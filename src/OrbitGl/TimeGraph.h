@@ -51,7 +51,7 @@ class TimeGraph {
   const std::vector<orbit_client_protos::CallstackEvent>& GetSelectedCallstackEvents(int32_t tid);
 
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
-                    const orbit_client_protos::FunctionInfo* function);
+                    const orbit_grpc_protos::InstrumentedFunction* function);
 
   // TODO (b/176056427): TimeGraph should not store nor expose CaptureData.
   [[nodiscard]] const CaptureData* GetCaptureData() const { return capture_data_; }

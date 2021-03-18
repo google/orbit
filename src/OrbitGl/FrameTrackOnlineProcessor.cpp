@@ -41,8 +41,9 @@ FrameTrackOnlineProcessor::FrameTrackOnlineProcessor(const CaptureData& capture_
   }
 }
 
-void FrameTrackOnlineProcessor::ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
-                                             const orbit_client_protos::FunctionInfo& function) {
+void FrameTrackOnlineProcessor::ProcessTimer(
+    const orbit_client_protos::TimerInfo& timer_info,
+    const orbit_grpc_protos::InstrumentedFunction& function) {
   uint64_t function_id = timer_info.function_id();
   if (!current_frame_track_function_ids_.contains(function_id)) {
     return;

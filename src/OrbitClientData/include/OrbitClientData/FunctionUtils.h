@@ -23,6 +23,7 @@ namespace function_utils {
   return func.pretty_name().empty() ? func.name() : func.pretty_name();
 }
 
+[[nodiscard]] std::string GetLoadedModuleNameByPath(std::string_view module_path);
 [[nodiscard]] std::string GetLoadedModuleName(const orbit_client_protos::FunctionInfo& func);
 [[nodiscard]] uint64_t GetHash(const orbit_client_protos::FunctionInfo& func);
 
@@ -36,14 +37,19 @@ namespace function_utils {
          module.load_bias();
 }
 
-[[nodiscard]] bool IsOrbitFunc(const orbit_client_protos::FunctionInfo& func);
+[[nodiscard]] bool IsOrbitFunctionFromType(
+    const orbit_client_protos::FunctionInfo::OrbitType& type);
+
+[[nodiscard]] bool IsOrbitFunctionFromName(const std::string& function_name);
 
 [[nodiscard]] std::unique_ptr<orbit_client_protos::FunctionInfo> CreateFunctionInfo(
     const orbit_grpc_protos::SymbolInfo& symbol_info, const std::string& module_path);
 
 [[nodiscard]] const absl::flat_hash_map<std::string, orbit_client_protos::FunctionInfo::OrbitType>&
 GetFunctionNameToOrbitTypeMap();
-bool SetOrbitTypeFromName(orbit_client_protos::FunctionInfo* func);
+[[nodiscard]] orbit_client_protos::FunctionInfo::OrbitType GetOrbitTypeByName(
+    const std::string& function_name);
+void SetOrbitTypeFromName(orbit_client_protos::FunctionInfo* func);
 
 }  // namespace function_utils
 

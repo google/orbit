@@ -31,9 +31,9 @@
 #include "OrbitClientData/UserDefinedCaptureData.h"
 #include "OrbitClientModel/CaptureDeserializer.h"
 #include "absl/base/casts.h"
+#include "capture.pb.h"
 #include "capture_data.pb.h"
 #include "gtest/gtest.h"
-#include "tracepoint.pb.h"
 
 using orbit_client_data::ModuleManager;
 using orbit_client_protos::CallstackEvent;
@@ -46,6 +46,7 @@ using orbit_client_protos::ProcessInfo;
 using orbit_client_protos::ThreadStateSliceInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_client_protos::TracepointEventInfo;
+using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::TracepointInfo;
 
 using ::testing::_;
@@ -63,13 +64,12 @@ namespace {
 
 class MockCaptureListener : public CaptureListener {
  public:
-  MOCK_METHOD(
-      void, OnCaptureStarted,
-      (ProcessData&& /*process*/,
-       (absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>)/*selected_functions*/,
-       TracepointInfoSet /*selected_tracepoints*/,
-       absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/),
-      (override));
+  MOCK_METHOD(void, OnCaptureStarted,
+              (ProcessData&& /*process*/,
+               (absl::flat_hash_map<uint64_t, InstrumentedFunction>)/*instrumented_functions*/,
+               TracepointInfoSet /*selected_tracepoints*/,
+               absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/),
+              (override));
   MOCK_METHOD(void, OnTimer, (const TimerInfo&), (override));
   MOCK_METHOD(void, OnKeyAndString, (uint64_t /*key*/, std::string), (override));
   MOCK_METHOD(void, OnUniqueCallStack, (CallStack), (override));
@@ -187,7 +187,9 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
   process_info->set_pid(42);
   process_info->set_name("process");
 
+  constexpr uint64_t kLoadBias = 5;
   orbit_client_protos::ModuleInfo* module_info = capture_info.add_modules();
+  module_info->set_load_bias(kLoadBias);
   module_info->set_name("module");
   module_info->set_file_path("path/to/module");
   module_info->set_address_start(10);
@@ -210,9 +212,9 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
   EXPECT_CALL(listener, OnCaptureStarted(_, _, _, _)).Times(0);
   EXPECT_CALL(listener, OnCaptureStarted(_, _, IsEmpty(), _))
       .Times(1)
-      .WillOnce([&instrumented_function, kInstrumentedFunctionId](
+      .WillOnce([&instrumented_function, load_bias = kLoadBias, kInstrumentedFunctionId](
                     ProcessData&& process,
-                    absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>
+                    absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction>
                         actual_instrumented_functions,
                     Unused, Unused) {
         EXPECT_EQ(process.name(), "process");
@@ -221,12 +223,12 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
 
         ASSERT_EQ(actual_instrumented_functions.size(), 1);
         ASSERT_TRUE(actual_instrumented_functions.contains(kInstrumentedFunctionId));
-        FunctionInfo actual_function_info =
+        const InstrumentedFunction& actual_function_info =
             actual_instrumented_functions.at(kInstrumentedFunctionId);
 
-        EXPECT_EQ(actual_function_info.name(), instrumented_function.name());
-        EXPECT_EQ(actual_function_info.pretty_name(), instrumented_function.pretty_name());
-        EXPECT_EQ(actual_function_info.size(), instrumented_function.size());
+        EXPECT_EQ(actual_function_info.function_name(), instrumented_function.pretty_name());
+        EXPECT_EQ(actual_function_info.file_path(), instrumented_function.loaded_module_path());
+        EXPECT_EQ(actual_function_info.file_offset(), instrumented_function.address() - load_bias);
       });
 
   EXPECT_CALL(listener, OnAddressInfo).Times(0);

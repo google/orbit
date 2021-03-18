@@ -30,6 +30,7 @@
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/TracepointCustom.h"
 #include "OrbitClientData/TracepointData.h"
+#include "capture.pb.h"
 #include "capture_data.pb.h"
 #include "process.pb.h"
 #include "tracepoint.pb.h"
@@ -38,7 +39,7 @@ class CaptureData {
  public:
   explicit CaptureData(
       ProcessData&& process, orbit_client_data::ModuleManager* module_manager,
-      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> instrumented_functions,
+      absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions,
       TracepointInfoSet selected_tracepoints,
       absl::flat_hash_set<uint64_t> frame_track_function_ids)
       : process_(std::move(process)),
@@ -57,12 +58,12 @@ class CaptureData {
   CaptureData(CaptureData&& other) = default;
   CaptureData& operator=(CaptureData&& other) = default;
 
-  [[nodiscard]] const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>&
+  [[nodiscard]] const absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction>&
   instrumented_functions() const {
     return instrumented_functions_;
   }
 
-  [[nodiscard]] const orbit_client_protos::FunctionInfo* GetInstrumentedFunctionById(
+  [[nodiscard]] const orbit_grpc_protos::InstrumentedFunction* GetInstrumentedFunctionById(
       uint64_t function_id) const;
   [[nodiscard]] std::optional<uint64_t> FindInstrumentedFunctionIdSlow(
       const orbit_client_protos::FunctionInfo& function) const;
@@ -88,6 +89,8 @@ class CaptureData {
   [[nodiscard]] const std::string& GetFunctionNameByAddress(uint64_t absolute_address) const;
   [[nodiscard]] std::optional<uint64_t> FindFunctionAbsoluteAddressByAddress(
       uint64_t absolute_address) const;
+  [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByModulePathAndOffset(
+      const std::string& module_path, uint64_t offset) const;
   [[nodiscard]] const std::string& GetModulePathByAddress(uint64_t absolute_address) const;
   [[nodiscard]] const ModuleData* GetModuleByPath(const std::string& module_path) const {
     return module_manager_->GetModuleByPath(module_path);
@@ -137,15 +140,15 @@ class CaptureData {
       int32_t thread_id, uint64_t min_timestamp, uint64_t max_timestamp,
       const std::function<void(const orbit_client_protos::ThreadStateSliceInfo&)>& action) const;
 
-  [[nodiscard]] const FunctionInfoMap<orbit_client_protos::FunctionStats>& functions_stats() const {
+  [[nodiscard]] const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats>&
+  functions_stats() const {
     return functions_stats_;
   }
 
   [[nodiscard]] const orbit_client_protos::FunctionStats& GetFunctionStatsOrDefault(
-      const orbit_client_protos::FunctionInfo& function) const;
+      uint64_t instrumented_function_id) const;
 
-  void UpdateFunctionStats(const orbit_client_protos::FunctionInfo& function,
-                           uint64_t elapsed_nanos);
+  void UpdateFunctionStats(uint64_t instrumented_function_id, uint64_t elapsed_nanos);
 
   [[nodiscard]] const CallstackData* GetCallstackData() const { return callstack_data_.get(); };
 
@@ -222,7 +225,7 @@ class CaptureData {
  private:
   ProcessData process_;
   orbit_client_data::ModuleManager* module_manager_;
-  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> instrumented_functions_;
+  absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions_;
 
   TracepointInfoSet selected_tracepoints_;
   // std::unique_ptr<> allows to move and copy CallstackData easier
@@ -237,7 +240,7 @@ class CaptureData {
 
   absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo> address_infos_;
 
-  FunctionInfoMap<orbit_client_protos::FunctionStats> functions_stats_;
+  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats> functions_stats_;
 
   absl::flat_hash_map<int32_t, std::string> thread_names_;
 

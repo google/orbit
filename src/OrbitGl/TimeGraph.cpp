@@ -38,6 +38,7 @@
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
+using orbit_grpc_protos::InstrumentedFunction;
 
 TimeGraph::TimeGraph(OrbitApp* app, TextRenderer* text_renderer, GlCanvas* canvas,
                      const CaptureData* capture_data)
@@ -238,7 +239,7 @@ double TimeGraph::GetTime(double ratio) const {
   return min_time_us_ + delta;
 }
 
-void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* function) {
+void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunction* function) {
   capture_min_timestamp_ = std::min(capture_min_timestamp_, timer_info.start());
   capture_max_timestamp_ = std::max(capture_max_timestamp_, timer_info.end());
 
@@ -248,9 +249,14 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
   // functions, but in those cases the timer type is TimerInfo::kFrame. We need to exclude those
   // frame track timers from the special processing here as they do not represent manual
   // instrumentation scopes.
-  if (function != nullptr && function_utils::IsOrbitFunc(*function) &&
+  FunctionInfo::OrbitType orbit_type = FunctionInfo::kNone;
+  if (function != nullptr) {
+    orbit_type = function_utils::GetOrbitTypeByName(function->function_name());
+  }
+
+  if (function != nullptr && function_utils::IsOrbitFunctionFromType(orbit_type) &&
       timer_info.type() == TimerInfo::kNone) {
-    ProcessOrbitFunctionTimer(function->orbit_type(), timer_info);
+    ProcessOrbitFunctionTimer(orbit_type, timer_info);
   }
 
   // TODO (b/175869409): Change the way to create and get the tracks. Move this part to
@@ -269,8 +275,7 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const FunctionInfo* fu
       if (function == nullptr) {
         break;
       }
-      FrameTrack* track =
-          track_manager_->GetOrCreateFrameTrack(timer_info.function_id(), *function);
+      FrameTrack* track = track_manager_->GetOrCreateFrameTrack(*function);
       track->OnTimer(timer_info);
       break;
     }
@@ -631,10 +636,10 @@ void TimeGraph::Draw(GlCanvas* canvas, PickingMode picking_mode) {
 
 namespace {
 
-[[nodiscard]] std::string GetLabelBetweenIterators(const FunctionInfo& function_a,
-                                                   const FunctionInfo& function_b) {
-  const std::string& function_from = function_utils::GetDisplayName(function_a);
-  const std::string& function_to = function_utils::GetDisplayName(function_b);
+[[nodiscard]] std::string GetLabelBetweenIterators(const InstrumentedFunction& function_a,
+                                                   const InstrumentedFunction& function_b) {
+  const std::string& function_from = function_a.function_name();
+  const std::string& function_to = function_b.function_name();
   return absl::StrFormat("%s to %s", function_from, function_to);
 }
 
@@ -740,8 +745,10 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
     uint64_t function_a_id = iterator_id_to_function_id_.at(id_a);
     uint64_t function_b_id = iterator_id_to_function_id_.at(id_b);
     const CaptureData& capture_data = app_->GetCaptureData();
-    const FunctionInfo* function_a = capture_data.GetInstrumentedFunctionById(function_a_id);
-    const FunctionInfo* function_b = capture_data.GetInstrumentedFunctionById(function_b_id);
+    const InstrumentedFunction* function_a =
+        capture_data.GetInstrumentedFunctionById(function_a_id);
+    const InstrumentedFunction* function_b =
+        capture_data.GetInstrumentedFunctionById(function_b_id);
     CHECK(function_a != nullptr);
     CHECK(function_b != nullptr);
     const std::string& label = GetLabelBetweenIterators(*function_a, *function_b);

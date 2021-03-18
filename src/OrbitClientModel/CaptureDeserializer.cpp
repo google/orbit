@@ -20,6 +20,7 @@
 #include "OrbitBase/Result.h"
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/Callstack.h"
+#include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/TracepointCustom.h"
@@ -154,9 +155,18 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureInfo(
     return CaptureListener::CaptureOutcome::kCancelled;
   }
 
-  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> instrumented_functions;
+  absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions;
   for (const auto& function : capture_info.instrumented_functions()) {
-    instrumented_functions.insert_or_assign(function.first, function.second);
+    orbit_grpc_protos::InstrumentedFunction instrumented_function;
+    instrumented_function.set_function_id(function.first);
+    instrumented_function.set_function_name(function.second.pretty_name());
+    instrumented_function.set_file_path(function.second.loaded_module_path());
+    const ModuleData* module_data =
+        module_manager->GetModuleByPath(function.second.loaded_module_path());
+    CHECK(module_data != nullptr);
+    instrumented_function.set_file_offset(function_utils::Offset(function.second, *module_data));
+
+    instrumented_functions.insert_or_assign(function.first, instrumented_function);
   }
 
   TracepointInfoSet selected_tracepoints;

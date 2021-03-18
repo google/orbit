@@ -11,6 +11,7 @@
 #include "OrbitClientData/TracepointCustom.h"
 #include "OrbitClientData/UserDefinedCaptureData.h"
 #include "absl/container/flat_hash_set.h"
+#include "capture.pb.h"
 #include "capture_data.pb.h"
 
 class CaptureListener {
@@ -22,7 +23,7 @@ class CaptureListener {
   // Called after capture started but before the first event arrived.
   virtual void OnCaptureStarted(
       ProcessData&& process,
-      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> instrumented_functions,
+      absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions,
       TracepointInfoSet selected_tracepoints,
       absl::flat_hash_set<uint64_t> frame_track_function_ids) = 0;
 

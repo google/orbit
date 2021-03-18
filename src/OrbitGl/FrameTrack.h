@@ -24,11 +24,11 @@ class OrbitApp;
 
 class FrameTrack : public TimerTrack {
  public:
-  explicit FrameTrack(TimeGraph* time_graph, TimeGraphLayout* layout, uint64_t function_id,
-                      orbit_client_protos::FunctionInfo function, OrbitApp* app,
+  explicit FrameTrack(TimeGraph* time_graph, TimeGraphLayout* layout,
+                      orbit_grpc_protos::InstrumentedFunction function, OrbitApp* app,
                       const CaptureData* capture_data);
   [[nodiscard]] Type GetType() const override { return kFrameTrack; }
-  [[nodiscard]] uint64_t GetFunctionId() const { return function_id_; }
+  [[nodiscard]] uint64_t GetFunctionId() const { return function_.function_id(); }
   [[nodiscard]] bool IsCollapsible() const override { return GetMaximumScaleFactor() > 0.f; }
 
   [[nodiscard]] float GetYFromTimer(
@@ -60,8 +60,7 @@ class FrameTrack : public TimerTrack {
   [[nodiscard]] float GetMaximumBoxHeight() const;
   [[nodiscard]] float GetAverageBoxHeight() const;
 
-  uint64_t function_id_;
-  orbit_client_protos::FunctionInfo function_;
+  orbit_grpc_protos::InstrumentedFunction function_;
   orbit_client_protos::FunctionStats stats_;
 };
 

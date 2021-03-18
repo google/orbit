@@ -25,7 +25,7 @@ namespace {
 class EmptyCaptureListener : public CaptureListener {
  public:
   void OnCaptureStarted(ProcessData&&,
-                        absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>,
+                        absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction>,
                         TracepointInfoSet, absl::flat_hash_set<uint64_t>) override {}
   void OnTimer(const orbit_client_protos::TimerInfo&) override {}
   void OnKeyAndString(uint64_t, std::string) override {}

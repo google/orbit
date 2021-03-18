@@ -47,6 +47,7 @@ using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::TimerInfo;
+using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
 
@@ -297,7 +298,7 @@ void ClientGgp::ProcessTimer(const TimerInfo& timer_info) { timer_infos_.push_ba
 // CaptureListener implementation
 void ClientGgp::OnCaptureStarted(
     ProcessData&& process,
-    absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
+    absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> selected_functions,
     TracepointInfoSet selected_tracepoints,
     absl::flat_hash_set<uint64_t> frame_track_function_ids) {
   capture_data_ = CaptureData(std::move(process), &module_manager_, std::move(selected_functions),
@@ -315,12 +316,8 @@ void ClientGgp::PostprocessCaptureData() {
 
 void ClientGgp::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   if (timer_info.function_id() != 0) {
-    const FunctionInfo* func =
-        GetCaptureData().GetInstrumentedFunctionById(timer_info.function_id());
-    // For timers, the function must be present in the process
-    CHECK(func != nullptr);
     uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
-    GetMutableCaptureData().UpdateFunctionStats(*func, elapsed_nanos);
+    GetMutableCaptureData().UpdateFunctionStats(timer_info.function_id(), elapsed_nanos);
   }
   ProcessTimer(timer_info);
 }

@@ -44,6 +44,7 @@ using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::GpuQueueSubmission;
 using orbit_grpc_protos::GpuQueueSubmissionMetaInfo;
 using orbit_grpc_protos::GpuSubmitInfo;
+using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointInfo;
@@ -63,13 +64,12 @@ namespace {
 
 class MockCaptureListener : public CaptureListener {
  public:
-  MOCK_METHOD(
-      void, OnCaptureStarted,
-      (ProcessData&& /*process*/,
-       (absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>)/*selected_functions*/,
-       TracepointInfoSet /*selected_tracepoints*/,
-       absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/),
-      (override));
+  MOCK_METHOD(void, OnCaptureStarted,
+              (ProcessData&& /*process*/,
+               (absl::flat_hash_map<uint64_t, InstrumentedFunction>)/*instrumented_functions*/,
+               TracepointInfoSet /*selected_tracepoints*/,
+               absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/),
+              (override));
   MOCK_METHOD(void, OnTimer, (const TimerInfo&), (override));
   MOCK_METHOD(void, OnKeyAndString, (uint64_t /*key*/, std::string), (override));
   MOCK_METHOD(void, OnUniqueCallStack, (CallStack), (override));

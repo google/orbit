@@ -9,6 +9,7 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "capture.pb.h"
 #include "capture_data.pb.h"
 
 class CaptureData;
@@ -25,7 +26,7 @@ class FrameTrackOnlineProcessor {
   FrameTrackOnlineProcessor() = default;
   FrameTrackOnlineProcessor(const CaptureData& capture_data, TimeGraph* time_graph);
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
-                    const orbit_client_protos::FunctionInfo& function);
+                    const orbit_grpc_protos::InstrumentedFunction& function);
 
   void AddFrameTrack(uint64_t function_id);
   void RemoveFrameTrack(uint64_t function_id);

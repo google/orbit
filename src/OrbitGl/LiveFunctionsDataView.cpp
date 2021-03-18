@@ -35,6 +35,7 @@
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
+using orbit_grpc_protos::InstrumentedFunction;
 
 ABSL_DECLARE_FLAG(bool, enable_source_code_view);
 
@@ -46,7 +47,7 @@ LiveFunctionsDataView::LiveFunctionsDataView(
       selected_function_id_(orbit_grpc_protos::kInvalidFunctionId),
       metrics_uploader_(metrics_uploader) {
   update_period_ms_ = 300;
-  OnDataChanged();
+  LiveFunctionsDataView::OnDataChanged();
 }
 
 const std::vector<DataView::Column>& LiveFunctionsDataView::GetColumns() {
@@ -61,7 +62,6 @@ const std::vector<DataView::Column>& LiveFunctionsDataView::GetColumns() {
     columns[kColumnTimeMin] = {"Min", .075f, SortingOrder::kDescending};
     columns[kColumnTimeMax] = {"Max", .075f, SortingOrder::kDescending};
     columns[kColumnModule] = {"Module", .1f, SortingOrder::kAscending};
-    columns[kColumnAddress] = {"Address", .0f, SortingOrder::kAscending};
     return columns;
   }();
   return columns;
@@ -75,9 +75,10 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
     return "";
   }
 
-  const FunctionInfo& function = GetInstrumentedFunction(row);
-  const FunctionStats& stats = app_->GetCaptureData().GetFunctionStatsOrDefault(function);
+  const uint64_t function_id = GetInstrumentedFunctionId(row);
+  const FunctionStats& stats = app_->GetCaptureData().GetFunctionStatsOrDefault(function_id);
 
+  const FunctionInfo& function = GetInstrumentedFunction(row);
   switch (column) {
     case kColumnSelected:
       return FunctionsDataView::BuildSelectedColumnsString(app_, function);
@@ -97,7 +98,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
       return function.loaded_module_path();
     case kColumnAddress: {
       const CaptureData& capture_data = app_->GetCaptureData();
-      return absl::StrFormat("0x%llx", capture_data.GetAbsoluteAddress(function));
+      return absl::StrFormat("0x%" PRIx64, capture_data.GetAbsoluteAddress(function));
     }
     default:
       return "";
@@ -132,13 +133,11 @@ void LiveFunctionsDataView::OnSelect(const std::vector<int>& rows) {
   [&](uint64_t a, uint64_t b) {                                                            \
     return orbit_core::Compare(functions.at(a).Member, functions.at(b).Member, ascending); \
   }
-#define ORBIT_STAT_SORT(Member)                                            \
-  [&](uint64_t a, uint64_t b) {                                            \
-    const FunctionStats& stats_a =                                         \
-        app_->GetCaptureData().GetFunctionStatsOrDefault(functions.at(a)); \
-    const FunctionStats& stats_b =                                         \
-        app_->GetCaptureData().GetFunctionStatsOrDefault(functions.at(b)); \
-    return orbit_core::Compare(stats_a.Member, stats_b.Member, ascending); \
+#define ORBIT_STAT_SORT(Member)                                                         \
+  [&](uint64_t a, uint64_t b) {                                                         \
+    const FunctionStats& stats_a = app_->GetCaptureData().GetFunctionStatsOrDefault(a); \
+    const FunctionStats& stats_b = app_->GetCaptureData().GetFunctionStatsOrDefault(b); \
+    return orbit_core::Compare(stats_a.Member, stats_b.Member, ascending);              \
   }
 #define ORBIT_CUSTOM_FUNC_SORT(Func)                                                     \
   [&](uint64_t a, uint64_t b) {                                                          \
@@ -217,22 +216,22 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   const CaptureData& capture_data = app_->GetCaptureData();
   for (int index : selected_indices) {
     uint64_t instrumented_function_id = GetInstrumentedFunctionId(index);
-    const FunctionInfo& selected_function = GetInstrumentedFunction(index);
+    const FunctionInfo& instrumented_function = GetInstrumentedFunction(index);
 
     if (app_->IsCaptureConnected(capture_data)) {
-      enable_select |= !app_->IsFunctionSelected(selected_function);
-      enable_unselect |= app_->IsFunctionSelected(selected_function);
+      enable_select |= !app_->IsFunctionSelected(instrumented_function);
+      enable_unselect |= app_->IsFunctionSelected(instrumented_function);
       enable_disassembly = true;
       enable_source_code = absl::GetFlag(FLAGS_enable_source_code_view);
     }
 
-    const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(selected_function);
+    const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(instrumented_function_id);
     // We need at least one function call to a function so that adding iterators makes sense.
     enable_iterator |= stats.count() > 0;
 
     if (app_->IsCaptureConnected(capture_data)) {
-      enable_enable_frame_track |= !app_->IsFrameTrackEnabled(selected_function);
-      enable_disable_frame_track |= app_->IsFrameTrackEnabled(selected_function);
+      enable_enable_frame_track |= !app_->IsFrameTrackEnabled(instrumented_function);
+      enable_disable_frame_track |= app_->IsFrameTrackEnabled(instrumented_function);
     } else {
       enable_enable_frame_track |= !capture_data.IsFrameTrackEnabled(instrumented_function_id);
       enable_disable_frame_track |= capture_data.IsFrameTrackEnabled(instrumented_function_id);
@@ -258,8 +257,8 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
   // For now, these actions only make sense when one function is selected,
   // so we don't show them otherwise.
   if (selected_indices.size() == 1) {
-    const FunctionInfo& function = GetInstrumentedFunction(selected_indices[0]);
-    const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(function);
+    uint64_t instrumented_function_id = GetInstrumentedFunctionId(selected_indices[0]);
+    const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(instrumented_function_id);
     if (stats.count() > 0) {
       menu.insert(menu.end(), {kMenuActionJumpToFirst, kMenuActionJumpToLast, kMenuActionJumpToMin,
                                kMenuActionJumpToMax});
@@ -297,7 +296,7 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
   } else if (action == kMenuActionJumpToFirst) {
     CHECK(item_indices.size() == 1);
     auto function_id = GetInstrumentedFunctionId(item_indices[0]);
-    auto first_box = app_->GetTimeGraph()->FindNextFunctionCall(
+    const auto* first_box = app_->GetTimeGraph()->FindNextFunctionCall(
         function_id, std::numeric_limits<uint64_t>::lowest());
     if (first_box != nullptr) {
       app_->GetMutableTimeGraph()->SelectAndZoom(first_box);
@@ -305,7 +304,7 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
   } else if (action == kMenuActionJumpToLast) {
     CHECK(item_indices.size() == 1);
     auto function_id = GetInstrumentedFunctionId(item_indices[0]);
-    auto last_box = app_->GetTimeGraph()->FindPreviousFunctionCall(
+    const auto* last_box = app_->GetTimeGraph()->FindPreviousFunctionCall(
         function_id, std::numeric_limits<uint64_t>::max());
     if (last_box != nullptr) {
       app_->GetMutableTimeGraph()->SelectAndZoom(last_box);
@@ -329,7 +328,7 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
       uint64_t instrumented_function_id = GetInstrumentedFunctionId(i);
       const FunctionInfo& instrumented_function = GetInstrumentedFunction(i);
       const FunctionStats& stats =
-          app_->GetCaptureData().GetFunctionStatsOrDefault(instrumented_function);
+          app_->GetCaptureData().GetFunctionStatsOrDefault(instrumented_function_id);
       if (stats.count() > 0) {
         live_functions_->AddIterator(instrumented_function_id, &instrumented_function);
         if (metrics_uploader_ != nullptr) {
@@ -340,7 +339,7 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
     }
   } else if (action == kMenuActionEnableFrameTrack) {
     for (int i : item_indices) {
-      const FunctionInfo function = GetInstrumentedFunction(i);
+      const FunctionInfo& function = GetInstrumentedFunction(i);
       if (app_->IsCaptureConnected(capture_data)) {
         app_->SelectFunction(function);
       }
@@ -404,13 +403,22 @@ void LiveFunctionsDataView::OnDataChanged() {
     return;
   }
 
-  const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>& instrumented_functions =
-      app_->GetCaptureData().instrumented_functions();
+  const absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction>&
+      instrumented_functions = app_->GetCaptureData().instrumented_functions();
   for (const auto& pair : instrumented_functions) {
-    if (function_utils::IsOrbitFunc(pair.second)) {
+    const FunctionInfo* function_info = app_->GetCaptureData().FindFunctionByModulePathAndOffset(
+        pair.second.file_path(), pair.second.file_offset());
+
+    // Likely because module has not yet been updated - skip for now
+    if (function_info == nullptr) {
       continue;
     }
-    functions_.insert_or_assign(pair.first, pair.second);
+
+    if (function_utils::IsOrbitFunctionFromType(function_info->orbit_type())) {
+      continue;
+    }
+
+    functions_.insert_or_assign(pair.first, *function_info);
     indices_.push_back(pair.first);
   }
 

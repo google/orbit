@@ -17,6 +17,7 @@
 #include "MetricsUploader/MetricsUploader.h"
 #include "TextBox.h"
 #include "TimerChain.h"
+#include "capture.pb.h"
 #include "capture_data.pb.h"
 
 class LiveFunctionsController;
@@ -56,7 +57,7 @@ class LiveFunctionsDataView : public DataView {
       uint32_t row) const;
   [[nodiscard]] std::pair<TextBox*, TextBox*> GetMinMax(uint64_t function_id) const;
 
-  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> functions_;
+  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> functions_{};
 
   LiveFunctionsController* live_functions_;
   uint64_t selected_function_id_;

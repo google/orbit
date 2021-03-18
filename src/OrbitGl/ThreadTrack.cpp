@@ -33,6 +33,7 @@
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
+using orbit_grpc_protos::InstrumentedFunction;
 
 ThreadTrack::ThreadTrack(TimeGraph* time_graph, TimeGraphLayout* layout, int32_t thread_id,
                          OrbitApp* app, const CaptureData* capture_data)
@@ -98,7 +99,7 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
     return "";
   }
 
-  const FunctionInfo* func =
+  const InstrumentedFunction* func =
       capture_data_
           ? capture_data_->GetInstrumentedFunctionById(text_box->GetTimerInfo().function_id())
           : nullptr;
@@ -108,13 +109,13 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
   }
 
   std::string function_name;
-  bool is_manual = func->orbit_type() == orbit_client_protos::FunctionInfo::kOrbitTimerStart;
+  bool is_manual = func->function_type() == InstrumentedFunction::kTimerStart;
   if (is_manual) {
     const TimerInfo& timer_info = text_box->GetTimerInfo();
     auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
     function_name = api_event.name;
   } else {
-    function_name = function_utils::GetDisplayName(*func);
+    function_name = func->function_name();
   }
 
   return absl::StrFormat(
@@ -123,7 +124,8 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
       "<br/><br/>"
       "<b>Module:</b> %s<br/>"
       "<b>Time:</b> %s",
-      function_name, is_manual ? "manual" : "dynamic", function_utils::GetLoadedModuleName(*func),
+      function_name, is_manual ? "manual" : "dynamic",
+      function_utils::GetLoadedModuleNameByPath(func->file_path()),
       GetPrettyTime(
           TicksToDuration(text_box->GetTimerInfo().start(), text_box->GetTimerInfo().end())));
 }
@@ -143,9 +145,13 @@ bool ThreadTrack::IsTrackSelected() const {
   return Color((val >> 24) & 0xFF, (val >> 16) & 0xFF, (val >> 8) & 0xFF, val & 0xFF);
 }
 
-[[nodiscard]] static inline std::optional<Color> GetUserColor(const TimerInfo& timer_info,
-                                                              const FunctionInfo* function_info) {
-  FunctionInfo::OrbitType type = function_info ? function_info->orbit_type() : FunctionInfo::kNone;
+[[nodiscard]] static std::optional<Color> GetUserColor(const TimerInfo& timer_info,
+                                                       const InstrumentedFunction* function) {
+  FunctionInfo::OrbitType type{FunctionInfo::kNone};
+  if (function != nullptr) {
+    type = function_utils::GetOrbitTypeByName(function->function_name());
+  }
+
   bool manual_instrumentation_timer =
       (type == FunctionInfo::kOrbitTimerStart || type == FunctionInfo::kOrbitTimerStartAsync ||
        timer_info.type() == TimerInfo::kApiEvent);
@@ -177,10 +183,10 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
   }
 
   uint64_t function_id = timer_info.function_id();
-  const FunctionInfo* function_info = app_->GetInstrumentedFunction(function_id);
-  CHECK(function_info || timer_info.type() == TimerInfo::kIntrospection ||
+  const InstrumentedFunction* instrumented_function = app_->GetInstrumentedFunction(function_id);
+  CHECK(instrumented_function != nullptr || timer_info.type() == TimerInfo::kIntrospection ||
         timer_info.type() == TimerInfo::kApiEvent);
-  std::optional<Color> user_color = GetUserColor(timer_info, function_info);
+  std::optional<Color> user_color = GetUserColor(timer_info, instrumented_function);
 
   Color color = kInactiveColor;
   if (user_color.has_value()) {
@@ -318,15 +324,15 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_u
     std::string time = GetPrettyTime(absl::Microseconds(elapsed_us));
     text_box->SetElapsedTimeTextLength(time.length());
 
-    const FunctionInfo* func = app_->GetInstrumentedFunction(timer_info.function_id());
-    if (func) {
+    const InstrumentedFunction* func = app_->GetInstrumentedFunction(timer_info.function_id());
+    if (func != nullptr) {
       std::string extra_info = GetExtraInfo(timer_info);
       std::string name;
-      if (func->orbit_type() == FunctionInfo::kOrbitTimerStart) {
+      if (func->function_type() == InstrumentedFunction::kTimerStart) {
         auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
         name = api_event.name;
       } else {
-        name = function_utils::GetDisplayName(*func);
+        name = func->function_name();
       }
 
       std::string text = absl::StrFormat("%s %s %s", name, extra_info.c_str(), time.c_str());
@@ -346,7 +352,7 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_u
       ERROR(
           "Unexpected case in ThreadTrack::SetTimesliceText, function=\"%s\", "
           "type=%d",
-          func->name(), static_cast<int>(timer_info.type()));
+          func->function_name(), static_cast<int>(timer_info.type()));
     }
   }
 
