@@ -455,14 +455,6 @@ void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
   GraphTrack* track;
   int64_t unused_kb = orbit_api::Decode<int64_t>(
       timer_info.registers(static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kFreeKb)));
-  if (unused_kb != kMissingInfo) {
-    track = track_manager_->GetOrCreateGraphTrack(kUnusedLabel);
-    track->SetValueUpperBoundWhenEmpty(total_pretty_name_and_raw_value);
-    track->SetValueLowerBoundWhenEmpty(minimum_pretty_name_and_raw_value);
-    double unused_mb = static_cast<double>(unused_kb) / kMegabytesToKilobytes;
-    track->AddValue(unused_mb, timer_info.start());
-  }
-
   int64_t buffers_kb = orbit_api::Decode<int64_t>(timer_info.registers(
       static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kBuffersKb)));
   int64_t cached_kb = orbit_api::Decode<int64_t>(timer_info.registers(
