@@ -454,8 +454,8 @@ void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
   int64_t unused_kb = orbit_api::Decode<int64_t>(
       timer_info.registers(static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kFreeKb)));
   if (unused_kb != kMissingInfo) {
-    track = track_manager_->GetOrCreateGraphTrack(kUnusedLabel, std::nullopt,
-                                                  total_pretty_name_and_raw_value);
+    track = track_manager_->GetOrCreateGraphTrack(kUnusedLabel);
+    track->SetValueUpperBoundWhenEmpty(total_pretty_name_and_raw_value);
     double unused_mb = static_cast<double>(unused_kb) / kMegabytesToKilobytes;
     track->AddValue(unused_mb, timer_info.start());
   }
@@ -465,8 +465,8 @@ void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
   int64_t cached_kb = orbit_api::Decode<int64_t>(timer_info.registers(
       static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kCachedKb)));
   if (buffers_kb != kMissingInfo && cached_kb != kMissingInfo) {
-    track = track_manager_->GetOrCreateGraphTrack(kBuffersOrCachedLabel, std::nullopt,
-                                                  total_pretty_name_and_raw_value);
+    track = track_manager_->GetOrCreateGraphTrack(kBuffersOrCachedLabel);
+    track->SetValueUpperBoundWhenEmpty(total_pretty_name_and_raw_value);
     double buffers_or_cached_mb =
         static_cast<double>(buffers_kb + cached_kb) / kMegabytesToKilobytes;
     track->AddValue(buffers_or_cached_mb, timer_info.start());
@@ -474,8 +474,9 @@ void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
 
   if (total_kb != kMissingInfo && unused_kb != kMissingInfo && buffers_kb != kMissingInfo &&
       cached_kb != kMissingInfo) {
-    track = track_manager_->GetOrCreateGraphTrack(
-        kUsedLabel, warning_threshold_pretty_name_and_raw_value, total_pretty_name_and_raw_value);
+    track = track_manager_->GetOrCreateGraphTrack(kUsedLabel);
+    track->SetWarningThresholdWhenEmpty(warning_threshold_pretty_name_and_raw_value);
+    track->SetValueUpperBoundWhenEmpty(total_pretty_name_and_raw_value);
     double used_mb =
         static_cast<double>(total_kb - unused_kb - buffers_kb - cached_kb) / kMegabytesToKilobytes;
     track->AddValue(used_mb, timer_info.start());

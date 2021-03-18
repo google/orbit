@@ -35,16 +35,18 @@ class GraphTrack : public Track {
       uint64_t time) const;
   [[nodiscard]] bool IsEmpty() const override { return values_.empty(); }
 
-  void SetWarningThreshold(const std::optional<std::pair<std::string, double>>& warning_threshold) {
+  void SetWarningThresholdWhenEmpty(
+      const std::optional<std::pair<std::string, double>>& warning_threshold) {
+    if (warning_threshold_.has_value() || !warning_threshold.has_value()) return;
     warning_threshold_ = warning_threshold;
     max_ = std::max(max_, warning_threshold.value().second);
     min_ = std::min(min_, warning_threshold.value().second);
   }
-  void SetValueUpperBound(const std::optional<std::pair<std::string, double>>& value_upper_bound) {
+  void SetValueUpperBoundWhenEmpty(
+      const std::optional<std::pair<std::string, double>>& value_upper_bound) {
+    if (value_upper_bound_.has_value() || !value_upper_bound.has_value()) return;
     value_upper_bound_ = value_upper_bound;
   }
-  bool WarningThresholdSetHasValue() { return warning_threshold_.has_value(); }
-  bool ValueUpperBoundHasValue() { return value_upper_bound_.has_value(); }
 
  protected:
   void DrawSquareDot(Batcher* batcher, Vec2 center, float radius, float z, const Color& color);
