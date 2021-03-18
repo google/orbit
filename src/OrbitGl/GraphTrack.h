@@ -35,13 +35,10 @@ class GraphTrack : public Track {
       uint64_t time) const;
   [[nodiscard]] bool IsEmpty() const override { return values_.empty(); }
 
-  void SetWarningThresholdWhenEmpty(
-      const std::optional<std::pair<std::string, double>>& warning_threshold);
-  void SetValueUpperBoundWhenEmpty(
-      const std::optional<std::pair<std::string, double>>& value_upper_bound);
-  void SetValueLowerBoundWhenEmpty(
-      const std::optional<std::pair<std::string, double>>& value_lower_bound);
-  void SetLabelUnit(const std::string& label_unit) { label_unit_ = label_unit; }
+  void SetWarningThresholdWhenEmpty(const std::string& pretty_label, double raw_value);
+  void SetValueUpperBoundWhenEmpty(const std::string& pretty_label, double raw_value);
+  void SetValueLowerBoundWhenEmpty(const std::string& pretty_label, double raw_value);
+  void SetLabelUnitWhenEmpty(const std::string& label_unit);
   void SetValueDecimalDigitsWhenEmpty(uint8_t value_decimal_digits);
 
  protected:

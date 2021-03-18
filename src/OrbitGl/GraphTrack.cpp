@@ -230,23 +230,26 @@ float GraphTrack::GetHeight() const {
   return height;
 }
 
-void GraphTrack::SetWarningThresholdWhenEmpty(
-    const std::optional<std::pair<std::string, double>>& warning_threshold) {
-  if (warning_threshold_.has_value() || !warning_threshold.has_value()) return;
-  warning_threshold_ = warning_threshold;
-  UpdateMinAndMax(warning_threshold_.value().second);
+void GraphTrack::SetWarningThresholdWhenEmpty(const std::string& pretty_label, double raw_value) {
+  if (warning_threshold_.has_value()) return;
+  warning_threshold_ = std::make_pair(pretty_label, raw_value);
+  UpdateMinAndMax(raw_value);
 }
 
-void GraphTrack::SetValueUpperBoundWhenEmpty(
-    const std::optional<std::pair<std::string, double>>& value_upper_bound) {
-  if (value_upper_bound_.has_value() || !value_upper_bound.has_value()) return;
-  value_upper_bound_ = value_upper_bound;
-  UpdateMinAndMax(value_upper_bound_.value().second);
+void GraphTrack::SetValueUpperBoundWhenEmpty(const std::string& pretty_label, double raw_value) {
+  if (value_upper_bound_.has_value()) return;
+  value_upper_bound_ = std::make_pair(pretty_label, raw_value);
+  UpdateMinAndMax(raw_value);
 }
-void GraphTrack::SetValueLowerBoundWhenEmpty(
-    const std::optional<std::pair<std::string, double>>& value_lower_bound) {
-  value_lower_bound_ = value_lower_bound;
-  UpdateMinAndMax(value_lower_bound_.value().second);
+void GraphTrack::SetValueLowerBoundWhenEmpty(const std::string& pretty_label, double raw_value) {
+  if (value_lower_bound_.has_value()) return;
+  value_lower_bound_ = std::make_pair(pretty_label, raw_value);
+  UpdateMinAndMax(raw_value);
+}
+
+void GraphTrack::SetLabelUnitWhenEmpty(const std::string& label_unit) {
+  if (!label_unit_.empty()) return;
+  label_unit_ = label_unit;
 }
 
 void GraphTrack::SetValueDecimalDigitsWhenEmpty(uint8_t value_decimal_digits) {
