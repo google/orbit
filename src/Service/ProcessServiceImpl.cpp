@@ -82,10 +82,10 @@ Status ProcessServiceImpl::GetProcessMemory(ServerContext*, const GetProcessMemo
                                             GetProcessMemoryResponse* response) {
   uint64_t size = std::min(request->size(), kMaxGetProcessMemoryResponseSize);
   response->mutable_memory()->resize(size);
-  uint64_t num_bytes_read = 0;
-  if (utils::ReadProcessMemory(request->pid(), request->address(),
-                               response->mutable_memory()->data(), size, &num_bytes_read)) {
-    response->mutable_memory()->resize(num_bytes_read);
+  const auto result = utils::ReadProcessMemory(request->pid(), request->address(),
+                                               response->mutable_memory()->data(), size);
+  if (result.has_value()) {
+    response->mutable_memory()->resize(result.value());
     return Status::OK;
   }
 

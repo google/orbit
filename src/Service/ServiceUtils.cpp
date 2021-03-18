@@ -30,6 +30,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/SafeStrerror.h"
 #include "absl/strings/str_format.h"
 #include "module.pb.h"
 
@@ -369,13 +370,25 @@ ErrorMessageOr<fs::path> FindSymbolsFilePath(
   return ErrorMessage(error_message_for_client);
 }
 
-bool ReadProcessMemory(int32_t pid, uintptr_t address, void* buffer, uint64_t size,
-                       uint64_t* num_bytes_read) noexcept {
-  iovec local_iov[] = {{buffer, size}};
-  iovec remote_iov[] = {{absl::bit_cast<void*>(address), size}};
-  *num_bytes_read = process_vm_readv(pid, local_iov, ABSL_ARRAYSIZE(local_iov), remote_iov,
-                                     ABSL_ARRAYSIZE(remote_iov), 0);
-  return *num_bytes_read == size;
+ErrorMessageOr<uint64_t> ReadProcessMemory(int32_t pid, uintptr_t address, void* buffer,
+                                           uint64_t size) noexcept {
+  ssize_t total_bytes_read = 0;
+  while (size > 0) {
+    iovec local_iov[] = {{buffer, size}};
+    iovec remote_iov[] = {{absl::bit_cast<void*>(address), size}};
+    const ssize_t num_bytes_read = process_vm_readv(pid, local_iov, ABSL_ARRAYSIZE(local_iov),
+                                                    remote_iov, ABSL_ARRAYSIZE(remote_iov), 0);
+    if (num_bytes_read == -1) {
+      return ErrorMessage{SafeStrerror(errno)};
+    }
+
+    total_bytes_read += num_bytes_read;
+    address += num_bytes_read;
+    buffer = static_cast<char*>(buffer) + num_bytes_read;
+    size -= num_bytes_read;
+  }
+
+  return static_cast<uint64_t>(total_bytes_read);
 }
 
 }  // namespace orbit_service::utils
