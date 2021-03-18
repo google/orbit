@@ -517,6 +517,8 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   ui->actionOpen_Preset->setEnabled(!is_capturing && is_connected_);
   ui->actionSave_Preset_As->setEnabled(!is_capturing);
 
+  filter_panel_action_->setEnabled(has_data);
+
   hint_frame_->setVisible(!has_data);
 
   UpdateCaptureToolbarIconOpacity();
