@@ -17,6 +17,7 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::ThreadStateSliceInfo;
+using orbit_grpc_protos::InstrumentedFunction;
 
 void CaptureData::ForEachThreadStateSliceIntersectingTimeRange(
     int32_t thread_id, uint64_t min_timestamp, uint64_t max_timestamp,
@@ -41,17 +42,18 @@ void CaptureData::ForEachThreadStateSliceIntersectingTimeRange(
   }
 }
 
-const FunctionStats& CaptureData::GetFunctionStatsOrDefault(const FunctionInfo& function) const {
+const FunctionStats& CaptureData::GetFunctionStatsOrDefault(
+    uint64_t instrumented_function_id) const {
   static const FunctionStats kDefaultFunctionStats;
-  auto function_stats_it = functions_stats_.find(function);
+  auto function_stats_it = functions_stats_.find(instrumented_function_id);
   if (function_stats_it == functions_stats_.end()) {
     return kDefaultFunctionStats;
   }
   return function_stats_it->second;
 }
 
-void CaptureData::UpdateFunctionStats(const FunctionInfo& function, uint64_t elapsed_nanos) {
-  FunctionStats& stats = functions_stats_[function];
+void CaptureData::UpdateFunctionStats(uint64_t instrumented_function_id, uint64_t elapsed_nanos) {
+  FunctionStats& stats = functions_stats_[instrumented_function_id];
   stats.set_count(stats.count() + 1);
   stats.set_total_time_ns(stats.total_time_ns() + elapsed_nanos);
   stats.set_average_time_ns(stats.total_time_ns() / stats.count());
@@ -65,20 +67,21 @@ void CaptureData::UpdateFunctionStats(const FunctionInfo& function, uint64_t ela
   }
 }
 
-const FunctionInfo* CaptureData::GetInstrumentedFunctionById(uint64_t function_id) const {
-  auto selected_functions_it = instrumented_functions_.find(function_id);
-  if (selected_functions_it == instrumented_functions_.end()) {
+const InstrumentedFunction* CaptureData::GetInstrumentedFunctionById(uint64_t function_id) const {
+  auto instrumented_functions_it = instrumented_functions_.find(function_id);
+  if (instrumented_functions_it == instrumented_functions_.end()) {
     return nullptr;
   }
-  return &selected_functions_it->second;
+  return &instrumented_functions_it->second;
 }
 
 std::optional<uint64_t> CaptureData::FindInstrumentedFunctionIdSlow(
     const orbit_client_protos::FunctionInfo& function) const {
+  const ModuleData* module = module_manager_->GetModuleByPath(function.loaded_module_path());
   for (const auto& it : instrumented_functions_) {
     const auto& target_function = it.second;
-    if (target_function.file() == function.file() &&
-        target_function.address() == function.address()) {
+    if (target_function.file_path() == function.loaded_module_path() &&
+        target_function.file_offset() == function_utils::Offset(function, *module)) {
       return it.first;
     }
   }
@@ -144,6 +147,18 @@ std::optional<uint64_t> CaptureData::FindFunctionAbsoluteAddressByAddress(
   return std::nullopt;
 }
 
+const FunctionInfo* CaptureData::FindFunctionByModulePathAndOffset(const std::string& module_path,
+                                                                   uint64_t offset) const {
+  const ModuleData* module_data = module_manager_->GetModuleByPath(module_path);
+  if (module_data == nullptr) {
+    return nullptr;
+  }
+
+  uint64_t address = module_data->load_bias() + offset;
+
+  return module_data->FindFunctionByElfAddress(address, true);
+}
+
 const std::string& CaptureData::GetModulePathByAddress(uint64_t absolute_address) const {
   const ModuleData* module_data = FindModuleByAddress(absolute_address);
   if (module_data != nullptr) {
@@ -193,10 +208,10 @@ std::string CaptureData::process_name() const { return process_.name(); }
 
 void CaptureData::EnableFrameTrack(uint64_t instrumented_function_id) {
   if (frame_track_function_ids_.contains(instrumented_function_id)) {
-    const FunctionInfo* function = GetInstrumentedFunctionById(instrumented_function_id);
+    const auto* function = GetInstrumentedFunctionById(instrumented_function_id);
     CHECK(function != nullptr);
     LOG("Warning: Frame track for instrumented function \"%s\" is already enabled",
-        function->name());
+        function->function_name());
     return;
   }
   frame_track_function_ids_.insert(instrumented_function_id);

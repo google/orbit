@@ -34,7 +34,8 @@ class MyCaptureListener : public CaptureListener {
  private:
   void OnCaptureStarted(
       ProcessData&& /*process*/,
-      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> /*selected_functions*/,
+      absl::flat_hash_map<uint64_t,
+                          orbit_grpc_protos::InstrumentedFunction> /*instrumented_functions*/,
       TracepointInfoSet /*selected_tracepoints*/,
       absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/) override {}
   void OnTimer(const TimerInfo&) override {}

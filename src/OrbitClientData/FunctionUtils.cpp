@@ -26,7 +26,11 @@ using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::SymbolInfo;
 
 std::string GetLoadedModuleName(const FunctionInfo& func) {
-  return std::filesystem::path(func.loaded_module_path()).filename().string();
+  return GetLoadedModuleNameByPath(func.loaded_module_path());
+}
+
+std::string GetLoadedModuleNameByPath(std::string_view module_path) {
+  return std::filesystem::path(module_path).filename().string();
 }
 
 uint64_t GetHash(const FunctionInfo& func) { return StringHash(func.pretty_name()); }
@@ -35,7 +39,13 @@ uint64_t Offset(const FunctionInfo& func, const ModuleData& module) {
   return func.address() - module.load_bias();
 }
 
-bool IsOrbitFunc(const FunctionInfo& func) { return func.orbit_type() != FunctionInfo::kNone; }
+bool IsOrbitFunctionFromType(const FunctionInfo::OrbitType& type) {
+  return type != FunctionInfo::kNone;
+}
+
+bool IsOrbitFunctionFromName(const std::string& function_name) {
+  return GetOrbitTypeByName(function_name) != FunctionInfo::kNone;
+}
 
 std::unique_ptr<FunctionInfo> CreateFunctionInfo(const SymbolInfo& symbol_info,
                                                  const std::string& module_path) {
@@ -65,20 +75,23 @@ const absl::flat_hash_map<std::string, FunctionInfo::OrbitType>& GetFunctionName
   return function_name_to_type_map;
 }
 
-// Detect Orbit API functions by looking for special function names part of the
-// orbit_api namespace. On a match, set the corresponding function type.
-bool SetOrbitTypeFromName(FunctionInfo* func) {
-  const std::string& name = GetDisplayName(*func);
-  if (absl::StartsWith(name, "orbit_api::")) {
-    for (auto& pair : GetFunctionNameToOrbitTypeMap()) {
-      if (absl::StrContains(name, pair.first)) {
-        LOG("Found orbit_api function: %s", name);
-        func->set_orbit_type(pair.second);
-        return true;
+FunctionInfo::OrbitType GetOrbitTypeByName(const std::string& function_name) {
+  if (absl::StartsWith(function_name, "orbit_api::")) {
+    for (const auto& pair : GetFunctionNameToOrbitTypeMap()) {
+      if (absl::StrContains(function_name, pair.first)) {
+        LOG("Found orbit_api function: %s", function_name);
+        return pair.second;
       }
     }
   }
-  return false;
+
+  return FunctionInfo::kNone;
+}
+
+// Detect Orbit API functions by looking for special function names part of the
+// orbit_api namespace. On a match, set the corresponding function type.
+void SetOrbitTypeFromName(FunctionInfo* func) {
+  func->set_orbit_type(GetOrbitTypeByName(GetDisplayName(*func)));
 }
 
 }  // namespace function_utils

@@ -23,6 +23,7 @@
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
+using orbit_grpc_protos::InstrumentedFunction;
 
 namespace {
 constexpr const double kHeightCapAverageMultipleDouble = 6.0;
@@ -64,14 +65,12 @@ float FrameTrack::GetAverageBoxHeight() const {
   return box_height_ / box_height_normalizer;
 }
 
-FrameTrack::FrameTrack(TimeGraph* time_graph, TimeGraphLayout* layout, uint64_t function_id,
-                       FunctionInfo function, OrbitApp* app, const CaptureData* capture_data)
-    : TimerTrack(time_graph, layout, app, capture_data),
-      function_id_(function_id),
-      function_(std::move(function)) {
+FrameTrack::FrameTrack(TimeGraph* time_graph, TimeGraphLayout* layout,
+                       InstrumentedFunction function, OrbitApp* app,
+                       const CaptureData* capture_data)
+    : TimerTrack(time_graph, layout, app, capture_data), function_(std::move(function)) {
   // TODO(b/169554463): Support manual instrumentation.
-  const std::string& function_name = function_utils::GetDisplayName(function_);
-  std::string name = absl::StrFormat("Frame track based on %s", function_name);
+  std::string name = absl::StrFormat("Frame track based on %s", function_.function_name());
   SetName(name);
   SetLabel(name);
 
@@ -179,7 +178,7 @@ void FrameTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us
 }
 
 std::string FrameTrack::GetTooltip() const {
-  const std::string& function_name = function_utils::GetDisplayName(function_);
+  const std::string& function_name = function_.function_name();
   return absl::StrFormat(
       "<b>Frame track</b><br/>"
       "<i>Shows frame timings based on subsequent callst to %s. "
@@ -198,7 +197,7 @@ std::string FrameTrack::GetTooltip() const {
       "<b>Minimum frame time:</b> %s<br/>"
       "<b>Average frame time:</b> %s<br/>",
       function_name, kHeightCapAverageMultipleUint64, function_name,
-      function_utils::GetLoadedModuleName(function_), stats_.count(),
+      function_utils::GetLoadedModuleNameByPath(function_.file_path()), stats_.count(),
       GetPrettyTime(absl::Nanoseconds(stats_.max_ns())),
       GetPrettyTime(absl::Nanoseconds(stats_.min_ns())),
       GetPrettyTime(absl::Nanoseconds(stats_.average_time_ns())));
@@ -210,7 +209,7 @@ std::string FrameTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) cons
     return "";
   }
   // TODO(b/169554463): Support manual instrumentation.
-  const std::string& function_name = function_utils::GetDisplayName(function_);
+  const std::string& function_name = function_.function_name();
 
   return absl::StrFormat(
       "<b>Frame time</b><br/>"
@@ -223,7 +222,8 @@ std::string FrameTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) cons
       "<b>Frame:</b> #%u<br/>"
       "<b>Frame time:</b> %s",
       function_name, kHeightCapAverageMultipleUint64, function_name,
-      function_utils::GetLoadedModuleName(function_), text_box->GetTimerInfo().user_data_key(),
+      function_utils::GetLoadedModuleNameByPath(function_.file_path()),
+      text_box->GetTimerInfo().user_data_key(),
       GetPrettyTime(
           TicksToDuration(text_box->GetTimerInfo().start(), text_box->GetTimerInfo().end())));
 }

@@ -138,7 +138,7 @@ std::vector<FunctionInfo> ModuleData::GetOrbitFunctions() const {
   CHECK(is_loaded_);
   std::vector<FunctionInfo> result;
   for (const auto& [_, function] : functions_) {
-    if (function_utils::IsOrbitFunc(*function)) {
+    if (function_utils::IsOrbitFunctionFromType(function->orbit_type())) {
       result.emplace_back(*function);
     }
   }

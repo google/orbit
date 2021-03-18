@@ -59,8 +59,7 @@ class TrackManager {
   GpuTrack* GetOrCreateGpuTrack(uint64_t timeline_hash);
   GraphTrack* GetOrCreateGraphTrack(const std::string& name);
   AsyncTrack* GetOrCreateAsyncTrack(const std::string& name);
-  FrameTrack* GetOrCreateFrameTrack(uint64_t function_id,
-                                    const orbit_client_protos::FunctionInfo& function);
+  FrameTrack* GetOrCreateFrameTrack(const orbit_grpc_protos::InstrumentedFunction& function);
 
   void AddTrack(const std::shared_ptr<Track>& track);
   void RemoveFrameTrack(uint64_t function_address);

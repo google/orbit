@@ -385,21 +385,20 @@ AsyncTrack* TrackManager::GetOrCreateAsyncTrack(const std::string& name) {
   return track.get();
 }
 
-FrameTrack* TrackManager::GetOrCreateFrameTrack(uint64_t function_id,
-                                                const FunctionInfo& function) {
+FrameTrack* TrackManager::GetOrCreateFrameTrack(
+    const orbit_grpc_protos::InstrumentedFunction& function) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  auto track_it = frame_tracks_.find(function_id);
+  auto track_it = frame_tracks_.find(function.function_id());
   if (track_it != frame_tracks_.end()) {
     return track_it->second.get();
   }
 
-  auto track = std::make_shared<FrameTrack>(time_graph_, layout_, function_id, function, app_,
-                                            capture_data_);
+  auto track = std::make_shared<FrameTrack>(time_graph_, layout_, function, app_, capture_data_);
 
   // Normally we would call AddTrack(track) here, but frame tracks are removable by users
   // and therefore cannot be simply thrown into the flat vector of tracks.
   sorting_invalidated_ = true;
-  frame_tracks_[function_id] = track;
+  frame_tracks_[function.function_id()] = track;
 
   return track.get();
 }

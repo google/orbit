@@ -4,7 +4,7 @@
 
 #include "OrbitClientModel/CaptureSerializer.h"
 
-#include <absl/container/flat_hash_set.h>
+#include <absl/container/flat_hash_map.h>
 #include <absl/strings/str_cat.h>
 #include <google/protobuf/stubs/common.h>
 #include <google/protobuf/stubs/port.h>
@@ -21,7 +21,6 @@
 #include "CoreUtils.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/CallstackData.h"
-#include "OrbitClientData/FunctionInfoSet.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ProcessData.h"
@@ -38,6 +37,7 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::ModuleInfo;
 using orbit_client_protos::ProcessInfo;
+using orbit_grpc_protos::InstrumentedFunction;
 
 namespace {
 inline constexpr std::string_view kFileOrbitExtension = ".orbit";
@@ -75,7 +75,13 @@ CaptureInfo GenerateCaptureInfo(
     const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map) {
   CaptureInfo capture_info;
   for (const auto& pair : capture_data.instrumented_functions()) {
-    (*capture_info.mutable_instrumented_functions())[pair.first] = pair.second;
+    const FunctionInfo* function_info = capture_data.FindFunctionByModulePathAndOffset(
+        pair.second.file_path(), pair.second.file_offset());
+    if (function_info == nullptr) {
+      FATAL("Serializing instrumented function \"%s\", couldn't find corresponding FunctionInfo",
+            pair.second.function_name());
+    }
+    (*capture_info.mutable_instrumented_functions())[pair.first] = *function_info;
   }
 
   ProcessInfo* process = capture_info.mutable_process();
@@ -131,9 +137,16 @@ CaptureInfo GenerateCaptureInfo(
     added_address_info->set_module_path(function->loaded_module_path());
   }
 
-  const FunctionInfoMap<FunctionStats>& functions_stats = capture_data.functions_stats();
-  for (const auto& [function, stats] : functions_stats) {
-    uint64_t absolute_address = capture_data.GetAbsoluteAddress(function);
+  const absl::flat_hash_map<uint64_t, FunctionStats>& functions_stats =
+      capture_data.functions_stats();
+  for (const auto& [function_id, stats] : functions_stats) {
+    const InstrumentedFunction* instrumented_function =
+        capture_data.GetInstrumentedFunctionById(function_id);
+    CHECK(instrumented_function != nullptr);
+    const FunctionInfo* function = capture_data.FindFunctionByModulePathAndOffset(
+        instrumented_function->file_path(), instrumented_function->file_offset());
+    CHECK(function != nullptr);
+    uint64_t absolute_address = capture_data.GetAbsoluteAddress(*function);
     capture_info.mutable_function_stats()->operator[](absolute_address) = stats;
   }
 

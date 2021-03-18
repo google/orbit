@@ -38,6 +38,7 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::TracepointEventInfo;
+using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::TracepointInfo;
 using ::testing::ElementsAreArray;
 
@@ -87,24 +88,37 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   process_info.set_pid(process_id);
   ProcessData process(process_info);
 
+  constexpr const char* kModulePath = "path/to/module";
+
   orbit_grpc_protos::ModuleInfo module_info;
   module_info.set_load_bias(0);
-  module_info.set_file_path("path/to/module");
+  module_info.set_file_path(kModulePath);
   module_info.set_address_start(15);
   module_info.set_address_end(1000);
-  ModuleData module(module_info);
 
   std::vector<orbit_grpc_protos::ModuleInfo> module_infos{module_info};
   process.UpdateModuleInfos(module_infos);
   ModuleManager module_manager;
   module_manager.AddOrUpdateModules(module_infos);
+  ModuleData* module = module_manager.GetMutableModuleByPath(kModulePath);
+  ASSERT_NE(module, nullptr);
+
+  orbit_grpc_protos::ModuleSymbols symbols;
+  symbols.set_symbols_file_path(kModulePath);
+  orbit_grpc_protos::SymbolInfo* symbol_info = symbols.add_symbol_infos();
+  symbol_info->set_name("foo");
+  symbol_info->set_demangled_name("void foo()");
+  symbol_info->set_address(123);
+  symbol_info->set_size(12);
+  module->AddSymbols(symbols);
 
   constexpr uint64_t kInstrumentedFunctionId = 23;
-  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> instrumented_functions;
-  FunctionInfo instrumented_function;
-  instrumented_function.set_name("foo");
-  instrumented_function.set_address(123);
-  instrumented_function.set_loaded_module_path("path/to/module");
+  absl::flat_hash_map<uint64_t, InstrumentedFunction> instrumented_functions;
+  InstrumentedFunction instrumented_function;
+  instrumented_function.set_function_id(kInstrumentedFunctionId);
+  instrumented_function.set_function_name("void foo()");
+  instrumented_function.set_file_offset(123);
+  instrumented_function.set_file_path(kModulePath);
   uint64_t selected_function_absolute_address = 123 + 15 - 0;
   instrumented_functions[kInstrumentedFunctionId] = instrumented_function;
 
@@ -168,9 +182,9 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
       tracepoint_event.time(), tracepoint_event.tracepoint_info_key(), tracepoint_event.pid(),
       tracepoint_event.tid(), tracepoint_event.cpu(), true);
 
-  capture_data.UpdateFunctionStats(instrumented_function, 100);
-  capture_data.UpdateFunctionStats(instrumented_function, 110);
-  capture_data.UpdateFunctionStats(instrumented_function, 120);
+  capture_data.UpdateFunctionStats(instrumented_function.function_id(), 100);
+  capture_data.UpdateFunctionStats(instrumented_function.function_id(), 110);
+  capture_data.UpdateFunctionStats(instrumented_function.function_id(), 120);
 
   absl::flat_hash_map<uint64_t, std::string> key_to_string_map;
   key_to_string_map[0] = "a";
@@ -183,8 +197,8 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   ASSERT_EQ(1, capture_info.instrumented_functions_size());
   const FunctionInfo& actual_selected_function =
       capture_info.instrumented_functions().begin()->second;
-  EXPECT_EQ(instrumented_function.address(), actual_selected_function.address());
-  EXPECT_EQ(instrumented_function.name(), actual_selected_function.name());
+  EXPECT_EQ(instrumented_function.file_offset(), actual_selected_function.address() - 0);
+  EXPECT_EQ(instrumented_function.function_name(), actual_selected_function.pretty_name());
 
   EXPECT_EQ(process_id, capture_info.process().pid());
   EXPECT_EQ(process_name, capture_info.process().name());
@@ -249,7 +263,7 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   const FunctionStats& actual_function_stats =
       capture_info.function_stats().at(selected_function_absolute_address);
   const FunctionStats& expected_function_stats =
-      capture_data.GetFunctionStatsOrDefault(instrumented_function);
+      capture_data.GetFunctionStatsOrDefault(instrumented_function.function_id());
   EXPECT_EQ(expected_function_stats.count(), actual_function_stats.count());
   EXPECT_EQ(expected_function_stats.total_time_ns(), actual_function_stats.total_time_ns());
   EXPECT_EQ(expected_function_stats.average_time_ns(), actual_function_stats.average_time_ns());

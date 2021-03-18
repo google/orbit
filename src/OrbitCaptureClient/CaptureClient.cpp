@@ -100,7 +100,7 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
 
 ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
     ProcessData&& process, const orbit_client_data::ModuleManager& module_manager,
-    absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
+    const absl::flat_hash_map<uint64_t, FunctionInfo>& selected_functions,
     TracepointInfoSet selected_tracepoints, absl::flat_hash_set<uint64_t> frame_track_function_ids,
     bool collect_thread_state, bool enable_introspection,
     uint64_t max_local_marker_depth_per_command_buffer) {
@@ -135,6 +135,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   capture_options->set_trace_gpu_driver(true);
   capture_options->set_max_local_marker_depth_per_command_buffer(
       max_local_marker_depth_per_command_buffer);
+  absl::flat_hash_map<uint64_t, InstrumentedFunction> instrumented_functions;
   for (const auto& [function_id, function] : selected_functions) {
     InstrumentedFunction* instrumented_function = capture_options->add_instrumented_functions();
     instrumented_function->set_file_path(function.loaded_module_path());
@@ -145,6 +146,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
     instrumented_function->set_function_name(function.pretty_name());
     instrumented_function->set_function_type(
         InstrumentedFunctionTypeFromOrbitType(function.orbit_type()));
+    instrumented_functions.insert_or_assign(function_id, *instrumented_function);
   }
 
   for (const auto& tracepoint : selected_tracepoints) {
@@ -180,7 +182,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
 
   CaptureEventProcessor event_processor(capture_listener_);
 
-  capture_listener_->OnCaptureStarted(std::move(process), std::move(selected_functions),
+  capture_listener_->OnCaptureStarted(std::move(process), std::move(instrumented_functions),
                                       std::move(selected_tracepoints),
                                       std::move(frame_track_function_ids));
 

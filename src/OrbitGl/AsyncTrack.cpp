@@ -27,8 +27,8 @@
 #include "TriangleToggle.h"
 #include "capture_data.pb.h"
 
-using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
+using orbit_grpc_protos::InstrumentedFunction;
 
 AsyncTrack::AsyncTrack(TimeGraph* time_graph, TimeGraphLayout* layout, const std::string& name,
                        OrbitApp* app, const CaptureData* capture_data)
@@ -46,13 +46,13 @@ AsyncTrack::AsyncTrack(TimeGraph* time_graph, TimeGraphLayout* layout, const std
 
   // The FunctionInfo here corresponds to one of the automatically instrumented empty stubs from
   // Orbit.h. Use it to retrieve the module from which the manually instrumented scope originated.
-  const FunctionInfo* func =
+  const InstrumentedFunction* func =
       capture_data_
           ? capture_data_->GetInstrumentedFunctionById(text_box->GetTimerInfo().function_id())
           : nullptr;
   CHECK(func || timer_info.type() == TimerInfo::kIntrospection);
   std::string module_name =
-      func != nullptr ? function_utils::GetLoadedModuleName(*func) : "unknown";
+      func != nullptr ? function_utils::GetLoadedModuleNameByPath(func->file_path()) : "unknown";
   const uint64_t event_id = event.data;
   std::string function_name = manual_inst_manager->GetString(event_id);
 

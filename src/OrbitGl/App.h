@@ -134,7 +134,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void OnCaptureStarted(
       ProcessData&& process,
-      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
+      absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions,
       TracepointInfoSet selected_tracepoints,
       absl::flat_hash_set<uint64_t> frame_track_function_ids) override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
@@ -363,7 +363,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] bool IsFunctionSelected(const orbit_client_protos::FunctionInfo& func) const;
   [[nodiscard]] bool IsFunctionSelected(const SampledFunction& func) const;
   [[nodiscard]] bool IsFunctionSelected(uint64_t absolute_address) const;
-  [[nodiscard]] const orbit_client_protos::FunctionInfo* GetInstrumentedFunction(
+  [[nodiscard]] const orbit_grpc_protos::InstrumentedFunction* GetInstrumentedFunction(
       uint64_t function_id) const;
 
   void SetVisibleFunctionIds(absl::flat_hash_set<uint64_t> visible_functions);
