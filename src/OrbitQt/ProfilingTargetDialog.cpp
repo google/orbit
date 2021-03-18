@@ -232,6 +232,7 @@ void ProfilingTargetDialog::SetupStadiaStates() {
   // STATE state_stadia_
   state_stadia_.addTransition(ui_->loadCaptureRadioButton, &QRadioButton::clicked,
                               &state_file_history_);
+  state_stadia_.addTransition(this, &ProfilingTargetDialog::FileSelected, &state_file_selected_);
   state_stadia_.addTransition(ui_->localProfilingRadioButton, &QRadioButton::clicked,
                               &state_local_history_);
   state_stadia_.addTransition(ui_->stadiaWidget, &ConnectToStadiaWidget::Disconnected,
@@ -317,6 +318,7 @@ void ProfilingTargetDialog::SetupLocalStates() {
                              &state_stadia_history_);
   state_local_.addTransition(ui_->loadCaptureRadioButton, &QRadioButton::clicked,
                              &state_file_history_);
+  state_local_.addTransition(this, &ProfilingTargetDialog::FileSelected, &state_file_selected_);
 
   // STATE state_local_connecting_
   state_local_connecting_.addTransition(this, &ProfilingTargetDialog::ProcessListUpdated,
@@ -372,7 +374,6 @@ void ProfilingTargetDialog::SetupFileStates() {
   state_file_.assignProperty(ui_->stadiaWidget, "active", false);
   state_file_.assignProperty(ui_->loadCaptureRadioButton, "checked", true);
   state_file_.assignProperty(ui_->processesFrame, "enabled", false);
-  state_file_.assignProperty(ui_->selectFileButton, "enabled", true);
   state_file_.assignProperty(ui_->localProfilingRadioButton, "checked", false);
   state_file_.assignProperty(ui_->targetLabel, "text", "");
 

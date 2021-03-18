@@ -190,7 +190,7 @@
             <item>
              <widget class="QPushButton" name="selectFileButton">
               <property name="enabled">
-               <bool>false</bool>
+               <bool>true</bool>
               </property>
               <property name="text">
                <string>...</string>
