@@ -157,7 +157,11 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
   float point_x = time_graph_->GetWorldFromTick(label_time);
   double normalized_value = (value - min_) * inv_value_range_;
   float point_y = pos_[1] - size_[1] * (1.f - static_cast<float>(normalized_value));
-  DrawLabel(canvas, Vec2(point_x, point_y), std::to_string(value), kBlack, kWhite, text_z);
+  std::string text = value_decimal_digits_.has_value()
+                         ? absl::StrFormat("%.*f", value_decimal_digits_.value(), value)
+                         : std::to_string(value);
+  absl::StrAppend(&text, label_unit_);
+  DrawLabel(canvas, Vec2(point_x, point_y), text, kBlack, kWhite, text_z);
 }
 
 void GraphTrack::DrawSquareDot(Batcher* batcher, Vec2 center, float radius, float z,
@@ -243,6 +247,11 @@ void GraphTrack::SetValueLowerBoundWhenEmpty(
     const std::optional<std::pair<std::string, double>>& value_lower_bound) {
   value_lower_bound_ = value_lower_bound;
   UpdateMinAndMax(value_lower_bound_.value().second);
+}
+
+void GraphTrack::SetValueDecimalDigitsWhenEmpty(uint8_t value_decimal_digits) {
+  if (value_decimal_digits_.has_value()) return;
+  value_decimal_digits_ = value_decimal_digits;
 }
 
 void GraphTrack::UpdateMinAndMax(double value) {

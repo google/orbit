@@ -426,6 +426,8 @@ void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
   const std::string kBuffersOrCachedLabel = "System Memory Buffers / Cached (MB)";
   const std::string kUsedLabel = "System Memory Used (MB)";
   const std::string kWarningThresholdLabel = "Production Limit";
+  const std::string kTrackValueLabelUnit = "MB";
+  constexpr uint8_t kTrackValueDecimalDigits = 2;
 
   std::optional<std::pair<std::string, uint64_t>> warning_threshold_pretty_name_and_raw_value =
       std::nullopt;
@@ -463,6 +465,8 @@ void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
     track = track_manager_->GetOrCreateGraphTrack(kBuffersOrCachedLabel);
     track->SetValueUpperBoundWhenEmpty(total_pretty_name_and_raw_value);
     track->SetValueLowerBoundWhenEmpty(minimum_pretty_name_and_raw_value);
+    track->SetLabelUnit(kTrackValueLabelUnit);
+    track->SetValueDecimalDigitsWhenEmpty(kTrackValueDecimalDigits);
     double buffers_or_cached_mb =
         static_cast<double>(buffers_kb + cached_kb) / kMegabytesToKilobytes;
     track->AddValue(buffers_or_cached_mb, timer_info.start());
@@ -474,6 +478,8 @@ void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
     track->SetWarningThresholdWhenEmpty(warning_threshold_pretty_name_and_raw_value);
     track->SetValueLowerBoundWhenEmpty(minimum_pretty_name_and_raw_value);
     track->SetValueUpperBoundWhenEmpty(total_pretty_name_and_raw_value);
+    track->SetLabelUnit(kTrackValueLabelUnit);
+    track->SetValueDecimalDigitsWhenEmpty(kTrackValueDecimalDigits);
     double used_mb =
         static_cast<double>(total_kb - unused_kb - buffers_kb - cached_kb) / kMegabytesToKilobytes;
     track->AddValue(used_mb, timer_info.start());
