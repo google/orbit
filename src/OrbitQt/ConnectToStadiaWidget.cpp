@@ -74,7 +74,7 @@ ConnectToStadiaWidget::ConnectToStadiaWidget(QWidget* parent)
   QObject::connect(ui_->instancesTableView->selectionModel(), &QItemSelectionModel::currentChanged,
                    this, &ConnectToStadiaWidget::OnSelectionChanged);
   QObject::connect(ui_->rememberCheckBox, &QCheckBox::toggled, this,
-                   &ConnectToStadiaWidget::OnRememberCheckBoxToggled);
+                   &ConnectToStadiaWidget::UpdateRememberInstance);
   QObject::connect(ui_->refreshButton, &QPushButton::clicked, this,
                    [this]() { emit InstanceReloadRequested(); });
 
@@ -352,9 +352,9 @@ void ConnectToStadiaWidget::OnSelectionChanged(const QModelIndex& current) {
   emit InstanceSelected();
 }
 
-void ConnectToStadiaWidget::OnRememberCheckBoxToggled(bool checked) {
+void ConnectToStadiaWidget::UpdateRememberInstance(bool value) {
   QSettings settings;
-  if (checked) {
+  if (value) {
     CHECK(selected_instance_ != std::nullopt);
     settings.setValue(kRememberChosenInstance, selected_instance_->id);
   } else {
