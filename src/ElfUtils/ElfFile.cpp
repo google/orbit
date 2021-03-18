@@ -12,6 +12,9 @@
 #include <llvm/ADT/Twine.h>
 #include <llvm/ADT/iterator_range.h>
 #include <llvm/BinaryFormat/ELF.h>
+#include <llvm/DebugInfo/DWARF/DWARFContext.h>
+#include <llvm/DebugInfo/DWARF/DWARFDebugLine.h>
+#include <llvm/DebugInfo/DWARF/DWARFFormValue.h>
 #include <llvm/DebugInfo/Symbolize/Symbolize.h>
 #include <llvm/Demangle/Demangle.h>
 #include <llvm/Object/Binary.h>
@@ -63,6 +66,8 @@ class ElfFileImpl : public ElfFile {
   [[nodiscard]] std::string GetSoname() const override;
   [[nodiscard]] std::filesystem::path GetFilePath() const override;
   [[nodiscard]] ErrorMessageOr<LineInfo> GetLineInfo(uint64_t address) override;
+  [[nodiscard]] ErrorMessageOr<LineInfo> GetDeclarationLocationOfFunction(
+      uint64_t address) override;
   [[nodiscard]] std::optional<GnuDebugLinkInfo> GetGnuDebugLinkInfo() const override;
 
  private:
@@ -444,6 +449,39 @@ ErrorMessageOr<LineInfo> orbit_elf_utils::ElfFileImpl<ElfT>::GetLineInfo(uint64_
   LineInfo line_info;
   line_info.set_source_file(last_frame.FileName);
   line_info.set_source_line(last_frame.Line);
+  return line_info;
+}
+
+template <typename ElfT>
+ErrorMessageOr<LineInfo> orbit_elf_utils::ElfFileImpl<ElfT>::GetDeclarationLocationOfFunction(
+    uint64_t address) {
+  const auto dwarf_context = llvm::DWARFContext::create(*owning_binary_.getBinary());
+  if (dwarf_context == nullptr) return ErrorMessage{"Could not read DWARF information."};
+
+  const auto offset = dwarf_context->getDebugAranges()->findAddress(address);
+  auto* const compile_unit = dwarf_context->getCompileUnitForOffset(offset);
+  if (compile_unit == nullptr) return ErrorMessage{"Invalid address"};
+
+  const auto subroutine = compile_unit->getSubroutineForAddress(address);
+  if (!subroutine.isValid()) return ErrorMessage{"Address not associated with any subroutine"};
+
+  const auto decl_file_index =
+      llvm::dwarf::toUnsigned(subroutine.findRecursively(llvm::dwarf::Attribute::DW_AT_decl_file));
+  if (!decl_file_index) return ErrorMessage{"Could not find source file location"};
+
+  const llvm::DWARFDebugLine::LineTable* const line_table =
+      dwarf_context->getLineTableForUnit(compile_unit);
+  if (line_table == nullptr) return ErrorMessage{"Line Table was missing in debug information"};
+
+  std::string file_path;
+  const auto result = line_table->getFileNameByIndex(
+      *decl_file_index, compile_unit->getCompilationDir(),
+      llvm::DILineInfoSpecifier::FileLineInfoKind::AbsoluteFilePath, file_path);
+  if (!result) return ErrorMessage{"Source declaration file path not found in debug information."};
+
+  LineInfo line_info{};
+  line_info.set_source_line(subroutine.getDeclLine());
+  line_info.set_source_file(file_path);
   return line_info;
 }
 

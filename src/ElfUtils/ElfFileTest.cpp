@@ -361,3 +361,20 @@ TEST(ElfFile, GetSonameForFileWithoutSoname) {
 
   EXPECT_EQ(elf_file_or_error.value()->GetSoname(), "");
 }
+
+TEST(ElfFile, GetDeclarationLocationOfFunction) {
+  const std::filesystem::path file_path =
+      orbit_base::GetExecutableDir() / "testdata" / "line_info_test_binary";
+
+  auto program = ElfFile::Create(file_path);
+  ASSERT_TRUE(program.has_value()) << program.error().message();
+
+  constexpr uint64_t kAddressOfMainFunction = 0x401140;
+  ErrorMessageOr<orbit_grpc_protos::LineInfo> decl_line_info =
+      program.value()->GetDeclarationLocationOfFunction(kAddressOfMainFunction);
+  ASSERT_TRUE(decl_line_info.has_value()) << decl_line_info.error().message();
+
+  EXPECT_EQ(decl_line_info.value().source_line(), 12);
+  EXPECT_EQ(std::filesystem::path{decl_line_info.value().source_file()}.filename().string(),
+            "LineInfoTestBinary.cpp");
+}
