@@ -629,7 +629,7 @@ void TracerThread::Shutdown() {
   {
     ORBIT_SCOPE_WITH_COLOR(
         absl::StrFormat("Closing %d file descriptors", tracing_fds_.size()).c_str(),
-        orbit::Color::kRed);
+        kOrbitColorRed);
     SCOPED_TIMED_LOG("Closing %d file descriptors", tracing_fds_.size());
     for (int fd : tracing_fds_) {
       ORBIT_SCOPE("Closing fd");

@@ -96,6 +96,23 @@ message IntrospectionScope {
   repeated uint64 registers = 6;
 }
 
+message ApiEvent {
+  int32 pid = 1;
+  int32 tid = 2;
+  uint64 timestamp_ns = 3;
+
+  // The fields below are used to encode orbit_api::EncodedEvent events. This is
+  // done mainly for the performance gain of not having to allocate memory out
+  // of the Arena for strings, but also to emulate the old uprobe-based use of
+  // registers to encode events. To review after deprecation (b/182485096).
+  fixed64 r0 = 4;
+  fixed64 r1 = 5;
+  fixed64 r2 = 6;
+  fixed64 r3 = 7;
+  fixed64 r4 = 8;
+  fixed64 r5 = 9;
+}
+
 message Callstack {
   repeated uint64 pcs = 1;
 }
@@ -304,6 +321,7 @@ message ClientCaptureEvent {
     // it is going to go away in the future when we switch to
     // frame-pointer based unwinding.
     AddressInfo address_info = 16;
+    ApiEvent api_event = 9;
     CallstackSample callstack_sample = 1;
     FunctionCall function_call = 2;
     GpuJob gpu_job = 3;
@@ -329,6 +347,7 @@ message ProducerCaptureEvent {
     // numbers starting with 16.
     //
     // Please keep these alphabetically ordered.
+    ApiEvent api_event = 10;
     CallstackSample callstack_sample = 1;
     FullCallstackSample full_callstack_sample = 2;
 

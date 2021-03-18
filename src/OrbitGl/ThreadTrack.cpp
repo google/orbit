@@ -130,6 +130,7 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
 
 bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
   return timer_info.type() == TimerInfo::kIntrospection ||
+         timer_info.type() == TimerInfo::kApiEvent ||
          app_->IsFunctionVisible(timer_info.function_id());
 }
 
@@ -143,14 +144,18 @@ bool ThreadTrack::IsTrackSelected() const {
 }
 
 [[nodiscard]] static inline std::optional<Color> GetUserColor(const TimerInfo& timer_info,
-                                                              const FunctionInfo& function_info) {
-  FunctionInfo::OrbitType type = function_info.orbit_type();
-  if (type != FunctionInfo::kOrbitTimerStart && type != FunctionInfo::kOrbitTimerStartAsync) {
+                                                              const FunctionInfo* function_info) {
+  FunctionInfo::OrbitType type = function_info ? function_info->orbit_type() : FunctionInfo::kNone;
+  bool manual_instrumentation_timer =
+      (type == FunctionInfo::kOrbitTimerStart || type == FunctionInfo::kOrbitTimerStartAsync ||
+       timer_info.type() == TimerInfo::kApiEvent);
+
+  if (!manual_instrumentation_timer) {
     return std::nullopt;
   }
 
   orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
-  if (event.color == orbit::Color::kAuto) {
+  if (event.color == kOrbitColorAuto) {
     return std::nullopt;
   }
 
@@ -173,17 +178,17 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
 
   uint64_t function_id = timer_info.function_id();
   const FunctionInfo* function_info = app_->GetInstrumentedFunction(function_id);
-  CHECK(function_info || timer_info.type() == TimerInfo::kIntrospection);
-  std::optional<Color> user_color =
-      function_info ? GetUserColor(timer_info, *function_info) : std::nullopt;
+  CHECK(function_info || timer_info.type() == TimerInfo::kIntrospection ||
+        timer_info.type() == TimerInfo::kApiEvent);
+  std::optional<Color> user_color = GetUserColor(timer_info, function_info);
 
   Color color = kInactiveColor;
   if (user_color.has_value()) {
     color = user_color.value();
   } else if (timer_info.type() == TimerInfo::kIntrospection) {
     orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
-    color = event.color == orbit::Color::kAuto ? TimeGraph::GetColor(event.name)
-                                               : ToColor(static_cast<uint64_t>(event.color));
+    color = event.color == kOrbitColorAuto ? TimeGraph::GetColor(event.name)
+                                           : ToColor(static_cast<uint64_t>(event.color));
   } else {
     color = TimeGraph::GetThreadColor(timer_info.thread_id());
   }
@@ -330,6 +335,12 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_u
     } else if (timer_info.type() == TimerInfo::kIntrospection) {
       auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
       std::string text = absl::StrFormat("%s %s", api_event.name, time.c_str());
+      text_box->SetText(text);
+    } else if (timer_info.type() == TimerInfo::kApiEvent) {
+      auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
+      std::string extra_info = GetExtraInfo(timer_info);
+      std::string text =
+          absl::StrFormat("%s %s %s", api_event.name, extra_info.c_str(), time.c_str());
       text_box->SetText(text);
     } else {
       ERROR(

@@ -174,6 +174,7 @@ class TimeGraph {
  protected:
   void ProcessOrbitFunctionTimer(orbit_client_protos::FunctionInfo::OrbitType type,
                                  const orbit_client_protos::TimerInfo& timer_info);
+  void ProcessApiEventTimer(const orbit_client_protos::TimerInfo& timer_info);
   void ProcessIntrospectionTimer(const orbit_client_protos::TimerInfo& timer_info);
   void ProcessValueTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
   void ProcessAsyncTimer(const std::string& track_name,

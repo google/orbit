@@ -15,14 +15,14 @@
 #include <imgui.h>
 #include <stddef.h>
 
+#include <filesystem>
+
 #include "GlCanvas.h"
 #include "Images.h"
 #include "OpenGl.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "absl/base/casts.h"
-
-#include <filesystem>
 
 ImFont* GOrbitImguiFont;
 

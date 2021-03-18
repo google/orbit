@@ -27,6 +27,7 @@ class ManualInstrumentationManager {
 
   void AddAsyncTimerListener(AsyncTimerInfoListener* listener);
   void RemoveAsyncTimerListener(AsyncTimerInfoListener* listener);
+  void ProcessAsyncTimerDeprecated(const orbit_client_protos::TimerInfo& timer_info);
   void ProcessAsyncTimer(const orbit_client_protos::TimerInfo& timer_info);
   void ProcessStringEvent(const orbit_api::Event& event);
   [[nodiscard]] std::string GetString(uint32_t id) const {

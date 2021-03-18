@@ -7,19 +7,21 @@ add_library(OrbitCaptureClient STATIC)
 
 target_compile_options(OrbitCaptureClient PRIVATE ${STRICT_COMPILE_FLAGS})
 
-target_include_directories(OrbitCaptureClient PUBLIC 
+target_include_directories(OrbitCaptureClient PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
-target_include_directories(OrbitCaptureClient PRIVATE 
+target_include_directories(OrbitCaptureClient PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
-target_sources(OrbitCaptureClient PUBLIC 
+target_sources(OrbitCaptureClient PUBLIC
+        include/OrbitCaptureClient/ApiEventProcessor.h
         include/OrbitCaptureClient/CaptureClient.h
         include/OrbitCaptureClient/CaptureListener.h
         include/OrbitCaptureClient/CaptureEventProcessor.h
         include/OrbitCaptureClient/GpuQueueSubmissionProcessor.h)
 
-target_sources(OrbitCaptureClient PRIVATE 
+target_sources(OrbitCaptureClient PRIVATE
+        ApiEventProcessor.cpp
         CaptureClient.cpp
         CaptureEventProcessor.cpp
         GpuQueueSubmissionProcessor.cpp)
@@ -38,6 +40,7 @@ add_executable(OrbitCaptureClientTests)
 target_compile_options(OrbitCaptureClientTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitCaptureClientTests PRIVATE
+        ApiEventProcessorTest.cpp
         CaptureEventProcessorTest.cpp)
 
 target_link_libraries(
