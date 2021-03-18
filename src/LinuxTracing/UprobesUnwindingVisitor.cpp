@@ -41,8 +41,9 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
   return_address_manager_.PatchSample(event->GetTid(), event->GetRegisters()[PERF_REG_X86_SP],
                                       event->GetStackData(), event->GetStackSize());
 
-  const std::vector<unwindstack::FrameData>& libunwindstack_callstack = unwinder_.Unwind(
-      current_maps_.get(), event->GetRegisters(), event->GetStackData(), event->GetStackSize());
+  const std::vector<unwindstack::FrameData>& libunwindstack_callstack =
+      unwinder_.Unwind(event->GetPid(), current_maps_.get(), event->GetRegisters(),
+                       event->GetStackData(), event->GetStackSize());
 
   // LibunwindstackUnwinder::Unwind signals an unwinding error with an empty callstack.
   if (libunwindstack_callstack.empty()) {
@@ -53,8 +54,7 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
   }
 
   // Callstacks with only one frame (the sampled address) are also unwinding errors, that were not
-  // reported as such by LibunwindstackUnwinder::Unwind. These are often samples falling inside the
-  // [vdso] map.
+  // reported as such by LibunwindstackUnwinder::Unwind.
   // Note that this doesn't exclude samples inside the main function of any thread as the main
   // function is never the outermost frame. For example, for the main thread the outermost function
   // is _start, followed by __libc_start_main. For other threads, the outermost function is clone.
