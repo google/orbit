@@ -41,6 +41,8 @@ class GraphTrack : public Track {
       const std::optional<std::pair<std::string, double>>& value_upper_bound);
   void SetValueLowerBoundWhenEmpty(
       const std::optional<std::pair<std::string, double>>& value_lower_bound);
+  void SetLabelUnit(const std::string& label_unit) { label_unit_ = label_unit; }
+  void SetValueDecimalDigitsWhenEmpty(uint8_t value_decimal_digits);
 
  protected:
   void DrawSquareDot(Batcher* batcher, Vec2 center, float radius, float z, const Color& color);
@@ -56,6 +58,8 @@ class GraphTrack : public Track {
   std::optional<std::pair<std::string, double>> warning_threshold_ = std::nullopt;
   std::optional<std::pair<std::string, double>> value_upper_bound_ = std::nullopt;
   std::optional<std::pair<std::string, double>> value_lower_bound_ = std::nullopt;
+  std::optional<uint8_t> value_decimal_digits_ = std::nullopt;
+  std::string label_unit_;
 };
 
 #endif  // ORBIT_GL_GRAPH_TRACK_H_
