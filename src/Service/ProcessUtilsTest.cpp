@@ -13,7 +13,7 @@
 #include "ProcessUtils.h"
 #include "module.pb.h"
 
-TEST(ProcessUtils, CreateProcessMemoryBackedModuleFromMapEntry) {
+TEST(ProcessUtils, CreateModuleFromProcessMemory) {
   const auto maps_data = orbit_elf_utils::ReadProcMapsFile(getpid());
   ASSERT_TRUE(maps_data.has_value());
 

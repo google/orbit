@@ -17,7 +17,7 @@ namespace orbit_service {
 // into account.
 ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ReadModulesFromProcMaps(int32_t pid);
 
-// CreateProcessMemoryBackedModuleFromMapEntry can create a ModuleInfo object by reading the ELF
+// CreateModuleFromProcessMemory can create a ModuleInfo object by reading the ELF
 // file from the mapped section in the target process. This is handy for modules which don't exist
 // on the filesystem like the [vdso] module.
 ErrorMessageOr<orbit_grpc_protos::ModuleInfo> CreateModuleFromProcessMemory(
