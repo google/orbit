@@ -544,15 +544,16 @@ void OrbitApp::ShowSourceCode(const orbit_client_protos::FunctionInfo& function)
           [this, module,
            function](const std::filesystem::path& local_file_path) -> ErrorMessageOr<void> {
             const auto elf_file = orbit_elf_utils::ElfFile::Create(local_file_path);
-            const auto first_line_info_or_error = elf_file.value()->GetLineInfo(function.address());
+            const auto decl_line_info_or_error =
+                elf_file.value()->GetDeclarationLocationOfFunction(function.address());
 
-            if (first_line_info_or_error.has_error()) {
+            if (decl_line_info_or_error.has_error()) {
               return ErrorMessage{absl::StrFormat(
-                  "Could not find source code line info for function \"%s\" in module \"%s\": %s",
+                  "Could not find source code location of function \"%s\" in module \"%s\": %s",
                   function.pretty_name(), module->file_path(),
-                  first_line_info_or_error.error().message())};
+                  decl_line_info_or_error.error().message())};
             }
-            const auto& line_info = first_line_info_or_error.value();
+            const auto& line_info = decl_line_info_or_error.value();
             auto source_file_path =
                 std::filesystem::path{line_info.source_file()}.lexically_normal();
 
