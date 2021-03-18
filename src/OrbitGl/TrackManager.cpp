@@ -349,9 +349,7 @@ GpuTrack* TrackManager::GetOrCreateGpuTrack(uint64_t timeline_hash) {
   return track.get();
 }
 
-GraphTrack* TrackManager::GetOrCreateGraphTrack(
-    const std::string& name, const std::optional<std::pair<std::string, double>>& warning_threshold,
-    const std::optional<std::pair<std::string, double>>& value_upper_bound) {
+GraphTrack* TrackManager::GetOrCreateGraphTrack(const std::string& name) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<GraphTrack> track = graph_tracks_[name];
   if (track == nullptr) {
@@ -359,14 +357,6 @@ GraphTrack* TrackManager::GetOrCreateGraphTrack(
     AddTrack(track);
     graph_tracks_[name] = track;
   }
-
-  if (!track->WarningThresholdSetHasValue() && warning_threshold.has_value()) {
-    track->SetWarningThreshold(warning_threshold);
-  }
-  if (!track->ValueUpperBoundHasValue() && value_upper_bound.has_value()) {
-    track->SetValueUpperBound(value_upper_bound);
-  }
-
   return track.get();
 }
 
