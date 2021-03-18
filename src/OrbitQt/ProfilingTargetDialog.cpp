@@ -120,7 +120,7 @@ ProfilingTargetDialog::ProfilingTargetDialog(
     ui_->localFrame->setVisible(true);
   }
 
-  QObject::connect(ui_->loadFromFileButton, &QPushButton::clicked, this,
+  QObject::connect(ui_->selectFileButton, &QPushButton::clicked, this,
                    &ProfilingTargetDialog::SelectFile);
   // This and the next connect makes the radiobuttons behave as if they were in a exclusive button
   // group. If a user clicks on one of these and it was not checked before, it is checked afterwards
@@ -384,7 +384,7 @@ void ProfilingTargetDialog::SetupFileStates() {
   state_file_.assignProperty(ui_->stadiaWidget, "active", false);
   state_file_.assignProperty(ui_->loadCaptureRadioButton, "checked", true);
   state_file_.assignProperty(ui_->processesFrame, "enabled", false);
-  state_file_.assignProperty(ui_->loadFromFileButton, "enabled", true);
+  state_file_.assignProperty(ui_->selectFileButton, "enabled", true);
   state_file_.assignProperty(ui_->localProfilingRadioButton, "checked", false);
 
   // STATE state_file_selected_

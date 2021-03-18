@@ -188,7 +188,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="loadFromFileButton">
+             <widget class="QPushButton" name="selectFileButton">
               <property name="enabled">
                <bool>false</bool>
               </property>
