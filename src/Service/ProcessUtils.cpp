@@ -49,11 +49,10 @@ ErrorMessageOr<orbit_grpc_protos::ModuleInfo> CreateModuleFromProcessMemory(
 
   const auto size = map_entry.end_address - map_entry.start_address;
 
-  // 8 MiB - That's also the limit that we support in the `ReadProcessMemory` gRPC endpoint.
-  // It's more than enough for reading [vdso] which is typically around 8 KiB.
-  if (size > 8 * 1024 * 1024) {
+  // 3 MiB - It's more than enough for reading [vdso] which is typically around 8 KiB.
+  if (size > 3 * 1024 * 1024) {
     return ErrorMessage{absl::StrFormat(
-        "Module \"%s\" has a size of %d bytes (> 8MiB) and is too large to be read.",
+        "Module \"%s\" has a size of %d bytes (> 3MiB) and is too large to be read.",
         map_entry.module_path, size)};
   }
 
