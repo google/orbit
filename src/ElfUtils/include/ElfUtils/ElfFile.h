@@ -64,6 +64,8 @@ class ElfFile {
   [[nodiscard]] virtual std::filesystem::path GetFilePath() const = 0;
   [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::LineInfo> GetLineInfo(
       uint64_t address) = 0;
+  [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::LineInfo>
+  GetDeclarationLocationOfFunction(uint64_t address) = 0;
   [[nodiscard]] virtual std::optional<GnuDebugLinkInfo> GetGnuDebugLinkInfo() const = 0;
 
   [[nodiscard]] static ErrorMessageOr<std::unique_ptr<ElfFile>> Create(
