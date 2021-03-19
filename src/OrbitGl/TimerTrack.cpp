@@ -59,8 +59,7 @@ float TimerTrack::GetYFromTimer(const TimerInfo& timer_info) const {
 }
 
 float TimerTrack::GetYFromDepth(uint32_t depth) const {
-  const TimeGraphLayout& layout = time_graph_->GetLayout();
-  return pos_[1] - GetHeaderHeight() - layout.GetSpaceBetweenTracksAndThread() -
+  return pos_[1] - GetHeaderHeight() - layout_->GetSpaceBetweenTracksAndThread() -
          box_height_ * static_cast<float>(depth + 1);
 }
 
