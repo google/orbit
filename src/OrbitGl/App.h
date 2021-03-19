@@ -416,9 +416,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
  private:
   void AddSymbols(const std::filesystem::path& module_file_path,
                   const orbit_grpc_protos::ModuleSymbols& symbols);
-  void LoadSymbols(const std::filesystem::path& symbols_path, ModuleData* module_data,
-                   std::vector<uint64_t> function_hashes_to_hook,
-                   std::vector<uint64_t> frame_track_function_hashes);
 
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleFromRemote(
       const std::string& module_file_path);
