@@ -54,6 +54,9 @@ class TrackManager {
 
   [[nodiscard]] float GetTracksTotalHeight() const { return tracks_total_height_; }
 
+  [[nodiscard]] uint32_t GetNumTimers() const;
+  [[nodiscard]] std::pair<uint64_t, uint64_t> GetTracksMinMaxTimestamps() const;
+
   SchedulerTrack* GetOrCreateSchedulerTrack();
   ThreadTrack* GetOrCreateThreadTrack(int32_t tid);
   GpuTrack* GetOrCreateGpuTrack(uint64_t timeline_hash);
@@ -73,6 +76,7 @@ class TrackManager {
 
   void UpdateTrackPositions();
 
+  // TODO(b/174655559): Use absl's mutex here.
   mutable std::recursive_mutex mutex_;
 
   std::vector<std::shared_ptr<Track>> all_tracks_;

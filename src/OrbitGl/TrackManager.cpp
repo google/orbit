@@ -402,3 +402,31 @@ FrameTrack* TrackManager::GetOrCreateFrameTrack(
 
   return track.get();
 }
+
+uint32_t TrackManager::GetNumTimers() const {
+  uint32_t num_timers = 0;
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  for (const auto& track : GetAllTracks()) {
+    num_timers += track->GetNumTimers();
+  }
+  // Frame tracks are removable by users and cannot simply be thrown into the
+  // tracks_ vector.
+  for (const auto& track : GetFrameTracks()) {
+    num_timers += track->GetNumTimers();
+  }
+  return num_timers;
+}
+
+std::pair<uint64_t, uint64_t> TrackManager::GetTracksMinMaxTimestamps() const {
+  uint64_t min_time = std::numeric_limits<uint64_t>::max();
+  uint64_t max_time = std::numeric_limits<uint64_t>::min();
+
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  for (auto& track : GetAllTracks()) {
+    if (!track->IsEmpty()) {
+      min_time = std::min(min_time, track->GetMinTime());
+      max_time = std::max(max_time, track->GetMaxTime());
+    }
+  }
+  return std::make_pair(min_time, max_time);
+}
