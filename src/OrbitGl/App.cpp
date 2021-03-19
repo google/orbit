@@ -1460,6 +1460,8 @@ void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {
 }
 
 void OrbitApp::UpdateProcessAndModuleList() {
+  functions_data_view_->ClearFunctions();
+
   auto module_infos = thread_pool_->Schedule(
       [this] { return GetProcessManager()->LoadModuleList(GetTargetProcess()->pid()); });
 
