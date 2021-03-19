@@ -39,7 +39,7 @@ class TimerBlock {
   // Adds an item to the block. If capacity of this block is reached, a new
   // blocked is allocated and the item is added to the new block.
   void Add(const TextBox& item);
-  [[nodiscard]] TextBox* Last() {
+  [[nodiscard]] TextBox* GetLast() {
     CHECK(size_ > 0);
     CHECK(size_ <= kBlockSize);
     return &data_[size_ - 1];
@@ -114,7 +114,6 @@ class TimerChain {
   ~TimerChain();
 
   void push_back(const TextBox& item) { current_->Add(item); }
-  [[nodiscard]] TextBox* Last() { return current_->Last(); }
   [[nodiscard]] bool empty() const { return num_items_ == 0; }
   [[nodiscard]] uint64_t size() const { return num_items_; }
 
@@ -123,6 +122,8 @@ class TimerChain {
   [[nodiscard]] TextBox* GetElementAfter(const TextBox* element) const;
 
   [[nodiscard]] TextBox* GetElementBefore(const TextBox* element) const;
+
+  [[nodiscard]] TextBox* GetLast() { return current_->GetLast(); }
 
   [[nodiscard]] TimerChainIterator begin() { return TimerChainIterator(root_); }
 

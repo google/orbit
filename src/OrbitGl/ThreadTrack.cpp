@@ -417,7 +417,7 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
   CHECK(timer_chain != nullptr);
   {
     absl::MutexLock lock(&scope_tree_mutex_);
-    scope_tree_.Insert(timer_chain->Last());
+    scope_tree_.Insert(timer_chain->GetLast());
   }
 }
 
@@ -453,13 +453,13 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
   UpdatePrimitivesOfSubtracks(batcher, min_tick, max_tick, picking_mode, z_offset);
   UpdateBoxHeight();
 
-  internal::DrawData draw_data = GetDrawData(
+  const internal::DrawData draw_data = GetDrawData(
       min_tick, max_tick, z_offset, batcher, time_graph_, collapse_toggle_->IsCollapsed(),
       app_->selected_text_box(), app_->GetFunctionIdToHighlight());
 
   absl::MutexLock lock(&scope_tree_mutex_);
 
-  for (auto& [depth, ordered_nodes] : scope_tree_.GetOrderedNodesByDepth()) {
+  for (const auto& [depth, ordered_nodes] : scope_tree_.GetOrderedNodesByDepth()) {
     auto first_node_to_draw = ordered_nodes.lower_bound(min_tick);
     if (first_node_to_draw != ordered_nodes.begin()) --first_node_to_draw;
 
