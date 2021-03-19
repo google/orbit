@@ -99,24 +99,30 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
     return "";
   }
 
+  const TimerInfo& timer_info = text_box->GetTimerInfo();
+
   const InstrumentedFunction* func =
       capture_data_
-          ? capture_data_->GetInstrumentedFunctionById(text_box->GetTimerInfo().function_id())
+          ? capture_data_->GetInstrumentedFunctionById(timer_info.function_id())
           : nullptr;
 
-  if (!func) {
+  std::string function_name;
+  bool is_manual = (func != nullptr && func->orbit_type() == FunctionInfo::kOrbitTimerStart) ||
+                   timer_info.type() == TimerInfo::kApiEvent;
+
+  if (!func && !is_manual) {
     return text_box->GetText();
   }
 
-  std::string function_name;
-  bool is_manual = func->function_type() == InstrumentedFunction::kTimerStart;
   if (is_manual) {
-    const TimerInfo& timer_info = text_box->GetTimerInfo();
     auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
     function_name = api_event.name;
   } else {
     function_name = func->function_name();
   }
+
+  std::string module_name =
+      func != nullptr ? function_utils::GetLoadedModuleName(*func->file_path()) : "unknown";
 
   return absl::StrFormat(
       "<b>%s</b><br/>"
@@ -124,8 +130,7 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
       "<br/><br/>"
       "<b>Module:</b> %s<br/>"
       "<b>Time:</b> %s",
-      function_name, is_manual ? "manual" : "dynamic",
-      function_utils::GetLoadedModuleNameByPath(func->file_path()),
+      function_name, is_manual ? "manual" : "dynamic", module_name,
       GetPrettyTime(
           TicksToDuration(text_box->GetTimerInfo().start(), text_box->GetTimerInfo().end())));
 }
@@ -416,10 +421,9 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
   }
 }
 
-[[nodiscard]] static inline internal::Rect GetTimerInfoRect(const TimerInfo& timer_info,
-                                                            const internal::DrawData& draw_data,
-                                                            const TimeGraph* time_graph,
-                                                            float world_pos_y, float world_size_y) {
+static inline void ResizeTextBox(const internal::DrawData& draw_data, const TimeGraph* time_graph,
+                                 float world_pos_y, float world_size_y, TextBox* text_box) {
+  const TimerInfo& timer_info = text_box->GetTimerInfo();
   double start_us = time_graph->GetUsFromTick(timer_info.start());
   double end_us = time_graph->GetUsFromTick(timer_info.end());
   double elapsed_us = end_us - start_us;
@@ -428,7 +432,8 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
   float world_timer_width = static_cast<float>(normalized_length * draw_data.world_width);
   float world_timer_x =
       static_cast<float>(draw_data.world_start_x + normalized_start * draw_data.world_width);
-  return internal::Rect(world_timer_x, world_pos_y, world_timer_width, world_size_y);
+  text_box->SetPos({world_timer_x, world_pos_y});
+  text_box->SetSize({world_timer_width, world_size_y});
 }
 
 [[nodiscard]] static inline uint64_t GetNextPixelBoundaryTimeNs(
@@ -443,9 +448,11 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
 // this has no effect. When zoomed  out, many events will be discarded quickly.
 void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                    PickingMode picking_mode, float z_offset) {
+  CHECK(batcher);
+  visible_timer_count_ = 0;
   UpdatePrimitivesOfSubtracks(batcher, min_tick, max_tick, picking_mode, z_offset);
   UpdateBoxHeight();
-  visible_timer_count_ = 0;
+
   internal::DrawData draw_data = GetDrawData(
       min_tick, max_tick, z_offset, batcher, time_graph_, collapse_toggle_->IsCollapsed(),
       app_->selected_text_box(), app_->GetFunctionIdToHighlight());
@@ -462,25 +469,25 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
 
     for (auto it = first_node_to_draw; it != ordered_nodes.end() && it->first < max_tick; ++it) {
       TextBox& text_box = *it->second->GetScope();
-      const TimerInfo& timer_info = text_box.GetTimerInfo();
-      if (timer_info.end() <= next_pixel_start_time_ns) continue;
+      if (text_box.End() <= next_pixel_start_time_ns) continue;
       ++visible_timer_count_;
 
       Color color = GetTimerColor(text_box, draw_data);
-      auto rect = GetTimerInfoRect(timer_info, draw_data, time_graph_, world_timer_y, box_height_);
-      text_box.SetPosAndSize(rect.pos, rect.size);
-      auto user_data = std::make_unique<PickingUserData>(
-          &text_box, [&, batcher](PickingId id) { return this->GetBoxTooltip(*batcher, id); });
+      std::unique_ptr<PickingUserData> user_data = CreatePickingUserData(*batcher, text_box);
 
-      if ((timer_info.end() - timer_info.start()) > draw_data.ns_per_pixel) {
-        SetTimesliceText(timer_info, draw_data.world_start_x, z_offset, &text_box);
-        batcher->AddShadedBox(rect.pos, rect.size, draw_data.z, color, std::move(user_data));
+      ResizeTextBox(draw_data, time_graph_, world_timer_y, box_height_, &text_box);
+      const Vec2& pos = text_box.GetPos();
+      const Vec2& size = text_box.GetSize();
+
+      if (text_box.Duration() > draw_data.ns_per_pixel) {
+        SetTimesliceText(text_box.GetTimerInfo(), draw_data.world_start_x, z_offset, &text_box);
+        batcher->AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
       } else {
-        batcher->AddVerticalLine(rect.pos, rect.size[1], draw_data.z, color, std::move(user_data));
+        batcher->AddVerticalLine(pos, box_height_, draw_data.z, color, std::move(user_data));
       }
 
       // Use the time at boundary of the next pixel as a threshold to avoid overdraw.
-      next_pixel_start_time_ns = GetNextPixelBoundaryTimeNs(rect.pos[0] + rect.size[0], draw_data);
+      next_pixel_start_time_ns = GetNextPixelBoundaryTimeNs(pos[0] + size[0], draw_data);
     }
   }
 }

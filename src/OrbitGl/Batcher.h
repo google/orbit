@@ -26,11 +26,12 @@
 using TooltipCallback = std::function<std::string(PickingId)>;
 
 struct PickingUserData {
-  TextBox* text_box_;
+  const TextBox* text_box_;
   TooltipCallback generate_tooltip_;
   const void* custom_data_ = nullptr;
 
-  explicit PickingUserData(TextBox* text_box = nullptr, TooltipCallback generate_tooltip = nullptr)
+  explicit PickingUserData(const TextBox* text_box = nullptr,
+                           TooltipCallback generate_tooltip = nullptr)
       : text_box_(text_box), generate_tooltip_(std::move(generate_tooltip)) {}
 };
 

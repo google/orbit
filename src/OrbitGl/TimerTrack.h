@@ -46,13 +46,6 @@ struct DrawData {
   float z;
   bool is_collapsed;
 };
-
-struct Rect {
-  Rect(float pos_x, float pos_y, float size_x, float size_y)
-      : pos(pos_x, pos_y), size(size_x, size_y) {}
-  Vec2 pos;
-  Vec2 size;
-};
 }  // namespace internal
 
 class TimerTrack : public Track {
@@ -139,6 +132,12 @@ class TimerTrack : public Track {
   int visible_timer_count_ = 0;
 
   [[nodiscard]] virtual std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const;
+  [[nodiscard]] std::unique_ptr<PickingUserData> CreatePickingUserData(const Batcher& batcher,
+                                                                       const TextBox& text_box) {
+    return std::make_unique<PickingUserData>(
+        &text_box, [this, &batcher](PickingId id) { return this->GetBoxTooltip(batcher, id); });
+  }
+
   float GetHeight() const override;
   float box_height_ = 0.0f;
 

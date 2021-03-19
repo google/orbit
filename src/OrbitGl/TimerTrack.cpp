@@ -204,12 +204,8 @@ bool TimerTrack::DrawTimer(const TextBox* prev_text_box, const TextBox* next_tex
         world_x_info_right_overlap.world_x_start + world_x_info_right_overlap.world_x_width,
         world_timer_y, draw_data.z);
     Batcher* batcher = draw_data.batcher;
-    draw_data.batcher->AddShadedTrapezium(
-        top_left, bottom_left, bottom_right, top_right, color,
-        std::make_unique<PickingUserData>(current_text_box, [&, batcher](PickingId id) {
-          return this->GetBoxTooltip(*batcher, id);
-        }));
-
+    draw_data.batcher->AddShadedTrapezium(top_left, bottom_left, bottom_right, top_right, color,
+                                          CreatePickingUserData(*batcher, *current_text_box));
   } else {
     Batcher* batcher = draw_data.batcher;
     auto user_data = std::make_unique<PickingUserData>(
