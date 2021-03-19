@@ -219,9 +219,6 @@ class TimeGraph {
 
   Batcher batcher_;
 
-  // TODO(b/174655559): Use absl's mutex here.
-  mutable std::recursive_mutex mutex_;
-
   std::unique_ptr<TrackManager> track_manager_;
 
   absl::flat_hash_map<int32_t, std::vector<orbit_client_protos::CallstackEvent>>

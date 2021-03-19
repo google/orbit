@@ -68,13 +68,10 @@ TimeGraph::~TimeGraph() {
 double GNumHistorySeconds = 2.f;
 
 void TimeGraph::UpdateCaptureMinMaxTimestamps() {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  for (auto& track : track_manager_->GetAllTracks()) {
-    if (!track->IsEmpty()) {
-      capture_min_timestamp_ = std::min(capture_min_timestamp_, track->GetMinTime());
-      capture_max_timestamp_ = std::max(capture_max_timestamp_, track->GetMaxTime());
-    }
-  }
+  auto [tracks_min_time, tracks_max_time] = track_manager_->GetTracksMinMaxTimestamps();
+
+  capture_min_timestamp_ = std::min(capture_min_timestamp_, tracks_min_time);
+  capture_max_timestamp_ = std::max(capture_max_timestamp_, tracks_max_time);
 }
 
 void TimeGraph::ZoomAll() {
@@ -414,20 +411,6 @@ void TimeGraph::ProcessValueTrackingTimer(const TimerInfo& timer_info) {
 void TimeGraph::ProcessAsyncTimer(const std::string& track_name, const TimerInfo& timer_info) {
   AsyncTrack* track = track_manager_->GetOrCreateAsyncTrack(track_name);
   track->OnTimer(timer_info);
-}
-
-uint32_t TimeGraph::GetNumTimers() const {
-  uint32_t num_timers = 0;
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  for (const auto& track : track_manager_->GetAllTracks()) {
-    num_timers += track->GetNumTimers();
-  }
-  // Frame tracks are removable by users and cannot simply be thrown into the
-  // tracks_ vector.
-  for (const auto& track : track_manager_->GetFrameTracks()) {
-    num_timers += track->GetNumTimers();
-  }
-  return num_timers;
 }
 
 std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllTimerChains() const {
