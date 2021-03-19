@@ -18,7 +18,6 @@
 #include "CoreMath.h"
 #include "OrbitClientData/CallstackTypes.h"
 #include "PickingManager.h"
-#include "ScopeTree.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
 #include "TimerChain.h"

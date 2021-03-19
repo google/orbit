@@ -14,6 +14,7 @@
 #include "CallstackThreadBar.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
+#include "ScopeTree.h"
 #include "TextBox.h"
 #include "ThreadStateBar.h"
 #include "TimerTrack.h"
