@@ -1354,47 +1354,6 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
   return result_future;
 }
 
-void OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path, ModuleData* module_data,
-                           std::vector<uint64_t> function_hashes_to_hook,
-                           std::vector<uint64_t> frame_track_function_hashes) {
-  // This overload will be removed in a subsequent commit.
-
-  const auto handle_hooks_and_frame_tracks =
-      [function_hashes_to_hook = std::move(function_hashes_to_hook),
-       frame_track_function_hashes = std::move(frame_track_function_hashes), module_data,
-       symbols_path, this](const ErrorMessageOr<void>& result) {
-        if (result.has_error()) {
-          std::string error_message{absl::StrFormat(
-              "Unable to load symbols for %s from file %s: %s", module_data->file_path(),
-              symbols_path.string(), result.error().message())};
-          ERROR("%s", error_message);
-          crash_handler_->DumpWithoutCrash();
-          SendErrorToUi("Unexpected error while loading symbols", error_message);
-          return;
-        }
-
-        if (!function_hashes_to_hook.empty()) {
-          SelectFunctionsFromHashes(module_data, function_hashes_to_hook);
-          LOG("Auto hooked functions in module \"%s\"", module_data->file_path());
-        }
-
-        if (!frame_track_function_hashes.empty()) {
-          EnableFrameTracksFromHashes(module_data, frame_track_function_hashes);
-          LOG("Added frame tracks in module \"%s\"", module_data->file_path());
-        }
-
-        UpdateAfterSymbolLoading();
-        FireRefreshCallbacks();
-      };
-
-  const auto future = LoadSymbols(symbols_path, module_data->file_path())
-                          .Then(main_thread_executor_, std::move(handle_hooks_and_frame_tracks));
-
-  // We discard this future and don't wait for it to complete, as this was the original
-  // behaviour of this function which needs to be preserved.
-  (void)future;
-}
-
 orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPresetModule(
     const std::string& module_path, const orbit_client_protos::PresetModule& preset_module) {
   if (!GetTargetProcess()->IsModuleLoaded(module_path)) {
