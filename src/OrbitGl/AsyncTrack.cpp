@@ -93,9 +93,9 @@ void AsyncTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   TimerTrack::OnTimer(new_timer_info);
 }
 
-void AsyncTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us, float min_x,
-                                  float z_offset, TextBox* text_box) {
-  std::string time = GetPrettyTime(absl::Microseconds(elapsed_us));
+void AsyncTrack::SetTimesliceText(const TimerInfo& timer_info, float min_x, float z_offset,
+                                  TextBox* text_box) {
+  std::string time = GetPrettyTime(absl::Nanoseconds(timer_info.end() - timer_info.start()));
   text_box->SetElapsedTimeTextLength(time.length());
 
   orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);

@@ -18,6 +18,7 @@
 #include "CoreMath.h"
 #include "OrbitClientData/CallstackTypes.h"
 #include "PickingManager.h"
+#include "ScopeTree.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
 #include "TimerChain.h"
@@ -34,7 +35,7 @@ struct DrawData {
   uint64_t min_tick;
   uint64_t max_tick;
   uint64_t highlighted_function_id;
-  uint64_t pixel_delta_in_ticks;
+  uint64_t ns_per_pixel;
   uint64_t min_timegraph_tick;
   Batcher* batcher;
   GlCanvas* canvas;
@@ -45,6 +46,13 @@ struct DrawData {
   float z_offset;
   float z;
   bool is_collapsed;
+};
+
+struct Rect {
+  Rect(float pos_x, float pos_y, float size_x, float size_y)
+      : pos(pos_x, pos_y), size(size_x, size_y) {}
+  Vec2 pos;
+  Vec2 size;
 };
 }  // namespace internal
 
@@ -89,6 +97,7 @@ class TimerTrack : public Track {
   [[nodiscard]] virtual float GetTextBoxHeight(
       const orbit_client_protos::TimerInfo& /*timer_info*/) const;
   [[nodiscard]] virtual float GetYFromTimer(const orbit_client_protos::TimerInfo& timer_info) const;
+  [[nodiscard]] float GetYFromDepth(uint32_t depth) const;
 
   [[nodiscard]] virtual float GetHeaderHeight() const;
 
@@ -115,9 +124,15 @@ class TimerTrack : public Track {
   }
   [[nodiscard]] std::shared_ptr<TimerChain> GetTimers(uint32_t depth) const;
 
-  virtual void SetTimesliceText(const orbit_client_protos::TimerInfo& /*timer*/,
-                                double /*elapsed_us*/, float /*min_x*/, float /*z_offset*/,
-                                TextBox* /*text_box*/) {}
+  virtual void SetTimesliceText(const orbit_client_protos::TimerInfo& /*timer*/, float /*min_x*/,
+                                float /*z_offset*/, TextBox* /*text_box*/) {}
+
+  [[nodiscard]] static internal::DrawData GetDrawData(uint64_t min_tick, uint64_t max_tick,
+                                                      float z_offset, Batcher* batcher,
+                                                      TimeGraph* time_graph, bool is_collapsed,
+                                                      const TextBox* selected_textbox,
+                                                      uint64_t highlighted_function_id);
+
   TextRenderer* text_renderer_ = nullptr;
   uint32_t depth_ = 0;
   mutable absl::Mutex mutex_;

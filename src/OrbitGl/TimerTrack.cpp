@@ -55,8 +55,13 @@ std::string TimerTrack::GetExtraInfo(const TimerInfo& timer_info) {
 }
 
 float TimerTrack::GetYFromTimer(const TimerInfo& timer_info) const {
-  return pos_[1] - GetHeaderHeight() - layout_->GetSpaceBetweenTracksAndThread() -
-         box_height_ * static_cast<float>(timer_info.depth() + 1);
+  return GetYFromDepth(timer_info.depth());
+}
+
+float TimerTrack::GetYFromDepth(uint32_t depth) const {
+  const TimeGraphLayout& layout = time_graph_->GetLayout();
+  return pos_[1] - GetHeaderHeight() - layout.GetSpaceBetweenTracksAndThread() -
+         box_height_ * static_cast<float>(depth + 1);
 }
 
 void TimerTrack::UpdateBoxHeight() { box_height_ = layout_->GetTextBoxHeight(); }
@@ -166,7 +171,7 @@ bool TimerTrack::DrawTimer(const TextBox* prev_text_box, const TextBox* next_tex
       current_text_box->SetPos(pos);
       current_text_box->SetSize(size);
 
-      SetTimesliceText(current_timer_info, elapsed_us, draw_data.world_start_x, draw_data.z_offset,
+      SetTimesliceText(current_timer_info, draw_data.world_start_x, draw_data.z_offset,
                        current_text_box);
     }
   }
@@ -219,15 +224,15 @@ bool TimerTrack::DrawTimer(const TextBox* prev_text_box, const TextBox* next_tex
                                        color, std::move(user_data));
     // For lines, we can ignore the entire pixel into which this event
     // falls. We align this precisely on the pixel x-coordinate of the
-    // current line being drawn (in ticks). If pixel_delta_in_ticks is
+    // current line being drawn (in ticks). If ns_per_pixel is
     // zero, we need to avoid dividing by zero, but we also wouldn't
     // gain anything here.
-    if (draw_data.pixel_delta_in_ticks != 0) {
-      *min_ignore = draw_data.min_timegraph_tick +
-                    ((current_timer_info.start() - draw_data.min_timegraph_tick) /
-                     draw_data.pixel_delta_in_ticks) *
-                        draw_data.pixel_delta_in_ticks;
-      *max_ignore = *min_ignore + draw_data.pixel_delta_in_ticks;
+    if (draw_data.ns_per_pixel != 0) {
+      *min_ignore =
+          draw_data.min_timegraph_tick +
+          ((current_timer_info.start() - draw_data.min_timegraph_tick) / draw_data.ns_per_pixel) *
+              draw_data.ns_per_pixel;
+      *max_ignore = *min_ignore + draw_data.ns_per_pixel;
     }
   }
 
@@ -264,7 +269,7 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
   // enough that all events are drawn as boxes, this has no effect. When zoomed
   // out, many events will be discarded quickly.
   uint64_t time_window_ns = static_cast<uint64_t>(1000 * time_graph_->GetTimeWindowUs());
-  draw_data.pixel_delta_in_ticks = time_window_ns / draw_data.canvas->GetWidth();
+  draw_data.ns_per_pixel = time_window_ns / draw_data.canvas->GetWidth();
   draw_data.min_timegraph_tick = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
 
   for (auto& chain : chains_by_depth) {
@@ -287,8 +292,8 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
       if (!block.Intersects(min_tick, max_tick)) continue;
 
       for (size_t k = 0; k < block.size(); ++k) {
-        // The current index (k) points to the "next" text box and we want to draw the text box from
-        // the previous iteration ("current").
+        // The current index (k) points to the "next" text box and we want to draw the text box
+        // from the previous iteration ("current").
         next_text_box = &block[k];
 
         if (DrawTimer(prev_text_box, next_text_box, draw_data, current_text_box, &min_ignore,
@@ -300,6 +305,7 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
         current_text_box = next_text_box;
       }
     }
+
     // We still need to draw the last timer.
     next_text_box = nullptr;
     if (DrawTimer(prev_text_box, next_text_box, draw_data, current_text_box, &min_ignore,
@@ -327,6 +333,7 @@ void TimerTrack::OnTimer(const TimerInfo& timer_info) {
     timers_[timer_info.depth()] = timer_chain;
   }
   timer_chain->push_back(text_box);
+
   ++num_timers_;
   if (timer_info.start() < min_time_) min_time_ = timer_info.start();
   if (timer_info.end() > max_time_) max_time_ = timer_info.end();
@@ -427,3 +434,27 @@ std::string TimerTrack::GetBoxTooltip(const Batcher& /*batcher*/, PickingId /*id
 }
 
 float TimerTrack::GetHeaderHeight() const { return layout_->GetEventTrackHeight(); }
+
+internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick, float z_offset,
+                                           Batcher* batcher, TimeGraph* time_graph,
+                                           bool is_collapsed, const TextBox* selected_textbox,
+                                           uint64_t highlighted_function_id) {
+  internal::DrawData draw_data;
+  draw_data.min_tick = min_tick;
+  draw_data.max_tick = max_tick;
+  draw_data.z_offset = z_offset;
+  draw_data.batcher = batcher;
+  draw_data.canvas = time_graph->GetCanvas();
+  draw_data.world_start_x = draw_data.canvas->GetWorldTopLeftX();
+  draw_data.world_width = draw_data.canvas->GetWorldWidth();
+  draw_data.inv_time_window = 1.0 / time_graph->GetTimeWindowUs();
+  draw_data.is_collapsed = is_collapsed;
+  draw_data.z = GlCanvas::kZValueBox + z_offset;
+  draw_data.selected_textbox = selected_textbox;
+  draw_data.highlighted_function_id = highlighted_function_id;
+
+  uint64_t time_window_ns = static_cast<uint64_t>(1000 * time_graph->GetTimeWindowUs());
+  draw_data.ns_per_pixel = time_window_ns / draw_data.canvas->GetWidth();
+  draw_data.min_timegraph_tick = time_graph->GetTickFromUs(time_graph->GetMinTimeUs());
+  return draw_data;
+}

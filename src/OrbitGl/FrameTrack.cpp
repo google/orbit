@@ -156,10 +156,10 @@ void FrameTrack::OnTimer(const TimerInfo& timer_info) {
   TimerTrack::OnTimer(timer_info);
 }
 
-void FrameTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us, float min_x,
-                                  float z_offset, TextBox* text_box) {
+void FrameTrack::SetTimesliceText(const TimerInfo& timer_info, float min_x, float z_offset,
+                                  TextBox* text_box) {
   if (text_box->GetText().empty()) {
-    std::string time = GetPrettyTime(absl::Microseconds(elapsed_us));
+    std::string time = GetPrettyTime(absl::Nanoseconds(timer_info.end() - timer_info.start()));
     text_box->SetElapsedTimeTextLength(time.length());
 
     std::string text = absl::StrFormat("Frame #%u: %s", timer_info.user_data_key(), time.c_str());

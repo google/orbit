@@ -38,15 +38,15 @@ class ThreadTrack final : public TimerTrack {
   [[nodiscard]] const TextBox* GetRight(const TextBox* textbox) const override;
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
+  void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                        PickingMode picking_mode, float z_offset = 0) override;
+  void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 
   void OnPick(int x, int y) override;
 
   void UpdateBoxHeight() override;
   void SetTrackColor(Color color);
   [[nodiscard]] bool IsEmpty() const override;
-
-  void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                        PickingMode picking_mode, float z_offset = 0) override;
 
   [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() override;
 
@@ -56,19 +56,25 @@ class ThreadTrack final : public TimerTrack {
 
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer, bool is_selected,
                                     bool is_highlighted) const override;
-  void SetTimesliceText(const orbit_client_protos::TimerInfo& timer, double elapsed_us, float min_x,
-                        float z_offset, TextBox* text_box) override;
+  [[nodiscard]] Color GetTimerColor(const TextBox& text_box, const internal::DrawData& draw_data);
+  void SetTimesliceText(const orbit_client_protos::TimerInfo& timer, float min_x, float z_offset,
+                        TextBox* text_box) override;
   [[nodiscard]] std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const override;
 
   [[nodiscard]] float GetHeight() const override;
   [[nodiscard]] float GetHeaderHeight() const override;
 
   void UpdatePositionOfSubtracks();
+  void UpdatePrimitivesOfSubtracks(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                                   PickingMode picking_mode, float z_offset);
   void UpdateMinMaxTimestamps();
 
   std::shared_ptr<orbit_gl::ThreadStateBar> thread_state_bar_;
   std::shared_ptr<orbit_gl::CallstackThreadBar> event_bar_;
   std::shared_ptr<orbit_gl::TracepointThreadBar> tracepoint_bar_;
+
+  absl::Mutex scope_tree_mutex_;
+  ScopeTree<TextBox> scope_tree_;
 };
 
 #endif  // ORBIT_GL_THREAD_TRACK_H_

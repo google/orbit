@@ -20,6 +20,10 @@ class TextBox {
 
   void SetSize(const Vec2& size) { size_ = size; }
   void SetPos(const Vec2& pos) { pos_ = pos; }
+  void SetPosAndSize(const Vec2& pos, const Vec2& size) {
+    pos_ = pos;
+    size_ = size;
+  }
 
   const Vec2& GetSize() const { return size_; }
   const Vec2& GetPos() const { return pos_; }

@@ -47,6 +47,7 @@ class ScopeNode {
   [[nodiscard]] size_t CountNodesInSubtree() const;
   [[nodiscard]] std::set<const ScopeNode*> GetAllNodesInSubtree() const;
   void SetDepth(uint32_t depth) { depth_ = depth; }
+  ScopeT* GetScope() { return scope_; }
 
  private:
   [[nodiscard]] ScopeNode* FindDeepestParentForNode(const ScopeNode* node);

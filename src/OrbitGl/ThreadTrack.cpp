@@ -168,6 +168,15 @@ bool ThreadTrack::IsTrackSelected() const {
   return ToColor(static_cast<uint64_t>(event.color));
 }
 
+Color ThreadTrack::GetTimerColor(const TextBox& text_box, const internal::DrawData& draw_data) {
+  const TimerInfo& timer_info = text_box.GetTimerInfo();
+  uint64_t function_id = timer_info.function_id();
+  bool is_selected = &text_box == draw_data.selected_textbox;
+  bool is_highlighted = !is_selected && function_id != orbit_grpc_protos::kInvalidFunctionId &&
+                        function_id == draw_data.highlighted_function_id;
+  return GetTimerColor(timer_info, is_selected, is_highlighted);
+}
+
 Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
                                  bool is_highlighted) const {
   const Color kInactiveColor(100, 100, 100, 255);
@@ -278,23 +287,6 @@ void ThreadTrack::OnPick(int x, int y) {
   app_->set_selected_thread_id(thread_id_);
 }
 
-void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                   PickingMode picking_mode, float z_offset) {
-  UpdatePositionOfSubtracks();
-
-  if (!thread_state_bar_->IsEmpty()) {
-    thread_state_bar_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-  }
-  if (!event_bar_->IsEmpty()) {
-    event_bar_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-  }
-  if (!tracepoint_bar_->IsEmpty()) {
-    tracepoint_bar_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-  }
-
-  TimerTrack::UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-}
-
 std::vector<orbit_gl::CaptureViewElement*> ThreadTrack::GetVisibleChildren() {
   std::vector<CaptureViewElement*> result;
   if (!thread_state_bar_->IsEmpty()) {
@@ -318,10 +310,10 @@ void ThreadTrack::SetTrackColor(Color color) {
   tracepoint_bar_->SetColor(color);
 }
 
-void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us, float min_x,
-                                   float z_offset, TextBox* text_box) {
+void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, float min_x, float z_offset,
+                                   TextBox* text_box) {
   if (text_box->GetText().empty()) {
-    std::string time = GetPrettyTime(absl::Microseconds(elapsed_us));
+    std::string time = GetPrettyTime(absl::Nanoseconds(timer_info.end() - timer_info.start()));
     text_box->SetElapsedTimeTextLength(time.length());
 
     const InstrumentedFunction* func = app_->GetInstrumentedFunction(timer_info.function_id());
@@ -410,4 +402,101 @@ float ThreadTrack::GetHeaderHeight() const {
 
   header_height += std::max(0, track_count - 1) * space_between_subtracks;
   return header_height;
+}
+
+void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
+  TimerTrack::OnTimer(timer_info);
+
+  // Get the address of the freshly added TextBox and insert it into the ScopeTree.
+  std::shared_ptr<TimerChain> timer_chain = timers_[timer_info.depth()];
+  CHECK(timer_chain != nullptr);
+  {
+    absl::MutexLock lock(&scope_tree_mutex_);
+    scope_tree_.Insert(timer_chain->Last());
+  }
+}
+
+[[nodiscard]] static inline internal::Rect GetTimerInfoRect(const TimerInfo& timer_info,
+                                                            const internal::DrawData& draw_data,
+                                                            const TimeGraph* time_graph,
+                                                            float world_pos_y, float world_size_y) {
+  double start_us = time_graph->GetUsFromTick(timer_info.start());
+  double end_us = time_graph->GetUsFromTick(timer_info.end());
+  double elapsed_us = end_us - start_us;
+  double normalized_start = start_us * draw_data.inv_time_window;
+  double normalized_length = elapsed_us * draw_data.inv_time_window;
+  float world_timer_width = static_cast<float>(normalized_length * draw_data.world_width);
+  float world_timer_x =
+      static_cast<float>(draw_data.world_start_x + normalized_start * draw_data.world_width);
+  return internal::Rect(world_timer_x, world_pos_y, world_timer_width, world_size_y);
+}
+
+[[nodiscard]] static inline uint64_t GetNextPixelBoundaryTimeNs(
+    float world_x, const internal::DrawData& draw_data) {
+  float normalized_x = (world_x - draw_data.world_start_x) / draw_data.world_width;
+  int pixel_x = static_cast<int>(ceil(normalized_x * draw_data.canvas->GetWidth()));
+  return draw_data.min_tick + pixel_x * draw_data.ns_per_pixel;
+}
+
+// We minimize overdraw when drawing lines for small events by discarding events that would just
+// draw over an already drawn pixel line. When zoomed in enough that all events are drawn as boxes,
+// this has no effect. When zoomed  out, many events will be discarded quickly.
+void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                                   PickingMode picking_mode, float z_offset) {
+  UpdatePrimitivesOfSubtracks(batcher, min_tick, max_tick, picking_mode, z_offset);
+  UpdateBoxHeight();
+  visible_timer_count_ = 0;
+  internal::DrawData draw_data = GetDrawData(
+      min_tick, max_tick, z_offset, batcher, time_graph_, collapse_toggle_->IsCollapsed(),
+      app_->selected_text_box(), app_->GetFunctionIdToHighlight());
+
+  absl::MutexLock lock(&scope_tree_mutex_);
+
+  for (auto& [depth, ordered_nodes] : scope_tree_.GetOrderedNodesByDepth()) {
+    auto first_node_to_draw = ordered_nodes.lower_bound(min_tick);
+    if (first_node_to_draw != ordered_nodes.begin()) --first_node_to_draw;
+
+    UpdateDepth(depth);
+    float world_timer_y = GetYFromDepth(depth - 1);
+    uint64_t next_pixel_start_time_ns = min_tick;
+
+    for (auto it = first_node_to_draw; it != ordered_nodes.end() && it->first < max_tick; ++it) {
+      TextBox& text_box = *it->second->GetScope();
+      const TimerInfo& timer_info = text_box.GetTimerInfo();
+      if (timer_info.end() <= next_pixel_start_time_ns) continue;
+      ++visible_timer_count_;
+
+      Color color = GetTimerColor(text_box, draw_data);
+      auto rect = GetTimerInfoRect(timer_info, draw_data, time_graph_, world_timer_y, box_height_);
+      text_box.SetPosAndSize(rect.pos, rect.size);
+      auto user_data = std::make_unique<PickingUserData>(
+          &text_box, [&, batcher](PickingId id) { return this->GetBoxTooltip(*batcher, id); });
+
+      if ((timer_info.end() - timer_info.start()) > draw_data.ns_per_pixel) {
+        SetTimesliceText(timer_info, draw_data.world_start_x, z_offset, &text_box);
+        batcher->AddShadedBox(rect.pos, rect.size, draw_data.z, color, std::move(user_data));
+      } else {
+        batcher->AddVerticalLine(rect.pos, rect.size[1], draw_data.z, color, std::move(user_data));
+      }
+
+      // Use the time at boundary of the next pixel as a threshold to avoid overdraw.
+      next_pixel_start_time_ns = GetNextPixelBoundaryTimeNs(rect.pos[0] + rect.size[0], draw_data);
+    }
+  }
+}
+
+void ThreadTrack::UpdatePrimitivesOfSubtracks(Batcher* batcher, uint64_t min_tick,
+                                              uint64_t max_tick, PickingMode picking_mode,
+                                              float z_offset) {
+  UpdatePositionOfSubtracks();
+
+  if (!thread_state_bar_->IsEmpty()) {
+    thread_state_bar_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
+  }
+  if (!event_bar_->IsEmpty()) {
+    event_bar_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
+  }
+  if (!tracepoint_bar_->IsEmpty()) {
+    tracepoint_bar_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
+  }
 }

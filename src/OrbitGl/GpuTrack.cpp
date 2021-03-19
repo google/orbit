@@ -200,10 +200,10 @@ bool GpuTrack::TimerFilter(const TimerInfo& timer_info) const {
   return true;
 }
 
-void GpuTrack::SetTimesliceText(const TimerInfo& timer_info, double elapsed_us, float min_x,
-                                float z_offset, TextBox* text_box) {
+void GpuTrack::SetTimesliceText(const TimerInfo& timer_info, float min_x, float z_offset,
+                                TextBox* text_box) {
   if (text_box->GetText().empty()) {
-    std::string time = GetPrettyTime(absl::Microseconds(elapsed_us));
+    std::string time = GetPrettyTime(absl::Nanoseconds(timer_info.end() - timer_info.start()));
 
     text_box->SetElapsedTimeTextLength(time.length());
 
