@@ -72,6 +72,16 @@ class DataManager final {
   }
   [[nodiscard]] bool collect_thread_states() const { return collect_thread_states_; }
 
+  void set_samples_per_second(double samples_per_second) {
+    samples_per_second_ = samples_per_second;
+  }
+  [[nodiscard]] double samples_per_second() const { return samples_per_second_; }
+
+  void set_unwinding_method(orbit_grpc_protos::UnwindingMethod method) {
+    unwinding_method_ = method;
+  }
+  orbit_grpc_protos::UnwindingMethod unwinding_method() const { return unwinding_method_; }
+
   void set_max_local_marker_depth_per_command_buffer(
       uint64_t max_local_marker_depth_per_command_buffer) {
     max_local_marker_depth_per_command_buffer_ = max_local_marker_depth_per_command_buffer;
@@ -98,6 +108,8 @@ class DataManager final {
 
   bool collect_thread_states_ = false;
   uint64_t max_local_marker_depth_per_command_buffer_ = std::numeric_limits<uint64_t>::max();
+  double samples_per_second_ = 0;
+  orbit_grpc_protos::UnwindingMethod unwinding_method_{};
 };
 
 #endif  // ORBIT_GL_DATA_MANAGER_H_

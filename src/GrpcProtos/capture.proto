@@ -29,7 +29,7 @@ message InstrumentedFunction {
 message CaptureOptions {
   bool trace_context_switches = 1;
   int32 pid = 2;
-  double sampling_rate = 3;
+  double samples_per_second = 3;
 
   enum UnwindingMethod {
     kUndefined = 0;

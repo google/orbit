@@ -111,6 +111,8 @@
 ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
 ABSL_DECLARE_FLAG(bool, enable_tutorials_feature);
+ABSL_DECLARE_FLAG(uint16_t, sampling_rate);
+ABSL_DECLARE_FLAG(bool, frame_pointer_unwinding);
 
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_CHECK_FALSE;
@@ -181,6 +183,11 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
   std::visit([this](const auto& target) { SetTarget(target); }, target_configuration_);
 
   app_->PostInit(is_connected_);
+
+  app_->SetSamplesPerSecond(absl::GetFlag(FLAGS_sampling_rate));
+  app_->SetUnwindingMethod(absl::GetFlag(FLAGS_frame_pointer_unwinding)
+                               ? orbit_grpc_protos::UnwindingMethod::kFramePointerUnwinding
+                               : orbit_grpc_protos::UnwindingMethod::kDwarfUnwinding);
 
   SaveCurrentTabLayoutAsDefaultInMemory();
 

@@ -276,7 +276,7 @@ class LinuxTracingIntegrationTestFixture {
     orbit_grpc_protos::CaptureOptions capture_options;
     capture_options.set_trace_context_switches(true);
     capture_options.set_pid(puppet_.GetChildPid());
-    capture_options.set_sampling_rate(1000.0);
+    capture_options.set_samples_per_second(1000.0);
     capture_options.set_unwinding_method(orbit_grpc_protos::CaptureOptions::kDwarf);
     capture_options.set_trace_thread_state(true);
     capture_options.set_trace_gpu_driver(true);
@@ -753,7 +753,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesAndAddressInfos) {
   const std::filesystem::path& executable_path = GetExecutableBinaryPath(fixture.GetPuppetPid());
 
   orbit_grpc_protos::CaptureOptions capture_options = fixture.BuildDefaultCaptureOptions();
-  const double sampling_rate = capture_options.sampling_rate();
+  const double samples_per_second = capture_options.samples_per_second();
 
   std::vector<orbit_grpc_protos::ProducerCaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
@@ -767,7 +767,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesAndAddressInfos) {
 
   VerifyCallstackSamplesWithOuterAndInnerFunctionForDwarfUnwinding(
       events, fixture.GetPuppetPid(), outer_function_virtual_address_range,
-      inner_function_virtual_address_range, sampling_rate, &address_infos_received);
+      inner_function_virtual_address_range, samples_per_second, &address_infos_received);
 }
 
 TEST(LinuxTracingIntegrationTest, CallstackSamplesTogetherWithFunctionCalls) {
@@ -785,7 +785,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesTogetherWithFunctionCalls) {
   constexpr uint64_t kInnerFunctionId = 2;
   AddOuterAndInnerFunctionToCaptureOptions(&capture_options, fixture.GetPuppetPid(),
                                            kOuterFunctionId, kInnerFunctionId);
-  const double sampling_rate = capture_options.sampling_rate();
+  const double sampling_rate = capture_options.samples_per_second();
 
   std::vector<orbit_grpc_protos::ProducerCaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
@@ -822,7 +822,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointers) {
 
   orbit_grpc_protos::CaptureOptions capture_options = fixture.BuildDefaultCaptureOptions();
   capture_options.set_unwinding_method(orbit_grpc_protos::CaptureOptions::kFramePointers);
-  const double sampling_rate = capture_options.sampling_rate();
+  const double sampling_rate = capture_options.samples_per_second();
 
   std::vector<orbit_grpc_protos::ProducerCaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
@@ -854,7 +854,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointersTogetherWithF
   constexpr uint64_t kInnerFunctionId = 2;
   AddOuterAndInnerFunctionToCaptureOptions(&capture_options, fixture.GetPuppetPid(),
                                            kOuterFunctionId, kInnerFunctionId);
-  const double sampling_rate = capture_options.sampling_rate();
+  const double sampling_rate = capture_options.samples_per_second();
 
   std::vector<orbit_grpc_protos::ProducerCaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);

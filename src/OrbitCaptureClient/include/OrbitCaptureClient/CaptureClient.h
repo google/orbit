@@ -6,6 +6,7 @@
 #define ORBIT_CAPTURE_CLIENT_CAPTURE_CLIENT_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 #include <absl/synchronization/mutex.h>
 #include <grpcpp/grpcpp.h>
 #include <stdint.h>
@@ -14,6 +15,7 @@
 #include <memory>
 
 #include "CaptureListener.h"
+#include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
@@ -21,7 +23,6 @@
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/TracepointCustom.h"
 #include "OrbitClientData/UserDefinedCaptureData.h"
-#include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
 #include "grpcpp/channel.h"
 #include "services.grpc.pb.h"
@@ -43,7 +44,8 @@ class CaptureClient {
       const orbit_client_data::ModuleManager& module_manager,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       TracepointInfoSet selected_tracepoints,
-      absl::flat_hash_set<uint64_t> frame_track_function_ids, bool collect_thread_state,
+      absl::flat_hash_set<uint64_t> frame_track_function_ids, double samples_per_second,
+      orbit_grpc_protos::UnwindingMethod unwinding_method, bool collect_thread_state,
       bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer);
 
   // Returns true if stop was initiated and false otherwise.
@@ -71,7 +73,8 @@ class CaptureClient {
       ProcessData&& process, const orbit_client_data::ModuleManager& module_manager,
       const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>& selected_functions,
       TracepointInfoSet selected_tracepoints,
-      absl::flat_hash_set<uint64_t> frame_track_function_ids, bool collect_thread_state,
+      absl::flat_hash_set<uint64_t> frame_track_function_ids, double samples_per_second,
+      orbit_grpc_protos::UnwindingMethod unwinding_method, bool collect_thread_state,
       bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer);
 
   [[nodiscard]] ErrorMessageOr<void> FinishCapture();
