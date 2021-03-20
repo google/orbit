@@ -61,11 +61,13 @@ target_sources(OrbitBase PRIVATE
 if (WIN32)
 target_sources(OrbitBase PRIVATE
         ExecutablePathWindows.cpp
+        FileWindows.cpp
         ThreadUtilsWindows.cpp)
 else()
 target_sources(OrbitBase PRIVATE
         ExecutablePathLinux.cpp
         ExecuteCommandLinux.cpp
+        FileLinux.cpp
         GetProcessIdsLinux.cpp
         ThreadUtilsLinux.cpp)
 endif()

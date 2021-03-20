@@ -94,4 +94,18 @@ TEST(File, ReadFullySmoke) {
   EXPECT_STREQ(buf.data(), "");
 }
 
+TEST(File, GetFilePathFromFd) {
+  const std::filesystem::path file_path =
+      GetExecutableDir() / "testdata" / "OrbitBase" / "textfile.bin";
+  const auto fd_or_error = OpenFileForReading(file_path);
+
+  ASSERT_TRUE(fd_or_error.has_value()) << fd_or_error.error().message();
+
+  auto file_path_from_fd_or_error = GetFilePathFromFd(fd_or_error.value());
+  ASSERT_TRUE(file_path_from_fd_or_error.has_value())
+      << file_path_from_fd_or_error.error().message();
+
+  EXPECT_EQ(file_path_from_fd_or_error.value(), file_path);
+}
+
 }  // namespace orbit_base

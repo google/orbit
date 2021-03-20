@@ -85,6 +85,8 @@ ErrorMessageOr<void> WriteFully(const unique_fd& fd, std::string_view content);
 // used for non-blocking reads from sockets/pipes - it does not handle EAGAIN.
 ErrorMessageOr<size_t> ReadFully(const unique_fd& fd, void* buffer, size_t size);
 
+ErrorMessageOr<std::filesystem::path> GetFilePathFromFd(const unique_fd& fd);
+
 }  // namespace orbit_base
 
 #endif  // ORBIT_BASE_FILE_H_
