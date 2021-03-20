@@ -719,13 +719,13 @@ void OrbitApp::ClearSelectionBottomUpView() {
   selection_bottom_up_view_callback_(std::make_unique<CallTreeView>());
 }
 
-std::string OrbitApp::GetCaptureTime() {
+std::string OrbitApp::GetCaptureTime() const {
   const TimeGraph* time_graph = GetTimeGraph();
   double time = (time_graph == nullptr) ? 0 : time_graph->GetCaptureTimeSpanUs();
   return GetPrettyTime(absl::Microseconds(time));
 }
 
-std::string OrbitApp::GetSaveFile(const std::string& extension) {
+std::string OrbitApp::GetSaveFile(const std::string& extension) const {
   CHECK(save_file_callback_);
   return save_file_callback_(extension);
 }
@@ -1151,11 +1151,6 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
                          [this, module_path](const std::filesystem::path& local_file_path) {
                            return LoadSymbols(local_file_path, module_path);
                          }));
-}
-
-orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModule(
-    const ModuleData* module) {
-  return RetrieveModule(module->file_path(), module->build_id());
 }
 
 orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModule(

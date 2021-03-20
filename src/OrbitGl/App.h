@@ -93,8 +93,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void PostInit(bool is_connected);
   void MainTick();
 
-  std::string GetCaptureTime();
-  std::string GetSaveFile(const std::string& extension);
+  [[nodiscard]] std::string GetCaptureTime() const;
+  [[nodiscard]] std::string GetSaveFile(const std::string& extension) const;
   void SetClipboard(const std::string& text);
   ErrorMessageOr<void> OnSavePreset(const std::string& file_name);
   ErrorMessageOr<void> OnLoadPreset(const std::string& file_name);
@@ -110,8 +110,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void StopCapture();
   void AbortCapture();
   void ClearCapture();
-  bool HasCaptureData() const { return capture_data_.has_value(); }
-  void SetCaptureData(CaptureData capture_data) { capture_data_ = std::move(capture_data); }
+  [[nodiscard]] bool HasCaptureData() const { return capture_data_.has_value(); }
   [[nodiscard]] CaptureData& GetMutableCaptureData() {
     CHECK(capture_data_.has_value());
     return capture_data_.value();
@@ -287,8 +286,6 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   // RetrieveModule retrieves a module file and returns the local file path (potentially from the
   // local cache). Only modules with a .symtab section will be considered.
-  orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModule(
-      const ModuleData* module);
   orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModule(
       const std::string& module_path, const std::string& build_id);
   orbit_base::Future<void> RetrieveModulesAndLoadSymbols(
@@ -516,7 +513,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   std::unique_ptr<FramePointerValidatorClient> frame_pointer_validator_client_;
 
-  // TODO(kuebler): This is mostely written during capture by the capture thread on the
+  // TODO(kuebler): This is mostly written during capture by the capture thread on the
   //  CaptureListener parts of App, but may be read also during capturing by all threads.
   //  Currently, it is not properly synchronized (and thus it can't live at DataManager).
   std::optional<CaptureData> capture_data_;
