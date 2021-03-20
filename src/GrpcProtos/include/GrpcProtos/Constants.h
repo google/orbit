@@ -17,6 +17,8 @@ constexpr int kMissingInfo = -1;
 constexpr uint64_t kLinuxTracingProducerId = 0;
 constexpr uint64_t kMemoryInfoProducerId = 1;
 constexpr uint64_t kExternalProducerStartingId = 1024;
+
+enum class UnwindingMethod { kDwarfUnwinding, kFramePointerUnwinding };
 }  // namespace orbit_grpc_protos
 
 #endif  // GRPC_PROTOS_CONSTANTS_H_

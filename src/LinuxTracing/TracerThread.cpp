@@ -49,9 +49,9 @@ TracerThread::TracerThread(const CaptureOptions& capture_options)
       trace_gpu_driver_{capture_options.trace_gpu_driver()} {
   if (unwinding_method_ != CaptureOptions::kUndefined) {
     std::optional<uint64_t> sampling_period_ns =
-        ComputeSamplingPeriodNs(capture_options.sampling_rate());
+        ComputeSamplingPeriodNs(capture_options.samples_per_second());
     FAIL_IF(!sampling_period_ns.has_value(), "Invalid sampling rate: %.1f",
-            capture_options.sampling_rate());
+            capture_options.samples_per_second());
     sampling_period_ns_ = sampling_period_ns.value();
   } else {
     sampling_period_ns_ = 0;

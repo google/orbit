@@ -85,7 +85,7 @@ constexpr std::chrono::duration kWaitMessagesSentDuration = std::chrono::millise
 const orbit_grpc_protos::CaptureOptions kFakeCaptureOptions = [] {
   orbit_grpc_protos::CaptureOptions capture_options;
   capture_options.set_pid(42);
-  capture_options.set_sampling_rate(1234.0);
+  capture_options.set_samples_per_second(1234.0);
   return capture_options;
 }();
 

@@ -17,6 +17,8 @@ struct ClientGgpOptions {
   std::vector<std::string> capture_functions;
   std::string capture_file_name;
   std::string capture_file_directory;
+  double samples_per_second;
+  bool use_framepointer_unwinding;
 };
 
 #endif  // ORBIT_CLIENT_GGP_CLIENT_GGP_OPTIONS_H_

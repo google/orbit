@@ -72,6 +72,8 @@ int main(int argc, char** argv) {
   options.capture_functions = absl::GetFlag(FLAGS_functions);
   options.capture_file_name = absl::GetFlag(FLAGS_file_name);
   options.capture_file_directory = absl::GetFlag(FLAGS_file_directory);
+  options.samples_per_second = absl::GetFlag(FLAGS_sampling_rate);
+  options.use_framepointer_unwinding = absl::GetFlag(FLAGS_frame_pointer_unwinding);
 
   ClientGgp client_ggp(std::move(options));
   if (!client_ggp.InitClient()) {

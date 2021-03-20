@@ -28,9 +28,6 @@
 #include "capture.pb.h"
 #include "tracepoint.pb.h"
 
-ABSL_DECLARE_FLAG(uint16_t, sampling_rate);
-ABSL_DECLARE_FLAG(bool, frame_pointer_unwinding);
-
 using orbit_client_protos::FunctionInfo;
 
 using orbit_grpc_protos::CaptureOptions;
@@ -38,6 +35,7 @@ using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::TracepointInfo;
+using orbit_grpc_protos::UnwindingMethod;
 
 using orbit_base::Future;
 
@@ -67,8 +65,8 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
     const orbit_client_data::ModuleManager& module_manager,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
     TracepointInfoSet selected_tracepoints, absl::flat_hash_set<uint64_t> frame_track_function_ids,
-    bool collect_thread_state, bool enable_introspection,
-    uint64_t max_local_marker_depth_per_command_buffer) {
+    double samples_per_second, UnwindingMethod unwinding_method, bool collect_thread_state,
+    bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer) {
   absl::MutexLock lock(&state_mutex_);
   if (state_ != State::kStopped) {
     return {
@@ -88,11 +86,12 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
       [this, process = std::move(process_copy), &module_manager,
        selected_functions = std::move(selected_functions), selected_tracepoints,
        frame_track_function_ids = std::move(frame_track_function_ids), collect_thread_state,
-       enable_introspection, max_local_marker_depth_per_command_buffer]() mutable {
+       samples_per_second, unwinding_method, enable_introspection,
+       max_local_marker_depth_per_command_buffer]() mutable {
         return CaptureSync(std::move(process), module_manager, std::move(selected_functions),
                            std::move(selected_tracepoints), std::move(frame_track_function_ids),
-                           collect_thread_state, enable_introspection,
-                           max_local_marker_depth_per_command_buffer);
+                           samples_per_second, unwinding_method, collect_thread_state,
+                           enable_introspection, max_local_marker_depth_per_command_buffer);
       });
 
   return capture_result;
@@ -102,8 +101,8 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
     ProcessData&& process, const orbit_client_data::ModuleManager& module_manager,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
     TracepointInfoSet selected_tracepoints, absl::flat_hash_set<uint64_t> frame_track_function_ids,
-    bool collect_thread_state, bool enable_introspection,
-    uint64_t max_local_marker_depth_per_command_buffer) {
+    double samples_per_second, UnwindingMethod unwinding_method, bool collect_thread_state,
+    bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer) {
   ORBIT_SCOPE_FUNCTION;
   writes_done_failed_ = false;
   try_abort_ = false;
@@ -119,12 +118,11 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   CaptureOptions* capture_options = request.mutable_capture_options();
   capture_options->set_trace_context_switches(true);
   capture_options->set_pid(process.pid());
-  uint16_t sampling_rate = absl::GetFlag(FLAGS_sampling_rate);
-  if (sampling_rate == 0) {
+  if (samples_per_second == 0) {
     capture_options->set_unwinding_method(CaptureOptions::kUndefined);
   } else {
-    capture_options->set_sampling_rate(sampling_rate);
-    if (absl::GetFlag(FLAGS_frame_pointer_unwinding)) {
+    capture_options->set_samples_per_second(samples_per_second);
+    if (unwinding_method == UnwindingMethod::kFramePointerUnwinding) {
       capture_options->set_unwinding_method(CaptureOptions::kFramePointers);
     } else {
       capture_options->set_unwinding_method(CaptureOptions::kDwarf);

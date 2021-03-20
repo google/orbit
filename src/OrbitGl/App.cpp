@@ -106,6 +106,7 @@ using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::TracepointInfo;
+using orbit_grpc_protos::UnwindingMethod;
 
 using orbit_base::Future;
 
@@ -549,7 +550,7 @@ void OrbitApp::ShowSourceCode(const orbit_client_protos::FunctionInfo& function)
 
             if (decl_line_info_or_error.has_error()) {
               return ErrorMessage{absl::StrFormat(
-                  "Could not find source code location of function \"%s\" in module \"%s\": %s",
+                  R"(Could not find source code location of function "%s" in module "%s": %s)",
                   function.pretty_name(), module->file_path(),
                   decl_line_info_or_error.error().message())};
             }
@@ -931,14 +932,17 @@ void OrbitApp::StartCapture() {
   TracepointInfoSet selected_tracepoints = data_manager_->selected_tracepoints();
   bool collect_thread_states = data_manager_->collect_thread_states();
   bool enable_introspection = absl::GetFlag(FLAGS_devmode);
+  double samples_per_second = data_manager_->samples_per_second();
+  UnwindingMethod unwinding_method = data_manager_->unwinding_method();
   uint64_t max_local_marker_depth_per_command_buffer =
       data_manager_->max_local_marker_depth_per_command_buffer();
 
   CHECK(capture_client_ != nullptr);
   Future<ErrorMessageOr<CaptureOutcome>> capture_result = capture_client_->Capture(
       thread_pool_.get(), *process, *module_manager_, std::move(selected_functions_map),
-      std::move(selected_tracepoints), std::move(frame_track_function_ids), collect_thread_states,
-      enable_introspection, max_local_marker_depth_per_command_buffer);
+      std::move(selected_tracepoints), std::move(frame_track_function_ids), samples_per_second,
+      unwinding_method, collect_thread_states, enable_introspection,
+      max_local_marker_depth_per_command_buffer);
 
   capture_result.Then(main_thread_executor_, [this](ErrorMessageOr<CaptureOutcome> capture_result) {
     if (capture_result.has_error()) {
@@ -1619,6 +1623,14 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
 
 void OrbitApp::SetCollectThreadStates(bool collect_thread_states) {
   data_manager_->set_collect_thread_states(collect_thread_states);
+}
+
+void OrbitApp::SetSamplesPerSecond(double samples_per_second) {
+  data_manager_->set_samples_per_second(samples_per_second);
+}
+
+void OrbitApp::SetUnwindingMethod(orbit_grpc_protos::UnwindingMethod unwinding_method) {
+  data_manager_->set_unwinding_method(unwinding_method);
 }
 
 void OrbitApp::SetMaxLocalMarkerDepthPerCommandBuffer(
