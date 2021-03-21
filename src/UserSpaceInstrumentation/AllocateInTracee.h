@@ -14,9 +14,13 @@
 namespace orbit_user_space_instrumentation {
 
 // Allocate `size` bytes of memory in the tracee's address space using mmap. The memory will have
-// read, write, and execute permissions.
-// Assumes we are already attached to the tracee `pid` e.g. using `AttachAndStopProcess`.
-[[nodiscard]] ErrorMessageOr<uint64_t> AllocateInTracee(pid_t pid, uint64_t size);
+// read, write, and execute permissions. The memory allocated will start at `address`. `address`
+// needs to be aligned to page boundaries. Make sure the requested memory range is available;
+// otherwise the overlapped part of existing mappings will be discarded.
+// If `address` is zero the placement of memory will be arbitray (compare the documenation of mmap:
+// https://man7.org/linux/man-pages/man2/mmap.2.html). Assumes we are already attached to the tracee
+// `pid` e.g. using `AttachAndStopProcess`.
+[[nodiscard]] ErrorMessageOr<uint64_t> AllocateInTracee(pid_t pid, uint64_t address, uint64_t size);
 
 // Free address range previously allocated with AllocateInTracee using munmap.
 // Assumes we are already attached to the tracee `pid` e.g. using `AttachAndStopProcess`.

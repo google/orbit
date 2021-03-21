@@ -55,7 +55,8 @@ using orbit_base::ReadFileToString;
   return outcome::success();
 }
 
-[[nodiscard]] ErrorMessageOr<AddressRange> GetFirstExecutableMemoryRegion(pid_t pid) {
+[[nodiscard]] ErrorMessageOr<AddressRange> GetFirstExecutableMemoryRegion(
+    pid_t pid, uint64_t exclude_address) {
   auto result_read_maps = ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
   if (result_read_maps.has_error()) {
     return result_read_maps.error();
@@ -70,6 +71,7 @@ using orbit_base::ReadFileToString;
     AddressRange result;
     if (!absl::numbers_internal::safe_strtou64_base(addresses[0], &result.first, 16)) continue;
     if (!absl::numbers_internal::safe_strtou64_base(addresses[1], &result.second, 16)) continue;
+    if (exclude_address >= result.first && exclude_address < result.second) continue;
     return result;
   }
   return ErrorMessage(absl::StrFormat("Unable to locate executable memory area in pid: %d", pid));

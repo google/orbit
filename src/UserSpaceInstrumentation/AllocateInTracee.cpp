@@ -30,10 +30,13 @@ namespace {
 // list: https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl
 // The parameters and the ordering are the same as in the C wrapper:
 // https://man7.org/linux/man-pages/dir_section_2.html
+// Optionally one can specify `exclude_address`. This prevents the method from using an address
+// range containing `exclude_address` as a working area. This is required for the munmap syscall
+// which might otherwise choose the mapping it is removing as a working area.
 [[nodiscard]] ErrorMessageOr<uint64_t> SyscallInTracee(pid_t pid, uint64_t syscall, uint64_t arg_0,
-                                                       uint64_t arg_1 = 0, uint64_t arg_2 = 0,
-                                                       uint64_t arg_3 = 0, uint64_t arg_4 = 0,
-                                                       uint64_t arg_5 = 0) {
+                                                       uint64_t arg_1, uint64_t arg_2,
+                                                       uint64_t arg_3, uint64_t arg_4,
+                                                       uint64_t arg_5, uint64_t exclude_address) {
   RegisterState original_registers;
   auto result_backup = original_registers.BackupRegisters(pid);
   if (result_backup.has_error()) {
@@ -46,7 +49,7 @@ namespace {
   }
 
   // Get an executable memory region.
-  auto result_memory_region = GetFirstExecutableMemoryRegion(pid);
+  auto result_memory_region = GetFirstExecutableMemoryRegion(pid, exclude_address);
   if (result_memory_region.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to find executable memory region: \"%s\"",
                                         result_memory_region.error().message()));
@@ -127,13 +130,18 @@ namespace {
 
 }  // namespace
 
-[[nodiscard]] ErrorMessageOr<uint64_t> AllocateInTracee(pid_t pid, uint64_t size) {
+[[nodiscard]] ErrorMessageOr<uint64_t> AllocateInTracee(pid_t pid, uint64_t address,
+                                                        uint64_t size) {
   // Syscall will be equivalent to:
-  // `mmap(NULL, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)`
+  // `mmap(address, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0)`
+  // unless address it 0 in which case it will be (without the `MAP_FIXED`): 
+  // `mmap(0, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)`
+  const int flags =
+      (address == 0) ? (MAP_PRIVATE | MAP_ANONYMOUS) : (MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED);
   constexpr uint64_t kSyscallNumberMmap = 9;
-  auto result_or_error = SyscallInTracee(pid, kSyscallNumberMmap, static_cast<uint64_t>(NULL), size,
-                                         PROT_READ | PROT_WRITE | PROT_EXEC,
-                                         MAP_PRIVATE | MAP_ANONYMOUS, static_cast<uint64_t>(-1), 0);
+  auto result_or_error =
+      SyscallInTracee(pid, kSyscallNumberMmap, address, size, PROT_READ | PROT_WRITE | PROT_EXEC,
+                      flags, static_cast<uint64_t>(-1), 0, /*exclude_address=*/ 0);
   if (result_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to execute mmap syscall: \"%s\"",
                                         result_or_error.error().message()));
@@ -145,7 +153,8 @@ namespace {
   // Syscall will be equivalent to:
   // `munmap(address, size)`
   constexpr uint64_t kSyscallNumberMunmap = 11;
-  auto result_or_error = SyscallInTracee(pid, kSyscallNumberMunmap, address, size);
+  auto result_or_error =
+      SyscallInTracee(pid, kSyscallNumberMunmap, address, size, 0, 0, 0, 0, address);
   if (result_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to execute munmap syscall: \"%s\"",
                                         result_or_error.error().message()));

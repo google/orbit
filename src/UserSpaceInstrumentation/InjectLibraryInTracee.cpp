@@ -138,7 +138,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   // Allocate small memory area in the tracee. This is used for the code and the path name.
   const uint64_t path_length = path.string().length() + 1;  // Include terminating zero.
   const uint64_t memory_size = kCodeScratchPadSize + path_length;
-  OUTCOME_TRY(address_code, AllocateInTracee(pid, memory_size));
+  OUTCOME_TRY(address_code, AllocateInTracee(pid, 0, memory_size));
 
   // Write the name of the .so into memory at address_code with offset of kCodeScratchPadSize.
   std::vector<uint8_t> path_as_vector(path_length);
@@ -189,7 +189,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   // Allocate small memory area in the tracee. This is used for the code and the symbol name.
   const size_t symbol_name_length = symbol.length() + 1;  // include terminating zero
   const uint64_t memory_size = kCodeScratchPadSize + symbol_name_length;
-  OUTCOME_TRY(address_code, AllocateInTracee(pid, memory_size));
+  OUTCOME_TRY(address_code, AllocateInTracee(pid, 0, memory_size));
 
   // Write the name of symbol into memory at address_code with offset of kCodeScratchPadSize.
   std::vector<uint8_t> symbol_name_as_vector(symbol_name_length, 0);
@@ -238,7 +238,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
                                                                kDlcloseInLibc, kLibcSoname));
 
   // Allocate small memory area in the tracee.
-  OUTCOME_TRY(address_code, AllocateInTracee(pid, kCodeScratchPadSize));
+  OUTCOME_TRY(address_code, AllocateInTracee(pid, 0, kCodeScratchPadSize));
 
   // We want to do the following in the tracee:
   // dlclose(handle);
