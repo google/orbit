@@ -28,6 +28,8 @@ target_link_libraries(
 
 add_executable(CaptureFileTests)
 
+target_compile_options(CaptureFileTests PRIVATE ${STRICT_COMPILE_FLAGS})
+
 target_sources(CaptureFileTests PRIVATE
     CaptureFileOutputStreamTest.cpp
 )

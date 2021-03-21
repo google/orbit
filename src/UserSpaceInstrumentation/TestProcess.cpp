@@ -30,9 +30,20 @@ void Touch(const fs::path& path) {
 }  // namespace
 
 TestProcess::TestProcess() {
-  flag_file_run_child_ = std::tmpnam(nullptr);
-  flag_file_child_started_ = std::tmpnam(nullptr);
-  Touch(flag_file_run_child_);
+  {
+    auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
+    CHECK(temporary_file_or_error.has_value());
+    flag_file_run_child_.emplace(std::move(temporary_file_or_error.value()));
+  }
+
+  {
+    auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
+    CHECK(temporary_file_or_error.has_value());
+    flag_file_child_started_.emplace(std::move(temporary_file_or_error.value()));
+  }
+
+  Touch(flag_file_run_child_->file_path());
+  flag_file_child_started_->CloseAndRemove();
   pid_ = fork();
   CHECK(pid_ != -1);
   // Start the workload and have the parent wait for the startup to complete.
@@ -41,20 +52,16 @@ TestProcess::TestProcess() {
     exit(0);
   }
   std::error_code error;
-  while (!fs::exists(flag_file_child_started_, error)) {
+  while (!fs::exists(flag_file_child_started_->file_path(), error)) {
     CHECK(!error);
   };
 }
 
 TestProcess::~TestProcess() {
-  std::error_code error;
-  fs::remove(flag_file_run_child_, error);
-  CHECK(!error);
+  flag_file_run_child_->CloseAndRemove();
   int status;
   waitpid(pid_, &status, 0);
   CHECK(WIFEXITED(status));
-  fs::remove(flag_file_child_started_, error);
-  CHECK(!error);
 }
 
 void TestProcess::Worker() {
@@ -70,17 +77,17 @@ void TestProcess::Worker() {
 }
 
 void TestProcess::Workload() {
-  size_t kNumThreads = 4;
+  constexpr size_t kNumThreads = 4;
   std::vector<std::thread> threads;
   std::error_code error;
-  while (fs::exists(flag_file_run_child_, error) || !threads.empty()) {
+  while (fs::exists(flag_file_run_child_->file_path(), error) || !threads.empty()) {
     CHECK(!error);
     // Spawn as many threads as there are missing.
-    while (threads.size() < kNumThreads && fs::exists(flag_file_run_child_, error)) {
+    while (threads.size() < kNumThreads && fs::exists(flag_file_run_child_->file_path(), error)) {
       CHECK(!error);
       threads.emplace_back(std::thread(&TestProcess::Worker, this));
     }
-    Touch(flag_file_child_started_);
+    Touch(flag_file_child_started_->file_path());
     // Join the finished threads.
     for (auto& t : threads) {
       const auto id = t.get_id();

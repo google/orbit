@@ -10,12 +10,17 @@
 
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/TemporaryFile.h"
 #include "OrbitBase/WriteStringToFile.h"
 
 namespace orbit_base {
 TEST(WriteStringToFile, Smoke) {
-  // TODO(http://b/180574275): Replace this with temporary_file once it becomes available
-  const char* temp_file_name = std::tmpnam(nullptr);
+  auto temporary_file_or_error = TemporaryFile::Create();
+  ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
+  TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
+
+  std::string temp_file_name = temporary_file.file_path().string();
+
   const char* full_content = "content\nnew line(this text is not written)";
   constexpr size_t kContentSize = 16;
   const char* expected_content = "content\nnew line";
@@ -26,6 +31,5 @@ TEST(WriteStringToFile, Smoke) {
   ErrorMessageOr<std::string> actual_content_or_error = ReadFileToString(temp_file_name);
   ASSERT_FALSE(actual_content_or_error.has_error()) << actual_content_or_error.error().message();
   EXPECT_EQ(actual_content_or_error.value(), expected_content);
-  remove(temp_file_name);  // TODO(http://b/180574275): see above
 }
 }  // namespace orbit_base
