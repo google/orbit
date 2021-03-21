@@ -75,6 +75,8 @@ ErrorMessageOr<unique_fd> OpenFileForReading(const std::filesystem::path& path);
 
 ErrorMessageOr<unique_fd> OpenFileForWriting(const std::filesystem::path& path);
 
+ErrorMessageOr<unique_fd> OpenNewFileForReadWrite(const std::filesystem::path& path);
+
 ErrorMessageOr<void> WriteFully(const unique_fd& fd, std::string_view content);
 
 // Tries to read 'size' bytes from the file to the buffer, returns actual
