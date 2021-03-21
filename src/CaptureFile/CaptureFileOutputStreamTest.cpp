@@ -9,6 +9,7 @@
 #include "CaptureFile/CaptureFileOutputStream.h"
 #include "CaptureFileConstants.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/TemporaryFile.h"
 
 namespace orbit_capture_file {
 
@@ -25,8 +26,11 @@ static orbit_grpc_protos::ClientCaptureEvent CreateInternedStringCaptureEvent() 
 }
 
 TEST(CaptureFileOutputStream, Smoke) {
-  // TODO(http://b/180574275): Replace this with temporary_file once it becomes available
-  const char* temp_file_name = std::tmpnam(nullptr);
+  auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
+  ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
+  orbit_base::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
+
+  std::string temp_file_name = temporary_file.file_path().string();
 
   auto output_stream_or_error = CaptureFileOutputStream::Create(temp_file_name);
   ASSERT_TRUE(output_stream_or_error.has_value()) << output_stream_or_error.error().message();
@@ -36,7 +40,8 @@ TEST(CaptureFileOutputStream, Smoke) {
 
   orbit_grpc_protos::ClientCaptureEvent event = CreateInternedStringCaptureEvent();
 
-  output_stream->WriteCaptureEvent(event);
+  auto write_result = output_stream->WriteCaptureEvent(event);
+  EXPECT_FALSE(write_result.has_error()) << write_result.error().message();
   output_stream->Close();
 
   ErrorMessageOr<std::string> file_content_or_error = orbit_base::ReadFileToString(temp_file_name);
@@ -64,8 +69,11 @@ TEST(CaptureFileOutputStream, Smoke) {
 }
 
 TEST(CaptureFileOutputStream, WriteAfterClose) {
-  // TODO(http://b/180574275): Replace this with temporary_file once it becomes available
-  const char* temp_file_name = std::tmpnam(nullptr);
+  auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
+  ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
+  orbit_base::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
+
+  std::string temp_file_name = temporary_file.file_path().string();
 
   auto output_stream_or_error = CaptureFileOutputStream::Create(temp_file_name);
   ASSERT_TRUE(output_stream_or_error.has_value()) << output_stream_or_error.error().message();
@@ -77,7 +85,7 @@ TEST(CaptureFileOutputStream, WriteAfterClose) {
 
   orbit_grpc_protos::ClientCaptureEvent event = CreateInternedStringCaptureEvent();
 
-  EXPECT_DEATH(output_stream->WriteCaptureEvent(event), "");
+  EXPECT_DEATH((void)output_stream->WriteCaptureEvent(event), "");
 }
 
 }  // namespace orbit_capture_file

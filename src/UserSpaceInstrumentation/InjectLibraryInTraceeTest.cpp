@@ -133,7 +133,7 @@ TEST(InjectLibraryInTraceeTest, OpenUseCloseLibrary) {
 
   // Close the library.
   auto result_dlclose = DlcloseInTracee(pid, result_dlopen.value());
-  ASSERT_FALSE(result_dlclose.has_error());
+  ASSERT_FALSE(result_dlclose.has_error()) << result_dlclose.error().message();
 
   // Now, again, the lib is absent from the tracee.
   auto maps_after_close = orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));

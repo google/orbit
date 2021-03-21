@@ -10,6 +10,8 @@
 #include <set>
 #include <thread>
 
+#include "OrbitBase/TemporaryFile.h"
+
 namespace orbit_user_space_instrumentation {
 
 // TestProcess forks a new process in the constructor and starts a multi threaded load: A busy loop
@@ -33,7 +35,7 @@ class TestProcess {
   pid_t pid_;
   absl::Mutex joinable_threads_mutex_;
   std::set<std::thread::id> joinable_threads_;
-  std::filesystem::path flag_file_run_child_;
-  std::filesystem::path flag_file_child_started_;
+  std::optional<orbit_base::TemporaryFile> flag_file_run_child_;
+  std::optional<orbit_base::TemporaryFile> flag_file_child_started_;
 };
 }  // namespace orbit_user_space_instrumentation
