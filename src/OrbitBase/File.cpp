@@ -19,19 +19,23 @@
 
 namespace orbit_base {
 
-ErrorMessageOr<unique_fd> OpenFileForReading(const std::filesystem::path& path) {
-#if defined(__linux)
-  constexpr int kOpenFlags = O_RDONLY | O_CLOEXEC;
-#elif defined(_WIN32)
-  constexpr int kOpenFlags = O_RDONLY | O_BINARY;
-#endif  // defined(__linux)
-  int fd = TEMP_FAILURE_RETRY(open(path.string().c_str(), kOpenFlags));
+static ErrorMessageOr<unique_fd> OpenFile(const std::filesystem::path& path, int flags, int mode) {
+  int fd = TEMP_FAILURE_RETRY(open(path.string().c_str(), flags, mode));
   if (fd == kInvalidFd) {
     return ErrorMessage(
         absl::StrFormat("Unable to open file \"%s\": %s", path.string(), SafeStrerror(errno)));
   }
 
   return unique_fd{fd};
+}
+
+ErrorMessageOr<unique_fd> OpenFileForReading(const std::filesystem::path& path) {
+#if defined(__linux)
+  constexpr int kOpenFlags = O_RDONLY | O_CLOEXEC;
+#elif defined(_WIN32)
+  constexpr int kOpenFlags = O_RDONLY | O_BINARY;
+#endif  // defined(__linux)
+  return OpenFile(path, kOpenFlags, 0);
 }
 
 ErrorMessageOr<unique_fd> OpenFileForWriting(const std::filesystem::path& path) {
@@ -42,14 +46,18 @@ ErrorMessageOr<unique_fd> OpenFileForWriting(const std::filesystem::path& path) 
   constexpr int kOpenFlags = O_WRONLY | O_CREAT | O_TRUNC | O_BINARY;
   constexpr int kOpenMode = _S_IREAD | _S_IWRITE;
 #endif  // defined(__linux)
-  int fd = TEMP_FAILURE_RETRY(open(path.string().c_str(), kOpenFlags, kOpenMode));
+  return OpenFile(path, kOpenFlags, kOpenMode);
+}
 
-  if (fd == kInvalidFd) {
-    return ErrorMessage(
-        absl::StrFormat("Unable to open file \"%s\": %s", path.string(), SafeStrerror(errno)));
-  }
-
-  return unique_fd{fd};
+ErrorMessageOr<unique_fd> OpenNewFileForReadWrite(const std::filesystem::path& path) {
+#if defined(__linux)
+  constexpr int kOpenFlags = O_RDWR | O_CREAT | O_EXCL | O_CLOEXEC;
+  constexpr int kOpenMode = 0600;
+#elif defined(_WIN32)
+  constexpr int kOpenFlags = O_RDWR | O_CREAT | O_EXCL | O_BINARY;
+  constexpr int kOpenMode = _S_IREAD | _S_IWRITE;
+#endif  // defined(__linux)
+  return OpenFile(path, kOpenFlags, kOpenMode);
 }
 
 ErrorMessageOr<void> WriteFully(const unique_fd& fd, std::string_view content) {
