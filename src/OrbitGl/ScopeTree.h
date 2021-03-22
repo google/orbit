@@ -169,6 +169,7 @@ uint32_t ScopeNode<ScopeT>::Height() const {
 template <typename ScopeT>
 void ScopeNode<ScopeT>::FindHeight(const ScopeNode* node, uint32_t* height,
                                    uint32_t current_height) {
+  ORBIT_SCOPE_FUNCTION;
   *height = std::max(*height, current_height);
   for (auto& [unused_time, child_node] : node->children_by_start_time_) {
     FindHeight(child_node, height, current_height + 1);
@@ -250,6 +251,8 @@ std::vector<ScopeNode<ScopeT>*> ScopeNode<ScopeT>::GetChildrenInRange(uint64_t s
 
 template <typename ScopeT>
 void ScopeNode<ScopeT>::Insert(ScopeNode<ScopeT>* node) {
+  ORBIT_SCOPE_FUNCTION;
+
   // Find deepest parent and set depth on node to insert. The depth of descendants will be updated
   // in ScopeTree::UpdateDepthInSubtree as the tree also needs to update another data structure.
   ScopeNode* parent_node = FindDeepestParentForNode(node);
