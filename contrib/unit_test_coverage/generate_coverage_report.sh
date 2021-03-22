@@ -4,6 +4,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+exit 1
+
 # --- generate_coverage_report.sh ---
 #
 # This script generates a coverage report for the Orbit repository. It uses 
