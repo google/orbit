@@ -450,7 +450,7 @@ void ProfilingTargetDialog::SelectFile() {
   }
 }
 
-bool ProfilingTargetDialog::TrySelectProcess(const std::string& process_name) {
+bool ProfilingTargetDialog::TrySelectProcessByName(const std::string& process_name) {
   QModelIndexList matches = process_proxy_model_.match(
       process_proxy_model_.index(0, static_cast<int>(ProcessItemModel::Column::kName)),
       Qt::DisplayRole, QVariant::fromValue(QString::fromStdString(process_name)));
@@ -488,15 +488,15 @@ void ProfilingTargetDialog::OnProcessListUpdate(
     }
 
     // If process_ != nullptr here, that means it has been moved into the ProfilingTargetDialog and
-    // the user was using this process before. TrySelectProcess attempts to select the process again
-    // if it exists in process_model_.
+    // the user was using this process before. TrySelectProcessByName attempts to select the process
+    // again if it exists in process_model_.
     if (process_ != nullptr) {
-      bool success = TrySelectProcess(process_->name());
+      bool success = TrySelectProcessByName(process_->name());
       if (success) return;
     }
 
     if (!absl::GetFlag(FLAGS_process_name).empty()) {
-      bool success = TrySelectProcess(absl::GetFlag(FLAGS_process_name));
+      bool success = TrySelectProcessByName(absl::GetFlag(FLAGS_process_name));
       if (success) {
         accept();
         return;
