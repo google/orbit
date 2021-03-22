@@ -79,7 +79,7 @@
    <item>
     <widget class="QLabel" name="timerLabel">
      <property name="text">
-      <string>1s</string>
+      <string>0s</string>
      </property>
     </widget>
    </item>
