@@ -643,6 +643,9 @@ void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
   track_manager_->SortTracks();
   track_manager_->UpdateMovingTrackSorting();
   track_manager_->UpdateTracks(&batcher_, min_tick, max_tick, picking_mode);
+  // Coordinates from CaptureWindows could need an update if we modified the vertical size of some
+  // track.
+  GetCanvas()->UpdateWorldTopLeftY();
 
   update_primitives_requested_ = false;
 }

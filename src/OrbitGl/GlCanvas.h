@@ -95,6 +95,7 @@ class GlCanvas {
   [[nodiscard]] float GetWorldMaxY() const { return world_max_y_; }
   [[nodiscard]] float GetWorldTopLeftX() const { return world_top_left_x_; }
   [[nodiscard]] float GetWorldTopLeftY() const { return world_top_left_y_; }
+  void UpdateWorldTopLeftY() { UpdateWorldTopLeftY(GetWorldTopLeftY()); }
   virtual void UpdateWorldTopLeftY(float val) { world_top_left_y_ = val; }
 
   [[nodiscard]] TextRenderer& GetTextRenderer() { return text_renderer_; }
