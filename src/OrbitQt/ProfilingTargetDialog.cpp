@@ -144,7 +144,8 @@ ProfilingTargetDialog::ProfilingTargetDialog(
   if (target_configuration_opt.has_value()) {
     TargetConfiguration config = std::move(target_configuration_opt.value());
     target_configuration_opt = std::nullopt;
-    SetStateMachineInitialStateFromTarget(std::move(config));
+    std::visit([this](auto&& target) { SetTargetAndStateMachineInitialState(std::move(target)); },
+               config);
   } else {
     SetStateMachineInitialState();
   }
@@ -368,11 +369,6 @@ void ProfilingTargetDialog::SetupLocalStates() {
   });
   QObject::connect(&state_local_process_selected_, &QState::exited, ui_->targetLabel,
                    &TargetLabel::Clear);
-}
-
-void ProfilingTargetDialog::SetStateMachineInitialStateFromTarget(TargetConfiguration config) {
-  std::visit([this](auto target) { SetTargetAndStateMachineInitialState(std::move(target)); },
-             std::move(config));
 }
 
 void ProfilingTargetDialog::SetupFileStates() {

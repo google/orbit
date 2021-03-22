@@ -102,7 +102,6 @@ class ProfilingTargetDialog : public QDialog {
   void SetupStadiaStates();
   void SetupFileStates();
   void SetupLocalStates();
-  void SetStateMachineInitialStateFromTarget(TargetConfiguration config);
   void SetStateMachineInitialState();
   [[nodiscard]] bool TrySelectProcessByName(const std::string& process_name);
   void OnProcessListUpdate(std::vector<orbit_grpc_protos::ProcessInfo> process_list);
