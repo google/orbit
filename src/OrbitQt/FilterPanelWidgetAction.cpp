@@ -12,20 +12,20 @@ FilterPanelWidgetAction::FilterPanelWidgetAction(QWidget* parent) : QWidgetActio
 
 QWidget* FilterPanelWidgetAction::createWidget(QWidget* parent) {
   filter_panel_ = new FilterPanelWidget(parent);
-
-  // Directly calling methods on FilterPanelWidget (e.g. to set timer text or clear the text),
-  // can cause access violations when the toolbar layout changes and the filter panel appears on the
-  // capture toolbar again. We therefore use the signal/slot system instead of calling methods
-  // directly on QWidgetAction.
   connect(filter_panel_, &FilterPanelWidget::FilterTracksTextChanged, this,
           &FilterPanelWidgetAction::FilterTracksTextChanged);
   connect(filter_panel_, &FilterPanelWidget::FilterFunctionsTextChanged, this,
           &FilterPanelWidgetAction::FilterFunctionsTextChanged);
+
+  // Directly call `FilterPanelWidget::SetTimerLabelText` from `OrbitMainWindow::OnTimer()` causes
+  // the access violation when the toolbar layout changes and the filter panel appears on the
+  // capture toolbar again. For the thread-safety consideration, using signal/slot system instead of
+  // calling functions for the QWidgetAction.
   connect(this, &FilterPanelWidgetAction::SetTimerLabelText, filter_panel_,
           &FilterPanelWidget::SetTimerLabelText);
   connect(this, &FilterPanelWidgetAction::SetFilterFunctionsText, filter_panel_,
           &FilterPanelWidget::SetFilterFunctionsText);
-  connect(this, &FilterPanelWidgetAction::ClearEdits, filter_panel_,
-          &FilterPanelWidget::ClearEdits);
   return filter_panel_;
 }
+
+void FilterPanelWidgetAction::ClearEdits() { filter_panel_->ClearEdits(); }

@@ -26,12 +26,13 @@ class FilterPanelWidgetAction : public QWidgetAction {
   explicit FilterPanelWidgetAction(QWidget* parent);
   QWidget* createWidget(QWidget* parent);
 
+  void ClearEdits();
+
  signals:
   void FilterFunctionsTextChanged(const QString& text);
   void FilterTracksTextChanged(const QString& text);
   void SetTimerLabelText(const QString& text);
   void SetFilterFunctionsText(const QString& text);
-  void ClearEdits();
 
  private:
   FilterPanelWidget* filter_panel_ = nullptr;
