@@ -114,11 +114,6 @@ target_link_libraries(
           SyntaxHighlighter
           qtpropertybrowser::qtpropertybrowser)
 
-if(WITH_CRASH_HANDLING)
-  target_link_libraries(OrbitQt PRIVATE CrashHandler)
-  target_compile_definitions(OrbitQt PRIVATE ORBIT_CRASH_HANDLING)
-endif()
-
 set_target_properties(OrbitQt PROPERTIES AUTOMOC ON)
 set_target_properties(OrbitQt PROPERTIES AUTOUIC ON)
 set_target_properties(OrbitQt PROPERTIES AUTORCC ON)
