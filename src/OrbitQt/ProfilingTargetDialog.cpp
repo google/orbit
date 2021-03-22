@@ -457,8 +457,6 @@ bool ProfilingTargetDialog::TrySelectProcessByName(const std::string& process_na
 
   if (matches.isEmpty()) return false;
 
-  LOG("Selecting remembered process: %s", process_name);
-
   ui_->processesTableView->selectionModel()->setCurrentIndex(
       matches[0], {QItemSelectionModel::SelectCurrent, QItemSelectionModel::Rows});
   return true;
@@ -492,12 +490,17 @@ void ProfilingTargetDialog::OnProcessListUpdate(
     // again if it exists in process_model_.
     if (process_ != nullptr) {
       bool success = TrySelectProcessByName(process_->name());
-      if (success) return;
+      if (success) {
+        LOG("Selected remembered process with name: %s", process_->name());
+        return;
+      }
     }
 
     if (!absl::GetFlag(FLAGS_process_name).empty()) {
       bool success = TrySelectProcessByName(absl::GetFlag(FLAGS_process_name));
       if (success) {
+        LOG("Selected process with name: %s (provided via --process_name flag)",
+            absl::GetFlag(FLAGS_process_name));
         accept();
         return;
       }
