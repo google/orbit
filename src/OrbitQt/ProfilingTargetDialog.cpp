@@ -170,6 +170,14 @@ ProfilingTargetDialog::~ProfilingTargetDialog() noexcept = default;
 std::optional<TargetConfiguration> ProfilingTargetDialog::Exec() {
   ui_->stadiaWidget->Start();
   state_machine_.start();
+
+  if (process_manager_ != nullptr) {
+    process_manager_->SetProcessListUpdateListener(
+        [this](std::vector<orbit_grpc_protos::ProcessInfo> process_list) {
+          OnProcessListUpdate(std::move(process_list));
+        });
+  }
+
   int rc = QDialog::exec();
   state_machine_.stop();
 
@@ -365,13 +373,6 @@ void ProfilingTargetDialog::SetupLocalStates() {
 void ProfilingTargetDialog::SetStateMachineInitialStateFromTarget(TargetConfiguration config) {
   std::visit([this](auto target) { SetTargetAndStateMachineInitialState(std::move(target)); },
              std::move(config));
-
-  if (process_manager_ != nullptr) {
-    process_manager_->SetProcessListUpdateListener(
-        [this](std::vector<orbit_grpc_protos::ProcessInfo> process_list) {
-          OnProcessListUpdate(std::move(process_list));
-        });
-  }
 }
 
 void ProfilingTargetDialog::SetupFileStates() {
