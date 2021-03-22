@@ -5,18 +5,8 @@
 #ifndef USER_SPACE_INSTRUMENTATION_TEST_LIB_H_
 #define USER_SPACE_INSTRUMENTATION_TEST_LIB_H_
 
-// Library functions for some trivial logging. This library is merely used in tests: The test
-// injects a binary produced by this code into its child.
-
-// Call first to initialize the library.
-extern "C" void InitTestLib();
-
-// Log a string into a temporary file.
-extern "C" void UseTestLib(const char* s);
-
-// Call to end using the library. Prints the entire log to standard output and removes the
-// temporary log file.
-extern "C" void CloseTestLib();
+// This library is merely used in tests: The test  injects a binary produced by this code into its
+// child.
 
 // Returns 42.
 extern "C" int TrivialFunction();
