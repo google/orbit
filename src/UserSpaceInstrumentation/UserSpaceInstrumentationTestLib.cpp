@@ -4,47 +4,4 @@
 
 #include "UserSpaceInstrumentationTestLib.h"
 
-#include <cstdio>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-
-namespace {
-
-std::filesystem::path GetTmpFilePath() {
-  static std::filesystem::path p = std::tmpnam(nullptr);
-  return p;
-}
-
-}  // namespace
-
-void InitTestLib() {
-  auto p = GetTmpFilePath();
-  std::cout << "Init Lib. Tmp file is: " << p << std::endl;
-}
-
-void UseTestLib(const char* s) {
-  auto p = GetTmpFilePath();
-  std::ofstream ofs;
-  ofs.open(p, std::ofstream::out | std::ofstream::app);
-  ofs << s << std::endl;
-  ofs.close();
-}
-
-void CloseTestLib() {
-  auto p = GetTmpFilePath();
-
-  std::cout << "Close Lib. Content of " << p << std::endl;
-
-  std::ifstream tmp_file(p);
-  std::string line;
-  while (std::getline(tmp_file, line)) {
-    std::cout << line << std::endl;
-  }
-  tmp_file.close();
-  std::cout << std::endl << std::endl;
-
-  std::remove(p.c_str());
-}
-
 int TrivialFunction() { return 42; }
