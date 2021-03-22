@@ -529,6 +529,8 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
 
   hint_frame_->setVisible(!has_data);
 
+  filter_panel_action_->SetTimerLabelText(QString::fromStdString(app_->GetCaptureTime()));
+
   UpdateCaptureToolbarIconOpacity();
 }
 
