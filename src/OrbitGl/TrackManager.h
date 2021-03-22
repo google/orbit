@@ -49,9 +49,8 @@ class TrackManager {
   void SortTracks();
   void SetFilter(const std::string& filter);
 
-  void UpdateTrackPrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                             PickingMode picking_mode);
-
+  void UpdateTracks(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                    PickingMode picking_mode);
   [[nodiscard]] float GetTracksTotalHeight() const { return tracks_total_height_; }
 
   [[nodiscard]] uint32_t GetNumTimers() const;
