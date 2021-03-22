@@ -59,7 +59,7 @@ TEST(TemporaryFile, Move) {
   EXPECT_FALSE(error) << error.message();
 }
 
-TEST(TemporaryFile, Destruction) {
+TEST(TemporaryFile, Cleanup) {
   std::filesystem::path file_path_copy;
   {
     auto tmp_file_or_error = TemporaryFile::Create();
@@ -70,6 +70,29 @@ TEST(TemporaryFile, Destruction) {
     EXPECT_THAT(tmp_file.file_path().string(), HasSubstr("orbit_"));
     EXPECT_THAT(tmp_file.file_path().string(), Not(HasSubstr("XXXXXX")));
     file_path_copy = tmp_file.file_path();
+  }
+
+  std::error_code error;
+  EXPECT_FALSE(std::filesystem::exists(file_path_copy, error));
+  EXPECT_FALSE(error) << error.message();
+}
+
+TEST(TemporaryFile, CleanupAfterReopen) {
+  std::filesystem::path file_path_copy;
+  {
+    auto tmp_file_or_error = TemporaryFile::Create();
+    ASSERT_TRUE(tmp_file_or_error.has_value()) << tmp_file_or_error.error().message();
+    TemporaryFile tmp_file = std::move(tmp_file_or_error.value());
+
+    EXPECT_TRUE(tmp_file.fd().valid());
+    EXPECT_THAT(tmp_file.file_path().string(), HasSubstr("orbit_"));
+    EXPECT_THAT(tmp_file.file_path().string(), Not(HasSubstr("XXXXXX")));
+    file_path_copy = tmp_file.file_path();
+
+    // Check that the file is removed even if we call RemoveAndClose and then recreate it.
+    tmp_file.CloseAndRemove();
+    auto fd_or_error = OpenFileForWriting(file_path_copy);
+    ASSERT_TRUE(fd_or_error.has_value()) << fd_or_error.error().message();
   }
 
   std::error_code error;

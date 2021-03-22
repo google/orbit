@@ -2,12 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/File.h"
+#include "OrbitBase/TemporaryFile.h"
 
 namespace orbit_base {
+
+using ::testing::HasSubstr;
 
 TEST(File, DefaultUniqueFdIsInvalidDescriptor) {
   unique_fd fd;
@@ -64,6 +68,19 @@ TEST(File, AcccessInvalidUniqueFd) {
 TEST(File, OpenFileForReadingInvalidFile) {
   const auto fd_or_error = OpenFileForReading("non/existing/filename");
   ASSERT_TRUE(fd_or_error.has_error());
+}
+
+TEST(File, OpenNewFileForReadWrite) {
+  auto temporary_file_or_error = TemporaryFile::Create();
+  ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
+  TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
+
+  auto fd_or_error = OpenNewFileForReadWrite(temporary_file.file_path());
+  ASSERT_TRUE(fd_or_error.has_error());
+  EXPECT_THAT(fd_or_error.error().message(), HasSubstr("File exists"));
+  temporary_file.CloseAndRemove();
+  fd_or_error = OpenNewFileForReadWrite(temporary_file.file_path());
+  ASSERT_TRUE(fd_or_error.has_value()) << fd_or_error.error().message();
 }
 
 TEST(File, ReadFullySmoke) {
