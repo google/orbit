@@ -66,11 +66,12 @@ class AddFrameTrack(LiveTabTestCase):
         wait_for_condition(lambda: "F" in tree_view.children()[index - 1].window_text())
 
         logging.info("Verifying existence of track in the Capture window")
-        match_tracks = MatchTracks(expected_names=["Frame track based on %s" % function_name],
+        track_name = "Frame track based on %s" % function_name
+        match_tracks = MatchTracks(expected_names=[track_name],
                                    allow_additional_tracks=True)
         match_tracks.execute(self.suite)
 
-        check_timers = CheckTimers(track_name_contains=function_name)
+        check_timers = CheckTimers(track_name_filter=track_name)
         check_timers.execute(self.suite)
 
 
@@ -90,7 +91,8 @@ class VerifyFunctionCallCount(LiveTabTestCase):
         self.expect_true(min_calls <= call_count <= max_calls,
                          'Call count for function "%s" expected to be between %s and %s, was %s'
                          % (function_name, min_calls, max_calls, call_count))
-                         
+
+
 class VerifyOneFunctionWasCalled(LiveTabTestCase):
     """
     Verify that at least one of the functions matching the function name has 
@@ -106,4 +108,4 @@ class VerifyOneFunctionWasCalled(LiveTabTestCase):
                                  children[i].window_text(), call_count)
                     return
         
-        raise RuntimeError('No function matching "%s" has received the required hit count' % (function_name))
+        raise RuntimeError('No function matching "%s" has received the required hit count' % (function_name_contains))

@@ -22,9 +22,9 @@ def main(argv):
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter='hello_'),
         Capture(collect_thread_states=True),
-        CheckThreadStates(track_name_contains='hello_ggp'),
+        CheckThreadStates(track_name_filter='hello_ggp_stand'),
         Capture(collect_thread_states=False),
-        CheckThreadStates(track_name_contains='hello_ggp', expect_exists=False),
+        CheckThreadStates(track_name_filter='hello_ggp_stand', expect_exists=False),
     ]
     suite = E2ETestSuite(test_name="Collect Thread States", test_cases=test_cases)
     suite.execute()

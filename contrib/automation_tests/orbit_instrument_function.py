@@ -36,15 +36,15 @@ def main(argv):
         FilterAndSelectFirstProcess(process_filter='hello_'),
         LoadSymbols(module_search_string="hello_ggp"),
         Capture(),
-        CheckTimers(track_name_contains='Scheduler'),
-        CheckTimers(track_name_contains='gfx'),
-        CheckTimers(track_name_contains="All Threads", expect_exists=False),
-        CheckTimers(track_name_contains="hello_ggp_stand", expect_exists=False),
+        CheckTimers(track_name_filter='Scheduler'),
+        CheckTimers(track_name_filter='gfx'),
+        CheckTimers(track_name_filter="All Threads", expect_exists=False),
+        CheckTimers(track_name_filter="hello_ggp_stand", expect_exists=False),
         FilterAndHookFunction(function_search_string='DrawFrame'),
         Capture(),
         VerifyFunctionCallCount(function_name='DrawFrame', min_calls=30, max_calls=3000),
-        CheckTimers(track_name_contains="All Threads", expect_exists=False),
-        CheckTimers(track_name_contains="hello_ggp_stand")
+        CheckTimers(track_name_filter="All Threads", expect_exists=False),
+        CheckTimers(track_name_filter="hello_ggp_stand")
     ]
     suite = E2ETestSuite(test_name="Instrument Function", test_cases=test_cases)
     suite.execute()

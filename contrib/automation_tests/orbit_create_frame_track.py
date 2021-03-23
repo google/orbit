@@ -40,7 +40,7 @@ def main(argv):
         Capture(),
         AddFrameTrack(function_name="DrawFrame"),
         FilterTracks(filter_string="Frame", expected_count=1),   # Verify there's exactly one frame track
-        CheckTimers(track_name_contains='Frame track')  # Verify the frame track has timers
+        CheckTimers(track_name_filter='Frame track*')  # Verify the frame track has timers
     ]
     suite = E2ETestSuite(test_name="Add Frame Track", test_cases=test_cases)
     suite.execute()
