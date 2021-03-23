@@ -6,6 +6,7 @@ found in the LICENSE file.
 
 import logging
 import time
+from fnmatch import fnmatch
 
 from typing import Tuple, List, Iterable
 
@@ -28,10 +29,10 @@ class CaptureWindowE2ETestCaseBase(E2ETestCase):
         self._time_graph = self.find_control('Image', name='TimeGraph', parent=suite.top_window())
         super().execute(suite=suite)
 
-    def _find_tracks(self, name_contains: str = None):
+    def _find_tracks(self, name_filter: str = None):
         tracks = self._time_graph.children()
-        if name_contains is not None:
-            tracks = filter(lambda track: name_contains in track.texts()[0], tracks)
+        if name_filter is not None:
+            tracks = filter(lambda track: fnmatch(track.texts()[0], name_filter), tracks)
         return list(tracks)
 
 
@@ -169,10 +170,10 @@ class MatchTracks(CaptureWindowE2ETestCaseBase):
     @staticmethod
     def _match(expected_name: str or Iterable[str], found_name: str) -> bool:
         if isinstance(expected_name, str):
-            return found_name in expected_name
+            return fnmatch(found_name, expected_name)
         else:
             for option in expected_name:
-                if found_name in option:
+                if fnmatch(found_name, option):
                     return True
         return False
 
@@ -253,9 +254,9 @@ class Capture(E2ETestCase):
 
 
 class CheckThreadStates(CaptureWindowE2ETestCaseBase):
-    def _execute(self, track_name_contains: str, expect_exists: bool = True):
-        tracks = self._find_tracks(track_name_contains)
-        self.expect_true(len(tracks) > 0, 'Found tracks matching %s' % track_name_contains)
+    def _execute(self, track_name_filter: str, expect_exists: bool = True):
+        tracks = self._find_tracks(track_name_filter)
+        self.expect_true(len(tracks) > 0, 'Found tracks matching %s' % track_name_filter)
         logging.info('Checking for thread states in %s tracks', len(tracks))
         for track in tracks:
             track = Track(track)
@@ -266,9 +267,9 @@ class CheckThreadStates(CaptureWindowE2ETestCaseBase):
 
 
 class CheckTimers(CaptureWindowE2ETestCaseBase):
-    def _execute(self, track_name_contains: str, expect_exists: bool = True):
-        tracks = self._find_tracks(track_name_contains)
-        self.expect_true(len(tracks) > 0, 'Found tracks matching "%s"' % track_name_contains)
+    def _execute(self, track_name_filter: str, expect_exists: bool = True):
+        tracks = self._find_tracks(track_name_filter)
+        self.expect_true(len(tracks) > 0, 'Found tracks matching "%s"' % track_name_filter)
         logging.info('Checking for timers in %s tracks', len(tracks))
         for track in tracks:
             track = Track(track)
@@ -279,9 +280,9 @@ class CheckTimers(CaptureWindowE2ETestCaseBase):
 
 
 class CheckCallstacks(CaptureWindowE2ETestCaseBase):
-    def _execute(self, track_name_contains: str, expect_exists: bool = True):
-        tracks = self._find_tracks(track_name_contains)
-        self.expect_true(len(tracks) > 0, 'Found tracks matching "%s"' % track_name_contains)
+    def _execute(self, track_name_filter: str, expect_exists: bool = True):
+        tracks = self._find_tracks(track_name_filter)
+        self.expect_true(len(tracks) > 0, 'Found tracks matching "%s"' % track_name_filter)
         logging.info('Checking for callstacks pane in %s tracks', len(tracks))
         for track in tracks:
             track = Track(track)

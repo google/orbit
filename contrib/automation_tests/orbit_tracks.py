@@ -18,7 +18,7 @@ def main(argv):
         Capture(),
         # "sdma0" is not present on the DevKits, instead there is "vce0", so this tests for "sdma0 or vce0"
         MatchTracks(expected_names=[
-            "Scheduler", ("sdma0", "vce0"), "gfx", "All Threads", "hello_ggp_stand"],
+            "Scheduler", ("*sdma0*", "*vce0*"), "gfx", "All Threads", "hello_ggp_stand"],
             allow_additional_tracks=True),
         SelectTrack(track_index=4),
         DeselectTrack(),
