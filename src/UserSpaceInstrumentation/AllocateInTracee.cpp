@@ -135,9 +135,9 @@ namespace {
   // Syscall will be equivalent to:
   // `mmap(address, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)`
   constexpr uint64_t kSyscallNumberMmap = 9;
-  auto result_or_error =
-      SyscallInTracee(pid, kSyscallNumberMmap, address, size, PROT_READ | PROT_WRITE | PROT_EXEC,
-                      MAP_PRIVATE | MAP_ANONYMOUS, static_cast<uint64_t>(-1), 0, /*exclude_address=*/0);
+  auto result_or_error = SyscallInTracee(
+      pid, kSyscallNumberMmap, address, size, PROT_READ | PROT_WRITE | PROT_EXEC,
+      MAP_PRIVATE | MAP_ANONYMOUS, static_cast<uint64_t>(-1), 0, /*exclude_address=*/0);
   if (result_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to execute mmap syscall: \"%s\"",
                                         result_or_error.error().message()));
