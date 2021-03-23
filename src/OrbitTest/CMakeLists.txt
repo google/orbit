@@ -18,6 +18,12 @@ if (NOT WIN32)
 target_link_libraries(OrbitTest PRIVATE dl)
 endif()
 
+add_executable(OrbitTestLegacyApi)
+target_compile_options(OrbitTestLegacyApi PRIVATE ${STRICT_COMPILE_FLAGS})
+target_sources(OrbitTestLegacyApi PRIVATE main_legacy_api.cpp)
+target_include_directories(OrbitTestLegacyApi PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(OrbitTestLegacyApi PRIVATE Threads::Threads CONAN_PKG::abseil)
+
 add_executable(OrbitTestShortLivedThreads)
 target_compile_options(OrbitTestShortLivedThreads PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(OrbitTestShortLivedThreads PRIVATE main_short_lived_threads.cpp)
