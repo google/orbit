@@ -5,10 +5,11 @@ found in the LICENSE file.
 """
 
 import orbitutils.run_all_unittests as unit_tests
+import sys
 
 def main():
     print("Running Python unit tests")
-    unit_tests.main()
+    return unit_tests.main()
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
