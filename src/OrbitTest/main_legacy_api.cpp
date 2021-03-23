@@ -36,6 +36,8 @@ class AsyncScopeTester {
           id);
       ORBIT_ASYNC_STRING(str.c_str(), id);
       ORBIT_STOP_ASYNC(id);
+
+      // Scatter end times for async events.
       std::this_thread::sleep_for(std::chrono::milliseconds(2));
     }
     async_scope_ids_to_stop_.clear();
@@ -51,6 +53,8 @@ void StartAsyncScopesThread(AsyncScopeTester* tester) {
     tester->Start("ASYNC_SCOPES_0");
     tester->Start("ASYNC_SCOPES_1");
     tester->Start("ASYNC_SCOPES_2");
+
+    // Throttle the number of generated async events.
     std::this_thread::sleep_for(std::chrono::milliseconds(16));
   }
 }
