@@ -16,6 +16,7 @@ build_type=RelWithDebInfo
 abseil:compiler=clang
 abseil:compiler.cppstd=17
 [options]
+OrbitProfiler:run_python_tests=True
 [build_requires]
 &: cmake_installer/3.16.3@conan/stable
 [env]

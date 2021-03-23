@@ -14,5 +14,6 @@ setup(
     url='http://github.com/google/orbit',
     license='BSD 2-Clause License',
     description='Orbit capture utilities',
-    install_requires=[],
+    # This should stay in sync with the proto version we use in C++ (see conanfile.py).
+    install_requires=["protobuf==3.9.1"],
 )
