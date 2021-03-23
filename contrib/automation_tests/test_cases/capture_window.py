@@ -10,7 +10,7 @@ import time
 from typing import Tuple, List, Iterable
 
 from core.common_controls import Track
-from core.orbit_e2e import E2ETestCase, E2ETestSuite
+from core.orbit_e2e import E2ETestCase, E2ETestSuite, wait_for_condition
 from pywinauto.base_wrapper import BaseWrapper
 from pywinauto import mouse, keyboard
 
@@ -233,10 +233,17 @@ class Capture(E2ETestCase):
         time.sleep(length_in_seconds)
         logging.info('Stopping capture')
         toggle_capture_button.click_input()
+        self._wait_for_capture_completion()
 
     def _verify_existence_of_tracks(self):
         logging.info("Verifying existence of at least one track...")
         MatchTracks(expected_count=1, allow_additional_tracks=True).execute(self.suite)
+
+    def _wait_for_capture_completion(self):
+        logging.info("Waiting for capture to finalize...")
+        wait_for_condition(lambda: self.find_control('Window', 'Finalizing capture',
+                                                     recurse=False, raise_on_failure=False) is None, max_seconds=120)
+        logging.info("Capturing finished")
 
     def _execute(self, length_in_seconds: int = 5, collect_thread_states: bool = False):
         self._show_capture_window()
