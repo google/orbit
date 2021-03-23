@@ -18,6 +18,7 @@ if [ -z "${CONAN_PROFILE}" ]; then
     [gcp_ubuntu_test]="clang7_relwithdebinfo" \
     [gcp_windows]="msvc2017_relwithdebinfo" \
     [gcp_windows_test]="msvc2017_relwithdebinfo" \
+    [msvc2017_relwithdebinfo]="msvc2019_relwithdebinfo" \
   )
 
   CONAN_PROFILE="${profile_mapping[${CONAN_PROFILE}]-${CONAN_PROFILE}}"
