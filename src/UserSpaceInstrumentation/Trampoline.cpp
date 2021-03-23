@@ -26,20 +26,20 @@ bool DoAddressRangesOverlap(const AddressRange& a, const AddressRange& b) {
   return !(b.end <= a.start || b.start >= a.end);
 }
 
-std::optional<size_t> LowestIntersectingAddressRange(const std::vector<AddressRange>& all_ranges,
+std::optional<size_t> LowestIntersectingAddressRange(const std::vector<AddressRange>& ranges_sorted,
                                                      const AddressRange& range) {
-  for (size_t i = 0; i < all_ranges.size(); i++) {
-    if (DoAddressRangesOverlap(all_ranges[i], range)) {
+  for (size_t i = 0; i < ranges_sorted.size(); i++) {
+    if (DoAddressRangesOverlap(ranges_sorted[i], range)) {
       return i;
     }
   }
   return std::nullopt;
 }
 
-std::optional<size_t> HighestIntersectingAddressRange(const std::vector<AddressRange>& all_ranges,
-                                                      const AddressRange& range) {
-  for (int i = all_ranges.size() - 1; i >= 0; i--) {
-    if (DoAddressRangesOverlap(all_ranges[i], range)) {
+std::optional<size_t> HighestIntersectingAddressRange(
+    const std::vector<AddressRange>& ranges_sorted, const AddressRange& range) {
+  for (int i = ranges_sorted.size() - 1; i >= 0; i--) {
+    if (DoAddressRangesOverlap(ranges_sorted[i], range)) {
       return i;
     }
   }

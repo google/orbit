@@ -25,7 +25,7 @@ namespace {
 using absl::numbers_internal::safe_strtou64_base;
 using orbit_base::ReadFileToString;
 
-extern "C" __attribute__((noinline)) int DoubleAndIncrease(int i) {
+extern "C" __attribute__((noinline)) int DoubleAndIncrement(int i) {
   i = 2 * i;
   return i + 1;
 }
@@ -208,14 +208,14 @@ TEST(TrampolineTest, AllocateMemoryForTrampolines) {
     int i = 0;
     while (true) {
       i = (i + 1) & 3;
-      sum += DoubleAndIncrease(i);
+      sum += DoubleAndIncrement(i);
     }
   }
 
   // Stop the process using our tooling.
   CHECK(AttachAndStopProcess(pid).has_value());
 
-  // Find the address range of the code for `DoubleAndIncrease`. For the purpose of this test we
+  // Find the address range of the code for `DoubleAndIncrement`. For the purpose of this test we
   // just take the entire address space taken up by `UserSpaceInstrumentationTests`.
   AddressRange code_range;
   auto modules = orbit_elf_utils::ReadModules(pid);

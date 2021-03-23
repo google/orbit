@@ -27,13 +27,17 @@ struct AddressRange {
 // the ranges are well formed (.first < .second).
 [[nodiscard]] bool DoAddressRangesOverlap(const AddressRange& a, const AddressRange& b);
 
-// Returns the index of the lowest range in `all_ranges` that is intersecting with `range`.
+// Returns the index of the lowest range in `ranges_sorted` that is intersecting with `range`.
+// `ranges_sorted` needs to contain non-overlapping ranges in ascending order (as provided by
+// `GetTakenAddressRanges`).
 [[nodiscard]] std::optional<size_t> LowestIntersectingAddressRange(
-    const std::vector<AddressRange>& all_ranges, const AddressRange& range);
+    const std::vector<AddressRange>& ranges_sorted, const AddressRange& range);
 
-// Returns the index of the highest range in `all_ranges` that is intersecting with `range`.
+// Returns the index of the highest range in `ranges_sorted` that is intersecting with `range`.
+// `ranges_sorted` needs to contain non-overlapping ranges in ascending order (as provided by
+// `GetTakenAddressRanges`).
 [[nodiscard]] std::optional<size_t> HighestIntersectingAddressRange(
-    const std::vector<AddressRange>& all_ranges, const AddressRange& range);
+    const std::vector<AddressRange>& ranges_sorted, const AddressRange& range);
 
 // Parses the /proc/pid/maps file of a process and returns all the taken address ranges (joining
 // directly neighboring ones). We also add a range [0, /proc/sys/vm/mmap_min_addr] to block the
