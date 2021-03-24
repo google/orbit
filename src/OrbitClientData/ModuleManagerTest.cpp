@@ -2,13 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <absl/container/flat_hash_map.h>
 #include <absl/strings/str_format.h>
 #include <gtest/gtest.h>
 #include <stdint.h>
 
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "OrbitClientData/FunctionUtils.h"
@@ -28,11 +26,11 @@ using orbit_grpc_protos::ModuleSymbols;
 using orbit_grpc_protos::ProcessInfo;
 using orbit_grpc_protos::SymbolInfo;
 
-TEST(ModuleManager, GetModuleByPath) {
+TEST(ModuleManager, GetModuleByPathAndBuildId) {
   std::string name = "name of module";
   std::string file_path = "path/of/module";
   uint64_t file_size = 300;
-  std::string build_id = "build id example";
+  std::string build_id = "build id 1";
   uint64_t load_bias = 0x400;
 
   ModuleInfo module_info;
@@ -45,7 +43,7 @@ TEST(ModuleManager, GetModuleByPath) {
   ModuleManager module_manager;
   module_manager.AddOrUpdateModules({module_info});
 
-  const ModuleData* module = module_manager.GetModuleByPath(file_path);
+  const ModuleData* module = module_manager.GetModuleByPathAndBuildId(file_path, build_id);
   ASSERT_NE(module, nullptr);
   EXPECT_EQ(module->name(), name);
   EXPECT_EQ(module->file_path(), file_path);
@@ -53,15 +51,20 @@ TEST(ModuleManager, GetModuleByPath) {
   EXPECT_EQ(module->build_id(), build_id);
   EXPECT_EQ(module->load_bias(), load_bias);
 
-  const ModuleData* non_existing_module = module_manager.GetModuleByPath("wrong/path");
-  EXPECT_EQ(non_existing_module, nullptr);
+  const ModuleData* module_invalid_path =
+      module_manager.GetModuleByPathAndBuildId("wrong/path", build_id);
+  EXPECT_EQ(module_invalid_path, nullptr);
+
+  const ModuleData* module_invalid_build_id =
+      module_manager.GetModuleByPathAndBuildId(file_path, "wrong buildid");
+  EXPECT_EQ(module_invalid_build_id, nullptr);
 }
 
-TEST(ModuleManager, GetMutableModuleByPath) {
+TEST(ModuleManager, GetMutableModuleByPathAndBuildId) {
   std::string name = "name of module";
   std::string file_path = "path/of/module";
   uint64_t file_size = 300;
-  std::string build_id = "build id example";
+  std::string build_id = "build id 1";
   uint64_t load_bias = 0x400;
 
   ModuleInfo module_info;
@@ -74,7 +77,7 @@ TEST(ModuleManager, GetMutableModuleByPath) {
   ModuleManager module_manager;
   module_manager.AddOrUpdateModules({module_info});
 
-  ModuleData* module = module_manager.GetMutableModuleByPath(file_path);
+  ModuleData* module = module_manager.GetMutableModuleByPathAndBuildId(file_path, build_id);
   ASSERT_NE(module, nullptr);
   EXPECT_EQ(module->name(), name);
   EXPECT_EQ(module->file_path(), file_path);
@@ -86,29 +89,29 @@ TEST(ModuleManager, GetMutableModuleByPath) {
   module->AddSymbols({});
   EXPECT_TRUE(module->is_loaded());
 
-  ModuleData* non_existing_module = module_manager.GetMutableModuleByPath("wrong/path");
-  EXPECT_EQ(non_existing_module, nullptr);
+  EXPECT_EQ(module_manager.GetMutableModuleByPathAndBuildId("wrong/path", build_id), nullptr);
+  EXPECT_EQ(module_manager.GetMutableModuleByPathAndBuildId(file_path, "wrong build_id"), nullptr);
 }
 
 TEST(ModuleManager, AddOrUpdateModules) {
-  std::string name = "name of module";
-  std::string file_path = "path/of/module";
-  uint64_t file_size = 300;
-  std::string build_id = "build id example";
-  uint64_t load_bias = 0x400;
+  const std::string name = "name of module";
+  const std::string file_path = "path/of/module";
+  const std::string build_id{};
+  constexpr uint64_t kFileSize = 300;
+  constexpr uint64_t kLoadBias = 0x400;
 
   ModuleInfo module_info;
   module_info.set_name(name);
   module_info.set_file_path(file_path);
-  module_info.set_file_size(file_size);
+  module_info.set_file_size(kFileSize);
   module_info.set_build_id(build_id);
-  module_info.set_load_bias(load_bias);
+  module_info.set_load_bias(kLoadBias);
 
   ModuleManager module_manager;
   std::vector<ModuleData*> unloaded_modules = module_manager.AddOrUpdateModules({module_info});
   EXPECT_TRUE(unloaded_modules.empty());
 
-  ModuleData* module = module_manager.GetMutableModuleByPath(file_path);
+  ModuleData* module = module_manager.GetMutableModuleByPathAndBuildId(file_path, build_id);
 
   ASSERT_NE(module, nullptr);
   EXPECT_EQ(module->name(), name);
@@ -129,14 +132,14 @@ TEST(ModuleManager, AddOrUpdateModules) {
   module->AddSymbols(module_symbols);
   ASSERT_TRUE(module->is_loaded());
 
-  // change build id, this updates the module and removes the symbols
-  module_info.set_build_id("different build id");
+  // change build id, this creates new module
+  constexpr const char* kDifferentBuildId = "different build id";
+  module_info.set_build_id(kDifferentBuildId);
   unloaded_modules = module_manager.AddOrUpdateModules({module_info});
-  EXPECT_FALSE(unloaded_modules.empty());
-  EXPECT_EQ(unloaded_modules.size(), 1);
+  EXPECT_TRUE(unloaded_modules.empty());
 
-  EXPECT_EQ(module->build_id(), module_info.build_id());
-  EXPECT_FALSE(module->is_loaded());
+  EXPECT_EQ(module->build_id(), build_id);
+  EXPECT_TRUE(module->is_loaded());
 
   // change file path & file size and add again (should be added again, because it is now considered
   // a different module)
@@ -149,31 +152,32 @@ TEST(ModuleManager, AddOrUpdateModules) {
 
   ASSERT_NE(module, nullptr);
   EXPECT_EQ(module->file_path(), file_path);
-  EXPECT_EQ(module->file_size(), file_size);
+  EXPECT_EQ(module->file_size(), kFileSize);
 
-  const ModuleData* different_module = module_manager.GetModuleByPath(different_path);
+  const ModuleData* different_module =
+      module_manager.GetModuleByPathAndBuildId(different_path, kDifferentBuildId);
   ASSERT_NE(different_module, nullptr);
   EXPECT_EQ(different_module->file_path(), different_path);
   EXPECT_EQ(different_module->file_size(), different_file_size);
 }
 
 TEST(ModuleManager, GetOrbitFunctionsOfProcess) {
-  std::string name = "name of module";
-  std::string file_path = "path/of/module";
-  uint64_t file_size = 300;
-  std::string build_id = "build id example";
-  uint64_t load_bias = 0x400;
-  uint64_t address_start = 100;
-  uint64_t address_end = 1000;
+  const std::string name = "name of module";
+  const std::string file_path = "path/of/module";
+  const std::string build_id = "build id example";
+  constexpr uint64_t kFileSize = 300;
+  constexpr uint64_t kLoadBias = 0x400;
+  constexpr uint64_t kAddressStart = 100;
+  constexpr uint64_t kAddressEnd = 1000;
 
   ModuleInfo module_info;
   module_info.set_name(name);
   module_info.set_file_path(file_path);
-  module_info.set_file_size(file_size);
+  module_info.set_file_size(kFileSize);
   module_info.set_build_id(build_id);
-  module_info.set_load_bias(load_bias);
-  module_info.set_address_start(address_start);
-  module_info.set_address_end(address_end);
+  module_info.set_load_bias(kLoadBias);
+  module_info.set_address_start(kAddressStart);
+  module_info.set_address_end(kAddressEnd);
 
   ModuleManager module_manager;
   module_manager.AddOrUpdateModules({module_info});
@@ -202,17 +206,17 @@ TEST(ModuleManager, GetOrbitFunctionsOfProcess) {
   }
 
   const auto& orbit_name_to_orbit_type_map = function_utils::GetFunctionNameToOrbitTypeMap();
-  const std::string kOrbitName = orbit_name_to_orbit_type_map.begin()->first;
-  const std::string kOrbitNameMangled = absl::StrFormat("mangled_%s", kOrbitName);
+  const std::string orbit_name = orbit_name_to_orbit_type_map.begin()->first;
+  const std::string orbit_name_mangled = absl::StrFormat("mangled_%s", orbit_name);
 
   {
     SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
-    symbol_info->set_name(kOrbitNameMangled);
-    symbol_info->set_demangled_name(kOrbitName);
+    symbol_info->set_name(orbit_name_mangled);
+    symbol_info->set_demangled_name(orbit_name);
     symbol_info->set_address(500);
   }
 
-  ModuleData* module = module_manager.GetMutableModuleByPath(file_path);
+  ModuleData* module = module_manager.GetMutableModuleByPathAndBuildId(file_path, build_id);
   module->AddSymbols(module_symbols);
 
   {
@@ -222,8 +226,8 @@ TEST(ModuleManager, GetOrbitFunctionsOfProcess) {
     ASSERT_EQ(functions.size(), 1);
 
     FunctionInfo& function{functions[0]};
-    EXPECT_EQ(function.name(), kOrbitNameMangled);
-    EXPECT_EQ(function.pretty_name(), kOrbitName);
+    EXPECT_EQ(function.name(), orbit_name_mangled);
+    EXPECT_EQ(function.pretty_name(), orbit_name);
     EXPECT_EQ(function.address(), 500);
   }
 }

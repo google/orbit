@@ -49,11 +49,12 @@ CallTreeFunction* CallTreeNode::GetFunctionOrNull(uint64_t function_absolute_add
 
 CallTreeFunction* CallTreeNode::AddAndGetFunction(uint64_t function_absolute_address,
                                                   std::string function_name,
-                                                  std::string module_path) {
+                                                  std::string module_path,
+                                                  std::string module_build_id) {
   function_children_.insert_or_assign(
       function_absolute_address,
       CallTreeFunction{function_absolute_address, std::move(function_name), std::move(module_path),
-                       this});
+                       std::move(module_build_id), this});
   return &function_children_.at(function_absolute_address);
 }
 
@@ -71,7 +72,8 @@ uint64_t CallTreeNode::GetExclusiveSampleCount() const {
 [[nodiscard]] static CallTreeFunction* GetOrCreateFunctionNode(CallTreeNode* current_node,
                                                                uint64_t frame,
                                                                const std::string& function_name,
-                                                               const std::string& module_path) {
+                                                               const std::string& module_path,
+                                                               const std::string& module_build_id) {
   CallTreeFunction* function_node = current_node->GetFunctionOrNull(frame);
   if (function_node == nullptr) {
     std::string formatted_function_name;
@@ -80,8 +82,8 @@ uint64_t CallTreeNode::GetExclusiveSampleCount() const {
     } else {
       formatted_function_name = absl::StrFormat("[unknown@%#llx]", frame);
     }
-    function_node =
-        current_node->AddAndGetFunction(frame, std::move(formatted_function_name), module_path);
+    function_node = current_node->AddAndGetFunction(frame, std::move(formatted_function_name),
+                                                    module_path, module_build_id);
   }
   return function_node;
 }
@@ -96,8 +98,10 @@ static void AddCallstackToTopDownThread(CallTreeThread* thread_node,
     uint64_t frame = *frame_it;
     const std::string& function_name = capture_data.GetFunctionNameByAddress(frame);
     const std::string& module_path = capture_data.GetModulePathByAddress(frame);
-    CallTreeFunction* function_node =
-        GetOrCreateFunctionNode(current_thread_or_function, frame, function_name, module_path);
+    const std::string module_build_id = capture_data.FindModuleBuildIdByAddress(frame).value_or("");
+
+    CallTreeFunction* function_node = GetOrCreateFunctionNode(
+        current_thread_or_function, frame, function_name, module_path, module_build_id);
     function_node->IncreaseSampleCount(callstack_sample_count);
     current_thread_or_function = function_node;
   }
@@ -155,8 +159,9 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromSamplingProfile
   for (uint64_t frame : resolved_callstack.frames()) {
     const std::string& function_name = capture_data.GetFunctionNameByAddress(frame);
     const std::string& module_path = capture_data.GetModulePathByAddress(frame);
+    const std::string module_build_id = capture_data.FindModuleBuildIdByAddress(frame).value_or("");
     CallTreeFunction* function_node =
-        GetOrCreateFunctionNode(current_node, frame, function_name, module_path);
+        GetOrCreateFunctionNode(current_node, frame, function_name, module_path, module_build_id);
     function_node->IncreaseSampleCount(callstack_sample_count);
     current_node = function_node;
   }

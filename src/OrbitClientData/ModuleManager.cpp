@@ -28,9 +28,10 @@ std::vector<ModuleData*> ModuleManager::AddOrUpdateModules(
   std::vector<ModuleData*> unloaded_modules;
 
   for (const auto& module_info : module_infos) {
-    auto module_it = module_map_.find(module_info.file_path());
+    auto module_id = std::make_pair(module_info.file_path(), module_info.build_id());
+    auto module_it = module_map_.find(module_id);
     if (module_it == module_map_.end()) {
-      const bool success = module_map_.try_emplace(module_info.file_path(), module_info).second;
+      const bool success = module_map_.try_emplace(module_id, module_info).second;
       CHECK(success);
     } else {
       ModuleData& module = module_it->second;
@@ -45,19 +46,21 @@ std::vector<ModuleData*> ModuleManager::AddOrUpdateModules(
   return unloaded_modules;
 }
 
-const ModuleData* ModuleManager::GetModuleByPath(const std::string& path) const {
+const ModuleData* ModuleManager::GetModuleByPathAndBuildId(const std::string& path,
+                                                           const std::string& build_id) const {
   absl::MutexLock lock(&mutex_);
 
-  auto it = module_map_.find(path);
+  auto it = module_map_.find(std::make_pair(path, build_id));
   if (it == module_map_.end()) return nullptr;
 
   return &it->second;
 }
 
-ModuleData* ModuleManager::GetMutableModuleByPath(const std::string& path) {
+ModuleData* ModuleManager::GetMutableModuleByPathAndBuildId(const std::string& path,
+                                                            const std::string& build_id) {
   absl::MutexLock lock(&mutex_);
 
-  auto it = module_map_.find(path);
+  auto it = module_map_.find(std::make_pair(path, build_id));
   if (it == module_map_.end()) return nullptr;
 
   return &it->second;
@@ -69,8 +72,8 @@ std::vector<FunctionInfo> ModuleManager::GetOrbitFunctionsOfProcess(
 
   std::vector<FunctionInfo> result;
 
-  for (const auto& [module_path, _] : process.GetMemoryMap()) {
-    auto it = module_map_.find(module_path);
+  for (const auto& [module_path, module_in_memory] : process.GetMemoryMap()) {
+    auto it = module_map_.find(std::make_pair(module_path, module_in_memory.build_id()));
     CHECK(it != module_map_.end());
     const ModuleData* module = &it->second;
     CHECK(module != nullptr);

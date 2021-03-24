@@ -179,9 +179,10 @@ absl::flat_hash_set<const FunctionInfo*> SamplingReportDataView::GetFunctionsFro
   return functions_set;
 }
 
-absl::flat_hash_set<std::string> SamplingReportDataView::GetModulePathsFromIndices(
+absl::flat_hash_set<std::pair<std::string, std::string>>
+SamplingReportDataView::GetModulePathsAndBuildIdsFromIndices(
     const std::vector<int>& indices) const {
-  absl::flat_hash_set<std::string> module_paths;
+  absl::flat_hash_set<std::pair<std::string, std::string>> module_paths_and_build_ids;
   const ProcessData* process = app_->GetCaptureData().process();
   CHECK(process != nullptr);
 
@@ -192,11 +193,11 @@ absl::flat_hash_set<std::string> SamplingReportDataView::GetModulePathsFromIndic
     if (result.has_error()) {
       ERROR("result %s", result.error().message());
     } else {
-      module_paths.insert(result.value().first);
+      module_paths_and_build_ids.emplace(result.value().file_path(), result.value().build_id());
     }
   }
 
-  return module_paths;
+  return module_paths_and_build_ids;
 }
 
 const std::string SamplingReportDataView::kMenuActionSelect = "Hook";
@@ -227,8 +228,9 @@ std::vector<std::string> SamplingReportDataView::GetContextMenu(
   }
 
   bool enable_load = false;
-  for (const std::string& module_path : GetModulePathsFromIndices(selected_indices)) {
-    const ModuleData* module = app_->GetModuleByPath(module_path);
+  for (const auto& [module_path, build_id] :
+       GetModulePathsAndBuildIdsFromIndices(selected_indices)) {
+    const ModuleData* module = app_->GetModuleByPathAndBuildId(module_path, build_id);
     if (!module->is_loaded()) {
       enable_load = true;
     }
@@ -257,8 +259,8 @@ void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_i
     }
   } else if (action == kMenuActionLoadSymbols) {
     std::vector<ModuleData*> modules_to_load;
-    for (const std::string& module_path : GetModulePathsFromIndices(item_indices)) {
-      ModuleData* module = app_->GetMutableModuleByPath(module_path);
+    for (const auto& [module_path, build_id] : GetModulePathsAndBuildIdsFromIndices(item_indices)) {
+      ModuleData* module = app_->GetMutableModuleByPathAndBuildId(module_path, build_id);
       if (!module->is_loaded()) {
         modules_to_load.push_back(module);
       }

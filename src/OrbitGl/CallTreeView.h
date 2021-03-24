@@ -41,7 +41,8 @@ class CallTreeNode {
 
   [[nodiscard]] CallTreeFunction* AddAndGetFunction(uint64_t function_absolute_address,
                                                     std::string function_name,
-                                                    std::string module_path);
+                                                    std::string module_path,
+                                                    std::string module_build_id);
 
   [[nodiscard]] uint64_t sample_count() const { return sample_count_; }
 
@@ -80,17 +81,21 @@ class CallTreeNode {
 class CallTreeFunction : public CallTreeNode {
  public:
   explicit CallTreeFunction(uint64_t function_absolute_address, std::string function_name,
-                            std::string module_path, CallTreeNode* parent)
+                            std::string module_path, std::string module_build_id,
+                            CallTreeNode* parent)
       : CallTreeNode{parent},
         function_absolute_address_{function_absolute_address},
         function_name_{std::move(function_name)},
-        module_path_{std::move(module_path)} {}
+        module_path_{std::move(module_path)},
+        module_build_id_{std::move(module_build_id)} {}
 
   [[nodiscard]] uint64_t function_absolute_address() const { return function_absolute_address_; }
 
   [[nodiscard]] const std::string& function_name() const { return function_name_; }
 
   [[nodiscard]] const std::string& module_path() const { return module_path_; }
+
+  [[nodiscard]] const std::string& module_build_id() const { return module_build_id_; }
 
   [[nodiscard]] std::string GetModuleName() const {
     return std::filesystem::path(module_path()).filename().string();
@@ -100,6 +105,7 @@ class CallTreeFunction : public CallTreeNode {
   uint64_t function_absolute_address_;
   std::string function_name_;
   std::string module_path_;
+  std::string module_build_id_;
 };
 
 class CallTreeThread : public CallTreeNode {

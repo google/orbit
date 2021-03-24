@@ -130,9 +130,19 @@ QVariant CallTreeViewItemModel::GetToolTipRoleData(const QModelIndex& index) con
 QVariant CallTreeViewItemModel::GetModulePathRoleData(const QModelIndex& index) const {
   CHECK(index.isValid());
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
-  auto function_item = dynamic_cast<CallTreeFunction*>(item);
+  auto* function_item = dynamic_cast<CallTreeFunction*>(item);
   if (function_item != nullptr) {
     return QString::fromStdString(function_item->module_path());
+  }
+  return QVariant();
+}
+
+QVariant CallTreeViewItemModel::GetModuleBuildIdRoleData(const QModelIndex& index) const {
+  CHECK(index.isValid());
+  auto* item = static_cast<CallTreeNode*>(index.internalPointer());
+  auto* function_item = dynamic_cast<CallTreeFunction*>(item);
+  if (function_item != nullptr) {
+    return QString::fromStdString(function_item->module_build_id());
   }
   return QVariant();
 }
@@ -152,6 +162,8 @@ QVariant CallTreeViewItemModel::data(const QModelIndex& index, int role) const {
       return GetToolTipRoleData(index);
     case kModulePathRole:
       return GetModulePathRoleData(index);
+    case kModuleBuildIdRole:
+      return GetModuleBuildIdRoleData(index);
   }
   return QVariant();
 }

@@ -89,10 +89,12 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   ProcessData process(process_info);
 
   constexpr const char* kModulePath = "path/to/module";
+  constexpr const char* kModuleBuildId = "build_id_id";
 
   orbit_grpc_protos::ModuleInfo module_info;
   module_info.set_load_bias(0);
   module_info.set_file_path(kModulePath);
+  module_info.set_build_id(kModuleBuildId);
   module_info.set_address_start(15);
   module_info.set_address_end(1000);
 
@@ -100,7 +102,7 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   process.UpdateModuleInfos(module_infos);
   ModuleManager module_manager;
   module_manager.AddOrUpdateModules(module_infos);
-  ModuleData* module = module_manager.GetMutableModuleByPath(kModulePath);
+  ModuleData* module = module_manager.GetMutableModuleByPathAndBuildId(kModulePath, kModuleBuildId);
   ASSERT_NE(module, nullptr);
 
   orbit_grpc_protos::ModuleSymbols symbols;
@@ -119,6 +121,7 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   instrumented_function.set_function_name("void foo()");
   instrumented_function.set_file_offset(123);
   instrumented_function.set_file_path(kModulePath);
+  instrumented_function.set_file_build_id(kModuleBuildId);
   uint64_t selected_function_absolute_address = 123 + 15 - 0;
   instrumented_functions[kInstrumentedFunctionId] = instrumented_function;
 

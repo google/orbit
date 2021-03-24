@@ -161,9 +161,21 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureInfo(
     instrumented_function.set_function_id(function.first);
     instrumented_function.set_function_name(function.second.pretty_name());
     instrumented_function.set_file_path(function.second.loaded_module_path());
-    const ModuleData* module_data =
-        module_manager->GetModuleByPath(function.second.loaded_module_path());
+    const ModuleData* module_data = module_manager->GetModuleByPathAndBuildId(
+        function.second.loaded_module_path(), function.second.loaded_module_build_id());
+
+    // In the case module_data was not found by build id check if FunctionInfo build_id is empty,
+    // in which case assume this is capture saved with Orbit v1.61 and below try to get module
+    // build id from path and do another lookup.
+    if (module_data == nullptr && function.second.loaded_module_build_id().empty()) {
+      const std::string& module_path = function.second.loaded_module_path();
+      CHECK(module_map.contains(module_path));
+      const std::string& build_id = module_map.at(module_path).build_id();
+      module_data = module_manager->GetModuleByPathAndBuildId(module_path, build_id);
+    }
+
     CHECK(module_data != nullptr);
+    instrumented_function.set_file_build_id(module_data->build_id());
     instrumented_function.set_file_offset(function_utils::Offset(function.second, *module_data));
 
     instrumented_functions.insert_or_assign(function.first, instrumented_function);

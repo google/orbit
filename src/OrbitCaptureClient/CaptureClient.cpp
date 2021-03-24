@@ -145,9 +145,11 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   for (const auto& [function_id, function] : selected_functions) {
     InstrumentedFunction* instrumented_function = capture_options->add_instrumented_functions();
     instrumented_function->set_file_path(function.loaded_module_path());
-    const ModuleData* module = module_manager.GetModuleByPath(function.loaded_module_path());
+    const ModuleData* module = module_manager.GetModuleByPathAndBuildId(
+        function.loaded_module_path(), function.loaded_module_build_id());
     CHECK(module != nullptr);
     instrumented_function->set_file_offset(function_utils::Offset(function, *module));
+    instrumented_function->set_file_build_id(function.loaded_module_build_id());
     instrumented_function->set_function_id(function_id);
     instrumented_function->set_function_name(function.pretty_name());
     instrumented_function->set_function_type(

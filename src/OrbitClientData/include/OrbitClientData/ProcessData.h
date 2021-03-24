@@ -5,6 +5,8 @@
 #ifndef ORBIT_CLIENT_DATA_PROCESS_DATA_H_
 #define ORBIT_CLIENT_DATA_PROCESS_DATA_H_
 
+#include <absl/container/flat_hash_set.h>
+#include <absl/container/node_hash_map.h>
 #include <absl/strings/str_format.h>
 #include <inttypes.h>
 #include <stdint.h>
@@ -18,20 +20,28 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitClientData/ModuleData.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
 #include "module.pb.h"
 #include "process.pb.h"
 #include "symbol.pb.h"
 
 // Small struct to model a space in memory occupied by a module.
-struct MemorySpace {
-  explicit MemorySpace(uint64_t start, uint64_t end) : start(start), end(end) {}
-  uint64_t start;
-  uint64_t end;
+class ModuleInMemory {
+ public:
+  explicit ModuleInMemory(uint64_t start, uint64_t end, std::string file_path, std::string build_id)
+      : start_(start), end_(end), file_path_{file_path}, build_id_{std::move(build_id)} {}
+  [[nodiscard]] uint64_t start() const { return start_; }
+  [[nodiscard]] uint64_t end() const { return end_; }
+  [[nodiscard]] const std::string& file_path() const { return file_path_; }
+  [[nodiscard]] const std::string& build_id() const { return build_id_; }
   [[nodiscard]] std::string FormattedAddressRange() const {
-    return absl::StrFormat("[%016" PRIx64 " - %016" PRIx64 "]", start, end);
+    return absl::StrFormat("[%016" PRIx64 " - %016" PRIx64 "]", start_, end_);
   }
+
+ private:
+  uint64_t start_;
+  uint64_t end_;
+  std::string file_path_;
+  std::string build_id_;
 };
 
 // Contains current information about process
@@ -59,25 +69,27 @@ class ProcessData final {
 
   void UpdateModuleInfos(absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
 
-  [[nodiscard]] ErrorMessageOr<std::pair<std::string, uint64_t>> FindModuleByAddress(
-      uint64_t absolute_address) const;
+  [[nodiscard]] ErrorMessageOr<ModuleInMemory> FindModuleByAddress(uint64_t absolute_address) const;
 
   uint64_t GetModuleBaseAddress(const std::string& module_path) const {
     CHECK(module_memory_map_.contains(module_path));
-    return module_memory_map_.at(module_path).start;
+    return module_memory_map_.at(module_path).start();
   }
-  const absl::flat_hash_map<std::string, MemorySpace>& GetMemoryMap() const {
+  const absl::node_hash_map<std::string, ModuleInMemory>& GetMemoryMap() const {
     return module_memory_map_;
   }
-  bool IsModuleLoaded(const std::string& module_path) const {
-    return module_memory_map_.contains(module_path);
+
+  [[nodiscard]] const ModuleInMemory* FindModuleByPath(const std::string& module_path) const;
+
+  [[nodiscard]] bool IsModuleLoaded(const std::string& module_path) const {
+    return FindModuleByPath(module_path) != nullptr;
   }
 
  private:
   orbit_grpc_protos::ProcessInfo process_info_;
 
   // This is a map from module_path to the space in memory where that module is loaded
-  absl::flat_hash_map<std::string, MemorySpace> module_memory_map_;
+  absl::node_hash_map<std::string, ModuleInMemory> module_memory_map_;
   std::map<uint64_t, const std::string> start_addresses_;
 };
 

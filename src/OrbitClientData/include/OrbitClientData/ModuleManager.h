@@ -21,8 +21,10 @@ class ModuleManager final {
  public:
   explicit ModuleManager() = default;
 
-  [[nodiscard]] const ModuleData* GetModuleByPath(const std::string& path) const;
-  [[nodiscard]] ModuleData* GetMutableModuleByPath(const std::string& path);
+  [[nodiscard]] const ModuleData* GetModuleByPathAndBuildId(const std::string& path,
+                                                            const std::string& build_id) const;
+  [[nodiscard]] ModuleData* GetMutableModuleByPathAndBuildId(const std::string& path,
+                                                             const std::string& build_id);
   // Add new modules for the module_infos that do not exist yet, and update the modules that do
   // exist. If the update changed the module in a way that symbols were not valid anymore, the
   // symbols are discarded aka the module is not loaded anymore. This method returns the list of
@@ -35,7 +37,8 @@ class ModuleManager final {
  private:
   mutable absl::Mutex mutex_;
   // We are sharing pointers to that entries and ensure reference stability by using node_hash_map
-  absl::node_hash_map<std::string, ModuleData> module_map_;
+  // Map of <path, build_id> -> ModuleData
+  absl::node_hash_map<std::pair<std::string, std::string>, ModuleData> module_map_;
 };
 
 }  // namespace orbit_client_data

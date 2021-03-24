@@ -230,6 +230,8 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
 
         EXPECT_EQ(actual_function_info.function_name(), instrumented_function.pretty_name());
         EXPECT_EQ(actual_function_info.file_path(), instrumented_function.loaded_module_path());
+        EXPECT_EQ(actual_function_info.file_build_id(),
+                  instrumented_function.loaded_module_build_id());
         EXPECT_EQ(actual_function_info.file_offset(), instrumented_function.address() - load_bias);
       });
 
@@ -253,11 +255,12 @@ TEST(CaptureDeserializer, LoadCaptureInfoModuleManager) {
   process_info->set_name("process");
 
   std::string module_path = "path/to/module";
+  const char* kBuildId = "build id 42";
   orbit_client_protos::ModuleInfo* module_info = capture_info.add_modules();
   module_info->set_name("module");
   module_info->set_file_path(module_path);
   module_info->set_file_size(300);
-  module_info->set_build_id("test build id");
+  module_info->set_build_id(kBuildId);
   module_info->set_load_bias(0x400);
 
   std::atomic<bool> cancellation_requested = false;
@@ -277,7 +280,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoModuleManager) {
   ASSERT_TRUE(result.has_value()) << result.error().message();
   EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
 
-  const ModuleData* module = module_manager.GetModuleByPath(module_path);
+  const ModuleData* module = module_manager.GetModuleByPathAndBuildId(module_path, kBuildId);
   ASSERT_NE(module, nullptr);
   EXPECT_EQ(module->name(), module_info->name());
   EXPECT_EQ(module->file_path(), module_info->file_path());

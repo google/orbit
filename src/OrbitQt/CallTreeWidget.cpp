@@ -308,20 +308,20 @@ static void CollapseChildrenRecursively(QTreeView* tree_view, const QModelIndex&
 
 static std::vector<ModuleData*> GetModulesFromIndices(OrbitApp* app,
                                                       const std::vector<QModelIndex>& indices) {
-  std::set<std::string> unique_module_paths;
+  std::set<std::pair<std::string, std::string>> unique_module_paths_and_build_ids;
   for (const auto& index : indices) {
+    QModelIndex model_index =
+        index.model()->index(index.row(), CallTreeViewItemModel::kModule, index.parent());
     std::string module_path =
-        index.model()
-            ->index(index.row(), CallTreeViewItemModel::kModule, index.parent())
-            .data(CallTreeViewItemModel::kModulePathRole)
-            .toString()
-            .toStdString();
-    unique_module_paths.insert(module_path);
+        model_index.data(CallTreeViewItemModel::kModulePathRole).toString().toStdString();
+    std::string module_build_id =
+        model_index.data(CallTreeViewItemModel::kModuleBuildIdRole).toString().toStdString();
+    unique_module_paths_and_build_ids.emplace(module_path, module_build_id);
   }
 
   std::vector<ModuleData*> modules;
-  for (const std::string& module_path : unique_module_paths) {
-    ModuleData* module = app->GetMutableModuleByPath(module_path);
+  for (const auto& [module_path, module_build_id] : unique_module_paths_and_build_ids) {
+    ModuleData* module = app->GetMutableModuleByPathAndBuildId(module_path, module_build_id);
     if (module != nullptr) {
       modules.emplace_back(module);
     }

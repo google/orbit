@@ -48,7 +48,8 @@ bool IsOrbitFunctionFromName(const std::string& function_name) {
 }
 
 std::unique_ptr<FunctionInfo> CreateFunctionInfo(const SymbolInfo& symbol_info,
-                                                 const std::string& module_path) {
+                                                 const std::string& module_path,
+                                                 const std::string& module_build_id) {
   auto function_info = std::make_unique<FunctionInfo>();
 
   function_info->set_name(symbol_info.name());
@@ -58,6 +59,7 @@ std::unique_ptr<FunctionInfo> CreateFunctionInfo(const SymbolInfo& symbol_info,
   function_info->set_file("");
   function_info->set_line(0);
   function_info->set_loaded_module_path(module_path);
+  function_info->set_loaded_module_build_id(module_build_id);
 
   SetOrbitTypeFromName(function_info.get());
   return function_info;
