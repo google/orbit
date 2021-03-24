@@ -149,6 +149,7 @@ class GlCanvas {
   static float kZValueOverlayTextBackground;
   static float kZValueOverlay;
   static float kZValueTrackText;
+  static float kZValueTrackLabel;
   static float kZValueEvent;
   static float kZValueBox;
   static float kZValueEventBar;

@@ -91,7 +91,8 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
 
   const Color kBlack(0, 0, 0, 255);
   const Color kWhite(255, 255, 255, 255);
-  float text_z = GlCanvas::kZValueEvent + z_offset;
+  float text_z = GlCanvas::kZValueTrackText + z_offset;
+  float label_z = GlCanvas::kZValueTrackLabel + z_offset;
 
   // Add warning threshold text box and line.
   Batcher* ui_batcher = canvas->GetBatcher();
@@ -161,7 +162,7 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
                          ? absl::StrFormat("%.*f", value_decimal_digits_.value(), value)
                          : std::to_string(value);
   absl::StrAppend(&text, label_unit_);
-  DrawLabel(canvas, Vec2(point_x, point_y), text, kBlack, kWhite, text_z);
+  DrawLabel(canvas, Vec2(point_x, point_y), text, kBlack, kWhite, label_z);
 }
 
 void GraphTrack::DrawSquareDot(Batcher* batcher, Vec2 center, float radius, float z,

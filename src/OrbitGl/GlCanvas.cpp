@@ -27,7 +27,8 @@ float GlCanvas::kZValueTrack = 0.01f;
 float GlCanvas::kZValueEventBar = 0.03f;
 float GlCanvas::kZValueBox = 0.05f;
 float GlCanvas::kZValueEvent = 0.07f;
-float GlCanvas::kZValueTrackText = 0.09f;
+float GlCanvas::kZValueTrackText = 0.08f;
+float GlCanvas::kZValueTrackLabel = 0.09f;
 float GlCanvas::kZValueOverlay = 0.43f;
 float GlCanvas::kZValueOverlayTextBackground = 0.45f;
 float GlCanvas::kZValueEventBarPicking = 0.49f;
@@ -43,9 +44,9 @@ float GlCanvas::kZValueSlider = 0.89f;
 float GlCanvas::kZOffsetMovingTack = 0.1f;
 float GlCanvas::kZOffsetPinnedTrack = 0.2f;
 
-constexpr unsigned kNumberOriginalLayers = 16;
-constexpr unsigned kExtraLayersForMovingTracks = 5;
-constexpr unsigned kExtraLayersForPinnedTracks = 5;
+constexpr unsigned kNumberOriginalLayers = 17;
+constexpr unsigned kExtraLayersForMovingTracks = 6;
+constexpr unsigned kExtraLayersForPinnedTracks = 6;
 constexpr unsigned kExtraLayersForSliderEpsilons = 4;
 unsigned GlCanvas::kMaxNumberRealZLayers = kNumberOriginalLayers + kExtraLayersForMovingTracks +
                                            kExtraLayersForPinnedTracks +
