@@ -190,10 +190,12 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
   process_info->set_name("process");
 
   constexpr uint64_t kLoadBias = 5;
+  constexpr const char* kModuleBuildId = "build_id";
   orbit_client_protos::ModuleInfo* module_info = capture_info.add_modules();
   module_info->set_load_bias(kLoadBias);
   module_info->set_name("module");
   module_info->set_file_path("path/to/module");
+  module_info->set_build_id(kModuleBuildId);
   module_info->set_address_start(10);
   module_info->set_address_end(123);
 
@@ -201,7 +203,8 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
   FunctionInfo instrumented_function;
   instrumented_function.set_name("foo");
   instrumented_function.set_pretty_name("void foo()");
-  instrumented_function.set_loaded_module_path("path/to/module");
+  instrumented_function.set_module_path("path/to/module");
+  instrumented_function.set_module_build_id(kModuleBuildId);
   instrumented_function.set_address(21);
   instrumented_function.set_size(12);
   (*capture_info.mutable_instrumented_functions())[kInstrumentedFunctionId] = instrumented_function;
@@ -229,9 +232,8 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
             actual_instrumented_functions.at(kInstrumentedFunctionId);
 
         EXPECT_EQ(actual_function_info.function_name(), instrumented_function.pretty_name());
-        EXPECT_EQ(actual_function_info.file_path(), instrumented_function.loaded_module_path());
-        EXPECT_EQ(actual_function_info.file_build_id(),
-                  instrumented_function.loaded_module_build_id());
+        EXPECT_EQ(actual_function_info.file_path(), instrumented_function.module_path());
+        EXPECT_EQ(actual_function_info.file_build_id(), instrumented_function.module_build_id());
         EXPECT_EQ(actual_function_info.file_offset(), instrumented_function.address() - load_bias);
       });
 

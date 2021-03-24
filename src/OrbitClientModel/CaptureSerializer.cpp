@@ -138,7 +138,7 @@ CaptureInfo GenerateCaptureInfo(
     uint64_t absolute_function_address = capture_data.GetAbsoluteAddress(*function);
     const uint64_t offset = absolute_address - absolute_function_address;
     added_address_info->set_offset_in_function(offset);
-    added_address_info->set_module_path(function->loaded_module_path());
+    added_address_info->set_module_path(function->module_path());
   }
 
   const absl::flat_hash_map<uint64_t, FunctionStats>& functions_stats =

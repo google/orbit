@@ -12,8 +12,10 @@
 namespace internal {
 struct HashFunctionInfo {
   size_t operator()(const orbit_client_protos::FunctionInfo& function) const {
-    return std::hash<uint64_t>{}(function.address()) * 37 +
-           std::hash<std::string>{}(function.loaded_module_path());
+    return (std::hash<uint64_t>{}(function.address()) * 37 +
+            std::hash<std::string>{}(function.module_build_id())) *
+               37 +
+           std::hash<std::string>{}(function.module_path());
   }
 };
 
@@ -21,8 +23,8 @@ struct HashFunctionInfo {
 struct EqualFunctionInfo {
   bool operator()(const orbit_client_protos::FunctionInfo& left,
                   const orbit_client_protos::FunctionInfo& right) const {
-    return left.loaded_module_path() == right.loaded_module_path() &&
-           left.address() == right.address();
+    return left.module_path() == right.module_path() &&
+           left.module_build_id() == right.module_build_id() && left.address() == right.address();
   }
 };
 
