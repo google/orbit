@@ -32,8 +32,11 @@ namespace orbit_user_space_instrumentation {
 // was the second line in the `maps` file corresponding to the code of the process we look at.
 // However we don't really care. So keeping it general and just searching for an executable region
 // is probably helping stability.
+// Optionally one can specify `exclude_address`. This prevents the method from returning an address
+// range containing `exclude_address`.
 using AddressRange = std::pair<uint64_t, uint64_t>;
-[[nodiscard]] ErrorMessageOr<AddressRange> GetFirstExecutableMemoryRegion(pid_t pid);
+[[nodiscard]] ErrorMessageOr<AddressRange> GetFirstExecutableMemoryRegion(
+    pid_t pid, uint64_t exclude_address = 0);
 
 }  // namespace orbit_user_space_instrumentation
 

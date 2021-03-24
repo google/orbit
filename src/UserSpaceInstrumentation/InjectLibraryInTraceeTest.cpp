@@ -101,7 +101,7 @@ TEST(InjectLibraryInTraceeTest, OpenUseCloseLibrary) {
   RegisterState original_registers;
   ASSERT_FALSE(original_registers.BackupRegisters(pid).has_error());
   constexpr uint64_t kScratchPadSize = 1024;
-  auto result_address_code = AllocateInTracee(pid, kScratchPadSize);
+  auto result_address_code = AllocateInTracee(pid, 0, kScratchPadSize);
   ASSERT_TRUE(result_address_code.has_value());
   const uint64_t address_code = result_address_code.value();
   // Move function's address to rax, do the call, and hit a breakpoint:

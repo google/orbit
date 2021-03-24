@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 #include <gtest/gtest.h>
@@ -65,14 +66,25 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
 
   // Allocate a megabyte in the tracee.
   constexpr uint64_t kMemorySize = 1024 * 1024;
-  auto result_allocate = AllocateInTracee(pid, kMemorySize);
-  CHECK(result_allocate.has_value());
-
+  auto result_allocate = AllocateInTracee(pid, 0, kMemorySize);
+  ASSERT_TRUE(result_allocate.has_value());
   EXPECT_TRUE(ProcessHasRwxMapAtAddress(pid, result_allocate.value()));
 
   // Free the memory.
-  CHECK(FreeInTracee(pid, result_allocate.value(), kMemorySize).has_value());
+  ASSERT_FALSE(FreeInTracee(pid, result_allocate.value(), kMemorySize).has_error());
+  EXPECT_FALSE(ProcessHasRwxMapAtAddress(pid, result_allocate.value()));
 
+  // Allocate a megabyte at a low memory position.
+  auto mmap_min_addr_or_error = ReadFileToString("/proc/sys/vm/mmap_min_addr");
+  CHECK(mmap_min_addr_or_error.has_value());
+  uint64_t mmap_min_addr = 0;
+  CHECK(absl::SimpleAtoi(mmap_min_addr_or_error.value(), &mmap_min_addr));
+  result_allocate = AllocateInTracee(pid, mmap_min_addr, kMemorySize);
+  ASSERT_TRUE(result_allocate.has_value());
+  EXPECT_TRUE(ProcessHasRwxMapAtAddress(pid, result_allocate.value()));
+
+  // Free the memory.
+  ASSERT_FALSE(FreeInTracee(pid, result_allocate.value(), kMemorySize).has_error());
   EXPECT_FALSE(ProcessHasRwxMapAtAddress(pid, result_allocate.value()));
 
   // Detach and end child.

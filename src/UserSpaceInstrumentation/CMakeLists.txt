@@ -30,7 +30,9 @@ target_sources(UserSpaceInstrumentation PRIVATE
         MachineCode.cpp
         MachineCode.h
         RegisterState.cpp
-        RegisterState.h)
+        RegisterState.h
+        Trampoline.cpp
+        Trampoline.h)
 
 target_link_libraries(UserSpaceInstrumentation PUBLIC
         LinuxTracing
@@ -68,7 +70,8 @@ target_sources(UserSpaceInstrumentationTests PRIVATE
         MachineCodeTest.cpp
         RegisterStateTest.cpp
         TestProcess.cpp
-        TestProcess.h)
+        TestProcess.h
+        TrampolineTest.cpp)
 
 target_link_libraries(UserSpaceInstrumentationTests PRIVATE
         LinuxTracing
