@@ -46,9 +46,11 @@ TEST(ModuleData, Constructor) {
 
 TEST(ModuleData, LoadSymbols) {
   // Setup ModuleData
+  constexpr const char* kBuildId = "build_id";
   std::string module_file_path = "/test/file/path";
   ModuleInfo module_info{};
   module_info.set_file_path(module_file_path);
+  module_info.set_build_id(kBuildId);
   ModuleData module{module_info};
 
   // Setup ModuleSymbols
@@ -73,7 +75,8 @@ TEST(ModuleData, LoadSymbols) {
   const FunctionInfo* function = module.GetFunctions()[0];
   EXPECT_EQ(function->name(), symbol_name);
   EXPECT_EQ(function->pretty_name(), symbol_pretty_name);
-  EXPECT_EQ(function->loaded_module_path(), module_file_path);
+  EXPECT_EQ(function->module_path(), module_file_path);
+  EXPECT_EQ(function->module_build_id(), kBuildId);
   EXPECT_EQ(function->address(), symbol_address);
   EXPECT_EQ(function->size(), symbol_size);
   EXPECT_EQ(function->file(), "");

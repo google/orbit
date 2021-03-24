@@ -95,7 +95,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
     case kColumnTimeMax:
       return GetPrettyTime(absl::Nanoseconds(stats.max_ns()));
     case kColumnModule:
-      return function.loaded_module_path();
+      return function.module_path();
     case kColumnAddress: {
       const CaptureData& capture_data = app_->GetCaptureData();
       return absl::StrFormat("0x%" PRIx64, capture_data.GetAbsoluteAddress(function));

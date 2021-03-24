@@ -77,11 +77,11 @@ const InstrumentedFunction* CaptureData::GetInstrumentedFunctionById(uint64_t fu
 
 std::optional<uint64_t> CaptureData::FindInstrumentedFunctionIdSlow(
     const orbit_client_protos::FunctionInfo& function) const {
-  const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(
-      function.loaded_module_path(), function.loaded_module_build_id());
+  const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(function.module_path(),
+                                                                        function.module_build_id());
   for (const auto& it : instrumented_functions_) {
     const auto& target_function = it.second;
-    if (target_function.file_path() == function.loaded_module_path() &&
+    if (target_function.file_path() == function.module_path() &&
         target_function.file_offset() == function_utils::Offset(function, *module)) {
       return it.first;
     }
@@ -210,8 +210,8 @@ const FunctionInfo* CaptureData::FindFunctionByAddress(uint64_t absolute_address
 }
 
 uint64_t CaptureData::GetAbsoluteAddress(const orbit_client_protos::FunctionInfo& function) const {
-  const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(
-      function.loaded_module_path(), function.loaded_module_build_id());
+  const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(function.module_path(),
+                                                                        function.module_build_id());
   CHECK(module != nullptr);
   return function_utils::GetAbsoluteAddress(function, process_, *module);
 }

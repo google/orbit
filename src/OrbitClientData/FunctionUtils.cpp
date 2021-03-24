@@ -26,7 +26,7 @@ using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::SymbolInfo;
 
 std::string GetLoadedModuleName(const FunctionInfo& func) {
-  return GetLoadedModuleNameByPath(func.loaded_module_path());
+  return GetLoadedModuleNameByPath(func.module_path());
 }
 
 std::string GetLoadedModuleNameByPath(std::string_view module_path) {
@@ -58,8 +58,8 @@ std::unique_ptr<FunctionInfo> CreateFunctionInfo(const SymbolInfo& symbol_info,
   function_info->set_size(symbol_info.size());
   function_info->set_file("");
   function_info->set_line(0);
-  function_info->set_loaded_module_path(module_path);
-  function_info->set_loaded_module_build_id(module_build_id);
+  function_info->set_module_path(module_path);
+  function_info->set_module_build_id(module_build_id);
 
   SetOrbitTypeFromName(function_info.get());
   return function_info;

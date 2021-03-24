@@ -160,15 +160,15 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureInfo(
     orbit_grpc_protos::InstrumentedFunction instrumented_function;
     instrumented_function.set_function_id(function.first);
     instrumented_function.set_function_name(function.second.pretty_name());
-    instrumented_function.set_file_path(function.second.loaded_module_path());
+    instrumented_function.set_file_path(function.second.module_path());
     const ModuleData* module_data = module_manager->GetModuleByPathAndBuildId(
-        function.second.loaded_module_path(), function.second.loaded_module_build_id());
+        function.second.module_path(), function.second.module_build_id());
 
     // In the case module_data was not found by build id check if FunctionInfo build_id is empty,
     // in which case assume this is capture saved with Orbit v1.61 and below try to get module
     // build id from path and do another lookup.
-    if (module_data == nullptr && function.second.loaded_module_build_id().empty()) {
-      const std::string& module_path = function.second.loaded_module_path();
+    if (module_data == nullptr && function.second.module_build_id().empty()) {
+      const std::string& module_path = function.second.module_path();
       CHECK(module_map.contains(module_path));
       const std::string& build_id = module_map.at(module_path).build_id();
       module_data = module_manager->GetModuleByPathAndBuildId(module_path, build_id);

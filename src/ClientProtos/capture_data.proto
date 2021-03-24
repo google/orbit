@@ -37,8 +37,8 @@ message FunctionInfo {
   reserved 4, 6, 11;
   string name = 1;
   string pretty_name = 2;
-  string loaded_module_path = 3;
-  string loaded_module_build_id = 12;
+  string module_path = 3;
+  string module_build_id = 12;
   uint64 address = 5;
   uint64 size = 7;
   string file = 8;

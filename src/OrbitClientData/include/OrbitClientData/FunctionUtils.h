@@ -33,8 +33,7 @@ namespace function_utils {
 [[nodiscard]] inline uint64_t GetAbsoluteAddress(const orbit_client_protos::FunctionInfo& func,
                                                  const ProcessData& process,
                                                  const ModuleData& module) {
-  return func.address() + process.GetModuleBaseAddress(func.loaded_module_path()) -
-         module.load_bias();
+  return func.address() + process.GetModuleBaseAddress(func.module_path()) - module.load_bias();
 }
 
 [[nodiscard]] bool IsOrbitFunctionFromType(

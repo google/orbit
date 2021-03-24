@@ -532,8 +532,8 @@ void OrbitApp::RenderImGuiDebugUI() {
 
 void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
   CHECK(process_ != nullptr);
-  const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(
-      function.loaded_module_path(), function.loaded_module_build_id());
+  const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(function.module_path(),
+                                                                        function.module_build_id());
   CHECK(module != nullptr);
   const bool is_64_bit = process_->is_64_bit();
   const uint64_t absolute_address =
@@ -566,8 +566,8 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
 }
 
 void OrbitApp::ShowSourceCode(const orbit_client_protos::FunctionInfo& function) {
-  const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(
-      function.loaded_module_path(), function.loaded_module_build_id());
+  const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(function.module_path(),
+                                                                        function.module_build_id());
 
   auto loaded_module = RetrieveModuleWithDebugInfo(module);
 
@@ -789,13 +789,13 @@ ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
     CHECK(!function_utils::IsOrbitFunctionFromType(function.orbit_type()));
 
     uint64_t hash = function_utils::GetHash(function);
-    (*preset.mutable_path_to_module())[function.loaded_module_path()].add_function_hashes(hash);
+    (*preset.mutable_path_to_module())[function.module_path()].add_function_hashes(hash);
   }
 
   for (const auto& function : data_manager_->user_defined_capture_data().frame_track_functions()) {
     uint64_t hash = function_utils::GetHash(function);
-    (*preset.mutable_path_to_module())[function.loaded_module_path()]
-        .add_frame_track_function_hashes(hash);
+    (*preset.mutable_path_to_module())[function.module_path()].add_frame_track_function_hashes(
+        hash);
   }
 
   std::string filename_with_ext = filename;
@@ -954,7 +954,7 @@ void OrbitApp::StartCapture() {
   uint64_t function_id = 1;
   for (auto& function : selected_functions) {
     const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(
-        function.loaded_module_path(), function.loaded_module_build_id());
+        function.module_path(), function.module_build_id());
     CHECK(module != nullptr);
     if (user_defined_capture_data.ContainsFrameTrack(function)) {
       frame_track_function_ids.insert(function_id);
@@ -1574,8 +1574,8 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
 
   absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map;
   for (const FunctionInfo& func : data_manager_->GetSelectedFunctions()) {
-    const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(
-        func.loaded_module_path(), func.loaded_module_build_id());
+    const ModuleData* module =
+        module_manager_->GetModuleByPathAndBuildId(func.module_path(), func.module_build_id());
     // (A) deselect functions when the module is not loaded by the process anymore
     if (!process->IsModuleLoaded(module->file_path())) {
       data_manager_->DeselectFunction(func);
@@ -1589,8 +1589,8 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
   absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map;
   for (const FunctionInfo& func :
        data_manager_->user_defined_capture_data().frame_track_functions()) {
-    const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(
-        func.loaded_module_path(), func.loaded_module_build_id());
+    const ModuleData* module =
+        module_manager_->GetModuleByPathAndBuildId(func.module_path(), func.module_build_id());
     // Frame tracks are only meaningful if the module for the underlying function is actually
     // loaded by the process.
     if (!process->IsModuleLoaded(module->file_path())) {
@@ -1648,7 +1648,7 @@ void OrbitApp::SetMaxLocalMarkerDepthPerCommandBuffer(
 
 void OrbitApp::SelectFunction(const orbit_client_protos::FunctionInfo& func) {
   LOG("Selected %s (address_=0x%" PRIx64 ", loaded_module_path_=%s)", func.pretty_name(),
-      func.address(), func.loaded_module_path());
+      func.address(), func.module_path());
   data_manager_->SelectFunction(func);
 }
 

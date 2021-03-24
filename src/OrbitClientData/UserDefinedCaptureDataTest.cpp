@@ -17,8 +17,8 @@ FunctionInfo CreateFunctionInfo(const std::string& function_name, uint64_t funct
   FunctionInfo info;
   info.set_name(function_name);
   info.set_pretty_name(function_name);
-  info.set_loaded_module_path("/path/to/module");
-  info.set_loaded_module_build_id("build id");
+  info.set_module_path("/path/to/module");
+  info.set_module_build_id("build id");
   info.set_address(function_address);
   info.set_size(16);
   info.set_file("file.cpp");
