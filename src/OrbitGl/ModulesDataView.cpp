@@ -41,7 +41,7 @@ const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
 
 std::string ModulesDataView::GetValue(int row, int col) {
   const ModuleData* module = GetModule(row);
-  const MemorySpace* memory_space = module_memory_.at(module);
+  const ModuleInMemory* memory_space = module_memory_.at(module);
 
   switch (col) {
     case kColumnName:
@@ -82,7 +82,7 @@ void ModulesDataView::DoSort() {
       sorter = ORBIT_PROC_SORT(file_path());
       break;
     case kColumnAddressRange:
-      sorter = ORBIT_MODULE_SPACE_SORT(start);
+      sorter = ORBIT_MODULE_SPACE_SORT(start());
       break;
     case kColumnFileSize:
       sorter = ORBIT_PROC_SORT(file_size());
@@ -170,7 +170,7 @@ void ModulesDataView::DoFilter() {
 
   for (size_t i = 0; i < modules_.size(); ++i) {
     const ModuleData* module = modules_[i];
-    const MemorySpace* memory_space = module_memory_.at(module);
+    const ModuleInMemory* memory_space = module_memory_.at(module);
     std::string module_string = absl::StrFormat("%s %s", memory_space->FormattedAddressRange(),
                                                 absl::AsciiStrToLower(module->file_path()));
 
@@ -194,10 +194,11 @@ void ModulesDataView::DoFilter() {
 void ModulesDataView::UpdateModules(const ProcessData* process) {
   modules_.clear();
   module_memory_.clear();
-  for (const auto& [module_path, memory_space] : process->GetMemoryMap()) {
-    ModuleData* module = app_->GetMutableModuleByPath(module_path);
+  for (const auto& [module_path, module_in_memory] : process->GetMemoryMap()) {
+    ModuleData* module =
+        app_->GetMutableModuleByPathAndBuildId(module_path, module_in_memory.build_id());
     modules_.push_back(module);
-    module_memory_[module] = &memory_space;
+    module_memory_[module] = &module_in_memory;
   }
 
   indices_.resize(modules_.size());

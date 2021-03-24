@@ -14,6 +14,7 @@ option cc_enable_arenas = true;
 
 message InstrumentedFunction {
   string file_path = 1;
+  string file_build_id = 6;
   uint64 file_offset = 2;
   uint64 function_id = 3;
 

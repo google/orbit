@@ -355,11 +355,13 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] ManualInstrumentationManager* GetManualInstrumentationManager() {
     return manual_instrumentation_manager_.get();
   }
-  [[nodiscard]] ModuleData* GetMutableModuleByPath(const std::string& path) const {
-    return module_manager_->GetMutableModuleByPath(path);
+  [[nodiscard]] ModuleData* GetMutableModuleByPathAndBuildId(const std::string& path,
+                                                             const std::string& build_id) const {
+    return module_manager_->GetMutableModuleByPathAndBuildId(path, build_id);
   }
-  [[nodiscard]] const ModuleData* GetModuleByPath(const std::string& path) const {
-    return module_manager_->GetModuleByPath(path);
+  [[nodiscard]] const ModuleData* GetModuleByPathAndBuildId(const std::string& path,
+                                                            const std::string& build_id) const {
+    return module_manager_->GetModuleByPathAndBuildId(path, build_id);
   }
 
   void SetCollectThreadStates(bool collect_thread_states);
@@ -438,7 +440,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] bool HasFrameTrackInCaptureData(uint64_t instrumented_function_id) const;
 
  private:
-  void AddSymbols(const std::filesystem::path& module_file_path,
+  void AddSymbols(const std::filesystem::path& module_file_path, const std::string& module_build_id,
                   const orbit_grpc_protos::ModuleSymbols& symbols);
 
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleFromRemote(
@@ -450,7 +452,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   ErrorMessageOr<std::filesystem::path> FindModuleLocally(const std::filesystem::path& module_path,
                                                           const std::string& build_id);
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<void>> LoadSymbols(
-      const std::filesystem::path& symbols_path, const std::string& module_file_path);
+      const std::filesystem::path& symbols_path, const std::string& module_file_path,
+      const std::string& module_build_id);
 
   ErrorMessageOr<orbit_client_protos::PresetInfo> ReadPresetFromFile(
       const std::filesystem::path& filename);
@@ -510,9 +513,10 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   std::shared_ptr<SamplingReport> sampling_report_;
   std::shared_ptr<SamplingReport> selection_report_ = nullptr;
 
-  absl::flat_hash_map<std::string, orbit_base::Future<ErrorMessageOr<std::filesystem::path>>>
+  absl::flat_hash_map<std::pair<std::string, std::string>,
+                      orbit_base::Future<ErrorMessageOr<std::filesystem::path>>>
       modules_currently_loading_;
-  absl::flat_hash_map<std::string, orbit_base::Future<ErrorMessageOr<void>>>
+  absl::flat_hash_map<std::pair<std::string, std::string>, orbit_base::Future<ErrorMessageOr<void>>>
       symbols_currently_loading_;
 
   StringManager string_manager_;

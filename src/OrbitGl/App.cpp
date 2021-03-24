@@ -124,7 +124,7 @@ PresetLoadState GetPresetLoadStateForProcess(
   int modules_not_found_count = 0;
   for (const auto& pair : preset->preset_info().path_to_module()) {
     const std::string& module_path = pair.first;
-    if (!process->IsModuleLoaded(module_path)) {
+    if (process->FindModuleByPath(module_path) == nullptr) {
       modules_not_found_count++;
     }
   }
@@ -532,7 +532,8 @@ void OrbitApp::RenderImGuiDebugUI() {
 
 void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
   CHECK(process_ != nullptr);
-  const ModuleData* module = module_manager_->GetModuleByPath(function.loaded_module_path());
+  const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(
+      function.loaded_module_path(), function.loaded_module_build_id());
   CHECK(module != nullptr);
   const bool is_64_bit = process_->is_64_bit();
   const uint64_t absolute_address =
@@ -565,7 +566,8 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
 }
 
 void OrbitApp::ShowSourceCode(const orbit_client_protos::FunctionInfo& function) {
-  const ModuleData* module = module_manager_->GetModuleByPath(function.loaded_module_path());
+  const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(
+      function.loaded_module_path(), function.loaded_module_build_id());
 
   auto loaded_module = RetrieveModuleWithDebugInfo(module);
 
@@ -951,7 +953,8 @@ void OrbitApp::StartCapture() {
   // non-zero since 0 is reserved for invalid ids.
   uint64_t function_id = 1;
   for (auto& function : selected_functions) {
-    const ModuleData* module = module_manager_->GetModuleByPath(function.loaded_module_path());
+    const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(
+        function.loaded_module_path(), function.loaded_module_build_id());
     CHECK(module != nullptr);
     if (user_defined_capture_data.ContainsFrameTrack(function)) {
       frame_track_function_ids.insert(function_id);
@@ -1176,7 +1179,7 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
 
 orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
     const std::string& module_path, const std::string& build_id) {
-  const ModuleData* const module_data = GetModuleByPath(module_path);
+  const ModuleData* const module_data = GetModuleByPathAndBuildId(module_path, build_id);
   if (module_data == nullptr) {
     return {ErrorMessage{absl::StrFormat("Module \"%s\" was not found", module_path)}};
   }
@@ -1184,21 +1187,23 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
 
   return orbit_base::UnwrapFuture(
       RetrieveModule(module_path, build_id)
-          .ThenIfSuccess(main_thread_executor_,
-                         [this, module_path](const std::filesystem::path& local_file_path) {
-                           return LoadSymbols(local_file_path, module_path);
-                         }));
+          .ThenIfSuccess(main_thread_executor_, [this, module_path, build_id](
+                                                    const std::filesystem::path& local_file_path) {
+            return LoadSymbols(local_file_path, module_path, build_id);
+          }));
 }
 
 orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModule(
     const std::string& module_path, const std::string& build_id) {
-  const ModuleData* module_data = GetModuleByPath(module_path);
+  const ModuleData* module_data = GetModuleByPathAndBuildId(module_path, build_id);
 
   if (module_data == nullptr) {
     return {ErrorMessage{absl::StrFormat("Module \"%s\" was not found", module_path)}};
   }
 
-  const auto it = modules_currently_loading_.find(module_path);
+  auto module_id = std::make_pair(module_path, build_id);
+
+  const auto it = modules_currently_loading_.find(module_id);
   if (it != modules_currently_loading_.end()) {
     return it->second;
   }
@@ -1218,19 +1223,21 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
   auto final_result =
       RetrieveModuleFromRemote(module_path)
           .Then(main_thread_executor_,
-                [this, module_path, local_error_message = local_symbols_path.error().message()](
+                [this, module_id, local_error_message = local_symbols_path.error().message()](
                     const ErrorMessageOr<std::filesystem::path>& remote_result)
                     -> ErrorMessageOr<std::filesystem::path> {
-                  modules_currently_loading_.erase(module_path);
+                  modules_currently_loading_.erase(module_id);
 
                   // If remote loading fails as well, we combine the error messages.
                   if (remote_result.has_value()) return remote_result;
-                  return {ErrorMessage{absl::StrFormat(
-                      "Did not find symbols locally or on remote for module \"%s\": %s\n%s",
-                      module_path, local_error_message, remote_result.error().message())}};
+                  return {ErrorMessage{
+                      absl::StrFormat("Did not find symbols locally or on remote for module \"%s\" "
+                                      "with build_id=\"%s\": %s\n%s",
+                                      module_id.first, module_id.second, local_error_message,
+                                      remote_result.error().message())}};
                 });
 
-  modules_currently_loading_.emplace(module_path, final_result);
+  modules_currently_loading_.emplace(module_id, final_result);
   return final_result;
 }
 
@@ -1332,8 +1339,10 @@ ErrorMessageOr<std::filesystem::path> OrbitApp::FindModuleLocally(
 }
 
 void OrbitApp::AddSymbols(const std::filesystem::path& module_file_path,
+                          const std::string& module_build_id,
                           const orbit_grpc_protos::ModuleSymbols& module_symbols) {
-  ModuleData* module_data = GetMutableModuleByPath(module_file_path.string());
+  ModuleData* module_data =
+      GetMutableModuleByPathAndBuildId(module_file_path.string(), module_build_id);
   module_data->AddSymbols(module_symbols);
 
   const ProcessData* selected_process = GetTargetProcess();
@@ -1348,8 +1357,10 @@ void OrbitApp::AddSymbols(const std::filesystem::path& module_file_path,
 }
 
 orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
-    const std::filesystem::path& symbols_path, const std::string& module_file_path) {
-  const auto it = symbols_currently_loading_.find(module_file_path);
+    const std::filesystem::path& symbols_path, const std::string& module_file_path,
+    const std::string& module_build_id) {
+  auto module_id = std::make_pair(module_file_path, module_build_id);
+  const auto it = symbols_currently_loading_.find(module_id);
   if (it != symbols_currently_loading_.end()) {
     return it->second;
   }
@@ -1361,14 +1372,15 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
       [symbols_path]() { return SymbolHelper::LoadSymbolsFromFile(symbols_path); });
 
   auto add_symbols =
-      [this, module_file_path, scoped_status = std::move(scoped_status)](
+      [this, module_id, scoped_status = std::move(scoped_status)](
           const ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>& symbols_result) mutable
       -> ErrorMessageOr<void> {
-    symbols_currently_loading_.erase(module_file_path);
+    symbols_currently_loading_.erase(module_id);
 
     if (symbols_result.has_error()) return symbols_result.error();
 
-    AddSymbols(module_file_path, symbols_result.value());
+    auto& [module_file_path, module_build_id] = module_id;
+    AddSymbols(module_file_path, module_build_id, symbols_result.value());
 
     std::string message =
         absl::StrFormat(R"(Successfully loaded %d symbols for "%s")",
@@ -1379,16 +1391,19 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
   };
 
   auto result_future = load_symbols_from_file.Then(main_thread_executor_, std::move(add_symbols));
-  symbols_currently_loading_.emplace(module_file_path, result_future);
+  symbols_currently_loading_.emplace(module_id, result_future);
   return result_future;
 }
 
 orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPresetModule(
     const std::string& module_path, const orbit_client_protos::PresetModule& preset_module) {
-  if (!GetTargetProcess()->IsModuleLoaded(module_path)) {
-    return ErrorMessage{"Module not loaded by process."};
+  const ModuleInMemory* module_in_memory = GetTargetProcess()->FindModuleByPath(module_path);
+  if (module_in_memory == nullptr) {
+    return ErrorMessage{absl::StrFormat("Module \"%s\" is not loaded by process.", module_path)};
   }
-  ModuleData* module_data = module_manager_->GetMutableModuleByPath(module_path);
+
+  ModuleData* module_data =
+      module_manager_->GetMutableModuleByPathAndBuildId(module_path, module_in_memory->build_id());
   if (module_data == nullptr) {
     ERROR("module \"%s\" was loaded by the process, but is not part of module manager",
           module_path);
@@ -1525,8 +1540,9 @@ void OrbitApp::RefreshUIAfterModuleReload() {
   modules_data_view_->UpdateModules(GetMutableTargetProcess());
 
   functions_data_view_->ClearFunctions();
-  for (const auto& [module_path, _] : GetTargetProcess()->GetMemoryMap()) {
-    ModuleData* module = module_manager_->GetMutableModuleByPath(module_path);
+  for (const auto& [module_path, module_in_memory] : GetTargetProcess()->GetMemoryMap()) {
+    ModuleData* module =
+        module_manager_->GetMutableModuleByPathAndBuildId(module_path, module_in_memory.build_id());
     if (module->is_loaded()) {
       functions_data_view_->AddFunctions(module->GetFunctions());
     }
@@ -1558,7 +1574,8 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
 
   absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map;
   for (const FunctionInfo& func : data_manager_->GetSelectedFunctions()) {
-    const ModuleData* module = module_manager_->GetModuleByPath(func.loaded_module_path());
+    const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(
+        func.loaded_module_path(), func.loaded_module_build_id());
     // (A) deselect functions when the module is not loaded by the process anymore
     if (!process->IsModuleLoaded(module->file_path())) {
       data_manager_->DeselectFunction(func);
@@ -1572,7 +1589,8 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
   absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map;
   for (const FunctionInfo& func :
        data_manager_->user_defined_capture_data().frame_track_functions()) {
-    const ModuleData* module = module_manager_->GetModuleByPath(func.loaded_module_path());
+    const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(
+        func.loaded_module_path(), func.loaded_module_build_id());
     // Frame tracks are only meaningful if the module for the underlying function is actually
     // loaded by the process.
     if (!process->IsModuleLoaded(module->file_path())) {
@@ -1654,10 +1672,11 @@ void OrbitApp::DeselectFunction(const orbit_client_protos::FunctionInfo& func) {
   const auto result = process->FindModuleByAddress(absolute_address);
   if (result.has_error()) return false;
 
-  const std::string& module_path = result.value().first;
-  const uint64_t module_base_address = result.value().second;
+  const std::string& module_path = result.value().file_path();
+  const std::string& module_build_id = result.value().build_id();
+  const uint64_t module_base_address = result.value().start();
 
-  const ModuleData* module = GetModuleByPath(module_path);
+  const ModuleData* module = GetModuleByPathAndBuildId(module_path, module_build_id);
   if (module == nullptr) return false;
 
   const uint64_t relative_address = absolute_address - module_base_address;

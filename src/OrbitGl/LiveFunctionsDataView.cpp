@@ -405,9 +405,11 @@ void LiveFunctionsDataView::OnDataChanged() {
 
   const absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction>&
       instrumented_functions = app_->GetCaptureData().instrumented_functions();
-  for (const auto& pair : instrumented_functions) {
-    const FunctionInfo* function_info = app_->GetCaptureData().FindFunctionByModulePathAndOffset(
-        pair.second.file_path(), pair.second.file_offset());
+  for (const auto& [function_id, instrumented_function] : instrumented_functions) {
+    const FunctionInfo* function_info =
+        app_->GetCaptureData().FindFunctionByModulePathBuildIdAndOffset(
+            instrumented_function.file_path(), instrumented_function.file_build_id(),
+            instrumented_function.file_offset());
 
     // Likely because module has not yet been updated - skip for now
     if (function_info == nullptr) {
@@ -418,8 +420,8 @@ void LiveFunctionsDataView::OnDataChanged() {
       continue;
     }
 
-    functions_.insert_or_assign(pair.first, *function_info);
-    indices_.push_back(pair.first);
+    functions_.insert_or_assign(function_id, *function_info);
+    indices_.push_back(function_id);
   }
 
   DataView::OnDataChanged();

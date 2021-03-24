@@ -182,7 +182,12 @@ ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
   OUTCOME_TRY(module_infos, process_client_->LoadModuleList(target_process_.pid()));
 
   LOG("List of modules");
+  std::string target_process_build_id;
   for (const ModuleInfo& info : module_infos) {
+    // TODO(dimitry): eventually we want to get build_id directly from ProcessData
+    if (info.file_path() == target_process_.full_path()) {
+      target_process_build_id = info.build_id();
+    }
     LOG("name:%s, path:%s, size:%d, address_start:%d. address_end:%d, build_id:%s", info.name(),
         info.file_path(), info.file_size(), info.address_start(), info.address_end(),
         info.build_id());
@@ -192,7 +197,8 @@ ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
 
   // Process name can be arbitrary so we use the path to find the module corresponding to the binary
   // of target_process_
-  main_module_ = module_manager_.GetMutableModuleByPath(target_process_.full_path());
+  main_module_ = module_manager_.GetMutableModuleByPathAndBuildId(target_process_.full_path(),
+                                                                  target_process_build_id);
   if (main_module_ == nullptr) {
     return ErrorMessage("Error: Module corresponding to process binary not found");
   }

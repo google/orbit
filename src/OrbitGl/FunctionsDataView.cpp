@@ -121,7 +121,8 @@ std::string FunctionsDataView::GetValue(int row, int column) {
         CHECK(!app_->IsCaptureConnected(capture_data));
       }
       CHECK(process != nullptr);
-      const ModuleData* module = app_->GetModuleByPath(function.loaded_module_path());
+      const ModuleData* module = app_->GetModuleByPathAndBuildId(function.loaded_module_path(),
+                                                                 function.loaded_module_build_id());
       CHECK(module != nullptr);
       return absl::StrFormat("0x%llx",
                              function_utils::GetAbsoluteAddress(function, *process, *module));

@@ -74,15 +74,6 @@ CaptureInfo GenerateCaptureInfo(
     const CaptureData& capture_data,
     const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map) {
   CaptureInfo capture_info;
-  for (const auto& pair : capture_data.instrumented_functions()) {
-    const FunctionInfo* function_info = capture_data.FindFunctionByModulePathAndOffset(
-        pair.second.file_path(), pair.second.file_offset());
-    if (function_info == nullptr) {
-      FATAL("Serializing instrumented function \"%s\", couldn't find corresponding FunctionInfo",
-            pair.second.function_name());
-    }
-    (*capture_info.mutable_instrumented_functions())[pair.first] = *function_info;
-  }
 
   ProcessInfo* process = capture_info.mutable_process();
   process->set_pid(capture_data.process()->pid());
@@ -92,17 +83,30 @@ CaptureInfo GenerateCaptureInfo(
   process->set_command_line(capture_data.process()->command_line());
   process->set_is_64_bit(capture_data.process()->is_64_bit());
 
-  for (const auto& [module_path, memory_space] : capture_data.process()->GetMemoryMap()) {
-    const ModuleData* module = capture_data.GetModuleByPath(module_path);
+  for (const auto& [module_path, module_in_memory] : capture_data.process()->GetMemoryMap()) {
+    const ModuleData* module =
+        capture_data.GetModuleByPathAndBuildId(module_path, module_in_memory.build_id());
     CHECK(module != nullptr);
     ModuleInfo* module_info = capture_info.add_modules();
     module_info->set_name(module->name());
     module_info->set_file_path(module->file_path());
     module_info->set_file_size(module->file_size());
-    module_info->set_address_start(memory_space.start);
-    module_info->set_address_end(memory_space.end);
+    module_info->set_address_start(module_in_memory.start());
+    module_info->set_address_end(module_in_memory.end());
     module_info->set_build_id(module->build_id());
     module_info->set_load_bias(module->load_bias());
+  }
+
+  for (const auto& [function_id, instumented_function] : capture_data.instrumented_functions()) {
+    const std::string& module_path = instumented_function.file_path();
+    const std::string& build_id = instumented_function.file_build_id();
+    const FunctionInfo* function_info = capture_data.FindFunctionByModulePathBuildIdAndOffset(
+        module_path, build_id, instumented_function.file_offset());
+    if (function_info == nullptr) {
+      FATAL("Serializing instrumented function \"%s\", couldn't find corresponding FunctionInfo",
+            instumented_function.function_name());
+    }
+    (*capture_info.mutable_instrumented_functions())[function_id] = *function_info;
   }
 
   capture_info.mutable_thread_names()->insert(capture_data.thread_names().begin(),
@@ -143,8 +147,10 @@ CaptureInfo GenerateCaptureInfo(
     const InstrumentedFunction* instrumented_function =
         capture_data.GetInstrumentedFunctionById(function_id);
     CHECK(instrumented_function != nullptr);
-    const FunctionInfo* function = capture_data.FindFunctionByModulePathAndOffset(
-        instrumented_function->file_path(), instrumented_function->file_offset());
+    const std::string& module_path = instrumented_function->file_path();
+    const std::string& build_id = instrumented_function->file_build_id();
+    const FunctionInfo* function = capture_data.FindFunctionByModulePathBuildIdAndOffset(
+        module_path, build_id, instrumented_function->file_offset());
     CHECK(function != nullptr);
     uint64_t absolute_address = capture_data.GetAbsoluteAddress(*function);
     capture_info.mutable_function_stats()->operator[](absolute_address) = stats;

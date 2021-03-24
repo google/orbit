@@ -62,10 +62,13 @@ TEST(ProcessData, UpdateModuleInfos) {
   {
     // valid module infos
     const std::string file_path_1 = "filepath1";
+    constexpr const char* kBuildId1 = "build_id_1";
+    constexpr const char* kBuildId2 = "build_id_2";
     uint64_t start_address1 = 0;
     uint64_t end_address_1 = 10;
     ModuleInfo module_info1;
     module_info1.set_file_path(file_path_1);
+    module_info1.set_build_id(kBuildId1);
     module_info1.set_address_start(start_address1);
     module_info1.set_address_end(end_address_1);
 
@@ -74,6 +77,7 @@ TEST(ProcessData, UpdateModuleInfos) {
     uint64_t end_address_2 = 110;
     ModuleInfo module_info2;
     module_info2.set_file_path(file_path_2);
+    module_info2.set_build_id(kBuildId2);
     module_info2.set_address_start(start_address_2);
     module_info2.set_address_end(end_address_2);
 
@@ -82,16 +86,19 @@ TEST(ProcessData, UpdateModuleInfos) {
     ProcessData process(ProcessInfo{});
     process.UpdateModuleInfos(module_infos);
 
-    const absl::flat_hash_map<std::string, MemorySpace>& module_memory_map = process.GetMemoryMap();
+    const absl::node_hash_map<std::string, ModuleInMemory>& module_memory_map =
+        process.GetMemoryMap();
 
     EXPECT_EQ(module_memory_map.size(), 2);
 
-    const MemorySpace& memory_space_1 = module_memory_map.at(file_path_1);
-    EXPECT_EQ(memory_space_1.start, start_address1);
-    EXPECT_EQ(memory_space_1.end, end_address_1);
-    const MemorySpace& memory_space_2 = module_memory_map.at(file_path_2);
-    EXPECT_EQ(memory_space_2.start, start_address_2);
-    EXPECT_EQ(memory_space_2.end, end_address_2);
+    const ModuleInMemory& memory_space_1 = module_memory_map.at(file_path_1);
+    EXPECT_EQ(memory_space_1.start(), start_address1);
+    EXPECT_EQ(memory_space_1.end(), end_address_1);
+    EXPECT_EQ(memory_space_1.build_id(), kBuildId1);
+    const ModuleInMemory& memory_space_2 = module_memory_map.at(file_path_2);
+    EXPECT_EQ(memory_space_2.start(), start_address_2);
+    EXPECT_EQ(memory_space_2.end(), end_address_2);
+    EXPECT_EQ(memory_space_2.build_id(), kBuildId2);
   }
   {
     // invalid module infos: same filepath
@@ -146,7 +153,7 @@ TEST(ProcessData, MemorySpace) {
     // AddressRange
     uint64_t start = 0x4000;
     uint64_t end = 0x4100;
-    MemorySpace ms{start, end};
+    ModuleInMemory ms{start, end, "path/to/file", "build_id"};
     EXPECT_EQ(ms.FormattedAddressRange(), "[0000000000004000 - 0000000000004100]");
   }
 }
@@ -173,9 +180,9 @@ TEST(ProcessData, IsModuleLoaded) {
   ProcessData process(ProcessInfo{});
   process.UpdateModuleInfos(module_infos);
 
-  EXPECT_TRUE(process.IsModuleLoaded(file_path_1));
-  EXPECT_TRUE(process.IsModuleLoaded(file_path_2));
-  EXPECT_FALSE(process.IsModuleLoaded("not/loaded/module"));
+  EXPECT_NE(process.FindModuleByPath(file_path_1), nullptr);
+  EXPECT_NE(process.FindModuleByPath(file_path_2), nullptr);
+  EXPECT_EQ(process.FindModuleByPath("not/loaded/module"), nullptr);
 }
 
 TEST(ProcessData, GetModuleBaseAddress) {
@@ -223,14 +230,15 @@ TEST(ProcessData, CreateCopy) {
   ProcessData process_copy = process;
 
   EXPECT_EQ(process_copy.name(), process_name);
-  EXPECT_TRUE(process_copy.IsModuleLoaded(module_path));
+  EXPECT_NE(process_copy.FindModuleByPath(module_path), nullptr);
   ASSERT_EQ(process_copy.GetMemoryMap().size(), 1);
-  EXPECT_EQ(process_copy.GetMemoryMap().at(module_path).start, start_address);
+  EXPECT_EQ(process_copy.GetMemoryMap().at(module_path).start(), start_address);
 }
 
 TEST(ProcessData, FindModuleByAddress) {
   const std::string process_name = "Test Name";
   const std::string module_path = "test/file/path";
+  constexpr const char* kBuildId = "42";
   uint64_t start_address = 100;
   uint64_t end_address = 200;
 
@@ -250,6 +258,7 @@ TEST(ProcessData, FindModuleByAddress) {
 
   ModuleInfo module_info;
   module_info.set_file_path(module_path);
+  module_info.set_build_id(kBuildId);
   module_info.set_address_start(start_address);
   module_info.set_address_end(end_address);
 
@@ -268,22 +277,28 @@ TEST(ProcessData, FindModuleByAddress) {
     // start address
     const auto result = process.FindModuleByAddress(start_address);
     ASSERT_FALSE(result.has_error());
-    EXPECT_EQ(result.value().first, module_path);
-    EXPECT_EQ(result.value().second, start_address);
+    EXPECT_EQ(result.value().file_path(), module_path);
+    EXPECT_EQ(result.value().start(), start_address);
+    EXPECT_EQ(result.value().end(), end_address);
+    EXPECT_EQ(result.value().build_id(), kBuildId);
   }
   {
     // after start address
     const auto result = process.FindModuleByAddress(start_address + 10);
     ASSERT_FALSE(result.has_error());
-    EXPECT_EQ(result.value().first, module_path);
-    EXPECT_EQ(result.value().second, start_address);
+    EXPECT_EQ(result.value().file_path(), module_path);
+    EXPECT_EQ(result.value().start(), start_address);
+    EXPECT_EQ(result.value().end(), end_address);
+    EXPECT_EQ(result.value().build_id(), kBuildId);
   }
   {
     // exactly end address
     const auto result = process.FindModuleByAddress(end_address);
     ASSERT_FALSE(result.has_error());
-    EXPECT_EQ(result.value().first, module_path);
-    EXPECT_EQ(result.value().second, start_address);
+    EXPECT_EQ(result.value().file_path(), module_path);
+    EXPECT_EQ(result.value().start(), start_address);
+    EXPECT_EQ(result.value().end(), end_address);
+    EXPECT_EQ(result.value().build_id(), kBuildId);
   }
   {
     // after end address

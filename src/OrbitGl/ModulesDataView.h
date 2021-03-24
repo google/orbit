@@ -46,7 +46,7 @@ class ModulesDataView : public DataView {
   [[nodiscard]] ModuleData* GetModule(uint32_t row) const { return modules_[indices_[row]]; }
 
   std::vector<ModuleData*> modules_;
-  absl::flat_hash_map<const ModuleData*, const MemorySpace*> module_memory_;
+  absl::flat_hash_map<const ModuleData*, const ModuleInMemory*> module_memory_;
 
   enum ColumnIndex {
     kColumnName,

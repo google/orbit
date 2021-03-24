@@ -27,7 +27,8 @@ void ProcessData::UpdateModuleInfos(absl::Span<const orbit_grpc_protos::ModuleIn
     {
       const auto [it, success] = module_memory_map_.try_emplace(
           module_info.file_path(),
-          MemorySpace{module_info.address_start(), module_info.address_end()});
+          ModuleInMemory{module_info.address_start(), module_info.address_end(),
+                         module_info.file_path(), module_info.build_id()});
       CHECK(success);
     }
     {
@@ -37,9 +38,16 @@ void ProcessData::UpdateModuleInfos(absl::Span<const orbit_grpc_protos::ModuleIn
     }
   }
 }
+const ModuleInMemory* ProcessData::FindModuleByPath(const std::string& module_path) const {
+  auto it = module_memory_map_.find(module_path);
+  if (it == module_memory_map_.end()) {
+    return nullptr;
+  }
 
-ErrorMessageOr<std::pair<std::string, uint64_t>> ProcessData::FindModuleByAddress(
-    uint64_t absolute_address) const {
+  return &it->second;
+}
+
+ErrorMessageOr<ModuleInMemory> ProcessData::FindModuleByAddress(uint64_t absolute_address) const {
   if (start_addresses_.empty()) {
     return ErrorMessage(absl::StrFormat("Unable to find module for address %016" PRIx64
                                         ": No modules loaded by process %s",
@@ -56,9 +64,9 @@ ErrorMessageOr<std::pair<std::string, uint64_t>> ProcessData::FindModuleByAddres
 
   --it;
   const std::string& module_path = it->second;
-  const MemorySpace& memory_space = module_memory_map_.at(module_path);
-  CHECK(absolute_address >= memory_space.start);
-  if (absolute_address > memory_space.end) return not_found_error;
+  const ModuleInMemory& module_in_memory = module_memory_map_.at(module_path);
+  CHECK(absolute_address >= module_in_memory.start());
+  if (absolute_address > module_in_memory.end()) return not_found_error;
 
-  return std::make_pair(module_path, memory_space.start);
+  return module_in_memory;
 }
