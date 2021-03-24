@@ -128,20 +128,22 @@ TEST(TrampolineTest, FindAddressRangeForTrampoline) {
   EXPECT_EQ(kOneGb, address_range_or_error.value().start);
 
   // Placement to the left just fits but only after a few hops.
-  const std::vector<AddressRange> kUnavailableRanges4 = {{0, k64Kb},  // this is the gap that just fits
-                                                   {k64Kb + kOneMb, 6 * kOneMb},
-                                                   {6 * kOneMb + kOneMb - 1, 7 * kOneMb},
-                                                   {7 * kOneMb + kOneMb - 1, 8 * kOneMb},
-                                                   {8 * kOneMb + kOneMb - 1, 9 * kOneMb}};
-  address_range_or_error =
-      FindAddressRangeForTrampoline(kUnavailableRanges4, {8 * kOneMb + kOneMb - 1, 9 * kOneMb}, kOneMb);
+  const std::vector<AddressRange> kUnavailableRanges4 = {
+      {0, k64Kb},  // this is the gap that just fits
+      {k64Kb + kOneMb, 6 * kOneMb},
+      {6 * kOneMb + kOneMb - 1, 7 * kOneMb},
+      {7 * kOneMb + kOneMb - 1, 8 * kOneMb},
+      {8 * kOneMb + kOneMb - 1, 9 * kOneMb}};
+  address_range_or_error = FindAddressRangeForTrampoline(
+      kUnavailableRanges4, {8 * kOneMb + kOneMb - 1, 9 * kOneMb}, kOneMb);
   ASSERT_FALSE(address_range_or_error.has_error());
   EXPECT_EQ(k64Kb, address_range_or_error.value().start);
 
   // No space to the left but trivial placement to the right.
   const std::vector<AddressRange> kUnavailableRanges5 = {
       {0, k64Kb}, {kOneMb, kOneGb}, {5 * kOneGb, 6 * kOneGb}};
-  address_range_or_error = FindAddressRangeForTrampoline(kUnavailableRanges5, {kOneMb, kOneGb}, kOneMb);
+  address_range_or_error =
+      FindAddressRangeForTrampoline(kUnavailableRanges5, {kOneMb, kOneGb}, kOneMb);
   ASSERT_FALSE(address_range_or_error.has_error()) << address_range_or_error.error().message();
   EXPECT_EQ(kOneGb, address_range_or_error.value().start);
 
@@ -153,7 +155,8 @@ TEST(TrampolineTest, FindAddressRangeForTrampoline) {
       {kOneGb + 0x11 * kOneMb - 1, kOneGb + 0x20 * kOneMb},
       {kOneGb + 0x21 * kOneMb - 1, kOneGb + 0x30 * kOneMb},
       {kOneGb + 0x31 * kOneMb - 1, kOneGb + 0x40 * kOneMb}};
-  address_range_or_error = FindAddressRangeForTrampoline(kUnavailableRanges6, {kOneMb, kOneGb}, kOneMb);
+  address_range_or_error =
+      FindAddressRangeForTrampoline(kUnavailableRanges6, {kOneMb, kOneGb}, kOneMb);
   ASSERT_FALSE(address_range_or_error.has_error()) << address_range_or_error.error().message();
   EXPECT_EQ(kOneGb + 0x40 * kOneMb, address_range_or_error.value().start);
 
@@ -167,7 +170,8 @@ TEST(TrampolineTest, FindAddressRangeForTrampoline) {
       {3 * k256Mb + kOneMb - 1, 4 * k256Mb + 1},  // this gap is large but alignment doesn't fit
       {4 * k256Mb + kOneMb + 2, 5 * k256Mb},
       {5 * k256Mb + kOneMb - 1, 0xffffffffffffffff - kOneMb / 2}};
-  address_range_or_error = FindAddressRangeForTrampoline(kUnavailableRanges7, {kOneMb, k256Mb}, kOneMb);
+  address_range_or_error =
+      FindAddressRangeForTrampoline(kUnavailableRanges7, {kOneMb, k256Mb}, kOneMb);
   ASSERT_TRUE(address_range_or_error.has_error());
 
   // There is no sufficiently large gap in the mappings in the 2GB below the code segment. So the
