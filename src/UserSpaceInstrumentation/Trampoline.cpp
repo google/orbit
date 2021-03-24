@@ -87,8 +87,8 @@ ErrorMessageOr<std::vector<AddressRange>> GetUnavailableAddressRanges(pid_t pid)
 ErrorMessageOr<AddressRange> FindAddressRangeForTrampoline(
     const std::vector<AddressRange>& unavailable_ranges, const AddressRange& code_range,
     uint64_t size) {
-  constexpr uint64_t kMax32BitOffset = 0x7fffffff;
-  constexpr uint64_t kMax64BitAdress = 0xffffffffffffffff;
+  constexpr uint64_t kMax32BitOffset = INT32_MAX;
+  constexpr uint64_t kMax64BitAdress = UINT64_MAX;
   const uint64_t page_size = sysconf(_SC_PAGE_SIZE);
 
   FAIL_IF(unavailable_ranges.size() == 0 || unavailable_ranges[0].start != 0,
