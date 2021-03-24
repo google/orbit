@@ -46,12 +46,12 @@ std::optional<size_t> HighestIntersectingAddressRange(
   return std::nullopt;
 }
 
-ErrorMessageOr<std::vector<AddressRange>> GetTakenAddressRanges(pid_t pid) {
+ErrorMessageOr<std::vector<AddressRange>> GetUnavailableAddressRanges(pid_t pid) {
   std::vector<AddressRange> result;
   OUTCOME_TRY(mmap_min_addr, ReadFileToString("/proc/sys/vm/mmap_min_addr"));
   uint64_t mmap_min_addr_as_uint64 = 0;
   if (!absl::SimpleAtoi(mmap_min_addr, &mmap_min_addr_as_uint64)) {
-    return ErrorMessage("Failed to read/proc/sys/vm/mmap_min_addr");
+    return ErrorMessage("Failed to parse /proc/sys/vm/mmap_min_addr");
   }
   result.emplace_back(0, mmap_min_addr_as_uint64);
 
@@ -85,23 +85,29 @@ ErrorMessageOr<std::vector<AddressRange>> GetTakenAddressRanges(pid_t pid) {
 }
 
 ErrorMessageOr<AddressRange> FindAddressRangeForTrampoline(
-    const std::vector<AddressRange>& taken_ranges, const AddressRange& code_range, uint64_t size) {
+    const std::vector<AddressRange>& unavailable_ranges, const AddressRange& code_range,
+    uint64_t size) {
   constexpr uint64_t kMax32BitOffset = 0x7fffffff;
+  constexpr uint64_t kMax64BitAdress = 0xffffffffffffffff;
   const uint64_t page_size = sysconf(_SC_PAGE_SIZE);
 
+  FAIL_IF(unavailable_ranges.size() == 0 || unavailable_ranges[0].start != 0,
+          "First entry at unavailable_ranges needs to start at zero. Use result of "
+          "GetUnavailableAddressRanges.");
+
   // Try to fit an interval of length `size` below `code_range`.
-  auto optional_range_index = LowestIntersectingAddressRange(taken_ranges, code_range);
+  auto optional_range_index = LowestIntersectingAddressRange(unavailable_ranges, code_range);
   if (!optional_range_index) {
-    return ErrorMessage(absl::StrFormat("code_range %#x-%#x is not in taken_ranges.",
+    return ErrorMessage(absl::StrFormat("code_range %#x-%#x is not in unavailable_ranges.",
                                         code_range.start, code_range.end));
   }
   while (optional_range_index.value() > 0) {
     // Place directly to the left of the take interval we are in...
-    uint64_t address_trampoline = taken_ranges[optional_range_index.value()].start - size;
-    // ... but round down to the previous page boundary.
+    uint64_t address_trampoline = unavailable_ranges[optional_range_index.value()].start - size;
+    // ... but round down to page boundary.
     address_trampoline = (address_trampoline / page_size) * page_size;
     AddressRange range_trampoline = {address_trampoline, address_trampoline + size};
-    optional_range_index = LowestIntersectingAddressRange(taken_ranges, range_trampoline);
+    optional_range_index = LowestIntersectingAddressRange(unavailable_ranges, range_trampoline);
     if (!optional_range_index) {
       // We do not intersect any taken interval. Check if we are close enough to code_range:
       // code_range is above range_trampoline we will need to jmp back and forth in these ranges
@@ -115,21 +121,21 @@ ErrorMessageOr<AddressRange> FindAddressRangeForTrampoline(
   }
 
   // Try to fit an interval of length `size` above `code_range`.
-  optional_range_index = HighestIntersectingAddressRange(taken_ranges, code_range);
+  optional_range_index = HighestIntersectingAddressRange(unavailable_ranges, code_range);
   if (!optional_range_index) {
-    return ErrorMessage(absl::StrFormat("code_range %#x-%#x is not in taken_ranges.",
+    return ErrorMessage(absl::StrFormat("code_range %#x-%#x is not in unavailable_ranges.",
                                         code_range.start, code_range.end));
   }
   do {
     const uint64_t address_trampoline =
-        ((taken_ranges[optional_range_index.value()].end + (page_size - 1)) / page_size) *
+        ((unavailable_ranges[optional_range_index.value()].end + (page_size - 1)) / page_size) *
         page_size;
     // Check if we ran out of address space.
-    if (address_trampoline >= 0xffffffffffffffff - size) {
+    if (address_trampoline >= kMax64BitAdress - size) {
       break;
     }
     AddressRange range_trampoline = {address_trampoline, address_trampoline + size};
-    optional_range_index = HighestIntersectingAddressRange(taken_ranges, range_trampoline);
+    optional_range_index = HighestIntersectingAddressRange(unavailable_ranges, range_trampoline);
     if (!optional_range_index) {
       // We do not intersect any taken interval. Check if we are close enough to code_range:
       // code_range is below range_trampoline we will need to jump back and forth in these ranges
@@ -140,15 +146,15 @@ ErrorMessageOr<AddressRange> FindAddressRangeForTrampoline(
       // If we are already beyond the close range there is no need to go any further.
       break;
     }
-  } while (optional_range_index.value() < taken_ranges.size());
+  } while (true);
   return ErrorMessage(absl::StrFormat("No place to fit %u bytes close to code range %#x-%#x.", size,
                                       code_range.start, code_range.end));
 }
 
 ErrorMessageOr<uint64_t> AllocateMemoryForTrampolines(pid_t pid, const AddressRange& code_range,
                                                       uint64_t size) {
-  OUTCOME_TRY(taken_ranges, GetTakenAddressRanges(pid));
-  OUTCOME_TRY(address_range, FindAddressRangeForTrampoline(taken_ranges, code_range, size));
+  OUTCOME_TRY(unavailable_ranges, GetUnavailableAddressRanges(pid));
+  OUTCOME_TRY(address_range, FindAddressRangeForTrampoline(unavailable_ranges, code_range, size));
   return AllocateInTracee(pid, address_range.start, size);
 }
 

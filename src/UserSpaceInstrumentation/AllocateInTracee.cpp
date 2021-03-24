@@ -144,8 +144,9 @@ namespace {
   }
   const uint64_t result = result_or_error.value();
   if (address != 0 && result != address) {
-    FAIL_IF(FreeInTracee(pid, result, size).has_error(),
-            "Unable to free proviously allocated memory.");
+    auto error_or_void = FreeInTracee(pid, result, size);
+    FAIL_IF(error_or_void.has_error(), "Unable to free proviously allocated memory: \"%s\"",
+            error_or_void.error().message());
     return ErrorMessage(
         absl::StrFormat("AllocateInTracee wanted to allocate memory at %#x but got memory at a "
                         "different adress: %#x. The memory has been freed again.",

@@ -103,63 +103,63 @@ TEST(TrampolineTest, FindAddressRangeForTrampoline) {
   constexpr uint64_t kOneGb = 0x40000000;
 
   // Trivial placement to the left.
-  const std::vector<AddressRange> kTakenRanges1 = {
+  const std::vector<AddressRange> kUnavailableRanges1 = {
       {0, k64Kb}, {kOneGb, 2 * kOneGb}, {3 * kOneGb, 4 * kOneGb}};
   auto address_range_or_error =
-      FindAddressRangeForTrampoline(kTakenRanges1, {kOneGb, 2 * kOneGb}, k256Mb);
+      FindAddressRangeForTrampoline(kUnavailableRanges1, {kOneGb, 2 * kOneGb}, k256Mb);
   ASSERT_FALSE(address_range_or_error.has_error());
   EXPECT_EQ(kOneGb - k256Mb, address_range_or_error.value().start);
 
   // Placement to the left just fits.
-  const std::vector<AddressRange> kTakenRanges2 = {
+  const std::vector<AddressRange> kUnavailableRanges2 = {
       {0, k64Kb}, {k256Mb, kOneGb}, {3 * kOneGb, 4 * kOneGb}};
   address_range_or_error =
-      FindAddressRangeForTrampoline(kTakenRanges2, {k256Mb, kOneGb}, k256Mb - k64Kb);
+      FindAddressRangeForTrampoline(kUnavailableRanges2, {k256Mb, kOneGb}, k256Mb - k64Kb);
   ASSERT_FALSE(address_range_or_error.has_error());
   EXPECT_EQ(k64Kb, address_range_or_error.value().start);
 
   // Placement to the left fails due to page alignment. So we place to the right which fits
   // trivially.
-  const std::vector<AddressRange> kTakenRanges3 = {
+  const std::vector<AddressRange> kUnavailableRanges3 = {
       {0, k64Kb + 1}, {k256Mb, kOneGb}, {3 * kOneGb, 4 * kOneGb}};
   address_range_or_error =
-      FindAddressRangeForTrampoline(kTakenRanges3, {k256Mb, kOneGb}, k256Mb - k64Kb - 5);
+      FindAddressRangeForTrampoline(kUnavailableRanges3, {k256Mb, kOneGb}, k256Mb - k64Kb - 5);
   ASSERT_FALSE(address_range_or_error.has_error());
   EXPECT_EQ(kOneGb, address_range_or_error.value().start);
 
   // Placement to the left just fits but only after a few hops.
-  const std::vector<AddressRange> kTakenRanges4 = {{0, k64Kb},  // this is the gap that just fits
+  const std::vector<AddressRange> kUnavailableRanges4 = {{0, k64Kb},  // this is the gap that just fits
                                                    {k64Kb + kOneMb, 6 * kOneMb},
                                                    {6 * kOneMb + kOneMb - 1, 7 * kOneMb},
                                                    {7 * kOneMb + kOneMb - 1, 8 * kOneMb},
                                                    {8 * kOneMb + kOneMb - 1, 9 * kOneMb}};
   address_range_or_error =
-      FindAddressRangeForTrampoline(kTakenRanges4, {8 * kOneMb + kOneMb - 1, 9 * kOneMb}, kOneMb);
+      FindAddressRangeForTrampoline(kUnavailableRanges4, {8 * kOneMb + kOneMb - 1, 9 * kOneMb}, kOneMb);
   ASSERT_FALSE(address_range_or_error.has_error());
   EXPECT_EQ(k64Kb, address_range_or_error.value().start);
 
   // No space to the left but trivial placement to the right.
-  const std::vector<AddressRange> kTakenRanges5 = {
+  const std::vector<AddressRange> kUnavailableRanges5 = {
       {0, k64Kb}, {kOneMb, kOneGb}, {5 * kOneGb, 6 * kOneGb}};
-  address_range_or_error = FindAddressRangeForTrampoline(kTakenRanges5, {kOneMb, kOneGb}, kOneMb);
+  address_range_or_error = FindAddressRangeForTrampoline(kUnavailableRanges5, {kOneMb, kOneGb}, kOneMb);
   ASSERT_FALSE(address_range_or_error.has_error()) << address_range_or_error.error().message();
   EXPECT_EQ(kOneGb, address_range_or_error.value().start);
 
   // No space to the left but placement to the right works after a few hops.
-  const std::vector<AddressRange> kTakenRanges6 = {
+  const std::vector<AddressRange> kUnavailableRanges6 = {
       {0, k64Kb},
       {kOneMb, kOneGb},
       {kOneGb + 0x01 * kOneMb - 1, kOneGb + 0x10 * kOneMb},
       {kOneGb + 0x11 * kOneMb - 1, kOneGb + 0x20 * kOneMb},
       {kOneGb + 0x21 * kOneMb - 1, kOneGb + 0x30 * kOneMb},
       {kOneGb + 0x31 * kOneMb - 1, kOneGb + 0x40 * kOneMb}};
-  address_range_or_error = FindAddressRangeForTrampoline(kTakenRanges6, {kOneMb, kOneGb}, kOneMb);
+  address_range_or_error = FindAddressRangeForTrampoline(kUnavailableRanges6, {kOneMb, kOneGb}, kOneMb);
   ASSERT_FALSE(address_range_or_error.has_error()) << address_range_or_error.error().message();
   EXPECT_EQ(kOneGb + 0x40 * kOneMb, address_range_or_error.value().start);
 
   // No space to the left and the last segment nearly fills up the 64 bit address space. So no
   // placement is possible.
-  const std::vector<AddressRange> kTakenRanges7 = {
+  const std::vector<AddressRange> kUnavailableRanges7 = {
       {0, k64Kb},
       {kOneMb, k256Mb},
       {1 * k256Mb + kOneMb - 1, 2 * k256Mb},
@@ -167,19 +167,19 @@ TEST(TrampolineTest, FindAddressRangeForTrampoline) {
       {3 * k256Mb + kOneMb - 1, 4 * k256Mb + 1},  // this gap is large but alignment doesn't fit
       {4 * k256Mb + kOneMb + 2, 5 * k256Mb},
       {5 * k256Mb + kOneMb - 1, 0xffffffffffffffff - kOneMb / 2}};
-  address_range_or_error = FindAddressRangeForTrampoline(kTakenRanges7, {kOneMb, k256Mb}, kOneMb);
+  address_range_or_error = FindAddressRangeForTrampoline(kUnavailableRanges7, {kOneMb, k256Mb}, kOneMb);
   ASSERT_TRUE(address_range_or_error.has_error());
 
   // There is no sufficiently large gap in the mappings in the 2GB below the code segment. So the
   // trampoline is placed above the code segment. Also we test that the trampoline starts at the
   // next memory page above last taken segment.
-  const std::vector<AddressRange> kTakenRanges8 = {
+  const std::vector<AddressRange> kUnavailableRanges8 = {
       {0, k64Kb},  // huge gap here, but it's too far away
       {0x10 * kOneGb, 0x11 * kOneGb},
       {0x11 * kOneGb + kOneMb - 1, 0x12 * kOneGb},
       {0x12 * kOneGb + kOneMb - 1, 0x12 * kOneGb + 2 * kOneMb + 42}};
   address_range_or_error = FindAddressRangeForTrampoline(
-      kTakenRanges8, {0x12 * kOneGb + kOneMb - 1, 0x12 * kOneGb + 2 * kOneMb}, kOneMb);
+      kUnavailableRanges8, {0x12 * kOneGb + kOneMb - 1, 0x12 * kOneGb + 2 * kOneMb}, kOneMb);
   ASSERT_FALSE(address_range_or_error.has_error()) << address_range_or_error.error().message();
   constexpr uint64_t kPageSize = 4096;
   constexpr uint64_t kNextPage =
@@ -188,7 +188,7 @@ TEST(TrampolineTest, FindAddressRangeForTrampoline) {
 
   // There is no sufficiently large gap in the mappings in the 2GB below the code segment. And there
   // also is no gap large enough in the 2GB above the code segment. So no placement is possible.
-  const std::vector<AddressRange> kTakenRanges9 = {
+  const std::vector<AddressRange> kUnavailableRanges9 = {
       {0, k64Kb},  // huge gap here, but it's too far away
       {0x10 * kOneGb + kOneMb - 1, 0x11 * kOneGb},
       {0x11 * kOneGb + kOneMb - 1, 0x12 * kOneGb},
@@ -196,8 +196,14 @@ TEST(TrampolineTest, FindAddressRangeForTrampoline) {
       {0x12 * kOneGb + 3 * kOneMb - 1, 0x13 * kOneGb + 1},
       {0x13 * kOneGb + kOneMb + 42, 0x14 * kOneGb}};
   address_range_or_error = FindAddressRangeForTrampoline(
-      kTakenRanges9, {0x12 * kOneGb + kOneMb - 1, 0x12 * kOneGb + 2 * kOneMb}, kOneMb);
+      kUnavailableRanges9, {0x12 * kOneGb + kOneMb - 1, 0x12 * kOneGb + 2 * kOneMb}, kOneMb);
   ASSERT_TRUE(address_range_or_error.has_error());
+
+  // Fail on malformed into: first address range does not start at zero.
+  const std::vector<AddressRange> kUnavailableRanges10 = {{k64Kb, kOneGb}};
+  EXPECT_DEATH(
+      auto result = FindAddressRangeForTrampoline(kUnavailableRanges10, {k64Kb, kOneGb}, kOneMb),
+      "needs to start at zero");
 }
 
 TEST(TrampolineTest, AllocateMemoryForTrampolines) {
