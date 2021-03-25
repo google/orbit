@@ -19,7 +19,7 @@ class TriangleToggle : public orbit_gl::CaptureViewElement,
 
   using StateChangeHandler = std::function<void(TriangleToggle::State)>;
   explicit TriangleToggle(State initial_state, StateChangeHandler handler, TimeGraph* time_graph,
-                          TimeGraphLayout* layout);
+                          TimeGraphLayout* layout, orbit_gl::CaptureViewElement* parent);
   ~TriangleToggle() override = default;
 
   TriangleToggle() = delete;
@@ -41,11 +41,15 @@ class TriangleToggle : public orbit_gl::CaptureViewElement,
   bool IsExpanded() const { return state_ == State::kExpanded; }
   bool IsInactive() const { return state_ == State::kInactive; }
 
+ protected:
+  std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
+
  private:
+  orbit_gl::CaptureViewElement* parent_;
+
   State state_ = State::kInactive;
   State initial_state_ = State::kInactive;
   StateChangeHandler handler_;
-  float size_ = 10.f;
 };
 
 #endif  // ORBIT_GL_TRIANGLE_TOGGLE_H_

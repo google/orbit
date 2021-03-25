@@ -22,7 +22,8 @@ Track::Track(TimeGraph* time_graph, TimeGraphLayout* layout, const CaptureData* 
     : CaptureViewElement(time_graph, layout),
       collapse_toggle_(std::make_shared<TriangleToggle>(
           TriangleToggle::State::kExpanded,
-          [this](TriangleToggle::State state) { OnCollapseToggle(state); }, time_graph, layout)),
+          [this](TriangleToggle::State state) { OnCollapseToggle(state); }, time_graph, layout,
+          this)),
       layout_(layout),
       capture_data_(capture_data) {
   const Color kDarkGrey(50, 50, 50, 255);
@@ -207,4 +208,12 @@ void Track::OnDrag(int x, int y) {
 
   pos_[1] = mouse_pos_cur_[1] - picking_offset_[1];
   time_graph_->VerticallyMoveIntoView(*this);
+}
+
+std::vector<orbit_gl::CaptureViewElement*> Track::GetVisibleChildren() {
+  std::vector<CaptureViewElement*> result;
+
+  result.push_back(collapse_toggle_.get());
+
+  return result;
 }
