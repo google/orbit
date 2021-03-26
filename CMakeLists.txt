@@ -43,6 +43,9 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(STRICT_COMPILE_FLAGS -Werror=all
+                           # gcc does not behave consistently here; what is fine with gcc9 fails with gcc10
+                           # and vice versa, see https://github.com/google/orbit/issues/1624 for details.
+                           -Wno-stringop-truncation
                            -Werror=float-conversion
                            -Werror=format=2
                            -Werror=ignored-attributes
