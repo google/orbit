@@ -20,7 +20,7 @@ namespace orbit_gl {
  */
 class AccessibleTriangleToggle : public orbit_accessibility::AccessibleInterface {
  public:
-  explicit AccessibleTriangleToggle(TriangleToggle* triangle_toggle, CaptureViewElement* parent)
+  explicit AccessibleTriangleToggle(TriangleToggle* triangle_toggle, Track* parent)
       : triangle_toggle_{triangle_toggle}, parent_{parent} {};
 
   [[nodiscard]] int AccessibleChildCount() const override { return 0; };

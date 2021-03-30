@@ -14,10 +14,10 @@
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "TimeGraph.h"
+#include "Track.h"
 
 TriangleToggle::TriangleToggle(State initial_state, StateChangeHandler handler,
-                               TimeGraph* time_graph, TimeGraphLayout* layout,
-                               orbit_gl::CaptureViewElement* parent)
+                               TimeGraph* time_graph, TimeGraphLayout* layout, Track* parent)
     : CaptureViewElement(time_graph, layout),
       parent_(parent),
       state_(initial_state),
