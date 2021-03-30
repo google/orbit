@@ -23,8 +23,8 @@ TriangleToggle::TriangleToggle(State initial_state, StateChangeHandler handler,
       state_(initial_state),
       initial_state_(initial_state),
       handler_(std::move(handler)) {
-        SetSize(10.f, 10.f);
-      }
+  SetSize(10.f, 10.f);
+}
 
 void TriangleToggle::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   CaptureViewElement::Draw(canvas, picking_mode, z_offset);
