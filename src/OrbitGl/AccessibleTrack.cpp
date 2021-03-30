@@ -116,10 +116,11 @@ AccessibilityState AccessibleTrackContent::AccessibleState() const {
   return AccessibilityState::Normal;
 }
 
-int AccessibleTrackTab::AccessibleChildCount() const { return 0; }
+int AccessibleTrackTab::AccessibleChildCount() const { return 1; }
 
-const AccessibleInterface* AccessibleTrackTab::AccessibleChild(int /*index*/) const {
-  return nullptr;
+const AccessibleInterface* AccessibleTrackTab::AccessibleChild(int index) const {
+  CHECK(index == 0);
+  return track_->GetTriangleToggle()->GetOrCreateAccessibleInterface();
 }
 
 const AccessibleInterface* AccessibleTrackTab::AccessibleParent() const {
@@ -152,15 +153,10 @@ int AccessibleTrack::AccessibleChildCount() const {
 }
 
 const AccessibleInterface* AccessibleTrack::AccessibleChild(int index) const {
-  int child_count = track_->GetVisibleChildren().size();
-  std::vector<orbit_gl::CaptureViewElement*> children = track_->GetVisibleChildren();
-  if (index < child_count) {
-    return children[index]->GetAccessibleInterface();
-  }
-  if (index == child_count) {
+  if (index == 0) {
     return &tab_;
   }
-  CHECK(index == child_count + 1);
+  CHECK(index == 2);
   return &content_;
 }
 

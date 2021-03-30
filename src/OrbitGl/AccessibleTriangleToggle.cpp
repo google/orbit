@@ -21,20 +21,6 @@ orbit_accessibility::AccessibilityRect AccessibleTriangleToggle::AccessibleLocal
   int screen_width = canvas->WorldToScreenWidth(size[0]);
   int screen_height = canvas->WorldToScreenHeight(size[1]);
 
-  // Adjust the coordinates to clamp the result to an on-screen rect
-  // This will "cut" any part that is offscreen due to scrolling, and may result
-  // in a final result with width / height of 0.
-
-  // First: Clamp bottom
-  if (screen_pos[1] + screen_height > canvas->GetHeight()) {
-    screen_height = std::max(0, canvas->GetHeight() - static_cast<int>(screen_pos[1]));
-  }
-  // Second: Clamp top
-  if (screen_pos[1] < 0) {
-    screen_height = std::max(0, static_cast<int>(screen_pos[1]) + screen_height);
-    screen_pos[1] = 0;
-  }
-
   orbit_accessibility::AccessibilityRect parent_rect =
       parent_->GetOrCreateAccessibleInterface()->AccessibleLocalRect();
 
@@ -51,7 +37,10 @@ orbit_accessibility::AccessibilityState AccessibleTriangleToggle::AccessibleStat
 }
 
 const orbit_accessibility::AccessibleInterface* AccessibleTriangleToggle::AccessibleParent() const {
-  return parent_->GetOrCreateAccessibleInterface();
+  // Hack: The toggle's parent is the track tab, not the track itself.
+  // As the tab is virtual only, we expose it's accessibility interface here
+  // directly.
+  return parent_->GetOrCreateAccessibleInterface()->AccessibleChild(0);
 }
 
 }  // namespace orbit_gl

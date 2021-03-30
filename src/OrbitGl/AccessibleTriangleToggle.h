@@ -7,6 +7,7 @@
 
 #include "CaptureViewElement.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
+#include "Track.h"
 
 class TriangleToggle;
 
@@ -31,7 +32,7 @@ class AccessibleTriangleToggle : public orbit_accessibility::AccessibleInterface
   [[nodiscard]] std::string AccessibleName() const override { return "TriangleToggle"; }
 
   [[nodiscard]] orbit_accessibility::AccessibilityRole AccessibleRole() const override {
-    return orbit_accessibility::AccessibilityRole::Graphic;
+    return orbit_accessibility::AccessibilityRole::Button;
   }
 
   [[nodiscard]] orbit_accessibility::AccessibilityRect AccessibleLocalRect() const override;
@@ -39,7 +40,7 @@ class AccessibleTriangleToggle : public orbit_accessibility::AccessibleInterface
 
  private:
   TriangleToggle* triangle_toggle_;
-  CaptureViewElement* parent_;
+  Track* parent_;
 };
 
 }  // namespace orbit_gl

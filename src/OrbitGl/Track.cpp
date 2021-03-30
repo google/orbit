@@ -209,11 +209,3 @@ void Track::OnDrag(int x, int y) {
   pos_[1] = mouse_pos_cur_[1] - picking_offset_[1];
   time_graph_->VerticallyMoveIntoView(*this);
 }
-
-std::vector<orbit_gl::CaptureViewElement*> Track::GetVisibleChildren() {
-  std::vector<CaptureViewElement*> result;
-
-  result.push_back(collapse_toggle_.get());
-
-  return result;
-}
