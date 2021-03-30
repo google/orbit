@@ -22,7 +22,8 @@ Track::Track(TimeGraph* time_graph, TimeGraphLayout* layout, const CaptureData* 
     : CaptureViewElement(time_graph, layout),
       collapse_toggle_(std::make_shared<TriangleToggle>(
           TriangleToggle::State::kExpanded,
-          [this](TriangleToggle::State state) { OnCollapseToggle(state); }, time_graph, layout)),
+          [this](TriangleToggle::State state) { OnCollapseToggle(state); }, time_graph, layout,
+          this)),
       layout_(layout),
       capture_data_(capture_data) {
   const Color kDarkGrey(50, 50, 50, 255);

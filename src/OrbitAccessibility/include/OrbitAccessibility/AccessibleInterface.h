@@ -38,7 +38,8 @@ enum class AccessibilityRole {
   Grouping = 0x00000014,
   PageTab = 0x00000025,
   Graphic = 0x00000028,
-  StaticText = 0x00000029
+  StaticText = 0x00000029,
+  Button = 0x0000002B
 };
 
 /* Selected state constants as required by QAccessible::State, same reasoning as above.

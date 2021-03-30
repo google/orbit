@@ -116,10 +116,11 @@ AccessibilityState AccessibleTrackContent::AccessibleState() const {
   return AccessibilityState::Normal;
 }
 
-int AccessibleTrackTab::AccessibleChildCount() const { return 0; }
+int AccessibleTrackTab::AccessibleChildCount() const { return 1; }
 
-const AccessibleInterface* AccessibleTrackTab::AccessibleChild(int /*index*/) const {
-  return nullptr;
+const AccessibleInterface* AccessibleTrackTab::AccessibleChild(int index) const {
+  CHECK(index == 0);
+  return track_->GetTriangleToggle()->GetOrCreateAccessibleInterface();
 }
 
 const AccessibleInterface* AccessibleTrackTab::AccessibleParent() const {
@@ -146,12 +147,16 @@ AccessibilityState AccessibleTrackTab::AccessibleState() const {
   return AccessibilityState::Normal;
 }
 
-int AccessibleTrack::AccessibleChildCount() const { return 2; }
+int AccessibleTrack::AccessibleChildCount() const {
+  int child_count = track_->GetVisibleChildren().size();
+  return child_count + 2;
+}
 
 const AccessibleInterface* AccessibleTrack::AccessibleChild(int index) const {
   if (index == 0) {
     return &tab_;
   }
+  CHECK(index == 2);
   return &content_;
 }
 

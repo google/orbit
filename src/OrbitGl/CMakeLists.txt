@@ -14,6 +14,7 @@ target_sources(
   PUBLIC AccessibleThreadBar.h
          AccessibleTimeGraph.h
          AccessibleTrack.h
+         AccessibleTriangleToggle.h
          App.h
          AsyncTrack.h
          Batcher.h
@@ -78,6 +79,7 @@ target_sources(
   PRIVATE AccessibleThreadBar.cpp
           AccessibleTimeGraph.cpp
           AccessibleTrack.cpp
+          AccessibleTriangleToggle.cpp
           App.cpp
           AsyncTrack.cpp
           Batcher.cpp

@@ -9,17 +9,22 @@
 
 #include <utility>
 
+#include "AccessibleTriangleToggle.h"
 #include "Batcher.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "TimeGraph.h"
+#include "Track.h"
 
 TriangleToggle::TriangleToggle(State initial_state, StateChangeHandler handler,
-                               TimeGraph* time_graph, TimeGraphLayout* layout)
+                               TimeGraph* time_graph, TimeGraphLayout* layout, Track* track)
     : CaptureViewElement(time_graph, layout),
+      track_(track),
       state_(initial_state),
       initial_state_(initial_state),
-      handler_(std::move(handler)) {}
+      handler_(std::move(handler)) {
+  SetSize(10.f, 10.f);
+}
 
 void TriangleToggle::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   CaptureViewElement::Draw(canvas, picking_mode, z_offset);
@@ -34,7 +39,7 @@ void TriangleToggle::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_of
 
   // Draw triangle.
   static float half_sqrt_three = 0.5f * sqrtf(3.f);
-  float half_w = 0.5f * size_;
+  float half_w = 0.5f * size_[0];
   float half_h = half_sqrt_three * half_w;
 
   if (!picking) {
@@ -75,4 +80,9 @@ void TriangleToggle::SetState(State state, InitialStateUpdate behavior) {
   if (behavior == InitialStateUpdate::kReplaceInitialState) {
     initial_state_ = state;
   }
+}
+
+std::unique_ptr<orbit_accessibility::AccessibleInterface>
+TriangleToggle::CreateAccessibleInterface() {
+  return std::make_unique<orbit_gl::AccessibleTriangleToggle>(this, track_);
 }

@@ -11,6 +11,8 @@
 #include "CaptureViewElement.h"
 #include "CoreMath.h"
 
+class Track;
+
 class TriangleToggle : public orbit_gl::CaptureViewElement,
                        public std::enable_shared_from_this<TriangleToggle> {
  public:
@@ -19,7 +21,7 @@ class TriangleToggle : public orbit_gl::CaptureViewElement,
 
   using StateChangeHandler = std::function<void(TriangleToggle::State)>;
   explicit TriangleToggle(State initial_state, StateChangeHandler handler, TimeGraph* time_graph,
-                          TimeGraphLayout* layout);
+                          TimeGraphLayout* layout, Track* track);
   ~TriangleToggle() override = default;
 
   TriangleToggle() = delete;
@@ -41,11 +43,18 @@ class TriangleToggle : public orbit_gl::CaptureViewElement,
   bool IsExpanded() const { return state_ == State::kExpanded; }
   bool IsInactive() const { return state_ == State::kInactive; }
 
+ protected:
+  std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
+
  private:
+  // Ideally this should be `CaptureViewElement* parent`, but as the track is not the parent, but
+  // the virtual `TrackTab`, which is a child of the track itself, we stick to track here.
+  // We require explicit knowledge about the parent.
+  Track* track_;
+
   State state_ = State::kInactive;
   State initial_state_ = State::kInactive;
   StateChangeHandler handler_;
-  float size_ = 10.f;
 };
 
 #endif  // ORBIT_GL_TRIANGLE_TOGGLE_H_
