@@ -17,9 +17,9 @@
 #include "Track.h"
 
 TriangleToggle::TriangleToggle(State initial_state, StateChangeHandler handler,
-                               TimeGraph* time_graph, TimeGraphLayout* layout, Track* parent)
+                               TimeGraph* time_graph, TimeGraphLayout* layout, Track* track)
     : CaptureViewElement(time_graph, layout),
-      parent_(parent),
+      track_(track),
       state_(initial_state),
       initial_state_(initial_state),
       handler_(std::move(handler)) {
@@ -84,5 +84,5 @@ void TriangleToggle::SetState(State state, InitialStateUpdate behavior) {
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface>
 TriangleToggle::CreateAccessibleInterface() {
-  return std::make_unique<orbit_gl::AccessibleTriangleToggle>(this, parent_);
+  return std::make_unique<orbit_gl::AccessibleTriangleToggle>(this, track_);
 }

@@ -21,7 +21,7 @@ class TriangleToggle : public orbit_gl::CaptureViewElement,
 
   using StateChangeHandler = std::function<void(TriangleToggle::State)>;
   explicit TriangleToggle(State initial_state, StateChangeHandler handler, TimeGraph* time_graph,
-                          TimeGraphLayout* layout, Track* parent);
+                          TimeGraphLayout* layout, Track* track);
   ~TriangleToggle() override = default;
 
   TriangleToggle() = delete;
@@ -47,7 +47,10 @@ class TriangleToggle : public orbit_gl::CaptureViewElement,
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
 
  private:
-  Track* parent_;
+  // Ideally this should be `CaptureViewElement* parent`, but as the track is not the parent, but
+  // the virtual `TrackTab`, which is a child of the track itself, we stick to track here.
+  // We require explicit knowledge about the parent.
+  Track* track_;
 
   State state_ = State::kInactive;
   State initial_state_ = State::kInactive;
