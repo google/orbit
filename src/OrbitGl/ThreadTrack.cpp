@@ -102,12 +102,16 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
   const TimerInfo& timer_info = text_box->GetTimerInfo();
 
   const InstrumentedFunction* func =
-      capture_data_
-          ? capture_data_->GetInstrumentedFunctionById(timer_info.function_id())
-          : nullptr;
+      capture_data_ ? capture_data_->GetInstrumentedFunctionById(timer_info.function_id())
+                    : nullptr;
+
+  FunctionInfo::OrbitType type{FunctionInfo::kNone};
+  if (func != nullptr) {
+    type = function_utils::GetOrbitTypeByName(func->function_name());
+  }
 
   std::string function_name;
-  bool is_manual = (func != nullptr && func->orbit_type() == FunctionInfo::kOrbitTimerStart) ||
+  bool is_manual = (func != nullptr && type == FunctionInfo::kOrbitTimerStart) ||
                    timer_info.type() == TimerInfo::kApiEvent;
 
   if (!func && !is_manual) {
@@ -122,7 +126,7 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
   }
 
   std::string module_name =
-      func != nullptr ? function_utils::GetLoadedModuleName(*func->file_path()) : "unknown";
+      func != nullptr ? function_utils::GetLoadedModuleNameByPath(func->file_path()) : "unknown";
 
   return absl::StrFormat(
       "<b>%s</b><br/>"
