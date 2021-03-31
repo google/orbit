@@ -57,8 +57,8 @@ class GpuTrack : public TimerTrack {
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer, bool is_selected,
                                     bool is_highlighted) const override;
   [[nodiscard]] bool TimerFilter(const orbit_client_protos::TimerInfo& timer) const override;
-  void SetTimesliceText(const orbit_client_protos::TimerInfo& timer, double elapsed_us, float min_x,
-                        float z_offset, TextBox* text_box) override;
+  void SetTimesliceText(const orbit_client_protos::TimerInfo& timer, float min_x, float z_offset,
+                        TextBox* text_box) override;
   [[nodiscard]] std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const override;
 
  private:

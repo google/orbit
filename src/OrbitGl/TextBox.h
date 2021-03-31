@@ -41,6 +41,7 @@ class TextBox {
   // Start() and End() are required in order to be used as node in a ScopeTree.
   uint64_t Start() const { return timer_info_.start(); }
   uint64_t End() const { return timer_info_.end(); }
+  uint64_t Duration() const { return End() - Start(); }
 
  protected:
   Vec2 pos_;

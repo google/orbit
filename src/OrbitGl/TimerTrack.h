@@ -34,7 +34,7 @@ struct DrawData {
   uint64_t min_tick;
   uint64_t max_tick;
   uint64_t highlighted_function_id;
-  uint64_t pixel_delta_in_ticks;
+  uint64_t ns_per_pixel;
   uint64_t min_timegraph_tick;
   Batcher* batcher;
   GlCanvas* canvas;
@@ -89,6 +89,7 @@ class TimerTrack : public Track {
   [[nodiscard]] virtual float GetTextBoxHeight(
       const orbit_client_protos::TimerInfo& /*timer_info*/) const;
   [[nodiscard]] virtual float GetYFromTimer(const orbit_client_protos::TimerInfo& timer_info) const;
+  [[nodiscard]] float GetYFromDepth(uint32_t depth) const;
 
   [[nodiscard]] virtual float GetHeaderHeight() const;
 
@@ -115,9 +116,15 @@ class TimerTrack : public Track {
   }
   [[nodiscard]] std::shared_ptr<TimerChain> GetTimers(uint32_t depth) const;
 
-  virtual void SetTimesliceText(const orbit_client_protos::TimerInfo& /*timer*/,
-                                double /*elapsed_us*/, float /*min_x*/, float /*z_offset*/,
-                                TextBox* /*text_box*/) {}
+  virtual void SetTimesliceText(const orbit_client_protos::TimerInfo& /*timer*/, float /*min_x*/,
+                                float /*z_offset*/, TextBox* /*text_box*/) {}
+
+  [[nodiscard]] static internal::DrawData GetDrawData(uint64_t min_tick, uint64_t max_tick,
+                                                      float z_offset, Batcher* batcher,
+                                                      TimeGraph* time_graph, bool is_collapsed,
+                                                      const TextBox* selected_textbox,
+                                                      uint64_t highlighted_function_id);
+
   TextRenderer* text_renderer_ = nullptr;
   uint32_t depth_ = 0;
   mutable absl::Mutex mutex_;
@@ -125,6 +132,12 @@ class TimerTrack : public Track {
   int visible_timer_count_ = 0;
 
   [[nodiscard]] virtual std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const;
+  [[nodiscard]] std::unique_ptr<PickingUserData> CreatePickingUserData(const Batcher& batcher,
+                                                                       const TextBox& text_box) {
+    return std::make_unique<PickingUserData>(
+        &text_box, [this, &batcher](PickingId id) { return this->GetBoxTooltip(batcher, id); });
+  }
+
   float GetHeight() const override;
   float box_height_ = 0.0f;
 

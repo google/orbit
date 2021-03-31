@@ -79,7 +79,6 @@ FunctionInfo::OrbitType GetOrbitTypeByName(const std::string& function_name) {
   if (absl::StartsWith(function_name, "orbit_api::")) {
     for (const auto& pair : GetFunctionNameToOrbitTypeMap()) {
       if (absl::StrContains(function_name, pair.first)) {
-        LOG("Found orbit_api function: %s", function_name);
         return pair.second;
       }
     }
