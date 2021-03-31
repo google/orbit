@@ -297,7 +297,7 @@ void TextRenderer::AddText(const char* text, float x, float y, float z, const Co
   AddTextInternal(GetFont(font_size), text, ColorToVec4(color), &pen_, max_size, z, &out_screen_pos,
                   &out_screen_size);
   if (out_text_pos) {
-    float inv_y = canvas_->GetHeight() - out_screen_pos.y;
+    float inv_y = canvas_->GetViewport().GetHeight() - out_screen_pos.y;
     (*out_text_pos) = canvas_->ScreenToWorld(Vec2(out_screen_pos.x, inv_y));
   }
 
@@ -433,17 +433,17 @@ std::vector<float> TextRenderer::GetLayers() const {
 };
 
 void TextRenderer::ToScreenSpace(float x, float y, float& o_x, float& o_y) {
-  float world_width = canvas_->GetWorldWidth();
-  float world_height = canvas_->GetWorldHeight();
-  float world_top_left_x = canvas_->GetWorldTopLeftX();
-  float world_min_left_y = canvas_->GetWorldTopLeftY() - world_height;
+  float world_width = canvas_->GetViewport().GetWorldWidth();
+  float world_height = canvas_->GetViewport().GetWorldHeight();
+  float world_top_left_x = canvas_->GetViewport().GetWorldTopLeft()[0];
+  float world_min_left_y = canvas_->GetViewport().GetWorldTopLeft()[1] - world_height;
 
-  o_x = ((x - world_top_left_x) / world_width) * canvas_->GetWidth();
-  o_y = ((y - world_min_left_y) / world_height) * canvas_->GetHeight();
+  o_x = ((x - world_top_left_x) / world_width) * canvas_->GetViewport().GetWidth();
+  o_y = ((y - world_min_left_y) / world_height) * canvas_->GetViewport().GetHeight();
 }
 
 float TextRenderer::ToScreenSpace(float width) {
-  return (width / canvas_->GetWorldWidth()) * canvas_->GetWidth();
+  return (width / canvas_->GetViewport().GetWorldWidth()) * canvas_->GetViewport().GetWidth();
 }
 
 void TextRenderer::Clear() {

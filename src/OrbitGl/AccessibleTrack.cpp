@@ -184,8 +184,9 @@ AccessibilityRect AccessibleTrack::AccessibleLocalRect() const {
   // in a final result with width / height of 0.
 
   // First: Clamp bottom
-  if (screen_pos[1] + screen_height > canvas->GetHeight()) {
-    screen_height = std::max(0, canvas->GetHeight() - static_cast<int>(screen_pos[1]));
+  if (screen_pos[1] + screen_height > canvas->GetViewport().GetHeight()) {
+    screen_height =
+        std::max(0, canvas->GetViewport().GetHeight() - static_cast<int>(screen_pos[1]));
   }
   // Second: Clamp top
   if (screen_pos[1] < 0) {

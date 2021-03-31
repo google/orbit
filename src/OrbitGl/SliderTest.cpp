@@ -13,13 +13,6 @@
 #include "GlCanvas.h"
 #include "GlSlider.h"
 
-class MockCanvas : public GlCanvas {
- public:
-  MockCanvas() : GlCanvas() {}
-  MOCK_METHOD(int, GetWidth, (), (const, override));
-  MOCK_METHOD(int, GetHeight, (), (const, override));
-};
-
 template <int dim>
 void Pick(GlSlider& slider, int start, int other_dim = 0) {
   static_assert(dim >= 0 && dim <= 1);
@@ -58,11 +51,9 @@ void PickDragRelease(GlSlider& slider, int start, int end = -1, int other_dim = 
 }
 
 template <typename SliderClass>
-std::pair<std::unique_ptr<SliderClass>, std::unique_ptr<MockCanvas>> Setup() {
-  std::unique_ptr<MockCanvas> canvas = std::make_unique<MockCanvas>();
-  // Simulate a 1000x100 canvas
-  EXPECT_CALL(*canvas, GetWidth()).WillRepeatedly(::testing::Return(150));
-  EXPECT_CALL(*canvas, GetHeight()).WillRepeatedly(::testing::Return(1050));
+std::pair<std::unique_ptr<SliderClass>, std::unique_ptr<GlCanvas>> Setup() {
+  std::unique_ptr<GlCanvas> canvas = std::make_unique<GlCanvas>();
+  canvas->Resize(150, 1050);
 
   std::unique_ptr<SliderClass> slider = std::make_unique<SliderClass>();
   slider->SetCanvas(canvas.get());
@@ -73,8 +64,8 @@ std::pair<std::unique_ptr<SliderClass>, std::unique_ptr<MockCanvas>> Setup() {
   slider->SetNormalizedPosition(0.5f);
   slider->SetNormalizedLength(0.5f);
 
-  return std::make_pair<std::unique_ptr<SliderClass>, std::unique_ptr<MockCanvas>>(
-      std::move(slider), std::move(canvas));
+  return std::make_pair<std::unique_ptr<SliderClass>, std::unique_ptr<GlCanvas>>(std::move(slider),
+                                                                                 std::move(canvas));
 }
 
 const float kEpsilon = 0.01f;

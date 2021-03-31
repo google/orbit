@@ -273,9 +273,9 @@ void TrackManager::UpdateTracks(Batcher* batcher, uint64_t min_tick, uint64_t ma
 
     const float z_offset = GlCanvas::kZOffsetPinnedTrack;
     if (!track->IsMoving()) {
-      track->SetPos(track->GetPos()[0], current_y + time_graph_->GetCanvas()->GetWorldTopLeftY() -
-                                            layout_->GetTopMargin() -
-                                            layout_->GetSchedulerTrackOffset());
+      track->SetPos(track->GetPos()[0],
+                    current_y + time_graph_->GetCanvas()->GetViewport().GetWorldTopLeft()[1] -
+                        layout_->GetTopMargin() - layout_->GetSchedulerTrackOffset());
     }
     track->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
     const float height = (track->GetHeight() + layout_->GetSpaceBetweenTracks());

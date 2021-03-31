@@ -147,16 +147,16 @@ void TimeGraph::VerticalZoom(float zoom_value, float mouse_relative_position) {
 
   const float ratio = (zoom_value > 0) ? (1 + kIncrementRatio) : (1 / (1 + kIncrementRatio));
 
-  const float world_height = canvas_->GetWorldHeight();
+  const float world_height = canvas_->GetViewport().GetWorldHeight();
   const float y_mouse_position =
-      canvas_->GetWorldTopLeftY() - mouse_relative_position * world_height;
-  const float top_distance = canvas_->GetWorldTopLeftY() - y_mouse_position;
+      canvas_->GetViewport().GetWorldTopLeft()[1] - mouse_relative_position * world_height;
+  const float top_distance = canvas_->GetViewport().GetWorldTopLeft()[1] - y_mouse_position;
 
   const float new_y_mouse_position = y_mouse_position / ratio;
 
   float new_world_top_left_y = new_y_mouse_position + top_distance;
 
-  canvas_->UpdateWorldTopLeftY(new_world_top_left_y);
+  canvas_->GetViewport().SetWorldTopLeftY(new_world_top_left_y);
 
   // Finally, we have to scale every item in the layout.
   const float old_scale = layout_.GetScale();
@@ -223,11 +223,13 @@ void TimeGraph::VerticallyMoveIntoView(const TimerInfo& timer_info) {
 void TimeGraph::VerticallyMoveIntoView(Track& track) {
   float pos = track.GetPos()[1];
   float height = track.GetHeight();
-  float world_top_left_y = canvas_->GetWorldTopLeftY();
+  float world_top_left_y = canvas_->GetViewport().GetWorldTopLeft()[1];
 
   float min_world_top_left_y = pos + layout_.GetTrackTabHeight();
-  float max_world_top_left_y = pos + canvas_->GetWorldHeight() - height - layout_.GetBottomMargin();
-  canvas_->UpdateWorldTopLeftY(clamp(world_top_left_y, min_world_top_left_y, max_world_top_left_y));
+  float max_world_top_left_y =
+      pos + canvas_->GetViewport().GetWorldHeight() - height - layout_.GetBottomMargin();
+  canvas_->GetViewport().SetWorldTopLeftY(
+      clamp(world_top_left_y, min_world_top_left_y, max_world_top_left_y));
 }
 
 void TimeGraph::UpdateHorizontalScroll(float ratio) {
@@ -643,17 +645,14 @@ void TimeGraph::UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, ui
   }
 
   time_window_us_ = max_time_us_ - min_time_us_;
-  world_start_x_ = canvas_->GetWorldTopLeftX();
-  world_width_ = canvas_->GetWorldWidth();
+  world_start_x_ = canvas_->GetViewport().GetWorldTopLeft()[0];
+  world_width_ = canvas_->GetViewport().GetWorldWidth();
   uint64_t min_tick = GetTickFromUs(min_time_us_);
   uint64_t max_tick = GetTickFromUs(max_time_us_);
 
   track_manager_->SortTracks();
   track_manager_->UpdateMovingTrackSorting();
   track_manager_->UpdateTracks(&batcher_, min_tick, max_tick, picking_mode);
-  // Coordinates from CaptureWindows could need an update if we modified the vertical size of some
-  // track.
-  GetCanvas()->UpdateWorldTopLeftY();
 
   update_primitives_requested_ = false;
 }
@@ -777,11 +776,11 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
   std::vector<float> x_coords;
   x_coords.reserve(boxes.size());
 
-  float world_start_x = canvas->GetWorldTopLeftX();
-  float world_width = canvas->GetWorldWidth();
+  float world_start_x = canvas->GetViewport().GetWorldTopLeft()[0];
+  float world_width = canvas->GetViewport().GetWorldWidth();
 
-  float world_start_y = canvas->GetWorldTopLeftY();
-  float world_height = canvas->GetWorldHeight();
+  float world_start_y = canvas->GetViewport().GetWorldTopLeft()[1];
+  float world_height = canvas->GetViewport().GetWorldHeight();
 
   double inv_time_window = 1.0 / GetTimeWindowUs();
 

@@ -26,6 +26,7 @@
 #include "TextRenderer.h"
 #include "TimeGraph.h"
 #include "Timer.h"
+#include "Viewport.h"
 
 class OrbitApp;
 
@@ -42,9 +43,6 @@ class GlCanvas {
   virtual void Render(int width, int height);
   virtual void PreRender();
   virtual void PostRender();
-
-  [[nodiscard]] virtual int GetWidth() const;
-  [[nodiscard]] virtual int GetHeight() const;
 
   void Prepare2DViewport(int top_left_x, int top_left_y, int bottom_right_x, int bottom_right_y);
   void PrepareScreenSpaceViewport();
@@ -83,16 +81,6 @@ class GlCanvas {
   }
   virtual void OnContextMenu(const std::string& /*a_Action*/, int /*a_MenuIndex*/) {}
 
-  [[nodiscard]] float GetWorldWidth() const { return world_width_; }
-  [[nodiscard]] float GetWorldHeight() const { return world_height_; }
-  [[nodiscard]] float GetWorldMaxY() const { return world_max_y_; }
-  [[nodiscard]] float GetWorldTopLeftX() const { return world_top_left_x_; }
-  [[nodiscard]] float GetWorldTopLeftY() const { return world_top_left_y_; }
-
-  void UpdateWorldTopLeftY() { UpdateWorldTopLeftY(GetWorldTopLeftY()); }
-  virtual void UpdateWorldTopLeftY(float val) { world_top_left_y_ = val; }
-  virtual void UpdateWorldTopLeftX(float val) { world_top_left_x_ = val; }
-
   [[nodiscard]] TextRenderer& GetTextRenderer() { return text_renderer_; }
 
   [[nodiscard]] float GetMouseX() const { return mouse_world_x_; }
@@ -129,6 +117,9 @@ class GlCanvas {
     return accessibility_.get();
   }
 
+  [[nodiscard]] const orbit_gl::Viewport& GetViewport() const { return viewport_; }
+  [[nodiscard]] orbit_gl::Viewport& GetViewport() { return viewport_; }
+
   static float kZValueSlider;
   static float kZValueSliderBg;
   static float kZValueMargin;
@@ -157,14 +148,6 @@ class GlCanvas {
  protected:
   [[nodiscard]] PickingMode GetPickingMode();
 
-  int screen_width_;
-  int screen_height_;
-  float world_width_;
-  float world_height_;
-  float world_top_left_x_;
-  float world_top_left_y_;
-  float world_max_y_;
-  float world_min_width_;
   float world_click_x_;
   float world_click_y_;
   float mouse_world_x_;
@@ -191,6 +174,8 @@ class GlCanvas {
   bool control_key_;
   bool is_mouse_over_ = false;
   bool redraw_requested_;
+
+  orbit_gl::Viewport viewport_;
 
   // Batcher to draw elements in the UI.
   Batcher ui_batcher_;

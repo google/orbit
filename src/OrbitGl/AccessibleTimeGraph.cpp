@@ -18,7 +18,8 @@ using orbit_accessibility::AccessibleInterface;
 
 AccessibilityRect TimeGraphAccessibility::AccessibleLocalRect() const {
   GlCanvas* canvas = time_graph_->GetCanvas();
-  return AccessibilityRect(0, 0, canvas->GetWidth(), canvas->GetHeight());
+  return AccessibilityRect(0, 0, canvas->GetViewport().GetWidth(),
+                           canvas->GetViewport().GetHeight());
 }
 
 AccessibilityState TimeGraphAccessibility::AccessibleState() const {
