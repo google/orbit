@@ -276,17 +276,17 @@ void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offse
   const float tracepoint_track_height = layout_->GetEventTrackHeight();
 
   if (!thread_state_bar_->IsEmpty()) {
-    thread_state_bar_->SetSize(canvas->GetWorldWidth(), thread_state_track_height);
+    thread_state_bar_->SetSize(canvas->GetViewport().GetWorldWidth(), thread_state_track_height);
     thread_state_bar_->Draw(canvas, picking_mode, z_offset);
   }
 
   if (!event_bar_->IsEmpty()) {
-    event_bar_->SetSize(canvas->GetWorldWidth(), event_track_height);
+    event_bar_->SetSize(canvas->GetViewport().GetWorldWidth(), event_track_height);
     event_bar_->Draw(canvas, picking_mode, z_offset);
   }
 
   if (!tracepoint_bar_->IsEmpty()) {
-    tracepoint_bar_->SetSize(canvas->GetWorldWidth(), tracepoint_track_height);
+    tracepoint_bar_->SetSize(canvas->GetViewport().GetWorldWidth(), tracepoint_track_height);
     tracepoint_bar_->Draw(canvas, picking_mode, z_offset);
   }
 }

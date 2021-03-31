@@ -37,9 +37,9 @@ TimerTrack::TimerTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGr
 
 void TimerTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   float track_height = GetHeight();
-  float track_width = canvas->GetWorldWidth();
+  float track_width = canvas->GetViewport().GetWorldWidth();
 
-  SetPos(canvas->GetWorldTopLeftX(), pos_[1]);
+  SetPos(canvas->GetViewport().GetWorldTopLeft()[0], pos_[1]);
   SetSize(track_width, track_height);
 
   Track::Draw(canvas, picking_mode, z_offset);
@@ -160,7 +160,7 @@ bool TimerTrack::DrawTimer(const TextBox* prev_text_box, const TextBox* next_tex
     double text_x_end_us = end_or_next_start_us + (.25 * right_overlap_width_us);
 
     bool is_visible_width = ((text_x_end_us - text_x_start_us) * draw_data.inv_time_window *
-                             draw_data.canvas->GetWidth()) > 1;
+                             draw_data.canvas->GetViewport().GetWidth()) > 1;
     WorldXInfo world_x_info = ToWorldX(text_x_start_us, text_x_end_us, draw_data.inv_time_window,
                                        draw_data.world_start_x, draw_data.world_width);
 
@@ -183,7 +183,8 @@ bool TimerTrack::DrawTimer(const TextBox* prev_text_box, const TextBox* next_tex
 
   Color color = GetTimerColor(current_timer_info, is_selected, is_highlighted);
 
-  bool is_visible_width = elapsed_us * draw_data.inv_time_window * draw_data.canvas->GetWidth() > 1;
+  bool is_visible_width =
+      elapsed_us * draw_data.inv_time_window * draw_data.canvas->GetViewport().GetWidth() > 1;
 
   if (is_visible_width) {
     WorldXInfo world_x_info_left_overlap =
@@ -248,8 +249,8 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
   draw_data.batcher = batcher;
   draw_data.canvas = time_graph_->GetCanvas();
 
-  draw_data.world_start_x = draw_data.canvas->GetWorldTopLeftX();
-  draw_data.world_width = draw_data.canvas->GetWorldWidth();
+  draw_data.world_start_x = draw_data.canvas->GetViewport().GetWorldTopLeft()[0];
+  draw_data.world_width = draw_data.canvas->GetViewport().GetWorldWidth();
   draw_data.inv_time_window = 1.0 / time_graph_->GetTimeWindowUs();
   draw_data.is_collapsed = collapse_toggle_->IsCollapsed();
 
@@ -264,7 +265,7 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
   // enough that all events are drawn as boxes, this has no effect. When zoomed
   // out, many events will be discarded quickly.
   uint64_t time_window_ns = static_cast<uint64_t>(1000 * time_graph_->GetTimeWindowUs());
-  draw_data.ns_per_pixel = time_window_ns / draw_data.canvas->GetWidth();
+  draw_data.ns_per_pixel = time_window_ns / draw_data.canvas->GetViewport().GetWidth();
   draw_data.min_timegraph_tick = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
 
   for (auto& chain : chains_by_depth) {

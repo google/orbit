@@ -165,10 +165,10 @@ void ThreadStateBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint6
   const GlCanvas* canvas = time_graph_->GetCanvas();
 
   const auto time_window_ns = static_cast<uint64_t>(1000 * time_graph_->GetTimeWindowUs());
-  const uint64_t pixel_delta_ns = time_window_ns / canvas->GetWidth();
+  const uint64_t pixel_delta_ns = time_window_ns / canvas->GetViewport().GetWidth();
   const uint64_t min_time_graph_ns = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
   const float pixel_width_in_world_coords =
-      canvas->GetWorldWidth() / static_cast<float>(canvas->GetWidth());
+      canvas->GetViewport().GetWorldWidth() / static_cast<float>(canvas->GetViewport().GetWidth());
 
   uint64_t ignore_until_ns = 0;
 

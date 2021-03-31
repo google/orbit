@@ -69,9 +69,6 @@ using orbit_client_protos::TimerInfo;
 
 CaptureWindow::CaptureWindow(OrbitApp* app) : GlCanvas(), app_{app} {
   draw_help_ = true;
-  world_top_left_x_ = 0;
-  world_top_left_y_ = 0;
-  world_max_y_ = 0;
 
   slider_ = std::make_shared<GlHorizontalSlider>();
   vertical_slider_ = std::make_shared<GlVerticalSlider>();
@@ -110,7 +107,7 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool right, bool middle)
 
   // Pan
   if (left && !picking_manager_.IsDragging() && !app_->IsCapturing()) {
-    time_graph_->PanTime(screen_click_x_, x, GetWidth(), ref_time_click_);
+    time_graph_->PanTime(screen_click_x_, x, viewport_.GetWidth(), ref_time_click_);
     RequestUpdatePrimitives();
 
     click_was_drag_ = true;
@@ -123,7 +120,7 @@ void CaptureWindow::LeftDown(int x, int y) {
   click_was_drag_ = false;
 
   if (time_graph_ == nullptr) return;
-  ref_time_click_ = time_graph_->GetTime(static_cast<double>(x) / GetWidth());
+  ref_time_click_ = time_graph_->GetTime(static_cast<double>(x) / viewport_.GetWidth());
 }
 
 void CaptureWindow::LeftUp() {
@@ -197,6 +194,13 @@ void CaptureWindow::PostRender() {
   }
 
   GlCanvas::PostRender();
+
+  // TODO: This should not be needed, but the extents of track heights may change after drawing
+  // This will re-request updatePrimitives() if the height changed.
+  if (time_graph_ != nullptr) {
+    viewport_.SetWorldExtents(viewport_.GetWidth(),
+                              time_graph_->GetTrackManager()->GetTracksTotalHeight());
+  }
 }
 
 void CaptureWindow::Resize(int width, int height) {
@@ -234,7 +238,7 @@ void CaptureWindow::Zoom(ZoomDirection dir, int delta) {
   if (time_graph_ != nullptr) {
     switch (dir) {
       case ZoomDirection::kHorizontal: {
-        double mouse_ratio = static_cast<double>(mouse_screen_x_) / GetWidth();
+        double mouse_ratio = static_cast<double>(mouse_screen_x_) / viewport_.GetWidth();
         time_graph_->ZoomTime(delta_float, mouse_ratio);
         break;
       }
@@ -251,10 +255,12 @@ void CaptureWindow::Zoom(ZoomDirection dir, int delta) {
 
 void CaptureWindow::Pan(float ratio) {
   if (time_graph_ == nullptr) return;
-  double ref_time = time_graph_->GetTime(static_cast<double>(mouse_screen_x_) / GetWidth());
-  time_graph_->PanTime(mouse_screen_x_,
-                       mouse_screen_x_ + static_cast<int>(ratio * static_cast<float>(GetWidth())),
-                       GetWidth(), ref_time);
+  double ref_time =
+      time_graph_->GetTime(static_cast<double>(mouse_screen_x_) / viewport_.GetWidth());
+  time_graph_->PanTime(
+      mouse_screen_x_,
+      mouse_screen_x_ + static_cast<int>(ratio * static_cast<float>(viewport_.GetWidth())),
+      viewport_.GetWidth(), ref_time);
   RequestUpdatePrimitives();
 }
 
@@ -360,9 +366,14 @@ void CaptureWindow::Draw() {
   }
 
   if (time_graph_ != nullptr) {
-    time_graph_->SetPos(0, GetWorldTopLeftX());
-    time_graph_->SetSize(static_cast<float>(GetWidth()), static_cast<float>(GetHeight()));
+    viewport_.SetWorldExtents(viewport_.GetWidth(),
+                              time_graph_->GetTrackManager()->GetTracksTotalHeight());
+    if (viewport_.IsDirty()) {
+      time_graph_->SetPos(0, 0);
+      time_graph_->SetSize(viewport_.GetWorldExtents()[0], viewport_.GetWorldExtents()[1]);
 
+      time_graph_->RequestUpdatePrimitives();
+    }
     time_graph_->Draw(this, GetPickingMode());
   }
 
@@ -371,9 +382,9 @@ void CaptureWindow::Draw() {
   if (GetPickingMode() == PickingMode::kNone) {
     RenderTimeBar();
 
-    Vec2 pos(mouse_world_x_, world_top_left_y_);
+    Vec2 pos(mouse_world_x_, viewport_.GetWorldTopLeft()[1]);
     // Vertical green line at mouse x position
-    ui_batcher_.AddVerticalLine(pos, -world_height_, kZValueUi, Color(0, 255, 0, 127));
+    ui_batcher_.AddVerticalLine(pos, -viewport_.GetWorldHeight(), kZValueUi, Color(0, 255, 0, 127));
 
     if (draw_help_) {
       RenderHelpUi();
@@ -408,7 +419,7 @@ void CaptureWindow::Draw() {
     // and for the text than the rest of items inside CaptureWindow. So, we have to switch
     // between these 2 systems while the layer is changing (with these "Prepare.." functions).
     if (layer < GlCanvas::kScreenSpaceCutPoint) {
-      Prepare2DViewport(0, 0, GetWidth(), GetHeight());
+      Prepare2DViewport(0, 0, viewport_.GetWidth(), viewport_.GetHeight());
     }
     if (time_graph_ != nullptr) {
       time_graph_->GetBatcher().DrawLayer(layer, GetPickingMode() != PickingMode::kNone);
@@ -430,7 +441,7 @@ void CaptureWindow::DrawScreenSpace() {
   double time_span = time_graph_->GetCaptureTimeSpanUs();
 
   Color col = slider_->GetBarColor();
-  auto canvas_height = static_cast<float>(GetHeight());
+  auto canvas_height = static_cast<float>(viewport_.GetHeight());
 
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   float right_margin = layout.GetRightMargin();
@@ -449,7 +460,7 @@ void CaptureWindow::DrawScreenSpace() {
 
   // Right vertical margin.
   time_graph_->UpdateRightMargin(right_margin);
-  auto margin_x1 = static_cast<float>(GetWidth());
+  auto margin_x1 = static_cast<float>(viewport_.GetWidth());
   float margin_x0 = margin_x1 - right_margin;
 
   Box box(Vec2(margin_x0, 0), Vec2(margin_x1 - margin_x0, canvas_height), GlCanvas::kZValueMargin);
@@ -458,7 +469,7 @@ void CaptureWindow::DrawScreenSpace() {
   // Time bar background
   if (time_graph_->GetCaptureTimeSpanUs() > 0) {
     Box background_box(Vec2(0, time_graph_->GetLayout().GetSliderWidth()),
-                       Vec2(GetWidth(), time_graph_->GetLayout().GetTimeBarHeight()),
+                       Vec2(viewport_.GetWidth(), time_graph_->GetLayout().GetTimeBarHeight()),
                        GlCanvas::kZValueTimeBarBg);
     ui_batcher_.AddBox(background_box,
                        Color(kBackgroundColor[0], kBackgroundColor[1], kBackgroundColor[2], 200));
@@ -472,13 +483,12 @@ void CaptureWindow::UpdateHorizontalScroll(float ratio) {
 
 void CaptureWindow::UpdateVerticalScroll(float ratio) {
   if (time_graph_ == nullptr) return;
-  float min = world_max_y_;
-  float max = world_height_ - time_graph_->GetTrackManager()->GetTracksTotalHeight();
+  float min = 0.0f;
+  float max = viewport_.GetWorldHeight() - viewport_.GetWorldExtents()[1];
   float range = max - min;
   float new_top_left_y = min + ratio * range;
-  if (new_top_left_y != world_top_left_y_) {
-    world_top_left_y_ = new_top_left_y;
-    RequestUpdatePrimitives();
+  if (new_top_left_y != viewport_.GetWorldTopLeft()[1]) {
+    viewport_.SetWorldTopLeftY(new_top_left_y);
   }
 }
 
@@ -505,31 +515,15 @@ void CaptureWindow::UpdateHorizontalSliderFromWorld() {
 
 void CaptureWindow::UpdateVerticalSliderFromWorld() {
   if (time_graph_ == nullptr) return;
-  float min = world_max_y_;
-  float max = world_height_ - time_graph_->GetTrackManager()->GetTracksTotalHeight();
-  float ratio = (world_top_left_y_ - min) / (max - min);
-  float vertical_ratio = world_height_ / time_graph_->GetTrackManager()->GetTracksTotalHeight();
+  float min = 0.0f;
+  float max = viewport_.GetWorldHeight() - viewport_.GetWorldExtents()[1];
+  float ratio = (viewport_.GetWorldTopLeft()[1] - min) / (max - min);
+  float vertical_ratio = viewport_.GetWorldHeight() / viewport_.GetWorldExtents()[1];
   int slider_width = static_cast<int>(time_graph_->GetLayout().GetSliderWidth());
   vertical_slider_->SetPixelHeight(slider_width);
   vertical_slider_->SetNormalizedPosition(ratio);
   vertical_slider_->SetNormalizedLength(vertical_ratio);
   vertical_slider_->SetOrthogonalSliderPixelHeight(slider_->GetPixelHeight());
-}
-
-void CaptureWindow::UpdateWorldTopLeftY(float val) {
-  if (time_graph_ == nullptr) return;
-  float min_world_top_left =
-      GetWorldHeight() - time_graph_->GetTrackManager()->GetTracksTotalHeight();
-  GlCanvas::UpdateWorldTopLeftY(clamp(val, min_world_top_left, GetWorldMaxY()));
-  RequestUpdatePrimitives();
-}
-
-void CaptureWindow::UpdateWorldTopLeftX(float val) {
-  float world_min;
-  float world_max;
-
-  time_graph_->GetWorldMinMax(world_min, world_max);
-  world_top_left_x_ = clamp(world_top_left_x_, world_min, world_max - world_width_);
 }
 
 void CaptureWindow::ToggleRecording() {
@@ -583,13 +577,14 @@ void CaptureWindow::RenderImGuiDebugUI() {
   }
 
   if (ImGui::CollapsingHeader("Capture Info")) {
-    IMGUI_VAR_TO_TEXT(screen_width_);
-    IMGUI_VAR_TO_TEXT(screen_height_);
-    IMGUI_VAR_TO_TEXT(world_height_);
-    IMGUI_VAR_TO_TEXT(world_width_);
-    IMGUI_VAR_TO_TEXT(world_top_left_x_);
-    IMGUI_VAR_TO_TEXT(world_top_left_y_);
-    IMGUI_VAR_TO_TEXT(world_min_width_);
+    IMGUI_VAR_TO_TEXT(viewport_.GetWidth());
+    IMGUI_VAR_TO_TEXT(viewport_.GetHeight());
+    IMGUI_VAR_TO_TEXT(viewport_.GetWorldHeight());
+    IMGUI_VAR_TO_TEXT(viewport_.GetWorldWidth());
+    IMGUI_VAR_TO_TEXT(viewport_.GetWorldTopLeft()[0]);
+    IMGUI_VAR_TO_TEXT(viewport_.GetWorldTopLeft()[1]);
+    IMGUI_VAR_TO_TEXT(viewport_.GetWorldExtents()[0]);
+    IMGUI_VAR_TO_TEXT(viewport_.GetWorldExtents()[1]);
     IMGUI_VAR_TO_TEXT(mouse_screen_x_);
     IMGUI_VAR_TO_TEXT(mouse_screen_y_);
     IMGUI_VAR_TO_TEXT(mouse_world_x_);
@@ -599,7 +594,6 @@ void CaptureWindow::RenderImGuiDebugUI() {
       IMGUI_VAR_TO_TEXT(time_graph_->GetNumDrawnTextBoxes());
       IMGUI_VAR_TO_TEXT(time_graph_->GetTrackManager()->GetNumTimers());
       IMGUI_VAR_TO_TEXT(time_graph_->GetTrackManager()->GetAllTracks().size());
-      IMGUI_VAR_TO_TEXT(time_graph_->GetTrackManager()->GetTracksTotalHeight());
       IMGUI_VAR_TO_TEXT(time_graph_->GetMinTimeUs());
       IMGUI_VAR_TO_TEXT(time_graph_->GetMaxTimeUs());
       IMGUI_VAR_TO_TEXT(time_graph_->GetCaptureMin());
@@ -709,7 +703,7 @@ void CaptureWindow::RenderTimeBar() {
     double norm_start_us = 1000.0 * static_cast<int>(start_ms / norm_inc) * norm_inc;
 
     static constexpr int kPixelMargin = 2;
-    int screen_y = GetHeight() - static_cast<int>(time_bar_height) - kPixelMargin;
+    int screen_y = viewport_.GetHeight() - static_cast<int>(time_bar_height) - kPixelMargin;
     float dummy;
     float world_y;
     ScreenToWorld(0, screen_y, dummy, world_y);
@@ -740,8 +734,8 @@ void CaptureWindow::RenderSelectionOverlay() {
     float from = std::min(select_start_[0], select_stop_[0]);
     float to = std::max(select_start_[0], select_stop_[0]);
 
-    Vec2 pos(from, world_top_left_y_ - world_height_);
-    Vec2 size(to - from, world_height_);
+    Vec2 pos(from, viewport_.GetWorldTopLeft()[1] - viewport_.GetWorldHeight());
+    Vec2 size(to - from, viewport_.GetWorldHeight());
 
     uint64_t min_time = time_graph_->GetTickFromWorld(from);
     uint64_t max_time = time_graph_->GetTickFromWorld(to);

@@ -27,9 +27,9 @@ void GraphTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
                                   PickingMode picking_mode, float z_offset) {
   GlCanvas* canvas = time_graph_->GetCanvas();
 
-  float track_width = canvas->GetWorldWidth();
+  float track_width = canvas->GetViewport().GetWorldWidth();
   SetSize(track_width, GetHeight());
-  pos_[0] = canvas->GetWorldTopLeftX();
+  pos_[0] = canvas->GetViewport().GetWorldTopLeft()[0];
 
   Color color = GetBackgroundColor();
   const Color kLineColor(0, 128, 255, 128);
@@ -181,7 +181,7 @@ void GraphTrack::DrawLabel(GlCanvas* canvas, Vec2 target_pos, const std::string&
 
   float arrow_width = text_box_size[1] / 2.f;
   bool arrow_is_left_directed =
-      target_pos[0] < canvas->GetWorldTopLeftX() + text_box_size[0] + arrow_width;
+      target_pos[0] < canvas->GetViewport().GetWorldTopLeft()[0] + text_box_size[0] + arrow_width;
   Vec2 text_box_position(
       target_pos[0] + (arrow_is_left_directed ? arrow_width : -arrow_width - text_box_size[0]),
       target_pos[1] - text_box_size[1] / 2.f);

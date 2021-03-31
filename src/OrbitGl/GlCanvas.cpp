@@ -55,16 +55,9 @@ unsigned GlCanvas::kMaxNumberRealZLayers = kNumberOriginalLayers + kExtraLayersF
 const Color GlCanvas::kBackgroundColor = Color(67, 67, 67, 255);
 const Color GlCanvas::kTabTextColorSelected = Color(100, 181, 246, 255);
 
-GlCanvas::GlCanvas() : ui_batcher_(BatcherId::kUi, &picking_manager_) {
+GlCanvas::GlCanvas() : viewport_(0, 0), ui_batcher_(BatcherId::kUi, &picking_manager_) {
   text_renderer_.SetCanvas(this);
 
-  screen_width_ = 0;
-  screen_height_ = 0;
-  world_width_ = 0;
-  world_height_ = 0;
-  world_top_left_x_ = -5.f;
-  world_top_left_y_ = 5.f;
-  world_min_width_ = 1.f;
   select_start_ = Vec2(0.f, 0.f);
   select_stop_ = Vec2(0.f, 0.f);
   is_selecting_ = false;
@@ -79,7 +72,6 @@ GlCanvas::GlCanvas() : ui_batcher_(BatcherId::kUi, &picking_manager_) {
   mouse_world_y_ = 0.0;
   world_click_x_ = 0.0;
   world_click_y_ = 0.0;
-  world_max_y_ = 0.0;
   screen_click_x_ = 0;
   screen_click_y_ = 0;
   ref_time_click_ = 0.0;
@@ -144,7 +136,8 @@ void GlCanvas::EnableImGui() {
 
 bool GlCanvas::IsRedrawNeeded() const {
   return redraw_requested_ ||
-         (is_mouse_over_ && can_hover_ && hover_timer_.ElapsedMillis() > hover_delay_ms_);
+         (is_mouse_over_ && can_hover_ && hover_timer_.ElapsedMillis() > hover_delay_ms_) ||
+         viewport_.IsDirty();
 }
 
 void GlCanvas::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle*/) {
@@ -161,11 +154,12 @@ void GlCanvas::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle
 
   // Pan
   if (left && !picking_manager_.IsDragging()) {
-    UpdateWorldTopLeftX(world_click_x_ - static_cast<float>(mouse_x) /
-                                             static_cast<float>(GetWidth()) * world_width_);
-    UpdateWorldTopLeftY(world_top_left_y_ = world_click_y_ + static_cast<float>(mouse_y) /
-                                                                 static_cast<float>(GetHeight()) *
-                                                                 world_height_);
+    viewport_.SetWorldTopLeftX(world_click_x_ - static_cast<float>(mouse_x) /
+                                                    static_cast<float>(viewport_.GetWidth()) *
+                                                    viewport_.GetWorldWidth());
+    viewport_.SetWorldTopLeftY(world_click_y_ + static_cast<float>(mouse_y) /
+                                                    static_cast<float>(viewport_.GetHeight()) *
+                                                    viewport_.GetWorldHeight());
   }
 
   if (left) {
@@ -269,24 +263,21 @@ void GlCanvas::Prepare2DViewport(int top_left_x, int top_left_y, int bottom_righ
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
 
-  world_width_ = static_cast<float>(screen_width_);
-  world_height_ = static_cast<float>(screen_height_);
+  Vec2 top_left = viewport_.GetWorldTopLeft();
+  float width = viewport_.GetWorldWidth();
+  float height = viewport_.GetWorldHeight();
 
-  if (world_width_ <= 0) world_width_ = 1.f;
-  if (world_height_ <= 0) world_height_ = 1.f;
-
-  glOrtho(world_top_left_x_, world_top_left_x_ + world_width_, world_top_left_y_ - world_height_,
-          world_top_left_y_, -1, 1);
+  glOrtho(top_left[0], top_left[0] + width, top_left[1] - height, top_left[1], -1, 1);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 }
 
 void GlCanvas::PrepareScreenSpaceViewport() {
   ORBIT_SCOPE_FUNCTION;
-  glViewport(0, 0, GetWidth(), GetHeight());
+  glViewport(0, 0, viewport_.GetWidth(), viewport_.GetHeight());
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  glOrtho(0, GetWidth(), 0, GetHeight(), -1, 1);
+  glOrtho(0, viewport_.GetWidth(), 0, viewport_.GetHeight(), -1, 1);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 }
@@ -313,58 +304,44 @@ void GlCanvas::PrepareGlState() {
 void GlCanvas::CleanupGlState() { glPopAttrib(); }
 
 void GlCanvas::ScreenToWorld(int x, int y, float& wx, float& wy) const {
-  wx = world_top_left_x_ + (static_cast<float>(x) / static_cast<float>(GetWidth())) * world_width_;
-  wy =
-      world_top_left_y_ - (static_cast<float>(y) / static_cast<float>(GetHeight())) * world_height_;
+  Vec2 result = viewport_.ScreenToWorldPos(Vec2i(x, y));
+  wx = result[0];
+  wy = result[1];
 }
 
 Vec2 GlCanvas::ScreenToWorld(Vec2 screen_pos) const {
-  Vec2 world_pos;
-  world_pos[0] = world_top_left_x_ + screen_pos[0] / static_cast<float>(GetWidth()) * world_width_;
-  world_pos[1] =
-      world_top_left_y_ - screen_pos[1] / static_cast<float>(GetHeight()) * world_height_;
-  return world_pos;
+  return viewport_.ScreenToWorldPos(
+      Vec2i(static_cast<int>(screen_pos[0]), static_cast<int>(screen_pos[1])));
 }
 
 float GlCanvas::ScreenToWorldHeight(int height) const {
-  return (static_cast<float>(height) / static_cast<float>(GetHeight())) * world_height_;
+  return viewport_.ScreenToWorldHeight(height);
 }
 
-float GlCanvas::ScreenToWorldWidth(int width) const {
-  return (static_cast<float>(width) / static_cast<float>(GetWidth())) * world_width_;
-}
+float GlCanvas::ScreenToWorldWidth(int width) const { return viewport_.ScreenToWorldWidth(width); }
 
 Vec2 GlCanvas::WorldToScreen(Vec2 world_pos) const {
-  Vec2 screen_pos;
-  screen_pos[0] = floorf((world_pos[0] - world_top_left_x_) / world_width_ * GetWidth());
-  screen_pos[1] = floorf((world_top_left_y_ - world_pos[1]) / world_height_ * GetHeight());
-  return screen_pos;
+  Vec2i result = viewport_.WorldToScreenPos(world_pos);
+  return Vec2(result[0], result[1]);
 }
 
 // TODO (b/177350599): Unify QtScreen and GlScreen
 // QtScreen(x,y) --> GlScreen(x,height-y)
 Vec2 GlCanvas::QtScreenToGlScreen(Vec2 qt_pos) const {
-  Vec2 gl_pos = qt_pos;
-  gl_pos[1] = GetHeight() - qt_pos[1];
-  return gl_pos;
+  Vec2i result =
+      viewport_.QtToGlScreenPos(Vec2i(static_cast<int>(qt_pos[0]), static_cast<int>(qt_pos[1])));
+  return Vec2(result[0], result[1]);
 }
 
 int GlCanvas::WorldToScreenHeight(float height) const {
-  return static_cast<int>(height / world_height_ * GetHeight());
+  return viewport_.WorldToScreenHeight(height);
 }
 
-int GlCanvas::WorldToScreenWidth(float width) const {
-  return static_cast<int>(width / world_width_ * GetWidth());
-}
-
-int GlCanvas::GetWidth() const { return screen_width_; }
-
-int GlCanvas::GetHeight() const { return screen_height_; }
+int GlCanvas::WorldToScreenWidth(float width) const { return viewport_.WorldToScreenWidth(width); }
 
 void GlCanvas::Render(int width, int height) {
   ORBIT_SCOPE("GlCanvas::Render");
-  screen_width_ = width;
-  screen_height_ = height;
+  CHECK(width == viewport_.GetWidth() && height == viewport_.GetHeight());
 
   if (!IsRedrawNeeded()) {
     return;
@@ -374,7 +351,7 @@ void GlCanvas::Render(int width, int height) {
   ui_batcher_.StartNewFrame();
 
   PrepareGlState();
-  Prepare2DViewport(0, 0, GetWidth(), GetHeight());
+  Prepare2DViewport(0, 0, viewport_.GetWidth(), viewport_.GetHeight());
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -423,14 +400,16 @@ void GlCanvas::PostRender() {
 
   if (picking_mode != PickingMode::kNone) {
     Pick(picking_mode, screen_click_x_, screen_click_y_);
-    GlCanvas::Render(screen_width_, screen_height_);
+    GlCanvas::Render(viewport_.GetWidth(), viewport_.GetHeight());
   }
+
+  viewport_.ClearDirtyFlag();
 }
 
 void GlCanvas::Resize(int width, int height) {
-  screen_width_ = width;
-  screen_height_ = height;
-  RequestRedraw();
+  viewport_.Resize(width, height);
+  viewport_.SetWorldWidth(width);
+  viewport_.SetWorldHeight(height);
 }
 
 void GlCanvas::ResetHoverTimer() {
@@ -453,7 +432,7 @@ PickingMode GlCanvas::GetPickingMode() {
 void GlCanvas::Pick(PickingMode picking_mode, int x, int y) {
   // 4 bytes per pixel (RGBA), 1x1 bitmap
   std::array<uint8_t, 4 * 1 * 1> pixels{};
-  glReadPixels(x, screen_height_ - y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0]);
+  glReadPixels(x, viewport_.GetHeight() - y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0]);
   uint32_t value;
   std::memcpy(&value, &pixels[0], sizeof(uint32_t));
   PickingId pick_id = PickingId::FromPixelValue(value);
