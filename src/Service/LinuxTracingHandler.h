@@ -57,6 +57,7 @@ class LinuxTracingHandler : public orbit_linux_tracing::TracerListener {
   std::unique_ptr<orbit_base::TracingListener> orbit_tracing_listener_;
 
   void SetupIntrospection();
+  void SetupManualInstrumentation(const orbit_grpc_protos::CaptureOptions& capture_options);
 };
 
 }  // namespace orbit_service

@@ -9,6 +9,7 @@
 
 #include <utility>
 
+#include "Api/ManualInstrumentation.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
 
@@ -30,6 +31,8 @@ using orbit_grpc_protos::kLinuxTracingProducerId;
 void LinuxTracingHandler::Start(CaptureOptions capture_options) {
   CHECK(tracer_ == nullptr);
   bool enable_introspection = capture_options.enable_introspection();
+
+  SetupManualInstrumentation(capture_options);
 
   tracer_ = std::make_unique<orbit_linux_tracing::Tracer>(std::move(capture_options));
   tracer_->SetListener(this);
@@ -58,6 +61,13 @@ void LinuxTracingHandler::SetupIntrospection() {
         introspection_scope.add_registers(scope.encoded_event.args[5]);
         OnIntrospectionScope(introspection_scope);
       });
+}
+
+void LinuxTracingHandler::SetupManualInstrumentation(const CaptureOptions& capture_options) {
+  auto result = orbit_api::InitializeManualInstrumentationForProcess(capture_options.pid());
+  if (result.has_error()) {
+    LOG("Warning: Could not initialize instrumentation: %s", result.error().message());
+  }
 }
 
 void LinuxTracingHandler::Stop() {

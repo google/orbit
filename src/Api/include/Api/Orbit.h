@@ -7,7 +7,17 @@
 
 #include <stdint.h>
 
+<<<<<<< HEAD
 // =================================================================================================
+=======
+#if __linux
+#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#endif
+
+>>>>>>> 9f6fafa4 (New liborbit.so loading from OrbitService)
 // Orbit Manual Instrumentation API.
 // =================================================================================================
 //

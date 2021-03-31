@@ -13,9 +13,6 @@ target_compile_options(UserSpaceInstrumentation PRIVATE ${STRICT_COMPILE_FLAGS})
 target_compile_features(UserSpaceInstrumentation PUBLIC cxx_std_17)
 
 target_include_directories(UserSpaceInstrumentation PUBLIC
-        ${CMAKE_CURRENT_LIST_DIR}/include)
-
-target_include_directories(UserSpaceInstrumentation PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(UserSpaceInstrumentation PUBLIC

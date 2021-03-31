@@ -12,6 +12,24 @@
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
 
+namespace {
+enum class OrbitApiFunctionId {
+  kOrbitApiStart = 0,
+  kOrbitApiStop = 1,
+  kOrbitApiStartAsync = 2,
+  kOrbitApiStopAsync = 3,
+  kOrbitApiAsyncString = 4,
+  kOrbitApiTrackInt = 5,
+  kOrbitApiTrackInt64 = 6,
+  kOrbitApiTrackUint = 7,
+  kOrbitApiTrackUint64 = 8,
+  kOrbitApiTrackFloat = 9,
+  kOrbitApiTrackDouble = 10,
+
+  kOrbitNumFunctions  // This must be last.
+};
+}
+
 static void EnqueueApiEvent(orbit_api::EventType type, const char* name = nullptr,
                             uint64_t data = 0, orbit_api_color color = kOrbitColorAuto) {
   static orbit_api::LockFreeApiEventProducer producer;
