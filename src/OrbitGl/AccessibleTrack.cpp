@@ -118,7 +118,7 @@ AccessibilityState AccessibleTrackContent::AccessibleState() const {
 
 int AccessibleTrackTab::AccessibleChildCount() const { return 1; }
 
-const AccessibleInterface* AccessibleTrackTab::AccessibleChild(int index) const {
+const AccessibleInterface* AccessibleTrackTab::AccessibleChild(int /*index*/) const {
   return track_->GetTriangleToggle()->GetOrCreateAccessibleInterface();
 }
 
