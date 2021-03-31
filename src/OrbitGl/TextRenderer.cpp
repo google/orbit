@@ -298,12 +298,15 @@ void TextRenderer::AddText(const char* text, float x, float y, float z, const Co
                   &out_screen_size);
   if (out_text_pos) {
     float inv_y = canvas_->GetViewport().GetHeight() - out_screen_pos.y;
-    (*out_text_pos) = canvas_->ScreenToWorld(Vec2(out_screen_pos.x, inv_y));
+    (*out_text_pos) = canvas_->GetViewport().ScreenToWorldPos(
+        Vec2i(static_cast<int>(out_screen_pos.x), static_cast<int>(inv_y)));
   }
 
   if (out_text_size) {
-    (*out_text_size)[0] = canvas_->ScreenToWorldWidth(static_cast<int>(out_screen_size.x));
-    (*out_text_size)[1] = canvas_->ScreenToWorldHeight(static_cast<int>(out_screen_size.y));
+    (*out_text_size)[0] =
+        canvas_->GetViewport().ScreenToWorldWidth(static_cast<int>(out_screen_size.x));
+    (*out_text_size)[1] =
+        canvas_->GetViewport().ScreenToWorldHeight(static_cast<int>(out_screen_size.y));
   }
 }
 
@@ -378,11 +381,11 @@ float TextRenderer::AddTextTrailingCharsPrioritized(const char* text, float x, f
 }
 
 float TextRenderer::GetStringWidth(const char* text, uint32_t font_size) {
-  return canvas_->ScreenToWorldWidth(GetStringWidthScreenSpace(text, font_size));
+  return canvas_->GetViewport().ScreenToWorldWidth(GetStringWidthScreenSpace(text, font_size));
 }
 
 float TextRenderer::GetStringHeight(const char* text, uint32_t font_size) {
-  return canvas_->ScreenToWorldHeight(GetStringHeightScreenSpace(text, font_size));
+  return canvas_->GetViewport().ScreenToWorldHeight(GetStringHeightScreenSpace(text, font_size));
 }
 
 int TextRenderer::GetStringWidthScreenSpace(const char* text, uint32_t font_size) {

@@ -66,14 +66,6 @@ GlCanvas::GlCanvas() : viewport_(0, 0), ui_batcher_(BatcherId::kUi, &picking_man
   control_key_ = false;
   redraw_requested_ = true;
 
-  mouse_screen_x_ = 0.0;
-  mouse_screen_y_ = 0.0;
-  mouse_world_x_ = 0.0;
-  mouse_world_y_ = 0.0;
-  world_click_x_ = 0.0;
-  world_click_y_ = 0.0;
-  screen_click_x_ = 0;
-  screen_click_y_ = 0;
   ref_time_click_ = 0.0;
 
   delta_time_ = 0.0f;
@@ -141,25 +133,17 @@ bool GlCanvas::IsRedrawNeeded() const {
 }
 
 void GlCanvas::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle*/) {
-  int mouse_x = x;
-  int mouse_y = y;
-
-  float world_x, world_y;
-  ScreenToWorld(mouse_x, mouse_y, world_x, world_y);
-
-  mouse_world_x_ = world_x;
-  mouse_world_y_ = world_y;
-  mouse_screen_x_ = mouse_x;
-  mouse_screen_y_ = mouse_y;
+  mouse_screen_ = Vec2i(x, y);
+  mouse_world_ = viewport_.ScreenToWorldPos(mouse_screen_);
 
   // Pan
   if (left && !picking_manager_.IsDragging()) {
-    viewport_.SetWorldTopLeftX(world_click_x_ - static_cast<float>(mouse_x) /
-                                                    static_cast<float>(viewport_.GetWidth()) *
-                                                    viewport_.GetWorldWidth());
-    viewport_.SetWorldTopLeftY(world_click_y_ + static_cast<float>(mouse_y) /
-                                                    static_cast<float>(viewport_.GetHeight()) *
-                                                    viewport_.GetWorldHeight());
+    viewport_.SetWorldTopLeftX(world_click_pos_[0] - static_cast<float>(x) /
+                                                         static_cast<float>(viewport_.GetWidth()) *
+                                                         viewport_.GetWorldWidth());
+    viewport_.SetWorldTopLeftY(world_click_pos_[1] + static_cast<float>(y) /
+                                                         static_cast<float>(viewport_.GetHeight()) *
+                                                         viewport_.GetWorldHeight());
   }
 
   if (left) {
@@ -167,7 +151,7 @@ void GlCanvas::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle
   }
 
   if (is_selecting_) {
-    select_stop_ = Vec2(world_x, world_y);
+    select_stop_ = mouse_world_;
   }
 
   ResetHoverTimer();
@@ -176,10 +160,8 @@ void GlCanvas::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle
 
 void GlCanvas::LeftDown(int x, int y) {
   // Store world clicked pos for panning
-  ScreenToWorld(x, y, world_click_x_, world_click_y_);
-
-  screen_click_x_ = x;
-  screen_click_y_ = y;
+  screen_click_ = Vec2i(x, y);
+  world_click_pos_ = viewport_.ScreenToWorldPos(screen_click_);
   picking_ = true;
   is_selecting_ = false;
 
@@ -213,11 +195,10 @@ void GlCanvas::LeftDoubleClick() {
 }
 
 void GlCanvas::RightDown(int x, int y) {
-  ScreenToWorld(x, y, world_click_x_, world_click_y_);
-  screen_click_x_ = x;
-  screen_click_y_ = y;
+  screen_click_ = Vec2i(x, y);
+  world_click_pos_ = viewport_.ScreenToWorldPos(screen_click_);
 
-  select_start_ = select_stop_ = Vec2(world_click_x_, world_click_y_);
+  select_start_ = select_stop_ = world_click_pos_;
   is_selecting_ = true;
   picking_ = true;
 
@@ -303,42 +284,6 @@ void GlCanvas::PrepareGlState() {
 
 void GlCanvas::CleanupGlState() { glPopAttrib(); }
 
-void GlCanvas::ScreenToWorld(int x, int y, float& wx, float& wy) const {
-  Vec2 result = viewport_.ScreenToWorldPos(Vec2i(x, y));
-  wx = result[0];
-  wy = result[1];
-}
-
-Vec2 GlCanvas::ScreenToWorld(Vec2 screen_pos) const {
-  return viewport_.ScreenToWorldPos(
-      Vec2i(static_cast<int>(screen_pos[0]), static_cast<int>(screen_pos[1])));
-}
-
-float GlCanvas::ScreenToWorldHeight(int height) const {
-  return viewport_.ScreenToWorldHeight(height);
-}
-
-float GlCanvas::ScreenToWorldWidth(int width) const { return viewport_.ScreenToWorldWidth(width); }
-
-Vec2 GlCanvas::WorldToScreen(Vec2 world_pos) const {
-  Vec2i result = viewport_.WorldToScreenPos(world_pos);
-  return Vec2(result[0], result[1]);
-}
-
-// TODO (b/177350599): Unify QtScreen and GlScreen
-// QtScreen(x,y) --> GlScreen(x,height-y)
-Vec2 GlCanvas::QtScreenToGlScreen(Vec2 qt_pos) const {
-  Vec2i result =
-      viewport_.QtToGlScreenPos(Vec2i(static_cast<int>(qt_pos[0]), static_cast<int>(qt_pos[1])));
-  return Vec2(result[0], result[1]);
-}
-
-int GlCanvas::WorldToScreenHeight(float height) const {
-  return viewport_.WorldToScreenHeight(height);
-}
-
-int GlCanvas::WorldToScreenWidth(float width) const { return viewport_.WorldToScreenWidth(width); }
-
 void GlCanvas::Render(int width, int height) {
   ORBIT_SCOPE("GlCanvas::Render");
   CHECK(width == viewport_.GetWidth() && height == viewport_.GetHeight());
@@ -399,7 +344,7 @@ void GlCanvas::PostRender() {
   }
 
   if (picking_mode != PickingMode::kNone) {
-    Pick(picking_mode, screen_click_x_, screen_click_y_);
+    Pick(picking_mode, screen_click_[0], screen_click_[1]);
     GlCanvas::Render(viewport_.GetWidth(), viewport_.GetHeight());
   }
 

@@ -17,16 +17,16 @@ orbit_accessibility::AccessibilityRect AccessibleTriangleToggle::AccessibleLocal
   Vec2 pos = triangle_toggle_->GetPos();
   Vec2 size = triangle_toggle_->GetSize();
 
-  Vec2 screen_pos = canvas->WorldToScreen(pos);
-  int screen_width = canvas->WorldToScreenWidth(size[0]);
-  int screen_height = canvas->WorldToScreenHeight(size[1]);
+  Vec2i screen_pos = canvas->GetViewport().WorldToScreenPos(pos);
+  int screen_width = canvas->GetViewport().WorldToScreenWidth(size[0]);
+  int screen_height = canvas->GetViewport().WorldToScreenHeight(size[1]);
 
   orbit_accessibility::AccessibilityRect parent_rect =
       parent_->GetOrCreateAccessibleInterface()->AccessibleLocalRect();
 
-  return orbit_accessibility::AccessibilityRect(static_cast<int>(screen_pos[0]) - parent_rect.left,
-                                                static_cast<int>(screen_pos[1]) - parent_rect.top,
-                                                screen_width, screen_height);
+  return orbit_accessibility::AccessibilityRect(screen_pos[0] - parent_rect.left,
+                                                screen_pos[1] - parent_rect.top, screen_width,
+                                                screen_height);
 }
 
 orbit_accessibility::AccessibilityState AccessibleTriangleToggle::AccessibleState() const {

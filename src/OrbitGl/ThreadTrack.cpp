@@ -443,7 +443,7 @@ static inline void ResizeTextBox(const internal::DrawData& draw_data, const Time
 [[nodiscard]] static inline uint64_t GetNextPixelBoundaryTimeNs(
     float world_x, const internal::DrawData& draw_data) {
   float normalized_x = (world_x - draw_data.world_start_x) / draw_data.world_width;
-  int pixel_x = static_cast<int>(ceil(normalized_x * draw_data.canvas->GetWidth()));
+  int pixel_x = static_cast<int>(ceil(normalized_x * draw_data.canvas->GetViewport().GetWidth()));
   return draw_data.min_tick + pixel_x * draw_data.ns_per_pixel;
 }
 
