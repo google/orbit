@@ -47,9 +47,10 @@ orbit_accessibility::AccessibilityRect orbit_gl::AccessibleThreadBar::Accessible
   CHECK(canvas != nullptr);
 
   return orbit_accessibility::AccessibilityRect(
-      canvas->WorldToScreenWidth(local_pos[0]), canvas->WorldToScreenHeight(local_pos[1]),
-      canvas->WorldToScreenWidth(thread_bar_->GetSize()[0]),
-      canvas->WorldToScreenHeight(thread_bar_->GetSize()[1]));
+      canvas->GetViewport().WorldToScreenWidth(local_pos[0]),
+      canvas->GetViewport().WorldToScreenHeight(local_pos[1]),
+      canvas->GetViewport().WorldToScreenWidth(thread_bar_->GetSize()[0]),
+      canvas->GetViewport().WorldToScreenHeight(thread_bar_->GetSize()[1]));
 }
 
 orbit_accessibility::AccessibilityState AccessibleThreadBar::AccessibleState() const {

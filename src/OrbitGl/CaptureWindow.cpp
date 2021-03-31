@@ -107,7 +107,7 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool right, bool middle)
 
   // Pan
   if (left && !picking_manager_.IsDragging() && !app_->IsCapturing()) {
-    time_graph_->PanTime(screen_click_x_, x, viewport_.GetWidth(), ref_time_click_);
+    time_graph_->PanTime(screen_click_[0], x, viewport_.GetWidth(), ref_time_click_);
     RequestUpdatePrimitives();
 
     click_was_drag_ = true;
@@ -230,15 +230,10 @@ void CaptureWindow::Zoom(ZoomDirection dir, int delta) {
 
   auto delta_float = static_cast<float>(-delta);
 
-  float world_x;
-  float world_y;
-
-  ScreenToWorld(mouse_screen_x_, mouse_screen_y_, world_x, world_y);
-
   if (time_graph_ != nullptr) {
     switch (dir) {
       case ZoomDirection::kHorizontal: {
-        double mouse_ratio = static_cast<double>(mouse_screen_x_) / viewport_.GetWidth();
+        double mouse_ratio = static_cast<double>(mouse_screen_[0]) / viewport_.GetWidth();
         time_graph_->ZoomTime(delta_float, mouse_ratio);
         break;
       }
@@ -256,10 +251,10 @@ void CaptureWindow::Zoom(ZoomDirection dir, int delta) {
 void CaptureWindow::Pan(float ratio) {
   if (time_graph_ == nullptr) return;
   double ref_time =
-      time_graph_->GetTime(static_cast<double>(mouse_screen_x_) / viewport_.GetWidth());
+      time_graph_->GetTime(static_cast<double>(mouse_screen_[0]) / viewport_.GetWidth());
   time_graph_->PanTime(
-      mouse_screen_x_,
-      mouse_screen_x_ + static_cast<int>(ratio * static_cast<float>(viewport_.GetWidth())),
+      mouse_screen_[0],
+      mouse_screen_[0] + static_cast<int>(ratio * static_cast<float>(viewport_.GetWidth())),
       viewport_.GetWidth(), ref_time);
   RequestUpdatePrimitives();
 }
@@ -382,7 +377,7 @@ void CaptureWindow::Draw() {
   if (GetPickingMode() == PickingMode::kNone) {
     RenderTimeBar();
 
-    Vec2 pos(mouse_world_x_, viewport_.GetWorldTopLeft()[1]);
+    Vec2 pos(mouse_world_[0], viewport_.GetWorldTopLeft()[1]);
     // Vertical green line at mouse x position
     ui_batcher_.AddVerticalLine(pos, -viewport_.GetWorldHeight(), kZValueUi, Color(0, 255, 0, 127));
 
@@ -585,10 +580,9 @@ void CaptureWindow::RenderImGuiDebugUI() {
     IMGUI_VAR_TO_TEXT(viewport_.GetWorldTopLeft()[1]);
     IMGUI_VAR_TO_TEXT(viewport_.GetWorldExtents()[0]);
     IMGUI_VAR_TO_TEXT(viewport_.GetWorldExtents()[1]);
-    IMGUI_VAR_TO_TEXT(mouse_screen_x_);
-    IMGUI_VAR_TO_TEXT(mouse_screen_y_);
-    IMGUI_VAR_TO_TEXT(mouse_world_x_);
-    IMGUI_VAR_TO_TEXT(mouse_world_y_);
+    // TODO (freichl): These give compiler errors
+    // IMGUI_VAR_TO_TEXT(mouse_screen_);
+    // IMGUI_VAR_TO_TEXT(mouse_world_);
     IMGUI_VAR_TO_TEXT(mouse_world_[1]);
     if (time_graph_ != nullptr) {
       IMGUI_VAR_TO_TEXT(time_graph_->GetNumDrawnTextBoxes());
@@ -616,23 +610,14 @@ void CaptureWindow::RenderText(float layer) {
   }
 }
 
-Vec2 ScreenToWorld(GlCanvas* canvas, Vec2 screen_pos) {
-  Vec2 world_pos;
-  canvas->ScreenToWorld(static_cast<int>(screen_pos[0]), static_cast<int>(screen_pos[1]),
-                        world_pos[0], world_pos[1]);
-  return world_pos;
-}
-
 void CaptureWindow::RenderHelpUi() {
   constexpr int kOffset = 30;
-  float world_x = 0;
-  float world_y = 0;
-  ScreenToWorld(kOffset, kOffset, world_x, world_y);
+  Vec2 world_pos = viewport_.ScreenToWorldPos(Vec2i(kOffset, kOffset));
 
   Vec2 text_bounding_box_pos;
   Vec2 text_bounding_box_size;
   // TODO (b/180312795): Use TimeGraphLayout's font size again.
-  text_renderer_.AddText(GetHelpText(), world_x, world_y, GlCanvas::kZValueTextUi,
+  text_renderer_.AddText(GetHelpText(), world_pos[0], world_pos[1], GlCanvas::kZValueTextUi,
                          Color(255, 255, 255, 255), 14, -1.f /*max_size*/,
                          false /*right_justified*/, &text_bounding_box_pos,
                          &text_bounding_box_size);
@@ -704,12 +689,10 @@ void CaptureWindow::RenderTimeBar() {
 
     static constexpr int kPixelMargin = 2;
     int screen_y = viewport_.GetHeight() - static_cast<int>(time_bar_height) - kPixelMargin;
-    float dummy;
-    float world_y;
-    ScreenToWorld(0, screen_y, dummy, world_y);
+    Vec2 world_pos = viewport_.ScreenToWorldPos(Vec2i(0, screen_y));
 
     float height = time_graph_->GetLayout().GetTimeBarHeight() - kPixelMargin;
-    float x_margin = ScreenToWorldWidth(4);
+    float x_margin = viewport_.ScreenToWorldWidth(4);
 
     for (int i = 0; i < num_time_points; ++i) {
       double current_micros = norm_start_us + i * 1000 * norm_inc;
@@ -717,12 +700,15 @@ void CaptureWindow::RenderTimeBar() {
 
       std::string text = GetPrettyTime(absl::Microseconds(current_micros));
       float world_x = time_graph_->GetWorldFromUs(current_micros);
-      text_renderer_.AddText(text.c_str(), world_x + x_margin, world_y, GlCanvas::kZValueTimeBar,
-                             Color(255, 255, 255, 255), time_graph_->GetLayout().GetFontSize());
+      text_renderer_.AddText(text.c_str(), world_x + x_margin, world_pos[1],
+                             GlCanvas::kZValueTimeBar, Color(255, 255, 255, 255),
+                             time_graph_->GetLayout().GetFontSize());
 
       // Lines from time bar are drawn in screen space.
-      Vec2 pos = QtScreenToGlScreen(WorldToScreen(Vec2(world_x, world_y)));
-      ui_batcher_.AddVerticalLine(pos, height, GlCanvas::kZValueTimeBar, Color(255, 255, 255, 255));
+      Vec2i pos =
+          viewport_.QtToGlScreenPos(viewport_.WorldToScreenPos(Vec2(world_x, world_pos[1])));
+      ui_batcher_.AddVerticalLine(Vec2(pos[0], pos[1]), height, GlCanvas::kZValueTimeBar,
+                                  Color(255, 255, 255, 255));
     }
   }
 }

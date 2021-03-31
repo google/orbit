@@ -49,16 +49,6 @@ class GlCanvas {
   void PrepareGlState();
   static void CleanupGlState();
 
-  void ScreenToWorld(int x, int y, float& wx, float& wy) const;
-  [[nodiscard]] Vec2 ScreenToWorld(Vec2 screen_pos) const;
-  [[nodiscard]] float ScreenToWorldHeight(int height) const;
-  [[nodiscard]] float ScreenToWorldWidth(int width) const;
-
-  [[nodiscard]] Vec2 WorldToScreen(Vec2 world_pos) const;
-  [[nodiscard]] int WorldToScreenHeight(float height) const;
-  [[nodiscard]] int WorldToScreenWidth(float width) const;
-  [[nodiscard]] Vec2 QtScreenToGlScreen(Vec2 qt_pos) const;
-
   // events
   virtual void MouseMoved(int x, int y, bool left, bool right, bool middle);
   virtual void LeftDown(int x, int y);
@@ -83,10 +73,12 @@ class GlCanvas {
 
   [[nodiscard]] TextRenderer& GetTextRenderer() { return text_renderer_; }
 
-  [[nodiscard]] float GetMouseX() const { return mouse_world_x_; }
+  // TODO: Only needed for Graph labels
+  [[nodiscard]] float GetMouseX() const { return mouse_world_[0]; }
 
-  [[nodiscard]] float GetMousePosX() const { return static_cast<float>(mouse_screen_x_); }
-  [[nodiscard]] float GetMousePosY() const { return static_cast<float>(mouse_screen_y_); }
+  // TODO: Could be removed when ImGui is removed
+  [[nodiscard]] float GetMousePosX() const { return static_cast<float>(mouse_screen_[0]); }
+  [[nodiscard]] float GetMousePosY() const { return static_cast<float>(mouse_screen_[1]); }
 
   void ResetHoverTimer();
 
@@ -148,16 +140,12 @@ class GlCanvas {
  protected:
   [[nodiscard]] PickingMode GetPickingMode();
 
-  float world_click_x_;
-  float world_click_y_;
-  float mouse_world_x_;
-  float mouse_world_y_;
-  int mouse_screen_x_;
-  int mouse_screen_y_;
-  Vec2 select_start_;
-  Vec2 select_stop_;
-  int screen_click_x_;
-  int screen_click_y_;
+  Vec2 world_click_pos_ = Vec2(0, 0);
+  Vec2 mouse_world_ = Vec2(0, 0);
+  Vec2i mouse_screen_ = Vec2i(0, 0);
+  Vec2 select_start_ = Vec2(0, 0);
+  Vec2 select_stop_ = Vec2(0, 0);
+  Vec2i screen_click_;
   float delta_time_;
   bool is_selecting_;
   Timer hover_timer_;

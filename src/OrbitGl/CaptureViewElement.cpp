@@ -16,7 +16,7 @@ CaptureViewElement::CaptureViewElement(CaptureViewElement* parent, TimeGraph* ti
 }
 
 void CaptureViewElement::OnPick(int x, int y) {
-  canvas_->ScreenToWorld(x, y, mouse_pos_last_click_[0], mouse_pos_last_click_[1]);
+  mouse_pos_last_click_ = canvas_->GetViewport().ScreenToWorldPos(Vec2i(x, y));
   picking_offset_ = mouse_pos_last_click_ - pos_;
   mouse_pos_cur_ = mouse_pos_last_click_;
   picked_ = true;
@@ -28,7 +28,7 @@ void CaptureViewElement::OnRelease() {
 }
 
 void CaptureViewElement::OnDrag(int x, int y) {
-  canvas_->ScreenToWorld(x, y, mouse_pos_cur_[0], mouse_pos_cur_[1]);
+  mouse_pos_cur_ = canvas_->GetViewport().ScreenToWorldPos(Vec2i(x, y));
   time_graph_->RequestUpdatePrimitives();
 }
 

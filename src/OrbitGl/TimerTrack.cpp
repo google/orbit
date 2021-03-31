@@ -441,8 +441,8 @@ internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick,
   draw_data.z_offset = z_offset;
   draw_data.batcher = batcher;
   draw_data.canvas = time_graph->GetCanvas();
-  draw_data.world_start_x = draw_data.canvas->GetWorldTopLeftX();
-  draw_data.world_width = draw_data.canvas->GetWorldWidth();
+  draw_data.world_start_x = draw_data.canvas->GetViewport().GetWorldTopLeft()[0];
+  draw_data.world_width = draw_data.canvas->GetViewport().GetWorldWidth();
   draw_data.inv_time_window = 1.0 / time_graph->GetTimeWindowUs();
   draw_data.is_collapsed = is_collapsed;
   draw_data.z = GlCanvas::kZValueBox + z_offset;
@@ -450,7 +450,7 @@ internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick,
   draw_data.highlighted_function_id = highlighted_function_id;
 
   uint64_t time_window_ns = static_cast<uint64_t>(1000 * time_graph->GetTimeWindowUs());
-  draw_data.ns_per_pixel = time_window_ns / draw_data.canvas->GetWidth();
+  draw_data.ns_per_pixel = time_window_ns / draw_data.canvas->GetViewport().GetWidth();
   draw_data.min_timegraph_tick = time_graph->GetTickFromUs(time_graph->GetMinTimeUs());
   return draw_data;
 }

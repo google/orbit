@@ -106,10 +106,10 @@ AccessibilityRect AccessibleTrackContent::AccessibleLocalRect() const {
 
   GlCanvas* canvas = track_->GetCanvas();
 
-  return AccessibilityRect(canvas->WorldToScreenWidth(0),
-                           canvas->WorldToScreenHeight(layout_->GetTrackTabHeight()),
-                           canvas->WorldToScreenWidth(track_->GetSize()[0]),
-                           canvas->WorldToScreenHeight(track_->GetSize()[1]));
+  return AccessibilityRect(canvas->GetViewport().WorldToScreenWidth(0),
+                           canvas->GetViewport().WorldToScreenHeight(layout_->GetTrackTabHeight()),
+                           canvas->GetViewport().WorldToScreenWidth(track_->GetSize()[0]),
+                           canvas->GetViewport().WorldToScreenHeight(track_->GetSize()[1]));
 }
 
 AccessibilityState AccessibleTrackContent::AccessibleState() const {
@@ -136,10 +136,10 @@ AccessibilityRect AccessibleTrackTab::AccessibleLocalRect() const {
 
   GlCanvas* canvas = track_->GetCanvas();
 
-  return AccessibilityRect(canvas->WorldToScreenWidth(layout_->GetTrackTabOffset()),
-                           canvas->WorldToScreenHeight(0),
-                           canvas->WorldToScreenWidth(layout_->GetTrackTabWidth()),
-                           canvas->WorldToScreenHeight(layout_->GetTrackTabHeight()));
+  return AccessibilityRect(canvas->GetViewport().WorldToScreenWidth(layout_->GetTrackTabOffset()),
+                           canvas->GetViewport().WorldToScreenHeight(0),
+                           canvas->GetViewport().WorldToScreenWidth(layout_->GetTrackTabWidth()),
+                           canvas->GetViewport().WorldToScreenHeight(layout_->GetTrackTabHeight()));
 }
 
 AccessibilityState AccessibleTrackTab::AccessibleState() const {
@@ -175,9 +175,9 @@ AccessibilityRect AccessibleTrack::AccessibleLocalRect() const {
   Vec2 size = track_->GetSize();
   size[1] += layout_->GetTrackTabHeight();
 
-  Vec2 screen_pos = canvas->WorldToScreen(pos);
-  int screen_width = canvas->WorldToScreenWidth(size[0]);
-  int screen_height = canvas->WorldToScreenHeight(size[1]);
+  Vec2i screen_pos = canvas->GetViewport().WorldToScreenPos(pos);
+  int screen_width = canvas->GetViewport().WorldToScreenWidth(size[0]);
+  int screen_height = canvas->GetViewport().WorldToScreenHeight(size[1]);
 
   // Adjust the coordinates to clamp the result to an on-screen rect
   // This will "cut" any part that is offscreen due to scrolling, and may result
