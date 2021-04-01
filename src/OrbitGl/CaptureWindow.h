@@ -39,15 +39,29 @@ class CaptureWindow : public GlCanvas {
   void MouseWheelMovedHorizontally(int x, int y, int delta, bool ctrl) override;
   void KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) override;
 
+  void PostRender() override;
+  void RenderImGuiDebugUI() override;
+
+  void RequestUpdatePrimitives();
+
+  void ToggleDrawHelp();
+  void set_draw_help(bool draw_help);
+
+  [[nodiscard]] TimeGraph* GetTimeGraph() { return time_graph_.get(); }
+  void CreateTimeGraph(const CaptureData* capture_data);
+  void ClearTimeGraph() { time_graph_.reset(nullptr); }
+
+  Batcher& GetBatcherById(BatcherId batcher_id);
+
+ protected:
   void Draw() override;
+
   virtual void DrawScreenSpace();
   virtual void RenderText(float layer);
 
-  void RenderImGuiDebugUI() override;
+  virtual void ToggleRecording();
 
-  void PostRender() override;
-
-  void Resize(int width, int height) override;
+ private:
   void RenderHelpUi();
   void RenderTimeBar();
   void RenderSelectionOverlay();
@@ -59,19 +73,6 @@ class CaptureWindow : public GlCanvas {
   void UpdateVerticalSliderFromWorld();
   void UpdateHorizontalSliderFromWorld();
 
-  void RequestUpdatePrimitives();
-
-  virtual void ToggleRecording();
-  void ToggleDrawHelp();
-  void set_draw_help(bool draw_help);
-
-  [[nodiscard]] TimeGraph* GetTimeGraph() { return time_graph_.get(); }
-  void CreateTimeGraph(const CaptureData* capture_data);
-  void ClearTimeGraph() { time_graph_.reset(nullptr); }
-
-  Batcher& GetBatcherById(BatcherId batcher_id);
-
- private:
   [[nodiscard]] virtual const char* GetHelpText() const;
   [[nodiscard]] virtual bool ShouldAutoZoom() const;
   void HandlePickedElement(PickingMode picking_mode, PickingId picking_id, int x, int y) override;
