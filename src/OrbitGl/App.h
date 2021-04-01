@@ -153,7 +153,8 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
     kFreeKb,
     kAvailableKb,
     kBuffersKb,
-    kCachedKb
+    kCachedKb,
+    kEnd
   };
   void OnSystemMemoryUsage(
       const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage) override;
