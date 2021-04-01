@@ -10,7 +10,6 @@
 #include <cstdint>
 #include <map>
 #include <memory>
-#include <mutex>
 #include <optional>
 #include <string>
 #include <vector>
@@ -112,7 +111,6 @@ class TimeGraph {
   [[nodiscard]] TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
   [[nodiscard]] GlCanvas* GetCanvas() { return canvas_; }
   [[nodiscard]] Batcher& GetBatcher() { return batcher_; }
-  [[nodiscard]] uint32_t GetNumTimers() const;
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllTimerChains() const;
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllThreadTrackTimerChains() const;
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableTimerChains() const;
