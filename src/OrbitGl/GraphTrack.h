@@ -41,6 +41,12 @@ class GraphTrack : public Track {
   void SetLabelUnitWhenEmpty(const std::string& label_unit);
   void SetValueDecimalDigitsWhenEmpty(uint8_t value_decimal_digits);
 
+  void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
+  std::vector<std::shared_ptr<TimerChain>> GetAllChains() const override;
+  std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains() const override {
+    return GetAllChains();
+  }
+
  protected:
   void DrawSquareDot(Batcher* batcher, Vec2 center, float radius, float z, const Color& color);
   void DrawLabel(GlCanvas* canvas, Vec2 target_pos, const std::string& text,
