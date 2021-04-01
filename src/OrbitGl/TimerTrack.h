@@ -56,7 +56,7 @@ class TimerTrack : public Track {
 
   // Pickable
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
-  virtual void OnTimer(const orbit_client_protos::TimerInfo& timer_info);
+  void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   [[nodiscard]] std::string GetTooltip() const override;
 
   // Track
@@ -128,7 +128,6 @@ class TimerTrack : public Track {
   TextRenderer* text_renderer_ = nullptr;
   uint32_t depth_ = 0;
   mutable absl::Mutex mutex_;
-  std::map<int, std::shared_ptr<TimerChain>> timers_;
   int visible_timer_count_ = 0;
 
   [[nodiscard]] virtual std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const;

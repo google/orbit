@@ -485,6 +485,7 @@ void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
     double used_mb =
         static_cast<double>(total_kb - unused_kb - buffers_kb - cached_kb) / kMegabytesToKilobytes;
     track->AddValue(used_mb, timer_info.start());
+    track->OnTimer(timer_info);
   }
 }
 
