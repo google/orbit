@@ -643,9 +643,10 @@ void Orbit_ImGui_NewFrame(GlCanvas* a_Canvas) {
   }
 
   // Setup inputs
-  io.MousePos = ImVec2(a_Canvas->GetMousePosX(),
-                       a_Canvas->GetMousePosY());  // Mouse position in screen coordinates (set to
-                                                   // -1,-1 if no mouse / on another screen, etc.)
+  io.MousePos =
+      ImVec2(a_Canvas->GetMouseScreenPos()[0],
+             a_Canvas->GetMouseScreenPos()[1]);  // Mouse position in screen coordinates (set to
+                                                 // -1,-1 if no mouse / on another screen, etc.)
 
   for (int i = 0; i < 3; i++) {
     io.MouseDown[i] = g_MousePressed[i];

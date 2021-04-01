@@ -45,7 +45,7 @@ class GlCanvas {
   virtual void PreRender();
   virtual void PostRender();
 
-  void Prepare2DViewport(int top_left_x, int top_left_y, int bottom_right_x, int bottom_right_y);
+  void PrepareWorldSpaceViewport();
   void PrepareScreenSpaceViewport();
   void PrepareGlState();
   static void CleanupGlState();
@@ -72,12 +72,9 @@ class GlCanvas {
 
   [[nodiscard]] TextRenderer& GetTextRenderer() { return text_renderer_; }
 
-  // Only needed for Graph labels - should we find a better way?
-  [[nodiscard]] float GetMouseX() const { return mouse_world_[0]; }
+  [[nodiscard]] const Vec2i& GetMouseScreenPos() const { return mouse_move_pos_screen_; }
 
-  // The 3 methods below could be removed if ImGui is removed
-  [[nodiscard]] float GetMousePosX() const { return static_cast<float>(mouse_screen_[0]); }
-  [[nodiscard]] float GetMousePosY() const { return static_cast<float>(mouse_screen_[1]); }
+  // This could be removed if ImGui is removed
   [[nodiscard]] float GetDeltaTimeSeconds() const { return delta_time_; }
 
   virtual void RenderImGuiDebugUI() {}
@@ -135,31 +132,30 @@ class GlCanvas {
  protected:
   virtual void Draw() {}
 
-  [[nodiscard]] PickingMode GetPickingMode();
-
   void UpdateSpecialKeys(bool ctrl, bool shift, bool alt);
   bool ControlPressed();
 
   void ResetHoverTimer();
 
-  Vec2 world_click_pos_ = Vec2(0, 0);
-  Vec2 mouse_world_ = Vec2(0, 0);
-  Vec2i mouse_screen_ = Vec2i(0, 0);
-  Vec2 select_start_ = Vec2(0, 0);
-  Vec2 select_stop_ = Vec2(0, 0);
-  Vec2i screen_click_;
+  void SetPickingMode(PickingMode mode);
+
+  Vec2 mouse_click_pos_world_;
+  Vec2i mouse_move_pos_screen_ = Vec2i(0, 0);
+  Vec2 select_start_pos_world_ = Vec2(0, 0);
+  Vec2 select_stop_pos_world_ = Vec2(0, 0);
+
   float delta_time_;
   bool is_selecting_;
   Timer hover_timer_;
   int hover_delay_ms_;
-  bool is_hovering_;
   bool can_hover_;
+
+  PickingMode picking_mode_ = PickingMode::kNone;
 
   ImGuiContext* imgui_context_ = nullptr;
   double ref_time_click_;
   TextRenderer text_renderer_;
   PickingManager picking_manager_;
-  bool picking_;
   bool double_clicking_;
   bool control_key_;
   bool is_mouse_over_ = false;
