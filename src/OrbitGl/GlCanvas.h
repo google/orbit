@@ -38,9 +38,10 @@ class GlCanvas {
   enum class CanvasType { kCaptureWindow, kIntrospectionWindow, kDebug };
   static std::unique_ptr<GlCanvas> Create(CanvasType canvas_type, OrbitApp* app);
 
-  virtual void Initialize();
-  virtual void Resize(int width, int height);
-  virtual void Render(int width, int height);
+  void Initialize();
+  void Resize(int width, int height);
+  void Render(int width, int height);
+
   virtual void PreRender();
   virtual void PostRender();
 
@@ -63,8 +64,6 @@ class GlCanvas {
   virtual void CharEvent(unsigned int character);
   virtual void KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt);
   virtual void KeyReleased(unsigned int key_code, bool ctrl, bool shift, bool alt);
-  virtual void UpdateSpecialKeys(bool ctrl, bool shift, bool alt);
-  virtual bool ControlPressed();
 
   [[nodiscard]] virtual std::vector<std::string> GetContextMenu() {
     return std::vector<std::string>();
@@ -73,18 +72,14 @@ class GlCanvas {
 
   [[nodiscard]] TextRenderer& GetTextRenderer() { return text_renderer_; }
 
-  // TODO: Only needed for Graph labels
+  // Only needed for Graph labels - should we find a better way?
   [[nodiscard]] float GetMouseX() const { return mouse_world_[0]; }
 
-  // TODO: Could be removed when ImGui is removed
+  // The 3 methods below could be removed if ImGui is removed
   [[nodiscard]] float GetMousePosX() const { return static_cast<float>(mouse_screen_[0]); }
   [[nodiscard]] float GetMousePosY() const { return static_cast<float>(mouse_screen_[1]); }
-
-  void ResetHoverTimer();
-
   [[nodiscard]] float GetDeltaTimeSeconds() const { return delta_time_; }
 
-  virtual void Draw() {}
   virtual void RenderImGuiDebugUI() {}
 
   using RenderCallback = std::function<void()>;
@@ -138,7 +133,14 @@ class GlCanvas {
   static const Color kTabTextColorSelected;
 
  protected:
+  virtual void Draw() {}
+
   [[nodiscard]] PickingMode GetPickingMode();
+
+  void UpdateSpecialKeys(bool ctrl, bool shift, bool alt);
+  bool ControlPressed();
+
+  void ResetHoverTimer();
 
   Vec2 world_click_pos_ = Vec2(0, 0);
   Vec2 mouse_world_ = Vec2(0, 0);

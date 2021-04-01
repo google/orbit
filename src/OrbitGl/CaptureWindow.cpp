@@ -203,11 +203,6 @@ void CaptureWindow::PostRender() {
   }
 }
 
-void CaptureWindow::Resize(int width, int height) {
-  GlCanvas::Resize(width, height);
-  RequestUpdatePrimitives();
-}
-
 bool CaptureWindow::RightUp() {
   if (time_graph_ != nullptr && is_selecting_ && (select_start_[0] != select_stop_[0]) &&
       ControlPressed()) {
