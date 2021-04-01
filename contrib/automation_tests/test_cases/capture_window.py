@@ -123,7 +123,7 @@ class MoveTrack(CaptureWindowE2ETestCaseBase):
 
 class MatchTracksBase(CaptureWindowE2ETestCaseBase):
     """
-    Provides a static method track names.
+    Provides a static method to match track names.
     """
     @staticmethod
     def _match(expected_name: str or Iterable[str], found_name: str) -> bool:
