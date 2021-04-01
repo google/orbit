@@ -19,6 +19,7 @@ class Track:
         self._thread_states = find_control(control, 'Pane', 'ThreadState', raise_on_failure=False)
         self._tracepoints = find_control(control, 'Pane', 'Tracepoints', raise_on_failure=False)
         self._timers = find_control(control, 'Pane', 'Timers', raise_on_failure=False)
+        self._triangle_toggle = find_control(control, 'Button', 'TriangleToggle', raise_on_failure=False)
 
     container = property(lambda self: self._container)
     title = property(lambda self: self._title)
@@ -26,6 +27,7 @@ class Track:
     thread_states = property(lambda self: self._thread_states)
     tracepoints = property(lambda self: self._tracepoints)
     timers = property(lambda self: self._timers)
+    triangle_toggle = property(lambda self: self._triangle_toggle)
     name = property(lambda self: self._name)
 
 

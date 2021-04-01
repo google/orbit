@@ -121,7 +121,22 @@ class MoveTrack(CaptureWindowE2ETestCaseBase):
                        (expected_new_index, index))
 
 
-class MatchTracks(CaptureWindowE2ETestCaseBase):
+class MatchTracksBase(CaptureWindowE2ETestCaseBase):
+    """
+    Provides a static method track names.
+    """
+    @staticmethod
+    def _match(expected_name: str or Iterable[str], found_name: str) -> bool:
+        if isinstance(expected_name, str):
+            return fnmatch(found_name, expected_name)
+        else:
+            for option in expected_name:
+                if fnmatch(found_name, option):
+                    return True
+        return False
+
+
+class MatchTracks(MatchTracksBase):
     """
     Verify that the existing visible tracks match the expected tracks
     """
@@ -167,15 +182,58 @@ class MatchTracks(CaptureWindowE2ETestCaseBase):
         if expected_names and not allow_additional_tracks:
             self.expect_eq(names_found, expected_count, "No additional tracks are found")
 
-    @staticmethod
-    def _match(expected_name: str or Iterable[str], found_name: str) -> bool:
-        if isinstance(expected_name, str):
-            return fnmatch(found_name, expected_name)
-        else:
-            for option in expected_name:
-                if fnmatch(found_name, option):
-                    return True
-        return False
+
+class CollapsingTrackBase(MatchTracksBase):
+    """
+    Clicks on a track's triangle toggle and calls compares the track's height by calling `_verify_height`.
+    """
+
+    def _execute(self, expected_name: str):
+        """
+        :param expected_name: The exact name of the track to be collapsed. "*" is allowed as placeholder.
+        """
+        assert (expected_name is not "")
+
+        tracks = self._find_tracks()
+
+        found_track = False
+        for track in [Track(t) for t in tracks]:
+            track_name = track.name
+            if self._match(expected_name, track_name):
+                found_track = True
+                prev_height = track.container.rectangle().height()
+                triangle_toggle = track.triangle_toggle
+                # TODO (b/184237564): Very short mouse clicks (within one frame) will be ignored. Thus we need expand
+                #  the duration of the click explicitly.
+                triangle_toggle.click_input(button_up=False)
+                time.sleep(0.1)
+                triangle_toggle.click_input(button_down=False)
+                post_height = track.container.rectangle().height()
+                self._verify_height(prev_height, post_height, expected_name)
+                break
+
+        self.expect_true(found_track, "Found a match for track name '%s'" % expected_name)
+
+    def _verify_height(self, prev_click_height, post_click_height, track_name):
+        raise NotImplementedError("Implementation required")
+
+
+class ExpandTrack(CollapsingTrackBase):
+    """
+    Click on a collapsed track's triangle toggle, verify that the height increased.
+    """
+    def _verify_height(self, prev_click_height, post_click_height, track_name):
+        self.expect_true(prev_click_height < post_click_height, "Expanding track '%s' changed its height from %u to %u"
+                                                                % (track_name, prev_click_height, post_click_height))
+
+
+class CollapseTrack(CollapsingTrackBase):
+    """
+    Click on an expanded track's triangle toggle, verify that the height decreased.
+    """
+    def _verify_height(self, prev_click_height, post_click_height, track_name):
+        self.expect_true(prev_click_height > post_click_height, "Collapsing track '%s' changed its height from %u to %u"
+                                                                % (track_name, prev_click_height, post_click_height))
 
 
 class FilterTracks(CaptureWindowE2ETestCaseBase):
