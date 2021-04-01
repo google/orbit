@@ -291,21 +291,24 @@ void OrbitApp::OnSystemMemoryUsage(
   timer_info.set_start(system_memory_usage.timestamp_ns());
   timer_info.set_end(system_memory_usage.timestamp_ns());
 
-  constexpr size_t kNumOfEncodedValues = 5;
-  timer_info.mutable_registers()->Reserve(kNumOfEncodedValues);
-  timer_info.mutable_registers()->Set(static_cast<size_t>(SystemMemoryUsageEncodingIndex::kTotalKb),
-                                      orbit_api::Encode<uint64_t>(system_memory_usage.total_kb()));
-  timer_info.mutable_registers()->Set(static_cast<size_t>(SystemMemoryUsageEncodingIndex::kFreeKb),
-                                      orbit_api::Encode<uint64_t>(system_memory_usage.free_kb()));
-  timer_info.mutable_registers()->Set(
-      static_cast<size_t>(SystemMemoryUsageEncodingIndex::kAvailableKb),
-      orbit_api::Encode<uint64_t>(system_memory_usage.available_kb()));
-  timer_info.mutable_registers()->Set(
-      static_cast<size_t>(SystemMemoryUsageEncodingIndex::kBuffersKb),
-      orbit_api::Encode<uint64_t>(system_memory_usage.buffers_kb()));
-  timer_info.mutable_registers()->Set(
-      static_cast<size_t>(SystemMemoryUsageEncodingIndex::kCachedKb),
-      orbit_api::Encode<uint64_t>(system_memory_usage.cached_kb()));
+  // The RepeatedField<Element>::Set(int index, const Element & value) method won't update the
+  // current_size_ of the repeated field. If the current_size_ == 0, the repeated field will be
+  // ignored when copying the protobuf. Therefore, if encoding the following memory information
+  // into TimerInfo registers with the Set method, the registers field of the copied TimerInfo
+  // would be empty.
+  std::vector<uint64_t> encoded_values(static_cast<size_t>(SystemMemoryUsageEncodingIndex::kEnd));
+  encoded_values[static_cast<size_t>(SystemMemoryUsageEncodingIndex::kTotalKb)] =
+      orbit_api::Encode<uint64_t>(system_memory_usage.total_kb());
+  encoded_values[static_cast<size_t>(SystemMemoryUsageEncodingIndex::kFreeKb)] =
+      orbit_api::Encode<uint64_t>(system_memory_usage.free_kb());
+  encoded_values[static_cast<size_t>(SystemMemoryUsageEncodingIndex::kAvailableKb)] =
+      orbit_api::Encode<uint64_t>(system_memory_usage.available_kb());
+  encoded_values[static_cast<size_t>(SystemMemoryUsageEncodingIndex::kBuffersKb)] =
+      orbit_api::Encode<uint64_t>(system_memory_usage.buffers_kb());
+  encoded_values[static_cast<size_t>(SystemMemoryUsageEncodingIndex::kCachedKb)] =
+      orbit_api::Encode<uint64_t>(system_memory_usage.cached_kb());
+
+  *timer_info.mutable_registers() = {encoded_values.begin(), encoded_values.end()};
 
   GetMutableTimeGraph()->ProcessTimer(timer_info, nullptr);
 }
