@@ -7,6 +7,7 @@
 
 #include "Batcher.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
+#include "OrbitAccessibility/WrappedAccessibility.h"
 #include "PickingManager.h"
 #include "TimeGraphLayout.h"
 
@@ -16,9 +17,10 @@ class GlCanvas;
 namespace orbit_gl {
 
 /* Base class for UI elements drawn underneath the capture window. */
-class CaptureViewElement : public Pickable {
+class CaptureViewElement : public Pickable, public orbit_accessibility::WrappedAccessibility {
  public:
-  explicit CaptureViewElement(TimeGraph* time_graph, TimeGraphLayout* layout);
+  explicit CaptureViewElement(WrappedAccessibility* parent, TimeGraph* time_graph,
+                              TimeGraphLayout* layout);
   virtual void Draw(GlCanvas* canvas, PickingMode /*picking_mode*/, float /*z_offset*/ = 0) {
     canvas_ = canvas;
   }
@@ -35,22 +37,17 @@ class CaptureViewElement : public Pickable {
   void SetSize(float width, float height) { size_ = Vec2(width, height); }
   [[nodiscard]] Vec2 GetSize() const { return size_; }
 
-  [[nodiscard]] orbit_accessibility::AccessibleInterface* GetOrCreateAccessibleInterface();
-  [[nodiscard]] const orbit_accessibility::AccessibleInterface* GetAccessibleInterface() const {
-    return accessible_interface_.get();
-  }
-
   // Pickable
   void OnPick(int x, int y) override;
   void OnRelease() override;
   void OnDrag(int x, int y) override;
   [[nodiscard]] bool Draggable() override { return true; }
 
+  WrappedAccessibility* GetParent() const { return parent_; }
+
  protected:
+  WrappedAccessibility* parent_;
   TimeGraphLayout* layout_;
-  virtual std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() {
-    return {};
-  };
 
   GlCanvas* canvas_ = nullptr;
   TimeGraph* time_graph_;
@@ -61,8 +58,6 @@ class CaptureViewElement : public Pickable {
   Vec2 mouse_pos_cur_;
   Vec2 picking_offset_ = Vec2(0, 0);
   bool picked_ = false;
-
-  std::unique_ptr<orbit_accessibility::AccessibleInterface> accessible_interface_;
 };
 }  // namespace orbit_gl
 

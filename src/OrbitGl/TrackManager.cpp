@@ -318,7 +318,8 @@ SchedulerTrack* TrackManager::GetOrCreateSchedulerTrack() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<SchedulerTrack> track = scheduler_track_;
   if (track == nullptr) {
-    track = std::make_shared<SchedulerTrack>(time_graph_, layout_, app_, capture_data_);
+    track =
+        std::make_shared<SchedulerTrack>(time_graph_, time_graph_, layout_, app_, capture_data_);
     AddTrack(track);
     scheduler_track_ = track;
   }
@@ -329,7 +330,8 @@ ThreadTrack* TrackManager::GetOrCreateThreadTrack(int32_t tid) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<ThreadTrack> track = thread_tracks_[tid];
   if (track == nullptr) {
-    track = std::make_shared<ThreadTrack>(time_graph_, layout_, tid, app_, capture_data_);
+    track =
+        std::make_shared<ThreadTrack>(time_graph_, time_graph_, layout_, tid, app_, capture_data_);
     AddTrack(track);
     thread_tracks_[tid] = track;
   }
@@ -342,7 +344,8 @@ GpuTrack* TrackManager::GetOrCreateGpuTrack(uint64_t timeline_hash) {
       app_->GetStringManager()->Get(timeline_hash).value_or(std::to_string(timeline_hash));
   std::shared_ptr<GpuTrack> track = gpu_tracks_[timeline];
   if (track == nullptr) {
-    track = std::make_shared<GpuTrack>(time_graph_, layout_, timeline_hash, app_, capture_data_);
+    track = std::make_shared<GpuTrack>(time_graph_, time_graph_, layout_, timeline_hash, app_,
+                                       capture_data_);
     AddTrack(track);
     gpu_tracks_[timeline] = track;
   }
@@ -353,7 +356,7 @@ GraphTrack* TrackManager::GetOrCreateGraphTrack(const std::string& name) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<GraphTrack> track = graph_tracks_[name];
   if (track == nullptr) {
-    track = std::make_shared<GraphTrack>(time_graph_, layout_, name, capture_data_);
+    track = std::make_shared<GraphTrack>(time_graph_, time_graph_, layout_, name, capture_data_);
     AddTrack(track);
     graph_tracks_[name] = track;
   }
@@ -364,7 +367,8 @@ AsyncTrack* TrackManager::GetOrCreateAsyncTrack(const std::string& name) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<AsyncTrack> track = async_tracks_[name];
   if (track == nullptr) {
-    track = std::make_shared<AsyncTrack>(time_graph_, layout_, name, app_, capture_data_);
+    track =
+        std::make_shared<AsyncTrack>(time_graph_, time_graph_, layout_, name, app_, capture_data_);
     AddTrack(track);
     async_tracks_[name] = track;
   }
@@ -380,7 +384,8 @@ FrameTrack* TrackManager::GetOrCreateFrameTrack(
     return track_it->second.get();
   }
 
-  auto track = std::make_shared<FrameTrack>(time_graph_, layout_, function, app_, capture_data_);
+  auto track = std::make_shared<FrameTrack>(time_graph_, time_graph_, layout_, function, app_,
+                                            capture_data_);
 
   // Normally we would call AddTrack(track) here, but frame tracks are removable by users
   // and therefore cannot be simply thrown into the flat vector of tracks.

@@ -35,9 +35,10 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::InstrumentedFunction;
 
-ThreadTrack::ThreadTrack(TimeGraph* time_graph, TimeGraphLayout* layout, int32_t thread_id,
-                         OrbitApp* app, const CaptureData* capture_data)
-    : TimerTrack(time_graph, layout, app, capture_data) {
+ThreadTrack::ThreadTrack(WrappedAccessibility* parent, TimeGraph* time_graph,
+                         TimeGraphLayout* layout, int32_t thread_id, OrbitApp* app,
+                         const CaptureData* capture_data)
+    : TimerTrack(parent, time_graph, layout, app, capture_data) {
   thread_id_ = thread_id;
   InitializeNameAndLabel(thread_id);
 

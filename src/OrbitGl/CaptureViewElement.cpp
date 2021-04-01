@@ -9,17 +9,10 @@
 
 namespace orbit_gl {
 
-CaptureViewElement::CaptureViewElement(TimeGraph* time_graph, TimeGraphLayout* layout)
-    : layout_(layout), time_graph_(time_graph) {
+CaptureViewElement::CaptureViewElement(WrappedAccessibility* parent, TimeGraph* time_graph,
+                                       TimeGraphLayout* layout)
+    : parent_(parent), layout_(layout), time_graph_(time_graph) {
   CHECK(layout != nullptr);
-}
-
-orbit_accessibility::AccessibleInterface* CaptureViewElement::GetOrCreateAccessibleInterface() {
-  if (accessible_interface_ == nullptr) {
-    accessible_interface_ = CreateAccessibleInterface();
-  }
-
-  return accessible_interface_.get();
 }
 
 void CaptureViewElement::OnPick(int x, int y) {

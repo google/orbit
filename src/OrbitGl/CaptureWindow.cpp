@@ -519,7 +519,7 @@ void CaptureWindow::OnContextMenu(const std::string& /*action*/, int /*menu_inde
 
 bool CaptureWindow::ShouldAutoZoom() const { return app_->IsCapturing(); }
 
-std::unique_ptr<AccessibleWidgetBridge> CaptureWindow::CreateAccessibilityInterface() {
+std::unique_ptr<AccessibleInterface> CaptureWindow::CreateAccessibleInterface() {
   return std::make_unique<AccessibleCaptureWindow>(this);
 }
 

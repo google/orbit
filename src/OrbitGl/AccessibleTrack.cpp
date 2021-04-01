@@ -157,7 +157,7 @@ const AccessibleInterface* AccessibleTrack::AccessibleChild(int index) const {
 
 const AccessibleInterface* AccessibleTrack::AccessibleParent() const {
   CHECK(track_ != nullptr);
-  return track_->GetTimeGraph()->GetOrCreateAccessibleInterface();
+  return track_->GetParent()->GetOrCreateAccessibleInterface();
 }
 
 std::string AccessibleTrack::AccessibleName() const {

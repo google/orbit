@@ -47,7 +47,6 @@ TimeGraph::TimeGraph(OrbitApp* app, TextRenderer* text_renderer, GlCanvas* canva
                      const CaptureData* capture_data)
     : text_renderer_{text_renderer},
       canvas_{canvas},
-      accessibility_(this),
       batcher_(BatcherId::kTimeGraph),
       capture_data_{capture_data},
       app_{app} {
@@ -1019,4 +1018,8 @@ bool TimeGraph::HasFrameTrack(uint64_t function_id) const {
 void TimeGraph::RemoveFrameTrack(uint64_t function_id) {
   track_manager_->RemoveFrameTrack(function_id);
   RequestUpdatePrimitives();
+}
+
+std::unique_ptr<orbit_accessibility::AccessibleInterface> TimeGraph::CreateAccessibleInterface() {
+  return std::make_unique<TimeGraphAccessibility>(this);
 }

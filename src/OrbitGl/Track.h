@@ -19,6 +19,7 @@
 #include "BlockChain.h"
 #include "CaptureViewElement.h"
 #include "CoreMath.h"
+#include "OrbitAccessibility/WrappedAccessibility.h"
 #include "OrbitBase/Profiling.h"
 #include "TextBox.h"
 #include "TextRenderer.h"
@@ -40,7 +41,8 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
     kUnknown,
   };
 
-  explicit Track(TimeGraph* time_graph, TimeGraphLayout* layout, const CaptureData* capture_data);
+  explicit Track(WrappedAccessibility* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
+                 const CaptureData* capture_data);
   ~Track() override = default;
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;

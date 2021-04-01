@@ -156,13 +156,6 @@ bool GlCanvas::IsRedrawNeeded() const {
          (is_mouse_over_ && can_hover_ && hover_timer_.ElapsedMillis() > hover_delay_ms_);
 }
 
-orbit_accessibility::AccessibleInterface* GlCanvas::GetOrCreateAccessibleInterface() {
-  if (accessibility_ == nullptr) {
-    accessibility_ = CreateAccessibilityInterface();
-  }
-  return accessibility_.get();
-}
-
 void GlCanvas::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle*/) {
   int mouse_x = x;
   int mouse_y = y;
@@ -459,7 +452,6 @@ PickingMode GlCanvas::GetPickingMode() {
   return PickingMode::kNone;
 }
 
-std::unique_ptr<orbit_accessibility::AccessibleWidgetBridge>
-GlCanvas::CreateAccessibilityInterface() {
+std::unique_ptr<orbit_accessibility::AccessibleInterface> GlCanvas::CreateAccessibleInterface() {
   return std::make_unique<orbit_accessibility::AccessibleWidgetBridge>();
 }
