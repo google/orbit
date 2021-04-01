@@ -34,6 +34,7 @@ class CaptureWindow : public GlCanvas {
   void MouseMoved(int x, int y, bool left, bool right, bool middle) override;
   void LeftDown(int x, int y) override;
   void LeftUp() override;
+  void RightDown(int x, int y) override;
   bool RightUp() override;
   void MouseWheelMoved(int x, int y, int delta, bool ctrl) override;
   void MouseWheelMovedHorizontally(int x, int y, int delta, bool ctrl) override;
@@ -81,6 +82,9 @@ class CaptureWindow : public GlCanvas {
   bool draw_help_;
   std::shared_ptr<GlSlider> slider_;
   std::shared_ptr<GlSlider> vertical_slider_;
+
+  uint64_t select_start_time_ = 0;
+  uint64_t select_stop_time_ = 0;
 
   bool click_was_drag_ = false;
   bool background_clicked_ = false;

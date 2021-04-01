@@ -107,10 +107,16 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool right, bool middle)
 
   // Pan
   if (left && !picking_manager_.IsDragging() && !app_->IsCapturing()) {
-    time_graph_->PanTime(screen_click_[0], x, viewport_.GetWidth(), ref_time_click_);
+    Vec2i mouse_click_screen = viewport_.WorldToScreenPos(mouse_click_pos_world_);
+    time_graph_->PanTime(mouse_click_screen[0], x, viewport_.GetWidth(), ref_time_click_);
     RequestUpdatePrimitives();
 
     click_was_drag_ = true;
+  }
+
+  // Update selection timestamps
+  if (is_selecting_) {
+    select_stop_time_ = time_graph_->GetTickFromWorld(select_stop_pos_world_[0]);
   }
 }
 
@@ -189,7 +195,7 @@ void CaptureWindow::SelectTextBox(const TextBox* text_box) {
 }
 
 void CaptureWindow::PostRender() {
-  if (GetPickingMode() != PickingMode::kNone) {
+  if (picking_mode_ != PickingMode::kNone) {
     RequestUpdatePrimitives();
   }
 
@@ -203,11 +209,18 @@ void CaptureWindow::PostRender() {
   }
 }
 
+void CaptureWindow::RightDown(int x, int y) {
+  GlCanvas::RightDown(x, y);
+  if (time_graph_ != nullptr) {
+    select_start_time_ = time_graph_->GetTickFromWorld(select_start_pos_world_[0]);
+  }
+}
+
 bool CaptureWindow::RightUp() {
-  if (time_graph_ != nullptr && is_selecting_ && (select_start_[0] != select_stop_[0]) &&
-      ControlPressed()) {
-    float min_world = std::min(select_start_[0], select_stop_[0]);
-    float max_world = std::max(select_start_[0], select_stop_[0]);
+  if (time_graph_ != nullptr && is_selecting_ &&
+      (select_start_pos_world_[0] != select_stop_pos_world_[0]) && ControlPressed()) {
+    float min_world = std::min(select_start_pos_world_[0], select_stop_pos_world_[0]);
+    float max_world = std::max(select_start_pos_world_[0], select_stop_pos_world_[0]);
 
     double new_min =
         TicksToMicroseconds(time_graph_->GetCaptureMin(), time_graph_->GetTickFromWorld(min_world));
@@ -228,13 +241,13 @@ void CaptureWindow::Zoom(ZoomDirection dir, int delta) {
   if (time_graph_ != nullptr) {
     switch (dir) {
       case ZoomDirection::kHorizontal: {
-        double mouse_ratio = static_cast<double>(mouse_screen_[0]) / viewport_.GetWidth();
+        double mouse_ratio = static_cast<double>(mouse_move_pos_screen_[0]) / viewport_.GetWidth();
         time_graph_->ZoomTime(delta_float, mouse_ratio);
         break;
       }
       case ZoomDirection::kVertical: {
-        float mouse_ratio =
-            static_cast<float>(mouse_screen_[1]) / static_cast<float>(viewport_.GetHeight());
+        float mouse_ratio = static_cast<float>(mouse_move_pos_screen_[1]) /
+                            static_cast<float>(viewport_.GetHeight());
         time_graph_->VerticalZoom(delta_float, mouse_ratio);
       }
     }
@@ -246,11 +259,11 @@ void CaptureWindow::Zoom(ZoomDirection dir, int delta) {
 void CaptureWindow::Pan(float ratio) {
   if (time_graph_ == nullptr) return;
   double ref_time =
-      time_graph_->GetTime(static_cast<double>(mouse_screen_[0]) / viewport_.GetWidth());
-  time_graph_->PanTime(
-      mouse_screen_[0],
-      mouse_screen_[0] + static_cast<int>(ratio * static_cast<float>(viewport_.GetWidth())),
-      viewport_.GetWidth(), ref_time);
+      time_graph_->GetTime(static_cast<double>(mouse_move_pos_screen_[0]) / viewport_.GetWidth());
+  time_graph_->PanTime(mouse_move_pos_screen_[0],
+                       mouse_move_pos_screen_[0] +
+                           static_cast<int>(ratio * static_cast<float>(viewport_.GetWidth())),
+                       viewport_.GetWidth(), ref_time);
   RequestUpdatePrimitives();
 }
 
@@ -364,15 +377,15 @@ void CaptureWindow::Draw() {
 
       time_graph_->RequestUpdatePrimitives();
     }
-    time_graph_->Draw(this, GetPickingMode());
+    time_graph_->Draw(this, picking_mode_);
   }
 
   RenderSelectionOverlay();
 
-  if (GetPickingMode() == PickingMode::kNone) {
+  if (picking_mode_ == PickingMode::kNone) {
     RenderTimeBar();
 
-    Vec2 pos(mouse_world_[0], viewport_.GetWorldTopLeft()[1]);
+    Vec2 pos = viewport_.ScreenToWorldPos(Vec2i(mouse_move_pos_screen_[0], 0));
     // Vertical green line at mouse x position
     ui_batcher_.AddVerticalLine(pos, -viewport_.GetWorldHeight(), kZValueUi, Color(0, 255, 0, 127));
 
@@ -383,7 +396,7 @@ void CaptureWindow::Draw() {
 
   DrawScreenSpace();
 
-  if (GetPickingMode() == PickingMode::kNone) {
+  if (picking_mode_ == PickingMode::kNone) {
     text_renderer_.RenderDebug(&ui_batcher_);
   }
 
@@ -409,16 +422,16 @@ void CaptureWindow::Draw() {
     // and for the text than the rest of items inside CaptureWindow. So, we have to switch
     // between these 2 systems while the layer is changing (with these "Prepare.." functions).
     if (layer < GlCanvas::kScreenSpaceCutPoint) {
-      Prepare2DViewport(0, 0, viewport_.GetWidth(), viewport_.GetHeight());
+      PrepareWorldSpaceViewport();
     }
     if (time_graph_ != nullptr) {
-      time_graph_->GetBatcher().DrawLayer(layer, GetPickingMode() != PickingMode::kNone);
+      time_graph_->GetBatcher().DrawLayer(layer, picking_mode_ != PickingMode::kNone);
     }
-    ui_batcher_.DrawLayer(layer, GetPickingMode() != PickingMode::kNone);
+    ui_batcher_.DrawLayer(layer, picking_mode_ != PickingMode::kNone);
 
     PrepareScreenSpaceViewport();
     // Text needs to be drawn in screen space.
-    if (GetPickingMode() == PickingMode::kNone) {
+    if (picking_mode_ == PickingMode::kNone) {
       text_renderer_.RenderLayer(&ui_batcher_, layer);
       RenderText(layer);
     }
@@ -575,10 +588,8 @@ void CaptureWindow::RenderImGuiDebugUI() {
     IMGUI_VAR_TO_TEXT(viewport_.GetWorldTopLeft()[1]);
     IMGUI_VAR_TO_TEXT(viewport_.GetWorldExtents()[0]);
     IMGUI_VAR_TO_TEXT(viewport_.GetWorldExtents()[1]);
-    // TODO (freichl): These give compiler errors
-    // IMGUI_VAR_TO_TEXT(mouse_screen_);
-    // IMGUI_VAR_TO_TEXT(mouse_world_);
-    IMGUI_VAR_TO_TEXT(mouse_world_[1]);
+    IMGUI_VAR_TO_TEXT(mouse_move_pos_screen_[0]);
+    IMGUI_VAR_TO_TEXT(mouse_move_pos_screen_[1]);
     if (time_graph_ != nullptr) {
       IMGUI_VAR_TO_TEXT(time_graph_->GetNumDrawnTextBoxes());
       IMGUI_VAR_TO_TEXT(time_graph_->GetTrackManager()->GetNumTimers());
@@ -600,7 +611,7 @@ void CaptureWindow::RenderImGuiDebugUI() {
 void CaptureWindow::RenderText(float layer) {
   ORBIT_SCOPE_FUNCTION;
   if (time_graph_ == nullptr) return;
-  if (GetPickingMode() == PickingMode::kNone) {
+  if (picking_mode_ == PickingMode::kNone) {
     time_graph_->DrawText(this, layer);
   }
 }
@@ -710,31 +721,32 @@ void CaptureWindow::RenderTimeBar() {
 
 void CaptureWindow::RenderSelectionOverlay() {
   if (time_graph_ == nullptr) return;
+  if (picking_mode_ != PickingMode::kNone) return;
+  if (select_start_pos_world_[0] == select_stop_pos_world_[0]) return;
 
-  if (!picking_ && select_start_[0] != select_stop_[0]) {
-    float from = std::min(select_start_[0], select_stop_[0]);
-    float to = std::max(select_start_[0], select_stop_[0]);
+  uint64_t min_time = std::min(select_start_time_, select_stop_time_);
+  uint64_t max_time = std::max(select_start_time_, select_stop_time_);
 
-    Vec2 pos(from, viewport_.GetWorldTopLeft()[1] - viewport_.GetWorldHeight());
-    Vec2 size(to - from, viewport_.GetWorldHeight());
+  float from_world = time_graph_->GetWorldFromTick(min_time);
+  float to_world = time_graph_->GetWorldFromTick(max_time);
 
-    uint64_t min_time = time_graph_->GetTickFromWorld(from);
-    uint64_t max_time = time_graph_->GetTickFromWorld(to);
+  float size_x = to_world - from_world;
+  Vec2 pos(from_world, viewport_.GetWorldTopLeft()[1] - viewport_.GetWorldHeight());
+  Vec2 size(size_x, viewport_.GetWorldHeight());
 
-    std::string text = GetPrettyTime(TicksToDuration(min_time, max_time));
-    const Color color(0, 128, 0, 128);
+  std::string text = GetPrettyTime(TicksToDuration(min_time, max_time));
+  const Color color(0, 128, 0, 128);
 
-    Box box(pos, size, GlCanvas::kZValueOverlay);
-    ui_batcher_.AddBox(box, color);
+  Box box(pos, size, GlCanvas::kZValueOverlay);
+  ui_batcher_.AddBox(box, color);
 
-    const Color text_color(255, 255, 255, 255);
-    float pos_x = pos[0] + size[0];
+  const Color text_color(255, 255, 255, 255);
+  float pos_x = pos[0] + size[0];
 
-    text_renderer_.AddText(text.c_str(), pos_x, select_stop_[1], GlCanvas::kZValueTextUi,
-                           text_color, time_graph_->GetLayout().GetFontSize(), size[0], true);
+  text_renderer_.AddText(text.c_str(), pos_x, select_stop_pos_world_[1], GlCanvas::kZValueTextUi,
+                         text_color, time_graph_->GetLayout().GetFontSize(), size[0], true);
 
-    const unsigned char g = 100;
-    Color grey(g, g, g, 255);
-    ui_batcher_.AddVerticalLine(pos, size[1], GlCanvas::kZValueOverlay, grey);
-  }
+  const unsigned char g = 100;
+  Color grey(g, g, g, 255);
+  ui_batcher_.AddVerticalLine(pos, size[1], GlCanvas::kZValueOverlay, grey);
 }

@@ -58,10 +58,7 @@ const Color GlCanvas::kTabTextColorSelected = Color(100, 181, 246, 255);
 GlCanvas::GlCanvas() : viewport_(0, 0), ui_batcher_(BatcherId::kUi, &picking_manager_) {
   text_renderer_.SetCanvas(this);
 
-  select_start_ = Vec2(0.f, 0.f);
-  select_stop_ = Vec2(0.f, 0.f);
   is_selecting_ = false;
-  picking_ = false;
   double_clicking_ = false;
   control_key_ = false;
   redraw_requested_ = true;
@@ -133,17 +130,13 @@ bool GlCanvas::IsRedrawNeeded() const {
 }
 
 void GlCanvas::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle*/) {
-  mouse_screen_ = Vec2i(x, y);
-  mouse_world_ = viewport_.ScreenToWorldPos(mouse_screen_);
+  mouse_move_pos_screen_ = Vec2i(x, y);
+  Vec2 mouse_pos_world = viewport_.ScreenToWorldPos(mouse_move_pos_screen_);
 
   // Pan
   if (left && !picking_manager_.IsDragging()) {
-    viewport_.SetWorldTopLeftX(world_click_pos_[0] - static_cast<float>(x) /
-                                                         static_cast<float>(viewport_.GetWidth()) *
-                                                         viewport_.GetWorldWidth());
-    viewport_.SetWorldTopLeftY(world_click_pos_[1] + static_cast<float>(y) /
-                                                         static_cast<float>(viewport_.GetHeight()) *
-                                                         viewport_.GetWorldHeight());
+    viewport_.SetWorldTopLeftX(mouse_click_pos_world_[0] - viewport_.ScreenToWorldWidth(x));
+    viewport_.SetWorldTopLeftY(mouse_click_pos_world_[1] + viewport_.ScreenToWorldHeight(y));
   }
 
   if (left) {
@@ -151,7 +144,7 @@ void GlCanvas::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle
   }
 
   if (is_selecting_) {
-    select_stop_ = mouse_world_;
+    select_stop_pos_world_ = mouse_pos_world;
   }
 
   ResetHoverTimer();
@@ -160,9 +153,8 @@ void GlCanvas::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle
 
 void GlCanvas::LeftDown(int x, int y) {
   // Store world clicked pos for panning
-  screen_click_ = Vec2i(x, y);
-  world_click_pos_ = viewport_.ScreenToWorldPos(screen_click_);
-  picking_ = true;
+  mouse_click_pos_world_ = viewport_.ScreenToWorldPos(Vec2i(x, y));
+  SetPickingMode(PickingMode::kClick);
   is_selecting_ = false;
 
   Orbit_ImGui_MouseButtonCallback(imgui_context_, 0, true);
@@ -177,8 +169,7 @@ void GlCanvas::MouseWheelMoved(int /*x*/, int /*y*/, int delta, bool /*ctrl*/) {
   // Use the original sign of a_Delta here.
   Orbit_ImGui_ScrollCallback(imgui_context_, -delta_normalized);
 
-  can_hover_ = true;
-
+  ResetHoverTimer();
   RequestRedraw();
 }
 
@@ -190,17 +181,16 @@ void GlCanvas::LeftUp() {
 
 void GlCanvas::LeftDoubleClick() {
   double_clicking_ = true;
-  picking_ = true;
+  SetPickingMode(PickingMode::kClick);
   RequestRedraw();
 }
 
 void GlCanvas::RightDown(int x, int y) {
-  screen_click_ = Vec2i(x, y);
-  world_click_pos_ = viewport_.ScreenToWorldPos(screen_click_);
+  mouse_click_pos_world_ = viewport_.ScreenToWorldPos(Vec2i(x, y));
 
-  select_start_ = select_stop_ = world_click_pos_;
+  select_start_pos_world_ = select_stop_pos_world_ = mouse_click_pos_world_;
   is_selecting_ = true;
-  picking_ = true;
+  SetPickingMode(PickingMode::kClick);
 
   Orbit_ImGui_MouseButtonCallback(imgui_context_, 1, true);
   RequestRedraw();
@@ -209,10 +199,9 @@ void GlCanvas::RightDown(int x, int y) {
 bool GlCanvas::RightUp() {
   Orbit_ImGui_MouseButtonCallback(imgui_context_, 1, false);
   is_selecting_ = false;
-  select_start_ = select_stop_;
   RequestRedraw();
 
-  bool show_context_menu = select_start_ == select_stop_;
+  bool show_context_menu = select_start_pos_world_ == select_stop_pos_world_;
   return show_context_menu;
 }
 
@@ -238,8 +227,9 @@ void GlCanvas::UpdateSpecialKeys(bool ctrl, bool /*shift*/, bool /*alt*/) { cont
 bool GlCanvas::ControlPressed() { return control_key_; }
 
 /** Inits the OpenGL viewport for drawing in 2D. */
-void GlCanvas::Prepare2DViewport(int top_left_x, int top_left_y, int bottom_right_x,
-                                 int bottom_right_y) {
+void GlCanvas::PrepareWorldSpaceViewport() {
+  const int top_left_x = 0, top_left_y = 0, bottom_right_x = viewport_.GetWidth(),
+            bottom_right_y = viewport_.GetHeight();
   glViewport(top_left_x, top_left_y, bottom_right_x - top_left_x, bottom_right_y - top_left_y);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -270,12 +260,12 @@ void GlCanvas::PrepareGlState() {
                static_cast<float>(kBackgroundColor[1]) / 255.0f,
                static_cast<float>(kBackgroundColor[2]) / 255.0f,
                static_cast<float>(kBackgroundColor[3]) / 255.0f);
-  if (picking_) glClearColor(0.f, 0.f, 0.f, 0.f);
+  if (picking_mode_ != PickingMode::kNone) glClearColor(0.f, 0.f, 0.f, 0.f);
 
   glDisable(GL_LIGHTING);
   glEnable(GL_TEXTURE_2D);
   glEnable(GL_COLOR_MATERIAL);
-  picking_ ? glDisable(GL_BLEND) : glEnable(GL_BLEND);
+  picking_mode_ != PickingMode::kNone ? glDisable(GL_BLEND) : glEnable(GL_BLEND);
   glEnable(GL_DEPTH_TEST);  // Enables Depth Testing
   glDepthFunc(GL_LEQUAL);   // The Type Of Depth Testing To Do
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -296,7 +286,7 @@ void GlCanvas::Render(int width, int height) {
   ui_batcher_.StartNewFrame();
 
   PrepareGlState();
-  Prepare2DViewport(0, 0, viewport_.GetWidth(), viewport_.GetHeight());
+  PrepareWorldSpaceViewport();
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -312,7 +302,7 @@ void GlCanvas::Render(int width, int height) {
 
   Draw();
 
-  if (GetPickingMode() == PickingMode::kNone) {
+  if (picking_mode_ == PickingMode::kNone) {
     for (const auto& render_callback : render_callbacks_) {
       render_callback();
     }
@@ -323,28 +313,29 @@ void GlCanvas::Render(int width, int height) {
 
   PostRender();
 
-  picking_ = false;
   double_clicking_ = false;
 }
 
 void GlCanvas::PreRender() {
+  if (viewport_.IsDirty()) {
+    ResetHoverTimer();
+  }
+
   if (is_mouse_over_ && can_hover_ && hover_timer_.ElapsedMillis() > hover_delay_ms_) {
-    is_hovering_ = true;
-    picking_ = true;
+    SetPickingMode(PickingMode::kHover);
   }
 }
 
 void GlCanvas::PostRender() {
-  PickingMode picking_mode = GetPickingMode();
+  PickingMode prev_picking_mode = picking_mode_;
+  picking_mode_ = PickingMode::kNone;
 
-  picking_ = false;
-
-  if (picking_mode == PickingMode::kHover) {
-    ResetHoverTimer();
+  if (prev_picking_mode == PickingMode::kHover) {
+    can_hover_ = false;
   }
 
-  if (picking_mode != PickingMode::kNone) {
-    Pick(picking_mode, screen_click_[0], screen_click_[1]);
+  if (prev_picking_mode != PickingMode::kNone) {
+    Pick(prev_picking_mode, mouse_move_pos_screen_[0], mouse_move_pos_screen_[1]);
     GlCanvas::Render(viewport_.GetWidth(), viewport_.GetHeight());
   }
 
@@ -359,19 +350,12 @@ void GlCanvas::Resize(int width, int height) {
 
 void GlCanvas::ResetHoverTimer() {
   hover_timer_.Restart();
-  is_hovering_ = false;
   can_hover_ = true;
 }
 
-PickingMode GlCanvas::GetPickingMode() {
-  if (picking_ && !is_hovering_) {
-    return PickingMode::kClick;
-  }
-  if (is_hovering_) {
-    return PickingMode::kHover;
-  }
-
-  return PickingMode::kNone;
+void GlCanvas::SetPickingMode(PickingMode mode) {
+  if (imgui_context_ != nullptr) return;
+  picking_mode_ = mode;
 }
 
 void GlCanvas::Pick(PickingMode picking_mode, int x, int y) {
