@@ -82,6 +82,8 @@ class TimerTrack : public Track {
 
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllChains() const override;
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains() const override;
+  [[nodiscard]] std::vector<const TextBox*> GetScopesInRange(uint64_t start_ns,
+                                                             uint64_t end_ns) const;
   [[nodiscard]] bool IsEmpty() const override;
 
   [[nodiscard]] bool IsCollapsible() const override { return depth_ > 1; }

@@ -226,6 +226,13 @@ bool CaptureWindow::RightUp() {
     select_stop_pos_world_ = select_start_pos_world_;
   }
 
+  if (app_->IsDevMode()) {
+    auto result = selection_stats_.Generate(this, select_start_time_, select_stop_time_);
+    if (result.has_error()) {
+      ERROR("%s", result.error().message());
+    }
+  }
+
   return GlCanvas::RightUp();
 }
 
@@ -605,6 +612,17 @@ void CaptureWindow::RenderImGuiDebugUI() {
         IMGUI_VAR_TO_TEXT(capture_data->GetCallstackData()->GetCallstackEventsCount());
       }
     }
+  }
+
+  if (ImGui::CollapsingHeader("Selection Summary")) {
+    const std::string& selection_summary = selection_stats_.GetSummary();
+
+    if (ImGui::Button("Copy to clipboard")) {
+      app_->SetClipboard(selection_summary);
+    }
+
+    ImGui::TextUnformatted(selection_summary.c_str(),
+                           selection_summary.c_str() + selection_summary.size());
   }
 }
 

@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "Batcher.h"
+#include "CaptureStats.h"
 #include "GlCanvas.h"
 #include "GlSlider.h"
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
@@ -92,6 +93,7 @@ class CaptureWindow : public GlCanvas {
   OrbitApp* app_ = nullptr;
   [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleInterface>
   CreateAccessibleInterface() override;
+  CaptureStats selection_stats_;
 };
 
 #endif  // ORBIT_GL_CAPTURE_WINDOW_H_
