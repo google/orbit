@@ -21,7 +21,16 @@ class TemporaryFile final {
     that.file_path_.clear();
   }
 
-  TemporaryFile& operator=(TemporaryFile&&) = delete;
+  TemporaryFile& operator=(TemporaryFile&& that) noexcept {
+    if (&that == this) return *this;
+
+    CloseAndRemove();
+    fd_ = std::move(that.fd_);
+    file_path_ = std::move(that.file_path_);
+    that.file_path_.clear();
+
+    return *this;
+  }
 
   void CloseAndRemove() noexcept;
 
