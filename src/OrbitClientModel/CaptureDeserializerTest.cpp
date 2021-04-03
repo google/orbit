@@ -213,11 +213,12 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
   uint8_t empty_data = 0;
   google::protobuf::io::CodedInputStream empty_stream(&empty_data, 0);
 
-  // There will be no call to OnCaptureStarted other then the one specified next.
-  EXPECT_CALL(listener, OnCaptureStarted(_, _, _, _)).Times(0);
+  ModuleManager module_manager;
+
   EXPECT_CALL(listener, OnCaptureStarted(_, _, IsEmpty(), _))
       .Times(1)
-      .WillOnce([&instrumented_function, load_bias = kLoadBias, kInstrumentedFunctionId](
+      .WillOnce([&instrumented_function, load_bias = kLoadBias, kInstrumentedFunctionId,
+                 &module_manager](
                     ProcessData&& process,
                     absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction>
                         actual_instrumented_functions,
@@ -235,12 +236,109 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
         EXPECT_EQ(actual_function_info.file_path(), instrumented_function.module_path());
         EXPECT_EQ(actual_function_info.file_build_id(), instrumented_function.module_build_id());
         EXPECT_EQ(actual_function_info.file_offset(), instrumented_function.address() - load_bias);
+
+        // Also check that we can find corresponding function_infos using module_path/build_id and
+        // offset
+        const ModuleData* module = module_manager.GetModuleByPathAndBuildId(
+            actual_function_info.file_path(), actual_function_info.file_build_id());
+        ASSERT_NE(module, nullptr);
+        const FunctionInfo* function_info = module->FindFunctionByElfAddress(
+            module->load_bias() + actual_function_info.file_offset(), true);
+        ASSERT_NE(function_info, nullptr);
+
+        EXPECT_EQ(function_info->name(), instrumented_function.name());
+        EXPECT_EQ(function_info->pretty_name(), instrumented_function.pretty_name());
+        EXPECT_EQ(function_info->module_path(), instrumented_function.module_path());
+        EXPECT_EQ(function_info->module_build_id(), instrumented_function.module_build_id());
+        EXPECT_EQ(function_info->address(), instrumented_function.address());
+        EXPECT_EQ(function_info->size(), instrumented_function.size());
       });
 
   EXPECT_CALL(listener, OnAddressInfo).Times(0);
   EXPECT_CALL(listener, OnThreadName).Times(0);
 
+  ErrorMessageOr<CaptureListener::CaptureOutcome> result =
+      capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
+                                                      &empty_stream, &cancellation_requested);
+  ASSERT_FALSE(result.has_error()) << result.error().message();
+  EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
+}
+
+TEST(CaptureDeserializer, LoadCaptureInfoNoBuildIdInFunctionInfo) {
+  MockCaptureListener listener;
+  CaptureInfo capture_info;
+
+  ProcessInfo* process_info = capture_info.mutable_process();
+  process_info->set_pid(42);
+  process_info->set_name("process");
+
+  constexpr uint64_t kLoadBias = 5;
+  constexpr const char* kModuleBuildId = "build_id";
+  orbit_client_protos::ModuleInfo* module_info = capture_info.add_modules();
+  module_info->set_load_bias(kLoadBias);
+  module_info->set_name("module");
+  module_info->set_file_path("path/to/module");
+  module_info->set_build_id(kModuleBuildId);
+  module_info->set_address_start(10);
+  module_info->set_address_end(123);
+
+  constexpr uint64_t kInstrumentedFunctionId = 1;
+  FunctionInfo instrumented_function;
+  instrumented_function.set_name("foo");
+  instrumented_function.set_pretty_name("void foo()");
+  instrumented_function.set_module_path("path/to/module");
+  instrumented_function.set_module_build_id("");
+  instrumented_function.set_address(21);
+  instrumented_function.set_size(12);
+  (*capture_info.mutable_instrumented_functions())[kInstrumentedFunctionId] = instrumented_function;
+
+  std::atomic<bool> cancellation_requested = false;
+  uint8_t empty_data = 0;
+  google::protobuf::io::CodedInputStream empty_stream(&empty_data, 0);
+
   ModuleManager module_manager;
+  EXPECT_CALL(listener, OnCaptureStarted(_, _, IsEmpty(), _))
+      .Times(1)
+      .WillOnce([&instrumented_function, load_bias = kLoadBias, kInstrumentedFunctionId,
+                 kModuleBuildId, &module_manager](
+                    ProcessData&& process,
+                    absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction>
+                        actual_instrumented_functions,
+                    Unused, Unused) {
+        EXPECT_EQ(process.name(), "process");
+        EXPECT_EQ(process.pid(), 42);
+        EXPECT_EQ(process.GetModuleBaseAddress("path/to/module"), 10);
+
+        ASSERT_EQ(actual_instrumented_functions.size(), 1);
+        ASSERT_TRUE(actual_instrumented_functions.contains(kInstrumentedFunctionId));
+        const InstrumentedFunction& actual_function_info =
+            actual_instrumented_functions.at(kInstrumentedFunctionId);
+
+        EXPECT_EQ(actual_function_info.function_name(), instrumented_function.pretty_name());
+        EXPECT_EQ(actual_function_info.file_path(), instrumented_function.module_path());
+        EXPECT_EQ(actual_function_info.file_build_id(), kModuleBuildId);
+        EXPECT_EQ(actual_function_info.file_offset(), instrumented_function.address() - load_bias);
+
+        // Also check that we can find corresponding function_infos using module_path/build_id and
+        // offset
+        const ModuleData* module = module_manager.GetModuleByPathAndBuildId(
+            actual_function_info.file_path(), actual_function_info.file_build_id());
+        ASSERT_NE(module, nullptr);
+        const FunctionInfo* function_info = module->FindFunctionByElfAddress(
+            module->load_bias() + actual_function_info.file_offset(), true);
+        ASSERT_NE(function_info, nullptr);
+
+        EXPECT_EQ(function_info->name(), instrumented_function.name());
+        EXPECT_EQ(function_info->pretty_name(), instrumented_function.pretty_name());
+        EXPECT_EQ(function_info->module_path(), instrumented_function.module_path());
+        EXPECT_EQ(function_info->module_build_id(), kModuleBuildId);
+        EXPECT_EQ(function_info->address(), instrumented_function.address());
+        EXPECT_EQ(function_info->size(), instrumented_function.size());
+      });
+
+  EXPECT_CALL(listener, OnAddressInfo).Times(0);
+  EXPECT_CALL(listener, OnThreadName).Times(0);
+
   ErrorMessageOr<CaptureListener::CaptureOutcome> result =
       capture_deserializer::internal::LoadCaptureInfo(capture_info, &listener, &module_manager,
                                                       &empty_stream, &cancellation_requested);

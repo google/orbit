@@ -162,19 +162,20 @@ TEST(ModuleManager, AddOrUpdateModules) {
 }
 
 TEST(ModuleManager, GetOrbitFunctionsOfProcess) {
-  const std::string name = "name of module";
-  const std::string file_path = "path/of/module";
-  const std::string build_id = "build id example";
+  constexpr const char* kName = "name of module";
+  constexpr const char* kFilePath = "path/of/module";
+  constexpr const char* kBuildId = "build id example";
+  constexpr const char* kBuildIdChanged = "another build id";
   constexpr uint64_t kFileSize = 300;
   constexpr uint64_t kLoadBias = 0x400;
   constexpr uint64_t kAddressStart = 100;
   constexpr uint64_t kAddressEnd = 1000;
 
   ModuleInfo module_info;
-  module_info.set_name(name);
-  module_info.set_file_path(file_path);
+  module_info.set_name(kName);
+  module_info.set_file_path(kFilePath);
   module_info.set_file_size(kFileSize);
-  module_info.set_build_id(build_id);
+  module_info.set_build_id(kBuildId);
   module_info.set_load_bias(kLoadBias);
   module_info.set_address_start(kAddressStart);
   module_info.set_address_end(kAddressEnd);
@@ -216,7 +217,7 @@ TEST(ModuleManager, GetOrbitFunctionsOfProcess) {
     symbol_info->set_address(500);
   }
 
-  ModuleData* module = module_manager.GetMutableModuleByPathAndBuildId(file_path, build_id);
+  ModuleData* module = module_manager.GetMutableModuleByPathAndBuildId(kFilePath, kBuildId);
   module->AddSymbols(module_symbols);
 
   {
@@ -229,6 +230,29 @@ TEST(ModuleManager, GetOrbitFunctionsOfProcess) {
     EXPECT_EQ(function.name(), orbit_name_mangled);
     EXPECT_EQ(function.pretty_name(), orbit_name);
     EXPECT_EQ(function.address(), 500);
+  }
+
+  module_info.set_build_id(kBuildIdChanged);
+  // Add same module with another build_id
+  module_manager.AddOrUpdateModules({module_info});
+  {
+    // We should still be able to lookup the function because old module did not go anywhere.
+    std::vector<FunctionInfo> functions = module_manager.GetOrbitFunctionsOfProcess(process);
+    ASSERT_EQ(functions.size(), 1);
+
+    FunctionInfo& function{functions[0]};
+    EXPECT_EQ(function.name(), orbit_name_mangled);
+    EXPECT_EQ(function.pretty_name(), orbit_name);
+    EXPECT_EQ(function.address(), 500);
+  }
+
+  // Now update the process modules in memory.
+  process.UpdateModuleInfos({module_info});
+  {
+    // Now ModuleManager should not be able to find the functions because the module is no longer in
+    // the memory.
+    std::vector<FunctionInfo> functions = module_manager.GetOrbitFunctionsOfProcess(process);
+    EXPECT_TRUE(functions.empty());
   }
 }
 
