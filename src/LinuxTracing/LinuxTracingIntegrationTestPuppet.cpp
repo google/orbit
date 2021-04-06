@@ -27,7 +27,7 @@ using PuppetConstants = LinuxTracingIntegrationTestPuppetConstants;
 
 static void SleepRepeatedly() {
   for (uint64_t i = 0; i < PuppetConstants::kSleepCount; ++i) {
-    absl::SleepFor(absl::Microseconds(10));
+    absl::SleepFor(absl::Microseconds(100));
   }
 }
 
