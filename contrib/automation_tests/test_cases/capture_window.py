@@ -180,7 +180,7 @@ class MatchTracks(CaptureWindowE2ETestCaseBase):
 
 class CollapsingTrackBase(CaptureWindowE2ETestCaseBase):
     """
-    Clicks on a track's triangle toggle and calls compares the track's height by calling `_verify_height`.
+    Clicks on a track's triangle toggle and compares the track's height by calling `_verify_height`.
     """
 
     def _execute(self, expected_name: str):
@@ -204,7 +204,7 @@ class CollapsingTrackBase(CaptureWindowE2ETestCaseBase):
         post_height = track.container.rectangle().height()
         self._verify_height(prev_height, post_height, expected_name)
 
-    def _verify_height(self, prev_click_height, post_click_height, track_name):
+    def _verify_height(self, prev_click_height: int, post_click_height: int, track_name: str):
         raise NotImplementedError("Implementation required")
 
 
@@ -212,7 +212,7 @@ class ExpandTrack(CollapsingTrackBase):
     """
     Click on a collapsed track's triangle toggle, verify that the height increased.
     """
-    def _verify_height(self, prev_click_height, post_click_height, track_name):
+    def _verify_height(self, prev_click_height: int, post_click_height: int, track_name: str):
         self.expect_true(prev_click_height < post_click_height, "Expanding track '%s' changed its height from %u to %u"
                                                                 % (track_name, prev_click_height, post_click_height))
 
@@ -221,7 +221,7 @@ class CollapseTrack(CollapsingTrackBase):
     """
     Click on an expanded track's triangle toggle, verify that the height decreased.
     """
-    def _verify_height(self, prev_click_height, post_click_height, track_name):
+    def _verify_height(self, prev_click_height: int, post_click_height: int, track_name: str):
         self.expect_true(prev_click_height > post_click_height, "Collapsing track '%s' changed its height from %u to %u"
                                                                 % (track_name, prev_click_height, post_click_height))
 
