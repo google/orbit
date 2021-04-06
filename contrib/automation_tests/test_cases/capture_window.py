@@ -178,6 +178,54 @@ class MatchTracks(CaptureWindowE2ETestCaseBase):
         return False
 
 
+class CollapsingTrackBase(CaptureWindowE2ETestCaseBase):
+    """
+    Clicks on a track's triangle toggle and compares the track's height by calling `_verify_height`.
+    """
+
+    def _execute(self, expected_name: str):
+        """
+        :param expected_name: The exact name of the track to be collapsed. "*" is allowed as placeholder.
+        """
+        assert (expected_name is not "")
+
+        tracks = self._find_tracks(expected_name)
+
+        self.expect_true(len(tracks) == 1, 'Found track %s' % expected_name)
+        track = Track(tracks[0])
+
+        prev_height = track.container.rectangle().height()
+        triangle_toggle = track.triangle_toggle
+        # TODO (b/184237564): Very short mouse clicks (within one frame) will be ignored. Thus we need expand
+        #  the duration of the click explicitly.
+        triangle_toggle.click_input(button_up=False)
+        time.sleep(0.1)
+        triangle_toggle.click_input(button_down=False)
+        post_height = track.container.rectangle().height()
+        self._verify_height(prev_height, post_height, expected_name)
+
+    def _verify_height(self, prev_click_height: int, post_click_height: int, track_name: str):
+        raise NotImplementedError("Implementation required")
+
+
+class ExpandTrack(CollapsingTrackBase):
+    """
+    Click on a collapsed track's triangle toggle, verify that the height increased.
+    """
+    def _verify_height(self, prev_click_height: int, post_click_height: int, track_name: str):
+        self.expect_true(prev_click_height < post_click_height, "Expanding track '%s' changed its height from %u to %u"
+                                                                % (track_name, prev_click_height, post_click_height))
+
+
+class CollapseTrack(CollapsingTrackBase):
+    """
+    Click on an expanded track's triangle toggle, verify that the height decreased.
+    """
+    def _verify_height(self, prev_click_height: int, post_click_height: int, track_name: str):
+        self.expect_true(prev_click_height > post_click_height, "Collapsing track '%s' changed its height from %u to %u"
+                                                                % (track_name, prev_click_height, post_click_height))
+
+
 class FilterTracks(CaptureWindowE2ETestCaseBase):
     """
     Set a filter in the capture tab, and verify either the amount of visible tracks or their names

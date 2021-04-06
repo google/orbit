@@ -7,7 +7,7 @@ found in the LICENSE file.
 from absl import app
 
 from core.orbit_e2e import E2ETestSuite
-from test_cases.capture_window import MatchTracks, Capture
+from test_cases.capture_window import MatchTracks, Capture, ExpandTrack, CollapseTrack
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 
 """Basic smoke test for the Vulkan layer functionality using pywinauto.
@@ -31,7 +31,9 @@ def main(argv):
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter="UE4Game"),
         Capture(),
-        MatchTracks(expected_names=["gfx", "gfx_marker"], allow_additional_tracks=True)]
+        MatchTracks(expected_names=["gfx", "gfx_marker"], allow_additional_tracks=True),
+        ExpandTrack(expected_name="gfx"),
+        CollapseTrack(expected_name="gfx")]
     suite = E2ETestSuite(test_name="Vulkan Layer", test_cases=test_cases)
     suite.execute()
 
