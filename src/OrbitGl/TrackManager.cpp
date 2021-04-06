@@ -142,17 +142,17 @@ void TrackManager::SortTracks() {
 
     last_thread_reorder_.Restart();
 
-    UpdateFilteredTrackList();
+    UpdateVisibleTrackList();
   }
   sorting_invalidated_ = false;
 }
 
 void TrackManager::SetFilter(const std::string& filter) {
   filter_ = absl::AsciiStrToLower(filter);
-  UpdateFilteredTrackList();
+  UpdateVisibleTrackList();
 }
 
-void TrackManager::UpdateFilteredTrackList() {
+void TrackManager::UpdateVisibleTrackList() {
   if (filter_.empty()) {
     visible_tracks_ = sorted_tracks_;
     return;
@@ -306,12 +306,23 @@ void TrackManager::AddTrack(const std::shared_ptr<Track>& track) {
   sorting_invalidated_ = true;
 }
 
+void TrackManager::AddFrameTrack(const std::shared_ptr<FrameTrack>& frame_track) {
+  frame_tracks_[frame_track->GetFunctionId()] = frame_track;
+  auto scheduler_track_pos =
+      find(sorted_tracks_.begin(), sorted_tracks_.end(), scheduler_track_.get());
+  if (scheduler_track_pos != sorted_tracks_.end()) {
+    sorted_tracks_.insert(++scheduler_track_pos, frame_track.get());
+  } else {
+    sorted_tracks_.push_back(frame_track.get());
+  }
+  UpdateVisibleTrackList();
+}
+
 void TrackManager::RemoveFrameTrack(uint64_t function_id) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::remove(sorted_tracks_.begin(), sorted_tracks_.end(), frame_tracks_[function_id].get());
   frame_tracks_.erase(function_id);
-  sorting_invalidated_ = true;
-  // We need to do SortTracks again to have visible_tracks_ updated
-  SortTracks();
+  UpdateVisibleTrackList();
 }
 
 SchedulerTrack* TrackManager::GetOrCreateSchedulerTrack() {
@@ -388,9 +399,9 @@ FrameTrack* TrackManager::GetOrCreateFrameTrack(
                                             capture_data_);
 
   // Normally we would call AddTrack(track) here, but frame tracks are removable by users
-  // and therefore cannot be simply thrown into the flat vector of tracks.
-  sorting_invalidated_ = true;
-  frame_tracks_[function.function_id()] = track;
+  // and therefore cannot be simply thrown into the flat vector of tracks. Also, we don't want to
+  // trigger a sorting in all the tracks.
+  AddFrameTrack(track);
 
   return track.get();
 }
