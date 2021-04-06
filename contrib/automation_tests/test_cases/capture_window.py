@@ -121,22 +121,7 @@ class MoveTrack(CaptureWindowE2ETestCaseBase):
                        (expected_new_index, index))
 
 
-class MatchTracksBase(CaptureWindowE2ETestCaseBase):
-    """
-    Provides a static method to match track names.
-    """
-    @staticmethod
-    def _match(expected_name: str or Iterable[str], found_name: str) -> bool:
-        if isinstance(expected_name, str):
-            return fnmatch(found_name, expected_name)
-        else:
-            for option in expected_name:
-                if fnmatch(found_name, option):
-                    return True
-        return False
-
-
-class MatchTracks(MatchTracksBase):
+class MatchTracks(CaptureWindowE2ETestCaseBase):
     """
     Verify that the existing visible tracks match the expected tracks
     """
@@ -182,8 +167,18 @@ class MatchTracks(MatchTracksBase):
         if expected_names and not allow_additional_tracks:
             self.expect_eq(names_found, expected_count, "No additional tracks are found")
 
+    @staticmethod
+    def _match(expected_name: str or Iterable[str], found_name: str) -> bool:
+        if isinstance(expected_name, str):
+            return fnmatch(found_name, expected_name)
+        else:
+            for option in expected_name:
+                if fnmatch(found_name, option):
+                    return True
+        return False
 
-class CollapsingTrackBase(MatchTracksBase):
+
+class CollapsingTrackBase(CaptureWindowE2ETestCaseBase):
     """
     Clicks on a track's triangle toggle and calls compares the track's height by calling `_verify_height`.
     """
@@ -194,25 +189,20 @@ class CollapsingTrackBase(MatchTracksBase):
         """
         assert (expected_name is not "")
 
-        tracks = self._find_tracks()
+        tracks = self._find_tracks(expected_name)
 
-        found_track = False
-        for track in [Track(t) for t in tracks]:
-            track_name = track.name
-            if self._match(expected_name, track_name):
-                found_track = True
-                prev_height = track.container.rectangle().height()
-                triangle_toggle = track.triangle_toggle
-                # TODO (b/184237564): Very short mouse clicks (within one frame) will be ignored. Thus we need expand
-                #  the duration of the click explicitly.
-                triangle_toggle.click_input(button_up=False)
-                time.sleep(0.1)
-                triangle_toggle.click_input(button_down=False)
-                post_height = track.container.rectangle().height()
-                self._verify_height(prev_height, post_height, expected_name)
-                break
+        self.expect_true(len(tracks) == 1, 'Found track %s' % expected_name)
+        track = Track(tracks[0])
 
-        self.expect_true(found_track, "Found a match for track name '%s'" % expected_name)
+        prev_height = track.container.rectangle().height()
+        triangle_toggle = track.triangle_toggle
+        # TODO (b/184237564): Very short mouse clicks (within one frame) will be ignored. Thus we need expand
+        #  the duration of the click explicitly.
+        triangle_toggle.click_input(button_up=False)
+        time.sleep(0.1)
+        triangle_toggle.click_input(button_down=False)
+        post_height = track.container.rectangle().height()
+        self._verify_height(prev_height, post_height, expected_name)
 
     def _verify_height(self, prev_click_height, post_click_height, track_name):
         raise NotImplementedError("Implementation required")
