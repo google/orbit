@@ -17,6 +17,7 @@
 #include "CoreUtils.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
+#include "OrbitAccessibility/WrappedAccessibility.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitClientData/Callstack.h"
@@ -31,10 +32,10 @@ using orbit_client_protos::CallstackEvent;
 
 namespace orbit_gl {
 
-CallstackThreadBar::CallstackThreadBar(OrbitApp* app, TimeGraph* time_graph,
-                                       TimeGraphLayout* layout, const CaptureData* capture_data,
-                                       ThreadID thread_id, CaptureViewElement* parent)
-    : ThreadBar(app, time_graph, layout, capture_data, thread_id, parent, "Callstacks"),
+CallstackThreadBar::CallstackThreadBar(WrappedAccessibility* parent, OrbitApp* app,
+                                       TimeGraph* time_graph, TimeGraphLayout* layout,
+                                       const CaptureData* capture_data, ThreadID thread_id)
+    : ThreadBar(parent, app, time_graph, layout, capture_data, thread_id, "Callstacks"),
       color_{0, 255, 0, 255} {}
 
 std::string CallstackThreadBar::GetTooltip() const {

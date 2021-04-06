@@ -12,6 +12,7 @@
 #include <string>
 
 #include "CoreMath.h"
+#include "OrbitAccessibility/WrappedAccessibility.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/CallstackTypes.h"
 #include "OrbitClientModel/CaptureData.h"
@@ -23,9 +24,9 @@ namespace orbit_gl {
 
 class CallstackThreadBar : public ThreadBar {
  public:
-  explicit CallstackThreadBar(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
-                              const CaptureData* capture_data, ThreadID thread_id,
-                              CaptureViewElement* parent);
+  explicit CallstackThreadBar(WrappedAccessibility* parent, OrbitApp* app, TimeGraph* time_graph,
+                              TimeGraphLayout* layout, const CaptureData* capture_data,
+                              ThreadID thread_id);
 
   std::string GetTooltip() const override;
 

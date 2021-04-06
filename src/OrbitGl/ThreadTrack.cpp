@@ -42,15 +42,15 @@ ThreadTrack::ThreadTrack(WrappedAccessibility* parent, TimeGraph* time_graph,
   thread_id_ = thread_id;
   InitializeNameAndLabel(thread_id);
 
-  thread_state_bar_ = std::make_shared<orbit_gl::ThreadStateBar>(app_, time_graph, layout,
-                                                                 capture_data, thread_id_, this);
+  thread_state_bar_ = std::make_shared<orbit_gl::ThreadStateBar>(this, app_, time_graph, layout,
+                                                                 capture_data, thread_id_);
 
-  event_bar_ = std::make_shared<orbit_gl::CallstackThreadBar>(app_, time_graph, layout,
-                                                              capture_data, thread_id_, this);
+  event_bar_ = std::make_shared<orbit_gl::CallstackThreadBar>(this, app_, time_graph, layout,
+                                                              capture_data, thread_id_);
   event_bar_->SetThreadId(thread_id);
 
-  tracepoint_bar_ = std::make_shared<orbit_gl::TracepointThreadBar>(app_, time_graph, layout,
-                                                                    capture_data, thread_id_, this);
+  tracepoint_bar_ = std::make_shared<orbit_gl::TracepointThreadBar>(this, app_, time_graph, layout,
+                                                                    capture_data, thread_id_);
   SetTrackColor(TimeGraph::GetThreadColor(thread_id));
 }
 

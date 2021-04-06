@@ -12,6 +12,7 @@
 #include <string>
 
 #include "CoreMath.h"
+#include "OrbitAccessibility/WrappedAccessibility.h"
 #include "ThreadBar.h"
 
 namespace orbit_gl {
@@ -23,9 +24,9 @@ namespace orbit_gl {
 
 class ThreadStateBar final : public ThreadBar {
  public:
-  explicit ThreadStateBar(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
-                          const CaptureData* capture_data, ThreadID thread_id,
-                          CaptureViewElement* parent);
+  explicit ThreadStateBar(WrappedAccessibility* parent, OrbitApp* app, TimeGraph* time_graph,
+                          TimeGraphLayout* layout, const CaptureData* capture_data,
+                          ThreadID thread_id);
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) override;
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
