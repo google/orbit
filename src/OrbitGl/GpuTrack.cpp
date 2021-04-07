@@ -172,14 +172,17 @@ float GpuTrack::GetYFromTimer(const TimerInfo& timer_info) const {
   CHECK(timer_info.type() == TimerInfo::kGpuActivity ||
         timer_info.type() == TimerInfo::kGpuCommandBuffer);
 
+  // We are drawing a small gap between each depths, as the timers of different depths do not
+  // correlate. There won't be a gap between "hw execution"timers and command buffer timers, which
+  // is why the gap space needs to be calculated before adjusting the depth further (see below).
+  float gap_space = adjusted_depth * layout_->GetSpaceBetweenGpuDepths();
+
   // Command buffer timers are drawn underneath the matching "hw execution" timer, which has the
   // same depth value as the command buffer timer. Therefore, we need to double the depth in the
   // case that we have command buffer timers.
   if (has_vulkan_layer_command_buffer_timers_) {
     adjusted_depth *= 2.f;
   }
-
-  float gap_space = adjusted_depth * layout_->GetSpaceBetweenGpuDepths();
 
   // Command buffer timers have the same depth value as their matching "hw execution" timer.
   // As we want to draw command buffers underneath the hw execution timers, we need to increase
