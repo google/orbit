@@ -24,7 +24,7 @@ class OrbitApp;
 
 class AsyncTrack final : public TimerTrack {
  public:
-  explicit AsyncTrack(WrappedAccessibility* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
+  explicit AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
                       const std::string& name, OrbitApp* app, const CaptureData* capture_data);
 
   [[nodiscard]] Type GetType() const override { return kAsyncTrack; };

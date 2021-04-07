@@ -21,7 +21,7 @@ using orbit_client_protos::TimerInfo;
 const Color kInactiveColor(100, 100, 100, 255);
 const Color kSelectionColor(0, 128, 255, 255);
 
-SchedulerTrack::SchedulerTrack(WrappedAccessibility* parent, TimeGraph* time_graph,
+SchedulerTrack::SchedulerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                                TimeGraphLayout* layout, OrbitApp* app,
                                const CaptureData* capture_data)
     : TimerTrack(parent, time_graph, layout, app, capture_data) {

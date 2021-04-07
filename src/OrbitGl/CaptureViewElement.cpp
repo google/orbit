@@ -9,7 +9,7 @@
 
 namespace orbit_gl {
 
-CaptureViewElement::CaptureViewElement(WrappedAccessibility* parent, TimeGraph* time_graph,
+CaptureViewElement::CaptureViewElement(CaptureViewElement* parent, TimeGraph* time_graph,
                                        TimeGraphLayout* layout)
     : parent_(parent), layout_(layout), time_graph_(time_graph) {
   CHECK(layout != nullptr);
@@ -30,6 +30,13 @@ void CaptureViewElement::OnRelease() {
 void CaptureViewElement::OnDrag(int x, int y) {
   canvas_->ScreenToWorld(x, y, mouse_pos_cur_[0], mouse_pos_cur_[1]);
   time_graph_->RequestUpdatePrimitives();
+}
+
+orbit_accessibility::AccessibleInterface* CaptureViewElement::GetOrCreateAccessibleInterface() {
+  if (accessibility_ == nullptr) {
+    accessibility_ = CreateAccessibleInterface();
+  }
+  return accessibility_.get();
 }
 
 }  // namespace orbit_gl

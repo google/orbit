@@ -45,7 +45,10 @@ using orbit_grpc_protos::kMissingInfo;
 
 TimeGraph::TimeGraph(OrbitApp* app, TextRenderer* text_renderer, GlCanvas* canvas,
                      const CaptureData* capture_data)
-    : text_renderer_{text_renderer},
+    // Note that `GlCanvas` and `TimeGraph` span the bridge to OpenGl content, and `TimeGraph`'s
+    // parent needs special handling for accessibility. Thus, we use `nullptr` here.
+    : orbit_gl::CaptureViewElement(nullptr, this, &layout_),
+      text_renderer_{text_renderer},
       canvas_{canvas},
       batcher_(BatcherId::kTimeGraph),
       capture_data_{capture_data},
@@ -619,7 +622,8 @@ void TimeGraph::RequestUpdatePrimitives() {
 }
 
 // UpdatePrimitives updates all the drawable track timers in the timegraph's batcher
-void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
+void TimeGraph::UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, uint64_t /*max_tick*/,
+                                 PickingMode picking_mode, float /*z_offset*/) {
   ORBIT_SCOPE_FUNCTION;
   CHECK(app_->GetStringManager() != nullptr);
 
@@ -679,13 +683,13 @@ const std::vector<CallstackEvent>& TimeGraph::GetSelectedCallstackEvents(int32_t
   return selected_callstack_events_per_thread_[tid];
 }
 
-void TimeGraph::Draw(GlCanvas* canvas, PickingMode picking_mode) {
+void TimeGraph::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   ORBIT_SCOPE("TimeGraph::Draw");
   current_mouse_time_ns_ = GetTickFromWorld(canvas_->GetMouseX());
 
   const bool picking = picking_mode != PickingMode::kNone;
   if ((!picking && update_primitives_requested_) || picking) {
-    UpdatePrimitives(picking_mode);
+    UpdatePrimitives(nullptr, 0, 0, picking_mode, z_offset);
   }
 
   DrawTracks(canvas, picking_mode);

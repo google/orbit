@@ -11,8 +11,8 @@
 #include <memory>
 #include <string>
 
+#include "CaptureViewElement.h"
 #include "CoreMath.h"
-#include "OrbitAccessibility/WrappedAccessibility.h"
 #include "ThreadBar.h"
 
 namespace orbit_gl {
@@ -24,7 +24,7 @@ namespace orbit_gl {
 
 class ThreadStateBar final : public ThreadBar {
  public:
-  explicit ThreadStateBar(WrappedAccessibility* parent, OrbitApp* app, TimeGraph* time_graph,
+  explicit ThreadStateBar(CaptureViewElement* parent, OrbitApp* app, TimeGraph* time_graph,
                           TimeGraphLayout* layout, const CaptureData* capture_data,
                           ThreadID thread_id);
 

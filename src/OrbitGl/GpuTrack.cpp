@@ -65,7 +65,7 @@ std::string MapGpuTimelineToTrackLabel(std::string_view timeline) {
 
 }  // namespace orbit_gl
 
-GpuTrack::GpuTrack(WrappedAccessibility* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
+GpuTrack::GpuTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
                    uint64_t timeline_hash, OrbitApp* app, const CaptureData* capture_data)
     : TimerTrack(parent, time_graph, layout, app, capture_data) {
   text_renderer_ = time_graph->GetTextRenderer();

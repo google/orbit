@@ -18,11 +18,11 @@
 #include "AccessibleTimeGraph.h"
 #include "Batcher.h"
 #include "CallstackThreadBar.h"
+#include "CaptureViewElement.h"
 #include "CoreMath.h"
 #include "CoreUtils.h"
 #include "ManualInstrumentationManager.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
-#include "OrbitAccessibility/WrappedAccessibility.h"
 #include "OrbitClientModel/CaptureData.h"
 #include "PickingManager.h"
 #include "TextBox.h"
@@ -36,19 +36,21 @@
 
 class OrbitApp;
 
-class TimeGraph : public orbit_accessibility::WrappedAccessibility {
+class TimeGraph : public orbit_gl::CaptureViewElement {
  public:
   explicit TimeGraph(OrbitApp* app, TextRenderer* text_renderer, GlCanvas* canvas,
                      const CaptureData* capture_data);
   ~TimeGraph();
 
-  void Draw(GlCanvas* canvas, PickingMode picking_mode = PickingMode::kNone);
+  void Draw(GlCanvas* canvas, PickingMode picking_mode = PickingMode::kNone,
+            float /*z_offset*/ = 0) override;
   void DrawTracks(GlCanvas* canvas, PickingMode picking_mode = PickingMode::kNone);
   void DrawOverlay(GlCanvas* canvas, PickingMode picking_mode);
   void DrawText(GlCanvas* canvas, float layer);
 
   void RequestUpdatePrimitives();
-  void UpdatePrimitives(PickingMode picking_mode);
+  void UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, uint64_t /*max_tick*/,
+                        PickingMode /*picking_mode*/, float /*z_offset*/ = 0) override;
   void SelectCallstacks(float world_start, float world_end, int32_t thread_id);
   const std::vector<orbit_client_protos::CallstackEvent>& GetSelectedCallstackEvents(int32_t tid);
 

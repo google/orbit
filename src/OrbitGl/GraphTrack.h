@@ -15,7 +15,6 @@
 
 #include "Batcher.h"
 #include "CoreMath.h"
-#include "OrbitAccessibility/WrappedAccessibility.h"
 #include "PickingManager.h"
 #include "Timer.h"
 #include "Track.h"
@@ -24,7 +23,7 @@ class TimeGraph;
 
 class GraphTrack : public Track {
  public:
-  explicit GraphTrack(WrappedAccessibility* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
+  explicit GraphTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
                       std::string name, const CaptureData* capture_data);
   [[nodiscard]] Type GetType() const override { return kGraphTrack; }
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;

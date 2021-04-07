@@ -29,7 +29,7 @@ ABSL_DECLARE_FLAG(bool, show_return_values);
 
 const Color TimerTrack::kHighlightColor = Color(100, 181, 246, 255);
 
-TimerTrack::TimerTrack(WrappedAccessibility* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
+TimerTrack::TimerTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
                        OrbitApp* app, const CaptureData* capture_data)
     : Track(parent, time_graph, layout, capture_data), app_{app} {
   text_renderer_ = time_graph->GetTextRenderer();

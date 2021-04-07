@@ -16,7 +16,7 @@
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 
-GraphTrack::GraphTrack(WrappedAccessibility* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
+GraphTrack::GraphTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
                        std::string name, const CaptureData* capture_data)
     : Track(parent, time_graph, layout, capture_data) {
   SetName(name);

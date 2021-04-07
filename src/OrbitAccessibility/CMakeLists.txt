@@ -20,15 +20,12 @@ target_sources(
   PUBLIC include/OrbitAccessibility/AccessibleInterface.h
          include/OrbitAccessibility/AccessibleInterfaceRegistry.h
          include/OrbitAccessibility/AccessibleObjectFake.h
-         include/OrbitAccessibility/AccessibleWidgetBridge.h
-         include/OrbitAccessibility/WrappedAccessibility.h
-         )
+         include/OrbitAccessibility/AccessibleWidgetBridge.h)
 
 target_sources(
   OrbitAccessibility
   PRIVATE AccessibleInterface.cpp
-          AccessibleInterfaceRegistry.cpp
-          WrappedAccessibility.cpp)
+          AccessibleInterfaceRegistry.cpp)
 
 target_link_libraries(
   OrbitAccessibility
