@@ -94,6 +94,9 @@ if [ -n "$1" ]; then
   if [[ $CONAN_PROFILE == "msvc2017_relwithdebinfo" ]]; then
     CONAN_PROFILE="msvc2017_relwithdebinfo_ninja"
   fi
+  if [[ $CONAN_PROFILE == "msvc2019_relwithdebinfo" ]]; then
+    CONAN_PROFILE="msvc2019_relwithdebinfo_ninja"
+  fi
 
   echo "Using conan profile ${CONAN_PROFILE} and performing a ${BUILD_TYPE} build."
 
