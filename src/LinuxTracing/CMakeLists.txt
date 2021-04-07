@@ -87,37 +87,3 @@ target_link_libraries(LinuxTracingTests PRIVATE
         GTest::Main)
 
 register_test(LinuxTracingTests)
-
-add_library(LinuxTracingIntegrationTestPuppetSharedObject SHARED)
-
-target_compile_options(LinuxTracingIntegrationTestPuppetSharedObject PRIVATE ${STRICT_COMPILE_FLAGS})
-
-target_sources(LinuxTracingIntegrationTestPuppetSharedObject PRIVATE
-        LinuxTracingIntegrationTestPuppetSharedObject.cpp)
-
-target_link_libraries(LinuxTracingIntegrationTestPuppetSharedObject PUBLIC
-        dl
-        OrbitBase)
-
-strip_symbols(LinuxTracingIntegrationTestPuppetSharedObject)
-
-add_executable(LinuxTracingIntegrationTests)
-
-target_compile_options(LinuxTracingIntegrationTests PRIVATE ${STRICT_COMPILE_FLAGS})
-
-target_sources(LinuxTracingIntegrationTests PRIVATE
-        LinuxTracingIntegrationTest.cpp
-        LinuxTracingIntegrationTestPuppet.cpp
-        LinuxTracingIntegrationTestPuppet.h)
-
-target_link_libraries(LinuxTracingIntegrationTests PRIVATE
-        ElfUtils
-        LinuxTracing
-        OrbitBase
-        GTest::GTest
-        GTest::Main
-        CONAN_PKG::abseil)
-
-strip_symbols(LinuxTracingIntegrationTests)
-
-register_test(LinuxTracingIntegrationTests)

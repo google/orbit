@@ -8,7 +8,6 @@
 #include <absl/time/clock.h>
 #include <dlfcn.h>
 #include <pthread.h>
-#include <sched.h>
 #include <stddef.h>
 
 #include <filesystem>
