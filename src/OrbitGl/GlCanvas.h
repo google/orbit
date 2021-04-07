@@ -168,8 +168,6 @@ class GlCanvas {
 
  protected:
   [[nodiscard]] PickingMode GetPickingMode();
-  [[nodiscard]] virtual std::unique_ptr<orbit_accessibility::AccessibleInterface>
-  CreateAccessibleInterface();
 
   int screen_width_;
   int screen_height_;
@@ -220,6 +218,9 @@ class GlCanvas {
   Batcher ui_batcher_;
   std::vector<RenderCallback> render_callbacks_;
 
+ private:
+  [[nodiscard]] virtual std::unique_ptr<orbit_accessibility::AccessibleInterface>
+  CreateAccessibleInterface();
   std::unique_ptr<orbit_accessibility::AccessibleInterface> accessibility_;
 };
 
