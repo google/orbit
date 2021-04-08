@@ -331,10 +331,8 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
           app_->GetCaptureData().GetFunctionStatsOrDefault(instrumented_function_id);
       if (stats.count() > 0) {
         live_functions_->AddIterator(instrumented_function_id, &instrumented_function);
-        if (metrics_uploader_ != nullptr) {
-          metrics_uploader_->SendLogEvent(
-              orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_ITERATOR_ADD);
-        }
+        metrics_uploader_->SendLogEvent(
+            orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_ITERATOR_ADD);
       }
     }
   } else if (action == kMenuActionEnableFrameTrack) {
