@@ -9,15 +9,16 @@
 
 #include <string>
 
+#include "CaptureViewElement.h"
 #include "ThreadBar.h"
 
 namespace orbit_gl {
 
 class TracepointThreadBar : public ThreadBar {
  public:
-  explicit TracepointThreadBar(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
-                               const CaptureData* capture_data, int32_t thread_id,
-                               CaptureViewElement* parent);
+  explicit TracepointThreadBar(CaptureViewElement* parent, OrbitApp* app, TimeGraph* time_graph,
+                               TimeGraphLayout* layout, const CaptureData* capture_data,
+                               int32_t thread_id);
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
 

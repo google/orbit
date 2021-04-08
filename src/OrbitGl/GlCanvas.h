@@ -137,6 +137,9 @@ class GlCanvas {
   [[nodiscard]] PickingManager& GetPickingManager() { return picking_manager_; }
 
   [[nodiscard]] orbit_accessibility::AccessibleInterface* GetOrCreateAccessibleInterface();
+  [[nodiscard]] const orbit_accessibility::AccessibleInterface* GetAccessibleInterface() const {
+    return accessibility_.get();
+  }
 
   static float kZValueSlider;
   static float kZValueSliderBg;
@@ -165,8 +168,6 @@ class GlCanvas {
 
  protected:
   [[nodiscard]] PickingMode GetPickingMode();
-
-  std::unique_ptr<orbit_accessibility::AccessibleInterface> accessibility_;
 
   int screen_width_;
   int screen_height_;
@@ -218,8 +219,9 @@ class GlCanvas {
   std::vector<RenderCallback> render_callbacks_;
 
  private:
-  [[nodiscard]] virtual std::unique_ptr<orbit_accessibility::AccessibleWidgetBridge>
-  CreateAccessibilityInterface();
+  [[nodiscard]] virtual std::unique_ptr<orbit_accessibility::AccessibleInterface>
+  CreateAccessibleInterface();
+  std::unique_ptr<orbit_accessibility::AccessibleInterface> accessibility_;
 };
 
 #endif  // ORBIT_GL_GL_CANVAS_H_

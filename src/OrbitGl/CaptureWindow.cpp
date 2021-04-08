@@ -519,7 +519,7 @@ void CaptureWindow::OnContextMenu(const std::string& /*action*/, int /*menu_inde
 
 bool CaptureWindow::ShouldAutoZoom() const { return app_->IsCapturing(); }
 
-std::unique_ptr<AccessibleWidgetBridge> CaptureWindow::CreateAccessibilityInterface() {
+std::unique_ptr<AccessibleInterface> CaptureWindow::CreateAccessibleInterface() {
   return std::make_unique<AccessibleCaptureWindow>(this);
 }
 
@@ -533,6 +533,9 @@ void CaptureWindow::Draw() {
   picking_manager_.Reset();
 
   if (time_graph_ != nullptr) {
+    time_graph_->SetPos(0, GetWorldTopLeftX());
+    time_graph_->SetSize(static_cast<float>(GetWidth()), static_cast<float>(GetHeight()));
+
     time_graph_->Draw(this, GetPickingMode());
   }
 

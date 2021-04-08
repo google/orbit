@@ -11,6 +11,7 @@
 
 #include "App.h"
 #include "Batcher.h"
+#include "CaptureViewElement.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
@@ -22,10 +23,10 @@ using orbit_client_protos::ThreadStateSliceInfo;
 
 namespace orbit_gl {
 
-ThreadStateBar::ThreadStateBar(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
-                               const CaptureData* capture_data, ThreadID thread_id,
-                               CaptureViewElement* parent)
-    : ThreadBar(app, time_graph, layout, capture_data, thread_id, parent, "ThreadState") {}
+ThreadStateBar::ThreadStateBar(CaptureViewElement* parent, OrbitApp* app, TimeGraph* time_graph,
+                               TimeGraphLayout* layout, const CaptureData* capture_data,
+                               ThreadID thread_id)
+    : ThreadBar(parent, app, time_graph, layout, capture_data, thread_id, "ThreadState") {}
 
 bool ThreadStateBar::IsEmpty() const {
   if (capture_data_ == nullptr) return true;

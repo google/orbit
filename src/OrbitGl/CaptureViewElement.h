@@ -18,7 +18,8 @@ namespace orbit_gl {
 /* Base class for UI elements drawn underneath the capture window. */
 class CaptureViewElement : public Pickable {
  public:
-  explicit CaptureViewElement(TimeGraph* time_graph, TimeGraphLayout* layout);
+  explicit CaptureViewElement(CaptureViewElement* parent, TimeGraph* time_graph,
+                              TimeGraphLayout* layout);
   virtual void Draw(GlCanvas* canvas, PickingMode /*picking_mode*/, float /*z_offset*/ = 0) {
     canvas_ = canvas;
   }
@@ -35,22 +36,23 @@ class CaptureViewElement : public Pickable {
   void SetSize(float width, float height) { size_ = Vec2(width, height); }
   [[nodiscard]] Vec2 GetSize() const { return size_; }
 
-  [[nodiscard]] orbit_accessibility::AccessibleInterface* GetOrCreateAccessibleInterface();
-  [[nodiscard]] const orbit_accessibility::AccessibleInterface* GetAccessibleInterface() const {
-    return accessible_interface_.get();
-  }
-
   // Pickable
   void OnPick(int x, int y) override;
   void OnRelease() override;
   void OnDrag(int x, int y) override;
   [[nodiscard]] bool Draggable() override { return true; }
 
+  // Accessibility
+  [[nodiscard]] orbit_accessibility::AccessibleInterface* GetOrCreateAccessibleInterface();
+  [[nodiscard]] const orbit_accessibility::AccessibleInterface* GetAccessibleInterface() const {
+    return accessibility_.get();
+  }
+
+  [[nodiscard]] virtual CaptureViewElement* GetParent() const { return parent_; }
+
  protected:
+  CaptureViewElement* parent_;
   TimeGraphLayout* layout_;
-  virtual std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() {
-    return {};
-  };
 
   GlCanvas* canvas_ = nullptr;
   TimeGraph* time_graph_;
@@ -62,7 +64,10 @@ class CaptureViewElement : public Pickable {
   Vec2 picking_offset_ = Vec2(0, 0);
   bool picked_ = false;
 
-  std::unique_ptr<orbit_accessibility::AccessibleInterface> accessible_interface_;
+ private:
+  [[nodiscard]] virtual std::unique_ptr<orbit_accessibility::AccessibleInterface>
+  CreateAccessibleInterface() = 0;
+  std::unique_ptr<orbit_accessibility::AccessibleInterface> accessibility_;
 };
 }  // namespace orbit_gl
 

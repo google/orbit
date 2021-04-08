@@ -23,9 +23,9 @@ namespace orbit_gl {
 
 class CallstackThreadBar : public ThreadBar {
  public:
-  explicit CallstackThreadBar(OrbitApp* app, TimeGraph* time_graph, TimeGraphLayout* layout,
-                              const CaptureData* capture_data, ThreadID thread_id,
-                              CaptureViewElement* parent);
+  explicit CallstackThreadBar(CaptureViewElement* parent, OrbitApp* app, TimeGraph* time_graph,
+                              TimeGraphLayout* layout, const CaptureData* capture_data,
+                              ThreadID thread_id);
 
   std::string GetTooltip() const override;
 

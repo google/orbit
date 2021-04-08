@@ -35,21 +35,21 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::InstrumentedFunction;
 
-ThreadTrack::ThreadTrack(TimeGraph* time_graph, TimeGraphLayout* layout, int32_t thread_id,
-                         OrbitApp* app, const CaptureData* capture_data)
-    : TimerTrack(time_graph, layout, app, capture_data) {
+ThreadTrack::ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
+                         int32_t thread_id, OrbitApp* app, const CaptureData* capture_data)
+    : TimerTrack(parent, time_graph, layout, app, capture_data) {
   thread_id_ = thread_id;
   InitializeNameAndLabel(thread_id);
 
-  thread_state_bar_ = std::make_shared<orbit_gl::ThreadStateBar>(app_, time_graph, layout,
-                                                                 capture_data, thread_id_, this);
+  thread_state_bar_ = std::make_shared<orbit_gl::ThreadStateBar>(this, app_, time_graph, layout,
+                                                                 capture_data, thread_id_);
 
-  event_bar_ = std::make_shared<orbit_gl::CallstackThreadBar>(app_, time_graph, layout,
-                                                              capture_data, thread_id_, this);
+  event_bar_ = std::make_shared<orbit_gl::CallstackThreadBar>(this, app_, time_graph, layout,
+                                                              capture_data, thread_id_);
   event_bar_->SetThreadId(thread_id);
 
-  tracepoint_bar_ = std::make_shared<orbit_gl::TracepointThreadBar>(app_, time_graph, layout,
-                                                                    capture_data, thread_id_, this);
+  tracepoint_bar_ = std::make_shared<orbit_gl::TracepointThreadBar>(this, app_, time_graph, layout,
+                                                                    capture_data, thread_id_);
   SetTrackColor(TimeGraph::GetThreadColor(thread_id));
 }
 

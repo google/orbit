@@ -18,7 +18,7 @@
 
 TriangleToggle::TriangleToggle(State initial_state, StateChangeHandler handler,
                                TimeGraph* time_graph, TimeGraphLayout* layout, Track* track)
-    : CaptureViewElement(time_graph, layout),
+    : CaptureViewElement(track, time_graph, layout),
       track_(track),
       state_(initial_state),
       initial_state_(initial_state),

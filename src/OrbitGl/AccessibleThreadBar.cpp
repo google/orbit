@@ -34,9 +34,10 @@ orbit_accessibility::AccessibilityRect orbit_gl::AccessibleThreadBar::Accessible
   Vec2 pos = thread_bar_->GetPos();
   Vec2 local_pos;
 
+  const CaptureViewElement* parent = thread_bar_->GetParent();
   // TODO(b/177350599): This could be cleaned up with clearer coordinate systems
-  if (thread_bar_->GetParent() != nullptr) {
-    Vec2 parent_pos = thread_bar_->GetParent()->GetPos();
+  if (parent != nullptr) {
+    Vec2 parent_pos = parent->GetPos();
     local_pos = Vec2(pos[0] - parent_pos[0], parent_pos[1] - pos[1]);
   } else {
     local_pos = pos;

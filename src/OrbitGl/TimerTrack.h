@@ -15,6 +15,7 @@
 
 #include "BlockChain.h"
 #include "CallstackThreadBar.h"
+#include "CaptureViewElement.h"
 #include "CoreMath.h"
 #include "OrbitClientData/CallstackTypes.h"
 #include "PickingManager.h"
@@ -50,8 +51,8 @@ struct DrawData {
 
 class TimerTrack : public Track {
  public:
-  explicit TimerTrack(TimeGraph* time_graph, TimeGraphLayout* layout, OrbitApp* app,
-                      const CaptureData* capture_data);
+  explicit TimerTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
+                      OrbitApp* app, const CaptureData* capture_data);
   ~TimerTrack() override = default;
 
   // Pickable

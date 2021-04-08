@@ -21,9 +21,10 @@ using orbit_client_protos::TimerInfo;
 const Color kInactiveColor(100, 100, 100, 255);
 const Color kSelectionColor(0, 128, 255, 255);
 
-SchedulerTrack::SchedulerTrack(TimeGraph* time_graph, TimeGraphLayout* layout, OrbitApp* app,
+SchedulerTrack::SchedulerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+                               TimeGraphLayout* layout, OrbitApp* app,
                                const CaptureData* capture_data)
-    : TimerTrack(time_graph, layout, app, capture_data) {
+    : TimerTrack(parent, time_graph, layout, app, capture_data) {
   SetPinned(false);
   SetName("Scheduler");
   SetLabel("Scheduler (0 cores)");
