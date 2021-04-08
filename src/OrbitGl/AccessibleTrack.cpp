@@ -105,11 +105,12 @@ AccessibilityRect AccessibleTrackContent::AccessibleLocalRect() const {
   CHECK(track_ != nullptr);
 
   GlCanvas* canvas = track_->GetCanvas();
+  const Viewport& viewport = canvas->GetViewport();
 
-  return AccessibilityRect(canvas->GetViewport().WorldToScreenWidth(0),
-                           canvas->GetViewport().WorldToScreenHeight(layout_->GetTrackTabHeight()),
-                           canvas->GetViewport().WorldToScreenWidth(track_->GetSize()[0]),
-                           canvas->GetViewport().WorldToScreenHeight(track_->GetSize()[1]));
+  return AccessibilityRect(viewport.WorldToScreenWidth(0),
+                           viewport.WorldToScreenHeight(layout_->GetTrackTabHeight()),
+                           viewport.WorldToScreenWidth(track_->GetSize()[0]),
+                           viewport.WorldToScreenHeight(track_->GetSize()[1]));
 }
 
 AccessibilityState AccessibleTrackContent::AccessibleState() const {
@@ -135,11 +136,12 @@ AccessibilityRect AccessibleTrackTab::AccessibleLocalRect() const {
   CHECK(track_ != nullptr);
 
   GlCanvas* canvas = track_->GetCanvas();
+  const Viewport& viewport = canvas->GetViewport();
 
-  return AccessibilityRect(canvas->GetViewport().WorldToScreenWidth(layout_->GetTrackTabOffset()),
-                           canvas->GetViewport().WorldToScreenHeight(0),
-                           canvas->GetViewport().WorldToScreenWidth(layout_->GetTrackTabWidth()),
-                           canvas->GetViewport().WorldToScreenHeight(layout_->GetTrackTabHeight()));
+  return AccessibilityRect(viewport.WorldToScreenWidth(layout_->GetTrackTabOffset()),
+                           viewport.WorldToScreenHeight(0),
+                           viewport.WorldToScreenWidth(layout_->GetTrackTabWidth()),
+                           viewport.WorldToScreenHeight(layout_->GetTrackTabHeight()));
 }
 
 AccessibilityState AccessibleTrackTab::AccessibleState() const {
@@ -175,18 +177,19 @@ AccessibilityRect AccessibleTrack::AccessibleLocalRect() const {
   Vec2 size = track_->GetSize();
   size[1] += layout_->GetTrackTabHeight();
 
-  Vec2i screen_pos = canvas->GetViewport().WorldToScreenPos(pos);
-  int screen_width = canvas->GetViewport().WorldToScreenWidth(size[0]);
-  int screen_height = canvas->GetViewport().WorldToScreenHeight(size[1]);
+  const Viewport& viewport = canvas->GetViewport();
+
+  Vec2i screen_pos = viewport.WorldToScreenPos(pos);
+  int screen_width = viewport.WorldToScreenWidth(size[0]);
+  int screen_height = viewport.WorldToScreenHeight(size[1]);
 
   // Adjust the coordinates to clamp the result to an on-screen rect
   // This will "cut" any part that is offscreen due to scrolling, and may result
   // in a final result with width / height of 0.
 
   // First: Clamp bottom
-  if (screen_pos[1] + screen_height > canvas->GetViewport().GetHeight()) {
-    screen_height =
-        std::max(0, canvas->GetViewport().GetHeight() - static_cast<int>(screen_pos[1]));
+  if (screen_pos[1] + screen_height > viewport.GetScreenHeight()) {
+    screen_height = std::max(0, viewport.GetScreenHeight() - static_cast<int>(screen_pos[1]));
   }
   // Second: Clamp top
   if (screen_pos[1] < 0) {

@@ -183,7 +183,7 @@ bool GlSlider::HandlePageScroll(float click_value) {
 void GlVerticalSlider::Draw(GlCanvas* canvas) {
   CHECK(canvas == canvas_);
 
-  float x = canvas_->GetViewport().GetWidth() - GetPixelHeight();
+  float x = canvas_->GetViewport().GetScreenWidth() - GetPixelHeight();
 
   float bar_pixel_len = GetBarPixelLength();
   float slider_height = ceilf(length_ratio_ * bar_pixel_len);
@@ -200,7 +200,7 @@ void GlVerticalSlider::Draw(GlCanvas* canvas) {
 }
 
 int GlVerticalSlider::GetBarPixelLength() const {
-  return canvas_->GetViewport().GetHeight() - GetOrthogonalSliderSize();
+  return canvas_->GetViewport().GetScreenHeight() - GetOrthogonalSliderSize();
 }
 
 void GlHorizontalSlider::Draw(GlCanvas* canvas) {
@@ -271,5 +271,5 @@ void GlHorizontalSlider::Draw(GlCanvas* canvas) {
 }
 
 int GlHorizontalSlider::GetBarPixelLength() const {
-  return canvas_->GetViewport().GetWidth() - GetOrthogonalSliderSize();
+  return canvas_->GetViewport().GetScreenWidth() - GetOrthogonalSliderSize();
 }

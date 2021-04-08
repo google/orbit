@@ -228,15 +228,15 @@ bool GlCanvas::ControlPressed() { return control_key_; }
 
 /** Inits the OpenGL viewport for drawing in 2D. */
 void GlCanvas::PrepareWorldSpaceViewport() {
-  const int top_left_x = 0, top_left_y = 0, bottom_right_x = viewport_.GetWidth(),
-            bottom_right_y = viewport_.GetHeight();
+  const int top_left_x = 0, top_left_y = 0, bottom_right_x = viewport_.GetScreenWidth(),
+            bottom_right_y = viewport_.GetScreenHeight();
   glViewport(top_left_x, top_left_y, bottom_right_x - top_left_x, bottom_right_y - top_left_y);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
 
   Vec2 top_left = viewport_.GetWorldTopLeft();
-  float width = viewport_.GetWorldWidth();
-  float height = viewport_.GetWorldHeight();
+  float width = viewport_.GetVisibleWorldWidth();
+  float height = viewport_.GetVisibleWorldHeight();
 
   glOrtho(top_left[0], top_left[0] + width, top_left[1] - height, top_left[1], -1, 1);
   glMatrixMode(GL_MODELVIEW);
@@ -245,10 +245,10 @@ void GlCanvas::PrepareWorldSpaceViewport() {
 
 void GlCanvas::PrepareScreenSpaceViewport() {
   ORBIT_SCOPE_FUNCTION;
-  glViewport(0, 0, viewport_.GetWidth(), viewport_.GetHeight());
+  glViewport(0, 0, viewport_.GetScreenWidth(), viewport_.GetScreenHeight());
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  glOrtho(0, viewport_.GetWidth(), 0, viewport_.GetHeight(), -1, 1);
+  glOrtho(0, viewport_.GetScreenWidth(), 0, viewport_.GetScreenHeight(), -1, 1);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 }
@@ -276,7 +276,7 @@ void GlCanvas::CleanupGlState() { glPopAttrib(); }
 
 void GlCanvas::Render(int width, int height) {
   ORBIT_SCOPE("GlCanvas::Render");
-  CHECK(width == viewport_.GetWidth() && height == viewport_.GetHeight());
+  CHECK(width == viewport_.GetScreenWidth() && height == viewport_.GetScreenHeight());
 
   if (!IsRedrawNeeded()) {
     return;
@@ -336,7 +336,7 @@ void GlCanvas::PostRender() {
 
   if (prev_picking_mode != PickingMode::kNone) {
     Pick(prev_picking_mode, mouse_move_pos_screen_[0], mouse_move_pos_screen_[1]);
-    GlCanvas::Render(viewport_.GetWidth(), viewport_.GetHeight());
+    GlCanvas::Render(viewport_.GetScreenWidth(), viewport_.GetScreenHeight());
   }
 
   viewport_.ClearDirtyFlag();
@@ -344,8 +344,8 @@ void GlCanvas::PostRender() {
 
 void GlCanvas::Resize(int width, int height) {
   viewport_.Resize(width, height);
-  viewport_.SetWorldWidth(width);
-  viewport_.SetWorldHeight(height);
+  viewport_.SetVisibleWorldWidth(width);
+  viewport_.SetVisibleWorldHeight(height);
 }
 
 void GlCanvas::ResetHoverTimer() {
@@ -361,7 +361,7 @@ void GlCanvas::SetPickingMode(PickingMode mode) {
 void GlCanvas::Pick(PickingMode picking_mode, int x, int y) {
   // 4 bytes per pixel (RGBA), 1x1 bitmap
   std::array<uint8_t, 4 * 1 * 1> pixels{};
-  glReadPixels(x, viewport_.GetHeight() - y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0]);
+  glReadPixels(x, viewport_.GetScreenHeight() - y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0]);
   uint32_t value;
   std::memcpy(&value, &pixels[0], sizeof(uint32_t));
   PickingId pick_id = PickingId::FromPixelValue(value);

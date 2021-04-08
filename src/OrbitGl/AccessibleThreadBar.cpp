@@ -8,6 +8,7 @@
 #include "OrbitBase/Logging.h"
 #include "ThreadBar.h"
 #include "Track.h"
+#include "Viewport.h"
 
 namespace orbit_gl {
 
@@ -45,12 +46,12 @@ orbit_accessibility::AccessibilityRect orbit_gl::AccessibleThreadBar::Accessible
 
   GlCanvas* canvas = thread_bar_->GetCanvas();
   CHECK(canvas != nullptr);
+  const Viewport& viewport = canvas->GetViewport();
 
   return orbit_accessibility::AccessibilityRect(
-      canvas->GetViewport().WorldToScreenWidth(local_pos[0]),
-      canvas->GetViewport().WorldToScreenHeight(local_pos[1]),
-      canvas->GetViewport().WorldToScreenWidth(thread_bar_->GetSize()[0]),
-      canvas->GetViewport().WorldToScreenHeight(thread_bar_->GetSize()[1]));
+      viewport.WorldToScreenWidth(local_pos[0]), viewport.WorldToScreenHeight(local_pos[1]),
+      viewport.WorldToScreenWidth(thread_bar_->GetSize()[0]),
+      viewport.WorldToScreenHeight(thread_bar_->GetSize()[1]));
 }
 
 orbit_accessibility::AccessibilityState AccessibleThreadBar::AccessibleState() const {

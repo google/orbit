@@ -274,19 +274,20 @@ void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offse
   const float thread_state_track_height = layout_->GetThreadStateTrackHeight();
   const float event_track_height = layout_->GetEventTrackHeight();
   const float tracepoint_track_height = layout_->GetEventTrackHeight();
+  const float world_width = canvas->GetViewport().GetVisibleWorldWidth();
 
   if (!thread_state_bar_->IsEmpty()) {
-    thread_state_bar_->SetSize(canvas->GetViewport().GetWorldWidth(), thread_state_track_height);
+    thread_state_bar_->SetSize(world_width, thread_state_track_height);
     thread_state_bar_->Draw(canvas, picking_mode, z_offset);
   }
 
   if (!event_bar_->IsEmpty()) {
-    event_bar_->SetSize(canvas->GetViewport().GetWorldWidth(), event_track_height);
+    event_bar_->SetSize(world_width, event_track_height);
     event_bar_->Draw(canvas, picking_mode, z_offset);
   }
 
   if (!tracepoint_bar_->IsEmpty()) {
-    tracepoint_bar_->SetSize(canvas->GetViewport().GetWorldWidth(), tracepoint_track_height);
+    tracepoint_bar_->SetSize(world_width, tracepoint_track_height);
     tracepoint_bar_->Draw(canvas, picking_mode, z_offset);
   }
 }
@@ -443,7 +444,8 @@ static inline void ResizeTextBox(const internal::DrawData& draw_data, const Time
 [[nodiscard]] static inline uint64_t GetNextPixelBoundaryTimeNs(
     float world_x, const internal::DrawData& draw_data) {
   float normalized_x = (world_x - draw_data.world_start_x) / draw_data.world_width;
-  int pixel_x = static_cast<int>(ceil(normalized_x * draw_data.canvas->GetViewport().GetWidth()));
+  int pixel_x =
+      static_cast<int>(ceil(normalized_x * draw_data.canvas->GetViewport().GetScreenWidth()));
   return draw_data.min_tick + pixel_x * draw_data.ns_per_pixel;
 }
 

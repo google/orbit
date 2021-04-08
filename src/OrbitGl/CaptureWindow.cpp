@@ -108,7 +108,7 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool right, bool middle)
   // Pan
   if (left && !picking_manager_.IsDragging() && !app_->IsCapturing()) {
     Vec2i mouse_click_screen = viewport_.WorldToScreenPos(mouse_click_pos_world_);
-    time_graph_->PanTime(mouse_click_screen[0], x, viewport_.GetWidth(), ref_time_click_);
+    time_graph_->PanTime(mouse_click_screen[0], x, viewport_.GetScreenWidth(), ref_time_click_);
     RequestUpdatePrimitives();
 
     click_was_drag_ = true;
@@ -126,7 +126,7 @@ void CaptureWindow::LeftDown(int x, int y) {
   click_was_drag_ = false;
 
   if (time_graph_ == nullptr) return;
-  ref_time_click_ = time_graph_->GetTime(static_cast<double>(x) / viewport_.GetWidth());
+  ref_time_click_ = time_graph_->GetTime(static_cast<double>(x) / viewport_.GetScreenWidth());
 }
 
 void CaptureWindow::LeftUp() {
@@ -204,7 +204,7 @@ void CaptureWindow::PostRender() {
   // TODO: This should not be needed, but the extents of track heights may change after drawing
   // This will re-request updatePrimitives() if the height changed.
   if (time_graph_ != nullptr) {
-    viewport_.SetWorldExtents(viewport_.GetWidth(),
+    viewport_.SetWorldExtents(viewport_.GetScreenWidth(),
                               time_graph_->GetTrackManager()->GetTracksTotalHeight());
   }
 }
@@ -241,13 +241,14 @@ void CaptureWindow::Zoom(ZoomDirection dir, int delta) {
   if (time_graph_ != nullptr) {
     switch (dir) {
       case ZoomDirection::kHorizontal: {
-        double mouse_ratio = static_cast<double>(mouse_move_pos_screen_[0]) / viewport_.GetWidth();
+        double mouse_ratio =
+            static_cast<double>(mouse_move_pos_screen_[0]) / viewport_.GetScreenWidth();
         time_graph_->ZoomTime(delta_float, mouse_ratio);
         break;
       }
       case ZoomDirection::kVertical: {
         float mouse_ratio = static_cast<float>(mouse_move_pos_screen_[1]) /
-                            static_cast<float>(viewport_.GetHeight());
+                            static_cast<float>(viewport_.GetScreenHeight());
         time_graph_->VerticalZoom(delta_float, mouse_ratio);
       }
     }
@@ -258,12 +259,12 @@ void CaptureWindow::Zoom(ZoomDirection dir, int delta) {
 
 void CaptureWindow::Pan(float ratio) {
   if (time_graph_ == nullptr) return;
-  double ref_time =
-      time_graph_->GetTime(static_cast<double>(mouse_move_pos_screen_[0]) / viewport_.GetWidth());
+  double ref_time = time_graph_->GetTime(static_cast<double>(mouse_move_pos_screen_[0]) /
+                                         viewport_.GetScreenWidth());
   time_graph_->PanTime(mouse_move_pos_screen_[0],
                        mouse_move_pos_screen_[0] +
-                           static_cast<int>(ratio * static_cast<float>(viewport_.GetWidth())),
-                       viewport_.GetWidth(), ref_time);
+                           static_cast<int>(ratio * static_cast<float>(viewport_.GetScreenWidth())),
+                       viewport_.GetScreenWidth(), ref_time);
   RequestUpdatePrimitives();
 }
 
@@ -369,7 +370,7 @@ void CaptureWindow::Draw() {
   }
 
   if (time_graph_ != nullptr) {
-    viewport_.SetWorldExtents(viewport_.GetWidth(),
+    viewport_.SetWorldExtents(viewport_.GetScreenWidth(),
                               time_graph_->GetTrackManager()->GetTracksTotalHeight());
     if (viewport_.IsDirty()) {
       time_graph_->SetPos(0, 0);
@@ -387,7 +388,8 @@ void CaptureWindow::Draw() {
 
     Vec2 pos = viewport_.ScreenToWorldPos(Vec2i(mouse_move_pos_screen_[0], 0));
     // Vertical green line at mouse x position
-    ui_batcher_.AddVerticalLine(pos, -viewport_.GetWorldHeight(), kZValueUi, Color(0, 255, 0, 127));
+    ui_batcher_.AddVerticalLine(pos, -viewport_.GetVisibleWorldHeight(), kZValueUi,
+                                Color(0, 255, 0, 127));
 
     if (draw_help_) {
       RenderHelpUi();
@@ -444,7 +446,7 @@ void CaptureWindow::DrawScreenSpace() {
   double time_span = time_graph_->GetCaptureTimeSpanUs();
 
   Color col = slider_->GetBarColor();
-  auto canvas_height = static_cast<float>(viewport_.GetHeight());
+  auto canvas_height = static_cast<float>(viewport_.GetScreenHeight());
 
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   float right_margin = layout.GetRightMargin();
@@ -463,7 +465,7 @@ void CaptureWindow::DrawScreenSpace() {
 
   // Right vertical margin.
   time_graph_->UpdateRightMargin(right_margin);
-  auto margin_x1 = static_cast<float>(viewport_.GetWidth());
+  auto margin_x1 = static_cast<float>(viewport_.GetScreenWidth());
   float margin_x0 = margin_x1 - right_margin;
 
   Box box(Vec2(margin_x0, 0), Vec2(margin_x1 - margin_x0, canvas_height), GlCanvas::kZValueMargin);
@@ -471,9 +473,10 @@ void CaptureWindow::DrawScreenSpace() {
 
   // Time bar background
   if (time_graph_->GetCaptureTimeSpanUs() > 0) {
-    Box background_box(Vec2(0, time_graph_->GetLayout().GetSliderWidth()),
-                       Vec2(viewport_.GetWidth(), time_graph_->GetLayout().GetTimeBarHeight()),
-                       GlCanvas::kZValueTimeBarBg);
+    Box background_box(
+        Vec2(0, time_graph_->GetLayout().GetSliderWidth()),
+        Vec2(viewport_.GetScreenWidth(), time_graph_->GetLayout().GetTimeBarHeight()),
+        GlCanvas::kZValueTimeBarBg);
     ui_batcher_.AddBox(background_box,
                        Color(kBackgroundColor[0], kBackgroundColor[1], kBackgroundColor[2], 200));
   }
@@ -486,8 +489,9 @@ void CaptureWindow::UpdateHorizontalScroll(float ratio) {
 
 void CaptureWindow::UpdateVerticalScroll(float ratio) {
   if (time_graph_ == nullptr) return;
-  float min = 0.0f;
-  float max = viewport_.GetWorldHeight() - viewport_.GetWorldExtents()[1];
+  float min = viewport_.GetWorldMin()[1];
+  float max = viewport_.GetVisibleWorldHeight() - viewport_.GetWorldExtents()[1] +
+              viewport_.GetWorldMin()[1];
   float range = max - min;
   float new_top_left_y = min + ratio * range;
   if (new_top_left_y != viewport_.GetWorldTopLeft()[1]) {
@@ -519,9 +523,9 @@ void CaptureWindow::UpdateHorizontalSliderFromWorld() {
 void CaptureWindow::UpdateVerticalSliderFromWorld() {
   if (time_graph_ == nullptr) return;
   float min = 0.0f;
-  float max = viewport_.GetWorldHeight() - viewport_.GetWorldExtents()[1];
+  float max = viewport_.GetVisibleWorldHeight() - viewport_.GetWorldExtents()[1];
   float ratio = (viewport_.GetWorldTopLeft()[1] - min) / (max - min);
-  float vertical_ratio = viewport_.GetWorldHeight() / viewport_.GetWorldExtents()[1];
+  float vertical_ratio = viewport_.GetVisibleWorldHeight() / viewport_.GetWorldExtents()[1];
   int slider_width = static_cast<int>(time_graph_->GetLayout().GetSliderWidth());
   vertical_slider_->SetPixelHeight(slider_width);
   vertical_slider_->SetNormalizedPosition(ratio);
@@ -580,10 +584,10 @@ void CaptureWindow::RenderImGuiDebugUI() {
   }
 
   if (ImGui::CollapsingHeader("Capture Info")) {
-    IMGUI_VAR_TO_TEXT(viewport_.GetWidth());
-    IMGUI_VAR_TO_TEXT(viewport_.GetHeight());
-    IMGUI_VAR_TO_TEXT(viewport_.GetWorldHeight());
-    IMGUI_VAR_TO_TEXT(viewport_.GetWorldWidth());
+    IMGUI_VAR_TO_TEXT(viewport_.GetScreenWidth());
+    IMGUI_VAR_TO_TEXT(viewport_.GetScreenHeight());
+    IMGUI_VAR_TO_TEXT(viewport_.GetVisibleWorldHeight());
+    IMGUI_VAR_TO_TEXT(viewport_.GetVisibleWorldWidth());
     IMGUI_VAR_TO_TEXT(viewport_.GetWorldTopLeft()[0]);
     IMGUI_VAR_TO_TEXT(viewport_.GetWorldTopLeft()[1]);
     IMGUI_VAR_TO_TEXT(viewport_.GetWorldExtents()[0]);
@@ -694,7 +698,7 @@ void CaptureWindow::RenderTimeBar() {
     double norm_start_us = 1000.0 * static_cast<int>(start_ms / norm_inc) * norm_inc;
 
     static constexpr int kPixelMargin = 2;
-    int screen_y = viewport_.GetHeight() - static_cast<int>(time_bar_height) - kPixelMargin;
+    int screen_y = viewport_.GetScreenHeight() - static_cast<int>(time_bar_height) - kPixelMargin;
     Vec2 world_pos = viewport_.ScreenToWorldPos(Vec2i(0, screen_y));
 
     float height = time_graph_->GetLayout().GetTimeBarHeight() - kPixelMargin;
@@ -731,8 +735,8 @@ void CaptureWindow::RenderSelectionOverlay() {
   float to_world = time_graph_->GetWorldFromTick(max_time);
 
   float size_x = to_world - from_world;
-  Vec2 pos(from_world, viewport_.GetWorldTopLeft()[1] - viewport_.GetWorldHeight());
-  Vec2 size(size_x, viewport_.GetWorldHeight());
+  Vec2 pos(from_world, viewport_.GetWorldTopLeft()[1] - viewport_.GetVisibleWorldHeight());
+  Vec2 size(size_x, viewport_.GetVisibleWorldHeight());
 
   std::string text = GetPrettyTime(TicksToDuration(min_time, max_time));
   const Color color(0, 128, 0, 128);

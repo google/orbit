@@ -26,10 +26,11 @@ GraphTrack::GraphTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGr
 void GraphTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                   PickingMode picking_mode, float z_offset) {
   GlCanvas* canvas = time_graph_->GetCanvas();
+  const orbit_gl::Viewport& viewport = canvas->GetViewport();
 
-  float track_width = canvas->GetViewport().GetWorldWidth();
+  float track_width = viewport.GetVisibleWorldWidth();
   SetSize(track_width, GetHeight());
-  pos_[0] = canvas->GetViewport().GetWorldTopLeft()[0];
+  pos_[0] = viewport.GetWorldTopLeft()[0];
 
   Color color = GetBackgroundColor();
   const Color kLineColor(0, 128, 255, 128);
