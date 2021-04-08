@@ -533,9 +533,8 @@ void CaptureWindow::Draw() {
   picking_manager_.Reset();
 
   if (time_graph_ != nullptr) {
-    GlCanvas* canvas = time_graph_->GetCanvas();
-    time_graph_->SetPos(0, canvas->GetWorldTopLeftX());
-    time_graph_->SetSize(canvas->GetWidth(), canvas->GetHeight());
+    time_graph_->SetPos(0, GetWorldTopLeftX());
+    time_graph_->SetSize(static_cast<float>(GetWidth()), static_cast<float>(GetHeight()));
 
     time_graph_->Draw(this, GetPickingMode());
   }

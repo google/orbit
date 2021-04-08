@@ -20,7 +20,8 @@ target_sources(
   PUBLIC include/OrbitAccessibility/AccessibleInterface.h
          include/OrbitAccessibility/AccessibleInterfaceRegistry.h
          include/OrbitAccessibility/AccessibleObjectFake.h
-         include/OrbitAccessibility/AccessibleWidgetBridge.h)
+         include/OrbitAccessibility/AccessibleWidgetBridge.h
+         )
 
 target_sources(
   OrbitAccessibility
