@@ -90,8 +90,17 @@ ErrorMessageOr<uint64_t> ExecuteOrDie(pid_t pid, uint64_t address_code, uint64_t
   // The calling convention also asks for rsp being a multiple of 16 so we additionally round down
   // to the next multiople of 16.
   const uint64_t old_rsp = original_registers.GetGeneralPurposeRegisters()->x86_64.rsp;
-  const uint64_t aligned_rsp_below_red_zone = (old_rsp - 128) / 16 * 16;
+  constexpr int kSizeRedZone = 128;
+  constexpr int kStackAlignment = 16;
+  const uint64_t aligned_rsp_below_red_zone =
+      ((old_rsp - kSizeRedZone) / kStackAlignment) * kStackAlignment;
   registers_for_execution.GetGeneralPurposeRegisters()->x86_64.rsp = aligned_rsp_below_red_zone;
+  // In case we stopped the process in the middle of a syscall orig_rax holds the number of that
+  // syscall. The kernel uses that to trigger the restart of the interrupted syscall. By setting
+  // orig_rax to -1 we bypass this logic for the PTRACE_CONT below.
+  // The syscall will be restarted when we restore the original registers and detach to continue the
+  // normal operation.
+  registers_for_execution.GetGeneralPurposeRegisters()->x86_64.orig_rax = -1;
   OUTCOME_TRY(registers_for_execution.RestoreRegisters());
   if (ptrace(PTRACE_CONT, pid, 0, 0) != 0) {
     FATAL("Unable to continue tracee with PTRACE_CONT.");
