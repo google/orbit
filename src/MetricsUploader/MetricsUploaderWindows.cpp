@@ -8,6 +8,7 @@
 #include <type_traits>
 
 #include "MetricsUploader/MetricsUploader.h"
+#include "MetricsUploader/MetricsUploaderStub.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitVersion/OrbitVersion.h"
@@ -106,20 +107,26 @@ MetricsUploaderImpl::~MetricsUploaderImpl() {
   // }
 }
 
-ErrorMessageOr<std::unique_ptr<MetricsUploader>> MetricsUploader::CreateMetricsUploader(
-    std::string client_name) {
+std::unique_ptr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::string client_name) {
   HMODULE metrics_uploader_client_dll;
   if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, client_name.c_str(),
                          &metrics_uploader_client_dll) != 0) {
-    return ErrorMessage("MetricsUploader is already created");
+    ERROR("MetricsUploader is already created");
+    return std::make_unique<MetricsUploaderStub>();
   }
 
-  OUTCOME_TRY(session_uuid, GenerateUUID());
+  auto uuid_result = GenerateUUID();
+  if (uuid_result.has_error()) {
+    ERROR("%s", uuid_result.error().message());
+    return std::make_unique<MetricsUploaderStub>();
+  }
+  std::string session_uuid = uuid_result.value();
   LOG("Session UUID for metrics: %s", session_uuid);
 
   metrics_uploader_client_dll = LoadLibraryA(client_name.c_str());
   if (metrics_uploader_client_dll == nullptr) {
-    return ErrorMessage("Metrics uploader client library is not found");
+    ERROR("Metrics uploader client library is not found");
+    return std::make_unique<MetricsUploaderStub>();
   }
 
   auto setup_connection_addr = reinterpret_cast<Result (*)(const char*)>(
@@ -129,21 +136,24 @@ ErrorMessageOr<std::unique_ptr<MetricsUploader>> MetricsUploader::CreateMetricsU
     // to crash. This should be revisited as soon as the issue in golang is fixed.
     //
     // FreeLibrary(metrics_uploader_client_dll);
-    return ErrorMessage(absl::StrFormat("%s function not found", kSetupConnectionFunctionName));
+    ERROR("%s function not found", kSetupConnectionFunctionName);
+    return std::make_unique<MetricsUploaderStub>();
   }
 
   auto shutdown_connection_addr = reinterpret_cast<Result (*)()>(
       GetProcAddress(metrics_uploader_client_dll, kShutdownConnectionFunctionName));
   if (nullptr == shutdown_connection_addr) {
     // FreeLibrary(metrics_uploader_client_dll);
-    return ErrorMessage(absl::StrFormat("%s function not found", kShutdownConnectionFunctionName));
+    ERROR("%s function not found", kShutdownConnectionFunctionName);
+    return std::make_unique<MetricsUploaderStub>();
   }
 
   auto send_log_event_addr = reinterpret_cast<Result (*)(const uint8_t*, int)>(
       GetProcAddress(metrics_uploader_client_dll, kSendLogEventFunctionName));
   if (nullptr == send_log_event_addr) {
     // FreeLibrary(metrics_uploader_client_dll);
-    return ErrorMessage(absl::StrFormat("%s function not found", kSendLogEventFunctionName));
+    ERROR("%s function not found", kSendLogEventFunctionName);
+    return std::make_unique<MetricsUploaderStub>();
   }
 
   // set up connection and create a client
@@ -156,10 +166,11 @@ ErrorMessageOr<std::unique_ptr<MetricsUploader>> MetricsUploader::CreateMetricsU
       }
     }
     // FreeLibrary(metrics_uploader_client_dll);
-    return ErrorMessage(absl::StrFormat("Error while starting the metrics uploader client: %s",
-                                        GetErrorMessage(result)));
+    ERROR("Error while starting the metrics uploader client: %s", GetErrorMessage(result));
+    return std::make_unique<MetricsUploaderStub>();
   }
 
+  LOG("MetricsUploader was initialized successfully");
   return std::make_unique<MetricsUploaderImpl>(client_name, session_uuid, send_log_event_addr,
                                                shutdown_connection_addr,
                                                metrics_uploader_client_dll);

@@ -93,16 +93,10 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
 
   std::optional<orbit_qt::TargetConfiguration> target_config;
 
-  std::unique_ptr<orbit_metrics_uploader::MetricsUploader> metrics_uploader;
-  auto metrics_uploader_result = orbit_metrics_uploader::MetricsUploader::CreateMetricsUploader();
-  if (metrics_uploader_result.has_value()) {
-    metrics_uploader = std::move(metrics_uploader_result.value());
-    LOG("MetricsUploader was initialized successfully");
-    metrics_uploader->SendLogEvent(
-        orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_METRICS_UPLOADER_START);
-  } else {
-    ERROR("%s", metrics_uploader_result.error().message());
-  }
+  std::unique_ptr<orbit_metrics_uploader::MetricsUploader> metrics_uploader =
+      orbit_metrics_uploader::MetricsUploader::CreateMetricsUploader();
+  metrics_uploader->SendLogEvent(
+      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_METRICS_UPLOADER_START);
 
   orbit_metrics_uploader::ScopedMetric(
       metrics_uploader.get(), orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_EXIT);
