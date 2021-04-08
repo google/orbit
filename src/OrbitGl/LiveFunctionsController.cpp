@@ -179,10 +179,8 @@ void LiveFunctionsController::OnPreviousButton(uint64_t id) {
 void LiveFunctionsController::OnDeleteButton(uint64_t id) {
   current_textboxes_.erase(id);
   iterator_id_to_function_id_.erase(id);
-  if (metrics_uploader_ != nullptr) {
-    metrics_uploader_->SendLogEvent(
-        orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_ITERATOR_REMOVE);
-  }
+  metrics_uploader_->SendLogEvent(
+      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_ITERATOR_REMOVE);
 
   // If we erase the iterator that was last used by the user, then
   // we need to switch last_id_pressed_ to an existing id.

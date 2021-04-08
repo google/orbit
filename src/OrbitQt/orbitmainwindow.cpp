@@ -195,10 +195,8 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
 
   LoadCaptureOptionsIntoApp();
 
-  if (metrics_uploader_ != nullptr) {
-    metrics_uploader_->SendLogEvent(
-        orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_OPEN);
-  }
+  metrics_uploader_->SendLogEvent(
+      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_OPEN);
 }
 
 void OrbitMainWindow::SetupMainWindow() {
@@ -1211,10 +1209,8 @@ void OrbitMainWindow::Exit(int return_code) {
     introspection_widget_->close();
   }
 
-  if (metrics_uploader_ != nullptr) {
-    metrics_uploader_->SendLogEvent(
-        orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_CLOSE);
-  }
+  metrics_uploader_->SendLogEvent(
+      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_CLOSE);
 
   QApplication::exit(return_code);
 }

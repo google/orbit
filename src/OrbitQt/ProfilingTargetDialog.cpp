@@ -150,10 +150,8 @@ ProfilingTargetDialog::ProfilingTargetDialog(
     SetStateMachineInitialState();
   }
 
-  if (metrics_uploader_ != nullptr) {
-    metrics_uploader_->SendLogEvent(
-        orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_SESSION_SETUP_WINDOW_OPEN);
-  }
+  metrics_uploader_->SendLogEvent(
+      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_SESSION_SETUP_WINDOW_OPEN);
 }
 
 void ProfilingTargetDialog::SetStateMachineInitialState() {
@@ -182,10 +180,8 @@ std::optional<TargetConfiguration> ProfilingTargetDialog::Exec() {
   int rc = QDialog::exec();
   state_machine_.stop();
 
-  if (metrics_uploader_ != nullptr) {
-    metrics_uploader_->SendLogEvent(
-        orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_SESSION_SETUP_WINDOW_CLOSE);
-  }
+  metrics_uploader_->SendLogEvent(
+      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_SESSION_SETUP_WINDOW_CLOSE);
 
   if (rc != QDialog::Accepted) return std::nullopt;
 

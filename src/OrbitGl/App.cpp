@@ -1004,13 +1004,11 @@ void OrbitApp::StopCapture() {
     return;
   }
 
-  if (metrics_uploader_ != nullptr) {
-    auto capture_time_us =
-        std::chrono::duration<double, std::micro>(GetTimeGraph()->GetCaptureTimeSpanUs());
-    auto capture_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(capture_time_us);
-    metrics_uploader_->SendLogEvent(
-        orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_CAPTURE_DURATION, capture_time_ms);
-  }
+  auto capture_time_us =
+      std::chrono::duration<double, std::micro>(GetTimeGraph()->GetCaptureTimeSpanUs());
+  auto capture_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(capture_time_us);
+  metrics_uploader_->SendLogEvent(
+      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_CAPTURE_DURATION, capture_time_ms);
 
   CHECK(capture_stop_requested_callback_);
   capture_stop_requested_callback_();
