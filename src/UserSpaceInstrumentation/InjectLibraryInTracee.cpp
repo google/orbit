@@ -81,9 +81,18 @@ ErrorMessageOr<uint64_t> ExecuteOrDie(pid_t pid, uint64_t address_code, uint64_t
   RegisterState original_registers;
   OUTCOME_TRY(original_registers.BackupRegisters(pid));
 
-  RegisterState registers_set_rip = original_registers;
-  registers_set_rip.GetGeneralPurposeRegisters()->x86_64.rip = address_code;
-  OUTCOME_TRY(registers_set_rip.RestoreRegisters());
+  RegisterState registers_for_execution = original_registers;
+  registers_for_execution.GetGeneralPurposeRegisters()->x86_64.rip = address_code;
+  // The calling convention for x64 assumes the 128 bytes below rsp to be usable as a scratch pad
+  // for the current function. This area is called the 'red zone'. The function we interrupted might
+  // have stored temporary data in the red zone and the function we are about to execute might do
+  // the same. To keep them separated we decrement rsp by 128 bytes.
+  // The calling convention also asks for rsp being a multiple of 16 so we additionally round down
+  // to the next multiople of 16.
+  const uint64_t old_rsp = original_registers.GetGeneralPurposeRegisters()->x86_64.rsp;
+  const uint64_t aligned_rsp_below_red_zone = (old_rsp - 128) / 16 * 16;
+  registers_for_execution.GetGeneralPurposeRegisters()->x86_64.rsp = aligned_rsp_below_red_zone;
+  OUTCOME_TRY(registers_for_execution.RestoreRegisters());
   if (ptrace(PTRACE_CONT, pid, 0, 0) != 0) {
     FATAL("Unable to continue tracee with PTRACE_CONT.");
   }
