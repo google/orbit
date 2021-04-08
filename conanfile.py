@@ -291,5 +291,13 @@ chmod -v 4775 /opt/developer/tools/OrbitService
             orbit_executable = "Orbit.exe" if self.settings.os == "Windows" else "Orbit"
             self.run("windeployqt --pdb {}".format(orbit_executable), cwd=os.path.join(self.package_folder, "bin"), run_environment=True)
 
+            # Package Visual C++ and C Runtime
+            vcvars = tools.vcvars_dict(self)
+            if 'VCToolsRedistDir' in vcvars:
+                arch = 'x64' if self.settings.arch == 'x86_64' else 'x86'
+                src_path = os.path.join(vcvars['VCToolsRedistDir'], arch, 'Microsoft.VC142.CRT')
+                self.copy("*.dll", src=src_path, dst="bin")
+
+
     def deploy(self):
         self.copy("*", src="bin", dst="bin")
