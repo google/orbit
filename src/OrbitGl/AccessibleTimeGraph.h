@@ -12,6 +12,8 @@
 
 class TimeGraph;
 
+namespace orbit_gl {
+
 class TimeGraphAccessibility : public orbit_accessibility::AccessibleInterface {
  public:
   explicit TimeGraphAccessibility(TimeGraph* time_graph) : time_graph_(time_graph) {
@@ -32,5 +34,7 @@ class TimeGraphAccessibility : public orbit_accessibility::AccessibleInterface {
  private:
   TimeGraph* time_graph_;
 };
+
+}  // namespace orbit_gl
 
 #endif

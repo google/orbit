@@ -11,15 +11,19 @@
 #include "TimeGraph.h"
 #include "Track.h"
 #include "TrackManager.h"
+#include "Viewport.h"
 
 using orbit_accessibility::AccessibilityRect;
 using orbit_accessibility::AccessibilityState;
 using orbit_accessibility::AccessibleInterface;
 
+namespace orbit_gl {
+
 AccessibilityRect TimeGraphAccessibility::AccessibleLocalRect() const {
   GlCanvas* canvas = time_graph_->GetCanvas();
-  return AccessibilityRect(0, 0, canvas->GetViewport().GetWidth(),
-                           canvas->GetViewport().GetHeight());
+  const Viewport& viewport = canvas->GetViewport();
+
+  return AccessibilityRect(0, 0, viewport.GetScreenWidth(), viewport.GetScreenHeight());
 }
 
 AccessibilityState TimeGraphAccessibility::AccessibleState() const {
@@ -39,3 +43,5 @@ const AccessibleInterface* TimeGraphAccessibility::AccessibleChild(int index) co
 const AccessibleInterface* TimeGraphAccessibility::AccessibleParent() const {
   return time_graph_->GetCanvas()->GetOrCreateAccessibleInterface();
 }
+
+}  // namespace orbit_gl

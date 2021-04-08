@@ -147,7 +147,7 @@ void TimeGraph::VerticalZoom(float zoom_value, float mouse_relative_position) {
 
   const float ratio = (zoom_value > 0) ? (1 + kIncrementRatio) : (1 / (1 + kIncrementRatio));
 
-  const float world_height = canvas_->GetViewport().GetWorldHeight();
+  const float world_height = canvas_->GetViewport().GetVisibleWorldHeight();
   const float y_mouse_position =
       canvas_->GetViewport().GetWorldTopLeft()[1] - mouse_relative_position * world_height;
   const float top_distance = canvas_->GetViewport().GetWorldTopLeft()[1] - y_mouse_position;
@@ -227,7 +227,7 @@ void TimeGraph::VerticallyMoveIntoView(Track& track) {
 
   float min_world_top_left_y = pos + layout_.GetTrackTabHeight();
   float max_world_top_left_y =
-      pos + canvas_->GetViewport().GetWorldHeight() - height - layout_.GetBottomMargin();
+      pos + canvas_->GetViewport().GetVisibleWorldHeight() - height - layout_.GetBottomMargin();
   canvas_->GetViewport().SetWorldTopLeftY(
       clamp(world_top_left_y, min_world_top_left_y, max_world_top_left_y));
 }
@@ -646,7 +646,7 @@ void TimeGraph::UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, ui
 
   time_window_us_ = max_time_us_ - min_time_us_;
   world_start_x_ = canvas_->GetViewport().GetWorldTopLeft()[0];
-  world_width_ = canvas_->GetViewport().GetWorldWidth();
+  world_width_ = canvas_->GetViewport().GetVisibleWorldWidth();
   uint64_t min_tick = GetTickFromUs(min_time_us_);
   uint64_t max_tick = GetTickFromUs(max_time_us_);
 
@@ -777,11 +777,13 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
   std::vector<float> x_coords;
   x_coords.reserve(boxes.size());
 
-  float world_start_x = canvas->GetViewport().GetWorldTopLeft()[0];
-  float world_width = canvas->GetViewport().GetWorldWidth();
+  const orbit_gl::Viewport& viewport = canvas->GetViewport();
 
-  float world_start_y = canvas->GetViewport().GetWorldTopLeft()[1];
-  float world_height = canvas->GetViewport().GetWorldHeight();
+  float world_start_x = viewport.GetWorldTopLeft()[0];
+  float world_width = viewport.GetVisibleWorldWidth();
+
+  float world_start_y = viewport.GetWorldTopLeft()[1];
+  float world_height = viewport.GetVisibleWorldHeight();
 
   double inv_time_window = 1.0 / GetTimeWindowUs();
 
@@ -1030,5 +1032,5 @@ void TimeGraph::RemoveFrameTrack(uint64_t function_id) {
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> TimeGraph::CreateAccessibleInterface() {
-  return std::make_unique<TimeGraphAccessibility>(this);
+  return std::make_unique<orbit_gl::TimeGraphAccessibility>(this);
 }

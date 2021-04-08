@@ -296,17 +296,18 @@ void TextRenderer::AddText(const char* text, float x, float y, float z, const Co
   vec2 out_screen_size;
   AddTextInternal(GetFont(font_size), text, ColorToVec4(color), &pen_, max_size, z, &out_screen_pos,
                   &out_screen_size);
+
+  const orbit_gl::Viewport& viewport = canvas_->GetViewport();
+
   if (out_text_pos) {
-    float inv_y = canvas_->GetViewport().GetHeight() - out_screen_pos.y;
-    (*out_text_pos) = canvas_->GetViewport().ScreenToWorldPos(
+    float inv_y = viewport.GetScreenHeight() - out_screen_pos.y;
+    (*out_text_pos) = viewport.ScreenToWorldPos(
         Vec2i(static_cast<int>(out_screen_pos.x), static_cast<int>(inv_y)));
   }
 
   if (out_text_size) {
-    (*out_text_size)[0] =
-        canvas_->GetViewport().ScreenToWorldWidth(static_cast<int>(out_screen_size.x));
-    (*out_text_size)[1] =
-        canvas_->GetViewport().ScreenToWorldHeight(static_cast<int>(out_screen_size.y));
+    (*out_text_size)[0] = viewport.ScreenToWorldWidth(static_cast<int>(out_screen_size.x));
+    (*out_text_size)[1] = viewport.ScreenToWorldHeight(static_cast<int>(out_screen_size.y));
   }
 }
 
@@ -436,17 +437,20 @@ std::vector<float> TextRenderer::GetLayers() const {
 };
 
 void TextRenderer::ToScreenSpace(float x, float y, float& o_x, float& o_y) {
-  float world_width = canvas_->GetViewport().GetWorldWidth();
-  float world_height = canvas_->GetViewport().GetWorldHeight();
-  float world_top_left_x = canvas_->GetViewport().GetWorldTopLeft()[0];
-  float world_min_left_y = canvas_->GetViewport().GetWorldTopLeft()[1] - world_height;
+  const orbit_gl::Viewport& viewport = canvas_->GetViewport();
 
-  o_x = ((x - world_top_left_x) / world_width) * canvas_->GetViewport().GetWidth();
-  o_y = ((y - world_min_left_y) / world_height) * canvas_->GetViewport().GetHeight();
+  float world_width = viewport.GetVisibleWorldWidth();
+  float world_height = viewport.GetVisibleWorldHeight();
+  float world_top_left_x = viewport.GetWorldTopLeft()[0];
+  float world_min_left_y = viewport.GetWorldTopLeft()[1] - world_height;
+
+  o_x = ((x - world_top_left_x) / world_width) * viewport.GetScreenWidth();
+  o_y = ((y - world_min_left_y) / world_height) * viewport.GetScreenHeight();
 }
 
 float TextRenderer::ToScreenSpace(float width) {
-  return (width / canvas_->GetViewport().GetWorldWidth()) * canvas_->GetViewport().GetWidth();
+  return (width / canvas_->GetViewport().GetVisibleWorldWidth()) *
+         canvas_->GetViewport().GetScreenWidth();
 }
 
 void TextRenderer::Clear() {

@@ -630,10 +630,11 @@ void Orbit_ImGui_NewFrame(GlCanvas* a_Canvas) {
   if (!g_FontTexture) Orbit_ImGui_CreateDeviceObjects();
 
   ImGuiIO& io = ImGui::GetIO();
+  const orbit_gl::Viewport& viewport = a_Canvas->GetViewport();
 
   // Setup display size (every frame to accommodate for window resizing)
-  const int w = a_Canvas->GetViewport().GetWidth();
-  const int h = a_Canvas->GetViewport().GetHeight();
+  const int w = viewport.GetScreenWidth();
+  const int h = viewport.GetScreenHeight();
   io.DisplaySize = ImVec2(w, h);
 
   // Setup time step

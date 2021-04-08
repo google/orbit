@@ -17,9 +17,11 @@ orbit_accessibility::AccessibilityRect AccessibleTriangleToggle::AccessibleLocal
   Vec2 pos = triangle_toggle_->GetPos();
   Vec2 size = triangle_toggle_->GetSize();
 
-  Vec2i screen_pos = canvas->GetViewport().WorldToScreenPos(pos);
-  int screen_width = canvas->GetViewport().WorldToScreenWidth(size[0]);
-  int screen_height = canvas->GetViewport().WorldToScreenHeight(size[1]);
+  const Viewport& viewport = canvas->GetViewport();
+
+  Vec2i screen_pos = viewport.WorldToScreenPos(pos);
+  int screen_width = viewport.WorldToScreenWidth(size[0]);
+  int screen_height = viewport.WorldToScreenHeight(size[1]);
 
   orbit_accessibility::AccessibilityRect parent_rect =
       parent_->GetOrCreateAccessibleInterface()->AccessibleLocalRect();
