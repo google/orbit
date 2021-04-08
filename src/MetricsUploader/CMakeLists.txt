@@ -16,6 +16,7 @@ target_include_directories(MetricsUploader PUBLIC ${CMAKE_CURRENT_LIST_DIR}/incl
                                            PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(MetricsUploader PUBLIC include/MetricsUploader/MetricsUploader.h
+                                      include/MetricsUploader/MetricsUploaderStub.h
                                       include/MetricsUploader/Result.h
                                       include/MetricsUploader/ScopedMetric.h
                                PRIVATE Result.cpp

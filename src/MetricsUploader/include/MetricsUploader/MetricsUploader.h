@@ -40,9 +40,9 @@ class MetricsUploader {
   virtual ~MetricsUploader() = default;
 
   // Create a MetricsUploader instance, load metrics uploader client library if available and starts
-  // metrics uploader client when called first time. Return the instance if there are no errors and
-  // ErrorMessage otherwise.
-  [[nodiscard]] static ErrorMessageOr<std::unique_ptr<MetricsUploader>> CreateMetricsUploader(
+  // metrics uploader client when called first time. Return the MetricsUploaderImpl if there are no
+  // errors and MetricsUploaderStub otherwise.
+  [[nodiscard]] static std::unique_ptr<MetricsUploader> CreateMetricsUploader(
       std::string client_name = kMetricsUploaderClientDllName);
 
   // Send a log event to the server using metrics_uploader. Returns true on success and false

@@ -3,13 +3,15 @@
 // found in the LICENSE file.
 
 #include "MetricsUploader/MetricsUploader.h"
+#include "MetricsUploader/MetricsUploaderStub.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 
 namespace orbit_metrics_uploader {
 
-ErrorMessageOr<std::unique_ptr<MetricsUploader>> MetricsUploader::CreateMetricsUploader(
-    std::string) {
-  return ErrorMessage("MetricsUploader is not implemented on Linux");
+std::unique_ptr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::string) {
+  ERROR("MetricsUploader is not implemented on Linux");
+  return std::make_unique<MetricsUploaderStub>();
 }
 
 ErrorMessageOr<std::string> GenerateUUID() {

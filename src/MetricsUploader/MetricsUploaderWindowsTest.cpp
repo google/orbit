@@ -7,65 +7,71 @@
 #include <chrono>
 
 #include "MetricsUploader/MetricsUploader.h"
+#include "MetricsUploader/MetricsUploaderStub.h"
 #include "OrbitBase/Result.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/strings/ascii.h"
 
 namespace orbit_metrics_uploader {
 
+using orbit_metrics_uploader::MetricsUploaderStub;
+
+[[nodiscard]] static bool IsMetricsUploaderStub(
+    const std::unique_ptr<MetricsUploader>& metrics_uploader) {
+  return dynamic_cast<MetricsUploaderStub*>(metrics_uploader.get()) != nullptr;
+}
+
 TEST(MetricsUploader, CreateMetricsUploaderFromClientWithoutSendEvent) {
   auto metrics_uploader =
       MetricsUploader::CreateMetricsUploader("MetricsUploaderClientWithoutSendEvent");
-  EXPECT_FALSE(metrics_uploader.has_value());
+  EXPECT_TRUE(IsMetricsUploaderStub(metrics_uploader));
 }
 
 TEST(MetricsUploader, CreateMetricsUploaderFromClientWithoutSetup) {
   auto metrics_uploader =
       MetricsUploader::CreateMetricsUploader("MetricsUploaderClientWithoutSetup");
-  EXPECT_FALSE(metrics_uploader.has_value());
+  EXPECT_TRUE(IsMetricsUploaderStub(metrics_uploader));
 }
 
 TEST(MetricsUploader, CreateMetricsUploaderFromClientWithoutShutdown) {
   auto metrics_uploader =
       MetricsUploader::CreateMetricsUploader("MetricsUploaderClientWithoutShutdown");
-  EXPECT_FALSE(metrics_uploader.has_value());
+  EXPECT_TRUE(IsMetricsUploaderStub(metrics_uploader));
 }
 
 TEST(MetricsUploader, SetupMetricsUploaderWithError) {
   auto metrics_uploader =
       MetricsUploader::CreateMetricsUploader("MetricsUploaderSetupWithErrorClient");
-  EXPECT_FALSE(metrics_uploader.has_value());
+  EXPECT_TRUE(IsMetricsUploaderStub(metrics_uploader));
 }
 
 TEST(MetricsUploader, SendLogEvent) {
   auto metrics_uploader = MetricsUploader::CreateMetricsUploader("MetricsUploaderCompleteClient");
-  ASSERT_TRUE(metrics_uploader.has_value());
-  bool result =
-      metrics_uploader.value()->SendLogEvent(OrbitLogEvent_LogEventType_UNKNOWN_EVENT_TYPE);
+  EXPECT_FALSE(IsMetricsUploaderStub(metrics_uploader));
+  bool result = metrics_uploader->SendLogEvent(OrbitLogEvent_LogEventType_UNKNOWN_EVENT_TYPE);
   EXPECT_FALSE(result);
-  result =
-      metrics_uploader.value()->SendLogEvent(OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_OPEN);
+  result = metrics_uploader->SendLogEvent(OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_OPEN);
   EXPECT_TRUE(result);
-  result = metrics_uploader.value()->SendLogEvent(OrbitLogEvent_LogEventType_ORBIT_CAPTURE_DURATION,
-                                                  std::chrono::milliseconds(100));
+  result = metrics_uploader->SendLogEvent(OrbitLogEvent_LogEventType_ORBIT_CAPTURE_DURATION,
+                                          std::chrono::milliseconds(100));
   EXPECT_TRUE(result);
-  result = metrics_uploader.value()->SendLogEvent(OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_OPEN,
-                                                  std::chrono::milliseconds(0),
-                                                  OrbitLogEvent_StatusCode_SUCCESS);
+  result = metrics_uploader->SendLogEvent(OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_OPEN,
+                                          std::chrono::milliseconds(0),
+                                          OrbitLogEvent_StatusCode_SUCCESS);
   EXPECT_TRUE(result);
 }
 
 TEST(MetricsUploader, CreateTwoMetricsUploaders) {
   auto metrics_uploader1 = MetricsUploader::CreateMetricsUploader("MetricsUploaderCompleteClient");
-  EXPECT_TRUE(metrics_uploader1.has_value());
+  EXPECT_FALSE(IsMetricsUploaderStub(metrics_uploader1));
   auto metrics_uploader2 = MetricsUploader::CreateMetricsUploader("MetricsUploaderCompleteClient");
-  EXPECT_FALSE(metrics_uploader2.has_value());
+  EXPECT_TRUE(IsMetricsUploaderStub(metrics_uploader2));
 }
 
 TEST(MetricsUploader, CreateMetricsUploaderFromNonexistentClient) {
   auto metrics_uploader =
       MetricsUploader::CreateMetricsUploader("NonexistentMetricsUploaderClient");
-  EXPECT_FALSE(metrics_uploader.has_value());
+  EXPECT_TRUE(IsMetricsUploaderStub(metrics_uploader));
 }
 
 TEST(MetricsUploader, GenerateUUID) {
