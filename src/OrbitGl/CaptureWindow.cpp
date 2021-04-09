@@ -200,13 +200,6 @@ void CaptureWindow::PostRender() {
   }
 
   GlCanvas::PostRender();
-
-  // TODO: This should not be needed, but the extents of track heights may change after drawing
-  // This will re-request updatePrimitives() if the height changed.
-  if (time_graph_ != nullptr) {
-    viewport_.SetWorldExtents(viewport_.GetScreenWidth(),
-                              time_graph_->GetTrackManager()->GetTracksTotalHeight());
-  }
 }
 
 void CaptureWindow::RightDown(int x, int y) {
@@ -370,8 +363,6 @@ void CaptureWindow::Draw() {
   }
 
   if (time_graph_ != nullptr) {
-    viewport_.SetWorldExtents(viewport_.GetScreenWidth(),
-                              time_graph_->GetTrackManager()->GetTracksTotalHeight());
     if (viewport_.IsDirty()) {
       time_graph_->SetPos(0, 0);
       time_graph_->SetSize(viewport_.GetWorldExtents()[0], viewport_.GetWorldExtents()[1]);
@@ -379,6 +370,8 @@ void CaptureWindow::Draw() {
       time_graph_->RequestUpdatePrimitives();
     }
     time_graph_->Draw(this, picking_mode_);
+    viewport_.SetWorldExtents(viewport_.GetScreenWidth(),
+                              time_graph_->GetTrackManager()->GetTracksTotalHeight());
   }
 
   RenderSelectionOverlay();
