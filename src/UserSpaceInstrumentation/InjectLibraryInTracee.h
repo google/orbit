@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <string_view>
 
+#include "MachineCode.h"
 #include "OrbitBase/Result.h"
 
 namespace orbit_user_space_instrumentation {
@@ -31,6 +32,14 @@ namespace orbit_user_space_instrumentation {
 [[nodiscard]] ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid,
                                                            std::string_view function_name,
                                                            std::string_view module_soname);
+
+// Copies `code` to `address_code` in the tracee and executes it. The memory at `address_code` needs
+// to be allocated using AllocateInTracee. The code segment has to end with an `int3`. Takes care of
+// backup and restore of register state in the tracee and also deallocates the memory at
+// `address_code` afterwards. The return value is the content of rax after the execution finished.
+[[nodiscard]] ErrorMessageOr<uint64_t> ExecuteMachineCode(pid_t pid, uint64_t address_code,
+                                                          uint64_t memory_size,
+                                                          const MachineCode& code);
 
 }  // namespace orbit_user_space_instrumentation
 

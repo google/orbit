@@ -65,63 +65,6 @@ uint64_t GetReturnValueOrDie(pid_t pid) {
   return return_value_registers.GetGeneralPurposeRegisters()->x86_64.rax;
 }
 
-// Copies `code` to `address_code` in the tracee and executes it. The code segment has to end with
-// an `int3`. Takes care of backup and restore of register state in the tracee and also deallocates
-// the memory at `address_code` afterwards. The return value is the content of eax after the
-// execution finished.
-ErrorMessageOr<uint64_t> ExecuteOrDie(pid_t pid, uint64_t address_code, uint64_t memory_size,
-                                      const MachineCode& code) {
-  auto result_write_code = WriteTraceesMemory(pid, address_code, code.GetResultAsVector());
-  if (result_write_code.has_error()) {
-    FreeMemoryOrDie(pid, address_code, memory_size);
-    return result_write_code.error();
-  }
-
-  // Backup registers.
-  RegisterState original_registers;
-  OUTCOME_TRY(original_registers.BackupRegisters(pid));
-
-  RegisterState registers_for_execution = original_registers;
-  registers_for_execution.GetGeneralPurposeRegisters()->x86_64.rip = address_code;
-  // The calling convention for x64 assumes the 128 bytes below rsp to be usable as a scratch pad
-  // for the current function. This area is called the 'red zone'. The function we interrupted might
-  // have stored temporary data in the red zone and the function we are about to execute might do
-  // the same. To keep them separated we decrement rsp by 128 bytes.
-  // The calling convention also asks for rsp being a multiple of 16 so we additionally round down
-  // to the next multiople of 16.
-  const uint64_t old_rsp = original_registers.GetGeneralPurposeRegisters()->x86_64.rsp;
-  constexpr int kSizeRedZone = 128;
-  constexpr int kStackAlignment = 16;
-  const uint64_t aligned_rsp_below_red_zone =
-      ((old_rsp - kSizeRedZone) / kStackAlignment) * kStackAlignment;
-  registers_for_execution.GetGeneralPurposeRegisters()->x86_64.rsp = aligned_rsp_below_red_zone;
-  // In case we stopped the process in the middle of a syscall orig_rax holds the number of that
-  // syscall. The kernel uses that to trigger the restart of the interrupted syscall. By setting
-  // orig_rax to -1 we bypass this logic for the PTRACE_CONT below.
-  // The syscall will be restarted when we restore the original registers and detach to continue the
-  // normal operation.
-  registers_for_execution.GetGeneralPurposeRegisters()->x86_64.orig_rax = -1;
-  OUTCOME_TRY(registers_for_execution.RestoreRegisters());
-  if (ptrace(PTRACE_CONT, pid, 0, 0) != 0) {
-    FATAL("Unable to continue tracee with PTRACE_CONT.");
-  }
-  int status = 0;
-  pid_t waited = waitpid(pid, &status, 0);
-  if (waited != pid || !WIFSTOPPED(status) || WSTOPSIG(status) != SIGTRAP) {
-    FATAL(
-        "Failed to wait for sigtrap after PTRACE_CONT. Expected pid: %d Pid returned from waitpid: "
-        "%d status: %u, WIFSTOPPED: %u, WSTOPSIG: %u",
-        pid, waited, status, WIFSTOPPED(status), WSTOPSIG(status));
-  }
-
-  const uint64_t return_value = GetReturnValueOrDie(pid);
-
-  // Clean up memory and registers.
-  RestoreRegistersOrDie(original_registers);
-  FreeMemoryOrDie(pid, address_code, memory_size);
-  return return_value;
-}
-
 // Returns the absolute virtual address of a function in a module of a process as
 // FindFunctionAddress does but accepts a fallback symbol if the primary one cannot be resolved.
 ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_view function,
@@ -190,7 +133,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-  auto return_value_or_error = ExecuteOrDie(pid, address_code, memory_size, code);
+  auto return_value_or_error = ExecuteMachineCode(pid, address_code, memory_size, code);
   if (return_value_or_error.has_error()) {
     FreeMemoryOrDie(pid, address_code, memory_size);
     return return_value_or_error.error();
@@ -242,7 +185,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-  auto return_value_or_error = ExecuteOrDie(pid, address_code, memory_size, code);
+  auto return_value_or_error = ExecuteMachineCode(pid, address_code, memory_size, code);
   if (return_value_or_error.has_error()) {
     FreeMemoryOrDie(pid, address_code, memory_size);
     return return_value_or_error.error();
@@ -276,7 +219,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-  auto return_value_or_error = ExecuteOrDie(pid, address_code, kCodeScratchPadSize, code);
+  auto return_value_or_error = ExecuteMachineCode(pid, address_code, kCodeScratchPadSize, code);
   if (return_value_or_error.has_error()) {
     FreeMemoryOrDie(pid, address_code, kCodeScratchPadSize);
     return return_value_or_error.error();
@@ -324,6 +267,59 @@ ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view functio
 
   return ErrorMessage(absl::StrFormat("Unable to locate function symbol \"%s\" in module \"%s\".",
                                       function_name, module_soname));
+}
+
+ErrorMessageOr<uint64_t> ExecuteMachineCode(pid_t pid, uint64_t address_code, uint64_t memory_size,
+                                            const MachineCode& code) {
+  auto result_write_code = WriteTraceesMemory(pid, address_code, code.GetResultAsVector());
+  if (result_write_code.has_error()) {
+    FreeMemoryOrDie(pid, address_code, memory_size);
+    return result_write_code.error();
+  }
+
+  // Backup registers.
+  RegisterState original_registers;
+  OUTCOME_TRY(original_registers.BackupRegisters(pid));
+
+  RegisterState registers_for_execution = original_registers;
+  registers_for_execution.GetGeneralPurposeRegisters()->x86_64.rip = address_code;
+  // The calling convention for x64 assumes the 128 bytes below rsp to be usable as a scratch pad
+  // for the current function. This area is called the 'red zone'. The function we interrupted might
+  // have stored temporary data in the red zone and the function we are about to execute might do
+  // the same. To keep them separated we decrement rsp by 128 bytes.
+  // The calling convention also asks for rsp being to be aligned to 16 bytes so we additionally
+  // round down to the previous multiple of 16.
+  const uint64_t old_rsp = original_registers.GetGeneralPurposeRegisters()->x86_64.rsp;
+  constexpr int kSizeRedZone = 128;
+  constexpr int kStackAlignment = 16;
+  const uint64_t aligned_rsp_below_red_zone =
+      ((old_rsp - kSizeRedZone) / kStackAlignment) * kStackAlignment;
+  registers_for_execution.GetGeneralPurposeRegisters()->x86_64.rsp = aligned_rsp_below_red_zone;
+  // In case we stopped the process in the middle of a syscall orig_rax holds the number of that
+  // syscall. The kernel uses that to trigger the restart of the interrupted syscall. By setting
+  // orig_rax to -1 we bypass this logic for the PTRACE_CONT below.
+  // The syscall will be restarted when we restore the original registers and detach to continue the
+  // normal operation.
+  registers_for_execution.GetGeneralPurposeRegisters()->x86_64.orig_rax = -1;
+  OUTCOME_TRY(registers_for_execution.RestoreRegisters());
+  if (ptrace(PTRACE_CONT, pid, 0, 0) != 0) {
+    FATAL("Unable to continue tracee with PTRACE_CONT.");
+  }
+  int status = 0;
+  pid_t waited = waitpid(pid, &status, 0);
+  if (waited != pid || !WIFSTOPPED(status) || WSTOPSIG(status) != SIGTRAP) {
+    FATAL(
+        "Failed to wait for sigtrap after PTRACE_CONT. Expected pid: %d Pid returned from waitpid: "
+        "%d status: %u, WIFSTOPPED: %u, WSTOPSIG: %u",
+        pid, waited, status, WIFSTOPPED(status), WSTOPSIG(status));
+  }
+
+  const uint64_t return_value = GetReturnValueOrDie(pid);
+
+  // Clean up memory and registers.
+  RestoreRegistersOrDie(original_registers);
+  FreeMemoryOrDie(pid, address_code, memory_size);
+  return return_value;
 }
 
 }  // namespace orbit_user_space_instrumentation

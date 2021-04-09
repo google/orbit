@@ -54,14 +54,9 @@ void OpenUseAndCloseLibrary(pid_t pid) {
   // Look up symbol for "TrivialFunction" in the dynamic lib.
   auto result_dlsym = DlsymInTracee(pid, result_dlopen.value(), "TrivialFunction");
   ASSERT_TRUE(result_dlsym.has_value());
-  EXPECT_TRUE(result_dlsym.value() != nullptr);
+  const uint64_t address_function = absl::bit_cast<uint64_t>(result_dlsym.value());
 
   // Write machine code to call "TrivialFunction" from the dynamic lib.
-  auto result_address_function = FindFunctionAddress(pid, "TrivialFunction", kLibName);
-  ASSERT_TRUE(result_address_function.has_value());
-  const uint64_t address_function = result_address_function.value();
-  RegisterState original_registers;
-  ASSERT_FALSE(original_registers.BackupRegisters(pid).has_error());
   constexpr uint64_t kScratchPadSize = 1024;
   auto result_address_code = AllocateInTracee(pid, 0, kScratchPadSize);
   ASSERT_TRUE(result_address_code.has_value());
@@ -75,30 +70,10 @@ void OpenUseAndCloseLibrary(pid_t pid) {
       .AppendImmediate64(address_function)
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
-  auto result_write_code = WriteTraceesMemory(pid, address_code, code.GetResultAsVector());
-  ASSERT_FALSE(result_write_code.has_error());
 
-  // Set rip to the code address and execute.
-  RegisterState registers_for_execution = original_registers;
-  registers_for_execution.GetGeneralPurposeRegisters()->x86_64.rip = address_code;
-  const uint64_t old_rsp = original_registers.GetGeneralPurposeRegisters()->x86_64.rsp;
-  constexpr int kSizeRedZone = 128;
-  constexpr int kStackAlignment = 16;
-  const uint64_t aligned_rsp_below_red_zone =
-      ((old_rsp - kSizeRedZone) / kStackAlignment) * kStackAlignment;
-  registers_for_execution.GetGeneralPurposeRegisters()->x86_64.rsp = aligned_rsp_below_red_zone;
-  registers_for_execution.GetGeneralPurposeRegisters()->x86_64.orig_rax = -1;
-  ASSERT_FALSE(registers_for_execution.RestoreRegisters().has_error());
-  ASSERT_EQ(0, ptrace(PTRACE_CONT, pid, 0, 0));
-  ASSERT_EQ(pid, waitpid(pid, nullptr, 0));
-
-  // Get return value and check result.
-  RegisterState return_value_registers;
-  ASSERT_FALSE(return_value_registers.BackupRegisters(pid).has_error());
-  EXPECT_EQ(42, return_value_registers.GetGeneralPurposeRegisters()->x86_64.rax);
-
-  ASSERT_FALSE(original_registers.RestoreRegisters().has_error());
-  ASSERT_FALSE(FreeInTracee(pid, address_code, kScratchPadSize).has_error());
+  auto result_or_error = ExecuteMachineCode(pid, address_code, kScratchPadSize, code);
+  ASSERT_FALSE(result_or_error.has_error());
+  EXPECT_EQ(42, result_or_error.value());
 
   // Close the library.
   auto result_dlclose = DlcloseInTracee(pid, result_dlopen.value());
