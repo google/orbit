@@ -82,7 +82,10 @@ void OpenUseAndCloseLibrary(pid_t pid) {
   RegisterState registers_for_execution = original_registers;
   registers_for_execution.GetGeneralPurposeRegisters()->x86_64.rip = address_code;
   const uint64_t old_rsp = original_registers.GetGeneralPurposeRegisters()->x86_64.rsp;
-  const uint64_t aligned_rsp_below_red_zone = (old_rsp - 128) / 16 * 16;
+  constexpr int kSizeRedZone = 128;
+  constexpr int kStackAlignment = 16;
+  const uint64_t aligned_rsp_below_red_zone =
+      ((old_rsp - kSizeRedZone) / kStackAlignment) * kStackAlignment;
   registers_for_execution.GetGeneralPurposeRegisters()->x86_64.rsp = aligned_rsp_below_red_zone;
   registers_for_execution.GetGeneralPurposeRegisters()->x86_64.orig_rax = -1;
   ASSERT_FALSE(registers_for_execution.RestoreRegisters().has_error());
@@ -123,20 +126,20 @@ TEST(InjectLibraryInTraceeTest, FindFunctionAddress) {
   ASSERT_TRUE(AttachAndStopProcess(pid).has_value());
 
   auto function_address_or_error = FindFunctionAddress(pid, "printf", "libc.so.6");
-  EXPECT_TRUE(function_address_or_error.has_value());
+  ASSERT_TRUE(function_address_or_error.has_value());
 
   function_address_or_error = FindFunctionAddress(pid, "NOT_A_SYMBOL", "libc.so.6");
-  EXPECT_TRUE(function_address_or_error.has_error());
+  ASSERT_TRUE(function_address_or_error.has_error());
   EXPECT_TRUE(absl::StrContains(function_address_or_error.error().message(),
                                 "Unable to locate function symbol"));
 
   function_address_or_error = FindFunctionAddress(pid, "printf", "NOT_A_LIB-");
-  EXPECT_TRUE(function_address_or_error.has_error());
+  ASSERT_TRUE(function_address_or_error.has_error());
   EXPECT_TRUE(absl::StrContains(function_address_or_error.error().message(),
                                 "There is no module \"NOT_A_LIB-\" in process"));
 
   function_address_or_error = FindFunctionAddress(-1, "printf", "libc.so.6");
-  EXPECT_TRUE(function_address_or_error.has_error());
+  ASSERT_TRUE(function_address_or_error.has_error());
   EXPECT_TRUE(
       absl::StrContains(function_address_or_error.error().message(), "Unable to open file"));
 
@@ -166,7 +169,7 @@ TEST(InjectLibraryInTraceeTest, OpenUseAndCloseLibraryInSyscall) {
   ASSERT_TRUE(pid != -1);
   if (pid == 0) {
     while (true) {
-      // Child wil be stuck in syscall sys_clock_nanosleep.
+      // Child will be stuck in syscall sys_clock_nanosleep.
       std::this_thread::sleep_for(std::chrono::hours(1000000000));
     }
   }
