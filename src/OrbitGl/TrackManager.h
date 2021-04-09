@@ -63,17 +63,16 @@ class TrackManager {
   AsyncTrack* GetOrCreateAsyncTrack(const std::string& name);
   FrameTrack* GetOrCreateFrameTrack(const orbit_grpc_protos::InstrumentedFunction& function);
 
+  void AddTrack(const std::shared_ptr<Track>& track);
   void RemoveFrameTrack(uint64_t function_address);
 
   void UpdateMovingTrackSorting();
 
  private:
-  void UpdateVisibleTrackList();
+  void UpdateFilteredTrackList();
   [[nodiscard]] int FindMovingTrackIndex();
   [[nodiscard]] std::vector<ThreadTrack*> GetSortedThreadTracks();
 
-  void AddTrack(const std::shared_ptr<Track>& track);
-  void AddFrameTrack(const std::shared_ptr<FrameTrack>& frame_track);
   void UpdateTrackPositions();
 
   // TODO(b/174655559): Use absl's mutex here.
