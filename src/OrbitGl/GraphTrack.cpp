@@ -216,7 +216,7 @@ void GraphTrack::AddValue(double value, uint64_t time) {
   if (value_range_ > 0) inv_value_range_ = 1.0 / value_range_;
 }
 
-std::optional<std::pair<uint64_t, double> > GraphTrack::GetPreviousValueAndTime(
+std::optional<std::pair<uint64_t, double>> GraphTrack::GetPreviousValueAndTime(
     uint64_t time) const {
   auto iterator_lower = values_.upper_bound(time);
   if (iterator_lower == values_.begin()) {

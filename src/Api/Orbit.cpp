@@ -11,6 +11,7 @@
 #include "Api/LockFreeApiEventProducer.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
+#include "absl/base/casts.h"
 
 namespace {
 enum class OrbitApiFunctionId {

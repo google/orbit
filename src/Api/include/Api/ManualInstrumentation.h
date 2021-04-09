@@ -6,10 +6,12 @@
 #define ORBIT_API_MANUAL_INSTRUMENTATION_H_
 
 #include "OrbitBase/Result.h"
+#include "capture.pb.h"
 
 namespace orbit_api {
 
-ErrorMessageOr<void> InitializeManualInstrumentationForProcess(int pid);
+ErrorMessageOr<void> InitializeApiInTracee(
+    const orbit_grpc_protos::CaptureOptions& capture_options);
 
 }  // namespace orbit_api
 

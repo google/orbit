@@ -34,6 +34,7 @@ using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::InstrumentedFunction;
+using orbit_grpc_protos::ManualInstrumentationInfo;
 using orbit_grpc_protos::TracepointInfo;
 using orbit_grpc_protos::UnwindingMethod;
 
@@ -159,6 +160,12 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   }
 
   capture_options->set_enable_introspection(enable_introspection);
+
+  // Orbit API.
+  ManualInstrumentationInfo* api_info = capture_options->add_manual_instrumentation_infos();
+  api_info->set_api_object_address(
+      0x556ead02b008);  // TODO, properly find global variable address in tracee.
+  api_info->set_api_version(0);
 
   bool request_write_succeeded;
   {

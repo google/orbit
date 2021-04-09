@@ -59,9 +59,10 @@ OrbitTest::~OrbitTest() {
 }
 
 void OrbitTest::Start() {
-  std::cout << "Starting OrbitTest [" << orbit_base::GetCurrentProcessId()
-            << "] num_threads: " << num_threads_ << " recurse_depth: " << recurse_depth_
-            << " sleep_us: " << sleep_us_ << std::endl;
+  std::string g_orbit_api_address = absl::StrFormat("g_orbit_api_v0: %p", &g_orbit_api_v0);
+  std::cout << "Starting OrbitTest [" << orbit_base::GetCurrentProcessId() << "] "
+            << g_orbit_api_address << "\nnum_threads: " << num_threads_
+            << " recurse_depth: " << recurse_depth_ << " sleep_us: " << sleep_us_ << std::endl;
   for (uint32_t i = 0; i < num_threads_; ++i) {
     auto thread = std::make_shared<std::thread>(&OrbitTest::Loop, this);
     m_Threads.push_back(thread);

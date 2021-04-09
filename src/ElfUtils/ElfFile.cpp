@@ -38,6 +38,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
+#include "absl/strings/match.h"
 #include "symbol.pb.h"
 
 namespace orbit_elf_utils {
@@ -279,6 +280,12 @@ ErrorMessageOr<SymbolInfo> ElfFileImpl<ElfT>::CreateSymbolInfo(
     return ErrorMessage("Symbol is defined in another object file (SF_Undefined flag is set).");
   }
   const std::string name = symbol_ref.getName() ? symbol_ref.getName().get() : "";
+
+  const char* kOrbitSymbolPrefix = "g_orbit_api_v";
+  if (absl::StrContains(name, kOrbitSymbolPrefix)) {
+    LOG("======== FOUND ORBIT API SYMBOL: %s 0x%x size: %lu", name, symbol_ref.getValue(),
+        symbol_ref.getSize());
+  }
   // Unknown type - skip and generate a warning.
   if (!symbol_ref.getType()) {
     LOG("WARNING: Type is not set for symbol \"%s\" in \"%s\", skipping.", name,
