@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 
-namespace orbit_linux_tracing {
+namespace orbit_linux_tracing_integration_tests {
 
 struct LinuxTracingIntegrationTestPuppetConstants {
   LinuxTracingIntegrationTestPuppetConstants() = delete;
@@ -34,6 +34,6 @@ struct LinuxTracingIntegrationTestPuppetConstants {
 
 int LinuxTracingIntegrationTestPuppetMain();
 
-}  // namespace orbit_linux_tracing
+}  // namespace orbit_linux_tracing_integration_tests
 
 #endif  // LINUX_TRACING_INTEGRATION_TEST_PUPPET_H_
