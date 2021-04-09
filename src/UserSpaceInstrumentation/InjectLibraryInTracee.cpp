@@ -287,8 +287,8 @@ ErrorMessageOr<uint64_t> ExecuteMachineCode(pid_t pid, uint64_t address_code, ui
   // for the current function. This area is called the 'red zone'. The function we interrupted might
   // have stored temporary data in the red zone and the function we are about to execute might do
   // the same. To keep them separated we decrement rsp by 128 bytes.
-  // The calling convention also asks for rsp being a multiple of 16 so we additionally round down
-  // to the next multiople of 16.
+  // The calling convention also asks for rsp being to be aligned to 16 bytes so we additionally
+  // round down to the next multiple of 16.
   const uint64_t old_rsp = original_registers.GetGeneralPurposeRegisters()->x86_64.rsp;
   constexpr int kSizeRedZone = 128;
   constexpr int kStackAlignment = 16;
