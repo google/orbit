@@ -27,7 +27,7 @@
 #include "OrbitBase/ThreadUtils.h"
 #include "capture.pb.h"
 
-namespace orbit_linux_tracing {
+namespace orbit_linux_tracing_integration_tests {
 namespace {
 
 [[nodiscard]] bool IsRunningAsRoot() { return geteuid() == 0; }
@@ -142,7 +142,7 @@ class ChildProcess {
   int writing_fd_ = -1;
 };
 
-class BufferTracerListener : public TracerListener {
+class BufferTracerListener : public orbit_linux_tracing::TracerListener {
  public:
   void OnSchedulingSlice(orbit_grpc_protos::SchedulingSlice scheduling_slice) override {
     orbit_grpc_protos::ProducerCaptureEvent event;
@@ -311,7 +311,7 @@ class LinuxTracingIntegrationTestFixture {
 
  private:
   ChildProcess puppet_;
-  std::optional<Tracer> tracer_ = std::nullopt;
+  std::optional<orbit_linux_tracing::Tracer> tracer_ = std::nullopt;
   std::optional<BufferTracerListener> listener_ = std::nullopt;
 };
 
@@ -1003,4 +1003,4 @@ TEST(LinuxTracingIntegrationTest, ModuleUpdateOnDlopen) {
 }
 
 }  // namespace
-}  // namespace orbit_linux_tracing
+}  // namespace orbit_linux_tracing_integration_tests

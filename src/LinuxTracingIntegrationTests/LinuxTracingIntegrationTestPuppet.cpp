@@ -18,9 +18,9 @@
 #include "OrbitBase/Logging.h"
 
 // This executable is used by LinuxTracingIntegrationTest to test the generation of specific
-// perf_event_open event. The behavior is controlled by commands sent on standard input.
+// perf_event_open events. The behavior is controlled by commands sent on standard input.
 
-namespace orbit_linux_tracing {
+namespace orbit_linux_tracing_integration_tests {
 
 using PuppetConstants = LinuxTracingIntegrationTestPuppetConstants;
 
@@ -110,4 +110,4 @@ int LinuxTracingIntegrationTestPuppetMain() {
   return 0;
 }
 
-}  // namespace orbit_linux_tracing
+}  // namespace orbit_linux_tracing_integration_tests
