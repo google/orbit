@@ -110,7 +110,9 @@ ErrorMessageOr<void> InitializeApiInTracee(const CaptureOptions& capture_options
           .AppendBytes({0xff, 0xd0})
           .AppendBytes({0xcc});
 
-      auto result = ExecuteInTracee(pid, code);
+      const uint64_t memory_size = code.GetResultAsVector().size();
+      OUTCOME_TRY(code_address, AllocateInTracee(pid, 0, memory_size));
+      auto result = ExecuteMachineCode(pid, code_address, memory_size, code);
       CHECK(!result.has_error());
     }
   }

@@ -29,10 +29,9 @@ enum class OrbitApiFunctionId {
 
   kOrbitNumFunctions  // This must be last.
 };
-}
 
-static void EnqueueApiEvent(orbit_api::EventType type, const char* name = nullptr,
-                            uint64_t data = 0, orbit_api_color color = kOrbitColorAuto) {
+void EnqueueApiEvent(orbit_api::EventType type, const char* name = nullptr, uint64_t data = 0,
+                     orbit_api_color color = kOrbitColorAuto) {
   static orbit_api::LockFreeApiEventProducer producer;
   if (!producer.IsCapturing()) return;
 
@@ -43,6 +42,8 @@ static void EnqueueApiEvent(orbit_api::EventType type, const char* name = nullpt
   orbit_api::ApiEvent api_event(pid, tid, timestamp_ns, type, name, data, color);
   producer.EnqueueIntermediateEvent(api_event);
 }
+
+}  // namespace
 
 extern "C" {
 

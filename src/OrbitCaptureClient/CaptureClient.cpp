@@ -164,7 +164,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   // Orbit API.
   ManualInstrumentationInfo* api_info = capture_options->add_manual_instrumentation_infos();
   api_info->set_api_object_address(
-      0x556ead02b008);  // TODO, properly find global variable address in tracee.
+      0x5634d3db0008);  // TODO, properly find global variable address in tracee.
   api_info->set_api_version(0);
 
   bool request_write_succeeded;
