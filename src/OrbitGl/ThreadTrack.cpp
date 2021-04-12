@@ -242,7 +242,7 @@ void ThreadTrack::UpdatePositionOfSubtracks() {
   const float event_track_height = layout_->GetEventTrackHeight();
   const float space_between_subtracks = layout_->GetSpaceBetweenTracksAndThread();
 
-  float current_y = pos_[1];
+  float current_y = pos_[1] - layout_->GetTrackTabHeight();
 
   thread_state_bar_->SetPos(pos_[0], current_y);
   if (!thread_state_bar_->IsEmpty()) {
@@ -393,7 +393,7 @@ float ThreadTrack::GetHeaderHeight() const {
   const float tracepoint_track_height = layout_->GetEventTrackHeight();
   const float space_between_subtracks = layout_->GetSpaceBetweenTracksAndThread();
 
-  float header_height = 0.0f;
+  float header_height = layout_->GetTrackTabHeight();
   int track_count = 0;
   if (!thread_state_bar_->IsEmpty()) {
     header_height += thread_state_track_height;
@@ -412,6 +412,14 @@ float ThreadTrack::GetHeaderHeight() const {
 
   header_height += std::max(0, track_count - 1) * space_between_subtracks;
   return header_height;
+}
+
+float ThreadTrack::GetYFromDepth(uint32_t depth) const {
+  bool gap_between_tracks_and_timers =
+      !thread_state_bar_->IsEmpty() || !event_bar_->IsEmpty() || !tracepoint_bar_->IsEmpty();
+  return pos_[1] - GetHeaderHeight() -
+         (gap_between_tracks_and_timers ? layout_->GetSpaceBetweenTracksAndThread() : 0) -
+         box_height_ * static_cast<float>(depth + 1);
 }
 
 void ThreadTrack::OnTimer(const TimerInfo& timer_info) {

@@ -96,26 +96,12 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   const bool picking = picking_mode != PickingMode::kNone;
 
   float x0 = pos_[0];
-  float x1 = x0 + size_[0];
   float y0 = pos_[1];
-  float y1 = y0 - size_[1];
   float track_z = GlCanvas::kZValueTrack + z_offset;
   float text_z = GlCanvas::kZValueTrackText + z_offset;
   float top_margin = layout_->GetTrackTopMargin();
 
   const Color kBackgroundColor = GetBackgroundColor();
-
-  // Draw track background.
-  if (!picking) {
-    if (IsPinned()) {
-      Box box(Vec2(x0, y0), Vec2(size_[0], size_[1]), track_z);
-      ui_batcher->AddBox(box, kBackgroundColor, shared_from_this());
-    }
-    if (layout_->GetDrawTrackBackground()) {
-      Box box(Vec2(x0, y0 + top_margin), Vec2(size_[0], -size_[1] - top_margin), track_z);
-      ui_batcher->AddBox(box, kBackgroundColor, shared_from_this());
-    }
-  }
 
   // Draw tab.
   float label_height = layout_->GetTrackTabHeight();
@@ -124,7 +110,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   float half_label_width = 0.5f * label_width;
   float tab_x0 = x0 + layout_->GetTrackTabOffset();
 
-  Box box(Vec2(tab_x0, y0), Vec2(label_width, label_height), track_z);
+  Box box(Vec2(tab_x0, y0), Vec2(label_width, -label_height), track_z);
   ui_batcher->AddBox(box, kBackgroundColor, shared_from_this());
 
   // Draw rounded corners.
@@ -134,24 +120,33 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
     radius = std::min(radius, half_label_width);
     uint32_t sides = static_cast<uint32_t>(layout_->GetRoundingNumSides() + 0.5f);
     auto rounded_corner = GetRoundedCornerMask(radius, sides);
-    Vec2 bottom_left(x0, y1);
-    Vec2 bottom_right(tab_x0 + label_width, y0 + top_margin);
-    Vec2 top_right(tab_x0 + label_width, y0 + label_height);
-    Vec2 top_left(tab_x0, y0 + label_height);
-    Vec2 end_bottom(x1 - right_margin, y1);
-    Vec2 end_top(x1 - right_margin, y0 + top_margin);
 
-    DrawTriangleFan(ui_batcher, rounded_corner, bottom_left, GlCanvas::kBackgroundColor, 0,
-                    track_z);
-    DrawTriangleFan(ui_batcher, rounded_corner, bottom_right, kBackgroundColor, 0, track_z);
-    DrawTriangleFan(ui_batcher, rounded_corner, top_right, GlCanvas::kBackgroundColor, 180.f,
-                    track_z);
+    // top_left       tab_top_right
+    //  __________________              content_top_right
+    // /                  \_______________
+    // |             tab_bottom_right     `
+    // |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|
+    // \__________________________________/
+    // content_bottom_left                      content_bottom_right
+    Vec2 top_left(tab_x0, y0);
+    Vec2 tab_top_right(top_left[0] + label_width, top_left[1]);
+    Vec2 tab_bottom_right(top_left[0] + label_width, top_left[1] - label_height + top_margin);
+    Vec2 content_bottom_left(top_left[0] - tab_x0, top_left[1] - size_[1]);
+    Vec2 content_bottom_right(top_left[0] + size_[0] - right_margin, top_left[1] - size_[1]);
+    Vec2 content_top_right(top_left[0] + size_[0] - right_margin,
+                           top_left[1] - label_height + top_margin);
+
     DrawTriangleFan(ui_batcher, rounded_corner, top_left, GlCanvas::kBackgroundColor, -90.f,
                     track_z);
-    DrawTriangleFan(ui_batcher, rounded_corner, end_bottom, GlCanvas::kBackgroundColor, 90.f,
+    DrawTriangleFan(ui_batcher, rounded_corner, tab_top_right, GlCanvas::kBackgroundColor, 180.f,
                     track_z);
-    DrawTriangleFan(ui_batcher, rounded_corner, end_top, GlCanvas::kBackgroundColor, 180.f,
+    DrawTriangleFan(ui_batcher, rounded_corner, tab_bottom_right, kBackgroundColor, 0, track_z);
+    DrawTriangleFan(ui_batcher, rounded_corner, content_bottom_left, GlCanvas::kBackgroundColor, 0,
                     track_z);
+    DrawTriangleFan(ui_batcher, rounded_corner, content_bottom_right, GlCanvas::kBackgroundColor,
+                    90.f, track_z);
+    DrawTriangleFan(ui_batcher, rounded_corner, content_top_right, GlCanvas::kBackgroundColor,
+                    180.f, track_z);
   }
 
   // Collapse toggle state management.
@@ -163,7 +158,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
 
   // Draw collapsing triangle.
   float button_offset = layout_->GetCollapseButtonOffset();
-  float toggle_y_pos = pos_[1] + half_label_height;
+  float toggle_y_pos = pos_[1] - half_label_height;
   Vec2 toggle_pos = Vec2(tab_x0 + button_offset, toggle_y_pos);
   collapse_toggle_->SetPos(toggle_pos[0], toggle_pos[1]);
   collapse_toggle_->Draw(canvas, picking_mode, z_offset);
@@ -181,6 +176,15 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
     text_renderer.AddTextTrailingCharsPrioritized(
         label_.c_str(), tab_x0 + label_offset_x, toggle_y_pos - label_offset_y, text_z, kColor,
         GetNumberOfPrioritizedTrailingCharacters(), font_size, label_width - label_offset_x);
+  }
+
+  // Draw track's content background.
+  if (!picking) {
+    if (layout_->GetDrawTrackBackground()) {
+      Box box(Vec2(x0, y0 - label_height + top_margin),
+              Vec2(size_[0], -size_[1] + label_height - top_margin), track_z);
+      ui_batcher->AddBox(box, kBackgroundColor, shared_from_this());
+    }
   }
 }
 

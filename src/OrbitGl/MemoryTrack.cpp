@@ -19,12 +19,18 @@ void MemoryTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offse
   Batcher* ui_batcher = canvas->GetBatcher();
   uint32_t font_size = layout_->CalculateZoomedFontSize();
 
+  float content_height =
+      (size_[1] - layout_->GetTrackTabHeight() - layout_->GetTrackBottomMargin());
+  Vec2 content_pos = pos_;
+  content_pos[1] -= layout_->GetTrackTabHeight();
+
   // Add warning threshold text box and line.
   if (warning_threshold_.has_value()) {
     const Color kThresholdColor(244, 67, 54, 255);
     double normalized_value = (warning_threshold_.value().second - min_) * inv_value_range_;
     float x = pos_[0];
-    float y = pos_[1] - size_[1] + static_cast<float>(normalized_value) * size_[1];
+    float y =
+        content_pos[1] - content_height + static_cast<float>(normalized_value) * content_height;
     Vec2 from(x, y);
     Vec2 to(x + size_[0], y);
 
@@ -51,7 +57,7 @@ void MemoryTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offse
     Vec2 text_box_size(string_width, layout_->GetTextBoxHeight());
     Vec2 text_box_position(pos_[0] + size_[0] - text_box_size[0] - layout_->GetRightMargin() -
                                layout_->GetSliderWidth(),
-                           pos_[1] - layout_->GetTextBoxHeight() / 2.f);
+                           content_pos[1] - layout_->GetTextBoxHeight() / 2.f);
     canvas->GetTextRenderer().AddText(text.c_str(), text_box_position[0],
                                       text_box_position[1] + layout_->GetTextOffset(), text_z,
                                       kWhite, font_size, text_box_size[0]);
@@ -64,7 +70,7 @@ void MemoryTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offse
     Vec2 text_box_size(string_width, layout_->GetTextBoxHeight());
     Vec2 text_box_position(pos_[0] + size_[0] - text_box_size[0] - layout_->GetRightMargin() -
                                layout_->GetSliderWidth(),
-                           pos_[1] - size_[1]);
+                           content_pos[1] - content_height);
     canvas->GetTextRenderer().AddText(text.c_str(), text_box_position[0],
                                       text_box_position[1] + layout_->GetTextOffset(), text_z,
                                       kWhite, font_size, text_box_size[0]);
