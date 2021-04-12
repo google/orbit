@@ -40,6 +40,7 @@ class GpuTracepointVisitor : public PerfEventVisitor {
   TracerListener* listener_ = nullptr;
 
   struct AmdgpuCsIoctlEvent {
+    pid_t pid;
     pid_t tid;
     uint64_t timestamp_ns;
     uint32_t context;

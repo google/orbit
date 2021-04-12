@@ -472,6 +472,8 @@ class GpuPerfEvent : public TracepointPerfEvent {
     return std::string(&data_loc_data[0]);
   }
 
+  pid_t GetPid() const { return ring_buffer_record.sample_id.pid; }
+
   pid_t GetTid() const { return ring_buffer_record.sample_id.tid; }
 
   virtual uint32_t GetContext() const = 0;
