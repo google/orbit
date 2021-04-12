@@ -31,6 +31,12 @@ class ModuleManager final {
   // modules that used to be loaded before the call and are not loaded anymore after the call.
   [[nodiscard]] std::vector<ModuleData*> AddOrUpdateModules(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
+
+  // Similar to AddOrUpdateModules except it does not update loaded modules.
+  // Retuns the list of modules that it did not update.
+  [[nodiscard]] std::vector<ModuleData*> AddOrUpdateNotLoadedModules(
+      absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
+
   [[nodiscard]] std::vector<orbit_client_protos::FunctionInfo> GetOrbitFunctionsOfProcess(
       const ProcessData& process) const;
 
