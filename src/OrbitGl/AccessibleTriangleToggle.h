@@ -5,8 +5,8 @@
 #ifndef ORBIT_GL_ACCESSIBLE_TRIANGLE_TOGGLE_H_
 #define ORBIT_GL_ACCESSIBLE_TRIANGLE_TOGGLE_H_
 
+#include "AccessibleCaptureViewElement.h"
 #include "CaptureViewElement.h"
-#include "OrbitAccessibility/AccessibleInterface.h"
 #include "Track.h"
 
 class TriangleToggle;
@@ -18,24 +18,22 @@ namespace orbit_gl {
  * child of the track. It will be thus on the same level as the virtual elements for the tab and the
  * content (see `AccessibleTrack`).
  */
-class AccessibleTriangleToggle : public orbit_accessibility::AccessibleInterface {
+class AccessibleTriangleToggle : public AccessibleCaptureViewElement {
  public:
-  explicit AccessibleTriangleToggle(TriangleToggle* triangle_toggle, Track* parent)
-      : triangle_toggle_{triangle_toggle}, parent_{parent} {};
+  explicit AccessibleTriangleToggle(TriangleToggle* triangle_toggle, Track* parent);
 
   [[nodiscard]] int AccessibleChildCount() const override { return 0; };
   [[nodiscard]] const AccessibleInterface* AccessibleChild(int /*index*/) const override {
     return nullptr;
   }
-  [[nodiscard]] const AccessibleInterface* AccessibleParent() const override;
+
+  [[nodiscard]] const orbit_accessibility::AccessibleInterface* AccessibleParent() const override;
 
   [[nodiscard]] std::string AccessibleName() const override { return "TriangleToggle"; }
 
   [[nodiscard]] orbit_accessibility::AccessibilityRole AccessibleRole() const override {
     return orbit_accessibility::AccessibilityRole::Button;
   }
-
-  [[nodiscard]] orbit_accessibility::AccessibilityRect AccessibleLocalRect() const override;
   [[nodiscard]] orbit_accessibility::AccessibilityState AccessibleState() const override;
 
  private:
