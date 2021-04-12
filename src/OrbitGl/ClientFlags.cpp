@@ -41,3 +41,8 @@ ABSL_FLAG(bool, enable_tracepoint_feature, false,
 
 // TODO(b/181736566): Remove this flag entirely
 ABSL_FLAG(bool, enable_source_code_view, true, "Enable the experimental source code view");
+
+// TODO(b/185099421): Remove this flag once we have a clear explanation of the memory warning
+// threshold (i.e., production limit).
+ABSL_FLAG(bool, enable_warning_threshold, false,
+          "Enable setting and showing the memory warning threshold");
