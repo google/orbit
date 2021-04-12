@@ -52,10 +52,12 @@ class GpuTracepointVisitorTest : public ::testing::Test {
 };
 
 std::unique_ptr<AmdgpuCsIoctlPerfEvent> MakeFakeAmdgpuCsIoctlPerfEvent(
-    pid_t tid, uint64_t timestamp_ns, uint32_t context, uint32_t seqno,
+    pid_t pid, pid_t tid, uint64_t timestamp_ns, uint32_t context, uint32_t seqno,
     const std::string& timeline) {
   auto event = std::make_unique<AmdgpuCsIoctlPerfEvent>(
       static_cast<uint32_t>(sizeof(amdgpu_cs_ioctl_tracepoint) + timeline.length() + 1));
+  event->ring_buffer_record.sample_id.pid = pid;
+  CHECK(event->GetPid() == pid);
   event->ring_buffer_record.sample_id.tid = tid;
   CHECK(event->GetTid() == tid);
   event->ring_buffer_record.sample_id.time = timestamp_ns;
@@ -110,13 +112,14 @@ std::unique_ptr<DmaFenceSignaledPerfEvent> MakeFakeDmaFenceSignaledPerfEvent(
   return event;
 }
 
-orbit_grpc_protos::FullGpuJob MakeGpuJob(int32_t tid, uint32_t context, uint32_t seqno,
+orbit_grpc_protos::FullGpuJob MakeGpuJob(int32_t pid, int32_t tid, uint32_t context, uint32_t seqno,
                                          std::string timeline, int32_t depth,
                                          uint64_t amdgpu_cs_ioctl_time_ns,
                                          uint64_t amdgpu_sched_run_job_time_ns,
                                          uint64_t gpu_hardware_start_time_ns,
                                          uint64_t dma_fence_signaled_time_ns) {
   orbit_grpc_protos::FullGpuJob expected_gpu_job;
+  expected_gpu_job.set_pid(pid);
   expected_gpu_job.set_tid(tid);
   expected_gpu_job.set_context(context);
   expected_gpu_job.set_seqno(seqno);
@@ -132,6 +135,7 @@ orbit_grpc_protos::FullGpuJob MakeGpuJob(int32_t tid, uint32_t context, uint32_t
 ::testing::Matcher<orbit_grpc_protos::FullGpuJob> GpuJobEq(
     const orbit_grpc_protos::FullGpuJob& expected) {
   return ::testing::AllOf(
+      ::testing::Property("pid", &orbit_grpc_protos::FullGpuJob::pid, expected.pid()),
       ::testing::Property("tid", &orbit_grpc_protos::FullGpuJob::tid, expected.tid()),
       ::testing::Property("context", &orbit_grpc_protos::FullGpuJob::context, expected.context()),
       ::testing::Property("seqno", &orbit_grpc_protos::FullGpuJob::seqno, expected.seqno()),
@@ -155,6 +159,7 @@ orbit_grpc_protos::FullGpuJob MakeGpuJob(int32_t tid, uint32_t context, uint32_t
 }  // namespace
 
 TEST(GpuTracepointVisitor, NeedsListener) {
+  static constexpr pid_t kPid = 41;
   static constexpr pid_t kTid = 42;
   static constexpr uint32_t kContext = 1;
   static constexpr uint32_t kSeqno = 10;
@@ -165,7 +170,8 @@ TEST(GpuTracepointVisitor, NeedsListener) {
 
   GpuTracepointVisitor visitor;
 
-  MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA, kContext, kSeqno, kTimeline)->Accept(&visitor);
+  MakeFakeAmdgpuCsIoctlPerfEvent(kPid, kTid, kTimestampA, kContext, kSeqno, kTimeline)
+      ->Accept(&visitor);
   MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB, kContext, kSeqno, kTimeline)->Accept(&visitor);
   EXPECT_DEATH(
       MakeFakeDmaFenceSignaledPerfEvent(kTimestampD, kContext, kSeqno, kTimeline)->Accept(&visitor),
@@ -173,6 +179,7 @@ TEST(GpuTracepointVisitor, NeedsListener) {
 }
 
 TEST_F(GpuTracepointVisitorTest, JobCreatedWithAllThreePerfEvents) {
+  static constexpr pid_t kPid = 41;
   static constexpr pid_t kTid = 42;
   static constexpr uint32_t kContext = 1;
   static constexpr uint32_t kSeqno = 10;
@@ -182,17 +189,20 @@ TEST_F(GpuTracepointVisitorTest, JobCreatedWithAllThreePerfEvents) {
   static constexpr uint64_t kTimestampC = kTimestampB;
   static constexpr uint64_t kTimestampD = 300;
 
-  orbit_grpc_protos::FullGpuJob expected_gpu_job = MakeGpuJob(
-      kTid, kContext, kSeqno, kTimeline, 0, kTimestampA, kTimestampB, kTimestampC, kTimestampD);
+  orbit_grpc_protos::FullGpuJob expected_gpu_job =
+      MakeGpuJob(kPid, kTid, kContext, kSeqno, kTimeline, 0, kTimestampA, kTimestampB, kTimestampC,
+                 kTimestampD);
   orbit_grpc_protos::FullGpuJob actual_gpu_job;
   EXPECT_CALL(mock_listener_, OnGpuJob).Times(1).WillOnce(::testing::SaveArg<0>(&actual_gpu_job));
-  MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA, kContext, kSeqno, kTimeline)->Accept(&visitor_);
+  MakeFakeAmdgpuCsIoctlPerfEvent(kPid, kTid, kTimestampA, kContext, kSeqno, kTimeline)
+      ->Accept(&visitor_);
   MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB, kContext, kSeqno, kTimeline)->Accept(&visitor_);
   MakeFakeDmaFenceSignaledPerfEvent(kTimestampD, kContext, kSeqno, kTimeline)->Accept(&visitor_);
   EXPECT_THAT(actual_gpu_job, GpuJobEq(expected_gpu_job));
 }
 
 TEST_F(GpuTracepointVisitorTest, JobCreatedEvenWithOutOfOrderPerfEvents1) {
+  static constexpr pid_t kPid = 41;
   static constexpr pid_t kTid = 42;
   static constexpr uint32_t kContext = 1;
   static constexpr uint32_t kSeqno = 10;
@@ -202,18 +212,21 @@ TEST_F(GpuTracepointVisitorTest, JobCreatedEvenWithOutOfOrderPerfEvents1) {
   static constexpr uint64_t kTimestampC = kTimestampB;
   static constexpr uint64_t kTimestampD = 300;
 
-  orbit_grpc_protos::FullGpuJob expected_gpu_job = MakeGpuJob(
-      kTid, kContext, kSeqno, kTimeline, 0, kTimestampA, kTimestampB, kTimestampC, kTimestampD);
+  orbit_grpc_protos::FullGpuJob expected_gpu_job =
+      MakeGpuJob(kPid, kTid, kContext, kSeqno, kTimeline, 0, kTimestampA, kTimestampB, kTimestampC,
+                 kTimestampD);
   orbit_grpc_protos::FullGpuJob actual_gpu_job;
   EXPECT_CALL(mock_listener_, OnGpuJob).Times(1).WillOnce(::testing::SaveArg<0>(&actual_gpu_job));
   MakeFakeDmaFenceSignaledPerfEvent(kTimestampD, kContext, kSeqno, kTimeline)->Accept(&visitor_);
   MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB, kContext, kSeqno, kTimeline)->Accept(&visitor_);
 
-  MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA, kContext, kSeqno, kTimeline)->Accept(&visitor_);
+  MakeFakeAmdgpuCsIoctlPerfEvent(kPid, kTid, kTimestampA, kContext, kSeqno, kTimeline)
+      ->Accept(&visitor_);
   EXPECT_THAT(actual_gpu_job, GpuJobEq(expected_gpu_job));
 }
 
 TEST_F(GpuTracepointVisitorTest, JobCreatedEvenWithOutOfOrderPerfEvents2) {
+  static constexpr pid_t kPid = 41;
   static constexpr pid_t kTid = 42;
   static constexpr uint32_t kContext = 1;
   static constexpr uint32_t kSeqno = 10;
@@ -223,17 +236,20 @@ TEST_F(GpuTracepointVisitorTest, JobCreatedEvenWithOutOfOrderPerfEvents2) {
   static constexpr uint64_t kTimestampC = kTimestampB;
   static constexpr uint64_t kTimestampD = 300;
 
-  orbit_grpc_protos::FullGpuJob expected_gpu_job = MakeGpuJob(
-      kTid, kContext, kSeqno, kTimeline, 0, kTimestampA, kTimestampB, kTimestampC, kTimestampD);
+  orbit_grpc_protos::FullGpuJob expected_gpu_job =
+      MakeGpuJob(kPid, kTid, kContext, kSeqno, kTimeline, 0, kTimestampA, kTimestampB, kTimestampC,
+                 kTimestampD);
   orbit_grpc_protos::FullGpuJob actual_gpu_job;
   EXPECT_CALL(mock_listener_, OnGpuJob).Times(1).WillOnce(::testing::SaveArg<0>(&actual_gpu_job));
   MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB, kContext, kSeqno, kTimeline)->Accept(&visitor_);
-  MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA, kContext, kSeqno, kTimeline)->Accept(&visitor_);
+  MakeFakeAmdgpuCsIoctlPerfEvent(kPid, kTid, kTimestampA, kContext, kSeqno, kTimeline)
+      ->Accept(&visitor_);
   MakeFakeDmaFenceSignaledPerfEvent(kTimestampD, kContext, kSeqno, kTimeline)->Accept(&visitor_);
   EXPECT_THAT(actual_gpu_job, GpuJobEq(expected_gpu_job));
 }
 
 TEST_F(GpuTracepointVisitorTest, NoJobBecauseOfMismatchingContext) {
+  static constexpr pid_t kPid = 41;
   static constexpr pid_t kTid = 42;
   static constexpr uint32_t kContext = 1;
   static constexpr uint32_t kSeqno = 10;
@@ -244,13 +260,14 @@ TEST_F(GpuTracepointVisitorTest, NoJobBecauseOfMismatchingContext) {
 
   EXPECT_CALL(mock_listener_, OnGpuJob).Times(0);
 
-  MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA, kContext + 1, kSeqno, kTimeline)
+  MakeFakeAmdgpuCsIoctlPerfEvent(kPid, kTid, kTimestampA, kContext + 1, kSeqno, kTimeline)
       ->Accept(&visitor_);
   MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB, kContext, kSeqno, kTimeline)->Accept(&visitor_);
   MakeFakeDmaFenceSignaledPerfEvent(kTimestampD, kContext, kSeqno, kTimeline)->Accept(&visitor_);
 }
 
 TEST_F(GpuTracepointVisitorTest, NoJobBecauseOfMismatchingSeqno) {
+  static constexpr pid_t kPid = 41;
   static constexpr pid_t kTid = 42;
   static constexpr uint32_t kContext = 1;
   static constexpr uint32_t kSeqno = 10;
@@ -260,13 +277,15 @@ TEST_F(GpuTracepointVisitorTest, NoJobBecauseOfMismatchingSeqno) {
   static constexpr uint64_t kTimestampD = 300;
 
   EXPECT_CALL(mock_listener_, OnGpuJob).Times(0);
-  MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA, kContext, kSeqno, kTimeline)->Accept(&visitor_);
+  MakeFakeAmdgpuCsIoctlPerfEvent(kPid, kTid, kTimestampA, kContext, kSeqno, kTimeline)
+      ->Accept(&visitor_);
   MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB, kContext, kSeqno + 1, kTimeline)
       ->Accept(&visitor_);
   MakeFakeDmaFenceSignaledPerfEvent(kTimestampD, kContext, kSeqno, kTimeline)->Accept(&visitor_);
 }
 
 TEST_F(GpuTracepointVisitorTest, NoJobBecauseOfMismatchingTimeline) {
+  static constexpr pid_t kPid = 41;
   static constexpr pid_t kTid = 42;
   static constexpr uint32_t kContext = 1;
   static constexpr uint32_t kSeqno = 10;
@@ -276,13 +295,15 @@ TEST_F(GpuTracepointVisitorTest, NoJobBecauseOfMismatchingTimeline) {
   static constexpr uint64_t kTimestampD = 300;
 
   EXPECT_CALL(mock_listener_, OnGpuJob).Times(0);
-  MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA, kContext, kSeqno, kTimeline)->Accept(&visitor_);
+  MakeFakeAmdgpuCsIoctlPerfEvent(kPid, kTid, kTimestampA, kContext, kSeqno, kTimeline)
+      ->Accept(&visitor_);
   MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB, kContext, kSeqno, kTimeline)->Accept(&visitor_);
   MakeFakeDmaFenceSignaledPerfEvent(kTimestampD, kContext, kSeqno, kTimeline + "1")
       ->Accept(&visitor_);
 }
 
 TEST_F(GpuTracepointVisitorTest, TwoNonOverlappingJobsWithSameDepthDifferingByContext) {
+  static constexpr pid_t kPid = 41;
   static constexpr pid_t kTid = 42;
   static constexpr uint32_t kContext1 = 1;
   static constexpr uint32_t kContext2 = 2;
@@ -299,11 +320,11 @@ TEST_F(GpuTracepointVisitorTest, TwoNonOverlappingJobsWithSameDepthDifferingByCo
   static constexpr uint64_t kTimestampD2 = kNsDistanceForSameDepth + 500;
 
   orbit_grpc_protos::FullGpuJob expected_gpu_job1 =
-      MakeGpuJob(kTid, kContext1, kSeqno, kTimeline, 0, kTimestampA1, kTimestampB1, kTimestampC1,
-                 kTimestampD1);
+      MakeGpuJob(kPid, kTid, kContext1, kSeqno, kTimeline, 0, kTimestampA1, kTimestampB1,
+                 kTimestampC1, kTimestampD1);
   orbit_grpc_protos::FullGpuJob expected_gpu_job2 =
-      MakeGpuJob(kTid, kContext2, kSeqno, kTimeline, 0, kTimestampA2, kTimestampB2, kTimestampC2,
-                 kTimestampD2);
+      MakeGpuJob(kPid, kTid, kContext2, kSeqno, kTimeline, 0, kTimestampA2, kTimestampB2,
+                 kTimestampC2, kTimestampD2);
   orbit_grpc_protos::FullGpuJob actual_gpu_job1;
   orbit_grpc_protos::FullGpuJob actual_gpu_job2;
   EXPECT_CALL(mock_listener_, OnGpuJob)
@@ -311,12 +332,12 @@ TEST_F(GpuTracepointVisitorTest, TwoNonOverlappingJobsWithSameDepthDifferingByCo
       .WillOnce(::testing::SaveArg<0>(&actual_gpu_job1))
       .WillOnce(::testing::SaveArg<0>(&actual_gpu_job2));
 
-  MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA1, kContext1, kSeqno, kTimeline)
+  MakeFakeAmdgpuCsIoctlPerfEvent(kPid, kTid, kTimestampA1, kContext1, kSeqno, kTimeline)
       ->Accept(&visitor_);
   MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB1, kContext1, kSeqno, kTimeline)->Accept(&visitor_);
   MakeFakeDmaFenceSignaledPerfEvent(kTimestampD1, kContext1, kSeqno, kTimeline)->Accept(&visitor_);
 
-  MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA2, kContext2, kSeqno, kTimeline)
+  MakeFakeAmdgpuCsIoctlPerfEvent(kPid, kTid, kTimestampA2, kContext2, kSeqno, kTimeline)
       ->Accept(&visitor_);
   MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB2, kContext2, kSeqno, kTimeline)->Accept(&visitor_);
   MakeFakeDmaFenceSignaledPerfEvent(kTimestampD2, kContext2, kSeqno, kTimeline)->Accept(&visitor_);
@@ -326,6 +347,7 @@ TEST_F(GpuTracepointVisitorTest, TwoNonOverlappingJobsWithSameDepthDifferingByCo
 }
 
 TEST_F(GpuTracepointVisitorTest, TwoNonOverlappingJobsWithSameDepthDifferingBySeqno) {
+  static constexpr pid_t kPid = 41;
   static constexpr pid_t kTid = 42;
   static constexpr uint32_t kContext = 1;
   static constexpr uint32_t kSeqno1 = 10;
@@ -342,11 +364,11 @@ TEST_F(GpuTracepointVisitorTest, TwoNonOverlappingJobsWithSameDepthDifferingBySe
   static constexpr uint64_t kTimestampD2 = kNsDistanceForSameDepth + 500;
 
   orbit_grpc_protos::FullGpuJob expected_gpu_job1 =
-      MakeGpuJob(kTid, kContext, kSeqno1, kTimeline, 0, kTimestampA1, kTimestampB1, kTimestampC1,
-                 kTimestampD1);
+      MakeGpuJob(kPid, kTid, kContext, kSeqno1, kTimeline, 0, kTimestampA1, kTimestampB1,
+                 kTimestampC1, kTimestampD1);
   orbit_grpc_protos::FullGpuJob expected_gpu_job2 =
-      MakeGpuJob(kTid, kContext, kSeqno2, kTimeline, 0, kTimestampA2, kTimestampB2, kTimestampC2,
-                 kTimestampD2);
+      MakeGpuJob(kPid, kTid, kContext, kSeqno2, kTimeline, 0, kTimestampA2, kTimestampB2,
+                 kTimestampC2, kTimestampD2);
   orbit_grpc_protos::FullGpuJob actual_gpu_job1;
   orbit_grpc_protos::FullGpuJob actual_gpu_job2;
   EXPECT_CALL(mock_listener_, OnGpuJob)
@@ -354,12 +376,12 @@ TEST_F(GpuTracepointVisitorTest, TwoNonOverlappingJobsWithSameDepthDifferingBySe
       .WillOnce(::testing::SaveArg<0>(&actual_gpu_job1))
       .WillOnce(::testing::SaveArg<0>(&actual_gpu_job2));
 
-  MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA1, kContext, kSeqno1, kTimeline)
+  MakeFakeAmdgpuCsIoctlPerfEvent(kPid, kTid, kTimestampA1, kContext, kSeqno1, kTimeline)
       ->Accept(&visitor_);
   MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB1, kContext, kSeqno1, kTimeline)->Accept(&visitor_);
   MakeFakeDmaFenceSignaledPerfEvent(kTimestampD1, kContext, kSeqno1, kTimeline)->Accept(&visitor_);
 
-  MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA2, kContext, kSeqno2, kTimeline)
+  MakeFakeAmdgpuCsIoctlPerfEvent(kPid, kTid, kTimestampA2, kContext, kSeqno2, kTimeline)
       ->Accept(&visitor_);
   MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB2, kContext, kSeqno2, kTimeline)->Accept(&visitor_);
   MakeFakeDmaFenceSignaledPerfEvent(kTimestampD2, kContext, kSeqno2, kTimeline)->Accept(&visitor_);
@@ -369,6 +391,7 @@ TEST_F(GpuTracepointVisitorTest, TwoNonOverlappingJobsWithSameDepthDifferingBySe
 }
 
 TEST_F(GpuTracepointVisitorTest, TwoOverlappingJobsButOnDifferentTimelines) {
+  static constexpr pid_t kPid = 41;
   static constexpr pid_t kTid = 42;
   static constexpr uint32_t kContext = 1;
   static constexpr uint32_t kSeqno = 10;
@@ -379,10 +402,12 @@ TEST_F(GpuTracepointVisitorTest, TwoOverlappingJobsButOnDifferentTimelines) {
   static constexpr uint64_t kTimestampC = kTimestampB;
   static constexpr uint64_t kTimestampD = 300;
 
-  orbit_grpc_protos::FullGpuJob expected_gpu_job1 = MakeGpuJob(
-      kTid, kContext, kSeqno, kTimeline1, 0, kTimestampA, kTimestampB, kTimestampC, kTimestampD);
-  orbit_grpc_protos::FullGpuJob expected_gpu_job2 = MakeGpuJob(
-      kTid, kContext, kSeqno, kTimeline2, 0, kTimestampA, kTimestampB, kTimestampC, kTimestampD);
+  orbit_grpc_protos::FullGpuJob expected_gpu_job1 =
+      MakeGpuJob(kPid, kTid, kContext, kSeqno, kTimeline1, 0, kTimestampA, kTimestampB, kTimestampC,
+                 kTimestampD);
+  orbit_grpc_protos::FullGpuJob expected_gpu_job2 =
+      MakeGpuJob(kPid, kTid, kContext, kSeqno, kTimeline2, 0, kTimestampA, kTimestampB, kTimestampC,
+                 kTimestampD);
   orbit_grpc_protos::FullGpuJob actual_gpu_job1;
   orbit_grpc_protos::FullGpuJob actual_gpu_job2;
   EXPECT_CALL(mock_listener_, OnGpuJob)
@@ -390,12 +415,12 @@ TEST_F(GpuTracepointVisitorTest, TwoOverlappingJobsButOnDifferentTimelines) {
       .WillOnce(::testing::SaveArg<0>(&actual_gpu_job1))
       .WillOnce(::testing::SaveArg<0>(&actual_gpu_job2));
 
-  MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA, kContext, kSeqno, kTimeline1)
+  MakeFakeAmdgpuCsIoctlPerfEvent(kPid, kTid, kTimestampA, kContext, kSeqno, kTimeline1)
       ->Accept(&visitor_);
   MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB, kContext, kSeqno, kTimeline1)->Accept(&visitor_);
   MakeFakeDmaFenceSignaledPerfEvent(kTimestampD, kContext, kSeqno, kTimeline1)->Accept(&visitor_);
 
-  MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA, kContext, kSeqno, kTimeline2)
+  MakeFakeAmdgpuCsIoctlPerfEvent(kPid, kTid, kTimestampA, kContext, kSeqno, kTimeline2)
       ->Accept(&visitor_);
   MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB, kContext, kSeqno, kTimeline2)->Accept(&visitor_);
   MakeFakeDmaFenceSignaledPerfEvent(kTimestampD, kContext, kSeqno, kTimeline2)->Accept(&visitor_);
@@ -405,6 +430,7 @@ TEST_F(GpuTracepointVisitorTest, TwoOverlappingJobsButOnDifferentTimelines) {
 }
 
 TEST_F(GpuTracepointVisitorTest, TwoNonOverlappingJobsWithDifferentDepthsBecauseOfSlack) {
+  static constexpr pid_t kPid = 41;
   static constexpr pid_t kTid = 42;
   static constexpr uint32_t kContext = 1;
   static constexpr uint32_t kSeqno1 = 10;
@@ -420,11 +446,11 @@ TEST_F(GpuTracepointVisitorTest, TwoNonOverlappingJobsWithDifferentDepthsBecause
   static constexpr uint64_t kTimestampD2 = 600;
 
   orbit_grpc_protos::FullGpuJob expected_gpu_job1 =
-      MakeGpuJob(kTid, kContext, kSeqno1, kTimeline, 0, kTimestampA1, kTimestampB1, kTimestampC1,
-                 kTimestampD1);
+      MakeGpuJob(kPid, kTid, kContext, kSeqno1, kTimeline, 0, kTimestampA1, kTimestampB1,
+                 kTimestampC1, kTimestampD1);
   orbit_grpc_protos::FullGpuJob expected_gpu_job2 =
-      MakeGpuJob(kTid, kContext, kSeqno2, kTimeline, 1, kTimestampA2, kTimestampB2, kTimestampC2,
-                 kTimestampD2);
+      MakeGpuJob(kPid, kTid, kContext, kSeqno2, kTimeline, 1, kTimestampA2, kTimestampB2,
+                 kTimestampC2, kTimestampD2);
   orbit_grpc_protos::FullGpuJob actual_gpu_job1;
   orbit_grpc_protos::FullGpuJob actual_gpu_job2;
   EXPECT_CALL(mock_listener_, OnGpuJob)
@@ -432,12 +458,12 @@ TEST_F(GpuTracepointVisitorTest, TwoNonOverlappingJobsWithDifferentDepthsBecause
       .WillOnce(::testing::SaveArg<0>(&actual_gpu_job1))
       .WillOnce(::testing::SaveArg<0>(&actual_gpu_job2));
 
-  MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA1, kContext, kSeqno1, kTimeline)
+  MakeFakeAmdgpuCsIoctlPerfEvent(kPid, kTid, kTimestampA1, kContext, kSeqno1, kTimeline)
       ->Accept(&visitor_);
   MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB1, kContext, kSeqno1, kTimeline)->Accept(&visitor_);
   MakeFakeDmaFenceSignaledPerfEvent(kTimestampD1, kContext, kSeqno1, kTimeline)->Accept(&visitor_);
 
-  MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA2, kContext, kSeqno2, kTimeline)
+  MakeFakeAmdgpuCsIoctlPerfEvent(kPid, kTid, kTimestampA2, kContext, kSeqno2, kTimeline)
       ->Accept(&visitor_);
   MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB2, kContext, kSeqno2, kTimeline)->Accept(&visitor_);
   MakeFakeDmaFenceSignaledPerfEvent(kTimestampD2, kContext, kSeqno2, kTimeline)->Accept(&visitor_);
@@ -447,6 +473,7 @@ TEST_F(GpuTracepointVisitorTest, TwoNonOverlappingJobsWithDifferentDepthsBecause
 }
 
 TEST_F(GpuTracepointVisitorTest, TwoOverlappingJobsWithImmediateHwExecution) {
+  static constexpr pid_t kPid = 41;
   static constexpr pid_t kTid = 42;
   static constexpr uint32_t kContext = 1;
   static constexpr uint32_t kSeqno1 = 10;
@@ -462,11 +489,11 @@ TEST_F(GpuTracepointVisitorTest, TwoOverlappingJobsWithImmediateHwExecution) {
   static constexpr uint64_t kTimestampD2 = 410;
 
   orbit_grpc_protos::FullGpuJob expected_gpu_job1 =
-      MakeGpuJob(kTid, kContext, kSeqno1, kTimeline, 0, kTimestampA1, kTimestampB1, kTimestampC1,
-                 kTimestampD1);
+      MakeGpuJob(kPid, kTid, kContext, kSeqno1, kTimeline, 0, kTimestampA1, kTimestampB1,
+                 kTimestampC1, kTimestampD1);
   orbit_grpc_protos::FullGpuJob expected_gpu_job2 =
-      MakeGpuJob(kTid, kContext, kSeqno2, kTimeline, 1, kTimestampA2, kTimestampB2, kTimestampC2,
-                 kTimestampD2);
+      MakeGpuJob(kPid, kTid, kContext, kSeqno2, kTimeline, 1, kTimestampA2, kTimestampB2,
+                 kTimestampC2, kTimestampD2);
   orbit_grpc_protos::FullGpuJob actual_gpu_job1;
   orbit_grpc_protos::FullGpuJob actual_gpu_job2;
   EXPECT_CALL(mock_listener_, OnGpuJob)
@@ -474,12 +501,12 @@ TEST_F(GpuTracepointVisitorTest, TwoOverlappingJobsWithImmediateHwExecution) {
       .WillOnce(::testing::SaveArg<0>(&actual_gpu_job1))
       .WillOnce(::testing::SaveArg<0>(&actual_gpu_job2));
 
-  MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA1, kContext, kSeqno1, kTimeline)
+  MakeFakeAmdgpuCsIoctlPerfEvent(kPid, kTid, kTimestampA1, kContext, kSeqno1, kTimeline)
       ->Accept(&visitor_);
   MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB1, kContext, kSeqno1, kTimeline)->Accept(&visitor_);
   MakeFakeDmaFenceSignaledPerfEvent(kTimestampD1, kContext, kSeqno1, kTimeline)->Accept(&visitor_);
 
-  MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA2, kContext, kSeqno2, kTimeline)
+  MakeFakeAmdgpuCsIoctlPerfEvent(kPid, kTid, kTimestampA2, kContext, kSeqno2, kTimeline)
       ->Accept(&visitor_);
   MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB2, kContext, kSeqno2, kTimeline)->Accept(&visitor_);
   MakeFakeDmaFenceSignaledPerfEvent(kTimestampD2, kContext, kSeqno2, kTimeline)->Accept(&visitor_);
@@ -489,6 +516,7 @@ TEST_F(GpuTracepointVisitorTest, TwoOverlappingJobsWithImmediateHwExecution) {
 }
 
 TEST_F(GpuTracepointVisitorTest, TwoOverlappingJobsWithDelayedHwExecution) {
+  static constexpr pid_t kPid = 41;
   static constexpr pid_t kTid = 42;
   static constexpr uint32_t kContext = 1;
   static constexpr uint32_t kSeqno1 = 10;
@@ -504,11 +532,11 @@ TEST_F(GpuTracepointVisitorTest, TwoOverlappingJobsWithDelayedHwExecution) {
   static constexpr uint64_t kTimestampD2 = 400;
 
   orbit_grpc_protos::FullGpuJob expected_gpu_job1 =
-      MakeGpuJob(kTid, kContext, kSeqno1, kTimeline, 0, kTimestampA1, kTimestampB1, kTimestampC1,
-                 kTimestampD1);
+      MakeGpuJob(kPid, kTid, kContext, kSeqno1, kTimeline, 0, kTimestampA1, kTimestampB1,
+                 kTimestampC1, kTimestampD1);
   orbit_grpc_protos::FullGpuJob expected_gpu_job2 =
-      MakeGpuJob(kTid, kContext, kSeqno2, kTimeline, 1, kTimestampA2, kTimestampB2, kTimestampC2,
-                 kTimestampD2);
+      MakeGpuJob(kPid, kTid, kContext, kSeqno2, kTimeline, 1, kTimestampA2, kTimestampB2,
+                 kTimestampC2, kTimestampD2);
   orbit_grpc_protos::FullGpuJob actual_gpu_job1;
   orbit_grpc_protos::FullGpuJob actual_gpu_job2;
   EXPECT_CALL(mock_listener_, OnGpuJob)
@@ -516,12 +544,12 @@ TEST_F(GpuTracepointVisitorTest, TwoOverlappingJobsWithDelayedHwExecution) {
       .WillOnce(::testing::SaveArg<0>(&actual_gpu_job1))
       .WillOnce(::testing::SaveArg<0>(&actual_gpu_job2));
 
-  MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA1, kContext, kSeqno1, kTimeline)
+  MakeFakeAmdgpuCsIoctlPerfEvent(kPid, kTid, kTimestampA1, kContext, kSeqno1, kTimeline)
       ->Accept(&visitor_);
   MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB1, kContext, kSeqno1, kTimeline)->Accept(&visitor_);
   MakeFakeDmaFenceSignaledPerfEvent(kTimestampD1, kContext, kSeqno1, kTimeline)->Accept(&visitor_);
 
-  MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA2, kContext, kSeqno2, kTimeline)
+  MakeFakeAmdgpuCsIoctlPerfEvent(kPid, kTid, kTimestampA2, kContext, kSeqno2, kTimeline)
       ->Accept(&visitor_);
   MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB2, kContext, kSeqno2, kTimeline)->Accept(&visitor_);
   MakeFakeDmaFenceSignaledPerfEvent(kTimestampD2, kContext, kSeqno2, kTimeline)->Accept(&visitor_);
@@ -532,6 +560,7 @@ TEST_F(GpuTracepointVisitorTest, TwoOverlappingJobsWithDelayedHwExecution) {
 
 TEST_F(GpuTracepointVisitorTest,
        TwoNonOverlappingJobsWithWrongDepthsAndHardwareStartsBecauseReceivedOutOfOrder) {
+  static constexpr pid_t kPid = 41;
   static constexpr pid_t kTid = 42;
   static constexpr uint32_t kContext = 1;
   static constexpr uint32_t kSeqno1 = 10;
@@ -550,11 +579,11 @@ TEST_F(GpuTracepointVisitorTest,
   static constexpr uint64_t kTimestampC1 = kTimestampD2;
 
   orbit_grpc_protos::FullGpuJob expected_gpu_job1 =
-      MakeGpuJob(kTid, kContext, kSeqno1, kTimeline, 1, kTimestampA1, kTimestampB1, kTimestampC1,
-                 kTimestampD1);
+      MakeGpuJob(kPid, kTid, kContext, kSeqno1, kTimeline, 1, kTimestampA1, kTimestampB1,
+                 kTimestampC1, kTimestampD1);
   orbit_grpc_protos::FullGpuJob expected_gpu_job2 =
-      MakeGpuJob(kTid, kContext, kSeqno2, kTimeline, 0, kTimestampA2, kTimestampB2, kTimestampC2,
-                 kTimestampD2);
+      MakeGpuJob(kPid, kTid, kContext, kSeqno2, kTimeline, 0, kTimestampA2, kTimestampB2,
+                 kTimestampC2, kTimestampD2);
   orbit_grpc_protos::FullGpuJob actual_gpu_job1;
   orbit_grpc_protos::FullGpuJob actual_gpu_job2;
   EXPECT_CALL(mock_listener_, OnGpuJob)
@@ -563,10 +592,10 @@ TEST_F(GpuTracepointVisitorTest,
       .WillOnce(::testing::SaveArg<0>(&actual_gpu_job2))
       .WillOnce(::testing::SaveArg<0>(&actual_gpu_job1));
 
-  MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA1, kContext, kSeqno1, kTimeline)
+  MakeFakeAmdgpuCsIoctlPerfEvent(kPid, kTid, kTimestampA1, kContext, kSeqno1, kTimeline)
       ->Accept(&visitor_);
   MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB1, kContext, kSeqno1, kTimeline)->Accept(&visitor_);
-  MakeFakeAmdgpuCsIoctlPerfEvent(kTid, kTimestampA2, kContext, kSeqno2, kTimeline)
+  MakeFakeAmdgpuCsIoctlPerfEvent(kPid, kTid, kTimestampA2, kContext, kSeqno2, kTimeline)
       ->Accept(&visitor_);
   MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB2, kContext, kSeqno2, kTimeline)->Accept(&visitor_);
   MakeFakeDmaFenceSignaledPerfEvent(kTimestampD2, kContext, kSeqno2, kTimeline)->Accept(&visitor_);

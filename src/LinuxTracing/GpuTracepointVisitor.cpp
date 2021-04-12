@@ -60,6 +60,7 @@ void GpuTracepointVisitor::CreateGpuJobAndSendToListenerIfComplete(const Key& ke
   }
 
   std::string timeline = cs_it->second.timeline;
+  pid_t pid = cs_it->second.pid;
   pid_t tid = cs_it->second.tid;
 
   // We assume that GPU jobs (command buffer submissions) immediately
@@ -91,6 +92,7 @@ void GpuTracepointVisitor::CreateGpuJobAndSendToListenerIfComplete(const Key& ke
   int depth =
       ComputeDepthForGpuJob(timeline, cs_it->second.timestamp_ns, dma_it->second.timestamp_ns);
   FullGpuJob gpu_job;
+  gpu_job.set_pid(pid);
   gpu_job.set_tid(tid);
   gpu_job.set_context(cs_it->second.context);
   gpu_job.set_seqno(cs_it->second.seqno);
@@ -128,8 +130,9 @@ void GpuTracepointVisitor::CreateGpuJobAndSendToListenerIfComplete(const Key& ke
 // created when all three types of GPU events have been received.
 
 void GpuTracepointVisitor::visit(AmdgpuCsIoctlPerfEvent* event) {
-  AmdgpuCsIoctlEvent internal_event{event->GetTid(), event->GetTimestamp(), event->GetContext(),
-                                    event->GetSeqno(), event->ExtractTimelineString()};
+  AmdgpuCsIoctlEvent internal_event{event->GetPid(),       event->GetTid(),
+                                    event->GetTimestamp(), event->GetContext(),
+                                    event->GetSeqno(),     event->ExtractTimelineString()};
   Key key = std::make_tuple(event->GetContext(), event->GetSeqno(), event->ExtractTimelineString());
 
   amdgpu_cs_ioctl_events_.emplace(key, std::move(internal_event));
