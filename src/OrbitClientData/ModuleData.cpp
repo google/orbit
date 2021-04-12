@@ -22,7 +22,7 @@ bool ModuleData::is_loaded() const {
   return is_loaded_;
 }
 
-void ModuleData::UpdateIfChanged(ModuleInfo info) {
+bool ModuleData::UpdateIfChangedAndUnload(ModuleInfo info) {
   absl::MutexLock lock(&mutex_);
 
   CHECK(file_path() == info.file_path());
@@ -31,7 +31,7 @@ void ModuleData::UpdateIfChanged(ModuleInfo info) {
   const bool all_module_properties_matching =
       (name() == info.name() && file_size() == info.file_size() && load_bias() == info.load_bias());
 
-  if (all_module_properties_matching) return;
+  if (all_module_properties_matching) return false;
 
   // The update only makes sense if build_id is empty.
   CHECK(build_id().empty());
@@ -41,13 +41,15 @@ void ModuleData::UpdateIfChanged(ModuleInfo info) {
   LOG("WARNING: Module \"%s\" changed and will to be updated (it does not have build_id).",
       file_path());
 
-  if (!is_loaded_) return;
+  if (!is_loaded_) return false;
 
   LOG("Module %s contained symbols. Because the module changed, those are now removed.",
       file_path());
   functions_.clear();
   hash_to_function_map_.clear();
   is_loaded_ = false;
+
+  return true;
 }
 
 const orbit_client_protos::FunctionInfo* ModuleData::FindFunctionByRelativeAddress(

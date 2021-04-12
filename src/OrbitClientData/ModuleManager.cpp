@@ -35,9 +35,7 @@ std::vector<ModuleData*> ModuleManager::AddOrUpdateModules(
       CHECK(success);
     } else {
       ModuleData& module = module_it->second;
-      bool was_loaded = module.is_loaded();
-      module.UpdateIfChanged(module_info);
-      if (was_loaded && !module.is_loaded()) {
+      if (module.UpdateIfChangedAndUnload(module_info)) {
         unloaded_modules.push_back(&module);
       }
     }

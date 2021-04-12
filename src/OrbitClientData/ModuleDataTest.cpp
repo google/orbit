@@ -212,15 +212,15 @@ TEST(ModuleData, UpdateIfChanged) {
   EXPECT_TRUE(module.GetFunctions().empty());
 
   module_info.set_name("different name");
-  module.UpdateIfChanged(module_info);
+  EXPECT_FALSE(module.UpdateIfChangedAndUnload(module_info));
   EXPECT_EQ(module.name(), module_info.name());
 
   module_info.set_file_size(1002);
-  module.UpdateIfChanged(module_info);
+  EXPECT_FALSE(module.UpdateIfChangedAndUnload(module_info));
   EXPECT_EQ(module.file_size(), module_info.file_size());
 
   module_info.set_load_bias(4010);
-  module.UpdateIfChanged(module_info);
+  EXPECT_FALSE(module.UpdateIfChangedAndUnload(module_info));
   EXPECT_EQ(module.load_bias(), module_info.load_bias());
 
   // add symbols, then change module; symbols are deleted
@@ -229,16 +229,16 @@ TEST(ModuleData, UpdateIfChanged) {
   EXPECT_TRUE(module.is_loaded());
 
   module_info.set_file_size(1003);
-  module.UpdateIfChanged(module_info);
+  EXPECT_TRUE(module.UpdateIfChangedAndUnload(module_info));
   EXPECT_EQ(module.file_size(), module_info.file_size());
 
   // file_path is not allowed to be changed
   module_info.set_file_path("changed/path");
-  EXPECT_DEATH(module.UpdateIfChanged(module_info), "Check failed");
+  EXPECT_DEATH((void)module.UpdateIfChangedAndUnload(module_info), "Check failed");
 
   // as well as build_id
   module_info.set_build_id("yet another build id");
-  EXPECT_DEATH(module.UpdateIfChanged(module_info), "Check failed");
+  EXPECT_DEATH((void)module.UpdateIfChangedAndUnload(module_info), "Check failed");
 }
 
 TEST(ModuleData, UpdateIfChangedWithBuildId) {
@@ -267,7 +267,7 @@ TEST(ModuleData, UpdateIfChangedWithBuildId) {
 
   // We cannot change a module with non-empty build_id
   module_info.set_name("different name");
-  EXPECT_DEATH(module.UpdateIfChanged(module_info), "Check failed");
+  EXPECT_DEATH((void)module.UpdateIfChangedAndUnload(module_info), "Check failed");
 
   // adding symbols should work.
   ModuleSymbols symbols;
