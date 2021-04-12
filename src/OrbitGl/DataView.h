@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_DATA_VIEW_H_
 #define ORBIT_GL_DATA_VIEW_H_
 
+#include <absl/container/flat_hash_set.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -19,11 +20,18 @@
 #include "DataViewTypes.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "absl/container/flat_hash_set.h"
 
 class OrbitApp;
 
 enum class RefreshMode { kOnFilter, kOnSort, kOther };
+
+namespace orbit_gl {
+// Values in the dataview may contain commas, for example, functions with arguments. We quote all
+// values in the output and also escape quotes (with a second quote) in values to ensure the CSV
+// files can be imported correctly in spreadsheet applications. The formatting follows the
+// specification in https://tools.ietf.org/html/rfc4180.
+std::string FormatValueForCsv(std::string_view value);
+}  // namespace orbit_gl
 
 class DataView {
  public:
