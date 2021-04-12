@@ -345,13 +345,13 @@ void OrbitApp::OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracep
       is_same_pid_as_target);
 }
 
-void OrbitApp::UpdateModulesAbortIfModuleWithoutBuildIdReloader(
+void OrbitApp::UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
     absl::Span<const ModuleInfo> module_infos) {
-  auto updated_modules = module_manager_->AddOrUpdateModules(module_infos);
+  auto not_updated_modules = module_manager_->AddOrUpdateNotLoadedModules(module_infos);
 
-  if (!updated_modules.empty()) {
+  if (!not_updated_modules.empty()) {
     std::string module_paths;
-    for (const auto* updated_module : updated_modules) {
+    for (const auto* updated_module : not_updated_modules) {
       if (!module_paths.empty()) module_paths += ", ";
       module_paths += updated_module->file_path();
     }
@@ -369,12 +369,12 @@ void OrbitApp::UpdateModulesAbortIfModuleWithoutBuildIdReloader(
 }
 
 void OrbitApp::OnModuleUpdate(uint64_t /*timestamp_ns*/, ModuleInfo module_info) {
-  UpdateModulesAbortIfModuleWithoutBuildIdReloader({module_info});
+  UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload({module_info});
   GetMutableCaptureData().mutable_process()->AddOrUpdateModuleInfo(module_info);
 }
 
 void OrbitApp::OnModulesSnapshot(uint64_t /*timestamp_ns*/, std::vector<ModuleInfo> module_infos) {
-  UpdateModulesAbortIfModuleWithoutBuildIdReloader(module_infos);
+  UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(module_infos);
   GetMutableCaptureData().mutable_process()->UpdateModuleInfos(module_infos);
 }
 
