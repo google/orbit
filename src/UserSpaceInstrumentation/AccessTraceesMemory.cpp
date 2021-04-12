@@ -14,6 +14,7 @@
 #include <cstring>
 #include <string>
 
+#include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/SafeStrerror.h"
@@ -25,44 +26,61 @@ using orbit_base::ReadFileToString;
 [[nodiscard]] ErrorMessageOr<std::vector<uint8_t>> ReadTraceesMemory(pid_t pid,
                                                                      uint64_t address_start,
                                                                      uint64_t length) {
-  // Round up length to next multiple of eight.
-  length = ((length + 7) / 8) * 8;
-  std::vector<uint8_t> bytes(length);
-  for (size_t i = 0; i < length / 8; i++) {
-    const uint64_t data = ptrace(PTRACE_PEEKDATA, pid, address_start + i * 8, NULL);
-    if (errno) {
-      return ErrorMessage(
-          absl::StrFormat("Failed to PTRACE_PEEKDATA for pid %d with errno %d: \"%s\"", pid, errno,
-                          SafeStrerror(errno)));
-    }
-    std::memcpy(bytes.data() + (i * sizeof(uint64_t)), &data, 8);
+  if (length == 0) {
+    return ErrorMessage("Tried to read 0 bytes.");
   }
-  return bytes;
+
+  OUTCOME_TRY(fd, orbit_base::OpenFileForReading(absl::StrFormat("/proc/%d/mem", pid)));
+
+  std::vector<uint8_t> data(length);
+  ssize_t result = pread(fd.get(), data.data(), length, address_start);
+
+  if (result == -1) {
+    return ErrorMessage(
+        absl::StrFormat("Failed to read from memory file of process %d with errno %d: \"%s\"", pid,
+                        errno, SafeStrerror(errno)));
+  }
+
+  if (result < static_cast<ssize_t>(length)) {
+    return ErrorMessage(absl::StrFormat(
+        "Failed to read %u bytes from memory file of process %d. Only got %d bytes.", length, pid,
+        result));
+  }
+
+  return data;
 }
 
 [[nodiscard]] ErrorMessageOr<void> WriteTraceesMemory(pid_t pid, uint64_t address_start,
                                                       const std::vector<uint8_t>& bytes) {
-  size_t pos = 0;
-  do {
-    // Pack 8 bytes for writing into `data`.
-    uint64_t data = 0;
-    std::memcpy(&data, bytes.data() + pos, sizeof(uint64_t));
-    if (ptrace(PTRACE_POKEDATA, pid, address_start + pos, data) == -1) {
-      return ErrorMessage(absl::StrFormat("Failed to PTRACE_POKEDATA for pid: %d.", pid));
-    }
-    pos += sizeof(uint64_t);
-  } while (pos < bytes.size());
+  if (bytes.empty()) {
+    return ErrorMessage("Tried to write 0 bytes.");
+  }
+  OUTCOME_TRY(fd, orbit_base::OpenFileForWriting(absl::StrFormat("/proc/%d/mem", pid)));
+  ssize_t result = pwrite(fd.get(), bytes.data(), bytes.size(), address_start);
+
+  if (result == -1) {
+    return ErrorMessage(
+        absl::StrFormat("Failed to write to memory file of process pid %d with errno %d: \"%s\"",
+                        pid, errno, SafeStrerror(errno)));
+  }
+
+  if (result < static_cast<ssize_t>(bytes.size())) {
+    return ErrorMessage(absl::StrFormat(
+        "Failed to write %u bytes to memory file of process pid %d. Only wrote %d bytes.",
+        bytes.size(), pid, result));
+  }
+
   return outcome::success();
 }
 
 [[nodiscard]] ErrorMessageOr<AddressRange> GetFirstExecutableMemoryRegion(
     pid_t pid, uint64_t exclude_address) {
-  auto result_read_maps = ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
-  if (result_read_maps.has_error()) {
-    return result_read_maps.error();
+  auto read_maps_or_error = ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
+  if (read_maps_or_error.has_error()) {
+    return read_maps_or_error.error();
   }
   const std::vector<std::string> lines =
-      absl::StrSplit(result_read_maps.value(), '\n', absl::SkipEmpty());
+      absl::StrSplit(read_maps_or_error.value(), '\n', absl::SkipEmpty());
   for (const auto& line : lines) {
     const std::vector<std::string> tokens = absl::StrSplit(line, ' ', absl::SkipEmpty());
     if (tokens.size() < 2 || tokens[1].size() != 4 || tokens[1][2] != 'x') continue;
