@@ -34,6 +34,10 @@ class ModuleData final {
   [[nodiscard]] bool is_loaded() const;
   // Returns true of module was unloaded and false otherwise
   [[nodiscard]] bool UpdateIfChangedAndUnload(orbit_grpc_protos::ModuleInfo info);
+  // This method does not update module_data in case it needs update and was not loaded.
+  // returns true if update was successful or no update was needed and false if module
+  // cannot be updated because it was loaded.
+  [[nodiscard]] bool UpdateIfChangedAndNotLoaded(orbit_grpc_protos::ModuleInfo info);
   // relative_address here is the absolute address minus the address this module was loaded at by
   // the process (module base address)
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByRelativeAddress(
@@ -48,6 +52,8 @@ class ModuleData final {
   [[nodiscard]] std::vector<orbit_client_protos::FunctionInfo> GetOrbitFunctions() const;
 
  private:
+  [[nodiscard]] bool NeedsUpdate(const orbit_grpc_protos::ModuleInfo& info) const;
+
   mutable absl::Mutex mutex_;
   orbit_grpc_protos::ModuleInfo module_info_;
   bool is_loaded_;

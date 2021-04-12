@@ -22,16 +22,18 @@ bool ModuleData::is_loaded() const {
   return is_loaded_;
 }
 
+bool ModuleData::NeedsUpdate(const orbit_grpc_protos::ModuleInfo& info) const {
+  return name() != info.name() || file_size() != info.file_size() ||
+         load_bias() != info.load_bias();
+}
+
 bool ModuleData::UpdateIfChangedAndUnload(ModuleInfo info) {
   absl::MutexLock lock(&mutex_);
 
   CHECK(file_path() == info.file_path());
   CHECK(build_id() == info.build_id());
 
-  const bool all_module_properties_matching =
-      (name() == info.name() && file_size() == info.file_size() && load_bias() == info.load_bias());
-
-  if (all_module_properties_matching) return false;
+  if (!NeedsUpdate(info)) return false;
 
   // The update only makes sense if build_id is empty.
   CHECK(build_id().empty());
@@ -49,6 +51,23 @@ bool ModuleData::UpdateIfChangedAndUnload(ModuleInfo info) {
   hash_to_function_map_.clear();
   is_loaded_ = false;
 
+  return true;
+}
+
+bool ModuleData::UpdateIfChangedAndNotLoaded(orbit_grpc_protos::ModuleInfo info) {
+  absl::MutexLock lock(&mutex_);
+
+  CHECK(file_path() == info.file_path());
+  CHECK(build_id() == info.build_id());
+
+  if (!NeedsUpdate(info)) return true;
+
+  // The update only makes sense if build_id is empty.
+  CHECK(build_id().empty());
+
+  if (is_loaded_) return false;
+
+  module_info_ = std::move(info);
   return true;
 }
 
