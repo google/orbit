@@ -165,6 +165,7 @@ message FullTracepointEvent {
 }
 
 message FullGpuJob {
+  // TODO(b/184942487): pid is currently not set, consider setting it.
   int32 pid = 1;
   int32 tid = 2;
   uint32 context = 3;
@@ -179,6 +180,7 @@ message FullGpuJob {
 }
 
 message GpuJob {
+  // TODO(b/184942487): pid is currently not set, consider setting it.
   int32 pid = 1;
   int32 tid = 2;
   uint32 context = 3;

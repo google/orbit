@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/strings/match.h>
 #include <absl/strings/numbers.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/clock.h>
@@ -10,6 +11,7 @@
 #include <gtest/gtest.h>
 #include <stdint.h>
 #include <sys/types.h>
+#include <sys/utsname.h>
 #include <unistd.h>
 
 #include <array>
@@ -63,6 +65,23 @@ namespace {
 
   ERROR("Root or max perf_event_paranoid %d (actual is %d) required for this test",
         max_perf_event_paranoid, perf_event_paranoid);
+  return false;
+}
+
+[[nodiscard]] std::string ReadUnameKernelRelease() {
+  utsname utsname{};
+  int uname_result = uname(&utsname);
+  CHECK(uname_result == 0);
+  return utsname.release;
+}
+
+[[nodiscard]] bool CheckIsStadiaInstance() {
+  std::string release = ReadUnameKernelRelease();
+  if (absl::StrContains(release, "-ggp-")) {
+    return true;
+  }
+
+  ERROR("Stadia instance required for this test (but kernel release is \"%s\")", release);
   return false;
 }
 
@@ -1047,6 +1066,69 @@ TEST(LinuxTracingIntegrationTest, ModuleUpdateOnDlopen) {
   }
 
   EXPECT_TRUE(module_update_found);
+}
+
+TEST(LinuxTracingIntegrationTest, GpuJobs) {
+  if (!CheckIsStadiaInstance()) {
+    GTEST_SKIP();
+  }
+  if (!CheckIsPerfEventParanoidAtMost(-1)) {
+    GTEST_SKIP();
+  }
+  LinuxTracingIntegrationTestFixture fixture;
+
+  std::vector<orbit_grpc_protos::ProducerCaptureEvent> events =
+      TraceAndGetEvents(&fixture, PuppetConstants::kVulkanTutorialCommand);
+
+  VerifyOrderOfAllEvents(events);
+
+  bool another_process_used_gpu = false;
+  for (const auto& event : events) {
+    if (event.event_case() != orbit_grpc_protos::ProducerCaptureEvent::kFullGpuJob) {
+      continue;
+    }
+
+    const orbit_grpc_protos::FullGpuJob& gpu_job = event.full_gpu_job();
+    if (gpu_job.tid() != fixture.GetPuppetPid()) {
+      another_process_used_gpu = true;
+      break;
+    }
+  }
+  LOG("another_process_used_gpu=%d", another_process_used_gpu);
+
+  uint64_t gpu_job_count = 0;
+  for (const auto& event : events) {
+    if (event.event_case() != orbit_grpc_protos::ProducerCaptureEvent::kFullGpuJob) {
+      continue;
+    }
+
+    const orbit_grpc_protos::FullGpuJob& gpu_job = event.full_gpu_job();
+    if (gpu_job.tid() != fixture.GetPuppetPid()) {
+      continue;
+    }
+
+    // We currently don't set the pid.
+    EXPECT_EQ(gpu_job.pid(), 0);
+
+    EXPECT_LT(gpu_job.amdgpu_cs_ioctl_time_ns(), gpu_job.amdgpu_sched_run_job_time_ns());
+    // If no other job is running on the GPU (which is the case if the puppet is the only process
+    // using the GPU), then we assume (it's the best we can do) that the job starts running on the
+    // hardware at the same time as it is scheduled by the driver, hence the EXPECT_EQ.
+    // Otherwise, use EXPECT_LE.
+    if (another_process_used_gpu) {
+      EXPECT_LE(gpu_job.amdgpu_sched_run_job_time_ns(), gpu_job.gpu_hardware_start_time_ns());
+    } else {
+      EXPECT_EQ(gpu_job.amdgpu_sched_run_job_time_ns(), gpu_job.gpu_hardware_start_time_ns());
+    }
+    EXPECT_LT(gpu_job.gpu_hardware_start_time_ns(), gpu_job.dma_fence_signaled_time_ns());
+
+    EXPECT_EQ(gpu_job.timeline(), "gfx");
+
+    ++gpu_job_count;
+  }
+
+  LOG("gpu_job_count=%lu", gpu_job_count);
+  EXPECT_GE(gpu_job_count, PuppetConstants::kFrameCount);
 }
 
 }  // namespace

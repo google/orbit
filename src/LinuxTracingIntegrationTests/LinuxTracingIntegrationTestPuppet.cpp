@@ -16,6 +16,7 @@
 
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
+#include "VulkanTutorial/OffscreenRenderingVulkanTutorial.h"
 
 // This executable is used by LinuxTracingIntegrationTest to test the generation of specific
 // perf_event_open events. The behavior is controlled by commands sent on standard input.
@@ -83,6 +84,11 @@ static void LoadSoWithDlopenAndCallFunction() {
   LOG("Function call completed: %f", function());
 }
 
+static void RunVulkanTutorial() {
+  orbit_vulkan_tutorial::OffscreenRenderingVulkanTutorial tutorial;
+  tutorial.Run(PuppetConstants::kFrameCount);
+}
+
 int LinuxTracingIntegrationTestPuppetMain() {
   while (!!std::cin && !std::cin.eof()) {
     std::string command;
@@ -100,6 +106,8 @@ int LinuxTracingIntegrationTestPuppetMain() {
       ChangeCurrentThreadName();
     } else if (command == PuppetConstants::kDlopenCommand) {
       LoadSoWithDlopenAndCallFunction();
+    } else if (command == PuppetConstants::kVulkanTutorialCommand) {
+      RunVulkanTutorial();
     } else {
       ERROR("Unknown command: %s", command);
       continue;

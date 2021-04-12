@@ -32,6 +32,7 @@ target_link_libraries(LinuxTracingIntegrationTests PRIVATE
         ElfUtils
         GrpcProtos
         LinuxTracing
+        OffscreenRenderingVulkanTutorialLib
         OrbitBase
         GTest::GTest
         GTest::Main
