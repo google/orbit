@@ -484,7 +484,9 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
       const Vec2& size = text_box.GetSize();
 
       if (text_box.Duration() > draw_data.ns_per_pixel) {
-        SetTimesliceText(text_box.GetTimerInfo(), draw_data.world_start_x, z_offset, &text_box);
+        if (collapse_toggle_->IsExpanded()) {
+          SetTimesliceText(text_box.GetTimerInfo(), draw_data.world_start_x, z_offset, &text_box);
+        }
         batcher->AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
       } else {
         batcher->AddVerticalLine(pos, box_height_, draw_data.z, color, std::move(user_data));
