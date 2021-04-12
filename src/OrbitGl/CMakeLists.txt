@@ -11,7 +11,8 @@ target_compile_options(OrbitGl PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   OrbitGl
-  PUBLIC AccessibleThreadBar.h
+  PUBLIC AccessibleCaptureViewElement.h
+         AccessibleThreadBar.h
          AccessibleTimeGraph.h
          AccessibleTrack.h
          AccessibleTriangleToggle.h
@@ -78,7 +79,8 @@ target_sources(
 
 target_sources(
   OrbitGl
-  PRIVATE AccessibleThreadBar.cpp
+  PRIVATE AccessibleCaptureViewElement.cpp
+          AccessibleThreadBar.cpp
           AccessibleTimeGraph.cpp
           AccessibleTrack.cpp
           AccessibleTriangleToggle.cpp

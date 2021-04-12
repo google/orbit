@@ -9,27 +9,10 @@
 
 namespace orbit_gl {
 
-orbit_accessibility::AccessibilityRect AccessibleTriangleToggle::AccessibleLocalRect() const {
-  CHECK(triangle_toggle_ != nullptr);
-  CHECK(triangle_toggle_->GetCanvas() != nullptr);
-
-  GlCanvas* canvas = triangle_toggle_->GetCanvas();
-  Vec2 pos = triangle_toggle_->GetPos();
-  Vec2 size = triangle_toggle_->GetSize();
-
-  const Viewport& viewport = canvas->GetViewport();
-
-  Vec2i screen_pos = viewport.WorldToScreenPos(pos);
-  int screen_width = viewport.WorldToScreenWidth(size[0]);
-  int screen_height = viewport.WorldToScreenHeight(size[1]);
-
-  orbit_accessibility::AccessibilityRect parent_rect =
-      parent_->GetOrCreateAccessibleInterface()->AccessibleLocalRect();
-
-  return orbit_accessibility::AccessibilityRect(screen_pos[0] - parent_rect.left,
-                                                screen_pos[1] - parent_rect.top, screen_width,
-                                                screen_height);
-}
+AccessibleTriangleToggle::AccessibleTriangleToggle(TriangleToggle* triangle_toggle, Track* parent)
+    : AccessibleCaptureViewElement(triangle_toggle),
+      triangle_toggle_{triangle_toggle},
+      parent_{parent} {}
 
 orbit_accessibility::AccessibilityState AccessibleTriangleToggle::AccessibleState() const {
   if (triangle_toggle_->IsInactive()) {

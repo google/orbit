@@ -17,110 +17,16 @@
 #include "Track.h"
 
 using orbit_accessibility::AccessibilityRect;
-using orbit_accessibility::AccessibilityRole;
 using orbit_accessibility::AccessibilityState;
 using orbit_accessibility::AccessibleInterface;
 
-namespace {
-class AccessibleTimerPane : public AccessibleInterface {
- public:
-  AccessibleTimerPane(orbit_gl::AccessibleTrackContent* parent) : parent_(parent) {}
-
-  [[nodiscard]] int AccessibleChildCount() const override { return 0; }
-  [[nodiscard]] const AccessibleInterface* AccessibleChild(int /*index*/) const override {
-    return nullptr;
-  }
-  [[nodiscard]] const AccessibleInterface* AccessibleParent() const override { return parent_; }
-
-  [[nodiscard]] std::string AccessibleName() const override { return "Timers"; }
-  [[nodiscard]] AccessibilityRole AccessibleRole() const override {
-    return AccessibilityRole::Pane;
-  }
-  [[nodiscard]] AccessibilityRect AccessibleLocalRect() const override {
-    // This implies a lot of knowledge about the structure of the parent:
-    // The TimerPane is not a real control and only created to expose areas of the track to the
-    // E2E tests. We know that the TimerPane is always the last child of the content pane of a
-    // track, and that the content pane does not have any margins / paddings.
-    AccessibilityRect parent_rect = parent_->AccessibleLocalRect();
-
-    if (parent_->AccessibleChildCount() <= 1) {
-      return AccessibilityRect(0, 0, parent_rect.width, parent_rect.height);
-    }
-
-    AccessibilityRect last_child_rect =
-        parent_->AccessibleChild(parent_->AccessibleChildCount() - 2)->AccessibleLocalRect();
-    AccessibilityRect result;
-    result.width = parent_rect.width;
-    result.top = last_child_rect.top + last_child_rect.height;
-    result.height = parent_rect.height - result.top;
-    return result;
-  }
-
-  [[nodiscard]] AccessibilityState AccessibleState() const override {
-    return AccessibilityState::Normal;
-  }
-
- private:
-  orbit_gl::AccessibleTrackContent* parent_;
-};
-}  // namespace
-
 namespace orbit_gl {
 
-AccessibleTrackContent::AccessibleTrackContent(Track* track, TimeGraphLayout* layout)
-    : track_(track), layout_(layout), timer_pane_(new AccessibleTimerPane(this)) {}
-
-int AccessibleTrackContent::AccessibleChildCount() const {
-  int result = static_cast<int>(track_->GetVisibleChildren().size());
-  if (track_->GetVisiblePrimitiveCount() > 0) {
-    // Only expose the "Timer" pane if any timers were rendered in the visible field
-    result += 1;
+const AccessibleInterface* AccessibleTrackTab::AccessibleChild(int index) const {
+  if (index == 0) {
+    return track_->GetTriangleToggle()->GetOrCreateAccessibleInterface();
   }
-
-  return result;
-}
-
-const AccessibleInterface* AccessibleTrackContent::AccessibleChild(int index) const {
-  if (index < 0) {
-    return nullptr;
-  }
-
-  auto children = track_->GetVisibleChildren();
-  if (static_cast<size_t>(index) == children.size()) {
-    return timer_pane_.get();
-  }
-  if (static_cast<size_t>(index) > children.size()) {
-    return nullptr;
-  }
-  return children[index]->GetOrCreateAccessibleInterface();
-}
-
-const AccessibleInterface* AccessibleTrackContent::AccessibleParent() const {
-  return track_->GetOrCreateAccessibleInterface();
-}
-
-std::string AccessibleTrackContent::AccessibleName() const { return "Content"; }
-
-AccessibilityRect AccessibleTrackContent::AccessibleLocalRect() const {
-  CHECK(track_ != nullptr);
-
-  GlCanvas* canvas = track_->GetCanvas();
-  const Viewport& viewport = canvas->GetViewport();
-
-  return AccessibilityRect(viewport.WorldToScreenWidth(0),
-                           viewport.WorldToScreenHeight(layout_->GetTrackTabHeight()),
-                           viewport.WorldToScreenWidth(track_->GetSize()[0]),
-                           viewport.WorldToScreenHeight(track_->GetSize()[1]));
-}
-
-AccessibilityState AccessibleTrackContent::AccessibleState() const {
-  return AccessibilityState::Normal;
-}
-
-int AccessibleTrackTab::AccessibleChildCount() const { return 1; }
-
-const AccessibleInterface* AccessibleTrackTab::AccessibleChild(int /*index*/) const {
-  return track_->GetTriangleToggle()->GetOrCreateAccessibleInterface();
+  return nullptr;
 }
 
 const AccessibleInterface* AccessibleTrackTab::AccessibleParent() const {
@@ -144,17 +50,60 @@ AccessibilityRect AccessibleTrackTab::AccessibleLocalRect() const {
                            viewport.WorldToScreenHeight(layout_->GetTrackTabHeight()));
 }
 
-AccessibilityState AccessibleTrackTab::AccessibleState() const {
-  return AccessibilityState::Normal;
+orbit_accessibility::AccessibilityRect AccessibleTimerPane::AccessibleLocalRect() const {
+  // This implies a lot of knowledge about the structure of the parent:
+  // The TimerPane is not a real control and only created to expose areas of the track to the
+  // E2E tests. We know that the TimerPane is always the last child of a track.
+
+  orbit_accessibility::AccessibilityRect parent_rect = parent_->AccessibleLocalRect();
+
+  int parents_child_count = parent_->AccessibleChildCount();
+  // We are in a TimerPane, so there are at least the "tab" and the "timers" as children.
+  CHECK(parents_child_count >= 2);
+
+  orbit_accessibility::AccessibilityRect last_child_rect =
+      parent_->AccessibleChild(parent_->AccessibleChildCount() - 2)->AccessibleLocalRect();
+  orbit_accessibility::AccessibilityRect result;
+  result.width = parent_rect.width;
+  result.top = last_child_rect.top + last_child_rect.height;
+  result.height = parent_rect.height - result.top;
+  return result;
 }
 
-int AccessibleTrack::AccessibleChildCount() const { return 2; }
+int AccessibleTrack::AccessibleChildCount() const {
+  CHECK(track_ != nullptr);
+
+  // Only expose the "Timer" pane if any timers were rendered in the visible field
+  if (track_->GetVisiblePrimitiveCount() > 0) {
+    return static_cast<int>(track_->GetVisibleChildren().size()) + 2;
+  }
+
+  return static_cast<int>(track_->GetVisibleChildren().size()) + 1;
+}
 
 const AccessibleInterface* AccessibleTrack::AccessibleChild(int index) const {
+  CHECK(track_ != nullptr);
+
+  // The first child is the "virtual" tab.
   if (index == 0) {
     return &tab_;
   }
-  return &content_;
+
+  const auto& children = track_->GetVisibleChildren();
+  auto child_count = static_cast<int>(children.size());
+
+  // The last child is the timer pane if it has timers.
+  if (index == child_count + 1 && track_->GetVisiblePrimitiveCount() > 0) {
+    return &timers_pane_;
+  }
+
+  // Are we out of bound?
+  if (index < 0 || index >= child_count + 1) {
+    return nullptr;
+  }
+
+  // Indexes between 1 and child_count + 1 are reserved for the actual children.
+  return children[index - 1]->GetOrCreateAccessibleInterface();
 }
 
 const AccessibleInterface* AccessibleTrack::AccessibleParent() const {
@@ -173,9 +122,7 @@ AccessibilityRect AccessibleTrack::AccessibleLocalRect() const {
 
   GlCanvas* canvas = track_->GetCanvas();
   Vec2 pos = track_->GetPos();
-  pos[1] += layout_->GetTrackTabHeight();
   Vec2 size = track_->GetSize();
-  size[1] += layout_->GetTrackTabHeight();
 
   const Viewport& viewport = canvas->GetViewport();
 
