@@ -16,7 +16,7 @@ TimeGraphLayout::TimeGraphLayout() {
   track_top_margin_ = 5.f;
   space_between_cores_ = 2.f;
   space_between_gpu_depths_ = 2.f;
-  space_between_tracks_ = 40.f;
+  space_between_tracks_ = 10.f;
   space_between_tracks_and_thread_ = 5.f;
   space_between_thread_blocks_ = 35.f;
   track_label_offset_x_ = 30.f;

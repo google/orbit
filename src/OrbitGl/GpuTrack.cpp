@@ -167,7 +167,7 @@ float GpuTrack::GetYFromTimer(const TimerInfo& timer_info) const {
     adjusted_depth = 0.f;
   }
   if (timer_info.type() == TimerInfo::kGpuDebugMarker) {
-    return pos_[1] - layout_->GetTextBoxHeight() * (adjusted_depth + 1.f);
+    return pos_[1] - GetHeaderHeight() - layout_->GetTextBoxHeight() * (adjusted_depth + 1.f);
   }
   CHECK(timer_info.type() == TimerInfo::kGpuActivity ||
         timer_info.type() == TimerInfo::kGpuCommandBuffer);
@@ -190,7 +190,8 @@ float GpuTrack::GetYFromTimer(const TimerInfo& timer_info) const {
   if (timer_info.type() == TimerInfo::kGpuCommandBuffer) {
     adjusted_depth += 1.f;
   }
-  return pos_[1] - layout_->GetTextBoxHeight() * (adjusted_depth + 1.f) - gap_space;
+  return pos_[1] - GetHeaderHeight() - layout_->GetTextBoxHeight() * (adjusted_depth + 1.f) -
+         gap_space;
 }
 
 // When track is collapsed, only draw "hardware execution" timers and the root "debug markers".
@@ -242,8 +243,8 @@ float GpuTrack::GetHeight() const {
   if (has_vulkan_layer_command_buffer_timers_ && !collapsed) {
     depth *= 2;
   }
-  return layout_->GetTextBoxHeight() * depth + (num_gaps * layout_->GetSpaceBetweenGpuDepths()) +
-         layout_->GetTrackBottomMargin();
+  return GetHeaderHeight() + layout_->GetTextBoxHeight() * depth +
+         (num_gaps * layout_->GetSpaceBetweenGpuDepths()) + layout_->GetTrackBottomMargin();
 }
 
 const TextBox* GpuTrack::GetLeft(const TextBox* text_box) const {

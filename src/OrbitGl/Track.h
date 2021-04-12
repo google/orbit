@@ -54,7 +54,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   [[nodiscard]] virtual Type GetType() const = 0;
   [[nodiscard]] virtual bool Movable() { return !pinned_; }
 
-  [[nodiscard]] virtual float GetHeight() const { return 0.f; };
+  [[nodiscard]] virtual float GetHeight() const = 0;
   [[nodiscard]] bool GetVisible() const { return visible_; }
   void SetVisible(bool value) { visible_ = value; }
 

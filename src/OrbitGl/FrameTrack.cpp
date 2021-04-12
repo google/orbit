@@ -79,14 +79,14 @@ FrameTrack::FrameTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGr
                              TriangleToggle::InitialStateUpdate::kReplaceInitialState);
 }
 
-float FrameTrack::GetHeaderHeight() const { return 0.f; }
+float FrameTrack::GetHeaderHeight() const { return layout_->GetTrackTabHeight(); }
 
 float FrameTrack::GetHeight() const {
-  return GetMaximumBoxHeight() + layout_->GetTrackBottomMargin();
+  return GetHeaderHeight() + GetMaximumBoxHeight() + layout_->GetTrackBottomMargin();
 }
 
 float FrameTrack::GetYFromTimer(const TimerInfo& /*timer_info*/) const {
-  return pos_[1] - GetMaximumBoxHeight();
+  return pos_[1] - GetHeaderHeight() - GetMaximumBoxHeight();
 }
 
 float FrameTrack::GetTextBoxHeight(const TimerInfo& timer_info) const {
@@ -234,7 +234,7 @@ void FrameTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
   const Color kWhiteColor(255, 255, 255, 255);
   const Color kBlackColor(0, 0, 0, 255);
 
-  float y = pos_[1] - GetMaximumBoxHeight() + GetAverageBoxHeight();
+  float y = pos_[1] - GetHeaderHeight() - GetMaximumBoxHeight() + GetAverageBoxHeight();
   float x = pos_[0];
   Vec2 from(x, y);
   Vec2 to(x + size_[0], y);

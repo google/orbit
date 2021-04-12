@@ -60,8 +60,7 @@ float TimerTrack::GetYFromTimer(const TimerInfo& timer_info) const {
 }
 
 float TimerTrack::GetYFromDepth(uint32_t depth) const {
-  return pos_[1] - GetHeaderHeight() - layout_->GetSpaceBetweenTracksAndThread() -
-         box_height_ * static_cast<float>(depth + 1);
+  return pos_[1] - GetHeaderHeight() - box_height_ * static_cast<float>(depth + 1);
 }
 
 void TimerTrack::UpdateBoxHeight() { box_height_ = layout_->GetTextBoxHeight(); }
@@ -340,9 +339,9 @@ float TimerTrack::GetHeight() const {
   bool is_collapsed = collapse_toggle_->IsCollapsed();
   uint32_t collapsed_depth = (GetNumTimers() == 0) ? 0 : 1;
   uint32_t depth = is_collapsed ? collapsed_depth : GetDepth();
-  return layout_->GetTextBoxHeight() * depth +
+  return GetHeaderHeight() + layout_->GetTextBoxHeight() * depth +
          (depth > 0 ? layout_->GetSpaceBetweenTracksAndThread() : 0) +
-         layout_->GetEventTrackHeight() + layout_->GetTrackBottomMargin();
+         layout_->GetTrackBottomMargin();
 }
 
 std::string TimerTrack::GetTooltip() const {
@@ -430,7 +429,7 @@ std::string TimerTrack::GetBoxTooltip(const Batcher& /*batcher*/, PickingId /*id
   return "";
 }
 
-float TimerTrack::GetHeaderHeight() const { return layout_->GetEventTrackHeight(); }
+float TimerTrack::GetHeaderHeight() const { return layout_->GetTrackTabHeight(); }
 
 internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick, float z_offset,
                                            Batcher* batcher, TimeGraph* time_graph,

@@ -274,33 +274,10 @@ int TrackManager::FindMovingTrackIndex() {
 void TrackManager::UpdateTracks(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                 PickingMode picking_mode) {
   // Make sure track tab fits in the viewport.
-  float current_y = -layout_->GetSchedulerTrackOffset() - layout_->GetTrackTabHeight();
-  float pinned_tracks_height = 0.f;
+  float current_y = -layout_->GetSchedulerTrackOffset();
 
-  // Draw pinned tracks
+  // Draw tracks
   for (auto& track : visible_tracks_) {
-    if (!track->IsPinned()) {
-      continue;
-    }
-
-    const float z_offset = GlCanvas::kZOffsetPinnedTrack;
-    if (!track->IsMoving()) {
-      track->SetPos(track->GetPos()[0],
-                    current_y + time_graph_->GetCanvas()->GetViewport().GetWorldTopLeft()[1] -
-                        layout_->GetTopMargin() - layout_->GetSchedulerTrackOffset());
-    }
-    track->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-    const float height = (track->GetHeight() + layout_->GetSpaceBetweenTracks());
-    current_y -= height;
-    pinned_tracks_height += height;
-  }
-
-  // Draw unpinned tracks
-  for (auto& track : visible_tracks_) {
-    if (track->IsPinned()) {
-      continue;
-    }
-
     const float z_offset = track->IsMoving() ? GlCanvas::kZOffsetMovingTack : 0.f;
     if (!track->IsMoving()) {
       track->SetPos(track->GetPos()[0], current_y);

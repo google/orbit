@@ -42,6 +42,7 @@ class ThreadTrack final : public TimerTrack {
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset = 0) override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
+  [[nodiscard]] virtual float GetYFromDepth(uint32_t depth) const override;
 
   void OnPick(int x, int y) override;
 

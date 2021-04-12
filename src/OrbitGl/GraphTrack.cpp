@@ -39,7 +39,11 @@ void GraphTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
   float graph_z = GlCanvas::kZValueEventBar + z_offset;
   float dot_z = GlCanvas::kZValueBox + z_offset;
 
-  Box box(pos_, Vec2(size_[0], -size_[1]), track_z);
+  float content_height =
+      (size_[1] - layout_->GetTrackTabHeight() - layout_->GetTrackBottomMargin());
+  Vec2 content_pos = pos_;
+  content_pos[1] -= layout_->GetTrackTabHeight();
+  Box box(content_pos, Vec2(size_[0], -content_height), track_z);
   batcher->AddBox(box, color, shared_from_this());
 
   const bool picking = picking_mode != PickingMode::kNone;
@@ -53,11 +57,11 @@ void GraphTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
     uint64_t previous_time = it->first;
     double last_normalized_value = (it->second - min_) * inv_value_range_;
     constexpr float kDotRadius = 2.f;
-    float base_y = pos_[1] - size_[1];
+    float base_y = pos_[1] - size_[1] + layout_->GetTrackBottomMargin();
     float y1 = 0;
     DrawSquareDot(batcher,
                   Vec2(time_graph_->GetWorldFromTick(previous_time),
-                       base_y + static_cast<float>(last_normalized_value) * size_[1]),
+                       base_y + static_cast<float>(last_normalized_value) * content_height),
                   kDotRadius, dot_z, kDotColor);
 
     for (++it; it != values_.end(); ++it) {
@@ -66,8 +70,8 @@ void GraphTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
       double normalized_value = (it->second - min_) * inv_value_range_;
       float x0 = time_graph_->GetWorldFromTick(previous_time);
       float x1 = time_graph_->GetWorldFromTick(time);
-      float y0 = base_y + static_cast<float>(last_normalized_value) * size_[1];
-      y1 = base_y + static_cast<float>(normalized_value) * size_[1];
+      float y0 = base_y + static_cast<float>(last_normalized_value) * content_height;
+      y1 = base_y + static_cast<float>(normalized_value) * content_height;
       batcher->AddLine(Vec2(x0, y0), Vec2(x1, y0), graph_z, kLineColor);
       batcher->AddLine(Vec2(x1, y0), Vec2(x1, y1), graph_z, kLineColor);
       DrawSquareDot(batcher, Vec2(x1, y1), kDotRadius, dot_z, kDotColor);
@@ -104,7 +108,10 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
   uint64_t label_time = std::max(current_mouse_time_ns, first_time);
   float point_x = time_graph_->GetWorldFromTick(label_time);
   double normalized_value = (value - min_) * inv_value_range_;
-  float point_y = pos_[1] - size_[1] * (1.f - static_cast<float>(normalized_value));
+  float content_height =
+      (size_[1] - layout_->GetTrackTabHeight() - layout_->GetTrackBottomMargin());
+  float point_y = pos_[1] - layout_->GetTrackTabHeight() -
+                  content_height * (1.f - static_cast<float>(normalized_value));
   std::string text = value_decimal_digits_.has_value()
                          ? absl::StrFormat("%.*f", value_decimal_digits_.value(), value)
                          : std::to_string(value);
@@ -173,8 +180,9 @@ std::optional<std::pair<uint64_t, double>> GraphTrack::GetPreviousValueAndTime(
 }
 
 float GraphTrack::GetHeight() const {
-  float height = layout_->GetTextBoxHeight() + layout_->GetSpaceBetweenTracksAndThread() +
-                 layout_->GetEventTrackHeight() + layout_->GetTrackBottomMargin();
+  float height = layout_->GetTrackTabHeight() + layout_->GetTextBoxHeight() +
+                 layout_->GetSpaceBetweenTracksAndThread() + layout_->GetEventTrackHeight() +
+                 layout_->GetTrackBottomMargin();
   return height;
 }
 
