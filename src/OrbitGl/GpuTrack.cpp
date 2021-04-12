@@ -301,8 +301,10 @@ std::string GpuTrack::GetSwQueueTooltip(const TimerInfo& timer_info) const {
       "amdgpu_sched_run_job (job scheduled)</i>"
       "<br/>"
       "<br/>"
+      "<b>Submitted from process:</b> %s [%d]<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
+      capture_data_->GetThreadName(timer_info.process_id()), timer_info.process_id(),
       capture_data_->GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
       GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
 }
@@ -314,8 +316,10 @@ std::string GpuTrack::GetHwQueueTooltip(const TimerInfo& timer_info) const {
       "(job scheduled) and start of GPU execution</i>"
       "<br/>"
       "<br/>"
+      "<b>Submitted from process:</b> %s [%d]<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
+      capture_data_->GetThreadName(timer_info.process_id()), timer_info.process_id(),
       capture_data_->GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
       GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
 }
@@ -328,8 +332,10 @@ std::string GpuTrack::GetHwExecutionTooltip(const TimerInfo& timer_info) const {
       "buffer submission</i>"
       "<br/>"
       "<br/>"
+      "<b>Submitted from process:</b> %s [%d]<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
+      capture_data_->GetThreadName(timer_info.process_id()), timer_info.process_id(),
       capture_data_->GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
       GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
 }
@@ -343,8 +349,10 @@ std::string GpuTrack::GetCommandBufferTooltip(
       "submission.</i>"
       "<br/>"
       "<br/>"
+      "<b>Submitted from process:</b> %s [%d]<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
+      capture_data_->GetThreadName(timer_info.process_id()), timer_info.process_id(),
       app_->GetCaptureData().GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
       GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
 }
@@ -360,9 +368,10 @@ std::string GpuTrack::GetDebugMarkerTooltip(
       "<br/>"
       "<br/>"
       "<b>Marker text:</b> %s<br/>"
+      "<b>Submitted from process:</b> %s [%d]<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
-      marker_text, app_->GetCaptureData().GetThreadName(timer_info.thread_id()),
-      timer_info.thread_id(),
+      marker_text, capture_data_->GetThreadName(timer_info.process_id()), timer_info.process_id(),
+      app_->GetCaptureData().GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
       GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
 }
