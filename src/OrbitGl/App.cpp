@@ -354,13 +354,17 @@ void OrbitApp::UpdateModulesAbortIfModuleWithoutBuildIdReloader(
     for (const auto* updated_module : updated_modules) {
       if (!module_paths.empty()) module_paths += ", ";
       module_paths += updated_module->file_path();
-      FATAL(
-          "Following modules have been updated during the capture: \"%s\", since they do not have "
-          "build_id, this will likely result in undefined behaviour/incorrect data being produced, "
-          "please recompile these modules with build_id support by adding \"-Wl,--build-id\" to "
-          "compile flags.",
-          module_paths);
     }
+
+    std::string error_message = absl::StrFormat(
+        "Following modules have been updated during the capture: \"%s\", since they do not have "
+        "build_id, this will likely result in undefined behaviour/incorrect data being produced, "
+        "please recompile these modules with build_id support by adding \"-Wl,--build-id\" to "
+        "compile flags (or removing \"-Wl,--build-id=none\" from them).",
+        module_paths);
+    SendErrorToUi("Capture Error", error_message);
+    LOG("%s", error_message);
+    main_thread_executor_->Schedule([this] { AbortCapture(); });
   }
 }
 
