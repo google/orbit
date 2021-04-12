@@ -241,6 +241,61 @@ TEST(ModuleData, UpdateIfChanged) {
   EXPECT_DEATH((void)module.UpdateIfChangedAndUnload(module_info), "Check failed");
 }
 
+TEST(ModuleData, UpdateIfChangedAndNotLoaded) {
+  std::string name = "Example Name";
+  std::string file_path = "/test/file/path";
+  uint64_t file_size = 1000;
+  std::string build_id{};
+  uint64_t load_bias = 4000;
+
+  ModuleInfo module_info{};
+  module_info.set_name(name);
+  module_info.set_file_path(file_path);
+  module_info.set_file_size(file_size);
+  module_info.set_build_id(build_id);
+  module_info.set_load_bias(load_bias);
+
+  ModuleData module{module_info};
+
+  EXPECT_EQ(module.name(), name);
+  EXPECT_EQ(module.file_path(), file_path);
+  EXPECT_EQ(module.file_size(), file_size);
+  EXPECT_EQ(module.build_id(), build_id);
+  EXPECT_EQ(module.load_bias(), load_bias);
+  EXPECT_FALSE(module.is_loaded());
+  EXPECT_TRUE(module.GetFunctions().empty());
+
+  module_info.set_name("different name");
+  EXPECT_TRUE(module.UpdateIfChangedAndNotLoaded(module_info));
+  EXPECT_EQ(module.name(), module_info.name());
+
+  module_info.set_file_size(1002);
+  EXPECT_TRUE(module.UpdateIfChangedAndNotLoaded(module_info));
+  EXPECT_EQ(module.file_size(), module_info.file_size());
+
+  module_info.set_load_bias(4010);
+  EXPECT_TRUE(module.UpdateIfChangedAndNotLoaded(module_info));
+  EXPECT_EQ(module.load_bias(), module_info.load_bias());
+
+  // add symbols, then change module; symbols are deleted
+  ModuleSymbols symbols;
+  module.AddSymbols(symbols);
+  EXPECT_TRUE(module.is_loaded());
+
+  module_info.set_file_size(1003);
+  EXPECT_FALSE(module.UpdateIfChangedAndNotLoaded(module_info));
+  EXPECT_NE(module.file_size(), module_info.file_size());
+  EXPECT_TRUE(module.is_loaded());
+
+  // file_path is not allowed to be changed
+  module_info.set_file_path("changed/path");
+  EXPECT_DEATH((void)module.UpdateIfChangedAndNotLoaded(module_info), "Check failed");
+
+  // as well as build_id
+  module_info.set_build_id("yet another build id");
+  EXPECT_DEATH((void)module.UpdateIfChangedAndNotLoaded(module_info), "Check failed");
+}
+
 TEST(ModuleData, UpdateIfChangedWithBuildId) {
   std::string name = "Example Name";
   std::string file_path = "/test/file/path";
@@ -268,6 +323,7 @@ TEST(ModuleData, UpdateIfChangedWithBuildId) {
   // We cannot change a module with non-empty build_id
   module_info.set_name("different name");
   EXPECT_DEATH((void)module.UpdateIfChangedAndUnload(module_info), "Check failed");
+  EXPECT_DEATH((void)module.UpdateIfChangedAndNotLoaded(module_info), "Check failed");
 
   // adding symbols should work.
   ModuleSymbols symbols;
