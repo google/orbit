@@ -441,7 +441,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   [[nodiscard]] bool HasFrameTrackInCaptureData(uint64_t instrumented_function_id) const;
 
  private:
-  void UpdateModulesAbortIfModuleWithoutBuildIdReloader(
+  void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
   void AddSymbols(const std::filesystem::path& module_file_path, const std::string& module_build_id,
                   const orbit_grpc_protos::ModuleSymbols& symbols);

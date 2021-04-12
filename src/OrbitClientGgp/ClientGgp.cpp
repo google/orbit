@@ -370,11 +370,11 @@ void ClientGgp::OnTracepointEvent(orbit_client_protos::TracepointEventInfo trace
 }
 
 void ClientGgp::OnModuleUpdate(uint64_t /*timestamp_ns*/, ModuleInfo module_info) {
-  CHECK(module_manager_.AddOrUpdateModules({module_info}).empty());
+  CHECK(module_manager_.AddOrUpdateNotLoadedModules({module_info}).empty());
   GetMutableCaptureData().mutable_process()->AddOrUpdateModuleInfo(module_info);
 }
 
 void ClientGgp::OnModulesSnapshot(uint64_t /*timestamp_ns*/, std::vector<ModuleInfo> module_infos) {
-  CHECK(module_manager_.AddOrUpdateModules(module_infos).empty());
+  CHECK(module_manager_.AddOrUpdateNotLoadedModules(module_infos).empty());
   GetMutableCaptureData().mutable_process()->UpdateModuleInfos(module_infos);
 }
