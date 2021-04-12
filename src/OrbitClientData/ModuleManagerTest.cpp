@@ -131,6 +131,16 @@ TEST(ModuleManager, AddOrUpdateModules) {
   ModuleSymbols module_symbols;
   module->AddSymbols(module_symbols);
   ASSERT_TRUE(module->is_loaded());
+  module_info.set_name("changed name 2");
+
+  unloaded_modules = module_manager.AddOrUpdateModules({module_info});
+  ASSERT_EQ(unloaded_modules.size(), 1);
+  EXPECT_EQ(unloaded_modules[0]->name(), "changed name 2");
+  EXPECT_FALSE(unloaded_modules[0]->is_loaded());
+
+  // add symbols again
+  module->AddSymbols(module_symbols);
+  ASSERT_TRUE(module->is_loaded());
 
   // change build id, this creates new module
   constexpr const char* kDifferentBuildId = "different build id";
@@ -149,6 +159,82 @@ TEST(ModuleManager, AddOrUpdateModules) {
   module_info.set_file_size(different_file_size);
   unloaded_modules = module_manager.AddOrUpdateModules({module_info});
   EXPECT_TRUE(unloaded_modules.empty());
+
+  ASSERT_NE(module, nullptr);
+  EXPECT_EQ(module->file_path(), file_path);
+  EXPECT_EQ(module->file_size(), kFileSize);
+
+  const ModuleData* different_module =
+      module_manager.GetModuleByPathAndBuildId(different_path, kDifferentBuildId);
+  ASSERT_NE(different_module, nullptr);
+  EXPECT_EQ(different_module->file_path(), different_path);
+  EXPECT_EQ(different_module->file_size(), different_file_size);
+}
+
+TEST(ModuleManager, AddOrUpdateNotLoadedModules) {
+  const std::string name = "name of module";
+  const std::string file_path = "path/of/module";
+  const std::string build_id{};
+  constexpr uint64_t kFileSize = 300;
+  constexpr uint64_t kLoadBias = 0x400;
+
+  ModuleInfo module_info;
+  module_info.set_name(name);
+  module_info.set_file_path(file_path);
+  module_info.set_file_size(kFileSize);
+  module_info.set_build_id(build_id);
+  module_info.set_load_bias(kLoadBias);
+
+  ModuleManager module_manager;
+  std::vector<ModuleData*> not_changed_modules =
+      module_manager.AddOrUpdateNotLoadedModules({module_info});
+  EXPECT_TRUE(not_changed_modules.empty());
+
+  ModuleData* module = module_manager.GetMutableModuleByPathAndBuildId(file_path, build_id);
+
+  ASSERT_NE(module, nullptr);
+  EXPECT_EQ(module->name(), name);
+
+  // change name, this updates the module
+  std::string changed_name = "changed name";
+  module_info.set_name(changed_name);
+
+  not_changed_modules = module_manager.AddOrUpdateNotLoadedModules({module_info});
+  EXPECT_TRUE(not_changed_modules.empty());
+
+  ASSERT_NE(module, nullptr);
+  EXPECT_EQ(module->file_path(), file_path);
+  EXPECT_EQ(module->name(), changed_name);
+
+  // add symbols
+  ModuleSymbols module_symbols;
+  module->AddSymbols(module_symbols);
+  ASSERT_TRUE(module->is_loaded());
+  module_info.set_name("changed name 2");
+
+  not_changed_modules = module_manager.AddOrUpdateNotLoadedModules({module_info});
+  ASSERT_EQ(not_changed_modules.size(), 1);
+  EXPECT_EQ(not_changed_modules[0], module);
+  EXPECT_EQ(not_changed_modules[0]->name(), changed_name);
+  EXPECT_TRUE(not_changed_modules[0]->is_loaded());
+
+  // change build id, this creates new module
+  constexpr const char* kDifferentBuildId = "different build id";
+  module_info.set_build_id(kDifferentBuildId);
+  not_changed_modules = module_manager.AddOrUpdateNotLoadedModules({module_info});
+  EXPECT_TRUE(not_changed_modules.empty());
+
+  EXPECT_EQ(module->build_id(), build_id);
+  EXPECT_TRUE(module->is_loaded());
+
+  // change file path & file size and add again (should be added again, because it is now considered
+  // a different module)
+  std::string different_path = "different/path/of/module";
+  module_info.set_file_path(different_path);
+  uint64_t different_file_size = 301;
+  module_info.set_file_size(different_file_size);
+  not_changed_modules = module_manager.AddOrUpdateNotLoadedModules({module_info});
+  EXPECT_TRUE(not_changed_modules.empty());
 
   ASSERT_NE(module, nullptr);
   EXPECT_EQ(module->file_path(), file_path);

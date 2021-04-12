@@ -44,6 +44,29 @@ std::vector<ModuleData*> ModuleManager::AddOrUpdateModules(
   return unloaded_modules;
 }
 
+std::vector<ModuleData*> ModuleManager::AddOrUpdateNotLoadedModules(
+    absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos) {
+  absl::MutexLock lock(&mutex_);
+
+  std::vector<ModuleData*> not_updated_modules;
+
+  for (const auto& module_info : module_infos) {
+    auto module_id = std::make_pair(module_info.file_path(), module_info.build_id());
+    auto module_it = module_map_.find(module_id);
+    if (module_it == module_map_.end()) {
+      const bool success = module_map_.try_emplace(module_id, module_info).second;
+      CHECK(success);
+    } else {
+      ModuleData& module = module_it->second;
+      if (!module.UpdateIfChangedAndNotLoaded(module_info)) {
+        not_updated_modules.push_back(&module);
+      }
+    }
+  }
+
+  return not_updated_modules;
+}
+
 const ModuleData* ModuleManager::GetModuleByPathAndBuildId(const std::string& path,
                                                            const std::string& build_id) const {
   absl::MutexLock lock(&mutex_);
