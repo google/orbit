@@ -24,10 +24,13 @@ struct LinuxTracingIntegrationTestPuppetConstants {
   constexpr static const char* kSharedObjectFileName =
       "libLinuxTracingIntegrationTestPuppetSharedObject.so";
 
+  constexpr static uint64_t kFrameCount = 60;
+
   constexpr static const char* kSleepCommand = "sleep";
   constexpr static const char* kCallOuterFunctionCommand = "CallOuterFunction";
   constexpr static const char* kPthreadSetnameNpCommand = "pthread_setname_np";
   constexpr static const char* kDlopenCommand = "dlopen";
+  constexpr static const char* kVulkanTutorialCommand = "VulkanTutorial";
 
   constexpr static const char* kDoneResponse = "DONE";
 };
