@@ -36,6 +36,8 @@
 #include "TrackManager.h"
 #include "absl/strings/str_format.h"
 
+ABSL_DECLARE_FLAG(bool, enable_warning_threshold);
+
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
@@ -480,8 +482,10 @@ void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
     track = track_manager_->GetOrCreateGraphTrack(kUsedLabel);
     track->SetValueUpperBoundWhenEmpty(total_pretty_label, total_raw_value);
     track->SetValueLowerBoundWhenEmpty(kValueLowerBoundLabel, kValueLowerBoundRawValue);
-    track->SetWarningThresholdWhenEmpty(warning_threshold_pretty_label,
-                                        warning_threshold_raw_value);
+    if (absl::GetFlag(FLAGS_enable_warning_threshold)) {
+      track->SetWarningThresholdWhenEmpty(warning_threshold_pretty_label,
+                                          warning_threshold_raw_value);
+    }
     track->SetLabelUnitWhenEmpty(kTrackValueLabelUnit);
     track->SetValueDecimalDigitsWhenEmpty(kTrackValueDecimalDigits);
     double used_mb =

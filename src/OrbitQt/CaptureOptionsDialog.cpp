@@ -4,6 +4,9 @@
 
 #include "CaptureOptionsDialog.h"
 
+#include <absl/flags/declare.h>
+#include <absl/flags/flag.h>
+
 #include <QAbstractButton>
 #include <QDialog>
 #include <QDialogButtonBox>
@@ -13,6 +16,8 @@
 #include "ConfigWidgets/SourcePathsMappingDialog.h"
 #include "SourcePathsMapping/MappingManager.h"
 #include "ui_CaptureOptionsDialog.h"
+
+ABSL_DECLARE_FLAG(bool, enable_warning_threshold);
 
 namespace orbit_qt {
 
@@ -29,6 +34,11 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
 
   QObject::connect(ui_->openSourcePathsMappingDialog, &QAbstractButton::clicked, this,
                    &CaptureOptionsDialog::ShowSourcePathsMappingEditor);
+
+  if (!absl::GetFlag(FLAGS_enable_warning_threshold)) {
+    ui_->memoryWarningThresholdKbLabel->hide();
+    ui_->memoryWarningThresholdKbLineEdit->hide();
+  }
 }
 
 bool CaptureOptionsDialog::GetCollectThreadStates() const {
