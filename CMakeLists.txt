@@ -140,7 +140,6 @@ else()
   add_subdirectory(src/ProducerSideChannel)
   add_subdirectory(src/Service)
   add_subdirectory(src/UserSpaceInstrumentation)
-  find_package(Vulkan REQUIRED)
   add_subdirectory(src/VulkanTutorial)
 endif()
 

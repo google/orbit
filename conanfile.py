@@ -89,6 +89,7 @@ class OrbitConan(ConanFile):
         if self.settings.os != "Windows":
             self.requires(
                 "libunwindstack/80a734f14@{}#0".format(self._orbit_channel))
+            self.requires("volk/1.2.170")
             self.requires("vulkan-headers/1.1.114.0")
         self.requires("zlib/1.2.11#9e0c292b60ce77402bd9be60dd68266f")
 
