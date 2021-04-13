@@ -2,7 +2,7 @@
 
 #include <absl/base/casts.h>
 #include <absl/synchronization/mutex.h>
-#include <vulkan/vulkan.h>
+#include <volk.h>
 
 #include <cstdint>
 #include <vector>
@@ -31,7 +31,11 @@ void OffscreenRenderingVulkanTutorial::StopAsync() {
 
 void OffscreenRenderingVulkanTutorial::InitVulkan() {
   LOG("InitVulkan");
+  // To simplify our dependencies, we don't link to Vulkan, but we use volk instead:
+  // https://github.com/zeux/volk
+  CHECK_VK_SUCCESS(volkInitialize());
   CreateInstance();
+  volkLoadInstance(instance_);
   // Note that, unlike what is described at
   // https://vulkan-tutorial.com/en/Drawing_a_triangle/Presentation/Window_surface,
   // we don't need to create a surface, as we are performing offscreen rendering.

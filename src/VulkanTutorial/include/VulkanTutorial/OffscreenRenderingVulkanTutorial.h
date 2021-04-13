@@ -3,7 +3,7 @@
 
 #include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
-#include <vulkan/vulkan.h>
+#include <volk.h>
 
 #include <cstdint>
 #include <optional>
