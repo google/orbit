@@ -111,7 +111,7 @@ TEST(AccessTraceesMemoryTest, ReadFailures) {
       absl::StrContains(result.error().message(), "Failed to read from memory file of process"));
 
   // Detach and end child.
-  ASSERT_TRUE(!DetachAndContinueProcess(pid).has_error());
+  ASSERT_FALSE(DetachAndContinueProcess(pid).has_error());
   kill(pid, SIGKILL);
   waitpid(pid, NULL, 0);
 }
@@ -165,8 +165,8 @@ TEST(AccessTraceesMemoryTest, WriteFailures) {
   EXPECT_TRUE(absl::StrContains(result.error().message(), "Failed to write to memory file"));
 
   // Restore, detach and end child.
-  EXPECT_FALSE(WriteTraceesMemory(pid, address, backup.value()).has_error());
-  ASSERT_TRUE(!DetachAndContinueProcess(pid).has_error());
+  ASSERT_FALSE(WriteTraceesMemory(pid, address, backup.value()).has_error());
+  ASSERT_FALSE(DetachAndContinueProcess(pid).has_error());
   kill(pid, SIGKILL);
   waitpid(pid, NULL, 0);
 }
