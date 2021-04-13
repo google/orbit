@@ -21,12 +21,6 @@ namespace {
 // In certain error conditions the tracee is damaged and we don't try to recover from that. We just
 // abort with a fatal log message. None of these errors are expected to occur in operation
 // obvioulsy. That's what the *OrDie methods below are for.
-void FreeMemoryOrDie(pid_t pid, uint64_t address_code, uint64_t size) {
-  auto result = FreeInTracee(pid, address_code, size);
-  FAIL_IF(result.has_error(), "Unable to free previously allocated memory in tracee: \"%s\"",
-          result.error().message());
-}
-
 void RestoreRegistersOrDie(RegisterState& register_state) {
   auto result = register_state.RestoreRegisters();
   FAIL_IF(result.has_error(), "Unable to restore register state in tracee: \"%s\"",
@@ -43,13 +37,9 @@ uint64_t GetReturnValueOrDie(pid_t pid) {
 
 }  // namespace
 
-ErrorMessageOr<uint64_t> ExecuteMachineCode(pid_t pid, uint64_t address_code, uint64_t memory_size,
+ErrorMessageOr<uint64_t> ExecuteMachineCode(pid_t pid, uint64_t address_code,
                                             const MachineCode& code) {
-  auto result_write_code = WriteTraceesMemory(pid, address_code, code.GetResultAsVector());
-  if (result_write_code.has_error()) {
-    FreeMemoryOrDie(pid, address_code, memory_size);
-    return result_write_code.error();
-  }
+  OUTCOME_TRY(WriteTraceesMemory(pid, address_code, code.GetResultAsVector()));
 
   // Backup registers.
   RegisterState original_registers;
@@ -90,9 +80,8 @@ ErrorMessageOr<uint64_t> ExecuteMachineCode(pid_t pid, uint64_t address_code, ui
 
   const uint64_t return_value = GetReturnValueOrDie(pid);
 
-  // Clean up memory and registers.
+  // Clean up registers.
   RestoreRegistersOrDie(original_registers);
-  FreeMemoryOrDie(pid, address_code, memory_size);
   return return_value;
 }
 

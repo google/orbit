@@ -25,20 +25,20 @@ TEST(FindFunctionAddressTest, FindFunctionAddress) {
   // Stop the child process using our tooling.
   ASSERT_TRUE(AttachAndStopProcess(pid).has_value());
 
-  auto function_address_or_error = FindFunctionAddress(pid, "printf", "libc.so.6");
+  auto function_address_or_error = FindFunctionAddress(pid, "libc.so.6", "printf");
   ASSERT_TRUE(function_address_or_error.has_value());
 
-  function_address_or_error = FindFunctionAddress(pid, "NOT_A_SYMBOL", "libc.so.6");
+  function_address_or_error = FindFunctionAddress(pid, "libc.so.6", "NOT_A_SYMBOL");
   ASSERT_TRUE(function_address_or_error.has_error());
   EXPECT_TRUE(absl::StrContains(function_address_or_error.error().message(),
                                 "Unable to locate function symbol"));
 
-  function_address_or_error = FindFunctionAddress(pid, "printf", "NOT_A_LIB-");
+  function_address_or_error = FindFunctionAddress(pid, "NOT_A_LIB-", "printf");
   ASSERT_TRUE(function_address_or_error.has_error());
   EXPECT_TRUE(absl::StrContains(function_address_or_error.error().message(),
                                 "There is no module \"NOT_A_LIB-\" in process"));
 
-  function_address_or_error = FindFunctionAddress(-1, "printf", "libc.so.6");
+  function_address_or_error = FindFunctionAddress(-1, "libc.so.6", "printf");
   ASSERT_TRUE(function_address_or_error.has_error());
   EXPECT_TRUE(
       absl::StrContains(function_address_or_error.error().message(), "Unable to open file"));

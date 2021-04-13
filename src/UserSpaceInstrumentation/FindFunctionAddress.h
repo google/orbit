@@ -20,8 +20,8 @@ namespace orbit_user_space_instrumentation {
 // (compare https://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html) of the module
 // exactly.
 [[nodiscard]] ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid,
-                                                           std::string_view function_name,
-                                                           std::string_view module_soname);
+                                                           std::string_view module_soname,
+                                                           std::string_view function_name);
 
 }  // namespace orbit_user_space_instrumentation
 

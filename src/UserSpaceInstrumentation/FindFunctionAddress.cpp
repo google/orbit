@@ -14,8 +14,8 @@
 
 namespace orbit_user_space_instrumentation {
 
-ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view function_name,
-                                             std::string_view module_soname) {
+ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view module_soname,
+                                             std::string_view function_name) {
   auto modules = orbit_elf_utils::ReadModules(pid);
   if (modules.has_error()) {
     return modules.error();
@@ -23,10 +23,10 @@ ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view functio
 
   std::string module_file_path;
   uint64_t module_base_address = 0;
-  for (const auto& m : modules.value()) {
-    if (m.name() == module_soname) {
-      module_file_path = m.file_path();
-      module_base_address = m.address_start();
+  for (const orbit_grpc_protos::ModuleInfo& module : modules.value()) {
+    if (module.name() == module_soname) {
+      module_file_path = module.file_path();
+      module_base_address = module.address_start();
     }
   }
   if (module_file_path.empty()) {
@@ -34,20 +34,16 @@ ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view functio
         absl::StrFormat("There is no module \"%s\" in process %d.", module_soname, pid));
   }
 
-  auto elf_file = orbit_elf_utils::ElfFile::Create(module_file_path);
-  if (elf_file.has_error()) {
-    return elf_file.error();
-  }
-
-  auto syms = elf_file.value()->LoadSymbolsFromDynsym();
-  if (syms.has_error()) {
+  OUTCOME_TRY(elf_file, orbit_elf_utils::ElfFile::Create(module_file_path));
+  auto symbols = elf_file->LoadSymbolsFromDynsym();
+  if (symbols.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to load symbols for module \"%s\": %s",
-                                        module_soname, syms.error().message()));
+                                        module_soname, symbols.error().message()));
   }
 
-  for (const auto& sym : syms.value().symbol_infos()) {
-    if (sym.name() == function_name) {
-      return sym.address() + module_base_address - syms.value().load_bias();
+  for (const orbit_grpc_protos::SymbolInfo& symbol : symbols.value().symbol_infos()) {
+    if (symbol.name() == function_name) {
+      return symbol.address() + module_base_address - symbols.value().load_bias();
     }
   }
 

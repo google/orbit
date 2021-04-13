@@ -20,14 +20,11 @@ constexpr uint64_t kCodeScratchPadSize = 1024;
 
 }  // namespace
 
-ErrorMessageOr<uint64_t> ExecuteInProcess(pid_t pid, void* handle, std::string_view function,
-                                          uint64_t param_0, uint64_t param_1, uint64_t param_2,
-                                          uint64_t param_3, uint64_t param_4, uint64_t param_5) {
-  OUTCOME_TRY(address_function_as_pointer, DlsymInTracee(pid, handle, function));
-  const uint64_t address_function = absl::bit_cast<uint64_t>(address_function_as_pointer);
-
+ErrorMessageOr<uint64_t> ExecuteInProcess(pid_t pid, void* function_address, uint64_t param_0,
+                                          uint64_t param_1, uint64_t param_2, uint64_t param_3,
+                                          uint64_t param_4, uint64_t param_5) {
   // The input parameters go into rdi, rsi, rdx, rcx, r8 and r9 in that order. Write
-  // `address_function` into rax, call the function and hit a breakpoint. The return value (if
+  // `function_address` into rax, call the function and hit a breakpoint. The return value (if
   // any) will be in rax.
   // movabsq rdi, param_0             48 bf param_0
   // movabsq rsi, param_1             48 be param_1
@@ -35,7 +32,7 @@ ErrorMessageOr<uint64_t> ExecuteInProcess(pid_t pid, void* handle, std::string_v
   // movabsq rcx, param_3             48 b9 param_3
   // movabsq  r8, param_4             49 b8 param_4
   // movabsq  r9, param_5             49 b9 param_5
-  // movabsq rax, address_function    48 b8 address_function
+  // movabsq rax, function_address    48 b8 function_address
   // call rax                         ff d0
   // int3                             cc
   MachineCode code;
@@ -52,14 +49,26 @@ ErrorMessageOr<uint64_t> ExecuteInProcess(pid_t pid, void* handle, std::string_v
       .AppendBytes({0x49, 0xb9})
       .AppendImmediate64(param_5)
       .AppendBytes({0x48, 0xb8})
-      .AppendImmediate64(address_function)
+      .AppendImmediate64(absl::bit_cast<uint64_t>(function_address))
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
-  OUTCOME_TRY(address_code, AllocateInTracee(pid, 0, kCodeScratchPadSize));
 
-  OUTCOME_TRY(return_value, ExecuteMachineCode(pid, address_code, kCodeScratchPadSize, code));
+  OUTCOME_TRY(address, AllocateInTracee(pid, 0, kCodeScratchPadSize));
+
+  OUTCOME_TRY(return_value, ExecuteMachineCode(pid, address, code));
+
+  OUTCOME_TRY(FreeInTracee(pid, address, kCodeScratchPadSize));
 
   return return_value;
+}
+
+ErrorMessageOr<uint64_t> ExecuteInProcess(pid_t pid, void* library_handle,
+                                          std::string_view function, uint64_t param_0,
+                                          uint64_t param_1, uint64_t param_2, uint64_t param_3,
+                                          uint64_t param_4, uint64_t param_5) {
+  OUTCOME_TRY(function_address, DlsymInTracee(pid, library_handle, function));
+  return ExecuteInProcess(pid, function_address, param_0, param_1, param_2, param_3, param_4,
+                          param_5);
 }
 
 }  // namespace orbit_user_space_instrumentation

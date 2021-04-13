@@ -15,6 +15,7 @@
 #include "FindFunctionAddress.h"
 #include "MachineCode.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/UniqueResource.h"
 
 namespace orbit_user_space_instrumentation {
 
@@ -43,16 +44,16 @@ void FreeMemoryOrDie(pid_t pid, uint64_t address_code, uint64_t size) {
 
 // Returns the absolute virtual address of a function in a module of a process as
 // FindFunctionAddress does but accepts a fallback symbol if the primary one cannot be resolved.
-ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_view function,
-                                                         std::string_view module,
-                                                         std::string_view fallback_function,
-                                                         std::string_view fallback_module) {
-  ErrorMessageOr<uint64_t> primary_address_or_error = FindFunctionAddress(pid, function, module);
+ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_view module,
+                                                         std::string_view function,
+                                                         std::string_view fallback_module,
+                                                         std::string_view fallback_function) {
+  ErrorMessageOr<uint64_t> primary_address_or_error = FindFunctionAddress(pid, module, function);
   if (primary_address_or_error.has_value()) {
     return primary_address_or_error.value();
   }
   ErrorMessageOr<uint64_t> fallback_address_or_error =
-      FindFunctionAddress(pid, fallback_function, fallback_module);
+      FindFunctionAddress(pid, fallback_module, fallback_function);
   if (fallback_address_or_error.has_value()) {
     return fallback_address_or_error.value();
   }
@@ -69,13 +70,16 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
 [[nodiscard]] ErrorMessageOr<void*> DlopenInTracee(pid_t pid, std::filesystem::path path,
                                                    uint32_t flag) {
   // Figure out address of dlopen.
-  OUTCOME_TRY(address_dlopen, FindFunctionAddressWithFallback(pid, kDlopenInLibdl, kLibdlSoname,
-                                                              kDlopenInLibc, kLibcSoname));
+  OUTCOME_TRY(address_dlopen, FindFunctionAddressWithFallback(pid, kLibdlSoname, kDlopenInLibdl,
+                                                              kLibcSoname, kDlopenInLibc));
 
   // Allocate small memory area in the tracee. This is used for the code and the path name.
   const uint64_t path_length = path.string().length() + 1;  // Include terminating zero.
   const uint64_t memory_size = kCodeScratchPadSize + path_length;
-  OUTCOME_TRY(address_code, AllocateInTracee(pid, 0, memory_size));
+  OUTCOME_TRY(address, AllocateInTracee(pid, 0, memory_size));
+  orbit_base::unique_resource address_code{address, [&pid, &memory_size](uint64_t address) {
+                                             FreeMemoryOrDie(pid, address, memory_size);
+                                           }};
 
   // Write the name of the .so into memory at address_code with offset of kCodeScratchPadSize.
   std::vector<uint8_t> path_as_vector(path_length);
@@ -83,7 +87,6 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   const uint64_t address_so_path = address_code + kCodeScratchPadSize;
   auto result_write_path = WriteTraceesMemory(pid, address_so_path, path_as_vector);
   if (result_write_path.has_error()) {
-    FreeMemoryOrDie(pid, address_code, memory_size);
     return result_write_path.error();
   }
 
@@ -109,24 +112,24 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-  auto return_value_or_error = ExecuteMachineCode(pid, address_code, memory_size, code);
-  if (return_value_or_error.has_error()) {
-    FreeMemoryOrDie(pid, address_code, memory_size);
-    return return_value_or_error.error();
-  }
-  return absl::bit_cast<void*>(return_value_or_error.value());
+  OUTCOME_TRY(return_value, ExecuteMachineCode(pid, address_code, code));
+
+  return absl::bit_cast<void*>(return_value);
 }
 
 [[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(pid_t pid, void* handle,
                                                   std::string_view symbol) {
   // Figure out address of dlsym.
-  OUTCOME_TRY(address_dlsym, FindFunctionAddressWithFallback(pid, kDlsymInLibdl, kLibdlSoname,
-                                                             kDlsymInLibc, kLibcSoname));
+  OUTCOME_TRY(address_dlsym, FindFunctionAddressWithFallback(pid, kLibdlSoname, kDlsymInLibdl,
+                                                             kLibcSoname, kDlsymInLibc));
 
   // Allocate small memory area in the tracee. This is used for the code and the symbol name.
   const size_t symbol_name_length = symbol.length() + 1;  // include terminating zero
   const uint64_t memory_size = kCodeScratchPadSize + symbol_name_length;
-  OUTCOME_TRY(address_code, AllocateInTracee(pid, 0, memory_size));
+  OUTCOME_TRY(address, AllocateInTracee(pid, 0, memory_size));
+  orbit_base::unique_resource address_code{address, [&pid, &memory_size](uint64_t address) {
+                                             FreeMemoryOrDie(pid, address, memory_size);
+                                           }};
 
   // Write the name of symbol into memory at address_code with offset of kCodeScratchPadSize.
   std::vector<uint8_t> symbol_name_as_vector(symbol_name_length, 0);
@@ -135,7 +138,6 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   auto result_write_symbol_name =
       WriteTraceesMemory(pid, address_symbol_name, symbol_name_as_vector);
   if (result_write_symbol_name.has_error()) {
-    FreeMemoryOrDie(pid, address_code, memory_size);
     return result_write_symbol_name.error();
   }
 
@@ -161,21 +163,20 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-  auto return_value_or_error = ExecuteMachineCode(pid, address_code, memory_size, code);
-  if (return_value_or_error.has_error()) {
-    FreeMemoryOrDie(pid, address_code, memory_size);
-    return return_value_or_error.error();
-  }
-  return absl::bit_cast<void*>(return_value_or_error.value());
+  OUTCOME_TRY(return_value, ExecuteMachineCode(pid, address_code, code));
+
+  return absl::bit_cast<void*>(return_value);
 }
 
 [[nodiscard]] ErrorMessageOr<void> DlcloseInTracee(pid_t pid, void* handle) {
   // Figure out address of dlclose.
-  OUTCOME_TRY(address_dlclose, FindFunctionAddressWithFallback(pid, kDlcloseInLibdl, kLibdlSoname,
-                                                               kDlcloseInLibc, kLibcSoname));
+  OUTCOME_TRY(address_dlclose, FindFunctionAddressWithFallback(pid, kLibdlSoname, kDlcloseInLibdl,
+                                                               kLibcSoname, kDlcloseInLibc));
 
   // Allocate small memory area in the tracee.
-  OUTCOME_TRY(address_code, AllocateInTracee(pid, 0, kCodeScratchPadSize));
+  OUTCOME_TRY(address, AllocateInTracee(pid, 0, kCodeScratchPadSize));
+  orbit_base::unique_resource address_code{
+      address, [&pid](uint64_t address) { FreeMemoryOrDie(pid, address, kCodeScratchPadSize); }};
 
   // We want to do the following in the tracee:
   // dlclose(handle);
@@ -195,9 +196,8 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-  auto return_value_or_error = ExecuteMachineCode(pid, address_code, kCodeScratchPadSize, code);
+  auto return_value_or_error = ExecuteMachineCode(pid, address_code, code);
   if (return_value_or_error.has_error()) {
-    FreeMemoryOrDie(pid, address_code, kCodeScratchPadSize);
     return return_value_or_error.error();
   }
 

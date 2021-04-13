@@ -68,9 +68,11 @@ void OpenUseAndCloseLibrary(pid_t pid) {
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-  auto result_or_error = ExecuteMachineCode(pid, address_code, kScratchPadSize, code);
+  auto result_or_error = ExecuteMachineCode(pid, address_code, code);
   ASSERT_FALSE(result_or_error.has_error());
   EXPECT_EQ(42, result_or_error.value());
+
+  ASSERT_FALSE(FreeInTracee(pid, address_code, kScratchPadSize).has_error());
 
   // Close the library.
   auto result_dlclose = DlcloseInTracee(pid, result_dlopen.value());
