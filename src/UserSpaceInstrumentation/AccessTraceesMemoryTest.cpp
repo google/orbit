@@ -28,6 +28,21 @@ namespace orbit_user_space_instrumentation {
 
 namespace {
 
+AddressRange AddressRangeFromString(const std::string& s) {
+  AddressRange result;
+  const std::vector<std::string> addresses = absl::StrSplit(s, '-');
+  if (addresses.size() != 2) {
+    FATAL("Not an address range.");
+  }
+  if (!absl::numbers_internal::safe_strtou64_base(addresses[0], &result.first, 16)) {
+    FATAL("Not a number.");
+  }
+  if (!absl::numbers_internal::safe_strtou64_base(addresses[1], &result.second, 16)) {
+    FATAL("Not a number.");
+  }
+  return result;
+}
+
 // Get the adress range of the first consecutive mappings. We can read this range but not more.
 [[nodiscard]] ErrorMessageOr<AddressRange> GetFirstContinuesAdressRange(pid_t pid) {
   OUTCOME_TRY(maps_or_error, orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid)));
@@ -37,18 +52,13 @@ namespace {
   for (const auto& line : lines) {
     const std::vector<std::string> tokens = absl::StrSplit(line, ' ', absl::SkipEmpty());
     if (tokens.size() < 2 || tokens[1].size() != 4) continue;
-    const std::vector<std::string> addresses = absl::StrSplit(tokens[0], '-');
-    if (addresses.size() != 2) continue;
+    const AddressRange current_range = AddressRangeFromString(tokens[0]);
     if (is_first) {
-      if (!absl::numbers_internal::safe_strtou64_base(addresses[0], &result.first, 16)) continue;
-      if (!absl::numbers_internal::safe_strtou64_base(addresses[1], &result.second, 16)) continue;
+      result = current_range;
       is_first = false;
     } else {
-      AddressRange current;
-      if (!absl::numbers_internal::safe_strtou64_base(addresses[0], &current.first, 16)) continue;
-      if (!absl::numbers_internal::safe_strtou64_base(addresses[1], &current.second, 16)) continue;
-      if (current.first == result.second) {
-        result.second = current.second;
+      if (current_range.first == result.second) {
+        result.second = current_range.second;
       }
     }
   }
