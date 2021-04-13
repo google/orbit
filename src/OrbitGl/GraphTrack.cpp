@@ -92,61 +92,7 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
 
   const Color kBlack(0, 0, 0, 255);
   const Color kWhite(255, 255, 255, 255);
-  float text_z = GlCanvas::kZValueTrackText + z_offset;
   float label_z = GlCanvas::kZValueTrackLabel + z_offset;
-
-  // Add warning threshold text box and line.
-  Batcher* ui_batcher = canvas->GetBatcher();
-  uint32_t font_size = layout_->CalculateZoomedFontSize();
-  if (warning_threshold_.has_value()) {
-    const Color kThresholdColor(244, 67, 54, 255);
-
-    double normalized_value = (warning_threshold_.value().second - min_) * inv_value_range_;
-    float x = pos_[0];
-    float y = pos_[1] - size_[1] + static_cast<float>(normalized_value) * size_[1];
-    Vec2 from(x, y);
-    Vec2 to(x + size_[0], y);
-
-    std::string text = warning_threshold_.value().first;
-    float string_width = canvas->GetTextRenderer().GetStringWidth(text.c_str(), font_size);
-    Vec2 text_box_size(string_width, layout_->GetTextBoxHeight());
-    Vec2 text_box_position(pos_[0] + layout_->GetRightMargin(),
-                           y - layout_->GetTextBoxHeight() / 2.f);
-    canvas->GetTextRenderer().AddText(text.c_str(), text_box_position[0],
-                                      text_box_position[1] + layout_->GetTextOffset(), text_z,
-                                      kThresholdColor, font_size, text_box_size[0]);
-
-    ui_batcher->AddLine(from, from + Vec2(layout_->GetRightMargin() / 2.f, 0), text_z,
-                        kThresholdColor);
-    ui_batcher->AddLine(Vec2(text_box_position[0] + text_box_size[0], y), to, text_z,
-                        kThresholdColor);
-  }
-
-  // Add value upper bound text box (e.g., the "Memory Total" text box for the memory tracks).
-  if (value_upper_bound_.has_value()) {
-    std::string text = value_upper_bound_.value().first;
-    float string_width = canvas->GetTextRenderer().GetStringWidth(text.c_str(), font_size);
-    Vec2 text_box_size(string_width, layout_->GetTextBoxHeight());
-    Vec2 text_box_position(pos_[0] + size_[0] - text_box_size[0] - layout_->GetRightMargin() -
-                               layout_->GetSliderWidth(),
-                           pos_[1] - layout_->GetTextBoxHeight() / 2.f);
-    canvas->GetTextRenderer().AddText(text.c_str(), text_box_position[0],
-                                      text_box_position[1] + layout_->GetTextOffset(), text_z,
-                                      kWhite, font_size, text_box_size[0]);
-  }
-
-  // Add value lower bound text box.
-  if (value_lower_bound_.has_value()) {
-    std::string text = value_lower_bound_.value().first;
-    float string_width = canvas->GetTextRenderer().GetStringWidth(text.c_str(), font_size);
-    Vec2 text_box_size(string_width, layout_->GetTextBoxHeight());
-    Vec2 text_box_position(pos_[0] + size_[0] - text_box_size[0] - layout_->GetRightMargin() -
-                               layout_->GetSliderWidth(),
-                           pos_[1] - size_[1]);
-    canvas->GetTextRenderer().AddText(text.c_str(), text_box_position[0],
-                                      text_box_position[1] + layout_->GetTextOffset(), text_z,
-                                      kWhite, font_size, text_box_size[0]);
-  }
 
   // Draw label
   uint64_t current_mouse_time_ns = time_graph_->GetCurrentMouseTimeNs();
@@ -232,23 +178,6 @@ float GraphTrack::GetHeight() const {
   return height;
 }
 
-void GraphTrack::SetWarningThresholdWhenEmpty(const std::string& pretty_label, double raw_value) {
-  if (warning_threshold_.has_value()) return;
-  warning_threshold_ = std::make_pair(pretty_label, raw_value);
-  UpdateMinAndMax(raw_value);
-}
-
-void GraphTrack::SetValueUpperBoundWhenEmpty(const std::string& pretty_label, double raw_value) {
-  if (value_upper_bound_.has_value()) return;
-  value_upper_bound_ = std::make_pair(pretty_label, raw_value);
-  UpdateMinAndMax(raw_value);
-}
-void GraphTrack::SetValueLowerBoundWhenEmpty(const std::string& pretty_label, double raw_value) {
-  if (value_lower_bound_.has_value()) return;
-  value_lower_bound_ = std::make_pair(pretty_label, raw_value);
-  UpdateMinAndMax(raw_value);
-}
-
 void GraphTrack::SetLabelUnitWhenEmpty(const std::string& label_unit) {
   if (!label_unit_.empty()) return;
   label_unit_ = label_unit;
@@ -257,11 +186,6 @@ void GraphTrack::SetLabelUnitWhenEmpty(const std::string& label_unit) {
 void GraphTrack::SetValueDecimalDigitsWhenEmpty(uint8_t value_decimal_digits) {
   if (value_decimal_digits_.has_value()) return;
   value_decimal_digits_ = value_decimal_digits;
-}
-
-void GraphTrack::UpdateMinAndMax(double value) {
-  max_ = std::max(max_, value);
-  min_ = std::min(min_, value);
 }
 
 void GraphTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {

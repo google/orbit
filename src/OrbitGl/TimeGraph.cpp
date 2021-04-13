@@ -24,6 +24,7 @@
 #include "GraphTrack.h"
 #include "GrpcProtos/Constants.h"
 #include "ManualInstrumentationManager.h"
+#include "MemoryTrack.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/Tracing.h"
@@ -41,8 +42,8 @@ ABSL_DECLARE_FLAG(bool, enable_warning_threshold);
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
+using orbit_gl::MemoryTrack;
 using orbit_grpc_protos::InstrumentedFunction;
-
 using orbit_grpc_protos::kMissingInfo;
 
 TimeGraph::TimeGraph(OrbitApp* app, TextRenderer* text_renderer, GlCanvas* canvas,
@@ -459,7 +460,7 @@ void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
     total_raw_value = static_cast<double>(total_kb) / kMegabytesToKilobytes;
   }
 
-  GraphTrack* track;
+  MemoryTrack* track;
   int64_t unused_kb = orbit_api::Decode<int64_t>(
       timer_info.registers(static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kFreeKb)));
   int64_t buffers_kb = orbit_api::Decode<int64_t>(timer_info.registers(
@@ -467,7 +468,7 @@ void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
   int64_t cached_kb = orbit_api::Decode<int64_t>(timer_info.registers(
       static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kCachedKb)));
   if (buffers_kb != kMissingInfo && cached_kb != kMissingInfo) {
-    track = track_manager_->GetOrCreateGraphTrack(kBuffersOrCachedLabel);
+    track = track_manager_->GetOrCreateMemoryTrack(kBuffersOrCachedLabel);
     if (total_kb != kMissingInfo) {
       track->SetValueUpperBoundWhenEmpty(total_pretty_label, total_raw_value);
     }
@@ -481,7 +482,7 @@ void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
 
   if (total_kb != kMissingInfo && unused_kb != kMissingInfo && buffers_kb != kMissingInfo &&
       cached_kb != kMissingInfo) {
-    track = track_manager_->GetOrCreateGraphTrack(kUsedLabel);
+    track = track_manager_->GetOrCreateMemoryTrack(kUsedLabel);
     track->SetValueUpperBoundWhenEmpty(total_pretty_label, total_raw_value);
     track->SetValueLowerBoundWhenEmpty(kValueLowerBoundLabel, kValueLowerBoundRawValue);
     if (absl::GetFlag(FLAGS_enable_warning_threshold)) {
