@@ -46,6 +46,7 @@ target_sources(
          LiveFunctionsController.h
          LiveFunctionsDataView.h
          ManualInstrumentationManager.h
+         MemoryTrack.h
          ModulesDataView.h
          OpenGl.h
          PickingManager.h
@@ -107,6 +108,7 @@ target_sources(
           IntrospectionWindow.cpp
           LiveFunctionsDataView.cpp
           ManualInstrumentationManager.cpp
+          MemoryTrack.cpp
           ModulesDataView.cpp
           PickingManager.cpp
           PresetsDataView.cpp
