@@ -73,14 +73,14 @@ void TrackManager::SortTracks() {
     // Gather all tracks regardless of the process in sorted order
     std::vector<Track*> all_processes_sorted_tracks;
 
-    // Gpu tracks.
-    for (const auto& timeline_and_track : gpu_tracks_) {
-      all_processes_sorted_tracks.push_back(timeline_and_track.second.get());
-    }
-
     // Frame tracks.
     for (const auto& name_and_track : frame_tracks_) {
       all_processes_sorted_tracks.push_back(name_and_track.second.get());
+    }
+
+    // Gpu tracks.
+    for (const auto& timeline_and_track : gpu_tracks_) {
+      all_processes_sorted_tracks.push_back(timeline_and_track.second.get());
     }
 
     // Graph tracks.
@@ -142,17 +142,17 @@ void TrackManager::SortTracks() {
 
     last_thread_reorder_.Restart();
 
-    UpdateFilteredTrackList();
+    UpdateVisibleTrackList();
   }
   sorting_invalidated_ = false;
 }
 
 void TrackManager::SetFilter(const std::string& filter) {
   filter_ = absl::AsciiStrToLower(filter);
-  UpdateFilteredTrackList();
+  UpdateVisibleTrackList();
 }
 
-void TrackManager::UpdateFilteredTrackList() {
+void TrackManager::UpdateVisibleTrackList() {
   if (filter_.empty()) {
     visible_tracks_ = sorted_tracks_;
     return;
@@ -306,12 +306,29 @@ void TrackManager::AddTrack(const std::shared_ptr<Track>& track) {
   sorting_invalidated_ = true;
 }
 
+void TrackManager::AddFrameTrack(const std::shared_ptr<FrameTrack>& frame_track) {
+  // We are inserting the new frame track just after the last Frame Track with lower function_id
+  // (and also after the Scheduler one).
+  auto last_frame_or_scheduler_track_pos =
+      find_if(sorted_tracks_.rbegin(), sorted_tracks_.rend(), [frame_track](Track* track) {
+        return (track->GetType() == Track::kFrameTrack &&
+                frame_track->GetFunctionId() > static_cast<FrameTrack*>(track)->GetFunctionId()) ||
+               track->GetType() == Track::kSchedulerTrack;
+      });
+  if (last_frame_or_scheduler_track_pos != sorted_tracks_.rend()) {
+    sorted_tracks_.insert(last_frame_or_scheduler_track_pos.base(), frame_track.get());
+  } else {
+    sorted_tracks_.insert(sorted_tracks_.begin(), frame_track.get());
+  }
+  UpdateVisibleTrackList();
+}
+
 void TrackManager::RemoveFrameTrack(uint64_t function_id) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
+  sorted_tracks_.erase(
+      std::remove(sorted_tracks_.begin(), sorted_tracks_.end(), frame_tracks_[function_id].get()));
   frame_tracks_.erase(function_id);
-  sorting_invalidated_ = true;
-  // We need to do SortTracks again to have visible_tracks_ updated
-  SortTracks();
+  UpdateVisibleTrackList();
 }
 
 SchedulerTrack* TrackManager::GetOrCreateSchedulerTrack() {
@@ -388,9 +405,10 @@ FrameTrack* TrackManager::GetOrCreateFrameTrack(
                                             capture_data_);
 
   // Normally we would call AddTrack(track) here, but frame tracks are removable by users
-  // and therefore cannot be simply thrown into the flat vector of tracks.
-  sorting_invalidated_ = true;
+  // and therefore cannot be simply thrown into the flat vector of tracks. Also, we don't want to
+  // trigger a sorting in all the tracks.
   frame_tracks_[function.function_id()] = track;
+  AddFrameTrack(track);
 
   return track.get();
 }
