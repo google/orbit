@@ -19,6 +19,7 @@
 #include "FrameTrack.h"
 #include "GpuTrack.h"
 #include "GraphTrack.h"
+#include "MemoryTrack.h"
 #include "PickingManager.h"
 #include "SchedulerTrack.h"
 #include "StringManager.h"
@@ -61,6 +62,7 @@ class TrackManager {
   ThreadTrack* GetOrCreateThreadTrack(int32_t tid);
   GpuTrack* GetOrCreateGpuTrack(uint64_t timeline_hash);
   GraphTrack* GetOrCreateGraphTrack(const std::string& name);
+  orbit_gl::MemoryTrack* GetOrCreateMemoryTrack(const std::string& name);
   AsyncTrack* GetOrCreateAsyncTrack(const std::string& name);
   FrameTrack* GetOrCreateFrameTrack(const orbit_grpc_protos::InstrumentedFunction& function);
 
@@ -84,6 +86,7 @@ class TrackManager {
   absl::flat_hash_map<int32_t, std::shared_ptr<ThreadTrack>> thread_tracks_;
   std::map<std::string, std::shared_ptr<AsyncTrack>> async_tracks_;
   std::map<std::string, std::shared_ptr<GraphTrack>> graph_tracks_;
+  std::map<std::string, std::shared_ptr<orbit_gl::MemoryTrack>> memory_tracks_;
   // Mapping from timeline to GPU tracks. Timeline name is used for stable ordering. In particular
   // we want the marker tracks next to their queue track. E.g. "gfx" and "gfx_markers" should appear
   // next to each other.

@@ -35,9 +35,6 @@ class GraphTrack : public Track {
       uint64_t time) const;
   [[nodiscard]] bool IsEmpty() const override { return values_.empty(); }
 
-  void SetWarningThresholdWhenEmpty(const std::string& pretty_label, double raw_value);
-  void SetValueUpperBoundWhenEmpty(const std::string& pretty_label, double raw_value);
-  void SetValueLowerBoundWhenEmpty(const std::string& pretty_label, double raw_value);
   void SetLabelUnitWhenEmpty(const std::string& label_unit);
   void SetValueDecimalDigitsWhenEmpty(uint8_t value_decimal_digits);
 
@@ -51,16 +48,12 @@ class GraphTrack : public Track {
   void DrawSquareDot(Batcher* batcher, Vec2 center, float radius, float z, const Color& color);
   void DrawLabel(GlCanvas* canvas, Vec2 target_pos, const std::string& text,
                  const Color& text_color, const Color& font_color, float z);
-  void UpdateMinAndMax(double value);
 
   std::map<uint64_t, double> values_;
   double min_ = std::numeric_limits<double>::max();
   double max_ = std::numeric_limits<double>::lowest();
   double value_range_ = 0;
   double inv_value_range_ = 0;
-  std::optional<std::pair<std::string, double>> warning_threshold_ = std::nullopt;
-  std::optional<std::pair<std::string, double>> value_upper_bound_ = std::nullopt;
-  std::optional<std::pair<std::string, double>> value_lower_bound_ = std::nullopt;
   std::optional<uint8_t> value_decimal_digits_ = std::nullopt;
   std::string label_unit_;
 };

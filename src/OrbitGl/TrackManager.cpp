@@ -31,6 +31,7 @@
 #include "TimeGraphLayout.h"
 
 using orbit_client_protos::FunctionInfo;
+using orbit_gl::MemoryTrack;
 
 TrackManager::TrackManager(TimeGraph* time_graph, TimeGraphLayout* layout, OrbitApp* app,
                            const CaptureData* capture_data)
@@ -89,6 +90,11 @@ void TrackManager::SortTracks() {
     // Graph tracks.
     for (const auto& graph_track : graph_tracks_) {
       all_processes_sorted_tracks.push_back(graph_track.second.get());
+    }
+
+    // Memory tracks.
+    for (const auto& memory_track : memory_tracks_) {
+      all_processes_sorted_tracks.push_back(memory_track.second.get());
     }
 
     // Async tracks.
@@ -383,6 +389,17 @@ GraphTrack* TrackManager::GetOrCreateGraphTrack(const std::string& name) {
     track = std::make_shared<GraphTrack>(time_graph_, time_graph_, layout_, name, capture_data_);
     AddTrack(track);
     graph_tracks_[name] = track;
+  }
+  return track.get();
+}
+
+MemoryTrack* TrackManager::GetOrCreateMemoryTrack(const std::string& name) {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::shared_ptr<MemoryTrack> track = memory_tracks_[name];
+  if (track == nullptr) {
+    track = std::make_shared<MemoryTrack>(time_graph_, time_graph_, layout_, name, capture_data_);
+    AddTrack(track);
+    memory_tracks_[name] = track;
   }
   return track.get();
 }
