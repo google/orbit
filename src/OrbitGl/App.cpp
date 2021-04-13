@@ -1222,18 +1222,31 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
 
 orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
     const std::string& module_path, const std::string& build_id) {
+  ScopedMetric metric(metrics_uploader_,
+                      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_SYMBOL_LOAD);
+
   const ModuleData* const module_data = GetModuleByPathAndBuildId(module_path, build_id);
   if (module_data == nullptr) {
+    metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_INTERNAL_ERROR);
     return {ErrorMessage{absl::StrFormat("Module \"%s\" was not found", module_path)}};
   }
   if (module_data->is_loaded()) return {outcome::success()};
 
-  return orbit_base::UnwrapFuture(
+  orbit_base::Future<ErrorMessageOr<void>> load_result = orbit_base::UnwrapFuture(
       RetrieveModule(module_path, build_id)
           .ThenIfSuccess(main_thread_executor_, [this, module_path, build_id](
                                                     const std::filesystem::path& local_file_path) {
             return LoadSymbols(local_file_path, module_path, build_id);
           }));
+
+  load_result.Then(main_thread_executor_, [metric = std::move(metric)](
+                                              const ErrorMessageOr<void>& result) mutable {
+    if (result.has_error()) {
+      metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_INTERNAL_ERROR);
+    }
+  });
+
+  return load_result;
 }
 
 orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModule(
