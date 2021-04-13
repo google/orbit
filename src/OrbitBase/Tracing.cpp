@@ -25,6 +25,7 @@ using orbit_base::TracingTimerCallback;
 
 ABSL_CONST_INIT static absl::Mutex global_tracing_mutex(absl::kConstInit);
 ABSL_CONST_INIT static TracingListener* global_tracing_listener = nullptr;
+OrbitApi_V0 g_orbit_api_v0;
 
 // Tracing uses the same function table used by the Orbit API, but specifies its own functions.
 orbit_api_v0 g_orbit_api_v0;
@@ -46,6 +47,7 @@ TracingListener::TracingListener(TracingTimerCallback callback) {
 
   // Activate listener (only one listener instance is supported).
   absl::MutexLock lock(&global_tracing_mutex);
+  orbit_base::InitializeTracing();
   CHECK(!IsActive());
   orbit_base::InitializeTracing();
   global_tracing_listener = this;

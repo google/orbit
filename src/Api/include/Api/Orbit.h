@@ -9,6 +9,7 @@
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 // =================================================================================================
 =======
 #if __linux
@@ -21,6 +22,9 @@
 >>>>>>> 9f6fafa4 (New liborbit.so loading from OrbitService)
 =======
 >>>>>>> 39e4e8f9 (Load liborbit.so in tracee and call orbit_api_init function.)
+=======
+// =================================================================================================
+>>>>>>> 9b6101b5 (Remove ORBIT_API_INTERNAL_IMPL and clean up Orbit.h)
 // Orbit Manual Instrumentation API.
 // =================================================================================================
 //
@@ -49,6 +53,7 @@
 // Integration:
 // To integrate the manual instrumentation API in your code base, simply include this header file
 <<<<<<< HEAD
+<<<<<<< HEAD
 // and instantiate the "g_orbit_api_v0" global variable in your code. Orbit will automatically
 // deploy and dynamically load liborbit.so into the target process. Orbit will then write the proper
 // function addresses into the "g_orbit_api_v0" table.
@@ -56,6 +61,10 @@
 // and instanciate the g_orbit_api_v0 global variable in your code. Orbit will automatically deploy
 // and load liborbit.so and will write the proper function addresses into g_orbit_api_v0.
 >>>>>>> 39e4e8f9 (Load liborbit.so in tracee and call orbit_api_init function.)
+=======
+// and instanciate the "g_orbit_api_v0" global variable in your code. Orbit will automatically
+// deploy and load liborbit.so and will write the proper function addresses into g_orbit_api_v0.
+>>>>>>> 9b6101b5 (Remove ORBIT_API_INTERNAL_IMPL and clean up Orbit.h)
 //
 // Please note that this feature is still considered "experimental".
 //
@@ -237,7 +246,10 @@
 
 #else  // ORBIT_API_ENABLED
 
+<<<<<<< HEAD
 #ifdef __cplusplus
+=======
+>>>>>>> 9b6101b5 (Remove ORBIT_API_INTERNAL_IMPL and clean up Orbit.h)
 #define ORBIT_SCOPE(name)
 #define ORBIT_SCOPE_WITH_COLOR(name, color)
 #endif
@@ -327,37 +339,21 @@ extern orbit_api_v0 g_orbit_api_v0;
 struct OrbitApi_V0 {
   uint32_t active;
   uint32_t dummy;
-  void (*orbit_api_start)(const char* name, orbit_api_color color);
-  void (*orbit_api_stop)();
-  void (*orbit_api_start_async)(const char* name, uint64_t id, orbit_api_color color);
-  void (*orbit_api_stop_async)(uint64_t id);
-  void (*orbit_api_async_string)(const char* str, uint64_t id, orbit_api_color color);
-  void (*orbit_api_track_int)(const char* name, int value, orbit_api_color color);
-  void (*orbit_api_track_int64)(const char* name, int64_t value, orbit_api_color color);
-  void (*orbit_api_track_uint)(const char* name, uint32_t value, orbit_api_color color);
-  void (*orbit_api_track_uint64)(const char* name, uint64_t value, orbit_api_color color);
-  void (*orbit_api_track_float)(const char* name, float value, orbit_api_color color);
-  void (*orbit_api_track_double)(const char* name, double value, orbit_api_color color);
+  void (*start)(const char* name, orbit_api_color color);
+  void (*stop)();
+  void (*start_async)(const char* name, uint64_t id, orbit_api_color color);
+  void (*stop_async)(uint64_t id);
+  void (*async_string)(const char* str, uint64_t id, orbit_api_color color);
+  void (*track_int)(const char* name, int value, orbit_api_color color);
+  void (*track_int64)(const char* name, int64_t value, orbit_api_color color);
+  void (*track_uint)(const char* name, uint32_t value, orbit_api_color color);
+  void (*track_uint64)(const char* name, uint64_t value, orbit_api_color color);
+  void (*track_float)(const char* name, float value, orbit_api_color color);
+  void (*track_double)(const char* name, double value, orbit_api_color color);
 };
 
-#ifdef ORBIT_API_INTERNAL_IMPL
-
-void orbit_api_init();
-void orbit_api_start(const char* name, orbit_api_color color);
-void orbit_api_stop();
-void orbit_api_start_async(const char* name, uint64_t id, orbit_api_color color);
-void orbit_api_stop_async(uint64_t id);
-void orbit_api_async_string(const char* str, uint64_t id, orbit_api_color color);
-void orbit_api_track_int(const char* name, int value, orbit_api_color color);
-void orbit_api_track_int64(const char* name, int64_t value, orbit_api_color color);
-void orbit_api_track_uint(const char* name, uint32_t value, orbit_api_color color);
-void orbit_api_track_uint64(const char* name, uint64_t value, orbit_api_color color);
-void orbit_api_track_float(const char* name, float value, orbit_api_color color);
-void orbit_api_track_double(const char* name, double value, orbit_api_color color);
-
-#else  // ORBIT_API_INTERNAL_IMPL
-
 // User-instanciated global variable.
+<<<<<<< HEAD
 extern "C" OrbitApi_V0 g_orbit_api_v0;
 
 #define ORBIT_API_CALL(function_name)        \
@@ -400,7 +396,6 @@ inline void orbit_api_track_uint64(const char* name, uint64_t value, orbit_api_c
 inline void orbit_api_track_float(const char* name, float value, orbit_api_color color) {
   ORBIT_API_CALL(orbit_api_track_float)(name, value, color);
 }
->>>>>>> 39e4e8f9 (Load liborbit.so in tracee and call orbit_api_init function.)
 
 inline bool orbit_api_active_with_fence() {
   bool active = g_orbit_api_v0.active;
