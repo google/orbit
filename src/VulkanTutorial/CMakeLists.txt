@@ -14,15 +14,15 @@ target_compile_options(OffscreenRenderingVulkanTutorialLib PRIVATE ${STRICT_COMP
 target_compile_features(OffscreenRenderingVulkanTutorialLib PUBLIC cxx_std_17)
 
 target_include_directories(OffscreenRenderingVulkanTutorialLib PUBLIC
-        ${CMAKE_CURRENT_LIST_DIR}/include)
+        ${CMAKE_SOURCE_DIR}/third_party/VulkanTutorial/include)
 
 target_sources(OffscreenRenderingVulkanTutorialLib PUBLIC
-        include/VulkanTutorial/OffscreenRenderingVulkanTutorial.h)
+        ${CMAKE_SOURCE_DIR}/third_party/VulkanTutorial/include/VulkanTutorial/OffscreenRenderingVulkanTutorial.h)
 
 target_sources(OffscreenRenderingVulkanTutorialLib PRIVATE
-        OffscreenRenderingVulkanTutorial.cpp
-        VulkanTutorialFragmentShader.h
-        VulkanTutorialVertexShader.h)
+        ${CMAKE_SOURCE_DIR}/third_party/VulkanTutorial/OffscreenRenderingVulkanTutorial.cpp
+        ${CMAKE_SOURCE_DIR}/third_party/VulkanTutorial/VulkanTutorialFragmentShader.h
+        ${CMAKE_SOURCE_DIR}/third_party/VulkanTutorial/VulkanTutorialVertexShader.h)
 
 target_link_libraries(OffscreenRenderingVulkanTutorialLib PUBLIC
         OrbitBase
