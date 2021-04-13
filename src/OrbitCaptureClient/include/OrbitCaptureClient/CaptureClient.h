@@ -74,7 +74,7 @@ class CaptureClient {
 
  private:
   ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureSync(
-      int32_t process_id, const orbit_client_data::ModuleManager& module_manager,
+      const ProcessData& process, const orbit_client_data::ModuleManager& module_manager,
       const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>& selected_functions,
       const TracepointInfoSet& selected_tracepoints,
       absl::flat_hash_set<uint64_t> frame_track_function_ids, double samples_per_second,

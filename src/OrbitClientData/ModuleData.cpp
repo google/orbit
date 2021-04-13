@@ -5,6 +5,7 @@
 #include "OrbitClientData/ModuleData.h"
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/strings/match.h>
 
 #include <algorithm>
 
@@ -16,6 +17,7 @@
 
 using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::ModuleInfo;
+using orbit_grpc_protos::SymbolInfo;
 
 bool ModuleData::is_loaded() const {
   absl::MutexLock lock(&mutex_);
@@ -147,6 +149,11 @@ void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbo
         name_reuse_counter);
   }
 
+  data_symbols_.reserve(module_symbols.data_symbol_infos().size());
+  for (const orbit_grpc_protos::SymbolInfo& symbol_info : module_symbols.data_symbol_infos()) {
+    data_symbols_.emplace_back(symbol_info);
+  }
+
   is_loaded_ = true;
 }
 
@@ -175,4 +182,14 @@ std::vector<FunctionInfo> ModuleData::GetOrbitFunctions() const {
     }
   }
   return result;
+}
+
+std::vector<const SymbolInfo*> ModuleData::GetDataSymbolsFromName(std::string_view name) const {
+  std::vector<const SymbolInfo*> symbols;
+  for (const SymbolInfo& data_symbol : data_symbols_) {
+    if (absl::StrContains(data_symbol.name(), name)) {
+      symbols.push_back(&data_symbol);
+    }
+  }
+  return symbols;
 }

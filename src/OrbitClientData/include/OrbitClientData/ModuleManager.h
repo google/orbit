@@ -40,6 +40,8 @@ class ModuleManager final {
   [[nodiscard]] std::vector<orbit_client_protos::FunctionInfo> GetOrbitFunctionsOfProcess(
       const ProcessData& process) const;
 
+  [[nodiscard]] std::vector<const ModuleData*> GetAllModuleData() const;
+
  private:
   mutable absl::Mutex mutex_;
   // We are sharing pointers to that entries and ensure reference stability by using node_hash_map

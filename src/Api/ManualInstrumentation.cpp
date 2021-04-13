@@ -60,25 +60,22 @@ ErrorMessageOr<void> InitializeApiInTracee(const CaptureOptions& capture_options
       return maps_before.error();
     }
 
-    if (absl::StrContains(maps_before.value(), kLibName)) {
-      return ErrorMessage(
-          absl::StrFormat("Target process [%i] has already loaded liborbit.so", pid));
-    }
+    if (!absl::StrContains(maps_before.value(), kLibName)) {
+      // Load liborbit.so into target process.
+      auto result_dlopen = DlopenInTracee(pid, orbit_base::GetExecutableDir() / kLibName, RTLD_NOW);
+      if (result_dlopen.has_error()) {
+        return result_dlopen.error();
+      }
 
-    // Load liborbit.so into target process.
-    auto result_dlopen = DlopenInTracee(pid, orbit_base::GetExecutableDir() / kLibName, RTLD_NOW);
-    if (result_dlopen.has_error()) {
-      return result_dlopen.error();
-    }
+      auto maps_after_open = orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
+      if (maps_after_open.has_error()) {
+        return maps_after_open.error();
+      }
 
-    auto maps_after_open = orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
-    if (maps_after_open.has_error()) {
-      return maps_after_open.error();
-    }
-
-    if (absl::StrContains(maps_after_open.value(), kLibName) == false) {
-      return ErrorMessage(
-          absl::StrFormat("Dynamic loading of liborbit.so into target process [%i] failed", pid));
+      if (absl::StrContains(maps_after_open.value(), kLibName) == false) {
+        return ErrorMessage(
+            absl::StrFormat("Dynamic loading of liborbit.so into target process [%i] failed", pid));
+      }
     }
 
     // Find init function.

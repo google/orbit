@@ -40,19 +40,17 @@ class ElfFile {
   [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>
   LoadSymbolsFromDynsym() = 0;
   // Background and some terminology
-  // When an elf file is loaded to memory it has its load segments
-  // (segments of PT_LOAD type from program headers) mapped to some
-  // location in memory. The location of the first segment is called a base
-  // address.
-  // Symbols addresses in the elf file however are not offsets from the base
-  // address, they are calculated as offset from some virtual 0 where that
-  // virtual zero can be different from the base address.
+  // When an elf file is loaded to memory it has its load segments (segments of PT_LOAD type from
+  // program headers) mapped to some location in memory. The location of the first segment is called
+  // a base address. Symbols addresses in the elf file however are not offsets from the base
+  // address, they are calculated as offset from some virtual 0 where that virtual zero can be
+  // different from the base address.
   //
-  // The way to calculate the virtual zero is to take base address and subtract
-  // from it the minimum vaddr specified in PT_LOAD program headers.
+  // The way to calculate the virtual zero is to take base address and subtract from it the minimum
+  // vaddr specified in PT_LOAD program headers.
   //
-  // This method returns load bias for the elf-file if program headers are
-  // available. This should be the case for all loadable elf-files.
+  // This method returns load bias for the elf-file if program headers are available. This should be
+  // the case for all loadable elf-files.
   [[nodiscard]] virtual ErrorMessageOr<uint64_t> GetLoadBias() const = 0;
   [[nodiscard]] virtual bool HasSymtab() const = 0;
   [[nodiscard]] virtual bool HasDynsym() const = 0;
