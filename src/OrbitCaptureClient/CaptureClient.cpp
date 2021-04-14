@@ -29,11 +29,11 @@
 
 using orbit_client_protos::FunctionInfo;
 
+using orbit_grpc_protos::ApiTableInfo;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::InstrumentedFunction;
-using orbit_grpc_protos::ManualInstrumentationInfo;
 using orbit_grpc_protos::SymbolInfo;
 using orbit_grpc_protos::TracepointInfo;
 using orbit_grpc_protos::UnwindingMethod;
@@ -103,19 +103,19 @@ static void SetupManualInstrumentation(const ProcessData& process,
   for (const ModuleData* module_data : module_manager.GetAllModuleData()) {
     std::optional<uint64_t> base_address = process.GetModuleBaseAddress(module_data->file_path());
     if (!base_address.has_value()) {
-      ERROR("No base address found from module %s", module_data->file_path());
+      ERROR("No base address found for module %s", module_data->file_path());
       continue;
     }
 
     for (const SymbolInfo* symbol_info : module_data->GetDataSymbolsFromName(kOrbitApiPrefix)) {
       for (size_t i = 0; i <= kMaxApiVersion; ++i) {
-        std::string full_orbit_api_name = absl::StrFormat("%s%u", kOrbitApiPrefix, i);
-        if (symbol_info->name() != full_orbit_api_name) continue;
-        ManualInstrumentationInfo* api_info = capture_options->add_manual_instrumentation_infos();
-
-        uint64_t absolute_symbol_address = symbol_info->address() + base_address.value();
-        api_info->set_api_object_address(absolute_symbol_address);
-        api_info->set_api_version(i);
+        std::string orbit_api_table_name = absl::StrFormat("%s%u", kOrbitApiPrefix, i);
+        if (symbol_info->name() != orbit_api_table_name) continue;
+        ApiTableInfo* api_table_info = capture_options->add_api_table_infos();
+        api_table_info->set_module_path(module_data->file_path());
+        api_table_info->set_api_table_address(symbol_info->address() + base_address.value());
+        api_table_info->set_api_table_size(symbol_info->size());
+        api_table_info->set_api_version(i);
       }
     }
   }
