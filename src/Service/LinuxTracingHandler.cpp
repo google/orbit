@@ -9,7 +9,7 @@
 
 #include <utility>
 
-#include "Api/ManualInstrumentation.h"
+#include "Api/InitializeInTracee.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
 
@@ -64,7 +64,7 @@ void LinuxTracingHandler::SetupIntrospection() {
 }
 
 void LinuxTracingHandler::SetupManualInstrumentation(const CaptureOptions& capture_options) {
-  auto result = orbit_api::InitializeApiInTracee(capture_options);
+  auto result = orbit_api::InitializeInTracee(capture_options);
   if (result.has_error()) {
     LOG("Warning: Could not initialize instrumentation: %s", result.error().message());
   }

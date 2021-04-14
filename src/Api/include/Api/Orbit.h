@@ -337,8 +337,7 @@ struct orbit_api_v0 {
 extern orbit_api_v0 g_orbit_api_v0;
 =======
 struct OrbitApi_V0 {
-  uint32_t active;
-  uint32_t dummy;
+  uint64_t active;
   void (*start)(const char* name, orbit_api_color color);
   void (*stop)();
   void (*start_async)(const char* name, uint64_t id, orbit_api_color color);
