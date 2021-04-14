@@ -16,17 +16,17 @@ namespace orbit_user_space_instrumentation {
 
 TEST(FindFunctionAddressTest, FindFunctionAddress) {
   pid_t pid = fork();
-  ASSERT_TRUE(pid != -1);
+  CHECK(pid != -1);
   if (pid == 0) {
     while (true) {
     }
   }
 
   // Stop the child process using our tooling.
-  ASSERT_TRUE(AttachAndStopProcess(pid).has_value());
+  CHECK(AttachAndStopProcess(pid).has_value());
 
   auto function_address_or_error = FindFunctionAddress(pid, "libc.so.6", "printf");
-  ASSERT_TRUE(function_address_or_error.has_value());
+  ASSERT_TRUE(function_address_or_error.has_value()) << function_address_or_error.error().message();
 
   function_address_or_error = FindFunctionAddress(pid, "libc.so.6", "NOT_A_SYMBOL");
   ASSERT_TRUE(function_address_or_error.has_error());
@@ -44,7 +44,7 @@ TEST(FindFunctionAddressTest, FindFunctionAddress) {
       absl::StrContains(function_address_or_error.error().message(), "Unable to open file"));
 
   // Detach and end child.
-  ASSERT_TRUE(DetachAndContinueProcess(pid).has_value());
+  CHECK(!DetachAndContinueProcess(pid).has_error());
   kill(pid, SIGKILL);
   waitpid(pid, NULL, 0);
 }

@@ -35,7 +35,7 @@ constexpr const char* kDlcloseInLibc = "__libc_dlclose";
 
 // In certain error conditions the tracee is damaged and we don't try to recover from that. We just
 // abort with a fatal log message. None of these errors are expected to occur in operation
-// obvioulsy.
+// obviously.
 void FreeMemoryOrDie(pid_t pid, uint64_t address_code, uint64_t size) {
   auto result = FreeInTracee(pid, address_code, size);
   FAIL_IF(result.has_error(), "Unable to free previously allocated memory in tracee: \"%s\"",
