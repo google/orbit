@@ -5,6 +5,7 @@
 #include "ElfUtils/ElfFile.h"
 
 #include <absl/base/casts.h>
+#include <absl/strings/match.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <llvm/ADT/ArrayRef.h>
@@ -74,6 +75,7 @@ class ElfFileImpl : public ElfFile {
   void InitSections();
   void InitDynamicEntries(const llvm::object::ELFFile<ElfT>* elf_file);
   ErrorMessageOr<SymbolInfo> CreateSymbolInfo(const llvm::object::ELFSymbolRef& symbol_ref);
+  ErrorMessageOr<SymbolInfo> CreateDataSymbolInfo(const llvm::object::ELFSymbolRef& symbol_ref);
 
   const std::filesystem::path file_path_;
   llvm::object::OwningBinary<llvm::object::ObjectFile> owning_binary_;
@@ -299,6 +301,34 @@ ErrorMessageOr<SymbolInfo> ElfFileImpl<ElfT>::CreateSymbolInfo(
 }
 
 template <typename ElfT>
+ErrorMessageOr<SymbolInfo> ElfFileImpl<ElfT>::CreateDataSymbolInfo(
+    const llvm::object::ELFSymbolRef& symbol_ref) {
+  if ((symbol_ref.getFlags() & llvm::object::BasicSymbolRef::SF_Undefined) != 0) {
+    return ErrorMessage("Symbol is defined in another object file (SF_Undefined flag is set).");
+  }
+  const std::string name = symbol_ref.getName() ? symbol_ref.getName().get() : "";
+
+  // Unknown type - skip and generate a warning.
+  if (!symbol_ref.getType()) {
+    LOG("WARNING: Type is not set for symbol \"%s\" in \"%s\", skipping.", name,
+        file_path_.string());
+    return ErrorMessage(absl::StrFormat(R"(Type is not set for symbol "%s" in "%s", skipping.)",
+                                        name, file_path_.string()));
+  }
+
+  if (symbol_ref.getType().get() != llvm::object::SymbolRef::ST_Data) {
+    return ErrorMessage("Symbol is not data.");
+  }
+
+  SymbolInfo symbol_info;
+  symbol_info.set_name(name);
+  symbol_info.set_demangled_name(llvm::demangle(name));
+  symbol_info.set_address(symbol_ref.getValue());
+  symbol_info.set_size(symbol_ref.getSize());
+  return symbol_info;
+}
+
+template <typename ElfT>
 ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbolsFromSymtab() {
   if (!has_symtab_section_) {
     return ErrorMessage("ELF file does not have a .symtab section.");
@@ -311,9 +341,16 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbolsFromSymtab() {
   module_symbols.set_symbols_file_path(file_path_.string());
 
   for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->symbols()) {
-    auto symbol_or_error = CreateSymbolInfo(symbol_ref);
-    if (symbol_or_error.has_value()) {
-      *module_symbols.add_symbol_infos() = std::move(symbol_or_error.value());
+    if (symbol_ref.getType().get() == llvm::object::SymbolRef::ST_Data) {
+      auto symbol_or_error = CreateDataSymbolInfo(symbol_ref);
+      if (symbol_or_error.has_value()) {
+        *module_symbols.add_data_symbol_infos() = std::move(symbol_or_error.value());
+      }
+    } else {
+      auto symbol_or_error = CreateSymbolInfo(symbol_ref);
+      if (symbol_or_error.has_value()) {
+        *module_symbols.add_symbol_infos() = std::move(symbol_or_error.value());
+      }
     }
   }
 

@@ -10,6 +10,7 @@ message ModuleSymbols {
   uint64 load_bias = 1;
   string symbols_file_path = 2;
   repeated SymbolInfo symbol_infos = 3;
+  repeated SymbolInfo data_symbol_infos = 4;
 }
 
 message SymbolInfo {

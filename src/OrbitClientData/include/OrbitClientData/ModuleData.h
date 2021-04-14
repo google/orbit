@@ -50,6 +50,8 @@ class ModuleData final {
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionFromHash(uint64_t hash) const;
   [[nodiscard]] std::vector<const orbit_client_protos::FunctionInfo*> GetFunctions() const;
   [[nodiscard]] std::vector<orbit_client_protos::FunctionInfo> GetOrbitFunctions() const;
+  [[nodiscard]] std::vector<const orbit_grpc_protos::SymbolInfo*> GetDataSymbolsFromName(
+      std::string_view name) const;
 
  private:
   [[nodiscard]] bool NeedsUpdate(const orbit_grpc_protos::ModuleInfo& info) const;
@@ -58,6 +60,7 @@ class ModuleData final {
   orbit_grpc_protos::ModuleInfo module_info_;
   bool is_loaded_;
   std::map<uint64_t, std::unique_ptr<orbit_client_protos::FunctionInfo>> functions_;
+  std::vector<orbit_grpc_protos::SymbolInfo> data_symbols_;
   // TODO(168799822) This is a map of hash to function used for preset loading. Currently presets
   // are based on a hash of the functions pretty name. This should be changed to not use hashes
   // anymore.
