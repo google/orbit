@@ -29,7 +29,7 @@ class AccessibleWidgetBridge : public AccessibleInterface {
   [[nodiscard]] virtual AccessibilityRole AccessibleRole() const override {
     return AccessibilityRole::Grouping;
   }
-  [[nodiscard]] virtual AccessibilityRect AccessibleLocalRect() const override {
+  [[nodiscard]] virtual AccessibilityRect AccessibleRect() const override {
     return AccessibilityRect();
   }
   [[nodiscard]] virtual AccessibilityState AccessibleState() const override {

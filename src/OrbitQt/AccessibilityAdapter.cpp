@@ -205,14 +205,25 @@ QAccessibleInterface* AccessibilityAdapter::childAt(int x, int y) const {
 }
 
 QRect AccessibilityAdapter::rect() const {
-  orbit_accessibility::AccessibilityRect rect = info_->AccessibleLocalRect();
-  if (parent() == nullptr) {
-    return QRect(rect.left, rect.top, rect.width, rect.height);
+  orbit_accessibility::AccessibilityRect rect = info_->AccessibleRect();
+
+  // Find the outer most AccessibleInterface to convert the coordinates from
+  // pixel relative to the CaptureWindow to screen positions.
+
+  const orbit_accessibility::AccessibleInterface* root = info_->AccessibleParent();
+  while (root != nullptr && root->AccessibleParent() != nullptr) {
+    root = root->AccessibleParent();
   }
 
-  QRect parent_rect = parent()->rect();
-  return QRect(rect.left + parent_rect.left(), rect.top + parent_rect.top(), rect.width,
-               rect.height);
+  const QAccessibleInterface* bridge = AdapterRegistry::Get().GetOrCreateAdapter(root);
+
+  if (bridge != nullptr) {
+    QRect bridge_rect = bridge->rect();
+    return QRect(rect.left + bridge_rect.left(), rect.top + bridge_rect.top(), rect.width,
+                 rect.height);
+  }
+
+  return QRect(rect.left, rect.top, rect.width, rect.height);
 }
 
 QAccessible::Role AccessibilityAdapter::role() const {

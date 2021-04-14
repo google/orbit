@@ -24,7 +24,7 @@ class AccessibleObjectFake : public AccessibleInterface {
   }
   [[nodiscard]] AccessibilityState AccessibleState() const override { return AccessibilityState(); }
 
-  [[nodiscard]] AccessibilityRect AccessibleLocalRect() const override {
+  [[nodiscard]] AccessibilityRect AccessibleRect() const override {
     AccessibilityRect result;
     if (parent_ == nullptr) {
       return result;
