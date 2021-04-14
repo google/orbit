@@ -32,7 +32,7 @@ class ThreadTrack final : public TimerTrack {
 
   [[nodiscard]] int32_t GetThreadId() const { return thread_id_; }
 
-  [[nodiscard]] Type GetType() const override { return kThreadTrack; }
+  [[nodiscard]] Type GetType() const override { return Type::kThreadTrack; }
   [[nodiscard]] std::string GetTooltip() const override;
 
   [[nodiscard]] const TextBox* GetLeft(const TextBox* textbox) const override;

@@ -323,9 +323,9 @@ void TrackManager::AddFrameTrack(const std::shared_ptr<FrameTrack>& frame_track)
   // (and also after the Scheduler one).
   auto last_frame_or_scheduler_track_pos =
       find_if(sorted_tracks_.rbegin(), sorted_tracks_.rend(), [frame_track](Track* track) {
-        return (track->GetType() == Track::kFrameTrack &&
+        return (track->GetType() == Track::Type::kFrameTrack &&
                 frame_track->GetFunctionId() > static_cast<FrameTrack*>(track)->GetFunctionId()) ||
-               track->GetType() == Track::kSchedulerTrack;
+               track->GetType() == Track::Type::kSchedulerTrack;
       });
   if (last_frame_or_scheduler_track_pos != sorted_tracks_.rend()) {
     sorted_tracks_.insert(last_frame_or_scheduler_track_pos.base(), frame_track.get());

@@ -37,7 +37,7 @@ class GpuTrack : public TimerTrack {
                     uint64_t timeline_hash, OrbitApp* app, const CaptureData* capture_data);
   ~GpuTrack() override = default;
   [[nodiscard]] std::string GetTooltip() const override;
-  [[nodiscard]] Type GetType() const override { return kGpuTrack; }
+  [[nodiscard]] Type GetType() const override { return Type::kGpuTrack; }
   [[nodiscard]] float GetHeight() const override;
 
   [[nodiscard]] const TextBox* GetLeft(const TextBox* text_box) const override;
