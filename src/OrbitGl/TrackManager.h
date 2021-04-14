@@ -5,11 +5,11 @@
 #ifndef ORBIT_GL_TRACK_MANAGER_H_
 #define ORBIT_GL_TRACK_MANAGER_H_
 
-#include <absl/container/btree_map.h>
 #include <absl/container/flat_hash_map.h>
 #include <stdint.h>
 #include <stdlib.h>
 
+#include <map>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -81,15 +81,15 @@ class TrackManager {
 
   std::vector<std::shared_ptr<Track>> all_tracks_;
   absl::flat_hash_map<int32_t, std::shared_ptr<ThreadTrack>> thread_tracks_;
-  absl::btree_map<std::string, std::shared_ptr<AsyncTrack>> async_tracks_;
-  absl::btree_map<std::string, std::shared_ptr<GraphTrack>> graph_tracks_;
+  std::map<std::string, std::shared_ptr<AsyncTrack>> async_tracks_;
+  std::map<std::string, std::shared_ptr<GraphTrack>> graph_tracks_;
   // Mapping from timeline to GPU tracks. Timeline name is used for stable ordering. In particular
   // we want the marker tracks next to their queue track. E.g. "gfx" and "gfx_markers" should appear
   // next to each other.
-  absl::btree_map<std::string, std::shared_ptr<GpuTrack>> gpu_tracks_;
+  std::map<std::string, std::shared_ptr<GpuTrack>> gpu_tracks_;
   // Mapping from function address to frame tracks.
   // TODO (b/175865913): Use Function info instead of their address as key to FrameTracks
-  absl::btree_map<uint64_t, std::shared_ptr<FrameTrack>> frame_tracks_;
+  std::map<uint64_t, std::shared_ptr<FrameTrack>> frame_tracks_;
   std::shared_ptr<SchedulerTrack> scheduler_track_;
   ThreadTrack* tracepoints_system_wide_track_;
 
