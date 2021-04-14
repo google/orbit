@@ -7,25 +7,22 @@
 #include <absl/strings/str_format.h>
 #include <dlfcn.h>
 #include <gtest/gtest.h>
-#include <sys/ptrace.h>
 #include <sys/wait.h>
 
 #include <chrono>
 #include <csignal>
 #include <string>
 #include <thread>
-#include <vector>
 
-#include "AccessTraceesMemory.h"
 #include "AllocateInTracee.h"
-#include "Attach.h"
-#include "InjectLibraryInTracee.h"
+#include "ExecuteMachineCode.h"
 #include "MachineCode.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
-#include "RegisterState.h"
+#include "UserSpaceInstrumentation/Attach.h"
+#include "UserSpaceInstrumentation/InjectLibraryInTracee.h"
 
 namespace orbit_user_space_instrumentation {
 
@@ -71,9 +68,11 @@ void OpenUseAndCloseLibrary(pid_t pid) {
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-  auto result_or_error = ExecuteMachineCode(pid, address_code, kScratchPadSize, code);
+  auto result_or_error = ExecuteMachineCode(pid, address_code, code);
   ASSERT_FALSE(result_or_error.has_error());
   EXPECT_EQ(42, result_or_error.value());
+
+  ASSERT_FALSE(FreeInTracee(pid, address_code, kScratchPadSize).has_error());
 
   // Close the library.
   auto result_dlclose = DlcloseInTracee(pid, result_dlopen.value());
@@ -88,41 +87,6 @@ void OpenUseAndCloseLibrary(pid_t pid) {
 }
 
 }  // namespace
-
-TEST(InjectLibraryInTraceeTest, FindFunctionAddress) {
-  pid_t pid = fork();
-  ASSERT_TRUE(pid != -1);
-  if (pid == 0) {
-    while (true) {
-    }
-  }
-
-  // Stop the child process using our tooling.
-  ASSERT_TRUE(AttachAndStopProcess(pid).has_value());
-
-  auto function_address_or_error = FindFunctionAddress(pid, "printf", "libc.so.6");
-  ASSERT_TRUE(function_address_or_error.has_value());
-
-  function_address_or_error = FindFunctionAddress(pid, "NOT_A_SYMBOL", "libc.so.6");
-  ASSERT_TRUE(function_address_or_error.has_error());
-  EXPECT_TRUE(absl::StrContains(function_address_or_error.error().message(),
-                                "Unable to locate function symbol"));
-
-  function_address_or_error = FindFunctionAddress(pid, "printf", "NOT_A_LIB-");
-  ASSERT_TRUE(function_address_or_error.has_error());
-  EXPECT_TRUE(absl::StrContains(function_address_or_error.error().message(),
-                                "There is no module \"NOT_A_LIB-\" in process"));
-
-  function_address_or_error = FindFunctionAddress(-1, "printf", "libc.so.6");
-  ASSERT_TRUE(function_address_or_error.has_error());
-  EXPECT_TRUE(
-      absl::StrContains(function_address_or_error.error().message(), "Unable to open file"));
-
-  // Detach and end child.
-  ASSERT_TRUE(DetachAndContinueProcess(pid).has_value());
-  kill(pid, SIGKILL);
-  waitpid(pid, NULL, 0);
-}
 
 TEST(InjectLibraryInTraceeTest, OpenUseAndCloseLibraryInUserCode) {
   pid_t pid = fork();

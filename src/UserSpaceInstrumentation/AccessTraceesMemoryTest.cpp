@@ -16,9 +16,9 @@
 #include <vector>
 
 #include "AccessTraceesMemory.h"
-#include "Attach.h"
 #include "OrbitBase/Logging.h"
 #include "RegisterState.h"
+#include "UserSpaceInstrumentation/Attach.h"
 
 namespace orbit_user_space_instrumentation {
 

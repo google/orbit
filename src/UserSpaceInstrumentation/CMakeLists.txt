@@ -18,15 +18,23 @@ target_include_directories(UserSpaceInstrumentation PUBLIC
 target_include_directories(UserSpaceInstrumentation PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
+target_sources(UserSpaceInstrumentation PUBLIC
+        include/UserSpaceInstrumentation/Attach.h
+        include/UserSpaceInstrumentation/ExecuteInProcess.h
+        include/UserSpaceInstrumentation/InjectLibraryInTracee.h)        
+
 target_sources(UserSpaceInstrumentation PRIVATE
         AccessTraceesMemory.cpp
         AccessTraceesMemory.h
         AllocateInTracee.cpp
         AllocateInTracee.h
         Attach.cpp
-        Attach.h
+        ExecuteInProcess.cpp
+        ExecuteMachineCode.h
+        ExecuteMachineCode.cpp
+        FindFunctionAddress.h
+        FindFunctionAddress.cpp
         InjectLibraryInTracee.cpp
-        InjectLibraryInTracee.h
         MachineCode.cpp
         MachineCode.h
         RegisterState.cpp
@@ -55,6 +63,7 @@ target_sources(UserSpaceInstrumentationTestLib PRIVATE
         UserSpaceInstrumentationTestLib.cpp
         UserSpaceInstrumentationTestLib.h)
 
+# The tests for UserSpaceInstrumentation        
 add_executable(UserSpaceInstrumentationTests)
 
 target_compile_options(UserSpaceInstrumentationTests PRIVATE ${STRICT_COMPILE_FLAGS})
@@ -66,6 +75,9 @@ target_sources(UserSpaceInstrumentationTests PRIVATE
         AccessTraceesMemoryTest.cpp
         AllocateInTraceeTest.cpp
         AttachTest.cpp
+        ExecuteInProcessTest.cpp
+        ExecuteMachineCodeTest.cpp
+        FindFunctionAddressTest.cpp
         InjectLibraryInTraceeTest.cpp
         MachineCodeTest.cpp
         RegisterStateTest.cpp

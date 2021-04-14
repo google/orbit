@@ -2,33 +2,24 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "InjectLibraryInTracee.h"
+#include "UserSpaceInstrumentation/InjectLibraryInTracee.h"
 
 #include <absl/base/casts.h>
-#include <absl/strings/match.h>
-#include <absl/strings/str_cat.h>
-#include <absl/strings/str_format.h>
-#include <sys/ptrace.h>
-#include <sys/wait.h>
 
-#include <csignal>
 #include <string>
 #include <vector>
 
 #include "AccessTraceesMemory.h"
 #include "AllocateInTracee.h"
-#include "ElfUtils/ElfFile.h"
-#include "ElfUtils/LinuxMap.h"
+#include "ExecuteMachineCode.h"
+#include "FindFunctionAddress.h"
 #include "MachineCode.h"
 #include "OrbitBase/Logging.h"
-#include "RegisterState.h"
+#include "OrbitBase/UniqueResource.h"
 
 namespace orbit_user_space_instrumentation {
 
 namespace {
-
-using orbit_elf_utils::ElfFile;
-using orbit_elf_utils::ReadModules;
 
 // Size of the small amount of memory we need in the tracee to write machine code into.
 constexpr uint64_t kCodeScratchPadSize = 1024;
@@ -44,39 +35,25 @@ constexpr const char* kDlcloseInLibc = "__libc_dlclose";
 
 // In certain error conditions the tracee is damaged and we don't try to recover from that. We just
 // abort with a fatal log message. None of these errors are expected to occur in operation
-// obvioulsy. That's what the *OrDie methods below are for.
+// obviously.
 void FreeMemoryOrDie(pid_t pid, uint64_t address_code, uint64_t size) {
   auto result = FreeInTracee(pid, address_code, size);
   FAIL_IF(result.has_error(), "Unable to free previously allocated memory in tracee: \"%s\"",
           result.error().message());
 }
 
-void RestoreRegistersOrDie(RegisterState& register_state) {
-  auto result = register_state.RestoreRegisters();
-  FAIL_IF(result.has_error(), "Unable to restore register state in tracee: \"%s\"",
-          result.error().message());
-}
-
-uint64_t GetReturnValueOrDie(pid_t pid) {
-  RegisterState return_value_registers;
-  auto result_return_value = return_value_registers.BackupRegisters(pid);
-  FAIL_IF(result_return_value.has_error(), "Unable to read registers after function called :\"%s\"",
-          result_return_value.error().message());
-  return return_value_registers.GetGeneralPurposeRegisters()->x86_64.rax;
-}
-
 // Returns the absolute virtual address of a function in a module of a process as
 // FindFunctionAddress does but accepts a fallback symbol if the primary one cannot be resolved.
-ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_view function,
-                                                         std::string_view module,
-                                                         std::string_view fallback_function,
-                                                         std::string_view fallback_module) {
-  ErrorMessageOr<uint64_t> primary_address_or_error = FindFunctionAddress(pid, function, module);
+ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_view module,
+                                                         std::string_view function,
+                                                         std::string_view fallback_module,
+                                                         std::string_view fallback_function) {
+  ErrorMessageOr<uint64_t> primary_address_or_error = FindFunctionAddress(pid, module, function);
   if (primary_address_or_error.has_value()) {
     return primary_address_or_error.value();
   }
   ErrorMessageOr<uint64_t> fallback_address_or_error =
-      FindFunctionAddress(pid, fallback_function, fallback_module);
+      FindFunctionAddress(pid, fallback_module, fallback_function);
   if (fallback_address_or_error.has_value()) {
     return fallback_address_or_error.value();
   }
@@ -93,13 +70,16 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
 [[nodiscard]] ErrorMessageOr<void*> DlopenInTracee(pid_t pid, std::filesystem::path path,
                                                    uint32_t flag) {
   // Figure out address of dlopen.
-  OUTCOME_TRY(address_dlopen, FindFunctionAddressWithFallback(pid, kDlopenInLibdl, kLibdlSoname,
-                                                              kDlopenInLibc, kLibcSoname));
+  OUTCOME_TRY(address_dlopen, FindFunctionAddressWithFallback(pid, kLibdlSoname, kDlopenInLibdl,
+                                                              kLibcSoname, kDlopenInLibc));
 
   // Allocate small memory area in the tracee. This is used for the code and the path name.
   const uint64_t path_length = path.string().length() + 1;  // Include terminating zero.
   const uint64_t memory_size = kCodeScratchPadSize + path_length;
-  OUTCOME_TRY(address_code, AllocateInTracee(pid, 0, memory_size));
+  OUTCOME_TRY(address, AllocateInTracee(pid, 0, memory_size));
+  orbit_base::unique_resource address_code{address, [&pid, &memory_size](uint64_t address) {
+                                             FreeMemoryOrDie(pid, address, memory_size);
+                                           }};
 
   // Write the name of the .so into memory at address_code with offset of kCodeScratchPadSize.
   std::vector<uint8_t> path_as_vector(path_length);
@@ -107,7 +87,6 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   const uint64_t address_so_path = address_code + kCodeScratchPadSize;
   auto result_write_path = WriteTraceesMemory(pid, address_so_path, path_as_vector);
   if (result_write_path.has_error()) {
-    FreeMemoryOrDie(pid, address_code, memory_size);
     return result_write_path.error();
   }
 
@@ -133,24 +112,24 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-  auto return_value_or_error = ExecuteMachineCode(pid, address_code, memory_size, code);
-  if (return_value_or_error.has_error()) {
-    FreeMemoryOrDie(pid, address_code, memory_size);
-    return return_value_or_error.error();
-  }
-  return absl::bit_cast<void*>(return_value_or_error.value());
+  OUTCOME_TRY(return_value, ExecuteMachineCode(pid, address_code, code));
+
+  return absl::bit_cast<void*>(return_value);
 }
 
 [[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(pid_t pid, void* handle,
                                                   std::string_view symbol) {
   // Figure out address of dlsym.
-  OUTCOME_TRY(address_dlsym, FindFunctionAddressWithFallback(pid, kDlsymInLibdl, kLibdlSoname,
-                                                             kDlsymInLibc, kLibcSoname));
+  OUTCOME_TRY(address_dlsym, FindFunctionAddressWithFallback(pid, kLibdlSoname, kDlsymInLibdl,
+                                                             kLibcSoname, kDlsymInLibc));
 
   // Allocate small memory area in the tracee. This is used for the code and the symbol name.
   const size_t symbol_name_length = symbol.length() + 1;  // include terminating zero
   const uint64_t memory_size = kCodeScratchPadSize + symbol_name_length;
-  OUTCOME_TRY(address_code, AllocateInTracee(pid, 0, memory_size));
+  OUTCOME_TRY(address, AllocateInTracee(pid, 0, memory_size));
+  orbit_base::unique_resource address_code{address, [&pid, &memory_size](uint64_t address) {
+                                             FreeMemoryOrDie(pid, address, memory_size);
+                                           }};
 
   // Write the name of symbol into memory at address_code with offset of kCodeScratchPadSize.
   std::vector<uint8_t> symbol_name_as_vector(symbol_name_length, 0);
@@ -159,7 +138,6 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   auto result_write_symbol_name =
       WriteTraceesMemory(pid, address_symbol_name, symbol_name_as_vector);
   if (result_write_symbol_name.has_error()) {
-    FreeMemoryOrDie(pid, address_code, memory_size);
     return result_write_symbol_name.error();
   }
 
@@ -185,21 +163,20 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-  auto return_value_or_error = ExecuteMachineCode(pid, address_code, memory_size, code);
-  if (return_value_or_error.has_error()) {
-    FreeMemoryOrDie(pid, address_code, memory_size);
-    return return_value_or_error.error();
-  }
-  return absl::bit_cast<void*>(return_value_or_error.value());
+  OUTCOME_TRY(return_value, ExecuteMachineCode(pid, address_code, code));
+
+  return absl::bit_cast<void*>(return_value);
 }
 
 [[nodiscard]] ErrorMessageOr<void> DlcloseInTracee(pid_t pid, void* handle) {
   // Figure out address of dlclose.
-  OUTCOME_TRY(address_dlclose, FindFunctionAddressWithFallback(pid, kDlcloseInLibdl, kLibdlSoname,
-                                                               kDlcloseInLibc, kLibcSoname));
+  OUTCOME_TRY(address_dlclose, FindFunctionAddressWithFallback(pid, kLibdlSoname, kDlcloseInLibdl,
+                                                               kLibcSoname, kDlcloseInLibc));
 
   // Allocate small memory area in the tracee.
-  OUTCOME_TRY(address_code, AllocateInTracee(pid, 0, kCodeScratchPadSize));
+  OUTCOME_TRY(address, AllocateInTracee(pid, 0, kCodeScratchPadSize));
+  orbit_base::unique_resource address_code{
+      address, [&pid](uint64_t address) { FreeMemoryOrDie(pid, address, kCodeScratchPadSize); }};
 
   // We want to do the following in the tracee:
   // dlclose(handle);
@@ -219,107 +196,12 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-  auto return_value_or_error = ExecuteMachineCode(pid, address_code, kCodeScratchPadSize, code);
+  auto return_value_or_error = ExecuteMachineCode(pid, address_code, code);
   if (return_value_or_error.has_error()) {
-    FreeMemoryOrDie(pid, address_code, kCodeScratchPadSize);
     return return_value_or_error.error();
   }
 
   return outcome::success();
-}
-
-ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view function_name,
-                                             std::string_view module_soname) {
-  auto modules = ReadModules(pid);
-  if (modules.has_error()) {
-    return modules.error();
-  }
-
-  std::string module_file_path;
-  uint64_t module_base_address = 0;
-  for (const auto& m : modules.value()) {
-    if (m.name() == module_soname) {
-      module_file_path = m.file_path();
-      module_base_address = m.address_start();
-    }
-  }
-  if (module_file_path.empty()) {
-    return ErrorMessage(
-        absl::StrFormat("There is no module \"%s\" in process %d.", module_soname, pid));
-  }
-
-  auto elf_file = ElfFile::Create(module_file_path);
-  if (elf_file.has_error()) {
-    return elf_file.error();
-  }
-
-  auto syms = elf_file.value()->LoadSymbolsFromDynsym();
-  if (syms.has_error()) {
-    return ErrorMessage(absl::StrFormat("Failed to load symbols for module \"%s\": %s",
-                                        module_soname, syms.error().message()));
-  }
-
-  for (const auto& sym : syms.value().symbol_infos()) {
-    if (sym.name() == function_name) {
-      return sym.address() + module_base_address - syms.value().load_bias();
-    }
-  }
-
-  return ErrorMessage(absl::StrFormat("Unable to locate function symbol \"%s\" in module \"%s\".",
-                                      function_name, module_soname));
-}
-
-ErrorMessageOr<uint64_t> ExecuteMachineCode(pid_t pid, uint64_t address_code, uint64_t memory_size,
-                                            const MachineCode& code) {
-  auto result_write_code = WriteTraceesMemory(pid, address_code, code.GetResultAsVector());
-  if (result_write_code.has_error()) {
-    FreeMemoryOrDie(pid, address_code, memory_size);
-    return result_write_code.error();
-  }
-
-  // Backup registers.
-  RegisterState original_registers;
-  OUTCOME_TRY(original_registers.BackupRegisters(pid));
-
-  RegisterState registers_for_execution = original_registers;
-  registers_for_execution.GetGeneralPurposeRegisters()->x86_64.rip = address_code;
-  // The calling convention for x64 assumes the 128 bytes below rsp to be usable as a scratch pad
-  // for the current function. This area is called the 'red zone'. The function we interrupted might
-  // have stored temporary data in the red zone and the function we are about to execute might do
-  // the same. To keep them separated we decrement rsp by 128 bytes.
-  // The calling convention also asks for rsp being to be aligned to 16 bytes so we additionally
-  // round down to the previous multiple of 16.
-  const uint64_t old_rsp = original_registers.GetGeneralPurposeRegisters()->x86_64.rsp;
-  constexpr int kSizeRedZone = 128;
-  constexpr int kStackAlignment = 16;
-  const uint64_t aligned_rsp_below_red_zone =
-      ((old_rsp - kSizeRedZone) / kStackAlignment) * kStackAlignment;
-  registers_for_execution.GetGeneralPurposeRegisters()->x86_64.rsp = aligned_rsp_below_red_zone;
-  // In case we stopped the process in the middle of a syscall orig_rax holds the number of that
-  // syscall. The kernel uses that to trigger the restart of the interrupted syscall. By setting
-  // orig_rax to -1 we bypass this logic for the PTRACE_CONT below.
-  // The syscall will be restarted when we restore the original registers and detach to continue the
-  // normal operation.
-  registers_for_execution.GetGeneralPurposeRegisters()->x86_64.orig_rax = -1;
-  OUTCOME_TRY(registers_for_execution.RestoreRegisters());
-  if (ptrace(PTRACE_CONT, pid, 0, 0) != 0) {
-    FATAL("Unable to continue tracee with PTRACE_CONT.");
-  }
-  int status = 0;
-  pid_t waited = waitpid(pid, &status, 0);
-  if (waited != pid || !WIFSTOPPED(status) || WSTOPSIG(status) != SIGTRAP) {
-    FATAL(
-        "Failed to wait for sigtrap after PTRACE_CONT. Expected pid: %d Pid returned from waitpid: "
-        "%d status: %u, WIFSTOPPED: %u, WSTOPSIG: %u",
-        pid, waited, status, WIFSTOPPED(status), WSTOPSIG(status));
-  }
-
-  const uint64_t return_value = GetReturnValueOrDie(pid);
-
-  // Clean up memory and registers.
-  RestoreRegistersOrDie(original_registers);
-  FreeMemoryOrDie(pid, address_code, memory_size);
-  return return_value;
 }
 
 }  // namespace orbit_user_space_instrumentation
