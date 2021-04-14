@@ -19,7 +19,7 @@ using orbit_accessibility::AccessibleInterface;
 
 namespace orbit_gl {
 
-AccessibilityRect TimeGraphAccessibility::AccessibleLocalRect() const {
+AccessibilityRect TimeGraphAccessibility::AccessibleRect() const {
   GlCanvas* canvas = time_graph_->GetCanvas();
   const Viewport& viewport = canvas->GetViewport();
 

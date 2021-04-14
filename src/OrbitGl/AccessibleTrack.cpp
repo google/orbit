@@ -22,6 +22,72 @@ using orbit_accessibility::AccessibleInterface;
 
 namespace orbit_gl {
 
+namespace {
+
+class FakeTrackTab : public CaptureViewElement {
+ public:
+  explicit FakeTrackTab(Track* track, TimeGraphLayout* layout)
+      : CaptureViewElement(track, track->GetTimeGraph(), layout), track_(track) {
+    SetCanvas(track->GetCanvas());
+
+    // Compute and set the position and size (which would usually be done by the parent):
+    Vec2 track_pos = track_->GetPos();
+    SetPos(track_pos[0], track_pos[1]);
+
+    SetSize(track->GetSize()[0], layout_->GetTrackTabHeight());
+  }
+
+  std::unique_ptr<AccessibleInterface> CreateAccessibleInterface() override {
+    return std::make_unique<AccessibleTrackTab>(this, track_);
+  }
+
+ private:
+  Track* track_;
+};
+
+class FakeTimerPane : public CaptureViewElement {
+ public:
+  explicit FakeTimerPane(Track* track, TimeGraphLayout* layout, CaptureViewElement* track_tab)
+      : CaptureViewElement(track, track->GetTimeGraph(), layout),
+        track_(track),
+        track_tab_(track_tab) {
+    SetCanvas(track->GetCanvas());
+
+    // Compute and set the position and size (which would usually be done by the parent):
+    std::vector<CaptureViewElement*> track_children = track_->GetVisibleChildren();
+
+    // We are looking for the track's child that is right above the timer pane.
+    CaptureViewElement* predecessor = track_tab_;
+
+    if (!track_children.empty()) {
+      predecessor = track_children[track_children.size() - 1];
+    }
+
+    Vec2 pos = predecessor->GetPos();
+    Vec2 tab_size = predecessor->GetSize();
+    pos[1] -= tab_size[1];
+    SetPos(pos[0], pos[1]);
+
+    Vec2 track_size = track_->GetSize();
+    float track_header_height = track_->GetPos()[1] - pos[1];
+
+    SetSize(track_size[0], track_size[1] - track_header_height);
+  }
+
+  std::unique_ptr<AccessibleInterface> CreateAccessibleInterface() override {
+    return std::make_unique<AccessibleTimerPane>(this);
+  }
+
+ private:
+  Track* track_;
+  CaptureViewElement* track_tab_;
+};
+
+}  //  namespace
+
+AccessibleTrackTab::AccessibleTrackTab(CaptureViewElement* fake_track_tab, Track* track)
+    : AccessibleCaptureViewElement(fake_track_tab), track_(track) {}
+
 const AccessibleInterface* AccessibleTrackTab::AccessibleChild(int index) const {
   if (index == 0) {
     return track_->GetTriangleToggle()->GetOrCreateAccessibleInterface();
@@ -29,46 +95,19 @@ const AccessibleInterface* AccessibleTrackTab::AccessibleChild(int index) const 
   return nullptr;
 }
 
-const AccessibleInterface* AccessibleTrackTab::AccessibleParent() const {
-  return track_->GetOrCreateAccessibleInterface();
-}
-
 std::string AccessibleTrackTab::AccessibleName() const {
   CHECK(track_ != nullptr);
   return track_->GetName() + "_tab";
 }
 
-AccessibilityRect AccessibleTrackTab::AccessibleLocalRect() const {
-  CHECK(track_ != nullptr);
+AccessibleTimerPane::AccessibleTimerPane(CaptureViewElement* fake_timer_pane)
+    : AccessibleCaptureViewElement(fake_timer_pane) {}
 
-  GlCanvas* canvas = track_->GetCanvas();
-  const Viewport& viewport = canvas->GetViewport();
-
-  return AccessibilityRect(viewport.WorldToScreenWidth(layout_->GetTrackTabOffset()),
-                           viewport.WorldToScreenHeight(0),
-                           viewport.WorldToScreenWidth(layout_->GetTrackTabWidth()),
-                           viewport.WorldToScreenHeight(layout_->GetTrackTabHeight()));
-}
-
-orbit_accessibility::AccessibilityRect AccessibleTimerPane::AccessibleLocalRect() const {
-  // This implies a lot of knowledge about the structure of the parent:
-  // The TimerPane is not a real control and only created to expose areas of the track to the
-  // E2E tests. We know that the TimerPane is always the last child of a track.
-
-  orbit_accessibility::AccessibilityRect parent_rect = parent_->AccessibleLocalRect();
-
-  int parents_child_count = parent_->AccessibleChildCount();
-  // We are in a TimerPane, so there are at least the "tab" and the "timers" as children.
-  CHECK(parents_child_count >= 2);
-
-  orbit_accessibility::AccessibilityRect last_child_rect =
-      parent_->AccessibleChild(parent_->AccessibleChildCount() - 2)->AccessibleLocalRect();
-  orbit_accessibility::AccessibilityRect result;
-  result.width = parent_rect.width;
-  result.top = last_child_rect.top + last_child_rect.height;
-  result.height = parent_rect.height - result.top;
-  return result;
-}
+AccessibleTrack::AccessibleTrack(Track* track, TimeGraphLayout* layout)
+    : AccessibleCaptureViewElement(track),
+      track_(track),
+      fake_tab_(std::make_unique<FakeTrackTab>(track, layout)),
+      fake_timers_pane_(std::make_unique<FakeTimerPane>(track, layout, fake_tab_.get())) {}
 
 int AccessibleTrack::AccessibleChildCount() const {
   CHECK(track_ != nullptr);
@@ -86,7 +125,7 @@ const AccessibleInterface* AccessibleTrack::AccessibleChild(int index) const {
 
   // The first child is the "virtual" tab.
   if (index == 0) {
-    return &tab_;
+    return fake_tab_->GetOrCreateAccessibleInterface();
   }
 
   const auto& children = track_->GetVisibleChildren();
@@ -94,7 +133,7 @@ const AccessibleInterface* AccessibleTrack::AccessibleChild(int index) const {
 
   // The last child is the timer pane if it has timers.
   if (index == child_count + 1 && track_->GetVisiblePrimitiveCount() > 0) {
-    return &timers_pane_;
+    return fake_timers_pane_->GetOrCreateAccessibleInterface();
   }
 
   // Are we out of bound?
@@ -106,46 +145,9 @@ const AccessibleInterface* AccessibleTrack::AccessibleChild(int index) const {
   return children[index - 1]->GetOrCreateAccessibleInterface();
 }
 
-const AccessibleInterface* AccessibleTrack::AccessibleParent() const {
-  CHECK(track_ != nullptr);
-  return track_->GetParent()->GetOrCreateAccessibleInterface();
-}
-
 std::string AccessibleTrack::AccessibleName() const {
   CHECK(track_ != nullptr);
   return track_->GetName();
-}
-
-AccessibilityRect AccessibleTrack::AccessibleLocalRect() const {
-  CHECK(track_ != nullptr);
-  CHECK(track_->GetCanvas() != nullptr);
-
-  GlCanvas* canvas = track_->GetCanvas();
-  Vec2 pos = track_->GetPos();
-  Vec2 size = track_->GetSize();
-
-  const Viewport& viewport = canvas->GetViewport();
-
-  Vec2i screen_pos = viewport.WorldToScreenPos(pos);
-  int screen_width = viewport.WorldToScreenWidth(size[0]);
-  int screen_height = viewport.WorldToScreenHeight(size[1]);
-
-  // Adjust the coordinates to clamp the result to an on-screen rect
-  // This will "cut" any part that is offscreen due to scrolling, and may result
-  // in a final result with width / height of 0.
-
-  // First: Clamp bottom
-  if (screen_pos[1] + screen_height > viewport.GetScreenHeight()) {
-    screen_height = std::max(0, viewport.GetScreenHeight() - static_cast<int>(screen_pos[1]));
-  }
-  // Second: Clamp top
-  if (screen_pos[1] < 0) {
-    screen_height = std::max(0, static_cast<int>(screen_pos[1]) + screen_height);
-    screen_pos[1] = 0;
-  }
-
-  return AccessibilityRect(static_cast<int>(screen_pos[0]), static_cast<int>(screen_pos[1]),
-                           screen_width, screen_height);
 }
 
 AccessibilityState AccessibleTrack::AccessibleState() const {
@@ -166,7 +168,7 @@ AccessibilityState AccessibleTrack::AccessibleState() const {
     }
   }
 
-  if (AccessibleLocalRect().height == 0) {
+  if (AccessibleRect().height == 0) {
     result |= State::Offscreen;
   }
   return result;

@@ -92,7 +92,7 @@ class AccessibleInterface {
 
   [[nodiscard]] virtual std::string AccessibleName() const = 0;
   [[nodiscard]] virtual AccessibilityRole AccessibleRole() const = 0;
-  [[nodiscard]] virtual AccessibilityRect AccessibleLocalRect() const = 0;
+  [[nodiscard]] virtual AccessibilityRect AccessibleRect() const = 0;
   [[nodiscard]] virtual AccessibilityState AccessibleState() const = 0;
 };
 

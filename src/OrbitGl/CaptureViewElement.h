@@ -30,8 +30,9 @@ class CaptureViewElement : public Pickable {
   [[nodiscard]] TimeGraph* GetTimeGraph() { return time_graph_; }
 
   [[nodiscard]] GlCanvas* GetCanvas() const { return canvas_; }
+  void SetCanvas(GlCanvas* canvas) { canvas_ = canvas; }
 
-  virtual void SetPos(float x, float y) { pos_ = Vec2(x, y); }
+  void SetPos(float x, float y) { pos_ = Vec2(x, y); }
   [[nodiscard]] Vec2 GetPos() const { return pos_; }
   void SetSize(float width, float height) { size_ = Vec2(width, height); }
   [[nodiscard]] Vec2 GetSize() const { return size_; }

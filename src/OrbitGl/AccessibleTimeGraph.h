@@ -28,7 +28,7 @@ class TimeGraphAccessibility : public orbit_accessibility::AccessibleInterface {
   [[nodiscard]] orbit_accessibility::AccessibilityRole AccessibleRole() const override {
     return orbit_accessibility::AccessibilityRole::Graphic;
   }
-  [[nodiscard]] orbit_accessibility::AccessibilityRect AccessibleLocalRect() const override;
+  [[nodiscard]] orbit_accessibility::AccessibilityRect AccessibleRect() const override;
   [[nodiscard]] orbit_accessibility::AccessibilityState AccessibleState() const override;
 
  private:

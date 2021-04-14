@@ -18,7 +18,7 @@ class AccessibleCaptureViewElement : public orbit_accessibility::AccessibleInter
 
   [[nodiscard]] const AccessibleInterface* AccessibleParent() const override;
 
-  [[nodiscard]] orbit_accessibility::AccessibilityRect AccessibleLocalRect() const override;
+  [[nodiscard]] orbit_accessibility::AccessibilityRect AccessibleRect() const override;
   [[nodiscard]] orbit_accessibility::AccessibilityState AccessibleState() const override {
     return orbit_accessibility::AccessibilityState::Normal;
   }
