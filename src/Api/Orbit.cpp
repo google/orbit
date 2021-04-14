@@ -9,6 +9,7 @@
 #include "Api/LockFreeApiEventProducer.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
+#include "absl/base/casts.h"
 
 static void EnqueueApiEvent(orbit_api::EventType type, const char* name = nullptr,
                             uint64_t data = 0, orbit_api_color color = kOrbitColorAuto) {
@@ -74,5 +75,48 @@ void orbit_api_async_string(const char* str, uint64_t id, orbit_api_color color)
     EnqueueApiEvent(orbit_api::EventType::kString, buffer, id, color);
     str += chunk_size;
   }
+}
+
+static void orbit_api_initialize_v0(uint64_t address) {
+  // The api function table is accessed by user code using this pattern:
+  //
+  // if(api->active && api->orbit_api_function_name) api->orbit_api_function_name(...);
+  //
+  // We don't use locking nor memory barriers here for these reasons:
+  // 1. We rely on the fact that 64 bit read/writes on aligned uint64_t are atomic on x64 so we
+  //    assume there cannot be torn reads/writes on a function address in the table.
+  // 2. Nothing bad happens if "active" is 0 but other threads see non-null functions pointers.
+  // 3. Nothing bad happens if "active" is 1 but other threads see a null function pointer.
+  //
+  // If these assumptions became false, then we should revisit this mechanism both in this function
+  // and in the user code.
+
+  orbit_api_v0* api = absl::bit_cast<orbit_api_v0*>(address);
+  if (api->initialized != 0) return;
+  api->start = &orbit_api_start;
+  api->stop = &orbit_api_stop;
+  api->start_async = &orbit_api_start_async;
+  api->stop_async = &orbit_api_stop_async;
+  api->async_string = &orbit_api_async_string;
+  api->track_int = &orbit_api_track_int;
+  api->track_int64 = &orbit_api_track_int64;
+  api->track_uint = &orbit_api_track_uint;
+  api->track_uint64 = &orbit_api_track_uint64;
+  api->track_float = &orbit_api_track_float;
+  api->track_double = &orbit_api_track_double;
+  api->initialized = 1;
+  api->active = 1;
+}
+
+void orbit_api_initialize(uint64_t address, uint64_t api_version) {
+  LOG("Initializing Orbit API at address 0x%x, version %u", address, api_version);
+  if (api_version > kOrbitApiVersion) {
+    ERROR(
+        "Orbit API version in tracee (%u) is newer than the max supported version (%u). "
+        "Some features will be unavailable.",
+        api_version, kOrbitApiVersion);
+  }
+
+  if (api_version >= 0) orbit_api_initialize_v0(address);
 }
 }
