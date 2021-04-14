@@ -63,7 +63,7 @@ class TimerTrack : public Track {
   // Track
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode /*picking_mode*/, float z_offset = 0) override;
-  [[nodiscard]] Type GetType() const override { return kTimerTrack; }
+  [[nodiscard]] Type GetType() const override { return Type::kTimerTrack; }
 
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetTimers() const override;
   [[nodiscard]] uint32_t GetDepth() const { return depth_; }

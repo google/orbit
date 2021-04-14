@@ -18,7 +18,7 @@ class MemoryTrack final : public GraphTrack {
                        std::string name, const CaptureData* capture_data)
       : GraphTrack(parent, time_graph, layout, name, capture_data) {}
   ~MemoryTrack() override = default;
-  [[nodiscard]] Type GetType() const override { return kMemoryTrack; }
+  [[nodiscard]] Type GetType() const override { return Type::kMemoryTrack; }
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
 

@@ -29,7 +29,7 @@
 
 class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_from_this<Track> {
  public:
-  enum Type {
+  enum class Type {
     kTimerTrack,
     kThreadTrack,
     kFrameTrack,
@@ -118,7 +118,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   std::atomic<uint32_t> num_timers_;
   std::atomic<uint64_t> min_time_;
   std::atomic<uint64_t> max_time_;
-  Type type_ = kUnknown;
+  Type type_ = Type::kUnknown;
   std::shared_ptr<TriangleToggle> collapse_toggle_;
 
   TimeGraphLayout* layout_;
