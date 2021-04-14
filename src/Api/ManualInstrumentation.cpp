@@ -21,6 +21,7 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/UniqueResource.h"
 #include "RegisterState.h"
 
 using namespace orbit_user_space_instrumentation;
@@ -38,6 +39,7 @@ struct ScopeExit {
 namespace orbit_api {
 ErrorMessageOr<void> InitializeApiInTracee(const CaptureOptions& capture_options) {
   int32_t pid = capture_options.pid();
+  ErrorMessageOr<void> result = outcome::success();
 
   auto attach_result = AttachAndStopProcess(pid);
   if (attach_result.has_error()) {
@@ -45,13 +47,10 @@ ErrorMessageOr<void> InitializeApiInTracee(const CaptureOptions& capture_options
   }
 
   {
-    // Make sure we resume the target process even on early-outs.
-    ScopeExit scope_exit([pid]() {
-      auto detach_result = DetachAndContinueProcess(pid);
-      if (detach_result.has_error()) {
-        ERROR("Resuming target process [%i]: %s", pid, detach_result.error().message());
-      }
-    });
+    // Make sure we resume the target process, even on early-outs.
+    orbit_base::unique_resource scope_exit{pid, [&result](int32_t pid) {
+      result = DetachAndContinueProcess(pid);
+    }};
 
     const std::string kLibName = "liborbit.so";
     auto maps_before = orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
@@ -114,7 +113,7 @@ ErrorMessageOr<void> InitializeApiInTracee(const CaptureOptions& capture_options
     }
   }
 
-  return outcome::success();
+  return result;
 }
 
 }  // namespace orbit_api
