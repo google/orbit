@@ -76,6 +76,24 @@ ErrorMessageOr<void> WriteFully(const unique_fd& fd, std::string_view content) {
   return outcome::success();
 }
 
+ErrorMessageOr<void> WriteFullyAtOffset(const unique_fd& fd, const void* buffer, size_t size,
+                                        off_t offset) {
+  const char* current_position = static_cast<const char*>(buffer);
+
+  while (size > 0) {
+    int64_t bytes_written = TEMP_FAILURE_RETRY(pwrite(fd.get(), current_position, size, offset));
+    if (bytes_written == -1) {
+      return ErrorMessage{SafeStrerror(errno)};
+    }
+    current_position += bytes_written;
+    offset += bytes_written;
+    size -= bytes_written;
+  }
+
+  CHECK(size == 0);
+  return outcome::success();
+}
+
 ErrorMessageOr<size_t> ReadFully(const unique_fd& fd, void* buffer, size_t size) {
   size_t bytes_left = size;
   auto current_position = static_cast<uint8_t*>(buffer);
@@ -92,6 +110,27 @@ ErrorMessageOr<size_t> ReadFully(const unique_fd& fd, void* buffer, size_t size)
   }
 
   return size - bytes_left;
+}
+
+ErrorMessageOr<size_t> ReadFullyAtOffset(const unique_fd& fd, void* buffer, size_t size,
+                                         off_t offset) {
+  uint8_t* current_position = static_cast<uint8_t*>(buffer);
+  size_t bytes_received = 0;
+  while (bytes_received < size) {
+    int64_t pread_result = TEMP_FAILURE_RETRY(pread(fd.get(), current_position, size, offset));
+    if (pread_result == -1) {
+      return ErrorMessage{SafeStrerror(errno)};
+    }
+    if (pread_result == 0) {
+      return bytes_received;
+    }
+    bytes_received += pread_result;
+    current_position += pread_result;
+    size -= pread_result;
+    offset += pread_result;
+  }
+
+  return bytes_received;
 }
 
 }  // namespace orbit_base

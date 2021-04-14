@@ -26,61 +26,37 @@ using orbit_base::ReadFileToString;
 [[nodiscard]] ErrorMessageOr<std::vector<uint8_t>> ReadTraceesMemory(pid_t pid,
                                                                      uint64_t address_start,
                                                                      uint64_t length) {
-  if (length == 0) {
-    return ErrorMessage("Tried to read 0 bytes.");
-  }
+  CHECK(length != 0);
 
   OUTCOME_TRY(fd, orbit_base::OpenFileForReading(absl::StrFormat("/proc/%d/mem", pid)));
 
-  std::vector<uint8_t> data(length);
-  ssize_t result = pread(fd.get(), data.data(), length, address_start);
+  std::vector<uint8_t> bytes(length);
+  OUTCOME_TRY(result, ReadFullyAtOffset(fd, bytes.data(), length, address_start));
 
-  if (result == -1) {
-    return ErrorMessage(
-        absl::StrFormat("Failed to read from memory file of process %d with errno %d: \"%s\"", pid,
-                        errno, SafeStrerror(errno)));
-  }
-
-  if (result < static_cast<ssize_t>(length)) {
+  if (result < length) {
     return ErrorMessage(absl::StrFormat(
-        "Failed to read %u bytes from memory file of process %d. Only got %d bytes.", length, pid,
-        result));
+        "Failed to read %u bytes from memory file of process pid %d. Only got %d bytes.", length,
+        pid, result));
   }
 
-  return data;
+  return bytes;
 }
 
 [[nodiscard]] ErrorMessageOr<void> WriteTraceesMemory(pid_t pid, uint64_t address_start,
                                                       const std::vector<uint8_t>& bytes) {
-  if (bytes.empty()) {
-    return ErrorMessage("Tried to write 0 bytes.");
-  }
+  CHECK(!bytes.empty());
+
   OUTCOME_TRY(fd, orbit_base::OpenFileForWriting(absl::StrFormat("/proc/%d/mem", pid)));
-  ssize_t result = pwrite(fd.get(), bytes.data(), bytes.size(), address_start);
 
-  if (result == -1) {
-    return ErrorMessage(
-        absl::StrFormat("Failed to write to memory file of process pid %d with errno %d: \"%s\"",
-                        pid, errno, SafeStrerror(errno)));
-  }
-
-  if (result < static_cast<ssize_t>(bytes.size())) {
-    return ErrorMessage(absl::StrFormat(
-        "Failed to write %u bytes to memory file of process pid %d. Only wrote %d bytes.",
-        bytes.size(), pid, result));
-  }
+  OUTCOME_TRY(WriteFullyAtOffset(fd, bytes.data(), bytes.size(), address_start));
 
   return outcome::success();
 }
 
 [[nodiscard]] ErrorMessageOr<AddressRange> GetFirstExecutableMemoryRegion(
     pid_t pid, uint64_t exclude_address) {
-  auto read_maps_or_error = ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
-  if (read_maps_or_error.has_error()) {
-    return read_maps_or_error.error();
-  }
-  const std::vector<std::string> lines =
-      absl::StrSplit(read_maps_or_error.value(), '\n', absl::SkipEmpty());
+  OUTCOME_TRY(maps, ReadFileToString(absl::StrFormat("/proc/%d/maps", pid)));
+  const std::vector<std::string> lines = absl::StrSplit(maps, '\n', absl::SkipEmpty());
   for (const auto& line : lines) {
     const std::vector<std::string> tokens = absl::StrSplit(line, ' ', absl::SkipEmpty());
     if (tokens.size() < 2 || tokens[1].size() != 4 || tokens[1][2] != 'x') continue;

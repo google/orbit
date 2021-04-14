@@ -43,10 +43,10 @@ AddressRange AddressRangeFromString(const std::string& s) {
   return result;
 }
 
-// Get the adress range of the first consecutive mappings. We can read this range but not more.
-[[nodiscard]] ErrorMessageOr<AddressRange> GetFirstContinuesAdressRange(pid_t pid) {
-  OUTCOME_TRY(maps_or_error, orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid)));
-  const std::vector<std::string> lines = absl::StrSplit(maps_or_error, '\n', absl::SkipEmpty());
+// Get the address range of the first consecutive mappings. We can read this range but not more.
+[[nodiscard]] ErrorMessageOr<AddressRange> GetFirstContinuousAddressRange(pid_t pid) {
+  OUTCOME_TRY(maps, orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid)));
+  const std::vector<std::string> lines = absl::StrSplit(maps, '\n', absl::SkipEmpty());
   bool is_first = true;
   AddressRange result;
   for (const auto& line : lines) {
@@ -69,7 +69,7 @@ AddressRange AddressRangeFromString(const std::string& s) {
 
 TEST(AccessTraceesMemoryTest, ReadFailures) {
   pid_t pid = fork();
-  ASSERT_TRUE(pid != -1);
+  CHECK(pid != -1);
   if (pid == 0) {
     // Child just runs an endless loop.
     while (true) {
@@ -77,48 +77,47 @@ TEST(AccessTraceesMemoryTest, ReadFailures) {
   }
 
   // Stop the child process using our tooling.
-  ASSERT_TRUE(AttachAndStopProcess(pid).has_value());
+  CHECK(!AttachAndStopProcess(pid).has_error());
 
-  auto continues_range_or_error = GetFirstContinuesAdressRange(pid);
-  ASSERT_TRUE(continues_range_or_error.has_value());
-  const auto continues_range = continues_range_or_error.value();
-  const uint64_t address = continues_range.first;
-  const uint64_t length = continues_range.second - continues_range.first;
+  auto continuous_range_or_error = GetFirstContinuousAddressRange(pid);
+  CHECK(continuous_range_or_error.has_value());
+  const auto continuous_range = continuous_range_or_error.value();
+  const uint64_t address = continuous_range.first;
+  const uint64_t length = continuous_range.second - continuous_range.first;
 
   // Good read.
-  auto result = ReadTraceesMemory(pid, address, length);
+  ErrorMessageOr<std::vector<uint8_t>> result = ReadTraceesMemory(pid, address, length);
   EXPECT_TRUE(result.has_value());
 
   // Process does not exist.
   result = ReadTraceesMemory(-1, address, length);
   ASSERT_TRUE(result.has_error());
-  EXPECT_TRUE(absl::StrContains(result.error().message(), "Unable to open file"));
+  EXPECT_TRUE(absl::StrContains(result.error().message(), "Unable to open file"))
+      << result.error().message();
 
   // Read 0 bytes.
-  result = ReadTraceesMemory(pid, address, 0);
-  ASSERT_TRUE(result.has_error());
-  EXPECT_TRUE(absl::StrContains(result.error().message(), "Tried to read 0 bytes."));
+  EXPECT_DEATH(auto unused_result = ReadTraceesMemory(pid, address, 0), "Check failed");
 
   // Read past the end of the mappings.
   result = ReadTraceesMemory(pid, address, length + 1);
   ASSERT_TRUE(result.has_error());
-  EXPECT_TRUE(absl::StrContains(result.error().message(), "Only got"));
+  EXPECT_TRUE(absl::StrContains(result.error().message(), "Only got")) << result.error().message();
 
   // Read from bad address.
   result = ReadTraceesMemory(pid, 0, length);
   ASSERT_TRUE(result.has_error());
-  EXPECT_TRUE(
-      absl::StrContains(result.error().message(), "Failed to read from memory file of process"));
+  EXPECT_TRUE(absl::StrContains(result.error().message(), "Input/output error"))
+      << result.error().message();
 
   // Detach and end child.
-  ASSERT_FALSE(DetachAndContinueProcess(pid).has_error());
+  CHECK(!DetachAndContinueProcess(pid).has_error());
   kill(pid, SIGKILL);
   waitpid(pid, NULL, 0);
 }
 
 TEST(AccessTraceesMemoryTest, WriteFailures) {
   pid_t pid = fork();
-  ASSERT_TRUE(pid != -1);
+  CHECK(pid != -1);
   if (pid == 0) {
     // Child just runs an endless loop.
     while (true) {
@@ -126,47 +125,49 @@ TEST(AccessTraceesMemoryTest, WriteFailures) {
   }
 
   // Stop the child process using our tooling.
-  ASSERT_TRUE(AttachAndStopProcess(pid).has_value());
+  CHECK(!AttachAndStopProcess(pid).has_error());
 
-  auto continues_range_or_error = GetFirstContinuesAdressRange(pid);
-  ASSERT_TRUE(continues_range_or_error.has_value());
-  const auto continues_range = continues_range_or_error.value();
-  const uint64_t address = continues_range.first;
-  const uint64_t length = continues_range.second - continues_range.first;
+  auto continuous_range_or_error = GetFirstContinuousAddressRange(pid);
+  CHECK(continuous_range_or_error.has_value());
+  const auto continuous_range = continuous_range_or_error.value();
+  const uint64_t address = continuous_range.first;
+  const uint64_t length = continuous_range.second - continuous_range.first;
 
   // Backup.
   auto backup = ReadTraceesMemory(pid, address, length);
-  ASSERT_TRUE(backup.has_value());
+  CHECK(backup.has_value());
 
   // Good write.
   std::vector<uint8_t> bytes(length, 0);
-  auto result = WriteTraceesMemory(pid, address, bytes);
+  ErrorMessageOr<void> result = WriteTraceesMemory(pid, address, bytes);
   EXPECT_FALSE(result.has_error());
 
   // Process does not exist.
   result = WriteTraceesMemory(-1, address, bytes);
   ASSERT_TRUE(result.has_error());
-  EXPECT_TRUE(absl::StrContains(result.error().message(), "Unable to open file"));
+  EXPECT_TRUE(absl::StrContains(result.error().message(), "Unable to open file"))
+      << result.error().message();
 
   // Write 0 bytes.
-  result = WriteTraceesMemory(pid, address, std::vector<uint8_t>());
-  ASSERT_TRUE(result.has_error());
-  EXPECT_TRUE(absl::StrContains(result.error().message(), "Tried to write 0 bytes."));
+  EXPECT_DEATH(auto unused_result = WriteTraceesMemory(pid, address, std::vector<uint8_t>()),
+               "Check failed");
 
-  // Read past the end of the mappings.
+  // Write past the end of the mappings.
   bytes.push_back(0);
   result = WriteTraceesMemory(pid, address, bytes);
   ASSERT_TRUE(result.has_error());
-  EXPECT_TRUE(absl::StrContains(result.error().message(), "Only wrote"));
+  EXPECT_TRUE(absl::StrContains(result.error().message(), "Input/output error"))
+      << result.error().message();
 
-  // Read from bad address.
+  // Write to bad address.
   result = WriteTraceesMemory(pid, 0, bytes);
   ASSERT_TRUE(result.has_error());
-  EXPECT_TRUE(absl::StrContains(result.error().message(), "Failed to write to memory file"));
+  EXPECT_TRUE(absl::StrContains(result.error().message(), "Input/output error"))
+      << result.error().message();
 
   // Restore, detach and end child.
-  ASSERT_FALSE(WriteTraceesMemory(pid, address, backup.value()).has_error());
-  ASSERT_FALSE(DetachAndContinueProcess(pid).has_error());
+  CHECK(!WriteTraceesMemory(pid, address, backup.value()).has_error());
+  CHECK(!DetachAndContinueProcess(pid).has_error());
   kill(pid, SIGKILL);
   waitpid(pid, NULL, 0);
 }
