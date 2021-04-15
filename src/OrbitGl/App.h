@@ -48,6 +48,7 @@
 #include "DataView.h"
 #include "DataViewFactory.h"
 #include "DataViewTypes.h"
+#include "DataViews/AppInterface.h"
 #include "FramePointerValidatorClient.h"
 #include "FrameTrackOnlineProcessor.h"
 #include "FunctionsDataView.h"
@@ -80,7 +81,9 @@
 #include "symbol.pb.h"
 #include "tracepoint.pb.h"
 
-class OrbitApp final : public DataViewFactory, public orbit_capture_client::CaptureListener {
+class OrbitApp final : public DataViewFactory,
+                       public orbit_capture_client::CaptureListener,
+                       public orbit_data_views::AppInterface {
  public:
   explicit OrbitApp(orbit_gl::MainWindowInterface* main_window,
                     MainThreadExecutor* main_thread_executor,

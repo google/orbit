@@ -146,6 +146,7 @@ target_link_libraries(
          ClientModel
          ClientServices
          CodeReport
+         DataViews
          GrpcProtos
          MetricsUploader
          OrbitAccessibility
