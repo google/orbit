@@ -85,6 +85,7 @@ ErrorMessageOr<void> WriteFullyAtOffset(const unique_fd& fd, const void* buffer,
 
   while (size > 0) {
     int64_t bytes_written = TEMP_FAILURE_RETRY(pwrite(fd.get(), current_position, size, offset));
+    CHECK(bytes_written != 0);
     if (bytes_written == -1) {
       return ErrorMessage{SafeStrerror(errno)};
     }
@@ -122,22 +123,22 @@ ErrorMessageOr<size_t> ReadFullyAtOffset(const unique_fd& fd, void* buffer, size
   FATAL("Not implemented on Windows.")
 #elif defined(__linux)
   uint8_t* current_position = static_cast<uint8_t*>(buffer);
-  size_t bytes_received = 0;
-  while (bytes_received < size) {
+  size_t bytes_read = 0;
+  while (bytes_read < size) {
     int64_t pread_result = TEMP_FAILURE_RETRY(pread(fd.get(), current_position, size, offset));
     if (pread_result == -1) {
       return ErrorMessage{SafeStrerror(errno)};
     }
     if (pread_result == 0) {
-      return bytes_received;
+      break;
     }
-    bytes_received += pread_result;
+    bytes_read += pread_result;
     current_position += pread_result;
     size -= pread_result;
     offset += pread_result;
   }
 
-  return bytes_received;
+  return bytes_read;
 #endif
 }
 

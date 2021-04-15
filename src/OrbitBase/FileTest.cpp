@@ -85,7 +85,7 @@ TEST(File, OpenNewFileForReadWrite) {
 
 TEST(File, WriteFullySmoke) {
   auto temporary_file_or_error = TemporaryFile::Create();
-  ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
+  CHECK(temporary_file_or_error.has_value());
   TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
 
   // Write buffer into file.
@@ -97,17 +97,16 @@ TEST(File, WriteFullySmoke) {
   ErrorMessageOr<unique_fd> fd_or_error = OpenFileForReading(temporary_file.file_path().string());
   ASSERT_FALSE(fd_or_error.has_error()) << fd_or_error.error().message();
   std::array<char, 64> read_back = {};
-  ErrorMessageOr<size_t> result_or_error = ReadFully(fd_or_error.value(), read_back.data(), 9);
+  ErrorMessageOr<size_t> result_or_error =
+      ReadFully(fd_or_error.value(), read_back.data(), buffer.size() + 3);
   ASSERT_FALSE(result_or_error.has_error()) << result_or_error.error().message();
-  EXPECT_EQ(result_or_error.value(), 9);
+  EXPECT_EQ(result_or_error.value(), buffer.size());
   EXPECT_STREQ(read_back.data(), buffer.c_str());
-
-  temporary_file.CloseAndRemove();
 }
 
 TEST(File, WriteFullyAtOffsetSmoke) {
   auto temporary_file_or_error = TemporaryFile::Create();
-  ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
+  CHECK(temporary_file_or_error.has_value());
   TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
 
   // Write at the beginning of the previously empty file.
@@ -138,8 +137,6 @@ TEST(File, WriteFullyAtOffsetSmoke) {
   ASSERT_FALSE(result_or_error.has_error()) << result_or_error.error().message();
   EXPECT_EQ(result_or_error.value(), 6);
   EXPECT_STREQ(read_back.data(), "ab\nef\n");
-
-  temporary_file.CloseAndRemove();
 }
 
 TEST(File, ReadFullySmoke) {
@@ -173,9 +170,9 @@ TEST(File, ReadFullySmoke) {
 TEST(File, ReadFullyAtOffsetSmoke) {
   const auto fd_or_error =
       OpenFileForReading(GetExecutableDir() / "testdata" / "OrbitBase" / "textfile.bin");
-  ASSERT_FALSE(fd_or_error.has_error()) << fd_or_error.error().message();
+  CHECK(!fd_or_error.has_error());
   const auto& fd = fd_or_error.value();
-  ASSERT_TRUE(fd.valid());
+  CHECK(fd.valid());
   std::array<char, 64> buf{};
 
   // Read at beginning of file.

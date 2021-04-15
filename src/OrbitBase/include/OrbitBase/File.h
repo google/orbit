@@ -90,6 +90,8 @@ ErrorMessageOr<void> WriteFullyAtOffset(const unique_fd& fd, const void* buffer,
 // used for non-blocking reads from sockets/pipes - it does not handle EAGAIN.
 ErrorMessageOr<size_t> ReadFully(const unique_fd& fd, void* buffer, size_t size);
 
+// Same as above but tries to read from an offset. The file referenced by fd must be capable of
+// seeking. The same limitation for non-blocking reads as above applies here.
 ErrorMessageOr<size_t> ReadFullyAtOffset(const unique_fd& fd, void* buffer, size_t size,
                                          off_t offset);
 

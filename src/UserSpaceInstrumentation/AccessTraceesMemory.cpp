@@ -35,8 +35,8 @@ using orbit_base::ReadFileToString;
 
   if (result < length) {
     return ErrorMessage(absl::StrFormat(
-        "Failed to read %u bytes from memory file of process pid %d. Only got %d bytes.", length,
-        pid, result));
+        "Failed to read %u bytes from memory file of process %d. Only got %d bytes.", length, pid,
+        result));
   }
 
   return bytes;

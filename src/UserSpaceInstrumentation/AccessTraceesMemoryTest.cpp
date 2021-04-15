@@ -5,6 +5,7 @@
 #include <absl/strings/match.h>
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_split.h>
+#include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 #include <stdint.h>
 #include <sys/ptrace.h>
@@ -28,17 +29,19 @@ namespace orbit_user_space_instrumentation {
 
 namespace {
 
-AddressRange AddressRangeFromString(const std::string& s) {
+using ::testing::HasSubstr;
+
+AddressRange AddressRangeFromString(const std::string& address_string) {
   AddressRange result;
-  const std::vector<std::string> addresses = absl::StrSplit(s, '-');
+  const std::vector<std::string> addresses = absl::StrSplit(address_string, '-');
   if (addresses.size() != 2) {
-    FATAL("Not an address range.");
+    FATAL("Not an address range: %s", address_string);
   }
   if (!absl::numbers_internal::safe_strtou64_base(addresses[0], &result.first, 16)) {
-    FATAL("Not a number.");
+    FATAL("Not a number: %s", addresses[0]);
   }
   if (!absl::numbers_internal::safe_strtou64_base(addresses[1], &result.second, 16)) {
-    FATAL("Not a number.");
+    FATAL("Not a number: %s", addresses[1]);
   }
   return result;
 }
@@ -92,8 +95,7 @@ TEST(AccessTraceesMemoryTest, ReadFailures) {
   // Process does not exist.
   result = ReadTraceesMemory(-1, address, length);
   ASSERT_TRUE(result.has_error());
-  EXPECT_TRUE(absl::StrContains(result.error().message(), "Unable to open file"))
-      << result.error().message();
+  EXPECT_THAT(result.error().message(), HasSubstr("Unable to open file"));
 
   // Read 0 bytes.
   EXPECT_DEATH(auto unused_result = ReadTraceesMemory(pid, address, 0), "Check failed");
@@ -101,13 +103,12 @@ TEST(AccessTraceesMemoryTest, ReadFailures) {
   // Read past the end of the mappings.
   result = ReadTraceesMemory(pid, address, length + 1);
   ASSERT_TRUE(result.has_error());
-  EXPECT_TRUE(absl::StrContains(result.error().message(), "Only got")) << result.error().message();
+  EXPECT_THAT(result.error().message(), HasSubstr("Only got"));
 
   // Read from bad address.
   result = ReadTraceesMemory(pid, 0, length);
   ASSERT_TRUE(result.has_error());
-  EXPECT_TRUE(absl::StrContains(result.error().message(), "Input/output error"))
-      << result.error().message();
+  EXPECT_THAT(result.error().message(), HasSubstr("Input/output error"));
 
   // Detach and end child.
   CHECK(!DetachAndContinueProcess(pid).has_error());
@@ -145,8 +146,7 @@ TEST(AccessTraceesMemoryTest, WriteFailures) {
   // Process does not exist.
   result = WriteTraceesMemory(-1, address, bytes);
   ASSERT_TRUE(result.has_error());
-  EXPECT_TRUE(absl::StrContains(result.error().message(), "Unable to open file"))
-      << result.error().message();
+  EXPECT_THAT(result.error().message(), HasSubstr("Unable to open file"));
 
   // Write 0 bytes.
   EXPECT_DEATH(auto unused_result = WriteTraceesMemory(pid, address, std::vector<uint8_t>()),
@@ -156,14 +156,12 @@ TEST(AccessTraceesMemoryTest, WriteFailures) {
   bytes.push_back(0);
   result = WriteTraceesMemory(pid, address, bytes);
   ASSERT_TRUE(result.has_error());
-  EXPECT_TRUE(absl::StrContains(result.error().message(), "Input/output error"))
-      << result.error().message();
+  EXPECT_THAT(result.error().message(), HasSubstr("Input/output error"));
 
   // Write to bad address.
   result = WriteTraceesMemory(pid, 0, bytes);
   ASSERT_TRUE(result.has_error());
-  EXPECT_TRUE(absl::StrContains(result.error().message(), "Input/output error"))
-      << result.error().message();
+  EXPECT_THAT(result.error().message(), HasSubstr("Input/output error"));
 
   // Restore, detach and end child.
   CHECK(!WriteTraceesMemory(pid, address, backup.value()).has_error());
