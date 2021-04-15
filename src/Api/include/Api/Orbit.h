@@ -35,7 +35,7 @@
 //
 // Integration:
 // To integrate the manual instrumentation API in your code base, simply include this header file
-// and instanciate the "g_orbit_api_v0" global variable in your code. Orbit will automatically
+// and instantiate the "g_orbit_api_v0" global variable in your code. Orbit will automatically
 // deploy and dynamically load liborbit.so into the target process. Orbit will then write the proper
 // function addresses into the "g_orbit_api_v0" table.
 //
