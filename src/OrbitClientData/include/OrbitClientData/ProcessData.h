@@ -48,47 +48,36 @@ class ModuleInMemory {
 class ProcessData final {
  public:
   ProcessData();
-  ProcessData(const ProcessData&) = default;
-  ProcessData& operator=(const ProcessData&) = default;
-  ProcessData(ProcessData&&) = default;
-  ProcessData& operator=(ProcessData&&) = default;
 
   explicit ProcessData(orbit_grpc_protos::ProcessInfo process_info)
       : process_info_(std::move(process_info)) {}
 
-  void SetProcessInfo(const orbit_grpc_protos::ProcessInfo& process_info) {
-    process_info_ = process_info;
-  }
+  void SetProcessInfo(const orbit_grpc_protos::ProcessInfo& process_info);
 
-  [[nodiscard]] int32_t pid() const { return process_info_.pid(); }
-  [[nodiscard]] const std::string& name() const { return process_info_.name(); }
-  [[nodiscard]] double cpu_usage() const { return process_info_.cpu_usage(); }
-  [[nodiscard]] const std::string& full_path() const { return process_info_.full_path(); }
-  [[nodiscard]] const std::string& command_line() const { return process_info_.command_line(); }
-  [[nodiscard]] bool is_64_bit() const { return process_info_.is_64_bit(); }
+  [[nodiscard]] int32_t pid() const;
+  [[nodiscard]] const std::string& name() const;
+  [[nodiscard]] double cpu_usage() const;
+  [[nodiscard]] const std::string& full_path() const;
+  [[nodiscard]] const std::string& command_line() const;
+  [[nodiscard]] bool is_64_bit() const;
 
   void UpdateModuleInfos(absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
   void AddOrUpdateModuleInfo(const orbit_grpc_protos::ModuleInfo& module_infos);
 
   [[nodiscard]] ErrorMessageOr<ModuleInMemory> FindModuleByAddress(uint64_t absolute_address) const;
 
-  std::optional<uint64_t> GetModuleBaseAddress(const std::string& module_path) const {
-    if (!module_memory_map_.contains(module_path)) {
-      return std::nullopt;
-    }
-    return module_memory_map_.at(module_path).start();
-  }
-  const absl::node_hash_map<std::string, ModuleInMemory>& GetMemoryMap() const {
-    return module_memory_map_;
-  }
+  std::optional<uint64_t> GetModuleBaseAddress(const std::string& module_path) const;
+  absl::node_hash_map<std::string, ModuleInMemory> GetMemoryMapCopy() const;
 
-  [[nodiscard]] const ModuleInMemory* FindModuleByPath(const std::string& module_path) const;
+  [[nodiscard]] std::optional<ModuleInMemory> FindModuleByPath(
+      const std::string& module_path) const;
 
   [[nodiscard]] bool IsModuleLoaded(const std::string& module_path) const {
-    return FindModuleByPath(module_path) != nullptr;
+    return FindModuleByPath(module_path).has_value();
   }
 
  private:
+  mutable absl::Mutex mutex_;
   orbit_grpc_protos::ProcessInfo process_info_;
 
   // This is a map from module_path to the space in memory where that module is loaded

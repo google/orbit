@@ -86,8 +86,8 @@ TEST(ProcessData, UpdateModuleInfos) {
     ProcessData process(ProcessInfo{});
     process.UpdateModuleInfos(module_infos);
 
-    const absl::node_hash_map<std::string, ModuleInMemory>& module_memory_map =
-        process.GetMemoryMap();
+    const absl::node_hash_map<std::string, ModuleInMemory> module_memory_map =
+        process.GetMemoryMapCopy();
 
     EXPECT_EQ(module_memory_map.size(), 2);
 
@@ -180,9 +180,9 @@ TEST(ProcessData, IsModuleLoaded) {
   ProcessData process(ProcessInfo{});
   process.UpdateModuleInfos(module_infos);
 
-  EXPECT_NE(process.FindModuleByPath(file_path_1), nullptr);
-  EXPECT_NE(process.FindModuleByPath(file_path_2), nullptr);
-  EXPECT_EQ(process.FindModuleByPath("not/loaded/module"), nullptr);
+  EXPECT_TRUE(process.FindModuleByPath(file_path_1).has_value());
+  EXPECT_TRUE(process.FindModuleByPath(file_path_2).has_value());
+  EXPECT_FALSE(process.FindModuleByPath("not/loaded/module").has_value());
 }
 
 TEST(ProcessData, GetModuleBaseAddress) {
@@ -214,29 +214,6 @@ TEST(ProcessData, GetModuleBaseAddress) {
   ASSERT_TRUE(file_2_base_address.has_value());
   EXPECT_EQ(file_2_base_address.value(), start_address_2);
   EXPECT_FALSE(process.GetModuleBaseAddress("does/not/exist").has_value());
-}
-
-TEST(ProcessData, CreateCopy) {
-  const std::string process_name = "Test Name";
-  const std::string module_path = "test/file/path";
-  uint64_t start_address = 0x100;
-
-  ProcessInfo info;
-  info.set_name(process_name);
-  ProcessData process(info);
-
-  ModuleInfo module_info;
-  module_info.set_file_path(module_path);
-  module_info.set_address_start(start_address);
-
-  process.UpdateModuleInfos({module_info});
-
-  ProcessData process_copy = process;
-
-  EXPECT_EQ(process_copy.name(), process_name);
-  EXPECT_NE(process_copy.FindModuleByPath(module_path), nullptr);
-  ASSERT_EQ(process_copy.GetMemoryMap().size(), 1);
-  EXPECT_EQ(process_copy.GetMemoryMap().at(module_path).start(), start_address);
 }
 
 TEST(ProcessData, FindModuleByAddress) {
