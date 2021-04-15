@@ -5,11 +5,12 @@
 #define ORBIT_API_INTERNAL_IMPL
 #include "Api/Orbit.h"
 
+#include <absl/base/casts.h>
+
 #include "Api/EncodedEvent.h"
 #include "Api/LockFreeApiEventProducer.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "absl/base/casts.h"
 
 static void EnqueueApiEvent(orbit_api::EventType type, const char* name = nullptr,
                             uint64_t data = 0, orbit_api_color color = kOrbitColorAuto) {
@@ -80,16 +81,11 @@ void orbit_api_async_string(const char* str, uint64_t id, orbit_api_color color)
 static void orbit_api_initialize_v0(uint64_t address) {
   // The api function table is accessed by user code using this pattern:
   //
+  // std::atomic_thread_fence(std::memory_order_acquire)
   // if(api->active && api->orbit_api_function_name) api->orbit_api_function_name(...);
   //
-  // We don't use locking nor memory barriers here for these reasons:
-  // 1. We rely on the fact that 64 bit read/writes on aligned uint64_t are atomic on x64 so we
-  //    assume there cannot be torn reads/writes on a function address in the table.
-  // 2. Nothing bad happens if "active" is 0 but other threads see non-null functions pointers.
-  // 3. Nothing bad happens if "active" is 1 but other threads see a null function pointer.
-  //
-  // If these assumptions became false, then we should revisit this mechanism both in this function
-  // and in the user code.
+  // We use acquire and release semantics to make sure that when api->active is set, all the
+  // function pointers have been assigned and are visible to other cores.
 
   orbit_api_v0* api = absl::bit_cast<orbit_api_v0*>(address);
   if (api->initialized != 0) return;
@@ -104,6 +100,7 @@ static void orbit_api_initialize_v0(uint64_t address) {
   api->track_uint64 = &orbit_api_track_uint64;
   api->track_float = &orbit_api_track_float;
   api->track_double = &orbit_api_track_double;
+  std::atomic_thread_fence(std::memory_order_release);
   api->initialized = 1;
   api->active = 1;
 }

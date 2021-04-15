@@ -249,6 +249,14 @@
 #endif  // ORBIT_API_ENABLED
 
 #ifdef __cplusplus
+#include <atomic>
+#define ORBIT_THREAD_FENCE_ACQUIRE() std::atomic_thread_fence(std::memory_order_acquire)
+#else
+#include <stdatomic.h>
+#define ORBIT_THREAD_FENCE_ACQUIRE() atomic_thread_fence(memory_order_acquire)
+#endif
+
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -297,8 +305,14 @@ struct orbit_api_v0 {
 // User-instanciated global variable.
 extern orbit_api_v0 g_orbit_api_v0;
 
+inline bool orbit_api_active_with_fence() {
+  bool active = g_orbit_api_v0.active;
+  ORBIT_THREAD_FENCE_ACQUIRE();
+  return active;
+}
+
 #define ORBIT_CALL(function_name) \
-  if (g_orbit_api_v0.active && g_orbit_api_v0.function_name) g_orbit_api_v0.function_name
+  if (orbit_api_active_with_fence() && g_orbit_api_v0.function_name) g_orbit_api_v0.function_name
 
 #ifdef __cplusplus
 }  // extern "C"

@@ -11,9 +11,8 @@ using orbit_grpc_protos::CaptureOptions;
 
 namespace orbit_api {
 
-ErrorMessageOr<void> InitializeInTracee(const CaptureOptions& capture_options) {
+ErrorMessageOr<void> InitializeInTracee(const CaptureOptions& /*capture_options*/) {
   // Dummy implementation until "ExecuteInProcess" functionality makes it into main.
-  (void)capture_options;
   return outcome::success();
 }
 
