@@ -104,7 +104,7 @@ void CaptureOptionsDialog::SetMemorySamplingPeriodMs(uint64_t memory_sampling_pe
 void CaptureOptionsDialog::ResetMemorySamplingPeriodMsLineEditWhenEmpty() {
   if (!ui_->memorySamplingPeriodMsLineEdit->text().isEmpty()) return;
 
-  constexpr uint64_t kMemorySamplingPeriodMsDefaultValue = 100;
+  constexpr uint64_t kMemorySamplingPeriodMsDefaultValue = 10;
   ui_->memorySamplingPeriodMsLineEdit->setText(
       QString::number(kMemorySamplingPeriodMsDefaultValue));
 }

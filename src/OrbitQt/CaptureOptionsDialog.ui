@@ -92,7 +92,7 @@
              <set>Qt::ImhDigitsOnly</set>
             </property>
             <property name="text">
-             <string>100</string>
+             <string>10</string>
             </property>
            </widget>
           </item>
