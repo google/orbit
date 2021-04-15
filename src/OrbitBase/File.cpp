@@ -15,8 +15,11 @@
 #endif
 
 #if defined(_WIN32)
+
 // Windows never returns EINTR - so there is no need for TEMP_FAILURE_RETRY implementation
 #define TEMP_FAILURE_RETRY(expression) (expression)
+
+namespace {
 
 using ssize_t = int64_t;
 
@@ -52,6 +55,9 @@ ssize_t pwrite(int fd, const void* buffer, size_t size, off_t offset) {
   }
   return bytes_written;
 }
+
+}  // namespace
+
 #endif
 
 namespace orbit_base {
