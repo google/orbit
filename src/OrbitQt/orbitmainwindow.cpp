@@ -880,7 +880,7 @@ const QString OrbitMainWindow::kLimitLocalMarkerDepthPerCommandBufferSettingsKey
 const QString OrbitMainWindow::kMaxLocalMarkerDepthPerCommandBufferSettingsKey{
     "MaxLocalMarkerDepthPerCommandBuffer"};
 
-constexpr uint64_t kMemorySamplingPeriodMsDefaultValue = 100;
+constexpr uint64_t kMemorySamplingPeriodMsDefaultValue = 10;
 constexpr uint64_t kMemoryWarningThresholdKbDefaultValue = 1024 * 1024 * 8;  // 8Gb
 constexpr uint64_t kMilliSecondsToNanoSeconds = 1000'000;
 
