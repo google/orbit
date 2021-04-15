@@ -125,7 +125,7 @@ PresetLoadState GetPresetLoadStateForProcess(
   int modules_not_found_count = 0;
   for (const auto& pair : preset->preset_info().path_to_module()) {
     const std::string& module_path = pair.first;
-    if (process->FindModuleByPath(module_path) == nullptr) {
+    if (process->IsModuleLoaded(module_path)) {
       modules_not_found_count++;
     }
   }
@@ -191,9 +191,9 @@ void OrbitApp::OnCaptureStarted(const CaptureStarted& capture_started,
 
         // It is safe to do this write on the main thread, as the capture thread is suspended until
         // this task is completely executed.
-        capture_data_ = CaptureData{module_manager_.get(), capture_started,
-                                    std::move(frame_track_function_ids)};
-        capture_window_->CreateTimeGraph(&capture_data_.value());
+        capture_data_ = std::make_unique<CaptureData>(module_manager_.get(), capture_started,
+                                                      std::move(frame_track_function_ids));
+        capture_window_->CreateTimeGraph(capture_data_.get());
 
         frame_track_online_processor_ =
             orbit_gl::FrameTrackOnlineProcessor(GetCaptureData(), GetMutableTimeGraph());
@@ -1453,8 +1453,9 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
 
 orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPresetModule(
     const std::string& module_path, const orbit_client_protos::PresetModule& preset_module) {
-  const ModuleInMemory* module_in_memory = GetTargetProcess()->FindModuleByPath(module_path);
-  if (module_in_memory == nullptr) {
+  std::optional<ModuleInMemory> module_in_memory =
+      GetTargetProcess()->FindModuleByPath(module_path);
+  if (!module_in_memory.has_value()) {
     return ErrorMessage{absl::StrFormat("Module \"%s\" is not loaded by process.", module_path)};
   }
 
@@ -1596,7 +1597,8 @@ void OrbitApp::RefreshUIAfterModuleReload() {
   modules_data_view_->UpdateModules(GetMutableTargetProcess());
 
   functions_data_view_->ClearFunctions();
-  for (const auto& [module_path, module_in_memory] : GetTargetProcess()->GetMemoryMap()) {
+  auto memory_map = GetTargetProcess()->GetMemoryMapCopy();
+  for (const auto& [module_path, module_in_memory] : memory_map) {
     ModuleData* module =
         module_manager_->GetMutableModuleByPathAndBuildId(module_path, module_in_memory.build_id());
     if (module->is_loaded()) {

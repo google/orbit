@@ -69,26 +69,26 @@ class ClientGgp final : public CaptureListener {
 
  private:
   [[nodiscard]] CaptureData& GetMutableCaptureData() {
-    CHECK(capture_data_.has_value());
-    return capture_data_.value();
+    CHECK(capture_data_ != nullptr);
+    return *capture_data_;
   }
   [[nodiscard]] const CaptureData& GetCaptureData() const {
-    CHECK(capture_data_.has_value());
-    return capture_data_.value();
+    CHECK(capture_data_ != nullptr);
+    return *capture_data_;
   }
   ClientGgpOptions options_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
-  ProcessData target_process_;
+  std::unique_ptr<ProcessData> target_process_;
   orbit_client_data::ModuleManager module_manager_;
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions_;
   ModuleData* main_module_;
   std::shared_ptr<StringManager> string_manager_;
   std::unique_ptr<CaptureClient> capture_client_;
   std::unique_ptr<ProcessClient> process_client_;
-  std::optional<CaptureData> capture_data_;
+  std::unique_ptr<CaptureData> capture_data_;
   std::vector<orbit_client_protos::TimerInfo> timer_infos_;
 
-  ErrorMessageOr<ProcessData> GetOrbitProcessByPid(int32_t pid);
+  ErrorMessageOr<std::unique_ptr<ProcessData>> GetOrbitProcessByPid(int32_t pid);
   bool InitCapture();
   void ClearCapture();
   ErrorMessageOr<void> LoadModuleAndSymbols();
