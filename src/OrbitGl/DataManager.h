@@ -129,7 +129,7 @@ class DataManager final {
   orbit_grpc_protos::UnwindingMethod unwinding_method_{};
 
   bool collect_memory_info_ = false;
-  uint64_t memory_sampling_period_ns_ = 100'000'000;
+  uint64_t memory_sampling_period_ns_ = 10'000'000;
   uint64_t memory_warning_threshold_kb_ = 1024 * 1024 * 8;
 };
 
