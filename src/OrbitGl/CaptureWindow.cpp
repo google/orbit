@@ -221,6 +221,9 @@ bool CaptureWindow::RightUp() {
         TicksToMicroseconds(time_graph_->GetCaptureMin(), time_graph_->GetTickFromWorld(max_world));
 
     time_graph_->SetMinMax(new_min, new_max);
+
+    // Clear the selection display
+    select_stop_pos_world_ = select_start_pos_world_;
   }
 
   return GlCanvas::RightUp();
