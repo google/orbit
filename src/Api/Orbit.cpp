@@ -107,7 +107,7 @@ static void orbit_api_initialize_v0(uint64_t address) {
 }
 
 void orbit_api_initialize(uint64_t address, uint64_t api_version) {
-  LOG("Initializing Orbit API at address 0x%x, version %u", address, api_version);
+  LOG("Initializing Orbit API at address %#x, version %u", address, api_version);
   if (api_version > kOrbitApiVersion) {
     ERROR(
         "Orbit API version in tracee (%u) is newer than the max supported version (%u). "
