@@ -79,7 +79,7 @@ ErrorMessageOr<void> WriteFully(const unique_fd& fd, std::string_view content) {
 ErrorMessageOr<void> WriteFullyAtOffset(const unique_fd& fd, const void* buffer, size_t size,
                                         off_t offset) {
 #if defined(_WIN32)
-  FATAL("Not implemented on Windows.")
+  FATAL("Not implemented on Windows.");
 #elif defined(__linux)
   const char* current_position = static_cast<const char*>(buffer);
 
@@ -120,7 +120,7 @@ ErrorMessageOr<size_t> ReadFully(const unique_fd& fd, void* buffer, size_t size)
 ErrorMessageOr<size_t> ReadFullyAtOffset(const unique_fd& fd, void* buffer, size_t size,
                                          off_t offset) {
 #if defined(_WIN32)
-  FATAL("Not implemented on Windows.")
+  FATAL("Not implemented on Windows.");
 #elif defined(__linux)
   uint8_t* current_position = static_cast<uint8_t*>(buffer);
   size_t bytes_read = 0;
