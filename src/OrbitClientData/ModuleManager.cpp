@@ -89,11 +89,13 @@ ModuleData* ModuleManager::GetMutableModuleByPathAndBuildId(const std::string& p
 
 std::vector<FunctionInfo> ModuleManager::GetOrbitFunctionsOfProcess(
     const ProcessData& process) const {
+  auto memory_map = process.GetMemoryMapCopy();
+
   absl::MutexLock lock(&mutex_);
 
   std::vector<FunctionInfo> result;
 
-  for (const auto& [module_path, module_in_memory] : process.GetMemoryMap()) {
+  for (const auto& [module_path, module_in_memory] : memory_map) {
     auto it = module_map_.find(std::make_pair(module_path, module_in_memory.build_id()));
     CHECK(it != module_map_.end());
     const ModuleData* module = &it->second;

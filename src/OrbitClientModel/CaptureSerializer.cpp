@@ -83,7 +83,9 @@ CaptureInfo GenerateCaptureInfo(
   process->set_command_line(capture_data.process()->command_line());
   process->set_is_64_bit(capture_data.process()->is_64_bit());
 
-  for (const auto& [module_path, module_in_memory] : capture_data.process()->GetMemoryMap()) {
+  auto memory_map = capture_data.process()->GetMemoryMapCopy();
+
+  for (const auto& [module_path, module_in_memory] : memory_map) {
     const ModuleData* module =
         capture_data.GetModuleByPathAndBuildId(module_path, module_in_memory.build_id());
     CHECK(module != nullptr);

@@ -111,14 +111,14 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   void StopCapture();
   void AbortCapture();
   void ClearCapture();
-  [[nodiscard]] bool HasCaptureData() const { return capture_data_.has_value(); }
+  [[nodiscard]] bool HasCaptureData() const { return capture_data_ != nullptr; }
   [[nodiscard]] CaptureData& GetMutableCaptureData() {
-    CHECK(capture_data_.has_value());
-    return capture_data_.value();
+    CHECK(capture_data_ != nullptr);
+    return *capture_data_;
   }
   [[nodiscard]] const CaptureData& GetCaptureData() const {
-    CHECK(capture_data_.has_value());
-    return capture_data_.value();
+    CHECK(capture_data_ != nullptr);
+    return *capture_data_;
   }
 
   [[nodiscard]] bool HasSampleSelection() const {
@@ -547,7 +547,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   // TODO(kuebler): This is mostly written during capture by the capture thread on the
   //  CaptureListener parts of App, but may be read also during capturing by all threads.
   //  Currently, it is not properly synchronized (and thus it can't live at DataManager).
-  std::optional<CaptureData> capture_data_;
+  std::unique_ptr<CaptureData> capture_data_;
 
   orbit_gl::FrameTrackOnlineProcessor frame_track_online_processor_;
 

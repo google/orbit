@@ -17,7 +17,43 @@ using orbit_grpc_protos::ModuleInfo;
 
 ProcessData::ProcessData() { process_info_.set_pid(-1); }
 
+void ProcessData::SetProcessInfo(const orbit_grpc_protos::ProcessInfo& process_info) {
+  absl::MutexLock lock(&mutex_);
+  process_info_ = process_info;
+}
+
+int32_t ProcessData::pid() const {
+  absl::MutexLock lock(&mutex_);
+  return process_info_.pid();
+}
+
+const std::string& ProcessData::name() const {
+  absl::MutexLock lock(&mutex_);
+  return process_info_.name();
+}
+
+double ProcessData::cpu_usage() const {
+  absl::MutexLock lock(&mutex_);
+  return process_info_.cpu_usage();
+}
+
+const std::string& ProcessData::full_path() const {
+  absl::MutexLock lock(&mutex_);
+  return process_info_.full_path();
+}
+
+const std::string& ProcessData::command_line() const {
+  absl::MutexLock lock(&mutex_);
+  return process_info_.command_line();
+}
+
+bool ProcessData::is_64_bit() const {
+  absl::MutexLock lock(&mutex_);
+  return process_info_.is_64_bit();
+}
+
 void ProcessData::UpdateModuleInfos(absl::Span<const ModuleInfo> module_infos) {
+  absl::MutexLock lock(&mutex_);
   module_memory_map_.clear();
   start_addresses_.clear();
 
@@ -36,16 +72,19 @@ void ProcessData::UpdateModuleInfos(absl::Span<const ModuleInfo> module_infos) {
     }
   }
 }
-const ModuleInMemory* ProcessData::FindModuleByPath(const std::string& module_path) const {
+
+std::optional<ModuleInMemory> ProcessData::FindModuleByPath(const std::string& module_path) const {
+  absl::MutexLock lock(&mutex_);
   auto it = module_memory_map_.find(module_path);
   if (it == module_memory_map_.end()) {
-    return nullptr;
+    return std::nullopt;
   }
 
-  return &it->second;
+  return it->second;
 }
 
 void ProcessData::AddOrUpdateModuleInfo(const ModuleInfo& module_info) {
+  absl::MutexLock lock(&mutex_);
   module_memory_map_.insert_or_assign(
       module_info.file_path(),
       ModuleInMemory{module_info.address_start(), module_info.address_end(),
@@ -54,16 +93,17 @@ void ProcessData::AddOrUpdateModuleInfo(const ModuleInfo& module_info) {
 }
 
 ErrorMessageOr<ModuleInMemory> ProcessData::FindModuleByAddress(uint64_t absolute_address) const {
+  absl::MutexLock lock(&mutex_);
   if (start_addresses_.empty()) {
     return ErrorMessage(absl::StrFormat("Unable to find module for address %016" PRIx64
                                         ": No modules loaded by process %s",
-                                        absolute_address, name()));
+                                        absolute_address, process_info_.name()));
   }
 
   ErrorMessage not_found_error =
       ErrorMessage(absl::StrFormat("Unable to find module for address %016" PRIx64
                                    ": No module loaded at this address by process %s",
-                                   absolute_address, name()));
+                                   absolute_address, process_info_.name()));
 
   auto it = start_addresses_.upper_bound(absolute_address);
   if (it == start_addresses_.begin()) return not_found_error;
@@ -75,4 +115,17 @@ ErrorMessageOr<ModuleInMemory> ProcessData::FindModuleByAddress(uint64_t absolut
   if (absolute_address > module_in_memory.end()) return not_found_error;
 
   return module_in_memory;
+}
+
+std::optional<uint64_t> ProcessData::GetModuleBaseAddress(const std::string& module_path) const {
+  absl::MutexLock lock(&mutex_);
+  if (!module_memory_map_.contains(module_path)) {
+    return std::nullopt;
+  }
+  return module_memory_map_.at(module_path).start();
+}
+
+absl::node_hash_map<std::string, ModuleInMemory> ProcessData::GetMemoryMapCopy() const {
+  absl::MutexLock lock(&mutex_);
+  return module_memory_map_;
 }

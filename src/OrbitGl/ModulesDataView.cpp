@@ -194,7 +194,8 @@ void ModulesDataView::DoFilter() {
 void ModulesDataView::UpdateModules(const ProcessData* process) {
   modules_.clear();
   module_memory_.clear();
-  for (const auto& [module_path, module_in_memory] : process->GetMemoryMap()) {
+  auto memory_map = process->GetMemoryMapCopy();
+  for (const auto& [module_path, module_in_memory] : memory_map) {
     ModuleData* module =
         app_->GetMutableModuleByPathAndBuildId(module_path, module_in_memory.build_id());
     modules_.push_back(module);
