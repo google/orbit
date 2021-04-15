@@ -294,7 +294,7 @@ static void ClearSourcePathsMappings() {
 }
 
 // Put the command line into the log.
-void LogCommandLine(int argc, char* argv[]) {
+static void LogCommandLine(int argc, char* argv[]) {
   LOG("Command line invoking Orbit:");
   LOG("%s", argv[0]);
   for (int i = 1; i < argc; i++) {
