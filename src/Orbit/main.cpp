@@ -293,6 +293,16 @@ static void ClearSourcePathsMappings() {
   LOG("Cleared the saved source paths mappings.");
 }
 
+// Put the command line into the log.
+void LogCommandLine(int argc, char* argv[]) {
+  LOG("Command line invoking Orbit:");
+  LOG("%s", argv[0]);
+  for (int i = 1; i < argc; i++) {
+    LOG("  %s", argv[i]);
+  }
+  LOG("");
+}
+
 int main(int argc, char* argv[]) {
   absl::SetProgramUsageMessage("CPU Profiler");
   absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &orbit_core::GetBuildReport, {}});
@@ -309,6 +319,7 @@ int main(int argc, char* argv[]) {
 
   orbit_base::InitLogFile(Path::GetLogFilePath());
   LOG("You are running Orbit Profiler version %s", orbit_core::GetVersion());
+  LogCommandLine(argc, argv);
   ErrorMessageOr<void> remove_old_log_result =
       orbit_base::TryRemoveOldLogFiles(Path::CreateOrGetLogDir());
   if (remove_old_log_result.has_error()) {
