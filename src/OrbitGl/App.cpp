@@ -1782,6 +1782,7 @@ void OrbitApp::set_highlighted_function_id(uint64_t highlighted_function_id) {
 ThreadID OrbitApp::selected_thread_id() const { return data_manager_->selected_thread_id(); }
 
 void OrbitApp::set_selected_thread_id(ThreadID thread_id) {
+  RequestUpdatePrimitives();
   return data_manager_->set_selected_thread_id(thread_id);
 }
 
@@ -1795,9 +1796,13 @@ void OrbitApp::SelectTextBox(const TextBox* text_box) {
   data_manager_->set_highlighted_function_id(function_id);
   CHECK(timer_selected_callback_);
   timer_selected_callback_(timer_info);
+  RequestUpdatePrimitives();
 }
 
-void OrbitApp::DeselectTextBox() { data_manager_->set_selected_text_box(nullptr); }
+void OrbitApp::DeselectTextBox() {
+  data_manager_->set_selected_text_box(nullptr);
+  RequestUpdatePrimitives();
+}
 
 uint64_t OrbitApp::GetFunctionIdToHighlight() const {
   const TextBox* selected_textbox = selected_text_box();
