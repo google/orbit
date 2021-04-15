@@ -13,12 +13,15 @@ target_compile_options(UserSpaceInstrumentation PRIVATE ${STRICT_COMPILE_FLAGS})
 target_compile_features(UserSpaceInstrumentation PUBLIC cxx_std_17)
 
 target_include_directories(UserSpaceInstrumentation PUBLIC
+        ${CMAKE_CURRENT_LIST_DIR}/include)
+
+target_include_directories(UserSpaceInstrumentation PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(UserSpaceInstrumentation PUBLIC
         include/UserSpaceInstrumentation/Attach.h
         include/UserSpaceInstrumentation/ExecuteInProcess.h
-        include/UserSpaceInstrumentation/InjectLibraryInTracee.h)        
+        include/UserSpaceInstrumentation/InjectLibraryInTracee.h)
 
 target_sources(UserSpaceInstrumentation PRIVATE
         AccessTraceesMemory.cpp
@@ -60,7 +63,7 @@ target_sources(UserSpaceInstrumentationTestLib PRIVATE
         UserSpaceInstrumentationTestLib.cpp
         UserSpaceInstrumentationTestLib.h)
 
-# The tests for UserSpaceInstrumentation        
+# The tests for UserSpaceInstrumentation
 add_executable(UserSpaceInstrumentationTests)
 
 target_compile_options(UserSpaceInstrumentationTests PRIVATE ${STRICT_COMPILE_FLAGS})
