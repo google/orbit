@@ -101,8 +101,8 @@ static void orbit_api_initialize_v0(uint64_t address) {
   api->track_uint64 = &orbit_api_track_uint64;
   api->track_float = &orbit_api_track_float;
   api->track_double = &orbit_api_track_double;
-  std::atomic_thread_fence(std::memory_order_release);
   api->initialized = 1;
+  std::atomic_thread_fence(std::memory_order_release);
   api->active = 1;
 }
 

@@ -192,6 +192,7 @@ void InitializeTracing() {
   g_orbit_api_v0.track_float = &orbit_api_track_float;
   g_orbit_api_v0.track_double = &orbit_api_track_double;
   g_orbit_api_v0.initialized = 1;
+  std::atomic_thread_fence(std::memory_order_release);
   g_orbit_api_v0.active = 1;
 }
 
