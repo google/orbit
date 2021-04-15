@@ -184,33 +184,33 @@ void OrbitApp::OnCaptureStarted(const CaptureStarted& capture_started,
   absl::MutexLock mutex_lock(&mutex);
   bool initialization_complete = false;
 
-  main_thread_executor_->Schedule(
-      [this, &initialization_complete, &mutex, &capture_started,
-       frame_track_function_ids = std::move(frame_track_function_ids)]() mutable {
-        ClearCapture();
+  main_thread_executor_->Schedule([this, &initialization_complete, &mutex, &capture_started,
+                                   frame_track_function_ids =
+                                       std::move(frame_track_function_ids)]() mutable {
+    ClearCapture();
 
-        // It is safe to do this write on the main thread, as the capture thread is suspended until
-        // this task is completely executed.
-        capture_data_ = CaptureData{module_manager_.get(), capture_started,
-                                    std::move(frame_track_function_ids)};
-        capture_window_->CreateTimeGraph(&capture_data_.value());
+    // It is safe to do this write on the main thread, as the capture thread is suspended until
+    // this task is completely executed.
+    capture_data_ =
+        CaptureData{module_manager_.get(), capture_started, std::move(frame_track_function_ids)};
+    capture_window_->CreateTimeGraph(&capture_data_.value());
 
-        frame_track_online_processor_ =
-            orbit_gl::FrameTrackOnlineProcessor(GetCaptureData(), GetMutableTimeGraph());
+    frame_track_online_processor_ =
+        orbit_gl::FrameTrackOnlineProcessor(GetCaptureData(), GetMutableTimeGraph());
 
-        CHECK(capture_started_callback_);
-        capture_started_callback_();
+    CHECK(capture_started_callback_);
+    capture_started_callback_();
 
-        if (!capture_data_->instrumented_functions().empty()) {
-          CHECK(select_live_tab_callback_);
-          select_live_tab_callback_();
-        }
+    if (!capture_data_->instrumented_functions().empty()) {
+      CHECK(select_live_tab_callback_);
+      select_live_tab_callback_();
+    }
 
-        FireRefreshCallbacks();
+    FireRefreshCallbacks();
 
-        absl::MutexLock lock(&mutex);
-        initialization_complete = true;
-      });
+    absl::MutexLock lock(&mutex);
+    initialization_complete = true;
+  });
 
   mutex.Await(absl::Condition(&initialization_complete));
 }
@@ -1782,6 +1782,7 @@ void OrbitApp::set_highlighted_function_id(uint64_t highlighted_function_id) {
 ThreadID OrbitApp::selected_thread_id() const { return data_manager_->selected_thread_id(); }
 
 void OrbitApp::set_selected_thread_id(ThreadID thread_id) {
+  RequestUpdatePrimitives();
   return data_manager_->set_selected_thread_id(thread_id);
 }
 
@@ -1795,9 +1796,13 @@ void OrbitApp::SelectTextBox(const TextBox* text_box) {
   data_manager_->set_highlighted_function_id(function_id);
   CHECK(timer_selected_callback_);
   timer_selected_callback_(timer_info);
+  RequestUpdatePrimitives();
 }
 
-void OrbitApp::DeselectTextBox() { data_manager_->set_selected_text_box(nullptr); }
+void OrbitApp::DeselectTextBox() {
+  data_manager_->set_selected_text_box(nullptr);
+  RequestUpdatePrimitives();
+}
 
 uint64_t OrbitApp::GetFunctionIdToHighlight() const {
   const TextBox* selected_textbox = selected_text_box();
