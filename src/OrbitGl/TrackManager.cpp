@@ -65,10 +65,13 @@ std::vector<FrameTrack*> TrackManager::GetFrameTracks() const {
 }
 
 void TrackManager::SortTracks() {
-  if (!app_->IsCapturing() && !sorted_tracks_.empty() && !sorting_invalidated_) return;
+  if (!app_->IsCapturing() && !sorted_tracks_.empty() && !sorting_invalidated_ &&
+      !visible_track_list_needs_update_)
+    return;
 
   // Reorder threads if sorting isn't valid or once per second when capturing
-  if (sorting_invalidated_ || last_thread_reorder_.ElapsedMillis() > 1000.0) {
+  if (sorting_invalidated_ ||
+      (app_->IsCapturing() && last_thread_reorder_.ElapsedMillis() > 1000.0)) {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     // Gather all tracks regardless of the process in sorted order
     std::vector<Track*> all_processes_sorted_tracks;
@@ -141,10 +144,13 @@ void TrackManager::SortTracks() {
     Append(sorted_tracks_, capture_pid_tracks);
 
     last_thread_reorder_.Restart();
-
+  }
+  if (sorting_invalidated_ || visible_track_list_needs_update_) {
     UpdateVisibleTrackList();
   }
+
   sorting_invalidated_ = false;
+  visible_track_list_needs_update_ = false;
 }
 
 void TrackManager::SetFilter(const std::string& filter) {
@@ -320,7 +326,7 @@ void TrackManager::AddFrameTrack(const std::shared_ptr<FrameTrack>& frame_track)
   } else {
     sorted_tracks_.insert(sorted_tracks_.begin(), frame_track.get());
   }
-  UpdateVisibleTrackList();
+  visible_track_list_needs_update_ = true;
 }
 
 void TrackManager::RemoveFrameTrack(uint64_t function_id) {
@@ -329,7 +335,7 @@ void TrackManager::RemoveFrameTrack(uint64_t function_id) {
       std::remove(sorted_tracks_.begin(), sorted_tracks_.end(), frame_tracks_[function_id].get()),
       sorted_tracks_.end());
   frame_tracks_.erase(function_id);
-  UpdateVisibleTrackList();
+  visible_track_list_needs_update_ = true;
 }
 
 SchedulerTrack* TrackManager::GetOrCreateSchedulerTrack() {

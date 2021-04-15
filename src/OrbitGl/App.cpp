@@ -2085,6 +2085,7 @@ void OrbitApp::RefreshFrameTracks() {
     GetMutableTimeGraph()->RemoveFrameTrack(function_id);
     AddFrameTrackTimers(function_id);
   }
+  GetMutableTimeGraph()->GetTrackManager()->RequestTrackSorting();
 }
 
 void OrbitApp::AddFrameTrackTimers(uint64_t instrumented_function_id) {
