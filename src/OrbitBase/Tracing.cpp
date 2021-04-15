@@ -47,14 +47,20 @@ TracingListener::TracingListener(TracingTimerCallback callback) {
 }
 
 TracingListener::~TracingListener() {
+  // Deactivate the tracing listener before shutting down the thread pool.
+  // Note that this is required, as otherwise, we might allow scheduling
+  // new events on the already shut down thread pool.
+  {
+    absl::MutexLock lock(&global_tracing_mutex);
+    CHECK(IsActive());
+    active_ = false;
+  }
   // Purge deferred scopes.
   thread_pool_->Shutdown();
   thread_pool_->Wait();
 
-  // Deactivate listener.
+  // Destroy the listener.
   absl::MutexLock lock(&global_tracing_mutex);
-  CHECK(IsActive());
-  active_ = false;
   global_tracing_listener = nullptr;
 }
 
