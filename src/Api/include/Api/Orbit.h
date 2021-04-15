@@ -302,7 +302,7 @@ struct orbit_api_v0 {
   void (*track_double)(const char* name, double value, orbit_api_color color);
 };
 
-// User-instanciated global variable.
+// User-instantiated global variable.
 extern orbit_api_v0 g_orbit_api_v0;
 
 inline bool orbit_api_active_with_fence() {
