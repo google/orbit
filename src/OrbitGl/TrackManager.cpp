@@ -326,7 +326,8 @@ void TrackManager::AddFrameTrack(const std::shared_ptr<FrameTrack>& frame_track)
 void TrackManager::RemoveFrameTrack(uint64_t function_id) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   sorted_tracks_.erase(
-      std::remove(sorted_tracks_.begin(), sorted_tracks_.end(), frame_tracks_[function_id].get()));
+      std::remove(sorted_tracks_.begin(), sorted_tracks_.end(), frame_tracks_[function_id].get()),
+      sorted_tracks_.end());
   frame_tracks_.erase(function_id);
   UpdateVisibleTrackList();
 }
