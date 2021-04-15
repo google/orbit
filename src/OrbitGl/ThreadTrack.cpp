@@ -486,7 +486,7 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
       const Vec2& size = text_box.GetSize();
 
       if (text_box.Duration() > draw_data.ns_per_pixel) {
-        if (collapse_toggle_->IsExpanded()) {
+        if (!collapse_toggle_->IsCollapsed()) {
           SetTimesliceText(text_box.GetTimerInfo(), draw_data.world_start_x, z_offset, &text_box);
         }
         batcher->AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
