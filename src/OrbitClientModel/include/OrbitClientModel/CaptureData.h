@@ -45,8 +45,8 @@ class CaptureData {
   CaptureData& operator=(const CaptureData& other) = delete;
   CaptureData(const CaptureData& other) = delete;
 
-  CaptureData(CaptureData&& other) = default;
-  CaptureData& operator=(CaptureData&& other) = default;
+  CaptureData(CaptureData&& other) = delete;
+  CaptureData& operator=(CaptureData&& other) = delete;
 
   [[nodiscard]] const absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction>&
   instrumented_functions() const {
