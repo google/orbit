@@ -47,6 +47,7 @@ class TrackManager {
   }
 
   void SortTracks();
+  void RequestTrackSorting() { sorting_invalidated_ = true; };
   void SetFilter(const std::string& filter);
 
   void UpdateTracks(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
@@ -98,6 +99,7 @@ class TrackManager {
 
   std::vector<Track*> sorted_tracks_;
   bool sorting_invalidated_ = false;
+  bool visible_track_list_needs_update_ = false;
   Timer last_thread_reorder_;
 
   std::string filter_;
