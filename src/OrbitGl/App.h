@@ -100,8 +100,8 @@ class OrbitApp final : public DataViewFactory,
   void MainTick();
 
   [[nodiscard]] std::string GetCaptureTime() const;
-  [[nodiscard]] std::string GetSaveFile(const std::string& extension) const;
-  void SetClipboard(const std::string& text);
+  [[nodiscard]] std::string GetSaveFile(const std::string& extension) const override;
+  void SetClipboard(const std::string& text) override;
   ErrorMessageOr<void> OnSavePreset(const std::string& file_name);
   ErrorMessageOr<void> OnLoadPreset(const std::string& file_name);
   orbit_base::Future<ErrorMessageOr<CaptureOutcome>> LoadCaptureFromFile(
@@ -305,7 +305,7 @@ class OrbitApp final : public DataViewFactory,
   void SendTooltipToUi(const std::string& tooltip);
   void SendInfoToUi(const std::string& title, const std::string& text);
   void SendWarningToUi(const std::string& title, const std::string& text);
-  void SendErrorToUi(const std::string& title, const std::string& text);
+  void SendErrorToUi(const std::string& title, const std::string& text) override;
   void RenderImGuiDebugUI();
 
   // RetrieveModule retrieves a module file and returns the local file path (potentially from the
