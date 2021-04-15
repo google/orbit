@@ -11,3 +11,9 @@ target_sources(DataViews INTERFACE
 
 target_include_directories(DataViews INTERFACE include/)
 target_compile_features(DataViews INTERFACE cxx_std_17)
+target_link_libraries(DataViews INTERFACE
+        ClientData
+        ClientModel
+        ClientProtos
+        OrbitBase
+        CONAN_PKG::abseil)
