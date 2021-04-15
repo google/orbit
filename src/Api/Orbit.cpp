@@ -81,8 +81,9 @@ void orbit_api_async_string(const char* str, uint64_t id, orbit_api_color color)
 static void orbit_api_initialize_v0(uint64_t address) {
   // The api function table is accessed by user code using this pattern:
   //
+  // bool active = api->active;
   // std::atomic_thread_fence(std::memory_order_acquire)
-  // if(api->active && api->orbit_api_function_name) api->orbit_api_function_name(...);
+  // if(active && api->orbit_api_function_name) api->orbit_api_function_name(...);
   //
   // We use acquire and release semantics to make sure that when api->active is set, all the
   // function pointers have been assigned and are visible to other cores.
