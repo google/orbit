@@ -184,33 +184,33 @@ void OrbitApp::OnCaptureStarted(const CaptureStarted& capture_started,
   absl::MutexLock mutex_lock(&mutex);
   bool initialization_complete = false;
 
-  main_thread_executor_->Schedule([this, &initialization_complete, &mutex, &capture_started,
-                                   frame_track_function_ids =
-                                       std::move(frame_track_function_ids)]() mutable {
-    ClearCapture();
+  main_thread_executor_->Schedule(
+      [this, &initialization_complete, &mutex, &capture_started,
+       frame_track_function_ids = std::move(frame_track_function_ids)]() mutable {
+        ClearCapture();
 
-    // It is safe to do this write on the main thread, as the capture thread is suspended until
-    // this task is completely executed.
-    capture_data_ =
-        CaptureData{module_manager_.get(), capture_started, std::move(frame_track_function_ids)};
-    capture_window_->CreateTimeGraph(&capture_data_.value());
+        // It is safe to do this write on the main thread, as the capture thread is suspended until
+        // this task is completely executed.
+        capture_data_ = CaptureData{module_manager_.get(), capture_started,
+                                    std::move(frame_track_function_ids)};
+        capture_window_->CreateTimeGraph(&capture_data_.value());
 
-    frame_track_online_processor_ =
-        orbit_gl::FrameTrackOnlineProcessor(GetCaptureData(), GetMutableTimeGraph());
+        frame_track_online_processor_ =
+            orbit_gl::FrameTrackOnlineProcessor(GetCaptureData(), GetMutableTimeGraph());
 
-    CHECK(capture_started_callback_);
-    capture_started_callback_();
+        CHECK(capture_started_callback_);
+        capture_started_callback_();
 
-    if (!capture_data_->instrumented_functions().empty()) {
-      CHECK(select_live_tab_callback_);
-      select_live_tab_callback_();
-    }
+        if (!capture_data_->instrumented_functions().empty()) {
+          CHECK(select_live_tab_callback_);
+          select_live_tab_callback_();
+        }
 
-    FireRefreshCallbacks();
+        FireRefreshCallbacks();
 
-    absl::MutexLock lock(&mutex);
-    initialization_complete = true;
-  });
+        absl::MutexLock lock(&mutex);
+        initialization_complete = true;
+      });
 
   mutex.Await(absl::Condition(&initialization_complete));
 }
