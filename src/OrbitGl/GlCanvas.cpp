@@ -300,7 +300,10 @@ void GlCanvas::Render(int width, int height) {
   // Reset picking manager before each draw.
   picking_manager_.Reset();
 
-  Draw();
+  bool viewport_was_dirty = viewport_.IsDirty();
+  // Clear viewport dirty flag so it can be set again during rendering if needed
+  viewport_.ClearDirtyFlag();
+  Draw(viewport_was_dirty);
 
   if (picking_mode_ == PickingMode::kNone) {
     for (const auto& render_callback : render_callbacks_) {
@@ -338,8 +341,6 @@ void GlCanvas::PostRender() {
     Pick(prev_picking_mode, mouse_move_pos_screen_[0], mouse_move_pos_screen_[1]);
     GlCanvas::Render(viewport_.GetScreenWidth(), viewport_.GetScreenHeight());
   }
-
-  viewport_.ClearDirtyFlag();
 }
 
 void GlCanvas::Resize(int width, int height) {

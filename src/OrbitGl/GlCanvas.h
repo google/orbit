@@ -130,7 +130,7 @@ class GlCanvas {
   static const Color kTabTextColorSelected;
 
  protected:
-  virtual void Draw() {}
+  virtual void Draw(bool /*viewport_was_dirty*/) {}
 
   void UpdateSpecialKeys(bool ctrl, bool shift, bool alt);
   bool ControlPressed();
