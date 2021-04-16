@@ -38,11 +38,13 @@ class TracingListener {
 
   static void DeferScopeProcessing(const TracingScope& scope);
   [[nodiscard]] inline static bool IsActive() { return active_; }
+  [[nodiscard]] inline static bool IsShutdownInitiated() { return shutdown_initiated_; }
 
  private:
   TracingTimerCallback user_callback_ = nullptr;
   std::unique_ptr<ThreadPool> thread_pool_ = {};
   inline static bool active_ = false;
+  inline static bool shutdown_initiated_ = true;
 };
 
 }  // namespace orbit_base

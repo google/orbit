@@ -50,23 +50,26 @@ TracingListener::TracingListener(TracingTimerCallback callback) {
   orbit_base::InitializeTracing();
   global_tracing_listener = this;
   active_ = true;
+  shutdown_initiated_ = false;
 }
 
 TracingListener::~TracingListener() {
-  // Deactivate the tracing listener before shutting down the thread pool.
+  // Communicate that the thread pool will be shut down before shutting down
+  // the thread pool itself.
   // Note that this is required, as otherwise, we might allow scheduling
   // new events on the already shut down thread pool.
   {
     absl::MutexLock lock(&global_tracing_mutex);
     CHECK(IsActive());
-    active_ = false;
+    shutdown_initiated_ = true;
   }
   // Purge deferred scopes.
   thread_pool_->Shutdown();
   thread_pool_->Wait();
 
-  // Destroy the listener.
+  // Deactivate and destroy the listener.
   absl::MutexLock lock(&global_tracing_mutex);
+  active_ = false;
   global_tracing_listener = nullptr;
 }
 
@@ -88,7 +91,7 @@ void TracingListener::DeferScopeProcessing(const TracingScope& scope) {
 
   // User callback is called from a worker thread to minimize contention on instrumented threads.
   absl::MutexLock lock(&global_tracing_mutex);
-  if (!IsActive()) return;
+  if (IsShutdownInitiated()) return;
   global_tracing_listener->thread_pool_->Schedule([scope]() {
     ScopeToggle scope_toggle(&is_internal_update, true);
     absl::MutexLock lock(&global_tracing_mutex);

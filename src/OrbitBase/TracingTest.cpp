@@ -5,11 +5,9 @@
 #include <gtest/gtest.h>
 #include <stddef.h>
 
-#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <thread>
-#include <utility>
 #include <vector>
 
 #include "OrbitBase/ThreadUtils.h"
@@ -33,10 +31,15 @@ TEST(Tracing, Scopes) {
   constexpr size_t kNumExpectedScopesPerThread = 4;
 
   absl::flat_hash_map<uint32_t, std::vector<TracingScope>> scopes_by_thread_id;
+  std::once_flag thread_id_set_flag;
+  uint32_t callback_thread_id = 0;
   {
-    TracingListener tracing_listener([&scopes_by_thread_id](const TracingScope& scope) {
+    TracingListener tracing_listener([&scopes_by_thread_id, &thread_id_set_flag,
+                                      &callback_thread_id](const TracingScope& scope) {
       // Check that callback is called from a single thread.
-      static auto callback_thread_id = orbit_base::GetCurrentThreadId();
+      std::call_once(thread_id_set_flag, [&callback_thread_id] {
+        callback_thread_id = orbit_base::GetCurrentThreadId();
+      });
       EXPECT_EQ(orbit_base::GetCurrentThreadId(), callback_thread_id);
       scopes_by_thread_id[scope.tid].emplace_back(scope);
     });
