@@ -79,6 +79,9 @@ ErrorMessageOr<unique_fd> OpenNewFileForReadWrite(const std::filesystem::path& p
 
 ErrorMessageOr<void> WriteFully(const unique_fd& fd, std::string_view content);
 
+ErrorMessageOr<void> WriteFullyAtOffset(const unique_fd& fd, const void* buffer, size_t size,
+                                        off_t offset);
+
 // Tries to read 'size' bytes from the file to the buffer, returns actual
 // number of bytes read. Note that the return value is less then size in
 // the case when end of file was encountered.
@@ -86,6 +89,11 @@ ErrorMessageOr<void> WriteFully(const unique_fd& fd, std::string_view content);
 // Use this function only for reading from files. This function is not supposed to be
 // used for non-blocking reads from sockets/pipes - it does not handle EAGAIN.
 ErrorMessageOr<size_t> ReadFully(const unique_fd& fd, void* buffer, size_t size);
+
+// Same as above but tries to read from an offset. The file referenced by fd must be capable of
+// seeking. The same limitation for non-blocking reads as above applies here.
+ErrorMessageOr<size_t> ReadFullyAtOffset(const unique_fd& fd, void* buffer, size_t size,
+                                         off_t offset);
 
 }  // namespace orbit_base
 
