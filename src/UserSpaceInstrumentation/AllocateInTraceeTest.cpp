@@ -62,7 +62,7 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
   }
 
   // Stop the process using our tooling.
-  CHECK(AttachAndStopProcess(pid).has_value());
+  CHECK(!AttachAndStopProcess(pid).has_error());
 
   // Allocate a megabyte in the tracee.
   constexpr uint64_t kMemorySize = 1024 * 1024;
@@ -88,7 +88,7 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
   EXPECT_FALSE(ProcessHasRwxMapAtAddress(pid, result_allocate.value()));
 
   // Detach and end child.
-  CHECK(DetachAndContinueProcess(pid).has_value());
+  CHECK(!DetachAndContinueProcess(pid).has_error());
   kill(pid, SIGKILL);
   waitpid(pid, nullptr, 0);
 }

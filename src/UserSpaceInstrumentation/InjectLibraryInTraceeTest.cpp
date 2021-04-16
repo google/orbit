@@ -30,12 +30,12 @@ namespace {
 
 void OpenUseAndCloseLibrary(pid_t pid) {
   // Stop the child process using our tooling.
-  ASSERT_TRUE(AttachAndStopProcess(pid).has_value());
+  CHECK(!AttachAndStopProcess(pid).has_error());
 
   // Tracee does not have the dynamic lib loaded, obviously.
   const std::string kLibName = "libUserSpaceInstrumentationTestLib.so";
   auto maps_before = orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
-  ASSERT_TRUE(maps_before.has_value());
+  CHECK(maps_before.has_value());
   EXPECT_FALSE(absl::StrContains(maps_before.value(), kLibName));
 
   // Load dynamic lib into tracee.
@@ -45,7 +45,7 @@ void OpenUseAndCloseLibrary(pid_t pid) {
 
   // Tracee now does have the dynamic lib loaded.
   auto maps_after_open = orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
-  ASSERT_TRUE(maps_after_open.has_value());
+  CHECK(maps_after_open.has_value());
   EXPECT_TRUE(absl::StrContains(maps_after_open.value(), kLibName));
 
   // Look up symbol for "TrivialFunction" in the dynamic lib.
@@ -80,17 +80,17 @@ void OpenUseAndCloseLibrary(pid_t pid) {
 
   // Now, again, the lib is absent from the tracee.
   auto maps_after_close = orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
-  ASSERT_TRUE(maps_after_close.has_value());
+  CHECK(maps_after_close.has_value());
   EXPECT_FALSE(absl::StrContains(maps_after_close.value(), kLibName));
 
-  ASSERT_TRUE(DetachAndContinueProcess(pid).has_value());
+  CHECK(!DetachAndContinueProcess(pid).has_error());
 }
 
 }  // namespace
 
 TEST(InjectLibraryInTraceeTest, OpenUseAndCloseLibraryInUserCode) {
   pid_t pid = fork();
-  ASSERT_TRUE(pid != -1);
+  CHECK(pid != -1);
   if (pid == 0) {
     while (true) {
     }
@@ -105,7 +105,7 @@ TEST(InjectLibraryInTraceeTest, OpenUseAndCloseLibraryInUserCode) {
 
 TEST(InjectLibraryInTraceeTest, OpenUseAndCloseLibraryInSyscall) {
   pid_t pid = fork();
-  ASSERT_TRUE(pid != -1);
+  CHECK(pid != -1);
   if (pid == 0) {
     while (true) {
       // Child will be stuck in syscall sys_clock_nanosleep.
