@@ -5,6 +5,7 @@
 #ifndef USER_SPACE_INSTRUMENTATION_INJECT_LIBRARY_IN_TRACEE_H_
 #define USER_SPACE_INSTRUMENTATION_INJECT_LIBRARY_IN_TRACEE_H_
 
+#include <dlfcn.h>
 #include <sys/types.h>
 
 #include <cstdint>

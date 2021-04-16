@@ -22,7 +22,6 @@
 #include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ModuleData.h"
-#include "OrbitClientData/ProcessData.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 #include "capture.pb.h"
@@ -30,10 +29,12 @@
 
 using orbit_client_protos::FunctionInfo;
 
+using orbit_grpc_protos::ApiTableInfo;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::InstrumentedFunction;
+using orbit_grpc_protos::SymbolInfo;
 using orbit_grpc_protos::TracepointInfo;
 using orbit_grpc_protos::UnwindingMethod;
 
@@ -79,13 +80,12 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
   state_ = State::kStarting;
 
   auto capture_result = thread_pool->Schedule(
-      [this, process_id = process.pid(), &module_manager,
-       selected_functions = std::move(selected_functions), selected_tracepoints,
-       frame_track_function_ids = std::move(frame_track_function_ids), collect_thread_state,
-       samples_per_second, unwinding_method, enable_introspection,
+      [this, &process, &module_manager, selected_functions = std::move(selected_functions),
+       selected_tracepoints, frame_track_function_ids = std::move(frame_track_function_ids),
+       collect_thread_state, samples_per_second, unwinding_method, enable_introspection,
        max_local_marker_depth_per_command_buffer, collect_memory_info,
        memory_sampling_period_ns]() mutable {
-        return CaptureSync(process_id, module_manager, selected_functions, selected_tracepoints,
+        return CaptureSync(process, module_manager, selected_functions, selected_tracepoints,
                            frame_track_function_ids, samples_per_second, unwinding_method,
                            collect_thread_state, enable_introspection,
                            max_local_marker_depth_per_command_buffer, collect_memory_info,
@@ -95,8 +95,38 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
   return capture_result;
 }
 
+static void SetupApiTableInfos(const ProcessData& process,
+                               const orbit_client_data::ModuleManager& module_manager,
+                               CaptureOptions* capture_options) {
+  size_t kMaxApiVersion = 0;
+  const char* kOrbitApiPrefix = "g_orbit_api_v";
+  for (const ModuleData* module_data : module_manager.GetAllModuleData()) {
+    std::optional<uint64_t> base_address = process.GetModuleBaseAddress(module_data->file_path());
+    if (!base_address.has_value()) {
+      ERROR("No base address found for module %s", module_data->file_path());
+      continue;
+    }
+
+    // TODO: The global variable symbols will be obtained in the next PR.
+    // module_data->GetDataSymbolsFromName(kOrbitApiPrefix)
+    std::vector<SymbolInfo*> dummy_global_variables_symbol_infos;
+
+    for (const SymbolInfo* symbol_info : dummy_global_variables_symbol_infos) {
+      for (size_t i = 0; i <= kMaxApiVersion; ++i) {
+        std::string orbit_api_table_name = absl::StrFormat("%s%u", kOrbitApiPrefix, i);
+        if (symbol_info->name() != orbit_api_table_name) continue;
+        ApiTableInfo* api_table_info = capture_options->add_api_table_infos();
+        api_table_info->set_module_path(module_data->file_path());
+        api_table_info->set_api_table_address(symbol_info->address() + base_address.value());
+        api_table_info->set_api_table_size(symbol_info->size());
+        api_table_info->set_api_version(i);
+      }
+    }
+  }
+}
+
 ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
-    int32_t process_id, const orbit_client_data::ModuleManager& module_manager,
+    const ProcessData& process, const orbit_client_data::ModuleManager& module_manager,
     const absl::flat_hash_map<uint64_t, FunctionInfo>& selected_functions,
     const TracepointInfoSet& selected_tracepoints,
     absl::flat_hash_set<uint64_t> frame_track_function_ids, double samples_per_second,
@@ -117,7 +147,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   CaptureRequest request;
   CaptureOptions* capture_options = request.mutable_capture_options();
   capture_options->set_trace_context_switches(true);
-  capture_options->set_pid(process_id);
+  capture_options->set_pid(process.pid());
   if (samples_per_second == 0) {
     capture_options->set_unwinding_method(CaptureOptions::kUndefined);
   } else {
@@ -159,6 +189,8 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   }
 
   capture_options->set_enable_introspection(enable_introspection);
+
+  SetupApiTableInfos(process, module_manager, capture_options);
 
   bool request_write_succeeded;
   {
