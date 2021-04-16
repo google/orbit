@@ -98,8 +98,7 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
 static void SetupApiTableInfos(const ProcessData& process,
                                const orbit_client_data::ModuleManager& module_manager,
                                CaptureOptions* capture_options) {
-  size_t kMaxApiVersion = 0;
-  const char* kOrbitApiPrefix = "g_orbit_api_v";
+  constexpr const char* kOrbitApiPrefix = "g_orbit_api_v";
   for (const ModuleData* module_data : module_manager.GetAllModuleData()) {
     std::optional<uint64_t> base_address = process.GetModuleBaseAddress(module_data->file_path());
     if (!base_address.has_value()) {
@@ -112,12 +111,13 @@ static void SetupApiTableInfos(const ProcessData& process,
     std::vector<SymbolInfo*> dummy_global_variables_symbol_infos;
 
     for (const SymbolInfo* symbol_info : dummy_global_variables_symbol_infos) {
-      for (size_t i = 0; i <= kMaxApiVersion; ++i) {
+      for (size_t i = 0; i <= kOrbitApiVersion; ++i) {
         std::string orbit_api_table_name = absl::StrFormat("%s%u", kOrbitApiPrefix, i);
         if (symbol_info->name() != orbit_api_table_name) continue;
         ApiTableInfo* api_table_info = capture_options->add_api_table_infos();
         api_table_info->set_module_path(module_data->file_path());
-        api_table_info->set_api_table_address(symbol_info->address() + base_address.value());
+        api_table_info->set_api_table_address(symbol_info->address() + base_address.value() -
+                                              module_data->load_bias());
         api_table_info->set_api_table_size(symbol_info->size());
         api_table_info->set_api_version(i);
       }

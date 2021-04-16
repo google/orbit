@@ -8,14 +8,19 @@
 
 #include "Api/Orbit.h"
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/UniqueResource.h"
 #include "UserSpaceInstrumentation/Attach.h"
 #include "UserSpaceInstrumentation/ExecuteInProcess.h"
 #include "UserSpaceInstrumentation/InjectLibraryInTracee.h"
 
-using namespace orbit_user_space_instrumentation;
 using orbit_grpc_protos::ApiTableInfo;
 using orbit_grpc_protos::CaptureOptions;
+using orbit_user_space_instrumentation::AttachAndStopProcess;
+using orbit_user_space_instrumentation::DetachAndContinueProcess;
+using orbit_user_space_instrumentation::DlopenInTracee;
+using orbit_user_space_instrumentation::DlsymInTracee;
+using orbit_user_space_instrumentation::ExecuteInProcess;
 
 namespace orbit_api {
 ErrorMessageOr<void> InitializeInTracee(const CaptureOptions& capture_options) {
@@ -23,28 +28,28 @@ ErrorMessageOr<void> InitializeInTracee(const CaptureOptions& capture_options) {
     return ErrorMessage("No api table to initilize.");
   }
 
-  ErrorMessageOr<void> result = outcome::success();
   int32_t pid = capture_options.pid();
 
   OUTCOME_TRY(AttachAndStopProcess(pid));
-  {
-    // Make sure we resume the target process, even on early-outs.
-    orbit_base::unique_resource scope_exit{
-        pid, [&result](int32_t pid) { result = DetachAndContinueProcess(pid); }};
 
-    // Load liborbit.so and find api table initialization function.
-    const std::string kLibPath = orbit_base::GetExecutableDir() / "liborbit.so";
-    const char* kInitFunction = "orbit_api_initialize";
-    OUTCOME_TRY(handle, DlopenInTracee(pid, kLibPath, RTLD_NOW));
-    OUTCOME_TRY(address, DlsymInTracee(pid, handle, kInitFunction));
+  // Make sure we resume the target process, even on early-outs.
+  orbit_base::unique_resource scope_exit{pid, [](int32_t pid) {
+                                           if (DetachAndContinueProcess(pid).has_error())
+                                             ERROR("Detaching from %i", pid);
+                                         }};
 
-    // Initialize all api function tables.
-    for (const ApiTableInfo& info : capture_options.api_table_infos()) {
-      OUTCOME_TRY(ExecuteInProcess(pid, address, info.api_table_address(), info.api_version()));
-    }
+  // Load liborbit.so and find api table initialization function.
+  const std::string kLibPath = orbit_base::GetExecutableDir() / "liborbit.so";
+  constexpr const char* kInitFunction = "orbit_api_initialize";
+  OUTCOME_TRY(handle, DlopenInTracee(pid, kLibPath));
+  OUTCOME_TRY(address, DlsymInTracee(pid, handle, kInitFunction));
+
+  // Initialize all api function tables.
+  for (const ApiTableInfo& info : capture_options.api_table_infos()) {
+    OUTCOME_TRY(ExecuteInProcess(pid, address, info.api_table_address(), info.api_version()));
   }
 
-  return result;
+  return outcome::success();
 }
 
 }  // namespace orbit_api

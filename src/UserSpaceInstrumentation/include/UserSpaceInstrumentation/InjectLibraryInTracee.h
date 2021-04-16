@@ -20,7 +20,7 @@ namespace orbit_user_space_instrumentation {
 // functions offered by libdl as documented e.g. here: https://linux.die.net/man/3/dlopen. We rely
 // on either libdl or libc being loaded into the tracee.
 [[nodiscard]] ErrorMessageOr<void*> DlopenInTracee(pid_t pid, std::filesystem::path path,
-                                                   uint32_t flag);
+                                                   uint32_t flag = RTLD_NOW);
 [[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(pid_t pid, void* handle, std::string_view symbol);
 [[nodiscard]] ErrorMessageOr<void> DlcloseInTracee(pid_t pid, void* handle);
 
