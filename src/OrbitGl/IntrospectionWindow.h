@@ -25,7 +25,7 @@ class IntrospectionWindow : public CaptureWindow {
   void StartIntrospection();
   void StopIntrospection();
 
-  void Draw() override;
+  void Draw(bool viewport_was_dirty) override;
   void DrawScreenSpace() override;
   void RenderText(float layer) override;
 

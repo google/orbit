@@ -359,14 +359,14 @@ std::unique_ptr<AccessibleInterface> CaptureWindow::CreateAccessibleInterface() 
   return std::make_unique<AccessibleCaptureWindow>(this);
 }
 
-void CaptureWindow::Draw() {
+void CaptureWindow::Draw(bool viewport_was_dirty) {
   ORBIT_SCOPE("CaptureWindow::Draw");
   if (ShouldAutoZoom()) {
     ZoomAll();
   }
 
   if (time_graph_ != nullptr) {
-    if (viewport_.IsDirty()) {
+    if (viewport_was_dirty) {
       time_graph_->SetPos(0, 0);
       time_graph_->SetSize(viewport_.GetWorldExtents()[0], viewport_.GetWorldExtents()[1]);
 
