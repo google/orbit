@@ -172,7 +172,7 @@ TEST(AccessTraceesMemoryTest, WriteFailures) {
 
 TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
   pid_t pid = fork();
-  ASSERT_TRUE(pid != -1);
+  CHECK(pid != -1);
   if (pid == 0) {
     // Child just runs an endless loop.
     while (true) {
@@ -180,10 +180,10 @@ TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
   }
 
   // Stop the child process using our tooling.
-  ASSERT_TRUE(AttachAndStopProcess(pid).has_value());
+  CHECK(!AttachAndStopProcess(pid).has_error());
 
   auto memory_region_or_error = GetFirstExecutableMemoryRegion(pid);
-  ASSERT_TRUE(memory_region_or_error.has_value());
+  CHECK(memory_region_or_error.has_value());
   const uint64_t address = memory_region_or_error.value().first;
 
   constexpr uint64_t kMemorySize = 4 * 1024;
@@ -203,8 +203,8 @@ TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
   EXPECT_EQ(new_data, read_back_or_error.value());
 
   // Restore, detach and end child.
-  ASSERT_TRUE(WriteTraceesMemory(pid, address, backup.value()).has_value());
-  ASSERT_FALSE(DetachAndContinueProcess(pid).has_error());
+  CHECK(WriteTraceesMemory(pid, address, backup.value()).has_value());
+  CHECK(!DetachAndContinueProcess(pid).has_error());
   kill(pid, SIGKILL);
   waitpid(pid, NULL, 0);
 }
