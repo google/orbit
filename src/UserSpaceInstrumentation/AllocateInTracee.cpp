@@ -38,10 +38,10 @@ namespace {
                                                        uint64_t arg_3, uint64_t arg_4,
                                                        uint64_t arg_5, uint64_t exclude_address) {
   RegisterState original_registers;
-  auto result_backup = original_registers.BackupRegisters(pid);
-  if (result_backup.has_error()) {
+  auto register_backup_result = original_registers.BackupRegisters(pid);
+  if (register_backup_result.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to backup original register state: \"%s\"",
-                                        result_backup.error().message()));
+                                        register_backup_result.error().message()));
   }
   if (original_registers.GetBitness() != RegisterState::Bitness::k64Bit) {
     return ErrorMessage(
@@ -49,30 +49,30 @@ namespace {
   }
 
   // Get an executable memory region.
-  auto result_memory_region = GetFirstExecutableMemoryRegion(pid, exclude_address);
-  if (result_memory_region.has_error()) {
+  auto memory_region_or_error = GetFirstExecutableMemoryRegion(pid, exclude_address);
+  if (memory_region_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to find executable memory region: \"%s\"",
-                                        result_memory_region.error().message()));
+                                        memory_region_or_error.error().message()));
   }
-  const uint64_t address_start = result_memory_region.value().first;
+  const uint64_t start_address = memory_region_or_error.value().first;
 
   // Backup first 8 bytes.
-  auto result_backup_code = ReadTraceesMemory(pid, address_start, 8);
-  if (result_backup_code.has_error()) {
+  auto backup_or_error = ReadTraceesMemory(pid, start_address, 8);
+  if (backup_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to read from tracee's memory: \"%s\"",
-                                        result_backup_code.error().message()));
+                                        backup_or_error.error().message()));
   }
 
   // Write `syscall` into memory. Machine code is `0x0f05`.
-  auto result_write_code = WriteTraceesMemory(pid, address_start, std::vector<uint8_t>{0x0f, 0x05});
-  if (result_write_code.has_error()) {
+  auto write_code_result = WriteTraceesMemory(pid, start_address, std::vector<uint8_t>{0x0f, 0x05});
+  if (write_code_result.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to write to tracee's memory: \"%s\"",
-                                        result_write_code.error().message()));
+                                        write_code_result.error().message()));
   }
 
   // Move instruction pointer to the `syscall` and fill registers with parameters.
   RegisterState registers_for_syscall = original_registers;
-  registers_for_syscall.GetGeneralPurposeRegisters()->x86_64.rip = address_start;
+  registers_for_syscall.GetGeneralPurposeRegisters()->x86_64.rip = start_address;
   registers_for_syscall.GetGeneralPurposeRegisters()->x86_64.rax = syscall;
   // Register list for arguments can be found e.g. in the glibc wrapper:
   // https://github.com/bminor/glibc/blob/master/sysdeps/unix/sysv/linux/x86_64/syscall.S#L30
@@ -82,10 +82,10 @@ namespace {
   registers_for_syscall.GetGeneralPurposeRegisters()->x86_64.r10 = arg_3;
   registers_for_syscall.GetGeneralPurposeRegisters()->x86_64.r8 = arg_4;
   registers_for_syscall.GetGeneralPurposeRegisters()->x86_64.r9 = arg_5;
-  auto result_restore_registers = registers_for_syscall.RestoreRegisters();
-  if (result_restore_registers.has_error()) {
+  auto restore_registers_result = registers_for_syscall.RestoreRegisters();
+  if (restore_registers_result.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to set registers with syscall parameters: \"%s\"",
-                                        result_restore_registers.error().message()));
+                                        restore_registers_result.error().message()));
   }
 
   // Single step to execute the syscall.
@@ -100,29 +100,29 @@ namespace {
 
   // Return value of syscalls is in rax.
   RegisterState return_value;
-  auto result_backup_return_value = return_value.BackupRegisters(pid);
-  if (result_backup_return_value.has_error()) {
+  auto return_value_result = return_value.BackupRegisters(pid);
+  if (return_value_result.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to get registers with mmap result: \"%s\"",
-                                        result_backup_return_value.error().message()));
+                                        return_value_result.error().message()));
   }
   const uint64_t result = return_value.GetGeneralPurposeRegisters()->x86_64.rax;
   // Syscalls return -4095, ..., -1 on failure. And these are actually (-1 * errno)
-  const int64_t result_as_int = absl::bit_cast<uint64_t>(result);
+  const int64_t result_as_int = absl::bit_cast<int64_t>(result);
   if (result_as_int > -4096 && result_as_int < 0) {
     return ErrorMessage(absl::StrFormat("syscall failed. Return value: %s (%d)",
                                         SafeStrerror(-result_as_int), result_as_int));
   }
 
   // Clean up memory and registers.
-  auto result_restore_memory = WriteTraceesMemory(pid, address_start, result_backup_code.value());
-  if (result_restore_memory.has_error()) {
+  auto restore_memory_result = WriteTraceesMemory(pid, start_address, backup_or_error.value());
+  if (restore_memory_result.has_error()) {
     FATAL("Unable to restore memory state of tracee: \"%s\"",
-          result_restore_memory.error().message());
+          restore_memory_result.error().message());
   }
-  result_restore_registers = original_registers.RestoreRegisters();
-  if (result_restore_registers.has_error()) {
+  restore_registers_result = original_registers.RestoreRegisters();
+  if (restore_registers_result.has_error()) {
     FATAL("Unable to restore register state of tracee: \"%s\"",
-          result_restore_registers.error().message());
+          restore_registers_result.error().message());
   }
 
   return result;
@@ -144,9 +144,9 @@ namespace {
   }
   const uint64_t result = result_or_error.value();
   if (address != 0 && result != address) {
-    auto error_or_void = FreeInTracee(pid, result, size);
-    FAIL_IF(error_or_void.has_error(), "Unable to free proviously allocated memory: \"%s\"",
-            error_or_void.error().message());
+    auto free_memory_result = FreeInTracee(pid, result, size);
+    FAIL_IF(free_memory_result.has_error(), "Unable to free proviously allocated memory: \"%s\"",
+            free_memory_result.error().message());
     return ErrorMessage(
         absl::StrFormat("AllocateInTracee wanted to allocate memory at %#x but got memory at a "
                         "different adress: %#x. The memory has been freed again.",

@@ -36,8 +36,8 @@ constexpr const char* kDlcloseInLibc = "__libc_dlclose";
 // In certain error conditions the tracee is damaged and we don't try to recover from that. We just
 // abort with a fatal log message. None of these errors are expected to occur in operation
 // obviously.
-void FreeMemoryOrDie(pid_t pid, uint64_t address_code, uint64_t size) {
-  auto result = FreeInTracee(pid, address_code, size);
+void FreeMemoryOrDie(pid_t pid, uint64_t code_address, uint64_t size) {
+  auto result = FreeInTracee(pid, code_address, size);
   FAIL_IF(result.has_error(), "Unable to free previously allocated memory in tracee: \"%s\"",
           result.error().message());
 }
@@ -70,24 +70,24 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
 [[nodiscard]] ErrorMessageOr<void*> DlopenInTracee(pid_t pid, std::filesystem::path path,
                                                    uint32_t flag) {
   // Figure out address of dlopen.
-  OUTCOME_TRY(address_dlopen, FindFunctionAddressWithFallback(pid, kLibdlSoname, kDlopenInLibdl,
+  OUTCOME_TRY(dlopen_address, FindFunctionAddressWithFallback(pid, kLibdlSoname, kDlopenInLibdl,
                                                               kLibcSoname, kDlopenInLibc));
 
   // Allocate small memory area in the tracee. This is used for the code and the path name.
   const uint64_t path_length = path.string().length() + 1;  // Include terminating zero.
   const uint64_t memory_size = kCodeScratchPadSize + path_length;
   OUTCOME_TRY(address, AllocateInTracee(pid, 0, memory_size));
-  orbit_base::unique_resource address_code{address, [&pid, &memory_size](uint64_t address) {
+  orbit_base::unique_resource code_address{address, [&pid, &memory_size](uint64_t address) {
                                              FreeMemoryOrDie(pid, address, memory_size);
                                            }};
 
-  // Write the name of the .so into memory at address_code with offset of kCodeScratchPadSize.
+  // Write the name of the .so into memory at code_address with offset of kCodeScratchPadSize.
   std::vector<uint8_t> path_as_vector(path_length);
   memcpy(path_as_vector.data(), path.c_str(), path_length);
-  const uint64_t address_so_path = address_code + kCodeScratchPadSize;
-  auto result_write_path = WriteTraceesMemory(pid, address_so_path, path_as_vector);
-  if (result_write_path.has_error()) {
-    return result_write_path.error();
+  const uint64_t so_path_address = code_address + kCodeScratchPadSize;
+  auto write_memory_result = WriteTraceesMemory(pid, so_path_address, path_as_vector);
+  if (write_memory_result.has_error()) {
+    return write_memory_result.error();
   }
 
   // We want to do the following in the tracee:
@@ -97,22 +97,22 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   // address of dlopen into rax and do the call. Assembly in Intel syntax (destination first),
   // machine code on the right:
 
-  // movabsq rdi, address_so_path     48 bf address_so_path
+  // movabsq rdi, so_path_address     48 bf so_path_address
   // movl esi, flag                   be flag
-  // movabsq rax, address_dlopen      48 b8 address_dlopen
+  // movabsq rax, dlopen_address      48 b8 dlopen_address
   // call rax                         ff d0
   // int3                             cc
   MachineCode code;
   code.AppendBytes({0x48, 0xbf})
-      .AppendImmediate64(address_so_path)
+      .AppendImmediate64(so_path_address)
       .AppendBytes({0xbe})
       .AppendImmediate32(flag)
       .AppendBytes({0x48, 0xb8})
-      .AppendImmediate64(address_dlopen)
+      .AppendImmediate64(dlopen_address)
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-  OUTCOME_TRY(return_value, ExecuteMachineCode(pid, address_code, code));
+  OUTCOME_TRY(return_value, ExecuteMachineCode(pid, code_address, code));
 
   return absl::bit_cast<void*>(return_value);
 }
@@ -120,25 +120,24 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
 [[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(pid_t pid, void* handle,
                                                   std::string_view symbol) {
   // Figure out address of dlsym.
-  OUTCOME_TRY(address_dlsym, FindFunctionAddressWithFallback(pid, kLibdlSoname, kDlsymInLibdl,
+  OUTCOME_TRY(dlsym_address, FindFunctionAddressWithFallback(pid, kLibdlSoname, kDlsymInLibdl,
                                                              kLibcSoname, kDlsymInLibc));
 
   // Allocate small memory area in the tracee. This is used for the code and the symbol name.
   const size_t symbol_name_length = symbol.length() + 1;  // include terminating zero
   const uint64_t memory_size = kCodeScratchPadSize + symbol_name_length;
   OUTCOME_TRY(address, AllocateInTracee(pid, 0, memory_size));
-  orbit_base::unique_resource address_code{address, [&pid, &memory_size](uint64_t address) {
+  orbit_base::unique_resource code_address{address, [&pid, &memory_size](uint64_t address) {
                                              FreeMemoryOrDie(pid, address, memory_size);
                                            }};
 
-  // Write the name of symbol into memory at address_code with offset of kCodeScratchPadSize.
+  // Write the name of symbol into memory at code_address with offset of kCodeScratchPadSize.
   std::vector<uint8_t> symbol_name_as_vector(symbol_name_length, 0);
   memcpy(symbol_name_as_vector.data(), symbol.data(), symbol.length());
-  const uint64_t address_symbol_name = address_code + kCodeScratchPadSize;
-  auto result_write_symbol_name =
-      WriteTraceesMemory(pid, address_symbol_name, symbol_name_as_vector);
-  if (result_write_symbol_name.has_error()) {
-    return result_write_symbol_name.error();
+  const uint64_t symbol_name_address = code_address + kCodeScratchPadSize;
+  auto write_memory_result = WriteTraceesMemory(pid, symbol_name_address, symbol_name_as_vector);
+  if (write_memory_result.has_error()) {
+    return write_memory_result.error();
   }
 
   // We want to do the following in the tracee:
@@ -149,54 +148,54 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   // machine code on the right:
 
   // movabsq rdi, handle              48 bf handle
-  // movabsq rsi, address_symbol_name 48 be address_symbol_name
-  // movabsq rax, address_dlsym       48 b8 address_dlsym
+  // movabsq rsi, symbol_name_address 48 be symbol_name_address
+  // movabsq rax, dlsym_address       48 b8 dlsym_address
   // call rax                         ff d0
   // int3                             cc
   MachineCode code;
   code.AppendBytes({0x48, 0xbf})
       .AppendImmediate64(absl::bit_cast<uint64_t>(handle))
       .AppendBytes({0x48, 0xbe})
-      .AppendImmediate64(address_symbol_name)
+      .AppendImmediate64(symbol_name_address)
       .AppendBytes({0x48, 0xb8})
-      .AppendImmediate64(address_dlsym)
+      .AppendImmediate64(dlsym_address)
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-  OUTCOME_TRY(return_value, ExecuteMachineCode(pid, address_code, code));
+  OUTCOME_TRY(return_value, ExecuteMachineCode(pid, code_address, code));
 
   return absl::bit_cast<void*>(return_value);
 }
 
 [[nodiscard]] ErrorMessageOr<void> DlcloseInTracee(pid_t pid, void* handle) {
   // Figure out address of dlclose.
-  OUTCOME_TRY(address_dlclose, FindFunctionAddressWithFallback(pid, kLibdlSoname, kDlcloseInLibdl,
+  OUTCOME_TRY(dlclose_address, FindFunctionAddressWithFallback(pid, kLibdlSoname, kDlcloseInLibdl,
                                                                kLibcSoname, kDlcloseInLibc));
 
   // Allocate small memory area in the tracee.
   OUTCOME_TRY(address, AllocateInTracee(pid, 0, kCodeScratchPadSize));
-  orbit_base::unique_resource address_code{
+  orbit_base::unique_resource code_address{
       address, [&pid](uint64_t address) { FreeMemoryOrDie(pid, address, kCodeScratchPadSize); }};
 
   // We want to do the following in the tracee:
   // dlclose(handle);
   // The calling convention is to put the parameter in registers rdi. Then we load the address of
-  // address_dlclose into rax and do the call. Assembly in Intel syntax (destination first), machine
+  // dlclose_address into rax and do the call. Assembly in Intel syntax (destination first), machine
   // code on the right:
 
   // movabsq rdi, handle              48 bf handle
-  // movabsq rax, address_dlclose     48 b8 address_dlclose
+  // movabsq rax, dlclose_address     48 b8 dlclose_address
   // call rax                         ff d0
   // int3                             cc
   MachineCode code;
   code.AppendBytes({0x48, 0xbf})
       .AppendImmediate64(absl::bit_cast<uint64_t>(handle))
       .AppendBytes({0x48, 0xb8})
-      .AppendImmediate64(address_dlclose)
+      .AppendImmediate64(dlclose_address)
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-  auto return_value_or_error = ExecuteMachineCode(pid, address_code, code);
+  auto return_value_or_error = ExecuteMachineCode(pid, code_address, code);
   if (return_value_or_error.has_error()) {
     return return_value_or_error.error();
   }

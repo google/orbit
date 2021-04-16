@@ -14,15 +14,15 @@
 
 namespace orbit_user_space_instrumentation {
 
-// Read `length` bytes from process `pid` starting at `address_start`.
+// Read `length` bytes from process `pid` starting at `start_address`.
 // Assumes we are already attached to the tracee `pid` e.g. using `AttachAndStopProcess`.
 [[nodiscard]] ErrorMessageOr<std::vector<uint8_t>> ReadTraceesMemory(pid_t pid,
-                                                                     uint64_t address_start,
+                                                                     uint64_t start_address,
                                                                      uint64_t length);
 
-// Write `bytes` into memory of process `pid` starting from `address_start`.
+// Write `bytes` into memory of process `pid` starting from `start_address`.
 // Assumes we are already attached to the tracee `pid` e.g. using `AttachAndStopProcess`.
-[[nodiscard]] ErrorMessageOr<void> WriteTraceesMemory(pid_t pid, uint64_t address_start,
+[[nodiscard]] ErrorMessageOr<void> WriteTraceesMemory(pid_t pid, uint64_t start_address,
                                                       const std::vector<uint8_t>& bytes);
 
 // Returns the address range of the first executable memory region. In every case I encountered this

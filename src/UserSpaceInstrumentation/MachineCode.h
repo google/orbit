@@ -18,7 +18,7 @@ namespace orbit_user_space_instrumentation {
 //     .AppendBytes({0xff, 0xd0})
 //     .AppendBytes({0xcc});
 //
-// WriteTraceesMemory(pid, address_code, code.GetResultAsVector());
+// WriteTraceesMemory(pid, code_address, code.GetResultAsVector());
 //
 class MachineCode {
  public:

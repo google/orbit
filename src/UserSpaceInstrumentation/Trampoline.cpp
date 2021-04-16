@@ -103,17 +103,17 @@ ErrorMessageOr<AddressRange> FindAddressRangeForTrampoline(
   }
   while (optional_range_index.value() > 0) {
     // Place directly to the left of the take interval we are in...
-    uint64_t address_trampoline = unavailable_ranges[optional_range_index.value()].start - size;
+    uint64_t trampoline_address = unavailable_ranges[optional_range_index.value()].start - size;
     // ... but round down to page boundary.
-    address_trampoline = (address_trampoline / page_size) * page_size;
-    AddressRange range_trampoline = {address_trampoline, address_trampoline + size};
-    optional_range_index = LowestIntersectingAddressRange(unavailable_ranges, range_trampoline);
+    trampoline_address = (trampoline_address / page_size) * page_size;
+    AddressRange trampoline_range = {trampoline_address, trampoline_address + size};
+    optional_range_index = LowestIntersectingAddressRange(unavailable_ranges, trampoline_range);
     if (!optional_range_index) {
       // We do not intersect any taken interval. Check if we are close enough to code_range:
-      // code_range is above range_trampoline we will need to jmp back and forth in these ranges
+      // code_range is above trampoline_range we will need to jmp back and forth in these ranges
       // with 32 bit offsets. If no distance is greater than 0x7fffffff this is safe.
-      if (code_range.end - range_trampoline.start <= kMax32BitOffset) {
-        return range_trampoline;
+      if (code_range.end - trampoline_range.start <= kMax32BitOffset) {
+        return trampoline_range;
       }
       // If we are already beyond the close range there is no need to go any further.
       break;
@@ -127,21 +127,21 @@ ErrorMessageOr<AddressRange> FindAddressRangeForTrampoline(
                                         code_range.start, code_range.end));
   }
   do {
-    const uint64_t address_trampoline =
+    const uint64_t trampoline_address =
         ((unavailable_ranges[optional_range_index.value()].end + (page_size - 1)) / page_size) *
         page_size;
     // Check if we ran out of address space.
-    if (address_trampoline >= kMax64BitAdress - size) {
+    if (trampoline_address >= kMax64BitAdress - size) {
       break;
     }
-    AddressRange range_trampoline = {address_trampoline, address_trampoline + size};
-    optional_range_index = HighestIntersectingAddressRange(unavailable_ranges, range_trampoline);
+    AddressRange trampoline_range = {trampoline_address, trampoline_address + size};
+    optional_range_index = HighestIntersectingAddressRange(unavailable_ranges, trampoline_range);
     if (!optional_range_index) {
       // We do not intersect any taken interval. Check if we are close enough to code_range:
-      // code_range is below range_trampoline we will need to jump back and forth in these ranges
+      // code_range is below trampoline_range we will need to jump back and forth in these ranges
       // with 32 bit offsets. If no distance is greater than 0x7fffffff this is safe.
-      if (range_trampoline.end - code_range.start <= kMax32BitOffset) {
-        return range_trampoline;
+      if (trampoline_range.end - code_range.start <= kMax32BitOffset) {
+        return trampoline_range;
       }
       // If we are already beyond the close range there is no need to go any further.
       break;
