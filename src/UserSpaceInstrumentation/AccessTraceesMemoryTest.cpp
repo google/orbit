@@ -31,11 +31,11 @@ namespace {
 
 using ::testing::HasSubstr;
 
-AddressRange AddressRangeFromString(const std::string& address_string) {
+AddressRange AddressRangeFromString(const std::string& string_address) {
   AddressRange result;
-  const std::vector<std::string> addresses = absl::StrSplit(address_string, '-');
+  const std::vector<std::string> addresses = absl::StrSplit(string_address, '-');
   if (addresses.size() != 2) {
-    FATAL("Not an address range: %s", address_string);
+    FATAL("Not an address range: %s", string_address);
   }
   if (!absl::numbers_internal::safe_strtou64_base(addresses[0], &result.first, 16)) {
     FATAL("Not a number: %s", addresses[0]);

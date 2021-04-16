@@ -14,11 +14,11 @@
 
 namespace orbit_user_space_instrumentation {
 
-// Copies `code` to `address_code` in the tracee and executes it. The memory at `address_code` needs
+// Copies `code` to `code_address` in the tracee and executes it. The memory at `code_address` needs
 // to be allocated using AllocateInTracee. The code segment has to end with an `int3`. Takes care of
 // backup and restore of register state in the tracee.
 // The return value is the content of rax after the execution finished.
-[[nodiscard]] ErrorMessageOr<uint64_t> ExecuteMachineCode(pid_t pid, uint64_t address_code,
+[[nodiscard]] ErrorMessageOr<uint64_t> ExecuteMachineCode(pid_t pid, uint64_t code_address,
                                                           const MachineCode& code);
 
 }  // namespace orbit_user_space_instrumentation

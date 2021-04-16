@@ -37,16 +37,16 @@ uint64_t GetReturnValueOrDie(pid_t pid) {
 
 }  // namespace
 
-ErrorMessageOr<uint64_t> ExecuteMachineCode(pid_t pid, uint64_t address_code,
+ErrorMessageOr<uint64_t> ExecuteMachineCode(pid_t pid, uint64_t code_address,
                                             const MachineCode& code) {
-  OUTCOME_TRY(WriteTraceesMemory(pid, address_code, code.GetResultAsVector()));
+  OUTCOME_TRY(WriteTraceesMemory(pid, code_address, code.GetResultAsVector()));
 
   // Backup registers.
   RegisterState original_registers;
   OUTCOME_TRY(original_registers.BackupRegisters(pid));
 
   RegisterState registers_for_execution = original_registers;
-  registers_for_execution.GetGeneralPurposeRegisters()->x86_64.rip = address_code;
+  registers_for_execution.GetGeneralPurposeRegisters()->x86_64.rip = code_address;
   // The calling convention for x64 assumes the 128 bytes below rsp to be usable as a scratch pad
   // for the current function. This area is called the 'red zone'. The function we interrupted might
   // have stored temporary data in the red zone and the function we are about to execute might do

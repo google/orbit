@@ -24,14 +24,14 @@ namespace orbit_user_space_instrumentation {
 using orbit_base::ReadFileToString;
 
 [[nodiscard]] ErrorMessageOr<std::vector<uint8_t>> ReadTraceesMemory(pid_t pid,
-                                                                     uint64_t address_start,
+                                                                     uint64_t start_address,
                                                                      uint64_t length) {
   CHECK(length != 0);
 
   OUTCOME_TRY(fd, orbit_base::OpenFileForReading(absl::StrFormat("/proc/%d/mem", pid)));
 
   std::vector<uint8_t> bytes(length);
-  OUTCOME_TRY(result, ReadFullyAtOffset(fd, bytes.data(), length, address_start));
+  OUTCOME_TRY(result, ReadFullyAtOffset(fd, bytes.data(), length, start_address));
 
   if (result < length) {
     return ErrorMessage(absl::StrFormat(
@@ -42,13 +42,13 @@ using orbit_base::ReadFileToString;
   return bytes;
 }
 
-[[nodiscard]] ErrorMessageOr<void> WriteTraceesMemory(pid_t pid, uint64_t address_start,
+[[nodiscard]] ErrorMessageOr<void> WriteTraceesMemory(pid_t pid, uint64_t start_address,
                                                       const std::vector<uint8_t>& bytes) {
   CHECK(!bytes.empty());
 
   OUTCOME_TRY(fd, orbit_base::OpenFileForWriting(absl::StrFormat("/proc/%d/mem", pid)));
 
-  OUTCOME_TRY(WriteFullyAtOffset(fd, bytes.data(), bytes.size(), address_start));
+  OUTCOME_TRY(WriteFullyAtOffset(fd, bytes.data(), bytes.size(), start_address));
 
   return outcome::success();
 }

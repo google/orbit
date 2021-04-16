@@ -39,9 +39,9 @@ void OpenUseAndCloseLibrary(pid_t pid) {
   EXPECT_FALSE(absl::StrContains(maps_before.value(), kLibName));
 
   // Load dynamic lib into tracee.
-  auto result_dlopen =
+  auto library_handle_or_error =
       DlopenInTracee(pid, orbit_base::GetExecutableDir() / ".." / "lib" / kLibName, RTLD_NOW);
-  ASSERT_TRUE(result_dlopen.has_value());
+  ASSERT_TRUE(library_handle_or_error.has_value());
 
   // Tracee now does have the dynamic lib loaded.
   auto maps_after_open = orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
@@ -49,33 +49,33 @@ void OpenUseAndCloseLibrary(pid_t pid) {
   EXPECT_TRUE(absl::StrContains(maps_after_open.value(), kLibName));
 
   // Look up symbol for "TrivialFunction" in the dynamic lib.
-  auto result_dlsym = DlsymInTracee(pid, result_dlopen.value(), "TrivialFunction");
-  ASSERT_TRUE(result_dlsym.has_value());
-  const uint64_t address_function = absl::bit_cast<uint64_t>(result_dlsym.value());
+  auto dlsym_or_error = DlsymInTracee(pid, library_handle_or_error.value(), "TrivialFunction");
+  ASSERT_TRUE(dlsym_or_error.has_value());
+  const uint64_t function_address = absl::bit_cast<uint64_t>(dlsym_or_error.value());
 
   // Write machine code to call "TrivialFunction" from the dynamic lib.
   constexpr uint64_t kScratchPadSize = 1024;
-  auto result_address_code = AllocateInTracee(pid, 0, kScratchPadSize);
-  ASSERT_TRUE(result_address_code.has_value());
-  const uint64_t address_code = result_address_code.value();
+  auto address_or_error = AllocateInTracee(pid, 0, kScratchPadSize);
+  ASSERT_TRUE(address_or_error.has_value());
+  const uint64_t address = address_or_error.value();
   // Move function's address to rax, do the call, and hit a breakpoint:
-  // movabs rax, address_function     48 b8 address_function
+  // movabs rax, function_address     48 b8 function_address
   // call rax                         ff d0
   // int3                             cc
   MachineCode code;
   code.AppendBytes({0x48, 0xb8})
-      .AppendImmediate64(address_function)
+      .AppendImmediate64(function_address)
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-  auto result_or_error = ExecuteMachineCode(pid, address_code, code);
+  auto result_or_error = ExecuteMachineCode(pid, address, code);
   ASSERT_FALSE(result_or_error.has_error());
   EXPECT_EQ(42, result_or_error.value());
 
-  ASSERT_FALSE(FreeInTracee(pid, address_code, kScratchPadSize).has_error());
+  ASSERT_FALSE(FreeInTracee(pid, address, kScratchPadSize).has_error());
 
   // Close the library.
-  auto result_dlclose = DlcloseInTracee(pid, result_dlopen.value());
+  auto result_dlclose = DlcloseInTracee(pid, library_handle_or_error.value());
   ASSERT_FALSE(result_dlclose.has_error()) << result_dlclose.error().message();
 
   // Now, again, the lib is absent from the tracee.
