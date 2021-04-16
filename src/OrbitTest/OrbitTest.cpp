@@ -24,7 +24,8 @@
 // removed once we split the introspection and manual instrumentation apis TODO(b/182848566).
 namespace orbit_api_wrapper {
 #include "Api/Orbit.h"
-}
+orbit_api_v0 g_orbit_api_v0;
+}  // namespace orbit_api_wrapper
 
 using namespace orbit_api_wrapper;
 

@@ -10,7 +10,6 @@
 #include <functional>
 #include <memory>
 
-#define ORBIT_API_INTERNAL_IMPL
 #include "Api/EncodedEvent.h"
 #include "Api/Orbit.h"
 #include "OrbitBase/ThreadPool.h"

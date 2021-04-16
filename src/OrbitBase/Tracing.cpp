@@ -26,7 +26,12 @@ using orbit_base::TracingTimerCallback;
 ABSL_CONST_INIT static absl::Mutex global_tracing_mutex(absl::kConstInit);
 ABSL_CONST_INIT static TracingListener* global_tracing_listener = nullptr;
 
+// Tracing uses the same function table used by the Orbit API, but specifies its own functions.
+orbit_api_v0 g_orbit_api_v0;
+
 namespace orbit_base {
+
+void InitializeTracing();
 
 TracingScope::TracingScope(orbit_api::EventType type, const char* name, uint64_t data,
                            orbit_api_color color)
@@ -42,6 +47,7 @@ TracingListener::TracingListener(TracingTimerCallback callback) {
   // Activate listener (only one listener instance is supported).
   absl::MutexLock lock(&global_tracing_mutex);
   CHECK(!IsActive());
+  orbit_base::InitializeTracing();
   global_tracing_listener = this;
   active_ = true;
 }
@@ -91,8 +97,6 @@ void TracingListener::DeferScopeProcessing(const TracingScope& scope) {
   });
 }
 
-#ifdef ORBIT_API_INTERNAL_IMPL
-
 static std::vector<TracingScope>& GetThreadLocalScopes() {
   thread_local std::vector<TracingScope> thread_local_scopes;
   return thread_local_scopes;
@@ -106,7 +110,9 @@ void orbit_api_start(const char* name, orbit_api_color color) {
 }
 
 void orbit_api_stop() {
-  auto& scope = GetThreadLocalScopes().back();
+  std::vector<TracingScope>& thread_local_scopes = GetThreadLocalScopes();
+  if (thread_local_scopes.size() == 0) return;
+  auto& scope = thread_local_scopes.back();
   scope.end = orbit_base::CaptureTimestampNs();
   scope.depth = GetThreadLocalScopes().size() - 1;
   scope.tid = static_cast<uint32_t>(orbit_base::GetCurrentThreadId());
@@ -176,4 +182,24 @@ void orbit_api_track_double(const char* name, double value, orbit_api_color colo
   TrackValue(orbit_api::kTrackDouble, name, orbit_api::Encode<uint64_t>(value), color);
 }
 
-#endif
+namespace orbit_base {
+
+void InitializeTracing() {
+  if (g_orbit_api_v0.initialized != 0) return;
+  g_orbit_api_v0.start = &orbit_api_start;
+  g_orbit_api_v0.stop = &orbit_api_stop;
+  g_orbit_api_v0.start_async = &orbit_api_start_async;
+  g_orbit_api_v0.stop_async = &orbit_api_stop_async;
+  g_orbit_api_v0.async_string = &orbit_api_async_string;
+  g_orbit_api_v0.track_int = &orbit_api_track_int;
+  g_orbit_api_v0.track_int64 = &orbit_api_track_int64;
+  g_orbit_api_v0.track_uint = &orbit_api_track_uint;
+  g_orbit_api_v0.track_uint64 = &orbit_api_track_uint64;
+  g_orbit_api_v0.track_float = &orbit_api_track_float;
+  g_orbit_api_v0.track_double = &orbit_api_track_double;
+  g_orbit_api_v0.initialized = 1;
+  std::atomic_thread_fence(std::memory_order_release);
+  g_orbit_api_v0.active = 1;
+}
+
+}  // namespace orbit_base

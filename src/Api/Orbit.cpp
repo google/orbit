@@ -5,6 +5,8 @@
 #define ORBIT_API_INTERNAL_IMPL
 #include "Api/Orbit.h"
 
+#include <absl/base/casts.h>
+
 #include "Api/EncodedEvent.h"
 #include "Api/LockFreeApiEventProducer.h"
 #include "OrbitBase/Profiling.h"
@@ -74,5 +76,45 @@ void orbit_api_async_string(const char* str, uint64_t id, orbit_api_color color)
     EnqueueApiEvent(orbit_api::EventType::kString, buffer, id, color);
     str += chunk_size;
   }
+}
+
+static void orbit_api_initialize_v0(uint64_t address) {
+  // The api function table is accessed by user code using this pattern:
+  //
+  // bool active = api->active;
+  // std::atomic_thread_fence(std::memory_order_acquire)
+  // if(active && api->orbit_api_function_name) api->orbit_api_function_name(...);
+  //
+  // We use acquire and release semantics to make sure that when api->active is set, all the
+  // function pointers have been assigned and are visible to other cores.
+
+  orbit_api_v0* api = absl::bit_cast<orbit_api_v0*>(address);
+  if (api->initialized != 0) return;
+  api->start = &orbit_api_start;
+  api->stop = &orbit_api_stop;
+  api->start_async = &orbit_api_start_async;
+  api->stop_async = &orbit_api_stop_async;
+  api->async_string = &orbit_api_async_string;
+  api->track_int = &orbit_api_track_int;
+  api->track_int64 = &orbit_api_track_int64;
+  api->track_uint = &orbit_api_track_uint;
+  api->track_uint64 = &orbit_api_track_uint64;
+  api->track_float = &orbit_api_track_float;
+  api->track_double = &orbit_api_track_double;
+  api->initialized = 1;
+  std::atomic_thread_fence(std::memory_order_release);
+  api->active = 1;
+}
+
+void orbit_api_initialize(uint64_t address, uint64_t api_version) {
+  LOG("Initializing Orbit API at address %#x, version %u", address, api_version);
+  if (api_version > kOrbitApiVersion) {
+    ERROR(
+        "Orbit API version in tracee (%u) is newer than the max supported version (%u). "
+        "Some features will be unavailable.",
+        api_version, kOrbitApiVersion);
+  }
+
+  if (api_version >= 0) orbit_api_initialize_v0(address);
 }
 }
