@@ -55,7 +55,7 @@ class CaptureWindow : public GlCanvas {
   Batcher& GetBatcherById(BatcherId batcher_id);
 
  protected:
-  void Draw() override;
+  void Draw(bool viewport_was_dirty) override;
 
   virtual void DrawScreenSpace();
   virtual void RenderText(float layer);
