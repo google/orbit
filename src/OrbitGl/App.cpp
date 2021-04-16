@@ -125,7 +125,7 @@ PresetLoadState GetPresetLoadStateForProcess(
   int modules_not_found_count = 0;
   for (const auto& pair : preset->preset_info().path_to_module()) {
     const std::string& module_path = pair.first;
-    if (process->IsModuleLoaded(module_path)) {
+    if (!process->IsModuleLoaded(module_path)) {
       modules_not_found_count++;
     }
   }
