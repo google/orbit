@@ -32,7 +32,7 @@ TEST(Tracing, Scopes) {
 
   absl::flat_hash_map<uint32_t, std::vector<TracingScope>> scopes_by_thread_id;
   std::once_flag thread_id_set_flag;
-  uint32_t callback_thread_id = -1;
+  uint32_t callback_thread_id = 0;
   {
     TracingListener tracing_listener([&scopes_by_thread_id, &thread_id_set_flag,
                                       &callback_thread_id](const TracingScope& scope) {
