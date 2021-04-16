@@ -4,9 +4,17 @@
 
 #include "Api/InitializeInTracee.h"
 
-#include "Api/Orbit.h"
-#include "OrbitBase/Result.h"
+#include <functional>
 
+#include "Api/Orbit.h"
+#include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/UniqueResource.h"
+#include "UserSpaceInstrumentation/Attach.h"
+#include "UserSpaceInstrumentation/ExecuteInProcess.h"
+#include "UserSpaceInstrumentation/InjectLibraryInTracee.h"
+
+using namespace orbit_user_space_instrumentation;
+using orbit_grpc_protos::ApiTableInfo;
 using orbit_grpc_protos::CaptureOptions;
 
 namespace orbit_api {
@@ -36,9 +44,7 @@ ErrorMessageOr<void> InitializeInTracee(const CaptureOptions& capture_options) {
     }
   }
 
-ErrorMessageOr<void> InitializeInTracee(const CaptureOptions& /*capture_options*/) {
-  // Dummy implementation until "ExecuteInProcess" functionality makes it into main.
-  return outcome::success();
+  return result;
 }
 
 }  // namespace orbit_api
