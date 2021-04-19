@@ -37,6 +37,7 @@ class CaptureEventProcessor {
 
  private:
   void ProcessCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started);
+  void ProcessCaptureFinished(const orbit_grpc_protos::CaptureFinished& capture_finished);
   void ProcessSchedulingSlice(const orbit_grpc_protos::SchedulingSlice& scheduling_slice);
   void ProcessInternedCallstack(orbit_grpc_protos::InternedCallstack interned_callstack);
   void ProcessCallstackSample(const orbit_grpc_protos::CallstackSample& callstack_sample);

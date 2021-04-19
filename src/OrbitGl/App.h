@@ -134,6 +134,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
 
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
                         absl::flat_hash_set<uint64_t> frame_track_function_ids) override;
+  void OnCaptureFinished(const orbit_grpc_protos::CaptureFinished& capture_finished) override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
   void OnUniqueCallStack(CallStack callstack) override;

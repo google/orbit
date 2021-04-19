@@ -34,7 +34,8 @@ using orbit_client_protos::TimerInfo;
 class MyCaptureListener : public CaptureListener {
  private:
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& /*capture_started*/,
-                        absl::flat_hash_set<uint64_t> /* frame_track_function_ids */) override {}
+                        absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/) override {}
+  void OnCaptureFinished(const orbit_grpc_protos::CaptureFinished& /*capture_finished*/) override {}
   void OnTimer(const TimerInfo&) override {}
   void OnSystemMemoryUsage(const orbit_grpc_protos::SystemMemoryUsage&) override {}
   void OnKeyAndString(uint64_t, std::string) override {}

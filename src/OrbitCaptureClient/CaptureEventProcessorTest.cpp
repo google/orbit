@@ -25,7 +25,6 @@
 #include "tracepoint.pb.h"
 
 using orbit_client_protos::CallstackEvent;
-using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::ThreadStateSliceInfo;
 using orbit_client_protos::TimerInfo;
@@ -34,6 +33,7 @@ using orbit_client_protos::TracepointEventInfo;
 using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::CallstackSample;
+using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::Color;
@@ -45,7 +45,6 @@ using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::GpuQueueSubmission;
 using orbit_grpc_protos::GpuQueueSubmissionMetaInfo;
 using orbit_grpc_protos::GpuSubmitInfo;
-using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointInfo;
@@ -69,6 +68,7 @@ class MockCaptureListener : public CaptureListener {
  public:
   MOCK_METHOD(void, OnCaptureStarted, (const CaptureStarted&, absl::flat_hash_set<uint64_t>),
               (override));
+  MOCK_METHOD(void, OnCaptureFinished, (const CaptureFinished&), (override));
   MOCK_METHOD(void, OnTimer, (const TimerInfo&), (override));
   MOCK_METHOD(void, OnSystemMemoryUsage, (const SystemMemoryUsage&), (override));
   MOCK_METHOD(void, OnKeyAndString, (uint64_t /*key*/, std::string), (override));

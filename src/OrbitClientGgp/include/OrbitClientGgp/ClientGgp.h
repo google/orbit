@@ -49,6 +49,7 @@ class ClientGgp final : public CaptureListener {
   void UpdateCaptureFunctions(std::vector<std::string> capture_functions);
 
   // CaptureListener implementation
+  void OnCaptureFinished(const orbit_grpc_protos::CaptureFinished& capture_started) override;
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
                         absl::flat_hash_set<uint64_t> frame_track_function_ids) override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;

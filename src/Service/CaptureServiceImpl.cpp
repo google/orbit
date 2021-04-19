@@ -31,6 +31,7 @@
 
 namespace orbit_service {
 
+using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
@@ -231,6 +232,13 @@ static ProducerCaptureEvent CreateCaptureStartedEvent(const CaptureOptions& capt
   return event;
 }
 
+static ClientCaptureEvent CreateCaptureFinishedEvent() {
+  ClientCaptureEvent event;
+  CaptureFinished* capture_finished = event.mutable_capture_finished();
+  capture_finished->set_status(CaptureFinished::kSuccessful);
+  return event;
+}
+
 grpc::Status CaptureServiceImpl::Capture(
     grpc::ServerContext*,
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
@@ -276,6 +284,8 @@ grpc::Status CaptureServiceImpl::Capture(
 
   StopInternalProducersAndCaptureStartStopListenersInParallel(
       &tracing_handler, &memory_info_handler, &capture_start_stop_listeners_);
+
+  capture_event_buffer.AddEvent(CreateCaptureFinishedEvent());
 
   capture_event_buffer.StopAndWait();
   LOG("Finished handling gRPC call to Capture: all capture data has been sent");

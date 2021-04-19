@@ -91,10 +91,12 @@ void CaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
     case ClientCaptureEvent::kSystemMemoryUsage:
       ProcessSystemMemoryUsage(event.system_memory_usage());
       break;
-    case ClientCaptureEvent::kApiEvent: {
+    case ClientCaptureEvent::kApiEvent:
       api_event_processor_.ProcessApiEvent(event.api_event());
       break;
-    }
+    case ClientCaptureEvent::kCaptureFinished:
+      ProcessCaptureFinished(event.capture_finished());
+      break;
     case ClientCaptureEvent::EVENT_NOT_SET:
       ERROR("CaptureEvent::EVENT_NOT_SET read from Capture's gRPC stream");
       break;
@@ -104,6 +106,11 @@ void CaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
 void CaptureEventProcessor::ProcessCaptureStarted(
     const orbit_grpc_protos::CaptureStarted& capture_started) {
   capture_listener_->OnCaptureStarted(capture_started, frame_track_function_ids_);
+}
+
+void CaptureEventProcessor::ProcessCaptureFinished(
+    const orbit_grpc_protos::CaptureFinished& capture_finished) {
+  capture_listener_->OnCaptureFinished(capture_finished);
 }
 
 void CaptureEventProcessor::ProcessSchedulingSlice(const SchedulingSlice& scheduling_slice) {
