@@ -27,11 +27,12 @@ message InstrumentedFunction {
   string function_name = 5;
 }
 
-message ApiTableInfo {
-  string module_path = 1;
-  uint64 api_table_address = 2;
-  uint64 api_table_size = 3;
-  uint32 api_version = 4;
+message ApiFunction {
+  string file_path = 1;
+  string file_build_id = 2;
+  uint64 file_offset = 3;
+  string function_name = 4;
+  uint64 api_version = 5;
 }
 
 message CaptureOptions {
@@ -61,7 +62,7 @@ message CaptureOptions {
   bool collect_memory_info = 11;
   uint64 memory_sampling_period_ns = 12;
 
-  repeated ApiTableInfo api_table_infos = 13;
+  repeated ApiFunction api_functions = 13;
 }
 
 // For CaptureEvents with a duration, excluding for now GPU-related ones, we

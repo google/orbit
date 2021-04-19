@@ -29,7 +29,7 @@
 
 using orbit_client_protos::FunctionInfo;
 
-using orbit_grpc_protos::ApiTableInfo;
+using orbit_grpc_protos::ApiFunction;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
@@ -95,10 +95,9 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
   return capture_result;
 }
 
-static void SetupApiTableInfos(const ProcessData& process,
-                               const orbit_client_data::ModuleManager& module_manager,
-                               CaptureOptions* capture_options) {
-  constexpr const char* kOrbitApiPrefix = "g_orbit_api_v";
+static void SetupApiFunctions(const ProcessData& process,
+                              const orbit_client_data::ModuleManager& module_manager,
+                              CaptureOptions* capture_options) {
   for (const ModuleData* module_data : module_manager.GetAllModuleData()) {
     std::optional<uint64_t> base_address = process.GetModuleBaseAddress(module_data->file_path());
     if (!base_address.has_value()) {
@@ -106,20 +105,21 @@ static void SetupApiTableInfos(const ProcessData& process,
       continue;
     }
 
+    constexpr const char* kOrbitApiPrefix = "orbit_api_get_table_address_v";
     // TODO: The global variable symbols will be obtained in the next PR.
     // module_data->GetDataSymbolsFromName(kOrbitApiPrefix)
-    std::vector<SymbolInfo*> dummy_global_variables_symbol_infos;
+    std::vector<SymbolInfo*> orbit_api_symbol_infos;
 
-    for (const SymbolInfo* symbol_info : dummy_global_variables_symbol_infos) {
+    for (const SymbolInfo* symbol_info : orbit_api_symbol_infos) {
       for (size_t i = 0; i <= kOrbitApiVersion; ++i) {
         std::string orbit_api_table_name = absl::StrFormat("%s%u", kOrbitApiPrefix, i);
         if (symbol_info->name() != orbit_api_table_name) continue;
-        ApiTableInfo* api_table_info = capture_options->add_api_table_infos();
-        api_table_info->set_module_path(module_data->file_path());
-        api_table_info->set_api_table_address(symbol_info->address() + base_address.value() -
-                                              module_data->load_bias());
-        api_table_info->set_api_table_size(symbol_info->size());
-        api_table_info->set_api_version(i);
+        ApiFunction* api_function = capture_options->add_api_functions();
+
+        api_function->set_file_path(module_data->file_path());
+        api_function->set_file_build_id(module_data->build_id());
+        api_function->set_file_offset(symbol_info->address() - module_data->load_bias());
+        api_function->set_api_version(i);
       }
     }
   }
@@ -190,7 +190,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
 
   capture_options->set_enable_introspection(enable_introspection);
 
-  SetupApiTableInfos(process, module_manager, capture_options);
+  SetupApiFunctions(process, module_manager, capture_options);
 
   bool request_write_succeeded;
   {

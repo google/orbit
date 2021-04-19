@@ -4,6 +4,8 @@
 
 #include "Api/InitializeInTracee.h"
 
+#include <absl/base/casts.h>
+
 #include <functional>
 
 #include "Api/Orbit.h"
@@ -14,7 +16,7 @@
 #include "UserSpaceInstrumentation/ExecuteInProcess.h"
 #include "UserSpaceInstrumentation/InjectLibraryInTracee.h"
 
-using orbit_grpc_protos::ApiTableInfo;
+using orbit_grpc_protos::ApiFunction;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_user_space_instrumentation::AttachAndStopProcess;
 using orbit_user_space_instrumentation::DetachAndContinueProcess;
@@ -24,7 +26,7 @@ using orbit_user_space_instrumentation::ExecuteInProcess;
 
 namespace orbit_api {
 ErrorMessageOr<void> InitializeInTracee(const CaptureOptions& capture_options) {
-  if (capture_options.api_table_infos().size() == 0) {
+  if (capture_options.api_functions().size() == 0) {
     return ErrorMessage("No api table to initilize.");
   }
 
@@ -42,11 +44,15 @@ ErrorMessageOr<void> InitializeInTracee(const CaptureOptions& capture_options) {
   const std::string kLibPath = orbit_base::GetExecutableDir() / "liborbit.so";
   constexpr const char* kInitFunction = "orbit_api_initialize";
   OUTCOME_TRY(handle, DlopenInTracee(pid, kLibPath));
-  OUTCOME_TRY(address, DlsymInTracee(pid, handle, kInitFunction));
+  OUTCOME_TRY(orbit_init_function, DlsymInTracee(pid, handle, kInitFunction));
 
   // Initialize all api function tables.
-  for (const ApiTableInfo& info : capture_options.api_table_infos()) {
-    OUTCOME_TRY(ExecuteInProcess(pid, address, info.api_table_address(), info.api_version()));
+  for (const ApiFunction& api_function : capture_options.api_functions()) {
+    // Get address of function table
+    void* api_function_address = absl::bit_cast<void*>(api_function.file_offset());  // TODO: fix
+    OUTCOME_TRY(function_table_address, ExecuteInProcess(pid, api_function_address));
+    OUTCOME_TRY(ExecuteInProcess(pid, orbit_init_function, function_table_address,
+                                 api_function.api_version()));
   }
 
   return outcome::success();

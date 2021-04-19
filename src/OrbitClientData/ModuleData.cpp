@@ -5,6 +5,7 @@
 #include "OrbitClientData/ModuleData.h"
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/strings/match.h>
 
 #include <algorithm>
 
@@ -130,6 +131,9 @@ void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbo
     if (success_functions) {
       const bool success_func_hashes =
           hash_to_function_map_.try_emplace(function_utils::GetHash(*function), function).second;
+      if (absl::StrContains(function->pretty_name(), "orbit_api_")) {
+        LOG("*** Found orbit api function: %s", function->pretty_name());
+      }
       if (!success_func_hashes) {
         name_reuse_counter++;
       }
