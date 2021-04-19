@@ -63,9 +63,9 @@ using orbit_base::ReadFileToString;
     const std::vector<std::string> addresses = absl::StrSplit(tokens[0], '-');
     if (addresses.size() != 2) continue;
     AddressRange result;
-    if (!absl::numbers_internal::safe_strtou64_base(addresses[0], &result.first, 16)) continue;
-    if (!absl::numbers_internal::safe_strtou64_base(addresses[1], &result.second, 16)) continue;
-    if (exclude_address >= result.first && exclude_address < result.second) continue;
+    if (!absl::numbers_internal::safe_strtou64_base(addresses[0], &result.start, 16)) continue;
+    if (!absl::numbers_internal::safe_strtou64_base(addresses[1], &result.end, 16)) continue;
+    if (exclude_address >= result.start && exclude_address < result.end) continue;
     return result;
   }
   return ErrorMessage(absl::StrFormat("Unable to locate executable memory area in pid: %d", pid));

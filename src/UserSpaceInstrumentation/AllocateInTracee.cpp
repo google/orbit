@@ -54,7 +54,7 @@ namespace {
     return ErrorMessage(absl::StrFormat("Failed to find executable memory region: \"%s\"",
                                         memory_region_or_error.error().message()));
   }
-  const uint64_t start_address = memory_region_or_error.value().first;
+  const uint64_t start_address = memory_region_or_error.value().start;
 
   // Backup first 8 bytes.
   auto backup_or_error = ReadTraceesMemory(pid, start_address, 8);

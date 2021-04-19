@@ -37,10 +37,10 @@ AddressRange AddressRangeFromString(const std::string& string_address) {
   if (addresses.size() != 2) {
     FATAL("Not an address range: %s", string_address);
   }
-  if (!absl::numbers_internal::safe_strtou64_base(addresses[0], &result.first, 16)) {
+  if (!absl::numbers_internal::safe_strtou64_base(addresses[0], &result.start, 16)) {
     FATAL("Not a number: %s", addresses[0]);
   }
-  if (!absl::numbers_internal::safe_strtou64_base(addresses[1], &result.second, 16)) {
+  if (!absl::numbers_internal::safe_strtou64_base(addresses[1], &result.end, 16)) {
     FATAL("Not a number: %s", addresses[1]);
   }
   return result;
@@ -60,8 +60,8 @@ AddressRange AddressRangeFromString(const std::string& string_address) {
       result = current_range;
       is_first = false;
     } else {
-      if (current_range.first == result.second) {
-        result.second = current_range.second;
+      if (current_range.start == result.end) {
+        result.end = current_range.end;
       }
     }
   }
@@ -85,8 +85,8 @@ TEST(AccessTraceesMemoryTest, ReadFailures) {
   auto continuous_range_or_error = GetFirstContinuousAddressRange(pid);
   CHECK(continuous_range_or_error.has_value());
   const auto continuous_range = continuous_range_or_error.value();
-  const uint64_t address = continuous_range.first;
-  const uint64_t length = continuous_range.second - continuous_range.first;
+  const uint64_t address = continuous_range.start;
+  const uint64_t length = continuous_range.end - continuous_range.start;
 
   // Good read.
   ErrorMessageOr<std::vector<uint8_t>> result = ReadTraceesMemory(pid, address, length);
@@ -131,8 +131,8 @@ TEST(AccessTraceesMemoryTest, WriteFailures) {
   auto continuous_range_or_error = GetFirstContinuousAddressRange(pid);
   CHECK(continuous_range_or_error.has_value());
   const auto continuous_range = continuous_range_or_error.value();
-  const uint64_t address = continuous_range.first;
-  const uint64_t length = continuous_range.second - continuous_range.first;
+  const uint64_t address = continuous_range.start;
+  const uint64_t length = continuous_range.end - continuous_range.start;
 
   // Backup.
   auto backup = ReadTraceesMemory(pid, address, length);
@@ -184,7 +184,7 @@ TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
 
   auto memory_region_or_error = GetFirstExecutableMemoryRegion(pid);
   CHECK(memory_region_or_error.has_value());
-  const uint64_t address = memory_region_or_error.value().first;
+  const uint64_t address = memory_region_or_error.value().start;
 
   constexpr uint64_t kMemorySize = 4 * 1024;
   auto backup = ReadTraceesMemory(pid, address, kMemorySize);

@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "AddressRange.h"
 #include "OrbitBase/Result.h"
 
 namespace orbit_user_space_instrumentation {
@@ -31,7 +32,6 @@ namespace orbit_user_space_instrumentation {
 // is probably helping stability.
 // Optionally one can specify `exclude_address`. This prevents the method from returning an address
 // range containing `exclude_address`.
-using AddressRange = std::pair<uint64_t, uint64_t>;
 [[nodiscard]] ErrorMessageOr<AddressRange> GetFirstExecutableMemoryRegion(
     pid_t pid, uint64_t exclude_address = 0);
 

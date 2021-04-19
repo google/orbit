@@ -26,6 +26,7 @@ target_sources(UserSpaceInstrumentation PUBLIC
 target_sources(UserSpaceInstrumentation PRIVATE
         AccessTraceesMemory.cpp
         AccessTraceesMemory.h
+        AddressRange.h
         AllocateInTracee.cpp
         AllocateInTracee.h
         Attach.cpp
