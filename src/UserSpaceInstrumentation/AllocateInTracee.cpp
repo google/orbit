@@ -168,4 +168,15 @@ namespace {
   return outcome::success();
 }
 
+ErrorMessageOr<orbit_base::unique_resource<uint64_t, std::function<void(uint64_t)>>>
+AllocateInTraceeAsUniqueResource(pid_t pid, uint64_t address, uint64_t size) {
+  OUTCOME_TRY(allocated_address, AllocateInTracee(pid, address, size));
+  std::function<void(uint64_t)> deleter = [pid, size](uint64_t address) {
+    auto result = FreeInTracee(pid, address, size);
+    FAIL_IF(result.has_error(), "Unable to free previously allocated memory in tracee: \"%s\"",
+            result.error().message());
+  };
+  return orbit_base::unique_resource(allocated_address, deleter);
+}
+
 }  // namespace orbit_user_space_instrumentation

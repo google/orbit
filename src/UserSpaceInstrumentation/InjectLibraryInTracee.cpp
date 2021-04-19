@@ -33,15 +33,6 @@ constexpr const char* kDlsymInLibc = "__libc_dlsym";
 constexpr const char* kDlcloseInLibdl = "dlclose";
 constexpr const char* kDlcloseInLibc = "__libc_dlclose";
 
-// In certain error conditions the tracee is damaged and we don't try to recover from that. We just
-// abort with a fatal log message. None of these errors are expected to occur in operation
-// obviously.
-void FreeMemoryOrDie(pid_t pid, uint64_t code_address, uint64_t size) {
-  auto result = FreeInTracee(pid, code_address, size);
-  FAIL_IF(result.has_error(), "Unable to free previously allocated memory in tracee: \"%s\"",
-          result.error().message());
-}
-
 // Returns the absolute virtual address of a function in a module of a process as
 // FindFunctionAddress does but accepts a fallback symbol if the primary one cannot be resolved.
 ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_view module,
@@ -76,10 +67,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   // Allocate small memory area in the tracee. This is used for the code and the path name.
   const uint64_t path_length = path.string().length() + 1;  // Include terminating zero.
   const uint64_t memory_size = kCodeScratchPadSize + path_length;
-  OUTCOME_TRY(address, AllocateInTracee(pid, 0, memory_size));
-  orbit_base::unique_resource code_address{address, [&pid, &memory_size](uint64_t address) {
-                                             FreeMemoryOrDie(pid, address, memory_size);
-                                           }};
+  OUTCOME_TRY(code_address, AllocateInTraceeAsUniqueResource(pid, 0, memory_size));
 
   // Write the name of the .so into memory at code_address with offset of kCodeScratchPadSize.
   std::vector<uint8_t> path_as_vector(path_length);
@@ -126,10 +114,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   // Allocate small memory area in the tracee. This is used for the code and the symbol name.
   const size_t symbol_name_length = symbol.length() + 1;  // include terminating zero
   const uint64_t memory_size = kCodeScratchPadSize + symbol_name_length;
-  OUTCOME_TRY(address, AllocateInTracee(pid, 0, memory_size));
-  orbit_base::unique_resource code_address{address, [&pid, &memory_size](uint64_t address) {
-                                             FreeMemoryOrDie(pid, address, memory_size);
-                                           }};
+  OUTCOME_TRY(code_address, AllocateInTraceeAsUniqueResource(pid, 0, memory_size));
 
   // Write the name of symbol into memory at code_address with offset of kCodeScratchPadSize.
   std::vector<uint8_t> symbol_name_as_vector(symbol_name_length, 0);
@@ -173,9 +158,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
                                                                kLibcSoname, kDlcloseInLibc));
 
   // Allocate small memory area in the tracee.
-  OUTCOME_TRY(address, AllocateInTracee(pid, 0, kCodeScratchPadSize));
-  orbit_base::unique_resource code_address{
-      address, [&pid](uint64_t address) { FreeMemoryOrDie(pid, address, kCodeScratchPadSize); }};
+  OUTCOME_TRY(code_address, AllocateInTraceeAsUniqueResource(pid, 0, kCodeScratchPadSize));
 
   // We want to do the following in the tracee:
   // dlclose(handle);

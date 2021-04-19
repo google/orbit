@@ -53,11 +53,9 @@ ErrorMessageOr<uint64_t> ExecuteInProcess(pid_t pid, void* function_address, uin
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-  OUTCOME_TRY(address, AllocateInTracee(pid, 0, kCodeScratchPadSize));
+  OUTCOME_TRY(address, AllocateInTraceeAsUniqueResource(pid, 0, kCodeScratchPadSize));
 
   OUTCOME_TRY(return_value, ExecuteMachineCode(pid, address, code));
-
-  OUTCOME_TRY(FreeInTracee(pid, address, kCodeScratchPadSize));
 
   return return_value;
 }

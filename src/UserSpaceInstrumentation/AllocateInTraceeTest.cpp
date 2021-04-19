@@ -86,6 +86,16 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
   ASSERT_FALSE(FreeInTracee(pid, address_or_error.value(), kMemorySize).has_error());
   EXPECT_FALSE(ProcessHasRwxMapAtAddress(pid, address_or_error.value()));
 
+  // Allocate as unique resource.
+  uint64_t address = 0;
+  {
+    auto unique_resource_or_error = AllocateInTraceeAsUniqueResource(pid, 0, kMemorySize);
+    ASSERT_TRUE(unique_resource_or_error.has_value());
+    address = unique_resource_or_error.value();
+    EXPECT_TRUE(ProcessHasRwxMapAtAddress(pid, address));
+  }
+  EXPECT_FALSE(ProcessHasRwxMapAtAddress(pid, address));
+
   // Detach and end child.
   CHECK(!DetachAndContinueProcess(pid).has_error());
   kill(pid, SIGKILL);
