@@ -12,19 +12,13 @@
 #include <utility>
 #include <vector>
 
+#include "AddressRange.h"
 #include "OrbitBase/Result.h"
 
 namespace orbit_user_space_instrumentation {
 
-struct AddressRange {
-  AddressRange() = default;
-  AddressRange(uint64_t s, uint64_t e) : start(s), end(e) {}
-  uint64_t start;
-  uint64_t end;
-};
-
 // Returns true if the ranges overlap (touching ranges do not count as overlapping). Assumes that
-// the ranges are well formed (.first < .second).
+// the ranges are well formed (start < end).
 [[nodiscard]] bool DoAddressRangesOverlap(const AddressRange& a, const AddressRange& b);
 
 // Returns the index of the lowest range in `ranges_sorted` that is intersecting with `range`.
