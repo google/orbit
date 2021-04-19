@@ -10,7 +10,7 @@
 namespace orbit_user_space_instrumentation {
 
 // Represents an address range in the tracee. Mostly useful in the context of parsing the content of
-// "/proc/pid/maps". As in the maps file the address range is stored using the first and "one past
+// "/proc/pid/maps". As in the maps file, the address range is stored using the first and "one past
 // last" valid addresses.
 struct AddressRange {
   AddressRange() = default;
