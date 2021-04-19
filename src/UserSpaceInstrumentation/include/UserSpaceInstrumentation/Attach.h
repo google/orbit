@@ -11,8 +11,11 @@
 
 namespace orbit_user_space_instrumentation {
 
+// Attaches to and stops all threads of the process `pid` using `PTRACE_ATTACH`. Being attached to a
+// process using this function is a precondition for using any of the tooling provided here.
 [[nodiscard]] ErrorMessageOr<void> AttachAndStopProcess(pid_t pid);
 
+// Detaches from all threads of the process `pid` and continues the execution.
 [[nodiscard]] ErrorMessageOr<void> DetachAndContinueProcess(pid_t pid);
 
 }  // namespace orbit_user_space_instrumentation
