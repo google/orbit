@@ -321,6 +321,16 @@ message ThreadNamesSnapshot {
   repeated ThreadName thread_names = 2;
 }
 
+message CaptureFinished {
+  enum Status {
+    kSuccessful = 0;
+    kFailed = 1;
+  };
+
+  Status status = 1;
+  string error_message = 2;
+}
+
 message CaptureStarted {
   int32 process_id = 1;
   string executable_path = 2;
@@ -344,6 +354,7 @@ message ClientCaptureEvent {
     AddressInfo address_info = 16;
     ApiEvent api_event = 9;
     CallstackSample callstack_sample = 1;
+    CaptureFinished capture_finished = 27;
     CaptureStarted capture_started = 24;
     FunctionCall function_call = 2;
     GpuJob gpu_job = 3;

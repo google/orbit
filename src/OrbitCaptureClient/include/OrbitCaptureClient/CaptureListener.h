@@ -22,6 +22,7 @@ class CaptureListener {
 
   virtual void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
                                 absl::flat_hash_set<uint64_t> frame_track_function_ids) = 0;
+  virtual void OnCaptureFinished(const orbit_grpc_protos::CaptureFinished& capture_finished) = 0;
 
   virtual void OnTimer(const orbit_client_protos::TimerInfo& timer_info) = 0;
   virtual void OnSystemMemoryUsage(

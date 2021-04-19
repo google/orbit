@@ -43,6 +43,7 @@ using orbit_client_protos::ProcessInfo;
 using orbit_client_protos::ThreadStateSliceInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_client_protos::TracepointEventInfo;
+using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::SystemMemoryUsage;
@@ -66,6 +67,7 @@ class MockCaptureListener : public CaptureListener {
               (const CaptureStarted& /*capture_started*/,
                absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/),
               (override));
+  MOCK_METHOD(void, OnCaptureFinished, (const CaptureFinished& /*capture_finished*/), (override));
   MOCK_METHOD(void, OnTimer, (const TimerInfo&), (override));
   MOCK_METHOD(void, OnSystemMemoryUsage, (const SystemMemoryUsage&), (override));
   MOCK_METHOD(void, OnKeyAndString, (uint64_t /*key*/, std::string), (override));

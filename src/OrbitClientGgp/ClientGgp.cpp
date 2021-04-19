@@ -48,8 +48,8 @@ using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::TimerInfo;
+using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureStarted;
-using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
 using orbit_grpc_protos::UnwindingMethod;
@@ -309,6 +309,14 @@ void ClientGgp::ClearCapture() {
 void ClientGgp::ProcessTimer(const TimerInfo& timer_info) { timer_infos_.push_back(timer_info); }
 
 // CaptureListener implementation
+void ClientGgp::OnCaptureFinished(const CaptureFinished& capture_finished) {
+  if (capture_finished.status() == CaptureFinished::kFailed) {
+    ERROR("Capture finished with error: %s", capture_finished.error_message());
+  } else {
+    LOG("Capture finished successfully");
+  }
+}
+
 void ClientGgp::OnCaptureStarted(const CaptureStarted& capture_started,
                                  absl::flat_hash_set<uint64_t> frame_track_function_ids) {
   capture_data_ =

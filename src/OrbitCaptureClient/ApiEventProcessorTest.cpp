@@ -26,6 +26,7 @@ class EmptyCaptureListener : public CaptureListener {
  public:
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& /*capture_started*/,
                         absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/) override {}
+  void OnCaptureFinished(const orbit_grpc_protos::CaptureFinished& /*capture_finished*/) override {}
   void OnTimer(const orbit_client_protos::TimerInfo&) override {}
   void OnSystemMemoryUsage(const orbit_grpc_protos::SystemMemoryUsage&) override {}
   void OnKeyAndString(uint64_t, std::string) override {}

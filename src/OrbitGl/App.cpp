@@ -104,6 +104,7 @@ using orbit_client_protos::PresetFile;
 using orbit_client_protos::PresetInfo;
 using orbit_client_protos::TimerInfo;
 
+using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
 using orbit_grpc_protos::InstrumentedFunction;
@@ -174,6 +175,13 @@ OrbitApp::~OrbitApp() {
 #ifdef _WIN32
   oqpi::default_helpers::stop_scheduler();
 #endif
+}
+
+void OrbitApp::OnCaptureFinished(const CaptureFinished& capture_finished) {
+  if (capture_finished.status() == CaptureFinished::kFailed) {
+    SendErrorToUi("Capture Failed", capture_finished.error_message());
+    ERROR("Capture Finished with error: %s", capture_finished.error_message());
+  }
 }
 
 void OrbitApp::OnCaptureStarted(const CaptureStarted& capture_started,
@@ -363,7 +371,7 @@ void OrbitApp::UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
         "compile flags (or removing \"-Wl,--build-id=none\" from them).",
         module_paths);
     SendErrorToUi("Capture Error", error_message);
-    LOG("%s", error_message);
+    ERROR("%s", error_message);
     main_thread_executor_->Schedule([this] { AbortCapture(); });
   }
 }
@@ -1209,7 +1217,7 @@ orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
 
   for (const auto& module : modules) {
     futures.emplace_back(
-        RetrieveModuleAndLoadSymbols(module).Then(main_thread_executor_, std::move(handle_error)));
+        RetrieveModuleAndLoadSymbols(module).Then(main_thread_executor_, handle_error));
   }
 
   return orbit_base::JoinFutures(futures);
