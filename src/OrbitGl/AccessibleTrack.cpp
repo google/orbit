@@ -16,7 +16,6 @@
 #include "TimeGraph.h"
 #include "Track.h"
 
-using orbit_accessibility::AccessibilityRect;
 using orbit_accessibility::AccessibilityState;
 using orbit_accessibility::AccessibleInterface;
 
@@ -30,15 +29,19 @@ class FakeTrackTab : public CaptureViewElement {
       : CaptureViewElement(track, track->GetTimeGraph(), layout), track_(track) {
     SetCanvas(track->GetCanvas());
 
-    // Compute and set the position and size (which would usually be done by the parent):
-    Vec2 track_pos = track_->GetPos();
-    SetPos(track_pos[0], track_pos[1]);
-
-    SetSize(track->GetSize()[0], layout_->GetTrackTabHeight());
+    // Compute and set the size (which would usually be done by the parent). As the position may
+    // change, we override the GetPos() function.
+    SetSize(layout_->GetTrackTabWidth(), layout_->GetTrackTabHeight());
   }
 
-  std::unique_ptr<AccessibleInterface> CreateAccessibleInterface() override {
+  [[nodiscard]] std::unique_ptr<AccessibleInterface> CreateAccessibleInterface() override {
     return std::make_unique<AccessibleTrackTab>(this, track_);
+  }
+
+  [[nodiscard]] Vec2 GetPos() const override {
+    Vec2 track_pos = track_->GetPos();
+    Vec2 pos = track_pos + Vec2(layout_->GetTrackTabOffset(), 0);
+    return pos;
   }
 
  private:
@@ -52,8 +55,13 @@ class FakeTimerPane : public CaptureViewElement {
         track_(track),
         track_tab_(track_tab) {
     SetCanvas(track->GetCanvas());
+  }
 
-    // Compute and set the position and size (which would usually be done by the parent):
+  std::unique_ptr<AccessibleInterface> CreateAccessibleInterface() override {
+    return std::make_unique<AccessibleTimerPane>(this);
+  }
+
+  [[nodiscard]] Vec2 GetPos() const override {
     std::vector<CaptureViewElement*> track_children = track_->GetVisibleChildren();
 
     // We are looking for the track's child that is right above the timer pane.
@@ -63,19 +71,15 @@ class FakeTimerPane : public CaptureViewElement {
       predecessor = track_children[track_children.size() - 1];
     }
 
-    Vec2 pos = predecessor->GetPos();
-    Vec2 tab_size = predecessor->GetSize();
-    pos[1] -= tab_size[1];
-    SetPos(pos[0], pos[1]);
-
-    Vec2 track_size = track_->GetSize();
-    float track_header_height = track_->GetPos()[1] - pos[1];
-
-    SetSize(track_size[0], track_size[1] - track_header_height);
+    Vec2 pos{track_->GetPos()[0], predecessor->GetPos()[1] - predecessor->GetSize()[1]};
+    return pos;
   }
 
-  std::unique_ptr<AccessibleInterface> CreateAccessibleInterface() override {
-    return std::make_unique<AccessibleTimerPane>(this);
+  [[nodiscard]] Vec2 GetSize() const override {
+    Vec2 size = track_->GetSize();
+    float track_header_height = track_->GetPos()[1] - GetPos()[1];
+    size[1] -= track_header_height;
+    return size;
   }
 
  private:
