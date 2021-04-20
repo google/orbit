@@ -53,26 +53,26 @@ void OpenUseAndCloseLibrary(pid_t pid) {
   ASSERT_TRUE(dlsym_or_error.has_value());
   const uint64_t function_address = absl::bit_cast<uint64_t>(dlsym_or_error.value());
 
-  // Write machine code to call "TrivialFunction" from the dynamic lib.
-  constexpr uint64_t kScratchPadSize = 1024;
-  auto address_or_error = AllocateInTracee(pid, 0, kScratchPadSize);
-  ASSERT_TRUE(address_or_error.has_value());
-  const uint64_t address = address_or_error.value();
-  // Move function's address to rax, do the call, and hit a breakpoint:
-  // movabs rax, function_address     48 b8 function_address
-  // call rax                         ff d0
-  // int3                             cc
-  MachineCode code;
-  code.AppendBytes({0x48, 0xb8})
-      .AppendImmediate64(function_address)
-      .AppendBytes({0xff, 0xd0})
-      .AppendBytes({0xcc});
+  {
+    // Write machine code to call "TrivialFunction" from the dynamic lib.
+    constexpr uint64_t kScratchPadSize = 1024;
+    auto address_or_error = AllocateInTraceeAsUniqueResource(pid, 0, kScratchPadSize);
+    ASSERT_TRUE(address_or_error.has_value());
+    const uint64_t address = address_or_error.value().get();
+    // Move function's address to rax, do the call, and hit a breakpoint:
+    // movabs rax, function_address     48 b8 function_address
+    // call rax                         ff d0
+    // int3                             cc
+    MachineCode code;
+    code.AppendBytes({0x48, 0xb8})
+        .AppendImmediate64(function_address)
+        .AppendBytes({0xff, 0xd0})
+        .AppendBytes({0xcc});
 
-  auto result_or_error = ExecuteMachineCode(pid, address, code);
-  ASSERT_FALSE(result_or_error.has_error());
-  EXPECT_EQ(42, result_or_error.value());
-
-  ASSERT_FALSE(FreeInTracee(pid, address, kScratchPadSize).has_error());
+    auto result_or_error = ExecuteMachineCode(pid, address, code);
+    ASSERT_FALSE(result_or_error.has_error());
+    EXPECT_EQ(42, result_or_error.value());
+  }
 
   // Close the library.
   auto result_dlclose = DlcloseInTracee(pid, library_handle_or_error.value());

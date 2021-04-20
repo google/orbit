@@ -59,7 +59,6 @@ class unique_resource {
   void release() noexcept { resource_ = std::nullopt; }
 
   explicit operator bool() const noexcept { return resource_.has_value(); }
-  operator Resource() const { return resource_.value(); }
 
   void reset(Resource resource) {
     RunDeleter();

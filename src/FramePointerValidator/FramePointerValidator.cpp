@@ -33,7 +33,7 @@ std::optional<std::vector<CodeBlock>> FramePointerValidator::GetFpoFunctions(
   }
   orbit_base::unique_resource handle{temp_handle, [](csh handle) { cs_close(&handle); }};
 
-  cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
+  cs_option(handle.get(), CS_OPT_DETAIL, CS_OPT_ON);
 
   ErrorMessageOr<std::string> binary_or_error = orbit_base::ReadFileToString(file_name);
   if (binary_or_error.has_error()) {
@@ -48,7 +48,7 @@ std::optional<std::vector<CodeBlock>> FramePointerValidator::GetFpoFunctions(
     }
 
     const std::string& content = binary_or_error.value();
-    FunctionFramePointerValidator validator{handle, content.data() + function.offset(),
+    FunctionFramePointerValidator validator{handle.get(), content.data() + function.offset(),
                                             static_cast<size_t>(function.size())};
 
     if (!validator.Validate()) {

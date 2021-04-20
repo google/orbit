@@ -10,7 +10,6 @@
 #include <vector>
 
 #include "AccessTraceesMemory.h"
-#include "AllocateInTracee.h"
 #include "OrbitBase/Logging.h"
 #include "RegisterState.h"
 

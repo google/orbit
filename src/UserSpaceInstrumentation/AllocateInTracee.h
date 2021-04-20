@@ -8,8 +8,10 @@
 #include <sys/types.h>
 
 #include <cstdint>
+#include <functional>
 
 #include "OrbitBase/Result.h"
+#include "OrbitBase/UniqueResource.h"
 
 namespace orbit_user_space_instrumentation {
 
@@ -25,6 +27,12 @@ namespace orbit_user_space_instrumentation {
 // Free address range previously allocated with AllocateInTracee using munmap.
 // Assumes we are already attached to the tracee `pid` e.g. using `AttachAndStopProcess`.
 [[nodiscard]] ErrorMessageOr<void> FreeInTracee(pid_t pid, uint64_t address, uint64_t size);
+
+// Same as `AllocateInTracee` above but wraps the memory in a unique_resource that handles
+// deallocating the memory. Note that we still need to be attached (or attached again) to the tracee
+// when the unique_resource goes out of scope.
+[[nodiscard]] ErrorMessageOr<orbit_base::unique_resource<uint64_t, std::function<void(uint64_t)>>>
+AllocateInTraceeAsUniqueResource(pid_t pid, uint64_t address, uint64_t size);
 
 }  // namespace orbit_user_space_instrumentation
 
