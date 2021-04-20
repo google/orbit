@@ -35,6 +35,8 @@ target_link_libraries(Api PUBLIC
         OrbitProducer
         ProducerSideChannel)
 
+strip_symbols(Api)
+
 
 add_library(ApiLib STATIC)
 
