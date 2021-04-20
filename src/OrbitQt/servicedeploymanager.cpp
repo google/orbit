@@ -356,6 +356,21 @@ outcome::result<void> ServiceDeployManager::CopyOrbitServiceExecutable() {
   return outcome::success();
 }
 
+outcome::result<void> ServiceDeployManager::CopyOrbitApiLibrary() {
+  CHECK(QThread::currentThread() == thread());
+  emit statusMessage("Copying liborbit.so to the remote instance...");
+
+  const std::string library_destination_path = "/tmp/liborbit.so";
+  auto& config = std::get<BareExecutableAndRootPasswordDeployment>(*deployment_configuration_);
+  const auto library_source_path = config.path_to_executable.parent_path() / "../lib/liborbit.so";
+  OUTCOME_TRY(CopyFileToRemote(
+      library_source_path.string(), library_destination_path,
+      orbit_ssh_qt::SftpCopyToRemoteOperation::FileMode::kUserWritableAllExecutable));
+
+  emit statusMessage("Finished copying liborbit.so to the remote instance.");
+  return outcome::success();
+}
+
 outcome::result<void> ServiceDeployManager::StartOrbitService() {
   CHECK(QThread::currentThread() == thread());
   emit statusMessage("Starting OrbitService on the remote instance...");
@@ -536,6 +551,7 @@ outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::ExecImpl()
   } else if (std::holds_alternative<BareExecutableAndRootPasswordDeployment>(
                  *deployment_configuration_)) {
     OUTCOME_TRY(CopyOrbitServiceExecutable());
+    OUTCOME_TRY(CopyOrbitApiLibrary());
     OUTCOME_TRY(StartOrbitServicePrivileged());
     // TODO(hebecker): Replace this timeout by waiting for a
     // stdout-greeting-message.
