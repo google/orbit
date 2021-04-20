@@ -27,10 +27,10 @@ message InstrumentedFunction {
   string function_name = 5;
 }
 
-// Api functions are declared in Orbit.h. They are implemented in user code through the
-// ORBIT_API_INSTANTIATE macro. Those functions are used to query the tracee for Orbit specific
-// information, such as the memory location where Orbit should write function pointers to enable
-// the Api after having injected liborbit.so.
+// Api functions are declared in Orbit.h. They are implemented in user code
+// through the ORBIT_API_INSTANTIATE macro. Those functions are used to query
+// the tracee for Orbit specific information. See "FindApiFunction" form more
+// details.
 message ApiFunction {
   string module_path = 1;
   string module_build_id = 2;
