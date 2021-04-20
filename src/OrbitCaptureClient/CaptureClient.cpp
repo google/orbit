@@ -105,22 +105,19 @@ static void SetupApiFunctions(const ProcessData& process,
       continue;
     }
 
-    constexpr const char* kOrbitApiPrefix = "orbit_api_get_table_address_v";
-    // TODO: The global variable symbols will be obtained in the next PR.
-    // module_data->GetDataSymbolsFromName(kOrbitApiPrefix)
-    std::vector<SymbolInfo*> orbit_api_symbol_infos;
+    constexpr const char* kOrbitApiGetAddressPrefix = "orbit_api_get_function_table_address_v";
+    for (size_t i = 0; i <= kOrbitApiVersion; ++i) {
+      std::string orbit_api_function_name = absl::StrFormat("%s%u", kOrbitApiGetAddressPrefix, i);
+      uint64_t function_hash = function_utils::GetHash(orbit_api_function_name);
 
-    for (const SymbolInfo* symbol_info : orbit_api_symbol_infos) {
-      for (size_t i = 0; i <= kOrbitApiVersion; ++i) {
-        std::string orbit_api_table_name = absl::StrFormat("%s%u", kOrbitApiPrefix, i);
-        if (symbol_info->name() != orbit_api_table_name) continue;
-        ApiFunction* api_function = capture_options->add_api_functions();
-
-        api_function->set_file_path(module_data->file_path());
-        api_function->set_file_build_id(module_data->build_id());
-        api_function->set_file_offset(symbol_info->address() - module_data->load_bias());
-        api_function->set_api_version(i);
-      }
+      const FunctionInfo* function_info = module_data->FindFunctionFromHash(function_hash);
+      if (function_info == nullptr) continue;
+      ApiFunction* api_function = capture_options->add_api_functions();
+      api_function->set_module_path(function_info->module_path());
+      api_function->set_module_build_id(function_info->module_build_id());
+      api_function->set_address(function_info->address());
+      api_function->set_name(orbit_api_function_name);
+      api_function->set_api_version(i);
     }
   }
 }

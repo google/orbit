@@ -50,6 +50,7 @@ target_sources(ApiLib PRIVATE
 
 target_link_libraries(ApiLib PUBLIC
         ApiInterface
+        ElfUtils
         OrbitBase
         UserSpaceInstrumentation)
 endif()

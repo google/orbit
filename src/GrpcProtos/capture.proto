@@ -28,10 +28,10 @@ message InstrumentedFunction {
 }
 
 message ApiFunction {
-  string file_path = 1;
-  string file_build_id = 2;
-  uint64 file_offset = 3;
-  string function_name = 4;
+  string module_path = 1;
+  string module_build_id = 2;
+  uint64 address = 3;
+  string name = 4;
   uint64 api_version = 5;
 }
 

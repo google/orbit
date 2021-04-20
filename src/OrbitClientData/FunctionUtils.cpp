@@ -34,6 +34,7 @@ std::string GetLoadedModuleNameByPath(std::string_view module_path) {
 }
 
 uint64_t GetHash(const FunctionInfo& func) { return StringHash(func.pretty_name()); }
+uint64_t GetHash(std::string_view function_name) { return StringHash(std::string(function_name)); }
 
 uint64_t Offset(const FunctionInfo& func, const ModuleData& module) {
   return func.address() - module.load_bias();

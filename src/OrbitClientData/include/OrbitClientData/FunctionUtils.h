@@ -26,6 +26,7 @@ namespace function_utils {
 [[nodiscard]] std::string GetLoadedModuleNameByPath(std::string_view module_path);
 [[nodiscard]] std::string GetLoadedModuleName(const orbit_client_protos::FunctionInfo& func);
 [[nodiscard]] uint64_t GetHash(const orbit_client_protos::FunctionInfo& func);
+[[nodiscard]] uint64_t GetHash(std::string_view function_name);
 
 // Calculates and returns the absolute address of the function.
 [[nodiscard]] uint64_t Offset(const orbit_client_protos::FunctionInfo& func,
