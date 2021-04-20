@@ -101,7 +101,7 @@ static void SetupApiFunctions(const ProcessData& process,
   for (const ModuleData* module_data : module_manager.GetAllModuleData()) {
     std::optional<uint64_t> base_address = process.GetModuleBaseAddress(module_data->file_path());
     if (!base_address.has_value()) {
-      ERROR("No base address found for module %s", module_data->file_path());
+      ERROR("No base address found for module \"%s\"", module_data->file_path());
       continue;
     }
 

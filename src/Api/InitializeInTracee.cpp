@@ -43,12 +43,12 @@ static ErrorMessageOr<absl::flat_hash_map<std::string, ModuleInfo>> GetModulesBy
     const absl::flat_hash_map<std::string, ModuleInfo>& modules_by_path) {
   auto module_info_it = modules_by_path.find(api_function.module_path());
   if (module_info_it == modules_by_path.end()) {
-    ERROR("Could not find module %s when initializing Orbit Api.", api_function.module_path());
+    ERROR("Could not find module \"%s\" when initializing Orbit Api.", api_function.module_path());
     return nullptr;
   }
   const ModuleInfo& module_info = module_info_it->second;
   if (module_info.build_id() != api_function.module_build_id()) {
-    ERROR("Build-id mismatch for %s when initializing Orbit Api", api_function.module_path());
+    ERROR("Build-id mismatch for \"%s\" when initializing Orbit Api", api_function.module_path());
     return nullptr;
   }
 
@@ -67,8 +67,9 @@ ErrorMessageOr<void> InitializeInTracee(const CaptureOptions& capture_options) {
 
   // Make sure we resume the target process, even on early-outs.
   orbit_base::unique_resource scope_exit{pid, [](int32_t pid) {
-                                           if (DetachAndContinueProcess(pid).has_error())
+                                           if (DetachAndContinueProcess(pid).has_error()) {
                                              ERROR("Detaching from %i", pid);
+                                           }
                                          }};
 
   // Load liborbit.so and find api table initialization function.
