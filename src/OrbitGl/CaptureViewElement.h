@@ -33,9 +33,11 @@ class CaptureViewElement : public Pickable {
   void SetCanvas(GlCanvas* canvas) { canvas_ = canvas; }
 
   void SetPos(float x, float y) { pos_ = Vec2(x, y); }
-  [[nodiscard]] Vec2 GetPos() const { return pos_; }
+  // TODO(b/185854980): This should not be virtual as soon as we have meaningful track children.
+  [[nodiscard]] virtual Vec2 GetPos() const { return pos_; }
   void SetSize(float width, float height) { size_ = Vec2(width, height); }
-  [[nodiscard]] Vec2 GetSize() const { return size_; }
+  // TODO(b/185854980): This should not be virtual as soon as we have meaningful track children.
+  [[nodiscard]] virtual Vec2 GetSize() const { return size_; }
 
   // Pickable
   void OnPick(int x, int y) override;
