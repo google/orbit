@@ -58,7 +58,7 @@ static ErrorMessageOr<absl::flat_hash_map<std::string, ModuleInfo>> GetModulesBy
 namespace orbit_api {
 ErrorMessageOr<void> InitializeInTracee(const CaptureOptions& capture_options) {
   if (capture_options.api_functions().size() == 0) {
-    return ErrorMessage("No api table to initilize.");
+    return ErrorMessage("No api table to initialize.");
   }
 
   int32_t pid = capture_options.pid();
