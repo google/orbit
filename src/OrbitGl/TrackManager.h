@@ -47,7 +47,6 @@ class TrackManager {
     return tracepoints_system_wide_track_;
   }
 
-  void SortTracks();
   void RequestTrackSorting() { sorting_invalidated_ = true; };
   void SetFilter(const std::string& filter);
 
@@ -68,16 +67,17 @@ class TrackManager {
 
   void RemoveFrameTrack(uint64_t function_address);
 
-  void UpdateMovingTrackSorting();
 
  private:
-  void UpdateVisibleTrackList();
+  void UpdateTracksOrder();
   [[nodiscard]] int FindMovingTrackIndex();
+  void UpdateMovingTrackSorting();
+  void SortTracks();
   [[nodiscard]] std::vector<ThreadTrack*> GetSortedThreadTracks();
+  void UpdateVisibleTrackList();
 
   void AddTrack(const std::shared_ptr<Track>& track);
   void AddFrameTrack(const std::shared_ptr<FrameTrack>& frame_track);
-  void UpdateTrackPositions();
 
   // TODO(b/174655559): Use absl's mutex here.
   mutable std::recursive_mutex mutex_;

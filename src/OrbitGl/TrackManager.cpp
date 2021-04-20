@@ -66,97 +66,86 @@ std::vector<FrameTrack*> TrackManager::GetFrameTracks() const {
 }
 
 void TrackManager::SortTracks() {
-  if (!app_->IsCapturing() && !sorted_tracks_.empty() && !sorting_invalidated_ &&
-      !visible_track_list_needs_update_)
-    return;
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  // Gather all tracks regardless of the process in sorted order
+  std::vector<Track*> all_processes_sorted_tracks;
 
-  // Reorder threads if sorting isn't valid or once per second when capturing
-  if (sorting_invalidated_ ||
-      (app_->IsCapturing() && last_thread_reorder_.ElapsedMillis() > 1000.0)) {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    // Gather all tracks regardless of the process in sorted order
-    std::vector<Track*> all_processes_sorted_tracks;
-
-    // Frame tracks.
-    for (const auto& name_and_track : frame_tracks_) {
-      all_processes_sorted_tracks.push_back(name_and_track.second.get());
-    }
-
-    // Gpu tracks.
-    for (const auto& timeline_and_track : gpu_tracks_) {
-      all_processes_sorted_tracks.push_back(timeline_and_track.second.get());
-    }
-
-    // Graph tracks.
-    for (const auto& graph_track : graph_tracks_) {
-      all_processes_sorted_tracks.push_back(graph_track.second.get());
-    }
-
-    // Memory tracks.
-    for (const auto& memory_track : memory_tracks_) {
-      all_processes_sorted_tracks.push_back(memory_track.second.get());
-    }
-
-    // Async tracks.
-    for (const auto& async_track : async_tracks_) {
-      all_processes_sorted_tracks.push_back(async_track.second.get());
-    }
-
-    // Tracepoint tracks.
-    if (!tracepoints_system_wide_track_->IsEmpty()) {
-      all_processes_sorted_tracks.push_back(tracepoints_system_wide_track_);
-    }
-
-    // Process track.
-    if (app_->HasCaptureData()) {
-      ThreadTrack* process_track = GetOrCreateThreadTrack(orbit_base::kAllProcessThreadsTid);
-      if (!process_track->IsEmpty()) {
-        all_processes_sorted_tracks.push_back(process_track);
-      }
-    }
-
-    // Thread tracks.
-    std::vector<ThreadTrack*> sorted_thread_tracks = GetSortedThreadTracks();
-    for (ThreadTrack* thread_track : sorted_thread_tracks) {
-      if (!thread_track->IsEmpty()) {
-        all_processes_sorted_tracks.push_back(thread_track);
-      }
-    }
-
-    // Separate "capture_pid" tracks from tracks that originate from other processes.
-    int32_t capture_pid = capture_data_ ? capture_data_->process_id() : 0;
-    std::vector<Track*> capture_pid_tracks;
-    std::vector<Track*> external_pid_tracks;
-    for (auto& track : all_processes_sorted_tracks) {
-      int32_t pid = track->GetProcessId();
-      if (pid != -1 && pid != capture_pid) {
-        external_pid_tracks.push_back(track);
-      } else {
-        capture_pid_tracks.push_back(track);
-      }
-    }
-
-    // Clear before repopulating.
-    sorted_tracks_.clear();
-
-    // Scheduler track.
-    if (!scheduler_track_->IsEmpty()) {
-      sorted_tracks_.push_back(scheduler_track_.get());
-    }
-
-    // For now, "external_pid_tracks" should only contain
-    // introspection tracks. Display them on top.
-    Append(sorted_tracks_, external_pid_tracks);
-    Append(sorted_tracks_, capture_pid_tracks);
-
-    last_thread_reorder_.Restart();
+  // Frame tracks.
+  for (const auto& name_and_track : frame_tracks_) {
+    all_processes_sorted_tracks.push_back(name_and_track.second.get());
   }
-  if (sorting_invalidated_ || visible_track_list_needs_update_) {
-    UpdateVisibleTrackList();
+
+  // Gpu tracks.
+  for (const auto& timeline_and_track : gpu_tracks_) {
+    all_processes_sorted_tracks.push_back(timeline_and_track.second.get());
   }
+
+  // Graph tracks.
+  for (const auto& graph_track : graph_tracks_) {
+    all_processes_sorted_tracks.push_back(graph_track.second.get());
+  }
+
+  // Memory tracks.
+  for (const auto& memory_track : memory_tracks_) {
+    all_processes_sorted_tracks.push_back(memory_track.second.get());
+  }
+
+  // Async tracks.
+  for (const auto& async_track : async_tracks_) {
+    all_processes_sorted_tracks.push_back(async_track.second.get());
+  }
+
+  // Tracepoint tracks.
+  if (!tracepoints_system_wide_track_->IsEmpty()) {
+    all_processes_sorted_tracks.push_back(tracepoints_system_wide_track_);
+  }
+
+  // Process track.
+  if (app_->HasCaptureData()) {
+    ThreadTrack* process_track = GetOrCreateThreadTrack(orbit_base::kAllProcessThreadsTid);
+    if (!process_track->IsEmpty()) {
+      all_processes_sorted_tracks.push_back(process_track);
+    }
+  }
+
+  // Thread tracks.
+  std::vector<ThreadTrack*> sorted_thread_tracks = GetSortedThreadTracks();
+  for (ThreadTrack* thread_track : sorted_thread_tracks) {
+    if (!thread_track->IsEmpty()) {
+      all_processes_sorted_tracks.push_back(thread_track);
+    }
+  }
+
+  // Separate "capture_pid" tracks from tracks that originate from other processes.
+  int32_t capture_pid = capture_data_ ? capture_data_->process_id() : 0;
+  std::vector<Track*> capture_pid_tracks;
+  std::vector<Track*> external_pid_tracks;
+  for (auto& track : all_processes_sorted_tracks) {
+    int32_t pid = track->GetProcessId();
+    if (pid != -1 && pid != capture_pid) {
+      external_pid_tracks.push_back(track);
+    } else {
+      capture_pid_tracks.push_back(track);
+    }
+  }
+
+  // Clear before repopulating.
+  sorted_tracks_.clear();
+
+  // Scheduler track.
+  if (!scheduler_track_->IsEmpty()) {
+    sorted_tracks_.push_back(scheduler_track_.get());
+  }
+
+  // For now, "external_pid_tracks" should only contain
+  // introspection tracks. Display them on top.
+  Append(sorted_tracks_, external_pid_tracks);
+  Append(sorted_tracks_, capture_pid_tracks);
+
+  last_thread_reorder_.Restart();
 
   sorting_invalidated_ = false;
-  visible_track_list_needs_update_ = false;
+  visible_track_list_needs_update_ = true;
 }
 
 void TrackManager::SetFilter(const std::string& filter) {
@@ -181,6 +170,7 @@ void TrackManager::UpdateVisibleTrackList() {
       }
     }
   }
+  visible_track_list_needs_update_ = false;
 }
 
 std::vector<ThreadTrack*> TrackManager::GetSortedThreadTracks() {
@@ -273,6 +263,8 @@ int TrackManager::FindMovingTrackIndex() {
 
 void TrackManager::UpdateTracks(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                 PickingMode picking_mode) {
+  UpdateTracksOrder();
+
   // Make sure track tab fits in the viewport.
   float current_y = -layout_->GetSchedulerTrackOffset();
 
@@ -288,6 +280,21 @@ void TrackManager::UpdateTracks(Batcher* batcher, uint64_t min_tick, uint64_t ma
 
   // Tracks are drawn from 0 (top) to negative y-coordinates.
   tracks_total_height_ = std::abs(current_y);
+}
+
+void TrackManager::UpdateTracksOrder() {
+  // Reorder threads if sorting isn't valid or once per second when capturing.
+  if (sorting_invalidated_ ||
+      (app_->IsCapturing() && last_thread_reorder_.ElapsedMillis() > 1000.0)) {
+    SortTracks();
+  }
+
+  // Update position of a track which is currently being moved.
+  UpdateMovingTrackSorting();
+
+  if (visible_track_list_needs_update_) {
+    UpdateVisibleTrackList();
+  }
 }
 
 void TrackManager::AddTrack(const std::shared_ptr<Track>& track) {

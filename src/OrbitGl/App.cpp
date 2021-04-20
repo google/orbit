@@ -673,8 +673,6 @@ void OrbitApp::MainTick() {
   GMainTimer.Restart();
 
   if (DoZoom && HasCaptureData()) {
-    // TODO (b/176077097): TrackManager has to manage sorting by their own.
-    GetMutableTimeGraph()->GetTrackManager()->SortTracks();
     capture_window_->ZoomAll();
     RequestUpdatePrimitives();
     DoZoom = false;
