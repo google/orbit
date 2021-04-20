@@ -33,7 +33,7 @@ TEST(ExecuteMachineCodeTest, ExecuteMachineCode) {
     constexpr uint64_t kScratchPadSize = 1024;
     auto address_or_error = AllocateInTraceeAsUniqueResource(pid, 0, kScratchPadSize);
     CHECK(address_or_error.has_value());
-    const uint64_t address = address_or_error.value();
+    const uint64_t address = address_or_error.value().get();
 
     // This code moves a constant into rax and enters a breakpoint. The value in rax is interpreted
     // as a return value.

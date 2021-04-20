@@ -51,7 +51,7 @@ void InitLogFile(const std::filesystem::path& path) noexcept {
   // Do not call CHECK here - it will end up calling LogToFile,
   // which tries to lock on the same mutex a second time. This will
   // lead to an error since the mutex is not recursive.
-  if (log_file != nullptr) {
+  if (log_file.get() != nullptr) {
     PLATFORM_ABORT();
   }
 
@@ -63,9 +63,9 @@ void InitLogFile(const std::filesystem::path& path) noexcept {
 #else
     log_file.reset(fopen(path.string().c_str(), "wbe"));
 #endif
-  } while (log_file == nullptr && errno == EINTR);
+  } while (log_file.get() == nullptr && errno == EINTR);
 
-  if (log_file == nullptr) {
+  if (log_file.get() == nullptr) {
     // Log a error (to stderr)
     fprintf(stderr, "Error: Unable to open logfile \"%s\": %s\n", path.string().c_str(),
             SafeStrerror(errno));
@@ -74,11 +74,11 @@ void InitLogFile(const std::filesystem::path& path) noexcept {
 
 void LogToFile(const std::string& message) noexcept {
   absl::MutexLock lock(&log_file_mutex);
-  if (log_file != nullptr) {
+  if (log_file.get() != nullptr) {
     // Ignore any errors that can happen, we cannot do anything about them at this
     // point anyways.
-    fwrite(message.c_str(), message.size(), 1, log_file);
-    fflush(log_file);
+    fwrite(message.c_str(), message.size(), 1, log_file.get());
+    fflush(log_file.get());
   }
 }
 

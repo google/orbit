@@ -55,7 +55,7 @@ ErrorMessageOr<uint64_t> ExecuteInProcess(pid_t pid, void* function_address, uin
 
   OUTCOME_TRY(address, AllocateInTraceeAsUniqueResource(pid, 0, kCodeScratchPadSize));
 
-  OUTCOME_TRY(return_value, ExecuteMachineCode(pid, address, code));
+  OUTCOME_TRY(return_value, ExecuteMachineCode(pid, address.get(), code));
 
   return return_value;
 }

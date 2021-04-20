@@ -91,7 +91,7 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
   {
     auto unique_resource_or_error = AllocateInTraceeAsUniqueResource(pid, 0, kMemorySize);
     ASSERT_TRUE(unique_resource_or_error.has_value());
-    address = unique_resource_or_error.value();
+    address = unique_resource_or_error.value().get();
     EXPECT_TRUE(ProcessHasRwxMapAtAddress(pid, address));
   }
   EXPECT_FALSE(ProcessHasRwxMapAtAddress(pid, address));

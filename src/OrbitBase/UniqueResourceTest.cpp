@@ -20,7 +20,7 @@ TEST(UniqueResource, Construct) {
   {
     orbit_base::unique_resource ur{123, [&was_deleted](size_t) { was_deleted++; }};
     ASSERT_TRUE(static_cast<bool>(ur));
-    ASSERT_TRUE(static_cast<size_t>(ur) == 123);
+    ASSERT_TRUE(static_cast<size_t>(ur.get()) == 123);
   }
   ASSERT_EQ(was_deleted, 1);
 }

@@ -72,7 +72,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   // Write the name of the .so into memory at code_address with offset of kCodeScratchPadSize.
   std::vector<uint8_t> path_as_vector(path_length);
   memcpy(path_as_vector.data(), path.c_str(), path_length);
-  const uint64_t so_path_address = code_address + kCodeScratchPadSize;
+  const uint64_t so_path_address = code_address.get() + kCodeScratchPadSize;
   auto write_memory_result = WriteTraceesMemory(pid, so_path_address, path_as_vector);
   if (write_memory_result.has_error()) {
     return write_memory_result.error();
@@ -100,7 +100,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-  OUTCOME_TRY(return_value, ExecuteMachineCode(pid, code_address, code));
+  OUTCOME_TRY(return_value, ExecuteMachineCode(pid, code_address.get(), code));
 
   return absl::bit_cast<void*>(return_value);
 }
@@ -119,7 +119,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   // Write the name of symbol into memory at code_address with offset of kCodeScratchPadSize.
   std::vector<uint8_t> symbol_name_as_vector(symbol_name_length, 0);
   memcpy(symbol_name_as_vector.data(), symbol.data(), symbol.length());
-  const uint64_t symbol_name_address = code_address + kCodeScratchPadSize;
+  const uint64_t symbol_name_address = code_address.get() + kCodeScratchPadSize;
   auto write_memory_result = WriteTraceesMemory(pid, symbol_name_address, symbol_name_as_vector);
   if (write_memory_result.has_error()) {
     return write_memory_result.error();
@@ -147,7 +147,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-  OUTCOME_TRY(return_value, ExecuteMachineCode(pid, code_address, code));
+  OUTCOME_TRY(return_value, ExecuteMachineCode(pid, code_address.get(), code));
 
   return absl::bit_cast<void*>(return_value);
 }
@@ -178,7 +178,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-  auto return_value_or_error = ExecuteMachineCode(pid, code_address, code);
+  auto return_value_or_error = ExecuteMachineCode(pid, code_address.get(), code);
   if (return_value_or_error.has_error()) {
     return return_value_or_error.error();
   }
