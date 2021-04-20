@@ -31,8 +31,6 @@ void LinuxTracingHandler::Start(CaptureOptions capture_options) {
   CHECK(tracer_ == nullptr);
   bool enable_introspection = capture_options.enable_introspection();
 
-  SetupOrbitApi(capture_options);
-
   tracer_ = std::make_unique<orbit_linux_tracing::Tracer>(std::move(capture_options));
   tracer_->SetListener(this);
   tracer_->Start();
@@ -60,13 +58,6 @@ void LinuxTracingHandler::SetupIntrospection() {
         introspection_scope.add_registers(scope.encoded_event.args[5]);
         OnIntrospectionScope(introspection_scope);
       });
-}
-
-void LinuxTracingHandler::SetupOrbitApi(const CaptureOptions& capture_options) {
-  auto result = orbit_api::InitializeInTracee(capture_options);
-  if (result.has_error()) {
-    ERROR("Initializing Orbit Api: %s", result.error().message());
-  }
 }
 
 void LinuxTracingHandler::Stop() {

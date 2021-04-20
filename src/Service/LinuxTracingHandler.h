@@ -12,7 +12,6 @@
 #include <memory>
 #include <string>
 
-#include "Api/InitializeInTracee.h"
 #include "LinuxTracing/Tracer.h"
 #include "LinuxTracing/TracerListener.h"
 #include "OrbitBase/Logging.h"
@@ -58,7 +57,6 @@ class LinuxTracingHandler : public orbit_linux_tracing::TracerListener {
   std::unique_ptr<orbit_base::TracingListener> orbit_tracing_listener_;
 
   void SetupIntrospection();
-  void SetupOrbitApi(const orbit_grpc_protos::CaptureOptions& capture_options);
 };
 
 }  // namespace orbit_service
