@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <absl/strings/match.h>
+#include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <capstone/capstone.h>
 #include <gtest/gtest.h>
@@ -171,10 +172,13 @@ TEST(DisassemblerTest, Disassemble) {
     }
   }
 
-  // Backup registers.
-  RegisterState original_registers;
-  CHECK(!original_registers.BackupRegisters(pid).has_error());
-  const uint64_t rip = original_registers.GetGeneralPurposeRegisters()->x86_64.rip;
+  // Get rip.
+  auto rip_or_error = AllInstructionPointersFromProcess(pid);
+  CHECK(!rip_or_error.has_error());
+  const uint64_t rip = *(rip_or_error.value().begin());
+  // RegisterState original_registers;
+  // CHECK(!original_registers.BackupRegisters(pid).has_error());
+  // const uint64_t rip = original_registers.GetGeneralPurposeRegisters()->x86_64.rip;
   LOG("rip: %#x", rip);
 
   // Copy the entire function over into this process.
@@ -182,37 +186,45 @@ TEST(DisassemblerTest, Disassemble) {
   CHECK(function_backup.has_value());
 
   // Disassemble the function.
+
   csh handle = 0;
-  cs_insn* insn = nullptr;
-  cs_err err = cs_open(CS_ARCH_X86, CS_MODE_64, &handle);
-  CHECK(err == 0);
-  size_t count = cs_disasm(handle, static_cast<const uint8_t*>(function_backup.value().data()),
-                           size_do_something, address_do_something, 0, &insn);
+  cs_err error_code = cs_open(CS_ARCH_X86, CS_MODE_64, &handle);
+  CHECK(error_code == CS_ERR_OK);
+  //   if (error_code != CS_ERR_OK) {
+  //     return ErrorMessage("Unable to open capstone library. Error code: %u", error_code);
+  //   }
+  ErrorMessageOr<int> length_or_error =
+      LengthOfOverriddenInstructions(handle, function_backup.value(), 5);
+  ASSERT_FALSE(length_or_error.has_error());
+  const size_t length_override = length_or_error.value();
 
-  size_t j;
-  for (j = 0; j < count; j++) {
-    LOG("0x%llx:\t%-12s %s", insn[j].address, insn[j].mnemonic, insn[j].op_str);
-  }
-  // Print out the next offset, after the last instruction.
-  LOG("0x%llx:", insn[j - 1].address + insn[j - 1].size);
+  // cs_insn* insn = nullptr;
+  // size_t count = cs_disasm(handle, static_cast<const uint8_t*>(function_backup.value().data()),
+  //                          size_do_something, address_do_something, 0, &insn);
+  // size_t j;
+  // for (j = 0; j < count; j++) {
+  //   std::string machine_code;
+  //   for (int k = 0; k < insn[j].size; k++) {
+  //     machine_code = absl::StrCat(machine_code, k==0? absl::StrFormat("%#0.2x",
+  //     insn[j].bytes[k]):absl::StrFormat("%0.2x", insn[j].bytes[k]));
+  //   }
+  //   LOG("0x%llx:\t%-12s %s , %s", insn[j].address, insn[j].mnemonic, insn[j].op_str,
+  //   machine_code);
+  // }
+  // // Print out the next offset, after the last instruction.
+  // LOG("0x%llx:", insn[j - 1].address + insn[j - 1].size);
+  // cs_free(insn, count);
 
-  size_t length_override = 0;
-  for (size_t i = 0; i < count; i++) {
-    length_override += insn[i].size;
-    if (length_override >= 5) break;
-  }
-  CHECK(length_override >= 5);  // function too short?!
   LOG("length_override: %u", length_override);
-  if (rip >= address_do_something && rip < address_do_something + length_override) {
+  if (rip > address_do_something && rip < address_do_something + length_override) {
     LOG("********** rip: %#x , address_do_something: %#x , length_override: %#x\n", rip,
         address_do_something, length_override);
-  }
+  }else{
 
   // override 5 bytes with jmp, write the modified chunk to tracee and
   // keep a copy of the original code in the tracer.
-  std::vector<uint8_t> tmp_prolog(length_override);
-  memcpy(tmp_prolog.data(), function_backup.value().data(), length_override);
-  std::vector<uint8_t> backup_prolog(tmp_prolog);
+  std::vector<uint8_t> backup_prolog(length_override);
+  memcpy(backup_prolog.data(), function_backup.value().data(), length_override);
 
   // get some memory for the trampoline
   auto trampoline_or_error = AllocateMemoryForTrampolines(pid, address_range_code, 1024 * 1024);
@@ -225,8 +237,7 @@ TEST(DisassemblerTest, Disassemble) {
   // Not strictly necessary: fill the instructions we override with nop's so we leave no garbage
   // code here.
   while (code.GetResultAsVector().size() < length_override) code.AppendBytes({0x90});
-  for (int i = 0; i < 5; i++) tmp_prolog[i] = code.GetResultAsVector()[i];
-  auto result_write_code = WriteTraceesMemory(pid, address_do_something, tmp_prolog);
+  auto result_write_code = WriteTraceesMemory(pid, address_do_something, code.GetResultAsVector());
   CHECK(!result_write_code.has_error());
 
   // Flush cache so the change becomes active
@@ -288,9 +299,9 @@ TEST(DisassemblerTest, Disassemble) {
   ASSERT_FALSE(FreeInTracee(pid, address_trampoline, 1024 * 1024).has_error());
 
   // Free memory allocated by cs_disasm().
-  cs_free(insn, count);
   cs_free(insn_jmp, count_jmp);
   cs_free(insn_tra, count_tra);
+  }
   cs_close(&handle);
 
   // Detach and end child.
