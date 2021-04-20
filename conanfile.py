@@ -229,9 +229,9 @@ class OrbitConan(ConanFile):
     def package(self):
         if self.options.debian_packaging:
             shutil.rmtree(self.package_folder)
-            self.copy("*.so*", src="bin/", dst="{}-{}/usr/lib/x86_64-linux-gnu/".format(
-                self.name, self._version()), symlinks=True)
             self.copy("OrbitService", src="bin/",
+                      dst="{}-{}/opt/developer/tools/".format(self.name, self._version()))
+            self.copy("liborbit.so", src="lib/",
                       dst="{}-{}/opt/developer/tools/".format(self.name, self._version()))
             self.copy("NOTICE",
                       dst="{}-{}/usr/share/doc/{}/".format(self.name, self._version(), self.name))
@@ -281,6 +281,7 @@ chmod -v 4775 /opt/developer/tools/OrbitService
         self.copy("NOTICE.Chromium")
         self.copy("NOTICE.Chromium.csv")
         self.copy("LICENSE")
+        self.copy("liborbit.so", src="lib/", dst="lib")
         self.copy("libOrbitVulkanLayer.so", src="lib/", dst="lib")
         self.copy("VkLayer_Orbit_implicit.json", src="lib/", dst="lib")
         self.copy("LinuxTracingIntegrationTests", src="bin/", dst="bin")
