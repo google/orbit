@@ -75,7 +75,7 @@ ErrorMessageOr<void> InitializeInTracee(const CaptureOptions& capture_options) {
   // Load liborbit.so and find api table initialization function.
   const std::string kLibPath = orbit_base::GetExecutableDir() / "liborbit.so";
   constexpr const char* kInitFunction = "orbit_api_initialize";
-  OUTCOME_TRY(handle, DlopenInTracee(pid, kLibPath));
+  OUTCOME_TRY(handle, DlopenInTracee(pid, kLibPath, RTLD_NOW));
   OUTCOME_TRY(orbit_init_function, DlsymInTracee(pid, handle, kInitFunction));
 
   // Initialize all api function tables.
