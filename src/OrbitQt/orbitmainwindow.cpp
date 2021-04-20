@@ -430,8 +430,12 @@ void OrbitMainWindow::SetupTargetLabel() {
   QObject::connect(disconnect_target_button, &QPushButton::clicked, this,
                    [this] { on_actionEnd_Session_triggered(); });
 
-  QObject::connect(target_label_, &orbit_qt::TargetLabel::SizeChanged, ui->menuBar,
-                   &QMenuBar::adjustSize);
+  QObject::connect(target_label_, &orbit_qt::TargetLabel::SizeChanged, this,
+                   [this, target_widget]() {
+                     target_label_->adjustSize();
+                     target_widget->adjustSize();
+                     ui->menuBar->setCornerWidget(target_widget, Qt::TopRightCorner);
+                   });
 }
 
 void OrbitMainWindow::SetupAccessibleNamesForAutomation() {
