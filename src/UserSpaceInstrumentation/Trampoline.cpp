@@ -17,7 +17,10 @@
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
+<<<<<<< HEAD
 #include "OrbitBase/UniqueResource.h"
+=======
+>>>>>>> ab0cb390 (Tooling for trampolines.)
 #include "RegisterState.h"
 
 namespace orbit_user_space_instrumentation {
@@ -161,7 +164,11 @@ ErrorMessageOr<uint64_t> AllocateMemoryForTrampolines(pid_t pid, const AddressRa
   return AllocateInTracee(pid, address_range.start, size);
 }
 
+<<<<<<< HEAD
 ErrorMessageOr<absl::flat_hash_set<uint64_t>> GetInstructionPointersFromProcess(pid_t pid) {
+=======
+ErrorMessageOr<absl::flat_hash_set<uint64_t>> AllInstructionPointersFromProcess(pid_t pid) {
+>>>>>>> ab0cb390 (Tooling for trampolines.)
   absl::flat_hash_set<uint64_t> result;
   std::vector<pid_t> tids = orbit_base::GetTidsOfProcess(pid);
   for (pid_t tid : tids) {
@@ -172,15 +179,25 @@ ErrorMessageOr<absl::flat_hash_set<uint64_t>> GetInstructionPointersFromProcess(
   return result;
 }
 
+<<<<<<< HEAD
 std::optional<int> LengthOfOverwrittenInstructions(csh handle, const std::vector<uint8_t>& code,
                                                    int bytes_to_overwrite) {
   cs_insn* instruction = cs_malloc(handle);
   CHECK(instruction != nullptr);
+=======
+ErrorMessageOr<int> LengthOfOverriddenInstructions(csh handle, const std::vector<uint8_t>& code,
+                                                   int bytes_to_override) {
+  cs_insn* instruction = cs_malloc(handle);
+  if (instruction == nullptr) {
+    return ErrorMessage("Out of memory while disassembling with capstone.");
+  }
+>>>>>>> ab0cb390 (Tooling for trampolines.)
   orbit_base::unique_resource scope_exit{instruction,
                                          [](cs_insn* instruction) { cs_free(instruction, 1); }};
 
   const uint8_t* code_pointer = code.data();
   size_t code_size = code.size();
+<<<<<<< HEAD
   uint64_t address = 0;
   int length = 0;
   while (cs_disasm_iter(handle, &code_pointer, &code_size, &address, instruction)) {
@@ -193,6 +210,21 @@ std::optional<int> LengthOfOverwrittenInstructions(csh handle, const std::vector
     return std::nullopt;
   }
   return length;
+=======
+  uint64_t address = 0x00;
+  int length_override = 0;
+
+  while (cs_disasm_iter(handle, &code_pointer, &code_size, &address, instruction)) {
+    length_override += instruction->size;
+    if (length_override >= bytes_to_override) break;
+  }
+
+  if (length_override < bytes_to_override) {
+    return ErrorMessage(absl::StrFormat(
+        "Function is too short. Only %d bytes of code could be disassembled.", length_override));
+  }
+  return length_override;
+>>>>>>> ab0cb390 (Tooling for trampolines.)
 }
 
 }  // namespace orbit_user_space_instrumentation

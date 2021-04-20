@@ -66,11 +66,13 @@ namespace orbit_user_space_instrumentation {
 // taken up by the instructions we hit with the write operation. Example:
 //
 // Beginning of the code we want to overwrite:
+
 // 0x5583ba2837a0: push         rbp
 // 0x5583ba2837a1: mov          rbp, rsp
 // 0x5583ba2837a4: sub          rsp, 0x10
 // 0x5583ba2837a8: mov          rax, qword ptr fs:[0x28]
 //
+
 // We'd like to overwrite from 0x5583ba2837a0 with a jmp which is five bytes long:
 // 0x5583ba2837a0: jmp          0x5583ba0bf000
 // 0x5583ba2837a5: (last three bytes of the encoding of `sub rsp, 0x10`)
