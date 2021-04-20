@@ -109,6 +109,7 @@ std::vector<FunctionInfo> ModuleManager::GetOrbitFunctionsOfProcess(
 }
 
 std::vector<const ModuleData*> ModuleManager::GetAllModuleData() const {
+  absl::MutexLock lock(&mutex_);
   std::vector<const ModuleData*> result;
   for (const auto& [unused_pair, module_data] : module_map_) {
     result.push_back(&module_data);

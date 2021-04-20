@@ -65,7 +65,7 @@ void LinuxTracingHandler::SetupIntrospection() {
 void LinuxTracingHandler::SetupOrbitApi(const CaptureOptions& capture_options) {
   auto result = orbit_api::InitializeInTracee(capture_options);
   if (result.has_error()) {
-    LOG("Warning: Could not initialize Orbit Api: %s", result.error().message());
+    ERROR("Initializing Orbit Api: %s", result.error().message());
   }
 }
 

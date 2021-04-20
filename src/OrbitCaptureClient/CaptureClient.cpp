@@ -96,27 +96,24 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
   return capture_result;
 }
 
+// Api functions are declared in Orbit.h. They are implemented in user code through the
+// ORBIT_API_INSTANTIATE macro. Those functions are used to query the tracee for Orbit specific
+// information, such as the memory location where Orbit should write function pointers to enable
+// the Api after having injected liborbit.so.
 [[nodiscard]] static std::vector<ApiFunction> FindApiFunctions(
     const orbit_client_data::ModuleManager& module_manager) {
-  // Api functions are declared in Orbit.h. They are implemented in user code through the
-  // ORBIT_API_INSTANTIATE macro. Those functions are used to query the tracee for Orbit specific
-  // information such as the memory location where Orbit should write function pointers to enable
-  // the Api after having injected liborbit.so.
-
   std::vector<ApiFunction> api_functions;
   for (const ModuleData* module_data : module_manager.GetAllModuleData()) {
     constexpr const char* kOrbitApiGetAddressPrefix = "orbit_api_get_function_table_address_v";
     for (size_t i = 0; i <= kOrbitApiVersion; ++i) {
-      std::string orbit_api_function_name = absl::StrFormat("%s%u", kOrbitApiGetAddressPrefix, i);
-      uint64_t function_hash = function_utils::GetHash(orbit_api_function_name);
-
-      const FunctionInfo* function_info = module_data->FindFunctionFromHash(function_hash);
+      std::string function_name = absl::StrFormat("%s%u", kOrbitApiGetAddressPrefix, i);
+      const FunctionInfo* function_info = module_data->FindFunctionFromPrettyName(function_name);
       if (function_info == nullptr) continue;
       ApiFunction api_function;
       api_function.set_module_path(function_info->module_path());
       api_function.set_module_build_id(function_info->module_build_id());
       api_function.set_address(function_info->address());
-      api_function.set_name(orbit_api_function_name);
+      api_function.set_name(function_name);
       api_function.set_api_version(i);
       api_functions.emplace_back(api_function);
     }
