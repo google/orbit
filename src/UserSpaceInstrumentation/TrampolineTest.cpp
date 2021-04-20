@@ -15,6 +15,7 @@
 #include "ElfUtils/LinuxMap.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "RegisterState.h"
 #include "Trampoline.h"
 #include "UserSpaceInstrumentation/Attach.h"
 
@@ -254,6 +255,51 @@ TEST(TrampolineTest, AllocateMemoryForTrampolines) {
   CHECK(DetachAndContinueProcess(pid).has_value());
   kill(pid, SIGKILL);
   waitpid(pid, nullptr, 0);
+}
+
+TEST(TrampolineTest, AllInstructionPointersFromProcess) {
+  pid_t pid = fork();
+  CHECK(pid != -1);
+  if (pid == 0) {
+    while (true) {
+    }
+  }
+
+  // Stop the process using our tooling.
+  CHECK(AttachAndStopProcess(pid).has_value());
+
+  auto rips_or_error = AllInstructionPointersFromProcess(pid);
+  ASSERT_FALSE(rips_or_error.has_error());
+  EXPECT_EQ(1, rips_or_error.value().size());
+
+  // Detach and end child.
+  CHECK(DetachAndContinueProcess(pid).has_value());
+  kill(pid, SIGKILL);
+  waitpid(pid, nullptr, 0);
+}
+
+TEST(TrampolineTest, LengthOfOverriddenInstructions) {
+  csh handle = 0;
+  cs_err error_code = cs_open(CS_ARCH_X86, CS_MODE_64, &handle);
+  CHECK(error_code == CS_ERR_OK);
+
+  constexpr int kBytesToOverride = 5;
+  const std::vector<uint8_t> kFiveNops{0x90, 0x90, 0x90, 0x90, 0x90};
+  std::optional<int> result = LengthOfOverriddenInstructions(handle, kFiveNops, kBytesToOverride);
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(5, result.value());
+
+  const std::vector<uint8_t> kProlog{0x55, 0x48, 0x89, 0xe5, 0x48, 0x83, 0xec, 0x10, 0x64,
+                                     0x48, 0x8b, 0x04, 0x25, 0x28, 0x00, 0x00, 0x00};
+  result = LengthOfOverriddenInstructions(handle, kProlog, kBytesToOverride);
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(8, result.value());
+
+  const std::vector<uint8_t> kFourNops{0x90, 0x90, 0x90, 0x90};
+  result = LengthOfOverriddenInstructions(handle, kFourNops, kBytesToOverride);
+  ASSERT_FALSE(result.has_value());
+
+  cs_close(&handle);
 }
 
 }  // namespace orbit_user_space_instrumentation
