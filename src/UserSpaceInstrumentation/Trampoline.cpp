@@ -172,8 +172,8 @@ ErrorMessageOr<absl::flat_hash_set<uint64_t>> GetInstructionPointersFromProcess(
   return result;
 }
 
-std::optional<int> LengthOfOverriddenInstructions(csh handle, const std::vector<uint8_t>& code,
-                                                  int bytes_to_override) {
+std::optional<int> LengthOfOverwrittenInstructions(csh handle, const std::vector<uint8_t>& code,
+                                                   int bytes_to_overwrite) {
   cs_insn* instruction = cs_malloc(handle);
   CHECK(instruction != nullptr);
   orbit_base::unique_resource scope_exit{instruction,
@@ -185,11 +185,11 @@ std::optional<int> LengthOfOverriddenInstructions(csh handle, const std::vector<
   int length = 0;
   while (cs_disasm_iter(handle, &code_pointer, &code_size, &address, instruction)) {
     length += instruction->size;
-    if (length >= bytes_to_override) break;
+    if (length >= bytes_to_overwrite) break;
   }
 
   // Function too short?
-  if (length < bytes_to_override) {
+  if (length < bytes_to_overwrite) {
     return std::nullopt;
   }
   return length;

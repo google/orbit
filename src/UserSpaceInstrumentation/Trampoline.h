@@ -62,31 +62,31 @@ namespace orbit_user_space_instrumentation {
 [[nodiscard]] ErrorMessageOr<absl::flat_hash_set<uint64_t>> GetInstructionPointersFromProcess(
     pid_t pid);
 
-// When overriding instructions at the beginning of a function we need to know the number of bytes
+// When overwriting instructions at the beginning of a function we need to know the number of bytes
 // taken up by the instructions we hit with the write operation. Example:
 //
-// Beginning of the code we want to override:
+// Beginning of the code we want to overwrite:
 // 0x5583ba2837a0: push         rbp
 // 0x5583ba2837a1: mov          rbp, rsp
 // 0x5583ba2837a4: sub          rsp, 0x10
 // 0x5583ba2837a8: mov          rax, qword ptr fs:[0x28]
 //
-// We'd like to override from 0x5583ba2837a0 with a jmp which is five bytes long:
+// We'd like to overwrite from 0x5583ba2837a0 with a jmp which is five bytes long:
 // 0x5583ba2837a0: jmp          0x5583ba0bf000
 // 0x5583ba2837a5: (last three bytes of the encoding of `sub rsp, 0x10`)
 //
 // Since the instruction lengths do not align we end up with three bytes of garbage, the next intact
-// instruction starts at 0x5583ba2837a8. So LengthOfOverriddenInstructions would return eight.
+// instruction starts at 0x5583ba2837a8. So LengthOfOverwrittenInstructions would return eight.
 //
-// `handle` is a handle to the capstone library returned by cs_open. `code` contains  the machine
-// code of the function that should be overridden. `bytes_to_override` is the number of bytes to
-// override at the beginning of `code`.
-// The return value is either the number of bytes as described above or unset if there was a problem
-// with the function. That might either be that the function is too short or that we were unable to
-// disassemble enough code to cover `bytes_to_override` bytes.
-[[nodiscard]] std::optional<int> LengthOfOverriddenInstructions(csh handle,
-                                                                const std::vector<uint8_t>& code,
-                                                                int bytes_to_override);
+// `handle` is a handle to the capstone library returned by cs_open. `code` contains the machine
+// code of the function that should be overwritten. `bytes_to_overwrite` is the number of bytes to
+// overwrite at the beginning of `code`.
+// The return value is either the number of bytes as described above or nullopt if there was a
+// problem with the function. That might either be that the function is too short or that we were
+// unable to disassemble enough code to cover `bytes_to_overwrite` bytes.
+[[nodiscard]] std::optional<int> LengthOfOverwrittenInstructions(csh handle,
+                                                                 const std::vector<uint8_t>& code,
+                                                                 int bytes_to_overwrite);
 
 }  // namespace orbit_user_space_instrumentation
 

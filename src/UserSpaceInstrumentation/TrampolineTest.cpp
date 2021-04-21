@@ -278,29 +278,35 @@ TEST(TrampolineTest, GetInstructionPointersFromProcess) {
   waitpid(pid, nullptr, 0);
 }
 
-TEST(TrampolineTest, LengthOfOverriddenInstructions) {
+TEST(TrampolineTest, LengthOfOverwrittenInstructions) {
   csh handle = 0;
   cs_err error_code = cs_open(CS_ARCH_X86, CS_MODE_64, &handle);
   CHECK(error_code == CS_ERR_OK);
 
-  constexpr int kBytesToOverride = 5;
+  constexpr int kBytesToOverwrite = 5;
+  // 0x90 is maschine code for "nop".
   const std::vector<uint8_t> kFiveNops{0x90, 0x90, 0x90, 0x90, 0x90};
-  std::optional<int> result = LengthOfOverriddenInstructions(handle, kFiveNops, kBytesToOverride);
+  std::optional<int> result = LengthOfOverwrittenInstructions(handle, kFiveNops, kBytesToOverwrite);
   ASSERT_TRUE(result.has_value());
   EXPECT_EQ(5, result.value());
 
+  // 00: push  rbp                       0x55
+  // 01: mov   rbp, rsp                  0x48 0x89 0xe5
+  // 04: sub   rsp, 0x10                 0x48 0x83 0xec 0x10
+  // 08: mov   rax, qword ptr fs:[0x28]  0x64 0x48 0x8b 0x04 0x25 0x28 0x00 0x00 0x00
   const std::vector<uint8_t> kProlog{0x55, 0x48, 0x89, 0xe5, 0x48, 0x83, 0xec, 0x10, 0x64,
                                      0x48, 0x8b, 0x04, 0x25, 0x28, 0x00, 0x00, 0x00};
-  result = LengthOfOverriddenInstructions(handle, kProlog, kBytesToOverride);
+  result = LengthOfOverwrittenInstructions(handle, kProlog, kBytesToOverwrite);
   ASSERT_TRUE(result.has_value());
   EXPECT_EQ(8, result.value());
 
   const std::vector<uint8_t> kFourNops{0x90, 0x90, 0x90, 0x90};
-  result = LengthOfOverriddenInstructions(handle, kFourNops, kBytesToOverride);
+  result = LengthOfOverwrittenInstructions(handle, kFourNops, kBytesToOverwrite);
   ASSERT_FALSE(result.has_value());
 
+  // 0x06 is an illegal instruction in x64.
   const std::vector<uint8_t> kIllegalInstructions{0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06};
-  result = LengthOfOverriddenInstructions(handle, kIllegalInstructions, kBytesToOverride);
+  result = LengthOfOverwrittenInstructions(handle, kIllegalInstructions, kBytesToOverwrite);
   ASSERT_FALSE(result.has_value());
 
   cs_close(&handle);
