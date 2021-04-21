@@ -5,10 +5,7 @@
 #ifndef ORBIT_QT_ORBIT_GL_WIDGET_H_
 #define ORBIT_QT_ORBIT_GL_WIDGET_H_
 
-// clang-format off
-#include "OpenGl.h" // IWYU pragma: keep
-// clang-format on
-
+#include <glad/glad.h>
 #include <stdint.h>
 
 // Disable "qopenglfunctions.h is not compatible with GLEW, GLEW defines will be undefined" warning

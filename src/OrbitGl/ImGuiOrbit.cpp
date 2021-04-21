@@ -12,6 +12,7 @@
 
 #include "ImGuiOrbit.h"
 
+#include <glad/glad.h>
 #include <imgui.h>
 #include <stddef.h>
 
@@ -19,7 +20,6 @@
 
 #include "GlCanvas.h"
 #include "Images.h"
-#include "OpenGl.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "absl/base/casts.h"
@@ -416,10 +416,12 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
   glUseProgram(g_ShaderHandle);
   glUniform1i(g_AttribLocationTex, 0);
   glUniformMatrix4fv(g_AttribLocationProjMtx, 1, GL_FALSE, &ortho_projection[0][0]);
-#ifdef GL_SAMPLER_BINDING
-  glBindSampler(0, 0);  // We use combined texture/sampler state. Applications
-                        // using GL 3.3 may set that otherwise.
-#endif
+
+  if (GLAD_GL_VERSION_3_3) {
+    // We use combined texture/sampler state. Applications
+    // using GL 3.3 may set that otherwise.
+    glBindSampler(0, 0);
+  }
 
 #ifndef IMGUI_IMPL_OPENGL_ES2
   // Recreate the VAO every time
@@ -503,9 +505,9 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
   // Restore modified GL state
   glUseProgram(last_program);
   glBindTexture(GL_TEXTURE_2D, last_texture);
-#ifdef GL_SAMPLER_BINDING
-  glBindSampler(0, last_sampler);
-#endif
+  if (GLAD_GL_VERSION_3_3) {
+    glBindSampler(0, last_sampler);
+  }
   glActiveTexture(last_active_texture);
 #ifndef IMGUI_IMPL_OPENGL_ES2
   glBindVertexArray(last_vertex_array);

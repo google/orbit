@@ -88,9 +88,10 @@ void OrbitGLWidget::initializeGL() {
 
   initializeOpenGLFunctions();
 
-  if (gl_canvas_) {
-    gl_canvas_->Initialize();
-  }
+  gladLoadGLLoader([](const char* name) {
+    // NOLINTNEXTLINE
+    return reinterpret_cast<void*>(QOpenGLContext::currentContext()->getProcAddress(name));
+  });
 
   PrintContextInformation();
 }

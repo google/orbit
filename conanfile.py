@@ -99,9 +99,8 @@ class OrbitConan(ConanFile):
 
         if self.options.with_gui:
             self.requires("freetype/2.10.0@bincrafters/stable#0")
-            self.requires(
-                "freetype-gl/8d9a97a@{}#2836d28f3d91c308ec9652c2054015db".format(self._orbit_channel))
-            self.requires("glew/2.1.0@{}#0".format(self._orbit_channel))
+            self.requires("freetype-gl/79b03d9@{}".format(self._orbit_channel))
+            self.requires("glad/0.1.34")
             self.requires("imgui/1.69@bincrafters/stable#0")
             self.requires("libpng/1.6.37@bincrafters/stable#0")
             self.requires("libssh2/1.9.0#df2b6034da12cc5cb68bd3c5c22601bf")
@@ -128,7 +127,6 @@ class OrbitConan(ConanFile):
 
         self.options["gtest"].no_main = True
         if self.options.with_gui:
-            self.options["glew"].system_mesa = self.options.system_mesa
 
             if not self.options.system_qt:
                 self.options["qt"].qtwebengine = True

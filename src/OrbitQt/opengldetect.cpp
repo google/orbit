@@ -4,14 +4,9 @@
 
 #include "opengldetect.h"
 
-// This needs to be first because if it is not GL/glew.h
-// complains about being included after gl.h
-// clang-format off
-#include "OpenGl.h" // IWYU pragma: keep
-// clang-format on
-
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_split.h>
+#include <glad/glad.h>
 
 #include <QOffscreenSurface>
 #include <QOpenGLContext>

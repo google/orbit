@@ -59,7 +59,7 @@ void TextRenderer::Init() {
   if (initialized_) return;
 
   int atlas_size = 2 * 1024;
-  texture_atlas_ = texture_atlas_new(atlas_size, atlas_size, 1);
+  texture_atlas_ = ftgl::texture_atlas_new(atlas_size, atlas_size, 1);
 
   const auto exe_dir = orbit_base::GetExecutableDir();
   const auto font_file_name = (exe_dir / "fonts" / "Vera.ttf").string();
@@ -88,7 +88,7 @@ void TextRenderer::Init() {
 
   const auto vert_shader_file_name = (exe_dir / "shaders" / "v3f-t2f-c4f.vert").string();
   const auto frag_shader_file_name = (exe_dir / "shaders" / "v3f-t2f-c4f.frag").string();
-  shader_ = shader_load(vert_shader_file_name.c_str(), frag_shader_file_name.c_str());
+  shader_ = ftgl::shader_load(vert_shader_file_name.c_str(), frag_shader_file_name.c_str());
 
   mat4_set_identity(&projection_);
   mat4_set_identity(&model_);
@@ -97,7 +97,7 @@ void TextRenderer::Init() {
   initialized_ = true;
 }
 
-texture_font_t* TextRenderer::GetFont(uint32_t size) {
+ftgl::texture_font_t* TextRenderer::GetFont(uint32_t size) {
   CHECK(!fonts_by_size_.empty());
   if (fonts_by_size_.count(size) == 0) {
     auto iterator_next = fonts_by_size_.upper_bound(size);
@@ -116,7 +116,8 @@ texture_font_t* TextRenderer::GetFont(uint32_t size) {
 // already and, if not, load it explicitly (in which case the texture atlas is updated). Note that
 // texture_font_get_glyph internally may load the glyph if it does not find it. We do not want
 // that as in that case, we do not know that the atlas has actually changed.
-texture_glyph_t* TextRenderer::MaybeLoadAndGetGlyph(texture_font_t* font, const char* character) {
+ftgl::texture_glyph_t* TextRenderer::MaybeLoadAndGetGlyph(ftgl::texture_font_t* font,
+                                                          const char* character) {
   if (!texture_font_find_glyph(font, character)) {
     texture_font_load_glyph(font, character);
     texture_atlas_changed_ = true;
@@ -159,7 +160,7 @@ void TextRenderer::RenderLayer(Batcher* /*batcher*/, float layer) {
   // Get current projection matrix
   GLfloat matrix[16];
   glGetFloatv(GL_PROJECTION_MATRIX, matrix);
-  mat4* projection = reinterpret_cast<mat4*>(&matrix[0]);
+  ftgl::mat4* projection = reinterpret_cast<ftgl::mat4*>(&matrix[0]);
   projection_ = *projection;
 
   glUseProgram(shader_);
@@ -187,7 +188,7 @@ void TextRenderer::RenderDebug(Batcher* batcher) {
   }
 }
 
-void TextRenderer::DrawOutline(Batcher* batcher, vertex_buffer_t* vertex_buffer) {
+void TextRenderer::DrawOutline(Batcher* batcher, ftgl::vertex_buffer_t* vertex_buffer) {
   if (vertex_buffer == nullptr) return;
   const Color color(255, 255, 255, 255);
 
@@ -207,9 +208,9 @@ void TextRenderer::DrawOutline(Batcher* batcher, vertex_buffer_t* vertex_buffer)
   }
 }
 
-void TextRenderer::AddTextInternal(texture_font_t* font, const char* text, const vec4& color,
-                                   vec2* pen, float max_size, float z, vec2* out_text_pos,
-                                   vec2* out_text_size) {
+void TextRenderer::AddTextInternal(ftgl::texture_font_t* font, const char* text,
+                                   const ftgl::vec4& color, ftgl::vec2* pen, float max_size,
+                                   float z, ftgl::vec2* out_text_pos, ftgl::vec2* out_text_size) {
   float r = color.red;
   float g = color.green;
   float b = color.blue;
@@ -222,7 +223,7 @@ void TextRenderer::AddTextInternal(texture_font_t* font, const char* text, const
   float min_y = FLT_MAX;
   float max_y = -FLT_MAX;
   constexpr std::array<GLuint, 6> kIndices = {0, 1, 2, 0, 2, 3};
-  vec2 initial_pen = *pen;
+  ftgl::vec2 initial_pen = *pen;
 
   for (size_t i = 0; i < strlen(text); ++i) {
     if (text[i] == '\n') {
@@ -231,7 +232,7 @@ void TextRenderer::AddTextInternal(texture_font_t* font, const char* text, const
       continue;
     }
 
-    texture_glyph_t* glyph = MaybeLoadAndGetGlyph(font, text + i);
+    ftgl::texture_glyph_t* glyph = MaybeLoadAndGetGlyph(font, text + i);
     if (glyph != nullptr) {
       float kerning = (i == 0) ? 0.0f : texture_glyph_get_kerning(glyph, text + i - 1);
       pen->x += kerning;
@@ -262,7 +263,7 @@ void TextRenderer::AddTextInternal(texture_font_t* font, const char* text, const
         break;
       }
       if (!vertex_buffers_by_layer_.count(z)) {
-        vertex_buffers_by_layer_[z] = vertex_buffer_new("vertex:3f,tex_coord:2f,color:4f");
+        vertex_buffers_by_layer_[z] = ftgl::vertex_buffer_new("vertex:3f,tex_coord:2f,color:4f");
       }
       vertex_buffer_push_back(vertex_buffers_by_layer_.at(z), vertices, 4, kIndices.data(), 6);
       pen->x += glyph->advance_x;
@@ -292,8 +293,8 @@ void TextRenderer::AddText(const char* text, float x, float y, float z, const Co
     pen_.x -= string_width;
   }
 
-  vec2 out_screen_pos;
-  vec2 out_screen_size;
+  ftgl::vec2 out_screen_pos;
+  ftgl::vec2 out_screen_size;
   AddTextInternal(GetFont(font_size), text, ColorToVec4(color), &pen_, max_size, z, &out_screen_pos,
                   &out_screen_size);
 
@@ -326,10 +327,10 @@ float TextRenderer::AddTextTrailingCharsPrioritized(const char* text, float x, f
   int max_x = -INT_MAX;
 
   const size_t text_length = strlen(text);
-  texture_font_t* font = GetFont(font_size);
+  ftgl::texture_font_t* font = GetFont(font_size);
   size_t i;
   for (i = 0; i < text_length; ++i) {
-    texture_glyph_t* glyph = MaybeLoadAndGetGlyph(font, text + i);
+    ftgl::texture_glyph_t* glyph = MaybeLoadAndGetGlyph(font, text + i);
     if (glyph != nullptr) {
       float kerning = 0.0f;
       if (i > 0) {
@@ -394,8 +395,8 @@ int TextRenderer::GetStringWidthScreenSpace(const char* text, uint32_t font_size
 
   std::size_t len = strlen(text);
   for (std::size_t i = 0; i < len; ++i) {
-    texture_font_t* font = GetFont(font_size);
-    texture_glyph_t* glyph = MaybeLoadAndGetGlyph(font, text + i);
+    ftgl::texture_font_t* font = GetFont(font_size);
+    ftgl::texture_glyph_t* glyph = MaybeLoadAndGetGlyph(font, text + i);
     if (glyph != nullptr) {
       float kerning = 0.0f;
       if (i > 0) {
@@ -415,9 +416,9 @@ int TextRenderer::GetStringWidthScreenSpace(const char* text, uint32_t font_size
 
 int TextRenderer::GetStringHeightScreenSpace(const char* text, uint32_t font_size) {
   int max_height = 0.f;
-  texture_font_t* font = GetFont(font_size);
+  ftgl::texture_font_t* font = GetFont(font_size);
   for (std::size_t i = 0; i < strlen(text); ++i) {
-    texture_glyph_t* glyph = MaybeLoadAndGetGlyph(font, text + i);
+    ftgl::texture_glyph_t* glyph = MaybeLoadAndGetGlyph(font, text + i);
     if (glyph != nullptr) {
       max_height = std::max(max_height, glyph->offset_y);
     }

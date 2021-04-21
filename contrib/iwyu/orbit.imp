@@ -1,6 +1,4 @@
 [
-  # Orbit
-  { "include": ["<GL/glew.h>", "private", "\"OpenGl.h\"", "public"] },
   # GTest
   { "include": ["@<gtest/.*>", "private", "<gtest/gtest.h>", "public"] },
 
