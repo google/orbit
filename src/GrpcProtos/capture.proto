@@ -27,6 +27,18 @@ message InstrumentedFunction {
   string function_name = 5;
 }
 
+// Api functions are declared in Orbit.h. They are implemented in user code
+// through the ORBIT_API_INSTANTIATE macro. Those functions are used to query
+// the tracee for Orbit specific information. See "FindApiFunction" for more
+// details.
+message ApiFunction {
+  string module_path = 1;
+  string module_build_id = 2;
+  uint64 address = 3;
+  string name = 4;
+  uint64 api_version = 5;
+}
+
 message CaptureOptions {
   bool trace_context_switches = 1;
   int32 pid = 2;
@@ -53,6 +65,8 @@ message CaptureOptions {
 
   bool collect_memory_info = 11;
   uint64 memory_sampling_period_ns = 12;
+
+  repeated ApiFunction api_functions = 13;
 }
 
 // For CaptureEvents with a duration, excluding for now GPU-related ones, we

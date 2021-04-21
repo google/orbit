@@ -155,6 +155,16 @@ const orbit_client_protos::FunctionInfo* ModuleData::FindFunctionFromHash(uint64
   return hash_to_function_map_.contains(hash) ? hash_to_function_map_.at(hash) : nullptr;
 }
 
+[[nodiscard]] const orbit_client_protos::FunctionInfo* ModuleData::FindFunctionFromPrettyName(
+    std::string_view pretty_name) const {
+  const FunctionInfo* function_info = FindFunctionFromHash(function_utils::GetHash(pretty_name));
+  if (function_info != nullptr && function_info->pretty_name() != pretty_name) {
+    ERROR("Hash collision when looking for function \"%s\"", pretty_name);
+    function_info = nullptr;
+  }
+  return function_info;
+}
+
 std::vector<const FunctionInfo*> ModuleData::GetFunctions() const {
   absl::MutexLock lock(&mutex_);
   std::vector<const FunctionInfo*> result;

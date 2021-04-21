@@ -35,9 +35,9 @@
 //
 // Integration:
 // To integrate the manual instrumentation API in your code base, simply include this header file
-// and instantiate the "g_orbit_api_v0" global variable in your code. Orbit will automatically
+// and place the ORBIT_API_INSTANTIATE macro in an implementation file. Orbit will automatically
 // deploy and dynamically load liborbit.so into the target process. Orbit will then write the proper
-// function addresses into the "g_orbit_api_v0" table.
+// function addresses into the "g_orbit_api_v<N>" table.
 //
 // Please note that this feature is still considered "experimental".
 //
@@ -302,17 +302,22 @@ struct orbit_api_v0 {
   void (*track_double)(const char* name, double value, orbit_api_color color);
 };
 
-// User-instantiated global variable.
 extern orbit_api_v0 g_orbit_api_v0;
+extern void* orbit_api_get_function_table_address_v0();
 
-inline bool orbit_api_active_with_fence() {
+// User needs to place "ORBIT_API_INSTANTIATE" in an implementation file.
+#define ORBIT_API_INSTANTIATE  \
+  orbit_api_v0 g_orbit_api_v0; \
+  void* orbit_api_get_function_table_address_v0() { return &g_orbit_api_v0; }
+
+inline bool orbit_api_active() {
   bool active = g_orbit_api_v0.active;
   ORBIT_THREAD_FENCE_ACQUIRE();
   return active;
 }
 
 #define ORBIT_CALL(function_name) \
-  if (orbit_api_active_with_fence() && g_orbit_api_v0.function_name) g_orbit_api_v0.function_name
+  if (orbit_api_active() && g_orbit_api_v0.function_name) g_orbit_api_v0.function_name
 
 #ifdef __cplusplus
 }  // extern "C"

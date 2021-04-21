@@ -108,4 +108,13 @@ std::vector<FunctionInfo> ModuleManager::GetOrbitFunctionsOfProcess(
   return result;
 }
 
+std::vector<const ModuleData*> ModuleManager::GetAllModuleData() const {
+  absl::MutexLock lock(&mutex_);
+  std::vector<const ModuleData*> result;
+  for (const auto& [unused_pair, module_data] : module_map_) {
+    result.push_back(&module_data);
+  }
+  return result;
+}
+
 }  // namespace orbit_client_data
