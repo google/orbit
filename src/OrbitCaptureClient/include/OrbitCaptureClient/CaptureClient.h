@@ -15,11 +15,12 @@
 #include <atomic>
 #include <memory>
 
-#include "CaptureListener.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
+#include "OrbitCaptureClient/CaptureEventProcessor.h"
+#include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/TracepointCustom.h"
@@ -32,22 +33,18 @@ class CaptureClient {
  public:
   enum class State { kStopped = 0, kStarting, kStarted, kStopping };
 
-  explicit CaptureClient(const std::shared_ptr<grpc::Channel>& channel,
-                         CaptureListener* capture_listener)
-      : capture_service_{orbit_grpc_protos::CaptureService::NewStub(channel)},
-        capture_listener_{capture_listener} {
-    CHECK(capture_listener_ != nullptr);
-  }
+  explicit CaptureClient(const std::shared_ptr<grpc::Channel>& channel)
+      : capture_service_{orbit_grpc_protos::CaptureService::NewStub(channel)} {}
 
   orbit_base::Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> Capture(
       ThreadPool* thread_pool, const ProcessData& process,
       const orbit_client_data::ModuleManager& module_manager,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
-      TracepointInfoSet selected_tracepoints,
-      absl::flat_hash_set<uint64_t> frame_track_function_ids, double samples_per_second,
+      TracepointInfoSet selected_tracepoints, double samples_per_second,
       orbit_grpc_protos::UnwindingMethod unwinding_method, bool collect_thread_state,
       bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer,
-      bool collect_memory_info = false, uint64_t memory_sampling_period_ns = 0);
+      bool collect_memory_info, uint64_t memory_sampling_period_ns,
+      std::shared_ptr<CaptureEventProcessor> capture_event_processor);
 
   // Returns true if stop was initiated and false otherwise.
   // The latter can happen if for example the stop was already
@@ -76,11 +73,11 @@ class CaptureClient {
   ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureSync(
       int32_t process_id, const orbit_client_data::ModuleManager& module_manager,
       const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>& selected_functions,
-      const TracepointInfoSet& selected_tracepoints,
-      absl::flat_hash_set<uint64_t> frame_track_function_ids, double samples_per_second,
+      const TracepointInfoSet& selected_tracepoints, double samples_per_second,
       orbit_grpc_protos::UnwindingMethod unwinding_method, bool collect_thread_state,
       bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer,
-      bool collect_memory_info, uint64_t memory_sampling_period_ns);
+      bool collect_memory_info, uint64_t memory_sampling_period_ns,
+      const std::shared_ptr<CaptureEventProcessor>& capture_event_processor);
 
   [[nodiscard]] ErrorMessageOr<void> FinishCapture();
 
@@ -90,8 +87,6 @@ class CaptureClient {
                                            orbit_grpc_protos::CaptureResponse>>
       reader_writer_;
   absl::Mutex context_and_stream_mutex_;
-
-  CaptureListener* capture_listener_ = nullptr;
 
   mutable absl::Mutex state_mutex_;
   State state_ = State::kStopped;

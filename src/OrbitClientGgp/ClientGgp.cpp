@@ -78,7 +78,7 @@ bool ClientGgp::InitClient() {
   if (!InitCapture()) {
     return false;
   }
-  capture_client_ = std::make_unique<CaptureClient>(grpc_channel_, this);
+  capture_client_ = std::make_unique<CaptureClient>(grpc_channel_);
   string_manager_ = std::make_shared<StringManager>();
 
   return true;
@@ -105,10 +105,12 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
   UnwindingMethod unwinding_method = options_.use_framepointer_unwinding
                                          ? UnwindingMethod::kFramePointerUnwinding
                                          : UnwindingMethod::kDwarfUnwinding;
+
   Future<ErrorMessageOr<CaptureOutcome>> result = capture_client_->Capture(
       thread_pool, *target_process_, module_manager_, selected_functions_, selected_tracepoints,
-      absl::flat_hash_set<uint64_t>{}, options_.samples_per_second, unwinding_method,
-      collect_thread_state, enable_introspection, max_local_marker_depth_per_command_buffer);
+      options_.samples_per_second, unwinding_method, collect_thread_state, enable_introspection,
+      max_local_marker_depth_per_command_buffer, false, 0,
+      std::make_shared<CaptureEventProcessor>(this, absl::flat_hash_set<uint64_t>{}));
 
   orbit_base::ImmediateExecutor executor;
   result.Then(&executor, [this](ErrorMessageOr<CaptureOutcome> result) {

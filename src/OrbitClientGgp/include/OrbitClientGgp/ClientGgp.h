@@ -82,7 +82,7 @@ class ClientGgp final : public CaptureListener {
   std::unique_ptr<ProcessData> target_process_;
   orbit_client_data::ModuleManager module_manager_;
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions_;
-  ModuleData* main_module_;
+  ModuleData* main_module_ = nullptr;
   std::shared_ptr<StringManager> string_manager_;
   std::unique_ptr<CaptureClient> capture_client_;
   std::unique_ptr<ProcessClient> process_client_;

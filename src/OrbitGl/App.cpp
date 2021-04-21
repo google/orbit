@@ -410,7 +410,7 @@ void OrbitApp::PostInit(bool is_connected) {
   if (is_connected) {
     CHECK(process_manager_ != nullptr);
 
-    capture_client_ = std::make_unique<CaptureClient>(grpc_channel_, this);
+    capture_client_ = std::make_unique<CaptureClient>(grpc_channel_);
 
     if (GetTargetProcess() != nullptr) {
       UpdateProcessAndModuleList();
@@ -1027,11 +1027,15 @@ void OrbitApp::StartCapture() {
   uint64_t memory_sampling_period_ns = data_manager_->memory_sampling_period_ns();
 
   CHECK(capture_client_ != nullptr);
+
+  auto capture_event_processor =
+      std::make_shared<CaptureEventProcessor>(this, std::move(frame_track_function_ids));
+
   Future<ErrorMessageOr<CaptureOutcome>> capture_result = capture_client_->Capture(
       thread_pool_.get(), *process, *module_manager_, std::move(selected_functions_map),
-      std::move(selected_tracepoints), std::move(frame_track_function_ids), samples_per_second,
-      unwinding_method, collect_thread_states, enable_introspection,
-      max_local_marker_depth_per_command_buffer, collect_memory_info, memory_sampling_period_ns);
+      std::move(selected_tracepoints), samples_per_second, unwinding_method, collect_thread_states,
+      enable_introspection, max_local_marker_depth_per_command_buffer, collect_memory_info,
+      memory_sampling_period_ns, capture_event_processor);
 
   capture_result.Then(main_thread_executor_, [this](ErrorMessageOr<CaptureOutcome> capture_result) {
     if (capture_result.has_error()) {
