@@ -60,8 +60,9 @@ class ApiEventCaptureListener : public EmptyCaptureListener {
 class ApiTester {
  public:
   ApiTester()
-      : api_event_processor_(&api_event_listener_),
-        capture_event_processor_(&capture_event_listener_, {}) {}
+      : api_event_processor_{&api_event_listener_},
+        capture_event_processor_{
+            CaptureEventProcessor::CreateForCaptureListener(&capture_event_listener_, {})} {}
 
   ApiTester& Start(const char* name = nullptr, orbit_api_color color = kOrbitColorAuto) {
     EnqueueApiEvent(orbit_api::kScopeStart, name, 0, color);
@@ -130,7 +131,7 @@ class ApiTester {
     api_event->set_r5(encoded_event.args[5]);
 
     api_event_processor_.ProcessApiEvent(*api_event);
-    capture_event_processor_.ProcessEvent(client_capture_event);
+    capture_event_processor_->ProcessEvent(client_capture_event);
   }
 
   [[nodiscard]] static orbit_api::Event ApiEventFromTimerInfo(
@@ -156,7 +157,7 @@ class ApiTester {
 
   // ApiEventProcessor as part of a CaptureEventProcessor.
   ApiEventCaptureListener capture_event_listener_;
-  CaptureEventProcessor capture_event_processor_;
+  std::shared_ptr<CaptureEventProcessor> capture_event_processor_;
 };
 
 TEST(ApiEventProcessor, Scopes) {

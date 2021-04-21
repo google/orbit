@@ -110,7 +110,7 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
       thread_pool, *target_process_, module_manager_, selected_functions_, selected_tracepoints,
       options_.samples_per_second, unwinding_method, collect_thread_state, enable_introspection,
       max_local_marker_depth_per_command_buffer, false, 0,
-      std::make_shared<CaptureEventProcessor>(this, absl::flat_hash_set<uint64_t>{}));
+      CaptureEventProcessor::CreateForCaptureListener(this, absl::flat_hash_set<uint64_t>{}));
 
   orbit_base::ImmediateExecutor executor;
   result.Then(&executor, [this](ErrorMessageOr<CaptureOutcome> result) {

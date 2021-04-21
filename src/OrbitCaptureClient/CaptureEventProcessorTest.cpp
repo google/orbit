@@ -90,7 +90,7 @@ class MockCaptureListener : public CaptureListener {
 
 TEST(CaptureEventProcessor, CanHandleSchedulingSlices) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener, {});
+  auto event_processor = CaptureEventProcessor::CreateForCaptureListener(&listener, {});
 
   ClientCaptureEvent event;
   SchedulingSlice* scheduling_slice = event.mutable_scheduling_slice();
@@ -103,7 +103,7 @@ TEST(CaptureEventProcessor, CanHandleSchedulingSlices) {
   TimerInfo actual_timer;
   EXPECT_CALL(listener, OnTimer).Times(1).WillOnce(SaveArg<0>(&actual_timer));
 
-  event_processor.ProcessEvent(event);
+  event_processor->ProcessEvent(event);
 
   EXPECT_EQ(actual_timer.start(),
             scheduling_slice->out_timestamp_ns() - scheduling_slice->duration_ns());
@@ -146,13 +146,13 @@ static void ExpectCallstackSamplesEqual(const CallstackEvent& actual_callstack_e
 
 TEST(CaptureEventProcessor, CanHandleOneCallstackSample) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener, {});
+  auto event_processor = CaptureEventProcessor::CreateForCaptureListener(&listener, {});
 
   ClientCaptureEvent interned_callstack_event;
   InternedCallstack* interned_callstack =
       AddAndInitializeInternedCallstack(interned_callstack_event);
 
-  event_processor.ProcessEvent(interned_callstack_event);
+  event_processor->ProcessEvent(interned_callstack_event);
 
   ClientCaptureEvent event;
   CallstackSample* callstack_sample = AddAndInitializeCallstackSample(event);
@@ -163,7 +163,7 @@ TEST(CaptureEventProcessor, CanHandleOneCallstackSample) {
   CallstackEvent actual_callstack_event;
   EXPECT_CALL(listener, OnCallstackEvent).Times(1).WillOnce(SaveArg<0>(&actual_callstack_event));
 
-  event_processor.ProcessEvent(event);
+  event_processor->ProcessEvent(event);
 
   ExpectCallstackSamplesEqual(actual_callstack_event, actual_call_stack, callstack_sample,
                               &interned_callstack->intern());
@@ -171,7 +171,7 @@ TEST(CaptureEventProcessor, CanHandleOneCallstackSample) {
 
 TEST(CaptureEventProcessor, WillOnlyHandleUniqueCallstacksOnce) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener, {});
+  auto event_processor = CaptureEventProcessor::CreateForCaptureListener(&listener, {});
   std::vector<ClientCaptureEvent> events;
 
   ClientCaptureEvent event_interned_callstack;
@@ -195,9 +195,9 @@ TEST(CaptureEventProcessor, WillOnlyHandleUniqueCallstacksOnce) {
       .WillOnce(SaveArg<0>(&actual_call_stack_event_1))
       .WillOnce(SaveArg<0>(&actual_call_stack_event_2));
 
-  event_processor.ProcessEvent(event_interned_callstack);
-  event_processor.ProcessEvent(event_1);
-  event_processor.ProcessEvent(event_2);
+  event_processor->ProcessEvent(event_interned_callstack);
+  event_processor->ProcessEvent(event_1);
+  event_processor->ProcessEvent(event_2);
 
   ExpectCallstackSamplesEqual(actual_call_stack_event_1, actual_call_stack, callstack_sample_1,
                               &interned_callstack->intern());
@@ -207,7 +207,7 @@ TEST(CaptureEventProcessor, WillOnlyHandleUniqueCallstacksOnce) {
 
 TEST(CaptureEventProcessor, CanHandleInternedCallstackSamples) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener, {});
+  auto event_processor = CaptureEventProcessor::CreateForCaptureListener(&listener, {});
 
   ClientCaptureEvent interned_callstack_event;
   InternedCallstack* interned_callstack = interned_callstack_event.mutable_interned_callstack();
@@ -228,8 +228,8 @@ TEST(CaptureEventProcessor, CanHandleInternedCallstackSamples) {
   CallstackEvent actual_call_stack_event;
   EXPECT_CALL(listener, OnCallstackEvent).Times(1).WillOnce(SaveArg<0>(&actual_call_stack_event));
 
-  event_processor.ProcessEvent(interned_callstack_event);
-  event_processor.ProcessEvent(callstack_event);
+  event_processor->ProcessEvent(interned_callstack_event);
+  event_processor->ProcessEvent(callstack_event);
 
   ExpectCallstackSamplesEqual(actual_call_stack_event, actual_call_stack, callstack_sample,
                               callstack_intern);
@@ -237,7 +237,7 @@ TEST(CaptureEventProcessor, CanHandleInternedCallstackSamples) {
 
 TEST(CaptureEventProcessor, CanHandleFunctionCalls) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener, {});
+  auto event_processor = CaptureEventProcessor::CreateForCaptureListener(&listener, {});
 
   ClientCaptureEvent event;
   FunctionCall* function_call = event.mutable_function_call();
@@ -254,7 +254,7 @@ TEST(CaptureEventProcessor, CanHandleFunctionCalls) {
   TimerInfo actual_timer;
   EXPECT_CALL(listener, OnTimer).Times(1).WillOnce(SaveArg<0>(&actual_timer));
 
-  event_processor.ProcessEvent(event);
+  event_processor->ProcessEvent(event);
 
   EXPECT_EQ(actual_timer.process_id(), function_call->pid());
   EXPECT_EQ(actual_timer.thread_id(), function_call->tid());
@@ -272,7 +272,7 @@ TEST(CaptureEventProcessor, CanHandleFunctionCalls) {
 
 TEST(CaptureEventProcessor, CanHandleIntrospectionScopes) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener, {});
+  auto event_processor = CaptureEventProcessor::CreateForCaptureListener(&listener, {});
 
   ClientCaptureEvent event;
   IntrospectionScope* introspection_scope = event.mutable_introspection_scope();
@@ -287,7 +287,7 @@ TEST(CaptureEventProcessor, CanHandleIntrospectionScopes) {
   TimerInfo actual_timer;
   EXPECT_CALL(listener, OnTimer).Times(1).WillOnce(SaveArg<0>(&actual_timer));
 
-  event_processor.ProcessEvent(event);
+  event_processor->ProcessEvent(event);
 
   EXPECT_EQ(actual_timer.process_id(), introspection_scope->pid());
   EXPECT_EQ(actual_timer.thread_id(), introspection_scope->tid());
@@ -304,7 +304,7 @@ TEST(CaptureEventProcessor, CanHandleIntrospectionScopes) {
 
 TEST(CaptureEventProcessor, CanHandleThreadNames) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener, {});
+  auto event_processor = CaptureEventProcessor::CreateForCaptureListener(&listener, {});
 
   ClientCaptureEvent event;
   ThreadName* thread_name = event.mutable_thread_name();
@@ -315,7 +315,7 @@ TEST(CaptureEventProcessor, CanHandleThreadNames) {
 
   EXPECT_CALL(listener, OnThreadName(thread_name->tid(), thread_name->name())).Times(1);
 
-  event_processor.ProcessEvent(event);
+  event_processor->ProcessEvent(event);
 }
 
 static ClientCaptureEvent CreateInternedStringEvent(uint64_t key, std::string str) {
@@ -328,7 +328,7 @@ static ClientCaptureEvent CreateInternedStringEvent(uint64_t key, std::string st
 
 TEST(CaptureEventProcessor, CanHandleAddressInfosWithInternedStrings) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener, {});
+  auto event_processor = CaptureEventProcessor::CreateForCaptureListener(&listener, {});
 
   constexpr uint64_t kFunctionNameKey = 1;
   ClientCaptureEvent interned_function_name_event =
@@ -350,9 +350,9 @@ TEST(CaptureEventProcessor, CanHandleAddressInfosWithInternedStrings) {
   LinuxAddressInfo actual_address_info;
   EXPECT_CALL(listener, OnAddressInfo).Times(1).WillOnce(SaveArg<0>(&actual_address_info));
 
-  event_processor.ProcessEvent(interned_function_name_event);
-  event_processor.ProcessEvent(interned_map_name_event);
-  event_processor.ProcessEvent(address_info_event);
+  event_processor->ProcessEvent(interned_function_name_event);
+  event_processor->ProcessEvent(interned_map_name_event);
+  event_processor->ProcessEvent(address_info_event);
 
   EXPECT_EQ(actual_address_info.absolute_address(), address_info->absolute_address());
   EXPECT_EQ(actual_address_info.function_name(), "function");
@@ -362,7 +362,7 @@ TEST(CaptureEventProcessor, CanHandleAddressInfosWithInternedStrings) {
 
 TEST(CaptureEventProcessor, CanHandleInternedTracepointEvents) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener, {});
+  auto event_processor = CaptureEventProcessor::CreateForCaptureListener(&listener, {});
 
   ClientCaptureEvent interned_tracepoint_event;
   InternedTracepointInfo* interned_tracepoint =
@@ -388,8 +388,8 @@ TEST(CaptureEventProcessor, CanHandleInternedTracepointEvents) {
   TracepointEventInfo actual_tracepoint_event;
   EXPECT_CALL(listener, OnTracepointEvent).Times(1).WillOnce(SaveArg<0>(&actual_tracepoint_event));
 
-  event_processor.ProcessEvent(interned_tracepoint_event);
-  event_processor.ProcessEvent(tracepoint_event);
+  event_processor->ProcessEvent(interned_tracepoint_event);
+  event_processor->ProcessEvent(tracepoint_event);
 
   EXPECT_EQ(actual_key, actual_tracepoint_event.tracepoint_info_key());
   EXPECT_EQ(actual_tracepoint_event.tracepoint_info_key(), tracepoint->tracepoint_info_key());
@@ -426,7 +426,7 @@ static constexpr const char* kTimelineString = "timeline";
 
 TEST(CaptureEventProcessor, CanHandleGpuJobs) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener, {});
+  auto event_processor = CaptureEventProcessor::CreateForCaptureListener(&listener, {});
 
   ClientCaptureEvent event;
   GpuJob* gpu_job = CreateGpuJob(&event, kTimelineKey, 10, 20, 30, 40);
@@ -452,7 +452,7 @@ TEST(CaptureEventProcessor, CanHandleGpuJobs) {
       .WillOnce(SaveArg<0>(&hw_queue_timer))
       .WillOnce(SaveArg<0>(&hw_excecution_timer));
 
-  event_processor.ProcessEvent(event);
+  event_processor->ProcessEvent(event);
 
   EXPECT_EQ(sw_queue_timer.process_id(), gpu_job->pid());
   EXPECT_EQ(sw_queue_timer.thread_id(), gpu_job->tid());
@@ -560,7 +560,7 @@ void ExpectDebugMarkerTimerEq(const TimerInfo& actual_timer, uint64_t cpu_begin,
 
 TEST(CaptureEventProcessor, CanHandleGpuSubmissionAfterGpuJob) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener, {});
+  auto event_processor = CaptureEventProcessor::CreateForCaptureListener(&listener, {});
 
   ClientCaptureEvent timeline_key_and_string =
       CreateInternedStringEvent(kTimelineKey, kTimelineString);
@@ -588,8 +588,8 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionAfterGpuJob) {
 
   EXPECT_CALL(listener, OnTimer).Times(3);
 
-  event_processor.ProcessEvent(timeline_key_and_string);
-  event_processor.ProcessEvent(gpu_job_event);
+  event_processor->ProcessEvent(timeline_key_and_string);
+  event_processor->ProcessEvent(gpu_job_event);
 
   testing::Mock::VerifyAndClearExpectations(&listener);
 
@@ -616,8 +616,8 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionAfterGpuJob) {
       .WillOnce(SaveArg<0>(&command_buffer_timer_2))
       .WillOnce(SaveArg<0>(&debug_marker_timer));
 
-  event_processor.ProcessEvent(marker_string_event);
-  event_processor.ProcessEvent(queue_submission_event);
+  event_processor->ProcessEvent(marker_string_event);
+  event_processor->ProcessEvent(queue_submission_event);
 
   ExpectCommandBufferTimerEq(command_buffer_timer_1, *gpu_job, 30, 34, kTimelineKey,
                              actual_command_buffer_key);
@@ -631,7 +631,7 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionAfterGpuJob) {
 
 TEST(CaptureEventProcessor, CanHandleGpuSubmissionReceivedBeforeGpuJob) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener, {});
+  auto event_processor = CaptureEventProcessor::CreateForCaptureListener(&listener, {});
 
   ClientCaptureEvent timeline_key_and_string =
       CreateInternedStringEvent(kTimelineKey, kTimelineString);
@@ -654,8 +654,8 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionReceivedBeforeGpuJob) {
   EXPECT_CALL(listener, OnKeyAndString(kTimelineKey, kTimelineString)).Times(1);
   EXPECT_CALL(listener, OnTimer).Times(0);
 
-  event_processor.ProcessEvent(timeline_key_and_string);
-  event_processor.ProcessEvent(queue_submission_event);
+  event_processor->ProcessEvent(timeline_key_and_string);
+  event_processor->ProcessEvent(queue_submission_event);
 
   testing::Mock::VerifyAndClearExpectations(&listener);
 
@@ -691,8 +691,8 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionReceivedBeforeGpuJob) {
       .WillOnce(SaveArg<0>(&command_buffer_timer_2))
       .WillOnce(SaveArg<0>(&debug_marker_timer));
 
-  event_processor.ProcessEvent(marker_string_event);
-  event_processor.ProcessEvent(gpu_job_event);
+  event_processor->ProcessEvent(marker_string_event);
+  event_processor->ProcessEvent(gpu_job_event);
 
   ExpectCommandBufferTimerEq(command_buffer_timer_1, *gpu_job, 30, 34, kTimelineKey,
                              actual_command_buffer_key);
@@ -706,7 +706,7 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionReceivedBeforeGpuJob) {
 
 TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersSpreadAcrossSubmissions) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener, {});
+  auto event_processor = CaptureEventProcessor::CreateForCaptureListener(&listener, {});
 
   ClientCaptureEvent timeline_string = CreateInternedStringEvent(kTimelineKey, kTimelineString);
 
@@ -739,9 +739,9 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersSpreadAcrossSubmissions) {
 
   EXPECT_CALL(listener, OnTimer).Times(6);
 
-  event_processor.ProcessEvent(timeline_string);
-  event_processor.ProcessEvent(gpu_job_event_1);
-  event_processor.ProcessEvent(gpu_job_event_2);
+  event_processor->ProcessEvent(timeline_string);
+  event_processor->ProcessEvent(gpu_job_event_1);
+  event_processor->ProcessEvent(gpu_job_event_2);
 
   testing::Mock::VerifyAndClearExpectations(&listener);
 
@@ -757,7 +757,7 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersSpreadAcrossSubmissions) {
       .WillOnce(SaveArg<0>(&command_buffer_timer_1))
       .WillOnce(SaveArg<0>(&command_buffer_timer_2));
 
-  event_processor.ProcessEvent(queue_submission_event_1);
+  event_processor->ProcessEvent(queue_submission_event_1);
 
   testing::Mock::VerifyAndClearExpectations(&listener);
 
@@ -783,8 +783,8 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersSpreadAcrossSubmissions) {
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_marker_key));
 
-  event_processor.ProcessEvent(marker_string_event);
-  event_processor.ProcessEvent(queue_submission_event_2);
+  event_processor->ProcessEvent(marker_string_event);
+  event_processor->ProcessEvent(queue_submission_event_2);
   testing::Mock::VerifyAndClearExpectations(&listener);
 
   ExpectCommandBufferTimerEq(command_buffer_timer_3, *gpu_job_2, 70, 79, kTimelineKey,
@@ -796,7 +796,7 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersSpreadAcrossSubmissions) {
 
 TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginRecorded) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener, {});
+  auto event_processor = CaptureEventProcessor::CreateForCaptureListener(&listener, {});
 
   ClientCaptureEvent timeline_key_and_string =
       CreateInternedStringEvent(kTimelineKey, kTimelineString);
@@ -820,8 +820,8 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginRecorded) {
 
   EXPECT_CALL(listener, OnTimer).Times(3);
 
-  event_processor.ProcessEvent(timeline_key_and_string);
-  event_processor.ProcessEvent(gpu_job_event_2);
+  event_processor->ProcessEvent(timeline_key_and_string);
+  event_processor->ProcessEvent(gpu_job_event_2);
 
   testing::Mock::VerifyAndClearExpectations(&listener);
 
@@ -846,8 +846,8 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginRecorded) {
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_marker_key));
 
-  event_processor.ProcessEvent(marker_string_event);
-  event_processor.ProcessEvent(queue_submission_event_2);
+  event_processor->ProcessEvent(marker_string_event);
+  event_processor->ProcessEvent(queue_submission_event_2);
   testing::Mock::VerifyAndClearExpectations(&listener);
 
   ExpectCommandBufferTimerEq(command_buffer_timer_3, *gpu_job_2, 70, 79, kTimelineKey,
@@ -861,7 +861,7 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginRecorded) {
 
 TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginJobRecorded) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener, {});
+  auto event_processor = CaptureEventProcessor::CreateForCaptureListener(&listener, {});
 
   ClientCaptureEvent timeline_string = CreateInternedStringEvent(kTimelineKey, kTimelineString);
 
@@ -892,12 +892,12 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginJobRecorded) {
 
   EXPECT_CALL(listener, OnTimer).Times(3);
 
-  event_processor.ProcessEvent(timeline_string);
-  event_processor.ProcessEvent(gpu_job_event_2);
+  event_processor->ProcessEvent(timeline_string);
+  event_processor->ProcessEvent(gpu_job_event_2);
 
   testing::Mock::VerifyAndClearExpectations(&listener);
 
-  event_processor.ProcessEvent(queue_submission_event_1);
+  event_processor->ProcessEvent(queue_submission_event_1);
 
   uint64_t actual_command_buffer_key;
   EXPECT_CALL(listener, OnKeyAndString(_, "command buffer"))
@@ -920,8 +920,8 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginJobRecorded) {
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_marker_key));
 
-  event_processor.ProcessEvent(marker_string_event);
-  event_processor.ProcessEvent(queue_submission_event_2);
+  event_processor->ProcessEvent(marker_string_event);
+  event_processor->ProcessEvent(queue_submission_event_2);
   testing::Mock::VerifyAndClearExpectations(&listener);
 
   ExpectCommandBufferTimerEq(command_buffer_timer_3, *gpu_job_2, 70, 79, kTimelineKey,
@@ -934,7 +934,7 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginJobRecorded) {
 
 TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener, {});
+  auto event_processor = CaptureEventProcessor::CreateForCaptureListener(&listener, {});
 
   ClientCaptureEvent running_event;
   ThreadStateSlice* running_thread_state_slice = running_event.mutable_thread_state_slice();
@@ -969,9 +969,9 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
       .WillOnce(SaveArg<0>(&actual_runnable_thread_state_slice_info))
       .WillOnce(SaveArg<0>(&actual_dead_thread_state_slice_info));
 
-  event_processor.ProcessEvent(running_event);
-  event_processor.ProcessEvent(runnable_event);
-  event_processor.ProcessEvent(dead_event);
+  event_processor->ProcessEvent(running_event);
+  event_processor->ProcessEvent(runnable_event);
+  event_processor->ProcessEvent(dead_event);
 
   EXPECT_EQ(
       actual_running_thread_state_slice_info.begin_timestamp_ns(),
@@ -1000,7 +1000,7 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
 
 TEST(CaptureEventProcessor, CanHandleMultipleEvents) {
   MockCaptureListener listener;
-  CaptureEventProcessor event_processor(&listener, {});
+  auto event_processor = CaptureEventProcessor::CreateForCaptureListener(&listener, {});
 
   std::vector<ClientCaptureEvent> events;
   ClientCaptureEvent event_1;
@@ -1033,7 +1033,7 @@ TEST(CaptureEventProcessor, CanHandleMultipleEvents) {
   LinuxAddressInfo actual_address_info;
   EXPECT_CALL(listener, OnAddressInfo).Times(1).WillOnce(SaveArg<0>(&actual_address_info));
 
-  event_processor.ProcessEvents(events);
+  event_processor->ProcessEvents(events);
 
   EXPECT_EQ(actual_address_info.absolute_address(), address_info->absolute_address());
   EXPECT_EQ(actual_address_info.function_name(), kFunctionName);

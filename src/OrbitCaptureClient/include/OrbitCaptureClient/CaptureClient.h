@@ -44,7 +44,7 @@ class CaptureClient {
       orbit_grpc_protos::UnwindingMethod unwinding_method, bool collect_thread_state,
       bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer,
       bool collect_memory_info, uint64_t memory_sampling_period_ns,
-      std::shared_ptr<CaptureEventProcessor> capture_event_processor);
+      std::unique_ptr<CaptureEventProcessor> capture_event_processor);
 
   // Returns true if stop was initiated and false otherwise.
   // The latter can happen if for example the stop was already
@@ -77,7 +77,7 @@ class CaptureClient {
       orbit_grpc_protos::UnwindingMethod unwinding_method, bool collect_thread_state,
       bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer,
       bool collect_memory_info, uint64_t memory_sampling_period_ns,
-      const std::shared_ptr<CaptureEventProcessor>& capture_event_processor);
+      CaptureEventProcessor* capture_event_processor);
 
   [[nodiscard]] ErrorMessageOr<void> FinishCapture();
 

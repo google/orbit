@@ -53,6 +53,6 @@ class MyCaptureListener : public CaptureListener {
 
 DEFINE_PROTO_FUZZER(const CaptureResponse& response) {
   MyCaptureListener listener;
-  CaptureEventProcessor processor{&listener, {}};
-  processor.ProcessEvents(response.capture_events());
+  auto processor = CaptureEventProcessor::CreateForCaptureListener(&listener, {});
+  processor->ProcessEvents(response.capture_events());
 }

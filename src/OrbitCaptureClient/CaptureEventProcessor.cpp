@@ -13,6 +13,8 @@
 #include "CoreUtils.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitCaptureClient/ApiEventProcessor.h"
+#include "OrbitCaptureClient/GpuQueueSubmissionProcessor.h"
 #include "OrbitClientData/Callstack.h"
 #include "capture_data.pb.h"
 
@@ -35,7 +37,59 @@ using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadStateSlice;
 
-void CaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
+namespace {
+class CaptureEventProcessorForListener : public CaptureEventProcessor {
+ public:
+  explicit CaptureEventProcessorForListener(CaptureListener* capture_listener,
+                                            absl::flat_hash_set<uint64_t> frame_track_function_ids)
+      : frame_track_function_ids_(std::move(frame_track_function_ids)),
+        capture_listener_(capture_listener),
+        api_event_processor_{capture_listener} {}
+  ~CaptureEventProcessorForListener() override = default;
+
+  void ProcessEvent(const orbit_grpc_protos::ClientCaptureEvent& event) override;
+
+ private:
+  void ProcessCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started);
+  void ProcessCaptureFinished(const orbit_grpc_protos::CaptureFinished& capture_finished);
+  void ProcessSchedulingSlice(const orbit_grpc_protos::SchedulingSlice& scheduling_slice);
+  void ProcessInternedCallstack(orbit_grpc_protos::InternedCallstack interned_callstack);
+  void ProcessCallstackSample(const orbit_grpc_protos::CallstackSample& callstack_sample);
+  void ProcessFunctionCall(const orbit_grpc_protos::FunctionCall& function_call);
+  void ProcessIntrospectionScope(const orbit_grpc_protos::IntrospectionScope& introspection_scope);
+  void ProcessInternedString(orbit_grpc_protos::InternedString interned_string);
+  void ProcessModuleUpdate(orbit_grpc_protos::ModuleUpdateEvent module_update);
+  void ProcessModulesSnapshot(const orbit_grpc_protos::ModulesSnapshot& modules_snapshot);
+
+  void ProcessGpuJob(const orbit_grpc_protos::GpuJob& gpu_job);
+  void ProcessThreadName(const orbit_grpc_protos::ThreadName& thread_name);
+  void ProcessThreadNamesSnapshot(
+      const orbit_grpc_protos::ThreadNamesSnapshot& thread_names_snapshot);
+  void ProcessThreadStateSlice(const orbit_grpc_protos::ThreadStateSlice& thread_state_slice);
+  void ProcessAddressInfo(const orbit_grpc_protos::AddressInfo& address_info);
+  void ProcessInternedTracepointInfo(
+      orbit_grpc_protos::InternedTracepointInfo interned_tracepoint_info);
+  void ProcessTracepointEvent(const orbit_grpc_protos::TracepointEvent& tracepoint_event);
+  void ProcessGpuQueueSubmission(const orbit_grpc_protos::GpuQueueSubmission& gpu_command_buffer);
+  void ProcessSystemMemoryUsage(const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage);
+
+  absl::flat_hash_set<uint64_t> frame_track_function_ids_;
+
+  absl::flat_hash_map<uint64_t, orbit_grpc_protos::Callstack> callstack_intern_pool;
+  absl::flat_hash_map<uint64_t, std::string> string_intern_pool_;
+  CaptureListener* capture_listener_ = nullptr;
+
+  absl::flat_hash_set<uint64_t> callstack_hashes_seen_;
+  void SendCallstackToListenerIfNecessary(uint64_t callstack_id,
+                                          const orbit_grpc_protos::Callstack& callstack);
+  absl::flat_hash_set<uint64_t> string_hashes_seen_;
+  uint64_t GetStringHashAndSendToListenerIfNecessary(const std::string& str);
+
+  GpuQueueSubmissionProcessor gpu_queue_submission_processor_;
+  ApiEventProcessor api_event_processor_;
+};
+
+void CaptureEventProcessorForListener::ProcessEvent(const ClientCaptureEvent& event) {
   switch (event.event_case()) {
     case ClientCaptureEvent::kCaptureStarted:
       ProcessCaptureStarted(event.capture_started());
@@ -103,17 +157,18 @@ void CaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
   }
 }
 
-void CaptureEventProcessor::ProcessCaptureStarted(
+void CaptureEventProcessorForListener::ProcessCaptureStarted(
     const orbit_grpc_protos::CaptureStarted& capture_started) {
   capture_listener_->OnCaptureStarted(capture_started, frame_track_function_ids_);
 }
 
-void CaptureEventProcessor::ProcessCaptureFinished(
+void CaptureEventProcessorForListener::ProcessCaptureFinished(
     const orbit_grpc_protos::CaptureFinished& capture_finished) {
   capture_listener_->OnCaptureFinished(capture_finished);
 }
 
-void CaptureEventProcessor::ProcessSchedulingSlice(const SchedulingSlice& scheduling_slice) {
+void CaptureEventProcessorForListener::ProcessSchedulingSlice(
+    const SchedulingSlice& scheduling_slice) {
   TimerInfo timer_info;
   uint64_t in_timestamp_ns = scheduling_slice.out_timestamp_ns() - scheduling_slice.duration_ns();
   timer_info.set_start(in_timestamp_ns);
@@ -129,7 +184,8 @@ void CaptureEventProcessor::ProcessSchedulingSlice(const SchedulingSlice& schedu
   capture_listener_->OnTimer(timer_info);
 }
 
-void CaptureEventProcessor::ProcessInternedCallstack(InternedCallstack interned_callstack) {
+void CaptureEventProcessorForListener::ProcessInternedCallstack(
+    InternedCallstack interned_callstack) {
   if (callstack_intern_pool.contains(interned_callstack.key())) {
     ERROR("Overwriting InternedCallstack with key %llu", interned_callstack.key());
   }
@@ -137,7 +193,8 @@ void CaptureEventProcessor::ProcessInternedCallstack(InternedCallstack interned_
                                 std::move(*interned_callstack.mutable_intern()));
 }
 
-void CaptureEventProcessor::ProcessCallstackSample(const CallstackSample& callstack_sample) {
+void CaptureEventProcessorForListener::ProcessCallstackSample(
+    const CallstackSample& callstack_sample) {
   uint64_t callstack_id = callstack_sample.callstack_id();
   Callstack callstack = callstack_intern_pool[callstack_id];
 
@@ -154,7 +211,7 @@ void CaptureEventProcessor::ProcessCallstackSample(const CallstackSample& callst
   capture_listener_->OnCallstackEvent(std::move(callstack_event));
 }
 
-void CaptureEventProcessor::ProcessFunctionCall(const FunctionCall& function_call) {
+void CaptureEventProcessorForListener::ProcessFunctionCall(const FunctionCall& function_call) {
   TimerInfo timer_info;
   timer_info.set_process_id(function_call.pid());
   timer_info.set_thread_id(function_call.tid());
@@ -176,7 +233,7 @@ void CaptureEventProcessor::ProcessFunctionCall(const FunctionCall& function_cal
   capture_listener_->OnTimer(timer_info);
 }
 
-void CaptureEventProcessor::ProcessIntrospectionScope(
+void CaptureEventProcessorForListener::ProcessIntrospectionScope(
     const IntrospectionScope& introspection_scope) {
   TimerInfo timer_info;
   timer_info.set_process_id(introspection_scope.pid());
@@ -196,7 +253,7 @@ void CaptureEventProcessor::ProcessIntrospectionScope(
   capture_listener_->OnTimer(timer_info);
 }
 
-void CaptureEventProcessor::ProcessInternedString(InternedString interned_string) {
+void CaptureEventProcessorForListener::ProcessInternedString(InternedString interned_string) {
   if (string_intern_pool_.contains(interned_string.key())) {
     ERROR("Overwriting InternedString with key %llu", interned_string.key());
   }
@@ -204,20 +261,20 @@ void CaptureEventProcessor::ProcessInternedString(InternedString interned_string
   string_intern_pool_.emplace(interned_string.key(), std::move(*interned_string.mutable_intern()));
 }
 
-void CaptureEventProcessor::ProcessModuleUpdate(
+void CaptureEventProcessorForListener::ProcessModuleUpdate(
     orbit_grpc_protos::ModuleUpdateEvent module_update) {
   capture_listener_->OnModuleUpdate(module_update.timestamp_ns(),
                                     std::move(*module_update.mutable_module()));
 }
 
-void CaptureEventProcessor::ProcessModulesSnapshot(
+void CaptureEventProcessorForListener::ProcessModulesSnapshot(
     const orbit_grpc_protos::ModulesSnapshot& modules_snapshot) {
   capture_listener_->OnModulesSnapshot(
       modules_snapshot.timestamp_ns(),
       {modules_snapshot.modules().begin(), modules_snapshot.modules().end()});
 }
 
-void CaptureEventProcessor::ProcessGpuJob(const GpuJob& gpu_job) {
+void CaptureEventProcessorForListener::ProcessGpuJob(const GpuJob& gpu_job) {
   uint64_t timeline_key = gpu_job.timeline_key();
 
   int32_t process_id = gpu_job.pid();
@@ -280,7 +337,7 @@ void CaptureEventProcessor::ProcessGpuJob(const GpuJob& gpu_job) {
   }
 }
 
-void CaptureEventProcessor::ProcessGpuQueueSubmission(
+void CaptureEventProcessorForListener::ProcessGpuQueueSubmission(
     const GpuQueueSubmission& gpu_queue_submission) {
   std::vector<TimerInfo> vulkan_related_timers =
       gpu_queue_submission_processor_.ProcessGpuQueueSubmission(
@@ -292,24 +349,25 @@ void CaptureEventProcessor::ProcessGpuQueueSubmission(
   }
 }
 
-void CaptureEventProcessor::ProcessSystemMemoryUsage(
+void CaptureEventProcessorForListener::ProcessSystemMemoryUsage(
     const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage) {
   capture_listener_->OnSystemMemoryUsage(system_memory_usage);
 }
 
-void CaptureEventProcessor::ProcessThreadName(const ThreadName& thread_name) {
+void CaptureEventProcessorForListener::ProcessThreadName(const ThreadName& thread_name) {
   // Note: thread_name.pid() is available, but currently dropped.
   capture_listener_->OnThreadName(thread_name.tid(), thread_name.name());
 }
 
-void CaptureEventProcessor::ProcessThreadNamesSnapshot(
+void CaptureEventProcessorForListener::ProcessThreadNamesSnapshot(
     const orbit_grpc_protos::ThreadNamesSnapshot& thread_names_snapshot) {
   for (const auto& thread_name : thread_names_snapshot.thread_names()) {
     capture_listener_->OnThreadName(thread_name.tid(), thread_name.name());
   }
 }
 
-void CaptureEventProcessor::ProcessThreadStateSlice(const ThreadStateSlice& thread_state_slice) {
+void CaptureEventProcessorForListener::ProcessThreadStateSlice(
+    const ThreadStateSlice& thread_state_slice) {
   ThreadStateSliceInfo slice_info;
   slice_info.set_tid(thread_state_slice.tid());
   switch (thread_state_slice.thread_state()) {
@@ -355,7 +413,7 @@ void CaptureEventProcessor::ProcessThreadStateSlice(const ThreadStateSlice& thre
   capture_listener_->OnThreadStateSlice(std::move(slice_info));
 }
 
-void CaptureEventProcessor::ProcessAddressInfo(const AddressInfo& address_info) {
+void CaptureEventProcessorForListener::ProcessAddressInfo(const AddressInfo& address_info) {
   CHECK(string_intern_pool_.contains(address_info.function_name_key()));
   CHECK(string_intern_pool_.contains(address_info.module_name_key()));
   std::string function_name = string_intern_pool_.at(address_info.function_name_key());
@@ -369,8 +427,8 @@ void CaptureEventProcessor::ProcessAddressInfo(const AddressInfo& address_info) 
   capture_listener_->OnAddressInfo(linux_address_info);
 }
 
-void CaptureEventProcessor::SendCallstackToListenerIfNecessary(uint64_t callstack_id,
-                                                               const Callstack& callstack) {
+void CaptureEventProcessorForListener::SendCallstackToListenerIfNecessary(
+    uint64_t callstack_id, const Callstack& callstack) {
   if (!callstack_hashes_seen_.contains(callstack_id)) {
     callstack_hashes_seen_.emplace(callstack_id);
     capture_listener_->OnUniqueCallStack(
@@ -378,12 +436,12 @@ void CaptureEventProcessor::SendCallstackToListenerIfNecessary(uint64_t callstac
   }
 }
 
-void CaptureEventProcessor::ProcessInternedTracepointInfo(
+void CaptureEventProcessorForListener::ProcessInternedTracepointInfo(
     orbit_grpc_protos::InternedTracepointInfo interned_tracepoint_info) {
   capture_listener_->OnUniqueTracepointInfo(interned_tracepoint_info.key(),
                                             std::move(*interned_tracepoint_info.mutable_intern()));
 }
-void CaptureEventProcessor::ProcessTracepointEvent(
+void CaptureEventProcessorForListener::ProcessTracepointEvent(
     const orbit_grpc_protos::TracepointEvent& tracepoint_event) {
   uint64_t key = tracepoint_event.tracepoint_info_key();
 
@@ -399,11 +457,20 @@ void CaptureEventProcessor::ProcessTracepointEvent(
   capture_listener_->OnTracepointEvent(std::move(tracepoint_event_info));
 }
 
-uint64_t CaptureEventProcessor::GetStringHashAndSendToListenerIfNecessary(const std::string& str) {
+uint64_t CaptureEventProcessorForListener::GetStringHashAndSendToListenerIfNecessary(
+    const std::string& str) {
   uint64_t hash = StringHash(str);
   if (!string_intern_pool_.contains(hash)) {
     string_intern_pool_.emplace(hash, str);
     capture_listener_->OnKeyAndString(hash, str);
   }
   return hash;
+}
+
+}  // namespace
+
+std::unique_ptr<CaptureEventProcessor> CaptureEventProcessor::CreateForCaptureListener(
+    CaptureListener* capture_listener, absl::flat_hash_set<uint64_t> frame_track_function_ids) {
+  return std::make_unique<CaptureEventProcessorForListener>(capture_listener,
+                                                            std::move(frame_track_function_ids));
 }

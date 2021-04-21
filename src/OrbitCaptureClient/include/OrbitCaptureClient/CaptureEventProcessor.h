@@ -11,22 +11,15 @@
 #include <functional>
 #include <string>
 
-#include "OrbitCaptureClient/ApiEventProcessor.h"
 #include "OrbitCaptureClient/CaptureListener.h"
-#include "OrbitCaptureClient/GpuQueueSubmissionProcessor.h"
 #include "capture.pb.h"
-#include "services.pb.h"
-#include "tracepoint.pb.h"
 
 class CaptureEventProcessor {
  public:
-  explicit CaptureEventProcessor(CaptureListener* capture_listener,
-                                 absl::flat_hash_set<uint64_t> frame_track_function_ids)
-      : frame_track_function_ids_(std::move(frame_track_function_ids)),
-        capture_listener_(capture_listener),
-        api_event_processor_{capture_listener} {}
+  CaptureEventProcessor() = default;
+  virtual ~CaptureEventProcessor() = default;
 
-  void ProcessEvent(const orbit_grpc_protos::ClientCaptureEvent& event);
+  virtual void ProcessEvent(const orbit_grpc_protos::ClientCaptureEvent& event) = 0;
 
   template <typename Iterable>
   void ProcessEvents(const Iterable& events) {
@@ -35,44 +28,8 @@ class CaptureEventProcessor {
     }
   }
 
- private:
-  void ProcessCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started);
-  void ProcessCaptureFinished(const orbit_grpc_protos::CaptureFinished& capture_finished);
-  void ProcessSchedulingSlice(const orbit_grpc_protos::SchedulingSlice& scheduling_slice);
-  void ProcessInternedCallstack(orbit_grpc_protos::InternedCallstack interned_callstack);
-  void ProcessCallstackSample(const orbit_grpc_protos::CallstackSample& callstack_sample);
-  void ProcessFunctionCall(const orbit_grpc_protos::FunctionCall& function_call);
-  void ProcessIntrospectionScope(const orbit_grpc_protos::IntrospectionScope& introspection_scope);
-  void ProcessInternedString(orbit_grpc_protos::InternedString interned_string);
-  void ProcessModuleUpdate(orbit_grpc_protos::ModuleUpdateEvent module_update);
-  void ProcessModulesSnapshot(const orbit_grpc_protos::ModulesSnapshot& modules_snapshot);
-
-  void ProcessGpuJob(const orbit_grpc_protos::GpuJob& gpu_job);
-  void ProcessThreadName(const orbit_grpc_protos::ThreadName& thread_name);
-  void ProcessThreadNamesSnapshot(
-      const orbit_grpc_protos::ThreadNamesSnapshot& thread_names_snapshot);
-  void ProcessThreadStateSlice(const orbit_grpc_protos::ThreadStateSlice& thread_state_slice);
-  void ProcessAddressInfo(const orbit_grpc_protos::AddressInfo& address_info);
-  void ProcessInternedTracepointInfo(
-      orbit_grpc_protos::InternedTracepointInfo interned_tracepoint_info);
-  void ProcessTracepointEvent(const orbit_grpc_protos::TracepointEvent& tracepoint_event);
-  void ProcessGpuQueueSubmission(const orbit_grpc_protos::GpuQueueSubmission& gpu_command_buffer);
-  void ProcessSystemMemoryUsage(const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage);
-
-  absl::flat_hash_set<uint64_t> frame_track_function_ids_;
-
-  absl::flat_hash_map<uint64_t, orbit_grpc_protos::Callstack> callstack_intern_pool;
-  absl::flat_hash_map<uint64_t, std::string> string_intern_pool_;
-  CaptureListener* capture_listener_ = nullptr;
-
-  absl::flat_hash_set<uint64_t> callstack_hashes_seen_;
-  void SendCallstackToListenerIfNecessary(uint64_t callstack_id,
-                                          const orbit_grpc_protos::Callstack& callstack);
-  absl::flat_hash_set<uint64_t> string_hashes_seen_;
-  uint64_t GetStringHashAndSendToListenerIfNecessary(const std::string& str);
-
-  GpuQueueSubmissionProcessor gpu_queue_submission_processor_;
-  ApiEventProcessor api_event_processor_;
+  static std::unique_ptr<CaptureEventProcessor> CreateForCaptureListener(
+      CaptureListener* capture_listener, absl::flat_hash_set<uint64_t> frame_track_function_ids);
 };
 
 #endif  // ORBIT_GL_CAPTURE_EVENT_PROCESSOR_H_
