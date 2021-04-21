@@ -38,7 +38,6 @@ class GlCanvas {
   enum class CanvasType { kCaptureWindow, kIntrospectionWindow, kDebug };
   static std::unique_ptr<GlCanvas> Create(CanvasType canvas_type, OrbitApp* app);
 
-  void Initialize();
   void Resize(int width, int height);
   void Render(int width, int height);
 

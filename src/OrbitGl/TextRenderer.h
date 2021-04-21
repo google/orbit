@@ -10,6 +10,7 @@
 #include <freetype-gl/texture-atlas.h>
 #include <freetype-gl/texture-font.h>
 #include <freetype-gl/vec234.h>
+#include <glad/glad.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -19,7 +20,6 @@
 
 #include "Batcher.h"
 #include "CoreMath.h"
-#include "OpenGl.h"
 #include "PickingManager.h"
 
 namespace ftgl {
@@ -56,40 +56,41 @@ class TextRenderer {
   static void SetDrawOutline(bool value) { draw_outline_ = value; }
 
  protected:
-  void AddTextInternal(texture_font_t* font, const char* text, const vec4& color, vec2* pen,
-                       float max_size = -1.f, float z = -0.01f, vec2* out_text_pos = nullptr,
-                       vec2* out_text_size = nullptr);
+  void AddTextInternal(ftgl::texture_font_t* font, const char* text, const ftgl::vec4& color,
+                       ftgl::vec2* pen, float max_size = -1.f, float z = -0.01f,
+                       ftgl::vec2* out_text_pos = nullptr, ftgl::vec2* out_text_size = nullptr);
 
   void ToScreenSpace(float x, float y, float& o_x, float& o_y);
   [[nodiscard]] float ToScreenSpace(float width);
   [[nodiscard]] int GetStringWidthScreenSpace(const char* text, uint32_t font_size);
   [[nodiscard]] int GetStringHeightScreenSpace(const char* text, uint32_t font_size);
-  [[nodiscard]] texture_font_t* GetFont(uint32_t size);
-  [[nodiscard]] texture_glyph_t* MaybeLoadAndGetGlyph(texture_font_t* self, const char* character);
+  [[nodiscard]] ftgl::texture_font_t* GetFont(uint32_t size);
+  [[nodiscard]] ftgl::texture_glyph_t* MaybeLoadAndGetGlyph(ftgl::texture_font_t* self,
+                                                            const char* character);
 
-  void DrawOutline(Batcher* batcher, vertex_buffer_t* buffer);
+  void DrawOutline(Batcher* batcher, ftgl::vertex_buffer_t* buffer);
 
  private:
-  texture_atlas_t* texture_atlas_;
+  ftgl::texture_atlas_t* texture_atlas_;
   // Indicates when a change to the texture atlas occurred so that we have to reupload the
   // texture data. Only freetype-gl's texture_font_load_glyph modifies the texture atlas,
   // so we need to set this to true when and only when we call that function.
   bool texture_atlas_changed_;
-  std::unordered_map<float, vertex_buffer_t*> vertex_buffers_by_layer_;
-  std::map<uint32_t, texture_font_t*> fonts_by_size_;
+  std::unordered_map<float, ftgl::vertex_buffer_t*> vertex_buffers_by_layer_;
+  std::map<uint32_t, ftgl::texture_font_t*> fonts_by_size_;
   GlCanvas* canvas_;
   GLuint shader_;
-  mat4 model_;
-  mat4 view_;
-  mat4 projection_;
-  vec2 pen_;
+  ftgl::mat4 model_;
+  ftgl::mat4 view_;
+  ftgl::mat4 projection_;
+  ftgl::vec2 pen_;
   bool initialized_;
   static bool draw_outline_;
 };
 
-inline vec4 ColorToVec4(const Color& color) {
+inline ftgl::vec4 ColorToVec4(const Color& color) {
   const float coeff = 1.f / 255.f;
-  vec4 vec;
+  ftgl::vec4 vec;
   vec.r = color[0] * coeff;
   vec.g = color[1] * coeff;
   vec.b = color[2] * coeff;

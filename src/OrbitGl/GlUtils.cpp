@@ -4,7 +4,8 @@
 
 #include "GlUtils.h"
 
-#include "OpenGl.h"
+#include <glad/glad.h>
+
 #include "OrbitBase/Logging.h"
 
 static const char* kErrorInvalidEnum =

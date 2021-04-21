@@ -7,6 +7,7 @@
 #include <GteVector.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/time/time.h>
+#include <glad/glad.h>
 #include <imgui.h>
 #include <string.h>
 
@@ -25,7 +26,6 @@
 #include "Geometry.h"
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
-#include "OpenGl.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"

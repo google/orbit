@@ -6,11 +6,11 @@
 
 #include <GteVector.h>
 #include <GteVector2.h>
+#include <glad/glad.h>
 #include <math.h>
 #include <stddef.h>
 
 #include "CoreUtils.h"
-#include "OpenGl.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
 

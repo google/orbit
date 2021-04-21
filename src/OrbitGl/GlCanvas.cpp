@@ -6,6 +6,7 @@
 
 #include <GteVector.h>
 #include <absl/base/casts.h>
+#include <glad/glad.h>
 #include <limits.h>
 #include <math.h>
 
@@ -14,7 +15,6 @@
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
 #include "IntrospectionWindow.h"
-#include "OpenGl.h"
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
@@ -94,24 +94,6 @@ std::unique_ptr<GlCanvas> GlCanvas::Create(CanvasType canvas_type, OrbitApp* app
       return std::make_unique<GlCanvas>();
     default:
       UNREACHABLE();
-  }
-}
-
-void GlCanvas::Initialize() {
-  static bool first_init = true;
-  if (first_init) {
-    GLenum err = glewInit();
-    CheckGlError();
-    if (err != GLEW_OK) {
-      /* Problem: glewInit failed, something is seriously wrong. */
-      FATAL("Problem: glewInit failed, something is seriously wrong: %s",
-            absl::bit_cast<const char*>(glewGetErrorString(err)));
-    }
-    if (!glewIsSupported("GL_VERSION_2_0")) {
-      FATAL("Problem: OpenGL version supported by GLEW must be at least 2.0!");
-    }
-    LOG("Using GLEW %s", absl::bit_cast<const char*>(glewGetString(GLEW_VERSION)));
-    first_init = false;
   }
 }
 

@@ -49,7 +49,6 @@ target_sources(
          ManualInstrumentationManager.h
          MemoryTrack.h
          ModulesDataView.h
-         OpenGl.h
          PickingManager.h
          PresetLoadState.h
          PresetsDataView.h
@@ -150,7 +149,7 @@ target_link_libraries(
          CONAN_PKG::capstone
          CONAN_PKG::freetype-gl
          CONAN_PKG::freetype
-         CONAN_PKG::glew
+         CONAN_PKG::glad
          CONAN_PKG::imgui
          gte::gte)
 
