@@ -30,7 +30,7 @@ namespace orbit_user_space_instrumentation {
 
 namespace {
 
-using orbit_base::testing::HasErrorContaining;
+using orbit_base::HasErrorContaining;
 
 AddressRange AddressRangeFromString(const std::string& string_address) {
   AddressRange result;

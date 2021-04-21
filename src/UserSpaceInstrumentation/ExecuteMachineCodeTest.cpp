@@ -18,8 +18,8 @@
 
 namespace orbit_user_space_instrumentation {
 
-using orbit_base::testing::HasErrorContaining;
-using orbit_base::testing::HasNoError;
+using orbit_base::HasErrorContaining;
+using orbit_base::HasNoError;
 
 TEST(ExecuteMachineCodeTest, ExecuteMachineCode) {
   pid_t pid = fork();

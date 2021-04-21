@@ -19,8 +19,8 @@
 
 namespace orbit_user_space_instrumentation {
 
-using orbit_base::testing::HasNoError;
-using orbit_base::testing::HasValue;
+using orbit_base::HasNoError;
+using orbit_base::HasValue;
 
 TEST(ExecuteInProcessTest, ExecuteInProcess) {
   pid_t pid = fork();

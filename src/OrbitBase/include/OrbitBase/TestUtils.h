@@ -12,8 +12,6 @@
 
 namespace orbit_base {
 
-namespace testing {
-
 MATCHER(HasValue, absl::StrCat(negation ? "Has no" : "Has a", " value.")) {
   if (arg.has_error()) {
     *result_listener << "Error: " << arg.error().message();
@@ -50,8 +48,6 @@ MATCHER_P(HasErrorContaining, value,
   }
   return arg.has_error() && absl::StrContains(arg.error().message(), value);
 }
-
-}  // namespace testing
 
 }  // namespace orbit_base
 
