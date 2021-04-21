@@ -21,12 +21,15 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/TestUtils.h"
 #include "UserSpaceInstrumentation/Attach.h"
 #include "UserSpaceInstrumentation/InjectLibraryInTracee.h"
 
 namespace orbit_user_space_instrumentation {
 
 namespace {
+
+using orbit_base::testing::HasNoError;
 
 void OpenUseAndCloseLibrary(pid_t pid) {
   // Stop the child process using our tooling.
@@ -70,13 +73,13 @@ void OpenUseAndCloseLibrary(pid_t pid) {
         .AppendBytes({0xcc});
 
     auto result_or_error = ExecuteMachineCode(pid, address, code);
-    ASSERT_FALSE(result_or_error.has_error());
+    ASSERT_THAT(result_or_error, HasNoError());
     EXPECT_EQ(42, result_or_error.value());
   }
 
   // Close the library.
   auto result_dlclose = DlcloseInTracee(pid, library_handle_or_error.value());
-  ASSERT_FALSE(result_dlclose.has_error()) << result_dlclose.error().message();
+  ASSERT_THAT(result_dlclose, HasNoError());
 
   // Now, again, the lib is absent from the tracee.
   auto maps_after_close = orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));

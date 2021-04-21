@@ -13,9 +13,13 @@
 #include "MachineCode.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/TestUtils.h"
 #include "UserSpaceInstrumentation/Attach.h"
 
 namespace orbit_user_space_instrumentation {
+
+using orbit_base::testing::HasErrorContaining;
+using orbit_base::testing::HasNoError;
 
 TEST(ExecuteMachineCodeTest, ExecuteMachineCode) {
   pid_t pid = fork();
@@ -42,8 +46,11 @@ TEST(ExecuteMachineCodeTest, ExecuteMachineCode) {
     MachineCode code;
     code.AppendBytes({0x48, 0xb8}).AppendImmediate64(0x4242424242424242).AppendBytes({0xcc});
     ErrorMessageOr<uint64_t> result_or_error = ExecuteMachineCode(pid, address, code);
-    ASSERT_FALSE(result_or_error.has_error()) << result_or_error.error().message();
+    ASSERT_THAT(result_or_error, HasNoError());
     EXPECT_EQ(0x4242424242424242, result_or_error.value());
+
+    result_or_error = ExecuteMachineCode(-1, address, code);
+    EXPECT_THAT(result_or_error, HasErrorContaining("Unable to open file"));
   }
 
   // Cleanup, end child process.

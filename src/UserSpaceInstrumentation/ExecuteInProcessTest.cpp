@@ -12,11 +12,15 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/TestUtils.h"
 #include "UserSpaceInstrumentation/Attach.h"
 #include "UserSpaceInstrumentation/ExecuteInProcess.h"
 #include "UserSpaceInstrumentation/InjectLibraryInTracee.h"
 
 namespace orbit_user_space_instrumentation {
+
+using orbit_base::testing::HasNoError;
+using orbit_base::testing::HasValue;
 
 TEST(ExecuteInProcessTest, ExecuteInProcess) {
   pid_t pid = fork();
@@ -36,23 +40,23 @@ TEST(ExecuteInProcessTest, ExecuteInProcess) {
   void* library_handle = library_handle_or_error.value();
 
   auto result_or_error = ExecuteInProcess(pid, library_handle, "TrivialFunction");
-  ASSERT_TRUE(result_or_error.has_value()) << result_or_error.error().message();
+  ASSERT_THAT(result_or_error, HasNoError());
   EXPECT_EQ(42, result_or_error.value());
 
   result_or_error = ExecuteInProcess(pid, library_handle, "TrivialSum", 2, 4, 6, 8, 10, 12);
-  ASSERT_TRUE(result_or_error.has_value()) << result_or_error.error().message();
+  ASSERT_THAT(result_or_error, HasNoError());
   EXPECT_EQ(42, result_or_error.value());
 
   auto function_address_or_error = DlsymInTracee(pid, library_handle, "TrivialFunction");
-  ASSERT_TRUE(function_address_or_error.has_value());
+  ASSERT_THAT(result_or_error, HasValue());
   result_or_error = ExecuteInProcess(pid, function_address_or_error.value());
-  ASSERT_TRUE(result_or_error.has_value()) << result_or_error.error().message();
+  ASSERT_THAT(result_or_error, HasValue());
   EXPECT_EQ(42, result_or_error.value());
 
   function_address_or_error = DlsymInTracee(pid, library_handle, "TrivialSum");
   ASSERT_TRUE(function_address_or_error.has_value());
   result_or_error = ExecuteInProcess(pid, function_address_or_error.value(), 2, 4, 6, 8, 10, 12);
-  ASSERT_TRUE(result_or_error.has_value()) << result_or_error.error().message();
+  ASSERT_THAT(result_or_error, HasValue());
   EXPECT_EQ(42, result_or_error.value());
 
   // Cleanup, detach and end child.
