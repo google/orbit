@@ -75,6 +75,7 @@ class ServiceDeployManager : public QObject {
   outcome::result<bool> CheckIfInstalled();
   outcome::result<void> CopyOrbitServicePackage();
   outcome::result<void> CopyOrbitServiceExecutable();
+  outcome::result<void> CopyOrbitApiLibrary();
   outcome::result<void> InstallOrbitServicePackage();
   outcome::result<void> StartOrbitService();
   outcome::result<void> StartOrbitServicePrivileged();
