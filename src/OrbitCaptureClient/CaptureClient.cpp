@@ -65,10 +65,11 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
     ThreadPool* thread_pool, const ProcessData& process,
     const orbit_client_data::ModuleManager& module_manager,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
-    TracepointInfoSet selected_tracepoints, absl::flat_hash_set<uint64_t> frame_track_function_ids,
-    double samples_per_second, UnwindingMethod unwinding_method, bool collect_thread_state,
-    bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer,
-    bool collect_memory_info, uint64_t memory_sampling_period_ns) {
+    TracepointInfoSet selected_tracepoints, double samples_per_second,
+    UnwindingMethod unwinding_method, bool collect_thread_state, bool enable_introspection,
+    uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
+    uint64_t memory_sampling_period_ns,
+    std::shared_ptr<CaptureEventProcessor> capture_event_processor) {
   absl::MutexLock lock(&state_mutex_);
   if (state_ != State::kStopped) {
     return {
@@ -80,16 +81,15 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
 
   auto capture_result = thread_pool->Schedule(
       [this, process_id = process.pid(), &module_manager,
-       selected_functions = std::move(selected_functions), selected_tracepoints,
-       frame_track_function_ids = std::move(frame_track_function_ids), collect_thread_state,
+       selected_functions = std::move(selected_functions),
+       selected_tracepoints = std::move(selected_tracepoints), collect_thread_state,
        samples_per_second, unwinding_method, enable_introspection,
-       max_local_marker_depth_per_command_buffer, collect_memory_info,
-       memory_sampling_period_ns]() mutable {
+       max_local_marker_depth_per_command_buffer, collect_memory_info, memory_sampling_period_ns,
+       capture_event_processor = std::move(capture_event_processor)]() mutable {
         return CaptureSync(process_id, module_manager, selected_functions, selected_tracepoints,
-                           frame_track_function_ids, samples_per_second, unwinding_method,
-                           collect_thread_state, enable_introspection,
-                           max_local_marker_depth_per_command_buffer, collect_memory_info,
-                           memory_sampling_period_ns);
+                           samples_per_second, unwinding_method, collect_thread_state,
+                           enable_introspection, max_local_marker_depth_per_command_buffer,
+                           collect_memory_info, memory_sampling_period_ns, capture_event_processor);
       });
 
   return capture_result;
@@ -98,11 +98,11 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
 ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
     int32_t process_id, const orbit_client_data::ModuleManager& module_manager,
     const absl::flat_hash_map<uint64_t, FunctionInfo>& selected_functions,
-    const TracepointInfoSet& selected_tracepoints,
-    absl::flat_hash_set<uint64_t> frame_track_function_ids, double samples_per_second,
+    const TracepointInfoSet& selected_tracepoints, double samples_per_second,
     UnwindingMethod unwinding_method, bool collect_thread_state, bool enable_introspection,
     uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
-    uint64_t memory_sampling_period_ns) {
+    uint64_t memory_sampling_period_ns,
+    const std::shared_ptr<CaptureEventProcessor>& capture_event_processor) {
   ORBIT_SCOPE_FUNCTION;
   writes_done_failed_ = false;
   try_abort_ = false;
@@ -183,8 +183,6 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
     state_ = State::kStarted;
   }
 
-  CaptureEventProcessor event_processor(capture_listener_, std::move(frame_track_function_ids));
-
   while (!writes_done_failed_ && !try_abort_) {
     CaptureResponse response;
     bool read_succeeded;
@@ -193,7 +191,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
       read_succeeded = reader_writer_->Read(&response);
     }
     if (read_succeeded) {
-      event_processor.ProcessEvents(response.capture_events());
+      capture_event_processor->ProcessEvents(response.capture_events());
     } else {
       break;
     }
