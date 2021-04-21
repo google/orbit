@@ -59,7 +59,7 @@ namespace orbit_user_space_instrumentation {
                                                                     uint64_t size);
 
 // Returns the set of the instruction pointers from all the threads of a halted tracee.
-[[nodiscard]] ErrorMessageOr<absl::flat_hash_set<uint64_t>> AllInstructionPointersFromProcess(
+[[nodiscard]] ErrorMessageOr<absl::flat_hash_set<uint64_t>> GetInstructionPointersFromProcess(
     pid_t pid);
 
 // When overriding instructions at the beginning of a function we need to know the number of bytes
@@ -73,7 +73,7 @@ namespace orbit_user_space_instrumentation {
 //
 // We'd like to override from 0x5583ba2837a0 with a jmp which is five bytes long:
 // 0x5583ba2837a0: jmp          0x5583ba0bf000
-// 0x5583ba2837a5: XYZ
+// 0x5583ba2837a5: (last three bytes of the encoding of `sub rsp, 0x10`)
 //
 // Since the instruction lengths do not align we end up with three bytes of garbage, the next intact
 // instruction starts at 0x5583ba2837a8. So LengthOfOverriddenInstructions would return eight.
@@ -81,8 +81,9 @@ namespace orbit_user_space_instrumentation {
 // `handle` is a handle to the capstone library returned by cs_open. `code` contains  the machine
 // code of the function that should be overridden. `bytes_to_override` is the number of bytes to
 // override at the beginning of `code`.
-// The return value is either the number of bytes as described above or unset if the function was
-// too short to be overridden by `bytes_to_override` bytes.
+// The return value is either the number of bytes as described above or unset if there was a problem
+// with the function. That might either be that the function is too short or that we were unable to
+// disassemble enough code to cover `bytes_to_override` bytes.
 [[nodiscard]] std::optional<int> LengthOfOverriddenInstructions(csh handle,
                                                                 const std::vector<uint8_t>& code,
                                                                 int bytes_to_override);

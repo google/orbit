@@ -257,7 +257,7 @@ TEST(TrampolineTest, AllocateMemoryForTrampolines) {
   waitpid(pid, nullptr, 0);
 }
 
-TEST(TrampolineTest, AllInstructionPointersFromProcess) {
+TEST(TrampolineTest, GetInstructionPointersFromProcess) {
   pid_t pid = fork();
   CHECK(pid != -1);
   if (pid == 0) {
@@ -268,7 +268,7 @@ TEST(TrampolineTest, AllInstructionPointersFromProcess) {
   // Stop the process using our tooling.
   CHECK(AttachAndStopProcess(pid).has_value());
 
-  auto rips_or_error = AllInstructionPointersFromProcess(pid);
+  auto rips_or_error = GetInstructionPointersFromProcess(pid);
   ASSERT_FALSE(rips_or_error.has_error());
   EXPECT_EQ(1, rips_or_error.value().size());
 
@@ -297,6 +297,10 @@ TEST(TrampolineTest, LengthOfOverriddenInstructions) {
 
   const std::vector<uint8_t> kFourNops{0x90, 0x90, 0x90, 0x90};
   result = LengthOfOverriddenInstructions(handle, kFourNops, kBytesToOverride);
+  ASSERT_FALSE(result.has_value());
+
+  const std::vector<uint8_t> kIllegalInstructions{0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06};
+  result = LengthOfOverriddenInstructions(handle, kIllegalInstructions, kBytesToOverride);
   ASSERT_FALSE(result.has_value());
 
   cs_close(&handle);
