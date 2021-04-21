@@ -29,7 +29,7 @@ message InstrumentedFunction {
 
 // Api functions are declared in Orbit.h. They are implemented in user code
 // through the ORBIT_API_INSTANTIATE macro. Those functions are used to query
-// the tracee for Orbit specific information. See "FindApiFunction" form more
+// the tracee for Orbit specific information. See "FindApiFunction" for more
 // details.
 message ApiFunction {
   string module_path = 1;
