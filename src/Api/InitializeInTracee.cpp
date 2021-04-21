@@ -83,7 +83,7 @@ ErrorMessageOr<void> InitializeInTracee(const CaptureOptions& capture_options) {
   for (const ApiFunction& api_function : capture_options.api_functions()) {
     // Filter api functions.
     constexpr const char* kOrbitApiGetAddressPrefix = "orbit_api_get_function_table_address_v";
-    if (absl::StrContains(api_function.name(), kOrbitApiGetAddressPrefix) == false) continue;
+    if (!absl::StrContains(api_function.name(), kOrbitApiGetAddressPrefix)) continue;
 
     // Get ModuleInfo associated with function.
     const ModuleInfo* module_info = FindModuleInfoForApiFunction(api_function, modules_by_path);
