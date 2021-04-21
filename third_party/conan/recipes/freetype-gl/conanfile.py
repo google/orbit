@@ -4,7 +4,7 @@ import shutil, os
 
 class FreetypeglConan(ConanFile):
     name = "freetype-gl"
-    version = "8d9a97a"
+    version = "79b03d9"
     license = "BSD-2-Clause"
     description = "freetype-gl is a small library for displaying Unicode in OpenGL"
     topics = ("freetype", "opengl", "unicode", "fonts")
@@ -12,7 +12,7 @@ class FreetypeglConan(ConanFile):
     options = {"shared": [True, False], "fPIC" : [True, False]}
     default_options = {"shared": False, "fPIC": True}
     generators = "cmake", "cmake_find_package_multi"
-    requires = "glew/2.1.0@orbitdeps/stable", "freetype/2.10.0@bincrafters/stable", "zlib/1.2.11@conan/stable"
+    requires = "glad/0.1.34", "freetype/2.10.4", "zlib/1.2.11"
     exports_sources = "patches/*"
     _cmake = None
 
@@ -31,7 +31,8 @@ class FreetypeglConan(ConanFile):
             return self._cmake
 
         cmake = CMake(self)
-        cmake.definitions["freetype-gl_WITH_GLEW"] = True
+        cmake.definitions["freetype-gl_WITH_GLAD"] = True
+        cmake.definitions["freetype-gl_WITH_GLEW"] = False
         cmake.definitions["freetype-gl_USE_VAO"] = False
         cmake.definitions["freetype-gl_BUILD_DEMOS"] = False
         cmake.definitions["freetype-gl_BUILD_APIDOC"] = False
@@ -65,4 +66,5 @@ class FreetypeglConan(ConanFile):
             self.cpp_info.libs = ["libfreetype-gl.a"]
         self.cpp_info.includedirs = ["include"]
         self.cpp_info.resdirs = ["fonts", "shaders"]
+        self.cpp_info.defines = ["GL_WITH_GLAD"]
 
