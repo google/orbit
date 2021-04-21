@@ -131,3 +131,23 @@ if [[ $DONT_COMPILE != "yes" ]]; then
   fi
 fi
 
+PRE_COMMIT_HOOK_FILE=.git/hooks/pre-commit
+
+function install_clang_format_pre_commit_hook {
+  if [ ! -f $PRE_COMMIT_HOOK_FILE ] ; then
+    touch $PRE_COMMIT_HOOK_FILE
+    chmod +x $PRE_COMMIT_HOOK_FILE
+  fi
+  echo "source \"contrib/hooks/clang-format-pre-commit.sh\"" >> $PRE_COMMIT_HOOK_FILE
+}
+
+if  [ ! -f $PRE_COMMIT_HOOK_FILE ] || ! grep -q "contrib/hooks/clang-format-pre-commit.sh" .git/hooks/pre-commit ; then
+  while true; do
+    read -p "Do you want to install the clang-format pre-commit hook [y/n]? `echo $'\n> '`" yn
+    case $yn in
+      [Yy]* ) install_clang_format_pre_commit_hook; break;;
+      [Nn]* ) break;;
+    esac
+  done
+fi
+
