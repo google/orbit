@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 1c2e89f..dd7ae4a 100644
+index 9fb9316..e79ec1f 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -6,6 +6,8 @@
@@ -11,7 +11,7 @@ index 1c2e89f..dd7ae4a 100644
  
  set(CMAKE_MODULE_PATH
      "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules"
-@@ -82,7 +84,7 @@ if(NOT MINGW AND (WIN32 OR WIN64))
+@@ -83,7 +85,7 @@ if(NOT MINGW AND (WIN32 OR WIN64))
  endif()
  
  find_package(OpenGL REQUIRED)
@@ -20,7 +20,7 @@ index 1c2e89f..dd7ae4a 100644
  
  if(freetype-gl_WITH_GLEW)
      find_package(GLEW REQUIRED)
-@@ -120,6 +122,8 @@ set(FREETYPE_GL_HDR
+@@ -125,6 +127,8 @@ set(FREETYPE_GL_HDR
      vector.h
      vertex-attribute.h
      vertex-buffer.h
@@ -29,7 +29,7 @@ index 1c2e89f..dd7ae4a 100644
  )
  
  set(FREETYPE_GL_SRC
-@@ -134,6 +138,8 @@ set(FREETYPE_GL_SRC
+@@ -139,6 +143,8 @@ set(FREETYPE_GL_SRC
      vector.c
      vertex-attribute.c
      vertex-buffer.c
@@ -37,10 +37,10 @@ index 1c2e89f..dd7ae4a 100644
 +    demos/shader.c
  )
  
- add_library(freetype-gl STATIC
+ if(NOT MSVC)
 diff --git a/cmake/Modules/FindGLEW.cmake b/cmake/Modules/FindGLEW.cmake
 deleted file mode 100644
-index 5053c14..0000000
+index 9597d7f..0000000
 --- a/cmake/Modules/FindGLEW.cmake
 +++ /dev/null
 @@ -1,54 +0,0 @@
@@ -78,7 +78,7 @@ index 5053c14..0000000
 -
 -    # Prefer the static library.
 -    FIND_LIBRARY( GLEW_LIBRARY
--        NAMES libGLEW.a GLEW
+-        NAMES libGLEW GLEW
 -        PATHS
 -        /usr/lib64
 -        /usr/lib
@@ -98,3 +98,26 @@ index 5053c14..0000000
 -
 -INCLUDE(${CMAKE_ROOT}/Modules/FindPackageHandleStandardArgs.cmake)
 -FIND_PACKAGE_HANDLE_STANDARD_ARGS(GLEW DEFAULT_MSG GLEW_LIBRARY)
+diff --git a/texture-font.c b/texture-font.c
+index cc28e2a..cb53bac 100644
+--- a/texture-font.c
++++ b/texture-font.c
+@@ -31,18 +31,6 @@ static FT_F26Dot6 convert_float_to_F26Dot6(float value)
+   return (FT_F26Dot6) (value * 64.0);
+ }
+ 
+-#undef FTERRORS_H_
+-#define FT_ERROR_START_LIST     switch ( error_code ) {
+-#define FT_ERRORDEF( e, v, s )    case v: return s;
+-#define FT_ERROR_END_LIST       }
+-// Same signature as the function defined in fterrors.h:
+-// https://www.freetype.org/freetype2/docs/reference/ft2-error_enumerations.html#ft_error_string
+-const char* FT_Error_String( FT_Error error_code )
+-{
+-#include FT_ERRORS_H
+-    return "INVALID ERROR CODE";
+-}
+-
+ // ------------------------------------------------- texture_font_load_face ---
+ static int
+ texture_font_load_face(texture_font_t *self, float size,
