@@ -4,6 +4,8 @@
 
 syntax = "proto3";
 
+import "user_defined_capture_info.proto";
+
 package orbit_client_protos;
 
 message FunctionStats {
@@ -108,15 +110,6 @@ message LinuxAddressInfo {
 
 message CaptureHeader {
   string version = 1;
-}
-
-message FrameTracksInfo {
-  reserved 1;
-  repeated uint64 frame_track_function_ids = 2;
-}
-
-message UserDefinedCaptureInfo {
-  FrameTracksInfo frame_tracks_info = 1;
 }
 
 message CaptureInfo {
