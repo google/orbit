@@ -1016,6 +1016,7 @@ void OrbitApp::StartCapture() {
   }
 
   TracepointInfoSet selected_tracepoints = data_manager_->selected_tracepoints();
+  bool collect_scheduling_info = true;
   bool collect_thread_states = data_manager_->collect_thread_states();
   bool enable_introspection = absl::GetFlag(FLAGS_devmode);
   double samples_per_second = data_manager_->samples_per_second();
@@ -1033,9 +1034,10 @@ void OrbitApp::StartCapture() {
 
   Future<ErrorMessageOr<CaptureOutcome>> capture_result = capture_client_->Capture(
       thread_pool_.get(), process->pid(), *module_manager_, std::move(selected_functions_map),
-      std::move(selected_tracepoints), samples_per_second, unwinding_method, collect_thread_states,
-      enable_introspection, max_local_marker_depth_per_command_buffer, collect_memory_info,
-      memory_sampling_period_ns, std::move(capture_event_processor));
+      std::move(selected_tracepoints), samples_per_second, unwinding_method,
+      collect_scheduling_info, collect_thread_states, enable_introspection,
+      max_local_marker_depth_per_command_buffer, collect_memory_info, memory_sampling_period_ns,
+      std::move(capture_event_processor));
 
   capture_result.Then(main_thread_executor_, [this](ErrorMessageOr<CaptureOutcome> capture_result) {
     if (capture_result.has_error()) {
