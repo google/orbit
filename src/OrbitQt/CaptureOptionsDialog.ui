@@ -85,6 +85,9 @@
           </item>
           <item>
            <widget class="QLineEdit" name="memorySamplingPeriodMsLineEdit">
+            <property name="accessibleName">
+             <string>MemorySamplingPeriodEdit</string>
+            </property>           
             <property name="enabled">
              <bool>false</bool>
             </property>
