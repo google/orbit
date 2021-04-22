@@ -256,6 +256,12 @@
 #define ORBIT_THREAD_FENCE_ACQUIRE() atomic_thread_fence(memory_order_acquire)
 #endif
 
+#ifdef __linux
+#define ORBIT_EXPORT __attribute__((visibility("default")))
+#else
+#define ORBIT_EXPORT __declspec(dllexport)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -303,7 +309,7 @@ struct orbit_api_v0 {
 };
 
 extern orbit_api_v0 g_orbit_api_v0;
-extern __attribute__((visibility("default"))) void* orbit_api_get_function_table_address_v0();
+extern ORBIT_EXPORT void* orbit_api_get_function_table_address_v0();
 
 // User needs to place "ORBIT_API_INSTANTIATE" in an implementation file.
 #define ORBIT_API_INSTANTIATE  \
