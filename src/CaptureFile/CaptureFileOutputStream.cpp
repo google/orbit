@@ -29,6 +29,7 @@ class CaptureFileOutputStreamImpl final : public CaptureFileOutputStream {
   [[nodiscard]] ErrorMessageOr<void> WriteCaptureEvent(
       const orbit_grpc_protos::ClientCaptureEvent& event) override;
   void Close() noexcept override;
+  [[nodiscard]] bool IsOpen() noexcept override;
 
  private:
   [[nodiscard]] ErrorMessageOr<void> WriteHeader();
@@ -71,6 +72,8 @@ void CaptureFileOutputStreamImpl::Close() noexcept {
   file_output_stream_.reset();
   fd_.release();
 }
+
+bool CaptureFileOutputStreamImpl::IsOpen() noexcept { return fd_.valid(); }
 
 void CaptureFileOutputStreamImpl::CloseAndTryRemoveFileAfterError() {
   Close();

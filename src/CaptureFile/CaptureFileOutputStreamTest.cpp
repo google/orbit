@@ -38,6 +38,8 @@ TEST(CaptureFileOutputStream, Smoke) {
   std::unique_ptr<CaptureFileOutputStream> output_stream =
       std::move(output_stream_or_error.value());
 
+  EXPECT_TRUE(output_stream->IsOpen());
+
   orbit_grpc_protos::ClientCaptureEvent event = CreateInternedStringCaptureEvent();
 
   auto write_result = output_stream->WriteCaptureEvent(event);
@@ -81,7 +83,11 @@ TEST(CaptureFileOutputStream, WriteAfterClose) {
   std::unique_ptr<CaptureFileOutputStream> output_stream =
       std::move(output_stream_or_error.value());
 
+  EXPECT_TRUE(output_stream->IsOpen());
+
   output_stream->Close();
+
+  EXPECT_FALSE(output_stream->IsOpen());
 
   orbit_grpc_protos::ClientCaptureEvent event = CreateInternedStringCaptureEvent();
 
