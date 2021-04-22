@@ -48,6 +48,8 @@ class CaptureFileOutputStream {
       const orbit_grpc_protos::ClientCaptureEvent& event) = 0;
   virtual void Close() noexcept = 0;
 
+  [[nodiscard]] virtual bool IsOpen() noexcept = 0;
+
   // Create new capture file output stream. If the file exists it is going to be
   // overwritten.
   [[nodiscard]] static ErrorMessageOr<std::unique_ptr<CaptureFileOutputStream>> Create(
