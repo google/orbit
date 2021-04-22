@@ -74,11 +74,13 @@ class ServiceDeployManager : public QObject {
   outcome::result<void> ConnectToServer();
   outcome::result<bool> CheckIfInstalled();
   outcome::result<void> CopyOrbitServicePackage();
-  outcome::result<void> CopyOrbitServiceExecutable();
-  outcome::result<void> CopyOrbitApiLibrary();
+  outcome::result<void> CopyOrbitServiceExecutable(
+      const BareExecutableAndRootPasswordDeployment& config);
+  outcome::result<void> CopyOrbitApiLibrary(const BareExecutableAndRootPasswordDeployment& config);
   outcome::result<void> InstallOrbitServicePackage();
   outcome::result<void> StartOrbitService();
-  outcome::result<void> StartOrbitServicePrivileged();
+  outcome::result<void> StartOrbitServicePrivileged(
+      const BareExecutableAndRootPasswordDeployment& config);
   outcome::result<uint16_t> StartTunnel(std::optional<orbit_ssh_qt::Tunnel>* tunnel, uint16_t port);
   outcome::result<std::unique_ptr<orbit_ssh_qt::SftpChannel>> StartSftpChannel();
   outcome::result<void> StopSftpChannel(orbit_ssh_qt::SftpChannel* sftp_channel);

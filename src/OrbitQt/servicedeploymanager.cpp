@@ -341,13 +341,12 @@ ErrorMessageOr<void> ServiceDeployManager::CopyFileToLocalImpl(std::string_view 
   return outcome::success();
 }
 
-outcome::result<void> ServiceDeployManager::CopyOrbitServiceExecutable() {
+outcome::result<void> ServiceDeployManager::CopyOrbitServiceExecutable(
+    const BareExecutableAndRootPasswordDeployment& config) {
   CHECK(QThread::currentThread() == thread());
   emit statusMessage("Copying OrbitService executable to the remote instance...");
 
   const std::string exe_destination_path = "/tmp/OrbitService";
-  auto& config = std::get<BareExecutableAndRootPasswordDeployment>(*deployment_configuration_);
-
   OUTCOME_TRY(CopyFileToRemote(
       config.path_to_executable.string(), exe_destination_path,
       orbit_ssh_qt::SftpCopyToRemoteOperation::FileMode::kUserWritableAllExecutable));
@@ -356,12 +355,12 @@ outcome::result<void> ServiceDeployManager::CopyOrbitServiceExecutable() {
   return outcome::success();
 }
 
-outcome::result<void> ServiceDeployManager::CopyOrbitApiLibrary() {
+outcome::result<void> ServiceDeployManager::CopyOrbitApiLibrary(
+    const BareExecutableAndRootPasswordDeployment& config) {
   CHECK(QThread::currentThread() == thread());
   emit statusMessage("Copying liborbit.so to the remote instance...");
 
   const std::string library_destination_path = "/tmp/liborbit.so";
-  auto& config = std::get<BareExecutableAndRootPasswordDeployment>(*deployment_configuration_);
   const auto library_source_path = config.path_to_executable.parent_path() / "../lib/liborbit.so";
   OUTCOME_TRY(CopyFileToRemote(
       library_source_path.string(), library_destination_path,
@@ -405,7 +404,8 @@ outcome::result<void> ServiceDeployManager::StartOrbitService() {
   return outcome::success();
 }
 
-outcome::result<void> ServiceDeployManager::StartOrbitServicePrivileged() {
+outcome::result<void> ServiceDeployManager::StartOrbitServicePrivileged(
+    const BareExecutableAndRootPasswordDeployment& config) {
   CHECK(QThread::currentThread() == thread());
   // TODO(antonrohr) Check whether the password was incorrect.
   // There are multiple ways of doing this. the best way is probably to have a
@@ -420,9 +420,6 @@ outcome::result<void> ServiceDeployManager::StartOrbitServicePrivileged() {
     task_string += " --devmode";
   }
   orbit_service_task_.emplace(&session_.value(), task_string);
-
-  const auto& config =
-      std::get<orbit_qt::BareExecutableAndRootPasswordDeployment>(*deployment_configuration_);
 
   orbit_service_task_->Write(absl::StrFormat("%s\n", config.root_password));
 
@@ -550,9 +547,11 @@ outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::ExecImpl()
     // Developer mode: Deploying a bare executable and start it via sudo.
   } else if (std::holds_alternative<BareExecutableAndRootPasswordDeployment>(
                  *deployment_configuration_)) {
-    OUTCOME_TRY(CopyOrbitServiceExecutable());
-    OUTCOME_TRY(CopyOrbitApiLibrary());
-    OUTCOME_TRY(StartOrbitServicePrivileged());
+    const auto& config =
+        std::get<orbit_qt::BareExecutableAndRootPasswordDeployment>(*deployment_configuration_);
+    OUTCOME_TRY(CopyOrbitServiceExecutable(config));
+    OUTCOME_TRY(CopyOrbitApiLibrary(config));
+    OUTCOME_TRY(StartOrbitServicePrivileged(config));
     // TODO(hebecker): Replace this timeout by waiting for a
     // stdout-greeting-message.
     std::this_thread::sleep_for(std::chrono::milliseconds{200});
