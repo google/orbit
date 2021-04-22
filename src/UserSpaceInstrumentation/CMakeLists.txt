@@ -46,7 +46,8 @@ target_sources(UserSpaceInstrumentation PRIVATE
 target_link_libraries(UserSpaceInstrumentation PUBLIC
         LinuxTracing
         OrbitBase
-        CONAN_PKG::abseil)
+        CONAN_PKG::abseil
+        CONAN_PKG::capstone)
 
 # This test lib is merely used in UserSpaceInstrumentationTests below. The
 # binary libUserSpaceInstrumentationTestLib.so created from this target is used
@@ -90,6 +91,7 @@ target_link_libraries(UserSpaceInstrumentationTests PRIVATE
         LinuxTracing
         UserSpaceInstrumentation
         CONAN_PKG::abseil
+        CONAN_PKG::capstone
         GTest::GTest
         GTest::Main)
 
