@@ -63,7 +63,7 @@ InstrumentedFunction::FunctionType CaptureClient::InstrumentedFunctionTypeFromOr
 
 // TODO(vickyliu): This method contains a lot of arguments. Consider making it more structured.
 Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
-    ThreadPool* thread_pool, const ProcessData& process,
+    ThreadPool* thread_pool, int32_t process_id,
     const orbit_client_data::ModuleManager& module_manager,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
     TracepointInfoSet selected_tracepoints, double samples_per_second,
@@ -81,7 +81,7 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
   state_ = State::kStarting;
 
   auto capture_result = thread_pool->Schedule(
-      [this, process_id = process.pid(), &module_manager,
+      [this, process_id, &module_manager,
        selected_functions = std::move(selected_functions),
        selected_tracepoints = std::move(selected_tracepoints), collect_thread_state,
        samples_per_second, unwinding_method, enable_introspection,
