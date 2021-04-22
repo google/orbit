@@ -98,6 +98,7 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
 
   LOG("Capture pid %d", pid);
   TracepointInfoSet selected_tracepoints;
+  bool collect_scheduling_info = true;
   bool collect_thread_state = absl::GetFlag(FLAGS_thread_state);
   uint64_t max_local_marker_depth_per_command_buffer =
       absl::GetFlag(FLAGS_max_local_marker_depth_per_command_buffer);
@@ -107,10 +108,10 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
                                          : UnwindingMethod::kDwarfUnwinding;
 
   Future<ErrorMessageOr<CaptureOutcome>> result = capture_client_->Capture(
-      thread_pool, target_process_->pid(), module_manager_, selected_functions_, selected_tracepoints,
-      options_.samples_per_second, unwinding_method, collect_thread_state, enable_introspection,
-      max_local_marker_depth_per_command_buffer, false, 0,
-      CaptureEventProcessor::CreateForCaptureListener(this, absl::flat_hash_set<uint64_t>{}));
+      thread_pool, target_process_->pid(), module_manager_, selected_functions_,
+      selected_tracepoints, options_.samples_per_second, unwinding_method, collect_scheduling_info,
+      collect_thread_state, enable_introspection, max_local_marker_depth_per_command_buffer, false,
+      0, CaptureEventProcessor::CreateForCaptureListener(this, absl::flat_hash_set<uint64_t>{}));
 
   orbit_base::ImmediateExecutor executor;
   result.Then(&executor, [this](ErrorMessageOr<CaptureOutcome> result) {
