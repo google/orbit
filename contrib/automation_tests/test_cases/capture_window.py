@@ -256,7 +256,7 @@ class Capture(E2ETestCase):
         logging.info('Showing capture window')
         self.find_control("TabItem", "Capture").click_input()
 
-    def _set_capture_options(self, collect_thread_states: bool):
+    def _set_capture_options(self, collect_thread_states: bool, collect_system_memory_usage: bool):
         capture_tab = self.find_control('Group', "CaptureTab")
 
         logging.info('Opening "Capture Options" dialog')
@@ -269,6 +269,12 @@ class Capture(E2ETestCase):
         if collect_thread_states_checkbox.get_toggle_state() != collect_thread_states:
             logging.info('Toggling "Collect thread states" checkbox')
             collect_thread_states_checkbox.click_input()
+
+        collect_system_memory_usage_checkbox = self.find_control('CheckBox', 'Collect system-wide memory usage information',
+                                                                 parent=capture_options_dialog)
+        if collect_system_memory_usage_checkbox.get_toggle_state() != collect_system_memory_usage:
+            logging.info('Toggling "Collect system-wide memory usage information" checkbox')
+            collect_system_memory_usage_checkbox.click_input()
 
         logging.info('Saving "Capture Options"')
         self.find_control('Button', 'OK', parent=capture_options_dialog).click_input()
@@ -294,9 +300,10 @@ class Capture(E2ETestCase):
                                                      recurse=False, raise_on_failure=False) is None, max_seconds=120)
         logging.info("Capturing finished")
 
-    def _execute(self, length_in_seconds: int = 5, collect_thread_states: bool = False):
+    def _execute(self, length_in_seconds: int = 5, collect_thread_states: bool = False,
+                 collect_system_memory_usage: bool = False):
         self._show_capture_window()
-        self._set_capture_options(collect_thread_states)
+        self._set_capture_options(collect_thread_states, collect_system_memory_usage)
         self._take_capture(length_in_seconds)
         self._verify_existence_of_tracks()
 
