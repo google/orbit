@@ -51,7 +51,7 @@ class SelectTrack(CaptureWindowE2ETestCaseBase):
 
         if check_selection_before:
             self.expect_true(not track.container.has_keyboard_focus(), "Track is not selected")
-        logging.info("Selecting track with index %s", track_index)
+        logging.info("Selecting track with index {}".format(track_index))
         track.title.click_input()
         if expect_failure:
             self.expect_true(not track.container.has_keyboard_focus(), "Track is not selected")
@@ -111,14 +111,14 @@ class MoveTrack(CaptureWindowE2ETestCaseBase):
 
         track = Track(tracks[track_index])
         mouse_x = track.title.rectangle().left + 5
-        logging.info("Moving track '%s' from index %s to y=%s (expected new index: %s)",
-                     track.container.texts()[0], track_index, new_y, expected_new_index)
+        logging.info("Moving track '{}' from index {} to y={} (expected new index: {})".format(
+            track.container.texts()[0], track_index, new_y, expected_new_index))
 
         track.title.drag_mouse_input((mouse_x, new_y + 5))
 
         index = self._find_tracks().index(track.container)
-        self.expect_eq(index, expected_new_index % track_count, "Expected track index %s after reordering, got %s" %
-                       (expected_new_index, index))
+        self.expect_eq(index, expected_new_index % track_count,
+                       "Expected track index {} after reordering, got {}".format(expected_new_index, index))
 
 
 class MatchTracks(CaptureWindowE2ETestCaseBase):
@@ -147,13 +147,13 @@ class MatchTracks(CaptureWindowE2ETestCaseBase):
         tracks = self._find_tracks()
 
         if not allow_additional_tracks:
-            self.expect_eq(len(tracks), expected_count, "# of tracks matches %s" % expected_count)
+            self.expect_eq(len(tracks), expected_count, "# of tracks matches {}".format(expected_count))
         else:
-            self.expect_true(len(tracks) >= expected_count, "# of tracks is at least %s" % expected_count)
+            self.expect_true(len(tracks) >= expected_count, "# of tracks is at least {}".format(expected_count))
 
         names_found = 0
         if expected_names:
-            logging.info("Matching visible tracks against name list (%s)", expected_names)
+            logging.info("Matching visible tracks against name list ({})".format(expected_names))
             for name in expected_names:
                 found = False
                 for track in tracks:
@@ -162,7 +162,7 @@ class MatchTracks(CaptureWindowE2ETestCaseBase):
                         found = True
                         names_found += 1
                         break
-                self.expect_true(found, "Found a match for track name '%s'" % str(name))
+                self.expect_true(found, "Found a match for track name '{}'".format(str(name)))
 
         if expected_names and not allow_additional_tracks:
             self.expect_eq(names_found, expected_count, "No additional tracks are found")
@@ -191,7 +191,7 @@ class CollapsingTrackBase(CaptureWindowE2ETestCaseBase):
 
         tracks = self._find_tracks(expected_name)
 
-        self.expect_true(len(tracks) == 1, 'Found track %s' % expected_name)
+        self.expect_true(len(tracks) == 1, 'Found track {}'.format(expected_name))
         track = Track(tracks[0])
 
         prev_height = track.container.rectangle().height()
@@ -213,8 +213,8 @@ class ExpandTrack(CollapsingTrackBase):
     Click on a collapsed track's triangle toggle, verify that the height increased.
     """
     def _verify_height(self, prev_click_height: int, post_click_height: int, track_name: str):
-        self.expect_true(prev_click_height < post_click_height, "Expanding track '%s' changed its height from %u to %u"
-                                                                % (track_name, prev_click_height, post_click_height))
+        self.expect_true(prev_click_height < post_click_height, "Expanding track '{}' changed its height from {:d} to {:d}".format(
+            track_name, prev_click_height, post_click_height))
 
 
 class CollapseTrack(CollapsingTrackBase):
@@ -222,8 +222,8 @@ class CollapseTrack(CollapsingTrackBase):
     Click on an expanded track's triangle toggle, verify that the height decreased.
     """
     def _verify_height(self, prev_click_height: int, post_click_height: int, track_name: str):
-        self.expect_true(prev_click_height > post_click_height, "Collapsing track '%s' changed its height from %u to %u"
-                                                                % (track_name, prev_click_height, post_click_height))
+        self.expect_true(prev_click_height > post_click_height, "Collapsing track '{}' changed its height from {:d} to {:d}".format(
+            track_name, prev_click_height, post_click_height))
 
 
 class FilterTracks(CaptureWindowE2ETestCaseBase):
@@ -239,7 +239,7 @@ class FilterTracks(CaptureWindowE2ETestCaseBase):
         toolbar = self.find_control("ToolBar", "CaptureToolBar")
         track_filter = self.find_control("Edit", "FilterTracks", parent=toolbar)
 
-        logging.info("Setting track filter text: '%s'", filter_string)
+        logging.info("Setting track filter text: '{}'".format(filter_string))
         track_filter.set_focus()
         track_filter.set_edit_text('')
         # Using send_keys instead of set_edit_text directly because set_edit_text ignores the wait timings...
@@ -283,7 +283,7 @@ class Capture(E2ETestCase):
         capture_tab = self.find_control('Group', "CaptureTab")
         toggle_capture_button = self.find_control('Button', 'Toggle Capture', parent=capture_tab)
 
-        logging.info('Starting to capture for %s seconds', length_in_seconds)
+        logging.info('Starting to capture for {} seconds'.format(length_in_seconds))
         toggle_capture_button.click_input()
         time.sleep(length_in_seconds)
         logging.info('Stopping capture')
@@ -311,40 +311,40 @@ class Capture(E2ETestCase):
 class CheckThreadStates(CaptureWindowE2ETestCaseBase):
     def _execute(self, track_name_filter: str, expect_exists: bool = True):
         tracks = self._find_tracks(track_name_filter)
-        self.expect_true(len(tracks) > 0, 'Found tracks matching %s' % track_name_filter)
-        logging.info('Checking for thread states in %s tracks', len(tracks))
+        self.expect_true(len(tracks) > 0, 'Found tracks matching {}'.format(track_name_filter))
+        logging.info('Checking for thread states in {} tracks'.format(len(tracks)))
         for track in tracks:
             track = Track(track)
             if expect_exists:
-                self.expect_true(track.thread_states is not None, 'Track %s has a thread state pane' % track.name)
+                self.expect_true(track.thread_states is not None, 'Track {} has a thread state pane'.format(track.name))
             else:
-                self.expect_true(track.thread_states is None, 'Track %s has a no thread state pane' % track.name)
+                self.expect_true(track.thread_states is None, 'Track {} has a no thread state pane'.format(track.name))
 
 
 class CheckTimers(CaptureWindowE2ETestCaseBase):
     def _execute(self, track_name_filter: str, expect_exists: bool = True):
         tracks = self._find_tracks(track_name_filter)
-        self.expect_true(len(tracks) > 0, 'Found tracks matching "%s"' % track_name_filter)
-        logging.info('Checking for timers in %s tracks', len(tracks))
+        self.expect_true(len(tracks) > 0, 'Found tracks matching "{}"'.format(track_name_filter))
+        logging.info('Checking for timers in {} tracks'.format(len(tracks)))
         for track in tracks:
             track = Track(track)
             if expect_exists:
-                self.expect_true(track.timers is not None, 'Track "%s" has timers pane' % track.name)
+                self.expect_true(track.timers is not None, 'Track "{}" has timers pane'.format(track.name))
             else:
-                self.expect_true(track.timers is None, 'Track "%s" has no timers pane' % track.name)
+                self.expect_true(track.timers is None, 'Track "{}" has no timers pane'.format(track.name))
 
 
 class CheckCallstacks(CaptureWindowE2ETestCaseBase):
     def _execute(self, track_name_filter: str, expect_exists: bool = True):
         tracks = self._find_tracks(track_name_filter)
-        self.expect_true(len(tracks) > 0, 'Found tracks matching "%s"' % track_name_filter)
-        logging.info('Checking for callstacks pane in %s tracks', len(tracks))
+        self.expect_true(len(tracks) > 0, 'Found tracks matching "{}"'.format(track_name_filter))
+        logging.info('Checking for callstacks pane in {} tracks'.format(len(tracks)))
         for track in tracks:
             track = Track(track)
             if expect_exists:
-                self.expect_true(track.callstacks is not None, 'Track "%s" has callstacks pane' % track.name)
+                self.expect_true(track.callstacks is not None, 'Track "{}" has callstacks pane'.format(track.name))
             else:
-                self.expect_true(track.callstacks is None, 'Track "%s" has no callstacks pane' % track.name)
+                self.expect_true(track.callstacks is None, 'Track "{}" has no callstacks pane'.format(track.name))
 
 
 class SetAndCheckMemorySamplingPeriod(E2ETestCase):
