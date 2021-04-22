@@ -21,7 +21,6 @@
 #include "OrbitClientData/UserDefinedCaptureData.h"
 #include "capture.pb.h"
 #include "capture_data.pb.h"
-#include "gtest/gtest.h"
 #include "tracepoint.pb.h"
 
 namespace orbit_capture_client {

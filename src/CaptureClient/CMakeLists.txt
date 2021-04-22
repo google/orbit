@@ -24,9 +24,11 @@ target_sources(CaptureClient PRIVATE
         ApiEventProcessor.cpp
         CaptureClient.cpp
         CaptureEventProcessor.cpp
-        GpuQueueSubmissionProcessor.cpp)
+        GpuQueueSubmissionProcessor.cpp
+        SaveToFileCaptureEventProcessor.cpp)
 
 target_link_libraries(CaptureClient PUBLIC
+        CaptureFile
         GrpcProtos
         OrbitCore)
 
@@ -41,7 +43,8 @@ target_compile_options(CaptureClientTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(CaptureClientTests PRIVATE
         ApiEventProcessorTest.cpp
-        CaptureEventProcessorTest.cpp)
+        CaptureEventProcessorTest.cpp
+        SaveToFileCaptureEventProcessorTest.cpp)
 
 target_link_libraries(
         CaptureClientTests PRIVATE
