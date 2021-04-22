@@ -107,7 +107,7 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
                                          : UnwindingMethod::kDwarfUnwinding;
 
   Future<ErrorMessageOr<CaptureOutcome>> result = capture_client_->Capture(
-      thread_pool, *target_process_, module_manager_, selected_functions_, selected_tracepoints,
+      thread_pool, target_process_->pid(), module_manager_, selected_functions_, selected_tracepoints,
       options_.samples_per_second, unwinding_method, collect_thread_state, enable_introspection,
       max_local_marker_depth_per_command_buffer, false, 0,
       CaptureEventProcessor::CreateForCaptureListener(this, absl::flat_hash_set<uint64_t>{}));

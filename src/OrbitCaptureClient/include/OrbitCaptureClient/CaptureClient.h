@@ -37,7 +37,7 @@ class CaptureClient {
       : capture_service_{orbit_grpc_protos::CaptureService::NewStub(channel)} {}
 
   orbit_base::Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> Capture(
-      ThreadPool* thread_pool, const ProcessData& process,
+      ThreadPool* thread_pool, int32_t process_id,
       const orbit_client_data::ModuleManager& module_manager,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       TracepointInfoSet selected_tracepoints, double samples_per_second,

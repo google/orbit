@@ -1032,7 +1032,7 @@ void OrbitApp::StartCapture() {
       CaptureEventProcessor::CreateForCaptureListener(this, std::move(frame_track_function_ids));
 
   Future<ErrorMessageOr<CaptureOutcome>> capture_result = capture_client_->Capture(
-      thread_pool_.get(), *process, *module_manager_, std::move(selected_functions_map),
+      thread_pool_.get(), process->pid(), *module_manager_, std::move(selected_functions_map),
       std::move(selected_tracepoints), samples_per_second, unwinding_method, collect_thread_states,
       enable_introspection, max_local_marker_depth_per_command_buffer, collect_memory_info,
       memory_sampling_period_ns, std::move(capture_event_processor));
