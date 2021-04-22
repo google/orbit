@@ -8,6 +8,7 @@
      "2",
      "3",
      "4",
+     "8",
      "9",
      "23",
      "26",
@@ -76,7 +77,7 @@
     "context": "host"
    },
    "8": {
-    "ref": "c-ares/1.15.0@conan/stable#0",
+    "ref": "c-ares/1.15.0#c527ace6e98705612ec5ee943c6c0bf7",
     "context": "host"
    },
    "9": {

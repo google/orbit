@@ -77,8 +77,8 @@ class OrbitConan(ConanFile):
         self.requires("abseil/20200923.3")
         self.requires("bzip2/1.0.8@conan/stable#0")
         self.requires("capstone/4.0.1@{}#0".format(self._orbit_channel))
-        self.requires(
-            "grpc/1.27.3@{}".format(self._orbit_channel))
+        self.requires("grpc/1.27.3@{}".format(self._orbit_channel))
+        self.requires("c-ares/1.15.0")
         self.requires("llvm_object/9.0.1-3@orbitdeps/stable")
         self.requires("llvm_symbolize/9.0.1-3@orbitdeps/stable")
         self.requires("lzma_sdk/19.00@orbitdeps/stable#a7bc173325d7463a0757dee5b08bf7fd")
