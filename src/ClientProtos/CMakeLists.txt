@@ -10,7 +10,8 @@ add_library(ClientProtos STATIC)
 
 protobuf_generate(TARGET ClientProtos PROTOS
         capture_data.proto
-        preset.proto)
+        preset.proto
+        user_defined_capture_info.proto)
 
 target_include_directories(ClientProtos PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
