@@ -303,7 +303,7 @@ struct orbit_api_v0 {
 };
 
 extern orbit_api_v0 g_orbit_api_v0;
-extern void* orbit_api_get_function_table_address_v0();
+extern __attribute__((visibility("default"))) void* orbit_api_get_function_table_address_v0();
 
 // User needs to place "ORBIT_API_INSTANTIATE" in an implementation file.
 #define ORBIT_API_INSTANTIATE  \
