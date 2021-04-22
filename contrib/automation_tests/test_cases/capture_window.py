@@ -345,3 +345,56 @@ class CheckCallstacks(CaptureWindowE2ETestCaseBase):
                 self.expect_true(track.callstacks is not None, 'Track "%s" has callstacks pane' % track.name)
             else:
                 self.expect_true(track.callstacks is None, 'Track "%s" has no callstacks pane' % track.name)
+
+
+class SetAndCheckMemorySamplingPeriod(E2ETestCase):
+  # TODO(http://b/186098691): Move the capture options dialog utilities to a common base class.
+
+  def _show_capture_options_dialog(self):
+      logging.info('Opening "Capture Options" dialog')
+      capture_tab = self.find_control('Group', 'CaptureTab')
+      capture_options_button = self.find_control('Button', 'Capture Options', parent=capture_tab)
+      capture_options_button.click_input()
+
+  def _enable_collect_system_memory_usage(self):
+      logging.info('Selecting "Collect system-wide memory usage information" checkbox')
+      collect_system_memory_usage_checkbox = self.find_control(
+          'CheckBox', 'Collect system-wide memory usage information', 
+          parent=self.find_control('Window', 'Capture Options'))
+      if not collect_system_memory_usage_checkbox.get_toggle_state():
+          collect_system_memory_usage_checkbox.click_input()
+
+  def _close_capture_options_dialog(self):
+      logging.info('Saving "Capture Options"')
+      self.find_control(
+          'Button', 'OK', parent=self.find_control('Window', 'Capture Options')).click_input()
+
+  def _execute(self, memory_sampling_period: str):
+      self._show_capture_options_dialog()
+      self._enable_collect_system_memory_usage()
+      memory_sampling_period_edit = self.find_control('Edit', 'MemorySamplingPeriodEdit')
+      
+      DEFAULT_SAMPLING_PERIOD = "10"
+      expected = ""
+      if not memory_sampling_period:
+          # If the user clean the input, sampling period should be reset to the default value 
+          expected = DEFAULT_SAMPLING_PERIOD
+      elif (not memory_sampling_period.isdecimal()) or (not memory_sampling_period.lstrip('0')):
+          # If the input contains invalid characters (e.g., letters) or its value equals to 0, 
+          # sampling period should keep the same as the previous value.
+          expected = memory_sampling_period_edit.texts()[0]
+      else:
+          expected = memory_sampling_period.lstrip('0')
+
+      logging.info('Entering "{}" in "Sampling period (ms)" edit'.format(memory_sampling_period))    
+      memory_sampling_period_edit.set_edit_text(memory_sampling_period)
+
+      # Close and reopen capture options dialog to validate the setting of sampling period.
+      self._close_capture_options_dialog() 
+      self._show_capture_options_dialog()
+      logging.info('Validating the value in "Sampling period (ms)" edit')
+      memory_sampling_period_edit = self.find_control('Edit', 'MemorySamplingPeriodEdit')
+      result = memory_sampling_period_edit.texts()[0]
+      self.expect_true(result == expected,
+                       'Memory sampling period is set to "{}" while it should be "{}"'.format(result, expected))
+      self._close_capture_options_dialog()
