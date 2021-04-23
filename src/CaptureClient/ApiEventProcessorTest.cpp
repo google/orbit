@@ -14,6 +14,8 @@
 #include "OrbitBase/ThreadUtils.h"
 #include "capture.pb.h"
 
+namespace orbit_capture_client {
+
 using orbit_client_protos::TimerInfo;
 
 using orbit_grpc_protos::ApiEvent;
@@ -242,3 +244,5 @@ TEST(ApiEventProcessor, MixedEvents) {
 }
 
 }  // namespace
+
+}  // namespace orbit_capture_client

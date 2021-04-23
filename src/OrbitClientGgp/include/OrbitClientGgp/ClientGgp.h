@@ -35,7 +35,7 @@
 #include "grpcpp/grpcpp.h"
 #include "tracepoint.pb.h"
 
-class ClientGgp final : public CaptureListener {
+class ClientGgp final : public orbit_capture_client::CaptureListener {
  public:
   ClientGgp() : main_module_{nullptr} {}
 
@@ -84,7 +84,7 @@ class ClientGgp final : public CaptureListener {
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions_;
   ModuleData* main_module_ = nullptr;
   std::shared_ptr<StringManager> string_manager_;
-  std::unique_ptr<CaptureClient> capture_client_;
+  std::unique_ptr<orbit_capture_client::CaptureClient> capture_client_;
   std::unique_ptr<ProcessClient> process_client_;
   std::unique_ptr<CaptureData> capture_data_;
   std::vector<orbit_client_protos::TimerInfo> timer_infos_;

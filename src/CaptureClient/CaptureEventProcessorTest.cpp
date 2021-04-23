@@ -24,6 +24,8 @@
 #include "gtest/gtest.h"
 #include "tracepoint.pb.h"
 
+namespace orbit_capture_client {
+
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::ThreadStateSliceInfo;
@@ -1040,3 +1042,5 @@ TEST(CaptureEventProcessor, CanHandleMultipleEvents) {
   EXPECT_EQ(actual_address_info.offset_in_function(), address_info->offset_in_function());
   EXPECT_EQ(actual_address_info.module_path(), kModuleName);
 }
+
+}  // namespace orbit_capture_client

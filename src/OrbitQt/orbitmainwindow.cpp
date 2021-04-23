@@ -74,7 +74,6 @@
 #include "LiveFunctionsController.h"
 #include "LiveFunctionsDataView.h"
 #include "OrbitBase/ExecutablePath.h"
-#include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/Tracing.h"
@@ -114,12 +113,13 @@ ABSL_DECLARE_FLAG(bool, enable_tutorials_feature);
 ABSL_DECLARE_FLAG(uint16_t, sampling_rate);
 ABSL_DECLARE_FLAG(bool, frame_pointer_unwinding);
 
+using orbit_capture_client::CaptureClient;
+using orbit_capture_client::CaptureListener;
+
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_CHECK_FALSE;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_NULL_POINTER_DEREFERENCE;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
-
-using orbit_base::Future;
 
 using orbit_qt::ServiceDeployManager;
 

@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
 
   InstallSigintHandler();
 
-  CaptureClient capture_client{grpc_channel};
+  orbit_capture_client::CaptureClient capture_client{grpc_channel};
   std::unique_ptr<ThreadPool> thread_pool = ThreadPool::Create(1, 1, absl::Seconds(1));
   orbit_client_data::ModuleManager module_manager;
 
@@ -133,7 +133,8 @@ int main(int argc, char* argv[]) {
   if (capture_outcome_or_error.has_error()) {
     FATAL("Capture failed: %s", capture_outcome_or_error.error().message());
   }
-  CHECK(capture_outcome_or_error.value() == CaptureListener::CaptureOutcome::kComplete);
+  CHECK(capture_outcome_or_error.value() ==
+        orbit_capture_client::CaptureListener::CaptureOutcome::kComplete);
   LOG("Capture completed");
 
   thread_pool->ShutdownAndWait();

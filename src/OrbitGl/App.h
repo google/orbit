@@ -78,7 +78,7 @@
 #include "symbol.pb.h"
 #include "tracepoint.pb.h"
 
-class OrbitApp final : public DataViewFactory, public CaptureListener {
+class OrbitApp final : public DataViewFactory, public orbit_capture_client::CaptureListener {
  public:
   explicit OrbitApp(orbit_gl::MainWindowInterface* main_window,
                     MainThreadExecutor* main_thread_executor,
@@ -104,7 +104,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
       const std::string& file_name);
   void OnLoadCaptureCancelRequested();
 
-  [[nodiscard]] CaptureClient::State GetCaptureState() const;
+  [[nodiscard]] orbit_capture_client::CaptureClient::State GetCaptureState() const;
   [[nodiscard]] bool IsCapturing() const;
 
   void StartCapture();
@@ -530,7 +530,7 @@ class OrbitApp final : public DataViewFactory, public CaptureListener {
   MainThreadExecutor* main_thread_executor_;
   std::thread::id main_thread_id_;
   std::unique_ptr<ThreadPool> thread_pool_;
-  std::unique_ptr<CaptureClient> capture_client_;
+  std::unique_ptr<orbit_capture_client::CaptureClient> capture_client_;
   ProcessManager* process_manager_ = nullptr;
   std::unique_ptr<orbit_client_data::ModuleManager> module_manager_;
   std::unique_ptr<DataManager> data_manager_;
