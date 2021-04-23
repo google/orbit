@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CAPTURE_CLIENT_API_EVENT_PROCESSOR_H_
-#define ORBIT_CAPTURE_CLIENT_API_EVENT_PROCESSOR_H_
+#ifndef CAPTURE_CLIENT_API_EVENT_PROCESSOR_H_
+#define CAPTURE_CLIENT_API_EVENT_PROCESSOR_H_
 
 #include <absl/container/flat_hash_map.h>
 
 #include "Api/EncodedEvent.h"
-#include "OrbitCaptureClient/CaptureListener.h"
+#include "CaptureClient/CaptureListener.h"
 #include "capture.pb.h"
 
 // The ApiEventProcessor is responsible for processing orbit_grpc_protos::ApiEvent events and
@@ -35,4 +35,4 @@ class ApiEventProcessor {
   absl::flat_hash_map<int32_t, orbit_api::ApiEvent> asynchronous_events_by_id_;
 };
 
-#endif  // ORBIT_CAPTURE_CLIENT_API_EVENT_PROCESSOR_H_
+#endif  // CAPTURE_CLIENT_API_EVENT_PROCESSOR_H_

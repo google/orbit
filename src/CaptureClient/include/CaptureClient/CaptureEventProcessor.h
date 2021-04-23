@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CAPTURE_CLIENT_CAPTURE_EVENT_PROCESSOR_H_
-#define ORBIT_CAPTURE_CLIENT_CAPTURE_EVENT_PROCESSOR_H_
+#ifndef CAPTURE_CLIENT_CAPTURE_EVENT_PROCESSOR_H_
+#define CAPTURE_CLIENT_CAPTURE_EVENT_PROCESSOR_H_
 
 #include <absl/container/flat_hash_set.h>
 
@@ -11,7 +11,7 @@
 #include <functional>
 #include <string>
 
-#include "OrbitCaptureClient/CaptureListener.h"
+#include "CaptureClient/CaptureListener.h"
 #include "capture.pb.h"
 
 class CaptureEventProcessor {
@@ -32,4 +32,4 @@ class CaptureEventProcessor {
       CaptureListener* capture_listener, absl::flat_hash_set<uint64_t> frame_track_function_ids);
 };
 
-#endif  // ORBIT_GL_CAPTURE_EVENT_PROCESSOR_H_
+#endif  // CAPTURE_CLIENT_CAPTURE_EVENT_PROCESSOR_H_

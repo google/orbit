@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CAPTURE_CLIENT_CAPTURE_CLIENT_H_
-#define ORBIT_CAPTURE_CLIENT_CAPTURE_CLIENT_H_
+#ifndef CAPTURE_CLIENT_CAPTURE_CLIENT_H_
+#define CAPTURE_CLIENT_CAPTURE_CLIENT_H_
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
@@ -15,12 +15,12 @@
 #include <atomic>
 #include <memory>
 
+#include "CaptureClient/CaptureEventProcessor.h"
+#include "CaptureClient/CaptureListener.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
-#include "OrbitCaptureClient/CaptureEventProcessor.h"
-#include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/TracepointCustom.h"
@@ -95,4 +95,4 @@ class CaptureClient {
   std::atomic<bool> try_abort_ = false;
 };
 
-#endif  // ORBIT_GL_CAPTURE_CLIENT_H_
+#endif  // CAPTURE_CLIENT_CAPTURE_CLIENT_H_

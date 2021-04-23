@@ -5,8 +5,8 @@
 #ifndef FAKE_CLIENT_FAKE_CAPTURE_EVENT_PROCESSOR_H_
 #define FAKE_CLIENT_FAKE_CAPTURE_EVENT_PROCESSOR_H_
 
+#include "CaptureClient/CaptureEventProcessor.h"
 #include "OrbitBase/WriteStringToFile.h"
-#include "OrbitCaptureClient/CaptureEventProcessor.h"
 
 namespace orbit_fake_client {
 

@@ -20,9 +20,9 @@
 #include <utility>
 #include <vector>
 
+#include "CaptureClient/CaptureListener.h"
 #include "CaptureSerializationTestMatchers.h"
 #include "OrbitBase/Result.h"
-#include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/ModuleData.h"
 #include "OrbitClientData/ModuleManager.h"

@@ -7,11 +7,11 @@
 #include <algorithm>
 #include <vector>
 
+#include "CaptureClient/ApiEventProcessor.h"
+#include "CaptureClient/CaptureEventProcessor.h"
+#include "CaptureClient/CaptureListener.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "OrbitCaptureClient/ApiEventProcessor.h"
-#include "OrbitCaptureClient/CaptureEventProcessor.h"
-#include "OrbitCaptureClient/CaptureListener.h"
 #include "capture.pb.h"
 
 using orbit_client_protos::TimerInfo;

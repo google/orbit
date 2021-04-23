@@ -137,11 +137,11 @@ target_include_directories(OrbitGl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(
   OrbitGl
-  PUBLIC GrpcProtos
+  PUBLIC CaptureClient
+         GrpcProtos
          MetricsUploader
          OrbitAccessibility
          OrbitCore
-         OrbitCaptureClient
          OrbitClientData
          OrbitClientModel
          OrbitClientServices
