@@ -61,6 +61,8 @@
 
 #include "App.h"
 #include "CallTreeWidget.h"
+#include "CaptureClient/CaptureClient.h"
+#include "CaptureClient/CaptureListener.h"
 #include "CaptureOptionsDialog.h"
 #include "CodeViewer/Dialog.h"
 #include "CodeViewer/FontSizeInEm.h"
@@ -76,8 +78,6 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/Tracing.h"
-#include "OrbitCaptureClient/CaptureClient.h"
-#include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientModel/CaptureData.h"
 #include "OrbitClientModel/CaptureSerializer.h"

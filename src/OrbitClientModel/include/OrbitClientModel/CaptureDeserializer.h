@@ -15,10 +15,10 @@
 #include <outcome.hpp>
 #include <string>
 
+#include "CaptureClient/CaptureListener.h"
 #include "CaptureData.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Result.h"
-#include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/ModuleManager.h"
 #include "capture_data.pb.h"
 

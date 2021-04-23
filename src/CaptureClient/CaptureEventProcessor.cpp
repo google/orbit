@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitCaptureClient/CaptureEventProcessor.h"
+#include "CaptureClient/CaptureEventProcessor.h"
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
@@ -10,11 +10,11 @@
 
 #include <utility>
 
+#include "CaptureClient/ApiEventProcessor.h"
+#include "CaptureClient/GpuQueueSubmissionProcessor.h"
 #include "CoreUtils.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitCaptureClient/ApiEventProcessor.h"
-#include "OrbitCaptureClient/GpuQueueSubmissionProcessor.h"
 #include "OrbitClientData/Callstack.h"
 #include "capture_data.pb.h"
 

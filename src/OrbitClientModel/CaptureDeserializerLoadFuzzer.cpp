@@ -14,7 +14,7 @@
 #include <memory>
 #include <utility>
 
-#include "OrbitCaptureClient/CaptureListener.h"
+#include "CaptureClient/CaptureListener.h"
 #include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientModel/CaptureDeserializer.h"
 #include "OrbitClientModel/CaptureSerializer.h"

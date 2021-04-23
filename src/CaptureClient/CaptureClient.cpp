@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitCaptureClient/CaptureClient.h"
+#include "CaptureClient/CaptureClient.h"
 
 #include <absl/container/flat_hash_set.h>
 #include <absl/flags/declare.h>
@@ -14,12 +14,12 @@
 #include <type_traits>
 #include <utility>
 
+#include "CaptureClient/CaptureEventProcessor.h"
+#include "CaptureClient/CaptureListener.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/Tracing.h"
-#include "OrbitCaptureClient/CaptureEventProcessor.h"
-#include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ModuleData.h"
 #include "absl/flags/flag.h"

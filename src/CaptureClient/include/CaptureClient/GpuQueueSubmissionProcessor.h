@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CAPTURE_CLIENT_GPU_QUEUE_SUBMISSION_PROCESSOR_H_
-#define ORBIT_CAPTURE_CLIENT_GPU_QUEUE_SUBMISSION_PROCESSOR_H_
+#ifndef CAPTURE_CLIENT_GPU_QUEUE_SUBMISSION_PROCESSOR_H_
+#define CAPTURE_CLIENT_GPU_QUEUE_SUBMISSION_PROCESSOR_H_
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/node_hash_map.h>
@@ -116,4 +116,4 @@ class GpuQueueSubmissionProcessor {
   uint64_t begin_capture_time_ns_ = std::numeric_limits<uint64_t>::max();
 };
 
-#endif  // ORBIT_CAPTURE_CLIENT_GPU_QUEUE_SUBMISSION_PROCESSOR_H_
+#endif  // CAPTURE_CLIENT_GPU_QUEUE_SUBMISSION_PROCESSOR_H_

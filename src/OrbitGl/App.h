@@ -27,6 +27,8 @@
 
 #include "CallStackDataView.h"
 #include "CallTreeView.h"
+#include "CaptureClient/CaptureClient.h"
+#include "CaptureClient/CaptureListener.h"
 #include "CaptureWindow.h"
 #include "DataManager.h"
 #include "DataView.h"
@@ -48,8 +50,6 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
-#include "OrbitCaptureClient/CaptureClient.h"
-#include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/CallstackTypes.h"
 #include "OrbitClientData/ModuleData.h"

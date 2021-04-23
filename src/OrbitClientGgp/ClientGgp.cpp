@@ -22,13 +22,13 @@
 #include <type_traits>
 #include <vector>
 
+#include "CaptureClient/CaptureClient.h"
+#include "CaptureClient/CaptureListener.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "OrbitCaptureClient/CaptureClient.h"
-#include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/UserDefinedCaptureData.h"

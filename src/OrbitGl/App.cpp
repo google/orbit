@@ -33,6 +33,7 @@
 #include <utility>
 
 #include "CallStackDataView.h"
+#include "CaptureClient/CaptureListener.h"
 #include "CaptureWindow.h"
 #include "CoreUtils.h"
 #include "Disassembler.h"
@@ -55,7 +56,6 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/Tracing.h"
-#include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/CallstackData.h"
 #include "OrbitClientData/FunctionUtils.h"

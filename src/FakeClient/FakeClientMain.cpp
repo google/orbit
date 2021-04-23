@@ -16,12 +16,12 @@
 #include <memory>
 #include <thread>
 
+#include "CaptureClient/CaptureClient.h"
+#include "CaptureClient/CaptureListener.h"
 #include "FakeCaptureEventProcessor.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadPool.h"
-#include "OrbitCaptureClient/CaptureClient.h"
-#include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/ModuleManager.h"
 #include "capture_data.pb.h"
 

@@ -8,9 +8,9 @@
 
 #include <string>
 
+#include "CaptureClient/CaptureEventProcessor.h"
+#include "CaptureClient/CaptureListener.h"
 #include "OrbitBase/Result.h"
-#include "OrbitCaptureClient/CaptureEventProcessor.h"
-#include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/TracepointCustom.h"

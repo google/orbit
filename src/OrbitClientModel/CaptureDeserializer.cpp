@@ -14,12 +14,12 @@
 #include <utility>
 #include <vector>
 
+#include "CaptureClient/CaptureClient.h"
+#include "CaptureClient/CaptureListener.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/Result.h"
-#include "OrbitCaptureClient/CaptureClient.h"
-#include "OrbitCaptureClient/CaptureListener.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ModuleManager.h"

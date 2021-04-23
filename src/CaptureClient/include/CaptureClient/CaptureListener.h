@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CAPTURE_CLIENT_CAPTURE_LISTENER_H_
-#define ORBIT_CAPTURE_CLIENT_CAPTURE_LISTENER_H_
+#ifndef CAPTURE_CLIENT_CAPTURE_LISTENER_H_
+#define CAPTURE_CLIENT_CAPTURE_LISTENER_H_
 
 #include "OrbitBase/Result.h"
 #include "OrbitClientData/Callstack.h"
@@ -42,4 +42,4 @@ class CaptureListener {
       orbit_client_protos::TracepointEventInfo tracepoint_event_info) = 0;
 };
 
-#endif  // ORBIT_GL_CAPTURE_LISTENER_H_
+#endif  // CAPTURE_CLIENT_CAPTURE_LISTENER_H_
