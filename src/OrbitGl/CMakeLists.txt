@@ -23,8 +23,9 @@ target_sources(
          CallStackDataView.h
          CallstackThreadBar.h
          CallTreeView.h
-         CaptureWindow.h
+         CaptureStats.h
          CaptureViewElement.h
+         CaptureWindow.h
          CodeReport.h
          CoreMath.h
          DataView.h
@@ -55,6 +56,7 @@ target_sources(
          SamplingReport.h
          SamplingReportDataView.h
          SchedulerTrack.h
+         SchedulingStats.h
          ScopeTree.h
          SourceCodeReport.h
          StatusListener.h
@@ -89,8 +91,9 @@ target_sources(
           CallStackDataView.cpp
           CallstackThreadBar.cpp
           CallTreeView.cpp
-          CaptureWindow.cpp
+          CaptureStats.cpp
           CaptureViewElement.cpp
+          CaptureWindow.cpp
           DataManager.cpp
           DataView.cpp
           Disassembler.cpp
@@ -116,6 +119,7 @@ target_sources(
           SamplingReport.cpp
           SamplingReportDataView.cpp
           SchedulerTrack.cpp
+          SchedulingStats.cpp
           SourceCodeReport.cpp
           TextRenderer.cpp
           TimeGraph.cpp
@@ -171,6 +175,7 @@ target_sources(OrbitGlTests PRIVATE
                BlockChainTest.cpp
                ClientFlags.cpp
                DataViewTest.cpp
+               CaptureStatsTest.cpp
                GlUtilsTest.cpp
                GpuTrackTest.cpp
                PickingManagerTest.cpp

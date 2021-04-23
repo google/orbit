@@ -419,6 +419,23 @@ std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetAllChains() const {
   return chains;
 }
 
+std::vector<const TextBox*> TimerTrack::GetScopesInRange(uint64_t start_ns, uint64_t end_ns) const {
+  std::vector<const TextBox*> result;
+  for (auto chain : GetAllChains()) {
+    if (chain == nullptr) continue;
+    for (const auto& block : *chain) {
+      if (!block.Intersects(start_ns, end_ns)) continue;
+      for (uint64_t i = 0; i < block.size(); ++i) {
+        const TextBox& box = block[i];
+        if (box.GetTimerInfo().start() <= end_ns && box.GetTimerInfo().end() > start_ns) {
+          result.push_back(&box);
+        }
+      }
+    }
+  }
+  return result;
+}
+
 std::vector<std::shared_ptr<TimerChain>> TimerTrack::GetAllSerializableChains() const {
   return GetAllChains();
 }
