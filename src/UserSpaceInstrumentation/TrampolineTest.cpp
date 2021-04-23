@@ -257,11 +257,7 @@ TEST(TrampolineTest, AllocateMemoryForTrampolines) {
   waitpid(pid, nullptr, 0);
 }
 
-<<<<<<< HEAD
 TEST(TrampolineTest, GetInstructionPointersFromProcess) {
-=======
-TEST(TrampolineTest, AllInstructionPointersFromProcess) {
->>>>>>> ab0cb390 (Tooling for trampolines.)
   pid_t pid = fork();
   CHECK(pid != -1);
   if (pid == 0) {
@@ -272,11 +268,7 @@ TEST(TrampolineTest, AllInstructionPointersFromProcess) {
   // Stop the process using our tooling.
   CHECK(AttachAndStopProcess(pid).has_value());
 
-<<<<<<< HEAD
   auto rips_or_error = GetInstructionPointersFromProcess(pid);
-=======
-  auto rips_or_error = AllInstructionPointersFromProcess(pid);
->>>>>>> ab0cb390 (Tooling for trampolines.)
   ASSERT_FALSE(rips_or_error.has_error());
   EXPECT_EQ(1, rips_or_error.value().size());
 
@@ -286,16 +278,11 @@ TEST(TrampolineTest, AllInstructionPointersFromProcess) {
   waitpid(pid, nullptr, 0);
 }
 
-<<<<<<< HEAD
 TEST(TrampolineTest, LengthOfOverwrittenInstructions) {
-=======
-TEST(TrampolineTest, LengthOfOverriddenInstructions) {
->>>>>>> ab0cb390 (Tooling for trampolines.)
   csh handle = 0;
   cs_err error_code = cs_open(CS_ARCH_X86, CS_MODE_64, &handle);
   CHECK(error_code == CS_ERR_OK);
 
-<<<<<<< HEAD
   constexpr int kBytesToOverwrite = 5;
   // 0x90 is maschine code for "nop".
   const std::vector<uint8_t> kFiveNops{0x90, 0x90, 0x90, 0x90, 0x90};
@@ -321,23 +308,6 @@ TEST(TrampolineTest, LengthOfOverriddenInstructions) {
   const std::vector<uint8_t> kIllegalInstructions{0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06};
   result = LengthOfOverwrittenInstructions(handle, kIllegalInstructions, kBytesToOverwrite);
   ASSERT_FALSE(result.has_value());
-=======
-  constexpr int kBytesToOverride = 5;
-  const std::vector<uint8_t> kFiveNops{0x90, 0x90, 0x90, 0x90, 0x90};
-  ErrorMessageOr<int> result = LengthOfOverriddenInstructions(handle, kFiveNops, kBytesToOverride);
-  ASSERT_FALSE(result.has_error());
-  EXPECT_EQ(5, result.value());
-
-  const std::vector<uint8_t> kProlog{0x55, 0x48, 0x89, 0xe5, 0x48, 0x83, 0xec, 0x10, 0x64,
-                                     0x48, 0x8b, 0x04, 0x25, 0x28, 0x00, 0x00, 0x00};
-  result = LengthOfOverriddenInstructions(handle, kProlog, kBytesToOverride);
-  ASSERT_FALSE(result.has_error());
-  EXPECT_EQ(8, result.value());
-
-  const std::vector<uint8_t> kFourNops{0x90, 0x90, 0x90, 0x90};
-  result = LengthOfOverriddenInstructions(handle, kFourNops, kBytesToOverride);
-  ASSERT_TRUE(result.has_error());
->>>>>>> ab0cb390 (Tooling for trampolines.)
 
   cs_close(&handle);
 }
