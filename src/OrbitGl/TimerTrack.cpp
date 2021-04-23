@@ -423,17 +423,16 @@ std::vector<const TextBox*> TimerTrack::GetScopesInRange(uint64_t start_ns, uint
   std::vector<const TextBox*> result;
   for (auto chain : GetAllChains()) {
     if (chain == nullptr) continue;
-
-    for (TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
-      for (size_t k = 0; k < it->size(); ++k) {
-        const TextBox& box = (*it)[k];
+    for (const auto& block : *chain) {
+      if (!block.Intersects(start_ns, end_ns)) continue;
+      for (uint64_t i = 0; i < block.size(); ++i) {
+        const TextBox& box = block[i];
         if (box.GetTimerInfo().start() <= end_ns && box.GetTimerInfo().end() > start_ns) {
           result.push_back(&box);
         }
       }
     }
   }
-
   return result;
 }
 

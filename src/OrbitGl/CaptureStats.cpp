@@ -18,8 +18,7 @@ ErrorMessageOr<void> CaptureStats::Generate(CaptureWindow* capture_window, uint6
   if (start_ns > end_ns) std::swap(start_ns, end_ns);
 
   TimeGraph* time_graph = capture_window->GetTimeGraph();
-  TrackManager* track_manager = time_graph->GetTrackManager();
-  SchedulerTrack* scheduler_track = track_manager->GetOrCreateSchedulerTrack();
+  SchedulerTrack* scheduler_track = time_graph->GetTrackManager()->GetOrCreateSchedulerTrack();
   const CaptureData* capture_data = time_graph->GetCaptureData();
   if (capture_data == nullptr) return ErrorMessage("No capture data found");
 

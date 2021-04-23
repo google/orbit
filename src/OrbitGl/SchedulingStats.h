@@ -31,8 +31,7 @@ class SchedulingStats {
 
   struct ThreadStats {
     int32_t tid = -1;
-    uint64_t time_on_core_ns_ = 0;
-    double time_on_core_ms = 0;
+    uint64_t time_on_core_ns = 0;
     std::string thread_name;
   };
 
@@ -40,25 +39,24 @@ class SchedulingStats {
     std::map<int32_t, ThreadStats> thread_stats_by_tid;
     std::vector<ThreadStats*> thread_stats_sorted_by_time_on_core;
     int32_t pid = -1;
-    uint64_t time_on_core_ns_ = 0;
-    double time_on_core_ms = 0;
+    uint64_t time_on_core_ns = 0;
     std::string process_name;
   };
 
   struct ProcessStatsTimeSorter {
     bool operator()(const ProcessStats* a, const ProcessStats* b) const {
-      return a->time_on_core_ns_ > b->time_on_core_ns_;
+      return a->time_on_core_ns > b->time_on_core_ns;
     }
   };
 
   struct ThreadStatsTimeSorter {
     bool operator()(const ThreadStats* a, const ThreadStats* b) const {
-      return a->time_on_core_ns_ > b->time_on_core_ns_;
+      return a->time_on_core_ns > b->time_on_core_ns;
     }
   };
 
   double GetTimeRangeMs() const { return time_range_ms_; }
-  uint64_t GetTimeOnCoreNs() const { return time_on_core_ns_; }
+  uint64_t GetTimeOnCoreNs() const { return time_on_core_ns; }
   const std::map<int32_t, uint64_t>& GetTimeOnCoreNsByCore() const {
     return time_on_core_ns_by_core_;
   }
@@ -71,7 +69,7 @@ class SchedulingStats {
 
  private:
   double time_range_ms_ = 0;
-  uint64_t time_on_core_ns_ = 0;
+  uint64_t time_on_core_ns = 0;
   std::map<int32_t, uint64_t> time_on_core_ns_by_core_;
   std::map<int32_t, ProcessStats> process_stats_by_pid_;
   std::vector<ProcessStats*> process_stats_sorted_by_time_on_core_;
