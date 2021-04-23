@@ -11,6 +11,8 @@
 #include "CaptureClient/CaptureListener.h"
 #include "capture.pb.h"
 
+namespace orbit_capture_client {
+
 // The ApiEventProcessor is responsible for processing orbit_grpc_protos::ApiEvent events and
 // transforming them into TimerInfo objects that are relayed to a CaptureListener. Internal state
 // is maintained to cache "start" events until a corresponding "stop" event is received. The pair
@@ -34,5 +36,7 @@ class ApiEventProcessor {
   absl::flat_hash_map<int32_t, std::vector<orbit_api::ApiEvent>> synchronous_event_stack_by_tid_;
   absl::flat_hash_map<int32_t, orbit_api::ApiEvent> asynchronous_events_by_id_;
 };
+
+}  // namespace orbit_capture_client
 
 #endif  // CAPTURE_CLIENT_API_EVENT_PROCESSOR_H_

@@ -29,6 +29,8 @@
 #include "services.grpc.pb.h"
 #include "services.pb.h"
 
+namespace orbit_capture_client {
+
 class CaptureClient {
  public:
   enum class State { kStopped = 0, kStarting, kStarted, kStopping };
@@ -94,5 +96,7 @@ class CaptureClient {
   std::atomic<bool> writes_done_failed_ = false;
   std::atomic<bool> try_abort_ = false;
 };
+
+}  // namespace orbit_capture_client
 
 #endif  // CAPTURE_CLIENT_CAPTURE_CLIENT_H_

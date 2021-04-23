@@ -96,6 +96,10 @@ ABSL_DECLARE_FLAG(bool, local);
 ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
 ABSL_DECLARE_FLAG(bool, enable_source_code_view);
 
+using orbit_capture_client::CaptureClient;
+using orbit_capture_client::CaptureEventProcessor;
+using orbit_capture_client::CaptureListener;
+
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;

@@ -6,6 +6,8 @@
 
 #include "OrbitBase/Logging.h"
 
+namespace orbit_capture_client {
+
 using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::ApiEvent;
 
@@ -125,3 +127,5 @@ void ApiEventProcessor::ProcessTrackingEvent(const orbit_api::ApiEvent& api_even
                                 api_event.timestamp_ns, api_event.pid, api_event.tid, /*depth=*/0);
   capture_listener_->OnTimer(timer_info);
 }
+
+}  // namespace orbit_capture_client

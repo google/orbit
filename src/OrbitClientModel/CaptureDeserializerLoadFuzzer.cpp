@@ -20,7 +20,7 @@
 #include "OrbitClientModel/CaptureSerializer.h"
 
 namespace {
-class MockCaptureListener : public CaptureListener {
+class MockCaptureListener : public orbit_capture_client::CaptureListener {
  public:
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted&,
                         absl::flat_hash_set<uint64_t>) override {}

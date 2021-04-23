@@ -6,6 +6,8 @@
 
 #include "OrbitBase/Logging.h"
 
+namespace orbit_capture_client {
+
 using orbit_client_protos::Color;
 using orbit_client_protos::TimerInfo;
 
@@ -432,3 +434,5 @@ std::optional<GpuCommandBuffer> GpuQueueSubmissionProcessor::ExtractFirstCommand
   }
   return std::nullopt;
 }
+
+}  // namespace orbit_capture_client

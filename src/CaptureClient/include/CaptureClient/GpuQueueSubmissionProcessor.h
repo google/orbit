@@ -16,6 +16,8 @@
 #include "capture.pb.h"
 #include "capture_data.pb.h"
 
+namespace orbit_capture_client {
+
 // `GpuQueueSubmission` proto objects come with GPU timestamps (rather than CPU timestamps) for the
 // command buffer and debug marker timings. In order convert those timestamps into CPU time, each
 // `GpuQueueSubmission` contains a timestamp before (pre) and after (post) the vkQueueSubmit driver
@@ -115,5 +117,7 @@ class GpuQueueSubmissionProcessor {
 
   uint64_t begin_capture_time_ns_ = std::numeric_limits<uint64_t>::max();
 };
+
+}  // namespace orbit_capture_client
 
 #endif  // CAPTURE_CLIENT_GPU_QUEUE_SUBMISSION_PROCESSOR_H_

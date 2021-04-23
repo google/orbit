@@ -12,7 +12,7 @@ namespace orbit_fake_client {
 
 // This implementation of CaptureEventProcessor simply discards all the events it receives, but it
 // keeps track of their number and total size and then outputs these statistics to file.
-class FakeCaptureEventProcessor : public CaptureEventProcessor {
+class FakeCaptureEventProcessor : public orbit_capture_client::CaptureEventProcessor {
  public:
   void ProcessEvent(const orbit_grpc_protos::ClientCaptureEvent& event) override {
     ++event_count_;

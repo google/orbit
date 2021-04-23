@@ -18,6 +18,8 @@
 #include "OrbitClientData/Callstack.h"
 #include "capture_data.pb.h"
 
+namespace orbit_capture_client {
+
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::ThreadStateSliceInfo;
@@ -474,3 +476,5 @@ std::unique_ptr<CaptureEventProcessor> CaptureEventProcessor::CreateForCaptureLi
   return std::make_unique<CaptureEventProcessorForListener>(capture_listener,
                                                             std::move(frame_track_function_ids));
 }
+
+}  // namespace orbit_capture_client

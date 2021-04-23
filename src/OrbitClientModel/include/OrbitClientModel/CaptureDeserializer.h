@@ -24,20 +24,21 @@
 
 namespace capture_deserializer {
 
-ErrorMessageOr<CaptureListener::CaptureOutcome> Load(
+ErrorMessageOr<orbit_capture_client::CaptureListener::CaptureOutcome> Load(
     google::protobuf::io::CodedInputStream* input_stream, const std::filesystem::path& file_name,
-    CaptureListener* capture_listener, orbit_client_data::ModuleManager* module_manager,
-    std::atomic<bool>* cancellation_requested);
-ErrorMessageOr<CaptureListener::CaptureOutcome> Load(
-    const std::filesystem::path& file_name, CaptureListener* capture_listener,
+    orbit_capture_client::CaptureListener* capture_listener,
+    orbit_client_data::ModuleManager* module_manager, std::atomic<bool>* cancellation_requested);
+ErrorMessageOr<orbit_capture_client::CaptureListener::CaptureOutcome> Load(
+    const std::filesystem::path& file_name, orbit_capture_client::CaptureListener* capture_listener,
     orbit_client_data::ModuleManager* module_manager, std::atomic<bool>* cancellation_requested);
 
 namespace internal {
 
 bool ReadMessage(google::protobuf::Message* message, google::protobuf::io::CodedInputStream* input);
 
-ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureInfo(
-    const orbit_client_protos::CaptureInfo& capture_info, CaptureListener* capture_listener,
+ErrorMessageOr<orbit_capture_client::CaptureListener::CaptureOutcome> LoadCaptureInfo(
+    const orbit_client_protos::CaptureInfo& capture_info,
+    orbit_capture_client::CaptureListener* capture_listener,
     orbit_client_data::ModuleManager* module_manager,
     google::protobuf::io::CodedInputStream* coded_input, std::atomic<bool>* cancellation_requested);
 

@@ -32,6 +32,7 @@
 #include "capture.pb.h"
 #include "capture_data.pb.h"
 
+using orbit_capture_client::CaptureListener;
 using orbit_client_data::ModuleManager;
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;

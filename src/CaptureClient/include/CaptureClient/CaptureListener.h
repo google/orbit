@@ -14,6 +14,8 @@
 #include "capture.pb.h"
 #include "capture_data.pb.h"
 
+namespace orbit_capture_client {
+
 class CaptureListener {
  public:
   enum class CaptureOutcome { kComplete, kCancelled };
@@ -41,5 +43,7 @@ class CaptureListener {
   virtual void OnTracepointEvent(
       orbit_client_protos::TracepointEventInfo tracepoint_event_info) = 0;
 };
+
+}  // namespace orbit_capture_client
 
 #endif  // CAPTURE_CLIENT_CAPTURE_LISTENER_H_

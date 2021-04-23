@@ -14,6 +14,8 @@
 #include "CaptureClient/CaptureListener.h"
 #include "capture.pb.h"
 
+namespace orbit_capture_client {
+
 class CaptureEventProcessor {
  public:
   CaptureEventProcessor() = default;
@@ -31,5 +33,7 @@ class CaptureEventProcessor {
   static std::unique_ptr<CaptureEventProcessor> CreateForCaptureListener(
       CaptureListener* capture_listener, absl::flat_hash_set<uint64_t> frame_track_function_ids);
 };
+
+}  // namespace orbit_capture_client
 
 #endif  // CAPTURE_CLIENT_CAPTURE_EVENT_PROCESSOR_H_

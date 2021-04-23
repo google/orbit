@@ -27,6 +27,8 @@
 #include "capture.pb.h"
 #include "tracepoint.pb.h"
 
+namespace orbit_capture_client {
+
 using orbit_client_protos::FunctionInfo;
 
 using orbit_grpc_protos::ApiFunction;
@@ -335,3 +337,5 @@ ErrorMessageOr<void> CaptureClient::FinishCapture() {
   }
   return outcome::success();
 }
+
+}  // namespace orbit_capture_client
