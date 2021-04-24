@@ -20,8 +20,6 @@ TEST(FunctionInfoSet, EqualFunctions) {
   left.set_module_build_id("buildid");
   left.set_address(12);
   left.set_size(16);
-  left.set_file("file.cpp");
-  left.set_line(13);
 
   FunctionInfo right;
   right.set_name("foo");
@@ -30,8 +28,6 @@ TEST(FunctionInfoSet, EqualFunctions) {
   right.set_module_build_id("buildid");
   right.set_address(12);
   right.set_size(16);
-  right.set_file("file.cpp");
-  right.set_line(13);
 
   internal::EqualFunctionInfo eq;
   EXPECT_TRUE(eq(left, right));
@@ -47,8 +43,6 @@ TEST(FunctionInfoSet, DifferentName) {
   left.set_module_build_id("buildid");
   left.set_address(12);
   left.set_size(16);
-  left.set_file("file.cpp");
-  left.set_line(13);
 
   FunctionInfo right;
   right.CopyFrom(left);
@@ -66,8 +60,6 @@ TEST(FunctionInfoSet, DifferentPrettyName) {
   left.set_module_build_id("buildid");
   left.set_address(12);
   left.set_size(16);
-  left.set_file("file.cpp");
-  left.set_line(13);
 
   FunctionInfo right;
   right.CopyFrom(left);
@@ -85,8 +77,6 @@ TEST(FunctionInfoSet, DifferentModulePath) {
   left.set_module_build_id("buildid");
   left.set_address(12);
   left.set_size(16);
-  left.set_file("file.cpp");
-  left.set_line(13);
 
   FunctionInfo right;
   right.CopyFrom(left);
@@ -104,8 +94,6 @@ TEST(FunctionInfoSet, DifferentBuildId) {
   left.set_module_build_id("buildid");
   left.set_address(12);
   left.set_size(16);
-  left.set_file("file.cpp");
-  left.set_line(13);
 
   FunctionInfo right;
   right.CopyFrom(left);
@@ -123,8 +111,6 @@ TEST(FunctionInfoSet, DifferentAddress) {
   left.set_module_build_id("buildid");
   left.set_address(12);
   left.set_size(16);
-  left.set_file("file.cpp");
-  left.set_line(13);
 
   FunctionInfo right;
   right.CopyFrom(left);
@@ -142,50 +128,10 @@ TEST(FunctionInfoSet, DifferentSize) {
   left.set_module_build_id("buildid");
   left.set_address(12);
   left.set_size(16);
-  left.set_file("file.cpp");
-  left.set_line(13);
 
   FunctionInfo right;
   right.CopyFrom(left);
   right.set_size(15);
-
-  internal::EqualFunctionInfo eq;
-  EXPECT_TRUE(eq(left, right));
-}
-
-TEST(FunctionInfoSet, DifferentFile) {
-  FunctionInfo left;
-  left.set_name("foo");
-  left.set_pretty_name("void foo()");
-  left.set_module_path("/path/to/module");
-  left.set_module_build_id("buildid");
-  left.set_address(12);
-  left.set_size(16);
-  left.set_file("file.cpp");
-  left.set_line(13);
-
-  FunctionInfo right;
-  right.CopyFrom(left);
-  right.set_file("other.cpp");
-
-  internal::EqualFunctionInfo eq;
-  EXPECT_TRUE(eq(left, right));
-}
-
-TEST(FunctionInfoSet, DifferentLine) {
-  FunctionInfo left;
-  left.set_name("foo");
-  left.set_pretty_name("void foo()");
-  left.set_module_path("/path/to/module");
-  left.set_module_build_id("buildid");
-  left.set_address(12);
-  left.set_size(16);
-  left.set_file("file.cpp");
-  left.set_line(13);
-
-  FunctionInfo right;
-  right.CopyFrom(left);
-  right.set_line(12);
 
   internal::EqualFunctionInfo eq;
   EXPECT_TRUE(eq(left, right));
@@ -199,8 +145,6 @@ TEST(FunctionInfoSet, Insertion) {
   function.set_module_build_id("buildid");
   function.set_address(12);
   function.set_size(16);
-  function.set_file("file.cpp");
-  function.set_line(13);
 
   FunctionInfoSet functions;
   EXPECT_FALSE(functions.contains(function));
@@ -220,8 +164,6 @@ TEST(FunctionInfoSet, Deletion) {
   function.set_module_build_id("buildid");
   function.set_address(12);
   function.set_size(16);
-  function.set_file("file.cpp");
-  function.set_line(13);
 
   FunctionInfoSet functions;
   functions.insert(function);

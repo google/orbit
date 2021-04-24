@@ -36,8 +36,6 @@ const std::vector<DataView::Column>& CallStackDataView::GetColumns() {
     columns[kColumnSelected] = {"Hooked", .0f, SortingOrder::kDescending};
     columns[kColumnName] = {"Function", .65f, SortingOrder::kAscending};
     columns[kColumnSize] = {"Size", .0f, SortingOrder::kAscending};
-    columns[kColumnFile] = {"File", .0f, SortingOrder::kAscending};
-    columns[kColumnLine] = {"Line", .0f, SortingOrder::kAscending};
     columns[kColumnModule] = {"Module", .0f, SortingOrder::kAscending};
     columns[kColumnAddress] = {"Sampled Address", .0f, SortingOrder::kAscending};
     return columns;
@@ -66,10 +64,6 @@ std::string CallStackDataView::GetValue(int row, int column) {
           function != nullptr ? function_utils::GetDisplayName(*function) : frame.fallback_name);
     case kColumnSize:
       return function != nullptr ? absl::StrFormat("%lu", function->size()) : "";
-    case kColumnFile:
-      return function != nullptr ? function->file() : "";
-    case kColumnLine:
-      return function != nullptr ? absl::StrFormat("%d", function->line()) : "";
     case kColumnModule: {
       if (function != nullptr && !function_utils::GetLoadedModuleName(*function).empty()) {
         return function_utils::GetLoadedModuleName(*function);

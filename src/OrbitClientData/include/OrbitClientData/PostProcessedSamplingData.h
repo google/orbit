@@ -24,10 +24,8 @@ struct SampledFunction {
 
   std::string name;
   std::string module_path;
-  std::string file;
   float exclusive = 0;
   float inclusive = 0;
-  int line = 0;
   uint64_t absolute_address = 0;
   const orbit_client_protos::FunctionInfo* function = nullptr;
 };
