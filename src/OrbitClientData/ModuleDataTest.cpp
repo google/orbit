@@ -79,8 +79,6 @@ TEST(ModuleData, LoadSymbols) {
   EXPECT_EQ(function->module_build_id(), kBuildId);
   EXPECT_EQ(function->address(), symbol_address);
   EXPECT_EQ(function->size(), symbol_size);
-  EXPECT_EQ(function->file(), "");
-  EXPECT_EQ(function->line(), 0);
 }
 
 TEST(ModuleData, FindFunctionByRelativeAddress) {

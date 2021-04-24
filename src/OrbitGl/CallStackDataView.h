@@ -72,8 +72,6 @@ class CallStackDataView : public DataView {
     kColumnSelected,
     kColumnName,
     kColumnSize,
-    kColumnFile,
-    kColumnLine,
     kColumnModule,
     kColumnAddress,
     kNumColumns

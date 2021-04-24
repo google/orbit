@@ -46,8 +46,6 @@ const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
     columns[kColumnSelected] = {"Hooked", .0f, SortingOrder::kDescending};
     columns[kColumnName] = {"Function", .65f, SortingOrder::kAscending};
     columns[kColumnSize] = {"Size", .0f, SortingOrder::kAscending};
-    columns[kColumnFile] = {"File", .0f, SortingOrder::kAscending};
-    columns[kColumnLine] = {"Line", .0f, SortingOrder::kAscending};
     columns[kColumnModule] = {"Module", .0f, SortingOrder::kAscending};
     columns[kColumnAddress] = {"Address", .0f, SortingOrder::kAscending};
     return columns;
@@ -105,10 +103,6 @@ std::string FunctionsDataView::GetValue(int row, int column) {
       return function_utils::GetDisplayName(function);
     case kColumnSize:
       return absl::StrFormat("%lu", function.size());
-    case kColumnFile:
-      return function.file();
-    case kColumnLine:
-      return absl::StrFormat("%i", function.line());
     case kColumnModule:
       return function_utils::GetLoadedModuleName(function);
     case kColumnAddress: {
@@ -162,12 +156,6 @@ void FunctionsDataView::DoSort() {
       break;
     case kColumnSize:
       sorter = ORBIT_FUNC_SORT(size());
-      break;
-    case kColumnFile:
-      sorter = ORBIT_FUNC_SORT(file());
-      break;
-    case kColumnLine:
-      sorter = ORBIT_FUNC_SORT(line());
       break;
     case kColumnModule:
       sorter = ORBIT_CUSTOM_FUNC_SORT(function_utils::GetLoadedModuleName);

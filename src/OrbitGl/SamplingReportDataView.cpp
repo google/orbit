@@ -47,8 +47,6 @@ const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
     columns[kColumnExclusive] = {"Exclusive", .0f, SortingOrder::kDescending};
     columns[kColumnInclusive] = {"Inclusive", .0f, SortingOrder::kDescending};
     columns[kColumnModuleName] = {"Module", .0f, SortingOrder::kAscending};
-    columns[kColumnFile] = {"File", .0f, SortingOrder::kAscending};
-    columns[kColumnLine] = {"Line", .0f, SortingOrder::kAscending};
     columns[kColumnAddress] = {"Address", .0f, SortingOrder::kAscending};
     return columns;
   }();
@@ -70,10 +68,6 @@ std::string SamplingReportDataView::GetValue(int row, int column) {
       return absl::StrFormat("%.2f", func.inclusive);
     case kColumnModuleName:
       return std::filesystem::path(func.module_path).filename().string();
-    case kColumnFile:
-      return func.file;
-    case kColumnLine:
-      return func.line > 0 ? absl::StrFormat("%d", func.line) : "";
     case kColumnAddress:
       return absl::StrFormat("%#llx", func.absolute_address);
     default:
@@ -119,12 +113,6 @@ void SamplingReportDataView::DoSort() {
       break;
     case kColumnModuleName:
       sorter = ORBIT_MODULE_NAME_FUNC_SORT;
-      break;
-    case kColumnFile:
-      sorter = ORBIT_PROC_SORT(file);
-      break;
-    case kColumnLine:
-      sorter = ORBIT_PROC_SORT(line);
       break;
     case kColumnAddress:
       sorter = ORBIT_PROC_SORT(absolute_address);

@@ -21,8 +21,6 @@ FunctionInfo CreateFunctionInfo(const std::string& function_name, uint64_t funct
   info.set_module_build_id("build id");
   info.set_address(function_address);
   info.set_size(16);
-  info.set_file("file.cpp");
-  info.set_line(13);
   return info;
 }
 

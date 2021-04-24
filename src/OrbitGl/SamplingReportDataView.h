@@ -75,8 +75,6 @@ class SamplingReportDataView : public DataView {
     kColumnExclusive,
     kColumnInclusive,
     kColumnModuleName,
-    kColumnFile,
-    kColumnLine,
     kColumnAddress,
     kNumColumns
   };
