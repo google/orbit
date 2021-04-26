@@ -39,10 +39,10 @@
 #include <variant>
 #include <vector>
 
+#include "ClientServices/ProcessManager.h"
 #include "ConnectToStadiaWidget.h"
 #include "Connections.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitClientServices/ProcessManager.h"
 #include "OverlayWidget.h"
 #include "Path.h"
 #include "ProcessItemModel.h"

@@ -31,6 +31,7 @@
 
 #include "App.h"
 #include "CallTreeView.h"
+#include "ClientServices/ProcessManager.h"
 #include "DataView.h"
 #include "DataViewTypes.h"
 #include "DisassemblyReport.h"
@@ -38,7 +39,6 @@
 #include "MainThreadExecutor.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/CrashHandler.h"
-#include "OrbitClientServices/ProcessManager.h"
 #include "StatusListener.h"
 #include "TargetConfiguration.h"
 #include "TargetLabel.h"

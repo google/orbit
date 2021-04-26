@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitClientServices/ProcessManager.h"
+#include "ClientServices/ProcessManager.h"
 
 #include <absl/synchronization/mutex.h>
 #include <grpcpp/channel.h>
@@ -14,9 +14,9 @@
 #include <thread>
 #include <utility>
 
+#include "ClientServices/ProcessClient.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "OrbitClientServices/ProcessClient.h"
 
 namespace {
 
