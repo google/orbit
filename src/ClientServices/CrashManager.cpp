@@ -12,6 +12,7 @@
 #include "OrbitBase/Logging.h"
 #include "services.grpc.pb.h"
 
+namespace orbit_client_services {
 namespace {
 
 using orbit_grpc_protos::CrashOrbitServiceRequest;
@@ -58,3 +59,5 @@ std::unique_ptr<CrashManager> CrashManager::Create(std::shared_ptr<grpc::Channel
   std::unique_ptr<CrashManagerImpl> impl = std::make_unique<CrashManagerImpl>(channel);
   return impl;
 }
+
+}  // namespace orbit_client_services

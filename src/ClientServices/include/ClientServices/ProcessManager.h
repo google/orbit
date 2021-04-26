@@ -21,6 +21,8 @@
 #include "process.pb.h"
 #include "symbol.pb.h"
 
+namespace orbit_client_services {
+
 // This class is responsible for maintaining
 // process list. It periodically updates it
 // and calls callback to notify listeners when
@@ -64,5 +66,7 @@ class ProcessManager {
   static std::unique_ptr<ProcessManager> Create(const std::shared_ptr<grpc::Channel>& channel,
                                                 absl::Duration refresh_timeout);
 };
+
+}  // namespace orbit_client_services
 
 #endif  // CLIENT_SERVICES_PROCESS_MANAGER_H_

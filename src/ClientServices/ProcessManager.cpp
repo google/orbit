@@ -18,6 +18,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 
+namespace orbit_client_services {
 namespace {
 
 using orbit_grpc_protos::ModuleInfo;
@@ -162,3 +163,5 @@ std::unique_ptr<ProcessManager> ProcessManager::Create(
   impl->Start();
   return impl;
 }
+
+}  // namespace orbit_client_services

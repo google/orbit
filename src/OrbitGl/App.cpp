@@ -108,6 +108,9 @@ using orbit_client_protos::PresetFile;
 using orbit_client_protos::PresetInfo;
 using orbit_client_protos::TimerInfo;
 
+using orbit_client_services::CrashManager;
+using orbit_client_services::TracepointServiceClient;
+
 using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
