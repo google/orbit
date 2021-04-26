@@ -1027,6 +1027,7 @@ void OrbitApp::StartCapture() {
   bool collect_scheduling_info = true;
   bool collect_thread_states = data_manager_->collect_thread_states();
   bool enable_introspection = IsDevMode();
+  bool enable_api = true;
   double samples_per_second = data_manager_->samples_per_second();
   UnwindingMethod unwinding_method = data_manager_->unwinding_method();
   uint64_t max_local_marker_depth_per_command_buffer =
@@ -1043,7 +1044,7 @@ void OrbitApp::StartCapture() {
   Future<ErrorMessageOr<CaptureOutcome>> capture_result = capture_client_->Capture(
       thread_pool_.get(), process->pid(), *module_manager_, std::move(selected_functions_map),
       std::move(selected_tracepoints), samples_per_second, unwinding_method,
-      collect_scheduling_info, collect_thread_states, enable_introspection,
+      collect_scheduling_info, collect_thread_states, enable_introspection, enable_api,
       max_local_marker_depth_per_command_buffer, collect_memory_info, memory_sampling_period_ns,
       std::move(capture_event_processor));
 
