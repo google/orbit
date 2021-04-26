@@ -6,7 +6,7 @@
 #define API_LOCK_FREE_API_EVENT_PRODUCER_H_
 
 #include "Api/EncodedEvent.h"
-#include "OrbitProducer/LockFreeBufferCaptureEventProducer.h"
+#include "CaptureEventProducer/LockFreeBufferCaptureEventProducer.h"
 #include "ProducerSideChannel/ProducerSideChannel.h"
 
 namespace orbit_api {
@@ -14,7 +14,7 @@ namespace orbit_api {
 // This class is used to enqueue orbit_api::ApiEvent events from multiple threads and relay them to
 // OrbitService in the form of orbit_grpc_protos::ApiEvent events.
 class LockFreeApiEventProducer
-    : public orbit_producer::LockFreeBufferCaptureEventProducer<orbit_api::ApiEvent> {
+    : public orbit_capture_event_producer::LockFreeBufferCaptureEventProducer<orbit_api::ApiEvent> {
  public:
   LockFreeApiEventProducer() {
     BuildAndStart(orbit_producer_side_channel::CreateProducerSideChannel());

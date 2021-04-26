@@ -5,7 +5,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "OrbitProducer/FakeProducerSideService.h"
+#include "CaptureEventProducer/FakeProducerSideService.h"
 #include "VulkanLayerProducerImpl.h"
 
 namespace orbit_vulkan_layer {
@@ -55,7 +55,7 @@ class VulkanLayerProducerImplTest : public ::testing::Test {
     fake_server_.reset();
   }
 
-  std::optional<orbit_producer::FakeProducerSideService> fake_service_;
+  std::optional<orbit_capture_event_producer::FakeProducerSideService> fake_service_;
   std::unique_ptr<grpc::Server> fake_server_;
   std::optional<VulkanLayerProducerImpl> producer_;
   MockCaptureStatusListener mock_listener_;

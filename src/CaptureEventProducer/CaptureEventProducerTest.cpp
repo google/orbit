@@ -13,12 +13,12 @@
 #include <optional>
 #include <thread>
 
-#include "OrbitProducer/CaptureEventProducer.h"
-#include "OrbitProducer/FakeProducerSideService.h"
+#include "CaptureEventProducer/CaptureEventProducer.h"
+#include "CaptureEventProducer/FakeProducerSideService.h"
 #include "grpcpp/grpcpp.h"
 #include "producer_side_services.pb.h"
 
-namespace orbit_producer {
+namespace orbit_capture_event_producer {
 
 namespace {
 
@@ -385,4 +385,4 @@ TEST_F(CaptureEventProducerTest, DisconnectAndReconnect) {
 }
 
 }  // namespace
-}  // namespace orbit_producer
+}  // namespace orbit_capture_event_producer

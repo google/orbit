@@ -2,18 +2,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_PRODUCER_LOCK_FREE_BUFFER_CAPTURE_EVENT_PRODUCER_H_
-#define ORBIT_PRODUCER_LOCK_FREE_BUFFER_CAPTURE_EVENT_PRODUCER_H_
+#ifndef CAPTURE_EVENT_PRODUCER_LOCK_FREE_BUFFER_CAPTURE_EVENT_PRODUCER_H_
+#define CAPTURE_EVENT_PRODUCER_LOCK_FREE_BUFFER_CAPTURE_EVENT_PRODUCER_H_
 
 #include <google/protobuf/arena.h>
 
+#include "CaptureEventProducer/CaptureEventProducer.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "OrbitProducer/CaptureEventProducer.h"
 #include "concurrentqueue.h"
 
-namespace orbit_producer {
+namespace orbit_capture_event_producer {
 
 // This still abstract implementation of CaptureEventProducer provides a lock-free queue where to
 // write events with low overhead from the fast path where they are produced.
@@ -181,6 +181,6 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
   absl::Mutex status_mutex_;
 };
 
-}  // namespace orbit_producer
+}  // namespace orbit_capture_event_producer
 
-#endif  // ORBIT_PRODUCER_LOCK_FREE_BUFFER_CAPTURE_EVENT_PRODUCER_H_
+#endif  // CAPTURE_EVENT_PRODUCER_LOCK_FREE_BUFFER_CAPTURE_EVENT_PRODUCER_H_

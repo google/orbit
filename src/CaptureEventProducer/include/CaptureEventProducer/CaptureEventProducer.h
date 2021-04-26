@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_PRODUCER_CAPTURE_EVENT_PRODUCER_H_
-#define ORBIT_PRODUCER_CAPTURE_EVENT_PRODUCER_H_
+#ifndef CAPTURE_EVENT_PRODUCER_CAPTURE_EVENT_PRODUCER_H_
+#define CAPTURE_EVENT_PRODUCER_CAPTURE_EVENT_PRODUCER_H_
 
 #include <grpcpp/grpcpp.h>
 #include <stdint.h>
@@ -18,7 +18,7 @@
 #include "producer_side_services.grpc.pb.h"
 #include "producer_side_services.pb.h"
 
-namespace orbit_producer {
+namespace orbit_capture_event_producer {
 
 // This abstract class offers the subclasses methods
 // to connect and communicate with a ProducerSideService.
@@ -83,6 +83,6 @@ class CaptureEventProducer {
   std::atomic<uint64_t> reconnection_delay_ms_ = 4000;
 };
 
-}  // namespace orbit_producer
+}  // namespace orbit_capture_event_producer
 
-#endif  // ORBIT_PRODUCER_CAPTURE_EVENT_PRODUCER_H_
+#endif  // CAPTURE_EVENT_PRODUCER_CAPTURE_EVENT_PRODUCER_H_
