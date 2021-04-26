@@ -86,7 +86,6 @@ endif()
 
 find_package(Threads REQUIRED)
 find_package(xxHash REQUIRED)
-find_package(multicore REQUIRED)
 find_package(concurrentqueue REQUIRED)
 find_package(gte REQUIRED)
 find_package(oqpi REQUIRED)
@@ -191,7 +190,6 @@ endif()
 
 # Collecting third-party licenses
 file(COPY third_party/concurrentqueue/LICENSE.md DESTINATION ${CMAKE_BINARY_DIR}/licenses/concurrentqueue/)
-file(COPY third_party/multicore/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/multicore/)
 file(COPY third_party/xxHash-r42/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/xxhash/)
 file(COPY third_party/gte/LICENSE_1_0.txt DESTINATION ${CMAKE_BINARY_DIR}/licenses/gte/)
 file(COPY third_party/oqpi/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/oqpi/)
