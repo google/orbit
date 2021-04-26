@@ -17,7 +17,7 @@ if(NOT WIN32)
     # Create a custom version of compile_commands.json which does not include any compilation units from third_party
     # or any generated cpp-files. This will be used by include-what-you-use.
     add_custom_command(OUTPUT iwyu_commands.json
-      COMMAND jq 'map(select(.file | test(\"third_party|/build_|/build/\") != true))' > iwyu_commands.json < compile_commands.json
+      COMMAND jq 'map(select(.file | test(\"third_party|/build_|/build/\") != true)) ' > iwyu_commands.json < compile_commands.json
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
 
