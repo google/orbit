@@ -32,11 +32,14 @@
 #include <QMessageBox>
 #include <QMetaObject>
 #include <QMouseEvent>
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
 #include <QPixmap>
 #include <QPointer>
 #include <QProcess>
 #include <QProgressDialog>
 #include <QPushButton>
+#include <QRegularExpression>
 #include <QSettings>
 #include <QSplitter>
 #include <QStringList>
@@ -788,6 +791,28 @@ void OrbitMainWindow::on_actionAbout_triggered() {
   dialog.setWindowTitle("About");
   dialog.SetVersionString(QCoreApplication::applicationVersion());
   dialog.SetBuildInformation(QString::fromStdString(orbit_core::GetBuildReport()));
+
+  QOpenGLContext* const current_context = QOpenGLContext::currentContext();
+  if (current_context != nullptr) {
+    QOpenGLFunctions* const functions = current_context->functions();
+
+    const auto gl_get_string = [&](GLenum value) {
+      // NOLINTNEXTLINE
+      return QString::fromLocal8Bit(reinterpret_cast<const char*>(functions->glGetString(value)));
+    };
+
+    auto renderer = QString{"%1 %2 %3"}.arg(gl_get_string(GL_VENDOR), gl_get_string(GL_RENDERER),
+                                            gl_get_string(GL_VERSION));
+
+    // The simplest way to detect software rendering is to match the renderer's name.
+    // Unfortunately Qt does not provide a simple function for that.
+    QRegularExpression llvmpipe_matcher{"llvmpipe", QRegularExpression::CaseInsensitiveOption};
+    QRegularExpressionMatch match =
+        llvmpipe_matcher.match(renderer, QRegularExpression::PartialPreferFirstMatch);
+    const bool is_software_renderer = match.hasMatch();
+
+    dialog.SetOpenGlRenderer(renderer, is_software_renderer);
+  }
 
   QFile licenseFile{QDir{QCoreApplication::applicationDirPath()}.filePath("NOTICE")};
   if (licenseFile.open(QIODevice::ReadOnly)) {
