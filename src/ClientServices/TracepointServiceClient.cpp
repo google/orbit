@@ -45,10 +45,7 @@ ErrorMessageOr<std::vector<TracepointInfo>> TracepointServiceClient::GetTracepoi
 
 std::unique_ptr<TracepointServiceClient> TracepointServiceClient::Create(
     const std::shared_ptr<grpc::Channel>& channel) {
-  TracepointServiceClient* service = new TracepointServiceClient(channel);
-  std::unique_ptr<TracepointServiceClient> client(service);
-
-  return client;
+  return std::unique_ptr<TracepointServiceClient>(new TracepointServiceClient(channel));
 }
 
 }  // namespace orbit_client_services

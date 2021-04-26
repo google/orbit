@@ -23,9 +23,7 @@ class TracepointServiceClient {
   ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> GetTracepointList() const;
 
  private:
-  TracepointServiceClient() = default;
-
-  TracepointServiceClient(const std::shared_ptr<grpc::Channel>& channel);
+  explicit TracepointServiceClient(const std::shared_ptr<grpc::Channel>& channel);
 
   std::unique_ptr<orbit_grpc_protos::TracepointService::Stub> tracepoint_service_;
 };

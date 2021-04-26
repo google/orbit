@@ -24,7 +24,7 @@ constexpr uint64_t kTimeoutMilliseconds = 100;
 
 class CrashManagerImpl final : public CrashManager {
  public:
-  explicit CrashManagerImpl(std::shared_ptr<grpc::Channel> channel);
+  explicit CrashManagerImpl(const std::shared_ptr<grpc::Channel>& channel);
 
   void CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type) override;
 
@@ -32,7 +32,7 @@ class CrashManagerImpl final : public CrashManager {
   std::unique_ptr<CrashService::Stub> crash_service_;
 };
 
-CrashManagerImpl::CrashManagerImpl(std::shared_ptr<grpc::Channel> channel)
+CrashManagerImpl::CrashManagerImpl(const std::shared_ptr<grpc::Channel>& channel)
     : crash_service_(CrashService::NewStub(channel)) {}
 
 void CrashManagerImpl::CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type) {
@@ -55,7 +55,7 @@ void CrashManagerImpl::CrashOrbitService(CrashOrbitServiceRequest_CrashType cras
 
 }  // namespace
 
-std::unique_ptr<CrashManager> CrashManager::Create(std::shared_ptr<grpc::Channel> channel) {
+std::unique_ptr<CrashManager> CrashManager::Create(const std::shared_ptr<grpc::Channel>& channel) {
   std::unique_ptr<CrashManagerImpl> impl = std::make_unique<CrashManagerImpl>(channel);
   return impl;
 }
