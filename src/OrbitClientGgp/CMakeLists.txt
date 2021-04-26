@@ -24,10 +24,10 @@ target_sources(OrbitClientGgpLib PRIVATE
 
 target_link_libraries(OrbitClientGgpLib PUBLIC
     CaptureClient
+    ClientServices
     GrpcProtos
     OrbitBase
     OrbitClientModel
-    OrbitClientServices
     OrbitVersion)
 
 project(OrbitClientGgp)

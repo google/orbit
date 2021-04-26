@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_TRACEPOINTSERVICECLIENT_H
-#define ORBIT_TRACEPOINTSERVICECLIENT_H
+#ifndef CLIENT_SERVICES_TRACEPOINT_SERVICE_CLIENT_H_
+#define CLIENT_SERVICES_TRACEPOINT_SERVICE_CLIENT_H_
 
 #include <memory>
 #include <vector>
@@ -30,4 +30,4 @@ class TracepointServiceClient {
   std::unique_ptr<orbit_grpc_protos::TracepointService::Stub> tracepoint_service_;
 };
 
-#endif  // ORBIT_TRACEPOINTSERVICECLIENT_H
+#endif  // CLIENT_SERVICES_TRACEPOINT_SERVICE_CLIENT_H_

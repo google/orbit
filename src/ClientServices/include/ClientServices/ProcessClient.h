@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CLIENT_SERVICES_PROCESS_CLIENT_H_
-#define ORBIT_CLIENT_SERVICES_PROCESS_CLIENT_H_
+#ifndef CLIENT_SERVICES_PROCESS_CLIENT_H_
+#define CLIENT_SERVICES_PROCESS_CLIENT_H_
 
 #include <stdint.h>
 
@@ -40,4 +40,4 @@ class ProcessClient {
   std::unique_ptr<orbit_grpc_protos::ProcessService::Stub> process_service_;
 };
 
-#endif  // ORBIT_CLIENT_SERVICES_PROCESS_CLIENT_H_
+#endif  // CLIENT_SERVICES_PROCESS_CLIENT_H_

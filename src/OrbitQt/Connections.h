@@ -9,10 +9,10 @@
 #include <optional>
 #include <utility>
 
+#include "ClientServices/ProcessManager.h"
 #include "DeploymentConfigurations.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitClientData/ProcessData.h"
-#include "OrbitClientServices/ProcessManager.h"
 #include "OrbitGgp/Instance.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSsh/Credentials.h"
