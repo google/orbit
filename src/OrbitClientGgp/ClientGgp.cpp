@@ -74,7 +74,7 @@ bool ClientGgp::InitClient() {
   }
   LOG("Created GRPC channel to %s", options_.grpc_server_address);
 
-  process_client_ = std::make_unique<ProcessClient>(grpc_channel_);
+  process_client_ = std::make_unique<orbit_client_services::ProcessClient>(grpc_channel_);
 
   // Initialisations needed for capture to work
   if (!InitCapture()) {

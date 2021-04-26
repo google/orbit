@@ -19,8 +19,9 @@
 #include "process.pb.h"
 #include "services.grpc.pb.h"
 
-// This class handles the client calls related to process service.
+namespace orbit_client_services {
 
+// This class handles the client calls related to process service.
 class ProcessClient {
  public:
   explicit ProcessClient(const std::shared_ptr<grpc::Channel>& channel)
@@ -39,5 +40,7 @@ class ProcessClient {
  private:
   std::unique_ptr<orbit_grpc_protos::ProcessService::Stub> process_service_;
 };
+
+}  // namespace orbit_client_services
 
 #endif  // CLIENT_SERVICES_PROCESS_CLIENT_H_

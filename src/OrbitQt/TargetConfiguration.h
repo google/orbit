@@ -22,7 +22,7 @@ class StadiaTarget {
 
  public:
   explicit StadiaTarget(StadiaConnection&& connection,
-                        std::unique_ptr<ProcessManager> process_manager,
+                        std::unique_ptr<orbit_client_services::ProcessManager> process_manager,
                         std::unique_ptr<ProcessData> process)
       : connection_(std::move(connection)),
         process_manager_(std::move(process_manager)),
@@ -31,12 +31,14 @@ class StadiaTarget {
     CHECK(process_ != nullptr);
   }
   [[nodiscard]] const StadiaConnection* GetConnection() const { return &connection_; }
-  [[nodiscard]] ProcessManager* GetProcessManager() const { return process_manager_.get(); }
+  [[nodiscard]] orbit_client_services::ProcessManager* GetProcessManager() const {
+    return process_manager_.get();
+  }
   [[nodiscard]] ProcessData* GetProcess() const { return process_.get(); }
 
  private:
   StadiaConnection connection_;
-  std::unique_ptr<ProcessManager> process_manager_;
+  std::unique_ptr<orbit_client_services::ProcessManager> process_manager_;
   std::unique_ptr<ProcessData> process_;
 };
 
@@ -52,7 +54,7 @@ class LocalTarget {
 
  public:
   explicit LocalTarget(LocalConnection&& connection,
-                       std::unique_ptr<ProcessManager> process_manager,
+                       std::unique_ptr<orbit_client_services::ProcessManager> process_manager,
                        std::unique_ptr<ProcessData> process)
       : connection_(connection),
         process_manager_(std::move(process_manager)),
@@ -61,12 +63,14 @@ class LocalTarget {
     CHECK(process_ != nullptr);
   }
   [[nodiscard]] const LocalConnection* GetConnection() const { return &connection_; }
-  [[nodiscard]] ProcessManager* GetProcessManager() const { return process_manager_.get(); }
+  [[nodiscard]] orbit_client_services::ProcessManager* GetProcessManager() const {
+    return process_manager_.get();
+  }
   [[nodiscard]] ProcessData* GetProcess() const { return process_.get(); }
 
  private:
   LocalConnection connection_;
-  std::unique_ptr<ProcessManager> process_manager_;
+  std::unique_ptr<orbit_client_services::ProcessManager> process_manager_;
   std::unique_ptr<ProcessData> process_;
 };
 

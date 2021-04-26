@@ -105,7 +105,7 @@ void TracepointThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, 
 }
 
 std::string TracepointThreadBar::GetTracepointTooltip(Batcher* batcher, PickingId id) const {
-  auto user_data = batcher->GetUserData(id);
+  auto* user_data = batcher->GetUserData(id);
   CHECK(user_data && user_data->custom_data_);
 
   const auto* tracepoint_event_info =
@@ -115,7 +115,8 @@ std::string TracepointThreadBar::GetTracepointTooltip(Batcher* batcher, PickingI
 
   CHECK(capture_data_ != nullptr);
 
-  TracepointInfo tracepoint_info = capture_data_->GetTracepointInfo(tracepoint_info_key);
+  orbit_grpc_protos::TracepointInfo tracepoint_info =
+      capture_data_->GetTracepointInfo(tracepoint_info_key);
 
   if (thread_id_ == orbit_base::kAllThreadsOfAllProcessesTid) {
     return absl::StrFormat(

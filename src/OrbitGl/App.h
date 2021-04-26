@@ -341,7 +341,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
     CHECK(grpc_channel != nullptr);
     grpc_channel_ = std::move(grpc_channel);
   }
-  void SetProcessManager(ProcessManager* process_manager) {
+  void SetProcessManager(orbit_client_services::ProcessManager* process_manager) {
     CHECK(process_manager_ == nullptr);
     CHECK(process_manager != nullptr);
     process_manager_ = process_manager;
@@ -351,7 +351,9 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   [[nodiscard]] DataView* GetOrCreateSelectionCallstackDataView();
 
   [[nodiscard]] StringManager* GetStringManager() { return &string_manager_; }
-  [[nodiscard]] ProcessManager* GetProcessManager() { return process_manager_; }
+  [[nodiscard]] orbit_client_services::ProcessManager* GetProcessManager() {
+    return process_manager_;
+  }
   [[nodiscard]] ThreadPool* GetThreadPool() { return thread_pool_.get(); }
   [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() { return main_thread_executor_; }
   [[nodiscard]] ProcessData* GetMutableTargetProcess() const { return process_; }
@@ -415,10 +417,10 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
       const std::vector<orbit_client_protos::CallstackEvent>& selected_callstack_events,
       int32_t thread_id);
 
-  void SelectTracepoint(const TracepointInfo& info);
-  void DeselectTracepoint(const TracepointInfo& tracepoint);
+  void SelectTracepoint(const orbit_grpc_protos::TracepointInfo& info);
+  void DeselectTracepoint(const orbit_grpc_protos::TracepointInfo& tracepoint);
 
-  [[nodiscard]] bool IsTracepointSelected(const TracepointInfo& info) const;
+  [[nodiscard]] bool IsTracepointSelected(const orbit_grpc_protos::TracepointInfo& info) const;
 
   // Only enables the frame track in the capture settings (in DataManager) and does not
   // add a frame track to the current capture data.
@@ -533,10 +535,10 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   std::thread::id main_thread_id_;
   std::unique_ptr<ThreadPool> thread_pool_;
   std::unique_ptr<orbit_capture_client::CaptureClient> capture_client_;
-  ProcessManager* process_manager_ = nullptr;
+  orbit_client_services::ProcessManager* process_manager_ = nullptr;
   std::unique_ptr<orbit_client_data::ModuleManager> module_manager_;
   std::unique_ptr<DataManager> data_manager_;
-  std::unique_ptr<CrashManager> crash_manager_;
+  std::unique_ptr<orbit_client_services::CrashManager> crash_manager_;
   std::unique_ptr<ManualInstrumentationManager> manual_instrumentation_manager_;
 
   const SymbolHelper symbol_helper_;

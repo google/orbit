@@ -421,7 +421,8 @@ void ProfilingTargetDialog::SetupProcessManager(
 
   if (process_manager_ != nullptr) return;
 
-  process_manager_ = ProcessManager::Create(grpc_channel, absl::Milliseconds(1000));
+  process_manager_ =
+      orbit_client_services::ProcessManager::Create(grpc_channel, absl::Milliseconds(1000));
   process_manager_->SetProcessListUpdateListener(
       [this](std::vector<orbit_grpc_protos::ProcessInfo> process_list) {
         OnProcessListUpdate(std::move(process_list));

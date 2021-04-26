@@ -85,7 +85,7 @@ class ClientGgp final : public orbit_capture_client::CaptureListener {
   ModuleData* main_module_ = nullptr;
   std::shared_ptr<StringManager> string_manager_;
   std::unique_ptr<orbit_capture_client::CaptureClient> capture_client_;
-  std::unique_ptr<ProcessClient> process_client_;
+  std::unique_ptr<orbit_client_services::ProcessClient> process_client_;
   std::unique_ptr<CaptureData> capture_data_;
   std::vector<orbit_client_protos::TimerInfo> timer_infos_;
 

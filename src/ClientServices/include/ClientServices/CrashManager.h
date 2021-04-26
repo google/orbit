@@ -10,6 +10,8 @@
 #include "grpcpp/grpcpp.h"
 #include "services.pb.h"
 
+namespace orbit_client_services {
+
 // This class is responsible for crash OrbitService.
 //
 // Usage example:
@@ -30,5 +32,7 @@ class CrashManager {
 
   static std::unique_ptr<CrashManager> Create(std::shared_ptr<grpc::Channel> channel);
 };
+
+}  // namespace orbit_client_services
 
 #endif  // CLIENT_SERVICES_CRASH_MANAGER_H_

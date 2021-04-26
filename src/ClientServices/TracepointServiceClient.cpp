@@ -12,6 +12,8 @@
 #include "OrbitBase/Logging.h"
 #include "services.pb.h"
 
+namespace orbit_client_services {
+
 using orbit_grpc_protos::GetTracepointListRequest;
 using orbit_grpc_protos::GetTracepointListResponse;
 using orbit_grpc_protos::TracepointInfo;
@@ -48,3 +50,5 @@ std::unique_ptr<TracepointServiceClient> TracepointServiceClient::Create(
 
   return client;
 }
+
+}  // namespace orbit_client_services

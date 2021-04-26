@@ -17,6 +17,7 @@
 #include "services.grpc.pb.h"
 #include "services.pb.h"
 
+namespace orbit_client_services {
 namespace {
 
 using orbit_grpc_protos::GetDebugInfoFileRequest;
@@ -120,3 +121,5 @@ ErrorMessageOr<std::string> ProcessClient::LoadProcessMemory(int32_t pid, uint64
 
   return std::move(*response.mutable_memory());
 }
+
+}  // namespace orbit_client_services
