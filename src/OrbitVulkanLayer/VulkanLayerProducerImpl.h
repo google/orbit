@@ -8,7 +8,7 @@
 #include <absl/container/flat_hash_set.h>
 #include <google/protobuf/arena.h>
 
-#include "OrbitProducer/LockFreeBufferCaptureEventProducer.h"
+#include "CaptureEventProducer/LockFreeBufferCaptureEventProducer.h"
 #include "VulkanLayerProducer.h"
 
 namespace orbit_vulkan_layer {
@@ -37,7 +37,7 @@ class VulkanLayerProducerImpl : public VulkanLayerProducer {
 
  private:
   class LockFreeBufferVulkanLayerProducer
-      : public orbit_producer::LockFreeBufferCaptureEventProducer<
+      : public orbit_capture_event_producer::LockFreeBufferCaptureEventProducer<
             orbit_grpc_protos::ProducerCaptureEvent> {
    public:
     explicit LockFreeBufferVulkanLayerProducer(VulkanLayerProducerImpl* outer) : outer_{outer} {}

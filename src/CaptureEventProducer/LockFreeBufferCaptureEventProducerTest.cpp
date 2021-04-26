@@ -17,12 +17,12 @@
 #include <utility>
 #include <vector>
 
-#include "OrbitProducer/FakeProducerSideService.h"
-#include "OrbitProducer/LockFreeBufferCaptureEventProducer.h"
+#include "CaptureEventProducer/FakeProducerSideService.h"
+#include "CaptureEventProducer/LockFreeBufferCaptureEventProducer.h"
 #include "capture.pb.h"
 #include "grpcpp/grpcpp.h"
 
-namespace orbit_producer {
+namespace orbit_capture_event_producer {
 
 namespace {
 
@@ -405,4 +405,4 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, DisconnectAndReconnect) {
   EXPECT_FALSE(buffer_producer_->IsCapturing());
 }
 
-}  // namespace orbit_producer
+}  // namespace orbit_capture_event_producer

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitProducer/CaptureEventProducer.h"
+#include "CaptureEventProducer/CaptureEventProducer.h"
 
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
@@ -15,7 +15,7 @@ using orbit_grpc_protos::ProducerSideService;
 using orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest;
 using orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse;
 
-namespace orbit_producer {
+namespace orbit_capture_event_producer {
 
 void CaptureEventProducer::BuildAndStart(const std::shared_ptr<grpc::Channel>& channel) {
   CHECK(channel != nullptr);
@@ -229,4 +229,4 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
   }
 }
 
-}  // namespace orbit_producer
+}  // namespace orbit_capture_event_producer

@@ -23,10 +23,10 @@ target_sources(OrbitVulkanLayerInterface PRIVATE
         VulkanWrapper.h)
 
 target_link_libraries(OrbitVulkanLayerInterface PUBLIC
+        CaptureEventProducer
         CONAN_PKG::vulkan-headers
         GrpcProtos
         OrbitBase
-        OrbitProducer
         ProducerSideChannel
         Vulkan::ValidationLayers)
 

@@ -30,9 +30,9 @@ target_sources(Api PRIVATE
 
 target_link_libraries(Api PUBLIC
         ApiInterface
+        CaptureEventProducer
         GrpcProtos
         OrbitBase
-        OrbitProducer
         ProducerSideChannel)
 
 strip_symbols(Api)
