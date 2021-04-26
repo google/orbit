@@ -26,4 +26,13 @@ void OrbitAboutDialog::SetBuildInformation(const QString& build_info) {
   ui_->buildInformationEdit->setPlainText(build_info);
 }
 
+void OrbitAboutDialog::SetOpenGlRenderer(const QString& opengl_renderer, bool software_rendering) {
+  auto label = QString{"OpenGL Renderer: %1"}.arg(opengl_renderer);
+  if (software_rendering) {
+    label.append(" (Software Rendering)");
+  }
+
+  ui_->opengl_renderer_label->setText(label);
+}
+
 }  // namespace orbit_qt
