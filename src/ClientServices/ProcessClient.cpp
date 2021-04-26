@@ -30,7 +30,6 @@ using orbit_grpc_protos::GetProcessMemoryRequest;
 using orbit_grpc_protos::GetProcessMemoryResponse;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
-using orbit_grpc_protos::ProcessService;
 
 constexpr uint64_t kGrpcDefaultTimeoutMilliseconds = 3000;
 

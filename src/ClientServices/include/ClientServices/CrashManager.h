@@ -21,7 +21,6 @@ namespace orbit_client_services {
 // To crash OrbitService:
 // manager.CrashOrbitService(...);
 //
-//
 class CrashManager {
  public:
   CrashManager() = default;
@@ -30,7 +29,7 @@ class CrashManager {
   virtual void CrashOrbitService(
       orbit_grpc_protos::CrashOrbitServiceRequest_CrashType crash_type) = 0;
 
-  static std::unique_ptr<CrashManager> Create(std::shared_ptr<grpc::Channel> channel);
+  static std::unique_ptr<CrashManager> Create(const std::shared_ptr<grpc::Channel>& channel);
 };
 
 }  // namespace orbit_client_services

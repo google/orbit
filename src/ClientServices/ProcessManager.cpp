@@ -136,8 +136,8 @@ ErrorMessageOr<std::string> ProcessManagerImpl::LoadProcessMemory(int32_t pid, u
 
 ErrorMessageOr<std::string> ProcessManagerImpl::LoadNullTerminatedString(int32_t pid,
                                                                          uint64_t address) {
-  constexpr uint64_t max_size = 256;
-  auto error_or_string = LoadProcessMemory(pid, address, max_size);
+  constexpr uint64_t kMaxSize = 256;
+  auto error_or_string = LoadProcessMemory(pid, address, kMaxSize);
   if (error_or_string.has_value()) {
     const std::string& str = error_or_string.value();
     if (str.find('\0') == std::string::npos) {
