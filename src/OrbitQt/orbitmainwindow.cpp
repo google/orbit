@@ -879,6 +879,8 @@ void OrbitMainWindow::on_actionToggle_Capture_triggered() { app_->ToggleCapture(
 
 const QString OrbitMainWindow::kCollectThreadStatesSettingKey{"CollectThreadStates"};
 const QString OrbitMainWindow::kCollectMemoryInfoSettingKey{"CollectMemoryInfo"};
+const QString OrbitMainWindow::kEnableApiSettingKey{"EnableApi"};
+const QString OrbitMainWindow::kEnableIntrospectionSettingKey{"EnableIntrospection"};
 const QString OrbitMainWindow::kMemorySamplingPeriodMsSettingKey{"MemorySamplingPeriodMs"};
 const QString OrbitMainWindow::kMemoryWarningThresholdKbSettingKey{"MemoryWarningThresholdKb"};
 const QString OrbitMainWindow::kLimitLocalMarkerDepthPerCommandBufferSettingsKey{
@@ -893,6 +895,8 @@ constexpr uint64_t kMilliSecondsToNanoSeconds = 1000'000;
 void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
   QSettings settings;
   app_->SetCollectThreadStates(settings.value(kCollectThreadStatesSettingKey, false).toBool());
+  app_->SetEnableApi(settings.value(kEnableApiSettingKey, false).toBool());
+  app_->SetEnableIntrospection(settings.value(kEnableIntrospectionSettingKey, false).toBool());
 
   app_->SetCollectMemoryInfo(settings.value(kCollectMemoryInfoSettingKey, false).toBool());
   uint64_t memory_sampling_period_ns =
@@ -926,6 +930,8 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
 
   orbit_qt::CaptureOptionsDialog dialog{this};
   dialog.SetCollectThreadStates(settings.value(kCollectThreadStatesSettingKey, false).toBool());
+  dialog.SetEnableApi(settings.value(kEnableApiSettingKey, false).toBool());
+  dialog.SetEnableIntrospection(settings.value(kEnableIntrospectionSettingKey, false).toBool());
   dialog.SetCollectMemoryInfo(settings.value(kCollectMemoryInfoSettingKey, false).toBool());
   dialog.SetMemorySamplingPeriodMs(
       settings
@@ -948,6 +954,8 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
   }
 
   settings.setValue(kCollectThreadStatesSettingKey, dialog.GetCollectThreadStates());
+  settings.setValue(kEnableApiSettingKey, dialog.GetEnableApi());
+  settings.setValue(kEnableIntrospectionSettingKey, dialog.GetEnableIntrospection());
   settings.setValue(kCollectMemoryInfoSettingKey, dialog.GetCollectMemoryInfo());
   settings.setValue(kMemorySamplingPeriodMsSettingKey,
                     QString::number(dialog.GetMemorySamplingPeriodMs()));

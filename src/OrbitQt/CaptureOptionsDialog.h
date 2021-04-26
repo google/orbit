@@ -46,6 +46,10 @@ class CaptureOptionsDialog : public QDialog {
 
   void SetCollectThreadStates(bool collect_thread_state);
   [[nodiscard]] bool GetCollectThreadStates() const;
+  void SetEnableApi(bool enable_api);
+  [[nodiscard]] bool GetEnableApi() const;
+  void SetEnableIntrospection(bool enable_introspection);
+  [[nodiscard]] bool GetEnableIntrospection() const;
   void SetLimitLocalMarkerDepthPerCommandBuffer(bool limit_local_marker_depth_per_command_buffer);
   [[nodiscard]] bool GetLimitLocalMarkerDepthPerCommandBuffer() const;
   void SetMaxLocalMarkerDepthPerCommandBuffer(uint64_t local_marker_depth_per_command_buffer);

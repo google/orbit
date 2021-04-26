@@ -70,7 +70,7 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
     TracepointInfoSet selected_tracepoints, double samples_per_second,
     UnwindingMethod unwinding_method, bool collect_scheduling_info, bool collect_thread_state,
-    bool enable_introspection, bool enable_api, uint64_t max_local_marker_depth_per_command_buffer,
+    bool enable_api, bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer,
     bool collect_memory_info, uint64_t memory_sampling_period_ns,
     std::unique_ptr<CaptureEventProcessor> capture_event_processor) {
   absl::MutexLock lock(&state_mutex_);
@@ -85,12 +85,12 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
   auto capture_result = thread_pool->Schedule(
       [this, process_id, &module_manager, selected_functions = std::move(selected_functions),
        selected_tracepoints = std::move(selected_tracepoints), collect_scheduling_info,
-       collect_thread_state, samples_per_second, unwinding_method, enable_introspection, enable_api,
+       collect_thread_state, samples_per_second, unwinding_method, enable_api, enable_introspection,
        max_local_marker_depth_per_command_buffer, collect_memory_info, memory_sampling_period_ns,
        capture_event_processor = std::move(capture_event_processor)]() mutable {
         return CaptureSync(process_id, module_manager, selected_functions, selected_tracepoints,
                            samples_per_second, unwinding_method, collect_scheduling_info,
-                           collect_thread_state, enable_introspection, enable_api,
+                           collect_thread_state, enable_api, enable_introspection,
                            max_local_marker_depth_per_command_buffer, collect_memory_info,
                            memory_sampling_period_ns, capture_event_processor.get());
       });
@@ -128,7 +128,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
     const absl::flat_hash_map<uint64_t, FunctionInfo>& selected_functions,
     const TracepointInfoSet& selected_tracepoints, double samples_per_second,
     UnwindingMethod unwinding_method, bool collect_scheduling_info, bool collect_thread_state,
-    bool enable_introspection, bool enable_api, uint64_t max_local_marker_depth_per_command_buffer,
+    bool enable_api, bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer,
     bool collect_memory_info, uint64_t memory_sampling_period_ns,
     CaptureEventProcessor* capture_event_processor) {
   ORBIT_SCOPE_FUNCTION;
@@ -186,8 +186,8 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
     instrumented_tracepoint->set_name(tracepoint.name());
   }
 
-  capture_options->set_enable_introspection(enable_introspection);
   capture_options->set_enable_api(enable_api);
+  capture_options->set_enable_introspection(enable_introspection);
 
   auto api_functions = FindApiFunctions(module_manager);
   *(capture_options->mutable_api_functions()) = {api_functions.begin(), api_functions.end()};

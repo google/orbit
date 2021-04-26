@@ -58,6 +58,20 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QCheckBox" name="apiCheckBox">
+          <property name="text">
+           <string>Enable Orbit Api in target</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="introspectionCheckBox">
+          <property name="text">
+           <string>Enable introspection</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
      </item>
@@ -87,7 +101,7 @@
            <widget class="QLineEdit" name="memorySamplingPeriodMsLineEdit">
             <property name="accessibleName">
              <string>MemorySamplingPeriodEdit</string>
-            </property>           
+            </property>
             <property name="enabled">
              <bool>false</bool>
             </property>

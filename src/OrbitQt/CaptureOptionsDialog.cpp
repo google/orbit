@@ -49,6 +49,20 @@ void CaptureOptionsDialog::SetCollectThreadStates(bool collect_thread_state) {
   ui_->threadStateCheckBox->setChecked(collect_thread_state);
 }
 
+void CaptureOptionsDialog::SetEnableApi(bool enable_api) {
+  ui_->apiCheckBox->setChecked(enable_api);
+}
+
+bool CaptureOptionsDialog::GetEnableApi() const { return ui_->apiCheckBox->isChecked(); }
+
+void CaptureOptionsDialog::SetEnableIntrospection(bool enable_introspection) {
+  ui_->introspectionCheckBox->setChecked(enable_introspection);
+}
+
+bool CaptureOptionsDialog::GetEnableIntrospection() const {
+  return ui_->introspectionCheckBox->isChecked();
+}
+
 void CaptureOptionsDialog::SetLimitLocalMarkerDepthPerCommandBuffer(
     bool limit_local_marker_depth_per_command_buffer) {
   ui_->localMarkerDepthCheckBox->setChecked(limit_local_marker_depth_per_command_buffer);

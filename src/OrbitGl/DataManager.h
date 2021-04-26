@@ -72,6 +72,14 @@ class DataManager final {
   }
   [[nodiscard]] bool collect_thread_states() const { return collect_thread_states_; }
 
+  void set_enable_api(bool enable_api) { enable_api_ = enable_api; }
+  [[nodiscard]] bool get_enable_api() const { return enable_api_; }
+
+  void set_enable_introspection(bool enable_introspection) {
+    enable_introspection_ = enable_introspection;
+  }
+  [[nodiscard]] bool get_enable_introspection() const { return enable_introspection_; }
+
   void set_samples_per_second(double samples_per_second) {
     samples_per_second_ = samples_per_second;
   }
@@ -124,6 +132,8 @@ class DataManager final {
   UserDefinedCaptureData user_defined_capture_data_;
 
   bool collect_thread_states_ = false;
+  bool enable_api_ = false;
+  bool enable_introspection_ = false;
   uint64_t max_local_marker_depth_per_command_buffer_ = std::numeric_limits<uint64_t>::max();
   double samples_per_second_ = 0;
   orbit_grpc_protos::UnwindingMethod unwinding_method_{};
