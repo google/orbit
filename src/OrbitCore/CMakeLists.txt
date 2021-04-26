@@ -34,7 +34,6 @@ target_link_libraries(
          OrbitClientData
          xxHash::xxHash
          concurrentqueue::concurrentqueue
-         multicore::multicore
          oqpi::oqpi
          CONAN_PKG::abseil
          CONAN_PKG::llvm_object
