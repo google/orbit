@@ -8,8 +8,8 @@ project(GrpcProtos)
 
 add_library(GrpcProtos STATIC)
 target_compile_options(GrpcProtos PRIVATE ${STRICT_COMPILE_FLAGS})
-target_compile_definitions(GrpcProtos PRIVATE -D_WIN32_WINNT=0x0700)
-target_compile_definitions(GrpcProtos PRIVATE -DNTDDI_VERSION=0x06030000)
+target_compile_definitions(GrpcProtos PUBLIC -D_WIN32_WINNT=0x0700)
+target_compile_definitions(GrpcProtos PUBLIC -DNTDDI_VERSION=0x06030000)
 
 target_include_directories(GrpcProtos PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/include)
