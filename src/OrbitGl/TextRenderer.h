@@ -20,14 +20,13 @@
 
 #include "Batcher.h"
 #include "CoreMath.h"
+#include "Viewport.h"
 #include "PickingManager.h"
 
 namespace ftgl {
 struct vertex_buffer_t;
 struct texture_font_t;
 }  // namespace ftgl
-
-class GlCanvas;
 
 class TextRenderer {
  public:
@@ -36,7 +35,7 @@ class TextRenderer {
 
   void Init();
   void Clear();
-  void SetCanvas(GlCanvas* canvas) { canvas_ = canvas; }
+  void SetViewport(orbit_gl::Viewport* viewport) { viewport_ = viewport; }
 
   void RenderLayer(Batcher* batcher, float layer);
   void RenderDebug(Batcher* batcher);
@@ -78,7 +77,7 @@ class TextRenderer {
   bool texture_atlas_changed_;
   std::unordered_map<float, ftgl::vertex_buffer_t*> vertex_buffers_by_layer_;
   std::map<uint32_t, ftgl::texture_font_t*> fonts_by_size_;
-  GlCanvas* canvas_;
+  orbit_gl::Viewport* viewport_;
   GLuint shader_;
   ftgl::mat4 model_;
   ftgl::mat4 view_;

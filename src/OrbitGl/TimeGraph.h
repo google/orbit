@@ -30,6 +30,7 @@
 #include "TimerChain.h"
 #include "Track.h"
 #include "TrackManager.h"
+#include "Viewport.h"
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 
@@ -38,6 +39,7 @@ class OrbitApp;
 class TimeGraph : public orbit_gl::CaptureViewElement {
  public:
   explicit TimeGraph(OrbitApp* app, TextRenderer* text_renderer, GlCanvas* canvas,
+                     orbit_gl::Viewport* viewport,
                      const orbit_client_model::CaptureData* capture_data);
   ~TimeGraph();
 
