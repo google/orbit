@@ -12,10 +12,10 @@
 #include "App.h"
 #include "Batcher.h"
 #include "CaptureViewElement.h"
+#include "ClientModel/CaptureData.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitClientModel/CaptureData.h"
 #include "TimeGraph.h"
 #include "capture_data.pb.h"
 

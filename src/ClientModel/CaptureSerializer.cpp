@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitClientModel/CaptureSerializer.h"
+#include "ClientModel/CaptureSerializer.h"
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/strings/str_cat.h>
@@ -18,6 +18,7 @@
 #include <utility>
 #include <vector>
 
+#include "ClientModel/CaptureData.h"
 #include "CoreUtils.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/CallstackData.h"
@@ -26,7 +27,6 @@
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/TracepointData.h"
 #include "OrbitClientData/UserDefinedCaptureData.h"
-#include "OrbitClientModel/CaptureData.h"
 #include "capture_data.pb.h"
 #include "google/protobuf/io/coded_stream.h"
 #include "google/protobuf/message.h"

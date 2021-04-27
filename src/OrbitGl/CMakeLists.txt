@@ -142,13 +142,13 @@ target_include_directories(OrbitGl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(
   OrbitGl
   PUBLIC CaptureClient
+         ClientModel
          ClientServices
          GrpcProtos
          MetricsUploader
          OrbitAccessibility
          OrbitCore
          OrbitClientData
-         OrbitClientModel
          CONAN_PKG::Outcome
          CONAN_PKG::capstone
          CONAN_PKG::freetype-gl

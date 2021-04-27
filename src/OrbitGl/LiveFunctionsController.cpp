@@ -13,7 +13,7 @@
 #include <utility>
 
 #include "App.h"
-#include "OrbitClientModel/CaptureData.h"
+#include "ClientModel/CaptureData.h"
 #include "TimeGraph.h"
 
 using orbit_client_protos::FunctionInfo;

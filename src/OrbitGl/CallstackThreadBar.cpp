@@ -14,6 +14,7 @@
 
 #include "App.h"
 #include "Batcher.h"
+#include "ClientModel/CaptureData.h"
 #include "CoreUtils.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
@@ -21,7 +22,6 @@
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/CallstackData.h"
-#include "OrbitClientModel/CaptureData.h"
 #include "PickingManager.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"

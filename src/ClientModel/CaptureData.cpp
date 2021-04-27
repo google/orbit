@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitClientModel/CaptureData.h"
+#include "ClientModel/CaptureData.h"
 
 #include <absl/container/flat_hash_map.h>
 

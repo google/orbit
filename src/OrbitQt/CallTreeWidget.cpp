@@ -36,11 +36,11 @@
 
 #include "App.h"
 #include "CallTreeViewItemModel.h"
+#include "ClientModel/CaptureData.h"
 #include "CopyKeySequenceEnabledTreeView.h"
 #include "FunctionsDataView.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitClientData/ModuleData.h"
-#include "OrbitClientModel/CaptureData.h"
 #include "capture_data.pb.h"
 
 using orbit_client_protos::FunctionInfo;

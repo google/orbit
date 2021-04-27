@@ -21,6 +21,7 @@
 
 #include "AccessibleTimeGraph.h"
 #include "App.h"
+#include "ClientModel/CaptureData.h"
 #include "CoreMath.h"
 #include "CoreUtils.h"
 #include "Geometry.h"
@@ -31,7 +32,6 @@
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/Tracing.h"
 #include "OrbitClientData/CallstackData.h"
-#include "OrbitClientModel/CaptureData.h"
 #include "TextRenderer.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"

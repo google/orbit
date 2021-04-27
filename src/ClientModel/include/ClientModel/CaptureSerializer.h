@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CLIENT_MODEL_CAPTURE_SERIALIZER_H_
-#define ORBIT_CLIENT_MODEL_CAPTURE_SERIALIZER_H_
+#ifndef CLIENT_MODEL_CAPTURE_SERIALIZER_H_
+#define CLIENT_MODEL_CAPTURE_SERIALIZER_H_
 
 #include <absl/container/flat_hash_map.h>
 #include <google/protobuf/io/coded_stream.h>
@@ -89,4 +89,4 @@ ErrorMessageOr<void> Save(const std::filesystem::path& filename, const CaptureDa
 
 }  // namespace capture_serializer
 
-#endif  // ORBIT_CLIENT_MODEL_CAPTURE_SERIALIZER_H_
+#endif  // CLIENT_MODEL_CAPTURE_SERIALIZER_H_

@@ -15,9 +15,9 @@
 #include <utility>
 
 #include "CaptureClient/CaptureListener.h"
+#include "ClientModel/CaptureDeserializer.h"
+#include "ClientModel/CaptureSerializer.h"
 #include "OrbitClientData/ModuleManager.h"
-#include "OrbitClientModel/CaptureDeserializer.h"
-#include "OrbitClientModel/CaptureSerializer.h"
 
 namespace {
 class MockCaptureListener : public orbit_capture_client::CaptureListener {

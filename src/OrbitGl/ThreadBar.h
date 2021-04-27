@@ -9,7 +9,7 @@
 #include <string>
 
 #include "CaptureViewElement.h"
-#include "OrbitClientModel/CaptureData.h"
+#include "ClientModel/CaptureData.h"
 #include "TimeGraphLayout.h"
 
 class OrbitApp;

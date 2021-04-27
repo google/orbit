@@ -15,12 +15,12 @@
 #include <vector>
 
 #include "CaptureSerializationTestMatchers.h"
+#include "ClientModel/CaptureData.h"
+#include "ClientModel/CaptureSerializer.h"
 #include "CoreUtils.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/ModuleManager.h"
 #include "OrbitClientData/TracepointCustom.h"
-#include "OrbitClientModel/CaptureData.h"
-#include "OrbitClientModel/CaptureSerializer.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_cat.h"
 #include "capture_data.pb.h"

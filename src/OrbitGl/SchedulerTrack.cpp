@@ -10,8 +10,8 @@
 
 #include "App.h"
 #include "Batcher.h"
+#include "ClientModel/CaptureData.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitClientModel/CaptureData.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"

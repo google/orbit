@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CLIENT_MODEL_CAPTURE_DATA_H_
-#define ORBIT_CLIENT_MODEL_CAPTURE_DATA_H_
+#ifndef CLIENT_MODEL_CAPTURE_DATA_H_
+#define CLIENT_MODEL_CAPTURE_DATA_H_
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
@@ -247,4 +247,4 @@ class CaptureData {
   absl::flat_hash_set<uint64_t> frame_track_function_ids_;
 };
 
-#endif  // ORBIT_CLIENT_MODEL_CAPTURE_DATA_H_
+#endif  // CLIENT_MODEL_CAPTURE_DATA_H_
