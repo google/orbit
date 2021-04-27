@@ -67,7 +67,6 @@ class TrackManager {
 
   void RemoveFrameTrack(uint64_t function_address);
 
-
  private:
   void UpdateTracksOrder();
   [[nodiscard]] int FindMovingTrackIndex();
