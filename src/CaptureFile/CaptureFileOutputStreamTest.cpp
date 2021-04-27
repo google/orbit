@@ -15,13 +15,16 @@ namespace orbit_capture_file {
 
 static constexpr const char* kAnswerString =
     "Answer to the Ultimate Question of Life, The Universe, and Everything";
+static constexpr const char* kNotAnAnswerString = "Some odd number, not the answer.";
 static constexpr uint64_t kAnswerKey = 42;
+static constexpr uint64_t kNotAnAnswerKey = 43;
 
-static orbit_grpc_protos::ClientCaptureEvent CreateInternedStringCaptureEvent() {
+static orbit_grpc_protos::ClientCaptureEvent CreateInternedStringCaptureEvent(
+    uint64_t key, const std::string& str) {
   orbit_grpc_protos::ClientCaptureEvent event;
   orbit_grpc_protos::InternedString* interned_string = event.mutable_interned_string();
-  interned_string->set_key(42);
-  interned_string->set_intern(kAnswerString);
+  interned_string->set_key(key);
+  interned_string->set_intern(str);
   return event;
 }
 
@@ -40,11 +43,17 @@ TEST(CaptureFileOutputStream, Smoke) {
 
   EXPECT_TRUE(output_stream->IsOpen());
 
-  orbit_grpc_protos::ClientCaptureEvent event = CreateInternedStringCaptureEvent();
+  orbit_grpc_protos::ClientCaptureEvent event1 =
+      CreateInternedStringCaptureEvent(kAnswerKey, kAnswerString);
+  orbit_grpc_protos::ClientCaptureEvent event2 =
+      CreateInternedStringCaptureEvent(kNotAnAnswerKey, kNotAnAnswerString);
 
-  auto write_result = output_stream->WriteCaptureEvent(event);
+  auto write_result = output_stream->WriteCaptureEvent(event1);
   EXPECT_FALSE(write_result.has_error()) << write_result.error().message();
-  output_stream->Close();
+  write_result = output_stream->WriteCaptureEvent(event2);
+  EXPECT_FALSE(write_result.has_error()) << write_result.error().message();
+  auto close_result = output_stream->Close();
+  ASSERT_FALSE(close_result.has_error()) << close_result.error().message();
 
   ErrorMessageOr<std::string> file_content_or_error = orbit_base::ReadFileToString(temp_file_name);
   ASSERT_TRUE(file_content_or_error.has_value()) << file_content_or_error.error().message();
@@ -63,11 +72,24 @@ TEST(CaptureFileOutputStream, Smoke) {
   google::protobuf::io::CodedInputStream coded_input_stream(&input_stream);
 
   orbit_grpc_protos::ClientCaptureEvent event_from_file;
-  event_from_file.ParseFromCodedStream(&coded_input_stream);
+  size_t event_size;
+  ASSERT_TRUE(coded_input_stream.ReadVarint64(&event_size));
+  std::vector<uint8_t> buffer(event_size);
+  ASSERT_TRUE(coded_input_stream.ReadRaw(buffer.data(), buffer.size()));
+  ASSERT_TRUE(event_from_file.ParseFromArray(buffer.data(), buffer.size()));
 
   ASSERT_EQ(event_from_file.event_case(), orbit_grpc_protos::ClientCaptureEvent::kInternedString);
   EXPECT_EQ(event_from_file.interned_string().key(), kAnswerKey);
   EXPECT_EQ(event_from_file.interned_string().intern(), kAnswerString);
+
+  ASSERT_TRUE(coded_input_stream.ReadVarint64(&event_size));
+  buffer = std::vector<uint8_t>(event_size);
+  ASSERT_TRUE(coded_input_stream.ReadRaw(buffer.data(), buffer.size()));
+  ASSERT_TRUE(event_from_file.ParseFromArray(buffer.data(), buffer.size()));
+
+  ASSERT_EQ(event_from_file.event_case(), orbit_grpc_protos::ClientCaptureEvent::kInternedString);
+  EXPECT_EQ(event_from_file.interned_string().key(), kNotAnAnswerKey);
+  EXPECT_EQ(event_from_file.interned_string().intern(), kNotAnAnswerString);
 }
 
 TEST(CaptureFileOutputStream, WriteAfterClose) {
@@ -85,11 +107,13 @@ TEST(CaptureFileOutputStream, WriteAfterClose) {
 
   EXPECT_TRUE(output_stream->IsOpen());
 
-  output_stream->Close();
+  auto close_result = output_stream->Close();
+  ASSERT_FALSE(close_result.has_error()) << close_result.error().message();
 
   EXPECT_FALSE(output_stream->IsOpen());
 
-  orbit_grpc_protos::ClientCaptureEvent event = CreateInternedStringCaptureEvent();
+  orbit_grpc_protos::ClientCaptureEvent event =
+      CreateInternedStringCaptureEvent(kAnswerKey, kAnswerString);
 
   EXPECT_DEATH((void)output_stream->WriteCaptureEvent(event), "");
 }

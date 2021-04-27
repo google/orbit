@@ -28,10 +28,11 @@ class CaptureFileOutputStreamImpl final : public CaptureFileOutputStream {
   [[nodiscard]] ErrorMessageOr<void> Initialize();
   [[nodiscard]] ErrorMessageOr<void> WriteCaptureEvent(
       const orbit_grpc_protos::ClientCaptureEvent& event) override;
-  void Close() noexcept override;
+  [[nodiscard]] ErrorMessageOr<void> Close() noexcept override;
   [[nodiscard]] bool IsOpen() noexcept override;
 
  private:
+  void Reset() noexcept;
   [[nodiscard]] ErrorMessageOr<void> WriteHeader();
   // Handles write error by cleaning up the file and generating error message.
   [[nodiscard]] ErrorMessage HandleWriteError(const char* section_name,
@@ -47,9 +48,9 @@ class CaptureFileOutputStreamImpl final : public CaptureFileOutputStream {
 };
 
 CaptureFileOutputStreamImpl::~CaptureFileOutputStreamImpl() noexcept {
-  // This is not default to make sure close for streams and the file are called in the correct
-  // order.
-  CaptureFileOutputStreamImpl::Close();
+  // The destructor is not default to make sure close for streams and the file are called in
+  // the correct order.
+  Reset();
 }
 
 ErrorMessageOr<void> CaptureFileOutputStreamImpl::Initialize() {
@@ -67,7 +68,17 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::Initialize() {
   return outcome::success();
 }
 
-void CaptureFileOutputStreamImpl::Close() noexcept {
+ErrorMessageOr<void> CaptureFileOutputStreamImpl::Close() noexcept {
+  coded_output_->Trim();
+  if (coded_output_->HadError()) {
+    return HandleWriteError("Unknown", SafeStrerror(file_output_stream_->GetErrno()));
+  }
+  Reset();
+
+  return outcome::success();
+}
+
+void CaptureFileOutputStreamImpl::Reset() noexcept {
   coded_output_.reset();
   file_output_stream_.reset();
   fd_.release();
@@ -76,7 +87,7 @@ void CaptureFileOutputStreamImpl::Close() noexcept {
 bool CaptureFileOutputStreamImpl::IsOpen() noexcept { return fd_.valid(); }
 
 void CaptureFileOutputStreamImpl::CloseAndTryRemoveFileAfterError() {
-  Close();
+  Reset();
   if (remove(path_.string().c_str()) == -1) {
     ERROR("Unable to remove \"%s\": %s", path_.string(), SafeStrerror(errno));
   }
@@ -93,7 +104,13 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::WriteCaptureEvent(
     const orbit_grpc_protos::ClientCaptureEvent& event) {
   CHECK(coded_output_.has_value());
   CHECK(file_output_stream_.has_value());
+  size_t message_size = event.ByteSizeLong();
+  coded_output_->WriteVarint64(message_size);
   if (!event.SerializeToCodedStream(&coded_output_.value())) {
+    return HandleWriteError("Capture", SafeStrerror(file_output_stream_->GetErrno()));
+  }
+
+  if (coded_output_->HadError()) {
     return HandleWriteError("Capture", SafeStrerror(file_output_stream_->GetErrno()));
   }
 
