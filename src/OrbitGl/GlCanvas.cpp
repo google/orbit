@@ -56,7 +56,7 @@ const Color GlCanvas::kBackgroundColor = Color(67, 67, 67, 255);
 const Color GlCanvas::kTabTextColorSelected = Color(100, 181, 246, 255);
 
 GlCanvas::GlCanvas() : viewport_(0, 0), ui_batcher_(BatcherId::kUi, &picking_manager_) {
-  text_renderer_.SetCanvas(this);
+  text_renderer_.SetViewport(&viewport_);
 
   is_selecting_ = false;
   double_clicking_ = false;

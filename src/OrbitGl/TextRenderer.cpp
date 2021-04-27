@@ -36,7 +36,7 @@ bool TextRenderer::draw_outline_ = false;
 TextRenderer::TextRenderer()
     : texture_atlas_(nullptr),
       texture_atlas_changed_(false),
-      canvas_(nullptr),
+      viewport_(nullptr),
       initialized_(false) {}
 
 TextRenderer::~TextRenderer() {
@@ -298,17 +298,15 @@ void TextRenderer::AddText(const char* text, float x, float y, float z, const Co
   AddTextInternal(GetFont(font_size), text, ColorToVec4(color), &pen_, max_size, z, &out_screen_pos,
                   &out_screen_size);
 
-  const orbit_gl::Viewport& viewport = canvas_->GetViewport();
-
   if (out_text_pos) {
-    float inv_y = viewport.GetScreenHeight() - out_screen_pos.y;
-    (*out_text_pos) = viewport.ScreenToWorldPos(
+    float inv_y = viewport_->GetScreenHeight() - out_screen_pos.y;
+    (*out_text_pos) = viewport_->ScreenToWorldPos(
         Vec2i(static_cast<int>(out_screen_pos.x), static_cast<int>(inv_y)));
   }
 
   if (out_text_size) {
-    (*out_text_size)[0] = viewport.ScreenToWorldWidth(static_cast<int>(out_screen_size.x));
-    (*out_text_size)[1] = viewport.ScreenToWorldHeight(static_cast<int>(out_screen_size.y));
+    (*out_text_size)[0] = viewport_->ScreenToWorldWidth(static_cast<int>(out_screen_size.x));
+    (*out_text_size)[1] = viewport_->ScreenToWorldHeight(static_cast<int>(out_screen_size.y));
   }
 }
 
@@ -383,11 +381,11 @@ float TextRenderer::AddTextTrailingCharsPrioritized(const char* text, float x, f
 }
 
 float TextRenderer::GetStringWidth(const char* text, uint32_t font_size) {
-  return canvas_->GetViewport().ScreenToWorldWidth(GetStringWidthScreenSpace(text, font_size));
+  return viewport_->ScreenToWorldWidth(GetStringWidthScreenSpace(text, font_size));
 }
 
 float TextRenderer::GetStringHeight(const char* text, uint32_t font_size) {
-  return canvas_->GetViewport().ScreenToWorldHeight(GetStringHeightScreenSpace(text, font_size));
+  return viewport_->ScreenToWorldHeight(GetStringHeightScreenSpace(text, font_size));
 }
 
 int TextRenderer::GetStringWidthScreenSpace(const char* text, uint32_t font_size) {
@@ -438,20 +436,17 @@ std::vector<float> TextRenderer::GetLayers() const {
 };
 
 void TextRenderer::ToScreenSpace(float x, float y, float& o_x, float& o_y) {
-  const orbit_gl::Viewport& viewport = canvas_->GetViewport();
+  float world_width = viewport_->GetVisibleWorldWidth();
+  float world_height = viewport_->GetVisibleWorldHeight();
+  float world_top_left_x = viewport_->GetWorldTopLeft()[0];
+  float world_min_left_y = viewport_->GetWorldTopLeft()[1] - world_height;
 
-  float world_width = viewport.GetVisibleWorldWidth();
-  float world_height = viewport.GetVisibleWorldHeight();
-  float world_top_left_x = viewport.GetWorldTopLeft()[0];
-  float world_min_left_y = viewport.GetWorldTopLeft()[1] - world_height;
-
-  o_x = ((x - world_top_left_x) / world_width) * viewport.GetScreenWidth();
-  o_y = ((y - world_min_left_y) / world_height) * viewport.GetScreenHeight();
+  o_x = ((x - world_top_left_x) / world_width) * viewport_->GetScreenWidth();
+  o_y = ((y - world_min_left_y) / world_height) * viewport_->GetScreenHeight();
 }
 
 float TextRenderer::ToScreenSpace(float width) {
-  return (width / canvas_->GetViewport().GetVisibleWorldWidth()) *
-         canvas_->GetViewport().GetScreenWidth();
+  return (width / viewport_->GetVisibleWorldWidth()) * viewport_->GetScreenWidth();
 }
 
 void TextRenderer::Clear() {

@@ -48,7 +48,7 @@ using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::kMissingInfo;
 
 TimeGraph::TimeGraph(OrbitApp* app, TextRenderer* text_renderer, GlCanvas* canvas,
-                     const CaptureData* capture_data)
+                     orbit_gl::Viewport* viewport, const CaptureData* capture_data)
     // Note that `GlCanvas` and `TimeGraph` span the bridge to OpenGl content, and `TimeGraph`'s
     // parent needs special handling for accessibility. Thus, we use `nullptr` here.
     : orbit_gl::CaptureViewElement(nullptr, this, &layout_),
@@ -57,8 +57,8 @@ TimeGraph::TimeGraph(OrbitApp* app, TextRenderer* text_renderer, GlCanvas* canva
       batcher_(BatcherId::kTimeGraph),
       capture_data_{capture_data},
       app_{app} {
-  text_renderer_->SetCanvas(canvas);
-  text_renderer_static_.SetCanvas(canvas);
+  text_renderer_->SetViewport(viewport);
+  text_renderer_static_.SetViewport(viewport);
   batcher_.SetPickingManager(&canvas->GetPickingManager());
   track_manager_ = std::make_unique<TrackManager>(this, &GetLayout(), app, capture_data);
 
