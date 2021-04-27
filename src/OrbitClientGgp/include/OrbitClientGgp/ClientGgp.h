@@ -17,6 +17,7 @@
 
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
+#include "ClientModel/CaptureData.h"
 #include "ClientServices/ProcessClient.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -28,7 +29,6 @@
 #include "OrbitClientData/TracepointCustom.h"
 #include "OrbitClientData/UserDefinedCaptureData.h"
 #include "OrbitClientGgp/ClientGgpOptions.h"
-#include "OrbitClientModel/CaptureData.h"
 #include "StringManager.h"
 #include "capture.pb.h"
 #include "capture_data.pb.h"

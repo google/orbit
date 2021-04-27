@@ -24,6 +24,8 @@
 
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
+#include "ClientModel/CaptureSerializer.h"
+#include "ClientModel/SamplingDataPostProcessor.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/ImmediateExecutor.h"
@@ -32,8 +34,6 @@
 #include "OrbitClientData/FunctionUtils.h"
 #include "OrbitClientData/ProcessData.h"
 #include "OrbitClientData/UserDefinedCaptureData.h"
-#include "OrbitClientModel/CaptureSerializer.h"
-#include "OrbitClientModel/SamplingDataPostProcessor.h"
 #include "StringManager.h"
 #include "SymbolHelper.h"
 #include "capture_data.pb.h"

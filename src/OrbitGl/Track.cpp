@@ -10,10 +10,10 @@
 #include <limits>
 
 #include "AccessibleTrack.h"
+#include "ClientModel/CaptureData.h"
 #include "CoreMath.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
-#include "OrbitClientModel/CaptureData.h"
 #include "TextRenderer.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"

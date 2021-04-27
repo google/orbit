@@ -10,9 +10,9 @@
 #include <limits>
 #include <utility>
 
+#include "ClientModel/CaptureData.h"
 #include "OrbitClientData/FunctionInfoSet.h"
 #include "OrbitClientData/UserDefinedCaptureData.h"
-#include "OrbitClientModel/CaptureData.h"
 #include "TimeGraph.h"
 
 namespace orbit_gl {

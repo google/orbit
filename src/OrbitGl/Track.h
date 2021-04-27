@@ -5,8 +5,8 @@
 #ifndef ORBIT_GL_TRACK_H_
 #define ORBIT_GL_TRACK_H_
 
+#include <ClientModel/CaptureData.h>
 #include <GteVector.h>
-#include <OrbitClientModel/CaptureData.h>
 #include <stdint.h>
 
 #include <algorithm>

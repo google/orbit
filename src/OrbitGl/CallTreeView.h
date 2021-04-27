@@ -12,8 +12,8 @@
 #include <utility>
 #include <vector>
 
+#include "ClientModel/CaptureData.h"
 #include "OrbitClientData/PostProcessedSamplingData.h"
-#include "OrbitClientModel/CaptureData.h"
 #include "absl/container/node_hash_map.h"
 
 class CallTreeThread;

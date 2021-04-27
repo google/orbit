@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CLIENT_MODEL_CAPTURE_SERIALIZATION_TEST_MATCHERS_H_
-#define ORBIT_CLIENT_MODEL_CAPTURE_SERIALIZATION_TEST_MATCHERS_H_
+#ifndef CLIENT_MODEL_CAPTURE_SERIALIZATION_TEST_MATCHERS_H_
+#define CLIENT_MODEL_CAPTURE_SERIALIZATION_TEST_MATCHERS_H_
 
 #include <gmock/gmock-generated-matchers.h>
 
@@ -25,4 +25,4 @@ MATCHER_P(ThreadStateSliceInfoEq, that, "") {
          a.end_timestamp_ns() == b.end_timestamp_ns();
 }
 
-#endif  // ORBIT_CLIENT_MODEL_CAPTURE_SERIALIZATION_TEST_MATCHERS_H_
+#endif  // CLIENT_MODEL_CAPTURE_SERIALIZATION_TEST_MATCHERS_H_

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitClientModel/CaptureDeserializer.h"
+#include "ClientModel/CaptureDeserializer.h"
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/meta/type_traits.h>

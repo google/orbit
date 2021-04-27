@@ -11,10 +11,10 @@
 #include <memory>
 #include <string>
 
+#include "ClientModel/CaptureData.h"
 #include "CoreMath.h"
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/CallstackTypes.h"
-#include "OrbitClientModel/CaptureData.h"
 #include "ThreadBar.h"
 
 class OrbitApp;
