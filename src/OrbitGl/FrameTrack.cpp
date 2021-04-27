@@ -21,6 +21,7 @@
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
 
+using orbit_client_model::CaptureData;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::InstrumentedFunction;

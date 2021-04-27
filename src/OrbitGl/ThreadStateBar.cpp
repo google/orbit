@@ -24,7 +24,8 @@ using orbit_client_protos::ThreadStateSliceInfo;
 namespace orbit_gl {
 
 ThreadStateBar::ThreadStateBar(CaptureViewElement* parent, OrbitApp* app, TimeGraph* time_graph,
-                               TimeGraphLayout* layout, const CaptureData* capture_data,
+                               TimeGraphLayout* layout,
+                               const orbit_client_model::CaptureData* capture_data,
                                ThreadID thread_id)
     : ThreadBar(parent, app, time_graph, layout, capture_data, thread_id, "ThreadState") {}
 

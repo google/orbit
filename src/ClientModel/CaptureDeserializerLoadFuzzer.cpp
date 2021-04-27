@@ -19,6 +19,8 @@
 #include "ClientModel/CaptureSerializer.h"
 #include "OrbitClientData/ModuleManager.h"
 
+namespace orbit_client_model {
+
 namespace {
 class MockCaptureListener : public orbit_capture_client::CaptureListener {
  public:
@@ -67,3 +69,5 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
   (void)capture_deserializer::Load(&coded_input_stream, info.filename(), &capture_listener,
                                    &module_manager, &cancellation_requested);
 }
+
+}  // namespace orbit_client_model

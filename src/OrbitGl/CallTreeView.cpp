@@ -14,6 +14,8 @@
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitClientData/Callstack.h"
 
+using orbit_client_model::CaptureData;
+
 std::vector<const CallTreeNode*> CallTreeNode::children() const {
   std::vector<const CallTreeNode*> ret;
   for (const auto& tid_and_thread : thread_children_) {

@@ -43,6 +43,7 @@
 #include "OrbitClientData/ModuleData.h"
 #include "capture_data.pb.h"
 
+using orbit_client_model::CaptureData;
 using orbit_client_protos::FunctionInfo;
 
 ABSL_DECLARE_FLAG(bool, enable_source_code_view);

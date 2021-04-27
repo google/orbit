@@ -27,6 +27,7 @@
 #include "TimeGraphLayout.h"
 #include "capture_data.pb.h"
 
+using orbit_client_model::CaptureData;
 using orbit_client_protos::CallstackEvent;
 
 namespace orbit_gl {

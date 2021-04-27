@@ -33,6 +33,7 @@
 #include "TimerChain.h"
 #include "capture_data.pb.h"
 
+using orbit_client_model::CaptureData;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_grpc_protos::InstrumentedFunction;

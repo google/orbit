@@ -17,7 +17,7 @@
 #include "TimeGraphLayout.h"
 
 GraphTrack::GraphTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
-                       std::string name, const CaptureData* capture_data)
+                       const std::string& name, const orbit_client_model::CaptureData* capture_data)
     : Track(parent, time_graph, layout, capture_data) {
   SetName(name);
   SetLabel(name);

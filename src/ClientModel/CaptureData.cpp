@@ -23,6 +23,8 @@ using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ProcessInfo;
 
+namespace orbit_client_model {
+
 CaptureData::CaptureData(orbit_client_data::ModuleManager* module_manager,
                          const CaptureStarted& capture_started,
                          absl::flat_hash_set<uint64_t> frame_track_function_ids)
@@ -271,3 +273,5 @@ void CaptureData::DisableFrameTrack(uint64_t instrumented_function_id) {
 [[nodiscard]] bool CaptureData::IsFrameTrackEnabled(uint64_t instrumented_function_id) const {
   return frame_track_function_ids_.contains(instrumented_function_id);
 }
+
+}  // namespace orbit_client_model

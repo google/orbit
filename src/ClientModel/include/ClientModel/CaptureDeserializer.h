@@ -22,7 +22,7 @@
 #include "OrbitClientData/ModuleManager.h"
 #include "capture_data.pb.h"
 
-namespace capture_deserializer {
+namespace orbit_client_model::capture_deserializer {
 
 ErrorMessageOr<orbit_capture_client::CaptureListener::CaptureOutcome> Load(
     google::protobuf::io::CodedInputStream* input_stream, const std::filesystem::path& file_name,
@@ -46,6 +46,6 @@ inline const std::string kRequiredCaptureVersion = "1.59";
 
 }  // namespace internal
 
-}  // namespace capture_deserializer
+}  // namespace orbit_client_model::capture_deserializer
 
 #endif  // CLIENT_MODEL_CAPTURE_DESERIALIZER_H_

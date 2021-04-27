@@ -42,6 +42,7 @@
 
 using orbit_accessibility::AccessibleInterface;
 using orbit_accessibility::AccessibleWidgetBridge;
+using orbit_client_model::CaptureData;
 
 class AccessibleCaptureWindow : public AccessibleWidgetBridge {
  public:

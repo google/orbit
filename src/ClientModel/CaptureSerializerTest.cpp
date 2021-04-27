@@ -40,6 +40,8 @@ using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::TracepointInfo;
 using ::testing::ElementsAreArray;
 
+namespace orbit_client_model {
+
 TEST(CaptureSerializer, GetCaptureFileName) {
   constexpr int32_t kProcessId = 42;
 
@@ -284,3 +286,5 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
               capture_info.key_to_string().at(expected_key_to_string.first));
   }
 }
+
+}  // namespace orbit_client_model

@@ -35,6 +35,8 @@
 #include "process.pb.h"
 #include "tracepoint.pb.h"
 
+namespace orbit_client_model {
+
 class CaptureData {
  public:
   explicit CaptureData(orbit_client_data::ModuleManager* module_manager,
@@ -246,5 +248,7 @@ class CaptureData {
 
   absl::flat_hash_set<uint64_t> frame_track_function_ids_;
 };
+
+}  // namespace orbit_client_model
 
 #endif  // CLIENT_MODEL_CAPTURE_DATA_H_

@@ -52,7 +52,7 @@ struct DrawData {
 class TimerTrack : public Track {
  public:
   explicit TimerTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
-                      OrbitApp* app, const CaptureData* capture_data);
+                      OrbitApp* app, const orbit_client_model::CaptureData* capture_data);
   ~TimerTrack() override = default;
 
   // Pickable

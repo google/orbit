@@ -34,7 +34,8 @@ std::string MapGpuTimelineToTrackLabel(std::string_view timeline);
 class GpuTrack : public TimerTrack {
  public:
   explicit GpuTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
-                    uint64_t timeline_hash, OrbitApp* app, const CaptureData* capture_data);
+                    uint64_t timeline_hash, OrbitApp* app,
+                    const orbit_client_model::CaptureData* capture_data);
   ~GpuTrack() override = default;
   [[nodiscard]] std::string GetTooltip() const override;
   [[nodiscard]] Type GetType() const override { return Type::kGpuTrack; }

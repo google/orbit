@@ -112,11 +112,11 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   void AbortCapture();
   void ClearCapture();
   [[nodiscard]] bool HasCaptureData() const { return capture_data_ != nullptr; }
-  [[nodiscard]] CaptureData& GetMutableCaptureData() {
+  [[nodiscard]] orbit_client_model::CaptureData& GetMutableCaptureData() {
     CHECK(capture_data_ != nullptr);
     return *capture_data_;
   }
-  [[nodiscard]] const CaptureData& GetCaptureData() const {
+  [[nodiscard]] const orbit_client_model::CaptureData& GetCaptureData() const {
     CHECK(capture_data_ != nullptr);
     return *capture_data_;
   }
@@ -182,20 +182,20 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
       PostProcessedSamplingData post_processed_sampling_data,
       absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks,
       bool has_summary);
-  void SetTopDownView(const CaptureData& capture_data);
+  void SetTopDownView(const orbit_client_model::CaptureData& capture_data);
   void ClearTopDownView();
   void SetSelectionTopDownView(const PostProcessedSamplingData& selection_post_processed_data,
-                               const CaptureData& capture_data);
+                               const orbit_client_model::CaptureData& capture_data);
   void ClearSelectionTopDownView();
 
-  void SetBottomUpView(const CaptureData& capture_data);
+  void SetBottomUpView(const orbit_client_model::CaptureData& capture_data);
   void ClearBottomUpView();
   void SetSelectionBottomUpView(const PostProcessedSamplingData& selection_post_processed_data,
-                                const CaptureData& capture_data);
+                                const orbit_client_model::CaptureData& capture_data);
   void ClearSelectionBottomUpView();
 
   // This needs to be called from the main thread.
-  [[nodiscard]] bool IsCaptureConnected(const CaptureData& capture) const;
+  [[nodiscard]] bool IsCaptureConnected(const orbit_client_model::CaptureData& capture) const;
 
   [[nodiscard]] bool IsDevMode() const;
 
@@ -552,7 +552,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   // TODO(kuebler): This is mostly written during capture by the capture thread on the
   //  CaptureListener parts of App, but may be read also during capturing by all threads.
   //  Currently, it is not properly synchronized (and thus it can't live at DataManager).
-  std::unique_ptr<CaptureData> capture_data_;
+  std::unique_ptr<orbit_client_model::CaptureData> capture_data_;
 
   orbit_gl::FrameTrackOnlineProcessor frame_track_online_processor_;
 

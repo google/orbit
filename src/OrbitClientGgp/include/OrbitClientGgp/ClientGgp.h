@@ -69,11 +69,11 @@ class ClientGgp final : public orbit_capture_client::CaptureListener {
                          std::vector<orbit_grpc_protos::ModuleInfo> module_infos) override;
 
  private:
-  [[nodiscard]] CaptureData& GetMutableCaptureData() {
+  [[nodiscard]] orbit_client_model::CaptureData& GetMutableCaptureData() {
     CHECK(capture_data_ != nullptr);
     return *capture_data_;
   }
-  [[nodiscard]] const CaptureData& GetCaptureData() const {
+  [[nodiscard]] const orbit_client_model::CaptureData& GetCaptureData() const {
     CHECK(capture_data_ != nullptr);
     return *capture_data_;
   }
@@ -86,7 +86,7 @@ class ClientGgp final : public orbit_capture_client::CaptureListener {
   std::shared_ptr<StringManager> string_manager_;
   std::unique_ptr<orbit_capture_client::CaptureClient> capture_client_;
   std::unique_ptr<orbit_client_services::ProcessClient> process_client_;
-  std::unique_ptr<CaptureData> capture_data_;
+  std::unique_ptr<orbit_client_model::CaptureData> capture_data_;
   std::vector<orbit_client_protos::TimerInfo> timer_infos_;
 
   ErrorMessageOr<std::unique_ptr<ProcessData>> GetOrbitProcessByPid(int32_t pid);
