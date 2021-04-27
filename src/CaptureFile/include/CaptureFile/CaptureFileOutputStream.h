@@ -46,7 +46,7 @@ class CaptureFileOutputStream {
   virtual ~CaptureFileOutputStream() noexcept = default;
   [[nodiscard]] virtual ErrorMessageOr<void> WriteCaptureEvent(
       const orbit_grpc_protos::ClientCaptureEvent& event) = 0;
-  virtual void Close() noexcept = 0;
+  virtual ErrorMessageOr<void> Close() noexcept = 0;
 
   [[nodiscard]] virtual bool IsOpen() noexcept = 0;
 
