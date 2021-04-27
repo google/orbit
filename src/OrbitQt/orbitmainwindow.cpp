@@ -930,8 +930,8 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
 
   orbit_qt::CaptureOptionsDialog dialog{this};
   dialog.SetCollectThreadStates(settings.value(kCollectThreadStatesSettingKey, false).toBool());
-  dialog.SetEnableApi(settings.value(kEnableApiSettingKey, false).toBool());
-  dialog.SetEnableIntrospection(settings.value(kEnableIntrospectionSettingKey, false).toBool());
+  dialog.SetEnableApi(settings.value(kEnableApiSettingKey, true).toBool());
+  dialog.SetEnableIntrospection(settings.value(kEnableIntrospectionSettingKey, true).toBool());
   dialog.SetCollectMemoryInfo(settings.value(kCollectMemoryInfoSettingKey, false).toBool());
   dialog.SetMemorySamplingPeriodMs(
       settings

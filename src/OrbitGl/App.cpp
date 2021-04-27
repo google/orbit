@@ -1027,7 +1027,7 @@ void OrbitApp::StartCapture() {
   bool collect_scheduling_info = true;
   bool collect_thread_states = data_manager_->collect_thread_states();
   bool enable_api = data_manager_->get_enable_api();
-  bool enable_introspection = data_manager_->get_enable_introspection();
+  bool enable_introspection = IsDevMode() && data_manager_->get_enable_introspection();
   double samples_per_second = data_manager_->samples_per_second();
   UnwindingMethod unwinding_method = data_manager_->unwinding_method();
   uint64_t max_local_marker_depth_per_command_buffer =

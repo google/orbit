@@ -17,6 +17,7 @@
 #include "SourcePathsMapping/MappingManager.h"
 #include "ui_CaptureOptionsDialog.h"
 
+ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, enable_warning_threshold);
 
 namespace orbit_qt {
@@ -38,6 +39,10 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   if (!absl::GetFlag(FLAGS_enable_warning_threshold)) {
     ui_->memoryWarningThresholdKbLabel->hide();
     ui_->memoryWarningThresholdKbLineEdit->hide();
+  }
+
+  if (!absl::GetFlag(FLAGS_devmode)) {
+    ui_->introspectionCheckBox->hide();
   }
 }
 

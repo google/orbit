@@ -78,7 +78,7 @@ class CaptureClient {
       const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>& selected_functions,
       const TracepointInfoSet& selected_tracepoints, double samples_per_second,
       orbit_grpc_protos::UnwindingMethod unwinding_method, bool collect_scheduling_info,
-      bool collect_thread_state, bool enable_introspection, bool enable_api,
+      bool collect_thread_state, bool enable_api, bool enable_introspection,
       uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
       uint64_t memory_sampling_period_ns, CaptureEventProcessor* capture_event_processor);
 
