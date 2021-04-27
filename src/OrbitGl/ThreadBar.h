@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "CaptureViewElement.h"
 #include "ClientModel/CaptureData.h"
@@ -19,13 +20,13 @@ namespace orbit_gl {
 class ThreadBar : public CaptureViewElement, public std::enable_shared_from_this<ThreadBar> {
  public:
   explicit ThreadBar(CaptureViewElement* parent, OrbitApp* app, TimeGraph* time_graph,
-                     TimeGraphLayout* layout, const CaptureData* capture_data, ThreadID thread_id,
-                     std::string name)
+                     TimeGraphLayout* layout, const orbit_client_model::CaptureData* capture_data,
+                     ThreadID thread_id, std::string name)
       : CaptureViewElement(parent, time_graph, layout),
         thread_id_(thread_id),
         app_(app),
         capture_data_(capture_data),
-        name_(name) {}
+        name_(std::move(name)) {}
 
   void SetThreadId(ThreadID thread_id) { thread_id_ = thread_id; }
   [[nodiscard]] virtual bool IsEmpty() const { return false; }
@@ -38,7 +39,7 @@ class ThreadBar : public CaptureViewElement, public std::enable_shared_from_this
 
   ThreadID thread_id_ = -1;
   OrbitApp* app_;
-  const CaptureData* capture_data_;
+  const orbit_client_model::CaptureData* capture_data_;
 
   std::string name_;
 };

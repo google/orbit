@@ -100,6 +100,8 @@ using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureEventProcessor;
 using orbit_capture_client::CaptureListener;
 
+using orbit_client_model::CaptureData;
+
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
@@ -928,8 +930,8 @@ ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::filesystem::path& file_n
   TimerInfosIterator timers_it_end(chains.end(), chains.end());
   const CaptureData& capture_data = GetCaptureData();
 
-  auto save_result = capture_serializer::Save(file_name, capture_data, key_to_string_map,
-                                              timers_it_begin, timers_it_end);
+  auto save_result = orbit_client_model::capture_serializer::Save(
+      file_name, capture_data, key_to_string_map, timers_it_begin, timers_it_end);
   if (save_result.has_error()) {
     metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_INTERNAL_ERROR);
   }
@@ -949,8 +951,9 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
       thread_pool_->Schedule([this, file_name, metric = std::move(metric)]() mutable {
         capture_loading_cancellation_requested_ = false;
 
-        ErrorMessageOr<CaptureListener::CaptureOutcome> load_result = capture_deserializer::Load(
-            file_name, this, module_manager_.get(), &capture_loading_cancellation_requested_);
+        ErrorMessageOr<CaptureListener::CaptureOutcome> load_result =
+            orbit_client_model::capture_deserializer::Load(
+                file_name, this, module_manager_.get(), &capture_loading_cancellation_requested_);
 
         if (load_result.has_error()) {
           metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_INTERNAL_ERROR);

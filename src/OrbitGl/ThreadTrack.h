@@ -27,7 +27,8 @@ class OrbitApp;
 class ThreadTrack final : public TimerTrack {
  public:
   explicit ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
-                       int32_t thread_id, OrbitApp* app, const CaptureData* capture_data);
+                       int32_t thread_id, OrbitApp* app,
+                       const orbit_client_model::CaptureData* capture_data);
   void InitializeNameAndLabel(int32_t thread_id);
 
   [[nodiscard]] int32_t GetThreadId() const { return thread_id_; }

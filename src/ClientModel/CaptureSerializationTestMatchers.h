@@ -9,6 +9,8 @@
 
 #include "capture_data.pb.h"
 
+namespace orbit_client_model {
+
 MATCHER(ThreadStateSliceInfoEq, "") {
   const orbit_client_protos::ThreadStateSliceInfo& a = std::get<0>(arg);
   const orbit_client_protos::ThreadStateSliceInfo& b = std::get<1>(arg);
@@ -24,5 +26,7 @@ MATCHER_P(ThreadStateSliceInfoEq, that, "") {
          a.begin_timestamp_ns() == b.begin_timestamp_ns() &&
          a.end_timestamp_ns() == b.end_timestamp_ns();
 }
+
+}  // namespace orbit_client_model
 
 #endif  // CLIENT_MODEL_CAPTURE_SERIALIZATION_TEST_MATCHERS_H_

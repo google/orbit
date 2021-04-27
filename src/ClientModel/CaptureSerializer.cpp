@@ -39,6 +39,8 @@ using orbit_client_protos::ModuleInfo;
 using orbit_client_protos::ProcessInfo;
 using orbit_grpc_protos::InstrumentedFunction;
 
+namespace orbit_client_model {
+
 namespace {
 inline constexpr std::string_view kFileOrbitExtension = ".orbit";
 }
@@ -205,3 +207,5 @@ CaptureInfo GenerateCaptureInfo(
 }  // namespace internal
 
 }  // namespace capture_serializer
+
+}  // namespace orbit_client_model

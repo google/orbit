@@ -21,7 +21,7 @@
 #include "OrbitBase/Result.h"
 #include "capture_data.pb.h"
 
-namespace capture_serializer {
+namespace orbit_client_model::capture_serializer {
 
 template <class TimersIterator>
 ErrorMessageOr<void> Save(const std::filesystem::path& filename, const CaptureData& capture_data,
@@ -87,6 +87,6 @@ ErrorMessageOr<void> Save(const std::filesystem::path& filename, const CaptureDa
   return outcome::success();
 }
 
-}  // namespace capture_serializer
+}  // namespace orbit_client_model::capture_serializer
 
 #endif  // CLIENT_MODEL_CAPTURE_SERIALIZER_H_

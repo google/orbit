@@ -7,12 +7,12 @@
 
 #include <cstdint>
 
+#include "ClientModel/CaptureData.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture.pb.h"
 #include "capture_data.pb.h"
 
-class CaptureData;
 class TimeGraph;
 
 namespace orbit_gl {
@@ -24,7 +24,8 @@ void CreateFrameTrackTimer(uint64_t function_id, uint64_t start_ns, uint64_t end
 class FrameTrackOnlineProcessor {
  public:
   FrameTrackOnlineProcessor() = default;
-  FrameTrackOnlineProcessor(const CaptureData& capture_data, TimeGraph* time_graph);
+  FrameTrackOnlineProcessor(const orbit_client_model::CaptureData& capture_data,
+                            TimeGraph* time_graph);
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
                     const orbit_grpc_protos::InstrumentedFunction& function);
 

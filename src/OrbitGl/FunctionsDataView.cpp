@@ -29,6 +29,7 @@
 #define OQPI_USE_DEFAULT
 #endif
 
+using orbit_client_model::CaptureData;
 using orbit_client_protos::FunctionInfo;
 
 ABSL_DECLARE_FLAG(bool, enable_source_code_view);

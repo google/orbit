@@ -34,7 +34,7 @@ using orbit_client_protos::FunctionInfo;
 using orbit_gl::MemoryTrack;
 
 TrackManager::TrackManager(TimeGraph* time_graph, TimeGraphLayout* layout, OrbitApp* app,
-                           const CaptureData* capture_data)
+                           const orbit_client_model::CaptureData* capture_data)
     : time_graph_(time_graph), layout_(layout), capture_data_{capture_data}, app_{app} {
   GetOrCreateSchedulerTrack();
   tracepoints_system_wide_track_ = GetOrCreateThreadTrack(orbit_base::kAllThreadsOfAllProcessesTid);

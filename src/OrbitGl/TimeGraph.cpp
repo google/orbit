@@ -39,6 +39,7 @@
 
 ABSL_DECLARE_FLAG(bool, enable_warning_threshold);
 
+using orbit_client_model::CaptureData;
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;

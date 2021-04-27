@@ -60,6 +60,8 @@ using ::testing::Matcher;
 using ::testing::SaveArg;
 using ::testing::Unused;
 
+namespace orbit_client_model {
+
 namespace {
 
 class MockCaptureListener : public CaptureListener {
@@ -801,3 +803,5 @@ TEST(CaptureDeserializer, LoadCaptureInfoUserDefinedCaptureData) {
 }
 
 }  // namespace
+
+}  // namespace orbit_client_model

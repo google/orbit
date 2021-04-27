@@ -38,7 +38,7 @@ class OrbitApp;
 class TimeGraph : public orbit_gl::CaptureViewElement {
  public:
   explicit TimeGraph(OrbitApp* app, TextRenderer* text_renderer, GlCanvas* canvas,
-                     const CaptureData* capture_data);
+                     const orbit_client_model::CaptureData* capture_data);
   ~TimeGraph();
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode = PickingMode::kNone,
@@ -57,7 +57,9 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
                     const orbit_grpc_protos::InstrumentedFunction* function);
 
   // TODO (b/176056427): TimeGraph should not store nor expose CaptureData.
-  [[nodiscard]] const CaptureData* GetCaptureData() const { return capture_data_; }
+  [[nodiscard]] const orbit_client_model::CaptureData* GetCaptureData() const {
+    return capture_data_;
+  }
   [[nodiscard]] TrackManager* GetTrackManager() { return track_manager_.get(); }
 
   [[nodiscard]] float GetTextBoxHeight() const { return layout_.GetTextBoxHeight(); }
@@ -226,7 +228,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
 
   ManualInstrumentationManager* manual_instrumentation_manager_;
   std::unique_ptr<ManualInstrumentationManager::AsyncTimerInfoListener> async_timer_info_listener_;
-  const CaptureData* capture_data_ = nullptr;
+  const orbit_client_model::CaptureData* capture_data_ = nullptr;
 
   OrbitApp* app_ = nullptr;
 };

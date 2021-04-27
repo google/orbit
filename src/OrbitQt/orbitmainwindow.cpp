@@ -113,6 +113,8 @@ ABSL_DECLARE_FLAG(bool, enable_tutorials_feature);
 ABSL_DECLARE_FLAG(uint16_t, sampling_rate);
 ABSL_DECLARE_FLAG(bool, frame_pointer_unwinding);
 
+using orbit_client_model::CaptureData;
+
 using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureListener;
 
@@ -1056,7 +1058,8 @@ void OrbitMainWindow::on_actionSave_Capture_triggered() {
   QString file = QFileDialog::getSaveFileName(
       this, "Save capture...",
       QString::fromStdString(
-          (Path::CreateOrGetCaptureDir() / capture_serializer::GetCaptureFileName(capture_data))
+          (Path::CreateOrGetCaptureDir() /
+           orbit_client_model::capture_serializer::GetCaptureFileName(capture_data))
               .string()),
       "*.orbit");
   if (file.isEmpty()) {

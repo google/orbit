@@ -46,7 +46,7 @@ using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ProcessInfo;
 
-namespace capture_deserializer {
+namespace orbit_client_model::capture_deserializer {
 
 ErrorMessageOr<CaptureListener::CaptureOutcome> Load(const std::filesystem::path& file_name,
                                                      CaptureListener* capture_listener,
@@ -294,4 +294,4 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureInfo(
 
 }  // namespace internal
 
-}  // namespace capture_deserializer
+}  // namespace orbit_client_model::capture_deserializer

@@ -19,7 +19,7 @@ ErrorMessageOr<void> CaptureStats::Generate(CaptureWindow* capture_window, uint6
 
   TimeGraph* time_graph = capture_window->GetTimeGraph();
   SchedulerTrack* scheduler_track = time_graph->GetTrackManager()->GetOrCreateSchedulerTrack();
-  const CaptureData* capture_data = time_graph->GetCaptureData();
+  const orbit_client_model::CaptureData* capture_data = time_graph->GetCaptureData();
   if (capture_data == nullptr) return ErrorMessage("No capture data found");
 
   std::vector<const TextBox*> sched_scopes = scheduler_track->GetScopesInRange(start_ns, end_ns);

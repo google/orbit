@@ -46,6 +46,7 @@ ABSL_DECLARE_FLAG(uint64_t, max_local_marker_depth_per_command_buffer);
 using orbit_base::Future;
 using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureEventProcessor;
+using orbit_client_model::CaptureData;
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::LinuxAddressInfo;
@@ -146,15 +147,15 @@ bool ClientGgp::SaveCapture() {
   const auto& key_to_string_map = string_manager_->GetKeyToStringMap();
   std::string file_name = options_.capture_file_name;
   if (file_name.empty()) {
-    file_name = capture_serializer::GetCaptureFileName(GetCaptureData());
+    file_name = orbit_client_model::capture_serializer::GetCaptureFileName(GetCaptureData());
   } else {
     // Make sure the file is saved with orbit extension
-    capture_serializer::IncludeOrbitExtensionInFile(file_name);
+    orbit_client_model::capture_serializer::IncludeOrbitExtensionInFile(file_name);
   }
   // Add the location where the capture is saved
   file_name.insert(0, options_.capture_file_directory);
 
-  ErrorMessageOr<void> result = capture_serializer::Save(
+  ErrorMessageOr<void> result = orbit_client_model::capture_serializer::Save(
       file_name, GetCaptureData(), key_to_string_map, timer_infos_.begin(), timer_infos_.end());
   if (result.has_error()) {
     ERROR("Could not save the capture: %s", result.error().message());
