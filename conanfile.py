@@ -31,7 +31,8 @@ class OrbitConan(ConanFile):
                "with_crash_handling": [True, False],
                "run_tests": [True, False],
                "run_python_tests": [True, False],
-               "build_target": "ANY"}
+               "build_target": "ANY",
+               "deploy_opengl_software_renderer": [True, False]}
     default_options = {"system_mesa": True,
                        "system_qt": True, "with_gui": True,
                        "debian_packaging": False,
@@ -40,7 +41,8 @@ class OrbitConan(ConanFile):
                        "with_crash_handling": True,
                        "run_tests": True,
                        "run_python_tests": False,
-                       "build_target": None}
+                       "build_target": None,
+                       "deploy_opengl_software_renderer": False}
     _orbit_channel = "orbitdeps/stable"
     exports_sources = "CMakeLists.txt", "Orbit*", "bin/*", "cmake/*", "third_party/*", "LICENSE"
 
@@ -73,6 +75,13 @@ class OrbitConan(ConanFile):
         if self.settings.os != "Windows" and self.options.with_gui and not self.options.system_qt and self.options.system_mesa:
             raise ConanInvalidConfiguration("When disabling system_qt, you also have to "
                                             "disable system mesa.")
+
+        if self.options.deploy_opengl_software_renderer and self.settings.os != "Windows":
+            raise ConanInvalidConfiguration("The OpenGL software renderer can only be deployed on Windows")
+        if self.options.deploy_opengl_software_renderer and not self.options.with_gui:
+            raise ConanInvalidConfiguration("The OpenGL software renderer can only be deployed with GUI enabled.")
+        if self.options.deploy_opengl_software_renderer and self.options.system_qt:
+            raise ConanInvalidConfiguration("The OpenGL software renderer cannot be deployed when using a system-provided Qt installation.")
 
         self.requires("abseil/20200923.3")
         self.requires("bzip2/1.0.8@conan/stable#0")
@@ -110,6 +119,9 @@ class OrbitConan(ConanFile):
 
             if not self.options.system_qt:
                 self.requires("qt/5.15.1@{}#e659e981368e4baba1a201b75ddb89b6".format(self._orbit_channel))
+
+        if self.options.deploy_opengl_software_renderer:
+            self.requires("llvmpipe/21.0.3@{}#fd5932d6a7fa5fb0af5045eb53c02d18".format(self._orbit_channel))
 
 
     def configure(self):
@@ -177,6 +189,10 @@ class OrbitConan(ConanFile):
                           dst="{}/shaders/".format(dest))
                 self.copy("v3f-t2f-c4f.*", src=path,
                           dst="{}/shaders/".format("OrbitQt/"))
+        if self.options.deploy_opengl_software_renderer:
+            shutil.copyfile(os.path.join(self.deps_cpp_info["llvmpipe"].bin_paths[0], "opengl32.dll"),
+                            os.path.join(dest, "opengl32sw.dll"))
+
         excludes = [
                 "*qt*",
                 "*licensewizard*",
@@ -288,6 +304,7 @@ chmod -v 4775 /opt/developer/tools/OrbitService
         self.copy("libLinuxTracingIntegrationTestPuppetSharedObject.so.debug", src="lib/", dst="lib")
         self.copy("OrbitFakeClient", src="bin/", dst="bin")
         self.copy("OrbitFakeClient.debug", src="bin/", dst="bin")
+        self.copy("opengl32sw.dll", src="bin/", dst="bin")
 
         if not self.options.system_qt:
             orbit_executable = "Orbit.exe" if self.settings.os == "Windows" else "Orbit"
