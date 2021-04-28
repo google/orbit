@@ -14,7 +14,7 @@
 #include <thread>
 #include <vector>
 
-#include "../Orbit.h"
+#include "LegacyOrbit.h"
 #include "absl/strings/str_format.h"
 
 // AsyncScopeTester starts async scopes in one thread and stops them in another.
