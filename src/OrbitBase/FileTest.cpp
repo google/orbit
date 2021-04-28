@@ -228,4 +228,43 @@ TEST(File, ReadFullyAtOffsetSmoke) {
   EXPECT_STREQ(buf.data(), "");
 }
 
+TEST(File, ReadStructureAtOffset) {
+  struct TestStructure {
+    uint64_t u64;
+    std::array<char, 8> char_array;
+  };
+
+  auto tmp_file_or_error = TemporaryFile::Create();
+  ASSERT_TRUE(tmp_file_or_error.has_value()) << tmp_file_or_error.error().message();
+
+  auto fd_or_error = OpenExistingFileForReadWrite(tmp_file_or_error.value().file_path());
+  ASSERT_TRUE(fd_or_error.has_value()) << fd_or_error.error().message();
+
+  auto fd = std::move(fd_or_error.value());
+
+  constexpr const off_t kOffset = 42;
+  constexpr uint64_t kU64Value = 1121;
+  constexpr const char* kCharArray = "abcdefg";
+
+  auto write_result = WriteFullyAtOffset(fd, &kU64Value, sizeof(kU64Value), kOffset);
+  ASSERT_FALSE(write_result.has_error()) << write_result.error().message();
+
+  // Make sure we cannot read the structure - the file is too small
+  auto test_struct_or_error = ReadFullyAtOffset<TestStructure>(fd, kOffset);
+  ASSERT_TRUE(test_struct_or_error.has_error());
+  ASSERT_EQ(test_struct_or_error.error().message(), "Not enough bytes left in the file: 8 < 16");
+
+  write_result = WriteFullyAtOffset(fd, kCharArray, 8, kOffset + sizeof(kU64Value));
+  ASSERT_FALSE(write_result.has_error()) << write_result.error().message();
+
+  // Now we should be able to read the structure
+  test_struct_or_error = ReadFullyAtOffset<TestStructure>(fd, kOffset);
+  ASSERT_TRUE(test_struct_or_error.has_value()) << test_struct_or_error.error().message();
+
+  const auto test_struct = test_struct_or_error.value();
+
+  EXPECT_EQ(test_struct.u64, kU64Value);
+  EXPECT_STREQ(test_struct.char_array.data(), kCharArray);
+}
+
 }  // namespace orbit_base
