@@ -25,6 +25,7 @@
 #include "TimeGraphLayout.h"
 #include "TimerChain.h"
 #include "TriangleToggle.h"
+#include "Viewport.h"
 #include "capture_data.pb.h"
 
 class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_from_this<Track> {
@@ -41,8 +42,9 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
     kUnknown,
   };
 
-  explicit Track(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
-                 const orbit_client_model::CaptureData* capture_data);
+  explicit Track(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
+                 TimeGraphLayout* layout, const orbit_client_model::CaptureData* capture_data);
+
   ~Track() override = default;
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;

@@ -51,7 +51,7 @@ TimeGraph::TimeGraph(OrbitApp* app, TextRenderer* text_renderer, GlCanvas* canva
                      orbit_gl::Viewport* viewport, const CaptureData* capture_data)
     // Note that `GlCanvas` and `TimeGraph` span the bridge to OpenGl content, and `TimeGraph`'s
     // parent needs special handling for accessibility. Thus, we use `nullptr` here.
-    : orbit_gl::CaptureViewElement(nullptr, this, &layout_),
+    : orbit_gl::CaptureViewElement(nullptr, this, viewport, &layout_),
       text_renderer_{text_renderer},
       canvas_{canvas},
       batcher_(BatcherId::kTimeGraph),
@@ -60,7 +60,7 @@ TimeGraph::TimeGraph(OrbitApp* app, TextRenderer* text_renderer, GlCanvas* canva
   text_renderer_->SetViewport(viewport);
   text_renderer_static_.SetViewport(viewport);
   batcher_.SetPickingManager(&canvas->GetPickingManager());
-  track_manager_ = std::make_unique<TrackManager>(this, &GetLayout(), app, capture_data);
+  track_manager_ = std::make_unique<TrackManager>(this, viewport_, &GetLayout(), app, capture_data);
 
   async_timer_info_listener_ =
       std::make_unique<ManualInstrumentationManager::AsyncTimerInfoListener>(
@@ -149,16 +149,16 @@ void TimeGraph::VerticalZoom(float zoom_value, float mouse_relative_position) {
 
   const float ratio = (zoom_value > 0) ? (1 + kIncrementRatio) : (1 / (1 + kIncrementRatio));
 
-  const float world_height = canvas_->GetViewport().GetVisibleWorldHeight();
+  const float world_height = viewport_->GetVisibleWorldHeight();
   const float y_mouse_position =
-      canvas_->GetViewport().GetWorldTopLeft()[1] - mouse_relative_position * world_height;
-  const float top_distance = canvas_->GetViewport().GetWorldTopLeft()[1] - y_mouse_position;
+      viewport_->GetWorldTopLeft()[1] - mouse_relative_position * world_height;
+  const float top_distance = viewport_->GetWorldTopLeft()[1] - y_mouse_position;
 
   const float new_y_mouse_position = y_mouse_position / ratio;
 
   float new_world_top_left_y = new_y_mouse_position + top_distance;
 
-  canvas_->GetViewport().SetWorldTopLeftY(new_world_top_left_y);
+  viewport_->SetWorldTopLeftY(new_world_top_left_y);
 
   // Finally, we have to scale every item in the layout.
   const float old_scale = layout_.GetScale();
@@ -225,13 +225,12 @@ void TimeGraph::VerticallyMoveIntoView(const TimerInfo& timer_info) {
 void TimeGraph::VerticallyMoveIntoView(Track& track) {
   float pos = track.GetPos()[1];
   float height = track.GetHeight();
-  float world_top_left_y = canvas_->GetViewport().GetWorldTopLeft()[1];
+  float world_top_left_y = viewport_->GetWorldTopLeft()[1];
 
   float min_world_top_left_y = pos + layout_.GetTrackTabHeight();
   float max_world_top_left_y =
-      pos + canvas_->GetViewport().GetVisibleWorldHeight() - height - layout_.GetBottomMargin();
-  canvas_->GetViewport().SetWorldTopLeftY(
-      clamp(world_top_left_y, min_world_top_left_y, max_world_top_left_y));
+      pos + viewport_->GetVisibleWorldHeight() - height - layout_.GetBottomMargin();
+  viewport_->SetWorldTopLeftY(clamp(world_top_left_y, min_world_top_left_y, max_world_top_left_y));
 }
 
 void TimeGraph::UpdateHorizontalScroll(float ratio) {
@@ -647,8 +646,8 @@ void TimeGraph::UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, ui
   }
 
   time_window_us_ = max_time_us_ - min_time_us_;
-  world_start_x_ = canvas_->GetViewport().GetWorldTopLeft()[0];
-  world_width_ = canvas_->GetViewport().GetVisibleWorldWidth();
+  world_start_x_ = viewport_->GetWorldTopLeft()[0];
+  world_width_ = viewport_->GetVisibleWorldWidth();
   uint64_t min_tick = GetTickFromUs(min_time_us_);
   uint64_t max_tick = GetTickFromUs(max_time_us_);
 
@@ -690,7 +689,7 @@ const std::vector<CallstackEvent>& TimeGraph::GetSelectedCallstackEvents(int32_t
 void TimeGraph::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   ORBIT_SCOPE("TimeGraph::Draw");
   current_mouse_time_ns_ =
-      GetTickFromWorld(canvas->GetViewport().ScreenToWorldPos(canvas_->GetMouseScreenPos())[0]);
+      GetTickFromWorld(viewport_->ScreenToWorldPos(canvas_->GetMouseScreenPos())[0]);
 
   const bool picking = picking_mode != PickingMode::kNone;
   if ((!picking && update_primitives_requested_) || picking) {
@@ -777,13 +776,11 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
   std::vector<float> x_coords;
   x_coords.reserve(boxes.size());
 
-  const orbit_gl::Viewport& viewport = canvas->GetViewport();
+  float world_start_x = viewport_->GetWorldTopLeft()[0];
+  float world_width = viewport_->GetVisibleWorldWidth();
 
-  float world_start_x = viewport.GetWorldTopLeft()[0];
-  float world_width = viewport.GetVisibleWorldWidth();
-
-  float world_start_y = viewport.GetWorldTopLeft()[1];
-  float world_height = viewport.GetVisibleWorldHeight();
+  float world_start_y = viewport_->GetWorldTopLeft()[1];
+  float world_height = viewport_->GetVisibleWorldHeight();
 
   double inv_time_window = 1.0 / GetTimeWindowUs();
 

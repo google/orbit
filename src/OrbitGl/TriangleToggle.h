@@ -10,6 +10,7 @@
 
 #include "CaptureViewElement.h"
 #include "CoreMath.h"
+#include "Viewport.h"
 
 class Track;
 
@@ -21,7 +22,7 @@ class TriangleToggle : public orbit_gl::CaptureViewElement,
 
   using StateChangeHandler = std::function<void(TriangleToggle::State)>;
   explicit TriangleToggle(State initial_state, StateChangeHandler handler, TimeGraph* time_graph,
-                          TimeGraphLayout* layout, Track* track);
+                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout, Track* track);
   ~TriangleToggle() override = default;
 
   TriangleToggle() = delete;

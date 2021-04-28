@@ -18,13 +18,15 @@
 #include "PickingManager.h"
 #include "Timer.h"
 #include "Track.h"
+#include "Viewport.h"
 
 class TimeGraph;
 
 class GraphTrack : public Track {
  public:
-  explicit GraphTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
-                      const std::string& name, const orbit_client_model::CaptureData* capture_data);
+  explicit GraphTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+                      orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string name,
+                      const orbit_client_model::CaptureData* capture_data);
   [[nodiscard]] Type GetType() const override { return Type::kGraphTrack; }
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,

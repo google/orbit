@@ -24,6 +24,7 @@
 #include "TimerChain.h"
 #include "TracepointThreadBar.h"
 #include "Track.h"
+#include "Viewport.h"
 #include "absl/synchronization/mutex.h"
 #include "capture_data.pb.h"
 
@@ -38,7 +39,7 @@ struct DrawData {
   uint64_t ns_per_pixel;
   uint64_t min_timegraph_tick;
   Batcher* batcher;
-  GlCanvas* canvas;
+  orbit_gl::Viewport* viewport;
   const TextBox* selected_textbox;
   double inv_time_window;
   float world_start_x;
@@ -51,8 +52,9 @@ struct DrawData {
 
 class TimerTrack : public Track {
  public:
-  explicit TimerTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
-                      OrbitApp* app, const orbit_client_model::CaptureData* capture_data);
+  explicit TimerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+                      orbit_gl::Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
+                      const orbit_client_model::CaptureData* capture_data);
   ~TimerTrack() override = default;
 
   // Pickable
@@ -122,11 +124,10 @@ class TimerTrack : public Track {
   virtual void SetTimesliceText(const orbit_client_protos::TimerInfo& /*timer*/, float /*min_x*/,
                                 float /*z_offset*/, TextBox* /*text_box*/) {}
 
-  [[nodiscard]] static internal::DrawData GetDrawData(uint64_t min_tick, uint64_t max_tick,
-                                                      float z_offset, Batcher* batcher,
-                                                      TimeGraph* time_graph, bool is_collapsed,
-                                                      const TextBox* selected_textbox,
-                                                      uint64_t highlighted_function_id);
+  [[nodiscard]] static internal::DrawData GetDrawData(
+      uint64_t min_tick, uint64_t max_tick, float z_offset, Batcher* batcher, TimeGraph* time_graph,
+      orbit_gl::Viewport* viewport, bool is_collapsed, const TextBox* selected_textbox,
+      uint64_t highlighted_function_id);
 
   TextRenderer* text_renderer_ = nullptr;
   uint32_t depth_ = 0;

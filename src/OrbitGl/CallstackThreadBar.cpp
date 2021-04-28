@@ -25,6 +25,7 @@
 #include "PickingManager.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
+#include "Viewport.h"
 #include "capture_data.pb.h"
 
 using orbit_client_model::CaptureData;
@@ -33,9 +34,10 @@ using orbit_client_protos::CallstackEvent;
 namespace orbit_gl {
 
 CallstackThreadBar::CallstackThreadBar(CaptureViewElement* parent, OrbitApp* app,
-                                       TimeGraph* time_graph, TimeGraphLayout* layout,
-                                       const CaptureData* capture_data, ThreadID thread_id)
-    : ThreadBar(parent, app, time_graph, layout, capture_data, thread_id, "Callstacks"),
+                                       TimeGraph* time_graph, orbit_gl::Viewport* viewport,
+                                       TimeGraphLayout* layout, const CaptureData* capture_data,
+                                       ThreadID thread_id)
+    : ThreadBar(parent, app, time_graph, viewport, layout, capture_data, thread_id, "Callstacks"),
       color_{0, 255, 0, 255} {}
 
 std::string CallstackThreadBar::GetTooltip() const {

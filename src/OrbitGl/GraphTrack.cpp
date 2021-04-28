@@ -15,22 +15,21 @@
 #include "TextRenderer.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
+#include "Viewport.h"
 
-GraphTrack::GraphTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
-                       const std::string& name, const orbit_client_model::CaptureData* capture_data)
-    : Track(parent, time_graph, layout, capture_data) {
+GraphTrack::GraphTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string name,
+                       const orbit_client_model::CaptureData* capture_data)
+    : Track(parent, time_graph, viewport, layout, capture_data) {
   SetName(name);
   SetLabel(name);
 }
 
 void GraphTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                   PickingMode picking_mode, float z_offset) {
-  GlCanvas* canvas = time_graph_->GetCanvas();
-  const orbit_gl::Viewport& viewport = canvas->GetViewport();
-
-  float track_width = viewport.GetVisibleWorldWidth();
+  float track_width = viewport_->GetVisibleWorldWidth();
   SetSize(track_width, GetHeight());
-  pos_[0] = viewport.GetWorldTopLeft()[0];
+  pos_[0] = viewport_->GetWorldTopLeft()[0];
 
   Color color = GetBackgroundColor();
   const Color kLineColor(0, 128, 255, 128);

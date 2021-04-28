@@ -18,6 +18,7 @@
 #include "TextBox.h"
 #include "TimerTrack.h"
 #include "Track.h"
+#include "Viewport.h"
 #include "capture_data.pb.h"
 
 class OrbitApp;
@@ -33,8 +34,8 @@ std::string MapGpuTimelineToTrackLabel(std::string_view timeline);
 
 class GpuTrack : public TimerTrack {
  public:
-  explicit GpuTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
-                    uint64_t timeline_hash, OrbitApp* app,
+  explicit GpuTrack(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
+                    TimeGraphLayout* layout, uint64_t timeline_hash, OrbitApp* app,
                     const orbit_client_model::CaptureData* capture_data);
   ~GpuTrack() override = default;
   [[nodiscard]] std::string GetTooltip() const override;

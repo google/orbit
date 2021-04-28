@@ -15,6 +15,7 @@
 #include "TextBox.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
+#include "Viewport.h"
 
 using orbit_client_protos::TimerInfo;
 
@@ -22,9 +23,9 @@ const Color kInactiveColor(100, 100, 100, 255);
 const Color kSelectionColor(0, 128, 255, 255);
 
 SchedulerTrack::SchedulerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
-                               TimeGraphLayout* layout, OrbitApp* app,
+                               orbit_gl::Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
                                const orbit_client_model::CaptureData* capture_data)
-    : TimerTrack(parent, time_graph, layout, app, capture_data) {
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data) {
   SetPinned(false);
   SetName("Scheduler");
   SetLabel("Scheduler (0 cores)");

@@ -17,6 +17,7 @@
 #include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
 #include "TimeGraph.h"
+#include "Viewport.h"
 #include "capture_data.pb.h"
 
 using orbit_client_protos::ThreadStateSliceInfo;
@@ -24,10 +25,11 @@ using orbit_client_protos::ThreadStateSliceInfo;
 namespace orbit_gl {
 
 ThreadStateBar::ThreadStateBar(CaptureViewElement* parent, OrbitApp* app, TimeGraph* time_graph,
-                               TimeGraphLayout* layout,
+                               orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                const orbit_client_model::CaptureData* capture_data,
                                ThreadID thread_id)
-    : ThreadBar(parent, app, time_graph, layout, capture_data, thread_id, "ThreadState") {}
+    : ThreadBar(parent, app, time_graph, viewport, layout, capture_data, thread_id, "ThreadState") {
+}
 
 bool ThreadStateBar::IsEmpty() const {
   if (capture_data_ == nullptr) return true;
@@ -163,14 +165,11 @@ void ThreadStateBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint6
                                       PickingMode picking_mode, float z_offset) {
   ThreadBar::UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
 
-  const GlCanvas* canvas = time_graph_->GetCanvas();
-  const orbit_gl::Viewport& viewport = canvas->GetViewport();
-
   const auto time_window_ns = static_cast<uint64_t>(1000 * time_graph_->GetTimeWindowUs());
-  const uint64_t pixel_delta_ns = time_window_ns / viewport.GetScreenWidth();
+  const uint64_t pixel_delta_ns = time_window_ns / viewport_->GetScreenWidth();
   const uint64_t min_time_graph_ns = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
   const float pixel_width_in_world_coords =
-      viewport.GetVisibleWorldWidth() / static_cast<float>(viewport.GetScreenWidth());
+      viewport_->GetVisibleWorldWidth() / static_cast<float>(viewport_->GetScreenWidth());
 
   uint64_t ignore_until_ns = 0;
 

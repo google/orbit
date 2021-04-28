@@ -22,16 +22,18 @@
 #include "OrbitBase/ThreadConstants.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
+#include "Viewport.h"
 #include "capture_data.pb.h"
 #include "tracepoint.pb.h"
 
 namespace orbit_gl {
 
 TracepointThreadBar::TracepointThreadBar(CaptureViewElement* parent, OrbitApp* app,
-                                         TimeGraph* time_graph, TimeGraphLayout* layout,
+                                         TimeGraph* time_graph, orbit_gl::Viewport* viewport,
+                                         TimeGraphLayout* layout,
                                          const orbit_client_model::CaptureData* capture_data,
                                          int32_t thread_id)
-    : ThreadBar(parent, app, time_graph, layout, capture_data, thread_id, "Tracepoints"),
+    : ThreadBar(parent, app, time_graph, viewport, layout, capture_data, thread_id, "Tracepoints"),
       color_{255, 0, 0, 255} {}
 
 void TracepointThreadBar::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {

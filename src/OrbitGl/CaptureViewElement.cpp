@@ -4,19 +4,19 @@
 
 #include "CaptureViewElement.h"
 
-#include "GlCanvas.h"
 #include "TimeGraph.h"
+#include "Viewport.h"
 
 namespace orbit_gl {
 
 CaptureViewElement::CaptureViewElement(CaptureViewElement* parent, TimeGraph* time_graph,
-                                       TimeGraphLayout* layout)
-    : parent_(parent), layout_(layout), time_graph_(time_graph) {
+                                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout)
+    : parent_(parent), viewport_(viewport), layout_(layout), time_graph_(time_graph) {
   CHECK(layout != nullptr);
 }
 
 void CaptureViewElement::OnPick(int x, int y) {
-  mouse_pos_last_click_ = canvas_->GetViewport().ScreenToWorldPos(Vec2i(x, y));
+  mouse_pos_last_click_ = viewport_->ScreenToWorldPos(Vec2i(x, y));
   picking_offset_ = mouse_pos_last_click_ - pos_;
   mouse_pos_cur_ = mouse_pos_last_click_;
   picked_ = true;
@@ -28,7 +28,7 @@ void CaptureViewElement::OnRelease() {
 }
 
 void CaptureViewElement::OnDrag(int x, int y) {
-  mouse_pos_cur_ = canvas_->GetViewport().ScreenToWorldPos(Vec2i(x, y));
+  mouse_pos_cur_ = viewport_->ScreenToWorldPos(Vec2i(x, y));
   time_graph_->RequestUpdatePrimitives();
 }
 

@@ -17,8 +17,9 @@
 #include "Track.h"
 
 TriangleToggle::TriangleToggle(State initial_state, StateChangeHandler handler,
-                               TimeGraph* time_graph, TimeGraphLayout* layout, Track* track)
-    : CaptureViewElement(track, time_graph, layout),
+                               TimeGraph* time_graph, orbit_gl::Viewport* viewport,
+                               TimeGraphLayout* layout, Track* track)
+    : CaptureViewElement(track, time_graph, viewport, layout),
       track_(track),
       state_(initial_state),
       initial_state_(initial_state),

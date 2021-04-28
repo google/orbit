@@ -18,13 +18,15 @@
 #include "TimerChain.h"
 #include "TimerTrack.h"
 #include "Track.h"
+#include "Viewport.h"
 #include "capture_data.pb.h"
 
 class OrbitApp;
 
 class FrameTrack : public TimerTrack {
  public:
-  explicit FrameTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
+  explicit FrameTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+                      orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                       orbit_grpc_protos::InstrumentedFunction function, OrbitApp* app,
                       const orbit_client_model::CaptureData* capture_data);
   [[nodiscard]] Type GetType() const override { return Type::kFrameTrack; }

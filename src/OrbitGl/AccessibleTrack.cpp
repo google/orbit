@@ -15,6 +15,7 @@
 #include "OrbitBase/Logging.h"
 #include "TimeGraph.h"
 #include "Track.h"
+#include "Viewport.h"
 
 using orbit_accessibility::AccessibilityState;
 using orbit_accessibility::AccessibleInterface;
@@ -26,7 +27,8 @@ namespace {
 class FakeTrackTab : public CaptureViewElement {
  public:
   explicit FakeTrackTab(Track* track, TimeGraphLayout* layout)
-      : CaptureViewElement(track, track->GetTimeGraph(), layout), track_(track) {
+      : CaptureViewElement(track, track->GetTimeGraph(), track->GetViewport(), layout),
+        track_(track) {
     SetCanvas(track->GetCanvas());
 
     // Compute and set the size (which would usually be done by the parent). As the position may
@@ -51,7 +53,7 @@ class FakeTrackTab : public CaptureViewElement {
 class FakeTimerPane : public CaptureViewElement {
  public:
   explicit FakeTimerPane(Track* track, TimeGraphLayout* layout, CaptureViewElement* track_tab)
-      : CaptureViewElement(track, track->GetTimeGraph(), layout),
+      : CaptureViewElement(track, track->GetTimeGraph(), track->GetViewport(), layout),
         track_(track),
         track_tab_(track_tab) {
     SetCanvas(track->GetCanvas());
