@@ -83,6 +83,20 @@ TEST(File, OpenNewFileForReadWrite) {
   ASSERT_TRUE(fd_or_error.has_value()) << fd_or_error.error().message();
 }
 
+TEST(File, OpenExistingFileForReadWrite) {
+  auto temporary_file_or_error = TemporaryFile::Create();
+  ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
+  TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
+
+  auto fd_or_error = OpenExistingFileForReadWrite(temporary_file.file_path());
+  ASSERT_TRUE(fd_or_error.has_value()) << fd_or_error.error().message();
+  fd_or_error.value().release();
+  temporary_file.CloseAndRemove();
+  fd_or_error = OpenExistingFileForReadWrite(temporary_file.file_path());
+  ASSERT_TRUE(fd_or_error.has_error());
+  EXPECT_THAT(fd_or_error.error().message(), HasSubstr("No such file or directory"));
+}
+
 TEST(File, WriteFullySmoke) {
   auto temporary_file_or_error = TemporaryFile::Create();
   CHECK(temporary_file_or_error.has_value());
