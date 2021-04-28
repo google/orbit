@@ -103,6 +103,15 @@ ErrorMessageOr<unique_fd> OpenNewFileForReadWrite(const std::filesystem::path& p
   return OpenFile(path, kOpenFlags, kOpenMode);
 }
 
+ErrorMessageOr<unique_fd> OpenExistingFileForReadWrite(const std::filesystem::path& path) {
+#if defined(__linux)
+  constexpr int kOpenFlags = O_RDWR | O_CLOEXEC;
+#elif defined(_WIN32)
+  constexpr int kOpenFlags = O_RDWR | O_BINARY;
+#endif  // defined(__linux)
+  return OpenFile(path, kOpenFlags, 0);
+}
+
 ErrorMessageOr<void> WriteFully(const unique_fd& fd, std::string_view content) {
   int64_t bytes_left = content.size();
   const char* current_position = content.data();
