@@ -97,6 +97,22 @@ ErrorMessageOr<size_t> ReadFully(const unique_fd& fd, void* buffer, size_t size)
 ErrorMessageOr<size_t> ReadFullyAtOffset(const unique_fd& fd, void* buffer, size_t size,
                                          off_t offset);
 
+template <typename T>
+ErrorMessageOr<T> ReadFullyAtOffset(const unique_fd& fd, off_t offset) {
+  T value;
+  auto size_or_error = ReadFullyAtOffset(fd, &value, sizeof(value), offset);
+  if (size_or_error.has_error()) {
+    return size_or_error.error();
+  }
+
+  if (size_or_error.value() < sizeof(value)) {
+    return ErrorMessage{absl::StrFormat("Not enough bytes left in the file: %d < %d",
+                                        size_or_error.value(), sizeof(value))};
+  }
+
+  return value;
+}
+
 }  // namespace orbit_base
 
 #endif  // ORBIT_BASE_FILE_H_
