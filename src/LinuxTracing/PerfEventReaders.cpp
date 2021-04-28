@@ -120,17 +120,47 @@ std::unique_ptr<CallchainSamplePerfEvent> ConsumeCallchainSamplePerfEvent(
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
   uint64_t nr = 0;
   ring_buffer->ReadValueAtOffset(&nr, offsetof(perf_event_callchain_sample_fixed, nr));
-  auto event = std::make_unique<CallchainSamplePerfEvent>(nr);
+
+  uint64_t size_in_bytes = nr * sizeof(uint64_t) / sizeof(char);
+
+  // We expect the following layout of the perf event:
+  //  struct {
+  //    struct perf_event_header header;
+  //    u64 sample_id; /* if PERF_SAMPLE_IDENTIFIER */
+  //    u32 pid, tid;  /* if PERF_SAMPLE_TID */
+  //    u64 time;      /* if PERF_SAMPLE_TIME */
+  //    u64 stream_id; /* if PERF_SAMPLE_STREAM_ID */
+  //    u32 cpu, res;  /* if PERF_SAMPLE_CPU */
+  //    u64 nr;          /* if PERF_SAMPLE_CALLCHAIN */
+  //    u64 ips[nr];     /* if PERF_SAMPLE_CALLCHAIN */
+  //    u64 abi; /* if PERF_SAMPLE_REGS_USER */
+  //    u64 regs[weight(mask)];
+  //    u64 size;        /* if PERF_SAMPLE_STACK_USER */
+  //    char data[size]; /* if PERF_SAMPLE_STACK_USER */
+  //    u64 dyn_size;    /* if PERF_SAMPLE_STACK_USER &&
+  //                        size != 0 */
+  //  };
+  // Unfortunately, the number of `ips` is dynamic, so we need to compute the offsets by hand,
+  // rather than relying on a struct.
+
+  auto offset_of_ips = offsetof(perf_event_callchain_sample_fixed, nr) +
+                       sizeof(perf_event_callchain_sample_fixed::nr);
+  auto offset_of_regs_user = offset_of_ips + size_in_bytes;
+  auto offset_of_size = offset_of_regs_user + sizeof(perf_event_sample_regs_user_all);
+  auto offset_of_data = offset_of_regs_user + sizeof(perf_event_sample_regs_user_all);
+
+  uint64_t dyn_stack_size = 0;
+  ring_buffer->ReadRawAtOffset(&dyn_stack_size, offset_of_size, sizeof(uint64_t));
+  auto event = std::make_unique<CallchainSamplePerfEvent>(nr, dyn_stack_size);
   event->ring_buffer_record.header = header;
   ring_buffer->ReadValueAtOffset(&event->ring_buffer_record.sample_id,
                                  offsetof(perf_event_callchain_sample_fixed, sample_id));
 
-  // TODO(kuebler): we should have templated read methods
-  uint64_t size_in_bytes = nr * sizeof(uint64_t) / sizeof(char);
-  ring_buffer->ReadRawAtOffset(event->ips.data(),
-                               offsetof(perf_event_callchain_sample_fixed, nr) +
-                                   sizeof(perf_event_callchain_sample_fixed::nr),
-                               size_in_bytes);
+  ring_buffer->ReadRawAtOffset(event->ips.data(), offset_of_ips, size_in_bytes);
+
+  ring_buffer->ReadRawAtOffset(&event->regs, offset_of_regs_user,
+                               sizeof(perf_event_sample_regs_user_all));
+  ring_buffer->ReadRawAtOffset(event->stack.data.get(), offset_of_data, dyn_stack_size);
   ring_buffer->SkipRecord(header);
   return event;
 }
