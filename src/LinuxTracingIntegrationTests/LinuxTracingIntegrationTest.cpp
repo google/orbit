@@ -324,17 +324,28 @@ class LinuxTracingIntegrationTestFixture {
   void StartTracingAndWaitForTracingLoopStarted(orbit_grpc_protos::CaptureOptions capture_options) {
     CHECK(!tracer_.has_value());
     CHECK(!listener_.has_value());
-    // Needed for BufferTracerListener::WaitForAtLeastOneSchedulingSlice().
-    CHECK(capture_options.trace_context_switches());
+
+    if (IsRunningAsRoot()) {
+      // Needed for BufferTracerListener::WaitForAtLeastOneSchedulingSlice().
+      CHECK(capture_options.trace_context_switches());
+    }
+
     tracer_.emplace(std::move(capture_options));
     listener_.emplace();
     tracer_->SetListener(&*listener_);
     tracer_->Start();
 
-    // Waiting for the first SchedulingSlice (at least one of which is always expected as long as
-    // capture_options.trace_context_switches() is true) guarantees that the main loop in
-    // TracerThread has started, and hence that the capture has been fully set up.
-    listener_->WaitForAtLeastOneSchedulingSlice();
+    if (IsRunningAsRoot()) {
+      // Waiting for the first SchedulingSlice (at least one of which is always expected as long as
+      // capture_options.trace_context_switches() is true) guarantees that the main loop in
+      // TracerThread has started, and hence that the capture has been fully set up.
+      listener_->WaitForAtLeastOneSchedulingSlice();
+    } else {
+      // Some tests verify events that don't require root, but SchedulingSlices do need root.
+      // So when running those tests without being root, sleep for a long time instead of waiting
+      // for the first SchedulingSlice.
+      absl::SleepFor(absl::Milliseconds(2500));
+    }
   }
 
   [[nodiscard]] std::vector<orbit_grpc_protos::ProducerCaptureEvent> StopTracingAndGetEvents() {
@@ -480,7 +491,7 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
 }
 
 TEST(LinuxTracingIntegrationTest, SchedulingSlices) {
-  if (!CheckIsPerfEventParanoidAtMost(-1)) {
+  if (!CheckIsRunningAsRoot()) {
     GTEST_SKIP();
   }
   LinuxTracingIntegrationTestFixture fixture;
@@ -921,7 +932,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointersTogetherWithF
 }
 
 TEST(LinuxTracingIntegrationTest, ThreadStateSlices) {
-  if (!CheckIsPerfEventParanoidAtMost(-1)) {
+  if (!CheckIsRunningAsRoot()) {
     GTEST_SKIP();
   }
   LinuxTracingIntegrationTestFixture fixture;
@@ -983,7 +994,7 @@ TEST(LinuxTracingIntegrationTest, ThreadStateSlices) {
 }
 
 TEST(LinuxTracingIntegrationTest, ThreadNames) {
-  if (!CheckIsPerfEventParanoidAtMost(-1)) {
+  if (!CheckIsRunningAsRoot()) {
     GTEST_SKIP();
   }
   LinuxTracingIntegrationTestFixture fixture;
@@ -1072,7 +1083,7 @@ TEST(LinuxTracingIntegrationTest, GpuJobs) {
   if (!CheckIsStadiaInstance()) {
     GTEST_SKIP();
   }
-  if (!CheckIsPerfEventParanoidAtMost(-1)) {
+  if (!CheckIsRunningAsRoot()) {
     GTEST_SKIP();
   }
   LinuxTracingIntegrationTestFixture fixture;
