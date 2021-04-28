@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
       thread_pool.get(), process_id, module_manager,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>{}, TracepointInfoSet{},
       samples_per_second, unwinding_method, collect_scheduling_info, collect_thread_state,
-      /*enable_introspection=*/false,
+      /*enable_api=*/false, /*enable_introspection=*/false,
       /*max_local_marker_depth_per_command_buffer=*/0, collect_memory_info,
       memory_sampling_period_ns, std::move(capture_event_processor));
   LOG("Asked to start capture");

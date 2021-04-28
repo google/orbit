@@ -67,6 +67,8 @@ message CaptureOptions {
   uint64 memory_sampling_period_ns = 12;
 
   repeated ApiFunction api_functions = 13;
+
+  bool enable_api = 14;
 }
 
 // For CaptureEvents with a duration, excluding for now GPU-related ones, we

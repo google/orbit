@@ -17,6 +17,7 @@
 #include "SourcePathsMapping/MappingManager.h"
 #include "ui_CaptureOptionsDialog.h"
 
+ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, enable_warning_threshold);
 
 namespace orbit_qt {
@@ -39,6 +40,10 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
     ui_->memoryWarningThresholdKbLabel->hide();
     ui_->memoryWarningThresholdKbLineEdit->hide();
   }
+
+  if (!absl::GetFlag(FLAGS_devmode)) {
+    ui_->introspectionCheckBox->hide();
+  }
 }
 
 bool CaptureOptionsDialog::GetCollectThreadStates() const {
@@ -47,6 +52,20 @@ bool CaptureOptionsDialog::GetCollectThreadStates() const {
 
 void CaptureOptionsDialog::SetCollectThreadStates(bool collect_thread_state) {
   ui_->threadStateCheckBox->setChecked(collect_thread_state);
+}
+
+void CaptureOptionsDialog::SetEnableApi(bool enable_api) {
+  ui_->apiCheckBox->setChecked(enable_api);
+}
+
+bool CaptureOptionsDialog::GetEnableApi() const { return ui_->apiCheckBox->isChecked(); }
+
+void CaptureOptionsDialog::SetEnableIntrospection(bool enable_introspection) {
+  ui_->introspectionCheckBox->setChecked(enable_introspection);
+}
+
+bool CaptureOptionsDialog::GetEnableIntrospection() const {
+  return ui_->introspectionCheckBox->isChecked();
 }
 
 void CaptureOptionsDialog::SetLimitLocalMarkerDepthPerCommandBuffer(

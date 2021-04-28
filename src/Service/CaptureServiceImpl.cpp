@@ -265,8 +265,10 @@ grpc::Status CaptureServiceImpl::Capture(
   const CaptureOptions& capture_options = request.capture_options();
 
   // Initialize Orbit API in tracee.
-  if (auto result = orbit_api::InitializeInTracee(capture_options); result.has_error()) {
-    ERROR("Initializing Orbit Api: %s", result.error().message());
+  if (capture_options.enable_api()) {
+    if (auto result = orbit_api::InitializeInTracee(capture_options); result.has_error()) {
+      ERROR("Initializing Orbit Api: %s", result.error().message());
+    }
   }
 
   uint64_t capture_start_timestamp_ns = orbit_base::CaptureTimestampNs();

@@ -170,6 +170,8 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   static const QString kCollectThreadStatesSettingKey;
   static const QString kCollectMemoryInfoSettingKey;
+  static const QString kEnableApiSettingKey;
+  static const QString kEnableIntrospectionSettingKey;
   static const QString kMemorySamplingPeriodMsSettingKey;
   static const QString kMemoryWarningThresholdKbSettingKey;
   static const QString kLimitLocalMarkerDepthPerCommandBufferSettingsKey;
