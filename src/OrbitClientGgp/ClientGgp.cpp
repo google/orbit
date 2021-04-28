@@ -105,8 +105,8 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
   bool collect_thread_state = absl::GetFlag(FLAGS_thread_state);
   uint64_t max_local_marker_depth_per_command_buffer =
       absl::GetFlag(FLAGS_max_local_marker_depth_per_command_buffer);
-  bool enable_introspection = false;
   bool enable_api = false;
+  bool enable_introspection = false;
   UnwindingMethod unwinding_method = options_.use_framepointer_unwinding
                                          ? UnwindingMethod::kFramePointerUnwinding
                                          : UnwindingMethod::kDwarfUnwinding;
@@ -114,7 +114,7 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
   Future<ErrorMessageOr<CaptureOutcome>> result = capture_client_->Capture(
       thread_pool, target_process_->pid(), module_manager_, selected_functions_,
       selected_tracepoints, options_.samples_per_second, unwinding_method, collect_scheduling_info,
-      collect_thread_state, enable_introspection, enable_api,
+      collect_thread_state, enable_api, enable_introspection,
       max_local_marker_depth_per_command_buffer, false, 0,
       CaptureEventProcessor::CreateForCaptureListener(this, absl::flat_hash_set<uint64_t>{}));
 
