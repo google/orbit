@@ -25,15 +25,17 @@
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
+#include "Viewport.h"
 #include "capture_data.pb.h"
 
 using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::InstrumentedFunction;
 
-AsyncTrack::AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
+AsyncTrack::AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                        const std::string& name, OrbitApp* app,
                        const orbit_client_model::CaptureData* capture_data)
-    : TimerTrack(parent, time_graph, layout, app, capture_data) {
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data) {
   SetName(name);
   SetLabel(name);
 }

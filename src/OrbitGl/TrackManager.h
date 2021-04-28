@@ -26,6 +26,7 @@
 #include "ThreadTrack.h"
 #include "Timer.h"
 #include "Track.h"
+#include "Viewport.h"
 #include "capture_data.pb.h"
 
 class OrbitApp;
@@ -35,7 +36,8 @@ class Timegraph;
 // and sorting).
 class TrackManager {
  public:
-  explicit TrackManager(TimeGraph* time_graph, TimeGraphLayout* layout, OrbitApp* app,
+  explicit TrackManager(TimeGraph* time_graph, orbit_gl::Viewport* viewport,
+                        TimeGraphLayout* layout, OrbitApp* app,
                         const orbit_client_model::CaptureData* capture_data);
 
   [[nodiscard]] std::vector<Track*> GetAllTracks() const;
@@ -97,6 +99,7 @@ class TrackManager {
   ThreadTrack* tracepoints_system_wide_track_;
 
   TimeGraph* time_graph_;
+  orbit_gl::Viewport* viewport_;
   TimeGraphLayout* layout_;
 
   std::vector<Track*> sorted_tracks_;

@@ -11,13 +11,14 @@
 
 #include "CaptureViewElement.h"
 #include "ThreadBar.h"
+#include "Viewport.h"
 
 namespace orbit_gl {
 
 class TracepointThreadBar : public ThreadBar {
  public:
   explicit TracepointThreadBar(CaptureViewElement* parent, OrbitApp* app, TimeGraph* time_graph,
-                               TimeGraphLayout* layout,
+                               orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                const orbit_client_model::CaptureData* capture_data,
                                int32_t thread_id);
 

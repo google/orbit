@@ -14,6 +14,7 @@
 #include "CaptureViewElement.h"
 #include "CoreMath.h"
 #include "ThreadBar.h"
+#include "Viewport.h"
 
 namespace orbit_gl {
 
@@ -25,7 +26,7 @@ namespace orbit_gl {
 class ThreadStateBar final : public ThreadBar {
  public:
   explicit ThreadStateBar(CaptureViewElement* parent, OrbitApp* app, TimeGraph* time_graph,
-                          TimeGraphLayout* layout,
+                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                           const orbit_client_model::CaptureData* capture_data, ThreadID thread_id);
 
   void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) override;

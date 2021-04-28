@@ -12,6 +12,7 @@
 #include "PickingManager.h"
 #include "TimerTrack.h"
 #include "Track.h"
+#include "Viewport.h"
 #include "capture_data.pb.h"
 
 class OrbitApp;
@@ -19,7 +20,7 @@ class OrbitApp;
 class SchedulerTrack final : public TimerTrack {
  public:
   explicit SchedulerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
-                          TimeGraphLayout* layout, OrbitApp* app,
+                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
                           const orbit_client_model::CaptureData* capture_data);
   ~SchedulerTrack() override = default;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;

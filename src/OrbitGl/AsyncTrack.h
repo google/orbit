@@ -17,6 +17,7 @@
 #include "TimerChain.h"
 #include "TimerTrack.h"
 #include "Track.h"
+#include "Viewport.h"
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 
@@ -24,7 +25,8 @@ class OrbitApp;
 
 class AsyncTrack final : public TimerTrack {
  public:
-  explicit AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
+  explicit AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+                      orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                       const std::string& name, OrbitApp* app,
                       const orbit_client_model::CaptureData* capture_data);
 

@@ -30,27 +30,29 @@
 #include "TimeGraphLayout.h"
 #include "TimerChain.h"
 #include "TriangleToggle.h"
+#include "Viewport.h"
 
 using orbit_client_model::CaptureData;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::InstrumentedFunction;
 
-ThreadTrack::ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
-                         int32_t thread_id, OrbitApp* app, const CaptureData* capture_data)
-    : TimerTrack(parent, time_graph, layout, app, capture_data) {
+ThreadTrack::ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+                         orbit_gl::Viewport* viewport, TimeGraphLayout* layout, int32_t thread_id,
+                         OrbitApp* app, const CaptureData* capture_data)
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data) {
   thread_id_ = thread_id;
   InitializeNameAndLabel(thread_id);
 
-  thread_state_bar_ = std::make_shared<orbit_gl::ThreadStateBar>(this, app_, time_graph, layout,
-                                                                 capture_data, thread_id_);
+  thread_state_bar_ = std::make_shared<orbit_gl::ThreadStateBar>(this, app_, time_graph, viewport,
+                                                                 layout, capture_data, thread_id_);
 
-  event_bar_ = std::make_shared<orbit_gl::CallstackThreadBar>(this, app_, time_graph, layout,
-                                                              capture_data, thread_id_);
+  event_bar_ = std::make_shared<orbit_gl::CallstackThreadBar>(this, app_, time_graph, viewport,
+                                                              layout, capture_data, thread_id_);
   event_bar_->SetThreadId(thread_id);
 
-  tracepoint_bar_ = std::make_shared<orbit_gl::TracepointThreadBar>(this, app_, time_graph, layout,
-                                                                    capture_data, thread_id_);
+  tracepoint_bar_ = std::make_shared<orbit_gl::TracepointThreadBar>(
+      this, app_, time_graph, viewport, layout, capture_data, thread_id_);
   SetTrackColor(TimeGraph::GetThreadColor(thread_id));
 }
 
@@ -453,8 +455,7 @@ static inline void ResizeTextBox(const internal::DrawData& draw_data, const Time
 [[nodiscard]] static inline uint64_t GetNextPixelBoundaryTimeNs(
     float world_x, const internal::DrawData& draw_data) {
   float normalized_x = (world_x - draw_data.world_start_x) / draw_data.world_width;
-  int pixel_x =
-      static_cast<int>(ceil(normalized_x * draw_data.canvas->GetViewport().GetScreenWidth()));
+  int pixel_x = static_cast<int>(ceil(normalized_x * draw_data.viewport->GetScreenWidth()));
   return draw_data.min_tick + pixel_x * draw_data.ns_per_pixel;
 }
 
@@ -469,8 +470,8 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
   UpdateBoxHeight();
 
   const internal::DrawData draw_data = GetDrawData(
-      min_tick, max_tick, z_offset, batcher, time_graph_, collapse_toggle_->IsCollapsed(),
-      app_->selected_text_box(), app_->GetFunctionIdToHighlight());
+      min_tick, max_tick, z_offset, batcher, time_graph_, viewport_,
+      collapse_toggle_->IsCollapsed(), app_->selected_text_box(), app_->GetFunctionIdToHighlight());
 
   absl::MutexLock lock(&scope_tree_mutex_);
 

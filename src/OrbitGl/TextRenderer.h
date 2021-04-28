@@ -20,8 +20,8 @@
 
 #include "Batcher.h"
 #include "CoreMath.h"
-#include "Viewport.h"
 #include "PickingManager.h"
+#include "Viewport.h"
 
 namespace ftgl {
 struct vertex_buffer_t;

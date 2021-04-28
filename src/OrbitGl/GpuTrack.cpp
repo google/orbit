@@ -24,6 +24,7 @@
 #include "TimeGraphLayout.h"
 #include "TimerChain.h"
 #include "TriangleToggle.h"
+#include "Viewport.h"
 #include "absl/strings/str_format.h"
 
 using orbit_client_protos::TimerInfo;
@@ -65,10 +66,10 @@ std::string MapGpuTimelineToTrackLabel(std::string_view timeline) {
 
 }  // namespace orbit_gl
 
-GpuTrack::GpuTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
-                   uint64_t timeline_hash, OrbitApp* app,
+GpuTrack::GpuTrack(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
+                   TimeGraphLayout* layout, uint64_t timeline_hash, OrbitApp* app,
                    const orbit_client_model::CaptureData* capture_data)
-    : TimerTrack(parent, time_graph, layout, app, capture_data) {
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data) {
   text_renderer_ = time_graph->GetTextRenderer();
   timeline_hash_ = timeline_hash;
   string_manager_ = app->GetStringManager();

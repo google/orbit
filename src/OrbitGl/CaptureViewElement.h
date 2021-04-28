@@ -9,6 +9,7 @@
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
 #include "TimeGraphLayout.h"
+#include "Viewport.h"
 
 class TimeGraph;
 class GlCanvas;
@@ -19,7 +20,7 @@ namespace orbit_gl {
 class CaptureViewElement : public Pickable {
  public:
   explicit CaptureViewElement(CaptureViewElement* parent, TimeGraph* time_graph,
-                              TimeGraphLayout* layout);
+                              orbit_gl::Viewport* viewport, TimeGraphLayout* layout);
   virtual void Draw(GlCanvas* canvas, PickingMode /*picking_mode*/, float /*z_offset*/ = 0) {
     canvas_ = canvas;
   }
@@ -29,6 +30,7 @@ class CaptureViewElement : public Pickable {
 
   [[nodiscard]] TimeGraph* GetTimeGraph() { return time_graph_; }
 
+  [[nodiscard]] orbit_gl::Viewport* GetViewport() const { return viewport_; }
   [[nodiscard]] GlCanvas* GetCanvas() const { return canvas_; }
   void SetCanvas(GlCanvas* canvas) { canvas_ = canvas; }
 
@@ -55,6 +57,7 @@ class CaptureViewElement : public Pickable {
 
  protected:
   CaptureViewElement* parent_;
+  orbit_gl::Viewport* viewport_;
   TimeGraphLayout* layout_;
 
   GlCanvas* canvas_ = nullptr;

@@ -20,9 +20,10 @@ namespace orbit_gl {
 class ThreadBar : public CaptureViewElement, public std::enable_shared_from_this<ThreadBar> {
  public:
   explicit ThreadBar(CaptureViewElement* parent, OrbitApp* app, TimeGraph* time_graph,
-                     TimeGraphLayout* layout, const orbit_client_model::CaptureData* capture_data,
-                     ThreadID thread_id, std::string name)
-      : CaptureViewElement(parent, time_graph, layout),
+                     orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                     const orbit_client_model::CaptureData* capture_data, ThreadID thread_id,
+                     std::string name)
+      : CaptureViewElement(parent, time_graph, viewport, layout),
         thread_id_(thread_id),
         app_(app),
         capture_data_(capture_data),

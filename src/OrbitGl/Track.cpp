@@ -17,14 +17,15 @@
 #include "TextRenderer.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
+#include "Viewport.h"
 
-Track::Track(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
-             const orbit_client_model::CaptureData* capture_data)
-    : CaptureViewElement(parent, time_graph, layout),
+Track::Track(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
+             TimeGraphLayout* layout, const orbit_client_model::CaptureData* capture_data)
+    : CaptureViewElement(parent, time_graph, viewport, layout),
       collapse_toggle_(std::make_shared<TriangleToggle>(
           TriangleToggle::State::kExpanded,
-          [this](TriangleToggle::State state) { OnCollapseToggle(state); }, time_graph, layout,
-          this)),
+          [this](TriangleToggle::State state) { OnCollapseToggle(state); }, time_graph, viewport,
+          layout, this)),
       layout_(layout),
       capture_data_(capture_data) {
   const Color kDarkGrey(50, 50, 50, 255);

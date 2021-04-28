@@ -20,10 +20,9 @@ using orbit_accessibility::AccessibleInterface;
 namespace orbit_gl {
 
 AccessibilityRect TimeGraphAccessibility::AccessibleRect() const {
-  GlCanvas* canvas = time_graph_->GetCanvas();
-  const Viewport& viewport = canvas->GetViewport();
+  const Viewport* viewport = time_graph_->GetViewport();
 
-  return AccessibilityRect(0, 0, viewport.GetScreenWidth(), viewport.GetScreenHeight());
+  return AccessibilityRect(0, 0, viewport->GetScreenWidth(), viewport->GetScreenHeight());
 }
 
 AccessibilityState TimeGraphAccessibility::AccessibleState() const {

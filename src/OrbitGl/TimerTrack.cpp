@@ -20,6 +20,7 @@
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
+#include "Viewport.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 
@@ -29,9 +30,10 @@ ABSL_DECLARE_FLAG(bool, show_return_values);
 
 const Color TimerTrack::kHighlightColor = Color(100, 181, 246, 255);
 
-TimerTrack::TimerTrack(CaptureViewElement* parent, TimeGraph* time_graph, TimeGraphLayout* layout,
-                       OrbitApp* app, const orbit_client_model::CaptureData* capture_data)
-    : Track(parent, time_graph, layout, capture_data), app_{app} {
+TimerTrack::TimerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
+                       const orbit_client_model::CaptureData* capture_data)
+    : Track(parent, time_graph, viewport, layout, capture_data), app_{app} {
   text_renderer_ = time_graph->GetTextRenderer();
 }
 
@@ -160,7 +162,7 @@ bool TimerTrack::DrawTimer(const TextBox* prev_text_box, const TextBox* next_tex
     double text_x_end_us = end_or_next_start_us + (.25 * right_overlap_width_us);
 
     bool is_visible_width = ((text_x_end_us - text_x_start_us) * draw_data.inv_time_window *
-                             draw_data.canvas->GetViewport().GetScreenWidth()) > 1;
+                             draw_data.viewport->GetScreenWidth()) > 1;
     WorldXInfo world_x_info = ToWorldX(text_x_start_us, text_x_end_us, draw_data.inv_time_window,
                                        draw_data.world_start_x, draw_data.world_width);
 
@@ -184,7 +186,7 @@ bool TimerTrack::DrawTimer(const TextBox* prev_text_box, const TextBox* next_tex
   Color color = GetTimerColor(current_timer_info, is_selected, is_highlighted);
 
   bool is_visible_width =
-      elapsed_us * draw_data.inv_time_window * draw_data.canvas->GetViewport().GetScreenWidth() > 1;
+      elapsed_us * draw_data.inv_time_window * draw_data.viewport->GetScreenWidth() > 1;
 
   if (is_visible_width) {
     WorldXInfo world_x_info_left_overlap =
@@ -247,10 +249,10 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
   draw_data.z_offset = z_offset;
 
   draw_data.batcher = batcher;
-  draw_data.canvas = time_graph_->GetCanvas();
+  draw_data.viewport = viewport_;
 
-  draw_data.world_start_x = draw_data.canvas->GetViewport().GetWorldTopLeft()[0];
-  draw_data.world_width = draw_data.canvas->GetViewport().GetVisibleWorldWidth();
+  draw_data.world_start_x = viewport_->GetWorldTopLeft()[0];
+  draw_data.world_width = viewport_->GetVisibleWorldWidth();
   draw_data.inv_time_window = 1.0 / time_graph_->GetTimeWindowUs();
   draw_data.is_collapsed = collapse_toggle_->IsCollapsed();
 
@@ -265,7 +267,7 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
   // enough that all events are drawn as boxes, this has no effect. When zoomed
   // out, many events will be discarded quickly.
   uint64_t time_window_ns = static_cast<uint64_t>(1000 * time_graph_->GetTimeWindowUs());
-  draw_data.ns_per_pixel = time_window_ns / draw_data.canvas->GetViewport().GetScreenWidth();
+  draw_data.ns_per_pixel = time_window_ns / viewport_->GetScreenWidth();
   draw_data.min_timegraph_tick = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
 
   for (auto& chain : chains_by_depth) {
@@ -450,16 +452,17 @@ float TimerTrack::GetHeaderHeight() const { return layout_->GetTrackTabHeight();
 
 internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick, float z_offset,
                                            Batcher* batcher, TimeGraph* time_graph,
-                                           bool is_collapsed, const TextBox* selected_textbox,
+                                           orbit_gl::Viewport* viewport, bool is_collapsed,
+                                           const TextBox* selected_textbox,
                                            uint64_t highlighted_function_id) {
   internal::DrawData draw_data;
   draw_data.min_tick = min_tick;
   draw_data.max_tick = max_tick;
   draw_data.z_offset = z_offset;
   draw_data.batcher = batcher;
-  draw_data.canvas = time_graph->GetCanvas();
-  draw_data.world_start_x = draw_data.canvas->GetViewport().GetWorldTopLeft()[0];
-  draw_data.world_width = draw_data.canvas->GetViewport().GetVisibleWorldWidth();
+  draw_data.viewport = viewport;
+  draw_data.world_start_x = viewport->GetWorldTopLeft()[0];
+  draw_data.world_width = viewport->GetVisibleWorldWidth();
   draw_data.inv_time_window = 1.0 / time_graph->GetTimeWindowUs();
   draw_data.is_collapsed = is_collapsed;
   draw_data.z = GlCanvas::kZValueBox + z_offset;
@@ -467,7 +470,7 @@ internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick,
   draw_data.highlighted_function_id = highlighted_function_id;
 
   uint64_t time_window_ns = static_cast<uint64_t>(1000 * time_graph->GetTimeWindowUs());
-  draw_data.ns_per_pixel = time_window_ns / draw_data.canvas->GetViewport().GetScreenWidth();
+  draw_data.ns_per_pixel = time_window_ns / viewport->GetScreenWidth();
   draw_data.min_timegraph_tick = time_graph->GetTickFromUs(time_graph->GetMinTimeUs());
   return draw_data;
 }

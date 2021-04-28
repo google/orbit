@@ -16,6 +16,7 @@
 #include "OrbitClientData/Callstack.h"
 #include "OrbitClientData/CallstackTypes.h"
 #include "ThreadBar.h"
+#include "Viewport.h"
 
 class OrbitApp;
 
@@ -24,7 +25,7 @@ namespace orbit_gl {
 class CallstackThreadBar : public ThreadBar {
  public:
   explicit CallstackThreadBar(CaptureViewElement* parent, OrbitApp* app, TimeGraph* time_graph,
-                              TimeGraphLayout* layout,
+                              orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                               const orbit_client_model::CaptureData* capture_data,
                               ThreadID thread_id);
 
