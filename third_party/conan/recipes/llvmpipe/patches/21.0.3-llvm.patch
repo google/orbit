@@ -1,0 +1,20 @@
+--- a/mesa-21.0.3/meson.build	2021-04-21 19:41:10.486740600 +0200
++++ b/mesa-21.0.3/meson.build	2021-04-26 21:04:29.005757000 +0200
+@@ -1561,7 +1561,7 @@
+ with_llvm = false
+ if _llvm != 'disabled'
+   dep_llvm = dependency(
+-    'llvm',
++    'llvm-core',
+     version : _llvm_version,
+     modules : llvm_modules,
+     optional_modules : llvm_optional_modules,
+@@ -1592,7 +1592,7 @@
+     _rtti = subproject('llvm').get_variable('has_rtti', true)
+   else
+     # The CMake finder will return 'ON', the llvm-config will return 'YES'
+-    _rtti = ['ON', 'YES'].contains(dep_llvm.get_variable(cmake : 'LLVM_ENABLE_RTTI', configtool: 'has-rtti'))
++    _rtti = true
+   endif
+   if not _rtti
+     if with_gallium_nouveau
