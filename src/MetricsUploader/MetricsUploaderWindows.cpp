@@ -41,6 +41,8 @@ class MetricsUploaderImpl : public MetricsUploader {
   bool SendLogEvent(OrbitLogEvent_LogEventType log_event_type,
                     std::chrono::milliseconds event_duration,
                     OrbitLogEvent_StatusCode status_code) override;
+  bool SendCaptureEvent(OrbitCaptureData capture_data,
+                        OrbitLogEvent_StatusCode status_code) override;
 
  private:
   [[nodiscard]] bool FillAndSendLogEvent(OrbitLogEvent partial_filled_event) const;
@@ -241,6 +243,15 @@ bool MetricsUploaderImpl::SendLogEvent(OrbitLogEvent_LogEventType log_event_type
   OrbitLogEvent log_event;
   log_event.set_log_event_type(log_event_type);
   log_event.set_event_duration_milliseconds(event_duration.count());
+  log_event.set_status_code(status_code);
+  return FillAndSendLogEvent(log_event);
+}
+
+bool MetricsUploaderImpl::SendCaptureEvent(OrbitCaptureData capture_data,
+                                           OrbitLogEvent_StatusCode status_code) {
+  OrbitLogEvent log_event;
+  log_event.set_log_event_type(OrbitLogEvent_LogEventType_ORBIT_CAPTURE_END);
+  *log_event.mutable_orbit_capture_data() = std::move(capture_data);
   log_event.set_status_code(status_code);
   return FillAndSendLogEvent(log_event);
 }

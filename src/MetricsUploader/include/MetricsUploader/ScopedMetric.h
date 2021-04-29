@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef METRICS_UPLOADED_SCOPED_METRIC_H_
-#define METRICS_UPLOADED_SCOPED_METRIC_H_
+#ifndef METRICS_UPLOADER_SCOPED_METRIC_H_
+#define METRICS_UPLOADER_SCOPED_METRIC_H_
 
 #include <chrono>
 
@@ -32,4 +32,4 @@ class ScopedMetric {
 
 }  // namespace orbit_metrics_uploader
 
-#endif  // METRICS_UPLOADED_SCOPED_METRIC_H_
+#endif  // METRICS_UPLOADER_SCOPED_METRIC_H_

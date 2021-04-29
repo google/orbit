@@ -28,6 +28,9 @@ class MockUploader : public MetricsUploader {
                std::chrono::milliseconds /*event_duration*/,
                OrbitLogEvent_StatusCode /*status_code*/),
               (override));
+  MOCK_METHOD(bool, SendCaptureEvent,
+              (OrbitCaptureData /*capture data*/, OrbitLogEvent_StatusCode /*status_code*/),
+              (override));
 };
 
 TEST(ScopedMetric, Constructor) {
