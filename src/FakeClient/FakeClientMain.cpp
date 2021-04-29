@@ -88,6 +88,9 @@ int main(int argc, char* argv[]) {
   LOG("collect_scheduling_info=%d", collect_scheduling_info);
   bool collect_thread_state = absl::GetFlag(FLAGS_thread_state);
   LOG("collect_thread_state=%d", collect_thread_state);
+  constexpr bool kEnableApi = false;
+  constexpr bool kEnableIntrospection = false;
+  constexpr uint64_t kMaxLocalMarkerDepthPerCommandBuffer = std::numeric_limits<uint64_t>::max();
   bool collect_memory_info = absl::GetFlag(FLAGS_memory_sampling_rate) > 0;
   LOG("collect_memory_info=%d", collect_memory_info);
   uint64_t memory_sampling_period_ns = 0;
@@ -115,8 +118,7 @@ int main(int argc, char* argv[]) {
       thread_pool.get(), process_id, module_manager,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>{}, TracepointInfoSet{},
       samples_per_second, unwinding_method, collect_scheduling_info, collect_thread_state,
-      /*enable_api=*/false, /*enable_introspection=*/false,
-      /*max_local_marker_depth_per_command_buffer=*/0, collect_memory_info,
+      kEnableApi, kEnableIntrospection, kMaxLocalMarkerDepthPerCommandBuffer, collect_memory_info,
       memory_sampling_period_ns, std::move(capture_event_processor));
   LOG("Asked to start capture");
 
