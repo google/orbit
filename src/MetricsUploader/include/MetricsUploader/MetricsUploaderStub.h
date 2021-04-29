@@ -14,12 +14,14 @@ class MetricsUploaderStub : public MetricsUploader {
   MetricsUploaderStub& operator=(const MetricsUploaderStub& other) = delete;
   MetricsUploaderStub& operator=(MetricsUploaderStub&& other) = default;
 
-  bool SendLogEvent(OrbitLogEvent_LogEventType) override { return false; };
-  bool SendLogEvent(OrbitLogEvent_LogEventType, std::chrono::milliseconds) override {
+  bool SendLogEvent(OrbitLogEvent_LogEventType /*log_event_type*/) override { return false; };
+  bool SendLogEvent(OrbitLogEvent_LogEventType /*log_event_type*/,
+                    std::chrono::milliseconds /*event_duration*/) override {
     return false;
   };
-  bool SendLogEvent(OrbitLogEvent_LogEventType, std::chrono::milliseconds,
-                    OrbitLogEvent_StatusCode) override {
+  bool SendLogEvent(OrbitLogEvent_LogEventType /*log_event_type*/,
+                    std::chrono::milliseconds /*event_duration*/,
+                    OrbitLogEvent_StatusCode /*status_code*/) override {
     return false;
   };
 };
