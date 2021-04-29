@@ -11,11 +11,14 @@ target_compile_options(CaptureFile PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   CaptureFile
-  PUBLIC include/CaptureFile/CaptureFileOutputStream.h)
+  PUBLIC include/CaptureFile/CaptureFile.h
+         include/CaptureFile/CaptureFileOutputStream.h
+         include/CaptureFile/CaptureFileSection.h)
 
 target_sources(
   CaptureFile
   PRIVATE CaptureFileConstants.h
+          CaptureFile.cpp
           CaptureFileOutputStream.cpp)
 
 target_include_directories(CaptureFile PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
@@ -31,7 +34,8 @@ add_executable(CaptureFileTests)
 target_compile_options(CaptureFileTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(CaptureFileTests PRIVATE
-    CaptureFileOutputStreamTest.cpp
+  CaptureFileOutputStreamTest.cpp
+  CaptureFileTest.cpp
 )
 
 target_link_libraries(
