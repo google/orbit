@@ -102,6 +102,8 @@ static constexpr uint64_t SAMPLE_REGS_USER_SP_IP_ARGUMENTS =
 //  sample, this constant should be a parameters and should be made available in
 //  some setting.
 static constexpr uint16_t SAMPLE_STACK_USER_SIZE = 65000;
+
+// Arbitrary small value, that is still large enough to contain the complete last frame.
 static constexpr uint16_t SAMPLE_STACK_USER_SIZE_ON_CALLCHAINS = 128;
 
 static_assert(sizeof(void*) == 8);

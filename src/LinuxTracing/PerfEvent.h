@@ -46,38 +46,8 @@ class PerfEvent {
   int ordered_in_file_descriptor_ = kNotOrderedInAnyFileDescriptor;
 };
 
-namespace {
 std::array<uint64_t, PERF_REG_X86_64_MAX> perf_event_sample_regs_user_all_to_register_array(
-    const perf_event_sample_regs_user_all& regs) {
-  std::array<uint64_t, PERF_REG_X86_64_MAX> registers{};
-  registers[PERF_REG_X86_AX] = regs.ax;
-  registers[PERF_REG_X86_BX] = regs.bx;
-  registers[PERF_REG_X86_CX] = regs.cx;
-  registers[PERF_REG_X86_DX] = regs.dx;
-  registers[PERF_REG_X86_SI] = regs.si;
-  registers[PERF_REG_X86_DI] = regs.di;
-  registers[PERF_REG_X86_BP] = regs.bp;
-  registers[PERF_REG_X86_SP] = regs.sp;
-  registers[PERF_REG_X86_IP] = regs.ip;
-  registers[PERF_REG_X86_FLAGS] = regs.flags;
-  registers[PERF_REG_X86_CS] = regs.cs;
-  registers[PERF_REG_X86_SS] = regs.ss;
-  // Registers ds, es, fs, gs do not actually exist.
-  registers[PERF_REG_X86_DS] = 0ul;
-  registers[PERF_REG_X86_ES] = 0ul;
-  registers[PERF_REG_X86_FS] = 0ul;
-  registers[PERF_REG_X86_GS] = 0ul;
-  registers[PERF_REG_X86_R8] = regs.r8;
-  registers[PERF_REG_X86_R9] = regs.r9;
-  registers[PERF_REG_X86_R10] = regs.r10;
-  registers[PERF_REG_X86_R11] = regs.r11;
-  registers[PERF_REG_X86_R12] = regs.r12;
-  registers[PERF_REG_X86_R13] = regs.r13;
-  registers[PERF_REG_X86_R14] = regs.r14;
-  registers[PERF_REG_X86_R15] = regs.r15;
-  return registers;
-}
-}  // namespace
+    const perf_event_sample_regs_user_all& regs);
 
 class ContextSwitchPerfEvent : public PerfEvent {
  public:
@@ -240,7 +210,7 @@ class CallchainSamplePerfEvent : public PerfEvent {
   dynamically_sized_perf_event_sample_stack_user stack;
 
   explicit CallchainSamplePerfEvent(uint64_t callchain_size, uint64_t dyn_stack_size)
-      : ips(callchain_size), stack{dyn_stack_size} {
+      : ips(callchain_size), stack(dyn_stack_size) {
     ring_buffer_record.nr = callchain_size;
   }
 
