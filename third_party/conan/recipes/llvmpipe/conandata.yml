@@ -1,0 +1,7 @@
+sources:
+  "21.0.3":
+    url: "https://archive.mesa3d.org/mesa-21.0.3.tar.xz"
+    sha256: "565c6f4bd2d5747b919454fc1d439963024fc78ca56fd05158c3b2cde2f6912b"
+patches:
+  "21.0.3":
+    - patch_file: "patches/21.0.3-llvm.patch"
