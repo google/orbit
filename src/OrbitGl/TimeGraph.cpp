@@ -442,7 +442,6 @@ void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
   constexpr uint64_t kKilobytesToBytes = 1024;
   constexpr double kMegabytesToKilobytes = 1024.0;
 
-  CHECK(app_->GetCollectMemoryInfo());
   uint64_t warning_threshold_kb = app_->GetMemoryWarningThresholdKb();
   std::string warning_threshold_pretty_size =
       GetPrettySize(warning_threshold_kb * kKilobytesToBytes);
