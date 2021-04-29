@@ -45,10 +45,10 @@ target_compile_options(ApiLib PRIVATE ${STRICT_COMPILE_FLAGS})
 target_compile_features(ApiLib PUBLIC cxx_std_17)
 
 target_sources(ApiLib PUBLIC
-        include/Api/InitializeInTracee.h)
+        include/Api/EnableInTracee.h)
 
 target_sources(ApiLib PRIVATE
-        InitializeInTracee.cpp)
+        EnableInTracee.cpp)
 
 target_link_libraries(ApiLib PUBLIC
         ApiInterface

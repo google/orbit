@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "Api/InitializeInTracee.h"
+#include "Api/EnableInTracee.h"
 
 #include <absl/base/casts.h>
 #include <absl/container/flat_hash_map.h>
@@ -56,7 +56,8 @@ static ErrorMessageOr<absl::flat_hash_map<std::string, ModuleInfo>> GetModulesBy
 }
 
 namespace orbit_api {
-ErrorMessageOr<void> InitializeInTracee(const CaptureOptions& capture_options) {
+ErrorMessageOr<void> EnableApiInTracee(const CaptureOptions& capture_options, bool enabled) {
+  SCOPED_TIMED_LOG("%s Api in tracee", enabled ? "Enabling" : "Disabling");
   if (capture_options.api_functions().size() == 0) {
     return ErrorMessage("No api table to initialize.");
   }
@@ -74,9 +75,9 @@ ErrorMessageOr<void> InitializeInTracee(const CaptureOptions& capture_options) {
 
   // Load liborbit.so and find api table initialization function.
   const std::string liborbit_path = orbit_base::GetExecutableDir() / "liborbit.so";
-  constexpr const char* kInitFunction = "orbit_api_initialize";
+  constexpr const char* kEnableFunction = "orbit_api_enable";
   OUTCOME_TRY(handle, DlopenInTracee(pid, liborbit_path, RTLD_NOW));
-  OUTCOME_TRY(orbit_init_function, DlsymInTracee(pid, handle, kInitFunction));
+  OUTCOME_TRY(orbit_api_enable_function, DlsymInTracee(pid, handle, kEnableFunction));
 
   // Initialize all api function tables.
   OUTCOME_TRY(modules_by_path, GetModulesByPathForPid(pid));
@@ -94,9 +95,9 @@ ErrorMessageOr<void> InitializeInTracee(const CaptureOptions& capture_options) {
         module_info->address_start() + api_function.address() - module_info->load_bias());
     OUTCOME_TRY(function_table_address, ExecuteInProcess(pid, api_function_address));
 
-    // Call "orbit_api_initialize" in tracee with table address and api version as parameters.
-    OUTCOME_TRY(ExecuteInProcess(pid, orbit_init_function, function_table_address,
-                                 api_function.api_version()));
+    // Call "orbit_api_enable" in tracee.
+    OUTCOME_TRY(ExecuteInProcess(pid, orbit_api_enable_function, function_table_address,
+                                 api_function.api_version(), enabled ? 1 : 0));
   }
 
   return outcome::success();

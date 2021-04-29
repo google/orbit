@@ -78,17 +78,16 @@ void orbit_api_async_string(const char* str, uint64_t id, orbit_api_color color)
   }
 }
 
-static void orbit_api_initialize_v0(uint64_t address) {
+static void orbit_api_initialize_v0(orbit_api_v0* api) {
   // The api function table is accessed by user code using this pattern:
   //
-  // bool active = api->active;
+  // bool enabled = api.initialized && api.enabled;
   // std::atomic_thread_fence(std::memory_order_acquire)
-  // if(active && api->orbit_api_function_name) api->orbit_api_function_name(...);
+  // if(enabled && api->orbit_api_function_name) api->orbit_api_function_name(...);
   //
-  // We use acquire and release semantics to make sure that when api->active is set, all the
+  // We use acquire and release semantics to make sure that when api->initialized is set, all the
   // function pointers have been assigned and are visible to other cores.
 
-  orbit_api_v0* api = absl::bit_cast<orbit_api_v0*>(address);
   if (api->initialized != 0) return;
   api->start = &orbit_api_start;
   api->stop = &orbit_api_stop;
@@ -101,13 +100,16 @@ static void orbit_api_initialize_v0(uint64_t address) {
   api->track_uint64 = &orbit_api_track_uint64;
   api->track_float = &orbit_api_track_float;
   api->track_double = &orbit_api_track_double;
-  api->initialized = 1;
   std::atomic_thread_fence(std::memory_order_release);
-  api->active = 1;
+  api->initialized = 1;
 }
 
-void orbit_api_initialize(uint64_t address, uint64_t api_version) {
-  LOG("Initializing Orbit API at address %#x, version %u", address, api_version);
+// The "orbit_api_enable" function is called remotely by OrbitService on every capture start for all
+// api function tables. It is also called on every capture stop to disable the api so that the api
+// calls early out at the call site.
+void orbit_api_enable(uint64_t address, uint64_t api_version, bool enabled) {
+  LOG("%s Orbit API at address %#x, version %u", enabled ? "Enabling" : "Disabling", address,
+      api_version);
   if (api_version > kOrbitApiVersion) {
     ERROR(
         "Orbit API version in tracee (%u) is newer than the max supported version (%u). "
@@ -115,6 +117,8 @@ void orbit_api_initialize(uint64_t address, uint64_t api_version) {
         api_version, kOrbitApiVersion);
   }
 
-  if (api_version >= 0) orbit_api_initialize_v0(address);
+  orbit_api_v0* api_v0 = absl::bit_cast<orbit_api_v0*>(address);
+  orbit_api_initialize_v0(api_v0);
+  api_v0->enabled = enabled;
 }
 }
