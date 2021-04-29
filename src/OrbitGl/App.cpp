@@ -48,6 +48,8 @@
 #include "GrpcProtos/Constants.h"
 #include "ImGuiOrbit.h"
 #include "MainThreadExecutor.h"
+#include "MetricsUploader/CaptureMetric.h"
+#include "MetricsUploader/MetricsUploader.h"
 #include "MetricsUploader/ScopedMetric.h"
 #include "ModulesDataView.h"
 #include "OrbitBase/File.h"
@@ -123,6 +125,7 @@ using orbit_grpc_protos::UnwindingMethod;
 
 using orbit_base::Future;
 
+using orbit_metrics_uploader::CaptureMetric;
 using orbit_metrics_uploader::ScopedMetric;
 
 namespace {
@@ -151,6 +154,41 @@ PresetLoadState GetPresetLoadStateForProcess(
 
   return PresetLoadState::kPartiallyLoadable;
 }
+
+orbit_metrics_uploader::CaptureStartData CreateCaptureStartData(
+    const std::vector<FunctionInfo>& all_instrumented_functions, int64_t number_of_frame_tracks) {
+  orbit_metrics_uploader::CaptureStartData capture_start_data{};
+
+  for (const auto& function : all_instrumented_functions) {
+    switch (function.orbit_type()) {
+      case orbit_client_protos::FunctionInfo_OrbitType_kNone:
+        capture_start_data.number_of_instrumented_functions++;
+        break;
+      case orbit_client_protos::FunctionInfo_OrbitType_kOrbitTimerStart:
+        capture_start_data.number_of_manual_start_timers++;
+        break;
+      case orbit_client_protos::FunctionInfo_OrbitType_kOrbitTimerStop:
+        capture_start_data.number_of_manual_stop_timers++;
+        break;
+      case orbit_client_protos::FunctionInfo_OrbitType_kOrbitTimerStartAsync:
+        capture_start_data.number_of_manual_start_async_timers++;
+        break;
+      case orbit_client_protos::FunctionInfo_OrbitType_kOrbitTimerStopAsync:
+        capture_start_data.number_of_manual_stop_async_timers++;
+        break;
+      case orbit_client_protos::FunctionInfo_OrbitType_kOrbitTrackValue:
+        capture_start_data.number_of_manual_tracked_values++;
+        break;
+      default:
+        UNREACHABLE();
+        break;
+    }
+  }
+
+  capture_start_data.number_of_frame_tracks = number_of_frame_tracks;
+  return capture_start_data;
+}
+
 }  // namespace
 
 bool DoZoom = false;
@@ -1010,6 +1048,11 @@ void OrbitApp::StartCapture() {
 
   UserDefinedCaptureData user_defined_capture_data = data_manager_->user_defined_capture_data();
 
+  CaptureMetric capture_metric{
+      metrics_uploader_,
+      CreateCaptureStartData(selected_functions,
+                             user_defined_capture_data.frame_track_functions().size())};
+
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions_map;
   absl::flat_hash_set<uint64_t> frame_track_function_ids;
   // non-zero since 0 is reserved for invalid ids.
@@ -1049,20 +1092,33 @@ void OrbitApp::StartCapture() {
       max_local_marker_depth_per_command_buffer, collect_memory_info, memory_sampling_period_ns,
       std::move(capture_event_processor));
 
-  capture_result.Then(main_thread_executor_, [this](ErrorMessageOr<CaptureOutcome> capture_result) {
-    if (capture_result.has_error()) {
-      OnCaptureFailed(capture_result.error());
-      return;
-    }
-    switch (capture_result.value()) {
-      case CaptureListener::CaptureOutcome::kCancelled:
-        OnCaptureCancelled();
-        return;
-      case CaptureListener::CaptureOutcome::kComplete:
-        OnCaptureComplete();
-        return;
-    }
-  });
+  capture_result.Then(
+      main_thread_executor_, [this, capture_metric = std::move(capture_metric)](
+                                 ErrorMessageOr<CaptureOutcome> capture_result) mutable {
+        if (capture_result.has_error()) {
+          OnCaptureFailed(capture_result.error());
+          capture_metric.SetCaptureFailed();
+          capture_metric.Send();
+          return;
+        }
+        switch (capture_result.value()) {
+          case CaptureListener::CaptureOutcome::kCancelled:
+            OnCaptureCancelled();
+            capture_metric.SetCaptureCancelled();
+            capture_metric.Send();
+            return;
+          case CaptureListener::CaptureOutcome::kComplete:
+            OnCaptureComplete().Wait();
+            auto capture_time_us =
+                std::chrono::duration<double, std::micro>(GetTimeGraph()->GetCaptureTimeSpanUs());
+            auto capture_time_ms =
+                std::chrono::duration_cast<std::chrono::milliseconds>(capture_time_us);
+            orbit_metrics_uploader::CaptureCompleteData complete_data{capture_time_ms};
+            capture_metric.SetCaptureComplete(complete_data);
+            capture_metric.Send();
+            return;
+        }
+      });
 }
 
 void OrbitApp::StopCapture() {
