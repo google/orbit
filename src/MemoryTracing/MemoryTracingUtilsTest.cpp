@@ -16,23 +16,16 @@ using orbit_grpc_protos::SystemMemoryUsage;
 
 namespace {
 
-void ExpectMemInfoParsingResult(std::optional<SystemMemoryUsage> parsing_result,
-                                bool parsing_succeed, int expected_total = kMissingInfo,
+void ExpectMemInfoParsingResult(SystemMemoryUsage parsing_result, int expected_total = kMissingInfo,
                                 int expected_free = kMissingInfo,
                                 int expected_available = kMissingInfo,
                                 int expected_buffers = kMissingInfo,
                                 int expected_cached = kMissingInfo) {
-  if (!parsing_succeed) {
-    EXPECT_FALSE(parsing_result.has_value());
-    return;
-  }
-
-  EXPECT_TRUE(parsing_result.has_value());
-  EXPECT_EQ(parsing_result.value().total_kb(), expected_total);
-  EXPECT_EQ(parsing_result.value().free_kb(), expected_free);
-  EXPECT_EQ(parsing_result.value().available_kb(), expected_available);
-  EXPECT_EQ(parsing_result.value().buffers_kb(), expected_buffers);
-  EXPECT_EQ(parsing_result.value().cached_kb(), expected_cached);
+  EXPECT_EQ(parsing_result.total_kb(), expected_total);
+  EXPECT_EQ(parsing_result.free_kb(), expected_free);
+  EXPECT_EQ(parsing_result.available_kb(), expected_available);
+  EXPECT_EQ(parsing_result.buffers_kb(), expected_buffers);
+  EXPECT_EQ(parsing_result.cached_kb(), expected_cached);
 }
 
 }  // namespace
@@ -107,17 +100,185 @@ SwapCached:      0 kB)",
 
   const std::string kEmptyMeminfo = "";
 
-  std::optional<SystemMemoryUsage> parsing_result;
-
-  parsing_result = ParseMemInfo(kValidMeminfo);
-  ExpectMemInfoParsingResult(parsing_result, true, kMemTotal, kMemFree, kMemAvailable, kBuffers,
-                             kCached);
+  SystemMemoryUsage parsing_result = ParseMemInfo(kValidMeminfo);
+  ExpectMemInfoParsingResult(parsing_result, kMemTotal, kMemFree, kMemAvailable, kBuffers, kCached);
 
   parsing_result = ParseMemInfo(kPartialMeminfo);
-  ExpectMemInfoParsingResult(parsing_result, true, kMemTotal, kMemFree);
+  ExpectMemInfoParsingResult(parsing_result, kMemTotal, kMemFree);
 
   parsing_result = ParseMemInfo(kEmptyMeminfo);
-  ExpectMemInfoParsingResult(parsing_result, false);
+  ExpectMemInfoParsingResult(parsing_result);
+}
+
+TEST(MemoryUtils, GetVmRssFromProcessStatus) {
+  const int kVmRSS = 11268;
+
+  const std::string kValidProcessStatus = absl::Substitute(R"(Name:	java
+Umask:	0027
+State:	S (sleeping)
+Tgid:	816242
+Ngid:	0
+Pid:	816242
+PPid:	816101
+TracerPid:	0
+Uid:	475321	475321	475321	475321
+Gid:	89939	89939	89939	89939
+FDSize:	1024
+Groups:	4 20 24 25 44 46 109 129 997 5000 66688 70967 70970 74990 75209
+NStgid:	816242
+NSpid:	816242
+NSpgid:	981
+NSsid:	981
+VmPeak:	 9700792 kB
+VmSize:	 9654768 kB
+VmLck:	      16 kB
+VmPin:	       0 kB
+VmHWM:	 1945972 kB
+VmRSS:	 $0 kB
+RssAnon:	 1598556 kB
+RssFile:	   47672 kB
+RssShmem:	     224 kB
+VmData:	 2178668 kB
+VmStk:	     136 kB
+VmExe:	       4 kB
+VmLib:	  155960 kB
+VmPTE:	    4744 kB
+VmSwap:	  248780 kB
+HugetlbPages:	       0 kB
+CoreDumping:	0
+THP_enabled:	1
+Threads:	76
+SigQ:	0/63711
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000000000000
+SigCgt:	2000000181005ccf
+CapInh:	0000000000000000
+CapPrm:	0000000000000000
+CapEff:	0000000000000000
+CapBnd:	000001ffffffffff
+CapAmb:	0000000000000000
+NoNewPrivs:	0
+Seccomp:	0
+Seccomp_filters:	0
+Speculation_Store_Bypass:	thread vulnerable
+Cpus_allowed:	f
+Cpus_allowed_list:	0-3
+Mems_allowed:	00000000,00000000,00000000,00000001
+Mems_allowed_list:	0
+voluntary_ctxt_switches:	1
+nonvoluntary_ctxt_switches:	3)",
+                                                           kVmRSS);
+  const std::string kPartialProcessStatus = R"(Name:   java
+Umask:  0027)";
+
+  const std::string kEmptyProcessStatus = "";
+
+  int64_t parsing_result = GetVmRssFromProcessStatus(kValidProcessStatus);
+  EXPECT_EQ(parsing_result, kVmRSS);
+
+  parsing_result = GetVmRssFromProcessStatus(kPartialProcessStatus);
+  EXPECT_EQ(parsing_result, kMissingInfo);
+
+  parsing_result = GetVmRssFromProcessStatus(kEmptyProcessStatus);
+  EXPECT_EQ(parsing_result, kMissingInfo);
+}
+
+TEST(MemoryUtil, GetProcessMemoryCGroupName) {
+  const std::string kCGroupName = "user.slice/user-1000.slice";
+
+  const std::string kValidProcessCGroup = absl::Substitute(R"(10:memory:/$0
+9:blkio:/user.slice/user-1000.slice
+8:net_cls,net_prio:/
+7:cpu,cpuacct:/user.slice/user-1000.slice
+6:perf_event:/
+5:freezer:/
+4:cpuset:/
+3:pids:/user.slice/user-1000.slice
+2:devices:/user.slice/user-1000.slice
+1:name=systemd:/user.slice/user-1000.slice/session-3.scope)",
+                                                           kCGroupName);
+
+  const std::string kPartialProcessCGroup = R"(3:pids:/user.slice/user-1000.slice
+2:devices:/user.slice/user-1000.slice
+1:name=systemd:/user.slice/user-1000.slice/session-3.scope)";
+
+  const std::string kEmptyProcessCGroup = "";
+
+  std::string parsing_result = GetProcessMemoryCGroupName(kValidProcessCGroup);
+  EXPECT_EQ(parsing_result, kCGroupName);
+
+  parsing_result = GetProcessMemoryCGroupName(kPartialProcessCGroup);
+  EXPECT_TRUE(parsing_result.empty());
+
+  parsing_result = GetProcessMemoryCGroupName(kEmptyProcessCGroup);
+  EXPECT_TRUE(parsing_result.empty());
+}
+
+TEST(MemoryUtils, GetCGroupMemoryLimitInBytes) {
+  const int kCGroupMemoryLimitInBytes = 12345;
+
+  const std::string kValidCGroupMemoryLimitInBytes = std::to_string(kCGroupMemoryLimitInBytes);
+  const std::string kEmptyCGroupMemoryLimitInBytes = "";
+
+  int64_t parsing_result = GetCGroupMemoryLimitInBytes(kValidCGroupMemoryLimitInBytes);
+  EXPECT_EQ(parsing_result, kCGroupMemoryLimitInBytes);
+
+  parsing_result = GetCGroupMemoryLimitInBytes(kEmptyCGroupMemoryLimitInBytes);
+  EXPECT_EQ(parsing_result, kMissingInfo);
+}
+
+TEST(MemoryUtils, GetRssFromCGroupMemoryStat) {
+  const int kRssInBytes = 245760;
+
+  const std::string kValidCGroupMemoryStatus = absl::Substitute(R"(cache 36864
+rss $0
+rss_huge 0
+shmem 0
+mapped_file 0
+dirty 135168
+writeback 0
+pgpgin 299
+pgpgout 230
+pgfault 1425
+pgmajfault 0
+inactive_anon 16384
+active_anon 253952
+inactive_file 0
+active_file 12288
+unevictable 0
+hierarchical_memory_limit 14817636352
+total_cache 36864
+total_rss 245760
+total_rss_huge 0
+total_shmem 0
+total_mapped_file 0
+total_dirty 135168
+total_writeback 0
+total_pgpgin 299
+total_pgpgout 230
+total_pgfault 1425
+total_pgmajfault 0
+total_inactive_anon 16384
+total_active_anon 253952
+total_inactive_file 0
+total_active_file 12288
+total_unevictable 0)",
+                                                                kRssInBytes);
+  const std::string kPartialCGroupMemoryStatus = R"(cache 36864
+rss_huge 0)";
+
+  const std::string kEmptyCGroupMemoryStatus = "";
+
+  int64_t parsing_result = GetRssFromCGroupMemoryStat(kValidCGroupMemoryStatus);
+  EXPECT_EQ(parsing_result, kRssInBytes);
+
+  parsing_result = GetRssFromCGroupMemoryStat(kPartialCGroupMemoryStatus);
+  EXPECT_EQ(parsing_result, kMissingInfo);
+
+  parsing_result = GetRssFromCGroupMemoryStat(kEmptyCGroupMemoryStatus);
+  EXPECT_EQ(parsing_result, kMissingInfo);
 }
 
 }  // namespace orbit_memory_tracing

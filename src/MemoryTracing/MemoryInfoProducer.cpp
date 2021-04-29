@@ -44,11 +44,10 @@ void MemoryInfoProducer::Run() {
 }
 
 void MemoryInfoProducer::ProduceSystemMemoryUsageAndSendToListener() {
-  std::optional<SystemMemoryUsage> system_memory_usage;
   absl::Time scheduled_time = absl::Now();
   absl::MutexLock lock(&exit_requested_mutex_);
   while (!exit_requested_) {
-    system_memory_usage = GetSystemMemoryUsage();
+    ErrorMessageOr<SystemMemoryUsage> system_memory_usage = GetSystemMemoryUsage();
     if (system_memory_usage.has_value()) {
       listener_->OnSystemMemoryUsage(system_memory_usage.value());
     }

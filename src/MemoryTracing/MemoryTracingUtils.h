@@ -5,13 +5,27 @@
 #ifndef MEMORY_TRACING_MEMORY_TRACING_UTILS_H_
 #define MEMORY_TRACING_MEMORY_TRACING_UTILS_H_
 
+#include <string_view>
+
+#include "OrbitBase/Result.h"
 #include "capture.pb.h"
 
 namespace orbit_memory_tracing {
 
-std::optional<orbit_grpc_protos::SystemMemoryUsage> ParseMemInfo(
-    const std::string& meminfo_content);
-std::optional<orbit_grpc_protos::SystemMemoryUsage> GetSystemMemoryUsage() noexcept;
+// If the file format is incorrect or the unit size doesn't match "kB", this method returns a
+// SystemMemoryUsage with value fields set to kMissingInfo.
+[[nodiscard]] orbit_grpc_protos::SystemMemoryUsage ParseMemInfo(std::string_view meminfo_content);
+[[nodiscard]] ErrorMessageOr<orbit_grpc_protos::SystemMemoryUsage> GetSystemMemoryUsage() noexcept;
+
+[[nodiscard]] int64_t GetVmRssFromProcessStatus(std::string_view status_content);
+[[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ProcessMemoryUsage> GetProcessMemoryUsage(
+    uint32_t pid) noexcept;
+
+[[nodiscard]] std::string GetProcessMemoryCGroupName(std::string_view cgroup_content);
+[[nodiscard]] int64_t GetCGroupMemoryLimitInBytes(std::string_view memory_limit_in_bytes_content);
+[[nodiscard]] int64_t GetRssFromCGroupMemoryStat(std::string_view memory_stat_content);
+[[nodiscard]] ErrorMessageOr<orbit_grpc_protos::CGroupMemoryUsage> GetCGroupMemoryUsage(
+    uint32_t pid) noexcept;
 
 }  // namespace orbit_memory_tracing
 

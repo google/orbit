@@ -325,6 +325,24 @@ message SystemMemoryUsage {
   int64 cached_kb = 6;
 }
 
+message ProcessMemoryUsage {
+  uint32 pid = 1;
+  uint64 timestamp_ns = 2;
+  // These fields are retrieved from /proc/<pid>/status.
+  int64 vm_rss_kb = 3;
+}
+
+message CGroupMemoryUsage {
+  string cgroup_name = 1;
+  uint64 timestamp_ns = 2;
+  // This field is retrieved from
+  // /sys/fs/cgroup/memory/<cgroup_name>/memory.stat.
+  int64 rss_bytes = 3;
+  // This field is retrieved from
+  // /sys/fs/cgroup/memory/<cgroup_name>/memory.limit_in_bytes.
+  int64 limit_bytes = 4;
+}
+
 message ModulesSnapshot {
   int32 pid = 1;
   uint64 timestamp_ns = 2;
