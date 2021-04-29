@@ -47,11 +47,14 @@ using orbit_gl::MemoryTrack;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::kMissingInfo;
 
-TimeGraph::TimeGraph(OrbitApp* app, TextRenderer* text_renderer, GlCanvas* canvas,
-                     orbit_gl::Viewport* viewport, const CaptureData* capture_data)
+TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
+                     TextRenderer* text_renderer, GlCanvas* canvas, orbit_gl::Viewport* viewport,
+                     const CaptureData* capture_data)
     // Note that `GlCanvas` and `TimeGraph` span the bridge to OpenGl content, and `TimeGraph`'s
-    // parent needs special handling for accessibility. Thus, we use `nullptr` here.
+    // parent needs special handling for accessibility. Thus, we use `nullptr` here and we save the
+    // parent in accessible_parent_ which doesn't need to be a CaptureViewElement.
     : orbit_gl::CaptureViewElement(nullptr, this, viewport, &layout_),
+      accessible_parent_{parent},
       text_renderer_{text_renderer},
       canvas_{canvas},
       batcher_(BatcherId::kTimeGraph),

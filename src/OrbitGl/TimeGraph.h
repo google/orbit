@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 
+#include "AccessibleInterfaceProvider.h"
 #include "AccessibleTimeGraph.h"
 #include "Batcher.h"
 #include "CallstackThreadBar.h"
@@ -38,8 +39,8 @@ class OrbitApp;
 
 class TimeGraph : public orbit_gl::CaptureViewElement {
  public:
-  explicit TimeGraph(OrbitApp* app, TextRenderer* text_renderer, GlCanvas* canvas,
-                     orbit_gl::Viewport* viewport,
+  explicit TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
+                     TextRenderer* text_renderer, GlCanvas* canvas, orbit_gl::Viewport* viewport,
                      const orbit_client_model::CaptureData* capture_data);
   ~TimeGraph();
 
@@ -117,7 +118,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
 
   [[nodiscard]] int GetNumDrawnTextBoxes() { return num_drawn_text_boxes_; }
   [[nodiscard]] TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
-  [[nodiscard]] GlCanvas* GetCanvas() { return canvas_; }
   [[nodiscard]] Batcher& GetBatcher() { return batcher_; }
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllTimerChains() const;
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllThreadTrackTimerChains() const;
@@ -173,6 +173,10 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   void RemoveFrameTrack(uint64_t function_id);
   [[nodiscard]] std::string GetThreadNameFromTid(uint32_t tid);
 
+  [[nodiscard]] AccessibleInterfaceProvider* GetAccessibleParent() const {
+    return accessible_parent_;
+  }
+
  protected:
   [[nodiscard]] virtual std::unique_ptr<orbit_accessibility::AccessibleInterface>
   CreateAccessibleInterface() override;
@@ -187,6 +191,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   void ProcessMemoryTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
 
  private:
+  AccessibleInterfaceProvider* accessible_parent_;
   TextRenderer text_renderer_static_;
   TextRenderer* text_renderer_ = nullptr;
   GlCanvas* canvas_ = nullptr;

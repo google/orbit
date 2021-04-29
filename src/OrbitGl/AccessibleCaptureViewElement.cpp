@@ -4,7 +4,6 @@
 
 #include "AccessibleCaptureViewElement.h"
 
-#include "GlCanvas.h"
 #include "Viewport.h"
 
 namespace orbit_gl {

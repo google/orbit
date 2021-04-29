@@ -32,11 +32,4 @@ void CaptureViewElement::OnDrag(int x, int y) {
   time_graph_->RequestUpdatePrimitives();
 }
 
-orbit_accessibility::AccessibleInterface* CaptureViewElement::GetOrCreateAccessibleInterface() {
-  if (accessibility_ == nullptr) {
-    accessibility_ = CreateAccessibleInterface();
-  }
-  return accessibility_.get();
-}
-
 }  // namespace orbit_gl
