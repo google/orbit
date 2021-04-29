@@ -142,16 +142,16 @@ std::unique_ptr<CallchainSamplePerfEvent> ConsumeCallchainSamplePerfEvent(
   // Unfortunately, the number of `ips` is dynamic, so we need to compute the offsets by hand,
   // rather than relying on a struct.
 
-  auto offset_of_ips = offsetof(perf_event_callchain_sample_fixed, nr) +
-                       sizeof(perf_event_callchain_sample_fixed::nr);
-  auto offset_of_regs_user_struct = offset_of_ips + size_of_ips_in_bytes;
-  auto offset_of_size = offset_of_regs_user_struct + sizeof(perf_event_sample_regs_user_all);
-  auto offset_of_data = offset_of_size + sizeof(uint64_t);
+  size_t offset_of_ips = offsetof(perf_event_callchain_sample_fixed, nr) +
+                         sizeof(perf_event_callchain_sample_fixed::nr);
+  size_t offset_of_regs_user_struct = offset_of_ips + size_of_ips_in_bytes;
+  size_t offset_of_size = offset_of_regs_user_struct + sizeof(perf_event_sample_regs_user_all);
+  size_t offset_of_data = offset_of_size + sizeof(uint64_t);
 
   uint64_t size = 0;
   ring_buffer->ReadRawAtOffset(&size, offset_of_size, sizeof(uint64_t));
 
-  auto offset_of_dyn_size = offset_of_data + (size * sizeof(char));
+  size_t offset_of_dyn_size = offset_of_data + (size * sizeof(char));
 
   uint64_t dyn_size = 0;
   ring_buffer->ReadRawAtOffset(&dyn_size, offset_of_dyn_size, sizeof(uint64_t));
