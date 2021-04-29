@@ -6,8 +6,8 @@
 
 #include <vector>
 
+#include "AccessibleInterfaceProvider.h"
 #include "AccessibleTrack.h"
-#include "GlCanvas.h"
 #include "TimeGraph.h"
 #include "Track.h"
 #include "TrackManager.h"
@@ -40,7 +40,8 @@ const AccessibleInterface* TimeGraphAccessibility::AccessibleChild(int index) co
 }
 
 const AccessibleInterface* TimeGraphAccessibility::AccessibleParent() const {
-  return time_graph_->GetCanvas()->GetOrCreateAccessibleInterface();
+  // Special handling given than GlCanvas is not a CaptureViewElement.
+  return time_graph_->GetAccessibleParent()->GetOrCreateAccessibleInterface();
 }
 
 }  // namespace orbit_gl

@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+#include "AccessibleInterfaceProvider.h"
 #include "AccessibleTimeGraph.h"
 #include "Batcher.h"
 #include "CoreMath.h"
@@ -30,7 +31,7 @@
 
 class OrbitApp;
 
-class GlCanvas {
+class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
  public:
   explicit GlCanvas();
   virtual ~GlCanvas();
@@ -94,11 +95,6 @@ class GlCanvas {
   void SetIsMouseOver(bool value) { is_mouse_over_ = value; }
 
   [[nodiscard]] PickingManager& GetPickingManager() { return picking_manager_; }
-
-  [[nodiscard]] orbit_accessibility::AccessibleInterface* GetOrCreateAccessibleInterface();
-  [[nodiscard]] const orbit_accessibility::AccessibleInterface* GetAccessibleInterface() const {
-    return accessibility_.get();
-  }
 
   [[nodiscard]] const orbit_gl::Viewport& GetViewport() const { return viewport_; }
   [[nodiscard]] orbit_gl::Viewport& GetViewport() { return viewport_; }
@@ -168,9 +164,7 @@ class GlCanvas {
 
  private:
   [[nodiscard]] virtual std::unique_ptr<orbit_accessibility::AccessibleInterface>
-  CreateAccessibleInterface();
-  std::unique_ptr<orbit_accessibility::AccessibleInterface> accessibility_;
-
+  CreateAccessibleInterface() override;
   void Pick(PickingMode picking_mode, int x, int y);
   virtual void HandlePickedElement(PickingMode /*picking_mode*/, PickingId /*picking_id*/,
                                    int /*x*/, int /*y*/) {}

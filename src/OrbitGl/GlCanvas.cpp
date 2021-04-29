@@ -10,6 +10,7 @@
 #include <limits.h>
 #include <math.h>
 
+#include "AccessibleInterfaceProvider.h"
 #include "App.h"
 #include "CaptureWindow.h"
 #include "GlUtils.h"
@@ -55,7 +56,12 @@ unsigned GlCanvas::kMaxNumberRealZLayers = kNumberOriginalLayers + kExtraLayersF
 const Color GlCanvas::kBackgroundColor = Color(67, 67, 67, 255);
 const Color GlCanvas::kTabTextColorSelected = Color(100, 181, 246, 255);
 
-GlCanvas::GlCanvas() : viewport_(0, 0), ui_batcher_(BatcherId::kUi, &picking_manager_) {
+GlCanvas::GlCanvas()
+    : AccessibleInterfaceProvider(),
+      viewport_(0, 0),
+      ui_batcher_(BatcherId::kUi, &picking_manager_) {
+  // Note that `GlCanvas` is the bridge to OpenGl content, and `GlCanvas`'s parent needs special
+  // handling for accessibility. Thus, we use `nullptr` here.
   text_renderer_.SetViewport(&viewport_);
 
   is_selecting_ = false;
@@ -354,11 +360,4 @@ void GlCanvas::Pick(PickingMode picking_mode, int x, int y) {
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> GlCanvas::CreateAccessibleInterface() {
   return std::make_unique<orbit_accessibility::AccessibleWidgetBridge>();
-}
-
-orbit_accessibility::AccessibleInterface* GlCanvas::GetOrCreateAccessibleInterface() {
-  if (accessibility_ == nullptr) {
-    accessibility_ = CreateAccessibleInterface();
-  }
-  return accessibility_.get();
 }

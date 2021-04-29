@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_CAPTURE_VIEW_ELEMENT_H_
 #define ORBIT_GL_CAPTURE_VIEW_ELEMENT_H_
 
+#include "AccessibleInterfaceProvider.h"
 #include "Batcher.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
@@ -17,7 +18,7 @@ class GlCanvas;
 namespace orbit_gl {
 
 /* Base class for UI elements drawn underneath the capture window. */
-class CaptureViewElement : public Pickable {
+class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
  public:
   explicit CaptureViewElement(CaptureViewElement* parent, TimeGraph* time_graph,
                               orbit_gl::Viewport* viewport, TimeGraphLayout* layout);
@@ -47,13 +48,7 @@ class CaptureViewElement : public Pickable {
   void OnDrag(int x, int y) override;
   [[nodiscard]] bool Draggable() override { return true; }
 
-  // Accessibility
-  [[nodiscard]] orbit_accessibility::AccessibleInterface* GetOrCreateAccessibleInterface();
-  [[nodiscard]] const orbit_accessibility::AccessibleInterface* GetAccessibleInterface() const {
-    return accessibility_.get();
-  }
-
-  [[nodiscard]] virtual CaptureViewElement* GetParent() const { return parent_; }
+  [[nodiscard]] CaptureViewElement* GetParent() const { return parent_; }
 
  protected:
   CaptureViewElement* parent_;
@@ -69,11 +64,6 @@ class CaptureViewElement : public Pickable {
   Vec2 mouse_pos_cur_;
   Vec2 picking_offset_ = Vec2(0, 0);
   bool picked_ = false;
-
- private:
-  [[nodiscard]] virtual std::unique_ptr<orbit_accessibility::AccessibleInterface>
-  CreateAccessibleInterface() = 0;
-  std::unique_ptr<orbit_accessibility::AccessibleInterface> accessibility_;
 };
 }  // namespace orbit_gl
 
