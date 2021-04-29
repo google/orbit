@@ -10,8 +10,8 @@
 
 namespace orbit_api {
 
-ErrorMessageOr<void> EnableApiInTracee(const orbit_grpc_protos::CaptureOptions& capture_options,
-                                       bool enabled);
+ErrorMessageOr<void> EnableApiInTracee(const orbit_grpc_protos::CaptureOptions& capture_options);
+ErrorMessageOr<void> DisableApiInTracee(const orbit_grpc_protos::CaptureOptions& capture_options);
 
 }  // namespace orbit_api
 

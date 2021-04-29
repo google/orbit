@@ -81,14 +81,12 @@ void orbit_api_async_string(const char* str, uint64_t id, orbit_api_color color)
 static void orbit_api_initialize_v0(orbit_api_v0* api) {
   // The api function table is accessed by user code using this pattern:
   //
-  // bool enabled = api.initialized && api.enabled;
+  // bool initialized = api.initialized;
   // std::atomic_thread_fence(std::memory_order_acquire)
-  // if(enabled && api->orbit_api_function_name) api->orbit_api_function_name(...);
+  // if (initialized && api->enabled && api->orbit_api_function_name) api->orbit_api_function_name()
   //
   // We use acquire and release semantics to make sure that when api->initialized is set, all the
   // function pointers have been assigned and are visible to other cores.
-
-  if (api->initialized != 0) return;
   api->start = &orbit_api_start;
   api->stop = &orbit_api_stop;
   api->start_async = &orbit_api_start_async;
@@ -118,7 +116,16 @@ void orbit_api_enable(uint64_t address, uint64_t api_version, bool enabled) {
   }
 
   orbit_api_v0* api_v0 = absl::bit_cast<orbit_api_v0*>(address);
-  orbit_api_initialize_v0(api_v0);
+  if (!api_v0->initialized) {
+    // Note: initialize any newer api version before v0, which sets "initialized" to 1.
+    orbit_api_initialize_v0(api_v0);
+  }
+
+  // By the time we reach this, the "initialized" guard variable has been set to 1 and we know that
+  // all function pointers have been written to and published to other cores by the use of
+  // acquire/release fences. The "enabled" flag serves as a global toggle which is always used in
+  // conjunction with the "initialized" flag to determine if the Api is active. See
+  // orbit_api_active() in Orbit.h.
   api_v0->enabled = enabled;
 }
 }

@@ -316,14 +316,14 @@ extern ORBIT_EXPORT void* orbit_api_get_function_table_address_v0();
   orbit_api_v0 g_orbit_api_v0; \
   void* orbit_api_get_function_table_address_v0() { return &g_orbit_api_v0; }
 
-inline bool orbit_api_enabled() {
-  bool enabled = g_orbit_api_v0.initialized && g_orbit_api_v0.enabled;
+inline bool orbit_api_active() {
+  bool initialized = g_orbit_api_v0.initialized;
   ORBIT_THREAD_FENCE_ACQUIRE();
-  return enabled;
+  return initialized && g_orbit_api_v0.enabled;
 }
 
 #define ORBIT_CALL(function_name) \
-  if (orbit_api_enabled() && g_orbit_api_v0.function_name) g_orbit_api_v0.function_name
+  if (orbit_api_active() && g_orbit_api_v0.function_name) g_orbit_api_v0.function_name
 
 #ifdef __cplusplus
 }  // extern "C"

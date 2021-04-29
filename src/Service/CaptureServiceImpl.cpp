@@ -266,7 +266,7 @@ grpc::Status CaptureServiceImpl::Capture(
 
   // Enable Orbit API in tracee.
   if (capture_options.enable_api()) {
-    auto result = orbit_api::EnableApiInTracee(capture_options, /*enabled=*/true);
+    auto result = orbit_api::EnableApiInTracee(capture_options);
     if (result.has_error()) ERROR("Enabling Orbit Api: %s", result.error().message());
   }
 
@@ -291,7 +291,7 @@ grpc::Status CaptureServiceImpl::Capture(
 
   // Disable Orbit API in tracee.
   if (capture_options.enable_api()) {
-    auto result = orbit_api::EnableApiInTracee(capture_options, /*enabled=*/false);
+    auto result = orbit_api::DisableApiInTracee(capture_options);
     if (result.has_error()) ERROR("Disabling Orbit Api: %s", result.error().message());
   }
 

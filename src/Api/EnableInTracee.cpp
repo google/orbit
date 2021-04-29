@@ -28,8 +28,9 @@ using orbit_user_space_instrumentation::DlopenInTracee;
 using orbit_user_space_instrumentation::DlsymInTracee;
 using orbit_user_space_instrumentation::ExecuteInProcess;
 
-static ErrorMessageOr<absl::flat_hash_map<std::string, ModuleInfo>> GetModulesByPathForPid(
-    int32_t pid) {
+namespace {
+
+ErrorMessageOr<absl::flat_hash_map<std::string, ModuleInfo>> GetModulesByPathForPid(int32_t pid) {
   OUTCOME_TRY(module_infos, orbit_elf_utils::ReadModules(pid));
   absl::flat_hash_map<std::string, ModuleInfo> result;
   for (const ModuleInfo& module_info : module_infos) {
@@ -38,7 +39,7 @@ static ErrorMessageOr<absl::flat_hash_map<std::string, ModuleInfo>> GetModulesBy
   return result;
 }
 
-[[nodiscard]] static const ModuleInfo* FindModuleInfoForApiFunction(
+[[nodiscard]] const ModuleInfo* FindModuleInfoForApiFunction(
     const ApiFunction& api_function,
     const absl::flat_hash_map<std::string, ModuleInfo>& modules_by_path) {
   auto module_info_it = modules_by_path.find(api_function.module_path());
@@ -55,7 +56,6 @@ static ErrorMessageOr<absl::flat_hash_map<std::string, ModuleInfo>> GetModulesBy
   return &module_info;
 }
 
-namespace orbit_api {
 ErrorMessageOr<void> EnableApiInTracee(const CaptureOptions& capture_options, bool enabled) {
   SCOPED_TIMED_LOG("%s Api in tracee", enabled ? "Enabling" : "Disabling");
   if (capture_options.api_functions().size() == 0) {
@@ -101,6 +101,18 @@ ErrorMessageOr<void> EnableApiInTracee(const CaptureOptions& capture_options, bo
   }
 
   return outcome::success();
+}
+
+}  // namespace
+
+namespace orbit_api {
+
+ErrorMessageOr<void> EnableApiInTracee(const orbit_grpc_protos::CaptureOptions& capture_options) {
+  return ::EnableApiInTracee(capture_options, /*enabled*/ true);
+}
+
+ErrorMessageOr<void> DisableApiInTracee(const orbit_grpc_protos::CaptureOptions& capture_options) {
+  return ::EnableApiInTracee(capture_options, /*enabled*/ false);
 }
 
 }  // namespace orbit_api
