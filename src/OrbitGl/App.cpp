@@ -232,13 +232,13 @@ void OrbitApp::OnCaptureStarted(const CaptureStarted& capture_started,
   mutex.Await(absl::Condition(&initialization_complete));
 }
 
-void OrbitApp::OnCaptureComplete() {
+Future<void> OrbitApp::OnCaptureComplete() {
   GetMutableCaptureData().FilterBrokenCallstacks();
   PostProcessedSamplingData post_processed_sampling_data =
       orbit_client_model::CreatePostProcessedSamplingData(*GetCaptureData().GetCallstackData(),
                                                           GetCaptureData());
 
-  main_thread_executor_->Schedule(
+  return main_thread_executor_->Schedule(
       [this, sampling_profiler = std::move(post_processed_sampling_data)]() mutable {
         ORBIT_SCOPE("OnCaptureComplete");
         RefreshFrameTracks();
@@ -257,8 +257,8 @@ void OrbitApp::OnCaptureComplete() {
       });
 }
 
-void OrbitApp::OnCaptureCancelled() {
-  main_thread_executor_->Schedule([this]() mutable {
+Future<void> OrbitApp::OnCaptureCancelled() {
+  return main_thread_executor_->Schedule([this]() mutable {
     ORBIT_SCOPE("OnCaptureCancelled");
     CHECK(capture_failed_callback_);
     capture_failed_callback_();
@@ -267,15 +267,16 @@ void OrbitApp::OnCaptureCancelled() {
   });
 }
 
-void OrbitApp::OnCaptureFailed(ErrorMessage error_message) {
-  main_thread_executor_->Schedule([this, error_message = std::move(error_message)]() mutable {
-    ORBIT_SCOPE("OnCaptureFailed");
-    CHECK(capture_failed_callback_);
-    capture_failed_callback_();
+Future<void> OrbitApp::OnCaptureFailed(ErrorMessage error_message) {
+  return main_thread_executor_->Schedule(
+      [this, error_message = std::move(error_message)]() mutable {
+        ORBIT_SCOPE("OnCaptureFailed");
+        CHECK(capture_failed_callback_);
+        capture_failed_callback_();
 
-    ClearCapture();
-    SendErrorToUi("Error in capture", error_message.message());
-  });
+        ClearCapture();
+        SendErrorToUi("Error in capture", error_message.message());
+      });
 }
 
 void OrbitApp::OnTimer(const TimerInfo& timer_info) {
