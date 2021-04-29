@@ -10,11 +10,12 @@ package orbit_metrics_uploader;
 // client. Changing this proto requires changing the metrics uploader client
 // library accordingly.
 message OrbitLogEvent {
-  // NextID: 17
+  // NextID: 18
   enum LogEventType {
     UNKNOWN_EVENT_TYPE = 0;
     // go/keep-sorted start
     ORBIT_CAPTURE_DURATION = 2;
+    ORBIT_CAPTURE_END = 17;
     ORBIT_CAPTURE_LOAD = 4;
     ORBIT_CAPTURE_SAVE = 3;
     ORBIT_END_SESSION_CLICKED = 13;
@@ -58,4 +59,45 @@ message OrbitLogEvent {
   string session_uuid = 4;
   // Status code of the event
   StatusCode status_code = 5;
+  // Detailed information about a capture. Sent with ORBIT_CAPTURE_END.
+  OrbitCaptureData orbit_capture_data = 6;
+}
+
+// Holds data about a capture taken in Orbit. This includes data that was
+// available before the capture start, like the number of dynamically
+// instrumented functions and information that is available at capture stop,
+// like duration of the capture. It is sent when the user stops the capture, or
+// when the capture is aborted because of an error.
+message OrbitCaptureData {
+  // Duration of the capture in milliseconds. This is a measure of time from
+  // when the user started a capture until the user ends it.
+  int64 duration_in_milliseconds = 1;
+
+  // Number of functions the user dynamically instrumented (hooked) before the
+  // start of this capture. This does not include functions that are
+  // instrumented via the manual instrumentation api (Orbit.h).
+  int64 number_of_instrumented_functions = 2;
+
+  // Number of frame tracks the user added before the start of this capture.
+  int64 number_of_frame_tracks = 3;
+
+  // Number of orbit_api::Start calls that Orbit found in the modules that have
+  // been manually instrumented.
+  int64 number_of_manual_start_timers = 4;
+
+  // Number of orbit_api::Stop calls that Orbit found in the modules that have
+  // been manually instrumented.
+  int64 number_of_manual_stop_timers = 5;
+
+  // Number of orbit_api::StartAsync calls that Orbit found in the modules that
+  // have been manually instrumented.
+  int64 number_of_manual_start_async_timers = 6;
+
+  // Number of orbit_api::StopAsync calls that Orbit found in the modules that
+  // have been manually instrumented.
+  int64 number_of_manual_stop_async_timers = 7;
+
+  // Number of orbit_api::TrackValue calls that Orbit found in the modules that
+  // have been manually instrumented.
+  int64 number_of_manual_tracked_values = 8;
 }
