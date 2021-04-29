@@ -15,11 +15,13 @@ target_compile_features(MetricsUploader PUBLIC cxx_std_17)
 target_include_directories(MetricsUploader PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include
                                            PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
-target_sources(MetricsUploader PUBLIC include/MetricsUploader/MetricsUploader.h
+target_sources(MetricsUploader PUBLIC include/MetricsUploader/CaptureMetric.h
+                                      include/MetricsUploader/MetricsUploader.h
                                       include/MetricsUploader/MetricsUploaderStub.h
                                       include/MetricsUploader/Result.h
                                       include/MetricsUploader/ScopedMetric.h
-                               PRIVATE Result.cpp
+                               PRIVATE CaptureMetric.cpp
+                                       Result.cpp
                                        ScopedMetric.cpp)
 
 if (WIN32)
@@ -73,7 +75,8 @@ add_executable(MetricsUploaderTests)
 
 target_compile_options(MetricsUploaderTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
-target_sources(MetricsUploaderTests PRIVATE ScopedMetricTest.cpp)
+target_sources(MetricsUploaderTests PRIVATE CaptureMetricTest.cpp
+                                            ScopedMetricTest.cpp)
 
 if (WIN32)
 target_sources(MetricsUploaderTests PRIVATE MetricsUploaderWindowsTest.cpp)
