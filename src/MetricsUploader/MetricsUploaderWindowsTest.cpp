@@ -61,6 +61,14 @@ TEST(MetricsUploader, SendLogEvent) {
   EXPECT_TRUE(result);
 }
 
+TEST(MetricsUploader, SendCaptureEvent) {
+  auto metrics_uploader = MetricsUploader::CreateMetricsUploader("MetricsUploaderCompleteClient");
+  EXPECT_FALSE(IsMetricsUploaderStub(metrics_uploader));
+  bool result =
+      metrics_uploader->SendCaptureEvent(OrbitCaptureData{}, OrbitLogEvent_StatusCode_SUCCESS);
+  EXPECT_TRUE(result);
+}
+
 TEST(MetricsUploader, CreateTwoMetricsUploaders) {
   auto metrics_uploader1 = MetricsUploader::CreateMetricsUploader("MetricsUploaderCompleteClient");
   EXPECT_FALSE(IsMetricsUploaderStub(metrics_uploader1));

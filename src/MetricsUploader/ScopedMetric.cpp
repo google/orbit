@@ -6,8 +6,6 @@
 
 #include <chrono>
 
-#include "OrbitBase/Logging.h"
-
 namespace orbit_metrics_uploader {
 
 ScopedMetric::ScopedMetric(MetricsUploader* uploader, OrbitLogEvent_LogEventType log_event_type)

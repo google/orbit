@@ -24,6 +24,10 @@ class MetricsUploaderStub : public MetricsUploader {
                     OrbitLogEvent_StatusCode /*status_code*/) override {
     return false;
   };
+  bool SendCaptureEvent(OrbitCaptureData /*capture_data*/,
+                        OrbitLogEvent_StatusCode /*status_code*/) override {
+    return false;
+  }
 };
 
 }  // namespace orbit_metrics_uploader
