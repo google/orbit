@@ -16,7 +16,7 @@
 #include <utility>
 #include <vector>
 
-#include "Api/InitializeInTracee.h"
+#include "Api/EnableInTracee.h"
 #include "CaptureEventBuffer.h"
 #include "CaptureEventSender.h"
 #include "ElfUtils/ElfFile.h"
@@ -264,11 +264,10 @@ grpc::Status CaptureServiceImpl::Capture(
 
   const CaptureOptions& capture_options = request.capture_options();
 
-  // Initialize Orbit API in tracee.
+  // Enable Orbit API in tracee.
   if (capture_options.enable_api()) {
-    if (auto result = orbit_api::InitializeInTracee(capture_options); result.has_error()) {
-      ERROR("Initializing Orbit Api: %s", result.error().message());
-    }
+    auto result = orbit_api::EnableApiInTracee(capture_options);
+    if (result.has_error()) ERROR("Enabling Orbit Api: %s", result.error().message());
   }
 
   uint64_t capture_start_timestamp_ns = orbit_base::CaptureTimestampNs();
@@ -289,6 +288,12 @@ grpc::Status CaptureServiceImpl::Capture(
   while (reader_writer->Read(&request)) {
   }
   LOG("Client finished writing on Capture's gRPC stream: stopping capture");
+
+  // Disable Orbit API in tracee.
+  if (capture_options.enable_api()) {
+    auto result = orbit_api::DisableApiInTracee(capture_options);
+    if (result.has_error()) ERROR("Disabling Orbit Api: %s", result.error().message());
+  }
 
   StopInternalProducersAndCaptureStartStopListenersInParallel(
       &tracing_handler, &memory_info_handler, &capture_start_stop_listeners_);

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "Api/InitializeInTracee.h"
+#include "Api/EnableInTracee.h"
 
 #include <absl/base/casts.h>
 #include <absl/container/flat_hash_map.h>
@@ -28,8 +28,9 @@ using orbit_user_space_instrumentation::DlopenInTracee;
 using orbit_user_space_instrumentation::DlsymInTracee;
 using orbit_user_space_instrumentation::ExecuteInProcess;
 
-static ErrorMessageOr<absl::flat_hash_map<std::string, ModuleInfo>> GetModulesByPathForPid(
-    int32_t pid) {
+namespace {
+
+ErrorMessageOr<absl::flat_hash_map<std::string, ModuleInfo>> GetModulesByPathForPid(int32_t pid) {
   OUTCOME_TRY(module_infos, orbit_elf_utils::ReadModules(pid));
   absl::flat_hash_map<std::string, ModuleInfo> result;
   for (const ModuleInfo& module_info : module_infos) {
@@ -38,7 +39,7 @@ static ErrorMessageOr<absl::flat_hash_map<std::string, ModuleInfo>> GetModulesBy
   return result;
 }
 
-[[nodiscard]] static const ModuleInfo* FindModuleInfoForApiFunction(
+[[nodiscard]] const ModuleInfo* FindModuleInfoForApiFunction(
     const ApiFunction& api_function,
     const absl::flat_hash_map<std::string, ModuleInfo>& modules_by_path) {
   auto module_info_it = modules_by_path.find(api_function.module_path());
@@ -55,8 +56,8 @@ static ErrorMessageOr<absl::flat_hash_map<std::string, ModuleInfo>> GetModulesBy
   return &module_info;
 }
 
-namespace orbit_api {
-ErrorMessageOr<void> InitializeInTracee(const CaptureOptions& capture_options) {
+ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options, bool enabled) {
+  SCOPED_TIMED_LOG("%s Api in tracee", enabled ? "Enabling" : "Disabling");
   if (capture_options.api_functions().size() == 0) {
     return ErrorMessage("No api table to initialize.");
   }
@@ -74,9 +75,9 @@ ErrorMessageOr<void> InitializeInTracee(const CaptureOptions& capture_options) {
 
   // Load liborbit.so and find api table initialization function.
   const std::string liborbit_path = orbit_base::GetExecutableDir() / "liborbit.so";
-  constexpr const char* kInitFunction = "orbit_api_initialize";
+  constexpr const char* kSetEnabledFunction = "orbit_api_set_enabled";
   OUTCOME_TRY(handle, DlopenInTracee(pid, liborbit_path, RTLD_NOW));
-  OUTCOME_TRY(orbit_init_function, DlsymInTracee(pid, handle, kInitFunction));
+  OUTCOME_TRY(orbit_api_set_enabled_function, DlsymInTracee(pid, handle, kSetEnabledFunction));
 
   // Initialize all api function tables.
   OUTCOME_TRY(modules_by_path, GetModulesByPathForPid(pid));
@@ -94,12 +95,24 @@ ErrorMessageOr<void> InitializeInTracee(const CaptureOptions& capture_options) {
         module_info->address_start() + api_function.address() - module_info->load_bias());
     OUTCOME_TRY(function_table_address, ExecuteInProcess(pid, api_function_address));
 
-    // Call "orbit_api_initialize" in tracee with table address and api version as parameters.
-    OUTCOME_TRY(ExecuteInProcess(pid, orbit_init_function, function_table_address,
-                                 api_function.api_version()));
+    // Call "orbit_api_set_enabled" in tracee.
+    OUTCOME_TRY(ExecuteInProcess(pid, orbit_api_set_enabled_function, function_table_address,
+                                 api_function.api_version(), enabled ? 1 : 0));
   }
 
   return outcome::success();
+}
+
+}  // namespace
+
+namespace orbit_api {
+
+ErrorMessageOr<void> EnableApiInTracee(const orbit_grpc_protos::CaptureOptions& capture_options) {
+  return ::SetApiEnabledInTracee(capture_options, /*enabled*/ true);
+}
+
+ErrorMessageOr<void> DisableApiInTracee(const orbit_grpc_protos::CaptureOptions& capture_options) {
+  return ::SetApiEnabledInTracee(capture_options, /*enabled*/ false);
 }
 
 }  // namespace orbit_api

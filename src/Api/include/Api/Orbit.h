@@ -293,7 +293,7 @@ typedef enum {
 enum { kOrbitApiVersion = 0 };
 
 struct orbit_api_v0 {
-  uint32_t active;
+  uint32_t enabled;
   uint32_t initialized;
   void (*start)(const char* name, orbit_api_color color);
   void (*stop)();
@@ -317,9 +317,9 @@ extern ORBIT_EXPORT void* orbit_api_get_function_table_address_v0();
   void* orbit_api_get_function_table_address_v0() { return &g_orbit_api_v0; }
 
 inline bool orbit_api_active() {
-  bool active = g_orbit_api_v0.active;
+  bool initialized = g_orbit_api_v0.initialized;
   ORBIT_THREAD_FENCE_ACQUIRE();
-  return active;
+  return initialized && g_orbit_api_v0.enabled;
 }
 
 #define ORBIT_CALL(function_name) \

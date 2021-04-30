@@ -127,7 +127,15 @@ static void ExecuteTask(uint32_t id) {
   ORBIT_STOP_ASYNC(id);
 }
 
+void OrbitTest::OutputOrbitApiState() {
+  while (!m_ExitRequested) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    LOG("g_orbit_api_v0.enabled = %u", g_orbit_api_v0.enabled);
+  }
+}
+
 void OrbitTest::ManualInstrumentationApiTest() {
+  thread_pool_->Schedule([this]() { OutputOrbitApiState(); });
   while (!m_ExitRequested) {
     ORBIT_SCOPE("ORBIT_SCOPE_TEST");
     ORBIT_SCOPE_WITH_COLOR("ORBIT_SCOPE_TEST_WITH_COLOR", orbit_api_color(0xff0000ff));
