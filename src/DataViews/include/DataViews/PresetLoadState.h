@@ -2,8 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_PRESET_LOAD_STATE_H_
-#define ORBIT_GL_PRESET_LOAD_STATE_H_
+#ifndef DATA_VIEWS_PRESET_LOAD_STATE_H_
+#define DATA_VIEWS_PRESET_LOAD_STATE_H_
+
+#include <string>
+
+namespace orbit_data_views {
 
 struct PresetLoadState {
   enum State { kLoadable, kPartiallyLoadable, kNotLoadable } state;
@@ -42,4 +46,6 @@ struct PresetLoadState {
   }
 };
 
-#endif  // ORBIT_GL_PRESET_LOAD_STATE_H_
+}  // namespace orbit_data_views
+
+#endif  // DATA_VIEWS_PRESET_LOAD_STATE_H_

@@ -150,9 +150,10 @@ namespace {
 
 constexpr const char* kLibOrbitVulkanLayerSoFileName = "libOrbitVulkanLayer.so";
 
-PresetLoadState GetPresetLoadStateForProcess(const PresetFile& preset, const ProcessData* process) {
+orbit_data_views::PresetLoadState GetPresetLoadStateForProcess(const PresetFile& preset,
+                                                               const ProcessData* process) {
   if (process == nullptr) {
-    return PresetLoadState::kNotLoadable;
+    return orbit_data_views::PresetLoadState::kNotLoadable;
   }
 
   size_t modules_not_found_count = 0;
@@ -166,14 +167,14 @@ PresetLoadState GetPresetLoadStateForProcess(const PresetFile& preset, const Pro
 
   // Empty preset is also loadable
   if (modules_not_found_count == 0) {
-    return PresetLoadState::kLoadable;
+    return orbit_data_views::PresetLoadState::kLoadable;
   }
 
   if (modules_not_found_count == module_paths.size()) {
-    return PresetLoadState::kNotLoadable;
+    return orbit_data_views::PresetLoadState::kNotLoadable;
   }
 
-  return PresetLoadState::kPartiallyLoadable;
+  return orbit_data_views::PresetLoadState::kPartiallyLoadable;
 }
 
 orbit_metrics_uploader::CaptureStartData CreateCaptureStartData(
@@ -983,7 +984,7 @@ ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
   return outcome::success();
 }
 
-PresetLoadState OrbitApp::GetPresetLoadState(const PresetFile& preset) const {
+orbit_data_views::PresetLoadState OrbitApp::GetPresetLoadState(const PresetFile& preset) const {
   return GetPresetLoadStateForProcess(preset, GetTargetProcess());
 }
 

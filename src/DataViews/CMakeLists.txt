@@ -7,7 +7,8 @@ cmake_minimum_required(VERSION 3.15)
 add_library(DataViews INTERFACE)
 
 target_sources(DataViews INTERFACE
-        include/DataViews/AppInterface.h)
+        include/DataViews/AppInterface.h
+        include/DataViews/PresetLoadState.h)
 
 target_include_directories(DataViews INTERFACE include/)
 target_compile_features(DataViews INTERFACE cxx_std_17)

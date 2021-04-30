@@ -17,12 +17,12 @@
 #include "App.h"
 #include "CoreUtils.h"
 #include "DataViewTypes.h"
+#include "DataViews/PresetLoadState.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "MetricsUploader/ScopedMetric.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/SafeStrerror.h"
 #include "PresetFile/PresetFile.h"
-#include "PresetLoadState.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
 
@@ -40,7 +40,7 @@ constexpr const float kHookedFunctionsColumnWidth = 0.16f;
 
 namespace {
 std::string GetLoadStateString(OrbitApp* app, const PresetFile& preset) {
-  PresetLoadState load_state = app->GetPresetLoadState(preset);
+  orbit_data_views::PresetLoadState load_state = app->GetPresetLoadState(preset);
   return load_state.GetName();
 }
 }  // namespace
@@ -95,10 +95,11 @@ std::string PresetsDataView::GetValue(int row, int column) {
 
 std::string PresetsDataView::GetToolTip(int row, int /*column*/) {
   const PresetFile& preset = GetPreset(row);
-  return absl::StrCat(preset.file_path().string(),
-                      app_->GetPresetLoadState(preset).state == PresetLoadState::kNotLoadable
-                          ? "<br/><br/><i>None of the modules in the preset can be loaded.</i>"
-                          : "");
+  return absl::StrCat(
+      preset.file_path().string(),
+      app_->GetPresetLoadState(preset).state == orbit_data_views::PresetLoadState::kNotLoadable
+          ? "<br/><br/><i>None of the modules in the preset can be loaded.</i>"
+          : "");
 }
 
 void PresetsDataView::DoSort() {
@@ -135,7 +136,7 @@ std::vector<std::string> PresetsDataView::GetContextMenu(int clicked_index,
   // Note that the UI already enforces a single selection.
   if (selected_indices.size() == 1) {
     const PresetFile& preset = GetPreset(selected_indices[0]);
-    if (app_->GetPresetLoadState(preset).state != PresetLoadState::kNotLoadable) {
+    if (app_->GetPresetLoadState(preset).state != orbit_data_views::PresetLoadState::kNotLoadable) {
       menu.emplace_back(kMenuActionLoad);
     }
     menu.emplace_back(kMenuActionDelete);
@@ -180,7 +181,7 @@ void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
 
 void PresetsDataView::OnDoubleClicked(int index) {
   const PresetFile& preset = GetPreset(index);
-  if (app_->GetPresetLoadState(preset).state != PresetLoadState::kNotLoadable) {
+  if (app_->GetPresetLoadState(preset).state != orbit_data_views::PresetLoadState::kNotLoadable) {
     app_->LoadPreset(preset);
   }
 }
@@ -230,7 +231,7 @@ void PresetsDataView::OnDataChanged() {
 bool PresetsDataView::GetDisplayColor(int row, int /*column*/, unsigned char& red,
                                       unsigned char& green, unsigned char& blue) {
   const PresetFile& preset = GetPreset(row);
-  PresetLoadState load_state = app_->GetPresetLoadState(preset);
+  orbit_data_views::PresetLoadState load_state = app_->GetPresetLoadState(preset);
   load_state.GetDisplayColor(red, green, blue);
   return true;
 }

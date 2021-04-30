@@ -49,6 +49,7 @@
 #include "DataViewFactory.h"
 #include "DataViewTypes.h"
 #include "DataViews/AppInterface.h"
+#include "DataViews/PresetLoadState.h"
 #include "FramePointerValidatorClient.h"
 #include "FrameTrackOnlineProcessor.h"
 #include "FunctionsDataView.h"
@@ -65,7 +66,6 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
-#include "PresetLoadState.h"
 #include "PresetsDataView.h"
 #include "SamplingReport.h"
 #include "ScopedStatus.h"
@@ -340,7 +340,7 @@ class OrbitApp final : public DataViewFactory,
   orbit_base::Future<ErrorMessageOr<void>> LoadPresetModule(
       const std::string& module_path, const orbit_preset_file::PresetFile& preset_file);
   void LoadPreset(const orbit_preset_file::PresetFile& preset);
-  [[nodiscard]] PresetLoadState GetPresetLoadState(
+  [[nodiscard]] orbit_data_views::PresetLoadState GetPresetLoadState(
       const orbit_preset_file::PresetFile& preset) const;
   void FilterTracks(const std::string& filter);
 
