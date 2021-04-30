@@ -24,7 +24,7 @@ if(WIN32)
     TARGET QWebChannelExtractor
     POST_BUILD
     COMMAND "${CMAKE_COMMAND}" -E env PATH="${_qt_bin_dir}"
-            "${WINDEPLOYQT_EXECUTABLE}" --pdb "$<TARGET_FILE:QWebChannelExtractor>"
+            "${WINDEPLOYQT_EXECUTABLE}" --pdb --no-angle "$<TARGET_FILE:QWebChannelExtractor>"
     COMMENT "Running windeployqt for QWebChannelExtractor...")
 endif()
 

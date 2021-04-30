@@ -308,7 +308,7 @@ chmod -v 4775 /opt/developer/tools/OrbitService
 
         if not self.options.system_qt:
             orbit_executable = "Orbit.exe" if self.settings.os == "Windows" else "Orbit"
-            self.run("windeployqt --pdb {}".format(orbit_executable), cwd=os.path.join(self.package_folder, "bin"), run_environment=True)
+            self.run("windeployqt --pdb --no-angle {}".format(orbit_executable), cwd=os.path.join(self.package_folder, "bin"), run_environment=True)
 
             # Package Visual C++ and C Runtime
             vcvars = tools.vcvars_dict(self)
