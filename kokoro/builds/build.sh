@@ -223,7 +223,7 @@ if [ -n "$1" ]; then
     test -f NOTICE.Chromium && cp -v NOTICE.Chromium Orbit/NOTICE.Chromium
     cp -v LICENSE Orbit/LICENSE.txt
     cp -av "${REPO_ROOT}/contrib/automation_tests" Orbit
-    cp -v "${REPO_ROOT}/src/Orbit.h" Orbit/
+    cp -v "${REPO_ROOT}/src/Api/include/Api/Orbit.h" Orbit/
     zip -r Orbit.zip Orbit/
     rm -rf Orbit/
     popd > /dev/null
