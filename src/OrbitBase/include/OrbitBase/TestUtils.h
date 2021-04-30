@@ -26,13 +26,6 @@ MATCHER(HasNoValue, absl::StrCat(negation ? "Has a" : "Has no", " value.")) {
   return !arg.has_value();
 }
 
-MATCHER(HasError, absl::StrCat(negation ? "Has no" : "Has an", " error.")) {
-  if (arg.has_error()) {
-    *result_listener << "Error: " << arg.error().message();
-  }
-  return arg.has_error();
-}
-
 MATCHER(HasNoError, absl::StrCat(negation ? "Has an" : "Has no", " error.")) {
   if (arg.has_error()) {
     *result_listener << "Error: " << arg.error().message();
