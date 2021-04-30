@@ -168,7 +168,8 @@ PresetLoadState GetPresetLoadStateForProcess(const PresetFile& preset, const Pro
 }
 
 orbit_metrics_uploader::CaptureStartData CreateCaptureStartData(
-    const std::vector<FunctionInfo>& all_instrumented_functions, int64_t number_of_frame_tracks) {
+    const std::vector<FunctionInfo>& all_instrumented_functions, int64_t number_of_frame_tracks,
+    bool thread_states) {
   orbit_metrics_uploader::CaptureStartData capture_start_data{};
 
   for (const auto& function : all_instrumented_functions) {
@@ -198,6 +199,9 @@ orbit_metrics_uploader::CaptureStartData CreateCaptureStartData(
   }
 
   capture_start_data.number_of_frame_tracks = number_of_frame_tracks;
+  capture_start_data.thread_states =
+      thread_states ? orbit_metrics_uploader::OrbitCaptureData_ThreadStates_THREAD_STATES_ENABLED
+                    : orbit_metrics_uploader::OrbitCaptureData_ThreadStates_THREAD_STATES_DISABLED;
   return capture_start_data;
 }
 
@@ -1113,7 +1117,8 @@ void OrbitApp::StartCapture() {
   CaptureMetric capture_metric{
       metrics_uploader_,
       CreateCaptureStartData(selected_functions,
-                             user_defined_capture_data.frame_track_functions().size())};
+                             user_defined_capture_data.frame_track_functions().size(),
+                             data_manager_->collect_thread_states())};
 
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions_map;
   absl::flat_hash_set<uint64_t> frame_track_function_ids;
