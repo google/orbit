@@ -12,6 +12,7 @@ namespace orbit_qt {
 struct OpenGlVersion {
   int major;
   int minor;
+  bool is_opengl_es;
 };
 
 std::optional<OpenGlVersion> DetectOpenGlVersion();

@@ -15,7 +15,6 @@ namespace orbit_qt {
 
 // Detects the supported version of Desktop OpenGL by requesting the most
 // recent version of OpenGL and checking what the system could provide.
-// OpenGL ES is automatically ignored.
 std::optional<OpenGlVersion> DetectOpenGlVersion() {
   QSurfaceFormat format{};
   format.setRenderableType(QSurfaceFormat::OpenGL);
@@ -34,12 +33,9 @@ std::optional<OpenGlVersion> DetectOpenGlVersion() {
   gl_context.create();
   gl_context.makeCurrent(&surface);
 
-  // We are trying to detect Desktop OpenGL. So if Qt falls back to OpenGL ES,
-  // Desktop OpenGL will not be available.
-  if (!gl_context.isValid() || gl_context.isOpenGLES()) {
-    return std::nullopt;
-  }
+  if (!gl_context.isValid()) return std::nullopt;
 
-  return OpenGlVersion{surface.format().majorVersion(), surface.format().minorVersion()};
+  return OpenGlVersion{gl_context.format().majorVersion(), gl_context.format().minorVersion(),
+                       gl_context.isOpenGLES()};
 }
 }  // namespace orbit_qt
