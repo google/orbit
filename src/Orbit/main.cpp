@@ -379,13 +379,21 @@ int main(int argc, char* argv[]) {
 
   if (!open_gl_version) {
     DisplayErrorToUser(
-        "OpenGL support was not found. Please make sure you're not trying to "
-        "start Orbit in a remote session and make sure you have a recent "
-        "graphics driver installed. Then try again!");
+        "OpenGL support was not found. This usually indicates some DLLs are missing. "
+        "Please try to reinstall Orbit!");
     return -1;
   }
 
-  LOG("Detected OpenGL version: %i.%i", open_gl_version->major, open_gl_version->minor);
+  LOG("Detected OpenGL version: %i.%i %s", open_gl_version->major, open_gl_version->minor,
+      open_gl_version->is_opengl_es ? "OpenGL ES" : "OpenGL");
+
+  if (open_gl_version->is_opengl_es) {
+    DisplayErrorToUser(
+        "Orbit was only able to load OpenGL ES while Desktop OpenGL is required. Try to force "
+        "software rendering by starting Orbit with the environment variable QT_OPENGL=software "
+        "set.");
+    return -1;
+  }
 
   if (open_gl_version->major < 2) {
     DisplayErrorToUser(QString("The minimum required version of OpenGL is 2.0. But this machine "
