@@ -331,11 +331,6 @@ int main(int argc, char* argv[]) {
   QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
 #endif
 
-  // Without this flag Qt will consider OpenGL ES as a fallback which can almost always be provided
-  // using ANGLE. But we want Qt to use the software rasterizer (opengl32sw.dll) as a fallback since
-  // we need OpenGL (non-ES) for the timegraph widget.
-  QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
-
   QApplication app(argc, argv);
   QApplication::setOrganizationName("The Orbit Authors");
   QApplication::setApplicationName("orbitprofiler");
