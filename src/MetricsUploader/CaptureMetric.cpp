@@ -23,6 +23,7 @@ CaptureMetric::CaptureMetric(MetricsUploader* uploader, const CaptureStartData& 
   capture_data_.set_number_of_manual_stop_async_timers(
       start_data.number_of_manual_stop_async_timers);
   capture_data_.set_number_of_manual_tracked_values(start_data.number_of_manual_tracked_values);
+  capture_data_.set_thread_states(start_data.thread_states);
 }
 
 void CaptureMetric::SetCaptureFailed() {

@@ -23,7 +23,8 @@ constexpr CaptureStartData kTestStartData{
     4 /*number_of_manual_stop_timers*/,
     5 /*number_of_manual_start_async_timers*/,
     6 /*number_of_manual_stop_async_timers*/,
-    7 /*number_of_manual_tracked_values*/
+    7 /*number_of_manual_tracked_values*/,
+    OrbitCaptureData_ThreadStates_THREAD_STATES_ENABLED /*thread_states*/
 };
 
 bool HasSameCaptureStartData(const OrbitCaptureData& capture_data,
@@ -38,7 +39,8 @@ bool HasSameCaptureStartData(const OrbitCaptureData& capture_data,
          capture_data.number_of_manual_stop_async_timers() ==
              start_data.number_of_manual_stop_async_timers &&
          capture_data.number_of_manual_tracked_values() ==
-             start_data.number_of_manual_tracked_values;
+             start_data.number_of_manual_tracked_values &&
+         capture_data.thread_states() == start_data.thread_states;
 }
 
 }  // namespace
