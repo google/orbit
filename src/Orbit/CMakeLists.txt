@@ -30,7 +30,7 @@ if(WIN32)
     TARGET Orbit
     POST_BUILD
     COMMAND "${CMAKE_COMMAND}" -E env PATH="${_qt_bin_dir}"
-            "${WINDEPLOYQT_EXECUTABLE}" --pdb "$<TARGET_FILE:Orbit>"
+            "${WINDEPLOYQT_EXECUTABLE}" --pdb --no-angle "$<TARGET_FILE:Orbit>"
     COMMENT "Running windeployqt...")
 endif()
 
