@@ -24,8 +24,9 @@ const Color kSelectionColor(0, 128, 255, 255);
 
 SchedulerTrack::SchedulerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                                orbit_gl::Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
-                               const orbit_client_model::CaptureData* capture_data)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data) {
+                               const orbit_client_model::CaptureData* capture_data,
+                               uint32_t indentation_level)
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, indentation_level) {
   SetPinned(false);
   SetName("Scheduler");
   SetLabel("Scheduler (0 cores)");

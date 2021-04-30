@@ -34,8 +34,9 @@ using orbit_grpc_protos::InstrumentedFunction;
 AsyncTrack::AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                        const std::string& name, OrbitApp* app,
-                       const orbit_client_model::CaptureData* capture_data)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data) {
+                       const orbit_client_model::CaptureData* capture_data,
+                       uint32_t indentation_level)
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, indentation_level) {
   SetName(name);
   SetLabel(name);
 }

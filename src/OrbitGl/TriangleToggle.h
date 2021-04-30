@@ -22,7 +22,8 @@ class TriangleToggle : public orbit_gl::CaptureViewElement,
 
   using StateChangeHandler = std::function<void(TriangleToggle::State)>;
   explicit TriangleToggle(State initial_state, StateChangeHandler handler, TimeGraph* time_graph,
-                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout, Track* track);
+                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout, Track* track,
+                          float size);
   ~TriangleToggle() override = default;
 
   TriangleToggle() = delete;

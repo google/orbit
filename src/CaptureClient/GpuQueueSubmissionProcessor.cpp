@@ -175,8 +175,7 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuQueueSubmissionWit
   result.insert(result.end(), command_buffer_timers.begin(), command_buffer_timers.end());
 
   std::vector<TimerInfo> debug_marker_timers =
-      ProcessGpuDebugMarkers(gpu_queue_submission, matching_gpu_job, first_command_buffer, timeline,
-                             get_string_hash_and_send_to_listener_if_necessary);
+      ProcessGpuDebugMarkers(gpu_queue_submission, matching_gpu_job, first_command_buffer);
 
   result.insert(result.end(), debug_marker_timers.begin(), debug_marker_timers.end());
 
@@ -286,16 +285,11 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuCommandBuffers(
 
 std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
     const GpuQueueSubmission& gpu_queue_submission, const GpuJob& matching_gpu_job,
-    const std::optional<GpuCommandBuffer>& first_command_buffer, const std::string& timeline,
-    const std::function<uint64_t(const std::string& str)>&
-        get_string_hash_and_send_to_listener_if_necessary) {
+    const std::optional<GpuCommandBuffer>& first_command_buffer) {
   if (gpu_queue_submission.completed_markers_size() == 0) {
     return {};
   }
   std::vector<TimerInfo> result;
-  std::string timeline_marker = timeline + "_marker";
-  uint64_t timeline_marker_hash =
-      get_string_hash_and_send_to_listener_if_necessary(timeline_marker);
 
   const auto& submission_meta_info = gpu_queue_submission.meta_info();
   const int32_t submission_thread_id = submission_meta_info.tid();
@@ -400,7 +394,7 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
 
     marker_timer.set_process_id(submission_process_id);
     marker_timer.set_depth(completed_marker.depth());
-    marker_timer.set_timeline_hash(timeline_marker_hash);
+    marker_timer.set_timeline_hash(matching_gpu_job.timeline_key());
     marker_timer.set_processor(-1);
     marker_timer.set_type(TimerInfo::kGpuDebugMarker);
     marker_timer.set_end(completed_marker.end_gpu_timestamp_ns() -

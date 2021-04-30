@@ -25,6 +25,7 @@ class TimeGraphLayout {
   float GetTrackTabWidth() const { return track_tab_width_; }
   float GetTrackTabHeight() const { return track_tab_height_ * scale_; }
   float GetTrackTabOffset() const { return track_tab_offset_; }
+  float GetTrackIntentOffset() const { return track_intent_offset_; }
   float GetCollapseButtonOffset() const { return collapse_button_offset_; }
   float GetRoundingRadius() const { return rounding_radius_ * scale_; }
   float GetRoundingNumSides() const { return rounding_num_sides_; }
@@ -37,6 +38,7 @@ class TimeGraphLayout {
   float GetSpaceBetweenCores() const { return space_between_cores_ * scale_; }
   float GetSpaceBetweenGpuDepths() const { return space_between_gpu_depths_ * scale_; }
   float GetSpaceBetweenTracksAndThread() const { return space_between_tracks_and_thread_ * scale_; }
+  float GetSpaceBetweenGpuSubtracks() const { return space_between_gpu_subtracks_ * scale_; }
   float GetToolbarIconHeight() const { return toolbar_icon_height_; }
   float GetScale() const { return scale_; }
   void SetScale(float value) { scale_ = value; }
@@ -62,6 +64,7 @@ class TimeGraphLayout {
   float track_tab_width_;
   float track_tab_height_;
   float track_tab_offset_;
+  float track_intent_offset_;
   float collapse_button_offset_;
   float rounding_radius_;
   float rounding_num_sides_;
@@ -75,6 +78,7 @@ class TimeGraphLayout {
   float space_between_gpu_depths_;
   float space_between_tracks_;
   float space_between_tracks_and_thread_;
+  float space_between_gpu_subtracks_;
   float space_between_thread_blocks_;
 
   float toolbar_icon_height_;

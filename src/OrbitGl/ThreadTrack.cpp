@@ -39,8 +39,8 @@ using orbit_grpc_protos::InstrumentedFunction;
 
 ThreadTrack::ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout, int32_t thread_id,
-                         OrbitApp* app, const CaptureData* capture_data)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data) {
+                         OrbitApp* app, const CaptureData* capture_data, uint32_t indentation_level)
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, indentation_level) {
   thread_id_ = thread_id;
   InitializeNameAndLabel(thread_id);
 
