@@ -102,10 +102,10 @@ static void orbit_api_initialize_v0(orbit_api_v0* api) {
   api->initialized = 1;
 }
 
-// The "orbit_api_enable" function is called remotely by OrbitService on every capture start for all
-// api function tables. It is also called on every capture stop to disable the api so that the api
-// calls early out at the call site.
-void orbit_api_enable(uint64_t address, uint64_t api_version, bool enabled) {
+// The "orbit_api_set_enabled" function is called remotely by OrbitService on every capture start
+// for all api function tables. It is also called on every capture stop to disable the api so that
+// the api calls early out at the call site.
+void orbit_api_set_enabled(uint64_t address, uint64_t api_version, bool enabled) {
   LOG("%s Orbit API at address %#x, version %u", enabled ? "Enabling" : "Disabling", address,
       api_version);
   if (api_version > kOrbitApiVersion) {

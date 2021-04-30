@@ -56,7 +56,7 @@ ErrorMessageOr<absl::flat_hash_map<std::string, ModuleInfo>> GetModulesByPathFor
   return &module_info;
 }
 
-ErrorMessageOr<void> EnableApiInTracee(const CaptureOptions& capture_options, bool enabled) {
+ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options, bool enabled) {
   SCOPED_TIMED_LOG("%s Api in tracee", enabled ? "Enabling" : "Disabling");
   if (capture_options.api_functions().size() == 0) {
     return ErrorMessage("No api table to initialize.");
@@ -75,9 +75,9 @@ ErrorMessageOr<void> EnableApiInTracee(const CaptureOptions& capture_options, bo
 
   // Load liborbit.so and find api table initialization function.
   const std::string liborbit_path = orbit_base::GetExecutableDir() / "liborbit.so";
-  constexpr const char* kEnableFunction = "orbit_api_enable";
+  constexpr const char* kSetEnabledFunction = "orbit_api_set_enabled";
   OUTCOME_TRY(handle, DlopenInTracee(pid, liborbit_path, RTLD_NOW));
-  OUTCOME_TRY(orbit_api_enable_function, DlsymInTracee(pid, handle, kEnableFunction));
+  OUTCOME_TRY(orbit_api_set_enabled_function, DlsymInTracee(pid, handle, kSetEnabledFunction));
 
   // Initialize all api function tables.
   OUTCOME_TRY(modules_by_path, GetModulesByPathForPid(pid));
@@ -95,8 +95,8 @@ ErrorMessageOr<void> EnableApiInTracee(const CaptureOptions& capture_options, bo
         module_info->address_start() + api_function.address() - module_info->load_bias());
     OUTCOME_TRY(function_table_address, ExecuteInProcess(pid, api_function_address));
 
-    // Call "orbit_api_enable" in tracee.
-    OUTCOME_TRY(ExecuteInProcess(pid, orbit_api_enable_function, function_table_address,
+    // Call "orbit_api_set_enabled" in tracee.
+    OUTCOME_TRY(ExecuteInProcess(pid, orbit_api_set_enabled_function, function_table_address,
                                  api_function.api_version(), enabled ? 1 : 0));
   }
 
@@ -108,11 +108,11 @@ ErrorMessageOr<void> EnableApiInTracee(const CaptureOptions& capture_options, bo
 namespace orbit_api {
 
 ErrorMessageOr<void> EnableApiInTracee(const orbit_grpc_protos::CaptureOptions& capture_options) {
-  return ::EnableApiInTracee(capture_options, /*enabled*/ true);
+  return ::SetApiEnabledInTracee(capture_options, /*enabled*/ true);
 }
 
 ErrorMessageOr<void> DisableApiInTracee(const orbit_grpc_protos::CaptureOptions& capture_options) {
-  return ::EnableApiInTracee(capture_options, /*enabled*/ false);
+  return ::SetApiEnabledInTracee(capture_options, /*enabled*/ false);
 }
 
 }  // namespace orbit_api
