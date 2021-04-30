@@ -51,7 +51,6 @@ target_sources(
          MemoryTrack.h
          ModulesDataView.h
          PickingManager.h
-         PresetLoadState.h
          PresetsDataView.h
          SamplingReport.h
          SamplingReportDataView.h
