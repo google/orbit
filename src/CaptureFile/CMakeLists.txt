@@ -19,7 +19,9 @@ target_sources(
   CaptureFile
   PRIVATE CaptureFileConstants.h
           CaptureFile.cpp
-          CaptureFileOutputStream.cpp)
+          CaptureFileOutputStream.cpp
+          FileFragmentInputStream.cpp
+          FileFragmentInputStream.h)
 
 target_include_directories(CaptureFile PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
@@ -36,6 +38,7 @@ target_compile_options(CaptureFileTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(CaptureFileTests PRIVATE
   CaptureFileOutputStreamTest.cpp
   CaptureFileTest.cpp
+  FileFragmentInputStreamTest.cpp
 )
 
 target_link_libraries(
