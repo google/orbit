@@ -73,6 +73,10 @@ namespace {
 
 ErrorMessageOr<void> AttachAndStopProcess(pid_t pid) {
   auto process_tids = GetTidsOfProcess(pid);
+  if (process_tids.empty()) {
+    return ErrorMessage(absl::StrFormat("There is no process with pid %d.", pid));
+  }
+
   absl::flat_hash_set<pid_t> halted_tids;
   // Note that the process is still running - it can spawn and end threads at this point.
   while (process_tids.size() != halted_tids.size()) {

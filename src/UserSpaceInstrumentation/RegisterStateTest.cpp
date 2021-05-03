@@ -9,11 +9,14 @@
 #include <sys/wait.h>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/TestUtils.h"
 #include "RegisterState.h"
 
 namespace orbit_user_space_instrumentation {
 
 namespace {
+
+using orbit_base::HasError;
 
 // Let the parent trace us, write into rax and ymm0, then enter a breakpoint. While the child is
 // stopped the parent modifies the registers and continues the child. The child then reads back the
@@ -69,23 +72,25 @@ TEST(RegisterStateTest, BackupModifyRestore) {
   CHECK(WSTOPSIG(status) == SIGTRAP);
 
   // Read child's registers and check values.
-  RegisterState s;
-  EXPECT_TRUE(s.BackupRegisters(pid).has_value());
-  EXPECT_EQ(s.GetGeneralPurposeRegisters()->x86_64.rax, 0xaabbccdd);
-  EXPECT_TRUE(s.HasSseDataStored());
-  EXPECT_TRUE(s.HasAvxDataStored());
+  RegisterState state;
+
+  EXPECT_TRUE(state.BackupRegisters(pid).has_value());
+  EXPECT_EQ(state.GetGeneralPurposeRegisters()->x86_64.rax, 0xaabbccdd);
+  EXPECT_TRUE(state.Hasx87DataStored());
+  EXPECT_TRUE(state.HasSseDataStored());
+  EXPECT_TRUE(state.HasAvxDataStored());
   for (int i = 0; i < 16; ++i) {
-    EXPECT_EQ(s.GetFxSave()->xmm[0].bytes[i], i);
-    EXPECT_EQ(s.GetAvxHiRegisters()->ymm[0].bytes[i], i + 16);
+    EXPECT_EQ(state.GetFxSave()->xmm[0].bytes[i], i);
+    EXPECT_EQ(state.GetAvxHiRegisters()->ymm[0].bytes[i], i + 16);
   }
 
   // Modify rax and ymm0 and write them back to the child.
-  s.GetGeneralPurposeRegisters()->x86_64.rax += 0x11223344;
+  state.GetGeneralPurposeRegisters()->x86_64.rax += 0x11223344;
   for (int i = 0; i < 16; ++i) {
-    s.GetFxSave()->xmm[0].bytes[i] += 0x10;
-    s.GetAvxHiRegisters()->ymm[0].bytes[i] += 0x10;
+    state.GetFxSave()->xmm[0].bytes[i] += 0x10;
+    state.GetAvxHiRegisters()->ymm[0].bytes[i] += 0x10;
   }
-  EXPECT_TRUE(s.RestoreRegisters().has_value());
+  EXPECT_TRUE(state.RestoreRegisters().has_value());
 
   // Continue child.
   CHECK(ptrace(PT_CONTINUE, pid, 1, 0) == 0);
@@ -95,6 +100,10 @@ TEST(RegisterStateTest, BackupModifyRestore) {
   CHECK(waited == pid);
   CHECK(WIFEXITED(status));
   EXPECT_EQ(WEXITSTATUS(status), 0);
+
+  // After the process exited we get errors when backing up / restoring registers.
+  EXPECT_THAT(state.RestoreRegisters(), HasError("PTRACE_SETREGSET failed to write NT_PRSTATUS"));
+  EXPECT_THAT(state.BackupRegisters(pid), HasError("PTRACE_GETREGS, NT_PRSTATUS failed"));
 }
 
 }  // namespace orbit_user_space_instrumentation
