@@ -589,9 +589,14 @@
     "context": "host"
    },
    "73": {
-    "ref": "grpc_codegen/1.27.3@orbitdeps/stable#c6bf9ad213d71302cea8e565a62e37ea",
+    "ref": "grpc_codegen/1.27.3@orbitdeps/stable#8728b94e133a18e7454c14a28959a148",
     "requires": [
-     "71"
+     "1",
+     "8",
+     "6",
+     "7",
+     "71",
+     "5"
     ],
     "context": "host"
    },
