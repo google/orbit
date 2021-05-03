@@ -18,7 +18,7 @@
 
 namespace orbit_user_space_instrumentation {
 
-using orbit_base::HasErrorContaining;
+using orbit_base::HasError;
 using orbit_base::HasNoError;
 
 TEST(ExecuteMachineCodeTest, ExecuteMachineCode) {
@@ -50,7 +50,7 @@ TEST(ExecuteMachineCodeTest, ExecuteMachineCode) {
     EXPECT_EQ(0x4242424242424242, result_or_error.value());
 
     result_or_error = ExecuteMachineCode(-1, address, code);
-    EXPECT_THAT(result_or_error, HasErrorContaining("Unable to open file"));
+    EXPECT_THAT(result_or_error, HasError("Unable to open file"));
   }
 
   // Cleanup, end child process.
