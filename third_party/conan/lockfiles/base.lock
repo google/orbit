@@ -329,7 +329,7 @@
     "context": "host"
    },
    "32": {
-    "ref": "crashpad/20200624@orbitdeps/stable#8c19cb575eb819de0b050cf7d1f317b6",
+    "ref": "crashpad/20200624@orbitdeps/stable#e6bbf1b8d0e51618a84f8e1cbe045fbd",
     "context": "host"
    },
    "33": {
