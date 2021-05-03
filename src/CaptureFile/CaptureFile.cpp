@@ -5,11 +5,14 @@
 #include "CaptureFile/CaptureFile.h"
 
 #include "CaptureFileConstants.h"
+#include "CaptureSectionInputStreamImpl.h"
 #include "OrbitBase/File.h"
 
 namespace orbit_capture_file {
 
 namespace {
+
+using orbit_base::unique_fd;
 
 struct CaptureFileHeader {
   std::array<char, kFileSignatureSize> signature;
@@ -37,15 +40,43 @@ class CaptureFileImpl : public CaptureFile {
   ErrorMessageOr<void> ReadFromSection(uint64_t section_number, uint64_t offset_in_section,
                                        void* data, size_t size) override;
 
+  std::unique_ptr<CaptureSectionInputStream> CreateCaptureSectionInputStream() override;
+
  private:
   // Parse header and validate version/file-format
-  ErrorMessageOr<void> ReadHeaderAndSectionList();
+  ErrorMessageOr<void> ReadHeader();
+  ErrorMessageOr<void> ReadSectionList();
+  ErrorMessageOr<void> CalculateCaptureSectionSize();
 
   std::filesystem::path file_path_;
-  orbit_base::unique_fd fd_;
+  unique_fd fd_;
   CaptureFileHeader header_{};
+
+  // This is used for boundary checks so that we do not end up
+  // reading from sections following capture section, this is not
+  // the exact size of the section but it is always >= the actual
+  // size of the section. The user must rely on CaptureFinished
+  // message to detect the last message for the capture section.
+  uint64_t capture_section_size_ = 0;
+
   std::vector<CaptureFileSection> section_list_;
 };
+
+template <uint64_t alignment>
+constexpr uint64_t AlignUp(uint64_t value) {
+  // alignment must be a power of 2
+  static_assert((alignment & (alignment - 1)) == 0);
+  return (value + (alignment - 1)) & ~(alignment - 1);
+}
+
+ErrorMessageOr<uint64_t> GetEndOfFileOffset(const unique_fd& fd) {
+  off_t end_of_file = lseek(fd.get(), 0, SEEK_END);
+  if (end_of_file == -1) {
+    return ErrorMessage{SafeStrerror(errno)};
+  }
+
+  return end_of_file;
+}
 
 ErrorMessageOr<void> CaptureFileImpl::Initialize() {
   auto fd_or_error = orbit_base::OpenExistingFileForReadWrite(file_path_);
@@ -55,23 +86,40 @@ ErrorMessageOr<void> CaptureFileImpl::Initialize() {
 
   fd_ = std::move(fd_or_error.value());
 
-  OUTCOME_TRY(ReadHeaderAndSectionList());
+  OUTCOME_TRY(ReadHeader());
+  OUTCOME_TRY(ReadSectionList());
+  OUTCOME_TRY(CalculateCaptureSectionSize());
+
   return outcome::success();
 }
 
-ErrorMessageOr<void> CaptureFileImpl::ReadHeaderAndSectionList() {
-  OUTCOME_TRY(header, orbit_base::ReadFullyAtOffset<CaptureFileHeader>(fd_, 0));
-  header_ = header;
-
-  if (std::memcmp(header_.signature.data(), kFileSignature, header_.signature.size()) != 0) {
-    return ErrorMessage{"Invalid file signature"};
+ErrorMessageOr<void> CaptureFileImpl::CalculateCaptureSectionSize() {
+  // If there are no additional sections the capture section ends at the EOF
+  if (header_.section_list_offset == 0) {
+    OUTCOME_TRY(end_of_file_offset, GetEndOfFileOffset(fd_));
+    capture_section_size_ = end_of_file_offset - header_.capture_section_offset;
+    return outcome::success();
   }
 
-  if (header_.version != kFileVersion) {
-    return ErrorMessage{
-        absl::StrFormat("Incompatible version %d, expected %d", header_.version, kFileVersion)};
+  // Otherwise it ends at the start of the next section
+  uint64_t min_section_offset = std::numeric_limits<uint64_t>::max();
+
+  CHECK(!section_list_.empty());
+
+  for (const auto& section : section_list_) {
+    if (section.offset < min_section_offset) {
+      min_section_offset = section.offset;
+    }
   }
 
+  CHECK(min_section_offset < std::numeric_limits<uint64_t>::max());
+
+  capture_section_size_ = min_section_offset - header_.capture_section_offset;
+
+  return outcome::success();
+}
+
+ErrorMessageOr<void> CaptureFileImpl::ReadSectionList() {
   if (header_.section_list_offset == 0) {
     return outcome::success();
   }
@@ -95,10 +143,25 @@ ErrorMessageOr<void> CaptureFileImpl::ReadHeaderAndSectionList() {
   return outcome::success();
 }
 
-ErrorMessageOr<void> orbit_capture_file::CaptureFileImpl::WriteToSection(uint64_t section_number,
-                                                                         uint64_t offset_in_section,
-                                                                         const void* data,
-                                                                         size_t size) {
+ErrorMessageOr<void> CaptureFileImpl::ReadHeader() {
+  OUTCOME_TRY(header, orbit_base::ReadFullyAtOffset<CaptureFileHeader>(fd_, 0));
+  header_ = header;
+
+  if (std::memcmp(header_.signature.data(), kFileSignature, header_.signature.size()) != 0) {
+    return ErrorMessage{"Invalid file signature"};
+  }
+
+  if (header_.version != kFileVersion) {
+    return ErrorMessage{
+        absl::StrFormat("Incompatible version %d, expected %d", header_.version, kFileVersion)};
+  }
+
+  return outcome::success();
+}
+
+ErrorMessageOr<void> CaptureFileImpl::WriteToSection(uint64_t section_number,
+                                                     uint64_t offset_in_section, const void* data,
+                                                     size_t size) {
   CHECK(section_number < section_list_.size());
 
   const CaptureFileSection& section = section_list_[section_number];
@@ -109,15 +172,7 @@ ErrorMessageOr<void> orbit_capture_file::CaptureFileImpl::WriteToSection(uint64_
   return outcome::success();
 }
 
-template <uint64_t alignment>
-constexpr uint64_t AlignUp(uint64_t value) {
-  // alignment must be a power of 2
-  static_assert((alignment & (alignment - 1)) == 0);
-  return (value + (alignment - 1)) & ~(alignment - 1);
-}
-
-ErrorMessageOr<uint16_t> orbit_capture_file::CaptureFileImpl::AddSection(uint64_t section_type,
-                                                                         uint64_t section_size) {
+ErrorMessageOr<uint16_t> CaptureFileImpl::AddSection(uint64_t section_type, uint64_t section_size) {
   if (section_list_.size() == std::numeric_limits<uint16_t>::max()) {
     return ErrorMessage{
         absl::StrFormat("Section list has reached its maximum size: %d", section_list_.size())};
@@ -134,10 +189,7 @@ ErrorMessageOr<uint16_t> orbit_capture_file::CaptureFileImpl::AddSection(uint64_
   // to the end of the file.
   if (new_section_offset == 0) {
     CHECK(section_list.empty());
-    off_t end_of_file = lseek(fd_.get(), 0, SEEK_END);
-    if (end_of_file == -1) {
-      return ErrorMessage{SafeStrerror(errno)};
-    }
+    OUTCOME_TRY(end_of_file, GetEndOfFileOffset(fd_));
     new_section_offset = AlignUp<8>(end_of_file);
   }
 
@@ -167,8 +219,9 @@ ErrorMessageOr<uint16_t> orbit_capture_file::CaptureFileImpl::AddSection(uint64_
   return section_list_.size() - 1;
 }
 
-ErrorMessageOr<void> orbit_capture_file::CaptureFileImpl::ReadFromSection(
-    uint64_t section_number, uint64_t offset_in_section, void* data, size_t size) {
+ErrorMessageOr<void> CaptureFileImpl::ReadFromSection(uint64_t section_number,
+                                                      uint64_t offset_in_section, void* data,
+                                                      size_t size) {
   CHECK(section_number < section_list_.size());
 
   const CaptureFileSection& section = section_list_[section_number];
@@ -187,6 +240,11 @@ ErrorMessageOr<void> orbit_capture_file::CaptureFileImpl::ReadFromSection(
   }
 
   return outcome::success();
+}
+
+std::unique_ptr<CaptureSectionInputStream> CaptureFileImpl::CreateCaptureSectionInputStream() {
+  return std::make_unique<orbit_capture_file_internal::CaptureSectionInputStreamImpl>(
+      fd_, header_.capture_section_offset, capture_section_size_);
 }
 
 }  // namespace

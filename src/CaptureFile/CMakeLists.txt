@@ -13,13 +13,16 @@ target_sources(
   CaptureFile
   PUBLIC include/CaptureFile/CaptureFile.h
          include/CaptureFile/CaptureFileOutputStream.h
-         include/CaptureFile/CaptureFileSection.h)
+         include/CaptureFile/CaptureFileSection.h
+         include/CaptureFile/CaptureSectionInputStream.h)
 
 target_sources(
   CaptureFile
   PRIVATE CaptureFileConstants.h
           CaptureFile.cpp
           CaptureFileOutputStream.cpp
+          CaptureSectionInputStreamImpl.cpp
+          CaptureSectionInputStreamImpl.h
           FileFragmentInputStream.cpp
           FileFragmentInputStream.h)
 
