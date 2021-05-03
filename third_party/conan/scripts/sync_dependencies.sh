@@ -23,7 +23,6 @@ if [ "$1" ]; then
   conan remote enable bintray
   conan user -r bintray $BINTRAY_USERNAME -p $BINTRAY_API_KEY || exit $?
 
-  conan remote enable bincrafters
   conan remote enable conan-center
 
   for profile in $@; do

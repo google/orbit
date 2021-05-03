@@ -5,7 +5,7 @@
 $conan = Get-Command conan -ErrorAction Stop
 
 function conan_disable_public_remotes() {
-  $remotes = "bintray", "conan-center", "bincrafters"
+  $remotes = "bintray", "conan-center"
   foreach ($remote in $remotes) {
     $process = Start-Process $conan.Path -Wait -NoNewWindow -ErrorAction Stop -PassThru -ArgumentList "remote","disable",$remote
     if ($process.ExitCode -ne 0) { Throw "Error while disabling conan-remote $remote." }
