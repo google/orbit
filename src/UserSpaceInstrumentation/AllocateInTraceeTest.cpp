@@ -19,12 +19,14 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/TestUtils.h"
 #include "UserSpaceInstrumentation/Attach.h"
 
 namespace orbit_user_space_instrumentation {
 
 namespace {
 
+using orbit_base::HasError;
 using orbit_base::ReadFileToString;
 
 // Returns true if `pid` has a readable, writeable, and executable memory segment at `address`.
@@ -63,9 +65,21 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
   // Stop the process using our tooling.
   CHECK(!AttachAndStopProcess(pid).has_error());
 
-  // Allocate a megabyte in the tracee.
+  // Allocation fails for invalid process.
   constexpr uint64_t kMemorySize = 1024 * 1024;
-  auto address_or_error = AllocateInTracee(pid, 0, kMemorySize);
+  auto address_or_error = AllocateInTracee(-1, 0, kMemorySize);
+  EXPECT_THAT(address_or_error, HasError("No such process"));
+
+  // Allocation fails for non page aligned address.
+  address_or_error = AllocateInTracee(pid, 1, kMemorySize);
+  EXPECT_THAT(address_or_error, HasError("but got memory at a different adress"));
+
+  // Allocation fails for ridiculous size.
+  address_or_error = AllocateInTracee(pid, 0, 1 << 63);
+  EXPECT_THAT(address_or_error, HasError("Invalid argument"));
+
+  // Allocate a megabyte in the tracee.
+  address_or_error = AllocateInTracee(pid, 0, kMemorySize);
   ASSERT_TRUE(address_or_error.has_value());
   EXPECT_TRUE(ProcessHasRwxMapAtAddress(pid, address_or_error.value()));
 

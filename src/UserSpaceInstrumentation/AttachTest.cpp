@@ -10,14 +10,19 @@
 #include <vector>
 
 #include "OrbitBase/GetProcessIds.h"
+#include "OrbitBase/TestUtils.h"
 #include "TestProcess.h"
 #include "UserSpaceInstrumentation/Attach.h"
 
 namespace orbit_user_space_instrumentation {
 
+using orbit_base::HasError;
+
 TEST(AttachTest, AttachAndStopProcess) {
   TestProcess test_process;
   const pid_t pid = test_process.pid();
+
+  EXPECT_THAT(AttachAndStopProcess(-1), HasError("There is no process with pid"));
 
   const auto result = AttachAndStopProcess(pid);
   ASSERT_FALSE(result.has_error()) << result.error().message();
