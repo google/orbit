@@ -33,7 +33,7 @@ class CrashpadConan(ConanFile):
         return os.path.join(self._crashpad_source_base(), "crashpad")
 
     def build_requirements(self):
-        self.build_requires("depot_tools_installer/20200515@bincrafters/stable")
+        self.build_requires("depot_tools/cci.20201009")
         self.build_requires("ninja/1.9.0")
         if self.settings.os == "Linux":
             self.build_requires("openssl/1.1.1d@orbitdeps/stable")
