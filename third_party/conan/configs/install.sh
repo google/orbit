@@ -7,7 +7,6 @@
 function conan_disable_public_remotes {
   conan remote disable bintray || return $?
   conan remote disable conan-center || return $?
-  conan remote disable bincrafters || return $?
   return 0
 }
 
