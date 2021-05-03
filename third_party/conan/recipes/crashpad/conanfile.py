@@ -35,8 +35,10 @@ class CrashpadConan(ConanFile):
     def build_requirements(self):
         self.build_requires("depot_tools_installer/20200515@bincrafters/stable")
         self.build_requires("ninja/1.9.0")
+
+    def requirements(self):
         if self.settings.os == "Linux":
-            self.build_requires("openssl/1.1.1d@orbitdeps/stable")
+            self.requires("openssl/1.1.1k@orbitdeps/stable")
 
     def _mangle_spec_for_gclient(self, solutions):
         return json.dumps(solutions)          \
