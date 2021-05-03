@@ -18,7 +18,7 @@ it available in the path.
 "@
   }
 
-  & $pip3.Path install conan==1.32.0
+  & $pip3.Path install conan==1.36.0
   if ($LastExitCode -ne 0) {
     Throw "Error while installing conan via pip3."
   }

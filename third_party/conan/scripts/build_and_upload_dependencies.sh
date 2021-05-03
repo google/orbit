@@ -15,7 +15,7 @@ SCRIPT="/mnt/third_party/conan/scripts/build_and_upload_dependencies.sh"
 export CONAN_USE_ALWAYS_SHORT_PATHS=1
 
 if [ "$1" ]; then
-  pip3 install conan==1.29.2
+  pip3 install conan==1.36.0
   export QT_QPA_PLATFORM=offscreen
 
   $REPO_ROOT/third_party/conan/configs/install.sh || exit $?
