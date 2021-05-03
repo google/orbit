@@ -13,6 +13,7 @@
 
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "absl/synchronization/mutex.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -63,6 +64,14 @@ TEST(GetProcessIdsLinux, GetTidsOfProcess) {
 
   std::vector<pid_t> expected_tids{main_tid, thread_tid};
   EXPECT_THAT(returned_tids, ::testing::UnorderedElementsAreArray(expected_tids));
+}
+
+TEST(GetProcessIdsLinux, GetTracerPidOfProcess) {
+  pid_t current_pid = orbit_base::GetCurrentProcessId();
+  auto pid_or_error = orbit_base::GetTracerPidOfProcess(current_pid);
+  EXPECT_FALSE(pid_or_error.has_error()) << pid_or_error.error().message();
+  constexpr int kNoTracerPid = 0;
+  EXPECT_EQ(pid_or_error.value(), kNoTracerPid);
 }
 
 }  // namespace orbit_base
