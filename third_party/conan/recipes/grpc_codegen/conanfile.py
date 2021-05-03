@@ -28,16 +28,13 @@ class grpcConan(ConanFile):
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
 
-    build_requires = (
+    requires = (
         "abseil/20200923.3",
-        "zlib/1.2.11",
+        "c-ares/1.15.0",
         "openssl/1.1.1d@orbitdeps/stable",
         "protobuf/3.9.1@bincrafters/stable",
-        "c-ares/1.15.0@conan/stable"
-    )
-
-    requires = (
-        "protoc_installer/3.9.1@bincrafters/stable"
+        "protoc_installer/3.9.1@bincrafters/stable",
+        "zlib/1.2.11"
     )
 
     def configure(self):
