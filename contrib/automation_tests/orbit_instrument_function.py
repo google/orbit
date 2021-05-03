@@ -8,7 +8,7 @@ from absl import app
 
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-from test_cases.capture_window import Capture, CheckTimers
+from test_cases.capture_window import Capture, CheckTimers, ExpandTrack
 from test_cases.symbols_tab import LoadSymbols, FilterAndHookFunction
 from test_cases.live_tab import VerifyFunctionCallCount
 
@@ -37,7 +37,8 @@ def main(argv):
         LoadSymbols(module_search_string="hello_ggp"),
         Capture(),
         CheckTimers(track_name_filter='Scheduler'),
-        CheckTimers(track_name_filter='gfx'),
+        ExpandTrack(expected_name="gfx"),
+        CheckTimers(track_name_filter='gfx_submissions', recursive=True),
         CheckTimers(track_name_filter="All Threads", expect_exists=False),
         CheckTimers(track_name_filter="hello_ggp_stand", expect_exists=False),
         FilterAndHookFunction(function_search_string='DrawFrame'),
