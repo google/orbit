@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "CaptureFile/CaptureFileSection.h"
+#include "CaptureFile/CaptureSectionInputStream.h"
 #include "OrbitBase/Result.h"
 
 namespace orbit_capture_file {
@@ -41,6 +42,8 @@ class CaptureFile {
   // this function will CHECK fail.
   virtual ErrorMessageOr<void> ReadFromSection(uint64_t section_number, uint64_t section_offset,
                                                void* data, size_t size) = 0;
+
+  virtual std::unique_ptr<CaptureSectionInputStream> CreateCaptureSectionInputStream() = 0;
 
   static ErrorMessageOr<std::unique_ptr<CaptureFile>> OpenForReadWrite(
       const std::filesystem::path& file_path);

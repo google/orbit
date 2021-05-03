@@ -20,13 +20,125 @@ static constexpr const char* kNotAnAnswerString = "Some odd number, not the answ
 static constexpr uint64_t kAnswerKey = 42;
 static constexpr uint64_t kNotAnAnswerKey = 43;
 
-static orbit_grpc_protos::ClientCaptureEvent CreateInternedStringCaptureEvent(
-    uint64_t key, const std::string& str) {
-  orbit_grpc_protos::ClientCaptureEvent event;
+using orbit_grpc_protos::ClientCaptureEvent;
+using testing::HasSubstr;
+
+static ClientCaptureEvent CreateInternedStringCaptureEvent(uint64_t key, const std::string& str) {
+  ClientCaptureEvent event;
   orbit_grpc_protos::InternedString* interned_string = event.mutable_interned_string();
   interned_string->set_key(key);
   interned_string->set_intern(str);
   return event;
+}
+
+TEST(CaptureFile, CreateCaptureFileAndReadMainSection) {
+  auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
+  ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
+  orbit_base::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
+
+  std::string temp_file_name = temporary_file.file_path().string();
+
+  auto output_stream_or_error = CaptureFileOutputStream::Create(temp_file_name);
+  ASSERT_TRUE(output_stream_or_error.has_value()) << output_stream_or_error.error().message();
+
+  std::unique_ptr<CaptureFileOutputStream> output_stream =
+      std::move(output_stream_or_error.value());
+
+  EXPECT_TRUE(output_stream->IsOpen());
+
+  orbit_grpc_protos::ClientCaptureEvent event1 =
+      CreateInternedStringCaptureEvent(kAnswerKey, kAnswerString);
+  orbit_grpc_protos::ClientCaptureEvent event2 =
+      CreateInternedStringCaptureEvent(kNotAnAnswerKey, kNotAnAnswerString);
+
+  auto write_result = output_stream->WriteCaptureEvent(event1);
+  ASSERT_FALSE(write_result.has_error()) << write_result.error().message();
+  write_result = output_stream->WriteCaptureEvent(event2);
+  ASSERT_FALSE(write_result.has_error()) << write_result.error().message();
+  auto close_result = output_stream->Close();
+  ASSERT_FALSE(close_result.has_error()) << close_result.error().message();
+
+  auto capture_file_or_error = CaptureFile::OpenForReadWrite(temporary_file.file_path());
+  ASSERT_TRUE(capture_file_or_error.has_value()) << capture_file_or_error.error().message();
+  std::unique_ptr<CaptureFile> capture_file = std::move(capture_file_or_error.value());
+
+  auto capture_section = capture_file->CreateCaptureSectionInputStream();
+
+  {
+    auto event_or_error = capture_section->ReadEvent();
+    ASSERT_TRUE(event_or_error.has_value()) << event_or_error.error().message();
+    ASSERT_EQ(event_or_error.value().event_case(), ClientCaptureEvent::kInternedString);
+    EXPECT_EQ(event_or_error.value().interned_string().key(), kAnswerKey);
+    EXPECT_EQ(event_or_error.value().interned_string().intern(), kAnswerString);
+  }
+
+  {
+    auto event_or_error = capture_section->ReadEvent();
+    ASSERT_TRUE(event_or_error.has_value()) << event_or_error.error().message();
+    ASSERT_EQ(event_or_error.value().event_case(), ClientCaptureEvent::kInternedString);
+    EXPECT_EQ(event_or_error.value().interned_string().key(), kNotAnAnswerKey);
+    EXPECT_EQ(event_or_error.value().interned_string().intern(), kNotAnAnswerString);
+  }
+}
+
+TEST(CaptureFile, CreateCaptureFileWriteAdditionalSectionAndReadMainSection) {
+  auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
+  ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
+  orbit_base::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
+
+  std::string temp_file_name = temporary_file.file_path().string();
+
+  auto output_stream_or_error = CaptureFileOutputStream::Create(temp_file_name);
+  ASSERT_TRUE(output_stream_or_error.has_value()) << output_stream_or_error.error().message();
+
+  std::unique_ptr<CaptureFileOutputStream> output_stream =
+      std::move(output_stream_or_error.value());
+
+  EXPECT_TRUE(output_stream->IsOpen());
+
+  orbit_grpc_protos::ClientCaptureEvent event1 =
+      CreateInternedStringCaptureEvent(kAnswerKey, kAnswerString);
+  orbit_grpc_protos::ClientCaptureEvent event2 =
+      CreateInternedStringCaptureEvent(kNotAnAnswerKey, kNotAnAnswerString);
+
+  auto write_result = output_stream->WriteCaptureEvent(event1);
+  ASSERT_FALSE(write_result.has_error()) << write_result.error().message();
+  write_result = output_stream->WriteCaptureEvent(event2);
+  ASSERT_FALSE(write_result.has_error()) << write_result.error().message();
+  auto close_result = output_stream->Close();
+  ASSERT_FALSE(close_result.has_error()) << close_result.error().message();
+
+  auto capture_file_or_error = CaptureFile::OpenForReadWrite(temporary_file.file_path());
+  ASSERT_TRUE(capture_file_or_error.has_value()) << capture_file_or_error.error().message();
+  std::unique_ptr<CaptureFile> capture_file = std::move(capture_file_or_error.value());
+
+  auto section_number_or_error = capture_file->AddSection(1, 333);
+  ASSERT_TRUE(section_number_or_error.has_value()) << section_number_or_error.error().message();
+  ASSERT_EQ(capture_file->GetSectionList().size(), 1);
+  EXPECT_EQ(section_number_or_error.value(), 0);
+  capture_file.reset();
+
+  capture_file_or_error = CaptureFile::OpenForReadWrite(temporary_file.file_path());
+  ASSERT_TRUE(capture_file_or_error.has_value()) << capture_file_or_error.error().message();
+  capture_file = std::move(capture_file_or_error.value());
+
+  auto capture_section = capture_file->CreateCaptureSectionInputStream();
+
+  {
+    auto event_or_error = capture_section->ReadEvent();
+    ASSERT_TRUE(event_or_error.has_value()) << event_or_error.error().message();
+    ASSERT_EQ(event_or_error.value().event_case(), ClientCaptureEvent::kInternedString);
+    EXPECT_EQ(event_or_error.value().interned_string().key(), kAnswerKey);
+    EXPECT_EQ(event_or_error.value().interned_string().intern(), kAnswerString);
+  }
+
+  {
+    auto event_or_error = capture_section->ReadEvent();
+    ASSERT_TRUE(event_or_error.has_value()) << event_or_error.error().message();
+    ASSERT_EQ(event_or_error.value().event_case(), ClientCaptureEvent::kInternedString);
+    EXPECT_EQ(event_or_error.value().interned_string().key(), kNotAnAnswerKey);
+    EXPECT_EQ(event_or_error.value().interned_string().intern(), kNotAnAnswerString);
+  }
 }
 
 TEST(CaptureFile, CreateCaptureFileAndAddSection) {
