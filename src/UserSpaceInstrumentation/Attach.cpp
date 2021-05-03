@@ -77,6 +77,14 @@ ErrorMessageOr<void> AttachAndStopProcess(pid_t pid) {
     return ErrorMessage(absl::StrFormat("There is no process with pid %d.", pid));
   }
 
+  OUTCOME_TRY(tracer_pid, orbit_base::GetTracerPidOfProcess(pid));
+  if (tracer_pid != 0) {
+    return ErrorMessage(
+        absl::StrFormat("Process %d is already being traced by %d. Please make sure no debugger is "
+                        "attached to the target process when profiling.",
+                        pid, tracer_pid));
+  }
+
   absl::flat_hash_set<pid_t> halted_tids;
   // Note that the process is still running - it can spawn and end threads at this point.
   while (process_tids.size() != halted_tids.size()) {
