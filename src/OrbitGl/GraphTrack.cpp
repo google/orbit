@@ -88,8 +88,9 @@ void GraphTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
   }
 }
 
-void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
-  Track::Draw(canvas, picking_mode, z_offset);
+void GraphTrack::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
+                      PickingMode picking_mode, float z_offset) {
+  Track::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
   if (values_.empty() || picking_mode != PickingMode::kNone) {
     return;
   }
@@ -99,7 +100,6 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
   float label_z = GlCanvas::kZValueTrackLabel + z_offset;
 
   // Draw label
-  uint64_t current_mouse_time_ns = time_graph_->GetCurrentMouseTimeNs();
   auto previous_point = GetPreviousValueAndTime(current_mouse_time_ns);
   double value =
       previous_point.has_value() ? previous_point.value().second : values_.begin()->second;
@@ -116,7 +116,7 @@ void GraphTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
                          ? absl::StrFormat("%.*f", value_decimal_digits_.value(), value)
                          : std::to_string(value);
   absl::StrAppend(&text, label_unit_);
-  DrawLabel(canvas, Vec2(point_x, point_y), text, kBlack, kWhite, label_z);
+  DrawLabel(batcher, text_renderer, Vec2(point_x, point_y), text, kBlack, kWhite, label_z);
 }
 
 void GraphTrack::DrawSquareDot(Batcher* batcher, Vec2 center, float radius, float z,
@@ -126,16 +126,17 @@ void GraphTrack::DrawSquareDot(Batcher* batcher, Vec2 center, float radius, floa
   batcher->AddBox(Box(position, size, z), color);
 }
 
-void GraphTrack::DrawLabel(GlCanvas* canvas, Vec2 target_pos, const std::string& text,
-                           const Color& text_color, const Color& font_color, float z) {
+void GraphTrack::DrawLabel(Batcher& batcher, TextRenderer& text_renderer, Vec2 target_pos,
+                           const std::string& text, const Color& text_color,
+                           const Color& font_color, float z) {
   uint32_t font_size = layout_->CalculateZoomedFontSize();
 
-  float text_width = canvas->GetTextRenderer().GetStringWidth(text.c_str(), font_size);
+  float text_width = text_renderer.GetStringWidth(text.c_str(), font_size);
   Vec2 text_box_size(text_width, layout_->GetTextBoxHeight());
 
   float arrow_width = text_box_size[1] / 2.f;
   bool arrow_is_left_directed =
-      target_pos[0] < canvas->GetViewport().GetWorldTopLeft()[0] + text_box_size[0] + arrow_width;
+      target_pos[0] < viewport_->GetWorldTopLeft()[0] + text_box_size[0] + arrow_width;
   Vec2 text_box_position(
       target_pos[0] + (arrow_is_left_directed ? arrow_width : -arrow_width - text_box_size[0]),
       target_pos[1] - text_box_size[1] / 2.f);
@@ -143,21 +144,20 @@ void GraphTrack::DrawLabel(GlCanvas* canvas, Vec2 target_pos, const std::string&
   Box arrow_text_box(text_box_position, text_box_size, z);
   Vec3 arrow_extra_point(target_pos[0], target_pos[1], z);
 
-  Batcher* ui_batcher = canvas->GetBatcher();
-  ui_batcher->AddBox(arrow_text_box, font_color);
+  batcher.AddBox(arrow_text_box, font_color);
   if (arrow_is_left_directed) {
-    ui_batcher->AddTriangle(
+    batcher.AddTriangle(
         Triangle(arrow_text_box.vertices[0], arrow_text_box.vertices[1], arrow_extra_point),
         font_color);
   } else {
-    ui_batcher->AddTriangle(
+    batcher.AddTriangle(
         Triangle(arrow_text_box.vertices[2], arrow_text_box.vertices[3], arrow_extra_point),
         font_color);
   }
 
-  canvas->GetTextRenderer().AddText(text.c_str(), text_box_position[0],
-                                    text_box_position[1] + layout_->GetTextOffset(), z, text_color,
-                                    font_size, text_box_size[0]);
+  text_renderer.AddText(text.c_str(), text_box_position[0],
+                        text_box_position[1] + layout_->GetTextOffset(), z, text_color, font_size,
+                        text_box_size[0]);
 }
 
 void GraphTrack::AddValue(double value, uint64_t time) {

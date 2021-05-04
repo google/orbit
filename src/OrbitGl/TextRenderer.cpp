@@ -126,7 +126,7 @@ ftgl::texture_glyph_t* TextRenderer::MaybeLoadAndGetGlyph(ftgl::texture_font_t* 
   return texture_font_get_glyph(font, character);
 }
 
-void TextRenderer::RenderLayer(Batcher* /*batcher*/, float layer) {
+void TextRenderer::RenderLayer(float layer) {
   ORBIT_SCOPE_FUNCTION;
   if (vertex_buffers_by_layer_.count(layer) == 0) return;
   auto& buffer = vertex_buffers_by_layer_.at(layer);

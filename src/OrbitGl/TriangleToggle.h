@@ -32,7 +32,8 @@ class TriangleToggle : public orbit_gl::CaptureViewElement,
   TriangleToggle(TriangleToggle&&) = delete;
   TriangleToggle& operator=(TriangleToggle&&) = delete;
 
-  void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
+  void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
+            PickingMode picking_mode, float z_offset = 0) override;
 
   // Pickable
   void OnRelease() override;

@@ -44,14 +44,14 @@ std::string CallstackThreadBar::GetTooltip() const {
   return "Left-click and drag to select samples";
 }
 
-void CallstackThreadBar::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
-  ThreadBar::Draw(canvas, picking_mode, z_offset);
+void CallstackThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
+                              uint64_t current_mouse_time_ns, PickingMode picking_mode,
+                              float z_offset) {
+  ThreadBar::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
 
   if (thread_id_ == orbit_base::kAllThreadsOfAllProcessesTid) {
     return;
   }
-
-  Batcher* ui_batcher = canvas->GetBatcher();
 
   // The sample indicators are at z == 0 and do not respond to clicks, but
   // have a tooltip. For picking, we want to draw the event bar over them if
@@ -62,9 +62,9 @@ void CallstackThreadBar::Draw(GlCanvas* canvas, PickingMode picking_mode, float 
   event_bar_z += z_offset;
   Color color = color_;
   Box box(pos_, Vec2(size_[0], -size_[1]), event_bar_z);
-  ui_batcher->AddBox(box, color, shared_from_this());
+  batcher.AddBox(box, color, shared_from_this());
 
-  if (canvas->GetPickingManager().IsThisElementPicked(this)) {
+  if (batcher.GetPickingManager()->IsThisElementPicked(this)) {
     color = Color(255, 255, 255, 255);
   }
 
@@ -73,8 +73,8 @@ void CallstackThreadBar::Draw(GlCanvas* canvas, PickingMode picking_mode, float 
   float x1 = x0 + size_[0];
   float y1 = y0 - size_[1];
 
-  ui_batcher->AddLine(pos_, Vec2(x1, y0), event_bar_z, color, shared_from_this());
-  ui_batcher->AddLine(Vec2(x1, y1), Vec2(x0, y1), event_bar_z, color, shared_from_this());
+  batcher.AddLine(pos_, Vec2(x1, y0), event_bar_z, color, shared_from_this());
+  batcher.AddLine(Vec2(x1, y1), Vec2(x0, y1), event_bar_z, color, shared_from_this());
 
   if (picked_) {
     Vec2& from = mouse_pos_last_click_;
@@ -87,7 +87,7 @@ void CallstackThreadBar::Draw(GlCanvas* canvas, PickingMode picking_mode, float 
 
     Color picked_color(0, 128, 255, 128);
     Box picked_box(Vec2(x0, y0), Vec2(x1 - x0, -size_[1]), GlCanvas::kZValueUi + z_offset);
-    ui_batcher->AddBox(picked_box, picked_color, shared_from_this());
+    batcher.AddBox(picked_box, picked_color, shared_from_this());
   }
 }
 

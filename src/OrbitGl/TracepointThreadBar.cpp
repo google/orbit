@@ -36,21 +36,21 @@ TracepointThreadBar::TracepointThreadBar(CaptureViewElement* parent, OrbitApp* a
     : ThreadBar(parent, app, time_graph, viewport, layout, capture_data, thread_id, "Tracepoints"),
       color_{255, 0, 0, 255} {}
 
-void TracepointThreadBar::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
-  ThreadBar::Draw(canvas, picking_mode, z_offset);
+void TracepointThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
+                               uint64_t current_mouse_time_ns, PickingMode picking_mode,
+                               float z_offset) {
+  ThreadBar::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
 
   if (IsEmpty()) {
     return;
   }
-
-  Batcher* ui_batcher = canvas->GetBatcher();
 
   float event_bar_z = picking_mode == PickingMode::kClick ? GlCanvas::kZValueEventBarPicking
                                                           : GlCanvas::kZValueEventBar;
   event_bar_z += z_offset;
   Color color = color_;
   Box box(pos_, Vec2(size_[0], -size_[1]), event_bar_z);
-  ui_batcher->AddBox(box, color, shared_from_this());
+  batcher.AddBox(box, color, shared_from_this());
 }
 
 void TracepointThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,

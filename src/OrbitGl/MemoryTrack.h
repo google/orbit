@@ -23,7 +23,8 @@ class MemoryTrack final : public GraphTrack {
   ~MemoryTrack() override = default;
   [[nodiscard]] Type GetType() const override { return Type::kMemoryTrack; }
 
-  void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
+  void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
+            PickingMode picking_mode, float z_offset = 0) override;
 
   void SetWarningThresholdWhenEmpty(const std::string& pretty_label, double raw_value);
   void SetValueUpperBoundWhenEmpty(const std::string& pretty_label, double raw_value);

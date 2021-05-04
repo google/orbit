@@ -27,10 +27,11 @@ TriangleToggle::TriangleToggle(State initial_state, StateChangeHandler handler,
   SetSize(size, size);
 }
 
-void TriangleToggle::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
-  CaptureViewElement::Draw(canvas, picking_mode, z_offset);
+void TriangleToggle::Draw(Batcher& batcher, TextRenderer& text_renderer,
+                          uint64_t current_mouse_time_ns, PickingMode picking_mode,
+                          float z_offset) {
+  CaptureViewElement::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
 
-  Batcher* ui_batcher = canvas->GetBatcher();
   const float z = GlCanvas::kZValueTrack + z_offset;
 
   const bool picking = picking_mode != PickingMode::kNone;
@@ -54,14 +55,14 @@ void TriangleToggle::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_of
       triangle = Triangle(position + Vec3(half_w, half_h, z), position + Vec3(-half_w, half_h, z),
                           position + Vec3(0.f, -half_w, z));
     }
-    ui_batcher->AddTriangle(triangle, color, shared_from_this());
+    batcher.AddTriangle(triangle, color, shared_from_this());
   } else {
     // When picking, draw a big square for easier picking.
     float original_width = 2 * half_w;
     float large_width = 2 * original_width;
     Box box(Vec2(pos_[0] - original_width, pos_[1] - original_width),
             Vec2(large_width, large_width), z);
-    ui_batcher->AddBox(box, color, shared_from_this());
+    batcher.AddBox(box, color, shared_from_this());
   }
 }
 

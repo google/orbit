@@ -231,8 +231,9 @@ std::string FrameTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) cons
           TicksToDuration(text_box->GetTimerInfo().start(), text_box->GetTimerInfo().end())));
 }
 
-void FrameTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
-  TimerTrack::Draw(canvas, picking_mode, z_offset);
+void FrameTrack::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
+                      PickingMode picking_mode, float z_offset) {
+  TimerTrack::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
 
   const Color kWhiteColor(255, 255, 255, 255);
   const Color kBlackColor(0, 0, 0, 255);
@@ -246,19 +247,18 @@ void FrameTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset
   std::string avg_time = GetPrettyTime(absl::Nanoseconds(stats_.average_time_ns()));
   std::string label = absl::StrFormat("Avg: %s", avg_time);
   uint32_t font_size = layout_->CalculateZoomedFontSize();
-  float string_width = canvas->GetTextRenderer().GetStringWidth(label.c_str(), font_size);
+  float string_width = text_renderer.GetStringWidth(label.c_str(), font_size);
   Vec2 white_text_box_size(string_width, layout_->GetTextBoxHeight());
   Vec2 white_text_box_position(pos_[0] + layout_->GetRightMargin(),
                                y - layout_->GetTextBoxHeight() / 2.f);
 
-  Batcher* ui_batcher = canvas->GetBatcher();
-  ui_batcher->AddLine(from, from + Vec2(layout_->GetRightMargin() / 2.f, 0), text_z, kWhiteColor);
-  ui_batcher->AddLine(Vec2(white_text_box_position[0] + white_text_box_size[0], y), to, text_z,
-                      kWhiteColor);
+  batcher.AddLine(from, from + Vec2(layout_->GetRightMargin() / 2.f, 0), text_z, kWhiteColor);
+  batcher.AddLine(Vec2(white_text_box_position[0] + white_text_box_size[0], y), to, text_z,
+                  kWhiteColor);
 
-  canvas->GetTextRenderer().AddText(label.c_str(), white_text_box_position[0],
-                                    white_text_box_position[1] + layout_->GetTextOffset(), text_z,
-                                    kWhiteColor, font_size, white_text_box_size[0]);
+  text_renderer.AddText(label.c_str(), white_text_box_position[0],
+                        white_text_box_position[1] + layout_->GetTextOffset(), text_z, kWhiteColor,
+                        font_size, white_text_box_size[0]);
 }
 
 void FrameTrack::UpdateBoxHeight() {

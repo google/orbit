@@ -36,8 +36,10 @@ bool ThreadStateBar::IsEmpty() const {
   return !capture_data_->HasThreadStatesForThread(thread_id_);
 }
 
-void ThreadStateBar::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
-  ThreadBar::Draw(canvas, picking_mode, z_offset);
+void ThreadStateBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
+                          uint64_t current_mouse_time_ns, PickingMode picking_mode,
+                          float z_offset) {
+  ThreadBar::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
 
   // Similarly to CallstackThreadBar::Draw, the thread state slices don't respond to clicks, but
   // have a tooltip. For picking, we want to draw the event bar over them if handling a click, and
@@ -47,10 +49,9 @@ void ThreadStateBar::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_of
   thread_state_bar_z += z_offset;
 
   // Draw a transparent track just for clicking.
-  Batcher* ui_batcher = canvas->GetBatcher();
   Box box(pos_, Vec2(size_[0], -size_[1]), thread_state_bar_z);
   static const Color kTransparent{0, 0, 0, 0};
-  ui_batcher->AddBox(box, kTransparent, shared_from_this());
+  batcher.AddBox(box, kTransparent, shared_from_this());
 }
 
 static Color GetThreadStateColor(ThreadStateSliceInfo::ThreadState state) {

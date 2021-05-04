@@ -37,7 +37,7 @@ class TextRenderer {
   void Clear();
   void SetViewport(orbit_gl::Viewport* viewport) { viewport_ = viewport; }
 
-  void RenderLayer(Batcher* batcher, float layer);
+  void RenderLayer(float layer);
   void RenderDebug(Batcher* batcher);
   [[nodiscard]] std::vector<float> GetLayers() const;
 

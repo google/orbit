@@ -380,7 +380,10 @@ void CaptureWindow::Draw(bool viewport_was_dirty) {
 
       time_graph_->RequestUpdatePrimitives();
     }
-    time_graph_->Draw(this, picking_mode_);
+    uint64_t timegraph_current_mouse_time_ns =
+        time_graph_->GetTickFromWorld(viewport_.ScreenToWorldPos(GetMouseScreenPos())[0]);
+    time_graph_->Draw(GetBatcher(), GetTextRenderer(), timegraph_current_mouse_time_ns,
+                      picking_mode_);
     viewport_.SetWorldExtents(viewport_.GetScreenWidth(),
                               time_graph_->GetTrackManager()->GetTracksTotalHeight());
   }
@@ -438,7 +441,7 @@ void CaptureWindow::Draw(bool viewport_was_dirty) {
     PrepareScreenSpaceViewport();
     // Text needs to be drawn in screen space.
     if (picking_mode_ == PickingMode::kNone) {
-      text_renderer_.RenderLayer(&ui_batcher_, layer);
+      text_renderer_.RenderLayer(layer);
       RenderText(layer);
     }
   }
@@ -632,7 +635,7 @@ void CaptureWindow::RenderText(float layer) {
   ORBIT_SCOPE_FUNCTION;
   if (time_graph_ == nullptr) return;
   if (picking_mode_ == PickingMode::kNone) {
-    time_graph_->DrawText(this, layer);
+    time_graph_->DrawText(layer);
   }
 }
 

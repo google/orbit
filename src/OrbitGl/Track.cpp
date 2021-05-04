@@ -73,7 +73,7 @@ std::vector<Vec2> RotatePoints(const std::vector<Vec2>& points, float rotation) 
   return result;
 }
 
-void Track::DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, const Vec2& pos,
+void Track::DrawTriangleFan(Batcher& batcher, const std::vector<Vec2>& points, const Vec2& pos,
                             const Color& color, float rotation, float z) {
   if (points.size() < 3) {
     return;
@@ -89,7 +89,7 @@ void Track::DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, c
   for (size_t i = 1; i < rotated_points.size() - 1; ++i) {
     vertices[i % 2] = position + Vec3(rotated_points[i + 1][0], rotated_points[i + 1][1], z);
     Triangle triangle(pivot, vertices[i % 2], vertices[(i + 1) % 2]);
-    batcher->AddTriangle(triangle, color, shared_from_this());
+    batcher.AddTriangle(triangle, color, shared_from_this());
   }
 }
 
@@ -97,10 +97,10 @@ std::unique_ptr<orbit_accessibility::AccessibleInterface> Track::CreateAccessibl
   return std::make_unique<orbit_gl::AccessibleTrack>(this, layout_);
 }
 
-void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
-  CaptureViewElement::Draw(canvas, picking_mode, z_offset);
+void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
+                 PickingMode picking_mode, float z_offset) {
+  CaptureViewElement::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
 
-  Batcher* ui_batcher = canvas->GetBatcher();
   const bool picking = picking_mode != PickingMode::kNone;
 
   float x0 = pos_[0];
@@ -123,7 +123,7 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
 
   const float indentation_x0 = tab_x0 + (indentation_level_ * layout_->GetTrackIntentOffset());
   Box box(Vec2(indentation_x0, y0), Vec2(label_width, -label_height), track_z);
-  ui_batcher->AddBox(box, background_color, shared_from_this());
+  batcher.AddBox(box, background_color, shared_from_this());
 
   // Draw rounded corners.
   if (!picking && draw_background_) {
@@ -148,17 +148,12 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
     Vec2 content_top_right(top_left[0] + size_[0] - right_margin,
                            top_left[1] - label_height + top_margin);
 
-    DrawTriangleFan(ui_batcher, rounded_corner, top_left, GlCanvas::kBackgroundColor, -90.f,
-                    track_z);
-    DrawTriangleFan(ui_batcher, rounded_corner, tab_top_right, GlCanvas::kBackgroundColor, 180.f,
-                    track_z);
-    DrawTriangleFan(ui_batcher, rounded_corner, tab_bottom_right, background_color, 0, track_z);
-    DrawTriangleFan(ui_batcher, rounded_corner, content_bottom_left, GlCanvas::kBackgroundColor, 0,
-                    track_z);
-    DrawTriangleFan(ui_batcher, rounded_corner, content_bottom_right, GlCanvas::kBackgroundColor,
-                    90.f, track_z);
-    DrawTriangleFan(ui_batcher, rounded_corner, content_top_right, GlCanvas::kBackgroundColor,
-                    180.f, track_z);
+    DrawTriangleFan(batcher, rounded_corner, top_left, background_color, -90.f, track_z);
+    DrawTriangleFan(batcher, rounded_corner, tab_top_right, background_color, 180.f, track_z);
+    DrawTriangleFan(batcher, rounded_corner, tab_bottom_right, background_color, 0, track_z);
+    DrawTriangleFan(batcher, rounded_corner, content_bottom_left, background_color, 0, track_z);
+    DrawTriangleFan(batcher, rounded_corner, tab_bottom_right, background_color, 0, track_z);
+    DrawTriangleFan(batcher, rounded_corner, content_bottom_left, background_color, 0, track_z);
   }
 
   // Collapse toggle state management.
@@ -169,7 +164,8 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
   }
 
   // Draw collapsing triangle.
-  const float toggle_y_pos = DrawCollapsingTriangle(canvas, picking_mode, z_offset);
+  const float toggle_y_pos =
+      DrawCollapsingTriangle(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
 
   // Draw label.
   if (!picking) {
@@ -179,7 +175,6 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
     constexpr uint32_t kMaxIndentationLevel = 5;
     uint32_t capped_indentation_level = std::min(indentation_level_, kMaxIndentationLevel);
     font_size = (font_size * (10 - capped_indentation_level)) / 10;
-    auto& text_renderer = canvas->GetTextRenderer();
     float label_offset_x = layout_->GetTrackLabelOffsetX();
     float label_offset_y = text_renderer.GetStringHeight("o", font_size) / 2.f;
 
@@ -197,12 +192,14 @@ void Track::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
     if (layout_->GetDrawTrackBackground()) {
       Box box(Vec2(x0, y0 - label_height + top_margin),
               Vec2(size_[0], -size_[1] + label_height - top_margin), track_z);
-      ui_batcher->AddBox(box, background_color, shared_from_this());
+      batcher.AddBox(box, background_color, shared_from_this());
     }
   }
 }
 
-float Track::DrawCollapsingTriangle(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
+float Track::DrawCollapsingTriangle(Batcher& batcher, TextRenderer& text_renderer,
+                                    uint64_t current_mouse_time_ns, PickingMode picking_mode,
+                                    float z_offset) {
   const float label_height = layout_->GetTrackTabHeight();
   const float half_label_height = 0.5f * label_height;
   const float x0 = pos_[0];
@@ -212,7 +209,7 @@ float Track::DrawCollapsingTriangle(GlCanvas* canvas, PickingMode picking_mode, 
   const float toggle_y_pos = pos_[1] - half_label_height;
   Vec2 toggle_pos = Vec2(intent_x0 + button_offset, toggle_y_pos);
   collapse_toggle_->SetPos(toggle_pos[0], toggle_pos[1]);
-  collapse_toggle_->Draw(canvas, picking_mode, z_offset);
+  collapse_toggle_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
   return toggle_y_pos;
 }
 
