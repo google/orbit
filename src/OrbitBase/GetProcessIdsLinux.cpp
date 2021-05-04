@@ -4,10 +4,12 @@
 
 #include <filesystem>
 #include <optional>
+#include <string>
 #include <system_error>
 
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
 #include "absl/strings/numbers.h"
 
@@ -84,6 +86,32 @@ std::vector<pid_t> GetTidsOfProcess(pid_t pid) {
     }
   }
   return tids;
+}
+
+ErrorMessageOr<pid_t> GetTracerPidOfProcess(pid_t pid) {
+  std::string status_file_name = absl::StrFormat("/proc/%i/status", pid);
+  OUTCOME_TRY(status_file_content, orbit_base::ReadFileToString(status_file_name));
+  std::istringstream status_file_content_ss{status_file_content};
+  std::string line;
+  std::optional<pid_t> tracer_pid;
+  constexpr const char* kTracerPidStr = "TracerPid:";
+
+  while (std::getline(status_file_content_ss, line)) {
+    if (line.find(kTracerPidStr) == std::string::npos) continue;
+    int potential_pid;
+    if (!absl::SimpleAtoi(line.substr(line.find_last_of(kTracerPidStr) + 1), &potential_pid)) {
+      return ErrorMessage(absl::StrFormat("Could not extract pid from line %s", line));
+    }
+    tracer_pid = potential_pid;
+    break;
+  }
+
+  if (!tracer_pid.has_value()) {
+    return ErrorMessage(
+        absl::StrFormat("Could not find \"%s\" in %s", kTracerPidStr, status_file_name));
+  }
+
+  return tracer_pid.value();
 }
 
 }  // namespace orbit_base

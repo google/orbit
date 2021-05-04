@@ -9,6 +9,8 @@
 
 #include <vector>
 
+#include "OrbitBase/Result.h"
+
 namespace orbit_base {
 
 #if defined(__linux)
@@ -17,6 +19,9 @@ std::vector<pid_t> GetAllPids();
 
 // Get the thread ids of all the threads belonging to process 'pid'.
 std::vector<pid_t> GetTidsOfProcess(pid_t pid);
+
+// Get the process id of the tracer process or 0 if no tracer is attached.
+ErrorMessageOr<pid_t> GetTracerPidOfProcess(pid_t pid);
 #endif
 
 }  // namespace orbit_base
