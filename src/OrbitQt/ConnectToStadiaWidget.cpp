@@ -96,6 +96,14 @@ void ConnectToStadiaWidget::SetConnection(StadiaConnection connection) {
   selected_instance_ = std::move(connection.instance_);
   service_deploy_manager_ = std::move(connection.service_deploy_manager_);
   grpc_channel_ = std::move(connection.grpc_channel_);
+
+  QObject::connect(
+      service_deploy_manager_.get(), &ServiceDeployManager::socketErrorOccurred, this,
+      [this](std::error_code error) {
+        emit ErrorOccurred(QString("The connection to instance %1 failed with error: %2")
+                               .arg(selected_instance_->display_name)
+                               .arg(QString::fromStdString(error.message())));
+      });
 }
 
 void ConnectToStadiaWidget::Start() {
