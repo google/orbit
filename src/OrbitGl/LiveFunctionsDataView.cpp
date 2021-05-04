@@ -63,6 +63,7 @@ const std::vector<DataView::Column>& LiveFunctionsDataView::GetColumns() {
     columns[kColumnTimeMin] = {"Min", .075f, SortingOrder::kDescending};
     columns[kColumnTimeMax] = {"Max", .075f, SortingOrder::kDescending};
     columns[kColumnModule] = {"Module", .1f, SortingOrder::kAscending};
+    columns[kColumnAddress] = {"Address", .0f, SortingOrder::kAscending};
     return columns;
   }();
   return columns;
