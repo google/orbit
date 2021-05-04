@@ -688,18 +688,17 @@ const std::vector<CallstackEvent>& TimeGraph::GetSelectedCallstackEvents(int32_t
   return selected_callstack_events_per_thread_[tid];
 }
 
-void TimeGraph::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
+void TimeGraph::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
+                     PickingMode picking_mode, float z_offset) {
   ORBIT_SCOPE("TimeGraph::Draw");
-  current_mouse_time_ns_ =
-      GetTickFromWorld(viewport_->ScreenToWorldPos(canvas_->GetMouseScreenPos())[0]);
 
   const bool picking = picking_mode != PickingMode::kNone;
   if ((!picking && update_primitives_requested_) || picking) {
     UpdatePrimitives(nullptr, 0, 0, picking_mode, z_offset);
   }
 
-  DrawTracks(canvas, picking_mode);
-  DrawOverlay(canvas, picking_mode);
+  DrawTracks(batcher, text_renderer, current_mouse_time_ns, picking_mode);
+  DrawOverlay(batcher, text_renderer, picking_mode);
 
   redraw_requested_ = false;
 }
@@ -729,18 +728,18 @@ std::string GetTimeString(const TimerInfo& timer_a, const TimerInfo& timer_b) {
 
 }  // namespace
 
-void TimeGraph::DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Color& color,
-                                const std::string& label, const std::string& time,
-                                float text_box_y) {
+void TimeGraph::DrawIteratorBox(Batcher& batcher, TextRenderer& text_renderer, Vec2 pos, Vec2 size,
+                                const Color& color, const std::string& label,
+                                const std::string& time, float text_box_y) {
   Box box(pos, size, GlCanvas::kZValueOverlay);
-  canvas->GetBatcher()->AddBox(box, color);
+  batcher.AddBox(box, color);
 
   std::string text = absl::StrFormat("%s: %s", label, time);
 
   float max_size = size[0];
 
   const Color kBlack(0, 0, 0, 255);
-  float text_width = canvas->GetTextRenderer().AddTextTrailingCharsPrioritized(
+  float text_width = text_renderer.AddTextTrailingCharsPrioritized(
       text.c_str(), pos[0], text_box_y + layout_.GetTextOffset(), GlCanvas::kZValueTextUi, kBlack,
       time.length(), GetLayout().GetFontSize(), max_size);
 
@@ -750,15 +749,15 @@ void TimeGraph::DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Col
   Box white_box(white_box_position, white_box_size, GlCanvas::kZValueOverlayTextBackground);
 
   const Color kWhite(255, 255, 255, 255);
-  canvas->GetBatcher()->AddBox(white_box, kWhite);
+  batcher.AddBox(white_box, kWhite);
 
   Vec2 line_from(pos[0] + white_box_size[0], white_box_position[1] + GetTextBoxHeight() / 2.f);
   Vec2 line_to(pos[0] + size[0], white_box_position[1] + GetTextBoxHeight() / 2.f);
-  canvas->GetBatcher()->AddLine(line_from, line_to, GlCanvas::kZValueOverlay,
-                                Color(255, 255, 255, 255));
+  batcher.AddLine(line_from, line_to, GlCanvas::kZValueOverlay, Color(255, 255, 255, 255));
 }
 
-void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
+void TimeGraph::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
+                            PickingMode picking_mode) {
   if (picking_mode != PickingMode::kNone || iterator_text_boxes_.empty()) {
     return;
   }
@@ -797,8 +796,8 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
     Vec2 pos(world_timer_x, world_start_y);
     x_coords.push_back(pos[0]);
 
-    canvas->GetBatcher()->AddVerticalLine(pos, -world_height, GlCanvas::kZValueOverlay,
-                                          GetThreadColor(timer_info.thread_id()));
+    batcher.AddVerticalLine(pos, -world_height, GlCanvas::kZValueOverlay,
+                            GetThreadColor(timer_info.thread_id()));
   }
 
   // Draw boxes with timings between iterators.
@@ -836,7 +835,7 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
                             static_cast<float>(iterator_text_boxes_.size() - 1);
     float text_y = pos[1] + (world_height / 2.f) - static_cast<float>(k) * height_per_text;
 
-    DrawIteratorBox(canvas, pos, size, color, label, time, text_y);
+    DrawIteratorBox(batcher, text_renderer, pos, size, color, label, time, text_y);
   }
 
   // When we have at least 3 boxes, we also draw the total time from the first
@@ -857,7 +856,7 @@ void TimeGraph::DrawOverlay(GlCanvas* canvas, PickingMode picking_mode) {
     // We do not want the overall box to add any color, so we just set alpha to
     // 0.
     const Color kColorBlackTransparent(0, 0, 0, 0);
-    DrawIteratorBox(canvas, pos, size, kColorBlackTransparent, label, time, text_y);
+    DrawIteratorBox(batcher, text_renderer, pos, size, kColorBlackTransparent, label, time, text_y);
   }
 }
 
@@ -866,7 +865,8 @@ std::string TimeGraph::GetThreadNameFromTid(uint32_t tid) {
   return capture_data_ ? capture_data_->GetThreadName(tid) : kEmptyString;
 }
 
-void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
+void TimeGraph::DrawTracks(Batcher& batcher, TextRenderer& text_renderer,
+                           uint64_t current_mouse_time_ns, PickingMode picking_mode) {
   for (auto& track : track_manager_->GetVisibleTracks()) {
     float z_offset = 0;
     if (track->IsPinned()) {
@@ -874,7 +874,7 @@ void TimeGraph::DrawTracks(GlCanvas* canvas, PickingMode picking_mode) {
     } else if (track->IsMoving()) {
       z_offset = GlCanvas::kZOffsetMovingTack;
     }
-    track->Draw(canvas, picking_mode, z_offset);
+    track->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
   }
 }
 
@@ -987,9 +987,9 @@ const TextBox* TimeGraph::FindDown(const TextBox* from) {
   return track_manager_->GetOrCreateThreadTrack(timer_info.thread_id())->GetDown(from);
 }
 
-void TimeGraph::DrawText(GlCanvas* canvas, float layer) {
+void TimeGraph::DrawText(float layer) {
   if (draw_text_) {
-    text_renderer_static_.RenderLayer(canvas->GetBatcher(), layer);
+    text_renderer_static_.RenderLayer(layer);
   }
 }
 

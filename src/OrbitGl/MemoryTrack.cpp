@@ -10,13 +10,13 @@
 
 namespace orbit_gl {
 
-void MemoryTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
-  GraphTrack::Draw(canvas, picking_mode, z_offset);
+void MemoryTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
+                       uint64_t current_mouse_time_ns, PickingMode picking_mode, float z_offset) {
+  GraphTrack::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
 
   if (values_.empty() || picking_mode != PickingMode::kNone) return;
 
   float text_z = GlCanvas::kZValueTrackText + z_offset;
-  Batcher* ui_batcher = canvas->GetBatcher();
   uint32_t font_size = layout_->CalculateZoomedFontSize();
 
   float content_height =
@@ -35,45 +35,43 @@ void MemoryTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offse
     Vec2 to(x + size_[0], y);
 
     std::string text = warning_threshold_.value().first;
-    float string_width = canvas->GetTextRenderer().GetStringWidth(text.c_str(), font_size);
+    float string_width = text_renderer.GetStringWidth(text.c_str(), font_size);
     Vec2 text_box_size(string_width, layout_->GetTextBoxHeight());
     Vec2 text_box_position(pos_[0] + layout_->GetRightMargin(),
                            y - layout_->GetTextBoxHeight() / 2.f);
-    canvas->GetTextRenderer().AddText(text.c_str(), text_box_position[0],
-                                      text_box_position[1] + layout_->GetTextOffset(), text_z,
-                                      kThresholdColor, font_size, text_box_size[0]);
+    text_renderer.AddText(text.c_str(), text_box_position[0],
+                          text_box_position[1] + layout_->GetTextOffset(), text_z, kThresholdColor,
+                          font_size, text_box_size[0]);
 
-    ui_batcher->AddLine(from, from + Vec2(layout_->GetRightMargin() / 2.f, 0), text_z,
-                        kThresholdColor);
-    ui_batcher->AddLine(Vec2(text_box_position[0] + text_box_size[0], y), to, text_z,
-                        kThresholdColor);
+    batcher.AddLine(from, from + Vec2(layout_->GetRightMargin() / 2.f, 0), text_z, kThresholdColor);
+    batcher.AddLine(Vec2(text_box_position[0] + text_box_size[0], y), to, text_z, kThresholdColor);
   }
 
   // Add value upper bound text box (e.g., the "System Memory Total" text box for memory tracks).
   const Color kWhite(255, 255, 255, 255);
   if (value_upper_bound_.has_value()) {
     std::string text = value_upper_bound_.value().first;
-    float string_width = canvas->GetTextRenderer().GetStringWidth(text.c_str(), font_size);
+    float string_width = text_renderer.GetStringWidth(text.c_str(), font_size);
     Vec2 text_box_size(string_width, layout_->GetTextBoxHeight());
     Vec2 text_box_position(pos_[0] + size_[0] - text_box_size[0] - layout_->GetRightMargin() -
                                layout_->GetSliderWidth(),
                            content_pos[1] - layout_->GetTextBoxHeight() / 2.f);
-    canvas->GetTextRenderer().AddText(text.c_str(), text_box_position[0],
-                                      text_box_position[1] + layout_->GetTextOffset(), text_z,
-                                      kWhite, font_size, text_box_size[0]);
+    text_renderer.AddText(text.c_str(), text_box_position[0],
+                          text_box_position[1] + layout_->GetTextOffset(), text_z, kWhite,
+                          font_size, text_box_size[0]);
   }
 
   // Add value lower bound text box.
   if (value_lower_bound_.has_value()) {
     std::string text = value_lower_bound_.value().first;
-    float string_width = canvas->GetTextRenderer().GetStringWidth(text.c_str(), font_size);
+    float string_width = text_renderer.GetStringWidth(text.c_str(), font_size);
     Vec2 text_box_size(string_width, layout_->GetTextBoxHeight());
     Vec2 text_box_position(pos_[0] + size_[0] - text_box_size[0] - layout_->GetRightMargin() -
                                layout_->GetSliderWidth(),
                            content_pos[1] - content_height);
-    canvas->GetTextRenderer().AddText(text.c_str(), text_box_position[0],
-                                      text_box_position[1] + layout_->GetTextOffset(), text_z,
-                                      kWhite, font_size, text_box_size[0]);
+    text_renderer.AddText(text.c_str(), text_box_position[0],
+                          text_box_position[1] + layout_->GetTextOffset(), text_z, kWhite,
+                          font_size, text_box_size[0]);
   }
 }
 

@@ -38,15 +38,15 @@ TimerTrack::TimerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
   text_renderer_ = time_graph->GetTextRenderer();
 }
 
-void TimerTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
-  const orbit_gl::Viewport& viewport = canvas->GetViewport();
+void TimerTrack::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
+                      PickingMode picking_mode, float z_offset) {
   float track_height = GetHeight();
-  float track_width = viewport.GetVisibleWorldWidth();
+  float track_width = viewport_->GetVisibleWorldWidth();
 
-  SetPos(viewport.GetWorldTopLeft()[0], pos_[1]);
+  SetPos(viewport_->GetWorldTopLeft()[0], pos_[1]);
   SetSize(track_width, track_height);
 
-  Track::Draw(canvas, picking_mode, z_offset);
+  Track::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
 }
 
 std::string TimerTrack::GetExtraInfo(const TimerInfo& timer_info) {

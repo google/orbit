@@ -13,7 +13,6 @@
 #include "Viewport.h"
 
 class TimeGraph;
-class GlCanvas;
 
 namespace orbit_gl {
 
@@ -22,9 +21,9 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
  public:
   explicit CaptureViewElement(CaptureViewElement* parent, TimeGraph* time_graph,
                               orbit_gl::Viewport* viewport, TimeGraphLayout* layout);
-  virtual void Draw(GlCanvas* canvas, PickingMode /*picking_mode*/, float /*z_offset*/ = 0) {
-    canvas_ = canvas;
-  }
+  virtual void Draw(Batcher& /*batcher*/, TextRenderer& /*text_renderer*/,
+                    uint64_t /*current_mouse_time_ns*/, PickingMode /*picking_mode*/,
+                    float /*z_offset*/ = 0) {}
 
   virtual void UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, uint64_t /*max_tick*/,
                                 PickingMode /*picking_mode*/, float /*z_offset*/ = 0){};
@@ -32,8 +31,6 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   [[nodiscard]] TimeGraph* GetTimeGraph() { return time_graph_; }
 
   [[nodiscard]] orbit_gl::Viewport* GetViewport() const { return viewport_; }
-  [[nodiscard]] GlCanvas* GetCanvas() const { return canvas_; }
-  void SetCanvas(GlCanvas* canvas) { canvas_ = canvas; }
 
   void SetPos(float x, float y) { pos_ = Vec2(x, y); }
   // TODO(b/185854980): This should not be virtual as soon as we have meaningful track children.
@@ -55,7 +52,6 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   orbit_gl::Viewport* viewport_;
   TimeGraphLayout* layout_;
 
-  GlCanvas* canvas_ = nullptr;
   TimeGraph* time_graph_;
   Vec2 pos_ = Vec2(0, 0);
   Vec2 size_ = Vec2(0, 0);

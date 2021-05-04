@@ -22,7 +22,8 @@ class TracepointThreadBar : public ThreadBar {
                                const orbit_client_model::CaptureData* capture_data,
                                int32_t thread_id);
 
-  void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
+  void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
+            PickingMode picking_mode, float z_offset = 0) override;
 
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset = 0) override;

@@ -44,11 +44,15 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
                      const orbit_client_model::CaptureData* capture_data);
   ~TimeGraph();
 
-  void Draw(GlCanvas* canvas, PickingMode picking_mode = PickingMode::kNone,
-            float /*z_offset*/ = 0) override;
-  void DrawTracks(GlCanvas* canvas, PickingMode picking_mode = PickingMode::kNone);
-  void DrawOverlay(GlCanvas* canvas, PickingMode picking_mode);
-  void DrawText(GlCanvas* canvas, float layer);
+  void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
+            PickingMode picking_mode = PickingMode::kNone, float /*z_offset*/ = 0) override;
+  void DrawTracks(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
+                  PickingMode picking_mode = PickingMode::kNone);
+  void DrawOverlay(Batcher& batcher, TextRenderer& text_renderer, PickingMode picking_mode);
+  void DrawIteratorBox(Batcher& batcher, TextRenderer& text_renderer, Vec2 pos, Vec2 size,
+                       const Color& color, const std::string& label, const std::string& time,
+                       float text_box_y);
+  void DrawText(float layer);
 
   void RequestUpdatePrimitives();
   void UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, uint64_t /*max_tick*/,
@@ -161,9 +165,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
     iterator_id_to_function_id_ = iterator_id_to_function_id;
     RequestRedraw();
   }
-
-  void DrawIteratorBox(GlCanvas* canvas, Vec2 pos, Vec2 size, const Color& color,
-                       const std::string& label, const std::string& time, float text_box_y);
 
   [[nodiscard]] uint64_t GetCaptureMin() const { return capture_min_timestamp_; }
   [[nodiscard]] uint64_t GetCaptureMax() const { return capture_max_timestamp_; }

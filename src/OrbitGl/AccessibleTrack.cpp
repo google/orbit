@@ -11,7 +11,6 @@
 #include "AccessibleThreadBar.h"
 #include "AccessibleTimeGraph.h"
 #include "CoreMath.h"
-#include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
 #include "TimeGraph.h"
 #include "Track.h"
@@ -29,7 +28,6 @@ class FakeTrackTab : public CaptureViewElement {
   explicit FakeTrackTab(Track* track, TimeGraphLayout* layout)
       : CaptureViewElement(track, track->GetTimeGraph(), track->GetViewport(), layout),
         track_(track) {
-    SetCanvas(track->GetCanvas());
 
     // Compute and set the size (which would usually be done by the parent). As the position may
     // change, we override the GetPos() function.
@@ -56,7 +54,6 @@ class FakeTimerPane : public CaptureViewElement {
       : CaptureViewElement(track, track->GetTimeGraph(), track->GetViewport(), layout),
         track_(track),
         track_tab_(track_tab) {
-    SetCanvas(track->GetCanvas());
   }
 
   std::unique_ptr<AccessibleInterface> CreateAccessibleInterface() override {

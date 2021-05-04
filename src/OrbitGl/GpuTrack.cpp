@@ -146,30 +146,30 @@ float GpuTrack::GetHeight() const {
   return height;
 }
 
-void GpuTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
+void GpuTrack::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
+                    PickingMode picking_mode, float z_offset) {
   float track_height = GetHeight();
-  const orbit_gl::Viewport& viewport = canvas->GetViewport();
-  float track_width = viewport.GetVisibleWorldWidth();
+  float track_width = viewport_->GetVisibleWorldWidth();
 
-  SetPos(viewport.GetWorldTopLeft()[0], pos_[1]);
+  SetPos(viewport_->GetWorldTopLeft()[0], pos_[1]);
   SetSize(track_width, track_height);
 
   UpdatePositionOfSubtracks();
 
-  Track::Draw(canvas, picking_mode, z_offset);
+  Track::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
 
   if (collapse_toggle_->IsCollapsed()) {
     return;
   }
 
   if (!submission_track_->IsEmpty()) {
-    submission_track_->SetSize(viewport.GetVisibleWorldWidth(), submission_track_->GetHeight());
-    submission_track_->Draw(canvas, picking_mode, z_offset);
+    submission_track_->SetSize(viewport_->GetVisibleWorldWidth(), submission_track_->GetHeight());
+    submission_track_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
   }
 
   if (!marker_track_->IsEmpty()) {
-    marker_track_->SetSize(viewport.GetVisibleWorldWidth(), marker_track_->GetHeight());
-    marker_track_->Draw(canvas, picking_mode, z_offset);
+    marker_track_->SetSize(viewport_->GetVisibleWorldWidth(), marker_track_->GetHeight());
+    marker_track_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
   }
 }
 

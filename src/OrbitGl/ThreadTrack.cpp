@@ -268,8 +268,9 @@ void ThreadTrack::UpdateMinMaxTimestamps() {
   max_time_ = std::max(max_time_.load(), capture_data_->GetCallstackData()->max_time());
 }
 
-void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) {
-  TimerTrack::Draw(canvas, picking_mode, z_offset);
+void ThreadTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
+                       uint64_t current_mouse_time_ns, PickingMode picking_mode, float z_offset) {
+  TimerTrack::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
 
   UpdateMinMaxTimestamps();
   UpdatePositionOfSubtracks();
@@ -277,21 +278,21 @@ void ThreadTrack::Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offse
   const float thread_state_track_height = layout_->GetThreadStateTrackHeight();
   const float event_track_height = layout_->GetEventTrackHeight();
   const float tracepoint_track_height = layout_->GetEventTrackHeight();
-  const float world_width = canvas->GetViewport().GetVisibleWorldWidth();
+  const float world_width = viewport_->GetVisibleWorldWidth();
 
   if (!thread_state_bar_->IsEmpty()) {
     thread_state_bar_->SetSize(world_width, thread_state_track_height);
-    thread_state_bar_->Draw(canvas, picking_mode, z_offset);
+    thread_state_bar_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
   }
 
   if (!event_bar_->IsEmpty()) {
     event_bar_->SetSize(world_width, event_track_height);
-    event_bar_->Draw(canvas, picking_mode, z_offset);
+    event_bar_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
   }
 
   if (!tracepoint_bar_->IsEmpty()) {
     tracepoint_bar_->SetSize(world_width, tracepoint_track_height);
-    tracepoint_bar_->Draw(canvas, picking_mode, z_offset);
+    tracepoint_bar_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
   }
 }
 

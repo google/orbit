@@ -29,7 +29,8 @@ class ThreadStateBar final : public ThreadBar {
                           orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                           const orbit_client_model::CaptureData* capture_data, ThreadID thread_id);
 
-  void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset) override;
+  void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
+            PickingMode picking_mode, float z_offset) override;
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset) override;
 

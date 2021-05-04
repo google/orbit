@@ -30,7 +30,8 @@ class GraphTrack : public Track {
                       uint32_t indentation_level = 0);
 
   [[nodiscard]] Type GetType() const override { return Type::kGraphTrack; }
-  void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
+  void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
+            PickingMode picking_mode, float z_offset = 0) override;
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset = 0) override;
   [[nodiscard]] float GetHeight() const override;
@@ -50,8 +51,9 @@ class GraphTrack : public Track {
 
  protected:
   void DrawSquareDot(Batcher* batcher, Vec2 center, float radius, float z, const Color& color);
-  void DrawLabel(GlCanvas* canvas, Vec2 target_pos, const std::string& text,
-                 const Color& text_color, const Color& font_color, float z);
+  void DrawLabel(Batcher& batcher, TextRenderer& text_renderer, Vec2 target_pos,
+                 const std::string& text, const Color& text_color, const Color& font_color,
+                 float z);
 
   std::map<uint64_t, double> values_;
   double min_ = std::numeric_limits<double>::max();

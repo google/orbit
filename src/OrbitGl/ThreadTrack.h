@@ -42,7 +42,8 @@ class ThreadTrack final : public TimerTrack {
   [[nodiscard]] const TextBox* GetLeft(const TextBox* textbox) const override;
   [[nodiscard]] const TextBox* GetRight(const TextBox* textbox) const override;
 
-  void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
+  void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
+            PickingMode picking_mode, float z_offset = 0) override;
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset = 0) override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;

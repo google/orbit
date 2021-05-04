@@ -47,7 +47,8 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
                  uint32_t indentation_level);
   ~Track() override = default;
 
-  void Draw(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0) override;
+  void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
+            PickingMode picking_mode, float z_offset = 0) override;
 
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset = 0) override;
@@ -107,8 +108,10 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
 
  protected:
   // Returns the y-position of the triangle.
-  float DrawCollapsingTriangle(GlCanvas* canvas, PickingMode picking_mode, float z_offset = 0);
-  void DrawTriangleFan(Batcher* batcher, const std::vector<Vec2>& points, const Vec2& pos,
+  float DrawCollapsingTriangle(Batcher& batcher, TextRenderer& text_renderer,
+                               uint64_t current_mouse_time_ns, PickingMode picking_mode,
+                               float z_offset = 0);
+  void DrawTriangleFan(Batcher& batcher, const std::vector<Vec2>& points, const Vec2& pos,
                        const Color& color, float rotation, float z);
 
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
