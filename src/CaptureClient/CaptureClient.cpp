@@ -63,15 +63,16 @@ InstrumentedFunction::FunctionType CaptureClient::InstrumentedFunctionTypeFromOr
   UNREACHABLE();
 }
 
-// TODO(vickyliu): This method contains a lot of arguments. Consider making it more structured.
+// TODO(b/187170164): This method contains a lot of arguments. Consider making it more structured.
 Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
     ThreadPool* thread_pool, int32_t process_id,
     const orbit_client_data::ModuleManager& module_manager,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
     TracepointInfoSet selected_tracepoints, double samples_per_second,
     UnwindingMethod unwinding_method, bool collect_scheduling_info, bool collect_thread_state,
-    bool enable_api, bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer,
-    bool collect_memory_info, uint64_t memory_sampling_period_ns,
+    bool collect_gpu_jobs, bool enable_api, bool enable_introspection,
+    uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
+    uint64_t memory_sampling_period_ns,
     std::unique_ptr<CaptureEventProcessor> capture_event_processor) {
   absl::MutexLock lock(&state_mutex_);
   if (state_ != State::kStopped) {
@@ -84,13 +85,14 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
 
   auto capture_result = thread_pool->Schedule(
       [this, process_id, &module_manager, selected_functions = std::move(selected_functions),
-       selected_tracepoints = std::move(selected_tracepoints), collect_scheduling_info,
-       collect_thread_state, samples_per_second, unwinding_method, enable_api, enable_introspection,
-       max_local_marker_depth_per_command_buffer, collect_memory_info, memory_sampling_period_ns,
+       selected_tracepoints = std::move(selected_tracepoints), samples_per_second, unwinding_method,
+       collect_scheduling_info, collect_thread_state, collect_gpu_jobs, enable_api,
+       enable_introspection, max_local_marker_depth_per_command_buffer, collect_memory_info,
+       memory_sampling_period_ns,
        capture_event_processor = std::move(capture_event_processor)]() mutable {
         return CaptureSync(process_id, module_manager, selected_functions, selected_tracepoints,
                            samples_per_second, unwinding_method, collect_scheduling_info,
-                           collect_thread_state, enable_api, enable_introspection,
+                           collect_thread_state, collect_gpu_jobs, enable_api, enable_introspection,
                            max_local_marker_depth_per_command_buffer, collect_memory_info,
                            memory_sampling_period_ns, capture_event_processor.get());
       });
@@ -128,9 +130,9 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
     const absl::flat_hash_map<uint64_t, FunctionInfo>& selected_functions,
     const TracepointInfoSet& selected_tracepoints, double samples_per_second,
     UnwindingMethod unwinding_method, bool collect_scheduling_info, bool collect_thread_state,
-    bool enable_api, bool enable_introspection, uint64_t max_local_marker_depth_per_command_buffer,
-    bool collect_memory_info, uint64_t memory_sampling_period_ns,
-    CaptureEventProcessor* capture_event_processor) {
+    bool collect_gpu_jobs, bool enable_api, bool enable_introspection,
+    uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
+    uint64_t memory_sampling_period_ns, CaptureEventProcessor* capture_event_processor) {
   ORBIT_SCOPE_FUNCTION;
   writes_done_failed_ = false;
   try_abort_ = false;
@@ -161,7 +163,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   capture_options->set_memory_sampling_period_ns(memory_sampling_period_ns);
 
   capture_options->set_trace_thread_state(collect_thread_state);
-  capture_options->set_trace_gpu_driver(true);
+  capture_options->set_trace_gpu_driver(collect_gpu_jobs);
   capture_options->set_max_local_marker_depth_per_command_buffer(
       max_local_marker_depth_per_command_buffer);
   absl::flat_hash_map<uint64_t, InstrumentedFunction> instrumented_functions;

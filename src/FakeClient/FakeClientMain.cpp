@@ -34,6 +34,7 @@ ABSL_FLAG(uint16_t, sampling_rate, 1000,
 ABSL_FLAG(bool, frame_pointers, false, "Use frame pointers for unwinding");
 ABSL_FLAG(bool, scheduling, true, "Collect scheduling information");
 ABSL_FLAG(bool, thread_state, false, "Collect thread state information");
+ABSL_FLAG(bool, gpu_jobs, true, "Collect GPU jobs");
 ABSL_FLAG(uint16_t, memory_sampling_rate, 0,
           "Memory usage sampling rate in samples per second (0: no sampling)");
 
@@ -88,6 +89,8 @@ int main(int argc, char* argv[]) {
   LOG("collect_scheduling_info=%d", collect_scheduling_info);
   bool collect_thread_state = absl::GetFlag(FLAGS_thread_state);
   LOG("collect_thread_state=%d", collect_thread_state);
+  bool collect_gpu_jobs = absl::GetFlag(FLAGS_gpu_jobs);
+  LOG("collect_gpu_jobs=%d", collect_gpu_jobs);
   constexpr bool kEnableApi = false;
   constexpr bool kEnableIntrospection = false;
   constexpr uint64_t kMaxLocalMarkerDepthPerCommandBuffer = std::numeric_limits<uint64_t>::max();
@@ -118,8 +121,8 @@ int main(int argc, char* argv[]) {
       thread_pool.get(), process_id, module_manager,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>{}, TracepointInfoSet{},
       samples_per_second, unwinding_method, collect_scheduling_info, collect_thread_state,
-      kEnableApi, kEnableIntrospection, kMaxLocalMarkerDepthPerCommandBuffer, collect_memory_info,
-      memory_sampling_period_ns, std::move(capture_event_processor));
+      collect_gpu_jobs, kEnableApi, kEnableIntrospection, kMaxLocalMarkerDepthPerCommandBuffer,
+      collect_memory_info, memory_sampling_period_ns, std::move(capture_event_processor));
   LOG("Asked to start capture");
 
   uint32_t duration_s = absl::GetFlag(FLAGS_duration);
