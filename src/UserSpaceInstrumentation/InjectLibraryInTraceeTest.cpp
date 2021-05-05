@@ -29,6 +29,7 @@ namespace orbit_user_space_instrumentation {
 
 namespace {
 
+using orbit_base::HasError;
 using orbit_base::HasNoError;
 
 void OpenUseAndCloseLibrary(pid_t pid) {
@@ -139,7 +140,7 @@ TEST(InjectLibraryInTraceeTest, NonExistingLibrary) {
   // Try to load non existing dynamic lib into tracee.
   const std::string kNonExistingLibName = "libNotFound.so";
   auto library_handle_or_error = DlopenInTracee(pid, kNonExistingLibName, RTLD_NOW);
-  ASSERT_TRUE(library_handle_or_error.has_error());
+  ASSERT_THAT(library_handle_or_error, HasError("File not found"));
 
   // Continue child process.
   CHECK(!DetachAndContinueProcess(pid).has_error());
