@@ -75,8 +75,8 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
   EXPECT_THAT(address_or_error, HasError("but got memory at a different adress"));
 
   // Allocation fails for ridiculous size.
-  address_or_error = AllocateInTracee(pid, 0, 1 << 63);
-  EXPECT_THAT(address_or_error, HasError("Invalid argument"));
+  address_or_error = AllocateInTracee(pid, 0, 1ull << 63);
+  EXPECT_THAT(address_or_error, HasError("syscall failed. Return value: Cannot allocate memory"));
 
   // Allocate a megabyte in the tracee.
   address_or_error = AllocateInTracee(pid, 0, kMemorySize);
