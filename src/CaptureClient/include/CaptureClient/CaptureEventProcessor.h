@@ -32,10 +32,14 @@ class CaptureEventProcessor {
 
   static std::unique_ptr<CaptureEventProcessor> CreateForCaptureListener(
       CaptureListener* capture_listener, absl::flat_hash_set<uint64_t> frame_track_function_ids);
+
   static ErrorMessageOr<std::unique_ptr<CaptureEventProcessor>> CreateSaveToFileProcessor(
       const std::filesystem::path& file_path,
       absl::flat_hash_set<uint64_t> frame_track_function_ids,
       std::function<void(const ErrorMessage&)> error_handler);
+
+  static std::unique_ptr<CaptureEventProcessor> CreateCompositeProcessor(
+      absl::Span<CaptureEventProcessor* const> event_processors);
 };
 
 }  // namespace orbit_capture_client

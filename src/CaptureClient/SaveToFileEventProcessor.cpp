@@ -17,16 +17,16 @@ namespace orbit_capture_client {
 
 namespace {
 
-class SaveToFileCaptureEventProcessor : public CaptureEventProcessor {
+class SaveToFileEventProcessor : public CaptureEventProcessor {
  public:
-  explicit SaveToFileCaptureEventProcessor(std::filesystem::path file_path,
-                                           absl::flat_hash_set<uint64_t> frame_track_function_ids,
-                                           std::function<void(const ErrorMessage&)> error_handler)
+  explicit SaveToFileEventProcessor(std::filesystem::path file_path,
+                                    absl::flat_hash_set<uint64_t> frame_track_function_ids,
+                                    std::function<void(const ErrorMessage&)> error_handler)
       : frame_track_function_ids_(std::move(frame_track_function_ids)),
         file_path_{std::move(file_path)},
         error_handler_{std::move(error_handler)},
         state_{State::kProcessing} {}
-  ~SaveToFileCaptureEventProcessor() override = default;
+  ~SaveToFileEventProcessor() override = default;
 
   ErrorMessageOr<void> Initialize();
   void ProcessEvent(const ClientCaptureEvent& event) override;
@@ -48,7 +48,7 @@ class SaveToFileCaptureEventProcessor : public CaptureEventProcessor {
   State state_;
 };
 
-ErrorMessageOr<void> SaveToFileCaptureEventProcessor::Initialize() {
+ErrorMessageOr<void> SaveToFileEventProcessor::Initialize() {
   auto stream_or_error = CaptureFileOutputStream::Create(file_path_);
   if (stream_or_error.has_error()) {
     return ErrorMessage{absl::StrFormat("Failed to initialize CaptureSaveToFileProcessor: %s",
@@ -60,12 +60,12 @@ ErrorMessageOr<void> SaveToFileCaptureEventProcessor::Initialize() {
   return outcome::success();
 }
 
-void SaveToFileCaptureEventProcessor::ReportError(const ErrorMessage& error) {
+void SaveToFileEventProcessor::ReportError(const ErrorMessage& error) {
   error_handler_(error);
   state_ = State::kErrorReported;
 }
 
-void SaveToFileCaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
+void SaveToFileEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
   CHECK(output_stream_ != nullptr);
 
   if (state_ == State::kCaptureFinished) {
@@ -101,7 +101,7 @@ void SaveToFileCaptureEventProcessor::ProcessEvent(const ClientCaptureEvent& eve
   }
 }
 
-ErrorMessageOr<void> SaveToFileCaptureEventProcessor::WriteUserData() {
+ErrorMessageOr<void> SaveToFileEventProcessor::WriteUserData() {
   OUTCOME_TRY(capture_file, CaptureFile::OpenForReadWrite(file_path_));
   UserDefinedCaptureInfo user_defined_capture_data;
   for (uint64_t function_id : frame_track_function_ids_) {
@@ -128,7 +128,7 @@ ErrorMessageOr<std::unique_ptr<CaptureEventProcessor>>
 CaptureEventProcessor::CreateSaveToFileProcessor(
     const std::filesystem::path& file_path, absl::flat_hash_set<uint64_t> frame_track_function_ids,
     std::function<void(const ErrorMessage&)> error_handler) {
-  auto processor = std::make_unique<SaveToFileCaptureEventProcessor>(
+  auto processor = std::make_unique<SaveToFileEventProcessor>(
       file_path, std::move(frame_track_function_ids), std::move(error_handler));
   auto init_or_error = processor->Initialize();
   if (init_or_error.has_error()) {

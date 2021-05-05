@@ -37,7 +37,7 @@ static ClientCaptureEvent CreateCaptureFinishedEvent() {
   return event;
 }
 
-TEST(SaveToFileCaptureEventProcessor, SaveAndLoadSimpleCaptureWithFrameTracks) {
+TEST(SaveToFileEventProcessor, SaveAndLoadSimpleCaptureWithFrameTracks) {
   auto temporary_file_or_error = TemporaryFile::Create();
   ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
   TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
