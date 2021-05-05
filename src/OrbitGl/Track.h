@@ -100,6 +100,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
 
   [[nodiscard]] bool IsCollapsed() const { return collapse_toggle_->IsCollapsed(); }
   void Collapse() { collapse_toggle_->SetState(TriangleToggle::State::kCollapsed); }
+  void Expand() { collapse_toggle_->SetState(TriangleToggle::State::kExpanded); }
 
   [[nodiscard]] virtual std::vector<CaptureViewElement*> GetVisibleChildren() { return {}; }
   [[nodiscard]] virtual int GetVisiblePrimitiveCount() const { return 0; }

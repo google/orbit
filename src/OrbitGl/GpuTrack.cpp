@@ -270,10 +270,24 @@ const TextBox* GpuTrack::GetDown(const TextBox* textbox) const {
   }
 }
 void GpuTrack::OnCollapseToggle(TriangleToggle::State state) {
-  Track::OnCollapseToggle(state);
   // When being collapsed, we only show the submission track, and we want those timers also being
-  // collapsed. The marker track does not need to be touched, as it will not be drawn.
+  // collapsed. Further, when expanding the track the user likely wants to get more insights, thus
+  // we expand the subtracks.
   if (state == TriangleToggle::State::kCollapsed) {
-    submission_track_->Collapse();
+    if (submission_track_->IsCollapsible()) {
+      submission_track_->Collapse();
+    }
+    if (marker_track_->IsCollapsed()) {
+      marker_track_->Collapse();
+    }
+  } else if (state == TriangleToggle::State::kExpanded) {
+    if (submission_track_->IsCollapsible()) {
+      submission_track_->Expand();
+    }
+    if (marker_track_->IsCollapsed()) {
+      marker_track_->Expand();
+    }
   }
+
+  Track::OnCollapseToggle(state);
 }
