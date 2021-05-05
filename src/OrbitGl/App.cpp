@@ -97,6 +97,7 @@ ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, local);
 ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
 ABSL_DECLARE_FLAG(bool, enable_source_code_view);
+ABSL_DECLARE_FLAG(bool, enable_capture_autosave);
 
 using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureEventProcessor;
@@ -1029,6 +1030,36 @@ void OrbitApp::FireRefreshCallbacks(DataViewType type) {
   refresh_callback_(type);
 }
 
+static std::unique_ptr<CaptureEventProcessor> CreateCaptureEventProcessor(
+    CaptureListener* listener, const std::string& process_name,
+    absl::flat_hash_set<uint64_t> frame_track_function_ids,
+    std::function<void(const ErrorMessage&)> error_handler) {
+  auto processor_for_capture_listener =
+      CaptureEventProcessor::CreateForCaptureListener(listener, frame_track_function_ids);
+
+  if (!absl::GetFlag(FLAGS_enable_capture_autosave)) {
+    return processor_for_capture_listener;
+  }
+
+  std::filesystem::path file_path = Path::CreateOrGetCaptureDir() /
+                                    orbit_client_model::capture_serializer::GenerateCaptureFileName(
+                                        process_name, absl::Now(), "_autosave");
+  auto save_to_file_processor_or_error = CaptureEventProcessor::CreateSaveToFileProcessor(
+      file_path, std::move(frame_track_function_ids), error_handler);
+
+  if (save_to_file_processor_or_error.has_error()) {
+    error_handler(ErrorMessage{
+        absl::StrFormat("Unable to set up automatic capture saving to \"%s\": %s",
+                        file_path.string(), save_to_file_processor_or_error.error().message())});
+    return processor_for_capture_listener;
+  }
+
+  std::vector<std::unique_ptr<CaptureEventProcessor>> event_processors;
+  event_processors.push_back(std::move(processor_for_capture_listener));
+  event_processors.push_back(std::move(save_to_file_processor_or_error.value()));
+  return CaptureEventProcessor::CreateCompositeProcessor(std::move(event_processors));
+}
+
 void OrbitApp::StartCapture() {
   const ProcessData* process = GetTargetProcess();
   if (process == nullptr) {
@@ -1083,8 +1114,10 @@ void OrbitApp::StartCapture() {
 
   CHECK(capture_client_ != nullptr);
 
-  auto capture_event_processor =
-      CaptureEventProcessor::CreateForCaptureListener(this, std::move(frame_track_function_ids));
+  auto capture_event_processor = CreateCaptureEventProcessor(
+      this, process->name(), frame_track_function_ids, [this](const ErrorMessage& error) {
+        SendErrorToUi("Error saving capture", error.message());
+      });
 
   Future<ErrorMessageOr<CaptureOutcome>> capture_result = capture_client_->Capture(
       thread_pool_.get(), process->pid(), *module_manager_, std::move(selected_functions_map),

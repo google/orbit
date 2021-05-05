@@ -54,7 +54,7 @@ CaptureFileOutputStreamImpl::~CaptureFileOutputStreamImpl() noexcept {
 }
 
 ErrorMessageOr<void> CaptureFileOutputStreamImpl::Initialize() {
-  auto fd_or_error = orbit_base::OpenFileForWriting(path_);
+  auto fd_or_error = orbit_base::OpenNewFileForWriting(path_);
   if (fd_or_error.has_error()) {
     return fd_or_error.error();
   }

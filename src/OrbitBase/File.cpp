@@ -92,6 +92,17 @@ ErrorMessageOr<unique_fd> OpenFileForWriting(const std::filesystem::path& path) 
   return OpenFile(path, kOpenFlags, kOpenMode);
 }
 
+ErrorMessageOr<unique_fd> OpenNewFileForWriting(const std::filesystem::path& path) {
+#if defined(__linux)
+  constexpr int kOpenFlags = O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC;
+  constexpr int kOpenMode = 0600;
+#elif defined(_WIN32)
+  constexpr int kOpenFlags = O_WRONLY | O_CREAT | O_EXCL | O_BINARY;
+  constexpr int kOpenMode = _S_IREAD | _S_IWRITE;
+#endif  // defined(__linux)
+  return OpenFile(path, kOpenFlags, kOpenMode);
+}
+
 ErrorMessageOr<unique_fd> OpenNewFileForReadWrite(const std::filesystem::path& path) {
 #if defined(__linux)
   constexpr int kOpenFlags = O_RDWR | O_CREAT | O_EXCL | O_CLOEXEC;

@@ -15,16 +15,28 @@ class MockEventProcessor : public CaptureEventProcessor {
 };
 
 TEST(CompositeEventProcessor, Smoke) {
-  MockEventProcessor processor1;
-  MockEventProcessor processor2;
-  MockEventProcessor processor3;
+  // CompositeEventProcessor takes ownership of event processors used to construct it.
+  // But in the test we want to keep pointers to them to check that they are called.
+  std::vector<std::unique_ptr<CaptureEventProcessor>> event_processors;
+
+  auto processor = std::make_unique<MockEventProcessor>();
+  MockEventProcessor* processor1 = processor.get();
+  event_processors.push_back(std::move(processor));
+
+  processor = std::make_unique<MockEventProcessor>();
+  MockEventProcessor* processor2 = processor.get();
+  event_processors.push_back(std::move(processor));
+
+  processor = std::make_unique<MockEventProcessor>();
+  MockEventProcessor* processor3 = processor.get();
+  event_processors.push_back(std::move(processor));
 
   auto composite_processor =
-      CaptureEventProcessor::CreateCompositeProcessor({&processor1, &processor2, &processor3});
+      CaptureEventProcessor::CreateCompositeProcessor(std::move(event_processors));
 
-  EXPECT_CALL(processor1, ProcessEvent).Times(1);
-  EXPECT_CALL(processor2, ProcessEvent).Times(1);
-  EXPECT_CALL(processor3, ProcessEvent).Times(1);
+  EXPECT_CALL(*processor1, ProcessEvent).Times(1);
+  EXPECT_CALL(*processor2, ProcessEvent).Times(1);
+  EXPECT_CALL(*processor3, ProcessEvent).Times(1);
 
   orbit_grpc_protos::ClientCaptureEvent event;
   composite_processor->ProcessEvent(event);

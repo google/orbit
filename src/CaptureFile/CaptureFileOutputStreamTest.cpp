@@ -33,6 +33,7 @@ TEST(CaptureFileOutputStream, Smoke) {
   ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
   orbit_base::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
 
+  temporary_file.CloseAndRemove();
   std::string temp_file_name = temporary_file.file_path().string();
 
   auto output_stream_or_error = CaptureFileOutputStream::Create(temp_file_name);
@@ -98,6 +99,7 @@ TEST(CaptureFileOutputStream, WriteAfterClose) {
   orbit_base::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
 
   std::string temp_file_name = temporary_file.file_path().string();
+  temporary_file.CloseAndRemove();
 
   auto output_stream_or_error = CaptureFileOutputStream::Create(temp_file_name);
   ASSERT_TRUE(output_stream_or_error.has_value()) << output_stream_or_error.error().message();
