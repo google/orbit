@@ -60,6 +60,11 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
 
 [[nodiscard]] ErrorMessageOr<void*> DlopenInTracee(pid_t pid, std::filesystem::path path,
                                                    uint32_t flag) {
+  // Make sure file exists.
+  if (!std::filesystem::exists(path)) {
+    return ErrorMessage(absl::StrFormat("File not found (\"%s\")", path));
+  }
+
   // Figure out address of dlopen.
   OUTCOME_TRY(dlopen_address, FindFunctionAddressWithFallback(pid, kLibdlSoname, kDlopenInLibdl,
                                                               kLibcSoname, kDlopenInLibc));
