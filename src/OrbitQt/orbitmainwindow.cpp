@@ -1090,10 +1090,10 @@ void OrbitMainWindow::on_actionSave_Capture_triggered() {
   const CaptureData& capture_data = app_->GetCaptureData();
   QString file = QFileDialog::getSaveFileName(
       this, "Save capture...",
-      QString::fromStdString(
-          (Path::CreateOrGetCaptureDir() /
-           orbit_client_model::capture_serializer::GetCaptureFileName(capture_data))
-              .string()),
+      QString::fromStdString((Path::CreateOrGetCaptureDir() /
+                              orbit_client_model::capture_serializer::GenerateCaptureFileName(
+                                  capture_data.process_name(), capture_data.capture_start_time()))
+                                 .string()),
       "*.orbit");
   if (file.isEmpty()) {
     return;

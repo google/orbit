@@ -31,7 +31,8 @@ ErrorMessageOr<void> Save(const std::filesystem::path& filename, const CaptureDa
 void WriteMessage(const google::protobuf::Message* message,
                   google::protobuf::io::CodedOutputStream* output);
 
-std::string GetCaptureFileName(const CaptureData& capture_data);
+std::string GenerateCaptureFileName(std::string_view process_name, absl::Time time,
+                                    std::string_view suffix = "");
 
 void IncludeOrbitExtensionInFile(std::string& file_name);
 

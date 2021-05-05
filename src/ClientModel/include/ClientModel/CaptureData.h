@@ -64,9 +64,7 @@ class CaptureData {
 
   [[nodiscard]] std::string process_name() const;
 
-  [[nodiscard]] const std::chrono::system_clock::time_point& capture_start_time() const {
-    return capture_start_time_;
-  }
+  [[nodiscard]] absl::Time capture_start_time() const { return capture_start_time_; }
 
   [[nodiscard]] const absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo>&
   address_infos() const {
@@ -244,7 +242,7 @@ class CaptureData {
       thread_state_slices_;  // For each thread, assume sorted by timestamp and not overlapping.
   mutable std::unique_ptr<absl::Mutex> thread_state_slices_mutex_ = std::make_unique<absl::Mutex>();
 
-  std::chrono::system_clock::time_point capture_start_time_ = std::chrono::system_clock::now();
+  absl::Time capture_start_time_ = absl::Now();
 
   absl::flat_hash_set<uint64_t> frame_track_function_ids_;
 };

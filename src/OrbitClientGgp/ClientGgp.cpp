@@ -149,8 +149,10 @@ bool ClientGgp::SaveCapture() {
   LOG("Saving capture");
   const auto& key_to_string_map = string_manager_->GetKeyToStringMap();
   std::string file_name = options_.capture_file_name;
+  const CaptureData& capture_data = GetCaptureData();
   if (file_name.empty()) {
-    file_name = orbit_client_model::capture_serializer::GetCaptureFileName(GetCaptureData());
+    file_name = orbit_client_model::capture_serializer::GenerateCaptureFileName(
+        capture_data.process_name(), capture_data.capture_start_time());
   } else {
     // Make sure the file is saved with orbit extension
     orbit_client_model::capture_serializer::IncludeOrbitExtensionInFile(file_name);
@@ -159,7 +161,7 @@ bool ClientGgp::SaveCapture() {
   file_name.insert(0, options_.capture_file_directory);
 
   ErrorMessageOr<void> result = orbit_client_model::capture_serializer::Save(
-      file_name, GetCaptureData(), key_to_string_map, timer_infos_.begin(), timer_infos_.end());
+      file_name, capture_data, key_to_string_map, timer_infos_.begin(), timer_infos_.end());
   if (result.has_error()) {
     ERROR("Could not save the capture: %s", result.error().message());
     return false;

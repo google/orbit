@@ -40,44 +40,6 @@
 #define UNIQUE_ID CONCAT(Id_, __LINE__)
 #define UNUSED(x) (void)(x)
 
-inline std::string ws2s(const std::wstring& wstr) {
-  std::string str;
-  str.resize(wstr.size());
-  for (std::size_t i = 0; i < str.size(); ++i) {
-    str[i] = static_cast<char>(wstr[i]);
-  }
-
-  return str;
-}
-
-inline std::wstring s2ws(const std::string& str) {
-  std::wstring wstr;
-  wstr.resize(str.size());
-  for (std::size_t i = 0; i < str.size(); ++i) {
-    wstr[i] = str[i];
-  }
-
-  return wstr;
-}
-
-inline std::string GetEnvVar(const char* a_Var) {
-  std::string var;
-
-#ifdef _WIN32
-  char* buf = nullptr;
-  size_t sz = 0;
-  if (_dupenv_s(&buf, &sz, a_Var) == 0 && buf != nullptr) {
-    var = buf;
-    free(buf);
-  }
-#else
-  char* env = getenv(a_Var);
-  if (env) var = env;
-#endif
-
-  return var;
-}
-
 inline uint64_t StringHash(std::string_view str) {
   return XXH64(str.data(), str.size(), 0xBADDCAFEDEAD10CC);
 }
@@ -110,12 +72,6 @@ inline std::string Replace(const std::string& a_Subject, const std::string& sear
 
   return subject;
 }
-
-inline bool IsBlank(const std::string& a_Str) {
-  return a_Str.find_first_not_of("\t\n ") == std::string::npos;
-}
-
-std::string GetLastErrorAsString();
 
 inline void PrintBuffer(const void* a_Buffer, uint32_t a_Size, uint32_t a_Width = 16) {
   const auto* buffer = static_cast<const uint8_t*>(a_Buffer);
@@ -228,27 +184,11 @@ inline std::string GetPrettyTime(absl::Duration duration) {
   return res;
 }
 
-#ifndef WIN32
-inline void fopen_s(FILE** fp, const char* fileName, const char* mode) {
-  *(fp) = fopen(fileName, mode);
-}
-#endif
-
 namespace orbit_core {
 
 template <class T>
 inline bool Compare(const T& a, const T& b, bool asc) {
   return asc ? a < b : a > b;
-}
-
-template <class T>
-inline bool CompareAsc(const T& a, const T& b) {
-  return a < b;
-}
-
-template <class T>
-inline bool CompareDesc(const T& a, const T& b) {
-  return a > b;
 }
 
 template <>
@@ -317,7 +257,7 @@ std::vector<std::pair<Key, Val> > ReverseValueSort(std::map<Key, Val>& a_Map) {
   return ValueSort(a_Map, sortFunc);
 }
 
-std::string FormatTime(const time_t& rawtime);
+std::string FormatTime(absl::Time time);
 }  // namespace orbit_core
 
 #endif  // ORBIT_CORE_CORE_UTILS_H_
