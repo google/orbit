@@ -75,6 +75,8 @@ ErrorMessageOr<unique_fd> OpenFileForReading(const std::filesystem::path& path);
 
 ErrorMessageOr<unique_fd> OpenFileForWriting(const std::filesystem::path& path);
 
+ErrorMessageOr<unique_fd> OpenNewFileForWriting(const std::filesystem::path& path);
+
 ErrorMessageOr<unique_fd> OpenNewFileForReadWrite(const std::filesystem::path& path);
 
 ErrorMessageOr<unique_fd> OpenExistingFileForReadWrite(const std::filesystem::path& path);

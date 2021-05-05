@@ -39,7 +39,7 @@ class CaptureEventProcessor {
       std::function<void(const ErrorMessage&)> error_handler);
 
   static std::unique_ptr<CaptureEventProcessor> CreateCompositeProcessor(
-      absl::Span<CaptureEventProcessor* const> event_processors);
+      std::vector<std::unique_ptr<CaptureEventProcessor>> event_processors);
 };
 
 }  // namespace orbit_capture_client

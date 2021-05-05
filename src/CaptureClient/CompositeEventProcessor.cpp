@@ -10,8 +10,9 @@ namespace {
 
 class CompositeEventProcessor : public CaptureEventProcessor {
  public:
-  explicit CompositeEventProcessor(absl::Span<CaptureEventProcessor* const> event_processors)
-      : event_processors_(event_processors.begin(), event_processors.end()) {}
+  explicit CompositeEventProcessor(
+      std::vector<std::unique_ptr<CaptureEventProcessor>> event_processors)
+      : event_processors_{std::move(event_processors)} {}
 
   void ProcessEvent(const orbit_grpc_protos::ClientCaptureEvent& event) override {
     for (auto& event_processor : event_processors_) {
@@ -20,14 +21,14 @@ class CompositeEventProcessor : public CaptureEventProcessor {
   }
 
  private:
-  std::vector<CaptureEventProcessor*> event_processors_;
+  std::vector<std::unique_ptr<CaptureEventProcessor>> event_processors_;
 };
 
 }  // namespace
 
 std::unique_ptr<CaptureEventProcessor> CaptureEventProcessor::CreateCompositeProcessor(
-    absl::Span<CaptureEventProcessor* const> event_processors) {
-  return std::make_unique<CompositeEventProcessor>(event_processors);
+    std::vector<std::unique_ptr<CaptureEventProcessor>> event_processors) {
+  return std::make_unique<CompositeEventProcessor>(std::move(event_processors));
 }
 
 }  // namespace orbit_capture_client

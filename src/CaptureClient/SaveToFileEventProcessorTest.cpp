@@ -47,6 +47,8 @@ TEST(SaveToFileEventProcessor, SaveAndLoadSimpleCaptureWithFrameTracks) {
 
   auto error_handler = [](const ErrorMessage& error) { FAIL() << error.message(); };
 
+  temporary_file.CloseAndRemove();
+
   auto capture_event_processor_or_error = CaptureEventProcessor::CreateSaveToFileProcessor(
       temporary_file.file_path(), frame_track_function_ids, error_handler);
   ASSERT_TRUE(capture_event_processor_or_error.has_value())
