@@ -12,12 +12,14 @@
 #include <atomic>
 #include <csignal>
 #include <cstdlib>
+#include <filesystem>
 #include <limits>
 #include <memory>
 #include <thread>
 
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
+#include "ElfUtils/ElfFile.h"
 #include "FakeCaptureEventProcessor.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
@@ -62,24 +64,31 @@ void InstallSigintHandler() {
 // On OrbitService's side, and in particular in LinuxTracing, the only information needed to
 // instrument a function is what uprobes need, i.e., the path of the module and the function's
 // offset in the module (address minus load bias). But CaptureClient requires much more than that,
-// through the ModuleManager and the FunctionInfos. For now just keep it simple and for the fields
-// that are not needed just use default or fake values.
+// through the ModuleManager and the FunctionInfos. For now just keep it simple and leave the fields
+// that are not needed empty.
 void ManipulateModuleManagerAndSelectedFunctionsToAddUprobe(
     orbit_client_data::ModuleManager* module_manager,
     absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>* selected_functions,
     const std::string& file_path, uint64_t file_offset) {
+  ErrorMessageOr<std::unique_ptr<orbit_elf_utils::ElfFile>> error_or_elf_file =
+      orbit_elf_utils::ElfFile::Create(std::filesystem::path{file_path});
+  FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
+  std::unique_ptr<orbit_elf_utils::ElfFile>& elf_file = error_or_elf_file.value();
+  std::string build_id = elf_file->GetBuildId();
+  ErrorMessageOr<uint64_t> error_or_load_bias = elf_file->GetLoadBias();
+  FAIL_IF(error_or_load_bias.has_error(), "%s", error_or_load_bias.error().message());
+  uint64_t load_bias = error_or_load_bias.value();
+
   orbit_grpc_protos::ModuleInfo module_info;
   module_info.set_file_path(file_path);
-  constexpr const char* kFakeBuildId = "id";
-  module_info.set_build_id(kFakeBuildId);
-  constexpr uint64_t kFakeLoadBias = 0;
-  module_info.set_load_bias(kFakeLoadBias);
+  module_info.set_build_id(build_id);
+  module_info.set_load_bias(load_bias);
   CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
 
   orbit_client_protos::FunctionInfo function_info;
   function_info.set_module_path(file_path);
-  function_info.set_module_build_id(kFakeBuildId);
-  function_info.set_address(file_offset);  // This works because kFakeLoadBias == 0.
+  function_info.set_module_build_id(build_id);
+  function_info.set_address(load_bias + file_offset);
   function_info.set_orbit_type(
       orbit_client_protos::FunctionInfo::OrbitType::FunctionInfo_OrbitType_kNone);
   constexpr uint64_t kFunctionId = 1;

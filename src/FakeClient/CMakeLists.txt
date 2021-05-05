@@ -18,6 +18,7 @@ target_link_libraries(OrbitFakeClient PRIVATE
         CONAN_PKG::abseil
         CaptureClient
         ClientProtos
+        ElfUtils
         GrpcProtos
         OrbitBase
         OrbitClientData)
