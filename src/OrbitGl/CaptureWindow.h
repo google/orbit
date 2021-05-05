@@ -45,6 +45,7 @@ class CaptureWindow : public GlCanvas {
   void RenderImGuiDebugUI() override;
 
   void RequestUpdatePrimitives();
+  [[nodiscard]] bool IsRedrawNeeded() const override;
 
   void ToggleDrawHelp();
   void set_draw_help(bool draw_help);

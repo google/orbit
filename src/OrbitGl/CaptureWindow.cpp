@@ -556,8 +556,8 @@ void CaptureWindow::set_draw_help(bool draw_help) {
 }
 
 void CaptureWindow::CreateTimeGraph(const CaptureData* capture_data) {
-  time_graph_ =
-      std::make_unique<TimeGraph>(this, app_, &text_renderer_, this, &viewport_, capture_data);
+  time_graph_ = std::make_unique<TimeGraph>(this, app_, &text_renderer_, &viewport_, capture_data,
+                                            &GetPickingManager());
 }
 
 Batcher& CaptureWindow::GetBatcherById(BatcherId batcher_id) {
@@ -576,6 +576,10 @@ void CaptureWindow::RequestUpdatePrimitives() {
   redraw_requested_ = true;
   if (time_graph_ == nullptr) return;
   time_graph_->RequestUpdatePrimitives();
+}
+
+[[nodiscard]] bool CaptureWindow::IsRedrawNeeded() const {
+  return GlCanvas::IsRedrawNeeded() || (time_graph_ != nullptr && time_graph_->IsRedrawNeeded());
 }
 
 void CaptureWindow::RenderImGuiDebugUI() {

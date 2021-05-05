@@ -48,21 +48,20 @@ using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::kMissingInfo;
 
 TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
-                     TextRenderer* text_renderer, GlCanvas* canvas, orbit_gl::Viewport* viewport,
-                     const CaptureData* capture_data)
+                     TextRenderer* text_renderer, orbit_gl::Viewport* viewport,
+                     const CaptureData* capture_data, PickingManager* picking_manager)
     // Note that `GlCanvas` and `TimeGraph` span the bridge to OpenGl content, and `TimeGraph`'s
     // parent needs special handling for accessibility. Thus, we use `nullptr` here and we save the
     // parent in accessible_parent_ which doesn't need to be a CaptureViewElement.
     : orbit_gl::CaptureViewElement(nullptr, this, viewport, &layout_),
       accessible_parent_{parent},
       text_renderer_{text_renderer},
-      canvas_{canvas},
       batcher_(BatcherId::kTimeGraph),
       capture_data_{capture_data},
       app_{app} {
   text_renderer_->SetViewport(viewport);
   text_renderer_static_.SetViewport(viewport);
-  batcher_.SetPickingManager(&canvas->GetPickingManager());
+  batcher_.SetPickingManager(picking_manager);
   track_manager_ = std::make_unique<TrackManager>(this, viewport_, &GetLayout(), app, capture_data);
 
   async_timer_info_listener_ =
@@ -119,13 +118,6 @@ double TimeGraph::GetCaptureTimeSpanUs() const {
 }
 
 double TimeGraph::GetCurrentTimeSpanUs() const { return max_time_us_ - min_time_us_; }
-
-void TimeGraph::RequestRedraw() {
-  redraw_requested_ = true;
-  if (canvas_ != nullptr) {
-    canvas_->RequestRedraw();
-  }
-}
 
 void TimeGraph::ZoomTime(float zoom_value, double mouse_ratio) {
   static double increment_ratio = 0.1;
