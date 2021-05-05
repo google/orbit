@@ -196,7 +196,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   AccessibleInterfaceProvider* accessible_parent_;
   TextRenderer text_renderer_static_;
   TextRenderer* text_renderer_ = nullptr;
-  GlCanvas* canvas_ = nullptr;
   int num_drawn_text_boxes_ = 0;
 
   // First member is id.
