@@ -1093,6 +1093,8 @@ void OrbitApp::StartCapture() {
       enable_introspection, max_local_marker_depth_per_command_buffer, collect_memory_info,
       memory_sampling_period_ns, std::move(capture_event_processor));
 
+  // TODO (187250643): Refactor this to be more readable and maybe remove parts that are not needed
+  // here (capture cancelled)
   capture_result.Then(
       main_thread_executor_, [this, capture_metric = std::move(capture_metric)](
                                  ErrorMessageOr<CaptureOutcome> capture_result) mutable {
@@ -1109,14 +1111,17 @@ void OrbitApp::StartCapture() {
             capture_metric.Send();
             return;
           case CaptureListener::CaptureOutcome::kComplete:
-            OnCaptureComplete().Wait();
-            auto capture_time_us =
-                std::chrono::duration<double, std::micro>(GetTimeGraph()->GetCaptureTimeSpanUs());
-            auto capture_time_ms =
-                std::chrono::duration_cast<std::chrono::milliseconds>(capture_time_us);
-            orbit_metrics_uploader::CaptureCompleteData complete_data{capture_time_ms};
-            capture_metric.SetCaptureComplete(complete_data);
-            capture_metric.Send();
+            OnCaptureComplete().Then(main_thread_executor_, [this, capture_metric = std::move(
+                                                                       capture_metric)]() mutable {
+              auto capture_time_us =
+                  std::chrono::duration<double, std::micro>(GetTimeGraph()->GetCaptureTimeSpanUs());
+              auto capture_time_ms =
+                  std::chrono::duration_cast<std::chrono::milliseconds>(capture_time_us);
+              orbit_metrics_uploader::CaptureCompleteData complete_data{capture_time_ms};
+              capture_metric.SetCaptureComplete(complete_data);
+              capture_metric.Send();
+            });
+
             return;
         }
       });
