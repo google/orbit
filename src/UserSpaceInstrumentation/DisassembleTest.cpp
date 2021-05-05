@@ -8,6 +8,7 @@
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <capstone/capstone.h>
+#include <dlfcn.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <sys/ptrace.h>
@@ -39,6 +40,7 @@
 #include "RegisterState.h"
 #include "Trampoline.h"
 #include "UserSpaceInstrumentation/Attach.h"
+#include "UserSpaceInstrumentation/InjectLibraryInTracee.h"
 
 namespace orbit_user_space_instrumentation {
 
@@ -111,37 +113,85 @@ ErrorMessageOr<int32_t> AddressDifferenceAsInt32(uint64_t a, uint64_t b) {
 }
 
 void AppendBackupCode(MachineCode& trampoline) {
-  // To be implemented
-  trampoline.AppendBytes({0x90});
+  // This code is executed immediatly after the control is passed to the instrumented function. The
+  // top of the stack contains the return address.; above that are the parameters passed via the
+  // stack.
+  // Some of the general purpose and vector registers contain the parameters for the
+  // instrumented function not passed via the stack.
+
+  // Compare section "3.2 Function Calling Sequence" in "System V Application Binary Interface"
+  // https://refspecs.linuxfoundation.org/elf/x86_64-abi-0.99.pdf
+
+  // Backup general purpose registers used for passing parameters: push rdi, rsi, rdx, rcx, r8, r9
+  // in that order.
+  trampoline.AppendBytes({0x57})
+      .AppendBytes({0x56})
+      .AppendBytes({0x52})
+      .AppendBytes({0x51})
+      .AppendBytes({0x41, 0x50})
+      .AppendBytes({0x41, 0x51});
+  // rax is used to indicate the number of vector arguments passed to a function requiring a
+  // variable number of arguments. r10 is used for passing a function’s static chain pointer.
+  
+  // vector registers:
+  // https://stackoverflow.com/questions/10161911/push-xmm-register-to-the-stack
+
+  // TODO: We might want to add stuff here if it turnes out the compiler violates the calling
+  // convention for functions internal to a compilation unit (which is allowed but discouraged).
 }
 
-void AppendPayloadCode(uint64_t payload_address, MachineCode& trampoline) {
-  // To be implemented
-  LOG("unused: %u", payload_address);
-  trampoline.AppendBytes({0x90});
+// TBD: Why does this not crash? The stack alignment is off when calling into payload?!
+// EDIT: I had this before - stack misalignment does not cause crashes. maybe since sse/avx can now
+// load from unaligned memory?
+void AppendPayloadCode(uint64_t payload_address, uint64_t function_address,
+                       MachineCode& trampoline) {
+  // mov rax, payload_address
+  // mov rdi, function_address
+  // call rax
+  trampoline.AppendBytes({0x48, 0xb8})
+      .AppendImmediate64(payload_address)
+      .AppendBytes({0x48, 0xbf})
+      .AppendImmediate64(function_address)
+      .AppendBytes({0xff, 0xd0});
 }
 
 void AppendRestoreCode(MachineCode& trampoline) {
-  // To be implemented
-  trampoline.AppendBytes({0x90});
+  // Restore the general purpose registers: pop r9, r8, rcx, rdx, rsi, rdi
+  trampoline.AppendBytes({0x41, 0x59})
+      .AppendBytes({0x41, 0x58})
+      .AppendBytes({0x59})
+      .AppendBytes({0x5a})
+      .AppendBytes({0x5e})
+      .AppendBytes({0x5f});
 }
 
 struct RelocatedInstruction {
+  // Machine code of the relocated instruction. Might contain multiple instructions to emulate what
+  // the original instruction acchieved.
   std::vector<uint8_t> code;
-  // Some relocated instructions contain an absolute address that might need to be adjusted once all
-  // the relocations are done. Example: A conditional jump
 
-  // cc is true -> InstructionB otherwise -> InstructionA, InstructionB
-
+  // Some relocated instructions contain an absolute address that needs to be adjusted once all the
+  // relocations are done. Example: A conditional jump to a forward position needs to know the
+  // position of a instruction not yet processed.
+  // Original code does the following:
+  // condition cc is true -> InstructionB otherwise -> InstructionA, InstructionB
+  //
   // 0x0100: jcc rip+4 (==0x0104)
   // 0x0102: InstructionA
   // 0x0104: InstructionB
-  // ->
+  //
+  // -> relocate ->
+  //
   // 0x0200: j(!cc) rip+10 (== 0x0210)
   // 0x0202: jmp [rip+6] (== [0x0208])
   // 0x0208: 8 byte destination address == address of relocated InstructionB == 0x0217
-  // 0x0210: InstructionA
-  // 0x0217: InstructionB
+  // 0x0210: InstructionA'
+  // 0x0217: InstructionB'
+  //
+  // The conditional jump at 0x0100 is translated into the first three lines of the result. The
+  // address (at 0x0208) of InstructionB' is not yet known at the point of the translation. So it
+  // needs to be recorded and handled later. In this case the `position_of_absolute_address` below
+  // would be 8.
   std::optional<size_t> position_of_absolute_address = std::nullopt;
 };
 
@@ -171,7 +221,7 @@ ErrorMessageOr<RelocatedInstruction> RelocateInstruction(cs_insn* instruction, u
              instruction->detail->x86.opcode[0] == 0xe9) {
     // Jump to relative immediate parameter (32 bit or 8 bit).
     // We compute the absolute address and jump there:
-    // jmp [rip + 0]                ff 25 00 00 00 00
+    // jmp [rip + 6]                ff 25 00 00 00 00
     // .byte absolute_address       01 02 03 04 05 06 07 08
     const int32_t immediate =
         (instruction->detail->x86.opcode[0] == 0xe9)
@@ -189,7 +239,7 @@ ErrorMessageOr<RelocatedInstruction> RelocateInstruction(cs_insn* instruction, u
   } else if (instruction->detail->x86.opcode[0] == 0xe8) {
     // Call function at relative immediate parameter.
     // We compute the absolute address of the called function and call it like this:
-    // Call [rip+2]                 ff 15 02 00 00 00
+    // Call [rip+8]                 ff 15 02 00 00 00
     // jmp label;                   eb 08
     // .byte absolute_address       01 02 03 04 05 06 07 08
     // label:
@@ -381,7 +431,7 @@ ErrorMessageOr<void> InstrumentFunction(pid_t pid, uint64_t function_address,
   MachineCode trampoline;
   // Add code to backup register state, execute the payload and restore the register state.
   AppendBackupCode(trampoline);
-  AppendPayloadCode(payload_address, trampoline);
+  AppendPayloadCode(payload_address, function_address, trampoline);
   AppendRestoreCode(trampoline);
 
   // Relocate prolog into trampoline
@@ -460,7 +510,7 @@ void DumpDissasembly(csh handle, const std::vector<u_int8_t>& code, uint64_t sta
 uint64_t GetMaxTrampolineSize() {
   MachineCode unused_code;
   AppendBackupCode(unused_code);
-  AppendPayloadCode(0 /* payload_address*/, unused_code);
+  AppendPayloadCode(0 /* payload_address*/, 0 /* function address */, unused_code);
   AppendRestoreCode(unused_code);
   unused_code.AppendBytes(std::vector<uint8_t>(kMaxRelocatedPrologSize, 0));
   auto result =
@@ -673,103 +723,67 @@ TEST_F(RelocateInstructionTest, ConditionalDirectJumpToRelative32BitImmediate) {
   EXPECT_EQ(8, result.value().position_of_absolute_address.value());
 }
 
-TEST(DisassemblerTest, Relocate) {
-  pid_t pid = fork();
-  CHECK(pid != -1);
-  if (pid == 0) {
-    uint64_t sum = 0;
-    int i = 0;
-    while (true) {
-      i = (i + 1) & 3;
-      sum += DoSomething(i);
-    }
-  }
+// TEST(DisassemblerTest, Relocate) {
+//   pid_t pid = fork();
+//   CHECK(pid != -1);
+//   if (pid == 0) {
+//     uint64_t sum = 0;
+//     int i = 0;
+//     while (true) {
+//       i = (i + 1) & 3;
+//       sum += DoSomething(i);
+//     }
+//   }
 
-  // Examples with modrm & 0xC7 == 0x05
-  // mnemonic op_str: add qword ptr [rip + 0x969433], 1
-  // modrm: 0x05
-  // machine code: 0x48 83 05 33 94 96 00 01
+//   // Init Capstone disassembler.
+//   csh capstone_handle = 0;
+//   cs_err error_code = cs_open(CS_ARCH_X86, CS_MODE_64, &capstone_handle);
+//   CHECK(error_code == CS_ERR_OK);
+//   error_code = cs_option(capstone_handle, CS_OPT_DETAIL, CS_OPT_ON);
+//   CHECK(error_code == CS_ERR_OK);
 
-  // mnemonic op_str: lea rbx, [rip + 0x98fab3]
-  // modrm: 0x1d
-  // machine code: 0x48 8d 1d b3 fa 98 00
+//   CHECK(AttachAndStopProcess(pid).has_value());
 
-  // mnemonic op_str: mov rdi, qword ptr [rip + 0x9649b4]
-  // modrm: 0x3d
-  //  machine code: 0x48 8b 3d b4 49 96 00
+//   // const AddressRange address_range_code =
+//   //     GetFunctionAddressRangeOrDie(pid, "_GLOBAL__sub_I_FindFunctionAddressTest.cpp");
+//   const AddressRange address_range_code = GetFunctionAddressRangeOrDie(pid, "DoSomething");
+//   const uint64_t address_of_do_something = address_range_code.start;
+//   const uint64_t size_of_do_something = address_range_code.end - address_range_code.start;
+//   LOG("address_of_do_something: %x size_of_do_something: %x", address_of_do_something,
+//       size_of_do_something);
 
-  // mnemonic op_str: lea rdx, [rip + 0x9649bd]
-  // modrm: 0x15
-  // machine code: 0x48 8d 15 bd 49 96 00
+//   // Copy the start of the function over into this process.
+//   ErrorMessageOr<std::vector<uint8_t>> function_backup =
+//       ReadTraceesMemory(pid, address_of_do_something, size_of_do_something);
+//   CHECK(function_backup.has_value());
 
-  // mnemonic op_str: movups xmm0, xmmword ptr [rip + 0x63f2b7]
-  // modrm: 0x05
-  // machine code: 0x0f 10 05 b7 f2 63 00
+//   {
+//     cs_insn* instruction = cs_malloc(capstone_handle);
+//     CHECK(instruction != nullptr);
+//     orbit_base::unique_resource scope_exit{instruction,
+//                                            [](cs_insn* instruction) { cs_free(instruction, 1);
+//                                            }};
 
-  // mnemonic op_str: lea rdi, [rip + 0x63f195]
-  // modrm: 0x3d
-  // machine code: 0x48 8d 3d 95 f1 63 00
+//     const uint8_t* code_pointer = function_backup.value().data();
+//     size_t code_size = size_of_do_something;
+//     uint64_t disassemble_address = address_of_do_something;
+//     while (cs_disasm_iter(capstone_handle, &code_pointer, &code_size, &disassemble_address,
+//                           instruction)) {
+//       auto result = RelocateInstruction(instruction, disassemble_address - instruction->size,
+//                                         disassemble_address - instruction->size + 0x100000);
+//       CHECK(!result.has_error());
+//     }
+//   }
 
-  // mnemonic op_str: lea rcx, [rip + 0x92bc2f]
-  // modrm: 0x0d
-  // machine code: 0x48 8d 0d 2f bc 92 00
+//   DumpDissasembly(capstone_handle, function_backup.value(), address_of_do_something);
 
-  // mnemonic op_str: lea rsi, [rip + 0x63f13a]
-  // modrm: 0x35
-  // machine code: 0x48 8d 35 3a f1 63 00
+//   cs_close(&capstone_handle);
 
-  // mnemonic op_str: mov qword ptr [rip + 0x98f8fe], rbx
-  // modrm: 0x1d
-  // machine code: 0x48 89 1d fe f8 98 00
-
-  // Init Capstone disassembler.
-  csh capstone_handle = 0;
-  cs_err error_code = cs_open(CS_ARCH_X86, CS_MODE_64, &capstone_handle);
-  CHECK(error_code == CS_ERR_OK);
-  error_code = cs_option(capstone_handle, CS_OPT_DETAIL, CS_OPT_ON);
-  CHECK(error_code == CS_ERR_OK);
-
-  CHECK(AttachAndStopProcess(pid).has_value());
-
-  // const AddressRange address_range_code =
-  //     GetFunctionAddressRangeOrDie(pid, "_GLOBAL__sub_I_FindFunctionAddressTest.cpp");
-  const AddressRange address_range_code = GetFunctionAddressRangeOrDie(pid, "DoSomething");
-  const uint64_t address_of_do_something = address_range_code.start;
-  const uint64_t size_of_do_something = address_range_code.end - address_range_code.start;
-  LOG("address_of_do_something: %x size_of_do_something: %x", address_of_do_something,
-      size_of_do_something);
-
-  // Copy the start of the function over into this process.
-  ErrorMessageOr<std::vector<uint8_t>> function_backup =
-      ReadTraceesMemory(pid, address_of_do_something, size_of_do_something);
-  CHECK(function_backup.has_value());
-
-  {
-    cs_insn* instruction = cs_malloc(capstone_handle);
-    CHECK(instruction != nullptr);
-    orbit_base::unique_resource scope_exit{instruction,
-                                           [](cs_insn* instruction) { cs_free(instruction, 1); }};
-
-    const uint8_t* code_pointer = function_backup.value().data();
-    size_t code_size = size_of_do_something;
-    uint64_t disassemble_address = address_of_do_something;
-    while (cs_disasm_iter(capstone_handle, &code_pointer, &code_size, &disassemble_address,
-                          instruction)) {
-      auto result = RelocateInstruction(instruction, disassemble_address - instruction->size,
-                                        disassemble_address - instruction->size + 0x100000);
-      CHECK(!result.has_error());
-    }
-  }
-
-  DumpDissasembly(capstone_handle, function_backup.value(), address_of_do_something);
-
-  cs_close(&capstone_handle);
-
-  // Detach and end child.
-  CHECK(!DetachAndContinueProcess(pid).has_error());
-  kill(pid, SIGKILL);
-  waitpid(pid, NULL, 0);
-}
+//   // Detach and end child.
+//   CHECK(!DetachAndContinueProcess(pid).has_error());
+//   kill(pid, SIGKILL);
+//   waitpid(pid, NULL, 0);
+// }
 
 TEST(DisassemblerTest, Disassemble) {
   pid_t pid = fork();
@@ -793,7 +807,18 @@ TEST(DisassemblerTest, Disassemble) {
   const uint64_t address_of_do_something = address_range_code.start;
   const uint64_t size_of_do_something = address_range_code.end - address_range_code.start;
 
-  // Copy the start of the function over into this process.
+  // Inject the payload for the instrumentation - just some trivial logging in this case.
+  const std::string kLibName = "libUserSpaceInstrumentationTestLib.so";
+  const std::string library_path = orbit_base::GetExecutableDir() / ".." / "lib" / kLibName;
+  auto library_handle_or_error = DlopenInTracee(pid, library_path, RTLD_NOW);
+  CHECK(library_handle_or_error.has_value());
+  void* library_handle = library_handle_or_error.value();
+  auto logging_function_address_or_error = DlsymInTracee(pid, library_handle, "TrivialLog");
+  ASSERT_THAT(logging_function_address_or_error, HasValue());
+  uint64_t logging_function_address =
+      absl::bit_cast<uint64_t>(logging_function_address_or_error.value());
+
+  // Copy the start of the function 'DoSomething' over into this process.
   absl::flat_hash_map<uint64_t, std::vector<uint8_t>> functions;
   const uint64_t bytes_to_copy = std::min(size_of_do_something, kMaxFunctionPrologBackupSize);
   ErrorMessageOr<std::vector<uint8_t>> function_backup =
@@ -830,9 +855,9 @@ TEST(DisassemblerTest, Disassemble) {
   // Instrument DoSomething.
   ErrorMessageOr<void> result = InstrumentFunction(
       pid, functions.begin()->first, functions.begin()->second, trampoline_address,
-      0 /* payload_address*/, capstone_handle, relocation_map);
+      logging_function_address, capstone_handle, relocation_map);
 
-  // Move every instruction pointer that was in the middle of a overwritten function prolog to the
+  // Move every instruction pointer that was in the middle of an overwritten function prolog to the
   // corresponding place in the trampoline.
   std::vector<pid_t> tids = orbit_base::GetTidsOfProcess(pid);
   for (pid_t tid : tids) {
@@ -847,20 +872,20 @@ TEST(DisassemblerTest, Disassemble) {
     }
   }
 
-  // DEBUG
+  // DEBUG ------------------
+  // // Disassemble the function, overwritten function and trampoline.
+  // LOG("original function\n");
+  // DumpDissasembly(capstone_handle, function_backup.value(), address_of_do_something);
 
-  // Disassemble the function, overwritten function and trampoline.
-  LOG("original function\n");
-  DumpDissasembly(capstone_handle, function_backup.value(), address_of_do_something);
+  // auto overwritten_function = ReadTraceesMemory(pid, address_of_do_something, bytes_to_copy);
+  // LOG("\noverwritten function\n");
+  // DumpDissasembly(capstone_handle, overwritten_function.value(), address_of_do_something);
 
-  auto overwritten_function = ReadTraceesMemory(pid, address_of_do_something, bytes_to_copy);
-  LOG("\noverwritten function\n");
-  DumpDissasembly(capstone_handle, overwritten_function.value(), address_of_do_something);
-
-  auto trampoline = ReadTraceesMemory(pid, trampoline_address, max_trampoline_size);
-  LOG("\ntrampoline\n");
-  LOG("\nmax_trampoline_size: %u\n", max_trampoline_size);
-  DumpDissasembly(capstone_handle, trampoline.value(), trampoline_address);
+  // auto trampoline = ReadTraceesMemory(pid, trampoline_address, max_trampoline_size);
+  // LOG("\ntrampoline\n");
+  // LOG("\nmax_trampoline_size: %u\n", max_trampoline_size);
+  // DumpDissasembly(capstone_handle, trampoline.value(), trampoline_address);
+  // DEBUG ------------------
 
   cs_close(&capstone_handle);
 
@@ -869,8 +894,12 @@ TEST(DisassemblerTest, Disassemble) {
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
   CHECK(AttachAndStopProcess(pid).has_value());
 
-  // Remove the instrumentation (restore the function prologs and deallocate the trampolines)
-  // TBD
+  // Remove the instrumentation (restore the function prologs, unload the payload library and
+  // deallocate the trampolines)
+  // TBD: How do we handle threads currently executing trampolines/payloads?
+  // Restore function prologs first; run for a while; stop again; check rip for places in the
+  // payload or the trampoline and either restart again briefly if these are still used or savely
+  // delete the trampoline / dlclose the payload.
 
   // Restart the tracee briefly to assert the thing is still running.
   CHECK(!DetachAndContinueProcess(pid).has_error());
@@ -881,111 +910,6 @@ TEST(DisassemblerTest, Disassemble) {
   CHECK(!DetachAndContinueProcess(pid).has_error());
   kill(pid, SIGKILL);
   waitpid(pid, NULL, 0);
-
-  // ErrorMessageOr<int> length_or_error =
-  //     LengthOfOverriddenInstructions(handle, function_backup.value(), 5);
-  // ASSERT_FALSE(length_or_error.has_error());
-  // const size_t length_override = length_or_error.value();
-
-  // LOG("length_override: %u", length_override);
-  // if (rip > address_of_do_something && rip < address_of_do_something + length_override) {
-  //   LOG("********** rip: %#x , address_of_do_something: %#x , length_override: %#x\n", rip,
-  //       address_of_do_something, length_override);
-  // } else {
-  //   // override 5 bytes with jmp, write the modified chunk to tracee and
-  //   // keep a copy of the original code in the tracer.
-  //   std::vector<uint8_t> backup_prolog(length_override);
-  //   memcpy(backup_prolog.data(), function_backup.value().data(), length_override);
-
-  //   // get some memory for the trampoline
-  //   auto trampoline_or_error = AllocateMemoryForTrampolines(pid, address_range_code, 1024 *
-  //   1024); CHECK(!trampoline_or_error.has_error()); const uint64_t address_trampoline =
-  //   trampoline_or_error.value();
-
-  //   // Override beginning of `DoSomething` with a jmp.
-  //   MachineCode code;
-  //   code.AppendBytes({0xe9}).AppendImmediate32(address_trampoline - (address_of_do_something +
-  //   5));
-  //   // Not strictly necessary: fill the instructions we override with nop's so we leave no
-  //   garbage
-  //   // code here.
-  //   while (code.GetResultAsVector().size() < length_override) code.AppendBytes({0x90});
-  //   auto result_write_code =
-  //       WriteTraceesMemory(pid, address_of_do_something, code.GetResultAsVector());
-  //   CHECK(!result_write_code.has_error());
-
-  //   // Flush cache so the change becomes active
-  //   // CHECK(!FlushCacheLineInTracee(pid, address_of_do_something).has_error());
-
-  //   // disassemble jmp
-  //   cs_insn* insn_jmp = nullptr;
-  //   size_t count_jmp =
-  //       cs_disasm(handle, static_cast<const uint8_t*>(code.GetResultAsVector().data()),
-  //                 code.GetResultAsVector().size(), address_of_do_something, 0, &insn_jmp);
-  //   size_t k_jmp;
-  //   for (k_jmp = 0; k_jmp < count_jmp; k_jmp++) {
-  //     LOG("0x%llx:\t%-12s %s", insn_jmp[k_jmp].address, insn_jmp[k_jmp].mnemonic,
-  //         insn_jmp[k_jmp].op_str);
-  //   }
-  //   // Print out the next offset, after the last instruction.
-  //   LOG("0x%llx:", insn_jmp[k_jmp - 1].address + insn_jmp[k_jmp - 1].size);
-
-  //   // copy the stuff we overrode into the trampoline - this only works in case the instructions
-  //   do
-  //   // not use relative addressing.
-  //   // backup and restore registers is also missing here.
-  //   MachineCode code_trampoline;
-  //   std::vector<uint8_t> original_instructions(backup_prolog.begin(),
-  //                                              backup_prolog.begin() + length_override);
-  //   CHECK(original_instructions.size() == length_override);
-  //   code_trampoline.AppendBytes(original_instructions)
-  //       .AppendBytes({0xe9})
-  //       .AppendImmediate32(address_of_do_something - (address_trampoline + 5));
-  //   auto result_write_trampoline =
-  //       WriteTraceesMemory(pid, address_trampoline, code_trampoline.GetResultAsVector());
-  //   CHECK(!result_write_trampoline.has_error());
-
-  //   LOG("address_of_do_something: %x ", address_of_do_something);
-  //   LOG("address_trampoline: %x ", address_trampoline);
-
-  //   // disassemble trampoline
-  //   cs_insn* insn_tra = nullptr;
-  //   size_t count_tra =
-  //       cs_disasm(handle, static_cast<const
-  //       uint8_t*>(code_trampoline.GetResultAsVector().data()),
-  //                 code_trampoline.GetResultAsVector().size(), address_trampoline, 0, &insn_tra);
-
-  //   size_t k;
-  //   for (k = 0; k < count_tra; k++) {
-  //     LOG("0x%llx:\t%-12s %s", insn_tra[k].address, insn_tra[k].mnemonic, insn_tra[k].op_str);
-  //   }
-  //   // Print out the next offset, after the last instruction.
-  //   LOG("0x%llx:", insn_tra[k - 1].address + insn_tra[k - 1].size);
-
-  //   LOG("1");
-  //   CHECK(!DetachAndContinueProcess(pid).has_error());
-  //   LOG("1");
-  //   std::this_thread::sleep_for(std::chrono::milliseconds(3));
-  //   LOG("1");
-  //   CHECK(!AttachAndStopProcess(pid).has_error());
-  //   LOG("1");
-
-  //   // write back original function
-  //   auto result_write_original_code =
-  //       WriteTraceesMemory(pid, address_of_do_something, backup_prolog);
-
-  //   ASSERT_FALSE(FreeInTracee(pid, address_trampoline, 1024 * 1024).has_error());
-
-  //   // Free memory allocated by cs_disasm().
-  //   cs_free(insn_jmp, count_jmp);
-  //   cs_free(insn_tra, count_tra);
-  // }
-  // cs_close(&handle);
-
-  // // Detach and end child.
-  // CHECK(!DetachAndContinueProcess(pid).has_error());
-  // kill(pid, SIGKILL);
-  // waitpid(pid, NULL, 0);
 }
 
 }  // namespace orbit_user_space_instrumentation
