@@ -40,8 +40,9 @@ class OrbitApp;
 class TimeGraph : public orbit_gl::CaptureViewElement {
  public:
   explicit TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
-                     TextRenderer* text_renderer, GlCanvas* canvas, orbit_gl::Viewport* viewport,
-                     const orbit_client_model::CaptureData* capture_data);
+                     TextRenderer* text_renderer, orbit_gl::Viewport* viewport,
+                     const orbit_client_model::CaptureData* capture_data,
+                     PickingManager* picking_manager);
   ~TimeGraph();
 
   void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
@@ -112,7 +113,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   void SelectAndZoom(const TextBox* text_box);
   [[nodiscard]] double GetCaptureTimeSpanUs() const;
   [[nodiscard]] double GetCurrentTimeSpanUs() const;
-  void RequestRedraw();
+  void RequestRedraw() { redraw_requested_ = true; }
   [[nodiscard]] bool IsRedrawNeeded() const { return redraw_requested_; }
   void SetThreadFilter(const std::string& filter);
 
