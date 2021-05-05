@@ -32,6 +32,8 @@ ABSL_FLAG(uint32_t, duration, std::numeric_limits<uint32_t>::max(),
 ABSL_FLAG(uint16_t, sampling_rate, 1000,
           "Callstack sampling rate in samples per second (0: no sampling)");
 ABSL_FLAG(bool, frame_pointers, false, "Use frame pointers for unwinding");
+ABSL_FLAG(std::string, instrument_path, "", "Path of the binary of the function to instrument");
+ABSL_FLAG(uint64_t, instrument_offset, 0, "Offset in the binary of the function to instrument");
 ABSL_FLAG(bool, scheduling, true, "Collect scheduling information");
 ABSL_FLAG(bool, thread_state, false, "Collect thread state information");
 ABSL_FLAG(bool, gpu_jobs, true, "Collect GPU jobs");
@@ -57,6 +59,33 @@ void InstallSigintHandler() {
   sigaction(SIGINT, &act, nullptr);
 }
 
+// On OrbitService's side, and in particular in LinuxTracing, the only information needed to
+// instrument a function is what uprobes need, i.e., the path of the module and the function's
+// offset in the module (address minus load bias). But CaptureClient requires much more than that,
+// through the ModuleManager and the FunctionInfos. For now just keep it simple and for the fields
+// that are not needed just use default or fake values.
+void ManipulateModuleManagerAndSelectedFunctionsToAddUprobe(
+    orbit_client_data::ModuleManager* module_manager,
+    absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>* selected_functions,
+    const std::string& file_path, uint64_t file_offset) {
+  orbit_grpc_protos::ModuleInfo module_info;
+  module_info.set_file_path(file_path);
+  constexpr const char* kFakeBuildId = "id";
+  module_info.set_build_id(kFakeBuildId);
+  constexpr uint64_t kFakeLoadBias = 0;
+  module_info.set_load_bias(kFakeLoadBias);
+  CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
+
+  orbit_client_protos::FunctionInfo function_info;
+  function_info.set_module_path(file_path);
+  function_info.set_module_build_id(kFakeBuildId);
+  function_info.set_address(file_offset);  // This works because kFakeLoadBias == 0.
+  function_info.set_orbit_type(
+      orbit_client_protos::FunctionInfo::OrbitType::FunctionInfo_OrbitType_kNone);
+  constexpr uint64_t kFunctionId = 1;
+  selected_functions->emplace(kFunctionId, function_info);
+}
+
 }  // namespace
 
 // OrbitFakeClient is a simple command line client that connects to a local instance of
@@ -72,6 +101,9 @@ int main(int argc, char* argv[]) {
 
   FAIL_IF(absl::GetFlag(FLAGS_pid) == 0, "PID to capture not specified");
   FAIL_IF(absl::GetFlag(FLAGS_duration) == 0, "Specified a zero-length duration");
+  FAIL_IF((absl::GetFlag(FLAGS_instrument_path).empty()) !=
+              (absl::GetFlag(FLAGS_instrument_offset) == 0),
+          "Binary path and offset of the function to instrument need to be specified together");
 
   int32_t process_id = absl::GetFlag(FLAGS_pid);
   LOG("process_id=%d", process_id);
@@ -85,6 +117,13 @@ int main(int argc, char* argv[]) {
       unwinding_method == orbit_grpc_protos::UnwindingMethod::kFramePointerUnwinding
           ? "Frame pointers"
           : "DWARF");
+  std::string file_path = absl::GetFlag(FLAGS_instrument_path);
+  uint64_t file_offset = absl::GetFlag(FLAGS_instrument_offset);
+  bool instrument_function = !file_path.empty() && file_offset != 0;
+  if (instrument_function) {
+    LOG("file_path=%s", file_path);
+    LOG("file_offset=%#x", file_offset);
+  }
   bool collect_scheduling_info = absl::GetFlag(FLAGS_scheduling);
   LOG("collect_scheduling_info=%d", collect_scheduling_info);
   bool collect_thread_state = absl::GetFlag(FLAGS_thread_state);
@@ -113,13 +152,18 @@ int main(int argc, char* argv[]) {
 
   orbit_capture_client::CaptureClient capture_client{grpc_channel};
   std::unique_ptr<ThreadPool> thread_pool = ThreadPool::Create(1, 1, absl::Seconds(1));
+
   orbit_client_data::ModuleManager module_manager;
+  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
+  if (instrument_function) {
+    ManipulateModuleManagerAndSelectedFunctionsToAddUprobe(&module_manager, &selected_functions,
+                                                           file_path, file_offset);
+  }
 
   auto capture_event_processor = std::make_unique<orbit_fake_client::FakeCaptureEventProcessor>();
 
   auto capture_outcome_future = capture_client.Capture(
-      thread_pool.get(), process_id, module_manager,
-      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>{}, TracepointInfoSet{},
+      thread_pool.get(), process_id, module_manager, selected_functions, TracepointInfoSet{},
       samples_per_second, unwinding_method, collect_scheduling_info, collect_thread_state,
       collect_gpu_jobs, kEnableApi, kEnableIntrospection, kMaxLocalMarkerDepthPerCommandBuffer,
       collect_memory_info, memory_sampling_period_ns, std::move(capture_event_processor));
