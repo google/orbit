@@ -123,4 +123,30 @@ TEST(InjectLibraryInTraceeTest, OpenUseAndCloseLibraryInSyscall) {
   waitpid(pid, NULL, 0);
 }
 
+TEST(InjectLibraryInTraceeTest, NonExistingLibrary) {
+  pid_t pid = fork();
+  CHECK(pid != -1);
+  if (pid == 0) {
+    while (true) {
+      // Child will be stuck in syscall sys_clock_nanosleep.
+      std::this_thread::sleep_for(std::chrono::hours(1000000000));
+    }
+  }
+
+  // Stop the child process using our tooling.
+  CHECK(!AttachAndStopProcess(pid).has_error());
+
+  // Try to load non existing dynamic lib into tracee.
+  const std::string kNonExistingLibName = "libNotFound.so";
+  auto library_handle_or_error = DlopenInTracee(pid, kNonExistingLibName, RTLD_NOW);
+  ASSERT_TRUE(library_handle_or_error.has_error());
+
+  // Continue child process.
+  CHECK(!DetachAndContinueProcess(pid).has_error());
+
+  // End child process.
+  kill(pid, SIGKILL);
+  waitpid(pid, NULL, 0);
+}
+
 }  // namespace orbit_user_space_instrumentation
