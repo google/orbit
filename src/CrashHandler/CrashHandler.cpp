@@ -25,7 +25,9 @@ struct StringTypeConverter {
 
 template <>
 struct StringTypeConverter<std::wstring> {
-  std::wstring operator()(const std::string& source_string) const { return s2ws(source_string); }
+  std::wstring operator()(const std::string& source_string) const {
+    return std::wstring(source_string.begin(), source_string.end());
+  }
 };
 }  // namespace
 

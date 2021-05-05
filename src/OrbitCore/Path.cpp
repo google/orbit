@@ -13,6 +13,24 @@
 
 ABSL_FLAG(std::string, log_dir, "", "Set directory for the log.");
 
+static std::string GetEnvVar(const char* variable_name) {
+  std::string var;
+
+#ifdef _WIN32
+  char* buf = nullptr;
+  size_t sz = 0;
+  if (_dupenv_s(&buf, &sz, variable_name) == 0 && buf != nullptr) {
+    var = buf;
+    free(buf);
+  }
+#else
+  char* env = getenv(variable_name);
+  if (env != nullptr) var = env;
+#endif
+
+  return var;
+}
+
 static std::filesystem::path CreateAndGetConfigPath() {
   std::filesystem::path config_dir = Path::CreateOrGetOrbitAppDataDir() / "config";
   std::filesystem::create_directory(config_dir);

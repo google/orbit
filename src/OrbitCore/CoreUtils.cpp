@@ -9,7 +9,6 @@
 #include <cguid.h> // IWYU pragma: keep
 #include <combaseapi.h> // IWYU pragma: keep
 // clang-format on
-#else
 #endif
 
 #include <time.h>
@@ -256,18 +255,6 @@ std::string CWindowsMessageToString::GetStringFromMsg(DWORD dwMessage, bool bSho
 std::string GetLastErrorAsString() { return ""; }
 #endif
 
-std::string orbit_core::FormatTime(const time_t& rawtime) {
-  struct tm* time_info = nullptr;
-  char buffer[80];
-#ifdef _WIN32
-  struct tm timeinfo;
-  localtime_s(&timeinfo, &rawtime);
-  time_info = &timeinfo;
-#else
-  time_info = localtime(&rawtime);
-#endif
-
-  strftime(buffer, 80, "%Y_%m_%d_%H_%M_%S", time_info);
-
-  return std::string(buffer);
+std::string orbit_core::FormatTime(absl::Time time) {
+  return absl::FormatTime("%Y_%m_%d_%H_%M_%S", time, absl::LocalTimeZone());
 }

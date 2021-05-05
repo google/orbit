@@ -42,7 +42,7 @@ using ::testing::ElementsAreArray;
 
 namespace orbit_client_model {
 
-TEST(CaptureSerializer, GetCaptureFileName) {
+TEST(CaptureSerializer, GenerateCaptureFileName) {
   constexpr int32_t kProcessId = 42;
 
   CaptureStarted capture_started;
@@ -62,9 +62,11 @@ TEST(CaptureSerializer, GetCaptureFileName) {
   EXPECT_TRUE(module_manager.AddOrUpdateModules({module_info}).empty());
   capture_data.mutable_process()->UpdateModuleInfos({module_info});
 
-  time_t timestamp = std::chrono::system_clock::to_time_t(capture_data.capture_start_time());
-  std::string expected_file_name = absl::StrCat("p_", orbit_core::FormatTime(timestamp), ".orbit");
-  EXPECT_EQ(expected_file_name, capture_serializer::GetCaptureFileName(capture_data));
+  std::string expected_file_name = absl::StrCat(
+      "p_", orbit_core::FormatTime(capture_data.capture_start_time()), "_suffix.orbit");
+  EXPECT_EQ(expected_file_name,
+            capture_serializer::GenerateCaptureFileName(
+                capture_data.process_name(), capture_data.capture_start_time(), "_suffix"));
 }
 
 TEST(CaptureSerializer, IncludeOrbitExtensionInFile) {

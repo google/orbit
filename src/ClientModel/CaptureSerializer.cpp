@@ -54,13 +54,10 @@ void WriteMessage(const google::protobuf::Message* message,
   message->SerializeToCodedStream(output);
 }
 
-std::string GetCaptureFileName(const CaptureData& capture_data) {
-  time_t timestamp = std::chrono::system_clock::to_time_t(capture_data.capture_start_time());
-  std::string result =
-      absl::StrCat(std::filesystem::path(capture_data.process_name()).stem().string(), "_",
-                   orbit_core::FormatTime(timestamp));
-  IncludeOrbitExtensionInFile(result);
-  return result;
+std::string GenerateCaptureFileName(std::string_view process_name, absl::Time time,
+                                    std::string_view suffix) {
+  return absl::StrCat(std::filesystem::path(process_name).stem().string(), "_",
+                      orbit_core::FormatTime(time), suffix, kFileOrbitExtension);
 }
 
 void IncludeOrbitExtensionInFile(std::string& file_name) {
