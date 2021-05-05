@@ -56,6 +56,22 @@ ErrorMessageOr<absl::flat_hash_map<std::string, ModuleInfo>> GetModulesByPathFor
   return &module_info;
 }
 
+ErrorMessageOr<std::string> GetLibOrbitPath() {
+  // When packaged, liborbit.so is found alongside OrbitService.  In development, it is found in
+  // "../lib", relative to OrbitService.
+  constexpr const char* kLibOrbitName = "liborbit.so";
+  const std::filesystem::path exe_dir = orbit_base::GetExecutableDir();
+  std::vector<std::filesystem::path> potential_paths = {exe_dir / kLibOrbitName,
+                                                        exe_dir / "../lib" / kLibOrbitName};
+  for (const auto& path : potential_paths) {
+    if (std::filesystem::exists(path)) {
+      return path;
+    }
+  }
+
+  return ErrorMessage("Liborbit.so not found on system.");
+}
+
 ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options, bool enabled) {
   SCOPED_TIMED_LOG("%s Api in tracee", enabled ? "Enabling" : "Disabling");
   if (capture_options.api_functions().size() == 0) {
@@ -74,7 +90,7 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
                                          }};
 
   // Load liborbit.so and find api table initialization function.
-  const std::string liborbit_path = orbit_base::GetExecutableDir() / "liborbit.so";
+  OUTCOME_TRY(liborbit_path, GetLibOrbitPath());
   constexpr const char* kSetEnabledFunction = "orbit_api_set_enabled";
   OUTCOME_TRY(handle, DlopenInTracee(pid, liborbit_path, RTLD_NOW));
   OUTCOME_TRY(orbit_api_set_enabled_function, DlsymInTracee(pid, handle, kSetEnabledFunction));
