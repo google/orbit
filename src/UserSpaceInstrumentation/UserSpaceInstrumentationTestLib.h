@@ -17,4 +17,6 @@ extern "C" int TrivialFunction();
 extern "C" uint64_t TrivialSum(uint64_t p0, uint64_t p1, uint64_t p2, uint64_t p3, uint64_t p4,
                                uint64_t p5);
 
+extern "C" void TrivialLog(uint64_t function_address);
+
 #endif  // USER_SPACE_INSTRUMENTATION_TEST_LIB_H_
