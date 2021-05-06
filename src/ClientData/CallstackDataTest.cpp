@@ -14,6 +14,8 @@
 #include "ClientData/CallstackData.h"
 #include "capture_data.pb.h"
 
+namespace orbit_client_data {
+
 MATCHER(CallstackEventEq, "") {
   const orbit_client_protos::CallstackEvent& a = std::get<0>(arg);
   const orbit_client_protos::CallstackEvent& b = std::get<1>(arg);
@@ -113,3 +115,5 @@ TEST(CallstackData, FilterCallstackEventsBasedOnMajorityStart) {
               testing::Pointwise(CallstackEventEq(),
                                  std::vector<orbit_client_protos::CallstackEvent>{event6, event7}));
 }
+
+}  // namespace orbit_client_data

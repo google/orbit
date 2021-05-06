@@ -19,6 +19,8 @@
 #include "ClientModel/CaptureDeserializer.h"
 #include "ClientModel/CaptureSerializer.h"
 
+using orbit_client_data::CallStack;
+
 namespace orbit_client_model {
 
 namespace {

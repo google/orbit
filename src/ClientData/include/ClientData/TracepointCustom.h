@@ -9,6 +9,8 @@
 
 #include "tracepoint.pb.h"
 
+namespace orbit_client_data {
+
 namespace internal {
 struct HashTracepointInfo {
   size_t operator()(const orbit_grpc_protos::TracepointInfo& info) const {
@@ -28,5 +30,7 @@ struct EqualTracepointInfo {
 using TracepointInfoSet =
     absl::flat_hash_set<orbit_grpc_protos::TracepointInfo, internal::HashTracepointInfo,
                         internal::EqualTracepointInfo>;
+
+}  // namespace orbit_client_data
 
 #endif  // CLIENT_DATA_TRACEPOINT_CUSTOM_H_

@@ -1339,7 +1339,7 @@ void OrbitMainWindow::SetTarget(const orbit_qt::FileTarget& target) {
 void OrbitMainWindow::OnProcessListUpdated(
     const std::vector<orbit_grpc_protos::ProcessInfo>& processes) {
   const auto is_current_process = [this](const auto& process) {
-    const ProcessData* const target_process = app_->GetTargetProcess();
+    const orbit_client_data::ProcessData* const target_process = app_->GetTargetProcess();
     return target_process != nullptr && process.pid() == app_->GetTargetProcess()->pid();
   };
   const auto current_process = std::find_if(processes.begin(), processes.end(), is_current_process);

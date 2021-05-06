@@ -200,8 +200,8 @@ std::string FrameTrack::GetTooltip() const {
       "<b>Minimum frame time:</b> %s<br/>"
       "<b>Average frame time:</b> %s<br/>",
       function_name, kHeightCapAverageMultipleUint64, function_name,
-      function_utils::GetLoadedModuleNameByPath(function_.file_path()), stats_.count(),
-      GetPrettyTime(absl::Nanoseconds(stats_.max_ns())),
+      orbit_client_data::function_utils::GetLoadedModuleNameByPath(function_.file_path()),
+      stats_.count(), GetPrettyTime(absl::Nanoseconds(stats_.max_ns())),
       GetPrettyTime(absl::Nanoseconds(stats_.min_ns())),
       GetPrettyTime(absl::Nanoseconds(stats_.average_time_ns())));
 }
@@ -225,7 +225,7 @@ std::string FrameTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) cons
       "<b>Frame:</b> #%u<br/>"
       "<b>Frame time:</b> %s",
       function_name, kHeightCapAverageMultipleUint64, function_name,
-      function_utils::GetLoadedModuleNameByPath(function_.file_path()),
+      orbit_client_data::function_utils::GetLoadedModuleNameByPath(function_.file_path()),
       text_box->GetTimerInfo().user_data_key(),
       GetPrettyTime(
           TicksToDuration(text_box->GetTimerInfo().start(), text_box->GetTimerInfo().end())));

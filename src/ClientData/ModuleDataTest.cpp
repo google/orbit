@@ -19,6 +19,8 @@ using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ModuleSymbols;
 using orbit_grpc_protos::SymbolInfo;
 
+namespace orbit_client_data {
+
 TEST(ModuleData, Constructor) {
   std::string name = "Example Name";
   std::string file_path = "/test/file/path";
@@ -328,3 +330,5 @@ TEST(ModuleData, UpdateIfChangedWithBuildId) {
   module.AddSymbols(symbols);
   EXPECT_TRUE(module.is_loaded());
 }
+
+}  // namespace orbit_client_data

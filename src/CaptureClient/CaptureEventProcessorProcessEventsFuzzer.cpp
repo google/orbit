@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 #include <libfuzzer/libfuzzer_macro.h>
 #include <stdint.h>
 
@@ -26,13 +26,15 @@ ABSL_FLAG(bool, frame_pointer_unwinding, false, "Use frame pointers for unwindin
 
 namespace orbit_capture_client {
 
-using orbit_grpc_protos::CaptureResponse;
+using orbit_client_data::CallStack;
 
-namespace {
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::TimerInfo;
 
+using orbit_grpc_protos::CaptureResponse;
+
+namespace {
 class MyCaptureListener : public CaptureListener {
  private:
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& /*capture_started*/,

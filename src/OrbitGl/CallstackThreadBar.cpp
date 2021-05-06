@@ -28,6 +28,9 @@
 #include "Viewport.h"
 #include "capture_data.pb.h"
 
+using orbit_client_data::CallStack;
+using orbit_client_data::CallstackData;
+using orbit_client_data::ThreadID;
 using orbit_client_model::CaptureData;
 using orbit_client_protos::CallstackEvent;
 

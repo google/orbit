@@ -8,6 +8,7 @@
 #include "module.pb.h"
 #include "symbol.pb.h"
 
+using orbit_client_data::ModuleData;
 using orbit_grpc_protos::ModuleSymbols;
 
 DEFINE_PROTO_FUZZER(const ModuleSymbols& symbols) {

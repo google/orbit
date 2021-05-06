@@ -14,6 +14,10 @@
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
 
+using orbit_client_data::CallstackData;
+using orbit_client_data::ModuleData;
+using orbit_client_data::TracepointData;
+
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::LinuxAddressInfo;
@@ -113,7 +117,8 @@ std::optional<uint64_t> CaptureData::FindInstrumentedFunctionIdSlow(
   for (const auto& it : instrumented_functions_) {
     const auto& target_function = it.second;
     if (target_function.file_path() == function.module_path() &&
-        target_function.file_offset() == function_utils::Offset(function, *module)) {
+        target_function.file_offset() ==
+            orbit_client_data::function_utils::Offset(function, *module)) {
       return it.first;
     }
   }
@@ -148,7 +153,7 @@ const std::string CaptureData::kUnknownFunctionOrModuleName{"???"};
 const std::string& CaptureData::GetFunctionNameByAddress(uint64_t absolute_address) const {
   const FunctionInfo* function = FindFunctionByAddress(absolute_address, false);
   if (function != nullptr) {
-    return function_utils::GetDisplayName(*function);
+    return orbit_client_data::function_utils::GetDisplayName(*function);
   }
   const auto address_info_it = address_infos_.find(absolute_address);
   if (address_info_it == address_infos_.end()) {
@@ -248,7 +253,7 @@ std::optional<uint64_t> CaptureData::GetAbsoluteAddress(
     return std::nullopt;
   }
 
-  return function_utils::GetAbsoluteAddress(function, process_, *module);
+  return orbit_client_data::function_utils::GetAbsoluteAddress(function, process_, *module);
 }
 
 int32_t CaptureData::process_id() const { return process_.pid(); }

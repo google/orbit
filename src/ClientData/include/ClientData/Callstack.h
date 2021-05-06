@@ -9,6 +9,8 @@
 
 #include "CallstackTypes.h"
 
+namespace orbit_client_data {
+
 class CallStack {
  public:
   CallStack() = default;
@@ -24,4 +26,7 @@ class CallStack {
   CallstackID id_ = 0;
   std::vector<uint64_t> frames_;
 };
+
+}  // namespace orbit_client_data
+
 #endif  // CLIENT_DATA_CALLSTACK_H_

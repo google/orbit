@@ -20,6 +20,8 @@
 #include "module.pb.h"
 #include "symbol.pb.h"
 
+namespace orbit_client_data {
+
 // Represents information about module on the client
 class ModuleData final {
  public:
@@ -65,5 +67,7 @@ class ModuleData final {
   // anymore.
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo*> hash_to_function_map_;
 };
+
+}  // namespace orbit_client_data
 
 #endif  // CLIENT_DATA_MODULE_DATA_H_

@@ -36,17 +36,21 @@ class ModulesDataView : public DataView {
   std::string GetLabel() override { return "Modules"; }
   bool HasRefreshButton() const override { return true; }
   void OnRefreshButtonClicked() override;
-  void UpdateModules(const ProcessData* process);
+  void UpdateModules(const orbit_client_data::ProcessData* process);
 
  protected:
   void DoSort() override;
   void DoFilter() override;
 
  private:
-  [[nodiscard]] ModuleData* GetModule(uint32_t row) const { return modules_[indices_[row]]; }
+  [[nodiscard]] orbit_client_data::ModuleData* GetModule(uint32_t row) const {
+    return modules_[indices_[row]];
+  }
 
-  std::vector<ModuleData*> modules_;
-  absl::flat_hash_map<const ModuleData*, const ModuleInMemory*> module_memory_;
+  std::vector<orbit_client_data::ModuleData*> modules_;
+  absl::flat_hash_map<const orbit_client_data::ModuleData*,
+                      const orbit_client_data::ModuleInMemory*>
+      module_memory_;
 
   enum ColumnIndex {
     kColumnName,

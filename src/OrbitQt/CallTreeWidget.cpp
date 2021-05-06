@@ -43,6 +43,7 @@
 #include "OrbitBase/Logging.h"
 #include "capture_data.pb.h"
 
+using orbit_client_data::ModuleData;
 using orbit_client_model::CaptureData;
 using orbit_client_protos::FunctionInfo;
 

@@ -21,6 +21,7 @@
 #include "OrbitBase/Logging.h"
 #include "absl/strings/str_format.h"
 
+using orbit_client_data::ModuleData;
 using orbit_client_model::CaptureData;
 using orbit_client_protos::FunctionInfo;
 
@@ -62,12 +63,14 @@ std::string CallStackDataView::GetValue(int row, int column) {
       return absl::StrCat(
           functions_to_highlight_.contains(frame.address) ? kHighlightedFunctionString
                                                           : kHighlightedFunctionBlankString,
-          function != nullptr ? function_utils::GetDisplayName(*function) : frame.fallback_name);
+          function != nullptr ? orbit_client_data::function_utils::GetDisplayName(*function)
+                              : frame.fallback_name);
     case kColumnSize:
       return function != nullptr ? absl::StrFormat("%lu", function->size()) : "";
     case kColumnModule: {
-      if (function != nullptr && !function_utils::GetLoadedModuleName(*function).empty()) {
-        return function_utils::GetLoadedModuleName(*function);
+      if (function != nullptr &&
+          !orbit_client_data::function_utils::GetLoadedModuleName(*function).empty()) {
+        return orbit_client_data::function_utils::GetLoadedModuleName(*function);
       }
       if (module != nullptr) {
         return module->name();
@@ -190,8 +193,9 @@ void CallStackDataView::DoFilter() {
   for (size_t i = 0; i < callstack_.GetFramesCount(); ++i) {
     CallStackDataViewFrame frame = GetFrameFromIndex(i);
     const FunctionInfo* function = frame.function;
-    std::string name = ToLower(function != nullptr ? function_utils::GetDisplayName(*function)
-                                                   : frame.fallback_name);
+    std::string name =
+        ToLower(function != nullptr ? orbit_client_data::function_utils::GetDisplayName(*function)
+                                    : frame.fallback_name);
     bool match = true;
 
     for (std::string& filter_token : tokens) {

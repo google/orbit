@@ -18,7 +18,8 @@
 class DisassemblyReport : public CodeReport {
  public:
   DisassemblyReport(Disassembler disasm, uint64_t function_address,
-                    PostProcessedSamplingData post_processed_sampling_data, uint32_t samples_count)
+                    orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
+                    uint32_t samples_count)
       : disasm_{std::move(disasm)},
         post_processed_sampling_data_{std::move(post_processed_sampling_data)},
         function_count_{post_processed_sampling_data_->GetCountOfFunction(function_address)},
@@ -33,7 +34,7 @@ class DisassemblyReport : public CodeReport {
 
  private:
   Disassembler disasm_;
-  std::optional<PostProcessedSamplingData> post_processed_sampling_data_;
+  std::optional<orbit_client_data::PostProcessedSamplingData> post_processed_sampling_data_;
   uint32_t function_count_;
   uint32_t samples_count_;
 };

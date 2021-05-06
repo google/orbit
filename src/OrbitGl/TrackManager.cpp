@@ -31,7 +31,7 @@
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
 
-using orbit_client_protos::FunctionInfo;
+using orbit_client_data::CallstackData;
 using orbit_gl::MemoryTrack;
 
 TrackManager::TrackManager(TimeGraph* time_graph, orbit_gl::Viewport* viewport,
@@ -56,7 +56,7 @@ std::vector<Track*> TrackManager::GetAllTracks() const {
 
 std::vector<ThreadTrack*> TrackManager::GetThreadTracks() const {
   std::vector<ThreadTrack*> tracks;
-  for (auto& [unused_key, track] : thread_tracks_) {
+  for (const auto& [unused_key, track] : thread_tracks_) {
     tracks.push_back(track.get());
   }
   return tracks;
@@ -65,7 +65,7 @@ std::vector<ThreadTrack*> TrackManager::GetThreadTracks() const {
 std::vector<FrameTrack*> TrackManager::GetFrameTracks() const {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::vector<FrameTrack*> tracks;
-  for (auto& [unused_id, track] : frame_tracks_) {
+  for (const auto& [unused_id, track] : frame_tracks_) {
     tracks.push_back(track.get());
   }
   return tracks;

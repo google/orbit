@@ -13,14 +13,14 @@
 
 namespace orbit_gl {
 
-SourceCodeReport::SourceCodeReport(std::string_view source_file,
-                                   const orbit_client_protos::FunctionInfo& function,
-                                   uint64_t absolute_address, orbit_elf_utils::ElfFile* elf_file,
-                                   const PostProcessedSamplingData& sampling_data,
-                                   uint32_t total_samples_in_capture)
+SourceCodeReport::SourceCodeReport(
+    std::string_view source_file, const orbit_client_protos::FunctionInfo& function,
+    uint64_t absolute_address, orbit_elf_utils::ElfFile* elf_file,
+    const orbit_client_data::PostProcessedSamplingData& sampling_data,
+    uint32_t total_samples_in_capture)
     : total_samples_in_capture_(total_samples_in_capture) {
   for (size_t offset = 0; offset < function.size(); ++offset) {
-    const ThreadSampleData* summary = sampling_data.GetSummary();
+    const orbit_client_data::ThreadSampleData* summary = sampling_data.GetSummary();
     const auto it = summary->raw_address_count.find(absolute_address + offset);
     if (it == summary->raw_address_count.end()) continue;
 

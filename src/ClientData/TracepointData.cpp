@@ -13,6 +13,8 @@
 
 using orbit_client_protos::TracepointEventInfo;
 
+namespace orbit_client_data {
+
 void TracepointData::EmplaceTracepointEvent(uint64_t time, uint64_t tracepoint_hash,
                                             int32_t process_id, int32_t thread_id, int32_t cpu,
                                             bool is_same_pid_as_target) {
@@ -142,3 +144,5 @@ void TracepointData::ForEachUniqueTracepointInfo(
     action(tracepoint_info);
   }
 }
+
+}  // namespace orbit_client_data

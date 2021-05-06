@@ -31,12 +31,16 @@
 #include "google/protobuf/io/coded_stream.h"
 #include "google/protobuf/message.h"
 
+using orbit_client_data::CallStack;
+using orbit_client_data::ModuleData;
+
 using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::CaptureInfo;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::ModuleInfo;
 using orbit_client_protos::ProcessInfo;
+
 using orbit_grpc_protos::InstrumentedFunction;
 
 namespace orbit_client_model {
@@ -135,10 +139,11 @@ CaptureInfo GenerateCaptureInfo(
       continue;
     }
     // Fix names/offset/module in address infos (some might only be in process):
-    added_address_info->set_function_name(function_utils::GetDisplayName(*function));
+    added_address_info->set_function_name(
+        orbit_client_data::function_utils::GetDisplayName(*function));
     const ModuleData* module = capture_data.GetModuleByPathAndBuildId(function->module_path(),
                                                                       function->module_build_id());
-    const uint64_t offset = function_utils::Offset(*function, *module);
+    const uint64_t offset = orbit_client_data::function_utils::Offset(*function, *module);
     added_address_info->set_offset_in_function(offset);
     added_address_info->set_module_path(function->module_path());
   }

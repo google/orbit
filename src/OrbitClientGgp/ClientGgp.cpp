@@ -44,13 +44,21 @@ ABSL_DECLARE_FLAG(bool, thread_state);
 ABSL_DECLARE_FLAG(uint64_t, max_local_marker_depth_per_command_buffer);
 
 using orbit_base::Future;
+
 using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureEventProcessor;
+
+using orbit_client_data::CallStack;
+using orbit_client_data::ProcessData;
+using orbit_client_data::TracepointInfoSet;
+
 using orbit_client_model::CaptureData;
+
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::TimerInfo;
+
 using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::ModuleInfo;

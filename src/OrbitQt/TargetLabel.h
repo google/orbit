@@ -30,11 +30,12 @@ class TargetLabel : public QWidget {
   void ChangeToFileTarget(const FileTarget& file_target);
   void ChangeToFileTarget(const std::filesystem::path& path);
   void ChangeToStadiaTarget(const StadiaTarget& stadia_target);
-  void ChangeToStadiaTarget(const ProcessData& process, const orbit_ggp::Instance& instance);
+  void ChangeToStadiaTarget(const orbit_client_data::ProcessData& process,
+                            const orbit_ggp::Instance& instance);
   void ChangeToStadiaTarget(const QString& process_name, double cpu_usage,
                             const QString& instance_name);
   void ChangeToLocalTarget(const LocalTarget& local_target);
-  void ChangeToLocalTarget(const ProcessData& process);
+  void ChangeToLocalTarget(const orbit_client_data::ProcessData& process);
   void ChangeToLocalTarget(const QString& process_name, double cpu_usage);
 
   bool SetProcessCpuUsageInPercent(double cpu_usage);

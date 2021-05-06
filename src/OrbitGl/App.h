@@ -138,7 +138,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   void OnCaptureFinished(const orbit_grpc_protos::CaptureFinished& capture_finished) override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
-  void OnUniqueCallStack(CallStack callstack) override;
+  void OnUniqueCallStack(orbit_client_data::CallStack callstack) override;
   void OnCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) override;
   void OnThreadName(int32_t thread_id, std::string thread_name) override;
   void OnThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo thread_state_slice) override;
@@ -161,7 +161,8 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   void OnSystemMemoryUsage(
       const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage) override;
 
-  void OnValidateFramePointers(std::vector<const ModuleData*> modules_to_validate);
+  void OnValidateFramePointers(
+      std::vector<const orbit_client_data::ModuleData*> modules_to_validate);
 
   void SetCaptureWindow(CaptureWindow* capture);
   [[nodiscard]] const TimeGraph* GetTimeGraph() const {
@@ -176,23 +177,27 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   void SetIntrospectionWindow(IntrospectionWindow* canvas);
   void StopIntrospection();
 
-  void SetSamplingReport(
-      PostProcessedSamplingData post_processed_sampling_data,
-      absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks);
-  void SetSelectionReport(
-      PostProcessedSamplingData post_processed_sampling_data,
-      absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks,
-      bool has_summary);
+  void SetSamplingReport(orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
+                         absl::flat_hash_map<orbit_client_data::CallstackID,
+                                             std::shared_ptr<orbit_client_data::CallStack>>
+                             unique_callstacks);
+  void SetSelectionReport(orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
+                          absl::flat_hash_map<orbit_client_data::CallstackID,
+                                              std::shared_ptr<orbit_client_data::CallStack>>
+                              unique_callstacks,
+                          bool has_summary);
   void SetTopDownView(const orbit_client_model::CaptureData& capture_data);
   void ClearTopDownView();
-  void SetSelectionTopDownView(const PostProcessedSamplingData& selection_post_processed_data,
-                               const orbit_client_model::CaptureData& capture_data);
+  void SetSelectionTopDownView(
+      const orbit_client_data::PostProcessedSamplingData& selection_post_processed_data,
+      const orbit_client_model::CaptureData& capture_data);
   void ClearSelectionTopDownView();
 
   void SetBottomUpView(const orbit_client_model::CaptureData& capture_data);
   void ClearBottomUpView();
-  void SetSelectionBottomUpView(const PostProcessedSamplingData& selection_post_processed_data,
-                                const orbit_client_model::CaptureData& capture_data);
+  void SetSelectionBottomUpView(
+      const orbit_client_data::PostProcessedSamplingData& selection_post_processed_data,
+      const orbit_client_model::CaptureData& capture_data);
   void ClearSelectionBottomUpView();
 
   // This needs to be called from the main thread.
@@ -305,18 +310,19 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModule(
       const std::string& module_path, const std::string& build_id);
   orbit_base::Future<void> RetrieveModulesAndLoadSymbols(
-      absl::Span<const ModuleData* const> modules);
+      absl::Span<const orbit_client_data::ModuleData* const> modules);
 
   // RetrieveModuleAndSymbols is a helper function which first retrieves the module by calling
   // `RetrieveModule` and afterwards load the symbols by calling `LoadSymbols`.
-  orbit_base::Future<ErrorMessageOr<void>> RetrieveModuleAndLoadSymbols(const ModuleData* module);
+  orbit_base::Future<ErrorMessageOr<void>> RetrieveModuleAndLoadSymbols(
+      const orbit_client_data::ModuleData* module);
   orbit_base::Future<ErrorMessageOr<void>> RetrieveModuleAndLoadSymbols(
       const std::string& module_path, const std::string& build_id);
 
   // This method is pretty similar to `RetrieveModule`, but it also requires debug information to be
   // present.
   orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleWithDebugInfo(
-      const ModuleData* module);
+      const orbit_client_data::ModuleData* module);
   orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleWithDebugInfo(
       const std::string& module_path, const std::string& build_id);
 
@@ -347,7 +353,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
     CHECK(process_manager != nullptr);
     process_manager_ = process_manager;
   }
-  void SetTargetProcess(ProcessData* process);
+  void SetTargetProcess(orbit_client_data::ProcessData* process);
   [[nodiscard]] DataView* GetOrCreateDataView(DataViewType type) override;
   [[nodiscard]] DataView* GetOrCreateSelectionCallstackDataView();
 
@@ -357,17 +363,17 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   }
   [[nodiscard]] ThreadPool* GetThreadPool() { return thread_pool_.get(); }
   [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() { return main_thread_executor_; }
-  [[nodiscard]] ProcessData* GetMutableTargetProcess() const { return process_; }
-  [[nodiscard]] const ProcessData* GetTargetProcess() const { return process_; }
+  [[nodiscard]] orbit_client_data::ProcessData* GetMutableTargetProcess() const { return process_; }
+  [[nodiscard]] const orbit_client_data::ProcessData* GetTargetProcess() const { return process_; }
   [[nodiscard]] ManualInstrumentationManager* GetManualInstrumentationManager() {
     return manual_instrumentation_manager_.get();
   }
-  [[nodiscard]] ModuleData* GetMutableModuleByPathAndBuildId(const std::string& path,
-                                                             const std::string& build_id) const {
+  [[nodiscard]] orbit_client_data::ModuleData* GetMutableModuleByPathAndBuildId(
+      const std::string& path, const std::string& build_id) const {
     return module_manager_->GetMutableModuleByPathAndBuildId(path, build_id);
   }
-  [[nodiscard]] const ModuleData* GetModuleByPathAndBuildId(const std::string& path,
-                                                            const std::string& build_id) const {
+  [[nodiscard]] const orbit_client_data::ModuleData* GetModuleByPathAndBuildId(
+      const std::string& path, const std::string& build_id) const {
     return module_manager_->GetModuleByPathAndBuildId(path, build_id);
   }
 
@@ -396,7 +402,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   void SelectFunction(const orbit_client_protos::FunctionInfo& func);
   void DeselectFunction(const orbit_client_protos::FunctionInfo& func);
   [[nodiscard]] bool IsFunctionSelected(const orbit_client_protos::FunctionInfo& func) const;
-  [[nodiscard]] bool IsFunctionSelected(const SampledFunction& func) const;
+  [[nodiscard]] bool IsFunctionSelected(const orbit_client_data::SampledFunction& func) const;
   [[nodiscard]] bool IsFunctionSelected(uint64_t absolute_address) const;
   [[nodiscard]] const orbit_grpc_protos::InstrumentedFunction* GetInstrumentedFunction(
       uint64_t function_id) const;
@@ -407,8 +413,8 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   [[nodiscard]] uint64_t highlighted_function_id() const;
   void set_highlighted_function_id(uint64_t highlighted_function_id);
 
-  [[nodiscard]] ThreadID selected_thread_id() const;
-  void set_selected_thread_id(ThreadID thread_id);
+  [[nodiscard]] orbit_client_data::ThreadID selected_thread_id() const;
+  void set_selected_thread_id(orbit_client_data::ThreadID thread_id);
 
   [[nodiscard]] const TextBox* selected_text_box() const;
   void SelectTextBox(const TextBox* text_box);
@@ -458,7 +464,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleFromRemote(
       const std::string& module_file_path);
 
-  void SelectFunctionsFromHashes(const ModuleData* module,
+  void SelectFunctionsFromHashes(const orbit_client_data::ModuleData* module,
                                  absl::Span<const uint64_t> function_hashes);
 
   ErrorMessageOr<std::filesystem::path> FindModuleLocally(const std::filesystem::path& module_path,
@@ -473,7 +479,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   ErrorMessageOr<void> SavePreset(const std::string& filename);
   [[nodiscard]] ScopedStatus CreateScopedStatus(const std::string& initial_message);
 
-  void EnableFrameTracksFromHashes(const ModuleData* module,
+  void EnableFrameTracksFromHashes(const orbit_client_data::ModuleData* module,
                                    absl::Span<const uint64_t> function_hashes);
   void AddFrameTrackTimers(uint64_t instrumented_function_id);
   void RefreshFrameTracks();
@@ -550,7 +556,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
 
   StatusListener* status_listener_ = nullptr;
 
-  ProcessData* process_ = nullptr;
+  orbit_client_data::ProcessData* process_ = nullptr;
 
   std::unique_ptr<FramePointerValidatorClient> frame_pointer_validator_client_;
 

@@ -172,10 +172,11 @@ int main(int argc, char* argv[]) {
   auto capture_event_processor = std::make_unique<orbit_fake_client::FakeCaptureEventProcessor>();
 
   auto capture_outcome_future = capture_client.Capture(
-      thread_pool.get(), process_id, module_manager, selected_functions, TracepointInfoSet{},
-      samples_per_second, unwinding_method, collect_scheduling_info, collect_thread_state,
-      collect_gpu_jobs, kEnableApi, kEnableIntrospection, kMaxLocalMarkerDepthPerCommandBuffer,
-      collect_memory_info, memory_sampling_period_ns, std::move(capture_event_processor));
+      thread_pool.get(), process_id, module_manager, selected_functions,
+      orbit_client_data::TracepointInfoSet{}, samples_per_second, unwinding_method,
+      collect_scheduling_info, collect_thread_state, collect_gpu_jobs, kEnableApi,
+      kEnableIntrospection, kMaxLocalMarkerDepthPerCommandBuffer, collect_memory_info,
+      memory_sampling_period_ns, std::move(capture_event_processor));
   LOG("Asked to start capture");
 
   uint32_t duration_s = absl::GetFlag(FLAGS_duration);

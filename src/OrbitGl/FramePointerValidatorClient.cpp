@@ -23,6 +23,7 @@
 #include "services.grpc.pb.h"
 #include "services.pb.h"
 
+using orbit_client_data::ModuleData;
 using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::CodeBlock;
 using orbit_grpc_protos::FramePointerValidatorService;
@@ -51,7 +52,7 @@ void FramePointerValidatorClient::AnalyzeModules(const std::vector<const ModuleD
     request.set_module_path(module->file_path());
     for (const FunctionInfo* function : functions) {
       CodeBlock* function_info = request.add_functions();
-      function_info->set_offset(function_utils::Offset(*function, *module));
+      function_info->set_offset(orbit_client_data::function_utils::Offset(*function, *module));
       function_info->set_size(function->size());
     }
     grpc::ClientContext context;

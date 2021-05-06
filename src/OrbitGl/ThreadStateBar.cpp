@@ -20,6 +20,7 @@
 #include "Viewport.h"
 #include "capture_data.pb.h"
 
+using orbit_client_data::ThreadID;
 using orbit_client_protos::ThreadStateSliceInfo;
 
 namespace orbit_gl {
@@ -146,7 +147,7 @@ static std::string GetThreadStateDescription(ThreadStateSliceInfo::ThreadState s
 }
 
 std::string ThreadStateBar::GetThreadStateSliceTooltip(Batcher* batcher, PickingId id) const {
-  auto user_data = batcher->GetUserData(id);
+  PickingUserData* user_data = batcher->GetUserData(id);
   if (user_data == nullptr || user_data->custom_data_ == nullptr) {
     return "";
   }

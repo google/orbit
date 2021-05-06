@@ -35,12 +35,19 @@
 #include "tracepoint.pb.h"
 
 using orbit_capture_client::CaptureListener;
+
+using orbit_client_data::CallStack;
+using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleManager;
+using orbit_client_data::ProcessData;
+using orbit_client_data::TracepointInfoSet;
+
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::CaptureHeader;
 using orbit_client_protos::CaptureInfo;
 using orbit_client_protos::TimerInfo;
+
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::InstrumentedFunction;
@@ -187,7 +194,8 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureInfo(
 
     CHECK(module_data != nullptr);
     instrumented_function.set_file_build_id(module_data->build_id());
-    instrumented_function.set_file_offset(function_utils::Offset(function.second, *module_data));
+    instrumented_function.set_file_offset(
+        orbit_client_data::function_utils::Offset(function.second, *module_data));
     instrumented_functions.insert_or_assign(function.first, instrumented_function);
 
     module_data->AddFunctionInfoWithBuildId(function.second, module_data->build_id());

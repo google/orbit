@@ -9,6 +9,8 @@
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
 
+namespace orbit_client_data {
+
 namespace internal {
 struct HashFunctionInfo {
   size_t operator()(const orbit_client_protos::FunctionInfo& function) const {
@@ -38,5 +40,7 @@ template <class V>
 using FunctionInfoMap =
     absl::flat_hash_map<orbit_client_protos::FunctionInfo, V, internal::HashFunctionInfo,
                         internal::EqualFunctionInfo>;
+
+}  // namespace orbit_client_data
 
 #endif  // CLIENT_DATA_FUNCTION_INFO_SET_H_

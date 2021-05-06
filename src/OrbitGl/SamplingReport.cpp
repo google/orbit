@@ -13,6 +13,13 @@
 #include "OrbitBase/Logging.h"
 #include "absl/strings/str_format.h"
 
+using orbit_client_data::CallStack;
+using orbit_client_data::CallstackCount;
+using orbit_client_data::CallstackID;
+using orbit_client_data::PostProcessedSamplingData;
+using orbit_client_data::ThreadID;
+using orbit_client_data::ThreadSampleData;
+
 SamplingReport::SamplingReport(
     OrbitApp* app, PostProcessedSamplingData post_processed_sampling_data,
     absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks,

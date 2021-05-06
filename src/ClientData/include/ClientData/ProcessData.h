@@ -24,6 +24,8 @@
 #include "process.pb.h"
 #include "symbol.pb.h"
 
+namespace orbit_client_data {
+
 // Small struct to model a space in memory occupied by a module.
 class ModuleInMemory {
  public:
@@ -84,5 +86,7 @@ class ProcessData final {
   absl::node_hash_map<std::string, ModuleInMemory> module_memory_map_;
   std::map<uint64_t, std::string> start_addresses_;
 };
+
+}  // namespace orbit_client_data
 
 #endif  // CLIENT_DATA_PROCESS_DATA_H_

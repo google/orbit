@@ -14,6 +14,10 @@
 #include "ClientData/Callstack.h"
 #include "OrbitBase/ThreadConstants.h"
 
+using orbit_client_data::CallStack;
+using orbit_client_data::PostProcessedSamplingData;
+using orbit_client_data::ThreadSampleData;
+
 using orbit_client_model::CaptureData;
 
 std::vector<const CallTreeNode*> CallTreeNode::children() const {
@@ -21,7 +25,7 @@ std::vector<const CallTreeNode*> CallTreeNode::children() const {
   for (const auto& tid_and_thread : thread_children_) {
     ret.push_back(&tid_and_thread.second);
   }
-  for (auto& address_and_functions : function_children_) {
+  for (const auto& address_and_functions : function_children_) {
     ret.push_back(&address_and_functions.second);
   }
   return ret;

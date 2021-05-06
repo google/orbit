@@ -110,7 +110,7 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
 
   FunctionInfo::OrbitType type{FunctionInfo::kNone};
   if (func != nullptr) {
-    type = function_utils::GetOrbitTypeByName(func->function_name());
+    type = orbit_client_data::function_utils::GetOrbitTypeByName(func->function_name());
   }
 
   std::string function_name;
@@ -129,7 +129,9 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
   }
 
   std::string module_name =
-      func != nullptr ? function_utils::GetLoadedModuleNameByPath(func->file_path()) : "unknown";
+      func != nullptr
+          ? orbit_client_data::function_utils::GetLoadedModuleNameByPath(func->file_path())
+          : "unknown";
 
   return absl::StrFormat(
       "<b>%s</b><br/>"
@@ -161,7 +163,7 @@ bool ThreadTrack::IsTrackSelected() const {
                                                        const InstrumentedFunction* function) {
   FunctionInfo::OrbitType type{FunctionInfo::kNone};
   if (function != nullptr) {
-    type = function_utils::GetOrbitTypeByName(function->function_name());
+    type = orbit_client_data::function_utils::GetOrbitTypeByName(function->function_name());
   }
 
   bool manual_instrumentation_timer =

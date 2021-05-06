@@ -15,6 +15,8 @@
 
 using orbit_client_protos::CallstackEvent;
 
+namespace orbit_client_data {
+
 void CallstackData::AddCallstackEvent(CallstackEvent callstack_event) {
   std::lock_guard lock(mutex_);
   CHECK(unique_callstacks_.contains(callstack_event.callstack_id()));
@@ -261,3 +263,5 @@ void CallstackData::FilterCallstackEventsBasedOnMajorityStart() {
       filtered_out_count, count_before_filtering,
       100.0f * filtered_out_count / count_before_filtering, count_after_filtering);
 }
+
+}  // namespace orbit_client_data

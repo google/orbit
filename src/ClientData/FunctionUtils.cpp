@@ -14,6 +14,8 @@
 #include "absl/strings/match.h"
 #include "xxhash.h"
 
+namespace orbit_client_data {
+
 namespace {
 uint64_t StringHash(const std::string& string) {
   return XXH64(string.data(), string.size(), 0xBADDCAFEDEAD10CC);
@@ -105,3 +107,5 @@ void SetOrbitTypeFromName(FunctionInfo* func) {
 }
 
 }  // namespace function_utils
+
+}  // namespace orbit_client_data
