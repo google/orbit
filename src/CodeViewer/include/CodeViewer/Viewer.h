@@ -49,7 +49,8 @@ class Viewer : public QPlainTextEdit {
  public:
   explicit Viewer(QWidget* parent);
 
-  void SetEnableLineNumbers(bool enabled);
+  enum class LineNumberTypes { kNone, kOnlyMainContent, kOnlyAnnotatingLines, kBoth };
+  void SetLineNumberTypes(LineNumberTypes line_number_types);
   void SetEnableSampleCounters(bool is_enabled);
   void SetLineNumberMargins(FontSizeInEm left, FontSizeInEm right);
 
@@ -79,7 +80,7 @@ class Viewer : public QPlainTextEdit {
   PlaceHolderWidget top_bar_widget_;
   PlaceHolderWidget left_sidebar_widget_;
   PlaceHolderWidget right_sidebar_widget_;
-  bool line_numbers_enabled_ = false;
+  LineNumberTypes line_number_types_ = LineNumberTypes::kNone;
   bool sample_counters_enabled_ = false;
   FontSizeInEm left_margin_ = FontSizeInEm{0.3f};
   FontSizeInEm right_margin_ = FontSizeInEm{0.3f};

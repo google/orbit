@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
   const DummyCodeReport code_report{static_cast<uint32_t>(line_numbers)};
   dialog.SetHeatmap(orbit_code_viewer::FontSizeInEm{1.2f}, &code_report);
 
-  dialog.SetEnableLineNumbers(true);
+  dialog.SetLineNumberTypes(orbit_code_viewer::Dialog::LineNumberTypes::kOnlyMainContent);
   dialog.SetEnableSampleCounters(true);
   dialog.GoToLineNumber(10);
   dialog.SetHighlightCurrentLine(true);

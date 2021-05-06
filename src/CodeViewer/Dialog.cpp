@@ -46,7 +46,9 @@ void Dialog::SetLineNumberMargins(FontSizeInEm left, FontSizeInEm right) {
   ui_->viewer->SetLineNumberMargins(left, right);
 }
 
-void Dialog::SetEnableLineNumbers(bool enabled) { ui_->viewer->SetEnableLineNumbers(enabled); }
+void Dialog::SetLineNumberTypes(LineNumberTypes line_number_types) {
+  ui_->viewer->SetLineNumberTypes(line_number_types);
+}
 
 void Dialog::SetEnableSampleCounters(bool enabled) {
   ui_->viewer->SetEnableSampleCounters(enabled);

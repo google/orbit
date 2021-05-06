@@ -45,6 +45,8 @@ class Dialog : public QDialog {
   Q_OBJECT
 
  public:
+  using LineNumberTypes = Viewer::LineNumberTypes;
+
   explicit Dialog(QWidget* parent = nullptr);
   ~Dialog() noexcept override;
 
@@ -54,7 +56,7 @@ class Dialog : public QDialog {
   void SetHeatmap(FontSizeInEm heatmap_bar_width, const CodeReport* code_report);
   void ClearHeatmap();
 
-  void SetEnableLineNumbers(bool enabled);
+  void SetLineNumberTypes(LineNumberTypes line_number_types);
   void SetEnableSampleCounters(bool enabled);
 
   void SetLineNumberMargins(FontSizeInEm left, FontSizeInEm right);

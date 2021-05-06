@@ -38,6 +38,18 @@ int DetermineLineNumberWidthInPixels(const QFontMetrics& font_metrics, int max_l
   return StringWidthInPixels(font_metrics, QString::number(max_line_number));
 }
 
+namespace {
+struct Metadata : QTextBlockUserData {
+  enum LineType { kMainContent, kAnnotatingLine };
+
+  LineType line_type;
+  uint64_t line_number;
+
+  explicit Metadata(LineType line_type, uint64_t line_number)
+      : line_type(line_type), line_number(line_number) {}
+};
+}  // namespace
+
 Viewer::Viewer(QWidget* parent)
     : QPlainTextEdit(parent),
       top_bar_widget_{this},
@@ -121,7 +133,7 @@ void Viewer::DrawTopWidget(QPaintEvent* event) {
   painter.setFont(font());
   painter.fillRect(event->rect(), kTitleBackgroundColor);
 
-  if (line_numbers_enabled_) {
+  if (line_number_types_ != LineNumberTypes::kNone) {
     const int left = (left_margin_ + heatmap_bar_width_).ToPixels(fontMetrics());
     const int width = DetermineLineNumberWidthInPixels(fontMetrics(), blockCount());
     const QRect bounding_box{left, 0, width, fontMetrics().height()};
@@ -172,12 +184,19 @@ void Viewer::DrawLineNumbers(QPaintEvent* event) {
        block = block.next()) {
     if (!block.isVisible() || bottom_of(block) < event->rect().top()) continue;
 
+    const auto* const metadata = static_cast<const Metadata*>(block.userData());
+
+    const auto line_number = [&]() -> uint64_t {
+      if (metadata != nullptr) return metadata->line_number;
+      return block.firstLineNumber() + 1;
+    }();
+
     if (heatmap_bar_width_.Value() > 0.0 && code_report_ != nullptr) {
       const QRect heatmap_rect{0, top_of(block), heatmap_bar_width_.ToPixels(fontMetrics()),
                                fontMetrics().height()};
 
       const uint32_t num_samples_in_line =
-          code_report_->GetNumSamplesAtLine(block.blockNumber() + 1).value_or(0);
+          code_report_->GetNumSamplesAtLine(line_number).value_or(0);
       const uint32_t num_samples_in_function = code_report_->GetNumSamplesInFunction();
       const float intensity = std::clamp(
           static_cast<float>(num_samples_in_line) / static_cast<float>(num_samples_in_function),
@@ -189,13 +208,34 @@ void Viewer::DrawLineNumbers(QPaintEvent* event) {
       painter.fillRect(heatmap_rect, color);
     }
 
-    if (line_numbers_enabled_) {
+    const auto is_line_number_enabled = [&]() {
+      if (line_number_types_ == LineNumberTypes::kBoth) return true;
+
+      if (metadata == nullptr && line_number_types_ == LineNumberTypes::kOnlyMainContent) {
+        return true;
+      }
+      if (metadata == nullptr) return false;
+
+      if (metadata->line_type == Metadata::kMainContent &&
+          line_number_types_ == LineNumberTypes::kOnlyMainContent) {
+        return true;
+      }
+      if (metadata->line_type == Metadata::kAnnotatingLine &&
+          line_number_types_ == LineNumberTypes::kOnlyAnnotatingLines) {
+        return true;
+      }
+
+      return false;
+    }();
+
+    if (is_line_number_enabled) {
       const int left = (left_margin_ + heatmap_bar_width_).ToPixels(fontMetrics());
-      const int width = DetermineLineNumberWidthInPixels(fontMetrics(), blockCount());
+      const int width =
+          DetermineLineNumberWidthInPixels(fontMetrics(), static_cast<int>(line_number));
       const QRect bounding_box{left, top_of(block), width, fontMetrics().height()};
 
       painter.setPen(kLineNumberForegroundColor);
-      painter.drawText(bounding_box, Qt::AlignRight, QString::number(block.blockNumber() + 1));
+      painter.drawText(bounding_box, Qt::AlignRight, QString::number(line_number));
     }
   }
 }
@@ -275,11 +315,12 @@ void Viewer::UpdateBarsSize() {
 
   int overall_left_width_px = heatmap_bar_width_.ToPixels(fontMetrics());
 
-  if (line_numbers_enabled_) {
+  if (line_number_types_ != LineNumberTypes::kNone) {
     overall_left_width_px += left_margin_.ToPixels(fontMetrics());
     overall_left_width_px += DetermineLineNumberWidthInPixels(fontMetrics(), number_of_lines);
     overall_left_width_px += right_margin_.ToPixels(fontMetrics());
   }
+
   int overall_right_width_px = 0;
   if (sample_counters_enabled_) {
     overall_right_width_px += left_margin_.ToPixels(fontMetrics());
@@ -319,10 +360,10 @@ void Viewer::UpdateBarsPosition() {
   right_sidebar_widget_.setGeometry(right_sidebar);
 }
 
-void Viewer::SetEnableLineNumbers(bool is_enabled) {
-  if (line_numbers_enabled_ == is_enabled) return;
+void Viewer::SetLineNumberTypes(LineNumberTypes line_number_types) {
+  if (line_number_types_ == line_number_types) return;
 
-  line_numbers_enabled_ = is_enabled;
+  line_number_types_ = line_number_types;
   UpdateBarsSize();
 }
 
