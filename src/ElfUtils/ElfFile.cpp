@@ -518,8 +518,7 @@ ErrorMessageOr<std::unique_ptr<ElfFile>> ElfFile::CreateFromBuffer(
 }
 
 ErrorMessageOr<std::unique_ptr<ElfFile>> ElfFile::Create(const std::filesystem::path& file_path) {
-  // TODO(hebecker): Remove this explicit construction of StringRef when we
-  // switch to LLVM10.
+  // TODO(hebecker): Remove this explicit construction of StringRef when we switch to LLVM10.
   const std::string file_path_str = file_path.string();
   const llvm::StringRef file_path_llvm{file_path_str};
 
@@ -560,8 +559,8 @@ ErrorMessageOr<std::unique_ptr<ElfFile>> ElfFile::Create(
 
 ErrorMessageOr<uint32_t> ElfFile::CalculateDebuglinkChecksum(
     const std::filesystem::path& file_path) {
-  // TODO(b/180995172): Make this read operation iterative since the potentially read files can be
-  // very large (gigabytes).
+  // TODO(b/180995172): Make this read operation iterative since the potentially read files
+  // can be very large (gigabytes).
   ErrorMessageOr<orbit_base::unique_fd> fd_or_error = orbit_base::OpenFileForReading(file_path);
 
   if (fd_or_error.has_error()) {

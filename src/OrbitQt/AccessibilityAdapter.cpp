@@ -243,10 +243,9 @@ class OrbitGlWidgetAccessible : public QAccessibleWidget {
 OrbitGlWidgetAccessible::OrbitGlWidgetAccessible(OrbitGLWidget* widget)
     : QAccessibleWidget(widget, QAccessible::Role::Graphic, "CaptureWindow") {
   CHECK(widget != nullptr);
-  /* TODO(175676123): For some reason setting an accessible name for the Canvas results in a memory
-   * access exception during runtime when accessibility is queried.
-   * This also happens when the accessibleName is explicitely set to "" in Qt Designer, which this
-   * check can't catch...
+  /* TODO(b/175676123): For some reason setting an accessible name for the Canvas results in
+   * a memory access exception during runtime when accessibility is queried. This also happens when
+   * the accessibleName is explicitely set to "" in Qt Designer, which this check can't catch...
    */
   CHECK(widget->accessibleName() == "");
   AdapterRegistry::Get().RegisterAdapter(

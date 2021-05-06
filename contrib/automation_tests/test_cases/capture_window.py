@@ -212,7 +212,7 @@ class CollapsingTrackBase(CaptureWindowE2ETestCaseBase):
 
         prev_height = track.container.rectangle().height()
         triangle_toggle = track.triangle_toggle
-        # TODO (b/184237564): Very short mouse clicks (within one frame) will be ignored. Thus we need expand
+        # TODO(b/184237564): Very short mouse clicks (within one frame) will be ignored. Thus we need expand
         #  the duration of the click explicitly.
         triangle_toggle.click_input(button_up=False)
         time.sleep(0.1)
@@ -367,7 +367,7 @@ class CheckCallstacks(CaptureWindowE2ETestCaseBase):
 
 
 class SetAndCheckMemorySamplingPeriod(E2ETestCase):
-  # TODO(http://b/186098691): Move the capture options dialog utilities to a common base class.
+  # TODO(b/186098691): Move the capture options dialog utilities to a common base class.
 
   def _show_capture_options_dialog(self):
       logging.info('Opening "Capture Options" dialog')

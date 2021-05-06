@@ -645,7 +645,7 @@ void CaptureWindow::RenderHelpUi() {
 
   Vec2 text_bounding_box_pos;
   Vec2 text_bounding_box_size;
-  // TODO (b/180312795): Use TimeGraphLayout's font size again.
+  // TODO(b/180312795): Use TimeGraphLayout's font size again.
   text_renderer_.AddText(GetHelpText(), world_pos[0], world_pos[1], GlCanvas::kZValueTextUi,
                          Color(255, 255, 255, 255), 14, -1.f /*max_size*/,
                          false /*right_justified*/, &text_bounding_box_pos,

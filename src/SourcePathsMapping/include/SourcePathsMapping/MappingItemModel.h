@@ -32,7 +32,7 @@ class MappingItemModel : public QAbstractListModel {
   bool moveRows(const QModelIndex& source_parent, int source_row, int count,
                 const QModelIndex& destination_parent, int destination_child) override;
 
-  // TODO(b/181733946): This is not a Qt-overload. Calling it `removeRows` triggers an incosistency
+  // TODO(b/181733946): This is not a Qt-overload. Calling it `removeRows` triggers an inconsistency
   // in Qt.
   bool RemoveRows(int row, int count, const QModelIndex& parent = QModelIndex{});
 

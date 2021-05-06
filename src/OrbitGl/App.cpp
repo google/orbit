@@ -1093,8 +1093,8 @@ void OrbitApp::StartCapture() {
       enable_introspection, max_local_marker_depth_per_command_buffer, collect_memory_info,
       memory_sampling_period_ns, std::move(capture_event_processor));
 
-  // TODO (b/187250643): Refactor this to be more readable and maybe remove parts that are not
-  // needed here (capture cancelled)
+  // TODO(b/187250643): Refactor this to be more readable and maybe remove parts that are not needed
+  // here (capture cancelled)
   capture_result.Then(
       main_thread_executor_, [this, capture_metric = std::move(capture_metric)](
                                  ErrorMessageOr<CaptureOutcome> capture_result) mutable {
@@ -1195,7 +1195,7 @@ bool OrbitApp::IsCaptureConnected(const CaptureData& capture) const {
   // the capture is not connected anymore. Orbit can be in a similar "capture connected" state, when
   // the user connects to an instance, selects a process and then loads an instance from file that
   // was taken shortly before of the same process.
-  // TODO(163303287): It might be the case in the future that captures loaded from file are always
+  // TODO(b/163303287): It might be the case in the future that captures loaded from file are always
   // opened in a new window (compare b/163303287). Then this function is probably not necessary
   // anymore. Otherwise, this function should probably be more sophisticated and also compare the
   // build-id of the selected process (main module) and the process of the capture.
@@ -1358,8 +1358,8 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
     return local_symbols_path;
   }
 
-  // TODO(177304549): [new UI] maybe come up with a better indicator whether orbit is
-  // connected than process_manager != nullptr
+  // TODO(b/177304549): [new UI] maybe come up with a better indicator whether orbit is connected
+  // than process_manager != nullptr
   if (absl::GetFlag(FLAGS_local) || GetProcessManager() == nullptr) {
     return local_symbols_path;
   }

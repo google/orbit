@@ -326,7 +326,7 @@ void ConnectToStadiaWidget::DeployOrbitService() {
 void ConnectToStadiaWidget::Disconnect() {
   grpc_channel_ = nullptr;
 
-  // TODO(174561221) currently does not work
+  // TODO(b/174561221) currently does not work
   // if (service_deploy_manager_ != nullptr) {
   //   service_deploy_manager_->Shutdown();
   // }
