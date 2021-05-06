@@ -11,11 +11,8 @@
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
-#include <absl/strings/str_split.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
-#include <google/protobuf/stubs/common.h>
-#include <google/protobuf/stubs/port.h>
 #include <imgui.h>
 
 #include <algorithm>
@@ -73,19 +70,16 @@
 #include "PresetsDataView.h"
 #include "SamplingReport.h"
 #include "SourceCodeReport.h"
-#include "StringManager.h"
 #include "SymbolHelper.h"
 #include "TimeGraph.h"
 #include "Timer.h"
 #include "TimerChain.h"
 #include "TimerInfosIterator.h"
-#include "TrackManager.h"
 #include "capture.pb.h"
 #include "capture_data.pb.h"
 #include "module.pb.h"
 #include "orbit_log_event.pb.h"
 #include "preset.pb.h"
-#include "process.pb.h"
 #include "symbol.pb.h"
 
 #ifdef _WIN32
@@ -105,7 +99,6 @@ using orbit_capture_client::CaptureEventProcessor;
 using orbit_capture_client::CaptureListener;
 
 using orbit_capture_file::CaptureFile;
-using orbit_capture_file::CaptureSectionInputStream;
 
 using orbit_client_model::CaptureData;
 
@@ -1033,8 +1026,10 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
 
         ErrorMessageOr<CaptureListener::CaptureOutcome> load_result{CaptureOutcome::kComplete};
         if (capture_file_or_error.has_value()) {
+          is_capture_loading_ = true;
           load_result = LoadCaptureFromNewFormat(this, capture_file_or_error.value().get(),
                                                  &capture_loading_cancellation_requested_);
+          is_capture_loading_ = false;
         } else {  // Fall back to old capture format.
           load_result = orbit_client_model::capture_deserializer::Load(
               file_path, this, module_manager_.get(), &capture_loading_cancellation_requested_);
@@ -2140,11 +2135,15 @@ void OrbitApp::CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type) 
 }
 
 CaptureClient::State OrbitApp::GetCaptureState() const {
-  return capture_client_ ? capture_client_->state() : CaptureClient::State::kStopped;
+  return capture_client_ != nullptr ? capture_client_->state() : CaptureClient::State::kStopped;
 }
 
 bool OrbitApp::IsCapturing() const {
-  return capture_client_ ? capture_client_->IsCapturing() : false;
+  return capture_client_ != nullptr && capture_client_->IsCapturing();
+}
+
+bool OrbitApp::IsCapturingOrLoading() const {
+  return is_capture_loading_ || (capture_client_ != nullptr && capture_client_->IsCapturing());
 }
 
 ScopedStatus OrbitApp::CreateScopedStatus(const std::string& initial_message) {

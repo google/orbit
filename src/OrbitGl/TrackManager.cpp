@@ -291,7 +291,7 @@ void TrackManager::UpdateTracks(Batcher* batcher, uint64_t min_tick, uint64_t ma
 void TrackManager::UpdateTracksOrder() {
   // Reorder threads if sorting isn't valid or once per second when capturing.
   if (sorting_invalidated_ ||
-      (app_->IsCapturing() && last_thread_reorder_.ElapsedMillis() > 1000.0)) {
+      (app_->IsCapturingOrLoading() && last_thread_reorder_.ElapsedMillis() > 1000.0)) {
     SortTracks();
   }
 

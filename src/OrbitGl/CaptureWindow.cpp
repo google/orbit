@@ -107,7 +107,7 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool right, bool middle)
   if (time_graph_ == nullptr) return;
 
   // Pan
-  if (left && !picking_manager_.IsDragging() && !app_->IsCapturing()) {
+  if (left && !picking_manager_.IsDragging() && !app_->IsCapturingOrLoading()) {
     Vec2i mouse_click_screen = viewport_.WorldToScreenPos(mouse_click_pos_world_);
     time_graph_->PanTime(mouse_click_screen[0], x, viewport_.GetScreenWidth(), ref_time_click_);
     RequestUpdatePrimitives();
@@ -361,7 +361,7 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
   }
 }
 
-bool CaptureWindow::ShouldAutoZoom() const { return app_->IsCapturing(); }
+bool CaptureWindow::ShouldAutoZoom() const { return app_->IsCapturingOrLoading(); }
 
 std::unique_ptr<AccessibleInterface> CaptureWindow::CreateAccessibleInterface() {
   return std::make_unique<AccessibleCaptureWindow>(this);
@@ -519,7 +519,7 @@ void CaptureWindow::UpdateHorizontalSliderFromWorld() {
   double stop = time_graph_->GetMaxTimeUs();
   double width = stop - start;
   double max_start = time_span - width;
-  double ratio = app_->IsCapturing() ? 1 : (max_start != 0 ? start / max_start : 0);
+  double ratio = app_->IsCapturingOrLoading() ? 1 : (max_start != 0 ? start / max_start : 0);
   int slider_width = static_cast<int>(time_graph_->GetLayout().GetSliderWidth());
   slider_->SetPixelHeight(slider_width);
   slider_->SetNormalizedPosition(static_cast<float>(ratio));

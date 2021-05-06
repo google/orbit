@@ -428,7 +428,7 @@ void LiveFunctionsDataView::OnDataChanged() {
 }
 
 void LiveFunctionsDataView::OnTimer() {
-  if (app_->IsCapturing()) {
+  if (app_->IsCapturingOrLoading()) {
     OnSort(sorting_column_, {});
   }
 }

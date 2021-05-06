@@ -106,7 +106,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   void OnLoadCaptureCancelRequested();
 
   [[nodiscard]] orbit_capture_client::CaptureClient::State GetCaptureState() const;
-  [[nodiscard]] bool IsCapturing() const;
+  [[nodiscard]] bool IsCapturingOrLoading() const;
 
   void StartCapture();
   void StopCapture();
@@ -449,6 +449,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   [[nodiscard]] bool HasFrameTrackInCaptureData(uint64_t instrumented_function_id) const;
 
  private:
+  [[nodiscard]] bool IsCapturing() const;
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
   void AddSymbols(const std::filesystem::path& module_file_path, const std::string& module_build_id,
@@ -484,6 +485,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   void RequestUpdatePrimitives();
 
   std::atomic<bool> capture_loading_cancellation_requested_ = false;
+  std::atomic<bool> is_capture_loading_{false};
 
   CaptureStartedCallback capture_started_callback_;
   CaptureStopRequestedCallback capture_stop_requested_callback_;
