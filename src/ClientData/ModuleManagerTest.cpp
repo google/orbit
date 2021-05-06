@@ -9,10 +9,10 @@
 #include <string>
 #include <vector>
 
-#include "OrbitClientData/FunctionUtils.h"
-#include "OrbitClientData/ModuleData.h"
-#include "OrbitClientData/ModuleManager.h"
-#include "OrbitClientData/ProcessData.h"
+#include "ClientData/FunctionUtils.h"
+#include "ClientData/ModuleData.h"
+#include "ClientData/ModuleManager.h"
+#include "ClientData/ProcessData.h"
 #include "capture_data.pb.h"
 #include "module.pb.h"
 #include "process.pb.h"

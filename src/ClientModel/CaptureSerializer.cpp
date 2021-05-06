@@ -18,15 +18,15 @@
 #include <utility>
 #include <vector>
 
+#include "ClientData/Callstack.h"
+#include "ClientData/CallstackData.h"
+#include "ClientData/FunctionUtils.h"
+#include "ClientData/ModuleData.h"
+#include "ClientData/ProcessData.h"
+#include "ClientData/TracepointData.h"
+#include "ClientData/UserDefinedCaptureData.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreUtils.h"
-#include "OrbitClientData/Callstack.h"
-#include "OrbitClientData/CallstackData.h"
-#include "OrbitClientData/FunctionUtils.h"
-#include "OrbitClientData/ModuleData.h"
-#include "OrbitClientData/ProcessData.h"
-#include "OrbitClientData/TracepointData.h"
-#include "OrbitClientData/UserDefinedCaptureData.h"
 #include "capture_data.pb.h"
 #include "google/protobuf/io/coded_stream.h"
 #include "google/protobuf/message.h"

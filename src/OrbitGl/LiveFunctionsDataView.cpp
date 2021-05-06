@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "App.h"
+#include "ClientData/FunctionUtils.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreUtils.h"
 #include "DataManager.h"
@@ -27,7 +28,6 @@
 #include "GrpcProtos/Constants.h"
 #include "LiveFunctionsController.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitClientData/FunctionUtils.h"
 #include "TextBox.h"
 #include "TimeGraph.h"
 #include "TimerChain.h"

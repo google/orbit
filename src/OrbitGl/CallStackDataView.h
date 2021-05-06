@@ -11,9 +11,9 @@
 #include <utility>
 #include <vector>
 
+#include "ClientData/Callstack.h"
+#include "ClientData/ModuleData.h"
 #include "DataView.h"
-#include "OrbitClientData/Callstack.h"
-#include "OrbitClientData/ModuleData.h"
 #include "capture_data.pb.h"
 
 class CallStackDataView : public DataView {

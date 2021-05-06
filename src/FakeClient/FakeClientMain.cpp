@@ -19,12 +19,12 @@
 
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
+#include "ClientData/ModuleManager.h"
 #include "ElfUtils/ElfFile.h"
 #include "FakeCaptureEventProcessor.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadPool.h"
-#include "OrbitClientData/ModuleManager.h"
 #include "capture_data.pb.h"
 
 ABSL_FLAG(uint64_t, port, 44765, "Port OrbitService's gRPC service is listening on");

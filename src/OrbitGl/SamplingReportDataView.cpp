@@ -19,6 +19,8 @@
 
 #include "App.h"
 #include "CallStackDataView.h"
+#include "ClientData/ModuleData.h"
+#include "ClientData/ProcessData.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreUtils.h"
 #include "DataViewTypes.h"
@@ -26,8 +28,6 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "OrbitClientData/ModuleData.h"
-#include "OrbitClientData/ProcessData.h"
 #include "SamplingReport.h"
 #include "absl/strings/str_format.h"
 

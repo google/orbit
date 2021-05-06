@@ -22,13 +22,13 @@
 
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureSerializationTestMatchers.h"
+#include "ClientData/Callstack.h"
+#include "ClientData/ModuleData.h"
+#include "ClientData/ModuleManager.h"
+#include "ClientData/ProcessData.h"
+#include "ClientData/TracepointCustom.h"
 #include "ClientModel/CaptureDeserializer.h"
 #include "OrbitBase/Result.h"
-#include "OrbitClientData/Callstack.h"
-#include "OrbitClientData/ModuleData.h"
-#include "OrbitClientData/ModuleManager.h"
-#include "OrbitClientData/ProcessData.h"
-#include "OrbitClientData/TracepointCustom.h"
 #include "capture.pb.h"
 #include "capture_data.pb.h"
 

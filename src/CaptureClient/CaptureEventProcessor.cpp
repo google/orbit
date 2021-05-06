@@ -12,10 +12,10 @@
 
 #include "CaptureClient/ApiEventProcessor.h"
 #include "CaptureClient/GpuQueueSubmissionProcessor.h"
+#include "ClientData/Callstack.h"
 #include "CoreUtils.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitClientData/Callstack.h"
 #include "capture_data.pb.h"
 
 namespace orbit_capture_client {

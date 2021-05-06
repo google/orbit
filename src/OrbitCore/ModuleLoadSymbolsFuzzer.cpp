@@ -4,7 +4,7 @@
 
 #include <libfuzzer/libfuzzer_macro.h>
 
-#include "OrbitClientData/ModuleData.h"
+#include "ClientData/ModuleData.h"
 #include "module.pb.h"
 #include "symbol.pb.h"
 

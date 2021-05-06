@@ -8,8 +8,8 @@
 #include <string>
 #include <vector>
 
-#include "OrbitClientData/FunctionUtils.h"
-#include "OrbitClientData/ModuleData.h"
+#include "ClientData/FunctionUtils.h"
+#include "ClientData/ModuleData.h"
 #include "capture_data.pb.h"
 #include "module.pb.h"
 #include "symbol.pb.h"

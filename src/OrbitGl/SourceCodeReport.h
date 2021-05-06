@@ -13,9 +13,9 @@
 #include <optional>
 #include <utility>
 
+#include "ClientData/PostProcessedSamplingData.h"
 #include "CodeReport.h"
 #include "ElfUtils/ElfFile.h"
-#include "OrbitClientData/PostProcessedSamplingData.h"
 #include "capture_data.pb.h"
 
 namespace orbit_gl {

@@ -13,6 +13,7 @@
 
 #include "App.h"
 #include "Batcher.h"
+#include "ClientData/FunctionUtils.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreUtils.h"
 #include "GlCanvas.h"
@@ -20,7 +21,6 @@
 #include "ManualInstrumentationManager.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
-#include "OrbitClientData/FunctionUtils.h"
 #include "TextRenderer.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"

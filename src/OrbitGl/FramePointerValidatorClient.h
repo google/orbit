@@ -8,7 +8,7 @@
 #include <memory>
 #include <vector>
 
-#include "OrbitClientData/ModuleData.h"
+#include "ClientData/ModuleData.h"
 #include "grpcpp/grpcpp.h"
 #include "services.grpc.pb.h"
 

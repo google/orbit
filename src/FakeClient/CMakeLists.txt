@@ -17,10 +17,10 @@ target_sources(OrbitFakeClient PRIVATE
 target_link_libraries(OrbitFakeClient PRIVATE
         CONAN_PKG::abseil
         CaptureClient
+        ClientData
         ClientProtos
         ElfUtils
         GrpcProtos
-        OrbitBase
-        OrbitClientData)
+        OrbitBase)
 
 strip_symbols(OrbitFakeClient)

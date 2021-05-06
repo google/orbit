@@ -27,11 +27,11 @@ target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
 target_link_libraries(
   OrbitCore
-  PUBLIC ClientProtos
+  PUBLIC ClientData
+         ClientProtos
          ElfUtils
          GrpcProtos
          OrbitBase
-         OrbitClientData
          xxHash::xxHash
          concurrentqueue::concurrentqueue
          oqpi::oqpi

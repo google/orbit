@@ -17,9 +17,9 @@
 #include <utility>
 #include <vector>
 
+#include "ClientData/ModuleData.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "OrbitClientData/ModuleData.h"
 #include "module.pb.h"
 #include "process.pb.h"
 #include "symbol.pb.h"

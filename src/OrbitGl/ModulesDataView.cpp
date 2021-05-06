@@ -15,10 +15,10 @@
 #include <functional>
 
 #include "App.h"
+#include "ClientData/ProcessData.h"
 #include "CoreUtils.h"
 #include "DataViewTypes.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitClientData/ProcessData.h"
 #include "absl/flags/flag.h"
 
 ABSL_DECLARE_FLAG(bool, enable_frame_pointer_validator);

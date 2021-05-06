@@ -15,6 +15,7 @@
 
 #include "App.h"
 #include "AsyncTrack.h"
+#include "ClientData/FunctionUtils.h"
 #include "CoreUtils.h"
 #include "FrameTrack.h"
 #include "Geometry.h"
@@ -28,7 +29,6 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/Tracing.h"
-#include "OrbitClientData/FunctionUtils.h"
 #include "PickingManager.h"
 #include "SchedulerTrack.h"
 #include "StringManager.h"

@@ -17,10 +17,10 @@
 #include <utility>
 #include <vector>
 
+#include "ClientData/Callstack.h"
+#include "ClientData/CallstackTypes.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "OrbitClientData/Callstack.h"
-#include "OrbitClientData/CallstackTypes.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"

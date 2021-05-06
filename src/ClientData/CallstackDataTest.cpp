@@ -10,8 +10,8 @@
 #include <tuple>
 #include <vector>
 
-#include "OrbitClientData/Callstack.h"
-#include "OrbitClientData/CallstackData.h"
+#include "ClientData/Callstack.h"
+#include "ClientData/CallstackData.h"
 #include "capture_data.pb.h"
 
 MATCHER(CallstackEventEq, "") {

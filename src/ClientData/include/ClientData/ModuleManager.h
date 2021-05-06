@@ -8,8 +8,8 @@
 #include <string>
 #include <vector>
 
-#include "OrbitClientData/ModuleData.h"
-#include "OrbitClientData/ProcessData.h"
+#include "ClientData/ModuleData.h"
+#include "ClientData/ProcessData.h"
 #include "absl/container/node_hash_map.h"
 #include "absl/synchronization/mutex.h"
 #include "capture_data.pb.h"

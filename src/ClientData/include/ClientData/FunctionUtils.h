@@ -11,7 +11,7 @@
 #include <memory>
 #include <string>
 
-#include "OrbitClientData/ModuleData.h"
+#include "ClientData/ModuleData.h"
 #include "ProcessData.h"
 #include "capture_data.pb.h"
 #include "symbol.pb.h"

@@ -12,13 +12,13 @@
 #include <filesystem>
 
 #include "App.h"
+#include "ClientData/Callstack.h"
+#include "ClientData/FunctionUtils.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreUtils.h"
 #include "DataViewTypes.h"
 #include "FunctionsDataView.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitClientData/Callstack.h"
-#include "OrbitClientData/FunctionUtils.h"
 #include "absl/strings/str_format.h"
 
 using orbit_client_model::CaptureData;
