@@ -556,8 +556,8 @@ void CaptureWindow::set_draw_help(bool draw_help) {
 }
 
 void CaptureWindow::CreateTimeGraph(const CaptureData* capture_data) {
-  time_graph_ = std::make_unique<TimeGraph>(this, app_, &text_renderer_, &viewport_, capture_data,
-                                            &GetPickingManager());
+  time_graph_ =
+      std::make_unique<TimeGraph>(this, app_, &viewport_, capture_data, &GetPickingManager());
 }
 
 Batcher& CaptureWindow::GetBatcherById(BatcherId batcher_id) {
