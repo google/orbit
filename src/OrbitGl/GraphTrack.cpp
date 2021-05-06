@@ -32,7 +32,6 @@ void GraphTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
   SetSize(track_width, GetHeight());
   pos_[0] = viewport_->GetWorldTopLeft()[0];
 
-  Color color = GetBackgroundColor();
   const Color kLineColor(0, 128, 255, 128);
   const Color kDotColor(0, 128, 255, 255);
   float track_z = GlCanvas::kZValueTrack + z_offset;
@@ -44,7 +43,7 @@ void GraphTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
   Vec2 content_pos = pos_;
   content_pos[1] -= layout_->GetTrackTabHeight();
   Box box(content_pos, Vec2(size_[0], -content_height), track_z);
-  batcher->AddBox(box, color, shared_from_this());
+  batcher->AddBox(box, GetTrackBackgroundColor(), shared_from_this());
 
   const bool picking = picking_mode != PickingMode::kNone;
   if (!picking) {
