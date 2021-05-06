@@ -19,6 +19,8 @@
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
 
+namespace orbit_client_data {
+
 struct SampledFunction {
   SampledFunction() = default;
 
@@ -110,5 +112,7 @@ class PostProcessedSamplingData {
   absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>> function_address_to_exact_addresses_;
   std::vector<ThreadSampleData> sorted_thread_sample_data_;
 };
+
+}  // namespace orbit_client_data
 
 #endif  // CLIENT_DATA_POST_PROCESSED_SAMPLING_DATA_H_

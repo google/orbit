@@ -12,6 +12,8 @@
 
 using orbit_client_protos::FunctionInfo;
 
+namespace orbit_client_data {
+
 TEST(FunctionInfoSet, EqualFunctions) {
   FunctionInfo left;
   left.set_name("foo");
@@ -180,3 +182,5 @@ TEST(FunctionInfoSet, Deletion) {
   EXPECT_FALSE(functions.contains(function));
   EXPECT_EQ(functions.size(), 0);
 }
+
+}  // namespace orbit_client_data

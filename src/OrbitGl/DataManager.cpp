@@ -10,6 +10,7 @@
 
 #include "OrbitBase/Logging.h"
 
+using orbit_client_data::TracepointInfoSet;
 using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::TracepointInfo;
 

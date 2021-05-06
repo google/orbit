@@ -17,6 +17,8 @@
 using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::ModuleInfo;
 
+namespace orbit_client_data {
+
 bool ModuleData::is_loaded() const {
   absl::MutexLock lock(&mutex_);
   return is_loaded_;
@@ -186,3 +188,5 @@ std::vector<FunctionInfo> ModuleData::GetOrbitFunctions() const {
   }
   return result;
 }
+
+}  // namespace orbit_client_data

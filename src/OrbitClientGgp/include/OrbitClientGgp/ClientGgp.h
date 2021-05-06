@@ -37,10 +37,9 @@
 
 class ClientGgp final : public orbit_capture_client::CaptureListener {
  public:
-  ClientGgp() : main_module_{nullptr} {}
+  ClientGgp() = default;
 
-  explicit ClientGgp(ClientGgpOptions&& options)
-      : options_(std::move(options)), main_module_{nullptr} {}
+  explicit ClientGgp(ClientGgpOptions&& options) : options_(std::move(options)) {}
 
   bool InitClient();
   bool RequestStartCapture(ThreadPool* thread_pool);
@@ -56,7 +55,7 @@ class ClientGgp final : public orbit_capture_client::CaptureListener {
   void OnSystemMemoryUsage(
       const orbit_grpc_protos::SystemMemoryUsage& /*system_memory_usage*/) override {}
   void OnKeyAndString(uint64_t key, std::string str) override;
-  void OnUniqueCallStack(CallStack callstack) override;
+  void OnUniqueCallStack(orbit_client_data::CallStack callstack) override;
   void OnCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) override;
   void OnThreadName(int32_t thread_id, std::string thread_name) override;
   void OnThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo thread_state_slice) override;
@@ -79,17 +78,17 @@ class ClientGgp final : public orbit_capture_client::CaptureListener {
   }
   ClientGgpOptions options_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
-  std::unique_ptr<ProcessData> target_process_;
+  std::unique_ptr<orbit_client_data::ProcessData> target_process_;
   orbit_client_data::ModuleManager module_manager_;
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions_;
-  ModuleData* main_module_ = nullptr;
+  orbit_client_data::ModuleData* main_module_ = nullptr;
   std::shared_ptr<StringManager> string_manager_;
   std::unique_ptr<orbit_capture_client::CaptureClient> capture_client_;
   std::unique_ptr<orbit_client_services::ProcessClient> process_client_;
   std::unique_ptr<orbit_client_model::CaptureData> capture_data_;
   std::vector<orbit_client_protos::TimerInfo> timer_infos_;
 
-  ErrorMessageOr<std::unique_ptr<ProcessData>> GetOrbitProcessByPid(int32_t pid);
+  ErrorMessageOr<std::unique_ptr<orbit_client_data::ProcessData>> GetOrbitProcessByPid(int32_t pid);
   bool InitCapture();
   void ClearCapture();
   ErrorMessageOr<void> LoadModuleAndSymbols();

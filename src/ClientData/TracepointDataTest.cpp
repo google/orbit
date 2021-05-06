@@ -18,6 +18,8 @@
 
 using ::testing::UnorderedElementsAre;
 
+namespace orbit_client_data {
+
 TEST(TracepointData, AddAndGetTracepointEvents) {
   TracepointData tracepoint_data;
 
@@ -105,3 +107,5 @@ TEST(TracepointData, Get) {
   EXPECT_FALSE(tracepoint_data.GetTracepointInfo(2).category() == "sched" &&
                tracepoint_data.GetTracepointInfo(2).name() == "sched_switch");
 }
+
+}  // namespace orbit_client_data

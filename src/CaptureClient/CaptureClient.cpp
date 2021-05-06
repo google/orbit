@@ -29,6 +29,9 @@
 
 namespace orbit_capture_client {
 
+using orbit_client_data::ModuleData;
+using orbit_client_data::TracepointInfoSet;
+
 using orbit_client_protos::FunctionInfo;
 
 using orbit_grpc_protos::ApiFunction;
@@ -36,7 +39,6 @@ using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::InstrumentedFunction;
-using orbit_grpc_protos::SymbolInfo;
 using orbit_grpc_protos::TracepointInfo;
 using orbit_grpc_protos::UnwindingMethod;
 
@@ -173,7 +175,8 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
     const ModuleData* module = module_manager.GetModuleByPathAndBuildId(function.module_path(),
                                                                         function.module_build_id());
     CHECK(module != nullptr);
-    instrumented_function->set_file_offset(function_utils::Offset(function, *module));
+    instrumented_function->set_file_offset(
+        orbit_client_data::function_utils::Offset(function, *module));
     instrumented_function->set_file_build_id(function.module_build_id());
     instrumented_function->set_function_id(function_id);
     instrumented_function->set_function_name(function.pretty_name());

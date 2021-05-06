@@ -100,6 +100,18 @@ using orbit_capture_client::CaptureListener;
 
 using orbit_capture_file::CaptureFile;
 
+using orbit_client_data::CallStack;
+using orbit_client_data::CallstackData;
+using orbit_client_data::CallstackID;
+using orbit_client_data::ModuleData;
+using orbit_client_data::ModuleInMemory;
+using orbit_client_data::PostProcessedSamplingData;
+using orbit_client_data::ProcessData;
+using orbit_client_data::SampledFunction;
+using orbit_client_data::ThreadID;
+using orbit_client_data::TracepointInfoSet;
+using orbit_client_data::UserDefinedCaptureData;
+
 using orbit_client_model::CaptureData;
 
 using orbit_client_protos::CallstackEvent;
@@ -621,7 +633,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
   CHECK(module != nullptr);
   const bool is_64_bit = process_->is_64_bit();
   std::optional<uint64_t> absolute_address =
-      function_utils::GetAbsoluteAddress(function, *process_, *module);
+      orbit_client_data::function_utils::GetAbsoluteAddress(function, *process_, *module);
   if (!absolute_address.has_value()) {
     SendErrorToUi(
         "Error reading memory",
@@ -641,7 +653,8 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
 
     const std::string& memory = result.value();
     Disassembler disasm;
-    disasm.AddLine(absl::StrFormat("asm: /* %s */", function_utils::GetDisplayName(function)));
+    disasm.AddLine(absl::StrFormat("asm: /* %s */",
+                                   orbit_client_data::function_utils::GetDisplayName(function)));
     disasm.Disassemble(memory.data(), memory.size(), absolute_address, is_64_bit);
     if (!HasCaptureData() || !GetCaptureData().has_post_processed_sampling_data()) {
       DisassemblyReport empty_report(disasm);
@@ -687,8 +700,8 @@ void OrbitApp::ShowSourceCode(const orbit_client_protos::FunctionInfo& function)
 
             if (HasCaptureData() && GetCaptureData().has_post_processed_sampling_data()) {
               const auto& sampling_data = GetCaptureData().post_processed_sampling_data();
-              const auto absolute_address =
-                  function_utils::GetAbsoluteAddress(function, *process_, *module);
+              const auto absolute_address = orbit_client_data::function_utils::GetAbsoluteAddress(
+                  function, *process_, *module);
 
               if (!absolute_address.has_value()) {
                 return ErrorMessage{absl::StrFormat(
@@ -884,14 +897,14 @@ ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
 
   for (const auto& function : data_manager_->GetSelectedFunctions()) {
     // GetSelectedFunctions should not contain orbit functions
-    CHECK(!function_utils::IsOrbitFunctionFromType(function.orbit_type()));
+    CHECK(!orbit_client_data::function_utils::IsOrbitFunctionFromType(function.orbit_type()));
 
-    uint64_t hash = function_utils::GetHash(function);
+    uint64_t hash = orbit_client_data::function_utils::GetHash(function);
     (*preset.mutable_path_to_module())[function.module_path()].add_function_hashes(hash);
   }
 
   for (const auto& function : data_manager_->user_defined_capture_data().frame_track_functions()) {
-    uint64_t hash = function_utils::GetHash(function);
+    uint64_t hash = orbit_client_data::function_utils::GetHash(function);
     (*preset.mutable_path_to_module())[function.module_path()].add_frame_track_function_hashes(
         hash);
   }
@@ -1802,7 +1815,8 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
       // (B) deselect when module does not have functions anymore (!is_loaded())
       data_manager_->DeselectFunction(func);
       // (C) Save function hashes, so they can be hooked again after reload
-      function_hashes_to_hook_map[module->file_path()].push_back(function_utils::GetHash(func));
+      function_hashes_to_hook_map[module->file_path()].push_back(
+          orbit_client_data::function_utils::GetHash(func));
     }
   }
   absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map;
@@ -1816,7 +1830,8 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
       RemoveFrameTrack(func);
     } else if (!module->is_loaded()) {
       RemoveFrameTrack(func);
-      frame_track_function_hashes_map[module->file_path()].push_back(function_utils::GetHash(func));
+      frame_track_function_hashes_map[module->file_path()].push_back(
+          orbit_client_data::function_utils::GetHash(func));
     }
   }
 
@@ -1931,7 +1946,7 @@ bool OrbitApp::IsFunctionVisible(uint64_t function_address) {
   const auto& instrumented_functions = GetCaptureData().instrumented_functions();
   auto it = instrumented_functions.find(function_address);
   if (it != instrumented_functions.end()) {
-    if (function_utils::IsOrbitFunctionFromName(it->second.function_name())) {
+    if (orbit_client_data::function_utils::IsOrbitFunctionFromName(it->second.function_name())) {
       return true;
     }
   }
@@ -1982,7 +1997,8 @@ uint64_t OrbitApp::GetFunctionIdToHighlight() const {
 
   // Highlighting of manually instrumented scopes is not yet supported.
   const InstrumentedFunction* function = GetInstrumentedFunction(selected_function_id);
-  if (function == nullptr || function_utils::IsOrbitFunctionFromName(function->function_name())) {
+  if (function == nullptr ||
+      orbit_client_data::function_utils::IsOrbitFunctionFromName(function->function_name())) {
     return orbit_grpc_protos::kInvalidFunctionId;
   }
 

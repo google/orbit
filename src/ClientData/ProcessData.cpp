@@ -15,6 +15,8 @@
 
 using orbit_grpc_protos::ModuleInfo;
 
+namespace orbit_client_data {
+
 ProcessData::ProcessData() { process_info_.set_pid(-1); }
 
 void ProcessData::SetProcessInfo(const orbit_grpc_protos::ProcessInfo& process_info) {
@@ -129,3 +131,5 @@ absl::node_hash_map<std::string, ModuleInMemory> ProcessData::GetMemoryMapCopy()
   absl::MutexLock lock(&mutex_);
   return module_memory_map_;
 }
+
+}  // namespace orbit_client_data

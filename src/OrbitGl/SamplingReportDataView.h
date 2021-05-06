@@ -40,15 +40,15 @@ class SamplingReportDataView : public DataView {
   void SetSamplingReport(class SamplingReport* sampling_report) {
     sampling_report_ = sampling_report;
   }
-  void SetSampledFunctions(const std::vector<SampledFunction>& functions);
-  void SetThreadID(ThreadID tid);
-  ThreadID GetThreadID() const { return tid_; }
+  void SetSampledFunctions(const std::vector<orbit_client_data::SampledFunction>& functions);
+  void SetThreadID(orbit_client_data::ThreadID tid);
+  orbit_client_data::ThreadID GetThreadID() const { return tid_; }
 
  protected:
   void DoSort() override;
   void DoFilter() override;
-  const SampledFunction& GetSampledFunction(unsigned int row) const;
-  SampledFunction& GetSampledFunction(unsigned int row);
+  const orbit_client_data::SampledFunction& GetSampledFunction(unsigned int row) const;
+  orbit_client_data::SampledFunction& GetSampledFunction(unsigned int row);
   absl::flat_hash_set<const orbit_client_protos::FunctionInfo*> GetFunctionsFromIndices(
       const std::vector<int>& indices);
   [[nodiscard]] absl::flat_hash_set<std::pair<std::string, std::string>>
@@ -60,11 +60,11 @@ class SamplingReportDataView : public DataView {
   // The callstack view will be updated according to the visible selected addresses and thread id.
   void UpdateVisibleSelectedAddressesAndTid(const std::vector<int>& visible_selected_indices);
 
-  std::vector<SampledFunction> functions_;
+  std::vector<orbit_client_data::SampledFunction> functions_;
   // We need to keep user's selected function ids such that if functions_ changes, the
   // selected_indices_ can be updated according to the selected function ids.
   absl::flat_hash_set<uint64_t> selected_function_ids_;
-  ThreadID tid_ = -1;
+  orbit_client_data::ThreadID tid_ = -1;
   std::string name_;
   CallStackDataView* callstack_data_view_;
   SamplingReport* sampling_report_ = nullptr;

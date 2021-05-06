@@ -125,11 +125,11 @@ class CallTreeThread : public CallTreeNode {
 class CallTreeView : public CallTreeNode {
  public:
   [[nodiscard]] static std::unique_ptr<CallTreeView> CreateTopDownViewFromSamplingProfiler(
-      const PostProcessedSamplingData& post_processed_sampling_data,
+      const orbit_client_data::PostProcessedSamplingData& post_processed_sampling_data,
       const orbit_client_model::CaptureData& capture_data);
 
   [[nodiscard]] static std::unique_ptr<CallTreeView> CreateBottomUpViewFromSamplingProfiler(
-      const PostProcessedSamplingData& post_processed_sampling_data,
+      const orbit_client_data::PostProcessedSamplingData& post_processed_sampling_data,
       const orbit_client_model::CaptureData& capture_data);
 
   CallTreeView() : CallTreeNode{nullptr} {}

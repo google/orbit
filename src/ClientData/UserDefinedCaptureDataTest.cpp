@@ -13,6 +13,8 @@
 
 using orbit_client_protos::FunctionInfo;
 
+namespace orbit_client_data {
+
 FunctionInfo CreateFunctionInfo(const std::string& function_name, uint64_t function_address) {
   FunctionInfo info;
   info.set_name(function_name);
@@ -90,3 +92,5 @@ TEST(UserDefinedCaptureData, Clear) {
   FunctionInfoSet set = data.frame_track_functions();
   EXPECT_TRUE(set.empty());
 }
+
+}  // namespace orbit_client_data

@@ -33,7 +33,11 @@
 #include "capture_data.pb.h"
 
 using orbit_capture_client::CaptureListener;
+
+using orbit_client_data::CallStack;
+using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleManager;
+
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::CaptureHeader;
@@ -44,6 +48,7 @@ using orbit_client_protos::ProcessInfo;
 using orbit_client_protos::ThreadStateSliceInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_client_protos::TracepointEventInfo;
+
 using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::ModuleInfo;

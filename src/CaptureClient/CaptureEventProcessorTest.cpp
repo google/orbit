@@ -25,6 +25,8 @@
 
 namespace orbit_capture_client {
 
+using orbit_client_data::CallStack;
+
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::ThreadStateSliceInfo;

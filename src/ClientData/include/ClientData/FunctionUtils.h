@@ -16,6 +16,8 @@
 #include "capture_data.pb.h"
 #include "symbol.pb.h"
 
+namespace orbit_client_data {
+
 namespace function_utils {
 
 [[nodiscard]] inline const std::string& GetDisplayName(
@@ -52,5 +54,7 @@ GetFunctionNameToOrbitTypeMap();
 void SetOrbitTypeFromName(orbit_client_protos::FunctionInfo* func);
 
 }  // namespace function_utils
+
+}  // namespace orbit_client_data
 
 #endif  // CLIENT_DATA_FUNCTION_UTILS_H_

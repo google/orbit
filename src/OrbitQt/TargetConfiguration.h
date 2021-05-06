@@ -23,7 +23,7 @@ class StadiaTarget {
  public:
   explicit StadiaTarget(StadiaConnection&& connection,
                         std::unique_ptr<orbit_client_services::ProcessManager> process_manager,
-                        std::unique_ptr<ProcessData> process)
+                        std::unique_ptr<orbit_client_data::ProcessData> process)
       : connection_(std::move(connection)),
         process_manager_(std::move(process_manager)),
         process_(std::move(process)) {
@@ -34,12 +34,12 @@ class StadiaTarget {
   [[nodiscard]] orbit_client_services::ProcessManager* GetProcessManager() const {
     return process_manager_.get();
   }
-  [[nodiscard]] ProcessData* GetProcess() const { return process_.get(); }
+  [[nodiscard]] orbit_client_data::ProcessData* GetProcess() const { return process_.get(); }
 
  private:
   StadiaConnection connection_;
   std::unique_ptr<orbit_client_services::ProcessManager> process_manager_;
-  std::unique_ptr<ProcessData> process_;
+  std::unique_ptr<orbit_client_data::ProcessData> process_;
 };
 
 /*
@@ -55,7 +55,7 @@ class LocalTarget {
  public:
   explicit LocalTarget(LocalConnection&& connection,
                        std::unique_ptr<orbit_client_services::ProcessManager> process_manager,
-                       std::unique_ptr<ProcessData> process)
+                       std::unique_ptr<orbit_client_data::ProcessData> process)
       : connection_(connection),
         process_manager_(std::move(process_manager)),
         process_(std::move(process)) {
@@ -66,12 +66,12 @@ class LocalTarget {
   [[nodiscard]] orbit_client_services::ProcessManager* GetProcessManager() const {
     return process_manager_.get();
   }
-  [[nodiscard]] ProcessData* GetProcess() const { return process_.get(); }
+  [[nodiscard]] orbit_client_data::ProcessData* GetProcess() const { return process_.get(); }
 
  private:
   LocalConnection connection_;
   std::unique_ptr<orbit_client_services::ProcessManager> process_manager_;
-  std::unique_ptr<ProcessData> process_;
+  std::unique_ptr<orbit_client_data::ProcessData> process_;
 };
 
 /*

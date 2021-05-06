@@ -16,6 +16,8 @@
 
 namespace orbit_capture_client {
 
+using orbit_client_data::CallStack;
+
 using orbit_client_protos::TimerInfo;
 
 using orbit_grpc_protos::ApiEvent;

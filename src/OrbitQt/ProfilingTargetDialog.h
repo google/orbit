@@ -66,7 +66,7 @@ class ProfilingTargetDialog : public QDialog {
   ProcessItemModel process_model_;
   QSortFilterProxyModel process_proxy_model_;
 
-  std::unique_ptr<ProcessData> process_;
+  std::unique_ptr<orbit_client_data::ProcessData> process_;
   std::unique_ptr<orbit_client_services::ProcessManager> process_manager_;
 
   std::shared_ptr<grpc::Channel> local_grpc_channel_;

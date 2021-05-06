@@ -85,7 +85,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
     case kColumnSelected:
       return FunctionsDataView::BuildSelectedColumnsString(app_, function);
     case kColumnName:
-      return function_utils::GetDisplayName(function);
+      return orbit_client_data::function_utils::GetDisplayName(function);
     case kColumnCount:
       return absl::StrFormat("%lu", stats.count());
     case kColumnTimeTotal:
@@ -161,7 +161,7 @@ void LiveFunctionsDataView::DoSort() {
       sorter = ORBIT_CUSTOM_FUNC_SORT(app_->IsFunctionSelected);
       break;
     case kColumnName:
-      sorter = ORBIT_CUSTOM_FUNC_SORT(function_utils::GetDisplayName);
+      sorter = ORBIT_CUSTOM_FUNC_SORT(orbit_client_data::function_utils::GetDisplayName);
       break;
     case kColumnCount:
       sorter = ORBIT_STAT_SORT(count());
@@ -179,7 +179,7 @@ void LiveFunctionsDataView::DoSort() {
       sorter = ORBIT_STAT_SORT(max_ns());
       break;
     case kColumnModule:
-      sorter = ORBIT_CUSTOM_FUNC_SORT(function_utils::GetLoadedModuleName);
+      sorter = ORBIT_CUSTOM_FUNC_SORT(orbit_client_data::function_utils::GetLoadedModuleName);
       break;
     case kColumnAddress:
       sorter = ORBIT_FUNC_SORT(address());
@@ -368,7 +368,7 @@ void LiveFunctionsDataView::DoFilter() {
   for (const auto& entry : functions_) {
     uint64_t function_id = entry.first;
     const FunctionInfo& function = entry.second;
-    std::string name = ToLower(function_utils::GetDisplayName(function));
+    std::string name = ToLower(orbit_client_data::function_utils::GetDisplayName(function));
 
     bool match = true;
 
@@ -416,7 +416,7 @@ void LiveFunctionsDataView::OnDataChanged() {
       continue;
     }
 
-    if (function_utils::IsOrbitFunctionFromType(function_info->orbit_type())) {
+    if (orbit_client_data::function_utils::IsOrbitFunctionFromType(function_info->orbit_type())) {
       continue;
     }
 

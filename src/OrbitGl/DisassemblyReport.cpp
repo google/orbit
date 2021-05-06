@@ -32,7 +32,7 @@ std::optional<uint32_t> DisassemblyReport::GetNumSamplesAtLine(size_t line) cons
   if (!post_processed_sampling_data_.has_value()) {
     return 0.0;
   }
-  const ThreadSampleData* data = post_processed_sampling_data_->GetSummary();
+  const orbit_client_data::ThreadSampleData* data = post_processed_sampling_data_->GetSummary();
   if (data == nullptr) {
     return 0.0;
   }

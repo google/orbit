@@ -253,10 +253,11 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
   // instrumentation scopes.
   FunctionInfo::OrbitType orbit_type = FunctionInfo::kNone;
   if (function != nullptr) {
-    orbit_type = function_utils::GetOrbitTypeByName(function->function_name());
+    orbit_type = orbit_client_data::function_utils::GetOrbitTypeByName(function->function_name());
   }
 
-  if (function != nullptr && function_utils::IsOrbitFunctionFromType(orbit_type) &&
+  if (function != nullptr &&
+      orbit_client_data::function_utils::IsOrbitFunctionFromType(orbit_type) &&
       timer_info.type() == TimerInfo::kNone) {
     ProcessOrbitFunctionTimer(orbit_type, timer_info);
   }

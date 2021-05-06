@@ -21,6 +21,8 @@
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
 
+namespace orbit_client_data {
+
 TEST(ProcessData, Constructor) {
   int32_t pid = 10;
   const std::string name = "Process name";
@@ -291,3 +293,5 @@ TEST(ProcessData, FindModuleByAddress) {
                 testing::HasSubstr("no module loaded at this address"));
   }
 }
+
+}  // namespace orbit_client_data

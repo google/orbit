@@ -19,6 +19,8 @@
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 
+namespace orbit_client_data {
+
 class CallstackData {
  public:
   explicit CallstackData() = default;
@@ -108,5 +110,7 @@ class CallstackData {
   uint64_t max_time_ = 0;
   uint64_t min_time_ = std::numeric_limits<uint64_t>::max();
 };
+
+}  // namespace orbit_client_data
 
 #endif  // CLIENT_DATA_CALLSTACK_DATA_H_

@@ -8,6 +8,8 @@
 #include "ClientData/FunctionInfoSet.h"
 #include "capture_data.pb.h"
 
+namespace orbit_client_data {
+
 // UserDefinedCaptureData holds any capture related data that was added by the user. Examples
 // for this include frame tracks, iterators, timeline annotations or comments.
 // Note that this class is not thread-safe.
@@ -24,5 +26,7 @@ class UserDefinedCaptureData {
  private:
   FunctionInfoSet frame_track_functions_;
 };
+
+}  // namespace orbit_client_data
 
 #endif  // CLIENT_DATA_USER_DEFINED_CAPTURE_DATA_H_

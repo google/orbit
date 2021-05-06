@@ -18,6 +18,8 @@
 #include "capture_data.pb.h"
 #include "tracepoint.pb.h"
 
+namespace orbit_client_data {
+
 /*
  * TracepointData stores all tracepoint related information on the Client/Ui side.
  * Single events in which a tracepoint got hit are represented by a 'TracepointEventInfo'.
@@ -65,5 +67,7 @@ class TracepointData {
       thread_id_to_time_to_tracepoint_;
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::TracepointInfo> unique_tracepoints_;
 };
+
+}  // namespace orbit_client_data
 
 #endif  // CLIENT_DATA_TRACEPOINT_DATA_H_

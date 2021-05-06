@@ -84,14 +84,14 @@ class CaptureData {
   [[nodiscard]] const std::string& GetModulePathByAddress(uint64_t absolute_address) const;
   [[nodiscard]] std::optional<std::string> FindModuleBuildIdByAddress(
       uint64_t absolute_address) const;
-  [[nodiscard]] const ModuleData* GetModuleByPathAndBuildId(const std::string& module_path,
-                                                            const std::string& build_id) const {
+  [[nodiscard]] const orbit_client_data::ModuleData* GetModuleByPathAndBuildId(
+      const std::string& module_path, const std::string& build_id) const {
     return module_manager_->GetModuleByPathAndBuildId(module_path, build_id);
   }
 
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByAddress(
       uint64_t absolute_address, bool is_exact) const;
-  [[nodiscard]] ModuleData* FindModuleByAddress(uint64_t absolute_address) const;
+  [[nodiscard]] orbit_client_data::ModuleData* FindModuleByAddress(uint64_t absolute_address) const;
   [[nodiscard]] std::optional<uint64_t> GetAbsoluteAddress(
       const orbit_client_protos::FunctionInfo& function) const;
 
@@ -143,13 +143,17 @@ class CaptureData {
 
   void UpdateFunctionStats(uint64_t instrumented_function_id, uint64_t elapsed_nanos);
 
-  [[nodiscard]] const CallstackData* GetCallstackData() const { return callstack_data_.get(); };
+  [[nodiscard]] const orbit_client_data::CallstackData* GetCallstackData() const {
+    return callstack_data_.get();
+  };
 
   [[nodiscard]] orbit_grpc_protos::TracepointInfo GetTracepointInfo(uint64_t key) const {
     return tracepoint_data_->GetTracepointInfo(key);
   }
 
-  [[nodiscard]] const TracepointData* GetTracepointData() const { return tracepoint_data_.get(); }
+  [[nodiscard]] const orbit_client_data::TracepointData* GetTracepointData() const {
+    return tracepoint_data_.get();
+  }
 
   void ForEachTracepointEventOfThreadInTimeRange(
       int32_t thread_id, uint64_t min_tick, uint64_t max_tick,
@@ -162,7 +166,7 @@ class CaptureData {
     return tracepoint_data_->GetNumTracepointEventsForThreadId(thread_id);
   }
 
-  void AddUniqueCallStack(CallStack call_stack) {
+  void AddUniqueCallStack(orbit_client_data::CallStack call_stack) {
     callstack_data_->AddUniqueCallStack(std::move(call_stack));
   }
 
@@ -184,27 +188,30 @@ class CaptureData {
                                              is_same_pid_as_target);
   }
 
-  [[nodiscard]] const CallstackData* GetSelectionCallstackData() const {
+  [[nodiscard]] const orbit_client_data::CallstackData* GetSelectionCallstackData() const {
     return selection_callstack_data_.get();
   };
 
-  void set_selection_callstack_data(std::unique_ptr<CallstackData> selection_callstack_data) {
+  void set_selection_callstack_data(
+      std::unique_ptr<orbit_client_data::CallstackData> selection_callstack_data) {
     selection_callstack_data_ = std::move(selection_callstack_data);
   }
 
-  [[nodiscard]] const ProcessData* process() const { return &process_; }
-  [[nodiscard]] ProcessData* mutable_process() { return &process_; }
+  [[nodiscard]] const orbit_client_data::ProcessData* process() const { return &process_; }
+  [[nodiscard]] orbit_client_data::ProcessData* mutable_process() { return &process_; }
 
   [[nodiscard]] bool has_post_processed_sampling_data() const {
     return post_processed_sampling_data_.has_value();
   }
 
-  [[nodiscard]] const PostProcessedSamplingData& post_processed_sampling_data() const {
+  [[nodiscard]] const orbit_client_data::PostProcessedSamplingData& post_processed_sampling_data()
+      const {
     CHECK(post_processed_sampling_data_.has_value());
     return post_processed_sampling_data_.value();
   }
 
-  void set_post_processed_sampling_data(PostProcessedSamplingData post_processed_sampling_data) {
+  void set_post_processed_sampling_data(
+      orbit_client_data::PostProcessedSamplingData post_processed_sampling_data) {
     post_processed_sampling_data_ = std::move(post_processed_sampling_data);
   }
 
@@ -217,20 +224,20 @@ class CaptureData {
   }
 
  private:
-  ProcessData process_;
+  orbit_client_data::ProcessData process_;
   orbit_client_data::ModuleManager* module_manager_;
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions_;
 
-  TracepointInfoSet selected_tracepoints_;
+  orbit_client_data::TracepointInfoSet selected_tracepoints_;
   // std::unique_ptr<> allows to move and copy CallstackData easier
   // (as CallstackData stores an absl::Mutex inside)
-  std::unique_ptr<CallstackData> callstack_data_;
+  std::unique_ptr<orbit_client_data::CallstackData> callstack_data_;
   // selection_callstack_data_ is subset of callstack_data_
-  std::unique_ptr<CallstackData> selection_callstack_data_;
+  std::unique_ptr<orbit_client_data::CallstackData> selection_callstack_data_;
 
-  std::unique_ptr<TracepointData> tracepoint_data_;
+  std::unique_ptr<orbit_client_data::TracepointData> tracepoint_data_;
 
-  std::optional<PostProcessedSamplingData> post_processed_sampling_data_;
+  std::optional<orbit_client_data::PostProcessedSamplingData> post_processed_sampling_data_;
 
   absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo> address_infos_;
 

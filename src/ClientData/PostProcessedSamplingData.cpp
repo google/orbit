@@ -13,6 +13,8 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 
+namespace orbit_client_data {
+
 namespace {
 
 std::multimap<int, CallstackID> SortCallstacks(const ThreadSampleData& data,
@@ -116,3 +118,5 @@ uint32_t PostProcessedSamplingData::GetCountOfFunction(uint64_t function_address
   }
   return result;
 }
+
+}  // namespace orbit_client_data

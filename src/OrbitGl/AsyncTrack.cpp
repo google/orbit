@@ -57,7 +57,9 @@ AsyncTrack::AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph,
   CHECK(func || timer_info.type() == TimerInfo::kIntrospection ||
         timer_info.type() == TimerInfo::kApiEvent);
   std::string module_name =
-      func != nullptr ? function_utils::GetLoadedModuleNameByPath(func->file_path()) : "unknown";
+      func != nullptr
+          ? orbit_client_data::function_utils::GetLoadedModuleNameByPath(func->file_path())
+          : "unknown";
   const uint64_t event_id = event.data;
   std::string function_name = manual_inst_manager->GetString(event_id);
 

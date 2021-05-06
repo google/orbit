@@ -27,7 +27,9 @@
 #include "module.pb.h"
 #include "tracepoint.pb.h"
 
+using orbit_client_data::CallStack;
 using orbit_client_data::ModuleManager;
+
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::CaptureInfo;
@@ -35,9 +37,11 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::TracepointEventInfo;
+
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::TracepointInfo;
+
 using ::testing::ElementsAreArray;
 
 namespace orbit_client_model {

@@ -32,13 +32,13 @@ class CallStackDataView : public DataView {
   void OnContextMenu(const std::string& action, int menu_index,
                      const std::vector<int>& item_indices) override;
   void OnDataChanged() override;
-  void SetCallStack(const CallStack& callstack) {
-    callstack_ = CallStack(callstack);
+  void SetCallStack(const orbit_client_data::CallStack& callstack) {
+    callstack_ = orbit_client_data::CallStack(callstack);
     OnDataChanged();
   }
 
   void ClearCallstack() {
-    callstack_ = CallStack();
+    callstack_ = orbit_client_data::CallStack();
     OnDataChanged();
   }
 
@@ -50,19 +50,20 @@ class CallStackDataView : public DataView {
  protected:
   void DoFilter() override;
 
-  CallStack callstack_;
+  orbit_client_data::CallStack callstack_;
 
   struct CallStackDataViewFrame {
     CallStackDataViewFrame(uint64_t address, const orbit_client_protos::FunctionInfo* function,
-                           ModuleData* module)
+                           orbit_client_data::ModuleData* module)
         : address(address), function(function), module(module) {}
-    CallStackDataViewFrame(uint64_t address, std::string fallback_name, ModuleData* module)
+    CallStackDataViewFrame(uint64_t address, std::string fallback_name,
+                           orbit_client_data::ModuleData* module)
         : address(address), fallback_name(std::move(fallback_name)), module(module) {}
 
     uint64_t address = 0;
     const orbit_client_protos::FunctionInfo* function = nullptr;
     std::string fallback_name;
-    ModuleData* module;
+    orbit_client_data::ModuleData* module;
   };
 
   CallStackDataViewFrame GetFrameFromRow(int row);

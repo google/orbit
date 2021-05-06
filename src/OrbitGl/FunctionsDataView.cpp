@@ -29,6 +29,8 @@
 #define OQPI_USE_DEFAULT
 #endif
 
+using orbit_client_data::ModuleData;
+using orbit_client_data::ProcessData;
 using orbit_client_model::CaptureData;
 using orbit_client_protos::FunctionInfo;
 
@@ -101,11 +103,11 @@ std::string FunctionsDataView::GetValue(int row, int column) {
     case kColumnSelected:
       return BuildSelectedColumnsString(app_, function);
     case kColumnName:
-      return function_utils::GetDisplayName(function);
+      return orbit_client_data::function_utils::GetDisplayName(function);
     case kColumnSize:
       return absl::StrFormat("%lu", function.size());
     case kColumnModule:
-      return function_utils::GetLoadedModuleName(function);
+      return orbit_client_data::function_utils::GetLoadedModuleName(function);
     case kColumnAddress: {
       const ProcessData* process = app_->GetTargetProcess();
       // If no process is selected, that means Orbit is in a disconnected state aka displaying a
@@ -119,8 +121,9 @@ std::string FunctionsDataView::GetValue(int row, int column) {
       const ModuleData* module =
           app_->GetModuleByPathAndBuildId(function.module_path(), function.module_build_id());
       CHECK(module != nullptr);
-      return absl::StrFormat(
-          "0x%llx", function_utils::GetAbsoluteAddress(function, *process, *module).value_or(0));
+      return absl::StrFormat("0x%llx", orbit_client_data::function_utils::GetAbsoluteAddress(
+                                           function, *process, *module)
+                                           .value_or(0));
     }
     default:
       return "";
@@ -138,7 +141,7 @@ std::string FunctionsDataView::GetValue(int row, int column) {
   }
 
 void FunctionsDataView::DoSort() {
-  // TODO(antonrohr) This sorting function can take a lot of time when a large
+  // TODO(antonrohr): This sorting function can take a lot of time when a large
   // number of functions is used (several seconds). This function is currently
   // executed on the main thread and therefore freezes the UI and interrupts the
   // ssh watchdog signals that are sent to the service. Therefore this should
@@ -153,13 +156,13 @@ void FunctionsDataView::DoSort() {
       sorter = ORBIT_CUSTOM_FUNC_SORT(app_->IsFunctionSelected);
       break;
     case kColumnName:
-      sorter = ORBIT_CUSTOM_FUNC_SORT(function_utils::GetDisplayName);
+      sorter = ORBIT_CUSTOM_FUNC_SORT(orbit_client_data::function_utils::GetDisplayName);
       break;
     case kColumnSize:
       sorter = ORBIT_FUNC_SORT(size());
       break;
     case kColumnModule:
-      sorter = ORBIT_CUSTOM_FUNC_SORT(function_utils::GetLoadedModuleName);
+      sorter = ORBIT_CUSTOM_FUNC_SORT(orbit_client_data::function_utils::GetLoadedModuleName);
       break;
     case kColumnAddress:
       sorter = ORBIT_FUNC_SORT(address());
@@ -263,9 +266,9 @@ void FunctionsDataView::DoFilter() {
   std::vector<uint64_t> indices;
   const std::vector<const FunctionInfo*>& functions(functions_);
   for (size_t i = 0; i < functions.size(); ++i) {
-    auto& function = functions[i];
-    std::string name = ToLower(function_utils::GetDisplayName(*function)) +
-                       function_utils::GetLoadedModuleName(*function);
+    const FunctionInfo* function = functions[i];
+    std::string name = ToLower(orbit_client_data::function_utils::GetDisplayName(*function)) +
+                       orbit_client_data::function_utils::GetLoadedModuleName(*function);
 
     bool match = true;
 
@@ -299,8 +302,9 @@ void FunctionsDataView::ParallelFilter() {
       [&](int32_t a_BlockIndex, int32_t a_ElementIndex) {
         std::vector<int>& result = indicesArray[a_BlockIndex];
         const std::string& name =
-            ToLower(function_utils::GetDisplayName(*functions[a_ElementIndex]));
-        const std::string& module = function_utils::GetLoadedModuleName(*functions[a_ElementIndex]);
+            ToLower(orbit_client_data::function_utils::GetDisplayName(*functions[a_ElementIndex]));
+        const std::string& module =
+            orbit_client_data::function_utils::GetLoadedModuleName(*functions[a_ElementIndex]);
 
         for (std::string& filterToken : m_FilterTokens) {
           if (name.find(filterToken) == std::string::npos &&

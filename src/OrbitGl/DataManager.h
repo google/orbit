@@ -50,20 +50,21 @@ class DataManager final {
 
   [[nodiscard]] bool IsTracepointSelected(const orbit_grpc_protos::TracepointInfo& info) const;
 
-  [[nodiscard]] const TracepointInfoSet& selected_tracepoints() const;
+  [[nodiscard]] const orbit_client_data::TracepointInfoSet& selected_tracepoints() const;
 
   void EnableFrameTrack(const orbit_client_protos::FunctionInfo& function);
   void DisableFrameTrack(const orbit_client_protos::FunctionInfo& function);
   [[nodiscard]] bool IsFrameTrackEnabled(const orbit_client_protos::FunctionInfo& function) const;
   void ClearUserDefinedCaptureData();
 
-  void set_user_defined_capture_data(const UserDefinedCaptureData& user_defined_capture_data) {
+  void set_user_defined_capture_data(
+      const orbit_client_data::UserDefinedCaptureData& user_defined_capture_data) {
     user_defined_capture_data_ = user_defined_capture_data;
   }
-  [[nodiscard]] const UserDefinedCaptureData& user_defined_capture_data() const {
+  [[nodiscard]] const orbit_client_data::UserDefinedCaptureData& user_defined_capture_data() const {
     return user_defined_capture_data_;
   }
-  [[nodiscard]] UserDefinedCaptureData& mutable_user_defined_capture_data() {
+  [[nodiscard]] orbit_client_data::UserDefinedCaptureData& mutable_user_defined_capture_data() {
     return user_defined_capture_data_;
   }
 
@@ -118,18 +119,18 @@ class DataManager final {
 
  private:
   const std::thread::id main_thread_id_;
-  FunctionInfoSet selected_functions_;
+  orbit_client_data::FunctionInfoSet selected_functions_;
   absl::flat_hash_set<uint64_t> visible_function_ids_;
   uint64_t highlighted_function_id_ = orbit_grpc_protos::kInvalidFunctionId;
 
-  TracepointInfoSet selected_tracepoints_;
+  orbit_client_data::TracepointInfoSet selected_tracepoints_;
 
   int32_t selected_thread_id_ = -1;
   const TextBox* selected_text_box_ = nullptr;
 
   // DataManager needs a copy of this so that we can persist user choices like frame tracks between
   // captures.
-  UserDefinedCaptureData user_defined_capture_data_;
+  orbit_client_data::UserDefinedCaptureData user_defined_capture_data_;
 
   bool collect_thread_states_ = false;
   bool enable_api_ = false;

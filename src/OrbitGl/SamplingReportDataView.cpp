@@ -31,6 +31,10 @@
 #include "SamplingReport.h"
 #include "absl/strings/str_format.h"
 
+using orbit_client_data::ModuleData;
+using orbit_client_data::ProcessData;
+using orbit_client_data::SampledFunction;
+using orbit_client_data::ThreadID;
 using orbit_client_model::CaptureData;
 using orbit_client_protos::FunctionInfo;
 

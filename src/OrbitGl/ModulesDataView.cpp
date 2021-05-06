@@ -23,6 +23,10 @@
 
 ABSL_DECLARE_FLAG(bool, enable_frame_pointer_validator);
 
+using orbit_client_data::ModuleData;
+using orbit_client_data::ModuleInMemory;
+using orbit_client_data::ProcessData;
+
 ModulesDataView::ModulesDataView(OrbitApp* app) : DataView(DataViewType::kModules, app) {}
 
 const std::vector<DataView::Column>& ModulesDataView::GetColumns() {

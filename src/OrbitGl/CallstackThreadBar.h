@@ -27,7 +27,7 @@ class CallstackThreadBar : public ThreadBar {
   explicit CallstackThreadBar(CaptureViewElement* parent, OrbitApp* app, TimeGraph* time_graph,
                               orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                               const orbit_client_model::CaptureData* capture_data,
-                              ThreadID thread_id);
+                              orbit_client_data::ThreadID thread_id);
 
   std::string GetTooltip() const override;
 
@@ -46,7 +46,7 @@ class CallstackThreadBar : public ThreadBar {
  protected:
   void SelectCallstacks();
   [[nodiscard]] std::string SafeGetFormattedFunctionName(uint64_t addr, int max_line_length) const;
-  [[nodiscard]] std::string FormatCallstackForTooltip(const CallStack& callstack,
+  [[nodiscard]] std::string FormatCallstackForTooltip(const orbit_client_data::CallStack& callstack,
                                                       int max_line_length = 80, int max_lines = 20,
                                                       int bottom_n_lines = 5) const;
 

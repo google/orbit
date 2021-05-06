@@ -78,7 +78,7 @@ void TargetLabel::ChangeToStadiaTarget(const StadiaTarget& stadia_target) {
   ChangeToStadiaTarget(*stadia_target.GetProcess(), stadia_target.GetConnection()->GetInstance());
 }
 
-void TargetLabel::ChangeToStadiaTarget(const ProcessData& process,
+void TargetLabel::ChangeToStadiaTarget(const orbit_client_data::ProcessData& process,
                                        const orbit_ggp::Instance& instance) {
   ChangeToStadiaTarget(QString::fromStdString(process.name()), process.cpu_usage(),
                        instance.display_name);
@@ -96,7 +96,7 @@ void TargetLabel::ChangeToLocalTarget(const LocalTarget& local_target) {
   ChangeToLocalTarget(*local_target.GetProcess());
 }
 
-void TargetLabel::ChangeToLocalTarget(const ProcessData& process) {
+void TargetLabel::ChangeToLocalTarget(const orbit_client_data::ProcessData& process) {
   ChangeToLocalTarget(QString::fromStdString(process.name()), process.cpu_usage());
 }
 

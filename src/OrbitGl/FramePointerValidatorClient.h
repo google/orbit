@@ -20,7 +20,7 @@ class OrbitApp;
 // analysis on the client.
 // On a response, it will display the number of functions that have a non-valid
 // prologue/epilogue as an infobox.
-// TODO(kuebler): The right output format need to be discussed and decided.
+// TODO(kuebler): The right output format needs to be discussed and decided.
 class FramePointerValidatorClient {
  public:
   explicit FramePointerValidatorClient(OrbitApp* core_app,
@@ -32,7 +32,7 @@ class FramePointerValidatorClient {
   FramePointerValidatorClient(FramePointerValidatorClient&&) = delete;
   FramePointerValidatorClient& operator=(FramePointerValidatorClient&&) = delete;
 
-  void AnalyzeModules(const std::vector<const ModuleData*>& modules);
+  void AnalyzeModules(const std::vector<const orbit_client_data::ModuleData*>& modules);
 
  private:
   OrbitApp* app_;

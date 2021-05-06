@@ -10,9 +10,9 @@
 #include "ClientModel/CaptureData.h"
 
 namespace orbit_client_model {
-PostProcessedSamplingData CreatePostProcessedSamplingData(const CallstackData& callstack_data,
-                                                          const CaptureData& capture_data,
-                                                          bool generate_summary = true);
+orbit_client_data::PostProcessedSamplingData CreatePostProcessedSamplingData(
+    const orbit_client_data::CallstackData& callstack_data, const CaptureData& capture_data,
+    bool generate_summary = true);
 }  // namespace orbit_client_model
 
 #endif  // CLIENT_MODEL_SAMPLING_DATA_POST_PROCESSOR_H_

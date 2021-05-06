@@ -212,7 +212,8 @@ void ProfilingTargetDialog::ProcessSelectionChanged(const QModelIndex& current) 
   }
 
   CHECK(current.data(Qt::UserRole).canConvert<const ProcessInfo*>());
-  process_ = std::make_unique<ProcessData>(*current.data(Qt::UserRole).value<const ProcessInfo*>());
+  process_ = std::make_unique<orbit_client_data::ProcessData>(
+      *current.data(Qt::UserRole).value<const ProcessInfo*>());
   emit ProcessSelected();
 }
 

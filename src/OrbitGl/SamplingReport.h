@@ -27,15 +27,20 @@ class OrbitApp;
 
 class SamplingReport {
  public:
-  explicit SamplingReport(
-      OrbitApp* app, PostProcessedSamplingData post_processed_sampling_data,
-      absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks,
-      bool has_summary = true);
-  void UpdateReport(PostProcessedSamplingData post_processed_sampling_data,
-                    absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks);
+  explicit SamplingReport(OrbitApp* app,
+                          orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
+                          absl::flat_hash_map<orbit_client_data::CallstackID,
+                                              std::shared_ptr<orbit_client_data::CallStack>>
+                              unique_callstacks,
+                          bool has_summary = true);
+  void UpdateReport(orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
+                    absl::flat_hash_map<orbit_client_data::CallstackID,
+                                        std::shared_ptr<orbit_client_data::CallStack>>
+                        unique_callstacks);
   [[nodiscard]] std::vector<SamplingReportDataView>& GetThreadReports() { return thread_reports_; };
   void SetCallstackDataView(CallStackDataView* data_view) { callstack_data_view_ = data_view; };
-  void OnSelectAddresses(const absl::flat_hash_set<uint64_t>& addresses, ThreadID thread_id);
+  void OnSelectAddresses(const absl::flat_hash_set<uint64_t>& addresses,
+                         orbit_client_data::ThreadID thread_id);
   void IncrementCallstackIndex();
   void DecrementCallstackIndex();
   [[nodiscard]] std::string GetSelectedCallstackString() const;
@@ -51,14 +56,15 @@ class SamplingReport {
   void UpdateDisplayedCallstack();
 
  protected:
-  PostProcessedSamplingData post_processed_sampling_data_;
-  absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks_;
+  orbit_client_data::PostProcessedSamplingData post_processed_sampling_data_;
+  absl::flat_hash_map<orbit_client_data::CallstackID, std::shared_ptr<orbit_client_data::CallStack>>
+      unique_callstacks_;
   std::vector<SamplingReportDataView> thread_reports_;
   CallStackDataView* callstack_data_view_;
 
   absl::flat_hash_set<uint64_t> selected_addresses_;
-  ThreadID selected_thread_id_;
-  std::unique_ptr<SortedCallstackReport> selected_sorted_callstack_report_;
+  orbit_client_data::ThreadID selected_thread_id_;
+  std::unique_ptr<orbit_client_data::SortedCallstackReport> selected_sorted_callstack_report_;
   size_t selected_callstack_index_;
   std::function<void()> ui_refresh_func_;
   bool has_summary_;
