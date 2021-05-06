@@ -87,7 +87,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   void SetLabel(const std::string& label) { label_ = label; }
   [[nodiscard]] const std::string& GetLabel() const { return label_; }
 
-  [[nodiscard]] virtual Color GetBackgroundColor() const;
+  [[nodiscard]] virtual Color GetTrackBackgroundColor() const;
 
   virtual void OnCollapseToggle(TriangleToggle::State state);
   [[nodiscard]] virtual bool IsCollapsible() const { return false; }

@@ -109,9 +109,9 @@ void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current
   float text_z = GlCanvas::kZValueTrackText + z_offset;
   float top_margin = layout_->GetTrackTopMargin();
 
-  Color background_color = GetBackgroundColor();
+  Color track_background_color = GetTrackBackgroundColor();
   if (!draw_background_) {
-    background_color[3] = 0;
+    track_background_color[3] = 0;
   }
 
   // Draw tab.
@@ -123,7 +123,7 @@ void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current
 
   const float indentation_x0 = tab_x0 + (indentation_level_ * layout_->GetTrackIntentOffset());
   Box box(Vec2(indentation_x0, y0), Vec2(label_width, -label_height), track_z);
-  batcher.AddBox(box, background_color, shared_from_this());
+  batcher.AddBox(box, track_background_color, shared_from_this());
 
   // Draw rounded corners.
   if (!picking && draw_background_) {
@@ -148,12 +148,16 @@ void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current
     Vec2 content_top_right(top_left[0] + size_[0] - right_margin,
                            top_left[1] - label_height + top_margin);
 
-    DrawTriangleFan(batcher, rounded_corner, top_left, background_color, -90.f, track_z);
-    DrawTriangleFan(batcher, rounded_corner, tab_top_right, background_color, 180.f, track_z);
-    DrawTriangleFan(batcher, rounded_corner, tab_bottom_right, background_color, 0, track_z);
-    DrawTriangleFan(batcher, rounded_corner, content_bottom_left, background_color, 0, track_z);
-    DrawTriangleFan(batcher, rounded_corner, tab_bottom_right, background_color, 0, track_z);
-    DrawTriangleFan(batcher, rounded_corner, content_bottom_left, background_color, 0, track_z);
+    DrawTriangleFan(batcher, rounded_corner, top_left, GlCanvas::kBackgroundColor, -90.f, track_z);
+    DrawTriangleFan(batcher, rounded_corner, tab_top_right, GlCanvas::kBackgroundColor, 180.f,
+                    track_z);
+    DrawTriangleFan(batcher, rounded_corner, tab_bottom_right, track_background_color, 0, track_z);
+    DrawTriangleFan(batcher, rounded_corner, content_bottom_left, GlCanvas::kBackgroundColor, 0,
+                    track_z);
+    DrawTriangleFan(batcher, rounded_corner, content_bottom_right, GlCanvas::kBackgroundColor, 90.f,
+                    track_z);
+    DrawTriangleFan(batcher, rounded_corner, content_top_right, GlCanvas::kBackgroundColor, 180.f,
+                    track_z);
   }
 
   // Collapse toggle state management.
@@ -192,7 +196,7 @@ void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current
     if (layout_->GetDrawTrackBackground()) {
       Box box(Vec2(x0, y0 - label_height + top_margin),
               Vec2(size_[0], -size_[1] + label_height - top_margin), track_z);
-      batcher.AddBox(box, background_color, shared_from_this());
+      batcher.AddBox(box, track_background_color, shared_from_this());
     }
   }
 }
@@ -218,7 +222,7 @@ void Track::UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*t_min*/, uint64_t 
 
 void Track::SetPinned(bool value) { pinned_ = value; }
 
-Color Track::GetBackgroundColor() const {
+Color Track::GetTrackBackgroundColor() const {
   int32_t capture_process_id = capture_data_ ? capture_data_->process_id() : -1;
 
   if (process_id_ != -1 && process_id_ != capture_process_id) {
