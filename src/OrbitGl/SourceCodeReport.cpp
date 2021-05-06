@@ -8,8 +8,8 @@
 #include <limits>
 #include <optional>
 
+#include "ClientData/PostProcessedSamplingData.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitClientData/PostProcessedSamplingData.h"
 
 namespace orbit_gl {
 

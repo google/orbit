@@ -21,12 +21,12 @@
 #include <utility>
 
 #include "App.h"
+#include "ClientData/CallstackData.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreMath.h"
 #include "CoreUtils.h"
 #include "GlCanvas.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "OrbitClientData/CallstackData.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"

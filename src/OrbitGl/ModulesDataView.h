@@ -11,9 +11,9 @@
 #include <string>
 #include <vector>
 
+#include "ClientData/ModuleData.h"
+#include "ClientData/ProcessData.h"
 #include "DataView.h"
-#include "OrbitClientData/ModuleData.h"
-#include "OrbitClientData/ProcessData.h"
 
 class OrbitApp;
 

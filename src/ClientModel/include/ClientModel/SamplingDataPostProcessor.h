@@ -5,9 +5,9 @@
 #ifndef CLIENT_MODEL_SAMPLING_DATA_POST_PROCESSOR_H_
 #define CLIENT_MODEL_SAMPLING_DATA_POST_PROCESSOR_H_
 
+#include "ClientData/CallstackData.h"
+#include "ClientData/PostProcessedSamplingData.h"
 #include "ClientModel/CaptureData.h"
-#include "OrbitClientData/CallstackData.h"
-#include "OrbitClientData/PostProcessedSamplingData.h"
 
 namespace orbit_client_model {
 PostProcessedSamplingData CreatePostProcessedSamplingData(const CallstackData& callstack_data,

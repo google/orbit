@@ -12,10 +12,10 @@
 #include <thread>
 #include <vector>
 
+#include "ClientData/FunctionInfoSet.h"
+#include "ClientData/TracepointCustom.h"
+#include "ClientData/UserDefinedCaptureData.h"
 #include "GrpcProtos/Constants.h"
-#include "OrbitClientData/FunctionInfoSet.h"
-#include "OrbitClientData/TracepointCustom.h"
-#include "OrbitClientData/UserDefinedCaptureData.h"
 #include "TextBox.h"
 #include "capture_data.pb.h"
 #include "tracepoint.pb.h"

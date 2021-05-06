@@ -20,10 +20,10 @@
 #include <optional>
 #include <vector>
 
+#include "ClientData/ProcessData.h"
 #include "ClientServices/ProcessManager.h"
 #include "Connections.h"
 #include "MetricsUploader/MetricsUploader.h"
-#include "OrbitClientData/ProcessData.h"
 #include "ProcessItemModel.h"
 #include "TargetConfiguration.h"
 #include "grpcpp/channel.h"

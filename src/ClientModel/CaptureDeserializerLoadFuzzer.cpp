@@ -15,9 +15,9 @@
 #include <utility>
 
 #include "CaptureClient/CaptureListener.h"
+#include "ClientData/ModuleManager.h"
 #include "ClientModel/CaptureDeserializer.h"
 #include "ClientModel/CaptureSerializer.h"
-#include "OrbitClientData/ModuleManager.h"
 
 namespace orbit_client_model {
 

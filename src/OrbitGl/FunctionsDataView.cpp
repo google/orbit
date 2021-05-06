@@ -14,13 +14,13 @@
 #include <functional>
 
 #include "App.h"
+#include "ClientData/FunctionUtils.h"
+#include "ClientData/ModuleData.h"
+#include "ClientData/ProcessData.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreUtils.h"
 #include "DataViewTypes.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitClientData/FunctionUtils.h"
-#include "OrbitClientData/ModuleData.h"
-#include "OrbitClientData/ProcessData.h"
 #include "absl/strings/str_format.h"
 
 #ifdef _WIN32

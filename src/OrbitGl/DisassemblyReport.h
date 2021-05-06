@@ -11,9 +11,9 @@
 #include <optional>
 #include <utility>
 
+#include "ClientData/PostProcessedSamplingData.h"
 #include "CodeReport.h"
 #include "Disassembler.h"
-#include "OrbitClientData/PostProcessedSamplingData.h"
 
 class DisassemblyReport : public CodeReport {
  public:

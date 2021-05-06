@@ -10,8 +10,8 @@
 #include <string>
 #include <vector>
 
+#include "ClientData/TracepointData.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "OrbitClientData/TracepointData.h"
 #include "capture_data.pb.h"
 #include "gtest/gtest.h"
 #include "tracepoint.pb.h"

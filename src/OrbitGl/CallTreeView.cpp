@@ -11,8 +11,8 @@
 
 #include <algorithm>
 
+#include "ClientData/Callstack.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "OrbitClientData/Callstack.h"
 
 using orbit_client_model::CaptureData;
 

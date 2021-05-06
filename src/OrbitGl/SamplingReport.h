@@ -17,10 +17,10 @@
 #include <vector>
 
 #include "CallStackDataView.h"
-#include "OrbitClientData/Callstack.h"
-#include "OrbitClientData/CallstackData.h"
-#include "OrbitClientData/CallstackTypes.h"
-#include "OrbitClientData/PostProcessedSamplingData.h"
+#include "ClientData/Callstack.h"
+#include "ClientData/CallstackData.h"
+#include "ClientData/CallstackTypes.h"
+#include "ClientData/PostProcessedSamplingData.h"
 #include "SamplingReportDataView.h"
 
 class OrbitApp;

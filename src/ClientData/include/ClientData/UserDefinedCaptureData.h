@@ -5,7 +5,7 @@
 #ifndef ORBIT_CORE_USER_DEFINED_CAPTURE_DATA_H_
 #define ORBIT_CORE_USER_DEFINED_CAPTURE_DATA_H_
 
-#include "OrbitClientData/FunctionInfoSet.h"
+#include "ClientData/FunctionInfoSet.h"
 #include "capture_data.pb.h"
 
 // UserDefinedCaptureData holds any capture related data that was added by the user. Examples

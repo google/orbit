@@ -12,10 +12,10 @@
 #include <utility>
 
 #include "Batcher.h"
+#include "ClientData/FunctionUtils.h"
 #include "CoreUtils.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
-#include "OrbitClientData/FunctionUtils.h"
 #include "TextRenderer.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"

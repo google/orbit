@@ -7,7 +7,7 @@
 
 #include <memory>
 
-#include "OrbitClientData/FunctionInfoSet.h"
+#include "ClientData/FunctionInfoSet.h"
 #include "capture_data.pb.h"
 
 using orbit_client_protos::FunctionInfo;

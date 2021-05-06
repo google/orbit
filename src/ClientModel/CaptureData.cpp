@@ -11,8 +11,8 @@
 #include <outcome.hpp>
 #include <vector>
 
-#include "OrbitClientData/FunctionUtils.h"
-#include "OrbitClientData/ModuleData.h"
+#include "ClientData/FunctionUtils.h"
+#include "ClientData/ModuleData.h"
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;

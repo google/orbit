@@ -9,10 +9,10 @@
 #include <vector>
 
 #include "CallStackDataView.h"
+#include "ClientData/CallstackTypes.h"
+#include "ClientData/PostProcessedSamplingData.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
 #include "DataView.h"
-#include "OrbitClientData/CallstackTypes.h"
-#include "OrbitClientData/PostProcessedSamplingData.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
 

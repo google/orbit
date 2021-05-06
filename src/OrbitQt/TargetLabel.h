@@ -10,7 +10,7 @@
 #include <memory>
 #include <optional>
 
-#include "OrbitClientData/ProcessData.h"
+#include "ClientData/ProcessData.h"
 #include "OrbitGgp/Instance.h"
 #include "TargetConfiguration.h"
 

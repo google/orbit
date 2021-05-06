@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitClientData/ModuleData.h"
+#include "ClientData/ModuleData.h"
 
 #include <absl/container/flat_hash_map.h>
 
 #include <algorithm>
 
+#include "ClientData/FunctionUtils.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitClientData/FunctionUtils.h"
 #include "absl/synchronization/mutex.h"
 #include "capture_data.pb.h"
 #include "module.pb.h"

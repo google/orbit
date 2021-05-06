@@ -13,8 +13,8 @@
 #include <utility>
 #include <vector>
 
+#include "ClientData/ProcessData.h"
 #include "OrbitBase/Result.h"
-#include "OrbitClientData/ProcessData.h"
 #include "module.pb.h"
 #include "process.pb.h"
 
