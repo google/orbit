@@ -20,14 +20,14 @@ Dialog::Dialog(QWidget* parent) : QDialog{parent}, ui_{std::make_unique<Ui::Code
 
 Dialog::~Dialog() noexcept = default;
 
-void Dialog::SetSourceCode(const QString& code) {
+void Dialog::SetMainContent(const QString& code) {
   ui_->viewer->setPlainText(code);
   syntax_highlighter_.reset();
 }
 
-void Dialog::SetSourceCode(const QString& code,
-                           std::unique_ptr<QSyntaxHighlighter> syntax_highlighter) {
-  SetSourceCode(code);
+void Dialog::SetMainContent(const QString& code,
+                            std::unique_ptr<QSyntaxHighlighter> syntax_highlighter) {
+  SetMainContent(code);
   syntax_highlighter_ = std::move(syntax_highlighter);
   syntax_highlighter_->setDocument(ui_->viewer->document());
 }

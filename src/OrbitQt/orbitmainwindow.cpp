@@ -146,7 +146,7 @@ void OpenDisassembly(const std::string& assembly, DisassemblyReport report) {
   dialog->SetHighlightCurrentLine(true);
 
   auto syntax_highlighter = std::make_unique<orbit_syntax_highlighter::X86Assembly>();
-  dialog->SetSourceCode(QString::fromStdString(assembly), std::move(syntax_highlighter));
+  dialog->SetMainContent(QString::fromStdString(assembly), std::move(syntax_highlighter));
 
   if (report.GetNumSamples() > 0) {
     constexpr orbit_code_viewer::FontSizeInEm kHeatmapAreaWidth{1.3f};
@@ -1479,7 +1479,7 @@ void OrbitMainWindow::ShowSourceCode(const std::filesystem::path& file_path, siz
   if (!source_code.has_value()) return;
 
   auto syntax_highlighter = std::make_unique<orbit_syntax_highlighter::Cpp>();
-  code_viewer_dialog->SetSourceCode(source_code.value(), std::move(syntax_highlighter));
+  code_viewer_dialog->SetMainContent(source_code.value(), std::move(syntax_highlighter));
   constexpr orbit_code_viewer::FontSizeInEm kHeatmapAreaWidth{1.3f};
 
   if (maybe_code_report.has_value()) {
