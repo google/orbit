@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CORE_CALLSTACK_DATA_H_
-#define ORBIT_CORE_CALLSTACK_DATA_H_
+#ifndef CLIENT_DATA_CALLSTACK_DATA_H_
+#define CLIENT_DATA_CALLSTACK_DATA_H_
 
 #include <stdint.h>
 
@@ -109,4 +109,4 @@ class CallstackData {
   uint64_t min_time_ = std::numeric_limits<uint64_t>::max();
 };
 
-#endif  // ORBIT_CORE_CALLSTACK_DATA_H_
+#endif  // CLIENT_DATA_CALLSTACK_DATA_H_

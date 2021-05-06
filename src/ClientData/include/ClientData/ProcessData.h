@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CLIENT_DATA_PROCESS_DATA_H_
-#define ORBIT_CLIENT_DATA_PROCESS_DATA_H_
+#ifndef CLIENT_DATA_PROCESS_DATA_H_
+#define CLIENT_DATA_PROCESS_DATA_H_
 
 #include <absl/container/flat_hash_set.h>
 #include <absl/container/node_hash_map.h>
@@ -85,4 +85,4 @@ class ProcessData final {
   std::map<uint64_t, std::string> start_addresses_;
 };
 
-#endif  // ORBIT_GL_PROCESS_DATA_H_
+#endif  // CLIENT_DATA_PROCESS_DATA_H_
