@@ -29,6 +29,7 @@
 #include "CallTreeView.h"
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
+#include "CaptureFile/CaptureFile.h"
 #include "CaptureWindow.h"
 #include "ClientModel/CaptureData.h"
 #include "ClientServices/CrashManager.h"
@@ -101,7 +102,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   ErrorMessageOr<void> OnLoadPreset(const std::string& file_name);
   ErrorMessageOr<void> OnSaveCapture(const std::filesystem::path& file_name);
   orbit_base::Future<ErrorMessageOr<CaptureOutcome>> LoadCaptureFromFile(
-      const std::string& file_name);
+      const std::filesystem::path& file_path);
   void OnLoadCaptureCancelRequested();
 
   [[nodiscard]] orbit_capture_client::CaptureClient::State GetCaptureState() const;

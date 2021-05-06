@@ -11,8 +11,12 @@
 #include "CaptureFile/CaptureFileOutputStream.h"
 #include "CaptureFileConstants.h"
 #include "OrbitBase/TemporaryFile.h"
+#include "OrbitBase/TestUtils.h"
 
 namespace orbit_capture_file {
+
+using orbit_base::HasNoError;
+using orbit_base::HasValue;
 
 static constexpr const char* kAnswerString =
     "Answer to the Ultimate Question of Life, The Universe, and Everything";
@@ -180,11 +184,29 @@ TEST(CaptureFile, CreateCaptureFileAndAddSection) {
   ASSERT_TRUE(section_number_or_error.has_value()) << section_number_or_error.error().message();
   ASSERT_EQ(capture_file->GetSectionList().size(), 1);
   EXPECT_EQ(section_number_or_error.value(), 0);
+
+  {
+    ClientCaptureEvent event;
+    event.mutable_capture_finished()->set_status(orbit_grpc_protos::CaptureFinished::kFailed);
+    event.mutable_capture_finished()->set_error_message("some error");
+    section_number_or_error = capture_file->AddSection(2, event.ByteSizeLong());
+    ASSERT_THAT(section_number_or_error, HasValue());
+    auto buf = make_unique_for_overwrite<uint8_t[]>(event.ByteSizeLong());
+    ASSERT_TRUE(event.SerializeToArray(buf.get(), event.ByteSizeLong()));
+    ASSERT_THAT(capture_file->WriteToSection(section_number_or_error.value(), 0, buf.get(),
+                                             event.ByteSizeLong()),
+                HasNoError());
+  }
+
   {
     const auto& capture_file_section = capture_file->GetSectionList()[0];
     EXPECT_EQ(capture_file_section.size, 333);
+    EXPECT_GT(capture_file_section.offset, 0);
     EXPECT_EQ(capture_file_section.type, 1);
   }
+
+  EXPECT_EQ(capture_file->FindSectionByType(1), 0);
+  EXPECT_EQ(capture_file->FindSectionByType(2), 1);
 
   // Write something to the section
   std::string something{"this is something"};
@@ -208,12 +230,24 @@ TEST(CaptureFile, CreateCaptureFileAndAddSection) {
   capture_file_or_error = CaptureFile::OpenForReadWrite(temporary_file.file_path());
   ASSERT_TRUE(capture_file_or_error.has_value()) << capture_file_or_error.error().message();
   capture_file = std::move(capture_file_or_error.value());
-  EXPECT_EQ(capture_file->GetSectionList().size(), 1);
+  EXPECT_EQ(capture_file->GetSectionList().size(), 2);
   {
     const auto& capture_file_section = capture_file->GetSectionList()[0];
     EXPECT_EQ(capture_file_section.type, 1);
-    EXPECT_EQ(capture_file_section.size, 333);
     EXPECT_GT(capture_file_section.offset, 0);
+    EXPECT_EQ(capture_file_section.size, 333);
+  }
+
+  EXPECT_EQ(capture_file->FindSectionByType(1), 0);
+  ASSERT_EQ(capture_file->FindSectionByType(2), 1);
+
+  {
+    auto message_or_error = capture_file->ReadSectionAsProto<ClientCaptureEvent>(1);
+    ASSERT_THAT(message_or_error, HasValue());
+    const ClientCaptureEvent& event_from_file = message_or_error.value();
+    EXPECT_EQ(event_from_file.capture_finished().status(),
+              orbit_grpc_protos::CaptureFinished::kFailed);
+    EXPECT_EQ(event_from_file.capture_finished().error_message(), "some error");
   }
 
   {

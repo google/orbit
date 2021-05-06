@@ -34,6 +34,7 @@
 
 #include "CallStackDataView.h"
 #include "CaptureClient/CaptureListener.h"
+#include "CaptureFile/CaptureFile.h"
 #include "CaptureWindow.h"
 #include "ClientModel/CaptureDeserializer.h"
 #include "ClientModel/CaptureSerializer.h"
@@ -103,6 +104,9 @@ using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureEventProcessor;
 using orbit_capture_client::CaptureListener;
 
+using orbit_capture_file::CaptureFile;
+using orbit_capture_file::CaptureSectionInputStream;
+
 using orbit_client_model::CaptureData;
 
 using orbit_client_protos::CallstackEvent;
@@ -118,6 +122,7 @@ using orbit_client_services::TracepointServiceClient;
 
 using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureStarted;
+using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
@@ -979,8 +984,41 @@ ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::filesystem::path& file_n
   return save_result;
 }
 
+static ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureFromNewFormat(
+    CaptureListener* listener, CaptureFile* capture_file,
+    std::atomic<bool>* capture_loading_cancellation_requested) {
+  absl::flat_hash_set<uint64_t> frame_track_function_ids;
+
+  std::optional<uint64_t> section_index =
+      capture_file->FindSectionByType(orbit_capture_file::kSectionTypeUserData);
+  if (section_index.has_value()) {
+    OUTCOME_TRY(user_defined_capture_info,
+                capture_file->ReadSectionAsProto<orbit_client_protos::UserDefinedCaptureInfo>(
+                    section_index.value()));
+    const auto& loaded_frame_track_function_ids =
+        user_defined_capture_info.frame_tracks_info().frame_track_function_ids();
+    frame_track_function_ids = {loaded_frame_track_function_ids.begin(),
+                                loaded_frame_track_function_ids.end()};
+  }
+
+  std::unique_ptr<CaptureEventProcessor> capture_event_processor =
+      CaptureEventProcessor::CreateForCaptureListener(listener, frame_track_function_ids);
+
+  auto capture_section_input_stream = capture_file->CreateCaptureSectionInputStream();
+  while (true) {
+    if (*capture_loading_cancellation_requested) {
+      return CaptureListener::CaptureOutcome::kCancelled;
+    }
+    OUTCOME_TRY(event, capture_section_input_stream->ReadEvent());
+    capture_event_processor->ProcessEvent(event);
+    if (event.event_case() == ClientCaptureEvent::kCaptureFinished) {
+      return CaptureListener::CaptureOutcome::kComplete;
+    }
+  }
+}
+
 Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFromFile(
-    const std::string& file_name) {
+    const std::filesystem::path& file_path) {
   ScopedMetric metric{metrics_uploader_,
                       orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_CAPTURE_LOAD};
   if (capture_window_ != nullptr) {
@@ -988,12 +1026,19 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
   }
   ClearCapture();
   auto load_future =
-      thread_pool_->Schedule([this, file_name, metric = std::move(metric)]() mutable {
+      thread_pool_->Schedule([this, file_path, metric = std::move(metric)]() mutable {
         capture_loading_cancellation_requested_ = false;
 
-        ErrorMessageOr<CaptureListener::CaptureOutcome> load_result =
-            orbit_client_model::capture_deserializer::Load(
-                file_name, this, module_manager_.get(), &capture_loading_cancellation_requested_);
+        auto capture_file_or_error = CaptureFile::OpenForReadWrite(file_path);
+
+        ErrorMessageOr<CaptureListener::CaptureOutcome> load_result{CaptureOutcome::kComplete};
+        if (capture_file_or_error.has_value()) {
+          load_result = LoadCaptureFromNewFormat(this, capture_file_or_error.value().get(),
+                                                 &capture_loading_cancellation_requested_);
+        } else {  // Fall back to old capture format.
+          load_result = orbit_client_model::capture_deserializer::Load(
+              file_path, this, module_manager_.get(), &capture_loading_cancellation_requested_);
+        }
 
         if (load_result.has_error()) {
           metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_INTERNAL_ERROR);
