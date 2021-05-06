@@ -28,7 +28,7 @@ class CaptureFileImpl : public CaptureFile {
 
   ErrorMessageOr<void> Initialize();
 
-  ErrorMessageOr<uint16_t> AddSection(uint64_t section_type, uint64_t section_size) override;
+  ErrorMessageOr<uint64_t> AddSection(uint64_t section_type, uint64_t section_size) override;
 
   ErrorMessageOr<void> WriteToSection(uint64_t section_number, uint64_t offset_in_section,
                                       const void* data, size_t size) override;
@@ -36,6 +36,8 @@ class CaptureFileImpl : public CaptureFile {
   [[nodiscard]] const std::vector<CaptureFileSection>& GetSectionList() const override {
     return section_list_;
   }
+
+  std::optional<uint64_t> FindSectionByType(uint64_t section_type) const override;
 
   ErrorMessageOr<void> ReadFromSection(uint64_t section_number, uint64_t offset_in_section,
                                        void* data, size_t size) override;
@@ -172,7 +174,7 @@ ErrorMessageOr<void> CaptureFileImpl::WriteToSection(uint64_t section_number,
   return outcome::success();
 }
 
-ErrorMessageOr<uint16_t> CaptureFileImpl::AddSection(uint64_t section_type, uint64_t section_size) {
+ErrorMessageOr<uint64_t> CaptureFileImpl::AddSection(uint64_t section_type, uint64_t section_size) {
   if (section_list_.size() == std::numeric_limits<uint16_t>::max()) {
     return ErrorMessage{
         absl::StrFormat("Section list has reached its maximum size: %d", section_list_.size())};
@@ -245,6 +247,17 @@ ErrorMessageOr<void> CaptureFileImpl::ReadFromSection(uint64_t section_number,
 std::unique_ptr<CaptureSectionInputStream> CaptureFileImpl::CreateCaptureSectionInputStream() {
   return std::make_unique<orbit_capture_file_internal::CaptureSectionInputStreamImpl>(
       fd_, header_.capture_section_offset, capture_section_size_);
+}
+
+std::optional<uint64_t> orbit_capture_file::CaptureFileImpl::FindSectionByType(
+    uint64_t section_type) const {
+  for (size_t i = 0; i < section_list_.size(); ++i) {
+    if (section_list_[i].type == section_type) {
+      return i;
+    }
+  }
+
+  return std::nullopt;
 }
 
 }  // namespace
