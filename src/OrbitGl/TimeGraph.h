@@ -40,7 +40,7 @@ class OrbitApp;
 class TimeGraph : public orbit_gl::CaptureViewElement {
  public:
   explicit TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
-                     TextRenderer* text_renderer, orbit_gl::Viewport* viewport,
+                     orbit_gl::Viewport* viewport,
                      const orbit_client_model::CaptureData* capture_data,
                      PickingManager* picking_manager);
   ~TimeGraph();
@@ -195,7 +195,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
  private:
   AccessibleInterfaceProvider* accessible_parent_;
   TextRenderer text_renderer_static_;
-  TextRenderer* text_renderer_ = nullptr;
   int num_drawn_text_boxes_ = 0;
 
   // First member is id.
