@@ -27,7 +27,7 @@ namespace orbit_code_viewer {
   which blocks until the dialog is closed:
 
   orbit_code_viewer::Dialog dialog{};
-  dialog.SetSourceCode(source_code);
+  dialog.SetMainContent(source_code);
   dialog.exec();
 
   Optionally a syntax highlighter can be provided with the source code.
@@ -35,7 +35,7 @@ namespace orbit_code_viewer {
   Example:
 
   orbit_code_viewer::Dialog dialog{};
-  dialog.SetSourceCode(source_code, std::make_unique<orbit_syntax_highlighter::X86Assembly>());
+  dialog.SetMainContent(source_code, std::make_unique<orbit_syntax_highlighter::X86Assembly>());
   dialog.exec();
 
   Check out orbit_code_viewer::Viewer if you don't need a dialog but rather a widget
@@ -48,8 +48,8 @@ class Dialog : public QDialog {
   explicit Dialog(QWidget* parent = nullptr);
   ~Dialog() noexcept override;
 
-  void SetSourceCode(const QString& code);
-  void SetSourceCode(const QString& code, std::unique_ptr<QSyntaxHighlighter> syntax_highlighter);
+  void SetMainContent(const QString& code);
+  void SetMainContent(const QString& code, std::unique_ptr<QSyntaxHighlighter> syntax_highlighter);
 
   void SetHeatmap(FontSizeInEm heatmap_bar_width, const CodeReport* code_report);
   void ClearHeatmap();

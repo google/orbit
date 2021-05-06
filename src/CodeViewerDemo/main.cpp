@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
   // Example file
   const QString content = testing_example;
 
-  dialog.SetSourceCode(content, std::make_unique<orbit_syntax_highlighter::Cpp>());
+  dialog.SetMainContent(content, std::make_unique<orbit_syntax_highlighter::Cpp>());
 
   const auto line_numbers = content.count('\n');
   const DummyCodeReport code_report{static_cast<uint32_t>(line_numbers)};

@@ -22,7 +22,7 @@ namespace orbit_code_viewer {
   It is meant to be used in conjunction with `OpenAndDeleteOnClose`, example:
 
   auto dialog = std::make_unique<orbit_code_viewer::OwningDialog>();
-  dialog->SetSourceCode(...);
+  dialog->SetMainContent(...);
   dialog->SetOwningHeatmap(kSidebarWidth, std::move(disassembly_report));
   orbit_code_viewer::OpenAndDeleteOnClose(std::move(dialog));
 */
