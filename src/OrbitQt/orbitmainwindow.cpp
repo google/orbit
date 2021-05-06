@@ -142,7 +142,7 @@ constexpr int kHintFrameHeight = 45;
 void OpenDisassembly(const std::string& assembly, DisassemblyReport report) {
   auto dialog = std::make_unique<orbit_code_viewer::OwningDialog>();
   dialog->setWindowTitle("Orbit Disassembly");
-  dialog->SetEnableLineNumbers(true);
+  dialog->SetLineNumberTypes(orbit_code_viewer::Dialog::LineNumberTypes::kOnlyMainContent);
   dialog->SetHighlightCurrentLine(true);
 
   auto syntax_highlighter = std::make_unique<orbit_syntax_highlighter::X86Assembly>();
@@ -1470,7 +1470,8 @@ void OrbitMainWindow::ShowSourceCode(const std::filesystem::path& file_path, siz
                                      std::optional<std::unique_ptr<CodeReport>> maybe_code_report) {
   auto code_viewer_dialog = std::make_unique<orbit_code_viewer::OwningDialog>();
 
-  code_viewer_dialog->SetEnableLineNumbers(true);
+  code_viewer_dialog->SetLineNumberTypes(
+      orbit_code_viewer::Dialog::LineNumberTypes::kOnlyMainContent);
   code_viewer_dialog->SetHighlightCurrentLine(true);
   code_viewer_dialog->setWindowTitle(QString::fromStdString(file_path.filename().string()));
 
