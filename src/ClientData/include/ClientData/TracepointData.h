@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CORE_TRACEPOINT_EVENT_BUFFER_H_
-#define ORBIT_CORE_TRACEPOINT_EVENT_BUFFER_H_
+#ifndef CLIENT_DATA_TRACEPOINT_DATA_H_
+#define CLIENT_DATA_TRACEPOINT_DATA_H_
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/synchronization/mutex.h>
@@ -66,4 +66,4 @@ class TracepointData {
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::TracepointInfo> unique_tracepoints_;
 };
 
-#endif  // ORBIT_CORE_TRACEPOINT_EVENT_BUFFER_H_
+#endif  // CLIENT_DATA_TRACEPOINT_DATA_H_

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CORE_CALLSTACK_H_
-#define ORBIT_CORE_CALLSTACK_H_
+#ifndef CLIENT_DATA_CALLSTACK_H_
+#define CLIENT_DATA_CALLSTACK_H_
 
 #include <vector>
 
@@ -24,4 +24,4 @@ class CallStack {
   CallstackID id_ = 0;
   std::vector<uint64_t> frames_;
 };
-#endif  // ORBIT_CORE_CALLSTACK_H_
+#endif  // CLIENT_DATA_CALLSTACK_H_

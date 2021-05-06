@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CLIENT_DATA_FUNCTION_UTILS_H_
-#define ORBIT_CLIENT_DATA_FUNCTION_UTILS_H_
+#ifndef CLIENT_DATA_FUNCTION_UTILS_H_
+#define CLIENT_DATA_FUNCTION_UTILS_H_
 
 #include <absl/container/flat_hash_map.h>
 
@@ -53,4 +53,4 @@ void SetOrbitTypeFromName(orbit_client_protos::FunctionInfo* func);
 
 }  // namespace function_utils
 
-#endif  // ORBIT_CORE_FUNCTION_UTILS_H_
+#endif  // CLIENT_DATA_FUNCTION_UTILS_H_

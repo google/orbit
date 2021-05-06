@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CORE_USER_DEFINED_CAPTURE_DATA_H_
-#define ORBIT_CORE_USER_DEFINED_CAPTURE_DATA_H_
+#ifndef CLIENT_DATA_USER_DEFINED_CAPTURE_DATA_H_
+#define CLIENT_DATA_USER_DEFINED_CAPTURE_DATA_H_
 
 #include "ClientData/FunctionInfoSet.h"
 #include "capture_data.pb.h"
@@ -25,4 +25,4 @@ class UserDefinedCaptureData {
   FunctionInfoSet frame_track_functions_;
 };
 
-#endif  // ORBIT_CORE_USER_DEFINED_CAPTURE_DATA_H_
+#endif  // CLIENT_DATA_USER_DEFINED_CAPTURE_DATA_H_

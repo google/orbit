@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CLIENT_DATA_MODULE_DATA_H_
-#define ORBIT_CLIENT_DATA_MODULE_DATA_H_
+#ifndef CLIENT_DATA_MODULE_DATA_H_
+#define CLIENT_DATA_MODULE_DATA_H_
 
 #include <cinttypes>
 #include <cstdint>
@@ -66,4 +66,4 @@ class ModuleData final {
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo*> hash_to_function_map_;
 };
 
-#endif  // ORBIT_GL_MODULE_DATA_H_
+#endif  // CLIENT_DATA_MODULE_DATA_H_

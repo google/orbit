@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CLIENT_DATA_MODULE_MANAGER_H_
-#define ORBIT_CLIENT_DATA_MODULE_MANAGER_H_
+#ifndef CLIENT_DATA_MODULE_MANAGER_H_
+#define CLIENT_DATA_MODULE_MANAGER_H_
 
 #include <string>
 #include <vector>
@@ -51,4 +51,4 @@ class ModuleManager final {
 
 }  // namespace orbit_client_data
 
-#endif
+#endif  // CLIENT_DATA_MODULE_MANAGER_H_

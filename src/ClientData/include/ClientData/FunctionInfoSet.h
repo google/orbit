@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CLIENT_DATA_FUNCTION_INFO_SET_H_
-#define ORBIT_CLIENT_DATA_FUNCTION_INFO_SET_H_
+#ifndef CLIENT_DATA_FUNCTION_INFO_SET_H_
+#define CLIENT_DATA_FUNCTION_INFO_SET_H_
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -39,4 +39,4 @@ using FunctionInfoMap =
     absl::flat_hash_map<orbit_client_protos::FunctionInfo, V, internal::HashFunctionInfo,
                         internal::EqualFunctionInfo>;
 
-#endif  // ORBIT_CLIENT_DATA_FUNCTION_INFO_SET_H_
+#endif  // CLIENT_DATA_FUNCTION_INFO_SET_H_

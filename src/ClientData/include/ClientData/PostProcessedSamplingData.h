@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CLIENT_DATA_POST_PROCESSED_SAMPLING_DATA_H_
-#define ORBIT_CLIENT_DATA_POST_PROCESSED_SAMPLING_DATA_H_
+#ifndef CLIENT_DATA_POST_PROCESSED_SAMPLING_DATA_H_
+#define CLIENT_DATA_POST_PROCESSED_SAMPLING_DATA_H_
 
 #include <cstdint>
 #include <map>
@@ -111,4 +111,4 @@ class PostProcessedSamplingData {
   std::vector<ThreadSampleData> sorted_thread_sample_data_;
 };
 
-#endif  // ORBIT_CLIENT_DATA_POST_PROCESSED_SAMPLING_DATA_H_
+#endif  // CLIENT_DATA_POST_PROCESSED_SAMPLING_DATA_H_
