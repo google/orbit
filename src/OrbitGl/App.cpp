@@ -1093,8 +1093,8 @@ void OrbitApp::StartCapture() {
       enable_introspection, max_local_marker_depth_per_command_buffer, collect_memory_info,
       memory_sampling_period_ns, std::move(capture_event_processor));
 
-  // TODO (187250643): Refactor this to be more readable and maybe remove parts that are not needed
-  // here (capture cancelled)
+  // TODO (b/187250643): Refactor this to be more readable and maybe remove parts that are not
+  // needed here (capture cancelled)
   capture_result.Then(
       main_thread_executor_, [this, capture_metric = std::move(capture_metric)](
                                  ErrorMessageOr<CaptureOutcome> capture_result) mutable {
