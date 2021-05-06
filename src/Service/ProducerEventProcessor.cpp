@@ -208,7 +208,7 @@ void ProducerEventProcessorImpl::ProcessFullCallstackSample(
 
 void ProducerEventProcessorImpl::ProcessInternedCallstack(uint64_t producer_id,
                                                           InternedCallstack* interned_callstack) {
-  // TODO(http://b/180235290): replace with error message
+  // TODO(b/180235290): replace with error message
   CHECK(!producer_interned_callstack_id_to_client_callstack_id_.contains(
       {producer_id, interned_callstack->key()}));
 
@@ -235,7 +235,7 @@ void ProducerEventProcessorImpl::ProcessCallstackSample(uint64_t producer_id,
   // translate producer id to client id
   auto it = producer_interned_callstack_id_to_client_callstack_id_.find(
       {producer_id, callstack_sample->callstack_id()});
-  // TODO(http://b/180235290): replace with error message
+  // TODO(b/180235290): replace with error message
   CHECK(it != producer_interned_callstack_id_to_client_callstack_id_.end());
   callstack_sample->set_callstack_id(it->second);
 
@@ -246,7 +246,7 @@ void ProducerEventProcessorImpl::ProcessCallstackSample(uint64_t producer_id,
 
 void ProducerEventProcessorImpl::ProcessInternedString(uint64_t producer_id,
                                                        InternedString* interned_string) {
-  // TODO(http://b/180235290): replace with error message
+  // TODO(b/180235290): replace with error message
   CHECK(!producer_interned_string_id_to_client_string_id_.contains(
       {producer_id, interned_string->key()}));
 

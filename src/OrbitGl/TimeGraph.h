@@ -63,7 +63,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
                     const orbit_grpc_protos::InstrumentedFunction* function);
 
-  // TODO (b/176056427): TimeGraph should not store nor expose CaptureData.
+  // TODO(b/176056427): TimeGraph should not store nor expose CaptureData.
   [[nodiscard]] const orbit_client_model::CaptureData* GetCaptureData() const {
     return capture_data_;
   }

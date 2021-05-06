@@ -132,7 +132,7 @@ int Viewport::WorldToScreenWidth(float width) const {
   return static_cast<int>(width / visible_world_width_ * GetScreenWidth());
 }
 
-// TODO (b/177350599): Unify QtScreen and GlScreen
+// TODO(b/177350599): Unify QtScreen and GlScreen
 // QtScreen(x,y) --> GlScreen(x,height-y)
 Vec2i Viewport::QtToGlScreenPos(const Vec2i& qt_pos) const {
   Vec2i gl_pos = qt_pos;

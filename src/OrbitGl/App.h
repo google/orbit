@@ -391,7 +391,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
     return data_manager_->memory_warning_threshold_kb();
   }
 
-  // TODO(kuebler): Move them to a separate controler at some point
+  // TODO(kuebler): Move them to a separate controller at some point
   void SelectFunction(const orbit_client_protos::FunctionInfo& func);
   void DeselectFunction(const orbit_client_protos::FunctionInfo& func);
   [[nodiscard]] bool IsFunctionSelected(const orbit_client_protos::FunctionInfo& func) const;

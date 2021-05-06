@@ -90,7 +90,7 @@ if [ -n "$1" ]; then
   }
   trap cleanup EXIT
 
-  # TODO(http://b/179358697): Temporary Ninja hack - will be removed when we move to Ninja in general
+  # TODO(b/179358697): Temporary Ninja hack - will be removed when we move to Ninja in general
   if [[ $CONAN_PROFILE == "msvc2017_relwithdebinfo" ]]; then
     CONAN_PROFILE="msvc2017_relwithdebinfo_ninja"
   fi

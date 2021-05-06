@@ -269,8 +269,7 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
     ProcessOrbitFunctionTimer(orbit_type, timer_info);
   }
 
-  // TODO (b/175869409): Change the way to create and get the tracks. Move this part to
-  // TrackManager.
+  // TODO(b/175869409): Change the way to create and get the tracks. Move this part to TrackManager.
   switch (timer_info.type()) {
     // All GPU timers are handled equally here.
     case TimerInfo::kGpuActivity:
