@@ -45,10 +45,9 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   void OnDrag(int x, int y) override;
   [[nodiscard]] bool Draggable() override { return true; }
 
-  [[nodiscard]] CaptureViewElement* GetParent() const { return parent_; }
+  [[nodiscard]] virtual CaptureViewElement* GetParent() const { return parent_; }
 
  protected:
-  CaptureViewElement* parent_;
   orbit_gl::Viewport* viewport_;
   TimeGraphLayout* layout_;
 
@@ -60,6 +59,9 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   Vec2 mouse_pos_cur_;
   Vec2 picking_offset_ = Vec2(0, 0);
   bool picked_ = false;
+
+ private:
+  CaptureViewElement* parent_;
 };
 }  // namespace orbit_gl
 

@@ -28,7 +28,7 @@ constexpr const char* kHwQueueString = "hw queue";
 constexpr const char* kHwExecutionString = "hw execution";
 constexpr const char* kCmdBufferString = "command buffer";
 
-GpuSubmissionTrack::GpuSubmissionTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+GpuSubmissionTrack::GpuSubmissionTrack(Track* parent, TimeGraph* time_graph,
                                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                        uint64_t timeline_hash, OrbitApp* app,
                                        const orbit_client_model::CaptureData* capture_data,
@@ -39,9 +39,10 @@ GpuSubmissionTrack::GpuSubmissionTrack(CaptureViewElement* parent, TimeGraph* ti
   text_renderer_ = time_graph->GetTextRenderer();
   timeline_hash_ = timeline_hash;
   string_manager_ = app->GetStringManager();
+  parent_ = parent;
 
-  // Gpu tracks are collapsed by default.
-  collapse_toggle_->SetState(TriangleToggle::State::kCollapsed,
+  // Gpu subtracks are expanded by default, but are however not shown until the parent is collapsed.
+  collapse_toggle_->SetState(TriangleToggle::State::kExpanded,
                              TriangleToggle::InitialStateUpdate::kReplaceInitialState);
 }
 
@@ -124,7 +125,7 @@ Color GpuSubmissionTrack::GetTimerColor(const TimerInfo& timer_info, bool is_sel
 
 float GpuSubmissionTrack::GetYFromTimer(const TimerInfo& timer_info) const {
   auto adjusted_depth = static_cast<float>(timer_info.depth());
-  if (collapse_toggle_->IsCollapsed()) {
+  if (IsCollapsed() || GetParent()->IsCollapsed()) {
     adjusted_depth = 0.f;
   }
   CHECK(timer_info.type() == TimerInfo::kGpuActivity ||
@@ -152,9 +153,9 @@ float GpuSubmissionTrack::GetYFromTimer(const TimerInfo& timer_info) const {
          layout_->GetTextBoxHeight() * (adjusted_depth + 1.f) - gap_space;
 }
 
-// When track is collapsed, only draw "hardware execution" timers.
+// When track or its parent is collapsed, only draw "hardware execution" timers.
 bool GpuSubmissionTrack::TimerFilter(const TimerInfo& timer_info) const {
-  if (collapse_toggle_->IsCollapsed()) {
+  if (IsCollapsed() || GetParent()->IsCollapsed()) {
     std::string gpu_stage = string_manager_->Get(timer_info.user_data_key()).value_or("");
     return gpu_stage == kHwExecutionString;
   }
@@ -188,7 +189,7 @@ void GpuSubmissionTrack::SetTimesliceText(const TimerInfo& timer_info, float min
 }
 
 float GpuSubmissionTrack::GetHeight() const {
-  bool collapsed = collapse_toggle_->IsCollapsed();
+  bool collapsed = IsCollapsed() || GetParent()->IsCollapsed();
   uint32_t depth = collapsed ? 1 : GetDepth();
   uint32_t num_gaps = depth > 0 ? depth - 1 : 0;
   if (has_vulkan_layer_command_buffer_timers_ && !collapsed) {

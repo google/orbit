@@ -67,7 +67,6 @@ class GpuTrack : public Track {
     return submission_track_->IsEmpty() && marker_track_->IsEmpty();
   }
   [[nodiscard]] bool IsCollapsible() const override { return true; }
-  void OnCollapseToggle(TriangleToggle::State state) override;
 
  private:
   void UpdatePositionOfSubtracks();
