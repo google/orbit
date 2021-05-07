@@ -46,6 +46,9 @@ class PerfEvent {
   int ordered_in_file_descriptor_ = kNotOrderedInAnyFileDescriptor;
 };
 
+std::array<uint64_t, PERF_REG_X86_64_MAX> perf_event_sample_regs_user_all_to_register_array(
+    const perf_event_sample_regs_user_all& regs);
+
 class ContextSwitchPerfEvent : public PerfEvent {
  public:
   perf_event_context_switch ring_buffer_record;
@@ -153,15 +156,15 @@ class LostPerfEvent : public PerfEvent {
   uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
 };
 
+struct dynamically_sized_perf_event_sample_stack_user {
+  uint64_t dyn_size;
+  std::unique_ptr<char[]> data;
+
+  explicit dynamically_sized_perf_event_sample_stack_user(uint64_t dyn_size)
+      : dyn_size{dyn_size}, data{make_unique_for_overwrite<char[]>(dyn_size)} {}
+};
+
 struct dynamically_sized_perf_event_stack_sample {
-  struct dynamically_sized_perf_event_sample_stack_user {
-    uint64_t dyn_size;
-    std::unique_ptr<char[]> data;
-
-    explicit dynamically_sized_perf_event_sample_stack_user(uint64_t dyn_size)
-        : dyn_size{dyn_size}, data{make_unique_for_overwrite<char[]>(dyn_size)} {}
-  };
-
   perf_event_header header;
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
   perf_event_sample_regs_user_all regs;
@@ -197,43 +200,17 @@ class StackSamplePerfEvent : public PerfEvent {
   uint64_t GetStackSize() const { return ring_buffer_record->stack.dyn_size; }
 
  private:
-  static std::array<uint64_t, PERF_REG_X86_64_MAX>
-  perf_event_sample_regs_user_all_to_register_array(const perf_event_sample_regs_user_all& regs) {
-    std::array<uint64_t, PERF_REG_X86_64_MAX> registers{};
-    registers[PERF_REG_X86_AX] = regs.ax;
-    registers[PERF_REG_X86_BX] = regs.bx;
-    registers[PERF_REG_X86_CX] = regs.cx;
-    registers[PERF_REG_X86_DX] = regs.dx;
-    registers[PERF_REG_X86_SI] = regs.si;
-    registers[PERF_REG_X86_DI] = regs.di;
-    registers[PERF_REG_X86_BP] = regs.bp;
-    registers[PERF_REG_X86_SP] = regs.sp;
-    registers[PERF_REG_X86_IP] = regs.ip;
-    registers[PERF_REG_X86_FLAGS] = regs.flags;
-    registers[PERF_REG_X86_CS] = regs.cs;
-    registers[PERF_REG_X86_SS] = regs.ss;
-    // Registers ds, es, fs, gs do not actually exist.
-    registers[PERF_REG_X86_DS] = 0ul;
-    registers[PERF_REG_X86_ES] = 0ul;
-    registers[PERF_REG_X86_FS] = 0ul;
-    registers[PERF_REG_X86_GS] = 0ul;
-    registers[PERF_REG_X86_R8] = regs.r8;
-    registers[PERF_REG_X86_R9] = regs.r9;
-    registers[PERF_REG_X86_R10] = regs.r10;
-    registers[PERF_REG_X86_R11] = regs.r11;
-    registers[PERF_REG_X86_R12] = regs.r12;
-    registers[PERF_REG_X86_R13] = regs.r13;
-    registers[PERF_REG_X86_R14] = regs.r14;
-    registers[PERF_REG_X86_R15] = regs.r15;
-    return registers;
-  }
 };
 
 class CallchainSamplePerfEvent : public PerfEvent {
  public:
   perf_event_callchain_sample_fixed ring_buffer_record;
   std::vector<uint64_t> ips;
-  explicit CallchainSamplePerfEvent(uint64_t callchain_size) : ips(callchain_size) {
+  perf_event_sample_regs_user_all regs;
+  dynamically_sized_perf_event_sample_stack_user stack;
+
+  explicit CallchainSamplePerfEvent(uint64_t callchain_size, uint64_t dyn_stack_size)
+      : ips(callchain_size), stack(dyn_stack_size) {
     ring_buffer_record.nr = callchain_size;
   }
 
@@ -252,6 +229,14 @@ class CallchainSamplePerfEvent : public PerfEvent {
   const uint64_t* GetCallchain() const { return ips.data(); }
 
   uint64_t GetCallchainSize() const { return ring_buffer_record.nr; }
+
+  [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegisters() const {
+    return perf_event_sample_regs_user_all_to_register_array(regs);
+  }
+
+  [[nodiscard]] const char* GetStackData() const { return stack.data.get(); }
+  [[nodiscard]] char* GetStackData() { return stack.data.get(); }
+  [[nodiscard]] uint64_t GetStackSize() const { return stack.dyn_size; }
 };
 
 class AbstractUprobesPerfEvent {

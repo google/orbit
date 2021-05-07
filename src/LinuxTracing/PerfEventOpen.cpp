@@ -92,6 +92,12 @@ int callchain_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu) {
   pe.sample_max_stack = 127;
   pe.exclude_callchain_kernel = true;
 
+  // Also capture a small part of the stack and the registers to allow patching the callers of
+  // leaf functions. This is done by unwinding the first two frame using DWARF.
+  pe.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
+  pe.sample_regs_user = SAMPLE_REGS_USER_ALL;
+  pe.sample_stack_user = SAMPLE_STACK_USER_SIZE_128BYTES;
+
   return generic_event_open(&pe, pid, cpu);
 }
 
