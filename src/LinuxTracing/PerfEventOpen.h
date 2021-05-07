@@ -103,7 +103,7 @@ static constexpr uint64_t SAMPLE_REGS_USER_SP_IP_ARGUMENTS =
 //  some setting.
 static constexpr uint16_t SAMPLE_STACK_USER_SIZE = 65000;
 
-// Arbitrary small value, that is should be large enough to contain the complete last frame.
+// Arbitrary small value, that should be large enough to contain the complete last frame.
 // Note that we don't have any guarantee that the sample is large enough.
 static constexpr uint16_t SAMPLE_STACK_USER_SIZE_128BYTES = 128;
 
