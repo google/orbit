@@ -24,12 +24,18 @@ void CaptureViewElement::OnPick(int x, int y) {
 
 void CaptureViewElement::OnRelease() {
   picked_ = false;
-  time_graph_->RequestUpdatePrimitives();
+  RequestUpdate();
 }
 
 void CaptureViewElement::OnDrag(int x, int y) {
   mouse_pos_cur_ = viewport_->ScreenToWorldPos(Vec2i(x, y));
-  time_graph_->RequestUpdatePrimitives();
+  RequestUpdate();
+}
+
+void CaptureViewElement::RequestUpdate() {
+  if (parent_ != nullptr) {
+    parent_->RequestUpdate();
+  }
 }
 
 }  // namespace orbit_gl

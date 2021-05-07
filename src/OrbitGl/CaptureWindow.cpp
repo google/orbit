@@ -378,7 +378,7 @@ void CaptureWindow::Draw(bool viewport_was_dirty) {
       time_graph_->SetPos(0, 0);
       time_graph_->SetSize(viewport_.GetWorldExtents()[0], viewport_.GetWorldExtents()[1]);
 
-      time_graph_->RequestUpdatePrimitives();
+      time_graph_->RequestUpdate();
     }
     uint64_t timegraph_current_mouse_time_ns =
         time_graph_->GetTickFromWorld(viewport_.ScreenToWorldPos(GetMouseScreenPos())[0]);
@@ -575,7 +575,7 @@ Batcher& CaptureWindow::GetBatcherById(BatcherId batcher_id) {
 void CaptureWindow::RequestUpdatePrimitives() {
   redraw_requested_ = true;
   if (time_graph_ == nullptr) return;
-  time_graph_->RequestUpdatePrimitives();
+  time_graph_->RequestUpdate();
 }
 
 [[nodiscard]] bool CaptureWindow::IsRedrawNeeded() const {

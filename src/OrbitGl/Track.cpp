@@ -233,9 +233,7 @@ Color Track::GetTrackBackgroundColor() const {
   return color_;
 }
 
-void Track::OnCollapseToggle(TriangleToggle::State /*state*/) {
-  time_graph_->RequestUpdatePrimitives();
-}
+void Track::OnCollapseToggle(TriangleToggle::State /*state*/) { RequestUpdate(); }
 
 void Track::OnDrag(int x, int y) {
   CaptureViewElement::OnDrag(x, y);

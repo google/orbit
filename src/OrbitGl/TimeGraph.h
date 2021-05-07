@@ -55,7 +55,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
                        float text_box_y);
   void DrawText(float layer);
 
-  void RequestUpdatePrimitives();
+  void RequestUpdate() override;
   void UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, uint64_t /*max_tick*/,
                         PickingMode /*picking_mode*/, float /*z_offset*/ = 0) override;
   void SelectCallstacks(float world_start, float world_end, int32_t thread_id);

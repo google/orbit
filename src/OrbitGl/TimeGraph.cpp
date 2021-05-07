@@ -90,7 +90,7 @@ void TimeGraph::ZoomAll() {
   min_time_us_ = max_time_us_ - (GNumHistorySeconds * 1000 * 1000);
   if (min_time_us_ < 0) min_time_us_ = 0;
 
-  RequestUpdatePrimitives();
+  RequestUpdate();
 }
 
 void TimeGraph::Zoom(uint64_t min, uint64_t max) {
@@ -163,7 +163,7 @@ void TimeGraph::SetMinMax(double min_time_us, double max_time_us) {
   min_time_us_ = std::max(min_time_us, 0.0);
   max_time_us_ = std::min(min_time_us_ + desired_time_window, GetCaptureTimeSpanUs());
 
-  RequestUpdatePrimitives();
+  RequestUpdate();
 }
 
 void TimeGraph::PanTime(int initial_x, int current_x, int width, double initial_time) {
@@ -175,7 +175,7 @@ void TimeGraph::PanTime(int initial_x, int current_x, int width, double initial_
       clamp(current_time - initial_local_time, 0.0, GetCaptureTimeSpanUs() - time_window_us_);
   max_time_us_ = min_time_us_ + time_window_us_;
 
-  RequestUpdatePrimitives();
+  RequestUpdate();
 }
 
 void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, uint64_t min, uint64_t max,
@@ -203,7 +203,7 @@ void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, uint64_t min, 
 
   SetMinMax(mid - current_time_window_us * (1 - distance), mid + current_time_window_us * distance);
 
-  RequestUpdatePrimitives();
+  RequestUpdate();
 }
 
 void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, const TimerInfo& timer_info,
@@ -308,7 +308,7 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
       UNREACHABLE();
   }
 
-  RequestUpdatePrimitives();
+  RequestUpdate();
 }
 
 void TimeGraph::ProcessOrbitFunctionTimer(FunctionInfo::OrbitType type,
@@ -616,7 +616,7 @@ const TextBox* TimeGraph::FindNextFunctionCall(uint64_t function_id, uint64_t cu
   return next_box;
 }
 
-void TimeGraph::RequestUpdatePrimitives() {
+void TimeGraph::RequestUpdate() {
   update_primitives_requested_ = true;
   RequestRedraw();
 }
@@ -671,7 +671,7 @@ void TimeGraph::SelectCallstacks(float world_start, float world_end, int32_t thr
 
   app_->SelectCallstackEvents(selected_callstack_events, thread_id);
 
-  RequestUpdatePrimitives();
+  RequestUpdate();
 }
 
 const std::vector<CallstackEvent>& TimeGraph::GetSelectedCallstackEvents(int32_t tid) {
@@ -865,7 +865,7 @@ void TimeGraph::DrawTracks(Batcher& batcher, TextRenderer& text_renderer,
 
 void TimeGraph::SetThreadFilter(const std::string& filter) {
   track_manager_->SetFilter(filter);
-  RequestUpdatePrimitives();
+  RequestUpdate();
 }
 
 void TimeGraph::SelectAndZoom(const TextBox* text_box) {
@@ -931,7 +931,7 @@ void TimeGraph::UpdateRightMargin(float margin) {
   {
     if (right_margin_ != margin) {
       right_margin_ = margin;
-      RequestUpdatePrimitives();
+      RequestUpdate();
     }
   }
 }
@@ -1012,7 +1012,7 @@ bool TimeGraph::HasFrameTrack(uint64_t function_id) const {
 
 void TimeGraph::RemoveFrameTrack(uint64_t function_id) {
   track_manager_->RemoveFrameTrack(function_id);
-  RequestUpdatePrimitives();
+  RequestUpdate();
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> TimeGraph::CreateAccessibleInterface() {

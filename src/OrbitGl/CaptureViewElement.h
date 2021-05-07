@@ -46,6 +46,7 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   [[nodiscard]] bool Draggable() override { return true; }
 
   [[nodiscard]] virtual CaptureViewElement* GetParent() const { return parent_; }
+  virtual void RequestUpdate();
 
  protected:
   orbit_gl::Viewport* viewport_;
