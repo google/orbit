@@ -11,7 +11,7 @@ namespace orbit_gl {
 
 CaptureViewElement::CaptureViewElement(CaptureViewElement* parent, TimeGraph* time_graph,
                                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout)
-    : parent_(parent), viewport_(viewport), layout_(layout), time_graph_(time_graph) {
+    : viewport_(viewport), layout_(layout), time_graph_(time_graph), parent_(parent) {
   CHECK(layout != nullptr);
 }
 

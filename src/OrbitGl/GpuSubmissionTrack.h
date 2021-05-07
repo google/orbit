@@ -31,12 +31,13 @@ class TextRenderer;
 // This track is meant to be used as a subtrack of `GpuTrack`.
 class GpuSubmissionTrack : public TimerTrack {
  public:
-  explicit GpuSubmissionTrack(CaptureViewElement* parent, TimeGraph* time_graph,
-                              orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                              uint64_t timeline_hash, OrbitApp* app,
+  explicit GpuSubmissionTrack(Track* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
+                              TimeGraphLayout* layout, uint64_t timeline_hash, OrbitApp* app,
                               const orbit_client_model::CaptureData* capture_data,
                               uint32_t indentation_level);
   ~GpuSubmissionTrack() override = default;
+
+  [[nodiscard]] Track* GetParent() const override { return parent_; }
 
   // The type is currently only used by the TrackManger. We are moving towards removing it
   // completely. For subtracks there is no meaningful type and it should also not be exposed,
@@ -69,6 +70,8 @@ class GpuSubmissionTrack : public TimerTrack {
  private:
   uint64_t timeline_hash_;
   StringManager* string_manager_;
+  Track* parent_;
+
   bool has_vulkan_layer_command_buffer_timers_ = false;
   [[nodiscard]] std::string GetSwQueueTooltip(
       const orbit_client_protos::TimerInfo& timer_info) const;
@@ -78,6 +81,10 @@ class GpuSubmissionTrack : public TimerTrack {
       const orbit_client_protos::TimerInfo& timer_info) const;
   [[nodiscard]] std::string GetCommandBufferTooltip(
       const orbit_client_protos::TimerInfo& timer_info) const;
+
+  [[nodiscard]] bool ShouldShowCollapsed() const {
+    return IsCollapsed() || GetParent()->IsCollapsed();
+  }
 };
 
 #endif  // ORBIT_GL_GPU_SUBMISSION_TRACK_H_

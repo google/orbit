@@ -269,11 +269,3 @@ const TextBox* GpuTrack::GetDown(const TextBox* textbox) const {
       UNREACHABLE();
   }
 }
-void GpuTrack::OnCollapseToggle(TriangleToggle::State state) {
-  Track::OnCollapseToggle(state);
-  // When being collapsed, we only show the submission track, and we want those timers also being
-  // collapsed. The marker track does not need to be touched, as it will not be drawn.
-  if (state == TriangleToggle::State::kCollapsed) {
-    submission_track_->Collapse();
-  }
-}
