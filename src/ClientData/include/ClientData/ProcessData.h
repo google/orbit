@@ -62,6 +62,7 @@ class ProcessData final {
   [[nodiscard]] const std::string& full_path() const;
   [[nodiscard]] const std::string& command_line() const;
   [[nodiscard]] bool is_64_bit() const;
+  [[nodiscard]] const std::string& build_id() const;
 
   void UpdateModuleInfos(absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
   void AddOrUpdateModuleInfo(const orbit_grpc_protos::ModuleInfo& module_infos);

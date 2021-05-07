@@ -54,6 +54,11 @@ bool ProcessData::is_64_bit() const {
   return process_info_.is_64_bit();
 }
 
+const std::string& ProcessData::build_id() const {
+  absl::MutexLock lock(&mutex_);
+  return process_info_.build_id();
+}
+
 void ProcessData::UpdateModuleInfos(absl::Span<const ModuleInfo> module_infos) {
   absl::MutexLock lock(&mutex_);
   module_memory_map_.clear();
