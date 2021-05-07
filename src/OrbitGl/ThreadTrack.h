@@ -58,6 +58,7 @@ class ThreadTrack final : public TimerTrack {
   [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() override;
 
  protected:
+  [[nodiscard]] std::string GetThreadNameFromTid(uint32_t tid);
   [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const override;
   [[nodiscard]] bool IsTrackSelected() const override;
 

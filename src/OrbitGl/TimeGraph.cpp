@@ -850,11 +850,6 @@ void TimeGraph::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
   }
 }
 
-std::string TimeGraph::GetThreadNameFromTid(uint32_t tid) {
-  const std::string kEmptyString;
-  return capture_data_ ? capture_data_->GetThreadName(tid) : kEmptyString;
-}
-
 void TimeGraph::DrawTracks(Batcher& batcher, TextRenderer& text_renderer,
                            uint64_t current_mouse_time_ns, PickingMode picking_mode) {
   for (auto& track : track_manager_->GetVisibleTracks()) {
