@@ -173,7 +173,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
 
   [[nodiscard]] bool HasFrameTrack(uint64_t function_id) const;
   void RemoveFrameTrack(uint64_t function_id);
-  [[nodiscard]] std::string GetThreadNameFromTid(uint32_t tid);
 
   [[nodiscard]] AccessibleInterfaceProvider* GetAccessibleParent() const {
     return accessible_parent_;
