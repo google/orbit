@@ -98,6 +98,13 @@ class Viewer : public QPlainTextEdit {
   const CodeReport* code_report_ = nullptr;
 
   bool is_current_line_highlighted_ = false;
+
+  // These are only used when SetAnnotatingContent was called and the line numbers deviate from
+  // simple counting.
+  std::optional<uint64_t> largest_occuring_line_number_main_content_;
+  std::optional<uint64_t> largest_occuring_line_number_annotating_lines_;
+
+  [[nodiscard]] uint64_t LargestOccuringLineNumber() const;
 };
 
 // Determine how many pixels are needed to draw all possible line numbers for the given font
