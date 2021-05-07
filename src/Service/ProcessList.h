@@ -36,11 +36,11 @@ class ProcessList {
 
   [[nodiscard]] std::optional<const Process*> GetProcessByPid(pid_t pid) const {
     const auto it = processes_.find(pid);
-    if (it != processes_.end()) {
-      return &it->second;
-    } else {
+    if (it == processes_.end()) {
       return std::nullopt;
     }
+
+    return &it->second;
   }
 
  private:

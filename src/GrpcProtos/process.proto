@@ -13,4 +13,5 @@ message ProcessInfo {
   string full_path = 4;
   string command_line = 5;
   bool is_64_bit = 6;
+  string build_id = 7;
 }

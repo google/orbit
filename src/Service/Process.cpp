@@ -98,9 +98,10 @@ ErrorMessageOr<Process> Process::FromPid(pid_t pid) {
     const auto& elf_file = orbit_elf_utils::ElfFile::Create(file_path_result.value());
     if (!elf_file.has_error()) {
       process.set_is_64_bit(elf_file.value()->Is64Bit());
+      process.set_build_id(elf_file.value()->GetBuildId());
     } else {
-      LOG("Warning: Unable to parse the executable \"%s\" as elf file. (pid: %d)",
-          file_path_result.value(), pid);
+      LOG("Warning: Unable to parse the executable \"%s\" as elf file. (pid: %d): %s",
+          file_path_result.value(), pid, elf_file.error().message());
     }
   }
 
