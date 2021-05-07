@@ -438,11 +438,13 @@ void OrbitApp::UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
 void OrbitApp::OnModuleUpdate(uint64_t /*timestamp_ns*/, ModuleInfo module_info) {
   UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload({module_info});
   GetMutableCaptureData().mutable_process()->AddOrUpdateModuleInfo(module_info);
+  main_thread_executor_->Schedule([this]() { FireRefreshCallbacks(DataViewType::kLiveFunctions); });
 }
 
 void OrbitApp::OnModulesSnapshot(uint64_t /*timestamp_ns*/, std::vector<ModuleInfo> module_infos) {
   UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(module_infos);
   GetMutableCaptureData().mutable_process()->UpdateModuleInfos(module_infos);
+  main_thread_executor_->Schedule([this]() { FireRefreshCallbacks(DataViewType::kLiveFunctions); });
 }
 
 void OrbitApp::OnValidateFramePointers(std::vector<const ModuleData*> modules_to_validate) {
