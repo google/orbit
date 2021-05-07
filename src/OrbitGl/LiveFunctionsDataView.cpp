@@ -33,6 +33,7 @@
 #include "TimerChain.h"
 #include "capture_data.pb.h"
 
+using orbit_client_data::ModuleData;
 using orbit_client_model::CaptureData;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
@@ -406,21 +407,30 @@ void LiveFunctionsDataView::OnDataChanged() {
   const absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction>&
       instrumented_functions = app_->GetCaptureData().instrumented_functions();
   for (const auto& [function_id, instrumented_function] : instrumented_functions) {
-    const FunctionInfo* function_info =
+    const FunctionInfo* function_info_from_capture_data =
         app_->GetCaptureData().FindFunctionByModulePathBuildIdAndOffset(
             instrumented_function.file_path(), instrumented_function.file_build_id(),
             instrumented_function.file_offset());
 
-    // Likely because module has not yet been updated - skip for now
-    if (function_info == nullptr) {
+    // This could happen because module has not yet been updated, it also
+    // happens when loading capture. In which case we will try to construct
+    // function info from instrumented function
+    std::optional<FunctionInfo> function_info;
+    if (function_info_from_capture_data == nullptr) {
+      function_info = CreateFunctionInfoFromInstrumentedFunction(instrumented_function);
+    } else {
+      function_info = *function_info_from_capture_data;
+    }
+
+    if (!function_info.has_value()) {
+      return;
+    }
+
+    if (orbit_client_data::function_utils::IsOrbitFunctionFromName(function_info->name())) {
       continue;
     }
 
-    if (orbit_client_data::function_utils::IsOrbitFunctionFromType(function_info->orbit_type())) {
-      continue;
-    }
-
-    functions_.insert_or_assign(function_id, *function_info);
+    functions_.insert_or_assign(function_id, std::move(*function_info));
     indices_.push_back(function_id);
   }
 
@@ -484,4 +494,21 @@ std::optional<int> LiveFunctionsDataView::GetRowFromFunctionId(uint64_t function
     }
   }
   return std::nullopt;
+}
+std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrumentedFunction(
+    const InstrumentedFunction& instrumented_function) {
+  const ModuleData* module_data = app_->GetModuleByPathAndBuildId(
+      instrumented_function.file_path(), instrumented_function.file_build_id());
+  if (module_data == nullptr) {
+    return std::nullopt;
+  }
+
+  FunctionInfo result;
+  result.set_name(instrumented_function.function_name());
+  result.set_module_path(instrumented_function.file_path());
+  result.set_module_build_id(instrumented_function.file_build_id());
+  result.set_address(module_data->load_bias() + instrumented_function.file_offset());
+  // size is unknown
+
+  return result;
 }
