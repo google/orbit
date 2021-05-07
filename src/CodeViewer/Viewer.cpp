@@ -4,6 +4,8 @@
 
 #include "CodeViewer/Viewer.h"
 
+#include <OrbitBase/Logging.h>
+
 #include <QDebug>
 #include <QFontDatabase>
 #include <QHeaderView>
@@ -18,6 +20,7 @@
 #include <QString>
 #include <QStringList>
 #include <QTextBlock>
+#include <QTextCursor>
 #include <QWheelEvent>
 #include <cmath>
 
@@ -440,5 +443,61 @@ int Viewer::WidthMarginBetweenColumns() const {
 }
 
 int Viewer::TopWidgetHeight() const { return fontMetrics().height(); }
+
+void Viewer::SetAnnotatingContent(absl::Span<const AnnotatingLine> annotating_lines) {
+  // Lets first go through the main content and save line numbers as metadata.
+  // If previously extra annotating content had been added, let's remove it now.
+  for (auto current_block = document()->begin(); current_block != document()->end();
+       current_block = current_block.next()) {
+    const auto metadata = static_cast<const Metadata*>(current_block.userData());
+
+    if (metadata == nullptr) {
+      auto user_data =
+          std::make_unique<Metadata>(Metadata::kMainContent, current_block.firstLineNumber() + 1);
+
+      // We transfer ownership
+      current_block.setUserData(user_data.release());
+      continue;
+    }
+
+    if (metadata->line_type == Metadata::kAnnotatingLine) {
+      // This must be from previous calls of this function. Lets remove this line.
+      QTextCursor cursor{current_block};
+      cursor.select(QTextCursor::BlockUnderCursor);
+      cursor.removeSelectedText();
+      cursor.deleteChar();  // Deletes line break
+      current_block = cursor.block().previous();
+    }
+  }
+
+  if (annotating_lines.empty()) return;
+  auto current_annotating_line = annotating_lines.begin();
+
+  // In a second pass we add the annotating lines
+  for (auto current_block = document()->begin();
+       current_block != document()->end() && current_annotating_line != annotating_lines.end();
+       current_block = current_block.next()) {
+    const auto metadata = static_cast<const Metadata*>(current_block.userData());
+    CHECK(metadata != nullptr);
+
+    if (metadata->line_number == current_annotating_line->reference_line) {
+      // That means the annotating line needs to go in front of the current block
+
+      QTextCursor cursor{current_block};
+      cursor.movePosition(QTextCursor::PreviousBlock);
+      cursor.movePosition(QTextCursor::EndOfBlock);
+      cursor.insertBlock();
+      cursor.insertText(QString::fromStdString(current_annotating_line->line_contents));
+
+      auto user_data = std::make_unique<Metadata>(Metadata::kAnnotatingLine,
+                                                  current_annotating_line->line_number);
+
+      // We transfer ownership
+      cursor.block().setUserData(user_data.release());
+      current_block = current_block.next();
+      ++current_annotating_line;
+    }
+  }
+}
 
 }  // namespace orbit_code_viewer

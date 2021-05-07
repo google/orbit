@@ -5,6 +5,8 @@
 #ifndef CODE_VIEWER_VIEWER_H_
 #define CODE_VIEWER_VIEWER_H_
 
+#include <absl/types/span.h>
+
 #include <QPlainTextEdit>
 #include <QPointer>
 #include <QResizeEvent>
@@ -61,6 +63,13 @@ class Viewer : public QPlainTextEdit {
 
   void SetHighlightCurrentLine(bool is_enabled);
   [[nodiscard]] bool IsCurrentLineHighlighted() const;
+
+  struct AnnotatingLine {
+    uint64_t reference_line;
+    uint64_t line_number;
+    std::string line_contents;
+  };
+  void SetAnnotatingContent(absl::Span<const AnnotatingLine> annotating_lines);
 
  private:
   void resizeEvent(QResizeEvent* ev) override;
