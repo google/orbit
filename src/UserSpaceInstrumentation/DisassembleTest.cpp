@@ -8,6 +8,7 @@
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <capstone/capstone.h>
+#include <cpuid.h>
 #include <dlfcn.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -98,6 +99,14 @@ std::string InstructionBytesAsString(cs_insn* instruction) {
   return result;
 }
 
+[[nodiscard]] bool HasAvx() {
+  uint32_t eax = 0;
+  uint32_t ebx = 0;
+  uint32_t ecx = 0;
+  uint32_t edx = 0;
+  return __get_cpuid(0x01, &eax, &ebx, &ecx, &edx) && (ecx & bit_AVX);
+}
+
 }  // namespace
 
 ErrorMessageOr<int32_t> AddressDifferenceAsInt32(uint64_t a, uint64_t b) {
@@ -114,35 +123,96 @@ ErrorMessageOr<int32_t> AddressDifferenceAsInt32(uint64_t a, uint64_t b) {
 
 void AppendBackupCode(MachineCode& trampoline) {
   // This code is executed immediatly after the control is passed to the instrumented function. The
-  // top of the stack contains the return address.; above that are the parameters passed via the
+  // top of the stack contains the return address. Above that are the parameters passed via the
   // stack.
   // Some of the general purpose and vector registers contain the parameters for the
   // instrumented function not passed via the stack.
-
   // Compare section "3.2 Function Calling Sequence" in "System V Application Binary Interface"
   // https://refspecs.linuxfoundation.org/elf/x86_64-abi-0.99.pdf
 
-  // Backup general purpose registers used for passing parameters: push rdi, rsi, rdx, rcx, r8, r9
-  // in that order.
+  // General purpose registers used for passing parameters are rdi, rsi, rdx, rcx, r8, r9
+  // in that order. rax is used to indicate the number of vector arguments passed to a function
+  // requiring a variable number of arguments. r10 is used for passing a function’s static chain
+  // pointer. All of these need to be backed up:
+  // push rdi      57
+  // push rsi      56
+  // push rdx      52
+  // push rcx      51
+  // push r8       41 50
+  // push r9       41 51
+  // push rax      50
+  // push r10      41 52
   trampoline.AppendBytes({0x57})
       .AppendBytes({0x56})
       .AppendBytes({0x52})
       .AppendBytes({0x51})
       .AppendBytes({0x41, 0x50})
-      .AppendBytes({0x41, 0x51});
-  // rax is used to indicate the number of vector arguments passed to a function requiring a
-  // variable number of arguments. r10 is used for passing a function’s static chain pointer.
-  
-  // vector registers:
-  // https://stackoverflow.com/questions/10161911/push-xmm-register-to-the-stack
+      .AppendBytes({0x41, 0x51})
+      .AppendBytes({0x50})
+      .AppendBytes({0x41, 0x52});
 
-  // TODO: We might want to add stuff here if it turnes out the compiler violates the calling
-  // convention for functions internal to a compilation unit (which is allowed but discouraged).
+  // We align the stack to 32 bytes first: round down to a multiple of 32, subtract another 24 and
+  // then push 8 byte original rsp. So we are 32 byte aligned after these commands and we can 'pop
+  // rsp' later to undo this.
+  // mov rax, rsp
+  // and rsp, $0xffffffffffffffe0
+  // sub rsp, 0x18
+  // push rax
+  trampoline.AppendBytes({0x48, 0x89, 0xe0})
+      .AppendBytes({0x48, 0x83, 0xe4, 0xe0})
+      .AppendBytes({0x48, 0x83, 0xec, 0x18})
+      .AppendBytes({0x50});
+
+  // Backup vector registers on the stack. They are used to pass float parameters so they need to be
+  // preserved. If Avx is supported backup ymm{0,..,8} (which include the xmm{0,..,8} registers as
+  // their lower half).
+  if (HasAvx()) {
+    // sub       esp, 32
+    // vmovdqa   (esp), ymm0
+    // ...
+    // sub       esp, 32
+    // vmovdqa   (esp), ymm7
+    trampoline.AppendBytes({0x48, 0x83, 0xec, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x7f, 0x04, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x7f, 0x0c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x7f, 0x14, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x7f, 0x1c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x7f, 0x24, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x7f, 0x2c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x7f, 0x34, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x7f, 0x3c, 0x24});
+  } else {
+    // sub     esp, 16
+    // movdqa  (esp), xmm0,
+    // ...
+    // sub     esp, 16
+    // movdqa  (esp), xmm7
+    trampoline.AppendBytes({0x48, 0x83, 0xec, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x7f, 0x04, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x7f, 0x0c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x7f, 0x14, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x7f, 0x1c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x7f, 0x24, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x7f, 0x2c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x7f, 0x34, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x7f, 0x3c, 0x24});
+  }
 }
 
-// TBD: Why does this not crash? The stack alignment is off when calling into payload?!
-// EDIT: I had this before - stack misalignment does not cause crashes. maybe since sse/avx can now
-// load from unaligned memory?
 void AppendPayloadCode(uint64_t payload_address, uint64_t function_address,
                        MachineCode& trampoline) {
   // mov rax, payload_address
@@ -156,8 +226,69 @@ void AppendPayloadCode(uint64_t payload_address, uint64_t function_address,
 }
 
 void AppendRestoreCode(MachineCode& trampoline) {
-  // Restore the general purpose registers: pop r9, r8, rcx, rdx, rsi, rdi
-  trampoline.AppendBytes({0x41, 0x59})
+  // Restore vector registers (see comment on AppendBackupCode above).
+  if (HasAvx()) {
+    // vmovdqa   ymm0, (esp)
+    // add       esp, 32
+    // ...
+    // vmovdqa   ymm7, (esp)
+    // add       esp, 32
+    trampoline.AppendBytes({0x48, 0x83, 0xc4, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x6f, 0x04, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x6f, 0x0c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x6f, 0x14, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x6f, 0x1c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x6f, 0x24, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x6f, 0x2c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x6f, 0x34, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x6f, 0x3c, 0x24});
+  } else {
+    // movdqa   xmm7, (esp)
+    // add esp, $0x10
+    //...
+    // movdqa   xmm0, (esp)
+    // add esp, $0x10
+    trampoline.AppendBytes({0x66, 0x0f, 0x6f, 0x3c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x6f, 0x34, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x6f, 0x2c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x6f, 0x24, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x6f, 0x1c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x6f, 0x14, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x6f, 0x0c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x6f, 0x04, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x10});
+  }
+
+  // Undo the 32 byte alignment (see comment on AppendBackupCode above).
+  // pop rsp
+  trampoline.AppendBytes({0x5c});
+
+  // Restore the general purpose registers (see comment on AppendBackupCode above).
+  // pop r10
+  // pop rax
+  // pop r9
+  // pop r8
+  // pop rcx
+  // pop  rdx
+  // pop  rsi
+  // pop  rdi
+  trampoline.AppendBytes({0x41, 0x5a})
+      .AppendBytes({0x58})
+      .AppendBytes({0x41, 0x59})
       .AppendBytes({0x41, 0x58})
       .AppendBytes({0x59})
       .AppendBytes({0x5a})
@@ -318,17 +449,17 @@ ErrorMessageOr<RelocatedInstruction> RelocateInstruction(cs_insn* instruction, u
 ErrorMessageOr<void> AppendRelocatedPrologCode(
     uint64_t function_address, const std::vector<uint8_t>& function, uint64_t trampoline_address,
     csh capstone_handle, uint64_t& address_after_prolog,
-    absl::flat_hash_map<uint64_t, uint64_t>& relocation_map, MachineCode& trampoline) {
+    absl::flat_hash_map<uint64_t, uint64_t>& global_relocation_map, MachineCode& trampoline) {
   cs_insn* instruction = cs_malloc(capstone_handle);
   CHECK(instruction != nullptr);
   orbit_base::unique_resource scope_exit{instruction,
                                          [](cs_insn* instruction) { cs_free(instruction, 1); }};
-
   std::vector<uint8_t> trampoline_code;
   const uint8_t* code_pointer = function.data();
   size_t code_size = function.size();
   uint64_t disassemble_address = function_address;
   std::vector<size_t> relocateable_addresses;
+  absl::flat_hash_map<uint64_t, uint64_t> relocation_map;
   while ((disassemble_address - function_address < kSizeOfJmp) &&
          cs_disasm_iter(capstone_handle, &code_pointer, &code_size, &disassemble_address,
                         instruction)) {
@@ -336,21 +467,16 @@ ErrorMessageOr<void> AppendRelocatedPrologCode(
     const uint64_t relocated_instruction_address =
         trampoline_address + trampoline.GetResultAsVector().size() + trampoline_code.size();
     relocation_map.insert_or_assign(original_instruction_address, relocated_instruction_address);
-    // LOG("reloc: %#x -> %#x", original_instruction_address, relocated_instruction_address);
-    //  For now just copy - this is the place to instert the non trivial relocation.
-    //  This might return an error if the code cannot be relocated.
-    auto instruction_or_error = RelocateInstruction(instruction, original_instruction_address,
-                                                    relocated_instruction_address);
-    if (instruction_or_error.has_error()) {
-      return instruction_or_error.error();  // better error message
-    }
-    if (instruction_or_error.value().position_of_absolute_address.has_value()) {
-      const size_t offset = instruction_or_error.value().position_of_absolute_address.value();
+    OUTCOME_TRY(relocated_instruction,
+                RelocateInstruction(instruction, original_instruction_address,
+                                    relocated_instruction_address));
+    if (relocated_instruction.position_of_absolute_address.has_value()) {
+      const size_t offset = relocated_instruction.position_of_absolute_address.value();
       const size_t instruction_address = trampoline_code.size();
       relocateable_addresses.push_back(instruction_address + offset);
     }
-    trampoline_code.insert(trampoline_code.end(), instruction_or_error.value().code.begin(),
-                           instruction_or_error.value().code.end());
+    trampoline_code.insert(trampoline_code.end(), relocated_instruction.code.begin(),
+                           relocated_instruction.code.end());
   }
   // Relocate addresses encoded in the trampoline.
   for (size_t pos : relocateable_addresses) {
@@ -362,7 +488,7 @@ ErrorMessageOr<void> AppendRelocatedPrologCode(
   }
 
   trampoline.AppendBytes(trampoline_code);
-
+  global_relocation_map.insert(relocation_map.begin(), relocation_map.end());
   address_after_prolog = disassemble_address;
   return outcome::success();
 }
@@ -434,7 +560,7 @@ ErrorMessageOr<void> InstrumentFunction(pid_t pid, uint64_t function_address,
   AppendPayloadCode(payload_address, function_address, trampoline);
   AppendRestoreCode(trampoline);
 
-  // Relocate prolog into trampoline
+  // Relocate prolog into trampoline.
   uint64_t address_after_prolog = 0;
   OUTCOME_TRY(AppendRelocatedPrologCode(function_address, function, trampoline_address,
                                         capstone_handle, address_after_prolog, relocation_map,
@@ -723,6 +849,18 @@ TEST_F(RelocateInstructionTest, ConditionalDirectJumpToRelative32BitImmediate) {
   EXPECT_EQ(8, result.value().position_of_absolute_address.value());
 }
 
+TEST_F(RelocateInstructionTest, TrivialTranslation) {
+  MachineCode code;
+  // nop
+  code.AppendBytes({0x90});
+  Disassemble(code);
+
+  ErrorMessageOr<RelocatedInstruction> result =
+      RelocateInstruction(instruction_, 0x0100000000, 0x0200000000);
+  EXPECT_THAT(result.value().code, ElementsAreArray({0x90}));
+  EXPECT_FALSE(result.value().position_of_absolute_address.has_value());
+}
+
 // TEST(DisassemblerTest, Relocate) {
 //   pid_t pid = fork();
 //   CHECK(pid != -1);
@@ -831,13 +969,6 @@ TEST(DisassemblerTest, Disassemble) {
       AllocateMemoryForTrampolines(pid, address_range_code, max_trampoline_size);
   CHECK(!trampoline_or_error.has_error());
   const uint64_t trampoline_address = trampoline_or_error.value();
-  // orbit_base::unique_resource scope_exit{
-  //     trampoline_address, [max_trampoline_size, pid](uint64_t trampoline_address) {
-  //       auto free_result = FreeInTracee(pid, trampoline_address, max_trampoline_size);
-  //       if (free_result.has_error()) {
-  //         ERROR("Unable to free memory for trampolines.");
-  //       }
-  //     }};
 
   // Init Capstone disassembler.
   csh capstone_handle = 0;
@@ -873,18 +1004,18 @@ TEST(DisassemblerTest, Disassemble) {
   }
 
   // DEBUG ------------------
-  // // Disassemble the function, overwritten function and trampoline.
-  // LOG("original function\n");
-  // DumpDissasembly(capstone_handle, function_backup.value(), address_of_do_something);
+  // Disassemble the function, overwritten function and trampoline.
+  LOG("original function\n");
+  DumpDissasembly(capstone_handle, function_backup.value(), address_of_do_something);
 
-  // auto overwritten_function = ReadTraceesMemory(pid, address_of_do_something, bytes_to_copy);
-  // LOG("\noverwritten function\n");
-  // DumpDissasembly(capstone_handle, overwritten_function.value(), address_of_do_something);
+  auto overwritten_function = ReadTraceesMemory(pid, address_of_do_something, bytes_to_copy);
+  LOG("\noverwritten function\n");
+  DumpDissasembly(capstone_handle, overwritten_function.value(), address_of_do_something);
 
-  // auto trampoline = ReadTraceesMemory(pid, trampoline_address, max_trampoline_size);
-  // LOG("\ntrampoline\n");
-  // LOG("\nmax_trampoline_size: %u\n", max_trampoline_size);
-  // DumpDissasembly(capstone_handle, trampoline.value(), trampoline_address);
+  auto trampoline = ReadTraceesMemory(pid, trampoline_address, max_trampoline_size);
+  LOG("\ntrampoline\n");
+  LOG("\nmax_trampoline_size: %u\n", max_trampoline_size);
+  DumpDissasembly(capstone_handle, trampoline.value(), trampoline_address);
   // DEBUG ------------------
 
   cs_close(&capstone_handle);
@@ -895,12 +1026,78 @@ TEST(DisassemblerTest, Disassemble) {
   CHECK(AttachAndStopProcess(pid).has_value());
 
   // Remove the instrumentation (restore the function prologs, unload the payload library and
-  // deallocate the trampolines)
-  // TBD: How do we handle threads currently executing trampolines/payloads?
-  // Restore function prologs first; run for a while; stop again; check rip for places in the
-  // payload or the trampoline and either restart again briefly if these are still used or savely
-  // delete the trampoline / dlclose the payload.
+  // deallocate the trampolines).
+  // The first part is relatively simple: overwrite the instrumented functions with the backed up
+  // original version. Since no threads can be executing the overwritten part (they are either on
+  // the jump or at a position behind the overwritten bytes) we can just write here.
 
+  // The problem here is that we don't know if the execution of a thread is still stuck in a
+  // payload. We can check for instruction pointers in trampolines and the payload library (and this
+  // is surprisingly stable) but in theory a thread can be executing code in different module and
+  // return to the payload later. In that case we would delete the trampoline and the lib and the
+  // thread would segfault later.
+
+  // A stable solution would require to either:
+  //   * add bookkeeping into the instrumentation to verify all the threads have left the building
+  //   * keep trampoline and payload in the process space forever.
+  //   * make sure the payload is *entirely* statically linked. So the heuristic described above
+  //   would be a proper guarantee.
+  // The first solution comes with a runtime overhead and additional complexity. The second solution
+  // is a memory leak: the payload is not a problem since it is not changing but the trampolines
+  // would be written again and again (using our current system).
+  // We could come up with a system to recycle the trampolines - if there already is one from a
+  // previous run we should use that one (might also be a performance benefit).
+  // Or we can delete old trampolines after a given time span (if a thread doen't finish to execute
+  // the payload after a minute we have more serious problems anyway.)
+  // TODO: The third solution is ...
+
+  {
+    for (const auto& f : functions) {
+      auto write_result_or_error = WriteTraceesMemory(pid, f.first, f.second);
+      CHECK(!write_result_or_error.has_error());
+    }
+
+    auto modules = ReadModules(pid);
+    CHECK(!modules.has_error());
+    AddressRange address_range_payload_lib;
+    for (const auto& m : modules.value()) {
+      if (m.name() == "libUserSpaceInstrumentationTestLib") {
+        address_range_payload_lib.start = m.address_start();
+        address_range_payload_lib.end = m.address_end();
+        break;
+      }
+    }
+    LOG("address_range_payload_lib: %#x - %#x", address_range_payload_lib.start,
+        address_range_payload_lib.end);
+
+    bool thread_in_trampoline_or_payload = false;
+    do {
+      CHECK(!DetachAndContinueProcess(pid).has_error());
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      CHECK(AttachAndStopProcess(pid).has_value());
+
+      thread_in_trampoline_or_payload = false;
+      std::vector<pid_t> tids = orbit_base::GetTidsOfProcess(pid);
+      for (pid_t tid : tids) {
+        RegisterState registers;
+        CHECK(!registers.BackupRegisters(tid).has_error());
+        const uint64_t rip = registers.GetGeneralPurposeRegisters()->x86_64.rip;
+        // Check for rip in the trampoline.
+        if (rip >= trampoline_address && rip <= trampoline_address + max_trampoline_size) {
+          thread_in_trampoline_or_payload = true;
+          LOG("rip in trampoline");
+        }
+        // Check for rip in the
+        if (rip >= address_range_payload_lib.start && rip <= address_range_payload_lib.end) {
+          thread_in_trampoline_or_payload = true;
+          LOG("rip in payload");
+        }
+      }
+    } while (thread_in_trampoline_or_payload);
+
+    CHECK(!DlcloseInTracee(pid, library_handle).has_error());
+    CHECK(!FreeInTracee(pid, trampoline_address, max_trampoline_size).has_error());
+  }
   // Restart the tracee briefly to assert the thing is still running.
   CHECK(!DetachAndContinueProcess(pid).has_error());
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -911,5 +1108,49 @@ TEST(DisassemblerTest, Disassemble) {
   kill(pid, SIGKILL);
   waitpid(pid, NULL, 0);
 }
+
+// void TrivialLog(uint64_t function_address) {
+//   using std::chrono::system_clock;
+//   constexpr std::chrono::duration<int, std::ratio<1>> kOneSecond(1);
+//   constexpr std::chrono::duration<int, std::ratio<1, 1000>> kThreeMilliseconds(3);
+//   static system_clock::time_point last_logged_event = system_clock::now() - kOneSecond;
+//   static uint64_t skipped = 0;
+//   // Rate limit log output to once every three milliseconds.
+//   const system_clock::time_point now = system_clock::now();
+//   if (now - last_logged_event > kThreeMilliseconds) {
+//     if (skipped > 0) {
+//       printf(" ( %lu skipped events )\n", skipped);
+//     }
+//     printf("Called function at %#lx\n", function_address);
+//     last_logged_event = now;
+//     skipped = 0;
+//   } else {
+//     skipped++;
+//   }
+// }
+
+// void asd() {
+//   void (*rax)(uint64_t) = &TrivialLog;
+//   uint64_t param = 0xdeadbeef;
+
+//   __asm__ __volatile__(
+//       "mov %%rsp, %%rax\n\t"
+//       "and $0xffffffffffffffe0, %%rsp\n\t"
+//       "sub $0x18, %%rsp\n\t"
+//       "push %%rax\n\t"
+//       // "sub $0x20, %%rsp\n\t"
+//       "mov (%0), %%rax\n\t"
+//       "mov (%1), %%rdi\n\t"
+//       "call *%%rax\n\t"
+//       // "add $0x20, %%rsp\n\t"
+//       "pop %%rsp\n\t"
+//       :
+//       : "r"(&rax), "r"(&param)
+//       : "%rax", "memory");
+// }
+
+// TEST(AssemblerTest, TrampolineDirektExecution) {
+//   asd();
+// }
 
 }  // namespace orbit_user_space_instrumentation
