@@ -187,6 +187,9 @@ void Viewer::DrawLineNumbers(QPaintEvent* event) {
        block = block.next()) {
     if (!block.isVisible() || bottom_of(block) < event->rect().top()) continue;
 
+    // We will only show the heatmap bar for lines belonging to the main content - which means the
+    // metadata's line type needs to be set to kMainContent. If no metadata is set we will assume
+    // it's main content.
     const auto* const metadata = static_cast<const Metadata*>(block.userData());
 
     const auto line_number = [&]() -> uint64_t {
@@ -194,7 +197,10 @@ void Viewer::DrawLineNumbers(QPaintEvent* event) {
       return block.firstLineNumber() + 1;
     }();
 
-    if (heatmap_bar_width_.Value() > 0.0 && code_report_ != nullptr) {
+    const bool is_main_content =
+        metadata == nullptr || metadata->line_type == Metadata::kMainContent;
+
+    if (heatmap_bar_width_.Value() > 0.0 && code_report_ != nullptr && is_main_content) {
       const QRect heatmap_rect{0, top_of(block), heatmap_bar_width_.ToPixels(fontMetrics()),
                                fontMetrics().height()};
 
@@ -271,7 +277,19 @@ void Viewer::DrawSampleCounters(QPaintEvent* event) {
        block = block.next()) {
     if (!block.isVisible() || bottom_of(block) < event->rect().top()) continue;
 
-    auto maybe_num_samples_in_lines = code_report_->GetNumSamplesAtLine(block.blockNumber() + 1);
+    const auto* const metadata = static_cast<const Metadata*>(block.userData());
+
+    const bool is_main_content =
+        metadata == nullptr || metadata->line_type == Metadata::kMainContent;
+
+    if (!is_main_content) continue;
+
+    const auto line_number = [&]() -> uint64_t {
+      if (metadata == nullptr) return block.firstLineNumber() + 1;
+      return metadata->line_number;
+    }();
+
+    auto maybe_num_samples_in_lines = code_report_->GetNumSamplesAtLine(line_number);
     if (!maybe_num_samples_in_lines.has_value()) continue;
 
     const uint32_t num_samples_in_line = maybe_num_samples_in_lines.value();
