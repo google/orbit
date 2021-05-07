@@ -219,6 +219,7 @@ if [ -n "$1" ]; then
     pushd "${REPO_ROOT}/build/package" > /dev/null
     cp -av bin/ Orbit
     find Orbit/ -name \*.pdb -delete
+    find Orbit/ -name \*.debug -delete
     cp -v NOTICE Orbit/NOTICE
     test -f NOTICE.Chromium && cp -v NOTICE.Chromium Orbit/NOTICE.Chromium
     cp -v LICENSE Orbit/LICENSE.txt
