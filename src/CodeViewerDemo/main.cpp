@@ -6,7 +6,7 @@
 
 #include "CodeExamples.h"
 #include "CodeViewer/Dialog.h"
-#include "SyntaxHighlighter/Cpp.h"
+#include "SyntaxHighlighter/X86Assembly.h"
 
 class DummyCodeReport : public CodeReport {
  public:
@@ -28,15 +28,28 @@ int main(int argc, char* argv[]) {
   orbit_code_viewer::Dialog dialog{};
 
   // Example file
-  const QString content = testing_example;
+  const QString content = x86Assembly_example;
 
-  dialog.SetMainContent(content, std::make_unique<orbit_syntax_highlighter::Cpp>());
+  dialog.SetMainContent(content, std::make_unique<orbit_syntax_highlighter::X86Assembly>());
+
+  std::vector<orbit_code_viewer::AnnotatingLine> lines{};
+  lines.emplace_back();
+  lines.back().reference_line = 9;
+  lines.back().line_number = 42;
+  lines.back().line_contents = "void main() {";
+
+  lines.emplace_back();
+  lines.back().reference_line = 14;
+  lines.back().line_number = 43;
+  lines.back().line_contents = "echo \"Hello World!\";";
+
+  dialog.SetAnnotatingContent(lines);
 
   const auto line_numbers = content.count('\n');
   const DummyCodeReport code_report{static_cast<uint32_t>(line_numbers)};
   dialog.SetHeatmap(orbit_code_viewer::FontSizeInEm{1.2f}, &code_report);
 
-  dialog.SetLineNumberTypes(orbit_code_viewer::Dialog::LineNumberTypes::kOnlyMainContent);
+  dialog.SetLineNumberTypes(orbit_code_viewer::Dialog::LineNumberTypes::kOnlyAnnotatingLines);
   dialog.SetEnableSampleCounters(true);
   dialog.GoToLineNumber(10);
   dialog.SetHighlightCurrentLine(true);
