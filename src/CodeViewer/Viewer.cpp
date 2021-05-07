@@ -329,8 +329,24 @@ void Viewer::DrawSampleCounters(QPaintEvent* event) {
   }
 }
 
+uint64_t Viewer::LargestOccuringLineNumber() const {
+  switch (line_number_types_) {
+    case LineNumberTypes::kNone:
+      return 0;
+    case LineNumberTypes::kOnlyMainContent:
+      return largest_occuring_line_number_main_content_.value_or(blockCount());
+    case LineNumberTypes::kOnlyAnnotatingLines:
+      return largest_occuring_line_number_annotating_lines_.value_or(0);
+    case LineNumberTypes::kBoth:
+      return std::max(largest_occuring_line_number_main_content_.value_or(blockCount()),
+                      largest_occuring_line_number_annotating_lines_.value_or(0));
+  }
+
+  return 0;
+}
+
 void Viewer::UpdateBarsSize() {
-  const int number_of_lines = blockCount();
+  const auto number_of_lines = LargestOccuringLineNumber();
 
   int top_font_height = fontMetrics().height();
 
@@ -338,7 +354,8 @@ void Viewer::UpdateBarsSize() {
 
   if (line_number_types_ != LineNumberTypes::kNone) {
     overall_left_width_px += left_margin_.ToPixels(fontMetrics());
-    overall_left_width_px += DetermineLineNumberWidthInPixels(fontMetrics(), number_of_lines);
+    overall_left_width_px +=
+        DetermineLineNumberWidthInPixels(fontMetrics(), static_cast<int>(number_of_lines));
     overall_left_width_px += right_margin_.ToPixels(fontMetrics());
   }
 
@@ -488,7 +505,11 @@ void Viewer::SetAnnotatingContent(absl::Span<const AnnotatingLine> annotating_li
     }
   }
 
+  largest_occuring_line_number_main_content_ = blockCount();
+  largest_occuring_line_number_annotating_lines_ = std::nullopt;
+
   if (annotating_lines.empty()) return;
+
   auto current_annotating_line = annotating_lines.begin();
 
   // In a second pass we add the annotating lines
@@ -509,6 +530,9 @@ void Viewer::SetAnnotatingContent(absl::Span<const AnnotatingLine> annotating_li
 
       auto user_data = std::make_unique<Metadata>(Metadata::kAnnotatingLine,
                                                   current_annotating_line->line_number);
+      largest_occuring_line_number_annotating_lines_ =
+          std::max(current_annotating_line->line_number,
+                   largest_occuring_line_number_annotating_lines_.value_or(0));
 
       // We transfer ownership
       cursor.block().setUserData(user_data.release());
