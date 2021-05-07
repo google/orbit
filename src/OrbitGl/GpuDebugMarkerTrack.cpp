@@ -33,7 +33,7 @@ GpuDebugMarkerTrack::GpuDebugMarkerTrack(CaptureViewElement* parent, TimeGraph* 
   draw_background_ = false;
   string_manager_ = app->GetStringManager();
 
-  // Gpu subtracks are expanded by default, but are however not shown until the parent is collapsed.
+  // Gpu subtracks are expanded by default, but are however not shown while the parent is collapsed.
   collapse_toggle_->SetState(TriangleToggle::State::kExpanded,
                              TriangleToggle::InitialStateUpdate::kReplaceInitialState);
 }

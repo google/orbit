@@ -81,6 +81,10 @@ class GpuSubmissionTrack : public TimerTrack {
       const orbit_client_protos::TimerInfo& timer_info) const;
   [[nodiscard]] std::string GetCommandBufferTooltip(
       const orbit_client_protos::TimerInfo& timer_info) const;
+
+  [[nodiscard]] bool ShouldShowCollapsed() const {
+    return IsCollapsed() || GetParent()->IsCollapsed();
+  }
 };
 
 #endif  // ORBIT_GL_GPU_SUBMISSION_TRACK_H_
