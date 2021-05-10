@@ -101,6 +101,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void ShowTooltip(std::string_view message) override;
   void ShowSourceCode(const std::filesystem::path& file_path, size_t line_number,
                       std::optional<std::unique_ptr<CodeReport>> maybe_code_report) override;
+  void OpenDisassembly(const std::string& assembly, DisassemblyReport report);
 
  protected:
   void closeEvent(QCloseEvent* event) override;
