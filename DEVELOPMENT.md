@@ -221,6 +221,16 @@ with no exceptions. Particularly we don't use methods from std that throw
 exceptions but prefer the variants returning error codes (e.g. in 
 `std::filesystem`).
 
+### Namespaces
+We place all code belonging to a module named `ModuleName` or `OrbitModuleName`
+inside the top-level namespace `orbit_module_name`. All namespaces start with
+the `orbit_` prefix. We do not use nested namespaces.
+
+Exclusively for code that needs to be in a `.h` file public to a module (i.e.,
+in the `include` directory) even if that code shouldn't be used by other
+modules, we use the top-level namespace `orbit_module_name_internal` instead.
+This is *not* nested inside `orbit_module_name`.
+
 ## FAQ
 
 ### What's the difference between `bootstrap-orbit.{sh,ps1}` and `build.{sh,ps1}`?
