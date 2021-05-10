@@ -5,6 +5,7 @@
 #ifndef ORBIT_API_ORBIT_H_
 #define ORBIT_API_ORBIT_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 
 // =================================================================================================
@@ -308,12 +309,12 @@ struct orbit_api_v0 {
   void (*track_double)(const char* name, double value, orbit_api_color color);
 };
 
-extern orbit_api_v0 g_orbit_api_v0;
+extern struct orbit_api_v0 g_orbit_api_v0;
 extern ORBIT_EXPORT void* orbit_api_get_function_table_address_v0();
 
 // User needs to place "ORBIT_API_INSTANTIATE" in an implementation file.
-#define ORBIT_API_INSTANTIATE  \
-  orbit_api_v0 g_orbit_api_v0; \
+#define ORBIT_API_INSTANTIATE         \
+  struct orbit_api_v0 g_orbit_api_v0; \
   void* orbit_api_get_function_table_address_v0() { return &g_orbit_api_v0; }
 
 inline bool orbit_api_active() {
