@@ -295,7 +295,8 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
 
   void SetStatusListener(StatusListener* listener) { status_listener_ = listener; }
 
-  void SendDisassemblyToUi(std::string disassembly, orbit_code_report::DisassemblyReport report);
+  void SendDisassemblyToUi(const orbit_client_protos::FunctionInfo& function_info,
+                           std::string disassembly, orbit_code_report::DisassemblyReport report);
   void SendTooltipToUi(const std::string& tooltip);
   void SendInfoToUi(const std::string& title, const std::string& text);
   void SendWarningToUi(const std::string& title, const std::string& text);

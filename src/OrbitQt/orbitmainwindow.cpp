@@ -100,6 +100,7 @@
 #include "absl/flags/flag.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
+#include "capture_data.pb.h"
 #include "orbitaboutdialog.h"
 #include "orbitdataviewpanel.h"
 #include "orbitglwidget.h"
@@ -1474,7 +1475,8 @@ void OrbitMainWindow::ShowSourceCode(
   orbit_code_viewer::OpenAndDeleteOnClose(std::move(code_viewer_dialog));
 }
 
-void OrbitMainWindow::ShowDisassembly(const std::string& assembly,
+void OrbitMainWindow::ShowDisassembly(const orbit_client_protos::FunctionInfo& /*function_info*/,
+                                      const std::string& assembly,
                                       orbit_code_report::DisassemblyReport report) {
   auto dialog = std::make_unique<orbit_code_viewer::OwningDialog>();
   dialog->setWindowTitle("Orbit Disassembly");

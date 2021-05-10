@@ -664,7 +664,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
     disasm.Disassemble(memory.data(), memory.size(), absolute_address, is_64_bit);
     if (!HasCaptureData() || !GetCaptureData().has_post_processed_sampling_data()) {
       orbit_code_report::DisassemblyReport empty_report(disasm);
-      SendDisassemblyToUi(disasm.GetResult(), std::move(empty_report));
+      SendDisassemblyToUi(function, disasm.GetResult(), std::move(empty_report));
       return;
     }
     const CaptureData& capture_data = GetCaptureData();
@@ -674,7 +674,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
     orbit_code_report::DisassemblyReport report(
         disasm, absolute_address, post_processed_sampling_data,
         capture_data.GetCallstackData()->GetCallstackEventsCount());
-    SendDisassemblyToUi(disasm.GetResult(), std::move(report));
+    SendDisassemblyToUi(function, disasm.GetResult(), std::move(report));
   });
 }
 
@@ -1276,12 +1276,13 @@ bool OrbitApp::IsCaptureConnected(const CaptureData& capture) const {
 
 bool OrbitApp::IsDevMode() const { return absl::GetFlag(FLAGS_devmode); }
 
-void OrbitApp::SendDisassemblyToUi(std::string disassembly,
+void OrbitApp::SendDisassemblyToUi(const orbit_client_protos::FunctionInfo& function_info,
+                                   std::string disassembly,
                                    orbit_code_report::DisassemblyReport report) {
-  main_thread_executor_->Schedule(
-      [this, disassembly = std::move(disassembly), report = std::move(report)]() mutable {
-        main_window_->ShowDisassembly(disassembly, std::move(report));
-      });
+  main_thread_executor_->Schedule([this, function_info, disassembly = std::move(disassembly),
+                                   report = std::move(report)]() mutable {
+    main_window_->ShowDisassembly(function_info, disassembly, std::move(report));
+  });
 }
 
 void OrbitApp::SendTooltipToUi(const std::string& tooltip) {
