@@ -232,10 +232,6 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   void SetSelectLiveTabCallback(SelectLiveTabCallback callback) {
     select_live_tab_callback_ = std::move(callback);
   }
-  using DisassemblyCallback = std::function<void(std::string, DisassemblyReport)>;
-  void SetDisassemblyCallback(DisassemblyCallback callback) {
-    disassembly_callback_ = std::move(callback);
-  }
   using ErrorMessageCallback = std::function<void(const std::string&, const std::string&)>;
   void SetErrorMessageCallback(ErrorMessageCallback callback) {
     error_message_callback_ = std::move(callback);
@@ -499,7 +495,6 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   CaptureFailedCallback capture_failed_callback_;
   CaptureClearedCallback capture_cleared_callback_;
   SelectLiveTabCallback select_live_tab_callback_;
-  DisassemblyCallback disassembly_callback_;
   ErrorMessageCallback error_message_callback_;
   WarningMessageCallback warning_message_callback_;
   InfoMessageCallback info_message_callback_;

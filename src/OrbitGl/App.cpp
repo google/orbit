@@ -1305,8 +1305,7 @@ bool OrbitApp::IsDevMode() const { return absl::GetFlag(FLAGS_devmode); }
 void OrbitApp::SendDisassemblyToUi(std::string disassembly, DisassemblyReport report) {
   main_thread_executor_->Schedule(
       [this, disassembly = std::move(disassembly), report = std::move(report)]() mutable {
-        CHECK(disassembly_callback_);
-        disassembly_callback_(std::move(disassembly), std::move(report));
+        main_window_->ShowDisassembly(disassembly, std::move(report));
       });
 }
 
