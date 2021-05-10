@@ -45,9 +45,15 @@ class LibunwindstackUnwinder {
 
   virtual LibunwindstackResult Unwind(pid_t pid, unwindstack::Maps* maps,
                                       const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
-                                      const void* stack_dump, uint64_t stack_dump_size) = 0;
+                                      const void* stack_dump, uint64_t stack_dump_size,
+                                      bool offline_memory = false,
+                                      size_t max_frames = kMaxFrames) = 0;
 
   static std::unique_ptr<LibunwindstackUnwinder> Create();
+  static std::string LibunwindstackErrorString(unwindstack::ErrorCode error_code);
+
+ protected:
+  static constexpr size_t kMaxFrames = 1024;  // This is arbitrary.
 };
 }  // namespace orbit_linux_tracing
 

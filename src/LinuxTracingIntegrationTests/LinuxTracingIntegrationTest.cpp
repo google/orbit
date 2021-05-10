@@ -758,14 +758,6 @@ void VerifyCallstackSamplesWithOuterAndInnerFunction(
       // address and the caller address should match the "outer" function's address.
       if (callstack.pcs(pc_index) >= inner_function_virtual_address_range.first &&
           callstack.pcs(pc_index) <= inner_function_virtual_address_range.second) {
-        // Frame-pointer unwinding skips the second innermost frame if the sample fell on `push rbp`
-        // (which is one byte) or `mov rbp,rsp`. Disregard such samples. See b/179376436#comment4.
-        if (pc_index == 0 && unwound_with_frame_pointers &&
-            (callstack.pcs(pc_index) == inner_function_virtual_address_range.first ||
-             callstack.pcs(pc_index) == inner_function_virtual_address_range.first + 1)) {
-          continue;
-        }
-
         if (address_infos_received != nullptr) {
           // Verify that we got the AddressInfo for this virtual address of the "inner" function.
           EXPECT_TRUE(address_infos_received->contains(callstack.pcs(pc_index)));
