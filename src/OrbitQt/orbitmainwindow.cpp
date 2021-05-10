@@ -269,9 +269,6 @@ void OrbitMainWindow::SetupMainWindow() {
       });
 
   app_->SetSelectLiveTabCallback([this] { ui->RightTabWidget->setCurrentWidget(ui->liveTab); });
-  app_->SetDisassemblyCallback([this](const std::string& assembly, DisassemblyReport report) {
-    ShowDisassembly(assembly, std::move(report));
-  });
   app_->SetErrorMessageCallback([this](const std::string& title, const std::string& text) {
     QMessageBox::critical(this, QString::fromStdString(title), QString::fromStdString(text));
   });
