@@ -323,7 +323,7 @@ inline bool orbit_api_active() {
 }
 
 #define ORBIT_CALL(function_name) \
-  if (orbit_api_active() && g_orbit_api_v0.function_name) g_orbit_api_v0.function_name
+  !(orbit_api_active() && g_orbit_api_v0.function_name) ? (void)0 : g_orbit_api_v0.function_name
 
 #ifdef __cplusplus
 }  // extern "C"
