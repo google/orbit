@@ -5,7 +5,9 @@
 #include "CodeViewer/Dialog.h"
 
 #include <QDialogButtonBox>
+#include <QHBoxLayout>
 #include <QPushButton>
+#include <QSizePolicy>
 #include <QSyntaxHighlighter>
 
 #include "ui_Dialog.h"
@@ -14,8 +16,13 @@ namespace orbit_code_viewer {
 Dialog::Dialog(QWidget* parent) : QDialog{parent}, ui_{std::make_unique<Ui::CodeViewerDialog>()} {
   ui_->setupUi(this);
 
+  ui_->notification_box->hide();
+  ui_->buttonBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+
   QObject::connect(ui_->buttonBox->button(QDialogButtonBox::StandardButton::Close),
                    &QPushButton::clicked, this, &QDialog::close);
+  QObject::connect(ui_->notification_action_button, &QPushButton::clicked, this,
+                   [this]() { emit StatusMessageButtonClicked(); });
 }
 
 Dialog::~Dialog() noexcept = default;
@@ -76,5 +83,19 @@ void Dialog::SetAnnotatingContent(absl::Span<const AnnotatingLine> annotating_li
 
 void Dialog::SetTopBarTitle(const QString& title) { ui_->viewer->SetTopBarTile(title); }
 const QString& Dialog::GetTopBarTitle() const { return ui_->viewer->GetTopBarTitle(); }
+
+void Dialog::SetStatusMessage(const QString& message, const std::optional<QString>& button_text) {
+  ui_->notification_text->setText(message);
+  ui_->notification_action_button->setHidden(!button_text.has_value());
+  ui_->notification_action_button->setText(button_text.value_or(QString{}));
+
+  ui_->notification_box->show();
+  ui_->buttonBox->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+}
+
+void Dialog::ClearStatusMessage() {
+  ui_->notification_box->hide();
+  ui_->buttonBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+}
 
 }  // namespace orbit_code_viewer
