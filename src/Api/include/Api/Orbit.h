@@ -5,6 +5,7 @@
 #ifndef ORBIT_API_ORBIT_H_
 #define ORBIT_API_ORBIT_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 
 // =================================================================================================
@@ -195,27 +196,27 @@
 #define ORBIT_SCOPE_WITH_COLOR(name, col) orbit_api::Scope ORBIT_VAR(name, col)
 #endif
 
-#define ORBIT_START(name) ORBIT_CALL(start)(name, kOrbitColorAuto)
-#define ORBIT_STOP() ORBIT_CALL(stop)()
-#define ORBIT_START_ASYNC(name, id) ORBIT_CALL(start_async)(name, id, kOrbitColorAuto)
-#define ORBIT_STOP_ASYNC(id) ORBIT_CALL(stop_async)(id)
-#define ORBIT_ASYNC_STRING(string, id) ORBIT_CALL(async_string)(string, id, kOrbitColorAuto)
-#define ORBIT_INT(name, value) ORBIT_CALL(track_int)(name, value, kOrbitColorAuto)
-#define ORBIT_INT64(name, value) ORBIT_CALL(track_int64)(name, value, kOrbitColorAuto)
-#define ORBIT_UINT(name, value) ORBIT_CALL(track_uint)(name, value, kOrbitColorAuto)
-#define ORBIT_UINT64(name, value) ORBIT_CALL(track_uint64)(name, value, kOrbitColorAuto)
-#define ORBIT_FLOAT(name, value) ORBIT_CALL(track_float)(name, value, kOrbitColorAuto)
-#define ORBIT_DOUBLE(name, value) ORBIT_CALL(track_double)(name, value, kOrbitColorAuto)
+#define ORBIT_START(name) ORBIT_CALL(start, name, kOrbitColorAuto)
+#define ORBIT_STOP() ORBIT_CALL(stop, )
+#define ORBIT_START_ASYNC(name, id) ORBIT_CALL(start_async, name, id, kOrbitColorAuto)
+#define ORBIT_STOP_ASYNC(id) ORBIT_CALL(stop_async, id)
+#define ORBIT_ASYNC_STRING(string, id) ORBIT_CALL(async_string, string, id, kOrbitColorAuto)
+#define ORBIT_INT(name, value) ORBIT_CALL(track_int, name, value, kOrbitColorAuto)
+#define ORBIT_INT64(name, value) ORBIT_CALL(track_int64, name, value, kOrbitColorAuto)
+#define ORBIT_UINT(name, value) ORBIT_CALL(track_uint, name, value, kOrbitColorAuto)
+#define ORBIT_UINT64(name, value) ORBIT_CALL(track_uint64, name, value, kOrbitColorAuto)
+#define ORBIT_FLOAT(name, value) ORBIT_CALL(track_float, name, value, kOrbitColorAuto)
+#define ORBIT_DOUBLE(name, value) ORBIT_CALL(track_double, name, value, kOrbitColorAuto)
 
-#define ORBIT_START_WITH_COLOR(name, color) ORBIT_CALL(start)(name, color)
-#define ORBIT_START_ASYNC_WITH_COLOR(name, id, color) ORBIT_CALL(start_async)(name, id, color)
-#define ORBIT_ASYNC_STRING_WITH_COLOR(string, id, color) ORBIT_CALL(async_string)(string, id, color)
-#define ORBIT_INT_WITH_COLOR(name, value, color) ORBIT_CALL(track_int)(name, value, color)
-#define ORBIT_INT64_WITH_COLOR(name, value, color) ORBIT_CALL(track_int64)(name, value, color)
-#define ORBIT_UINT_WITH_COLOR(name, value, color) ORBIT_CALL(track_uint)(name, value, color)
-#define ORBIT_UINT64_WITH_COLOR(name, value, color) ORBIT_CALL(track_uint64)(name, value, color)
-#define ORBIT_FLOAT_WITH_COLOR(name, value, color) ORBIT_CALL(track_float)(name, value, color)
-#define ORBIT_DOUBLE_WITH_COLOR(name, value, color) ORBIT_CALL(track_double)(name, value, color)
+#define ORBIT_START_WITH_COLOR(name, color) ORBIT_CALL(start, name, color)
+#define ORBIT_START_ASYNC_WITH_COLOR(name, id, color) ORBIT_CALL(start_async, name, id, color)
+#define ORBIT_ASYNC_STRING_WITH_COLOR(string, id, color) ORBIT_CALL(async_string, string, id, color)
+#define ORBIT_INT_WITH_COLOR(name, value, color) ORBIT_CALL(track_int, name, value, color)
+#define ORBIT_INT64_WITH_COLOR(name, value, color) ORBIT_CALL(track_int64, name, value, color)
+#define ORBIT_UINT_WITH_COLOR(name, value, color) ORBIT_CALL(track_uint, name, value, color)
+#define ORBIT_UINT64_WITH_COLOR(name, value, color) ORBIT_CALL(track_uint64, name, value, color)
+#define ORBIT_FLOAT_WITH_COLOR(name, value, color) ORBIT_CALL(track_float, name, value, color)
+#define ORBIT_DOUBLE_WITH_COLOR(name, value, color) ORBIT_CALL(track_double, name, value, color)
 
 #else  // ORBIT_API_ENABLED
 
@@ -308,12 +309,12 @@ struct orbit_api_v0 {
   void (*track_double)(const char* name, double value, orbit_api_color color);
 };
 
-extern orbit_api_v0 g_orbit_api_v0;
+extern struct orbit_api_v0 g_orbit_api_v0;
 extern ORBIT_EXPORT void* orbit_api_get_function_table_address_v0();
 
 // User needs to place "ORBIT_API_INSTANTIATE" in an implementation file.
-#define ORBIT_API_INSTANTIATE  \
-  orbit_api_v0 g_orbit_api_v0; \
+#define ORBIT_API_INSTANTIATE         \
+  struct orbit_api_v0 g_orbit_api_v0; \
   void* orbit_api_get_function_table_address_v0() { return &g_orbit_api_v0; }
 
 inline bool orbit_api_active() {
@@ -322,8 +323,11 @@ inline bool orbit_api_active() {
   return initialized && g_orbit_api_v0.enabled;
 }
 
-#define ORBIT_CALL(function_name) \
-  if (orbit_api_active() && g_orbit_api_v0.function_name) g_orbit_api_v0.function_name
+#define ORBIT_CALL(function_name, ...)                      \
+  do {                                                      \
+    if (orbit_api_active() && g_orbit_api_v0.function_name) \
+      g_orbit_api_v0.function_name(__VA_ARGS__);            \
+  } while (0)
 
 #ifdef __cplusplus
 }  // extern "C"
@@ -336,8 +340,8 @@ inline bool orbit_api_active() {
 
 namespace orbit_api {
 struct Scope {
-  Scope(const char* name, orbit_api_color color) { ORBIT_CALL(start)(name, color); }
-  ~Scope() { ORBIT_CALL(stop)(); }
+  Scope(const char* name, orbit_api_color color) { ORBIT_CALL(start, name, color); }
+  ~Scope() { ORBIT_CALL(stop); }
 };
 }  // namespace orbit_api
 
