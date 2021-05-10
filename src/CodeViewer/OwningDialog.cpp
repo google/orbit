@@ -26,10 +26,10 @@ void OwningDialog::ClearOwningHeatmap() {
   code_report_.reset();
 }
 
-void OpenAndDeleteOnClose(std::unique_ptr<OwningDialog> dialog) {
+QPointer<OwningDialog> OpenAndDeleteOnClose(std::unique_ptr<OwningDialog> dialog) {
   dialog->open();
   dialog->setAttribute(Qt::WA_DeleteOnClose);
-  (void)dialog.release();
+  return QPointer{dialog.release()};
 }
 
 }  // namespace orbit_code_viewer
