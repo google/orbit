@@ -5,6 +5,7 @@
 #ifndef CODE_VIEWER_OWNING_DIALOG_H_
 #define CODE_VIEWER_OWNING_DIALOG_H_
 
+#include <QPointer>
 #include <memory>
 #include <optional>
 #include <variant>
@@ -43,7 +44,7 @@ class OwningDialog : public Dialog {
 // This function opens the given dialog and ensures it is deleted when closed.
 // Note, this function returns immediately after opening the dialog, NOT when it is closed. Use
 // `QDialog::exec` to wait for the dialog.
-void OpenAndDeleteOnClose(std::unique_ptr<OwningDialog> dialog);
+QPointer<OwningDialog> OpenAndDeleteOnClose(std::unique_ptr<OwningDialog> dialog);
 }  // namespace orbit_code_viewer
 
 #endif  // CODE_VIEWER_OWNING_DIALOG_H_
