@@ -13,6 +13,7 @@
 
 #include "CodeReport/CodeReport.h"
 #include "CodeReport/DisassemblyReport.h"
+#include "capture_data.pb.h"
 
 namespace orbit_gl {
 
@@ -27,7 +28,8 @@ class MainWindowInterface {
   virtual void ShowSourceCode(
       const std::filesystem::path& file_path, size_t line_number,
       std::optional<std::unique_ptr<orbit_code_report::CodeReport>> code_report) = 0;
-  virtual void ShowDisassembly(const std::string& assembly,
+  virtual void ShowDisassembly(const orbit_client_protos::FunctionInfo& function_info,
+                               const std::string& assembly,
                                orbit_code_report::DisassemblyReport report) = 0;
 
   virtual ~MainWindowInterface() = default;

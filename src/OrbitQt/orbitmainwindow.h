@@ -101,7 +101,8 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void ShowSourceCode(
       const std::filesystem::path& file_path, size_t line_number,
       std::optional<std::unique_ptr<orbit_code_report::CodeReport>> maybe_code_report) override;
-  void ShowDisassembly(const std::string& assembly,
+  void ShowDisassembly(const orbit_client_protos::FunctionInfo& function_info,
+                       const std::string& assembly,
                        orbit_code_report::DisassemblyReport report) override;
 
  protected:
