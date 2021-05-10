@@ -138,8 +138,6 @@ constexpr int kHintFramePosX = 21;
 constexpr int kHintFramePosY = 47;
 constexpr int kHintFrameWidth = 140;
 constexpr int kHintFrameHeight = 45;
-
-void OpenDisassembly(const std::string& assembly, DisassemblyReport report);
 }  // namespace
 
 OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration,
@@ -271,7 +269,9 @@ void OrbitMainWindow::SetupMainWindow() {
       });
 
   app_->SetSelectLiveTabCallback([this] { ui->RightTabWidget->setCurrentWidget(ui->liveTab); });
-  app_->SetDisassemblyCallback(&OpenDisassembly);
+  app_->SetDisassemblyCallback([this](const std::string& assembly, DisassemblyReport report) {
+    OpenDisassembly(assembly, std::move(report));
+  });
   app_->SetErrorMessageCallback([this](const std::string& title, const std::string& text) {
     QMessageBox::critical(this, QString::fromStdString(title), QString::fromStdString(text));
   });
@@ -1476,8 +1476,7 @@ void OrbitMainWindow::ShowSourceCode(const std::filesystem::path& file_path, siz
   orbit_code_viewer::OpenAndDeleteOnClose(std::move(code_viewer_dialog));
 }
 
-namespace {
-void OpenDisassembly(const std::string& assembly, DisassemblyReport report) {
+void OrbitMainWindow::OpenDisassembly(const std::string& assembly, DisassemblyReport report) {
   auto dialog = std::make_unique<orbit_code_viewer::OwningDialog>();
   dialog->setWindowTitle("Orbit Disassembly");
   dialog->SetLineNumberTypes(orbit_code_viewer::Dialog::LineNumberTypes::kOnlyMainContent);
@@ -1495,4 +1494,3 @@ void OpenDisassembly(const std::string& assembly, DisassemblyReport report) {
 
   orbit_code_viewer::OpenAndDeleteOnClose(std::move(dialog));
 }
-}  // namespace
