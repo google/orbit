@@ -37,12 +37,14 @@ class CaptureFileImpl : public CaptureFile {
     return section_list_;
   }
 
-  std::optional<uint64_t> FindSectionByType(uint64_t section_type) const override;
+  [[nodiscard]] std::optional<uint64_t> FindSectionByType(uint64_t section_type) const override;
 
   ErrorMessageOr<void> ReadFromSection(uint64_t section_number, uint64_t offset_in_section,
                                        void* data, size_t size) override;
 
   std::unique_ptr<CaptureSectionInputStream> CreateCaptureSectionInputStream() override;
+
+  [[nodiscard]] const std::filesystem::path& GetFilePath() const override;
 
  private:
   // Parse header and validate version/file-format
@@ -249,8 +251,7 @@ std::unique_ptr<CaptureSectionInputStream> CaptureFileImpl::CreateCaptureSection
       fd_, header_.capture_section_offset, capture_section_size_);
 }
 
-std::optional<uint64_t> orbit_capture_file::CaptureFileImpl::FindSectionByType(
-    uint64_t section_type) const {
+std::optional<uint64_t> CaptureFileImpl::FindSectionByType(uint64_t section_type) const {
   for (size_t i = 0; i < section_list_.size(); ++i) {
     if (section_list_[i].type == section_type) {
       return i;
@@ -259,6 +260,7 @@ std::optional<uint64_t> orbit_capture_file::CaptureFileImpl::FindSectionByType(
 
   return std::nullopt;
 }
+const std::filesystem::path& CaptureFileImpl::GetFilePath() const { return file_path_; }
 
 }  // namespace
 
