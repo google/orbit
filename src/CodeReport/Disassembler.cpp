@@ -59,10 +59,18 @@ uint64_t Disassembler::GetAddressAtLine(size_t line) const {
   return line_to_address_[line];
 }
 
-void Disassembler::AddLine(std::string line, uint64_t address) {
+std::optional<size_t> Disassembler::GetLineAtAddress(uint64_t address) const {
+  const auto it = address_to_line_.find(address);
+  if (it == address_to_line_.end()) return std::nullopt;
+  return it->second;
+}
+
+void Disassembler::AddLine(std::string line, std::optional<uint64_t> address) {
+  if (address.has_value()) address_to_line_[*address] = line_to_address_.size();
+  line_to_address_.push_back(address.value_or(0ul));
+
   // Remove any new line character.
   line = absl::StrReplaceAll(line, {{"\n", ""}});
-  line_to_address_.push_back(address);
   result_ += absl::StrFormat("%s\n", line);
 }
 }  // namespace orbit_code_report

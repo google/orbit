@@ -8,22 +8,26 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <optional>
 #include <string>
 #include <vector>
 
-#include "absl/strings/str_format.h"
+#include "absl/container/flat_hash_map.h"
 
 namespace orbit_code_report {
 class Disassembler {
  public:
   void Disassemble(const void* machine_code, size_t size, uint64_t address, bool is_64bit);
-  void AddLine(std::string, uint64_t address = 0);
+  void AddLine(std::string, std::optional<uint64_t> address = std::nullopt);
+
   [[nodiscard]] const std::string& GetResult() const { return result_; }
   [[nodiscard]] uint64_t GetAddressAtLine(size_t line) const;
+  [[nodiscard]] std::optional<size_t> GetLineAtAddress(uint64_t address) const;
 
  private:
   std::string result_;
   std::vector<uint64_t> line_to_address_;
+  absl::flat_hash_map<uint64_t, size_t> address_to_line_;
 };
 }  // namespace orbit_code_report
 
