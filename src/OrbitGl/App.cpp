@@ -995,6 +995,8 @@ ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::filesystem::path& file_n
 static ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureFromNewFormat(
     CaptureListener* listener, CaptureFile* capture_file,
     std::atomic<bool>* capture_loading_cancellation_requested) {
+  SCOPED_TIMED_LOG("Loading capture in new format from \"%s\"",
+                   capture_file->GetFilePath().string());
   absl::flat_hash_set<uint64_t> frame_track_function_ids;
 
   std::optional<uint64_t> section_index =

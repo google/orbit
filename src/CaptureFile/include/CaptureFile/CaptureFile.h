@@ -50,6 +50,8 @@ class CaptureFile {
   virtual ErrorMessageOr<void> ReadFromSection(uint64_t section_number, uint64_t section_offset,
                                                void* data, size_t size) = 0;
 
+  [[nodiscard]] virtual const std::filesystem::path& GetFilePath() const = 0;
+
   template <typename T>
   ErrorMessageOr<T> ReadSectionAsProto(uint64_t section_number) {
     auto section_info = GetSectionList()[section_number];
