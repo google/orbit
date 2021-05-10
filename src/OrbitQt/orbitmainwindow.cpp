@@ -139,24 +139,7 @@ constexpr int kHintFramePosY = 47;
 constexpr int kHintFrameWidth = 140;
 constexpr int kHintFrameHeight = 45;
 
-void OpenDisassembly(const std::string& assembly, DisassemblyReport report) {
-  auto dialog = std::make_unique<orbit_code_viewer::OwningDialog>();
-  dialog->setWindowTitle("Orbit Disassembly");
-  dialog->SetLineNumberTypes(orbit_code_viewer::Dialog::LineNumberTypes::kOnlyMainContent);
-  dialog->SetHighlightCurrentLine(true);
-
-  auto syntax_highlighter = std::make_unique<orbit_syntax_highlighter::X86Assembly>();
-  dialog->SetMainContent(QString::fromStdString(assembly), std::move(syntax_highlighter));
-
-  if (report.GetNumSamples() > 0) {
-    constexpr orbit_code_viewer::FontSizeInEm kHeatmapAreaWidth{1.3f};
-    dialog->SetOwningHeatmap(kHeatmapAreaWidth,
-                             std::make_unique<DisassemblyReport>(std::move(report)));
-    dialog->SetEnableSampleCounters(true);
-  }
-
-  orbit_code_viewer::OpenAndDeleteOnClose(std::move(dialog));
-}
+void OpenDisassembly(const std::string& assembly, DisassemblyReport report);
 }  // namespace
 
 OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration,
@@ -1492,3 +1475,24 @@ void OrbitMainWindow::ShowSourceCode(const std::filesystem::path& file_path, siz
   code_viewer_dialog->GoToLineNumber(line_number);
   orbit_code_viewer::OpenAndDeleteOnClose(std::move(code_viewer_dialog));
 }
+
+namespace {
+void OpenDisassembly(const std::string& assembly, DisassemblyReport report) {
+  auto dialog = std::make_unique<orbit_code_viewer::OwningDialog>();
+  dialog->setWindowTitle("Orbit Disassembly");
+  dialog->SetLineNumberTypes(orbit_code_viewer::Dialog::LineNumberTypes::kOnlyMainContent);
+  dialog->SetHighlightCurrentLine(true);
+
+  auto syntax_highlighter = std::make_unique<orbit_syntax_highlighter::X86Assembly>();
+  dialog->SetMainContent(QString::fromStdString(assembly), std::move(syntax_highlighter));
+
+  if (report.GetNumSamples() > 0) {
+    constexpr orbit_code_viewer::FontSizeInEm kHeatmapAreaWidth{1.3f};
+    dialog->SetOwningHeatmap(kHeatmapAreaWidth,
+                             std::make_unique<DisassemblyReport>(std::move(report)));
+    dialog->SetEnableSampleCounters(true);
+  }
+
+  orbit_code_viewer::OpenAndDeleteOnClose(std::move(dialog));
+}
+}  // namespace
