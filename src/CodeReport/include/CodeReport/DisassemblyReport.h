@@ -33,6 +33,8 @@ class DisassemblyReport : public orbit_code_report::CodeReport {
   [[nodiscard]] uint32_t GetNumSamples() const override { return samples_count_; }
   [[nodiscard]] std::optional<uint32_t> GetNumSamplesAtLine(size_t line) const override;
 
+  [[nodiscard]] std::optional<size_t> GetLineAtAddress(uint64_t address) const;
+
  private:
   Disassembler disasm_;
   std::optional<orbit_client_data::PostProcessedSamplingData> post_processed_sampling_data_;
