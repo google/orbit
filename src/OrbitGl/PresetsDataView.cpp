@@ -21,6 +21,7 @@
 #include "MetricsUploader/ScopedMetric.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/SafeStrerror.h"
+#include "PresetFile.h"
 #include "PresetLoadState.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
@@ -82,7 +83,7 @@ std::string PresetsDataView::GetValue(int row, int column) {
     case kColumnLoadState:
       return GetLoadStateString(app_, preset);
     case kColumnPresetName:
-      return preset.file_path.filename().string();
+      return preset.file_path().filename().string();
     case kColumnModules:
       return GetModulesList(GetModules(row));
     case kColumnFunctionCount:
@@ -94,7 +95,7 @@ std::string PresetsDataView::GetValue(int row, int column) {
 
 std::string PresetsDataView::GetToolTip(int row, int /*column*/) {
   const PresetFile& preset = GetPreset(row);
-  return absl::StrCat(preset.file_path.string(),
+  return absl::StrCat(preset.file_path().string(),
                       app_->GetPresetLoadState(preset).state == PresetLoadState::kNotLoadable
                           ? "<br/><br/><i>None of the modules in the preset can be loaded.</i>"
                           : "");
@@ -113,7 +114,7 @@ void PresetsDataView::DoSort() {
       break;
     case kColumnPresetName:
       sorter = [&](int a, int b) {
-        return orbit_core::Compare(presets_[a].file_path, presets_[b].file_path, ascending);
+        return orbit_core::Compare(presets_[a].file_path(), presets_[b].file_path(), ascending);
       };
       break;
     default:
@@ -160,7 +161,7 @@ void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
     }
     int row = item_indices[0];
     const PresetFile& preset = GetPreset(row);
-    const std::string& filename = preset.file_path;
+    const std::string& filename = preset.file_path().string();
     int ret = remove(filename.c_str());
     if (ret == 0) {
       presets_.erase(presets_.begin() + indices_[row]);
@@ -191,7 +192,7 @@ void PresetsDataView::DoFilter() {
 
   for (size_t i = 0; i < presets_.size(); ++i) {
     const PresetFile& preset = presets_[i];
-    std::string name = ToLower(preset.file_path.filename().string());
+    std::string name = ToLower(preset.file_path().filename().string());
 
     bool match = true;
 
@@ -216,9 +217,9 @@ void PresetsDataView::OnDataChanged() {
   for (size_t i = 0; i < presets_.size(); ++i) {
     indices_[i] = i;
     std::vector<ModuleView> modules;
-    for (const auto& pair : presets_[i].preset_info.path_to_module()) {
-      modules.emplace_back(std::filesystem::path(pair.first).filename().string(),
-                           pair.second.function_hashes_size());
+    for (const auto& module_path : presets_[i].GetModulePaths()) {
+      modules.emplace_back(module_path.filename().string(),
+                           presets_[i].GetNumberOfFunctionsForModule(module_path));
     }
     modules_[i] = std::move(modules);
   }

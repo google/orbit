@@ -130,11 +130,16 @@ void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbo
     // __cxxabiv1::__class_type_info::~__class_type_info()
     // __cxxabiv1::__pbase_type_info::~__pbase_type_info()
     if (success_functions) {
-      const bool success_func_hashes =
-          hash_to_function_map_.try_emplace(function_utils::GetHash(*function), function).second;
-      if (!success_func_hashes) {
+      CHECK(!function->pretty_name().empty());
+      // Be careful about the scope, the key is a string_view. This is done to avoid name
+      // duplication.
+      bool success_function_name =
+          name_to_function_info_map_.try_emplace(function->pretty_name(), function).second;
+      if (!success_function_name) {
         name_reuse_counter++;
       }
+
+      hash_to_function_map_.try_emplace(function_utils::GetHash(*function), function);
     } else {
       address_reuse_counter++;
     }
@@ -144,8 +149,8 @@ void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbo
   }
   if (name_reuse_counter != 0) {
     LOG("Warning: %d function name collisions happened (functions with the same demangled name). "
-        "This is currently not supported by presets, since the presets are based on a hash of the "
-        "demangled name.",
+        "This is currently not supported by presets, since the presets are based on the demangled "
+        "name.",
         name_reuse_counter);
   }
 
@@ -157,14 +162,11 @@ const orbit_client_protos::FunctionInfo* ModuleData::FindFunctionFromHash(uint64
   return hash_to_function_map_.contains(hash) ? hash_to_function_map_.at(hash) : nullptr;
 }
 
-[[nodiscard]] const orbit_client_protos::FunctionInfo* ModuleData::FindFunctionFromPrettyName(
+const orbit_client_protos::FunctionInfo* ModuleData::FindFunctionFromPrettyName(
     std::string_view pretty_name) const {
-  const FunctionInfo* function_info = FindFunctionFromHash(function_utils::GetHash(pretty_name));
-  if (function_info != nullptr && function_info->pretty_name() != pretty_name) {
-    ERROR("Hash collision when looking for function \"%s\"", pretty_name);
-    function_info = nullptr;
-  }
-  return function_info;
+  absl::MutexLock lock(&mutex_);
+  auto it = name_to_function_info_map_.find(pretty_name);
+  return it != name_to_function_info_map_.end() ? it->second : nullptr;
 }
 
 std::vector<const FunctionInfo*> ModuleData::GetFunctions() const {

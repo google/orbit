@@ -62,6 +62,9 @@ class ModuleData final {
   orbit_grpc_protos::ModuleInfo module_info_;
   bool is_loaded_;
   std::map<uint64_t, std::unique_ptr<orbit_client_protos::FunctionInfo>> functions_;
+  absl::flat_hash_map<std::string_view, orbit_client_protos::FunctionInfo*>
+      name_to_function_info_map_;
+
   // TODO(b/168799822) This is a map of hash to function used for preset loading. Currently presets
   // are based on a hash of the functions pretty name. This should be changed to not use hashes
   // anymore.

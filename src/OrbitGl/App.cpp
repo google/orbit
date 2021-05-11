@@ -145,9 +145,10 @@ PresetLoadState GetPresetLoadStateForProcess(const PresetFile& preset, const Pro
     return PresetLoadState::kNotLoadable;
   }
 
-  int modules_not_found_count = 0;
-  for (const auto& pair : preset.preset_info.path_to_module()) {
-    const std::string& module_path = pair.first;
+  size_t modules_not_found_count = 0;
+  auto module_paths = preset.GetModulePaths();
+  for (const auto& path : module_paths) {
+    const std::string& module_path = path.string();
     if (!process->IsModuleLoaded(module_path)) {
       modules_not_found_count++;
     }
@@ -158,7 +159,7 @@ PresetLoadState GetPresetLoadStateForProcess(const PresetFile& preset, const Pro
     return PresetLoadState::kLoadable;
   }
 
-  if (modules_not_found_count == preset.preset_info.path_to_module_size()) {
+  if (modules_not_found_count == module_paths.size()) {
     return PresetLoadState::kNotLoadable;
   }
 
@@ -563,10 +564,7 @@ void OrbitApp::ListPresets() {
       continue;
     }
 
-    PresetFile preset;
-    preset.file_path = filename;
-    preset.preset_info = std::move(preset_result.value());
-    presets.push_back(std::move(preset));
+    presets.emplace_back(filename, std::move(preset_result.value()));
   }
 
   presets_data_view_->SetPresets(std::move(presets));
@@ -900,14 +898,12 @@ ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
     // GetSelectedFunctions should not contain orbit functions
     CHECK(!orbit_client_data::function_utils::IsOrbitFunctionFromType(function.orbit_type()));
 
-    uint64_t hash = orbit_client_data::function_utils::GetHash(function);
-    (*preset.mutable_path_to_module())[function.module_path()].add_function_hashes(hash);
+    (*preset.mutable_modules())[function.module_path()].add_function_names(function.pretty_name());
   }
 
   for (const auto& function : data_manager_->user_defined_capture_data().frame_track_functions()) {
-    uint64_t hash = orbit_client_data::function_utils::GetHash(function);
-    (*preset.mutable_path_to_module())[function.module_path()].add_frame_track_function_hashes(
-        hash);
+    (*preset.mutable_modules())[function.module_path()].add_frame_track_function_names(
+        function.pretty_name());
   }
 
   std::string filename_with_ext = filename;
@@ -958,11 +954,7 @@ ErrorMessageOr<PresetInfo> OrbitApp::ReadPresetFromFile(const std::filesystem::p
 
 ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
   OUTCOME_TRY(preset_info, ReadPresetFromFile(filename));
-
-  PresetFile preset;
-  preset.file_path = filename;
-  preset.preset_info = std::move(preset_info);
-  LoadPreset(preset);
+  LoadPreset(PresetFile{filename, std::move(preset_info)});
   return outcome::success();
 }
 
@@ -1627,8 +1619,8 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
   return result_future;
 }
 
-orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPresetModule(
-    const std::string& module_path, const orbit_client_protos::PresetModule& preset_module) {
+orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPresetModule(const std::string& module_path,
+                                                                    const PresetFile& preset_file) {
   std::optional<ModuleInMemory> module_in_memory =
       GetTargetProcess()->FindModuleByPath(module_path);
   if (!module_in_memory.has_value()) {
@@ -1645,11 +1637,22 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPresetModule(
   }
 
   auto handle_hooks_and_frame_tracks =
-      [this, module_data,
-       preset_module](const ErrorMessageOr<void>& result) -> ErrorMessageOr<void> {
+      [this, module_data, preset_file](const ErrorMessageOr<void>& result) -> ErrorMessageOr<void> {
     if (result.has_error()) return result.error();
-    SelectFunctionsFromHashes(module_data, preset_module.function_hashes());
-    EnableFrameTracksFromHashes(module_data, preset_module.frame_track_function_hashes());
+    const std::string& module_path = module_data->file_path();
+    if (preset_file.IsLegacyFileFormat()) {
+      SelectFunctionsFromHashes(module_data,
+                                preset_file.GetSelectedFunctionHashesForModuleLegacy(module_path));
+      EnableFrameTracksFromHashes(
+          module_data, preset_file.GetFrameTrackFunctionHashesForModuleLegacy(module_path));
+
+      // TODO(b/168799822): Automatically convert it to new format
+      return outcome::success();
+    }
+
+    SelectFunctionsByName(module_data, preset_file.GetSelectedFunctionNamesForModule(module_path));
+    EnableFrameTracksByName(module_data,
+                            preset_file.GetFrameTrackFunctionNamesForModule(module_path));
     return outcome::success();
   };
 
@@ -1671,6 +1674,19 @@ void OrbitApp::SelectFunctionsFromHashes(const ModuleData* module,
   }
 }
 
+void OrbitApp::SelectFunctionsByName(const ModuleData* module,
+                                     absl::Span<const std::string> function_names) {
+  for (const auto& function_name : function_names) {
+    const orbit_client_protos::FunctionInfo* const function_info =
+        module->FindFunctionFromPrettyName(function_name);
+    if (function_info == nullptr) {
+      ERROR("Could not find function \"%s\" in module \"%s\"", function_name, module->file_path());
+      continue;
+    }
+    SelectFunction(*function_info);
+  }
+}
+
 void OrbitApp::EnableFrameTracksFromHashes(const ModuleData* module,
                                            absl::Span<const uint64_t> function_hashes) {
   for (const auto function_hash : function_hashes) {
@@ -1685,15 +1701,29 @@ void OrbitApp::EnableFrameTracksFromHashes(const ModuleData* module,
   }
 }
 
+void OrbitApp::EnableFrameTracksByName(const ModuleData* module,
+                                       absl::Span<const std::string> function_names) {
+  for (const auto& function_name : function_names) {
+    const orbit_client_protos::FunctionInfo* const function_info =
+        module->FindFunctionFromPrettyName(function_name);
+    if (function_info == nullptr) {
+      ERROR("Could not find function \"%s\" in module \"%s\"", function_name, module->file_path());
+      continue;
+    }
+    EnableFrameTrack(*function_info);
+  }
+}
+
 void OrbitApp::LoadPreset(const PresetFile& preset_file) {
   ScopedMetric metric{metrics_uploader_,
                       orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_PRESET_LOAD};
   std::vector<orbit_base::Future<std::string>> load_module_results{};
-  load_module_results.reserve(preset_file.preset_info.path_to_module().size());
+  auto module_paths = preset_file.GetModulePaths();
+  load_module_results.reserve(module_paths.size());
 
   // First we try to load all preset modules in parallel
-  for (const auto& [module_path, preset_module] : preset_file.preset_info.path_to_module()) {
-    auto load_preset_result = LoadPresetModule(module_path, preset_module);
+  for (const auto& module_path : module_paths) {
+    auto load_preset_result = LoadPresetModule(module_path.string(), preset_file);
 
     orbit_base::ImmediateExecutor immediate_executor{};
     auto future = load_preset_result.Then(
@@ -1701,7 +1731,8 @@ void OrbitApp::LoadPreset(const PresetFile& preset_file) {
         [module_path = module_path](const ErrorMessageOr<void>& result) -> std::string {
           if (!result.has_error()) return {};
           // We will return the module_path plus error message in case loading fails.
-          return absl::StrFormat("%s, error: \"%s\"", module_path, result.error().message());
+          return absl::StrFormat("%s, error: \"%s\"", module_path.string(),
+                                 result.error().message());
         });
 
     load_module_results.emplace_back(std::move(future));

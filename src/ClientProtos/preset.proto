@@ -6,12 +6,21 @@ syntax = "proto3";
 
 package orbit_client_protos;
 
+// This message is used for loading presets from
+// old format, do not use it to save presets.
 message PresetModule {
   repeated uint64 function_hashes = 1;
   repeated uint64 frame_track_function_hashes = 2;
 }
 
+message PresetModuleInfo {
+  repeated string function_names = 1;
+  repeated string frame_track_function_names = 2;
+}
+
 message PresetInfo {
   reserved 1;
+  // This field is deprecated, use modules instead.
   map<string, PresetModule> path_to_module = 2;
+  map<string, PresetModuleInfo> modules = 3;
 }

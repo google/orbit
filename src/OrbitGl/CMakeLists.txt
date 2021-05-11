@@ -54,6 +54,7 @@ target_sources(
          MemoryTrack.h
          ModulesDataView.h
          PickingManager.h
+         PresetFile.h
          PresetLoadState.h
          PresetsDataView.h
          SamplingReport.h
@@ -121,6 +122,7 @@ target_sources(
           MemoryTrack.cpp
           ModulesDataView.cpp
           PickingManager.cpp
+          PresetFile.cpp
           PresetsDataView.cpp
           SamplingReport.cpp
           SamplingReportDataView.cpp

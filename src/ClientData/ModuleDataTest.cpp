@@ -100,7 +100,7 @@ TEST(ModuleData, FindFunctionByRelativeAddress) {
   symbol1->set_size(size);
   SymbolInfo* symbol2 = symbols.add_symbol_infos();
   symbol2->set_name(name2);
-  symbol1->set_demangled_name(demangled_name_2);
+  symbol2->set_demangled_name(demangled_name_2);
   symbol2->set_address(address2);
   symbol2->set_size(size);
 
@@ -166,6 +166,7 @@ TEST(ModuleData, FindFunctionFromHash) {
 
   SymbolInfo* symbol = symbols.add_symbol_infos();
   symbol->set_name("Symbol Name");
+  symbol->set_demangled_name("demangled name");
 
   ModuleData module{ModuleInfo{}};
   module.AddSymbols(symbols);

@@ -335,7 +335,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   void UpdateAfterCaptureCleared();
 
   orbit_base::Future<ErrorMessageOr<void>> LoadPresetModule(
-      const std::string& module_path, const orbit_client_protos::PresetModule& preset_module);
+      const std::string& module_path, const orbit_gl::PresetFile& preset_file);
   void LoadPreset(const orbit_gl::PresetFile& preset);
   [[nodiscard]] PresetLoadState GetPresetLoadState(const orbit_gl::PresetFile& preset) const;
   void FilterTracks(const std::string& filter);
@@ -465,6 +465,8 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
 
   void SelectFunctionsFromHashes(const orbit_client_data::ModuleData* module,
                                  absl::Span<const uint64_t> function_hashes);
+  void SelectFunctionsByName(const orbit_client_data::ModuleData* module,
+                             absl::Span<const std::string> function_names);
 
   ErrorMessageOr<std::filesystem::path> FindModuleLocally(const std::filesystem::path& module_path,
                                                           const std::string& build_id);
@@ -480,6 +482,8 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
 
   void EnableFrameTracksFromHashes(const orbit_client_data::ModuleData* module,
                                    absl::Span<const uint64_t> function_hashes);
+  void EnableFrameTracksByName(const orbit_client_data::ModuleData* module,
+                               absl::Span<const std::string> function_names);
   void AddFrameTrackTimers(uint64_t instrumented_function_id);
   void RefreshFrameTracks();
 
