@@ -18,16 +18,21 @@
 namespace orbit_code_report {
 class DisassemblyReport : public orbit_code_report::CodeReport {
  public:
-  DisassemblyReport(Disassembler disasm, uint64_t function_address,
+  DisassemblyReport(Disassembler disasm, uint64_t absolute_function_address,
                     orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
                     uint32_t samples_count)
       : disasm_{std::move(disasm)},
         post_processed_sampling_data_{std::move(post_processed_sampling_data)},
-        function_count_{post_processed_sampling_data_->GetCountOfFunction(function_address)},
-        samples_count_(samples_count) {}
+        function_count_{
+            post_processed_sampling_data_->GetCountOfFunction(absolute_function_address)},
+        samples_count_(samples_count),
+        absolute_function_address_{absolute_function_address} {}
 
-  explicit DisassemblyReport(Disassembler disasm)
-      : disasm_{std::move(disasm)}, function_count_{0}, samples_count_{0} {};
+  explicit DisassemblyReport(Disassembler disasm, uint64_t absolute_function_address)
+      : disasm_{std::move(disasm)},
+        function_count_{0},
+        samples_count_{0},
+        absolute_function_address_{absolute_function_address} {};
 
   [[nodiscard]] uint32_t GetNumSamplesInFunction() const override { return function_count_; }
   [[nodiscard]] uint32_t GetNumSamples() const override { return samples_count_; }
@@ -35,11 +40,14 @@ class DisassemblyReport : public orbit_code_report::CodeReport {
 
   [[nodiscard]] std::optional<size_t> GetLineAtAddress(uint64_t address) const;
 
+  [[nodiscard]] uint64_t GetAbsoluteFunctionAddress() const { return absolute_function_address_; }
+
  private:
   Disassembler disasm_;
   std::optional<orbit_client_data::PostProcessedSamplingData> post_processed_sampling_data_;
   uint32_t function_count_;
   uint32_t samples_count_;
+  uint64_t absolute_function_address_;
 };
 
 }  // namespace orbit_code_report
