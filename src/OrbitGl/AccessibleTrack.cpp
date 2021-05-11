@@ -28,7 +28,6 @@ class FakeTrackTab : public CaptureViewElement {
   explicit FakeTrackTab(Track* track, TimeGraphLayout* layout)
       : CaptureViewElement(track, track->GetTimeGraph(), track->GetViewport(), layout),
         track_(track) {
-
     // Compute and set the size (which would usually be done by the parent). As the position may
     // change, we override the GetPos() function.
     SetSize(layout_->GetTrackTabWidth(), layout_->GetTrackTabHeight());
@@ -53,8 +52,7 @@ class FakeTimerPane : public CaptureViewElement {
   explicit FakeTimerPane(Track* track, TimeGraphLayout* layout, CaptureViewElement* track_tab)
       : CaptureViewElement(track, track->GetTimeGraph(), track->GetViewport(), layout),
         track_(track),
-        track_tab_(track_tab) {
-  }
+        track_tab_(track_tab) {}
 
   std::unique_ptr<AccessibleInterface> CreateAccessibleInterface() override {
     return std::make_unique<AccessibleTimerPane>(this);
