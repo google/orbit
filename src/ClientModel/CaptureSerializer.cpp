@@ -138,13 +138,16 @@ CaptureInfo GenerateCaptureInfo(
     if (function == nullptr) {
       continue;
     }
+
     // Fix names/offset/module in address infos (some might only be in process):
     added_address_info->set_function_name(
         orbit_client_data::function_utils::GetDisplayName(*function));
-    const ModuleData* module = capture_data.GetModuleByPathAndBuildId(function->module_path(),
-                                                                      function->module_build_id());
-    const uint64_t offset = orbit_client_data::function_utils::Offset(*function, *module);
-    added_address_info->set_offset_in_function(offset);
+    auto absolute_function_address = capture_data.GetAbsoluteAddress(*function);
+    if (!absolute_function_address.has_value()) {
+      continue;
+    }
+
+    added_address_info->set_offset_in_function(absolute_address - *absolute_function_address);
     added_address_info->set_module_path(function->module_path());
   }
 
