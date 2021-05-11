@@ -336,9 +336,8 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
 
   orbit_base::Future<ErrorMessageOr<void>> LoadPresetModule(
       const std::string& module_path, const orbit_client_protos::PresetModule& preset_module);
-  void LoadPreset(const std::shared_ptr<orbit_client_protos::PresetFile>& preset);
-  PresetLoadState GetPresetLoadState(
-      const std::shared_ptr<orbit_client_protos::PresetFile>& preset) const;
+  void LoadPreset(const orbit_gl::PresetFile& preset);
+  [[nodiscard]] PresetLoadState GetPresetLoadState(const orbit_gl::PresetFile& preset) const;
   void FilterTracks(const std::string& filter);
 
   void CrashOrbitService(orbit_grpc_protos::CrashOrbitServiceRequest_CrashType crash_type);
