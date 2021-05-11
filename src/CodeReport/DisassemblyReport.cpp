@@ -46,4 +46,7 @@ std::optional<uint32_t> DisassemblyReport::GetNumSamplesAtLine(size_t line) cons
   return count;
 }
 
+std::optional<size_t> DisassemblyReport::GetLineAtAddress(uint64_t address) const {
+  return disasm_.GetLineAtAddress(address);
+}
 }  // namespace orbit_code_report
