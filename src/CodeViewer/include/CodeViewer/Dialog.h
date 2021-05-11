@@ -53,7 +53,6 @@ class Dialog : public QDialog {
   void SetMainContent(const QString& code);
   void SetMainContent(const QString& code, std::unique_ptr<QSyntaxHighlighter> syntax_highlighter);
 
-  using AnnotatingLine = Viewer::AnnotatingLine;
   void SetAnnotatingContent(absl::Span<const AnnotatingLine> annotating_lines);
 
   void SetHeatmap(FontSizeInEm heatmap_bar_width, const CodeReport* code_report);
