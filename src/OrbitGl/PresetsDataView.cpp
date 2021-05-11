@@ -25,7 +25,7 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
 
-using orbit_client_protos::PresetFile;
+using orbit_gl::PresetFile;
 
 constexpr const char* kLoadableColumnName = "Loadable";
 constexpr const char* kPresetColumnName = "Preset";
@@ -38,8 +38,7 @@ constexpr const float kModulesColumnWidth = 0.34f;
 constexpr const float kHookedFunctionsColumnWidth = 0.16f;
 
 namespace {
-std::string GetLoadStateString(OrbitApp* app,
-                               const std::shared_ptr<orbit_client_protos::PresetFile>& preset) {
+std::string GetLoadStateString(OrbitApp* app, const PresetFile& preset) {
   PresetLoadState load_state = app->GetPresetLoadState(preset);
   return load_state.GetName();
 }
@@ -49,13 +48,13 @@ PresetsDataView::PresetsDataView(OrbitApp* app,
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader)
     : DataView(DataViewType::kPresets, app), metrics_uploader_(metrics_uploader) {}
 
-std::string PresetsDataView::GetModulesList(const std::vector<ModuleView>& modules) const {
+std::string PresetsDataView::GetModulesList(const std::vector<ModuleView>& modules) {
   return absl::StrJoin(modules, "\n", [](std::string* out, const ModuleView& module) {
     absl::StrAppend(out, module.module_name);
   });
 }
 
-std::string PresetsDataView::GetFunctionCountList(const std::vector<ModuleView>& modules) const {
+std::string PresetsDataView::GetFunctionCountList(const std::vector<ModuleView>& modules) {
   return absl::StrJoin(modules, "\n", [](std::string* out, const ModuleView& module) {
     absl::StrAppend(out, module.function_count);
   });
@@ -77,13 +76,13 @@ const std::vector<DataView::Column>& PresetsDataView::GetColumns() {
 }
 
 std::string PresetsDataView::GetValue(int row, int column) {
-  const std::shared_ptr<PresetFile>& preset = GetPreset(row);
+  const PresetFile& preset = GetPreset(row);
 
   switch (column) {
     case kColumnLoadState:
       return GetLoadStateString(app_, preset);
     case kColumnPresetName:
-      return std::filesystem::path(preset->file_name()).filename().string();
+      return preset.file_path.filename().string();
     case kColumnModules:
       return GetModulesList(GetModules(row));
     case kColumnFunctionCount:
@@ -94,8 +93,8 @@ std::string PresetsDataView::GetValue(int row, int column) {
 }
 
 std::string PresetsDataView::GetToolTip(int row, int /*column*/) {
-  const std::shared_ptr<PresetFile>& preset = GetPreset(row);
-  return absl::StrCat(preset->file_name(),
+  const PresetFile& preset = GetPreset(row);
+  return absl::StrCat(preset.file_path.string(),
                       app_->GetPresetLoadState(preset).state == PresetLoadState::kNotLoadable
                           ? "<br/><br/><i>None of the modules in the preset can be loaded.</i>"
                           : "");
@@ -103,7 +102,7 @@ std::string PresetsDataView::GetToolTip(int row, int /*column*/) {
 
 void PresetsDataView::DoSort() {
   bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
-  std::function<bool(int a, int b)> sorter = nullptr;
+  std::function<bool(int, int)> sorter = nullptr;
 
   switch (sorting_column_) {
     case kColumnLoadState:
@@ -114,7 +113,7 @@ void PresetsDataView::DoSort() {
       break;
     case kColumnPresetName:
       sorter = [&](int a, int b) {
-        return orbit_core::Compare(presets_[a]->file_name(), presets_[b]->file_name(), ascending);
+        return orbit_core::Compare(presets_[a].file_path, presets_[b].file_path, ascending);
       };
       break;
     default:
@@ -134,7 +133,7 @@ std::vector<std::string> PresetsDataView::GetContextMenu(int clicked_index,
   std::vector<std::string> menu;
   // Note that the UI already enforces a single selection.
   if (selected_indices.size() == 1) {
-    const std::shared_ptr<PresetFile>& preset = GetPreset(selected_indices[0]);
+    const PresetFile& preset = GetPreset(selected_indices[0]);
     if (app_->GetPresetLoadState(preset).state != PresetLoadState::kNotLoadable) {
       menu.emplace_back(kMenuActionLoad);
     }
@@ -150,7 +149,7 @@ void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
     if (item_indices.size() != 1) {
       return;
     }
-    const std::shared_ptr<PresetFile>& preset = GetPreset(item_indices[0]);
+    const PresetFile& preset = GetPreset(item_indices[0]);
     app_->LoadPreset(preset);
 
   } else if (action == kMenuActionDelete) {
@@ -160,8 +159,8 @@ void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
       return;
     }
     int row = item_indices[0];
-    const std::shared_ptr<PresetFile>& preset = GetPreset(row);
-    const std::string& filename = preset->file_name();
+    const PresetFile& preset = GetPreset(row);
+    const std::string& filename = preset.file_path;
     int ret = remove(filename.c_str());
     if (ret == 0) {
       presets_.erase(presets_.begin() + indices_[row]);
@@ -179,7 +178,7 @@ void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
 }
 
 void PresetsDataView::OnDoubleClicked(int index) {
-  const std::shared_ptr<PresetFile>& preset = GetPreset(index);
+  const PresetFile& preset = GetPreset(index);
   if (app_->GetPresetLoadState(preset).state != PresetLoadState::kNotLoadable) {
     app_->LoadPreset(preset);
   }
@@ -191,8 +190,8 @@ void PresetsDataView::DoFilter() {
   std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');
 
   for (size_t i = 0; i < presets_.size(); ++i) {
-    const PresetFile& preset = *presets_[i];
-    std::string name = ToLower(std::filesystem::path(preset.file_name()).filename().string());
+    const PresetFile& preset = presets_[i];
+    std::string name = ToLower(preset.file_path.filename().string());
 
     bool match = true;
 
@@ -217,7 +216,7 @@ void PresetsDataView::OnDataChanged() {
   for (size_t i = 0; i < presets_.size(); ++i) {
     indices_[i] = i;
     std::vector<ModuleView> modules;
-    for (const auto& pair : presets_[i]->preset_info().path_to_module()) {
+    for (const auto& pair : presets_[i].preset_info.path_to_module()) {
       modules.emplace_back(std::filesystem::path(pair.first).filename().string(),
                            pair.second.function_hashes_size());
     }
@@ -229,18 +228,18 @@ void PresetsDataView::OnDataChanged() {
 
 bool PresetsDataView::GetDisplayColor(int row, int /*column*/, unsigned char& red,
                                       unsigned char& green, unsigned char& blue) {
-  const std::shared_ptr<PresetFile> preset = GetPreset(row);
+  const PresetFile& preset = GetPreset(row);
   PresetLoadState load_state = app_->GetPresetLoadState(preset);
   load_state.GetDisplayColor(red, green, blue);
   return true;
 }
 
-void PresetsDataView::SetPresets(const std::vector<std::shared_ptr<PresetFile> >& presets) {
-  presets_ = presets;
+void PresetsDataView::SetPresets(std::vector<PresetFile> presets) {
+  presets_ = std::move(presets);
   OnDataChanged();
 }
 
-const std::shared_ptr<PresetFile>& PresetsDataView::GetPreset(unsigned int row) const {
+const PresetFile& PresetsDataView::GetPreset(unsigned int row) const {
   return presets_[indices_[row]];
 }
 const std::vector<PresetsDataView::ModuleView>& PresetsDataView::GetModules(uint32_t row) const {

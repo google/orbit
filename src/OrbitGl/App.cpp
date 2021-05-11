@@ -118,7 +118,6 @@ using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::LinuxAddressInfo;
-using orbit_client_protos::PresetFile;
 using orbit_client_protos::PresetInfo;
 using orbit_client_protos::TimerInfo;
 
@@ -136,18 +135,18 @@ using orbit_grpc_protos::UnwindingMethod;
 
 using orbit_base::Future;
 
+using orbit_gl::PresetFile;
 using orbit_metrics_uploader::CaptureMetric;
 using orbit_metrics_uploader::ScopedMetric;
 
 namespace {
-PresetLoadState GetPresetLoadStateForProcess(
-    const std::shared_ptr<orbit_client_protos::PresetFile>& preset, const ProcessData* process) {
+PresetLoadState GetPresetLoadStateForProcess(const PresetFile& preset, const ProcessData* process) {
   if (process == nullptr) {
     return PresetLoadState::kNotLoadable;
   }
 
   int modules_not_found_count = 0;
-  for (const auto& pair : preset->preset_info().path_to_module()) {
+  for (const auto& pair : preset.preset_info.path_to_module()) {
     const std::string& module_path = pair.first;
     if (!process->IsModuleLoaded(module_path)) {
       modules_not_found_count++;
@@ -159,7 +158,7 @@ PresetLoadState GetPresetLoadStateForProcess(
     return PresetLoadState::kLoadable;
   }
 
-  if (modules_not_found_count == preset->preset_info().path_to_module_size()) {
+  if (modules_not_found_count == preset.preset_info.path_to_module_size()) {
     return PresetLoadState::kNotLoadable;
   }
 
@@ -555,7 +554,7 @@ static std::vector<std::filesystem::path> ListRegularFilesWithExtension(
 void OrbitApp::ListPresets() {
   std::vector<std::filesystem::path> preset_filenames =
       ListRegularFilesWithExtension(Path::CreateOrGetPresetDir(), ".opr");
-  std::vector<std::shared_ptr<PresetFile>> presets;
+  std::vector<PresetFile> presets;
   for (const std::filesystem::path& filename : preset_filenames) {
     ErrorMessageOr<PresetInfo> preset_result = ReadPresetFromFile(filename);
     if (preset_result.has_error()) {
@@ -564,13 +563,13 @@ void OrbitApp::ListPresets() {
       continue;
     }
 
-    auto preset = std::make_shared<PresetFile>();
-    preset->set_file_name(filename.string());
-    preset->mutable_preset_info()->CopyFrom(preset_result.value());
-    presets.push_back(preset);
+    PresetFile preset;
+    preset.file_path = filename;
+    preset.preset_info = std::move(preset_result.value());
+    presets.push_back(std::move(preset));
   }
 
-  presets_data_view_->SetPresets(presets);
+  presets_data_view_->SetPresets(std::move(presets));
 }
 
 void OrbitApp::RefreshCaptureView() {
@@ -960,15 +959,14 @@ ErrorMessageOr<PresetInfo> OrbitApp::ReadPresetFromFile(const std::filesystem::p
 ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
   OUTCOME_TRY(preset_info, ReadPresetFromFile(filename));
 
-  auto preset = std::make_shared<PresetFile>();
-  preset->set_file_name(filename);
-  preset->mutable_preset_info()->CopyFrom(preset_info);
+  PresetFile preset;
+  preset.file_path = filename;
+  preset.preset_info = std::move(preset_info);
   LoadPreset(preset);
   return outcome::success();
 }
 
-PresetLoadState OrbitApp::GetPresetLoadState(
-    const std::shared_ptr<orbit_client_protos::PresetFile>& preset) const {
+PresetLoadState OrbitApp::GetPresetLoadState(const orbit_gl::PresetFile& preset) const {
   return GetPresetLoadStateForProcess(preset, GetTargetProcess());
 }
 
@@ -1687,14 +1685,14 @@ void OrbitApp::EnableFrameTracksFromHashes(const ModuleData* module,
   }
 }
 
-void OrbitApp::LoadPreset(const std::shared_ptr<PresetFile>& preset_file) {
+void OrbitApp::LoadPreset(const PresetFile& preset_file) {
   ScopedMetric metric{metrics_uploader_,
                       orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_PRESET_LOAD};
   std::vector<orbit_base::Future<std::string>> load_module_results{};
-  load_module_results.reserve(preset_file->preset_info().path_to_module().size());
+  load_module_results.reserve(preset_file.preset_info.path_to_module().size());
 
   // First we try to load all preset modules in parallel
-  for (const auto& [module_path, preset_module] : preset_file->preset_info().path_to_module()) {
+  for (const auto& [module_path, preset_module] : preset_file.preset_info.path_to_module()) {
     auto load_preset_result = LoadPresetModule(module_path, preset_module);
 
     orbit_base::ImmediateExecutor immediate_executor{};
