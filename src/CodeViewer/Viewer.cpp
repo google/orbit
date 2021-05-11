@@ -45,11 +45,12 @@ namespace {
 struct Metadata : QTextBlockUserData {
   enum LineType { kMainContent, kAnnotatingLine };
 
-  LineType line_type;
-  uint64_t line_number;
+  LineType line_type = kMainContent;
+  uint64_t line_number = 0ul;
 
   explicit Metadata(LineType line_type, uint64_t line_number)
       : line_type(line_type), line_number(line_number) {}
+  explicit Metadata() = default;
 };
 }  // namespace
 
@@ -334,12 +335,12 @@ uint64_t Viewer::LargestOccuringLineNumber() const {
     case LineNumberTypes::kNone:
       return 0;
     case LineNumberTypes::kOnlyMainContent:
-      return largest_occuring_line_number_main_content_.value_or(blockCount());
+      return largest_occuring_line_numbers_.main_content.value_or(blockCount());
     case LineNumberTypes::kOnlyAnnotatingLines:
-      return largest_occuring_line_number_annotating_lines_.value_or(0);
+      return largest_occuring_line_numbers_.annotating_lines.value_or(0);
     case LineNumberTypes::kBoth:
-      return std::max(largest_occuring_line_number_main_content_.value_or(blockCount()),
-                      largest_occuring_line_number_annotating_lines_.value_or(0));
+      return std::max(largest_occuring_line_numbers_.main_content.value_or(blockCount()),
+                      largest_occuring_line_numbers_.annotating_lines.value_or(0));
   }
 
   return 0;
@@ -480,10 +481,14 @@ int Viewer::WidthMarginBetweenColumns() const {
 int Viewer::TopWidgetHeight() const { return fontMetrics().height(); }
 
 void Viewer::SetAnnotatingContent(absl::Span<const AnnotatingLine> annotating_lines) {
+  largest_occuring_line_numbers_ = SetAnnotatingContentInDocument(document(), annotating_lines);
+}
+
+LargestOccuringLineNumbers SetAnnotatingContentInDocument(
+    QTextDocument* document, absl::Span<const AnnotatingLine> annotating_lines) {
   // Lets first go through the main content and save line numbers as metadata.
   // If previously extra annotating content had been added, let's remove it now.
-  for (auto current_block = document()->begin(); current_block != document()->end();
-       current_block = current_block.next()) {
+  for (auto current_block = document->begin(); current_block != document->end();) {
     const auto metadata = static_cast<const Metadata*>(current_block.userData());
 
     if (metadata == nullptr) {
@@ -492,29 +497,31 @@ void Viewer::SetAnnotatingContent(absl::Span<const AnnotatingLine> annotating_li
 
       // We transfer ownership
       current_block.setUserData(user_data.release());
+      current_block = current_block.next();
       continue;
     }
 
     if (metadata->line_type == Metadata::kAnnotatingLine) {
       // This must be from previous calls of this function. Lets remove this line.
       QTextCursor cursor{current_block};
+      current_block = current_block.next();
       cursor.select(QTextCursor::BlockUnderCursor);
       cursor.removeSelectedText();
       cursor.deleteChar();  // Deletes line break
-      current_block = cursor.block().previous();
+      continue;
     }
+
+    current_block = current_block.next();
   }
 
-  largest_occuring_line_number_main_content_ = blockCount();
-  largest_occuring_line_number_annotating_lines_ = std::nullopt;
-
-  if (annotating_lines.empty()) return;
+  LargestOccuringLineNumbers largest_occuring_line_numbers{};
+  largest_occuring_line_numbers.main_content = document->blockCount();
 
   auto current_annotating_line = annotating_lines.begin();
 
   // In a second pass we add the annotating lines
-  for (auto current_block = document()->begin();
-       current_block != document()->end() && current_annotating_line != annotating_lines.end();
+  for (auto current_block = document->begin();
+       current_block != document->end() && current_annotating_line != annotating_lines.end();
        current_block = current_block.next()) {
     const auto metadata = static_cast<const Metadata*>(current_block.userData());
     CHECK(metadata != nullptr);
@@ -523,23 +530,33 @@ void Viewer::SetAnnotatingContent(absl::Span<const AnnotatingLine> annotating_li
       // That means the annotating line needs to go in front of the current block
 
       QTextCursor cursor{current_block};
-      cursor.movePosition(QTextCursor::PreviousBlock);
-      cursor.movePosition(QTextCursor::EndOfBlock);
-      cursor.insertBlock();
-      cursor.insertText(QString::fromStdString(current_annotating_line->line_contents));
+      cursor.movePosition(QTextCursor::StartOfBlock);
+      cursor.insertText(
+          QString::fromStdString(current_annotating_line->line_contents).append('\n'));
 
-      auto user_data = std::make_unique<Metadata>(Metadata::kAnnotatingLine,
-                                                  current_annotating_line->line_number);
-      largest_occuring_line_number_annotating_lines_ =
+      // We transfer ownership NOLINTNEXTLINE
+      cursor.block().setUserData(new Metadata{});
+
+      auto* previous_block_metadata = static_cast<Metadata*>(cursor.block().previous().userData());
+      auto* current_block_metadata = static_cast<Metadata*>(cursor.block().userData());
+
+      // When inserting a new block in front of an existing block the metadata does stay with the
+      // new block, so we have to copy it to the old one here.
+      *current_block_metadata = *previous_block_metadata;
+
+      previous_block_metadata->line_type = Metadata::kAnnotatingLine;
+      previous_block_metadata->line_number = current_annotating_line->line_number;
+
+      largest_occuring_line_numbers.annotating_lines =
           std::max(current_annotating_line->line_number,
-                   largest_occuring_line_number_annotating_lines_.value_or(0));
+                   largest_occuring_line_numbers.annotating_lines.value_or(0));
 
-      // We transfer ownership
-      cursor.block().setUserData(user_data.release());
       current_block = current_block.next();
       ++current_annotating_line;
     }
   }
+
+  return largest_occuring_line_numbers;
 }
 
 }  // namespace orbit_code_viewer

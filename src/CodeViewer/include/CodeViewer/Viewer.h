@@ -19,6 +19,20 @@
 
 namespace orbit_code_viewer {
 
+// Combines metadata and contents for a line that annotates another line. The current implementation
+// of Viewer inserts the annotating line above the annotated(reference) line. The association is
+// done via line numbers. Both line number fields are one-indexed.
+struct AnnotatingLine {
+  uint64_t reference_line;
+  uint64_t line_number;
+  std::string line_contents;
+};
+
+struct LargestOccuringLineNumbers {
+  std::optional<uint64_t> main_content;
+  std::optional<uint64_t> annotating_lines;
+};
+
 /*
   Viewer is a for displaying source code. It derives from a QPlainTextEdit
   and adds some additional features like a left sidebar for displaying
@@ -64,11 +78,6 @@ class Viewer : public QPlainTextEdit {
   void SetHighlightCurrentLine(bool is_enabled);
   [[nodiscard]] bool IsCurrentLineHighlighted() const;
 
-  struct AnnotatingLine {
-    uint64_t reference_line;
-    uint64_t line_number;
-    std::string line_contents;
-  };
   void SetAnnotatingContent(absl::Span<const AnnotatingLine> annotating_lines);
 
  private:
@@ -101,8 +110,7 @@ class Viewer : public QPlainTextEdit {
 
   // These are only used when SetAnnotatingContent was called and the line numbers deviate from
   // simple counting.
-  std::optional<uint64_t> largest_occuring_line_number_main_content_;
-  std::optional<uint64_t> largest_occuring_line_number_annotating_lines_;
+  LargestOccuringLineNumbers largest_occuring_line_numbers_;
 
   [[nodiscard]] uint64_t LargestOccuringLineNumber() const;
 };
@@ -111,6 +119,10 @@ class Viewer : public QPlainTextEdit {
 [[nodiscard]] int DetermineLineNumberWidthInPixels(const QFontMetrics& font_metrics,
                                                    int max_line_number);
 
+// Add a list of annoating lines to a document. The list of annotating lines need to be ordered by
+// `.reference_line`.
+[[nodiscard]] LargestOccuringLineNumbers SetAnnotatingContentInDocument(
+    QTextDocument* document, absl::Span<const AnnotatingLine> annotating_lines);
 }  // namespace orbit_code_viewer
 
 #endif  // CODE_VIEWER_VIEWER_H_
