@@ -663,7 +663,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
                                    orbit_client_data::function_utils::GetDisplayName(function)));
     disasm.Disassemble(memory.data(), memory.size(), absolute_address, is_64_bit);
     if (!HasCaptureData() || !GetCaptureData().has_post_processed_sampling_data()) {
-      orbit_code_report::DisassemblyReport empty_report(disasm);
+      orbit_code_report::DisassemblyReport empty_report(disasm, absolute_address);
       SendDisassemblyToUi(function, disasm.GetResult(), std::move(empty_report));
       return;
     }
