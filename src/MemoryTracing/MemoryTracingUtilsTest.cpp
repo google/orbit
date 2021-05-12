@@ -18,16 +18,6 @@ using orbit_grpc_protos::SystemMemoryUsage;
 
 namespace {
 
-void ResetSystemMemoryUsage(SystemMemoryUsage* system_memory_usage) {
-  system_memory_usage->set_total_kb(kMissingInfo);
-  system_memory_usage->set_free_kb(kMissingInfo);
-  system_memory_usage->set_available_kb(kMissingInfo);
-  system_memory_usage->set_buffers_kb(kMissingInfo);
-  system_memory_usage->set_cached_kb(kMissingInfo);
-  system_memory_usage->set_pgfault(kMissingInfo);
-  system_memory_usage->set_pgmajfault(kMissingInfo);
-}
-
 void ExpectSystemMemoryUsageEq(const SystemMemoryUsage& system_memory_usage,
                                int total_kb = kMissingInfo, int free_kb = kMissingInfo,
                                int available_kb = kMissingInfo, int buffers_kb = kMissingInfo,
@@ -42,12 +32,6 @@ void ExpectSystemMemoryUsageEq(const SystemMemoryUsage& system_memory_usage,
   EXPECT_EQ(system_memory_usage.pgmajfault(), pgmajfault);
 }
 
-void ResetProcessMemoryUsage(ProcessMemoryUsage* process_memory_usage) {
-  process_memory_usage->set_rss_pages(kMissingInfo);
-  process_memory_usage->set_minflt(kMissingInfo);
-  process_memory_usage->set_majflt(kMissingInfo);
-}
-
 void ExpectProcessMemoryUsageEq(const ProcessMemoryUsage& process_memory_usage,
                                 int rss_pages = kMissingInfo, int minflt = kMissingInfo,
                                 int majflt = kMissingInfo) {
@@ -56,23 +40,24 @@ void ExpectProcessMemoryUsageEq(const ProcessMemoryUsage& process_memory_usage,
   EXPECT_EQ(process_memory_usage.majflt(), majflt);
 }
 
-void ResetCGroupMemoryUsage(CGroupMemoryUsage* cgroup_memory_usage) {
-  cgroup_memory_usage->set_limit_bytes(kMissingInfo);
-  cgroup_memory_usage->set_rss_bytes(kMissingInfo);
-  cgroup_memory_usage->set_mapped_file_bytes(kMissingInfo);
-  cgroup_memory_usage->set_pgfault(kMissingInfo);
-  cgroup_memory_usage->set_pgmajfault(kMissingInfo);
-}
-
 void ExpectCGroupMemoryUsageEq(const CGroupMemoryUsage& cgroup_memory_usage,
                                int limit_bytes = kMissingInfo, int rss_bytes = kMissingInfo,
                                int mapped_file_bytes = kMissingInfo, int pgfault = kMissingInfo,
-                               int pgmajfault = kMissingInfo) {
+                               int pgmajfault = kMissingInfo, int unevictable_bytes = kMissingInfo,
+                               int inactive_anon_bytes = kMissingInfo,
+                               int active_anon_bytes = kMissingInfo,
+                               int inactive_file_bytes = kMissingInfo,
+                               int active_file_bytes = kMissingInfo) {
   EXPECT_EQ(cgroup_memory_usage.limit_bytes(), limit_bytes);
   EXPECT_EQ(cgroup_memory_usage.rss_bytes(), rss_bytes);
   EXPECT_EQ(cgroup_memory_usage.mapped_file_bytes(), mapped_file_bytes);
   EXPECT_EQ(cgroup_memory_usage.pgfault(), pgfault);
   EXPECT_EQ(cgroup_memory_usage.pgmajfault(), pgmajfault);
+  EXPECT_EQ(cgroup_memory_usage.unevictable_bytes(), unevictable_bytes);
+  EXPECT_EQ(cgroup_memory_usage.inactive_anon_bytes(), inactive_anon_bytes);
+  EXPECT_EQ(cgroup_memory_usage.active_anon_bytes(), active_anon_bytes);
+  EXPECT_EQ(cgroup_memory_usage.inactive_file_bytes(), inactive_file_bytes);
+  EXPECT_EQ(cgroup_memory_usage.active_file_bytes(), active_file_bytes);
 }
 
 }  // namespace
@@ -147,19 +132,24 @@ SwapCached:      0 kB)",
 
   const std::string kEmptyMeminfo = "";
 
-  SystemMemoryUsage system_memory_usage;
-  ResetSystemMemoryUsage(&system_memory_usage);
-  GetValuesFromMemInfo(kValidMeminfo, &system_memory_usage);
-  ExpectSystemMemoryUsageEq(system_memory_usage, kMemTotal, kMemFree, kMemAvailable, kBuffers,
-                            kCached);
+  {
+    SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
+    GetValuesFromMemInfo(kValidMeminfo, &system_memory_usage);
+    ExpectSystemMemoryUsageEq(system_memory_usage, kMemTotal, kMemFree, kMemAvailable, kBuffers,
+                              kCached);
+  }
 
-  ResetSystemMemoryUsage(&system_memory_usage);
-  GetValuesFromMemInfo(kPartialMeminfo, &system_memory_usage);
-  ExpectSystemMemoryUsageEq(system_memory_usage, kMemTotal, kMemFree);
+  {
+    SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
+    GetValuesFromMemInfo(kPartialMeminfo, &system_memory_usage);
+    ExpectSystemMemoryUsageEq(system_memory_usage, kMemTotal, kMemFree);
+  }
 
-  ResetSystemMemoryUsage(&system_memory_usage);
-  GetValuesFromMemInfo(kEmptyMeminfo, &system_memory_usage);
-  ExpectSystemMemoryUsageEq(system_memory_usage);
+  {
+    SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
+    GetValuesFromMemInfo(kEmptyMeminfo, &system_memory_usage);
+    ExpectSystemMemoryUsageEq(system_memory_usage);
+  }
 }
 
 TEST(MemoryUtils, GetValuesFromVmStat) {
@@ -326,20 +316,25 @@ nr_unstable 0)",
 
   const std::string kEmptyProcVmStat = "";
 
-  SystemMemoryUsage system_memory_usage;
-  ResetSystemMemoryUsage(&system_memory_usage);
-  GetValuesFromVmStat(kValidProcVmStat, &system_memory_usage);
-  ExpectSystemMemoryUsageEq(system_memory_usage, kMissingInfo, kMissingInfo, kMissingInfo,
-                            kMissingInfo, kMissingInfo, kPageFaults, kMajorPageFaults);
+  {
+    SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
+    GetValuesFromVmStat(kValidProcVmStat, &system_memory_usage);
+    ExpectSystemMemoryUsageEq(system_memory_usage, kMissingInfo, kMissingInfo, kMissingInfo,
+                              kMissingInfo, kMissingInfo, kPageFaults, kMajorPageFaults);
+  }
 
-  ResetSystemMemoryUsage(&system_memory_usage);
-  GetValuesFromVmStat(kPartialProcVmStat, &system_memory_usage);
-  ExpectSystemMemoryUsageEq(system_memory_usage, kMissingInfo, kMissingInfo, kMissingInfo,
-                            kMissingInfo, kMissingInfo, kPageFaults);
+  {
+    SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
+    GetValuesFromVmStat(kPartialProcVmStat, &system_memory_usage);
+    ExpectSystemMemoryUsageEq(system_memory_usage, kMissingInfo, kMissingInfo, kMissingInfo,
+                              kMissingInfo, kMissingInfo, kPageFaults);
+  }
 
-  ResetSystemMemoryUsage(&system_memory_usage);
-  GetValuesFromVmStat(kEmptyProcVmStat, &system_memory_usage);
-  ExpectSystemMemoryUsageEq(system_memory_usage);
+  {
+    SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
+    GetValuesFromVmStat(kEmptyProcVmStat, &system_memory_usage);
+    ExpectSystemMemoryUsageEq(system_memory_usage);
+  }
 }
 
 TEST(MemoryUtils, GetValuesFromProcessStat) {
@@ -353,18 +348,23 @@ TEST(MemoryUtils, GetValuesFromProcessStat) {
   const std::string kPartialProcessStat = R"(9562 (TargetProcess) S 9561 9561 9561)";
   const std::string kEmptyProcessStat = "";
 
-  ProcessMemoryUsage process_memory_usage;
-  ResetProcessMemoryUsage(&process_memory_usage);
-  GetValuesFromProcessStat(kValidProcessStat, &process_memory_usage);
-  ExpectProcessMemoryUsageEq(process_memory_usage, kRssPages, kMinorPageFaults, kMajorPageFaults);
+  {
+    ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
+    GetValuesFromProcessStat(kValidProcessStat, &process_memory_usage);
+    ExpectProcessMemoryUsageEq(process_memory_usage, kRssPages, kMinorPageFaults, kMajorPageFaults);
+  }
 
-  ResetProcessMemoryUsage(&process_memory_usage);
-  GetValuesFromProcessStat(kPartialProcessStat, &process_memory_usage);
-  ExpectProcessMemoryUsageEq(process_memory_usage);
+  {
+    ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
+    GetValuesFromProcessStat(kPartialProcessStat, &process_memory_usage);
+    ExpectProcessMemoryUsageEq(process_memory_usage);
+  }
 
-  ResetProcessMemoryUsage(&process_memory_usage);
-  GetValuesFromProcessStat(kEmptyProcessStat, &process_memory_usage);
-  ExpectProcessMemoryUsageEq(process_memory_usage);
+  {
+    ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
+    GetValuesFromProcessStat(kEmptyProcessStat, &process_memory_usage);
+    ExpectProcessMemoryUsageEq(process_memory_usage);
+  }
 }
 
 TEST(MemoryUtil, GetProcessMemoryCGroupName) {
@@ -388,30 +388,20 @@ TEST(MemoryUtil, GetProcessMemoryCGroupName) {
 
   const std::string kEmptyProcessCGroup = "";
 
-  std::string parsing_result = GetProcessMemoryCGroupName(kValidProcessCGroup);
-  EXPECT_EQ(parsing_result, kCGroupName);
+  {
+    std::string parsing_result = GetProcessMemoryCGroupName(kValidProcessCGroup);
+    EXPECT_EQ(parsing_result, kCGroupName);
+  }
 
-  parsing_result = GetProcessMemoryCGroupName(kPartialProcessCGroup);
-  EXPECT_TRUE(parsing_result.empty());
+  {
+    std::string parsing_result = GetProcessMemoryCGroupName(kPartialProcessCGroup);
+    EXPECT_TRUE(parsing_result.empty());
+  }
 
-  parsing_result = GetProcessMemoryCGroupName(kEmptyProcessCGroup);
-  EXPECT_TRUE(parsing_result.empty());
-}
-
-TEST(MemoryUtils, GetCGroupMemoryLimitInBytes) {
-  const int kCGroupMemoryLimitInBytes = 12345;
-
-  const std::string kValidCGroupMemoryLimitInBytes = std::to_string(kCGroupMemoryLimitInBytes);
-  const std::string kEmptyCGroupMemoryLimitInBytes = "";
-
-  CGroupMemoryUsage cgroup_memory_usage;
-  ResetCGroupMemoryUsage(&cgroup_memory_usage);
-  GetCGroupMemoryLimitInBytes(kValidCGroupMemoryLimitInBytes, &cgroup_memory_usage);
-  ExpectCGroupMemoryUsageEq(cgroup_memory_usage, kCGroupMemoryLimitInBytes);
-
-  ResetCGroupMemoryUsage(&cgroup_memory_usage);
-  GetCGroupMemoryLimitInBytes(kEmptyCGroupMemoryLimitInBytes, &cgroup_memory_usage);
-  ExpectCGroupMemoryUsageEq(cgroup_memory_usage);
+  {
+    std::string parsing_result = GetProcessMemoryCGroupName(kEmptyProcessCGroup);
+    EXPECT_TRUE(parsing_result.empty());
+  }
 }
 
 TEST(MemoryUtils, GetValuesFromCGroupMemoryStat) {
@@ -419,9 +409,14 @@ TEST(MemoryUtils, GetValuesFromCGroupMemoryStat) {
   const int KMappedFileInBytes = 1234;
   const int kPageFaults = 1425;
   const int kMajorPageFaults = 1;
+  const int kUnevictableInBytes = 0;
+  const int kInactiveAnonInBytes = 16384;
+  const int kActiveAnonInBytes = 253952;
+  const int kInactiveFileInBytes = 3678;
+  const int kActiveFileInBytes = 12288;
 
-  const std::string kValidCGroupMemoryStatus =
-      absl::Substitute(R"(cache 36864
+  const std::string kValidCGroupMemoryStatus = absl::Substitute(
+      R"(cache 36864
 rss $0
 rss_huge 0
 shmem 0
@@ -432,11 +427,11 @@ pgpgin 299
 pgpgout 230
 pgfault $2
 pgmajfault $3
-inactive_anon 16384
-active_anon 253952
-inactive_file 0
-active_file 12288
-unevictable 0
+inactive_anon $5
+active_anon $6
+inactive_file $7
+active_file $8
+unevictable $4
 hierarchical_memory_limit 14817636352
 total_cache 36864
 total_rss 245760
@@ -454,25 +449,34 @@ total_active_anon 253952
 total_inactive_file 0
 total_active_file 12288
 total_unevictable 0)",
-                       kRssInBytes, KMappedFileInBytes, kPageFaults, kMajorPageFaults);
+      kRssInBytes, KMappedFileInBytes, kPageFaults, kMajorPageFaults, kUnevictableInBytes,
+      kInactiveAnonInBytes, kActiveAnonInBytes, kInactiveFileInBytes, kActiveFileInBytes);
 
   const std::string kPartialCGroupMemoryStatus = R"(cache 36864
 rss_huge 0)";
 
   const std::string kEmptyCGroupMemoryStatus = "";
 
-  CGroupMemoryUsage cgroup_memory_usage;
-  ResetCGroupMemoryUsage(&cgroup_memory_usage);
-  GetValuesFromCGroupMemoryStat(kValidCGroupMemoryStatus, &cgroup_memory_usage);
-  ExpectCGroupMemoryUsageEq(cgroup_memory_usage, kMissingInfo, kRssInBytes, KMappedFileInBytes,
-                            kPageFaults, kMajorPageFaults);
+  {
+    CGroupMemoryUsage cgroup_memory_usage = CreateAndInitializeCGroupMemoryUsage();
+    GetValuesFromCGroupMemoryStat(kValidCGroupMemoryStatus, &cgroup_memory_usage);
+    ExpectCGroupMemoryUsageEq(cgroup_memory_usage, kMissingInfo, kRssInBytes, KMappedFileInBytes,
+                              kPageFaults, kMajorPageFaults, kUnevictableInBytes,
+                              kInactiveAnonInBytes, kActiveAnonInBytes, kInactiveFileInBytes,
+                              kActiveFileInBytes);
+  }
 
-  ResetCGroupMemoryUsage(&cgroup_memory_usage);
-  GetValuesFromCGroupMemoryStat(kPartialCGroupMemoryStatus, &cgroup_memory_usage);
-  ExpectCGroupMemoryUsageEq(cgroup_memory_usage);
+  {
+    CGroupMemoryUsage cgroup_memory_usage = CreateAndInitializeCGroupMemoryUsage();
+    GetValuesFromCGroupMemoryStat(kPartialCGroupMemoryStatus, &cgroup_memory_usage);
+    ExpectCGroupMemoryUsageEq(cgroup_memory_usage);
+  }
 
-  GetValuesFromCGroupMemoryStat(kEmptyCGroupMemoryStatus, &cgroup_memory_usage);
-  ExpectCGroupMemoryUsageEq(cgroup_memory_usage);
+  {
+    CGroupMemoryUsage cgroup_memory_usage = CreateAndInitializeCGroupMemoryUsage();
+    GetValuesFromCGroupMemoryStat(kEmptyCGroupMemoryStatus, &cgroup_memory_usage);
+    ExpectCGroupMemoryUsageEq(cgroup_memory_usage);
+  }
 }
 
 }  // namespace orbit_memory_tracing
