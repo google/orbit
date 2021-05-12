@@ -24,13 +24,23 @@ using orbit_grpc_protos::kMissingInfo;
 using orbit_grpc_protos::ProcessMemoryUsage;
 using orbit_grpc_protos::SystemMemoryUsage;
 
+SystemMemoryUsage CreateAndInitializeSystemMemoryUsage() {
+  SystemMemoryUsage system_memory_usage;
+  system_memory_usage.set_total_kb(kMissingInfo);
+  system_memory_usage.set_free_kb(kMissingInfo);
+  system_memory_usage.set_available_kb(kMissingInfo);
+  system_memory_usage.set_buffers_kb(kMissingInfo);
+  system_memory_usage.set_cached_kb(kMissingInfo);
+  system_memory_usage.set_pgfault(kMissingInfo);
+  system_memory_usage.set_pgmajfault(kMissingInfo);
+  return system_memory_usage;
+}
+
 void GetValuesFromMemInfo(std::string_view meminfo_content,
                           SystemMemoryUsage* system_memory_usage) {
   if (meminfo_content.empty()) return;
 
   std::vector<std::string> lines = absl::StrSplit(meminfo_content, '\n');
-  if (lines.empty()) return;
-
   constexpr size_t kNumLines = 5;
   std::vector<std::string> top_lines(
       lines.begin(), lines.begin() + (lines.size() > kNumLines ? kNumLines : lines.size()));
@@ -66,8 +76,6 @@ void GetValuesFromVmStat(std::string_view vmstat_content, SystemMemoryUsage* sys
   if (vmstat_content.empty()) return;
 
   std::vector<std::string> lines = absl::StrSplit(vmstat_content, '\n');
-  if (lines.empty()) return;
-
   for (std::string_view line : lines) {
     // Each line of the /proc/vmstat file consists a single name-value pair, delimited by white
     // space. In /proc/vmstat, the pgfault and pgmajfault fields report cumulative values.
@@ -86,15 +94,8 @@ void GetValuesFromVmStat(std::string_view vmstat_content, SystemMemoryUsage* sys
 }
 
 ErrorMessageOr<SystemMemoryUsage> GetSystemMemoryUsage() noexcept {
-  SystemMemoryUsage system_memory_usage;
+  SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
   system_memory_usage.set_timestamp_ns(orbit_base::CaptureTimestampNs());
-  system_memory_usage.set_total_kb(kMissingInfo);
-  system_memory_usage.set_free_kb(kMissingInfo);
-  system_memory_usage.set_available_kb(kMissingInfo);
-  system_memory_usage.set_buffers_kb(kMissingInfo);
-  system_memory_usage.set_cached_kb(kMissingInfo);
-  system_memory_usage.set_pgfault(kMissingInfo);
-  system_memory_usage.set_pgmajfault(kMissingInfo);
 
   // Extract system-wide memory usage from the /proc/meminfo file.
   ErrorMessageOr<std::string> reading_result = orbit_base::ReadFileToString("/proc/meminfo");
@@ -115,6 +116,14 @@ ErrorMessageOr<SystemMemoryUsage> GetSystemMemoryUsage() noexcept {
   return system_memory_usage;
 }
 
+ProcessMemoryUsage CreateAndInitializeProcessMemoryUsage() {
+  ProcessMemoryUsage process_memory_usage;
+  process_memory_usage.set_rss_pages(kMissingInfo);
+  process_memory_usage.set_minflt(kMissingInfo);
+  process_memory_usage.set_majflt(kMissingInfo);
+  return process_memory_usage;
+}
+
 void GetValuesFromProcessStat(std::string_view stat_content,
                               ProcessMemoryUsage* process_memory_usage) {
   if (stat_content.empty()) return;
@@ -122,7 +131,7 @@ void GetValuesFromProcessStat(std::string_view stat_content,
   // According to the kernel code
   // https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/proc/array.c,
   // the /proc/<PID>/stat file records 52 process status information on a single line, in a fixed
-  // order. We are intersted in the following fields:
+  // order. We are interested in the following fields:
   //   Field index | Name   | Format | Meaning
   //    24         | rss    | %ld    | # of pages the process has in real memory
   //    10         | minflt | %lu    | # of minor faults the process has made
@@ -137,7 +146,7 @@ void GetValuesFromProcessStat(std::string_view stat_content,
 }
 
 ErrorMessageOr<ProcessMemoryUsage> GetProcessMemoryUsage(uint32_t pid) noexcept {
-  ProcessMemoryUsage process_memory_usage;
+  ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
   process_memory_usage.set_pid(pid);
   process_memory_usage.set_timestamp_ns(orbit_base::CaptureTimestampNs());
 
@@ -153,12 +162,25 @@ ErrorMessageOr<ProcessMemoryUsage> GetProcessMemoryUsage(uint32_t pid) noexcept 
   return process_memory_usage;
 }
 
+CGroupMemoryUsage CreateAndInitializeCGroupMemoryUsage() {
+  CGroupMemoryUsage cgroup_memory_usage;
+  cgroup_memory_usage.set_limit_bytes(kMissingInfo);
+  cgroup_memory_usage.set_rss_bytes(kMissingInfo);
+  cgroup_memory_usage.set_mapped_file_bytes(kMissingInfo);
+  cgroup_memory_usage.set_pgfault(kMissingInfo);
+  cgroup_memory_usage.set_pgmajfault(kMissingInfo);
+  cgroup_memory_usage.set_unevictable_bytes(kMissingInfo);
+  cgroup_memory_usage.set_inactive_anon_bytes(kMissingInfo);
+  cgroup_memory_usage.set_active_anon_bytes(kMissingInfo);
+  cgroup_memory_usage.set_inactive_file_bytes(kMissingInfo);
+  cgroup_memory_usage.set_active_file_bytes(kMissingInfo);
+  return cgroup_memory_usage;
+}
+
 std::string GetProcessMemoryCGroupName(std::string_view cgroup_content) {
   if (cgroup_content.empty()) return "";
 
   std::vector<std::string> lines = absl::StrSplit(cgroup_content, '\n');
-  if (lines.empty()) return "";
-
   for (std::string_view line : lines) {
     std::vector<std::string> splits = absl::StrSplit(line, absl::MaxSplits(':', 2));
     // If find the memory cgroup, return the cgroup name without the leading "/".
@@ -184,8 +206,6 @@ void GetValuesFromCGroupMemoryStat(std::string_view memory_stat_content,
   if (memory_stat_content.empty()) return;
 
   std::vector<std::string> lines = absl::StrSplit(memory_stat_content, '\n');
-  if (lines.empty()) return;
-
   for (std::string_view line : lines) {
     std::vector<std::string> splits = absl::StrSplit(line, ' ', absl::SkipWhitespace{});
     // According to the document https://www.kernel.org/doc/Documentation/cgroup-v1/memory.txt:
@@ -204,6 +224,16 @@ void GetValuesFromCGroupMemoryStat(std::string_view memory_stat_content,
       cgroup_memory_usage->set_pgfault(value);
     } else if (splits[0] == "pgmajfault") {
       cgroup_memory_usage->set_pgmajfault(value);
+    } else if (splits[0] == "unevictable") {
+      cgroup_memory_usage->set_unevictable_bytes(value);
+    } else if (splits[0] == "inactive_anon") {
+      cgroup_memory_usage->set_inactive_anon_bytes(value);
+    } else if (splits[0] == "active_anon") {
+      cgroup_memory_usage->set_active_anon_bytes(value);
+    } else if (splits[0] == "inactive_file") {
+      cgroup_memory_usage->set_inactive_file_bytes(value);
+    } else if (splits[0] == "active_file") {
+      cgroup_memory_usage->set_active_file_bytes(value);
     }
   }
 }
@@ -226,12 +256,9 @@ ErrorMessageOr<CGroupMemoryUsage> GetCGroupMemoryUsage(uint32_t pid) noexcept {
     return ErrorMessage{std::move(error_message)};
   }
 
-  CGroupMemoryUsage cgroup_memory_usage;
+  CGroupMemoryUsage cgroup_memory_usage = CreateAndInitializeCGroupMemoryUsage();
   cgroup_memory_usage.set_cgroup_name(cgroup_name);
   cgroup_memory_usage.set_timestamp_ns(current_timestamp_ns);
-  cgroup_memory_usage.set_limit_bytes(kMissingInfo);
-  cgroup_memory_usage.set_rss_bytes(kMissingInfo);
-  cgroup_memory_usage.set_mapped_file_bytes(kMissingInfo);
 
   // Extract cgroup memory limit from /sys/fs/cgroup/memory/<cgroup_name>/memory.limit_in_bytes.
   reading_result = orbit_base::ReadFileToString(
