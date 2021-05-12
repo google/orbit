@@ -74,7 +74,7 @@ class CaptureEventProcessorForListener : public CaptureEventProcessor {
   void ProcessInternedTracepointInfo(
       orbit_grpc_protos::InternedTracepointInfo interned_tracepoint_info);
   void ProcessTracepointEvent(const orbit_grpc_protos::TracepointEvent& tracepoint_event);
-  void ProcessGpuQueueSubmission(const orbit_grpc_protos::GpuQueueSubmission& gpu_command_buffer);
+  void ProcessGpuQueueSubmission(const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission);
   void ProcessSystemMemoryUsage(const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage);
 
   absl::flat_hash_set<uint64_t> frame_track_function_ids_;
@@ -285,8 +285,8 @@ void CaptureEventProcessorForListener::ProcessGpuJob(const GpuJob& gpu_job) {
   int32_t thread_id = gpu_job.tid();
   uint64_t amdgpu_cs_ioctl_time_ns = gpu_job.amdgpu_cs_ioctl_time_ns();
 
-  constexpr const char* sw_queue = "sw queue";
-  uint64_t sw_queue_key = GetStringHashAndSendToListenerIfNecessary(sw_queue);
+  constexpr const char* kSwQueue = "sw queue";
+  uint64_t sw_queue_key = GetStringHashAndSendToListenerIfNecessary(kSwQueue);
 
   TimerInfo timer_user_to_sched;
   timer_user_to_sched.set_process_id(process_id);
@@ -303,8 +303,8 @@ void CaptureEventProcessorForListener::ProcessGpuJob(const GpuJob& gpu_job) {
 
   capture_listener_->OnTimer(timer_user_to_sched);
 
-  constexpr const char* hw_queue = "hw queue";
-  uint64_t hw_queue_key = GetStringHashAndSendToListenerIfNecessary(hw_queue);
+  constexpr const char* kHwQueue = "hw queue";
+  uint64_t hw_queue_key = GetStringHashAndSendToListenerIfNecessary(kHwQueue);
 
   TimerInfo timer_sched_to_start;
   timer_sched_to_start.set_process_id(process_id);
@@ -318,8 +318,8 @@ void CaptureEventProcessorForListener::ProcessGpuJob(const GpuJob& gpu_job) {
   timer_sched_to_start.set_type(TimerInfo::kGpuActivity);
   capture_listener_->OnTimer(timer_sched_to_start);
 
-  constexpr const char* hw_execution = "hw execution";
-  uint64_t hw_execution_key = GetStringHashAndSendToListenerIfNecessary(hw_execution);
+  constexpr const char* kHwExecution = "hw execution";
+  uint64_t hw_execution_key = GetStringHashAndSendToListenerIfNecessary(kHwExecution);
 
   TimerInfo timer_start_to_finish;
   timer_start_to_finish.set_process_id(process_id);
