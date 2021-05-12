@@ -12,12 +12,14 @@
 
 namespace orbit_memory_tracing {
 
-// If the file format is incorrect or the unit size doesn't match "kB", this method returns a
-// SystemMemoryUsage with value fields set to kMissingInfo.
-[[nodiscard]] orbit_grpc_protos::SystemMemoryUsage ParseMemInfo(std::string_view meminfo_content);
+void GetValuesFromMemInfo(std::string_view meminfo_content,
+                          orbit_grpc_protos::SystemMemoryUsage* system_memory_usage);
+void GetValuesFromVmStat(std::string_view vmstat_content,
+                         orbit_grpc_protos::SystemMemoryUsage* system_memory_usage);
 [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::SystemMemoryUsage> GetSystemMemoryUsage() noexcept;
 
-[[nodiscard]] int64_t GetVmRssFromProcessStatus(std::string_view status_content);
+void GetValuesFromProcessStat(std::string_view stat_content,
+                              orbit_grpc_protos::ProcessMemoryUsage* process_memory_usage);
 [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ProcessMemoryUsage> GetProcessMemoryUsage(
     uint32_t pid) noexcept;
 

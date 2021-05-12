@@ -323,13 +323,18 @@ message SystemMemoryUsage {
   int64 available_kb = 4;
   int64 buffers_kb = 5;
   int64 cached_kb = 6;
+  // These fields are retrieved from /proc/vmstat.
+  int64 pgfault = 7;
+  int64 pgmajfault = 8;
 }
 
 message ProcessMemoryUsage {
   uint32 pid = 1;
   uint64 timestamp_ns = 2;
-  // These fields are retrieved from /proc/<pid>/status.
-  int64 vm_rss_kb = 3;
+  // These fields are retrieved from /proc/<pid>/stat.
+  int64 rss_pages = 3;
+  int64 minflt = 4;
+  int64 majflt = 5;
 }
 
 message CGroupMemoryUsage {
@@ -342,6 +347,8 @@ message CGroupMemoryUsage {
   // /sys/fs/cgroup/memory/<cgroup_name>/memory.stat.
   int64 rss_bytes = 4;
   int64 mapped_file_bytes = 5;
+  int64 pgfault = 6;
+  int64 pgmajfault = 7;
 }
 
 message ModulesSnapshot {
