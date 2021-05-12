@@ -23,6 +23,8 @@
 #include "ElfUtils/ElfFile.h"
 #include "ElfUtils/LinuxMap.h"
 #include "Function.h"
+#include "LibunwindstackMaps.h"
+#include "LibunwindstackUnwinder.h"
 #include "LinuxTracing/TracerListener.h"
 #include "LinuxTracingUtils.h"
 #include "OrbitBase/ExecutablePath.h"
@@ -104,7 +106,10 @@ void CloseFileDescriptors(const absl::flat_hash_map<int32_t, int>& fds_per_cpu) 
 
 void TracerThread::InitUprobesEventVisitor() {
   ORBIT_SCOPE_FUNCTION;
-  uprobes_unwinding_visitor_ = std::make_unique<UprobesUnwindingVisitor>(ReadMaps(target_pid_));
+  maps_ = LibunwindstackMaps::ParseMaps(ReadMaps(target_pid_));
+  unwinder_ = LibunwindstackUnwinder::Create();
+  uprobes_unwinding_visitor_ =
+      std::make_unique<UprobesUnwindingVisitor>(maps_.get(), unwinder_.get());
   uprobes_unwinding_visitor_->SetListener(listener_);
   uprobes_unwinding_visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(
       &stats_.unwind_error_count, &stats_.discarded_samples_in_uretprobes_count);

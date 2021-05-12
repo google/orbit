@@ -17,6 +17,7 @@
 #include <tuple>
 #include <vector>
 
+#include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"
 #include "LinuxTracing/TracerListener.h"
 #include "PerfEvent.h"
@@ -44,8 +45,12 @@ namespace orbit_linux_tracing {
 
 class UprobesUnwindingVisitor : public PerfEventVisitor {
  public:
-  explicit UprobesUnwindingVisitor(const std::string& initial_maps)
-      : current_maps_{LibunwindstackUnwinder::ParseMaps(initial_maps)} {}
+  explicit UprobesUnwindingVisitor(LibunwindstackMaps* initial_maps,
+                                   LibunwindstackUnwinder* unwinder)
+      : current_maps_{initial_maps}, unwinder_{unwinder} {
+    CHECK(current_maps_ != nullptr);
+    CHECK(unwinder_ != nullptr);
+  }
 
   UprobesUnwindingVisitor(const UprobesUnwindingVisitor&) = delete;
   UprobesUnwindingVisitor& operator=(const UprobesUnwindingVisitor&) = delete;
@@ -71,8 +76,8 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
  private:
   UprobesFunctionCallManager function_call_manager_{};
   UprobesReturnAddressManager return_address_manager_{};
-  std::unique_ptr<unwindstack::BufferMaps> current_maps_;
-  LibunwindstackUnwinder unwinder_{};
+  LibunwindstackMaps* current_maps_;
+  LibunwindstackUnwinder* unwinder_;
 
   TracerListener* listener_ = nullptr;
 

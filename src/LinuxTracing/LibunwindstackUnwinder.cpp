@@ -63,38 +63,48 @@ class StackAndProcessMemory : public unwindstack::Memory {
   uint64_t stack_end_;
 };
 
-}  // namespace
+class LibunwindstackUnwinderImpl : public LibunwindstackUnwinder {
+ public:
+  std::vector<unwindstack::FrameData> Unwind(
+      pid_t pid, unwindstack::Maps* maps,
+      const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs, const void* stack_dump,
+      uint64_t stack_dump_size) override;
 
-std::unique_ptr<unwindstack::BufferMaps> LibunwindstackUnwinder::ParseMaps(
-    const std::string& maps_buffer) {
-  auto maps = std::make_unique<unwindstack::BufferMaps>(maps_buffer.c_str());
-  if (!maps->Parse()) {
-    return nullptr;
+ private:
+  static constexpr size_t kMaxFrames = 1024;  // This is arbitrary.
+
+  static const std::array<size_t, unwindstack::X86_64_REG_LAST> kUunwindstackRegsToPerfRegs;
+
+  static std::string LibunwindstackErrorString(unwindstack::ErrorCode error_code) {
+    static const std::vector<const char*> kErrorNames{
+        "ERROR_NONE",           "ERROR_MEMORY_INVALID", "ERROR_UNWIND_INFO",
+        "ERROR_UNSUPPORTED",    "ERROR_INVALID_MAP",    "ERROR_MAX_FRAMES_EXCEEDED",
+        "ERROR_REPEATED_FRAME", "ERROR_INVALID_ELF"};
+    return kErrorNames[error_code];
   }
-  return maps;
-}
+};
 
 const std::array<size_t, unwindstack::X86_64_REG_LAST>
-    LibunwindstackUnwinder::UNWINDSTACK_REGS_TO_PERF_REGS{
+    LibunwindstackUnwinderImpl::kUunwindstackRegsToPerfRegs{
         PERF_REG_X86_AX,  PERF_REG_X86_DX,  PERF_REG_X86_CX,  PERF_REG_X86_BX,  PERF_REG_X86_SI,
         PERF_REG_X86_DI,  PERF_REG_X86_BP,  PERF_REG_X86_SP,  PERF_REG_X86_R8,  PERF_REG_X86_R9,
         PERF_REG_X86_R10, PERF_REG_X86_R11, PERF_REG_X86_R12, PERF_REG_X86_R13, PERF_REG_X86_R14,
         PERF_REG_X86_R15, PERF_REG_X86_IP,
     };
 
-std::vector<unwindstack::FrameData> LibunwindstackUnwinder::Unwind(
+std::vector<unwindstack::FrameData> LibunwindstackUnwinderImpl::Unwind(
     pid_t pid, unwindstack::Maps* maps, const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
     const void* stack_dump, uint64_t stack_dump_size) {
   unwindstack::RegsX86_64 regs{};
   for (size_t perf_reg = 0; perf_reg < unwindstack::X86_64_REG_LAST; ++perf_reg) {
-    regs[perf_reg] = perf_regs.at(UNWINDSTACK_REGS_TO_PERF_REGS[perf_reg]);
+    regs[perf_reg] = perf_regs.at(kUunwindstackRegsToPerfRegs[perf_reg]);
   }
 
   std::shared_ptr<unwindstack::Memory> memory = StackAndProcessMemory::Create(
       pid, static_cast<const uint8_t*>(stack_dump), regs[unwindstack::X86_64_REG_RSP],
       regs[unwindstack::X86_64_REG_RSP] + stack_dump_size);
 
-  unwindstack::Unwinder unwinder{MAX_FRAMES, maps, &regs, memory};
+  unwindstack::Unwinder unwinder{kMaxFrames, maps, &regs, memory};
   // Careful: regs are modified. Use regs.Clone() if you need to reuse regs later.
   unwinder.Unwind();
 
@@ -108,6 +118,11 @@ std::vector<unwindstack::FrameData> LibunwindstackUnwinder::Unwind(
   }
 
   return unwinder.frames();
+}
+}  // namespace
+
+std::unique_ptr<LibunwindstackUnwinder> LibunwindstackUnwinder::Create() {
+  return std::make_unique<LibunwindstackUnwinderImpl>();
 }
 
 }  // namespace orbit_linux_tracing
