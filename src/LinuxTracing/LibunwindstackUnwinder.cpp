@@ -95,15 +95,11 @@ std::vector<unwindstack::FrameData> LibunwindstackUnwinder::Unwind(
       regs[unwindstack::X86_64_REG_RSP] + stack_dump_size);
 
   unwindstack::Unwinder unwinder{MAX_FRAMES, maps, &regs, memory};
-  // Careful: regs are modified. Use regs.Clone() if you need to reuse regs
-  // later.
+  // Careful: regs are modified. Use regs.Clone() if you need to reuse regs later.
   unwinder.Unwind();
 
-  // Samples that fall inside a function dynamically-instrumented with
-  // uretprobes often result in unwinding errors when hitting the trampoline
-  // inserted by the uretprobe. Do not treat them as errors as we might want
-  // those callstacks.
-  if (unwinder.LastErrorCode() != 0 && unwinder.frames().back().map_name != "[uprobes]") {
+  // Simply report an unwinding error as an empty callstack for now.
+  if (unwinder.LastErrorCode() != 0) {
 #ifndef NDEBUG
     ERROR("%s at %#016lx", LibunwindstackErrorString(unwinder.LastErrorCode()).c_str(),
           unwinder.LastErrorAddress());
