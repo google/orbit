@@ -24,18 +24,12 @@ using orbit_grpc_protos::kMissingInfo;
 using orbit_grpc_protos::ProcessMemoryUsage;
 using orbit_grpc_protos::SystemMemoryUsage;
 
-SystemMemoryUsage ParseMemInfo(std::string_view meminfo_content) {
-  SystemMemoryUsage memory_info;
-  memory_info.set_total_kb(kMissingInfo);
-  memory_info.set_free_kb(kMissingInfo);
-  memory_info.set_available_kb(kMissingInfo);
-  memory_info.set_buffers_kb(kMissingInfo);
-  memory_info.set_cached_kb(kMissingInfo);
-
-  if (meminfo_content.empty()) return memory_info;
+void GetValuesFromMemInfo(std::string_view meminfo_content,
+                          SystemMemoryUsage* system_memory_usage) {
+  if (meminfo_content.empty()) return;
 
   std::vector<std::string> lines = absl::StrSplit(meminfo_content, '\n');
-  if (lines.empty()) return memory_info;
+  if (lines.empty()) return;
 
   constexpr size_t kNumLines = 5;
   std::vector<std::string> top_lines(
@@ -55,75 +49,106 @@ SystemMemoryUsage ParseMemInfo(std::string_view meminfo_content) {
     if (!absl::SimpleAtoi(splits[1], &memory_size_value)) continue;
 
     if (splits[0] == "MemTotal:") {
-      memory_info.set_total_kb(memory_size_value);
+      system_memory_usage->set_total_kb(memory_size_value);
     } else if (splits[0] == "MemFree:") {
-      memory_info.set_free_kb(memory_size_value);
+      system_memory_usage->set_free_kb(memory_size_value);
     } else if (splits[0] == "MemAvailable:") {
-      memory_info.set_available_kb(memory_size_value);
+      system_memory_usage->set_available_kb(memory_size_value);
     } else if (splits[0] == "Buffers:") {
-      memory_info.set_buffers_kb(memory_size_value);
+      system_memory_usage->set_buffers_kb(memory_size_value);
     } else if (splits[0] == "Cached:") {
-      memory_info.set_cached_kb(memory_size_value);
+      system_memory_usage->set_cached_kb(memory_size_value);
     }
   }
+}
 
-  return memory_info;
+void GetValuesFromVmStat(std::string_view vmstat_content, SystemMemoryUsage* system_memory_usage) {
+  if (vmstat_content.empty()) return;
+
+  std::vector<std::string> lines = absl::StrSplit(vmstat_content, '\n');
+  if (lines.empty()) return;
+
+  for (std::string_view line : lines) {
+    // Each line of the /proc/vmstat file consists a single name-value pair, delimited by white
+    // space. In /proc/vmstat, the pgfault and pgmajfault fields report cumulative values.
+    std::vector<std::string> splits = absl::StrSplit(line, ' ', absl::SkipWhitespace{});
+    if (splits.size() < 2) continue;
+
+    int64_t value;
+    if (!absl::SimpleAtoi(splits[1], &value)) continue;
+
+    if (splits[0] == "pgfault") {
+      system_memory_usage->set_pgfault(value);
+    } else if (splits[0] == "pgmajfault") {
+      system_memory_usage->set_pgmajfault(value);
+    }
+  }
 }
 
 ErrorMessageOr<SystemMemoryUsage> GetSystemMemoryUsage() noexcept {
-  uint64_t current_timestamp_ns = orbit_base::CaptureTimestampNs();
+  SystemMemoryUsage system_memory_usage;
+  system_memory_usage.set_timestamp_ns(orbit_base::CaptureTimestampNs());
+  system_memory_usage.set_total_kb(kMissingInfo);
+  system_memory_usage.set_free_kb(kMissingInfo);
+  system_memory_usage.set_available_kb(kMissingInfo);
+  system_memory_usage.set_buffers_kb(kMissingInfo);
+  system_memory_usage.set_cached_kb(kMissingInfo);
+  system_memory_usage.set_pgfault(kMissingInfo);
+  system_memory_usage.set_pgmajfault(kMissingInfo);
 
+  // Extract system-wide memory usage from the /proc/meminfo file.
   ErrorMessageOr<std::string> reading_result = orbit_base::ReadFileToString("/proc/meminfo");
   if (reading_result.has_error()) {
     ERROR("%s", reading_result.error().message());
     return reading_result.error();
   }
+  GetValuesFromMemInfo(reading_result.value(), &system_memory_usage);
 
-  SystemMemoryUsage parsing_result = ParseMemInfo(reading_result.value());
-  parsing_result.set_timestamp_ns(current_timestamp_ns);
-  return parsing_result;
-}
-
-int64_t GetVmRssFromProcessStatus(std::string_view status_content) {
-  if (status_content.empty()) return kMissingInfo;
-
-  std::vector<std::string> lines = absl::StrSplit(status_content, '\n');
-  if (lines.empty()) return kMissingInfo;
-
-  for (std::string_view line : lines) {
-    if (absl::StartsWith(line, "VmRSS")) {
-      std::vector<std::string> splits = absl::StrSplit(line, ' ', absl::SkipWhitespace{});
-      // According to the kernel code
-      // https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/proc/task_mmu.c,
-      // the size unit of the VmRSS field in the /proc/<PID>/status file is fixed to "kB", which
-      // implies 1024 Bytes. We report in "KB" in ProcessSystemUsage.
-      int64_t rss_kb;
-      if (splits.size() == 3 && splits[2] == "kB" && absl::SimpleAtoi(splits[1], &rss_kb)) {
-        return rss_kb;
-      }
-      return kMissingInfo;
-    }
-  }
-
-  return kMissingInfo;
-}
-
-ErrorMessageOr<ProcessMemoryUsage> GetProcessMemoryUsage(uint32_t pid) noexcept {
-  uint64_t current_timestamp_ns = orbit_base::CaptureTimestampNs();
-
-  // Extract the VmRSS value in kilobytes from the /proc/<pid>/status file.
-  ErrorMessageOr<std::string> reading_result =
-      orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/status", pid));
+  // Extract system-wide page fault statistics from the /proc/vmstat file.
+  reading_result = orbit_base::ReadFileToString("/proc/vmstat");
   if (reading_result.has_error()) {
     ERROR("%s", reading_result.error().message());
     return reading_result.error();
   }
-  int64_t vm_rss_kb = GetVmRssFromProcessStatus(reading_result.value());
+  GetValuesFromVmStat(reading_result.value(), &system_memory_usage);
 
+  return system_memory_usage;
+}
+
+void GetValuesFromProcessStat(std::string_view stat_content,
+                              ProcessMemoryUsage* process_memory_usage) {
+  if (stat_content.empty()) return;
+
+  // According to the kernel code
+  // https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/fs/proc/array.c,
+  // the /proc/<PID>/stat file records 52 process status information on a single line, in a fixed
+  // order. We are intersted in the following fields:
+  //   Field index | Name   | Format | Meaning
+  //    24         | rss    | %ld    | # of pages the process has in real memory
+  //    10         | minflt | %lu    | # of minor faults the process has made
+  //    12         | majflt | %lu    | # of major faults the process has made
+  std::vector<std::string> splits = absl::StrSplit(stat_content, ' ', absl::SkipWhitespace{});
+  if (splits.size() != 52) return;
+
+  int64_t value;
+  if (absl::SimpleAtoi(splits[23], &value)) process_memory_usage->set_rss_pages(value);
+  if (absl::SimpleAtoi(splits[9], &value)) process_memory_usage->set_minflt(value);
+  if (absl::SimpleAtoi(splits[11], &value)) process_memory_usage->set_majflt(value);
+}
+
+ErrorMessageOr<ProcessMemoryUsage> GetProcessMemoryUsage(uint32_t pid) noexcept {
   ProcessMemoryUsage process_memory_usage;
   process_memory_usage.set_pid(pid);
-  process_memory_usage.set_timestamp_ns(current_timestamp_ns);
-  process_memory_usage.set_vm_rss_kb(vm_rss_kb);
+  process_memory_usage.set_timestamp_ns(orbit_base::CaptureTimestampNs());
+
+  // Extract the rss value (in pages) and page fault statistics from the /proc/<pid>/status file.
+  ErrorMessageOr<std::string> reading_result =
+      orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/stat", pid));
+  if (reading_result.has_error()) {
+    ERROR("%s", reading_result.error().message());
+    return reading_result.error();
+  }
+  GetValuesFromProcessStat(reading_result.value(), &process_memory_usage);
 
   return process_memory_usage;
 }
@@ -175,6 +200,10 @@ void GetValuesFromCGroupMemoryStat(std::string_view memory_stat_content,
       cgroup_memory_usage->set_rss_bytes(value);
     } else if (splits[0] == "mapped_file") {
       cgroup_memory_usage->set_mapped_file_bytes(value);
+    } else if (splits[0] == "pgfault") {
+      cgroup_memory_usage->set_pgfault(value);
+    } else if (splits[0] == "pgmajfault") {
+      cgroup_memory_usage->set_pgmajfault(value);
     }
   }
 }
