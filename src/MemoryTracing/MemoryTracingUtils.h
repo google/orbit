@@ -22,8 +22,10 @@ namespace orbit_memory_tracing {
     uint32_t pid) noexcept;
 
 [[nodiscard]] std::string GetProcessMemoryCGroupName(std::string_view cgroup_content);
-[[nodiscard]] int64_t GetCGroupMemoryLimitInBytes(std::string_view memory_limit_in_bytes_content);
-[[nodiscard]] int64_t GetRssFromCGroupMemoryStat(std::string_view memory_stat_content);
+void GetCGroupMemoryLimitInBytes(std::string_view memory_limit_in_bytes_content,
+                                 orbit_grpc_protos::CGroupMemoryUsage* cgroup_memory_usage);
+void GetValuesFromCGroupMemoryStat(std::string_view memory_stat_content,
+                                   orbit_grpc_protos::CGroupMemoryUsage* cgroup_memory_usage);
 [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::CGroupMemoryUsage> GetCGroupMemoryUsage(
     uint32_t pid) noexcept;
 
