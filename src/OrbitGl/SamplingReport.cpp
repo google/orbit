@@ -48,7 +48,7 @@ void SamplingReport::FillReport() {
 
   for (const ThreadSampleData& thread_sample_data : sample_data) {
     SamplingReportDataView thread_report{app_};
-    thread_report.SetSampledFunctions(thread_sample_data.sampled_function);
+    thread_report.SetSampledFunctions(thread_sample_data.sampled_functions);
     thread_report.SetThreadID(thread_sample_data.thread_id);
     thread_report.SetSamplingReport(this);
     thread_reports_.push_back(std::move(thread_report));
@@ -83,7 +83,7 @@ void SamplingReport::UpdateReport(
     const ThreadSampleData* thread_sample_data =
         post_processed_sampling_data_.GetThreadSampleDataByThreadId(thread_id);
     if (thread_sample_data != nullptr) {
-      thread_report.SetSampledFunctions(thread_sample_data->sampled_function);
+      thread_report.SetSampledFunctions(thread_sample_data->sampled_functions);
     }
   }
 

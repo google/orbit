@@ -142,7 +142,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromSamplingProfile
     CallTreeThread* thread_node =
         GetOrCreateThreadNode(top_down_view.get(), tid, process_name, thread_names);
 
-    for (const auto& callstack_id_and_count : thread_sample_data.callstack_count) {
+    for (const auto& callstack_id_and_count : thread_sample_data.callstack_id_to_count) {
       const CallStack& resolved_callstack =
           post_processed_sampling_data.GetResolvedCallstack(callstack_id_and_count.first);
       const uint64_t sample_count = callstack_id_and_count.second;
@@ -188,7 +188,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromSamplingProfil
       continue;
     }
 
-    for (const auto& callstack_id_and_count : thread_sample_data.callstack_count) {
+    for (const auto& callstack_id_and_count : thread_sample_data.callstack_id_to_count) {
       const CallStack& resolved_callstack =
           post_processed_sampling_data.GetResolvedCallstack(callstack_id_and_count.first);
       const uint64_t sample_count = callstack_id_and_count.second;
