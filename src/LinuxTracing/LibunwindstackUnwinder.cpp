@@ -73,7 +73,7 @@ class LibunwindstackUnwinderImpl : public LibunwindstackUnwinder {
  private:
   static constexpr size_t kMaxFrames = 1024;  // This is arbitrary.
 
-  static const std::array<size_t, unwindstack::X86_64_REG_LAST> UNWINDSTACK_REGS_TO_PERF_REGS;
+  static const std::array<size_t, unwindstack::X86_64_REG_LAST> kUunwindstackRegsToPerfRegs;
 
   static std::string LibunwindstackErrorString(unwindstack::ErrorCode error_code) {
     static const std::vector<const char*> kErrorNames{
@@ -83,14 +83,9 @@ class LibunwindstackUnwinderImpl : public LibunwindstackUnwinder {
     return kErrorNames[error_code];
   }
 };
-}  // namespace
-
-std::unique_ptr<LibunwindstackUnwinder> LibunwindstackUnwinder::Create() {
-  return std::make_unique<LibunwindstackUnwinderImpl>();
-}
 
 const std::array<size_t, unwindstack::X86_64_REG_LAST>
-    LibunwindstackUnwinderImpl::UNWINDSTACK_REGS_TO_PERF_REGS{
+    LibunwindstackUnwinderImpl::kUunwindstackRegsToPerfRegs{
         PERF_REG_X86_AX,  PERF_REG_X86_DX,  PERF_REG_X86_CX,  PERF_REG_X86_BX,  PERF_REG_X86_SI,
         PERF_REG_X86_DI,  PERF_REG_X86_BP,  PERF_REG_X86_SP,  PERF_REG_X86_R8,  PERF_REG_X86_R9,
         PERF_REG_X86_R10, PERF_REG_X86_R11, PERF_REG_X86_R12, PERF_REG_X86_R13, PERF_REG_X86_R14,
@@ -102,7 +97,7 @@ std::vector<unwindstack::FrameData> LibunwindstackUnwinderImpl::Unwind(
     const void* stack_dump, uint64_t stack_dump_size) {
   unwindstack::RegsX86_64 regs{};
   for (size_t perf_reg = 0; perf_reg < unwindstack::X86_64_REG_LAST; ++perf_reg) {
-    regs[perf_reg] = perf_regs.at(UNWINDSTACK_REGS_TO_PERF_REGS[perf_reg]);
+    regs[perf_reg] = perf_regs.at(kUunwindstackRegsToPerfRegs[perf_reg]);
   }
 
   std::shared_ptr<unwindstack::Memory> memory = StackAndProcessMemory::Create(
@@ -123,6 +118,11 @@ std::vector<unwindstack::FrameData> LibunwindstackUnwinderImpl::Unwind(
   }
 
   return unwinder.frames();
+}
+}  // namespace
+
+std::unique_ptr<LibunwindstackUnwinder> LibunwindstackUnwinder::Create() {
+  return std::make_unique<LibunwindstackUnwinderImpl>();
 }
 
 }  // namespace orbit_linux_tracing

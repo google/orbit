@@ -24,12 +24,12 @@ class LibunwindstackUnwinder {
  public:
   virtual ~LibunwindstackUnwinder() = default;
 
-  static std::unique_ptr<LibunwindstackUnwinder> Create();
-
   virtual std::vector<unwindstack::FrameData> Unwind(
       pid_t pid, unwindstack::Maps* maps,
       const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs, const void* stack_dump,
       uint64_t stack_dump_size) = 0;
+
+  static std::unique_ptr<LibunwindstackUnwinder> Create();
 };
 }  // namespace orbit_linux_tracing
 

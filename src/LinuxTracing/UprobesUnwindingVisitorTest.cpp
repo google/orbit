@@ -119,7 +119,13 @@ TEST_F(UprobesUnwindingVisitorTest, VisitValidStackSampleWithoutUprobesEmitsEven
   constexpr uint64_t kStackSize = 13;
   StackSamplePerfEvent event{kStackSize};
   perf_event_sample_id_tid_time_streamid_cpu sample_id{
-      .pid = kPid, .tid = 11, .time = 15, .stream_id = 12, .cpu = 0, .res = 0};
+      .pid = kPid,
+      .tid = 11,
+      .time = 15,
+      .stream_id = 12,
+      .cpu = 0,
+      .res = 0,
+  };
   event.ring_buffer_record->sample_id = sample_id;
 
   EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
@@ -183,7 +189,13 @@ TEST_F(UprobesUnwindingVisitorTest, VisitInvalidStackSampleWithoutUprobesLeadsTo
   constexpr uint64_t kStackSize = 13;
   StackSamplePerfEvent event{kStackSize};
   perf_event_sample_id_tid_time_streamid_cpu sample_id{
-      .pid = kPid, .tid = 11, .time = 15, .stream_id = 12, .cpu = 0, .res = 0};
+      .pid = kPid,
+      .tid = 11,
+      .time = 15,
+      .stream_id = 12,
+      .cpu = 0,
+      .res = 0,
+  };
   event.ring_buffer_record->sample_id = sample_id;
 
   EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
