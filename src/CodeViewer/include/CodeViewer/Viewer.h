@@ -80,6 +80,9 @@ class Viewer : public QPlainTextEdit {
 
   void SetAnnotatingContent(absl::Span<const AnnotatingLine> annotating_lines);
 
+  void SetTopBarTile(const QString& title) { top_bar_title_ = title; }
+  [[nodiscard]] const QString& GetTopBarTitle() const { return top_bar_title_; }
+
  private:
   void resizeEvent(QResizeEvent* ev) override;
   void wheelEvent(QWheelEvent* ev) override;
@@ -113,6 +116,8 @@ class Viewer : public QPlainTextEdit {
   LargestOccuringLineNumbers largest_occuring_line_numbers_;
 
   [[nodiscard]] uint64_t LargestOccuringLineNumber() const;
+
+  QString top_bar_title_;
 };
 
 // Determine how many pixels are needed to draw all possible line numbers for the given font
