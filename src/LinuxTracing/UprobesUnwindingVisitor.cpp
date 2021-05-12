@@ -221,9 +221,8 @@ void UprobesUnwindingVisitor::visit(MmapPerfEvent* event) {
   // if unwindstack::BufferMaps was built by passing the full content of /proc/<pid>/maps to its
   // constructor.
   if (event->filename() == "[uprobes]") {
-    current_maps_->Add(event->address(), event->address() + event->length(), 0, PROT_EXEC,
-                       event->filename(), INT64_MAX);
-    current_maps_->Sort();
+    current_maps_->AddAndSort(event->address(), event->address() + event->length(), 0, PROT_EXEC,
+                              event->filename(), INT64_MAX);
     return;
   }
 
@@ -238,11 +237,9 @@ void UprobesUnwindingVisitor::visit(MmapPerfEvent* event) {
   auto& module_info = module_info_or_error.value();
 
   // For flags we assume PROT_READ and PROT_EXEC, MMAP event does not return flags.
-  current_maps_->Add(module_info.address_start(), module_info.address_end(), event->page_offset(),
-                     PROT_READ | PROT_EXEC, event->filename(), module_info.load_bias());
-
-  // This Sort is important here since libunwindstack does binary search for module by pc.
-  current_maps_->Sort();
+  current_maps_->AddAndSort(module_info.address_start(), module_info.address_end(),
+                            event->page_offset(), PROT_READ | PROT_EXEC, event->filename(),
+                            module_info.load_bias());
 
   orbit_grpc_protos::ModuleUpdateEvent module_update_event;
   module_update_event.set_pid(event->pid());

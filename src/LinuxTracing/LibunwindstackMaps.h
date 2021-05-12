@@ -16,10 +16,8 @@ class LibunwindstackMaps {
 
   virtual unwindstack::MapInfo* Find(uint64_t pc) = 0;
   virtual unwindstack::Maps* Get() = 0;
-  virtual void Add(uint64_t start, uint64_t end, uint64_t offset, uint64_t flags,
-                   const std::string& name, uint64_t load_bias) = 0;
-
-  virtual void Sort() = 0;
+  virtual void AddAndSort(uint64_t start, uint64_t end, uint64_t offset, uint64_t flags,
+                          const std::string& name, uint64_t load_bias) = 0;
 
   static std::unique_ptr<LibunwindstackMaps> ParseMaps(const std::string& maps_buffer);
 };

@@ -29,9 +29,8 @@ class MockLibunwindstackMaps : public LibunwindstackMaps {
  public:
   MOCK_METHOD(unwindstack::MapInfo*, Find, (uint64_t), (override));
   MOCK_METHOD(unwindstack::Maps*, Get, (), (override));
-  MOCK_METHOD(void, Add, (uint64_t, uint64_t, uint64_t, uint64_t, const std::string&, uint64_t),
-              (override));
-  MOCK_METHOD(void, Sort, (), (override));
+  MOCK_METHOD(void, AddAndSort,
+              (uint64_t, uint64_t, uint64_t, uint64_t, const std::string&, uint64_t), (override));
 };
 
 class MockLibunwindstackUnwinder : public LibunwindstackUnwinder {
