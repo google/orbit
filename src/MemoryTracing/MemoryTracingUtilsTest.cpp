@@ -11,21 +11,36 @@
 #include "GrpcProtos/Constants.h"
 #include "MemoryTracingUtils.h"
 
+using orbit_grpc_protos::CGroupMemoryUsage;
 using orbit_grpc_protos::kMissingInfo;
 using orbit_grpc_protos::SystemMemoryUsage;
 
 namespace {
 
-void ExpectMemInfoParsingResult(SystemMemoryUsage parsing_result, int expected_total = kMissingInfo,
-                                int expected_free = kMissingInfo,
-                                int expected_available = kMissingInfo,
-                                int expected_buffers = kMissingInfo,
-                                int expected_cached = kMissingInfo) {
-  EXPECT_EQ(parsing_result.total_kb(), expected_total);
-  EXPECT_EQ(parsing_result.free_kb(), expected_free);
-  EXPECT_EQ(parsing_result.available_kb(), expected_available);
-  EXPECT_EQ(parsing_result.buffers_kb(), expected_buffers);
-  EXPECT_EQ(parsing_result.cached_kb(), expected_cached);
+void ExpectSystemMemoryUsageEq(const SystemMemoryUsage& system_memory_usage,
+                               int expected_total = kMissingInfo, int expected_free = kMissingInfo,
+                               int expected_available = kMissingInfo,
+                               int expected_buffers = kMissingInfo,
+                               int expected_cached = kMissingInfo) {
+  EXPECT_EQ(system_memory_usage.total_kb(), expected_total);
+  EXPECT_EQ(system_memory_usage.free_kb(), expected_free);
+  EXPECT_EQ(system_memory_usage.available_kb(), expected_available);
+  EXPECT_EQ(system_memory_usage.buffers_kb(), expected_buffers);
+  EXPECT_EQ(system_memory_usage.cached_kb(), expected_cached);
+}
+
+void ResetCGroupMemoryUsage(CGroupMemoryUsage* cgroup_memory_usage) {
+  cgroup_memory_usage->set_limit_bytes(kMissingInfo);
+  cgroup_memory_usage->set_rss_bytes(kMissingInfo);
+  cgroup_memory_usage->set_mapped_file_bytes(kMissingInfo);
+}
+
+void ExpectCGroupMemoryUsageEq(const CGroupMemoryUsage& cgroup_memory_usage,
+                               int limit_bytes = kMissingInfo, int rss_bytes = kMissingInfo,
+                               int mapped_file_bytes = kMissingInfo) {
+  EXPECT_EQ(cgroup_memory_usage.limit_bytes(), limit_bytes);
+  EXPECT_EQ(cgroup_memory_usage.rss_bytes(), rss_bytes);
+  EXPECT_EQ(cgroup_memory_usage.mapped_file_bytes(), mapped_file_bytes);
 }
 
 }  // namespace
@@ -101,13 +116,13 @@ SwapCached:      0 kB)",
   const std::string kEmptyMeminfo = "";
 
   SystemMemoryUsage parsing_result = ParseMemInfo(kValidMeminfo);
-  ExpectMemInfoParsingResult(parsing_result, kMemTotal, kMemFree, kMemAvailable, kBuffers, kCached);
+  ExpectSystemMemoryUsageEq(parsing_result, kMemTotal, kMemFree, kMemAvailable, kBuffers, kCached);
 
   parsing_result = ParseMemInfo(kPartialMeminfo);
-  ExpectMemInfoParsingResult(parsing_result, kMemTotal, kMemFree);
+  ExpectSystemMemoryUsageEq(parsing_result, kMemTotal, kMemFree);
 
   parsing_result = ParseMemInfo(kEmptyMeminfo);
-  ExpectMemInfoParsingResult(parsing_result);
+  ExpectSystemMemoryUsageEq(parsing_result);
 }
 
 TEST(MemoryUtils, GetVmRssFromProcessStatus) {
@@ -222,21 +237,25 @@ TEST(MemoryUtils, GetCGroupMemoryLimitInBytes) {
   const std::string kValidCGroupMemoryLimitInBytes = std::to_string(kCGroupMemoryLimitInBytes);
   const std::string kEmptyCGroupMemoryLimitInBytes = "";
 
-  int64_t parsing_result = GetCGroupMemoryLimitInBytes(kValidCGroupMemoryLimitInBytes);
-  EXPECT_EQ(parsing_result, kCGroupMemoryLimitInBytes);
+  CGroupMemoryUsage cgroup_memory_usage;
+  ResetCGroupMemoryUsage(&cgroup_memory_usage);
+  GetCGroupMemoryLimitInBytes(kValidCGroupMemoryLimitInBytes, &cgroup_memory_usage);
+  ExpectCGroupMemoryUsageEq(cgroup_memory_usage, kCGroupMemoryLimitInBytes);
 
-  parsing_result = GetCGroupMemoryLimitInBytes(kEmptyCGroupMemoryLimitInBytes);
-  EXPECT_EQ(parsing_result, kMissingInfo);
+  ResetCGroupMemoryUsage(&cgroup_memory_usage);
+  GetCGroupMemoryLimitInBytes(kEmptyCGroupMemoryLimitInBytes, &cgroup_memory_usage);
+  ExpectCGroupMemoryUsageEq(cgroup_memory_usage);
 }
 
-TEST(MemoryUtils, GetRssFromCGroupMemoryStat) {
+TEST(MemoryUtils, GetValuesFromCGroupMemoryStat) {
   const int kRssInBytes = 245760;
+  const int KMappedFileInBytes = 1234;
 
   const std::string kValidCGroupMemoryStatus = absl::Substitute(R"(cache 36864
 rss $0
 rss_huge 0
 shmem 0
-mapped_file 0
+mapped_file $1
 dirty 135168
 writeback 0
 pgpgin 299
@@ -265,20 +284,24 @@ total_active_anon 253952
 total_inactive_file 0
 total_active_file 12288
 total_unevictable 0)",
-                                                                kRssInBytes);
+                                                                kRssInBytes, KMappedFileInBytes);
+
   const std::string kPartialCGroupMemoryStatus = R"(cache 36864
 rss_huge 0)";
 
   const std::string kEmptyCGroupMemoryStatus = "";
 
-  int64_t parsing_result = GetRssFromCGroupMemoryStat(kValidCGroupMemoryStatus);
-  EXPECT_EQ(parsing_result, kRssInBytes);
+  CGroupMemoryUsage cgroup_memory_usage;
+  ResetCGroupMemoryUsage(&cgroup_memory_usage);
+  GetValuesFromCGroupMemoryStat(kValidCGroupMemoryStatus, &cgroup_memory_usage);
+  ExpectCGroupMemoryUsageEq(cgroup_memory_usage, kMissingInfo, kRssInBytes, KMappedFileInBytes);
 
-  parsing_result = GetRssFromCGroupMemoryStat(kPartialCGroupMemoryStatus);
-  EXPECT_EQ(parsing_result, kMissingInfo);
+  ResetCGroupMemoryUsage(&cgroup_memory_usage);
+  GetValuesFromCGroupMemoryStat(kPartialCGroupMemoryStatus, &cgroup_memory_usage);
+  ExpectCGroupMemoryUsageEq(cgroup_memory_usage);
 
-  parsing_result = GetRssFromCGroupMemoryStat(kEmptyCGroupMemoryStatus);
-  EXPECT_EQ(parsing_result, kMissingInfo);
+  GetValuesFromCGroupMemoryStat(kEmptyCGroupMemoryStatus, &cgroup_memory_usage);
+  ExpectCGroupMemoryUsageEq(cgroup_memory_usage);
 }
 
 }  // namespace orbit_memory_tracing

@@ -143,36 +143,40 @@ std::string GetProcessMemoryCGroupName(std::string_view cgroup_content) {
   return "";
 }
 
-int64_t GetCGroupMemoryLimitInBytes(std::string_view memory_limit_in_bytes_content) {
-  if (memory_limit_in_bytes_content.empty()) return kMissingInfo;
+void GetCGroupMemoryLimitInBytes(std::string_view memory_limit_in_bytes_content,
+                                 CGroupMemoryUsage* cgroup_memory_usage) {
+  if (memory_limit_in_bytes_content.empty()) return;
 
   // The memory.limit_in_bytes file use "bytes" as the size unit.
   int64_t memory_limit_in_bytes;
   if (absl::SimpleAtoi(memory_limit_in_bytes_content, &memory_limit_in_bytes)) {
-    return memory_limit_in_bytes;
+    cgroup_memory_usage->set_limit_bytes(memory_limit_in_bytes);
   }
-
-  return kMissingInfo;
 }
 
-int64_t GetRssFromCGroupMemoryStat(std::string_view memory_stat_content) {
-  if (memory_stat_content.empty()) return kMissingInfo;
+void GetValuesFromCGroupMemoryStat(std::string_view memory_stat_content,
+                                   CGroupMemoryUsage* cgroup_memory_usage) {
+  if (memory_stat_content.empty()) return;
 
   std::vector<std::string> lines = absl::StrSplit(memory_stat_content, '\n');
-  if (lines.empty()) return kMissingInfo;
+  if (lines.empty()) return;
 
   for (std::string_view line : lines) {
     std::vector<std::string> splits = absl::StrSplit(line, ' ', absl::SkipWhitespace{});
-    if (splits.size() == 2 && splits[0] == "rss") {
-      // According to the document https://www.kernel.org/doc/Documentation/cgroup-v1/memory.txt,
-      // the memory.stat file use "bytes" as the size unit.
-      int64_t rss_in_bytes;
-      if (absl::SimpleAtoi(splits[1], &rss_in_bytes)) return rss_in_bytes;
-      return kMissingInfo;
+    // According to the document https://www.kernel.org/doc/Documentation/cgroup-v1/memory.txt:
+    // Each line of the memory.stat file consists of a parameter name, followed by a whitespace, and
+    // the value of the parameter. Also the memory size unit is fixed to "bytes".
+    if (splits.size() < 2) continue;
+
+    int64_t value;
+    if (!absl::SimpleAtoi(splits[1], &value)) continue;
+
+    if (splits[0] == "rss") {
+      cgroup_memory_usage->set_rss_bytes(value);
+    } else if (splits[0] == "mapped_file") {
+      cgroup_memory_usage->set_mapped_file_bytes(value);
     }
   }
-
-  return kMissingInfo;
 }
 
 ErrorMessageOr<CGroupMemoryUsage> GetCGroupMemoryUsage(uint32_t pid) noexcept {
@@ -193,6 +197,13 @@ ErrorMessageOr<CGroupMemoryUsage> GetCGroupMemoryUsage(uint32_t pid) noexcept {
     return ErrorMessage{std::move(error_message)};
   }
 
+  CGroupMemoryUsage cgroup_memory_usage;
+  cgroup_memory_usage.set_cgroup_name(cgroup_name);
+  cgroup_memory_usage.set_timestamp_ns(current_timestamp_ns);
+  cgroup_memory_usage.set_limit_bytes(kMissingInfo);
+  cgroup_memory_usage.set_rss_bytes(kMissingInfo);
+  cgroup_memory_usage.set_mapped_file_bytes(kMissingInfo);
+
   // Extract cgroup memory limit from /sys/fs/cgroup/memory/<cgroup_name>/memory.limit_in_bytes.
   reading_result = orbit_base::ReadFileToString(
       absl::StrFormat("/sys/fs/cgroup/memory/%s/memory.limit_in_bytes", cgroup_name));
@@ -200,7 +211,7 @@ ErrorMessageOr<CGroupMemoryUsage> GetCGroupMemoryUsage(uint32_t pid) noexcept {
     ERROR("%s", reading_result.error().message());
     return reading_result.error();
   }
-  int64_t cgroup_memory_limit_in_bytes = GetCGroupMemoryLimitInBytes(reading_result.value());
+  GetCGroupMemoryLimitInBytes(reading_result.value(), &cgroup_memory_usage);
 
   // Extract cgroup memory usage from the /sys/fs/cgroup/memory/<cgroup_name>/memory.stat file.
   reading_result = orbit_base::ReadFileToString(
@@ -209,13 +220,7 @@ ErrorMessageOr<CGroupMemoryUsage> GetCGroupMemoryUsage(uint32_t pid) noexcept {
     ERROR("%s", reading_result.error().message());
     return reading_result.error();
   }
-  int64_t cgroup_rss_in_bytes = GetRssFromCGroupMemoryStat(reading_result.value());
-
-  CGroupMemoryUsage cgroup_memory_usage;
-  cgroup_memory_usage.set_cgroup_name(cgroup_name);
-  cgroup_memory_usage.set_timestamp_ns(current_timestamp_ns);
-  cgroup_memory_usage.set_limit_bytes(cgroup_memory_limit_in_bytes);
-  cgroup_memory_usage.set_rss_bytes(cgroup_rss_in_bytes);
+  GetValuesFromCGroupMemoryStat(reading_result.value(), &cgroup_memory_usage);
 
   return cgroup_memory_usage;
 }
