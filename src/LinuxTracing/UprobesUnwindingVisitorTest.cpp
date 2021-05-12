@@ -132,13 +132,25 @@ TEST_F(UprobesUnwindingVisitorTest, VisitValidStackSampleWithoutUprobesEmitsEven
   std::vector<unwindstack::FrameData> libunwindstack_callstack;
 
   unwindstack::FrameData frame_1{
-      .pc = kTargetAddress1, .function_name = "foo", .function_offset = 0, .map_name = kTargetName};
+      .pc = kTargetAddress1,
+      .function_name = "foo",
+      .function_offset = 0,
+      .map_name = kTargetName,
+  };
   libunwindstack_callstack.push_back(frame_1);
   unwindstack::FrameData frame_2{
-      .pc = kTargetAddress2, .function_name = "bar", .function_offset = 0, .map_name = kTargetName};
+      .pc = kTargetAddress2,
+      .function_name = "bar",
+      .function_offset = 0,
+      .map_name = kTargetName,
+  };
   libunwindstack_callstack.push_back(frame_2);
   unwindstack::FrameData frame_3{
-      .pc = kTargetAddress3, .function_name = "baz", .function_offset = 0, .map_name = kTargetName};
+      .pc = kTargetAddress3,
+      .function_name = "baz",
+      .function_offset = 0,
+      .map_name = kTargetName,
+  };
   libunwindstack_callstack.push_back(frame_3);
   EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, kStackSize))
       .Times(1)
@@ -232,7 +244,11 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   std::vector<unwindstack::FrameData> incomplete_callstack;
   unwindstack::FrameData frame_1{
-      .pc = kTargetAddress1, .function_name = "foo", .function_offset = 0, .map_name = kTargetName};
+      .pc = kTargetAddress1,
+      .function_name = "foo",
+      .function_offset = 0,
+      .map_name = kTargetName,
+  };
   incomplete_callstack.push_back(frame_1);
 
   EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, kStackSize))
