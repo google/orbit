@@ -29,6 +29,8 @@ target_sources(LinuxTracing PRIVATE
         GpuTracepointVisitor.h
         GpuTracepointVisitor.cpp
         KernelTracepoints.h
+        LibunwindstackMaps.cpp
+        LibunwindstackMaps.h
         LibunwindstackUnwinder.cpp
         LibunwindstackUnwinder.h
         LinuxTracingUtils.h
@@ -79,7 +81,8 @@ target_sources(LinuxTracingTests PRIVATE
         PerfEventQueueTest.cpp
         ThreadStateManagerTest.cpp
         UprobesFunctionCallManagerTest.cpp
-        UprobesReturnAddressManagerTest.cpp)
+        UprobesReturnAddressManagerTest.cpp
+        UprobesUnwindingVisitorTest.cpp)
 
 target_link_libraries(LinuxTracingTests PRIVATE
         LinuxTracing

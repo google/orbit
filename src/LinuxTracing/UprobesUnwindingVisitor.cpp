@@ -4,7 +4,6 @@
 
 #include "UprobesUnwindingVisitor.h"
 
-#include <absl/container/flat_hash_map.h>
 #include <asm/perf_regs.h>
 #include <llvm/Demangle/Demangle.h>
 #include <sys/mman.h>
@@ -12,7 +11,6 @@
 #include <unwindstack/Unwinder.h>
 
 #include <algorithm>
-#include <array>
 #include <optional>
 #include <utility>
 
@@ -20,7 +18,6 @@
 #include "Function.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "PerfEventRecords.h"
 #include "capture.pb.h"
 #include "module.pb.h"
 
@@ -42,8 +39,8 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
                                       event->GetStackData(), event->GetStackSize());
 
   const std::vector<unwindstack::FrameData>& libunwindstack_callstack =
-      unwinder_.Unwind(event->GetPid(), current_maps_.get(), event->GetRegisters(),
-                       event->GetStackData(), event->GetStackSize());
+      unwinder_->Unwind(event->GetPid(), current_maps_->Get(), event->GetRegisters(),
+                        event->GetStackData(), event->GetStackSize());
 
   // LibunwindstackUnwinder::Unwind signals an unwinding error with an empty callstack.
   if (libunwindstack_callstack.empty()) {
@@ -106,7 +103,7 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
   //  because rbp hasn't yet been updated to rsp. Drop the sample in this case?
 
   if (!return_address_manager_.PatchCallchain(event->GetTid(), event->GetCallchain(),
-                                              event->GetCallchainSize(), current_maps_.get())) {
+                                              event->GetCallchainSize(), current_maps_->Get())) {
     return;
   }
 
