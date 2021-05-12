@@ -68,6 +68,9 @@ class Dialog : public QDialog {
   void SetHighlightCurrentLine(bool enabled);
   [[nodiscard]] bool IsCurrentLineHighlighted() const;
 
+  void SetTopBarTitle(const QString& title);
+  [[nodiscard]] const QString& GetTopBarTitle() const;
+
  private:
   std::unique_ptr<Ui::CodeViewerDialog> ui_;
   std::unique_ptr<QSyntaxHighlighter> syntax_highlighter_;

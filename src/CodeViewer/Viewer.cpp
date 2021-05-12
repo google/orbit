@@ -145,6 +145,16 @@ void Viewer::DrawTopWidget(QPaintEvent* event) {
     painter.setPen(kLineNumberForegroundColor);
     painter.drawText(bounding_box, Qt::AlignCenter, QString("#"));
   }
+
+  {
+    const int left = left_sidebar_widget_.width();
+    const int width = top_bar_widget_.width() - left - right_sidebar_widget_.width();
+    const QRect bounding_box{left, 0, width, fontMetrics().height()};
+
+    painter.setPen(kLineNumberForegroundColor);
+    painter.drawText(bounding_box, Qt::AlignLeft, top_bar_title_);
+  }
+
   if (sample_counters_enabled_) {
     const int left = top_bar_widget_.width() - right_sidebar_widget_.width();
 

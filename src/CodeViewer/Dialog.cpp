@@ -73,4 +73,7 @@ void Dialog::SetAnnotatingContent(absl::Span<const AnnotatingLine> annotating_li
   ui_->viewer->SetAnnotatingContent(annotating_lines);
 }
 
+void Dialog::SetTopBarTitle(const QString& title) { ui_->viewer->SetTopBarTile(title); }
+const QString& Dialog::GetTopBarTitle() const { return ui_->viewer->GetTopBarTitle(); }
+
 }  // namespace orbit_code_viewer
