@@ -208,10 +208,16 @@ void Viewer::DrawLineNumbers(QPaintEvent* event) {
       const uint32_t num_samples_in_line =
           code_report_->GetNumSamplesAtLine(line_number).value_or(0);
       const uint32_t num_samples_in_function = code_report_->GetNumSamplesInFunction();
-      const float intensity = std::clamp(
-          static_cast<float>(num_samples_in_line) / static_cast<float>(num_samples_in_function),
-          0.0f, 1.0f);
-      const auto scaled_intensity = static_cast<int>(std::sqrt(intensity) * 255);
+
+      const int scaled_intensity = [&] {
+        if (num_samples_in_function == 0) return 0;
+
+        const float intensity = std::clamp(
+            static_cast<float>(num_samples_in_line) / static_cast<float>(num_samples_in_function),
+            0.0f, 1.0f);
+        return static_cast<int>(std::sqrt(intensity) * 255);
+      }();
+
       QColor color = kHeatmapColor;
       color.setAlpha(scaled_intensity);
 
