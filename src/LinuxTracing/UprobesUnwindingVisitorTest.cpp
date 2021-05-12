@@ -208,4 +208,38 @@ TEST_F(UprobesUnwindingVisitorTest, VisitInvalidStackSampleWithoutUprobesLeadsTo
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
 }
 
+TEST_F(UprobesUnwindingVisitorTest,
+       VisitSingleFrameStackSampleWithoutUprobesLeadsToUnwindingError) {
+  constexpr uint32_t kPid = 10;
+  constexpr uint64_t kStackSize = 13;
+  StackSamplePerfEvent event{kStackSize};
+  perf_event_sample_id_tid_time_streamid_cpu sample_id{
+      .pid = kPid, .tid = 11, .time = 15, .stream_id = 12, .cpu = 0, .res = 0};
+  event.ring_buffer_record->sample_id = sample_id;
+
+  EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
+
+  std::vector<unwindstack::FrameData> incomplete_callstack;
+  unwindstack::FrameData frame_1{
+      .pc = kTargetAddress1, .function_name = "foo", .function_offset = 0, .map_name = kTargetName};
+  incomplete_callstack.push_back(frame_1);
+
+  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, kStackSize))
+      .Times(1)
+      .WillOnce(Return(incomplete_callstack));
+
+  EXPECT_CALL(listener_, OnCallstackSample).Times(0);
+  EXPECT_CALL(listener_, OnAddressInfo).Times(0);
+
+  std::atomic<uint64_t> unwinding_errors = 0;
+  std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
+  visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
+                                                       &discarded_samples_in_uretprobes_counter);
+
+  visitor_->visit(&event);
+
+  EXPECT_EQ(unwinding_errors, 1);
+  EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
+}
+
 }  // namespace orbit_linux_tracing
