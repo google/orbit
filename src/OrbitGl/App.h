@@ -360,7 +360,6 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   [[nodiscard]] orbit_client_services::ProcessManager* GetProcessManager() {
     return process_manager_;
   }
-  [[nodiscard]] ThreadPool* GetThreadPool() { return thread_pool_.get(); }
   [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() { return main_thread_executor_; }
   [[nodiscard]] orbit_client_data::ProcessData* GetMutableTargetProcess() const { return process_; }
   [[nodiscard]] const orbit_client_data::ProcessData* GetTargetProcess() const { return process_; }
@@ -459,6 +458,9 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
   void AddSymbols(const std::filesystem::path& module_file_path, const std::string& module_build_id,
                   const orbit_grpc_protos::ModuleSymbols& symbols);
+  ErrorMessageOr<const orbit_client_data::ModuleData*> GetLoadedModuleByPath(
+      const std::string& module_path);
+  ErrorMessageOr<void> ConvertPresetToNewFormatIfNecessary(const orbit_gl::PresetFile& preset_file);
 
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleFromRemote(
       const std::string& module_file_path);

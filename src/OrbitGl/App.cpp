@@ -119,6 +119,7 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::PresetInfo;
+using orbit_client_protos::PresetModuleInfo;
 using orbit_client_protos::TimerInfo;
 
 using orbit_client_services::CrashManager;
@@ -891,6 +892,20 @@ ErrorMessageOr<void> OrbitApp::OnSavePreset(const std::string& filename) {
   return outcome::success();
 }
 
+static ErrorMessageOr<void> SavePresetTo(const std::string& file_path, const PresetInfo& preset) {
+  OUTCOME_TRY(fd, orbit_base::OpenFileForWriting(file_path));
+
+  LOG("Saving preset to \"%s\"", file_path);
+  if (!preset.SerializeToFileDescriptor(fd.get())) {
+    std::string error_message =
+        absl::StrFormat("Failed to save preset to \"%s\": %s", file_path, SafeStrerror(errno));
+    ERROR("%s", error_message);
+    return ErrorMessage(error_message);
+  }
+
+  return outcome::success();
+}
+
 ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
   PresetInfo preset;
 
@@ -911,21 +926,7 @@ ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
     filename_with_ext += ".opr";
   }
 
-  auto fd_or_error = orbit_base::OpenFileForWriting(filename_with_ext);
-  if (fd_or_error.has_error()) {
-    std::string error_message = absl::StrFormat("Failed to open \"%s\": %s", filename_with_ext,
-                                                fd_or_error.error().message());
-    ERROR("%s", error_message);
-    return ErrorMessage{error_message};
-  }
-
-  LOG("Saving preset to \"%s\"", filename_with_ext);
-  if (!preset.SerializeToFileDescriptor(fd_or_error.value().get())) {
-    std::string error_message =
-        absl::StrFormat("Failed to save preset to \"%s\"", filename_with_ext);
-    ERROR("%s", error_message);
-    return ErrorMessage(error_message);
-  }
+  OUTCOME_TRY(SavePresetTo(filename_with_ext, preset));
 
   return outcome::success();
 }
@@ -1619,22 +1620,34 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
   return result_future;
 }
 
-orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPresetModule(const std::string& module_path,
-                                                                    const PresetFile& preset_file) {
+ErrorMessageOr<const ModuleData*> OrbitApp::GetLoadedModuleByPath(const std::string& module_path) {
   std::optional<ModuleInMemory> module_in_memory =
       GetTargetProcess()->FindModuleByPath(module_path);
   if (!module_in_memory.has_value()) {
     return ErrorMessage{absl::StrFormat("Module \"%s\" is not loaded by process.", module_path)};
   }
 
-  ModuleData* module_data =
-      module_manager_->GetMutableModuleByPathAndBuildId(module_path, module_in_memory->build_id());
+  const ModuleData* module_data =
+      module_manager_->GetModuleByPathAndBuildId(module_path, module_in_memory->build_id());
   if (module_data == nullptr) {
     ERROR("module \"%s\" was loaded by the process, but is not part of module manager",
           module_path);
     crash_handler_->DumpWithoutCrash();
     return ErrorMessage{"Unexpected error while loading preset."};
   }
+
+  return module_data;
+}
+
+orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPresetModule(const std::string& module_path,
+                                                                    const PresetFile& preset_file) {
+  auto module_data_or_error = GetLoadedModuleByPath(module_path);
+
+  if (module_data_or_error.has_error()) {
+    return module_data_or_error.error();
+  }
+
+  const ModuleData* module_data = module_data_or_error.value();
 
   auto handle_hooks_and_frame_tracks =
       [this, module_data, preset_file](const ErrorMessageOr<void>& result) -> ErrorMessageOr<void> {
@@ -1646,7 +1659,6 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPresetModule(const std::s
       EnableFrameTracksFromHashes(
           module_data, preset_file.GetFrameTrackFunctionHashesForModuleLegacy(module_path));
 
-      // TODO(b/168799822): Automatically convert it to new format
       return outcome::success();
     }
 
@@ -1741,7 +1753,7 @@ void OrbitApp::LoadPreset(const PresetFile& preset_file) {
   // Then - when all modules are loaded or failed to load - we update the UI and potentially show an
   // error message.
   auto results = orbit_base::JoinFutures(absl::MakeConstSpan(load_module_results));
-  results.Then(main_thread_executor_, [this, metric = std::move(metric)](
+  results.Then(main_thread_executor_, [this, metric = std::move(metric), preset_file](
                                           std::vector<std::string> module_paths_not_found) mutable {
     size_t tried_to_load_amount = module_paths_not_found.size();
     module_paths_not_found.erase(
@@ -1761,6 +1773,16 @@ void OrbitApp::LoadPreset(const PresetFile& preset_file) {
       SendWarningToUi("Preset only partially loaded",
                       absl::StrFormat("The following modules were not loaded:\n* %s",
                                       absl::StrJoin(module_paths_not_found, "\n* ")));
+      //    } else {
+      //      // Then if load was successful and the preset is in old format - convert it to new
+      //      one. auto convertion_result = ConvertPresetToNewFormatIfNecessary(preset_file); if
+      //      (convertion_result.has_error()) {
+      //        SendWarningToUi(
+      //            "Conversion to new format failed",
+      //            absl::StrFormat("Unable to convert preset file \"%s\" to new file format: %s",
+      //                            preset_file.file_path().string(),
+      //                            convertion_result.error().message()));
+      //      }
     }
 
     FireRefreshCallbacks();
@@ -2354,4 +2376,54 @@ void OrbitApp::SetTargetProcess(ProcessData* process) {
     data_manager_->ClearUserDefinedCaptureData();
     process_ = process;
   }
+}
+ErrorMessageOr<void> OrbitApp::ConvertPresetToNewFormatIfNecessary(const PresetFile& preset_file) {
+  if (!preset_file.IsLegacyFileFormat()) {
+    return outcome::success();
+  }
+
+  LOG("Converting preset file \"%s\" to new format.", preset_file.file_path().string());
+
+  // Convert first
+  PresetInfo new_info;
+  for (const auto& module_path : preset_file.GetModulePaths()) {
+    OUTCOME_TRY(module_data, GetLoadedModuleByPath(module_path.string()));
+    PresetModuleInfo module_info;
+
+    for (uint64_t function_hash :
+         preset_file.GetSelectedFunctionHashesForModuleLegacy(module_path)) {
+      const auto* function_info = module_data->FindFunctionFromHash(function_hash);
+      if (function_info == nullptr) {
+        ERROR("Could not find function hash %#x in module \"%s\"", function_hash,
+              module_path.string());
+        continue;
+      }
+      module_info.add_function_names(function_info->pretty_name());
+    }
+
+    for (uint64_t function_hash :
+         preset_file.GetFrameTrackFunctionHashesForModuleLegacy(module_path)) {
+      const auto* function_info = module_data->FindFunctionFromHash(function_hash);
+      if (function_info == nullptr) {
+        ERROR("Could not find function hash %#x in module \"%s\"", function_hash,
+              module_path.string());
+        continue;
+      }
+      module_info.add_frame_track_function_names(function_info->pretty_name());
+    }
+
+    (*new_info.mutable_modules())[module_path.string()] = module_info;
+  }
+
+  // Backup the old file
+  std::string file_path = preset_file.file_path().string();
+  std::string new_file_path = file_path + ".backup";
+  if (rename(file_path.c_str(), new_file_path.c_str()) == -1) {
+    return ErrorMessage{absl::StrFormat(R"(Unable to rename "%s" to "%s": %s)", file_path,
+                                        new_file_path, SafeStrerror(errno))};
+  }
+
+  OUTCOME_TRY(SavePresetTo(file_path, new_info));
+
+  return outcome::success();
 }
