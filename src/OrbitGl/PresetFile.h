@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <vector>
 
+#include "OrbitBase/Result.h"
 #include "preset.pb.h"
 
 namespace orbit_gl {
@@ -15,7 +16,15 @@ namespace orbit_gl {
 class PresetFile final {
  public:
   explicit PresetFile(std::filesystem::path file_path, orbit_client_protos::PresetInfo preset_info)
-      : file_path_{std::move(file_path)}, preset_info_{std::move(preset_info)} {}
+      : file_path_{std::move(file_path)},
+        is_legacy_format_{false},
+        preset_info_{std::move(preset_info)} {}
+
+  explicit PresetFile(std::filesystem::path file_path,
+                      orbit_client_protos::PresetInfoLegacy preset_info_legacy)
+      : file_path_{std::move(file_path)},
+        is_legacy_format_{true},
+        preset_info_legacy_{std::move(preset_info_legacy)} {}
 
   [[nodiscard]] const std::filesystem::path& file_path() const { return file_path_; }
 
@@ -34,10 +43,16 @@ class PresetFile final {
   [[nodiscard]] std::vector<std::string> GetFrameTrackFunctionNamesForModule(
       const std::filesystem::path& module_path) const;
 
+  ErrorMessageOr<void> SaveToFile() const;
+
  private:
   std::filesystem::path file_path_;
+  bool is_legacy_format_;
   orbit_client_protos::PresetInfo preset_info_;
+  orbit_client_protos::PresetInfoLegacy preset_info_legacy_;
 };
+
+ErrorMessageOr<PresetFile> ReadPresetFromFile(const std::filesystem::path& file_path);
 
 }  // namespace orbit_gl
 

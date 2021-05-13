@@ -476,7 +476,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
       const std::filesystem::path& symbols_path, const std::string& module_file_path,
       const std::string& module_build_id);
 
-  ErrorMessageOr<orbit_client_protos::PresetInfo> ReadPresetFromFile(
+  static ErrorMessageOr<orbit_gl::PresetFile> ReadPresetFromFile(
       const std::filesystem::path& filename);
 
   ErrorMessageOr<void> SavePreset(const std::string& filename);

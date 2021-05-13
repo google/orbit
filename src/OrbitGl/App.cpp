@@ -119,7 +119,7 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::PresetInfo;
-using orbit_client_protos::PresetModuleInfo;
+using orbit_client_protos::PresetModule;
 using orbit_client_protos::TimerInfo;
 
 using orbit_client_services::CrashManager;
@@ -558,14 +558,14 @@ void OrbitApp::ListPresets() {
       ListRegularFilesWithExtension(Path::CreateOrGetPresetDir(), ".opr");
   std::vector<PresetFile> presets;
   for (const std::filesystem::path& filename : preset_filenames) {
-    ErrorMessageOr<PresetInfo> preset_result = ReadPresetFromFile(filename);
+    ErrorMessageOr<PresetFile> preset_result = ReadPresetFromFile(filename);
     if (preset_result.has_error()) {
       ERROR("Loading preset from \"%s\" failed: %s", filename.string(),
             preset_result.error().message());
       continue;
     }
 
-    presets.emplace_back(filename, std::move(preset_result.value()));
+    presets.push_back(std::move(preset_result.value()));
   }
 
   presets_data_view_->SetPresets(std::move(presets));
@@ -892,20 +892,6 @@ ErrorMessageOr<void> OrbitApp::OnSavePreset(const std::string& filename) {
   return outcome::success();
 }
 
-static ErrorMessageOr<void> SavePresetTo(const std::string& file_path, const PresetInfo& preset) {
-  OUTCOME_TRY(fd, orbit_base::OpenFileForWriting(file_path));
-
-  LOG("Saving preset to \"%s\"", file_path);
-  if (!preset.SerializeToFileDescriptor(fd.get())) {
-    std::string error_message =
-        absl::StrFormat("Failed to save preset to \"%s\": %s", file_path, SafeStrerror(errno));
-    ERROR("%s", error_message);
-    return ErrorMessage(error_message);
-  }
-
-  return outcome::success();
-}
-
 ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
   PresetInfo preset;
 
@@ -926,36 +912,22 @@ ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
     filename_with_ext += ".opr";
   }
 
-  OUTCOME_TRY(SavePresetTo(filename_with_ext, preset));
+  PresetFile preset_file{filename_with_ext, preset};
+  OUTCOME_TRY(preset_file.SaveToFile());
 
   return outcome::success();
 }
 
-ErrorMessageOr<PresetInfo> OrbitApp::ReadPresetFromFile(const std::filesystem::path& filename) {
+ErrorMessageOr<PresetFile> OrbitApp::ReadPresetFromFile(const std::filesystem::path& filename) {
   std::filesystem::path file_path =
       filename.is_absolute() ? filename : Path::CreateOrGetPresetDir() / filename;
 
-  auto fd_or_error = orbit_base::OpenFileForReading(file_path);
-  if (fd_or_error.has_error()) {
-    std::string error_message = absl::StrFormat("Failed to open \"%s\": %s", file_path.string(),
-                                                fd_or_error.error().message());
-    ERROR("%s", error_message);
-    return ErrorMessage{error_message};
-  }
-
-  PresetInfo preset_info;
-  if (!preset_info.ParseFromFileDescriptor(fd_or_error.value().get())) {
-    std::string error_message =
-        absl::StrFormat("Failed to load preset from \"%s\"", file_path.string());
-    ERROR("%s", error_message);
-    return ErrorMessage{error_message};
-  }
-  return preset_info;
+  return orbit_gl::ReadPresetFromFile(file_path);
 }
 
 ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
-  OUTCOME_TRY(preset_info, ReadPresetFromFile(filename));
-  LoadPreset(PresetFile{filename, std::move(preset_info)});
+  OUTCOME_TRY(preset_file, ReadPresetFromFile(filename));
+  LoadPreset(preset_file);
   return outcome::success();
 }
 
@@ -1773,16 +1745,13 @@ void OrbitApp::LoadPreset(const PresetFile& preset_file) {
       SendWarningToUi("Preset only partially loaded",
                       absl::StrFormat("The following modules were not loaded:\n* %s",
                                       absl::StrJoin(module_paths_not_found, "\n* ")));
-      //    } else {
-      //      // Then if load was successful and the preset is in old format - convert it to new
-      //      one. auto convertion_result = ConvertPresetToNewFormatIfNecessary(preset_file); if
-      //      (convertion_result.has_error()) {
-      //        SendWarningToUi(
-      //            "Conversion to new format failed",
-      //            absl::StrFormat("Unable to convert preset file \"%s\" to new file format: %s",
-      //                            preset_file.file_path().string(),
-      //                            convertion_result.error().message()));
-      //      }
+    } else {
+      // Then if load was successful and the preset is in old format - convert it to new one.
+      auto convertion_result = ConvertPresetToNewFormatIfNecessary(preset_file);
+      if (convertion_result.has_error()) {
+        ERROR("Unable to convert preset file \"%s\" to new file format: %s",
+              preset_file.file_path().string(), convertion_result.error().message());
+      }
     }
 
     FireRefreshCallbacks();
@@ -2388,7 +2357,7 @@ ErrorMessageOr<void> OrbitApp::ConvertPresetToNewFormatIfNecessary(const PresetF
   PresetInfo new_info;
   for (const auto& module_path : preset_file.GetModulePaths()) {
     OUTCOME_TRY(module_data, GetLoadedModuleByPath(module_path.string()));
-    PresetModuleInfo module_info;
+    PresetModule module_info;
 
     for (uint64_t function_hash :
          preset_file.GetSelectedFunctionHashesForModuleLegacy(module_path)) {
@@ -2416,14 +2385,25 @@ ErrorMessageOr<void> OrbitApp::ConvertPresetToNewFormatIfNecessary(const PresetF
   }
 
   // Backup the old file
-  std::string file_path = preset_file.file_path().string();
-  std::string new_file_path = file_path + ".backup";
-  if (rename(file_path.c_str(), new_file_path.c_str()) == -1) {
+  const std::string file_path = preset_file.file_path().string();
+  const std::string backup_file_path = file_path + ".backup";
+  if (rename(file_path.c_str(), backup_file_path.c_str()) == -1) {
     return ErrorMessage{absl::StrFormat(R"(Unable to rename "%s" to "%s": %s)", file_path,
-                                        new_file_path, SafeStrerror(errno))};
+                                        backup_file_path, SafeStrerror(errno))};
   }
 
-  OUTCOME_TRY(SavePresetTo(file_path, new_info));
+  PresetFile new_preset_file{file_path, new_info};
+
+  auto save_to_file_result = new_preset_file.SaveToFile();
+  if (save_to_file_result.has_error()) {
+    // restore the backup
+    if (rename(backup_file_path.c_str(), file_path.c_str()) == -1) {
+      ERROR(R"(Unable to rename "%s" to "%s": %s)", file_path, backup_file_path,
+            SafeStrerror(errno));
+    }
+
+    return save_to_file_result.error();
+  }
 
   return outcome::success();
 }
