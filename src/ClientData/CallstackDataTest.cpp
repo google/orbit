@@ -33,20 +33,20 @@ TEST(CallstackData, FilterCallstackEventsBasedOnMajorityStart) {
   const uint64_t cs1_id = 12;
   const uint64_t cs1_outer = 0x10;
   const uint64_t cs1_inner = 0x11;
-  const CallStack cs1{cs1_id, {cs1_inner, cs1_outer}};
-  callstack_data.AddUniqueCallStack(cs1);
+  const CallStack cs1{{cs1_inner, cs1_outer}};
+  callstack_data.AddUniqueCallStack(cs1_id, cs1);
 
   const uint64_t cs2_id = 13;
   const uint64_t cs2_outer = 0x10;
   const uint64_t cs2_inner = 0x21;
-  const CallStack cs2{cs2_id, {cs2_inner, cs2_outer}};
-  callstack_data.AddUniqueCallStack(cs2);
+  const CallStack cs2{{cs2_inner, cs2_outer}};
+  callstack_data.AddUniqueCallStack(cs2_id, cs2);
 
   const uint64_t broken_cs_id = 81;
   const uint64_t broken_cs_outer = 0x30;
   const uint64_t broken_cs_inner = 0x31;
-  const CallStack broken_cs{broken_cs_id, {broken_cs_inner, broken_cs_outer}};
-  callstack_data.AddUniqueCallStack(broken_cs);
+  const CallStack broken_cs{{broken_cs_inner, broken_cs_outer}};
+  callstack_data.AddUniqueCallStack(broken_cs_id, broken_cs);
 
   const uint64_t time1 = 100;
   orbit_client_protos::CallstackEvent event1;

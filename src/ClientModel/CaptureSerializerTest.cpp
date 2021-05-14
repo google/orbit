@@ -174,13 +174,14 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   addresses.push_back(1);
   addresses.push_back(2);
   addresses.push_back(3);
-  CallStack callstack(1, std::move(addresses));
-  capture_data.AddUniqueCallStack(callstack);
+  uint64_t callstack_id = 1;
+  CallStack callstack(std::move(addresses));
+  capture_data.AddUniqueCallStack(callstack_id, callstack);
 
   CallstackEvent callstack_event;
   callstack_event.set_time(1);
   callstack_event.set_thread_id(123);
-  callstack_event.set_callstack_id(callstack.id());
+  callstack_event.set_callstack_id(callstack_id);
   capture_data.AddCallstackEvent(callstack_event);
 
   capture_data.AddUniqueTracepointEventInfo(1, tracepoint_info);

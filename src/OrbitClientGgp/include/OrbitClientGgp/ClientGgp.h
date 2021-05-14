@@ -55,7 +55,7 @@ class ClientGgp final : public orbit_capture_client::CaptureListener {
   void OnSystemMemoryUsage(
       const orbit_grpc_protos::SystemMemoryUsage& /*system_memory_usage*/) override {}
   void OnKeyAndString(uint64_t key, std::string str) override;
-  void OnUniqueCallStack(orbit_client_data::CallStack callstack) override;
+  void OnUniqueCallStack(uint64_t callstack_id, orbit_client_data::CallStack callstack) override;
   void OnCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) override;
   void OnThreadName(int32_t thread_id, std::string thread_name) override;
   void OnThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo thread_state_slice) override;

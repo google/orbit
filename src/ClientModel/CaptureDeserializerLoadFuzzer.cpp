@@ -32,7 +32,7 @@ class MockCaptureListener : public orbit_capture_client::CaptureListener {
   void OnTimer(const orbit_client_protos::TimerInfo&) override {}
   void OnSystemMemoryUsage(const orbit_grpc_protos::SystemMemoryUsage&) override {}
   void OnKeyAndString(uint64_t, std::string) override {}
-  void OnUniqueCallStack(CallStack) override {}
+  void OnUniqueCallStack(uint64_t, CallStack) override {}
   void OnCallstackEvent(orbit_client_protos::CallstackEvent) override {}
   void OnThreadName(int32_t, std::string) override {}
   void OnThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo) override {}

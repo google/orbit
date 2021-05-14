@@ -35,7 +35,7 @@ class CallstackData {
   // Assume that callstack_event.callstack_hash is filled correctly and the
   // CallStack with corresponding hash is already in unique_callstacks_
   void AddCallstackEvent(orbit_client_protos::CallstackEvent callstack_event);
-  void AddUniqueCallStack(CallStack call_stack);
+  void AddUniqueCallStack(uint64_t callstack_id, CallStack call_stack);
   void AddCallStackFromKnownCallstackData(const orbit_client_protos::CallstackEvent& event,
                                           const CallstackData* known_callstack_data);
 
@@ -82,7 +82,8 @@ class CallstackData {
 
   [[nodiscard]] bool HasCallStack(uint64_t callstack_id) const;
 
-  void ForEachUniqueCallstack(const std::function<void(const CallStack&)>& action) const;
+  void ForEachUniqueCallstack(
+      const std::function<void(uint64_t callstack_id, const CallStack& callstack)>& action) const;
 
   void ForEachFrameInCallstack(uint64_t callstack_id,
                                const std::function<void(uint64_t)>& action) const;

@@ -245,14 +245,14 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureInfo(
     capture_listener->OnThreadStateSlice(thread_state_slice);
   }
 
-  for (const auto& callstack_it : capture_info.callstacks()) {
-    const CallstackInfo& callstack = callstack_it.second;
-    CallStack unique_callstack(callstack_it.first,
-                               {callstack.data().begin(), callstack.data().end()});
+  for (const auto& id_and_callstack_info : capture_info.callstacks()) {
+    uint64_t callstack_id = id_and_callstack_info.first;
+    const CallstackInfo& callstack = id_and_callstack_info.second;
+    CallStack unique_callstack({callstack.data().begin(), callstack.data().end()});
     if (*cancellation_requested) {
       return CaptureListener::CaptureOutcome::kCancelled;
     }
-    capture_listener->OnUniqueCallStack(std::move(unique_callstack));
+    capture_listener->OnUniqueCallStack(callstack_id, std::move(unique_callstack));
   }
   for (CallstackEvent callstack_event : capture_info.callstack_events()) {
     if (*cancellation_requested) {

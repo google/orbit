@@ -40,18 +40,24 @@ class MyCaptureListener : public CaptureListener {
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& /*capture_started*/,
                         absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/) override {}
   void OnCaptureFinished(const orbit_grpc_protos::CaptureFinished& /*capture_finished*/) override {}
-  void OnTimer(const TimerInfo&) override {}
-  void OnSystemMemoryUsage(const orbit_grpc_protos::SystemMemoryUsage&) override {}
-  void OnKeyAndString(uint64_t, std::string) override {}
-  void OnUniqueCallStack(CallStack) override {}
-  void OnCallstackEvent(CallstackEvent) override {}
-  void OnThreadName(int32_t, std::string) override {}
-  void OnThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo) override {}
-  void OnAddressInfo(LinuxAddressInfo) override {}
-  void OnUniqueTracepointInfo(uint64_t, orbit_grpc_protos::TracepointInfo) override {}
-  void OnTracepointEvent(orbit_client_protos::TracepointEventInfo) override {}
-  void OnModuleUpdate(uint64_t, orbit_grpc_protos::ModuleInfo) override {}
-  void OnModulesSnapshot(uint64_t, std::vector<orbit_grpc_protos::ModuleInfo>) override {}
+  void OnTimer(const TimerInfo& /*timer_info*/) override {}
+  void OnSystemMemoryUsage(
+      const orbit_grpc_protos::SystemMemoryUsage& /*system_memory_usage*/) override {}
+  void OnKeyAndString(uint64_t /*key*/, std::string /*str*/) override {}
+  void OnUniqueCallStack(uint64_t /*callstack_id*/, CallStack /*callstack*/) override {}
+  void OnCallstackEvent(CallstackEvent /*callstack_event*/) override {}
+  void OnThreadName(int32_t /*thread_id*/, std::string /*thread_name*/) override {}
+  void OnThreadStateSlice(
+      orbit_client_protos::ThreadStateSliceInfo /*thread_state_slice*/) override {}
+  void OnAddressInfo(LinuxAddressInfo /*address_info*/) override {}
+  void OnUniqueTracepointInfo(uint64_t /*key*/,
+                              orbit_grpc_protos::TracepointInfo /*tracepoint_info*/) override {}
+  void OnTracepointEvent(
+      orbit_client_protos::TracepointEventInfo /*tracepoint_event_info*/) override {}
+  void OnModuleUpdate(uint64_t /*timestamp_ns*/,
+                      orbit_grpc_protos::ModuleInfo /*module_info*/) override {}
+  void OnModulesSnapshot(uint64_t /*timestamp_ns*/,
+                         std::vector<orbit_grpc_protos::ModuleInfo> /*module_infos*/) override {}
 };
 }  // namespace
 
