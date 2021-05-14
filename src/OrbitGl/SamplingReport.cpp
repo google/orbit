@@ -15,15 +15,13 @@
 
 using orbit_client_data::CallStack;
 using orbit_client_data::CallstackCount;
-using orbit_client_data::CallstackID;
 using orbit_client_data::PostProcessedSamplingData;
 using orbit_client_data::ThreadID;
 using orbit_client_data::ThreadSampleData;
 
 SamplingReport::SamplingReport(
     OrbitApp* app, PostProcessedSamplingData post_processed_sampling_data,
-    absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks,
-    bool has_summary)
+    absl::flat_hash_map<uint64_t, std::shared_ptr<CallStack>> unique_callstacks, bool has_summary)
     : post_processed_sampling_data_{std::move(post_processed_sampling_data)},
       unique_callstacks_{std::move(unique_callstacks)},
       has_summary_{has_summary},
@@ -74,7 +72,7 @@ void SamplingReport::UpdateDisplayedCallstack() {
 
 void SamplingReport::UpdateReport(
     PostProcessedSamplingData post_processed_sampling_data,
-    absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks) {
+    absl::flat_hash_map<uint64_t, std::shared_ptr<CallStack>> unique_callstacks) {
   unique_callstacks_ = std::move(unique_callstacks);
   post_processed_sampling_data_ = std::move(post_processed_sampling_data);
 
@@ -96,7 +94,7 @@ void SamplingReport::UpdateReport(
 
 void SamplingReport::OnSelectAddresses(const absl::flat_hash_set<uint64_t>& addresses,
                                        ThreadID thread_id) {
-  if (callstack_data_view_) {
+  if (callstack_data_view_ != nullptr) {
     if (selected_addresses_ != addresses || selected_thread_id_ != thread_id) {
       selected_addresses_ = addresses;
       selected_thread_id_ = thread_id;

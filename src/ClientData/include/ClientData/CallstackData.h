@@ -78,17 +78,17 @@ class CallstackData {
     return min_time_;
   }
 
-  [[nodiscard]] const CallStack* GetCallStack(CallstackID callstack_id) const;
+  [[nodiscard]] const CallStack* GetCallStack(uint64_t callstack_id) const;
 
-  [[nodiscard]] bool HasCallStack(CallstackID callstack_id) const;
+  [[nodiscard]] bool HasCallStack(uint64_t callstack_id) const;
 
   void ForEachUniqueCallstack(const std::function<void(const CallStack&)>& action) const;
 
   void ForEachFrameInCallstack(uint64_t callstack_id,
                                const std::function<void(uint64_t)>& action) const;
 
-  [[nodiscard]] absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>>
-  GetUniqueCallstacksCopy() const;
+  [[nodiscard]] absl::flat_hash_map<uint64_t, std::shared_ptr<CallStack>> GetUniqueCallstacksCopy()
+      const;
 
   // Assuming that, for each thread, the outermost frame of each callstack is always the same,
   // filters out all the callstacks that have the outermost frame not matching the majority
@@ -96,14 +96,14 @@ class CallstackData {
   void FilterCallstackEventsBasedOnMajorityStart();
 
  private:
-  [[nodiscard]] std::shared_ptr<CallStack> GetCallstackPtr(CallstackID callstack_id) const;
+  [[nodiscard]] std::shared_ptr<CallStack> GetCallstackPtr(uint64_t callstack_id) const;
 
   void RegisterTime(uint64_t time);
 
   // Use a reentrant mutex so that calls to the ForEach... methods can be nested.
   // E.g., one might want to nest ForEachCallstackEvent and ForEachFrameInCallstack.
   mutable std::recursive_mutex mutex_;
-  absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks_;
+  absl::flat_hash_map<uint64_t, std::shared_ptr<CallStack>> unique_callstacks_;
   absl::flat_hash_map<int32_t, std::map<uint64_t, orbit_client_protos::CallstackEvent>>
       callstack_events_by_tid_;
 

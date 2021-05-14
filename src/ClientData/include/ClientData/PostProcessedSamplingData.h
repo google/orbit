@@ -35,7 +35,7 @@ struct SampledFunction {
 struct ThreadSampleData {
   ThreadSampleData() = default;
   [[nodiscard]] uint32_t GetCountForAddress(uint64_t address) const;
-  absl::flat_hash_map<CallstackID, uint32_t> callstack_id_to_count;
+  absl::flat_hash_map<uint64_t, uint32_t> sampled_callstack_id_to_count;
   absl::flat_hash_map<uint64_t, uint32_t> sampled_address_to_count;
   absl::flat_hash_map<uint64_t, uint32_t> resolved_address_to_count;
   absl::flat_hash_map<uint64_t, uint32_t> resolved_address_to_exclusive_count;
@@ -49,7 +49,7 @@ struct CallstackCount {
   CallstackCount() = default;
 
   int count = 0;
-  CallstackID callstack_id = 0;
+  uint64_t callstack_id = 0;
 };
 
 struct SortedCallstackReport {
@@ -63,17 +63,18 @@ class PostProcessedSamplingData {
   PostProcessedSamplingData() = default;
   PostProcessedSamplingData(
       absl::flat_hash_map<ThreadID, ThreadSampleData> thread_id_to_sample_data,
-      absl::flat_hash_map<CallstackID, CallStack> id_to_resolved_callstack,
-      absl::flat_hash_map<CallstackID, CallstackID> original_id_to_resolved_callstack_id,
-      absl::flat_hash_map<uint64_t, absl::flat_hash_set<CallstackID>>
-          function_address_to_callstack_ids,
+      absl::flat_hash_map<uint64_t, CallStack> id_to_resolved_callstack,
+      absl::flat_hash_map<uint64_t, uint64_t> original_id_to_resolved_callstack_id,
+      absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>>
+          function_address_to_sampled_callstack_ids,
       absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>>
           function_address_to_exact_addresses,
       std::vector<ThreadSampleData> sorted_thread_sample_data)
       : thread_id_to_sample_data_{std::move(thread_id_to_sample_data)},
         id_to_resolved_callstack_{std::move(id_to_resolved_callstack)},
         original_id_to_resolved_callstack_id_{std::move(original_id_to_resolved_callstack_id)},
-        function_address_to_callstack_ids_{std::move(function_address_to_callstack_ids)},
+        function_address_to_sampled_callstack_ids_{
+            std::move(function_address_to_sampled_callstack_ids)},
         function_address_to_exact_addresses_{std::move(function_address_to_exact_addresses)},
         sorted_thread_sample_data_{std::move(sorted_thread_sample_data)} {};
   ~PostProcessedSamplingData() = default;
@@ -83,9 +84,9 @@ class PostProcessedSamplingData {
 
   PostProcessedSamplingData& operator=(PostProcessedSamplingData&& other) = default;
 
-  [[nodiscard]] const CallStack& GetResolvedCallstack(CallstackID raw_callstack_id) const;
+  [[nodiscard]] const CallStack& GetResolvedCallstack(uint64_t sampled_callstack_id) const;
 
-  [[nodiscard]] std::multimap<int, CallstackID> GetCallstacksFromAddresses(
+  [[nodiscard]] std::multimap<int, uint64_t> GetCallstacksFromAddresses(
       const std::vector<uint64_t>& addresses, ThreadID thread_id) const;
   [[nodiscard]] std::unique_ptr<SortedCallstackReport> GetSortedCallstackReportFromAddresses(
       const std::vector<uint64_t>& addresses, ThreadID thread_id) const;
@@ -107,10 +108,10 @@ class PostProcessedSamplingData {
 
  private:
   absl::flat_hash_map<ThreadID, ThreadSampleData> thread_id_to_sample_data_;
-  absl::flat_hash_map<CallstackID, CallStack> id_to_resolved_callstack_;
-  absl::flat_hash_map<CallstackID, CallstackID> original_id_to_resolved_callstack_id_;
-  absl::flat_hash_map<uint64_t, absl::flat_hash_set<CallstackID>>
-      function_address_to_callstack_ids_;
+  absl::flat_hash_map<uint64_t, CallStack> id_to_resolved_callstack_;
+  absl::flat_hash_map<uint64_t, uint64_t> original_id_to_resolved_callstack_id_;
+  absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>>
+      function_address_to_sampled_callstack_ids_;
   absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>> function_address_to_exact_addresses_;
   std::vector<ThreadSampleData> sorted_thread_sample_data_;
 };

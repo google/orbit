@@ -177,15 +177,15 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   void SetIntrospectionWindow(IntrospectionWindow* canvas);
   void StopIntrospection();
 
-  void SetSamplingReport(orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
-                         absl::flat_hash_map<orbit_client_data::CallstackID,
-                                             std::shared_ptr<orbit_client_data::CallStack>>
-                             unique_callstacks);
-  void SetSelectionReport(orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
-                          absl::flat_hash_map<orbit_client_data::CallstackID,
-                                              std::shared_ptr<orbit_client_data::CallStack>>
-                              unique_callstacks,
-                          bool has_summary);
+  void SetSamplingReport(
+      orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
+      absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_data::CallStack>>
+          unique_callstacks);
+  void SetSelectionReport(
+      orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
+      absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_data::CallStack>>
+          unique_callstacks,
+      bool has_summary);
   void SetTopDownView(const orbit_client_model::CaptureData& capture_data);
   void ClearTopDownView();
   void SetSelectionTopDownView(

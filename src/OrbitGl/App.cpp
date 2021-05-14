@@ -102,7 +102,6 @@ using orbit_capture_file::CaptureFile;
 
 using orbit_client_data::CallStack;
 using orbit_client_data::CallstackData;
-using orbit_client_data::CallstackID;
 using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleInMemory;
 using orbit_client_data::PostProcessedSamplingData;
@@ -771,7 +770,7 @@ void OrbitApp::RequestUpdatePrimitives() {
 
 void OrbitApp::SetSamplingReport(
     PostProcessedSamplingData post_processed_sampling_data,
-    absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks) {
+    absl::flat_hash_map<uint64_t, std::shared_ptr<CallStack>> unique_callstacks) {
   ORBIT_SCOPE_FUNCTION;
   // clear old sampling report
   if (sampling_report_ != nullptr) {
@@ -789,8 +788,7 @@ void OrbitApp::SetSamplingReport(
 
 void OrbitApp::SetSelectionReport(
     PostProcessedSamplingData post_processed_sampling_data,
-    absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> unique_callstacks,
-    bool has_summary) {
+    absl::flat_hash_map<uint64_t, std::shared_ptr<CallStack>> unique_callstacks, bool has_summary) {
   CHECK(selection_report_callback_);
   // clear old selection report
   if (selection_report_ != nullptr) {
@@ -2088,7 +2086,7 @@ void OrbitApp::UpdateAfterSymbolLoading() {
 
 void OrbitApp::UpdateAfterCaptureCleared() {
   PostProcessedSamplingData empty_post_processed_sampling_data;
-  absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>> empty_unique_callstacks;
+  absl::flat_hash_map<uint64_t, std::shared_ptr<CallStack>> empty_unique_callstacks;
 
   if (sampling_report_ != nullptr) {
     SetSamplingReport(empty_post_processed_sampling_data, empty_unique_callstacks);

@@ -32,7 +32,7 @@ void CallstackData::RegisterTime(uint64_t time) {
 
 void CallstackData::AddUniqueCallStack(CallStack call_stack) {
   std::lock_guard lock(mutex_);
-  CallstackID id = call_stack.id();
+  uint64_t id = call_stack.id();
   unique_callstacks_[id] = std::make_shared<CallStack>(std::move(call_stack));
 }
 
@@ -145,7 +145,7 @@ void CallstackData::ForEachCallstackEventOfTidInTimeRange(
 void CallstackData::AddCallStackFromKnownCallstackData(const CallstackEvent& event,
                                                        const CallstackData* known_callstack_data) {
   std::lock_guard lock(mutex_);
-  CallstackID callstack_id = event.callstack_id();
+  uint64_t callstack_id = event.callstack_id();
   std::shared_ptr<CallStack> unique_callstack = known_callstack_data->GetCallstackPtr(callstack_id);
   if (unique_callstack == nullptr) {
     return;
@@ -156,7 +156,7 @@ void CallstackData::AddCallStackFromKnownCallstackData(const CallstackEvent& eve
   callstack_events_by_tid_[event.thread_id()][event.time()] = CallstackEvent(event);
 }
 
-const CallStack* CallstackData::GetCallStack(CallstackID callstack_id) const {
+const CallStack* CallstackData::GetCallStack(uint64_t callstack_id) const {
   std::lock_guard lock(mutex_);
   auto it = unique_callstacks_.find(callstack_id);
   if (it != unique_callstacks_.end()) {
@@ -165,7 +165,7 @@ const CallStack* CallstackData::GetCallStack(CallstackID callstack_id) const {
   return nullptr;
 }
 
-bool CallstackData::HasCallStack(CallstackID callstack_id) const {
+bool CallstackData::HasCallStack(uint64_t callstack_id) const {
   std::lock_guard lock(mutex_);
   return unique_callstacks_.contains(callstack_id);
 }
@@ -186,13 +186,13 @@ void CallstackData::ForEachFrameInCallstack(uint64_t callstack_id,
   }
 }
 
-absl::flat_hash_map<CallstackID, std::shared_ptr<CallStack>>
-CallstackData::GetUniqueCallstacksCopy() const {
+absl::flat_hash_map<uint64_t, std::shared_ptr<CallStack>> CallstackData::GetUniqueCallstacksCopy()
+    const {
   std::lock_guard lock(mutex_);
   return unique_callstacks_;
 }
 
-std::shared_ptr<CallStack> CallstackData::GetCallstackPtr(CallstackID callstack_id) const {
+std::shared_ptr<CallStack> CallstackData::GetCallstackPtr(uint64_t callstack_id) const {
   auto it = unique_callstacks_.find(callstack_id);
   if (it != unique_callstacks_.end()) {
     return unique_callstacks_.at(callstack_id);

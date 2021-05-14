@@ -27,15 +27,13 @@ class OrbitApp;
 
 class SamplingReport {
  public:
-  explicit SamplingReport(OrbitApp* app,
-                          orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
-                          absl::flat_hash_map<orbit_client_data::CallstackID,
-                                              std::shared_ptr<orbit_client_data::CallStack>>
-                              unique_callstacks,
-                          bool has_summary = true);
+  explicit SamplingReport(
+      OrbitApp* app, orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
+      absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_data::CallStack>>
+          unique_callstacks,
+      bool has_summary = true);
   void UpdateReport(orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
-                    absl::flat_hash_map<orbit_client_data::CallstackID,
-                                        std::shared_ptr<orbit_client_data::CallStack>>
+                    absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_data::CallStack>>
                         unique_callstacks);
   [[nodiscard]] std::vector<SamplingReportDataView>& GetThreadReports() { return thread_reports_; };
   void SetCallstackDataView(CallStackDataView* data_view) { callstack_data_view_ = data_view; };
@@ -50,15 +48,13 @@ class SamplingReport {
   [[nodiscard]] bool has_summary() const { return has_summary_; }
   void ClearReport();
 
- protected:
+ private:
   void FillReport();
   void OnCallstackIndexChanged(size_t index);
   void UpdateDisplayedCallstack();
 
- protected:
   orbit_client_data::PostProcessedSamplingData post_processed_sampling_data_;
-  absl::flat_hash_map<orbit_client_data::CallstackID, std::shared_ptr<orbit_client_data::CallStack>>
-      unique_callstacks_;
+  absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_data::CallStack>> unique_callstacks_;
   std::vector<SamplingReportDataView> thread_reports_;
   CallStackDataView* callstack_data_view_;
 

@@ -9,8 +9,7 @@
 
 namespace orbit_client_data {
 
-typedef uint64_t CallstackID;
-typedef int32_t ThreadID;
+using ThreadID = int32_t;
 
 }  // namespace orbit_client_data
 
