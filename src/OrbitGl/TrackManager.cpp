@@ -350,8 +350,11 @@ ThreadTrack* TrackManager::GetOrCreateThreadTrack(int32_t tid) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<ThreadTrack> track = thread_tracks_[tid];
   if (track == nullptr) {
+    ThreadTrack::ScopeTreeUpdateType scope_tree_update_type =
+        GetIsDataFromSavedCapture() ? ThreadTrack::ScopeTreeUpdateType::kOnCaptureComplete
+                                    : ThreadTrack::ScopeTreeUpdateType::kAlways;
     track = std::make_shared<ThreadTrack>(time_graph_, time_graph_, viewport_, layout_, tid, app_,
-                                          capture_data_);
+                                          capture_data_, scope_tree_update_type);
     AddTrack(track);
     thread_tracks_[tid] = track;
   }

@@ -682,6 +682,9 @@ void TimeGraph::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t cur
                      PickingMode picking_mode, float z_offset) {
   ORBIT_SCOPE("TimeGraph::Draw");
 
+  // Don't draw while loading to avoid contention with the loading thread.
+  if (app_->IsLoadingCapture()) return;
+
   const bool picking = picking_mode != PickingMode::kNone;
   if ((!picking && update_primitives_requested_) || picking) {
     UpdatePrimitives(nullptr, 0, 0, picking_mode, z_offset);

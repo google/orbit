@@ -65,6 +65,7 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/Tracing.h"
+#include "OrbitBase/UniqueResource.h"
 #include "Path.h"
 #include "PresetsDataView.h"
 #include "SamplingReport.h"
@@ -260,6 +261,8 @@ void OrbitApp::OnCaptureStarted(const CaptureStarted& capture_started,
         capture_data_ = std::make_unique<CaptureData>(module_manager_.get(), capture_started,
                                                       std::move(frame_track_function_ids));
         capture_window_->CreateTimeGraph(capture_data_.get());
+        TrackManager* track_manager = GetMutableTimeGraph()->GetTrackManager();
+        track_manager->SetIsDataFromSavedCapture(is_loading_capture_);
 
         frame_track_online_processor_ =
             orbit_gl::FrameTrackOnlineProcessor(GetCaptureData(), GetMutableTimeGraph());
@@ -282,6 +285,10 @@ void OrbitApp::OnCaptureStarted(const CaptureStarted& capture_started,
 }
 
 Future<void> OrbitApp::OnCaptureComplete() {
+  for (auto thread_track : GetTimeGraph()->GetTrackManager()->GetThreadTracks()) {
+    thread_track->OnCaptureComplete();
+  }
+
   GetMutableCaptureData().FilterBrokenCallstacks();
   PostProcessedSamplingData post_processed_sampling_data =
       orbit_client_model::CreatePostProcessedSamplingData(*GetCaptureData().GetCallstackData(),
@@ -1004,11 +1011,15 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
         auto capture_file_or_error = CaptureFile::OpenForReadWrite(file_path);
 
         ErrorMessageOr<CaptureListener::CaptureOutcome> load_result{CaptureOutcome::kComplete};
+
+        // Set is_loading_capture_ to true for the duration of this scope.
+        is_loading_capture_ = true;
+        orbit_base::unique_resource scope_exit{&is_loading_capture_,
+                                               [](std::atomic<bool>* value) { *value = false; }};
+
         if (capture_file_or_error.has_value()) {
-          is_capture_loading_ = true;
           load_result = LoadCaptureFromNewFormat(this, capture_file_or_error.value().get(),
                                                  &capture_loading_cancellation_requested_);
-          is_capture_loading_ = false;
         } else {  // Fall back to old capture format.
           load_result = orbit_client_model::capture_deserializer::Load(
               file_path, this, module_manager_.get(), &capture_loading_cancellation_requested_);
@@ -2181,8 +2192,10 @@ bool OrbitApp::IsCapturing() const {
   return capture_client_ != nullptr && capture_client_->IsCapturing();
 }
 
+bool OrbitApp::IsLoadingCapture() const { return is_loading_capture_; }
+
 bool OrbitApp::IsCapturingOrLoading() const {
-  return is_capture_loading_ || (capture_client_ != nullptr && capture_client_->IsCapturing());
+  return is_loading_capture_ || (capture_client_ != nullptr && capture_client_->IsCapturing());
 }
 
 ScopedStatus OrbitApp::CreateScopedStatus(const std::string& initial_message) {

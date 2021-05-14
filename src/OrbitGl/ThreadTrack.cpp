@@ -39,7 +39,8 @@ using orbit_grpc_protos::InstrumentedFunction;
 
 ThreadTrack::ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout, int32_t thread_id,
-                         OrbitApp* app, const CaptureData* capture_data, uint32_t indentation_level)
+                         OrbitApp* app, const CaptureData* capture_data,
+                         ScopeTreeUpdateType scope_tree_update_type, uint32_t indentation_level)
     : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, indentation_level) {
   thread_id_ = thread_id;
   InitializeNameAndLabel(thread_id);
@@ -54,6 +55,8 @@ ThreadTrack::ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph,
   tracepoint_bar_ = std::make_shared<orbit_gl::TracepointThreadBar>(
       this, app_, time_graph, viewport, layout, capture_data, thread_id_);
   SetTrackColor(TimeGraph::GetThreadColor(thread_id));
+
+  scope_tree_update_type_ = scope_tree_update_type;
 }
 
 std::string ThreadTrack::GetThreadNameFromTid(uint32_t thread_id) {
@@ -456,6 +459,22 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
   {
     absl::MutexLock lock(&scope_tree_mutex_);
     scope_tree_.Insert(&text_box);
+  }
+}
+
+void ThreadTrack::OnCaptureComplete() {
+  if (scope_tree_update_type_ == ScopeTreeUpdateType::kOnCaptureComplete) {
+    // Build ScopeTree from timer chains.
+    std::vector<std::shared_ptr<TimerChain>> timer_chains = GetAllChains();
+    for (std::shared_ptr<TimerChain> timer_chain : timer_chains) {
+      if (timer_chain == nullptr) return;
+      absl::MutexLock lock(&scope_tree_mutex_);
+      for (auto& block : *timer_chain) {
+        for (size_t k = 0; k < block.size(); ++k) {
+          scope_tree_.Insert(&block[k]);
+        }
+      }
+    }
   }
 }
 

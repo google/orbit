@@ -68,7 +68,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   [[nodiscard]] const orbit_client_model::CaptureData* GetCaptureData() const {
     return capture_data_;
   }
-  [[nodiscard]] TrackManager* GetTrackManager() { return track_manager_.get(); }
+  [[nodiscard]] TrackManager* GetTrackManager() const { return track_manager_.get(); }
 
   [[nodiscard]] float GetTextBoxHeight() const { return layout_.GetTextBoxHeight(); }
   [[nodiscard]] float GetWorldFromTick(uint64_t time) const;

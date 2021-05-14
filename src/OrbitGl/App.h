@@ -106,6 +106,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
 
   [[nodiscard]] orbit_capture_client::CaptureClient::State GetCaptureState() const;
   [[nodiscard]] bool IsCapturingOrLoading() const;
+  [[nodiscard]] bool IsLoadingCapture() const;
 
   void StartCapture();
   void StopCapture();
@@ -498,7 +499,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   void RequestUpdatePrimitives();
 
   std::atomic<bool> capture_loading_cancellation_requested_ = false;
-  std::atomic<bool> is_capture_loading_{false};
+  std::atomic<bool> is_loading_capture_{false};
 
   CaptureStartedCallback capture_started_callback_;
   CaptureStopRequestedCallback capture_stop_requested_callback_;
