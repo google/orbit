@@ -36,7 +36,7 @@ class ScopeNode {
 
   [[nodiscard]] ScopeNode* GetLastChildBeforeOrAtTime(uint64_t time) const;
   [[nodiscard]] std::vector<ScopeNode*> GetChildrenInRange(uint64_t start, uint64_t end) const;
-  [[nodiscard]] absl::btree_map<uint64_t, ScopeNode*>& GetChildrenByStartTime() const {
+  [[nodiscard]] const absl::btree_map<uint64_t, ScopeNode*>& GetChildrenByStartTime() const {
     return *children_by_start_time_;
   }
 
@@ -61,7 +61,7 @@ class ScopeNode {
   uint32_t depth_ = 0;
 
   // We use std::unique_ptr to work around an issue with absl::btree_map which complains about not
-  // knowing the size of ScopeT, which is not neede since ScopeNode only stores a ScopeTree*.
+  // knowing the size of ScopeT, which is not needed since ScopeNode only stores a ScopeTree*.
   std::unique_ptr<absl::btree_map<uint64_t, ScopeNode<ScopeT>*>> children_by_start_time_ =
       std::make_unique<absl::btree_map<uint64_t, ScopeNode<ScopeT>*>>();
 };
