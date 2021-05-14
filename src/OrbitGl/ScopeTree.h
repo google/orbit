@@ -25,9 +25,7 @@ template <typename ScopeT>
 class ScopeNode {
  public:
   ScopeNode() = default;
-  ScopeNode(ScopeT* scope) : scope_(scope) {
-    children_by_start_time_ = std::make_unique<absl::btree_map<uint64_t, ScopeNode<ScopeT>*>>();
-  }
+  ScopeNode(ScopeT* scope) : scope_(scope) {}
 
   void Insert(ScopeNode* node);
   std::string ToString() const {
@@ -61,7 +59,11 @@ class ScopeNode {
  private:
   ScopeT* scope_ = nullptr;
   uint32_t depth_ = 0;
-  std::unique_ptr<absl::btree_map<uint64_t, ScopeNode<ScopeT>*>> children_by_start_time_;
+
+  // We use std::unique_ptr to work around an issue with absl::btree_map which complains about not
+  // knowing the size of ScopeT, which is not neede since ScopeNode only stores a ScopeTree*.
+  std::unique_ptr<absl::btree_map<uint64_t, ScopeNode<ScopeT>*>> children_by_start_time_ =
+      std::make_unique<absl::btree_map<uint64_t, ScopeNode<ScopeT>*>>();
 };
 
 template <typename ScopeT>
