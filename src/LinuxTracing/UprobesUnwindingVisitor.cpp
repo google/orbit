@@ -35,12 +35,11 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
   return_address_manager_->PatchSample(event->GetTid(), event->GetRegisters()[PERF_REG_X86_SP],
                                        event->GetStackData(), event->GetStackSize());
 
-  const std::vector<unwindstack::FrameData>& libunwindstack_callstack =
+  LibunwindstackResult libunwindstack_result =
       unwinder_->Unwind(event->GetPid(), current_maps_->Get(), event->GetRegisters(),
                         event->GetStackData(), event->GetStackSize());
 
-  // LibunwindstackUnwinder::Unwind signals an unwinding error with an empty callstack.
-  if (libunwindstack_callstack.empty()) {
+  if (!libunwindstack_result.IsSuccess()) {
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
     }
@@ -52,7 +51,7 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
   // Note that this doesn't exclude samples inside the main function of any thread as the main
   // function is never the outermost frame. For example, for the main thread the outermost function
   // is _start, followed by __libc_start_main. For other threads, the outermost function is clone.
-  if (libunwindstack_callstack.size() == 1) {
+  if (libunwindstack_result.frames().size() == 1) {
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
     }
@@ -61,7 +60,7 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
 
   // Some samples can actually fall inside u(ret)probes code. Discard them,
   // because when they are unwound successfully the result is wrong.
-  if (libunwindstack_callstack.front().map_name == "[uprobes]") {
+  if (libunwindstack_result.frames().front().map_name == "[uprobes]") {
     if (discarded_samples_in_uretprobes_counter_ != nullptr) {
       ++(*discarded_samples_in_uretprobes_counter_);
     }
@@ -74,7 +73,7 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
   sample.set_timestamp_ns(event->GetTimestamp());
 
   Callstack* callstack = sample.mutable_callstack();
-  for (const unwindstack::FrameData& libunwindstack_frame : libunwindstack_callstack) {
+  for (const unwindstack::FrameData& libunwindstack_frame : libunwindstack_result.frames()) {
     FullAddressInfo address_info;
     address_info.set_absolute_address(libunwindstack_frame.pc);
     address_info.set_function_name(llvm::demangle(libunwindstack_frame.function_name));

@@ -65,10 +65,9 @@ class StackAndProcessMemory : public unwindstack::Memory {
 
 class LibunwindstackUnwinderImpl : public LibunwindstackUnwinder {
  public:
-  std::vector<unwindstack::FrameData> Unwind(
-      pid_t pid, unwindstack::Maps* maps,
-      const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs, const void* stack_dump,
-      uint64_t stack_dump_size) override;
+  LibunwindstackResult Unwind(pid_t pid, unwindstack::Maps* maps,
+                              const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
+                              const void* stack_dump, uint64_t stack_dump_size) override;
 
  private:
   static constexpr size_t kMaxFrames = 1024;  // This is arbitrary.
@@ -92,7 +91,7 @@ const std::array<size_t, unwindstack::X86_64_REG_LAST>
         PERF_REG_X86_R15, PERF_REG_X86_IP,
     };
 
-std::vector<unwindstack::FrameData> LibunwindstackUnwinderImpl::Unwind(
+LibunwindstackResult LibunwindstackUnwinderImpl::Unwind(
     pid_t pid, unwindstack::Maps* maps, const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
     const void* stack_dump, uint64_t stack_dump_size) {
   unwindstack::RegsX86_64 regs{};
@@ -108,17 +107,16 @@ std::vector<unwindstack::FrameData> LibunwindstackUnwinderImpl::Unwind(
   // Careful: regs are modified. Use regs.Clone() if you need to reuse regs later.
   unwinder.Unwind();
 
-  // Simply report an unwinding error as an empty callstack for now.
-  if (unwinder.LastErrorCode() != 0) {
 #ifndef NDEBUG
-    ERROR("%s at %#016lx", LibunwindstackErrorString(unwinder.LastErrorCode()).c_str(),
+  if (unwinder.LastErrorCode() != 0) {
+    ERROR("%s at %#016lx", LibunwindstackErrorString(unwinder.LastErrorCode()),
           unwinder.LastErrorAddress());
-#endif
-    return {};
   }
+#endif
 
-  return unwinder.frames();
+  return LibunwindstackResult{unwinder.ConsumeFrames(), unwinder.LastErrorCode()};
 }
+
 }  // namespace
 
 std::unique_ptr<LibunwindstackUnwinder> LibunwindstackUnwinder::Create() {
