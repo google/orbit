@@ -11,14 +11,15 @@
 
 #include <algorithm>
 
-#include "ClientData/Callstack.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "capture_data.pb.h"
 
-using orbit_client_data::CallStack;
 using orbit_client_data::PostProcessedSamplingData;
 using orbit_client_data::ThreadSampleData;
 
 using orbit_client_model::CaptureData;
+
+using orbit_client_protos::CallstackInfo;
 
 std::vector<const CallTreeNode*> CallTreeNode::children() const {
   std::vector<const CallTreeNode*> ret;
@@ -95,12 +96,12 @@ uint64_t CallTreeNode::GetExclusiveSampleCount() const {
 }
 
 static void AddCallstackToTopDownThread(CallTreeThread* thread_node,
-                                        const CallStack& resolved_callstack,
+                                        const CallstackInfo& resolved_callstack,
                                         uint64_t callstack_sample_count,
                                         const CaptureData& capture_data) {
   CallTreeNode* current_thread_or_function = thread_node;
-  for (auto frame_it = resolved_callstack.frames().crbegin();
-       frame_it != resolved_callstack.frames().crend(); ++frame_it) {
+  for (auto frame_it = resolved_callstack.frames().rbegin();
+       frame_it != resolved_callstack.frames().rend(); ++frame_it) {
     uint64_t frame = *frame_it;
     const std::string& function_name = capture_data.GetFunctionNameByAddress(frame);
     const std::string& module_path = capture_data.GetModulePathByAddress(frame);
@@ -143,7 +144,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromSamplingProfile
         GetOrCreateThreadNode(top_down_view.get(), tid, process_name, thread_names);
 
     for (const auto& callstack_id_and_count : thread_sample_data.sampled_callstack_id_to_count) {
-      const CallStack& resolved_callstack =
+      const CallstackInfo& resolved_callstack =
           post_processed_sampling_data.GetResolvedCallstack(callstack_id_and_count.first);
       const uint64_t sample_count = callstack_id_and_count.second;
       // Don't count samples from the all-thread case again.
@@ -159,7 +160,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromSamplingProfile
 }
 
 [[nodiscard]] static CallTreeNode* AddReversedCallstackToBottomUpViewAndReturnLastFunction(
-    CallTreeView* bottom_up_view, const CallStack& resolved_callstack,
+    CallTreeView* bottom_up_view, const CallstackInfo& resolved_callstack,
     uint64_t callstack_sample_count, const CaptureData& capture_data) {
   CallTreeNode* current_node = bottom_up_view;
   for (uint64_t frame : resolved_callstack.frames()) {
@@ -190,7 +191,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromSamplingProfil
 
     for (const auto& [callstack_id, sample_count] :
          thread_sample_data.sampled_callstack_id_to_count) {
-      const CallStack& resolved_callstack =
+      const CallstackInfo& resolved_callstack =
           post_processed_sampling_data.GetResolvedCallstack(callstack_id);
       bottom_up_view->IncreaseSampleCount(sample_count);
 

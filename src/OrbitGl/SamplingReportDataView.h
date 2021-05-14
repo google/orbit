@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "CallStackDataView.h"
+#include "CallstackDataView.h"
 #include "ClientData/CallstackTypes.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
@@ -66,7 +66,7 @@ class SamplingReportDataView : public DataView {
   absl::flat_hash_set<uint64_t> selected_function_ids_;
   orbit_client_data::ThreadID tid_ = -1;
   std::string name_;
-  CallStackDataView* callstack_data_view_;
+  CallstackDataView* callstack_data_view_;
   SamplingReport* sampling_report_ = nullptr;
 
   enum ColumnIndex {

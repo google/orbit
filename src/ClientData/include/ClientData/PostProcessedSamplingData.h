@@ -13,7 +13,6 @@
 #include <utility>
 #include <vector>
 
-#include "ClientData/Callstack.h"
 #include "ClientData/CallstackTypes.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -63,7 +62,7 @@ class PostProcessedSamplingData {
   PostProcessedSamplingData() = default;
   PostProcessedSamplingData(
       absl::flat_hash_map<ThreadID, ThreadSampleData> thread_id_to_sample_data,
-      absl::flat_hash_map<uint64_t, CallStack> id_to_resolved_callstack,
+      absl::flat_hash_map<uint64_t, orbit_client_protos::CallstackInfo> id_to_resolved_callstack,
       absl::flat_hash_map<uint64_t, uint64_t> original_id_to_resolved_callstack_id,
       absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>>
           function_address_to_sampled_callstack_ids,
@@ -84,7 +83,8 @@ class PostProcessedSamplingData {
 
   PostProcessedSamplingData& operator=(PostProcessedSamplingData&& other) = default;
 
-  [[nodiscard]] const CallStack& GetResolvedCallstack(uint64_t sampled_callstack_id) const;
+  [[nodiscard]] const orbit_client_protos::CallstackInfo& GetResolvedCallstack(
+      uint64_t sampled_callstack_id) const;
 
   [[nodiscard]] std::multimap<int, uint64_t> GetCallstacksFromAddresses(
       const std::vector<uint64_t>& addresses, ThreadID thread_id) const;
@@ -108,7 +108,7 @@ class PostProcessedSamplingData {
 
  private:
   absl::flat_hash_map<ThreadID, ThreadSampleData> thread_id_to_sample_data_;
-  absl::flat_hash_map<uint64_t, CallStack> id_to_resolved_callstack_;
+  absl::flat_hash_map<uint64_t, orbit_client_protos::CallstackInfo> id_to_resolved_callstack_;
   absl::flat_hash_map<uint64_t, uint64_t> original_id_to_resolved_callstack_id_;
   absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>>
       function_address_to_sampled_callstack_ids_;

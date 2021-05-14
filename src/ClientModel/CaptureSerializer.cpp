@@ -18,7 +18,6 @@
 #include <utility>
 #include <vector>
 
-#include "ClientData/Callstack.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
@@ -31,7 +30,6 @@
 #include "google/protobuf/io/coded_stream.h"
 #include "google/protobuf/message.h"
 
-using orbit_client_data::CallStack;
 using orbit_client_data::ModuleData;
 
 using orbit_client_protos::CallstackInfo;
@@ -171,9 +169,7 @@ CaptureInfo GenerateCaptureInfo(
   // same mutex lock we could end up having list of callstacks inconsistent with unique_callstacks.
   // Revisit sampling profiler data thread-safety.
   capture_data.GetCallstackData()->ForEachUniqueCallstack(
-      [&capture_info](uint64_t callstack_id, const CallStack& call_stack) {
-        CallstackInfo callstack;
-        *callstack.mutable_frames() = {call_stack.frames().begin(), call_stack.frames().end()};
+      [&capture_info](uint64_t callstack_id, const orbit_client_protos::CallstackInfo& callstack) {
         (*capture_info.mutable_callstacks())[callstack_id] = callstack;
       });
 

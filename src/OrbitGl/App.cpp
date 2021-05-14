@@ -29,11 +29,10 @@
 #include <type_traits>
 #include <utility>
 
-#include "CallStackDataView.h"
+#include "CallstackDataView.h"
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureFile/CaptureFile.h"
 #include "CaptureWindow.h"
-#include "ClientData/Callstack.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
@@ -100,7 +99,6 @@ using orbit_capture_client::CaptureListener;
 
 using orbit_capture_file::CaptureFile;
 
-using orbit_client_data::CallStack;
 using orbit_client_data::CallstackData;
 using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleInMemory;
@@ -114,6 +112,7 @@ using orbit_client_data::UserDefinedCaptureData;
 using orbit_client_model::CaptureData;
 
 using orbit_client_protos::CallstackEvent;
+using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::LinuxAddressInfo;
@@ -377,8 +376,8 @@ void OrbitApp::OnKeyAndString(uint64_t key, std::string str) {
   string_manager_.AddIfNotPresent(key, std::move(str));
 }
 
-void OrbitApp::OnUniqueCallStack(uint64_t callstack_id, CallStack callstack) {
-  GetMutableCaptureData().AddUniqueCallStack(callstack_id, std::move(callstack));
+void OrbitApp::OnUniqueCallstack(uint64_t callstack_id, CallstackInfo callstack) {
+  GetMutableCaptureData().AddUniqueCallstack(callstack_id, std::move(callstack));
 }
 
 void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
@@ -770,7 +769,7 @@ void OrbitApp::RequestUpdatePrimitives() {
 
 void OrbitApp::SetSamplingReport(
     PostProcessedSamplingData post_processed_sampling_data,
-    absl::flat_hash_map<uint64_t, std::shared_ptr<CallStack>> unique_callstacks) {
+    absl::flat_hash_map<uint64_t, std::shared_ptr<CallstackInfo>> unique_callstacks) {
   ORBIT_SCOPE_FUNCTION;
   // clear old sampling report
   if (sampling_report_ != nullptr) {
@@ -788,7 +787,8 @@ void OrbitApp::SetSamplingReport(
 
 void OrbitApp::SetSelectionReport(
     PostProcessedSamplingData post_processed_sampling_data,
-    absl::flat_hash_map<uint64_t, std::shared_ptr<CallStack>> unique_callstacks, bool has_summary) {
+    absl::flat_hash_map<uint64_t, std::shared_ptr<CallstackInfo>> unique_callstacks,
+    bool has_summary) {
   CHECK(selection_report_callback_);
   // clear old selection report
   if (selection_report_ != nullptr) {
@@ -2032,7 +2032,7 @@ void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected
   const CallstackData* callstack_data = GetCaptureData().GetCallstackData();
   std::unique_ptr<CallstackData> selection_callstack_data = std::make_unique<CallstackData>();
   for (const CallstackEvent& event : selected_callstack_events) {
-    selection_callstack_data->AddCallStackFromKnownCallstackData(event, callstack_data);
+    selection_callstack_data->AddCallstackFromKnownCallstackData(event, callstack_data);
   }
   // TODO: this might live on the data_manager
   GetMutableCaptureData().set_selection_callstack_data(std::move(selection_callstack_data));
@@ -2086,7 +2086,7 @@ void OrbitApp::UpdateAfterSymbolLoading() {
 
 void OrbitApp::UpdateAfterCaptureCleared() {
   PostProcessedSamplingData empty_post_processed_sampling_data;
-  absl::flat_hash_map<uint64_t, std::shared_ptr<CallStack>> empty_unique_callstacks;
+  absl::flat_hash_map<uint64_t, std::shared_ptr<CallstackInfo>> empty_unique_callstacks;
 
   if (sampling_report_ != nullptr) {
     SetSamplingReport(empty_post_processed_sampling_data, empty_unique_callstacks);
@@ -2112,7 +2112,7 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
     case DataViewType::kCallstack:
       if (!callstack_data_view_) {
-        callstack_data_view_ = std::make_unique<CallStackDataView>(this);
+        callstack_data_view_ = std::make_unique<CallstackDataView>(this);
         panels_.push_back(callstack_data_view_.get());
       }
       return callstack_data_view_.get();
@@ -2156,7 +2156,7 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
 DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {
   if (selection_callstack_data_view_ == nullptr) {
-    selection_callstack_data_view_ = std::make_unique<CallStackDataView>(this);
+    selection_callstack_data_view_ = std::make_unique<CallstackDataView>(this);
     panels_.push_back(selection_callstack_data_view_.get());
   }
   return selection_callstack_data_view_.get();

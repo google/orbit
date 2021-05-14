@@ -21,7 +21,7 @@ target_sources(
          AsyncTrack.h
          Batcher.h
          BlockChain.h
-         CallStackDataView.h
+         CallstackDataView.h
          CallstackThreadBar.h
          CallTreeView.h
          CaptureStats.h
@@ -93,7 +93,7 @@ target_sources(
           App.cpp
           AsyncTrack.cpp
           Batcher.cpp
-          CallStackDataView.cpp
+          CallstackDataView.cpp
           CallstackThreadBar.cpp
           CallTreeView.cpp
           CaptureStats.cpp

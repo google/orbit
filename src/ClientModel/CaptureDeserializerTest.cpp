@@ -8,25 +8,19 @@
 #include <gmock/gmock.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
-#include <google/protobuf/stubs/common.h>
-#include <google/protobuf/stubs/port.h>
 #include <gtest/gtest.h>
 
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
-#include <ostream>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureSerializationTestMatchers.h"
-#include "ClientData/Callstack.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
-#include "ClientData/ProcessData.h"
-#include "ClientData/TracepointCustom.h"
 #include "ClientModel/CaptureDeserializer.h"
 #include "OrbitBase/Result.h"
 #include "capture.pb.h"
@@ -34,7 +28,6 @@
 
 using orbit_capture_client::CaptureListener;
 
-using orbit_client_data::CallStack;
 using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleManager;
 
@@ -79,7 +72,7 @@ class MockCaptureListener : public CaptureListener {
   MOCK_METHOD(void, OnTimer, (const TimerInfo& /*timer_info*/), (override));
   MOCK_METHOD(void, OnSystemMemoryUsage, (const SystemMemoryUsage&), (override));
   MOCK_METHOD(void, OnKeyAndString, (uint64_t /*key*/, std::string), (override));
-  MOCK_METHOD(void, OnUniqueCallStack, (uint64_t /*callstack_id*/, CallStack /*callstack*/),
+  MOCK_METHOD(void, OnUniqueCallstack, (uint64_t /*callstack_id*/, CallstackInfo /*callstack*/),
               (override));
   MOCK_METHOD(void, OnCallstackEvent, (CallstackEvent /*callstack_event*/), (override));
   MOCK_METHOD(void, OnModuleUpdate, (uint64_t /*timestamp_ns*/, ModuleInfo /*module_info*/),
@@ -530,12 +523,11 @@ TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
   CaptureInfo capture_info;
 
   // Add two callstacks with same hash:
-  std::vector<uint64_t> callstack_data_1;
-  callstack_data_1.push_back(1);
-  callstack_data_1.push_back(2);
-  callstack_data_1.push_back(3);
   uint64_t callstack_id_1 = 1;
-  CallStack callstack_1(std::move(callstack_data_1));
+  CallstackInfo callstack_1;
+  callstack_1.add_frames(1);
+  callstack_1.add_frames(2);
+  callstack_1.add_frames(3);
 
   CallstackInfo callstack_info_1;
   *callstack_info_1.mutable_frames() = {callstack_1.frames().begin(), callstack_1.frames().end()};
@@ -552,11 +544,10 @@ TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
   callstack_event_1_2->set_callstack_id(callstack_id_1);
 
   // Add one additional callstack with a different hash:
-  std::vector<uint64_t> callstack_data_2;
-  callstack_data_2.push_back(4);
-  callstack_data_2.push_back(5);
   uint64_t callstack_id_2 = 2;
-  CallStack callstack_2(std::move(callstack_data_2));
+  CallstackInfo callstack_2;
+  callstack_2.add_frames(4);
+  callstack_2.add_frames(5);
 
   CallstackInfo callstack_info_2;
   *callstack_info_2.mutable_frames() = {callstack_2.frames().begin(), callstack_2.frames().end()};
@@ -579,10 +570,10 @@ TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
   bool hash_present_2 = false;
 
   uint64_t actual_callstack_id_1 = 0;
-  CallStack actual_callstack_1;
+  CallstackInfo actual_callstack_1;
   uint64_t actual_callstack_id_2 = 0;
-  CallStack actual_callstack_2;
-  EXPECT_CALL(listener, OnUniqueCallStack(_, _))
+  CallstackInfo actual_callstack_2;
+  EXPECT_CALL(listener, OnUniqueCallstack(_, _))
       .Times(2)
       .WillOnce(DoAll(SaveArg<0>(&actual_callstack_id_1), SaveArg<1>(&actual_callstack_1),
                       Assign(&hash_added_1, true)))
@@ -621,10 +612,18 @@ TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
   ASSERT_TRUE(result.has_value()) << result.error().message();
   EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
 
+  if (actual_callstack_id_1 > actual_callstack_id_2) {
+    std::swap(actual_callstack_id_1, actual_callstack_id_2);
+    std::swap(actual_callstack_1, actual_callstack_2);
+  }
   EXPECT_EQ(actual_callstack_id_1, callstack_id_1);
-  EXPECT_EQ(actual_callstack_1.frames(), callstack_1.frames());
+  EXPECT_EQ(
+      std::vector<uint64_t>(actual_callstack_1.frames().begin(), actual_callstack_1.frames().end()),
+      std::vector<uint64_t>(callstack_1.frames().begin(), callstack_1.frames().end()));
   EXPECT_EQ(actual_callstack_id_2, callstack_id_2);
-  EXPECT_EQ(actual_callstack_2.frames(), callstack_2.frames());
+  EXPECT_EQ(
+      std::vector<uint64_t>(actual_callstack_2.frames().begin(), actual_callstack_2.frames().end()),
+      std::vector<uint64_t>(callstack_2.frames().begin(), callstack_2.frames().end()));
 
   EXPECT_TRUE(hash_added_1);
   EXPECT_TRUE(hash_added_2);

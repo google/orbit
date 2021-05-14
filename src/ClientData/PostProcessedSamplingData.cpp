@@ -41,7 +41,7 @@ uint32_t ThreadSampleData::GetCountForAddress(uint64_t address) const {
   return (*res).second;
 }
 
-const CallStack& PostProcessedSamplingData::GetResolvedCallstack(
+const orbit_client_protos::CallstackInfo& PostProcessedSamplingData::GetResolvedCallstack(
     uint64_t sampled_callstack_id) const {
   auto resolved_callstack_id_it = original_id_to_resolved_callstack_id_.find(sampled_callstack_id);
   CHECK(resolved_callstack_id_it != original_id_to_resolved_callstack_id_.end());

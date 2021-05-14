@@ -20,7 +20,6 @@
 #include <utility>
 #include <vector>
 
-#include "ClientData/Callstack.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/FunctionInfoSet.h"
 #include "ClientData/ModuleData.h"
@@ -166,8 +165,8 @@ class CaptureData {
     return tracepoint_data_->GetNumTracepointEventsForThreadId(thread_id);
   }
 
-  void AddUniqueCallStack(uint64_t callstack_id, orbit_client_data::CallStack call_stack) {
-    callstack_data_->AddUniqueCallStack(callstack_id, std::move(call_stack));
+  void AddUniqueCallstack(uint64_t callstack_id, orbit_client_protos::CallstackInfo callstack) {
+    callstack_data_->AddUniqueCallstack(callstack_id, std::move(callstack));
   }
 
   void AddCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) {

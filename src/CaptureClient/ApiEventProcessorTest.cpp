@@ -16,8 +16,7 @@
 
 namespace orbit_capture_client {
 
-using orbit_client_data::CallStack;
-
+using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::TimerInfo;
 
 using orbit_grpc_protos::ApiEvent;
@@ -35,7 +34,7 @@ class EmptyCaptureListener : public CaptureListener {
   void OnSystemMemoryUsage(
       const orbit_grpc_protos::SystemMemoryUsage& /*system_memory_usage*/) override {}
   void OnKeyAndString(uint64_t /*key*/, std::string /*str*/) override {}
-  void OnUniqueCallStack(uint64_t /*callstack_id*/, CallStack /*callstack*/) override {}
+  void OnUniqueCallstack(uint64_t /*callstack_id*/, CallstackInfo /*callstack*/) override {}
   void OnCallstackEvent(orbit_client_protos::CallstackEvent /*callstack_event*/) override {}
   void OnThreadName(int32_t /*thread_id*/, std::string /*thread_name*/) override {}
   void OnModuleUpdate(uint64_t /*timestamp_ns*/,

@@ -126,9 +126,9 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="CallStackLabel">
+             <widget class="QLabel" name="CallstackLabel">
               <property name="text">
-               <string>CallStack</string>
+               <string>Callstack</string>
               </property>
              </widget>
             </item>

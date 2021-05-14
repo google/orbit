@@ -4,18 +4,15 @@
 
 #include <absl/flags/flag.h>
 #include <gmock/gmock.h>
-#include <google/protobuf/stubs/port.h>
 #include <gtest/gtest.h>
 #include <sys/types.h>
 
-#include <chrono>
 #include <cstdint>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "CaptureSerializationTestMatchers.h"
-#include "ClientData/Callstack.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientModel/CaptureData.h"
@@ -27,7 +24,6 @@
 #include "module.pb.h"
 #include "tracepoint.pb.h"
 
-using orbit_client_data::CallStack;
 using orbit_client_data::ModuleManager;
 
 using orbit_client_protos::CallstackEvent;
@@ -170,13 +166,12 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   address_info.set_offset_in_function(0);
   capture_data.InsertAddressInfo(address_info);
 
-  std::vector<uint64_t> addresses;
-  addresses.push_back(1);
-  addresses.push_back(2);
-  addresses.push_back(3);
   uint64_t callstack_id = 1;
-  CallStack callstack(std::move(addresses));
-  capture_data.AddUniqueCallStack(callstack_id, callstack);
+  CallstackInfo callstack;
+  callstack.add_frames(1);
+  callstack.add_frames(2);
+  callstack.add_frames(3);
+  capture_data.AddUniqueCallstack(callstack_id, callstack);
 
   CallstackEvent callstack_event;
   callstack_event.set_time(1);

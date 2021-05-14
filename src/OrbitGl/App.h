@@ -25,13 +25,12 @@
 #include <utility>
 #include <vector>
 
-#include "CallStackDataView.h"
 #include "CallTreeView.h"
+#include "CallstackDataView.h"
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureFile/CaptureFile.h"
 #include "CaptureWindow.h"
-#include "ClientData/Callstack.h"
 #include "ClientData/CallstackTypes.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
@@ -138,7 +137,8 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   void OnCaptureFinished(const orbit_grpc_protos::CaptureFinished& capture_finished) override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
-  void OnUniqueCallStack(uint64_t callstack_id, orbit_client_data::CallStack callstack) override;
+  void OnUniqueCallstack(uint64_t callstack_id,
+                         orbit_client_protos::CallstackInfo callstack) override;
   void OnCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) override;
   void OnThreadName(int32_t thread_id, std::string thread_name) override;
   void OnThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo thread_state_slice) override;
@@ -179,11 +179,11 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
 
   void SetSamplingReport(
       orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
-      absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_data::CallStack>>
+      absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
           unique_callstacks);
   void SetSelectionReport(
       orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
-      absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_data::CallStack>>
+      absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
           unique_callstacks,
       bool has_summary);
   void SetTopDownView(const orbit_client_model::CaptureData& capture_data);
@@ -525,8 +525,8 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
 
   std::unique_ptr<ModulesDataView> modules_data_view_;
   std::unique_ptr<FunctionsDataView> functions_data_view_;
-  std::unique_ptr<CallStackDataView> callstack_data_view_;
-  std::unique_ptr<CallStackDataView> selection_callstack_data_view_;
+  std::unique_ptr<CallstackDataView> callstack_data_view_;
+  std::unique_ptr<CallstackDataView> selection_callstack_data_view_;
   std::unique_ptr<PresetsDataView> presets_data_view_;
   std::unique_ptr<TracepointsDataView> tracepoints_data_view_;
 

@@ -11,14 +11,13 @@
 #include <utility>
 #include <vector>
 
-#include "ClientData/Callstack.h"
 #include "ClientData/ModuleData.h"
 #include "DataView.h"
 #include "capture_data.pb.h"
 
-class CallStackDataView : public DataView {
+class CallstackDataView : public DataView {
  public:
-  explicit CallStackDataView(OrbitApp* app);
+  explicit CallstackDataView(OrbitApp* app);
 
   void SetAsMainInstance() override;
   const std::vector<Column>& GetColumns() override;
@@ -32,13 +31,13 @@ class CallStackDataView : public DataView {
   void OnContextMenu(const std::string& action, int menu_index,
                      const std::vector<int>& item_indices) override;
   void OnDataChanged() override;
-  void SetCallStack(const orbit_client_data::CallStack& callstack) {
-    callstack_ = orbit_client_data::CallStack(callstack);
+  void SetCallstack(const orbit_client_protos::CallstackInfo& callstack) {
+    callstack_ = callstack;
     OnDataChanged();
   }
 
   void ClearCallstack() {
-    callstack_ = orbit_client_data::CallStack();
+    callstack_ = orbit_client_protos::CallstackInfo{};
     OnDataChanged();
   }
 
@@ -50,13 +49,13 @@ class CallStackDataView : public DataView {
  protected:
   void DoFilter() override;
 
-  orbit_client_data::CallStack callstack_;
+  orbit_client_protos::CallstackInfo callstack_;
 
-  struct CallStackDataViewFrame {
-    CallStackDataViewFrame(uint64_t address, const orbit_client_protos::FunctionInfo* function,
+  struct CallstackDataViewFrame {
+    CallstackDataViewFrame(uint64_t address, const orbit_client_protos::FunctionInfo* function,
                            orbit_client_data::ModuleData* module)
         : address(address), function(function), module(module) {}
-    CallStackDataViewFrame(uint64_t address, std::string fallback_name,
+    CallstackDataViewFrame(uint64_t address, std::string fallback_name,
                            orbit_client_data::ModuleData* module)
         : address(address), fallback_name(std::move(fallback_name)), module(module) {}
 
@@ -66,8 +65,8 @@ class CallStackDataView : public DataView {
     orbit_client_data::ModuleData* module;
   };
 
-  CallStackDataViewFrame GetFrameFromRow(int row);
-  CallStackDataViewFrame GetFrameFromIndex(int index_in_callstack);
+  CallstackDataViewFrame GetFrameFromRow(int row);
+  CallstackDataViewFrame GetFrameFromIndex(int index_in_callstack);
 
   enum ColumnIndex {
     kColumnSelected,

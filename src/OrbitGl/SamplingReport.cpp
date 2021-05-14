@@ -9,19 +9,21 @@
 #include <algorithm>
 
 #include "App.h"
-#include "CallStackDataView.h"
+#include "CallstackDataView.h"
 #include "OrbitBase/Logging.h"
 #include "absl/strings/str_format.h"
+#include "capture_data.pb.h"
 
-using orbit_client_data::CallStack;
 using orbit_client_data::CallstackCount;
 using orbit_client_data::PostProcessedSamplingData;
 using orbit_client_data::ThreadID;
 using orbit_client_data::ThreadSampleData;
+using orbit_client_protos::CallstackInfo;
 
 SamplingReport::SamplingReport(
     OrbitApp* app, PostProcessedSamplingData post_processed_sampling_data,
-    absl::flat_hash_map<uint64_t, std::shared_ptr<CallStack>> unique_callstacks, bool has_summary)
+    absl::flat_hash_map<uint64_t, std::shared_ptr<CallstackInfo>> unique_callstacks,
+    bool has_summary)
     : post_processed_sampling_data_{std::move(post_processed_sampling_data)},
       unique_callstacks_{std::move(unique_callstacks)},
       has_summary_{has_summary},
@@ -72,7 +74,7 @@ void SamplingReport::UpdateDisplayedCallstack() {
 
 void SamplingReport::UpdateReport(
     PostProcessedSamplingData post_processed_sampling_data,
-    absl::flat_hash_map<uint64_t, std::shared_ptr<CallStack>> unique_callstacks) {
+    absl::flat_hash_map<uint64_t, std::shared_ptr<CallstackInfo>> unique_callstacks) {
   unique_callstacks_ = std::move(unique_callstacks);
   post_processed_sampling_data_ = std::move(post_processed_sampling_data);
 
@@ -150,7 +152,7 @@ void SamplingReport::OnCallstackIndexChanged(size_t index) {
     selected_callstack_index_ = index;
     auto it = unique_callstacks_.find(cs.callstack_id);
     CHECK(it != unique_callstacks_.end());
-    callstack_data_view_->SetCallStack(*it->second);
+    callstack_data_view_->SetCallstack(*it->second);
     callstack_data_view_->SetFunctionsToHighlight(selected_addresses_);
   } else {
     selected_callstack_index_ = 0;

@@ -18,7 +18,7 @@
 #include <utility>
 
 #include "App.h"
-#include "CallStackDataView.h"
+#include "CallstackDataView.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
 #include "ClientModel/CaptureData.h"
@@ -314,7 +314,7 @@ void SamplingReportDataView::OnRefresh(const std::vector<int>& visible_selected_
 
 void SamplingReportDataView::LinkDataView(DataView* data_view) {
   if (data_view->GetType() == DataViewType::kCallstack) {
-    callstack_data_view_ = static_cast<CallStackDataView*>(data_view);
+    callstack_data_view_ = static_cast<CallstackDataView*>(data_view);
     sampling_report_->SetCallstackDataView(callstack_data_view_);
   }
 }

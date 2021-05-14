@@ -7,6 +7,7 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
+#include <grpcpp/grpcpp.h>
 
 #include <cstdint>
 #include <memory>
@@ -17,7 +18,6 @@
 
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
-#include "ClientData/Callstack.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
@@ -32,7 +32,6 @@
 #include "StringManager.h"
 #include "capture.pb.h"
 #include "capture_data.pb.h"
-#include "grpcpp/grpcpp.h"
 #include "tracepoint.pb.h"
 
 class ClientGgp final : public orbit_capture_client::CaptureListener {
@@ -55,7 +54,8 @@ class ClientGgp final : public orbit_capture_client::CaptureListener {
   void OnSystemMemoryUsage(
       const orbit_grpc_protos::SystemMemoryUsage& /*system_memory_usage*/) override {}
   void OnKeyAndString(uint64_t key, std::string str) override;
-  void OnUniqueCallStack(uint64_t callstack_id, orbit_client_data::CallStack callstack) override;
+  void OnUniqueCallstack(uint64_t callstack_id,
+                         orbit_client_protos::CallstackInfo callstack) override;
   void OnCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) override;
   void OnThreadName(int32_t thread_id, std::string thread_name) override;
   void OnThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo thread_state_slice) override;
