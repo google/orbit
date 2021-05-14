@@ -457,7 +457,6 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
   if (timer_info.end() > max_time_) max_time_ = timer_info.end();
 
   if (scope_tree_update_type_ == ScopeTreeUpdateType::kAlways) {
-  {
     absl::MutexLock lock(&scope_tree_mutex_);
     scope_tree_.Insert(&text_box);
   }
