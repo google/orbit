@@ -95,7 +95,7 @@ void GpuDebugMarkerTrack::SetTimesliceText(const TimerInfo& timer_info, float mi
 
 std::string GpuDebugMarkerTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
   const TextBox* text_box = batcher.GetTextBox(id);
-  if (text_box != nullptr) {
+  if (text_box == nullptr) {
     return "";
   }
 
