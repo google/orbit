@@ -51,7 +51,7 @@ void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Col
   line.end_point = Vec3(floorf(to[0]), floorf(to[1]), z);
   auto& buffer = primitive_buffers_by_layer_[z];
 
-  buffer.line_buffer.lines_.push_back(line);
+  buffer.line_buffer.lines_.emplace_back(line);
   buffer.line_buffer.colors_.push_back_n(color, 2);
   buffer.line_buffer.picking_colors_.push_back_n(picking_color, 2);
   user_data_.push_back(std::move(user_data));
@@ -196,7 +196,7 @@ void Batcher::AddBox(const Box& box, const std::array<Color, 4>& colors, const C
   }
   float layer_z_value = rounded_box.vertices[0][2];
   auto& buffer = primitive_buffers_by_layer_[layer_z_value];
-  buffer.box_buffer.boxes_.push_back(rounded_box);
+  buffer.box_buffer.boxes_.emplace_back(rounded_box);
   buffer.box_buffer.colors_.push_back(colors);
   buffer.box_buffer.picking_colors_.push_back_n(picking_color, 4);
   user_data_.push_back(std::move(user_data));
@@ -250,7 +250,7 @@ void Batcher::AddTriangle(const Triangle& triangle, const std::array<Color, 3>& 
   }
   float layer_z_value = rounded_tri.vertices[0][2];
   auto& buffer = primitive_buffers_by_layer_[layer_z_value];
-  buffer.triangle_buffer.triangles_.push_back(rounded_tri);
+  buffer.triangle_buffer.triangles_.emplace_back(rounded_tri);
   buffer.triangle_buffer.colors_.push_back(colors);
   buffer.triangle_buffer.picking_colors_.push_back_n(picking_color, 3);
   user_data_.push_back(std::move(user_data));

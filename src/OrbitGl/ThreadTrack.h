@@ -82,6 +82,7 @@ class ThreadTrack final : public TimerTrack {
 
   absl::Mutex scope_tree_mutex_;
   ScopeTree<TextBox> scope_tree_;
+  TimerChain* timer_chain_;
 };
 
 #endif  // ORBIT_GL_THREAD_TRACK_H_

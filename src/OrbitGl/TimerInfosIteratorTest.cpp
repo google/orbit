@@ -28,8 +28,8 @@ TEST(TimerInfosIterator, Access) {
   // Need to set the end, as SetTimerInfo will refuse that timer otherwise.
   timer.set_end(1);
   box.SetTimerInfo(timer);
-  chain->push_back(box);
-  chains.push_back(chain);
+  chain->emplace_back(box);
+  chains.emplace_back(chain);
 
   // Just validate setting worked as expected
   EXPECT_EQ(1, timer.function_id());
@@ -50,8 +50,8 @@ TEST(TimerInfosIterator, Copy) {
   // Need to set the end, as SetTimerInfo will refuse that timer otherwise.
   timer.set_end(1);
   box.SetTimerInfo(timer);
-  chain->push_back(box);
-  chains.push_back(chain);
+  chain->emplace_back(box);
+  chains.emplace_back(chain);
 
   // Now create an iterator and test to access it
   TimerInfosIterator it(chains.begin(), chains.end());
@@ -83,8 +83,8 @@ TEST(TimerInfosIterator, Move) {
   // Need to set the end, as SetTimerInfo will refuse that timer otherwise.
   timer.set_end(1);
   box.SetTimerInfo(timer);
-  chain->push_back(box);
-  chains.push_back(chain);
+  chain->emplace_back(box);
+  chains.emplace_back(chain);
 
   // Now create an iterator and test to access it
   TimerInfosIterator it(chains.begin(), chains.end());
@@ -107,8 +107,8 @@ TEST(TimerInfosIterator, Equality) {
   timer.set_function_id(1);
   timer.set_end(1);
   box.SetTimerInfo(timer);
-  chain->push_back(box);
-  chains.push_back(chain);
+  chain->emplace_back(box);
+  chains.emplace_back(chain);
 
   // Now create an iterators and test equality
   TimerInfosIterator it1(chains.begin(), chains.end());
@@ -136,7 +136,7 @@ TEST(TimerInfosIterator, ForEachEmpty) {
 
   std::vector<uint64_t> result;
   for (auto it = it_begin; it != it_end; ++it) {
-    result.push_back(it->function_id());
+    result.emplace_back(it->function_id());
   }
   EXPECT_THAT(result, testing::ElementsAre());
 }
@@ -159,12 +159,12 @@ TEST(TimerInfosIterator, ForEachLarge) {
       timer.set_start(count);
       timer.set_end(count + 1);
       box.SetTimerInfo(timer);
-      chain->push_back(box);
-      expected.push_back(count);
+      chain->emplace_back(box);
+      expected.emplace_back(count);
       ++count;
     }
     max_timers *= 2;
-    chains.push_back(chain);
+    chains.emplace_back(chain);
   }
 
   TimerInfosIterator it_begin(chains.begin(), chains.end());
@@ -172,7 +172,7 @@ TEST(TimerInfosIterator, ForEachLarge) {
 
   std::vector<uint64_t> result;
   for (auto it = it_begin; it != it_end; ++it) {
-    result.push_back(it->function_id());
+    result.emplace_back(it->function_id());
   }
   EXPECT_THAT(result, testing::ElementsAreArray(expected));
 }

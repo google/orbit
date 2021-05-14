@@ -203,9 +203,8 @@ void GraphTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
     timers_[kDepth] = timer_chain;
   }
 
-  TextBox text_box(Vec2(0, 0), Vec2(0, 0), "");
+  TextBox& text_box = timer_chain->emplace_back();
   text_box.SetTimerInfo(timer_info);
-  timer_chain->push_back(text_box);
 }
 
 std::vector<std::shared_ptr<TimerChain>> GraphTrack::GetAllChains() const {

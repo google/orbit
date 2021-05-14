@@ -9,26 +9,6 @@
 #include "OrbitBase/Logging.h"
 #include "capture_data.pb.h"
 
-void TimerBlock::Add(const TextBox& item) {
-  if (size_ == kBlockSize) {
-    if (next_ == nullptr) {
-      next_ = new TimerBlock(chain_, this);
-    }
-
-    chain_->current_ = next_;
-    ++chain_->num_blocks_;
-    next_->Add(item);
-    return;
-  }
-
-  CHECK(size_ < kBlockSize);
-  data_[size_] = item;
-  ++size_;
-  ++chain_->num_items_;
-  min_timestamp_ = std::min(item.GetTimerInfo().start(), min_timestamp_);
-  max_timestamp_ = std::max(item.GetTimerInfo().end(), max_timestamp_);
-}
-
 bool TimerBlock::Intersects(uint64_t min, uint64_t max) const {
   return (min <= max_timestamp_ && max >= min_timestamp_);
 }
