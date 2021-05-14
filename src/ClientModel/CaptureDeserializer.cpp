@@ -248,7 +248,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureInfo(
   for (const auto& id_and_callstack_info : capture_info.callstacks()) {
     uint64_t callstack_id = id_and_callstack_info.first;
     const CallstackInfo& callstack = id_and_callstack_info.second;
-    CallStack unique_callstack({callstack.data().begin(), callstack.data().end()});
+    CallStack unique_callstack({callstack.frames().begin(), callstack.frames().end()});
     if (*cancellation_requested) {
       return CaptureListener::CaptureOutcome::kCancelled;
     }

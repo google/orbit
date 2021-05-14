@@ -241,10 +241,10 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   EXPECT_EQ(address_info.offset_in_function(), actual_address_info.offset_in_function());
 
   ASSERT_EQ(1, capture_info.callstacks_size());
-  const CallstackInfo& actual_callstack = capture_info.callstacks().at(1);
-  std::vector<uint64_t> actual_callstack_data{actual_callstack.data().begin(),
-                                              actual_callstack.data().end()};
-  EXPECT_THAT(actual_callstack_data, ElementsAreArray(callstack.frames()));
+  const CallstackInfo& actual_callstack_info = capture_info.callstacks().at(1);
+  std::vector<uint64_t> actual_callstack_frames{actual_callstack_info.frames().begin(),
+                                                actual_callstack_info.frames().end()};
+  EXPECT_THAT(actual_callstack_frames, ElementsAreArray(callstack.frames()));
 
   ASSERT_EQ(1, capture_info.callstack_events_size());
   const CallstackEvent& actual_callstack_event = capture_info.callstack_events(0);
