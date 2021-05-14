@@ -436,7 +436,7 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
   }
 
   // Thread tracks use a ScopeTree so we don't need to create one TimerChain per depth.
-  // Allocate a single TimerChain into which all timers will.
+  // Allocate a single TimerChain into which all timers will be appended.
   std::shared_ptr<TimerChain>& timer_chain = timers_[0];
   if (timer_chain == nullptr) {
     timer_chain = std::make_shared<TimerChain>();
