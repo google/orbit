@@ -14,7 +14,7 @@
 
 #include "DataView.h"
 #include "MetricsUploader/MetricsUploader.h"
-#include "PresetFile.h"
+#include "PresetFile/PresetFile.h"
 #include "preset.pb.h"
 
 class OrbitApp;
@@ -41,7 +41,7 @@ class PresetsDataView : public DataView {
   bool GetDisplayColor(int /*row*/, int /*column*/, unsigned char& /*red*/,
                        unsigned char& /*green*/, unsigned char& /*blue*/) override;
 
-  void SetPresets(std::vector<orbit_gl::PresetFile> presets);
+  void SetPresets(std::vector<orbit_preset_file::PresetFile> presets);
 
  protected:
   struct ModuleView {
@@ -55,10 +55,10 @@ class PresetsDataView : public DataView {
   void DoFilter() override;
   [[nodiscard]] static std::string GetModulesList(const std::vector<ModuleView>& modules);
   [[nodiscard]] static std::string GetFunctionCountList(const std::vector<ModuleView>& modules);
-  [[nodiscard]] const orbit_gl::PresetFile& GetPreset(unsigned int row) const;
+  [[nodiscard]] const orbit_preset_file::PresetFile& GetPreset(unsigned int row) const;
   [[nodiscard]] const std::vector<ModuleView>& GetModules(uint32_t row) const;
 
-  std::vector<orbit_gl::PresetFile> presets_;
+  std::vector<orbit_preset_file::PresetFile> presets_;
   std::vector<std::vector<ModuleView>> modules_;
 
   enum ColumnIndex {

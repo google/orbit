@@ -136,9 +136,10 @@ using orbit_grpc_protos::UnwindingMethod;
 
 using orbit_base::Future;
 
-using orbit_gl::PresetFile;
 using orbit_metrics_uploader::CaptureMetric;
 using orbit_metrics_uploader::ScopedMetric;
+
+using orbit_preset_file::PresetFile;
 
 namespace {
 PresetLoadState GetPresetLoadStateForProcess(const PresetFile& preset, const ProcessData* process) {
@@ -922,7 +923,7 @@ ErrorMessageOr<PresetFile> OrbitApp::ReadPresetFromFile(const std::filesystem::p
   std::filesystem::path file_path =
       filename.is_absolute() ? filename : Path::CreateOrGetPresetDir() / filename;
 
-  return orbit_gl::ReadPresetFromFile(file_path);
+  return orbit_preset_file::ReadPresetFromFile(file_path);
 }
 
 ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
@@ -931,7 +932,7 @@ ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
   return outcome::success();
 }
 
-PresetLoadState OrbitApp::GetPresetLoadState(const orbit_gl::PresetFile& preset) const {
+PresetLoadState OrbitApp::GetPresetLoadState(const PresetFile& preset) const {
   return GetPresetLoadStateForProcess(preset, GetTargetProcess());
 }
 
