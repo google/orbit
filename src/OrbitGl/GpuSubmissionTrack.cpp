@@ -251,8 +251,10 @@ std::string GpuSubmissionTrack::GetSwQueueTooltip(const TimerInfo& timer_info) c
       "amdgpu_sched_run_job (job scheduled)</i>"
       "<br/>"
       "<br/>"
+      "<b>Submitted from process:</b> %s [%d]<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
+      capture_data_->GetThreadName(timer_info.process_id()), timer_info.process_id(),
       capture_data_->GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
       GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
 }
@@ -264,8 +266,10 @@ std::string GpuSubmissionTrack::GetHwQueueTooltip(const TimerInfo& timer_info) c
       "(job scheduled) and start of GPU execution</i>"
       "<br/>"
       "<br/>"
+      "<b>Submitted from process:</b> %s [%d]<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
+      capture_data_->GetThreadName(timer_info.process_id()), timer_info.process_id(),
       capture_data_->GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
       GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
 }
@@ -278,8 +282,10 @@ std::string GpuSubmissionTrack::GetHwExecutionTooltip(const TimerInfo& timer_inf
       "buffer submission</i>"
       "<br/>"
       "<br/>"
+      "<b>Submitted from process:</b> %s [%d]<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
+      capture_data_->GetThreadName(timer_info.process_id()), timer_info.process_id(),
       capture_data_->GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
       GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
 }
@@ -293,8 +299,10 @@ std::string GpuSubmissionTrack::GetCommandBufferTooltip(
       "submission.</i>"
       "<br/>"
       "<br/>"
+      "<b>Submitted from process:</b> %s [%d]<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
-      app_->GetCaptureData().GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
+      capture_data_->GetThreadName(timer_info.process_id()), timer_info.process_id(),
+      capture_data_->GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
       GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
 }
