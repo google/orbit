@@ -538,7 +538,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
   CallStack callstack_1(std::move(callstack_data_1));
 
   CallstackInfo callstack_info_1;
-  *callstack_info_1.mutable_data() = {callstack_1.frames().begin(), callstack_1.frames().end()};
+  *callstack_info_1.mutable_frames() = {callstack_1.frames().begin(), callstack_1.frames().end()};
   (*capture_info.mutable_callstacks())[callstack_id_1] = callstack_info_1;
 
   CallstackEvent* callstack_event_1_1 = capture_info.add_callstack_events();
@@ -559,7 +559,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
   CallStack callstack_2(std::move(callstack_data_2));
 
   CallstackInfo callstack_info_2;
-  *callstack_info_2.mutable_data() = {callstack_2.frames().begin(), callstack_2.frames().end()};
+  *callstack_info_2.mutable_frames() = {callstack_2.frames().begin(), callstack_2.frames().end()};
   (*capture_info.mutable_callstacks())[callstack_id_2] = callstack_info_2;
 
   CallstackEvent* callstack_event_2 = capture_info.add_callstack_events();

@@ -62,7 +62,7 @@ message CallstackEvent {
 }
 
 message CallstackInfo {
-  repeated uint64 data = 1;
+  repeated uint64 frames = 1;
 }
 
 message ThreadStateSliceInfo {

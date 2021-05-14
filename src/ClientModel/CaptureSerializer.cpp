@@ -173,7 +173,7 @@ CaptureInfo GenerateCaptureInfo(
   capture_data.GetCallstackData()->ForEachUniqueCallstack(
       [&capture_info](uint64_t callstack_id, const CallStack& call_stack) {
         CallstackInfo callstack;
-        *callstack.mutable_data() = {call_stack.frames().begin(), call_stack.frames().end()};
+        *callstack.mutable_frames() = {call_stack.frames().begin(), call_stack.frames().end()};
         (*capture_info.mutable_callstacks())[callstack_id] = callstack;
       });
 
