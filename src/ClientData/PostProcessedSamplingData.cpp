@@ -17,12 +17,12 @@ namespace orbit_client_data {
 
 namespace {
 
-std::multimap<int, CallstackID> SortCallstacks(const ThreadSampleData& data,
-                                               const std::set<CallstackID>& callstacks) {
-  std::multimap<int, CallstackID> sorted_callstacks;
-  for (CallstackID id : callstacks) {
-    auto it = data.callstack_id_to_count.find(id);
-    if (it != data.callstack_id_to_count.end()) {
+std::multimap<int, uint64_t> SortCallstacks(const ThreadSampleData& data,
+                                            const std::set<uint64_t>& callstacks) {
+  std::multimap<int, uint64_t> sorted_callstacks;
+  for (uint64_t id : callstacks) {
+    auto it = data.sampled_callstack_id_to_count.find(id);
+    if (it != data.sampled_callstack_id_to_count.end()) {
       int count = it->second;
       sorted_callstacks.insert(std::make_pair(count, id));
     }
@@ -42,31 +42,31 @@ uint32_t ThreadSampleData::GetCountForAddress(uint64_t address) const {
 }
 
 const CallStack& PostProcessedSamplingData::GetResolvedCallstack(
-    CallstackID raw_callstack_id) const {
-  auto resolved_callstack_id_it = original_id_to_resolved_callstack_id_.find(raw_callstack_id);
+    uint64_t sampled_callstack_id) const {
+  auto resolved_callstack_id_it = original_id_to_resolved_callstack_id_.find(sampled_callstack_id);
   CHECK(resolved_callstack_id_it != original_id_to_resolved_callstack_id_.end());
   auto resolved_callstack_it = id_to_resolved_callstack_.find(resolved_callstack_id_it->second);
   CHECK(resolved_callstack_it != id_to_resolved_callstack_.end());
   return resolved_callstack_it->second;
 }
 
-std::multimap<int, CallstackID> PostProcessedSamplingData::GetCallstacksFromAddresses(
+std::multimap<int, uint64_t> PostProcessedSamplingData::GetCallstacksFromAddresses(
     const std::vector<uint64_t>& addresses, ThreadID thread_id) const {
   const auto& sample_data_it = thread_id_to_sample_data_.find(thread_id);
   if (sample_data_it == thread_id_to_sample_data_.end()) {
-    return std::multimap<int, CallstackID>();
+    return std::multimap<int, uint64_t>();
   }
 
-  std::set<CallstackID> callstacks;
+  std::set<uint64_t> callstacks;
   for (uint64_t address : addresses) {
-    const auto& callstacks_it = function_address_to_callstack_ids_.find(address);
-    if (callstacks_it != function_address_to_callstack_ids_.end()) {
+    const auto& callstacks_it = function_address_to_sampled_callstack_ids_.find(address);
+    if (callstacks_it != function_address_to_sampled_callstack_ids_.end()) {
       callstacks.insert(callstacks_it->second.begin(), callstacks_it->second.end());
     }
   }
 
   if (callstacks.empty()) {
-    return std::multimap<int, CallstackID>();
+    return std::multimap<int, uint64_t>();
   }
   return SortCallstacks(sample_data_it->second, callstacks);
 }
@@ -75,7 +75,7 @@ std::unique_ptr<SortedCallstackReport>
 PostProcessedSamplingData::GetSortedCallstackReportFromAddresses(
     const std::vector<uint64_t>& addresses, ThreadID thread_id) const {
   std::unique_ptr<SortedCallstackReport> report = std::make_unique<SortedCallstackReport>();
-  std::multimap<int, CallstackID> multi_map = GetCallstacksFromAddresses(addresses, thread_id);
+  std::multimap<int, uint64_t> multi_map = GetCallstacksFromAddresses(addresses, thread_id);
   size_t unique_callstacks_count = multi_map.size();
   report->callstacks_count.resize(unique_callstacks_count);
   size_t index = unique_callstacks_count;
