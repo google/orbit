@@ -67,6 +67,9 @@ class TrackManager {
   AsyncTrack* GetOrCreateAsyncTrack(const std::string& name);
   FrameTrack* GetOrCreateFrameTrack(const orbit_grpc_protos::InstrumentedFunction& function);
 
+  [[nodiscard]] bool GetIsDataFromSavedCapture() const { return data_from_saved_capture_; }
+  void SetIsDataFromSavedCapture(bool value) { data_from_saved_capture_ = value; }
+
   void RemoveFrameTrack(uint64_t function_address);
 
  private:
@@ -114,6 +117,8 @@ class TrackManager {
   const orbit_client_model::CaptureData* capture_data_ = nullptr;
 
   OrbitApp* app_ = nullptr;
+
+  bool data_from_saved_capture_ = false;
 };
 
 #endif  // ORBIT_GL_TRACK_MANAGER_H_
