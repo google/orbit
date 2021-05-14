@@ -21,12 +21,12 @@
 #include "MetricsUploader/ScopedMetric.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/SafeStrerror.h"
-#include "PresetFile.h"
+#include "PresetFile/PresetFile.h"
 #include "PresetLoadState.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
 
-using orbit_gl::PresetFile;
+using orbit_preset_file::PresetFile;
 
 constexpr const char* kLoadableColumnName = "Loadable";
 constexpr const char* kPresetColumnName = "Preset";

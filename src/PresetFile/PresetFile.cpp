@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "PresetFile.h"
+#include "PresetFile/PresetFile.h"
 
 #include <absl/strings/match.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
@@ -12,7 +12,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 
-namespace orbit_gl {
+namespace orbit_preset_file {
 
 using orbit_client_protos::PresetInfo;
 using orbit_client_protos::PresetInfoLegacy;
@@ -78,6 +78,7 @@ bool PresetFile::IsLegacyFileFormat() const { return is_legacy_format_; }
 std::vector<uint64_t> PresetFile::GetSelectedFunctionHashesForModuleLegacy(
     const std::filesystem::path& module_path) const {
   CHECK(IsLegacyFileFormat());
+  CHECK(preset_info_legacy_.path_to_module().contains(module_path.string()));
   const auto& function_hashes =
       preset_info_legacy_.path_to_module().at(module_path.string()).function_hashes();
   return {function_hashes.begin(), function_hashes.end()};
@@ -86,6 +87,7 @@ std::vector<uint64_t> PresetFile::GetSelectedFunctionHashesForModuleLegacy(
 std::vector<uint64_t> PresetFile::GetFrameTrackFunctionHashesForModuleLegacy(
     const std::filesystem::path& module_path) const {
   CHECK(IsLegacyFileFormat());
+  CHECK(preset_info_legacy_.path_to_module().contains(module_path.string()));
   const auto& frame_track_function_hashes =
       preset_info_legacy_.path_to_module().at(module_path.string()).frame_track_function_hashes();
   return {frame_track_function_hashes.begin(), frame_track_function_hashes.end()};
@@ -94,6 +96,7 @@ std::vector<uint64_t> PresetFile::GetFrameTrackFunctionHashesForModuleLegacy(
 std::vector<std::string> PresetFile::GetSelectedFunctionNamesForModule(
     const std::filesystem::path& module_path) const {
   CHECK(!IsLegacyFileFormat());
+  CHECK(preset_info_.modules().contains(module_path.string()));
   const auto& function_names = preset_info_.modules().at(module_path.string()).function_names();
   return {function_names.begin(), function_names.end()};
 }
@@ -101,6 +104,7 @@ std::vector<std::string> PresetFile::GetSelectedFunctionNamesForModule(
 std::vector<std::string> PresetFile::GetFrameTrackFunctionNamesForModule(
     const std::filesystem::path& module_path) const {
   CHECK(!IsLegacyFileFormat());
+  CHECK(preset_info_.modules().contains(module_path.string()));
   const auto& function_names =
       preset_info_.modules().at(module_path.string()).frame_track_function_names();
   return {function_names.begin(), function_names.end()};
@@ -150,4 +154,4 @@ ErrorMessageOr<void> PresetFile::SaveToFile() const {
   return outcome::success();
 }
 
-}  // namespace orbit_gl
+}  // namespace orbit_preset_file

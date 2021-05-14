@@ -159,6 +159,7 @@ add_subdirectory(src/OrbitBase)
 add_subdirectory(src/OrbitCore)
 add_subdirectory(src/OrbitTest)
 add_subdirectory(src/OrbitVersion)
+add_subdirectory(src/PresetFile)
 
 if(WITH_GUI)
   add_subdirectory(src/CodeViewer)

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_PRESET_FILE_H_
-#define ORBIT_GL_PRESET_FILE_H_
+#ifndef PRESET_FILE_PRESET_FILE_H_
+#define PRESET_FILE_PRESET_FILE_H_
 
 #include <filesystem>
 #include <vector>
@@ -11,7 +11,7 @@
 #include "OrbitBase/Result.h"
 #include "preset.pb.h"
 
-namespace orbit_gl {
+namespace orbit_preset_file {
 
 class PresetFile final {
  public:
@@ -54,6 +54,6 @@ class PresetFile final {
 
 ErrorMessageOr<PresetFile> ReadPresetFromFile(const std::filesystem::path& file_path);
 
-}  // namespace orbit_gl
+}  // namespace orbit_preset_file
 
-#endif  // ORBIT_GL_PRESET_FILE_H_
+#endif  // PRESET_FILE_PRESET_FILE_H_

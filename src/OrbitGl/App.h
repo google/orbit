@@ -335,9 +335,10 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   void UpdateAfterCaptureCleared();
 
   orbit_base::Future<ErrorMessageOr<void>> LoadPresetModule(
-      const std::string& module_path, const orbit_gl::PresetFile& preset_file);
-  void LoadPreset(const orbit_gl::PresetFile& preset);
-  [[nodiscard]] PresetLoadState GetPresetLoadState(const orbit_gl::PresetFile& preset) const;
+      const std::string& module_path, const orbit_preset_file::PresetFile& preset_file);
+  void LoadPreset(const orbit_preset_file::PresetFile& preset);
+  [[nodiscard]] PresetLoadState GetPresetLoadState(
+      const orbit_preset_file::PresetFile& preset) const;
   void FilterTracks(const std::string& filter);
 
   void CrashOrbitService(orbit_grpc_protos::CrashOrbitServiceRequest_CrashType crash_type);
@@ -460,7 +461,8 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
                   const orbit_grpc_protos::ModuleSymbols& symbols);
   ErrorMessageOr<const orbit_client_data::ModuleData*> GetLoadedModuleByPath(
       const std::string& module_path);
-  ErrorMessageOr<void> ConvertPresetToNewFormatIfNecessary(const orbit_gl::PresetFile& preset_file);
+  ErrorMessageOr<void> ConvertPresetToNewFormatIfNecessary(
+      const orbit_preset_file::PresetFile& preset_file);
 
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleFromRemote(
       const std::string& module_file_path);
@@ -476,7 +478,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
       const std::filesystem::path& symbols_path, const std::string& module_file_path,
       const std::string& module_build_id);
 
-  static ErrorMessageOr<orbit_gl::PresetFile> ReadPresetFromFile(
+  static ErrorMessageOr<orbit_preset_file::PresetFile> ReadPresetFromFile(
       const std::filesystem::path& filename);
 
   ErrorMessageOr<void> SavePreset(const std::string& filename);
