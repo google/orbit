@@ -5,13 +5,13 @@
 #ifndef ORBIT_GL_SCOPE_TREE_H_
 #define ORBIT_GL_SCOPE_TREE_H_
 
-#include <map>
 #include <memory>
 #include <set>
 #include <vector>
 
 #include "BlockChain.h"
 #include "OrbitBase/Tracing.h"
+#include "absl/container/btree_map.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 
@@ -25,7 +25,9 @@ template <typename ScopeT>
 class ScopeNode {
  public:
   ScopeNode() = default;
-  ScopeNode(ScopeT* scope) : scope_(scope) {}
+  ScopeNode(ScopeT* scope) : scope_(scope) {
+    children_by_start_time_ = std::make_unique<absl::btree_map<uint64_t, ScopeNode<ScopeT>*>>();
+  }
 
   void Insert(ScopeNode* node);
   std::string ToString() const {
@@ -36,8 +38,8 @@ class ScopeNode {
 
   [[nodiscard]] ScopeNode* GetLastChildBeforeOrAtTime(uint64_t time) const;
   [[nodiscard]] std::vector<ScopeNode*> GetChildrenInRange(uint64_t start, uint64_t end) const;
-  [[nodiscard]] std::map<uint64_t, ScopeNode*>& GetChildrenByStartTime() {
-    return children_by_start_time_;
+  [[nodiscard]] absl::btree_map<uint64_t, ScopeNode*>& GetChildrenByStartTime() const {
+    return *children_by_start_time_;
   }
 
   [[nodiscard]] uint64_t Start() const { return scope_->Start(); }
@@ -59,7 +61,7 @@ class ScopeNode {
  private:
   ScopeT* scope_ = nullptr;
   uint32_t depth_ = 0;
-  std::map<uint64_t, ScopeNode<ScopeT>*> children_by_start_time_;
+  std::unique_ptr<absl::btree_map<uint64_t, ScopeNode<ScopeT>*>> children_by_start_time_;
 };
 
 template <typename ScopeT>
@@ -76,7 +78,8 @@ class ScopeTree {
   [[nodiscard]] size_t Size() const { return nodes_.size(); }
   [[nodiscard]] size_t CountOrderedNodesByDepth() const;
   [[nodiscard]] uint32_t Height() const { return root_->Height(); }
-  [[nodiscard]] const std::map<uint32_t, std::map<uint64_t /*start time*/, ScopeNodeT*>>&
+  [[nodiscard]] const absl::btree_map<uint32_t,
+                                      absl::btree_map<uint64_t /*start time*/, ScopeNodeT*>>&
   GetOrderedNodesByDepth() const {
     return ordered_nodes_by_depth_;
   }
@@ -88,7 +91,7 @@ class ScopeTree {
  private:
   ScopeNodeT* root_ = nullptr;
   BlockChain<ScopeNodeT, 1024> nodes_;
-  std::map<uint32_t, std::map<uint64_t, ScopeNodeT*>> ordered_nodes_by_depth_;
+  absl::btree_map<uint32_t, absl::btree_map<uint64_t, ScopeNodeT*>> ordered_nodes_by_depth_;
 };
 
 template <typename ScopeT>
@@ -153,7 +156,7 @@ void ScopeNode<ScopeT>::ToString(const ScopeNode* node, std::string* str, uint32
   absl::StrAppend(str, absl::StrFormat("d%u %s ScopeNode(%p) [%lu, %lu]\n", node->Depth(),
                                        std::string(depth, ' '), node->scope_, node->scope_->Start(),
                                        node->scope_->End()));
-  for (auto& [unused_time, child_node] : node->children_by_start_time_) {
+  for (auto& [unused_time, child_node] : node->GetChildrenByStartTime()) {
     ToString(child_node, str, depth + 1);
   }
 }
@@ -170,7 +173,7 @@ void ScopeNode<ScopeT>::FindHeight(const ScopeNode* node, uint32_t* height,
                                    uint32_t current_height) {
   ORBIT_SCOPE_FUNCTION;
   *height = std::max(*height, current_height);
-  for (auto& [unused_time, child_node] : node->children_by_start_time_) {
+  for (auto& [unused_time, child_node] : node->GetChildrenByStartTime()) {
     FindHeight(child_node, height, current_height + 1);
   }
 }
@@ -186,7 +189,7 @@ template <typename ScopeT>
 void ScopeNode<ScopeT>::CountNodesInSubtree(const ScopeNode* node, size_t* count) {
   CHECK(count != nullptr);
   ++(*count);
-  for (const auto [unused_time, child] : node->children_by_start_time_) {
+  for (const auto [unused_time, child] : node->GetChildrenByStartTime()) {
     CountNodesInSubtree(child, count);
   }
 }
@@ -203,7 +206,7 @@ void ScopeNode<ScopeT>::GetAllNodesInSubtree(const ScopeNode* node,
                                              std::set<const ScopeNode*>* node_set) {
   CHECK(node_set != nullptr);
   node_set->insert(node);
-  for (const auto [unused_time, child] : node->children_by_start_time_) {
+  for (const auto [unused_time, child] : node->GetChildrenByStartTime()) {
     GetAllNodesInSubtree(child, node_set);
   }
 }
@@ -211,9 +214,9 @@ void ScopeNode<ScopeT>::GetAllNodesInSubtree(const ScopeNode* node,
 template <typename ScopeT>
 ScopeNode<ScopeT>* ScopeNode<ScopeT>::GetLastChildBeforeOrAtTime(uint64_t time) const {
   // Get first child before or exactly at "time".
-  if (children_by_start_time_.empty()) return nullptr;
-  auto next_node_it = children_by_start_time_.upper_bound(time);
-  if (next_node_it == children_by_start_time_.begin()) return nullptr;
+  if (children_by_start_time_->empty()) return nullptr;
+  auto next_node_it = children_by_start_time_->upper_bound(time);
+  if (next_node_it == children_by_start_time_->begin()) return nullptr;
   return (--next_node_it)->second;
 }
 
@@ -234,10 +237,10 @@ template <typename ScopeT>
 std::vector<ScopeNode<ScopeT>*> ScopeNode<ScopeT>::GetChildrenInRange(uint64_t start,
                                                                       uint64_t end) const {
   // Get children that are enclosed by start and end inclusively.
-  if (children_by_start_time_.empty()) return {};
+  if (children_by_start_time_->empty()) return {};
   std::vector<ScopeNode*> nodes;
-  for (auto node_it = children_by_start_time_.lower_bound(start);
-       node_it != children_by_start_time_.end(); ++node_it) {
+  for (auto node_it = children_by_start_time_->lower_bound(start);
+       node_it != children_by_start_time_->end(); ++node_it) {
     ScopeNode* node = node_it->second;
     if (node->Start() >= start && node->End() <= end) {
       nodes.push_back(node);
@@ -259,12 +262,12 @@ void ScopeNode<ScopeT>::Insert(ScopeNode<ScopeT>* node) {
 
   // Migrate current children of the parent that are encompassed by the new node to the new node.
   for (ScopeNode* encompassed_node : parent_node->GetChildrenInRange(node->Start(), node->End())) {
-    parent_node->children_by_start_time_.erase(encompassed_node->Start());
-    node->children_by_start_time_.emplace(encompassed_node->Start(), encompassed_node);
+    parent_node->children_by_start_time_->erase(encompassed_node->Start());
+    node->children_by_start_time_->emplace(encompassed_node->Start(), encompassed_node);
   }
 
   // Add new node as child of parent_node.
-  parent_node->children_by_start_time_.emplace(node->Start(), node);
+  parent_node->children_by_start_time_->emplace(node->Start(), node);
 }
 
 #endif  // ORBIT_GL_SCOPE_TREE_H_
