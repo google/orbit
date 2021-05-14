@@ -2194,10 +2194,6 @@ bool OrbitApp::IsCapturing() const {
 
 bool OrbitApp::IsLoadingCapture() const { return is_loading_capture_; }
 
-bool OrbitApp::IsCapturingOrLoading() const {
-  return is_loading_capture_ || (capture_client_ != nullptr && capture_client_->IsCapturing());
-}
-
 ScopedStatus OrbitApp::CreateScopedStatus(const std::string& initial_message) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   CHECK(status_listener_ != nullptr);

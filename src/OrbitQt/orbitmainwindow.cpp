@@ -840,7 +840,7 @@ void OrbitMainWindow::OnTimer() {
     }
   }
 
-  if (app_->IsCapturingOrLoading()) {
+  if (app_->IsCapturing()) {
     filter_panel_action_->SetTimerLabelText(QString::fromStdString(app_->GetCaptureTime()));
   }
 }
@@ -1224,7 +1224,7 @@ bool OrbitMainWindow::eventFilter(QObject* watched, QEvent* event) {
 }
 
 bool OrbitMainWindow::ConfirmExit() {
-  if (app_->IsCapturingOrLoading()) {
+  if (app_->IsCapturing() || app_->IsLoadingCapture()) {
     return QMessageBox::question(this, "Capture in progress",
                                  "A capture is currently in progress. Do you want to abort the "
                                  "capture and exit Orbit?") == QMessageBox::Yes;
@@ -1236,7 +1236,7 @@ bool OrbitMainWindow::ConfirmExit() {
 }
 
 void OrbitMainWindow::Exit(int return_code) {
-  if (app_->IsCapturingOrLoading()) {
+  if (app_->IsCapturing() || app_->IsLoadingCapture()) {
     // We need for the capture to clean up - exit as soon as this is done
     app_->SetCaptureFailedCallback([this, return_code] { Exit(return_code); });
     app_->AbortCapture();
