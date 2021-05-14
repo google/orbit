@@ -32,8 +32,8 @@ sections appearing in any particular order.
 | Additional Section List Offset | 8    | May be 0 if there are no additional sections in this file |
 
 ### Capture Section
-Capture section is a sequence of `orbit_grpc_proto::ClientCaptureEvent` messages. The first message is
-always `orbit_grpc_proto::CaptureStarted` and the last one is `orbit_grpc_proto::CapureFinished`.
+Capture section is a sequence of `orbit_grpc_protos::ClientCaptureEvent` messages. The first message is
+always `orbit_grpc_protos::CaptureStarted` and the last one is `orbit_grpc_protos::CapureFinished`.
 
 ### Additional Section List
 The following is a format of Additional Section List
