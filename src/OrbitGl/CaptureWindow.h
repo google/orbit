@@ -61,6 +61,7 @@ class CaptureWindow : public GlCanvas {
 
   virtual void DrawScreenSpace();
   virtual void RenderText(float layer);
+  virtual bool ShouldSkipRendering() const;
 
   virtual void ToggleRecording();
 

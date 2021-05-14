@@ -25,9 +25,11 @@ class IntrospectionWindow : public CaptureWindow {
   void StartIntrospection();
   void StopIntrospection();
 
+ protected:
   void Draw(bool viewport_was_dirty) override;
   void DrawScreenSpace() override;
   void RenderText(float layer) override;
+  bool ShouldSkipRendering() const override { return false; };
 
  private:
   [[nodiscard]] const char* GetHelpText() const override;

@@ -369,6 +369,11 @@ std::unique_ptr<AccessibleInterface> CaptureWindow::CreateAccessibleInterface() 
 
 void CaptureWindow::Draw(bool viewport_was_dirty) {
   ORBIT_SCOPE("CaptureWindow::Draw");
+
+  if (ShouldSkipRendering()) {
+    return;
+  }
+
   if (ShouldAutoZoom()) {
     ZoomAll();
   }
@@ -546,6 +551,11 @@ void CaptureWindow::ToggleRecording() {
 #ifdef __linux__
   ZoomAll();
 #endif
+}
+
+bool CaptureWindow::ShouldSkipRendering() const {
+  // Don't render when loading a capture to avoid contention with the loading thread.
+  return app_->IsLoadingCapture();
 }
 
 void CaptureWindow::ToggleDrawHelp() { set_draw_help(!draw_help_); }
