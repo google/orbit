@@ -16,12 +16,12 @@
 #include <utility>
 #include <vector>
 
-#include "CallStackDataView.h"
-#include "ClientData/Callstack.h"
+#include "CallstackDataView.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackTypes.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "SamplingReportDataView.h"
+#include "capture_data.pb.h"
 
 class OrbitApp;
 
@@ -29,14 +29,15 @@ class SamplingReport {
  public:
   explicit SamplingReport(
       OrbitApp* app, orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
-      absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_data::CallStack>>
+      absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
           unique_callstacks,
       bool has_summary = true);
-  void UpdateReport(orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
-                    absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_data::CallStack>>
-                        unique_callstacks);
+  void UpdateReport(
+      orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
+      absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
+          unique_callstacks);
   [[nodiscard]] std::vector<SamplingReportDataView>& GetThreadReports() { return thread_reports_; };
-  void SetCallstackDataView(CallStackDataView* data_view) { callstack_data_view_ = data_view; };
+  void SetCallstackDataView(CallstackDataView* data_view) { callstack_data_view_ = data_view; };
   void OnSelectAddresses(const absl::flat_hash_set<uint64_t>& addresses,
                          orbit_client_data::ThreadID thread_id);
   void IncrementCallstackIndex();
@@ -54,9 +55,10 @@ class SamplingReport {
   void UpdateDisplayedCallstack();
 
   orbit_client_data::PostProcessedSamplingData post_processed_sampling_data_;
-  absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_data::CallStack>> unique_callstacks_;
+  absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
+      unique_callstacks_;
   std::vector<SamplingReportDataView> thread_reports_;
-  CallStackDataView* callstack_data_view_;
+  CallstackDataView* callstack_data_view_;
 
   absl::flat_hash_set<uint64_t> selected_addresses_;
   orbit_client_data::ThreadID selected_thread_id_;

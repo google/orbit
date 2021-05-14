@@ -12,7 +12,6 @@
 
 #include "CaptureClient/ApiEventProcessor.h"
 #include "CaptureClient/GpuQueueSubmissionProcessor.h"
-#include "ClientData/Callstack.h"
 #include "CoreUtils.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
@@ -20,9 +19,8 @@
 
 namespace orbit_capture_client {
 
-using orbit_client_data::CallStack;
-
 using orbit_client_protos::CallstackEvent;
+using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::ThreadStateSliceInfo;
 using orbit_client_protos::TimerInfo;
@@ -435,8 +433,9 @@ void CaptureEventProcessorForListener::SendCallstackToListenerIfNecessary(
     uint64_t callstack_id, const Callstack& callstack) {
   if (!callstack_hashes_seen_.contains(callstack_id)) {
     callstack_hashes_seen_.emplace(callstack_id);
-    capture_listener_->OnUniqueCallStack(
-        callstack_id, CallStack{{callstack.pcs().begin(), callstack.pcs().end()}});
+    CallstackInfo callstack_info;
+    *callstack_info.mutable_frames() = {callstack.pcs().begin(), callstack.pcs().end()};
+    capture_listener_->OnUniqueCallstack(callstack_id, callstack_info);
   }
 }
 

@@ -2,9 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CallStackDataView.h"
+#include "CallstackDataView.h"
 
 #include <absl/flags/flag.h>
+#include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 #include <stddef.h>
 
@@ -12,26 +13,26 @@
 #include <filesystem>
 
 #include "App.h"
-#include "ClientData/Callstack.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreUtils.h"
 #include "DataViewTypes.h"
 #include "FunctionsDataView.h"
 #include "OrbitBase/Logging.h"
-#include "absl/strings/str_format.h"
+#include "capture_data.pb.h"
 
 using orbit_client_data::ModuleData;
 using orbit_client_model::CaptureData;
+using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::FunctionInfo;
 
 ABSL_DECLARE_FLAG(bool, enable_source_code_view);
 
-CallStackDataView::CallStackDataView(OrbitApp* app) : DataView(DataViewType::kCallstack, app) {}
+CallstackDataView::CallstackDataView(OrbitApp* app) : DataView(DataViewType::kCallstack, app) {}
 
-void CallStackDataView::SetAsMainInstance() {}
+void CallstackDataView::SetAsMainInstance() {}
 
-const std::vector<DataView::Column>& CallStackDataView::GetColumns() {
+const std::vector<DataView::Column>& CallstackDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
@@ -45,12 +46,12 @@ const std::vector<DataView::Column>& CallStackDataView::GetColumns() {
   return columns;
 }
 
-std::string CallStackDataView::GetValue(int row, int column) {
+std::string CallstackDataView::GetValue(int row, int column) {
   if (row >= static_cast<int>(GetNumElements())) {
     return "";
   }
 
-  CallStackDataViewFrame frame = GetFrameFromRow(row);
+  CallstackDataViewFrame frame = GetFrameFromRow(row);
   const FunctionInfo* function = frame.function;
   const ModuleData* module = frame.module;
 
@@ -87,26 +88,26 @@ std::string CallStackDataView::GetValue(int row, int column) {
   }
 }
 
-std::string CallStackDataView::GetToolTip(int row, int /*column*/) {
-  CallStackDataViewFrame frame = GetFrameFromRow(row);
+std::string CallstackDataView::GetToolTip(int row, int /*column*/) {
+  CallstackDataViewFrame frame = GetFrameFromRow(row);
   if (functions_to_highlight_.find(frame.address) != functions_to_highlight_.end()) {
     return absl::StrFormat(
         "Functions marked with %s are part of the selection in the sampling report above",
-        CallStackDataView::kHighlightedFunctionString);
+        CallstackDataView::kHighlightedFunctionString);
   }
   return "";
 }
 
-const std::string CallStackDataView::kMenuActionLoadSymbols = "Load Symbols";
-const std::string CallStackDataView::kMenuActionSelect = "Hook";
-const std::string CallStackDataView::kMenuActionUnselect = "Unhook";
-const std::string CallStackDataView::kMenuActionDisassembly = "Go to Disassembly";
-const std::string CallStackDataView::kHighlightedFunctionString = "➜ ";
-const std::string CallStackDataView::kHighlightedFunctionBlankString =
+const std::string CallstackDataView::kMenuActionLoadSymbols = "Load Symbols";
+const std::string CallstackDataView::kMenuActionSelect = "Hook";
+const std::string CallstackDataView::kMenuActionUnselect = "Unhook";
+const std::string CallstackDataView::kMenuActionDisassembly = "Go to Disassembly";
+const std::string CallstackDataView::kHighlightedFunctionString = "➜ ";
+const std::string CallstackDataView::kHighlightedFunctionBlankString =
     std::string(kHighlightedFunctionString.size(), ' ');
-const std::string CallStackDataView::kMenuActionSourceCode = "Go to Source code";
+const std::string CallstackDataView::kMenuActionSourceCode = "Go to Source code";
 
-std::vector<std::string> CallStackDataView::GetContextMenu(
+std::vector<std::string> CallstackDataView::GetContextMenu(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_load = false;
   bool enable_select = false;
@@ -114,7 +115,7 @@ std::vector<std::string> CallStackDataView::GetContextMenu(
   bool enable_disassembly = false;
   bool enable_source_code = false;
   for (int index : selected_indices) {
-    CallStackDataViewFrame frame = GetFrameFromRow(index);
+    CallstackDataViewFrame frame = GetFrameFromRow(index);
     const FunctionInfo* function = frame.function;
     const ModuleData* module = frame.module;
 
@@ -138,12 +139,12 @@ std::vector<std::string> CallStackDataView::GetContextMenu(
   return menu;
 }
 
-void CallStackDataView::OnContextMenu(const std::string& action, int menu_index,
+void CallstackDataView::OnContextMenu(const std::string& action, int menu_index,
                                       const std::vector<int>& item_indices) {
   if (action == kMenuActionLoadSymbols) {
     std::vector<ModuleData*> modules_to_load;
     for (int i : item_indices) {
-      CallStackDataViewFrame frame = GetFrameFromRow(i);
+      CallstackDataViewFrame frame = GetFrameFromRow(i);
       ModuleData* module = frame.module;
       if (module != nullptr && !module->is_loaded()) {
         modules_to_load.push_back(module);
@@ -153,14 +154,14 @@ void CallStackDataView::OnContextMenu(const std::string& action, int menu_index,
 
   } else if (action == kMenuActionSelect) {
     for (int i : item_indices) {
-      CallStackDataViewFrame frame = GetFrameFromRow(i);
+      CallstackDataViewFrame frame = GetFrameFromRow(i);
       const FunctionInfo* function = frame.function;
       app_->SelectFunction(*function);
     }
 
   } else if (action == kMenuActionUnselect) {
     for (int i : item_indices) {
-      CallStackDataViewFrame frame = GetFrameFromRow(i);
+      CallstackDataViewFrame frame = GetFrameFromRow(i);
       const FunctionInfo* function = frame.function;
       app_->DeselectFunction(*function);
       app_->DisableFrameTrack(*function);
@@ -182,16 +183,16 @@ void CallStackDataView::OnContextMenu(const std::string& action, int menu_index,
   }
 }
 
-void CallStackDataView::DoFilter() {
-  if (callstack_.GetFramesCount() == 0) {
+void CallstackDataView::DoFilter() {
+  if (callstack_.frames_size() == 0) {
     return;
   }
 
   std::vector<uint64_t> indices;
   std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');
 
-  for (size_t i = 0; i < callstack_.GetFramesCount(); ++i) {
-    CallStackDataViewFrame frame = GetFrameFromIndex(i);
+  for (int i = 0; i < callstack_.frames_size(); ++i) {
+    CallstackDataViewFrame frame = GetFrameFromIndex(i);
     const FunctionInfo* function = frame.function;
     std::string name =
         ToLower(function != nullptr ? orbit_client_data::function_utils::GetDisplayName(*function)
@@ -213,23 +214,23 @@ void CallStackDataView::DoFilter() {
   indices_ = std::move(indices);
 }
 
-void CallStackDataView::OnDataChanged() {
-  size_t num_functions = callstack_.GetFramesCount();
+void CallstackDataView::OnDataChanged() {
+  int num_functions = callstack_.frames_size();
   indices_.resize(num_functions);
-  for (size_t i = 0; i < num_functions; ++i) {
+  for (int i = 0; i < num_functions; ++i) {
     indices_[i] = i;
   }
 
   DataView::OnDataChanged();
 }
 
-void CallStackDataView::SetFunctionsToHighlight(
+void CallstackDataView::SetFunctionsToHighlight(
     const absl::flat_hash_set<uint64_t>& absolute_addresses) {
   const CaptureData& capture_data = app_->GetCaptureData();
   functions_to_highlight_.clear();
 
   for (int index : indices_) {
-    CallStackDataViewFrame frame = GetFrameFromIndex(index);
+    CallstackDataViewFrame frame = GetFrameFromIndex(index);
     std::optional<uint64_t> callstack_function_absolute_address =
         capture_data.FindFunctionAbsoluteAddressByAddress(frame.address);
     if (callstack_function_absolute_address.has_value() &&
@@ -239,9 +240,9 @@ void CallStackDataView::SetFunctionsToHighlight(
   }
 }
 
-bool CallStackDataView::GetDisplayColor(int row, int /*column*/, unsigned char& red,
+bool CallstackDataView::GetDisplayColor(int row, int /*column*/, unsigned char& red,
                                         unsigned char& green, unsigned char& blue) {
-  CallStackDataViewFrame frame = GetFrameFromRow(row);
+  CallstackDataViewFrame frame = GetFrameFromRow(row);
   if (functions_to_highlight_.contains(frame.address)) {
     red = 200;
     green = 240;
@@ -251,22 +252,22 @@ bool CallStackDataView::GetDisplayColor(int row, int /*column*/, unsigned char& 
   return false;
 }
 
-CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromRow(int row) {
+CallstackDataView::CallstackDataViewFrame CallstackDataView::GetFrameFromRow(int row) {
   return GetFrameFromIndex(indices_[row]);
 }
 
-CallStackDataView::CallStackDataViewFrame CallStackDataView::GetFrameFromIndex(
+CallstackDataView::CallstackDataViewFrame CallstackDataView::GetFrameFromIndex(
     int index_in_callstack) {
-  CHECK(index_in_callstack < static_cast<int>(callstack_.GetFramesCount()));
-  uint64_t address = callstack_.GetFrame(index_in_callstack);
+  CHECK(index_in_callstack < callstack_.frames_size());
+  uint64_t address = callstack_.frames(index_in_callstack);
 
   const CaptureData& capture_data = app_->GetCaptureData();
   const FunctionInfo* function = capture_data.FindFunctionByAddress(address, false);
   ModuleData* module = capture_data.FindModuleByAddress(address);
 
   if (function != nullptr) {
-    return CallStackDataViewFrame(address, function, module);
+    return CallstackDataViewFrame(address, function, module);
   }
   const std::string& fallback_name = capture_data.GetFunctionNameByAddress(address);
-  return CallStackDataViewFrame(address, fallback_name, module);
+  return CallstackDataViewFrame(address, fallback_name, module);
 }

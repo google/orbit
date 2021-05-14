@@ -14,7 +14,6 @@
 
 #include "App.h"
 #include "Batcher.h"
-#include "ClientData/Callstack.h"
 #include "ClientData/CallstackData.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreUtils.h"
@@ -28,11 +27,11 @@
 #include "Viewport.h"
 #include "capture_data.pb.h"
 
-using orbit_client_data::CallStack;
 using orbit_client_data::CallstackData;
 using orbit_client_data::ThreadID;
 using orbit_client_model::CaptureData;
 using orbit_client_protos::CallstackEvent;
+using orbit_client_protos::CallstackInfo;
 
 namespace orbit_gl {
 
@@ -108,7 +107,7 @@ void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, u
 
   if (!picking) {
     // Sampling Events
-    auto action_on_callstack_events = [=](const orbit_client_protos::CallstackEvent& event) {
+    auto action_on_callstack_events = [=](const CallstackEvent& event) {
       const uint64_t time = event.time();
       CHECK(time >= min_tick && time <= max_tick);
       Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
@@ -136,7 +135,7 @@ void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, u
     constexpr const float kPickingBoxWidth = 9.0f;
     constexpr const float kPickingBoxOffset = (kPickingBoxWidth - 1.0f) / 2.0f;
 
-    auto action_on_callstack_events = [=](const orbit_client_protos::CallstackEvent& event) {
+    auto action_on_callstack_events = [=](const CallstackEvent& event) {
       const uint64_t time = event.time();
       CHECK(time >= min_tick && time <= max_tick);
       Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset, pos_[1] - track_height + 1);
@@ -202,11 +201,11 @@ bool CallstackThreadBar::IsEmpty() const {
   return fn_name;
 }
 
-std::string CallstackThreadBar::FormatCallstackForTooltip(const CallStack& callstack,
+std::string CallstackThreadBar::FormatCallstackForTooltip(const CallstackInfo& callstack,
                                                           int max_line_length, int max_lines,
                                                           int bottom_n_lines) const {
   std::string result;
-  int size = static_cast<int>(callstack.GetFramesCount());
+  int size = static_cast<int>(callstack.frames_size());
   if (max_lines <= 0) {
     max_lines = size;
   }
@@ -214,13 +213,13 @@ std::string CallstackThreadBar::FormatCallstackForTooltip(const CallStack& calls
   const int top_n = std::min(max_lines, size) - bottom_n;
 
   for (int i = 0; i < top_n; ++i) {
-    result.append("<br/>" + SafeGetFormattedFunctionName(callstack.GetFrame(i), max_line_length));
+    result.append("<br/>" + SafeGetFormattedFunctionName(callstack.frames(i), max_line_length));
   }
   if (max_lines < size) {
     result += "<br/><i>... shortened for readability ...</i>";
   }
   for (int i = size - bottom_n; i < size; ++i) {
-    result.append("<br/>" + SafeGetFormattedFunctionName(callstack.GetFrame(i), max_line_length));
+    result.append("<br/>" + SafeGetFormattedFunctionName(callstack.frames(i), max_line_length));
   }
 
   return result;
@@ -229,7 +228,7 @@ std::string CallstackThreadBar::FormatCallstackForTooltip(const CallStack& calls
 std::string CallstackThreadBar::GetSampleTooltip(const Batcher& batcher, PickingId id) const {
   static const std::string unknown_return_text = "Function call information missing";
 
-  auto user_data = batcher.GetUserData(id);
+  const PickingUserData* user_data = batcher.GetUserData(id);
   if (user_data == nullptr || user_data->custom_data_ == nullptr) {
     return unknown_return_text;
   }
@@ -239,12 +238,12 @@ std::string CallstackThreadBar::GetSampleTooltip(const Batcher& batcher, Picking
   const auto* callstack_event = static_cast<const CallstackEvent*>(user_data->custom_data_);
 
   uint64_t callstack_id = callstack_event->callstack_id();
-  const CallStack* callstack = callstack_data->GetCallStack(callstack_id);
+  const CallstackInfo* callstack = callstack_data->GetCallstack(callstack_id);
   if (callstack == nullptr) {
     return unknown_return_text;
   }
 
-  std::string function_name = SafeGetFormattedFunctionName(callstack->GetFrame(0), -1);
+  std::string function_name = SafeGetFormattedFunctionName(callstack->frames(0), -1);
   std::string result = absl::StrFormat(
       "<b>%s</b><br/><i>Sampled event</i><br/><br/><b>Callstack:</b>", function_name.c_str());
   result += FormatCallstackForTooltip(*callstack);

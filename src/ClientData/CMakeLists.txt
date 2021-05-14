@@ -14,7 +14,6 @@ target_include_directories(ClientData PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(ClientData PUBLIC
-        include/ClientData/Callstack.h
         include/ClientData/CallstackData.h
         include/ClientData/CallstackTypes.h
         include/ClientData/FunctionInfoSet.h

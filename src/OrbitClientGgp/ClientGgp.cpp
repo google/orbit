@@ -48,13 +48,13 @@ using orbit_base::Future;
 using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureEventProcessor;
 
-using orbit_client_data::CallStack;
 using orbit_client_data::ProcessData;
 using orbit_client_data::TracepointInfoSet;
 
 using orbit_client_model::CaptureData;
 
 using orbit_client_protos::CallstackEvent;
+using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::TimerInfo;
@@ -363,8 +363,8 @@ void ClientGgp::OnKeyAndString(uint64_t key, std::string str) {
   string_manager_->AddIfNotPresent(key, std::move(str));
 }
 
-void ClientGgp::OnUniqueCallStack(uint64_t callstack_id, CallStack callstack) {
-  GetMutableCaptureData().AddUniqueCallStack(callstack_id, std::move(callstack));
+void ClientGgp::OnUniqueCallstack(uint64_t callstack_id, CallstackInfo callstack) {
+  GetMutableCaptureData().AddUniqueCallstack(callstack_id, std::move(callstack));
 }
 
 void ClientGgp::OnCallstackEvent(CallstackEvent callstack_event) {

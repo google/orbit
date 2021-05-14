@@ -16,7 +16,6 @@
 
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
-#include "ClientData/Callstack.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
@@ -36,7 +35,6 @@
 
 using orbit_capture_client::CaptureListener;
 
-using orbit_client_data::CallStack;
 using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleManager;
 using orbit_client_data::ProcessData;
@@ -248,11 +246,10 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureInfo(
   for (const auto& id_and_callstack_info : capture_info.callstacks()) {
     uint64_t callstack_id = id_and_callstack_info.first;
     const CallstackInfo& callstack = id_and_callstack_info.second;
-    CallStack unique_callstack({callstack.frames().begin(), callstack.frames().end()});
     if (*cancellation_requested) {
       return CaptureListener::CaptureOutcome::kCancelled;
     }
-    capture_listener->OnUniqueCallStack(callstack_id, std::move(unique_callstack));
+    capture_listener->OnUniqueCallstack(callstack_id, callstack);
   }
   for (CallstackEvent callstack_event : capture_info.callstack_events()) {
     if (*cancellation_requested) {

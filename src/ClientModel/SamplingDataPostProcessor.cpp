@@ -17,7 +17,6 @@
 #include <utility>
 #include <vector>
 
-#include "ClientData/Callstack.h"
 #include "ClientData/CallstackTypes.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
@@ -25,7 +24,6 @@
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
 
-using orbit_client_data::CallStack;
 using orbit_client_data::CallstackData;
 using orbit_client_data::PostProcessedSamplingData;
 using orbit_client_data::SampledFunction;
@@ -33,6 +31,7 @@ using orbit_client_data::ThreadID;
 using orbit_client_data::ThreadSampleData;
 
 using orbit_client_protos::CallstackEvent;
+using orbit_client_protos::CallstackInfo;
 
 namespace orbit_client_model {
 
@@ -53,7 +52,7 @@ class SamplingDataPostProcessor {
  private:
   void SortByThreadUsage();
 
-  void ResolveCallstacks(const CallstackData& callstack_data, const CaptureData& capture_data);
+  void ResolveCallstacks(const CallstackData& callstack_data, const CaptureData& callstack);
 
   void MapAddressToFunctionAddress(uint64_t absolute_address, const CaptureData& capture_data);
 
@@ -61,7 +60,7 @@ class SamplingDataPostProcessor {
 
   // Filled by ProcessSamples.
   absl::flat_hash_map<ThreadID, ThreadSampleData> thread_id_to_sample_data_;
-  absl::flat_hash_map<uint64_t, CallStack> id_to_resolved_callstack_;
+  absl::flat_hash_map<uint64_t, CallstackInfo> id_to_resolved_callstack_;
   absl::flat_hash_map<std::vector<uint64_t>, uint64_t> resolved_callstack_to_id_;
   absl::flat_hash_map<uint64_t, uint64_t> original_id_to_resolved_callstack_id_;
   absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>>
@@ -85,7 +84,7 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
   // Unique call stacks and per thread data
   callstack_data.ForEachCallstackEvent(
       [this, &callstack_data, generate_summary](const CallstackEvent& event) {
-        CHECK(callstack_data.HasCallStack(event.callstack_id()));
+        CHECK(callstack_data.HasCallstack(event.callstack_id()));
 
         ThreadSampleData* thread_sample_data = &thread_id_to_sample_data_[event.thread_id()];
         thread_sample_data->samples_count++;
@@ -116,10 +115,10 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
     for (const auto& [sampled_callstack_id, callstack_count] :
          thread_sample_data->sampled_callstack_id_to_count) {
       uint64_t resolved_callstack_id = original_id_to_resolved_callstack_id_[sampled_callstack_id];
-      const CallStack& resolved_callstack = id_to_resolved_callstack_[resolved_callstack_id];
+      const CallstackInfo& resolved_callstack = id_to_resolved_callstack_[resolved_callstack_id];
 
       // exclusive stat
-      thread_sample_data->resolved_address_to_exclusive_count[resolved_callstack.GetFrame(0)] +=
+      thread_sample_data->resolved_address_to_exclusive_count[resolved_callstack.frames(0)] +=
           callstack_count;
 
       absl::flat_hash_set<uint64_t> unique_resolved_addresses;
@@ -169,32 +168,33 @@ void SamplingDataPostProcessor::SortByThreadUsage() {
 void SamplingDataPostProcessor::ResolveCallstacks(const CallstackData& callstack_data,
                                                   const CaptureData& capture_data) {
   callstack_data.ForEachUniqueCallstack(
-      [this, &capture_data](uint64_t callstack_id, const CallStack& call_stack) {
+      [this, &capture_data](uint64_t callstack_id, const CallstackInfo& callstack) {
         // A "resolved callstack" is a callstack where every address is replaced
         // by the start address of the function (if known).
-        std::vector<uint64_t> resolved_callstack_data;
+        std::vector<uint64_t> resolved_callstack_frames;
 
-        for (uint64_t address : call_stack.frames()) {
+        for (uint64_t address : callstack.frames()) {
           if (exact_address_to_function_address_.find(address) ==
               exact_address_to_function_address_.end()) {
             MapAddressToFunctionAddress(address, capture_data);
           }
           uint64_t function_address = exact_address_to_function_address_.at(address);
 
-          resolved_callstack_data.push_back(function_address);
+          resolved_callstack_frames.push_back(function_address);
           function_address_to_sampled_callstack_ids_[function_address].insert(callstack_id);
         }
 
         // Check if we already have this callstack
         uint64_t resolved_callstack_id;
-        auto it = resolved_callstack_to_id_.find(resolved_callstack_data);
+        auto it = resolved_callstack_to_id_.find(resolved_callstack_frames);
         if (it == resolved_callstack_to_id_.end()) {
           resolved_callstack_id = callstack_id;
           CHECK(!id_to_resolved_callstack_.contains(resolved_callstack_id));
-          id_to_resolved_callstack_.insert_or_assign(
-              resolved_callstack_id,
-              CallStack{{resolved_callstack_data.begin(), resolved_callstack_data.end()}});
-          resolved_callstack_to_id_.insert_or_assign(std::move(resolved_callstack_data),
+          orbit_client_protos::CallstackInfo resolved_callstack;
+          *resolved_callstack.mutable_frames() = {resolved_callstack_frames.begin(),
+                                                  resolved_callstack_frames.end()};
+          id_to_resolved_callstack_.insert_or_assign(resolved_callstack_id, resolved_callstack);
+          resolved_callstack_to_id_.insert_or_assign(std::move(resolved_callstack_frames),
                                                      resolved_callstack_id);
         } else {
           resolved_callstack_id = it->second;

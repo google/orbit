@@ -89,8 +89,8 @@ void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
     //  is no need for manual updates.
     m_OrbitDataViews.push_back(treeView);
 
-    QString threadName = QString::fromStdString(report_data_view.GetName());
-    ui->tabWidget->addTab(tab, threadName);
+    QString thread_name = QString::fromStdString(report_data_view.GetName());
+    ui->tabWidget->addTab(tab, thread_name);
   }
 
   connect(ui->tabWidget, &QTabWidget::currentChanged, this,
@@ -136,7 +136,7 @@ void OrbitSamplingReport::RefreshCallstackView() {
   ui->PreviousCallstackButton->setEnabled(m_SamplingReport->HasCallstacks());
 
   std::string label = m_SamplingReport->GetSelectedCallstackString();
-  ui->CallStackLabel->setText(QString::fromStdString(label));
+  ui->CallstackLabel->setText(QString::fromStdString(label));
   ui->CallstackTreeView->Refresh();
 }
 

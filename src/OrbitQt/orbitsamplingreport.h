@@ -11,7 +11,7 @@
 #include <memory>
 #include <vector>
 
-#include "CallStackDataView.h"
+#include "CallstackDataView.h"
 #include "DataView.h"
 #include "orbitdataviewpanel.h"
 

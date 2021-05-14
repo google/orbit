@@ -10,7 +10,6 @@
 
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureClient/CaptureListener.h"
-#include "ClientData/Callstack.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
@@ -26,9 +25,8 @@ ABSL_FLAG(bool, frame_pointer_unwinding, false, "Use frame pointers for unwindin
 
 namespace orbit_capture_client {
 
-using orbit_client_data::CallStack;
-
 using orbit_client_protos::CallstackEvent;
+using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::TimerInfo;
 
@@ -44,7 +42,7 @@ class MyCaptureListener : public CaptureListener {
   void OnSystemMemoryUsage(
       const orbit_grpc_protos::SystemMemoryUsage& /*system_memory_usage*/) override {}
   void OnKeyAndString(uint64_t /*key*/, std::string /*str*/) override {}
-  void OnUniqueCallStack(uint64_t /*callstack_id*/, CallStack /*callstack*/) override {}
+  void OnUniqueCallstack(uint64_t /*callstack_id*/, CallstackInfo /*callstack*/) override {}
   void OnCallstackEvent(CallstackEvent /*callstack_event*/) override {}
   void OnThreadName(int32_t /*thread_id*/, std::string /*thread_name*/) override {}
   void OnThreadStateSlice(

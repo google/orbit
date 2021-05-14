@@ -11,12 +11,12 @@
 #include <memory>
 #include <string>
 
-#include "ClientData/Callstack.h"
 #include "ClientData/CallstackTypes.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreMath.h"
 #include "ThreadBar.h"
 #include "Viewport.h"
+#include "capture_data.pb.h"
 
 class OrbitApp;
 
@@ -46,9 +46,9 @@ class CallstackThreadBar : public ThreadBar {
  protected:
   void SelectCallstacks();
   [[nodiscard]] std::string SafeGetFormattedFunctionName(uint64_t addr, int max_line_length) const;
-  [[nodiscard]] std::string FormatCallstackForTooltip(const orbit_client_data::CallStack& callstack,
-                                                      int max_line_length = 80, int max_lines = 20,
-                                                      int bottom_n_lines = 5) const;
+  [[nodiscard]] std::string FormatCallstackForTooltip(
+      const orbit_client_protos::CallstackInfo& callstack, int max_line_length = 80,
+      int max_lines = 20, int bottom_n_lines = 5) const;
 
   [[nodiscard]] std::string GetSampleTooltip(const Batcher& batcher, PickingId id) const;
 

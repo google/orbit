@@ -14,7 +14,6 @@
 #include <mutex>
 #include <vector>
 
-#include "Callstack.h"
 #include "CallstackTypes.h"
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
@@ -33,10 +32,10 @@ class CallstackData {
   ~CallstackData() = default;
 
   // Assume that callstack_event.callstack_hash is filled correctly and the
-  // CallStack with corresponding hash is already in unique_callstacks_
+  // Callstack with the corresponding id is already in unique_callstacks_.
   void AddCallstackEvent(orbit_client_protos::CallstackEvent callstack_event);
-  void AddUniqueCallStack(uint64_t callstack_id, CallStack call_stack);
-  void AddCallStackFromKnownCallstackData(const orbit_client_protos::CallstackEvent& event,
+  void AddUniqueCallstack(uint64_t callstack_id, orbit_client_protos::CallstackInfo callstack);
+  void AddCallstackFromKnownCallstackData(const orbit_client_protos::CallstackEvent& event,
                                           const CallstackData* known_callstack_data);
 
   [[nodiscard]] const absl::flat_hash_map<int32_t,
@@ -78,18 +77,19 @@ class CallstackData {
     return min_time_;
   }
 
-  [[nodiscard]] const CallStack* GetCallStack(uint64_t callstack_id) const;
+  [[nodiscard]] const orbit_client_protos::CallstackInfo* GetCallstack(uint64_t callstack_id) const;
 
-  [[nodiscard]] bool HasCallStack(uint64_t callstack_id) const;
+  [[nodiscard]] bool HasCallstack(uint64_t callstack_id) const;
 
   void ForEachUniqueCallstack(
-      const std::function<void(uint64_t callstack_id, const CallStack& callstack)>& action) const;
+      const std::function<void(uint64_t callstack_id,
+                               const orbit_client_protos::CallstackInfo& callstack)>& action) const;
 
   void ForEachFrameInCallstack(uint64_t callstack_id,
                                const std::function<void(uint64_t)>& action) const;
 
-  [[nodiscard]] absl::flat_hash_map<uint64_t, std::shared_ptr<CallStack>> GetUniqueCallstacksCopy()
-      const;
+  [[nodiscard]] absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
+  GetUniqueCallstacksCopy() const;
 
   // Assuming that, for each thread, the outermost frame of each callstack is always the same,
   // filters out all the callstacks that have the outermost frame not matching the majority
@@ -97,14 +97,16 @@ class CallstackData {
   void FilterCallstackEventsBasedOnMajorityStart();
 
  private:
-  [[nodiscard]] std::shared_ptr<CallStack> GetCallstackPtr(uint64_t callstack_id) const;
+  [[nodiscard]] std::shared_ptr<orbit_client_protos::CallstackInfo> GetCallstackPtr(
+      uint64_t callstack_id) const;
 
   void RegisterTime(uint64_t time);
 
   // Use a reentrant mutex so that calls to the ForEach... methods can be nested.
   // E.g., one might want to nest ForEachCallstackEvent and ForEachFrameInCallstack.
   mutable std::recursive_mutex mutex_;
-  absl::flat_hash_map<uint64_t, std::shared_ptr<CallStack>> unique_callstacks_;
+  absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
+      unique_callstacks_;
   absl::flat_hash_map<int32_t, std::map<uint64_t, orbit_client_protos::CallstackEvent>>
       callstack_events_by_tid_;
 

@@ -13,7 +13,6 @@
 
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureClient/CaptureListener.h"
-#include "ClientData/Callstack.h"
 #include "ClientData/TracepointCustom.h"
 #include "capture.pb.h"
 #include "capture_data.pb.h"
@@ -21,9 +20,8 @@
 
 namespace orbit_capture_client {
 
-using orbit_client_data::CallStack;
-
 using orbit_client_protos::CallstackEvent;
+using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::ThreadStateSliceInfo;
 using orbit_client_protos::TimerInfo;
@@ -71,7 +69,7 @@ class MockCaptureListener : public CaptureListener {
   MOCK_METHOD(void, OnTimer, (const TimerInfo&), (override));
   MOCK_METHOD(void, OnSystemMemoryUsage, (const SystemMemoryUsage&), (override));
   MOCK_METHOD(void, OnKeyAndString, (uint64_t /*key*/, std::string), (override));
-  MOCK_METHOD(void, OnUniqueCallStack, (uint64_t /*callstack_id*/, CallStack /*callstack*/),
+  MOCK_METHOD(void, OnUniqueCallstack, (uint64_t /*callstack_id*/, CallstackInfo /*callstack*/),
               (override));
   MOCK_METHOD(void, OnCallstackEvent, (CallstackEvent), (override));
   MOCK_METHOD(void, OnThreadName, (int32_t /*thread_id*/, std::string /*thread_name*/), (override));
@@ -133,15 +131,15 @@ static CallstackSample* AddAndInitializeCallstackSample(ClientCaptureEvent& even
 
 static void ExpectCallstackSamplesEqual(const CallstackEvent& actual_callstack_event,
                                         uint64_t actual_callstack_id,
-                                        const CallStack& actual_call_stack,
+                                        const CallstackInfo& actual_callstack,
                                         const CallstackSample* expected_callstack_sample,
                                         const Callstack* expected_callstack) {
   EXPECT_EQ(actual_callstack_event.time(), expected_callstack_sample->timestamp_ns());
   EXPECT_EQ(actual_callstack_event.thread_id(), expected_callstack_sample->tid());
   EXPECT_EQ(actual_callstack_event.callstack_id(), actual_callstack_id);
-  ASSERT_EQ(actual_call_stack.GetFramesCount(), expected_callstack->pcs_size());
-  for (size_t i = 0; i < actual_call_stack.GetFramesCount(); ++i) {
-    EXPECT_EQ(actual_call_stack.GetFrame(i), expected_callstack->pcs(i));
+  ASSERT_EQ(actual_callstack.frames_size(), expected_callstack->pcs_size());
+  for (int i = 0; i < actual_callstack.frames_size(); ++i) {
+    EXPECT_EQ(actual_callstack.frames(i), expected_callstack->pcs(i));
   }
 }
 
@@ -160,16 +158,16 @@ TEST(CaptureEventProcessor, CanHandleOneCallstackSample) {
   callstack_sample->set_timestamp_ns(100);
 
   uint64_t actual_callstack_id = 0;
-  CallStack actual_call_stack;
-  EXPECT_CALL(listener, OnUniqueCallStack)
+  CallstackInfo actual_callstack;
+  EXPECT_CALL(listener, OnUniqueCallstack)
       .Times(1)
-      .WillOnce(DoAll(SaveArg<0>(&actual_callstack_id), SaveArg<1>(&actual_call_stack)));
+      .WillOnce(DoAll(SaveArg<0>(&actual_callstack_id), SaveArg<1>(&actual_callstack)));
   CallstackEvent actual_callstack_event;
   EXPECT_CALL(listener, OnCallstackEvent).Times(1).WillOnce(SaveArg<0>(&actual_callstack_event));
 
   event_processor->ProcessEvent(event);
 
-  ExpectCallstackSamplesEqual(actual_callstack_event, actual_callstack_id, actual_call_stack,
+  ExpectCallstackSamplesEqual(actual_callstack_event, actual_callstack_id, actual_callstack,
                               callstack_sample, &interned_callstack->intern());
 }
 
@@ -191,10 +189,10 @@ TEST(CaptureEventProcessor, WillOnlyHandleUniqueCallstacksOnce) {
   callstack_sample_2->set_timestamp_ns(200);
 
   uint64_t actual_callstack_id = 0;
-  CallStack actual_call_stack;
-  EXPECT_CALL(listener, OnUniqueCallStack)
+  CallstackInfo actual_callstack;
+  EXPECT_CALL(listener, OnUniqueCallstack)
       .Times(1)
-      .WillOnce(DoAll(SaveArg<0>(&actual_callstack_id), SaveArg<1>(&actual_call_stack)));
+      .WillOnce(DoAll(SaveArg<0>(&actual_callstack_id), SaveArg<1>(&actual_callstack)));
   CallstackEvent actual_call_stack_event_1;
   CallstackEvent actual_call_stack_event_2;
   EXPECT_CALL(listener, OnCallstackEvent)
@@ -206,9 +204,9 @@ TEST(CaptureEventProcessor, WillOnlyHandleUniqueCallstacksOnce) {
   event_processor->ProcessEvent(event_1);
   event_processor->ProcessEvent(event_2);
 
-  ExpectCallstackSamplesEqual(actual_call_stack_event_1, actual_callstack_id, actual_call_stack,
+  ExpectCallstackSamplesEqual(actual_call_stack_event_1, actual_callstack_id, actual_callstack,
                               callstack_sample_1, &interned_callstack->intern());
-  ExpectCallstackSamplesEqual(actual_call_stack_event_2, actual_callstack_id, actual_call_stack,
+  ExpectCallstackSamplesEqual(actual_call_stack_event_2, actual_callstack_id, actual_callstack,
                               callstack_sample_2, &interned_callstack->intern());
 }
 
@@ -231,17 +229,17 @@ TEST(CaptureEventProcessor, CanHandleInternedCallstackSamples) {
   callstack_sample->set_timestamp_ns(100);
 
   uint64_t actual_callstack_id = 0;
-  CallStack actual_call_stack;
-  EXPECT_CALL(listener, OnUniqueCallStack)
+  CallstackInfo actual_callstack;
+  EXPECT_CALL(listener, OnUniqueCallstack)
       .Times(1)
-      .WillOnce(DoAll(SaveArg<0>(&actual_callstack_id), SaveArg<1>(&actual_call_stack)));
+      .WillOnce(DoAll(SaveArg<0>(&actual_callstack_id), SaveArg<1>(&actual_callstack)));
   CallstackEvent actual_call_stack_event;
   EXPECT_CALL(listener, OnCallstackEvent).Times(1).WillOnce(SaveArg<0>(&actual_call_stack_event));
 
   event_processor->ProcessEvent(interned_callstack_event);
   event_processor->ProcessEvent(callstack_event);
 
-  ExpectCallstackSamplesEqual(actual_call_stack_event, actual_callstack_id, actual_call_stack,
+  ExpectCallstackSamplesEqual(actual_call_stack_event, actual_callstack_id, actual_callstack,
                               callstack_sample, callstack_intern);
 }
 
