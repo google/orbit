@@ -168,40 +168,40 @@ void SamplingDataPostProcessor::SortByThreadUsage() {
 
 void SamplingDataPostProcessor::ResolveCallstacks(const CallstackData& callstack_data,
                                                   const CaptureData& capture_data) {
-  callstack_data.ForEachUniqueCallstack([this, &capture_data](const CallStack& call_stack) {
-    // A "resolved callstack" is a callstack where every address is replaced
-    // by the start address of the function (if known).
-    std::vector<uint64_t> resolved_callstack_data;
+  callstack_data.ForEachUniqueCallstack(
+      [this, &capture_data](uint64_t callstack_id, const CallStack& call_stack) {
+        // A "resolved callstack" is a callstack where every address is replaced
+        // by the start address of the function (if known).
+        std::vector<uint64_t> resolved_callstack_data;
 
-    for (uint64_t address : call_stack.frames()) {
-      if (exact_address_to_function_address_.find(address) ==
-          exact_address_to_function_address_.end()) {
-        MapAddressToFunctionAddress(address, capture_data);
-      }
-      uint64_t function_address = exact_address_to_function_address_.at(address);
+        for (uint64_t address : call_stack.frames()) {
+          if (exact_address_to_function_address_.find(address) ==
+              exact_address_to_function_address_.end()) {
+            MapAddressToFunctionAddress(address, capture_data);
+          }
+          uint64_t function_address = exact_address_to_function_address_.at(address);
 
-      resolved_callstack_data.push_back(function_address);
-      function_address_to_sampled_callstack_ids_[function_address].insert(call_stack.id());
-    }
+          resolved_callstack_data.push_back(function_address);
+          function_address_to_sampled_callstack_ids_[function_address].insert(callstack_id);
+        }
 
-    // Check if we already have this callstack
-    uint64_t resolved_callstack_id;
-    auto it = resolved_callstack_to_id_.find(resolved_callstack_data);
-    if (it == resolved_callstack_to_id_.end()) {
-      resolved_callstack_id = call_stack.id();
-      CHECK(!id_to_resolved_callstack_.contains(resolved_callstack_id));
-      id_to_resolved_callstack_.insert_or_assign(
-          resolved_callstack_id,
-          CallStack{resolved_callstack_id,
-                    {resolved_callstack_data.begin(), resolved_callstack_data.end()}});
-      resolved_callstack_to_id_.insert_or_assign(std::move(resolved_callstack_data),
-                                                 resolved_callstack_id);
-    } else {
-      resolved_callstack_id = it->second;
-    }
+        // Check if we already have this callstack
+        uint64_t resolved_callstack_id;
+        auto it = resolved_callstack_to_id_.find(resolved_callstack_data);
+        if (it == resolved_callstack_to_id_.end()) {
+          resolved_callstack_id = callstack_id;
+          CHECK(!id_to_resolved_callstack_.contains(resolved_callstack_id));
+          id_to_resolved_callstack_.insert_or_assign(
+              resolved_callstack_id,
+              CallStack{{resolved_callstack_data.begin(), resolved_callstack_data.end()}});
+          resolved_callstack_to_id_.insert_or_assign(std::move(resolved_callstack_data),
+                                                     resolved_callstack_id);
+        } else {
+          resolved_callstack_id = it->second;
+        }
 
-    original_id_to_resolved_callstack_id_[call_stack.id()] = resolved_callstack_id;
-  });
+        original_id_to_resolved_callstack_id_[callstack_id] = resolved_callstack_id;
+      });
 }
 
 void SamplingDataPostProcessor::MapAddressToFunctionAddress(uint64_t absolute_address,

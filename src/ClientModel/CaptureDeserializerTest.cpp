@@ -76,11 +76,12 @@ class MockCaptureListener : public CaptureListener {
                absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/),
               (override));
   MOCK_METHOD(void, OnCaptureFinished, (const CaptureFinished& /*capture_finished*/), (override));
-  MOCK_METHOD(void, OnTimer, (const TimerInfo&), (override));
+  MOCK_METHOD(void, OnTimer, (const TimerInfo& /*timer_info*/), (override));
   MOCK_METHOD(void, OnSystemMemoryUsage, (const SystemMemoryUsage&), (override));
   MOCK_METHOD(void, OnKeyAndString, (uint64_t /*key*/, std::string), (override));
-  MOCK_METHOD(void, OnUniqueCallStack, (CallStack), (override));
-  MOCK_METHOD(void, OnCallstackEvent, (CallstackEvent), (override));
+  MOCK_METHOD(void, OnUniqueCallStack, (uint64_t /*callstack_id*/, CallStack /*callstack*/),
+              (override));
+  MOCK_METHOD(void, OnCallstackEvent, (CallstackEvent /*callstack_event*/), (override));
   MOCK_METHOD(void, OnModuleUpdate, (uint64_t /*timestamp_ns*/, ModuleInfo /*module_info*/),
               (override));
   MOCK_METHOD(void, OnModulesSnapshot,
@@ -533,31 +534,38 @@ TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
   callstack_data_1.push_back(1);
   callstack_data_1.push_back(2);
   callstack_data_1.push_back(3);
-  CallStack callstack_1(1, std::move(callstack_data_1));
+  uint64_t callstack_id_1 = 1;
+  CallStack callstack_1(std::move(callstack_data_1));
+
   CallstackInfo callstack_info_1;
   *callstack_info_1.mutable_data() = {callstack_1.frames().begin(), callstack_1.frames().end()};
-  (*capture_info.mutable_callstacks())[1] = callstack_info_1;
+  (*capture_info.mutable_callstacks())[callstack_id_1] = callstack_info_1;
+
   CallstackEvent* callstack_event_1_1 = capture_info.add_callstack_events();
   callstack_event_1_1->set_thread_id(1);
   callstack_event_1_1->set_time(1);
-  callstack_event_1_1->set_callstack_id(callstack_1.id());
+  callstack_event_1_1->set_callstack_id(callstack_id_1);
+
   CallstackEvent* callstack_event_1_2 = capture_info.add_callstack_events();
   callstack_event_1_2->set_thread_id(1);
   callstack_event_1_2->set_time(2);
-  callstack_event_1_2->set_callstack_id(callstack_1.id());
+  callstack_event_1_2->set_callstack_id(callstack_id_1);
 
   // Add one additional callstack with a different hash:
   std::vector<uint64_t> callstack_data_2;
   callstack_data_2.push_back(4);
   callstack_data_2.push_back(5);
-  CallStack callstack_2(2, std::move(callstack_data_2));
+  uint64_t callstack_id_2 = 2;
+  CallStack callstack_2(std::move(callstack_data_2));
+
   CallstackInfo callstack_info_2;
   *callstack_info_2.mutable_data() = {callstack_2.frames().begin(), callstack_2.frames().end()};
-  (*capture_info.mutable_callstacks())[2] = callstack_info_2;
+  (*capture_info.mutable_callstacks())[callstack_id_2] = callstack_info_2;
+
   CallstackEvent* callstack_event_2 = capture_info.add_callstack_events();
   callstack_event_2->set_thread_id(2);
   callstack_event_2->set_time(3);
-  callstack_event_2->set_callstack_id(callstack_2.id());
+  callstack_event_2->set_callstack_id(callstack_id_2);
 
   std::atomic<bool> cancellation_requested = false;
   uint8_t empty_data = 0;
@@ -570,12 +578,16 @@ TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
   bool hash_added_2 = false;
   bool hash_present_2 = false;
 
+  uint64_t actual_callstack_id_1 = 0;
   CallStack actual_callstack_1;
+  uint64_t actual_callstack_id_2 = 0;
   CallStack actual_callstack_2;
-  EXPECT_CALL(listener, OnUniqueCallStack(_))
+  EXPECT_CALL(listener, OnUniqueCallStack(_, _))
       .Times(2)
-      .WillOnce(DoAll(SaveArg<0>(&actual_callstack_1), Assign(&hash_added_1, true)))
-      .WillOnce(DoAll(SaveArg<0>(&actual_callstack_2), Assign(&hash_added_2, true)));
+      .WillOnce(DoAll(SaveArg<0>(&actual_callstack_id_1), SaveArg<1>(&actual_callstack_1),
+                      Assign(&hash_added_1, true)))
+      .WillOnce(DoAll(SaveArg<0>(&actual_callstack_id_2), SaveArg<1>(&actual_callstack_2),
+                      Assign(&hash_added_2, true)));
 
   CallstackEvent actual_callstack_event_1_1;
   CallstackEvent actual_callstack_event_1_2;
@@ -608,6 +620,11 @@ TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
                                                       &empty_stream, &cancellation_requested);
   ASSERT_TRUE(result.has_value()) << result.error().message();
   EXPECT_EQ(result.value(), CaptureListener::CaptureOutcome::kComplete);
+
+  EXPECT_EQ(actual_callstack_id_1, callstack_id_1);
+  EXPECT_EQ(actual_callstack_1.frames(), callstack_1.frames());
+  EXPECT_EQ(actual_callstack_id_2, callstack_id_2);
+  EXPECT_EQ(actual_callstack_2.frames(), callstack_2.frames());
 
   EXPECT_TRUE(hash_added_1);
   EXPECT_TRUE(hash_added_2);

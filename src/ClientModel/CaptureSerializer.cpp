@@ -171,10 +171,10 @@ CaptureInfo GenerateCaptureInfo(
   // same mutex lock we could end up having list of callstacks inconsistent with unique_callstacks.
   // Revisit sampling profiler data thread-safety.
   capture_data.GetCallstackData()->ForEachUniqueCallstack(
-      [&capture_info](const CallStack& call_stack) {
+      [&capture_info](uint64_t callstack_id, const CallStack& call_stack) {
         CallstackInfo callstack;
         *callstack.mutable_data() = {call_stack.frames().begin(), call_stack.frames().end()};
-        (*capture_info.mutable_callstacks())[call_stack.id()] = callstack;
+        (*capture_info.mutable_callstacks())[callstack_id] = callstack;
       });
 
   capture_info.mutable_callstack_events()->Reserve(

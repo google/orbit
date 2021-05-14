@@ -363,8 +363,8 @@ void ClientGgp::OnKeyAndString(uint64_t key, std::string str) {
   string_manager_->AddIfNotPresent(key, std::move(str));
 }
 
-void ClientGgp::OnUniqueCallStack(CallStack callstack) {
-  GetMutableCaptureData().AddUniqueCallStack(std::move(callstack));
+void ClientGgp::OnUniqueCallStack(uint64_t callstack_id, CallStack callstack) {
+  GetMutableCaptureData().AddUniqueCallStack(callstack_id, std::move(callstack));
 }
 
 void ClientGgp::OnCallstackEvent(CallstackEvent callstack_event) {

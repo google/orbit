@@ -31,20 +31,24 @@ class EmptyCaptureListener : public CaptureListener {
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& /*capture_started*/,
                         absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/) override {}
   void OnCaptureFinished(const orbit_grpc_protos::CaptureFinished& /*capture_finished*/) override {}
-  void OnTimer(const orbit_client_protos::TimerInfo&) override {}
-  void OnSystemMemoryUsage(const orbit_grpc_protos::SystemMemoryUsage&) override {}
-  void OnKeyAndString(uint64_t, std::string) override {}
-  void OnUniqueCallStack(CallStack) override {}
-  void OnCallstackEvent(orbit_client_protos::CallstackEvent) override {}
-  void OnThreadName(int32_t, std::string) override {}
+  void OnTimer(const orbit_client_protos::TimerInfo& /*timer_info*/) override {}
+  void OnSystemMemoryUsage(
+      const orbit_grpc_protos::SystemMemoryUsage& /*system_memory_usage*/) override {}
+  void OnKeyAndString(uint64_t /*key*/, std::string /*str*/) override {}
+  void OnUniqueCallStack(uint64_t /*callstack_id*/, CallStack /*callstack*/) override {}
+  void OnCallstackEvent(orbit_client_protos::CallstackEvent /*callstack_event*/) override {}
+  void OnThreadName(int32_t /*thread_id*/, std::string /*thread_name*/) override {}
   void OnModuleUpdate(uint64_t /*timestamp_ns*/,
                       orbit_grpc_protos::ModuleInfo /*module_info*/) override {}
   void OnModulesSnapshot(uint64_t /*timestamp_ns*/,
                          std::vector<orbit_grpc_protos::ModuleInfo> /*module_infos*/) override {}
-  void OnThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo) override {}
-  void OnAddressInfo(orbit_client_protos::LinuxAddressInfo) override {}
-  void OnUniqueTracepointInfo(uint64_t, orbit_grpc_protos::TracepointInfo) override {}
-  void OnTracepointEvent(orbit_client_protos::TracepointEventInfo) override {}
+  void OnThreadStateSlice(
+      orbit_client_protos::ThreadStateSliceInfo /*thread_state_slice*/) override {}
+  void OnAddressInfo(orbit_client_protos::LinuxAddressInfo /*address_info*/) override {}
+  void OnUniqueTracepointInfo(uint64_t /*key*/,
+                              orbit_grpc_protos::TracepointInfo /*tracepoint_info*/) override {}
+  void OnTracepointEvent(
+      orbit_client_protos::TracepointEventInfo /*tracepoint_event_info*/) override {}
 };
 
 // Test CaptureListener used to validate TimerInfo data produced by api events.

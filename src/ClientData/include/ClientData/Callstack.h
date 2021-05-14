@@ -14,16 +14,13 @@ namespace orbit_client_data {
 class CallStack {
  public:
   CallStack() = default;
-  explicit CallStack(uint64_t id, std::vector<uint64_t>&& addresses)
-      : id_{id}, frames_{std::move(addresses)} {};
+  explicit CallStack(std::vector<uint64_t>&& addresses) : frames_{std::move(addresses)} {}
 
-  [[nodiscard]] uint64_t id() const { return id_; }
   [[nodiscard]] uint64_t GetFrame(size_t index) const { return frames_.at(index); }
   [[nodiscard]] const std::vector<uint64_t>& frames() const { return frames_; };
   [[nodiscard]] size_t GetFramesCount() const { return frames_.size(); }
 
  private:
-  uint64_t id_ = 0;
   std::vector<uint64_t> frames_;
 };
 

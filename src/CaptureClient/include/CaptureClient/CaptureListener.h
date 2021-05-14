@@ -30,7 +30,7 @@ class CaptureListener {
   virtual void OnSystemMemoryUsage(
       const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage) = 0;
   virtual void OnKeyAndString(uint64_t key, std::string str) = 0;
-  virtual void OnUniqueCallStack(orbit_client_data::CallStack callstack) = 0;
+  virtual void OnUniqueCallStack(uint64_t callstack_id, orbit_client_data::CallStack callstack) = 0;
   virtual void OnCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) = 0;
   virtual void OnThreadName(int32_t thread_id, std::string thread_name) = 0;
   virtual void OnModuleUpdate(uint64_t timestamp_ns, orbit_grpc_protos::ModuleInfo module_info) = 0;

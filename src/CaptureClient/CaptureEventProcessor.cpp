@@ -436,7 +436,7 @@ void CaptureEventProcessorForListener::SendCallstackToListenerIfNecessary(
   if (!callstack_hashes_seen_.contains(callstack_id)) {
     callstack_hashes_seen_.emplace(callstack_id);
     capture_listener_->OnUniqueCallStack(
-        CallStack{callstack_id, {callstack.pcs().begin(), callstack.pcs().end()}});
+        callstack_id, CallStack{{callstack.pcs().begin(), callstack.pcs().end()}});
   }
 }
 

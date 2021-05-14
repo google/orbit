@@ -166,8 +166,8 @@ class CaptureData {
     return tracepoint_data_->GetNumTracepointEventsForThreadId(thread_id);
   }
 
-  void AddUniqueCallStack(orbit_client_data::CallStack call_stack) {
-    callstack_data_->AddUniqueCallStack(std::move(call_stack));
+  void AddUniqueCallStack(uint64_t callstack_id, orbit_client_data::CallStack call_stack) {
+    callstack_data_->AddUniqueCallStack(callstack_id, std::move(call_stack));
   }
 
   void AddCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) {

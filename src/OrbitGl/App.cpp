@@ -377,8 +377,8 @@ void OrbitApp::OnKeyAndString(uint64_t key, std::string str) {
   string_manager_.AddIfNotPresent(key, std::move(str));
 }
 
-void OrbitApp::OnUniqueCallStack(CallStack callstack) {
-  GetMutableCaptureData().AddUniqueCallStack(std::move(callstack));
+void OrbitApp::OnUniqueCallStack(uint64_t callstack_id, CallStack callstack) {
+  GetMutableCaptureData().AddUniqueCallStack(callstack_id, std::move(callstack));
 }
 
 void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {

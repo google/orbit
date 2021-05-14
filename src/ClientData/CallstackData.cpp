@@ -30,10 +30,9 @@ void CallstackData::RegisterTime(uint64_t time) {
   if (time > 0 && time < min_time_) min_time_ = time;
 }
 
-void CallstackData::AddUniqueCallStack(CallStack call_stack) {
+void CallstackData::AddUniqueCallStack(uint64_t callstack_id, CallStack call_stack) {
   std::lock_guard lock(mutex_);
-  uint64_t id = call_stack.id();
-  unique_callstacks_[id] = std::make_shared<CallStack>(std::move(call_stack));
+  unique_callstacks_[callstack_id] = std::make_shared<CallStack>(std::move(call_stack));
 }
 
 uint32_t CallstackData::GetCallstackEventsCount() const {
@@ -171,10 +170,10 @@ bool CallstackData::HasCallStack(uint64_t callstack_id) const {
 }
 
 void CallstackData::ForEachUniqueCallstack(
-    const std::function<void(const CallStack&)>& action) const {
+    const std::function<void(uint64_t callstack_id, const CallStack& callstack)>& action) const {
   std::lock_guard lock(mutex_);
-  for (const auto& it : unique_callstacks_) {
-    action(*it.second);
+  for (const auto& [callstack_id, callstack_ptr] : unique_callstacks_) {
+    action(callstack_id, *callstack_ptr);
   }
 }
 
