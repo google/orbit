@@ -323,15 +323,14 @@ void TimerTrack::OnTimer(const TimerInfo& timer_info) {
     process_id_ = timer_info.process_id();
   }
 
-  TextBox text_box(Vec2(0, 0), Vec2(0, 0), "");
-  text_box.SetTimerInfo(timer_info);
-
   std::shared_ptr<TimerChain> timer_chain = timers_[timer_info.depth()];
   if (timer_chain == nullptr) {
     timer_chain = std::make_shared<TimerChain>();
     timers_[timer_info.depth()] = timer_chain;
   }
-  timer_chain->push_back(text_box);
+
+  TextBox& text_box = timer_chain->emplace_back();
+  text_box.SetTimerInfo(timer_info);
 
   ++num_timers_;
   if (timer_info.start() < min_time_) min_time_ = timer_info.start();

@@ -25,13 +25,8 @@ class Block final {
   [[nodiscard]] const Block<T, Size>* next() const { return next_; }
   [[nodiscard]] const Block<T, Size>* prev() const { return prev_; }
   [[nodiscard]] uint32_t size() const { return size_; }
-
   [[nodiscard]] const T* data() const { return data_; }
-  [[nodiscard]] T* Last() {
-    CHECK(size_ > 0);
-    CHECK(size_ <= Size);
-    return &data_[size_ - 1];
-  }
+  [[nodiscard]] bool at_capacity() const { return size_ == Size; }
 
  private:
   friend class BlockIterator<T, Size>;
@@ -50,20 +45,12 @@ class Block final {
   }
 
   // Returns block the element was inserted to.
-  template <typename V>
-  Block<T, Size>* Add(V&& item) {
-    if (size() == Size) {
-      if (!HasNext()) {
-        next_ = new Block<T, Size>(this);
-      }
-
-      return next_->Add(std::forward<V>(item));
-    }
-
+  template <class... Args>
+  T& emplace_back(Args&&... args) {
     CHECK(size_ < Size);
-    data_[size_++] = std::forward<V>(item);
-
-    return this;
+    T* new_item = new (&data_[size_]) T(std::forward<Args>(args)...);
+    ++size_;
+    return *new_item;
   }
 
   Block<T, Size>* prev_;
@@ -138,23 +125,25 @@ class BlockChain final {
     }
   }
 
-  template <typename V>
-  void push_back(V&& item) {
-    current_ = current_->Add(std::forward<V>(item));
-    ++size_;
-  }
-
   template <size_t size>
   void push_back(const std::array<T, size>& array) {
     for (uint32_t i = 0; i < size; ++i) {
-      push_back(array[i]);
+      emplace_back(array[i]);
     }
   }
 
   void push_back_n(const T& item, uint32_t num) {
     for (uint32_t i = 0; i < num; ++i) {
-      push_back(item);
+      emplace_back(item);
     }
+  }
+
+  template <class... Args>
+  T& emplace_back(Args&&... args) {
+    if (current_->at_capacity()) AllocateOrRecycleBlock();
+    T& new_item = current_->emplace_back(std::forward<Args>(args)...);
+    ++size_;
+    return new_item;
   }
 
   void clear() {
@@ -172,10 +161,6 @@ class BlockChain final {
   }
 
   [[nodiscard]] const Block<T, BlockSize>* root() const { return root_; }
-  [[nodiscard]] T* Last() {
-    CHECK(size_ > 0);
-    return current_->Last();
-  }
 
   void Reset() {
     Block<T, BlockSize>* block = root_;
@@ -199,6 +184,13 @@ class BlockChain final {
   }
 
  private:
+  void AllocateOrRecycleBlock() {
+    if (current_->next_ == nullptr) {
+      current_->next_ = new Block<T, BlockSize>(current_);
+    }
+    current_ = current_->next_;
+  }
+
   Block<T, BlockSize>* root_;
   Block<T, BlockSize>* current_;
   uint32_t size_;

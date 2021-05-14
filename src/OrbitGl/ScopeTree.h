@@ -100,9 +100,8 @@ ScopeTree<ScopeT>::ScopeTree() {
 
 template <typename ScopeT>
 ScopeNode<ScopeT>* ScopeTree<ScopeT>::CreateNode(ScopeT* scope) {
-  nodes_.push_back(ScopeNodeT(scope));
-  ScopeNodeT* node = nodes_.Last();
-  return node;
+  ScopeNode<ScopeT>& new_node = nodes_.emplace_back(ScopeNodeT(scope));
+  return &new_node;
 }
 
 template <typename ScopeT>

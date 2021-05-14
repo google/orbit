@@ -51,8 +51,8 @@ TEST(BlockChain, AddCopyableTypes) {
 
   BlockChain<CopyableType, 1024> chain;
   EXPECT_EQ(chain.size(), 0);
-  chain.push_back(v1);
-  chain.push_back(v2);
+  chain.emplace_back(v1);
+  chain.emplace_back(v2);
   EXPECT_EQ(chain.size(), 2);
 
   v1.set_value("new v1");
@@ -63,7 +63,7 @@ TEST(BlockChain, AddCopyableTypes) {
 
   // Multi-block test
   for (int i = 0; i < 2000; ++i) {
-    chain.push_back(v1);
+    chain.emplace_back(v1);
   }
   EXPECT_EQ(chain.size(), 2002);
 }
@@ -73,18 +73,18 @@ TEST(BlockChain, Clear) {
   const std::string v2 = "or not";
 
   BlockChain<std::string, 1024> chain;
-  chain.push_back(v1);
+  chain.emplace_back(v1);
   EXPECT_GT(chain.size(), 0);
   chain.clear();
   EXPECT_EQ(chain.size(), 0);
 
-  chain.push_back(v2);
+  chain.emplace_back(v2);
   EXPECT_GT(chain.size(), 0);
   EXPECT_EQ(chain.root()->data()[0], v2);
 
   // Multi-block test
   for (int i = 0; i < 2000; ++i) {
-    chain.push_back(v1);
+    chain.emplace_back(v1);
   }
   chain.clear();
   EXPECT_EQ(chain.size(), 0);
@@ -97,9 +97,9 @@ TEST(BlockChain, ElementIteration) {
 
   BlockChain<int, 1024> chain;
 
-  chain.push_back(v1);
-  chain.push_back(v2);
-  chain.push_back(v3);
+  chain.emplace_back(v1);
+  chain.emplace_back(v2);
+  chain.emplace_back(v3);
 
   // Note that only the "++it" operator is supported
   auto it = chain.begin();
@@ -122,7 +122,7 @@ TEST(BlockChain, ElementIteration) {
   // Multi-block test
   chain.clear();
   for (int i = 0; i < 2000; ++i) {
-    chain.push_back(i);
+    chain.emplace_back(i);
   }
   it_count = 0;
 
@@ -197,8 +197,8 @@ TEST(BlockChain, Reset) {
 TEST(BlockChain, MovableType) {
   BlockChain<MovableType, 1024> chain;
   EXPECT_EQ(chain.size(), 0);
-  chain.push_back(MovableType("v1"));
-  chain.push_back(MovableType("v2"));
+  chain.emplace_back(MovableType("v1"));
+  chain.emplace_back(MovableType("v2"));
   EXPECT_EQ(chain.size(), 2);
 
   EXPECT_EQ(chain.root()->data()[0].value(), "v1");

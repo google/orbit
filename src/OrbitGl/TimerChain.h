@@ -17,49 +17,48 @@
 static constexpr int kBlockSize = 1024;
 class TimerChain;
 
-// TimerBlock is a straightforward specialization of Block (see BlockChain.h)
-// with the added bonus that it keeps track of the minimum and maximum
-// timestamps of all timers added to it. This allows trivial rejection of an
-// entire block by using the Intersects(t_min, t_max) method. This effectively
-// tests if any of the timers stored in this block intersects with the [t_min,
-// t_max] interval.
+// TimerBlock is a straightforward specialization of Block (see BlockChain.h) with the added bonus
+// that it keeps track of the minimum and maximum timestamps of all timers added to it. This allows
+// trivial rejection of an entire block by using the Intersects(t_min, t_max) method. This
+// effectively tests if any of the timers stored in this block intersects with the [t_min, t_max]
+// interval.
 class TimerBlock {
   friend class TimerChain;
   friend class TimerChainIterator;
 
  public:
-  TimerBlock(TimerChain* chain, TimerBlock* prev)
+  TimerBlock(TimerBlock* prev)
       : prev_(prev),
         next_(nullptr),
-        chain_(chain),
         size_(0),
         min_timestamp_(std::numeric_limits<uint64_t>::max()),
         max_timestamp_(std::numeric_limits<uint64_t>::min()) {}
 
-  // Adds an item to the block. If capacity of this block is reached, a new
-  // blocked is allocated and the item is added to the new block.
-  void Add(const TextBox& item);
-  [[nodiscard]] TextBox* GetLast() {
-    CHECK(size_ > 0);
-    CHECK(size_ <= kBlockSize);
-    return &data_[size_ - 1];
+  // Append a new element to the end of the block using placement-new.
+  template <class... Args>
+  TextBox& emplace_back(Args&&... args) {
+    CHECK(size_ < kBlockSize);
+    TextBox* text_box = new (&data_[size_]) TextBox(std::forward<Args>(args)...);
+    ++size_;
+    min_timestamp_ = std::min(text_box->GetTimerInfo().start(), min_timestamp_);
+    max_timestamp_ = std::max(text_box->GetTimerInfo().end(), max_timestamp_);
+    return *text_box;
   }
 
   // Tests if [min, max] intersects with [min_timestamp, max_timestamp], where
   // {min, max}_timestamp are the minimum and maximum timestamp of the timers
   // that have so far been added to this block.
-  bool Intersects(uint64_t min, uint64_t max) const;
+  [[nodiscard]] bool Intersects(uint64_t min, uint64_t max) const;
 
-  uint64_t size() const { return size_; }
+  [[nodiscard]] uint64_t size() const { return size_; }
+  [[nodiscard]] bool at_capacity() const { return size() == kBlockSize; }
 
   TextBox& operator[](std::size_t idx) { return data_[idx]; }
-
   const TextBox& operator[](std::size_t idx) const { return data_[idx]; }
 
  private:
   TimerBlock* prev_;
   TimerBlock* next_;
-  TimerChain* chain_;
   uint64_t size_;
   TextBox data_[kBlockSize];
 
@@ -103,17 +102,24 @@ class TimerChainIterator {
 // the iterator runs over blocks, in BlockChain the iterator runs over the
 // individually stored elements.
 class TimerChain {
-  friend class TimerBlock;
-
  public:
   TimerChain() : num_blocks_(1), num_items_(0) {
-    root_ = new TimerBlock(this, nullptr);
+    root_ = new TimerBlock(/*prev=*/nullptr);
     current_ = root_;
   }
 
   ~TimerChain();
 
-  void push_back(const TextBox& item) { current_->Add(item); }
+  // Append an item to the end of the current block. If capacity of the current block is reached, a
+  // new blocked is allocated and the item is added to the new block.
+  template <class... Args>
+  TextBox& emplace_back(Args&&... args) {
+    if (current_->at_capacity()) AllocateNewBlock();
+    TextBox& text_box = current_->emplace_back(std::forward<Args>(args)...);
+    ++num_items_;
+    return text_box;
+  }
+
   [[nodiscard]] bool empty() const { return num_items_ == 0; }
   [[nodiscard]] uint64_t size() const { return num_items_; }
 
@@ -123,13 +129,18 @@ class TimerChain {
 
   [[nodiscard]] TextBox* GetElementBefore(const TextBox* element) const;
 
-  [[nodiscard]] TextBox* GetLast() { return current_->GetLast(); }
-
   [[nodiscard]] TimerChainIterator begin() { return TimerChainIterator(root_); }
 
   [[nodiscard]] TimerChainIterator end() { return TimerChainIterator(nullptr); }
 
  private:
+  void AllocateNewBlock() {
+    CHECK(current_->next_ == nullptr);
+    current_->next_ = new TimerBlock(current_);
+    current_ = current_->next_;
+    ++num_blocks_;
+  }
+
   TimerBlock* root_;
   TimerBlock* current_;
   uint64_t num_blocks_;

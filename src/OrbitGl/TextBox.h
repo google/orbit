@@ -14,7 +14,7 @@ class TextRenderer;
 
 class TextBox {
  public:
-  TextBox() : pos_(Vec2::Zero()), size_(Vec2(100.f, 10.f)) {}
+  TextBox() : pos_(Vec2::Zero()), size_(Vec2::Zero()) {}
   TextBox(const Vec2& pos, const Vec2& size, std::string text = "")
       : pos_(pos), size_(size), text_(std::move(text)) {}
 
