@@ -12,8 +12,8 @@ from typing import Tuple, List, Iterable
 
 from core.common_controls import Track
 from core.orbit_e2e import E2ETestCase, E2ETestSuite, wait_for_condition
-from pywinauto.base_wrapper import BaseWrapper
 from pywinauto import mouse, keyboard
+from pywinauto.base_wrapper import BaseWrapper
 
 
 class CaptureWindowE2ETestCaseBase(E2ETestCase):
@@ -80,7 +80,7 @@ class DeselectTrack(CaptureWindowE2ETestCaseBase):
     Expects a track to be selected, fails otherwise.
     """
 
-    def _find_focused_track_and_index(self) -> Tuple[BaseWrapper, int]:
+    def _find_focused_track_and_index(self) -> Tuple[BaseWrapper or None, int or None]:
         children = self._find_tracks()
         for i in range(len(children)):
             if children[i].has_keyboard_focus():
@@ -203,7 +203,7 @@ class CollapsingTrackBase(CaptureWindowE2ETestCaseBase):
         """
         :param expected_name: The exact name of the track to be collapsed. "*" is allowed as placeholder.
         """
-        assert (expected_name is not "")
+        assert (expected_name != "")
 
         tracks = self._find_tracks(expected_name)
 
@@ -230,7 +230,8 @@ class ExpandTrack(CollapsingTrackBase):
     """
 
     def _verify_height(self, prev_click_height: int, post_click_height: int, track_name: str):
-        self.expect_true(prev_click_height < post_click_height, "Expanding track '{}' changed its height from {:d} to {:d}".format(
+        self.expect_true(prev_click_height < post_click_height, "Expanding track '{}' changed its height from {:d} to "
+                                                                "{:d}".format(
             track_name, prev_click_height, post_click_height))
 
 
@@ -240,8 +241,9 @@ class CollapseTrack(CollapsingTrackBase):
     """
 
     def _verify_height(self, prev_click_height: int, post_click_height: int, track_name: str):
-        self.expect_true(prev_click_height > post_click_height, "Collapsing track '{}' changed its height from {:d} to {:d}".format(
-            track_name, prev_click_height, post_click_height))
+        self.expect_true(prev_click_height > post_click_height,
+                         "Collapsing track '{}' changed its height from {:d} to {:d}".format(
+                             track_name, prev_click_height, post_click_height))
 
 
 class FilterTracks(CaptureWindowE2ETestCaseBase):
@@ -289,7 +291,8 @@ class Capture(E2ETestCase):
             logging.info('Toggling "Collect thread states" checkbox')
             collect_thread_states_checkbox.click_input()
 
-        collect_system_memory_usage_checkbox = self.find_control('CheckBox', 'Collect system-wide memory usage information',
+        collect_system_memory_usage_checkbox = self.find_control('CheckBox',
+                                                                 'Collect system-wide memory usage information',
                                                                  parent=capture_options_dialog)
         if collect_system_memory_usage_checkbox.get_toggle_state() != collect_system_memory_usage:
             logging.info('Toggling "Collect system-wide memory usage information" checkbox')
@@ -367,53 +370,52 @@ class CheckCallstacks(CaptureWindowE2ETestCaseBase):
 
 
 class SetAndCheckMemorySamplingPeriod(E2ETestCase):
-  # TODO(b/186098691): Move the capture options dialog utilities to a common base class.
+    # TODO(http://b/186098691): Move the capture options dialog utilities to a common base class.
 
-  def _show_capture_options_dialog(self):
-      logging.info('Opening "Capture Options" dialog')
-      capture_tab = self.find_control('Group', 'CaptureTab')
-      capture_options_button = self.find_control('Button', 'Capture Options', parent=capture_tab)
-      capture_options_button.click_input()
+    def _show_capture_options_dialog(self):
+        logging.info('Opening "Capture Options" dialog')
+        capture_tab = self.find_control('Group', 'CaptureTab')
+        capture_options_button = self.find_control('Button', 'Capture Options', parent=capture_tab)
+        capture_options_button.click_input()
 
-  def _enable_collect_system_memory_usage(self):
-      logging.info('Selecting "Collect system-wide memory usage information" checkbox')
-      collect_system_memory_usage_checkbox = self.find_control(
-          'CheckBox', 'Collect system-wide memory usage information', 
-          parent=self.find_control('Window', 'Capture Options'))
-      if not collect_system_memory_usage_checkbox.get_toggle_state():
-          collect_system_memory_usage_checkbox.click_input()
+    def _enable_collect_system_memory_usage(self):
+        logging.info('Selecting "Collect system-wide memory usage information" checkbox')
+        collect_system_memory_usage_checkbox = self.find_control(
+            'CheckBox', 'Collect system-wide memory usage information',
+            parent=self.find_control('Window', 'Capture Options'))
+        if not collect_system_memory_usage_checkbox.get_toggle_state():
+            collect_system_memory_usage_checkbox.click_input()
 
-  def _close_capture_options_dialog(self):
-      logging.info('Saving "Capture Options"')
-      self.find_control(
-          'Button', 'OK', parent=self.find_control('Window', 'Capture Options')).click_input()
+    def _close_capture_options_dialog(self):
+        logging.info('Saving "Capture Options"')
+        self.find_control(
+            'Button', 'OK', parent=self.find_control('Window', 'Capture Options')).click_input()
 
-  def _execute(self, memory_sampling_period: str):
-      self._show_capture_options_dialog()
-      self._enable_collect_system_memory_usage()
-      memory_sampling_period_edit = self.find_control('Edit', 'MemorySamplingPeriodEdit')
-      
-      DEFAULT_SAMPLING_PERIOD = "10"
-      expected = ""
-      if not memory_sampling_period:
-          # If the user clean the input, sampling period should be reset to the default value 
-          expected = DEFAULT_SAMPLING_PERIOD
-      elif (not memory_sampling_period.isdecimal()) or (not memory_sampling_period.lstrip('0')):
-          # If the input contains invalid characters (e.g., letters) or its value equals to 0, 
-          # sampling period should keep the same as the previous value.
-          expected = memory_sampling_period_edit.texts()[0]
-      else:
-          expected = memory_sampling_period.lstrip('0')
+    def _execute(self, memory_sampling_period: str):
+        self._show_capture_options_dialog()
+        self._enable_collect_system_memory_usage()
+        memory_sampling_period_edit = self.find_control('Edit', 'MemorySamplingPeriodEdit')
 
-      logging.info('Entering "{}" in "Sampling period (ms)" edit'.format(memory_sampling_period))    
-      memory_sampling_period_edit.set_edit_text(memory_sampling_period)
+        DEFAULT_SAMPLING_PERIOD = "10"
+        if not memory_sampling_period:
+            # If the user clean the input, sampling period should be reset to the default value
+            expected = DEFAULT_SAMPLING_PERIOD
+        elif (not memory_sampling_period.isdecimal()) or (not memory_sampling_period.lstrip('0')):
+            # If the input contains invalid characters (e.g., letters) or its value equals to 0,
+            # sampling period should keep the same as the previous value.
+            expected = memory_sampling_period_edit.texts()[0]
+        else:
+            expected = memory_sampling_period.lstrip('0')
 
-      # Close and reopen capture options dialog to validate the setting of sampling period.
-      self._close_capture_options_dialog() 
-      self._show_capture_options_dialog()
-      logging.info('Validating the value in "Sampling period (ms)" edit')
-      memory_sampling_period_edit = self.find_control('Edit', 'MemorySamplingPeriodEdit')
-      result = memory_sampling_period_edit.texts()[0]
-      self.expect_true(result == expected,
-                       'Memory sampling period is set to "{}" while it should be "{}"'.format(result, expected))
-      self._close_capture_options_dialog()
+        logging.info('Entering "{}" in "Sampling period (ms)" edit'.format(memory_sampling_period))
+        memory_sampling_period_edit.set_edit_text(memory_sampling_period)
+
+        # Close and reopen capture options dialog to validate the setting of sampling period.
+        self._close_capture_options_dialog()
+        self._show_capture_options_dialog()
+        logging.info('Validating the value in "Sampling period (ms)" edit')
+        memory_sampling_period_edit = self.find_control('Edit', 'MemorySamplingPeriodEdit')
+        result = memory_sampling_period_edit.texts()[0]
+        self.expect_true(result == expected,
+                         'Memory sampling period is set to "{}" while it should be "{}"'.format(result, expected))
+        self._close_capture_options_dialog()
