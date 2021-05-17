@@ -13,11 +13,11 @@
 
 #include "ClientData/PostProcessedSamplingData.h"
 #include "CodeReport/CodeReport.h"
-#include "Disassembler.h"
+#include "CodeReport/Disassembler.h"
 
 class DisassemblyReport : public orbit_code_report::CodeReport {
  public:
-  DisassemblyReport(Disassembler disasm, uint64_t function_address,
+  DisassemblyReport(orbit_code_report::Disassembler disasm, uint64_t function_address,
                     orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
                     uint32_t samples_count)
       : disasm_{std::move(disasm)},
@@ -25,7 +25,7 @@ class DisassemblyReport : public orbit_code_report::CodeReport {
         function_count_{post_processed_sampling_data_->GetCountOfFunction(function_address)},
         samples_count_(samples_count) {}
 
-  explicit DisassemblyReport(Disassembler disasm)
+  explicit DisassemblyReport(orbit_code_report::Disassembler disasm)
       : disasm_{std::move(disasm)}, function_count_{0}, samples_count_{0} {};
 
   [[nodiscard]] uint32_t GetNumSamplesInFunction() const override { return function_count_; }
@@ -33,7 +33,7 @@ class DisassemblyReport : public orbit_code_report::CodeReport {
   [[nodiscard]] std::optional<uint32_t> GetNumSamplesAtLine(size_t line) const override;
 
  private:
-  Disassembler disasm_;
+  orbit_code_report::Disassembler disasm_;
   std::optional<orbit_client_data::PostProcessedSamplingData> post_processed_sampling_data_;
   uint32_t function_count_;
   uint32_t samples_count_;

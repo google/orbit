@@ -1,8 +1,8 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "Disassembler.h"
+#include "CodeReport/Disassembler.h"
 
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cstdint>
 
+namespace orbit_code_report {
 void Disassembler::Disassemble(const void* machine_code, size_t size, uint64_t address,
                                bool is_64bit) {
   csh handle = 0;
@@ -64,3 +65,4 @@ void Disassembler::AddLine(std::string line, uint64_t address) {
   line_to_address_.push_back(address);
   result_ += absl::StrFormat("%s\n", line);
 }
+}  // namespace orbit_code_report

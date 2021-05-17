@@ -9,9 +9,14 @@ add_library(CodeReport OBJECT)
 
 target_compile_options(CodeReport PRIVATE ${STRICT_COMPILE_FLAGS})
 target_include_directories(CodeReport PUBLIC include/)
-target_link_libraries(CodeReport PUBLIC OrbitBase ClientData ElfUtils)
+target_link_libraries(CodeReport PUBLIC OrbitBase
+                                        ClientData
+                                        ElfUtils
+                                        CONAN_PKG::abseil
+                                        CONAN_PKG::capstone)
 
 target_sources(CodeReport PUBLIC include/CodeReport/CodeReport.h
+                                 include/CodeReport/Disassembler.h
                                  include/CodeReport/SourceCodeReport.h)
 
-target_sources(CodeReport PRIVATE SourceCodeReport.cpp)
+target_sources(CodeReport PRIVATE Disassembler.cpp SourceCodeReport.cpp)

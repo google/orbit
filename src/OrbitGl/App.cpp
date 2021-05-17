@@ -42,9 +42,9 @@
 #include "ClientModel/CaptureDeserializer.h"
 #include "ClientModel/CaptureSerializer.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
+#include "CodeReport/Disassembler.h"
 #include "CodeReport/SourceCodeReport.h"
 #include "CoreUtils.h"
-#include "Disassembler.h"
 #include "DisassemblyReport.h"
 #include "ElfUtils/ElfFile.h"
 #include "FrameTrackOnlineProcessor.h"
@@ -658,7 +658,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
     }
 
     const std::string& memory = result.value();
-    Disassembler disasm;
+    orbit_code_report::Disassembler disasm;
     disasm.AddLine(absl::StrFormat("asm: /* %s */",
                                    orbit_client_data::function_utils::GetDisplayName(function)));
     disasm.Disassemble(memory.data(), memory.size(), absolute_address, is_64_bit);
