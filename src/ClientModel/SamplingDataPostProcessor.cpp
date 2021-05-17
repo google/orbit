@@ -4,15 +4,10 @@
 
 #include "ClientModel/SamplingDataPostProcessor.h"
 
-#include <absl/meta/type_traits.h>
-
 #include <algorithm>
 #include <cstdint>
-#include <iterator>
-#include <map>
 #include <memory>
 #include <optional>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -52,7 +47,7 @@ class SamplingDataPostProcessor {
  private:
   void SortByThreadUsage();
 
-  void ResolveCallstacks(const CallstackData& callstack_data, const CaptureData& callstack);
+  void ResolveCallstacks(const CallstackData& callstack_data, const CaptureData& capture_data);
 
   void MapAddressToFunctionAddress(uint64_t absolute_address, const CaptureData& capture_data);
 
