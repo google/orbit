@@ -11,22 +11,26 @@ target_compile_options(CodeReport PRIVATE ${STRICT_COMPILE_FLAGS})
 target_include_directories(CodeReport PUBLIC include/)
 target_link_libraries(CodeReport PUBLIC OrbitBase
                                         ClientData
+                                        GrpcProtos
                                         ObjectUtils
                                         CONAN_PKG::abseil
                                         CONAN_PKG::capstone)
 
-target_sources(CodeReport PUBLIC include/CodeReport/AnnotatingLine.h
+target_sources(CodeReport PUBLIC include/CodeReport/AnnotateDisassembly.h
+                                 include/CodeReport/AnnotatingLine.h
                                  include/CodeReport/CodeReport.h
                                  include/CodeReport/Disassembler.h
                                  include/CodeReport/DisassemblyReport.h
                                  include/CodeReport/SourceCodeReport.h)
 
-target_sources(CodeReport PRIVATE Disassembler.cpp
+target_sources(CodeReport PRIVATE AnnotateDisassembly.cpp
+                                  Disassembler.cpp
                                   DisassemblyReport.cpp
                                   SourceCodeReport.cpp)
 
 add_executable(CodeReportTests)
 target_compile_options(CodeReportTests PRIVATE ${STRICT_COMPILE_FLAGS})
-target_sources(CodeReportTests PRIVATE DisassemblerTest.cpp)
+target_sources(CodeReportTests PRIVATE AnnotateDisassemblyTest.cpp
+                                       DisassemblerTest.cpp)
 target_link_libraries(CodeReportTests PRIVATE CodeReport GTest::Main)
 register_test(CodeReportTests)
