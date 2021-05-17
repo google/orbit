@@ -118,6 +118,7 @@ static InternedCallstack* AddAndInitializeInternedCallstack(ClientCaptureEvent& 
   Callstack* callstack = interned_callstack->mutable_intern();
   callstack->add_pcs(14);
   callstack->add_pcs(15);
+  callstack->set_type(Callstack::kComplete);
   return interned_callstack;
 }
 
@@ -141,6 +142,9 @@ static void ExpectCallstackSamplesEqual(const CallstackEvent& actual_callstack_e
   for (int i = 0; i < actual_callstack.frames_size(); ++i) {
     EXPECT_EQ(actual_callstack.frames(i), expected_callstack->pcs(i));
   }
+  // TODO(b/188178748): Remove this CHECK and replace it with an EXPECT once non-kComplete samples
+  //  are also supported by the client and its protos.
+  CHECK(expected_callstack->type() == Callstack::kComplete);
 }
 
 TEST(CaptureEventProcessor, CanHandleOneCallstackSample) {
@@ -241,6 +245,29 @@ TEST(CaptureEventProcessor, CanHandleInternedCallstackSamples) {
 
   ExpectCallstackSamplesEqual(actual_call_stack_event, actual_callstack_id, actual_callstack,
                               callstack_sample, callstack_intern);
+}
+
+// TODO(b/188178748): Remove and possibly replace this test once non-kComplete Callstacks are also
+//  supported on the client.
+TEST(CaptureEventProcessor, DiscardsNonCompleteCallstackSamples) {
+  MockCaptureListener listener;
+  auto event_processor = CaptureEventProcessor::CreateForCaptureListener(&listener, {});
+
+  ClientCaptureEvent interned_callstack_event;
+  InternedCallstack* interned_callstack =
+      AddAndInitializeInternedCallstack(interned_callstack_event);
+  interned_callstack->mutable_intern()->set_type(Callstack::kDwarfUnwindingError);
+
+  event_processor->ProcessEvent(interned_callstack_event);
+
+  ClientCaptureEvent event;
+  CallstackSample* callstack_sample = AddAndInitializeCallstackSample(event);
+  callstack_sample->set_timestamp_ns(100);
+
+  EXPECT_CALL(listener, OnUniqueCallstack).Times(0);
+  EXPECT_CALL(listener, OnCallstackEvent).Times(0);
+
+  event_processor->ProcessEvent(event);
 }
 
 TEST(CaptureEventProcessor, CanHandleFunctionCalls) {

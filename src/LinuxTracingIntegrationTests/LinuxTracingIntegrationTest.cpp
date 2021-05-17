@@ -7,6 +7,7 @@
 #include <absl/strings/numbers.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/clock.h>
+#include <gmock/gmock-matchers.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stdint.h>
@@ -727,10 +728,24 @@ void VerifyCallstackSamplesWithOuterAndInnerFunction(
     EXPECT_GT(callstack_sample.timestamp_ns(), previous_callstack_timestamp_ns);
     previous_callstack_timestamp_ns = callstack_sample.timestamp_ns();
 
+    // We don't expect other reasons for broken callstacks other than these.
+    const std::vector<orbit_grpc_protos::Callstack::CallstackType> expected_callstack_types{
+        {orbit_grpc_protos::Callstack::kComplete,
+         unwound_with_frame_pointers ? orbit_grpc_protos::Callstack::kFramePointerUnwindingError
+                                     : orbit_grpc_protos::Callstack::kDwarfUnwindingError,
+         orbit_grpc_protos::Callstack::kInUprobes}};
+    EXPECT_THAT(expected_callstack_types, ::testing::Contains(callstack_sample.callstack().type()));
+
     // We are only sampling the puppet.
     EXPECT_EQ(callstack_sample.pid(), pid);
     // The puppet is expected single-threaded.
     ASSERT_EQ(callstack_sample.tid(), pid);
+
+    if (callstack_sample.callstack().type() != orbit_grpc_protos::Callstack::kComplete) {
+      LOG("callstack_sample.callstack().type() == %s",
+          orbit_grpc_protos::Callstack::CallstackType_Name(callstack_sample.callstack().type()));
+      continue;
+    }
 
     const orbit_grpc_protos::Callstack& callstack = callstack_sample.callstack();
     for (int32_t pc_index = 0; pc_index < callstack.pcs_size(); ++pc_index) {

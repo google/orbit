@@ -28,6 +28,19 @@ using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
 using orbit_grpc_protos::FunctionCall;
 
+static void SendFullAddressInfoToListener(TracerListener* listener,
+                                          const unwindstack::FrameData& libunwindstack_frame) {
+  CHECK(listener != nullptr);
+
+  FullAddressInfo address_info;
+  address_info.set_absolute_address(libunwindstack_frame.pc);
+  address_info.set_function_name(llvm::demangle(libunwindstack_frame.function_name));
+  address_info.set_offset_in_function(libunwindstack_frame.function_offset);
+  address_info.set_module_name(libunwindstack_frame.map_name);
+
+  listener->OnAddressInfo(std::move(address_info));
+}
+
 void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
   CHECK(listener_ != nullptr);
   CHECK(current_maps_ != nullptr);
@@ -39,49 +52,67 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
       unwinder_->Unwind(event->GetPid(), current_maps_->Get(), event->GetRegisters(),
                         event->GetStackData(), event->GetStackSize());
 
-  if (!libunwindstack_result.IsSuccess()) {
-    if (unwind_error_counter_ != nullptr) {
-      ++(*unwind_error_counter_);
-    }
-    return;
-  }
-
-  // Callstacks with only one frame (the sampled address) are also unwinding errors, that were not
-  // reported as such by LibunwindstackUnwinder::Unwind.
-  // Note that this doesn't exclude samples inside the main function of any thread as the main
-  // function is never the outermost frame. For example, for the main thread the outermost function
-  // is _start, followed by __libc_start_main. For other threads, the outermost function is clone.
-  if (libunwindstack_result.frames().size() == 1) {
-    if (unwind_error_counter_ != nullptr) {
-      ++(*unwind_error_counter_);
-    }
-    return;
-  }
-
-  // Some samples can actually fall inside u(ret)probes code. Discard them,
-  // because when they are unwound successfully the result is wrong.
-  if (libunwindstack_result.frames().front().map_name == "[uprobes]") {
-    if (discarded_samples_in_uretprobes_counter_ != nullptr) {
-      ++(*discarded_samples_in_uretprobes_counter_);
-    }
-    return;
-  }
-
   FullCallstackSample sample;
   sample.set_pid(event->GetPid());
   sample.set_tid(event->GetTid());
   sample.set_timestamp_ns(event->GetTimestamp());
 
   Callstack* callstack = sample.mutable_callstack();
-  for (const unwindstack::FrameData& libunwindstack_frame : libunwindstack_result.frames()) {
-    FullAddressInfo address_info;
-    address_info.set_absolute_address(libunwindstack_frame.pc);
-    address_info.set_function_name(llvm::demangle(libunwindstack_frame.function_name));
-    address_info.set_offset_in_function(libunwindstack_frame.function_offset);
-    address_info.set_module_name(libunwindstack_frame.map_name);
-    listener_->OnAddressInfo(std::move(address_info));
 
-    callstack->add_pcs(libunwindstack_frame.pc);
+  if (libunwindstack_result.frames().empty()) {
+    // Even with unwinding errors this is not expected because we should at least get the program
+    // counter, but let's handle it anyway.
+    ERROR("Unwound callstack has no frames");
+    if (unwind_error_counter_ != nullptr) {
+      ++(*unwind_error_counter_);
+    }
+    callstack->set_type(Callstack::kDwarfUnwindingError);
+    // Leave callstack.pcs empty, we have no frames at all.
+
+  } else if (libunwindstack_result.frames().front().map_name == "[uprobes]") {
+    // Some samples can actually fall inside u(ret)probes code. They cannot be unwound by
+    // libunwindstack (even when the unwinding is reported as successful, the result is wrong).
+    if (samples_in_uretprobes_counter_ != nullptr) {
+      ++(*samples_in_uretprobes_counter_);
+    }
+    callstack->set_type(Callstack::kInUprobes);
+    // Leave callstack.pcs empty, we have no frames at all.
+
+  } else if (libunwindstack_result.frames().size() > 1 &&
+             libunwindstack_result.frames().back().map_name == "[uprobes]") {
+    // If unwinding stops at a [uprobes] frame (this is usually reported as an unwinding error, but
+    // not always), it means that patching the stack with UprobesReturnAddressManager::PatchSample
+    // wasn't (completely) successful (we cannot detect this before actually unwinding).
+    // This easily happens at the beginning of the capture, when we missed the first uprobes, but
+    // also if some perf_event_open events are lost or discarded.
+    if (unwind_error_counter_ != nullptr) {
+      ++(*unwind_error_counter_);
+    }
+    callstack->set_type(Callstack::kUprobesPatchingFailed);
+    SendFullAddressInfoToListener(listener_, libunwindstack_result.frames().front());
+    callstack->add_pcs(libunwindstack_result.frames().front().pc);
+
+  } else if (!libunwindstack_result.IsSuccess() || libunwindstack_result.frames().size() == 1) {
+    // Callstacks with only one frame (the sampled address) are also unwinding errors, that were not
+    // reported as such by LibunwindstackUnwinder::Unwind.
+    // Note that this doesn't exclude samples inside the main function of any thread as the main
+    // function is never the outermost frame. For example, for the main thread the outermost
+    // function is _start, followed by __libc_start_main. For other threads, the outermost function
+    // is clone.
+    if (unwind_error_counter_ != nullptr) {
+      ++(*unwind_error_counter_);
+    }
+    callstack->set_type(Callstack::kDwarfUnwindingError);
+    SendFullAddressInfoToListener(listener_, libunwindstack_result.frames().front());
+    callstack->add_pcs(libunwindstack_result.frames().front().pc);
+
+  } else {
+    callstack->set_type(Callstack::kComplete);
+
+    for (const unwindstack::FrameData& libunwindstack_frame : libunwindstack_result.frames()) {
+      SendFullAddressInfoToListener(listener_, libunwindstack_frame);
+      callstack->add_pcs(libunwindstack_frame.pc);
+    }
   }
 
   listener_->OnCallstackSample(std::move(sample));
@@ -90,6 +121,26 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
 void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
   CHECK(listener_ != nullptr);
   CHECK(current_maps_ != nullptr);
+
+  FullCallstackSample sample;
+  sample.set_pid(event->GetPid());
+  sample.set_tid(event->GetTid());
+  sample.set_timestamp_ns(event->GetTimestamp());
+
+  Callstack* callstack = sample.mutable_callstack();
+
+  // The top of a callchain is always inside the kernel code and we don't expect samples to be only
+  // inside the kernel.
+  if (event->GetCallchainSize() <= 1) {
+    ERROR("Callchain has only %lu frames", event->GetCallchainSize());
+    if (unwind_error_counter_ != nullptr) {
+      ++(*unwind_error_counter_);
+    }
+    callstack->set_type(Callstack::kFramePointerUnwindingError);
+    // Leave callstack.pcs empty, we have no frames at all.
+    listener_->OnCallstackSample(std::move(sample));
+    return;
+  }
 
   // TODO(b/179976268): When a sample falls on the first (push rbp) or second (mov rbp,rsp)
   //  instruction of the current function, frame-pointer unwinding skips the caller's frame,
@@ -100,41 +151,31 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
     }
-    return;
-  }
-
-  // The top of a callchain is always inside the kernel code and we don't expect samples to be only
-  // inside the kernel.
-  if (event->GetCallchainSize() <= 1) {
-    ERROR("Callchain has only %lu frames.", event->GetCallchainSize());
-    if (unwind_error_counter_ != nullptr) {
-      ++(*unwind_error_counter_);
-    }
+    callstack->set_type(Callstack::kUprobesPatchingFailed);
+    callstack->add_pcs(event->GetCallchain()[1]);
+    listener_->OnCallstackSample(std::move(sample));
     return;
   }
 
   uint64_t top_ip = event->GetCallchain()[1];
   unwindstack::MapInfo* top_ip_map_info = current_maps_->Find(top_ip);
 
-  // Some samples can actually fall inside u(ret)probes code. Discard them,
-  // as we don't want to show the unnamed uprobes module in the samples.
+  // Some samples can actually fall inside u(ret)probes code. Set their type accordingly, as we
+  // don't want to show the unnamed uprobes module in the samples.
   if (top_ip_map_info == nullptr || top_ip_map_info->name == "[uprobes]") {
-    if (discarded_samples_in_uretprobes_counter_ != nullptr) {
-      ++(*discarded_samples_in_uretprobes_counter_);
+    if (samples_in_uretprobes_counter_ != nullptr) {
+      ++(*samples_in_uretprobes_counter_);
     }
+    callstack->set_type(Callstack::kInUprobes);
+    // Leave callstack.pcs empty, we have no frames at all.
+    listener_->OnCallstackSample(std::move(sample));
     return;
   }
 
-  FullCallstackSample sample;
-  sample.set_pid(event->GetPid());
-  sample.set_tid(event->GetTid());
-  sample.set_timestamp_ns(event->GetTimestamp());
-
-  Callstack* callstack = sample.mutable_callstack();
-  uint64_t* raw_callchain = event->GetCallchain();
+  callstack->set_type(Callstack::kComplete);
   // Skip the first frame as the top of a perf_event_open callchain is always
   // inside kernel code.
-  callstack->add_pcs(raw_callchain[1]);
+  callstack->add_pcs(event->GetCallchain()[1]);
   // Only the address of the top of the stack is correct. Frame-based unwinding
   // uses the return address of a function call as the caller's address.
   // However, the actual address of the call instruction is before that.
@@ -142,7 +183,7 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
   // return address. This way we fall into the range of the call instruction.
   // Note: This is also done the same way in Libunwindstack.
   for (uint64_t frame_index = 2; frame_index < event->GetCallchainSize(); ++frame_index) {
-    callstack->add_pcs(raw_callchain[frame_index] - 1);
+    callstack->add_pcs(event->GetCallchain()[frame_index] - 1);
   }
 
   listener_->OnCallstackSample(std::move(sample));

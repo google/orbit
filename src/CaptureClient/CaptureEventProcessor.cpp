@@ -200,6 +200,12 @@ void CaptureEventProcessorForListener::ProcessCallstackSample(
   uint64_t callstack_id = callstack_sample.callstack_id();
   Callstack callstack = callstack_intern_pool[callstack_id];
 
+  // TODO(b/188178748): Remove this early return and correctly populate CallstackEvent once
+  //  non-kComplete Callstacks are also supported by the client and its protos.
+  if (callstack.type() != Callstack::kComplete) {
+    return;
+  }
+
   SendCallstackToListenerIfNecessary(callstack_id, callstack);
 
   CallstackEvent callstack_event;

@@ -103,7 +103,7 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
 
   CaptureEventBuffer* capture_event_buffer_;
 
-  InternPool<std::vector<uint64_t>> callstack_pool_;
+  InternPool<std::pair<std::vector<uint64_t>, Callstack::CallstackType>> callstack_pool_;
   InternPool<std::string> string_pool_;
   InternPool<std::pair<std::string, std::string>> tracepoint_pool_;
 
@@ -186,8 +186,9 @@ void ProducerEventProcessorImpl::ProcessGpuQueueSubmission(
 void ProducerEventProcessorImpl::ProcessFullCallstackSample(
     FullCallstackSample* full_callstack_sample) {
   Callstack* callstack = full_callstack_sample->mutable_callstack();
-  auto [callstack_id, assigned] =
-      callstack_pool_.GetOrAssignId({callstack->pcs().begin(), callstack->pcs().end()});
+  std::pair<std::vector<uint64_t>, Callstack::CallstackType> callstack_data{
+      {callstack->pcs().begin(), callstack->pcs().end()}, callstack->type()};
+  auto [callstack_id, assigned] = callstack_pool_.GetOrAssignId(callstack_data);
 
   if (assigned) {
     ClientCaptureEvent interned_callstack_event;
@@ -212,8 +213,9 @@ void ProducerEventProcessorImpl::ProcessInternedCallstack(uint64_t producer_id,
   CHECK(!producer_interned_callstack_id_to_client_callstack_id_.contains(
       {producer_id, interned_callstack->key()}));
 
-  std::vector<uint64_t> callstack_data{interned_callstack->intern().pcs().begin(),
-                                       interned_callstack->intern().pcs().end()};
+  std::pair<std::vector<uint64_t>, Callstack::CallstackType> callstack_data{
+      {interned_callstack->intern().pcs().begin(), interned_callstack->intern().pcs().end()},
+      interned_callstack->intern().type()};
   auto [interned_callstack_id, assigned] = callstack_pool_.GetOrAssignId(callstack_data);
 
   producer_interned_callstack_id_to_client_callstack_id_.insert_or_assign(

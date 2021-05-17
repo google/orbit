@@ -178,7 +178,7 @@ class TracerThread {
       lost_count_per_buffer.clear();
       discarded_out_of_order_count = 0;
       unwind_error_count = 0;
-      discarded_samples_in_uretprobes_count = 0;
+      samples_in_uretprobes_count = 0;
       thread_state_count = 0;
     }
 
@@ -191,7 +191,7 @@ class TracerThread {
     absl::flat_hash_map<PerfEventRingBuffer*, uint64_t> lost_count_per_buffer{};
     std::atomic<uint64_t> discarded_out_of_order_count = 0;
     std::atomic<uint64_t> unwind_error_count = 0;
-    std::atomic<uint64_t> discarded_samples_in_uretprobes_count = 0;
+    std::atomic<uint64_t> samples_in_uretprobes_count = 0;
     std::atomic<uint64_t> thread_state_count = 0;
   };
 
