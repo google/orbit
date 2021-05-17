@@ -71,9 +71,7 @@ class UprobesReturnAddressManager {
   // the uprobes.
   virtual bool PatchCallchain(pid_t tid, uint64_t* callchain, uint64_t callchain_size,
                               LibunwindstackMaps* maps) {
-    if (callchain_size == 0) {
-      return true;
-    }
+    CHECK(callchain_size > 0);
     CHECK(callchain != nullptr);
     CHECK(maps != nullptr);
 
