@@ -8,11 +8,11 @@
 CC=clang
 PHONY=clean
 
-line_info_test_binary: ../LineInfoTestBinary.cpp
-	${CC} ../LineInfoTestBinary.cpp -g -O3 -o line_info_test_binary -fdebug-prefix-map=$(shell pwd)=.
+line_info_test_binary: LineInfoTestBinary.cpp
+	${CC} LineInfoTestBinary.cpp -g -O3 -o line_info_test_binary -fdebug-prefix-map=$(shell pwd)=.
 
-line_info_test_binary_compressed: ../LineInfoTestBinary.cpp
-	${CC} ../LineInfoTestBinary.cpp -g -gz -O3 -o line_info_test_binary_compressed -fdebug-prefix-map=$(shell pwd)=.
+line_info_test_binary_compressed: LineInfoTestBinary.cpp
+	${CC} LineInfoTestBinary.cpp -g -gz -O3 -o line_info_test_binary_compressed -fdebug-prefix-map=$(shell pwd)=.
 
 test_library: ../TestLibrary.cpp
 	$(CC) ../TestLibrary.cpp -shared -fPIC -O3 -Wl,-soname,libtest.so -o libtest-1.0.so
