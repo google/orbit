@@ -1,8 +1,10 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "DisassemblyReport.h"
+#include "CodeReport/DisassemblyReport.h"
+
+namespace orbit_code_report {
 
 std::optional<uint32_t> DisassemblyReport::GetNumSamplesAtLine(size_t line) const {
   // The given line number will be 1-indexed, but `Disassembler` works with 0-indexed line numbers.
@@ -43,3 +45,5 @@ std::optional<uint32_t> DisassemblyReport::GetNumSamplesAtLine(size_t line) cons
   }
   return count;
 }
+
+}  // namespace orbit_code_report
