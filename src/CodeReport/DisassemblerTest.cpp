@@ -69,4 +69,12 @@ TEST(Disassembler, Disassemble) {
   EXPECT_EQ(disassembler.GetAddressAtLine(28), 0);
   EXPECT_EQ(disassembler.GetAddressAtLine(29), 0);  // 29 is the first invalid line index.
   EXPECT_EQ(disassembler.GetAddressAtLine(1024), 0);
+
+  EXPECT_FALSE(disassembler.GetLineAtAddress(0x0).has_value());
+  EXPECT_FALSE(disassembler.GetLineAtAddress(0x40102c).has_value());
+  EXPECT_EQ(disassembler.GetLineAtAddress(0x40102d).value_or(0), 4);
+  EXPECT_EQ(disassembler.GetLineAtAddress(0x40103b).value_or(0), 12);
+  EXPECT_EQ(disassembler.GetLineAtAddress(0x401057).value_or(0), 24);
+  EXPECT_FALSE(disassembler.GetLineAtAddress(0x4010ff).has_value());
+  EXPECT_FALSE(disassembler.GetLineAtAddress(0x0).has_value());
 }
