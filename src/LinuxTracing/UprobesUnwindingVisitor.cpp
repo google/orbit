@@ -35,8 +35,8 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
     return;
   }
 
-  return_address_manager_.PatchSample(event->GetTid(), event->GetRegisters()[PERF_REG_X86_SP],
-                                      event->GetStackData(), event->GetStackSize());
+  return_address_manager_->PatchSample(event->GetTid(), event->GetRegisters()[PERF_REG_X86_SP],
+                                       event->GetStackData(), event->GetStackSize());
 
   const std::vector<unwindstack::FrameData>& libunwindstack_callstack =
       unwinder_->Unwind(event->GetPid(), current_maps_->Get(), event->GetRegisters(),
@@ -102,13 +102,19 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
   //  instruction of the current function, frame-pointer unwinding skips the caller's frame,
   //  because rbp hasn't yet been updated to rsp. Drop the sample in this case?
 
-  if (!return_address_manager_.PatchCallchain(event->GetTid(), event->GetCallchain(),
-                                              event->GetCallchainSize(), current_maps_->Get())) {
+  if (!return_address_manager_->PatchCallchain(event->GetTid(), event->GetCallchain(),
+                                               event->GetCallchainSize(), current_maps_)) {
+    if (unwind_error_counter_ != nullptr) {
+      ++(*unwind_error_counter_);
+    }
     return;
   }
 
   // The top of a callchain is always inside the kernel code.
   if (event->GetCallchainSize() <= 1) {
+    if (unwind_error_counter_ != nullptr) {
+      ++(*unwind_error_counter_);
+    }
     return;
   }
 
@@ -182,11 +188,11 @@ void UprobesUnwindingVisitor::visit(UprobesPerfEvent* event) {
   }
   uprobe_sps_ips_cpus.emplace_back(uprobe_sp, uprobe_ip, uprobe_cpu);
 
-  function_call_manager_.ProcessUprobes(event->GetTid(), event->GetFunction()->function_id(),
-                                        event->GetTimestamp(), event->ring_buffer_record.regs);
+  function_call_manager_->ProcessUprobes(event->GetTid(), event->GetFunction()->function_id(),
+                                         event->GetTimestamp(), event->ring_buffer_record.regs);
 
-  return_address_manager_.ProcessUprobes(event->GetTid(), event->GetSp(),
-                                         event->GetReturnAddress());
+  return_address_manager_->ProcessUprobes(event->GetTid(), event->GetSp(),
+                                          event->GetReturnAddress());
 }
 
 void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
@@ -199,13 +205,13 @@ void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
     uprobe_sps_ips_cpus.pop_back();
   }
 
-  std::optional<FunctionCall> function_call = function_call_manager_.ProcessUretprobes(
+  std::optional<FunctionCall> function_call = function_call_manager_->ProcessUretprobes(
       event->GetPid(), event->GetTid(), event->GetTimestamp(), event->GetAx());
   if (function_call.has_value()) {
     listener_->OnFunctionCall(std::move(function_call.value()));
   }
 
-  return_address_manager_.ProcessUretprobes(event->GetTid());
+  return_address_manager_->ProcessUretprobes(event->GetTid());
 }
 
 void UprobesUnwindingVisitor::visit(MmapPerfEvent* event) {

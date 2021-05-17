@@ -157,6 +157,9 @@ class TracerThread {
   std::atomic<bool> stop_deferred_thread_ = false;
   std::vector<std::unique_ptr<PerfEvent>> deferred_events_;
   std::mutex deferred_events_mutex_;
+
+  UprobesFunctionCallManager function_call_manager_;
+  UprobesReturnAddressManager return_address_manager_;
   std::unique_ptr<LibunwindstackMaps> maps_;
   std::unique_ptr<LibunwindstackUnwinder> unwinder_;
   std::unique_ptr<UprobesUnwindingVisitor> uprobes_unwinding_visitor_;

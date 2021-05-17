@@ -29,12 +29,13 @@ class UprobesReturnAddressManager {
   UprobesReturnAddressManager(UprobesReturnAddressManager&&) = default;
   UprobesReturnAddressManager& operator=(UprobesReturnAddressManager&&) = default;
 
-  void ProcessUprobes(pid_t tid, uint64_t stack_pointer, uint64_t return_address) {
+  virtual void ProcessUprobes(pid_t tid, uint64_t stack_pointer, uint64_t return_address) {
     auto& tid_uprobes_stack = tid_uprobes_stacks_[tid];
     tid_uprobes_stack.emplace_back(stack_pointer, return_address);
   }
 
-  void PatchSample(pid_t tid, uint64_t stack_pointer, void* stack_data, uint64_t stack_size) {
+  virtual void PatchSample(pid_t tid, uint64_t stack_pointer, void* stack_data,
+                           uint64_t stack_size) {
     if (!tid_uprobes_stacks_.contains(tid)) {
       return;
     }
@@ -67,8 +68,13 @@ class UprobesReturnAddressManager {
   // This function patches the callchain, using the maps information to identify
   // instruction pointers of uprobe code and using the return address saved in
   // the uprobes.
-  bool PatchCallchain(pid_t tid, uint64_t* callchain, uint64_t callchain_size,
-                      unwindstack::Maps* maps) {
+  virtual bool PatchCallchain(pid_t tid, uint64_t* callchain, uint64_t callchain_size,
+                              orbit_linux_tracing::LibunwindstackMaps* maps) {
+    if (callchain_size == 0) {
+      return true;
+    }
+    CHECK(callchain != nullptr);
+    CHECK(maps != nullptr);
     std::vector<uint64_t> frames_to_patch;
     for (uint64_t i = 0; i < callchain_size; i++) {
       uint64_t ip = callchain[i];
@@ -167,7 +173,7 @@ class UprobesReturnAddressManager {
     return true;
   }
 
-  void ProcessUretprobes(pid_t tid) {
+  virtual void ProcessUretprobes(pid_t tid) {
     if (!tid_uprobes_stacks_.contains(tid)) {
       return;
     }
