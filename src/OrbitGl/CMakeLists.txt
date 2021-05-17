@@ -30,7 +30,6 @@ target_sources(
          CoreMath.h
          DataView.h
          DataViewTypes.h
-         Disassembler.h
          DisassemblyReport.h
          FramePointerValidatorClient.h
          FrameTrack.h
@@ -98,7 +97,6 @@ target_sources(
           CaptureWindow.cpp
           DataManager.cpp
           DataView.cpp
-          Disassembler.cpp
           DisassemblyReport.cpp
           FramePointerValidatorClient.cpp
           FrameTrack.cpp
@@ -155,7 +153,6 @@ target_link_libraries(
          OrbitCore
          PresetFile
          CONAN_PKG::Outcome
-         CONAN_PKG::capstone
          CONAN_PKG::freetype-gl
          CONAN_PKG::freetype
          CONAN_PKG::glad
