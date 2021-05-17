@@ -200,12 +200,6 @@ void CaptureEventProcessorForListener::ProcessCallstackSample(
   uint64_t callstack_id = callstack_sample.callstack_id();
   Callstack callstack = callstack_intern_pool[callstack_id];
 
-  // TODO(b/188178748): Remove this early return and correctly populate CallstackEvent once
-  //  non-kComplete Callstacks are also supported by the client and its protos.
-  if (callstack.type() != Callstack::kComplete) {
-    return;
-  }
-
   SendCallstackToListenerIfNecessary(callstack_id, callstack);
 
   CallstackEvent callstack_event;
@@ -437,12 +431,38 @@ void CaptureEventProcessorForListener::ProcessAddressInfo(const AddressInfo& add
 
 void CaptureEventProcessorForListener::SendCallstackToListenerIfNecessary(
     uint64_t callstack_id, const Callstack& callstack) {
-  if (!callstack_hashes_seen_.contains(callstack_id)) {
-    callstack_hashes_seen_.emplace(callstack_id);
-    CallstackInfo callstack_info;
-    *callstack_info.mutable_frames() = {callstack.pcs().begin(), callstack.pcs().end()};
-    capture_listener_->OnUniqueCallstack(callstack_id, callstack_info);
+  if (callstack_hashes_seen_.contains(callstack_id)) {
+    return;
   }
+  callstack_hashes_seen_.emplace(callstack_id);
+
+  CallstackInfo callstack_info;
+  *callstack_info.mutable_frames() = {callstack.pcs().begin(), callstack.pcs().end()};
+  switch (callstack.type()) {
+    case orbit_grpc_protos::Callstack::kComplete:
+      callstack_info.set_type(CallstackInfo::kComplete);
+      break;
+    case orbit_grpc_protos::Callstack::kDwarfUnwindingError:
+      callstack_info.set_type(CallstackInfo::kDwarfUnwindingError);
+      break;
+    case orbit_grpc_protos::Callstack::kFramePointerUnwindingError:
+      callstack_info.set_type(CallstackInfo::kFramePointerUnwindingError);
+      break;
+    case orbit_grpc_protos::Callstack::kInUprobes:
+      callstack_info.set_type(CallstackInfo::kInUprobes);
+      break;
+    case orbit_grpc_protos::Callstack::kUprobesPatchingFailed:
+      callstack_info.set_type(CallstackInfo::kUprobesPatchingFailed);
+      break;
+    case orbit_grpc_protos::
+        Callstack_CallstackType_Callstack_CallstackType_INT_MIN_SENTINEL_DO_NOT_USE_:
+      [[fallthrough]];
+    case orbit_grpc_protos::
+        Callstack_CallstackType_Callstack_CallstackType_INT_MAX_SENTINEL_DO_NOT_USE_:
+      UNREACHABLE();
+  }
+
+  capture_listener_->OnUniqueCallstack(callstack_id, callstack_info);
 }
 
 void CaptureEventProcessorForListener::ProcessInternedTracepointInfo(

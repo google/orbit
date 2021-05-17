@@ -146,6 +146,8 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
     for (const auto& callstack_id_and_count : thread_sample_data.sampled_callstack_id_to_count) {
       const CallstackInfo& resolved_callstack =
           post_processed_sampling_data.GetResolvedCallstack(callstack_id_and_count.first);
+      // TODO(b/188496245): Include aggregated statistics on unwinding errors.
+      CHECK(resolved_callstack.type() == CallstackInfo::kComplete);
       const uint64_t sample_count = callstack_id_and_count.second;
       // Don't count samples from the all-thread case again.
       if (tid != orbit_base::kAllProcessThreadsTid) {
@@ -193,6 +195,8 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromPostProcessedS
          thread_sample_data.sampled_callstack_id_to_count) {
       const CallstackInfo& resolved_callstack =
           post_processed_sampling_data.GetResolvedCallstack(callstack_id);
+      // TODO(b/188496245): Include aggregated statistics on unwinding errors.
+      CHECK(resolved_callstack.type() == CallstackInfo::kComplete);
       bottom_up_view->IncreaseSampleCount(sample_count);
 
       CallTreeNode* last_node = AddReversedCallstackToBottomUpViewAndReturnLastFunction(

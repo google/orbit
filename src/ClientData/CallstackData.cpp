@@ -5,6 +5,7 @@
 #include "ClientData/CallstackData.h"
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 
 #include <cstdint>
 #include <utility>
@@ -14,6 +15,7 @@
 #include "capture_data.pb.h"
 
 using orbit_client_protos::CallstackEvent;
+using orbit_client_protos::CallstackInfo;
 
 namespace orbit_client_data {
 
@@ -204,22 +206,26 @@ std::shared_ptr<orbit_client_protos::CallstackInfo> CallstackData::GetCallstackP
   return nullptr;
 }
 
-void CallstackData::FilterCallstackEventsBasedOnMajorityStart() {
+void CallstackData::UpdateCallstackTypeBasedOnMajorityStart() {
   std::lock_guard lock(mutex_);
-  uint32_t count_before_filtering = GetCallstackEventsCount();
 
-  for (auto& tid_and_events : callstack_events_by_tid_) {
-    std::map<uint64_t, CallstackEvent>& callstack_events = tid_and_events.second;
-    const uint64_t count_for_this_thread = callstack_events.size();
+  absl::flat_hash_set<uint64_t> callstack_ids_to_filter;
+
+  for (auto& [tid, timestamps_and_callstack_events] : callstack_events_by_tid_) {
+    uint64_t count_for_this_thread = 0;
 
     // Count the number of occurrences of each outer frame for this thread.
     absl::flat_hash_map<uint64_t, uint64_t> count_by_outer_frame;
-    for (const auto& time_and_event : callstack_events) {
-      const CallstackEvent& event = time_and_event.second;
-      const auto& frames = unique_callstacks_.at(event.callstack_id())->frames();
-      if (frames.empty()) {
+    for (const auto& [unused_timestamp_ns, event] : timestamps_and_callstack_events) {
+      const CallstackInfo& callstack = *unique_callstacks_.at(event.callstack_id());
+      CHECK(callstack.type() != CallstackInfo::kFilteredByMajorityOutermostFrame);
+      if (callstack.type() != CallstackInfo::kComplete) {
         continue;
       }
+      ++count_for_this_thread;
+
+      const auto& frames = callstack.frames();
+      CHECK(!frames.empty());
       uint64_t outer_frame = *frames.rbegin();
       ++count_by_outer_frame[outer_frame];
     }
@@ -238,34 +244,58 @@ void CallstackData::FilterCallstackEventsBasedOnMajorityStart() {
       }
     }
 
-    static constexpr double kFilterSupermajorityThreshold = 0.6;
+    // The value is somewhat arbitrary. We want at least three quarters of the thread's callstacks
+    // to agree on the "correct" outermost frame.
+    static constexpr double kFilterSupermajorityThreshold = 0.75;
     if (majority_outer_frame_count < count_for_this_thread * kFilterSupermajorityThreshold) {
-      ERROR(
-          "Skipping filtering CallstackEvents for tid %d: majority outer frame has only %lu "
+      LOG("Skipping filtering CallstackEvents for tid %d: majority outer frame has only %lu "
           "occurrences out of %lu",
-          tid_and_events.first, majority_outer_frame_count, count_for_this_thread);
+          tid, majority_outer_frame_count, count_for_this_thread);
       continue;
     }
 
-    // Discard the CallstackEvents whose outer frame doesn't match the (super)majority outer frame.
-    for (auto time_and_event_it = callstack_events.begin();
-         time_and_event_it != callstack_events.end();) {
-      const CallstackEvent& event = time_and_event_it->second;
+    // Record the ids of the CallstackInfos references by the CallstackEvents whose outer frame
+    // doesn't match the (super)majority outer frame.
+    // Note that if a CallstackEvent from another thread references a filtered CallstackInfo, that
+    // CallstackEvent will also be affected.
+    for (const auto& [unused_timestamp_ns, event] : timestamps_and_callstack_events) {
+      const CallstackInfo& callstack = *unique_callstacks_.at(event.callstack_id());
+      CHECK(callstack.type() != CallstackInfo::kFilteredByMajorityOutermostFrame);
+      if (callstack.type() != CallstackInfo::kComplete) {
+        continue;
+      }
+
       const auto& frames = unique_callstacks_.at(event.callstack_id())->frames();
-      if (frames.empty() || *frames.rbegin() != majority_outer_frame) {
-        time_and_event_it = callstack_events.erase(time_and_event_it);
-      } else {
-        ++time_and_event_it;
+      CHECK(!frames.empty());
+      if (*frames.rbegin() != majority_outer_frame) {
+        callstack_ids_to_filter.insert(event.callstack_id());
       }
     }
   }
 
-  uint32_t count_after_filtering = GetCallstackEventsCount();
-  CHECK(count_after_filtering <= count_before_filtering);
-  uint32_t filtered_out_count = count_before_filtering - count_after_filtering;
-  LOG("Filtered out %u CallstackEvents of the original %u (%.2f%%), remaining %u",
-      filtered_out_count, count_before_filtering,
-      100.0f * filtered_out_count / count_before_filtering, count_after_filtering);
+  // Change the type of the recorded CallstackInfos.
+  for (uint64_t callstack_id_to_filter : callstack_ids_to_filter) {
+    CallstackInfo* callstack = unique_callstacks_.at(callstack_id_to_filter).get();
+    CHECK(callstack->type() == CallstackInfo::kComplete);
+    callstack->set_type(CallstackInfo::kFilteredByMajorityOutermostFrame);
+  }
+
+  // Count how many CallstackEvents had their CallstackInfo affected by the type change.
+  uint64_t affected_event_count = 0;
+  for (auto& [tid, timestamps_and_callstack_events] : callstack_events_by_tid_) {
+    for (const auto& [unused_timestamp_ns, event] : timestamps_and_callstack_events) {
+      if (unique_callstacks_.at(event.callstack_id())->type() ==
+          CallstackInfo::kFilteredByMajorityOutermostFrame) {
+        ++affected_event_count;
+      }
+    }
+  }
+
+  uint32_t callstack_event_count = GetCallstackEventsCount();
+  LOG("Filtered %u CallstackInfos of %u (%.2f%%), affecting %u CallstackEvents of %u (%.2f%%)",
+      callstack_ids_to_filter.size(), unique_callstacks_.size(),
+      100.0f * callstack_ids_to_filter.size() / unique_callstacks_.size(), affected_event_count,
+      callstack_event_count, 100.0f * affected_event_count / callstack_event_count);
 }
 
 }  // namespace orbit_client_data

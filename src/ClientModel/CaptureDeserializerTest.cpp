@@ -528,6 +528,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
   callstack_1.add_frames(1);
   callstack_1.add_frames(2);
   callstack_1.add_frames(3);
+  callstack_1.set_type(CallstackInfo::kComplete);
   (*capture_info.mutable_callstacks())[callstack_id_1] = callstack_1;
 
   CallstackEvent* callstack_event_1_1 = capture_info.add_callstack_events();
@@ -545,6 +546,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
   CallstackInfo callstack_2;
   callstack_2.add_frames(4);
   callstack_2.add_frames(5);
+  callstack_2.set_type(CallstackInfo::kDwarfUnwindingError);
   (*capture_info.mutable_callstacks())[callstack_id_2] = callstack_2;
 
   CallstackEvent* callstack_event_2 = capture_info.add_callstack_events();
@@ -614,10 +616,12 @@ TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
   EXPECT_EQ(
       std::vector<uint64_t>(actual_callstack_1.frames().begin(), actual_callstack_1.frames().end()),
       std::vector<uint64_t>(callstack_1.frames().begin(), callstack_1.frames().end()));
+  EXPECT_EQ(actual_callstack_1.type(), callstack_1.type());
   EXPECT_EQ(actual_callstack_id_2, callstack_id_2);
   EXPECT_EQ(
       std::vector<uint64_t>(actual_callstack_2.frames().begin(), actual_callstack_2.frames().end()),
       std::vector<uint64_t>(callstack_2.frames().begin(), callstack_2.frames().end()));
+  EXPECT_EQ(actual_callstack_2.type(), callstack_2.type());
 
   EXPECT_TRUE(hash_added_1);
   EXPECT_TRUE(hash_added_2);

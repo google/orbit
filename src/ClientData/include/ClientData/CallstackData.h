@@ -92,9 +92,10 @@ class CallstackData {
   GetUniqueCallstacksCopy() const;
 
   // Assuming that, for each thread, the outermost frame of each callstack is always the same,
-  // filters out all the callstacks that have the outermost frame not matching the majority
-  // outermost frame. This is a way to filter unwinding errors that were not reported as such.
-  void FilterCallstackEventsBasedOnMajorityStart();
+  // update the type of all the kComplete callstacks that have the outermost frame not matching the
+  // majority outermost frame. This is a way to filter unwinding errors that were not reported as
+  // such.
+  void UpdateCallstackTypeBasedOnMajorityStart();
 
  private:
   [[nodiscard]] std::shared_ptr<orbit_client_protos::CallstackInfo> GetCallstackPtr(
