@@ -8,7 +8,7 @@
 #include "CodeViewer/Dialog.h"
 #include "SyntaxHighlighter/X86Assembly.h"
 
-class DummyCodeReport : public CodeReport {
+class DummyCodeReport : public orbit_code_report::CodeReport {
  public:
   explicit DummyCodeReport(uint32_t num_samples) : num_samples_{num_samples} {}
 

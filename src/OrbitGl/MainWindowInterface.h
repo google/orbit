@@ -11,7 +11,7 @@
 #include <optional>
 #include <string_view>
 
-#include "CodeReport.h"
+#include "CodeReport/CodeReport.h"
 #include "DisassemblyReport.h"
 
 namespace orbit_gl {
@@ -24,8 +24,9 @@ namespace orbit_gl {
 class MainWindowInterface {
  public:
   virtual void ShowTooltip(std::string_view message) = 0;
-  virtual void ShowSourceCode(const std::filesystem::path& file_path, size_t line_number,
-                              std::optional<std::unique_ptr<CodeReport>> code_report) = 0;
+  virtual void ShowSourceCode(
+      const std::filesystem::path& file_path, size_t line_number,
+      std::optional<std::unique_ptr<orbit_code_report::CodeReport>> code_report) = 0;
   virtual void ShowDisassembly(const std::string& assembly, DisassemblyReport report) = 0;
 
   virtual ~MainWindowInterface() = default;

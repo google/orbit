@@ -430,7 +430,7 @@ void Viewer::SetHeatmapBarWidth(FontSizeInEm width) {
   UpdateBarsSize();
 }
 
-void Viewer::SetHeatmapSource(const CodeReport* code_report) {
+void Viewer::SetHeatmapSource(const orbit_code_report::CodeReport* code_report) {
   code_report_ = code_report;
   UpdateBarsSize();
 }

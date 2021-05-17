@@ -702,7 +702,7 @@ void OrbitApp::ShowSourceCode(const orbit_client_protos::FunctionInfo& function)
             auto source_file_path =
                 std::filesystem::path{line_info.source_file()}.lexically_normal();
 
-            std::optional<std::unique_ptr<CodeReport>> code_report;
+            std::optional<std::unique_ptr<orbit_code_report::CodeReport>> code_report;
 
             if (HasCaptureData() && GetCaptureData().has_post_processed_sampling_data()) {
               const auto& sampling_data = GetCaptureData().post_processed_sampling_data();

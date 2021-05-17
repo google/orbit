@@ -99,8 +99,9 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   [[nodiscard]] orbit_qt::TargetConfiguration ClearTargetConfiguration();
 
   void ShowTooltip(std::string_view message) override;
-  void ShowSourceCode(const std::filesystem::path& file_path, size_t line_number,
-                      std::optional<std::unique_ptr<CodeReport>> maybe_code_report) override;
+  void ShowSourceCode(
+      const std::filesystem::path& file_path, size_t line_number,
+      std::optional<std::unique_ptr<orbit_code_report::CodeReport>> maybe_code_report) override;
   void ShowDisassembly(const std::string& assembly, DisassemblyReport report) override;
 
  protected:

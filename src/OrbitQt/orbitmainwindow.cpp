@@ -1446,8 +1446,9 @@ std::optional<QString> OrbitMainWindow::LoadSourceCode(const std::filesystem::pa
   return std::nullopt;
 }
 
-void OrbitMainWindow::ShowSourceCode(const std::filesystem::path& file_path, size_t line_number,
-                                     std::optional<std::unique_ptr<CodeReport>> maybe_code_report) {
+void OrbitMainWindow::ShowSourceCode(
+    const std::filesystem::path& file_path, size_t line_number,
+    std::optional<std::unique_ptr<orbit_code_report::CodeReport>> maybe_code_report) {
   auto code_viewer_dialog = std::make_unique<orbit_code_viewer::OwningDialog>();
 
   code_viewer_dialog->SetLineNumberTypes(

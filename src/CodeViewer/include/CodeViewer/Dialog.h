@@ -10,7 +10,7 @@
 #include <memory>
 #include <optional>
 
-#include "CodeReport.h"
+#include "CodeReport/CodeReport.h"
 #include "CodeViewer/FontSizeInEm.h"
 #include "CodeViewer/Viewer.h"
 
@@ -55,7 +55,7 @@ class Dialog : public QDialog {
 
   void SetAnnotatingContent(absl::Span<const AnnotatingLine> annotating_lines);
 
-  void SetHeatmap(FontSizeInEm heatmap_bar_width, const CodeReport* code_report);
+  void SetHeatmap(FontSizeInEm heatmap_bar_width, const orbit_code_report::CodeReport* code_report);
   void ClearHeatmap();
 
   void SetLineNumberTypes(LineNumberTypes line_number_types);
