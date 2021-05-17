@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "SourceCodeReport.h"
+#include "CodeReport/SourceCodeReport.h"
 
 #include <algorithm>
 #include <limits>
@@ -11,7 +11,7 @@
 #include "ClientData/PostProcessedSamplingData.h"
 #include "OrbitBase/Logging.h"
 
-namespace orbit_gl {
+namespace orbit_code_report {
 
 SourceCodeReport::SourceCodeReport(
     std::string_view source_file, const orbit_client_protos::FunctionInfo& function,
@@ -60,4 +60,4 @@ std::optional<uint32_t> SourceCodeReport::GetNumSamplesAtLine(size_t line) const
   return 0;
 }
 
-}  // namespace orbit_gl
+}  // namespace orbit_code_report

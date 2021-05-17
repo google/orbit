@@ -5,9 +5,13 @@
 cmake_minimum_required(VERSION 3.15)
 
 project(CodeReport)
-add_library(CodeReport INTERFACE)
+add_library(CodeReport OBJECT)
 
-target_compile_options(CodeReport INTERFACE ${STRICT_COMPILE_FLAGS})
-target_include_directories(CodeReport INTERFACE include/)
+target_compile_options(CodeReport PRIVATE ${STRICT_COMPILE_FLAGS})
+target_include_directories(CodeReport PUBLIC include/)
+target_link_libraries(CodeReport PUBLIC OrbitBase ClientData ElfUtils)
 
-target_sources(CodeReport INTERFACE include/CodeReport/CodeReport.h)
+target_sources(CodeReport PUBLIC include/CodeReport/CodeReport.h
+                                 include/CodeReport/SourceCodeReport.h)
+
+target_sources(CodeReport PRIVATE SourceCodeReport.cpp)
