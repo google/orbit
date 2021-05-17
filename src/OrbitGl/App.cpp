@@ -309,7 +309,7 @@ void OrbitApp::OnCaptureStarted(const CaptureStarted& capture_started,
 }
 
 Future<void> OrbitApp::OnCaptureComplete() {
-  for (auto thread_track : GetMutableTimeGraph()->GetTrackManager()->GetThreadTracks()) {
+  for (ThreadTrack* thread_track : GetMutableTimeGraph()->GetTrackManager()->GetThreadTracks()) {
     thread_track->OnCaptureComplete();
   }
 
