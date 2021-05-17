@@ -97,6 +97,62 @@ Cpp::Cpp() : QSyntaxHighlighter{static_cast<QObject*>(nullptr)} {
   class_member_regex_ = QRegularExpression{CppRegex::kClassMemberRegex};
 }
 
+CppHighlighterState HighlightBlockCpp(
+    const QString& code, CppHighlighterState previous_block_state,
+    std::function<void(int, int, const QTextCharFormat&)> set_format) {
+  CppHighlighterState next_block_state = CppHighlighterState::kInitialState;
+  const auto apply = [&code, &set_format, &next_block_state](
+                         QRegularExpression* expression, const QColor& color,
+                         CppHighlighterState new_state = CppHighlighterState::kInitialState) {
+    QTextCharFormat format{};
+    format.setForeground(color);
+
+    for (auto it = expression->globalMatch(code); it.hasNext();) {
+      const auto match = it.next();
+      set_format(match.capturedStart(), match.capturedLength(), format);
+      next_block_state = new_state;
+    }
+  };
+
+  // We are processing line by line and trying to find all substrings that match with these
+  // patterns. As each one paints over the others, order matters.
+
+  // Ordered heuristics for painting certain word patterns. Should be at the first.
+  apply(&Cpp::capitalized_regex_, kGreyViolet);
+  apply(&Cpp::namespace_variables_regex_, kGreyViolet);
+  apply(&Cpp::function_definition_regex_, kYellowOrange);
+  apply(&Cpp::namespace_regex_, kGreyViolet);
+  apply(&Cpp::only_uppercase_regex_, kOlive);
+
+  // Extra patterns which make the syntax highlighter nicer. Order doesn't matter.
+  apply(&Cpp::class_name_regex_, kGreyViolet);
+  apply(&Cpp::number_regex_, kBlue);
+  apply(&Cpp::class_member_regex_, kViolet);
+  apply(&Cpp::comma_regex_, kOrange);
+
+  // Special C/C++ patterns. Order doesn't matter.
+  apply(&Cpp::keyword_regex_, kOrange);
+  apply(&Cpp::constant_regex_, kOlive);
+  apply(&Cpp::include_file_regex_, kGreen);
+  apply(&Cpp::preprocessor_regex_, kYellow);
+
+  // Comments and strings should be painted at the end.
+  apply(&Cpp::string_regex_, kGreen);
+  apply(&Cpp::comment_regex_, kGrey);
+
+  // For several-lines comments and strings, we have these states.
+  if (previous_block_state == CppHighlighterState::kOpenStringState) {
+    apply(&Cpp::no_end_string_regex_, kGreen, CppHighlighterState::kOpenStringState);
+    apply(&Cpp::end_string_regex_, kGreen);
+  }
+  if (previous_block_state == CppHighlighterState::kOpenCommentState) {
+    apply(&Cpp::no_end_comment_regex_, kGrey, CppHighlighterState::kOpenCommentState);
+    apply(&Cpp::end_comment_regex_, kGrey);
+  }
+  apply(&Cpp::open_string_regex_, kGreen, CppHighlighterState::kOpenStringState);
+  apply(&Cpp::open_comment_regex_, kGrey, CppHighlighterState::kOpenCommentState);
+}
+
 void Cpp::highlightBlock(const QString& code) {
   const auto apply = [&code, this](
                          QRegularExpression* expression, const QColor& color,

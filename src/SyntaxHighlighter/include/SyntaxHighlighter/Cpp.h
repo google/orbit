@@ -22,28 +22,27 @@ class Cpp : public QSyntaxHighlighter {
  public:
   explicit Cpp();
 
- private:
-  QRegularExpression comment_regex_;
-  QRegularExpression open_comment_regex_;
-  QRegularExpression end_comment_regex_;
-  QRegularExpression no_end_comment_regex_;
-  QRegularExpression function_definition_regex_;
-  QRegularExpression number_regex_;
-  QRegularExpression constant_regex_;
-  QRegularExpression keyword_regex_;
-  QRegularExpression preprocessor_regex_;
-  QRegularExpression include_file_regex_;
-  QRegularExpression string_regex_;
-  QRegularExpression open_string_regex_;
-  QRegularExpression end_string_regex_;
-  QRegularExpression no_end_string_regex_;
-  QRegularExpression comma_regex_;
-  QRegularExpression only_uppercase_regex_;
-  QRegularExpression capitalized_regex_;
-  QRegularExpression namespace_regex_;
-  QRegularExpression namespace_variables_regex_;
-  QRegularExpression class_name_regex_;
-  QRegularExpression class_member_regex_;
+  static QRegularExpression comment_regex_;
+  static QRegularExpression open_comment_regex_;
+  static QRegularExpression end_comment_regex_;
+  static QRegularExpression no_end_comment_regex_;
+  static QRegularExpression function_definition_regex_;
+  static QRegularExpression number_regex_;
+  static QRegularExpression constant_regex_;
+  static QRegularExpression keyword_regex_;
+  static QRegularExpression preprocessor_regex_;
+  static QRegularExpression include_file_regex_;
+  static QRegularExpression string_regex_;
+  static QRegularExpression open_string_regex_;
+  static QRegularExpression end_string_regex_;
+  static QRegularExpression no_end_string_regex_;
+  static QRegularExpression comma_regex_;
+  static QRegularExpression only_uppercase_regex_;
+  static QRegularExpression capitalized_regex_;
+  static QRegularExpression namespace_regex_;
+  static QRegularExpression namespace_variables_regex_;
+  static QRegularExpression class_name_regex_;
+  static QRegularExpression class_member_regex_;
 };
 
 }  // namespace orbit_syntax_highlighter
