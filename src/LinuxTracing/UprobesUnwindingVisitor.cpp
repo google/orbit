@@ -30,10 +30,7 @@ using orbit_grpc_protos::FunctionCall;
 
 void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
   CHECK(listener_ != nullptr);
-
-  if (current_maps_ == nullptr) {
-    return;
-  }
+  CHECK(current_maps_ != nullptr);
 
   return_address_manager_->PatchSample(event->GetTid(), event->GetRegisters()[PERF_REG_X86_SP],
                                        event->GetStackData(), event->GetStackSize());
@@ -93,10 +90,7 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
 
 void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
   CHECK(listener_ != nullptr);
-
-  if (current_maps_ == nullptr) {
-    return;
-  }
+  CHECK(current_maps_ != nullptr);
 
   // TODO(b/179976268): When a sample falls on the first (push rbp) or second (mov rbp,rsp)
   //  instruction of the current function, frame-pointer unwinding skips the caller's frame,
@@ -218,6 +212,7 @@ void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
 
 void UprobesUnwindingVisitor::visit(MmapPerfEvent* event) {
   CHECK(listener_ != nullptr);
+  CHECK(current_maps_ != nullptr);
 
   // Obviously the uprobes map cannot be successfully processed by orbit_object_utils::CreateModule,
   // but it's important that current_maps_ contain it.
