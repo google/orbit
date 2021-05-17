@@ -68,6 +68,7 @@ message OrbitLogEvent {
 // instrumented functions and information that is available at capture stop,
 // like duration of the capture. It is sent when the user stops the capture, or
 // when the capture is aborted because of an error.
+// NextID: 18
 message OrbitCaptureData {
   // Duration of the capture in milliseconds. This is a measure of time from
   // when the user started a capture until the user ends it.
@@ -100,4 +101,56 @@ message OrbitCaptureData {
   // Number of orbit_api::TrackValue calls that Orbit found in the modules that
   // have been manually instrumented.
   int64 number_of_manual_tracked_values = 8;
+
+  // Whether the collection of thread states is enabled or not.
+  enum ThreadStates {
+    THREAD_STATES_UNKNOWN = 0;
+    THREAD_STATES_ENABLED = 1;
+    THREAD_STATES_DISABLED = 2;
+  }
+  ThreadStates thread_states = 9;
+
+  // Memory information sampling period in milliseconds. The default value 0
+  // cannot be chosen by the user, hence it indicates the field was not set.
+  // Value -1 means memory information collection is turned off.
+  int64 memory_information_sampling_period_ms = 10;
+
+  // Total number of timers of all dynamically instrumented (hooked) functions
+  // that were recorded in this capture. This does not include anything from
+  // the manual instrumentation api (Orbit.h).
+  int64 number_of_instrumented_function_timers = 11;
+
+  // Total number of timers of type kGpuActivity.
+  int64 number_of_gpu_activity_timers = 12;
+
+  // Whether the custom Orbit Vulkan layer (libOrbitVulkanLayer.so) was loaded
+  // by the process or not.
+  enum LibOrbitVulkanLayer {
+    LIB_ORBIT_VULKAN_LAYER_UNKNOWN = 0;
+    LIB_LOADED = 1;
+    LIB_NOT_LOADED = 2;
+  }
+  LibOrbitVulkanLayer lib_orbit_vulkan_layer = 13;
+
+  // Total number of timers of type kGpuCommandBuffer. Only applicable if
+  // loaded_lib_orbit_vulkan_layer is LIB_LOADED.
+  int64 number_of_vulkan_layer_gpu_command_buffer_timers = 14;
+
+  // Total number of timers of type kGpuDebugBuffer. Only applicable if
+  // lib_orbit_vulkan_layer_loaded is LIB_LOADED.
+  int64 number_of_vulkan_layer_gpu_debug_marker_timers = 15;
+
+  // Whether or not the user enabled the limit for local marker depth per
+  // command buffer. When this is LIMITED, it means the user checked the option
+  // to limit the marker depth.
+  enum LocalMarkerDepthPerCommandBuffer {
+    LOCAL_MARKER_DEPTH_PER_COMMAND_BUFFER_UNKNOWN = 0;
+    LIMITED = 1;
+    UNLIMITED = 2;
+  }
+  LocalMarkerDepthPerCommandBuffer local_marker_depth_per_command_buffer = 16;
+
+  // Value of the limit the user set for local marker depth per command buffer.
+  // Only applicable if local_marker_depth_per_command_buffer is LIMITED.
+  uint64 max_local_marker_depth_per_command_buffer = 17;
 }
