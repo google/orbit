@@ -171,6 +171,7 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   callstack.add_frames(1);
   callstack.add_frames(2);
   callstack.add_frames(3);
+  callstack.set_type(CallstackInfo::kComplete);
   capture_data.AddUniqueCallstack(callstack_id, callstack);
 
   CallstackEvent callstack_event;
@@ -178,6 +179,20 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   callstack_event.set_thread_id(123);
   callstack_event.set_callstack_id(callstack_id);
   capture_data.AddCallstackEvent(callstack_event);
+
+  uint64_t broken_callstack_id = 2;
+  CallstackInfo broken_callstack;
+  broken_callstack.add_frames(1);
+  broken_callstack.add_frames(2);
+  broken_callstack.add_frames(3);
+  broken_callstack.set_type(CallstackInfo::kDwarfUnwindingError);
+  capture_data.AddUniqueCallstack(broken_callstack_id, broken_callstack);
+
+  CallstackEvent broken_callstack_event;
+  broken_callstack_event.set_time(2);
+  broken_callstack_event.set_thread_id(123);
+  broken_callstack_event.set_callstack_id(broken_callstack_id);
+  capture_data.AddCallstackEvent(broken_callstack_event);
 
   capture_data.AddUniqueTracepointEventInfo(1, tracepoint_info);
 
@@ -235,17 +250,30 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   EXPECT_EQ(address_info.absolute_address(), actual_address_info.absolute_address());
   EXPECT_EQ(address_info.offset_in_function(), actual_address_info.offset_in_function());
 
-  ASSERT_EQ(1, capture_info.callstacks_size());
-  const CallstackInfo& actual_callstack_info = capture_info.callstacks().at(1);
+  ASSERT_EQ(2, capture_info.callstacks_size());
+  const CallstackInfo& actual_callstack_info = capture_info.callstacks().at(callstack_id);
   std::vector<uint64_t> actual_callstack_frames{actual_callstack_info.frames().begin(),
                                                 actual_callstack_info.frames().end()};
   EXPECT_THAT(actual_callstack_frames, ElementsAreArray(callstack.frames()));
+  EXPECT_EQ(actual_callstack_info.type(), callstack.type());
 
-  ASSERT_EQ(1, capture_info.callstack_events_size());
+  const CallstackInfo& actual_broken_callstack_info =
+      capture_info.callstacks().at(broken_callstack_id);
+  std::vector<uint64_t> actual_broken_callstack_frames{
+      actual_broken_callstack_info.frames().begin(), actual_broken_callstack_info.frames().end()};
+  EXPECT_THAT(actual_broken_callstack_frames, ElementsAreArray(broken_callstack.frames()));
+  EXPECT_EQ(actual_broken_callstack_info.type(), broken_callstack.type());
+
+  ASSERT_EQ(2, capture_info.callstack_events_size());
   const CallstackEvent& actual_callstack_event = capture_info.callstack_events(0);
-  EXPECT_EQ(callstack_event.thread_id(), actual_callstack_event.thread_id());
-  EXPECT_EQ(callstack_event.time(), actual_callstack_event.time());
-  EXPECT_EQ(callstack_event.callstack_id(), actual_callstack_event.callstack_id());
+  EXPECT_EQ(actual_callstack_event.thread_id(), callstack_event.thread_id());
+  EXPECT_EQ(actual_callstack_event.time(), callstack_event.time());
+  EXPECT_EQ(actual_callstack_event.callstack_id(), callstack_event.callstack_id());
+
+  const CallstackEvent& actual_broken_callstack_event = capture_info.callstack_events(1);
+  EXPECT_EQ(actual_broken_callstack_event.thread_id(), broken_callstack_event.thread_id());
+  EXPECT_EQ(actual_broken_callstack_event.time(), broken_callstack_event.time());
+  EXPECT_EQ(actual_broken_callstack_event.callstack_id(), broken_callstack_event.callstack_id());
 
   ASSERT_EQ(1, capture_info.tracepoint_infos_size());
   const orbit_client_protos::TracepointInfo& actual_tracepoint_info =

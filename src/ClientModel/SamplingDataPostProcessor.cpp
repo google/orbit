@@ -81,6 +81,13 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
       [this, &callstack_data, generate_summary](const CallstackEvent& event) {
         CHECK(callstack_data.HasCallstack(event.callstack_id()));
 
+        // TODO(b/188496245): Include aggregated statistics on unwinding errors in
+        //  SamplingDataPostProcessor and the corresponding views ("Sampling", "Top-down",
+        //  "Bottom-up"). But for now, just skip those callstacks.
+        if (callstack_data.GetCallstack(event.callstack_id())->type() != CallstackInfo::kComplete) {
+          return;
+        }
+
         ThreadSampleData* thread_sample_data = &thread_id_to_sample_data_[event.thread_id()];
         thread_sample_data->samples_count++;
         thread_sample_data->sampled_callstack_id_to_count[event.callstack_id()]++;
@@ -164,6 +171,11 @@ void SamplingDataPostProcessor::ResolveCallstacks(const CallstackData& callstack
                                                   const CaptureData& capture_data) {
   callstack_data.ForEachUniqueCallstack(
       [this, &capture_data](uint64_t callstack_id, const CallstackInfo& callstack) {
+        // TODO(b/188496245): Include aggregated statistics on unwinding errors.
+        if (callstack.type() != CallstackInfo::kComplete) {
+          return;
+        }
+
         // A "resolved callstack" is a callstack where every address is replaced
         // by the start address of the function (if known).
         std::vector<uint64_t> resolved_callstack_frames;
@@ -188,6 +200,7 @@ void SamplingDataPostProcessor::ResolveCallstacks(const CallstackData& callstack
           orbit_client_protos::CallstackInfo resolved_callstack;
           *resolved_callstack.mutable_frames() = {resolved_callstack_frames.begin(),
                                                   resolved_callstack_frames.end()};
+          resolved_callstack.set_type(callstack.type());
           id_to_resolved_callstack_.insert_or_assign(resolved_callstack_id, resolved_callstack);
           resolved_callstack_to_id_.insert_or_assign(std::move(resolved_callstack_frames),
                                                      resolved_callstack_id);

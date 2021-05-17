@@ -63,6 +63,19 @@ message CallstackEvent {
 
 message CallstackInfo {
   repeated uint64 frames = 1;
+
+  enum CallstackType {
+    // Keep these in sync with orbit_grpc_protos::Callstack::CallstackType.
+    kComplete = 0;
+    kDwarfUnwindingError = 1;
+    kFramePointerUnwindingError = 2;
+    kInUprobes = 3;
+    kUprobesPatchingFailed = 4;
+    // These are set by the client and are in addition to the ones in
+    // Callstack::CallstackType.
+    kFilteredByMajorityOutermostFrame = 100;
+  }
+  CallstackType type = 2;
 }
 
 message ThreadStateSliceInfo {

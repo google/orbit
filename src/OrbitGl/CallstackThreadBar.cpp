@@ -109,6 +109,12 @@ void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, u
   if (!picking) {
     // Sampling Events
     auto action_on_callstack_events = [=](const CallstackEvent& event) {
+      // TODO(b/188496243): Also show unwinding errors in the timeline.
+      if (capture_data_->GetCallstackData()->GetCallstack(event.callstack_id())->type() !=
+          CallstackInfo::kComplete) {
+        return;
+      }
+
       const uint64_t time = event.time();
       CHECK(time >= min_tick && time <= max_tick);
       Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
@@ -137,6 +143,12 @@ void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, u
     constexpr const float kPickingBoxOffset = (kPickingBoxWidth - 1.0f) / 2.0f;
 
     auto action_on_callstack_events = [=](const CallstackEvent& event) {
+      // TODO(b/188496243): Also show unwinding errors in the timeline.
+      if (capture_data_->GetCallstackData()->GetCallstack(event.callstack_id())->type() !=
+          CallstackInfo::kComplete) {
+        return;
+      }
+
       const uint64_t time = event.time();
       CHECK(time >= min_tick && time <= max_tick);
       Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset, pos_[1] - track_height + 1);
