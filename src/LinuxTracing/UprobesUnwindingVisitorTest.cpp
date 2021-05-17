@@ -257,7 +257,13 @@ TEST_F(UprobesUnwindingVisitorTest,
   constexpr uint64_t kStackSize = 13;
   StackSamplePerfEvent event{kStackSize};
   perf_event_sample_id_tid_time_streamid_cpu sample_id{
-      .pid = kPid, .tid = 11, .time = 15, .stream_id = 12, .cpu = 0, .res = 0};
+      .pid = kPid,
+      .tid = 11,
+      .time = 15,
+      .stream_id = 12,
+      .cpu = 0,
+      .res = 0,
+  };
   event.ring_buffer_record->sample_id = sample_id;
 
   EXPECT_CALL(return_address_manager_, PatchSample).WillRepeatedly(Return());
@@ -289,7 +295,13 @@ TEST_F(UprobesUnwindingVisitorTest, VisitStackSampleWithinUprobeLeadsToUnwinding
   constexpr uint64_t kStackSize = 13;
   StackSamplePerfEvent event{kStackSize};
   perf_event_sample_id_tid_time_streamid_cpu sample_id{
-      .pid = kPid, .tid = 11, .time = 15, .stream_id = 12, .cpu = 0, .res = 0};
+      .pid = kPid,
+      .tid = 11,
+      .time = 15,
+      .stream_id = 12,
+      .cpu = 0,
+      .res = 0,
+  };
   event.ring_buffer_record->sample_id = sample_id;
 
   EXPECT_CALL(return_address_manager_, PatchSample).WillRepeatedly(Return());
@@ -373,7 +385,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitValidCallchainSampleWithoutUprobesEmits
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
 }
 
-TEST_F(UprobesUnwindingVisitorTest, VisitBrokenCallchainSampleDiscardsEvents) {
+TEST_F(UprobesUnwindingVisitorTest, VisitSingleFrameCallchainSampleDiscardsEvents) {
   constexpr uint32_t kPid = 10;
   constexpr uint64_t kStackSize = 13;
 
@@ -474,7 +486,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleWithUprobeEmitsEvents) {
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
 }
 
-TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleWithBrokenUprobeDiscardEvents) {
+TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleWithBrokenUprobeDiscardsEvents) {
   constexpr uint32_t kPid = 10;
   constexpr uint64_t kStackSize = 13;
 
@@ -520,7 +532,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleWithBrokenUprobeDiscardE
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
 }
 
-TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleInsideUprobeCodeDiscardEvents) {
+TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleInsideUprobeCodeDiscardsEvents) {
   constexpr uint32_t kPid = 10;
   constexpr uint64_t kStackSize = 13;
 
@@ -567,6 +579,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleInsideUprobeCodeDiscardE
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 1);
 }
 
+// TODO(b/160399871): Disabled until we have support for handling leaf calls without frame pointers.
 TEST_F(UprobesUnwindingVisitorTest,
        DISABLED_VisitLeafCallOptimizedCallchainSampleWithoutUprobesEmitsEvents) {
   constexpr uint32_t kPid = 10;

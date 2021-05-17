@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2020 The Orbit Authit_ors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -15,6 +15,7 @@
 
 #include "OrbitBase/Logging.h"
 
+namespace orbit_linux_tracing {
 // Keeps a stack, for every thread, of the return addresses at the top of the
 // stack when uprobes are hit, before they are hijacked by uretprobes. Patches
 // them into samples so that unwinding can continue past
@@ -69,12 +70,13 @@ class UprobesReturnAddressManager {
   // instruction pointers of uprobe code and using the return address saved in
   // the uprobes.
   virtual bool PatchCallchain(pid_t tid, uint64_t* callchain, uint64_t callchain_size,
-                              orbit_linux_tracing::LibunwindstackMaps* maps) {
+                              LibunwindstackMaps* maps) {
     if (callchain_size == 0) {
       return true;
     }
     CHECK(callchain != nullptr);
     CHECK(maps != nullptr);
+
     std::vector<uint64_t> frames_to_patch;
     for (uint64_t i = 0; i < callchain_size; i++) {
       uint64_t ip = callchain[i];
@@ -196,5 +198,7 @@ class UprobesReturnAddressManager {
 
   absl::flat_hash_map<pid_t, std::vector<OpenUprobes>> tid_uprobes_stacks_{};
 };
+
+}  // namespace orbit_linux_tracing
 
 #endif  // LINUX_TRACING_UPROBES_RETURN_ADDRESS_MANAGER_H_
