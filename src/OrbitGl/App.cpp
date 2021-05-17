@@ -42,6 +42,7 @@
 #include "ClientModel/CaptureDeserializer.h"
 #include "ClientModel/CaptureSerializer.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
+#include "CodeReport/SourceCodeReport.h"
 #include "CoreUtils.h"
 #include "Disassembler.h"
 #include "DisassemblyReport.h"
@@ -69,7 +70,6 @@
 #include "Path.h"
 #include "PresetsDataView.h"
 #include "SamplingReport.h"
-#include "SourceCodeReport.h"
 #include "SymbolHelper.h"
 #include "TimeGraph.h"
 #include "Timer.h"
@@ -715,7 +715,7 @@ void OrbitApp::ShowSourceCode(const orbit_client_protos::FunctionInfo& function)
                     function.pretty_name(), module->file_path())};
               }
 
-              code_report = std::make_unique<orbit_gl::SourceCodeReport>(
+              code_report = std::make_unique<orbit_code_report::SourceCodeReport>(
                   line_info.source_file(), function, absolute_address.value(),
                   elf_file.value().get(), sampling_data,
                   GetCaptureData().GetCallstackData()->GetCallstackEventsCount());

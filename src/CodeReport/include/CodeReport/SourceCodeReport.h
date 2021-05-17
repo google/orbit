@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_SOURCE_CODE_REPORT_H_
-#define ORBIT_GL_SOURCE_CODE_REPORT_H_
+#ifndef CODE_REPORT_SOURCE_CODE_REPORT_H_
+#define CODE_REPORT_SOURCE_CODE_REPORT_H_
 
 #include <absl/container/flat_hash_map.h>
 #include <stddef.h>
@@ -18,11 +18,11 @@
 #include "ElfUtils/ElfFile.h"
 #include "capture_data.pb.h"
 
-namespace orbit_gl {
+namespace orbit_code_report {
 
 // SourceCodeReport implemented the CodeReport interface and provides sample statistics for a source
 // code file. The current implementation can only handle sample statistics for a single function.
-class SourceCodeReport : public orbit_code_report::CodeReport {
+class SourceCodeReport : public CodeReport {
  public:
   explicit SourceCodeReport(std::string_view source_file,
                             const orbit_client_protos::FunctionInfo& function,
@@ -44,6 +44,6 @@ class SourceCodeReport : public orbit_code_report::CodeReport {
   uint32_t max_line_number_ = std::numeric_limits<uint32_t>::min();
 };
 
-}  // namespace orbit_gl
+}  // namespace orbit_code_report
 
-#endif  // ORBIT_GL_DISASSEMBLY_REPORT_H_
+#endif  // CODE_REPORT_SOURCE_CODE_REPORT_H_
