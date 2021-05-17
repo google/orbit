@@ -153,7 +153,7 @@ TEST(ProducerEventProcessor, OneInternedCallstack) {
   EXPECT_EQ(actual_interned_callstack.intern().pcs()[2], 3);
 }
 
-TEST(ProducerEventProcessor, TwoInternedCallstacskDifferentProducersSameKey) {
+TEST(ProducerEventProcessor, TwoInternedCallstacksDifferentProducersSameKey) {
   MockCaptureEventBuffer buffer;
   auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
 
@@ -450,23 +450,23 @@ TEST(ProducerEventProcessor, FullCallstackSampleDifferentCallstacks) {
   callstack2->add_pcs(8);
 
   ClientCaptureEvent interned_callstack_event1;
-  ClientCaptureEvent callstack_sameple_event1;
+  ClientCaptureEvent callstack_sample_event1;
   ClientCaptureEvent interned_callstack_event2;
-  ClientCaptureEvent callstack_sameple_event2;
+  ClientCaptureEvent callstack_sample_event2;
   EXPECT_CALL(buffer, AddEvent)
       .Times(4)
       .WillOnce(SaveArg<0>(&interned_callstack_event1))
-      .WillOnce(SaveArg<0>(&callstack_sameple_event1))
+      .WillOnce(SaveArg<0>(&callstack_sample_event1))
       .WillOnce(SaveArg<0>(&interned_callstack_event2))
-      .WillOnce(SaveArg<0>(&callstack_sameple_event2));
+      .WillOnce(SaveArg<0>(&callstack_sample_event2));
 
   producer_event_processor->ProcessEvent(1, event1);
   producer_event_processor->ProcessEvent(1, event2);
 
   ASSERT_EQ(interned_callstack_event1.event_case(), ClientCaptureEvent::kInternedCallstack);
   ASSERT_EQ(interned_callstack_event2.event_case(), ClientCaptureEvent::kInternedCallstack);
-  ASSERT_EQ(callstack_sameple_event1.event_case(), ClientCaptureEvent::kCallstackSample);
-  ASSERT_EQ(callstack_sameple_event2.event_case(), ClientCaptureEvent::kCallstackSample);
+  ASSERT_EQ(callstack_sample_event1.event_case(), ClientCaptureEvent::kCallstackSample);
+  ASSERT_EQ(callstack_sample_event2.event_case(), ClientCaptureEvent::kCallstackSample);
 
   const InternedCallstack& interned_callstack1 = interned_callstack_event1.interned_callstack();
   EXPECT_NE(interned_callstack1.key(), orbit_grpc_protos::kInvalidInternId);
@@ -484,13 +484,13 @@ TEST(ProducerEventProcessor, FullCallstackSampleDifferentCallstacks) {
   EXPECT_EQ(interned_callstack2.intern().pcs(2), 7);
   EXPECT_EQ(interned_callstack2.intern().pcs(3), 8);
 
-  const CallstackSample& callstack_sample1 = callstack_sameple_event1.callstack_sample();
+  const CallstackSample& callstack_sample1 = callstack_sample_event1.callstack_sample();
   EXPECT_EQ(callstack_sample1.pid(), kPid1);
   EXPECT_EQ(callstack_sample1.tid(), kTid1);
   EXPECT_EQ(callstack_sample1.timestamp_ns(), kTimestampNs1);
   EXPECT_EQ(callstack_sample1.callstack_id(), interned_callstack1.key());
 
-  const CallstackSample& callstack_sample2 = callstack_sameple_event2.callstack_sample();
+  const CallstackSample& callstack_sample2 = callstack_sample_event2.callstack_sample();
   EXPECT_EQ(callstack_sample2.pid(), kPid2);
   EXPECT_EQ(callstack_sample2.tid(), kTid2);
   EXPECT_EQ(callstack_sample2.timestamp_ns(), kTimestampNs2);
@@ -524,20 +524,20 @@ TEST(ProducerEventProcessor, FullCallstackSamplesSameCallstack) {
   callstack2->add_pcs(4);
 
   ClientCaptureEvent interned_callstack_event1;
-  ClientCaptureEvent callstack_sameple_event1;
-  ClientCaptureEvent callstack_sameple_event2;
+  ClientCaptureEvent callstack_sample_event1;
+  ClientCaptureEvent callstack_sample_event2;
   EXPECT_CALL(buffer, AddEvent)
       .Times(3)
       .WillOnce(SaveArg<0>(&interned_callstack_event1))
-      .WillOnce(SaveArg<0>(&callstack_sameple_event1))
-      .WillOnce(SaveArg<0>(&callstack_sameple_event2));
+      .WillOnce(SaveArg<0>(&callstack_sample_event1))
+      .WillOnce(SaveArg<0>(&callstack_sample_event2));
 
   producer_event_processor->ProcessEvent(1, event1);
   producer_event_processor->ProcessEvent(1, event2);
 
   ASSERT_EQ(interned_callstack_event1.event_case(), ClientCaptureEvent::kInternedCallstack);
-  ASSERT_EQ(callstack_sameple_event1.event_case(), ClientCaptureEvent::kCallstackSample);
-  ASSERT_EQ(callstack_sameple_event2.event_case(), ClientCaptureEvent::kCallstackSample);
+  ASSERT_EQ(callstack_sample_event1.event_case(), ClientCaptureEvent::kCallstackSample);
+  ASSERT_EQ(callstack_sample_event2.event_case(), ClientCaptureEvent::kCallstackSample);
 
   const InternedCallstack& interned_callstack1 = interned_callstack_event1.interned_callstack();
   EXPECT_NE(interned_callstack1.key(), orbit_grpc_protos::kInvalidInternId);
@@ -547,13 +547,13 @@ TEST(ProducerEventProcessor, FullCallstackSamplesSameCallstack) {
   EXPECT_EQ(interned_callstack1.intern().pcs(2), 3);
   EXPECT_EQ(interned_callstack1.intern().pcs(3), 4);
 
-  const CallstackSample& callstack_sample1 = callstack_sameple_event1.callstack_sample();
+  const CallstackSample& callstack_sample1 = callstack_sample_event1.callstack_sample();
   EXPECT_EQ(callstack_sample1.pid(), kPid1);
   EXPECT_EQ(callstack_sample1.tid(), kTid1);
   EXPECT_EQ(callstack_sample1.timestamp_ns(), kTimestampNs1);
   EXPECT_EQ(callstack_sample1.callstack_id(), interned_callstack1.key());
 
-  const CallstackSample& callstack_sample2 = callstack_sameple_event2.callstack_sample();
+  const CallstackSample& callstack_sample2 = callstack_sample_event2.callstack_sample();
   EXPECT_EQ(callstack_sample2.pid(), kPid2);
   EXPECT_EQ(callstack_sample2.tid(), kTid2);
   EXPECT_EQ(callstack_sample2.timestamp_ns(), kTimestampNs2);
