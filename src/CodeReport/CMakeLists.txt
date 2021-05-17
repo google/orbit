@@ -15,7 +15,8 @@ target_link_libraries(CodeReport PUBLIC OrbitBase
                                         CONAN_PKG::abseil
                                         CONAN_PKG::capstone)
 
-target_sources(CodeReport PUBLIC include/CodeReport/CodeReport.h
+target_sources(CodeReport PUBLIC include/CodeReport/AnnotatingLine.h
+                                 include/CodeReport/CodeReport.h
                                  include/CodeReport/Disassembler.h
                                  include/CodeReport/DisassemblyReport.h
                                  include/CodeReport/SourceCodeReport.h)
