@@ -14,8 +14,8 @@
 #include <optional>
 #include <utility>
 
-#include "ElfUtils/LinuxMap.h"
 #include "Function.h"
+#include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "capture.pb.h"
@@ -211,12 +211,12 @@ void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
 void UprobesUnwindingVisitor::visit(MmapPerfEvent* event) {
   CHECK(listener_ != nullptr);
 
-  // Obviously the uprobes map cannot be successfully processed by orbit_elf_utils::CreateModule,
+  // Obviously the uprobes map cannot be successfully processed by orbit_object_utils::CreateModule,
   // but it's important that current_maps_ contain it.
   // For example, UprobesReturnAddressManager::PatchCallchain needs it to check whether a program
   // counter is inside the uprobes map, and UprobesUnwindingVisitor::visit(StackSamplePerfEvent*)
   // needs it to throw away incorrectly-unwound samples.
-  // As below we are only adding maps successfully parsed with orbit_elf_utils::CreateModule,
+  // As below we are only adding maps successfully parsed with orbit_object_utils::CreateModule,
   // we add the uprobes map manually. We are using the same values that that uprobes map would get
   // if unwindstack::BufferMaps was built by passing the full content of /proc/<pid>/maps to its
   // constructor.
@@ -227,8 +227,8 @@ void UprobesUnwindingVisitor::visit(MmapPerfEvent* event) {
   }
 
   ErrorMessageOr<orbit_grpc_protos::ModuleInfo> module_info_or_error =
-      orbit_elf_utils::CreateModule(event->filename(), event->address(),
-                                    event->address() + event->length());
+      orbit_object_utils::CreateModule(event->filename(), event->address(),
+                                       event->address() + event->length());
   if (module_info_or_error.has_error()) {
     ERROR("Unable to create module: %s", module_info_or_error.error().message());
     return;

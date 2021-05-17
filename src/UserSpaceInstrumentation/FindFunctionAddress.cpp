@@ -8,15 +8,15 @@
 
 #include <string>
 
-#include "ElfUtils/ElfFile.h"
-#include "ElfUtils/LinuxMap.h"
+#include "ObjectUtils/ElfFile.h"
+#include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_user_space_instrumentation {
 
 ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view module_soname,
                                              std::string_view function_name) {
-  auto modules = orbit_elf_utils::ReadModules(pid);
+  auto modules = orbit_object_utils::ReadModules(pid);
   if (modules.has_error()) {
     return modules.error();
   }
@@ -24,7 +24,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view module_
   std::string module_file_path;
   uint64_t module_base_address = 0;
   for (const orbit_grpc_protos::ModuleInfo& module : modules.value()) {
-    if (module.name() == module_soname) {
+    if (module.soname() == module_soname) {
       module_file_path = module.file_path();
       module_base_address = module.address_start();
     }
@@ -34,7 +34,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view module_
         absl::StrFormat("There is no module \"%s\" in process %d.", module_soname, pid));
   }
 
-  OUTCOME_TRY(elf_file, orbit_elf_utils::ElfFile::Create(module_file_path));
+  OUTCOME_TRY(elf_file, orbit_object_utils::CreateElfFile(module_file_path));
   auto symbols = elf_file->LoadSymbolsFromDynsym();
   if (symbols.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to load symbols for module \"%s\": %s",

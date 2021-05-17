@@ -53,11 +53,11 @@ target_include_directories(ServiceLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(ServiceLib PUBLIC
         ApiLib
-        ElfUtils
         FramePointerValidator
         GrpcProtos
         LinuxTracing
         MemoryTracing
+        ObjectUtils
         OrbitVersion
         ProducerSideChannel)
 

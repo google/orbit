@@ -18,11 +18,11 @@
 #include <thread>
 #include <utility>
 
-#include "ElfUtils/ElfFile.h"
-#include "ElfUtils/LinuxMap.h"
 #include "LinuxTracing/Tracer.h"
 #include "LinuxTracing/TracerListener.h"
 #include "LinuxTracingIntegrationTestPuppet.h"
+#include "ObjectUtils/ElfFile.h"
+#include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
@@ -393,17 +393,17 @@ std::filesystem::path GetExecutableBinaryPath(pid_t pid) {
 orbit_grpc_protos::ModuleSymbols GetExecutableBinaryModuleSymbols(pid_t pid) {
   const std::filesystem::path& executable_path = GetExecutableBinaryPath(pid);
 
-  auto error_or_elf_file = orbit_elf_utils::ElfFile::Create(executable_path.string());
+  auto error_or_elf_file = orbit_object_utils::CreateElfFile(executable_path.string());
   CHECK(error_or_elf_file.has_value());
-  const std::unique_ptr<orbit_elf_utils::ElfFile>& elf_file = error_or_elf_file.value();
+  const std::unique_ptr<orbit_object_utils::ElfFile>& elf_file = error_or_elf_file.value();
 
-  auto error_or_module = elf_file->LoadSymbolsFromSymtab();
+  auto error_or_module = elf_file->LoadDebugSymbols();
   CHECK(error_or_module.has_value());
   return error_or_module.value();
 }
 
 orbit_grpc_protos::ModuleInfo GetExecutableBinaryModuleInfo(pid_t pid) {
-  auto error_or_module_infos = orbit_elf_utils::ReadModules(pid);
+  auto error_or_module_infos = orbit_object_utils::ReadModules(pid);
   CHECK(error_or_module_infos.has_value());
   const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos = error_or_module_infos.value();
 

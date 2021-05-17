@@ -4,28 +4,28 @@
 
 cmake_minimum_required(VERSION 3.15)
 
-project(ElfUtils)
-add_library(ElfUtils STATIC)
+project(ObjectUtils)
+add_library(ObjectUtils STATIC)
 
-target_compile_options(ElfUtils PRIVATE ${STRICT_COMPILE_FLAGS})
-
-target_sources(
-  ElfUtils
-  PUBLIC include/ElfUtils/ElfFile.h
-         include/ElfUtils/LinuxMap.h)
+target_compile_options(ObjectUtils PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
-  ElfUtils
+  ObjectUtils
+  PUBLIC include/ObjectUtils/ElfFile.h
+         include/ObjectUtils/LinuxMap.h)
+
+target_sources(
+  ObjectUtils
   PRIVATE ElfFile.cpp)
 
 if (NOT WIN32)
-target_sources(ElfUtils PRIVATE LinuxMap.cpp)
+target_sources(ObjectUtils PRIVATE LinuxMap.cpp)
 endif()
 
-target_include_directories(ElfUtils PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
+target_include_directories(ObjectUtils PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
 target_link_libraries(
-  ElfUtils
+  ObjectUtils
   PUBLIC GrpcProtos
          OrbitBase
          CONAN_PKG::abseil
@@ -33,29 +33,29 @@ target_link_libraries(
          CONAN_PKG::llvm_symbolize
          CONAN_PKG::Outcome)
 
-add_executable(ElfUtilsTests)
+add_executable(ObjectUtilsTests)
 
-target_sources(ElfUtilsTests PRIVATE
+target_sources(ObjectUtilsTests PRIVATE
     ElfFileTest.cpp
 )
 
 if (NOT WIN32)
-target_sources(ElfUtilsTests PRIVATE LinuxMapTest.cpp)
+target_sources(ObjectUtilsTests PRIVATE LinuxMapTest.cpp)
 endif()
 
 target_link_libraries(
-  ElfUtilsTests
-  PRIVATE ElfUtils
+  ObjectUtilsTests
+  PRIVATE ObjectUtils
           GTest::Main
           CONAN_PKG::llvm_object
           CONAN_PKG::abseil)
 
-add_custom_command(TARGET ElfUtilsTests POST_BUILD
+add_custom_command(TARGET ObjectUtilsTests POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/testdata
-  $<TARGET_FILE_DIR:ElfUtilsTests>/testdata)
+  $<TARGET_FILE_DIR:ObjectUtilsTests>/testdata)
 
-register_test(ElfUtilsTests)
+register_test(ObjectUtilsTests)
 
 
 add_fuzzer(ElfFileLoadSymbolsFuzzer ElfFileLoadSymbolsFuzzer.cpp)
-target_link_libraries(ElfFileLoadSymbolsFuzzer ElfUtils)
+target_link_libraries(ElfFileLoadSymbolsFuzzer ObjectUtils)

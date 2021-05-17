@@ -15,8 +15,8 @@
 #include <string>
 #include <vector>
 
-#include "ElfUtils/ElfFile.h"
 #include "FramePointerValidator/FramePointerValidator.h"
+#include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -30,10 +30,10 @@ TEST(FramePointerValidator, GetFpoFunctions) {
   const std::filesystem::path executable_dir = orbit_base::GetExecutableDir();
   const std::filesystem::path test_elf_file = executable_dir / "testdata" / "hello_world_elf";
 
-  auto elf_file = orbit_elf_utils::ElfFile::Create(test_elf_file);
+  auto elf_file = orbit_object_utils::CreateElfFile(test_elf_file);
   ASSERT_FALSE(elf_file.has_error()) << elf_file.error().message();
 
-  const auto symbols_result = elf_file.value()->LoadSymbolsFromSymtab();
+  const auto symbols_result = elf_file.value()->LoadDebugSymbols();
   ASSERT_FALSE(symbols_result.has_error()) << symbols_result.error().message();
   uint64_t load_bias = symbols_result.value().load_bias();
   const std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),

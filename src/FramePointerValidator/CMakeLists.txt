@@ -39,7 +39,7 @@ target_sources(FramePointerValidatorTests PRIVATE
 
 target_link_libraries(FramePointerValidatorTests PRIVATE
         FramePointerValidator
-        ElfUtils
+        ObjectUtils
         OrbitBase
         GTest::Main
         CONAN_PKG::abseil

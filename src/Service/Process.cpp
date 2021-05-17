@@ -14,7 +14,7 @@
 #include <string>
 #include <utility>
 
-#include "ElfUtils/ElfFile.h"
+#include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
@@ -95,7 +95,7 @@ ErrorMessageOr<Process> Process::FromPid(pid_t pid) {
   if (!file_path_result.has_error()) {
     process.set_full_path(file_path_result.value());
 
-    const auto& elf_file = orbit_elf_utils::ElfFile::Create(file_path_result.value());
+    const auto& elf_file = orbit_object_utils::CreateElfFile(file_path_result.value());
     if (!elf_file.has_error()) {
       process.set_is_64_bit(elf_file.value()->Is64Bit());
       process.set_build_id(elf_file.value()->GetBuildId());

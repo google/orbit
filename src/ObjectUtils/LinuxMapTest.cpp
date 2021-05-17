@@ -15,14 +15,14 @@
 #include <string_view>
 #include <vector>
 
-#include "ElfUtils/LinuxMap.h"
+#include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Result.h"
 #include "module.pb.h"
 
 TEST(LinuxMap, CreateModuleHelloWorld) {
-  using orbit_elf_utils::CreateModule;
   using orbit_grpc_protos::ModuleInfo;
+  using orbit_object_utils::CreateModule;
 
   const std::filesystem::path hello_world_path =
       orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf";
@@ -42,8 +42,8 @@ TEST(LinuxMap, CreateModuleHelloWorld) {
 }
 
 TEST(LinuxMap, CreateModuleOnDev) {
-  using orbit_elf_utils::CreateModule;
   using orbit_grpc_protos::ModuleInfo;
+  using orbit_object_utils::CreateModule;
 
   const std::filesystem::path dev_zero_path = "/dev/zero";
 
@@ -56,8 +56,8 @@ TEST(LinuxMap, CreateModuleOnDev) {
 }
 
 TEST(LinuxMap, CreateModuleNotElf) {
-  using orbit_elf_utils::CreateModule;
   using orbit_grpc_protos::ModuleInfo;
+  using orbit_object_utils::CreateModule;
 
   const std::filesystem::path text_file =
       orbit_base::GetExecutableDir() / "testdata" / "textfile.txt";
@@ -71,8 +71,8 @@ TEST(LinuxMap, CreateModuleNotElf) {
 }
 
 TEST(LinuxMan, CreateModuleWithSoname) {
-  using orbit_elf_utils::CreateModule;
   using orbit_grpc_protos::ModuleInfo;
+  using orbit_object_utils::CreateModule;
 
   const std::filesystem::path hello_world_path =
       orbit_base::GetExecutableDir() / "testdata" / "libtest-1.0.so";
@@ -92,8 +92,8 @@ TEST(LinuxMan, CreateModuleWithSoname) {
 }
 
 TEST(LinuxMap, CreateModuleFileDoesNotExist) {
-  using orbit_elf_utils::CreateModule;
   using orbit_grpc_protos::ModuleInfo;
+  using orbit_object_utils::CreateModule;
 
   const std::filesystem::path file_path = "/not/a/valid/file/path";
 
@@ -105,13 +105,13 @@ TEST(LinuxMap, CreateModuleFileDoesNotExist) {
 }
 
 TEST(LinuxMap, ReadModules) {
-  const auto result = orbit_elf_utils::ReadModules(getpid());
+  const auto result = orbit_object_utils::ReadModules(getpid());
   EXPECT_FALSE(result.has_error()) << result.error().message();
 }
 
 TEST(LinuxMap, ParseMaps) {
-  using orbit_elf_utils::ParseMaps;
   using orbit_grpc_protos::ModuleInfo;
+  using orbit_object_utils::ParseMaps;
 
   {
     // Empty data

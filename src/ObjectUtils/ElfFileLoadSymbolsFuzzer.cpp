@@ -6,9 +6,9 @@
 
 #include <cstdlib>
 
-#include "ElfUtils/ElfFile.h"
+#include "ObjectUtils/ElfFile.h"
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t* buf, size_t len) {
-  (void)orbit_elf_utils::ElfFile::CreateFromBuffer("INMEMORY", buf, len);
+  (void)orbit_object_utils::CreateElfFileFromBuffer("INMEMORY", buf, len);
   return 0;
 }

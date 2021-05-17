@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ElfUtils/LinuxMap.h"
+#include "ObjectUtils/LinuxMap.h"
 
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
@@ -18,14 +18,15 @@
 #include <type_traits>
 #include <utility>
 
-#include "ElfUtils/ElfFile.h"
+#include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 
-namespace orbit_elf_utils {
+namespace orbit_object_utils {
 
-using orbit_elf_utils::ElfFile;
 using orbit_grpc_protos::ModuleInfo;
+using orbit_object_utils::CreateElfFile;
+using orbit_object_utils::ElfFile;
 
 ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path,
                                         uint64_t start_address, uint64_t end_address) {
@@ -45,7 +46,7 @@ ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path
         absl::StrFormat("Unable to get size of \"%s\": %s", module_path, error.message()));
   }
 
-  ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file_or_error = ElfFile::Create(module_path);
+  ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file_or_error = CreateElfFile(module_path);
   if (elf_file_or_error.has_error()) {
     return ErrorMessage(
         absl::StrFormat("Unable to load module: %s", elf_file_or_error.error().message()));
@@ -58,9 +59,8 @@ ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path
   }
 
   ModuleInfo module_info;
-  std::string soname = elf_file_or_error.value()->GetSoname();
-  module_info.set_name(soname.empty() ? std::filesystem::path{module_path}.filename().string()
-                                      : soname);
+  module_info.set_name(elf_file_or_error.value()->GetName());
+  module_info.set_soname(elf_file_or_error.value()->GetSoname());
   module_info.set_file_path(module_path);
   module_info.set_file_size(file_size);
   module_info.set_address_start(start_address);
@@ -131,4 +131,4 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
   return result;
 }
 
-}  // namespace orbit_elf_utils
+}  // namespace orbit_object_utils

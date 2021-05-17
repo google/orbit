@@ -11,7 +11,7 @@ target_compile_options(CodeReport PRIVATE ${STRICT_COMPILE_FLAGS})
 target_include_directories(CodeReport PUBLIC include/)
 target_link_libraries(CodeReport PUBLIC OrbitBase
                                         ClientData
-                                        ElfUtils
+                                        ObjectUtils
                                         CONAN_PKG::abseil
                                         CONAN_PKG::capstone)
 

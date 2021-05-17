@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "AllocateInTracee.h"
-#include "ElfUtils/LinuxMap.h"
+#include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "RegisterState.h"
@@ -229,7 +229,7 @@ TEST(TrampolineTest, AllocateMemoryForTrampolines) {
   // Find the address range of the code for `DoubleAndIncrement`. For the purpose of this test we
   // just take the entire address space taken up by `UserSpaceInstrumentationTests`.
   AddressRange code_range;
-  auto modules = orbit_elf_utils::ReadModules(pid);
+  auto modules = orbit_object_utils::ReadModules(pid);
   CHECK(!modules.has_error());
   for (const auto& m : modules.value()) {
     if (m.name() == "UserSpaceInstrumentationTests") {

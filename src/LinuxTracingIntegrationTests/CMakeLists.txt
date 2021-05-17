@@ -29,9 +29,9 @@ target_sources(LinuxTracingIntegrationTests PRIVATE
         LinuxTracingIntegrationTestPuppet.h)
 
 target_link_libraries(LinuxTracingIntegrationTests PRIVATE
-        ElfUtils
         GrpcProtos
         LinuxTracing
+        ObjectUtils
         OffscreenRenderingVulkanTutorialLib
         OrbitBase
         GTest::GTest

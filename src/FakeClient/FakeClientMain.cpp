@@ -20,9 +20,9 @@
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
 #include "ClientData/ModuleManager.h"
-#include "ElfUtils/ElfFile.h"
 #include "FakeCaptureEventProcessor.h"
 #include "GrpcProtos/Constants.h"
+#include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadPool.h"
 #include "capture_data.pb.h"
@@ -70,10 +70,10 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddUprobe(
     orbit_client_data::ModuleManager* module_manager,
     absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>* selected_functions,
     const std::string& file_path, uint64_t file_offset) {
-  ErrorMessageOr<std::unique_ptr<orbit_elf_utils::ElfFile>> error_or_elf_file =
-      orbit_elf_utils::ElfFile::Create(std::filesystem::path{file_path});
+  ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
+      orbit_object_utils::CreateElfFile(std::filesystem::path{file_path});
   FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
-  std::unique_ptr<orbit_elf_utils::ElfFile>& elf_file = error_or_elf_file.value();
+  std::unique_ptr<orbit_object_utils::ElfFile>& elf_file = error_or_elf_file.value();
   std::string build_id = elf_file->GetBuildId();
   ErrorMessageOr<uint64_t> error_or_load_bias = elf_file->GetLoadBias();
   FAIL_IF(error_or_load_bias.has_error(), "%s", error_or_load_bias.error().message());

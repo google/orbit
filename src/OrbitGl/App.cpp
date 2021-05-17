@@ -46,7 +46,6 @@
 #include "CodeReport/DisassemblyReport.h"
 #include "CodeReport/SourceCodeReport.h"
 #include "CoreUtils.h"
-#include "ElfUtils/ElfFile.h"
 #include "FrameTrackOnlineProcessor.h"
 #include "FunctionsDataView.h"
 #include "GlCanvas.h"
@@ -57,6 +56,7 @@
 #include "MetricsUploader/MetricsUploader.h"
 #include "MetricsUploader/ScopedMetric.h"
 #include "ModulesDataView.h"
+#include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/FutureHelpers.h"
@@ -689,7 +689,7 @@ void OrbitApp::ShowSourceCode(const orbit_client_protos::FunctionInfo& function)
           main_thread_executor_,
           [this, module,
            function](const std::filesystem::path& local_file_path) -> ErrorMessageOr<void> {
-            const auto elf_file = orbit_elf_utils::ElfFile::Create(local_file_path);
+            const auto elf_file = orbit_object_utils::CreateElfFile(local_file_path);
             const auto decl_line_info_or_error =
                 elf_file.value()->GetDeclarationLocationOfFunction(function.address());
 
@@ -1461,7 +1461,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
       main_thread_executor_,
       [this, module_path](
           const std::filesystem::path& local_file_path) -> ErrorMessageOr<std::filesystem::path> {
-        auto elf_file = orbit_elf_utils::ElfFile::Create(local_file_path);
+        auto elf_file = orbit_object_utils::CreateElfFile(local_file_path);
 
         if (elf_file.has_error()) return elf_file.error();
 
@@ -1489,7 +1489,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
               module_path, debuglink.path.string())};
         }
 
-        elf_file = orbit_elf_utils::ElfFile::Create(local_debuginfo_path.value());
+        elf_file = orbit_object_utils::CreateElfFile(local_debuginfo_path.value());
         if (elf_file.has_error()) return elf_file.error();
         return local_debuginfo_path;
       });
