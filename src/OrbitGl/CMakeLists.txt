@@ -27,7 +27,6 @@ target_sources(
          CaptureStats.h
          CaptureViewElement.h
          CaptureWindow.h
-         CodeReport.h
          CoreMath.h
          DataView.h
          DataViewTypes.h
@@ -151,6 +150,7 @@ target_link_libraries(
          ClientData
          ClientModel
          ClientServices
+         CodeReport
          GrpcProtos
          MetricsUploader
          OrbitAccessibility

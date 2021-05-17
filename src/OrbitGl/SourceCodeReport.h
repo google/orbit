@@ -14,7 +14,7 @@
 #include <utility>
 
 #include "ClientData/PostProcessedSamplingData.h"
-#include "CodeReport.h"
+#include "CodeReport/CodeReport.h"
 #include "ElfUtils/ElfFile.h"
 #include "capture_data.pb.h"
 
@@ -22,7 +22,7 @@ namespace orbit_gl {
 
 // SourceCodeReport implemented the CodeReport interface and provides sample statistics for a source
 // code file. The current implementation can only handle sample statistics for a single function.
-class SourceCodeReport : public CodeReport {
+class SourceCodeReport : public orbit_code_report::CodeReport {
  public:
   explicit SourceCodeReport(std::string_view source_file,
                             const orbit_client_protos::FunctionInfo& function,

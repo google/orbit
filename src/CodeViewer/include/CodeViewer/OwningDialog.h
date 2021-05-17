@@ -10,7 +10,7 @@
 #include <optional>
 #include <variant>
 
-#include "CodeReport.h"
+#include "CodeReport/CodeReport.h"
 #include "CodeViewer/Dialog.h"
 #include "CodeViewer/FontSizeInEm.h"
 
@@ -34,11 +34,12 @@ class OwningDialog : public Dialog {
   using Dialog::Dialog;
   ~OwningDialog() noexcept override;
 
-  void SetOwningHeatmap(FontSizeInEm heatmap_bar_width, std::unique_ptr<CodeReport> code_report);
+  void SetOwningHeatmap(FontSizeInEm heatmap_bar_width,
+                        std::unique_ptr<orbit_code_report::CodeReport> code_report);
   void ClearOwningHeatmap();
 
  private:
-  std::unique_ptr<CodeReport> code_report_;
+  std::unique_ptr<orbit_code_report::CodeReport> code_report_;
 };
 
 // This function opens the given dialog and ensures it is deleted when closed.

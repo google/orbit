@@ -12,10 +12,10 @@
 #include <utility>
 
 #include "ClientData/PostProcessedSamplingData.h"
-#include "CodeReport.h"
+#include "CodeReport/CodeReport.h"
 #include "Disassembler.h"
 
-class DisassemblyReport : public CodeReport {
+class DisassemblyReport : public orbit_code_report::CodeReport {
  public:
   DisassemblyReport(Disassembler disasm, uint64_t function_address,
                     orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,

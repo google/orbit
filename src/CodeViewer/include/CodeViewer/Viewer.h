@@ -13,7 +13,7 @@
 #include <QWheelEvent>
 #include <functional>
 
-#include "CodeReport.h"
+#include "CodeReport/CodeReport.h"
 #include "CodeViewer/FontSizeInEm.h"
 #include "CodeViewer/PlaceHolderWidget.h"
 
@@ -72,7 +72,7 @@ class Viewer : public QPlainTextEdit {
 
   void SetHeatmapBarWidth(FontSizeInEm width);
 
-  void SetHeatmapSource(const CodeReport* code_report);
+  void SetHeatmapSource(const orbit_code_report::CodeReport* code_report);
   void ClearHeatmapSource();
 
   void SetHighlightCurrentLine(bool is_enabled);
@@ -104,7 +104,7 @@ class Viewer : public QPlainTextEdit {
   FontSizeInEm right_margin_ = FontSizeInEm{0.3f};
 
   FontSizeInEm heatmap_bar_width_ = FontSizeInEm{0.0f};
-  const CodeReport* code_report_ = nullptr;
+  const orbit_code_report::CodeReport* code_report_ = nullptr;
 
   bool is_current_line_highlighted_ = false;
 

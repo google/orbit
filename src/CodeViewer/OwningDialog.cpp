@@ -15,7 +15,7 @@ OwningDialog::~OwningDialog() noexcept {
 }
 
 void OwningDialog::SetOwningHeatmap(FontSizeInEm heatmap_bar_width,
-                                    std::unique_ptr<CodeReport> code_report) {
+                                    std::unique_ptr<orbit_code_report::CodeReport> code_report) {
   ClearHeatmap();
   code_report_ = std::move(code_report);
   SetHeatmap(heatmap_bar_width, code_report_.get());

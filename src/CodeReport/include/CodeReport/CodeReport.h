@@ -1,15 +1,16 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_CODE_REPORT_H_
-#define ORBIT_GL_CODE_REPORT_H_
+#ifndef CODE_REPORT_CODE_REPORT_H_
+#define CODE_REPORT_CODE_REPORT_H_
 
 #include <stddef.h>
 #include <stdint.h>
 
 #include <optional>
 
+namespace orbit_code_report {
 class CodeReport {
  public:
   virtual ~CodeReport() = default;
@@ -19,5 +20,6 @@ class CodeReport {
   // A returned empty optional means there is no data available for this line.
   [[nodiscard]] virtual std::optional<uint32_t> GetNumSamplesAtLine(size_t line) const = 0;
 };
+}  // namespace orbit_code_report
 
-#endif  // ORBIT_GL_CODE_REPORT_H_
+#endif  // CODE_REPORT_CODE_REPORT_H_
