@@ -34,7 +34,6 @@
 #include "ClientServices/ProcessManager.h"
 #include "DataView.h"
 #include "DataViewTypes.h"
-#include "DisassemblyReport.h"
 #include "FilterPanelWidgetAction.h"
 #include "MainThreadExecutor.h"
 #include "MetricsUploader/MetricsUploader.h"
@@ -102,7 +101,8 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void ShowSourceCode(
       const std::filesystem::path& file_path, size_t line_number,
       std::optional<std::unique_ptr<orbit_code_report::CodeReport>> maybe_code_report) override;
-  void ShowDisassembly(const std::string& assembly, DisassemblyReport report) override;
+  void ShowDisassembly(const std::string& assembly,
+                       orbit_code_report::DisassemblyReport report) override;
 
  protected:
   void closeEvent(QCloseEvent* event) override;

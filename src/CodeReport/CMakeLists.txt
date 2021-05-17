@@ -17,6 +17,9 @@ target_link_libraries(CodeReport PUBLIC OrbitBase
 
 target_sources(CodeReport PUBLIC include/CodeReport/CodeReport.h
                                  include/CodeReport/Disassembler.h
+                                 include/CodeReport/DisassemblyReport.h
                                  include/CodeReport/SourceCodeReport.h)
 
-target_sources(CodeReport PRIVATE Disassembler.cpp SourceCodeReport.cpp)
+target_sources(CodeReport PRIVATE Disassembler.cpp
+                                  DisassemblyReport.cpp
+                                  SourceCodeReport.cpp)

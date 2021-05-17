@@ -42,11 +42,11 @@
 #include "ClientServices/CrashManager.h"
 #include "ClientServices/ProcessManager.h"
 #include "ClientServices/TracepointServiceClient.h"
+#include "CodeReport/DisassemblyReport.h"
 #include "DataManager.h"
 #include "DataView.h"
 #include "DataViewFactory.h"
 #include "DataViewTypes.h"
-#include "DisassemblyReport.h"
 #include "FramePointerValidatorClient.h"
 #include "FrameTrackOnlineProcessor.h"
 #include "FunctionsDataView.h"
@@ -295,7 +295,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
 
   void SetStatusListener(StatusListener* listener) { status_listener_ = listener; }
 
-  void SendDisassemblyToUi(std::string disassembly, DisassemblyReport report);
+  void SendDisassemblyToUi(std::string disassembly, orbit_code_report::DisassemblyReport report);
   void SendTooltipToUi(const std::string& tooltip);
   void SendInfoToUi(const std::string& title, const std::string& text);
   void SendWarningToUi(const std::string& title, const std::string& text);

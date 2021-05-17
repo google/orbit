@@ -30,7 +30,6 @@ target_sources(
          CoreMath.h
          DataView.h
          DataViewTypes.h
-         DisassemblyReport.h
          FramePointerValidatorClient.h
          FrameTrack.h
          FrameTrackOnlineProcessor.h
@@ -97,7 +96,6 @@ target_sources(
           CaptureWindow.cpp
           DataManager.cpp
           DataView.cpp
-          DisassemblyReport.cpp
           FramePointerValidatorClient.cpp
           FrameTrack.cpp
           FrameTrackOnlineProcessor.cpp

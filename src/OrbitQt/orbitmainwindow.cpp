@@ -71,12 +71,12 @@
 #include "ClientModel/CaptureData.h"
 #include "ClientModel/CaptureSerializer.h"
 #include "ClientServices/ProcessManager.h"
+#include "CodeReport/DisassemblyReport.h"
 #include "CodeViewer/Dialog.h"
 #include "CodeViewer/FontSizeInEm.h"
 #include "CodeViewer/OwningDialog.h"
 #include "Connections.h"
 #include "DataViewFactory.h"
-#include "DisassemblyReport.h"
 #include "GlCanvas.h"
 #include "LiveFunctionsController.h"
 #include "LiveFunctionsDataView.h"
@@ -1474,7 +1474,8 @@ void OrbitMainWindow::ShowSourceCode(
   orbit_code_viewer::OpenAndDeleteOnClose(std::move(code_viewer_dialog));
 }
 
-void OrbitMainWindow::ShowDisassembly(const std::string& assembly, DisassemblyReport report) {
+void OrbitMainWindow::ShowDisassembly(const std::string& assembly,
+                                      orbit_code_report::DisassemblyReport report) {
   auto dialog = std::make_unique<orbit_code_viewer::OwningDialog>();
   dialog->setWindowTitle("Orbit Disassembly");
   dialog->SetLineNumberTypes(orbit_code_viewer::Dialog::LineNumberTypes::kOnlyMainContent);
@@ -1485,8 +1486,9 @@ void OrbitMainWindow::ShowDisassembly(const std::string& assembly, DisassemblyRe
 
   if (report.GetNumSamples() > 0) {
     constexpr orbit_code_viewer::FontSizeInEm kHeatmapAreaWidth{1.3f};
-    dialog->SetOwningHeatmap(kHeatmapAreaWidth,
-                             std::make_unique<DisassemblyReport>(std::move(report)));
+    dialog->SetOwningHeatmap(
+        kHeatmapAreaWidth,
+        std::make_unique<orbit_code_report::DisassemblyReport>(std::move(report)));
     dialog->SetEnableSampleCounters(true);
   }
 

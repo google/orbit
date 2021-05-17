@@ -43,9 +43,9 @@
 #include "ClientModel/CaptureSerializer.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
 #include "CodeReport/Disassembler.h"
+#include "CodeReport/DisassemblyReport.h"
 #include "CodeReport/SourceCodeReport.h"
 #include "CoreUtils.h"
-#include "DisassemblyReport.h"
 #include "ElfUtils/ElfFile.h"
 #include "FrameTrackOnlineProcessor.h"
 #include "FunctionsDataView.h"
@@ -663,7 +663,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
                                    orbit_client_data::function_utils::GetDisplayName(function)));
     disasm.Disassemble(memory.data(), memory.size(), absolute_address, is_64_bit);
     if (!HasCaptureData() || !GetCaptureData().has_post_processed_sampling_data()) {
-      DisassemblyReport empty_report(disasm);
+      orbit_code_report::DisassemblyReport empty_report(disasm);
       SendDisassemblyToUi(disasm.GetResult(), std::move(empty_report));
       return;
     }
@@ -671,8 +671,9 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
     const PostProcessedSamplingData& post_processed_sampling_data =
         capture_data.post_processed_sampling_data();
 
-    DisassemblyReport report(disasm, absolute_address, post_processed_sampling_data,
-                             capture_data.GetCallstackData()->GetCallstackEventsCount());
+    orbit_code_report::DisassemblyReport report(
+        disasm, absolute_address, post_processed_sampling_data,
+        capture_data.GetCallstackData()->GetCallstackEventsCount());
     SendDisassemblyToUi(disasm.GetResult(), std::move(report));
   });
 }
@@ -1275,7 +1276,8 @@ bool OrbitApp::IsCaptureConnected(const CaptureData& capture) const {
 
 bool OrbitApp::IsDevMode() const { return absl::GetFlag(FLAGS_devmode); }
 
-void OrbitApp::SendDisassemblyToUi(std::string disassembly, DisassemblyReport report) {
+void OrbitApp::SendDisassemblyToUi(std::string disassembly,
+                                   orbit_code_report::DisassemblyReport report) {
   main_thread_executor_->Schedule(
       [this, disassembly = std::move(disassembly), report = std::move(report)]() mutable {
         main_window_->ShowDisassembly(disassembly, std::move(report));
