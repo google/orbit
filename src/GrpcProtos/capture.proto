@@ -132,6 +132,17 @@ message ApiEvent {
 
 message Callstack {
   repeated uint64 pcs = 1;
+
+  // This enum describes whether the corresponding stack sample was unwound
+  // successfully (kComplete), or the (likely) reason for failure.
+  enum CallstackType {
+    kComplete = 0;
+    kDwarfUnwindingError = 1;
+    kFramePointerUnwindingError = 2;
+    kInUprobes = 3;
+    kUprobesPatchingFailed = 4;
+  }
+  CallstackType type = 2;
 }
 
 message InternedCallstack {

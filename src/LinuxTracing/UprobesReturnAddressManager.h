@@ -88,10 +88,10 @@ class UprobesReturnAddressManager {
     }
 
     if (!tid_uprobes_stacks_.contains(tid)) {
-      // In there are no uprobes, but the callchain needs to be patched, we need
+      // If there are no uprobes, but the callchain needs to be patched, we need
       // to discard the sample.
       // There are two situations where this may happen:
-      //  1. At the beginning of a capture, where we missed the first uprobes
+      //  1. At the beginning of a capture, where we missed the first uprobes;
       //  2. When some events are lost or processed out of order.
       if (!frames_to_patch.empty()) {
         ERROR("Discarding sample in a uprobe as uprobe records are missing.");
@@ -145,7 +145,7 @@ class UprobesReturnAddressManager {
     bool skip_last_uprobes = num_unique_uprobes == frames_to_patch.size() + 1;
 
     // On tail-call optimization, when instrumenting the caller and the callee,
-    // the correct call-stack will only contain the callee.
+    // the correct callstack will only contain the callee.
     // However, there are two uprobe records (with the same stack pointer),
     // where the first one (the caller's) contains the correct return address.
     prev_uprobe_stack_pointer = -1;

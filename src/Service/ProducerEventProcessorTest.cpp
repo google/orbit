@@ -135,6 +135,7 @@ TEST(ProducerEventProcessor, OneInternedCallstack) {
   callstack->add_pcs(1);
   callstack->add_pcs(2);
   callstack->add_pcs(3);
+  callstack->set_type(Callstack::kComplete);
 
   ClientCaptureEvent client_capture_event;
   EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
@@ -153,6 +154,61 @@ TEST(ProducerEventProcessor, OneInternedCallstack) {
   EXPECT_EQ(actual_interned_callstack.intern().pcs()[2], 3);
 }
 
+TEST(ProducerEventProcessor, TwoInternedCallstacksSameFramesDifferentTypes) {
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+
+  ProducerCaptureEvent event1;
+  InternedCallstack* interned_callstack1 = event1.mutable_interned_callstack();
+  interned_callstack1->set_key(kKey1);
+  Callstack* callstack1 = interned_callstack1->mutable_intern();
+  callstack1->add_pcs(1);
+  callstack1->add_pcs(2);
+  callstack1->add_pcs(3);
+  callstack1->set_type(Callstack::kComplete);
+
+  ProducerCaptureEvent event2;
+  InternedCallstack* interned_callstack2 = event2.mutable_interned_callstack();
+  interned_callstack2->set_key(kKey2);
+  Callstack* callstack2 = interned_callstack2->mutable_intern();
+  callstack2->add_pcs(1);
+  callstack2->add_pcs(2);
+  callstack2->add_pcs(3);
+  callstack2->set_type(Callstack::kDwarfUnwindingError);
+
+  ClientCaptureEvent client_capture_event1;
+  ClientCaptureEvent client_capture_event2;
+  EXPECT_CALL(buffer, AddEvent)
+      .Times(2)
+      .WillOnce(SaveArg<0>(&client_capture_event1))
+      .WillOnce(SaveArg<0>(&client_capture_event2));
+
+  producer_event_processor->ProcessEvent(kDefaultProducerId, event1);
+  producer_event_processor->ProcessEvent(kDefaultProducerId, event2);
+
+  ASSERT_EQ(client_capture_event1.event_case(), ClientCaptureEvent::kInternedCallstack);
+  ASSERT_EQ(client_capture_event2.event_case(), ClientCaptureEvent::kInternedCallstack);
+
+  const InternedCallstack& actual_interned_callstack1 = client_capture_event1.interned_callstack();
+  const InternedCallstack& actual_interned_callstack2 = client_capture_event2.interned_callstack();
+
+  EXPECT_NE(actual_interned_callstack1.key(), actual_interned_callstack2.key());
+
+  EXPECT_NE(actual_interned_callstack1.key(), orbit_grpc_protos::kInvalidInternId);
+  ASSERT_EQ(actual_interned_callstack1.intern().pcs_size(), 3);
+  EXPECT_EQ(actual_interned_callstack1.intern().pcs()[0], 1);
+  EXPECT_EQ(actual_interned_callstack1.intern().pcs()[1], 2);
+  EXPECT_EQ(actual_interned_callstack1.intern().pcs()[2], 3);
+  EXPECT_EQ(actual_interned_callstack1.intern().type(), Callstack::kComplete);
+
+  EXPECT_NE(actual_interned_callstack2.key(), orbit_grpc_protos::kInvalidInternId);
+  ASSERT_EQ(actual_interned_callstack2.intern().pcs_size(), 3);
+  EXPECT_EQ(actual_interned_callstack2.intern().pcs()[0], 1);
+  EXPECT_EQ(actual_interned_callstack2.intern().pcs()[1], 2);
+  EXPECT_EQ(actual_interned_callstack2.intern().pcs()[2], 3);
+  EXPECT_EQ(actual_interned_callstack2.intern().type(), Callstack::kDwarfUnwindingError);
+}
+
 TEST(ProducerEventProcessor, TwoInternedCallstacksDifferentProducersSameKey) {
   MockCaptureEventBuffer buffer;
   auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
@@ -164,6 +220,7 @@ TEST(ProducerEventProcessor, TwoInternedCallstacksDifferentProducersSameKey) {
   callstack1->add_pcs(1);
   callstack1->add_pcs(2);
   callstack1->add_pcs(3);
+  callstack1->set_type(Callstack::kComplete);
 
   ProducerCaptureEvent event2;
   InternedCallstack* interned_callstack2 = event2.mutable_interned_callstack();
@@ -172,6 +229,7 @@ TEST(ProducerEventProcessor, TwoInternedCallstacksDifferentProducersSameKey) {
   callstack2->add_pcs(1);
   callstack2->add_pcs(2);
   callstack2->add_pcs(4);
+  callstack2->set_type(Callstack::kComplete);
 
   ClientCaptureEvent client_capture_event1;
   EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event1));
@@ -194,12 +252,14 @@ TEST(ProducerEventProcessor, TwoInternedCallstacksDifferentProducersSameKey) {
   EXPECT_EQ(actual_interned_callstack1.intern().pcs()[0], 1);
   EXPECT_EQ(actual_interned_callstack1.intern().pcs()[1], 2);
   EXPECT_EQ(actual_interned_callstack1.intern().pcs()[2], 3);
+  EXPECT_EQ(actual_interned_callstack1.intern().type(), Callstack::kComplete);
 
   EXPECT_NE(actual_interned_callstack2.key(), orbit_grpc_protos::kInvalidInternId);
   ASSERT_EQ(actual_interned_callstack2.intern().pcs_size(), 3);
   EXPECT_EQ(actual_interned_callstack2.intern().pcs()[0], 1);
   EXPECT_EQ(actual_interned_callstack2.intern().pcs()[1], 2);
   EXPECT_EQ(actual_interned_callstack2.intern().pcs()[2], 4);
+  EXPECT_EQ(actual_interned_callstack2.intern().type(), Callstack::kComplete);
 }
 
 TEST(ProducerEventProcessor, TwoInternedCallstacksDifferentProducersSameIntern) {
@@ -216,6 +276,7 @@ TEST(ProducerEventProcessor, TwoInternedCallstacksDifferentProducersSameIntern) 
   callstack1->add_pcs(1);
   callstack1->add_pcs(2);
   callstack1->add_pcs(3);
+  callstack1->set_type(Callstack::kComplete);
 
   ProducerCaptureEvent event2;
   InternedCallstack* interned_callstack2 = event2.mutable_interned_callstack();
@@ -236,6 +297,7 @@ TEST(ProducerEventProcessor, TwoInternedCallstacksDifferentProducersSameIntern) 
   EXPECT_EQ(actual_interned_callstack.intern().pcs()[0], 1);
   EXPECT_EQ(actual_interned_callstack.intern().pcs()[1], 2);
   EXPECT_EQ(actual_interned_callstack.intern().pcs()[2], 3);
+  EXPECT_EQ(actual_interned_callstack.intern().type(), Callstack::kComplete);
 
   // Now check that the both producer's callstack are still tracked by
   // ProducerEventProcessor
@@ -437,6 +499,7 @@ TEST(ProducerEventProcessor, FullCallstackSampleDifferentCallstacks) {
   callstack1->add_pcs(2);
   callstack1->add_pcs(3);
   callstack1->add_pcs(4);
+  callstack1->set_type(Callstack::kComplete);
 
   ProducerCaptureEvent event2;
   FullCallstackSample* full_callstack_sample2 = event2.mutable_full_callstack_sample();
@@ -448,6 +511,7 @@ TEST(ProducerEventProcessor, FullCallstackSampleDifferentCallstacks) {
   callstack2->add_pcs(6);
   callstack2->add_pcs(7);
   callstack2->add_pcs(8);
+  callstack2->set_type(Callstack::kComplete);
 
   ClientCaptureEvent interned_callstack_event1;
   ClientCaptureEvent callstack_sample_event1;
@@ -475,6 +539,7 @@ TEST(ProducerEventProcessor, FullCallstackSampleDifferentCallstacks) {
   EXPECT_EQ(interned_callstack1.intern().pcs(1), 2);
   EXPECT_EQ(interned_callstack1.intern().pcs(2), 3);
   EXPECT_EQ(interned_callstack1.intern().pcs(3), 4);
+  EXPECT_EQ(interned_callstack1.intern().type(), Callstack::kComplete);
 
   const InternedCallstack& interned_callstack2 = interned_callstack_event2.interned_callstack();
   EXPECT_NE(interned_callstack2.key(), orbit_grpc_protos::kInvalidInternId);
@@ -483,6 +548,85 @@ TEST(ProducerEventProcessor, FullCallstackSampleDifferentCallstacks) {
   EXPECT_EQ(interned_callstack2.intern().pcs(1), 6);
   EXPECT_EQ(interned_callstack2.intern().pcs(2), 7);
   EXPECT_EQ(interned_callstack2.intern().pcs(3), 8);
+  EXPECT_EQ(interned_callstack2.intern().type(), Callstack::kComplete);
+
+  const CallstackSample& callstack_sample1 = callstack_sample_event1.callstack_sample();
+  EXPECT_EQ(callstack_sample1.pid(), kPid1);
+  EXPECT_EQ(callstack_sample1.tid(), kTid1);
+  EXPECT_EQ(callstack_sample1.timestamp_ns(), kTimestampNs1);
+  EXPECT_EQ(callstack_sample1.callstack_id(), interned_callstack1.key());
+
+  const CallstackSample& callstack_sample2 = callstack_sample_event2.callstack_sample();
+  EXPECT_EQ(callstack_sample2.pid(), kPid2);
+  EXPECT_EQ(callstack_sample2.tid(), kTid2);
+  EXPECT_EQ(callstack_sample2.timestamp_ns(), kTimestampNs2);
+  EXPECT_EQ(callstack_sample2.callstack_id(), interned_callstack2.key());
+}
+
+TEST(ProducerEventProcessor, FullCallstackSampleSameFramesDifferentTypes) {
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+
+  ProducerCaptureEvent event1;
+  FullCallstackSample* full_callstack_sample1 = event1.mutable_full_callstack_sample();
+  full_callstack_sample1->set_pid(kPid1);
+  full_callstack_sample1->set_tid(kTid1);
+  full_callstack_sample1->set_timestamp_ns(kTimestampNs1);
+  Callstack* callstack1 = full_callstack_sample1->mutable_callstack();
+  callstack1->add_pcs(1);
+  callstack1->add_pcs(2);
+  callstack1->add_pcs(3);
+  callstack1->add_pcs(4);
+  callstack1->set_type(Callstack::kComplete);
+
+  ProducerCaptureEvent event2;
+  FullCallstackSample* full_callstack_sample2 = event2.mutable_full_callstack_sample();
+  full_callstack_sample2->set_pid(kPid2);
+  full_callstack_sample2->set_tid(kTid2);
+  full_callstack_sample2->set_timestamp_ns(kTimestampNs2);
+  Callstack* callstack2 = full_callstack_sample2->mutable_callstack();
+  callstack2->add_pcs(1);
+  callstack2->add_pcs(2);
+  callstack2->add_pcs(3);
+  callstack2->add_pcs(4);
+  callstack2->set_type(Callstack::kDwarfUnwindingError);
+
+  ClientCaptureEvent interned_callstack_event1;
+  ClientCaptureEvent callstack_sample_event1;
+  ClientCaptureEvent interned_callstack_event2;
+  ClientCaptureEvent callstack_sample_event2;
+  EXPECT_CALL(buffer, AddEvent)
+      .Times(4)
+      .WillOnce(SaveArg<0>(&interned_callstack_event1))
+      .WillOnce(SaveArg<0>(&callstack_sample_event1))
+      .WillOnce(SaveArg<0>(&interned_callstack_event2))
+      .WillOnce(SaveArg<0>(&callstack_sample_event2));
+
+  producer_event_processor->ProcessEvent(1, event1);
+  producer_event_processor->ProcessEvent(1, event2);
+
+  ASSERT_EQ(interned_callstack_event1.event_case(), ClientCaptureEvent::kInternedCallstack);
+  ASSERT_EQ(interned_callstack_event2.event_case(), ClientCaptureEvent::kInternedCallstack);
+  ASSERT_EQ(callstack_sample_event1.event_case(), ClientCaptureEvent::kCallstackSample);
+  ASSERT_EQ(callstack_sample_event2.event_case(), ClientCaptureEvent::kCallstackSample);
+
+  const InternedCallstack& interned_callstack1 = interned_callstack_event1.interned_callstack();
+  EXPECT_NE(interned_callstack1.key(), orbit_grpc_protos::kInvalidInternId);
+  ASSERT_EQ(interned_callstack1.intern().pcs_size(), 4);
+  EXPECT_EQ(interned_callstack1.intern().pcs(0), 1);
+  EXPECT_EQ(interned_callstack1.intern().pcs(1), 2);
+  EXPECT_EQ(interned_callstack1.intern().pcs(2), 3);
+  EXPECT_EQ(interned_callstack1.intern().pcs(3), 4);
+  EXPECT_EQ(interned_callstack1.intern().type(), Callstack::kComplete);
+
+  const InternedCallstack& interned_callstack2 = interned_callstack_event2.interned_callstack();
+  EXPECT_NE(interned_callstack2.key(), orbit_grpc_protos::kInvalidInternId);
+  ASSERT_EQ(interned_callstack2.intern().pcs_size(), 4);
+  EXPECT_EQ(interned_callstack2.intern().pcs(0), 1);
+  EXPECT_EQ(interned_callstack2.intern().pcs(1), 2);
+  EXPECT_EQ(interned_callstack2.intern().pcs(2), 3);
+  EXPECT_EQ(interned_callstack2.intern().pcs(3), 4);
+  EXPECT_EQ(interned_callstack2.intern().type(), Callstack::kDwarfUnwindingError);
 
   const CallstackSample& callstack_sample1 = callstack_sample_event1.callstack_sample();
   EXPECT_EQ(callstack_sample1.pid(), kPid1);
@@ -511,6 +655,7 @@ TEST(ProducerEventProcessor, FullCallstackSamplesSameCallstack) {
   callstack1->add_pcs(2);
   callstack1->add_pcs(3);
   callstack1->add_pcs(4);
+  callstack1->set_type(Callstack::kComplete);
 
   ProducerCaptureEvent event2;
   FullCallstackSample* full_callstack_sample2 = event2.mutable_full_callstack_sample();
@@ -522,6 +667,7 @@ TEST(ProducerEventProcessor, FullCallstackSamplesSameCallstack) {
   callstack2->add_pcs(2);
   callstack2->add_pcs(3);
   callstack2->add_pcs(4);
+  callstack2->set_type(Callstack::kComplete);
 
   ClientCaptureEvent interned_callstack_event1;
   ClientCaptureEvent callstack_sample_event1;
@@ -546,6 +692,7 @@ TEST(ProducerEventProcessor, FullCallstackSamplesSameCallstack) {
   EXPECT_EQ(interned_callstack1.intern().pcs(1), 2);
   EXPECT_EQ(interned_callstack1.intern().pcs(2), 3);
   EXPECT_EQ(interned_callstack1.intern().pcs(3), 4);
+  EXPECT_EQ(interned_callstack1.intern().type(), Callstack::kComplete);
 
   const CallstackSample& callstack_sample1 = callstack_sample_event1.callstack_sample();
   EXPECT_EQ(callstack_sample1.pid(), kPid1);
@@ -1285,6 +1432,7 @@ TEST(ProducerEventProcessor, TwoInternedCallstacksSameProducerSameKey) {
     InternedCallstack* callstack = event1.mutable_interned_callstack();
     callstack->set_key(kKey1);
     callstack->mutable_intern()->add_pcs(1);
+    callstack->mutable_intern()->set_type(Callstack::kComplete);
   }
 
   ProducerCaptureEvent event2;
@@ -1292,6 +1440,7 @@ TEST(ProducerEventProcessor, TwoInternedCallstacksSameProducerSameKey) {
     InternedCallstack* callstack = event2.mutable_interned_callstack();
     callstack->set_key(kKey1);
     callstack->mutable_intern()->add_pcs(2);
+    callstack->mutable_intern()->set_type(Callstack::kComplete);
   }
 
   producer_event_processor->ProcessEvent(1, event1);
