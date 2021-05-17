@@ -23,3 +23,9 @@ target_sources(CodeReport PUBLIC include/CodeReport/CodeReport.h
 target_sources(CodeReport PRIVATE Disassembler.cpp
                                   DisassemblyReport.cpp
                                   SourceCodeReport.cpp)
+
+add_executable(CodeReportTests)
+target_compile_options(CodeReportTests PRIVATE ${STRICT_COMPILE_FLAGS})
+target_sources(CodeReportTests PRIVATE DisassemblerTest.cpp)
+target_link_libraries(CodeReportTests PRIVATE CodeReport GTest::Main)
+register_test(CodeReportTests)
