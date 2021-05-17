@@ -19,10 +19,10 @@
 #include "Api/EnableInTracee.h"
 #include "CaptureEventBuffer.h"
 #include "CaptureEventSender.h"
-#include "ElfUtils/ElfFile.h"
 #include "GrpcProtos/Constants.h"
 #include "LinuxTracingHandler.h"
 #include "MemoryInfoHandler.h"
+#include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
@@ -216,8 +216,8 @@ static ProducerCaptureEvent CreateCaptureStartedEvent(const CaptureOptions& capt
     const std::string& executable_path = executable_path_or_error.value();
     capture_started->set_executable_path(executable_path);
 
-    ErrorMessageOr<std::unique_ptr<orbit_elf_utils::ElfFile>> elf_file_or_error =
-        orbit_elf_utils::ElfFile::Create(executable_path);
+    ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> elf_file_or_error =
+        orbit_object_utils::CreateElfFile(executable_path);
     if (elf_file_or_error.has_value()) {
       capture_started->set_executable_build_id(elf_file_or_error.value()->GetBuildId());
     } else {

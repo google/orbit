@@ -29,8 +29,8 @@ target_link_libraries(
   OrbitCore
   PUBLIC ClientData
          ClientProtos
-         ElfUtils
          GrpcProtos
+         ObjectUtils
          OrbitBase
          xxHash::xxHash
          concurrentqueue::concurrentqueue

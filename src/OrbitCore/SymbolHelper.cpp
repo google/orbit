@@ -16,7 +16,7 @@
 #include <set>
 #include <system_error>
 
-#include "ElfUtils/ElfFile.h"
+#include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
@@ -28,7 +28,8 @@
 using orbit_grpc_protos::ModuleSymbols;
 
 namespace fs = std::filesystem;
-using ::orbit_elf_utils::ElfFile;
+using ::orbit_object_utils::CreateElfFile;
+using ::orbit_object_utils::ElfFile;
 
 namespace {
 
@@ -127,9 +128,9 @@ std::vector<fs::path> FindStructuredDebugDirectories() {
 
 ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const fs::path& symbols_path,
                                                      const std::string& build_id) {
-  OUTCOME_TRY(symbols_file, ElfFile::Create(symbols_path));
+  OUTCOME_TRY(symbols_file, CreateElfFile(symbols_path));
 
-  if (!symbols_file->HasSymtab()) {
+  if (!symbols_file->HasDebugSymbols()) {
     return ErrorMessage(
         absl::StrFormat("Elf file \"%s\" does not contain symbols.", symbols_path.string()));
   }
@@ -225,14 +226,14 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsWithSymbolsPathFile(
 ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(const fs::path& file_path) {
   ORBIT_SCOPE_FUNCTION;
   SCOPED_TIMED_LOG("LoadSymbolsFromFile: %s", file_path.string());
-  ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file_or_error = ElfFile::Create(file_path.string());
+  ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file_or_error = CreateElfFile(file_path.string());
 
   if (elf_file_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to load debug symbols from \"%s\": %s",
                                         file_path.string(), elf_file_or_error.error().message()));
   }
 
-  return elf_file_or_error.value()->LoadSymbolsFromSymtab();
+  return elf_file_or_error.value()->LoadDebugSymbols();
 }
 
 fs::path SymbolHelper::GenerateCachedFileName(const fs::path& file_path) const {

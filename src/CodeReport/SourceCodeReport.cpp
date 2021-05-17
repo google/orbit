@@ -15,7 +15,7 @@ namespace orbit_code_report {
 
 SourceCodeReport::SourceCodeReport(
     std::string_view source_file, const orbit_client_protos::FunctionInfo& function,
-    uint64_t absolute_address, orbit_elf_utils::ElfFile* elf_file,
+    uint64_t absolute_address, orbit_object_utils::ElfFile* elf_file,
     const orbit_client_data::PostProcessedSamplingData& sampling_data,
     uint32_t total_samples_in_capture)
     : total_samples_in_capture_(total_samples_in_capture) {

@@ -63,8 +63,8 @@ target_sources(LinuxTracing PRIVATE
         UprobesUnwindingVisitor.h)
 
 target_link_libraries(LinuxTracing PUBLIC
-        ElfUtils
         GrpcProtos
+        ObjectUtils
         OrbitBase
         CONAN_PKG::abseil
         CONAN_PKG::libunwindstack)

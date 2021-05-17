@@ -11,7 +11,7 @@
 #include <functional>
 
 #include "Api/Orbit.h"
-#include "ElfUtils/LinuxMap.h"
+#include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/UniqueResource.h"
@@ -31,7 +31,7 @@ using orbit_user_space_instrumentation::ExecuteInProcess;
 namespace {
 
 ErrorMessageOr<absl::flat_hash_map<std::string, ModuleInfo>> GetModulesByPathForPid(int32_t pid) {
-  OUTCOME_TRY(module_infos, orbit_elf_utils::ReadModules(pid));
+  OUTCOME_TRY(module_infos, orbit_object_utils::ReadModules(pid));
   absl::flat_hash_map<std::string, ModuleInfo> result;
   for (const ModuleInfo& module_info : module_infos) {
     result.emplace(module_info.file_path(), std::move(module_info));

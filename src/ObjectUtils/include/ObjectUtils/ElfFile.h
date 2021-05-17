@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ELF_UTILS_ELF_FILE_H_
-#define ELF_UTILS_ELF_FILE_H_
+#ifndef OBJECT_UTILS_ELF_FILE_H_
+#define OBJECT_UTILS_ELF_FILE_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -14,12 +14,13 @@
 #include <string>
 #include <vector>
 
+#include "ObjectFile.h"
 #include "OrbitBase/Result.h"
 #include "llvm/Object/Binary.h"
 #include "llvm/Object/ObjectFile.h"
 #include "symbol.pb.h"
 
-namespace orbit_elf_utils {
+namespace orbit_object_utils {
 
 struct GnuDebugLinkInfo {
   std::filesystem::path path;
@@ -30,15 +31,14 @@ struct GnuDebugLinkInfo {
   uint32_t crc32_checksum;
 };
 
-class ElfFile {
+class ElfFile : public ObjectFile {
  public:
   ElfFile() = default;
   virtual ~ElfFile() = default;
 
   [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>
-  LoadSymbolsFromSymtab() = 0;
-  [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>
   LoadSymbolsFromDynsym() = 0;
+
   // Background and some terminology
   // When an elf file is loaded to memory it has its load segments
   // (segments of PT_LOAD type from program headers) mapped to some
@@ -54,31 +54,31 @@ class ElfFile {
   // This method returns load bias for the elf-file if program headers are
   // available. This should be the case for all loadable elf-files.
   [[nodiscard]] virtual ErrorMessageOr<uint64_t> GetLoadBias() const = 0;
-  [[nodiscard]] virtual bool HasSymtab() const = 0;
+
   [[nodiscard]] virtual bool HasDynsym() const = 0;
   [[nodiscard]] virtual bool HasDebugInfo() const = 0;
   [[nodiscard]] virtual bool HasGnuDebuglink() const = 0;
   [[nodiscard]] virtual bool Is64Bit() const = 0;
-  [[nodiscard]] virtual std::string GetBuildId() const = 0;
   [[nodiscard]] virtual std::string GetSoname() const = 0;
-  [[nodiscard]] virtual std::filesystem::path GetFilePath() const = 0;
+  [[nodiscard]] virtual std::string GetBuildId() const = 0;
   [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::LineInfo> GetLineInfo(
       uint64_t address) = 0;
   [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::LineInfo>
   GetDeclarationLocationOfFunction(uint64_t address) = 0;
   [[nodiscard]] virtual std::optional<GnuDebugLinkInfo> GetGnuDebugLinkInfo() const = 0;
 
-  [[nodiscard]] static ErrorMessageOr<std::unique_ptr<ElfFile>> Create(
-      const std::filesystem::path& file_path);
-  [[nodiscard]] static ErrorMessageOr<std::unique_ptr<ElfFile>> Create(
-      const std::filesystem::path& file_path,
-      llvm::object::OwningBinary<llvm::object::ObjectFile>&& file);
-  [[nodiscard]] static ErrorMessageOr<std::unique_ptr<ElfFile>> CreateFromBuffer(
-      const std::filesystem::path& file_path, const void* buf, size_t len);
   [[nodiscard]] static ErrorMessageOr<uint32_t> CalculateDebuglinkChecksum(
       const std::filesystem::path& file_path);
 };
 
-}  // namespace orbit_elf_utils
+[[nodiscard]] ErrorMessageOr<std::unique_ptr<ElfFile>> CreateElfFile(
+    const std::filesystem::path& file_path);
+[[nodiscard]] ErrorMessageOr<std::unique_ptr<ElfFile>> CreateElfFile(
+    const std::filesystem::path& file_path,
+    llvm::object::OwningBinary<llvm::object::ObjectFile>&& file);
+[[nodiscard]] ErrorMessageOr<std::unique_ptr<ElfFile>> CreateElfFileFromBuffer(
+    const std::filesystem::path& file_path, const void* buf, size_t len);
 
-#endif  // ELF_UTILS_ELF_FILE_H_
+}  // namespace orbit_object_utils
+
+#endif  // OBJECT_UTILS_ELF_FILE_H_

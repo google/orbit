@@ -7,6 +7,8 @@ syntax = "proto3";
 package orbit_grpc_protos;
 
 message ModuleInfo {
+  // General purpose name of the module, can be used as a pretty name in the UI.
+  // If you need the ELF specific soname, use the field "soname" below.
   string name = 1;
   string file_path = 2;
   uint64 file_size = 3;
@@ -14,4 +16,6 @@ message ModuleInfo {
   uint64 address_end = 5;
   string build_id = 6;
   uint64 load_bias = 7;
+  // ELF specific soname.
+  string soname = 9;
 }

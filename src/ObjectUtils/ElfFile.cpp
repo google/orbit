@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ElfUtils/ElfFile.h"
+#include "ObjectUtils/ElfFile.h"
 
 #include <absl/base/casts.h>
 #include <absl/strings/str_cat.h>
@@ -40,7 +40,7 @@
 #include "OrbitBase/Result.h"
 #include "symbol.pb.h"
 
-namespace orbit_elf_utils {
+namespace orbit_object_utils {
 
 namespace {
 
@@ -54,15 +54,17 @@ class ElfFileImpl : public ElfFile {
   ElfFileImpl(std::filesystem::path file_path,
               llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary);
 
-  [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadSymbolsFromSymtab() override;
+  // Loads symbols from the .symtab section.
+  [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadDebugSymbols() override;
   [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadSymbolsFromDynsym() override;
   [[nodiscard]] ErrorMessageOr<uint64_t> GetLoadBias() const override;
-  [[nodiscard]] bool HasSymtab() const override;
+  [[nodiscard]] bool HasDebugSymbols() const override;
   [[nodiscard]] bool HasDynsym() const override;
   [[nodiscard]] bool HasDebugInfo() const override;
   [[nodiscard]] bool HasGnuDebuglink() const override;
   [[nodiscard]] bool Is64Bit() const override;
   [[nodiscard]] std::string GetBuildId() const override;
+  [[nodiscard]] std::string GetName() const override;
   [[nodiscard]] std::string GetSoname() const override;
   [[nodiscard]] std::filesystem::path GetFilePath() const override;
   [[nodiscard]] ErrorMessageOr<LineInfo> GetLineInfo(uint64_t address) override;
@@ -299,7 +301,7 @@ ErrorMessageOr<SymbolInfo> ElfFileImpl<ElfT>::CreateSymbolInfo(
 }
 
 template <typename ElfT>
-ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbolsFromSymtab() {
+ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadDebugSymbols() {
   if (!has_symtab_section_) {
     return ErrorMessage("ELF file does not have a .symtab section.");
   }
@@ -386,7 +388,7 @@ ErrorMessageOr<uint64_t> ElfFileImpl<ElfT>::GetLoadBias() const {
 }
 
 template <typename ElfT>
-bool ElfFileImpl<ElfT>::HasSymtab() const {
+bool ElfFileImpl<ElfT>::HasDebugSymbols() const {
   return has_symtab_section_;
 }
 
@@ -411,6 +413,11 @@ std::string ElfFileImpl<ElfT>::GetBuildId() const {
 }
 
 template <typename ElfT>
+std::string ElfFileImpl<ElfT>::GetName() const {
+  return soname_.empty() ? std::filesystem::path{file_path_}.filename().string() : soname_;
+}
+
+template <typename ElfT>
 std::string ElfFileImpl<ElfT>::GetSoname() const {
   return soname_;
 }
@@ -421,7 +428,7 @@ std::filesystem::path ElfFileImpl<ElfT>::GetFilePath() const {
 }
 
 template <typename ElfT>
-ErrorMessageOr<LineInfo> orbit_elf_utils::ElfFileImpl<ElfT>::GetLineInfo(uint64_t address) {
+ErrorMessageOr<LineInfo> orbit_object_utils::ElfFileImpl<ElfT>::GetLineInfo(uint64_t address) {
   CHECK(has_debug_info_section_);
   auto line_info_or_error = symbolizer_.symbolizeInlinedCode(
       object_file_->getFileName(), {address, llvm::object::SectionedAddress::UndefSection});
@@ -453,7 +460,7 @@ ErrorMessageOr<LineInfo> orbit_elf_utils::ElfFileImpl<ElfT>::GetLineInfo(uint64_
 }
 
 template <typename ElfT>
-ErrorMessageOr<LineInfo> orbit_elf_utils::ElfFileImpl<ElfT>::GetDeclarationLocationOfFunction(
+ErrorMessageOr<LineInfo> orbit_object_utils::ElfFileImpl<ElfT>::GetDeclarationLocationOfFunction(
     uint64_t address) {
   const auto dwarf_context = llvm::DWARFContext::create(*owning_binary_.getBinary());
   if (dwarf_context == nullptr) return ErrorMessage{"Could not read DWARF information."};
@@ -501,7 +508,7 @@ std::optional<GnuDebugLinkInfo> ElfFileImpl<ElfT>::GetGnuDebugLinkInfo() const {
 }
 }  // namespace
 
-ErrorMessageOr<std::unique_ptr<ElfFile>> ElfFile::CreateFromBuffer(
+ErrorMessageOr<std::unique_ptr<ElfFile>> CreateElfFileFromBuffer(
     const std::filesystem::path& file_path, const void* buf, size_t len) {
   std::unique_ptr<llvm::MemoryBuffer> buffer = llvm::MemoryBuffer::getMemBuffer(
       llvm::StringRef(static_cast<const char*>(buf), len), llvm::StringRef("buffer name"), false);
@@ -513,11 +520,11 @@ ErrorMessageOr<std::unique_ptr<ElfFile>> ElfFile::CreateFromBuffer(
                                         llvm::toString(object_file_or_error.takeError())));
   }
 
-  return ElfFile::Create(file_path, llvm::object::OwningBinary<llvm::object::ObjectFile>(
-                                        std::move(object_file_or_error.get()), std::move(buffer)));
+  return CreateElfFile(file_path, llvm::object::OwningBinary<llvm::object::ObjectFile>(
+                                      std::move(object_file_or_error.get()), std::move(buffer)));
 }
 
-ErrorMessageOr<std::unique_ptr<ElfFile>> ElfFile::Create(const std::filesystem::path& file_path) {
+ErrorMessageOr<std::unique_ptr<ElfFile>> CreateElfFile(const std::filesystem::path& file_path) {
   // TODO(hebecker): Remove this explicit construction of StringRef when we switch to LLVM10.
   const std::string file_path_str = file_path.string();
   const llvm::StringRef file_path_llvm{file_path_str};
@@ -532,10 +539,10 @@ ErrorMessageOr<std::unique_ptr<ElfFile>> ElfFile::Create(const std::filesystem::
 
   llvm::object::OwningBinary<llvm::object::ObjectFile>& file = object_file_or_error.get();
 
-  return ElfFile::Create(file_path, std::move(file));
+  return CreateElfFile(file_path, std::move(file));
 }
 
-ErrorMessageOr<std::unique_ptr<ElfFile>> ElfFile::Create(
+ErrorMessageOr<std::unique_ptr<ElfFile>> CreateElfFile(
     const std::filesystem::path& file_path,
     llvm::object::OwningBinary<llvm::object::ObjectFile>&& file) {
   llvm::object::ObjectFile* object_file = file.getBinary();
@@ -586,4 +593,4 @@ ErrorMessageOr<uint32_t> ElfFile::CalculateDebuglinkChecksum(
   return rolling_checksum;
 }
 
-}  // namespace orbit_elf_utils
+}  // namespace orbit_object_utils

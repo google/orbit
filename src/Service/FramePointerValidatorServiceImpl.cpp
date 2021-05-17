@@ -11,8 +11,8 @@
 #include <outcome.hpp>
 #include <vector>
 
-#include "ElfUtils/ElfFile.h"
 #include "FramePointerValidator/FramePointerValidator.h"
+#include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/Result.h"
 #include "code_block.pb.h"
 
@@ -28,7 +28,7 @@ grpc::Status FramePointerValidatorServiceImpl::ValidateFramePointers(
   // Even though this information should be available on the client,
   // we want not rely on this here, and for this particular use case we are
   // fine with doing some extra work, and read it from the elf file.
-  auto elf_file_result = orbit_elf_utils::ElfFile::Create(request->module_path());
+  auto elf_file_result = orbit_object_utils::CreateElfFile(request->module_path());
 
   if (elf_file_result.has_error()) {
     return grpc::Status(grpc::StatusCode::INTERNAL,

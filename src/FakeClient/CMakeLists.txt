@@ -19,8 +19,8 @@ target_link_libraries(OrbitFakeClient PRIVATE
         CaptureClient
         ClientData
         ClientProtos
-        ElfUtils
         GrpcProtos
+        ObjectUtils
         OrbitBase)
 
 strip_symbols(OrbitFakeClient)

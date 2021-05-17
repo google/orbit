@@ -26,7 +26,7 @@
 #include <system_error>
 #include <utility>
 
-#include "ElfUtils/ElfFile.h"
+#include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
@@ -37,8 +37,9 @@ namespace orbit_service::utils {
 
 namespace fs = std::filesystem;
 
-using ::orbit_elf_utils::ElfFile;
 using orbit_grpc_protos::TracepointInfo;
+using ::orbit_object_utils::CreateElfFile;
+using ::orbit_object_utils::ElfFile;
 
 static const char* kLinuxTracingEventsDirectory = "/sys/kernel/debug/tracing/events/";
 
@@ -269,8 +270,8 @@ static ErrorMessageOr<fs::path> FindSymbolsFilePathInStructuredDebugStore(
 
 ErrorMessageOr<fs::path> FindSymbolsFilePath(
     const fs::path& module_path, const std::vector<fs::path>& search_directories) noexcept {
-  OUTCOME_TRY(module_elf_file, ElfFile::Create(module_path.string()));
-  if (module_elf_file->HasSymtab()) {
+  OUTCOME_TRY(module_elf_file, CreateElfFile(module_path.string()));
+  if (module_elf_file->HasDebugSymbols()) {
     return module_path;
   }
 
@@ -321,7 +322,7 @@ ErrorMessageOr<fs::path> FindSymbolsFilePath(
     if (!path_exists) continue;
 
     ErrorMessageOr<std::unique_ptr<ElfFile>> symbols_file_or_error =
-        ElfFile::Create(symbols_path.string());
+        CreateElfFile(symbols_path.string());
     if (symbols_file_or_error.has_error()) {
       std::string error_message =
           absl::StrFormat("Potential symbols file \"%s\" cannot be read as an elf file: %s",
@@ -333,7 +334,7 @@ ErrorMessageOr<fs::path> FindSymbolsFilePath(
 
     std::unique_ptr<ElfFile>& symbols_file = symbols_file_or_error.value();
 
-    if (!symbols_file->HasSymtab()) {
+    if (!symbols_file->HasDebugSymbols()) {
       std::string error_message =
           absl::StrFormat("Potential symbols file \"%s\" does not contain symbols.", symbols_path);
       ERROR("%s (It does not contain a .symtab section)", error_message);
