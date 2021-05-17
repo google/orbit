@@ -528,10 +528,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
   callstack_1.add_frames(1);
   callstack_1.add_frames(2);
   callstack_1.add_frames(3);
-
-  CallstackInfo callstack_info_1;
-  *callstack_info_1.mutable_frames() = {callstack_1.frames().begin(), callstack_1.frames().end()};
-  (*capture_info.mutable_callstacks())[callstack_id_1] = callstack_info_1;
+  (*capture_info.mutable_callstacks())[callstack_id_1] = callstack_1;
 
   CallstackEvent* callstack_event_1_1 = capture_info.add_callstack_events();
   callstack_event_1_1->set_thread_id(1);
@@ -548,10 +545,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoCallstacks) {
   CallstackInfo callstack_2;
   callstack_2.add_frames(4);
   callstack_2.add_frames(5);
-
-  CallstackInfo callstack_info_2;
-  *callstack_info_2.mutable_frames() = {callstack_2.frames().begin(), callstack_2.frames().end()};
-  (*capture_info.mutable_callstacks())[callstack_id_2] = callstack_info_2;
+  (*capture_info.mutable_callstacks())[callstack_id_2] = callstack_2;
 
   CallstackEvent* callstack_event_2 = capture_info.add_callstack_events();
   callstack_event_2->set_thread_id(2);
