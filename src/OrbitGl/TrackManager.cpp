@@ -47,6 +47,7 @@ TrackManager::TrackManager(TimeGraph* time_graph, orbit_gl::Viewport* viewport,
 }
 
 std::vector<Track*> TrackManager::GetAllTracks() const {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::vector<Track*> tracks;
   for (const auto& track : all_tracks_) {
     tracks.push_back(track.get());
@@ -160,6 +161,7 @@ void TrackManager::SetFilter(const std::string& filter) {
 }
 
 void TrackManager::UpdateVisibleTrackList() {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   if (filter_.empty()) {
     visible_tracks_ = sorted_tracks_;
     return;
@@ -216,6 +218,7 @@ void TrackManager::UpdateMovingTrackSorting() {
 
   int moving_track_previous_position = FindMovingTrackIndex();
 
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   if (moving_track_previous_position != -1) {
     Track* moving_track = visible_tracks_[moving_track_previous_position];
     visible_tracks_.erase(visible_tracks_.begin() + moving_track_previous_position);
@@ -258,6 +261,7 @@ void TrackManager::UpdateMovingTrackSorting() {
 }
 
 int TrackManager::FindMovingTrackIndex() {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   // Returns the position of the moving track, or -1 if there is none.
   for (auto track_it = visible_tracks_.begin(); track_it != visible_tracks_.end(); ++track_it) {
     if ((*track_it)->IsMoving()) {
@@ -275,6 +279,7 @@ void TrackManager::UpdateTracks(Batcher* batcher, uint64_t min_tick, uint64_t ma
   float current_y = -layout_->GetSchedulerTrackOffset();
 
   // Draw tracks
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   for (auto& track : visible_tracks_) {
     const float z_offset = track->IsMoving() ? GlCanvas::kZOffsetMovingTack : 0.f;
     if (!track->IsMoving()) {
