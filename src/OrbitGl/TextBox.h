@@ -19,6 +19,14 @@ class TextBox {
           std::string text = "")
       : timer_info_{std::move(timer_info)}, pos_{pos}, size_{size}, text_{std::move(text)} {}
 
+  // Delete the copy- and move-assignment operators, while keeping the copy- and move- constructors.
+  // This is so that an element in TimerChain cannot just be re-assigned, which would break the
+  // invariance on TimerBlock::min_timestamp_ and max_timestamp_.
+  TextBox(const TextBox& other) = default;
+  TextBox& operator=(const TextBox& other) = delete;
+  TextBox(TextBox&& other) = default;
+  TextBox& operator=(TextBox&& other) = delete;
+
   void SetSize(const Vec2& size) { size_ = size; }
   void SetPos(const Vec2& pos) { pos_ = pos; }
 

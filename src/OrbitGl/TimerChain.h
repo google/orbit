@@ -72,8 +72,8 @@ class TimerBlock {
 class TimerChainIterator {
  public:
   explicit TimerChainIterator(TimerBlock* block) : block_(block) {}
-  TimerChainIterator& operator=(const TimerChainIterator& other) = default;
   TimerChainIterator(const TimerChainIterator& other) = default;
+  TimerChainIterator& operator=(const TimerChainIterator& other) = default;
   TimerChainIterator(TimerChainIterator&& other) = default;
   TimerChainIterator& operator=(TimerChainIterator&& other) = default;
 
@@ -85,8 +85,8 @@ class TimerChainIterator {
     return *this;
   }
 
-  const TimerBlock& operator*() const { return *block_; }
   TimerBlock& operator*() { return *block_; }
+  const TimerBlock& operator*() const { return *block_; }
 
   TimerBlock* operator->() { return block_; }
   const TimerBlock* operator->() const { return block_; }
