@@ -25,7 +25,8 @@ constexpr CaptureStartData kTestStartData{
     6 /*number_of_manual_stop_async_timers*/,
     7 /*number_of_manual_tracked_values*/,
     OrbitCaptureData_ThreadStates_THREAD_STATES_ENABLED /*thread_states*/,
-    10 /*memory_information_sampling_period_ms*/
+    10 /*memory_information_sampling_period_ms*/,
+    OrbitCaptureData_LibOrbitVulkanLayer_LIB_LOADED,
 };
 
 bool HasSameCaptureStartData(const OrbitCaptureData& capture_data,
