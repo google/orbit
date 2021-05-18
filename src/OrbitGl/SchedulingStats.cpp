@@ -5,7 +5,6 @@
 #include "SchedulingStats.h"
 
 #include "CaptureWindow.h"
-#include "OrbitBase/Tracing.h"
 #include "absl/strings/str_format.h"
 #include "capture_data.pb.h"
 
@@ -25,7 +24,7 @@ SchedulingStats::SchedulingStats(const std::vector<const TextBox*>& scheduling_s
     uint64_t clipped_end_ns = std::min(end_ns, timer_info.end());
     uint64_t timer_duration_ns = clipped_end_ns - clipped_start_ns;
 
-    time_on_core_ns += timer_duration_ns;
+    time_on_core_ns_ += timer_duration_ns;
     time_on_core_ns_by_core_[timer_info.processor()] += timer_duration_ns;
 
     ProcessStats& process_stats = process_stats_by_pid_[timer_info.process_id()];
@@ -64,8 +63,8 @@ std::string SchedulingStats::ToString() const {
   std::string summary;
 
   // Core occupancy.
-  if (time_on_core_ns_by_core_.size()) summary += "Core occupancy: \n";
-  for (auto& [core, time_on_core_ns] : time_on_core_ns_by_core_) {
+  if (!time_on_core_ns_by_core_.empty()) summary += "Core occupancy: \n";
+  for (const auto& [core, time_on_core_ns] : time_on_core_ns_by_core_) {
     double time_on_core_ms = static_cast<double>(time_on_core_ns) * kNsToMs;
     summary +=
         absl::StrFormat("cpu[%u] : %.2f%%\n", core, 100.0 * time_on_core_ms / time_range_ms_);
