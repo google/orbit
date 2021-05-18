@@ -45,9 +45,16 @@ namespace orbit_linux_tracing {
 
 class UprobesUnwindingVisitor : public PerfEventVisitor {
  public:
-  explicit UprobesUnwindingVisitor(LibunwindstackMaps* initial_maps,
+  explicit UprobesUnwindingVisitor(UprobesFunctionCallManager* function_call_manager,
+                                   UprobesReturnAddressManager* uprobes_return_address_manager,
+                                   LibunwindstackMaps* initial_maps,
                                    LibunwindstackUnwinder* unwinder)
-      : current_maps_{initial_maps}, unwinder_{unwinder} {
+      : function_call_manager_{function_call_manager},
+        return_address_manager_{uprobes_return_address_manager},
+        current_maps_{initial_maps},
+        unwinder_{unwinder} {
+    CHECK(function_call_manager_ != nullptr);
+    CHECK(return_address_manager_ != nullptr);
     CHECK(current_maps_ != nullptr);
     CHECK(unwinder_ != nullptr);
   }
@@ -74,8 +81,8 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   void visit(MmapPerfEvent* event) override;
 
  private:
-  UprobesFunctionCallManager function_call_manager_{};
-  UprobesReturnAddressManager return_address_manager_{};
+  UprobesFunctionCallManager* function_call_manager_;
+  UprobesReturnAddressManager* return_address_manager_;
   LibunwindstackMaps* current_maps_;
   LibunwindstackUnwinder* unwinder_;
 

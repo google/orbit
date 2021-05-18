@@ -15,6 +15,7 @@
 
 #include "OrbitBase/Logging.h"
 
+namespace orbit_linux_tracing {
 // Keeps a stack, for every thread, of the return addresses at the top of the
 // stack when uprobes are hit, before they are hijacked by uretprobes. Patches
 // them into samples so that unwinding can continue past
@@ -29,12 +30,13 @@ class UprobesReturnAddressManager {
   UprobesReturnAddressManager(UprobesReturnAddressManager&&) = default;
   UprobesReturnAddressManager& operator=(UprobesReturnAddressManager&&) = default;
 
-  void ProcessUprobes(pid_t tid, uint64_t stack_pointer, uint64_t return_address) {
+  virtual void ProcessUprobes(pid_t tid, uint64_t stack_pointer, uint64_t return_address) {
     auto& tid_uprobes_stack = tid_uprobes_stacks_[tid];
     tid_uprobes_stack.emplace_back(stack_pointer, return_address);
   }
 
-  void PatchSample(pid_t tid, uint64_t stack_pointer, void* stack_data, uint64_t stack_size) {
+  virtual void PatchSample(pid_t tid, uint64_t stack_pointer, void* stack_data,
+                           uint64_t stack_size) {
     if (!tid_uprobes_stacks_.contains(tid)) {
       return;
     }
@@ -67,8 +69,12 @@ class UprobesReturnAddressManager {
   // This function patches the callchain, using the maps information to identify
   // instruction pointers of uprobe code and using the return address saved in
   // the uprobes.
-  bool PatchCallchain(pid_t tid, uint64_t* callchain, uint64_t callchain_size,
-                      unwindstack::Maps* maps) {
+  virtual bool PatchCallchain(pid_t tid, uint64_t* callchain, uint64_t callchain_size,
+                              LibunwindstackMaps* maps) {
+    CHECK(callchain_size > 0);
+    CHECK(callchain != nullptr);
+    CHECK(maps != nullptr);
+
     std::vector<uint64_t> frames_to_patch;
     for (uint64_t i = 0; i < callchain_size; i++) {
       uint64_t ip = callchain[i];
@@ -167,7 +173,7 @@ class UprobesReturnAddressManager {
     return true;
   }
 
-  void ProcessUretprobes(pid_t tid) {
+  virtual void ProcessUretprobes(pid_t tid) {
     if (!tid_uprobes_stacks_.contains(tid)) {
       return;
     }
@@ -190,5 +196,7 @@ class UprobesReturnAddressManager {
 
   absl::flat_hash_map<pid_t, std::vector<OpenUprobes>> tid_uprobes_stacks_{};
 };
+
+}  // namespace orbit_linux_tracing
 
 #endif  // LINUX_TRACING_UPROBES_RETURN_ADDRESS_MANAGER_H_

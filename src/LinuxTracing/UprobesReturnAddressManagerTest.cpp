@@ -500,7 +500,7 @@ TEST(UprobesReturnAddressManager, CallchainNoUprobes) {
                                          0x5541D68949564100lu};
 
   EXPECT_TRUE(return_address_manager.PatchCallchain(1, callchain_sample.data(),
-                                                    callchain_sample.size(), maps->Get()));
+                                                    callchain_sample.size(), maps.get()));
   EXPECT_THAT(callchain_sample, testing::ElementsAreArray(expected_callchain));
 }
 
@@ -522,7 +522,7 @@ TEST(UprobesReturnAddressManager, CallchainOneUprobe) {
                                          0x5541D68949564100lu};
 
   EXPECT_TRUE(return_address_manager.PatchCallchain(1, callchain_sample.data(),
-                                                    callchain_sample.size(), maps->Get()));
+                                                    callchain_sample.size(), maps.get()));
   EXPECT_THAT(callchain_sample, testing::ElementsAreArray(expected_callchain));
 }
 
@@ -544,7 +544,7 @@ TEST(UprobesReturnAddressManager, CallchainTwoUprobes) {
                                          0x5541D68949564100lu};
 
   EXPECT_TRUE(return_address_manager.PatchCallchain(1, callchain_sample.data(),
-                                                    callchain_sample.size(), maps->Get()));
+                                                    callchain_sample.size(), maps.get()));
   EXPECT_THAT(callchain_sample, testing::ElementsAreArray(expected_callchain));
 }
 
@@ -560,7 +560,7 @@ TEST(UprobesReturnAddressManager, CallchainTwoUprobesMissingOne) {
                                          0x5541D68949564100lu};
 
   EXPECT_FALSE(return_address_manager.PatchCallchain(1, callchain_sample.data(),
-                                                     callchain_sample.size(), maps->Get()));
+                                                     callchain_sample.size(), maps.get()));
 }
 
 TEST(UprobesReturnAddressManager, CallchainTwoConsecutiveUprobes) {
@@ -583,7 +583,7 @@ TEST(UprobesReturnAddressManager, CallchainTwoConsecutiveUprobes) {
                                          0x5541D68949564100lu};
 
   EXPECT_TRUE(return_address_manager.PatchCallchain(1, callchain_sample.data(),
-                                                    callchain_sample.size(), maps->Get()));
+                                                    callchain_sample.size(), maps.get()));
   EXPECT_THAT(callchain_sample, testing::ElementsAreArray(expected_callchain));
 }
 
@@ -605,7 +605,7 @@ TEST(UprobesReturnAddressManager, CallchainBeforeInjectionByUprobe) {
                                          0x5541D68949564100lu};
 
   EXPECT_TRUE(return_address_manager.PatchCallchain(1, callchain_sample.data(),
-                                                    callchain_sample.size(), maps->Get()));
+                                                    callchain_sample.size(), maps.get()));
   EXPECT_THAT(callchain_sample, testing::ElementsAreArray(expected_callchain));
 }
 
@@ -619,7 +619,7 @@ TEST(UprobesReturnAddressManager, CallchainWithoutUprobeRecord) {
                                          0x5541D68949564100lu};
 
   EXPECT_FALSE(return_address_manager.PatchCallchain(1, callchain_sample.data(),
-                                                     callchain_sample.size(), maps->Get()));
+                                                     callchain_sample.size(), maps.get()));
 }
 
 TEST(UprobesReturnAddressManager, CallchainOfTailcall) {
@@ -639,7 +639,7 @@ TEST(UprobesReturnAddressManager, CallchainOfTailcall) {
                                          0x00007FE90B8B9E0Blu, 0x5541D68949564100lu};
 
   EXPECT_TRUE(return_address_manager.PatchCallchain(1, callchain_sample.data(),
-                                                    callchain_sample.size(), maps->Get()));
+                                                    callchain_sample.size(), maps.get()));
   EXPECT_THAT(callchain_sample, testing::ElementsAreArray(expected_callchain));
 }
 }  // namespace
