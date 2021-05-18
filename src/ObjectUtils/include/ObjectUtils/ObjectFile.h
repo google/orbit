@@ -25,7 +25,7 @@ class ObjectFile {
   [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbols() = 0;
   [[nodiscard]] virtual bool HasDebugSymbols() const = 0;
   [[nodiscard]] virtual std::string GetName() const = 0;
-  [[nodiscard]] virtual std::filesystem::path GetFilePath() const = 0;
+  [[nodiscard]] virtual const std::filesystem::path& GetFilePath() const = 0;
 };
 
 }  // namespace orbit_object_utils

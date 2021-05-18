@@ -11,12 +11,13 @@ target_compile_options(ObjectUtils PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   ObjectUtils
-  PUBLIC include/ObjectUtils/ElfFile.h
+  PUBLIC include/ObjectUtils/CoffFile.h
+         include/ObjectUtils/ElfFile.h
          include/ObjectUtils/LinuxMap.h)
 
 target_sources(
   ObjectUtils
-  PRIVATE ElfFile.cpp)
+  PRIVATE CoffFile.cpp ElfFile.cpp)
 
 if (NOT WIN32)
 target_sources(ObjectUtils PRIVATE LinuxMap.cpp)
@@ -36,6 +37,7 @@ target_link_libraries(
 add_executable(ObjectUtilsTests)
 
 target_sources(ObjectUtilsTests PRIVATE
+    CoffFileTest.cpp
     ElfFileTest.cpp
 )
 
