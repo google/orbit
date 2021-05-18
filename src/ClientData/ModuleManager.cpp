@@ -9,6 +9,7 @@
 #include <absl/meta/type_traits.h>
 
 #include <algorithm>
+#include <filesystem>
 #include <utility>
 #include <vector>
 
@@ -113,6 +114,19 @@ std::vector<const ModuleData*> ModuleManager::GetAllModuleData() const {
   std::vector<const ModuleData*> result;
   for (const auto& [unused_pair, module_data] : module_map_) {
     result.push_back(&module_data);
+  }
+  return result;
+}
+
+std::vector<const ModuleData*> ModuleManager::GetModulesByFilename(
+    const std::string& filename) const {
+  absl::MutexLock lock(&mutex_);
+  std::vector<const ModuleData*> result;
+  for (const auto& [path_build_id_pair, module_data] : module_map_) {
+    const std::string& file_path = path_build_id_pair.first;
+    if (std::filesystem::path(file_path).filename().string() == filename) {
+      result.push_back(&module_data);
+    }
   }
   return result;
 }

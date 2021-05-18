@@ -42,6 +42,9 @@ class ModuleManager final {
 
   [[nodiscard]] std::vector<const ModuleData*> GetAllModuleData() const;
 
+  [[nodiscard]] std::vector<const ModuleData*> GetModulesByFilename(
+      const std::string& filename) const;
+
  private:
   mutable absl::Mutex mutex_;
   // We are sharing pointers to that entries and ensure reference stability by using node_hash_map
