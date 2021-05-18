@@ -342,4 +342,52 @@ TEST(ModuleManager, GetOrbitFunctionsOfProcess) {
   }
 }
 
+TEST(ModuleManager, GetModulesByFilename) {
+  ModuleInfo module_info_1;
+  module_info_1.set_name("name_1");
+  module_info_1.set_file_path("path/to/file_1.ext");
+  module_info_1.set_build_id("build_id_1");
+
+  ModuleInfo module_info_2;
+  module_info_2.set_name("name_2");
+  module_info_2.set_file_path("path/to/file_2.ext");
+  module_info_2.set_build_id("build_id_2");
+
+  ModuleInfo module_info_3;
+  module_info_3.set_name("name_3");
+  module_info_3.set_file_path("path/to/file_3.ext");
+  module_info_3.set_build_id("build_id_3");
+
+  ModuleManager module_manager;
+  std::vector<ModuleData*> changed_modules =
+      module_manager.AddOrUpdateModules({module_info_1, module_info_2, module_info_3});
+  EXPECT_TRUE(changed_modules.empty());
+
+  {  // Empty
+    std::vector<const ModuleData*> found_modules = module_manager.GetModulesByFilename("");
+    EXPECT_TRUE(found_modules.empty());
+  }
+
+  {  // Not existing filename
+    std::vector<const ModuleData*> found_modules =
+        module_manager.GetModulesByFilename("notExistingFilename.ext");
+    EXPECT_TRUE(found_modules.empty());
+  }
+
+  {  // filename without extension
+    std::vector<const ModuleData*> found_modules = module_manager.GetModulesByFilename("file_2");
+    EXPECT_TRUE(found_modules.empty());
+  }
+
+  {  // find file_2.ext
+    std::vector<const ModuleData*> found_modules =
+        module_manager.GetModulesByFilename("file_2.ext");
+    ASSERT_EQ(found_modules.size(), 1);
+    const ModuleData* found_module = found_modules[0];
+    EXPECT_EQ(found_module->name(), module_info_2.name());
+    EXPECT_EQ(found_module->file_path(), module_info_2.file_path());
+    EXPECT_EQ(found_module->build_id(), module_info_2.build_id());
+  }
+}
+
 }  // namespace orbit_client_data
