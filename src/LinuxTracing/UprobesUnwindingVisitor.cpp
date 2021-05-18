@@ -110,7 +110,8 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
     return;
   }
 
-  // The top of a callchain is always inside the kernel code.
+  // The top of a callchain is always inside the kernel code and we don't expect samples to be only
+  // inside the kernel.
   if (event->GetCallchainSize() <= 1) {
     ERROR("Callchain has only %lu frames.", event->GetCallchainSize());
     if (unwind_error_counter_ != nullptr) {
