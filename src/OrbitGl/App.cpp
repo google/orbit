@@ -151,7 +151,7 @@ PresetLoadState GetPresetLoadStateForProcess(const PresetFile& preset, const Pro
   auto module_paths = preset.GetModulePaths();
   for (const auto& path : module_paths) {
     const std::string& module_path = path.string();
-    if (!process->IsModuleLoaded(module_path)) {
+    if (!process->IsModuleLoadedByProcess(module_path)) {
       modules_not_found_count++;
     }
   }
@@ -1571,7 +1571,8 @@ void OrbitApp::AddSymbols(const std::filesystem::path& module_file_path,
   module_data->AddSymbols(module_symbols);
 
   const ProcessData* selected_process = GetTargetProcess();
-  if (selected_process != nullptr && selected_process->IsModuleLoaded(module_data->file_path())) {
+  if (selected_process != nullptr &&
+      selected_process->IsModuleLoadedByProcess(module_data->file_path())) {
     functions_data_view_->AddFunctions(module_data->GetFunctions());
     LOG("Added loaded function symbols for module \"%s\" to the functions tab",
         module_data->file_path());
@@ -1861,7 +1862,7 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
     const ModuleData* module =
         module_manager_->GetModuleByPathAndBuildId(func.module_path(), func.module_build_id());
     // (A) deselect functions when the module is not loaded by the process anymore
-    if (!process->IsModuleLoaded(module->file_path())) {
+    if (!process->IsModuleLoadedByProcess(module->file_path())) {
       data_manager_->DeselectFunction(func);
     } else if (!module->is_loaded()) {
       // (B) deselect when module does not have functions anymore (!is_loaded())
@@ -1878,7 +1879,7 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
         module_manager_->GetModuleByPathAndBuildId(func.module_path(), func.module_build_id());
     // Frame tracks are only meaningful if the module for the underlying function is actually
     // loaded by the process.
-    if (!process->IsModuleLoaded(module->file_path())) {
+    if (!process->IsModuleLoadedByProcess(module->file_path())) {
       RemoveFrameTrack(func);
     } else if (!module->is_loaded()) {
       RemoveFrameTrack(func);
