@@ -142,6 +142,9 @@ using orbit_metrics_uploader::ScopedMetric;
 using orbit_preset_file::PresetFile;
 
 namespace {
+
+constexpr const char* kLibOrbitVulkanLayerSoFileName = "libOrbitVulkanLayer.so";
+
 PresetLoadState GetPresetLoadStateForProcess(const PresetFile& preset, const ProcessData* process) {
   if (process == nullptr) {
     return PresetLoadState::kNotLoadable;
@@ -170,7 +173,8 @@ PresetLoadState GetPresetLoadStateForProcess(const PresetFile& preset, const Pro
 
 orbit_metrics_uploader::CaptureStartData CreateCaptureStartData(
     const std::vector<FunctionInfo>& all_instrumented_functions, int64_t number_of_frame_tracks,
-    bool thread_states, int64_t memory_information_sampling_period_ms) {
+    bool thread_states, int64_t memory_information_sampling_period_ms,
+    bool lib_orbit_vulkan_layer_loaded) {
   orbit_metrics_uploader::CaptureStartData capture_start_data{};
 
   for (const auto& function : all_instrumented_functions) {
@@ -204,6 +208,10 @@ orbit_metrics_uploader::CaptureStartData CreateCaptureStartData(
       thread_states ? orbit_metrics_uploader::OrbitCaptureData_ThreadStates_THREAD_STATES_ENABLED
                     : orbit_metrics_uploader::OrbitCaptureData_ThreadStates_THREAD_STATES_DISABLED;
   capture_start_data.memory_information_sampling_period_ms = memory_information_sampling_period_ms;
+  capture_start_data.lib_orbit_vulkan_layer =
+      lib_orbit_vulkan_layer_loaded
+          ? orbit_metrics_uploader::OrbitCaptureData_LibOrbitVulkanLayer_LIB_LOADED
+          : orbit_metrics_uploader::OrbitCaptureData_LibOrbitVulkanLayer_LIB_NOT_LOADED;
   return capture_start_data;
 }
 
@@ -1152,12 +1160,25 @@ void OrbitApp::StartCapture() {
     memory_information_sampling_period_ms_for_metrics =
         static_cast<int64_t>(memory_sampling_period_ms);
   }
+
+  // Whether the Orbit custom vulkan layer is used by the process (game), is determined via the
+  // module list of the process. If "libOrbitVulkanLayer.so" is in the module list, it means the
+  // process loaded it and it is in use.
+  bool orbit_vulkan_layer_loaded_by_process = false;
+  std::vector<const ModuleData*> vulkan_layer_modules =
+      module_manager_->GetModulesByFilename(kLibOrbitVulkanLayerSoFileName);
+  for (const auto& module : vulkan_layer_modules) {
+    if (process->IsModuleLoadedByProcess(module)) {
+      orbit_vulkan_layer_loaded_by_process = true;
+    }
+  }
+
   CaptureMetric capture_metric{
       metrics_uploader_,
-      CreateCaptureStartData(selected_functions,
-                             user_defined_capture_data.frame_track_functions().size(),
-                             data_manager_->collect_thread_states(),
-                             memory_information_sampling_period_ms_for_metrics)};
+      CreateCaptureStartData(
+          selected_functions, user_defined_capture_data.frame_track_functions().size(),
+          data_manager_->collect_thread_states(), memory_information_sampling_period_ms_for_metrics,
+          orbit_vulkan_layer_loaded_by_process)};
 
   CHECK(capture_client_ != nullptr);
 

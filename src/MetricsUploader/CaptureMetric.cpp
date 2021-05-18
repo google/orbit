@@ -26,6 +26,7 @@ CaptureMetric::CaptureMetric(MetricsUploader* uploader, const CaptureStartData& 
   capture_data_.set_thread_states(start_data.thread_states);
   capture_data_.set_memory_information_sampling_period_ms(
       start_data.memory_information_sampling_period_ms);
+  capture_data_.set_lib_orbit_vulkan_layer(start_data.lib_orbit_vulkan_layer);
 }
 
 void CaptureMetric::SetCaptureFailed() {
