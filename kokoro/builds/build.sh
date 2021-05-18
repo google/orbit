@@ -292,6 +292,9 @@ readonly DOCKER_IMAGE_TAG="${docker_image_tag_mapping[${CONAN_PROFILE}]-latest}"
 readonly CONTAINER="gcr.io/orbitprofiler/${CONAN_PROFILE}:${DOCKER_IMAGE_TAG}"
 
 if [ "$(uname -s)" == "Linux" ]; then
+  df -h
+  lsblk
+  blkid
   echo "Bring up docker for Linux build."
   gcloud auth configure-docker --quiet
   docker pull "${CONTAINER}"
