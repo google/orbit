@@ -66,7 +66,7 @@ class ElfFileImpl : public ElfFile {
   [[nodiscard]] std::string GetBuildId() const override;
   [[nodiscard]] std::string GetName() const override;
   [[nodiscard]] std::string GetSoname() const override;
-  [[nodiscard]] std::filesystem::path GetFilePath() const override;
+  [[nodiscard]] const std::filesystem::path& GetFilePath() const override;
   [[nodiscard]] ErrorMessageOr<LineInfo> GetLineInfo(uint64_t address) override;
   [[nodiscard]] ErrorMessageOr<LineInfo> GetDeclarationLocationOfFunction(
       uint64_t address) override;
@@ -423,7 +423,7 @@ std::string ElfFileImpl<ElfT>::GetSoname() const {
 }
 
 template <typename ElfT>
-std::filesystem::path ElfFileImpl<ElfT>::GetFilePath() const {
+const std::filesystem::path& ElfFileImpl<ElfT>::GetFilePath() const {
   return file_path_;
 }
 
