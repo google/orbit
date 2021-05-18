@@ -896,7 +896,6 @@ const QString OrbitMainWindow::kMaxLocalMarkerDepthPerCommandBufferSettingsKey{
 
 constexpr uint64_t kMemorySamplingPeriodMsDefaultValue = 10;
 constexpr uint64_t kMemoryWarningThresholdKbDefaultValue = 1024 * 1024 * 8;  // 8Gb
-constexpr uint64_t kMilliSecondsToNanoSeconds = 1000'000;
 
 void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
   QSettings settings;
@@ -905,22 +904,20 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
   app_->SetEnableIntrospection(settings.value(kEnableIntrospectionSettingKey, false).toBool());
 
   app_->SetCollectMemoryInfo(settings.value(kCollectMemoryInfoSettingKey, false).toBool());
-  uint64_t memory_sampling_period_ns =
-      kMemorySamplingPeriodMsDefaultValue * kMilliSecondsToNanoSeconds;
+  uint64_t memory_sampling_period_ms = kMemorySamplingPeriodMsDefaultValue;
   uint64_t memory_warning_threshold_kb = kMemoryWarningThresholdKbDefaultValue;
   if (app_->GetCollectMemoryInfo()) {
-    memory_sampling_period_ns = settings
+    memory_sampling_period_ms = settings
                                     .value(kMemorySamplingPeriodMsSettingKey,
                                            QVariant::fromValue(kMemorySamplingPeriodMsDefaultValue))
-                                    .toULongLong() *
-                                kMilliSecondsToNanoSeconds;
+                                    .toULongLong();
     memory_warning_threshold_kb =
         settings
             .value(kMemoryWarningThresholdKbSettingKey,
                    QVariant::fromValue(kMemoryWarningThresholdKbDefaultValue))
             .toULongLong();
   }
-  app_->SetMemorySamplingPeriodNs(memory_sampling_period_ns);
+  app_->SetMemorySamplingPeriodMs(memory_sampling_period_ms);
   app_->SetMemoryWarningThresholdKb(memory_warning_threshold_kb);
 
   uint64_t max_local_marker_depth_per_command_buffer = std::numeric_limits<uint64_t>::max();

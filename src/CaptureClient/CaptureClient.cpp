@@ -74,7 +74,7 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
     UnwindingMethod unwinding_method, bool collect_scheduling_info, bool collect_thread_state,
     bool collect_gpu_jobs, bool enable_api, bool enable_introspection,
     uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
-    uint64_t memory_sampling_period_ns,
+    uint64_t memory_sampling_period_ms,
     std::unique_ptr<CaptureEventProcessor> capture_event_processor) {
   absl::MutexLock lock(&state_mutex_);
   if (state_ != State::kStopped) {
@@ -90,13 +90,13 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
        selected_tracepoints = std::move(selected_tracepoints), samples_per_second, unwinding_method,
        collect_scheduling_info, collect_thread_state, collect_gpu_jobs, enable_api,
        enable_introspection, max_local_marker_depth_per_command_buffer, collect_memory_info,
-       memory_sampling_period_ns,
+       memory_sampling_period_ms,
        capture_event_processor = std::move(capture_event_processor)]() mutable {
         return CaptureSync(process_id, module_manager, selected_functions, selected_tracepoints,
                            samples_per_second, unwinding_method, collect_scheduling_info,
                            collect_thread_state, collect_gpu_jobs, enable_api, enable_introspection,
                            max_local_marker_depth_per_command_buffer, collect_memory_info,
-                           memory_sampling_period_ns, capture_event_processor.get());
+                           memory_sampling_period_ms, capture_event_processor.get());
       });
 
   return capture_result;
@@ -134,7 +134,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
     UnwindingMethod unwinding_method, bool collect_scheduling_info, bool collect_thread_state,
     bool collect_gpu_jobs, bool enable_api, bool enable_introspection,
     uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
-    uint64_t memory_sampling_period_ns, CaptureEventProcessor* capture_event_processor) {
+    uint64_t memory_sampling_period_ms, CaptureEventProcessor* capture_event_processor) {
   ORBIT_SCOPE_FUNCTION;
   writes_done_failed_ = false;
   try_abort_ = false;
@@ -162,7 +162,8 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   }
 
   capture_options->set_collect_memory_info(collect_memory_info);
-  capture_options->set_memory_sampling_period_ns(memory_sampling_period_ns);
+  constexpr const uint64_t kMsToNs = 1000'000;
+  capture_options->set_memory_sampling_period_ns(memory_sampling_period_ms * kMsToNs);
 
   capture_options->set_trace_thread_state(collect_thread_state);
   capture_options->set_trace_gpu_driver(collect_gpu_jobs);
