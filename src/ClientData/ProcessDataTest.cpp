@@ -13,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+#include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
 #include "OrbitBase/Result.h"
 #include "module.pb.h"
@@ -160,7 +161,7 @@ TEST(ProcessData, MemorySpace) {
   }
 }
 
-TEST(ProcessData, IsModuleLoaded) {
+TEST(ProcessData, FindModuleByPath) {
   const std::string file_path_1 = "filepath1";
   uint64_t start_address_1 = 0;
   uint64_t end_address_1 = 10;
@@ -175,7 +176,7 @@ TEST(ProcessData, IsModuleLoaded) {
   ModuleInfo module_info_2;
   module_info_2.set_file_path(file_path_2);
   module_info_2.set_address_start(start_address_2);
-  module_info_1.set_address_end(end_address_2);
+  module_info_2.set_address_end(end_address_2);
 
   std::vector<ModuleInfo> module_infos{module_info_1, module_info_2};
 
@@ -185,6 +186,52 @@ TEST(ProcessData, IsModuleLoaded) {
   EXPECT_TRUE(process.FindModuleByPath(file_path_1).has_value());
   EXPECT_TRUE(process.FindModuleByPath(file_path_2).has_value());
   EXPECT_FALSE(process.FindModuleByPath("not/loaded/module").has_value());
+}
+
+TEST(ProcessData, IsModuleLoadedByProcess) {
+  ModuleInfo module_info_1;
+  module_info_1.set_file_path("path/to/file1");
+  module_info_1.set_address_start(0);
+  module_info_1.set_address_end(10);
+
+  ModuleInfo module_info_2;
+  module_info_2.set_file_path("path/to/file2");
+  module_info_2.set_address_start(100);
+  module_info_2.set_address_end(110);
+  module_info_2.set_build_id("build_id_2");
+
+  ProcessData process(ProcessInfo{});
+  process.UpdateModuleInfos({module_info_1, module_info_2});
+
+  // path empty
+  EXPECT_FALSE(process.IsModuleLoadedByProcess(""));
+
+  // wrong path
+  EXPECT_FALSE(process.IsModuleLoadedByProcess("/path/to/file1"));
+
+  // correct path
+  EXPECT_TRUE(process.IsModuleLoadedByProcess("path/to/file1"));
+
+  // Module without build id
+  ModuleData module_1{module_info_1};
+  EXPECT_TRUE(process.IsModuleLoadedByProcess(&module_1));
+
+  // Module with build id
+  ModuleData module_2{module_info_2};
+  EXPECT_TRUE(process.IsModuleLoadedByProcess(&module_2));
+
+  // Different module (same path, different build_id)
+  ModuleInfo module_info_3;
+  module_info_3.set_file_path("path/to/file1");
+  module_info_3.set_address_start(0);
+  module_info_3.set_address_end(10);
+  module_info_3.set_build_id("build_id_3");
+  process.AddOrUpdateModuleInfo({module_info_3});
+
+  EXPECT_TRUE(process.IsModuleLoadedByProcess("path/to/file1"));
+  EXPECT_FALSE(process.IsModuleLoadedByProcess(&module_1));
+  ModuleData module_3{module_info_3};
+  EXPECT_TRUE(process.IsModuleLoadedByProcess(&module_3));
 }
 
 TEST(ProcessData, GetModuleBaseAddress) {

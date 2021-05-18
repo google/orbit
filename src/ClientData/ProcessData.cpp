@@ -137,4 +137,10 @@ absl::node_hash_map<std::string, ModuleInMemory> ProcessData::GetMemoryMapCopy()
   return module_memory_map_;
 }
 
+bool ProcessData::IsModuleLoadedByProcess(const ModuleData* module) const {
+  const std::optional<ModuleInMemory> loaded_module = FindModuleByPath(module->file_path());
+  if (!loaded_module.has_value()) return false;
+  return loaded_module->build_id() == module->build_id();
+}
+
 }  // namespace orbit_client_data

@@ -75,9 +75,11 @@ class ProcessData final {
   [[nodiscard]] std::optional<ModuleInMemory> FindModuleByPath(
       const std::string& module_path) const;
 
-  [[nodiscard]] bool IsModuleLoaded(const std::string& module_path) const {
+  [[nodiscard]] bool IsModuleLoadedByProcess(const std::string& module_path) const {
     return FindModuleByPath(module_path).has_value();
   }
+
+  [[nodiscard]] bool IsModuleLoadedByProcess(const ModuleData* module) const;
 
  private:
   mutable absl::Mutex mutex_;
