@@ -64,7 +64,7 @@ void ExpectCGroupMemoryUsageEq(const CGroupMemoryUsage& cgroup_memory_usage,
 
 namespace orbit_memory_tracing {
 
-TEST(MemoryUtils, GetValuesFromMemInfo) {
+TEST(MemoryUtils, UpdateSystemMemoryUsageFromMemInfo) {
   const int kMemTotal = 16396576;
   const int kMemFree = 11493816;
   const int kMemAvailable = 14378752;
@@ -134,25 +134,31 @@ SwapCached:      0 kB)",
 
   {
     SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
-    GetValuesFromMemInfo(kValidMeminfo, &system_memory_usage);
+    ErrorMessageOr<void> updating_result =
+        UpdateSystemMemoryUsageFromMemInfo(kValidMeminfo, &system_memory_usage);
+    EXPECT_FALSE(updating_result.has_error());
     ExpectSystemMemoryUsageEq(system_memory_usage, kMemTotal, kMemFree, kMemAvailable, kBuffers,
                               kCached);
   }
 
   {
     SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
-    GetValuesFromMemInfo(kPartialMeminfo, &system_memory_usage);
+    ErrorMessageOr<void> updating_result =
+        UpdateSystemMemoryUsageFromMemInfo(kPartialMeminfo, &system_memory_usage);
+    EXPECT_FALSE(updating_result.has_error());
     ExpectSystemMemoryUsageEq(system_memory_usage, kMemTotal, kMemFree);
   }
 
   {
     SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
-    GetValuesFromMemInfo(kEmptyMeminfo, &system_memory_usage);
+    ErrorMessageOr<void> updating_result =
+        UpdateSystemMemoryUsageFromMemInfo(kEmptyMeminfo, &system_memory_usage);
+    EXPECT_TRUE(updating_result.has_error());
     ExpectSystemMemoryUsageEq(system_memory_usage);
   }
 }
 
-TEST(MemoryUtils, GetValuesFromVmStat) {
+TEST(MemoryUtils, UpdateSystemMemoryUsageFromVmStat) {
   const int kPageFaults = 123456789;
   const int kMajorPageFaults = 123456;
 
@@ -318,26 +324,32 @@ nr_unstable 0)",
 
   {
     SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
-    GetValuesFromVmStat(kValidProcVmStat, &system_memory_usage);
+    ErrorMessageOr<void> updating_result =
+        UpdateSystemMemoryUsageFromVmStat(kValidProcVmStat, &system_memory_usage);
+    EXPECT_FALSE(updating_result.has_error());
     ExpectSystemMemoryUsageEq(system_memory_usage, kMissingInfo, kMissingInfo, kMissingInfo,
                               kMissingInfo, kMissingInfo, kPageFaults, kMajorPageFaults);
   }
 
   {
     SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
-    GetValuesFromVmStat(kPartialProcVmStat, &system_memory_usage);
+    ErrorMessageOr<void> updating_result =
+        UpdateSystemMemoryUsageFromVmStat(kPartialProcVmStat, &system_memory_usage);
+    EXPECT_FALSE(updating_result.has_error());
     ExpectSystemMemoryUsageEq(system_memory_usage, kMissingInfo, kMissingInfo, kMissingInfo,
                               kMissingInfo, kMissingInfo, kPageFaults);
   }
 
   {
     SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
-    GetValuesFromVmStat(kEmptyProcVmStat, &system_memory_usage);
+    ErrorMessageOr<void> updating_result =
+        UpdateSystemMemoryUsageFromVmStat(kEmptyProcVmStat, &system_memory_usage);
+    EXPECT_TRUE(updating_result.has_error());
     ExpectSystemMemoryUsageEq(system_memory_usage);
   }
 }
 
-TEST(MemoryUtils, GetValuesFromProcessStat) {
+TEST(MemoryUtils, UpdateProcessMemoryUsageFromProcessStat) {
   const int kRssPages = 2793;
   const int kMinorPageFaults = 20;
   const int kMajorPageFaults = 1;
@@ -350,19 +362,25 @@ TEST(MemoryUtils, GetValuesFromProcessStat) {
 
   {
     ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
-    GetValuesFromProcessStat(kValidProcessStat, &process_memory_usage);
+    ErrorMessageOr<void> updating_result =
+        UpdateProcessMemoryUsageFromProcessStat(kValidProcessStat, &process_memory_usage);
+    EXPECT_FALSE(updating_result.has_error());
     ExpectProcessMemoryUsageEq(process_memory_usage, kRssPages, kMinorPageFaults, kMajorPageFaults);
   }
 
   {
     ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
-    GetValuesFromProcessStat(kPartialProcessStat, &process_memory_usage);
+    ErrorMessageOr<void> updating_result =
+        UpdateProcessMemoryUsageFromProcessStat(kPartialProcessStat, &process_memory_usage);
+    EXPECT_TRUE(updating_result.has_error());
     ExpectProcessMemoryUsageEq(process_memory_usage);
   }
 
   {
     ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
-    GetValuesFromProcessStat(kEmptyProcessStat, &process_memory_usage);
+    ErrorMessageOr<void> updating_result =
+        UpdateProcessMemoryUsageFromProcessStat(kEmptyProcessStat, &process_memory_usage);
+    EXPECT_TRUE(updating_result.has_error());
     ExpectProcessMemoryUsageEq(process_memory_usage);
   }
 }
@@ -404,7 +422,7 @@ TEST(MemoryUtil, GetProcessMemoryCGroupName) {
   }
 }
 
-TEST(MemoryUtils, GetValuesFromCGroupMemoryStat) {
+TEST(MemoryUtils, UpdateCGroupMemoryUsageFromMemoryStat) {
   const int kRssInBytes = 245760;
   const int KMappedFileInBytes = 1234;
   const int kPageFaults = 1425;
@@ -459,7 +477,9 @@ rss_huge 0)";
 
   {
     CGroupMemoryUsage cgroup_memory_usage = CreateAndInitializeCGroupMemoryUsage();
-    GetValuesFromCGroupMemoryStat(kValidCGroupMemoryStatus, &cgroup_memory_usage);
+    ErrorMessageOr<void> updating_result =
+        UpdateCGroupMemoryUsageFromMemoryStat(kValidCGroupMemoryStatus, &cgroup_memory_usage);
+    EXPECT_FALSE(updating_result.has_error());
     ExpectCGroupMemoryUsageEq(cgroup_memory_usage, kMissingInfo, kRssInBytes, KMappedFileInBytes,
                               kPageFaults, kMajorPageFaults, kUnevictableInBytes,
                               kInactiveAnonInBytes, kActiveAnonInBytes, kInactiveFileInBytes,
@@ -468,13 +488,17 @@ rss_huge 0)";
 
   {
     CGroupMemoryUsage cgroup_memory_usage = CreateAndInitializeCGroupMemoryUsage();
-    GetValuesFromCGroupMemoryStat(kPartialCGroupMemoryStatus, &cgroup_memory_usage);
+    ErrorMessageOr<void> updating_result =
+        UpdateCGroupMemoryUsageFromMemoryStat(kPartialCGroupMemoryStatus, &cgroup_memory_usage);
+    EXPECT_FALSE(updating_result.has_error());
     ExpectCGroupMemoryUsageEq(cgroup_memory_usage);
   }
 
   {
     CGroupMemoryUsage cgroup_memory_usage = CreateAndInitializeCGroupMemoryUsage();
-    GetValuesFromCGroupMemoryStat(kEmptyCGroupMemoryStatus, &cgroup_memory_usage);
+    ErrorMessageOr<void> updating_result =
+        UpdateCGroupMemoryUsageFromMemoryStat(kEmptyCGroupMemoryStatus, &cgroup_memory_usage);
+    EXPECT_TRUE(updating_result.has_error());
     ExpectCGroupMemoryUsageEq(cgroup_memory_usage);
   }
 }
