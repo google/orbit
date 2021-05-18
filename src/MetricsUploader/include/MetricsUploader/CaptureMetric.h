@@ -22,6 +22,7 @@ struct CaptureStartData {
   int64_t number_of_manual_tracked_values = 0;
   orbit_metrics_uploader::OrbitCaptureData_ThreadStates thread_states =
       orbit_metrics_uploader::OrbitCaptureData_ThreadStates_THREAD_STATES_UNKNOWN;
+  int64_t memory_information_sampling_period_ms = 0;
 };
 
 struct CaptureCompleteData {

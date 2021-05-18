@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <exception>
 #include <memory>
+#include <optional>
 #include <outcome.hpp>
 #include <ratio>
 #include <string>
@@ -169,7 +170,7 @@ PresetLoadState GetPresetLoadStateForProcess(const PresetFile& preset, const Pro
 
 orbit_metrics_uploader::CaptureStartData CreateCaptureStartData(
     const std::vector<FunctionInfo>& all_instrumented_functions, int64_t number_of_frame_tracks,
-    bool thread_states) {
+    bool thread_states, int64_t memory_information_sampling_period_ms) {
   orbit_metrics_uploader::CaptureStartData capture_start_data{};
 
   for (const auto& function : all_instrumented_functions) {
@@ -202,6 +203,7 @@ orbit_metrics_uploader::CaptureStartData CreateCaptureStartData(
   capture_start_data.thread_states =
       thread_states ? orbit_metrics_uploader::OrbitCaptureData_ThreadStates_THREAD_STATES_ENABLED
                     : orbit_metrics_uploader::OrbitCaptureData_ThreadStates_THREAD_STATES_DISABLED;
+  capture_start_data.memory_information_sampling_period_ms = memory_information_sampling_period_ms;
   return capture_start_data;
 }
 
@@ -1114,12 +1116,6 @@ void OrbitApp::StartCapture() {
 
   UserDefinedCaptureData user_defined_capture_data = data_manager_->user_defined_capture_data();
 
-  CaptureMetric capture_metric{
-      metrics_uploader_,
-      CreateCaptureStartData(selected_functions,
-                             user_defined_capture_data.frame_track_functions().size(),
-                             data_manager_->collect_thread_states())};
-
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions_map;
   absl::flat_hash_set<uint64_t> frame_track_function_ids;
   // non-zero since 0 is reserved for invalid ids.
@@ -1147,6 +1143,21 @@ void OrbitApp::StartCapture() {
 
   bool collect_memory_info = data_manager_->collect_memory_info();
   uint64_t memory_sampling_period_ms = data_manager_->memory_sampling_period_ms();
+
+  // In metrics, -1 indicates memory collection was turned off. See also the comment in
+  // orbit_log_event.proto
+  constexpr int64_t kMemoryCollectionDisabledMetricsValue = -1;
+  int64_t memory_information_sampling_period_ms_for_metrics = kMemoryCollectionDisabledMetricsValue;
+  if (collect_memory_info) {
+    memory_information_sampling_period_ms_for_metrics =
+        static_cast<int64_t>(memory_sampling_period_ms);
+  }
+  CaptureMetric capture_metric{
+      metrics_uploader_,
+      CreateCaptureStartData(selected_functions,
+                             user_defined_capture_data.frame_track_functions().size(),
+                             data_manager_->collect_thread_states(),
+                             memory_information_sampling_period_ms_for_metrics)};
 
   CHECK(capture_client_ != nullptr);
 
