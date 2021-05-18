@@ -331,6 +331,7 @@ void TimerTrack::OnTimer(const TimerInfo& timer_info) {
 
   TextBox& text_box = timer_chain->emplace_back();
   text_box.SetTimerInfo(timer_info);
+  timer_chain->emplace_back(text_box);
 
   ++num_timers_;
   if (timer_info.start() < min_time_) min_time_ = timer_info.start();
