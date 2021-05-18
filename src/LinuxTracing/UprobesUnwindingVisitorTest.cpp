@@ -162,7 +162,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitValidStackSampleWithoutUprobesEmitsEven
   };
   event.ring_buffer_record->sample_id = sample_id;
 
-  EXPECT_CALL(return_address_manager_, PatchSample).WillRepeatedly(Return());
+  EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillRepeatedly(Return());
   EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
 
   std::vector<unwindstack::FrameData> libunwindstack_callstack;
@@ -228,7 +228,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitInvalidStackSampleWithoutUprobesLeadsTo
   };
   event.ring_buffer_record->sample_id = sample_id;
 
-  EXPECT_CALL(return_address_manager_, PatchSample).WillRepeatedly(Return());
+  EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillRepeatedly(Return());
   EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
 
   std::vector<unwindstack::FrameData> empty_callstack;
@@ -266,7 +266,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   };
   event.ring_buffer_record->sample_id = sample_id;
 
-  EXPECT_CALL(return_address_manager_, PatchSample).WillRepeatedly(Return());
+  EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillRepeatedly(Return());
   EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
 
   std::vector<unwindstack::FrameData> incomplete_callstack;
@@ -304,7 +304,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitStackSampleWithinUprobeLeadsToUnwinding
   };
   event.ring_buffer_record->sample_id = sample_id;
 
-  EXPECT_CALL(return_address_manager_, PatchSample).WillRepeatedly(Return());
+  EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillRepeatedly(Return());
   EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
 
   std::vector<unwindstack::FrameData> callstack;
@@ -453,7 +453,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleWithUprobeEmitsEvents) {
 
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
   auto fake_patch_callchain = [](pid_t /*tid*/, uint64_t* callchain, uint64_t callchain_size,
-                                 orbit_linux_tracing::LibunwindstackMaps*
+                                 orbit_linux_tracing::LibunwindstackMaps *
                                  /*maps*/) -> bool {
     CHECK(callchain != nullptr);
     CHECK(callchain_size == 4);
