@@ -460,16 +460,17 @@ const FunctionInfo& LiveFunctionsDataView::GetInstrumentedFunction(uint32_t row)
   return functions_.at(indices_[row]);
 }
 
-std::pair<TextBox*, TextBox*> LiveFunctionsDataView::GetMinMax(uint64_t function_id) const {
-  TextBox* min_box = nullptr;
-  TextBox* max_box = nullptr;
+std::pair<const TextBox*, const TextBox*> LiveFunctionsDataView::GetMinMax(
+    uint64_t function_id) const {
+  const TextBox* min_box = nullptr;
+  const TextBox* max_box = nullptr;
   std::vector<std::shared_ptr<TimerChain>> chains =
       app_->GetTimeGraph()->GetAllThreadTrackTimerChains();
   for (auto& chain : chains) {
     if (!chain) continue;
     for (auto& block : *chain) {
       for (size_t i = 0; i < block.size(); i++) {
-        TextBox& box = block[i];
+        const TextBox& box = block[i];
         if (box.GetTimerInfo().function_id() == function_id) {
           uint64_t elapsed_nanos = box.GetTimerInfo().end() - box.GetTimerInfo().start();
           if (min_box == nullptr ||
@@ -495,6 +496,7 @@ std::optional<int> LiveFunctionsDataView::GetRowFromFunctionId(uint64_t function
   }
   return std::nullopt;
 }
+
 std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrumentedFunction(
     const InstrumentedFunction& instrumented_function) {
   const ModuleData* module_data = app_->GetModuleByPathAndBuildId(
