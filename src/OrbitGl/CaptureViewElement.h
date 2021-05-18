@@ -9,6 +9,7 @@
 #include "Batcher.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
+#include "TextRenderer.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
 

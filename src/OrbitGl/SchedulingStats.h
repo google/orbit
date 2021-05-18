@@ -56,7 +56,7 @@ class SchedulingStats {
   };
 
   double GetTimeRangeMs() const { return time_range_ms_; }
-  uint64_t GetTimeOnCoreNs() const { return time_on_core_ns; }
+  uint64_t GetTimeOnCoreNs() const { return time_on_core_ns_; }
   const std::map<int32_t, uint64_t>& GetTimeOnCoreNsByCore() const {
     return time_on_core_ns_by_core_;
   }
@@ -69,7 +69,7 @@ class SchedulingStats {
 
  private:
   double time_range_ms_ = 0;
-  uint64_t time_on_core_ns = 0;
+  uint64_t time_on_core_ns_ = 0;
   std::map<int32_t, uint64_t> time_on_core_ns_by_core_;
   std::map<int32_t, ProcessStats> process_stats_by_pid_;
   std::vector<ProcessStats*> process_stats_sorted_by_time_on_core_;

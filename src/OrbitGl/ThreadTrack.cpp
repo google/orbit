@@ -449,8 +449,7 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
     timer_chain = std::make_shared<TimerChain>();
   }
 
-  TextBox& text_box = timer_chain->emplace_back();
-  text_box.SetTimerInfo(timer_info);
+  TextBox& text_box = timer_chain->emplace_back(timer_info);
   ++num_timers_;
 
   if (timer_info.start() < min_time_) min_time_ = timer_info.start();

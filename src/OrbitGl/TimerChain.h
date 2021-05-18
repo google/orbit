@@ -27,7 +27,7 @@ class TimerBlock {
   friend class TimerChainIterator;
 
  public:
-  TimerBlock(TimerBlock* prev)
+  explicit TimerBlock(TimerBlock* prev)
       : prev_(prev),
         next_(nullptr),
         size_(0),
@@ -60,7 +60,7 @@ class TimerBlock {
   TimerBlock* prev_;
   TimerBlock* next_;
   uint64_t size_;
-  TextBox data_[kBlockSize];
+  std::array<TextBox, kBlockSize> data_;
 
   uint64_t min_timestamp_;
   uint64_t max_timestamp_;
@@ -103,11 +103,6 @@ class TimerChainIterator {
 // individually stored elements.
 class TimerChain {
  public:
-  TimerChain() : num_blocks_(1), num_items_(0) {
-    root_ = new TimerBlock(/*prev=*/nullptr);
-    current_ = root_;
-  }
-
   ~TimerChain();
 
   // Append an item to the end of the current block. If capacity of the current block is reached, a
@@ -141,10 +136,10 @@ class TimerChain {
     ++num_blocks_;
   }
 
-  TimerBlock* root_;
-  TimerBlock* current_;
-  uint64_t num_blocks_;
-  uint64_t num_items_;
+  TimerBlock* root_ = new TimerBlock(/*prev=*/nullptr);
+  TimerBlock* current_ = root_;
+  uint64_t num_blocks_ = 1;
+  uint64_t num_items_ = 0;
 };
 
 #endif  // ORBIT_GL_TIMER_CHAIN_H_

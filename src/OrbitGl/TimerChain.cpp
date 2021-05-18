@@ -6,7 +6,6 @@
 
 #include <algorithm>
 
-#include "OrbitBase/Logging.h"
 #include "capture_data.pb.h"
 
 bool TimerBlock::Intersects(uint64_t min, uint64_t max) const {
@@ -15,10 +14,12 @@ bool TimerBlock::Intersects(uint64_t min, uint64_t max) const {
 
 TimerChain::~TimerChain() {
   // Find last block in chain
-  while (current_->next_) current_ = current_->next_;
+  while (current_->next_ != nullptr) {
+    current_ = current_->next_;
+  }
 
   TimerBlock* prev = current_;
-  while (prev) {
+  while (prev != nullptr) {
     prev = current_->prev_;
     delete current_;
     current_ = prev;
@@ -27,7 +28,7 @@ TimerChain::~TimerChain() {
 
 TimerBlock* TimerChain::GetBlockContaining(const TextBox* element) const {
   TimerBlock* block = root_;
-  while (block) {
+  while (block != nullptr) {
     uint32_t size = block->size_;
     if (size != 0) {
       TextBox* begin = &block->data_[0];
@@ -43,14 +44,14 @@ TimerBlock* TimerChain::GetBlockContaining(const TextBox* element) const {
 }
 
 TextBox* TimerChain::GetElementAfter(const TextBox* element) const {
-  auto block = GetBlockContaining(element);
-  if (block) {
+  TimerBlock* block = GetBlockContaining(element);
+  if (block != nullptr) {
     TextBox* begin = &block->data_[0];
     uint32_t index = element - begin;
     if (index < block->size_ - 1) {
       return &block->data_[++index];
     }
-    if (block->next_ && block->next_->size_) {
+    if (block->next_ != nullptr && block->next_->size_ != 0) {
       return &block->next_->data_[0];
     }
   }
@@ -58,14 +59,16 @@ TextBox* TimerChain::GetElementAfter(const TextBox* element) const {
 }
 
 TextBox* TimerChain::GetElementBefore(const TextBox* element) const {
-  auto block = GetBlockContaining(element);
-  if (block) {
+  TimerBlock* block = GetBlockContaining(element);
+  if (block != nullptr) {
     TextBox* begin = &block->data_[0];
     uint32_t index = element - begin;
     if (index > 0) {
       return &block->data_[--index];
     }
-    if (block->prev_) return &block->prev_->data_[block->prev_->size_ - 1];
+    if (block->prev_ != nullptr) {
+      return &block->prev_->data_[block->prev_->size_ - 1];
+    }
   }
   return nullptr;
 }

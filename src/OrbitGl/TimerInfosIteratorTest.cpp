@@ -22,12 +22,9 @@ using orbit_client_protos::TimerInfo;
 TEST(TimerInfosIterator, Access) {
   std::vector<std::shared_ptr<TimerChain>> chains;
   std::shared_ptr<TimerChain> chain = std::make_shared<TimerChain>();
-  TextBox box;
   TimerInfo timer;
   timer.set_function_id(1);
-  // Need to set the end, as SetTimerInfo will refuse that timer otherwise.
-  timer.set_end(1);
-  box.SetTimerInfo(timer);
+  TextBox box{timer};
   chain->emplace_back(box);
   chains.emplace_back(chain);
 
@@ -44,12 +41,9 @@ TEST(TimerInfosIterator, Access) {
 TEST(TimerInfosIterator, Copy) {
   std::vector<std::shared_ptr<TimerChain>> chains;
   std::shared_ptr<TimerChain> chain = std::make_shared<TimerChain>();
-  TextBox box;
   TimerInfo timer;
   timer.set_function_id(1);
-  // Need to set the end, as SetTimerInfo will refuse that timer otherwise.
-  timer.set_end(1);
-  box.SetTimerInfo(timer);
+  TextBox box{timer};
   chain->emplace_back(box);
   chains.emplace_back(chain);
 
@@ -77,12 +71,9 @@ TEST(TimerInfosIterator, Copy) {
 TEST(TimerInfosIterator, Move) {
   std::vector<std::shared_ptr<TimerChain>> chains;
   std::shared_ptr<TimerChain> chain = std::make_shared<TimerChain>();
-  TextBox box;
   TimerInfo timer;
   timer.set_function_id(1);
-  // Need to set the end, as SetTimerInfo will refuse that timer otherwise.
-  timer.set_end(1);
-  box.SetTimerInfo(timer);
+  TextBox box{timer};
   chain->emplace_back(box);
   chains.emplace_back(chain);
 
@@ -102,11 +93,9 @@ TEST(TimerInfosIterator, Move) {
 TEST(TimerInfosIterator, Equality) {
   std::vector<std::shared_ptr<TimerChain>> chains;
   std::shared_ptr<TimerChain> chain = std::make_shared<TimerChain>();
-  TextBox box;
   TimerInfo timer;
   timer.set_function_id(1);
-  timer.set_end(1);
-  box.SetTimerInfo(timer);
+  TextBox box{timer};
   chain->emplace_back(box);
   chains.emplace_back(chain);
 
@@ -153,12 +142,11 @@ TEST(TimerInfosIterator, ForEachLarge) {
   for (size_t chain_count = 0; chain_count < 12; ++chain_count) {
     std::shared_ptr<TimerChain> chain = std::make_shared<TimerChain>();
     for (size_t box_count = 0; box_count < max_timers; ++box_count) {
-      TextBox box;
       TimerInfo timer;
       timer.set_function_id(count);
       timer.set_start(count);
       timer.set_end(count + 1);
-      box.SetTimerInfo(timer);
+      TextBox box{timer};
       chain->emplace_back(box);
       expected.emplace_back(count);
       ++count;
