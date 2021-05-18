@@ -1146,7 +1146,7 @@ void OrbitApp::StartCapture() {
       data_manager_->max_local_marker_depth_per_command_buffer();
 
   bool collect_memory_info = data_manager_->collect_memory_info();
-  uint64_t memory_sampling_period_ns = data_manager_->memory_sampling_period_ns();
+  uint64_t memory_sampling_period_ms = data_manager_->memory_sampling_period_ms();
 
   CHECK(capture_client_ != nullptr);
 
@@ -1160,7 +1160,7 @@ void OrbitApp::StartCapture() {
       std::move(selected_tracepoints), samples_per_second, unwinding_method,
       collect_scheduling_info, collect_thread_states, collect_gpu_jobs, enable_api,
       enable_introspection, max_local_marker_depth_per_command_buffer, collect_memory_info,
-      memory_sampling_period_ns, std::move(capture_event_processor));
+      memory_sampling_period_ms, std::move(capture_event_processor));
 
   // TODO(b/187250643): Refactor this to be more readable and maybe remove parts that are not needed
   // here (capture cancelled)

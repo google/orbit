@@ -385,8 +385,8 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
     data_manager_->set_collect_memory_info(collect_memory_info);
   }
   [[nodiscard]] bool GetCollectMemoryInfo() const { return data_manager_->collect_memory_info(); }
-  void SetMemorySamplingPeriodNs(uint64_t memory_sampling_period_ns) {
-    data_manager_->set_memory_sampling_period_ns(memory_sampling_period_ns);
+  void SetMemorySamplingPeriodMs(uint64_t memory_sampling_period_ms) {
+    data_manager_->set_memory_sampling_period_ms(memory_sampling_period_ms);
   }
   void SetMemoryWarningThresholdKb(uint64_t memory_warning_threshold_kb) {
     data_manager_->set_memory_warning_threshold_kb(memory_warning_threshold_kb);

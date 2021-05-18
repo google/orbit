@@ -144,10 +144,10 @@ int main(int argc, char* argv[]) {
   constexpr uint64_t kMaxLocalMarkerDepthPerCommandBuffer = std::numeric_limits<uint64_t>::max();
   bool collect_memory_info = absl::GetFlag(FLAGS_memory_sampling_rate) > 0;
   LOG("collect_memory_info=%d", collect_memory_info);
-  uint64_t memory_sampling_period_ns = 0;
+  uint64_t memory_sampling_period_ms = 0;
   if (collect_memory_info) {
-    memory_sampling_period_ns = 1'000'000'000 / absl::GetFlag(FLAGS_memory_sampling_rate);
-    LOG("memory_sampling_period_ns=%u", memory_sampling_period_ns);
+    memory_sampling_period_ms = 1'000 / absl::GetFlag(FLAGS_memory_sampling_rate);
+    LOG("memory_sampling_period_ms=%u", memory_sampling_period_ms);
   }
 
   uint32_t grpc_port = absl::GetFlag(FLAGS_port);
@@ -176,7 +176,7 @@ int main(int argc, char* argv[]) {
       orbit_client_data::TracepointInfoSet{}, samples_per_second, unwinding_method,
       collect_scheduling_info, collect_thread_state, collect_gpu_jobs, kEnableApi,
       kEnableIntrospection, kMaxLocalMarkerDepthPerCommandBuffer, collect_memory_info,
-      memory_sampling_period_ns, std::move(capture_event_processor));
+      memory_sampling_period_ms, std::move(capture_event_processor));
   LOG("Asked to start capture");
 
   uint32_t duration_s = absl::GetFlag(FLAGS_duration);

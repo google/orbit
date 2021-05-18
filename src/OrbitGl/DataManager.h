@@ -105,10 +105,10 @@ class DataManager final {
   }
   [[nodiscard]] bool collect_memory_info() const { return collect_memory_info_; }
 
-  void set_memory_sampling_period_ns(uint64_t memory_sampling_period_ns) {
-    memory_sampling_period_ns_ = memory_sampling_period_ns;
+  void set_memory_sampling_period_ms(uint64_t memory_sampling_period_ms) {
+    memory_sampling_period_ms_ = memory_sampling_period_ms;
   }
-  [[nodiscard]] uint64_t memory_sampling_period_ns() const { return memory_sampling_period_ns_; }
+  [[nodiscard]] uint64_t memory_sampling_period_ms() const { return memory_sampling_period_ms_; }
 
   void set_memory_warning_threshold_kb(uint64_t memory_warning_threshold_kb) {
     memory_warning_threshold_kb_ = memory_warning_threshold_kb;
@@ -140,7 +140,7 @@ class DataManager final {
   orbit_grpc_protos::UnwindingMethod unwinding_method_{};
 
   bool collect_memory_info_ = false;
-  uint64_t memory_sampling_period_ns_ = 10'000'000;
+  uint64_t memory_sampling_period_ms_ = 10;
   uint64_t memory_warning_threshold_kb_ = 1024 * 1024 * 8;
 };
 
