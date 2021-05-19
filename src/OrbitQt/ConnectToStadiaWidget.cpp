@@ -65,7 +65,14 @@ ConnectToStadiaWidget::ConnectToStadiaWidget(QWidget* parent)
     ui_->rememberCheckBox->setChecked(true);
   }
 
-  ui_->instancesTableView->setModel(&instance_model_);
+  instance_proxy_model_.setSourceModel(&instance_model_);
+  instance_proxy_model_.setSortRole(Qt::DisplayRole);
+
+  ui_->instancesTableView->setModel(&instance_proxy_model_);
+  ui_->instancesTableView->setSortingEnabled(true);
+  ui_->instancesTableView->sortByColumn(
+      static_cast<int>(orbit_ggp::InstanceItemModel::Columns::kDisplayName),
+      Qt::SortOrder::AscendingOrder);
 
   QObject::connect(ui_->radioButton, &QRadioButton::clicked, this,
                    &ConnectToStadiaWidget::OnConnectToStadiaRadioButtonClicked);
@@ -354,7 +361,6 @@ void ConnectToStadiaWidget::OnErrorOccurred(const QString& message) {
 void ConnectToStadiaWidget::OnSelectionChanged(const QModelIndex& current) {
   if (!current.isValid()) return;
 
-  CHECK(current.model() == &instance_model_);
   selected_instance_ = current.data(Qt::UserRole).value<Instance>();
   UpdateRememberInstance(ui_->rememberCheckBox->isChecked());
   emit InstanceSelected();
@@ -428,8 +434,8 @@ void ConnectToStadiaWidget::OnSshInfoLoaded(outcome::result<orbit_ggp::SshInfo> 
 void ConnectToStadiaWidget::TrySelectRememberedInstance() {
   if (remembered_instance_id_ == std::nullopt) return;
 
-  QModelIndexList matches = instance_model_.match(
-      instance_model_.index(0, static_cast<int>(orbit_ggp::InstanceItemModel::Columns::kId)),
+  QModelIndexList matches = instance_proxy_model_.match(
+      instance_proxy_model_.index(0, static_cast<int>(orbit_ggp::InstanceItemModel::Columns::kId)),
       Qt::DisplayRole, QVariant::fromValue(remembered_instance_id_.value()));
 
   if (matches.isEmpty()) return;
