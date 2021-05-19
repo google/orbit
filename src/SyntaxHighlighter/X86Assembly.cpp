@@ -22,9 +22,10 @@ const QColor kNumberColor{0xf0, 0x8d, 0x49};
 const QColor kRegisterColor{0x7e, 0xc6, 0x99};
 const QColor kKeywordColor{0xcc, 0x99, 0xcd};
 
-const char* const kNumberRegex = "\\s(0x)?[\\da-f]+\\b";
-const char* const kProgramCounterRegex = "^0x[0-9a-f]+:";
-const char* const kOpCodeRegex =
+namespace AssemblyRegex {
+const QRegularExpression kNumberRegex{"\\s(0x)?[\\da-f]+\\b"};
+const QRegularExpression kProgramCounterRegex{"^0x[0-9a-f]+:"};
+const QRegularExpression kOpCodeRegex{
     "\\b(?:aaa|aad|aam|aas|adc|add|and|arpl|bb0_reset|bb1_reset|bound|bsf|bsr|bswap|bt|btc|btr|"
     "bts|call|cbw|cdq|cdqe|clc|cld|cli|clts|cmc|cmp|cmpsb|cmpsd|cmpsq|cmpsw|cmpxchg|cmpxchg486|"
     "cmpxchg8b|cmpxchg16b|cpuid|cpu_read|cpu_write|cqo|cwd|cwde|daa|das|dec|div|dmint|emms|enter|"
@@ -200,46 +201,45 @@ const char* const kOpCodeRegex =
     "hint_nop38|hint_nop39|hint_nop40|hint_nop41|hint_nop42|hint_nop43|hint_nop44|hint_nop45|"
     "hint_nop46|hint_nop47|hint_nop48|hint_nop49|hint_nop50|hint_nop51|hint_nop52|hint_nop53|"
     "hint_nop54|hint_nop55|hint_nop56|hint_nop57|hint_nop58|hint_nop59|hint_nop60|hint_nop61|"
-    "hint_nop62|hint_nop63)\\b";
-const char* const kRegisterRegex =
+    "hint_nop62|hint_nop63)\\b"};
+const QRegularExpression kRegisterRegex{
     "\\b(?:ip|eip|rip|[abcd][lh]|sil|dil|bpl|spl|r\\d+b|[abcd]x|si|di|bp|sp|r\\d+w|e[abcd]x|esi|"
     "edi|ebp|esp|eip|r\\d+d|r[abcd]x|rsi|rdi|rbp|rsp|r\\d+|[cdefgs]s|st\\d*|[xyz]?mm\\d+|k\\d|"
     "bnd\\d|[cd]?r\\d+[bwhl]?|d[bwdqtoyz]|ddq|res[bwdqtoyz]|resdq|incbin|equ|times|nosplit|rel|"
-    "abs|seg|wrt|strict|near|far|a32)\\b";
-const char* const kKeywordRegex = "\\b(?:ptr|[xy]mmword|[sdq]?word|byte)\\b";
-const char* const kCommentRegex = ";.*$";
-const char* const kPlatformRegex = "^Platform:.*$";
+    "abs|seg|wrt|strict|near|far|a32)\\b"};
+const QRegularExpression kKeywordRegex{"\\b(?:ptr|[xy]mmword|[sdq]?word|byte)\\b"};
+const QRegularExpression kCommentRegex{";.*$"};
+const QRegularExpression kPlatformRegex{"^Platform:.*$"};
+}  // namespace AssemblyRegex
 }  // namespace
 
-X86Assembly::X86Assembly() : QSyntaxHighlighter{static_cast<QObject*>(nullptr)} {
-  using PatternOption = QRegularExpression::PatternOption;
-  number_regex_ = QRegularExpression{kNumberRegex, PatternOption::CaseInsensitiveOption};
-  program_counter_regex_ =
-      QRegularExpression{kProgramCounterRegex, PatternOption::CaseInsensitiveOption};
-  opcode_regex_ = QRegularExpression{kOpCodeRegex};
-  register_regex_ = QRegularExpression{kRegisterRegex};
-  keyword_regex_ = QRegularExpression{kKeywordRegex};
-  comment_regex_ = QRegularExpression{kCommentRegex};
-  platform_regex_ = QRegularExpression{kPlatformRegex};
-}
+X86Assembly::X86Assembly() : QSyntaxHighlighter{static_cast<QObject*>(nullptr)} {}
 
 void X86Assembly::highlightBlock(const QString& code) {
-  const auto apply = [&code, this](QRegularExpression* expression, const QColor& color) {
+  HighlightBlockAssembly(code, [this](int start, int count, const QTextCharFormat& format) {
+    setFormat(start, count, format);
+  });
+}
+
+void HighlightBlockAssembly(const QString& code,
+                            std::function<void(int, int, const QTextCharFormat&)> set_format) {
+  const auto apply = [&code, &set_format](const QRegularExpression& expression,
+                                          const QColor& color) {
     QTextCharFormat format{};
     format.setForeground(color);
 
-    for (auto it = expression->globalMatch(code); it.hasNext();) {
+    for (auto it = expression.globalMatch(code); it.hasNext();) {
       const auto match = it.next();
-      setFormat(match.capturedStart(), match.capturedLength(), format);
+      set_format(match.capturedStart(), match.capturedLength(), format);
     }
   };
 
-  apply(&number_regex_, kNumberColor);
-  apply(&program_counter_regex_, kProgramCounterColor);
-  apply(&opcode_regex_, kOpcodeColor);
-  apply(&register_regex_, kRegisterColor);
-  apply(&keyword_regex_, kKeywordColor);
-  apply(&comment_regex_, kCommentColor);
-  apply(&platform_regex_, kPlatformColor);
+  apply(AssemblyRegex::kNumberRegex, kNumberColor);
+  apply(AssemblyRegex::kProgramCounterRegex, kProgramCounterColor);
+  apply(AssemblyRegex::kOpCodeRegex, kOpcodeColor);
+  apply(AssemblyRegex::kRegisterRegex, kRegisterColor);
+  apply(AssemblyRegex::kKeywordRegex, kKeywordColor);
+  apply(AssemblyRegex::kCommentRegex, kCommentColor);
+  apply(AssemblyRegex::kPlatformRegex, kPlatformColor);
 }
 }  // namespace orbit_syntax_highlighter

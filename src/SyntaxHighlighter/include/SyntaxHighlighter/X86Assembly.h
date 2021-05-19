@@ -26,15 +26,10 @@ class X86Assembly : public QSyntaxHighlighter {
 
  public:
   explicit X86Assembly();
-
-  QRegularExpression comment_regex_;
-  QRegularExpression platform_regex_;
-  QRegularExpression program_counter_regex_;
-  QRegularExpression opcode_regex_;
-  QRegularExpression number_regex_;
-  QRegularExpression register_regex_;
-  QRegularExpression keyword_regex_;
 };
+
+void HighlightBlockAssembly(const QString& code,
+                            std::function<void(int, int, const QTextCharFormat&)> set_format);
 
 }  // namespace orbit_syntax_highlighter
 
