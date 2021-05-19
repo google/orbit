@@ -16,11 +16,13 @@ target_include_directories(MemoryTracing PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(MemoryTracing PUBLIC
+        include/MemoryTracing/CGroupMemoryInfoProducer.h        
         include/MemoryTracing/MemoryInfoListener.h
         include/MemoryTracing/MemoryInfoProducer.h
         include/MemoryTracing/SystemMemoryInfoProducer.h)
 
 target_sources(MemoryTracing PRIVATE
+        CGroupMemoryInfoProducer.cpp
         MemoryInfoProducer.cpp
         MemoryTracingUtils.cpp
         MemoryTracingUtils.h
