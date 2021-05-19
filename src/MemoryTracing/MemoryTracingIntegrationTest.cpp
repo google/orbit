@@ -41,6 +41,9 @@ class BufferMemoryInfoListener : public MemoryInfoListener {
     return events;
   }
 
+  void OnProcessMemoryUsage(orbit_grpc_protos::ProcessMemoryUsage /*memory_info*/) override {}
+  void OnCGroupMemoryUsage(orbit_grpc_protos::CGroupMemoryUsage /*memory_info*/) override {}
+
  private:
   std::vector<ProducerCaptureEvent> events_;
   absl::Mutex events_mutex_;

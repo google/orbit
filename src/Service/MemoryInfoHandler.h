@@ -32,6 +32,9 @@ class MemoryInfoHandler : public orbit_memory_tracing::MemoryInfoListener {
   void Stop();
 
   void OnSystemMemoryUsage(orbit_grpc_protos::SystemMemoryUsage system_memory_usage) override;
+  void OnCGroupMemoryUsage(orbit_grpc_protos::CGroupMemoryUsage /*cgroup_memory_usage*/) override {}
+  void OnProcessMemoryUsage(
+      orbit_grpc_protos::ProcessMemoryUsage /*process_memory_usage*/) override {}
 
  private:
   ProducerEventProcessor* producer_event_processor_;
