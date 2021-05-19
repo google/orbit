@@ -5,12 +5,10 @@
 #include "MemoryTracing/MemoryInfoProducer.h"
 
 #include <absl/synchronization/mutex.h>
-#include <absl/time/time.h>
 
 #include <thread>
 
 #include "MemoryTracingUtils.h"
-#include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "capture.pb.h"
 
@@ -34,26 +32,6 @@ void MemoryInfoProducer::Stop() {
 void MemoryInfoProducer::SetExitRequested(bool exit_requested) {
   absl::MutexLock lock(&exit_requested_mutex_);
   exit_requested_ = exit_requested;
-}
-
-void MemoryInfoProducer::Run() {
-  orbit_base::SetCurrentThreadName("MemInfoPr::Run");
-
-  CHECK(listener_ != nullptr);
-  ProduceSystemMemoryUsageAndSendToListener();
-}
-
-void MemoryInfoProducer::ProduceSystemMemoryUsageAndSendToListener() {
-  absl::Time scheduled_time = absl::Now();
-  absl::MutexLock lock(&exit_requested_mutex_);
-  while (!exit_requested_) {
-    ErrorMessageOr<SystemMemoryUsage> system_memory_usage = GetSystemMemoryUsage();
-    if (system_memory_usage.has_value()) {
-      listener_->OnSystemMemoryUsage(system_memory_usage.value());
-    }
-    scheduled_time += absl::Nanoseconds(sampling_period_ns_);
-    exit_requested_mutex_.AwaitWithDeadline(absl::Condition(&exit_requested_), scheduled_time);
-  }
 }
 
 }  // namespace orbit_memory_tracing
