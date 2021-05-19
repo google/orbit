@@ -144,6 +144,12 @@ void CaptureEventProcessorForListener::ProcessEvent(const ClientCaptureEvent& ev
     case ClientCaptureEvent::kModuleUpdateEvent:
       ProcessModuleUpdate(event.module_update_event());
       break;
+    case ClientCaptureEvent::kCgroupMemoryUsage:
+      // TODO (http://b/185107371): Process the cgroup memory usage information.
+      break;
+    case ClientCaptureEvent::kProcessMemoryUsage:
+      // TODO (http://b/185107593): Process the process memory usage information.
+      break;
     case ClientCaptureEvent::kSystemMemoryUsage:
       ProcessSystemMemoryUsage(event.system_memory_usage());
       break;
