@@ -58,5 +58,8 @@ int main(int argc, char* argv[]) {
 
   dialog.SetTopBarTitle("Demo title");
 
+  dialog.SetStatusMessage("<b>Important message</b><br>A new notification is available.",
+                          "Show me!");
+
   return dialog.exec();
 }
