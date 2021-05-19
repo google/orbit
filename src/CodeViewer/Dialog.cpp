@@ -23,6 +23,7 @@ Dialog::~Dialog() noexcept = default;
 void Dialog::SetMainContent(const QString& code) {
   ui_->viewer->setPlainText(code);
   syntax_highlighter_.reset();
+  ui_->viewer->document()->setDefaultFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
 }
 
 void Dialog::SetMainContent(const QString& code,

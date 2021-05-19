@@ -106,8 +106,6 @@ Viewer::Viewer(QWidget* parent)
   };
   QObject::connect(this, &QPlainTextEdit::updateRequest, this, update_viewport_area);
 
-  setFont(QFontDatabase::systemFont(QFontDatabase::SystemFont::FixedFont));
-
   constexpr int kTabStopInWhitespaces = 4;
   setTabStopDistance(fontMetrics().horizontalAdvance(' ') * kTabStopInWhitespaces);
 
@@ -126,7 +124,15 @@ void Viewer::resizeEvent(QResizeEvent* ev) {
 }
 
 void Viewer::wheelEvent(QWheelEvent* ev) {
+  QFont document_default_font = document()->defaultFont();
+
   QPlainTextEdit::wheelEvent(ev);
+
+  // QPlainTextEdit::wheelEvent updates the default font to adjust the size.
+  // We respect the size change but stick to the user's default font.
+  const QFont wrong_font_with_correct_size = document()->defaultFont();
+  document_default_font.setPointSize(wrong_font_with_correct_size.pointSize());
+  document()->setDefaultFont(document_default_font);
 
   UpdateBarsSize();
   UpdateBarsPosition();
