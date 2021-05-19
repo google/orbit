@@ -6,7 +6,7 @@
 #define SERVICE_MEMORY_INFO_HANDLER_H_
 
 #include "MemoryTracing/MemoryInfoListener.h"
-#include "MemoryTracing/MemoryInfoProducer.h"
+#include "MemoryTracing/SystemMemoryInfoProducer.h"
 #include "OrbitBase/Logging.h"
 #include "ProducerEventProcessor.h"
 #include "capture.pb.h"
@@ -35,7 +35,7 @@ class MemoryInfoHandler : public orbit_memory_tracing::MemoryInfoListener {
 
  private:
   ProducerEventProcessor* producer_event_processor_;
-  std::unique_ptr<orbit_memory_tracing::MemoryInfoProducer> memory_info_producer_;
+  std::unique_ptr<orbit_memory_tracing::SystemMemoryInfoProducer> system_memory_info_producer_;
 };
 
 }  // namespace orbit_service

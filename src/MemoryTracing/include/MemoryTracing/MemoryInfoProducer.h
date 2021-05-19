@@ -10,14 +10,12 @@
 #include <thread>
 
 #include "MemoryTracing/MemoryInfoListener.h"
-#include "capture.pb.h"
 
 namespace orbit_memory_tracing {
 
-// This class periodically produces the SystemMemoryUsage information retrieved from /proc/meminfo.
-// When the MemoryInfoProducer is started, it creates a thread to extract the memory usage
-// information with a sampling interval specified in sampling_period_ns_, and send the extracted
-// information to the listener.
+// This class periodically produces the memory usage information. When the MemoryInfoProducer is
+// started, it creates a thread to extract the memory usage information with a sampling interval
+// specified in sampling_period_ns_, and send the extracted information to the listener.
 class MemoryInfoProducer {
  public:
   explicit MemoryInfoProducer(uint64_t memory_sampling_period_ns)
@@ -28,17 +26,16 @@ class MemoryInfoProducer {
   MemoryInfoProducer(MemoryInfoProducer&&) = delete;
   MemoryInfoProducer& operator=(MemoryInfoProducer&&) = delete;
 
-  ~MemoryInfoProducer() { Stop(); }
+  virtual ~MemoryInfoProducer() { Stop(); }
 
   void SetListener(MemoryInfoListener* listener) { listener_ = listener; }
 
   void Start();
   void Stop();
 
- private:
+ protected:
   void SetExitRequested(bool exit_requested);
-  void Run();
-  void ProduceSystemMemoryUsageAndSendToListener();
+  virtual void Run() = 0;
 
   uint64_t sampling_period_ns_;
   MemoryInfoListener* listener_ = nullptr;

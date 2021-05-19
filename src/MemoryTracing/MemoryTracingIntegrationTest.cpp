@@ -10,7 +10,7 @@
 
 #include "GrpcProtos/Constants.h"
 #include "MemoryTracing/MemoryInfoListener.h"
-#include "MemoryTracing/MemoryInfoProducer.h"
+#include "MemoryTracing/SystemMemoryInfoProducer.h"
 #include "OrbitBase/Logging.h"
 #include "capture.pb.h"
 
@@ -21,7 +21,7 @@ using orbit_grpc_protos::kMissingInfo;
 using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_grpc_protos::SystemMemoryUsage;
 using orbit_memory_tracing::MemoryInfoListener;
-using orbit_memory_tracing::MemoryInfoProducer;
+using orbit_memory_tracing::SystemMemoryInfoProducer;
 
 class BufferMemoryInfoListener : public MemoryInfoListener {
  public:
@@ -72,7 +72,7 @@ class MemoryTracingIntegrationTestFixture {
 
  private:
   uint64_t memory_sampling_period_ns_;
-  std::optional<MemoryInfoProducer> producer_ = std::nullopt;
+  std::optional<SystemMemoryInfoProducer> producer_ = std::nullopt;
   std::optional<BufferMemoryInfoListener> listener_ = std::nullopt;
 };
 
