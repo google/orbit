@@ -41,7 +41,7 @@ ErrorMessageOr<void> UpdateSystemMemoryUsageFromMemInfo(std::string_view meminfo
                                                         SystemMemoryUsage* system_memory_usage) {
   if (meminfo_content.empty()) return ErrorMessage("Empty file content.");
 
-  std::vector<std::string> lines = absl::StrSplit(meminfo_content, '\n');
+  std::vector<std::string> lines = absl::StrSplit(meminfo_content, '\n', absl::SkipEmpty());
   constexpr size_t kNumLines = 5;
   std::vector<std::string> top_lines(
       lines.begin(), lines.begin() + (lines.size() > kNumLines ? kNumLines : lines.size()));
@@ -87,7 +87,7 @@ ErrorMessageOr<void> UpdateSystemMemoryUsageFromVmStat(std::string_view vmstat_c
                                                        SystemMemoryUsage* system_memory_usage) {
   if (vmstat_content.empty()) return ErrorMessage("Empty file content.");
 
-  std::vector<std::string> lines = absl::StrSplit(vmstat_content, '\n');
+  std::vector<std::string> lines = absl::StrSplit(vmstat_content, '\n', absl::SkipEmpty());
   std::string error_message;
   for (std::string_view line : lines) {
     // Each line of the /proc/vmstat file consists a single name-value pair, delimited by white
@@ -238,7 +238,7 @@ CGroupMemoryUsage CreateAndInitializeCGroupMemoryUsage() {
 std::string GetProcessMemoryCGroupName(std::string_view cgroup_content) {
   if (cgroup_content.empty()) return "";
 
-  std::vector<std::string> lines = absl::StrSplit(cgroup_content, '\n');
+  std::vector<std::string> lines = absl::StrSplit(cgroup_content, '\n', absl::SkipEmpty());
   for (std::string_view line : lines) {
     std::vector<std::string> splits = absl::StrSplit(line, absl::MaxSplits(':', 2));
     // If find the memory cgroup, return the cgroup name without the leading "/".
@@ -267,7 +267,7 @@ ErrorMessageOr<void> UpdateCGroupMemoryUsageFromMemoryStat(std::string_view memo
                                                            CGroupMemoryUsage* cgroup_memory_usage) {
   if (memory_stat_content.empty()) return ErrorMessage("Empty file content.");
 
-  std::vector<std::string> lines = absl::StrSplit(memory_stat_content, '\n');
+  std::vector<std::string> lines = absl::StrSplit(memory_stat_content, '\n', absl::SkipEmpty());
   std::string error_message;
   for (std::string_view line : lines) {
     std::vector<std::string> splits = absl::StrSplit(line, ' ', absl::SkipWhitespace{});
