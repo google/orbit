@@ -42,6 +42,7 @@ ABSL_FLAG(bool, thread_state, false, "Collect thread state information");
 ABSL_FLAG(bool, gpu_jobs, true, "Collect GPU jobs");
 ABSL_FLAG(uint16_t, memory_sampling_rate, 0,
           "Memory usage sampling rate in samples per second (0: no sampling)");
+ABSL_FLAG(bool, enable_cgroup_memory, false, "Collect cgroup and process memory usage information");
 
 namespace {
 std::atomic<bool> exit_requested = false;
@@ -190,6 +191,8 @@ int main(int argc, char* argv[]) {
     memory_sampling_period_ms = 1'000 / absl::GetFlag(FLAGS_memory_sampling_rate);
     LOG("memory_sampling_period_ms=%u", memory_sampling_period_ms);
   }
+  bool enable_cgroup_memory = absl::GetFlag(FLAGS_enable_cgroup_memory);
+  LOG("enable_cgroup_memory=%d", enable_cgroup_memory);
 
   uint32_t grpc_port = absl::GetFlag(FLAGS_port);
   std::string service_address = absl::StrFormat("127.0.0.1:%d", grpc_port);
@@ -240,7 +243,7 @@ int main(int argc, char* argv[]) {
       orbit_client_data::TracepointInfoSet{}, samples_per_second, unwinding_method,
       collect_scheduling_info, collect_thread_state, collect_gpu_jobs, kEnableApi,
       kEnableIntrospection, kMaxLocalMarkerDepthPerCommandBuffer, collect_memory_info,
-      memory_sampling_period_ms, std::move(capture_event_processor));
+      memory_sampling_period_ms, enable_cgroup_memory, std::move(capture_event_processor));
   LOG("Asked to start capture");
 
   uint32_t duration_s = absl::GetFlag(FLAGS_duration);

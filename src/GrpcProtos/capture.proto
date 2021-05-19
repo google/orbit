@@ -65,6 +65,7 @@ message CaptureOptions {
 
   bool collect_memory_info = 11;
   uint64 memory_sampling_period_ns = 12;
+  bool enable_cgroup_memory = 15;
 
   repeated ApiFunction api_functions = 13;
 
