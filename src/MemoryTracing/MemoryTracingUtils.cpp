@@ -197,7 +197,7 @@ ErrorMessageOr<void> UpdateProcessMemoryUsageFromProcessStat(
   return outcome::success();
 }
 
-ErrorMessageOr<ProcessMemoryUsage> GetProcessMemoryUsage(uint32_t pid) noexcept {
+ErrorMessageOr<ProcessMemoryUsage> GetProcessMemoryUsage(int32_t pid) noexcept {
   ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
   process_memory_usage.set_pid(pid);
   process_memory_usage.set_timestamp_ns(orbit_base::CaptureTimestampNs());
@@ -310,7 +310,7 @@ ErrorMessageOr<void> UpdateCGroupMemoryUsageFromMemoryStat(std::string_view memo
   return outcome::success();
 }
 
-ErrorMessageOr<CGroupMemoryUsage> GetCGroupMemoryUsage(uint32_t pid) noexcept {
+ErrorMessageOr<CGroupMemoryUsage> GetCGroupMemoryUsage(int32_t pid) noexcept {
   uint64_t current_timestamp_ns = orbit_base::CaptureTimestampNs();
 
   const std::string kProcessCGroupsFilename = absl::StrFormat("/proc/%d/cgroup", pid);
