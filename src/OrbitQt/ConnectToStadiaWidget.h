@@ -12,6 +12,7 @@
 #include <QModelIndex>
 #include <QObject>
 #include <QPointer>
+#include <QSortFilterProxyModel>
 #include <QState>
 #include <QStateMachine>
 #include <QString>
@@ -79,7 +80,10 @@ class ConnectToStadiaWidget : public QWidget {
  private:
   void showEvent(QShowEvent* event) override;
   std::unique_ptr<Ui::ConnectToStadiaWidget> ui_;
+
   orbit_ggp::InstanceItemModel instance_model_;
+  QSortFilterProxyModel instance_proxy_model_;
+
   SshConnectionArtifacts* ssh_connection_artifacts_ = nullptr;
   std::optional<orbit_ggp::Instance> selected_instance_;
   std::unique_ptr<ServiceDeployManager> service_deploy_manager_;
