@@ -342,7 +342,7 @@ message SystemMemoryUsage {
 }
 
 message ProcessMemoryUsage {
-  uint32 pid = 1;
+  int32 pid = 1;
   uint64 timestamp_ns = 2;
   // These fields are retrieved from /proc/<pid>/stat. See
   // https://man7.org/linux/man-pages/man5/proc.5.html for the documentation.

@@ -27,7 +27,7 @@ namespace orbit_memory_tracing {
 [[nodiscard]] ErrorMessageOr<void> UpdateProcessMemoryUsageFromProcessStat(
     std::string_view stat_content, orbit_grpc_protos::ProcessMemoryUsage* process_memory_usage);
 [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ProcessMemoryUsage> GetProcessMemoryUsage(
-    uint32_t pid) noexcept;
+    int32_t pid) noexcept;
 
 [[nodiscard]] orbit_grpc_protos::CGroupMemoryUsage CreateAndInitializeCGroupMemoryUsage();
 [[nodiscard]] std::string GetProcessMemoryCGroupName(std::string_view cgroup_content);
@@ -38,7 +38,7 @@ namespace orbit_memory_tracing {
     std::string_view memory_stat_content,
     orbit_grpc_protos::CGroupMemoryUsage* cgroup_memory_usage);
 [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::CGroupMemoryUsage> GetCGroupMemoryUsage(
-    uint32_t pid) noexcept;
+    int32_t pid) noexcept;
 
 }  // namespace orbit_memory_tracing
 
