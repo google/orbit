@@ -10,16 +10,13 @@
 #include <absl/flags/usage_config.h>
 
 #include <QApplication>
-#include <QColor>
 #include <QCoreApplication>
 #include <QDir>
 #include <QMessageBox>
 #include <QMetaType>
 #include <QObject>
-#include <QPalette>
 #include <QProcessEnvironment>
 #include <QString>
-#include <QStyleFactory>
 #include <Qt>
 #include <cstdint>
 #include <filesystem>
@@ -52,6 +49,7 @@
 #include "Path.h"
 #include "ProfilingTargetDialog.h"
 #include "SourcePathsMapping/MappingManager.h"
+#include "Style/Style.h"
 #include "TargetConfiguration.h"
 #include "opengldetect.h"
 #include "orbitmainwindow.h"
@@ -165,46 +163,6 @@ static QStringList ExtractCommandLineFlags(const std::vector<std::string>& comma
     }
   }
   return command_line_flags;
-}
-
-static void StyleOrbit(QApplication& app) {
-  QApplication::setStyle(QStyleFactory::create("Fusion"));
-
-  QPalette darkPalette;
-  darkPalette.setColor(QPalette::Window, QColor(53, 53, 53));
-  darkPalette.setColor(QPalette::WindowText, Qt::white);
-  darkPalette.setColor(QPalette::Base, QColor(25, 25, 25));
-  darkPalette.setColor(QPalette::AlternateBase, QColor(53, 53, 53));
-  darkPalette.setColor(QPalette::ToolTipBase, Qt::white);
-  darkPalette.setColor(QPalette::ToolTipText, Qt::white);
-  darkPalette.setColor(QPalette::Text, Qt::white);
-  darkPalette.setColor(QPalette::Button, QColor(53, 53, 53));
-  darkPalette.setColor(QPalette::ButtonText, Qt::white);
-  darkPalette.setColor(QPalette::BrightText, Qt::red);
-  darkPalette.setColor(QPalette::Link, QColor(42, 130, 218));
-  darkPalette.setColor(QPalette::Highlight, QColor(42, 130, 218));
-  darkPalette.setColor(QPalette::HighlightedText, Qt::black);
-
-  QColor light_gray{160, 160, 160};
-  QColor dark_gray{90, 90, 90};
-  QColor darker_gray{80, 80, 80};
-  darkPalette.setColor(QPalette::Disabled, QPalette::Window, dark_gray);
-  darkPalette.setColor(QPalette::Disabled, QPalette::WindowText, light_gray);
-  darkPalette.setColor(QPalette::Disabled, QPalette::Base, darker_gray);
-  darkPalette.setColor(QPalette::Disabled, QPalette::AlternateBase, dark_gray);
-  darkPalette.setColor(QPalette::Disabled, QPalette::ToolTipBase, dark_gray);
-  darkPalette.setColor(QPalette::Disabled, QPalette::ToolTipText, light_gray);
-  darkPalette.setColor(QPalette::Disabled, QPalette::Text, light_gray);
-  darkPalette.setColor(QPalette::Disabled, QPalette::Button, darker_gray);
-  darkPalette.setColor(QPalette::Disabled, QPalette::ButtonText, light_gray);
-  darkPalette.setColor(QPalette::Disabled, QPalette::BrightText, light_gray);
-  darkPalette.setColor(QPalette::Disabled, QPalette::Link, light_gray);
-  darkPalette.setColor(QPalette::Disabled, QPalette::Highlight, dark_gray);
-
-  QApplication::setPalette(darkPalette);
-  app.setStyleSheet(
-      "QToolTip { color: #ffffff; background-color: #2a82da; border: 1px "
-      "solid white; }");
 }
 
 static std::optional<std::string> GetCollectorRootPassword(
@@ -373,7 +331,7 @@ int main(int argc, char* argv[]) {
     return 0;
   }
 
-  StyleOrbit(app);
+  orbit_style::ApplyStyle(&app);
 
   const auto open_gl_version = orbit_qt::DetectOpenGlVersion();
 

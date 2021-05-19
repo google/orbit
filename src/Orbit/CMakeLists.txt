@@ -6,7 +6,7 @@ project(Orbit CXX)
 
 add_executable(Orbit main.cpp)
 target_compile_options(Orbit PRIVATE ${STRICT_COMPILE_FLAGS})
-target_link_libraries(Orbit PRIVATE OrbitQt)
+target_link_libraries(Orbit PRIVATE OrbitQt Style)
 target_include_directories(Orbit PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 if(WITH_CRASH_HANDLING)
