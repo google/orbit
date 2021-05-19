@@ -47,5 +47,8 @@ ABSL_FLAG(bool, enable_source_code_view, true, "Enable the experimental source c
 ABSL_FLAG(bool, enable_warning_threshold, false,
           "Enable setting and showing the memory warning threshold");
 
+ABSL_FLAG(bool, enable_cgroup_memory, false,
+          "Enable collecting cgroup and process memory usage information");
+
 // TODO(b/187388305): Set default to true in 1.65, remove the flag in 1.66
 ABSL_FLAG(bool, enable_capture_autosave, true, "Enable automatic saving of capture");
