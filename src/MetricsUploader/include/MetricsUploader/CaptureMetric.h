@@ -5,6 +5,8 @@
 #ifndef METRICS_UPLOADER_CAPTURE_METRIC_H_
 #define METRICS_UPLOADER_CAPTURE_METRIC_H_
 
+#include <stdint.h>
+
 #include <chrono>
 
 #include "MetricsUploader/MetricsUploader.h"
@@ -25,6 +27,10 @@ struct CaptureStartData {
   int64_t memory_information_sampling_period_ms = 0;
   orbit_metrics_uploader::OrbitCaptureData_LibOrbitVulkanLayer lib_orbit_vulkan_layer =
       orbit_metrics_uploader::OrbitCaptureData_LibOrbitVulkanLayer_LIB_ORBIT_VULKAN_LAYER_UNKNOWN;
+  orbit_metrics_uploader::OrbitCaptureData_LocalMarkerDepthPerCommandBuffer
+      local_marker_depth_per_command_buffer = orbit_metrics_uploader::
+          OrbitCaptureData_LocalMarkerDepthPerCommandBuffer_LOCAL_MARKER_DEPTH_PER_COMMAND_BUFFER_UNKNOWN;
+  uint64_t max_local_marker_depth_per_command_buffer = 0;
 };
 
 struct CaptureCompleteData {

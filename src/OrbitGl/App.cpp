@@ -21,6 +21,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <exception>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <outcome.hpp>
@@ -174,7 +175,7 @@ PresetLoadState GetPresetLoadStateForProcess(const PresetFile& preset, const Pro
 orbit_metrics_uploader::CaptureStartData CreateCaptureStartData(
     const std::vector<FunctionInfo>& all_instrumented_functions, int64_t number_of_frame_tracks,
     bool thread_states, int64_t memory_information_sampling_period_ms,
-    bool lib_orbit_vulkan_layer_loaded) {
+    bool lib_orbit_vulkan_layer_loaded, uint64_t max_local_marker_depth_per_command_buffer) {
   orbit_metrics_uploader::CaptureStartData capture_start_data{};
 
   for (const auto& function : all_instrumented_functions) {
@@ -212,6 +213,15 @@ orbit_metrics_uploader::CaptureStartData CreateCaptureStartData(
       lib_orbit_vulkan_layer_loaded
           ? orbit_metrics_uploader::OrbitCaptureData_LibOrbitVulkanLayer_LIB_LOADED
           : orbit_metrics_uploader::OrbitCaptureData_LibOrbitVulkanLayer_LIB_NOT_LOADED;
+  if (max_local_marker_depth_per_command_buffer == std::numeric_limits<uint64_t>::max()) {
+    capture_start_data.local_marker_depth_per_command_buffer =
+        orbit_metrics_uploader::OrbitCaptureData_LocalMarkerDepthPerCommandBuffer_UNLIMITED;
+  } else {
+    capture_start_data.local_marker_depth_per_command_buffer =
+        orbit_metrics_uploader::OrbitCaptureData_LocalMarkerDepthPerCommandBuffer_LIMITED;
+    capture_start_data.max_local_marker_depth_per_command_buffer =
+        max_local_marker_depth_per_command_buffer;
+  }
   return capture_start_data;
 }
 
@@ -1178,7 +1188,7 @@ void OrbitApp::StartCapture() {
       CreateCaptureStartData(
           selected_functions, user_defined_capture_data.frame_track_functions().size(),
           data_manager_->collect_thread_states(), memory_information_sampling_period_ms_for_metrics,
-          orbit_vulkan_layer_loaded_by_process)};
+          orbit_vulkan_layer_loaded_by_process, max_local_marker_depth_per_command_buffer)};
 
   CHECK(capture_client_ != nullptr);
 
