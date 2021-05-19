@@ -204,7 +204,7 @@ std::vector<ThreadTrack*> TrackManager::GetSortedThreadTracks() {
   return sorted_tracks;
 }
 
-void TrackManager::UpdateMovingTrackSorting() {
+void TrackManager::UpdateMovingTrackPositionInVisibleTracks() {
   // This updates the position of the currently moving track in both the sorted_tracks_
   // and the visible_tracks_ array. The moving track is inserted after the first track
   // with a value of top + height smaller than the current mouse position.
@@ -295,12 +295,13 @@ void TrackManager::UpdateTracksOrder() {
     SortTracks();
   }
 
-  // Update position of a track which is currently being moved.
-  UpdateMovingTrackSorting();
-
+  // Update visible track list from the sorted one based on the filter.
   if (visible_track_list_needs_update_) {
     UpdateVisibleTrackList();
   }
+
+  // Update position of a track which is currently being moved.
+  UpdateMovingTrackPositionInVisibleTracks();
 }
 
 void TrackManager::AddTrack(const std::shared_ptr<Track>& track) {
