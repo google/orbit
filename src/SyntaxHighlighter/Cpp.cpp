@@ -22,15 +22,17 @@ const QColor kGreen{0x66, 0x99, 0x66};
 const QColor kViolet{0x99, 0x66, 0x99};
 const QColor kGreyViolet{0xcc, 0xaa, 0xcc};
 
-enum CppHighlighterState { kInitialState, kOpenCommentState, kOpenStringState };
 namespace CppRegex {
-const char* const kNumberRegex =
+using PatternOption = QRegularExpression::PatternOption;
+
+const QRegularExpression kNumberRegex{
     "(?:\\b0b[01']+|\\b0x(?:[\\da-f']+(?:\\.[\\da-f']*)?|\\.[\\da-f']+)(?:p[+-]?[\\d']+)?|(?:\\b["
-    "\\d']+(?:\\.[\\d']*)?|\\B\\.[\\d']+)(?:e[+-]?[\\d']+)?)[ful]{0,4}";
-const char* const kConstantRegex =
+    "\\d']+(?:\\.[\\d']*)?|\\B\\.[\\d']+)(?:e[+-]?[\\d']+)?)[ful]{0,4}",
+    PatternOption::CaseInsensitiveOption};
+const QRegularExpression kConstantRegex{
     "__FILE__|__LINE__|__DATE__|__TIME__|__TIMESTAMP__|__func__|EOF|NULL|SEEK_CUR|SEEK_END|SEEK_"
-    "SET|stdin|stdout|stderr";
-const char* const kKeywordRegex =
+    "SET|stdin|stdout|stderr"};
+const QRegularExpression kKeywordRegex{
     "\\b(?:alignas|alignof|asm|auto|bool|break|case|catch|char|char8_t|char16_t|char32_t|class|"
     "compl|concept|const|consteval|constexpr|constinit|const_cast|continue|co_await|co_return|co_"
     "yield|decltype|default|delete|do|double|dynamic_cast|else|enum|explicit|export|extern|false|"
@@ -38,76 +40,56 @@ const char* const kKeywordRegex =
     "uint16_t|uint32_t|uint64_t|long|mutable|namespace|new|noexcept|nullptr|operator|override|"
     "private|protected|public|register|reinterpret_cast|requires|return|short|signed|sizeof|static|"
     "static_|assert|static_cast|struct|switch|template|this|thread_local|throw|true|try|typedef|"
-    "typeid|typename|union|unsigned|using|virtual|void|volatile|wchar_t|while)\\b";
-
-const char* const kCapitalizedRegex = "(?<=[\\s\\(<])[A-Z][\\w]*";
+    "typeid|typename|union|unsigned|using|virtual|void|volatile|wchar_t|while)\\b"};
+const QRegularExpression kCapitalizedRegex{"(?<=[\\s\\(<])[A-Z][\\w]*"};
 // int Function( or Namespace::FunctionName( patterns
-const char* const kFunctionDefinitionRegex = "(?<=\\w)\\s+([A-Za-z_]\\w*::)*[A-Za-z_]\\w*(?=\\()";
-const char* const kOnlyUppercaseRegex = "(?<=[\\s\\(])[A-Z][0-9A-Z\\_]*(?=\\b)";
-const char* const kCommaRegex = "[\\;\\,]";
+const QRegularExpression kFunctionDefinitionRegex{
+    "(?<=\\w)\\s+([A-Za-z_]\\w*::)*[A-Za-z_]\\w*(?=\\()", PatternOption::CaseInsensitiveOption};
+const QRegularExpression kOnlyUppercaseRegex{"(?<=[\\s\\(])[A-Z][0-9A-Z\\_]*(?=\\b)"};
+const QRegularExpression kCommaRegex{"[\\;\\,]"};
 // Methods and variables from a namespace, after "::" (e.g. std::cout, absl::Milliseconds)
-const char* const kNamespaceVariablesRegex = "(?<=::)[A-Za-z_]\\w*(?=\\b)";
+const QRegularExpression kNamespaceVariablesRegex{"(?<=::)[A-Za-z_]\\w*(?=\\b)"};
 // Namespaces itself, before "::"
-const char* const kNamespaceRegex = "[A-Za-z_]\\w*::";
-const char* const kClassNameRegex = "\\b(?:class|concept|enum|namespace|struct|typename)\\s+(\\w+)";
+const QRegularExpression kNamespaceRegex{"[A-Za-z_]\\w*::"};
+const QRegularExpression kClassNameRegex{
+    "\\b(?:class|concept|enum|namespace|struct|typename)\\s+(\\w+)"};
 // Variables starting with lowercase and finishing with _ (e.g. tracks_) or starting with "m_"
-const char* const kClassMemberRegex = "\\b[a-z]\\w*\\_(?<=\\b)|(?<=\\b)m_\\w*";
-const char* const kPreprocessorRegex = "(^\\s*)#\\s*[A-Za-z_]\\w*";
+const QRegularExpression kClassMemberRegex{"\\b[a-z]\\w*\\_(?<=\\b)|(?<=\\b)m_\\w*"};
+const QRegularExpression kPreprocessorRegex{"(^\\s*)#\\s*[A-Za-z_]\\w*"};
 // Match with <word> after #include
-const char* const kIncludeFileRegex = "(?<=#include)\\s*<[^>]*>";
-const char* const kCommentRegex =
-    "\\/\\/(?:[^\\r\\n\\\\]|\\\\(?:\\r\\n?|\\n|(?![\\r\\n])))*|\\/\\*[\\s\\S]*?\\*\\/";
+const QRegularExpression kIncludeFileRegex{"(?<=#include)\\s*<[^>]*>"};
+const QRegularExpression kCommentRegex{
+    "\\/\\/(?:[^\\r\\n\\\\]|\\\\(?:\\r\\n?|\\n|(?![\\r\\n])))*|\\/\\*[\\s\\S]*?\\*\\/"};
 // Match with "/*" comments which starts but not finishes in this line
-const char* const kOpenCommentRegex = "\\/\\*([^\\*]|[\\*]+[^\\/])*?$";
+const QRegularExpression kOpenCommentRegex{"\\/\\*([^\\*]|[\\*]+[^\\/])*?$"};
 // Match with the closing part of the comment
-const char* const kEndCommentRegex = "[\\s\\S]*\\*\\/";
+const QRegularExpression kEndCommentRegex{"[\\s\\S]*\\*\\/"};
 // Match with a line without a closing comment
-const char* const kNoEndCommentRegex = "([^\\*]|\\*+[^\\/\\*])*$";
+const QRegularExpression kNoEndCommentRegex{"([^\\*]|\\*+[^\\/\\*])*$"};
 // Similar process to comments to match a multiline string
-const char* const kStringRegex = "\"([^\\\\\"]|\\\\.)*\"|\'[^\']*\'";
-const char* const kOpenStringRegex = "\"([^\\\\\"]|\\\\.)*\\\\$";
-const char* const kEndStringRegex = "([^\\\\\"]|\\\\.)*\"";
-const char* const kNoEndStringRegex = "([^\\\\\"]|\\\\.)*\\\\$";
+const QRegularExpression kStringRegex{"\"([^\\\\\"]|\\\\.)*\"|\'[^\']*\'"};
+const QRegularExpression kOpenStringRegex{"\"([^\\\\\"]|\\\\.)*\\\\$"};
+const QRegularExpression kEndStringRegex{"([^\\\\\"]|\\\\.)*\""};
+const QRegularExpression kNoEndStringRegex{"([^\\\\\"]|\\\\.)*\\\\$"};
 }  // namespace CppRegex
 }  // namespace
 
-Cpp::Cpp() : QSyntaxHighlighter{static_cast<QObject*>(nullptr)} {
-  using PatternOption = QRegularExpression::PatternOption;
-  number_regex_ = QRegularExpression{CppRegex::kNumberRegex, PatternOption::CaseInsensitiveOption};
-  constant_regex_ = QRegularExpression{CppRegex::kConstantRegex};
-  keyword_regex_ = QRegularExpression{CppRegex::kKeywordRegex};
-  comment_regex_ = QRegularExpression{CppRegex::kCommentRegex};
-  open_comment_regex_ = QRegularExpression{CppRegex::kOpenCommentRegex};
-  end_comment_regex_ = QRegularExpression{CppRegex::kEndCommentRegex};
-  no_end_comment_regex_ = QRegularExpression{CppRegex::kNoEndCommentRegex};
-  function_definition_regex_ =
-      QRegularExpression{CppRegex::kFunctionDefinitionRegex, PatternOption::CaseInsensitiveOption};
-  preprocessor_regex_ = QRegularExpression{CppRegex::kPreprocessorRegex};
-  include_file_regex_ = QRegularExpression{CppRegex::kIncludeFileRegex};
-  string_regex_ = QRegularExpression{CppRegex::kStringRegex};
-  open_string_regex_ = QRegularExpression{CppRegex::kOpenStringRegex};
-  end_string_regex_ = QRegularExpression{CppRegex::kEndStringRegex};
-  no_end_string_regex_ = QRegularExpression{CppRegex::kNoEndStringRegex};
-  comma_regex_ = QRegularExpression{CppRegex::kCommaRegex};
-  capitalized_regex_ = QRegularExpression{CppRegex::kCapitalizedRegex};
-  only_uppercase_regex_ = QRegularExpression{CppRegex::kOnlyUppercaseRegex};
-  namespace_regex_ = QRegularExpression{CppRegex::kNamespaceRegex};
-  namespace_variables_regex_ = QRegularExpression{CppRegex::kNamespaceVariablesRegex};
-  class_name_regex_ = QRegularExpression{CppRegex::kClassNameRegex};
-  class_member_regex_ = QRegularExpression{CppRegex::kClassMemberRegex};
-}
+Cpp::Cpp() : QSyntaxHighlighter{static_cast<QObject*>(nullptr)} {}
 
-void Cpp::highlightBlock(const QString& code) {
-  const auto apply = [&code, this](
-                         QRegularExpression* expression, const QColor& color,
+CppHighlighterState HighlightBlockCpp(
+    const QString& code, int previous_block_state,
+    std::function<void(int, int, const QTextCharFormat&)> set_format) {
+  CppHighlighterState next_block_state = CppHighlighterState::kInitialState;
+  const auto apply = [&code, &set_format, &next_block_state](
+                         const QRegularExpression& expression, const QColor& color,
                          CppHighlighterState new_state = CppHighlighterState::kInitialState) {
     QTextCharFormat format{};
     format.setForeground(color);
 
-    for (auto it = expression->globalMatch(code); it.hasNext();) {
+    for (auto it = expression.globalMatch(code); it.hasNext();) {
       const auto match = it.next();
-      setFormat(match.capturedStart(), match.capturedLength(), format);
-      setCurrentBlockState(new_state);
+      set_format(match.capturedStart(), match.capturedLength(), format);
+      next_block_state = new_state;
     }
   };
 
@@ -115,38 +97,47 @@ void Cpp::highlightBlock(const QString& code) {
   // patterns. As each one paints over the others, order matters.
 
   // Ordered heuristics for painting certain word patterns. Should be at the first.
-  apply(&capitalized_regex_, kGreyViolet);
-  apply(&namespace_variables_regex_, kGreyViolet);
-  apply(&function_definition_regex_, kYellowOrange);
-  apply(&namespace_regex_, kGreyViolet);
-  apply(&only_uppercase_regex_, kOlive);
+  apply(CppRegex::kCapitalizedRegex, kGreyViolet);
+  apply(CppRegex::kNamespaceVariablesRegex, kGreyViolet);
+  apply(CppRegex::kFunctionDefinitionRegex, kYellowOrange);
+  apply(CppRegex::kNamespaceRegex, kGreyViolet);
+  apply(CppRegex::kOnlyUppercaseRegex, kOlive);
 
   // Extra patterns which make the syntax highlighter nicer. Order doesn't matter.
-  apply(&class_name_regex_, kGreyViolet);
-  apply(&number_regex_, kBlue);
-  apply(&class_member_regex_, kViolet);
-  apply(&comma_regex_, kOrange);
+  apply(CppRegex::kClassNameRegex, kGreyViolet);
+  apply(CppRegex::kNumberRegex, kBlue);
+  apply(CppRegex::kClassMemberRegex, kViolet);
+  apply(CppRegex::kCommaRegex, kOrange);
 
   // Special C/C++ patterns. Order doesn't matter.
-  apply(&keyword_regex_, kOrange);
-  apply(&constant_regex_, kOlive);
-  apply(&include_file_regex_, kGreen);
-  apply(&preprocessor_regex_, kYellow);
+  apply(CppRegex::kKeywordRegex, kOrange);
+  apply(CppRegex::kConstantRegex, kOlive);
+  apply(CppRegex::kIncludeFileRegex, kGreen);
+  apply(CppRegex::kPreprocessorRegex, kYellow);
 
   // Comments and strings should be painted at the end.
-  apply(&string_regex_, kGreen);
-  apply(&comment_regex_, kGrey);
+  apply(CppRegex::kStringRegex, kGreen);
+  apply(CppRegex::kCommentRegex, kGrey);
 
   // For several-lines comments and strings, we have these states.
-  if (previousBlockState() == CppHighlighterState::kOpenStringState) {
-    apply(&no_end_string_regex_, kGreen, CppHighlighterState::kOpenStringState);
-    apply(&end_string_regex_, kGreen);
+  if (previous_block_state == CppHighlighterState::kOpenStringState) {
+    apply(CppRegex::kNoEndStringRegex, kGreen, CppHighlighterState::kOpenStringState);
+    apply(CppRegex::kEndStringRegex, kGreen);
   }
-  if (previousBlockState() == CppHighlighterState::kOpenCommentState) {
-    apply(&no_end_comment_regex_, kGrey, CppHighlighterState::kOpenCommentState);
-    apply(&end_comment_regex_, kGrey);
+  if (previous_block_state == CppHighlighterState::kOpenCommentState) {
+    apply(CppRegex::kNoEndCommentRegex, kGrey, CppHighlighterState::kOpenCommentState);
+    apply(CppRegex::kEndCommentRegex, kGrey);
   }
-  apply(&open_string_regex_, kGreen, CppHighlighterState::kOpenStringState);
-  apply(&open_comment_regex_, kGrey, CppHighlighterState::kOpenCommentState);
+  apply(CppRegex::kOpenStringRegex, kGreen, CppHighlighterState::kOpenStringState);
+  apply(CppRegex::kOpenCommentRegex, kGrey, CppHighlighterState::kOpenCommentState);
+
+  return next_block_state;
+}
+
+void Cpp::highlightBlock(const QString& code) {
+  setCurrentBlockState(HighlightBlockCpp(
+      code, previousBlockState(), [this](int start, int count, const QTextCharFormat& format) {
+        setFormat(start, count, format);
+      }));
 }
 }  // namespace orbit_syntax_highlighter
