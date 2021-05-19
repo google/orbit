@@ -316,12 +316,12 @@
                  <height>30</height>
                 </rect>
                </property>
+               <property name="visible">
+                <bool>false</bool>
+               </property>
                <property name="accessibleName">
                 <string>ProcessListOverlay</string>
                </property>
-			   <property name="visible">
-                 <bool>false</bool>
-                </property>
               </widget>
              </widget>
             </item>
@@ -358,8 +358,7 @@
          </spacer>
         </item>
         <item>
-         <widget class="orbit_qt::TargetLabel" name="targetLabel">
-         </widget>
+         <widget class="orbit_qt::TargetLabel" name="targetLabel" native="true"/>
         </item>
         <item>
          <widget class="QPushButton" name="confirmButton">
@@ -380,15 +379,15 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>orbit_qt::ConnectToStadiaWidget</class>
-   <extends>QWidget</extends>
-   <header>ConnectToStadiaWidget.h</header>
-  </customwidget>
-  <customwidget>
    <class>orbit_qt::OverlayWidget</class>
    <extends>QWidget</extends>
    <header>OverlayWidget.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>orbit_qt::ConnectToStadiaWidget</class>
+   <extends>QWidget</extends>
+   <header>ConnectToStadiaWidget.h</header>
   </customwidget>
   <customwidget>
    <class>orbit_qt::TargetLabel</class>
@@ -399,5 +398,22 @@
  <resources>
   <include location="../../icons/orbiticons.qrc"/>
  </resources>
- <connections/>
+ <connections>
+  <connection>
+   <sender>processFilterLineEdit</sender>
+   <signal>returnPressed()</signal>
+   <receiver>confirmButton</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1106</x>
+     <y>64</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1229</x>
+     <y>693</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
