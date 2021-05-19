@@ -187,7 +187,7 @@ static void StopInternalProducersAndCaptureStartStopListenersInParallel(
 
   stop_threads.emplace_back([&memory_info_handler] {
     memory_info_handler->Stop();
-    LOG("MemoryInfoHandler stopped: total memory usage information collection is done");
+    LOG("MemoryInfoHandler stopped: memory usage information collection is done");
   });
 
   for (CaptureStartStopListener* listener : *capture_start_stop_listeners) {

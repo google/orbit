@@ -5,7 +5,9 @@
 #ifndef SERVICE_MEMORY_INFO_HANDLER_H_
 #define SERVICE_MEMORY_INFO_HANDLER_H_
 
+#include "MemoryTracing/CGroupMemoryInfoProducer.h"
 #include "MemoryTracing/MemoryInfoListener.h"
+#include "MemoryTracing/ProcessMemoryInfoProducer.h"
 #include "MemoryTracing/SystemMemoryInfoProducer.h"
 #include "OrbitBase/Logging.h"
 #include "ProducerEventProcessor.h"
@@ -32,12 +34,13 @@ class MemoryInfoHandler : public orbit_memory_tracing::MemoryInfoListener {
   void Stop();
 
   void OnSystemMemoryUsage(orbit_grpc_protos::SystemMemoryUsage system_memory_usage) override;
-  void OnCGroupMemoryUsage(orbit_grpc_protos::CGroupMemoryUsage /*cgroup_memory_usage*/) override {}
-  void OnProcessMemoryUsage(
-      orbit_grpc_protos::ProcessMemoryUsage /*process_memory_usage*/) override {}
+  void OnCGroupMemoryUsage(orbit_grpc_protos::CGroupMemoryUsage cgroup_memory_usage) override;
+  void OnProcessMemoryUsage(orbit_grpc_protos::ProcessMemoryUsage process_memory_usage) override;
 
  private:
   ProducerEventProcessor* producer_event_processor_;
+  std::unique_ptr<orbit_memory_tracing::CGroupMemoryInfoProducer> cgroup_memory_info_producer_;
+  std::unique_ptr<orbit_memory_tracing::ProcessMemoryInfoProducer> process_memory_info_producer_;
   std::unique_ptr<orbit_memory_tracing::SystemMemoryInfoProducer> system_memory_info_producer_;
 };
 
