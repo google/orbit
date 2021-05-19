@@ -1023,14 +1023,12 @@ static ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureFromNewFormat(
 
 Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFromFile(
     const std::filesystem::path& file_path) {
-  ScopedMetric metric{metrics_uploader_,
-                      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_CAPTURE_LOAD};
   if (capture_window_ != nullptr) {
     capture_window_->set_draw_help(false);
   }
   ClearCapture();
   auto load_future =
-      thread_pool_->Schedule([this, file_path, metric = std::move(metric)]() mutable {
+      thread_pool_->Schedule([this, file_path]() {
         capture_loading_cancellation_requested_ = false;
 
         auto capture_file_or_error = CaptureFile::OpenForReadWrite(file_path);
@@ -1042,6 +1040,10 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
         orbit_base::unique_resource scope_exit{&is_loading_capture_,
                                                [](std::atomic<bool>* value) { *value = false; }};
 
+        ScopedMetric metric{metrics_uploader_,
+                            capture_file_or_error.has_value()
+                                ? orbit_metrics_uploader::OrbitLogEvent::ORBIT_CAPTURE_LOAD_V2
+                                : orbit_metrics_uploader::OrbitLogEvent::ORBIT_CAPTURE_LOAD};
         if (capture_file_or_error.has_value()) {
           load_result = LoadCaptureFromNewFormat(this, capture_file_or_error.value().get(),
                                                  &capture_loading_cancellation_requested_);
