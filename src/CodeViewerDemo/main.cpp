@@ -54,5 +54,7 @@ int main(int argc, char* argv[]) {
   dialog.GoToLineNumber(10);
   dialog.SetHighlightCurrentLine(true);
 
+  dialog.SetTopBarTitle("Demo title");
+
   return dialog.exec();
 }
