@@ -27,6 +27,10 @@ CaptureMetric::CaptureMetric(MetricsUploader* uploader, const CaptureStartData& 
   capture_data_.set_memory_information_sampling_period_ms(
       start_data.memory_information_sampling_period_ms);
   capture_data_.set_lib_orbit_vulkan_layer(start_data.lib_orbit_vulkan_layer);
+  capture_data_.set_local_marker_depth_per_command_buffer(
+      start_data.local_marker_depth_per_command_buffer);
+  capture_data_.set_local_marker_depth_per_command_buffer(
+      start_data.local_marker_depth_per_command_buffer);
 }
 
 void CaptureMetric::SetCaptureFailed() {
