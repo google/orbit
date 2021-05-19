@@ -48,4 +48,4 @@ ABSL_FLAG(bool, enable_warning_threshold, false,
           "Enable setting and showing the memory warning threshold");
 
 // TODO(b/187388305): Set default to true in 1.65, remove the flag in 1.66
-ABSL_FLAG(bool, enable_capture_autosave, false, "Enable automatic saving of capture");
+ABSL_FLAG(bool, enable_capture_autosave, true, "Enable automatic saving of capture");
