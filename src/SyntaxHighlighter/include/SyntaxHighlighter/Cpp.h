@@ -15,37 +15,19 @@ namespace orbit_syntax_highlighter {
 //  documentation on how to use it. There are no additional settings or
 //  APIs.
 
+enum CppHighlighterState { kInitialState, kOpenCommentState, kOpenStringState };
+
 class Cpp : public QSyntaxHighlighter {
   Q_OBJECT
   void highlightBlock(const QString& code) override;
 
  public:
   explicit Cpp();
-
- private:
-  QRegularExpression comment_regex_;
-  QRegularExpression open_comment_regex_;
-  QRegularExpression end_comment_regex_;
-  QRegularExpression no_end_comment_regex_;
-  QRegularExpression function_definition_regex_;
-  QRegularExpression number_regex_;
-  QRegularExpression constant_regex_;
-  QRegularExpression keyword_regex_;
-  QRegularExpression preprocessor_regex_;
-  QRegularExpression include_file_regex_;
-  QRegularExpression string_regex_;
-  QRegularExpression open_string_regex_;
-  QRegularExpression end_string_regex_;
-  QRegularExpression no_end_string_regex_;
-  QRegularExpression comma_regex_;
-  QRegularExpression only_uppercase_regex_;
-  QRegularExpression capitalized_regex_;
-  QRegularExpression namespace_regex_;
-  QRegularExpression namespace_variables_regex_;
-  QRegularExpression class_name_regex_;
-  QRegularExpression class_member_regex_;
 };
 
+CppHighlighterState HighlightBlockCpp(
+    const QString& code, int previous_block_state,
+    std::function<void(int, int, const QTextCharFormat&)> set_format);
 }  // namespace orbit_syntax_highlighter
 
 #endif  // SYNTAX_HIGHLIGHTER_CPP_H_
