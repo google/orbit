@@ -360,6 +360,8 @@ Future<void> OrbitApp::OnCaptureFailed(ErrorMessage error_message) {
 }
 
 void OrbitApp::OnTimer(const TimerInfo& timer_info) {
+  CaptureMetricProcessTimer(timer_info);
+
   if (timer_info.function_id() == 0) {
     GetMutableTimeGraph()->ProcessTimer(timer_info, nullptr);
     return;
@@ -1190,6 +1192,8 @@ void OrbitApp::StartCapture() {
           data_manager_->collect_thread_states(), memory_information_sampling_period_ms_for_metrics,
           orbit_vulkan_layer_loaded_by_process, max_local_marker_depth_per_command_buffer)};
 
+  metrics_capture_complete_data_ = orbit_metrics_uploader::CaptureCompleteData{};
+
   CHECK(capture_client_ != nullptr);
 
   auto capture_event_processor = CreateCaptureEventProcessor(
@@ -1211,15 +1215,15 @@ void OrbitApp::StartCapture() {
                                  ErrorMessageOr<CaptureOutcome> capture_result) mutable {
         if (capture_result.has_error()) {
           OnCaptureFailed(capture_result.error());
-          capture_metric.SetCaptureFailed();
-          capture_metric.Send();
+          capture_metric.SetCaptureCompleteData(metrics_capture_complete_data_);
+          capture_metric.SendCaptureFailed();
           return;
         }
         switch (capture_result.value()) {
           case CaptureListener::CaptureOutcome::kCancelled:
             OnCaptureCancelled();
-            capture_metric.SetCaptureCancelled();
-            capture_metric.Send();
+            capture_metric.SetCaptureCompleteData(metrics_capture_complete_data_);
+            capture_metric.SendCaptureCancelled();
             return;
           case CaptureListener::CaptureOutcome::kComplete:
             OnCaptureComplete().Then(main_thread_executor_, [this, capture_metric = std::move(
@@ -1228,9 +1232,8 @@ void OrbitApp::StartCapture() {
                   std::chrono::duration<double, std::micro>(GetTimeGraph()->GetCaptureTimeSpanUs());
               auto capture_time_ms =
                   std::chrono::duration_cast<std::chrono::milliseconds>(capture_time_us);
-              orbit_metrics_uploader::CaptureCompleteData complete_data{capture_time_ms};
-              capture_metric.SetCaptureComplete(complete_data);
-              capture_metric.Send();
+              capture_metric.SetCaptureCompleteData(metrics_capture_complete_data_);
+              capture_metric.SendCaptureSucceeded(capture_time_ms);
             });
 
             return;
@@ -2404,6 +2407,7 @@ void OrbitApp::SetTargetProcess(ProcessData* process) {
     process_ = process;
   }
 }
+
 ErrorMessageOr<void> OrbitApp::ConvertPresetToNewFormatIfNecessary(const PresetFile& preset_file) {
   if (!preset_file.IsLegacyFileFormat()) {
     return outcome::success();
@@ -2464,4 +2468,24 @@ ErrorMessageOr<void> OrbitApp::ConvertPresetToNewFormatIfNecessary(const PresetF
   }
 
   return outcome::success();
+}
+
+void OrbitApp::CaptureMetricProcessTimer(const orbit_client_protos::TimerInfo& timer) {
+  if (timer.function_id() != 0) {
+    metrics_capture_complete_data_.number_of_instrumented_function_timers++;
+    return;
+  }
+  switch (timer.type()) {
+    case orbit_client_protos::TimerInfo_Type_kGpuActivity:
+      metrics_capture_complete_data_.number_of_gpu_activity_timers++;
+      break;
+    case orbit_client_protos::TimerInfo_Type_kGpuCommandBuffer:
+      metrics_capture_complete_data_.number_of_vulkan_layer_gpu_command_buffer_timers++;
+      break;
+    case orbit_client_protos::TimerInfo_Type_kGpuDebugMarker:
+      metrics_capture_complete_data_.number_of_vulkan_layer_gpu_debug_marker_timers++;
+      break;
+    default:
+      break;
+  }
 }

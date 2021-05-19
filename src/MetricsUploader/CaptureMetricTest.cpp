@@ -32,6 +32,12 @@ constexpr CaptureStartData kTestStartData{
     11 /*max_local_marker_depth_per_command_buffer*/
 };
 
+constexpr CaptureCompleteData kTestCompleteData{
+    101 /*number_of_instrumented_function_timers*/, 102 /*number_of_gpu_activity_timers*/,
+    103 /*number_of_vulkan_layer_gpu_command_buffer_timers*/,
+    104 /*number_of_vulkan_layer_gpu_debug_marker_timers*/
+};
+
 bool HasSameCaptureStartData(const OrbitCaptureData& capture_data,
                              const CaptureStartData& start_data) {
   return capture_data.number_of_instrumented_functions() ==
@@ -48,6 +54,18 @@ bool HasSameCaptureStartData(const OrbitCaptureData& capture_data,
          capture_data.thread_states() == start_data.thread_states &&
          capture_data.memory_information_sampling_period_ms() ==
              start_data.memory_information_sampling_period_ms;
+}
+
+bool HasSameCaptureCompleteData(const OrbitCaptureData& capture_data,
+                                const CaptureCompleteData& complete_data) {
+  return capture_data.number_of_instrumented_function_timers() ==
+             complete_data.number_of_instrumented_function_timers &&
+         capture_data.number_of_gpu_activity_timers() ==
+             complete_data.number_of_gpu_activity_timers &&
+         capture_data.number_of_vulkan_layer_gpu_command_buffer_timers() ==
+             complete_data.number_of_vulkan_layer_gpu_command_buffer_timers &&
+         capture_data.number_of_vulkan_layer_gpu_debug_marker_timers() ==
+             complete_data.number_of_vulkan_layer_gpu_debug_marker_timers;
 }
 
 }  // namespace
@@ -72,13 +90,7 @@ class MockUploader : public MetricsUploader {
               (override));
 };
 
-TEST(CaptureMetric, SendEmpty) {
-  MockUploader uploader{};
-  CaptureMetric metric{&uploader, kTestStartData};
-  EXPECT_FALSE(metric.Send());
-}
-
-TEST(CaptureMetric, SetCaptureFailedAndSend) {
+TEST(CaptureMetric, SendCaptureFailed) {
   MockUploader uploader{};
 
   EXPECT_CALL(uploader, SendCaptureEvent(_, _))
@@ -88,16 +100,17 @@ TEST(CaptureMetric, SetCaptureFailedAndSend) {
             EXPECT_EQ(status_code, OrbitLogEvent_StatusCode_INTERNAL_ERROR);
             EXPECT_GE(capture_data.duration_in_milliseconds(), 5);
             EXPECT_TRUE(HasSameCaptureStartData(capture_data, kTestStartData));
+            EXPECT_TRUE(HasSameCaptureCompleteData(capture_data, kTestCompleteData));
             return true;
           });
 
   CaptureMetric metric{&uploader, kTestStartData};
   std::this_thread::sleep_for(std::chrono::milliseconds(5));
-  metric.SetCaptureFailed();
-  EXPECT_TRUE(metric.Send());
+  metric.SetCaptureCompleteData(kTestCompleteData);
+  EXPECT_TRUE(metric.SendCaptureFailed());
 }
 
-TEST(CaptureMetric, SetCaptureCancelledAndSend) {
+TEST(CaptureMetric, SendCaptureCancelled) {
   MockUploader uploader{};
 
   EXPECT_CALL(uploader, SendCaptureEvent(_, _))
@@ -107,66 +120,52 @@ TEST(CaptureMetric, SetCaptureCancelledAndSend) {
             EXPECT_EQ(status_code, OrbitLogEvent_StatusCode_CANCELLED);
             EXPECT_GE(capture_data.duration_in_milliseconds(), 5);
             EXPECT_TRUE(HasSameCaptureStartData(capture_data, kTestStartData));
+            EXPECT_TRUE(HasSameCaptureCompleteData(capture_data, kTestCompleteData));
             return true;
           });
 
   CaptureMetric metric{&uploader, kTestStartData};
   std::this_thread::sleep_for(std::chrono::milliseconds(5));
-  metric.SetCaptureCancelled();
-  EXPECT_TRUE(metric.Send());
+  metric.SetCaptureCompleteData(kTestCompleteData);
+  EXPECT_TRUE(metric.SendCaptureCancelled());
 }
 
-TEST(CaptureMetric, SetCaptureCompleteAndSend) {
+TEST(CaptureMetric, SendCaptureSucceeded) {
   MockUploader uploader{};
-
-  CaptureCompleteData complete_data{
-      std::chrono::milliseconds{51} /*duration_in_milliseconds*/
-  };
 
   EXPECT_CALL(uploader, SendCaptureEvent(_, _))
       .Times(1)
-      .WillOnce([complete_data](const OrbitCaptureData& capture_data,
-                                OrbitLogEvent_StatusCode status_code) -> bool {
-        EXPECT_EQ(status_code, OrbitLogEvent_StatusCode_SUCCESS);
-        EXPECT_EQ(capture_data.duration_in_milliseconds(),
-                  complete_data.duration_in_milliseconds.count());
-        EXPECT_TRUE(HasSameCaptureStartData(capture_data, kTestStartData));
-        return true;
-      });
+      .WillOnce(
+          [](const OrbitCaptureData& capture_data, OrbitLogEvent_StatusCode status_code) -> bool {
+            EXPECT_EQ(status_code, OrbitLogEvent_StatusCode_SUCCESS);
+            EXPECT_EQ(capture_data.duration_in_milliseconds(), 51);
+            EXPECT_TRUE(HasSameCaptureStartData(capture_data, kTestStartData));
+            EXPECT_TRUE(HasSameCaptureCompleteData(capture_data, kTestCompleteData));
+            return true;
+          });
 
   CaptureMetric metric{&uploader, kTestStartData};
-  metric.SetCaptureComplete(complete_data);
-  EXPECT_TRUE(metric.Send());
+  metric.SetCaptureCompleteData(kTestCompleteData);
+  EXPECT_TRUE(metric.SendCaptureSucceeded(std::chrono::milliseconds{51}));
 }
 
-TEST(CaptureMetric, MultipleSetAndSend) {
+TEST(CaptureMetric, SendCaptureSucceededWithoutCompleteData) {
   MockUploader uploader{};
-
-  CaptureCompleteData complete_data1{
-      std::chrono::milliseconds{51} /*duration_in_milliseconds*/
-  };
-
-  CaptureCompleteData complete_data2{
-      std::chrono::milliseconds{423} /*duration_in_milliseconds*/
-  };
 
   EXPECT_CALL(uploader, SendCaptureEvent(_, _))
       .Times(1)
-      .WillOnce([complete_data2](const OrbitCaptureData& capture_data,
-                                 OrbitLogEvent_StatusCode status_code) -> bool {
-        EXPECT_EQ(status_code, OrbitLogEvent_StatusCode_SUCCESS);
-        EXPECT_EQ(capture_data.duration_in_milliseconds(),
-                  complete_data2.duration_in_milliseconds.count());
-        EXPECT_TRUE(HasSameCaptureStartData(capture_data, kTestStartData));
-        return true;
-      });
+      .WillOnce(
+          [](const OrbitCaptureData& capture_data, OrbitLogEvent_StatusCode status_code) -> bool {
+            EXPECT_EQ(status_code, OrbitLogEvent_StatusCode_SUCCESS);
+            EXPECT_EQ(capture_data.duration_in_milliseconds(), 5);
+            EXPECT_TRUE(HasSameCaptureStartData(capture_data, kTestStartData));
+            EXPECT_TRUE(HasSameCaptureCompleteData(capture_data, {}));
+            return true;
+          });
 
   CaptureMetric metric{&uploader, kTestStartData};
-  metric.SetCaptureComplete(complete_data1);
-  metric.SetCaptureFailed();
-  metric.SetCaptureCancelled();
-  metric.SetCaptureComplete(complete_data2);
-  EXPECT_TRUE(metric.Send());
+
+  EXPECT_TRUE(metric.SendCaptureSucceeded(std::chrono::milliseconds{5}));
 }
 
 }  // namespace orbit_metrics_uploader

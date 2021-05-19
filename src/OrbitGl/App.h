@@ -55,6 +55,7 @@
 #include "MainThreadExecutor.h"
 #include "MainWindowInterface.h"
 #include "ManualInstrumentationManager.h"
+#include "MetricsUploader/CaptureMetric.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "ModulesDataView.h"
 #include "OrbitBase/CrashHandler.h"
@@ -494,6 +495,9 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
 
   void RequestUpdatePrimitives();
 
+  // Only call from the capture thread
+  void CaptureMetricProcessTimer(const orbit_client_protos::TimerInfo& timer);
+
   std::atomic<bool> capture_loading_cancellation_requested_ = false;
   std::atomic<bool> is_loading_capture_{false};
 
@@ -563,7 +567,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
 
   std::unique_ptr<FramePointerValidatorClient> frame_pointer_validator_client_;
 
-  // TODO(kuebler): This is mostly written during capture by the capture thread on the
+  // TODO(b/166767590): This is mostly written during capture by the capture thread on the
   //  CaptureListener parts of App, but may be read also during capturing by all threads.
   //  Currently, it is not properly synchronized (and thus it can't live at DataManager).
   std::unique_ptr<orbit_client_model::CaptureData> capture_data_;
@@ -572,6 +576,11 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
 
   const orbit_base::CrashHandler* crash_handler_;
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
+  // TODO(b/166767590) Synchronize. Probably in the same way as capture_data
+  // Created by the main thread right before a capture is started. While capturing its modified by
+  // the capture thread. After the capture is finished its read by the main thread again. This is
+  // similar to how capture_data is used.
+  orbit_metrics_uploader::CaptureCompleteData metrics_capture_complete_data_;
 };
 
 #endif  // ORBIT_GL_APP_H_

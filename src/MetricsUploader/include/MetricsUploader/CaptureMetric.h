@@ -34,22 +34,21 @@ struct CaptureStartData {
 };
 
 struct CaptureCompleteData {
-  std::chrono::milliseconds duration_in_milliseconds = std::chrono::milliseconds{0};
+  int64_t number_of_instrumented_function_timers = 0;
+  int64_t number_of_gpu_activity_timers = 0;
+  int64_t number_of_vulkan_layer_gpu_command_buffer_timers = 0;
+  int64_t number_of_vulkan_layer_gpu_debug_marker_timers = 0;
 };
 
 class CaptureMetric {
  public:
   explicit CaptureMetric(MetricsUploader* uploader, const CaptureStartData& start_data);
-  CaptureMetric(const CaptureMetric& other) = delete;
-  CaptureMetric& operator=(const CaptureMetric& other) = delete;
-  CaptureMetric(CaptureMetric&& other) noexcept = default;
-  CaptureMetric& operator=(CaptureMetric&& other) noexcept = default;
-  ~CaptureMetric() = default;
 
-  void SetCaptureFailed();
-  void SetCaptureCancelled();
-  void SetCaptureComplete(const CaptureCompleteData& complete_data);
-  bool Send();
+  void SetCaptureCompleteData(const CaptureCompleteData& complete_data);
+
+  bool SendCaptureFailed();
+  bool SendCaptureCancelled();
+  bool SendCaptureSucceeded(std::chrono::milliseconds duration_in_milliseconds);
 
  private:
   MetricsUploader* uploader_;
