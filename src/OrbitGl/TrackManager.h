@@ -75,7 +75,7 @@ class TrackManager {
  private:
   void UpdateTracksOrder();
   [[nodiscard]] int FindMovingTrackIndex();
-  void UpdateMovingTrackSorting();
+  void UpdateMovingTrackPositionInVisibleTracks();
   void SortTracks();
   [[nodiscard]] std::vector<ThreadTrack*> GetSortedThreadTracks();
   void UpdateVisibleTrackList();
