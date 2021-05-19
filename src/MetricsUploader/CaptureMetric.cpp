@@ -33,27 +33,35 @@ CaptureMetric::CaptureMetric(MetricsUploader* uploader, const CaptureStartData& 
       start_data.max_local_marker_depth_per_command_buffer);
 }
 
-void CaptureMetric::SetCaptureFailed() {
+void CaptureMetric::SetCaptureCompleteData(const CaptureCompleteData& complete_data) {
+  capture_data_.set_number_of_instrumented_function_timers(
+      complete_data.number_of_instrumented_function_timers);
+  capture_data_.set_number_of_gpu_activity_timers(complete_data.number_of_gpu_activity_timers);
+  capture_data_.set_number_of_vulkan_layer_gpu_command_buffer_timers(
+      complete_data.number_of_vulkan_layer_gpu_command_buffer_timers);
+  capture_data_.set_number_of_vulkan_layer_gpu_debug_marker_timers(
+      complete_data.number_of_vulkan_layer_gpu_debug_marker_timers);
+}
+
+bool CaptureMetric::SendCaptureFailed() {
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::steady_clock::now() - start_);
   capture_data_.set_duration_in_milliseconds(duration.count());
   status_code_ = OrbitLogEvent_StatusCode_INTERNAL_ERROR;
+  return uploader_->SendCaptureEvent(capture_data_, status_code_);
 }
 
-void CaptureMetric::SetCaptureCancelled() {
+bool CaptureMetric::SendCaptureCancelled() {
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::steady_clock::now() - start_);
   capture_data_.set_duration_in_milliseconds(duration.count());
   status_code_ = OrbitLogEvent_StatusCode_CANCELLED;
+  return uploader_->SendCaptureEvent(capture_data_, status_code_);
 }
 
-void CaptureMetric::SetCaptureComplete(const CaptureCompleteData& complete_data) {
-  capture_data_.set_duration_in_milliseconds(complete_data.duration_in_milliseconds.count());
+bool CaptureMetric::SendCaptureSucceeded(std::chrono::milliseconds duration_in_milliseconds) {
+  capture_data_.set_duration_in_milliseconds(duration_in_milliseconds.count());
   status_code_ = OrbitLogEvent_StatusCode_SUCCESS;
-}
-
-bool CaptureMetric::Send() {
-  if (status_code_ == OrbitLogEvent_StatusCode_UNKNOWN_STATUS) return false;
   return uploader_->SendCaptureEvent(capture_data_, status_code_);
 }
 
