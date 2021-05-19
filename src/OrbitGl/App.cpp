@@ -1140,14 +1140,14 @@ void OrbitApp::StartCapture() {
   absl::flat_hash_set<uint64_t> frame_track_function_ids;
   // non-zero since 0 is reserved for invalid ids.
   uint64_t function_id = 1;
-  for (auto& function : selected_functions) {
+  for (const auto& function : selected_functions) {
     const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(
         function.module_path(), function.module_build_id());
     CHECK(module != nullptr);
     if (user_defined_capture_data.ContainsFrameTrack(function)) {
       frame_track_function_ids.insert(function_id);
     }
-    selected_functions_map[function_id++] = std::move(function);
+    selected_functions_map[function_id++] = function;
   }
 
   TracepointInfoSet selected_tracepoints = data_manager_->selected_tracepoints();
