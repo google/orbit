@@ -6,6 +6,7 @@
 
 #include "CodeExamples.h"
 #include "CodeViewer/Dialog.h"
+#include "Style/Style.h"
 #include "SyntaxHighlighter/X86Assembly.h"
 
 class DummyCodeReport : public orbit_code_report::CodeReport {
@@ -24,6 +25,7 @@ class DummyCodeReport : public orbit_code_report::CodeReport {
 
 int main(int argc, char* argv[]) {
   QApplication app{argc, argv};
+  orbit_style::ApplyStyle(&app);
 
   orbit_code_viewer::Dialog dialog{};
 
