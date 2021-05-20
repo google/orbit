@@ -510,13 +510,14 @@ int Viewer::WidthMarginBetweenColumns() const {
 
 int Viewer::TopWidgetHeight() const { return fontMetrics().height(); }
 
-void Viewer::SetAnnotatingContent(absl::Span<const AnnotatingLine> annotating_lines) {
+void Viewer::SetAnnotatingContent(
+    absl::Span<const orbit_code_report::AnnotatingLine> annotating_lines) {
   largest_occuring_line_numbers_ = SetAnnotatingContentInDocument(document(), annotating_lines);
   UpdateBarsSize();
 }
 
 LargestOccurringLineNumbers SetAnnotatingContentInDocument(
-    QTextDocument* document, absl::Span<const AnnotatingLine> annotating_lines) {
+    QTextDocument* document, absl::Span<const orbit_code_report::AnnotatingLine> annotating_lines) {
   // Lets first go through the main content and save line numbers as metadata.
   // If previously extra annotating content had been added, let's remove it now.
   for (auto current_block = document->begin(); current_block != document->end();) {

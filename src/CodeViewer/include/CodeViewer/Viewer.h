@@ -13,20 +13,12 @@
 #include <QWheelEvent>
 #include <functional>
 
+#include "CodeReport/AnnotatingLine.h"
 #include "CodeReport/CodeReport.h"
 #include "CodeViewer/FontSizeInEm.h"
 #include "CodeViewer/PlaceHolderWidget.h"
 
 namespace orbit_code_viewer {
-
-// Combines metadata and contents for a line that annotates another line. The current implementation
-// of Viewer inserts the annotating line above the annotated(reference) line. The association is
-// done via line numbers. Both line number fields are one-indexed.
-struct AnnotatingLine {
-  uint64_t reference_line;
-  uint64_t line_number;
-  std::string line_contents;
-};
 
 struct LargestOccurringLineNumbers {
   std::optional<uint64_t> main_content;
@@ -78,7 +70,7 @@ class Viewer : public QPlainTextEdit {
   void SetHighlightCurrentLine(bool is_enabled);
   [[nodiscard]] bool IsCurrentLineHighlighted() const;
 
-  void SetAnnotatingContent(absl::Span<const AnnotatingLine> annotating_lines);
+  void SetAnnotatingContent(absl::Span<const orbit_code_report::AnnotatingLine> annotating_lines);
 
   void SetTopBarTile(const QString& title) { top_bar_title_ = title; }
   [[nodiscard]] const QString& GetTopBarTitle() const { return top_bar_title_; }
@@ -127,7 +119,7 @@ class Viewer : public QPlainTextEdit {
 // Add a list of annotating lines to a document. The list of annotating lines need to be ordered by
 // `.reference_line`.
 [[nodiscard]] LargestOccurringLineNumbers SetAnnotatingContentInDocument(
-    QTextDocument* document, absl::Span<const AnnotatingLine> annotating_lines);
+    QTextDocument* document, absl::Span<const orbit_code_report::AnnotatingLine> annotating_lines);
 }  // namespace orbit_code_viewer
 
 #endif  // CODE_VIEWER_VIEWER_H_
