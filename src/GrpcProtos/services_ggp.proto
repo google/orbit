@@ -9,8 +9,7 @@ package orbit_grpc_protos;
 service CaptureClientGgpService {
   rpc StartCapture(StartCaptureRequest) returns (StartCaptureResponse) {}
 
-  rpc StopAndSaveCapture(StopAndSaveCaptureRequest)
-      returns (StopAndSaveCaptureResponse) {}
+  rpc StopCapture(StopCaptureRequest) returns (StopCaptureResponse) {}
 
   rpc UpdateSelectedFunctions(UpdateSelectedFunctionsRequest)
       returns (UpdateSelectedFunctionsResponse) {}
@@ -23,9 +22,9 @@ message StartCaptureRequest {}
 
 message StartCaptureResponse {}
 
-message StopAndSaveCaptureRequest {}
+message StopCaptureRequest {}
 
-message StopAndSaveCaptureResponse {}
+message StopCaptureResponse {}
 
 message UpdateSelectedFunctionsRequest {
   repeated string functions = 1;

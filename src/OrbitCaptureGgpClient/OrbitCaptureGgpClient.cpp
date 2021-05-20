@@ -24,8 +24,8 @@ using orbit_grpc_protos::ShutdownServiceRequest;
 using orbit_grpc_protos::ShutdownServiceResponse;
 using orbit_grpc_protos::StartCaptureRequest;
 using orbit_grpc_protos::StartCaptureResponse;
-using orbit_grpc_protos::StopAndSaveCaptureRequest;
-using orbit_grpc_protos::StopAndSaveCaptureResponse;
+using orbit_grpc_protos::StopCaptureRequest;
+using orbit_grpc_protos::StopCaptureResponse;
 using orbit_grpc_protos::UpdateSelectedFunctionsRequest;
 using orbit_grpc_protos::UpdateSelectedFunctionsResponse;
 
@@ -34,19 +34,19 @@ using grpc::Status;
 
 class CaptureClientGgpClient::CaptureClientGgpClientImpl {
  public:
-  void SetupGrpcClient(std::string grpc_server_address);
+  void SetupGrpcClient(const std::string& grpc_server_address);
 
   [[nodiscard]] ErrorMessageOr<void> StartCapture();
-  [[nodiscard]] ErrorMessageOr<void> StopAndSaveCapture();
+  [[nodiscard]] ErrorMessageOr<void> StopCapture();
   [[nodiscard]] ErrorMessageOr<void> UpdateSelectedFunctions(
-      std::vector<std::string> capture_functions);
+      const std::vector<std::string>& selected_functions);
   void ShutdownService();
 
  private:
   std::unique_ptr<orbit_grpc_protos::CaptureClientGgpService::Stub> capture_client_ggp_service_;
 };
 
-CaptureClientGgpClient::CaptureClientGgpClient(std::string grpc_server_address)
+CaptureClientGgpClient::CaptureClientGgpClient(const std::string& grpc_server_address)
     : pimpl{std::make_unique<CaptureClientGgpClientImpl>()} {
   pimpl->SetupGrpcClient(grpc_server_address);
 }
@@ -60,8 +60,8 @@ int CaptureClientGgpClient::StartCapture() {
   return 1;
 }
 
-int CaptureClientGgpClient::StopAndSaveCapture() {
-  ErrorMessageOr<void> result = pimpl->StopAndSaveCapture();
+int CaptureClientGgpClient::StopCapture() {
+  ErrorMessageOr<void> result = pimpl->StopCapture();
   if (result.has_error()) {
     ERROR("Not possible to stop or save capture: %s", result.error().message());
     return 0;
@@ -69,7 +69,8 @@ int CaptureClientGgpClient::StopAndSaveCapture() {
   return 1;
 }
 
-int CaptureClientGgpClient::UpdateSelectedFunctions(std::vector<std::string> selected_functions) {
+int CaptureClientGgpClient::UpdateSelectedFunctions(
+    const std::vector<std::string>& selected_functions) {
   ErrorMessageOr<void> result = pimpl->UpdateSelectedFunctions(selected_functions);
   if (result.has_error()) {
     ERROR("Not possible to update functions %s", result.error().message());
@@ -85,7 +86,7 @@ CaptureClientGgpClient::CaptureClientGgpClient(CaptureClientGgpClient&&) = defau
 CaptureClientGgpClient& CaptureClientGgpClient::operator=(CaptureClientGgpClient&&) = default;
 
 void CaptureClientGgpClient::CaptureClientGgpClientImpl::SetupGrpcClient(
-    std::string grpc_server_address) {
+    const std::string& grpc_server_address) {
   grpc::ChannelArguments channel_arguments;
   channel_arguments.SetMaxReceiveMessageSize(std::numeric_limits<int32_t>::max());
 
@@ -116,13 +117,12 @@ ErrorMessageOr<void> CaptureClientGgpClient::CaptureClientGgpClientImpl::StartCa
   return outcome::success();
 }
 
-ErrorMessageOr<void> CaptureClientGgpClient::CaptureClientGgpClientImpl::StopAndSaveCapture() {
-  StopAndSaveCaptureRequest request;
-  StopAndSaveCaptureResponse response;
+ErrorMessageOr<void> CaptureClientGgpClient::CaptureClientGgpClientImpl::StopCapture() {
+  StopCaptureRequest request;
+  StopCaptureResponse response;
   auto context = std::make_unique<ClientContext>();
 
-  Status status =
-      capture_client_ggp_service_->StopAndSaveCapture(context.get(), request, &response);
+  Status status = capture_client_ggp_service_->StopCapture(context.get(), request, &response);
   if (!status.ok()) {
     ERROR("gRPC call to StopCapture failed: %s (error_code=%d)", status.error_message(),
           status.error_code());
@@ -133,7 +133,7 @@ ErrorMessageOr<void> CaptureClientGgpClient::CaptureClientGgpClientImpl::StopAnd
 }
 
 ErrorMessageOr<void> CaptureClientGgpClient::CaptureClientGgpClientImpl::UpdateSelectedFunctions(
-    std::vector<std::string> selected_functions) {
+    const std::vector<std::string>& selected_functions) {
   UpdateSelectedFunctionsRequest request;
   UpdateSelectedFunctionsResponse response;
   auto context = std::make_unique<ClientContext>();

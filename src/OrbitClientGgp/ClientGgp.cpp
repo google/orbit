@@ -47,6 +47,7 @@ using orbit_base::Future;
 
 using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureEventProcessor;
+using orbit_capture_client::CaptureListener;
 
 using orbit_client_data::ProcessData;
 using orbit_client_data::TracepointInfoSet;
@@ -90,22 +91,18 @@ bool ClientGgp::InitClient() {
     return false;
   }
   capture_client_ = std::make_unique<CaptureClient>(grpc_channel_);
-  string_manager_ = std::make_shared<StringManager>();
 
   return true;
 }
 
 // Client requests to start the capture
-bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
+ErrorMessageOr<void> ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
   int32_t pid = target_process_->pid();
   if (pid == -1) {
-    ERROR(
+    return ErrorMessage{
         "Error starting capture: "
-        "No process selected. Please choose a target process for the capture.");
-    return false;
+        "No process selected. Please choose a target process for the capture."};
   }
-
-  ClearCapture();
 
   LOG("Capture pid %d", pid);
   TracepointInfoSet selected_tracepoints;
@@ -120,32 +117,33 @@ bool ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
   uint64_t max_local_marker_depth_per_command_buffer =
       absl::GetFlag(FLAGS_max_local_marker_depth_per_command_buffer);
 
-  Future<ErrorMessageOr<CaptureOutcome>> result = capture_client_->Capture(
+  std::filesystem::path file_path = GenerateFilePath();
+
+  LOG("Saving capture to \"%s\"", file_path.string());
+
+  OUTCOME_TRY(event_processor,
+              CaptureEventProcessor::CreateSaveToFileProcessor(
+                  GenerateFilePath(), absl::flat_hash_set<uint64_t>{},
+                  [](const ErrorMessage& error) { ERROR("%s", error.message()); }));
+
+  Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> result = capture_client_->Capture(
       thread_pool, target_process_->pid(), module_manager_, selected_functions_,
       selected_tracepoints, options_.samples_per_second, unwinding_method, collect_scheduling_info,
       collect_thread_state, collect_gpu_jobs, enable_api, enable_introspection,
-      max_local_marker_depth_per_command_buffer, false, 0,
-      CaptureEventProcessor::CreateForCaptureListener(this, absl::flat_hash_set<uint64_t>{}));
+      max_local_marker_depth_per_command_buffer, false, 0, std::move(event_processor));
 
   orbit_base::ImmediateExecutor executor;
-  result.Then(&executor, [this](ErrorMessageOr<CaptureOutcome> result) {
+
+  result.Then(&executor, [](ErrorMessageOr<CaptureListener::CaptureOutcome> result) {
     if (!result.has_value()) {
-      ClearCapture();
       ERROR("Capture failed: %s", result.error().message());
-      return;
     }
 
-    switch (result.value()) {
-      case CaptureListener::CaptureOutcome::kCancelled:
-        ClearCapture();
-        return;
-      case CaptureListener::CaptureOutcome::kComplete:
-        PostprocessCaptureData();
-        return;
-    }
+    // We do not send try aborting capture - it cannot be cancelled.
+    CHECK(result.value() == CaptureListener::CaptureOutcome::kComplete);
   });
 
-  return true;
+  return outcome::success();
 }
 
 bool ClientGgp::StopCapture() {
@@ -153,28 +151,18 @@ bool ClientGgp::StopCapture() {
   return capture_client_->StopCapture();
 }
 
-bool ClientGgp::SaveCapture() {
-  LOG("Saving capture");
-  const auto& key_to_string_map = string_manager_->GetKeyToStringMap();
+std::filesystem::path ClientGgp::GenerateFilePath() {
   std::string file_name = options_.capture_file_name;
-  const CaptureData& capture_data = GetCaptureData();
   if (file_name.empty()) {
     file_name = orbit_client_model::capture_serializer::GenerateCaptureFileName(
-        capture_data.process_name(), capture_data.capture_start_time());
+        target_process_->name(), absl::Now());
   } else {
     // Make sure the file is saved with orbit extension
     orbit_client_model::capture_serializer::IncludeOrbitExtensionInFile(file_name);
   }
-  // Add the location where the capture is saved
-  file_name.insert(0, options_.capture_file_directory);
 
-  ErrorMessageOr<void> result = orbit_client_model::capture_serializer::Save(
-      file_name, capture_data, key_to_string_map, timer_infos_.begin(), timer_infos_.end());
-  if (result.has_error()) {
-    ERROR("Could not save the capture: %s", result.error().message());
-    return false;
-  }
-  return true;
+  // Add the location where the capture is saved
+  return std::filesystem::path(options_.capture_file_directory) / file_name;
 }
 
 ErrorMessageOr<std::unique_ptr<ProcessData>> ClientGgp::GetOrbitProcessByPid(int32_t pid) {
@@ -317,93 +305,4 @@ absl::flat_hash_map<uint64_t, FunctionInfo> ClientGgp::GetSelectedFunctions() {
 void ClientGgp::UpdateCaptureFunctions(std::vector<std::string> capture_functions) {
   options_.capture_functions = std::move(capture_functions);
   LoadSelectedFunctions();
-}
-
-void ClientGgp::ClearCapture() {
-  capture_data_.reset();
-  string_manager_->Clear();
-  timer_infos_.clear();
-}
-
-void ClientGgp::ProcessTimer(const TimerInfo& timer_info) { timer_infos_.push_back(timer_info); }
-
-// CaptureListener implementation
-void ClientGgp::OnCaptureFinished(const CaptureFinished& capture_finished) {
-  if (capture_finished.status() == CaptureFinished::kFailed) {
-    ERROR("Capture finished with error: %s", capture_finished.error_message());
-  } else {
-    LOG("Capture finished successfully");
-  }
-}
-
-void ClientGgp::OnCaptureStarted(const CaptureStarted& capture_started,
-                                 absl::flat_hash_set<uint64_t> frame_track_function_ids) {
-  capture_data_ =
-      std::make_unique<CaptureData>(&module_manager_, capture_started, frame_track_function_ids);
-  LOG("Capture started");
-}
-
-void ClientGgp::PostprocessCaptureData() {
-  LOG("Capture completed");
-  GetMutableCaptureData().FilterBrokenCallstacks();
-  GetMutableCaptureData().set_post_processed_sampling_data(
-      orbit_client_model::CreatePostProcessedSamplingData(*GetCaptureData().GetCallstackData(),
-                                                          GetCaptureData()));
-}
-
-void ClientGgp::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
-  if (timer_info.function_id() != 0) {
-    uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
-    GetMutableCaptureData().UpdateFunctionStats(timer_info.function_id(), elapsed_nanos);
-  }
-  ProcessTimer(timer_info);
-}
-
-void ClientGgp::OnKeyAndString(uint64_t key, std::string str) {
-  string_manager_->AddIfNotPresent(key, std::move(str));
-}
-
-void ClientGgp::OnUniqueCallstack(uint64_t callstack_id, CallstackInfo callstack) {
-  GetMutableCaptureData().AddUniqueCallstack(callstack_id, std::move(callstack));
-}
-
-void ClientGgp::OnCallstackEvent(CallstackEvent callstack_event) {
-  GetMutableCaptureData().AddCallstackEvent(std::move(callstack_event));
-}
-
-void ClientGgp::OnThreadName(int32_t thread_id, std::string thread_name) {
-  GetMutableCaptureData().AddOrAssignThreadName(thread_id, std::move(thread_name));
-}
-
-void ClientGgp::OnThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo thread_state_slice) {
-  GetMutableCaptureData().AddThreadStateSlice(std::move(thread_state_slice));
-}
-
-void ClientGgp::OnAddressInfo(LinuxAddressInfo address_info) {
-  GetMutableCaptureData().InsertAddressInfo(std::move(address_info));
-}
-
-void ClientGgp::OnUniqueTracepointInfo(uint64_t key,
-                                       orbit_grpc_protos::TracepointInfo tracepoint_info) {
-  GetMutableCaptureData().AddUniqueTracepointEventInfo(key, std::move(tracepoint_info));
-}
-
-void ClientGgp::OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracepoint_event_info) {
-  int32_t capture_process_id = GetCaptureData().process_id();
-  bool is_same_pid_as_target = capture_process_id == tracepoint_event_info.pid();
-
-  GetMutableCaptureData().AddTracepointEventAndMapToThreads(
-      tracepoint_event_info.time(), tracepoint_event_info.tracepoint_info_key(),
-      tracepoint_event_info.pid(), tracepoint_event_info.tid(), tracepoint_event_info.cpu(),
-      is_same_pid_as_target);
-}
-
-void ClientGgp::OnModuleUpdate(uint64_t /*timestamp_ns*/, ModuleInfo module_info) {
-  CHECK(module_manager_.AddOrUpdateNotLoadedModules({module_info}).empty());
-  GetMutableCaptureData().mutable_process()->AddOrUpdateModuleInfo(module_info);
-}
-
-void ClientGgp::OnModulesSnapshot(uint64_t /*timestamp_ns*/, std::vector<ModuleInfo> module_infos) {
-  CHECK(module_manager_.AddOrUpdateNotLoadedModules(module_infos).empty());
-  GetMutableCaptureData().mutable_process()->UpdateModuleInfos(module_infos);
 }

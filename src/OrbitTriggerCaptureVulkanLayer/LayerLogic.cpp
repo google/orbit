@@ -125,7 +125,7 @@ void LayerLogic::RunCapture() {
 }
 
 void LayerLogic::StopCapture() {
-  int capture_stopped = ggp_capture_client_->StopAndSaveCapture();
+  int capture_stopped = ggp_capture_client_->StopCapture();
   if (capture_stopped == kCaptureClientResultSuccess) {
     orbit_capture_running_ = false;
     // The frame time is expected to be longer the next call so we skip the check
