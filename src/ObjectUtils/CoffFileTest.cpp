@@ -11,9 +11,11 @@
 
 #include "ObjectUtils/CoffFile.h"
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/TestUtils.h"
 #include "absl/strings/ascii.h"
 #include "symbol.pb.h"
 
+using orbit_base::HasNoError;
 using orbit_grpc_protos::SymbolInfo;
 using orbit_object_utils::CoffFile;
 using orbit_object_utils::CreateCoffFile;
@@ -22,11 +24,11 @@ TEST(CoffFile, LoadDebugSymbols) {
   std::filesystem::path file_path = orbit_base::GetExecutableDir() / "testdata" / "libtest.dll";
 
   auto coff_file_result = CreateCoffFile(file_path);
-  ASSERT_TRUE(coff_file_result.has_value()) << coff_file_result.error().message();
+  ASSERT_THAT(coff_file_result, HasNoError());
   std::unique_ptr<CoffFile> coff_file = std::move(coff_file_result.value());
 
   const auto symbols_result = coff_file->LoadDebugSymbols();
-  ASSERT_TRUE(symbols_result.has_value()) << symbols_result.error().message();
+  ASSERT_THAT(symbols_result, HasNoError());
 
   EXPECT_EQ(symbols_result.value().symbols_file_path(), file_path);
 
@@ -51,7 +53,7 @@ TEST(CoffFile, HasDebugSymbols) {
   std::filesystem::path file_path = orbit_base::GetExecutableDir() / "testdata" / "libtest.dll";
 
   auto coff_file_result = CreateCoffFile(file_path);
-  ASSERT_TRUE(coff_file_result.has_value()) << coff_file_result.error().message();
+  ASSERT_THAT(coff_file_result, HasNoError());
 
   EXPECT_TRUE(coff_file_result.value()->HasDebugSymbols());
 }
@@ -60,7 +62,7 @@ TEST(CoffFile, GetFilePath) {
   std::filesystem::path file_path = orbit_base::GetExecutableDir() / "testdata" / "libtest.dll";
 
   auto coff_file_result = CreateCoffFile(file_path);
-  ASSERT_TRUE(coff_file_result.has_value()) << coff_file_result.error().message();
+  ASSERT_THAT(coff_file_result, HasNoError());
 
   EXPECT_EQ(coff_file_result.value()->GetFilePath(), file_path);
 }

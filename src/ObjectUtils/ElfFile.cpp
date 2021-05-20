@@ -63,6 +63,8 @@ class ElfFileImpl : public ElfFile {
   [[nodiscard]] bool HasDebugInfo() const override;
   [[nodiscard]] bool HasGnuDebuglink() const override;
   [[nodiscard]] bool Is64Bit() const override;
+  [[nodiscard]] bool IsElf() const override;
+  [[nodiscard]] bool IsCoff() const override;
   [[nodiscard]] std::string GetBuildId() const override;
   [[nodiscard]] std::string GetName() const override;
   [[nodiscard]] std::string GetSoname() const override;
@@ -500,6 +502,16 @@ bool ElfFileImpl<llvm::object::ELF64LE>::Is64Bit() const {
 template <>
 bool ElfFileImpl<llvm::object::ELF32LE>::Is64Bit() const {
   return false;
+}
+
+template <typename ElfT>
+bool ElfFileImpl<ElfT>::IsCoff() const {
+  return false;
+}
+
+template <typename ElfT>
+bool ElfFileImpl<ElfT>::IsElf() const {
+  return true;
 }
 
 template <typename ElfT>

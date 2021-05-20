@@ -17,7 +17,7 @@ target_sources(
 
 target_sources(
   ObjectUtils
-  PRIVATE CoffFile.cpp ElfFile.cpp)
+  PRIVATE CoffFile.cpp ElfFile.cpp ObjectFile.cpp)
 
 if (NOT WIN32)
 target_sources(ObjectUtils PRIVATE LinuxMap.cpp)
@@ -39,6 +39,7 @@ add_executable(ObjectUtilsTests)
 target_sources(ObjectUtilsTests PRIVATE
     CoffFileTest.cpp
     ElfFileTest.cpp
+    ObjectFileTest.cpp
 )
 
 if (NOT WIN32)

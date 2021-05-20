@@ -18,7 +18,10 @@
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/TestUtils.h"
 #include "module.pb.h"
+
+using orbit_base::HasNoError;
 
 TEST(LinuxMap, CreateModuleHelloWorld) {
   using orbit_grpc_protos::ModuleInfo;
@@ -30,7 +33,7 @@ TEST(LinuxMap, CreateModuleHelloWorld) {
   constexpr uint64_t kStartAddress = 23;
   constexpr uint64_t kEndAddress = 8004;
   auto result = CreateModule(hello_world_path, kStartAddress, kEndAddress);
-  ASSERT_FALSE(result.has_error()) << result.error().message();
+  ASSERT_THAT(result, HasNoError());
 
   EXPECT_EQ(result.value().name(), "hello_world_elf");
   EXPECT_EQ(result.value().file_path(), hello_world_path);
@@ -53,6 +56,30 @@ TEST(LinuxMap, CreateModuleOnDev) {
   ASSERT_TRUE(result.has_error());
   EXPECT_EQ(result.error().message(),
             "The module \"/dev/zero\" is a character or block device (is in /dev/)");
+}
+
+TEST(LinuxMap, CreateCoffModule) {
+  using orbit_grpc_protos::ModuleInfo;
+  using orbit_object_utils::CreateModule;
+
+  const std::filesystem::path dll_path =
+      orbit_base::GetExecutableDir() / "testdata" / "libtest.dll";
+
+  constexpr uint64_t kStartAddress = 23;
+  constexpr uint64_t kEndAddress = 8004;
+
+  auto result = CreateModule(dll_path, kStartAddress, kEndAddress);
+  ASSERT_THAT(result, HasNoError());
+
+  EXPECT_EQ(result.value().name(), "libtest.dll");
+  EXPECT_EQ(result.value().file_path(), dll_path);
+  EXPECT_EQ(result.value().file_size(), 96441);
+  EXPECT_EQ(result.value().address_start(), kStartAddress);
+  EXPECT_EQ(result.value().address_end(), kEndAddress);
+
+  // These fields should have their default values.
+  EXPECT_EQ(result.value().build_id(), "");
+  EXPECT_EQ(result.value().load_bias(), 0x0);
 }
 
 TEST(LinuxMap, CreateModuleNotElf) {
@@ -80,7 +107,7 @@ TEST(LinuxMan, CreateModuleWithSoname) {
   constexpr uint64_t kStartAddress = 23;
   constexpr uint64_t kEndAddress = 8004;
   auto result = CreateModule(hello_world_path, kStartAddress, kEndAddress);
-  ASSERT_FALSE(result.has_error()) << result.error().message();
+  ASSERT_THAT(result, HasNoError());
 
   EXPECT_EQ(result.value().name(), "libtest.so");
   EXPECT_EQ(result.value().file_path(), hello_world_path);
@@ -106,7 +133,7 @@ TEST(LinuxMap, CreateModuleFileDoesNotExist) {
 
 TEST(LinuxMap, ReadModules) {
   const auto result = orbit_object_utils::ReadModules(getpid());
-  EXPECT_FALSE(result.has_error()) << result.error().message();
+  EXPECT_THAT(result, HasNoError());
 }
 
 TEST(LinuxMap, ParseMaps) {
@@ -116,7 +143,7 @@ TEST(LinuxMap, ParseMaps) {
   {
     // Empty data
     const auto result = ParseMaps(std::string_view{""});
-    ASSERT_FALSE(result.has_error()) << result.error().message();
+    ASSERT_THAT(result, HasNoError());
     EXPECT_TRUE(result.value().empty());
   }
 
@@ -135,7 +162,7 @@ TEST(LinuxMap, ParseMaps) {
         "7f6874290001-7f6874297002 r-dp 00000000 fe:01 661214                     %s\n",
         hello_world_path, text_file)};
     const auto result = ParseMaps(data);
-    ASSERT_FALSE(result.has_error()) << result.error().message();
+    ASSERT_THAT(result, HasNoError());
     EXPECT_EQ(result.value().size(), 1);
   }
 
@@ -153,7 +180,7 @@ TEST(LinuxMap, ParseMaps) {
         no_symbols_path)};
 
     const auto result = ParseMaps(data);
-    ASSERT_FALSE(result.has_error()) << result.error().message();
+    ASSERT_THAT(result, HasNoError());
     ASSERT_EQ(result.value().size(), 2);
 
     const ModuleInfo* hello_module_info = nullptr;
