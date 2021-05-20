@@ -24,6 +24,8 @@
 #include <QWheelEvent>
 #include <cmath>
 
+#include "SyntaxHighlighter/HighlightingMetadata.h"
+
 namespace orbit_code_viewer {
 
 static const QColor kLineNumberBackgroundColor{50, 50, 50};
@@ -43,7 +45,7 @@ int DetermineLineNumberWidthInPixels(const QFontMetrics& font_metrics, int max_l
 }
 
 namespace {
-struct Metadata : QTextBlockUserData {
+struct Metadata : public orbit_syntax_highlighter::HighlightingMetadata {
   enum LineType { kMainContent, kAnnotatingLine };
 
   LineType line_type = kMainContent;
@@ -52,6 +54,8 @@ struct Metadata : QTextBlockUserData {
   explicit Metadata(LineType line_type, uint64_t line_number)
       : line_type(line_type), line_number(line_number) {}
   explicit Metadata() = default;
+
+  [[nodiscard]] bool IsMainContentLine() const override { return line_type == kMainContent; }
 };
 }  // namespace
 

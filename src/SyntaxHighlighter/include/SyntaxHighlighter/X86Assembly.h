@@ -28,8 +28,11 @@ class X86Assembly : public QSyntaxHighlighter {
   explicit X86Assembly();
 };
 
-void HighlightBlockAssembly(const QString& code,
-                            std::function<void(int, int, const QTextCharFormat&)> set_format);
+void HighlightBlockAssembly(
+    const QString& code, const std::function<void(int, int, const QTextCharFormat&)>& set_format);
+void HighlightAnnotatingBlock(
+    const QString& code, const std::function<void(int, int, const QTextCharFormat&)>& set_format,
+    const QColor& default_color = Qt::white);
 
 }  // namespace orbit_syntax_highlighter
 
