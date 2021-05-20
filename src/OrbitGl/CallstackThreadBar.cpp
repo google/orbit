@@ -104,21 +104,21 @@ void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, u
 
   const Color kWhite(255, 255, 255, 255);
   const Color kGreenSelection(0, 255, 0, 255);
+  const Color kGreyError(160, 160, 160, 255);
   CHECK(capture_data_ != nullptr);
 
   if (!picking) {
     // Sampling Events
     auto action_on_callstack_events = [=](const CallstackEvent& event) {
-      // TODO(b/188496243): Also show unwinding errors in the timeline.
-      if (capture_data_->GetCallstackData()->GetCallstack(event.callstack_id())->type() !=
-          CallstackInfo::kComplete) {
-        return;
-      }
-
       const uint64_t time = event.time();
       CHECK(time >= min_tick && time <= max_tick);
       Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
-      batcher->AddVerticalLine(pos, -track_height, z, kWhite);
+      Color color = kWhite;
+      if (capture_data_->GetCallstackData()->GetCallstack(event.callstack_id())->type() !=
+          CallstackInfo::kComplete) {
+        color = kGreyError;
+      }
+      batcher->AddVerticalLine(pos, -track_height, z, color);
     };
 
     if (thread_id_ == orbit_base::kAllProcessThreadsTid) {
@@ -143,12 +143,6 @@ void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, u
     constexpr const float kPickingBoxOffset = (kPickingBoxWidth - 1.0f) / 2.0f;
 
     auto action_on_callstack_events = [=](const CallstackEvent& event) {
-      // TODO(b/188496243): Also show unwinding errors in the timeline.
-      if (capture_data_->GetCallstackData()->GetCallstack(event.callstack_id())->type() !=
-          CallstackInfo::kComplete) {
-        return;
-      }
-
       const uint64_t time = event.time();
       CHECK(time >= min_tick && time <= max_tick);
       Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset, pos_[1] - track_height + 1);
@@ -196,8 +190,14 @@ bool CallstackThreadBar::IsEmpty() const {
 }
 
 [[nodiscard]] std::string CallstackThreadBar::SafeGetFormattedFunctionName(
-    uint64_t addr, int max_line_length) const {
+    const orbit_client_protos::CallstackInfo& callstack, int frame_index,
+    int max_line_length) const {
   CHECK(capture_data_ != nullptr);
+  if (frame_index >= callstack.frames_size()) {
+    return std::string("<i>") + CaptureData::kUnknownFunctionOrModuleName + "</i>";
+  }
+
+  const uint64_t addr = callstack.frames(frame_index);
   const std::string& function_name = capture_data_->GetFunctionNameByAddress(addr);
   if (function_name == CaptureData::kUnknownFunctionOrModuleName) {
     return std::string("<i>") + function_name + "</i>";
@@ -223,13 +223,13 @@ std::string CallstackThreadBar::FormatCallstackForTooltip(const CallstackInfo& c
   const int top_n = std::min(max_lines, size) - bottom_n;
 
   for (int i = 0; i < top_n; ++i) {
-    result.append("<br/>" + SafeGetFormattedFunctionName(callstack.frames(i), max_line_length));
+    result.append("<br/>" + SafeGetFormattedFunctionName(callstack, i, max_line_length));
   }
   if (max_lines < size) {
     result += "<br/><i>... shortened for readability ...</i>";
   }
   for (int i = size - bottom_n; i < size; ++i) {
-    result.append("<br/>" + SafeGetFormattedFunctionName(callstack.frames(i), max_line_length));
+    result.append("<br/>" + SafeGetFormattedFunctionName(callstack, i, max_line_length));
   }
 
   return result;
@@ -253,13 +253,17 @@ std::string CallstackThreadBar::GetSampleTooltip(const Batcher& batcher, Picking
     return unknown_return_text;
   }
 
-  std::string function_name = SafeGetFormattedFunctionName(callstack->frames(0), -1);
-  std::string result = absl::StrFormat(
-      "<b>%s</b><br/><i>Sampled event</i><br/><br/><b>Callstack:</b>", function_name.c_str());
-  result += FormatCallstackForTooltip(*callstack);
+  std::string function_name = SafeGetFormattedFunctionName(*callstack, 0, -1);
+  std::string result =
+      absl::StrFormat("<b>%s</b><br/><i>Stack sample</i><br/><br/>", function_name.c_str());
+  if (callstack->type() == CallstackInfo::kComplete) {
+    result += "<b>Callstack:</b>" + FormatCallstackForTooltip(*callstack);
+  } else {
+    // TODO(b/188756080): Show a specific explanation for each CallstackType.
+    result += "Callstack not available: the stack could not be unwound successfully";
+  }
   return result +
-         "<br/><br/><i>To select samples, click the bar & drag across multiple "
-         "samples</i>";
+         "<br/><br/><i>To select samples, click the bar & drag across multiple samples</i>";
 }
 
 }  // namespace orbit_gl
