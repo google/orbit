@@ -29,6 +29,7 @@ namespace orbit_code_viewer {
 static const QColor kLineNumberBackgroundColor{50, 50, 50};
 static const QColor kLineNumberForegroundColor{189, 189, 189};
 static const QColor kTextEditBackgroundColor{30, 30, 30};
+static const QColor kAnnotatingLinesBackgroundColor{50, 50, 50};
 static const QColor kTextEditForegroundColor{189, 189, 189};
 static const QColor kTitleBackgroundColor{30, 65, 89};
 static const QColor kHeatmapColor{Qt::red};
@@ -474,10 +475,13 @@ void Viewer::SetHighlightCurrentLine(bool enabled) {
 bool Viewer::IsCurrentLineHighlighted() const { return is_current_line_highlighted_; }
 
 void Viewer::HighlightCurrentLine() {
-  const QColor highlight_color = palette().base().color().lighter();
+  QColor current_background_color = textCursor().block().blockFormat().background().color();
+  if (current_background_color == Qt::black) {  // color hasn't been set in the block
+    current_background_color = palette().base().color();
+  }
 
   QTextEdit::ExtraSelection selection{};
-  selection.format.setBackground(highlight_color);
+  selection.format.setBackground(current_background_color.lighter());
   selection.format.setProperty(QTextFormat::FullWidthSelection, true);
   selection.cursor = textCursor();
   selection.cursor.clearSelection();
@@ -555,6 +559,11 @@ LargestOccuringLineNumbers SetAnnotatingContentInDocument(
       cursor.movePosition(QTextCursor::StartOfBlock);
       cursor.insertText(
           QString::fromStdString(current_annotating_line->line_contents).append('\n'));
+
+      QTextCursor prev_cursor{cursor.block().previous()};
+      QTextBlockFormat annotating_format;
+      annotating_format.setBackground(kAnnotatingLinesBackgroundColor);
+      prev_cursor.setBlockFormat(annotating_format);
 
       // We transfer ownership NOLINTNEXTLINE
       cursor.block().setUserData(new Metadata{});
