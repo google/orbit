@@ -26,7 +26,9 @@
 #include <system_error>
 #include <utility>
 
+#include "ObjectUtils/CoffFile.h"
 #include "ObjectUtils/ElfFile.h"
+#include "ObjectUtils/ObjectFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
@@ -38,8 +40,11 @@ namespace orbit_service::utils {
 namespace fs = std::filesystem;
 
 using orbit_grpc_protos::TracepointInfo;
+using ::orbit_object_utils::CoffFile;
 using ::orbit_object_utils::CreateElfFile;
+using ::orbit_object_utils::CreateObjectFile;
 using ::orbit_object_utils::ElfFile;
+using ::orbit_object_utils::ObjectFile;
 
 static const char* kLinuxTracingEventsDirectory = "/sys/kernel/debug/tracing/events/";
 
@@ -268,9 +273,24 @@ static ErrorMessageOr<fs::path> FindSymbolsFilePathInStructuredDebugStore(
       absl::StrFormat("File does not exist: %s", path_in_structured_debug_store.string())};
 }
 
-ErrorMessageOr<fs::path> FindSymbolsFilePath(
-    const fs::path& module_path, const std::vector<fs::path>& search_directories) noexcept {
-  OUTCOME_TRY(module_elf_file, CreateElfFile(module_path.string()));
+static ErrorMessageOr<fs::path> FindSymbolsFilePathCoff(const fs::path& module_path,
+                                                        const CoffFile* module_coff_file) noexcept {
+  CHECK(module_coff_file != nullptr);
+
+  // For Coff files, we currently only support debug symbols embedded in the object file.
+  if (module_coff_file->HasDebugSymbols()) {
+    return module_path;
+  }
+  std::string error_message_for_client{absl::StrFormat(
+      "Unable to find debug symbols on the instance for module \"%s\". ", module_path)};
+  return ErrorMessage(error_message_for_client);
+}
+
+static ErrorMessageOr<fs::path> FindSymbolsFilePathElf(
+    const fs::path& module_path, const ElfFile* module_elf_file,
+    const std::vector<fs::path>& search_directories) noexcept {
+  CHECK(module_elf_file != nullptr);
+
   if (module_elf_file->HasDebugSymbols()) {
     return module_path;
   }
@@ -368,6 +388,27 @@ ErrorMessageOr<fs::path> FindSymbolsFilePath(
     absl::StrAppend(&error_message_for_client, "\nDetails:\n", absl::StrJoin(error_messages, "\n"));
   }
   return ErrorMessage(error_message_for_client);
+}
+
+ErrorMessageOr<fs::path> FindSymbolsFilePath(
+    const fs::path& module_path, const std::vector<fs::path>& search_directories) noexcept {
+  auto object_file_or_error = CreateObjectFile(module_path);
+  if (object_file_or_error.has_error()) {
+    return ErrorMessage(absl::StrFormat("Unable to create object file: %s",
+                                        object_file_or_error.error().message()));
+  }
+
+  if (object_file_or_error.value()->IsElf()) {
+    return FindSymbolsFilePathElf(module_path,
+                                  dynamic_cast<ElfFile*>(object_file_or_error.value().get()),
+                                  search_directories);
+  }
+  if (object_file_or_error.value()->IsCoff()) {
+    return FindSymbolsFilePathCoff(module_path,
+                                   dynamic_cast<CoffFile*>(object_file_or_error.value().get()));
+  }
+
+  return ErrorMessage("Unknown object file type.");
 }
 
 bool ReadProcessMemory(int32_t pid, uintptr_t address, void* buffer, uint64_t size,

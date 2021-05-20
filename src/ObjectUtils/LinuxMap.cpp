@@ -19,14 +19,16 @@
 #include <utility>
 
 #include "ObjectUtils/ElfFile.h"
+#include "ObjectUtils/ObjectFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 
 namespace orbit_object_utils {
 
 using orbit_grpc_protos::ModuleInfo;
-using orbit_object_utils::CreateElfFile;
+using orbit_object_utils::CreateObjectFile;
 using orbit_object_utils::ElfFile;
+using orbit_object_utils::ObjectFile;
 
 ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path,
                                         uint64_t start_address, uint64_t end_address) {
@@ -39,6 +41,7 @@ ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path
   if (!std::filesystem::exists(module_path)) {
     return ErrorMessage(absl::StrFormat("The module file \"%s\" does not exist", module_path));
   }
+
   std::error_code error;
   uint64_t file_size = std::filesystem::file_size(module_path, error);
   if (error) {
@@ -46,27 +49,35 @@ ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path
         absl::StrFormat("Unable to get size of \"%s\": %s", module_path, error.message()));
   }
 
-  ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file_or_error = CreateElfFile(module_path);
-  if (elf_file_or_error.has_error()) {
-    return ErrorMessage(
-        absl::StrFormat("Unable to load module: %s", elf_file_or_error.error().message()));
-  }
-
-  ErrorMessageOr<uint64_t> load_bias_or_error = elf_file_or_error.value()->GetLoadBias();
-  // Every loadable module contains a load bias.
-  if (load_bias_or_error.has_error()) {
-    return load_bias_or_error.error();
+  auto object_file_or_error = CreateObjectFile(module_path);
+  if (object_file_or_error.has_error()) {
+    return ErrorMessage(absl::StrFormat("Unable to create module from object file: %s",
+                                        object_file_or_error.error().message()));
   }
 
   ModuleInfo module_info;
-  module_info.set_name(elf_file_or_error.value()->GetName());
-  module_info.set_soname(elf_file_or_error.value()->GetSoname());
   module_info.set_file_path(module_path);
   module_info.set_file_size(file_size);
   module_info.set_address_start(start_address);
   module_info.set_address_end(end_address);
-  module_info.set_build_id(elf_file_or_error.value()->GetBuildId());
-  module_info.set_load_bias(load_bias_or_error.value());
+  module_info.set_name(object_file_or_error.value()->GetName());
+
+  if (object_file_or_error.value()->IsElf()) {
+    auto* elf_file = dynamic_cast<ElfFile*>((object_file_or_error.value().get()));
+    CHECK(elf_file != nullptr);
+    module_info.set_build_id(elf_file->GetBuildId());
+    module_info.set_soname(elf_file->GetSoname());
+
+    ErrorMessageOr<uint64_t> load_bias_or_error = elf_file->GetLoadBias();
+    // Every loadable ELF module contains a load bias.
+    if (load_bias_or_error.has_error()) {
+      return load_bias_or_error.error();
+    }
+    module_info.set_load_bias(load_bias_or_error.value());
+  }
+
+  // All fields we need to set for COFF files are already set, no need to handle COFF
+  // specifically here.
 
   return module_info;
 }

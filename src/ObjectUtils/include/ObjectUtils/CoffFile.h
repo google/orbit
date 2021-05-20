@@ -5,13 +5,14 @@
 #ifndef OBJECT_UTILS_COFF_FILE_H_
 #define OBJECT_UTILS_COFF_FILE_H_
 
+#include <llvm/Object/Binary.h>
+#include <llvm/Object/ObjectFile.h>
+
 #include <filesystem>
 #include <memory>
 
 #include "ObjectUtils/ObjectFile.h"
 #include "OrbitBase/Result.h"
-#include "llvm/Object/Binary.h"
-#include "llvm/Object/ObjectFile.h"
 #include "symbol.pb.h"
 
 namespace orbit_object_utils {

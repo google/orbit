@@ -169,7 +169,7 @@ TEST(SymbolHelper, VerifySymbolsFile) {
     const auto result = SymbolHelper::VerifySymbolsFile(symbols_file, build_id);
     EXPECT_TRUE(result.has_error());
     EXPECT_THAT(absl::AsciiStrToLower(result.error().message()),
-                testing::HasSubstr("unable to load elf file"));
+                testing::HasSubstr("unable to load object file"));
   }
 }
 

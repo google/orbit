@@ -29,6 +29,8 @@ class CoffFileImpl : public CoffFile {
   [[nodiscard]] bool HasDebugSymbols() const override;
   [[nodiscard]] std::string GetName() const override;
   [[nodiscard]] const std::filesystem::path& GetFilePath() const override;
+  [[nodiscard]] bool IsElf() const override;
+  [[nodiscard]] bool IsCoff() const override;
 
  private:
   ErrorMessageOr<uint64_t> GetSectionOffsetForSymbol(const llvm::object::SymbolRef& symbol_ref);
@@ -123,6 +125,9 @@ bool CoffFileImpl::HasDebugSymbols() const { return has_symbol_table_; }
 const std::filesystem::path& CoffFileImpl::GetFilePath() const { return file_path_; }
 
 std::string CoffFileImpl::GetName() const { return file_path_.filename().string(); }
+
+bool CoffFileImpl::IsElf() const { return false; }
+bool CoffFileImpl::IsCoff() const { return true; }
 
 }  // namespace
 

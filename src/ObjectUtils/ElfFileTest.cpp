@@ -17,10 +17,12 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/TestUtils.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_format.h"
 #include "symbol.pb.h"
 
+using orbit_base::HasNoError;
 using orbit_grpc_protos::SymbolInfo;
 using orbit_object_utils::CreateElfFile;
 using orbit_object_utils::CreateElfFileFromBuffer;
@@ -31,11 +33,11 @@ TEST(ElfFile, LoadDebugSymbols) {
       orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf_with_debug_info";
 
   auto elf_file_result = CreateElfFile(file_path);
-  ASSERT_TRUE(elf_file_result.has_value()) << elf_file_result.error().message();
+  ASSERT_THAT(elf_file_result, HasNoError());
   std::unique_ptr<ElfFile> elf_file = std::move(elf_file_result.value());
 
   const auto symbols_result = elf_file->LoadDebugSymbols();
-  ASSERT_TRUE(symbols_result.has_value()) << symbols_result.error().message();
+  ASSERT_THAT(symbols_result, HasNoError());
 
   EXPECT_EQ(symbols_result.value().symbols_file_path(), file_path);
 
@@ -61,7 +63,7 @@ TEST(ElfFile, LoadSymbolsFromDynsymFails) {
       orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf_with_debug_info";
 
   auto elf_file_result = CreateElfFile(file_path);
-  ASSERT_TRUE(elf_file_result.has_value()) << elf_file_result.error().message();
+  ASSERT_THAT(elf_file_result, HasNoError());
   std::unique_ptr<ElfFile> elf_file = std::move(elf_file_result.value());
 
   const auto symbols_result = elf_file->LoadSymbolsFromDynsym();
@@ -77,11 +79,11 @@ TEST(ElfFile, LoadSymbolsFromDynsym) {
   std::filesystem::path file_path = orbit_base::GetExecutableDir() / "testdata" / "test_lib.so";
 
   auto elf_file_result = CreateElfFile(file_path);
-  ASSERT_TRUE(elf_file_result.has_value()) << elf_file_result.error().message();
+  ASSERT_THAT(elf_file_result, HasNoError());
   std::unique_ptr<ElfFile> elf_file = std::move(elf_file_result.value());
 
   const auto symbols_result = elf_file->LoadSymbolsFromDynsym();
-  ASSERT_TRUE(symbols_result.has_value()) << symbols_result.error().message();
+  ASSERT_THAT(symbols_result, HasNoError());
 
   std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
                                        symbols_result.value().symbol_infos().end());
@@ -101,9 +103,9 @@ TEST(ElfFile, CalculateLoadBias) {
     const std::filesystem::path test_elf_file_dynamic =
         executable_dir / "testdata" / "hello_world_elf";
     auto elf_file_dynamic = CreateElfFile(test_elf_file_dynamic);
-    ASSERT_TRUE(elf_file_dynamic.has_value()) << elf_file_dynamic.error().message();
+    ASSERT_THAT(elf_file_dynamic, HasNoError());
     const auto load_bias = elf_file_dynamic.value()->GetLoadBias();
-    ASSERT_TRUE(load_bias.has_value()) << load_bias.error().message();
+    ASSERT_THAT(load_bias, HasNoError());
     EXPECT_EQ(load_bias.value(), 0x0);
   }
 
@@ -111,9 +113,9 @@ TEST(ElfFile, CalculateLoadBias) {
     const std::filesystem::path test_elf_file_static =
         executable_dir / "testdata" / "hello_world_static_elf";
     auto elf_file_static = CreateElfFile(test_elf_file_static);
-    ASSERT_TRUE(elf_file_static.has_value()) << elf_file_static.error().message();
+    ASSERT_THAT(elf_file_static, HasNoError());
     const auto load_bias = elf_file_static.value()->GetLoadBias();
-    ASSERT_TRUE(load_bias.has_value()) << load_bias.error().message();
+    ASSERT_THAT(load_bias, HasNoError());
     EXPECT_EQ(load_bias.value(), 0x400000);
   }
 }
@@ -123,7 +125,7 @@ TEST(ElfFile, CalculateLoadBiasNoProgramHeaders) {
       orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf_no_program_headers";
   auto elf_file_result = CreateElfFile(test_elf_file);
 
-  ASSERT_TRUE(elf_file_result.has_value()) << elf_file_result.error().message();
+  ASSERT_THAT(elf_file_result, HasNoError());
   auto elf_file = std::move(elf_file_result.value());
   const auto load_bias_or_error = elf_file->GetLoadBias();
   ASSERT_TRUE(load_bias_or_error.has_error());
@@ -141,12 +143,12 @@ TEST(ElfFile, HasDebugSymbols) {
       executable_dir / "testdata" / "no_symbols_elf";
 
   auto elf_with_symbols = CreateElfFile(elf_with_symbols_path);
-  ASSERT_TRUE(elf_with_symbols.has_value()) << elf_with_symbols.error().message();
+  ASSERT_THAT(elf_with_symbols, HasNoError());
 
   EXPECT_TRUE(elf_with_symbols.value()->HasDebugSymbols());
 
   auto elf_without_symbols = CreateElfFile(elf_without_symbols_path);
-  ASSERT_TRUE(elf_without_symbols.has_value()) << elf_without_symbols.error().message();
+  ASSERT_THAT(elf_without_symbols, HasNoError());
 
   EXPECT_FALSE(elf_without_symbols.value()->HasDebugSymbols());
 }
@@ -156,14 +158,14 @@ TEST(ElfFile, GetBuildId) {
   const std::filesystem::path hello_world_path = executable_dir / "testdata" / "hello_world_elf";
 
   auto hello_world = CreateElfFile(hello_world_path);
-  ASSERT_TRUE(hello_world.has_value()) << hello_world.error().message();
+  ASSERT_THAT(hello_world, HasNoError());
   EXPECT_EQ(hello_world.value()->GetBuildId(), "d12d54bc5b72ccce54a408bdeda65e2530740ac8");
 
   const std::filesystem::path elf_without_build_id_path =
       executable_dir / "testdata" / "hello_world_elf_no_build_id";
 
   auto elf_without_build_id = CreateElfFile(elf_without_build_id_path);
-  ASSERT_TRUE(elf_without_build_id.has_value()) << elf_without_build_id.error().message();
+  ASSERT_THAT(elf_without_build_id, HasNoError());
   EXPECT_EQ(elf_without_build_id.value()->GetBuildId(), "");
 }
 
@@ -172,7 +174,7 @@ TEST(ElfFile, GetFilePath) {
       orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf";
 
   auto hello_world = CreateElfFile(hello_world_path);
-  ASSERT_TRUE(hello_world.has_value()) << hello_world.error().message();
+  ASSERT_THAT(hello_world, HasNoError());
 
   EXPECT_EQ(hello_world.value()->GetFilePath(), hello_world_path);
 }
@@ -182,12 +184,12 @@ TEST(ElfFile, CreateFromBuffer) {
       orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf";
 
   auto file_content = orbit_base::ReadFileToString(test_elf_file);
-  ASSERT_TRUE(file_content.has_value()) << file_content.error().message();
+  ASSERT_THAT(file_content, HasNoError());
   const std::string& buffer = file_content.value();
   ASSERT_NE(buffer.size(), 0);
 
   auto elf_file = CreateElfFileFromBuffer(test_elf_file, buffer.data(), buffer.size());
-  ASSERT_TRUE(elf_file.has_value()) << elf_file.error().message();
+  ASSERT_THAT(elf_file, HasNoError());
   EXPECT_EQ(elf_file.value()->GetBuildId(), "d12d54bc5b72ccce54a408bdeda65e2530740ac8");
 }
 
@@ -206,7 +208,7 @@ TEST(ElfFile, HasDebugInfo) {
       orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf_with_debug_info";
 
   auto hello_world = CreateElfFile(file_path);
-  ASSERT_TRUE(hello_world.has_value()) << hello_world.error().message();
+  ASSERT_THAT(hello_world, HasNoError());
 
   EXPECT_TRUE(hello_world.value()->HasDebugInfo());
 }
@@ -216,7 +218,7 @@ TEST(ElfFile, DoesNotHaveDebugInfo) {
       orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf";
 
   auto hello_world = CreateElfFile(file_path);
-  ASSERT_TRUE(hello_world.has_value()) << hello_world.error().message();
+  ASSERT_THAT(hello_world, HasNoError());
 
   EXPECT_FALSE(hello_world.value()->HasDebugInfo());
 }
@@ -230,16 +232,16 @@ static void RunLineInfoTest(const char* file_name) {
   const std::filesystem::path file_path = orbit_base::GetExecutableDir() / "testdata" / file_name;
 
   auto hello_world = CreateElfFile(file_path);
-  ASSERT_TRUE(hello_world.has_value()) << hello_world.error().message();
+  ASSERT_THAT(hello_world, HasNoError());
 
   auto line_info1 = hello_world.value()->GetLineInfo(0x1140);
-  ASSERT_TRUE(line_info1.has_value()) << line_info1.error().message();
+  ASSERT_THAT(line_info1, HasNoError());
 
   EXPECT_EQ(line_info1.value().source_file(), kSourcePath);
   EXPECT_EQ(line_info1.value().source_line(), 3);
 
   auto line_info2 = hello_world.value()->GetLineInfo(0x1150);
-  ASSERT_TRUE(line_info2.has_value()) << line_info2.error().message();
+  ASSERT_THAT(line_info2, HasNoError());
 
   EXPECT_EQ(line_info2.value().source_file(), kSourcePath);
   EXPECT_EQ(line_info2.value().source_line(), 4);
@@ -259,7 +261,7 @@ TEST(ElfFile, LineInfoNoDebugInfo) {
       orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf";
 
   auto hello_world = CreateElfFile(file_path);
-  ASSERT_TRUE(hello_world.has_value()) << hello_world.error().message();
+  ASSERT_THAT(hello_world, HasNoError());
 
   EXPECT_FALSE(hello_world.value()->HasDebugInfo());
 
@@ -271,7 +273,7 @@ TEST(ElfFile, HasNoGnuDebugLink) {
       orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf";
 
   auto hello_world = CreateElfFile(file_path);
-  ASSERT_TRUE(hello_world.has_value()) << hello_world.error().message();
+  ASSERT_THAT(hello_world, HasNoError());
 
   EXPECT_FALSE(hello_world.value()->HasGnuDebuglink());
   EXPECT_FALSE(hello_world.value()->GetGnuDebugLinkInfo().has_value());
@@ -282,7 +284,7 @@ TEST(ElfFile, HasGnuDebugLink) {
       orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf_with_gnu_debuglink";
 
   auto hello_world = CreateElfFile(file_path);
-  ASSERT_TRUE(hello_world.has_value()) << hello_world.error().message();
+  ASSERT_THAT(hello_world, HasNoError());
 
   EXPECT_TRUE(hello_world.value()->HasGnuDebuglink());
   EXPECT_TRUE(hello_world.value()->GetGnuDebugLinkInfo().has_value());
@@ -296,12 +298,12 @@ TEST(ElfFile, CalculateDebuglinkChecksumValid) {
       orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf.debug";
 
   auto hello_world = CreateElfFile(file_path);
-  ASSERT_TRUE(hello_world.has_value()) << hello_world.error().message();
+  ASSERT_THAT(hello_world, HasNoError());
   ASSERT_TRUE(hello_world.value()->GetGnuDebugLinkInfo().has_value());
 
   const ErrorMessageOr<uint32_t> checksum_or_error =
       ElfFile::CalculateDebuglinkChecksum(debuglink_file_path);
-  ASSERT_TRUE(checksum_or_error.has_value());
+  ASSERT_THAT(checksum_or_error, HasNoError());
   EXPECT_EQ(hello_world.value()->GetGnuDebugLinkInfo()->crc32_checksum, checksum_or_error.value());
 }
 
@@ -319,12 +321,12 @@ TEST(ElfFile, LineInfoInlining) {
       orbit_base::GetExecutableDir() / "testdata" / "line_info_test_binary";
 
   auto program = CreateElfFile(file_path);
-  ASSERT_TRUE(program.has_value()) << program.error().message();
+  ASSERT_THAT(program, HasNoError());
 
   constexpr uint64_t kFirstInstructionOfInlinedPrintHelloWorld = 0x401141;
   ErrorMessageOr<orbit_grpc_protos::LineInfo> line_info =
       program.value()->GetLineInfo(kFirstInstructionOfInlinedPrintHelloWorld);
-  ASSERT_TRUE(line_info.has_value()) << line_info.error().message();
+  ASSERT_THAT(line_info, HasNoError());
 
   EXPECT_EQ(line_info.value().source_line(), 13);
   EXPECT_EQ(std::filesystem::path{line_info.value().source_file()}.filename().string(),
@@ -336,12 +338,12 @@ TEST(ElfFile, CompressedDebugInfo) {
       orbit_base::GetExecutableDir() / "testdata" / "line_info_test_binary_compressed";
 
   auto program = CreateElfFile(file_path);
-  ASSERT_TRUE(program.has_value()) << program.error().message();
+  ASSERT_THAT(program, HasNoError());
 
   constexpr uint64_t kFirstInstructionOfInlinedPrintHelloWorld = 0x401141;
   ErrorMessageOr<orbit_grpc_protos::LineInfo> line_info =
       program.value()->GetLineInfo(kFirstInstructionOfInlinedPrintHelloWorld);
-  ASSERT_TRUE(line_info.has_value()) << line_info.error().message();
+  ASSERT_THAT(line_info, HasNoError());
 }
 
 TEST(ElfFile, GetSonameSmoke) {
@@ -349,7 +351,7 @@ TEST(ElfFile, GetSonameSmoke) {
       orbit_base::GetExecutableDir() / "testdata" / "libtest-1.0.so";
 
   auto elf_file_or_error = CreateElfFile(file_path);
-  ASSERT_TRUE(elf_file_or_error.has_value()) << elf_file_or_error.error().message();
+  ASSERT_THAT(elf_file_or_error, HasNoError());
 
   EXPECT_EQ(elf_file_or_error.value()->GetSoname(), "libtest.so");
 }
@@ -359,7 +361,7 @@ TEST(ElfFile, GetNameForFileWithoutSoname) {
       orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf";
 
   auto elf_file_or_error = CreateElfFile(file_path);
-  ASSERT_TRUE(elf_file_or_error.has_value()) << elf_file_or_error.error().message();
+  ASSERT_THAT(elf_file_or_error, HasNoError());
 
   EXPECT_EQ(elf_file_or_error.value()->GetSoname(), "");
 }
@@ -369,12 +371,12 @@ TEST(ElfFile, GetDeclarationLocationOfFunction) {
       orbit_base::GetExecutableDir() / "testdata" / "line_info_test_binary";
 
   auto program = CreateElfFile(file_path);
-  ASSERT_TRUE(program.has_value()) << program.error().message();
+  ASSERT_THAT(program, HasNoError());
 
   constexpr uint64_t kAddressOfMainFunction = 0x401140;
   ErrorMessageOr<orbit_grpc_protos::LineInfo> decl_line_info =
       program.value()->GetDeclarationLocationOfFunction(kAddressOfMainFunction);
-  ASSERT_TRUE(decl_line_info.has_value()) << decl_line_info.error().message();
+  ASSERT_THAT(decl_line_info, HasNoError());
 
   EXPECT_EQ(decl_line_info.value().source_line(), 12);
   EXPECT_EQ(std::filesystem::path{decl_line_info.value().source_file()}.filename().string(),

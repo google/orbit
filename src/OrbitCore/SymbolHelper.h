@@ -5,8 +5,12 @@
 #ifndef SYMBOL_HELPER_H_
 #define SYMBOL_HELPER_H_
 
+#include <llvm/Object/Binary.h>
+#include <llvm/Object/ObjectFile.h>
+
 #include <filesystem>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 

@@ -8,15 +8,19 @@
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
 #include <absl/strings/str_split.h>
+#include <llvm/Object/Binary.h>
+#include <llvm/Object/ObjectFile.h>
 
 #include <algorithm>
 #include <filesystem>
 #include <memory>
 #include <outcome.hpp>
 #include <set>
+#include <string_view>
 #include <system_error>
 
 #include "ObjectUtils/ElfFile.h"
+#include "ObjectUtils/ObjectFile.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
@@ -28,8 +32,9 @@
 using orbit_grpc_protos::ModuleSymbols;
 
 namespace fs = std::filesystem;
-using ::orbit_object_utils::CreateElfFile;
+using ::orbit_object_utils::CreateObjectFile;
 using ::orbit_object_utils::ElfFile;
+using ::orbit_object_utils::ObjectFile;
 
 namespace {
 
@@ -128,22 +133,34 @@ std::vector<fs::path> FindStructuredDebugDirectories() {
 
 ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const fs::path& symbols_path,
                                                      const std::string& build_id) {
-  OUTCOME_TRY(symbols_file, CreateElfFile(symbols_path));
+  auto object_file_or_error = CreateObjectFile(symbols_path);
+  if (object_file_or_error.has_error()) {
+    return ErrorMessage(absl::StrFormat("Unable to load object file \"%s\": %s",
+                                        symbols_path.string(),
+                                        object_file_or_error.error().message()));
+  }
 
-  if (!symbols_file->HasDebugSymbols()) {
+  if (!object_file_or_error.value()->HasDebugSymbols()) {
     return ErrorMessage(
-        absl::StrFormat("Elf file \"%s\" does not contain symbols.", symbols_path.string()));
+        absl::StrFormat("Object file \"%s\" does not contain symbols.", symbols_path.string()));
   }
-  if (symbols_file->GetBuildId().empty()) {
-    return ErrorMessage(
-        absl::StrFormat("Symbols file \"%s\" does not have a build id", symbols_path.string()));
+
+  if (object_file_or_error.value()->IsElf()) {
+    ElfFile* symbols_file = dynamic_cast<ElfFile*>(object_file_or_error.value().get());
+    CHECK(symbols_file != nullptr);
+    if (symbols_file->GetBuildId().empty()) {
+      return ErrorMessage(
+          absl::StrFormat("Symbols file \"%s\" does not have a build id", symbols_path.string()));
+    }
+    const std::string& file_build_id = symbols_file->GetBuildId();
+    if (build_id != file_build_id) {
+      return ErrorMessage(
+          absl::StrFormat(R"(Symbols file "%s" has a different build id: "%s" != "%s")",
+                          symbols_path.string(), build_id, file_build_id));
+    }
+    return outcome::success();
   }
-  const std::string& file_build_id = symbols_file->GetBuildId();
-  if (build_id != file_build_id) {
-    return ErrorMessage(
-        absl::StrFormat(R"(Symbols file "%s" has a different build id: "%s" != "%s")",
-                        symbols_path.string(), build_id, file_build_id));
-  }
+
   return outcome::success();
 }
 
@@ -226,14 +243,15 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsWithSymbolsPathFile(
 ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(const fs::path& file_path) {
   ORBIT_SCOPE_FUNCTION;
   SCOPED_TIMED_LOG("LoadSymbolsFromFile: %s", file_path.string());
-  ErrorMessageOr<std::unique_ptr<ElfFile>> elf_file_or_error = CreateElfFile(file_path.string());
 
-  if (elf_file_or_error.has_error()) {
-    return ErrorMessage(absl::StrFormat("Failed to load debug symbols from \"%s\": %s",
-                                        file_path.string(), elf_file_or_error.error().message()));
+  auto object_file_or_error = CreateObjectFile(file_path);
+  if (object_file_or_error.has_error()) {
+    return ErrorMessage(absl::StrFormat("Unable to load symbols from object file \"%s\": %s",
+                                        file_path.string(),
+                                        object_file_or_error.error().message()));
   }
 
-  return elf_file_or_error.value()->LoadDebugSymbols();
+  return object_file_or_error.value()->LoadDebugSymbols();
 }
 
 fs::path SymbolHelper::GenerateCachedFileName(const fs::path& file_path) const {
