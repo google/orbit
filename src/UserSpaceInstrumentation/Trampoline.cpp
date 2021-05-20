@@ -161,38 +161,4 @@ ErrorMessageOr<uint64_t> AllocateMemoryForTrampolines(pid_t pid, const AddressRa
   return AllocateInTracee(pid, address_range.start, size);
 }
 
-ErrorMessageOr<absl::flat_hash_set<uint64_t>> GetInstructionPointersFromProcess(pid_t pid) {
-  absl::flat_hash_set<uint64_t> result;
-  std::vector<pid_t> tids = orbit_base::GetTidsOfProcess(pid);
-  for (pid_t tid : tids) {
-    RegisterState registers;
-    OUTCOME_TRY(registers.BackupRegisters(tid));
-    result.insert(registers.GetGeneralPurposeRegisters()->x86_64.rip);
-  }
-  return result;
-}
-
-std::optional<int> LengthOfOverwrittenInstructions(csh handle, const std::vector<uint8_t>& code,
-                                                   int bytes_to_overwrite) {
-  cs_insn* instruction = cs_malloc(handle);
-  CHECK(instruction != nullptr);
-  orbit_base::unique_resource scope_exit{instruction,
-                                         [](cs_insn* instruction) { cs_free(instruction, 1); }};
-
-  const uint8_t* code_pointer = code.data();
-  size_t code_size = code.size();
-  uint64_t address = 0;
-  int length = 0;
-  while (cs_disasm_iter(handle, &code_pointer, &code_size, &address, instruction)) {
-    length += instruction->size;
-    if (length >= bytes_to_overwrite) break;
-  }
-
-  // Function too short?
-  if (length < bytes_to_overwrite) {
-    return std::nullopt;
-  }
-  return length;
-}
-
 }  // namespace orbit_user_space_instrumentation
