@@ -41,6 +41,11 @@ class MappingManager {
   std::vector<Mapping> mappings_;
 };
 
+// This is a convenience function. It will try to infer a mapping and if that succeeds it will
+// append the mapping to the current list of mappings using a local instance of MappingManager.
+void InferAndAppendSourcePathsMapping(const std::filesystem::path& source_path,
+                                      const std::filesystem::path& target_path);
+
 }  // namespace orbit_source_paths_mapping
 
 #endif  // SOURCE_PATHS_MAPPING_MAPPING_MANAGER_H_
