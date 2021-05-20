@@ -33,9 +33,15 @@ constexpr CaptureStartData kTestStartData{
 };
 
 constexpr CaptureCompleteData kTestCompleteData{
-    101 /*number_of_instrumented_function_timers*/, 102 /*number_of_gpu_activity_timers*/,
+    101 /*number_of_instrumented_function_timers*/,
+    102 /*number_of_gpu_activity_timers*/,
     103 /*number_of_vulkan_layer_gpu_command_buffer_timers*/,
-    104 /*number_of_vulkan_layer_gpu_debug_marker_timers*/
+    104 /*number_of_vulkan_layer_gpu_debug_marker_timers*/,
+    105 /*number_of_manual_start_timers*/,
+    106 /*number_of_manual_stop_timers*/,
+    107 /*number_of_manual_start_async_timers*/,
+    108 /*number_of_manual_stop_async_timers*/,
+    109 /*number_of_manual_tracked_value_timers*/
 };
 
 bool HasSameCaptureStartData(const OrbitCaptureData& capture_data,
@@ -67,7 +73,17 @@ bool HasSameCaptureCompleteData(const OrbitCaptureData& capture_data,
          capture_data.number_of_vulkan_layer_gpu_command_buffer_timers() ==
              complete_data.number_of_vulkan_layer_gpu_command_buffer_timers &&
          capture_data.number_of_vulkan_layer_gpu_debug_marker_timers() ==
-             complete_data.number_of_vulkan_layer_gpu_debug_marker_timers;
+             complete_data.number_of_vulkan_layer_gpu_debug_marker_timers &&
+         capture_data.number_of_manual_start_timers() ==
+             complete_data.number_of_manual_start_timers &&
+         capture_data.number_of_manual_stop_timers() ==
+             complete_data.number_of_manual_stop_timers &&
+         capture_data.number_of_manual_start_async_timers() ==
+             complete_data.number_of_manual_start_async_timers &&
+         capture_data.number_of_manual_stop_async_timers() ==
+             complete_data.number_of_manual_stop_async_timers &&
+         capture_data.number_of_manual_tracked_value_timers() ==
+             complete_data.number_of_manual_tracked_value_timers;
 }
 
 }  // namespace

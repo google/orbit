@@ -38,6 +38,11 @@ struct CaptureCompleteData {
   int64_t number_of_gpu_activity_timers = 0;
   int64_t number_of_vulkan_layer_gpu_command_buffer_timers = 0;
   int64_t number_of_vulkan_layer_gpu_debug_marker_timers = 0;
+  int64_t number_of_manual_start_timers = 0;
+  int64_t number_of_manual_stop_timers = 0;
+  int64_t number_of_manual_start_async_timers = 0;
+  int64_t number_of_manual_stop_async_timers = 0;
+  int64_t number_of_manual_tracked_value_timers = 0;
 };
 
 class CaptureMetric {

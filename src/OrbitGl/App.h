@@ -497,6 +497,8 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
 
   // Only call from the capture thread
   void CaptureMetricProcessTimer(const orbit_client_protos::TimerInfo& timer);
+  // Only call from the capture thread
+  void CaptureMetricProcessApiTimer(const orbit_client_protos::TimerInfo& timer);
 
   std::atomic<bool> capture_loading_cancellation_requested_ = false;
   std::atomic<bool> is_loading_capture_{false};

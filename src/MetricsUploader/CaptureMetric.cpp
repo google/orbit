@@ -41,6 +41,14 @@ void CaptureMetric::SetCaptureCompleteData(const CaptureCompleteData& complete_d
       complete_data.number_of_vulkan_layer_gpu_command_buffer_timers);
   capture_data_.set_number_of_vulkan_layer_gpu_debug_marker_timers(
       complete_data.number_of_vulkan_layer_gpu_debug_marker_timers);
+  capture_data_.set_number_of_manual_start_timers(complete_data.number_of_manual_start_timers);
+  capture_data_.set_number_of_manual_stop_timers(complete_data.number_of_manual_stop_timers);
+  capture_data_.set_number_of_manual_start_async_timers(
+      complete_data.number_of_manual_start_async_timers);
+  capture_data_.set_number_of_manual_stop_async_timers(
+      complete_data.number_of_manual_stop_async_timers);
+  capture_data_.set_number_of_manual_tracked_value_timers(
+      complete_data.number_of_manual_tracked_value_timers);
 }
 
 bool CaptureMetric::SendCaptureFailed() {

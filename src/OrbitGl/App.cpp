@@ -2487,7 +2487,45 @@ void OrbitApp::CaptureMetricProcessTimer(const orbit_client_protos::TimerInfo& t
     case orbit_client_protos::TimerInfo_Type_kGpuDebugMarker:
       metrics_capture_complete_data_.number_of_vulkan_layer_gpu_debug_marker_timers++;
       break;
+    case orbit_client_protos::TimerInfo_Type_kApiEvent:
+      CaptureMetricProcessApiTimer(timer);
+      break;
     default:
       break;
+  }
+}
+
+void OrbitApp::CaptureMetricProcessApiTimer(const orbit_client_protos::TimerInfo& timer) {
+  orbit_api::Event api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer);
+  switch (api_event.type) {
+    case orbit_api::kScopeStart:
+      metrics_capture_complete_data_.number_of_manual_start_timers++;
+      break;
+    case orbit_api::kScopeStop:
+      metrics_capture_complete_data_.number_of_manual_stop_timers++;
+      break;
+    case orbit_api::kScopeStartAsync:
+      metrics_capture_complete_data_.number_of_manual_start_async_timers++;
+      break;
+    case orbit_api::kScopeStopAsync:
+      metrics_capture_complete_data_.number_of_manual_stop_async_timers++;
+      break;
+    case orbit_api::kTrackInt:
+      [[fallthrough]];
+    case orbit_api::kTrackInt64:
+      [[fallthrough]];
+    case orbit_api::kTrackUint:
+      [[fallthrough]];
+    case orbit_api::kTrackUint64:
+      [[fallthrough]];
+    case orbit_api::kTrackFloat:
+      [[fallthrough]];
+    case orbit_api::kTrackDouble:
+      metrics_capture_complete_data_.number_of_manual_tracked_value_timers++;
+      break;
+    case orbit_api::kString:
+      break;
+    case orbit_api::kNone:
+      UNREACHABLE();
   }
 }
