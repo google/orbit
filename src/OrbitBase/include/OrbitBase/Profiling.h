@@ -34,7 +34,7 @@ constexpr clockid_t kOrbitCaptureClock = CLOCK_MONOTONIC;
 [[nodiscard]] inline uint64_t CaptureTimestampNs() {
   timespec ts;
   clock_gettime(kOrbitCaptureClock, &ts);
-  return 1000000000LL * ts.tv_sec + ts.tv_nsec;
+  return 1'000'000'000LL * ts.tv_sec + ts.tv_nsec;
 }
 
 #endif
