@@ -23,6 +23,7 @@
 #include "FakeCaptureEventProcessor.h"
 #include "GrpcProtos/Constants.h"
 #include "ObjectUtils/ElfFile.h"
+#include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadPool.h"
 #include "capture_data.pb.h"
@@ -66,10 +67,10 @@ void InstallSigintHandler() {
 // offset in the module (address minus load bias). But CaptureClient requires much more than that,
 // through the ModuleManager and the FunctionInfos. For now just keep it simple and leave the fields
 // that are not needed empty.
-void ManipulateModuleManagerAndSelectedFunctionsToAddUprobe(
+void ManipulateModuleManagerAndSelectedFunctionsToAddUprobeFromOffset(
     orbit_client_data::ModuleManager* module_manager,
     absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>* selected_functions,
-    const std::string& file_path, uint64_t file_offset) {
+    const std::string& file_path, uint64_t file_offset, uint64_t function_id) {
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
       orbit_object_utils::CreateElfFile(std::filesystem::path{file_path});
   FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
@@ -89,10 +90,49 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddUprobe(
   function_info.set_module_path(file_path);
   function_info.set_module_build_id(build_id);
   function_info.set_address(load_bias + file_offset);
-  function_info.set_orbit_type(
-      orbit_client_protos::FunctionInfo::OrbitType::FunctionInfo_OrbitType_kNone);
-  constexpr uint64_t kFunctionId = 1;
-  selected_functions->emplace(kFunctionId, function_info);
+  function_info.set_orbit_type(orbit_client_protos::FunctionInfo::kNone);
+  selected_functions->emplace(function_id, function_info);
+}
+
+void ManipulateModuleManagerAndSelectedFunctionsToAddUprobeFromFunctionName(
+    orbit_client_data::ModuleManager* module_manager,
+    absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>* selected_functions,
+    const std::string& file_path, const std::string& mangled_function_name, uint64_t function_id) {
+  ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
+      orbit_object_utils::CreateElfFile(std::filesystem::path{file_path});
+  FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
+  std::unique_ptr<orbit_object_utils::ElfFile>& elf_file = error_or_elf_file.value();
+  std::string build_id = elf_file->GetBuildId();
+  ErrorMessageOr<uint64_t> error_or_load_bias = elf_file->GetLoadBias();
+  FAIL_IF(error_or_load_bias.has_error(), "%s", error_or_load_bias.error().message());
+  uint64_t load_bias = error_or_load_bias.value();
+
+  orbit_grpc_protos::ModuleInfo module_info;
+  module_info.set_file_path(file_path);
+  module_info.set_build_id(build_id);
+  module_info.set_load_bias(load_bias);
+  CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
+
+  ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> symbols_or_error =
+      elf_file->LoadSymbolsFromDynsym();
+  FAIL_IF(symbols_or_error.has_error(), "%s", symbols_or_error.error().message());
+  orbit_grpc_protos::ModuleSymbols& symbols = symbols_or_error.value();
+
+  std::optional<uint64_t> address = std::nullopt;
+  for (const orbit_grpc_protos::SymbolInfo& symbol : symbols.symbol_infos()) {
+    if (symbol.name() == mangled_function_name) {
+      address = symbol.address();
+    }
+  }
+  FAIL_IF(!address.has_value(), "Could not find function \"%s\" in module \"%s\"",
+          mangled_function_name, file_path);
+
+  orbit_client_protos::FunctionInfo function_info;
+  function_info.set_module_path(file_path);
+  function_info.set_module_build_id(build_id);
+  function_info.set_address(address.value());
+  function_info.set_orbit_type(orbit_client_protos::FunctionInfo::kNone);
+  selected_functions->emplace(function_id, function_info);
 }
 
 }  // namespace
@@ -102,8 +142,9 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddUprobe(
 // arguments.
 // It provides a simple way to make OrbitService take a capture in order to tests its performance
 // with various capture options.
-// All the received events are discarded, except for counting them and their total size (see
-// FakeCaptureEventProcessor).
+// In general, received events are mostly discarded. Only minimal processing is applied to report
+// some basic metrics, such as event count and their total size, and average frame time of the
+// target process. See FakeCaptureEventProcessor.
 int main(int argc, char* argv[]) {
   absl::SetProgramUsageMessage("Orbit fake client for testing");
   absl::ParseCommandLine(argc, argv);
@@ -165,8 +206,31 @@ int main(int argc, char* argv[]) {
   orbit_client_data::ModuleManager module_manager;
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
   if (instrument_function) {
-    ManipulateModuleManagerAndSelectedFunctionsToAddUprobe(&module_manager, &selected_functions,
-                                                           file_path, file_offset);
+    constexpr uint64_t kInstrumentedFunctionId = 1;
+    ManipulateModuleManagerAndSelectedFunctionsToAddUprobeFromOffset(
+        &module_manager, &selected_functions, file_path, file_offset, kInstrumentedFunctionId);
+  }
+
+  // Instrument vkQueuePresentKHR, if possible.
+  {
+    ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> modules_or_error =
+        orbit_object_utils::ReadModules(process_id);
+    FAIL_IF(modules_or_error.has_error(), "%s", modules_or_error.error().message());
+    static const std::string kLibvulkanModuleName{"libvulkan.so.1"};
+    std::string libvulkan_file_path;
+    for (const orbit_grpc_protos::ModuleInfo& module : modules_or_error.value()) {
+      if (module.soname() == kLibvulkanModuleName) {
+        libvulkan_file_path = module.file_path();
+        break;
+      }
+    }
+    if (!libvulkan_file_path.empty()) {
+      static const std::string kQueuePresentFunctionName{"vkQueuePresentKHR"};
+      LOG("%s found: instrumenting %s", kLibvulkanModuleName, kQueuePresentFunctionName);
+      ManipulateModuleManagerAndSelectedFunctionsToAddUprobeFromFunctionName(
+          &module_manager, &selected_functions, libvulkan_file_path, kQueuePresentFunctionName,
+          orbit_fake_client::FakeCaptureEventProcessor::kFrameBoundaryFunctionId);
+    }
   }
 
   auto capture_event_processor = std::make_unique<orbit_fake_client::FakeCaptureEventProcessor>();
