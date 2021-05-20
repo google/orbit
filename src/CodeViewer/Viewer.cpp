@@ -512,6 +512,7 @@ int Viewer::TopWidgetHeight() const { return fontMetrics().height(); }
 
 void Viewer::SetAnnotatingContent(absl::Span<const AnnotatingLine> annotating_lines) {
   largest_occuring_line_numbers_ = SetAnnotatingContentInDocument(document(), annotating_lines);
+  UpdateBarsSize();
 }
 
 LargestOccurringLineNumbers SetAnnotatingContentInDocument(
