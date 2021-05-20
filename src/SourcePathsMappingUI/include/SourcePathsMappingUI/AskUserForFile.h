@@ -10,7 +10,7 @@
 #include <filesystem>
 #include <optional>
 
-#include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_source_paths_mapping_ui {
 
@@ -23,12 +23,10 @@ namespace orbit_source_paths_mapping_ui {
 std::optional<QString> TryAskingTheUserAndReadSourceFile(QWidget* parent,
                                                          const std::filesystem::path& file_path);
 
-// Shows a file open dialog and returns the contents of the chosen file. It will also try to create
-// a source paths mapping when `infer_source_paths_mapping` is set to true. If reading the file
-// fails it will return an ErrorMessage. If the user aborts it will return std::nullopt. Otherwise
-// it returns the contents as a QString.
-ErrorMessageOr<std::optional<QString>> ShowFileOpenDialogAndReadSourceFile(
-    QWidget* parent, const std::filesystem::path& file_path, bool infer_source_paths_mapping);
+// Shows a file open dialog and returns the chosen file path. If the user aborts it will return
+// std::nullopt.
+[[nodiscard]] std::optional<std::filesystem::path> ShowFileOpenDialog(
+    QWidget* parent, const std::filesystem::path& file_path);
 
 }  // namespace orbit_source_paths_mapping_ui
 

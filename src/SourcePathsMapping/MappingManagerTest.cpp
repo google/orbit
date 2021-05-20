@@ -64,4 +64,28 @@ TEST(MappingManager, SaveLoadAndClear) {
     EXPECT_TRUE(manager.GetMappings().empty());
   }
 }
+
+TEST(MappingManager, InferAndAppendSourcePathsMapping) {
+  QCoreApplication::setOrganizationName(kOrgName);
+  QCoreApplication::setApplicationName("MappingManager.InferAndAppendSourcePathsMapping");
+
+  {
+    MappingManager manager{};
+    manager.SetMappings({});
+  }
+
+  const std::filesystem::path source_path = "/build/libc/glibc.c";
+  const std::filesystem::path target_path = "C:/src/sysroot/usr/src/libc/glibc.c";
+  InferAndAppendSourcePathsMapping(source_path, target_path);
+
+  {
+    const std::optional<Mapping> reference_mapping =
+        InferMappingFromExample(source_path, target_path);
+    ASSERT_TRUE(reference_mapping.has_value());
+
+    MappingManager manager{};
+    ASSERT_EQ(manager.GetMappings().size(), 1);
+    EXPECT_EQ(manager.GetMappings().front(), reference_mapping.value());
+  }
+}
 }  // namespace orbit_source_paths_mapping

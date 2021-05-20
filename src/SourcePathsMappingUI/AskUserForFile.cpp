@@ -16,7 +16,10 @@
 #include <filesystem>
 #include <memory>
 
+#include "OrbitBase/File.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/Result.h"
 #include "SourcePathsMapping/Mapping.h"
 #include "SourcePathsMapping/MappingManager.h"
 
@@ -54,16 +57,25 @@ std::optional<QString> TryAskingTheUserAndReadSourceFile(QWidget* parent,
 
   std::optional<QString> maybe_file_contents;
   QObject::connect(pick_file_button, &QAbstractButton::clicked, parent, [&]() {
-    const bool infer_source_paths_mapping = message_box.checkBox()->isChecked();
-    ErrorMessageOr<std::optional<QString>> result =
-        ShowFileOpenDialogAndReadSourceFile(parent, file_path, infer_source_paths_mapping);
-    if (result.has_error()) {
+    std::optional<std::filesystem::path> maybe_local_file_path =
+        ShowFileOpenDialog(parent, file_path);
+    if (!maybe_local_file_path.has_value()) return;
+
+    ErrorMessageOr<std::string> file_contents_or_error =
+        orbit_base::ReadFileToString(maybe_local_file_path.value());
+    if (file_contents_or_error.has_error()) {
       QMessageBox::critical(parent, "Could not open source file",
-                            QString::fromStdString(result.error().message()));
+                            QString::fromStdString(file_contents_or_error.error().message()));
       return;
     }
 
-    maybe_file_contents = std::move(result.value());
+    const bool infer_source_paths_mapping = message_box.checkBox()->isChecked();
+    if (infer_source_paths_mapping) {
+      orbit_source_paths_mapping::InferAndAppendSourcePathsMapping(file_path,
+                                                                   maybe_local_file_path.value());
+    }
+
+    maybe_file_contents = QString::fromStdString(file_contents_or_error.value());
   });
 
   message_box.exec();
@@ -76,8 +88,8 @@ std::optional<QString> TryAskingTheUserAndReadSourceFile(QWidget* parent,
   return maybe_file_contents;
 }
 
-ErrorMessageOr<std::optional<QString>> ShowFileOpenDialogAndReadSourceFile(
-    QWidget* parent, const std::filesystem::path& file_path, bool infer_source_paths_mapping) {
+std::optional<std::filesystem::path> ShowFileOpenDialog(QWidget* parent,
+                                                        const std::filesystem::path& file_path) {
   QSettings settings{};
   QDir previous_directory{
       settings.value(kPreviousSourcePathsMappingDirectoryKey, QDir::currentPath()).toString()};
@@ -91,28 +103,7 @@ ErrorMessageOr<std::optional<QString>> ShowFileOpenDialogAndReadSourceFile(
 
   settings.setValue(kPreviousSourcePathsMappingDirectoryKey, QFileInfo{user_chosen_file}.path());
 
-  ErrorMessageOr<std::string> maybe_source_code =
-      orbit_base::ReadFileToString(std::filesystem::path{user_chosen_file.toStdString()});
-  if (maybe_source_code.has_error()) {
-    return ErrorMessage{absl::StrFormat("Could not open file \"%s\" for reading: %s",
-                                        user_chosen_file.toStdString(),
-                                        maybe_source_code.error().message())};
-  }
-
-  if (infer_source_paths_mapping) {
-    std::optional<orbit_source_paths_mapping::Mapping> maybe_mapping =
-        orbit_source_paths_mapping::InferMappingFromExample(
-            file_path, std::filesystem::path{user_chosen_file.toStdString()});
-    if (maybe_mapping.has_value()) {
-      orbit_source_paths_mapping::MappingManager mapping_manager{};
-      mapping_manager.AppendMapping(maybe_mapping.value());
-    } else {
-      LOG("Unable to infer a mapping from \"%s\" to \"%s\"", file_path.string(),
-          user_chosen_file.toStdString());
-    }
-  }
-
-  return QString::fromStdString(maybe_source_code.value());
+  return std::filesystem::path{user_chosen_file.toStdString()};
 }
 
 }  // namespace orbit_source_paths_mapping_ui

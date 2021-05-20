@@ -62,6 +62,7 @@
 #include <utility>
 #include <variant>
 
+#include "AnnotatingSourceCodeDialog.h"
 #include "App.h"
 #include "CallTreeWidget.h"
 #include "CaptureClient/CaptureClient.h"
@@ -1372,7 +1373,7 @@ static std::optional<QString> TryApplyMappingAndReadSourceFile(
   orbit_source_paths_mapping::MappingManager mapping_manager{};
   const auto maybe_mapping_file_path = mapping_manager.MapToFirstExistingTarget(file_path);
   if (maybe_mapping_file_path.has_value()) {
-    auto result = orbit_base::ReadFileToString(*maybe_mapping_file_path);
+    ErrorMessageOr<std::string> result = orbit_base::ReadFileToString(*maybe_mapping_file_path);
     if (result.has_error()) return std::nullopt;
     return QString::fromStdString(result.value());
   }
@@ -1381,10 +1382,10 @@ static std::optional<QString> TryApplyMappingAndReadSourceFile(
 }
 
 std::optional<QString> OrbitMainWindow::LoadSourceCode(const std::filesystem::path& file_path) {
-  auto source_code_or_error = orbit_base::ReadFileToString(file_path);
+  ErrorMessageOr<std::string> source_code_or_error = orbit_base::ReadFileToString(file_path);
   if (source_code_or_error.has_value()) return QString::fromStdString(source_code_or_error.value());
 
-  auto maybe_source_code = TryApplyMappingAndReadSourceFile(file_path);
+  std::optional<QString> maybe_source_code = TryApplyMappingAndReadSourceFile(file_path);
   if (maybe_source_code.has_value()) return maybe_source_code.value();
 
   maybe_source_code =
@@ -1422,24 +1423,29 @@ void OrbitMainWindow::ShowSourceCode(
   orbit_code_viewer::OpenAndDeleteOnClose(std::move(code_viewer_dialog));
 }
 
-void OrbitMainWindow::ShowDisassembly(const orbit_client_protos::FunctionInfo& /*function_info*/,
+void OrbitMainWindow::ShowDisassembly(const orbit_client_protos::FunctionInfo& function_info,
                                       const std::string& assembly,
                                       orbit_code_report::DisassemblyReport report) {
-  auto dialog = std::make_unique<orbit_code_viewer::OwningDialog>();
+  auto dialog = std::make_unique<orbit_qt::AnnotatingSourceCodeDialog>();
   dialog->setWindowTitle("Orbit Disassembly");
-  dialog->SetLineNumberTypes(orbit_code_viewer::Dialog::LineNumberTypes::kOnlyMainContent);
+  dialog->SetLineNumberTypes(orbit_code_viewer::Dialog::LineNumberTypes::kOnlyAnnotatingLines);
   dialog->SetHighlightCurrentLine(true);
 
   auto syntax_highlighter = std::make_unique<orbit_syntax_highlighter::X86Assembly>();
   dialog->SetMainContent(QString::fromStdString(assembly), std::move(syntax_highlighter));
+  dialog->SetDisassemblyCodeReport(std::move(report));
 
   if (report.GetNumSamples() > 0) {
     constexpr orbit_code_viewer::FontSizeInEm kHeatmapAreaWidth{1.3f};
-    dialog->SetOwningHeatmap(
-        kHeatmapAreaWidth,
-        std::make_unique<orbit_code_report::DisassemblyReport>(std::move(report)));
+    dialog->EnableHeatmap(kHeatmapAreaWidth);
     dialog->SetEnableSampleCounters(true);
   }
 
-  orbit_code_viewer::OpenAndDeleteOnClose(std::move(dialog));
+  QPointer<orbit_qt::AnnotatingSourceCodeDialog> dialog_ptr =
+      OpenAndDeleteOnClose(std::move(dialog));
+
+  dialog_ptr->AddAnnotatingSourceCode(
+      function_info, [this](const std::string& module_path, const std::string& build_id) {
+        return app_->RetrieveModuleWithDebugInfo(module_path, build_id);
+      });
 }

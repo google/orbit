@@ -15,6 +15,7 @@ target_sources(
 target_sources(
   OrbitQt
   PRIVATE AccessibilityAdapter.h
+          AnnotatingSourceCodeDialog.h
           CallTreeViewItemModel.h
           CallTreeWidget.h
           CaptureOptionsDialog.h
@@ -50,6 +51,7 @@ target_sources(
 target_sources(
   OrbitQt
   PRIVATE AccessibilityAdapter.cpp
+          AnnotatingSourceCodeDialog.cpp
           CallTreeViewItemModel.cpp
           CallTreeWidget.cpp
           CallTreeWidget.ui
@@ -137,6 +139,7 @@ target_sources(OrbitQtTests
                 TutorialOverlay.h)
 target_sources(OrbitQtTests
         PRIVATE AccessibilityAdapterTest.cpp
+                AnnotatingSourceCodeDialogTest.cpp
                 ProcessItemModelTest.cpp
                 StatusListenerImplTest.cpp
                 TargetLabelTest.cpp

@@ -6,6 +6,8 @@
 
 #include <QSettings>
 
+#include "OrbitBase/Logging.h"
+
 constexpr const char* kMappingSettingsKey = "source_path_mappings";
 constexpr const char* kSourcePathKey = "source_path";
 constexpr const char* kTargetPathKey = "target_path";
@@ -50,6 +52,20 @@ void MappingManager::SetMappings(std::vector<Mapping> mappings) {
 void MappingManager::AppendMapping(Mapping mapping) {
   mappings_.emplace_back(std::move(mapping));
   SaveMappings();
+}
+
+void InferAndAppendSourcePathsMapping(const std::filesystem::path& source_path,
+                                      const std::filesystem::path& target_path) {
+  std::optional<orbit_source_paths_mapping::Mapping> maybe_mapping =
+      orbit_source_paths_mapping::InferMappingFromExample(source_path, target_path);
+  if (!maybe_mapping.has_value()) {
+    ERROR("Unable to infer a mapping from \"%s\" to \"%s\"", source_path.string(),
+          target_path.string());
+    return;
+  }
+
+  orbit_source_paths_mapping::MappingManager mapping_manager{};
+  mapping_manager.AppendMapping(maybe_mapping.value());
 }
 
 }  // namespace orbit_source_paths_mapping
