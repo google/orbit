@@ -81,6 +81,8 @@ ErrorMessageOr<unique_fd> OpenNewFileForReadWrite(const std::filesystem::path& p
 
 ErrorMessageOr<unique_fd> OpenExistingFileForReadWrite(const std::filesystem::path& path);
 
+ErrorMessageOr<void> WriteFully(const unique_fd& fd, const void* data, size_t size);
+
 ErrorMessageOr<void> WriteFully(const unique_fd& fd, std::string_view content);
 
 ErrorMessageOr<void> WriteFullyAtOffset(const unique_fd& fd, const void* buffer, size_t size,
