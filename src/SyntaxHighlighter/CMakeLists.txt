@@ -12,7 +12,9 @@ target_include_directories(SyntaxHighlighter PUBLIC include/)
 target_link_libraries(SyntaxHighlighter PUBLIC OrbitBase Qt5::Gui)
 set_target_properties(SyntaxHighlighter PROPERTIES AUTOMOC ON)
 
-target_sources(SyntaxHighlighter PUBLIC include/SyntaxHighlighter/X86Assembly.h)
-target_sources(SyntaxHighlighter PRIVATE X86Assembly.cpp)
-target_sources(SyntaxHighlighter PUBLIC include/SyntaxHighlighter/Cpp.h)
-target_sources(SyntaxHighlighter PRIVATE Cpp.cpp)
+target_sources(SyntaxHighlighter PUBLIC include/SyntaxHighlighter/Cpp.h
+                                        include/SyntaxHighlighter/HighlightingMetadata.h
+                                        include/SyntaxHighlighter/X86Assembly.h)
+
+target_sources(SyntaxHighlighter PRIVATE Cpp.cpp
+                                         X86Assembly.cpp)

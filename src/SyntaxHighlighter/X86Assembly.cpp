@@ -11,6 +11,8 @@
 #include <QString>
 #include <QTextCharFormat>
 
+#include "SyntaxHighlighter/HighlightingMetadata.h"
+
 namespace orbit_syntax_highlighter {
 
 namespace {
@@ -23,6 +25,7 @@ const QColor kRegisterColor{0x7e, 0xc6, 0x99};
 const QColor kKeywordColor{0xcc, 0x99, 0xcd};
 
 namespace AssemblyRegex {
+const QRegularExpression kCaracterRegex{"\\S"};
 const QRegularExpression kNumberRegex{"\\s(0x)?[\\da-f]+\\b"};
 const QRegularExpression kProgramCounterRegex{"^0x[0-9a-f]+:"};
 const QRegularExpression kOpCodeRegex{
@@ -216,13 +219,39 @@ const QRegularExpression kPlatformRegex{"^Platform:.*$"};
 X86Assembly::X86Assembly() : QSyntaxHighlighter{static_cast<QObject*>(nullptr)} {}
 
 void X86Assembly::highlightBlock(const QString& code) {
-  HighlightBlockAssembly(code, [this](int start, int count, const QTextCharFormat& format) {
-    setFormat(start, count, format);
-  });
+  const HighlightingMetadata* const highlighting_metadata =
+      dynamic_cast<const HighlightingMetadata*>(currentBlock().userData());
+  if (highlighting_metadata == nullptr || highlighting_metadata->IsMainContentLine()) {
+    HighlightBlockAssembly(code, [this](int start, int count, const QTextCharFormat& format) {
+      setFormat(start, count, format);
+    });
+  } else {  // Metadata::LineType::kAnnotatingLine
+    HighlightAnnotatingBlock(code, [this](int start, int count, const QTextCharFormat& format) {
+      setFormat(start, count, format);
+    });
+  }
 }
 
-void HighlightBlockAssembly(const QString& code,
-                            std::function<void(int, int, const QTextCharFormat&)> set_format) {
+// Highlight every character with the same default_color
+void HighlightAnnotatingBlock(
+    const QString& code, const std::function<void(int, int, const QTextCharFormat&)>& set_format,
+    const QColor& default_color) {
+  const auto apply = [&code, &set_format](const QRegularExpression& expression,
+                                          const QColor& color) {
+    QTextCharFormat format{};
+    format.setForeground(color);
+
+    for (auto it = expression.globalMatch(code); it.hasNext();) {
+      const auto match = it.next();
+      set_format(match.capturedStart(), match.capturedLength(), format);
+    }
+  };
+
+  apply(AssemblyRegex::kCaracterRegex, default_color);
+}
+
+void HighlightBlockAssembly(
+    const QString& code, const std::function<void(int, int, const QTextCharFormat&)>& set_format) {
   const auto apply = [&code, &set_format](const QRegularExpression& expression,
                                           const QColor& color) {
     QTextCharFormat format{};

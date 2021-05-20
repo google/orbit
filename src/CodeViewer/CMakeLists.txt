@@ -12,6 +12,7 @@ target_include_directories(CodeViewer PUBLIC include/)
 target_link_libraries(CodeViewer PUBLIC CodeReport
                                         OrbitBase
                                         OrbitGl
+                                        SyntaxHighlighter
                                         Qt5::Widgets)
 
 target_sources(CodeViewer PUBLIC include/CodeViewer/Dialog.h
