@@ -130,7 +130,7 @@ static void AddCallstackToTopDownThread(CallTreeThread* thread_node,
   return thread_node;
 }
 
-std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromSamplingProfiler(
+std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
     const PostProcessedSamplingData& post_processed_sampling_data,
     const CaptureData& capture_data) {
   auto top_down_view = std::make_unique<CallTreeView>();
@@ -175,7 +175,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromSamplingProfile
   return current_node;
 }
 
-std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromSamplingProfiler(
+std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(
     const PostProcessedSamplingData& post_processed_sampling_data,
     const CaptureData& capture_data) {
   auto bottom_up_view = std::make_unique<CallTreeView>();

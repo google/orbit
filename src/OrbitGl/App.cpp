@@ -842,8 +842,9 @@ void OrbitApp::SetSelectionReport(
 void OrbitApp::SetTopDownView(const CaptureData& capture_data) {
   ORBIT_SCOPE_FUNCTION;
   CHECK(top_down_view_callback_);
-  std::unique_ptr<CallTreeView> top_down_view = CallTreeView::CreateTopDownViewFromSamplingProfiler(
-      capture_data.post_processed_sampling_data(), capture_data);
+  std::unique_ptr<CallTreeView> top_down_view =
+      CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
+          capture_data.post_processed_sampling_data(), capture_data);
   top_down_view_callback_(std::move(top_down_view));
 }
 
@@ -857,8 +858,8 @@ void OrbitApp::SetSelectionTopDownView(
     const CaptureData& capture_data) {
   CHECK(selection_top_down_view_callback_);
   std::unique_ptr<CallTreeView> selection_top_down_view =
-      CallTreeView::CreateTopDownViewFromSamplingProfiler(selection_post_processed_data,
-                                                          capture_data);
+      CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(selection_post_processed_data,
+                                                                   capture_data);
   selection_top_down_view_callback_(std::move(selection_top_down_view));
 }
 
@@ -871,7 +872,7 @@ void OrbitApp::SetBottomUpView(const CaptureData& capture_data) {
   ORBIT_SCOPE_FUNCTION;
   CHECK(bottom_up_view_callback_);
   std::unique_ptr<CallTreeView> bottom_up_view =
-      CallTreeView::CreateBottomUpViewFromSamplingProfiler(
+      CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(
           capture_data.post_processed_sampling_data(), capture_data);
   bottom_up_view_callback_(std::move(bottom_up_view));
 }
@@ -886,8 +887,8 @@ void OrbitApp::SetSelectionBottomUpView(
     const CaptureData& capture_data) {
   CHECK(selection_bottom_up_view_callback_);
   std::unique_ptr<CallTreeView> selection_bottom_up_view =
-      CallTreeView::CreateBottomUpViewFromSamplingProfiler(selection_post_processed_data,
-                                                           capture_data);
+      CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(selection_post_processed_data,
+                                                                    capture_data);
   selection_bottom_up_view_callback_(std::move(selection_bottom_up_view));
 }
 
