@@ -77,7 +77,8 @@ void Dialog::SetHighlightCurrentLine(bool enabled) {
 
 bool Dialog::IsCurrentLineHighlighted() const { return ui_->viewer->IsCurrentLineHighlighted(); }
 
-void Dialog::SetAnnotatingContent(absl::Span<const AnnotatingLine> annotating_lines) {
+void Dialog::SetAnnotatingContent(
+    absl::Span<const orbit_code_report::AnnotatingLine> annotating_lines) {
   ui_->viewer->SetAnnotatingContent(annotating_lines);
 }
 

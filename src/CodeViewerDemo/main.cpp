@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
 
   dialog.SetMainContent(content, std::make_unique<orbit_syntax_highlighter::X86Assembly>());
 
-  std::vector<orbit_code_viewer::AnnotatingLine> lines{};
+  std::vector<orbit_code_report::AnnotatingLine> lines{};
   lines.emplace_back();
   lines.back().reference_line = 9;
   lines.back().line_number = 42;

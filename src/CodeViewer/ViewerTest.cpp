@@ -48,7 +48,7 @@ TEST(Viewer, SetAnnotatingContentInDocumentEmpty) {
   ASSERT_EQ(doc.blockCount(), kNumberOfLines);
 
   const LargestOccurringLineNumbers max_line_numbers =
-      SetAnnotatingContentInDocument(&doc, absl::Span<const AnnotatingLine>{});
+      SetAnnotatingContentInDocument(&doc, absl::Span<const orbit_code_report::AnnotatingLine>{});
 
   ASSERT_TRUE(max_line_numbers.main_content.has_value());
   ASSERT_EQ(max_line_numbers.main_content.value(), 3);
@@ -68,7 +68,7 @@ TEST(Viewer, SetAnnotatingContentInDocumentFirst) {
   doc.setPlainText("first line\nsecond line\nthird line");
   ASSERT_EQ(doc.blockCount(), kNumberOfLines);
 
-  std::array<AnnotatingLine, 1> lines{};
+  std::array<orbit_code_report::AnnotatingLine, 1> lines{};
   lines[0].reference_line = 1;
   lines[0].line_contents = "first annotation";
   lines[0].line_number = 42;
@@ -95,7 +95,7 @@ TEST(Viewer, SetAnnotatingContentInDocumentConsecutive) {
   doc.setPlainText("first line\nsecond line\nthird line");
   ASSERT_EQ(doc.blockCount(), kNumberOfLines);
 
-  std::array<AnnotatingLine, 2> lines{};
+  std::array<orbit_code_report::AnnotatingLine, 2> lines{};
   lines[0].reference_line = 1;
   lines[0].line_contents = "first annotation";
   lines[0].line_number = 42;
@@ -131,7 +131,7 @@ TEST(Viewer, SetAnnotatingContentInDocumentSecond) {
   doc.setPlainText("first line\nsecond line\nthird line");
   ASSERT_EQ(doc.blockCount(), kNumberOfLines);
 
-  std::array<AnnotatingLine, 1> lines{};
+  std::array<orbit_code_report::AnnotatingLine, 1> lines{};
   lines[0].reference_line = 2;
   lines[0].line_contents = "first annotation";
   lines[0].line_number = 42;
@@ -160,7 +160,7 @@ TEST(Viewer, SetAnnotatingContentInDocumentLast) {
   doc.setPlainText("first line\nsecond line\nthird line");
   ASSERT_EQ(doc.blockCount(), kNumberOfLines);
 
-  std::array<AnnotatingLine, 1> lines{};
+  std::array<orbit_code_report::AnnotatingLine, 1> lines{};
   lines[0].reference_line = 3;
   lines[0].line_contents = "first annotation";
   lines[0].line_number = 42;
@@ -190,7 +190,7 @@ TEST(Viewer, SetAnnotatingContentInDocumentInvalid) {
   doc.setPlainText("first line\nsecond line\nthird line");
   ASSERT_EQ(doc.blockCount(), kNumberOfLines);
 
-  std::array<AnnotatingLine, 1> lines{};
+  std::array<orbit_code_report::AnnotatingLine, 1> lines{};
   lines[0].reference_line = 4;  // Does not exist
   lines[0].line_contents = "first annotation";
   lines[0].line_number = 42;
@@ -218,7 +218,7 @@ TEST(Viewer, SetAnnotatingContentInDocumentFirstTwice) {
   doc.setPlainText("first line\nsecond line\nthird line");
   ASSERT_EQ(doc.blockCount(), kNumberOfLines);
 
-  std::array<AnnotatingLine, 1> lines{};
+  std::array<orbit_code_report::AnnotatingLine, 1> lines{};
   lines[0].reference_line = 1;
   lines[0].line_contents = "first annotation";
   lines[0].line_number = 42;
