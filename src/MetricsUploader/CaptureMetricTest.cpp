@@ -19,10 +19,10 @@ namespace {
 constexpr CaptureStartData kTestStartData{
     1 /*number_of_instrumented_functions*/,
     2 /*number_of_frame_tracks*/,
-    3 /*number_of_manual_start_timers*/,
-    4 /*number_of_manual_stop_timers*/,
-    5 /*number_of_manual_start_async_timers*/,
-    6 /*number_of_manual_stop_async_timers*/,
+    3 /*number_of_manual_start_functions*/,
+    4 /*number_of_manual_stop_functions*/,
+    5 /*number_of_manual_start_async_functions*/,
+    6 /*number_of_manual_stop_async_functions*/,
     7 /*number_of_manual_tracked_values*/,
     OrbitCaptureData_ThreadStates_THREAD_STATES_ENABLED /*thread_states*/,
     10 /*memory_information_sampling_period_ms*/,
@@ -43,12 +43,14 @@ bool HasSameCaptureStartData(const OrbitCaptureData& capture_data,
   return capture_data.number_of_instrumented_functions() ==
              start_data.number_of_instrumented_functions &&
          capture_data.number_of_frame_tracks() == start_data.number_of_frame_tracks &&
-         capture_data.number_of_manual_start_timers() == start_data.number_of_manual_start_timers &&
-         capture_data.number_of_manual_stop_timers() == start_data.number_of_manual_stop_timers &&
-         capture_data.number_of_manual_start_async_timers() ==
-             start_data.number_of_manual_start_async_timers &&
-         capture_data.number_of_manual_stop_async_timers() ==
-             start_data.number_of_manual_stop_async_timers &&
+         capture_data.number_of_manual_start_functions() ==
+             start_data.number_of_manual_start_functions &&
+         capture_data.number_of_manual_stop_functions() ==
+             start_data.number_of_manual_stop_functions &&
+         capture_data.number_of_manual_start_async_functions() ==
+             start_data.number_of_manual_start_async_functions &&
+         capture_data.number_of_manual_stop_async_functions() ==
+             start_data.number_of_manual_stop_async_functions &&
          capture_data.number_of_manual_tracked_values() ==
              start_data.number_of_manual_tracked_values &&
          capture_data.thread_states() == start_data.thread_states &&

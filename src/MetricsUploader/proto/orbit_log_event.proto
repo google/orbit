@@ -69,7 +69,7 @@ message OrbitLogEvent {
 // instrumented functions and information that is available at capture stop,
 // like duration of the capture. It is sent when the user stops the capture, or
 // when the capture is aborted because of an error.
-// NextID: 18
+// NextID: 23
 message OrbitCaptureData {
   // Duration of the capture in milliseconds. This is a measure of time from
   // when the user started a capture until the user ends it.
@@ -83,20 +83,16 @@ message OrbitCaptureData {
   // Number of frame tracks the user added before the start of this capture.
   int64 number_of_frame_tracks = 3;
 
-  // Number of orbit_api::Start calls that Orbit found in the modules that have
-  // been manually instrumented.
+  // Total number of timers from orbit_api::Start() calls.
   int64 number_of_manual_start_timers = 4;
 
-  // Number of orbit_api::Stop calls that Orbit found in the modules that have
-  // been manually instrumented.
+  // Total number of timers from orbit_api::Stop() calls.
   int64 number_of_manual_stop_timers = 5;
 
-  // Number of orbit_api::StartAsync calls that Orbit found in the modules that
-  // have been manually instrumented.
+  // Total number of timers from orbit_api::StartAsync() calls.
   int64 number_of_manual_start_async_timers = 6;
 
-  // Number of orbit_api::StopAsync calls that Orbit found in the modules that
-  // have been manually instrumented.
+  // Total number of timers from orbit_api::StopAsync() calls.
   int64 number_of_manual_stop_async_timers = 7;
 
   // Number of orbit_api::TrackValue calls that Orbit found in the modules that
@@ -154,4 +150,23 @@ message OrbitCaptureData {
   // Value of the limit the user set for local marker depth per command buffer.
   // Only applicable if local_marker_depth_per_command_buffer is LIMITED.
   uint64 max_local_marker_depth_per_command_buffer = 17;
+
+  // Number of orbit_api::Start calls that Orbit found in the modules that have
+  // been manually instrumented.
+  int64 number_of_manual_start_functions = 18;
+
+  // Number of orbit_api::Stop calls that Orbit found in the modules that have
+  // been manually instrumented.
+  int64 number_of_manual_stop_functions = 19;
+
+  // Number of orbit_api::StartAsync calls that Orbit found in the modules that
+  // have been manually instrumented.
+  int64 number_of_manual_start_async_functions = 20;
+
+  // Number of orbit_api::StopAsync calls that Orbit found in the modules that
+  // have been manually instrumented.
+  int64 number_of_manual_stop_async_functions = 21;
+
+  // Total number of timers from manually tracked values.
+  int64 number_of_manual_tracked_value_timers = 22;
 }
