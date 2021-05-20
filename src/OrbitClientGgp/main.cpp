@@ -44,7 +44,7 @@ namespace {
 std::string GetLogFilePath(const std::string& log_directory) {
   std::filesystem::path log_directory_path{log_directory};
   std::filesystem::create_directory(log_directory_path);
-  const std::string log_file_path = log_directory_path / "OrbitClientGgp.log";
+  std::filesystem::path log_file_path = log_directory_path / "OrbitClientGgp.log";
   LOG("Log file: %s", log_file_path);
   return log_file_path;
 }
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
     orbit_base::InitLogFile(GetLogFilePath(log_directory));
   }
 
-  if (!absl::GetFlag(FLAGS_pid)) {
+  if (absl::GetFlag(FLAGS_pid) == 0) {
     FATAL("pid to capture not provided; set using -pid");
   }
 
@@ -83,9 +83,10 @@ int main(int argc, char** argv) {
   // The request is done in a separate thread to avoid blocking main()
   // It is needed to provide a thread pool
   std::unique_ptr<ThreadPool> thread_pool = ThreadPool::Create(1, 1, absl::Seconds(1));
-  if (!client_ggp.RequestStartCapture(thread_pool.get())) {
+  auto start_capture_result = client_ggp.RequestStartCapture(thread_pool.get());
+  if (start_capture_result.has_error()) {
     thread_pool->ShutdownAndWait();
-    FATAL("Not possible to start the capture; exiting program");
+    FATAL("Unable to start capture: %s", start_capture_result.error().message());
   }
 
   // Captures for the period of time requested
@@ -97,14 +98,11 @@ int main(int argc, char** argv) {
   // Requests to stop the capture and waits for thread to finish
   if (!client_ggp.StopCapture()) {
     thread_pool->ShutdownAndWait();
-    FATAL("Not possible to stop the capture; exiting program");
+    FATAL("Unable to stop the capture; exiting");
   }
+
   LOG("Shut down the thread and wait for it to finish");
   thread_pool->ShutdownAndWait();
-
-  if (!client_ggp.SaveCapture()) {
-    return -1;
-  }
 
   LOG("All done");
   return 0;

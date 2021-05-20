@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
         break;
       case kStopAndSaveCaptureCommand:
         LOG("Chosen %d: Stop and save capture", i);
-        ggp_capture_client.StopAndSaveCapture();
+        ggp_capture_client.StopCapture();
         break;
       case kUpdateSelectedFunctionsCommand: {
         std::vector<std::string> selected_functions;

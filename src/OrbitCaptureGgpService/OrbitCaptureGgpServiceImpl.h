@@ -24,9 +24,9 @@ class CaptureClientGgpServiceImpl final
       grpc::ServerContext* context, const orbit_grpc_protos::StartCaptureRequest* request,
       orbit_grpc_protos::StartCaptureResponse* response) override;
 
-  [[nodiscard]] grpc::Status StopAndSaveCapture(
-      grpc::ServerContext* context, const orbit_grpc_protos::StopAndSaveCaptureRequest* request,
-      orbit_grpc_protos::StopAndSaveCaptureResponse* response) override;
+  [[nodiscard]] grpc::Status StopCapture(grpc::ServerContext* context,
+                                         const orbit_grpc_protos::StopCaptureRequest* request,
+                                         orbit_grpc_protos::StopCaptureResponse* response) override;
 
   [[nodiscard]] grpc::Status UpdateSelectedFunctions(
       grpc::ServerContext* context,
@@ -37,15 +37,14 @@ class CaptureClientGgpServiceImpl final
       grpc::ServerContext* context, const orbit_grpc_protos::ShutdownServiceRequest* request,
       orbit_grpc_protos::ShutdownServiceResponse* response) override;
 
-  bool ShutdownRequested();
+  [[nodiscard]] bool ShutdownFinished() const;
 
  private:
   std::unique_ptr<ClientGgp> client_ggp_;
   std::unique_ptr<ThreadPool> thread_pool_;
-  bool shutdown_ = false;
+  std::atomic<bool> shutdown_finished_{false};
 
   void InitClientGgp();
-  void SaveCapture();
   void Shutdown();
   bool CaptureIsRunning();
 };

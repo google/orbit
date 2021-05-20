@@ -11,14 +11,14 @@
 
 class CaptureClientGgpClient {
  public:
-  CaptureClientGgpClient(std::string grpc_server_address);
+  explicit CaptureClientGgpClient(const std::string& grpc_server_address);
   ~CaptureClientGgpClient();
   CaptureClientGgpClient(CaptureClientGgpClient&&);
   CaptureClientGgpClient& operator=(CaptureClientGgpClient&&);
 
   int StartCapture();
-  int StopAndSaveCapture();
-  int UpdateSelectedFunctions(std::vector<std::string> capture_functions);
+  int StopCapture();
+  int UpdateSelectedFunctions(const std::vector<std::string>& selected_functions);
   void ShutdownService();
 
  private:

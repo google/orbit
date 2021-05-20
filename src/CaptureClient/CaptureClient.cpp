@@ -162,7 +162,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   }
 
   capture_options->set_collect_memory_info(collect_memory_info);
-  constexpr const uint64_t kMsToNs = 1000'000;
+  constexpr const uint64_t kMsToNs = 1'000'000;
   capture_options->set_memory_sampling_period_ns(memory_sampling_period_ms * kMsToNs);
 
   capture_options->set_trace_thread_state(collect_thread_state);
