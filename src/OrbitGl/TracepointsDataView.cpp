@@ -80,7 +80,7 @@ void TracepointsDataView::DoSort() {
 
 void TracepointsDataView::DoFilter() {
   std::vector<uint64_t> indices;
-  std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');
+  std::vector<std::string> tokens = absl::StrSplit(absl::AsciiStrToLower(filter_), ' ');
 
   for (size_t i = 0; i < tracepoints_.size(); ++i) {
     const TracepointInfo& tracepoint = tracepoints_[i];

@@ -170,7 +170,7 @@ void ModulesDataView::OnDoubleClicked(int index) {
 
 void ModulesDataView::DoFilter() {
   std::vector<uint64_t> indices;
-  std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');
+  std::vector<std::string> tokens = absl::StrSplit(absl::AsciiStrToLower(filter_), ' ');
 
   for (size_t i = 0; i < modules_.size(); ++i) {
     const ModuleData* module = modules_[i];

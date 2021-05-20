@@ -5,6 +5,7 @@
 #include "CallstackThreadBar.h"
 
 #include <absl/strings/str_format.h>
+#include <absl/strings/str_replace.h>
 #include <stddef.h>
 
 #include <algorithm>
@@ -124,7 +125,7 @@ void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, u
 
     // Draw selected events
     std::array<Color, 2> selected_color;
-    Fill(selected_color, kGreenSelection);
+    selected_color.fill(kGreenSelection);
     for (const CallstackEvent& event : time_graph_->GetSelectedCallstackEvents(thread_id_)) {
       Vec2 pos(time_graph_->GetWorldFromTick(event.time()), pos_[1]);
       batcher->AddVerticalLine(pos, -track_height, z, kGreenSelection);
@@ -195,10 +196,7 @@ bool CallstackThreadBar::IsEmpty() const {
           ? ShortenStringWithEllipsis(function_name, static_cast<size_t>(max_line_length))
           : function_name;
   // Simple HTML escaping
-  fn_name = Replace(fn_name, "&", "&amp;");
-  fn_name = Replace(fn_name, "<", "&lt;");
-  fn_name = Replace(fn_name, ">", "&gt;");
-  return fn_name;
+  return absl::StrReplaceAll(fn_name, {{"&", "&amp;"}, {"<", "&lt;"}, {">", "&gt;"}});
 }
 
 std::string CallstackThreadBar::FormatCallstackForTooltip(const CallstackInfo& callstack,

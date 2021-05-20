@@ -5,6 +5,9 @@
 #ifndef ORBIT_CORE_CORE_UTILS_H_
 #define ORBIT_CORE_CORE_UTILS_H_
 
+#include <absl/strings/match.h>
+#include <absl/strings/str_format.h>
+#include <absl/strings/str_split.h>
 #include <absl/time/time.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -31,9 +34,6 @@
 #include <vector>
 
 #include "OrbitBase/Logging.h"
-#include "absl/strings/match.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/str_split.h"
 
 #define CONCAT_(x, y) x##y
 #define CONCAT(x, y) CONCAT_(x, y)
@@ -44,78 +44,10 @@ inline uint64_t StringHash(std::string_view str) {
   return XXH64(str.data(), str.size(), 0xBADDCAFEDEAD10CC);
 }
 
-template <typename T, typename U>
-inline void Fill(T& a_Array, U& a_Value) {
-  std::fill(std::begin(a_Array), std::end(a_Array), a_Value);
-}
-
 template <class T>
-inline T ToLower(const T& a_Str) {
-  T str = a_Str;
-  std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-  return str;
+inline void Append(std::vector<T>& dest, const std::vector<T>& source) {
+  dest.insert(std::end(dest), std::begin(source), std::end(source));
 }
-
-template <class T>
-inline void Append(std::vector<T>& a_Dest, const std::vector<T>& a_Source) {
-  a_Dest.insert(std::end(a_Dest), std::begin(a_Source), std::end(a_Source));
-}
-
-inline std::string Replace(const std::string& a_Subject, const std::string& search,
-                           const std::string& replace) {
-  std::string subject = a_Subject;
-  size_t pos = 0;
-  while ((pos = subject.find(search, pos)) != std::string::npos) {
-    subject.replace(pos, search.length(), replace);
-    pos += replace.length();
-  }
-
-  return subject;
-}
-
-inline void PrintBuffer(const void* a_Buffer, uint32_t a_Size, uint32_t a_Width = 16) {
-  const auto* buffer = static_cast<const uint8_t*>(a_Buffer);
-  std::stringstream buffer_string;
-  for (size_t i = 0; i < a_Size; ++i) {
-    buffer_string << std::hex << std::setfill('0') << std::setw(2) << buffer[i] << " ";
-
-    if ((i + 1) % a_Width == 0) {
-      buffer_string << std::endl;
-    }
-  }
-
-  buffer_string << std::endl;
-
-  for (size_t i = 0; i < a_Size; ++i) {
-    buffer_string << buffer[i];
-
-    if ((i + 1) % a_Width == 0) {
-      buffer_string << std::endl;
-    }
-  }
-
-  LOG("%s", buffer_string.str());
-}
-
-#ifdef _WIN32
-template <typename T>
-inline std::string ToHexString(T a_Value) {
-  std::stringstream l_StringStream;
-  l_StringStream << std::hex << a_Value;
-  return l_StringStream.str();
-}
-
-inline LONGLONG FileTimeDiffInMillis(const FILETIME& a_T0, const FILETIME& a_T1) {
-  __int64 i0 = (__int64(a_T0.dwHighDateTime) << 32) + a_T0.dwLowDateTime;
-  __int64 i1 = (__int64(a_T1.dwHighDateTime) << 32) + a_T1.dwLowDateTime;
-  return (i1 - i0) / 10000;
-}
-
-class CWindowsMessageToString {
- public:
-  static std::string GetStringFromMsg(DWORD dwMessage, bool = true);
-};
-#endif
 
 enum class EllipsisPosition { kMiddle };
 
@@ -194,67 +126,6 @@ inline bool Compare(const T& a, const T& b, bool asc) {
 template <>
 inline bool Compare<std::string>(const std::string& a, const std::string& b, bool asc) {
   return asc ? a < b : a > b;
-}
-
-template <class Key, class Val>
-std::vector<std::pair<Key, Val> > ValueSort(
-    std::unordered_map<Key, Val>& a_Map,
-    std::function<bool(const Val&, const Val&)> a_SortFunc = nullptr) {
-  typedef std::pair<Key, Val> PairType;
-  std::vector<PairType> vec;
-  vec.reserve(a_Map.size());
-
-  for (auto& it : a_Map) {
-    vec.push_back(it);
-  }
-
-  if (a_SortFunc)
-    std::sort(vec.begin(), vec.end(), [&a_SortFunc](const PairType& a, const PairType& b) {
-      return a_SortFunc(a.second, b.second);
-    });
-  else
-    std::sort(vec.begin(), vec.end(),
-              [&a_SortFunc](const PairType& a, const PairType& b) { return a.second < b.second; });
-
-  return vec;
-}
-
-template <class Key, class Val>
-std::vector<std::pair<Key, Val> > ValueSort(
-    std::map<Key, Val>& a_Map, std::function<bool(const Val&, const Val&)> a_SortFunc = nullptr) {
-  typedef std::pair<Key, Val> PairType;
-  std::vector<PairType> vec;
-  vec.reserve(a_Map.size());
-
-  for (auto& it : a_Map) {
-    vec.push_back(it);
-  }
-
-  if (a_SortFunc)
-    std::sort(vec.begin(), vec.end(), [&a_SortFunc](const PairType& a, const PairType& b) {
-      return a_SortFunc(a.second, b.second);
-    });
-  else
-    std::sort(vec.begin(), vec.end(),
-              [](const PairType& a, const PairType& b) { return a.second < b.second; });
-
-  return vec;
-}
-
-template <class Key, class Val>
-std::vector<std::pair<Key, Val> > ReverseValueSort(std::unordered_map<Key, Val>& a_Map) {
-  std::function<bool(const Val&, const Val&)> sortFunc = [](const Val& a, const Val& b) {
-    return a > b;
-  };
-  return ValueSort(a_Map, sortFunc);
-}
-
-template <class Key, class Val>
-std::vector<std::pair<Key, Val> > ReverseValueSort(std::map<Key, Val>& a_Map) {
-  std::function<bool(const Val&, const Val&)> sortFunc = [](const Val& a, const Val& b) {
-    return a > b;
-  };
-  return ValueSort(a_Map, sortFunc);
 }
 
 std::string FormatTime(absl::Time time);
