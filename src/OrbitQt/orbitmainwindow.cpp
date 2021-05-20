@@ -82,6 +82,7 @@
 #include "LiveFunctionsDataView.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/Tracing.h"
 #include "OrbitGgp/Instance.h"
@@ -1360,29 +1361,24 @@ void OrbitMainWindow::ShowTooltip(std::string_view message) {
                      QString::fromUtf8(message.data(), static_cast<int>(message.size())), this);
 }
 
-static std::optional<QString> TryReadSourceFile(const QString& file_path) {
-  QFile source_code_file{file_path};
-  if (!source_code_file.open(QIODevice::ReadOnly)) return std::nullopt;
-
-  return source_code_file.readAll();
-}
-
 static std::optional<QString> TryApplyMappingAndReadSourceFile(
     const std::filesystem::path& file_path) {
   orbit_source_paths_mapping::MappingManager mapping_manager{};
   const auto maybe_mapping_file_path = mapping_manager.MapToFirstExistingTarget(file_path);
   if (maybe_mapping_file_path.has_value()) {
-    return TryReadSourceFile(QString::fromStdString(maybe_mapping_file_path->string()));
+    auto result = orbit_base::ReadFileToString(*maybe_mapping_file_path);
+    if (result.has_error()) return std::nullopt;
+    return QString::fromStdString(result.value());
   }
 
   return std::nullopt;
 }
 
 std::optional<QString> OrbitMainWindow::LoadSourceCode(const std::filesystem::path& file_path) {
-  auto maybe_source_code = TryReadSourceFile(QString::fromStdString(file_path.string()));
-  if (maybe_source_code.has_value()) return maybe_source_code.value();
+  auto source_code_or_error = orbit_base::ReadFileToString(file_path);
+  if (source_code_or_error.has_value()) return QString::fromStdString(source_code_or_error.value());
 
-  maybe_source_code = TryApplyMappingAndReadSourceFile(file_path);
+  auto maybe_source_code = TryApplyMappingAndReadSourceFile(file_path);
   if (maybe_source_code.has_value()) return maybe_source_code.value();
 
   maybe_source_code =
