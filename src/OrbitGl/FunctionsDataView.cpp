@@ -257,7 +257,7 @@ void FunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
 }
 
 void FunctionsDataView::DoFilter() {
-  m_FilterTokens = absl::StrSplit(ToLower(filter_), ' ');
+  m_FilterTokens = absl::StrSplit(absl::AsciiStrToLower(filter_), ' ');
 
 #ifdef WIN32
   ParallelFilter();
@@ -267,8 +267,9 @@ void FunctionsDataView::DoFilter() {
   const std::vector<const FunctionInfo*>& functions(functions_);
   for (size_t i = 0; i < functions.size(); ++i) {
     const FunctionInfo* function = functions[i];
-    std::string name = ToLower(orbit_client_data::function_utils::GetDisplayName(*function)) +
-                       orbit_client_data::function_utils::GetLoadedModuleName(*function);
+    std::string name =
+        absl::AsciiStrToLower(orbit_client_data::function_utils::GetDisplayName(*function)) +
+        orbit_client_data::function_utils::GetLoadedModuleName(*function);
 
     bool match = true;
 
@@ -301,8 +302,8 @@ void FunctionsDataView::ParallelFilter() {
       "FunctionsDataViewParallelFor", functions.size(),
       [&](int32_t a_BlockIndex, int32_t a_ElementIndex) {
         std::vector<int>& result = indicesArray[a_BlockIndex];
-        const std::string& name =
-            ToLower(orbit_client_data::function_utils::GetDisplayName(*functions[a_ElementIndex]));
+        const std::string& name = absl::AsciiStrToLower(
+            orbit_client_data::function_utils::GetDisplayName(*functions[a_ElementIndex]));
         const std::string& module =
             orbit_client_data::function_utils::GetLoadedModuleName(*functions[a_ElementIndex]);
 

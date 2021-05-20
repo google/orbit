@@ -4,12 +4,12 @@
 
 #include "Path.h"
 
+#include <absl/flags/flag.h>
+
 #include <filesystem>
 #include <string>
 
-#include "CoreUtils.h"
 #include "OrbitBase/Logging.h"
-#include "absl/flags/flag.h"
 
 ABSL_FLAG(std::string, log_dir, "", "Set directory for the log.");
 

@@ -344,12 +344,13 @@ void SamplingReportDataView::SetThreadID(ThreadID tid) {
 void SamplingReportDataView::DoFilter() {
   std::vector<uint64_t> indices;
 
-  std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');
+  std::vector<std::string> tokens = absl::StrSplit(absl::AsciiStrToLower(filter_), ' ');
 
   for (size_t i = 0; i < functions_.size(); ++i) {
     SampledFunction& func = functions_[i];
-    std::string name = ToLower(func.name);
-    std::string module_name = ToLower(std::filesystem::path(func.module_path).filename().string());
+    std::string name = absl::AsciiStrToLower(func.name);
+    std::string module_name =
+        absl::AsciiStrToLower(std::filesystem::path(func.module_path).filename().string());
 
     bool match = true;
 

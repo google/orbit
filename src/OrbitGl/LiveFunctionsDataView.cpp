@@ -364,12 +364,13 @@ void LiveFunctionsDataView::DoFilter() {
   }
   std::vector<uint64_t> indices;
 
-  std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');
+  std::vector<std::string> tokens = absl::StrSplit(absl::AsciiStrToLower(filter_), ' ');
 
   for (const auto& entry : functions_) {
     uint64_t function_id = entry.first;
     const FunctionInfo& function = entry.second;
-    std::string name = ToLower(orbit_client_data::function_utils::GetDisplayName(function));
+    std::string name =
+        absl::AsciiStrToLower(orbit_client_data::function_utils::GetDisplayName(function));
 
     bool match = true;
 

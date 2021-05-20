@@ -188,11 +188,11 @@ void PresetsDataView::OnDoubleClicked(int index) {
 void PresetsDataView::DoFilter() {
   std::vector<uint64_t> indices;
 
-  std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');
+  std::vector<std::string> tokens = absl::StrSplit(absl::AsciiStrToLower(filter_), ' ');
 
   for (size_t i = 0; i < presets_.size(); ++i) {
     const PresetFile& preset = presets_[i];
-    std::string name = ToLower(preset.file_path().filename().string());
+    std::string name = absl::AsciiStrToLower(preset.file_path().filename().string());
 
     bool match = true;
 

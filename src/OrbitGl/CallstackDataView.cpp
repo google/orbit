@@ -189,14 +189,14 @@ void CallstackDataView::DoFilter() {
   }
 
   std::vector<uint64_t> indices;
-  std::vector<std::string> tokens = absl::StrSplit(ToLower(filter_), ' ');
+  std::vector<std::string> tokens = absl::StrSplit(absl::AsciiStrToLower(filter_), ' ');
 
   for (int i = 0; i < callstack_.frames_size(); ++i) {
     CallstackDataViewFrame frame = GetFrameFromIndex(i);
     const FunctionInfo* function = frame.function;
-    std::string name =
-        ToLower(function != nullptr ? orbit_client_data::function_utils::GetDisplayName(*function)
-                                    : frame.fallback_name);
+    std::string name = absl::AsciiStrToLower(
+        function != nullptr ? orbit_client_data::function_utils::GetDisplayName(*function)
+                            : frame.fallback_name);
     bool match = true;
 
     for (std::string& filter_token : tokens) {

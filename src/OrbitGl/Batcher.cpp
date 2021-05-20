@@ -66,7 +66,7 @@ void Batcher::AddBox(const Box& box, const std::array<Color, 4>& colors,
 void Batcher::AddBox(const Box& box, const Color& color,
                      std::unique_ptr<PickingUserData> user_data) {
   std::array<Color, 4> colors;
-  Fill(colors, color);
+  colors.fill(color);
   AddBox(box, colors, std::move(user_data));
 }
 
@@ -75,7 +75,7 @@ void Batcher::AddBox(const Box& box, const Color& color, std::shared_ptr<Pickabl
 
   Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
   std::array<Color, 4> colors;
-  Fill(colors, color);
+  colors.fill(color);
 
   AddBox(box, colors, picking_color, nullptr);
 }
