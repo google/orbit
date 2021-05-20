@@ -43,9 +43,11 @@ class CallstackThreadBar : public ThreadBar {
 
   void SetColor(const Color& color) { color_ = color; }
 
- protected:
+ private:
   void SelectCallstacks();
-  [[nodiscard]] std::string SafeGetFormattedFunctionName(uint64_t addr, int max_line_length) const;
+  [[nodiscard]] std::string SafeGetFormattedFunctionName(
+      const orbit_client_protos::CallstackInfo& callstack, int frame_index,
+      int max_line_length) const;
   [[nodiscard]] std::string FormatCallstackForTooltip(
       const orbit_client_protos::CallstackInfo& callstack, int max_line_length = 80,
       int max_lines = 20, int bottom_n_lines = 5) const;
