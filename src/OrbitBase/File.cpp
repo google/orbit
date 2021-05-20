@@ -123,9 +123,9 @@ ErrorMessageOr<unique_fd> OpenExistingFileForReadWrite(const std::filesystem::pa
   return OpenFile(path, kOpenFlags, 0);
 }
 
-ErrorMessageOr<void> WriteFully(const unique_fd& fd, std::string_view content) {
-  int64_t bytes_left = content.size();
-  const char* current_position = content.data();
+ErrorMessageOr<void> WriteFully(const unique_fd& fd, const void* data, size_t size) {
+  int64_t bytes_left = size;
+  const char* current_position = static_cast<const char*>(data);
   while (bytes_left > 0) {
     int64_t bytes_written = TEMP_FAILURE_RETRY(write(fd.get(), current_position, bytes_left));
     if (bytes_written == -1) {
@@ -137,6 +137,10 @@ ErrorMessageOr<void> WriteFully(const unique_fd& fd, std::string_view content) {
 
   CHECK(bytes_left == 0);
   return outcome::success();
+}
+
+ErrorMessageOr<void> WriteFully(const unique_fd& fd, std::string_view content) {
+  return WriteFully(fd, content.data(), content.size());
 }
 
 ErrorMessageOr<void> WriteFullyAtOffset(const unique_fd& fd, const void* buffer, size_t size,
