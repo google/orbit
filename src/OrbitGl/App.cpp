@@ -184,16 +184,16 @@ orbit_metrics_uploader::CaptureStartData CreateCaptureStartData(
         capture_start_data.number_of_instrumented_functions++;
         break;
       case orbit_client_protos::FunctionInfo_OrbitType_kOrbitTimerStart:
-        capture_start_data.number_of_manual_start_timers++;
+        capture_start_data.number_of_manual_start_functions++;
         break;
       case orbit_client_protos::FunctionInfo_OrbitType_kOrbitTimerStop:
-        capture_start_data.number_of_manual_stop_timers++;
+        capture_start_data.number_of_manual_stop_functions++;
         break;
       case orbit_client_protos::FunctionInfo_OrbitType_kOrbitTimerStartAsync:
-        capture_start_data.number_of_manual_start_async_timers++;
+        capture_start_data.number_of_manual_start_async_functions++;
         break;
       case orbit_client_protos::FunctionInfo_OrbitType_kOrbitTimerStopAsync:
-        capture_start_data.number_of_manual_stop_async_timers++;
+        capture_start_data.number_of_manual_stop_async_functions++;
         break;
       case orbit_client_protos::FunctionInfo_OrbitType_kOrbitTrackValue:
         capture_start_data.number_of_manual_tracked_values++;

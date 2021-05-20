@@ -17,10 +17,10 @@ namespace orbit_metrics_uploader {
 struct CaptureStartData {
   int64_t number_of_instrumented_functions = 0;
   int64_t number_of_frame_tracks = 0;
-  int64_t number_of_manual_start_timers = 0;
-  int64_t number_of_manual_stop_timers = 0;
-  int64_t number_of_manual_start_async_timers = 0;
-  int64_t number_of_manual_stop_async_timers = 0;
+  int64_t number_of_manual_start_functions = 0;
+  int64_t number_of_manual_stop_functions = 0;
+  int64_t number_of_manual_start_async_functions = 0;
+  int64_t number_of_manual_stop_async_functions = 0;
   int64_t number_of_manual_tracked_values = 0;
   orbit_metrics_uploader::OrbitCaptureData_ThreadStates thread_states =
       orbit_metrics_uploader::OrbitCaptureData_ThreadStates_THREAD_STATES_UNKNOWN;
