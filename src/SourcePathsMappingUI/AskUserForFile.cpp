@@ -25,6 +25,19 @@ constexpr const char* kAutocreateMappingKey = "auto_create_mapping";
 constexpr const char* kPreviousSourcePathsMappingDirectoryKey =
     "previous_source_paths_mapping_directory";
 
+static std::unique_ptr<QCheckBox> CreateSourcePathsMappingCheckBox() {
+  std::unique_ptr<QCheckBox> check_box = std::make_unique<QCheckBox>(
+      "Automatically create a source paths mapping from my selected file.");
+  check_box->setToolTip(
+      "If enabled, Orbit will automatically try to create a source paths mapping from it. The "
+      "common suffix between the path given in the debug information and the local file path will "
+      "be stripped. From the rest a mapping will be created.");
+  QSettings settings{};
+  check_box->setCheckState(settings.value(kAutocreateMappingKey, true).toBool() ? Qt::Checked
+                                                                                : Qt::Unchecked);
+  return check_box;
+}
+
 std::optional<QString> TryAskingTheUserAndReadSourceFile(QWidget* parent,
                                                          const std::filesystem::path& file_path) {
   QMessageBox message_box{QMessageBox::Warning, "Source code file not found",
@@ -33,18 +46,11 @@ std::optional<QString> TryAskingTheUserAndReadSourceFile(QWidget* parent,
                           QMessageBox::Cancel, parent};
   QPushButton* pick_file_button = message_box.addButton("Choose file...", QMessageBox::ActionRole);
 
-  std::unique_ptr<QCheckBox> checkbox = std::make_unique<QCheckBox>(
-      "Automatically create a source paths mapping from my selected file.");
-  checkbox->setToolTip(
-      "If enabled, Orbit will automatically try to create a source paths mapping from it. The "
-      "common suffix between the path given in the debug information and the local file path will "
-      "be stripped. From the rest a mapping will be created.");
-  QSettings settings{};
-  checkbox->setCheckState(settings.value(kAutocreateMappingKey, true).toBool() ? Qt::Checked
-                                                                               : Qt::Unchecked);
-
-  // Ownership will be transferred to message_box
-  message_box.setCheckBox(checkbox.release());
+  {
+    std::unique_ptr<QCheckBox> check_box = CreateSourcePathsMappingCheckBox();
+    // Ownership will be transferred to message_box
+    message_box.setCheckBox(check_box.release());
+  }
 
   std::optional<QString> maybe_file_contents;
   QObject::connect(pick_file_button, &QAbstractButton::clicked, parent, [&]() {
@@ -63,6 +69,7 @@ std::optional<QString> TryAskingTheUserAndReadSourceFile(QWidget* parent,
   message_box.exec();
 
   if (maybe_file_contents.has_value()) {
+    QSettings settings{};
     settings.setValue(kAutocreateMappingKey, message_box.checkBox()->isChecked());
   }
 
