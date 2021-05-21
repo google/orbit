@@ -41,8 +41,8 @@ static std::unique_ptr<QCheckBox> CreateSourcePathsMappingCheckBox() {
   return check_box;
 }
 
-std::optional<QString> TryAskingTheUserAndReadSourceFile(QWidget* parent,
-                                                         const std::filesystem::path& file_path) {
+std::optional<UserAnswers> AskUserForSourceFilePath(QWidget* parent,
+                                                    const std::filesystem::path& file_path) {
   QMessageBox message_box{QMessageBox::Warning, "Source code file not found",
                           QString("Could not find the source code file \"%1\" on this machine.")
                               .arg(QString::fromStdString(file_path.string())),
@@ -55,37 +55,19 @@ std::optional<QString> TryAskingTheUserAndReadSourceFile(QWidget* parent,
     message_box.setCheckBox(check_box.release());
   }
 
-  std::optional<QString> maybe_file_contents;
+  std::optional<UserAnswers> maybe_user_answers;
   QObject::connect(pick_file_button, &QAbstractButton::clicked, parent, [&]() {
     std::optional<std::filesystem::path> maybe_local_file_path =
         ShowFileOpenDialog(parent, file_path);
     if (!maybe_local_file_path.has_value()) return;
 
-    ErrorMessageOr<std::string> file_contents_or_error =
-        orbit_base::ReadFileToString(maybe_local_file_path.value());
-    if (file_contents_or_error.has_error()) {
-      QMessageBox::critical(parent, "Could not open source file",
-                            QString::fromStdString(file_contents_or_error.error().message()));
-      return;
-    }
-
-    const bool infer_source_paths_mapping = message_box.checkBox()->isChecked();
-    if (infer_source_paths_mapping) {
-      orbit_source_paths_mapping::InferAndAppendSourcePathsMapping(file_path,
-                                                                   maybe_local_file_path.value());
-    }
-
-    maybe_file_contents = QString::fromStdString(file_contents_or_error.value());
+    maybe_user_answers.emplace();
+    maybe_user_answers->local_file_path = maybe_local_file_path.value();
+    maybe_user_answers->infer_source_paths_mapping = message_box.checkBox()->isChecked();
   });
 
   message_box.exec();
-
-  if (maybe_file_contents.has_value()) {
-    QSettings settings{};
-    settings.setValue(kAutocreateMappingKey, message_box.checkBox()->isChecked());
-  }
-
-  return maybe_file_contents;
+  return maybe_user_answers;
 }
 
 std::optional<std::filesystem::path> ShowFileOpenDialog(QWidget* parent,
