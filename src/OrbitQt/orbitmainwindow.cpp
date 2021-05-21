@@ -1376,15 +1376,39 @@ static std::optional<QString> TryApplyMappingAndReadSourceFile(
 }
 
 std::optional<QString> OrbitMainWindow::LoadSourceCode(const std::filesystem::path& file_path) {
-  ErrorMessageOr<std::string> source_code_or_error = orbit_base::ReadFileToString(file_path);
-  if (source_code_or_error.has_value()) return QString::fromStdString(source_code_or_error.value());
+  {
+    ErrorMessageOr<std::string> source_code_or_error = orbit_base::ReadFileToString(file_path);
+    if (source_code_or_error.has_value()) {
+      return QString::fromStdString(source_code_or_error.value());
+    }
+  }
 
-  std::optional<QString> maybe_source_code = TryApplyMappingAndReadSourceFile(file_path);
-  if (maybe_source_code.has_value()) return maybe_source_code.value();
+  {
+    std::optional<QString> maybe_source_code = TryApplyMappingAndReadSourceFile(file_path);
+    if (maybe_source_code.has_value()) return maybe_source_code.value();
+  }
 
-  maybe_source_code =
-      orbit_source_paths_mapping_ui::TryAskingTheUserAndReadSourceFile(this, file_path);
-  if (maybe_source_code.has_value()) return maybe_source_code.value();
+  {
+    std::optional<orbit_source_paths_mapping_ui::UserAnswers> maybe_user_answers =
+        orbit_source_paths_mapping_ui::AskUserForSourceFilePath(this, file_path);
+    if (!maybe_user_answers.has_value()) return std::nullopt;
+
+    ErrorMessageOr<std::string> file_contents_or_error =
+        orbit_base::ReadFileToString(maybe_user_answers->local_file_path);
+
+    if (file_contents_or_error.has_error()) {
+      QMessageBox::critical(this, "Could not open source file",
+                            QString::fromStdString(file_contents_or_error.error().message()));
+      return std::nullopt;
+    }
+
+    if (maybe_user_answers->infer_source_paths_mapping) {
+      orbit_source_paths_mapping::InferAndAppendSourcePathsMapping(
+          file_path, maybe_user_answers->local_file_path);
+    }
+
+    return QString::fromStdString(file_contents_or_error.value());
+  }
 
   return std::nullopt;
 }
