@@ -9,10 +9,8 @@
 #include <gtest/gtest.h>
 
 #include "GrpcProtos/Constants.h"
-#include "MemoryTracing/CGroupMemoryInfoProducer.h"
 #include "MemoryTracing/MemoryInfoListener.h"
-#include "MemoryTracing/ProcessMemoryInfoProducer.h"
-#include "MemoryTracing/SystemMemoryInfoProducer.h"
+#include "MemoryTracing/MemoryInfoProducer.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "capture.pb.h"
@@ -26,7 +24,7 @@ using orbit_grpc_protos::ProcessMemoryUsage;
 using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_grpc_protos::SystemMemoryUsage;
 using orbit_memory_tracing::MemoryInfoListener;
-using orbit_memory_tracing::SystemMemoryInfoProducer;
+using orbit_memory_tracing::MemoryInfoProducer;
 
 class BufferMemoryInfoListener : public MemoryInfoListener {
  public:
@@ -76,31 +74,31 @@ class MemoryTracingIntegrationTestFixture {
 
   void StartTracing() {
     CHECK(!listener_.has_value());
-    CHECK(!system_memory_info_producer_.has_value());
-    CHECK(!cgroup_memory_info_producer_.has_value());
-    CHECK(!process_memory_info_producer_.has_value());
+    CHECK(system_memory_info_producer_ == nullptr);
+    CHECK(cgroup_memory_info_producer_ == nullptr);
+    CHECK(process_memory_info_producer_ == nullptr);
 
     listener_.emplace();
 
-    system_memory_info_producer_.emplace(memory_sampling_period_ns_);
-    system_memory_info_producer_->SetListener(&*listener_);
+    int32_t pid = static_cast<int32_t>(orbit_base::GetCurrentProcessId());
+    system_memory_info_producer_ =
+        CreateSystemMemoryInfoProducer(&*listener_, memory_sampling_period_ns_, pid);
     system_memory_info_producer_->Start();
 
-    int32_t pid = static_cast<int32_t>(orbit_base::GetCurrentProcessId());
-    cgroup_memory_info_producer_.emplace(memory_sampling_period_ns_, pid);
-    cgroup_memory_info_producer_->SetListener(&*listener_);
+    cgroup_memory_info_producer_ =
+        CreateCGroupMemoryInfoProducer(&*listener_, memory_sampling_period_ns_, pid);
     cgroup_memory_info_producer_->Start();
 
-    process_memory_info_producer_.emplace(memory_sampling_period_ns_, pid);
-    process_memory_info_producer_->SetListener(&*listener_);
+    process_memory_info_producer_ =
+        CreateProcessMemoryInfoProducer(&*listener_, memory_sampling_period_ns_, pid);
     process_memory_info_producer_->Start();
   }
 
   [[nodiscard]] std::vector<ProducerCaptureEvent> StopTracingAndGetEvents() {
     CHECK(listener_.has_value());
-    CHECK(system_memory_info_producer_.has_value());
-    CHECK(cgroup_memory_info_producer_.has_value());
-    CHECK(process_memory_info_producer_.has_value());
+    CHECK(system_memory_info_producer_ != nullptr);
+    CHECK(cgroup_memory_info_producer_ != nullptr);
+    CHECK(process_memory_info_producer_ != nullptr);
 
     system_memory_info_producer_->Stop();
     system_memory_info_producer_.reset();
@@ -118,9 +116,9 @@ class MemoryTracingIntegrationTestFixture {
 
  private:
   uint64_t memory_sampling_period_ns_;
-  std::optional<CGroupMemoryInfoProducer> cgroup_memory_info_producer_ = std::nullopt;
-  std::optional<ProcessMemoryInfoProducer> process_memory_info_producer_ = std::nullopt;
-  std::optional<SystemMemoryInfoProducer> system_memory_info_producer_ = std::nullopt;
+  std::unique_ptr<MemoryInfoProducer> cgroup_memory_info_producer_;
+  std::unique_ptr<MemoryInfoProducer> process_memory_info_producer_;
+  std::unique_ptr<MemoryInfoProducer> system_memory_info_producer_;
   std::optional<BufferMemoryInfoListener> listener_ = std::nullopt;
 };
 
