@@ -117,6 +117,10 @@ ErrorMessageOr<T> ReadFullyAtOffset(const unique_fd& fd, off_t offset) {
   return value;
 }
 
+// Following functions make sure we call stl in exception-free manner
+ErrorMessageOr<bool> FileExists(const std::filesystem::path& path);
+ErrorMessageOr<void> MoveFile(const std::filesystem::path& from, const std::filesystem::path& to);
+
 }  // namespace orbit_base
 
 #endif  // ORBIT_BASE_FILE_H_

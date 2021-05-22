@@ -8,6 +8,7 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/TemporaryFile.h"
+#include "OrbitBase/TestUtils.h"
 
 namespace orbit_base {
 
@@ -265,6 +266,34 @@ TEST(File, ReadStructureAtOffset) {
 
   EXPECT_EQ(test_struct.u64, kU64Value);
   EXPECT_STREQ(test_struct.char_array.data(), kCharArray);
+}
+
+TEST(File, MoveFile) {
+  auto tmp_file_or_error = TemporaryFile::Create();
+  ASSERT_THAT(tmp_file_or_error, HasNoError());
+  auto tmp_file = std::move(tmp_file_or_error.value());
+  std::filesystem::path new_path = tmp_file.file_path().string() + ".new";
+
+  auto exists_or_error = FileExists(new_path);
+  ASSERT_THAT(exists_or_error, HasNoError());
+  ASSERT_FALSE(exists_or_error.value());
+
+  exists_or_error = FileExists(tmp_file.file_path());
+  ASSERT_THAT(exists_or_error, HasNoError());
+  EXPECT_TRUE(exists_or_error.value());
+
+  auto move_result = MoveFile(tmp_file.file_path(), new_path);
+  ASSERT_THAT(move_result, HasNoError());
+
+  exists_or_error = FileExists(new_path);
+  ASSERT_THAT(exists_or_error, HasNoError());
+  EXPECT_TRUE(exists_or_error.value());
+
+  exists_or_error = FileExists(tmp_file.file_path());
+  ASSERT_THAT(exists_or_error, HasNoError());
+  EXPECT_FALSE(exists_or_error.value());
+
+  remove(new_path.string().c_str());
 }
 
 }  // namespace orbit_base
