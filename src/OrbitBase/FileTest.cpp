@@ -296,4 +296,15 @@ TEST(File, MoveFile) {
   remove(new_path.string().c_str());
 }
 
+TEST(File, ListFilesInDirectory) {
+  auto tmp_file_or_error = TemporaryFile::Create();
+  ASSERT_THAT(tmp_file_or_error, HasNoError());
+  auto tmp_file = std::move(tmp_file_or_error.value());
+  auto file_list_or_error = ListFilesInDirectory(tmp_file.file_path().parent_path());
+  ASSERT_THAT(file_list_or_error, HasNoError());
+  const auto& file_list = file_list_or_error.value();
+  auto it = find(file_list.begin(), file_list.end(), tmp_file.file_path());
+  EXPECT_TRUE(it != file_list.end());
+}
+
 }  // namespace orbit_base

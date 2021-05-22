@@ -221,4 +221,31 @@ ErrorMessageOr<void> MoveFile(const std::filesystem::path& from, const std::file
   return outcome::success();
 }
 
+ErrorMessageOr<std::vector<std::filesystem::path>> ListFilesInDirectory(
+    const std::filesystem::path& directory) {
+  std::vector<std::filesystem::path> files;
+  std::error_code error;
+
+  auto directory_iterator = std::filesystem::directory_iterator(directory, error);
+  if (error) {
+    return ErrorMessage{absl::StrFormat("Unable to list files in directory \"%s\": %s",
+                                        directory.string(), error.message())};
+  }
+
+  for (auto it = std::filesystem::begin(directory_iterator),
+            end = std::filesystem::end(directory_iterator);
+       it != end; it.increment(error)) {
+    if (error) {
+      return ErrorMessage{
+          absl::StrFormat("Iterating directory \"%s\": %s (increment failed, stopping)",
+                          directory.string(), error.message())};
+    }
+
+    const auto& path = it->path();
+    files.push_back(path);
+  }
+
+  return files;
+}
+
 }  // namespace orbit_base
