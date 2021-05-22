@@ -201,4 +201,24 @@ ErrorMessageOr<size_t> ReadFullyAtOffset(const unique_fd& fd, void* buffer, size
   return bytes_read;
 }
 
+ErrorMessageOr<bool> FileExists(const std::filesystem::path& path) {
+  std::error_code error;
+  bool result = std::filesystem::exists(path, error);
+  if (error) {
+    return ErrorMessage{error.message()};
+  }
+
+  return result;
+}
+
+ErrorMessageOr<void> MoveFile(const std::filesystem::path& from, const std::filesystem::path& to) {
+  std::error_code error;
+  std::filesystem::rename(from, to, error);
+  if (error) {
+    return ErrorMessage{error.message()};
+  }
+
+  return outcome::success();
+}
+
 }  // namespace orbit_base
