@@ -120,6 +120,9 @@ ErrorMessageOr<T> ReadFullyAtOffset(const unique_fd& fd, off_t offset) {
 // Following functions make sure we call stl in exception-free manner
 ErrorMessageOr<bool> FileExists(const std::filesystem::path& path);
 ErrorMessageOr<void> MoveFile(const std::filesystem::path& from, const std::filesystem::path& to);
+// Returns all files in directory; non recursively.
+ErrorMessageOr<std::vector<std::filesystem::path>> ListFilesInDirectory(
+    const std::filesystem::path& directory);
 
 }  // namespace orbit_base
 
