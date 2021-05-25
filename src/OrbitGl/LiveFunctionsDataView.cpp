@@ -10,10 +10,9 @@
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 #include <absl/time/time.h>
+#include <llvm/Demangle/Demangle.h>
 #include <stddef.h>
 
-#include <algorithm>
-#include <cstdint>
 #include <functional>
 #include <limits>
 #include <memory>
@@ -22,14 +21,12 @@
 #include "ClientData/FunctionUtils.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreUtils.h"
-#include "DataManager.h"
 #include "DataViewTypes.h"
 #include "FunctionsDataView.h"
 #include "GrpcProtos/Constants.h"
 #include "LiveFunctionsController.h"
 #include "OrbitBase/Logging.h"
 #include "TextBox.h"
-#include "TimeGraph.h"
 #include "TimerChain.h"
 #include "capture_data.pb.h"
 
@@ -427,7 +424,7 @@ void LiveFunctionsDataView::OnDataChanged() {
       return;
     }
 
-    if (orbit_client_data::function_utils::IsOrbitFunctionFromName(function_info->name())) {
+    if (orbit_client_data::function_utils::IsOrbitFunctionFromName(function_info->pretty_name())) {
       continue;
     }
 
@@ -508,6 +505,7 @@ std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrum
 
   FunctionInfo result;
   result.set_name(instrumented_function.function_name());
+  result.set_pretty_name(llvm::demangle(instrumented_function.function_name()));
   result.set_module_path(instrumented_function.file_path());
   result.set_module_build_id(instrumented_function.file_build_id());
   result.set_address(module_data->load_bias() + instrumented_function.file_offset());
