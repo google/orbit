@@ -866,8 +866,8 @@ void OrbitMainWindow::on_actionSave_Preset_As_triggered() {
 
   ErrorMessageOr<void> result = app_->OnSavePreset(file.toStdString());
   if (result.has_error()) {
-    QMessageBox::critical(this, "Error saving session",
-                          absl::StrFormat("Could not save session in \"%s\":\n%s.",
+    QMessageBox::critical(this, "Error saving preset",
+                          absl::StrFormat("Could not save preset in \"%s\":\n%s.",
                                           file.toStdString(), result.error().message())
                               .c_str());
   }
