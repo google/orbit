@@ -856,14 +856,6 @@ void OrbitMainWindow::on_actionOpen_Preset_triggered() {
   }
 }
 
-void OrbitMainWindow::on_actionEnd_Session_triggered() {
-  if (ConfirmExit()) Exit(kEndSessionReturnCode);
-}
-
-void OrbitMainWindow::on_actionQuit_triggered() {
-  if (ConfirmExit()) Exit(kQuitOrbitReturnCode);
-}
-
 void OrbitMainWindow::on_actionSave_Preset_As_triggered() {
   QString file = QFileDialog::getSaveFileName(
       this, "Specify a file to save...",
@@ -879,6 +871,14 @@ void OrbitMainWindow::on_actionSave_Preset_As_triggered() {
                                           file.toStdString(), result.error().message())
                               .c_str());
   }
+}
+
+void OrbitMainWindow::on_actionEnd_Session_triggered() {
+  if (ConfirmExit()) Exit(kEndSessionReturnCode);
+}
+
+void OrbitMainWindow::on_actionQuit_triggered() {
+  if (ConfirmExit()) Exit(kQuitOrbitReturnCode);
 }
 
 void OrbitMainWindow::on_actionToggle_Capture_triggered() { app_->ToggleCapture(); }
