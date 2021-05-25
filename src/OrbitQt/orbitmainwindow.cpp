@@ -847,8 +847,8 @@ void OrbitMainWindow::on_actionOpen_Preset_triggered() {
   for (const auto& file : list) {
     ErrorMessageOr<void> result = app_->OnLoadPreset(file.toStdString());
     if (result.has_error()) {
-      QMessageBox::critical(this, "Error loading session",
-                            absl::StrFormat("Could not load session from \"%s\":\n%s.",
+      QMessageBox::critical(this, "Error loading preset",
+                            absl::StrFormat("Could not load preset from \"%s\":\n%s.",
                                             file.toStdString(), result.error().message())
                                 .c_str());
     }
