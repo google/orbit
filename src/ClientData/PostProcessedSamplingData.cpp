@@ -90,6 +90,16 @@ PostProcessedSamplingData::GetSortedCallstackReportFromAddresses(
   return report;
 }
 
+const ThreadSampleData* PostProcessedSamplingData::GetThreadSampleDataByThreadId(
+    int32_t thread_id) const {
+  auto it = thread_id_to_sample_data_.find(thread_id);
+  if (it == thread_id_to_sample_data_.end()) {
+    return nullptr;
+  }
+
+  return &it->second;
+}
+
 const ThreadSampleData* PostProcessedSamplingData::GetSummary() const {
   auto summary_it = thread_id_to_sample_data_.find(orbit_base::kAllProcessThreadsTid);
   if (summary_it == thread_id_to_sample_data_.end()) {

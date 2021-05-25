@@ -76,11 +76,12 @@ class PostProcessedSamplingData {
             std::move(function_address_to_sampled_callstack_ids)},
         function_address_to_exact_addresses_{std::move(function_address_to_exact_addresses)},
         sorted_thread_sample_data_{std::move(sorted_thread_sample_data)} {};
-  ~PostProcessedSamplingData() = default;
-  PostProcessedSamplingData(const PostProcessedSamplingData& other) = default;
-  PostProcessedSamplingData(PostProcessedSamplingData&& other) = default;
-  PostProcessedSamplingData& operator=(const PostProcessedSamplingData& other) = default;
 
+  ~PostProcessedSamplingData() = default;
+
+  PostProcessedSamplingData(const PostProcessedSamplingData& other) = default;
+  PostProcessedSamplingData& operator=(const PostProcessedSamplingData& other) = default;
+  PostProcessedSamplingData(PostProcessedSamplingData&& other) = default;
   PostProcessedSamplingData& operator=(PostProcessedSamplingData&& other) = default;
 
   [[nodiscard]] const orbit_client_protos::CallstackInfo& GetResolvedCallstack(
@@ -94,14 +95,7 @@ class PostProcessedSamplingData {
   [[nodiscard]] const std::vector<ThreadSampleData>& GetThreadSampleData() const {
     return sorted_thread_sample_data_;
   }
-  [[nodiscard]] const ThreadSampleData* GetThreadSampleDataByThreadId(int32_t thread_id) const {
-    auto it = thread_id_to_sample_data_.find(thread_id);
-    if (it == thread_id_to_sample_data_.end()) {
-      return nullptr;
-    }
-
-    return &it->second;
-  }
+  [[nodiscard]] const ThreadSampleData* GetThreadSampleDataByThreadId(int32_t thread_id) const;
 
   [[nodiscard]] const ThreadSampleData* GetSummary() const;
   [[nodiscard]] uint32_t GetCountOfFunction(uint64_t function_address) const;
