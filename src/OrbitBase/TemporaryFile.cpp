@@ -44,6 +44,9 @@ ErrorMessageOr<void> TemporaryFile::Init() {
         absl::StrFormat("Unable to create a temporary file: %s", SafeStrerror(errnum))};
   }
 
+  // get rid of '\0' at the end
+  file_path = std::string(file_path.c_str());
+
   auto fd_or_error = OpenNewFileForReadWrite(file_path);
   if (fd_or_error.has_error()) {
     return ErrorMessage{

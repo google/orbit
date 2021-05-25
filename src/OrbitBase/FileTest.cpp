@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/strings/str_join.h>
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 
@@ -9,6 +10,7 @@
 #include "OrbitBase/File.h"
 #include "OrbitBase/TemporaryFile.h"
 #include "OrbitBase/TestUtils.h"
+#include "OrbitBase/WriteStringToFile.h"
 
 namespace orbit_base {
 
@@ -272,7 +274,16 @@ TEST(File, MoveFile) {
   auto tmp_file_or_error = TemporaryFile::Create();
   ASSERT_THAT(tmp_file_or_error, HasNoError());
   auto tmp_file = std::move(tmp_file_or_error.value());
-  std::filesystem::path new_path = tmp_file.file_path().string() + ".new";
+
+  // Windows is weird, for some reason it does not allow to move opened files.
+  tmp_file.CloseAndRemove();
+  ASSERT_THAT(WriteStringToFile(tmp_file.file_path(), "test"), HasNoError());
+
+  tmp_file_or_error = TemporaryFile::Create();
+  ASSERT_THAT(tmp_file_or_error, HasNoError());
+  auto new_file = std::move(tmp_file_or_error.value());
+  new_file.CloseAndRemove();
+  std::filesystem::path new_path = new_file.file_path();
 
   auto exists_or_error = FileExists(new_path);
   ASSERT_THAT(exists_or_error, HasNoError());
@@ -292,19 +303,24 @@ TEST(File, MoveFile) {
   exists_or_error = FileExists(tmp_file.file_path());
   ASSERT_THAT(exists_or_error, HasNoError());
   EXPECT_FALSE(exists_or_error.value());
-
-  remove(new_path.string().c_str());
 }
 
 TEST(File, ListFilesInDirectory) {
   auto tmp_file_or_error = TemporaryFile::Create();
   ASSERT_THAT(tmp_file_or_error, HasNoError());
   auto tmp_file = std::move(tmp_file_or_error.value());
+
   auto file_list_or_error = ListFilesInDirectory(tmp_file.file_path().parent_path());
   ASSERT_THAT(file_list_or_error, HasNoError());
   const auto& file_list = file_list_or_error.value();
+
   auto it = find(file_list.begin(), file_list.end(), tmp_file.file_path());
-  EXPECT_TRUE(it != file_list.end());
+
+  EXPECT_TRUE(it != file_list.end())
+      << "File " << tmp_file.file_path() << " was not found in the list: "
+      << absl::StrJoin(file_list, ", ", [](std::string* out, const std::filesystem::path& path) {
+           out->append(path.string());
+         });
 }
 
 }  // namespace orbit_base
