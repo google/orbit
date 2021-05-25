@@ -37,7 +37,8 @@ target_compile_options(ClientModelTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(ClientModelTests PRIVATE
         CaptureDeserializerTest.cpp
         CaptureSerializationTestMatchers.h
-        CaptureSerializerTest.cpp)
+        CaptureSerializerTest.cpp
+        SamplingDataPostProcessorTest.cpp)
 
 target_link_libraries(ClientModelTests PRIVATE
         ClientModel
