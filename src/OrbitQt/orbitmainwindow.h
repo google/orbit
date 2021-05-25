@@ -123,9 +123,10 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void OnLiveTabFunctionsFilterTextChanged(const QString& text);
 
   void on_actionOpen_Preset_triggered();
+  void on_actionSave_Preset_As_triggered();
+
   void on_actionEnd_Session_triggered();
   void on_actionQuit_triggered();
-  void on_actionSave_Preset_As_triggered();
 
   void on_actionToggle_Capture_triggered();
   void on_actionSave_Capture_triggered();
