@@ -87,8 +87,6 @@ class PostProcessedSamplingData {
   [[nodiscard]] const orbit_client_protos::CallstackInfo& GetResolvedCallstack(
       uint64_t sampled_callstack_id) const;
 
-  [[nodiscard]] std::multimap<int, uint64_t> GetCallstacksFromAddresses(
-      const std::vector<uint64_t>& addresses, ThreadID thread_id) const;
   [[nodiscard]] std::unique_ptr<SortedCallstackReport> GetSortedCallstackReportFromAddresses(
       const std::vector<uint64_t>& addresses, ThreadID thread_id) const;
 
@@ -101,6 +99,9 @@ class PostProcessedSamplingData {
   [[nodiscard]] uint32_t GetCountOfFunction(uint64_t function_address) const;
 
  private:
+  [[nodiscard]] std::multimap<int, uint64_t> GetCallstacksFromAddresses(
+      const std::vector<uint64_t>& addresses, ThreadID thread_id) const;
+
   absl::flat_hash_map<ThreadID, ThreadSampleData> thread_id_to_sample_data_;
   absl::flat_hash_map<uint64_t, orbit_client_protos::CallstackInfo> id_to_resolved_callstack_;
   absl::flat_hash_map<uint64_t, uint64_t> original_id_to_resolved_callstack_id_;
