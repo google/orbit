@@ -1,7 +1,7 @@
 C_COMPILER=clang-9
 CXX_COMPILER=clang++-9
-C_FLAGS= -mavx2 -mfma -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all
-CXX_FLAGS= -mavx2 -mfma -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all
+C_FLAGS= -march=sandybridge -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all
+CXX_FLAGS= -march=sandybridge -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all
 LINKER_FLAGS= -Wl,-z,relro,-z,now,-z,noexecstack
 [settings]
 os=Linux

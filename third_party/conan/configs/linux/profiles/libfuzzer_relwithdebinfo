@@ -1,5 +1,5 @@
-CFLAGS= -mavx2 -mfma -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -D_FORTIFY_SOURCE=2 -fstack-protector-all -fPIC
-CXXFLAGS= -mavx2 -mfma -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all -fPIC
+CFLAGS= -march=sandybridge -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -D_FORTIFY_SOURCE=2 -fstack-protector-all -fPIC
+CXXFLAGS= -march=sandybridge -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all -fPIC
 SANITIZE_CFLAGS=-fsanitize=fuzzer-no-link,address
 SANITIZE_CXXFLAGS=-fsanitize=fuzzer-no-link,address
 [settings]
