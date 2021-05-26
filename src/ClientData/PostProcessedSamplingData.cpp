@@ -109,20 +109,22 @@ const ThreadSampleData* PostProcessedSamplingData::GetSummary() const {
 }
 
 uint32_t PostProcessedSamplingData::GetCountOfFunction(uint64_t function_address) const {
-  auto addresses_of_functions_itr = function_address_to_exact_addresses_.find(function_address);
-  if (addresses_of_functions_itr == function_address_to_exact_addresses_.end()) {
-    return 0;
-  }
-  uint32_t result = 0;
   const ThreadSampleData* summary = GetSummary();
-  if (summary == nullptr) {
+  if (summary != nullptr) {
+    auto count_it = summary->resolved_address_to_count.find(function_address);
+    if (count_it != summary->resolved_address_to_count.end()) {
+      return count_it->second;
+    }
     return 0;
   }
-  const auto& function_addresses = addresses_of_functions_itr->second;
-  for (uint64_t address : function_addresses) {
-    auto count_itr = summary->sampled_address_to_count.find(address);
-    if (count_itr != summary->sampled_address_to_count.end()) {
-      result += count_itr->second;
+
+  uint32_t result = 0;
+  for (const auto& [tid, thread_sample_data] : thread_id_to_sample_data_) {
+    CHECK(tid != orbit_base::kAllProcessThreadsTid);  // Because GetSummary() == nullptr
+
+    auto count_it = thread_sample_data.resolved_address_to_count.find(function_address);
+    if (count_it != thread_sample_data.resolved_address_to_count.end()) {
+      result += count_it->second;
     }
   }
   return result;
