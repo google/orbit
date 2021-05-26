@@ -39,7 +39,9 @@ There are some exceptions. On Linux, we rely by default on the distribution's Qt
 and Mesa installation. This can be changed by modifying the conan package options
 `system_qt` and `system_mesa`, but we recommend to go with the distribution provided
 Qt package. You will need at least version 5.12.4 of Qt. The point release is important
-because it resolves a [known issue](https://bugreports.qt.io/browse/QTBUG-69683).
+because it resolves a [known issue](https://bugreports.qt.io/browse/QTBUG-69683). Note,
+that Ubuntu 18.04 LTS comes with Qt 5.9 which is NOT sufficient. Ubuntu 20.04 LTS is
+fine though.
 
 In case you still want to have Qt provided by conan, the simplest way to do that will be
 to change the default values of these two options.
