@@ -337,9 +337,9 @@ void Viewer::DrawSampleCounters(QPaintEvent* event) {
                                fontMetrics().height()};
       painter.setPen(kLineNumberForegroundColor);
 
-      QString function_percetange_string =
+      QString function_percentage_string =
           FractionToPercentageString(num_samples_in_line, code_report_->GetNumSamplesInFunction());
-      painter.drawText(bounding_box, Qt::AlignRight, function_percetange_string);
+      painter.drawText(bounding_box, Qt::AlignRight, function_percentage_string);
       current += WidthPercentageColumn() + WidthMarginBetweenColumns();
     }
 
@@ -349,15 +349,15 @@ void Viewer::DrawSampleCounters(QPaintEvent* event) {
                                fontMetrics().height()};
       painter.setPen(kLineNumberForegroundColor);
 
-      QString total_percetange_string =
+      QString total_percentage_string =
           FractionToPercentageString(num_samples_in_line, code_report_->GetNumSamples());
-      painter.drawText(bounding_box, Qt::AlignRight, total_percetange_string);
+      painter.drawText(bounding_box, Qt::AlignRight, total_percentage_string);
       current += WidthPercentageColumn() + right_margin_.ToPixels(fontMetrics());
     }
   }
 }
 
-uint64_t Viewer::LargestOccuringLineNumber() const {
+uint64_t Viewer::LargestOccurringLineNumber() const {
   switch (line_number_types_) {
     case LineNumberTypes::kNone:
       return 0;
@@ -374,7 +374,7 @@ uint64_t Viewer::LargestOccuringLineNumber() const {
 }
 
 void Viewer::UpdateBarsSize() {
-  const auto number_of_lines = LargestOccuringLineNumber();
+  const auto number_of_lines = LargestOccurringLineNumber();
 
   int top_font_height = fontMetrics().height();
 
@@ -514,7 +514,7 @@ void Viewer::SetAnnotatingContent(absl::Span<const AnnotatingLine> annotating_li
   largest_occuring_line_numbers_ = SetAnnotatingContentInDocument(document(), annotating_lines);
 }
 
-LargestOccuringLineNumbers SetAnnotatingContentInDocument(
+LargestOccurringLineNumbers SetAnnotatingContentInDocument(
     QTextDocument* document, absl::Span<const AnnotatingLine> annotating_lines) {
   // Lets first go through the main content and save line numbers as metadata.
   // If previously extra annotating content had been added, let's remove it now.
@@ -544,7 +544,7 @@ LargestOccuringLineNumbers SetAnnotatingContentInDocument(
     current_block = current_block.next();
   }
 
-  LargestOccuringLineNumbers largest_occuring_line_numbers{};
+  LargestOccurringLineNumbers largest_occuring_line_numbers{};
   largest_occuring_line_numbers.main_content = document->blockCount();
 
   auto current_annotating_line = annotating_lines.begin();

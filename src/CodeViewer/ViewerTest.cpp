@@ -47,7 +47,7 @@ TEST(Viewer, SetAnnotatingContentInDocumentEmpty) {
   doc.setPlainText("first line\nsecond line\nthird line");
   ASSERT_EQ(doc.blockCount(), kNumberOfLines);
 
-  const LargestOccuringLineNumbers max_line_numbers =
+  const LargestOccurringLineNumbers max_line_numbers =
       SetAnnotatingContentInDocument(&doc, absl::Span<const AnnotatingLine>{});
 
   ASSERT_TRUE(max_line_numbers.main_content.has_value());
@@ -73,7 +73,7 @@ TEST(Viewer, SetAnnotatingContentInDocumentFirst) {
   lines[0].line_contents = "first annotation";
   lines[0].line_number = 42;
 
-  const LargestOccuringLineNumbers max_line_numbers = SetAnnotatingContentInDocument(&doc, lines);
+  const LargestOccurringLineNumbers max_line_numbers = SetAnnotatingContentInDocument(&doc, lines);
 
   ASSERT_TRUE(max_line_numbers.main_content.has_value());
   ASSERT_EQ(max_line_numbers.main_content.value(), kNumberOfLines);
@@ -103,7 +103,7 @@ TEST(Viewer, SetAnnotatingContentInDocumentConsecutive) {
   lines[1].line_contents = "second annotation";
   lines[1].line_number = 43;
 
-  const LargestOccuringLineNumbers max_line_numbers = SetAnnotatingContentInDocument(&doc, lines);
+  const LargestOccurringLineNumbers max_line_numbers = SetAnnotatingContentInDocument(&doc, lines);
 
   ASSERT_TRUE(max_line_numbers.main_content.has_value());
   ASSERT_EQ(max_line_numbers.main_content.value(), kNumberOfLines);
@@ -136,7 +136,7 @@ TEST(Viewer, SetAnnotatingContentInDocumentSecond) {
   lines[0].line_contents = "first annotation";
   lines[0].line_number = 42;
 
-  const LargestOccuringLineNumbers max_line_numbers = SetAnnotatingContentInDocument(&doc, lines);
+  const LargestOccurringLineNumbers max_line_numbers = SetAnnotatingContentInDocument(&doc, lines);
 
   ASSERT_TRUE(max_line_numbers.main_content.has_value());
   ASSERT_EQ(max_line_numbers.main_content.value(), 3);
@@ -165,7 +165,7 @@ TEST(Viewer, SetAnnotatingContentInDocumentLast) {
   lines[0].line_contents = "first annotation";
   lines[0].line_number = 42;
 
-  const LargestOccuringLineNumbers max_line_numbers = SetAnnotatingContentInDocument(&doc, lines);
+  const LargestOccurringLineNumbers max_line_numbers = SetAnnotatingContentInDocument(&doc, lines);
 
   ASSERT_TRUE(max_line_numbers.main_content.has_value());
   ASSERT_EQ(max_line_numbers.main_content.value(), kNumberOfLines);
@@ -195,7 +195,7 @@ TEST(Viewer, SetAnnotatingContentInDocumentInvalid) {
   lines[0].line_contents = "first annotation";
   lines[0].line_number = 42;
 
-  const LargestOccuringLineNumbers max_line_numbers = SetAnnotatingContentInDocument(&doc, lines);
+  const LargestOccurringLineNumbers max_line_numbers = SetAnnotatingContentInDocument(&doc, lines);
 
   ASSERT_TRUE(max_line_numbers.main_content.has_value());
   ASSERT_EQ(max_line_numbers.main_content.value(), kNumberOfLines);
@@ -224,7 +224,8 @@ TEST(Viewer, SetAnnotatingContentInDocumentFirstTwice) {
   lines[0].line_number = 42;
 
   {
-    const LargestOccuringLineNumbers max_line_numbers = SetAnnotatingContentInDocument(&doc, lines);
+    const LargestOccurringLineNumbers max_line_numbers =
+        SetAnnotatingContentInDocument(&doc, lines);
 
     ASSERT_TRUE(max_line_numbers.main_content.has_value());
     ASSERT_EQ(max_line_numbers.main_content.value(), kNumberOfLines);
@@ -242,7 +243,8 @@ TEST(Viewer, SetAnnotatingContentInDocumentFirstTwice) {
   }
 
   {
-    const LargestOccuringLineNumbers max_line_numbers = SetAnnotatingContentInDocument(&doc, lines);
+    const LargestOccurringLineNumbers max_line_numbers =
+        SetAnnotatingContentInDocument(&doc, lines);
 
     ASSERT_TRUE(max_line_numbers.main_content.has_value());
     ASSERT_EQ(max_line_numbers.main_content.value(), kNumberOfLines);
