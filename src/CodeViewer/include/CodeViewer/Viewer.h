@@ -28,7 +28,7 @@ struct AnnotatingLine {
   std::string line_contents;
 };
 
-struct LargestOccuringLineNumbers {
+struct LargestOccurringLineNumbers {
   std::optional<uint64_t> main_content;
   std::optional<uint64_t> annotating_lines;
 };
@@ -113,9 +113,9 @@ class Viewer : public QPlainTextEdit {
 
   // These are only used when SetAnnotatingContent was called and the line numbers deviate from
   // simple counting.
-  LargestOccuringLineNumbers largest_occuring_line_numbers_;
+  LargestOccurringLineNumbers largest_occuring_line_numbers_;
 
-  [[nodiscard]] uint64_t LargestOccuringLineNumber() const;
+  [[nodiscard]] uint64_t LargestOccurringLineNumber() const;
 
   QString top_bar_title_;
 };
@@ -124,9 +124,9 @@ class Viewer : public QPlainTextEdit {
 [[nodiscard]] int DetermineLineNumberWidthInPixels(const QFontMetrics& font_metrics,
                                                    int max_line_number);
 
-// Add a list of annoating lines to a document. The list of annotating lines need to be ordered by
+// Add a list of annotating lines to a document. The list of annotating lines need to be ordered by
 // `.reference_line`.
-[[nodiscard]] LargestOccuringLineNumbers SetAnnotatingContentInDocument(
+[[nodiscard]] LargestOccurringLineNumbers SetAnnotatingContentInDocument(
     QTextDocument* document, absl::Span<const AnnotatingLine> annotating_lines);
 }  // namespace orbit_code_viewer
 
