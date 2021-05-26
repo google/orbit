@@ -34,11 +34,11 @@ std::multimap<int, uint64_t> SortCallstacks(const ThreadSampleData& data,
 }  // namespace
 
 uint32_t ThreadSampleData::GetCountForAddress(uint64_t address) const {
-  auto res = sampled_address_to_count.find(address);
-  if (res == sampled_address_to_count.end()) {
+  auto it = sampled_address_to_count.find(address);
+  if (it == sampled_address_to_count.end()) {
     return 0;
   }
-  return (*res).second;
+  return it->second;
 }
 
 const orbit_client_protos::CallstackInfo& PostProcessedSamplingData::GetResolvedCallstack(

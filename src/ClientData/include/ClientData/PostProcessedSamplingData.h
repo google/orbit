@@ -33,15 +33,17 @@ struct SampledFunction {
 
 struct ThreadSampleData {
   ThreadSampleData() = default;
-  [[nodiscard]] uint32_t GetCountForAddress(uint64_t address) const;
+
+  ThreadID thread_id = 0;
+  uint32_t samples_count = 0;
   absl::flat_hash_map<uint64_t, uint32_t> sampled_callstack_id_to_count;
   absl::flat_hash_map<uint64_t, uint32_t> sampled_address_to_count;
   absl::flat_hash_map<uint64_t, uint32_t> resolved_address_to_count;
   absl::flat_hash_map<uint64_t, uint32_t> resolved_address_to_exclusive_count;
   std::multimap<uint32_t, uint64_t> sorted_count_to_resolved_address;
-  uint32_t samples_count = 0;
   std::vector<SampledFunction> sampled_functions;
-  ThreadID thread_id = 0;
+
+  [[nodiscard]] uint32_t GetCountForAddress(uint64_t address) const;
 };
 
 struct CallstackCount {
