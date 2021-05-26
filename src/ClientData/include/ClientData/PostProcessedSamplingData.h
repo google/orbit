@@ -68,15 +68,12 @@ class PostProcessedSamplingData {
       absl::flat_hash_map<uint64_t, uint64_t> original_id_to_resolved_callstack_id,
       absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>>
           function_address_to_sampled_callstack_ids,
-      absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>>
-          function_address_to_exact_addresses,
       std::vector<ThreadSampleData> sorted_thread_sample_data)
       : thread_id_to_sample_data_{std::move(thread_id_to_sample_data)},
         id_to_resolved_callstack_{std::move(id_to_resolved_callstack)},
         original_id_to_resolved_callstack_id_{std::move(original_id_to_resolved_callstack_id)},
         function_address_to_sampled_callstack_ids_{
             std::move(function_address_to_sampled_callstack_ids)},
-        function_address_to_exact_addresses_{std::move(function_address_to_exact_addresses)},
         sorted_thread_sample_data_{std::move(sorted_thread_sample_data)} {};
 
   ~PostProcessedSamplingData() = default;
@@ -109,7 +106,6 @@ class PostProcessedSamplingData {
   absl::flat_hash_map<uint64_t, uint64_t> original_id_to_resolved_callstack_id_;
   absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>>
       function_address_to_sampled_callstack_ids_;
-  absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>> function_address_to_exact_addresses_;
   std::vector<ThreadSampleData> sorted_thread_sample_data_;
 };
 

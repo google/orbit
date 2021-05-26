@@ -61,7 +61,6 @@ class SamplingDataPostProcessor {
   absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>>
       function_address_to_sampled_callstack_ids_;
   absl::flat_hash_map<uint64_t, uint64_t> exact_address_to_function_address_;
-  absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>> function_address_to_exact_addresses_;
   std::vector<ThreadSampleData> sorted_thread_sample_data_;
 };
 
@@ -151,8 +150,7 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
   return PostProcessedSamplingData(
       std::move(thread_id_to_sample_data_), std::move(id_to_resolved_callstack_),
       std::move(original_id_to_resolved_callstack_id_),
-      std::move(function_address_to_sampled_callstack_ids_),
-      std::move(function_address_to_exact_addresses_), std::move(sorted_thread_sample_data_));
+      std::move(function_address_to_sampled_callstack_ids_), std::move(sorted_thread_sample_data_));
 }
 
 void SamplingDataPostProcessor::SortByThreadUsage() {
@@ -225,7 +223,6 @@ void SamplingDataPostProcessor::MapAddressToFunctionAddress(uint64_t absolute_ad
   uint64_t absolute_function_address = absolute_function_address_option.value_or(absolute_address);
 
   exact_address_to_function_address_[absolute_address] = absolute_function_address;
-  function_address_to_exact_addresses_[absolute_function_address].insert(absolute_address);
 }
 
 void SamplingDataPostProcessor::FillThreadSampleDataSampleReports(const CaptureData& capture_data) {
