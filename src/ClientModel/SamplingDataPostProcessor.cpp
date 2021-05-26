@@ -88,23 +88,26 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
           return;
         }
 
+        absl::flat_hash_set<uint64_t> unique_frames;
+        callstack_data.ForEachFrameInCallstack(
+            event.callstack_id(),
+            [&unique_frames](uint64_t address) { unique_frames.insert(address); });
+
         ThreadSampleData* thread_sample_data = &thread_id_to_sample_data_[event.thread_id()];
         thread_sample_data->samples_count++;
         thread_sample_data->sampled_callstack_id_to_count[event.callstack_id()]++;
-        callstack_data.ForEachFrameInCallstack(
-            event.callstack_id(), [&thread_sample_data](uint64_t address) {
-              thread_sample_data->sampled_address_to_count[address]++;
-            });
+        for (uint64_t frame : unique_frames) {
+          thread_sample_data->sampled_address_to_count[frame]++;
+        }
 
         if (generate_summary) {
           ThreadSampleData* all_thread_sample_data =
               &thread_id_to_sample_data_[orbit_base::kAllProcessThreadsTid];
           all_thread_sample_data->samples_count++;
           all_thread_sample_data->sampled_callstack_id_to_count[event.callstack_id()]++;
-          callstack_data.ForEachFrameInCallstack(
-              event.callstack_id(), [&all_thread_sample_data](uint64_t address) {
-                all_thread_sample_data->sampled_address_to_count[address]++;
-              });
+          for (uint64_t frame : unique_frames) {
+            all_thread_sample_data->sampled_address_to_count[frame]++;
+          }
         }
       });
 
