@@ -18,6 +18,6 @@ OrbitProfiler:with_gui=False
 ggp_sdk/1.43.0.14282@orbitdeps/stable
 
 [env]
-CFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all
-CXXFLAGS= -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all
+CFLAGS= -march=broadwell -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all
+CXXFLAGS= -march=broadwell -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all
 LDFLAGS= -Wl,-z,relro,-z,now,-z,noexecstack
