@@ -452,6 +452,9 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
 
   [[nodiscard]] bool HasFrameTrackInCaptureData(uint64_t instrumented_function_id) const;
 
+  enum class JumpToTextBoxMode { kFirst, kLast, kMin, kMax };
+  void JumpToTextBoxAndZoom(uint64_t function_id, JumpToTextBoxMode selection_mode);
+
  private:
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);

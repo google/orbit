@@ -293,33 +293,19 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
   } else if (action == kMenuActionJumpToFirst) {
     CHECK(item_indices.size() == 1);
     auto function_id = GetInstrumentedFunctionId(item_indices[0]);
-    const auto* first_box = app_->GetTimeGraph()->FindNextFunctionCall(
-        function_id, std::numeric_limits<uint64_t>::lowest());
-    if (first_box != nullptr) {
-      app_->GetMutableTimeGraph()->SelectAndZoom(first_box);
-    }
+    app_->JumpToTextBoxAndZoom(function_id, OrbitApp::JumpToTextBoxMode::kFirst);
   } else if (action == kMenuActionJumpToLast) {
     CHECK(item_indices.size() == 1);
     auto function_id = GetInstrumentedFunctionId(item_indices[0]);
-    const auto* last_box = app_->GetTimeGraph()->FindPreviousFunctionCall(
-        function_id, std::numeric_limits<uint64_t>::max());
-    if (last_box != nullptr) {
-      app_->GetMutableTimeGraph()->SelectAndZoom(last_box);
-    }
+    app_->JumpToTextBoxAndZoom(function_id, OrbitApp::JumpToTextBoxMode::kLast);
   } else if (action == kMenuActionJumpToMin) {
     CHECK(item_indices.size() == 1);
     uint64_t function_id = GetInstrumentedFunctionId(item_indices[0]);
-    auto [min_box, _] = app_->GetTimeGraph()->GetMinMaxTextBoxForFunction(function_id);
-    if (min_box != nullptr) {
-      app_->GetMutableTimeGraph()->SelectAndZoom(min_box);
-    }
+    app_->JumpToTextBoxAndZoom(function_id, OrbitApp::JumpToTextBoxMode::kMin);
   } else if (action == kMenuActionJumpToMax) {
     CHECK(item_indices.size() == 1);
     uint64_t function_id = GetInstrumentedFunctionId(item_indices[0]);
-    auto [_, max_box] = app_->GetTimeGraph()->GetMinMaxTextBoxForFunction(function_id);
-    if (max_box != nullptr) {
-      app_->GetMutableTimeGraph()->SelectAndZoom(max_box);
-    }
+    app_->JumpToTextBoxAndZoom(function_id, OrbitApp::JumpToTextBoxMode::kMax);
   } else if (action == kMenuActionIterate) {
     for (int i : item_indices) {
       uint64_t instrumented_function_id = GetInstrumentedFunctionId(i);
