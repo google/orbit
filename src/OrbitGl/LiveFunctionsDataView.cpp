@@ -26,8 +26,6 @@
 #include "GrpcProtos/Constants.h"
 #include "LiveFunctionsController.h"
 #include "OrbitBase/Logging.h"
-#include "TextBox.h"
-#include "TimerChain.h"
 #include "capture_data.pb.h"
 
 using orbit_client_data::ModuleData;
@@ -312,14 +310,14 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
   } else if (action == kMenuActionJumpToMin) {
     CHECK(item_indices.size() == 1);
     uint64_t function_id = GetInstrumentedFunctionId(item_indices[0]);
-    auto [min_box, _] = GetMinMax(function_id);
+    auto [min_box, _] = app_->GetTimeGraph()->GetMinMaxTextBoxForFunction(function_id);
     if (min_box != nullptr) {
       app_->GetMutableTimeGraph()->SelectAndZoom(min_box);
     }
   } else if (action == kMenuActionJumpToMax) {
     CHECK(item_indices.size() == 1);
     uint64_t function_id = GetInstrumentedFunctionId(item_indices[0]);
-    auto [_, max_box] = GetMinMax(function_id);
+    auto [_, max_box] = app_->GetTimeGraph()->GetMinMaxTextBoxForFunction(function_id);
     if (max_box != nullptr) {
       app_->GetMutableTimeGraph()->SelectAndZoom(max_box);
     }
@@ -456,34 +454,6 @@ const FunctionInfo& LiveFunctionsDataView::GetInstrumentedFunction(uint32_t row)
   CHECK(row < indices_.size());
   CHECK(functions_.find(indices_[row]) != functions_.end());
   return functions_.at(indices_[row]);
-}
-
-std::pair<const TextBox*, const TextBox*> LiveFunctionsDataView::GetMinMax(
-    uint64_t function_id) const {
-  const TextBox* min_box = nullptr;
-  const TextBox* max_box = nullptr;
-  std::vector<std::shared_ptr<TimerChain>> chains =
-      app_->GetTimeGraph()->GetAllThreadTrackTimerChains();
-  for (auto& chain : chains) {
-    if (!chain) continue;
-    for (auto& block : *chain) {
-      for (size_t i = 0; i < block.size(); i++) {
-        const TextBox& box = block[i];
-        if (box.GetTimerInfo().function_id() == function_id) {
-          uint64_t elapsed_nanos = box.GetTimerInfo().end() - box.GetTimerInfo().start();
-          if (min_box == nullptr ||
-              elapsed_nanos < (min_box->GetTimerInfo().end() - min_box->GetTimerInfo().start())) {
-            min_box = &box;
-          }
-          if (max_box == nullptr ||
-              elapsed_nanos > (max_box->GetTimerInfo().end() - max_box->GetTimerInfo().start())) {
-            max_box = &box;
-          }
-        }
-      }
-    }
-  }
-  return std::make_pair(min_box, max_box);
 }
 
 std::optional<int> LiveFunctionsDataView::GetRowFromFunctionId(uint64_t function_id) {

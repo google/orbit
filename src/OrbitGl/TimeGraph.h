@@ -140,6 +140,8 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   [[nodiscard]] const TextBox* FindNext(const TextBox* from);
   [[nodiscard]] const TextBox* FindTop(const TextBox* from);
   [[nodiscard]] const TextBox* FindDown(const TextBox* from);
+  [[nodiscard]] std::pair<const TextBox*, const TextBox*> GetMinMaxTextBoxForFunction(
+      uint64_t function_id) const;
 
   [[nodiscard]] static Color GetColor(uint32_t id) {
     constexpr unsigned char kAlpha = 255;
