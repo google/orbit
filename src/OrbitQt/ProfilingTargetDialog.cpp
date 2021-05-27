@@ -436,7 +436,7 @@ void ProfilingTargetDialog::SetupStadiaProcessManager() {
 
 void ProfilingTargetDialog::SelectFile() {
   const QString file = QFileDialog::getOpenFileName(
-      this, "Open Capture...", QString::fromStdString(Path::CreateOrGetCaptureDir().string()),
+      this, "Open Capture...", QString::fromStdString(orbit_core::CreateOrGetCaptureDir().string()),
       "*.orbit");
   if (!file.isEmpty()) {
     selected_file_path_ = std::filesystem::path(file.toStdString());

@@ -34,9 +34,9 @@ TEST(Path, FileExistsDevNull) {
 #endif
 
 TEST(Path, AllAutoCreatedDirsExist) {
-  auto test_fns = {Path::CreateOrGetOrbitAppDataDir, Path::CreateOrGetDumpDir,
-                   Path::CreateOrGetPresetDir,       Path::CreateOrGetCacheDir,
-                   Path::CreateOrGetCaptureDir,      Path::CreateOrGetLogDir};
+  auto test_fns = {orbit_core::CreateOrGetOrbitAppDataDir, orbit_core::CreateOrGetDumpDir,
+                   orbit_core::CreateOrGetPresetDir,       orbit_core::CreateOrGetCacheDir,
+                   orbit_core::CreateOrGetCaptureDir,      orbit_core::CreateOrGetLogDir};
 
   for (auto fn : test_fns) {
     std::filesystem::path path = fn();
@@ -46,7 +46,7 @@ TEST(Path, AllAutoCreatedDirsExist) {
 }
 
 TEST(Path, AllDirsOfFilesExist) {
-  auto test_fns = {Path::GetLogFilePath};
+  auto test_fns = {orbit_core::GetLogFilePath};
 
   for (auto fn : test_fns) {
     std::filesystem::path path = fn().parent_path();

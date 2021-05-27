@@ -275,11 +275,11 @@ int main(int argc, char* argv[]) {
   // Skip program name in positional_args[0].
   std::vector<std::string> capture_file_paths(positional_args.begin() + 1, positional_args.end());
 
-  orbit_base::InitLogFile(Path::GetLogFilePath());
+  orbit_base::InitLogFile(orbit_core::GetLogFilePath());
   LOG("You are running Orbit Profiler version %s", orbit_core::GetVersion());
   LogCommandLine(argc, argv);
   ErrorMessageOr<void> remove_old_log_result =
-      orbit_base::TryRemoveOldLogFiles(Path::CreateOrGetLogDir());
+      orbit_base::TryRemoveOldLogFiles(orbit_core::CreateOrGetLogDir());
   if (remove_old_log_result.has_error()) {
     LOG("Warning: Unable to remove some old log files:\n%s",
         remove_old_log_result.error().message());
@@ -311,7 +311,7 @@ int main(int argc, char* argv[]) {
 
   auto crash_handler = std::make_unique<orbit_base::CrashHandler>();
 #ifdef ORBIT_CRASH_HANDLING
-  const std::string dump_path = Path::CreateOrGetDumpDir().string();
+  const std::string dump_path = orbit_core::CreateOrGetDumpDir().string();
 #ifdef _WIN32
   const char* handler_name = "crashpad_handler.exe";
 #else
@@ -320,7 +320,7 @@ int main(int argc, char* argv[]) {
   const std::string handler_path =
       QDir(QCoreApplication::applicationDirPath()).absoluteFilePath(handler_name).toStdString();
   const std::string crash_server_url = orbit_crash_handler::GetServerUrl();
-  const std::vector<std::string> attachments = {Path::GetLogFilePath().string()};
+  const std::vector<std::string> attachments = {orbit_core::GetLogFilePath().string()};
 
   crash_handler = std::make_unique<orbit_crash_handler::CrashHandler>(
       dump_path, handler_path, crash_server_url, attachments);

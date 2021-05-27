@@ -129,10 +129,10 @@ TEST(SymbolHelper, LoadFromFile) {
 }
 
 TEST(SymbolHelper, GenerateCachedFileName) {
-  SymbolHelper symbol_helper{{}, Path::CreateOrGetCacheDir(), {}};
+  SymbolHelper symbol_helper{{}, orbit_core::CreateOrGetCacheDir(), {}};
   const std::filesystem::path file_path = "/var/data/filename.elf";
   const std::filesystem::path cache_file_path =
-      Path::CreateOrGetCacheDir() / "_var_data_filename.elf";
+      orbit_core::CreateOrGetCacheDir() / "_var_data_filename.elf";
   EXPECT_EQ(symbol_helper.GenerateCachedFileName(file_path), cache_file_path);
 }
 
