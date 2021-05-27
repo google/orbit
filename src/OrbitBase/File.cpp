@@ -231,6 +231,16 @@ ErrorMessageOr<bool> RemoveFile(const std::filesystem::path& file_path) {
   return removed;
 }
 
+ErrorMessageOr<bool> CreateDirectory(const std::filesystem::path& file_path) {
+  std::error_code error;
+  bool created = std::filesystem::create_directories(file_path, error);
+  if (error) {
+    return ErrorMessage{error.message()};
+  }
+
+  return created;
+}
+
 ErrorMessageOr<std::vector<std::filesystem::path>> ListFilesInDirectory(
     const std::filesystem::path& directory) {
   std::vector<std::filesystem::path> files;
