@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <string>
 
+#include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 
 ABSL_FLAG(std::string, log_dir, "", "Set directory for the log.");
@@ -33,9 +34,17 @@ static std::string GetEnvVar(const char* variable_name) {
   return var;
 }
 
+static void CreateDirectoryOrDie(const std::filesystem::path& directory) {
+  auto create_directory_result = orbit_base::CreateDirectory(directory);
+  if (create_directory_result.has_error()) {
+    FATAL("Unable to create directory \"%s\": %s", directory.string(),
+          create_directory_result.error().message());
+  }
+}
+
 static std::filesystem::path CreateAndGetConfigPath() {
   std::filesystem::path config_dir = CreateOrGetOrbitAppDataDir() / "config";
-  std::filesystem::create_directory(config_dir);
+  CreateDirectoryOrDie(config_dir);
   return config_dir;
 }
 
@@ -47,25 +56,25 @@ std::filesystem::path GetSymbolsFileName() { return CreateAndGetConfigPath() / "
 
 std::filesystem::path CreateOrGetCacheDir() {
   std::filesystem::path cache_dir = CreateOrGetOrbitAppDataDir() / "cache";
-  std::filesystem::create_directory(cache_dir);
+  CreateDirectoryOrDie(cache_dir);
   return cache_dir;
 }
 
 std::filesystem::path CreateOrGetPresetDir() {
   std::filesystem::path preset_dir = CreateOrGetOrbitAppDataDir() / "presets";
-  std::filesystem::create_directory(preset_dir);
+  CreateDirectoryOrDie(preset_dir);
   return preset_dir;
 }
 
 std::filesystem::path CreateOrGetCaptureDir() {
   std::filesystem::path capture_dir = CreateOrGetOrbitAppDataDir() / "output";
-  std::filesystem::create_directory(capture_dir);
+  CreateDirectoryOrDie(capture_dir);
   return capture_dir;
 }
 
 std::filesystem::path CreateOrGetDumpDir() {
   std::filesystem::path capture_dir = CreateOrGetOrbitAppDataDir() / "dumps";
-  std::filesystem::create_directory(capture_dir);
+  CreateDirectoryOrDie(capture_dir);
   return capture_dir;
 }
 
@@ -75,7 +84,7 @@ std::filesystem::path CreateOrGetOrbitAppDataDir() {
 #else
   std::filesystem::path path = std::filesystem::path(GetEnvVar("HOME")) / ".orbitprofiler";
 #endif
-  std::filesystem::create_directory(path);
+  CreateDirectoryOrDie(path);
   return path;
 }
 
@@ -86,7 +95,7 @@ std::filesystem::path CreateOrGetLogDir() {
   } else {
     logs_dir = CreateOrGetOrbitAppDataDir() / "logs";
   }
-  std::filesystem::create_directory(logs_dir);
+  CreateDirectoryOrDie(logs_dir);
   return logs_dir;
 }
 
