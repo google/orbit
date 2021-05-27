@@ -13,6 +13,8 @@
 
 ABSL_FLAG(std::string, log_dir, "", "Set directory for the log.");
 
+namespace orbit_core {
+
 static std::string GetEnvVar(const char* variable_name) {
   std::string var;
 
@@ -32,44 +34,42 @@ static std::string GetEnvVar(const char* variable_name) {
 }
 
 static std::filesystem::path CreateAndGetConfigPath() {
-  std::filesystem::path config_dir = Path::CreateOrGetOrbitAppDataDir() / "config";
+  std::filesystem::path config_dir = CreateOrGetOrbitAppDataDir() / "config";
   std::filesystem::create_directory(config_dir);
   return config_dir;
 }
 
-std::filesystem::path Path::GetFileMappingFileName() {
+std::filesystem::path GetFileMappingFileName() {
   return CreateAndGetConfigPath() / "FileMapping.txt";
 }
 
-std::filesystem::path Path::GetSymbolsFileName() {
-  return CreateAndGetConfigPath() / "SymbolPaths.txt";
-}
+std::filesystem::path GetSymbolsFileName() { return CreateAndGetConfigPath() / "SymbolPaths.txt"; }
 
-std::filesystem::path Path::CreateOrGetCacheDir() {
-  std::filesystem::path cache_dir = Path::CreateOrGetOrbitAppDataDir() / "cache";
+std::filesystem::path CreateOrGetCacheDir() {
+  std::filesystem::path cache_dir = CreateOrGetOrbitAppDataDir() / "cache";
   std::filesystem::create_directory(cache_dir);
   return cache_dir;
 }
 
-std::filesystem::path Path::CreateOrGetPresetDir() {
-  std::filesystem::path preset_dir = Path::CreateOrGetOrbitAppDataDir() / "presets";
+std::filesystem::path CreateOrGetPresetDir() {
+  std::filesystem::path preset_dir = CreateOrGetOrbitAppDataDir() / "presets";
   std::filesystem::create_directory(preset_dir);
   return preset_dir;
 }
 
-std::filesystem::path Path::CreateOrGetCaptureDir() {
-  std::filesystem::path capture_dir = Path::CreateOrGetOrbitAppDataDir() / "output";
+std::filesystem::path CreateOrGetCaptureDir() {
+  std::filesystem::path capture_dir = CreateOrGetOrbitAppDataDir() / "output";
   std::filesystem::create_directory(capture_dir);
   return capture_dir;
 }
 
-std::filesystem::path Path::CreateOrGetDumpDir() {
-  std::filesystem::path capture_dir = Path::CreateOrGetOrbitAppDataDir() / "dumps";
+std::filesystem::path CreateOrGetDumpDir() {
+  std::filesystem::path capture_dir = CreateOrGetOrbitAppDataDir() / "dumps";
   std::filesystem::create_directory(capture_dir);
   return capture_dir;
 }
 
-std::filesystem::path Path::CreateOrGetOrbitAppDataDir() {
+std::filesystem::path CreateOrGetOrbitAppDataDir() {
 #ifdef WIN32
   std::filesystem::path path = std::filesystem::path(GetEnvVar("APPDATA")) / "OrbitProfiler";
 #else
@@ -79,17 +79,19 @@ std::filesystem::path Path::CreateOrGetOrbitAppDataDir() {
   return path;
 }
 
-std::filesystem::path Path::CreateOrGetLogDir() {
+std::filesystem::path CreateOrGetLogDir() {
   std::filesystem::path logs_dir;
   if (!absl::GetFlag(FLAGS_log_dir).empty()) {
     logs_dir = absl::GetFlag(FLAGS_log_dir);
   } else {
-    logs_dir = Path::CreateOrGetOrbitAppDataDir() / "logs";
+    logs_dir = CreateOrGetOrbitAppDataDir() / "logs";
   }
   std::filesystem::create_directory(logs_dir);
   return logs_dir;
 }
 
-std::filesystem::path Path::GetLogFilePath() {
-  return Path::CreateOrGetLogDir() / orbit_base::GetLogFileName();
+std::filesystem::path GetLogFilePath() {
+  return CreateOrGetLogDir() / orbit_base::GetLogFileName();
 }
+
+}  // namespace orbit_core

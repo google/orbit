@@ -6,7 +6,7 @@
 
 #include <filesystem>
 
-namespace Path {
+namespace orbit_core {
 [[nodiscard]] std::filesystem::path GetFileMappingFileName();
 [[nodiscard]] std::filesystem::path GetSymbolsFileName();
 [[nodiscard]] std::filesystem::path CreateOrGetCacheDir();
@@ -16,4 +16,4 @@ namespace Path {
 [[nodiscard]] std::filesystem::path CreateOrGetOrbitAppDataDir();
 [[nodiscard]] std::filesystem::path CreateOrGetLogDir();
 [[nodiscard]] std::filesystem::path GetLogFilePath();
-};  // namespace Path
+};  // namespace orbit_core

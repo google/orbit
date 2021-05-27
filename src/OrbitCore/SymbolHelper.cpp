@@ -34,7 +34,7 @@ using ::orbit_object_utils::ElfFile;
 namespace {
 
 std::vector<fs::path> ReadSymbolsFile() {
-  fs::path file_name = Path::GetSymbolsFileName();
+  fs::path file_name = orbit_core::GetSymbolsFileName();
   std::error_code error;
   bool file_exists = fs::exists(file_name, error);
   if (error) {
@@ -149,7 +149,7 @@ ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const fs::path& symbols_pat
 
 SymbolHelper::SymbolHelper()
     : symbols_file_directories_(ReadSymbolsFile()),
-      cache_directory_(Path::CreateOrGetCacheDir()),
+      cache_directory_(orbit_core::CreateOrGetCacheDir()),
       structured_debug_directories_(FindStructuredDebugDirectories()) {}
 
 ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsWithSymbolsPathFile(

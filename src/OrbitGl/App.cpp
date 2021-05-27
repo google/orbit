@@ -587,7 +587,7 @@ static std::vector<std::filesystem::path> ListRegularFilesWithExtension(
 
 void OrbitApp::ListPresets() {
   std::vector<std::filesystem::path> preset_filenames =
-      ListRegularFilesWithExtension(Path::CreateOrGetPresetDir(), ".opr");
+      ListRegularFilesWithExtension(orbit_core::CreateOrGetPresetDir(), ".opr");
   std::vector<PresetFile> presets;
   for (const std::filesystem::path& filename : preset_filenames) {
     ErrorMessageOr<PresetFile> preset_result = ReadPresetFromFile(filename);
@@ -954,7 +954,7 @@ ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
 
 ErrorMessageOr<PresetFile> OrbitApp::ReadPresetFromFile(const std::filesystem::path& filename) {
   std::filesystem::path file_path =
-      filename.is_absolute() ? filename : Path::CreateOrGetPresetDir() / filename;
+      filename.is_absolute() ? filename : orbit_core::CreateOrGetPresetDir() / filename;
 
   return orbit_preset_file::ReadPresetFromFile(file_path);
 }
@@ -1101,7 +1101,7 @@ static std::unique_ptr<CaptureEventProcessor> CreateCaptureEventProcessor(
     return processor_for_capture_listener;
   }
 
-  std::filesystem::path file_path = Path::CreateOrGetCaptureDir() /
+  std::filesystem::path file_path = orbit_core::CreateOrGetCaptureDir() /
                                     orbit_client_model::capture_serializer::GenerateCaptureFileName(
                                         process_name, absl::Now(), "_autosave");
   auto save_to_file_processor_or_error = CaptureEventProcessor::CreateSaveToFileProcessor(
