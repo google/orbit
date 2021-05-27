@@ -2355,6 +2355,33 @@ bool OrbitApp::HasFrameTrackInCaptureData(uint64_t instrumented_function_id) con
   return GetTimeGraph()->HasFrameTrack(instrumented_function_id);
 }
 
+void OrbitApp::JumpToTextBoxAndZoom(uint64_t function_id, JumpToTextBoxMode selection_mode) {
+  switch (selection_mode) {
+    case JumpToTextBoxMode::kFirst: {
+      const auto* first_box = GetTimeGraph()->FindNextFunctionCall(
+          function_id, std::numeric_limits<uint64_t>::lowest());
+      if (first_box != nullptr) GetMutableTimeGraph()->SelectAndZoom(first_box);
+      break;
+    }
+    case JumpToTextBoxMode::kLast: {
+      const auto* last_box = GetTimeGraph()->FindPreviousFunctionCall(
+          function_id, std::numeric_limits<uint64_t>::max());
+      if (last_box != nullptr) GetMutableTimeGraph()->SelectAndZoom(last_box);
+      break;
+    }
+    case JumpToTextBoxMode::kMin: {
+      auto [min_box, unused_max_box] = GetTimeGraph()->GetMinMaxTextBoxForFunction(function_id);
+      if (min_box != nullptr) GetMutableTimeGraph()->SelectAndZoom(min_box);
+      break;
+    }
+    case JumpToTextBoxMode::kMax: {
+      auto [unused_min_box, max_box] = GetTimeGraph()->GetMinMaxTextBoxForFunction(function_id);
+      if (max_box != nullptr) GetMutableTimeGraph()->SelectAndZoom(max_box);
+      break;
+    }
+  }
+}
+
 void OrbitApp::RefreshFrameTracks() {
   CHECK(HasCaptureData());
   CHECK(std::this_thread::get_id() == main_thread_id_);

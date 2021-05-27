@@ -982,16 +982,16 @@ std::pair<const TextBox*, const TextBox*> TimeGraph::GetMinMaxTextBoxForFunction
     for (auto& block : *chain) {
       for (size_t i = 0; i < block.size(); i++) {
         const TextBox& box = block[i];
-        if (box.GetTimerInfo().function_id() == function_id) {
-          uint64_t elapsed_nanos = box.GetTimerInfo().end() - box.GetTimerInfo().start();
-          if (min_box == nullptr ||
-              elapsed_nanos < (min_box->GetTimerInfo().end() - min_box->GetTimerInfo().start())) {
-            min_box = &box;
-          }
-          if (max_box == nullptr ||
-              elapsed_nanos > (max_box->GetTimerInfo().end() - max_box->GetTimerInfo().start())) {
-            max_box = &box;
-          }
+        if (box.GetTimerInfo().function_id() != function_id) continue;
+
+        uint64_t elapsed_nanos = box.GetTimerInfo().end() - box.GetTimerInfo().start();
+        if (min_box == nullptr ||
+            elapsed_nanos < (min_box->GetTimerInfo().end() - min_box->GetTimerInfo().start())) {
+          min_box = &box;
+        }
+        if (max_box == nullptr ||
+            elapsed_nanos > (max_box->GetTimerInfo().end() - max_box->GetTimerInfo().start())) {
+          max_box = &box;
         }
       }
     }
