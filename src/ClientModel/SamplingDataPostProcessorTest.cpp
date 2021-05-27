@@ -14,9 +14,11 @@
 #include "OrbitBase/ThreadConstants.h"
 #include "capture_data.pb.h"
 
+using orbit_client_data::CallstackCount;
 using orbit_client_data::ModuleManager;
 using orbit_client_data::PostProcessedSamplingData;
 using orbit_client_data::SampledFunction;
+using orbit_client_data::SortedCallstackReport;
 using orbit_client_data::ThreadSampleData;
 
 using orbit_client_protos::CallstackEvent;
@@ -68,7 +70,52 @@ MATCHER_P(ThreadSampleDataEq, that, "") {
          lhs.resolved_address_to_exclusive_count == rhs.resolved_address_to_exclusive_count &&
          lhs.sorted_count_to_resolved_address == rhs.sorted_count_to_resolved_address &&
          std::equal(lhs.sampled_functions.begin(), lhs.sampled_functions.end(),
-                    rhs.sampled_functions.begin(), SampledFunctionsAreEqual);
+                    rhs.sampled_functions.begin(), rhs.sampled_functions.end(),
+                    SampledFunctionsAreEqual);
+}
+
+SortedCallstackReport MakeSortedCallstackReport(
+    const std::vector<std::pair<int, uint64_t>>& counts_and_callstack_ids) {
+  SortedCallstackReport report{};
+  for (const auto& [count, callstack_id] : counts_and_callstack_ids) {
+    report.total_callstack_count += count;
+    CallstackCount callstack_count;
+    callstack_count.count = count;
+    callstack_count.callstack_id = callstack_id;
+    report.callstack_counts.push_back(callstack_count);
+  }
+  return report;
+}
+
+MATCHER_P(SortedCallstackReportEq, that, "") {
+  const SortedCallstackReport& lhs = arg;
+  const SortedCallstackReport& rhs = that;
+
+  // `SortedCallstackReport::callstacks_counts` is sorted only by `CallstackCount::count` (in
+  // descending order), hence the order is not unique. Sort again considering
+  // `CallstackCount::callstack_id`, too, to facilitate the comparison of `SortedCallstackReport`s
+  // for equality.
+  auto callstack_count_less = [](const CallstackCount& lhs, const CallstackCount& rhs) {
+    if (lhs.count != rhs.count) return lhs.count > rhs.count;
+    return lhs.callstack_id < rhs.callstack_id;
+  };
+
+  std::vector<CallstackCount> lhs_resorted_callstacks_counts = lhs.callstack_counts;
+  std::sort(lhs_resorted_callstacks_counts.begin(), lhs_resorted_callstacks_counts.end(),
+            callstack_count_less);
+
+  std::vector<CallstackCount> rhs_resorted_callstacks_counts = rhs.callstack_counts;
+  std::sort(rhs_resorted_callstacks_counts.begin(), rhs_resorted_callstacks_counts.end(),
+            callstack_count_less);
+
+  auto callstack_count_equal = [](const CallstackCount& lhs, const CallstackCount& rhs) {
+    return lhs.count == rhs.count && lhs.callstack_id == rhs.callstack_id;
+  };
+
+  return lhs.total_callstack_count == rhs.total_callstack_count &&
+         std::equal(lhs_resorted_callstacks_counts.begin(), lhs_resorted_callstacks_counts.end(),
+                    rhs_resorted_callstacks_counts.begin(), rhs_resorted_callstacks_counts.end(),
+                    callstack_count_equal);
 }
 
 class SamplingDataPostProcessorTest : public ::testing::Test {
@@ -210,6 +257,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
 
   static constexpr int32_t kThreadId1 = 42;
   static constexpr int32_t kThreadId2 = 43;
+  static constexpr int32_t kThreadIdNotSampled = 99;
 
   void AddCallstackEventsAllInThreadId1() {
     // Let:
@@ -220,10 +268,12 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
     // D  = kFunction4Instruction1AbsoluteAddress.
     // There are the CallstackEvents that are added, innermost frame at the top. Note that:
     //   - the first and second CallstackEvents have the same Callstack;
-    //   - the last CallstackEvent has two identical frames.
+    //   - the last CallstackEvent has two identical frames;
+    //   - the number under each CallstackEvent is the callstack id.
     // C    C    D    C'   C
     // B    B    C    C    C
     // A    A    A    A    A
+    // 1    1    2    3    4
     AddCallstackEvent(kCallstack1Id, kThreadId1);
     AddCallstackEvent(kCallstack1Id,
                       kThreadId1);  // Intentionally two CallstackEvents with the same CallstackInfo
@@ -238,6 +288,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
     // C    D     |     C    C'   C
     // B    C     |     B    C    C
     // A    A     |     A    A    A
+    // 1    2     |     1    3    4
     AddCallstackEvent(kCallstack1Id, kThreadId1);
     AddCallstackEvent(kCallstack2Id, kThreadId1);
 
@@ -510,6 +561,269 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
     EXPECT_EQ(ppsd_.GetCountOfFunction(kFunction4Instruction1AbsoluteAddress), 1);
   }
 
+  void VerifyEmptySortedCallstackReport(int32_t thread_id) {
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses({}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction1StartAbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction2StartAbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction3StartAbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction4StartAbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction1StartAbsoluteAddress, kFunction2StartAbsoluteAddress,
+                     kFunction3StartAbsoluteAddress, kFunction4StartAbsoluteAddress},
+                    thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+
+    // Also test the non-"Start" addresses.
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction1Instruction1AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction2Instruction1AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction3Instruction1AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction3Instruction2AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction4Instruction1AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction1Instruction1AbsoluteAddress, kFunction2Instruction1AbsoluteAddress,
+                     kFunction3Instruction1AbsoluteAddress, kFunction3Instruction2AbsoluteAddress,
+                     kFunction4Instruction1AbsoluteAddress},
+                    thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+  }
+
+  void VerifySortedCallstackReportForCallstackEventsAllInTheSameThread(int32_t thread_id) {
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses({}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+
+    EXPECT_THAT(
+        *ppsd_.GetSortedCallstackReportFromFunctionAddresses({kFunction1StartAbsoluteAddress},
+                                                             thread_id),
+        SortedCallstackReportEq(MakeSortedCallstackReport(
+            {{2, kCallstack1Id}, {1, kCallstack2Id}, {1, kCallstack3Id}, {1, kCallstack4Id}})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction2StartAbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({{2, kCallstack1Id}})));
+    EXPECT_THAT(
+        *ppsd_.GetSortedCallstackReportFromFunctionAddresses({kFunction3StartAbsoluteAddress},
+                                                             thread_id),
+        SortedCallstackReportEq(MakeSortedCallstackReport(
+            {{2, kCallstack1Id}, {1, kCallstack2Id}, {1, kCallstack3Id}, {1, kCallstack4Id}})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction4StartAbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({{1, kCallstack2Id}})));
+
+    EXPECT_THAT(
+        *ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+            {kFunction1StartAbsoluteAddress, kFunction2StartAbsoluteAddress,
+             kFunction3StartAbsoluteAddress, kFunction4StartAbsoluteAddress},
+            thread_id),
+        SortedCallstackReportEq(MakeSortedCallstackReport(
+            {{2, kCallstack1Id}, {1, kCallstack2Id}, {1, kCallstack3Id}, {1, kCallstack4Id}})));
+
+    // Also test the non-"Start" addresses.
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction1Instruction1AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction2Instruction1AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction3Instruction1AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction3Instruction2AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction4Instruction1AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction1Instruction1AbsoluteAddress, kFunction2Instruction1AbsoluteAddress,
+                     kFunction3Instruction1AbsoluteAddress, kFunction3Instruction2AbsoluteAddress,
+                     kFunction4Instruction1AbsoluteAddress},
+                    thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+  }
+
+  void VerifySortedCallstackReportForCallstackEventsAllInTheSameThreadWithoutAddressInfo(
+      int32_t thread_id) {
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses({}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+
+    EXPECT_THAT(
+        *ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+            {kFunction1Instruction1AbsoluteAddress}, thread_id),
+        SortedCallstackReportEq(MakeSortedCallstackReport(
+            {{2, kCallstack1Id}, {1, kCallstack2Id}, {1, kCallstack3Id}, {1, kCallstack4Id}})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction2Instruction1AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({{2, kCallstack1Id}})));
+    EXPECT_THAT(
+        *ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+            {kFunction3Instruction1AbsoluteAddress}, thread_id),
+        SortedCallstackReportEq(MakeSortedCallstackReport(
+            {{2, kCallstack1Id}, {1, kCallstack2Id}, {1, kCallstack3Id}, {1, kCallstack4Id}})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction3Instruction2AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({{1, kCallstack3Id}})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction4Instruction1AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({{1, kCallstack2Id}})));
+
+    EXPECT_THAT(
+        *ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+            {kFunction1Instruction1AbsoluteAddress, kFunction2Instruction1AbsoluteAddress,
+             kFunction3Instruction1AbsoluteAddress, kFunction3Instruction2AbsoluteAddress,
+             kFunction4Instruction1AbsoluteAddress},
+            thread_id),
+        SortedCallstackReportEq(MakeSortedCallstackReport(
+            {{2, kCallstack1Id}, {1, kCallstack2Id}, {1, kCallstack3Id}, {1, kCallstack4Id}})));
+
+    // Also test the "Start" addresses.
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction1StartAbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction2StartAbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction3StartAbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction4StartAbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction1StartAbsoluteAddress, kFunction2StartAbsoluteAddress,
+                     kFunction3StartAbsoluteAddress, kFunction4StartAbsoluteAddress},
+                    thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+  }
+
+  void VerifySortedCallstackReportForCallstackEventsInThreadId1() {
+    int32_t thread_id = kThreadId1;
+
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses({}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction1StartAbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(
+                    MakeSortedCallstackReport({{1, kCallstack1Id}, {1, kCallstack2Id}})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction2StartAbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({{1, kCallstack1Id}})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction3StartAbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(
+                    MakeSortedCallstackReport({{1, kCallstack1Id}, {1, kCallstack2Id}})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction4StartAbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({{1, kCallstack2Id}})));
+
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction1StartAbsoluteAddress, kFunction2StartAbsoluteAddress,
+                     kFunction3StartAbsoluteAddress, kFunction4StartAbsoluteAddress},
+                    thread_id),
+                SortedCallstackReportEq(
+                    MakeSortedCallstackReport({{1, kCallstack1Id}, {1, kCallstack2Id}})));
+
+    // Also test the non-"Start" addresses.
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction1Instruction1AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction2Instruction1AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction3Instruction1AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction3Instruction2AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction4Instruction1AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction1Instruction1AbsoluteAddress, kFunction2Instruction1AbsoluteAddress,
+                     kFunction3Instruction1AbsoluteAddress, kFunction3Instruction2AbsoluteAddress,
+                     kFunction4Instruction1AbsoluteAddress},
+                    thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+  }
+
+  void VerifySortedCallstackReportForCallstackEventsInThreadId2() {
+    int32_t thread_id = kThreadId2;
+
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses({}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction1StartAbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport(
+                    {{1, kCallstack1Id}, {1, kCallstack3Id}, {1, kCallstack4Id}})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction2StartAbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({{1, kCallstack1Id}})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction3StartAbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport(
+                    {{1, kCallstack1Id}, {1, kCallstack3Id}, {1, kCallstack4Id}})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction4StartAbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction1StartAbsoluteAddress, kFunction2StartAbsoluteAddress,
+                     kFunction3StartAbsoluteAddress, kFunction4StartAbsoluteAddress},
+                    thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport(
+                    {{1, kCallstack1Id}, {1, kCallstack3Id}, {1, kCallstack4Id}})));
+
+    // Also test the non-"Start" addresses.
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction1Instruction1AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction2Instruction1AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction3Instruction1AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction3Instruction2AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction4Instruction1AbsoluteAddress}, thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+
+    EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
+                    {kFunction1Instruction1AbsoluteAddress, kFunction2Instruction1AbsoluteAddress,
+                     kFunction3Instruction1AbsoluteAddress, kFunction3Instruction2AbsoluteAddress,
+                     kFunction4Instruction1AbsoluteAddress},
+                    thread_id),
+                SortedCallstackReportEq(MakeSortedCallstackReport({})));
+  }
+
  private:
   uint64_t current_callstack_timestamp_ns_ = 0;
 };
@@ -523,6 +837,9 @@ TEST_F(SamplingDataPostProcessorTest, EmptyCallstackDataWithoutSummaryWithoutEve
 
   EXPECT_EQ(ppsd_.GetThreadSampleData().size(), 0);
   EXPECT_EQ(ppsd_.GetSummary(), nullptr);
+
+  VerifyEmptySortedCallstackReport(orbit_base::kAllProcessThreadsTid);
+  VerifyEmptySortedCallstackReport(kThreadIdNotSampled);
 }
 
 TEST_F(SamplingDataPostProcessorTest, EmptyCallstackDataWithSummaryWithoutEvenAddressInfos) {
@@ -532,6 +849,9 @@ TEST_F(SamplingDataPostProcessorTest, EmptyCallstackDataWithSummaryWithoutEvenAd
 
   EXPECT_EQ(ppsd_.GetThreadSampleData().size(), 0);
   EXPECT_EQ(ppsd_.GetSummary(), nullptr);
+
+  VerifyEmptySortedCallstackReport(orbit_base::kAllProcessThreadsTid);
+  VerifyEmptySortedCallstackReport(kThreadIdNotSampled);
 }
 
 TEST_F(SamplingDataPostProcessorTest, EmptyCallstackDataWithoutSummary) {
@@ -543,6 +863,9 @@ TEST_F(SamplingDataPostProcessorTest, EmptyCallstackDataWithoutSummary) {
 
   EXPECT_EQ(ppsd_.GetThreadSampleData().size(), 0);
   EXPECT_EQ(ppsd_.GetSummary(), nullptr);
+
+  VerifyEmptySortedCallstackReport(orbit_base::kAllProcessThreadsTid);
+  VerifyEmptySortedCallstackReport(kThreadIdNotSampled);
 }
 
 TEST_F(SamplingDataPostProcessorTest, EmptyCallstackDataWithSummary) {
@@ -554,6 +877,9 @@ TEST_F(SamplingDataPostProcessorTest, EmptyCallstackDataWithSummary) {
 
   EXPECT_EQ(ppsd_.GetThreadSampleData().size(), 0);
   EXPECT_EQ(ppsd_.GetSummary(), nullptr);
+
+  VerifyEmptySortedCallstackReport(orbit_base::kAllProcessThreadsTid);
+  VerifyEmptySortedCallstackReport(kThreadIdNotSampled);
 }
 
 TEST_F(SamplingDataPostProcessorTest, CallstackInfosButNoCallstackEvents) {
@@ -566,6 +892,9 @@ TEST_F(SamplingDataPostProcessorTest, CallstackInfosButNoCallstackEvents) {
 
   EXPECT_EQ(ppsd_.GetThreadSampleData().size(), 0);
   EXPECT_EQ(ppsd_.GetSummary(), nullptr);
+
+  VerifyEmptySortedCallstackReport(orbit_base::kAllProcessThreadsTid);
+  VerifyEmptySortedCallstackReport(kThreadIdNotSampled);
 }
 
 TEST_F(SamplingDataPostProcessorTest, OnlyCallstackEventsOfNonCompleteCallstackInfos) {
@@ -580,6 +909,9 @@ TEST_F(SamplingDataPostProcessorTest, OnlyCallstackEventsOfNonCompleteCallstackI
 
   EXPECT_EQ(ppsd_.GetThreadSampleData().size(), 0);
   EXPECT_EQ(ppsd_.GetSummary(), nullptr);
+
+  VerifyEmptySortedCallstackReport(orbit_base::kAllProcessThreadsTid);
+  VerifyEmptySortedCallstackReport(kThreadIdNotSampled);
 }
 
 TEST_F(SamplingDataPostProcessorTest, OneThreadWithoutSummary) {
@@ -603,6 +935,10 @@ TEST_F(SamplingDataPostProcessorTest, OneThreadWithoutSummary) {
       *ppsd_.GetThreadSampleDataByThreadId(kThreadId1), kThreadId1);
 
   VerifyGetCountOfFunction();
+
+  VerifyEmptySortedCallstackReport(orbit_base::kAllProcessThreadsTid);
+  VerifySortedCallstackReportForCallstackEventsAllInTheSameThread(kThreadId1);
+  VerifyEmptySortedCallstackReport(kThreadIdNotSampled);
 }
 
 TEST_F(SamplingDataPostProcessorTest, OneThreadWithSummary) {
@@ -633,6 +969,11 @@ TEST_F(SamplingDataPostProcessorTest, OneThreadWithSummary) {
       *ppsd_.GetThreadSampleDataByThreadId(kThreadId1), kThreadId1);
 
   VerifyGetCountOfFunction();
+
+  VerifySortedCallstackReportForCallstackEventsAllInTheSameThread(
+      orbit_base::kAllProcessThreadsTid);
+  VerifySortedCallstackReportForCallstackEventsAllInTheSameThread(kThreadId1);
+  VerifyEmptySortedCallstackReport(kThreadIdNotSampled);
 }
 
 // This test shows what happens when each different address is considered a different function.
@@ -663,6 +1004,11 @@ TEST_F(SamplingDataPostProcessorTest, OneThreadWithSummaryWithoutAddressInfos) {
       *ppsd_.GetThreadSampleDataByThreadId(kThreadId1), kThreadId1);
 
   VerifyGetCountOfFunctionWithoutAddressInfos();
+
+  VerifySortedCallstackReportForCallstackEventsAllInTheSameThreadWithoutAddressInfo(
+      orbit_base::kAllProcessThreadsTid);
+  VerifySortedCallstackReportForCallstackEventsAllInTheSameThreadWithoutAddressInfo(kThreadId1);
+  VerifyEmptySortedCallstackReport(kThreadIdNotSampled);
 }
 
 TEST_F(SamplingDataPostProcessorTest, TwoThreadsWithoutSummary) {
@@ -690,6 +1036,11 @@ TEST_F(SamplingDataPostProcessorTest, TwoThreadsWithoutSummary) {
       *ppsd_.GetThreadSampleDataByThreadId(kThreadId2));
 
   VerifyGetCountOfFunction();
+
+  VerifyEmptySortedCallstackReport(orbit_base::kAllProcessThreadsTid);
+  VerifySortedCallstackReportForCallstackEventsInThreadId1();
+  VerifySortedCallstackReportForCallstackEventsInThreadId2();
+  VerifyEmptySortedCallstackReport(kThreadIdNotSampled);
 }
 
 TEST_F(SamplingDataPostProcessorTest, TwoThreadsWithSummary) {
@@ -720,6 +1071,12 @@ TEST_F(SamplingDataPostProcessorTest, TwoThreadsWithSummary) {
       *ppsd_.GetThreadSampleDataByThreadId(kThreadId2));
 
   VerifyGetCountOfFunction();
+
+  VerifySortedCallstackReportForCallstackEventsAllInTheSameThread(
+      orbit_base::kAllProcessThreadsTid);
+  VerifySortedCallstackReportForCallstackEventsInThreadId1();
+  VerifySortedCallstackReportForCallstackEventsInThreadId2();
+  VerifyEmptySortedCallstackReport(kThreadIdNotSampled);
 }
 
 }  // namespace orbit_client_model
