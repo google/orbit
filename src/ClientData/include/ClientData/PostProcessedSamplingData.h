@@ -55,8 +55,9 @@ struct CallstackCount {
 
 struct SortedCallstackReport {
   SortedCallstackReport() = default;
-  int callstacks_total_count = 0;
-  std::vector<CallstackCount> callstacks_count;
+
+  int total_callstack_count = 0;
+  std::vector<CallstackCount> callstack_counts;
 };
 
 class PostProcessedSamplingData {
@@ -86,8 +87,9 @@ class PostProcessedSamplingData {
   [[nodiscard]] const orbit_client_protos::CallstackInfo& GetResolvedCallstack(
       uint64_t sampled_callstack_id) const;
 
-  [[nodiscard]] std::unique_ptr<SortedCallstackReport> GetSortedCallstackReportFromAddresses(
-      const std::vector<uint64_t>& addresses, ThreadID thread_id) const;
+  [[nodiscard]] std::unique_ptr<SortedCallstackReport>
+  GetSortedCallstackReportFromFunctionAddresses(const std::vector<uint64_t>& function_addresses,
+                                                ThreadID thread_id) const;
 
   [[nodiscard]] const std::vector<ThreadSampleData>& GetThreadSampleData() const {
     return sorted_thread_sample_data_;
@@ -98,8 +100,8 @@ class PostProcessedSamplingData {
   [[nodiscard]] uint32_t GetCountOfFunction(uint64_t function_address) const;
 
  private:
-  [[nodiscard]] std::multimap<int, uint64_t> GetCallstacksFromAddresses(
-      const std::vector<uint64_t>& addresses, ThreadID thread_id) const;
+  [[nodiscard]] std::multimap<int, uint64_t> GetCallstacksFromFunctionAddresses(
+      const std::vector<uint64_t>& function_addresses, ThreadID thread_id) const;
 
   absl::flat_hash_map<ThreadID, ThreadSampleData> thread_id_to_sample_data_;
   absl::flat_hash_map<uint64_t, orbit_client_protos::CallstackInfo> id_to_resolved_callstack_;
