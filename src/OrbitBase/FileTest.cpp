@@ -305,6 +305,27 @@ TEST(File, MoveFile) {
   EXPECT_FALSE(exists_or_error.value());
 }
 
+TEST(File, RemoveFile) {
+  auto tmp_file_or_error = TemporaryFile::Create();
+  ASSERT_THAT(tmp_file_or_error, HasNoError());
+  auto tmp_file = std::move(tmp_file_or_error.value());
+
+  tmp_file.CloseAndRemove();
+  auto removed_or_error = RemoveFile(tmp_file.file_path());
+  ASSERT_THAT(removed_or_error, HasNoError());
+  EXPECT_FALSE(removed_or_error.value());
+
+  ASSERT_THAT(WriteStringToFile(tmp_file.file_path(), "test"), HasNoError());
+
+  removed_or_error = RemoveFile(tmp_file.file_path());
+  ASSERT_THAT(removed_or_error, HasNoError());
+  EXPECT_TRUE(removed_or_error.value());
+
+  auto exists_or_error = FileExists(tmp_file.file_path());
+  ASSERT_THAT(exists_or_error, HasNoError());
+  ASSERT_FALSE(exists_or_error.value());
+}
+
 TEST(File, ListFilesInDirectory) {
   auto tmp_file_or_error = TemporaryFile::Create();
   ASSERT_THAT(tmp_file_or_error, HasNoError());

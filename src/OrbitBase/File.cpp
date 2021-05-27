@@ -221,6 +221,16 @@ ErrorMessageOr<void> MoveFile(const std::filesystem::path& from, const std::file
   return outcome::success();
 }
 
+ErrorMessageOr<bool> RemoveFile(const std::filesystem::path& file_path) {
+  std::error_code error;
+  bool removed = std::filesystem::remove(file_path, error);
+  if (error) {
+    return ErrorMessage{error.message()};
+  }
+
+  return removed;
+}
+
 ErrorMessageOr<std::vector<std::filesystem::path>> ListFilesInDirectory(
     const std::filesystem::path& directory) {
   std::vector<std::filesystem::path> files;
