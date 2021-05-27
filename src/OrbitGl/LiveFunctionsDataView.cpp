@@ -20,7 +20,6 @@
 #include "App.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientModel/CaptureData.h"
-#include "CoreUtils.h"
 #include "DataViewTypes.h"
 #include "FunctionsDataView.h"
 #include "GrpcProtos/Constants.h"
