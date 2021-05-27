@@ -81,7 +81,7 @@ Q_DECLARE_METATYPE(std::error_code);
 void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
                    const Context* ssh_context, const QStringList& command_line_flags,
                    const orbit_base::CrashHandler* crash_handler,
-                   const std::filesystem::path& capture_file_path = "") {
+                   const std::filesystem::path& capture_file_path) {
   qRegisterMetaType<std::error_code>();
 
   const GrpcPort grpc_port{/*.grpc_port =*/absl::GetFlag(FLAGS_grpc_port)};
@@ -141,12 +141,14 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
     if (application_return_code == OrbitMainWindow::kQuitOrbitReturnCode) {
       // User closed window
       break;
-    } else if (application_return_code == OrbitMainWindow::kEndSessionReturnCode) {
+    }
+
+    if (application_return_code == OrbitMainWindow::kEndSessionReturnCode) {
       // User clicked end session, or socket error occurred.
       continue;
-    } else {
-      UNREACHABLE();
     }
+
+    UNREACHABLE();
   }
 }
 
@@ -157,7 +159,7 @@ static QStringList ExtractCommandLineFlags(const std::vector<std::string>& comma
   QStringList command_line_flags;
   absl::flat_hash_set<std::string> positional_arg_set(positional_args.begin(),
                                                       positional_args.end());
-  for (std::string command_line_arg : command_line_args) {
+  for (const std::string& command_line_arg : command_line_args) {
     if (!positional_arg_set.contains(command_line_arg)) {
       command_line_flags << QString::fromStdString(command_line_arg);
     }
@@ -167,20 +169,25 @@ static QStringList ExtractCommandLineFlags(const std::vector<std::string>& comma
 
 static std::optional<std::string> GetCollectorRootPassword(
     const QProcessEnvironment& process_environment) {
-  const char* const kEnvRootPassword = "ORBIT_COLLECTOR_ROOT_PASSWORD";
+  constexpr const char* kEnvRootPassword = "ORBIT_COLLECTOR_ROOT_PASSWORD";
   if (FLAGS_collector_root_password.IsSpecifiedOnCommandLine()) {
     return absl::GetFlag(FLAGS_collector_root_password);
-  } else if (process_environment.contains(kEnvRootPassword)) {
+  }
+
+  if (process_environment.contains(kEnvRootPassword)) {
     return process_environment.value(kEnvRootPassword).toStdString();
   }
+
   return std::nullopt;
 }
 
 static std::optional<std::string> GetCollectorPath(const QProcessEnvironment& process_environment) {
-  const char* const kEnvExecutablePath = "ORBIT_COLLECTOR_EXECUTABLE_PATH";
+  constexpr const char* kEnvExecutablePath = "ORBIT_COLLECTOR_EXECUTABLE_PATH";
   if (FLAGS_collector.IsSpecifiedOnCommandLine()) {
     return absl::GetFlag(FLAGS_collector);
-  } else if (process_environment.contains(kEnvExecutablePath)) {
+  }
+
+  if (process_environment.contains(kEnvExecutablePath)) {
     return process_environment.value(kEnvExecutablePath).toStdString();
   }
   return std::nullopt;
@@ -191,9 +198,9 @@ static orbit_qt::DeploymentConfiguration FigureOutDeploymentConfiguration() {
     return orbit_qt::NoDeployment{};
   }
 
-  const char* const kEnvPackagePath = "ORBIT_COLLECTOR_PACKAGE_PATH";
-  const char* const kEnvSignaturePath = "ORBIT_COLLECTOR_SIGNATURE_PATH";
-  const char* const kEnvNoDeployment = "ORBIT_COLLECTOR_NO_DEPLOYMENT";
+  constexpr const char* kEnvPackagePath = "ORBIT_COLLECTOR_PACKAGE_PATH";
+  constexpr const char* kEnvSignaturePath = "ORBIT_COLLECTOR_SIGNATURE_PATH";
+  constexpr const char* kEnvNoDeployment = "ORBIT_COLLECTOR_NO_DEPLOYMENT";
 
   QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
   std::optional<std::string> collector_path = GetCollectorPath(env);
@@ -202,14 +209,18 @@ static orbit_qt::DeploymentConfiguration FigureOutDeploymentConfiguration() {
   if (collector_path.has_value() && collector_password.has_value()) {
     return orbit_qt::BareExecutableAndRootPasswordDeployment{collector_path.value(),
                                                              collector_password.value()};
-  } else if (env.contains(kEnvPackagePath) && env.contains(kEnvSignaturePath)) {
+  }
+
+  if (env.contains(kEnvPackagePath) && env.contains(kEnvSignaturePath)) {
     return orbit_qt::SignedDebianPackageDeployment{env.value(kEnvPackagePath).toStdString(),
                                                    env.value(kEnvSignaturePath).toStdString()};
-  } else if (env.contains(kEnvNoDeployment)) {
-    return orbit_qt::NoDeployment{};
-  } else {
-    return orbit_qt::SignedDebianPackageDeployment{};
   }
+
+  if (env.contains(kEnvNoDeployment)) {
+    return orbit_qt::NoDeployment{};
+  }
+
+  return orbit_qt::SignedDebianPackageDeployment{};
 }
 
 static void DisplayErrorToUser(const QString& message) {
