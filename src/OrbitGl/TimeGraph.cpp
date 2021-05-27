@@ -972,6 +972,33 @@ const TextBox* TimeGraph::FindDown(const TextBox* from) {
   return track_manager_->GetOrCreateThreadTrack(timer_info.thread_id())->GetDown(from);
 }
 
+std::pair<const TextBox*, const TextBox*> TimeGraph::GetMinMaxTextBoxForFunction(
+    uint64_t function_id) const {
+  const TextBox* min_box = nullptr;
+  const TextBox* max_box = nullptr;
+  std::vector<std::shared_ptr<TimerChain>> chains = GetAllThreadTrackTimerChains();
+  for (auto& chain : chains) {
+    if (!chain) continue;
+    for (auto& block : *chain) {
+      for (size_t i = 0; i < block.size(); i++) {
+        const TextBox& box = block[i];
+        if (box.GetTimerInfo().function_id() == function_id) {
+          uint64_t elapsed_nanos = box.GetTimerInfo().end() - box.GetTimerInfo().start();
+          if (min_box == nullptr ||
+              elapsed_nanos < (min_box->GetTimerInfo().end() - min_box->GetTimerInfo().start())) {
+            min_box = &box;
+          }
+          if (max_box == nullptr ||
+              elapsed_nanos > (max_box->GetTimerInfo().end() - max_box->GetTimerInfo().start())) {
+            max_box = &box;
+          }
+        }
+      }
+    }
+  }
+  return std::make_pair(min_box, max_box);
+}
+
 void TimeGraph::DrawText(float layer) {
   if (draw_text_) {
     text_renderer_static_.RenderLayer(layer);
