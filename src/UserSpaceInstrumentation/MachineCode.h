@@ -25,6 +25,8 @@ class MachineCode {
   MachineCode& AppendBytes(const std::vector<uint8_t>& data);
   MachineCode& AppendImmediate64(uint64_t data);
   MachineCode& AppendImmediate32(uint32_t data);
+  MachineCode& AppendImmediate32(int32_t data);
+  MachineCode& AppendImmediate8(int8_t data);
   const std::vector<uint8_t>& GetResultAsVector() const { return data_; }
 
  private:
