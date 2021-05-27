@@ -62,10 +62,10 @@ void SamplingReport::UpdateDisplayedCallstack() {
   }
 
   selected_sorted_callstack_report_ =
-      post_processed_sampling_data_.GetSortedCallstackReportFromAddresses(
+      post_processed_sampling_data_.GetSortedCallstackReportFromFunctionAddresses(
           std::vector<uint64_t>(selected_addresses_.begin(), selected_addresses_.end()),
           selected_thread_id_);
-  if (selected_sorted_callstack_report_->callstacks_count.empty()) {
+  if (selected_sorted_callstack_report_->callstack_counts.empty()) {
     ClearReport();
   } else {
     OnCallstackIndexChanged(selected_callstack_index_);
@@ -111,7 +111,7 @@ void SamplingReport::OnSelectAddresses(const absl::flat_hash_set<uint64_t>& addr
 
 void SamplingReport::IncrementCallstackIndex() {
   CHECK(HasCallstacks());
-  size_t max_index = selected_sorted_callstack_report_->callstacks_count.size() - 1;
+  size_t max_index = selected_sorted_callstack_report_->callstack_counts.size() - 1;
   if (++selected_callstack_index_ > max_index) {
     selected_callstack_index_ = 0;
   }
@@ -121,7 +121,7 @@ void SamplingReport::IncrementCallstackIndex() {
 
 void SamplingReport::DecrementCallstackIndex() {
   CHECK(HasCallstacks());
-  size_t max_index = selected_sorted_callstack_report_->callstacks_count.size() - 1;
+  size_t max_index = selected_sorted_callstack_report_->callstack_counts.size() - 1;
   if (selected_callstack_index_ == 0) {
     selected_callstack_index_ = max_index;
   } else {
@@ -134,12 +134,12 @@ void SamplingReport::DecrementCallstackIndex() {
 std::string SamplingReport::GetSelectedCallstackString() const {
   if (selected_sorted_callstack_report_) {
     int num_occurrences =
-        selected_sorted_callstack_report_->callstacks_count[selected_callstack_index_].count;
-    int total_callstacks = selected_sorted_callstack_report_->callstacks_total_count;
+        selected_sorted_callstack_report_->callstack_counts[selected_callstack_index_].count;
+    int total_callstacks = selected_sorted_callstack_report_->total_callstack_count;
 
     return absl::StrFormat(
         "%i of %i unique callstacks.  [%i/%i total callstacks](%.2f%%)",
-        selected_callstack_index_ + 1, selected_sorted_callstack_report_->callstacks_count.size(),
+        selected_callstack_index_ + 1, selected_sorted_callstack_report_->callstack_counts.size(),
         num_occurrences, total_callstacks, 100.f * num_occurrences / total_callstacks);
   }
 
@@ -147,8 +147,8 @@ std::string SamplingReport::GetSelectedCallstackString() const {
 }
 
 void SamplingReport::OnCallstackIndexChanged(size_t index) {
-  if (index < selected_sorted_callstack_report_->callstacks_count.size()) {
-    const CallstackCount& cs = selected_sorted_callstack_report_->callstacks_count[index];
+  if (index < selected_sorted_callstack_report_->callstack_counts.size()) {
+    const CallstackCount& cs = selected_sorted_callstack_report_->callstack_counts[index];
     selected_callstack_index_ = index;
     auto it = unique_callstacks_.find(cs.callstack_id);
     CHECK(it != unique_callstacks_.end());
