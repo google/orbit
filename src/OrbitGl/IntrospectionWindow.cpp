@@ -10,9 +10,19 @@
 #include "TimeGraph.h"
 #include "capture_data.pb.h"
 
+using orbit_client_model::CaptureData;
 using orbit_client_protos::TimerInfo;
+using orbit_grpc_protos::CaptureStarted;
 
-IntrospectionWindow::IntrospectionWindow(OrbitApp* app) : CaptureWindow(app) {}
+IntrospectionWindow::IntrospectionWindow(OrbitApp* app) : CaptureWindow(app) {
+  // Create CaptureData.
+  CaptureStarted capture_started;
+  capture_started.set_process_id(orbit_base::GetCurrentProcessId());
+  capture_started.set_executable_path("Orbit");
+  absl::flat_hash_set<uint64_t> frame_track_function_ids;
+  capture_data_ = std::make_unique<CaptureData>(/*module_manager=*/nullptr, capture_started,
+                                                std::move(frame_track_function_ids));
+}
 
 IntrospectionWindow::~IntrospectionWindow() { StopIntrospection(); }
 
@@ -29,7 +39,7 @@ bool IntrospectionWindow::IsIntrospecting() const { return introspection_listene
 void IntrospectionWindow::StartIntrospection() {
   CHECK(!IsIntrospecting());
   set_draw_help(false);
-  CreateTimeGraph(nullptr);
+  CreateTimeGraph(capture_data_.get());
   introspection_listener_ =
       std::make_unique<orbit_base::TracingListener>([this](const orbit_base::TracingScope& scope) {
         TimerInfo timer_info;

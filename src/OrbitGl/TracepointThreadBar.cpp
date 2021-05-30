@@ -143,7 +143,6 @@ std::string TracepointThreadBar::GetTracepointTooltip(Batcher* batcher, PickingI
 }
 
 bool TracepointThreadBar::IsEmpty() const {
-  if (capture_data_ == nullptr) return true;
   return capture_data_->GetNumTracepointsForThreadId(thread_id_) == 0;
 }
 

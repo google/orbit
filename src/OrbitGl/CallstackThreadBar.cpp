@@ -181,7 +181,6 @@ void CallstackThreadBar::SelectCallstacks() {
 }
 
 bool CallstackThreadBar::IsEmpty() const {
-  if (capture_data_ == nullptr) return true;
   const uint32_t callstack_count =
       (thread_id_ == orbit_base::kAllProcessThreadsTid)
           ? capture_data_->GetCallstackData()->GetCallstackEventsCount()

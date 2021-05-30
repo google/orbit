@@ -33,7 +33,6 @@ ThreadStateBar::ThreadStateBar(CaptureViewElement* parent, OrbitApp* app, TimeGr
 }
 
 bool ThreadStateBar::IsEmpty() const {
-  if (capture_data_ == nullptr) return true;
   return !capture_data_->HasThreadStatesForThread(thread_id_);
 }
 
