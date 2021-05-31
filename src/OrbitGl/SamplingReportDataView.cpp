@@ -48,11 +48,12 @@ const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
     columns[kColumnSelected] = {"Hooked", .0f, SortingOrder::kDescending};
-    columns[kColumnFunctionName] = {"Name", .5f, SortingOrder::kAscending};
+    columns[kColumnFunctionName] = {"Name", .4f, SortingOrder::kAscending};
     columns[kColumnExclusive] = {"Exclusive", .0f, SortingOrder::kDescending};
     columns[kColumnInclusive] = {"Inclusive", .0f, SortingOrder::kDescending};
     columns[kColumnModuleName] = {"Module", .0f, SortingOrder::kAscending};
     columns[kColumnAddress] = {"Address", .0f, SortingOrder::kAscending};
+    columns[kColumnUnwindErrors] = {"Unwind errors", .0f, SortingOrder::kDescending};
     return columns;
   }();
   return columns;
@@ -75,6 +76,10 @@ std::string SamplingReportDataView::GetValue(int row, int column) {
       return std::filesystem::path(func.module_path).filename().string();
     case kColumnAddress:
       return absl::StrFormat("%#llx", func.absolute_address);
+    case kColumnUnwindErrors:
+      return (func.unwind_errors > 0)
+                 ? absl::StrFormat("%.2f%% (%d)", func.unwind_errors_percent, func.unwind_errors)
+                 : "";
     default:
       return "";
   }
@@ -121,6 +126,9 @@ void SamplingReportDataView::DoSort() {
       break;
     case kColumnAddress:
       sorter = ORBIT_PROC_SORT(absolute_address);
+      break;
+    case kColumnUnwindErrors:
+      sorter = ORBIT_PROC_SORT(unwind_errors);
       break;
     default:
       break;

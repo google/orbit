@@ -56,7 +56,8 @@ class SamplingDataPostProcessor {
   // Filled by ProcessSamples.
   absl::flat_hash_map<ThreadID, ThreadSampleData> thread_id_to_sample_data_;
   absl::flat_hash_map<uint64_t, CallstackInfo> id_to_resolved_callstack_;
-  absl::flat_hash_map<std::vector<uint64_t>, uint64_t> resolved_callstack_to_id_;
+  absl::flat_hash_map<std::pair<std::vector<uint64_t>, CallstackInfo::CallstackType>, uint64_t>
+      resolved_callstack_to_id_;
   absl::flat_hash_map<uint64_t, uint64_t> original_id_to_resolved_callstack_id_;
   absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>>
       function_address_to_sampled_callstack_ids_;
@@ -79,18 +80,21 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
   callstack_data.ForEachCallstackEvent(
       [this, &callstack_data, generate_summary](const CallstackEvent& event) {
         CHECK(callstack_data.HasCallstack(event.callstack_id()));
+        const orbit_client_protos::CallstackInfo* callstack_info =
+            callstack_data.GetCallstack(event.callstack_id());
 
-        // TODO(b/188496245): Include aggregated statistics on unwinding errors in
-        //  SamplingDataPostProcessor and the corresponding views ("Sampling", "Top-down",
-        //  "Bottom-up"). But for now, just skip those callstacks.
-        if (callstack_data.GetCallstack(event.callstack_id())->type() != CallstackInfo::kComplete) {
-          return;
-        }
-
+        // For non-kComplete callstacks, only use the innermost frame for statistics, as it's the
+        // only one known to be correct. Note that, in the vast majority of cases, the innermost
+        // frame is also the only one available.
         absl::flat_hash_set<uint64_t> unique_frames;
-        callstack_data.ForEachFrameInCallstack(
-            event.callstack_id(),
-            [&unique_frames](uint64_t address) { unique_frames.insert(address); });
+        CHECK(!callstack_info->frames().empty());
+        if (callstack_info->type() == CallstackInfo::kComplete) {
+          for (uint64_t frame : callstack_info->frames()) {
+            unique_frames.insert(frame);
+          }
+        } else {
+          unique_frames.insert(callstack_info->frames(0));
+        }
 
         ThreadSampleData* thread_sample_data = &thread_id_to_sample_data_[event.thread_id()];
         thread_sample_data->samples_count++;
@@ -99,14 +103,15 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
           thread_sample_data->sampled_address_to_count[frame]++;
         }
 
-        if (generate_summary) {
-          ThreadSampleData* all_thread_sample_data =
-              &thread_id_to_sample_data_[orbit_base::kAllProcessThreadsTid];
-          all_thread_sample_data->samples_count++;
-          all_thread_sample_data->sampled_callstack_id_to_count[event.callstack_id()]++;
-          for (uint64_t frame : unique_frames) {
-            all_thread_sample_data->sampled_address_to_count[frame]++;
-          }
+        if (!generate_summary) {
+          return;
+        }
+        ThreadSampleData* all_thread_sample_data =
+            &thread_id_to_sample_data_[orbit_base::kAllProcessThreadsTid];
+        all_thread_sample_data->samples_count++;
+        all_thread_sample_data->sampled_callstack_id_to_count[event.callstack_id()]++;
+        for (uint64_t frame : unique_frames) {
+          all_thread_sample_data->sampled_address_to_count[frame]++;
         }
       });
 
@@ -121,22 +126,34 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
       uint64_t resolved_callstack_id = original_id_to_resolved_callstack_id_[sampled_callstack_id];
       const CallstackInfo& resolved_callstack = id_to_resolved_callstack_[resolved_callstack_id];
 
-      // exclusive stat
+      // "Exclusive" stat.
       CHECK(!resolved_callstack.frames().empty());
       thread_sample_data->resolved_address_to_exclusive_count[resolved_callstack.frames(0)] +=
           callstack_count;
 
       absl::flat_hash_set<uint64_t> unique_resolved_addresses;
-      for (uint64_t resolved_address : resolved_callstack.frames()) {
-        unique_resolved_addresses.insert(resolved_address);
+      if (resolved_callstack.type() == CallstackInfo::kComplete) {
+        for (uint64_t resolved_address : resolved_callstack.frames()) {
+          unique_resolved_addresses.insert(resolved_address);
+        }
+      } else {
+        // For non-kComplete callstacks, only use the innermost frame for statistics.
+        unique_resolved_addresses.insert(resolved_callstack.frames(0));
       }
 
+      // "Inclusive" stat.
       for (uint64_t resolved_address : unique_resolved_addresses) {
         thread_sample_data->resolved_address_to_count[resolved_address] += callstack_count;
       }
+
+      // "Unwind errors" stat.
+      if (resolved_callstack.type() != CallstackInfo::kComplete) {
+        thread_sample_data->resolved_address_to_error_count[resolved_callstack.frames(0)] +=
+            callstack_count;
+      }
     }
 
-    // sort thread addresses by count
+    // For each thread, sort resolved (function) addresses by inclusive count.
     for (const auto& address_count_it : thread_sample_data->resolved_address_to_count) {
       const uint64_t address = address_count_it.first;
       const uint32_t count = address_count_it.second;
@@ -171,47 +188,55 @@ void SamplingDataPostProcessor::SortByThreadUsage() {
 
 void SamplingDataPostProcessor::ResolveCallstacks(const CallstackData& callstack_data,
                                                   const CaptureData& capture_data) {
-  callstack_data.ForEachUniqueCallstack(
-      [this, &capture_data](uint64_t callstack_id, const CallstackInfo& callstack) {
-        // TODO(b/188496245): Include aggregated statistics on unwinding errors.
-        if (callstack.type() != CallstackInfo::kComplete) {
-          return;
-        }
+  callstack_data.ForEachUniqueCallstack([this, &capture_data](uint64_t callstack_id,
+                                                              const CallstackInfo& callstack) {
+    // A "resolved callstack" is a callstack where every address is replaced by the start address of
+    // the function (if known).
+    std::vector<uint64_t> resolved_callstack_frames;
 
-        // A "resolved callstack" is a callstack where every address is replaced
-        // by the start address of the function (if known).
-        std::vector<uint64_t> resolved_callstack_frames;
+    for (uint64_t address : callstack.frames()) {
+      if (!exact_address_to_function_address_.contains(address)) {
+        MapAddressToFunctionAddress(address, capture_data);
+      }
+      auto function_address_it = exact_address_to_function_address_.find(address);
+      CHECK(function_address_it != exact_address_to_function_address_.end());
+      resolved_callstack_frames.push_back(function_address_it->second);
+    }
 
-        for (uint64_t address : callstack.frames()) {
-          if (exact_address_to_function_address_.find(address) ==
-              exact_address_to_function_address_.end()) {
-            MapAddressToFunctionAddress(address, capture_data);
-          }
-          uint64_t function_address = exact_address_to_function_address_.at(address);
+    if (callstack.type() == CallstackInfo::kComplete) {
+      for (uint64_t function_address : resolved_callstack_frames) {
+        // Create a new entry if it doesn't exist.
+        auto it = function_address_to_sampled_callstack_ids_.try_emplace(function_address).first;
+        it->second.insert(callstack_id);
+      }
+    } else {
+      // For non-kComplete callstacks, only use the innermost frame for statistics.
+      auto it = function_address_to_sampled_callstack_ids_.try_emplace(resolved_callstack_frames[0])
+                    .first;
+      it->second.insert(callstack_id);
+    }
 
-          resolved_callstack_frames.push_back(function_address);
-          function_address_to_sampled_callstack_ids_[function_address].insert(callstack_id);
-        }
+    // Check if we already have this resolved callstack, and if not, create one.
+    uint64_t resolved_callstack_id;
+    auto it =
+        resolved_callstack_to_id_.find(std::make_pair(resolved_callstack_frames, callstack.type()));
+    if (it == resolved_callstack_to_id_.end()) {
+      resolved_callstack_id = callstack_id;
+      CHECK(!id_to_resolved_callstack_.contains(resolved_callstack_id));
+      orbit_client_protos::CallstackInfo resolved_callstack;
+      *resolved_callstack.mutable_frames() = {resolved_callstack_frames.begin(),
+                                              resolved_callstack_frames.end()};
+      resolved_callstack.set_type(callstack.type());
+      id_to_resolved_callstack_.insert_or_assign(resolved_callstack_id, resolved_callstack);
+      resolved_callstack_to_id_.insert_or_assign(
+          std::make_pair(std::move(resolved_callstack_frames), callstack.type()),
+          resolved_callstack_id);
+    } else {
+      resolved_callstack_id = it->second;
+    }
 
-        // Check if we already have this callstack
-        uint64_t resolved_callstack_id;
-        auto it = resolved_callstack_to_id_.find(resolved_callstack_frames);
-        if (it == resolved_callstack_to_id_.end()) {
-          resolved_callstack_id = callstack_id;
-          CHECK(!id_to_resolved_callstack_.contains(resolved_callstack_id));
-          orbit_client_protos::CallstackInfo resolved_callstack;
-          *resolved_callstack.mutable_frames() = {resolved_callstack_frames.begin(),
-                                                  resolved_callstack_frames.end()};
-          resolved_callstack.set_type(callstack.type());
-          id_to_resolved_callstack_.insert_or_assign(resolved_callstack_id, resolved_callstack);
-          resolved_callstack_to_id_.insert_or_assign(std::move(resolved_callstack_frames),
-                                                     resolved_callstack_id);
-        } else {
-          resolved_callstack_id = it->second;
-        }
-
-        original_id_to_resolved_callstack_id_[callstack_id] = resolved_callstack_id;
-      });
+    original_id_to_resolved_callstack_id_[callstack_id] = resolved_callstack_id;
+  });
 }
 
 void SamplingDataPostProcessor::MapAddressToFunctionAddress(uint64_t absolute_address,
@@ -244,12 +269,20 @@ void SamplingDataPostProcessor::FillThreadSampleDataSampleReports(const CaptureD
 
       function.exclusive = 0;
       function.exclusive_percent = 0.f;
-      auto it = thread_sample_data->resolved_address_to_exclusive_count.find(absolute_address);
-      if (it != thread_sample_data->resolved_address_to_exclusive_count.end()) {
+
+      if (auto it = thread_sample_data->resolved_address_to_exclusive_count.find(absolute_address);
+          it != thread_sample_data->resolved_address_to_exclusive_count.end()) {
         function.exclusive = it->second;
         function.exclusive_percent = 100.f * it->second / thread_sample_data->samples_count;
       }
 
+      function.unwind_errors = 0;
+      function.unwind_errors_percent = 0.f;
+      if (auto it = thread_sample_data->resolved_address_to_error_count.find(absolute_address);
+          it != thread_sample_data->resolved_address_to_error_count.end()) {
+        function.unwind_errors = it->second;
+        function.unwind_errors_percent = 100.f * it->second / thread_sample_data->samples_count;
+      }
       function.absolute_address = absolute_address;
       function.module_path = capture_data.GetModulePathByAddress(absolute_address);
 
