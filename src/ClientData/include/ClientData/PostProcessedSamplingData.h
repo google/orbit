@@ -25,8 +25,10 @@ struct SampledFunction {
 
   std::string name;
   std::string module_path;
-  float exclusive = 0;
-  float inclusive = 0;
+  uint32_t exclusive = 0;
+  float exclusive_percent = 0.f;
+  uint32_t inclusive = 0;
+  float inclusive_percent = 0.f;
   uint64_t absolute_address = 0;
   const orbit_client_protos::FunctionInfo* function = nullptr;
 };
