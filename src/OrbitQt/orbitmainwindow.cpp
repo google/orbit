@@ -729,9 +729,17 @@ void OrbitMainWindow::OnNewSelectionBottomUpView(
 }
 
 std::string OrbitMainWindow::OnGetSaveFileName(const std::string& extension) {
-  std::string filename =
-      QFileDialog::getSaveFileName(this, "Specify a file to save...", nullptr, extension.c_str())
-          .toStdString();
+  QFileDialog dialog(this);
+  dialog.setFileMode(QFileDialog::FileMode::AnyFile);
+  dialog.setAcceptMode(QFileDialog::AcceptMode::AcceptSave);
+  dialog.setNameFilter(QString::fromStdString(extension + " (*" + extension + ")"));
+  dialog.setWindowTitle("Specify a file to save...");
+  dialog.setDirectory(nullptr);
+  std::string filename;
+
+  if (dialog.exec() == QDialog::Accepted && dialog.selectedFiles().size() > 0) {
+    filename = dialog.selectedFiles()[0].toStdString();
+  }
   if (!filename.empty() && !absl::EndsWith(filename, extension)) {
     filename += extension;
   }
