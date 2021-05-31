@@ -220,7 +220,7 @@ ErrorMessageOr<RelocatedInstruction> RelocateInstruction(cs_insn* instruction, u
   } else if (instruction->detail->x86.opcode[0] == 0xeb ||
              instruction->detail->x86.opcode[0] == 0xe9) {
     // This handles unconditional jump to relative immediate parameter (32 bit or 8 bit).
-    // Examples of original code 
+    // Examples of original code
     // (endless loop doing nothing)
     // nop                          90
     // jmp 0xfc                     eb fc
@@ -239,7 +239,9 @@ ErrorMessageOr<RelocatedInstruction> RelocateInstruction(cs_insn* instruction, u
                                        instruction->detail->x86.encoding.imm_offset);
     const uint64_t absolute_address = old_address + instruction->size + immediate;
     MachineCode code;
-    code.AppendBytes({0xff, 0x25}).AppendImmediate32(0x00000000).AppendImmediate64(absolute_address);
+    code.AppendBytes({0xff, 0x25})
+        .AppendImmediate32(0x00000000)
+        .AppendImmediate64(absolute_address);
     result.code = code.GetResultAsVector();
     result.position_of_absolute_address = 6;
   } else if (instruction->detail->x86.opcode[0] == 0xe8) {
