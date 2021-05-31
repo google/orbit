@@ -216,11 +216,13 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
   static const inline std::vector<uint64_t> kCallstack2Frames{
       kFunction4Instruction1AbsoluteAddress,  // D
       kFunction3Instruction1AbsoluteAddress,  // C
+      kFunction2Instruction1AbsoluteAddress,  // B
       kFunction1Instruction1AbsoluteAddress,  // A
   };
   static const inline std::vector<uint64_t> kCallstack2ResolvedFrames{
       kFunction4StartAbsoluteAddress,
       kFunction3StartAbsoluteAddress,
+      kFunction2StartAbsoluteAddress,
       kFunction1StartAbsoluteAddress,
   };
 
@@ -270,8 +272,9 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
     //   - the first and second CallstackEvents have the same Callstack;
     //   - the last CallstackEvent has two identical frames;
     //   - the number under each CallstackEvent is the callstack id.
-    // C    C    D    C'   C
-    // B    B    C    C    C
+    //           D
+    // C    C    C    C'   C
+    // B    B    B    C    C
     // A    A    A    A    A
     // 1    1    2    3    4
     AddCallstackEvent(kCallstack1Id, kThreadId1);
@@ -285,8 +288,9 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
   void AddCallstackEventsInThreadId1And2() {
     // Like above, but with CallstackEvents split between kThreadId1 and kThreadId2 as follows:
     // kThreadId1 |     kThreadId2
-    // C    D     |     C    C'   C
-    // B    C     |     B    C    C
+    //      D
+    // C    C     |     C    C'   C
+    // B    B     |     B    C    C
     // A    A     |     A    A    A
     // 1    2     |     1    3    4
     AddCallstackEvent(kCallstack1Id, kThreadId1);
@@ -387,13 +391,13 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
                              std::make_pair(kCallstack3Id, 1), std::make_pair(kCallstack4Id, 1)));
     EXPECT_THAT(actual_thread_sample_data.sampled_address_to_count,
                 UnorderedElementsAre(std::make_pair(kFunction1Instruction1AbsoluteAddress, 5),
-                                     std::make_pair(kFunction2Instruction1AbsoluteAddress, 2),
+                                     std::make_pair(kFunction2Instruction1AbsoluteAddress, 3),
                                      std::make_pair(kFunction3Instruction1AbsoluteAddress, 5),
                                      std::make_pair(kFunction3Instruction2AbsoluteAddress, 1),
                                      std::make_pair(kFunction4Instruction1AbsoluteAddress, 1)));
     EXPECT_THAT(actual_thread_sample_data.resolved_address_to_count,
                 UnorderedElementsAre(std::make_pair(kFunction1StartAbsoluteAddress, 5),
-                                     std::make_pair(kFunction2StartAbsoluteAddress, 2),
+                                     std::make_pair(kFunction2StartAbsoluteAddress, 3),
                                      std::make_pair(kFunction3StartAbsoluteAddress, 5),
                                      std::make_pair(kFunction4StartAbsoluteAddress, 1)));
     EXPECT_THAT(actual_thread_sample_data.resolved_address_to_exclusive_count,
@@ -401,14 +405,14 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
                                      std::make_pair(kFunction4StartAbsoluteAddress, 1)));
     EXPECT_THAT(actual_thread_sample_data.sorted_count_to_resolved_address,
                 UnorderedElementsAre(std::make_pair(5, kFunction1StartAbsoluteAddress),
-                                     std::make_pair(2, kFunction2StartAbsoluteAddress),
+                                     std::make_pair(3, kFunction2StartAbsoluteAddress),
                                      std::make_pair(5, kFunction3StartAbsoluteAddress),
                                      std::make_pair(1, kFunction4StartAbsoluteAddress)));
     EXPECT_THAT(actual_thread_sample_data.sampled_functions,
                 UnorderedElementsAre(
                     SampledFunctionEq(MakeSampledFunction(kFunction1Name, kModulePath, 0.0f, 100.0f,
                                                           kFunction1StartAbsoluteAddress)),
-                    SampledFunctionEq(MakeSampledFunction(kFunction2Name, kModulePath, 0.0f, 40.0f,
+                    SampledFunctionEq(MakeSampledFunction(kFunction2Name, kModulePath, 0.0f, 60.0f,
                                                           kFunction2StartAbsoluteAddress)),
                     SampledFunctionEq(MakeSampledFunction(kFunction3Name, kModulePath, 80.0f,
                                                           100.0f, kFunction3StartAbsoluteAddress)),
@@ -426,13 +430,13 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
                              std::make_pair(kCallstack3Id, 1), std::make_pair(kCallstack4Id, 1)));
     EXPECT_THAT(actual_thread_sample_data.sampled_address_to_count,
                 UnorderedElementsAre(std::make_pair(kFunction1Instruction1AbsoluteAddress, 5),
-                                     std::make_pair(kFunction2Instruction1AbsoluteAddress, 2),
+                                     std::make_pair(kFunction2Instruction1AbsoluteAddress, 3),
                                      std::make_pair(kFunction3Instruction1AbsoluteAddress, 5),
                                      std::make_pair(kFunction3Instruction2AbsoluteAddress, 1),
                                      std::make_pair(kFunction4Instruction1AbsoluteAddress, 1)));
     EXPECT_THAT(actual_thread_sample_data.resolved_address_to_count,
                 UnorderedElementsAre(std::make_pair(kFunction1Instruction1AbsoluteAddress, 5),
-                                     std::make_pair(kFunction2Instruction1AbsoluteAddress, 2),
+                                     std::make_pair(kFunction2Instruction1AbsoluteAddress, 3),
                                      std::make_pair(kFunction3Instruction1AbsoluteAddress, 5),
                                      std::make_pair(kFunction3Instruction2AbsoluteAddress, 1),
                                      std::make_pair(kFunction4Instruction1AbsoluteAddress, 1)));
@@ -442,7 +446,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
                                      std::make_pair(kFunction4Instruction1AbsoluteAddress, 1)));
     EXPECT_THAT(actual_thread_sample_data.sorted_count_to_resolved_address,
                 UnorderedElementsAre(std::make_pair(5, kFunction1Instruction1AbsoluteAddress),
-                                     std::make_pair(2, kFunction2Instruction1AbsoluteAddress),
+                                     std::make_pair(3, kFunction2Instruction1AbsoluteAddress),
                                      std::make_pair(5, kFunction3Instruction1AbsoluteAddress),
                                      std::make_pair(1, kFunction3Instruction2AbsoluteAddress),
                                      std::make_pair(1, kFunction4Instruction1AbsoluteAddress)));
@@ -454,7 +458,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
                                                   100.0f, kFunction1Instruction1AbsoluteAddress)),
             SampledFunctionEq(MakeSampledFunction(CaptureData::kUnknownFunctionOrModuleName,
                                                   CaptureData::kUnknownFunctionOrModuleName, 0.0f,
-                                                  40.0f, kFunction2Instruction1AbsoluteAddress)),
+                                                  60.0f, kFunction2Instruction1AbsoluteAddress)),
             SampledFunctionEq(MakeSampledFunction(CaptureData::kUnknownFunctionOrModuleName,
                                                   CaptureData::kUnknownFunctionOrModuleName, 60.0f,
                                                   100.0f, kFunction3Instruction1AbsoluteAddress)),
@@ -475,12 +479,12 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
         UnorderedElementsAre(std::make_pair(kCallstack1Id, 1), std::make_pair(kCallstack2Id, 1)));
     EXPECT_THAT(actual_thread_sample_data.sampled_address_to_count,
                 UnorderedElementsAre(std::make_pair(kFunction1Instruction1AbsoluteAddress, 2),
-                                     std::make_pair(kFunction2Instruction1AbsoluteAddress, 1),
+                                     std::make_pair(kFunction2Instruction1AbsoluteAddress, 2),
                                      std::make_pair(kFunction3Instruction1AbsoluteAddress, 2),
                                      std::make_pair(kFunction4Instruction1AbsoluteAddress, 1)));
     EXPECT_THAT(actual_thread_sample_data.resolved_address_to_count,
                 UnorderedElementsAre(std::make_pair(kFunction1StartAbsoluteAddress, 2),
-                                     std::make_pair(kFunction2StartAbsoluteAddress, 1),
+                                     std::make_pair(kFunction2StartAbsoluteAddress, 2),
                                      std::make_pair(kFunction3StartAbsoluteAddress, 2),
                                      std::make_pair(kFunction4StartAbsoluteAddress, 1)));
     EXPECT_THAT(actual_thread_sample_data.resolved_address_to_exclusive_count,
@@ -488,14 +492,14 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
                                      std::make_pair(kFunction4StartAbsoluteAddress, 1)));
     EXPECT_THAT(actual_thread_sample_data.sorted_count_to_resolved_address,
                 UnorderedElementsAre(std::make_pair(2, kFunction1StartAbsoluteAddress),
-                                     std::make_pair(1, kFunction2StartAbsoluteAddress),
+                                     std::make_pair(2, kFunction2StartAbsoluteAddress),
                                      std::make_pair(2, kFunction3StartAbsoluteAddress),
                                      std::make_pair(1, kFunction4StartAbsoluteAddress)));
     EXPECT_THAT(actual_thread_sample_data.sampled_functions,
                 UnorderedElementsAre(
                     SampledFunctionEq(MakeSampledFunction(kFunction1Name, kModulePath, 0.0f, 100.0f,
                                                           kFunction1StartAbsoluteAddress)),
-                    SampledFunctionEq(MakeSampledFunction(kFunction2Name, kModulePath, 0.0f, 50.0f,
+                    SampledFunctionEq(MakeSampledFunction(kFunction2Name, kModulePath, 0.0f, 100.0f,
                                                           kFunction2StartAbsoluteAddress)),
                     SampledFunctionEq(MakeSampledFunction(kFunction3Name, kModulePath, 50.0f,
                                                           100.0f, kFunction3StartAbsoluteAddress)),
@@ -540,7 +544,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
   void VerifyGetCountOfFunction() {
     EXPECT_EQ(ppsd_.GetCountOfFunction(kFunction1StartAbsoluteAddress), 5);
     EXPECT_EQ(ppsd_.GetCountOfFunction(kFunction1Instruction1AbsoluteAddress), 0);
-    EXPECT_EQ(ppsd_.GetCountOfFunction(kFunction2StartAbsoluteAddress), 2);
+    EXPECT_EQ(ppsd_.GetCountOfFunction(kFunction2StartAbsoluteAddress), 3);
     EXPECT_EQ(ppsd_.GetCountOfFunction(kFunction2Instruction1AbsoluteAddress), 0);
     EXPECT_EQ(ppsd_.GetCountOfFunction(kFunction3StartAbsoluteAddress), 5);
     EXPECT_EQ(ppsd_.GetCountOfFunction(kFunction3Instruction1AbsoluteAddress), 0);
@@ -553,7 +557,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
     EXPECT_EQ(ppsd_.GetCountOfFunction(kFunction1StartAbsoluteAddress), 0);
     EXPECT_EQ(ppsd_.GetCountOfFunction(kFunction1Instruction1AbsoluteAddress), 5);
     EXPECT_EQ(ppsd_.GetCountOfFunction(kFunction2StartAbsoluteAddress), 0);
-    EXPECT_EQ(ppsd_.GetCountOfFunction(kFunction2Instruction1AbsoluteAddress), 2);
+    EXPECT_EQ(ppsd_.GetCountOfFunction(kFunction2Instruction1AbsoluteAddress), 3);
     EXPECT_EQ(ppsd_.GetCountOfFunction(kFunction3StartAbsoluteAddress), 0);
     EXPECT_EQ(ppsd_.GetCountOfFunction(kFunction3Instruction1AbsoluteAddress), 5);
     EXPECT_EQ(ppsd_.GetCountOfFunction(kFunction3Instruction2AbsoluteAddress), 1);
@@ -620,7 +624,8 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
             {{2, kCallstack1Id}, {1, kCallstack2Id}, {1, kCallstack3Id}, {1, kCallstack4Id}})));
     EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
                     {kFunction2StartAbsoluteAddress}, thread_id),
-                SortedCallstackReportEq(MakeSortedCallstackReport({{2, kCallstack1Id}})));
+                SortedCallstackReportEq(
+                    MakeSortedCallstackReport({{2, kCallstack1Id}, {1, kCallstack2Id}})));
     EXPECT_THAT(
         *ppsd_.GetSortedCallstackReportFromFunctionAddresses({kFunction3StartAbsoluteAddress},
                                                              thread_id),
@@ -675,7 +680,8 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
             {{2, kCallstack1Id}, {1, kCallstack2Id}, {1, kCallstack3Id}, {1, kCallstack4Id}})));
     EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
                     {kFunction2Instruction1AbsoluteAddress}, thread_id),
-                SortedCallstackReportEq(MakeSortedCallstackReport({{2, kCallstack1Id}})));
+                SortedCallstackReportEq(
+                    MakeSortedCallstackReport({{2, kCallstack1Id}, {1, kCallstack2Id}})));
     EXPECT_THAT(
         *ppsd_.GetSortedCallstackReportFromFunctionAddresses(
             {kFunction3Instruction1AbsoluteAddress}, thread_id),
@@ -730,7 +736,8 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
                     MakeSortedCallstackReport({{1, kCallstack1Id}, {1, kCallstack2Id}})));
     EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
                     {kFunction2StartAbsoluteAddress}, thread_id),
-                SortedCallstackReportEq(MakeSortedCallstackReport({{1, kCallstack1Id}})));
+                SortedCallstackReportEq(
+                    MakeSortedCallstackReport({{1, kCallstack1Id}, {1, kCallstack2Id}})));
     EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses(
                     {kFunction3StartAbsoluteAddress}, thread_id),
                 SortedCallstackReportEq(
