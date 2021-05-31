@@ -73,7 +73,7 @@
 #include "Path.h"
 #include "PresetsDataView.h"
 #include "SamplingReport.h"
-#include "SymbolHelper.h"
+#include "Symbols/SymbolHelper.h"
 #include "TimeGraph.h"
 #include "Timer.h"
 #include "TimerChain.h"
@@ -1538,7 +1538,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
 }
 
 static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
-    const SymbolHelper& symbol_helper, const std::filesystem::path& module_path,
+    const orbit_symbols::SymbolHelper& symbol_helper, const std::filesystem::path& module_path,
     const std::string& build_id) {
   if (build_id.empty()) {
     return ErrorMessage(absl::StrFormat(
@@ -1566,7 +1566,8 @@ static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
     error_message += "\n* " + symbols_path.error().message();
   }
   if (absl::GetFlag(FLAGS_local)) {
-    const auto symbols_included_in_module = SymbolHelper::VerifySymbolsFile(module_path, build_id);
+    const auto symbols_included_in_module =
+        orbit_symbols::SymbolHelper::VerifySymbolsFile(module_path, build_id);
     if (symbols_included_in_module.has_value()) {
       LOG("Found symbols included in module: \"%s\"", module_path.string());
       return module_path;
@@ -1620,7 +1621,7 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
       R"(Loading symbols for "%s" from file "%s"...)", module_file_path, symbols_path.string()));
 
   auto load_symbols_from_file = thread_pool_->Schedule(
-      [symbols_path]() { return SymbolHelper::LoadSymbolsFromFile(symbols_path); });
+      [symbols_path]() { return orbit_symbols::SymbolHelper::LoadSymbolsFromFile(symbols_path); });
 
   auto add_symbols =
       [this, module_id, scoped_status = std::move(scoped_status)](

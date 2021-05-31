@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef SYMBOL_HELPER_H_
-#define SYMBOL_HELPER_H_
+#ifndef SYMBOLS_SYMBOL_HELPER_H_
+#define SYMBOLS_SYMBOL_HELPER_H_
 
 #include <llvm/Object/Binary.h>
 #include <llvm/Object/ObjectFile.h>
@@ -18,6 +18,8 @@
 #include "symbol.pb.h"
 
 namespace fs = std::filesystem;
+
+namespace orbit_symbols {
 
 class SymbolHelper {
  public:
@@ -54,4 +56,6 @@ class SymbolHelper {
   const std::vector<fs::path> structured_debug_directories_;
 };
 
-#endif  // SYMBOL_HELPER_H_
+}  // namespace orbit_symbols
+
+#endif  // SYMBOLS_SYMBOL_HELPER_H_

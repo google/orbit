@@ -1,8 +1,8 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "SymbolHelper.h"
+#include "Symbols/SymbolHelper.h"
 
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
@@ -35,6 +35,8 @@ namespace fs = std::filesystem;
 using ::orbit_object_utils::CreateObjectFile;
 using ::orbit_object_utils::ElfFile;
 using ::orbit_object_utils::ObjectFile;
+
+namespace orbit_symbols {
 
 namespace {
 
@@ -326,3 +328,5 @@ ErrorMessageOr<fs::path> SymbolHelper::FindDebugInfoFileInDebugStore(
   return ErrorMessage{absl::StrFormat("Unable to stat the file \"%s\": %s", full_file_path.string(),
                                       error.message())};
 }
+
+}  // namespace orbit_symbols

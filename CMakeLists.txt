@@ -160,6 +160,7 @@ add_subdirectory(src/OrbitCore)
 add_subdirectory(src/OrbitTest)
 add_subdirectory(src/OrbitVersion)
 add_subdirectory(src/PresetFile)
+add_subdirectory(src/Symbols)
 
 if(WITH_GUI)
   add_subdirectory(src/CaptureFileInfo)
