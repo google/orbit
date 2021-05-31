@@ -122,6 +122,7 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
       const CallstackInfo& resolved_callstack = id_to_resolved_callstack_[resolved_callstack_id];
 
       // exclusive stat
+      CHECK(!resolved_callstack.frames().empty());
       thread_sample_data->resolved_address_to_exclusive_count[resolved_callstack.frames(0)] +=
           callstack_count;
 
