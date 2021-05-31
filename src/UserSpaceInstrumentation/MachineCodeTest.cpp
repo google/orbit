@@ -12,7 +12,7 @@ namespace orbit_user_space_instrumentation {
 
 TEST(MachineCodeTest, BuildCode) {
   MachineCode code;
-  uint32_t kSigned8 = 0x08;
+  int8_t kSigned8 = 0x08;
   uint32_t kUnsigned32 = 0x42;
   int32_t kSigned32 = -1;
   uint64_t kUnsigned64 = 0x54;

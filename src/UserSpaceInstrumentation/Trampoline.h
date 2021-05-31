@@ -65,13 +65,14 @@ namespace orbit_user_space_instrumentation {
 // Merely serves as a return value for the function below.
 struct RelocatedInstruction {
   // Machine code of the relocated instruction. Might contain multiple instructions to emulate what
-  // the original instruction acchieved.
+  // the original instruction achieved.
   std::vector<uint8_t> code;
 
-  // Some relocated instructions contain an absolute address that needs to be adjusted once all the
-  // relocations are done. The position of this absolute address is stored here.
-  // Example: A conditional jump to a forward position needs to know the position of a instruction
-  // not yet processed.
+  // Some relocated instructions contain an absolute address stored in the 'code' above. That
+  // address needs to be adjusted once all the relocations are done. The position of this absolute
+  // address in 'code' is what is stored here.
+  // Example: A conditional jump to a forward position needs to know the
+  // position of an instruction not yet processed.
   //
   // Original code does the following: condition cc is true -> InstructionB,
   // otherwise -> InstructionA, InstructionB

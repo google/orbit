@@ -265,7 +265,8 @@ TEST(TrampolineTest, AllocateMemoryForTrampolines) {
 }
 
 TEST(TrampolineTest, AddressDifferenceAsInt32) {
-  // Result of the difference is negative; in the first case it just fits the second case overflows.
+  // Result of the difference is negative; in the first case it just fits, the second case
+  // overflows.
   const uint64_t kAddr1 = 0x6012345612345678;
   const uint64_t kAddr2Larger = kAddr1 - std::numeric_limits<int32_t>::min();
   auto result = AddressDifferenceAsInt32(kAddr1, kAddr2Larger);
@@ -274,7 +275,8 @@ TEST(TrampolineTest, AddressDifferenceAsInt32) {
   result = AddressDifferenceAsInt32(kAddr1, kAddr2Larger + 1);
   EXPECT_THAT(result, HasError("Difference is larger than +-2GB"));
 
-  // Result of the difference is positive; in the first case it just fits the second case overflows.
+  // Result of the difference is positive; in the first case it just fits, the second case
+  // overflows.
   const uint64_t kAddr2Smaller = kAddr1 - std::numeric_limits<int32_t>::max();
   result = AddressDifferenceAsInt32(kAddr1, kAddr2Smaller);
   ASSERT_THAT(result, HasNoError());
@@ -319,23 +321,11 @@ class RelocateInstructionTest : public testing::Test {
   csh capstone_handle_ = 0;
 };
 
-TEST_F(RelocateInstructionTest, TrivialTranslation) {
-  MachineCode code;
-  // nop
-  code.AppendBytes({0x90});
-  Disassemble(code);
-
-  ErrorMessageOr<RelocatedInstruction> result =
-      RelocateInstruction(instruction_, 0x0100000000, 0x0200000000);
-  ASSERT_THAT(result, HasValue());
-  EXPECT_THAT(result.value().code, ElementsAreArray({0x90}));
-  EXPECT_FALSE(result.value().position_of_absolute_address.has_value());
-}
-
 TEST_F(RelocateInstructionTest, RipRelativeAddressing) {
   MachineCode code;
   constexpr int32_t kOffset = 0x969433;
   // add qword ptr [rip + kOffset], 1
+  // Handled by "((instruction->detail->x86.modrm & 0xC7) == 0x05)" branch in 'RelocateInstruction'.
   code.AppendBytes({0x48, 0x83, 0x05}).AppendImmediate32(kOffset).AppendBytes({0x01});
   Disassemble(code);
 
@@ -343,6 +333,11 @@ TEST_F(RelocateInstructionTest, RipRelativeAddressing) {
   ErrorMessageOr<RelocatedInstruction> result =
       RelocateInstruction(instruction_, kOriginalAddress, kOriginalAddress + kOffset - 0x123456);
   ASSERT_THAT(result, HasValue());
+  // add qword ptr [rip + new_offset], 1      48 83 05 56 34 12 00 01
+  // new_offset is computed as 
+  // old_absolute_address - new_address
+  // == (old_address + old_displacement) - (old_address + old_displacement - 0x123456)
+  // == 0x123456
   EXPECT_THAT(result.value().code,
               ElementsAreArray({0x48, 0x83, 0x05, 0x56, 0x34, 0x12, 0x00, 0x01}));
   EXPECT_FALSE(result.value().position_of_absolute_address.has_value());
@@ -350,7 +345,11 @@ TEST_F(RelocateInstructionTest, RipRelativeAddressing) {
   result =
       RelocateInstruction(instruction_, kOriginalAddress, kOriginalAddress + kOffset + 0x123456);
   ASSERT_THAT(result, HasValue());
-  // -0x123456 == 0xffedcbaa
+  // add qword ptr [rip + new_offset], 1      48 83 05 aa cb ed ff 01
+  // new_offset is computed as 
+  // old_absolute_address - new_address
+  // == (old_address + old_displacement) - (old_address + old_displacement + 0x123456)
+  // == -0x123456 == 0xffedcbaa
   EXPECT_THAT(result.value().code,
               ElementsAreArray({0x48, 0x83, 0x05, 0xaa, 0xcb, 0xed, 0xff, 0x01}));
   EXPECT_FALSE(result.value().position_of_absolute_address.has_value());
@@ -365,6 +364,7 @@ TEST_F(RelocateInstructionTest, UnconditionalJumpTo8BitImmediate) {
   MachineCode code;
   constexpr int8_t kOffset = 0x08;
   // jmp [rip + kOffset]
+  // Handled by "(instruction->detail->x86.opcode[0] == 0xeb)" branch in 'RelocateInstruction'.
   code.AppendBytes({0xeb}).AppendImmediate8(kOffset);
   Disassemble(code);
 
@@ -384,6 +384,7 @@ TEST_F(RelocateInstructionTest, UnconditionalJumpTo32BitImmediate) {
   MachineCode code;
   constexpr int32_t kOffset = 0x01020304;
   // jmp [rip + kOffset]
+  // Handled by "(instruction->detail->x86.opcode[0] == 0xe9)" branch in 'RelocateInstruction'.
   code.AppendBytes({0xe9}).AppendImmediate32(kOffset);
   Disassemble(code);
 
@@ -392,7 +393,7 @@ TEST_F(RelocateInstructionTest, UnconditionalJumpTo32BitImmediate) {
   ASSERT_THAT(result, HasValue());
   // jmp  [rip + 0]               ff 25 00 00 00 00
   // absolute_address             09 03 02 01 01 00 00 00
-  // original jump instruction end on 0x0100000000 + 0x05. Adding kOffset yields 0x0101020309.
+  // original jump instruction ends on 0x0100000000 + 0x05. Adding kOffset yields 0x0101020309.
   EXPECT_THAT(result.value().code, ElementsAreArray({0xff, 0x25, 0x00, 0x00, 0x00, 0x00, 0x09, 0x03,
                                                      0x02, 0x01, 0x01, 0x00, 0x00, 0x00}));
   ASSERT_TRUE(result.value().position_of_absolute_address.has_value());
@@ -403,13 +404,14 @@ TEST_F(RelocateInstructionTest, CallToImmediateAddress) {
   MachineCode code;
   constexpr int32_t kOffset = 0x01020304;
   // call [rip + kOffset]
+  // Handled by "(instruction->detail->x86.opcode[0] == 0xe8)" branch in 'RelocateInstruction'.
   code.AppendBytes({0xe8}).AppendImmediate32(kOffset);
   Disassemble(code);
 
   ErrorMessageOr<RelocatedInstruction> result =
       RelocateInstruction(instruction_, 0x0100000000, 0x0200000000);
   ASSERT_THAT(result, HasValue());
-  // Call [rip + 2]               ff 15 02 00 00 00
+  // call [rip + 2]               ff 15 02 00 00 00
   // jmp  [rip + 8]               eb 08
   // absolute_address             09 03 02 01 01 00 00 00
   EXPECT_THAT(result.value().code,
@@ -423,6 +425,8 @@ TEST_F(RelocateInstructionTest, ConditionalJumpTo8BitImmediate) {
   MachineCode code;
   constexpr int8_t kOffset = 0x40;
   // jno rip + kOffset
+  // Handled by "((instruction->detail->x86.opcode[0] & 0xf0) == 0x70)" branch in
+  // 'RelocateInstruction'.
   code.AppendBytes({0x71}).AppendImmediate8(kOffset);
   Disassemble(code);
 
@@ -444,6 +448,9 @@ TEST_F(RelocateInstructionTest, ConditionalJumpTo32BitImmediate) {
   MachineCode code;
   constexpr int32_t kOffset = 0x12345678;
   // jno rip + kOffset           0f 80 78 56 34 12
+  // Handled by "(instruction->detail->x86.opcode[0] == 0x0f &&
+  //             (instruction->detail->x86.opcode[1] & 0xf0) == 0x80)"
+  // branch in 'RelocateInstruction'.
   code.AppendBytes({0x0f, 0x80}).AppendImmediate32(kOffset);
   Disassemble(code);
 
@@ -465,12 +472,28 @@ TEST_F(RelocateInstructionTest, LoopIsUnsupported) {
   MachineCode code;
   constexpr int8_t kOffset = 0x40;
   // loopz rip + kOffset
+  // Handled by "((instruction->detail->x86.opcode[0] & 0xfc) == 0xe0)" branch in
+  // 'RelocateInstruction'.
   code.AppendBytes({0xe1}).AppendImmediate8(kOffset);
   Disassemble(code);
 
   ErrorMessageOr<RelocatedInstruction> result =
       RelocateInstruction(instruction_, 0x0100000000, 0x0200000000);
   EXPECT_THAT(result, HasError("Relocating a loop instruction is not supported."));
+}
+
+TEST_F(RelocateInstructionTest, TrivialTranslation) {
+  MachineCode code;
+  // nop
+  // Handled by "else" branch in 'RelocateInstruction' - instruction is just copied.
+  code.AppendBytes({0x90});
+  Disassemble(code);
+
+  ErrorMessageOr<RelocatedInstruction> result =
+      RelocateInstruction(instruction_, 0x0100000000, 0x0200000000);
+  ASSERT_THAT(result, HasValue());
+  EXPECT_THAT(result.value().code, ElementsAreArray({0x90}));
+  EXPECT_FALSE(result.value().position_of_absolute_address.has_value());
 }
 
 }  // namespace orbit_user_space_instrumentation
