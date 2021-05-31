@@ -11,11 +11,13 @@ target_compile_options(CaptureFileInfo PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   CaptureFileInfo
-  PUBLIC  include/CaptureFileInfo/CaptureFileInfo.h)
+  PUBLIC  include/CaptureFileInfo/CaptureFileInfo.h
+          include/CaptureFileInfo/Manager.h)
 
 target_sources(
   CaptureFileInfo
-  PRIVATE CaptureFileInfo.cpp)
+  PRIVATE CaptureFileInfo.cpp
+          Manager.cpp)
 
 target_include_directories(CaptureFileInfo PUBLIC include/)
 
@@ -29,7 +31,8 @@ target_compile_options(CaptureFileInfoTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   CaptureFileInfoTests 
-  PRIVATE CaptureFileInfoTest.cpp)
+  PRIVATE CaptureFileInfoTest.cpp
+          ManagerTest.cpp)
 
 target_link_libraries(
   CaptureFileInfoTests
