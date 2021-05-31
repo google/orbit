@@ -31,30 +31,30 @@
 #include "ui_orbitsamplingreport.h"
 
 OrbitSamplingReport::OrbitSamplingReport(QWidget* parent)
-    : QWidget(parent), ui(new Ui::OrbitSamplingReport) {
-  ui->setupUi(this);
-  if (!m_SamplingReport || !m_SamplingReport->HasCallstacks()) {
-    ui->NextCallstackButton->setEnabled(false);
-    ui->PreviousCallstackButton->setEnabled(false);
+    : QWidget(parent), ui_(new Ui::OrbitSamplingReport) {
+  ui_->setupUi(this);
+  if (!sampling_report_ || !sampling_report_->HasCallstacks()) {
+    ui_->NextCallstackButton->setEnabled(false);
+    ui_->PreviousCallstackButton->setEnabled(false);
   }
 
   QList<int> sizes;
   sizes.append(5000);
   sizes.append(5000);
-  ui->splitter->setSizes(sizes);
+  ui_->splitter->setSizes(sizes);
 }
 
-OrbitSamplingReport::~OrbitSamplingReport() { delete ui; }
+OrbitSamplingReport::~OrbitSamplingReport() { delete ui_; }
 
 void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
                                      const std::shared_ptr<SamplingReport>& report) {
-  ui->CallstackTreeView->Initialize(callstack_data_view, SelectionType::kExtended,
-                                    FontType::kDefault, false);
-  m_SamplingReport = report;
+  ui_->CallstackTreeView->Initialize(callstack_data_view, SelectionType::kExtended,
+                                     FontType::kDefault, false);
+  sampling_report_ = report;
 
   if (!report) return;
 
-  m_SamplingReport->SetUiRefreshFunc([&]() { this->RefreshCallstackView(); });
+  sampling_report_->SetUiRefreshFunc([&]() { this->RefreshCallstackView(); });
 
   for (SamplingReportDataView& report_data_view : report->GetThreadReports()) {
     auto* tab = new QWidget();
@@ -82,70 +82,70 @@ void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
     treeView->GetTreeView()->header()->resizeSections(QHeaderView::ResizeToContents);
     treeView->GetTreeView()->SetIsMultiSelection(true);
 
-    treeView->Link(ui->CallstackTreeView);
+    treeView->Link(ui_->CallstackTreeView);
 
     // This is hack - it is needed to update ui when data changes
     // TODO: Remove this once model is implemented properly and there
     //  is no need for manual updates.
-    m_OrbitDataViews.push_back(treeView);
+    orbit_data_views_.push_back(treeView);
 
     QString thread_name = QString::fromStdString(report_data_view.GetName());
-    ui->tabWidget->addTab(tab, thread_name);
+    ui_->tabWidget->addTab(tab, thread_name);
   }
 
-  connect(ui->tabWidget, &QTabWidget::currentChanged, this,
+  connect(ui_->tabWidget, &QTabWidget::currentChanged, this,
           &OrbitSamplingReport::OnCurrentThreadTabChanged);
 }
 
 void OrbitSamplingReport::Deinitialize() {
-  for (OrbitDataViewPanel* panel : m_OrbitDataViews) {
+  for (OrbitDataViewPanel* panel : orbit_data_views_) {
     panel->Deinitialize();
   }
-  ui->CallstackTreeView->Deinitialize();
+  ui_->CallstackTreeView->Deinitialize();
 }
 
 void OrbitSamplingReport::on_NextCallstackButton_clicked() {
-  CHECK(m_SamplingReport != nullptr);
-  m_SamplingReport->IncrementCallstackIndex();
+  CHECK(sampling_report_ != nullptr);
+  sampling_report_->IncrementCallstackIndex();
   RefreshCallstackView();
 }
 
 void OrbitSamplingReport::on_PreviousCallstackButton_clicked() {
-  CHECK(m_SamplingReport != nullptr);
-  m_SamplingReport->DecrementCallstackIndex();
+  CHECK(sampling_report_ != nullptr);
+  sampling_report_->DecrementCallstackIndex();
   RefreshCallstackView();
 }
 
 void OrbitSamplingReport::OnCurrentThreadTabChanged(int current_tab_index) {
-  auto treeView = m_OrbitDataViews[current_tab_index];
-  QModelIndexList index_list = treeView->GetTreeView()->selectionModel()->selectedIndexes();
+  OrbitDataViewPanel* data_view = orbit_data_views_[current_tab_index];
+  QModelIndexList index_list = data_view->GetTreeView()->selectionModel()->selectedIndexes();
   std::vector<int> row_list;
   for (QModelIndex& index : index_list) {
     row_list.push_back(index.row());
   }
-  treeView->GetTreeView()->GetModel()->OnRowsSelected(row_list);
+  data_view->GetTreeView()->GetModel()->OnRowsSelected(row_list);
   RefreshCallstackView();
 }
 
 void OrbitSamplingReport::RefreshCallstackView() {
-  if (m_SamplingReport == nullptr) {
+  if (sampling_report_ == nullptr) {
     return;
   }
 
-  ui->NextCallstackButton->setEnabled(m_SamplingReport->HasCallstacks());
-  ui->PreviousCallstackButton->setEnabled(m_SamplingReport->HasCallstacks());
+  ui_->NextCallstackButton->setEnabled(sampling_report_->HasCallstacks());
+  ui_->PreviousCallstackButton->setEnabled(sampling_report_->HasCallstacks());
 
-  std::string label = m_SamplingReport->GetSelectedCallstackString();
-  ui->CallstackLabel->setText(QString::fromStdString(label));
-  ui->CallstackTreeView->Refresh();
+  std::string label = sampling_report_->GetSelectedCallstackString();
+  ui_->CallstackLabel->setText(QString::fromStdString(label));
+  ui_->CallstackTreeView->Refresh();
 }
 
 void OrbitSamplingReport::RefreshTabs() {
-  if (m_SamplingReport == nullptr) {
+  if (sampling_report_ == nullptr) {
     return;
   }
 
-  for (OrbitDataViewPanel* panel : m_OrbitDataViews) {
+  for (OrbitDataViewPanel* panel : orbit_data_views_) {
     panel->Refresh();
   }
 }

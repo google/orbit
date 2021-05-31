@@ -41,9 +41,9 @@ class OrbitSamplingReport : public QWidget {
   void OnCurrentThreadTabChanged(int current_tab_index);
 
  private:
-  Ui::OrbitSamplingReport* ui;
-  std::shared_ptr<SamplingReport> m_SamplingReport;
-  std::vector<OrbitDataViewPanel*> m_OrbitDataViews;
+  Ui::OrbitSamplingReport* ui_;
+  std::shared_ptr<SamplingReport> sampling_report_;
+  std::vector<OrbitDataViewPanel*> orbit_data_views_;
 };
 
 #endif  // ORBIT_QT_ORBIT_SAMPLING_REPORT_H_
