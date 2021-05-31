@@ -273,7 +273,7 @@ TEST(TrampolineTest, AddressDifferenceAsInt32) {
   ASSERT_THAT(result, HasNoError());
   EXPECT_EQ(std::numeric_limits<int32_t>::min(), result.value());
   result = AddressDifferenceAsInt32(kAddr1, kAddr2Larger + 1);
-  EXPECT_THAT(result, HasError("Difference is larger than +-2GB"));
+  EXPECT_THAT(result, HasError("Difference is larger than -2GB"));
 
   // Result of the difference is positive; in the first case it just fits, the second case
   // overflows.
@@ -282,15 +282,15 @@ TEST(TrampolineTest, AddressDifferenceAsInt32) {
   ASSERT_THAT(result, HasNoError());
   EXPECT_EQ(std::numeric_limits<int32_t>::max(), result.value());
   result = AddressDifferenceAsInt32(kAddr1, kAddr2Smaller - 1);
-  EXPECT_THAT(result, HasError("Difference is larger than +-2GB"));
+  EXPECT_THAT(result, HasError("Difference is larger than +2GB"));
 
   // Result of the difference does not even fit into a int64. We handle that gracefully as well.
   const uint64_t kAddrHigh = 0xf234567812345678;
   const uint64_t kAddrLow = kAddrHigh - 0xe234567812345678;
   result = AddressDifferenceAsInt32(kAddrHigh, kAddrLow);
-  EXPECT_THAT(result, HasError("Difference is larger than +-2GB"));
+  EXPECT_THAT(result, HasError("Difference is larger than +2GB"));
   result = AddressDifferenceAsInt32(kAddrLow, kAddrHigh);
-  EXPECT_THAT(result, HasError("Difference is larger than +-2GB"));
+  EXPECT_THAT(result, HasError("Difference is larger than -2GB"));
 }
 
 class RelocateInstructionTest : public testing::Test {

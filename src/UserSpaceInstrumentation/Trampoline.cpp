@@ -29,7 +29,7 @@ namespace {
 using absl::numbers_internal::safe_strtou64_base;
 using orbit_base::ReadFileToString;
 
-std::string InstructionBytesAsString(cs_insn* instruction) {
+[[nodiscard]] std::string InstructionBytesAsString(cs_insn* instruction) {
   std::string result;
   for (int i = 0; i < instruction->size; i++) {
     result = absl::StrCat(result, i == 0 ? absl::StrFormat("%#0.2x", instruction->bytes[i])
@@ -177,13 +177,15 @@ ErrorMessageOr<uint64_t> AllocateMemoryForTrampolines(pid_t pid, const AddressRa
 }
 
 ErrorMessageOr<int32_t> AddressDifferenceAsInt32(uint64_t a, uint64_t b) {
-  const uint64_t abs_diff = (a > b) ? (a - b) : (b - a);
   constexpr uint64_t kAbsMaxInt32AsUint64 =
       static_cast<uint64_t>(std::numeric_limits<int32_t>::max());
   constexpr uint64_t kAbsMinInt32AsUint64 =
       static_cast<uint64_t>(-static_cast<int64_t>(std::numeric_limits<int32_t>::min()));
-  if ((a > b && abs_diff > kAbsMaxInt32AsUint64) || (b > a && abs_diff > kAbsMinInt32AsUint64)) {
-    return ErrorMessage("Difference is larger than +-2GB.");
+  if ((a > b) && (a - b > kAbsMaxInt32AsUint64)) {
+    return ErrorMessage("Difference is larger than +2GB.");
+  }
+  if ((b > a) && (b - a > kAbsMinInt32AsUint64)) {
+    return ErrorMessage("Difference is larger than -2GB.");
   }
   return a - b;
 }
