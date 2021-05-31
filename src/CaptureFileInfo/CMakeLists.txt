@@ -12,18 +12,24 @@ target_compile_options(CaptureFileInfo PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(
   CaptureFileInfo
   PUBLIC  include/CaptureFileInfo/CaptureFileInfo.h
+          include/CaptureFileInfo/ItemModel.h
           include/CaptureFileInfo/Manager.h)
 
 target_sources(
   CaptureFileInfo
   PRIVATE CaptureFileInfo.cpp
+          ItemModel.cpp
           Manager.cpp)
 
 target_include_directories(CaptureFileInfo PUBLIC include/)
 
 target_link_libraries(
   CaptureFileInfo
-  PUBLIC  Qt5::Core)
+  PUBLIC  OrbitBase
+          OrbitCore
+          Qt5::Core)
+
+set_target_properties(CaptureFileInfo PROPERTIES AUTOMOC ON)
 
 add_executable(CaptureFileInfoTests)
 
@@ -32,13 +38,15 @@ target_compile_options(CaptureFileInfoTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(
   CaptureFileInfoTests 
   PRIVATE CaptureFileInfoTest.cpp
+          ItemModelTest.cpp
           ManagerTest.cpp)
 
 target_link_libraries(
   CaptureFileInfoTests
-  PRIVATE CaptureFileInfo 
-          OrbitBase
-          GTest::Main)
+  PRIVATE CaptureFileInfo
+          GTest::Main
+          QtUtils
+          Qt5::Test)
 
 add_custom_command(TARGET CaptureFileInfoTests POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/testdata
