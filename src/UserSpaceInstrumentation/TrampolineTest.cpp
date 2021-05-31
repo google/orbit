@@ -334,7 +334,7 @@ TEST_F(RelocateInstructionTest, RipRelativeAddressing) {
       RelocateInstruction(instruction_, kOriginalAddress, kOriginalAddress + kOffset - 0x123456);
   ASSERT_THAT(result, HasValue());
   // add qword ptr [rip + new_offset], 1      48 83 05 56 34 12 00 01
-  // new_offset is computed as 
+  // new_offset is computed as
   // old_absolute_address - new_address
   // == (old_address + old_displacement) - (old_address + old_displacement - 0x123456)
   // == 0x123456
@@ -346,7 +346,7 @@ TEST_F(RelocateInstructionTest, RipRelativeAddressing) {
       RelocateInstruction(instruction_, kOriginalAddress, kOriginalAddress + kOffset + 0x123456);
   ASSERT_THAT(result, HasValue());
   // add qword ptr [rip + new_offset], 1      48 83 05 aa cb ed ff 01
-  // new_offset is computed as 
+  // new_offset is computed as
   // old_absolute_address - new_address
   // == (old_address + old_displacement) - (old_address + old_displacement + 0x123456)
   // == -0x123456 == 0xffedcbaa
