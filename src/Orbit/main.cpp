@@ -21,14 +21,15 @@
 #include <cstdint>
 #include <filesystem>
 #include <optional>
-#include <outcome.hpp>
 #include <string>
 #include <system_error>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #include "MetricsUploader/ScopedMetric.h"
+#include "OrbitBase/File.h"
+#include "OrbitQt/MoveFilesDialog.h"
+#include "OrbitQt/MoveFilesProcess.h"
 
 #ifdef _WIN32
 #include <process.h>
@@ -255,6 +256,59 @@ static void LogAndMaybeWarnAboutClockResolution() {
   }
 }
 
+static bool IsDirectoryEmpty(const std::filesystem::path& directory) {
+  auto exists_or_error = orbit_base::FileExists(directory);
+  if (exists_or_error.has_error()) {
+    ERROR("Unable to stat \"%s\": %s", directory.string(), exists_or_error.error().message());
+    return false;
+  }
+
+  if (!exists_or_error.value()) {
+    return true;
+  }
+
+  auto file_list_or_error = orbit_base::ListFilesInDirectory(directory);
+  if (file_list_or_error.has_error()) {
+    ERROR("Unable to list directory \"%s\": %s", directory.string(),
+          file_list_or_error.error().message());
+    return false;
+  }
+
+  return file_list_or_error.value().empty();
+}
+
+static void TryMoveSavedDataLocationIfNeeded() {
+  if (IsDirectoryEmpty(orbit_core::GetPresetDirPriorTo1_65()) &&
+      IsDirectoryEmpty(orbit_core::GetCaptureDirPriorTo1_65())) {
+    return;
+  }
+
+  orbit_qt::MoveFilesDialog dialog;
+  orbit_qt::MoveFilesProcess process;
+
+  QObject::connect(&process, &orbit_qt::MoveFilesProcess::generalError,
+                   [&dialog](const std::string& error_message) {
+                     dialog.AddText(absl::StrFormat("Error: %s", error_message));
+                   });
+
+  QObject::connect(
+      &process, &orbit_qt::MoveFilesProcess::moveStarted,
+      [&dialog](const std::filesystem::path& from_dir, const std::filesystem::path& to_dir,
+                size_t number_of_files) {
+        dialog.AddText(absl::StrFormat(R"(Moving %d files from "%s" to "%s" ...)", number_of_files,
+                                       from_dir.string(), to_dir.string()));
+      });
+
+  QObject::connect(&process, &orbit_qt::MoveFilesProcess::moveDone,
+                   [&dialog]() { dialog.AddText("... done"); });
+
+  QObject::connect(&process, &orbit_qt::MoveFilesProcess::processFinished,
+                   [&dialog]() { dialog.EnableCloseButton(); });
+
+  process.Start();
+  dialog.exec();
+}
+
 // Removes all source paths mappings from the persistent settings storage.
 static void ClearSourcePathsMappings() {
   orbit_source_paths_mapping::MappingManager mapping_manager{};
@@ -375,6 +429,8 @@ int main(int argc, char* argv[]) {
   }
 
   LogAndMaybeWarnAboutClockResolution();
+
+  TryMoveSavedDataLocationIfNeeded();
 
   const DeploymentConfiguration deployment_configuration = FigureOutDeploymentConfiguration();
 
