@@ -162,6 +162,7 @@ add_subdirectory(src/OrbitVersion)
 add_subdirectory(src/PresetFile)
 
 if(WITH_GUI)
+  add_subdirectory(src/CaptureFileInfo)
   add_subdirectory(src/CodeReport)
   add_subdirectory(src/CodeViewer)
   add_subdirectory(src/CodeViewerDemo)
