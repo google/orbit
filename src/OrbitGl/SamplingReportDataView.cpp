@@ -68,9 +68,9 @@ std::string SamplingReportDataView::GetValue(int row, int column) {
     case kColumnFunctionName:
       return func.name;
     case kColumnExclusive:
-      return absl::StrFormat("%.2f", func.exclusive);
+      return absl::StrFormat("%.2f%% (%u)", func.exclusive_percent, func.exclusive);
     case kColumnInclusive:
-      return absl::StrFormat("%.2f", func.inclusive);
+      return absl::StrFormat("%.2f%% (%u)", func.inclusive_percent, func.inclusive);
     case kColumnModuleName:
       return std::filesystem::path(func.module_path).filename().string();
     case kColumnAddress:

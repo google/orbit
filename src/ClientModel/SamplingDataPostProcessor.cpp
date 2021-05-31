@@ -234,16 +234,21 @@ void SamplingDataPostProcessor::FillThreadSampleDataSampleReports(const CaptureD
          sorted_it != thread_sample_data->sorted_count_to_resolved_address.rend(); ++sorted_it) {
       uint32_t num_occurrences = sorted_it->first;
       uint64_t absolute_address = sorted_it->second;
-      float inclusive_percent = 100.f * num_occurrences / thread_sample_data->samples_count;
 
       SampledFunction function;
       function.name = capture_data.GetFunctionNameByAddress(absolute_address);
-      function.inclusive = inclusive_percent;
-      function.exclusive = 0.f;
+
+      function.inclusive = num_occurrences;
+      function.inclusive_percent = 100.f * num_occurrences / thread_sample_data->samples_count;
+
+      function.exclusive = 0;
+      function.exclusive_percent = 0.f;
       auto it = thread_sample_data->resolved_address_to_exclusive_count.find(absolute_address);
       if (it != thread_sample_data->resolved_address_to_exclusive_count.end()) {
-        function.exclusive = 100.f * it->second / thread_sample_data->samples_count;
+        function.exclusive = it->second;
+        function.exclusive_percent = 100.f * it->second / thread_sample_data->samples_count;
       }
+
       function.absolute_address = absolute_address;
       function.module_path = capture_data.GetModulePathByAddress(absolute_address);
 

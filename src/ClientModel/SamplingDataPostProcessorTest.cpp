@@ -36,13 +36,16 @@ namespace orbit_client_model {
 
 namespace {
 
-SampledFunction MakeSampledFunction(std::string name, std::string module_path, float exclusive,
-                                    float inclusive, uint64_t absolute_address) {
+SampledFunction MakeSampledFunction(std::string name, std::string module_path, uint32_t exclusive,
+                                    float exclusive_percent, uint32_t inclusive,
+                                    float inclusive_percent, uint64_t absolute_address) {
   SampledFunction sampled_function;
   sampled_function.name = std::move(name);
   sampled_function.module_path = std::move(module_path);
   sampled_function.exclusive = exclusive;
+  sampled_function.exclusive_percent = exclusive_percent;
   sampled_function.inclusive = inclusive;
+  sampled_function.inclusive_percent = inclusive_percent;
   sampled_function.absolute_address = absolute_address;
   sampled_function.function = nullptr;
   return sampled_function;
@@ -50,7 +53,8 @@ SampledFunction MakeSampledFunction(std::string name, std::string module_path, f
 
 bool SampledFunctionsAreEqual(const SampledFunction& lhs, const SampledFunction& rhs) {
   return lhs.name == rhs.name && lhs.module_path == rhs.module_path &&
-         lhs.exclusive == rhs.exclusive && lhs.inclusive == rhs.inclusive &&
+         lhs.exclusive == rhs.exclusive && lhs.exclusive_percent == rhs.exclusive_percent &&
+         lhs.inclusive == rhs.inclusive && lhs.inclusive_percent == rhs.inclusive_percent &&
          lhs.absolute_address == rhs.absolute_address && lhs.function == rhs.function;
 }
 
@@ -410,14 +414,14 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
                                      std::make_pair(1, kFunction4StartAbsoluteAddress)));
     EXPECT_THAT(actual_thread_sample_data.sampled_functions,
                 UnorderedElementsAre(
-                    SampledFunctionEq(MakeSampledFunction(kFunction1Name, kModulePath, 0.0f, 100.0f,
-                                                          kFunction1StartAbsoluteAddress)),
-                    SampledFunctionEq(MakeSampledFunction(kFunction2Name, kModulePath, 0.0f, 60.0f,
-                                                          kFunction2StartAbsoluteAddress)),
-                    SampledFunctionEq(MakeSampledFunction(kFunction3Name, kModulePath, 80.0f,
+                    SampledFunctionEq(MakeSampledFunction(kFunction1Name, kModulePath, 0, 0.0f, 5,
+                                                          100.0f, kFunction1StartAbsoluteAddress)),
+                    SampledFunctionEq(MakeSampledFunction(kFunction2Name, kModulePath, 0, 0.0f, 3,
+                                                          60.0f, kFunction2StartAbsoluteAddress)),
+                    SampledFunctionEq(MakeSampledFunction(kFunction3Name, kModulePath, 4, 80.0f, 5,
                                                           100.0f, kFunction3StartAbsoluteAddress)),
-                    SampledFunctionEq(MakeSampledFunction(kFunction4Name, kModulePath, 20.0f, 20.0f,
-                                                          kFunction4StartAbsoluteAddress))));
+                    SampledFunctionEq(MakeSampledFunction(kFunction4Name, kModulePath, 1, 20.0f, 1,
+                                                          20.0f, kFunction4StartAbsoluteAddress))));
   }
 
   static void VerifyThreadSampleDataForCallstackEventsAllInTheSameThreadWithoutAddressInfos(
@@ -450,24 +454,27 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
                                      std::make_pair(5, kFunction3Instruction1AbsoluteAddress),
                                      std::make_pair(1, kFunction3Instruction2AbsoluteAddress),
                                      std::make_pair(1, kFunction4Instruction1AbsoluteAddress)));
-    EXPECT_THAT(
-        actual_thread_sample_data.sampled_functions,
-        UnorderedElementsAre(
-            SampledFunctionEq(MakeSampledFunction(CaptureData::kUnknownFunctionOrModuleName,
-                                                  CaptureData::kUnknownFunctionOrModuleName, 0.0f,
-                                                  100.0f, kFunction1Instruction1AbsoluteAddress)),
-            SampledFunctionEq(MakeSampledFunction(CaptureData::kUnknownFunctionOrModuleName,
-                                                  CaptureData::kUnknownFunctionOrModuleName, 0.0f,
-                                                  60.0f, kFunction2Instruction1AbsoluteAddress)),
-            SampledFunctionEq(MakeSampledFunction(CaptureData::kUnknownFunctionOrModuleName,
-                                                  CaptureData::kUnknownFunctionOrModuleName, 60.0f,
-                                                  100.0f, kFunction3Instruction1AbsoluteAddress)),
-            SampledFunctionEq(MakeSampledFunction(CaptureData::kUnknownFunctionOrModuleName,
-                                                  CaptureData::kUnknownFunctionOrModuleName, 20.0f,
-                                                  20.0f, kFunction3Instruction2AbsoluteAddress)),
-            SampledFunctionEq(MakeSampledFunction(CaptureData::kUnknownFunctionOrModuleName,
-                                                  CaptureData::kUnknownFunctionOrModuleName, 20.0f,
-                                                  20.0f, kFunction4Instruction1AbsoluteAddress))));
+    EXPECT_THAT(actual_thread_sample_data.sampled_functions,
+                UnorderedElementsAre(SampledFunctionEq(MakeSampledFunction(
+                                         CaptureData::kUnknownFunctionOrModuleName,
+                                         CaptureData::kUnknownFunctionOrModuleName, 0, 0.0f, 5,
+                                         100.0f, kFunction1Instruction1AbsoluteAddress)),
+                                     SampledFunctionEq(MakeSampledFunction(
+                                         CaptureData::kUnknownFunctionOrModuleName,
+                                         CaptureData::kUnknownFunctionOrModuleName, 0, 0.0f, 3,
+                                         60.0f, kFunction2Instruction1AbsoluteAddress)),
+                                     SampledFunctionEq(MakeSampledFunction(
+                                         CaptureData::kUnknownFunctionOrModuleName,
+                                         CaptureData::kUnknownFunctionOrModuleName, 3, 60.0f, 5,
+                                         100.0f, kFunction3Instruction1AbsoluteAddress)),
+                                     SampledFunctionEq(MakeSampledFunction(
+                                         CaptureData::kUnknownFunctionOrModuleName,
+                                         CaptureData::kUnknownFunctionOrModuleName, 1, 20.0f, 1,
+                                         20.0f, kFunction3Instruction2AbsoluteAddress)),
+                                     SampledFunctionEq(MakeSampledFunction(
+                                         CaptureData::kUnknownFunctionOrModuleName,
+                                         CaptureData::kUnknownFunctionOrModuleName, 1, 20.0f, 1,
+                                         20.0f, kFunction4Instruction1AbsoluteAddress))));
   }
 
   static void VerifyThreadSampleDataForCallstackEventsInThreadId1(
@@ -497,14 +504,14 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
                                      std::make_pair(1, kFunction4StartAbsoluteAddress)));
     EXPECT_THAT(actual_thread_sample_data.sampled_functions,
                 UnorderedElementsAre(
-                    SampledFunctionEq(MakeSampledFunction(kFunction1Name, kModulePath, 0.0f, 100.0f,
-                                                          kFunction1StartAbsoluteAddress)),
-                    SampledFunctionEq(MakeSampledFunction(kFunction2Name, kModulePath, 0.0f, 100.0f,
-                                                          kFunction2StartAbsoluteAddress)),
-                    SampledFunctionEq(MakeSampledFunction(kFunction3Name, kModulePath, 50.0f,
+                    SampledFunctionEq(MakeSampledFunction(kFunction1Name, kModulePath, 0, 0.0f, 2,
+                                                          100.0f, kFunction1StartAbsoluteAddress)),
+                    SampledFunctionEq(MakeSampledFunction(kFunction2Name, kModulePath, 0, 0.0f, 2,
+                                                          100.0f, kFunction2StartAbsoluteAddress)),
+                    SampledFunctionEq(MakeSampledFunction(kFunction3Name, kModulePath, 1, 50.0f, 2,
                                                           100.0f, kFunction3StartAbsoluteAddress)),
-                    SampledFunctionEq(MakeSampledFunction(kFunction4Name, kModulePath, 50.0f, 50.0f,
-                                                          kFunction4StartAbsoluteAddress))));
+                    SampledFunctionEq(MakeSampledFunction(kFunction4Name, kModulePath, 1, 50.0f, 1,
+                                                          50.0f, kFunction4StartAbsoluteAddress))));
   }
 
   static void VerifyThreadSampleDataForCallstackEventsInThreadId2(
@@ -533,11 +540,11 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
     EXPECT_THAT(
         actual_thread_sample_data.sampled_functions,
         UnorderedElementsAre(
-            SampledFunctionEq(MakeSampledFunction(kFunction1Name, kModulePath, 0.0f, 100.0f,
+            SampledFunctionEq(MakeSampledFunction(kFunction1Name, kModulePath, 0, 0.0f, 3, 100.0f,
                                                   kFunction1StartAbsoluteAddress)),
-            SampledFunctionEq(MakeSampledFunction(kFunction2Name, kModulePath, 0.0f, 100.0f / 3,
-                                                  kFunction2StartAbsoluteAddress)),
-            SampledFunctionEq(MakeSampledFunction(kFunction3Name, kModulePath, 100.0f, 100.0f,
+            SampledFunctionEq(MakeSampledFunction(kFunction2Name, kModulePath, 0, 0.0f, 1,
+                                                  100.0f / 3, kFunction2StartAbsoluteAddress)),
+            SampledFunctionEq(MakeSampledFunction(kFunction3Name, kModulePath, 3, 100.0f, 3, 100.0f,
                                                   kFunction3StartAbsoluteAddress))));
   }
 
