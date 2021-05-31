@@ -13,31 +13,21 @@ target_sources(
   OrbitCore
   PUBLIC CoreUtils.h
          Path.h
-         StringManager.h
-         SymbolHelper.h)
+         StringManager.h)
 
 target_sources(
   OrbitCore
   PRIVATE CoreUtils.cpp
           Path.cpp
-          StringManager.cpp
-          SymbolHelper.cpp)
+          StringManager.cpp)
 
 target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
 target_link_libraries(
   OrbitCore
-  PUBLIC ClientData
-         ClientProtos
-         GrpcProtos
-         ObjectUtils
-         OrbitBase
+  PUBLIC OrbitBase
          xxHash::xxHash
-         concurrentqueue::concurrentqueue
-         oqpi::oqpi
-         CONAN_PKG::abseil
-         CONAN_PKG::llvm_object
-         CONAN_PKG::Outcome)
+         CONAN_PKG::abseil)
 
 if(WIN32)
   target_link_libraries(OrbitCore PRIVATE dbghelp.lib)
@@ -60,19 +50,12 @@ target_compile_options(OrbitCoreTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(OrbitCoreTests PRIVATE
     CoreUtilsTest.cpp
     PathTest.cpp
-    StringManagerTest.cpp
-    SymbolHelperTest.cpp)
+    StringManagerTest.cpp)
 
 target_link_libraries(
   OrbitCoreTests
   PRIVATE OrbitCore
           GTest::Main
-          CONAN_PKG::llvm_object
           CONAN_PKG::abseil)
 
 register_test(OrbitCoreTests)
-
-add_fuzzer(ModuleLoadSymbolsFuzzer ModuleLoadSymbolsFuzzer.cpp)
-target_link_libraries(
-  ModuleLoadSymbolsFuzzer PRIVATE OrbitCore
-                                  CONAN_PKG::libprotobuf-mutator)

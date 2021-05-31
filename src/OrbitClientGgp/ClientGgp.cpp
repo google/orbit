@@ -35,7 +35,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "StringManager.h"
-#include "SymbolHelper.h"
+#include "Symbols/SymbolHelper.h"
 #include "capture_data.pb.h"
 #include "module.pb.h"
 #include "process.pb.h"
@@ -222,7 +222,8 @@ ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
   OUTCOME_TRY(main_executable_debug_file, process_client_->FindDebugInfoFile(module_path));
   LOG("Found file: %s", main_executable_debug_file);
   LOG("Loading symbols");
-  OUTCOME_TRY(symbols, SymbolHelper::LoadSymbolsFromFile(main_executable_debug_file));
+  OUTCOME_TRY(symbols,
+              orbit_symbols::SymbolHelper::LoadSymbolsFromFile(main_executable_debug_file));
   main_module_->AddSymbols(symbols);
   return outcome::success();
 }

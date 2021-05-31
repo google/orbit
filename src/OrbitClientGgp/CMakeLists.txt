@@ -28,7 +28,8 @@ target_link_libraries(OrbitClientGgpLib PUBLIC
     ClientServices
     GrpcProtos
     OrbitBase
-    OrbitVersion)
+    OrbitVersion
+    Symbols)
 
 project(OrbitClientGgp)
 

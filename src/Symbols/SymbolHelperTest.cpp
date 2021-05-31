@@ -1,7 +1,8 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/strings/ascii.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -12,11 +13,11 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Result.h"
 #include "Path.h"
-#include "SymbolHelper.h"
-#include "absl/strings/ascii.h"
+#include "Symbols/SymbolHelper.h"
 #include "symbol.pb.h"
 
 using orbit_grpc_protos::ModuleSymbols;
+using orbit_symbols::SymbolHelper;
 namespace fs = std::filesystem;
 
 static const std::filesystem::path testdata_directory = orbit_base::GetExecutableDir() / "testdata";

@@ -69,7 +69,7 @@
 #include "ScopedStatus.h"
 #include "StatusListener.h"
 #include "StringManager.h"
-#include "SymbolHelper.h"
+#include "Symbols/SymbolHelper.h"
 #include "TextBox.h"
 #include "TracepointsDataView.h"
 #include "capture.pb.h"
@@ -565,7 +565,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   std::unique_ptr<orbit_client_services::CrashManager> crash_manager_;
   std::unique_ptr<ManualInstrumentationManager> manual_instrumentation_manager_;
 
-  const SymbolHelper symbol_helper_;
+  const orbit_symbols::SymbolHelper symbol_helper_;
 
   StatusListener* status_listener_ = nullptr;
 

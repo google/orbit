@@ -150,12 +150,14 @@ target_link_libraries(
          OrbitAccessibility
          OrbitCore
          PresetFile
+         Symbols
          CONAN_PKG::Outcome
          CONAN_PKG::freetype-gl
          CONAN_PKG::freetype
          CONAN_PKG::glad
          CONAN_PKG::imgui
-         gte::gte)
+         gte::gte
+         oqpi::oqpi)
 
 if(TARGET OpenGL::GLX AND TARGET OpenGL::OpenGL)
   target_link_libraries(OrbitGl PUBLIC OpenGL::GLX)

@@ -30,6 +30,7 @@ target_sources(CaptureClient PRIVATE
 
 target_link_libraries(CaptureClient PUBLIC
         CaptureFile
+        ClientData
         GrpcProtos
         OrbitCore)
 
