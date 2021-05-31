@@ -52,6 +52,13 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
       unwinder_->Unwind(event->GetPid(), current_maps_->Get(), event->GetRegisters(),
                         event->GetStackData(), event->GetStackSize());
 
+  if (libunwindstack_result.frames().empty()) {
+    // Even with unwinding errors this is not expected because we should at least get the program
+    // counter. Do nothing in case this doesn't hold for a reason we don't know.
+    ERROR("Unwound callstack has no frames");
+    return;
+  }
+
   FullCallstackSample sample;
   sample.set_pid(event->GetPid());
   sample.set_tid(event->GetTid());
@@ -59,24 +66,15 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
 
   Callstack* callstack = sample.mutable_callstack();
 
-  if (libunwindstack_result.frames().empty()) {
-    // Even with unwinding errors this is not expected because we should at least get the program
-    // counter, but let's handle it anyway.
-    ERROR("Unwound callstack has no frames");
-    if (unwind_error_counter_ != nullptr) {
-      ++(*unwind_error_counter_);
-    }
-    callstack->set_type(Callstack::kDwarfUnwindingError);
-    // Leave callstack.pcs empty, we have no frames at all.
-
-  } else if (libunwindstack_result.frames().front().map_name == "[uprobes]") {
+  if (libunwindstack_result.frames().front().map_name == "[uprobes]") {
     // Some samples can actually fall inside u(ret)probes code. They cannot be unwound by
     // libunwindstack (even when the unwinding is reported as successful, the result is wrong).
     if (samples_in_uretprobes_counter_ != nullptr) {
       ++(*samples_in_uretprobes_counter_);
     }
     callstack->set_type(Callstack::kInUprobes);
-    // Leave callstack.pcs empty, we have no frames at all.
+    // We are not able to send AddressInfos for frames in uprobes code.
+    callstack->add_pcs(libunwindstack_result.frames().front().pc);
 
   } else if (libunwindstack_result.frames().size() > 1 &&
              libunwindstack_result.frames().back().map_name == "[uprobes]") {
@@ -115,6 +113,7 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
     }
   }
 
+  CHECK(!callstack->pcs().empty());
   listener_->OnCallstackSample(std::move(sample));
 }
 
@@ -122,25 +121,19 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
   CHECK(listener_ != nullptr);
   CHECK(current_maps_ != nullptr);
 
+  // The top of a callchain is always inside the kernel code and we don't expect samples to be only
+  // inside the kernel. Do nothing in case this happens anyway for some reason.
+  if (event->GetCallchainSize() <= 1) {
+    ERROR("Callchain has only %lu frames", event->GetCallchainSize());
+    return;
+  }
+
   FullCallstackSample sample;
   sample.set_pid(event->GetPid());
   sample.set_tid(event->GetTid());
   sample.set_timestamp_ns(event->GetTimestamp());
 
   Callstack* callstack = sample.mutable_callstack();
-
-  // The top of a callchain is always inside the kernel code and we don't expect samples to be only
-  // inside the kernel.
-  if (event->GetCallchainSize() <= 1) {
-    ERROR("Callchain has only %lu frames", event->GetCallchainSize());
-    if (unwind_error_counter_ != nullptr) {
-      ++(*unwind_error_counter_);
-    }
-    callstack->set_type(Callstack::kFramePointerUnwindingError);
-    // Leave callstack.pcs empty, we have no frames at all.
-    listener_->OnCallstackSample(std::move(sample));
-    return;
-  }
 
   // TODO(b/179976268): When a sample falls on the first (push rbp) or second (mov rbp,rsp)
   //  instruction of the current function, frame-pointer unwinding skips the caller's frame,
@@ -167,7 +160,7 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
       ++(*samples_in_uretprobes_counter_);
     }
     callstack->set_type(Callstack::kInUprobes);
-    // Leave callstack.pcs empty, we have no frames at all.
+    callstack->add_pcs(top_ip);
     listener_->OnCallstackSample(std::move(sample));
     return;
   }
@@ -186,6 +179,7 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
     callstack->add_pcs(event->GetCallchain()[frame_index] - 1);
   }
 
+  CHECK(!callstack->pcs().empty());
   listener_->OnCallstackSample(std::move(sample));
 }
 

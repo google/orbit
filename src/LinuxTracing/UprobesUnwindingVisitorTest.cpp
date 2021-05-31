@@ -217,7 +217,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
 }
 
-TEST_F(UprobesUnwindingVisitorTest, VisitEmptyStackSampleWithoutUprobesSendsUnwindingError) {
+TEST_F(UprobesUnwindingVisitorTest, VisitEmptyStackSampleWithoutUprobesDoesNothing) {
   constexpr uint32_t kPid = 10;
   constexpr uint64_t kStackSize = 13;
   StackSamplePerfEvent event{kStackSize};
@@ -241,8 +241,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitEmptyStackSampleWithoutUprobesSendsUnwi
       .WillOnce(Return(
           LibunwindstackResult{empty_callstack, unwindstack::ErrorCode::ERROR_MEMORY_INVALID}));
 
-  orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
-  EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));
+  EXPECT_CALL(listener_, OnCallstackSample).Times(0);
 
   EXPECT_CALL(listener_, OnAddressInfo).Times(0);
 
@@ -253,11 +252,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitEmptyStackSampleWithoutUprobesSendsUnwi
 
   visitor_->visit(&event);
 
-  EXPECT_EQ(actual_callstack_sample.callstack().pcs().size(), 0);
-  EXPECT_EQ(actual_callstack_sample.callstack().type(),
-            orbit_grpc_protos::Callstack::kDwarfUnwindingError);
-
-  EXPECT_EQ(unwinding_errors, 1);
+  EXPECT_EQ(unwinding_errors, 0);
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
 }
 
@@ -420,7 +415,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitStackSampleWithinUprobeSendsInUprobesCa
 
   visitor_->visit(&event);
 
-  EXPECT_EQ(actual_callstack_sample.callstack().pcs().size(), 0);
+  EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kUprobesMapsStart));
   EXPECT_EQ(actual_callstack_sample.callstack().type(), orbit_grpc_protos::Callstack::kInUprobes);
 
   EXPECT_EQ(unwinding_errors, 0);
@@ -478,7 +473,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitValidCallchainSampleWithoutUprobesSends
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
 }
 
-TEST_F(UprobesUnwindingVisitorTest, VisitSingleFrameCallchainSampleSendsUnwindingError) {
+TEST_F(UprobesUnwindingVisitorTest, VisitSingleFrameCallchainSampleDoesNothing) {
   constexpr uint32_t kPid = 10;
   constexpr uint64_t kStackSize = 13;
 
@@ -508,8 +503,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitSingleFrameCallchainSampleSendsUnwindin
       .WillRepeatedly(Return(
           LibunwindstackResult{libunwindstack_callstack, unwindstack::ErrorCode::ERROR_NONE}));
 
-  orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
-  EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));
+  EXPECT_CALL(listener_, OnCallstackSample).Times(0);
 
   EXPECT_CALL(listener_, OnAddressInfo).Times(0);
 
@@ -520,11 +514,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitSingleFrameCallchainSampleSendsUnwindin
 
   visitor_->visit(&event);
 
-  EXPECT_EQ(actual_callstack_sample.callstack().pcs().size(), 0);
-  EXPECT_EQ(actual_callstack_sample.callstack().type(),
-            orbit_grpc_protos::Callstack::kFramePointerUnwindingError);
-
-  EXPECT_EQ(unwinding_errors, 1);
+  EXPECT_EQ(unwinding_errors, 0);
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
 }
 
@@ -692,7 +682,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleInsideUprobeCodeSendsInU
 
   visitor_->visit(&event);
 
-  EXPECT_EQ(actual_callstack_sample.callstack().pcs().size(), 0);
+  EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kUprobesMapsStart));
   EXPECT_EQ(actual_callstack_sample.callstack().type(), orbit_grpc_protos::Callstack::kInUprobes);
 
   EXPECT_EQ(unwinding_errors, 0);

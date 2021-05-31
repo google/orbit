@@ -897,6 +897,16 @@ TEST_F(SamplingDataPostProcessorTest, EmptyCallstackDataWithSummary) {
   VerifyEmptySortedCallstackReport(kThreadIdNotSampled);
 }
 
+TEST_F(SamplingDataPostProcessorTest, CallstackEventOfEmptyCallstack) {
+  AddAllAddressInfos();
+
+  static constexpr uint64_t kEmptyCallstackId = 99;
+  AddCallstackInfo(kEmptyCallstackId, {}, CallstackInfo::kComplete);
+  AddCallstackEvent(kEmptyCallstackId, kThreadId1);
+
+  EXPECT_DEATH(CreatePostProcessedSamplingDataWithSummary(), "Check failed");
+}
+
 TEST_F(SamplingDataPostProcessorTest, CallstackInfosButNoCallstackEvents) {
   AddAllAddressInfos();
   AddAllCallstackInfos(CallstackInfo::kComplete);
