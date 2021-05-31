@@ -29,6 +29,8 @@ struct SampledFunction {
   float exclusive_percent = 0.f;
   uint32_t inclusive = 0;
   float inclusive_percent = 0.f;
+  uint32_t unwind_errors = 0;
+  float unwind_errors_percent = 0.f;
   uint64_t absolute_address = 0;
   const orbit_client_protos::FunctionInfo* function = nullptr;
 };
@@ -42,6 +44,7 @@ struct ThreadSampleData {
   absl::flat_hash_map<uint64_t, uint32_t> sampled_address_to_count;
   absl::flat_hash_map<uint64_t, uint32_t> resolved_address_to_count;
   absl::flat_hash_map<uint64_t, uint32_t> resolved_address_to_exclusive_count;
+  absl::flat_hash_map<uint64_t, uint32_t> resolved_address_to_error_count;
   std::multimap<uint32_t, uint64_t> sorted_count_to_resolved_address;
   std::vector<SampledFunction> sampled_functions;
 

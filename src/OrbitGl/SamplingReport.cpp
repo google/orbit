@@ -132,18 +132,25 @@ void SamplingReport::DecrementCallstackIndex() {
 }
 
 std::string SamplingReport::GetSelectedCallstackString() const {
-  if (selected_sorted_callstack_report_) {
-    int num_occurrences =
-        selected_sorted_callstack_report_->callstack_counts[selected_callstack_index_].count;
-    int total_callstacks = selected_sorted_callstack_report_->total_callstack_count;
-
-    return absl::StrFormat(
-        "%i of %i unique callstacks.  [%i/%i total callstacks](%.2f%%)",
-        selected_callstack_index_ + 1, selected_sorted_callstack_report_->callstack_counts.size(),
-        num_occurrences, total_callstacks, 100.f * num_occurrences / total_callstacks);
+  if (selected_sorted_callstack_report_ == nullptr) {
+    return "Callstacks";
   }
 
-  return "Callstacks";
+  int num_occurrences =
+      selected_sorted_callstack_report_->callstack_counts[selected_callstack_index_].count;
+  int total_callstacks = selected_sorted_callstack_report_->total_callstack_count;
+
+  uint64_t callstack_id =
+      selected_sorted_callstack_report_->callstack_counts[selected_callstack_index_].callstack_id;
+  auto callstack_it = unique_callstacks_.find(callstack_id);
+  CHECK(callstack_it != unique_callstacks_.end());
+  CallstackInfo::CallstackType callstack_type = callstack_it->second->type();
+
+  std::string type_string = (callstack_type == CallstackInfo::kComplete) ? "" : "  -  Unwind error";
+  return absl::StrFormat(
+      "%i of %i unique callstacks  [%i/%i total samples] (%.2f%%)%s", selected_callstack_index_ + 1,
+      selected_sorted_callstack_report_->callstack_counts.size(), num_occurrences, total_callstacks,
+      100.f * num_occurrences / total_callstacks, type_string);
 }
 
 void SamplingReport::OnCallstackIndexChanged(size_t index) {
