@@ -83,6 +83,10 @@ class CaptureClient {
       uint64_t memory_sampling_period_ms, bool enable_cgroup_memory,
       CaptureEventProcessor* capture_event_processor);
 
+  void ProcessEvents(
+      CaptureEventProcessor* capture_event_processor,
+      const google::protobuf::RepeatedPtrField<orbit_grpc_protos::ClientCaptureEvent>& events);
+
   [[nodiscard]] ErrorMessageOr<void> FinishCapture();
 
   std::unique_ptr<orbit_grpc_protos::CaptureService::Stub> capture_service_;

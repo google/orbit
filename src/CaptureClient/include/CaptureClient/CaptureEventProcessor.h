@@ -23,13 +23,6 @@ class CaptureEventProcessor {
 
   virtual void ProcessEvent(const orbit_grpc_protos::ClientCaptureEvent& event) = 0;
 
-  template <typename Iterable>
-  void ProcessEvents(const Iterable& events) {
-    for (const auto& event : events) {
-      ProcessEvent(event);
-    }
-  }
-
   static std::unique_ptr<CaptureEventProcessor> CreateForCaptureListener(
       CaptureListener* capture_listener, absl::flat_hash_set<uint64_t> frame_track_function_ids);
 

@@ -1063,7 +1063,9 @@ TEST(CaptureEventProcessor, CanHandleMultipleEvents) {
   LinuxAddressInfo actual_address_info;
   EXPECT_CALL(listener, OnAddressInfo).Times(1).WillOnce(SaveArg<0>(&actual_address_info));
 
-  event_processor->ProcessEvents(events);
+  for (const auto& event : events) {
+    event_processor->ProcessEvent(event);
+  }
 
   EXPECT_EQ(actual_address_info.absolute_address(), address_info->absolute_address());
   EXPECT_EQ(actual_address_info.function_name(), kFunctionName);
