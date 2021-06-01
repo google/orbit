@@ -43,8 +43,10 @@ namespace {
 class CaptureEventProcessorForListener : public CaptureEventProcessor {
  public:
   explicit CaptureEventProcessorForListener(CaptureListener* capture_listener,
+                                            std::filesystem::path file_path,
                                             absl::flat_hash_set<uint64_t> frame_track_function_ids)
-      : frame_track_function_ids_(std::move(frame_track_function_ids)),
+      : file_path_{std::move(file_path)},
+        frame_track_function_ids_(std::move(frame_track_function_ids)),
         capture_listener_(capture_listener),
         api_event_processor_{capture_listener} {}
   ~CaptureEventProcessorForListener() override = default;
@@ -75,6 +77,7 @@ class CaptureEventProcessorForListener : public CaptureEventProcessor {
   void ProcessGpuQueueSubmission(const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission);
   void ProcessSystemMemoryUsage(const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage);
 
+  std::filesystem::path file_path_;
   absl::flat_hash_set<uint64_t> frame_track_function_ids_;
 
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::Callstack> callstack_intern_pool;
@@ -167,7 +170,7 @@ void CaptureEventProcessorForListener::ProcessEvent(const ClientCaptureEvent& ev
 
 void CaptureEventProcessorForListener::ProcessCaptureStarted(
     const orbit_grpc_protos::CaptureStarted& capture_started) {
-  capture_listener_->OnCaptureStarted(capture_started, frame_track_function_ids_);
+  capture_listener_->OnCaptureStarted(capture_started, file_path_, frame_track_function_ids_);
 }
 
 void CaptureEventProcessorForListener::ProcessCaptureFinished(
@@ -505,8 +508,9 @@ uint64_t CaptureEventProcessorForListener::GetStringHashAndSendToListenerIfNeces
 }  // namespace
 
 std::unique_ptr<CaptureEventProcessor> CaptureEventProcessor::CreateForCaptureListener(
-    CaptureListener* capture_listener, absl::flat_hash_set<uint64_t> frame_track_function_ids) {
-  return std::make_unique<CaptureEventProcessorForListener>(capture_listener,
+    CaptureListener* capture_listener, std::filesystem::path file_path,
+    absl::flat_hash_set<uint64_t> frame_track_function_ids) {
+  return std::make_unique<CaptureEventProcessorForListener>(capture_listener, std::move(file_path),
                                                             std::move(frame_track_function_ids));
 }
 

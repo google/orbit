@@ -219,7 +219,8 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureInfo(
     frame_track_function_ids.insert(function_id);
   }
 
-  capture_listener->OnCaptureStarted(capture_started, frame_track_function_ids);
+  capture_listener->OnCaptureStarted(capture_started, std::filesystem::path(),
+                                     frame_track_function_ids);
 
   for (const auto& address_info : capture_info.address_infos()) {
     if (*cancellation_requested) {

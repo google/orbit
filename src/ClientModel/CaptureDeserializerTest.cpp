@@ -65,7 +65,7 @@ namespace {
 class MockCaptureListener : public CaptureListener {
  public:
   MOCK_METHOD(void, OnCaptureStarted,
-              (const CaptureStarted& /*capture_started*/,
+              (const CaptureStarted& /*capture_started*/, std::filesystem::path /*file_path*/,
                absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/),
               (override));
   MOCK_METHOD(void, OnCaptureFinished, (const CaptureFinished& /*capture_finished*/), (override));
@@ -220,10 +220,10 @@ TEST(CaptureDeserializer, LoadCaptureInfoOnCaptureStarted) {
 
   ModuleManager module_manager;
 
-  EXPECT_CALL(listener, OnCaptureStarted(_, _))
+  EXPECT_CALL(listener, OnCaptureStarted(_, _, _))
       .Times(1)
       .WillOnce([&module_manager, &instrumented_function, kExecutablePath, kInstrumentedFunctionId,
-                 kModuleBuildId](const CaptureStarted& capture_started, Unused) {
+                 kModuleBuildId](const CaptureStarted& capture_started, Unused, Unused) {
         EXPECT_EQ(capture_started.process_id(), 42);
         EXPECT_EQ(capture_started.executable_path(), kExecutablePath);
         ASSERT_EQ(capture_started.capture_options().instrumented_functions_size(), 1);
@@ -295,10 +295,10 @@ TEST(CaptureDeserializer, LoadCaptureInfoNoBuildIdInFunctionInfo) {
   google::protobuf::io::CodedInputStream empty_stream(&empty_data, 0);
 
   ModuleManager module_manager;
-  EXPECT_CALL(listener, OnCaptureStarted(_, _))
+  EXPECT_CALL(listener, OnCaptureStarted(_, _, _))
       .Times(1)
       .WillOnce([&module_manager, &instrumented_function, kExecutablePath, kInstrumentedFunctionId,
-                 kModuleBuildId](const CaptureStarted& capture_started, Unused) {
+                 kModuleBuildId](const CaptureStarted& capture_started, Unused, Unused) {
         EXPECT_EQ(capture_started.process_id(), 42);
         EXPECT_EQ(capture_started.executable_path(), kExecutablePath);
         ASSERT_EQ(capture_started.capture_options().instrumented_functions_size(), 1);
@@ -808,7 +808,7 @@ TEST(CaptureDeserializer, LoadCaptureInfoUserDefinedCaptureData) {
   absl::flat_hash_set<uint64_t> actual_frame_track_function_ids;
   EXPECT_CALL(listener, OnCaptureStarted)
       .Times(1)
-      .WillOnce(SaveArg<1>(&actual_frame_track_function_ids));
+      .WillOnce(SaveArg<2>(&actual_frame_track_function_ids));
 
   ModuleManager module_manager;
   ErrorMessageOr<CaptureListener::CaptureOutcome> result =

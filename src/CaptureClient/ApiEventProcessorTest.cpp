@@ -28,6 +28,7 @@ namespace {
 class EmptyCaptureListener : public CaptureListener {
  public:
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& /*capture_started*/,
+                        std::filesystem::path /*file_path*/,
                         absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/) override {}
   void OnCaptureFinished(const orbit_grpc_protos::CaptureFinished& /*capture_finished*/) override {}
   void OnTimer(const orbit_client_protos::TimerInfo& /*timer_info*/) override {}
@@ -68,8 +69,8 @@ class ApiTester {
  public:
   ApiTester()
       : api_event_processor_{&api_event_listener_},
-        capture_event_processor_{
-            CaptureEventProcessor::CreateForCaptureListener(&capture_event_listener_, {})} {}
+        capture_event_processor_{CaptureEventProcessor::CreateForCaptureListener(
+            &capture_event_listener_, std::filesystem::path{}, {})} {}
 
   ApiTester& Start(const char* name = nullptr, orbit_api_color color = kOrbitColorAuto) {
     EnqueueApiEvent(orbit_api::kScopeStart, name, 0, color);

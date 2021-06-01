@@ -58,7 +58,7 @@ TEST(CaptureSerializer, GenerateCaptureFileName) {
 
   ModuleManager module_manager;
 
-  CaptureData capture_data{&module_manager, capture_started, {}};
+  CaptureData capture_data{&module_manager, capture_started, std::filesystem::path{}, {}};
   EXPECT_TRUE(module_manager.AddOrUpdateModules({module_info}).empty());
   capture_data.mutable_process()->UpdateModuleInfos({module_info});
 
@@ -128,7 +128,8 @@ TEST(CaptureSerializer, GenerateCaptureInfo) {
   frame_track_function_ids.insert(kInstrumentedFunctionId);
 
   ModuleManager module_manager;
-  CaptureData capture_data{&module_manager, capture_started, frame_track_function_ids};
+  CaptureData capture_data{&module_manager, capture_started, std::filesystem::path{},
+                           frame_track_function_ids};
   EXPECT_TRUE(module_manager.AddOrUpdateModules({module_info}).empty());
   capture_data.mutable_process()->UpdateModuleInfos({module_info});
 

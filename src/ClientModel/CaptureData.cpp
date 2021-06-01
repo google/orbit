@@ -30,13 +30,14 @@ using orbit_grpc_protos::ProcessInfo;
 namespace orbit_client_model {
 
 CaptureData::CaptureData(orbit_client_data::ModuleManager* module_manager,
-                         const CaptureStarted& capture_started,
+                         const CaptureStarted& capture_started, std::filesystem::path file_path,
                          absl::flat_hash_set<uint64_t> frame_track_function_ids)
     : module_manager_{module_manager},
       callstack_data_(std::make_unique<CallstackData>()),
       selection_callstack_data_(std::make_unique<CallstackData>()),
       tracepoint_data_(std::make_unique<TracepointData>()),
-      frame_track_function_ids_{std::move(frame_track_function_ids)} {
+      frame_track_function_ids_{std::move(frame_track_function_ids)},
+      file_path_{std::move(file_path)} {
   ProcessInfo process_info;
   process_info.set_pid(capture_started.process_id());
   std::filesystem::path executable_path{capture_started.executable_path()};

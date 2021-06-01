@@ -40,6 +40,7 @@ class CaptureData {
  public:
   explicit CaptureData(orbit_client_data::ModuleManager* module_manager,
                        const orbit_grpc_protos::CaptureStarted& capture_started,
+                       std::filesystem::path file_path,
                        absl::flat_hash_set<uint64_t> frame_track_function_ids);
 
   // We can not copy the unique_ptr, so we can not copy this object.
@@ -62,6 +63,8 @@ class CaptureData {
   [[nodiscard]] int32_t process_id() const;
 
   [[nodiscard]] std::string process_name() const;
+
+  [[nodiscard]] const std::filesystem::path& file_path() const { return file_path_; }
 
   [[nodiscard]] absl::Time capture_start_time() const { return capture_start_time_; }
 
@@ -251,6 +254,8 @@ class CaptureData {
   absl::Time capture_start_time_ = absl::Now();
 
   absl::flat_hash_set<uint64_t> frame_track_function_ids_;
+
+  const std::filesystem::path file_path_;
 };
 
 }  // namespace orbit_client_model

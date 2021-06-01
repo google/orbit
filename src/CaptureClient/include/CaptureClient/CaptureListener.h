@@ -22,6 +22,7 @@ class CaptureListener {
   virtual ~CaptureListener() = default;
 
   virtual void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
+                                std::filesystem::path file_path,
                                 absl::flat_hash_set<uint64_t> frame_track_function_ids) = 0;
   virtual void OnCaptureFinished(const orbit_grpc_protos::CaptureFinished& capture_finished) = 0;
 
