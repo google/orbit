@@ -58,6 +58,58 @@ namespace orbit_user_space_instrumentation {
                                                                     const AddressRange& code_range,
                                                                     uint64_t size);
 
+// Returns the signed 32 bit difference (a-b) between two absolute virtual 64 bit addresses or an
+// error if the difference is too large.
+[[nodiscard]] ErrorMessageOr<int32_t> AddressDifferenceAsInt32(uint64_t a, uint64_t b);
+
+// Merely serves as a return value for the function below.
+struct RelocatedInstruction {
+  // Machine code of the relocated instruction. Might contain multiple instructions to emulate what
+  // the original instruction achieved.
+  std::vector<uint8_t> code;
+
+  // Some relocated instructions contain an absolute address stored in the 'code' above. That
+  // address needs to be adjusted once all the relocations are done. The position of this absolute
+  // address in 'code' is what is stored here.
+  // Example: A conditional jump to a forward position needs to know the
+  // position of an instruction not yet processed.
+  //
+  // Original code does the following: condition cc is true -> InstructionB,
+  // otherwise -> InstructionA, InstructionB
+  //
+  // 0x0100: jcc rip+2 (==0x0104)
+  // 0x0102: InstructionA
+  // 0x0104: InstructionB
+  //
+  // -> relocate ->
+  //
+  // 0x0200: j(!cc) rip+08 (== 0x0210)
+  // 0x0202: jmp [rip+0] (== [0x0208])
+  // 0x0208: 8 byte destination address == address of relocated InstructionB == 0x0217
+  // 0x0210: InstructionA'
+  // 0x0217: InstructionB'
+  //
+  // The conditional jump at 0x0100 is translated into the first three lines of the result. The
+  // address (at 0x0208) of InstructionB' is not yet known at the point of the translation. So it
+  // needs to be recorded and handled later. In this case the `position_of_absolute_address` below
+  // would be 8.
+  std::optional<size_t> position_of_absolute_address = std::nullopt;
+};
+
+// Relocate `instruction` from `old_address` to `new_address`.
+// For many instructions the machine code can just be copied into the return value. The interesting
+// cases that need handling are relative jumps and calls, loop instructions and instructions that
+// use instruction pointer relative addressing (the implementation contains more detailed comments
+// for all the cases).
+// Returns the translated code and, optionally, a position in the code that might require an address
+// translation (details in the comment above).
+// Note that not all instructions can be handled (for various reasons, see the comments in the
+// implemention). At least in the current implementation it might not be possible to instrument some
+// functions.
+[[nodiscard]] ErrorMessageOr<RelocatedInstruction> RelocateInstruction(cs_insn* instruction,
+                                                                       uint64_t old_address,
+                                                                       uint64_t new_address);
+
 }  // namespace orbit_user_space_instrumentation
 
 #endif  // USER_SPACE_INSTRUMENTATION_TRAMPOLINE_H_
