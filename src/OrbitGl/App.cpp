@@ -268,7 +268,8 @@ void OrbitApp::OnCaptureFinished(const CaptureFinished& capture_finished) {
   }
 }
 
-void OrbitApp::OnCaptureStarted(const CaptureStarted& capture_started,
+void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
+                                std::filesystem::path file_path,
                                 absl::flat_hash_set<uint64_t> frame_track_function_ids) {
   // We need to block until initialization is complete to
   // avoid races when capture thread start processing data.
@@ -277,14 +278,14 @@ void OrbitApp::OnCaptureStarted(const CaptureStarted& capture_started,
   bool initialization_complete = false;
 
   main_thread_executor_->Schedule(
-      [this, &initialization_complete, &mutex, &capture_started,
+      [this, &initialization_complete, &mutex, &capture_started, file_path = std::move(file_path),
        frame_track_function_ids = std::move(frame_track_function_ids)]() mutable {
         ClearCapture();
 
         // It is safe to do this write on the main thread, as the capture thread is suspended until
         // this task is completely executed.
-        capture_data_ = std::make_unique<CaptureData>(module_manager_.get(), capture_started,
-                                                      std::move(frame_track_function_ids));
+        capture_data_ = std::make_unique<CaptureData>(
+            module_manager_.get(), capture_started, file_path, std::move(frame_track_function_ids));
         capture_window_->CreateTimeGraph(capture_data_.get());
         TrackManager* track_manager = GetMutableTimeGraph()->GetTrackManager();
         track_manager->SetIsDataFromSavedCapture(is_loading_capture_);
@@ -1010,7 +1011,8 @@ static ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureFromNewFormat(
   }
 
   std::unique_ptr<CaptureEventProcessor> capture_event_processor =
-      CaptureEventProcessor::CreateForCaptureListener(listener, frame_track_function_ids);
+      CaptureEventProcessor::CreateForCaptureListener(listener, capture_file->GetFilePath(),
+                                                      frame_track_function_ids);
 
   auto capture_section_input_stream = capture_file->CreateCaptureSectionInputStream();
   while (true) {
@@ -1094,29 +1096,30 @@ void OrbitApp::FireRefreshCallbacks(DataViewType type) {
 static std::unique_ptr<CaptureEventProcessor> CreateCaptureEventProcessor(
     CaptureListener* listener, const std::string& process_name,
     absl::flat_hash_set<uint64_t> frame_track_function_ids,
-    std::function<void(const ErrorMessage&)> error_handler) {
-  auto processor_for_capture_listener =
-      CaptureEventProcessor::CreateForCaptureListener(listener, frame_track_function_ids);
-
+    const std::function<void(const ErrorMessage&)>& error_handler) {
   if (!absl::GetFlag(FLAGS_enable_capture_autosave)) {
-    return processor_for_capture_listener;
+    return CaptureEventProcessor::CreateForCaptureListener(listener, std::filesystem::path{},
+                                                           std::move(frame_track_function_ids));
   }
 
   std::filesystem::path file_path = orbit_core::CreateOrGetCaptureDir() /
                                     orbit_client_model::capture_serializer::GenerateCaptureFileName(
                                         process_name, absl::Now(), "_autosave");
+
   auto save_to_file_processor_or_error = CaptureEventProcessor::CreateSaveToFileProcessor(
-      file_path, std::move(frame_track_function_ids), error_handler);
+      file_path, frame_track_function_ids, error_handler);
 
   if (save_to_file_processor_or_error.has_error()) {
     error_handler(ErrorMessage{
         absl::StrFormat("Unable to set up automatic capture saving to \"%s\": %s",
                         file_path.string(), save_to_file_processor_or_error.error().message())});
-    return processor_for_capture_listener;
+    return CaptureEventProcessor::CreateForCaptureListener(listener, std::filesystem::path{},
+                                                           std::move(frame_track_function_ids));
   }
 
   std::vector<std::unique_ptr<CaptureEventProcessor>> event_processors;
-  event_processors.push_back(std::move(processor_for_capture_listener));
+  event_processors.push_back(CaptureEventProcessor::CreateForCaptureListener(
+      listener, std::move(file_path), std::move(frame_track_function_ids)));
   event_processors.push_back(std::move(save_to_file_processor_or_error.value()));
   return CaptureEventProcessor::CreateCompositeProcessor(std::move(event_processors));
 }

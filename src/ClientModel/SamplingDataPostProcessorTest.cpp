@@ -125,7 +125,8 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
   void TearDown() override {}
 
   ModuleManager module_manager_;
-  CaptureData capture_data_{&module_manager_, CaptureStarted{}, absl::flat_hash_set<uint64_t>{}};
+  CaptureData capture_data_{&module_manager_, CaptureStarted{}, std::filesystem::path{},
+                            absl::flat_hash_set<uint64_t>{}};
 
   void AddCallstackInfo(uint64_t callstack_id, const std::vector<uint64_t>& callstack_frames,
                         CallstackInfo::CallstackType callstack_type) {

@@ -135,6 +135,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   void ShowSourceCode(const orbit_client_protos::FunctionInfo& function);
 
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
+                        std::filesystem::path file_path,
                         absl::flat_hash_set<uint64_t> frame_track_function_ids) override;
   void OnCaptureFinished(const orbit_grpc_protos::CaptureFinished& capture_finished) override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
