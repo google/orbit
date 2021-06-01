@@ -24,8 +24,8 @@ CallTreeViewItemModel::CallTreeViewItemModel(std::unique_ptr<CallTreeView> call_
 QVariant CallTreeViewItemModel::GetDisplayRoleData(const QModelIndex& index) const {
   CHECK(index.isValid());
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
-  auto thread_item = dynamic_cast<CallTreeThread*>(item);
-  auto function_item = dynamic_cast<CallTreeFunction*>(item);
+  auto* thread_item = dynamic_cast<CallTreeThread*>(item);
+  auto* function_item = dynamic_cast<CallTreeFunction*>(item);
   if (thread_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
@@ -79,8 +79,8 @@ QVariant CallTreeViewItemModel::GetDisplayRoleData(const QModelIndex& index) con
 QVariant CallTreeViewItemModel::GetEditRoleData(const QModelIndex& index) const {
   CHECK(index.isValid());
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
-  auto thread_item = dynamic_cast<CallTreeThread*>(item);
-  auto function_item = dynamic_cast<CallTreeFunction*>(item);
+  auto* thread_item = dynamic_cast<CallTreeThread*>(item);
+  auto* function_item = dynamic_cast<CallTreeFunction*>(item);
   if (thread_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
@@ -115,7 +115,7 @@ QVariant CallTreeViewItemModel::GetEditRoleData(const QModelIndex& index) const 
 QVariant CallTreeViewItemModel::GetToolTipRoleData(const QModelIndex& index) const {
   CHECK(index.isValid());
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
-  auto function_item = dynamic_cast<CallTreeFunction*>(item);
+  auto* function_item = dynamic_cast<CallTreeFunction*>(item);
   if (function_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
