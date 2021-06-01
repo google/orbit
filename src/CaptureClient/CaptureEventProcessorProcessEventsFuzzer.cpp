@@ -62,7 +62,9 @@ class MyCaptureListener : public CaptureListener {
 DEFINE_PROTO_FUZZER(const CaptureResponse& response) {
   MyCaptureListener listener;
   auto processor = CaptureEventProcessor::CreateForCaptureListener(&listener, {});
-  processor->ProcessEvents(response.capture_events());
+  for (const auto& event : response.capture_events()) {
+    processor->ProcessEvent(event);
+  }
 }
 
 }  // namespace orbit_capture_client

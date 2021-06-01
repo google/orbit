@@ -38,6 +38,7 @@ using orbit_grpc_protos::ApiFunction;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
+using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::TracepointInfo;
 using orbit_grpc_protos::UnwindingMethod;
@@ -84,6 +85,7 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
   }
 
   state_ = State::kStarting;
+  LOG("State is now kStarting");
 
   auto capture_result = thread_pool->Schedule(
       [this, process_id, &module_manager, selected_functions = std::move(selected_functions),
@@ -219,11 +221,6 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   }
   LOG("Sent CaptureRequest on Capture's gRPC stream: asking to start capturing");
 
-  {
-    absl::MutexLock lock{&state_mutex_};
-    state_ = State::kStarted;
-  }
-
   while (!writes_done_failed_ && !try_abort_) {
     CaptureResponse response;
     bool read_succeeded;
@@ -232,7 +229,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
       read_succeeded = reader_writer_->Read(&response);
     }
     if (read_succeeded) {
-      capture_event_processor->ProcessEvents(response.capture_events());
+      ProcessEvents(capture_event_processor, response.capture_events());
     } else {
       break;
     }
@@ -265,9 +262,8 @@ bool CaptureClient::StopCapture() {
   {
     absl::MutexLock lock(&state_mutex_);
     if (state_ == State::kStarting) {
-      // Block and wait until the state is not kStarting
-      bool (*is_not_starting)(State*) = [](State* state) { return *state != State::kStarting; };
-      state_mutex_.Await(absl::Condition(is_not_starting, &state_));
+      LOG("StopCapture ignored, because it is starting and cannot be stopped at this stage.");
+      return false;
     }
 
     if (state_ != State::kStarted) {
@@ -275,6 +271,7 @@ bool CaptureClient::StopCapture() {
       return false;
     }
     state_ = State::kStopping;
+    LOG("State is now kStopping");
   }
 
   bool writes_done_succeeded;
@@ -339,6 +336,7 @@ ErrorMessageOr<void> CaptureClient::FinishCapture() {
   {
     absl::MutexLock lock(&state_mutex_);
     state_ = State::kStopped;
+    LOG("State is now kStopped");
   }
 
   if (!status.ok()) {
@@ -346,6 +344,19 @@ ErrorMessageOr<void> CaptureClient::FinishCapture() {
     return ErrorMessage{status.error_message()};
   }
   return outcome::success();
+}
+
+void CaptureClient::ProcessEvents(
+    CaptureEventProcessor* capture_event_processor,
+    const google::protobuf::RepeatedPtrField<ClientCaptureEvent>& events) {
+  for (const auto& event : events) {
+    capture_event_processor->ProcessEvent(event);
+    if (event.event_case() == ClientCaptureEvent::kCaptureStarted) {
+      absl::MutexLock lock{&state_mutex_};
+      state_ = State::kStarted;
+      LOG("State is now kStarted");
+    }
+  }
 }
 
 }  // namespace orbit_capture_client
