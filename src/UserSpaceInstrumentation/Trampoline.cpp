@@ -199,11 +199,16 @@ ErrorMessageOr<RelocatedInstruction> RelocateInstruction(cs_insn* instruction, u
     // Most of these are optional - at least one byte of opcode needs to be present.
     // Many instructions that refer to an operand in memory have an addressing-form specifier byte
     // (called the modrm byte) following the primary opcode.
-    // In case (modrm & 0xC7 == 0x05) this modrm bytes encodes a memory operand that is computed as
+    // In case (modrm & 0xC7 == 0x05) this modrm byte encodes a memory operand that is computed as
     // the rip of the next instruction plus the 32 bit offset encoded in the four address
     // displacement bytes of the instruction.
     // See "Intel 64 and IA-32 Architectures Software Developer’s Manual Vol. 2A" Chapter 2.1.
     // Specifically table 2-2.
+    //
+    // Example of original code (add one to memory location at offset 0x123456 from rip):
+    // add [rip + 0x123456], 1       48 83 05 56 34 12 00 01
+    // The relocated instruction looks the same - we merely adjust the 0x123456 such that we address
+    // the same memory location but relative to the new code location.
     const int32_t old_displacement = *absl::bit_cast<int32_t*>(
         instruction->bytes + instruction->detail->x86.encoding.disp_offset);
     const uint64_t old_absolute_address = old_address + instruction->size + old_displacement;
@@ -222,15 +227,10 @@ ErrorMessageOr<RelocatedInstruction> RelocateInstruction(cs_insn* instruction, u
   } else if (instruction->detail->x86.opcode[0] == 0xeb ||
              instruction->detail->x86.opcode[0] == 0xe9) {
     // This handles unconditional jump to relative immediate parameter (32 bit or 8 bit).
-    // Examples of original code
-    // (endless loop doing nothing)
-    // nop                          90
-    // jmp 0xfc                     eb fc
-    // (jump to a 32 bit offset)
+    // Example of original code (jump to a 32 bit offset):
     // jmp 0x01020304               e9 01 20 03 04
-    //
-    // In both cases we compute the absolute address of the jump target, store it in memory in the
-    // trampoline and jump there:
+    // In both cases (8 and 32 bit offsets) we compute the absolute address of the jump target,
+    // store it in memory in the trampoline and jump there:
     // jmp [rip + 0]                ff 25 00 00 00 00
     // .byte absolute_address       01 02 03 04 05 06 07 08
     const int32_t immediate =
@@ -241,13 +241,13 @@ ErrorMessageOr<RelocatedInstruction> RelocateInstruction(cs_insn* instruction, u
                                        instruction->detail->x86.encoding.imm_offset);
     const uint64_t absolute_address = old_address + instruction->size + immediate;
     MachineCode code;
-    code.AppendBytes({0xff, 0x25})
-        .AppendImmediate32(0x00000000)
-        .AppendImmediate64(absolute_address);
+    code.AppendBytes({0xff, 0x25}).AppendImmediate32(0).AppendImmediate64(absolute_address);
     result.code = code.GetResultAsVector();
     result.position_of_absolute_address = 6;
   } else if (instruction->detail->x86.opcode[0] == 0xe8) {
     // Call function at relative immediate parameter.
+    // Example of original code (call function at offset 0x01020304):
+    // call 0x01020304              e8 04 03 02 01
     // We compute the absolute address of the called function and call it like this:
     // call [rip+2]                 ff 15 02 00 00 00
     // jmp label;                   eb 08
@@ -265,8 +265,11 @@ ErrorMessageOr<RelocatedInstruction> RelocateInstruction(cs_insn* instruction, u
     result.position_of_absolute_address = 8;
   } else if ((instruction->detail->x86.opcode[0] & 0xf0) == 0x70) {
     // 0x7? are conditional jumps to an 8 bit immediate.
-    // We invert the condition of the jump and construct the following code sequence.
-    // j(!cc) 0x0e                  7? 0e  // 0x0e == 14 = 6 bytes jmp + 8 bytes address
+    // Example of original code (jump backwards 10 bytes if last result was not zero):
+    // jne 0xf6                     75 f6
+    // We invert the condition of the jump, compute the absolute address of the jump target and
+    // construct the following code sequence.
+    // je 0x0e                      74 0e  // 0x0e == 14 = 6 bytes jmp + 8 bytes address
     // jmp [rip + 0]                ff 25 00 00 00 00
     // .byte absolute_address       01 02 03 04 05 06 07 08
     const int8_t immediate =
@@ -283,9 +286,11 @@ ErrorMessageOr<RelocatedInstruction> RelocateInstruction(cs_insn* instruction, u
     result.position_of_absolute_address = 8;
   } else if (instruction->detail->x86.opcode[0] == 0x0f &&
              (instruction->detail->x86.opcode[1] & 0xf0) == 0x80) {
-    // 0x0f 0x8? are conditional jumps to a 32 bit immediate
+    // 0x0f 0x8? are conditional jumps to a 32 bit immediate.
+    // Example of original code (jump backwards 10 bytes if last result was not zero):
+    // jne                          0f 85 f6 ff ff ff
     // We invert the condition of the jump and construct the following code sequence.
-    // j(!cc) 0x0e                  7? 0e
+    // je 0x0e                      74 0e  // 0x0e == 14 = 6 bytes jmp + 8 bytes address
     // jmp [rip + 0]                ff 25 00 00 00 00
     // .byte absolute_address       01 02 03 04 05 06 07 08
     const int32_t immediate = *absl::bit_cast<int32_t*>(
