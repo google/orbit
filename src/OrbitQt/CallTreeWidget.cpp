@@ -604,7 +604,7 @@ void CallTreeWidget::ProgressBarItemDelegate::paint(QPainter* painter,
   option_progress_bar.palette.setColor(QPalette::Base, bar_background_color);
 
   const QColor palette_highlight_color = option.palette.color(QPalette::Highlight);
-  static const float kBarColorValueReductionFactor = .3f / .4f;
+  static constexpr float kBarColorValueReductionFactor = .3f / .4f;
   const QColor bar_foreground_color = QColor::fromHsv(
       palette_highlight_color.hue(), palette_highlight_color.saturation(),
       static_cast<int>(round(palette_highlight_color.value() * kBarColorValueReductionFactor)));
