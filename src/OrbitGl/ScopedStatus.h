@@ -8,7 +8,7 @@
 #include <string>
 #include <thread>
 
-#include "MainThreadExecutor.h"
+#include "OrbitBase/Executor.h"
 #include "OrbitBase/Logging.h"
 #include "StatusListener.h"
 
@@ -36,10 +36,10 @@
 class ScopedStatus final {
  public:
   ScopedStatus() = default;
-  explicit ScopedStatus(std::weak_ptr<MainThreadExecutor> main_thread_executor,
+  explicit ScopedStatus(std::weak_ptr<orbit_base::Executor> executor,
                         StatusListener* status_listener, const std::string& status_message) {
     data_ = std::make_unique<Data>();
-    data_->main_thread_executor = std::move(main_thread_executor);
+    data_->executor = std::move(executor);
     data_->status_listener = status_listener;
     data_->main_thread_id = std::this_thread::get_id();
     data_->status_id = status_listener->AddStatus(status_message);
@@ -67,7 +67,7 @@ class ScopedStatus final {
     if (std::this_thread::get_id() == data_->main_thread_id) {
       data_->status_listener->UpdateStatus(data_->status_id, message);
     } else {
-      TrySchedule(data_->main_thread_executor,
+      TrySchedule(data_->executor,
                   [status_id = data_->status_id, status_listener = data_->status_listener,
                    message] { status_listener->UpdateStatus(status_id, message); });
     }
@@ -82,7 +82,7 @@ class ScopedStatus final {
     if (std::this_thread::get_id() == data_->main_thread_id) {
       data_->status_listener->ClearStatus(data_->status_id);
     } else {
-      TrySchedule(data_->main_thread_executor,
+      TrySchedule(data_->executor,
                   [status_listener = data_->status_listener, status_id = data_->status_id] {
                     status_listener->ClearStatus(status_id);
                   });
@@ -94,7 +94,7 @@ class ScopedStatus final {
   // Instances fo this class are going to be moved a lot so we want data to be
   // stored in easily movable form.
   struct Data {
-    std::weak_ptr<MainThreadExecutor> main_thread_executor;
+    std::weak_ptr<orbit_base::Executor> executor;
     StatusListener* status_listener = nullptr;
     std::thread::id main_thread_id;
     uint64_t status_id = 0;

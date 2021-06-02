@@ -17,13 +17,12 @@ class MainThreadExecutorImpl : public QObject, public MainThreadExecutor {
   Q_OBJECT
   explicit MainThreadExecutorImpl(QObject* parent = nullptr) : QObject(parent) {}
 
+  void ScheduleImpl(std::unique_ptr<Action> action) override;
+
  public:
   [[nodiscard]] static std::shared_ptr<MainThreadExecutorImpl> Create() {
     return std::shared_ptr<MainThreadExecutorImpl>{new MainThreadExecutorImpl{}};
   }
-
-  using MainThreadExecutor::Schedule;
-  void Schedule(std::unique_ptr<Action> action) override;
 
   WaitResult WaitFor(const orbit_base::Future<void>& future,
                      std::chrono::milliseconds timeout) override;

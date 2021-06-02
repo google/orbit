@@ -17,7 +17,7 @@
 
 namespace orbit_qt_utils {
 
-void MainThreadExecutorImpl::Schedule(std::unique_ptr<Action> action) {
+void MainThreadExecutorImpl::ScheduleImpl(std::unique_ptr<Action> action) {
   QMetaObject::invokeMethod(
       this,
       [action = std::move(action)]() {

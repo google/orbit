@@ -25,6 +25,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/CrashHandler.h
         include/OrbitBase/ExecutablePath.h
         include/OrbitBase/ExecuteCommand.h
+        include/OrbitBase/Executor.h
         include/OrbitBase/File.h
         include/OrbitBase/Future.h
         include/OrbitBase/FutureHelpers.h
@@ -87,6 +88,7 @@ target_sources(OrbitBaseTests PRIVATE
         AnyInvocableTest.cpp
         AnyMovableTest.cpp
         ExecutablePathTest.cpp
+        ExecutorTest.cpp
         FileTest.cpp
         FutureTest.cpp
         FutureHelpersTest.cpp
