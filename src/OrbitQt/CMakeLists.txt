@@ -25,7 +25,6 @@ target_sources(
           DeploymentConfigurations.h
           ElidedLabel.h
           Error.h
-          EventLoop.h
           FilterPanelWidget.h
           FilterPanelWidgetAction.h
           orbitaboutdialog.h
@@ -134,11 +133,9 @@ target_compile_options(OrbitQtTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(OrbitQtTests
         PRIVATE AccessibilityAdapter.h
                 CutoutWidget.h
-                EventLoop.h
                 TutorialOverlay.h)
 target_sources(OrbitQtTests
         PRIVATE AccessibilityAdapterTest.cpp
-                EventLoopTest.cpp
                 ProcessItemModelTest.cpp
                 StatusListenerImplTest.cpp
                 TargetLabelTest.cpp
