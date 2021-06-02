@@ -30,19 +30,19 @@ class TimerBlock {
   explicit TimerBlock(TimerBlock* prev)
       : prev_(prev),
         next_(nullptr),
-        size_(0),
         min_timestamp_(std::numeric_limits<uint64_t>::max()),
-        max_timestamp_(std::numeric_limits<uint64_t>::min()) {}
+        max_timestamp_(std::numeric_limits<uint64_t>::min()) {
+    data_.reserve(kBlockSize);
+  }
 
   // Append a new element to the end of the block using placement-new.
   template <class... Args>
   TextBox& emplace_back(Args&&... args) {
-    CHECK(size_ < kBlockSize);
-    TextBox* text_box = new (&data_[size_]) TextBox(std::forward<Args>(args)...);
-    ++size_;
-    min_timestamp_ = std::min(text_box->GetTimerInfo().start(), min_timestamp_);
-    max_timestamp_ = std::max(text_box->GetTimerInfo().end(), max_timestamp_);
-    return *text_box;
+    CHECK(size() < kBlockSize);
+    TextBox& text_box = data_.emplace_back(std::forward<Args>(args)...);
+    min_timestamp_ = std::min(text_box.GetTimerInfo().start(), min_timestamp_);
+    max_timestamp_ = std::max(text_box.GetTimerInfo().end(), max_timestamp_);
+    return text_box;
   }
 
   // Tests if [min, max] intersects with [min_timestamp, max_timestamp], where
@@ -50,7 +50,7 @@ class TimerBlock {
   // that have so far been added to this block.
   [[nodiscard]] bool Intersects(uint64_t min, uint64_t max) const;
 
-  [[nodiscard]] uint64_t size() const { return size_; }
+  [[nodiscard]] size_t size() const { return data_.size(); }
   [[nodiscard]] bool at_capacity() const { return size() == kBlockSize; }
 
   TextBox& operator[](std::size_t idx) { return data_[idx]; }
@@ -59,8 +59,7 @@ class TimerBlock {
  private:
   TimerBlock* prev_;
   TimerBlock* next_;
-  uint64_t size_;
-  std::array<TextBox, kBlockSize> data_;
+  std::vector<TextBox> data_;
 
   uint64_t min_timestamp_;
   uint64_t max_timestamp_;

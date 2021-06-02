@@ -19,14 +19,14 @@ class BlockIterator;
 template <class T, uint32_t Size>
 class Block final {
  public:
-  explicit Block(Block<T, Size>* prev) : prev_(prev), next_(nullptr), size_(0) {}
+  explicit Block(Block<T, Size>* prev) : prev_(prev), next_(nullptr) { data_.reserve(Size); }
 
   [[nodiscard]] bool HasNext() const { return next_ != nullptr; }
   [[nodiscard]] const Block<T, Size>* next() const { return next_; }
   [[nodiscard]] const Block<T, Size>* prev() const { return prev_; }
-  [[nodiscard]] uint32_t size() const { return size_; }
-  [[nodiscard]] const T* data() const { return data_; }
-  [[nodiscard]] bool at_capacity() const { return size_ == Size; }
+  [[nodiscard]] uint32_t size() const { return data_.size(); }
+  [[nodiscard]] const T* data() const { return data_.data(); }
+  [[nodiscard]] bool at_capacity() const { return size() == Size; }
 
  private:
   friend class BlockIterator<T, Size>;
@@ -36,10 +36,10 @@ class Block final {
   [[nodiscard]] Block<T, Size>* mutable_next() { return next_; }
   [[nodiscard]] Block<T, Size>* mutable_prev() { return prev_; }
 
-  void ResetSize() { size_ = 0; }
+  void ResetSize() { data_.resize(0); }
 
   void Reset() {
-    size_ = 0;
+    ResetSize();
     next_ = nullptr;
     prev_ = nullptr;
   }
@@ -47,16 +47,13 @@ class Block final {
   // Returns block the element was inserted to.
   template <class... Args>
   T& emplace_back(Args&&... args) {
-    CHECK(size_ < Size);
-    T* new_item = new (&data_[size_]) T(std::forward<Args>(args)...);
-    ++size_;
-    return *new_item;
+    CHECK(size() < Size);
+    return data_.emplace_back(std::forward<Args>(args)...);
   }
 
   Block<T, Size>* prev_;
   Block<T, Size>* next_;
-  uint32_t size_;
-  T data_[Size];
+  std::vector<T> data_;
 };
 
 template <class T, uint32_t BlockSize>
