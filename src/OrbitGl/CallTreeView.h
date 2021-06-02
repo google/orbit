@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_CALL_TREE_VIEW_H_
 #define ORBIT_GL_CALL_TREE_VIEW_H_
 
+#include <absl/container/node_hash_map.h>
+
 #include <cstdint>
 #include <filesystem>
 #include <memory>
@@ -14,10 +16,10 @@
 
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientModel/CaptureData.h"
-#include "absl/container/node_hash_map.h"
 
 class CallTreeThread;
 class CallTreeFunction;
+class CallTreeUnwindErrors;
 
 class CallTreeNode {
  public:
@@ -28,7 +30,8 @@ class CallTreeNode {
   [[nodiscard]] const CallTreeNode* parent() const { return parent_; }
 
   [[nodiscard]] uint64_t child_count() const {
-    return thread_children_.size() + function_children_.size();
+    return thread_children_.size() + function_children_.size() +
+           (unwind_errors_child_ != nullptr ? 1 : 0);
   }
 
   [[nodiscard]] std::vector<const CallTreeNode*> children() const;
@@ -43,6 +46,10 @@ class CallTreeNode {
                                                     std::string function_name,
                                                     std::string module_path,
                                                     std::string module_build_id);
+
+  [[nodiscard]] CallTreeUnwindErrors* GetUnwindErrorsOrNull();
+
+  [[nodiscard]] CallTreeUnwindErrors* AddAndGetUnwindErrors();
 
   [[nodiscard]] uint64_t sample_count() const { return sample_count_; }
 
@@ -68,10 +75,13 @@ class CallTreeNode {
   }
 
  protected:
-  // node_hash_map instead of flat_hash_map as pointer stability is needed for
-  // the CallTreeNode::parent_ field.
+  // absl::node_hash_map instead of absl::flat_hash_map as pointer stability is
+  // needed for the CallTreeNode::parent_ field.
   absl::node_hash_map<int32_t, CallTreeThread> thread_children_;
   absl::node_hash_map<uint64_t, CallTreeFunction> function_children_;
+  // std::shared_ptr instead of std::unique_ptr because absl::node_hash_map
+  // needs the copy constructor (even for try_emplace).
+  std::shared_ptr<CallTreeUnwindErrors> unwind_errors_child_;
 
  private:
   CallTreeNode* parent_;
@@ -120,6 +130,11 @@ class CallTreeThread : public CallTreeNode {
  private:
   int32_t thread_id_;
   std::string thread_name_;
+};
+
+class CallTreeUnwindErrors : public CallTreeNode {
+ public:
+  explicit CallTreeUnwindErrors(CallTreeNode* parent) : CallTreeNode{parent} {}
 };
 
 class CallTreeView : public CallTreeNode {

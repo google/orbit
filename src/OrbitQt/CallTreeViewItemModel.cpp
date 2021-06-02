@@ -7,6 +7,7 @@
 #include <absl/strings/str_format.h>
 #include <stddef.h>
 
+#include <QColor>
 #include <QtCore>
 #include <algorithm>
 #include <iterator>
@@ -26,6 +27,8 @@ QVariant CallTreeViewItemModel::GetDisplayRoleData(const QModelIndex& index) con
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
   auto* thread_item = dynamic_cast<CallTreeThread*>(item);
   auto* function_item = dynamic_cast<CallTreeFunction*>(item);
+  auto* unwind_errors_item = dynamic_cast<CallTreeUnwindErrors*>(item);
+
   if (thread_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
@@ -51,6 +54,7 @@ QVariant CallTreeViewItemModel::GetDisplayRoleData(const QModelIndex& index) con
       case kOfParent:
         return QString::fromStdString(absl::StrFormat("%.2f%%", thread_item->GetPercentOfParent()));
     }
+
   } else if (function_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
@@ -72,6 +76,21 @@ QVariant CallTreeViewItemModel::GetDisplayRoleData(const QModelIndex& index) con
         return QString::fromStdString(
             absl::StrFormat("%#llx", function_item->function_absolute_address()));
     }
+
+  } else if (unwind_errors_item != nullptr) {
+    switch (index.column()) {
+      case kThreadOrFunction:
+        return QStringLiteral("[unwind errors]");
+      case kInclusive:
+        return QString::fromStdString(absl::StrFormat(
+            "%.2f%% (%llu)",
+            unwind_errors_item->GetInclusivePercent(call_tree_view_->sample_count()),
+            unwind_errors_item->sample_count()));
+      // Exclusive makes no sense for this node, and would always be zero.
+      case kOfParent:
+        return QString::fromStdString(
+            absl::StrFormat("%.2f%%", unwind_errors_item->GetPercentOfParent()));
+    }
   }
   return QVariant();
 }
@@ -81,6 +100,8 @@ QVariant CallTreeViewItemModel::GetEditRoleData(const QModelIndex& index) const 
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
   auto* thread_item = dynamic_cast<CallTreeThread*>(item);
   auto* function_item = dynamic_cast<CallTreeFunction*>(item);
+  auto* unwind_errors_item = dynamic_cast<CallTreeUnwindErrors*>(item);
+
   if (thread_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
@@ -93,6 +114,7 @@ QVariant CallTreeViewItemModel::GetEditRoleData(const QModelIndex& index) const 
       case kOfParent:
         return thread_item->GetPercentOfParent();
     }
+
   } else if (function_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
@@ -107,6 +129,14 @@ QVariant CallTreeViewItemModel::GetEditRoleData(const QModelIndex& index) const 
         return QString::fromStdString(function_item->GetModuleName());
       case kFunctionAddress:
         return static_cast<qulonglong>(function_item->function_absolute_address());
+    }
+
+  } else if (unwind_errors_item != nullptr) {
+    switch (index.column()) {
+      case kInclusive:
+        return unwind_errors_item->GetInclusivePercent(call_tree_view_->sample_count());
+      case kOfParent:
+        return unwind_errors_item->GetPercentOfParent();
     }
   }
   return QVariant();
@@ -123,6 +153,17 @@ QVariant CallTreeViewItemModel::GetToolTipRoleData(const QModelIndex& index) con
       case kModule:
         return QString::fromStdString(function_item->module_path());
     }
+  }
+  return QVariant();
+}
+
+QVariant CallTreeViewItemModel::GetForegroundRoleData(const QModelIndex& index) const {
+  CHECK(index.isValid());
+  auto* item = static_cast<CallTreeNode*>(index.internalPointer());
+  auto* unwind_errors_item = dynamic_cast<CallTreeUnwindErrors*>(item);
+  if (unwind_errors_item != nullptr && index.column() == kThreadOrFunction) {
+    static const QColor kUnwindErrorsColor{Qt::red};
+    return kUnwindErrorsColor;
   }
   return QVariant();
 }
@@ -160,6 +201,8 @@ QVariant CallTreeViewItemModel::data(const QModelIndex& index, int role) const {
     // When role == Qt::ToolTipRole more detailed information than it's shown is returned.
     case Qt::ToolTipRole:
       return GetToolTipRoleData(index);
+    case Qt::ForegroundRole:
+      return GetForegroundRoleData(index);
     case kModulePathRole:
       return GetModulePathRoleData(index);
     case kModuleBuildIdRole:
