@@ -47,6 +47,7 @@ class CallTreeViewItemModel : public QAbstractItemModel {
   [[nodiscard]] QVariant GetDisplayRoleData(const QModelIndex& index) const;
   [[nodiscard]] QVariant GetEditRoleData(const QModelIndex& index) const;
   [[nodiscard]] QVariant GetToolTipRoleData(const QModelIndex& index) const;
+  [[nodiscard]] QVariant GetForegroundRoleData(const QModelIndex& index) const;
   [[nodiscard]] QVariant GetModulePathRoleData(const QModelIndex& index) const;
   [[nodiscard]] QVariant GetModuleBuildIdRoleData(const QModelIndex& index) const;
 

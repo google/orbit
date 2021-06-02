@@ -22,14 +22,17 @@ using orbit_client_model::CaptureData;
 using orbit_client_protos::CallstackInfo;
 
 std::vector<const CallTreeNode*> CallTreeNode::children() const {
-  std::vector<const CallTreeNode*> ret;
+  std::vector<const CallTreeNode*> children;
   for (const auto& tid_and_thread : thread_children_) {
-    ret.push_back(&tid_and_thread.second);
+    children.push_back(&tid_and_thread.second);
   }
   for (const auto& address_and_functions : function_children_) {
-    ret.push_back(&address_and_functions.second);
+    children.push_back(&address_and_functions.second);
   }
-  return ret;
+  if (unwind_errors_child_ != nullptr) {
+    children.push_back(unwind_errors_child_.get());
+  }
+  return children;
 }
 
 CallTreeThread* CallTreeNode::GetThreadOrNull(int32_t thread_id) {
@@ -41,9 +44,10 @@ CallTreeThread* CallTreeNode::GetThreadOrNull(int32_t thread_id) {
 }
 
 CallTreeThread* CallTreeNode::AddAndGetThread(int32_t thread_id, std::string thread_name) {
-  thread_children_.insert_or_assign(thread_id,
-                                    CallTreeThread{thread_id, std::move(thread_name), this});
-  return &thread_children_.at(thread_id);
+  const auto& [it, inserted] = thread_children_.try_emplace(
+      thread_id, CallTreeThread{thread_id, std::move(thread_name), this});
+  CHECK(inserted);
+  return &it->second;
 }
 
 CallTreeFunction* CallTreeNode::GetFunctionOrNull(uint64_t function_absolute_address) {
@@ -58,11 +62,20 @@ CallTreeFunction* CallTreeNode::AddAndGetFunction(uint64_t function_absolute_add
                                                   std::string function_name,
                                                   std::string module_path,
                                                   std::string module_build_id) {
-  function_children_.insert_or_assign(
+  const auto& [it, inserted] = function_children_.try_emplace(
       function_absolute_address,
       CallTreeFunction{function_absolute_address, std::move(function_name), std::move(module_path),
                        std::move(module_build_id), this});
-  return &function_children_.at(function_absolute_address);
+  CHECK(inserted);
+  return &it->second;
+}
+
+CallTreeUnwindErrors* CallTreeNode::GetUnwindErrorsOrNull() { return unwind_errors_child_.get(); }
+
+CallTreeUnwindErrors* CallTreeNode::AddAndGetUnwindErrors() {
+  CHECK(unwind_errors_child_ == nullptr);
+  unwind_errors_child_ = std::make_unique<CallTreeUnwindErrors>(this);
+  return unwind_errors_child_.get();
 }
 
 uint64_t CallTreeNode::GetExclusiveSampleCount() const {
@@ -114,6 +127,27 @@ static void AddCallstackToTopDownThread(CallTreeThread* thread_node,
   }
 }
 
+static void AddUnwindErrorToTopDownThread(CallTreeThread* thread_node,
+                                          const CallstackInfo& resolved_callstack,
+                                          uint64_t callstack_sample_count,
+                                          const CaptureData& capture_data) {
+  CallTreeUnwindErrors* unwind_errors_node = thread_node->GetUnwindErrorsOrNull();
+  if (unwind_errors_node == nullptr) {
+    unwind_errors_node = thread_node->AddAndGetUnwindErrors();
+  }
+  unwind_errors_node->IncreaseSampleCount(callstack_sample_count);
+
+  CHECK(!resolved_callstack.frames().empty());
+  // Only use the innermost frame for unwind errors.
+  uint64_t frame = resolved_callstack.frames(0);
+  const std::string& function_name = capture_data.GetFunctionNameByAddress(frame);
+  const std::string& module_path = capture_data.GetModulePathByAddress(frame);
+  const std::string module_build_id = capture_data.FindModuleBuildIdByAddress(frame).value_or("");
+  CallTreeFunction* function_node = GetOrCreateFunctionNode(
+      unwind_errors_node, frame, function_name, module_path, module_build_id);
+  function_node->IncreaseSampleCount(callstack_sample_count);
+}
+
 [[nodiscard]] static CallTreeThread* GetOrCreateThreadNode(
     CallTreeNode* current_node, int32_t tid, const std::string& process_name,
     const absl::flat_hash_map<int32_t, std::string>& thread_names) {
@@ -146,11 +180,6 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
       const CallstackInfo& resolved_callstack =
           post_processed_sampling_data.GetResolvedCallstack(callstack_id);
 
-      // TODO(b/188496245): Include aggregated statistics on unwinding errors.
-      if (resolved_callstack.type() != CallstackInfo::kComplete) {
-        continue;
-      }
-
       // Don't count samples from the all-thread case again.
       if (tid != orbit_base::kAllProcessThreadsTid) {
         top_down_view->IncreaseSampleCount(sample_count);
@@ -159,7 +188,12 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
       CallTreeThread* thread_node =
           GetOrCreateThreadNode(top_down_view.get(), tid, process_name, thread_names);
       thread_node->IncreaseSampleCount(sample_count);
-      AddCallstackToTopDownThread(thread_node, resolved_callstack, sample_count, capture_data);
+
+      if (resolved_callstack.type() == CallstackInfo::kComplete) {
+        AddCallstackToTopDownThread(thread_node, resolved_callstack, sample_count, capture_data);
+      } else {
+        AddUnwindErrorToTopDownThread(thread_node, resolved_callstack, sample_count, capture_data);
+      }
     }
   }
   return top_down_view;
@@ -181,6 +215,27 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
   return current_node;
 }
 
+[[nodiscard]] static CallTreeUnwindErrors* AddUnwindErrorToBottomUpViewAndReturnUnwindingErrorsNode(
+    CallTreeView* bottom_up_view, const CallstackInfo& resolved_callstack,
+    uint64_t callstack_sample_count, const CaptureData& capture_data) {
+  CHECK(!resolved_callstack.frames().empty());
+  // Only use the innermost frame for unwind errors.
+  uint64_t frame = resolved_callstack.frames(0);
+  const std::string& function_name = capture_data.GetFunctionNameByAddress(frame);
+  const std::string& module_path = capture_data.GetModulePathByAddress(frame);
+  const std::string module_build_id = capture_data.FindModuleBuildIdByAddress(frame).value_or("");
+  CallTreeFunction* function_node =
+      GetOrCreateFunctionNode(bottom_up_view, frame, function_name, module_path, module_build_id);
+  function_node->IncreaseSampleCount(callstack_sample_count);
+
+  CallTreeUnwindErrors* unwind_errors_node = function_node->GetUnwindErrorsOrNull();
+  if (unwind_errors_node == nullptr) {
+    unwind_errors_node = function_node->AddAndGetUnwindErrors();
+  }
+  unwind_errors_node->IncreaseSampleCount(callstack_sample_count);
+  return unwind_errors_node;
+}
+
 std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(
     const PostProcessedSamplingData& post_processed_sampling_data,
     const CaptureData& capture_data) {
@@ -200,15 +255,16 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromPostProcessedS
       const CallstackInfo& resolved_callstack =
           post_processed_sampling_data.GetResolvedCallstack(callstack_id);
 
-      // TODO(b/188496245): Include aggregated statistics on unwinding errors.
-      if (resolved_callstack.type() != CallstackInfo::kComplete) {
-        continue;
-      }
-
       bottom_up_view->IncreaseSampleCount(sample_count);
 
-      CallTreeNode* last_node = AddReversedCallstackToBottomUpViewAndReturnLastFunction(
-          bottom_up_view.get(), resolved_callstack, sample_count, capture_data);
+      CallTreeNode* last_node;
+      if (resolved_callstack.type() == CallstackInfo::kComplete) {
+        last_node = AddReversedCallstackToBottomUpViewAndReturnLastFunction(
+            bottom_up_view.get(), resolved_callstack, sample_count, capture_data);
+      } else {
+        last_node = AddUnwindErrorToBottomUpViewAndReturnUnwindingErrorsNode(
+            bottom_up_view.get(), resolved_callstack, sample_count, capture_data);
+      }
       CallTreeThread* thread_node =
           GetOrCreateThreadNode(last_node, tid, process_name, thread_names);
       thread_node->IncreaseSampleCount(sample_count);
