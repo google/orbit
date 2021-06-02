@@ -2,10 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
-
-#include <algorithm>
-#include <cmath>
+#ifndef ORBIT_GL_CORE_MATH_H_
+#define ORBIT_GL_CORE_MATH_H_
 
 #include "GteVector2.h"
 #include "GteVector3.h"
@@ -22,3 +20,5 @@ using Vec3i = gte::Vector3<int>;
 using Vec4i = gte::Vector4<int>;
 
 using Color = gte::Vector4<unsigned char>;
+
+#endif  // ORBIT_GL_CORE_MATH_H_
