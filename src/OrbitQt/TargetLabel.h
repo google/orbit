@@ -41,11 +41,13 @@ class TargetLabel : public QWidget {
   bool SetProcessCpuUsageInPercent(double cpu_usage);
   bool SetProcessEnded();
   bool SetConnectionDead(const QString& error_message);
+  void SetFile(const std::filesystem::path& file_path);
 
   void Clear();
 
-  [[nodiscard]] QColor GetColor() const;
-  [[nodiscard]] QString GetText() const;
+  [[nodiscard]] QColor GetTargetColor() const;
+  [[nodiscard]] QString GetTargetText() const;
+  [[nodiscard]] QString GetFileText() const;
   [[nodiscard]] QString GetToolTip() const { return toolTip(); }
   [[nodiscard]] const std::optional<IconType>& GetIconType() const { return icon_type_; }
 

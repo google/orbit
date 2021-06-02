@@ -197,10 +197,11 @@ void OrbitMainWindow::SetupMainWindow() {
 
   app_->SetStatusListener(status_listener_.get());
 
-  app_->SetCaptureStartedCallback([this] {
+  app_->SetCaptureStartedCallback([this](const std::filesystem::path& file_path) {
     UpdateCaptureStateDependentWidgets();
     ClearCaptureFilters();
     setWindowTitle({});
+    target_label_->SetFile(file_path);
   });
 
   constexpr const char* kFinalizingCaptureMessage =
