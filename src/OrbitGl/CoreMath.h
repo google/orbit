@@ -22,8 +22,3 @@ using Vec3i = gte::Vector3<int>;
 using Vec4i = gte::Vector4<int>;
 
 using Color = gte::Vector4<unsigned char>;
-
-template <class T>
-constexpr const T& clamp(const T& v, const T& lo, const T& hi) {
-  return std::min(std::max(v, lo), hi);
-}

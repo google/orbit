@@ -172,7 +172,7 @@ void TimeGraph::PanTime(int initial_x, int current_x, int width, double initial_
   double dt = static_cast<double>(current_x - initial_x) / width * time_window_us_;
   double current_time = initial_time - dt;
   min_time_us_ =
-      clamp(current_time - initial_local_time, 0.0, GetCaptureTimeSpanUs() - time_window_us_);
+      std::clamp(current_time - initial_local_time, 0.0, GetCaptureTimeSpanUs() - time_window_us_);
   max_time_us_ = min_time_us_ + time_window_us_;
 
   RequestUpdate();
@@ -223,7 +223,8 @@ void TimeGraph::VerticallyMoveIntoView(Track& track) {
   float min_world_top_left_y = pos + layout_.GetTrackTabHeight();
   float max_world_top_left_y =
       pos + viewport_->GetVisibleWorldHeight() - height - layout_.GetBottomMargin();
-  viewport_->SetWorldTopLeftY(clamp(world_top_left_y, min_world_top_left_y, max_world_top_left_y));
+  viewport_->SetWorldTopLeftY(
+      std::clamp(world_top_left_y, min_world_top_left_y, max_world_top_left_y));
 }
 
 void TimeGraph::UpdateHorizontalScroll(float ratio) {
