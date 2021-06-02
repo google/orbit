@@ -12,6 +12,7 @@ target_include_directories(QtUtils PUBLIC include/)
 target_link_libraries(QtUtils PUBLIC OrbitBase OrbitGl Qt5::Core CONAN_PKG::abseil GTest::GTest)
 
 target_sources(QtUtils PUBLIC include/QtUtils/AssertNoQtLogWarnings.h
+                              include/QtUtils/EventLoop.h
                               include/QtUtils/FutureWatcher.h
                               include/QtUtils/MainThreadExecutorImpl.h)
 
@@ -22,7 +23,8 @@ set_target_properties(QtUtils PROPERTIES AUTOMOC ON)
 
 add_executable(QtUtilsTests)
 target_compile_options(QtUtilsTests PRIVATE ${STRICT_COMPILE_FLAGS})
-target_sources(QtUtilsTests PRIVATE FutureWatcherTest.cpp
+target_sources(QtUtilsTests PRIVATE EventLoopTest.cpp
+                                    FutureWatcherTest.cpp
                                     MainThreadExecutorImplTest.cpp)
 target_link_libraries(QtUtilsTests PRIVATE QtUtils GTest::QtCoreMain)
 register_test(QtUtilsTests)

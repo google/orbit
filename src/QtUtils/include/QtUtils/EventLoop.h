@@ -1,15 +1,15 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_QT_EVENT_LOOP_H_
-#define ORBIT_QT_EVENT_LOOP_H_
+#ifndef QT_UTILS_EVENT_LOOP_H_
+#define QT_UTILS_EVENT_LOOP_H_
 
 #include <QEventLoop>
 #include <optional>
 #include <outcome.hpp>
 
-namespace orbit_qt {
+namespace orbit_qt_utils {
 
 /**
  * A wrapper around QEventLoop to allow returning a std::error_code instead of
@@ -68,6 +68,6 @@ class EventLoop : public QObject {
   QEventLoop loop_;
 };
 
-}  // namespace orbit_qt
+}  // namespace orbit_qt_utils
 
-#endif  // ORBIT_QT_EVENT_LOOP_H_
+#endif  // QT_UTILS_EVENT_LOOP_H_
