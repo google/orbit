@@ -39,6 +39,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/ReadFileToString.h
         include/OrbitBase/SafeStrerror.h
         include/OrbitBase/SharedState.h
+        include/OrbitBase/SimpleExecutor.h
         include/OrbitBase/TemporaryFile.h
         include/OrbitBase/ThreadConstants.h
         include/OrbitBase/ThreadPool.h
@@ -56,6 +57,7 @@ target_sources(OrbitBase PRIVATE
         Profiling.cpp
         ReadFileToString.cpp
         SafeStrerror.cpp
+        SimpleExecutor.cpp
         TemporaryFile.cpp
         ThreadPool.cpp
         Tracing.cpp
@@ -100,6 +102,7 @@ target_sources(OrbitBaseTests PRIVATE
         PromiseTest.cpp
         PromiseHelpersTest.cpp
         ReadFileToStringTest.cpp
+        SimpleExecutorTest.cpp
         TemporaryFileTest.cpp
         ThreadUtilsTest.cpp
         TracingTest.cpp
