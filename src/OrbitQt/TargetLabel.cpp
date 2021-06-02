@@ -68,9 +68,16 @@ void TargetLabel::ChangeToFileTarget(const FileTarget& file_target) {
   ChangeToFileTarget(file_target.GetCaptureFilePath());
 }
 
+void TargetLabel::SetFile(const std::filesystem::path& file_path) {
+  ui_->fileLabel->setText(QString::fromStdString(file_path.filename().string()));
+  ui_->fileLabel->setToolTip(QString::fromStdString(file_path.string()));
+  ui_->fileLabel->setVisible(true);
+}
+
 void TargetLabel::ChangeToFileTarget(const fs::path& path) {
   Clear();
-  ui_->textLabel->setText(QString::fromStdString(path.filename().string()));
+  SetFile(path);
+  ui_->targetLabel->setVisible(false);
   emit SizeChanged();
 }
 
@@ -90,6 +97,8 @@ void TargetLabel::ChangeToStadiaTarget(const QString& process_name, double cpu_u
   process_ = process_name;
   machine_ = instance_name;
   SetProcessCpuUsageInPercent(cpu_usage);
+  ui_->targetLabel->setVisible(true);
+  ui_->fileLabel->setVisible(false);
 }
 
 void TargetLabel::ChangeToLocalTarget(const LocalTarget& local_target) {
@@ -110,7 +119,7 @@ void TargetLabel::ChangeToLocalTarget(const QString& process_name, double cpu_us
 bool TargetLabel::SetProcessCpuUsageInPercent(double cpu_usage) {
   if (process_.isEmpty() || machine_.isEmpty()) return false;
 
-  ui_->textLabel->setText(
+  ui_->targetLabel->setText(
       QString{"%1 (%2%) @ %3"}.arg(process_).arg(cpu_usage, 0, 'f', 0).arg(machine_));
   SetColor(kGreenColor);
   setToolTip({});
@@ -122,7 +131,7 @@ bool TargetLabel::SetProcessCpuUsageInPercent(double cpu_usage) {
 bool TargetLabel::SetProcessEnded() {
   if (process_.isEmpty() || machine_.isEmpty()) return false;
 
-  ui_->textLabel->setText(QString{"%1 @ %2"}.arg(process_, machine_));
+  ui_->targetLabel->setText(QString{"%1 @ %2"}.arg(process_, machine_));
   SetColor(kOrangeColor);
   setToolTip("The process ended.");
   SetIcon(IconType::kOrangeDisconnectedIcon);
@@ -133,7 +142,7 @@ bool TargetLabel::SetProcessEnded() {
 bool TargetLabel::SetConnectionDead(const QString& error_message) {
   if (process_.isEmpty() || machine_.isEmpty()) return false;
 
-  ui_->textLabel->setText(QString{"%1 @ %2"}.arg(process_, machine_));
+  ui_->targetLabel->setText(QString{"%1 @ %2"}.arg(process_, machine_));
   SetColor(kRedColor);
   setToolTip(error_message);
   SetIcon(IconType::kRedDisconnectedIcon);
@@ -144,18 +153,23 @@ bool TargetLabel::SetConnectionDead(const QString& error_message) {
 void TargetLabel::Clear() {
   process_ = "";
   machine_ = "";
-  ui_->textLabel->setText({});
+  ui_->fileLabel->setText({});
+  ui_->targetLabel->setText({});
+  ui_->fileLabel->setVisible(false);
+  ui_->targetLabel->setVisible(false);
   SetColor(kDefaultTextColor);
   setToolTip({});
   ClearIcon();
   emit SizeChanged();
 }
 
-QColor TargetLabel::GetColor() const {
-  return ui_->textLabel->palette().color(QPalette::WindowText);
+QColor TargetLabel::GetTargetColor() const {
+  return ui_->targetLabel->palette().color(QPalette::WindowText);
 }
 
-QString TargetLabel::GetText() const { return ui_->textLabel->text(); }
+QString TargetLabel::GetTargetText() const { return ui_->targetLabel->text(); }
+
+QString TargetLabel::GetFileText() const { return ui_->fileLabel->text(); }
 
 void TargetLabel::SetColor(const QColor& color) {
   // This class is used in a QFrame and in QMenuBar. To make the coloring work in a QFrame the
@@ -164,7 +178,7 @@ void TargetLabel::SetColor(const QColor& color) {
   QPalette palette{};
   palette.setColor(QPalette::WindowText, color);
   palette.setColor(QPalette::ButtonText, color);
-  ui_->textLabel->setPalette(palette);
+  ui_->targetLabel->setPalette(palette);
 }
 
 void TargetLabel::SetIcon(IconType icon_type) {
@@ -180,11 +194,13 @@ void TargetLabel::SetIcon(IconType icon_type) {
       ui_->iconLabel->setPixmap(GetRedDisconnectedIcon());
       break;
   }
+  ui_->iconLabel->setVisible(true);
 }
 
 void TargetLabel::ClearIcon() {
   icon_type_ = std::nullopt;
   ui_->iconLabel->setPixmap(QPixmap{});
+  ui_->iconLabel->setVisible(false);
 }
 
 }  // namespace orbit_qt

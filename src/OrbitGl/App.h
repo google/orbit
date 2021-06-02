@@ -209,7 +209,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   [[nodiscard]] bool IsDevMode() const;
 
   // Callbacks
-  using CaptureStartedCallback = std::function<void()>;
+  using CaptureStartedCallback = std::function<void(const std::filesystem::path&)>;
   void SetCaptureStartedCallback(CaptureStartedCallback callback) {
     capture_started_callback_ = std::move(callback);
   }

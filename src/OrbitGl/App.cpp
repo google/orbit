@@ -293,8 +293,8 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
         frame_track_online_processor_ =
             orbit_gl::FrameTrackOnlineProcessor(GetCaptureData(), GetMutableTimeGraph());
 
-        CHECK(capture_started_callback_);
-        capture_started_callback_();
+        CHECK(capture_started_callback_ != nullptr);
+        capture_started_callback_(file_path);
 
         if (!capture_data_->instrumented_functions().empty()) {
           CHECK(select_live_tab_callback_);
