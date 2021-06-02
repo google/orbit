@@ -66,7 +66,7 @@ TEST(FutureWatcher, WaitForWithThreadPool) {
   constexpr size_t kThreadPoolMinSize = 1;
   constexpr size_t kThreadPoolMaxSize = 2;
   constexpr absl::Duration kThreadTtl = absl::Milliseconds(5);
-  std::unique_ptr<ThreadPool> thread_pool =
+  std::shared_ptr<ThreadPool> thread_pool =
       ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl);
 
   absl::Mutex mutex;
@@ -94,7 +94,7 @@ TEST(FutureWatcher, WaitForWithThreadPoolAndTimeout) {
   constexpr size_t kThreadPoolMinSize = 1;
   constexpr size_t kThreadPoolMaxSize = 2;
   constexpr absl::Duration kThreadTtl = absl::Milliseconds(5);
-  std::unique_ptr<ThreadPool> thread_pool =
+  std::shared_ptr<ThreadPool> thread_pool =
       ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl);
 
   absl::Mutex mutex;
@@ -120,7 +120,7 @@ TEST(FutureWatcher, WaitForAllWithThreadPool) {
   constexpr size_t kThreadPoolMinSize = 1;
   constexpr size_t kThreadPoolMaxSize = 2;
   constexpr absl::Duration kThreadTtl = absl::Milliseconds(5);
-  std::unique_ptr<ThreadPool> thread_pool =
+  std::shared_ptr<ThreadPool> thread_pool =
       ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl);
 
   absl::Mutex mutex;
@@ -152,7 +152,7 @@ TEST(FutureWatcher, WaitForAllWithThreadPoolAndTimeout) {
   constexpr size_t kThreadPoolMinSize = 1;
   constexpr size_t kThreadPoolMaxSize = 2;
   constexpr absl::Duration kThreadTtl = absl::Milliseconds(5);
-  std::unique_ptr<ThreadPool> thread_pool =
+  std::shared_ptr<ThreadPool> thread_pool =
       ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl);
 
   absl::Mutex mutex;
