@@ -18,7 +18,7 @@ TEST(ThreadPool, Smoke) {
   constexpr size_t kThreadPoolMinSize = 1;
   constexpr size_t kThreadPoolMaxSize = 2;
   constexpr absl::Duration kThreadTtl = absl::Milliseconds(5);
-  std::unique_ptr<ThreadPool> thread_pool =
+  std::shared_ptr<ThreadPool> thread_pool =
       ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl);
 
   absl::Mutex mutex;
@@ -50,7 +50,7 @@ TEST(ThreadPool, QueuedActionsExecutedOnShutdown) {
   constexpr size_t kThreadPoolMinSize = 1;
   constexpr size_t kThreadPoolMaxSize = 2;
   constexpr absl::Duration kThreadTtl = absl::Milliseconds(5);
-  std::unique_ptr<ThreadPool> thread_pool =
+  std::shared_ptr<ThreadPool> thread_pool =
       ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl);
 
   absl::Mutex mutex;
@@ -79,7 +79,7 @@ TEST(ThreadPool, CheckTtl) {
   constexpr size_t kThreadPoolMinSize = 1;
   constexpr size_t kThreadPoolMaxSize = 5;
   constexpr size_t kThreadTtlMillis = 5;
-  std::unique_ptr<ThreadPool> thread_pool = ThreadPool::Create(
+  std::shared_ptr<ThreadPool> thread_pool = ThreadPool::Create(
       kThreadPoolMinSize, kThreadPoolMaxSize, absl::Milliseconds(kThreadTtlMillis));
 
   absl::Mutex actions_started_mutex;
@@ -133,7 +133,7 @@ TEST(ThreadPool, ExtendThreadPool) {
   constexpr size_t kThreadPoolMinSize = 1;
   constexpr size_t kThreadPoolMaxSize = 5;
   constexpr size_t kThreadTtlMillis = 5;
-  std::unique_ptr<ThreadPool> thread_pool = ThreadPool::Create(
+  std::shared_ptr<ThreadPool> thread_pool = ThreadPool::Create(
       kThreadPoolMinSize, kThreadPoolMaxSize, absl::Milliseconds(kThreadTtlMillis));
 
   absl::Mutex actions_started_mutex;
@@ -257,7 +257,7 @@ TEST(ThreadPool, CheckGetNumberOfBusyThreads) {
   constexpr size_t kThreadPoolMaxSize = 2;
   constexpr size_t kThreadTtlMillis = 5;
 
-  std::unique_ptr<ThreadPool> thread_pool = ThreadPool::Create(
+  std::shared_ptr<ThreadPool> thread_pool = ThreadPool::Create(
       kThreadPoolMinSize, kThreadPoolMaxSize, absl::Milliseconds(kThreadTtlMillis));
 
   EXPECT_EQ(thread_pool->GetNumberOfBusyThreads(), 0);
@@ -358,7 +358,7 @@ TEST(ThreadPool, ScheduleAfterShutdown) {
         constexpr size_t kThreadPoolMinSize = 1;
         constexpr size_t kThreadPoolMaxSize = 2;
         constexpr absl::Duration kThreadTtl = absl::Milliseconds(5);
-        std::unique_ptr<ThreadPool> thread_pool =
+        std::shared_ptr<ThreadPool> thread_pool =
             ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl);
 
         thread_pool->Shutdown();
@@ -373,7 +373,7 @@ TEST(ThreadPool, WaitWithoutShutdown) {
         constexpr size_t kThreadPoolMinSize = 1;
         constexpr size_t kThreadPoolMaxSize = 2;
         constexpr absl::Duration kThreadTtl = absl::Milliseconds(5);
-        std::unique_ptr<ThreadPool> thread_pool =
+        std::shared_ptr<ThreadPool> thread_pool =
             ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl);
 
         thread_pool->Wait();
@@ -385,7 +385,7 @@ TEST(ThreadPool, FutureBasic) {
   constexpr size_t kThreadPoolMinSize = 1;
   constexpr size_t kThreadPoolMaxSize = 2;
   constexpr absl::Duration kThreadTtl = absl::Milliseconds(5);
-  std::unique_ptr<ThreadPool> thread_pool =
+  std::shared_ptr<ThreadPool> thread_pool =
       ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl);
 
   absl::Mutex mutex;
@@ -420,7 +420,7 @@ TEST(ThreadPool, FutureContinuation) {
   constexpr size_t kThreadPoolMinSize = 1;
   constexpr size_t kThreadPoolMaxSize = 2;
   constexpr absl::Duration kThreadTtl = absl::Milliseconds(5);
-  std::unique_ptr<ThreadPool> thread_pool =
+  std::shared_ptr<ThreadPool> thread_pool =
       ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl);
 
   absl::Mutex mutex;
@@ -467,7 +467,7 @@ TEST(ThreadPool, FutureWithMoveOnlyResult) {
   constexpr size_t kThreadPoolMinSize = 1;
   constexpr size_t kThreadPoolMaxSize = 2;
   constexpr absl::Duration kThreadTtl = absl::Milliseconds(5);
-  std::unique_ptr<ThreadPool> thread_pool =
+  std::shared_ptr<ThreadPool> thread_pool =
       ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl);
 
   absl::Mutex mutex;

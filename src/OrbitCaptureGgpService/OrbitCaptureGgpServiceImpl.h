@@ -41,7 +41,7 @@ class CaptureClientGgpServiceImpl final
 
  private:
   std::unique_ptr<ClientGgp> client_ggp_;
-  std::unique_ptr<ThreadPool> thread_pool_;
+  std::shared_ptr<ThreadPool> thread_pool_;
   std::atomic<bool> shutdown_finished_{false};
 
   void InitClientGgp();

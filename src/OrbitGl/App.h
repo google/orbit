@@ -557,7 +557,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   orbit_gl::MainWindowInterface* main_window_ = nullptr;
   MainThreadExecutor* main_thread_executor_;
   std::thread::id main_thread_id_;
-  std::unique_ptr<ThreadPool> thread_pool_;
+  std::shared_ptr<ThreadPool> thread_pool_;
   std::unique_ptr<orbit_capture_client::CaptureClient> capture_client_;
   orbit_client_services::ProcessManager* process_manager_ = nullptr;
   std::unique_ptr<orbit_client_data::ModuleManager> module_manager_;

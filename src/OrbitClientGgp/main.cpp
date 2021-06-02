@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
 
   // The request is done in a separate thread to avoid blocking main()
   // It is needed to provide a thread pool
-  std::unique_ptr<ThreadPool> thread_pool = ThreadPool::Create(1, 1, absl::Seconds(1));
+  std::shared_ptr<ThreadPool> thread_pool = ThreadPool::Create(1, 1, absl::Seconds(1));
   auto start_capture_result = client_ggp.RequestStartCapture(thread_pool.get());
   if (start_capture_result.has_error()) {
     thread_pool->ShutdownAndWait();

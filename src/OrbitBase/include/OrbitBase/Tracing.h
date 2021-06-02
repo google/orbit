@@ -42,7 +42,7 @@ class TracingListener {
 
  private:
   TracingTimerCallback user_callback_ = nullptr;
-  std::unique_ptr<ThreadPool> thread_pool_ = {};
+  std::shared_ptr<ThreadPool> thread_pool_ = {};
   inline static bool active_ = false;
   inline static bool shutdown_initiated_ = true;
 };

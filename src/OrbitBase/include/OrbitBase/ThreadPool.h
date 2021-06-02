@@ -10,9 +10,7 @@
 #include <memory>
 #include <utility>
 
-#include "OrbitBase/Action.h"
-#include "OrbitBase/Future.h"
-#include "OrbitBase/Promise.h"
+#include "OrbitBase/Executor.h"
 #include "absl/time/time.h"
 
 // This class implements a thread pool. ThreadPool allows to execute
@@ -32,38 +30,8 @@
 // thread_pool->Shutdown();
 // thread_pool->Wait();
 //
-class ThreadPool {
+class ThreadPool : public orbit_base::Executor {
  public:
-  ThreadPool() = default;
-  virtual ~ThreadPool() = default;
-
-  virtual void Schedule(std::unique_ptr<Action> action) = 0;
-
-  template <typename F>
-  auto Schedule(F&& functor) -> orbit_base::Future<std::decay_t<decltype(functor())>> {
-    using ReturnType = std::decay_t<decltype(functor())>;
-
-    orbit_base::Promise<ReturnType> promise;
-    orbit_base::Future<ReturnType> future = promise.GetFuture();
-
-    if constexpr (std::is_same_v<ReturnType, void>) {
-      auto function_wrapper = [functor = std::forward<F>(functor),
-                               promise = std::move(promise)]() mutable {
-        functor();
-        promise.MarkFinished();
-      };
-      Schedule(CreateAction(std::move(function_wrapper)));
-    } else {
-      auto function_wrapper = [functor = std::forward<F>(functor),
-                               promise = std::move(promise)]() mutable {
-        promise.SetResult(functor());
-      };
-      Schedule(CreateAction(std::move(function_wrapper)));
-    }
-
-    return future;
-  }
-
   // Initiates shutdown, any Schedule after this call will fail.
   virtual void Shutdown() = 0;
 
@@ -95,7 +63,7 @@ class ThreadPool {
   // until they hit thread_pool_min_size. thread_ttl specifies the duration
   // for the such a thread to remain in idle state before it finishes the
   // execution.
-  static std::unique_ptr<ThreadPool> Create(size_t thread_pool_min_size,
+  static std::shared_ptr<ThreadPool> Create(size_t thread_pool_min_size,
                                             size_t thread_pool_max_size, absl::Duration thread_ttl);
 };
 

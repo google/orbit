@@ -27,12 +27,12 @@ class ThreadPoolImpl : public ThreadPool {
 
   size_t GetPoolSize() override;
   size_t GetNumberOfBusyThreads() override;
-  void Schedule(std::unique_ptr<Action> action) override;
   void Shutdown() override;
   void Wait() override;
   void EnableAutoProfiling(bool value) override;
 
  private:
+  void ScheduleImpl(std::unique_ptr<Action> action) override;
   bool ActionsAvailableOrShutdownInitiated();
   // Blocking call - returns nullptr if the worker thread needs to exit.
   std::unique_ptr<Action> TakeAction();
@@ -80,7 +80,7 @@ void ThreadPoolImpl::CreateWorker() {
   worker_threads_.insert_or_assign(thread_id, std::move(thread));
 }
 
-void ThreadPoolImpl::Schedule(std::unique_ptr<Action> action) {
+void ThreadPoolImpl::ScheduleImpl(std::unique_ptr<Action> action) {
   absl::MutexLock lock(&mutex_);
   CHECK(!shutdown_initiated_);
 
@@ -191,8 +191,8 @@ void ThreadPoolImpl::WorkerFunction() {
 
 };  // namespace
 
-std::unique_ptr<ThreadPool> ThreadPool::Create(size_t thread_pool_min_size,
+std::shared_ptr<ThreadPool> ThreadPool::Create(size_t thread_pool_min_size,
                                                size_t thread_pool_max_size,
                                                absl::Duration thread_ttl) {
-  return std::make_unique<ThreadPoolImpl>(thread_pool_min_size, thread_pool_max_size, thread_ttl);
+  return std::make_shared<ThreadPoolImpl>(thread_pool_min_size, thread_pool_max_size, thread_ttl);
 }
