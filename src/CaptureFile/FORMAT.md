@@ -18,9 +18,10 @@ may not be present in the file. The header and Capture Section are the only mand
 | Additional Section N    | optional  |
 | Additional Section List | optional  |
 
-Note that the Header Section has to go first but other than that all other section may appear
-in any order. This includes the CaptureSection, the code reading this file shouldn't rely on
-sections appearing in any particular order.
+Note that the Header Section has to go first but other than that all other read-only section may appear
+in any order (note that [USER_DATA](#user_data) is a read-write section and is always placed at the end of file).
+This includes the CaptureSection, the code reading this file shouldn't rely on read-only sections appearing
+in any particular order.
 
 ### Header
 
@@ -40,10 +41,12 @@ The following is a format of Additional Section List
 
 | Field                          | Size | Comment                                                   |
 |--------------------------------|-----:|-----------------------------------------------------------|
-| Number of sections             | 2    | The size of the list in bytes                             |
+| Number of sections             | 8    | The size of the list in bytes                             |
 | Section Header 1               | 24   | Section header                                            |  
 | ...                            |      |                                                           |
 | Section Header N               | 24   | Section header                                            |
+
+Note that the section list size is 8 bytes but it is still limited by 65'535 entries.
 
 #### Section Header
 
@@ -61,10 +64,16 @@ The following table lists all the values for section types.
 
 | Section Type | Value | Comment                     |
 |--------------|-------|-----------------------------|
-| RESERVED     | 0, 1  | 0 and 1 are reserved - do not use. |
-| USER_DATA    | 2     | This section contains user-defined data like visible frame-tracks, track order, colors, bookmars, etc. |
+| RESERVED     | 0     | 0 is reserved - do not use. |
+| USER_DATA    | 1     | This section contains user-defined data like visible frame-tracks, track order, colors, bookmarks, etc. |
 
 #### USER_DATA
 
-User Data section content is `orbit_client_protos::UserDefinedCaptureInfo` proto message.  
+User Data section content is `orbit_client_protos::UserDefinedCaptureInfo` proto message.
+This section is read/write section that could be modified after the capture has been taken.
+For optimization reason this section is always placed at the end of file. Nothing should go
+after this section including the section list itself.
 
+#### How the protobuf messages are written
+All protobuf messages in sections are prepended by the Varint32 message size, even if
+the section contains only one protbuf message.

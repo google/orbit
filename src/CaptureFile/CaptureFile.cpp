@@ -5,7 +5,6 @@
 #include "CaptureFile/CaptureFile.h"
 
 #include "CaptureFileConstants.h"
-#include "FileFragmentInputStream.h"
 #include "OrbitBase/File.h"
 #include "ProtoSectionInputStreamImpl.h"
 
@@ -15,8 +14,10 @@ namespace {
 
 using orbit_base::unique_fd;
 
+constexpr uint64_t kMaxNumberOfSections = std::numeric_limits<uint16_t>::max();
+
 struct CaptureFileHeader {
-  std::array<char, kFileSignatureSize> signature;
+  std::array<char, kFileSignature.size()> signature;
   uint32_t version;
   uint64_t capture_section_offset;
   uint64_t section_list_offset;
@@ -30,6 +31,8 @@ class CaptureFileImpl : public CaptureFile {
   ErrorMessageOr<void> Initialize();
 
   ErrorMessageOr<uint64_t> AddUserDataSection(uint64_t section_size) override;
+
+  ErrorMessageOr<void> ExtendSection(uint64_t section_number, size_t new_size) override;
 
   ErrorMessageOr<void> WriteToSection(uint64_t section_number, uint64_t offset_in_section,
                                       const void* data, size_t size) override;
@@ -55,6 +58,8 @@ class CaptureFileImpl : public CaptureFile {
   ErrorMessageOr<void> ReadHeader();
   ErrorMessageOr<void> ReadSectionList();
   ErrorMessageOr<void> CalculateCaptureSectionSize();
+  ErrorMessageOr<void> WriteSectionList(const std::vector<CaptureFileSection>& section_list,
+                                        uint64_t offset);
   [[nodiscard]] bool IsThereSectionWithOffsetAfterSectionList() const;
 
   std::filesystem::path file_path_;
@@ -134,12 +139,17 @@ ErrorMessageOr<void> CaptureFileImpl::ReadSectionList() {
   }
 
   OUTCOME_TRY(number_of_sections,
-              orbit_base::ReadFullyAtOffset<uint16_t>(fd_, header_.section_list_offset));
+              orbit_base::ReadFullyAtOffset<uint64_t>(fd_, header_.section_list_offset));
+  if (number_of_sections > kMaxNumberOfSections) {
+    return ErrorMessage{absl::StrFormat("The section list is too large: %d (must be <= %d)",
+                                        number_of_sections, kMaxNumberOfSections)};
+  }
+
   std::vector<CaptureFileSection> section_list{number_of_sections};
   OUTCOME_TRY(bytes_read,
-              orbit_base::ReadFullyAtOffset(fd_, section_list.data(),
-                                            number_of_sections * sizeof(CaptureFileSection),
-                                            header_.section_list_offset + sizeof(uint16_t)));
+              orbit_base::ReadFullyAtOffset(
+                  fd_, section_list.data(), number_of_sections * sizeof(CaptureFileSection),
+                  header_.section_list_offset + sizeof(number_of_sections)));
 
   if (bytes_read < number_of_sections * sizeof(CaptureFileSection)) {
     return ErrorMessage{absl::StrFormat(
@@ -156,7 +166,7 @@ ErrorMessageOr<void> CaptureFileImpl::ReadHeader() {
   OUTCOME_TRY(header, orbit_base::ReadFullyAtOffset<CaptureFileHeader>(fd_, 0));
   header_ = header;
 
-  if (std::memcmp(header_.signature.data(), kFileSignature, header_.signature.size()) != 0) {
+  if (std::memcmp(header_.signature.data(), kFileSignature.data(), kFileSignature.size()) != 0) {
     return ErrorMessage{"Invalid file signature"};
   }
 
@@ -182,13 +192,14 @@ ErrorMessageOr<void> CaptureFileImpl::WriteToSection(uint64_t section_number,
 }
 
 bool CaptureFileImpl::IsThereSectionWithOffsetAfterSectionList() const {
-  return std::any_of(section_list_.begin(), section_list_.end(), [this](const CaptureFileSection& section) {
-    return section.offset > header_.section_list_offset;
-  });
+  return std::any_of(section_list_.begin(), section_list_.end(),
+                     [this](const CaptureFileSection& section) {
+                       return section.offset > header_.section_list_offset;
+                     });
 }
 
 ErrorMessageOr<uint64_t> CaptureFileImpl::AddUserDataSection(uint64_t section_size) {
-  if (section_list_.size() == std::numeric_limits<uint16_t>::max()) {
+  if (section_list_.size() == kMaxNumberOfSections) {
     return ErrorMessage{
         absl::StrFormat("Section list has reached its maximum size: %d", section_list_.size())};
   }
@@ -196,11 +207,11 @@ ErrorMessageOr<uint64_t> CaptureFileImpl::AddUserDataSection(uint64_t section_si
   // Take a copy of section list
   auto section_list = section_list_;
 
-  // If there is already a user-data section return a error
+  // If there is already a user-data section return an error
   for (const auto& section : section_list) {
     if (section.type == kSectionTypeUserData) {
-      return ErrorMessage{
-          absl::StrFormat("Cannot add USER_DATA section - there is already one at offset 0x%x", section.offset)};
+      return ErrorMessage{absl::StrFormat(
+          "Cannot add USER_DATA section - there is already one at offset %#x", section.offset)};
     }
   }
 
@@ -214,10 +225,10 @@ ErrorMessageOr<uint64_t> CaptureFileImpl::AddUserDataSection(uint64_t section_si
     section_list_offset = AlignUp<8>(end_of_file);
   }
 
+  uint64_t number_of_sections = section_list.size() + 1;
 
-  uint16_t number_of_sections = section_list.size() + 1;
-
-  uint64_t section_list_size = sizeof(number_of_sections) + number_of_sections * sizeof(CaptureFileSection);
+  uint64_t section_list_size =
+      sizeof(number_of_sections) + number_of_sections * sizeof(CaptureFileSection);
 
   uint64_t new_section_offset = AlignUp<8>(section_list_offset + section_list_size);
 
@@ -229,19 +240,13 @@ ErrorMessageOr<uint64_t> CaptureFileImpl::AddUserDataSection(uint64_t section_si
   // Resize the file
   OUTCOME_TRY(orbit_base::ResizeFile(file_path_, new_section_offset + section_size));
 
-  // first write new section list at new offset
-  OUTCOME_TRY(orbit_base::WriteFullyAtOffset(fd_, &number_of_sections, sizeof(number_of_sections),
-                                             section_list_offset));
-  OUTCOME_TRY(orbit_base::WriteFullyAtOffset(fd_, section_list.data(),
-                                             number_of_sections * sizeof(CaptureFileSection),
-                                             section_list_offset + sizeof(number_of_sections)));
+  OUTCOME_TRY(WriteSectionList(section_list, section_list_offset));
 
   // Now update section list offset in the header if necessary
   if (header_.section_list_offset != section_list_offset) {
     uint64_t section_list_offset_field_offset = offsetof(CaptureFileHeader, section_list_offset);
-    OUTCOME_TRY(orbit_base::WriteFullyAtOffset(fd_, &section_list_offset,
-                                               sizeof(section_list_offset),
-                                               section_list_offset_field_offset));
+    OUTCOME_TRY(orbit_base::WriteFullyAtOffset(
+        fd_, &section_list_offset, sizeof(section_list_offset), section_list_offset_field_offset));
 
     header_.section_list_offset = section_list_offset;
   }
@@ -298,6 +303,58 @@ std::optional<uint64_t> CaptureFileImpl::FindSectionByType(uint64_t section_type
 }
 
 const std::filesystem::path& CaptureFileImpl::GetFilePath() const { return file_path_; }
+
+ErrorMessageOr<void> orbit_capture_file::CaptureFileImpl::ExtendSection(uint64_t section_number,
+                                                                        size_t new_size) {
+  // Currently we do it only for last section of the file.
+  CHECK(section_number < section_list_.size());
+
+  const CaptureFileSection& section = section_list_[section_number];
+  if (section.size >= new_size) {
+    return outcome::success();
+  }
+
+  // Check format: The section should be the last section in the file and we expect it to go
+  // after section list. We currently handle only one read/write section, in case we get more
+  // in the future this will need to be revisited.
+  if (header_.section_list_offset > section.offset) {
+    return ErrorMessage{absl::StrFormat(
+        "Cannot resize section %d: The section is located before section list.", section_number)};
+  }
+
+  if (std::any_of(section_list_.begin(), section_list_.end(),
+                  [&section](const CaptureFileSection& section_to_check) {
+                    return section_to_check.offset > section.offset;
+                  })) {
+    return ErrorMessage{absl::StrFormat(
+        "Cannot resize section %d: The section is not the last section in the file.",
+        section_number)};
+  }
+
+  // Update section size and resize the file
+  auto section_list = section_list_;  // create a copy
+  section_list[section_number].size = new_size;
+
+  // We checked that this is the last section so the new file size is the section offset + size
+  OUTCOME_TRY(orbit_base::ResizeFile(
+      file_path_, section_list[section_number].offset + section_list[section_number].size));
+  OUTCOME_TRY(WriteSectionList(section_list, header_.section_list_offset));
+
+  section_list_ = section_list;
+  return outcome::success();
+}
+
+ErrorMessageOr<void> CaptureFileImpl::WriteSectionList(
+    const std::vector<CaptureFileSection>& section_list, uint64_t offset) {
+  uint64_t number_of_sections = section_list.size();
+  // first write new section list at new offset
+  OUTCOME_TRY(
+      orbit_base::WriteFullyAtOffset(fd_, &number_of_sections, sizeof(number_of_sections), offset));
+  OUTCOME_TRY(orbit_base::WriteFullyAtOffset(fd_, section_list.data(),
+                                             number_of_sections * sizeof(CaptureFileSection),
+                                             offset + sizeof(number_of_sections)));
+  return outcome::success();
+}
 
 }  // namespace
 

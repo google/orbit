@@ -2,15 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
-
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureFile/CaptureFile.h"
+#include "CaptureFile/CaptureFileHelpers.h"
 #include "CaptureFile/CaptureFileOutputStream.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "capture_data.pb.h"
 
-using orbit_capture_file::CaptureFile;
 using orbit_capture_file::CaptureFileOutputStream;
 using orbit_client_protos::UserDefinedCaptureInfo;
 using orbit_grpc_protos::ClientCaptureEvent;
@@ -104,27 +102,13 @@ void SaveToFileEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
 }
 
 ErrorMessageOr<void> SaveToFileEventProcessor::WriteUserData() {
-  OUTCOME_TRY(capture_file, CaptureFile::OpenForReadWrite(file_path_));
   UserDefinedCaptureInfo user_defined_capture_data;
   for (uint64_t function_id : frame_track_function_ids_) {
     user_defined_capture_data.mutable_frame_tracks_info()->add_frame_track_function_ids(
         function_id);
   }
 
-  uint32_t message_size = user_defined_capture_data.ByteSizeLong();
-  const size_t buf_size =
-      message_size + google::protobuf::io::CodedOutputStream::VarintSize32(message_size);
-  auto buf = make_unique_for_overwrite<uint8_t[]>(buf_size);
-  google::protobuf::io::ArrayOutputStream array_output_stream{buf.get(),
-                                                              static_cast<int>(buf_size)};
-  google::protobuf::io::CodedOutputStream coded_output_stream{&array_output_stream};
-  coded_output_stream.WriteVarint32(message_size);
-  // We do not expect any errors from coded output stream backed by ArrayOutputStream of correct
-  // size
-  CHECK(user_defined_capture_data.SerializeToCodedStream(&coded_output_stream));
-
-  OUTCOME_TRY(section_number, capture_file->AddUserDataSection(buf_size));
-  OUTCOME_TRY(capture_file->WriteToSection(section_number, 0, buf.get(), buf_size));
+  OUTCOME_TRY(orbit_capture_file::WriteUserData(file_path_, user_defined_capture_data));
 
   return outcome::success();
 }

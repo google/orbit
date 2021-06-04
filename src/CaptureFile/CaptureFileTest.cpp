@@ -16,6 +16,7 @@
 
 namespace orbit_capture_file {
 
+using orbit_base::HasError;
 using orbit_base::HasNoError;
 using orbit_base::HasValue;
 
@@ -72,7 +73,7 @@ TEST(CaptureFile, CreateCaptureFileAndReadMainSection) {
 
   {
     ClientCaptureEvent event;
-    ASSERT_THAT(capture_section->ReadEvent(&event), HasNoError());
+    ASSERT_THAT(capture_section->ReadMessage(&event), HasNoError());
     ASSERT_EQ(event.event_case(), ClientCaptureEvent::kInternedString);
     EXPECT_EQ(event.interned_string().key(), kAnswerKey);
     EXPECT_EQ(event.interned_string().intern(), kAnswerString);
@@ -80,7 +81,7 @@ TEST(CaptureFile, CreateCaptureFileAndReadMainSection) {
 
   {
     ClientCaptureEvent event;
-    ASSERT_THAT(capture_section->ReadEvent(&event), HasNoError());
+    ASSERT_THAT(capture_section->ReadMessage(&event), HasNoError());
     ASSERT_EQ(event.event_case(), ClientCaptureEvent::kInternedString);
     EXPECT_EQ(event.interned_string().key(), kNotAnAnswerKey);
     EXPECT_EQ(event.interned_string().intern(), kNotAnAnswerString);
@@ -133,7 +134,7 @@ TEST(CaptureFile, CreateCaptureFileWriteAdditionalSectionAndReadMainSection) {
 
   {
     ClientCaptureEvent event;
-    ASSERT_THAT(capture_section->ReadEvent(&event), HasNoError());
+    ASSERT_THAT(capture_section->ReadMessage(&event), HasNoError());
     ASSERT_EQ(event.event_case(), ClientCaptureEvent::kInternedString);
     EXPECT_EQ(event.interned_string().key(), kAnswerKey);
     EXPECT_EQ(event.interned_string().intern(), kAnswerString);
@@ -141,7 +142,7 @@ TEST(CaptureFile, CreateCaptureFileWriteAdditionalSectionAndReadMainSection) {
 
   {
     ClientCaptureEvent event;
-    ASSERT_THAT(capture_section->ReadEvent(&event), HasNoError());
+    ASSERT_THAT(capture_section->ReadMessage(&event), HasNoError());
     ASSERT_EQ(event.event_case(), ClientCaptureEvent::kInternedString);
     EXPECT_EQ(event.interned_string().key(), kNotAnAnswerKey);
     EXPECT_EQ(event.interned_string().intern(), kNotAnAnswerString);
@@ -199,7 +200,7 @@ TEST(CaptureFile, CreateCaptureFileAndAddSection) {
     ASSERT_EQ(capture_file->GetSectionList().size(), 1);
     EXPECT_EQ(section_number_or_error.value(), 0);
 
-    EXPECT_EQ(capture_file->FindSectionByType(2), 0);
+    EXPECT_EQ(capture_file->FindSectionByType(kSectionTypeUserData), 0);
     // Write something to the section
     std::string something{"something"};
     constexpr uint64_t kOffsetInSection = 5;
@@ -242,13 +243,13 @@ TEST(CaptureFile, CreateCaptureFileAndAddSection) {
     EXPECT_EQ(capture_file_section.size, buf_size);
   }
 
-  ASSERT_EQ(capture_file->FindSectionByType(2), 0);
+  ASSERT_EQ(capture_file->FindSectionByType(kSectionTypeUserData), 0);
 
   {
     auto section_input_stream = capture_file->CreateProtoSectionInputStream(0);
     ASSERT_NE(section_input_stream.get(), nullptr);
     ClientCaptureEvent event_from_file;
-    ASSERT_THAT(section_input_stream->ReadEvent(&event_from_file), HasNoError());
+    ASSERT_THAT(section_input_stream->ReadMessage(&event_from_file), HasNoError());
     EXPECT_EQ(event_from_file.capture_finished().status(),
               orbit_grpc_protos::CaptureFinished::kFailed);
     EXPECT_EQ(event_from_file.capture_finished().error_message(), "some error");
@@ -302,8 +303,7 @@ TEST(CaptureFile, OpenCaptureFileInvalidVersion) {
   auto write_result = orbit_base::WriteFully(temporary_file.fd(), header);
 
   auto capture_file_or_error = CaptureFile::OpenForReadWrite(temporary_file.file_path());
-  ASSERT_TRUE(capture_file_or_error.has_error());
-  EXPECT_EQ(capture_file_or_error.error().message(), "Incompatible version 0, expected 1");
+  EXPECT_THAT(capture_file_or_error, HasError("Incompatible version 0, expected 1"));
 }
 
 TEST(CaptureFile, OpenCaptureFileInvalidSectionListSize) {
@@ -313,16 +313,31 @@ TEST(CaptureFile, OpenCaptureFileInvalidSectionListSize) {
 
   std::string header = CreateHeader(1, 24, 32);
   header.append(std::string_view{"12345678", 8});
-  constexpr uint16_t kSectionListSize = 10;
+  constexpr uint64_t kSectionListSize = 10;
   header.append(
       std::string_view{absl::bit_cast<const char*>(&kSectionListSize), sizeof(kSectionListSize)});
 
   auto write_result = orbit_base::WriteFully(temporary_file.fd(), header);
 
   auto capture_file_or_error = CaptureFile::OpenForReadWrite(temporary_file.file_path());
-  ASSERT_TRUE(capture_file_or_error.has_error());
-  EXPECT_THAT(capture_file_or_error.error().message(),
-              testing::HasSubstr("Unexpected EOF while reading section list"));
+  EXPECT_THAT(capture_file_or_error, HasError("Unexpected EOF while reading section list"));
+}
+
+TEST(CaptureFile, OpenCaptureFileInvalidSectionListSizeTooLarge) {
+  auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
+  ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
+  orbit_base::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
+
+  std::string header = CreateHeader(1, 24, 32);
+  header.append(std::string_view{"12345678", 8});
+  constexpr uint64_t kSectionListSize = 65'536;
+  header.append(
+      std::string_view{absl::bit_cast<const char*>(&kSectionListSize), sizeof(kSectionListSize)});
+
+  auto write_result = orbit_base::WriteFully(temporary_file.fd(), header);
+
+  auto capture_file_or_error = CaptureFile::OpenForReadWrite(temporary_file.file_path());
+  EXPECT_THAT(capture_file_or_error, HasError("The section list is too large"));
 }
 
 }  // namespace orbit_capture_file

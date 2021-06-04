@@ -18,7 +18,7 @@ class ProtoSectionInputStream {
   ProtoSectionInputStream() = default;
   virtual ~ProtoSectionInputStream() = default;
 
-  // Reads next event from the stream to message. Note that the caller must not read past
+  // Reads next message from the stream. Note that the caller must not read past
   // orbit_grpc_protos::CaptureFinished message in the case of Capture Section. Doing so
   // will result in undefined behavior.
   //
@@ -27,7 +27,7 @@ class ProtoSectionInputStream {
   // This means reading after CaptureFinished message sometimes end up reading
   // padded zeros which yield an empty message, or it could generate end of section
   // error.
-  virtual ErrorMessageOr<void> ReadEvent(google::protobuf::Message* message) = 0;
+  virtual ErrorMessageOr<void> ReadMessage(google::protobuf::Message* message) = 0;
 };
 
 }  // namespace orbit_capture_file
