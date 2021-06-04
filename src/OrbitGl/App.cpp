@@ -1206,6 +1206,7 @@ void OrbitApp::StartCapture() {
 
   auto capture_event_processor = CreateCaptureEventProcessor(
       this, process->name(), frame_track_function_ids, [this](const ErrorMessage& error) {
+        capture_data_->reset_file_path();
         SendErrorToUi("Error saving capture", error.message());
       });
 

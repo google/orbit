@@ -30,7 +30,8 @@ using orbit_grpc_protos::ProcessInfo;
 namespace orbit_client_model {
 
 CaptureData::CaptureData(orbit_client_data::ModuleManager* module_manager,
-                         const CaptureStarted& capture_started, std::filesystem::path file_path,
+                         const CaptureStarted& capture_started,
+                         std::optional<std::filesystem::path> file_path,
                          absl::flat_hash_set<uint64_t> frame_track_function_ids)
     : module_manager_{module_manager},
       callstack_data_(std::make_unique<CallstackData>()),
