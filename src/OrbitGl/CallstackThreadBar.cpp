@@ -200,7 +200,7 @@ bool CallstackThreadBar::IsEmpty() const {
   const uint64_t addr = callstack.frames(frame_index);
   const std::string& function_name = capture_data_->GetFunctionNameByAddress(addr);
   if (function_name == CaptureData::kUnknownFunctionOrModuleName) {
-    return std::string("<i>") + function_name + "</i>";
+    return std::string("<i>") + absl::StrFormat("[unknown@%#x]", addr) + "</i>";
   }
 
   std::string fn_name =
