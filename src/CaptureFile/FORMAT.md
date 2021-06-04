@@ -61,8 +61,8 @@ The following table lists all the values for section types.
 
 | Section Type | Value | Comment                     |
 |--------------|-------|-----------------------------|
-| RESERVED     | 0     | 0 is reserved - do not use. |
-| USER_DATA    | 1     | This section contains user-defined data like visible frame-tracks, track order, colors, bookmars, etc. |
+| RESERVED     | 0, 1  | 0 and 1 are reserved - do not use. |
+| USER_DATA    | 2     | This section contains user-defined data like visible frame-tracks, track order, colors, bookmars, etc. |
 
 #### USER_DATA
 

@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
+
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureFile/CaptureFile.h"
 #include "CaptureFile/CaptureFileOutputStream.h"
@@ -109,15 +111,20 @@ ErrorMessageOr<void> SaveToFileEventProcessor::WriteUserData() {
         function_id);
   }
 
-  size_t message_size = user_defined_capture_data.ByteSizeLong();
-  auto buf = make_unique_for_overwrite<uint8_t[]>(message_size);
-  // SerializeToArray returns false if the size of the buffer is too small or too big
-  // https://github.com/protocolbuffers/protobuf/blob/5e84a6169cf0f9716c9285c95c860bcb355dbdc1/src/google/protobuf/message_lite.cc#L484
-  CHECK(user_defined_capture_data.SerializeToArray(buf.get(), message_size));
+  uint32_t message_size = user_defined_capture_data.ByteSizeLong();
+  const size_t buf_size =
+      message_size + google::protobuf::io::CodedOutputStream::VarintSize32(message_size);
+  auto buf = make_unique_for_overwrite<uint8_t[]>(buf_size);
+  google::protobuf::io::ArrayOutputStream array_output_stream{buf.get(),
+                                                              static_cast<int>(buf_size)};
+  google::protobuf::io::CodedOutputStream coded_output_stream{&array_output_stream};
+  coded_output_stream.WriteVarint32(message_size);
+  // We do not expect any errors from coded output stream backed by ArrayOutputStream of correct
+  // size
+  CHECK(user_defined_capture_data.SerializeToCodedStream(&coded_output_stream));
 
-  OUTCOME_TRY(section_number,
-              capture_file->AddSection(orbit_capture_file::kSectionTypeUserData, message_size));
-  OUTCOME_TRY(capture_file->WriteToSection(section_number, 0, buf.get(), message_size));
+  OUTCOME_TRY(section_number, capture_file->AddUserDataSection(buf_size));
+  OUTCOME_TRY(capture_file->WriteToSection(section_number, 0, buf.get(), buf_size));
 
   return outcome::success();
 }

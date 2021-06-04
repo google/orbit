@@ -73,8 +73,8 @@ TEST(CaptureFileOutputStream, Smoke) {
   google::protobuf::io::CodedInputStream coded_input_stream(&input_stream);
 
   orbit_grpc_protos::ClientCaptureEvent event_from_file;
-  size_t event_size;
-  ASSERT_TRUE(coded_input_stream.ReadVarint64(&event_size));
+  uint32_t event_size;
+  ASSERT_TRUE(coded_input_stream.ReadVarint32(&event_size));
   std::vector<uint8_t> buffer(event_size);
   ASSERT_TRUE(coded_input_stream.ReadRaw(buffer.data(), buffer.size()));
   ASSERT_TRUE(event_from_file.ParseFromArray(buffer.data(), buffer.size()));
@@ -83,7 +83,7 @@ TEST(CaptureFileOutputStream, Smoke) {
   EXPECT_EQ(event_from_file.interned_string().key(), kAnswerKey);
   EXPECT_EQ(event_from_file.interned_string().intern(), kAnswerString);
 
-  ASSERT_TRUE(coded_input_stream.ReadVarint64(&event_size));
+  ASSERT_TRUE(coded_input_stream.ReadVarint32(&event_size));
   buffer = std::vector<uint8_t>(event_size);
   ASSERT_TRUE(coded_input_stream.ReadRaw(buffer.data(), buffer.size()));
   ASSERT_TRUE(event_from_file.ParseFromArray(buffer.data(), buffer.size()));

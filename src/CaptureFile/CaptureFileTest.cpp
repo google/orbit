@@ -4,6 +4,7 @@
 
 #include <absl/base/casts.h>
 #include <gmock/gmock.h>
+#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include <gtest/gtest.h>
 #include <stdint.h>
 
@@ -70,19 +71,19 @@ TEST(CaptureFile, CreateCaptureFileAndReadMainSection) {
   auto capture_section = capture_file->CreateCaptureSectionInputStream();
 
   {
-    auto event_or_error = capture_section->ReadEvent();
-    ASSERT_TRUE(event_or_error.has_value()) << event_or_error.error().message();
-    ASSERT_EQ(event_or_error.value().event_case(), ClientCaptureEvent::kInternedString);
-    EXPECT_EQ(event_or_error.value().interned_string().key(), kAnswerKey);
-    EXPECT_EQ(event_or_error.value().interned_string().intern(), kAnswerString);
+    ClientCaptureEvent event;
+    ASSERT_THAT(capture_section->ReadEvent(&event), HasNoError());
+    ASSERT_EQ(event.event_case(), ClientCaptureEvent::kInternedString);
+    EXPECT_EQ(event.interned_string().key(), kAnswerKey);
+    EXPECT_EQ(event.interned_string().intern(), kAnswerString);
   }
 
   {
-    auto event_or_error = capture_section->ReadEvent();
-    ASSERT_TRUE(event_or_error.has_value()) << event_or_error.error().message();
-    ASSERT_EQ(event_or_error.value().event_case(), ClientCaptureEvent::kInternedString);
-    EXPECT_EQ(event_or_error.value().interned_string().key(), kNotAnAnswerKey);
-    EXPECT_EQ(event_or_error.value().interned_string().intern(), kNotAnAnswerString);
+    ClientCaptureEvent event;
+    ASSERT_THAT(capture_section->ReadEvent(&event), HasNoError());
+    ASSERT_EQ(event.event_case(), ClientCaptureEvent::kInternedString);
+    EXPECT_EQ(event.interned_string().key(), kNotAnAnswerKey);
+    EXPECT_EQ(event.interned_string().intern(), kNotAnAnswerString);
   }
 }
 
@@ -118,7 +119,7 @@ TEST(CaptureFile, CreateCaptureFileWriteAdditionalSectionAndReadMainSection) {
   ASSERT_TRUE(capture_file_or_error.has_value()) << capture_file_or_error.error().message();
   std::unique_ptr<CaptureFile> capture_file = std::move(capture_file_or_error.value());
 
-  auto section_number_or_error = capture_file->AddSection(1, 333);
+  auto section_number_or_error = capture_file->AddUserDataSection(333);
   ASSERT_TRUE(section_number_or_error.has_value()) << section_number_or_error.error().message();
   ASSERT_EQ(capture_file->GetSectionList().size(), 1);
   EXPECT_EQ(section_number_or_error.value(), 0);
@@ -131,19 +132,19 @@ TEST(CaptureFile, CreateCaptureFileWriteAdditionalSectionAndReadMainSection) {
   auto capture_section = capture_file->CreateCaptureSectionInputStream();
 
   {
-    auto event_or_error = capture_section->ReadEvent();
-    ASSERT_TRUE(event_or_error.has_value()) << event_or_error.error().message();
-    ASSERT_EQ(event_or_error.value().event_case(), ClientCaptureEvent::kInternedString);
-    EXPECT_EQ(event_or_error.value().interned_string().key(), kAnswerKey);
-    EXPECT_EQ(event_or_error.value().interned_string().intern(), kAnswerString);
+    ClientCaptureEvent event;
+    ASSERT_THAT(capture_section->ReadEvent(&event), HasNoError());
+    ASSERT_EQ(event.event_case(), ClientCaptureEvent::kInternedString);
+    EXPECT_EQ(event.interned_string().key(), kAnswerKey);
+    EXPECT_EQ(event.interned_string().intern(), kAnswerString);
   }
 
   {
-    auto event_or_error = capture_section->ReadEvent();
-    ASSERT_TRUE(event_or_error.has_value()) << event_or_error.error().message();
-    ASSERT_EQ(event_or_error.value().event_case(), ClientCaptureEvent::kInternedString);
-    EXPECT_EQ(event_or_error.value().interned_string().key(), kNotAnAnswerKey);
-    EXPECT_EQ(event_or_error.value().interned_string().intern(), kNotAnAnswerString);
+    ClientCaptureEvent event;
+    ASSERT_THAT(capture_section->ReadEvent(&event), HasNoError());
+    ASSERT_EQ(event.event_case(), ClientCaptureEvent::kInternedString);
+    EXPECT_EQ(event.interned_string().key(), kNotAnAnswerKey);
+    EXPECT_EQ(event.interned_string().intern(), kNotAnAnswerString);
   }
 }
 
@@ -180,48 +181,51 @@ TEST(CaptureFile, CreateCaptureFileAndAddSection) {
   std::unique_ptr<CaptureFile> capture_file = std::move(capture_file_or_error.value());
   EXPECT_EQ(capture_file->GetSectionList().size(), 0);
 
-  auto section_number_or_error = capture_file->AddSection(1, 333);
-  ASSERT_TRUE(section_number_or_error.has_value()) << section_number_or_error.error().message();
-  ASSERT_EQ(capture_file->GetSectionList().size(), 1);
-  EXPECT_EQ(section_number_or_error.value(), 0);
-
+  uint64_t buf_size;
   {
     ClientCaptureEvent event;
     event.mutable_capture_finished()->set_status(orbit_grpc_protos::CaptureFinished::kFailed);
     event.mutable_capture_finished()->set_error_message("some error");
-    section_number_or_error = capture_file->AddSection(2, event.ByteSizeLong());
+
+    buf_size = event.ByteSizeLong() +
+               google::protobuf::io::CodedOutputStream::VarintSize32(event.ByteSizeLong());
+    auto buf = make_unique_for_overwrite<uint8_t[]>(buf_size);
+    google::protobuf::io::ArrayOutputStream array_output_stream(buf.get(), buf_size);
+    google::protobuf::io::CodedOutputStream coded_output_stream(&array_output_stream);
+    coded_output_stream.WriteVarint32(event.ByteSizeLong());
+    ASSERT_TRUE(event.SerializeToCodedStream(&coded_output_stream));
+    auto section_number_or_error = capture_file->AddUserDataSection(buf_size);
     ASSERT_THAT(section_number_or_error, HasValue());
-    auto buf = make_unique_for_overwrite<uint8_t[]>(event.ByteSizeLong());
-    ASSERT_TRUE(event.SerializeToArray(buf.get(), event.ByteSizeLong()));
-    ASSERT_THAT(capture_file->WriteToSection(section_number_or_error.value(), 0, buf.get(),
-                                             event.ByteSizeLong()),
-                HasNoError());
+    ASSERT_EQ(capture_file->GetSectionList().size(), 1);
+    EXPECT_EQ(section_number_or_error.value(), 0);
+
+    EXPECT_EQ(capture_file->FindSectionByType(2), 0);
+    // Write something to the section
+    std::string something{"something"};
+    constexpr uint64_t kOffsetInSection = 5;
+    auto write_to_section_result =
+        capture_file->WriteToSection(0, kOffsetInSection, something.c_str(), something.size());
+    ASSERT_THAT(write_to_section_result, HasNoError());
+
+    {
+      std::string content;
+      content.resize(something.size());
+      auto read_result =
+          capture_file->ReadFromSection(0, kOffsetInSection, content.data(), something.size());
+      ASSERT_THAT(read_result, HasNoError());
+      EXPECT_EQ(content, something);
+    }
+
+    ASSERT_THAT(
+        capture_file->WriteToSection(section_number_or_error.value(), 0, buf.get(), buf_size),
+        HasNoError());
   }
 
   {
     const auto& capture_file_section = capture_file->GetSectionList()[0];
-    EXPECT_EQ(capture_file_section.size, 333);
+    EXPECT_EQ(capture_file_section.size, buf_size);
     EXPECT_GT(capture_file_section.offset, 0);
-    EXPECT_EQ(capture_file_section.type, 1);
-  }
-
-  EXPECT_EQ(capture_file->FindSectionByType(1), 0);
-  EXPECT_EQ(capture_file->FindSectionByType(2), 1);
-
-  // Write something to the section
-  std::string something{"this is something"};
-  constexpr uint64_t kOffsetInSection = 25;
-  auto write_to_section_result =
-      capture_file->WriteToSection(0, kOffsetInSection, something.c_str(), something.size());
-  ASSERT_FALSE(write_to_section_result.has_error()) << write_to_section_result.error().message();
-
-  {
-    std::string content;
-    content.resize(something.size());
-    auto read_result =
-        capture_file->ReadFromSection(0, kOffsetInSection, content.data(), something.size());
-    ASSERT_FALSE(read_result.has_error()) << read_result.error().message();
-    EXPECT_EQ(content, something);
+    EXPECT_EQ(capture_file_section.type, kSectionTypeUserData);
   }
 
   // Reopen the file to make sure this information was saved
@@ -230,33 +234,24 @@ TEST(CaptureFile, CreateCaptureFileAndAddSection) {
   capture_file_or_error = CaptureFile::OpenForReadWrite(temporary_file.file_path());
   ASSERT_TRUE(capture_file_or_error.has_value()) << capture_file_or_error.error().message();
   capture_file = std::move(capture_file_or_error.value());
-  EXPECT_EQ(capture_file->GetSectionList().size(), 2);
+  EXPECT_EQ(capture_file->GetSectionList().size(), 1);
   {
     const auto& capture_file_section = capture_file->GetSectionList()[0];
-    EXPECT_EQ(capture_file_section.type, 1);
+    EXPECT_EQ(capture_file_section.type, kSectionTypeUserData);
     EXPECT_GT(capture_file_section.offset, 0);
-    EXPECT_EQ(capture_file_section.size, 333);
+    EXPECT_EQ(capture_file_section.size, buf_size);
   }
 
-  EXPECT_EQ(capture_file->FindSectionByType(1), 0);
-  ASSERT_EQ(capture_file->FindSectionByType(2), 1);
+  ASSERT_EQ(capture_file->FindSectionByType(2), 0);
 
   {
-    auto message_or_error = capture_file->ReadSectionAsProto<ClientCaptureEvent>(1);
-    ASSERT_THAT(message_or_error, HasValue());
-    const ClientCaptureEvent& event_from_file = message_or_error.value();
+    auto section_input_stream = capture_file->CreateProtoSectionInputStream(0);
+    ASSERT_NE(section_input_stream.get(), nullptr);
+    ClientCaptureEvent event_from_file;
+    ASSERT_THAT(section_input_stream->ReadEvent(&event_from_file), HasNoError());
     EXPECT_EQ(event_from_file.capture_finished().status(),
               orbit_grpc_protos::CaptureFinished::kFailed);
     EXPECT_EQ(event_from_file.capture_finished().error_message(), "some error");
-  }
-
-  {
-    std::string content;
-    content.resize(something.size());
-    auto read_result =
-        capture_file->ReadFromSection(0, kOffsetInSection, content.data(), something.size());
-    ASSERT_FALSE(read_result.has_error()) << read_result.error().message();
-    EXPECT_EQ(content, something);
   }
 }
 
