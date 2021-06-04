@@ -16,6 +16,7 @@
 
 namespace orbit_capture_client {
 
+using orbit_base::HasNoError;
 using orbit_base::HasValue;
 using orbit_base::TemporaryFile;
 using orbit_capture_file::CaptureFile;
@@ -70,36 +71,32 @@ TEST(SaveToFileEventProcessor, SaveAndLoadSimpleCaptureWithFrameTracks) {
   auto capture_section_input_stream = capture_file->CreateCaptureSectionInputStream();
 
   {
-    auto event_or_error = capture_section_input_stream->ReadEvent();
-    ASSERT_THAT(event_or_error, HasValue());
-    const auto& event = event_or_error.value();
+    ClientCaptureEvent event;
+    ASSERT_THAT(capture_section_input_stream->ReadEvent(&event), HasNoError());
     ASSERT_EQ(event.event_case(), ClientCaptureEvent::kInternedString);
     EXPECT_EQ(event.interned_string().key(), 1);
     EXPECT_EQ(event.interned_string().intern(), "1");
   }
 
   {
-    auto event_or_error = capture_section_input_stream->ReadEvent();
-    ASSERT_THAT(event_or_error, HasValue());
-    const auto& event = event_or_error.value();
+    ClientCaptureEvent event;
+    ASSERT_THAT(capture_section_input_stream->ReadEvent(&event), HasNoError());
     ASSERT_EQ(event.event_case(), ClientCaptureEvent::kInternedString);
     EXPECT_EQ(event.interned_string().key(), 2);
     EXPECT_EQ(event.interned_string().intern(), "2");
   }
 
   {
-    auto event_or_error = capture_section_input_stream->ReadEvent();
-    ASSERT_THAT(event_or_error, HasValue());
-    const auto& event = event_or_error.value();
+    ClientCaptureEvent event;
+    ASSERT_THAT(capture_section_input_stream->ReadEvent(&event), HasNoError());
     ASSERT_EQ(event.event_case(), ClientCaptureEvent::kInternedString);
     EXPECT_EQ(event.interned_string().key(), 3);
     EXPECT_EQ(event.interned_string().intern(), "3");
   }
 
   {
-    auto event_or_error = capture_section_input_stream->ReadEvent();
-    ASSERT_THAT(event_or_error, HasValue());
-    const auto& event = event_or_error.value();
+    ClientCaptureEvent event;
+    ASSERT_THAT(capture_section_input_stream->ReadEvent(&event), HasNoError());
     ASSERT_EQ(event.event_case(), ClientCaptureEvent::kCaptureFinished);
     EXPECT_EQ(event.capture_finished().status(), CaptureFinished::kSuccessful);
   }
@@ -107,22 +104,14 @@ TEST(SaveToFileEventProcessor, SaveAndLoadSimpleCaptureWithFrameTracks) {
   const auto& sections = capture_file->GetSectionList();
   ASSERT_GE(sections.size(), 1);
 
-  std::optional<size_t> user_data_section;
-  for (size_t i = 0; i < sections.size(); i++) {
-    if (sections[i].type == orbit_capture_file::kSectionTypeUserData) {
-      user_data_section = i;
-      break;
-    }
-  }
-
+  std::optional<size_t> user_data_section =
+      capture_file->FindSectionByType(orbit_capture_file::kSectionTypeUserData);
   ASSERT_TRUE(user_data_section.has_value());
-
-  std::vector<uint8_t> buf(sections[user_data_section.value()].size);
-  ASSERT_THAT(capture_file->ReadFromSection(user_data_section.value(), 0, buf.data(), buf.size()),
-              HasValue());
-
+  auto user_data_section_input_stream =
+      capture_file->CreateProtoSectionInputStream(user_data_section.value());
+  ASSERT_NE(user_data_section_input_stream.get(), nullptr);
   UserDefinedCaptureInfo capture_info;
-  capture_info.ParseFromArray(buf.data(), buf.size());
+  ASSERT_THAT(user_data_section_input_stream->ReadEvent(&capture_info), HasNoError());
 
   ASSERT_EQ(capture_info.frame_tracks_info().frame_track_function_ids_size(), 1);
   EXPECT_EQ(capture_info.frame_tracks_info().frame_track_function_ids(0), kFrameTrackFunctionId);

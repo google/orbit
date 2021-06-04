@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "CaptureFile/CaptureFileSection.h"
-#include "CaptureFile/CaptureSectionInputStream.h"
+#include "CaptureFile/ProtoSectionInputStream.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/Result.h"
@@ -33,12 +33,13 @@ class CaptureFile {
   // Returns the index for the first section with specified type.
   [[nodiscard]] virtual std::optional<uint64_t> FindSectionByType(uint64_t section_type) const = 0;
 
-  // Adds a section, returns added section number. Sections are always added to the end of the list.
-  // The file layout is adjusted accordingly. In case of an I/O error the format consistency is
-  // preserved, but the file size could still end up being changed (for example if updated section
-  // list was successfully written to file and space for the section was successfully reserved
-  // but the function has failed to update file header with the new position of the section list).
-  virtual ErrorMessageOr<uint64_t> AddSection(uint64_t section_type, uint64_t section_size) = 0;
+  // Adds user data section, returns added section number. The user data section added to the end of the
+  // section list. The file layout is adjusted accordingly. This function makes the best effort to preserve
+  // the format consistency in the case of an I/O error  but the file size could still end up being changed
+  // (for example if updated section list was successfully written to file and space for the section was
+  // successfully reserved but the function has failed to update file header with the new position of the
+  // section list).
+  virtual ErrorMessageOr<uint64_t> AddUserDataSection(uint64_t section_size) = 0;
 
   // Write data from the buffer to the section with specified offset. The data must be in bound
   // of the section. The function will CHECK fail if it is not.
@@ -52,18 +53,10 @@ class CaptureFile {
 
   [[nodiscard]] virtual const std::filesystem::path& GetFilePath() const = 0;
 
-  template <typename T>
-  ErrorMessageOr<T> ReadSectionAsProto(uint64_t section_number) {
-    auto section_info = GetSectionList()[section_number];
-    auto buf = make_unique_for_overwrite<uint8_t[]>(section_info.size);
-    OUTCOME_TRY(ReadFromSection(section_number, 0, buf.get(), section_info.size));
+  virtual std::unique_ptr<ProtoSectionInputStream> CreateProtoSectionInputStream(
+      uint64_t section_number) = 0;
 
-    T message;
-    CHECK(message.ParseFromArray(buf.get(), section_info.size));
-    return message;
-  }
-
-  virtual std::unique_ptr<CaptureSectionInputStream> CreateCaptureSectionInputStream() = 0;
+  virtual std::unique_ptr<ProtoSectionInputStream> CreateCaptureSectionInputStream() = 0;
 
   static ErrorMessageOr<std::unique_ptr<CaptureFile>> OpenForReadWrite(
       const std::filesystem::path& file_path);

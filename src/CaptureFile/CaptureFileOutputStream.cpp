@@ -105,7 +105,7 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::WriteCaptureEvent(
   CHECK(coded_output_.has_value());
   CHECK(file_output_stream_.has_value());
   size_t message_size = event.ByteSizeLong();
-  coded_output_->WriteVarint64(message_size);
+  coded_output_->WriteVarint32(message_size);
   if (!event.SerializeToCodedStream(&coded_output_.value())) {
     return HandleWriteError("Capture", SafeStrerror(file_output_stream_->GetErrno()));
   }
