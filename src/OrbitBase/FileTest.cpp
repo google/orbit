@@ -8,6 +8,7 @@
 
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/File.h"
+#include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/TemporaryFile.h"
 #include "OrbitBase/TestUtils.h"
 #include "OrbitBase/WriteStringToFile.h"
@@ -342,6 +343,20 @@ TEST(File, CreateDirectory) {
   EXPECT_TRUE(exists_or_error.value());
 
   ASSERT_THAT(RemoveFile(tmp_file.file_path()), HasNoError());
+}
+
+TEST(File, ResizeFile) {
+  auto tmp_file_or_error = TemporaryFile::Create();
+  ASSERT_THAT(tmp_file_or_error, HasNoError());
+  auto tmp_file = std::move(tmp_file_or_error.value());
+
+  tmp_file.CloseAndRemove();
+
+  ASSERT_THAT(WriteStringToFile(tmp_file.file_path(), "string"), HasNoError());
+  ASSERT_THAT(ResizeFile(tmp_file.file_path(), 3), HasNoError());
+  auto file_content_or_error = ReadFileToString(tmp_file.file_path());
+  ASSERT_THAT(file_content_or_error, HasNoError());
+  EXPECT_EQ(file_content_or_error.value(), "str");
 }
 
 TEST(File, ListFilesInDirectory) {
