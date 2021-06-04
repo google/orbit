@@ -4,6 +4,8 @@
 
 #include "ClientModel/SamplingDataPostProcessor.h"
 
+#include <absl/hash/hash.h>
+
 #include <algorithm>
 #include <cstdint>
 #include <memory>
@@ -32,6 +34,59 @@ namespace orbit_client_model {
 
 namespace {
 
+// class equivalent of orbit_client_protos::CallstackInfo for use as key of absl::flat_hash_map.
+class CallstackInfoAsClass {
+ public:
+  CallstackInfoAsClass(std::vector<uint64_t> frames, CallstackInfo::CallstackType type)
+      : frames_(std::move(frames)), type_(type) {}
+
+  [[nodiscard]] const std::vector<uint64_t>& frames() const { return frames_; }
+  [[nodiscard]] CallstackInfo::CallstackType type() const { return type_; }
+
+ private:
+  std::vector<uint64_t> frames_;
+  CallstackInfo::CallstackType type_;
+};
+
+template <typename H>
+H AbslHashValue(H h, const CallstackInfoAsClass& o) {
+  return H::combine(std::move(h), o.frames(), o.type());
+}
+
+using CallstackInfoAsPairWithLvalueRefToFrames =
+    std::pair<const std::vector<uint64_t>&, CallstackInfo::CallstackType>;
+
+// CallstackInfoHash and CallstackInfoEq allow heterogeneous lookup in
+// SamplingDataPostProcessor::resolved_callstack_to_id_;
+struct CallstackInfoHash {
+  using is_transparent = void;  // Makes this functor transparent, enabling heterogeneous lookup.
+
+  size_t operator()(const CallstackInfoAsClass& o) const {
+    return absl::Hash<CallstackInfoAsClass>{}(o);
+  }
+
+  size_t operator()(const CallstackInfoAsPairWithLvalueRefToFrames& p) const {
+    return absl::Hash<CallstackInfoAsPairWithLvalueRefToFrames>{}(p);
+  }
+};
+
+struct CallstackInfoEq {
+  using is_transparent = void;  // Makes this functor transparent, enabling heterogeneous lookup.
+
+  bool operator()(const CallstackInfoAsClass& lhs, const CallstackInfoAsClass& rhs) const {
+    return std::equal(lhs.frames().begin(), lhs.frames().end(), rhs.frames().begin(),
+                      rhs.frames().end()) &&
+           lhs.type() == rhs.type();
+  }
+
+  bool operator()(const CallstackInfoAsClass& lhs,
+                  const CallstackInfoAsPairWithLvalueRefToFrames& rhs) const {
+    return std::equal(lhs.frames().begin(), lhs.frames().end(), rhs.first.begin(),
+                      rhs.first.end()) &&
+           lhs.type() == rhs.second;
+  }
+};
+
 class SamplingDataPostProcessor {
  public:
   explicit SamplingDataPostProcessor() = default;
@@ -56,7 +111,7 @@ class SamplingDataPostProcessor {
   // Filled by ProcessSamples.
   absl::flat_hash_map<ThreadID, ThreadSampleData> thread_id_to_sample_data_;
   absl::flat_hash_map<uint64_t, CallstackInfo> id_to_resolved_callstack_;
-  absl::flat_hash_map<std::pair<std::vector<uint64_t>, CallstackInfo::CallstackType>, uint64_t>
+  absl::flat_hash_map<CallstackInfoAsClass, uint64_t, CallstackInfoHash, CallstackInfoEq>
       resolved_callstack_to_id_;
   absl::flat_hash_map<uint64_t, uint64_t> original_id_to_resolved_callstack_id_;
   absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>>
@@ -216,20 +271,24 @@ void SamplingDataPostProcessor::ResolveCallstacks(const CallstackData& callstack
       it->second.insert(callstack_id);
     }
 
+    CallstackInfo::CallstackType resolved_callstack_type = callstack.type();
+
     // Check if we already have this resolved callstack, and if not, create one.
     uint64_t resolved_callstack_id;
-    auto it =
-        resolved_callstack_to_id_.find(std::make_pair(resolved_callstack_frames, callstack.type()));
+    auto it = resolved_callstack_to_id_.find(CallstackInfoAsPairWithLvalueRefToFrames{
+        resolved_callstack_frames, resolved_callstack_type});
     if (it == resolved_callstack_to_id_.end()) {
       resolved_callstack_id = callstack_id;
       CHECK(!id_to_resolved_callstack_.contains(resolved_callstack_id));
-      orbit_client_protos::CallstackInfo resolved_callstack;
+
+      CallstackInfo resolved_callstack;
       *resolved_callstack.mutable_frames() = {resolved_callstack_frames.begin(),
                                               resolved_callstack_frames.end()};
-      resolved_callstack.set_type(callstack.type());
+      resolved_callstack.set_type(resolved_callstack_type);
       id_to_resolved_callstack_.insert_or_assign(resolved_callstack_id, resolved_callstack);
-      resolved_callstack_to_id_.insert_or_assign(
-          std::make_pair(std::move(resolved_callstack_frames), callstack.type()),
+
+      resolved_callstack_to_id_.emplace(
+          CallstackInfoAsClass{resolved_callstack_frames, resolved_callstack_type},
           resolved_callstack_id);
     } else {
       resolved_callstack_id = it->second;
