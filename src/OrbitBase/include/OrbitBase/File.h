@@ -122,6 +122,7 @@ ErrorMessageOr<bool> FileExists(const std::filesystem::path& path);
 ErrorMessageOr<void> MoveFile(const std::filesystem::path& from, const std::filesystem::path& to);
 ErrorMessageOr<bool> RemoveFile(const std::filesystem::path& file_path);
 ErrorMessageOr<bool> CreateDirectory(const std::filesystem::path& file_path);
+ErrorMessageOr<void> ResizeFile(const std::filesystem::path& file_path, uint64_t new_size);
 // Returns all files in directory; non recursively.
 ErrorMessageOr<std::vector<std::filesystem::path>> ListFilesInDirectory(
     const std::filesystem::path& directory);

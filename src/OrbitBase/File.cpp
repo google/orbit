@@ -241,6 +241,19 @@ ErrorMessageOr<bool> CreateDirectory(const std::filesystem::path& file_path) {
   return created;
 }
 
+ErrorMessageOr<void> ResizeFile(const std::filesystem::path& file_path, uint64_t new_size) {
+  std::error_code error;
+
+  std::filesystem::resize_file(file_path, new_size, error);
+
+  if (error) {
+    return ErrorMessage{
+        absl::StrFormat("Unable to resize file \"%s\": %s", file_path.string(), error.message())};
+  }
+
+  return outcome::success();
+}
+
 ErrorMessageOr<std::vector<std::filesystem::path>> ListFilesInDirectory(
     const std::filesystem::path& directory) {
   std::vector<std::filesystem::path> files;
