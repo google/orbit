@@ -41,6 +41,25 @@ static void SendFullAddressInfoToListener(TracerListener* listener,
   listener->OnAddressInfo(std::move(address_info));
 }
 
+// For addresses falling directly inside u(ret)probes code, unwindstack::FrameData has limited
+// information. Nonetheless, we can send a perfectly meaningful FullAddressInfo, treating
+// u(ret)probes code as a single function. This makes sense as the only affected virtual addresses I
+// observed are 0x7fffffffe000 (~1% of uprobes addresses) and 0x7fffffffe001 (~99%). This way the
+// client can show more information for such a frame, in particular when associated with the
+// corresponding unwinding error.
+static void SendUprobesFullAddressInfoToListener(
+    TracerListener* listener, const unwindstack::FrameData& libunwindstack_frame) {
+  CHECK(listener != nullptr);
+
+  FullAddressInfo address_info;
+  address_info.set_absolute_address(libunwindstack_frame.pc);
+  address_info.set_function_name("[uprobes]");
+  address_info.set_offset_in_function(libunwindstack_frame.pc - libunwindstack_frame.map_start);
+  address_info.set_module_name("[uprobes]");
+
+  listener->OnAddressInfo(std::move(address_info));
+}
+
 void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
   CHECK(listener_ != nullptr);
   CHECK(current_maps_ != nullptr);
@@ -73,7 +92,7 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
       ++(*samples_in_uretprobes_counter_);
     }
     callstack->set_type(Callstack::kInUprobes);
-    // We are not able to send AddressInfos for frames in uprobes code.
+    SendUprobesFullAddressInfoToListener(listener_, libunwindstack_result.frames().front());
     callstack->add_pcs(libunwindstack_result.frames().front().pc);
 
   } else if (libunwindstack_result.frames().size() > 1 &&
