@@ -60,8 +60,7 @@ ThreadTrack::ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph,
 }
 
 std::string ThreadTrack::GetThreadNameFromTid(uint32_t thread_id) {
-  const std::string kEmptyString;
-  return capture_data_ ? capture_data_->GetThreadName(thread_id) : kEmptyString;
+  return capture_data_->GetThreadName(thread_id);
 }
 
 void ThreadTrack::InitializeNameAndLabel(int32_t thread_id) {
@@ -112,8 +111,7 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
   const TimerInfo& timer_info = text_box->GetTimerInfo();
 
   const InstrumentedFunction* func =
-      capture_data_ ? capture_data_->GetInstrumentedFunctionById(timer_info.function_id())
-                    : nullptr;
+      capture_data_->GetInstrumentedFunctionById(timer_info.function_id());
 
   FunctionInfo::OrbitType type{FunctionInfo::kNone};
   if (func != nullptr) {
@@ -270,9 +268,6 @@ void ThreadTrack::UpdatePositionOfSubtracks() {
 }
 
 void ThreadTrack::UpdateMinMaxTimestamps() {
-  // Tracks in the introspection window don't have capture data.
-  if (capture_data_ == nullptr) return;
-
   min_time_ = std::min(min_time_.load(), capture_data_->GetCallstackData()->min_time());
   max_time_ = std::max(max_time_.load(), capture_data_->GetCallstackData()->max_time());
 }

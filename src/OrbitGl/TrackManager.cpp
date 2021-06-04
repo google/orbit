@@ -123,7 +123,7 @@ void TrackManager::SortTracks() {
   }
 
   // Separate "capture_pid" tracks from tracks that originate from other processes.
-  int32_t capture_pid = capture_data_ ? capture_data_->process_id() : 0;
+  int32_t capture_pid = capture_data_->process_id();
   std::vector<Track*> capture_pid_tracks;
   std::vector<Track*> external_pid_tracks;
   for (auto& track : all_processes_sorted_tracks) {
@@ -182,7 +182,7 @@ void TrackManager::UpdateVisibleTrackList() {
 std::vector<ThreadTrack*> TrackManager::GetSortedThreadTracks() {
   std::vector<ThreadTrack*> sorted_tracks;
   absl::flat_hash_map<ThreadTrack*, uint32_t> num_events_by_track;
-  const CallstackData* callstack_data = capture_data_ ? capture_data_->GetCallstackData() : nullptr;
+  const CallstackData* callstack_data = capture_data_->GetCallstackData();
 
   for (auto& [tid, track] : thread_tracks_) {
     if (tid == orbit_base::kAllProcessThreadsTid) {

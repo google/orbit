@@ -631,12 +631,10 @@ void TimeGraph::UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, ui
   batcher_.StartNewFrame();
   text_renderer_static_.Clear();
 
-  if (capture_data_) {
-    capture_min_timestamp_ =
-        std::min(capture_min_timestamp_, capture_data_->GetCallstackData()->min_time());
-    capture_max_timestamp_ =
-        std::max(capture_max_timestamp_, capture_data_->GetCallstackData()->max_time());
-  }
+  capture_min_timestamp_ =
+      std::min(capture_min_timestamp_, capture_data_->GetCallstackData()->min_time());
+  capture_max_timestamp_ =
+      std::max(capture_max_timestamp_, capture_data_->GetCallstackData()->max_time());
 
   time_window_us_ = max_time_us_ - min_time_us_;
   world_start_x_ = viewport_->GetWorldTopLeft()[0];

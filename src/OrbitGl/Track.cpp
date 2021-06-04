@@ -223,7 +223,7 @@ void Track::UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*t_min*/, uint64_t 
 void Track::SetPinned(bool value) { pinned_ = value; }
 
 Color Track::GetTrackBackgroundColor() const {
-  int32_t capture_process_id = capture_data_ ? capture_data_->process_id() : -1;
+  int32_t capture_process_id = capture_data_->process_id();
 
   if (process_id_ != -1 && process_id_ != capture_process_id) {
     const Color kExternalProcessColor(30, 30, 40, 255);
