@@ -29,7 +29,7 @@ TimerChain::~TimerChain() {
 TimerBlock* TimerChain::GetBlockContaining(const TextBox* element) const {
   TimerBlock* block = root_;
   while (block != nullptr) {
-    uint32_t size = block->size_;
+    uint32_t size = block->size();
     if (size != 0) {
       TextBox* begin = &block->data_[0];
       TextBox* end = &block->data_[size - 1];
@@ -48,10 +48,10 @@ TextBox* TimerChain::GetElementAfter(const TextBox* element) const {
   if (block != nullptr) {
     TextBox* begin = &block->data_[0];
     uint32_t index = element - begin;
-    if (index < block->size_ - 1) {
+    if (index < block->size() - 1) {
       return &block->data_[++index];
     }
-    if (block->next_ != nullptr && block->next_->size_ != 0) {
+    if (block->next_ != nullptr && block->next_->size() != 0) {
       return &block->next_->data_[0];
     }
   }
@@ -67,7 +67,7 @@ TextBox* TimerChain::GetElementBefore(const TextBox* element) const {
       return &block->data_[--index];
     }
     if (block->prev_ != nullptr) {
-      return &block->prev_->data_[block->prev_->size_ - 1];
+      return &block->prev_->data_[block->prev_->size() - 1];
     }
   }
   return nullptr;
