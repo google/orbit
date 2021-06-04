@@ -1002,7 +1002,7 @@ static ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureFromNewFormat(
   if (section_index.has_value()) {
     orbit_client_protos::UserDefinedCaptureInfo user_defined_capture_info;
     auto proto_input_stream = capture_file->CreateProtoSectionInputStream(section_index.value());
-    OUTCOME_TRY(proto_input_stream->ReadEvent(&user_defined_capture_info));
+    OUTCOME_TRY(proto_input_stream->ReadMessage(&user_defined_capture_info));
     const auto& loaded_frame_track_function_ids =
         user_defined_capture_info.frame_tracks_info().frame_track_function_ids();
     frame_track_function_ids = {loaded_frame_track_function_ids.begin(),
@@ -1018,7 +1018,7 @@ static ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureFromNewFormat(
       return CaptureListener::CaptureOutcome::kCancelled;
     }
     ClientCaptureEvent event;
-    OUTCOME_TRY(capture_section_input_stream->ReadEvent(&event));
+    OUTCOME_TRY(capture_section_input_stream->ReadMessage(&event));
     capture_event_processor->ProcessEvent(event);
     if (event.event_case() == ClientCaptureEvent::kCaptureFinished) {
       return CaptureListener::CaptureOutcome::kComplete;

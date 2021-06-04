@@ -12,17 +12,19 @@ target_compile_options(CaptureFile PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(
   CaptureFile
   PUBLIC include/CaptureFile/CaptureFile.h
+         include/CaptureFile/CaptureFileHelpers.h
          include/CaptureFile/CaptureFileOutputStream.h
          include/CaptureFile/CaptureFileSection.h
-        include/CaptureFile/ProtoSectionInputStream.h)
+         include/CaptureFile/ProtoSectionInputStream.h)
 
 target_sources(
   CaptureFile
   PRIVATE CaptureFileConstants.h
           CaptureFile.cpp
+          CaptureFileHelpers.cpp
           CaptureFileOutputStream.cpp
-        ProtoSectionInputStreamImpl.cpp
-        ProtoSectionInputStreamImpl.h
+          ProtoSectionInputStreamImpl.cpp
+          ProtoSectionInputStreamImpl.h
           FileFragmentInputStream.cpp
           FileFragmentInputStream.h)
 
@@ -32,6 +34,7 @@ target_link_libraries(
   CaptureFile
   PUBLIC OrbitBase
          GrpcProtos
+         ClientProtos
          CONAN_PKG::protobuf)
 
 add_executable(CaptureFileTests)
@@ -39,6 +42,7 @@ add_executable(CaptureFileTests)
 target_compile_options(CaptureFileTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(CaptureFileTests PRIVATE
+  CaptureFileHelpersTest.cpp
   CaptureFileOutputStreamTest.cpp
   CaptureFileTest.cpp
   FileFragmentInputStreamTest.cpp

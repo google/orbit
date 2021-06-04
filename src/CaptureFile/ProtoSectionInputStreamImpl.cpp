@@ -11,7 +11,7 @@ namespace orbit_capture_file_internal {
 
 constexpr uint64_t kMaximumMessageSize = 1024 * 1024;  // 1Mb
 
-ErrorMessageOr<void> ProtoSectionInputStreamImpl::ReadEvent(google::protobuf::Message* message) {
+ErrorMessageOr<void> ProtoSectionInputStreamImpl::ReadMessage(google::protobuf::Message* message) {
   uint32_t message_size = 0;
 
   // Note that in case there was an error CodedInputStream does not provide error messages/codes.
@@ -22,11 +22,11 @@ ErrorMessageOr<void> ProtoSectionInputStreamImpl::ReadEvent(google::protobuf::Me
         ErrorMessage{"Unexpected end of section while reading message size"});
   }
 
-  // Since file input is not trusted having too big value here may lead to out-of-memory allocation
+  // Since file input is not trusted, having too big value here may lead to out-of-memory allocation
   // below. Do a sanity check for message size, we limit our messages to 1Mb maximum size.
   if (message_size > kMaximumMessageSize) {
     return ErrorMessage{
-        absl::StrFormat("The message size is too big %d (maximum allowed message size is %d)",
+        absl::StrFormat("The message size %d is too big (maximum allowed message size is %d)",
                         message_size, kMaximumMessageSize)};
   }
 

@@ -33,13 +33,20 @@ class CaptureFile {
   // Returns the index for the first section with specified type.
   [[nodiscard]] virtual std::optional<uint64_t> FindSectionByType(uint64_t section_type) const = 0;
 
-  // Adds user data section, returns added section number. The user data section added to the end of the
-  // section list. The file layout is adjusted accordingly. This function makes the best effort to preserve
-  // the format consistency in the case of an I/O error  but the file size could still end up being changed
-  // (for example if updated section list was successfully written to file and space for the section was
-  // successfully reserved but the function has failed to update file header with the new position of the
-  // section list).
+  // Adds user data section, returns added section number. The user data section is added to the end
+  // of the section list. The file layout is adjusted accordingly. This function makes the best
+  // effort to preserve the format consistency in the case of an I/O error, but the file size could
+  // still end up being changed (for example if updated section list was successfully written to
+  // file and space for the section was successfully reserved but the function has failed to update
+  // file header with the new position of the section list).
   virtual ErrorMessageOr<uint64_t> AddUserDataSection(uint64_t section_size) = 0;
+
+  // Extend the last section in the file. This function is intended as fast-path for USER_DATA
+  // read-write section, other sections in the file are supposed to read-only which lets us
+  // avoid copying data around for the most of the file in the case when only user data
+  // is modified. The function will return a error if the section is not located at the
+  // end of file.
+  virtual ErrorMessageOr<void> ExtendSection(uint64_t section_number, size_t new_size) = 0;
 
   // Write data from the buffer to the section with specified offset. The data must be in bound
   // of the section. The function will CHECK fail if it is not.

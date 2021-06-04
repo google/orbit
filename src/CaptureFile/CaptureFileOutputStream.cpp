@@ -120,13 +120,13 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::WriteCaptureEvent(
 ErrorMessageOr<void> CaptureFileOutputStreamImpl::WriteHeader() {
   CHECK(fd_.valid());
 
-  std::string header{kFileSignature, kFileSignatureSize};
+  std::string header{kFileSignature};
   header.append(std::string_view(absl::bit_cast<char*>(&kFileVersion), sizeof(kFileVersion)));
   // signature - 4bytes, version - 4bytes
   // capture section offset - 8 bytes
   // additional section offset - 8 bytes
   uint64_t capture_section_offset =
-      kFileSignatureSize + sizeof(kFileVersion) + 2 * sizeof(uint64_t);
+      kFileSignature.size() + sizeof(kFileVersion) + 2 * sizeof(uint64_t);
   header.append(std::string_view(absl::bit_cast<char*>(&capture_section_offset),
                                  sizeof(capture_section_offset)));
   uint64_t additional_section_list_offset =

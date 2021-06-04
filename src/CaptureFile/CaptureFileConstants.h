@@ -9,11 +9,12 @@
 #include <stdint.h>
 
 #include <array>
+#include <string_view>
 
 // We want the signature length to be divisible by sizeof(uint32_t) to have
 // following fields aligned to 4 as well.
-constexpr size_t kFileSignatureSize = 4;
-constexpr const char* kFileSignature = "ORBT";
+constexpr std::string_view kFileSignature = "ORBT";
+static_assert(kFileSignature.size() == 4);
 
 constexpr uint32_t kFileVersion = 1;
 

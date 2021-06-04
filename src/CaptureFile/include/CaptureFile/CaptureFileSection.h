@@ -9,7 +9,7 @@
 
 namespace orbit_capture_file {
 
-constexpr uint64_t kSectionTypeUserData = 2;
+constexpr uint64_t kSectionTypeUserData = 1;
 
 struct CaptureFileSection {
   uint64_t type;

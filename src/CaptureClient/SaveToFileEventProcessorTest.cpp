@@ -72,7 +72,7 @@ TEST(SaveToFileEventProcessor, SaveAndLoadSimpleCaptureWithFrameTracks) {
 
   {
     ClientCaptureEvent event;
-    ASSERT_THAT(capture_section_input_stream->ReadEvent(&event), HasNoError());
+    ASSERT_THAT(capture_section_input_stream->ReadMessage(&event), HasNoError());
     ASSERT_EQ(event.event_case(), ClientCaptureEvent::kInternedString);
     EXPECT_EQ(event.interned_string().key(), 1);
     EXPECT_EQ(event.interned_string().intern(), "1");
@@ -80,7 +80,7 @@ TEST(SaveToFileEventProcessor, SaveAndLoadSimpleCaptureWithFrameTracks) {
 
   {
     ClientCaptureEvent event;
-    ASSERT_THAT(capture_section_input_stream->ReadEvent(&event), HasNoError());
+    ASSERT_THAT(capture_section_input_stream->ReadMessage(&event), HasNoError());
     ASSERT_EQ(event.event_case(), ClientCaptureEvent::kInternedString);
     EXPECT_EQ(event.interned_string().key(), 2);
     EXPECT_EQ(event.interned_string().intern(), "2");
@@ -88,7 +88,7 @@ TEST(SaveToFileEventProcessor, SaveAndLoadSimpleCaptureWithFrameTracks) {
 
   {
     ClientCaptureEvent event;
-    ASSERT_THAT(capture_section_input_stream->ReadEvent(&event), HasNoError());
+    ASSERT_THAT(capture_section_input_stream->ReadMessage(&event), HasNoError());
     ASSERT_EQ(event.event_case(), ClientCaptureEvent::kInternedString);
     EXPECT_EQ(event.interned_string().key(), 3);
     EXPECT_EQ(event.interned_string().intern(), "3");
@@ -96,7 +96,7 @@ TEST(SaveToFileEventProcessor, SaveAndLoadSimpleCaptureWithFrameTracks) {
 
   {
     ClientCaptureEvent event;
-    ASSERT_THAT(capture_section_input_stream->ReadEvent(&event), HasNoError());
+    ASSERT_THAT(capture_section_input_stream->ReadMessage(&event), HasNoError());
     ASSERT_EQ(event.event_case(), ClientCaptureEvent::kCaptureFinished);
     EXPECT_EQ(event.capture_finished().status(), CaptureFinished::kSuccessful);
   }
@@ -111,7 +111,7 @@ TEST(SaveToFileEventProcessor, SaveAndLoadSimpleCaptureWithFrameTracks) {
       capture_file->CreateProtoSectionInputStream(user_data_section.value());
   ASSERT_NE(user_data_section_input_stream.get(), nullptr);
   UserDefinedCaptureInfo capture_info;
-  ASSERT_THAT(user_data_section_input_stream->ReadEvent(&capture_info), HasNoError());
+  ASSERT_THAT(user_data_section_input_stream->ReadMessage(&capture_info), HasNoError());
 
   ASSERT_EQ(capture_info.frame_tracks_info().frame_track_function_ids_size(), 1);
   EXPECT_EQ(capture_info.frame_tracks_info().frame_track_function_ids(0), kFrameTrackFunctionId);
