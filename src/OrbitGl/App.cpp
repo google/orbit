@@ -1031,47 +1031,46 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
     capture_window_->set_draw_help(false);
   }
   ClearCapture();
-  auto load_future =
-      thread_pool_->Schedule([this, file_path]() {
-        capture_loading_cancellation_requested_ = false;
+  auto load_future = thread_pool_->Schedule([this, file_path]() {
+    capture_loading_cancellation_requested_ = false;
 
-        auto capture_file_or_error = CaptureFile::OpenForReadWrite(file_path);
+    auto capture_file_or_error = CaptureFile::OpenForReadWrite(file_path);
 
-        ErrorMessageOr<CaptureListener::CaptureOutcome> load_result{CaptureOutcome::kComplete};
+    ErrorMessageOr<CaptureListener::CaptureOutcome> load_result{CaptureOutcome::kComplete};
 
-        // Set is_loading_capture_ to true for the duration of this scope.
-        is_loading_capture_ = true;
-        orbit_base::unique_resource scope_exit{&is_loading_capture_,
-                                               [](std::atomic<bool>* value) { *value = false; }};
+    // Set is_loading_capture_ to true for the duration of this scope.
+    is_loading_capture_ = true;
+    orbit_base::unique_resource scope_exit{&is_loading_capture_,
+                                           [](std::atomic<bool>* value) { *value = false; }};
 
-        ScopedMetric metric{metrics_uploader_,
-                            capture_file_or_error.has_value()
-                                ? orbit_metrics_uploader::OrbitLogEvent::ORBIT_CAPTURE_LOAD_V2
-                                : orbit_metrics_uploader::OrbitLogEvent::ORBIT_CAPTURE_LOAD};
-        if (capture_file_or_error.has_value()) {
-          load_result = LoadCaptureFromNewFormat(this, capture_file_or_error.value().get(),
-                                                 &capture_loading_cancellation_requested_);
-        } else {  // Fall back to old capture format.
-          load_result = orbit_client_model::capture_deserializer::Load(
-              file_path, this, module_manager_.get(), &capture_loading_cancellation_requested_);
-        }
+    ScopedMetric metric{metrics_uploader_,
+                        capture_file_or_error.has_value()
+                            ? orbit_metrics_uploader::OrbitLogEvent::ORBIT_CAPTURE_LOAD_V2
+                            : orbit_metrics_uploader::OrbitLogEvent::ORBIT_CAPTURE_LOAD};
+    if (capture_file_or_error.has_value()) {
+      load_result = LoadCaptureFromNewFormat(this, capture_file_or_error.value().get(),
+                                             &capture_loading_cancellation_requested_);
+    } else {  // Fall back to old capture format.
+      load_result = orbit_client_model::capture_deserializer::Load(
+          file_path, this, module_manager_.get(), &capture_loading_cancellation_requested_);
+    }
 
-        if (load_result.has_error()) {
-          metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_INTERNAL_ERROR);
-          return load_result;
-        }
+    if (load_result.has_error()) {
+      metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_INTERNAL_ERROR);
+      return load_result;
+    }
 
-        switch (load_result.value()) {
-          case CaptureOutcome::kCancelled:
-            metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_CANCELLED);
-            break;
-          case CaptureOutcome::kComplete:
-            OnCaptureComplete();
-            break;
-        }
+    switch (load_result.value()) {
+      case CaptureOutcome::kCancelled:
+        metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_CANCELLED);
+        break;
+      case CaptureOutcome::kComplete:
+        OnCaptureComplete();
+        break;
+    }
 
-        return load_result;
-      });
+    return load_result;
+  });
 
   DoZoom = true;  // TODO: remove global, review logic
 
