@@ -492,6 +492,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
                                absl::Span<const std::string> function_names);
   void AddFrameTrackTimers(uint64_t instrumented_function_id);
   void RefreshFrameTracks();
+  void TrySaveUserDefinedCaptureInfo();
 
   orbit_base::Future<void> OnCaptureFailed(ErrorMessage error_message);
   orbit_base::Future<void> OnCaptureCancelled();

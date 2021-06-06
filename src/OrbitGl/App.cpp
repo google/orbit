@@ -34,6 +34,7 @@
 #include "CallstackDataView.h"
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureFile/CaptureFile.h"
+#include "CaptureFile/CaptureFileHelpers.h"
 #include "CaptureWindow.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/FunctionUtils.h"
@@ -323,6 +324,7 @@ Future<void> OrbitApp::OnCaptureComplete() {
   return main_thread_executor_->Schedule(
       [this, sampling_profiler = std::move(post_processed_sampling_data)]() mutable {
         ORBIT_SCOPE("OnCaptureComplete");
+        TrySaveUserDefinedCaptureInfo();
         RefreshFrameTracks();
         GetMutableCaptureData().set_post_processed_sampling_data(sampling_profiler);
         RefreshCaptureView();
@@ -1107,8 +1109,8 @@ static std::unique_ptr<CaptureEventProcessor> CreateCaptureEventProcessor(
                                     orbit_client_model::capture_serializer::GenerateCaptureFileName(
                                         process_name, absl::Now(), "_autosave");
 
-  auto save_to_file_processor_or_error = CaptureEventProcessor::CreateSaveToFileProcessor(
-      file_path, frame_track_function_ids, error_handler);
+  auto save_to_file_processor_or_error =
+      CaptureEventProcessor::CreateSaveToFileProcessor(file_path, error_handler);
 
   if (save_to_file_processor_or_error.has_error()) {
     error_handler(ErrorMessage{
@@ -2301,6 +2303,7 @@ void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
 
 void OrbitApp::AddFrameTrack(uint64_t instrumented_function_id) {
   CHECK(instrumented_function_id != 0);
+  CHECK(std::this_thread::get_id() == main_thread_id_);
   if (!HasCaptureData()) {
     return;
   }
@@ -2316,6 +2319,7 @@ void OrbitApp::AddFrameTrack(uint64_t instrumented_function_id) {
     if (!IsCapturing()) {
       AddFrameTrackTimers(instrumented_function_id);
     }
+    TrySaveUserDefinedCaptureInfo();
   } else {
     CHECK(empty_frame_track_warning_callback_);
     const InstrumentedFunction* function =
@@ -2351,6 +2355,7 @@ void OrbitApp::RemoveFrameTrack(uint64_t instrumented_function_id) {
     frame_track_online_processor_.RemoveFrameTrack(instrumented_function_id);
     GetMutableCaptureData().DisableFrameTrack(instrumented_function_id);
     GetMutableTimeGraph()->RemoveFrameTrack(instrumented_function_id);
+    TrySaveUserDefinedCaptureInfo();
   }
 }
 
@@ -2563,4 +2568,33 @@ void OrbitApp::CaptureMetricProcessApiTimer(const orbit_client_protos::TimerInfo
     case orbit_api::kNone:
       UNREACHABLE();
   }
+}
+
+void OrbitApp::TrySaveUserDefinedCaptureInfo() {
+  CHECK(std::this_thread::get_id() == main_thread_id_);
+  CHECK(HasCaptureData());
+  if (IsCapturing()) {
+    // We are going to save it at the end of capture anyways.
+    return;
+  }
+
+  const auto& file_path = GetCaptureData().file_path();
+  if (!file_path.has_value()) {
+    LOG("Warning: capture is not backed by a file, skipping the save of UserDefinedCaptureInfo");
+    return;
+  }
+
+  orbit_client_protos::UserDefinedCaptureInfo capture_info;
+  const auto& frame_track_function_ids = GetCaptureData().frame_track_function_ids();
+  *capture_info.mutable_frame_tracks_info()->mutable_frame_track_function_ids() = {
+      frame_track_function_ids.begin(), frame_track_function_ids.end()};
+  thread_pool_->Schedule([this, capture_info = std::move(capture_info),
+                          file_path = file_path.value()] {
+    LOG("Saving user defined capture info to \"%s\"", file_path.string());
+    auto write_result = orbit_capture_file::WriteUserData(file_path, capture_info);
+    if (write_result.has_error()) {
+      SendErrorToUi("Save failed", absl::StrFormat("Save to \"%s\" failed: %s", file_path.string(),
+                                                   write_result.error().message()));
+    }
+  });
 }

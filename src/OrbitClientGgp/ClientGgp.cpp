@@ -121,10 +121,10 @@ ErrorMessageOr<void> ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
 
   LOG("Saving capture to \"%s\"", file_path.string());
 
-  OUTCOME_TRY(event_processor,
-              CaptureEventProcessor::CreateSaveToFileProcessor(
-                  GenerateFilePath(), absl::flat_hash_set<uint64_t>{},
-                  [](const ErrorMessage& error) { ERROR("%s", error.message()); }));
+  OUTCOME_TRY(event_processor, CaptureEventProcessor::CreateSaveToFileProcessor(
+                                   GenerateFilePath(), [](const ErrorMessage& error) {
+                                     ERROR("%s", error.message());
+                                   }));
 
   Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> result = capture_client_->Capture(
       thread_pool, target_process_->pid(), module_manager_, selected_functions_,
