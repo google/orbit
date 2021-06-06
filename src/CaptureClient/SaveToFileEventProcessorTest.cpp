@@ -20,7 +20,6 @@ using orbit_base::HasNoError;
 using orbit_base::HasValue;
 using orbit_base::TemporaryFile;
 using orbit_capture_file::CaptureFile;
-using orbit_client_protos::UserDefinedCaptureInfo;
 using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::ClientCaptureEvent;
 
@@ -38,20 +37,18 @@ static ClientCaptureEvent CreateCaptureFinishedEvent() {
   return event;
 }
 
-TEST(SaveToFileEventProcessor, SaveAndLoadSimpleCaptureWithFrameTracks) {
+TEST(SaveToFileEventProcessor, SaveAndLoadSimpleCapture) {
   auto temporary_file_or_error = TemporaryFile::Create();
   ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
   TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
   absl::flat_hash_set<uint64_t> frame_track_function_ids;
-  constexpr uint64_t kFrameTrackFunctionId = 17;
-  frame_track_function_ids.insert(kFrameTrackFunctionId);
 
   auto error_handler = [](const ErrorMessage& error) { FAIL() << error.message(); };
 
   temporary_file.CloseAndRemove();
 
-  auto capture_event_processor_or_error = CaptureEventProcessor::CreateSaveToFileProcessor(
-      temporary_file.file_path(), frame_track_function_ids, error_handler);
+  auto capture_event_processor_or_error =
+      CaptureEventProcessor::CreateSaveToFileProcessor(temporary_file.file_path(), error_handler);
   ASSERT_TRUE(capture_event_processor_or_error.has_value())
       << capture_event_processor_or_error.error().message();
 
@@ -102,19 +99,11 @@ TEST(SaveToFileEventProcessor, SaveAndLoadSimpleCaptureWithFrameTracks) {
   }
 
   const auto& sections = capture_file->GetSectionList();
-  ASSERT_GE(sections.size(), 1);
+  EXPECT_EQ(sections.size(), 0);
 
   std::optional<size_t> user_data_section =
       capture_file->FindSectionByType(orbit_capture_file::kSectionTypeUserData);
-  ASSERT_TRUE(user_data_section.has_value());
-  auto user_data_section_input_stream =
-      capture_file->CreateProtoSectionInputStream(user_data_section.value());
-  ASSERT_NE(user_data_section_input_stream.get(), nullptr);
-  UserDefinedCaptureInfo capture_info;
-  ASSERT_THAT(user_data_section_input_stream->ReadMessage(&capture_info), HasNoError());
-
-  ASSERT_EQ(capture_info.frame_tracks_info().frame_track_function_ids_size(), 1);
-  EXPECT_EQ(capture_info.frame_tracks_info().frame_track_function_ids(0), kFrameTrackFunctionId);
+  EXPECT_FALSE(user_data_section.has_value());
 }
 
 }  // namespace orbit_capture_client

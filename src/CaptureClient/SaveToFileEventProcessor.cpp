@@ -20,10 +20,8 @@ namespace {
 class SaveToFileEventProcessor : public CaptureEventProcessor {
  public:
   explicit SaveToFileEventProcessor(std::filesystem::path file_path,
-                                    absl::flat_hash_set<uint64_t> frame_track_function_ids,
                                     std::function<void(const ErrorMessage&)> error_handler)
-      : frame_track_function_ids_(std::move(frame_track_function_ids)),
-        file_path_{std::move(file_path)},
+      : file_path_{std::move(file_path)},
         error_handler_{std::move(error_handler)},
         state_{State::kProcessing} {}
   ~SaveToFileEventProcessor() override = default;
@@ -38,10 +36,8 @@ class SaveToFileEventProcessor : public CaptureEventProcessor {
     kErrorReported,
   };
 
-  ErrorMessageOr<void> WriteUserData();
   void ReportError(const ErrorMessage& error);
 
-  absl::flat_hash_set<uint64_t> frame_track_function_ids_;
   std::filesystem::path file_path_;
   std::function<void(const ErrorMessage&)> error_handler_;
   std::unique_ptr<CaptureFileOutputStream> output_stream_;
@@ -91,36 +87,17 @@ void SaveToFileEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
       return;
     }
 
-    auto write_user_data_result = WriteUserData();
-    if (write_user_data_result.has_error()) {
-      ReportError(write_user_data_result.error());
-      return;
-    }
-
     state_ = State::kCaptureFinished;
   }
-}
-
-ErrorMessageOr<void> SaveToFileEventProcessor::WriteUserData() {
-  UserDefinedCaptureInfo user_defined_capture_data;
-  for (uint64_t function_id : frame_track_function_ids_) {
-    user_defined_capture_data.mutable_frame_tracks_info()->add_frame_track_function_ids(
-        function_id);
-  }
-
-  OUTCOME_TRY(orbit_capture_file::WriteUserData(file_path_, user_defined_capture_data));
-
-  return outcome::success();
 }
 
 }  // namespace
 
 ErrorMessageOr<std::unique_ptr<CaptureEventProcessor>>
 CaptureEventProcessor::CreateSaveToFileProcessor(
-    const std::filesystem::path& file_path, absl::flat_hash_set<uint64_t> frame_track_function_ids,
+    const std::filesystem::path& file_path,
     std::function<void(const ErrorMessage&)> error_handler) {
-  auto processor = std::make_unique<SaveToFileEventProcessor>(
-      file_path, std::move(frame_track_function_ids), std::move(error_handler));
+  auto processor = std::make_unique<SaveToFileEventProcessor>(file_path, std::move(error_handler));
   auto init_or_error = processor->Initialize();
   if (init_or_error.has_error()) {
     return init_or_error.error();
