@@ -85,7 +85,6 @@ QPushButton:disabled {
            <addaction name="actionToggle_Capture"/>
            <addaction name="actionCaptureOptions"/>
            <addaction name="actionOpen_Capture"/>
-           <addaction name="actionSave_Capture"/>
            <addaction name="actionHelp"/>
            <addaction name="actionIntrospection"/>
           </widget>
@@ -251,7 +250,7 @@ QPushButton:disabled {
      <x>0</x>
      <y>0</y>
      <width>976</width>
-     <height>21</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -259,7 +258,6 @@ QPushButton:disabled {
      <string>File</string>
     </property>
     <addaction name="actionOpen_Capture"/>
-    <addaction name="actionSave_Capture"/>
     <addaction name="separator"/>
     <addaction name="actionOpen_Preset"/>
     <addaction name="actionSave_Preset_As"/>
@@ -454,15 +452,6 @@ QPushButton:disabled {
    </property>
    <property name="text">
     <string>Open Capture...</string>
-   </property>
-  </action>
-  <action name="actionSave_Capture">
-   <property name="icon">
-    <iconset resource="../../icons/orbiticons.qrc">
-     <normaloff>:/actions/save_alt</normaloff>:/actions/save_alt</iconset>
-   </property>
-   <property name="text">
-    <string>Save Capture</string>
    </property>
   </action>
   <action name="actionCheckFalse">

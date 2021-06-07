@@ -509,7 +509,6 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   ui->actionToggle_Capture->setIcon(is_capturing ? icon_stop_capture_ : icon_start_capture_);
   ui->actionCaptureOptions->setEnabled(!is_capturing);
   ui->actionOpen_Capture->setEnabled(!is_capturing);
-  ui->actionSave_Capture->setEnabled(!is_capturing && has_data);
   ui->actionOpen_Preset->setEnabled(!is_capturing && is_connected_);
   ui->actionSave_Preset_As->setEnabled(!is_capturing);
 
@@ -1063,35 +1062,6 @@ void OrbitMainWindow::OnTimerSelectionChanged(const orbit_client_protos::TimerIn
     live_functions_data_view.UpdateSelectedFunctionId();
   }
   ui->liveFunctions->OnRowSelected(selected_row);
-}
-
-void OrbitMainWindow::on_actionSave_Capture_triggered() {
-  ShowCaptureOnSaveWarningIfNeeded();
-
-  if (!app_->HasCaptureData()) {
-    QMessageBox::information(this, "Save capture", "Looks like there is no capture to save.");
-    return;
-  }
-
-  const CaptureData& capture_data = app_->GetCaptureData();
-  QString file = QFileDialog::getSaveFileName(
-      this, "Save capture...",
-      QString::fromStdString((orbit_core::CreateOrGetCaptureDir() /
-                              orbit_client_model::capture_serializer::GenerateCaptureFileName(
-                                  capture_data.process_name(), capture_data.capture_start_time()))
-                                 .string()),
-      "*.orbit");
-  if (file.isEmpty()) {
-    return;
-  }
-
-  ErrorMessageOr<void> result = app_->OnSaveCapture(file.toStdString());
-  if (result.has_error()) {
-    QMessageBox::critical(this, "Error saving capture",
-                          absl::StrFormat("Could not save capture in \"%s\":\n%s.",
-                                          file.toStdString(), result.error().message())
-                              .c_str());
-  }
 }
 
 void OrbitMainWindow::on_actionOpen_Capture_triggered() {
