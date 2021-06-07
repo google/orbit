@@ -117,7 +117,7 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   static float kZValueEventBar;
   static float kZValueTrack;
 
-  static float kZOffsetMovingTack;
+  static float kZOffsetMovingTrack;
   static float kZOffsetPinnedTrack;
   static unsigned kMaxNumberRealZLayers;
 
