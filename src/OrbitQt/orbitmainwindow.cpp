@@ -1194,10 +1194,8 @@ bool OrbitMainWindow::ConfirmExit() {
                                  "A capture is currently in progress. Do you want to abort the "
                                  "capture and exit Orbit?") == QMessageBox::Yes;
   }
-  return QMessageBox::question(
-             this, QApplication::applicationName(),
-             "This discards any unsaved progress. Are you sure you want to continue?") ==
-         QMessageBox::Yes;
+
+  return true;
 }
 
 void OrbitMainWindow::Exit(int return_code) {
