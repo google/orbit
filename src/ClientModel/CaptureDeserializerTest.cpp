@@ -65,7 +65,8 @@ namespace {
 class MockCaptureListener : public CaptureListener {
  public:
   MOCK_METHOD(void, OnCaptureStarted,
-              (const CaptureStarted& /*capture_started*/, std::filesystem::path /*file_path*/,
+              (const CaptureStarted& /*capture_started*/,
+               std::optional<std::filesystem::path> /*file_path*/,
                absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/),
               (override));
   MOCK_METHOD(void, OnCaptureFinished, (const CaptureFinished& /*capture_finished*/), (override));
