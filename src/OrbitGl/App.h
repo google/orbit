@@ -100,7 +100,6 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   void SetClipboard(const std::string& text);
   ErrorMessageOr<void> OnSavePreset(const std::string& file_name);
   ErrorMessageOr<void> OnLoadPreset(const std::string& file_name);
-  ErrorMessageOr<void> OnSaveCapture(const std::filesystem::path& file_name);
   orbit_base::Future<ErrorMessageOr<CaptureOutcome>> LoadCaptureFromFile(
       const std::filesystem::path& file_path);
   void OnLoadCaptureCancelRequested();

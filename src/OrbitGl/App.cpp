@@ -971,26 +971,6 @@ PresetLoadState OrbitApp::GetPresetLoadState(const PresetFile& preset) const {
   return GetPresetLoadStateForProcess(preset, GetTargetProcess());
 }
 
-ErrorMessageOr<void> OrbitApp::OnSaveCapture(const std::filesystem::path& file_name) {
-  ScopedMetric metric{metrics_uploader_,
-                      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_CAPTURE_SAVE};
-  const auto& key_to_string_map = string_manager_.GetKeyToStringMap();
-
-  std::vector<std::shared_ptr<TimerChain>> chains = GetTimeGraph()->GetAllSerializableTimerChains();
-
-  TimerInfosIterator timers_it_begin(chains.begin(), chains.end());
-  TimerInfosIterator timers_it_end(chains.end(), chains.end());
-  const CaptureData& capture_data = GetCaptureData();
-
-  auto save_result = orbit_client_model::capture_serializer::Save(
-      file_name, capture_data, key_to_string_map, timers_it_begin, timers_it_end);
-  if (save_result.has_error()) {
-    metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_INTERNAL_ERROR);
-  }
-
-  return save_result;
-}
-
 static ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureFromNewFormat(
     CaptureListener* listener, CaptureFile* capture_file,
     std::atomic<bool>* capture_loading_cancellation_requested) {
