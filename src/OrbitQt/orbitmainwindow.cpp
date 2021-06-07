@@ -1000,28 +1000,6 @@ void OrbitMainWindow::on_actionIntrospection_triggered() {
   introspection_widget_->show();
 }
 
-void OrbitMainWindow::ShowCaptureOnSaveWarningIfNeeded() {
-  QSettings settings;
-  const QString skip_capture_warning("SkipCaptureVersionWarning");
-  if (!settings.value(skip_capture_warning, false).toBool()) {
-    QMessageBox message_box(this);
-    message_box.setText(
-        "Note: Captures saved with this version of Orbit might be incompatible "
-        "with future versions. Please check release notes for more "
-        "information");
-    message_box.addButton(QMessageBox::Ok);
-    QCheckBox check_box("Don't show this message again.");
-    message_box.setCheckBox(&check_box);
-
-    QObject::connect(&check_box, &QCheckBox::stateChanged,
-                     [&settings, &skip_capture_warning](int state) {
-                       settings.setValue(skip_capture_warning, static_cast<bool>(state));
-                     });
-
-    message_box.exec();
-  }
-}
-
 void OrbitMainWindow::ShowEmptyFrameTrackWarningIfNeeded(std::string_view function) {
   QSettings settings;
   const QString empty_frame_track_warning("EmptyFrameTrackWarning");
