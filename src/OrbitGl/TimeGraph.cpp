@@ -856,7 +856,7 @@ void TimeGraph::DrawTracks(Batcher& batcher, TextRenderer& text_renderer,
     if (track->IsPinned()) {
       z_offset = GlCanvas::kZOffsetPinnedTrack;
     } else if (track->IsMoving()) {
-      z_offset = GlCanvas::kZOffsetMovingTack;
+      z_offset = GlCanvas::kZOffsetMovingTrack;
     }
     track->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
   }

@@ -42,7 +42,7 @@ float GlCanvas::kZValueMargin = 0.85f;
 float GlCanvas::kZValueSliderBg = 0.87f;
 float GlCanvas::kZValueSlider = 0.89f;
 
-float GlCanvas::kZOffsetMovingTack = 0.1f;
+float GlCanvas::kZOffsetMovingTrack = 0.1f;
 float GlCanvas::kZOffsetPinnedTrack = 0.2f;
 
 constexpr unsigned kNumberOriginalLayers = 17;

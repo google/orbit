@@ -276,7 +276,7 @@ void TrackManager::UpdateTracks(Batcher* batcher, uint64_t min_tick, uint64_t ma
 
   // Draw tracks
   for (auto& track : visible_tracks_) {
-    const float z_offset = track->IsMoving() ? GlCanvas::kZOffsetMovingTack : 0.f;
+    const float z_offset = track->IsMoving() ? GlCanvas::kZOffsetMovingTrack : 0.f;
     if (!track->IsMoving()) {
       track->SetPos(track->GetPos()[0], current_y);
     }
