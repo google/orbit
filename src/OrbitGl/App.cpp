@@ -269,7 +269,7 @@ void OrbitApp::OnCaptureFinished(const CaptureFinished& capture_finished) {
 }
 
 void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
-                                std::filesystem::path file_path,
+                                std::optional<std::filesystem::path> file_path,
                                 absl::flat_hash_set<uint64_t> frame_track_function_ids) {
   // We need to block until initialization is complete to
   // avoid races when capture thread start processing data.
