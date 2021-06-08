@@ -22,6 +22,8 @@ using ::testing::Return;
 using ::testing::SaveArg;
 using ::testing::UnorderedElementsAre;
 
+using orbit_grpc_protos::Callstack;
+
 namespace orbit_linux_tracing {
 
 namespace {
@@ -66,9 +68,9 @@ class MockUprobesReturnAddressManager : public UprobesReturnAddressManager {
   MOCK_METHOD(void, ProcessUretprobes, (pid_t), (override));
 };
 
-class MockLeafFunctionCallerManager : public LeafFunctionCallManager {
+class MockLeafFunctionCallManager : public LeafFunctionCallManager {
  public:
-  MOCK_METHOD(bool, PatchLeafFunctionCaller,
+  MOCK_METHOD(Callstack::CallstackType, PatchLeafFunctionCaller,
               (CallchainSamplePerfEvent*, LibunwindstackMaps*, LibunwindstackUnwinder*),
               (override));
 };
@@ -98,7 +100,7 @@ class UprobesUnwindingVisitorTest : public ::testing::Test {
   MockUprobesReturnAddressManager return_address_manager_;
   MockLibunwindstackMaps maps_;
   MockLibunwindstackUnwinder unwinder_;
-  MockLeafFunctionCallerManager leaf_function_call_manager_;
+  MockLeafFunctionCallManager leaf_function_call_manager_;
   MockTracerListener listener_;
 
   std::unique_ptr<UprobesUnwindingVisitor> visitor_ = nullptr;
@@ -478,7 +480,9 @@ TEST_F(UprobesUnwindingVisitorTest, VisitValidCallchainSampleWithoutUprobesSends
 
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(1).WillOnce(Return(true));
-  EXPECT_CALL(leaf_function_call_manager_, PatchLeafFunctionCaller).Times(1).WillOnce(Return(true));
+  EXPECT_CALL(leaf_function_call_manager_, PatchLeafFunctionCaller)
+      .Times(1)
+      .WillOnce(Return(Callstack::kComplete));
 
   orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
   EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));
@@ -618,7 +622,9 @@ TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleWithUprobeSendsCompleteC
       .Times(1)
       .WillOnce(Invoke(fake_patch_callchain));
 
-  EXPECT_CALL(leaf_function_call_manager_, PatchLeafFunctionCaller).Times(1).WillOnce(Return(true));
+  EXPECT_CALL(leaf_function_call_manager_, PatchLeafFunctionCaller)
+      .Times(1)
+      .WillOnce(Return(Callstack::kComplete));
 
   orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
   EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));
@@ -665,8 +671,10 @@ TEST_F(UprobesUnwindingVisitorTest,
   event.ips = callchain;
 
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
-  EXPECT_CALL(leaf_function_call_manager_, PatchLeafFunctionCaller).Times(1).WillOnce(Return(true));
-  EXPECT_CALL(return_address_manager_, PatchCallchain).Times(1).WillRepeatedly(Return(false));
+  EXPECT_CALL(leaf_function_call_manager_, PatchLeafFunctionCaller)
+      .Times(1)
+      .WillOnce(Return(Callstack::kComplete));
+  EXPECT_CALL(return_address_manager_, PatchCallchain).Times(1).WillOnce(Return(false));
 
   orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
   EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));
@@ -717,7 +725,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   auto fake_patch_leaf_function_caller = [](CallchainSamplePerfEvent* event,
                                             LibunwindstackMaps* /*maps*/,
                                             orbit_linux_tracing::LibunwindstackUnwinder*
-                                            /*unwinder*/) -> bool {
+                                            /*unwinder*/) -> Callstack::CallstackType {
     CHECK(event != nullptr);
     std::vector<uint64_t> patched_callchain;
     EXPECT_THAT(event->ips, ElementsAre(kKernelAddress, kTargetAddress1, kTargetAddress3 + 1));
@@ -728,7 +736,7 @@ TEST_F(UprobesUnwindingVisitorTest,
     patched_callchain.push_back(kTargetAddress3 + 1);
     event->ring_buffer_record.nr = patched_callchain.size();
     event->ips = std::move(patched_callchain);
-    return true;
+    return Callstack::kComplete;
   };
   EXPECT_CALL(leaf_function_call_manager_, PatchLeafFunctionCaller)
       .Times(1)
@@ -751,8 +759,9 @@ TEST_F(UprobesUnwindingVisitorTest,
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
 }
 
-TEST_F(UprobesUnwindingVisitorTest,
-       VisitLeafCallOptimizedCallchainSampleWherePatchingLeafFunctionCallerFails) {
+TEST_F(
+    UprobesUnwindingVisitorTest,
+    VisitLeafCallOptimizedCallchainSampleWherePatchingLeafFunctionCallerSendsFramePointerUnwindingErrorCallstack) {
   constexpr uint32_t kPid = 10;
   constexpr uint64_t kStackSize = 13;
 
@@ -779,7 +788,7 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   EXPECT_CALL(leaf_function_call_manager_, PatchLeafFunctionCaller)
       .Times(1)
-      .WillOnce(Return(false));
+      .WillOnce(Return(Callstack::kFramePointerUnwindingError));
 
   orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
   EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));

@@ -142,6 +142,7 @@ message Callstack {
     kFramePointerUnwindingError = 2;
     kInUprobes = 3;
     kUprobesPatchingFailed = 4;
+    kFramePointerDwarfStackTooSmallError = 5;
   }
   CallstackType type = 2;
 }

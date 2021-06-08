@@ -170,7 +170,6 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
     listener_->OnCallstackSample(std::move(sample));
     return;
   }
-  
 
   uint64_t top_ip = event->GetCallchain()[1];
   unwindstack::MapInfo* top_ip_map_info = current_maps_->Find(top_ip);
@@ -195,23 +194,25 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
   // TODO(b/187690455): As soon as we actually have frame pointers in all non-leaf functions, we can
   //  "discard" the sample. Till that point this check will always fail, because the caller of
   //  __libc_start_main will be invalid since libc doesn't have frame-pointers.
-  //  Note that, that at this point in time, we don't want to actually throw the sample away, but
-  //  rather report it as "broken".
+  //  Note that, at this point in time, we don't want to actually throw the sample away, but rather
+  //  report it as "broken".
   for (uint64_t frame_index = 1; frame_index < event->GetCallchainSize(); ++frame_index) {
     unwindstack::MapInfo* map_info = current_maps_->Find(event->GetCallchain()[frame_index]);
     if (map_info == nullptr || (map_info->flags & PROT_EXEC) == 0) {
       ERROR(
-          "Unwinding failed, $rbp was likely modified in the leaf-function and no longer pointer "
+          "Unwinding failed, $rbp was likely modified in the leaf-function and no longer points "
           "to a frame.");
       break;
     }
   }
 
-  if (!leaf_function_call_manager_->PatchLeafFunctionCaller(event, current_maps_, unwinder_)) {
+  Callstack::CallstackType leaf_function_patching_status =
+      leaf_function_call_manager_->PatchLeafFunctionCaller(event, current_maps_, unwinder_);
+  if (leaf_function_patching_status != Callstack::kComplete) {
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
     }
-    callstack->set_type(Callstack::kFramePointerUnwindingError);
+    callstack->set_type(leaf_function_patching_status);
     callstack->add_pcs(top_ip);
     listener_->OnCallstackSample(std::move(sample));
     return;

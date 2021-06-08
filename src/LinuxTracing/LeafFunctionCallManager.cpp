@@ -12,6 +12,8 @@
 
 namespace orbit_linux_tracing {
 
+using orbit_grpc_protos::Callstack;
+
 // Let's unwind the stack from $rsp to $rbp using libunwindstack. If $rbp points to the current
 // frame, this will only include the locals and not the return address, so libunwindstack will
 // only be able to unwind one frame (the instruction pointer). If $rpb points to the previous frame,
@@ -20,16 +22,16 @@ namespace orbit_linux_tracing {
 // Therefore, libunwindstack will be able to compute two frames, where the outer one is the missing
 // caller and needs to be patched in.
 // As libunwindstack will try to unwind even further, unwinding errors will always be reported.
-// We need to fallback to plausibility checks to detect actual unwinding errors (such as are the
-// frames executable).
-// Note, that we can not simply set libunwindstack to unwind always two frames and compare the outer
-// frame with the respective one in the perf_event_open event, as in case of uprobes overriding the
-// return addresses, both addresses would be identical even if the actual addresses (after uprobe
-// patching) are not.
+// We need to fallback to plausibility checks to detect actual unwinding errors (such as whether the
+// frames are executable).
+// Note that we cannot simply set libunwindstack to unwind always two frames and compare the outer
+// frame with the respective one in the callchain carried by the perf_event_open event, as in case
+// of uprobes overriding the return addresses, both addresses would be identical even if the actual
+// addresses (after uprobe patching) are not.
 // More (internal) documentation on this in: go/stadia-orbit-leaf-frame-pointer
-bool LeafFunctionCallManager::PatchLeafFunctionCaller(CallchainSamplePerfEvent* event,
-                                                      LibunwindstackMaps* current_maps,
-                                                      LibunwindstackUnwinder* unwinder) {
+Callstack::CallstackType LeafFunctionCallManager::PatchLeafFunctionCaller(
+    CallchainSamplePerfEvent* event, LibunwindstackMaps* current_maps,
+    LibunwindstackUnwinder* unwinder) {
   CHECK(event != nullptr);
   CHECK(current_maps != nullptr);
   CHECK(unwinder != nullptr);
@@ -38,9 +40,7 @@ bool LeafFunctionCallManager::PatchLeafFunctionCaller(CallchainSamplePerfEvent* 
   uint64_t stack_size =
       event->GetRegisters()[PERF_REG_X86_BP] - event->GetRegisters()[PERF_REG_X86_SP];
   if (stack_size > SAMPLE_STACK_USER_SIZE_128BYTES) {
-    ERROR("Discarding sample where the stack dump is to small (required %lu bytes, got %lu bytes)",
-          stack_size, SAMPLE_STACK_USER_SIZE_128BYTES);
-    return false;
+    return Callstack::kFramePointerDwarfStackTooSmallError;
   }
 
   const LibunwindstackResult& libunwindstack_result =
@@ -50,26 +50,22 @@ bool LeafFunctionCallManager::PatchLeafFunctionCaller(CallchainSamplePerfEvent* 
       libunwindstack_result.frames();
 
   if (libunwindstack_callstack.empty()) {
-    ERROR(
-        "Discarding sample as DWARF-based unwinding resulted in empty callstack (error code: %s).",
-        LibunwindstackUnwinder::LibunwindstackErrorString(libunwindstack_result.error_code()));
-    return false;
+    ERROR("Discarding sample as DWARF-based unwinding resulted in empty callstack (error: %s)",
+          LibunwindstackUnwinder::LibunwindstackErrorString(libunwindstack_result.error_code()));
+    return Callstack::kDwarfUnwindingError;
   }
 
   // In case of an intact frame pointer, the region from $rsp to $rbp will only include the locals
   // of the current frame, and NOT the return address. Thus, unwinding will only report one frame
   // (the instruction pointer) and we know that the original callchain is already correct.
   if (libunwindstack_callstack.size() == 1) {
-    return true;
+    return Callstack::kComplete;
   }
 
   // If unwinding results in more than two frames, $rbp was also not set correctly by the caller,
-  // thus frame pointers are not in all non-leaf functions, and our assumptions do not hold.
+  // thus frame pointers are not all in non-leaf functions, and our assumptions do not hold.
   if (libunwindstack_callstack.size() > 2) {
-    ERROR(
-        "Discarding sample as DWARF-based unwinding resulted in more than two frames, indicating "
-        "the absence of frame pointers.");
-    return false;
+    return Callstack::kFramePointerUnwindingError;
   }
 
   const std::vector<uint64_t> original_callchain = event->ips;
@@ -87,12 +83,7 @@ bool LeafFunctionCallManager::PatchLeafFunctionCaller(CallchainSamplePerfEvent* 
   // If the caller is not executable, we have an unwinding error.
   unwindstack::MapInfo* map_info = current_maps->Find(libunwindstack_leaf_caller_pc);
   if (map_info == nullptr || (map_info->flags & PROT_EXEC) == 0) {
-    ERROR(
-        "Discarding sample as DWARF-based unwounded caller with address 0x%x does not point to "
-        "executable code (error code: %s).",
-        libunwindstack_leaf_caller_pc,
-        LibunwindstackUnwinder::LibunwindstackErrorString(libunwindstack_result.error_code()));
-    return false;
+    return Callstack::kDwarfUnwindingError;
   }
 
   // perf_event_open's callstack always contains the return address. Libunwindstack has already
@@ -106,7 +97,7 @@ bool LeafFunctionCallManager::PatchLeafFunctionCaller(CallchainSamplePerfEvent* 
   event->ring_buffer_record.nr = result.size();
   event->ips = std::move(result);
 
-  return true;
+  return Callstack::kComplete;
 }
 
-}  //  namespace orbit_linux_tracing
+}  // namespace orbit_linux_tracing

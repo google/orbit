@@ -5,6 +5,8 @@
 #ifndef LINUX_TRACING_LEAF_FUNCTION_UTILS_H_
 #define LINUX_TRACING_LEAF_FUNCTION_UTILS_H_
 
+#include <capture.pb.h>
+
 #include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"
 #include "PerfEvent.h"
@@ -21,17 +23,17 @@ class LeafFunctionCallManager {
   // Computes the actual caller of a leaf function (that may not have frame-pointers) based on
   // libunwindstack and modifies the given callchain event, if needed.
   // In case of any unwinding error (either from libunwindstack or in the frame-pointer based
-  // callchain), `false` will be returned and the event remains untouched.
-  // If the innermost frame has frame-pointers, this function will return `true` and keeps the
+  // callchain), the respective `CallstackType` will be returned and the event remains untouched.
+  // If the innermost frame has frame-pointers, this function will return `kComplete` and keeps the
   // callchain event untouched.
   // Otherwise, that is the caller of the leaf function is missing and there are no unwinding
-  // errors, the callchain event gets updated, such that it contains the missing caller, and `true`
-  // will be returned.
-  // Note that, the address of the caller address is computed by decreasing the return address by
+  // errors, the callchain event gets updated, such that it contains the missing caller, and
+  // `kComplete` will be returned.
+  // Note that the address of the caller address is computed by decreasing the return address by
   // one in libunwindstack, to match the format of perf_event_open.
-  virtual bool PatchLeafFunctionCaller(CallchainSamplePerfEvent* event,
-                                       LibunwindstackMaps* current_maps,
-                                       LibunwindstackUnwinder* unwinder);
+  virtual orbit_grpc_protos::Callstack::CallstackType PatchLeafFunctionCaller(
+      CallchainSamplePerfEvent* event, LibunwindstackMaps* current_maps,
+      LibunwindstackUnwinder* unwinder);
 };
 
 }  //  namespace orbit_linux_tracing

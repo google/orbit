@@ -16,6 +16,8 @@ using ::testing::Ge;
 using ::testing::Lt;
 using ::testing::Return;
 
+using orbit_grpc_protos::Callstack;
+
 namespace orbit_linux_tracing {
 
 namespace {
@@ -50,6 +52,7 @@ class LeafFunctionCallManagerTest : public ::testing::Test {
   }
 
   void TearDown() override {}
+
   MockLibunwindstackMaps maps_;
   MockLibunwindstackUnwinder unwinder_;
 
@@ -67,10 +70,8 @@ class LeafFunctionCallManagerTest : public ::testing::Test {
   static constexpr uint64_t kKernelAddress = 11;
 
   static constexpr uint64_t kTargetAddress1 = 100;
-  //  static constexpr uint64_t kUprobesAddress = 42;
   static constexpr uint64_t kTargetAddress2 = 200;
   static constexpr uint64_t kTargetAddress3 = 300;
-  //  static constexpr uint64_t kNonExecutableAddress3 = 500;
 
   static inline const std::string kUprobesName = "[uprobes]";
   static inline const std::string kTargetName = "target";
@@ -116,7 +117,7 @@ class LeafFunctionCallManagerTest : public ::testing::Test {
 
 }  // namespace
 
-TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsFalseOnSmallStackSamples) {
+TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsErrorOnSmallStackSamples) {
   constexpr uint32_t kPid = 10;
   constexpr uint64_t kStackSize = 13;
 
@@ -142,11 +143,12 @@ TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsFalseOnSmallSt
   event.regs.bp = 2 * SAMPLE_STACK_USER_SIZE_128BYTES;
   event.regs.sp = 0;
 
-  EXPECT_FALSE(leaf_function_call_manager_.PatchLeafFunctionCaller(&event, &maps_, &unwinder_));
+  EXPECT_EQ(Callstack::kFramePointerDwarfStackTooSmallError,
+            leaf_function_call_manager_.PatchLeafFunctionCaller(&event, &maps_, &unwinder_));
   EXPECT_THAT(event.ips, ElementsAreArray(callchain));
 }
 
-TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsFalseOnUnwindingErrors) {
+TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsErrorOnUnwindingErrors) {
   constexpr uint32_t kPid = 10;
   constexpr uint64_t kStackSize = 13;
 
@@ -178,7 +180,8 @@ TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsFalseOnUnwindi
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{{}, unwindstack::ErrorCode::ERROR_INVALID_MAP}));
 
-  EXPECT_FALSE(leaf_function_call_manager_.PatchLeafFunctionCaller(&event, &maps_, &unwinder_));
+  EXPECT_EQ(Callstack::kDwarfUnwindingError,
+            leaf_function_call_manager_.PatchLeafFunctionCaller(&event, &maps_, &unwinder_));
   EXPECT_THAT(event.ips, ElementsAreArray(callchain));
 
   ::testing::Mock::VerifyAndClearExpectations(&unwinder_);
@@ -197,11 +200,12 @@ TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsFalseOnUnwindi
       .Times(1)
       .WillOnce(Return(&kNonExecutableMapInfo));
 
-  EXPECT_FALSE(leaf_function_call_manager_.PatchLeafFunctionCaller(&event, &maps_, &unwinder_));
+  EXPECT_EQ(Callstack::kDwarfUnwindingError,
+            leaf_function_call_manager_.PatchLeafFunctionCaller(&event, &maps_, &unwinder_));
   EXPECT_THAT(event.ips, ElementsAreArray(callchain));
 }
 
-TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsFalseOnNoFramePointers) {
+TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsErrorOnNoFramePointers) {
   constexpr uint32_t kPid = 10;
   constexpr uint64_t kStackSize = 13;
 
@@ -239,12 +243,13 @@ TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsFalseOnNoFrame
       .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
                                             unwindstack::ErrorCode::ERROR_INVALID_MAP}));
 
-  EXPECT_FALSE(leaf_function_call_manager_.PatchLeafFunctionCaller(&event, &maps_, &unwinder_));
+  EXPECT_EQ(Callstack::kFramePointerUnwindingError,
+            leaf_function_call_manager_.PatchLeafFunctionCaller(&event, &maps_, &unwinder_));
   EXPECT_THAT(event.ips, ElementsAreArray(callchain));
 }
 
 TEST_F(LeafFunctionCallManagerTest,
-       PatchLeafFunctionCallerReturnsTrueAndKeepsCallchainUntouchedOnNonLeafFunctions) {
+       PatchLeafFunctionCallerReturnsSuccessAndKeepsCallchainUntouchedOnNonLeafFunctions) {
   constexpr uint32_t kPid = 10;
   constexpr uint64_t kStackSize = 13;
 
@@ -281,12 +286,13 @@ TEST_F(LeafFunctionCallManagerTest,
       .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
                                             unwindstack::ErrorCode::ERROR_INVALID_MAP}));
 
-  EXPECT_TRUE(leaf_function_call_manager_.PatchLeafFunctionCaller(&event, &maps_, &unwinder_));
+  EXPECT_EQ(Callstack::kComplete,
+            leaf_function_call_manager_.PatchLeafFunctionCaller(&event, &maps_, &unwinder_));
   EXPECT_THAT(event.ips, ElementsAreArray(callchain));
 }
 
 TEST_F(LeafFunctionCallManagerTest,
-       PatchLeafFunctionCallerReturnsTrueAndPatchesCallchainOnLeafFunctions) {
+       PatchLeafFunctionCallerReturnsSuccessAndPatchesCallchainOnLeafFunctions) {
   constexpr uint32_t kPid = 10;
   constexpr uint64_t kStackSize = 13;
 
@@ -312,8 +318,6 @@ TEST_F(LeafFunctionCallManagerTest,
 
   EXPECT_CALL(maps_, Get).WillRepeatedly(Return(nullptr));
 
-  // When libunwindstack reports exactly one frame (the ip), the innermost function has frame
-  // pointers.
   std::vector<unwindstack::FrameData> libunwindstack_callstack;
   libunwindstack_callstack.push_back(kFrame1);
   libunwindstack_callstack.push_back(kFrame2);
@@ -325,7 +329,8 @@ TEST_F(LeafFunctionCallManagerTest,
 
   EXPECT_CALL(maps_, Find(_)).WillRepeatedly(Return(&kTargetMapInfo));
 
-  EXPECT_TRUE(leaf_function_call_manager_.PatchLeafFunctionCaller(&event, &maps_, &unwinder_));
+  EXPECT_EQ(Callstack::kComplete,
+            leaf_function_call_manager_.PatchLeafFunctionCaller(&event, &maps_, &unwinder_));
   EXPECT_THAT(event.ips, ElementsAre(kKernelAddress, kTargetAddress1, kTargetAddress2 + 1,
                                      kTargetAddress3 + 1));
   EXPECT_EQ(event.GetCallchainSize(), callchain.size() + 1);

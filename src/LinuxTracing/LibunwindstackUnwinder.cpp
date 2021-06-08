@@ -67,7 +67,8 @@ class LibunwindstackUnwinderImpl : public LibunwindstackUnwinder {
  public:
   LibunwindstackResult Unwind(pid_t pid, unwindstack::Maps* maps,
                               const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
-                              const void* stack_dump, uint64_t stack_dump_size, bool offline_memory,
+                              const void* stack_dump, uint64_t stack_dump_size,
+                              bool offline_memory_only = false,
                               size_t max_frames = kMaxFrames) override;
 
  private:
@@ -86,20 +87,22 @@ const std::array<size_t, unwindstack::X86_64_REG_LAST>
 
 LibunwindstackResult LibunwindstackUnwinderImpl::Unwind(
     pid_t pid, unwindstack::Maps* maps, const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
-    const void* stack_dump, uint64_t stack_dump_size, bool offline_memory, size_t max_frames) {
+    const void* stack_dump, uint64_t stack_dump_size, bool offline_memory_only, size_t max_frames) {
   unwindstack::RegsX86_64 regs{};
   for (size_t perf_reg = 0; perf_reg < unwindstack::X86_64_REG_LAST; ++perf_reg) {
     regs[perf_reg] = perf_regs.at(kUnwindstackRegsToPerfRegs[perf_reg]);
   }
 
-  std::shared_ptr<unwindstack::Memory> memory =
-      (offline_memory)
-          ? unwindstack::Memory::CreateOfflineMemory(
-                static_cast<const uint8_t*>(stack_dump), regs[unwindstack::X86_64_REG_RSP],
-                regs[unwindstack::X86_64_REG_RSP] + stack_dump_size)
-          : StackAndProcessMemory::Create(pid, static_cast<const uint8_t*>(stack_dump),
-                                          regs[unwindstack::X86_64_REG_RSP],
-                                          regs[unwindstack::X86_64_REG_RSP] + stack_dump_size);
+  std::shared_ptr<unwindstack::Memory> memory = nullptr;
+  if (offline_memory_only) {
+    memory = unwindstack::Memory::CreateOfflineMemory(
+        static_cast<const uint8_t*>(stack_dump), regs[unwindstack::X86_64_REG_RSP],
+        regs[unwindstack::X86_64_REG_RSP] + stack_dump_size);
+  } else {
+    memory = StackAndProcessMemory::Create(pid, static_cast<const uint8_t*>(stack_dump),
+                                           regs[unwindstack::X86_64_REG_RSP],
+                                           regs[unwindstack::X86_64_REG_RSP] + stack_dump_size);
+  }
 
   unwindstack::Unwinder unwinder{max_frames, maps, &regs, memory};
   // Careful: regs are modified. Use regs.Clone() if you need to reuse regs later.
