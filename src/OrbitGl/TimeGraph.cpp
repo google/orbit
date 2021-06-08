@@ -561,7 +561,9 @@ void TimeGraph::GetWorldMinMax(float& min, float& max) const {
   max = GetWorldFromTick(capture_max_timestamp_);
 }
 
-void TimeGraph::Select(const TextBox* text_box) {
+// Select a text_box. Also move the view in order to assure that the text_box and its track are
+// visible.
+void TimeGraph::SelectAndMakeVisible(const TextBox* text_box) {
   CHECK(text_box != nullptr);
   app_->SelectTextBox(text_box);
   const TimerInfo& timer_info = text_box->GetTimerInfo();
@@ -870,7 +872,7 @@ void TimeGraph::SetThreadFilter(const std::string& filter) {
 void TimeGraph::SelectAndZoom(const TextBox* text_box) {
   CHECK(text_box);
   Zoom(text_box->GetTimerInfo());
-  Select(text_box);
+  SelectAndMakeVisible(text_box);
 }
 
 void TimeGraph::JumpToNeighborBox(const TextBox* from, JumpDirection jump_direction,
@@ -922,7 +924,7 @@ void TimeGraph::JumpToNeighborBox(const TextBox* from, JumpDirection jump_direct
     goal = FindDown(from);
   }
   if (goal) {
-    Select(goal);
+    SelectAndMakeVisible(goal);
   }
 }
 
