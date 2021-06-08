@@ -44,12 +44,16 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuQueueSubmission(
     return {};
   }
 
+  // Save the timestamp now, as after the call to `ProcessGpuQueueSubmissionWithMatchingGpuJob`,
+  // the matching_gpu_job may already be deleted.
+  uint64_t submission_cpu_timestamp = matching_gpu_job->amdgpu_cs_ioctl_time_ns();
+
   std::vector<TimerInfo> result = ProcessGpuQueueSubmissionWithMatchingGpuJob(
       gpu_queue_submission, *matching_gpu_job, string_intern_pool,
       get_string_hash_and_send_to_listener_if_necessary);
 
   if (!HasUnprocessedBeginMarkers(thread_id, post_submission_cpu_timestamp)) {
-    DeleteSavedGpuJob(thread_id, matching_gpu_job->amdgpu_cs_ioctl_time_ns());
+    DeleteSavedGpuJob(thread_id, submission_cpu_timestamp);
   }
   return result;
 }
