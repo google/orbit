@@ -57,6 +57,7 @@
 #include "GrpcProtos/Constants.h"
 #include "ImGuiOrbit.h"
 #include "MainThreadExecutor.h"
+#include "MainWindowInterface.h"
 #include "MetricsUploader/CaptureMetric.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "MetricsUploader/ScopedMetric.h"
@@ -100,6 +101,8 @@ ABSL_DECLARE_FLAG(bool, enable_source_code_view);
 ABSL_DECLARE_FLAG(bool, enable_capture_autosave);
 ABSL_DECLARE_FLAG(bool, enable_cgroup_memory);
 
+using orbit_base::Future;
+
 using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureEventProcessor;
 using orbit_capture_client::CaptureListener;
@@ -130,6 +133,8 @@ using orbit_client_protos::TimerInfo;
 using orbit_client_services::CrashManager;
 using orbit_client_services::TracepointServiceClient;
 
+using orbit_gl::MainWindowInterface;
+
 using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::ClientCaptureEvent;
@@ -138,8 +143,6 @@ using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::TracepointInfo;
 using orbit_grpc_protos::UnwindingMethod;
-
-using orbit_base::Future;
 
 using orbit_metrics_uploader::CaptureMetric;
 using orbit_metrics_uploader::ScopedMetric;
@@ -265,9 +268,25 @@ OrbitApp::~OrbitApp() {
 }
 
 void OrbitApp::OnCaptureFinished(const CaptureFinished& capture_finished) {
-  if (capture_finished.status() == CaptureFinished::kFailed) {
-    SendErrorToUi("Capture Failed", capture_finished.error_message());
-    ERROR("Capture Finished with error: %s", capture_finished.error_message());
+  switch (capture_finished.status()) {
+    case orbit_grpc_protos::CaptureFinished_Status_kSuccessful: {
+      main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kInfo,
+                                       GetCaptureTime(), "Capture finished.");
+    } break;
+    case orbit_grpc_protos::CaptureFinished_Status_kFailed: {
+      SendErrorToUi("Capture Failed", capture_finished.error_message());
+      ERROR("Capture Finished with error: %s", capture_finished.error_message());
+      main_window_->AppendToCaptureLog(
+          MainWindowInterface::CaptureLogSeverity::kError, GetCaptureTime(),
+          absl::StrFormat("Capture finished with error: %s.", capture_finished.error_message()));
+    } break;
+    case orbit_grpc_protos::
+        CaptureFinished_Status_CaptureFinished_Status_INT_MIN_SENTINEL_DO_NOT_USE_:
+      [[fallthrough]];
+    case orbit_grpc_protos::
+        CaptureFinished_Status_CaptureFinished_Status_INT_MAX_SENTINEL_DO_NOT_USE_:
+      UNREACHABLE();
+      break;
   }
 }
 
@@ -309,6 +328,9 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
         }
 
         FireRefreshCallbacks();
+
+        main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kInfo,
+                                         GetPrettyTime(absl::ZeroDuration()), "Capture started.");
 
         absl::MutexLock lock(&mutex);
         initialization_complete = true;
