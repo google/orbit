@@ -125,11 +125,11 @@ target_link_libraries(OrbitBaseTests PRIVATE
         GTest::GTest
         GTest::Main)
 
-add_custom_command(TARGET OrbitBaseTests POST_BUILD COMMAND ${CMAKE_COMMAND}
-                   -E remove_directory $<TARGET_FILE_DIR:OrbitBaseTests>/testdata/OrbitBase)
-
-add_custom_command(TARGET OrbitBaseTests POST_BUILD COMMAND ${CMAKE_COMMAND}
-                   -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/testdata/
-                   $<TARGET_FILE_DIR:OrbitBaseTests>/testdata/OrbitBase)
+add_custom_command(TARGET OrbitBaseTests POST_BUILD 
+        COMMAND ${CMAKE_COMMAND} -E remove_directory
+          $<TARGET_FILE_DIR:OrbitBaseTests>/testdata/OrbitBase
+        COMMAND ${CMAKE_COMMAND} -E copy_directory 
+          ${CMAKE_CURRENT_SOURCE_DIR}/testdata/
+          $<TARGET_FILE_DIR:OrbitBaseTests>/testdata/OrbitBase)
 
 register_test(OrbitBaseTests)
