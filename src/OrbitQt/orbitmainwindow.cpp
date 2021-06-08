@@ -157,6 +157,7 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
   SetupMainWindow();
 
   SetupTargetLabel();
+  SetupStatusBarLogButton();
   SetupHintFrame();
 
   DataViewFactory* data_view_factory = app_.get();
@@ -435,6 +436,32 @@ void OrbitMainWindow::SetupTargetLabel() {
                    });
 }
 
+void OrbitMainWindow::SetupStatusBarLogButton() {
+  // The Qt Designer doesn't seem to support adding children to a StatusBar.
+  auto* capture_log_widget = new QWidget(statusBar());  // NOLINT
+  statusBar()->setContentsMargins(0, 0, 0, 0);
+  statusBar()->addPermanentWidget(capture_log_widget);
+
+  auto* capture_log_layout = new QHBoxLayout(capture_log_widget);  // NOLINT
+  capture_log_layout->setContentsMargins(0, 0, 9, 0);
+  capture_log_widget->setLayout(capture_log_layout);
+
+  capture_log_button_ = new QPushButton("Capture Log", statusBar());  // NOLINT
+  capture_log_button_->setEnabled(false);
+  capture_log_button_->setCheckable(true);
+  capture_log_button_->setStyleSheet(
+      "padding-left: 11; padding-right: 11; padding-top: 2; padding-bottom: 2;");
+  capture_log_layout->addWidget(capture_log_button_);
+
+  QObject::connect(capture_log_button_, &QPushButton::toggled, [this](bool checked) {
+    if (checked) {
+      ui->captureLogWidget->show();
+    } else {
+      ui->captureLogWidget->hide();
+    }
+  });
+}
+
 void OrbitMainWindow::SetupAccessibleNamesForAutomation() {
   for (QTabWidget* tab_widget : {ui->MainTabWidget, ui->RightTabWidget}) {
     for (int i = 0; i < tab_widget->count(); ++i) {
@@ -530,6 +557,13 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   filter_panel_action_->SetTimerLabelText(QString::fromStdString(app_->GetCaptureTime()));
 
   UpdateCaptureToolbarIconOpacity();
+
+  capture_log_button_->setEnabled(has_data);
+  if (capture_state == CaptureClient::State::kStarting) {
+    capture_log_button_->setChecked(true);
+  } else if (capture_state == CaptureClient::State::kStopped) {
+    capture_log_button_->setChecked(false);
+  }
 }
 
 void OrbitMainWindow::UpdateCaptureToolbarIconOpacity() {
@@ -1133,6 +1167,7 @@ void OrbitMainWindow::on_actionServiceStackOverflow_triggered() {
 void OrbitMainWindow::OnCaptureCleared() {
   ui->liveFunctions->Reset();
   UpdateCaptureStateDependentWidgets();
+  ui->captureLogTextEdit->clear();
 }
 
 bool OrbitMainWindow::eventFilter(QObject* watched, QEvent* event) {
@@ -1412,4 +1447,26 @@ void OrbitMainWindow::ShowDisassembly(const orbit_client_protos::FunctionInfo& f
       function_info, [this](const std::string& module_path, const std::string& build_id) {
         return app_->RetrieveModuleWithDebugInfo(module_path, build_id);
       });
+}
+
+void OrbitMainWindow::AppendToCaptureLog(CaptureLogSeverity severity, std::string_view capture_time,
+                                         std::string_view message) {
+  QColor message_color;
+  switch (severity) {
+    case CaptureLogSeverity::kInfo:
+      message_color = Qt::white;
+      break;
+    case CaptureLogSeverity::kWarning:
+      message_color = Qt::yellow;
+      break;
+    case CaptureLogSeverity::kSevereWarning:
+      message_color = QColor{255, 128, 0};
+      break;
+    case CaptureLogSeverity::kError:
+      message_color = Qt::darkRed;
+      break;
+  }
+  ui->captureLogTextEdit->setTextColor(message_color);
+  ui->captureLogTextEdit->append(
+      QString::fromStdString(absl::StrFormat("%s\t%s", capture_time, message)));
 }
