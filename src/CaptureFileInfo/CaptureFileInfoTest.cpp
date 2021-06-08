@@ -85,4 +85,23 @@ TEST(CaptureFileInfo, Touch) {
   EXPECT_GE(capture_file_info.LastUsed(), now);
 }
 
+TEST(CaptureFileInfo, FileSize) {
+  {
+    const QString non_existing_path{"test/path/file.ext"};
+
+    CaptureFileInfo capture_file_info{non_existing_path};
+
+    EXPECT_EQ(capture_file_info.FileSize(), 0);
+  }
+  {
+    const std::filesystem::path path =
+        orbit_base::GetExecutableDir() / "testdata" / "test_file.txt";
+
+    CaptureFileInfo capture_file_info{QString::fromStdString(path.string())};
+
+    // Not testing exact file size here, because it might be slightly different on windows and linux
+    EXPECT_GT(capture_file_info.FileSize(), 0);
+  }
+}
+
 }  // namespace orbit_capture_file_info

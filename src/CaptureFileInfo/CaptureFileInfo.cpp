@@ -14,4 +14,6 @@ CaptureFileInfo::CaptureFileInfo(const QString& path, QDateTime last_used)
 
 bool CaptureFileInfo::FileExists() const { return file_info_.exists() && file_info_.isFile(); }
 
+uint64_t CaptureFileInfo::FileSize() const { return file_info_.size(); }
+
 }  // namespace orbit_capture_file_info
