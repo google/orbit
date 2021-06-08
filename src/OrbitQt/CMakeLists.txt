@@ -141,6 +141,7 @@ target_sources(OrbitQtTests
 target_sources(OrbitQtTests
         PRIVATE AccessibilityAdapterTest.cpp
                 AnnotatingSourceCodeDialogTest.cpp
+                CallTreeViewItemModelTest.cpp
                 ProcessItemModelTest.cpp
                 StatusListenerImplTest.cpp
                 TargetLabelTest.cpp
