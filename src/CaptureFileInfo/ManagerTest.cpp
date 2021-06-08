@@ -50,12 +50,12 @@ TEST(CaptureFileInfoManager, AddOrTouchCaptureFile) {
   ASSERT_TRUE(manager.GetCaptureFileInfos().empty());
 
   // Add 1st file
-  const QString path1 = "path/to/file1";
+  const std::filesystem::path path1 = "path/to/file1";
   manager.AddOrTouchCaptureFile(path1);
   ASSERT_EQ(manager.GetCaptureFileInfos().size(), 1);
 
   const CaptureFileInfo& capture_file_info_1 = manager.GetCaptureFileInfos()[0];
-  EXPECT_EQ(capture_file_info_1.FilePath(), path1);
+  EXPECT_EQ(capture_file_info_1.FilePath(), QString::fromStdString(path1.string()));
   // last used was before (or at the same time) than now_time_stamp.
   const QDateTime now_time_stamp = QDateTime::currentDateTime();
   EXPECT_LE(capture_file_info_1.LastUsed(), now_time_stamp);
@@ -70,11 +70,11 @@ TEST(CaptureFileInfoManager, AddOrTouchCaptureFile) {
   EXPECT_GT(capture_file_info_1.LastUsed(), now_time_stamp);
 
   // Add 2nd file
-  const QString path2 = "path/to/file2";
+  const std::filesystem::path path2 = "path/to/file2";
   manager.AddOrTouchCaptureFile(path2);
   ASSERT_EQ(manager.GetCaptureFileInfos().size(), 2);
   const CaptureFileInfo& capture_file_info_2 = manager.GetCaptureFileInfos()[1];
-  EXPECT_EQ(capture_file_info_2.FilePath(), path2);
+  EXPECT_EQ(capture_file_info_2.FilePath(), QString::fromStdString(path2.string()));
 
   // clean up
   manager.Clear();
@@ -96,7 +96,7 @@ TEST(CaptureFileInfoManager, PurgeNonExistingFiles) {
 
   const std::filesystem::path existing_file =
       orbit_base::GetExecutableDir() / "testdata" / "test_file.txt";
-  manager.AddOrTouchCaptureFile(QString::fromStdString(existing_file.string()));
+  manager.AddOrTouchCaptureFile(existing_file);
   EXPECT_FALSE(manager.GetCaptureFileInfos().empty());
 
   manager.PurgeNonExistingFiles();
@@ -124,7 +124,7 @@ TEST(CaptureFileInfoManager, Persistency) {
       orbit_base::GetExecutableDir() / "testdata" / "test_file.txt";
   {
     Manager manager;
-    manager.AddOrTouchCaptureFile(QString::fromStdString(existing_file.string()));
+    manager.AddOrTouchCaptureFile(existing_file);
     EXPECT_EQ(manager.GetCaptureFileInfos().size(), 1);
   }
 
