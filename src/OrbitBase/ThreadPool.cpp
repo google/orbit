@@ -138,7 +138,9 @@ bool ThreadPoolImpl::ActionsAvailableOrShutdownInitiated() {
 std::unique_ptr<Action> ThreadPoolImpl::TakeAction() {
   while (true) {
     if (mutex_.AwaitWithTimeout(
-            absl::Condition(this, &ThreadPoolImpl::ActionsAvailableOrShutdownInitiated),
+            absl::Condition(
+                +[](ThreadPoolImpl* self) { return self->ActionsAvailableOrShutdownInitiated(); },
+                this),
             thread_ttl_)) {
       break;
     }
