@@ -25,6 +25,8 @@ class CaptureFileInfo {
 
   [[nodiscard]] bool FileExists() const;
 
+  [[nodiscard]] uint64_t FileSize() const;
+
   void Touch() { last_used_ = QDateTime::currentDateTime(); }
 
  private:
