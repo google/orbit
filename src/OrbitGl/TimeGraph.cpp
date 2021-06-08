@@ -215,12 +215,13 @@ void TimeGraph::VerticallyMoveIntoView(const TimerInfo& timer_info) {
   VerticallyMoveIntoView(*track_manager_->GetOrCreateThreadTrack(timer_info.thread_id()));
 }
 
+// Move vertically the view to make a Track fully visible.
 void TimeGraph::VerticallyMoveIntoView(Track& track) {
   float pos = track.GetPos()[1];
   float height = track.GetHeight();
   float world_top_left_y = viewport_->GetWorldTopLeft()[1];
 
-  float min_world_top_left_y = pos + layout_.GetTrackTabHeight();
+  float min_world_top_left_y = pos;
   float max_world_top_left_y =
       pos + viewport_->GetVisibleWorldHeight() - height - layout_.GetBottomMargin();
   viewport_->SetWorldTopLeftY(
