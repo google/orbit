@@ -100,7 +100,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   void VerticallyMoveIntoView(Track& track);
 
   [[nodiscard]] double GetTime(double ratio) const;
-  void Select(const TextBox* text_box);
+  void SelectAndMakeVisible(const TextBox* text_box);
   enum class JumpScope { kGlobal, kSameDepth, kSameThread, kSameFunction, kSameThreadSameFunction };
   enum class JumpDirection { kPrevious, kNext, kTop, kDown };
   void JumpToNeighborBox(const TextBox* from, JumpDirection jump_direction, JumpScope jump_scope);
