@@ -39,7 +39,7 @@ Callstack::CallstackType LeafFunctionCallManager::PatchLeafFunctionCaller(
 
   uint64_t stack_size =
       event->GetRegisters()[PERF_REG_X86_BP] - event->GetRegisters()[PERF_REG_X86_SP];
-  if (stack_size > SAMPLE_STACK_USER_SIZE_128BYTES) {
+  if (stack_size > SAMPLE_STACK_USER_SIZE_512BYTES) {
     return Callstack::kFramePointerDwarfStackTooSmallError;
   }
 

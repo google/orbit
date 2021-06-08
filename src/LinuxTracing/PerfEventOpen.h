@@ -105,7 +105,7 @@ static constexpr uint16_t SAMPLE_STACK_USER_SIZE = 65000;
 
 // Arbitrary small value, that should be large enough to contain the complete last frame.
 // Note that we don't have any guarantee that the sample is large enough.
-static constexpr uint16_t SAMPLE_STACK_USER_SIZE_128BYTES = 128;
+static constexpr uint16_t SAMPLE_STACK_USER_SIZE_512BYTES = 512;
 
 static_assert(sizeof(void*) == 8);
 static constexpr uint16_t SAMPLE_STACK_USER_SIZE_8BYTES = 8;

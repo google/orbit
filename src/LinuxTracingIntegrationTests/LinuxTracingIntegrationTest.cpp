@@ -734,11 +734,19 @@ void VerifyCallstackSamplesWithOuterAndInnerFunction(
     previous_callstack_timestamp_ns = callstack_sample.timestamp_ns();
 
     // We don't expect other reasons for broken callstacks other than these.
-    const std::vector<orbit_grpc_protos::Callstack::CallstackType> expected_callstack_types{
-        {orbit_grpc_protos::Callstack::kComplete,
-         unwound_with_frame_pointers ? orbit_grpc_protos::Callstack::kFramePointerUnwindingError
-                                     : orbit_grpc_protos::Callstack::kDwarfUnwindingError,
-         orbit_grpc_protos::Callstack::kInUprobes}};
+    std::vector<orbit_grpc_protos::Callstack::CallstackType> expected_callstack_types;
+    if (unwound_with_frame_pointers) {
+      expected_callstack_types = {
+          orbit_grpc_protos::Callstack::kComplete,
+          orbit_grpc_protos::Callstack::kFramePointerUnwindingError,
+          orbit_grpc_protos::Callstack::kDwarfUnwindingError,
+          orbit_grpc_protos::Callstack::kFramePointerDwarfStackTooSmallError,
+          orbit_grpc_protos::Callstack::kInUprobes};
+    } else {
+      expected_callstack_types = {orbit_grpc_protos::Callstack::kComplete,
+                                  orbit_grpc_protos::Callstack::kDwarfUnwindingError,
+                                  orbit_grpc_protos::Callstack::kInUprobes};
+    }
     EXPECT_THAT(expected_callstack_types, ::testing::Contains(callstack_sample.callstack().type()));
 
     // We are only sampling the puppet.

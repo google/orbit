@@ -140,7 +140,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsErrorOnSmallSt
   event.ring_buffer_record.sample_id = sample_id;
   event.ips = callchain;
 
-  event.regs.bp = 2 * SAMPLE_STACK_USER_SIZE_128BYTES;
+  event.regs.bp = 2 * SAMPLE_STACK_USER_SIZE_512BYTES;
   event.regs.sp = 0;
 
   EXPECT_EQ(Callstack::kFramePointerDwarfStackTooSmallError,
@@ -170,13 +170,13 @@ TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsErrorOnUnwindi
   };
   event.ring_buffer_record.sample_id = sample_id;
   event.ips = callchain;
-  event.regs.bp = SAMPLE_STACK_USER_SIZE_128BYTES;
+  event.regs.bp = SAMPLE_STACK_USER_SIZE_512BYTES;
   event.regs.sp = 10;
 
   EXPECT_CALL(maps_, Get).WillRepeatedly(Return(nullptr));
 
   // Unwinding errors could result in empty callstacks:
-  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, SAMPLE_STACK_USER_SIZE_128BYTES - 10, _, _))
+  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, SAMPLE_STACK_USER_SIZE_512BYTES - 10, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{{}, unwindstack::ErrorCode::ERROR_INVALID_MAP}));
 
@@ -191,7 +191,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsErrorOnUnwindi
   libunwindstack_callstack.push_back(kFrame1);
   libunwindstack_callstack.push_back(kNonExecutableFrame);
 
-  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, SAMPLE_STACK_USER_SIZE_128BYTES - 10, _, _))
+  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, SAMPLE_STACK_USER_SIZE_512BYTES - 10, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
                                             unwindstack::ErrorCode::ERROR_INVALID_MAP}));
@@ -227,7 +227,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsErrorOnNoFrame
   };
   event.ring_buffer_record.sample_id = sample_id;
   event.ips = callchain;
-  event.regs.bp = SAMPLE_STACK_USER_SIZE_128BYTES;
+  event.regs.bp = SAMPLE_STACK_USER_SIZE_512BYTES;
   event.regs.sp = 10;
 
   EXPECT_CALL(maps_, Get).WillRepeatedly(Return(nullptr));
@@ -238,7 +238,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsErrorOnNoFrame
   libunwindstack_callstack.push_back(kFrame2);
   libunwindstack_callstack.push_back(kFrame3);
 
-  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, SAMPLE_STACK_USER_SIZE_128BYTES - 10, _, _))
+  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, SAMPLE_STACK_USER_SIZE_512BYTES - 10, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
                                             unwindstack::ErrorCode::ERROR_INVALID_MAP}));
@@ -271,7 +271,7 @@ TEST_F(LeafFunctionCallManagerTest,
   };
   event.ring_buffer_record.sample_id = sample_id;
   event.ips = callchain;
-  event.regs.bp = SAMPLE_STACK_USER_SIZE_128BYTES;
+  event.regs.bp = SAMPLE_STACK_USER_SIZE_512BYTES;
   event.regs.sp = 10;
 
   EXPECT_CALL(maps_, Get).WillRepeatedly(Return(nullptr));
@@ -281,7 +281,7 @@ TEST_F(LeafFunctionCallManagerTest,
   std::vector<unwindstack::FrameData> libunwindstack_callstack;
   libunwindstack_callstack.push_back(kFrame1);
 
-  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, SAMPLE_STACK_USER_SIZE_128BYTES - 10, _, _))
+  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, SAMPLE_STACK_USER_SIZE_512BYTES - 10, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
                                             unwindstack::ErrorCode::ERROR_INVALID_MAP}));
@@ -313,7 +313,7 @@ TEST_F(LeafFunctionCallManagerTest,
   };
   event.ring_buffer_record.sample_id = sample_id;
   event.ips = callchain;
-  event.regs.bp = SAMPLE_STACK_USER_SIZE_128BYTES;
+  event.regs.bp = SAMPLE_STACK_USER_SIZE_512BYTES;
   event.regs.sp = 10;
 
   EXPECT_CALL(maps_, Get).WillRepeatedly(Return(nullptr));
@@ -322,7 +322,7 @@ TEST_F(LeafFunctionCallManagerTest,
   libunwindstack_callstack.push_back(kFrame1);
   libunwindstack_callstack.push_back(kFrame2);
 
-  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, SAMPLE_STACK_USER_SIZE_128BYTES - 10, _, _))
+  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, SAMPLE_STACK_USER_SIZE_512BYTES - 10, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
                                             unwindstack::ErrorCode::ERROR_INVALID_MAP}));
