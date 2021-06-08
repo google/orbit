@@ -98,7 +98,7 @@ TEST(CaptureFileInfoManager, PurgeNonExistingFiles) {
   EXPECT_TRUE(manager.GetCaptureFileInfos().empty());
 
   const std::filesystem::path existing_file =
-      orbit_base::GetExecutableDir() / "testdata" / "test_file.txt";
+      orbit_base::GetExecutableDir() / "testdata" / "CaptureFileInfo" / "test_file.txt";
   manager.AddOrTouchCaptureFile(existing_file);
   EXPECT_FALSE(manager.GetCaptureFileInfos().empty());
 
@@ -124,7 +124,7 @@ TEST(CaptureFileInfoManager, Persistency) {
   }
 
   const std::filesystem::path existing_file =
-      orbit_base::GetExecutableDir() / "testdata" / "test_file.txt";
+      orbit_base::GetExecutableDir() / "testdata" / "CaptureFileInfo" / "test_file.txt";
   {
     Manager manager;
     manager.AddOrTouchCaptureFile(existing_file);
@@ -160,7 +160,8 @@ TEST(CaptureFileInfoManager, FillFromDirectory) {
   }
 
   {  // Success
-    std::filesystem::path test_data_dir = orbit_base::GetExecutableDir() / "testdata";
+    std::filesystem::path test_data_dir =
+        orbit_base::GetExecutableDir() / "testdata" / "CaptureFileInfo";
     ErrorMessageOr<void> result = manager.FillFromDirectory(test_data_dir);
     ASSERT_FALSE(result.has_error());
 

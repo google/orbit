@@ -43,7 +43,7 @@ TEST(CaptureFileInfo, PathLastUsedConstructor) {
 TEST(CaptureFileInfo, FileExistsAndCreated) {
   {
     const std::filesystem::path path =
-        orbit_base::GetExecutableDir() / "testdata" / "test_file.txt";
+        orbit_base::GetExecutableDir() / "testdata" / "CaptureFileInfo" / "test_file.txt";
 
     CaptureFileInfo capture_file_info{QString::fromStdString(path.string())};
 
@@ -54,8 +54,8 @@ TEST(CaptureFileInfo, FileExistsAndCreated) {
   }
 
   {
-    const std::filesystem::path path =
-        orbit_base::GetExecutableDir() / "testdata" / "not_existing_test_file.txt";
+    const std::filesystem::path path = orbit_base::GetExecutableDir() / "testdata" /
+                                       "CaptureFileInfo" / "not_existing_test_file.txt";
 
     CaptureFileInfo capture_file_info{QString::fromStdString(path.string())};
 
@@ -95,7 +95,7 @@ TEST(CaptureFileInfo, FileSize) {
   }
   {
     const std::filesystem::path path =
-        orbit_base::GetExecutableDir() / "testdata" / "test_file.txt";
+        orbit_base::GetExecutableDir() / "testdata" / "CaptureFileInfo" / "test_file.txt";
 
     CaptureFileInfo capture_file_info{QString::fromStdString(path.string())};
 
