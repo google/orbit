@@ -48,14 +48,14 @@ void Manager::SaveCaptureFileInfos() {
   settings.endArray();
 }
 
-void Manager::AddOrTouchCaptureFile(const QString& path) {
+void Manager::AddOrTouchCaptureFile(const std::filesystem::path& path) {
   auto it = std::find_if(capture_file_infos_.begin(), capture_file_infos_.end(),
                          [&](const CaptureFileInfo& capture_file_info) {
-                           return capture_file_info.FilePath() == path;
+                           return capture_file_info.FilePath().toStdString() == path.string();
                          });
 
   if (it == capture_file_infos_.end()) {
-    capture_file_infos_.emplace_back(path);
+    capture_file_infos_.emplace_back(QString::fromStdString(path.string()));
   } else {
     it->Touch();
   }

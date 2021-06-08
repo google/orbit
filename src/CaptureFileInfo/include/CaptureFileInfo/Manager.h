@@ -5,6 +5,7 @@
 #ifndef CAPTURE_FILE_INFO_MANAGER_H_
 #define CAPTURE_FILE_INFO_MANAGER_H_
 
+#include <filesystem>
 #include <vector>
 
 #include "CaptureFileInfo/CaptureFileInfo.h"
@@ -18,7 +19,7 @@ class Manager {
     return capture_file_infos_;
   }
 
-  void AddOrTouchCaptureFile(const QString& path);
+  void AddOrTouchCaptureFile(const std::filesystem::path& path);
   void Clear();
   void PurgeNonExistingFiles();
 
