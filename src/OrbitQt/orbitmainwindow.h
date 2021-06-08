@@ -14,6 +14,7 @@
 #include <QMainWindow>
 #include <QObject>
 #include <QPoint>
+#include <QPushButton>
 #include <QString>
 #include <QTabWidget>
 #include <QTimer>
@@ -105,6 +106,9 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
                        const std::string& assembly,
                        orbit_code_report::DisassemblyReport report) override;
 
+  void AppendToCaptureLog(CaptureLogSeverity severity, std::string_view capture_time,
+                          std::string_view message) override;
+
  protected:
   void closeEvent(QCloseEvent* event) override;
 
@@ -148,6 +152,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void SetupMainWindow();
   void SetupHintFrame();
   void SetupTargetLabel();
+  void SetupStatusBarLogButton();
 
   void SetupAccessibleNamesForAutomation();
 
@@ -197,6 +202,8 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   std::unique_ptr<OrbitGLWidget> introspection_widget_ = nullptr;
   QFrame* hint_frame_ = nullptr;
   orbit_qt::TargetLabel* target_label_ = nullptr;
+  QPushButton* capture_log_button_ = nullptr;
+
   QStringList command_line_flags_;
 
   // Capture toolbar.
