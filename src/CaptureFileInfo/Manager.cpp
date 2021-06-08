@@ -5,10 +5,12 @@
 #include "CaptureFileInfo/Manager.h"
 
 #include <QDateTime>
+#include <QFileInfo>
 #include <QSettings>
 #include <algorithm>
 
 #include "CaptureFileInfo/CaptureFileInfo.h"
+#include "OrbitBase/File.h"
 
 constexpr const char* kCaptureFileInfoArrayKey = "capture_file_infos";
 constexpr const char* kCaptureFileInfoPathKey = "capture_file_info_path";
@@ -75,6 +77,23 @@ void Manager::PurgeNonExistingFiles() {
                                            }),
                             capture_file_infos_.end());
   SaveCaptureFileInfos();
+}
+
+ErrorMessageOr<void> Manager::FillFromDirectory(const std::filesystem::path& directory) {
+  Clear();
+
+  OUTCOME_TRY(files, orbit_base::ListFilesInDirectory(directory));
+
+  for (const auto& file : files) {
+    if (file.extension() != ".orbit") continue;
+
+    QFileInfo tmp_file_info{QString::fromStdString(file.string())};
+    capture_file_infos_.emplace_back(tmp_file_info.filePath(), tmp_file_info.birthTime());
+  }
+
+  SaveCaptureFileInfos();
+
+  return outcome::success();
 }
 
 }  // namespace orbit_capture_file_info

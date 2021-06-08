@@ -12,8 +12,11 @@
 
 #include "CaptureFileInfo/Manager.h"
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/TestUtils.h"
 
 namespace orbit_capture_file_info {
+
+using orbit_base::HasError;
 
 constexpr const char* kOrgName = "The Orbit Authors";
 
@@ -142,6 +145,34 @@ TEST(CaptureFileInfoManager, Persistency) {
     Manager manager;
     manager.Clear();
   }
+}
+
+TEST(CaptureFileInfoManager, FillFromDirectory) {
+  QCoreApplication::setOrganizationName(kOrgName);
+  QCoreApplication::setApplicationName("CaptureFileInfo.Manager.FillFromDirectory");
+
+  Manager manager;
+  manager.Clear();
+
+  {  // Fail
+    ErrorMessageOr<void> result = manager.FillFromDirectory("/non/existent/path/to/dir");
+    EXPECT_THAT(result, HasError("Unable to list files in directory"));
+  }
+
+  {  // Success
+    std::filesystem::path test_data_dir = orbit_base::GetExecutableDir() / "testdata";
+    ErrorMessageOr<void> result = manager.FillFromDirectory(test_data_dir);
+    ASSERT_FALSE(result.has_error());
+
+    ASSERT_EQ(manager.GetCaptureFileInfos().size(), 1);
+
+    const CaptureFileInfo capture_file_info = manager.GetCaptureFileInfos()[0];
+
+    EXPECT_EQ(capture_file_info.FileName(), "test_capture.orbit");
+  }
+
+  // clean up
+  manager.Clear();
 }
 
 }  // namespace orbit_capture_file_info

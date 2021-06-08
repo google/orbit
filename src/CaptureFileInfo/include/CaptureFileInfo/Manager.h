@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "CaptureFileInfo/CaptureFileInfo.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_capture_file_info {
 
@@ -22,6 +23,7 @@ class Manager {
   void AddOrTouchCaptureFile(const std::filesystem::path& path);
   void Clear();
   void PurgeNonExistingFiles();
+  ErrorMessageOr<void> FillFromDirectory(const std::filesystem::path& directory);
 
  private:
   void SaveCaptureFileInfos();
