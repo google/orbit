@@ -55,7 +55,7 @@ struct LargestOccurringLineNumbers {
 class Viewer : public QPlainTextEdit {
   Q_OBJECT
  public:
-  explicit Viewer(QWidget* parent);
+  explicit Viewer(QWidget* parent = nullptr);
 
   enum class LineNumberTypes { kNone, kOnlyMainContent, kOnlyAnnotatingLines, kBoth };
   void SetLineNumberTypes(LineNumberTypes line_number_types);

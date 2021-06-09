@@ -36,11 +36,7 @@ TEST(FontSizeInEm, Subtraction) {
   EXPECT_EQ(result.Value(), 1.0f - 2.2f);
 }
 
-static int argc = 0;
-
 TEST(FontSizeInEm, ToPixels) {
-  QApplication app{argc, nullptr};
-
   const QFont general_font = QFontDatabase::systemFont(QFontDatabase::GeneralFont);
   const QFont fixed_font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
