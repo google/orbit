@@ -30,7 +30,11 @@ namespace orbit_client_data {
 class ModuleInMemory {
  public:
   explicit ModuleInMemory(uint64_t start, uint64_t end, std::string file_path, std::string build_id)
-      : start_(start), end_(end), file_path_{file_path}, build_id_{std::move(build_id)} {}
+      : start_(start),
+        end_(end),
+        file_path_{std::move(file_path)},
+        build_id_{std::move(build_id)} {}
+
   [[nodiscard]] uint64_t start() const { return start_; }
   [[nodiscard]] uint64_t end() const { return end_; }
   [[nodiscard]] const std::string& file_path() const { return file_path_; }
