@@ -70,8 +70,8 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
       gl_widgets_.erase(it);
     }
   }
-  void OnRefreshDataViewPanels(DataViewType a_Type);
-  void UpdatePanel(DataViewType a_Type);
+  void OnRefreshDataViewPanels(DataViewType type);
+  void UpdatePanel(DataViewType type);
 
   void OnNewSamplingReport(DataView* callstack_data_view,
                            const std::shared_ptr<class SamplingReport>& sampling_report);
@@ -155,7 +155,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   void SaveCurrentTabLayoutAsDefaultInMemory();
 
-  void CreateTabBarContextMenu(QTabWidget* tab_widget, int tab_index, const QPoint pos);
+  void CreateTabBarContextMenu(QTabWidget* tab_widget, int tab_index, const QPoint& pos);
   void UpdateCaptureStateDependentWidgets();
   void UpdateProcessConnectionStateDependentWidgets();
   void ClearCaptureFilters();
@@ -194,7 +194,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   std::unique_ptr<OrbitApp> app_;
   Ui::OrbitMainWindow* ui;
   FilterPanelWidgetAction* filter_panel_action_ = nullptr;
-  QTimer* m_MainTimer = nullptr;
+  QTimer* main_timer_ = nullptr;
   std::vector<OrbitGLWidget*> gl_widgets_;
   std::unique_ptr<OrbitGLWidget> introspection_widget_ = nullptr;
   QFrame* hint_frame_ = nullptr;
