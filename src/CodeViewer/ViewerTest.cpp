@@ -8,6 +8,7 @@
 #include <QFontMetrics>
 #include <QTextBlock>
 #include <QTextDocument>
+#include <QWheelEvent>
 #include <array>
 #include <limits>
 
@@ -16,11 +17,7 @@
 
 namespace orbit_code_viewer {
 
-static int argc = 0;
-
 TEST(Viewer, DetermineLineNumberWidthInPixels) {
-  QApplication app{argc, nullptr};
-
   const QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
   const QFontMetrics font_metrics{font};
 
@@ -37,8 +34,6 @@ TEST(Viewer, DetermineLineNumberWidthInPixels) {
       EXPECT_LE(font_metrics.horizontalAdvance(line_number_label), number_of_pixels_needed);
     }
   }
-
-  (void)app;
 }
 
 TEST(Viewer, SetAnnotatingContentInDocumentEmpty) {
@@ -260,5 +255,52 @@ TEST(Viewer, SetAnnotatingContentInDocumentFirstTwice) {
     EXPECT_EQ(doc.begin().text().toStdString(), "first annotation");
     EXPECT_EQ(doc.begin().next().text().toStdString(), "first line");
   }
+}
+
+TEST(Viewer, Smoke) {
+  // This is really just a smoke test. A lot of code is executed in the background but can't be
+  // observed since it only affects the UI drawing. But at least we will know if that crashes due to
+  // whatever reason.
+  orbit_code_viewer::Viewer viewer{};
+  viewer.show();
+
+  QApplication::processEvents();
+
+  constexpr std::string_view kContents{"first line\nsecond line\nthird line"};
+  viewer.setPlainText(QString::fromLocal8Bit(kContents.data(), kContents.size()));
+  EXPECT_EQ(viewer.toPlainText().toStdString(), kContents);
+
+  QApplication::processEvents();
+
+  // We also call `QWidget::setGeometry` to trigger the resize event which also calls a lot of extra
+  // code. Again, this can't be really observed.
+  const QSize new_size{800, 600};
+  viewer.resize(new_size);
+  EXPECT_EQ(viewer.geometry().size(), new_size);
+
+  QApplication::processEvents();
+
+  // We also send a wheel event to trigger the scaling code.
+  auto wheel_event = std::make_unique<QWheelEvent>(
+      QPointF{viewer.geometry().center()}, QPointF{viewer.geometry().center()}, QPoint{},
+      QPoint{42, 42}, Qt::MouseButton::NoButton, Qt::KeyboardModifier::NoModifier,
+      Qt::NoScrollPhase, false);
+  QApplication::sendEvent(&viewer, wheel_event.release());
+
+  QApplication::processEvents();
+}
+
+TEST(Viewer, HighlightCurrentLine) {
+  orbit_code_viewer::Viewer viewer{};
+  constexpr std::string_view kContents{"first line\nsecond line\nthird line"};
+  viewer.setPlainText(QString::fromLocal8Bit(kContents.data(), kContents.size()));
+
+  EXPECT_FALSE(viewer.IsCurrentLineHighlighted());
+
+  viewer.SetHighlightCurrentLine(true);
+  EXPECT_TRUE(viewer.IsCurrentLineHighlighted());
+
+  viewer.SetHighlightCurrentLine(false);
+  EXPECT_FALSE(viewer.IsCurrentLineHighlighted());
 }
 }  // namespace orbit_code_viewer
