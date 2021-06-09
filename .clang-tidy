@@ -26,6 +26,7 @@ Checks: >
   performance-*,
   -performance-noexcept-move-constructor,
   readability-*,
+  -readability-function-cognitive-complexity,
   -readability-magic-numbers,
   -readability-non-const-parameter,
   -readability-uppercase-literal-suffix,
