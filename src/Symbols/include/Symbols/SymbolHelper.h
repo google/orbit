@@ -56,6 +56,8 @@ class SymbolHelper {
   const std::vector<fs::path> structured_debug_directories_;
 };
 
+[[nodiscard]] std::vector<std::filesystem::path> ReadSymbolsFile(
+    const std::filesystem::path& file_name);
 }  // namespace orbit_symbols
 
 #endif  // SYMBOLS_SYMBOL_HELPER_H_

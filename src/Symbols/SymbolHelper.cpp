@@ -4,6 +4,7 @@
 
 #include "Symbols/SymbolHelper.h"
 
+#include <absl/strings/ascii.h>
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
@@ -38,10 +39,7 @@ using ::orbit_object_utils::ObjectFile;
 
 namespace orbit_symbols {
 
-namespace {
-
-std::vector<fs::path> ReadSymbolsFile() {
-  fs::path file_name = orbit_core::GetSymbolsFileName();
+std::vector<fs::path> ReadSymbolsFile(const fs::path& file_name) {
   std::error_code error;
   bool file_exists = fs::exists(file_name, error);
   if (error) {
@@ -82,10 +80,16 @@ std::vector<fs::path> ReadSymbolsFile() {
 
   std::vector<std::string> lines =
       absl::StrSplit(file_content_or_error.value(), absl::ByAnyChar("\r\n"));
-  for (const std::string& line : lines) {
+  for (std::string_view line : lines) {
+    line = absl::StripAsciiWhitespace(line);
+
     if (absl::StartsWith(line, "//") || line.empty()) continue;
 
-    const fs::path& dir = line;
+    if (absl::StartsWith(line, "\"") && absl::EndsWith(line, "\"")) {
+      line = line.substr(1, line.size() - 2);
+    }
+
+    const fs::path dir = line;
     bool is_directory = fs::is_directory(dir, error);
     if (error) {
       ERROR("Unable to stat \"%s\": %s (skipping)", dir.string(), error.message());
@@ -102,7 +106,7 @@ std::vector<fs::path> ReadSymbolsFile() {
   return directories;
 }
 
-std::vector<fs::path> FindStructuredDebugDirectories() {
+static std::vector<fs::path> FindStructuredDebugDirectories() {
   std::vector<fs::path> directories;
 
   const auto add_dir_if_exists = [&](std::filesystem::path&& dir) {
@@ -130,8 +134,6 @@ std::vector<fs::path> FindStructuredDebugDirectories() {
 
   return directories;
 }
-
-}  // namespace
 
 ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const fs::path& symbols_path,
                                                      const std::string& build_id) {
@@ -167,7 +169,7 @@ ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const fs::path& symbols_pat
 }
 
 SymbolHelper::SymbolHelper()
-    : symbols_file_directories_(ReadSymbolsFile()),
+    : symbols_file_directories_(ReadSymbolsFile(orbit_core::GetSymbolsFileName())),
       cache_directory_(orbit_core::CreateOrGetCacheDir()),
       structured_debug_directories_(FindStructuredDebugDirectories()) {}
 
