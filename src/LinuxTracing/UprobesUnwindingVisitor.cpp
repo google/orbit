@@ -195,8 +195,6 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
   //  caller of __libc_start_main will be invalid since libc doesn't have frame-pointers. This
   //  prevents us from testing the current implementation, which will have "almost" correct
   //  callstack.
-  //  Note that, at this point in time, we don't want to actually throw the sample away, but rather
-  //  report it as "broken".
   for (uint64_t frame_index = 1; frame_index < event->GetCallchainSize(); ++frame_index) {
     unwindstack::MapInfo* map_info = current_maps_->Find(event->GetCallchain()[frame_index]);
     if (map_info == nullptr || (map_info->flags & PROT_EXEC) == 0) {

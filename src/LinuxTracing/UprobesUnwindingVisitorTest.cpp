@@ -722,7 +722,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(1).WillRepeatedly(Return(true));
 
-  auto fake_patch_leaf_function_caller = [](CallchainSamplePerfEvent* event,
+  auto fake_patch_caller_of_leaf_function = [](CallchainSamplePerfEvent* event,
                                             LibunwindstackMaps* /*maps*/,
                                             orbit_linux_tracing::LibunwindstackUnwinder *
                                             /*unwinder*/) -> Callstack::CallstackType {
@@ -740,7 +740,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   };
   EXPECT_CALL(leaf_function_call_manager_, PatchCallerOfLeafFunction)
       .Times(1)
-      .WillOnce(Invoke(fake_patch_leaf_function_caller));
+      .WillOnce(Invoke(fake_patch_caller_of_leaf_function));
 
   orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
   EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));

@@ -117,7 +117,7 @@ class LeafFunctionCallManagerTest : public ::testing::Test {
 
 }  // namespace
 
-TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsErrorOnSmallStackSamples) {
+TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnSmallStackSamples) {
   constexpr uint32_t kPid = 10;
   constexpr uint64_t kStackSize = 13;
 
@@ -148,7 +148,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsErrorOnSmallSt
   EXPECT_THAT(event.ips, ElementsAreArray(callchain));
 }
 
-TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsErrorOnUnwindingErrors) {
+TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwindingErrors) {
   constexpr uint32_t kPid = 10;
   constexpr uint64_t kStackSize = 13;
 
@@ -206,7 +206,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsErrorOnUnwindi
   EXPECT_THAT(event.ips, ElementsAreArray(callchain));
 }
 
-TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsErrorOnNoFramePointers) {
+TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnNoFramePointers) {
   constexpr uint32_t kPid = 10;
   constexpr uint64_t kStackSize = 13;
 
@@ -250,7 +250,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsErrorOnNoFrame
 }
 
 TEST_F(LeafFunctionCallManagerTest,
-       PatchLeafFunctionCallerReturnsSuccessAndKeepsCallchainUntouchedOnNonLeafFunctions) {
+       PatchCallerOfLeafFunctionReturnsSuccessAndKeepsCallchainUntouchedOnNonLeafFunctions) {
   constexpr uint32_t kPid = 10;
   constexpr uint64_t kStackSize = 13;
 
@@ -293,7 +293,7 @@ TEST_F(LeafFunctionCallManagerTest,
 }
 
 TEST_F(LeafFunctionCallManagerTest,
-       PatchLeafFunctionCallerReturnsSuccessAndPatchesCallchainOnLeafFunctions) {
+       PatchCallerOfLeafFunctionReturnsSuccessAndPatchesCallchainOnLeafFunctions) {
   constexpr uint32_t kPid = 10;
   constexpr uint64_t kStackSize = 13;
 
