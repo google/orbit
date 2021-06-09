@@ -120,8 +120,6 @@ ABSL_DECLARE_FLAG(bool, enable_tutorials_feature);
 ABSL_DECLARE_FLAG(uint16_t, sampling_rate);
 ABSL_DECLARE_FLAG(bool, frame_pointer_unwinding);
 
-using orbit_client_model::CaptureData;
-
 using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureListener;
 
@@ -219,7 +217,7 @@ void OrbitMainWindow::SetupMainWindow() {
       "<li>Cleaning up dynamic instrumentation</li>"
       "</ul>"
       "</div>";
-  auto finalizing_capture_dialog =
+  auto* finalizing_capture_dialog =
       new QProgressDialog(kFinalizingCaptureMessage, "OK", 0, 0, this, Qt::Tool);
   finalizing_capture_dialog->setWindowTitle("Finalizing capture");
   finalizing_capture_dialog->setModal(true);
@@ -453,7 +451,7 @@ void OrbitMainWindow::SaveCurrentTabLayoutAsDefaultInMemory() {
 }
 
 void OrbitMainWindow::CreateTabBarContextMenu(QTabWidget* tab_widget, int tab_index,
-                                              const QPoint pos) {
+                                              const QPoint& pos) {
   QMenu context_menu(this);
   context_menu.setAccessibleName("TabBarContextMenu");
   QAction move_action;
@@ -534,7 +532,7 @@ void OrbitMainWindow::UpdateCaptureToolbarIconOpacity() {
     // setGraphicsEffect(effect) transfers the ownership of effect to the QWidget. If the effect is
     // installed on a different item, setGraphicsEffect() will remove the effect from the original
     // item and install it on this item.
-    QGraphicsOpacityEffect* effect = new QGraphicsOpacityEffect;
+    auto* effect = new QGraphicsOpacityEffect;
     effect->setOpacity(action->isEnabled() ? 1 : 0.3);
     ui->capture_toolbar->widgetForAction(action)->setGraphicsEffect(effect);
   }
@@ -581,7 +579,7 @@ void OrbitMainWindow::UpdateActiveTabsAfterSelection(bool selection_has_samples)
       // Empty selection: If the selection tab was visible, switch back to the first complete report
       // that is in the same tab widget
       if (selection_parent->currentWidget() == selection_tab) {
-        for (auto& report_tab : report_tabs) {
+        for (const auto& report_tab : report_tabs) {
           QTabWidget* report_parent = FindParentTabWidget(report_tab);
           if (selection_parent == report_parent &&
               report_parent->isTabEnabled(report_parent->indexOf(report_tab))) {
@@ -644,18 +642,18 @@ OrbitMainWindow::~OrbitMainWindow() {
   main_thread_executor_.reset();
 }
 
-void OrbitMainWindow::OnRefreshDataViewPanels(DataViewType a_Type) {
-  if (a_Type == DataViewType::kAll) {
+void OrbitMainWindow::OnRefreshDataViewPanels(DataViewType type) {
+  if (type == DataViewType::kAll) {
     for (int i = 0; i < static_cast<int>(DataViewType::kAll); ++i) {
       UpdatePanel(static_cast<DataViewType>(i));
     }
   } else {
-    UpdatePanel(a_Type);
+    UpdatePanel(type);
   }
 }
 
-void OrbitMainWindow::UpdatePanel(DataViewType a_Type) {
-  switch (a_Type) {
+void OrbitMainWindow::UpdatePanel(DataViewType type) {
+  switch (type) {
     case DataViewType::kFunctions:
       ui->FunctionsList->Refresh();
       break;
@@ -743,7 +741,7 @@ std::string OrbitMainWindow::OnGetSaveFileName(const std::string& extension) {
   dialog.setDirectory(nullptr);
   std::string filename;
 
-  if (dialog.exec() == QDialog::Accepted && dialog.selectedFiles().size() > 0) {
+  if (dialog.exec() == QDialog::Accepted && !dialog.selectedFiles().isEmpty()) {
     filename = dialog.selectedFiles()[0].toStdString();
   }
   if (!filename.empty() && !absl::EndsWith(filename, extension)) {
@@ -809,20 +807,20 @@ void OrbitMainWindow::on_actionAbout_triggered() {
     dialog.SetOpenGlRenderer(renderer, is_software_renderer);
   }
 
-  QFile licenseFile{QDir{QCoreApplication::applicationDirPath()}.filePath("NOTICE")};
-  if (licenseFile.open(QIODevice::ReadOnly)) {
-    dialog.SetLicenseText(licenseFile.readAll());
+  QFile license_file{QDir{QCoreApplication::applicationDirPath()}.filePath("NOTICE")};
+  if (license_file.open(QIODevice::ReadOnly)) {
+    dialog.SetLicenseText(license_file.readAll());
   }
   dialog.exec();
 }
 
 void OrbitMainWindow::StartMainTimer() {
-  m_MainTimer = new QTimer(this);
-  connect(m_MainTimer, SIGNAL(timeout()), this, SLOT(OnTimer()));
+  main_timer_ = new QTimer(this);
+  connect(main_timer_, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
   // Update period set to 16ms (~60FPS)
   int msec = 16;
-  m_MainTimer->start(msec);
+  main_timer_->start(msec);
 }
 
 void OrbitMainWindow::OnTimer() {
@@ -1064,7 +1062,7 @@ void OrbitMainWindow::on_actionOpen_Capture_triggered() {
 }
 
 void OrbitMainWindow::OpenCapture(const std::string& filepath) {
-  auto loading_capture_dialog =
+  auto* loading_capture_dialog =
       new QProgressDialog("Waiting for the capture to be loaded...", nullptr, 0, 0, this, Qt::Tool);
   loading_capture_dialog->setWindowTitle("Loading capture");
   loading_capture_dialog->setModal(true);
@@ -1143,11 +1141,11 @@ void OrbitMainWindow::OnCaptureCleared() {
 bool OrbitMainWindow::eventFilter(QObject* watched, QEvent* event) {
   if (watched == ui->MainTabWidget->tabBar() || watched == ui->RightTabWidget->tabBar()) {
     if (event->type() == QEvent::MouseButtonRelease) {
-      QMouseEvent* mouse_event = static_cast<QMouseEvent*>(event);
+      auto* mouse_event = static_cast<QMouseEvent*>(event);
       if (mouse_event->button() == Qt::MouseButton::RightButton) {
         int index = static_cast<QTabBar*>(watched)->tabAt(mouse_event->pos());
         if (index >= 0) {
-          auto tab_widget = static_cast<QTabWidget*>(watched->parent());
+          auto* tab_widget = static_cast<QTabWidget*>(watched->parent());
           if (tab_widget->isTabEnabled(index)) {
             tab_widget->setCurrentIndex(index);
           }
@@ -1401,9 +1399,10 @@ void OrbitMainWindow::ShowDisassembly(const orbit_client_protos::FunctionInfo& f
 
   auto syntax_highlighter = std::make_unique<orbit_syntax_highlighter::X86Assembly>();
   dialog->SetMainContent(QString::fromStdString(assembly), std::move(syntax_highlighter));
+  uint32_t num_samples = report.GetNumSamples();
   dialog->SetDisassemblyCodeReport(std::move(report));
 
-  if (report.GetNumSamples() > 0) {
+  if (num_samples > 0) {
     constexpr orbit_code_viewer::FontSizeInEm kHeatmapAreaWidth{1.3f};
     dialog->EnableHeatmap(kHeatmapAreaWidth);
     dialog->SetEnableSampleCounters(true);
