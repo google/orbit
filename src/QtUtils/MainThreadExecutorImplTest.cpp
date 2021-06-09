@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 
 #include <QCoreApplication>
+#include <chrono>
 #include <memory>
 
 #include "OrbitBase/Future.h"
@@ -121,13 +122,6 @@ TEST(MainThreadExecutorImpl, ScheduleAfterWithExecutorOutOfScope) {
   promise.MarkFinished();
   QCoreApplication::processEvents();
   EXPECT_FALSE(called);
-}
-
-TEST(MainThreadExecutorImpl, Wait) {
-  bool called = false;
-  auto executor = MainThreadExecutorImpl::Create();
-  orbit_base::Future<void> future = executor->Schedule([&called]() { called = true; });
-  EXPECT_EQ(executor->WaitFor(future), MainThreadExecutor::WaitResult::kCompleted);
 }
 
 TEST(MainThreadExecutorImpl, ChainFuturesWithThen) {
@@ -264,6 +258,101 @@ TEST(MainThreadExecutorImpl, ScheduleAfterIfSuccessTwice) {
   EXPECT_TRUE(second_chained_future.IsFinished());
   EXPECT_FALSE(second_chained_future.Get().has_error());
   EXPECT_EQ(second_chained_future.Get().value(), "The number is 42");
+}
+
+TEST(MainThreadExecutorImpl, WaitForNoTimeout) {
+  auto executor = MainThreadExecutorImpl::Create();
+  orbit_base::Future<void> future = executor->Schedule([]() {});
+  EXPECT_EQ(executor->WaitFor(future), MainThreadExecutor::WaitResult::kCompleted);
+}
+
+TEST(MainThreadExecutorImpl, WaitForWithTimeout) {
+  auto executor = MainThreadExecutorImpl::Create();
+  orbit_base::Future<void> future = executor->Schedule([]() {});
+  EXPECT_EQ(executor->WaitFor(future, std::chrono::milliseconds{10}),
+            MainThreadExecutor::WaitResult::kCompleted);
+}
+
+TEST(MainThreadExecutorImpl, WaitForNoTimeoutCompletedFutures) {
+  auto executor = MainThreadExecutorImpl::Create();
+  orbit_base::Future<void> future{};  // Constructs completed future
+  EXPECT_EQ(executor->WaitFor(future), MainThreadExecutor::WaitResult::kCompleted);
+}
+
+TEST(MainThreadExecutorImpl, WaitForWithTimeoutCompletedFutures) {
+  auto executor = MainThreadExecutorImpl::Create();
+  orbit_base::Future<void> future{};  // Constructs completed future
+  EXPECT_EQ(executor->WaitFor(future, std::chrono::milliseconds{10}),
+            MainThreadExecutor::WaitResult::kCompleted);
+}
+
+TEST(MainThreadExecutorImpl, WaitForWithExceedingTimeout) {
+  auto executor = MainThreadExecutorImpl::Create();
+  // We will never mark that promise as finished, so we would wait forever if waiting didn't time
+  // out.
+  orbit_base::Promise<void> promise{};
+  EXPECT_EQ(executor->WaitFor(promise.GetFuture(), std::chrono::milliseconds{10}),
+            MainThreadExecutor::WaitResult::kTimedOut);
+}
+
+TEST(MainThreadExecutorImpl, WaitForWithAbort) {
+  auto executor = MainThreadExecutorImpl::Create();
+  // We will never mark that promise as finished, so we would wait forever if waiting wasn't
+  // aborted.
+  orbit_base::Promise<void> promise{};
+  executor->Schedule([&]() { executor->AbortWaitingJobs(); });
+  EXPECT_EQ(executor->WaitFor(promise.GetFuture()), MainThreadExecutor::WaitResult::kAborted);
+}
+
+TEST(MainThreadExecutorImpl, WaitForAllNoTimeout) {
+  auto executor = MainThreadExecutorImpl::Create();
+  std::array futures = {executor->Schedule([]() {}), executor->Schedule([]() {})};
+  EXPECT_EQ(executor->WaitForAll(absl::MakeSpan(futures)),
+            MainThreadExecutor::WaitResult::kCompleted);
+}
+
+TEST(MainThreadExecutorImpl, WaitForAllWithTimeout) {
+  auto executor = MainThreadExecutorImpl::Create();
+  std::array futures = {executor->Schedule([]() {}), executor->Schedule([]() {})};
+  EXPECT_EQ(executor->WaitForAll(absl::MakeSpan(futures), std::chrono::milliseconds{10}),
+            MainThreadExecutor::WaitResult::kCompleted);
+}
+
+TEST(MainThreadExecutorImpl, WaitForAllNoTimeoutCompletedFutures) {
+  auto executor = MainThreadExecutorImpl::Create();
+  std::array futures = {orbit_base::Future<void>{}, orbit_base::Future<void>{}};
+  EXPECT_EQ(executor->WaitForAll(absl::MakeSpan(futures)),
+            MainThreadExecutor::WaitResult::kCompleted);
+}
+
+TEST(MainThreadExecutorImpl, WaitForAllWithTimeoutCompletedFutures) {
+  auto executor = MainThreadExecutorImpl::Create();
+
+  // Create completed futures
+  std::array futures = {orbit_base::Future<void>{}, orbit_base::Future<void>{}};
+  EXPECT_EQ(executor->WaitForAll(absl::MakeSpan(futures), std::chrono::milliseconds{10}),
+            MainThreadExecutor::WaitResult::kCompleted);
+}
+
+TEST(MainThreadExecutorImpl, WaitForAllWithExceedingTimeout) {
+  auto executor = MainThreadExecutorImpl::Create();
+
+  // We won't mark these promises as finished, so we would wait forever if there wasn't a time out.
+  std::array promises{orbit_base::Promise<void>{}, orbit_base::Promise<void>{}};
+  std::array futures = {promises[0].GetFuture(), promises[1].GetFuture()};
+  EXPECT_EQ(executor->WaitForAll(absl::MakeSpan(futures), std::chrono::milliseconds{10}),
+            MainThreadExecutor::WaitResult::kTimedOut);
+}
+
+TEST(MainThreadExecutorImpl, WaitForAllWithAbort) {
+  auto executor = MainThreadExecutorImpl::Create();
+
+  // We won't mark these promises as finished, so we would wait forever if we didn't abort.
+  std::array promises{orbit_base::Promise<void>{}, orbit_base::Promise<void>{}};
+  std::array futures = {promises[0].GetFuture(), promises[1].GetFuture()};
+  executor->Schedule([&]() { executor->AbortWaitingJobs(); });
+  EXPECT_EQ(executor->WaitForAll(absl::MakeSpan(futures)),
+            MainThreadExecutor::WaitResult::kAborted);
 }
 
 }  // namespace orbit_qt_utils
