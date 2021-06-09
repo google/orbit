@@ -72,7 +72,7 @@ class Viewer : public QPlainTextEdit {
 
   void SetAnnotatingContent(absl::Span<const orbit_code_report::AnnotatingLine> annotating_lines);
 
-  void SetTopBarTile(const QString& title) { top_bar_title_ = title; }
+  void SetTopBarTitle(const QString& title) { top_bar_title_ = title; }
   [[nodiscard]] const QString& GetTopBarTitle() const { return top_bar_title_; }
 
  private:
