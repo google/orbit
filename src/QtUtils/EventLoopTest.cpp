@@ -29,6 +29,7 @@ TEST(EventLoop, exec) {
     {
       const auto result = loop.exec();
       ASSERT_FALSE(result.has_error());
+      EXPECT_EQ(result.value(), 0);
     }
   }
 
@@ -71,4 +72,34 @@ TEST(EventLoop, exec) {
       ASSERT_EQ(result.error(), std::errc::bad_message);
     }
   }
+}
+
+TEST(EventLoop, exit) {
+  orbit_qt_utils::EventLoop loop{};
+  ASSERT_FALSE(loop.isRunning());
+
+  QMetaObject::invokeMethod(
+      &loop,
+      [&]() {
+        ASSERT_TRUE(loop.isRunning());
+        loop.exit(42);
+      },
+      Qt::QueuedConnection);
+  {
+    const auto result = loop.exec();
+    ASSERT_FALSE(result.has_error());
+    EXPECT_EQ(result.value(), 42);
+  }
+}
+
+TEST(EventLoop, processEvents) {
+  orbit_qt_utils::EventLoop loop{};
+  ASSERT_FALSE(loop.isRunning());
+
+  bool called = false;
+  QMetaObject::invokeMethod(
+      &loop, [&]() { called = true; }, Qt::QueuedConnection);
+
+  loop.processEvents();
+  EXPECT_TRUE(called);
 }
