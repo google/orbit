@@ -736,12 +736,11 @@ void VerifyCallstackSamplesWithOuterAndInnerFunction(
     // We don't expect other reasons for broken callstacks other than these.
     std::vector<orbit_grpc_protos::Callstack::CallstackType> expected_callstack_types;
     if (unwound_with_frame_pointers) {
-      expected_callstack_types = {
-          orbit_grpc_protos::Callstack::kComplete,
-          orbit_grpc_protos::Callstack::kFramePointerUnwindingError,
-          orbit_grpc_protos::Callstack::kDwarfUnwindingError,
-          orbit_grpc_protos::Callstack::kFramePointerDwarfStackTooSmallError,
-          orbit_grpc_protos::Callstack::kInUprobes};
+      expected_callstack_types = {orbit_grpc_protos::Callstack::kComplete,
+                                  orbit_grpc_protos::Callstack::kFramePointerUnwindingError,
+                                  orbit_grpc_protos::Callstack::kStackTopForDwarfUnwindingTooSmall,
+                                  orbit_grpc_protos::Callstack::kStackTopDwarfUnwindingError,
+                                  orbit_grpc_protos::Callstack::kInUprobes};
     } else {
       expected_callstack_types = {orbit_grpc_protos::Callstack::kComplete,
                                   orbit_grpc_protos::Callstack::kDwarfUnwindingError,

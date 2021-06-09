@@ -69,11 +69,9 @@ class LibunwindstackUnwinderImpl : public LibunwindstackUnwinder {
                               const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
                               const void* stack_dump, uint64_t stack_dump_size,
                               bool offline_memory_only = false,
-                              size_t max_frames = kMaxFrames) override;
+                              size_t max_frames = kDefaultMaxFrames) override;
 
  private:
-  static constexpr size_t kMaxFrames = 1024;  // This is arbitrary.
-
   static const std::array<size_t, unwindstack::X86_64_REG_LAST> kUnwindstackRegsToPerfRegs;
 };
 

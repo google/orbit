@@ -71,7 +71,8 @@ message CallstackInfo {
     kFramePointerUnwindingError = 2;
     kInUprobes = 3;
     kUprobesPatchingFailed = 4;
-    kFramePointerDwarfStackTooSmallError = 5;
+    kStackTopForDwarfUnwindingTooSmall = 5;
+    kStackTopDwarfUnwindingError = 6;
     // These are set by the client and are in addition to the ones in
     // Callstack::CallstackType.
     kFilteredByMajorityOutermostFrame = 100;

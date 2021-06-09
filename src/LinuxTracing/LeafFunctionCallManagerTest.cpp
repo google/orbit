@@ -143,8 +143,8 @@ TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsErrorOnSmallSt
   event.regs.bp = 2 * SAMPLE_STACK_USER_SIZE_512BYTES;
   event.regs.sp = 0;
 
-  EXPECT_EQ(Callstack::kFramePointerDwarfStackTooSmallError,
-            leaf_function_call_manager_.PatchLeafFunctionCaller(&event, &maps_, &unwinder_));
+  EXPECT_EQ(Callstack::kStackTopForDwarfUnwindingTooSmall,
+            leaf_function_call_manager_.PatchCallerOfLeafFunction(&event, &maps_, &unwinder_));
   EXPECT_THAT(event.ips, ElementsAreArray(callchain));
 }
 
@@ -175,13 +175,14 @@ TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsErrorOnUnwindi
 
   EXPECT_CALL(maps_, Get).WillRepeatedly(Return(nullptr));
 
-  // Unwinding errors could result in empty callstacks:
+  // Usually, we should get at least the instruction pointer as frame, even on unwinding errors.
+  // However, we should also support empty callstacks and treat them as unwinding error.
   EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, SAMPLE_STACK_USER_SIZE_512BYTES - 10, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{{}, unwindstack::ErrorCode::ERROR_INVALID_MAP}));
 
-  EXPECT_EQ(Callstack::kDwarfUnwindingError,
-            leaf_function_call_manager_.PatchLeafFunctionCaller(&event, &maps_, &unwinder_));
+  EXPECT_EQ(Callstack::kStackTopDwarfUnwindingError,
+            leaf_function_call_manager_.PatchCallerOfLeafFunction(&event, &maps_, &unwinder_));
   EXPECT_THAT(event.ips, ElementsAreArray(callchain));
 
   ::testing::Mock::VerifyAndClearExpectations(&unwinder_);
@@ -200,8 +201,8 @@ TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsErrorOnUnwindi
       .Times(1)
       .WillOnce(Return(&kNonExecutableMapInfo));
 
-  EXPECT_EQ(Callstack::kDwarfUnwindingError,
-            leaf_function_call_manager_.PatchLeafFunctionCaller(&event, &maps_, &unwinder_));
+  EXPECT_EQ(Callstack::kStackTopDwarfUnwindingError,
+            leaf_function_call_manager_.PatchCallerOfLeafFunction(&event, &maps_, &unwinder_));
   EXPECT_THAT(event.ips, ElementsAreArray(callchain));
 }
 
@@ -244,7 +245,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchLeafFunctionCallerReturnsErrorOnNoFrame
                                             unwindstack::ErrorCode::ERROR_INVALID_MAP}));
 
   EXPECT_EQ(Callstack::kFramePointerUnwindingError,
-            leaf_function_call_manager_.PatchLeafFunctionCaller(&event, &maps_, &unwinder_));
+            leaf_function_call_manager_.PatchCallerOfLeafFunction(&event, &maps_, &unwinder_));
   EXPECT_THAT(event.ips, ElementsAreArray(callchain));
 }
 
@@ -287,7 +288,7 @@ TEST_F(LeafFunctionCallManagerTest,
                                             unwindstack::ErrorCode::ERROR_INVALID_MAP}));
 
   EXPECT_EQ(Callstack::kComplete,
-            leaf_function_call_manager_.PatchLeafFunctionCaller(&event, &maps_, &unwinder_));
+            leaf_function_call_manager_.PatchCallerOfLeafFunction(&event, &maps_, &unwinder_));
   EXPECT_THAT(event.ips, ElementsAreArray(callchain));
 }
 
@@ -330,7 +331,7 @@ TEST_F(LeafFunctionCallManagerTest,
   EXPECT_CALL(maps_, Find(_)).WillRepeatedly(Return(&kTargetMapInfo));
 
   EXPECT_EQ(Callstack::kComplete,
-            leaf_function_call_manager_.PatchLeafFunctionCaller(&event, &maps_, &unwinder_));
+            leaf_function_call_manager_.PatchCallerOfLeafFunction(&event, &maps_, &unwinder_));
   EXPECT_THAT(event.ips, ElementsAre(kKernelAddress, kTargetAddress1, kTargetAddress2 + 1,
                                      kTargetAddress3 + 1));
   EXPECT_EQ(event.GetCallchainSize(), callchain.size() + 1);

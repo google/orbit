@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef LINUX_TRACING_LEAF_FUNCTION_UTILS_H_
-#define LINUX_TRACING_LEAF_FUNCTION_UTILS_H_
+#ifndef LINUX_TRACING_LEAF_FUNCTION_CALL_MANAGER_H_
+#define LINUX_TRACING_LEAF_FUNCTION_CALL_MANAGER_H_
 
 #include <capture.pb.h>
 
@@ -13,9 +13,9 @@
 
 namespace orbit_linux_tracing {
 
-// This class provides the `PatchLeafFunctionCaller` method to fix a frame-pointer based callchain,
-// where the leaf function does not have frame-pointers.
-// Note that, this is wrapped in a class to allow tests to mock this implementation.
+// This class provides the `PatchCallerOfLeafFunction` method to fix a frame-pointer based
+// callchain, where the leaf function does not have frame-pointers. Note that this is wrapped in a
+// class to allow tests to mock this implementation.
 class LeafFunctionCallManager {
  public:
   virtual ~LeafFunctionCallManager() = default;
@@ -26,16 +26,16 @@ class LeafFunctionCallManager {
   // callchain), the respective `CallstackType` will be returned and the event remains untouched.
   // If the innermost frame has frame-pointers, this function will return `kComplete` and keeps the
   // callchain event untouched.
-  // Otherwise, that is the caller of the leaf function is missing and there are no unwinding
+  // Otherwise, that is if the caller of the leaf function is missing and there are no unwinding
   // errors, the callchain event gets updated, such that it contains the missing caller, and
   // `kComplete` will be returned.
   // Note that the address of the caller address is computed by decreasing the return address by
   // one in libunwindstack, to match the format of perf_event_open.
-  virtual orbit_grpc_protos::Callstack::CallstackType PatchLeafFunctionCaller(
+  virtual orbit_grpc_protos::Callstack::CallstackType PatchCallerOfLeafFunction(
       CallchainSamplePerfEvent* event, LibunwindstackMaps* current_maps,
       LibunwindstackUnwinder* unwinder);
 };
 
 }  //  namespace orbit_linux_tracing
 
-#endif  // LINUX_TRACING_LEAF_FUNCTION_UTILS_H_
+#endif  // LINUX_TRACING_LEAF_FUNCTION_CALL_MANAGER_H_

@@ -70,7 +70,7 @@ class MockUprobesReturnAddressManager : public UprobesReturnAddressManager {
 
 class MockLeafFunctionCallManager : public LeafFunctionCallManager {
  public:
-  MOCK_METHOD(Callstack::CallstackType, PatchLeafFunctionCaller,
+  MOCK_METHOD(Callstack::CallstackType, PatchCallerOfLeafFunction,
               (CallchainSamplePerfEvent*, LibunwindstackMaps*, LibunwindstackUnwinder*),
               (override));
 };
@@ -480,7 +480,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitValidCallchainSampleWithoutUprobesSends
 
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(1).WillOnce(Return(true));
-  EXPECT_CALL(leaf_function_call_manager_, PatchLeafFunctionCaller)
+  EXPECT_CALL(leaf_function_call_manager_, PatchCallerOfLeafFunction)
       .Times(1)
       .WillOnce(Return(Callstack::kComplete));
 
@@ -522,7 +522,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitSingleFrameCallchainSampleDoesNothing) 
 
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(0);
-  EXPECT_CALL(leaf_function_call_manager_, PatchLeafFunctionCaller).Times(0);
+  EXPECT_CALL(leaf_function_call_manager_, PatchCallerOfLeafFunction).Times(0);
 
   EXPECT_CALL(listener_, OnCallstackSample).Times(0);
 
@@ -565,7 +565,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleInsideUprobeCodeSendsInU
   EXPECT_CALL(maps_, Find(_)).WillRepeatedly(Return(&kTargetMapInfo));
   EXPECT_CALL(maps_, Find(kUprobesMapsStart)).WillRepeatedly(Return(&kUprobesMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(0);
-  EXPECT_CALL(leaf_function_call_manager_, PatchLeafFunctionCaller).Times(0);
+  EXPECT_CALL(leaf_function_call_manager_, PatchCallerOfLeafFunction).Times(0);
 
   orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
   EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));
@@ -622,7 +622,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleWithUprobeSendsCompleteC
       .Times(1)
       .WillOnce(Invoke(fake_patch_callchain));
 
-  EXPECT_CALL(leaf_function_call_manager_, PatchLeafFunctionCaller)
+  EXPECT_CALL(leaf_function_call_manager_, PatchCallerOfLeafFunction)
       .Times(1)
       .WillOnce(Return(Callstack::kComplete));
 
@@ -671,7 +671,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   event.ips = callchain;
 
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
-  EXPECT_CALL(leaf_function_call_manager_, PatchLeafFunctionCaller)
+  EXPECT_CALL(leaf_function_call_manager_, PatchCallerOfLeafFunction)
       .Times(1)
       .WillOnce(Return(Callstack::kComplete));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(1).WillOnce(Return(false));
@@ -738,7 +738,7 @@ TEST_F(UprobesUnwindingVisitorTest,
     event->ips = std::move(patched_callchain);
     return Callstack::kComplete;
   };
-  EXPECT_CALL(leaf_function_call_manager_, PatchLeafFunctionCaller)
+  EXPECT_CALL(leaf_function_call_manager_, PatchCallerOfLeafFunction)
       .Times(1)
       .WillOnce(Invoke(fake_patch_leaf_function_caller));
 
@@ -761,7 +761,7 @@ TEST_F(UprobesUnwindingVisitorTest,
 
 TEST_F(
     UprobesUnwindingVisitorTest,
-    VisitLeafCallOptimizedCallchainSampleWherePatchingLeafFunctionCallerSendsFramePointerUnwindingErrorCallstack) {
+    VisitLeafCallOptimizedCallchainSampleWherePatchingLeafFunctionCallerFailsSendsFramePointerUnwindingErrorCallstack) {
   constexpr uint32_t kPid = 10;
   constexpr uint64_t kStackSize = 13;
 
@@ -786,7 +786,7 @@ TEST_F(
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(0);
 
-  EXPECT_CALL(leaf_function_call_manager_, PatchLeafFunctionCaller)
+  EXPECT_CALL(leaf_function_call_manager_, PatchCallerOfLeafFunction)
       .Times(1)
       .WillOnce(Return(Callstack::kFramePointerUnwindingError));
 

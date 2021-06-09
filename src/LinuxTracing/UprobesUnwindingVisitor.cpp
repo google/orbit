@@ -161,7 +161,6 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
   // function is never the outermost frame. For example, for the main thread the outermost function
   // is _start, followed by __libc_start_main. For other threads, the outermost function is clone.
   if (event->GetCallchainSize() == 2) {
-    ERROR("Callchain has only %lu frames", event->GetCallchainSize());
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
     }
@@ -192,22 +191,21 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
   // missing). We do a plausibility check for this assumption by checking if the callstack only
   // contains executable code.
   // TODO(b/187690455): As soon as we actually have frame pointers in all non-leaf functions, we can
-  //  "discard" the sample. Till that point this check will always fail, because the caller of
-  //  __libc_start_main will be invalid since libc doesn't have frame-pointers.
+  //  report an unwinding error here. Till that point this check will always fail, because the
+  //  caller of __libc_start_main will be invalid since libc doesn't have frame-pointers. This
+  //  prevents us from testing the current implementation, which will have "almost" correct
+  //  callstack.
   //  Note that, at this point in time, we don't want to actually throw the sample away, but rather
   //  report it as "broken".
   for (uint64_t frame_index = 1; frame_index < event->GetCallchainSize(); ++frame_index) {
     unwindstack::MapInfo* map_info = current_maps_->Find(event->GetCallchain()[frame_index]);
     if (map_info == nullptr || (map_info->flags & PROT_EXEC) == 0) {
-      ERROR(
-          "Unwinding failed, $rbp was likely modified in the leaf-function and no longer points "
-          "to a frame.");
       break;
     }
   }
 
   Callstack::CallstackType leaf_function_patching_status =
-      leaf_function_call_manager_->PatchLeafFunctionCaller(event, current_maps_, unwinder_);
+      leaf_function_call_manager_->PatchCallerOfLeafFunction(event, current_maps_, unwinder_);
   if (leaf_function_patching_status != Callstack::kComplete) {
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
