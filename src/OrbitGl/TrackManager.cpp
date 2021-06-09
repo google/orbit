@@ -86,9 +86,9 @@ void TrackManager::SortTracks() {
     all_processes_sorted_tracks.push_back(timeline_and_track.second.get());
   }
 
-  // Graph tracks.
-  for (const auto& graph_track : graph_tracks_) {
-    all_processes_sorted_tracks.push_back(graph_track.second.get());
+  // Variable tracks.
+  for (const auto& variable_track : variable_tracks_) {
+    all_processes_sorted_tracks.push_back(variable_track.second.get());
   }
 
   // Memory tracks.
@@ -376,14 +376,14 @@ GpuTrack* TrackManager::GetOrCreateGpuTrack(uint64_t timeline_hash) {
   return track.get();
 }
 
-GraphTrack* TrackManager::GetOrCreateGraphTrack(const std::string& name) {
+VariableTrack* TrackManager::GetOrCreateVariableTrack(const std::string& name) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  std::shared_ptr<GraphTrack> track = graph_tracks_[name];
+  std::shared_ptr<VariableTrack> track = variable_tracks_[name];
   if (track == nullptr) {
-    track = std::make_shared<GraphTrack>(time_graph_, time_graph_, viewport_, layout_, name,
-                                         capture_data_);
+    track = std::make_shared<VariableTrack>(time_graph_, time_graph_, viewport_, layout_, name,
+                                            capture_data_);
     AddTrack(track);
-    graph_tracks_[name] = track;
+    variable_tracks_[name] = track;
   }
   return track.get();
 }

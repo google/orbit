@@ -6,6 +6,7 @@
 
 #include <GteVector.h>
 #include <absl/container/flat_hash_map.h>
+#include <absl/strings/str_format.h>
 #include <absl/time/time.h>
 #include <stddef.h>
 
@@ -22,7 +23,6 @@
 #include "GlCanvas.h"
 #include "GlUtils.h"
 #include "GpuTrack.h"
-#include "GraphTrack.h"
 #include "GrpcProtos/Constants.h"
 #include "ManualInstrumentationManager.h"
 #include "MemoryTrack.h"
@@ -35,7 +35,7 @@
 #include "TextBox.h"
 #include "ThreadTrack.h"
 #include "TrackManager.h"
-#include "absl/strings/str_format.h"
+#include "VariableTrack.h"
 
 ABSL_DECLARE_FLAG(bool, enable_warning_threshold);
 
@@ -390,7 +390,7 @@ void TimeGraph::ProcessValueTrackingTimer(const TimerInfo& timer_info) {
     return;
   }
 
-  GraphTrack* track = track_manager_->GetOrCreateGraphTrack(event.name);
+  VariableTrack* track = track_manager_->GetOrCreateVariableTrack(event.name);
   uint64_t time = timer_info.start();
 
   switch (event.type) {

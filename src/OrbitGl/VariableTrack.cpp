@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "GraphTrack.h"
+#include "VariableTrack.h"
 
 #include <GteVector.h>
 #include <absl/strings/str_format.h>
@@ -17,17 +17,17 @@
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
 
-GraphTrack::GraphTrack(CaptureViewElement* parent, TimeGraph* time_graph,
-                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string name,
-                       const orbit_client_model::CaptureData* capture_data,
-                       uint32_t indentation_level)
+VariableTrack::VariableTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+                             orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                             std::string name, const orbit_client_model::CaptureData* capture_data,
+                             uint32_t indentation_level)
     : Track(parent, time_graph, viewport, layout, capture_data, indentation_level) {
   SetName(name);
   SetLabel(name);
 }
 
-void GraphTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                  PickingMode picking_mode, float z_offset) {
+void VariableTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                                     PickingMode picking_mode, float z_offset) {
   float track_width = viewport_->GetVisibleWorldWidth();
   SetSize(track_width, GetHeight());
   pos_[0] = viewport_->GetWorldTopLeft()[0];
@@ -87,8 +87,8 @@ void GraphTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
   }
 }
 
-void GraphTrack::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-                      PickingMode picking_mode, float z_offset) {
+void VariableTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
+                         uint64_t current_mouse_time_ns, PickingMode picking_mode, float z_offset) {
   Track::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
   if (values_.empty() || picking_mode != PickingMode::kNone) {
     return;
@@ -118,16 +118,16 @@ void GraphTrack::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t cu
   DrawLabel(batcher, text_renderer, Vec2(point_x, point_y), text, kBlack, kWhite, label_z);
 }
 
-void GraphTrack::DrawSquareDot(Batcher* batcher, Vec2 center, float radius, float z,
-                               const Color& color) {
+void VariableTrack::DrawSquareDot(Batcher* batcher, Vec2 center, float radius, float z,
+                                  const Color& color) {
   Vec2 position(center[0] - radius, center[1] - radius);
   Vec2 size(2 * radius, 2 * radius);
   batcher->AddBox(Box(position, size, z), color);
 }
 
-void GraphTrack::DrawLabel(Batcher& batcher, TextRenderer& text_renderer, Vec2 target_pos,
-                           const std::string& text, const Color& text_color,
-                           const Color& font_color, float z) {
+void VariableTrack::DrawLabel(Batcher& batcher, TextRenderer& text_renderer, Vec2 target_pos,
+                              const std::string& text, const Color& text_color,
+                              const Color& font_color, float z) {
   uint32_t font_size = layout_->CalculateZoomedFontSize();
 
   float text_width = text_renderer.GetStringWidth(text.c_str(), font_size);
@@ -159,7 +159,7 @@ void GraphTrack::DrawLabel(Batcher& batcher, TextRenderer& text_renderer, Vec2 t
                         text_box_size[0]);
 }
 
-void GraphTrack::AddValue(double value, uint64_t time) {
+void VariableTrack::AddValue(double value, uint64_t time) {
   values_[time] = value;
   max_ = std::max(max_, value);
   min_ = std::min(min_, value);
@@ -168,7 +168,7 @@ void GraphTrack::AddValue(double value, uint64_t time) {
   if (value_range_ > 0) inv_value_range_ = 1.0 / value_range_;
 }
 
-std::optional<std::pair<uint64_t, double>> GraphTrack::GetPreviousValueAndTime(
+std::optional<std::pair<uint64_t, double>> VariableTrack::GetPreviousValueAndTime(
     uint64_t time) const {
   auto iterator_lower = values_.upper_bound(time);
   if (iterator_lower == values_.begin()) {
@@ -178,24 +178,24 @@ std::optional<std::pair<uint64_t, double>> GraphTrack::GetPreviousValueAndTime(
   return *iterator_lower;
 }
 
-float GraphTrack::GetHeight() const {
+float VariableTrack::GetHeight() const {
   float height = layout_->GetTrackTabHeight() + layout_->GetTextBoxHeight() +
                  layout_->GetSpaceBetweenTracksAndThread() + layout_->GetEventTrackHeight() +
                  layout_->GetTrackBottomMargin();
   return height;
 }
 
-void GraphTrack::SetLabelUnitWhenEmpty(const std::string& label_unit) {
+void VariableTrack::SetLabelUnitWhenEmpty(const std::string& label_unit) {
   if (!label_unit_.empty()) return;
   label_unit_ = label_unit;
 }
 
-void GraphTrack::SetValueDecimalDigitsWhenEmpty(uint8_t value_decimal_digits) {
+void VariableTrack::SetValueDecimalDigitsWhenEmpty(uint8_t value_decimal_digits) {
   if (value_decimal_digits_.has_value()) return;
   value_decimal_digits_ = value_decimal_digits;
 }
 
-void GraphTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
+void VariableTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   constexpr uint32_t kDepth = 0;
   std::shared_ptr<TimerChain> timer_chain = timers_[kDepth];
   if (timer_chain == nullptr) {
@@ -206,7 +206,7 @@ void GraphTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   timer_chain->emplace_back(timer_info);
 }
 
-std::vector<std::shared_ptr<TimerChain>> GraphTrack::GetAllChains() const {
+std::vector<std::shared_ptr<TimerChain>> VariableTrack::GetAllChains() const {
   std::vector<std::shared_ptr<TimerChain>> chains;
   for (const auto& pair : timers_) {
     chains.push_back(pair.second);

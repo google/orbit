@@ -39,7 +39,6 @@ target_sources(
          GpuDebugMarkerTrack.h
          GpuSubmissionTrack.h
          GpuTrack.h
-         GraphTrack.h
          Images.h
          ImGuiOrbit.h
          IntrospectionWindow.h
@@ -71,6 +70,7 @@ target_sources(
          TriangleToggle.h
          TracepointsDataView.h
          TracepointThreadBar.h
+         VariableTrack.h
          Viewport.h)
 
 target_sources(
@@ -102,7 +102,6 @@ target_sources(
           GpuDebugMarkerTrack.cpp
           GpuSubmissionTrack.cpp
           GpuTrack.cpp
-          GraphTrack.cpp
           ImGuiOrbit.cpp
           IntrospectionWindow.cpp
           LiveFunctionsDataView.cpp
@@ -128,6 +127,7 @@ target_sources(
           TriangleToggle.cpp
           TracepointsDataView.cpp
           TracepointThreadBar.cpp
+          VariableTrack.cpp
           Viewport.cpp)
 
 target_include_directories(OrbitGl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

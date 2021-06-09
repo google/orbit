@@ -8,18 +8,18 @@
 #include <string>
 #include <utility>
 
-#include "GraphTrack.h"
 #include "Track.h"
+#include "VariableTrack.h"
 #include "Viewport.h"
 
 namespace orbit_gl {
 
-class MemoryTrack final : public GraphTrack {
+class MemoryTrack final : public VariableTrack {
  public:
   explicit MemoryTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string name,
                        const orbit_client_model::CaptureData* capture_data)
-      : GraphTrack(parent, time_graph, viewport, layout, name, capture_data) {}
+      : VariableTrack(parent, time_graph, viewport, layout, name, capture_data) {}
   ~MemoryTrack() override = default;
   [[nodiscard]] Type GetType() const override { return Type::kMemoryTrack; }
 
