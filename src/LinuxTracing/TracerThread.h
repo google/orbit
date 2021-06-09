@@ -162,6 +162,7 @@ class TracerThread {
   UprobesReturnAddressManager return_address_manager_;
   std::unique_ptr<LibunwindstackMaps> maps_;
   std::unique_ptr<LibunwindstackUnwinder> unwinder_;
+  std::unique_ptr<LeafFunctionCallManager> leaf_function_call_manager_;
   std::unique_ptr<UprobesUnwindingVisitor> uprobes_unwinding_visitor_;
   std::unique_ptr<SwitchesStatesNamesVisitor> switches_states_names_visitor_;
   std::unique_ptr<GpuTracepointVisitor> gpu_event_visitor_;

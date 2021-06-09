@@ -29,6 +29,8 @@ target_sources(LinuxTracing PRIVATE
         GpuTracepointVisitor.h
         GpuTracepointVisitor.cpp
         KernelTracepoints.h
+        LeafFunctionCallManager.h
+        LeafFunctionCallManager.cpp
         LibunwindstackMaps.cpp
         LibunwindstackMaps.h
         LibunwindstackUnwinder.cpp
@@ -76,6 +78,7 @@ target_compile_options(LinuxTracingTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(LinuxTracingTests PRIVATE
         ContextSwitchManagerTest.cpp
         GpuTracepointVisitorTest.cpp
+        LeafFunctionCallManagerTest.cpp
         LinuxTracingUtilsTest.cpp
         PerfEventProcessorTest.cpp
         PerfEventQueueTest.cpp

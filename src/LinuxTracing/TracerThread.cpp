@@ -108,8 +108,10 @@ void TracerThread::InitUprobesEventVisitor() {
   ORBIT_SCOPE_FUNCTION;
   maps_ = LibunwindstackMaps::ParseMaps(ReadMaps(target_pid_));
   unwinder_ = LibunwindstackUnwinder::Create();
+  leaf_function_call_manager_ = std::make_unique<LeafFunctionCallManager>();
   uprobes_unwinding_visitor_ = std::make_unique<UprobesUnwindingVisitor>(
-      &function_call_manager_, &return_address_manager_, maps_.get(), unwinder_.get());
+      &function_call_manager_, &return_address_manager_, maps_.get(), unwinder_.get(),
+      leaf_function_call_manager_.get());
   uprobes_unwinding_visitor_->SetListener(listener_);
   uprobes_unwinding_visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(
       &stats_.unwind_error_count, &stats_.samples_in_uretprobes_count);

@@ -98,9 +98,9 @@ struct __attribute__((__packed__)) perf_event_sample_stack_user_8bytes {
   uint64_t dyn_size;
 };
 
-struct __attribute__((__packed__)) perf_event_sample_stack_user_128bytes {
+struct __attribute__((__packed__)) perf_event_sample_stack_user_512bytes {
   uint64_t size;
-  char data[SAMPLE_STACK_USER_SIZE_128BYTES];
+  char data[SAMPLE_STACK_USER_SIZE_512BYTES];
   uint64_t dyn_size;
 };
 
@@ -118,7 +118,7 @@ struct __attribute__((__packed__)) perf_event_callchain_sample_fixed {
   // Following this field there are the following fields, which we read dynamically:
   // uint64_t[nr] ips;
   // perf_event_sample_regs_user_sp_ip_arguments regs;
-  // perf_event_sample_stack_user_128bytes stack;
+  // perf_event_sample_stack_user_512bytes stack;
 };
 
 struct __attribute__((__packed__)) perf_event_sp_ip_arguments_8bytes_sample {

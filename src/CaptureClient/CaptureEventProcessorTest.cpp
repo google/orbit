@@ -162,6 +162,12 @@ static void ExpectCallstackSamplesEqual(const CallstackEvent& actual_callstack_e
     case Callstack::kUprobesPatchingFailed:
       EXPECT_EQ(actual_callstack.type(), CallstackInfo::kUprobesPatchingFailed);
       break;
+    case Callstack::kStackTopDwarfUnwindingError:
+      EXPECT_EQ(actual_callstack.type(), CallstackInfo::kStackTopDwarfUnwindingError);
+      break;
+    case Callstack::kStackTopForDwarfUnwindingTooSmall:
+      EXPECT_EQ(actual_callstack.type(), CallstackInfo::kStackTopForDwarfUnwindingTooSmall);
+      break;
     case orbit_grpc_protos::
         Callstack_CallstackType_Callstack_CallstackType_INT_MIN_SENTINEL_DO_NOT_USE_:
       [[fallthrough]];
@@ -210,6 +216,8 @@ TEST(CaptureEventProcessor, CanHandleOneNonCompleteCallstackSample) {
   CanHandleOneCallstackSampleOfType(Callstack::kFramePointerUnwindingError);
   CanHandleOneCallstackSampleOfType(Callstack::kInUprobes);
   CanHandleOneCallstackSampleOfType(Callstack::kUprobesPatchingFailed);
+  CanHandleOneCallstackSampleOfType(Callstack::kStackTopDwarfUnwindingError);
+  CanHandleOneCallstackSampleOfType(Callstack::kStackTopForDwarfUnwindingTooSmall);
 }
 
 TEST(CaptureEventProcessor, WillOnlyHandleUniqueCallstacksOnce) {

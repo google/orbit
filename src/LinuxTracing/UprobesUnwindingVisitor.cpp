@@ -15,6 +15,7 @@
 #include <utility>
 
 #include "Function.h"
+#include "LeafFunctionCallManager.h"
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -154,16 +155,16 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
 
   Callstack* callstack = sample.mutable_callstack();
 
-  // TODO(b/179976268): When a sample falls on the first (push rbp) or second (mov rbp,rsp)
-  //  instruction of the current function, frame-pointer unwinding skips the caller's frame,
-  //  because rbp hasn't yet been updated to rsp. Drop the sample in this case?
-
-  if (!return_address_manager_->PatchCallchain(event->GetTid(), event->GetCallchain(),
-                                               event->GetCallchainSize(), current_maps_)) {
+  // Callstacks with only two frames (the first is in the kernel, the second is the sampled address)
+  // are unwinding errors.
+  // Note that this doesn't exclude samples inside the main function of any thread as the main
+  // function is never the outermost frame. For example, for the main thread the outermost function
+  // is _start, followed by __libc_start_main. For other threads, the outermost function is clone.
+  if (event->GetCallchainSize() == 2) {
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
     }
-    callstack->set_type(Callstack::kUprobesPatchingFailed);
+    callstack->set_type(Callstack::kFramePointerUnwindingError);
     callstack->add_pcs(event->GetCallchain()[1]);
     listener_->OnCallstackSample(std::move(sample));
     return;
@@ -179,6 +180,46 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
       ++(*samples_in_uretprobes_counter_);
     }
     callstack->set_type(Callstack::kInUprobes);
+    callstack->add_pcs(top_ip);
+    listener_->OnCallstackSample(std::move(sample));
+    return;
+  }
+
+  // The leaf function is not guaranteed to have the frame pointer for all our targets. Though, we
+  // assume that $rbp remains untouched by the leaf functions, such that we can rely on
+  // perf_event_open to give us "almost" correct callstacks (the caller of the leaf function will be
+  // missing). We do a plausibility check for this assumption by checking if the callstack only
+  // contains executable code.
+  // TODO(b/187690455): As soon as we actually have frame pointers in all non-leaf functions, we can
+  //  report an unwinding error here. Till that point this check will always fail, because the
+  //  caller of __libc_start_main will be invalid since libc doesn't have frame-pointers. This
+  //  prevents us from testing the current implementation, which will have "almost" correct
+  //  callstack.
+  for (uint64_t frame_index = 1; frame_index < event->GetCallchainSize(); ++frame_index) {
+    unwindstack::MapInfo* map_info = current_maps_->Find(event->GetCallchain()[frame_index]);
+    if (map_info == nullptr || (map_info->flags & PROT_EXEC) == 0) {
+      break;
+    }
+  }
+
+  Callstack::CallstackType leaf_function_patching_status =
+      leaf_function_call_manager_->PatchCallerOfLeafFunction(event, current_maps_, unwinder_);
+  if (leaf_function_patching_status != Callstack::kComplete) {
+    if (unwind_error_counter_ != nullptr) {
+      ++(*unwind_error_counter_);
+    }
+    callstack->set_type(leaf_function_patching_status);
+    callstack->add_pcs(top_ip);
+    listener_->OnCallstackSample(std::move(sample));
+    return;
+  }
+
+  if (!return_address_manager_->PatchCallchain(event->GetTid(), event->GetCallchain(),
+                                               event->GetCallchainSize(), current_maps_)) {
+    if (unwind_error_counter_ != nullptr) {
+      ++(*unwind_error_counter_);
+    }
+    callstack->set_type(Callstack::kUprobesPatchingFailed);
     callstack->add_pcs(top_ip);
     listener_->OnCallstackSample(std::move(sample));
     return;

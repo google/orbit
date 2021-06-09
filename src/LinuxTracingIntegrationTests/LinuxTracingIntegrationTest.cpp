@@ -734,11 +734,18 @@ void VerifyCallstackSamplesWithOuterAndInnerFunction(
     previous_callstack_timestamp_ns = callstack_sample.timestamp_ns();
 
     // We don't expect other reasons for broken callstacks other than these.
-    const std::vector<orbit_grpc_protos::Callstack::CallstackType> expected_callstack_types{
-        {orbit_grpc_protos::Callstack::kComplete,
-         unwound_with_frame_pointers ? orbit_grpc_protos::Callstack::kFramePointerUnwindingError
-                                     : orbit_grpc_protos::Callstack::kDwarfUnwindingError,
-         orbit_grpc_protos::Callstack::kInUprobes}};
+    std::vector<orbit_grpc_protos::Callstack::CallstackType> expected_callstack_types;
+    if (unwound_with_frame_pointers) {
+      expected_callstack_types = {orbit_grpc_protos::Callstack::kComplete,
+                                  orbit_grpc_protos::Callstack::kFramePointerUnwindingError,
+                                  orbit_grpc_protos::Callstack::kStackTopForDwarfUnwindingTooSmall,
+                                  orbit_grpc_protos::Callstack::kStackTopDwarfUnwindingError,
+                                  orbit_grpc_protos::Callstack::kInUprobes};
+    } else {
+      expected_callstack_types = {orbit_grpc_protos::Callstack::kComplete,
+                                  orbit_grpc_protos::Callstack::kDwarfUnwindingError,
+                                  orbit_grpc_protos::Callstack::kInUprobes};
+    }
     EXPECT_THAT(expected_callstack_types, ::testing::Contains(callstack_sample.callstack().type()));
 
     // We are only sampling the puppet.
@@ -758,14 +765,6 @@ void VerifyCallstackSamplesWithOuterAndInnerFunction(
       // address and the caller address should match the "outer" function's address.
       if (callstack.pcs(pc_index) >= inner_function_virtual_address_range.first &&
           callstack.pcs(pc_index) <= inner_function_virtual_address_range.second) {
-        // Frame-pointer unwinding skips the second innermost frame if the sample fell on `push rbp`
-        // (which is one byte) or `mov rbp,rsp`. Disregard such samples. See b/179376436#comment4.
-        if (pc_index == 0 && unwound_with_frame_pointers &&
-            (callstack.pcs(pc_index) == inner_function_virtual_address_range.first ||
-             callstack.pcs(pc_index) == inner_function_virtual_address_range.first + 1)) {
-          continue;
-        }
-
         if (address_infos_received != nullptr) {
           // Verify that we got the AddressInfo for this virtual address of the "inner" function.
           EXPECT_TRUE(address_infos_received->contains(callstack.pcs(pc_index)));

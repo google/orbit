@@ -17,6 +17,7 @@
 #include <tuple>
 #include <vector>
 
+#include "LeafFunctionCallManager.h"
 #include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"
 #include "LinuxTracing/TracerListener.h"
@@ -48,15 +49,18 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   explicit UprobesUnwindingVisitor(UprobesFunctionCallManager* function_call_manager,
                                    UprobesReturnAddressManager* uprobes_return_address_manager,
                                    LibunwindstackMaps* initial_maps,
-                                   LibunwindstackUnwinder* unwinder)
+                                   LibunwindstackUnwinder* unwinder,
+                                   LeafFunctionCallManager* leaf_function_call_manager)
       : function_call_manager_{function_call_manager},
         return_address_manager_{uprobes_return_address_manager},
         current_maps_{initial_maps},
-        unwinder_{unwinder} {
+        unwinder_{unwinder},
+        leaf_function_call_manager_{leaf_function_call_manager} {
     CHECK(function_call_manager_ != nullptr);
     CHECK(return_address_manager_ != nullptr);
     CHECK(current_maps_ != nullptr);
     CHECK(unwinder_ != nullptr);
+    CHECK(leaf_function_call_manager_ != nullptr);
   }
 
   UprobesUnwindingVisitor(const UprobesUnwindingVisitor&) = delete;
@@ -85,6 +89,7 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   UprobesReturnAddressManager* return_address_manager_;
   LibunwindstackMaps* current_maps_;
   LibunwindstackUnwinder* unwinder_;
+  LeafFunctionCallManager* leaf_function_call_manager_;
 
   TracerListener* listener_ = nullptr;
 
