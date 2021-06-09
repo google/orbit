@@ -45,7 +45,7 @@ const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
 
 std::string ModulesDataView::GetValue(int row, int col) {
   const ModuleData* module = GetModule(row);
-  const ModuleInMemory* memory_space = module_memory_.at(module);
+  const ModuleInMemory& memory_space = module_memory_.at(module);
 
   switch (col) {
     case kColumnName:
@@ -53,7 +53,7 @@ std::string ModulesDataView::GetValue(int row, int col) {
     case kColumnPath:
       return module->file_path();
     case kColumnAddressRange:
-      return memory_space->FormattedAddressRange();
+      return memory_space.FormattedAddressRange();
     case kColumnFileSize:
       return GetPrettySize(module->file_size());
     case kColumnLoaded:
@@ -68,10 +68,10 @@ std::string ModulesDataView::GetValue(int row, int col) {
     return orbit_core::Compare(modules_[a]->Member, modules_[b]->Member, ascending); \
   }
 
-#define ORBIT_MODULE_SPACE_SORT(Member)                                            \
-  [&](int a, int b) {                                                              \
-    return orbit_core::Compare(module_memory_.at(modules_[a])->Member,             \
-                               module_memory_.at(modules_[b])->Member, ascending); \
+#define ORBIT_MODULE_SPACE_SORT(Member)                                           \
+  [&](int a, int b) {                                                             \
+    return orbit_core::Compare(module_memory_.at(modules_[a]).Member,             \
+                               module_memory_.at(modules_[b]).Member, ascending); \
   }
 
 void ModulesDataView::DoSort() {
@@ -174,8 +174,8 @@ void ModulesDataView::DoFilter() {
 
   for (size_t i = 0; i < modules_.size(); ++i) {
     const ModuleData* module = modules_[i];
-    const ModuleInMemory* memory_space = module_memory_.at(module);
-    std::string module_string = absl::StrFormat("%s %s", memory_space->FormattedAddressRange(),
+    const ModuleInMemory& memory_space = module_memory_.at(module);
+    std::string module_string = absl::StrFormat("%s %s", memory_space.FormattedAddressRange(),
                                                 absl::AsciiStrToLower(module->file_path()));
 
     bool match = true;
@@ -203,7 +203,7 @@ void ModulesDataView::UpdateModules(const ProcessData* process) {
     ModuleData* module =
         app_->GetMutableModuleByPathAndBuildId(module_path, module_in_memory.build_id());
     modules_.push_back(module);
-    module_memory_[module] = &module_in_memory;
+    module_memory_.insert_or_assign(module, module_in_memory);
   }
 
   indices_.resize(modules_.size());

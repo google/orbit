@@ -48,8 +48,7 @@ class ModulesDataView : public DataView {
   }
 
   std::vector<orbit_client_data::ModuleData*> modules_;
-  absl::flat_hash_map<const orbit_client_data::ModuleData*,
-                      const orbit_client_data::ModuleInMemory*>
+  absl::flat_hash_map<const orbit_client_data::ModuleData*, orbit_client_data::ModuleInMemory>
       module_memory_;
 
   enum ColumnIndex {
