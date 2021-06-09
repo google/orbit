@@ -3,6 +3,8 @@
 // found in the LICENSE file.
 
 #include <absl/strings/ascii.h>
+#include <gmock/gmock-matchers.h>
+#include <gmock/gmock-more-matchers.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -11,7 +13,10 @@
 #include <string>
 
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/File.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/TemporaryFile.h"
+#include "OrbitBase/TestUtils.h"
 #include "Path.h"
 #include "Symbols/SymbolHelper.h"
 #include "symbol.pb.h"
@@ -21,6 +26,94 @@ using orbit_symbols::SymbolHelper;
 namespace fs = std::filesystem;
 
 static const std::filesystem::path testdata_directory = orbit_base::GetExecutableDir() / "testdata";
+
+TEST(ReadSymbolsFile, Empty) {
+  auto temp_file_or_error = orbit_base::TemporaryFile::Create();
+  ASSERT_THAT(temp_file_or_error, orbit_base::HasNoError());
+
+  std::vector<fs::path> paths =
+      orbit_symbols::ReadSymbolsFile(temp_file_or_error.value().file_path());
+
+  EXPECT_THAT(paths, testing::IsEmpty());
+}
+
+TEST(ReadSymbolsFile, EmptyWithComments) {
+  auto temp_file_or_error = orbit_base::TemporaryFile::Create();
+  ASSERT_THAT(temp_file_or_error, orbit_base::HasNoError());
+
+  ASSERT_THAT(
+      orbit_base::WriteFully(temp_file_or_error.value().fd(),
+                             "// C:\\Users\\username - Looks like a path but is a comment.\n"
+                             "\t// A comment with a sneaky whitespace at the beginning.\n"
+                             "\n"),  // Empty line as well
+      orbit_base::HasNoError());
+
+  std::vector<fs::path> paths =
+      orbit_symbols::ReadSymbolsFile(temp_file_or_error.value().file_path());
+
+  EXPECT_THAT(paths, testing::IsEmpty());
+}
+
+TEST(ReadSymbolsFile, OnePath) {
+  auto temp_file_or_error = orbit_base::TemporaryFile::Create();
+  ASSERT_THAT(temp_file_or_error, orbit_base::HasNoError());
+
+  ASSERT_THAT(orbit_base::WriteFully(temp_file_or_error.value().fd(),
+                                     orbit_base::GetExecutableDir().string()),
+              orbit_base::HasNoError());
+
+  std::vector<fs::path> paths =
+      orbit_symbols::ReadSymbolsFile(temp_file_or_error.value().file_path());
+
+  EXPECT_THAT(paths, testing::ElementsAre(orbit_base::GetExecutableDir()));
+}
+
+TEST(ReadSymbolsFile, TwoPaths) {
+  auto temp_file_or_error = orbit_base::TemporaryFile::Create();
+  ASSERT_THAT(temp_file_or_error, orbit_base::HasNoError());
+
+  ASSERT_THAT(orbit_base::WriteFully(temp_file_or_error.value().fd(),
+                                     orbit_base::GetExecutableDir().string() + '\n'),
+              orbit_base::HasNoError());
+  ASSERT_THAT(
+      orbit_base::WriteFully(temp_file_or_error.value().fd(), testdata_directory.string() + '\n'),
+      orbit_base::HasNoError());
+
+  std::vector<fs::path> paths =
+      orbit_symbols::ReadSymbolsFile(temp_file_or_error.value().file_path());
+
+  EXPECT_THAT(paths, testing::ElementsAre(orbit_base::GetExecutableDir(), testdata_directory));
+}
+
+TEST(ReadSymbolsFile, OnePathInQuotes) {
+  auto temp_file_or_error = orbit_base::TemporaryFile::Create();
+  ASSERT_THAT(temp_file_or_error, orbit_base::HasNoError());
+
+  ASSERT_THAT(
+      orbit_base::WriteFully(temp_file_or_error.value().fd(),
+                             absl::StrFormat("\"%s\"\n", orbit_base::GetExecutableDir().string())),
+      orbit_base::HasNoError());
+
+  std::vector<fs::path> paths =
+      orbit_symbols::ReadSymbolsFile(temp_file_or_error.value().file_path());
+
+  EXPECT_THAT(paths, testing::ElementsAre(orbit_base::GetExecutableDir()));
+}
+
+TEST(ReadSymbolsFile, OnePathTrailingWhitespace) {
+  auto temp_file_or_error = orbit_base::TemporaryFile::Create();
+  ASSERT_THAT(temp_file_or_error, orbit_base::HasNoError());
+
+  ASSERT_THAT(
+      orbit_base::WriteFully(temp_file_or_error.value().fd(),
+                             absl::StrFormat("%s \t\n", orbit_base::GetExecutableDir().string())),
+      orbit_base::HasNoError());
+
+  std::vector<fs::path> paths =
+      orbit_symbols::ReadSymbolsFile(temp_file_or_error.value().file_path());
+
+  EXPECT_THAT(paths, testing::ElementsAre(orbit_base::GetExecutableDir()));
+}
 
 TEST(SymbolHelper, FindSymbolsWithSymbolsPathFile) {
   SymbolHelper symbol_helper({testdata_directory}, "", {});
