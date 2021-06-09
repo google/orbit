@@ -723,9 +723,9 @@ TEST_F(UprobesUnwindingVisitorTest,
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(1).WillRepeatedly(Return(true));
 
   auto fake_patch_caller_of_leaf_function = [](CallchainSamplePerfEvent* event,
-                                            LibunwindstackMaps* /*maps*/,
-                                            orbit_linux_tracing::LibunwindstackUnwinder *
-                                            /*unwinder*/) -> Callstack::CallstackType {
+                                               LibunwindstackMaps* /*maps*/,
+                                               orbit_linux_tracing::LibunwindstackUnwinder *
+                                               /*unwinder*/) -> Callstack::CallstackType {
     CHECK(event != nullptr);
     std::vector<uint64_t> patched_callchain;
     EXPECT_THAT(event->ips, ElementsAre(kKernelAddress, kTargetAddress1, kTargetAddress3 + 1));
