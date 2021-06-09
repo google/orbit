@@ -2552,6 +2552,7 @@ void OrbitApp::CaptureMetricProcessApiTimer(const orbit_client_protos::TimerInfo
 void OrbitApp::TrySaveUserDefinedCaptureInfo() {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   CHECK(HasCaptureData());
+  if (!absl::GetFlag(FLAGS_enable_capture_autosave)) return;
   if (IsCapturing()) {
     // We are going to save it at the end of capture anyways.
     return;
