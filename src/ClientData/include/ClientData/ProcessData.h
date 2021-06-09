@@ -73,9 +73,16 @@ class ProcessData final {
 
   [[nodiscard]] ErrorMessageOr<ModuleInMemory> FindModuleByAddress(uint64_t absolute_address) const;
 
+  // This function is deprecated since it relies on the fact that only one instance
+  // of module is loaded in the process which is not always true.
   std::optional<uint64_t> GetModuleBaseAddress(const std::string& module_path) const;
+
+  // This function is deprecated since it relies on the fact that only one instance
+  // of module is loaded in the process which is not always true.
   absl::node_hash_map<std::string, ModuleInMemory> GetMemoryMapCopy() const;
 
+  // This function is deprecated since it relies on the fact that only one instance
+  // of module is loaded in the process which is not always true.
   [[nodiscard]] std::optional<ModuleInMemory> FindModuleByPath(
       const std::string& module_path) const;
 
@@ -91,7 +98,7 @@ class ProcessData final {
 
   // This is a map from module_path to the space in memory where that module is loaded
   absl::node_hash_map<std::string, ModuleInMemory> module_memory_map_;
-  std::map<uint64_t, std::string> start_addresses_;
+  std::map<uint64_t, ModuleInMemory> start_address_to_module_in_memory_;
 };
 
 }  // namespace orbit_client_data

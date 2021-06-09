@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <absl/container/flat_hash_map.h>
 #include <absl/strings/ascii.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -16,9 +15,12 @@
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/TestUtils.h"
 #include "module.pb.h"
 #include "process.pb.h"
 
+using orbit_base::HasError;
+using orbit_base::HasNoError;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
 
@@ -338,6 +340,64 @@ TEST(ProcessData, FindModuleByAddress) {
                 testing::HasSubstr("unable to find module for address"));
     EXPECT_THAT(absl::AsciiStrToLower(result.error().message()),
                 testing::HasSubstr("no module loaded at this address"));
+  }
+}
+
+TEST(ProcessData, RemapModule) {
+  constexpr const char* kProcessName = "Test Name";
+  constexpr const char* kModulePath = "test/file/path";
+  constexpr const char* kBuildId = "42";
+  constexpr uint64_t kStartAddress = 100;
+  constexpr uint64_t kEndAddress = 200;
+
+  constexpr uint64_t kNewStartAddress = 300;
+  constexpr uint64_t kNewEndAddress = 400;
+
+  ProcessInfo info;
+  info.set_name(kProcessName);
+  ProcessData process(info);
+
+  EXPECT_THAT(process.FindModuleByAddress(0), HasError("Unable to find module for address"));
+
+  ModuleInfo module_info;
+  module_info.set_file_path(kModulePath);
+  module_info.set_build_id(kBuildId);
+  module_info.set_address_start(kStartAddress);
+  module_info.set_address_end(kEndAddress);
+
+  process.UpdateModuleInfos({module_info});
+
+  {
+    const auto result = process.FindModuleByAddress(kStartAddress);
+    ASSERT_THAT(result, HasNoError());
+    EXPECT_EQ(result.value().file_path(), kModulePath);
+    EXPECT_EQ(result.value().start(), kStartAddress);
+    EXPECT_EQ(result.value().end(), kEndAddress);
+    EXPECT_EQ(result.value().build_id(), kBuildId);
+  }
+
+  module_info.set_address_start(kNewStartAddress);
+  module_info.set_address_end(kNewEndAddress);
+  process.AddOrUpdateModuleInfo(module_info);
+
+  {
+    // old start address is still there and has correct data
+    const auto result = process.FindModuleByAddress(kStartAddress);
+    ASSERT_THAT(result, HasNoError());
+    EXPECT_EQ(result.value().file_path(), kModulePath);
+    EXPECT_EQ(result.value().start(), kStartAddress);
+    EXPECT_EQ(result.value().end(), kEndAddress);
+    EXPECT_EQ(result.value().build_id(), kBuildId);
+  }
+
+  {
+    // new start address is also available
+    const auto result = process.FindModuleByAddress(kNewStartAddress);
+    ASSERT_THAT(result, HasNoError());
+    EXPECT_EQ(result.value().file_path(), kModulePath);
+    EXPECT_EQ(result.value().start(), kNewStartAddress);
+    EXPECT_EQ(result.value().end(), kNewEndAddress);
+    EXPECT_EQ(result.value().build_id(), kBuildId);
   }
 }
 
