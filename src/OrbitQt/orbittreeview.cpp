@@ -188,8 +188,6 @@ void OrbitTreeView::SetGlWidget(OrbitGLWidget* gl_widget) {
   model_->GetDataView()->SetGlCanvas(gl_widget->GetCanvas());
 }
 
-QMenu* GContextMenu;
-
 void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
   QModelIndex index = indexAt(pos);
   if (index.isValid()) {
@@ -206,7 +204,6 @@ void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
         model_->GetDataView()->GetContextMenu(clicked_index, selected_indices);
     if (!menu.empty()) {
       QMenu context_menu(tr("ContextMenu"), this);
-      GContextMenu = &context_menu;
       std::vector<std::unique_ptr<QAction>> actions;
 
       for (size_t i = 0; i < menu.size(); ++i) {
@@ -217,7 +214,6 @@ void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
       }
 
       context_menu.exec(mapToGlobal(pos));
-      GContextMenu = nullptr;
     }
   }
 }

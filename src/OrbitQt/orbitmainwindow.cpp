@@ -132,8 +132,6 @@ using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
 
 using orbit_qt::ServiceDeployManager;
 
-extern QMenu* GContextMenu;
-
 namespace {
 const QString kLightGrayColor = "rgb(117, 117, 117)";
 const QString kMediumGrayColor = "rgb(68, 68, 68)";
