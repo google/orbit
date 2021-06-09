@@ -82,7 +82,7 @@ void Dialog::SetAnnotatingContent(
   ui_->viewer->SetAnnotatingContent(annotating_lines);
 }
 
-void Dialog::SetTopBarTitle(const QString& title) { ui_->viewer->SetTopBarTile(title); }
+void Dialog::SetTopBarTitle(const QString& title) { ui_->viewer->SetTopBarTitle(title); }
 const QString& Dialog::GetTopBarTitle() const { return ui_->viewer->GetTopBarTitle(); }
 
 void Dialog::SetStatusMessage(const QString& message, const std::optional<QString>& button_text) {
