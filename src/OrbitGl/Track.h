@@ -34,7 +34,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
     kTimerTrack,
     kThreadTrack,
     kFrameTrack,
-    kGraphTrack,
+    kVariableTrack,
     kGpuTrack,
     kSchedulerTrack,
     kAsyncTrack,

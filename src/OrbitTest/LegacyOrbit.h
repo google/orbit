@@ -189,7 +189,7 @@
 //
 //   ORBIT_UINT64("Live Allocations", MemManager::GetNumLiveAllocs());
 // }
-// Result: Given that instances have unique names, as many graph tracks as there are unique
+// Result: Given that instances have unique names, as many variable tracks as there are unique
 //         instances will be created and they will graph their individual instance health over time.
 //         A single "Live Allocations" track will be created and will graph the the result of
 //         "MemManager::GetNumLiveAllocs()" over time.

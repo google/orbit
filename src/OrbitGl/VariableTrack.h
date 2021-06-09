@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_GRAPH_TRACK_H_
-#define ORBIT_GL_GRAPH_TRACK_H_
+#ifndef ORBIT_GL_VARIABLE_TRACK_H_
+#define ORBIT_GL_VARIABLE_TRACK_H_
 
 #include <stdint.h>
 
@@ -22,14 +22,14 @@
 
 class TimeGraph;
 
-class GraphTrack : public Track {
+class VariableTrack : public Track {
  public:
-  explicit GraphTrack(CaptureViewElement* parent, TimeGraph* time_graph,
-                      orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string name,
-                      const orbit_client_model::CaptureData* capture_data,
-                      uint32_t indentation_level = 0);
+  explicit VariableTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+                         orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string name,
+                         const orbit_client_model::CaptureData* capture_data,
+                         uint32_t indentation_level = 0);
 
-  [[nodiscard]] Type GetType() const override { return Type::kGraphTrack; }
+  [[nodiscard]] Type GetType() const override { return Type::kVariableTrack; }
   void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
             PickingMode picking_mode, float z_offset = 0) override;
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
@@ -64,4 +64,4 @@ class GraphTrack : public Track {
   std::string label_unit_;
 };
 
-#endif  // ORBIT_GL_GRAPH_TRACK_H_
+#endif  // ORBIT_GL_VARIABLE_TRACK_H_

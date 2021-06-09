@@ -12,7 +12,7 @@ namespace orbit_gl {
 
 void MemoryTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
                        uint64_t current_mouse_time_ns, PickingMode picking_mode, float z_offset) {
-  GraphTrack::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
+  VariableTrack::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
 
   if (values_.empty() || picking_mode != PickingMode::kNone) return;
 
