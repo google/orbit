@@ -157,6 +157,7 @@ class OrbitApp final : public DataViewFactory,
   void OnModuleUpdate(uint64_t timestamp_ns, orbit_grpc_protos::ModuleInfo module_info) override;
   void OnModulesSnapshot(uint64_t timestamp_ns,
                          std::vector<orbit_grpc_protos::ModuleInfo> module_infos) override;
+  void OnMetadataEvent(const orbit_grpc_protos::MetadataEvent& metadata_event) override;
 
   enum class SystemMemoryUsageEncodingIndex {
     kTotalKb,

@@ -33,7 +33,7 @@ namespace {
 ErrorMessageOr<absl::flat_hash_map<std::string, ModuleInfo>> GetModulesByPathForPid(int32_t pid) {
   OUTCOME_TRY(module_infos, orbit_object_utils::ReadModules(pid));
   absl::flat_hash_map<std::string, ModuleInfo> result;
-  for (const ModuleInfo& module_info : module_infos) {
+  for (ModuleInfo& module_info : module_infos) {
     result.emplace(module_info.file_path(), std::move(module_info));
   }
   return result;
@@ -74,7 +74,7 @@ ErrorMessageOr<std::string> GetLibOrbitPath() {
 
 ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options, bool enabled) {
   SCOPED_TIMED_LOG("%s Api in tracee", enabled ? "Enabling" : "Disabling");
-  if (capture_options.api_functions().size() == 0) {
+  if (capture_options.api_functions().empty()) {
     return ErrorMessage("No api table to initialize.");
   }
 

@@ -86,6 +86,8 @@ class MockCaptureListener : public CaptureListener {
   MOCK_METHOD(void, OnUniqueTracepointInfo, (uint64_t /*key*/, TracepointInfo /*tracepoint_info*/),
               (override));
   MOCK_METHOD(void, OnTracepointEvent, (TracepointEventInfo), (override));
+  MOCK_METHOD(void, OnMetadataEvent, (const orbit_grpc_protos::MetadataEvent& /*metadata_event*/),
+              (override));
 };
 
 TEST(CaptureDeserializer, LoadFileNotExists) {

@@ -64,7 +64,6 @@ class CaptureEventProcessorForListener : public CaptureEventProcessor {
   void ProcessInternedString(orbit_grpc_protos::InternedString interned_string);
   void ProcessModuleUpdate(orbit_grpc_protos::ModuleUpdateEvent module_update);
   void ProcessModulesSnapshot(const orbit_grpc_protos::ModulesSnapshot& modules_snapshot);
-
   void ProcessGpuJob(const orbit_grpc_protos::GpuJob& gpu_job);
   void ProcessThreadName(const orbit_grpc_protos::ThreadName& thread_name);
   void ProcessThreadNamesSnapshot(
@@ -76,6 +75,7 @@ class CaptureEventProcessorForListener : public CaptureEventProcessor {
   void ProcessTracepointEvent(const orbit_grpc_protos::TracepointEvent& tracepoint_event);
   void ProcessGpuQueueSubmission(const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission);
   void ProcessSystemMemoryUsage(const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage);
+  void ProcessMetadataEvent(const orbit_grpc_protos::MetadataEvent& metadata_event);
 
   std::optional<std::filesystem::path> file_path_;
   absl::flat_hash_set<uint64_t> frame_track_function_ids_;
@@ -158,6 +158,9 @@ void CaptureEventProcessorForListener::ProcessEvent(const ClientCaptureEvent& ev
       break;
     case ClientCaptureEvent::kApiEvent:
       api_event_processor_.ProcessApiEvent(event.api_event());
+      break;
+    case ClientCaptureEvent::kMetadataEvent:
+      ProcessMetadataEvent(event.metadata_event());
       break;
     case ClientCaptureEvent::kCaptureFinished:
       ProcessCaptureFinished(event.capture_finished());
@@ -499,6 +502,11 @@ void CaptureEventProcessorForListener::ProcessTracepointEvent(
   gpu_queue_submission_processor_.UpdateBeginCaptureTime(tracepoint_event.timestamp_ns());
 
   capture_listener_->OnTracepointEvent(std::move(tracepoint_event_info));
+}
+
+void orbit_capture_client::CaptureEventProcessorForListener::ProcessMetadataEvent(
+    const orbit_grpc_protos::MetadataEvent& metadata_event) {
+  capture_listener_->OnMetadataEvent(metadata_event);
 }
 
 uint64_t CaptureEventProcessorForListener::GetStringHashAndSendToListenerIfNecessary(

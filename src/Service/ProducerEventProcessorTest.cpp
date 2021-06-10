@@ -34,6 +34,7 @@ using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointInfo;
+using orbit_grpc_protos::MetadataEvent;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ModulesSnapshot;
 using orbit_grpc_protos::ModuleUpdateEvent;
@@ -1584,6 +1585,29 @@ TEST(ProducerEventProcessor, ThreadNamesSnapshot) {
   EXPECT_EQ(thread_name.tid(), kTid1);
   EXPECT_EQ(thread_name.name(), "Main Thread");
   EXPECT_EQ(thread_name.timestamp_ns(), kTimestampNs2);
+}
+
+TEST(ProducerEventProcessor, MetadataEvent) {
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+
+  ProducerCaptureEvent producer_capture_event;
+  MetadataEvent* metadata_event = producer_capture_event.mutable_metadata_event();
+  orbit_grpc_protos::InfoEvent* info_event = metadata_event->mutable_info_event();
+  info_event->set_timestamp_ns(kTimestampNs1);
+  constexpr const char* kMessage = "message";
+  info_event->set_message(kMessage);
+
+  ClientCaptureEvent client_capture_event;
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+
+  producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
+
+  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kMetadataEvent);
+  const MetadataEvent& actual_metadata_event = client_capture_event.metadata_event();
+  ASSERT_EQ(actual_metadata_event.event_case(), MetadataEvent::kInfoEvent);
+  EXPECT_EQ(actual_metadata_event.info_event().timestamp_ns(), kTimestampNs1);
+  EXPECT_EQ(actual_metadata_event.info_event().message(), kMessage);
 }
 
 }  // namespace orbit_service
