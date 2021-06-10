@@ -37,6 +37,7 @@ using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::CaptureStarted;
+using orbit_grpc_protos::MetadataEvent;
 using orbit_grpc_protos::ProducerCaptureEvent;
 
 namespace {
@@ -233,6 +234,37 @@ static ProducerCaptureEvent CreateCaptureStartedEvent(const CaptureOptions& capt
   return event;
 }
 
+static ProducerCaptureEvent CreateClockResolutionEvent(uint64_t timestamp_ns,
+                                                       uint64_t resolution_ns) {
+  ProducerCaptureEvent event;
+  MetadataEvent* metadata_event = event.mutable_metadata_event();
+  orbit_grpc_protos::ClockResolutionEvent* clock_resolution_event =
+      metadata_event->mutable_clock_resolution_event();
+  clock_resolution_event->set_timestamp_ns(timestamp_ns);
+  clock_resolution_event->set_clock_resolution_ns(resolution_ns);
+  return event;
+}
+
+static ProducerCaptureEvent CreateErrorEnablingOrbitApiEvent(uint64_t timestamp_ns,
+                                                             std::string message) {
+  ProducerCaptureEvent event;
+  MetadataEvent* metadata_event = event.mutable_metadata_event();
+  orbit_grpc_protos::ErrorEnablingOrbitApiEvent* error_enabling_orbit_api_event =
+      metadata_event->mutable_error_enabling_orbit_api_event();
+  error_enabling_orbit_api_event->set_timestamp_ns(timestamp_ns);
+  error_enabling_orbit_api_event->set_message(std::move(message));
+  return event;
+}
+
+static ProducerCaptureEvent CreateWarningEvent(uint64_t timestamp_ns, std::string message) {
+  ProducerCaptureEvent event;
+  MetadataEvent* metadata_event = event.mutable_metadata_event();
+  orbit_grpc_protos::WarningEvent* warning_event = metadata_event->mutable_warning_event();
+  warning_event->set_timestamp_ns(timestamp_ns);
+  warning_event->set_message(std::move(message));
+  return event;
+}
+
 static ClientCaptureEvent CreateCaptureFinishedEvent() {
   ClientCaptureEvent event;
   CaptureFinished* capture_finished = event.mutable_capture_finished();
@@ -241,7 +273,7 @@ static ClientCaptureEvent CreateCaptureFinishedEvent() {
 }
 
 grpc::Status CaptureServiceImpl::Capture(
-    grpc::ServerContext*,
+    grpc::ServerContext* /*context*/,
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   pthread_setname_np(pthread_self(), "CSImpl::Capture");
   if (is_capturing) {
@@ -265,15 +297,31 @@ grpc::Status CaptureServiceImpl::Capture(
   const CaptureOptions& capture_options = request.capture_options();
 
   // Enable Orbit API in tracee.
+  std::optional<std::string> error_enabling_orbit_api;
   if (capture_options.enable_api()) {
     auto result = orbit_api::EnableApiInTracee(capture_options);
-    if (result.has_error()) ERROR("Enabling Orbit Api: %s", result.error().message());
+    if (result.has_error()) {
+      ERROR("Enabling Orbit Api: %s", result.error().message());
+      error_enabling_orbit_api =
+          absl::StrFormat("Could not enable Orbit API: %s", result.error().message());
+    }
   }
 
   uint64_t capture_start_timestamp_ns = orbit_base::CaptureTimestampNs();
   producer_event_processor->ProcessEvent(
       orbit_grpc_protos::kRootProducerId,
       CreateCaptureStartedEvent(capture_options, capture_start_timestamp_ns));
+
+  producer_event_processor->ProcessEvent(
+      orbit_grpc_protos::kRootProducerId,
+      CreateClockResolutionEvent(capture_start_timestamp_ns, clock_resolution_ns_));
+
+  if (error_enabling_orbit_api.has_value()) {
+    producer_event_processor->ProcessEvent(
+        orbit_grpc_protos::kRootProducerId,
+        CreateErrorEnablingOrbitApiEvent(capture_start_timestamp_ns,
+                                         std::move(error_enabling_orbit_api.value())));
+  }
 
   tracing_handler.Start(capture_options);
 
@@ -292,7 +340,14 @@ grpc::Status CaptureServiceImpl::Capture(
   // Disable Orbit API in tracee.
   if (capture_options.enable_api()) {
     auto result = orbit_api::DisableApiInTracee(capture_options);
-    if (result.has_error()) ERROR("Disabling Orbit Api: %s", result.error().message());
+    if (result.has_error()) {
+      ERROR("Disabling Orbit Api: %s", result.error().message());
+      producer_event_processor->ProcessEvent(
+          orbit_grpc_protos::kRootProducerId,
+          CreateWarningEvent(
+              orbit_base::CaptureTimestampNs(),
+              absl::StrFormat("Could not disable Orbit API: %s", result.error().message())));
+    }
   }
 
   StopInternalProducersAndCaptureStartStopListenersInParallel(
@@ -314,6 +369,16 @@ void CaptureServiceImpl::AddCaptureStartStopListener(CaptureStartStopListener* l
 void CaptureServiceImpl::RemoveCaptureStartStopListener(CaptureStartStopListener* listener) {
   bool was_removed = capture_start_stop_listeners_.erase(listener) > 0;
   CHECK(was_removed);
+}
+
+void CaptureServiceImpl::EstimateAndLogClockResolution() {
+  // We expect the value to be small, ~35 nanoseconds.
+  clock_resolution_ns_ = orbit_base::EstimateClockResolution();
+  if (clock_resolution_ns_ > 0) {
+    LOG("Clock resolution: %d (ns)", clock_resolution_ns_);
+  } else {
+    ERROR("Failed to estimate clock resolution");
+  }
 }
 
 }  // namespace orbit_service

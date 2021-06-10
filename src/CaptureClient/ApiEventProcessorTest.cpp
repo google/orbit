@@ -49,6 +49,7 @@ class EmptyCaptureListener : public CaptureListener {
                               orbit_grpc_protos::TracepointInfo /*tracepoint_info*/) override {}
   void OnTracepointEvent(
       orbit_client_protos::TracepointEventInfo /*tracepoint_event_info*/) override {}
+  void OnMetadataEvent(const orbit_grpc_protos::MetadataEvent& /*metadata_event*/) override {}
 };
 
 // Test CaptureListener used to validate TimerInfo data produced by api events.

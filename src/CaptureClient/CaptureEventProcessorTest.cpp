@@ -46,6 +46,7 @@ using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointInfo;
 using orbit_grpc_protos::IntrospectionScope;
+using orbit_grpc_protos::MetadataEvent;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::SystemMemoryUsage;
@@ -84,6 +85,8 @@ class MockCaptureListener : public CaptureListener {
               (override));
   MOCK_METHOD(void, OnModulesSnapshot,
               (uint64_t /*timestamp_ns*/, std::vector<ModuleInfo> /*module_infos*/), (override));
+  MOCK_METHOD(void, OnMetadataEvent, (const orbit_grpc_protos::MetadataEvent& /*metadata_event*/),
+              (override));
 };
 
 }  // namespace
@@ -1052,6 +1055,29 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
             dead_thread_state_slice->end_timestamp_ns());
   EXPECT_EQ(actual_dead_thread_state_slice_info.tid(), dead_thread_state_slice->tid());
   EXPECT_EQ(actual_dead_thread_state_slice_info.thread_state(), ThreadStateSliceInfo::kDead);
+}
+
+TEST(CaptureEventProcessor, CanHandleMetadataEvents) {
+  MockCaptureListener listener;
+  auto event_processor =
+      CaptureEventProcessor::CreateForCaptureListener(&listener, std::filesystem::path{}, {});
+
+  ClientCaptureEvent event;
+  MetadataEvent* metadata_event = event.mutable_metadata_event();
+  orbit_grpc_protos::WarningEvent* warning_event = metadata_event->mutable_warning_event();
+  constexpr uint64_t kTimestampNs = 100;
+  warning_event->set_timestamp_ns(kTimestampNs);
+  constexpr const char* kMessage = "message";
+  warning_event->set_message(kMessage);
+
+  MetadataEvent actual_metadata_event;
+  EXPECT_CALL(listener, OnMetadataEvent).Times(1).WillOnce(SaveArg<0>(&actual_metadata_event));
+
+  event_processor->ProcessEvent(event);
+
+  ASSERT_EQ(actual_metadata_event.event_case(), MetadataEvent::kWarningEvent);
+  EXPECT_EQ(actual_metadata_event.warning_event().timestamp_ns(), kTimestampNs);
+  EXPECT_EQ(actual_metadata_event.warning_event().message(), kMessage);
 }
 
 TEST(CaptureEventProcessor, CanHandleMultipleEvents) {

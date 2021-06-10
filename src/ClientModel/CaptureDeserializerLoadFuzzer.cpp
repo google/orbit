@@ -47,6 +47,7 @@ class MockCaptureListener : public orbit_capture_client::CaptureListener {
                       orbit_grpc_protos::ModuleInfo /*module_info*/) override {}
   void OnModulesSnapshot(uint64_t /*timestamp_ns*/,
                          std::vector<orbit_grpc_protos::ModuleInfo> /*module_infos*/) override {}
+  void OnMetadataEvent(const orbit_grpc_protos::MetadataEvent& /*metadata_event*/) override {}
 };
 
 void WriteMessage(const google::protobuf::Message* message,
