@@ -13,23 +13,28 @@ target_sources(
   CaptureFileInfo
   PUBLIC  include/CaptureFileInfo/CaptureFileInfo.h
           include/CaptureFileInfo/ItemModel.h
-          include/CaptureFileInfo/Manager.h)
+          include/CaptureFileInfo/Manager.h
+          include/CaptureFileInfo/LoadCaptureWidget.h)
+
+target_include_directories(CaptureFileInfo PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
 target_sources(
   CaptureFileInfo
   PRIVATE CaptureFileInfo.cpp
           ItemModel.cpp
-          Manager.cpp)
+          Manager.cpp
+          LoadCaptureWidget.cpp
+          LoadCaptureWidget.ui)
 
-target_include_directories(CaptureFileInfo PUBLIC include/)
 
 target_link_libraries(
   CaptureFileInfo
   PUBLIC  OrbitBase
           OrbitCore
-          Qt5::Core)
+          Qt5::Widgets)
 
 set_target_properties(CaptureFileInfo PROPERTIES AUTOMOC ON)
+set_target_properties(CaptureFileInfo PROPERTIES AUTOUIC ON)
 
 add_executable(CaptureFileInfoTests)
 
