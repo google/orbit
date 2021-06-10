@@ -13,16 +13,15 @@
 
 namespace orbit_code_report {
 
-SourceCodeReport::SourceCodeReport(
-    std::string_view source_file, const orbit_client_protos::FunctionInfo& function,
-    uint64_t absolute_address, orbit_object_utils::ElfFile* elf_file,
-    const orbit_client_data::PostProcessedSamplingData& sampling_data,
-    uint32_t total_samples_in_capture)
+SourceCodeReport::SourceCodeReport(std::string_view source_file,
+                                   const orbit_client_protos::FunctionInfo& function,
+                                   uint64_t absolute_address, orbit_object_utils::ElfFile* elf_file,
+                                   const orbit_client_data::ThreadSampleData& thread_sample_data,
+                                   uint32_t total_samples_in_capture)
     : total_samples_in_capture_(total_samples_in_capture) {
   for (size_t offset = 0; offset < function.size(); ++offset) {
-    const orbit_client_data::ThreadSampleData* summary = sampling_data.GetSummary();
-    const auto it = summary->sampled_address_to_count.find(absolute_address + offset);
-    if (it == summary->sampled_address_to_count.end()) continue;
+    const auto it = thread_sample_data.sampled_address_to_count.find(absolute_address + offset);
+    if (it == thread_sample_data.sampled_address_to_count.end()) continue;
 
     const uint32_t current_samples = it->second;
     if (current_samples == 0) continue;
