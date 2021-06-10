@@ -194,5 +194,7 @@ void ThreadPoolImpl::WorkerFunction() {
 std::shared_ptr<ThreadPool> ThreadPool::Create(size_t thread_pool_min_size,
                                                size_t thread_pool_max_size,
                                                absl::Duration thread_ttl) {
+  // The base class `Executor` uses `std::enable_shared_from_this` and requires `ThreadPool` to be
+  // created as a `shared_ptr`.
   return std::make_shared<ThreadPoolImpl>(thread_pool_min_size, thread_pool_max_size, thread_ttl);
 }
