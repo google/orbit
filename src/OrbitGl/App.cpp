@@ -35,6 +35,7 @@
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureFile/CaptureFile.h"
 #include "CaptureFile/CaptureFileHelpers.h"
+#include "CaptureFileInfo/Manager.h"
 #include "CaptureWindow.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/FunctionUtils.h"
@@ -282,6 +283,10 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
       [this, &initialization_complete, &mutex, &capture_started, file_path = std::move(file_path),
        frame_track_function_ids = std::move(frame_track_function_ids)]() mutable {
         ClearCapture();
+
+        if (file_path.has_value()) {
+          capture_file_info_manager_.AddOrTouchCaptureFile(file_path.value());
+        }
 
         // It is safe to do this write on the main thread, as the capture thread is suspended until
         // this task is completely executed.
@@ -1058,6 +1063,13 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
   });
 
   DoZoom = true;  // TODO: remove global, review logic
+
+  (void)load_future.ThenIfSuccess(main_thread_executor_,
+                                  [this, file_path](CaptureListener::CaptureOutcome outcome) {
+                                    if (outcome == CaptureOutcome::kComplete) {
+                                      capture_file_info_manager_.AddOrTouchCaptureFile(file_path);
+                                    }
+                                  });
 
   return load_future;
 }

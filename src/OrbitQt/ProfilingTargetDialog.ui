@@ -61,7 +61,7 @@
        <widget class="QFrame" name="frame">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
+          <horstretch>3</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
@@ -74,7 +74,7 @@
         <property name="lineWidth">
          <number>0</number>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0,0">
+        <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0,1">
          <property name="rightMargin">
           <number>0</number>
          </property>
@@ -132,80 +132,14 @@
           </widget>
          </item>
          <item>
-          <widget class="QFrame" name="captureFrame">
-           <property name="frameShape">
-            <enum>QFrame::StyledPanel</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Raised</enum>
-           </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_2">
-            <item>
-             <widget class="QRadioButton" name="loadCaptureRadioButton">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>23</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>12</pointsize>
-               </font>
-              </property>
-              <property name="accessibleName">
-               <string>LoadCapture</string>
-              </property>
-              <property name="text">
-               <string>Load a capture</string>
-              </property>
-              <property name="checked">
-               <bool>false</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_2">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>454</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QLabel" name="selectedFileLabel">
-              <property name="visible">
-               <bool>false</bool>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="selectFileButton">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="text">
-               <string>...</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
+          <widget class="orbit_capture_file_info::LoadCaptureWidget" name="loadCaptureWidget" native="true"/>
          </item>
         </layout>
        </widget>
        <widget class="QFrame" name="frame_4">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
+          <horstretch>2</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
@@ -388,6 +322,11 @@
    <class>orbit_qt::ConnectToStadiaWidget</class>
    <extends>QWidget</extends>
    <header>ConnectToStadiaWidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>orbit_capture_file_info::LoadCaptureWidget</class>
+   <extends>QWidget</extends>
+   <header>CaptureFileInfo/LoadCaptureWidget.h</header>
   </customwidget>
   <customwidget>
    <class>orbit_qt::TargetLabel</class>
