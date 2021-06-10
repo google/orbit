@@ -114,6 +114,8 @@ void TargetLabel::ChangeToLocalTarget(const QString& process_name, double cpu_us
   process_ = process_name;
   machine_ = kLocalhostName;
   SetProcessCpuUsageInPercent(cpu_usage);
+  ui_->targetLabel->setVisible(true);
+  ui_->fileLabel->setVisible(false);
 }
 
 bool TargetLabel::SetProcessCpuUsageInPercent(double cpu_usage) {
