@@ -280,7 +280,7 @@
        <property name="frameShadow">
         <enum>QFrame::Raised</enum>
        </property>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,0,0">
         <item>
          <spacer name="horizontalSpacer_3">
           <property name="orientation">
@@ -288,8 +288,8 @@
           </property>
           <property name="sizeHint" stdset="0">
            <size>
-            <width>1183</width>
-            <height>20</height>
+            <width>0</width>
+            <height>0</height>
            </size>
           </property>
          </spacer>
