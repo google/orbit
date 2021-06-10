@@ -46,7 +46,6 @@ class ProfilingTargetDialog : public QDialog {
 
   [[nodiscard]] std::optional<TargetConfiguration> Exec();
  private slots:
-  void SelectFile();
   void SetupStadiaProcessManager();
   void SetupLocalProcessManager();
   void TearDownProcessManager();
@@ -54,7 +53,6 @@ class ProfilingTargetDialog : public QDialog {
   void ConnectToLocal();
 
  signals:
-  void FileSelected();
   void ProcessSelected();
   void NoProcessSelected();
   void StadiaIsConnected();

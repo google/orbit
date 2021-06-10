@@ -30,6 +30,7 @@
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureFile/CaptureFile.h"
+#include "CaptureFileInfo/Manager.h"
 #include "CaptureWindow.h"
 #include "ClientData/CallstackTypes.h"
 #include "ClientData/ModuleData.h"
@@ -587,6 +588,8 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   // the capture thread. After the capture is finished its read by the main thread again. This is
   // similar to how capture_data is used.
   orbit_metrics_uploader::CaptureCompleteData metrics_capture_complete_data_;
+
+  orbit_capture_file_info::Manager capture_file_info_manager_{};
 };
 
 #endif  // ORBIT_GL_APP_H_
