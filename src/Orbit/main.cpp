@@ -340,7 +340,8 @@ int main(int argc, char* argv[]) {
   // Skip program name in positional_args[0].
   std::vector<std::string> capture_file_paths(positional_args.begin() + 1, positional_args.end());
 
-  orbit_base::InitLogFile(orbit_core::GetLogFilePath());
+  std::filesystem::path log_file{orbit_core::GetLogFilePath()};
+  orbit_base::InitLogFile(log_file);
   LOG("You are running Orbit Profiler version %s", orbit_core::GetVersion());
   LogCommandLine(argc, argv);
   ErrorMessageOr<void> remove_old_log_result =
@@ -385,7 +386,7 @@ int main(int argc, char* argv[]) {
   const std::string handler_path =
       QDir(QCoreApplication::applicationDirPath()).absoluteFilePath(handler_name).toStdString();
   const std::string crash_server_url = orbit_crash_handler::GetServerUrl();
-  const std::vector<std::string> attachments = {orbit_core::GetLogFilePath().string()};
+  const std::vector<std::string> attachments = {log_file.string()};
 
   crash_handler = std::make_unique<orbit_crash_handler::CrashHandler>(
       dump_path, handler_path, crash_server_url, attachments);
