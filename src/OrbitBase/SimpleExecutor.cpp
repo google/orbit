@@ -4,10 +4,13 @@
 
 #include "OrbitBase/SimpleExecutor.h"
 
+#include <absl/synchronization/mutex.h>
+
 #include <memory>
 
 namespace orbit_base {
 void SimpleExecutor::ScheduleImpl(std::unique_ptr<Action> action) {
+  absl::MutexLock lock{&mutex_};
   scheduled_tasks_.emplace_back(std::move(action));
 }
 

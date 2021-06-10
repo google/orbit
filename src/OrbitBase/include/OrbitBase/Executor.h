@@ -21,6 +21,7 @@ namespace orbit_base {
 // Check out these two for details.
 class Executor : public std::enable_shared_from_this<Executor> {
   // Schedules the action to be performed on the executor.
+  // Note for implementers: `ScheduleImpl` needs to be thread-safe!
   virtual void ScheduleImpl(std::unique_ptr<Action> action) = 0;
 
  public:
