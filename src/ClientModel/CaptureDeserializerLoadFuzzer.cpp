@@ -49,6 +49,13 @@ class MockCaptureListener : public orbit_capture_client::CaptureListener {
                          std::vector<orbit_grpc_protos::ModuleInfo> /*module_infos*/) override {}
 };
 
+void WriteMessage(const google::protobuf::Message* message,
+                  google::protobuf::io::CodedOutputStream* output) {
+  uint32_t message_size = message->ByteSizeLong();
+  output->WriteLittleEndian32(message_size);
+  message->SerializeToCodedStream(output);
+}
+
 }  // namespace
 
 DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& info) {
@@ -59,10 +66,10 @@ DEFINE_PROTO_FUZZER(const orbit_client_protos::CaptureDeserializerFuzzerInfo& in
     orbit_client_protos::CaptureHeader capture_header{};
     capture_header.set_version("1.59");
 
-    capture_serializer::WriteMessage(&capture_header, &coded_stream);
-    capture_serializer::WriteMessage(&info.capture_info(), &coded_stream);
+    WriteMessage(&capture_header, &coded_stream);
+    WriteMessage(&info.capture_info(), &coded_stream);
     for (const auto& timer : info.timers()) {
-      capture_serializer::WriteMessage(&timer, &coded_stream);
+      WriteMessage(&timer, &coded_stream);
     }
   }
 
