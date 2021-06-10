@@ -20,10 +20,8 @@ SourceCodeReport::SourceCodeReport(std::string_view source_file,
                                    uint32_t total_samples_in_capture)
     : total_samples_in_capture_(total_samples_in_capture) {
   for (size_t offset = 0; offset < function.size(); ++offset) {
-    const auto it = thread_sample_data.sampled_address_to_count.find(absolute_address + offset);
-    if (it == thread_sample_data.sampled_address_to_count.end()) continue;
-
-    const uint32_t current_samples = it->second;
+    const uint32_t current_samples =
+        thread_sample_data.GetCountForAddress(absolute_address + offset);
     if (current_samples == 0) continue;
 
     const auto maybe_current_line_info = elf_file->GetLineInfo(function.address() + offset);
