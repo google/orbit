@@ -41,6 +41,7 @@
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
+#include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/UserDefinedCaptureData.h"
 #include "ClientModel/CaptureDeserializer.h"
@@ -751,10 +752,13 @@ void OrbitApp::ShowSourceCode(const orbit_client_protos::FunctionInfo& function)
                     function.pretty_name(), module->file_path())};
               }
 
-              code_report = std::make_unique<orbit_code_report::SourceCodeReport>(
-                  line_info.source_file(), function, absolute_address.value(),
-                  elf_file.value().get(), sampling_data,
-                  GetCaptureData().GetCallstackData()->GetCallstackEventsCount());
+              const orbit_client_data::ThreadSampleData* summary = sampling_data.GetSummary();
+              if (summary != nullptr) {
+                code_report = std::make_unique<orbit_code_report::SourceCodeReport>(
+                    line_info.source_file(), function, absolute_address.value(),
+                    elf_file.value().get(), *summary,
+                    GetCaptureData().GetCallstackData()->GetCallstackEventsCount());
+              }
             }
 
             main_window_->ShowSourceCode(source_file_path, line_info.source_line(),
