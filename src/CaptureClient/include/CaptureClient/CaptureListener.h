@@ -43,6 +43,7 @@ class CaptureListener {
                                       orbit_grpc_protos::TracepointInfo tracepoint_info) = 0;
   virtual void OnTracepointEvent(
       orbit_client_protos::TracepointEventInfo tracepoint_event_info) = 0;
+  virtual void OnMetadataEvent(const orbit_grpc_protos::MetadataEvent& metadata_event) = 0;
 };
 
 }  // namespace orbit_capture_client

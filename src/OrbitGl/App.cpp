@@ -512,6 +512,67 @@ void OrbitApp::OnModulesSnapshot(uint64_t /*timestamp_ns*/, std::vector<ModuleIn
   main_thread_executor_->Schedule([this]() { FireRefreshCallbacks(DataViewType::kLiveFunctions); });
 }
 
+void OrbitApp::OnMetadataEvent(const orbit_grpc_protos::MetadataEvent& metadata_event) {
+  main_thread_executor_->Schedule([this, metadata_event]() {
+    switch (metadata_event.event_case()) {
+      case orbit_grpc_protos::MetadataEvent::kWarningEvent: {
+        main_window_->AppendToCaptureLog(
+            MainWindowInterface::CaptureLogSeverity::kWarning,
+            GetCaptureTimeAt(metadata_event.warning_event().timestamp_ns()),
+            metadata_event.warning_event().message());
+      } break;
+
+      case orbit_grpc_protos::MetadataEvent::kInfoEvent: {
+        main_window_->AppendToCaptureLog(
+            MainWindowInterface::CaptureLogSeverity::kInfo,
+            GetCaptureTimeAt(metadata_event.info_event().timestamp_ns()),
+            metadata_event.info_event().message());
+      } break;
+
+      case orbit_grpc_protos::MetadataEvent::kErrorEnablingOrbitApiEvent: {
+        main_window_->AppendToCaptureLog(
+            MainWindowInterface::CaptureLogSeverity::kSevereWarning,
+            GetCaptureTimeAt(metadata_event.error_enabling_orbit_api_event().timestamp_ns()),
+            metadata_event.error_enabling_orbit_api_event().message());
+        constexpr const char* kDontShowAgainErrorEnablingOrbitApiWarningKey =
+            "DontShowAgainErrorEnablingOrbitApiWarning";
+        main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
+            "Could not enable Orbit API", metadata_event.error_enabling_orbit_api_event().message(),
+            kDontShowAgainErrorEnablingOrbitApiWarningKey);
+      } break;
+
+      case orbit_grpc_protos::MetadataEvent::kClockResolutionEvent: {
+        constexpr uint64_t kClockResolutionWarningThresholdNs = 10 * 1000;
+        uint64_t timestamp_ns = metadata_event.clock_resolution_event().timestamp_ns();
+        const uint64_t clock_resolution_ns =
+            metadata_event.clock_resolution_event().clock_resolution_ns();
+        if (clock_resolution_ns == 0) {
+          main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
+                                           GetCaptureTimeAt(timestamp_ns),
+                                           "Failed to estimate clock resolution.");
+        } else if (clock_resolution_ns < kClockResolutionWarningThresholdNs) {
+          main_window_->AppendToCaptureLog(
+              MainWindowInterface::CaptureLogSeverity::kInfo, GetCaptureTimeAt(timestamp_ns),
+              absl::StrFormat("Clock resolution is %u ns.", clock_resolution_ns));
+        } else {
+          std::string message =
+              absl::StrFormat("Clock resolution is high (%u ns): some timings may be inaccurate.",
+                              clock_resolution_ns);
+          main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
+                                           GetCaptureTimeAt(timestamp_ns), message);
+          constexpr const char* kDontShowAgainHighClockResolutionWarningKey =
+              "DontShowAgainHighClockResolutionWarning";
+          main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
+              "High clock resolution", message, kDontShowAgainHighClockResolutionWarningKey);
+        }
+      } break;
+
+      case orbit_grpc_protos::MetadataEvent::EVENT_NOT_SET:
+        break;
+    }
+  });
+}
+
 void OrbitApp::OnValidateFramePointers(std::vector<const ModuleData*> modules_to_validate) {
   thread_pool_->Schedule([modules_to_validate = std::move(modules_to_validate), this] {
     frame_pointer_validator_client_->AnalyzeModules(modules_to_validate);

@@ -491,6 +491,8 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kApiEvent:
         UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kMetadataEvent:
+        UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::EVENT_NOT_SET:
         UNREACHABLE();
     }
