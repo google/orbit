@@ -290,10 +290,6 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   void SetSecureCopyCallback(SecureCopyCallback callback) {
     secure_copy_callback_ = std::move(callback);
   }
-  using ShowEmptyFrameTrackWarningCallback = std::function<void(std::string_view)>;
-  void SetShowEmptyFrameTrackWarningCallback(ShowEmptyFrameTrackWarningCallback callback) {
-    empty_frame_track_warning_callback_ = std::move(callback);
-  }
 
   void SetStatusListener(StatusListener* listener) { status_listener_ = listener; }
 
@@ -528,7 +524,6 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   SaveFileCallback save_file_callback_;
   ClipboardCallback clipboard_callback_;
   SecureCopyCallback secure_copy_callback_;
-  ShowEmptyFrameTrackWarningCallback empty_frame_track_warning_callback_;
   TimerSelectedCallback timer_selected_callback_;
 
   std::vector<DataView*> panels_;

@@ -108,6 +108,9 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   void AppendToCaptureLog(CaptureLogSeverity severity, std::string_view capture_time,
                           std::string_view message) override;
+  void ShowWarningWithDontShowAgainCheckboxIfNeeded(
+      std::string_view title, std::string_view text,
+      std::string_view dont_show_again_setting_key) override;
 
  protected:
   void closeEvent(QCloseEvent* event) override;
@@ -146,7 +149,6 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void on_actionServiceStackOverflow_triggered();
 
   void OnTimerSelectionChanged(const orbit_client_protos::TimerInfo* timer_info);
-  void ShowEmptyFrameTrackWarningIfNeeded(std::string_view function);
 
  private:
   void StartMainTimer();
