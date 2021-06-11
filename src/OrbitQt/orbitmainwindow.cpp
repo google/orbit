@@ -199,12 +199,12 @@ void OrbitMainWindow::SetupMainWindow() {
   app_->SetCaptureStartedCallback([this](const std::optional<std::filesystem::path>& file_path) {
     UpdateCaptureStateDependentWidgets();
     ClearCaptureFilters();
-    setWindowTitle({});
 
     // Only set it if this is not empty, we do not want to reset the label when loading from legacy
     // file format.
     if (file_path.has_value()) {
       target_label_->SetFile(file_path.value());
+      setWindowTitle(QString::fromStdString(file_path.value().string()));
     }
   });
 
