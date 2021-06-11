@@ -1,9 +1,9 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_PRESET_DATA_VIEW_H_
-#define ORBIT_GL_PRESET_DATA_VIEW_H_
+#ifndef DATA_VIEWS_PRESET_DATA_VIEW_H_
+#define DATA_VIEWS_PRESET_DATA_VIEW_H_
 
 #include <stdint.h>
 
@@ -18,11 +18,10 @@
 #include "PresetFile/PresetFile.h"
 #include "preset.pb.h"
 
-class OrbitApp;
-
-class PresetsDataView : public orbit_data_views::DataView {
+namespace orbit_data_views {
+class PresetsDataView : public DataView {
  public:
-  explicit PresetsDataView(orbit_data_views::AppInterface* app,
+  explicit PresetsDataView(AppInterface* app,
                            orbit_metrics_uploader::MetricsUploader* metrics_uploader);
 
   const std::vector<Column>& GetColumns() override;
@@ -77,4 +76,6 @@ class PresetsDataView : public orbit_data_views::DataView {
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 };
 
-#endif  // ORBIT_GL_PRESET_DATA_VIEW_H_
+}  // namespace orbit_data_views
+
+#endif  // DATA_VIEWS_PRESET_DATA_VIEW_H_

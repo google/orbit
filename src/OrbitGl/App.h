@@ -49,6 +49,7 @@
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/PresetLoadState.h"
+#include "DataViews/PresetsDataView.h"
 #include "FramePointerValidatorClient.h"
 #include "FrameTrackOnlineProcessor.h"
 #include "FunctionsDataView.h"
@@ -65,7 +66,6 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
-#include "PresetsDataView.h"
 #include "SamplingReport.h"
 #include "ScopedStatus.h"
 #include "StatusListener.h"
@@ -543,7 +543,7 @@ class OrbitApp final : public DataViewFactory,
   std::unique_ptr<FunctionsDataView> functions_data_view_;
   std::unique_ptr<CallstackDataView> callstack_data_view_;
   std::unique_ptr<CallstackDataView> selection_callstack_data_view_;
-  std::unique_ptr<PresetsDataView> presets_data_view_;
+  std::unique_ptr<orbit_data_views::PresetsDataView> presets_data_view_;
   std::unique_ptr<TracepointsDataView> tracepoints_data_view_;
 
   CaptureWindow* capture_window_ = nullptr;

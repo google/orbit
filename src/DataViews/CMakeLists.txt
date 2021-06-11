@@ -6,12 +6,15 @@ cmake_minimum_required(VERSION 3.15)
 
 add_library(DataViews STATIC)
 
-target_sources(DataViews PRIVATE DataView.cpp)
+target_sources(DataViews PRIVATE
+        DataView.cpp
+        PresetsDataView.cpp)
 
 target_sources(DataViews PUBLIC
         include/DataViews/AppInterface.h
         include/DataViews/DataView.h
         include/DataViews/DataViewType.h
+        include/DataViews/PresetsDataView.h
         include/DataViews/PresetLoadState.h)
 
 target_include_directories(DataViews PUBLIC include/)
@@ -20,6 +23,7 @@ target_link_libraries(DataViews PUBLIC
         ClientData
         ClientModel
         ClientProtos
+        MetricsUploader
         OrbitBase
         PresetFile
         CONAN_PKG::abseil)
