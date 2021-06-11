@@ -1,8 +1,8 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "PresetsDataView.h"
+#include "DataViews/PresetsDataView.h"
 
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_split.h>
@@ -14,7 +14,6 @@
 #include <filesystem>
 #include <functional>
 
-#include "App.h"
 #include "CoreUtils.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataViewType.h"
@@ -46,9 +45,11 @@ std::string GetLoadStateString(orbit_data_views::AppInterface* app, const Preset
 }
 }  // namespace
 
-PresetsDataView::PresetsDataView(orbit_data_views::AppInterface* app,
+namespace orbit_data_views {
+
+PresetsDataView::PresetsDataView(AppInterface* app,
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : orbit_data_views::DataView(orbit_data_views::DataViewType::kPresets, app),
+    : DataView(DataViewType::kPresets, app),
       metrics_uploader_(metrics_uploader) {}
 
 std::string PresetsDataView::GetModulesList(const std::vector<ModuleView>& modules) {
@@ -63,7 +64,7 @@ std::string PresetsDataView::GetFunctionCountList(const std::vector<ModuleView>&
   });
 }
 
-const std::vector<orbit_data_views::DataView::Column>& PresetsDataView::GetColumns() {
+const std::vector<DataView::Column>& PresetsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
@@ -99,7 +100,7 @@ std::string PresetsDataView::GetToolTip(int row, int /*column*/) {
   const PresetFile& preset = GetPreset(row);
   return absl::StrCat(
       preset.file_path().string(),
-      app_->GetPresetLoadState(preset).state == orbit_data_views::PresetLoadState::kNotLoadable
+      app_->GetPresetLoadState(preset).state == PresetLoadState::kNotLoadable
           ? "<br/><br/><i>None of the modules in the preset can be loaded.</i>"
           : "");
 }
@@ -138,7 +139,7 @@ std::vector<std::string> PresetsDataView::GetContextMenu(int clicked_index,
   // Note that the UI already enforces a single selection.
   if (selected_indices.size() == 1) {
     const PresetFile& preset = GetPreset(selected_indices[0]);
-    if (app_->GetPresetLoadState(preset).state != orbit_data_views::PresetLoadState::kNotLoadable) {
+    if (app_->GetPresetLoadState(preset).state != PresetLoadState::kNotLoadable) {
       menu.emplace_back(kMenuActionLoad);
     }
     menu.emplace_back(kMenuActionDelete);
@@ -183,7 +184,7 @@ void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
 
 void PresetsDataView::OnDoubleClicked(int index) {
   const PresetFile& preset = GetPreset(index);
-  if (app_->GetPresetLoadState(preset).state != orbit_data_views::PresetLoadState::kNotLoadable) {
+  if (app_->GetPresetLoadState(preset).state != PresetLoadState::kNotLoadable) {
     app_->LoadPreset(preset);
   }
 }
@@ -233,7 +234,7 @@ void PresetsDataView::OnDataChanged() {
 bool PresetsDataView::GetDisplayColor(int row, int /*column*/, unsigned char& red,
                                       unsigned char& green, unsigned char& blue) {
   const PresetFile& preset = GetPreset(row);
-  orbit_data_views::PresetLoadState load_state = app_->GetPresetLoadState(preset);
+  PresetLoadState load_state = app_->GetPresetLoadState(preset);
   load_state.GetDisplayColor(red, green, blue);
   return true;
 }
@@ -249,3 +250,5 @@ const PresetFile& PresetsDataView::GetPreset(unsigned int row) const {
 const std::vector<PresetsDataView::ModuleView>& PresetsDataView::GetModules(uint32_t row) const {
   return modules_[indices_[row]];
 }
+
+}  // namespace orbit_data_views

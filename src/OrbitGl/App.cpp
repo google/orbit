@@ -53,6 +53,7 @@
 #include "CoreUtils.h"
 #include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
+#include "DataViews/PresetsDataView.h"
 #include "FrameTrackOnlineProcessor.h"
 #include "FunctionsDataView.h"
 #include "GlCanvas.h"
@@ -75,7 +76,6 @@
 #include "OrbitBase/Tracing.h"
 #include "OrbitBase/UniqueResource.h"
 #include "Path.h"
-#include "PresetsDataView.h"
 #include "SamplingReport.h"
 #include "Symbols/SymbolHelper.h"
 #include "TimeGraph.h"
@@ -2213,7 +2213,8 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
     case DataViewType::kPresets:
       if (!presets_data_view_) {
-        presets_data_view_ = std::make_unique<PresetsDataView>(this, metrics_uploader_);
+        presets_data_view_ =
+            std::make_unique<orbit_data_views::PresetsDataView>(this, metrics_uploader_);
         panels_.push_back(presets_data_view_.get());
       }
       return presets_data_view_.get();
