@@ -580,10 +580,8 @@ void TracerThread::Startup() {
 
   perf_event_open_errors |= !OpenMmapTask(all_cpus);
 
-  bool uprobes_event_open_errors = false;
   if (!instrumented_functions_.empty()) {
-    uprobes_event_open_errors = !OpenUserSpaceProbes(cpuset_cpus);
-    perf_event_open_errors |= uprobes_event_open_errors;
+    perf_event_open_errors |= !OpenUserSpaceProbes(cpuset_cpus);
   }
 
   // This takes an initial snapshot of the maps. Note that, if at least one
@@ -616,12 +614,8 @@ void TracerThread::Startup() {
 
   perf_event_open_errors |= !OpenInstrumentedTracepoints(all_cpus);
 
-  if (uprobes_event_open_errors) {
-    LOG("There were errors with perf_event_open, including for uprobes: did "
-        "you forget to run as root?");
-  } else if (perf_event_open_errors) {
-    LOG("There were errors with perf_event_open: did you forget to run as root "
-        "or to set /proc/sys/kernel/perf_event_paranoid to -1?");
+  if (perf_event_open_errors) {
+    LOG("There were errors with perf_event_open: did you forget to run as root?");
   }
 
   // Start recording events.
