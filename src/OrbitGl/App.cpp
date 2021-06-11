@@ -947,6 +947,18 @@ std::string OrbitApp::GetCaptureTime() const {
   return GetPrettyTime(absl::Microseconds(time));
 }
 
+std::string OrbitApp::GetCaptureTimeAt(uint64_t timestamp_ns) const {
+  const TimeGraph* time_graph = GetTimeGraph();
+  if (time_graph == nullptr) {
+    return GetPrettyTime(absl::ZeroDuration());
+  }
+  const uint64_t capture_min_timestamp_ns = time_graph->GetCaptureMin();
+  if (timestamp_ns < capture_min_timestamp_ns) {
+    return GetPrettyTime(absl::ZeroDuration());
+  }
+  return GetPrettyTime(absl::Nanoseconds(timestamp_ns - capture_min_timestamp_ns));
+}
+
 std::string OrbitApp::GetSaveFile(const std::string& extension) const {
   CHECK(save_file_callback_);
   return save_file_callback_(extension);

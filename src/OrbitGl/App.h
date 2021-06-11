@@ -97,6 +97,8 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   void MainTick();
 
   [[nodiscard]] std::string GetCaptureTime() const;
+  [[nodiscard]] std::string GetCaptureTimeAt(uint64_t timestamp_ns) const;
+
   [[nodiscard]] std::string GetSaveFile(const std::string& extension) const;
   void SetClipboard(const std::string& text);
   ErrorMessageOr<void> OnSavePreset(const std::string& file_name);
