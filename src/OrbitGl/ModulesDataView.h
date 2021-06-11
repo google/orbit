@@ -62,6 +62,10 @@ class ModulesDataView : public DataView {
 
   static const std::string kMenuActionLoadSymbols;
   static const std::string kMenuActionVerifyFramePointers;
+
+  // TODO(b/185090791): This is temporary and will be removed once this data view has been ported
+  // and move to orbit_data_views.
+  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_MODULES_DATA_VIEW_H_

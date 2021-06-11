@@ -41,7 +41,7 @@ using orbit_client_protos::FunctionInfo;
 ABSL_DECLARE_FLAG(bool, enable_source_code_view);
 
 SamplingReportDataView::SamplingReportDataView(OrbitApp* app)
-    : DataView(DataViewType::kSampling, app), callstack_data_view_(nullptr) {}
+    : DataView(DataViewType::kSampling, app), callstack_data_view_(nullptr), app_{app} {}
 
 const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
   static const std::vector<Column> columns = [] {

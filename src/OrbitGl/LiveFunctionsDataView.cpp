@@ -41,7 +41,8 @@ LiveFunctionsDataView::LiveFunctionsDataView(
     : DataView(DataViewType::kLiveFunctions, app),
       live_functions_(live_functions),
       selected_function_id_(orbit_grpc_protos::kInvalidFunctionId),
-      metrics_uploader_(metrics_uploader) {
+      metrics_uploader_(metrics_uploader),
+      app_{app} {
   update_period_ms_ = 300;
   LiveFunctionsDataView::OnDataChanged();
 }

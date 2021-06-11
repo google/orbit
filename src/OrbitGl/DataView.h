@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "DataViewTypes.h"
+#include "DataViews/AppInterface.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 
@@ -49,7 +50,7 @@ class DataView {
     SortingOrder initial_order;
   };
 
-  explicit DataView(DataViewType type, OrbitApp* app)
+  explicit DataView(DataViewType type, orbit_data_views::AppInterface* app)
       : update_period_ms_(-1), type_(type), app_{app} {}
 
   virtual ~DataView() = default;
@@ -122,7 +123,7 @@ class DataView {
   static const std::string kMenuActionCopySelection;
   static const std::string kMenuActionExportToCsv;
 
-  OrbitApp* app_ = nullptr;
+  orbit_data_views::AppInterface* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_DATA_VIEW_H_
