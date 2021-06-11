@@ -51,6 +51,7 @@
 #include "CodeReport/DisassemblyReport.h"
 #include "CodeReport/SourceCodeReport.h"
 #include "CoreUtils.h"
+#include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
 #include "FrameTrackOnlineProcessor.h"
 #include "FunctionsDataView.h"
@@ -836,7 +837,7 @@ void OrbitApp::SetSamplingReport(
   auto report = std::make_shared<SamplingReport>(this, std::move(post_processed_sampling_data),
                                                  std::move(unique_callstacks));
   CHECK(sampling_reports_callback_);
-  DataView* callstack_data_view = GetOrCreateDataView(DataViewType::kCallstack);
+  orbit_data_views::DataView* callstack_data_view = GetOrCreateDataView(DataViewType::kCallstack);
   sampling_reports_callback_(callstack_data_view, report);
 
   sampling_report_ = report;
@@ -854,7 +855,7 @@ void OrbitApp::SetSelectionReport(
 
   auto report = std::make_shared<SamplingReport>(this, std::move(post_processed_sampling_data),
                                                  std::move(unique_callstacks), has_summary);
-  DataView* callstack_data_view = GetOrCreateSelectionCallstackDataView();
+  orbit_data_views::DataView* callstack_data_view = GetOrCreateSelectionCallstackDataView();
 
   selection_report_ = report;
   selection_report_callback_(callstack_data_view, report);
@@ -1090,7 +1091,7 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
 void OrbitApp::OnLoadCaptureCancelRequested() { capture_loading_cancellation_requested_ = true; }
 
 void OrbitApp::FireRefreshCallbacks(DataViewType type) {
-  for (DataView* panel : panels_) {
+  for (orbit_data_views::DataView* panel : panels_) {
     if (type == orbit_data_views::DataViewType::kAll || type == panel->GetType()) {
       panel->OnDataChanged();
     }
@@ -2187,7 +2188,7 @@ void OrbitApp::UpdateAfterCaptureCleared() {
   }
 }
 
-DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
+orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
   switch (type) {
     case DataViewType::kFunctions:
       if (!functions_data_view_) {
@@ -2240,7 +2241,7 @@ DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
   FATAL("Unreachable");
 }
 
-DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {
+orbit_data_views::DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {
   if (selection_callstack_data_view_ == nullptr) {
     selection_callstack_data_view_ = std::make_unique<CallstackDataView>(this);
     panels_.push_back(selection_callstack_data_view_.get());

@@ -1,9 +1,9 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_DATA_VIEW_H_
-#define ORBIT_GL_DATA_VIEW_H_
+#ifndef DATA_VIEWS_DATA_VIEW_H_
+#define DATA_VIEWS_DATA_VIEW_H_
 
 #include <absl/container/flat_hash_set.h>
 #include <stddef.h>
@@ -22,17 +22,14 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 
-class OrbitApp;
-
 enum class RefreshMode { kOnFilter, kOnSort, kOther };
 
-namespace orbit_gl {
+namespace orbit_data_views {
 // Values in the dataview may contain commas, for example, functions with arguments. We quote all
 // values in the output and also escape quotes (with a second quote) in values to ensure the CSV
 // files can be imported correctly in spreadsheet applications. The formatting follows the
 // specification in https://tools.ietf.org/html/rfc4180.
 std::string FormatValueForCsv(std::string_view value);
-}  // namespace orbit_gl
 
 class DataView {
  public:
@@ -50,7 +47,7 @@ class DataView {
     SortingOrder initial_order;
   };
 
-  explicit DataView(orbit_data_views::DataViewType type, orbit_data_views::AppInterface* app)
+  explicit DataView(DataViewType type, AppInterface* app)
       : update_period_ms_(-1), type_(type), app_{app} {}
 
   virtual ~DataView() = default;
@@ -95,7 +92,6 @@ class DataView {
   virtual std::string GetLabel() { return ""; }
   virtual bool HasRefreshButton() const { return false; }
   virtual void OnRefreshButtonClicked() {}
-  virtual void SetGlCanvas(class GlCanvas* /*gl_canvas*/) {}
   virtual void LinkDataView(DataView* /*data_view*/) {}
   virtual bool ScrollToBottom() { return false; }
   virtual bool SkipTimer() { return false; }
@@ -103,7 +99,7 @@ class DataView {
   virtual void CopySelection(const std::vector<int>& selection);
 
   int GetUpdatePeriodMs() const { return update_period_ms_; }
-  orbit_data_views::DataViewType GetType() const { return type_; }
+  [[nodiscard]] DataViewType GetType() const { return type_; }
   [[nodiscard]] virtual bool ResetOnRefresh() const { return true; }
 
  protected:
@@ -118,7 +114,7 @@ class DataView {
   std::string filter_;
   int update_period_ms_;
   absl::flat_hash_set<int> selected_indices_;
-  orbit_data_views::DataViewType type_;
+  DataViewType type_;
 
   static const std::string kMenuActionCopySelection;
   static const std::string kMenuActionExportToCsv;
@@ -126,4 +122,6 @@ class DataView {
   orbit_data_views::AppInterface* app_ = nullptr;
 };
 
-#endif  // ORBIT_GL_DATA_VIEW_H_
+}  // namespace orbit_data_views
+
+#endif  // DATA_VIEWS_DATA_VIEW_H_

@@ -253,15 +253,15 @@ void OrbitMainWindow::SetupMainWindow() {
     this->OnRefreshDataViewPanels(type);
   });
 
-  app_->SetSamplingReportCallback(
-      [this](DataView* callstack_data_view, const std::shared_ptr<SamplingReport>& report) {
-        this->OnNewSamplingReport(callstack_data_view, report);
-      });
+  app_->SetSamplingReportCallback([this](orbit_data_views::DataView* callstack_data_view,
+                                         const std::shared_ptr<SamplingReport>& report) {
+    this->OnNewSamplingReport(callstack_data_view, report);
+  });
 
-  app_->SetSelectionReportCallback(
-      [this](DataView* callstack_data_view, const std::shared_ptr<SamplingReport>& report) {
-        this->OnNewSelectionReport(callstack_data_view, report);
-      });
+  app_->SetSelectionReportCallback([this](orbit_data_views::DataView* callstack_data_view,
+                                          const std::shared_ptr<SamplingReport>& report) {
+    this->OnNewSelectionReport(callstack_data_view, report);
+  });
 
   app_->SetTopDownViewCallback([this](std::unique_ptr<CallTreeView> top_down_view) {
     this->OnNewTopDownView(std::move(top_down_view));
@@ -684,7 +684,7 @@ void OrbitMainWindow::UpdatePanel(DataViewType type) {
   }
 }
 
-void OrbitMainWindow::OnNewSamplingReport(DataView* callstack_data_view,
+void OrbitMainWindow::OnNewSamplingReport(orbit_data_views::DataView* callstack_data_view,
                                           const std::shared_ptr<SamplingReport>& sampling_report) {
   ui->samplingGridLayout->removeWidget(ui->samplingReport);
   delete ui->samplingReport;
@@ -707,7 +707,7 @@ void OrbitMainWindow::OnNewSamplingReport(DataView* callstack_data_view,
   }
 }
 
-void OrbitMainWindow::OnNewSelectionReport(DataView* callstack_data_view,
+void OrbitMainWindow::OnNewSelectionReport(orbit_data_views::DataView* callstack_data_view,
                                            const std::shared_ptr<SamplingReport>& sampling_report) {
   ui->selectionGridLayout->removeWidget(ui->selectionReport);
   delete ui->selectionReport;

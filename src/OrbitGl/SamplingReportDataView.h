@@ -12,14 +12,14 @@
 #include "ClientData/CallstackTypes.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
-#include "DataView.h"
+#include "DataViews/DataView.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
 
 class OrbitApp;
 class SamplingReport;
 
-class SamplingReportDataView : public DataView {
+class SamplingReportDataView : public orbit_data_views::DataView {
  public:
   explicit SamplingReportDataView(OrbitApp* app);
 
@@ -36,7 +36,7 @@ class SamplingReportDataView : public DataView {
   void OnRefresh(const std::vector<int>& visible_selected_indices,
                  const RefreshMode& mode) override;
 
-  void LinkDataView(DataView* data_view) override;
+  void LinkDataView(orbit_data_views::DataView* data_view) override;
   void SetSamplingReport(class SamplingReport* sampling_report) {
     sampling_report_ = sampling_report;
   }

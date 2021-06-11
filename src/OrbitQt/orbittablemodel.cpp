@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-OrbitTableModel::OrbitTableModel(DataView* data_view, QObject* parent,
+OrbitTableModel::OrbitTableModel(orbit_data_views::DataView* data_view, QObject* parent,
                                  QFlags<Qt::AlignmentFlag> text_alignment)
     : QAbstractTableModel(parent), data_view_(data_view), text_alignment_(text_alignment) {}
 
@@ -40,7 +40,8 @@ QVariant OrbitTableModel::headerData(int section, Qt::Orientation orientation, i
       }
 
     case Qt::InitialSortOrderRole:
-      return data_view_->GetColumns()[section].initial_order == DataView::SortingOrder::kAscending
+      return data_view_->GetColumns()[section].initial_order ==
+                     orbit_data_views::DataView::SortingOrder::kAscending
                  ? Qt::AscendingOrder
                  : Qt::DescendingOrder;
 
@@ -76,8 +77,9 @@ void OrbitTableModel::sort(int column, Qt::SortOrder order) {
   // On Linux, the arrows for ascending/descending are reversed, e.g. ascending
   // has an arrow pointing down, which is unexpected. This is because of some
   // Linux UI guideline, it is not the case on Windows.
-  data_view_->OnSort(column, order == Qt::AscendingOrder ? DataView::SortingOrder::kAscending
-                                                         : DataView::SortingOrder::kDescending);
+  data_view_->OnSort(column, order == Qt::AscendingOrder
+                                 ? orbit_data_views::DataView::SortingOrder::kAscending
+                                 : orbit_data_views::DataView::SortingOrder::kDescending);
 }
 
 std::pair<int, Qt::SortOrder> OrbitTableModel::GetDefaultSortingColumnAndOrder() {
@@ -86,10 +88,10 @@ std::pair<int, Qt::SortOrder> OrbitTableModel::GetDefaultSortingColumnAndOrder()
   }
 
   int column = data_view_->GetDefaultSortingColumn();
-  Qt::SortOrder order =
-      data_view_->GetColumns()[column].initial_order == DataView::SortingOrder::kAscending
-          ? Qt::AscendingOrder
-          : Qt::DescendingOrder;
+  Qt::SortOrder order = data_view_->GetColumns()[column].initial_order ==
+                                orbit_data_views::DataView::SortingOrder::kAscending
+                            ? Qt::AscendingOrder
+                            : Qt::DescendingOrder;
   return std::make_pair(column, order);
 }
 

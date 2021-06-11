@@ -26,7 +26,7 @@
 #include <set>
 #include <utility>
 
-#include "DataView.h"
+#include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
 #include "orbitglwidget.h"
 
@@ -55,7 +55,7 @@ OrbitTreeView::OrbitTreeView(QWidget* parent) : QTreeView(parent), auto_resize_(
   connect(this, &OrbitTreeView::doubleClicked, this, &OrbitTreeView::OnDoubleClicked);
 }
 
-void OrbitTreeView::Initialize(DataView* data_view, SelectionType selection_type,
+void OrbitTreeView::Initialize(orbit_data_views::DataView* data_view, SelectionType selection_type,
                                FontType font_type, bool uniform_row_height,
                                QFlags<Qt::AlignmentFlag> text_alignment) {
   setUniformRowHeights(uniform_row_height);
@@ -97,7 +97,7 @@ void OrbitTreeView::Deinitialize() {
   model_.reset();
 }
 
-void OrbitTreeView::SetDataModel(DataView* data_view) {
+void OrbitTreeView::SetDataModel(orbit_data_views::DataView* data_view) {
   model_ = std::make_unique<OrbitTableModel>();
   model_->SetDataView(data_view);
   setModel(model_.get());
@@ -180,12 +180,8 @@ void OrbitTreeView::resizeEvent(QResizeEvent* event) {
 void OrbitTreeView::Link(OrbitTreeView* link) {
   links_.push_back(link);
 
-  DataView* data_view = link->GetModel()->GetDataView();
+  orbit_data_views::DataView* data_view = link->GetModel()->GetDataView();
   model_->GetDataView()->LinkDataView(data_view);
-}
-
-void OrbitTreeView::SetGlWidget(OrbitGLWidget* gl_widget) {
-  model_->GetDataView()->SetGlCanvas(gl_widget->GetCanvas());
 }
 
 void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
@@ -303,7 +299,7 @@ void OrbitTreeView::OnRangeChanged(int /*min*/, int max) {
     return;
   }
 
-  DataView* data_view = model_->GetDataView();
+  orbit_data_views::DataView* data_view = model_->GetDataView();
   if (data_view->ScrollToBottom()) {
     verticalScrollBar()->setValue(max);
   }

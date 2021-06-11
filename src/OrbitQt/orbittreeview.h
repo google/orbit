@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 
-#include "DataView.h"
+#include "DataViews/DataView.h"
 #include "orbitglwidget.h"
 #include "orbittablemodel.h"
 #include "types.h"
@@ -32,16 +32,15 @@ class OrbitTreeView : public QTreeView {
   Q_OBJECT
  public:
   explicit OrbitTreeView(QWidget* parent = nullptr);
-  void Initialize(DataView* data_view, SelectionType selection_type, FontType font_type,
-                  bool uniform_row_height = true,
+  void Initialize(orbit_data_views::DataView* data_view, SelectionType selection_type,
+                  FontType font_type, bool uniform_row_height = true,
                   QFlags<Qt::AlignmentFlag> text_alignment = Qt::AlignVCenter | Qt::AlignLeft);
   void Deinitialize();
-  void SetDataModel(DataView* model);
+  void SetDataModel(orbit_data_views::DataView* model);
   void ClearDataModel();
   void OnFilter(const QString& filter);
   void Refresh(RefreshMode refresh_mode = RefreshMode::kOther);
   void Link(OrbitTreeView* link);
-  void SetGlWidget(OrbitGLWidget* gl_widget);
   void resizeEvent(QResizeEvent* event) override;
   void keyPressEvent(QKeyEvent* event) override;
   void mousePressEvent(QMouseEvent* event) override;

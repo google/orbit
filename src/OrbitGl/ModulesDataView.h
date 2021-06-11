@@ -13,11 +13,11 @@
 
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
-#include "DataView.h"
+#include "DataViews/DataView.h"
 
 class OrbitApp;
 
-class ModulesDataView : public DataView {
+class ModulesDataView : public orbit_data_views::DataView {
  public:
   explicit ModulesDataView(OrbitApp* app);
 

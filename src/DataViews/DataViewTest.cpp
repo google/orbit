@@ -5,10 +5,11 @@
 #include <gtest/gtest.h>
 
 #include <string>
+#include <string_view>
 
-#include "DataView.h"
+#include "DataViews/DataView.h"
 
-using orbit_gl::FormatValueForCsv;
+using orbit_data_views::FormatValueForCsv;
 
 TEST(DataView, FormatValueForCsvQuotesEmptyString) { EXPECT_EQ("\"\"", FormatValueForCsv("")); }
 

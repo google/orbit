@@ -20,9 +20,9 @@ OrbitDataViewPanel::OrbitDataViewPanel(QWidget* parent)
 
 OrbitDataViewPanel::~OrbitDataViewPanel() { delete ui; }
 
-void OrbitDataViewPanel::Initialize(DataView* data_view, SelectionType selection_type,
-                                    FontType font_type, bool is_main_instance,
-                                    bool uniform_row_height,
+void OrbitDataViewPanel::Initialize(orbit_data_views::DataView* data_view,
+                                    SelectionType selection_type, FontType font_type,
+                                    bool is_main_instance, bool uniform_row_height,
                                     QFlags<Qt::AlignmentFlag> text_alignment) {
   ui->treeView->Initialize(data_view, selection_type, font_type, uniform_row_height,
                            text_alignment);
@@ -59,7 +59,9 @@ void OrbitDataViewPanel::Link(OrbitDataViewPanel* a_Panel) {
 
 void OrbitDataViewPanel::Refresh() { ui->treeView->Refresh(); }
 
-void OrbitDataViewPanel::SetDataModel(DataView* model) { ui->treeView->SetDataModel(model); }
+void OrbitDataViewPanel::SetDataModel(orbit_data_views::DataView* model) {
+  ui->treeView->SetDataModel(model);
+}
 
 void OrbitDataViewPanel::ClearDataModel() { ui->treeView->ClearDataModel(); }
 

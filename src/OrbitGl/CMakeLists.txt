@@ -28,7 +28,6 @@ target_sources(
          CaptureViewElement.h
          CaptureWindow.h
          CoreMath.h
-         DataView.h
          FramePointerValidatorClient.h
          FrameTrack.h
          FrameTrackOnlineProcessor.h
@@ -93,7 +92,6 @@ target_sources(
           CaptureViewElement.cpp
           CaptureWindow.cpp
           DataManager.cpp
-          DataView.cpp
           FramePointerValidatorClient.cpp
           FrameTrack.cpp
           FrameTrackOnlineProcessor.cpp
@@ -176,7 +174,6 @@ target_sources(OrbitGlTests PRIVATE
                BatcherTest.cpp
                BlockChainTest.cpp
                ClientFlags.cpp
-               DataViewTest.cpp
                CaptureStatsTest.cpp
                GlUtilsTest.cpp
                GpuTrackTest.cpp

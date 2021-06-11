@@ -46,7 +46,7 @@ OrbitSamplingReport::OrbitSamplingReport(QWidget* parent)
 
 OrbitSamplingReport::~OrbitSamplingReport() { delete ui_; }
 
-void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
+void OrbitSamplingReport::Initialize(orbit_data_views::DataView* callstack_data_view,
                                      const std::shared_ptr<SamplingReport>& report) {
   ui_->CallstackTreeView->Initialize(callstack_data_view, SelectionType::kExtended,
                                      FontType::kDefault, false);
@@ -69,10 +69,10 @@ void OrbitSamplingReport::Initialize(DataView* callstack_data_view,
       treeView->GetTreeView()->setSortingEnabled(false);
     } else {
       int column = report_data_view.GetDefaultSortingColumn();
-      Qt::SortOrder order =
-          report_data_view.GetColumns()[column].initial_order == DataView::SortingOrder::kAscending
-              ? Qt::AscendingOrder
-              : Qt::DescendingOrder;
+      Qt::SortOrder order = report_data_view.GetColumns()[column].initial_order ==
+                                    orbit_data_views::DataView::SortingOrder::kAscending
+                                ? Qt::AscendingOrder
+                                : Qt::DescendingOrder;
       treeView->GetTreeView()->sortByColumn(column, order);
     }
 

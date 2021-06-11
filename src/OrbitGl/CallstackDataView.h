@@ -12,10 +12,11 @@
 #include <vector>
 
 #include "ClientData/ModuleData.h"
-#include "DataView.h"
+#include "DataViews/DataView.h"
 #include "capture_data.pb.h"
 
-class CallstackDataView : public DataView {
+class OrbitApp;
+class CallstackDataView : public orbit_data_views::DataView {
  public:
   explicit CallstackDataView(OrbitApp* app);
 

@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "CallstackDataView.h"
-#include "DataView.h"
+#include "DataViews/DataView.h"
 #include "orbitdataviewpanel.h"
 
 class SamplingReport;
@@ -28,7 +28,7 @@ class OrbitSamplingReport : public QWidget {
   explicit OrbitSamplingReport(QWidget* parent = nullptr);
   ~OrbitSamplingReport() override;
 
-  void Initialize(DataView* callstack_data_view,
+  void Initialize(orbit_data_views::DataView* callstack_data_view,
                   const std::shared_ptr<class SamplingReport>& report);
   void Deinitialize();
 

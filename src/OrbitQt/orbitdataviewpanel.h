@@ -12,7 +12,7 @@
 #include <QWidget>
 #include <Qt>
 
-#include "DataView.h"
+#include "DataViews/DataView.h"
 #include "orbittablemodel.h"
 #include "orbittreeview.h"
 #include "types.h"
@@ -28,13 +28,13 @@ class OrbitDataViewPanel : public QWidget {
   explicit OrbitDataViewPanel(QWidget* parent = nullptr);
   ~OrbitDataViewPanel() override;
 
-  void Initialize(DataView* data_view, SelectionType selection_type, FontType font_type,
-                  bool is_main_instance = true, bool uniform_row_height = true,
+  void Initialize(orbit_data_views::DataView* data_view, SelectionType selection_type,
+                  FontType font_type, bool is_main_instance = true, bool uniform_row_height = true,
                   QFlags<Qt::AlignmentFlag> text_alignment = Qt::AlignVCenter | Qt::AlignLeft);
   void Deinitialize();
   void Link(OrbitDataViewPanel* a_Panel);
   void Refresh();
-  void SetDataModel(DataView* model);
+  void SetDataModel(orbit_data_views::DataView* model);
   void ClearDataModel();
   void SetFilter(const QString& a_Filter);
   OrbitTreeView* GetTreeView();
