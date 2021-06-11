@@ -2389,11 +2389,16 @@ void OrbitApp::AddFrameTrack(uint64_t instrumented_function_id) {
     }
     TrySaveUserDefinedCaptureInfo();
   } else {
-    CHECK(empty_frame_track_warning_callback_);
     const InstrumentedFunction* function =
         GetCaptureData().GetInstrumentedFunctionById(instrumented_function_id);
-    CHECK(function != nullptr);
-    empty_frame_track_warning_callback_(function->function_name());
+    constexpr const char* kDontShowAgainEmptyFrameTrackWarningKey = "EmptyFrameTrackWarning";
+    const std::string title = "Frame track not added";
+    const std::string message = absl::StrFormat(
+        "Frame track enabled for function \"%s\", but since the function does not have any hits in "
+        "the current capture, a frame track was not added to the capture.",
+        function->function_name());
+    main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
+        title, message, kDontShowAgainEmptyFrameTrackWarningKey);
   }
 }
 
