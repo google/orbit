@@ -30,7 +30,7 @@ ABSL_FLAG(uint16_t, sampling_rate, 1000, "Frequency of callstack sampling in sam
 // Max to pass to perf_event_open without getting an error is (1u << 16u) - 8,
 // because the kernel stores this in a short and because of alignment reasons.
 // But the size the kernel actually returns is smaller and we leave some extra room (see
-// PerfEventOpen.cpp`).
+// `PerfEventOpen.cpp`).
 ABSL_FLAG(uint16_t, stack_dump_size, 65000,
           "Number of bytes to copy from the stack per sample. Max: 65000");
 

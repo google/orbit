@@ -154,7 +154,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   CaptureOptions* capture_options = request.mutable_capture_options();
   capture_options->set_trace_context_switches(collect_scheduling_info);
   capture_options->set_pid(process_id);
-  if (samples_per_second == 0 || stack_dump_size == 0) {
+  if (samples_per_second == 0) {
     capture_options->set_unwinding_method(CaptureOptions::kUndefined);
   } else {
     capture_options->set_samples_per_second(samples_per_second);

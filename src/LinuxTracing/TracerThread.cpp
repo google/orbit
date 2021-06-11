@@ -52,11 +52,13 @@ using orbit_grpc_protos::ThreadNamesSnapshot;
 TracerThread::TracerThread(const CaptureOptions& capture_options)
     : trace_context_switches_{capture_options.trace_context_switches()},
       target_pid_{capture_options.pid()},
-      stack_dump_size_{static_cast<uint16_t>(capture_options.stack_dump_size())},
       unwinding_method_{capture_options.unwinding_method()},
       trace_thread_state_{capture_options.trace_thread_state()},
       trace_gpu_driver_{capture_options.trace_gpu_driver()} {
   if (unwinding_method_ != CaptureOptions::kUndefined) {
+    uint32_t stack_dump_size = capture_options.stack_dump_size();
+    CHECK(stack_dump_size <= kMaxStackSampleUserSize && stack_dump_size > 0);
+    stack_dump_size_ = static_cast<uint16_t>(stack_dump_size);
     std::optional<uint64_t> sampling_period_ns =
         ComputeSamplingPeriodNs(capture_options.samples_per_second());
     FAIL_IF(!sampling_period_ns.has_value(), "Invalid sampling rate: %.1f",

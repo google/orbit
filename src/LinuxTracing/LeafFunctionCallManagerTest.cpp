@@ -56,7 +56,7 @@ class LeafFunctionCallManagerTest : public ::testing::Test {
   MockLibunwindstackMaps maps_;
   MockLibunwindstackUnwinder unwinder_;
 
-  static constexpr uint32_t kStackDumpSize = 128;
+  static constexpr uint16_t kStackDumpSize = 128;
 
   LeafFunctionCallManager leaf_function_call_manager_{kStackDumpSize};
 

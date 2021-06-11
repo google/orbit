@@ -94,6 +94,8 @@ static constexpr uint64_t SAMPLE_REGS_USER_SP_IP_ARGUMENTS =
 static_assert(sizeof(void*) == 8);
 static constexpr uint16_t SAMPLE_STACK_USER_SIZE_8BYTES = 8;
 
+static constexpr uint16_t kMaxStackSampleUserSize = 65000;
+
 // perf_event_open for context switches.
 int context_switch_event_open(pid_t pid, int32_t cpu);
 

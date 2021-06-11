@@ -173,7 +173,7 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
 
   app_->SetSamplesPerSecond(absl::GetFlag(FLAGS_sampling_rate));
   uint16_t stack_dump_size = absl::GetFlag(FLAGS_stack_dump_size);
-  CHECK(stack_dump_size <= 65000);
+  CHECK(stack_dump_size <= 65000 && stack_dump_size > 0);
   app_->SetStackDumpSize(stack_dump_size);
   app_->SetUnwindingMethod(absl::GetFlag(FLAGS_frame_pointer_unwinding)
                                ? orbit_grpc_protos::UnwindingMethod::kFramePointerUnwinding

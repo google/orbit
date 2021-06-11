@@ -18,7 +18,7 @@ namespace orbit_linux_tracing {
 // class to allow tests to mock this implementation.
 class LeafFunctionCallManager {
  public:
-  explicit LeafFunctionCallManager(uint32_t stack_dump_size) : stack_dump_size_{stack_dump_size} {}
+  explicit LeafFunctionCallManager(uint16_t stack_dump_size) : stack_dump_size_{stack_dump_size} {}
   virtual ~LeafFunctionCallManager() = default;
 
   // Computes the actual caller of a leaf function (that may not have frame-pointers) based on
@@ -37,7 +37,7 @@ class LeafFunctionCallManager {
       LibunwindstackUnwinder* unwinder);
 
  private:
-  uint32_t stack_dump_size_;
+  uint16_t stack_dump_size_;
 };
 
 }  //  namespace orbit_linux_tracing
