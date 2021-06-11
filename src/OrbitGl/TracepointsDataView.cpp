@@ -14,7 +14,7 @@
 
 #include "App.h"
 #include "CoreUtils.h"
-#include "DataViewTypes.h"
+#include "DataViews/DataViewType.h"
 
 using orbit_grpc_protos::TracepointInfo;
 
@@ -24,7 +24,7 @@ static const std::string kMenuActionUnselect = "Unhook";
 }  // namespace
 
 TracepointsDataView::TracepointsDataView(OrbitApp* app)
-    : DataView(DataViewType::kTracepoints, app), app_{app} {}
+    : DataView(orbit_data_views::DataViewType::kTracepoints, app), app_{app} {}
 
 const std::vector<DataView::Column>& TracepointsDataView::GetColumns() {
   static const std::vector<Column>& columns = [] {

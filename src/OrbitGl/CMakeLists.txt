@@ -29,7 +29,6 @@ target_sources(
          CaptureWindow.h
          CoreMath.h
          DataView.h
-         DataViewTypes.h
          FramePointerValidatorClient.h
          FrameTrack.h
          FrameTrackOnlineProcessor.h

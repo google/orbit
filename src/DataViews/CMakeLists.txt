@@ -8,6 +8,7 @@ add_library(DataViews INTERFACE)
 
 target_sources(DataViews INTERFACE
         include/DataViews/AppInterface.h
+        include/DataViews/DataViewType.h
         include/DataViews/PresetLoadState.h)
 
 target_include_directories(DataViews INTERFACE include/)

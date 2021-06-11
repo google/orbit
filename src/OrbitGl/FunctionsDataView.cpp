@@ -19,7 +19,7 @@
 #include "ClientData/ProcessData.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreUtils.h"
-#include "DataViewTypes.h"
+#include "DataViews/DataViewType.h"
 #include "OrbitBase/Logging.h"
 #include "absl/strings/str_format.h"
 
@@ -37,7 +37,7 @@ using orbit_client_protos::FunctionInfo;
 ABSL_DECLARE_FLAG(bool, enable_source_code_view);
 
 FunctionsDataView::FunctionsDataView(OrbitApp* app)
-    : DataView(DataViewType::kFunctions, app), app_{app} {}
+    : DataView(orbit_data_views::DataViewType::kFunctions, app), app_{app} {}
 
 const std::string FunctionsDataView::kUnselectedFunctionString = "";
 const std::string FunctionsDataView::kSelectedFunctionString = "✓";

@@ -17,8 +17,8 @@
 #include <utility>
 #include <vector>
 
-#include "DataViewTypes.h"
 #include "DataViews/AppInterface.h"
+#include "DataViews/DataViewType.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 
@@ -50,7 +50,7 @@ class DataView {
     SortingOrder initial_order;
   };
 
-  explicit DataView(DataViewType type, orbit_data_views::AppInterface* app)
+  explicit DataView(orbit_data_views::DataViewType type, orbit_data_views::AppInterface* app)
       : update_period_ms_(-1), type_(type), app_{app} {}
 
   virtual ~DataView() = default;
@@ -103,7 +103,7 @@ class DataView {
   virtual void CopySelection(const std::vector<int>& selection);
 
   int GetUpdatePeriodMs() const { return update_period_ms_; }
-  DataViewType GetType() const { return type_; }
+  orbit_data_views::DataViewType GetType() const { return type_; }
   [[nodiscard]] virtual bool ResetOnRefresh() const { return true; }
 
  protected:
@@ -118,7 +118,7 @@ class DataView {
   std::string filter_;
   int update_period_ms_;
   absl::flat_hash_set<int> selected_indices_;
-  DataViewType type_;
+  orbit_data_views::DataViewType type_;
 
   static const std::string kMenuActionCopySelection;
   static const std::string kMenuActionExportToCsv;
