@@ -19,12 +19,11 @@ namespace orbit_code_report {
 class DisassemblyReport : public orbit_code_report::CodeReport {
  public:
   DisassemblyReport(Disassembler disasm, uint64_t absolute_function_address,
-                    orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
+                    orbit_client_data::ThreadSampleData thread_sample_data, uint32_t function_count,
                     uint32_t samples_count)
       : disasm_{std::move(disasm)},
-        post_processed_sampling_data_{std::move(post_processed_sampling_data)},
-        function_count_{
-            post_processed_sampling_data_->GetCountOfFunction(absolute_function_address)},
+        thread_sample_data_{std::move(thread_sample_data)},
+        function_count_{function_count},
         samples_count_(samples_count),
         absolute_function_address_{absolute_function_address} {}
 
@@ -44,7 +43,7 @@ class DisassemblyReport : public orbit_code_report::CodeReport {
 
  private:
   Disassembler disasm_;
-  std::optional<orbit_client_data::PostProcessedSamplingData> post_processed_sampling_data_;
+  std::optional<orbit_client_data::ThreadSampleData> thread_sample_data_;
   uint32_t function_count_;
   uint32_t samples_count_;
   uint64_t absolute_function_address_;

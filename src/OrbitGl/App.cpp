@@ -706,9 +706,18 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
     const CaptureData& capture_data = GetCaptureData();
     const PostProcessedSamplingData& post_processed_sampling_data =
         capture_data.post_processed_sampling_data();
+    const orbit_client_data::ThreadSampleData* const thread_sample_data =
+        post_processed_sampling_data.GetSummary();
+
+    if (thread_sample_data == nullptr) {
+      orbit_code_report::DisassemblyReport empty_report(disasm, absolute_address);
+      SendDisassemblyToUi(function, disasm.GetResult(), std::move(empty_report));
+      return;
+    }
 
     orbit_code_report::DisassemblyReport report(
-        disasm, absolute_address, post_processed_sampling_data,
+        disasm, absolute_address, *thread_sample_data,
+        post_processed_sampling_data.GetCountOfFunction(absolute_address),
         capture_data.GetCallstackData()->GetCallstackEventsCount());
     SendDisassemblyToUi(function, disasm.GetResult(), std::move(report));
   });
