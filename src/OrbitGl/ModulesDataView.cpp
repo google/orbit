@@ -17,7 +17,7 @@
 #include "App.h"
 #include "ClientData/ProcessData.h"
 #include "CoreUtils.h"
-#include "DataViewTypes.h"
+#include "DataViews/DataViewType.h"
 #include "OrbitBase/Logging.h"
 #include "absl/flags/flag.h"
 
@@ -28,7 +28,7 @@ using orbit_client_data::ModuleInMemory;
 using orbit_client_data::ProcessData;
 
 ModulesDataView::ModulesDataView(OrbitApp* app)
-    : DataView(DataViewType::kModules, app), app_{app} {}
+    : DataView(orbit_data_views::DataViewType::kModules, app), app_{app} {}
 
 const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
   static const std::vector<Column> columns = [] {

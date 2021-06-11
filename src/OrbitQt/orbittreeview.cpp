@@ -27,7 +27,7 @@
 #include <utility>
 
 #include "DataView.h"
-#include "DataViewTypes.h"
+#include "DataViews/DataViewType.h"
 #include "orbitglwidget.h"
 
 OrbitTreeView::OrbitTreeView(QWidget* parent) : QTreeView(parent), auto_resize_(true) {

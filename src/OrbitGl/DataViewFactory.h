@@ -23,7 +23,7 @@ class DataViewFactory {
   //
   // Note that SamplingReportDataView should not be created using this method
   // since it is owned and created by SamplingReport.
-  virtual DataView* GetOrCreateDataView(DataViewType type) = 0;
+  virtual DataView* GetOrCreateDataView(orbit_data_views::DataViewType type) = 0;
 };
 
 #endif  // ORBIT_GL_DATA_VIEW_FACTORY_H_

@@ -20,7 +20,7 @@
 #include "App.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientModel/CaptureData.h"
-#include "DataViewTypes.h"
+#include "DataViews/DataViewType.h"
 #include "FunctionsDataView.h"
 #include "GrpcProtos/Constants.h"
 #include "LiveFunctionsController.h"
@@ -38,7 +38,7 @@ ABSL_DECLARE_FLAG(bool, enable_source_code_view);
 LiveFunctionsDataView::LiveFunctionsDataView(
     LiveFunctionsController* live_functions, OrbitApp* app,
     orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : DataView(DataViewType::kLiveFunctions, app),
+    : DataView(orbit_data_views::DataViewType::kLiveFunctions, app),
       live_functions_(live_functions),
       selected_function_id_(orbit_grpc_protos::kInvalidFunctionId),
       metrics_uploader_(metrics_uploader),

@@ -51,6 +51,7 @@
 #include "CodeReport/DisassemblyReport.h"
 #include "CodeReport/SourceCodeReport.h"
 #include "CoreUtils.h"
+#include "DataViews/DataViewType.h"
 #include "FrameTrackOnlineProcessor.h"
 #include "FunctionsDataView.h"
 #include "GlCanvas.h"
@@ -145,6 +146,8 @@ using orbit_metrics_uploader::CaptureMetric;
 using orbit_metrics_uploader::ScopedMetric;
 
 using orbit_preset_file::PresetFile;
+
+using orbit_data_views::DataViewType;
 
 namespace {
 
@@ -1088,7 +1091,7 @@ void OrbitApp::OnLoadCaptureCancelRequested() { capture_loading_cancellation_req
 
 void OrbitApp::FireRefreshCallbacks(DataViewType type) {
   for (DataView* panel : panels_) {
-    if (type == DataViewType::kAll || type == panel->GetType()) {
+    if (type == orbit_data_views::DataViewType::kAll || type == panel->GetType()) {
       panel->OnDataChanged();
     }
   }

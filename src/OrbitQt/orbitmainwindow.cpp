@@ -78,6 +78,7 @@
 #include "CodeViewer/OwningDialog.h"
 #include "Connections.h"
 #include "DataViewFactory.h"
+#include "DataViews/DataViewType.h"
 #include "GlCanvas.h"
 #include "LiveFunctionsController.h"
 #include "LiveFunctionsDataView.h"
@@ -130,6 +131,8 @@ using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_NULL_POINTER_DEREFER
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
 
 using orbit_qt::ServiceDeployManager;
+
+using orbit_data_views::DataViewType;
 
 namespace {
 const QString kLightGrayColor = "rgb(117, 117, 117)";

@@ -23,7 +23,7 @@
 #include "ClientData/ProcessData.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreUtils.h"
-#include "DataViewTypes.h"
+#include "DataViews/DataViewType.h"
 #include "FunctionsDataView.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -41,7 +41,9 @@ using orbit_client_protos::FunctionInfo;
 ABSL_DECLARE_FLAG(bool, enable_source_code_view);
 
 SamplingReportDataView::SamplingReportDataView(OrbitApp* app)
-    : DataView(DataViewType::kSampling, app), callstack_data_view_(nullptr), app_{app} {}
+    : DataView(orbit_data_views::DataViewType::kSampling, app),
+      callstack_data_view_(nullptr),
+      app_{app} {}
 
 const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
@@ -321,7 +323,7 @@ void SamplingReportDataView::OnRefresh(const std::vector<int>& visible_selected_
 }
 
 void SamplingReportDataView::LinkDataView(DataView* data_view) {
-  if (data_view->GetType() == DataViewType::kCallstack) {
+  if (data_view->GetType() == orbit_data_views::DataViewType::kCallstack) {
     callstack_data_view_ = static_cast<CallstackDataView*>(data_view);
     sampling_report_->SetCallstackDataView(callstack_data_view_);
   }

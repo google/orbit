@@ -16,7 +16,7 @@
 
 #include "App.h"
 #include "CoreUtils.h"
-#include "DataViewTypes.h"
+#include "DataViews/DataViewType.h"
 #include "DataViews/PresetLoadState.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "MetricsUploader/ScopedMetric.h"
@@ -47,7 +47,9 @@ std::string GetLoadStateString(OrbitApp* app, const PresetFile& preset) {
 
 PresetsDataView::PresetsDataView(OrbitApp* app,
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : DataView(DataViewType::kPresets, app), metrics_uploader_(metrics_uploader), app_{app} {}
+    : DataView(orbit_data_views::DataViewType::kPresets, app),
+      metrics_uploader_(metrics_uploader),
+      app_{app} {}
 
 std::string PresetsDataView::GetModulesList(const std::vector<ModuleView>& modules) {
   return absl::StrJoin(modules, "\n", [](std::string* out, const ModuleView& module) {

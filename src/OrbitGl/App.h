@@ -47,8 +47,8 @@
 #include "DataManager.h"
 #include "DataView.h"
 #include "DataViewFactory.h"
-#include "DataViewTypes.h"
 #include "DataViews/AppInterface.h"
+#include "DataViews/DataViewType.h"
 #include "DataViews/PresetLoadState.h"
 #include "FramePointerValidatorClient.h"
 #include "FrameTrackOnlineProcessor.h"
@@ -250,7 +250,7 @@ class OrbitApp final : public DataViewFactory,
   void SetInfoMessageCallback(InfoMessageCallback callback) {
     info_message_callback_ = std::move(callback);
   }
-  using RefreshCallback = std::function<void(DataViewType type)>;
+  using RefreshCallback = std::function<void(orbit_data_views::DataViewType type)>;
   void SetRefreshCallback(RefreshCallback callback) { refresh_callback_ = std::move(callback); }
 
   using SamplingReportCallback =
@@ -282,8 +282,11 @@ class OrbitApp final : public DataViewFactory,
 
   using SaveFileCallback = std::function<std::string(const std::string& extension)>;
   void SetSaveFileCallback(SaveFileCallback callback) { save_file_callback_ = std::move(callback); }
-  void FireRefreshCallbacks(DataViewType type = DataViewType::kAll);
-  void Refresh(DataViewType type = DataViewType::kAll) { FireRefreshCallbacks(type); }
+  void FireRefreshCallbacks(
+      orbit_data_views::DataViewType type = orbit_data_views::DataViewType::kAll);
+  void Refresh(orbit_data_views::DataViewType type = orbit_data_views::DataViewType::kAll) {
+    FireRefreshCallbacks(type);
+  }
   using ClipboardCallback = std::function<void(const std::string&)>;
   void SetClipboardCallback(ClipboardCallback callback) {
     clipboard_callback_ = std::move(callback);
@@ -357,7 +360,7 @@ class OrbitApp final : public DataViewFactory,
     process_manager_ = process_manager;
   }
   void SetTargetProcess(orbit_client_data::ProcessData* process);
-  [[nodiscard]] DataView* GetOrCreateDataView(DataViewType type) override;
+  [[nodiscard]] DataView* GetOrCreateDataView(orbit_data_views::DataViewType type) override;
   [[nodiscard]] DataView* GetOrCreateSelectionCallstackDataView();
 
   [[nodiscard]] StringManager* GetStringManager() { return &string_manager_; }

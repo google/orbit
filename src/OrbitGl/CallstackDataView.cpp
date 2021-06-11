@@ -16,7 +16,7 @@
 #include "ClientData/FunctionUtils.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreUtils.h"
-#include "DataViewTypes.h"
+#include "DataViews/DataViewType.h"
 #include "FunctionsDataView.h"
 #include "OrbitBase/Logging.h"
 #include "capture_data.pb.h"
@@ -29,7 +29,7 @@ using orbit_client_protos::FunctionInfo;
 ABSL_DECLARE_FLAG(bool, enable_source_code_view);
 
 CallstackDataView::CallstackDataView(OrbitApp* app)
-    : DataView(DataViewType::kCallstack, app), app_{app} {}
+    : DataView(orbit_data_views::DataViewType::kCallstack, app), app_{app} {}
 
 void CallstackDataView::SetAsMainInstance() {}
 

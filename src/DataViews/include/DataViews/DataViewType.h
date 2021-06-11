@@ -1,9 +1,11 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_DATA_VIEW_TYPES_H_
-#define ORBIT_GL_DATA_VIEW_TYPES_H_
+#ifndef DATA_VIEWS_DATA_VIEW_TYPE_H_
+#define DATA_VIEWS_DATA_VIEW_TYPE_H_
+
+namespace orbit_data_views {
 
 enum class DataViewType {
   kInvalid,
@@ -17,4 +19,6 @@ enum class DataViewType {
   kAll,
 };
 
-#endif  // ORBIT_GL_DATA_VIEW_TYPES_H_
+}  // namespace orbit_data_views
+
+#endif  // DATA_VIEWS_DATA_VIEW_TYPE_H_
