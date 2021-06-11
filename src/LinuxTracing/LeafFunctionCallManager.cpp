@@ -45,7 +45,7 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
   }
 
   uint64_t stack_size = rbp - rsp;
-  if (stack_size > SAMPLE_STACK_USER_SIZE_512BYTES) {
+  if (stack_size > stack_dump_size_) {
     return Callstack::kStackTopForDwarfUnwindingTooSmall;
   }
 

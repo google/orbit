@@ -91,22 +91,6 @@ static constexpr uint64_t SAMPLE_REGS_USER_SP_IP_ARGUMENTS =
     (1lu << PERF_REG_X86_DI) | (1lu << PERF_REG_X86_SP) | (1lu << PERF_REG_X86_IP) |
     (1lu << PERF_REG_X86_R8) | (1lu << PERF_REG_X86_R9);
 
-// Max to pass to perf_event_open without getting an error is (1u << 16u) - 8,
-// because the kernel stores this in a short and because of alignment reasons.
-// But the size the kernel actually returns is smaller, because the maximum size
-// of the entire record the kernel is willing to return is (1u << 16u) - 8.
-// If we want the size we pass to coincide with the size we get, we need to pass
-// a lower value. For the current layout of perf_event_stack_sample, the maximum
-// size is 65312, but let's leave some extra room.
-// TODO: As this amount of memory has to be copied from the ring buffer for each
-//  sample, this constant should be a parameters and should be made available in
-//  some setting.
-static constexpr uint16_t SAMPLE_STACK_USER_SIZE = 65000;
-
-// Arbitrary small value, that should be large enough to contain the complete last frame.
-// Note that we don't have any guarantee that the sample is large enough.
-static constexpr uint16_t SAMPLE_STACK_USER_SIZE_512BYTES = 512;
-
 static_assert(sizeof(void*) == 8);
 static constexpr uint16_t SAMPLE_STACK_USER_SIZE_8BYTES = 8;
 
@@ -117,10 +101,11 @@ int context_switch_event_open(pid_t pid, int32_t cpu);
 int mmap_task_event_open(pid_t pid, int32_t cpu);
 
 // perf_event_open for stack sampling.
-int stack_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu);
+int stack_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu, uint32_t stack_dump_size);
 
 // perf_event_open for stack sampling using frame pointers.
-int callchain_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu);
+int callchain_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu,
+                                uint32_t stack_dump_size);
 
 // perf_event_open for uprobes and uretprobes.
 int uprobes_retaddr_event_open(const char* module, uint64_t function_offset, pid_t pid,

@@ -86,6 +86,9 @@ class DataManager final {
   }
   [[nodiscard]] double samples_per_second() const { return samples_per_second_; }
 
+  void set_stack_dump_size(uint32_t stack_dump_size) { stack_dump_size_ = stack_dump_size; }
+  [[nodiscard]] uint32_t stack_dump_size() const { return stack_dump_size_; }
+
   void set_unwinding_method(orbit_grpc_protos::UnwindingMethod method) {
     unwinding_method_ = method;
   }
@@ -137,6 +140,7 @@ class DataManager final {
   bool enable_introspection_ = false;
   uint64_t max_local_marker_depth_per_command_buffer_ = std::numeric_limits<uint64_t>::max();
   double samples_per_second_ = 0;
+  uint32_t stack_dump_size_ = 0;
   orbit_grpc_protos::UnwindingMethod unwinding_method_{};
 
   bool collect_memory_info_ = false;

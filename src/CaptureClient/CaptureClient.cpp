@@ -71,7 +71,7 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
     ThreadPool* thread_pool, int32_t process_id,
     const orbit_client_data::ModuleManager& module_manager,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions,
-    TracepointInfoSet selected_tracepoints, double samples_per_second,
+    TracepointInfoSet selected_tracepoints, double samples_per_second, uint32_t stack_dump_size,
     UnwindingMethod unwinding_method, bool collect_scheduling_info, bool collect_thread_state,
     bool collect_gpu_jobs, bool enable_api, bool enable_introspection,
     uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
@@ -89,17 +89,17 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
 
   auto capture_result = thread_pool->Schedule(
       [this, process_id, &module_manager, selected_functions = std::move(selected_functions),
-       selected_tracepoints = std::move(selected_tracepoints), samples_per_second, unwinding_method,
-       collect_scheduling_info, collect_thread_state, collect_gpu_jobs, enable_api,
-       enable_introspection, max_local_marker_depth_per_command_buffer, collect_memory_info,
-       memory_sampling_period_ms, enable_cgroup_memory,
+       selected_tracepoints = std::move(selected_tracepoints), samples_per_second, stack_dump_size,
+       unwinding_method, collect_scheduling_info, collect_thread_state, collect_gpu_jobs,
+       enable_api, enable_introspection, max_local_marker_depth_per_command_buffer,
+       collect_memory_info, memory_sampling_period_ms, enable_cgroup_memory,
        capture_event_processor = std::move(capture_event_processor)]() mutable {
-        return CaptureSync(process_id, module_manager, selected_functions, selected_tracepoints,
-                           samples_per_second, unwinding_method, collect_scheduling_info,
-                           collect_thread_state, collect_gpu_jobs, enable_api, enable_introspection,
-                           max_local_marker_depth_per_command_buffer, collect_memory_info,
-                           memory_sampling_period_ms, enable_cgroup_memory,
-                           capture_event_processor.get());
+        return CaptureSync(
+            process_id, module_manager, selected_functions, selected_tracepoints,
+            samples_per_second, stack_dump_size, unwinding_method, collect_scheduling_info,
+            collect_thread_state, collect_gpu_jobs, enable_api, enable_introspection,
+            max_local_marker_depth_per_command_buffer, collect_memory_info,
+            memory_sampling_period_ms, enable_cgroup_memory, capture_event_processor.get());
       });
 
   return capture_result;
@@ -134,8 +134,8 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
     int32_t process_id, const orbit_client_data::ModuleManager& module_manager,
     const absl::flat_hash_map<uint64_t, FunctionInfo>& selected_functions,
     const TracepointInfoSet& selected_tracepoints, double samples_per_second,
-    UnwindingMethod unwinding_method, bool collect_scheduling_info, bool collect_thread_state,
-    bool collect_gpu_jobs, bool enable_api, bool enable_introspection,
+    uint32_t stack_dump_size, UnwindingMethod unwinding_method, bool collect_scheduling_info,
+    bool collect_thread_state, bool collect_gpu_jobs, bool enable_api, bool enable_introspection,
     uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
     uint64_t memory_sampling_period_ms, bool enable_cgroup_memory,
     CaptureEventProcessor* capture_event_processor) {
@@ -154,10 +154,11 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   CaptureOptions* capture_options = request.mutable_capture_options();
   capture_options->set_trace_context_switches(collect_scheduling_info);
   capture_options->set_pid(process_id);
-  if (samples_per_second == 0) {
+  if (samples_per_second == 0 || stack_dump_size == 0) {
     capture_options->set_unwinding_method(CaptureOptions::kUndefined);
   } else {
     capture_options->set_samples_per_second(samples_per_second);
+    capture_options->set_stack_dump_size(stack_dump_size);
     if (unwinding_method == UnwindingMethod::kFramePointerUnwinding) {
       capture_options->set_unwinding_method(CaptureOptions::kFramePointers);
     } else {

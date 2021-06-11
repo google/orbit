@@ -50,6 +50,7 @@ message CaptureOptions {
     kDwarf = 2;
   }
   UnwindingMethod unwinding_method = 4;
+  uint32 stack_dump_size = 16;
 
   repeated InstrumentedFunction instrumented_functions = 5;
 

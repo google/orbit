@@ -52,6 +52,7 @@ using orbit_grpc_protos::ThreadNamesSnapshot;
 TracerThread::TracerThread(const CaptureOptions& capture_options)
     : trace_context_switches_{capture_options.trace_context_switches()},
       target_pid_{capture_options.pid()},
+      stack_dump_size_{capture_options.stack_dump_size()},
       unwinding_method_{capture_options.unwinding_method()},
       trace_thread_state_{capture_options.trace_thread_state()},
       trace_gpu_driver_{capture_options.trace_gpu_driver()} {
@@ -108,7 +109,7 @@ void TracerThread::InitUprobesEventVisitor() {
   ORBIT_SCOPE_FUNCTION;
   maps_ = LibunwindstackMaps::ParseMaps(ReadMaps(target_pid_));
   unwinder_ = LibunwindstackUnwinder::Create();
-  leaf_function_call_manager_ = std::make_unique<LeafFunctionCallManager>();
+  leaf_function_call_manager_ = std::make_unique<LeafFunctionCallManager>(stack_dump_size_);
   uprobes_unwinding_visitor_ = std::make_unique<UprobesUnwindingVisitor>(
       &function_call_manager_, &return_address_manager_, maps_.get(), unwinder_.get(),
       leaf_function_call_manager_.get());
@@ -286,10 +287,10 @@ bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
     int sampling_fd;
     switch (unwinding_method_) {
       case CaptureOptions::kFramePointers:
-        sampling_fd = callchain_sample_event_open(sampling_period_ns_, -1, cpu);
+        sampling_fd = callchain_sample_event_open(sampling_period_ns_, -1, cpu, stack_dump_size_);
         break;
       case CaptureOptions::kDwarf:
-        sampling_fd = stack_sample_event_open(sampling_period_ns_, -1, cpu);
+        sampling_fd = stack_sample_event_open(sampling_period_ns_, -1, cpu, stack_dump_size_);
         break;
       case CaptureOptions::kUndefined:
       default:
@@ -905,8 +906,12 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
 
   } else if (is_stack_sample) {
     pid_t pid = ReadSampleRecordPid(ring_buffer);
-    constexpr size_t kSizeOfStackSample = sizeof(perf_event_stack_sample);
-    if (header.size != kSizeOfStackSample) {
+
+    const size_t size_of_stack_sample = sizeof(perf_event_stack_sample_fixed) +
+                                        2 * sizeof(uint64_t) /*size and dyn_size*/ +
+                                        stack_dump_size_ /*data*/;
+
+    if (header.size != size_of_stack_sample) {
       // Skip stack samples that have an unexpected size. These normally have
       // abi == PERF_SAMPLE_REGS_ABI_NONE and no registers, and size == 0 and
       // no stack. Usually, these samples have pid == tid == 0, but that's not

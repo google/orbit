@@ -70,19 +70,20 @@ int mmap_task_event_open(pid_t pid, int32_t cpu) {
   return generic_event_open(&pe, pid, cpu);
 }
 
-int stack_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu) {
+int stack_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu, uint32_t stack_dump_size) {
   perf_event_attr pe = generic_event_attr();
   pe.type = PERF_TYPE_SOFTWARE;
   pe.config = PERF_COUNT_SW_CPU_CLOCK;
   pe.sample_period = period_ns;
   pe.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
   pe.sample_regs_user = SAMPLE_REGS_USER_ALL;
-  pe.sample_stack_user = SAMPLE_STACK_USER_SIZE;
+  pe.sample_stack_user = stack_dump_size;
 
   return generic_event_open(&pe, pid, cpu);
 }
 
-int callchain_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu) {
+int callchain_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu,
+                                uint32_t stack_dump_size) {
   perf_event_attr pe = generic_event_attr();
   pe.type = PERF_TYPE_SOFTWARE;
   pe.config = PERF_COUNT_SW_CPU_CLOCK;
@@ -99,7 +100,7 @@ int callchain_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu) {
   // leaf functions. This is done by unwinding the first two frame using DWARF.
   pe.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
   pe.sample_regs_user = SAMPLE_REGS_USER_ALL;
-  pe.sample_stack_user = SAMPLE_STACK_USER_SIZE_512BYTES;
+  pe.sample_stack_user = stack_dump_size;
 
   return generic_event_open(&pe, pid, cpu);
 }

@@ -100,18 +100,43 @@ std::unique_ptr<MmapPerfEvent> ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_bu
 
 std::unique_ptr<StackSamplePerfEvent> ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
                                                                   const perf_event_header& header) {
-  // Data in the ring buffer has the layout of perf_event_stack_sample, but we
-  // copy it into dynamically_sized_perf_event_stack_sample.
-  uint64_t dyn_size;
-  ring_buffer->ReadValueAtOffset(&dyn_size, offsetof(perf_event_stack_sample, stack.dyn_size));
+  // We expect the following layout of the perf event:
+  //  struct {
+  //    struct perf_event_header header;
+  //    u64 sample_id;          /* if PERF_SAMPLE_IDENTIFIER */
+  //    u32 pid, tid;           /* if PERF_SAMPLE_TID */
+  //    u64 time;               /* if PERF_SAMPLE_TIME */
+  //    u64 stream_id;          /* if PERF_SAMPLE_STREAM_ID */
+  //    u32 cpu, res;           /* if PERF_SAMPLE_CPU */
+  //    u64 abi;                /* if PERF_SAMPLE_REGS_USER */
+  //    u64 regs[weight(mask)]; /* if PERF_SAMPLE_REGS_USER */
+  //    u64 size;               /* if PERF_SAMPLE_STACK_USER */
+  //    char data[size];        /* if PERF_SAMPLE_STACK_USER */
+  //    u64 dyn_size;           /* if PERF_SAMPLE_STACK_USER && size != 0 */
+  //  };
+  // Unfortunately, the value of `size` is not constant, so we need to compute the offsets by hand,
+  // rather than relying on a struct.
+
+  size_t offset_of_size =
+      offsetof(perf_event_stack_sample_fixed, regs) + sizeof(perf_event_sample_regs_user_all);
+  size_t offset_of_data = offset_of_size + sizeof(uint64_t);
+
+  uint64_t size = 0;
+  ring_buffer->ReadValueAtOffset(&size, offset_of_size);
+
+  size_t offset_of_dyn_size = offset_of_data + (size * sizeof(char));
+
+  uint64_t dyn_size = 0;
+  ring_buffer->ReadValueAtOffset(&dyn_size, offset_of_dyn_size);
+
   auto event = std::make_unique<StackSamplePerfEvent>(dyn_size);
   event->ring_buffer_record->header = header;
   ring_buffer->ReadValueAtOffset(&event->ring_buffer_record->sample_id,
-                                 offsetof(perf_event_stack_sample, sample_id));
+                                 offsetof(perf_event_stack_sample_fixed, sample_id));
   ring_buffer->ReadValueAtOffset(&event->ring_buffer_record->regs,
-                                 offsetof(perf_event_stack_sample, regs));
-  ring_buffer->ReadRawAtOffset(event->ring_buffer_record->stack.data.get(),
-                               offsetof(perf_event_stack_sample, stack.data), dyn_size);
+                                 offsetof(perf_event_stack_sample_fixed, regs));
+  ring_buffer->ReadRawAtOffset(event->ring_buffer_record->stack.data.get(), offset_of_data,
+                               dyn_size);
   ring_buffer->SkipRecord(header);
   return event;
 }

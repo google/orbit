@@ -316,6 +316,7 @@ class LinuxTracingIntegrationTestFixture {
     capture_options.set_trace_context_switches(true);
     capture_options.set_pid(puppet_.GetChildPid());
     capture_options.set_samples_per_second(1000.0);
+    capture_options.set_stack_dump_size(65000);
     capture_options.set_unwinding_method(orbit_grpc_protos::CaptureOptions::kDwarf);
     capture_options.set_trace_thread_state(true);
     capture_options.set_trace_gpu_driver(true);
@@ -901,6 +902,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointers) {
 
   orbit_grpc_protos::CaptureOptions capture_options = fixture.BuildDefaultCaptureOptions();
   capture_options.set_unwinding_method(orbit_grpc_protos::CaptureOptions::kFramePointers);
+  capture_options.set_stack_dump_size(512);
   const double sampling_rate = capture_options.samples_per_second();
 
   std::vector<orbit_grpc_protos::ProducerCaptureEvent> events =
