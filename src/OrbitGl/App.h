@@ -99,8 +99,11 @@ class OrbitApp final : public DataViewFactory,
   void MainTick();
 
   [[nodiscard]] std::string GetCaptureTime() const;
+  [[nodiscard]] std::string GetCaptureTimeAt(uint64_t timestamp_ns) const;
+
   [[nodiscard]] std::string GetSaveFile(const std::string& extension) const override;
   void SetClipboard(const std::string& text) override;
+
   ErrorMessageOr<void> OnSavePreset(const std::string& file_name);
   ErrorMessageOr<void> OnLoadPreset(const std::string& file_name);
   orbit_base::Future<ErrorMessageOr<CaptureOutcome>> LoadCaptureFromFile(
