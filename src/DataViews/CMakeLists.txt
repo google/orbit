@@ -21,6 +21,7 @@ target_link_libraries(DataViews PUBLIC
         ClientModel
         ClientProtos
         OrbitBase
+        PresetFile
         CONAN_PKG::abseil)
 
 add_executable(DataViewsTests)

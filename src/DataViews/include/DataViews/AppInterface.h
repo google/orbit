@@ -13,7 +13,9 @@
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
 #include "ClientModel/CaptureData.h"
+#include "DataViews/PresetLoadState.h"
 #include "OrbitBase/Future.h"
+#include "PresetFile/PresetFile.h"
 #include "capture_data.pb.h"
 
 namespace orbit_data_views {
@@ -26,6 +28,10 @@ class AppInterface {
   [[nodiscard]] virtual std::string GetSaveFile(const std::string& extension) const = 0;
 
   virtual void SendErrorToUi(const std::string& title, const std::string& text) = 0;
+
+  virtual void LoadPreset(const orbit_preset_file::PresetFile& preset) = 0;
+  [[nodiscard]] virtual PresetLoadState GetPresetLoadState(
+      const orbit_preset_file::PresetFile& preset) const = 0;
 };
 
 }  // namespace orbit_data_views

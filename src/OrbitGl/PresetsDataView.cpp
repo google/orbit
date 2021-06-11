@@ -16,6 +16,7 @@
 
 #include "App.h"
 #include "CoreUtils.h"
+#include "DataViews/AppInterface.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/PresetLoadState.h"
 #include "MetricsUploader/MetricsUploader.h"
@@ -39,17 +40,16 @@ constexpr const float kModulesColumnWidth = 0.34f;
 constexpr const float kHookedFunctionsColumnWidth = 0.16f;
 
 namespace {
-std::string GetLoadStateString(OrbitApp* app, const PresetFile& preset) {
+std::string GetLoadStateString(orbit_data_views::AppInterface* app, const PresetFile& preset) {
   orbit_data_views::PresetLoadState load_state = app->GetPresetLoadState(preset);
   return load_state.GetName();
 }
 }  // namespace
 
-PresetsDataView::PresetsDataView(OrbitApp* app,
+PresetsDataView::PresetsDataView(orbit_data_views::AppInterface* app,
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader)
     : orbit_data_views::DataView(orbit_data_views::DataViewType::kPresets, app),
-      metrics_uploader_(metrics_uploader),
-      app_{app} {}
+      metrics_uploader_(metrics_uploader) {}
 
 std::string PresetsDataView::GetModulesList(const std::vector<ModuleView>& modules) {
   return absl::StrJoin(modules, "\n", [](std::string* out, const ModuleView& module) {
