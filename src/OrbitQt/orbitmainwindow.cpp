@@ -295,9 +295,6 @@ void OrbitMainWindow::SetupMainWindow() {
       [this](const std::string& extension) { return this->OnGetSaveFileName(extension); });
   app_->SetClipboardCallback([this](const std::string& text) { this->OnSetClipboard(text); });
 
-  app_->SetShowEmptyFrameTrackWarningCallback(
-      [this](std::string_view function) { this->ShowEmptyFrameTrackWarningIfNeeded(function); });
-
   ui->CaptureGLWidget->Initialize(GlCanvas::CanvasType::kCaptureWindow, this, app_.get());
 
   app_->SetTimerSelectedCallback([this](const orbit_client_protos::TimerInfo* timer_info) {
@@ -1056,30 +1053,6 @@ void OrbitMainWindow::on_actionIntrospection_triggered() {
   introspection_widget_->show();
 }
 
-void OrbitMainWindow::ShowEmptyFrameTrackWarningIfNeeded(std::string_view function) {
-  QSettings settings;
-  const QString empty_frame_track_warning("EmptyFrameTrackWarning");
-  std::string message = absl::StrFormat(
-      "Frame track enabled for function %s, but since the function "
-      "does not have any hits in the current capture, a frame track "
-      "was not added to the capture.",
-      function);
-  if (!settings.value(empty_frame_track_warning, false).toBool()) {
-    QMessageBox message_box(this);
-    message_box.setText(message.c_str());
-    message_box.addButton(QMessageBox::Ok);
-    QCheckBox check_box("Don't show this message again.");
-    message_box.setCheckBox(&check_box);
-
-    QObject::connect(&check_box, &QCheckBox::stateChanged,
-                     [&settings, &empty_frame_track_warning](int state) {
-                       settings.setValue(empty_frame_track_warning, static_cast<bool>(state));
-                     });
-
-    message_box.exec();
-  }
-}
-
 void OrbitMainWindow::RestoreDefaultTabLayout() {
   for (auto& widget_and_layout : default_tab_layout_) {
     QTabWidget* tab_widget = widget_and_layout.first;
@@ -1360,6 +1333,27 @@ orbit_qt::TargetConfiguration OrbitMainWindow::ClearTargetConfiguration() {
 void OrbitMainWindow::ShowTooltip(std::string_view message) {
   QToolTip::showText(QCursor::pos(),
                      QString::fromUtf8(message.data(), static_cast<int>(message.size())), this);
+}
+
+void OrbitMainWindow::ShowWarningWithDontShowAgainCheckboxIfNeeded(
+    std::string_view title, std::string_view text, std::string_view dont_show_again_setting_key) {
+  QSettings settings;
+  QString setting_key = QString::fromStdString(std::string{dont_show_again_setting_key});
+  if (settings.value(setting_key, false).toBool()) {
+    return;
+  }
+
+  QMessageBox message_box{QMessageBox::Icon::Warning, QString::fromStdString(std::string{title}),
+                          QString::fromStdString(std::string{text}),
+                          QMessageBox::StandardButton::Ok, this};
+
+  QCheckBox check_box("Don't show this message again.");
+  message_box.setCheckBox(&check_box);
+  QObject::connect(&check_box, &QCheckBox::stateChanged, [&settings, &setting_key](int state) {
+    settings.setValue(setting_key, static_cast<bool>(state));
+  });
+
+  message_box.exec();
 }
 
 static std::optional<QString> TryApplyMappingAndReadSourceFile(

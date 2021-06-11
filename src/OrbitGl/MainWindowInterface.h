@@ -25,6 +25,10 @@ namespace orbit_gl {
 class MainWindowInterface {
  public:
   virtual void ShowTooltip(std::string_view message) = 0;
+  virtual void ShowWarningWithDontShowAgainCheckboxIfNeeded(
+      std::string_view title, std::string_view text,
+      std::string_view dont_show_again_setting_key) = 0;
+
   virtual void ShowSourceCode(
       const std::filesystem::path& file_path, size_t line_number,
       std::optional<std::unique_ptr<orbit_code_report::CodeReport>> code_report) = 0;
