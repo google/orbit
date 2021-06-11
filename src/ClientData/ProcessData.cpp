@@ -131,15 +131,26 @@ std::optional<uint64_t> ProcessData::GetModuleBaseAddress(const std::string& mod
   return module_memory_map_.at(module_path).start();
 }
 
-absl::node_hash_map<std::string, ModuleInMemory> ProcessData::GetMemoryMapCopy() const {
+std::map<uint64_t, ModuleInMemory> ProcessData::GetMemoryMapCopy() const {
   absl::MutexLock lock(&mutex_);
-  return module_memory_map_;
+  return start_address_to_module_in_memory_;
 }
 
 bool ProcessData::IsModuleLoadedByProcess(const ModuleData* module) const {
   const std::optional<ModuleInMemory> loaded_module = FindModuleByPath(module->file_path());
   if (!loaded_module.has_value()) return false;
   return loaded_module->build_id() == module->build_id();
+}
+
+std::vector<std::pair<std::string, std::string>> ProcessData::GetUniqueModulesPathAndBuildId()
+    const {
+  absl::MutexLock lock(&mutex_);
+  std::set<std::pair<std::string, std::string>> module_keys;
+  for (const auto& [unused_address, module_in_memory] : start_address_to_module_in_memory_) {
+    module_keys.insert(std::make_pair(module_in_memory.file_path(), module_in_memory.build_id()));
+  }
+
+  return {module_keys.begin(), module_keys.end()};
 }
 
 }  // namespace orbit_client_data

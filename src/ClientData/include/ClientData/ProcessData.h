@@ -75,11 +75,11 @@ class ProcessData final {
 
   // This function is deprecated since it relies on the fact that only one instance
   // of module is loaded in the process which is not always true.
-  std::optional<uint64_t> GetModuleBaseAddress(const std::string& module_path) const;
+  [[nodiscard]] std::optional<uint64_t> GetModuleBaseAddress(const std::string& module_path) const;
 
-  // This function is deprecated since it relies on the fact that only one instance
-  // of module is loaded in the process which is not always true.
-  absl::node_hash_map<std::string, ModuleInMemory> GetMemoryMapCopy() const;
+  [[nodiscard]] std::map<uint64_t, ModuleInMemory> GetMemoryMapCopy() const;
+  [[nodiscard]] std::vector<std::pair<std::string, std::string>> GetUniqueModulesPathAndBuildId()
+      const;
 
   // This function is deprecated since it relies on the fact that only one instance
   // of module is loaded in the process which is not always true.

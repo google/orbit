@@ -91,18 +91,20 @@ TEST(ProcessData, UpdateModuleInfos) {
     ProcessData process(ProcessInfo{});
     process.UpdateModuleInfos(module_infos);
 
-    const absl::node_hash_map<std::string, ModuleInMemory> module_memory_map =
-        process.GetMemoryMapCopy();
+    const std::map<uint64_t, ModuleInMemory> module_memory_map = process.GetMemoryMapCopy();
 
     EXPECT_EQ(module_memory_map.size(), 2);
 
-    const ModuleInMemory& memory_space_1 = module_memory_map.at(file_path_1);
+    const ModuleInMemory& memory_space_1 = module_memory_map.at(start_address1);
     EXPECT_EQ(memory_space_1.start(), start_address1);
     EXPECT_EQ(memory_space_1.end(), end_address_1);
+    EXPECT_EQ(memory_space_1.file_path(), file_path_1);
     EXPECT_EQ(memory_space_1.build_id(), kBuildId1);
-    const ModuleInMemory& memory_space_2 = module_memory_map.at(file_path_2);
+
+    const ModuleInMemory& memory_space_2 = module_memory_map.at(start_address_2);
     EXPECT_EQ(memory_space_2.start(), start_address_2);
     EXPECT_EQ(memory_space_2.end(), end_address_2);
+    EXPECT_EQ(memory_space_2.file_path(), file_path_2);
     EXPECT_EQ(memory_space_2.build_id(), kBuildId2);
   }
   {
@@ -251,7 +253,7 @@ TEST(ProcessData, GetModuleBaseAddress) {
   ModuleInfo module_info_2;
   module_info_2.set_file_path(file_path_2);
   module_info_2.set_address_start(start_address_2);
-  module_info_1.set_address_end(end_address_2);
+  module_info_2.set_address_end(end_address_2);
 
   std::vector<ModuleInfo> module_infos{module_info_1, module_info_2};
 
@@ -341,6 +343,49 @@ TEST(ProcessData, FindModuleByAddress) {
     EXPECT_THAT(absl::AsciiStrToLower(result.error().message()),
                 testing::HasSubstr("no module loaded at this address"));
   }
+}
+
+TEST(ProcessData, GetUniqueModulesPathAndBuildIds) {
+  const std::string file_path_1 = "filepath1";
+  const std::string build_id_1 = "build_id1";
+  uint64_t start_address_1 = 0;
+  uint64_t end_address_1 = 10;
+  ModuleInfo module_info_1;
+  module_info_1.set_file_path(file_path_1);
+  module_info_1.set_build_id(build_id_1);
+  module_info_1.set_address_start(start_address_1);
+  module_info_1.set_address_end(end_address_1);
+
+  const std::string file_path_2 = "filepath2";
+  const std::string build_id_2 = "build_id2";
+  uint64_t start_address_2 = 100;
+  uint64_t end_address_2 = 110;
+  ModuleInfo module_info_2;
+  module_info_2.set_file_path(file_path_2);
+  module_info_2.set_build_id(build_id_2);
+  module_info_2.set_address_start(start_address_2);
+  module_info_2.set_address_end(end_address_2);
+
+  const std::string& file_path_3 = file_path_2;
+  const std::string& build_id_3 = build_id_2;
+  uint64_t start_address_3 = 400;
+  uint64_t end_address_3 = 410;
+  ModuleInfo module_info_3;
+  module_info_3.set_file_path(file_path_3);
+  module_info_3.set_build_id(build_id_3);
+  module_info_3.set_address_start(start_address_3);
+  module_info_3.set_address_end(end_address_3);
+
+  std::vector<ModuleInfo> module_infos{module_info_1, module_info_2};
+
+  ProcessData process(ProcessInfo{});
+  process.UpdateModuleInfos(module_infos);
+  process.AddOrUpdateModuleInfo(module_info_3);
+
+  auto keys = process.GetUniqueModulesPathAndBuildId();
+  ASSERT_EQ(keys.size(), 2);
+  EXPECT_THAT(keys, testing::ElementsAre(testing::Pair(file_path_1, build_id_1),
+                                         testing::Pair(file_path_2, build_id_2)));
 }
 
 TEST(ProcessData, RemapModule) {
