@@ -33,6 +33,7 @@ target_compile_options(CodeReportTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(CodeReportTests PRIVATE AnnotateDisassemblyTest.cpp
                                        AssemblyTestLiterals.h
                                        DisassemblerTest.cpp
+                                       DisassemblyReportTest.cpp
                                        SourceCodeReportTest.cpp)
 target_link_libraries(CodeReportTests PRIVATE CodeReport GTest::Main)
 register_test(CodeReportTests)
