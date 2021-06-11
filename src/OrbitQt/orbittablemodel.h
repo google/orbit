@@ -16,12 +16,12 @@
 #include <optional>
 #include <utility>
 
-#include "DataView.h"
+#include "DataViews/DataView.h"
 
 class OrbitTableModel : public QAbstractTableModel {
   Q_OBJECT
  public:
-  explicit OrbitTableModel(DataView* data_view, QObject* parent = nullptr,
+  explicit OrbitTableModel(orbit_data_views::DataView* data_view, QObject* parent = nullptr,
                            QFlags<Qt::AlignmentFlag> text_alignment = Qt::AlignVCenter |
                                                                       Qt::AlignLeft);
   explicit OrbitTableModel(QObject* parent = nullptr);
@@ -38,8 +38,8 @@ class OrbitTableModel : public QAbstractTableModel {
     return data_view_->GetVisibleSelectedIndices();
   }
   QModelIndex CreateIndex(int row, int column) { return createIndex(row, column); }
-  DataView* GetDataView() { return data_view_; }
-  void SetDataView(DataView* model) { data_view_ = model; }
+  orbit_data_views::DataView* GetDataView() { return data_view_; }
+  void SetDataView(orbit_data_views::DataView* model) { data_view_ = model; }
   bool IsSortingAllowed() { return GetDataView()->IsSortingAllowed(); }
   std::pair<int, Qt::SortOrder> GetDefaultSortingColumnAndOrder();
 
@@ -48,7 +48,7 @@ class OrbitTableModel : public QAbstractTableModel {
   void OnRowsSelected(const std::vector<int>& rows);
 
  protected:
-  DataView* data_view_;
+  orbit_data_views::DataView* data_view_;
   QFlags<Qt::AlignmentFlag> text_alignment_;
 };
 

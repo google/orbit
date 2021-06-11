@@ -47,7 +47,7 @@ std::string GetLoadStateString(OrbitApp* app, const PresetFile& preset) {
 
 PresetsDataView::PresetsDataView(OrbitApp* app,
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : DataView(orbit_data_views::DataViewType::kPresets, app),
+    : orbit_data_views::DataView(orbit_data_views::DataViewType::kPresets, app),
       metrics_uploader_(metrics_uploader),
       app_{app} {}
 
@@ -63,7 +63,7 @@ std::string PresetsDataView::GetFunctionCountList(const std::vector<ModuleView>&
   });
 }
 
-const std::vector<DataView::Column>& PresetsDataView::GetColumns() {
+const std::vector<orbit_data_views::DataView::Column>& PresetsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);

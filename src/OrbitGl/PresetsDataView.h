@@ -12,14 +12,14 @@
 #include <utility>
 #include <vector>
 
-#include "DataView.h"
+#include "DataViews/DataView.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "PresetFile/PresetFile.h"
 #include "preset.pb.h"
 
 class OrbitApp;
 
-class PresetsDataView : public DataView {
+class PresetsDataView : public orbit_data_views::DataView {
  public:
   explicit PresetsDataView(OrbitApp* app,
                            orbit_metrics_uploader::MetricsUploader* metrics_uploader);

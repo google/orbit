@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-#include "DataView.h"
+#include "DataViews/DataView.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "capture.pb.h"
 #include "capture_data.pb.h"
@@ -21,7 +21,7 @@
 class LiveFunctionsController;
 class OrbitApp;
 
-class LiveFunctionsDataView : public DataView {
+class LiveFunctionsDataView : public orbit_data_views::DataView {
  public:
   explicit LiveFunctionsDataView(LiveFunctionsController* live_functions, OrbitApp* app,
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader);

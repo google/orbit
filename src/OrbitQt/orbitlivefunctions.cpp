@@ -17,7 +17,7 @@
 #include <utility>
 
 #include "App.h"
-#include "DataView.h"
+#include "DataViews/DataView.h"
 #include "LiveFunctionsDataView.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "orbitdataviewpanel.h"
@@ -39,7 +39,7 @@ void OrbitLiveFunctions::Initialize(OrbitApp* app,
                                     SelectionType selection_type, FontType font_type,
                                     bool is_main_instance) {
   live_functions_.emplace(app, metrics_uploader);
-  DataView* data_view = &live_functions_->GetDataView();
+  orbit_data_views::DataView* data_view = &live_functions_->GetDataView();
   ui->data_view_panel_->Initialize(data_view, selection_type, font_type, is_main_instance);
 
   live_functions_->SetAddIteratorCallback(

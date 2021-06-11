@@ -1,8 +1,8 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "DataView.h"
+#include "DataViews/DataView.h"
 
 #include <absl/strings/str_replace.h>
 
@@ -11,7 +11,7 @@
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 
-namespace orbit_gl {
+namespace orbit_data_views {
 std::string FormatValueForCsv(std::string_view value) {
   std::string result;
   result.append("\"");
@@ -19,7 +19,6 @@ std::string FormatValueForCsv(std::string_view value) {
   result.append("\"");
   return result;
 }
-}  // namespace orbit_gl
 
 void DataView::InitSortingOrders() {
   sorting_orders_.clear();
@@ -116,7 +115,7 @@ ErrorMessageOr<void> DataView::ExportCSV(const std::filesystem::path& file_path)
   {
     std::string header_line;
     for (size_t i = 0; i < num_columns; ++i) {
-      header_line.append(orbit_gl::FormatValueForCsv(GetColumns()[i].header));
+      header_line.append(FormatValueForCsv(GetColumns()[i].header));
       if (i < num_columns - 1) header_line.append(", ");
     }
 
@@ -133,7 +132,7 @@ ErrorMessageOr<void> DataView::ExportCSV(const std::filesystem::path& file_path)
   for (size_t i = 0; i < num_elements; ++i) {
     std::string line;
     for (size_t j = 0; j < num_columns; ++j) {
-      line.append(orbit_gl::FormatValueForCsv(GetValue(i, j)));
+      line.append(FormatValueForCsv(GetValue(i, j)));
       if (j < num_columns - 1) line.append(", ");
     }
     line.append("\r\n");
@@ -169,3 +168,5 @@ void DataView::CopySelection(const std::vector<int>& selection) {
 
   app_->SetClipboard(clipboard);
 }
+
+}  // namespace orbit_data_views

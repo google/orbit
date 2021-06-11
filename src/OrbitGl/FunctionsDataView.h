@@ -11,12 +11,12 @@
 #include <string>
 #include <vector>
 
-#include "DataView.h"
+#include "DataViews/DataView.h"
 #include "capture_data.pb.h"
 
 class OrbitApp;
 
-class FunctionsDataView : public DataView {
+class FunctionsDataView : public orbit_data_views::DataView {
  public:
   explicit FunctionsDataView(OrbitApp* app);
 

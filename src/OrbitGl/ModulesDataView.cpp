@@ -28,9 +28,9 @@ using orbit_client_data::ModuleInMemory;
 using orbit_client_data::ProcessData;
 
 ModulesDataView::ModulesDataView(OrbitApp* app)
-    : DataView(orbit_data_views::DataViewType::kModules, app), app_{app} {}
+    : orbit_data_views::DataView(orbit_data_views::DataViewType::kModules, app), app_{app} {}
 
-const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
+const std::vector<orbit_data_views::DataView::Column>& ModulesDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);

@@ -38,7 +38,7 @@ ABSL_DECLARE_FLAG(bool, enable_source_code_view);
 LiveFunctionsDataView::LiveFunctionsDataView(
     LiveFunctionsController* live_functions, OrbitApp* app,
     orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : DataView(orbit_data_views::DataViewType::kLiveFunctions, app),
+    : orbit_data_views::DataView(orbit_data_views::DataViewType::kLiveFunctions, app),
       live_functions_(live_functions),
       selected_function_id_(orbit_grpc_protos::kInvalidFunctionId),
       metrics_uploader_(metrics_uploader),
@@ -47,7 +47,7 @@ LiveFunctionsDataView::LiveFunctionsDataView(
   LiveFunctionsDataView::OnDataChanged();
 }
 
-const std::vector<DataView::Column>& LiveFunctionsDataView::GetColumns() {
+const std::vector<orbit_data_views::DataView::Column>& LiveFunctionsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);

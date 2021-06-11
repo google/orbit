@@ -29,11 +29,11 @@ using orbit_client_protos::FunctionInfo;
 ABSL_DECLARE_FLAG(bool, enable_source_code_view);
 
 CallstackDataView::CallstackDataView(OrbitApp* app)
-    : DataView(orbit_data_views::DataViewType::kCallstack, app), app_{app} {}
+    : orbit_data_views::DataView(orbit_data_views::DataViewType::kCallstack, app), app_{app} {}
 
 void CallstackDataView::SetAsMainInstance() {}
 
-const std::vector<DataView::Column>& CallstackDataView::GetColumns() {
+const std::vector<orbit_data_views::DataView::Column>& CallstackDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);

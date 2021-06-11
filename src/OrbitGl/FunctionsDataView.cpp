@@ -37,13 +37,13 @@ using orbit_client_protos::FunctionInfo;
 ABSL_DECLARE_FLAG(bool, enable_source_code_view);
 
 FunctionsDataView::FunctionsDataView(OrbitApp* app)
-    : DataView(orbit_data_views::DataViewType::kFunctions, app), app_{app} {}
+    : orbit_data_views::DataView(orbit_data_views::DataViewType::kFunctions, app), app_{app} {}
 
 const std::string FunctionsDataView::kUnselectedFunctionString = "";
 const std::string FunctionsDataView::kSelectedFunctionString = "✓";
 const std::string FunctionsDataView::kFrameTrackString = "F";
 
-const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
+const std::vector<orbit_data_views::DataView::Column>& FunctionsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);

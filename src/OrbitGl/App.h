@@ -45,7 +45,6 @@
 #include "ClientServices/TracepointServiceClient.h"
 #include "CodeReport/DisassemblyReport.h"
 #include "DataManager.h"
-#include "DataView.h"
 #include "DataViewFactory.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataViewType.h"
@@ -254,7 +253,7 @@ class OrbitApp final : public DataViewFactory,
   void SetRefreshCallback(RefreshCallback callback) { refresh_callback_ = std::move(callback); }
 
   using SamplingReportCallback =
-      std::function<void(DataView*, const std::shared_ptr<SamplingReport>&)>;
+      std::function<void(orbit_data_views::DataView*, const std::shared_ptr<SamplingReport>&)>;
   void SetSamplingReportCallback(SamplingReportCallback callback) {
     sampling_reports_callback_ = std::move(callback);
   }
@@ -360,8 +359,9 @@ class OrbitApp final : public DataViewFactory,
     process_manager_ = process_manager;
   }
   void SetTargetProcess(orbit_client_data::ProcessData* process);
-  [[nodiscard]] DataView* GetOrCreateDataView(orbit_data_views::DataViewType type) override;
-  [[nodiscard]] DataView* GetOrCreateSelectionCallstackDataView();
+  [[nodiscard]] orbit_data_views::DataView* GetOrCreateDataView(
+      orbit_data_views::DataViewType type) override;
+  [[nodiscard]] orbit_data_views::DataView* GetOrCreateSelectionCallstackDataView();
 
   [[nodiscard]] StringManager* GetStringManager() { return &string_manager_; }
   [[nodiscard]] orbit_client_services::ProcessManager* GetProcessManager() {
@@ -537,7 +537,7 @@ class OrbitApp final : public DataViewFactory,
   ShowEmptyFrameTrackWarningCallback empty_frame_track_warning_callback_;
   TimerSelectedCallback timer_selected_callback_;
 
-  std::vector<DataView*> panels_;
+  std::vector<orbit_data_views::DataView*> panels_;
 
   std::unique_ptr<ModulesDataView> modules_data_view_;
   std::unique_ptr<FunctionsDataView> functions_data_view_;

@@ -11,12 +11,12 @@
 #include <string>
 #include <vector>
 
-#include "DataView.h"
+#include "DataViews/DataView.h"
 #include "tracepoint.pb.h"
 
 class OrbitApp;
 
-class TracepointsDataView : public DataView {
+class TracepointsDataView : public orbit_data_views::DataView {
  public:
   explicit TracepointsDataView(OrbitApp* app);
 

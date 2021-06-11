@@ -32,7 +32,7 @@
 #include "App.h"
 #include "CallTreeView.h"
 #include "ClientServices/ProcessManager.h"
-#include "DataView.h"
+#include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
 #include "FilterPanelWidgetAction.h"
 #include "MainThreadExecutor.h"
@@ -73,9 +73,9 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void OnRefreshDataViewPanels(orbit_data_views::DataViewType type);
   void UpdatePanel(orbit_data_views::DataViewType type);
 
-  void OnNewSamplingReport(DataView* callstack_data_view,
+  void OnNewSamplingReport(orbit_data_views::DataView* callstack_data_view,
                            const std::shared_ptr<class SamplingReport>& sampling_report);
-  void OnNewSelectionReport(DataView* callstack_data_view,
+  void OnNewSelectionReport(orbit_data_views::DataView* callstack_data_view,
                             const std::shared_ptr<class SamplingReport>& sampling_report);
 
   void OnNewTopDownView(std::unique_ptr<CallTreeView> top_down_view);
