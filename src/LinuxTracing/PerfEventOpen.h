@@ -101,11 +101,11 @@ int context_switch_event_open(pid_t pid, int32_t cpu);
 int mmap_task_event_open(pid_t pid, int32_t cpu);
 
 // perf_event_open for stack sampling.
-int stack_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu, uint32_t stack_dump_size);
+int stack_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu, uint16_t stack_dump_size);
 
 // perf_event_open for stack sampling using frame pointers.
 int callchain_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu,
-                                uint32_t stack_dump_size);
+                                uint16_t stack_dump_size);
 
 // perf_event_open for uprobes and uretprobes.
 int uprobes_retaddr_event_open(const char* module, uint64_t function_offset, pid_t pid,

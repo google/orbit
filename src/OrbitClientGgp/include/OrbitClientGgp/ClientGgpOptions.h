@@ -18,7 +18,7 @@ struct ClientGgpOptions {
   std::string capture_file_name;
   std::string capture_file_directory;
   double samples_per_second;
-  uint32_t stack_dump_size;
+  uint16_t stack_dump_size;
   bool use_framepointer_unwinding;
 };
 

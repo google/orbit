@@ -118,7 +118,7 @@ ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
 ABSL_DECLARE_FLAG(bool, enable_tutorials_feature);
 ABSL_DECLARE_FLAG(uint16_t, sampling_rate);
-ABSL_DECLARE_FLAG(uint32_t, stack_dump_size);
+ABSL_DECLARE_FLAG(uint16_t, stack_dump_size);
 ABSL_DECLARE_FLAG(bool, frame_pointer_unwinding);
 
 using orbit_capture_client::CaptureClient;
@@ -172,7 +172,9 @@ OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configurat
   app_->PostInit(is_connected_);
 
   app_->SetSamplesPerSecond(absl::GetFlag(FLAGS_sampling_rate));
-  app_->SetStackDumpSize(absl::GetFlag(FLAGS_stack_dump_size));
+  uint16_t stack_dump_size = absl::GetFlag(FLAGS_stack_dump_size);
+  CHECK(stack_dump_size <= 65000);
+  app_->SetStackDumpSize(stack_dump_size);
   app_->SetUnwindingMethod(absl::GetFlag(FLAGS_frame_pointer_unwinding)
                                ? orbit_grpc_protos::UnwindingMethod::kFramePointerUnwinding
                                : orbit_grpc_protos::UnwindingMethod::kDwarfUnwinding);

@@ -379,7 +379,7 @@ class OrbitApp final : public DataViewFactory, public orbit_capture_client::Capt
   void SetEnableApi(bool enable_api);
   void SetEnableIntrospection(bool enable_introspection);
   void SetSamplesPerSecond(double samples_per_second);
-  void SetStackDumpSize(uint32_t stack_dump_size);
+  void SetStackDumpSize(uint16_t stack_dump_size);
   void SetUnwindingMethod(orbit_grpc_protos::UnwindingMethod unwinding_method);
   void SetMaxLocalMarkerDepthPerCommandBuffer(uint64_t max_local_marker_depth_per_command_buffer);
 

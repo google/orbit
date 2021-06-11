@@ -70,7 +70,7 @@ class MockUprobesReturnAddressManager : public UprobesReturnAddressManager {
 
 class MockLeafFunctionCallManager : public LeafFunctionCallManager {
  public:
-  explicit MockLeafFunctionCallManager(uint32_t stack_dump_size)
+  explicit MockLeafFunctionCallManager(uint16_t stack_dump_size)
       : LeafFunctionCallManager(stack_dump_size) {}
   MOCK_METHOD(Callstack::CallstackType, PatchCallerOfLeafFunction,
               (CallchainSamplePerfEvent*, LibunwindstackMaps*, LibunwindstackUnwinder*),
@@ -99,12 +99,12 @@ class UprobesUnwindingVisitorTest : public ::testing::Test {
 
   void TearDown() override { visitor_.reset(); }
 
-  static constexpr uint32_t kMaxStackDumpSize = 128;
+  static constexpr uint32_t kStackDumpSize = 128;
   MockUprobesFunctionCallManager function_call_manager_;
   MockUprobesReturnAddressManager return_address_manager_;
   MockLibunwindstackMaps maps_;
   MockLibunwindstackUnwinder unwinder_;
-  MockLeafFunctionCallManager leaf_function_call_manager_{kMaxStackDumpSize};
+  MockLeafFunctionCallManager leaf_function_call_manager_{kStackDumpSize};
   MockTracerListener listener_;
 
   std::unique_ptr<UprobesUnwindingVisitor> visitor_ = nullptr;

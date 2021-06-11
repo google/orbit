@@ -96,6 +96,7 @@ struct __attribute__((__packed__)) perf_event_stack_sample_fixed {
   perf_event_header header;
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
   perf_event_sample_regs_user_all regs;
+  // Following this field there are the following fields, which we read dynamically:
   // uint64_t size;                     /* if PERF_SAMPLE_STACK_USER */
   // char data[SAMPLE_STACK_USER_SIZE]; /* if PERF_SAMPLE_STACK_USER */
   // uint64_t dyn_size;                 /* if PERF_SAMPLE_STACK_USER && size != 0 */

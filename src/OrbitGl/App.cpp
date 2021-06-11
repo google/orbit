@@ -1146,7 +1146,7 @@ void OrbitApp::StartCapture() {
   bool enable_api = data_manager_->get_enable_api();
   bool enable_introspection = IsDevMode() && data_manager_->get_enable_introspection();
   double samples_per_second = data_manager_->samples_per_second();
-  uint32_t stack_dump_size = data_manager_->stack_dump_size();
+  uint16_t stack_dump_size = data_manager_->stack_dump_size();
   UnwindingMethod unwinding_method = data_manager_->unwinding_method();
   uint64_t max_local_marker_depth_per_command_buffer =
       data_manager_->max_local_marker_depth_per_command_buffer();
@@ -1956,7 +1956,7 @@ void OrbitApp::SetSamplesPerSecond(double samples_per_second) {
   data_manager_->set_samples_per_second(samples_per_second);
 }
 
-void OrbitApp::SetStackDumpSize(uint32_t stack_dump_size) {
+void OrbitApp::SetStackDumpSize(uint16_t stack_dump_size) {
   data_manager_->set_stack_dump_size(stack_dump_size);
 }
 

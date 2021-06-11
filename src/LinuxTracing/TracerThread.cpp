@@ -52,7 +52,7 @@ using orbit_grpc_protos::ThreadNamesSnapshot;
 TracerThread::TracerThread(const CaptureOptions& capture_options)
     : trace_context_switches_{capture_options.trace_context_switches()},
       target_pid_{capture_options.pid()},
-      stack_dump_size_{capture_options.stack_dump_size()},
+      stack_dump_size_{static_cast<uint16_t>(capture_options.stack_dump_size())},
       unwinding_method_{capture_options.unwinding_method()},
       trace_thread_state_{capture_options.trace_thread_state()},
       trace_gpu_driver_{capture_options.trace_gpu_driver()} {

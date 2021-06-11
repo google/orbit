@@ -126,7 +126,7 @@ class TracerThread {
   bool trace_context_switches_;
   pid_t target_pid_;
   uint64_t sampling_period_ns_;
-  uint32_t stack_dump_size_;
+  uint16_t stack_dump_size_;
   orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method_;
   std::vector<Function> instrumented_functions_;
   ManualInstrumentationConfig manual_instrumentation_config_;
