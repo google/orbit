@@ -34,7 +34,7 @@ class ModulesDataView : public DataView {
   bool GetDisplayColor(int row, int column, unsigned char& red, unsigned char& green,
                        unsigned char& blue) override;
   std::string GetLabel() override { return "Modules"; }
-  bool HasRefreshButton() const override { return true; }
+  [[nodiscard]] bool HasRefreshButton() const override { return true; }
   void OnRefreshButtonClicked() override;
   void UpdateModules(const orbit_client_data::ProcessData* process);
 
@@ -44,12 +44,12 @@ class ModulesDataView : public DataView {
 
  private:
   [[nodiscard]] orbit_client_data::ModuleData* GetModule(uint32_t row) const {
-    return modules_[indices_[row]];
+    return start_address_to_module_.at(indices_[row]);
   }
 
-  std::vector<orbit_client_data::ModuleData*> modules_;
-  absl::flat_hash_map<const orbit_client_data::ModuleData*, orbit_client_data::ModuleInMemory>
-      module_memory_;
+  absl::flat_hash_map<uint64_t, orbit_client_data::ModuleInMemory>
+      start_address_to_module_in_memory_;
+  absl::flat_hash_map<uint64_t, orbit_client_data::ModuleData*> start_address_to_module_;
 
   enum ColumnIndex {
     kColumnName,

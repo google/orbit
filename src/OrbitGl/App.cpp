@@ -1876,10 +1876,9 @@ void OrbitApp::RefreshUIAfterModuleReload() {
   modules_data_view_->UpdateModules(GetMutableTargetProcess());
 
   functions_data_view_->ClearFunctions();
-  auto memory_map = GetTargetProcess()->GetMemoryMapCopy();
-  for (const auto& [module_path, module_in_memory] : memory_map) {
-    ModuleData* module =
-        module_manager_->GetMutableModuleByPathAndBuildId(module_path, module_in_memory.build_id());
+  auto module_keys = GetTargetProcess()->GetUniqueModulesPathAndBuildId();
+  for (const auto& [file_path, build_id] : module_keys) {
+    ModuleData* module = module_manager_->GetMutableModuleByPathAndBuildId(file_path, build_id);
     if (module->is_loaded()) {
       functions_data_view_->AddFunctions(module->GetFunctions());
     }

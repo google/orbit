@@ -44,8 +44,9 @@ const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
 }
 
 std::string ModulesDataView::GetValue(int row, int col) {
-  const ModuleData* module = GetModule(row);
-  const ModuleInMemory& memory_space = module_memory_.at(module);
+  uint64_t start_address = indices_[row];
+  const ModuleData* module = start_address_to_module_.at(start_address);
+  const ModuleInMemory& memory_space = start_address_to_module_in_memory_.at(start_address);
 
   switch (col) {
     case kColumnName:
@@ -63,20 +64,21 @@ std::string ModulesDataView::GetValue(int row, int col) {
   }
 }
 
-#define ORBIT_PROC_SORT(Member)                                                      \
-  [&](int a, int b) {                                                                \
-    return orbit_core::Compare(modules_[a]->Member, modules_[b]->Member, ascending); \
+#define ORBIT_PROC_SORT(Member)                                                    \
+  [&](uint64_t a, uint64_t b) {                                                    \
+    return orbit_core::Compare(start_address_to_module_.at(a)->Member,             \
+                               start_address_to_module_.at(b)->Member, ascending); \
   }
 
-#define ORBIT_MODULE_SPACE_SORT(Member)                                           \
-  [&](int a, int b) {                                                             \
-    return orbit_core::Compare(module_memory_.at(modules_[a]).Member,             \
-                               module_memory_.at(modules_[b]).Member, ascending); \
+#define ORBIT_MODULE_SPACE_SORT(Member)                                                     \
+  [&](uint64_t a, uint64_t b) {                                                             \
+    return orbit_core::Compare(start_address_to_module_in_memory_.at(a).Member,             \
+                               start_address_to_module_in_memory_.at(b).Member, ascending); \
   }
 
 void ModulesDataView::DoSort() {
   bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
-  std::function<bool(int a, int b)> sorter = nullptr;
+  std::function<bool(uint64_t, uint64_t)> sorter = nullptr;
 
   switch (sorting_column_) {
     case kColumnName:
@@ -172,23 +174,22 @@ void ModulesDataView::DoFilter() {
   std::vector<uint64_t> indices;
   std::vector<std::string> tokens = absl::StrSplit(absl::AsciiStrToLower(filter_), ' ');
 
-  for (size_t i = 0; i < modules_.size(); ++i) {
-    const ModuleData* module = modules_[i];
-    const ModuleInMemory& memory_space = module_memory_.at(module);
+  for (uint64_t start_address : indices_) {
+    const ModuleInMemory& memory_space = start_address_to_module_in_memory_.at(start_address);
     std::string module_string = absl::StrFormat("%s %s", memory_space.FormattedAddressRange(),
-                                                absl::AsciiStrToLower(module->file_path()));
+                                                absl::AsciiStrToLower(memory_space.file_path()));
 
     bool match = true;
 
     for (std::string& filter_token : tokens) {
-      if (module_string.find(filter_token) == std::string::npos) {
+      if (!absl::StrContains(module_string, filter_token)) {
         match = false;
         break;
       }
     }
 
     if (match) {
-      indices.push_back(i);
+      indices.push_back(start_address);
     }
   }
 
@@ -196,19 +197,17 @@ void ModulesDataView::DoFilter() {
 }
 
 void ModulesDataView::UpdateModules(const ProcessData* process) {
-  modules_.clear();
-  module_memory_.clear();
+  start_address_to_module_.clear();
+  start_address_to_module_in_memory_.clear();
   auto memory_map = process->GetMemoryMapCopy();
-  for (const auto& [module_path, module_in_memory] : memory_map) {
-    ModuleData* module =
-        app_->GetMutableModuleByPathAndBuildId(module_path, module_in_memory.build_id());
-    modules_.push_back(module);
-    module_memory_.insert_or_assign(module, module_in_memory);
-  }
-
-  indices_.resize(modules_.size());
-  for (size_t i = 0; i < indices_.size(); ++i) {
-    indices_[i] = i;
+  indices_.resize(memory_map.size());
+  size_t index = 0;
+  for (const auto& [start_address, module_in_memory] : memory_map) {
+    ModuleData* module = app_->GetMutableModuleByPathAndBuildId(module_in_memory.file_path(),
+                                                                module_in_memory.build_id());
+    start_address_to_module_.insert_or_assign(start_address, module);
+    start_address_to_module_in_memory_.insert_or_assign(start_address, module_in_memory);
+    indices_[index++] = start_address;
   }
 
   OnDataChanged();
