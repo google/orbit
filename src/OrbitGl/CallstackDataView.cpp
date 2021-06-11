@@ -28,7 +28,8 @@ using orbit_client_protos::FunctionInfo;
 
 ABSL_DECLARE_FLAG(bool, enable_source_code_view);
 
-CallstackDataView::CallstackDataView(OrbitApp* app) : DataView(DataViewType::kCallstack, app) {}
+CallstackDataView::CallstackDataView(OrbitApp* app)
+    : DataView(DataViewType::kCallstack, app), app_{app} {}
 
 void CallstackDataView::SetAsMainInstance() {}
 

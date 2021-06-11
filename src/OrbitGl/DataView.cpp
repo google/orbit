@@ -8,7 +8,6 @@
 
 #include <memory>
 
-#include "App.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 
