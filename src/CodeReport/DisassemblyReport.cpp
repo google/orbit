@@ -31,16 +31,12 @@ std::optional<uint32_t> DisassemblyReport::GetNumSamplesAtLine(size_t line) cons
   if (next_address == 0) {
     next_address = address + 1;
   }
-  if (!post_processed_sampling_data_.has_value()) {
-    return 0.0;
-  }
-  const orbit_client_data::ThreadSampleData* data = post_processed_sampling_data_->GetSummary();
-  if (data == nullptr) {
+  if (!thread_sample_data_.has_value()) {
     return 0.0;
   }
   uint32_t count = 0;
   while (address < next_address) {
-    count += data->GetCountForAddress(address);
+    count += thread_sample_data_->GetCountForAddress(address);
     address++;
   }
   return count;
