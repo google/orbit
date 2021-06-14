@@ -78,13 +78,6 @@ int stack_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu, uint16_t
   pe.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
   pe.sample_regs_user = SAMPLE_REGS_USER_ALL;
 
-  // Max to pass to perf_event_open without getting an error is (1u << 16u) - 8,
-  // because the kernel stores this in a short and because of alignment reasons.
-  // But the size the kernel actually returns is smaller, because the maximum size
-  // of the entire record the kernel is willing to return is (1u << 16u) - 8.
-  // If we want the size we pass to coincide with the size we get, we need to pass
-  // a lower value. For the current layout of perf_event_stack_sample_fixed, the maximum
-  // size is 65312. We leave some extra room with our flag (see `ClientFlags.cpp`).
   pe.sample_stack_user = stack_dump_size;
 
   return generic_event_open(&pe, pid, cpu);

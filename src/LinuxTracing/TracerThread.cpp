@@ -57,7 +57,11 @@ TracerThread::TracerThread(const CaptureOptions& capture_options)
       trace_gpu_driver_{capture_options.trace_gpu_driver()} {
   if (unwinding_method_ != CaptureOptions::kUndefined) {
     uint32_t stack_dump_size = capture_options.stack_dump_size();
-    CHECK(stack_dump_size <= kMaxStackSampleUserSize && stack_dump_size > 0);
+    if (stack_dump_size > kMaxStackSampleUserSize || stack_dump_size == 0) {
+      ERROR("Invalid sample stack dump size: %u; Reassigning to default: %u", stack_dump_size,
+            kMaxStackSampleUserSize);
+      stack_dump_size = kMaxStackSampleUserSize;
+    }
     stack_dump_size_ = static_cast<uint16_t>(stack_dump_size);
     std::optional<uint64_t> sampling_period_ns =
         ComputeSamplingPeriodNs(capture_options.samples_per_second());

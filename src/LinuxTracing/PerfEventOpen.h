@@ -94,6 +94,13 @@ static constexpr uint64_t SAMPLE_REGS_USER_SP_IP_ARGUMENTS =
 static_assert(sizeof(void*) == 8);
 static constexpr uint16_t SAMPLE_STACK_USER_SIZE_8BYTES = 8;
 
+// Max to pass to perf_event_open without getting an error is (1u << 16u) - 8,
+// because the kernel stores this in a short and because of alignment reasons.
+// But the size the kernel actually returns is smaller, because the maximum size
+// of the entire record the kernel is willing to return is (1u << 16u) - 8.
+// If we want the size we pass to coincide with the size we get, we need to pass
+// a lower value. For the current layout of perf_event_stack_sample_fixed, the maximum
+// size is 65312. We leave some extra room with our flag (see `ClientFlags.cpp`).
 static constexpr uint16_t kMaxStackSampleUserSize = 65000;
 
 // perf_event_open for context switches.
