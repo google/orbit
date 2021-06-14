@@ -30,7 +30,8 @@ target_link_libraries(DataViews PUBLIC
 
 add_executable(DataViewsTests)
 target_compile_options(DataViewsTests PRIVATE ${STRICT_COMPILE_FLAGS})
-target_sources(DataViewsTests PRIVATE DataViewTest.cpp)
+target_sources(DataViewsTests PRIVATE DataViewTest.cpp
+                                      MockAppInterface.h)
 target_link_libraries(DataViewsTests PRIVATE
         DataViews
         GTest::Main)
