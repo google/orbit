@@ -34,6 +34,8 @@ ABSL_FLAG(std::string, file_directory, "/var/game/",
 ABSL_FLAG(std::string, log_directory, "",
           "Path to locate debug file. By default only stdout is used for logs");
 ABSL_FLAG(uint16_t, sampling_rate, 1000, "Frequency of callstack sampling in samples per second");
+ABSL_FLAG(uint16_t, stack_dump_size, 65000,
+          "Number of bytes to copy from the stack per sample. Max: 65000");
 ABSL_FLAG(bool, frame_pointer_unwinding, false, "Use frame pointers for unwinding");
 ABSL_FLAG(bool, thread_state, false, "Collect thread states");
 ABSL_FLAG(uint64_t, max_local_marker_depth_per_command_buffer, std::numeric_limits<uint64_t>::max(),
@@ -73,6 +75,9 @@ int main(int argc, char** argv) {
   options.capture_file_name = absl::GetFlag(FLAGS_file_name);
   options.capture_file_directory = absl::GetFlag(FLAGS_file_directory);
   options.samples_per_second = absl::GetFlag(FLAGS_sampling_rate);
+  uint16_t stack_dump_size = absl::GetFlag(FLAGS_stack_dump_size);
+  CHECK(stack_dump_size <= 65000);
+  options.stack_dump_size = stack_dump_size;
   options.use_framepointer_unwinding = absl::GetFlag(FLAGS_frame_pointer_unwinding);
 
   ClientGgp client_ggp(std::move(options));

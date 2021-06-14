@@ -56,7 +56,9 @@ class LeafFunctionCallManagerTest : public ::testing::Test {
   MockLibunwindstackMaps maps_;
   MockLibunwindstackUnwinder unwinder_;
 
-  LeafFunctionCallManager leaf_function_call_manager_;
+  static constexpr uint16_t kStackDumpSize = 128;
+
+  LeafFunctionCallManager leaf_function_call_manager_{kStackDumpSize};
 
   static constexpr uint64_t kUprobesMapsStart = 42;
   static constexpr uint64_t kUprobesMapsEnd = 84;
@@ -140,7 +142,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnSmall
   event.ring_buffer_record.sample_id = sample_id;
   event.ips = callchain;
 
-  event.regs.bp = 2 * SAMPLE_STACK_USER_SIZE_512BYTES;
+  event.regs.bp = 2 * kStackDumpSize;
   event.regs.sp = 0;
 
   EXPECT_EQ(Callstack::kStackTopForDwarfUnwindingTooSmall,
@@ -170,14 +172,14 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
   };
   event.ring_buffer_record.sample_id = sample_id;
   event.ips = callchain;
-  event.regs.bp = SAMPLE_STACK_USER_SIZE_512BYTES;
+  event.regs.bp = kStackDumpSize;
   event.regs.sp = 10;
 
   EXPECT_CALL(maps_, Get).WillRepeatedly(Return(nullptr));
 
   // Usually, we should get at least the instruction pointer as frame, even on unwinding errors.
   // However, we should also support empty callstacks and treat them as unwinding error.
-  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, SAMPLE_STACK_USER_SIZE_512BYTES - 10, _, _))
+  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, kStackDumpSize - 10, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{{}, unwindstack::ErrorCode::ERROR_INVALID_MAP}));
 
@@ -192,7 +194,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
   libunwindstack_callstack.push_back(kFrame1);
   libunwindstack_callstack.push_back(kNonExecutableFrame);
 
-  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, SAMPLE_STACK_USER_SIZE_512BYTES - 10, _, _))
+  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, kStackDumpSize - 10, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
                                             unwindstack::ErrorCode::ERROR_INVALID_MAP}));
@@ -228,7 +230,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnNoFra
   };
   event.ring_buffer_record.sample_id = sample_id;
   event.ips = callchain;
-  event.regs.bp = SAMPLE_STACK_USER_SIZE_512BYTES;
+  event.regs.bp = kStackDumpSize;
   event.regs.sp = 10;
 
   EXPECT_CALL(maps_, Get).WillRepeatedly(Return(nullptr));
@@ -239,7 +241,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnNoFra
   libunwindstack_callstack.push_back(kFrame2);
   libunwindstack_callstack.push_back(kFrame3);
 
-  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, SAMPLE_STACK_USER_SIZE_512BYTES - 10, _, _))
+  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, kStackDumpSize - 10, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
                                             unwindstack::ErrorCode::ERROR_INVALID_MAP}));
@@ -272,7 +274,7 @@ TEST_F(LeafFunctionCallManagerTest,
   };
   event.ring_buffer_record.sample_id = sample_id;
   event.ips = callchain;
-  event.regs.bp = SAMPLE_STACK_USER_SIZE_512BYTES;
+  event.regs.bp = kStackDumpSize;
   event.regs.sp = 10;
 
   EXPECT_CALL(maps_, Get).WillRepeatedly(Return(nullptr));
@@ -282,7 +284,7 @@ TEST_F(LeafFunctionCallManagerTest,
   std::vector<unwindstack::FrameData> libunwindstack_callstack;
   libunwindstack_callstack.push_back(kFrame1);
 
-  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, SAMPLE_STACK_USER_SIZE_512BYTES - 10, _, _))
+  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, kStackDumpSize - 10, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
                                             unwindstack::ErrorCode::ERROR_INVALID_MAP}));
@@ -314,7 +316,7 @@ TEST_F(LeafFunctionCallManagerTest,
   };
   event.ring_buffer_record.sample_id = sample_id;
   event.ips = callchain;
-  event.regs.bp = SAMPLE_STACK_USER_SIZE_512BYTES;
+  event.regs.bp = kStackDumpSize;
   event.regs.sp = 10;
 
   EXPECT_CALL(maps_, Get).WillRepeatedly(Return(nullptr));
@@ -323,7 +325,7 @@ TEST_F(LeafFunctionCallManagerTest,
   libunwindstack_callstack.push_back(kFrame1);
   libunwindstack_callstack.push_back(kFrame2);
 
-  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, SAMPLE_STACK_USER_SIZE_512BYTES - 10, _, _))
+  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, kStackDumpSize - 10, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
                                             unwindstack::ErrorCode::ERROR_INVALID_MAP}));

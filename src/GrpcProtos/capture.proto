@@ -43,6 +43,8 @@ message CaptureOptions {
   bool trace_context_switches = 1;
   int32 pid = 2;
   double samples_per_second = 3;
+  // Expected to be "uint16".
+  uint32 stack_dump_size = 16;
 
   enum UnwindingMethod {
     kUndefined = 0;

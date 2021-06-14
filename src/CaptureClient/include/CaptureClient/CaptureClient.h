@@ -43,8 +43,9 @@ class CaptureClient {
       const orbit_client_data::ModuleManager& module_manager,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       orbit_client_data::TracepointInfoSet selected_tracepoints, double samples_per_second,
-      orbit_grpc_protos::UnwindingMethod unwinding_method, bool collect_scheduling_info,
-      bool collect_thread_state, bool collect_gpu_jobs, bool enable_api, bool enable_introspection,
+      uint16_t stack_dump_size, orbit_grpc_protos::UnwindingMethod unwinding_method,
+      bool collect_scheduling_info, bool collect_thread_state, bool collect_gpu_jobs,
+      bool enable_api, bool enable_introspection,
       uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
       uint64_t memory_sampling_period_ms, bool enable_cgroup_memory,
       std::unique_ptr<CaptureEventProcessor> capture_event_processor);
@@ -77,8 +78,9 @@ class CaptureClient {
       int32_t process_id, const orbit_client_data::ModuleManager& module_manager,
       const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>& selected_functions,
       const orbit_client_data::TracepointInfoSet& selected_tracepoints, double samples_per_second,
-      orbit_grpc_protos::UnwindingMethod unwinding_method, bool collect_scheduling_info,
-      bool collect_thread_state, bool collect_gpu_jobs, bool enable_api, bool enable_introspection,
+      uint16_t stack_dump_size, orbit_grpc_protos::UnwindingMethod unwinding_method,
+      bool collect_scheduling_info, bool collect_thread_state, bool collect_gpu_jobs,
+      bool enable_api, bool enable_introspection,
       uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
       uint64_t memory_sampling_period_ms, bool enable_cgroup_memory,
       CaptureEventProcessor* capture_event_processor);

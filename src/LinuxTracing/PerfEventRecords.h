@@ -86,29 +86,20 @@ struct __attribute__((__packed__)) perf_event_sample_regs_user_sp_ip_arguments {
   uint64_t r9;
 };
 
-struct __attribute__((__packed__)) perf_event_sample_stack_user {
-  uint64_t size;                     /* if PERF_SAMPLE_STACK_USER */
-  char data[SAMPLE_STACK_USER_SIZE]; /* if PERF_SAMPLE_STACK_USER */
-  uint64_t dyn_size;                 /* if PERF_SAMPLE_STACK_USER && size != 0 */
-};
-
 struct __attribute__((__packed__)) perf_event_sample_stack_user_8bytes {
   uint64_t size;
   uint64_t top8bytes;
   uint64_t dyn_size;
 };
 
-struct __attribute__((__packed__)) perf_event_sample_stack_user_512bytes {
-  uint64_t size;
-  char data[SAMPLE_STACK_USER_SIZE_512BYTES];
-  uint64_t dyn_size;
-};
-
-struct __attribute__((__packed__)) perf_event_stack_sample {
+struct __attribute__((__packed__)) perf_event_stack_sample_fixed {
   perf_event_header header;
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
   perf_event_sample_regs_user_all regs;
-  perf_event_sample_stack_user stack;
+  // Following this field there are the following fields, which we read dynamically:
+  // uint64_t size;                     /* if PERF_SAMPLE_STACK_USER */
+  // char data[SAMPLE_STACK_USER_SIZE]; /* if PERF_SAMPLE_STACK_USER */
+  // uint64_t dyn_size;                 /* if PERF_SAMPLE_STACK_USER && size != 0 */
 };
 
 struct __attribute__((__packed__)) perf_event_callchain_sample_fixed {
@@ -118,7 +109,9 @@ struct __attribute__((__packed__)) perf_event_callchain_sample_fixed {
   // Following this field there are the following fields, which we read dynamically:
   // uint64_t[nr] ips;
   // perf_event_sample_regs_user_sp_ip_arguments regs;
-  // perf_event_sample_stack_user_512bytes stack;
+  // uint64_t size;
+  // char data[size];
+  // uint64_t dyn_size;
 };
 
 struct __attribute__((__packed__)) perf_event_sp_ip_arguments_8bytes_sample {

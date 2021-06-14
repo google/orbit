@@ -160,6 +160,7 @@ int main(int argc, char* argv[]) {
   LOG("process_id=%d", process_id);
   uint16_t samples_per_second = absl::GetFlag(FLAGS_sampling_rate);
   LOG("samples_per_second=%u", samples_per_second);
+  constexpr uint16_t kStackDumpSize = 65000;
   orbit_grpc_protos::UnwindingMethod unwinding_method =
       absl::GetFlag(FLAGS_frame_pointers)
           ? orbit_grpc_protos::UnwindingMethod::kFramePointerUnwinding
@@ -240,7 +241,7 @@ int main(int argc, char* argv[]) {
 
   auto capture_outcome_future = capture_client.Capture(
       thread_pool.get(), process_id, module_manager, selected_functions,
-      orbit_client_data::TracepointInfoSet{}, samples_per_second, unwinding_method,
+      orbit_client_data::TracepointInfoSet{}, samples_per_second, kStackDumpSize, unwinding_method,
       collect_scheduling_info, collect_thread_state, collect_gpu_jobs, kEnableApi,
       kEnableIntrospection, kMaxLocalMarkerDepthPerCommandBuffer, collect_memory_info,
       memory_sampling_period_ms, enable_cgroup_memory, std::move(capture_event_processor));

@@ -27,6 +27,13 @@ ABSL_FLAG(bool, enable_tutorials_feature, false, "Enable tutorials");
 // TODO(b/160549506): Remove this flag once it can be specified in the ui.
 ABSL_FLAG(uint16_t, sampling_rate, 1000, "Frequency of callstack sampling in samples per second");
 
+// Max to pass to perf_event_open without getting an error is (1u << 16u) - 8,
+// because the kernel stores this in a short and because of alignment reasons.
+// But the size the kernel actually returns is smaller and we leave some extra room (see
+// `PerfEventOpen.cpp`).
+ABSL_FLAG(uint16_t, stack_dump_size, 65000,
+          "Number of bytes to copy from the stack per sample. Max: 65000");
+
 // TODO(b/160549506): Remove this flag once it can be specified in the ui.
 ABSL_FLAG(bool, frame_pointer_unwinding, false, "Use frame pointers for unwinding");
 

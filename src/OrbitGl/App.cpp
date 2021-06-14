@@ -1171,6 +1171,7 @@ void OrbitApp::StartCapture() {
   bool enable_api = data_manager_->get_enable_api();
   bool enable_introspection = IsDevMode() && data_manager_->get_enable_introspection();
   double samples_per_second = data_manager_->samples_per_second();
+  uint16_t stack_dump_size = data_manager_->stack_dump_size();
   UnwindingMethod unwinding_method = data_manager_->unwinding_method();
   uint64_t max_local_marker_depth_per_command_buffer =
       data_manager_->max_local_marker_depth_per_command_buffer();
@@ -1219,7 +1220,7 @@ void OrbitApp::StartCapture() {
 
   Future<ErrorMessageOr<CaptureOutcome>> capture_result = capture_client_->Capture(
       thread_pool_.get(), process->pid(), *module_manager_, std::move(selected_functions_map),
-      std::move(selected_tracepoints), samples_per_second, unwinding_method,
+      std::move(selected_tracepoints), samples_per_second, stack_dump_size, unwinding_method,
       collect_scheduling_info, collect_thread_states, collect_gpu_jobs, enable_api,
       enable_introspection, max_local_marker_depth_per_command_buffer, collect_memory_info,
       memory_sampling_period_ms, enable_cgroup_memory, std::move(capture_event_processor));
@@ -1978,6 +1979,10 @@ void OrbitApp::SetEnableIntrospection(bool enable_introspection) {
 
 void OrbitApp::SetSamplesPerSecond(double samples_per_second) {
   data_manager_->set_samples_per_second(samples_per_second);
+}
+
+void OrbitApp::SetStackDumpSize(uint16_t stack_dump_size) {
+  data_manager_->set_stack_dump_size(stack_dump_size);
 }
 
 void OrbitApp::SetUnwindingMethod(orbit_grpc_protos::UnwindingMethod unwinding_method) {
