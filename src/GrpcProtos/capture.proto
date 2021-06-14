@@ -432,12 +432,17 @@ message ClockResolutionEvent {
   uint64 clock_resolution_ns = 2;
 }
 
+message ErrorsWithPerfEventOpenEvent {
+  uint64 timestamp_ns = 1;
+}
+
 message MetadataEvent {
   oneof event {
     WarningEvent warning_event = 1;
     InfoEvent info_event = 2;
     ErrorEnablingOrbitApiEvent error_enabling_orbit_api_event = 3;
     ClockResolutionEvent clock_resolution_event = 4;
+    ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event = 5;
   }
 }
 

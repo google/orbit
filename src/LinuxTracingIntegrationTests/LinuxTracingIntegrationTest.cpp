@@ -277,6 +277,17 @@ class BufferTracerListener : public orbit_linux_tracing::TracerListener {
     }
   }
 
+  void OnErrorsWithPerfEventOpenEvent(
+      orbit_grpc_protos::ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event) override {
+    orbit_grpc_protos::ProducerCaptureEvent event;
+    *event.mutable_metadata_event()->mutable_errors_with_perf_event_open_event() =
+        std::move(errors_with_perf_event_open_event);
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
+  }
+
   [[nodiscard]] std::vector<orbit_grpc_protos::ProducerCaptureEvent> GetAndClearEvents() {
     absl::MutexLock lock{&events_mutex_};
     std::vector<orbit_grpc_protos::ProducerCaptureEvent> events = std::move(events_);
@@ -491,12 +502,45 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kApiEvent:
         UNREACHABLE();
-      case orbit_grpc_protos::ProducerCaptureEvent::kMetadataEvent:
-        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kMetadataEvent: {
+        const orbit_grpc_protos::MetadataEvent& metadata_event = event.metadata_event();
+        switch (metadata_event.event_case()) {
+          case orbit_grpc_protos::MetadataEvent::kWarningEvent:
+            UNREACHABLE();
+          case orbit_grpc_protos::MetadataEvent::kInfoEvent:
+            UNREACHABLE();
+          case orbit_grpc_protos::MetadataEvent::kErrorEnablingOrbitApiEvent:
+            UNREACHABLE();
+          case orbit_grpc_protos::MetadataEvent::kClockResolutionEvent:
+            UNREACHABLE();
+          case orbit_grpc_protos::MetadataEvent::kErrorsWithPerfEventOpenEvent:
+            EXPECT_GE(metadata_event.errors_with_perf_event_open_event().timestamp_ns(),
+                      previous_event_timestamp_ns);
+            previous_event_timestamp_ns =
+                metadata_event.errors_with_perf_event_open_event().timestamp_ns();
+            break;
+          case orbit_grpc_protos::MetadataEvent::EVENT_NOT_SET:
+            UNREACHABLE();
+        }
+      } break;
       case orbit_grpc_protos::ProducerCaptureEvent::EVENT_NOT_SET:
         UNREACHABLE();
     }
   }
+}
+
+void VerifyErrorsWithPerfEventOpenEvent(
+    const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
+  bool errors_with_perf_event_open_event_found = false;
+  for (const auto& event : events) {
+    if (event.event_case() == orbit_grpc_protos::ProducerCaptureEvent::kMetadataEvent &&
+        event.metadata_event().event_case() ==
+            orbit_grpc_protos::MetadataEvent::kErrorsWithPerfEventOpenEvent) {
+      EXPECT_FALSE(errors_with_perf_event_open_event_found);
+      errors_with_perf_event_open_event_found = true;
+    }
+  }
+  EXPECT_EQ(errors_with_perf_event_open_event_found, !IsRunningAsRoot());
 }
 
 TEST(LinuxTracingIntegrationTest, SchedulingSlices) {
@@ -842,6 +886,8 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesAndAddressInfos) {
 
   VerifyOrderOfAllEvents(events);
 
+  VerifyErrorsWithPerfEventOpenEvent(events);
+
   absl::flat_hash_set<uint64_t> address_infos_received =
       VerifyAndGetAddressInfosWithOuterAndInnerFunction(events, executable_path,
                                                         outer_function_virtual_address_range,
@@ -911,6 +957,8 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointers) {
       TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
 
   VerifyOrderOfAllEvents(events);
+
+  VerifyErrorsWithPerfEventOpenEvent(events);
 
   // AddressInfos are not sent when unwinding with frame pointers as they are produced by
   // libunwindstack.
@@ -1078,6 +1126,8 @@ TEST(LinuxTracingIntegrationTest, ModuleUpdateOnDlopen) {
       TraceAndGetEvents(&fixture, PuppetConstants::kDlopenCommand);
 
   VerifyOrderOfAllEvents(events);
+
+  VerifyErrorsWithPerfEventOpenEvent(events);
 
   bool module_update_found = false;
   for (const auto& event : events) {
