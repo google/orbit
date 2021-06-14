@@ -567,6 +567,21 @@ void OrbitApp::OnMetadataEvent(const orbit_grpc_protos::MetadataEvent& metadata_
         }
       } break;
 
+      case orbit_grpc_protos::MetadataEvent::kErrorsWithPerfEventOpenEvent: {
+        constexpr const char* kMessage =
+            "There were errors with perf_event_open. Some information will probably be missing "
+            "from the capture.";
+        main_window_->AppendToCaptureLog(
+            MainWindowInterface::CaptureLogSeverity::kSevereWarning,
+            GetCaptureTimeAt(metadata_event.errors_with_perf_event_open_event().timestamp_ns()),
+            kMessage);
+        constexpr const char* kDontShowAgainErrorsWithPerfEventOpenWarningKey =
+            "DontShowAgainErrorsWithPerfEventOpenWarning";
+        main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
+            "Errors with perf_event_open", kMessage,
+            kDontShowAgainErrorsWithPerfEventOpenWarningKey);
+      } break;
+
       case orbit_grpc_protos::MetadataEvent::EVENT_NOT_SET:
         break;
     }

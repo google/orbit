@@ -141,4 +141,12 @@ void LinuxTracingHandler::OnModulesSnapshot(orbit_grpc_protos::ModulesSnapshot m
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }
 
+void LinuxTracingHandler::OnErrorsWithPerfEventOpenEvent(
+    orbit_grpc_protos::ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event) {
+  ProducerCaptureEvent event;
+  *event.mutable_metadata_event()->mutable_errors_with_perf_event_open_event() =
+      std::move(errors_with_perf_event_open_event);
+  producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
+}
+
 }  // namespace orbit_service
