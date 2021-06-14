@@ -616,6 +616,9 @@ void TracerThread::Startup() {
 
   if (perf_event_open_errors) {
     LOG("There were errors with perf_event_open: did you forget to run as root?");
+    orbit_grpc_protos::ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event;
+    errors_with_perf_event_open_event.set_timestamp_ns(orbit_base::CaptureTimestampNs());
+    listener_->OnErrorsWithPerfEventOpenEvent(std::move(errors_with_perf_event_open_event));
   }
 
   // Start recording events.
