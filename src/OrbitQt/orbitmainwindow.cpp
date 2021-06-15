@@ -1472,21 +1472,27 @@ void OrbitMainWindow::ShowDisassembly(const orbit_client_protos::FunctionInfo& f
 void OrbitMainWindow::AppendToCaptureLog(CaptureLogSeverity severity, std::string_view capture_time,
                                          std::string_view message) {
   QColor message_color;
+  std::string severity_name;
   switch (severity) {
     case CaptureLogSeverity::kInfo:
       message_color = Qt::white;
+      severity_name = "kInfo";
       break;
     case CaptureLogSeverity::kWarning:
       message_color = Qt::yellow;
+      severity_name = "kWarning";
       break;
     case CaptureLogSeverity::kSevereWarning:
       message_color = QColor{255, 128, 0};
+      severity_name = "kSevereWarning";
       break;
     case CaptureLogSeverity::kError:
       message_color = Qt::darkRed;
+      severity_name = "kError";
       break;
   }
   ui->captureLogTextEdit->setTextColor(message_color);
   ui->captureLogTextEdit->append(
       QString::fromStdString(absl::StrFormat("%s\t%s", capture_time, message)));
+  LOG("\"%s  %s\" with severity %s added to the capture log", capture_time, message, severity_name);
 }
