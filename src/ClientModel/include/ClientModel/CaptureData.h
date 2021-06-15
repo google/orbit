@@ -79,7 +79,7 @@ class CaptureData {
   void InsertAddressInfo(orbit_client_protos::LinuxAddressInfo address_info);
 
   [[nodiscard]] const std::string& GetFunctionNameByAddress(uint64_t absolute_address) const;
-  [[nodiscard]] std::optional<uint64_t> FindFunctionAbsoluteAddressByAddress(
+  [[nodiscard]] std::optional<uint64_t> FindFunctionAbsoluteAddressByInstructionAbsoluteAddress(
       uint64_t absolute_address) const;
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByModulePathBuildIdAndOffset(
       const std::string& module_path, const std::string& build_id, uint64_t offset) const;
@@ -94,8 +94,6 @@ class CaptureData {
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByAddress(
       uint64_t absolute_address, bool is_exact) const;
   [[nodiscard]] orbit_client_data::ModuleData* FindModuleByAddress(uint64_t absolute_address) const;
-  [[nodiscard]] std::optional<uint64_t> GetAbsoluteAddress(
-      const orbit_client_protos::FunctionInfo& function) const;
 
   static const std::string kUnknownFunctionOrModuleName;
 
@@ -228,6 +226,13 @@ class CaptureData {
   }
 
  private:
+  [[nodiscard]] std::optional<uint64_t>
+  FindFunctionAbsoluteAddressByInstructionAbsoluteAddressUsingModulesInMemory(
+      uint64_t absolute_address) const;
+  [[nodiscard]] std::optional<uint64_t>
+  FindFunctionAbsoluteAddressByInstructionAbsoluteAddressUsingAddressInfo(
+      uint64_t absolute_address) const;
+
   orbit_client_data::ProcessData process_;
   orbit_client_data::ModuleManager* module_manager_;
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions_;

@@ -27,7 +27,7 @@ class FunctionsDataView : public orbit_data_views::DataView {
                                                 const orbit_client_protos::FunctionInfo& function);
 
   const std::vector<Column>& GetColumns() override;
-  int GetDefaultSortingColumn() override { return kColumnAddress; }
+  int GetDefaultSortingColumn() override { return kColumnAddressInModule; }
   std::vector<std::string> GetContextMenu(int clicked_index,
                                           const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
@@ -53,7 +53,7 @@ class FunctionsDataView : public orbit_data_views::DataView {
     kColumnName,
     kColumnSize,
     kColumnModule,
-    kColumnAddress,
+    kColumnAddressInModule,
     kNumColumns
   };
 

@@ -83,7 +83,7 @@ TEST(ModuleData, LoadSymbols) {
   EXPECT_EQ(function->size(), symbol_size);
 }
 
-TEST(ModuleData, FindFunctionByRelativeAddress) {
+TEST(ModuleData, FindFunctionByOffset) {
   uint64_t address1 = 100;
   std::string name1 = "Name 1";
   std::string demangled_name_1 = "Pretty Name 1";
@@ -112,51 +112,51 @@ TEST(ModuleData, FindFunctionByRelativeAddress) {
   // Find exact
   {
     // address 1
-    const FunctionInfo* result = module.FindFunctionByRelativeAddress(address1, true);
+    const FunctionInfo* result = module.FindFunctionByOffset(address1, true);
     ASSERT_NE(result, nullptr);
     EXPECT_EQ(result->name(), name1);
   }
   {
     // address 2
-    const FunctionInfo* result = module.FindFunctionByRelativeAddress(address2, true);
+    const FunctionInfo* result = module.FindFunctionByOffset(address2, true);
     ASSERT_NE(result, nullptr);
     EXPECT_EQ(result->name(), name2);
   }
   {
     // wrong address (larger)
-    const FunctionInfo* result = module.FindFunctionByRelativeAddress(address1 + 1, true);
+    const FunctionInfo* result = module.FindFunctionByOffset(address1 + 1, true);
     EXPECT_EQ(result, nullptr);
   }
   {
     // wrong address (smaller)
-    const FunctionInfo* result = module.FindFunctionByRelativeAddress(address1 - 1, true);
+    const FunctionInfo* result = module.FindFunctionByOffset(address1 - 1, true);
     EXPECT_EQ(result, nullptr);
   }
 
   // Find not exact
   {
     // at address 1
-    const FunctionInfo* result = module.FindFunctionByRelativeAddress(address1, false);
+    const FunctionInfo* result = module.FindFunctionByOffset(address1, false);
     ASSERT_NE(result, nullptr);
     EXPECT_EQ(result->name(), name1);
   }
   {
     // at address 1 + offset (offset < size)
     uint64_t offset = 5;
-    const FunctionInfo* result = module.FindFunctionByRelativeAddress(address1 + offset, false);
+    const FunctionInfo* result = module.FindFunctionByOffset(address1 + offset, false);
     ASSERT_NE(result, nullptr);
     EXPECT_EQ(result->name(), name1);
   }
   {
     // at address 1 + offset (offset > size)
     uint64_t offset = 15;
-    const FunctionInfo* result = module.FindFunctionByRelativeAddress(address1 + offset, false);
+    const FunctionInfo* result = module.FindFunctionByOffset(address1 + offset, false);
     EXPECT_EQ(result, nullptr);
   }
   {
     // at address 1 - offset
     uint64_t offset = 5;
-    const FunctionInfo* result = module.FindFunctionByRelativeAddress(address1 - offset, false);
+    const FunctionInfo* result = module.FindFunctionByOffset(address1 - offset, false);
     EXPECT_EQ(result, nullptr);
   }
 }

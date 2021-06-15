@@ -51,7 +51,7 @@ const std::vector<orbit_data_views::DataView::Column>& FunctionsDataView::GetCol
     columns[kColumnName] = {"Function", .65f, SortingOrder::kAscending};
     columns[kColumnSize] = {"Size", .0f, SortingOrder::kAscending};
     columns[kColumnModule] = {"Module", .0f, SortingOrder::kAscending};
-    columns[kColumnAddress] = {"Address", .0f, SortingOrder::kAscending};
+    columns[kColumnAddressInModule] = {"Address in module", .0f, SortingOrder::kAscending};
     return columns;
   }();
   return columns;
@@ -109,23 +109,8 @@ std::string FunctionsDataView::GetValue(int row, int column) {
       return absl::StrFormat("%lu", function.size());
     case kColumnModule:
       return orbit_client_data::function_utils::GetLoadedModuleName(function);
-    case kColumnAddress: {
-      const ProcessData* process = app_->GetTargetProcess();
-      // If no process is selected, that means Orbit is in a disconnected state aka displaying a
-      // capture that has been loaded from file. CaptureData then holds the process
-      if (process == nullptr) {
-        const CaptureData& capture_data = app_->GetCaptureData();
-        process = capture_data.process();
-        CHECK(!app_->IsCaptureConnected(capture_data));
-      }
-      CHECK(process != nullptr);
-      const ModuleData* module =
-          app_->GetModuleByPathAndBuildId(function.module_path(), function.module_build_id());
-      CHECK(module != nullptr);
-      return absl::StrFormat("0x%llx", orbit_client_data::function_utils::GetAbsoluteAddress(
-                                           function, *process, *module)
-                                           .value_or(0));
-    }
+    case kColumnAddressInModule:
+      return absl::StrFormat("%#x", function.address());
     default:
       return "";
   }
@@ -165,7 +150,7 @@ void FunctionsDataView::DoSort() {
     case kColumnModule:
       sorter = ORBIT_CUSTOM_FUNC_SORT(orbit_client_data::function_utils::GetLoadedModuleName);
       break;
-    case kColumnAddress:
+    case kColumnAddressInModule:
       sorter = ORBIT_FUNC_SORT(address());
       break;
     default:

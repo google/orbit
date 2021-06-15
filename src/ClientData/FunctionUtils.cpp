@@ -5,6 +5,7 @@
 #include "ClientData/FunctionUtils.h"
 
 #include <absl/strings/str_cat.h>
+#include <absl/strings/str_join.h>
 
 #include <filesystem>
 #include <utility>
@@ -44,12 +45,25 @@ uint64_t Offset(const FunctionInfo& func, const ModuleData& module) {
 
 std::optional<uint64_t> GetAbsoluteAddress(const orbit_client_protos::FunctionInfo& func,
                                            const ProcessData& process, const ModuleData& module) {
-  std::optional<uint64_t> base_address = process.GetModuleBaseAddress(func.module_path());
-  if (!base_address.has_value()) {
+  std::vector<uint64_t> base_addresses =
+      process.GetModuleBaseAddresses(module.file_path(), module.build_id());
+  if (base_addresses.empty()) {
     return std::nullopt;
   }
 
-  return func.address() + base_address.value() - module.load_bias();
+  if (base_addresses.size() > 1) {
+    ERROR(
+        "Found multiple mappings for \"%s\" with build_id=%s [%s]: "
+        "will use the first one as a base address",
+        module.file_path(), module.build_id(),
+        absl::StrJoin(base_addresses, ",", [](std::string* out, uint64_t address) {
+          return out->append(absl::StrFormat("%#x", address));
+        }));
+  }
+
+  CHECK(!base_addresses.empty());
+
+  return func.address() + base_addresses.at(0) - module.load_bias();
 }
 
 bool IsOrbitFunctionFromType(const FunctionInfo::OrbitType& type) {

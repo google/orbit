@@ -34,7 +34,12 @@ namespace function_utils {
 [[nodiscard]] uint64_t Offset(const orbit_client_protos::FunctionInfo& func,
                               const ModuleData& module);
 
-[[nodiscard]] std::optional<uint64_t> GetAbsoluteAddress(
+// This function should not be used, since it could return incomplete or invalid
+// result in the case when one module is mapped two or more times. Try to find another way
+// of solving the problem, for example by converting an absolute address to a module offset and
+// then operating on that.
+// TODO(b/191248550): Disassemble from file instead of doing it from process memory.
+[[nodiscard, deprecated]] std::optional<uint64_t> GetAbsoluteAddress(
     const orbit_client_protos::FunctionInfo& func, const ProcessData& process,
     const ModuleData& module);
 

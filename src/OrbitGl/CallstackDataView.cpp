@@ -233,7 +233,7 @@ void CallstackDataView::SetFunctionsToHighlight(
   for (int index : indices_) {
     CallstackDataViewFrame frame = GetFrameFromIndex(index);
     std::optional<uint64_t> callstack_function_absolute_address =
-        capture_data.FindFunctionAbsoluteAddressByAddress(frame.address);
+        capture_data.FindFunctionAbsoluteAddressByInstructionAbsoluteAddress(frame.address);
     if (callstack_function_absolute_address.has_value() &&
         absolute_addresses.contains(callstack_function_absolute_address.value())) {
       functions_to_highlight_.insert(frame.address);

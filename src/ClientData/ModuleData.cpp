@@ -73,9 +73,9 @@ bool ModuleData::UpdateIfChangedAndNotLoaded(orbit_grpc_protos::ModuleInfo info)
   return true;
 }
 
-const orbit_client_protos::FunctionInfo* ModuleData::FindFunctionByRelativeAddress(
-    uint64_t relative_address, bool is_exact) const {
-  uint64_t elf_address = relative_address + load_bias();
+const orbit_client_protos::FunctionInfo* ModuleData::FindFunctionByOffset(uint64_t offset,
+                                                                          bool is_exact) const {
+  uint64_t elf_address = offset + load_bias();
   return FindFunctionByElfAddress(elf_address, is_exact);
 }
 
