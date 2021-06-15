@@ -304,7 +304,7 @@ void SamplingDataPostProcessor::MapAddressToFunctionAddress(uint64_t absolute_ad
   // address held by exact_address_to_function_address_, otherwise each address is considered a
   // different function. We are storing this mapping for faster lookup.
   std::optional<uint64_t> absolute_function_address_option =
-      capture_data.FindFunctionAbsoluteAddressByAddress(absolute_address);
+      capture_data.FindFunctionAbsoluteAddressByInstructionAbsoluteAddress(absolute_address);
   uint64_t absolute_function_address = absolute_function_address_option.value_or(absolute_address);
 
   exact_address_to_function_address_[absolute_address] = absolute_function_address;

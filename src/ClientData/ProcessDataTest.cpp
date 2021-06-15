@@ -24,6 +24,8 @@ using orbit_base::HasNoError;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
 
+using testing::ElementsAre;
+
 namespace orbit_client_data {
 
 TEST(ProcessData, Constructor) {
@@ -238,35 +240,73 @@ TEST(ProcessData, IsModuleLoadedByProcess) {
   EXPECT_TRUE(process.IsModuleLoadedByProcess(&module_3));
 }
 
-TEST(ProcessData, GetModuleBaseAddress) {
+TEST(ProcessData, GetModuleBaseAddresses) {
   const std::string file_path_1 = "filepath1";
+  const std::string build_id_1 = "buildid1";
   uint64_t start_address_1 = 0;
   uint64_t end_address_1 = 10;
   ModuleInfo module_info_1;
   module_info_1.set_file_path(file_path_1);
+  module_info_1.set_build_id(build_id_1);
   module_info_1.set_address_start(start_address_1);
   module_info_1.set_address_end(end_address_1);
 
   const std::string file_path_2 = "filepath2";
+  const std::string build_id_2 = "buildid2";
   uint64_t start_address_2 = 100;
   uint64_t end_address_2 = 110;
   ModuleInfo module_info_2;
   module_info_2.set_file_path(file_path_2);
+  module_info_2.set_build_id(build_id_2);
   module_info_2.set_address_start(start_address_2);
   module_info_2.set_address_end(end_address_2);
+
+  const std::string& file_path_3 = file_path_2;
+  const std::string& build_id_3 = build_id_2;
+  uint64_t start_address_3 = 300;
+  uint64_t end_address_3 = 310;
+  ModuleInfo module_info_3;
+  module_info_3.set_file_path(file_path_3);
+  module_info_3.set_build_id(build_id_3);
+  module_info_3.set_address_start(start_address_3);
+  module_info_3.set_address_end(end_address_3);
 
   std::vector<ModuleInfo> module_infos{module_info_1, module_info_2};
 
   ProcessData process(ProcessInfo{});
   process.UpdateModuleInfos(module_infos);
 
-  const std::optional<uint64_t>& file_1_base_address = process.GetModuleBaseAddress(file_path_1);
-  ASSERT_TRUE(file_1_base_address.has_value());
-  EXPECT_EQ(file_1_base_address.value(), start_address_1);
-  const std::optional<uint64_t>& file_2_base_address = process.GetModuleBaseAddress(file_path_2);
-  ASSERT_TRUE(file_2_base_address.has_value());
-  EXPECT_EQ(file_2_base_address.value(), start_address_2);
-  EXPECT_FALSE(process.GetModuleBaseAddress("does/not/exist").has_value());
+  {
+    const std::vector<uint64_t> file_1_base_address =
+        process.GetModuleBaseAddresses(file_path_1, build_id_1);
+    ASSERT_EQ(file_1_base_address.size(), 1);
+    EXPECT_THAT(file_1_base_address, ElementsAre(start_address_1));
+
+    const std::vector<uint64_t> file_2_base_address =
+        process.GetModuleBaseAddresses(file_path_2, build_id_2);
+    ASSERT_EQ(file_2_base_address.size(), 1);
+    EXPECT_THAT(file_2_base_address, ElementsAre(start_address_2));
+
+    EXPECT_EQ(process.GetModuleBaseAddresses("does/not/exist", "nobuildid").size(), 0);
+    EXPECT_EQ(process.GetModuleBaseAddresses(file_path_1, build_id_2).size(), 0);
+  }
+
+  process.AddOrUpdateModuleInfo(module_info_3);
+
+  {
+    const std::vector<uint64_t> file_1_base_address =
+        process.GetModuleBaseAddresses(file_path_1, build_id_1);
+    ASSERT_EQ(file_1_base_address.size(), 1);
+    EXPECT_THAT(file_1_base_address, ElementsAre(start_address_1));
+
+    const std::vector<uint64_t> file_2_base_address =
+        process.GetModuleBaseAddresses(file_path_2, build_id_2);
+    ASSERT_EQ(file_2_base_address.size(), 2);
+    EXPECT_THAT(file_2_base_address, ElementsAre(start_address_2, start_address_3));
+
+    EXPECT_EQ(process.GetModuleBaseAddresses("does/not/exist", "nobuildid").size(), 0);
+    EXPECT_EQ(process.GetModuleBaseAddresses(file_path_1, build_id_2).size(), 0);
+  }
 }
 
 TEST(ProcessData, FindModuleByAddress) {

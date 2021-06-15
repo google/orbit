@@ -123,12 +123,16 @@ ErrorMessageOr<ModuleInMemory> ProcessData::FindModuleByAddress(uint64_t absolut
   return module_in_memory;
 }
 
-std::optional<uint64_t> ProcessData::GetModuleBaseAddress(const std::string& module_path) const {
+std::vector<uint64_t> ProcessData::GetModuleBaseAddresses(const std::string& module_path,
+                                                          const std::string& build_id) const {
   absl::MutexLock lock(&mutex_);
-  if (!module_memory_map_.contains(module_path)) {
-    return std::nullopt;
+  std::vector<uint64_t> result;
+  for (const auto& [start_address, module_in_memory] : start_address_to_module_in_memory_) {
+    if (module_in_memory.file_path() == module_path && module_in_memory.build_id() == build_id) {
+      result.emplace_back(start_address);
+    }
   }
-  return module_memory_map_.at(module_path).start();
+  return result;
 }
 
 std::map<uint64_t, ModuleInMemory> ProcessData::GetMemoryMapCopy() const {

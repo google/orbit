@@ -40,10 +40,10 @@ class ModuleData final {
   // returns true if update was successful or no update was needed and false if module
   // cannot be updated because it was loaded.
   [[nodiscard]] bool UpdateIfChangedAndNotLoaded(orbit_grpc_protos::ModuleInfo info);
-  // relative_address here is the absolute address minus the address this module was loaded at by
+  // offset here is the absolute address minus the address this module was loaded at by
   // the process (module base address)
-  [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByRelativeAddress(
-      uint64_t relative_address, bool is_exact) const;
+  [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByOffset(uint64_t offset,
+                                                                              bool is_exact) const;
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByElfAddress(
       uint64_t elf_address, bool is_exact) const;
   void AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols);
