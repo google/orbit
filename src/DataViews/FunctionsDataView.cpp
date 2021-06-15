@@ -1,8 +1,8 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "FunctionsDataView.h"
+#include "DataViews/FunctionsDataView.h"
 
 #include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
@@ -14,7 +14,6 @@
 #include <cstdint>
 #include <functional>
 
-#include "App.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
@@ -36,14 +35,15 @@ using orbit_client_data::ProcessData;
 using orbit_client_model::CaptureData;
 using orbit_client_protos::FunctionInfo;
 
-FunctionsDataView::FunctionsDataView(orbit_data_views::AppInterface* app)
-    : orbit_data_views::DataView(orbit_data_views::DataViewType::kFunctions, app) {}
+namespace orbit_data_views {
+
+FunctionsDataView::FunctionsDataView(AppInterface* app) : DataView(DataViewType::kFunctions, app) {}
 
 const std::string FunctionsDataView::kUnselectedFunctionString = "";
 const std::string FunctionsDataView::kSelectedFunctionString = "✓";
 const std::string FunctionsDataView::kFrameTrackString = "F";
 
-const std::vector<orbit_data_views::DataView::Column>& FunctionsDataView::GetColumns() {
+const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
@@ -57,13 +57,12 @@ const std::vector<orbit_data_views::DataView::Column>& FunctionsDataView::GetCol
   return columns;
 }
 
-bool FunctionsDataView::ShouldShowSelectedFunctionIcon(orbit_data_views::AppInterface* app,
+bool FunctionsDataView::ShouldShowSelectedFunctionIcon(AppInterface* app,
                                                        const FunctionInfo& function) {
   return app->IsFunctionSelected(function);
 }
 
-bool FunctionsDataView::ShouldShowFrameTrackIcon(orbit_data_views::AppInterface* app,
-                                                 const FunctionInfo& function) {
+bool FunctionsDataView::ShouldShowFrameTrackIcon(AppInterface* app, const FunctionInfo& function) {
   if (app->IsFrameTrackEnabled(function)) {
     return true;
   }
@@ -80,7 +79,7 @@ bool FunctionsDataView::ShouldShowFrameTrackIcon(orbit_data_views::AppInterface*
          app->HasFrameTrackInCaptureData(instrumented_function_id.value());
 }
 
-std::string FunctionsDataView::BuildSelectedColumnsString(orbit_data_views::AppInterface* app,
+std::string FunctionsDataView::BuildSelectedColumnsString(AppInterface* app,
                                                           const FunctionInfo& function) {
   std::string result = kUnselectedFunctionString;
   if (ShouldShowSelectedFunctionIcon(app, function)) {
@@ -332,3 +331,5 @@ void FunctionsDataView::ClearFunctions() {
   functions_.clear();
   OnDataChanged();
 }
+
+}  // namespace orbit_data_views

@@ -25,7 +25,7 @@
 #include "ClientModel/CaptureData.h"
 #include "CoreUtils.h"
 #include "DataViews/DataViewType.h"
-#include "FunctionsDataView.h"
+#include "DataViews/FunctionsDataView.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"
@@ -65,8 +65,9 @@ std::string SamplingReportDataView::GetValue(int row, int column) {
 
   switch (column) {
     case kColumnSelected:
-      return app_->IsFunctionSelected(func) ? FunctionsDataView::kSelectedFunctionString
-                                            : FunctionsDataView::kUnselectedFunctionString;
+      return app_->IsFunctionSelected(func)
+                 ? orbit_data_views::FunctionsDataView::kSelectedFunctionString
+                 : orbit_data_views::FunctionsDataView::kUnselectedFunctionString;
     case kColumnFunctionName:
       return func.name;
     case kColumnExclusive:

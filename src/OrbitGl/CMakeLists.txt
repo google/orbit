@@ -32,7 +32,6 @@ target_sources(
          FramePointerValidatorClient.h
          FrameTrack.h
          FrameTrackOnlineProcessor.h
-         FunctionsDataView.h
          Geometry.h
          GlCanvas.h
          GlSlider.h
@@ -99,7 +98,6 @@ target_sources(
           FrameTrack.cpp
           FrameTrackOnlineProcessor.cpp
           LiveFunctionsController.cpp
-          FunctionsDataView.cpp
           GlCanvas.cpp
           GlSlider.cpp
           GlUtils.cpp
@@ -157,8 +155,7 @@ target_link_libraries(
          CONAN_PKG::freetype
          CONAN_PKG::glad
          CONAN_PKG::imgui
-         gte::gte
-         oqpi::oqpi)
+         gte::gte)
 
 if(TARGET OpenGL::GLX AND TARGET OpenGL::OpenGL)
   target_link_libraries(OrbitGl PUBLIC OpenGL::GLX)

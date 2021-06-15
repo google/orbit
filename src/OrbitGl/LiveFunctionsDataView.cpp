@@ -22,7 +22,7 @@
 #include "ClientData/FunctionUtils.h"
 #include "ClientModel/CaptureData.h"
 #include "DataViews/DataViewType.h"
-#include "FunctionsDataView.h"
+#include "DataViews/FunctionsDataView.h"
 #include "GrpcProtos/Constants.h"
 #include "LiveFunctionsController.h"
 #include "OrbitBase/Logging.h"
@@ -78,7 +78,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
   const FunctionInfo& function = GetInstrumentedFunction(row);
   switch (column) {
     case kColumnSelected:
-      return FunctionsDataView::BuildSelectedColumnsString(app_, function);
+      return orbit_data_views::FunctionsDataView::BuildSelectedColumnsString(app_, function);
     case kColumnName:
       return orbit_client_data::function_utils::GetDisplayName(function);
     case kColumnCount:

@@ -53,9 +53,9 @@
 #include "CoreUtils.h"
 #include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
+#include "DataViews/FunctionsDataView.h"
 #include "DataViews/PresetsDataView.h"
 #include "FrameTrackOnlineProcessor.h"
-#include "FunctionsDataView.h"
 #include "GlCanvas.h"
 #include "GrpcProtos/Constants.h"
 #include "ImGuiOrbit.h"
@@ -2225,7 +2225,7 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
   switch (type) {
     case DataViewType::kFunctions:
       if (!functions_data_view_) {
-        functions_data_view_ = std::make_unique<FunctionsDataView>(this);
+        functions_data_view_ = std::make_unique<orbit_data_views::FunctionsDataView>(this);
         panels_.push_back(functions_data_view_.get());
       }
       return functions_data_view_.get();
