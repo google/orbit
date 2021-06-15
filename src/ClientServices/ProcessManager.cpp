@@ -96,11 +96,7 @@ void ProcessManagerImpl::ShutdownAndWait() noexcept {
   shutdown_initiated_ = true;
   shutdown_mutex_.Unlock();
   if (worker_thread_.joinable()) {
-    try {
-      worker_thread_.join();
-    } catch (const std::exception& e) {
-      FATAL("Exception during call to worker_thread_.join: %s", e.what());
-    }
+    worker_thread_.join();
   }
 }
 

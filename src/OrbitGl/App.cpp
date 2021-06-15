@@ -253,11 +253,7 @@ OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
 OrbitApp::~OrbitApp() {
   AbortCapture();
 
-  try {
-    thread_pool_->ShutdownAndWait();
-  } catch (const std::exception& e) {
-    FATAL("Exception occurred in ThreadPool::ShutdownAndWait(): %s", e.what());
-  }
+  thread_pool_->ShutdownAndWait();
 
 #ifdef _WIN32
   oqpi::default_helpers::stop_scheduler();

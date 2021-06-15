@@ -1,7 +1,7 @@
 C_COMPILER=gcc-10
 CXX_COMPILER=g++-10
 C_FLAGS= -march=sandybridge -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all
-CXX_FLAGS= -march=sandybridge -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all
+CXX_FLAGS= -march=sandybridge -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all -fno-exceptions
 LINKER_FLAGS= -Wl,-z,relro,-z,now,-z,noexecstack
 [settings]
 os=Linux
