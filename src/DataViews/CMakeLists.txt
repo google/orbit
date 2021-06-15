@@ -8,12 +8,14 @@ add_library(DataViews STATIC)
 
 target_sources(DataViews PRIVATE
         DataView.cpp
+        FunctionsDataView.cpp
         PresetsDataView.cpp)
 
 target_sources(DataViews PUBLIC
         include/DataViews/AppInterface.h
         include/DataViews/DataView.h
         include/DataViews/DataViewType.h
+        include/DataViews/FunctionsDataView.h
         include/DataViews/PresetsDataView.h
         include/DataViews/PresetLoadState.h)
 
@@ -26,7 +28,8 @@ target_link_libraries(DataViews PUBLIC
         MetricsUploader
         OrbitBase
         PresetFile
-        CONAN_PKG::abseil)
+        CONAN_PKG::abseil
+        oqpi::oqpi)
 
 add_executable(DataViewsTests)
 target_compile_options(DataViewsTests PRIVATE ${STRICT_COMPILE_FLAGS})

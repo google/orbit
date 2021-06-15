@@ -18,7 +18,7 @@
 #include "ClientModel/CaptureData.h"
 #include "CoreUtils.h"
 #include "DataViews/DataViewType.h"
-#include "FunctionsDataView.h"
+#include "DataViews/FunctionsDataView.h"
 #include "OrbitBase/Logging.h"
 #include "capture_data.pb.h"
 
@@ -58,8 +58,8 @@ std::string CallstackDataView::GetValue(int row, int column) {
   switch (column) {
     case kColumnSelected:
       return (function != nullptr && app_->IsFunctionSelected(*function))
-                 ? FunctionsDataView::kSelectedFunctionString
-                 : FunctionsDataView::kUnselectedFunctionString;
+                 ? orbit_data_views::FunctionsDataView::kSelectedFunctionString
+                 : orbit_data_views::FunctionsDataView::kUnselectedFunctionString;
     case kColumnName:
       return absl::StrCat(
           functions_to_highlight_.contains(frame.address) ? kHighlightedFunctionString

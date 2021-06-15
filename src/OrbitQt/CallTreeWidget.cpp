@@ -40,7 +40,7 @@
 #include "ClientData/ModuleData.h"
 #include "ClientModel/CaptureData.h"
 #include "CopyKeySequenceEnabledTreeView.h"
-#include "FunctionsDataView.h"
+#include "DataViews/FunctionsDataView.h"
 #include "OrbitBase/Logging.h"
 #include "capture_data.pb.h"
 
@@ -568,7 +568,8 @@ QVariant CallTreeWidget::HookedIdentityProxyModel::data(const QModelIndex& index
     return kTooltipHookedPrefix + data.toString();
   }
   static const QString kDisplayHookedPrefix =
-      QStringLiteral("[") + QString::fromStdString(FunctionsDataView::kSelectedFunctionString) +
+      QStringLiteral("[") +
+      QString::fromStdString(orbit_data_views::FunctionsDataView::kSelectedFunctionString) +
       QStringLiteral("] ");
   return kDisplayHookedPrefix + data.toString();
 }

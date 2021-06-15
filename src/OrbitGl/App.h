@@ -48,11 +48,11 @@
 #include "DataViewFactory.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataViewType.h"
+#include "DataViews/FunctionsDataView.h"
 #include "DataViews/PresetLoadState.h"
 #include "DataViews/PresetsDataView.h"
 #include "FramePointerValidatorClient.h"
 #include "FrameTrackOnlineProcessor.h"
-#include "FunctionsDataView.h"
 #include "GlCanvas.h"
 #include "IntrospectionWindow.h"
 #include "MainThreadExecutor.h"
@@ -545,7 +545,7 @@ class OrbitApp final : public DataViewFactory,
   std::vector<orbit_data_views::DataView*> panels_;
 
   std::unique_ptr<ModulesDataView> modules_data_view_;
-  std::unique_ptr<FunctionsDataView> functions_data_view_;
+  std::unique_ptr<orbit_data_views::FunctionsDataView> functions_data_view_;
   std::unique_ptr<CallstackDataView> callstack_data_view_;
   std::unique_ptr<CallstackDataView> selection_callstack_data_view_;
   std::unique_ptr<orbit_data_views::PresetsDataView> presets_data_view_;

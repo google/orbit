@@ -1,9 +1,9 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_FUNCTIONS_DATA_VIEW_H_
-#define ORBIT_GL_FUNCTIONS_DATA_VIEW_H_
+#ifndef DATA_VIEWS_FUNCTIONS_DATA_VIEW_H_
+#define DATA_VIEWS_FUNCTIONS_DATA_VIEW_H_
 
 #include <string>
 #include <vector>
@@ -12,16 +12,15 @@
 #include "DataViews/DataView.h"
 #include "capture_data.pb.h"
 
-class OrbitApp;
-
-class FunctionsDataView : public orbit_data_views::DataView {
+namespace orbit_data_views {
+class FunctionsDataView : public DataView {
  public:
-  explicit FunctionsDataView(orbit_data_views::AppInterface* app);
+  explicit FunctionsDataView(AppInterface* app);
 
   static const std::string kUnselectedFunctionString;
   static const std::string kSelectedFunctionString;
   static const std::string kFrameTrackString;
-  static std::string BuildSelectedColumnsString(orbit_data_views::AppInterface* app,
+  static std::string BuildSelectedColumnsString(AppInterface* app,
                                                 const orbit_client_protos::FunctionInfo& function);
 
   const std::vector<Column>& GetColumns() override;
@@ -63,11 +62,13 @@ class FunctionsDataView : public orbit_data_views::DataView {
   static const std::string kMenuActionSourceCode;
 
  private:
-  static bool ShouldShowSelectedFunctionIcon(orbit_data_views::AppInterface* app,
+  static bool ShouldShowSelectedFunctionIcon(AppInterface* app,
                                              const orbit_client_protos::FunctionInfo& function);
-  static bool ShouldShowFrameTrackIcon(orbit_data_views::AppInterface* app,
+  static bool ShouldShowFrameTrackIcon(AppInterface* app,
                                        const orbit_client_protos::FunctionInfo& function);
   std::vector<const orbit_client_protos::FunctionInfo*> functions_;
 };
 
-#endif  // ORBIT_GL_FUNCTIONS_DATA_VIEW_H_
+}  // namespace orbit_data_views
+
+#endif  // DATA_VIEWS_FUNCTIONS_DATA_VIEW_H_
