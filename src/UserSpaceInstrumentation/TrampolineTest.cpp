@@ -2,25 +2,35 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/base/casts.h>
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_split.h>
+#include <dlfcn.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <cstdint>
+#include <random>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <vector>
 
+#include "AccessTraceesMemory.h"
 #include "AllocateInTracee.h"
 #include "MachineCode.h"
+#include "ObjectUtils/ElfFile.h"
 #include "ObjectUtils/LinuxMap.h"
+#include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/TestUtils.h"
 #include "RegisterState.h"
 #include "Trampoline.h"
 #include "UserSpaceInstrumentation/Attach.h"
+#include "UserSpaceInstrumentation/InjectLibraryInTracee.h"
 
 namespace orbit_user_space_instrumentation {
 
@@ -494,6 +504,484 @@ TEST_F(RelocateInstructionTest, TrivialTranslation) {
   ASSERT_THAT(result, HasValue());
   EXPECT_THAT(result.value().code, ElementsAreArray({0x90}));
   EXPECT_FALSE(result.value().position_of_absolute_address.has_value());
+}
+
+class InstrumentFunctionTest : public testing::Test {
+ protected:
+  void SetUp() override {
+    // Init Capstone disassembler.
+    cs_err error_code = cs_open(CS_ARCH_X86, CS_MODE_64, &capstone_handle_);
+    CHECK(error_code == CS_ERR_OK);
+    error_code = cs_option(capstone_handle_, CS_OPT_DETAIL, CS_OPT_ON);
+    CHECK(error_code == CS_ERR_OK);
+
+    max_trampoline_size_ = GetMaxTrampolineSize();
+  }
+
+  void RunChild(int (*function_pointer)(), std::string_view function_name) {
+    function_name_ = function_name;
+
+    pid_ = fork();
+    CHECK(pid_ != -1);
+    if (pid_ == 0) {
+      uint64_t sum = 0;
+      while (true) {
+        sum += (*function_pointer)();
+      }
+    }
+  }
+
+  AddressRange GetFunctionAddressRangeOrDie() {
+    auto modules = orbit_object_utils::ReadModules(pid_);
+    CHECK(!modules.has_error());
+    std::string module_file_path;
+    AddressRange address_range_code;
+    for (const auto& m : modules.value()) {
+      if (m.name() == "UserSpaceInstrumentationTests") {
+        module_file_path = m.file_path();
+        address_range_code.start = m.address_start();
+        address_range_code.end = m.address_end();
+      }
+    }
+    auto elf_file = orbit_object_utils::CreateElfFile(module_file_path);
+    CHECK(!elf_file.has_error());
+    auto syms = elf_file.value()->LoadDebugSymbols();
+    CHECK(!syms.has_error());
+    uint64_t address = 0;
+    uint64_t size = 0;
+    for (const auto& sym : syms.value().symbol_infos()) {
+      if (sym.name() == function_name_) {
+        address = sym.address() + address_range_code.start - syms.value().load_bias();
+        size = sym.size();
+      }
+    }
+    return {address, address + size};
+  }
+
+  void PrepareInstrumentation(std::string_view payload_function_name) {
+    // Stop the child process using our tooling.
+    CHECK(AttachAndStopProcess(pid_).has_value());
+
+    // Inject the payload for the instrumentation.
+    const std::string kLibName = "libUserSpaceInstrumentationTestLib.so";
+    const std::string library_path = orbit_base::GetExecutableDir() / ".." / "lib" / kLibName;
+    auto library_handle_or_error = DlopenInTracee(pid_, library_path, RTLD_NOW);
+    CHECK(library_handle_or_error.has_value());
+    void* library_handle = library_handle_or_error.value();
+    auto payload_function_address_or_error =
+        DlsymInTracee(pid_, library_handle, payload_function_name);
+    CHECK(payload_function_address_or_error.has_value());
+    payload_function_address_ = absl::bit_cast<uint64_t>(payload_function_address_or_error.value());
+
+    // Get address of the function to instrument.
+    const AddressRange address_range_code = GetFunctionAddressRangeOrDie();
+    function_address_ = address_range_code.start;
+    const uint64_t size_of_function = address_range_code.end - address_range_code.start;
+
+    // Get memory for the trampoline.
+    auto trampoline_or_error =
+        AllocateMemoryForTrampolines(pid_, address_range_code, max_trampoline_size_);
+    CHECK(!trampoline_or_error.has_error());
+    trampoline_address_ = trampoline_or_error.value();
+
+    // Copy the beginning of the function over into this process.
+    constexpr uint64_t kMaxFunctionPrologBackupSize = 20;
+    const uint64_t bytes_to_copy = std::min(size_of_function, kMaxFunctionPrologBackupSize);
+    ErrorMessageOr<std::vector<uint8_t>> function_backup =
+        ReadTraceesMemory(pid_, function_address_, bytes_to_copy);
+    CHECK(function_backup.has_value());
+    function_code_ = function_backup.value();
+  }
+
+  // Runs the child for a millisecond to assert it is still working fine, stops it, removes the
+  // instrumentation, restarts and stops it again.
+  void RestartAndRemoveInstrumentation() {
+    MoveInstructionPointersOutOfOverwrittenCode(pid_, relocation_map_);
+
+    CHECK(!DetachAndContinueProcess(pid_).has_error());
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    CHECK(AttachAndStopProcess(pid_).has_value());
+
+    auto write_result_or_error = WriteTraceesMemory(pid_, function_address_, function_code_);
+    CHECK(!write_result_or_error.has_error());
+
+    CHECK(!DetachAndContinueProcess(pid_).has_error());
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    CHECK(AttachAndStopProcess(pid_).has_value());
+  }
+
+  void TearDown() override {
+    cs_close(&capstone_handle_);
+
+    // Detach and end child.
+    CHECK(!DetachAndContinueProcess(pid_).has_error());
+    kill(pid_, SIGKILL);
+    waitpid(pid_, NULL, 0);
+  }
+
+  pid_t pid_;
+  cs_insn* instruction_ = nullptr;
+  csh capstone_handle_ = 0;
+  uint64_t max_trampoline_size_ = 0;
+  uint64_t trampoline_address_;
+  uint64_t payload_function_address_;
+  absl::flat_hash_map<uint64_t, uint64_t> relocation_map_;
+
+  std::string function_name_;
+  uint64_t function_address_;
+  std::vector<uint8_t> function_code_;
+};
+
+// Function with an ordinary compiler synthesised prolog; performs some arithmetics. Most real world
+// functions will look like this (starting with pushing the stack frame...). Most functions below
+// are declared "naked", i.e. without the prolog and implemented entirely in assembly. This is done
+// to also cover edge cases.
+extern "C" int DoSomething() {
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<int> dis(1, 6);
+  std::vector<int> v(10);
+  std::generate(v.begin(), v.end(), [&]() { return dis(gen); });
+  int sum = std::accumulate(v.begin(), v.end(), 0);
+  return sum;
+}
+
+TEST_F(InstrumentFunctionTest, DoSomething) {
+  RunChild(&DoSomething, "DoSomething");
+  PrepareInstrumentation("TrivialLog");
+  ErrorMessageOr<uint64_t> address_after_prolog_or_error =
+      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
+                       payload_function_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(address_after_prolog_or_error, HasNoError());
+  ErrorMessageOr<void> result = InstrumentFunction(
+      pid_, function_address_, address_after_prolog_or_error.value(), trampoline_address_);
+  EXPECT_THAT(result, HasNoError());
+  RestartAndRemoveInstrumentation();
+}
+
+// We will not be able to instrument this - the function is just four bytes long and we need five
+// bytes to write a jump.
+extern "C" __attribute__((naked)) int TooShort() {
+  __asm__ __volatile__(
+      "nop \n\t"
+      "nop \n\t"
+      "nop \n\t"
+      "ret \n\t"
+      :
+      :
+      :);
+}
+
+TEST_F(InstrumentFunctionTest, TooShort) {
+  RunChild(&TooShort, "TooShort");
+  PrepareInstrumentation("TrivialLog");
+  ErrorMessageOr<uint64_t> result =
+      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
+                       payload_function_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(result, HasError("Unable to disassemble enough of the function to instrument it"));
+  RestartAndRemoveInstrumentation();
+}
+
+// This function is just long enough to be instrumented (five bytes). It is also interesting in that
+// the return statement is copied into the trampoline and executed from there.
+extern "C" __attribute__((naked)) int LongEnough() {
+  __asm__ __volatile__(
+      "nop \n\t"
+      "nop \n\t"
+      "nop \n\t"
+      "nop \n\t"
+      "ret \n\t"
+      :
+      :
+      :);
+}
+
+TEST_F(InstrumentFunctionTest, LongEnough) {
+  RunChild(&LongEnough, "LongEnough");
+  PrepareInstrumentation("TrivialLog");
+  ErrorMessageOr<uint64_t> address_after_prolog_or_error =
+      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
+                       payload_function_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(address_after_prolog_or_error, HasNoError());
+  ErrorMessageOr<void> result = InstrumentFunction(
+      pid_, function_address_, address_after_prolog_or_error.value(), trampoline_address_);
+  EXPECT_THAT(result, HasNoError());
+  RestartAndRemoveInstrumentation();
+}
+
+// The rip relative address is translated to the new code position.
+extern "C" __attribute__((naked)) int RipRelativeAddressing() {
+  __asm__ __volatile__(
+      "movq 0x03(%%rip), %%rax\n\t"
+      "nop \n\t"
+      "nop \n\t"
+      "ret \n\t"
+      ".quad 0x0102034200000000 \n\t"
+      :
+      :
+      :);
+}
+
+TEST_F(InstrumentFunctionTest, RipRelativeAddressing) {
+  RunChild(&RipRelativeAddressing, "RipRelativeAddressing");
+  PrepareInstrumentation("TrivialLog");
+  ErrorMessageOr<uint64_t> address_after_prolog_or_error =
+      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
+                       payload_function_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(address_after_prolog_or_error, HasNoError());
+  ErrorMessageOr<void> result = InstrumentFunction(
+      pid_, function_address_, address_after_prolog_or_error.value(), trampoline_address_);
+  EXPECT_THAT(result, HasNoError());
+  RestartAndRemoveInstrumentation();
+}
+
+// Unconditional jump to a 8 bit offset.
+extern "C" __attribute__((naked)) int UnconditionalJump8BitOffset() {
+  __asm__ __volatile__(
+      "jmp label_unconditional_jmp_8_bit \n\t"
+      "nop \n\t"
+      "nop \n\t"
+      "nop \n\t"
+      "label_unconditional_jmp_8_bit: \n\t"
+      "ret \n\t"
+      :
+      :
+      :);
+}
+
+TEST_F(InstrumentFunctionTest, UnconditionalJump8BitOffset) {
+  RunChild(&UnconditionalJump8BitOffset, "UnconditionalJump8BitOffset");
+  PrepareInstrumentation("TrivialLog");
+  ErrorMessageOr<uint64_t> address_after_prolog_or_error =
+      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
+                       payload_function_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(address_after_prolog_or_error, HasNoError());
+  ErrorMessageOr<void> result = InstrumentFunction(
+      pid_, function_address_, address_after_prolog_or_error.value(), trampoline_address_);
+  EXPECT_THAT(result, HasNoError());
+  RestartAndRemoveInstrumentation();
+}
+
+// Unconditional jump to a 32 bit offset.
+extern "C" __attribute__((naked)) int UnconditionalJump32BitOffset() {
+  __asm__ __volatile__(
+      "jmp label_unconditional_jmp_32_bit \n\t"
+      ".octa 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 \n\t"  // 256 bytes of zeros
+      "label_unconditional_jmp_32_bit: \n\t"
+      "ret \n\t"
+      :
+      :
+      :);
+}
+
+TEST_F(InstrumentFunctionTest, UnconditionalJump32BitOffset) {
+  RunChild(&UnconditionalJump32BitOffset, "UnconditionalJump32BitOffset");
+  PrepareInstrumentation("TrivialLog");
+  ErrorMessageOr<uint64_t> address_after_prolog_or_error =
+      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
+                       payload_function_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(address_after_prolog_or_error, HasNoError());
+  ErrorMessageOr<void> result = InstrumentFunction(
+      pid_, function_address_, address_after_prolog_or_error.value(), trampoline_address_);
+  EXPECT_THAT(result, HasNoError());
+  RestartAndRemoveInstrumentation();
+}
+
+// Call function at relative offset.
+extern "C" __attribute__((naked)) int CallFunction() {
+  __asm__ __volatile__(
+      "call function_label\n\t"
+      "ret \n\t"
+      "function_label:\n\t"
+      "nop \n\t"
+      "ret \n\t"
+      :
+      :
+      :);
+}
+
+TEST_F(InstrumentFunctionTest, CallFunction) {
+  RunChild(&CallFunction, "CallFunction");
+  PrepareInstrumentation("TrivialLog");
+  ErrorMessageOr<uint64_t> address_after_prolog_or_error =
+      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
+                       payload_function_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(address_after_prolog_or_error, HasNoError());
+  ErrorMessageOr<void> result = InstrumentFunction(
+      pid_, function_address_, address_after_prolog_or_error.value(), trampoline_address_);
+  EXPECT_THAT(result, HasNoError());
+  RestartAndRemoveInstrumentation();
+}
+
+// The rip relative address is translated to the new code position.
+extern "C" __attribute__((naked)) int ConditionalJump8BitOffset() {
+  __asm__ __volatile__(
+      "loop_label_jcc: \n\t"
+      "xor %%eax, %%eax \n\t"
+      "jnz loop_label_jcc \n\t"
+      "nop \n\t"
+      "nop \n\t"
+      "ret \n\t"
+      :
+      :
+      :);
+}
+
+TEST_F(InstrumentFunctionTest, ConditionalJump8BitOffset) {
+  RunChild(&ConditionalJump8BitOffset, "ConditionalJump8BitOffset");
+  PrepareInstrumentation("TrivialLog");
+  ErrorMessageOr<uint64_t> address_after_prolog_or_error =
+      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
+                       payload_function_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(address_after_prolog_or_error, HasNoError());
+  ErrorMessageOr<void> result = InstrumentFunction(
+      pid_, function_address_, address_after_prolog_or_error.value(), trampoline_address_);
+  EXPECT_THAT(result, HasNoError());
+  RestartAndRemoveInstrumentation();
+}
+
+// The rip relative address is translated to the new code position.
+extern "C" __attribute__((naked)) int ConditionalJump32BitOffset() {
+  __asm__ __volatile__(
+      "xor %%eax, %%eax \n\t"
+      "jnz label_jcc_32_bit \n\t"
+      "nop \n\t"
+      "ret \n\t"
+      ".octa 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 \n\t"  // 256 bytes of zeros
+      "label_jcc_32_bit: \n\t"
+      "ret \n\t"
+      :
+      :
+      :);
+}
+
+TEST_F(InstrumentFunctionTest, ConditionalJump32BitOffset) {
+  RunChild(&ConditionalJump32BitOffset, "ConditionalJump32BitOffset");
+  PrepareInstrumentation("TrivialLog");
+  ErrorMessageOr<uint64_t> address_after_prolog_or_error =
+      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
+                       payload_function_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(address_after_prolog_or_error, HasNoError());
+  ErrorMessageOr<void> result = InstrumentFunction(
+      pid_, function_address_, address_after_prolog_or_error.value(), trampoline_address_);
+  EXPECT_THAT(result, HasNoError());
+  RestartAndRemoveInstrumentation();
+}
+
+// Function can not be instrumented since it uses the unsupported loop instruction.
+extern "C" __attribute__((naked)) int Loop() {
+  __asm__ __volatile__(
+      "mov $42, %%cx\n\t"
+      "loop_label:\n\t"
+      "loopnz loop_label\n\t"
+      "ret \n\t"
+      :
+      :
+      :);
+}
+
+TEST_F(InstrumentFunctionTest, Loop) {
+  RunChild(&Loop, "Loop");
+  PrepareInstrumentation("TrivialLog");
+  ErrorMessageOr<uint64_t> result =
+      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
+                       payload_function_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(result, HasError("Relocating a loop instruction is not supported."));
+  RestartAndRemoveInstrumentation();
+}
+
+// Check-fails if any parameter is not zero.
+extern "C" int CheckIntParameters(u_int64_t p0, u_int64_t p1, u_int64_t p2, u_int64_t p3,
+                                  u_int64_t p4, u_int64_t p5, u_int64_t p6, u_int64_t p7) {
+  CHECK(p0 == 0 && p1 == 0 && p2 == 0 && p3 == 0 && p4 == 0 && p5 == 0 && p6 == 0 && p7 == 0);
+  return 0;
+}
+
+// This test and the two tests below check for proper handling of parameters handed of the
+// instrumented function. The payload that is called before the instrumented function is executed
+// clobbers
+TEST_F(InstrumentFunctionTest, CheckIntParameters) {
+  function_name_ = "CheckIntParameters";
+  pid_ = fork();
+  CHECK(pid_ != -1);
+  if (pid_ == 0) {
+    uint64_t sum = 0;
+    while (true) {
+      sum += CheckIntParameters(0, 0, 0, 0, 0, 0, 0, 0);
+    }
+  }
+  PrepareInstrumentation("ClobberParameterRegisters");
+  ErrorMessageOr<uint64_t> address_after_prolog_or_error =
+      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
+                       payload_function_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(address_after_prolog_or_error, HasNoError());
+  ErrorMessageOr<void> result = InstrumentFunction(
+      pid_, function_address_, address_after_prolog_or_error.value(), trampoline_address_);
+  EXPECT_THAT(result, HasNoError());
+  RestartAndRemoveInstrumentation();
+}
+
+// Check-fails if any parameter is not zero.
+extern "C" int CheckFloatParameters(float p0, float p1, float p2, float p3, float p4, float p5,
+                                    float p6, float p7) {
+  CHECK(p0 == 0.f && p1 == 0.f && p2 == 0.f && p3 == 0.f && p4 == 0.f && p5 == 0.f && p6 == 0.f &&
+        p7 == 0.f);
+  return 0;
+}
+
+TEST_F(InstrumentFunctionTest, CheckFloatParameters) {
+  function_name_ = "CheckFloatParameters";
+  pid_ = fork();
+  CHECK(pid_ != -1);
+  if (pid_ == 0) {
+    uint64_t sum = 0;
+    while (true) {
+      sum += CheckFloatParameters(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
+    }
+  }
+  PrepareInstrumentation("ClobberXmmRegisters");
+  ErrorMessageOr<uint64_t> address_after_prolog_or_error =
+      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
+                       payload_function_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(address_after_prolog_or_error, HasNoError());
+  ErrorMessageOr<void> result = InstrumentFunction(
+      pid_, function_address_, address_after_prolog_or_error.value(), trampoline_address_);
+  EXPECT_THAT(result, HasNoError());
+  RestartAndRemoveInstrumentation();
+}
+
+// Check-fails if any parameter is not zero.
+extern "C" int CheckM256iParameters(__m256i p0, __m256i p1, __m256i p2, __m256i p3, __m256i p4,
+                                    __m256i p5, __m256i p6, __m256i p7) {
+  CHECK(_mm256_extract_epi64(p0, 0) == 0 && _mm256_extract_epi64(p1, 0) == 0 &&
+        _mm256_extract_epi64(p2, 0) == 0 && _mm256_extract_epi64(p3, 0) == 0 &&
+        _mm256_extract_epi64(p4, 0) == 0 && _mm256_extract_epi64(p5, 0) == 0 &&
+        _mm256_extract_epi64(p6, 0) == 0 && _mm256_extract_epi64(p7, 0) == 0);
+  return 0;
+}
+
+TEST_F(InstrumentFunctionTest, CheckM256iParameters) {
+  function_name_ = "CheckM256iParameters";
+  pid_ = fork();
+  CHECK(pid_ != -1);
+  if (pid_ == 0) {
+    uint64_t sum = 0;
+    while (true) {
+      sum +=
+          CheckM256iParameters(_mm256_set1_epi64x(0), _mm256_set1_epi64x(0), _mm256_set1_epi64x(0),
+                               _mm256_set1_epi64x(0), _mm256_set1_epi64x(0), _mm256_set1_epi64x(0),
+                               _mm256_set1_epi64x(0), _mm256_set1_epi64x(0));
+    }
+  }
+  PrepareInstrumentation("ClobberYmmRegisters");
+  ErrorMessageOr<uint64_t> address_after_prolog_or_error =
+      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
+                       payload_function_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(address_after_prolog_or_error, HasNoError());
+  ErrorMessageOr<void> result = InstrumentFunction(
+      pid_, function_address_, address_after_prolog_or_error.value(), trampoline_address_);
+  EXPECT_THAT(result, HasNoError());
+  RestartAndRemoveInstrumentation();
 }
 
 }  // namespace orbit_user_space_instrumentation
