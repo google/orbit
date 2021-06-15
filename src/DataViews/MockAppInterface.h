@@ -32,6 +32,33 @@ class MockAppInterface : public AppInterface {
 
   MOCK_METHOD(void, LoadPreset, (const orbit_preset_file::PresetFile& preset));
   MOCK_METHOD(PresetLoadState, GetPresetLoadState, (const orbit_preset_file::PresetFile&), (const));
+
+  MOCK_METHOD(bool, IsFunctionSelected, (const orbit_client_protos::FunctionInfo&), (const));
+
+  MOCK_METHOD(bool, IsFrameTrackEnabled, (const orbit_client_protos::FunctionInfo&), (const));
+  MOCK_METHOD(bool, HasFrameTrackInCaptureData, (uint64_t), (const));
+
+  MOCK_METHOD(bool, HasCaptureData, (), (const));
+  MOCK_METHOD(const orbit_client_model::CaptureData&, GetCaptureData, (), (const));
+
+  // This needs to be called from the main thread.
+  MOCK_METHOD(bool, IsCaptureConnected, (const orbit_client_model::CaptureData&), (const));
+
+  MOCK_METHOD(const orbit_client_data::ProcessData*, GetTargetProcess, (), (const));
+
+  MOCK_METHOD(const orbit_client_data::ModuleData*, GetModuleByPathAndBuildId,
+              (const std::string&, const std::string&), (const));
+
+  MOCK_METHOD(void, SelectFunction, (const orbit_client_protos::FunctionInfo&));
+  MOCK_METHOD(void, DeselectFunction, (const orbit_client_protos::FunctionInfo&));
+
+  MOCK_METHOD(void, EnableFrameTrack, (const orbit_client_protos::FunctionInfo&));
+  MOCK_METHOD(void, DisableFrameTrack, (const orbit_client_protos::FunctionInfo&));
+  MOCK_METHOD(void, AddFrameTrack, (const orbit_client_protos::FunctionInfo&));
+  MOCK_METHOD(void, RemoveFrameTrack, (const orbit_client_protos::FunctionInfo&));
+
+  MOCK_METHOD(void, Disassemble, (int32_t pid, const orbit_client_protos::FunctionInfo&));
+  MOCK_METHOD(void, ShowSourceCode, (const orbit_client_protos::FunctionInfo&));
 };
 
 }  // namespace orbit_data_views

@@ -115,12 +115,12 @@ class OrbitApp final : public DataViewFactory,
   void StopCapture();
   void AbortCapture();
   void ClearCapture();
-  [[nodiscard]] bool HasCaptureData() const { return capture_data_ != nullptr; }
+  [[nodiscard]] bool HasCaptureData() const override { return capture_data_ != nullptr; }
   [[nodiscard]] orbit_client_model::CaptureData& GetMutableCaptureData() {
     CHECK(capture_data_ != nullptr);
     return *capture_data_;
   }
-  [[nodiscard]] const orbit_client_model::CaptureData& GetCaptureData() const {
+  [[nodiscard]] const orbit_client_model::CaptureData& GetCaptureData() const override {
     CHECK(capture_data_ != nullptr);
     return *capture_data_;
   }
@@ -133,8 +133,8 @@ class OrbitApp final : public DataViewFactory,
   void ToggleCapture();
   void ListPresets();
   void RefreshCaptureView();
-  void Disassemble(int32_t pid, const orbit_client_protos::FunctionInfo& function);
-  void ShowSourceCode(const orbit_client_protos::FunctionInfo& function);
+  void Disassemble(int32_t pid, const orbit_client_protos::FunctionInfo& function) override;
+  void ShowSourceCode(const orbit_client_protos::FunctionInfo& function) override;
 
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
                         std::optional<std::filesystem::path> file_path,
@@ -206,7 +206,8 @@ class OrbitApp final : public DataViewFactory,
   void ClearSelectionBottomUpView();
 
   // This needs to be called from the main thread.
-  [[nodiscard]] bool IsCaptureConnected(const orbit_client_model::CaptureData& capture) const;
+  [[nodiscard]] bool IsCaptureConnected(
+      const orbit_client_model::CaptureData& capture) const override;
 
   [[nodiscard]] bool IsDevMode() const;
 
@@ -369,7 +370,9 @@ class OrbitApp final : public DataViewFactory,
   }
   [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() { return main_thread_executor_; }
   [[nodiscard]] orbit_client_data::ProcessData* GetMutableTargetProcess() const { return process_; }
-  [[nodiscard]] const orbit_client_data::ProcessData* GetTargetProcess() const { return process_; }
+  [[nodiscard]] const orbit_client_data::ProcessData* GetTargetProcess() const override {
+    return process_;
+  }
   [[nodiscard]] ManualInstrumentationManager* GetManualInstrumentationManager() {
     return manual_instrumentation_manager_.get();
   }
@@ -378,7 +381,7 @@ class OrbitApp final : public DataViewFactory,
     return module_manager_->GetMutableModuleByPathAndBuildId(path, build_id);
   }
   [[nodiscard]] const orbit_client_data::ModuleData* GetModuleByPathAndBuildId(
-      const std::string& path, const std::string& build_id) const {
+      const std::string& path, const std::string& build_id) const override {
     return module_manager_->GetModuleByPathAndBuildId(path, build_id);
   }
 
@@ -405,9 +408,10 @@ class OrbitApp final : public DataViewFactory,
   }
 
   // TODO(kuebler): Move them to a separate controller at some point
-  void SelectFunction(const orbit_client_protos::FunctionInfo& func);
-  void DeselectFunction(const orbit_client_protos::FunctionInfo& func);
-  [[nodiscard]] bool IsFunctionSelected(const orbit_client_protos::FunctionInfo& func) const;
+  void SelectFunction(const orbit_client_protos::FunctionInfo& func) override;
+  void DeselectFunction(const orbit_client_protos::FunctionInfo& func) override;
+  [[nodiscard]] bool IsFunctionSelected(
+      const orbit_client_protos::FunctionInfo& func) const override;
   [[nodiscard]] bool IsFunctionSelected(const orbit_client_data::SampledFunction& func) const;
   [[nodiscard]] bool IsFunctionSelected(uint64_t absolute_address) const;
   [[nodiscard]] const orbit_grpc_protos::InstrumentedFunction* GetInstrumentedFunction(
@@ -439,26 +443,27 @@ class OrbitApp final : public DataViewFactory,
 
   // Only enables the frame track in the capture settings (in DataManager) and does not
   // add a frame track to the current capture data.
-  void EnableFrameTrack(const orbit_client_protos::FunctionInfo& function);
+  void EnableFrameTrack(const orbit_client_protos::FunctionInfo& function) override;
 
   // Only disables the frame track in the capture settings (in DataManager) and does
   // not remove the frame track from the capture data.
-  void DisableFrameTrack(const orbit_client_protos::FunctionInfo& function);
+  void DisableFrameTrack(const orbit_client_protos::FunctionInfo& function) override;
 
-  [[nodiscard]] bool IsFrameTrackEnabled(const orbit_client_protos::FunctionInfo& function) const;
+  [[nodiscard]] bool IsFrameTrackEnabled(
+      const orbit_client_protos::FunctionInfo& function) const override;
 
   // Adds the frame track to the capture settings and also adds a frame track to the current
   // capture data, *if* the captures contains function calls to the function and the function
   // was instrumented.
-  void AddFrameTrack(const orbit_client_protos::FunctionInfo& function);
+  void AddFrameTrack(const orbit_client_protos::FunctionInfo& function) override;
   void AddFrameTrack(uint64_t instrumented_function_id);
 
   // Removes the frame track from the capture settings and also removes the frame track
   // (if it exists) from the capture data.
-  void RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function);
+  void RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function) override;
   void RemoveFrameTrack(uint64_t instrumented_function_id);
 
-  [[nodiscard]] bool HasFrameTrackInCaptureData(uint64_t instrumented_function_id) const;
+  [[nodiscard]] bool HasFrameTrackInCaptureData(uint64_t instrumented_function_id) const override;
 
   enum class JumpToTextBoxMode { kFirst, kLast, kMin, kMax };
   void JumpToTextBoxAndZoom(uint64_t function_id, JumpToTextBoxMode selection_mode);

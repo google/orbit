@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 
+#include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
 #include "capture_data.pb.h"
 
@@ -18,12 +19,12 @@ class OrbitApp;
 
 class FunctionsDataView : public orbit_data_views::DataView {
  public:
-  explicit FunctionsDataView(OrbitApp* app);
+  explicit FunctionsDataView(orbit_data_views::AppInterface* app);
 
   static const std::string kUnselectedFunctionString;
   static const std::string kSelectedFunctionString;
   static const std::string kFrameTrackString;
-  static std::string BuildSelectedColumnsString(OrbitApp* app,
+  static std::string BuildSelectedColumnsString(orbit_data_views::AppInterface* app,
                                                 const orbit_client_protos::FunctionInfo& function);
 
   const std::vector<Column>& GetColumns() override;
@@ -65,15 +66,11 @@ class FunctionsDataView : public orbit_data_views::DataView {
   static const std::string kMenuActionSourceCode;
 
  private:
-  static bool ShouldShowSelectedFunctionIcon(OrbitApp* app,
+  static bool ShouldShowSelectedFunctionIcon(orbit_data_views::AppInterface* app,
                                              const orbit_client_protos::FunctionInfo& function);
-  static bool ShouldShowFrameTrackIcon(OrbitApp* app,
+  static bool ShouldShowFrameTrackIcon(orbit_data_views::AppInterface* app,
                                        const orbit_client_protos::FunctionInfo& function);
   std::vector<const orbit_client_protos::FunctionInfo*> functions_;
-
-  // TODO(b/185090791): This is temporary and will be removed once this data view has been ported
-  // and move to orbit_data_views.
-  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_FUNCTIONS_DATA_VIEW_H_
