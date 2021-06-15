@@ -38,5 +38,7 @@
     <file alias="connected">outline_sensors_white_18dp.png</file>
     <file alias="disconnected">outline_sensors_off_white_18dp.png</file>
     <file alias="alert">outline_report_problem_white_18dp.png</file>
+    <file alias="expand_down">outline_expand_more_white_18dp_cropped.png</file>
+    <file alias="expand_up">outline_expand_less_white_18dp_cropped.png</file>
   </qresource>
 </RCC>
