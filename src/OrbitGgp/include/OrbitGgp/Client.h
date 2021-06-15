@@ -9,6 +9,7 @@
 #include <QPointer>
 #include <QString>
 #include <QVector>
+#include <chrono>
 #include <functional>
 #include <outcome.hpp>
 #include <string>
@@ -19,11 +20,16 @@
 
 namespace orbit_ggp {
 
+constexpr const char* kDefaultGgpProgram{"ggp"};
+constexpr std::chrono::milliseconds kDefaultTimeout{10'000};
+
 class Client : public QObject {
   Q_OBJECT
 
  public:
-  static ErrorMessageOr<QPointer<Client>> Create(QObject* parent);
+  static ErrorMessageOr<QPointer<Client>> Create(
+      QObject* parent, QString ggp_program = kDefaultGgpProgram,
+      std::chrono::milliseconds timeout = kDefaultTimeout);
 
   void GetInstancesAsync(const std::function<void(outcome::result<QVector<Instance>>)>& callback,
                          int retry = 3);
@@ -31,7 +37,11 @@ class Client : public QObject {
                        const std::function<void(outcome::result<SshInfo>)>& callback);
 
  private:
-  explicit Client(QObject* parent) : QObject(parent) {}
+  explicit Client(QObject* parent, QString ggp_program, std::chrono::milliseconds timeout)
+      : QObject(parent), ggp_program_(std::move(ggp_program)), timeout_(timeout) {}
+
+  const QString ggp_program_;
+  const std::chrono::milliseconds timeout_;
 };
 
 }  // namespace orbit_ggp
