@@ -22,6 +22,7 @@ namespace orbit_ggp {
 namespace {
 
 constexpr int kDefaultTimeoutInMs = 10'000;
+constexpr int kAdditionalSynchronousTimeoutInMs = 20;
 
 void RunProcessWithTimeout(const QString& program, const QStringList& arguments, QObject* parent,
                            const std::function<void(outcome::result<QByteArray>)>& callback) {
@@ -32,7 +33,7 @@ void RunProcessWithTimeout(const QString& program, const QStringList& arguments,
   const auto timeout_timer = QPointer{new QTimer{parent}};
 
   QObject::connect(timeout_timer, &QTimer::timeout, parent, [process, timeout_timer, callback]() {
-    if (process && !process->waitForFinished(20)) {
+    if (process && !process->waitForFinished(kAdditionalSynchronousTimeoutInMs)) {
       ERROR("Process request timed out after %dms", kDefaultTimeoutInMs);
       callback(Error::kRequestTimedOut);
       if (process) {
