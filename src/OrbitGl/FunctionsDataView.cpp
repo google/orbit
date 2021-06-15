@@ -4,6 +4,7 @@
 
 #include "FunctionsDataView.h"
 
+#include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_split.h>

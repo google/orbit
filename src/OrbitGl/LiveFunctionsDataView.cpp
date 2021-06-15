@@ -6,6 +6,7 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
+#include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
