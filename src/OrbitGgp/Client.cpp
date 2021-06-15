@@ -10,6 +10,7 @@
 #include <QProcess>
 #include <QStringList>
 #include <QTimer>
+#include <chrono>
 #include <type_traits>
 
 #include "OrbitBase/Logging.h"
@@ -21,10 +22,10 @@ namespace orbit_ggp {
 
 namespace {
 
-constexpr int kDefaultTimeoutInMs = 10'000;
 constexpr int kAdditionalSynchronousTimeoutInMs = 20;
 
-void RunProcessWithTimeout(const QString& program, const QStringList& arguments, QObject* parent,
+void RunProcessWithTimeout(const QString& program, const QStringList& arguments,
+                           std::chrono::milliseconds timeout, QObject* parent,
                            const std::function<void(outcome::result<QByteArray>)>& callback) {
   const auto process = QPointer{new QProcess{parent}};
   process->setProgram(program);
@@ -32,19 +33,20 @@ void RunProcessWithTimeout(const QString& program, const QStringList& arguments,
 
   const auto timeout_timer = QPointer{new QTimer{parent}};
 
-  QObject::connect(timeout_timer, &QTimer::timeout, parent, [process, timeout_timer, callback]() {
-    if (process && !process->waitForFinished(kAdditionalSynchronousTimeoutInMs)) {
-      ERROR("Process request timed out after %dms", kDefaultTimeoutInMs);
-      callback(Error::kRequestTimedOut);
-      if (process) {
-        process->terminate();
-        process->waitForFinished();
-        process->deleteLater();
-      }
-    }
+  QObject::connect(timeout_timer, &QTimer::timeout, parent,
+                   [process, timeout_timer, timeout, callback]() {
+                     if (process && !process->waitForFinished(kAdditionalSynchronousTimeoutInMs)) {
+                       ERROR("Process request timed out after %dms", timeout.count());
+                       callback(Error::kRequestTimedOut);
+                       if (process) {
+                         process->terminate();
+                         process->waitForFinished();
+                         process->deleteLater();
+                       }
+                     }
 
-    timeout_timer->deleteLater();
-  });
+                     timeout_timer->deleteLater();
+                   });
 
   QObject::connect(process,
                    static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
@@ -81,14 +83,15 @@ void RunProcessWithTimeout(const QString& program, const QStringList& arguments,
   });
 
   process->start(QIODevice::ReadOnly);
-  timeout_timer->start(kDefaultTimeoutInMs);
+  timeout_timer->start(timeout);
 }
 
 }  // namespace
 
-ErrorMessageOr<QPointer<Client>> Client::Create(QObject* parent) {
+ErrorMessageOr<QPointer<Client>> Client::Create(QObject* parent, QString ggp_program,
+                                                std::chrono::milliseconds timeout) {
   QProcess ggp_process{};
-  ggp_process.setProgram("ggp");
+  ggp_process.setProgram(ggp_program);
   ggp_process.setArguments({"version"});
 
   ggp_process.start(QIODevice::ReadOnly);
@@ -112,14 +115,14 @@ ErrorMessageOr<QPointer<Client>> Client::Create(QObject* parent) {
     return ErrorMessage{error_message};
   }
 
-  return QPointer<Client>(new Client{parent});
+  return QPointer<Client>(new Client{parent, std::move(ggp_program), timeout});
 }
 
 void Client::GetInstancesAsync(
     const std::function<void(outcome::result<QVector<Instance>>)>& callback, int retry) {
   CHECK(callback);
 
-  RunProcessWithTimeout("ggp", {"instance", "list", "-s"}, this,
+  RunProcessWithTimeout(ggp_program_, {"instance", "list", "-s"}, timeout_, this,
                         [this, callback, retry](outcome::result<QByteArray> result) {
                           if (!result) {
                             if (retry < 1) {
@@ -138,13 +141,14 @@ void Client::GetSshInfoAsync(const Instance& ggp_instance,
   CHECK(callback);
 
   const QStringList arguments{"ssh", "init", "-s", "--instance", ggp_instance.id};
-  RunProcessWithTimeout("ggp", arguments, this, [callback](outcome::result<QByteArray> result) {
-    if (!result) {
-      callback(result.error());
-    } else {
-      callback(SshInfo::CreateFromJson(result.value()));
-    }
-  });
+  RunProcessWithTimeout(ggp_program_, arguments, timeout_, this,
+                        [callback](outcome::result<QByteArray> result) {
+                          if (!result) {
+                            callback(result.error());
+                          } else {
+                            callback(SshInfo::CreateFromJson(result.value()));
+                          }
+                        });
 }
 
 }  // namespace orbit_ggp
