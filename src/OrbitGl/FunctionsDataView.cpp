@@ -19,6 +19,7 @@
 #include "ClientData/ProcessData.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreUtils.h"
+#include "DataViews/AppInterface.h"
 #include "DataViews/DataViewType.h"
 #include "OrbitBase/Logging.h"
 #include "absl/strings/str_format.h"
@@ -34,8 +35,8 @@ using orbit_client_data::ProcessData;
 using orbit_client_model::CaptureData;
 using orbit_client_protos::FunctionInfo;
 
-FunctionsDataView::FunctionsDataView(OrbitApp* app)
-    : orbit_data_views::DataView(orbit_data_views::DataViewType::kFunctions, app), app_{app} {}
+FunctionsDataView::FunctionsDataView(orbit_data_views::AppInterface* app)
+    : orbit_data_views::DataView(orbit_data_views::DataViewType::kFunctions, app) {}
 
 const std::string FunctionsDataView::kUnselectedFunctionString = "";
 const std::string FunctionsDataView::kSelectedFunctionString = "✓";
@@ -55,12 +56,13 @@ const std::vector<orbit_data_views::DataView::Column>& FunctionsDataView::GetCol
   return columns;
 }
 
-bool FunctionsDataView::ShouldShowSelectedFunctionIcon(OrbitApp* app,
+bool FunctionsDataView::ShouldShowSelectedFunctionIcon(orbit_data_views::AppInterface* app,
                                                        const FunctionInfo& function) {
   return app->IsFunctionSelected(function);
 }
 
-bool FunctionsDataView::ShouldShowFrameTrackIcon(OrbitApp* app, const FunctionInfo& function) {
+bool FunctionsDataView::ShouldShowFrameTrackIcon(orbit_data_views::AppInterface* app,
+                                                 const FunctionInfo& function) {
   if (app->IsFrameTrackEnabled(function)) {
     return true;
   }
@@ -77,7 +79,7 @@ bool FunctionsDataView::ShouldShowFrameTrackIcon(OrbitApp* app, const FunctionIn
          app->HasFrameTrackInCaptureData(instrumented_function_id.value());
 }
 
-std::string FunctionsDataView::BuildSelectedColumnsString(OrbitApp* app,
+std::string FunctionsDataView::BuildSelectedColumnsString(orbit_data_views::AppInterface* app,
                                                           const FunctionInfo& function) {
   std::string result = kUnselectedFunctionString;
   if (ShouldShowSelectedFunctionIcon(app, function)) {
