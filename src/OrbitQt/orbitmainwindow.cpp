@@ -446,9 +446,29 @@ void OrbitMainWindow::SetupStatusBarLogButton() {
   capture_log_layout->setContentsMargins(0, 0, 9, 0);
   capture_log_widget->setLayout(capture_log_layout);
 
+  static const QIcon icon = [] {
+    QIcon icon;
+    QPixmap expand_up_pixmap = QPixmap{":/actions/expand_up"};
+    QPixmap expand_down_pixmap = QPixmap{":/actions/expand_down"};
+
+    // Reduce opacity for the Disabled mode.
+    QPixmap expand_up_disabled_pixmap = QPixmap{expand_up_pixmap.size()};
+    expand_up_disabled_pixmap.fill(Qt::transparent);
+    QPainter expand_up_disabled_painter{&expand_up_disabled_pixmap};
+    expand_up_disabled_painter.setOpacity(0.3);
+    expand_up_disabled_painter.drawPixmap(0, 0, expand_up_pixmap);
+    expand_up_disabled_painter.end();
+
+    icon.addPixmap(expand_up_pixmap, QIcon::Normal);
+    icon.addPixmap(expand_down_pixmap, QIcon::Normal, QIcon::On);
+    icon.addPixmap(expand_up_disabled_pixmap, QIcon::Disabled);
+    return icon;
+  }();
+
   capture_log_button_ = new QPushButton("Capture Log", statusBar());  // NOLINT
   capture_log_button_->setEnabled(false);
   capture_log_button_->setCheckable(true);
+  capture_log_button_->setIcon(icon);
   capture_log_button_->setStyleSheet(
       "padding-left: 11; padding-right: 11; padding-top: 2; padding-bottom: 2;");
   capture_log_layout->addWidget(capture_log_button_);
