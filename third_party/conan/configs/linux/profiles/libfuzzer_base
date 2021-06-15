@@ -2,7 +2,7 @@
 # Compiler and settings are auto-detected in that case, but we want to have
 # an upstream config file where settings can be changed.
 BASE_CFLAGS= -march=sandybridge -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -D_FORTIFY_SOURCE=2 -fstack-protector-all -fPIC
-BASE_CXXFLAGS= -march=sandybridge -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all -fPIC
+BASE_CXXFLAGS= -march=sandybridge -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all -fPIC -fno-exceptions
 BASE_LDFLAGS=-Wl,-z,relro,-z,now,-z,noexecstack -pthread
 [settings]
 abseil:compiler=clang
