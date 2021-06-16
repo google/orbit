@@ -75,7 +75,8 @@ ErrorMessageOr<std::string> GetLibOrbitPath() {
 ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options, bool enabled) {
   SCOPED_TIMED_LOG("%s Api in tracee", enabled ? "Enabling" : "Disabling");
   if (capture_options.api_functions().empty()) {
-    return ErrorMessage("No api table to initialize.");
+    LOG("No api table to initialize");
+    return outcome::success();
   }
 
   int32_t pid = capture_options.pid();
