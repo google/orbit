@@ -82,13 +82,11 @@ class ProcessData final {
   [[nodiscard]] std::vector<std::pair<std::string, std::string>> GetUniqueModulesPathAndBuildId()
       const;
 
-  // This function is deprecated since it relies on the fact that only one instance
-  // of module is loaded in the process which is not always true.
-  [[nodiscard]] std::optional<ModuleInMemory> FindModuleByPath(
+  [[nodiscard]] std::vector<std::string> FindModuleBuildIdsByPath(
       const std::string& module_path) const;
 
   [[nodiscard]] bool IsModuleLoadedByProcess(const std::string& module_path) const {
-    return FindModuleByPath(module_path).has_value();
+    return !FindModuleBuildIdsByPath(module_path).empty();
   }
 
   [[nodiscard]] bool IsModuleLoadedByProcess(const ModuleData* module) const;
@@ -97,8 +95,6 @@ class ProcessData final {
   mutable absl::Mutex mutex_;
   orbit_grpc_protos::ProcessInfo process_info_;
 
-  // This is a map from module_path to the space in memory where that module is loaded
-  absl::node_hash_map<std::string, ModuleInMemory> module_memory_map_;
   std::map<uint64_t, ModuleInMemory> start_address_to_module_in_memory_;
 };
 
