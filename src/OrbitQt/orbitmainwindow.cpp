@@ -969,7 +969,7 @@ constexpr uint64_t kMemoryWarningThresholdKbDefaultValue = 1024 * 1024 * 8;  // 
 void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
   QSettings settings;
   app_->SetCollectThreadStates(settings.value(kCollectThreadStatesSettingKey, false).toBool());
-  app_->SetEnableApi(settings.value(kEnableApiSettingKey, false).toBool());
+  app_->SetEnableApi(settings.value(kEnableApiSettingKey, true).toBool());
   app_->SetEnableIntrospection(settings.value(kEnableIntrospectionSettingKey, false).toBool());
 
   app_->SetCollectMemoryInfo(settings.value(kCollectMemoryInfoSettingKey, false).toBool());
