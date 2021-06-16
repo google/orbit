@@ -70,7 +70,7 @@ class ApiTester {
   ApiTester()
       : api_event_processor_{&api_event_listener_},
         capture_event_processor_{CaptureEventProcessor::CreateForCaptureListener(
-            &capture_event_listener_, std::filesystem::path{}, {})} {}
+            &capture_event_listener_, std::nullopt, {})} {}
 
   ApiTester& Start(const char* name = nullptr, orbit_api_color color = kOrbitColorAuto) {
     EnqueueApiEvent(orbit_api::kScopeStart, name, 0, color);
