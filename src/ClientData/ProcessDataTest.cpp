@@ -110,29 +110,6 @@ TEST(ProcessData, UpdateModuleInfos) {
     EXPECT_EQ(memory_space_2.build_id(), kBuildId2);
   }
   {
-    // invalid module infos: same filepath
-    const std::string file_path = "file/path";
-
-    uint64_t start_address_1 = 0;
-    uint64_t end_address_1 = 10;
-    ModuleInfo module_info_1;
-    module_info_1.set_file_path(file_path);
-    module_info_1.set_address_start(start_address_1);
-    module_info_1.set_address_end(end_address_1);
-
-    uint64_t start_address_2 = 100;
-    uint64_t end_address_2 = 110;
-    ModuleInfo module_info_2;
-    module_info_2.set_file_path(file_path);
-    module_info_2.set_address_start(start_address_2);
-    module_info_1.set_address_end(end_address_2);
-
-    std::vector<ModuleInfo> module_infos{module_info_1, module_info_2};
-
-    ProcessData process;
-    ASSERT_DEATH(process.UpdateModuleInfos(module_infos), "Check failed");
-  }
-  {
     // invalid module infos: same start address
     uint64_t start_address = 0;
 
@@ -167,31 +144,51 @@ TEST(ProcessData, MemorySpace) {
   }
 }
 
-TEST(ProcessData, FindModuleByPath) {
-  const std::string file_path_1 = "filepath1";
-  uint64_t start_address_1 = 0;
-  uint64_t end_address_1 = 10;
+TEST(ProcessData, FindModuleBuildIdsByPath) {
+  constexpr const char* kFilePath1 = "filepath1";
+  constexpr const char* kBuildId1 = "buildid1";
+  constexpr uint64_t kStartAddress1 = 0;
+  constexpr uint64_t kEndAddress1 = 10;
   ModuleInfo module_info_1;
-  module_info_1.set_file_path(file_path_1);
-  module_info_1.set_address_start(start_address_1);
-  module_info_1.set_address_end(end_address_1);
+  module_info_1.set_file_path(kFilePath1);
+  module_info_1.set_build_id(kBuildId1);
+  module_info_1.set_address_start(kStartAddress1);
+  module_info_1.set_address_end(kEndAddress1);
 
-  const std::string file_path_2 = "filepath2";
-  uint64_t start_address_2 = 100;
-  uint64_t end_address_2 = 110;
+  constexpr const char* kFilePath2 = "filepath2";
+  constexpr const char* kBuildId2 = "buildid2";
+  constexpr uint64_t kStartAddress2 = 100;
+  constexpr uint64_t kEndAddress2 = 110;
   ModuleInfo module_info_2;
-  module_info_2.set_file_path(file_path_2);
-  module_info_2.set_address_start(start_address_2);
-  module_info_2.set_address_end(end_address_2);
+  module_info_2.set_file_path(kFilePath2);
+  module_info_2.set_build_id(kBuildId2);
+  module_info_2.set_address_start(kStartAddress2);
+  module_info_2.set_address_end(kEndAddress2);
+
+  constexpr const char* kFilePath3 = kFilePath2;
+  constexpr const char* kBuildId3 = "buildid3";
+  constexpr uint64_t kStartAddress3 = 200;
+  constexpr uint64_t kEndAddress3 = 210;
+  ModuleInfo module_info_3;
+  module_info_3.set_file_path(kFilePath3);
+  module_info_3.set_build_id(kBuildId3);
+  module_info_3.set_address_start(kStartAddress3);
+  module_info_3.set_address_end(kEndAddress3);
 
   std::vector<ModuleInfo> module_infos{module_info_1, module_info_2};
 
   ProcessData process(ProcessInfo{});
   process.UpdateModuleInfos(module_infos);
+  process.AddOrUpdateModuleInfo(module_info_3);
 
-  EXPECT_TRUE(process.FindModuleByPath(file_path_1).has_value());
-  EXPECT_TRUE(process.FindModuleByPath(file_path_2).has_value());
-  EXPECT_FALSE(process.FindModuleByPath("not/loaded/module").has_value());
+  EXPECT_TRUE(process.IsModuleLoadedByProcess(kFilePath1));
+  EXPECT_THAT(process.FindModuleBuildIdsByPath(kFilePath1), ElementsAre(kBuildId1));
+  EXPECT_TRUE(process.IsModuleLoadedByProcess(kFilePath2));
+  EXPECT_THAT(process.FindModuleBuildIdsByPath(kFilePath2), ElementsAre(kBuildId2, kBuildId3));
+  EXPECT_TRUE(process.IsModuleLoadedByProcess(kFilePath3));
+  EXPECT_THAT(process.FindModuleBuildIdsByPath(kFilePath3), ElementsAre(kBuildId2, kBuildId3));
+  EXPECT_FALSE(process.IsModuleLoadedByProcess("not/loaded/module"));
+  EXPECT_TRUE(process.FindModuleBuildIdsByPath("not/loaded/module").empty());
 }
 
 TEST(ProcessData, IsModuleLoadedByProcess) {

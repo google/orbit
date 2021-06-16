@@ -61,40 +61,34 @@ const std::string& ProcessData::build_id() const {
 
 void ProcessData::UpdateModuleInfos(absl::Span<const ModuleInfo> module_infos) {
   absl::MutexLock lock(&mutex_);
-  module_memory_map_.clear();
   start_address_to_module_in_memory_.clear();
 
   for (const auto& module_info : module_infos) {
-    {
-      const auto [unused_it, success] = module_memory_map_.try_emplace(
-          module_info.file_path(), module_info.address_start(), module_info.address_end(),
-          module_info.file_path(), module_info.build_id());
-      CHECK(success);
-    }
-    {
-      const auto [unused_it, success] = start_address_to_module_in_memory_.try_emplace(
-          module_info.address_start(), module_info.address_start(), module_info.address_end(),
-          module_info.file_path(), module_info.build_id());
-      CHECK(success);
-    }
+    const auto [unused_it, success] = start_address_to_module_in_memory_.try_emplace(
+        module_info.address_start(), module_info.address_start(), module_info.address_end(),
+        module_info.file_path(), module_info.build_id());
+    CHECK(success);
   }
 }
 
-std::optional<ModuleInMemory> ProcessData::FindModuleByPath(const std::string& module_path) const {
+std::vector<std::string> ProcessData::FindModuleBuildIdsByPath(
+    const std::string& module_path) const {
   absl::MutexLock lock(&mutex_);
-  auto it = module_memory_map_.find(module_path);
-  if (it == module_memory_map_.end()) {
-    return std::nullopt;
+  std::set<std::string> build_ids;
+
+  for (const auto& [unused_address, module_in_memory] : start_address_to_module_in_memory_) {
+    if (module_in_memory.file_path() == module_path) {
+      build_ids.insert(module_in_memory.build_id());
+    }
   }
 
-  return it->second;
+  return {build_ids.begin(), build_ids.end()};
 }
 
 void ProcessData::AddOrUpdateModuleInfo(const ModuleInfo& module_info) {
   absl::MutexLock lock(&mutex_);
   ModuleInMemory module_in_memory{module_info.address_start(), module_info.address_end(),
                                   module_info.file_path(), module_info.build_id()};
-  module_memory_map_.insert_or_assign(module_info.file_path(), module_in_memory);
   start_address_to_module_in_memory_.insert_or_assign(module_info.address_start(),
                                                       module_in_memory);
 }
@@ -141,9 +135,12 @@ std::map<uint64_t, ModuleInMemory> ProcessData::GetMemoryMapCopy() const {
 }
 
 bool ProcessData::IsModuleLoadedByProcess(const ModuleData* module) const {
-  const std::optional<ModuleInMemory> loaded_module = FindModuleByPath(module->file_path());
-  if (!loaded_module.has_value()) return false;
-  return loaded_module->build_id() == module->build_id();
+  absl::MutexLock lock(&mutex_);
+  return std::any_of(start_address_to_module_in_memory_.begin(),
+                     start_address_to_module_in_memory_.end(), [module](const auto& it) {
+                       return it.second.file_path() == module->file_path() &&
+                              it.second.build_id() == module->build_id();
+                     });
 }
 
 std::vector<std::pair<std::string, std::string>> ProcessData::GetUniqueModulesPathAndBuildId()

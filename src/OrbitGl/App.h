@@ -340,7 +340,7 @@ class OrbitApp final : public DataViewFactory,
   void UpdateAfterCaptureCleared();
 
   orbit_base::Future<ErrorMessageOr<void>> LoadPresetModule(
-      const std::string& module_path, const orbit_preset_file::PresetFile& preset_file);
+      const std::filesystem::path& module_path, const orbit_preset_file::PresetFile& preset_file);
   void LoadPreset(const orbit_preset_file::PresetFile& preset) override;
   [[nodiscard]] orbit_data_views::PresetLoadState GetPresetLoadState(
       const orbit_preset_file::PresetFile& preset) const override;
@@ -468,8 +468,8 @@ class OrbitApp final : public DataViewFactory,
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
   void AddSymbols(const std::filesystem::path& module_file_path, const std::string& module_build_id,
                   const orbit_grpc_protos::ModuleSymbols& symbols);
-  ErrorMessageOr<const orbit_client_data::ModuleData*> GetLoadedModuleByPath(
-      const std::string& module_path);
+  ErrorMessageOr<std::vector<const orbit_client_data::ModuleData*>> GetLoadedModulesByPath(
+      const std::filesystem::path& module_path);
   ErrorMessageOr<void> ConvertPresetToNewFormatIfNecessary(
       const orbit_preset_file::PresetFile& preset_file);
 

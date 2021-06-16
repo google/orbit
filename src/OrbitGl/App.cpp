@@ -1693,34 +1693,55 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
   return result_future;
 }
 
-ErrorMessageOr<const ModuleData*> OrbitApp::GetLoadedModuleByPath(const std::string& module_path) {
-  std::optional<ModuleInMemory> module_in_memory =
-      GetTargetProcess()->FindModuleByPath(module_path);
-  if (!module_in_memory.has_value()) {
-    return ErrorMessage{absl::StrFormat("Module \"%s\" is not loaded by process.", module_path)};
+ErrorMessageOr<std::vector<const ModuleData*>> OrbitApp::GetLoadedModulesByPath(
+    const std::filesystem::path& module_path) {
+  std::vector<std::string> build_ids =
+      GetTargetProcess()->FindModuleBuildIdsByPath(module_path.string());
+
+  std::vector<const ModuleData*> result;
+  for (const auto& build_id : build_ids) {
+    const ModuleData* module_data =
+        module_manager_->GetModuleByPathAndBuildId(module_path.string(), build_id);
+    if (module_data == nullptr) {
+      ERROR("Module \"%s\" was loaded by the process, but is not part of module manager",
+            module_path.string());
+      crash_handler_->DumpWithoutCrash();
+      return ErrorMessage{"Unexpected error while loading preset."};
+    }
+
+    result.emplace_back(module_data);
   }
 
-  const ModuleData* module_data =
-      module_manager_->GetModuleByPathAndBuildId(module_path, module_in_memory->build_id());
-  if (module_data == nullptr) {
-    ERROR("module \"%s\" was loaded by the process, but is not part of module manager",
-          module_path);
-    crash_handler_->DumpWithoutCrash();
-    return ErrorMessage{"Unexpected error while loading preset."};
-  }
-
-  return module_data;
+  return result;
 }
 
-orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPresetModule(const std::string& module_path,
-                                                                    const PresetFile& preset_file) {
-  auto module_data_or_error = GetLoadedModuleByPath(module_path);
+orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPresetModule(
+    const std::filesystem::path& module_path, const PresetFile& preset_file) {
+  auto modules_data_or_error = GetLoadedModulesByPath(module_path);
 
-  if (module_data_or_error.has_error()) {
-    return module_data_or_error.error();
+  if (modules_data_or_error.has_error()) {
+    return modules_data_or_error.error();
   }
 
-  const ModuleData* module_data = module_data_or_error.value();
+  std::vector<const ModuleData*>& modules_data = modules_data_or_error.value();
+
+  if (modules_data.empty()) {
+    return ErrorMessage{
+        absl::StrFormat("Module \"%s\" is not loaded by process.", module_path.string())};
+  }
+
+  // TODO(b/191240539): Ask the user which build_id they prefer.
+  if (modules_data.size() > 1) {
+    ERROR("Found multiple build_ids (%s) for module \"%s\", will choose the first one",
+          absl::StrJoin(modules_data, ", ",
+                        [](std::string* out, const ModuleData* module_data) {
+                          out->append(module_data->build_id());
+                        }),
+          module_path.string());
+  }
+
+  CHECK(!modules_data.empty());
+  const ModuleData* module_data = modules_data.at(0);
 
   auto handle_hooks_and_frame_tracks =
       [this, module_data, preset_file](const ErrorMessageOr<void>& result) -> ErrorMessageOr<void> {
@@ -1808,7 +1829,7 @@ void OrbitApp::LoadPreset(const PresetFile& preset_file) {
 
   // First we try to load all preset modules in parallel
   for (const auto& module_path : module_paths) {
-    auto load_preset_result = LoadPresetModule(module_path.string(), preset_file);
+    auto load_preset_result = LoadPresetModule(module_path, preset_file);
 
     orbit_base::ImmediateExecutor immediate_executor{};
     auto future = load_preset_result.Then(
@@ -2490,7 +2511,13 @@ ErrorMessageOr<void> OrbitApp::ConvertPresetToNewFormatIfNecessary(const PresetF
   // Convert first
   PresetInfo new_info;
   for (const auto& module_path : preset_file.GetModulePaths()) {
-    OUTCOME_TRY(module_data, GetLoadedModuleByPath(module_path.string()));
+    OUTCOME_TRY(modules_data, GetLoadedModulesByPath(module_path.string()));
+    if (modules_data.empty()) {
+      return ErrorMessage{
+          absl::StrFormat("Module \"%s\" is not loaded by process.", module_path.string())};
+    }
+    const ModuleData* module_data = modules_data.at(0);
+
     PresetModule module_info;
 
     for (uint64_t function_hash :
