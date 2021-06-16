@@ -36,12 +36,22 @@ target_link_libraries(
 set_target_properties(OrbitGgp PROPERTIES AUTOMOC ON)
 set_target_properties(OrbitGgp PROPERTIES AUTOUIC ON)
 
+# Mock ggp clients
+add_executable(OrbitMockGgpFailing)
+target_compile_options(OrbitMockGgpFailing PRIVATE ${STRICT_COMPILE_FLAGS})
+target_sources(OrbitMockGgpFailing PRIVATE MockGgp/Failing.cpp)
+
+add_executable(OrbitMockGgpWorking)
+target_compile_options(OrbitMockGgpWorking PRIVATE ${STRICT_COMPILE_FLAGS})
+target_sources(OrbitMockGgpWorking PRIVATE MockGgp/Working.cpp)
+
 # Tests
 add_executable(OrbitGgpTests)
 
 target_compile_options(OrbitGgpTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitGgpTests PRIVATE 
+          ClientTest.cpp
           InstanceTests.cpp
           InstanceItemModelTests.cpp
           SshInfoTests.cpp
@@ -50,7 +60,7 @@ target_sources(OrbitGgpTests PRIVATE
 target_link_libraries(OrbitGgpTests PRIVATE 
           OrbitGgp
           OrbitBase
-          GTest::Main
+          GTest::QtCoreMain
           Qt5::Core
 )
 
