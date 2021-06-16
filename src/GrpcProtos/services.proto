@@ -98,6 +98,7 @@ service FramePointerValidatorService {
 message CrashOrbitServiceRequest {
   enum CrashType {
     CHECK_FALSE = 0;
+	NULL_POINTER_DEREFERENCE = 1 [deprecated = true];
     STACK_OVERFLOW = 2;
   }
   CrashType crash_type = 1;
