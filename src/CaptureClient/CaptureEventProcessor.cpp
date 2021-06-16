@@ -43,7 +43,7 @@ namespace {
 class CaptureEventProcessorForListener : public CaptureEventProcessor {
  public:
   explicit CaptureEventProcessorForListener(CaptureListener* capture_listener,
-                                            std::filesystem::path file_path,
+                                            std::optional<std::filesystem::path> file_path,
                                             absl::flat_hash_set<uint64_t> frame_track_function_ids)
       : file_path_{std::move(file_path)},
         frame_track_function_ids_(std::move(frame_track_function_ids)),
@@ -77,7 +77,7 @@ class CaptureEventProcessorForListener : public CaptureEventProcessor {
   void ProcessGpuQueueSubmission(const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission);
   void ProcessSystemMemoryUsage(const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage);
 
-  std::filesystem::path file_path_;
+  std::optional<std::filesystem::path> file_path_;
   absl::flat_hash_set<uint64_t> frame_track_function_ids_;
 
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::Callstack> callstack_intern_pool;
@@ -514,7 +514,7 @@ uint64_t CaptureEventProcessorForListener::GetStringHashAndSendToListenerIfNeces
 }  // namespace
 
 std::unique_ptr<CaptureEventProcessor> CaptureEventProcessor::CreateForCaptureListener(
-    CaptureListener* capture_listener, std::filesystem::path file_path,
+    CaptureListener* capture_listener, std::optional<std::filesystem::path> file_path,
     absl::flat_hash_set<uint64_t> frame_track_function_ids) {
   return std::make_unique<CaptureEventProcessorForListener>(capture_listener, std::move(file_path),
                                                             std::move(frame_track_function_ids));

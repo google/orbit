@@ -24,7 +24,7 @@ class CaptureEventProcessor {
   virtual void ProcessEvent(const orbit_grpc_protos::ClientCaptureEvent& event) = 0;
 
   static std::unique_ptr<CaptureEventProcessor> CreateForCaptureListener(
-      CaptureListener* capture_listener, std::filesystem::path file_path,
+      CaptureListener* capture_listener, std::optional<std::filesystem::path> file_path,
       absl::flat_hash_set<uint64_t> frame_track_function_ids);
 
   static ErrorMessageOr<std::unique_ptr<CaptureEventProcessor>> CreateSaveToFileProcessor(

@@ -1106,7 +1106,7 @@ static std::unique_ptr<CaptureEventProcessor> CreateCaptureEventProcessor(
     absl::flat_hash_set<uint64_t> frame_track_function_ids,
     const std::function<void(const ErrorMessage&)>& error_handler) {
   if (!absl::GetFlag(FLAGS_enable_capture_autosave)) {
-    return CaptureEventProcessor::CreateForCaptureListener(listener, std::filesystem::path{},
+    return CaptureEventProcessor::CreateForCaptureListener(listener, std::nullopt,
                                                            std::move(frame_track_function_ids));
   }
 
@@ -1121,7 +1121,7 @@ static std::unique_ptr<CaptureEventProcessor> CreateCaptureEventProcessor(
     error_handler(ErrorMessage{
         absl::StrFormat("Unable to set up automatic capture saving to \"%s\": %s",
                         file_path.string(), save_to_file_processor_or_error.error().message())});
-    return CaptureEventProcessor::CreateForCaptureListener(listener, std::filesystem::path{},
+    return CaptureEventProcessor::CreateForCaptureListener(listener, std::nullopt,
                                                            std::move(frame_track_function_ids));
   }
 
@@ -1217,6 +1217,7 @@ void OrbitApp::StartCapture() {
       this, process->name(), frame_track_function_ids, [this](const ErrorMessage& error) {
         capture_data_->reset_file_path();
         SendErrorToUi("Error saving capture", error.message());
+        ERROR("%s", error.message());
       });
 
   Future<ErrorMessageOr<CaptureOutcome>> capture_result = capture_client_->Capture(
