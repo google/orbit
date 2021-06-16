@@ -534,11 +534,15 @@ void OrbitApp::OnMetadataEvent(const orbit_grpc_protos::MetadataEvent& metadata_
             MainWindowInterface::CaptureLogSeverity::kSevereWarning,
             GetCaptureTimeAt(metadata_event.error_enabling_orbit_api_event().timestamp_ns()),
             metadata_event.error_enabling_orbit_api_event().message());
-        constexpr const char* kDontShowAgainErrorEnablingOrbitApiWarningKey =
-            "DontShowAgainErrorEnablingOrbitApiWarning";
-        main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
-            "Could not enable Orbit API", metadata_event.error_enabling_orbit_api_event().message(),
-            kDontShowAgainErrorEnablingOrbitApiWarningKey);
+
+        if (!IsLoadingCapture()) {
+          constexpr const char* kDontShowAgainErrorEnablingOrbitApiWarningKey =
+              "DontShowAgainErrorEnablingOrbitApiWarning";
+          main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
+              "Could not enable Orbit API",
+              metadata_event.error_enabling_orbit_api_event().message(),
+              kDontShowAgainErrorEnablingOrbitApiWarningKey);
+        }
       } break;
 
       case orbit_grpc_protos::MetadataEvent::kClockResolutionEvent: {
@@ -560,10 +564,13 @@ void OrbitApp::OnMetadataEvent(const orbit_grpc_protos::MetadataEvent& metadata_
                               clock_resolution_ns);
           main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
                                            GetCaptureTimeAt(timestamp_ns), message);
-          constexpr const char* kDontShowAgainHighClockResolutionWarningKey =
-              "DontShowAgainHighClockResolutionWarning";
-          main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
-              "High clock resolution", message, kDontShowAgainHighClockResolutionWarningKey);
+
+          if (!IsLoadingCapture()) {
+            constexpr const char* kDontShowAgainHighClockResolutionWarningKey =
+                "DontShowAgainHighClockResolutionWarning";
+            main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
+                "High clock resolution", message, kDontShowAgainHighClockResolutionWarningKey);
+          }
         }
       } break;
 
@@ -575,11 +582,14 @@ void OrbitApp::OnMetadataEvent(const orbit_grpc_protos::MetadataEvent& metadata_
             MainWindowInterface::CaptureLogSeverity::kSevereWarning,
             GetCaptureTimeAt(metadata_event.errors_with_perf_event_open_event().timestamp_ns()),
             kMessage);
-        constexpr const char* kDontShowAgainErrorsWithPerfEventOpenWarningKey =
-            "DontShowAgainErrorsWithPerfEventOpenWarning";
-        main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
-            "Errors with perf_event_open", kMessage,
-            kDontShowAgainErrorsWithPerfEventOpenWarningKey);
+
+        if (!IsLoadingCapture()) {
+          constexpr const char* kDontShowAgainErrorsWithPerfEventOpenWarningKey =
+              "DontShowAgainErrorsWithPerfEventOpenWarning";
+          main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
+              "Errors with perf_event_open", kMessage,
+              kDontShowAgainErrorsWithPerfEventOpenWarningKey);
+        }
       } break;
 
       case orbit_grpc_protos::MetadataEvent::EVENT_NOT_SET:
