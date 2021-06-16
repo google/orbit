@@ -34,6 +34,7 @@ target_link_libraries(DataViews PUBLIC
 add_executable(DataViewsTests)
 target_compile_options(DataViewsTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(DataViewsTests PRIVATE DataViewTest.cpp
+                                      FunctionsDataViewTest.cpp
                                       MockAppInterface.h
                                       PresetsDataViewTest.cpp)
 target_link_libraries(DataViewsTests PRIVATE
