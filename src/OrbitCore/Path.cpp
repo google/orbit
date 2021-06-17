@@ -12,6 +12,11 @@
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 
+#ifdef WIN32
+#include <KnownFolders.h>
+#include <shlobj.h>
+#endif
+
 ABSL_FLAG(std::string, log_dir, "", "Set directory for the log.");
 
 namespace orbit_core {
@@ -92,14 +97,36 @@ std::filesystem::path CreateOrGetOrbitAppDataDir() {
   return path;
 }
 
-std::filesystem::path CreateOrGetOrbitUserDataDir() {
+static std::filesystem::path GetDocumentsPath() {
 #ifdef WIN32
-  std::filesystem::path path = std::filesystem::path(GetEnvVar("USERPROFILE"));
+  PWSTR ppszPath;
+  HRESULT result = SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &ppszPath);
+
+  if (result != S_OK) {
+    CoTaskMemFree(ppszPath);
+    LPSTR error_string = nullptr;
+    FormatMessageA(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+        nullptr, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        reinterpret_cast<LPSTR>(&error_string), 0, nullptr);
+    std::filesystem::path path = std::filesystem::path(GetEnvVar("USERPROFILE")) / "Documents";
+    ERROR("Retrieving path to Documents (defaulting to \"%s\"): %s", path.string(), error_string);
+    LocalFree(error_string);
+    return path;
+  }
+
+  std::wstring wpath = ppszPath;
+  CoTaskMemFree(ppszPath);
+  std::filesystem::path path{wpath};
+  LOG("Path to Documents: %s", path.string());
+  return path;
 #else
-  std::filesystem::path path = std::filesystem::path(GetEnvVar("HOME"));
+  return std::filesystem::path(GetEnvVar("HOME")) / "Documents";
 #endif
-  path = path / "Documents" / "Orbit";
-  const auto mkdir_result = orbit_base::CreateDirectory(path);
+}
+
+std::filesystem::path CreateOrGetOrbitUserDataDir() {
+  std::filesystem::path path = GetDocumentsPath() / "Orbit";
   CreateDirectoryOrDie(path);
   return path;
 }
