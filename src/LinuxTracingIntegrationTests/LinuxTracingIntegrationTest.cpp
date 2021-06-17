@@ -299,6 +299,17 @@ class BufferTracerListener : public orbit_linux_tracing::TracerListener {
     }
   }
 
+  void OnOutOfOrderEventsDiscardedEvent(orbit_grpc_protos::OutOfOrderEventsDiscardedEvent
+                                            out_of_order_events_discarded_event) override {
+    orbit_grpc_protos::ProducerCaptureEvent event;
+    *event.mutable_metadata_event()->mutable_out_of_order_events_discarded_event() =
+        std::move(out_of_order_events_discarded_event);
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
+  }
+
   [[nodiscard]] std::vector<orbit_grpc_protos::ProducerCaptureEvent> GetAndClearEvents() {
     absl::MutexLock lock{&events_mutex_};
     std::vector<orbit_grpc_protos::ProducerCaptureEvent> events = std::move(events_);
@@ -532,6 +543,12 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
             previous_event_timestamp_ns =
                 metadata_event.lost_perf_records_event().end_timestamp_ns();
             break;
+          case orbit_grpc_protos::MetadataEvent::kOutOfOrderEventsDiscardedEvent:
+            EXPECT_GE(metadata_event.out_of_order_events_discarded_event().end_timestamp_ns(),
+                      previous_event_timestamp_ns);
+            previous_event_timestamp_ns =
+                metadata_event.out_of_order_events_discarded_event().end_timestamp_ns();
+            break;
           case orbit_grpc_protos::MetadataEvent::EVENT_NOT_SET:
             UNREACHABLE();
         }
@@ -542,10 +559,12 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
   }
 }
 
-void VerifyNoLostEvents(const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
+void VerifyNoLostOrDiscardedEvents(
+    const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
   for (const orbit_grpc_protos::ProducerCaptureEvent& event : events) {
     if (event.has_metadata_event()) {
       EXPECT_FALSE(event.metadata_event().has_lost_perf_records_event());
+      EXPECT_FALSE(event.metadata_event().has_out_of_order_events_discarded_event());
     }
   }
 }
@@ -575,7 +594,7 @@ TEST(LinuxTracingIntegrationTest, SchedulingSlices) {
 
   VerifyOrderOfAllEvents(events);
 
-  VerifyNoLostEvents(events);
+  VerifyNoLostOrDiscardedEvents(events);
 
   uint64_t scheduling_slice_count = 0;
   uint64_t last_out_timestamp_ns = 0;
@@ -711,7 +730,7 @@ TEST(LinuxTracingIntegrationTest, FunctionCalls) {
 
   VerifyOrderOfAllEvents(events);
 
-  VerifyNoLostEvents(events);
+  VerifyNoLostOrDiscardedEvents(events);
 
   VerifyFunctionCallsOfOuterAndInnerFunction(events, fixture.GetPuppetPid(), kOuterFunctionId,
                                              kInnerFunctionId);
@@ -913,7 +932,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesAndAddressInfos) {
 
   VerifyOrderOfAllEvents(events);
 
-  VerifyNoLostEvents(events);
+  VerifyNoLostOrDiscardedEvents(events);
 
   VerifyErrorsWithPerfEventOpenEvent(events);
 
@@ -949,7 +968,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesTogetherWithFunctionCalls) {
 
   VerifyOrderOfAllEvents(events);
 
-  VerifyNoLostEvents(events);
+  VerifyNoLostOrDiscardedEvents(events);
 
   VerifyFunctionCallsOfOuterAndInnerFunction(events, fixture.GetPuppetPid(), kOuterFunctionId,
                                              kInnerFunctionId);
@@ -989,7 +1008,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointers) {
 
   VerifyOrderOfAllEvents(events);
 
-  VerifyNoLostEvents(events);
+  VerifyNoLostOrDiscardedEvents(events);
 
   VerifyErrorsWithPerfEventOpenEvent(events);
 
@@ -1025,7 +1044,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointersTogetherWithF
 
   VerifyOrderOfAllEvents(events);
 
-  VerifyNoLostEvents(events);
+  VerifyNoLostOrDiscardedEvents(events);
 
   VerifyFunctionCallsOfOuterAndInnerFunction(events, fixture.GetPuppetPid(), kOuterFunctionId,
                                              kInnerFunctionId);
@@ -1048,7 +1067,7 @@ TEST(LinuxTracingIntegrationTest, ThreadStateSlices) {
 
   VerifyOrderOfAllEvents(events);
 
-  VerifyNoLostEvents(events);
+  VerifyNoLostOrDiscardedEvents(events);
 
   uint64_t running_slice_count = 0;
   uint64_t runnable_slice_count = 0;
@@ -1116,7 +1135,7 @@ TEST(LinuxTracingIntegrationTest, ThreadNames) {
 
   VerifyOrderOfAllEvents(events);
 
-  VerifyNoLostEvents(events);
+  VerifyNoLostOrDiscardedEvents(events);
 
   std::vector<std::string> changed_thread_names;
   std::vector<std::string> initial_thread_names;
@@ -1166,7 +1185,7 @@ TEST(LinuxTracingIntegrationTest, ModuleUpdateOnDlopen) {
 
   VerifyOrderOfAllEvents(events);
 
-  VerifyNoLostEvents(events);
+  VerifyNoLostOrDiscardedEvents(events);
 
   VerifyErrorsWithPerfEventOpenEvent(events);
 
@@ -1207,7 +1226,7 @@ TEST(LinuxTracingIntegrationTest, GpuJobs) {
 
   VerifyOrderOfAllEvents(events);
 
-  VerifyNoLostEvents(events);
+  VerifyNoLostOrDiscardedEvents(events);
 
   bool another_process_used_gpu = false;
   for (const auto& event : events) {

@@ -453,6 +453,11 @@ message LostPerfRecordsEvent {
   uint64 end_timestamp_ns = 2;
 }
 
+message OutOfOrderEventsDiscardedEvent {
+  uint64 duration_ns = 1;
+  uint64 end_timestamp_ns = 2;
+}
+
 message MetadataEvent {
   oneof event {
     WarningEvent warning_event = 1;
@@ -461,6 +466,7 @@ message MetadataEvent {
     ClockResolutionEvent clock_resolution_event = 4;
     ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event = 5;
     LostPerfRecordsEvent lost_perf_records_event = 6;
+    OutOfOrderEventsDiscardedEvent out_of_order_events_discarded_event = 7;
   }
 }
 

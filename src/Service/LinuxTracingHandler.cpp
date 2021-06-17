@@ -157,4 +157,12 @@ void LinuxTracingHandler::OnLostPerfRecordsEvent(
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }
 
+void LinuxTracingHandler::OnOutOfOrderEventsDiscardedEvent(
+    orbit_grpc_protos::OutOfOrderEventsDiscardedEvent out_of_order_events_discarded_event) {
+  orbit_grpc_protos::ProducerCaptureEvent event;
+  *event.mutable_metadata_event()->mutable_out_of_order_events_discarded_event() =
+      std::move(out_of_order_events_discarded_event);
+  producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
+}
+
 }  // namespace orbit_service

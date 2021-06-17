@@ -52,6 +52,8 @@ class LinuxTracingHandler : public orbit_linux_tracing::TracerListener {
       orbit_grpc_protos::ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event) override;
   void OnLostPerfRecordsEvent(
       orbit_grpc_protos::LostPerfRecordsEvent lost_perf_records_event) override;
+  void OnOutOfOrderEventsDiscardedEvent(orbit_grpc_protos::OutOfOrderEventsDiscardedEvent
+                                            out_of_order_events_discarded_event) override;
 
  private:
   ProducerEventProcessor* producer_event_processor_;

@@ -37,7 +37,7 @@ target_sources(LinuxTracing PRIVATE
         LibunwindstackUnwinder.h
         LinuxTracingUtils.h
         LinuxTracingUtils.cpp
-        LostEventVisitor.h
+        LostAndDiscardedEventVisitor.h
         ManualInstrumentationConfig.h
         PerfEvent.cpp
         PerfEvent.h
@@ -82,7 +82,7 @@ target_sources(LinuxTracingTests PRIVATE
         GpuTracepointVisitorTest.cpp
         LeafFunctionCallManagerTest.cpp
         LinuxTracingUtilsTest.cpp
-        LostEventVisitorTest.cpp
+        LostAndDiscardedEventVisitorTest.cpp
         PerfEventProcessorTest.cpp
         PerfEventQueueTest.cpp
         ThreadStateManagerTest.cpp

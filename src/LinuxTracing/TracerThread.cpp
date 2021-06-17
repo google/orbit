@@ -526,11 +526,11 @@ bool TracerThread::OpenInstrumentedTracepoints(const std::vector<int32_t>& cpus)
   return !tracepoint_event_open_errors;
 }
 
-void TracerThread::InitLostEventVisitor() {
+void TracerThread::InitLostAndDiscardedEventVisitor() {
   ORBIT_SCOPE_FUNCTION;
-  lost_event_visitor_ = std::make_unique<LostEventVisitor>();
-  lost_event_visitor_->SetListener(listener_);
-  event_processor_.AddVisitor(lost_event_visitor_.get());
+  lost_and_discarded_event_visitor_ = std::make_unique<LostAndDiscardedEventVisitor>();
+  lost_and_discarded_event_visitor_->SetListener(listener_);
+  event_processor_.AddVisitor(lost_and_discarded_event_visitor_.get());
 }
 
 static std::vector<ThreadName> RetrieveInitialThreadNamesSystemWide(uint64_t initial_timestamp_ns) {
@@ -583,7 +583,7 @@ void TracerThread::Startup() {
 
   event_processor_.SetDiscardedOutOfOrderCounter(&stats_.discarded_out_of_order_count);
 
-  InitLostEventVisitor();
+  InitLostAndDiscardedEventVisitor();
 
   bool perf_event_open_errors = false;
   std::vector<std::string> perf_event_open_error_details;
