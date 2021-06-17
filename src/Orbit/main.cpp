@@ -279,8 +279,8 @@ static bool IsDirectoryEmpty(const std::filesystem::path& directory) {
 }
 
 static void TryMoveSavedDataLocationIfNeeded() {
-  if (IsDirectoryEmpty(orbit_core::GetPresetDirPriorTo1_65()) &&
-      IsDirectoryEmpty(orbit_core::GetCaptureDirPriorTo1_65())) {
+  if (IsDirectoryEmpty(orbit_core::GetPresetDirPriorTo1_66()) &&
+      IsDirectoryEmpty(orbit_core::GetCaptureDirPriorTo1_66())) {
     return;
   }
 

@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_CORE_PATH_H_
+#define ORBIT_CORE_PATH_H_
 
 #include <filesystem>
 
@@ -18,6 +19,8 @@ namespace orbit_core {
 [[nodiscard]] std::filesystem::path CreateOrGetLogDir();
 [[nodiscard]] std::filesystem::path GetLogFilePath();
 
-[[nodiscard]] std::filesystem::path GetPresetDirPriorTo1_65();
-[[nodiscard]] std::filesystem::path GetCaptureDirPriorTo1_65();
-};  // namespace orbit_core
+[[nodiscard]] std::filesystem::path GetPresetDirPriorTo1_66();
+[[nodiscard]] std::filesystem::path GetCaptureDirPriorTo1_66();
+}  // namespace orbit_core
+
+#endif  // ORBIT_CORE_PATH_H_
