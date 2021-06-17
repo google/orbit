@@ -259,7 +259,8 @@ static void LogAndMaybeWarnAboutClockResolution() {
 static bool IsDirectoryEmpty(const std::filesystem::path& directory) {
   auto exists_or_error = orbit_base::FileExists(directory);
   if (exists_or_error.has_error()) {
-    ERROR("Unable to stat \"%s\": %s", directory.string(), exists_or_error.error().message());
+    ERROR("Unable to check for existence of \"%s\": %s", directory.string(),
+          exists_or_error.error().message());
     return false;
   }
 

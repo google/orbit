@@ -33,7 +33,7 @@ void MoveFilesProcess::TryMoveFilesAndRemoveDirIfNeeded(const std::filesystem::p
                                                         const std::filesystem::path& dest_dir) {
   auto file_exists_or_error = orbit_base::FileExists(src_dir);
   if (file_exists_or_error.has_error()) {
-    ReportError(absl::StrFormat("Unable to stat \"%s\": %s", src_dir.string(),
+    ReportError(absl::StrFormat("Unable to check for existence of \"%s\": %s", src_dir.string(),
                                 file_exists_or_error.error().message()));
   } else if (!file_exists_or_error.value()) {
     return;
