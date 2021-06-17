@@ -26,8 +26,6 @@ using orbit_client_model::CaptureData;
 using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::FunctionInfo;
 
-ABSL_DECLARE_FLAG(bool, enable_source_code_view);
-
 CallstackDataView::CallstackDataView(OrbitApp* app)
     : orbit_data_views::DataView(orbit_data_views::DataViewType::kCallstack, app), app_{app} {}
 
@@ -124,7 +122,7 @@ std::vector<std::string> CallstackDataView::GetContextMenu(
       enable_select |= !app_->IsFunctionSelected(*function);
       enable_unselect |= app_->IsFunctionSelected(*function);
       enable_disassembly = true;
-      enable_source_code = absl::GetFlag(FLAGS_enable_source_code_view);
+      enable_source_code = true;
     } else if (module != nullptr && !module->is_loaded()) {
       enable_load = true;
     }

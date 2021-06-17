@@ -98,7 +98,6 @@
 ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, local);
 ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
-ABSL_DECLARE_FLAG(bool, enable_source_code_view);
 ABSL_DECLARE_FLAG(bool, enable_capture_autosave);
 ABSL_DECLARE_FLAG(bool, enable_cgroup_memory);
 

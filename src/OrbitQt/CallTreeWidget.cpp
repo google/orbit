@@ -47,8 +47,6 @@ using orbit_client_data::ModuleData;
 using orbit_client_model::CaptureData;
 using orbit_client_protos::FunctionInfo;
 
-ABSL_DECLARE_FLAG(bool, enable_source_code_view);
-
 CallTreeWidget::CallTreeWidget(QWidget* parent)
     : QWidget{parent}, ui_{std::make_unique<Ui::CallTreeWidget>()} {
   ui_->setupUi(this);
@@ -403,7 +401,7 @@ void CallTreeWidget::onCustomContextMenuRequested(const QPoint& point) {
       enable_select |= !app_->IsFunctionSelected(*function);
       enable_deselect |= app_->IsFunctionSelected(*function);
       enable_disassembly = true;
-      enable_source_code = absl::GetFlag(FLAGS_enable_source_code_view);
+      enable_source_code = true;
     }
   }
 
