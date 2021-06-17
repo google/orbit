@@ -69,7 +69,12 @@ class ProcessData final {
   [[nodiscard]] const std::string& build_id() const;
 
   void UpdateModuleInfos(absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
-  void AddOrUpdateModuleInfo(const orbit_grpc_protos::ModuleInfo& module_infos);
+
+  // This method removes all modules with addresses intersecting with module_info.
+  // Some background on this. The service currently does not send any unmap event
+  // to the client, which means that if the client receives a module with mapping
+  // intersecting with exiting mapping the old module was likely unloaded.
+  void AddOrUpdateModuleInfo(const orbit_grpc_protos::ModuleInfo& module_info);
 
   [[nodiscard]] ErrorMessageOr<ModuleInMemory> FindModuleByAddress(uint64_t absolute_address) const;
 
