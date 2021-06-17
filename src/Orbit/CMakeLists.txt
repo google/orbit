@@ -22,16 +22,12 @@ if(WIN32)
                       "${CMAKE_CURRENT_SOURCE_DIR}/Orbit.rc.in" Orbit)
   target_sources(Orbit PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/Orbit.rc)
 
-  get_target_property(_qmake_executable Qt5::qmake IMPORTED_LOCATION)
-  get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
-  find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${_qt_bin_dir}")
-
-  add_custom_command(
-    TARGET Orbit
-    POST_BUILD
-    COMMAND "${CMAKE_COMMAND}" -E env PATH="${_qt_bin_dir}"
-            "${WINDEPLOYQT_EXECUTABLE}" --pdb --no-angle "$<TARGET_FILE:Orbit>"
-    COMMENT "Running windeployqt...")
+  # We have to wait for the OrbitQtTests to be finished building because
+  # as part of this target also windeployqt is called which is also needed
+  # by the Orbit target.
+  # Calling windeployqt twice lead to problems in the past when both calls
+  # were running simultaneously.
+  add_dependencies(Orbit OrbitQtTests)
 endif()
 
 strip_symbols(Orbit)
