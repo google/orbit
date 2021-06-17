@@ -26,7 +26,7 @@ void MoveFilesProcess::Start() {
 
 void MoveFilesProcess::ReportError(const std::string& error_message) {
   ERROR("%s", error_message);
-  emit generalError(error_message);
+  emit generalError(QString::fromStdString(error_message));
 }
 
 void MoveFilesProcess::TryMoveFilesAndRemoveDirIfNeeded(const std::filesystem::path& src_dir,
@@ -46,7 +46,8 @@ void MoveFilesProcess::TryMoveFilesAndRemoveDirIfNeeded(const std::filesystem::p
     return;
   }
 
-  emit moveStarted(src_dir, dest_dir, files_or_error.value().size());
+  emit moveStarted(QString::fromStdString(src_dir.string()),
+                   QString::fromStdString(dest_dir.string()), files_or_error.value().size());
   for (const auto& file_path : files_or_error.value()) {
     const auto& file_name = file_path.filename();
     const auto& new_file_path = dest_dir / file_name;
