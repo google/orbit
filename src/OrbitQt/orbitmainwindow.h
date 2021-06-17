@@ -135,10 +135,8 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void on_actionIntrospection_triggered();
 
   void on_actionCheckFalse_triggered();
-  void on_actionNullPointerDereference_triggered();
   void on_actionStackOverflow_triggered();
   void on_actionServiceCheckFalse_triggered();
-  void on_actionServiceNullPointerDereference_triggered();
   void on_actionServiceStackOverflow_triggered();
 
   void OnTimerSelectionChanged(const orbit_client_protos::TimerInfo* timer_info);

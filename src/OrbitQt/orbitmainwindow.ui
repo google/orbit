@@ -288,10 +288,8 @@ QPushButton:disabled {
       <string>Crash Test</string>
      </property>
      <addaction name="actionCheckFalse"/>
-     <addaction name="actionNullPointerDereference"/>
      <addaction name="actionStackOverflow"/>
      <addaction name="actionServiceCheckFalse"/>
-     <addaction name="actionServiceNullPointerDereference"/>
      <addaction name="actionServiceStackOverflow"/>
     </widget>
     <addaction name="menuCrash"/>
@@ -459,11 +457,6 @@ QPushButton:disabled {
     <string>Check False</string>
    </property>
   </action>
-  <action name="actionNullPointerDereference">
-   <property name="text">
-    <string>Null Pointer Dereference</string>
-   </property>
-  </action>
   <action name="actionStackOverflow">
    <property name="text">
     <string>Stack Overflow</string>
@@ -472,11 +465,6 @@ QPushButton:disabled {
   <action name="actionServiceCheckFalse">
    <property name="text">
     <string>[Service] Check False</string>
-   </property>
-  </action>
-  <action name="actionServiceNullPointerDereference">
-   <property name="text">
-    <string>[Service] Null Pointer Dereference</string>
    </property>
   </action>
   <action name="actionServiceStackOverflow">

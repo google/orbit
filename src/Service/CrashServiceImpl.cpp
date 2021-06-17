@@ -13,7 +13,6 @@ using grpc::ServerContext;
 using grpc::Status;
 using orbit_grpc_protos::CrashOrbitServiceRequest;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_CHECK_FALSE;
-using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_NULL_POINTER_DEREFERENCE;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
 using orbit_grpc_protos::CrashOrbitServiceResponse;
 
@@ -29,11 +28,6 @@ Status CrashServiceImpl::CrashOrbitService(ServerContext*, const CrashOrbitServi
   switch (request->crash_type()) {
     case CrashOrbitServiceRequest_CrashType_CHECK_FALSE: {
       CHECK(false);
-      break;
-    }
-    case CrashOrbitServiceRequest_CrashType_NULL_POINTER_DEREFERENCE: {
-      int* null_pointer = nullptr;
-      *null_pointer = 0;
       break;
     }
     case CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW: {

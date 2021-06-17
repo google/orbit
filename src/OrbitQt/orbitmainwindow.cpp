@@ -127,7 +127,6 @@ using orbit_capture_client::CaptureListener;
 
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_CHECK_FALSE;
-using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_NULL_POINTER_DEREFERENCE;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
 
 using orbit_qt::ServiceDeployManager;
@@ -1113,11 +1112,6 @@ void OrbitMainWindow::OpenCapture(const std::string& filepath) {
 
 void OrbitMainWindow::on_actionCheckFalse_triggered() { CHECK(false); }
 
-void OrbitMainWindow::on_actionNullPointerDereference_triggered() {
-  int* null_pointer = nullptr;
-  *null_pointer = 0;
-}
-
 void InfiniteRecursion(int num) {
   if (num != 1) {
     InfiniteRecursion(num);
@@ -1130,10 +1124,6 @@ void OrbitMainWindow::on_actionStackOverflow_triggered() { InfiniteRecursion(0);
 
 void OrbitMainWindow::on_actionServiceCheckFalse_triggered() {
   app_->CrashOrbitService(CrashOrbitServiceRequest_CrashType_CHECK_FALSE);
-}
-
-void OrbitMainWindow::on_actionServiceNullPointerDereference_triggered() {
-  app_->CrashOrbitService(CrashOrbitServiceRequest_CrashType_NULL_POINTER_DEREFERENCE);
 }
 
 void OrbitMainWindow::on_actionServiceStackOverflow_triggered() {
