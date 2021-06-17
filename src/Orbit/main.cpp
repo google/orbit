@@ -296,23 +296,37 @@ static void TryMoveSavedDataLocationIfNeeded() {
                    });
 
   QObject::connect(
-      &process, &orbit_qt::MoveFilesProcess::moveStarted, &dialog,
+      &process, &orbit_qt::MoveFilesProcess::moveDirectoryStarted, &dialog,
       [&dialog, main_thread_id](const QString& from_dir_path, const QString& to_dir_path,
                                 quint64 number_of_files) {
         CHECK(main_thread_id == std::this_thread::get_id());
-        dialog.AddText(absl::StrFormat(R"(Moving %d files from "%s" to "%s" ...)", number_of_files,
+        dialog.AddText(absl::StrFormat(R"(Moving %d files from "%s" to "%s"...)", number_of_files,
                                        from_dir_path.toStdString(), to_dir_path.toStdString()));
       });
 
-  QObject::connect(&process, &orbit_qt::MoveFilesProcess::moveDone, &dialog,
+  QObject::connect(&process, &orbit_qt::MoveFilesProcess::moveDirectoryDone, &dialog,
                    [&dialog, main_thread_id]() {
                      CHECK(main_thread_id == std::this_thread::get_id());
-                     dialog.AddText("... done");
+                     dialog.AddText("Done.\n");
+                   });
+
+  QObject::connect(
+      &process, &orbit_qt::MoveFilesProcess::moveFileStarted, &dialog,
+      [&dialog, main_thread_id](const QString& from_path) {
+        CHECK(main_thread_id == std::this_thread::get_id());
+        dialog.AddText(absl::StrFormat("        Moving \"%s\"...", from_path.toStdString()));
+      });
+
+  QObject::connect(&process, &orbit_qt::MoveFilesProcess::moveFileDone, &dialog,
+                   [&dialog, main_thread_id]() {
+                     CHECK(main_thread_id == std::this_thread::get_id());
+                     dialog.AddText("        Done.");
                    });
 
   QObject::connect(&process, &orbit_qt::MoveFilesProcess::processFinished, &dialog,
                    [&dialog, main_thread_id]() {
                      CHECK(main_thread_id == std::this_thread::get_id());
+                     dialog.AddText("Finished.");
                      dialog.EnableCloseButton();
                    });
 

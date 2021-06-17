@@ -21,9 +21,11 @@ class MoveFilesProcess : public QObject {
   void Start();
 
  signals:
-  void moveStarted(const QString& from_dir_path, const QString& to_dir_path,
-                   quint64 number_of_files);
-  void moveDone();
+  void moveDirectoryStarted(const QString& from_dir_path, const QString& to_dir_path,
+                            quint64 number_of_files);
+  void moveDirectoryDone();
+  void moveFileStarted(const QString& from_path);
+  void moveFileDone();
   void processFinished();
   // Called if something goes wrong before or after all files are moved.
   void generalError(const QString& error_message);
