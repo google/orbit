@@ -60,9 +60,9 @@ std::filesystem::path CreateOrGetCacheDir() {
   return cache_dir;
 }
 
-std::filesystem::path GetPresetDirPriorTo1_65() { return CreateOrGetOrbitAppDataDir() / "presets"; }
+std::filesystem::path GetPresetDirPriorTo1_66() { return CreateOrGetOrbitAppDataDir() / "presets"; }
 
-std::filesystem::path GetCaptureDirPriorTo1_65() { return CreateOrGetOrbitAppDataDir() / "output"; }
+std::filesystem::path GetCaptureDirPriorTo1_66() { return CreateOrGetOrbitAppDataDir() / "output"; }
 
 std::filesystem::path CreateOrGetPresetDir() {
   std::filesystem::path preset_dir = CreateOrGetOrbitUserDataDir() / "presets";
