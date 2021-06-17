@@ -59,6 +59,17 @@ const std::string& ProcessData::build_id() const {
   return process_info_.build_id();
 }
 
+static bool IsModuleMapValid(const std::map<uint64_t, ModuleInMemory>& module_map) {
+  // Check that modules do not intersect in the address space.
+  uint64_t last_end_address = 0;
+  for (const auto& [unused_address, module_in_memory] : module_map) {
+    if (module_in_memory.start() < last_end_address) return false;
+    last_end_address = module_in_memory.end();
+  }
+
+  return true;
+}
+
 void ProcessData::UpdateModuleInfos(absl::Span<const ModuleInfo> module_infos) {
   absl::MutexLock lock(&mutex_);
   start_address_to_module_in_memory_.clear();
@@ -69,6 +80,8 @@ void ProcessData::UpdateModuleInfos(absl::Span<const ModuleInfo> module_infos) {
         module_info.file_path(), module_info.build_id());
     CHECK(success);
   }
+
+  CHECK(IsModuleMapValid(start_address_to_module_in_memory_));
 }
 
 std::vector<std::string> ProcessData::FindModuleBuildIdsByPath(
@@ -89,8 +102,26 @@ void ProcessData::AddOrUpdateModuleInfo(const ModuleInfo& module_info) {
   absl::MutexLock lock(&mutex_);
   ModuleInMemory module_in_memory{module_info.address_start(), module_info.address_end(),
                                   module_info.file_path(), module_info.build_id()};
+
+  auto it = start_address_to_module_in_memory_.upper_bound(module_in_memory.start());
+  if (it != start_address_to_module_in_memory_.begin()) {
+    --it;
+    if (it->second.end() > module_in_memory.start()) {
+      it = start_address_to_module_in_memory_.erase(it);
+    } else {
+      ++it;
+    }
+  }
+
+  while (it != start_address_to_module_in_memory_.end() &&
+         it->second.start() < module_in_memory.end()) {
+    it = start_address_to_module_in_memory_.erase(it);
+  }
+
   start_address_to_module_in_memory_.insert_or_assign(module_info.address_start(),
                                                       module_in_memory);
+
+  CHECK(IsModuleMapValid(start_address_to_module_in_memory_));
 }
 
 ErrorMessageOr<ModuleInMemory> ProcessData::FindModuleByAddress(uint64_t absolute_address) const {
@@ -112,7 +143,7 @@ ErrorMessageOr<ModuleInMemory> ProcessData::FindModuleByAddress(uint64_t absolut
   --it;
   const ModuleInMemory& module_in_memory = it->second;
   CHECK(absolute_address >= module_in_memory.start());
-  if (absolute_address > module_in_memory.end()) return not_found_error;
+  if (absolute_address >= module_in_memory.end()) return not_found_error;
 
   return module_in_memory;
 }
