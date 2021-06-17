@@ -1114,6 +1114,25 @@ static std::unique_ptr<CaptureEventProcessor> CreateCaptureEventProcessor(
                                     orbit_client_model::capture_serializer::GenerateCaptureFileName(
                                         process_name, absl::Now(), "_autosave");
 
+  uint64_t suffix_number = 0;
+  while (true) {
+    auto file_exists_or_error = orbit_base::FileExists(file_path);
+    if (file_exists_or_error.has_error()) {
+      ERROR("Unable to check for existence of \"%s\": %s", file_path.string(),
+            file_exists_or_error.error().message());
+      break;
+    }
+
+    if (!file_exists_or_error.value()) {
+      break;
+    }
+
+    std::string suffix = absl::StrFormat("_autosave(%d)", ++suffix_number);
+    file_path = orbit_core::CreateOrGetCaptureDir() /
+                orbit_client_model::capture_serializer::GenerateCaptureFileName(
+                    process_name, absl::Now(), suffix);
+  }
+
   auto save_to_file_processor_or_error =
       CaptureEventProcessor::CreateSaveToFileProcessor(file_path, error_handler);
 
