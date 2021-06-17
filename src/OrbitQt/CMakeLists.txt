@@ -10,7 +10,8 @@ target_compile_options(OrbitQt PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   OrbitQt
-  PUBLIC include/OrbitQt/MoveFilesProcess.h)
+  PUBLIC include/OrbitQt/MoveFilesDialog.h
+         include/OrbitQt/MoveFilesProcess.h)
 
 target_sources(
   OrbitQt
