@@ -11,7 +11,7 @@
 #include <utility>
 
 #include "LinuxTracing/TracerListener.h"
-#include "LostEventVisitor.h"
+#include "LostAndDiscardedEventVisitor.h"
 #include "OrbitBase/Logging.h"
 #include "PerfEvent.h"
 #include "capture.pb.h"
@@ -37,6 +37,8 @@ class MockTracerListener : public TracerListener {
   MOCK_METHOD(void, OnErrorsWithPerfEventOpenEvent,
               (orbit_grpc_protos::ErrorsWithPerfEventOpenEvent), (override));
   MOCK_METHOD(void, OnLostPerfRecordsEvent, (orbit_grpc_protos::LostPerfRecordsEvent), (override));
+  MOCK_METHOD(void, OnOutOfOrderEventsDiscardedEvent,
+              (orbit_grpc_protos::OutOfOrderEventsDiscardedEvent), (override));
 };
 
 [[nodiscard]] std::unique_ptr<LostPerfEvent> MakeFakeLostPerfEvent(uint64_t previous_timestamp_ns,
@@ -49,25 +51,36 @@ class MockTracerListener : public TracerListener {
   return event;
 }
 
-class LostEventVisitorTest : public ::testing::Test {
+[[nodiscard]] std::unique_ptr<DiscardedPerfEvent> MakeFakeDiscardedPerfEvent(
+    uint64_t begin_timestamp_ns, uint64_t end_timestamp_ns) {
+  auto event = std::make_unique<DiscardedPerfEvent>(begin_timestamp_ns, end_timestamp_ns);
+  CHECK(event->GetTimestamp() == end_timestamp_ns);
+  CHECK(event->GetBeginTimestampNs() == begin_timestamp_ns);
+  CHECK(event->GetEndTimestampNs() == end_timestamp_ns);
+  CHECK(event->GetTimestamp() == end_timestamp_ns);
+  return event;
+}
+
+class LostAndDiscardedEventVisitorTest : public ::testing::Test {
  protected:
   void SetUp() override { visitor_.SetListener(&mock_listener_); }
 
   void TearDown() override {}
 
-  LostEventVisitor visitor_;
+  LostAndDiscardedEventVisitor visitor_;
   MockTracerListener mock_listener_;
 };
 
 }  // namespace
 
-TEST(LostEventVisitor, NeedsVisitor) {
-  LostEventVisitor visitor;
+TEST(LostAndDiscardedEventVisitor, NeedsVisitor) {
+  LostAndDiscardedEventVisitor visitor;
 
   EXPECT_DEATH(MakeFakeLostPerfEvent(1111, 1234)->Accept(&visitor), "listener_ != nullptr");
+  EXPECT_DEATH(MakeFakeDiscardedPerfEvent(1111, 1234)->Accept(&visitor), "listener_ != nullptr");
 }
 
-TEST_F(LostEventVisitorTest, VisitLostPerfEventCallsOnLostPerfRecordsEvent) {
+TEST_F(LostAndDiscardedEventVisitorTest, VisitLostPerfEventCallsOnLostPerfRecordsEvent) {
   orbit_grpc_protos::LostPerfRecordsEvent actual_lost_perf_records_event;
   EXPECT_CALL(mock_listener_, OnLostPerfRecordsEvent)
       .Times(1)
@@ -79,6 +92,22 @@ TEST_F(LostEventVisitorTest, VisitLostPerfEventCallsOnLostPerfRecordsEvent) {
 
   EXPECT_EQ(actual_lost_perf_records_event.end_timestamp_ns(), kTimestampNs);
   EXPECT_EQ(actual_lost_perf_records_event.duration_ns(), kTimestampNs - kPreviousTimestampNs);
+}
+
+TEST_F(LostAndDiscardedEventVisitorTest,
+       VisitDiscardedPerfEventCallsOnOutOfOrderEventsDiscardedEvent) {
+  orbit_grpc_protos::OutOfOrderEventsDiscardedEvent actual_out_of_order_events_discarded_event;
+  EXPECT_CALL(mock_listener_, OnOutOfOrderEventsDiscardedEvent)
+      .Times(1)
+      .WillOnce(::testing::SaveArg<0>(&actual_out_of_order_events_discarded_event));
+
+  constexpr uint64_t kBeginTimestampNs = 1111;
+  constexpr uint64_t kEndTimestampNs = 1234;
+  MakeFakeDiscardedPerfEvent(kBeginTimestampNs, kEndTimestampNs)->Accept(&visitor_);
+
+  EXPECT_EQ(actual_out_of_order_events_discarded_event.end_timestamp_ns(), kEndTimestampNs);
+  EXPECT_EQ(actual_out_of_order_events_discarded_event.duration_ns(),
+            kEndTimestampNs - kBeginTimestampNs);
 }
 
 }  // namespace orbit_linux_tracing

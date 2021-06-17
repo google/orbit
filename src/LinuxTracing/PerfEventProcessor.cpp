@@ -18,9 +18,58 @@ void PerfEventProcessor::AddEvent(std::unique_ptr<PerfEvent> event) {
     if (discarded_out_of_order_counter_ != nullptr) {
       ++(*discarded_out_of_order_counter_);
     }
+
+    std::optional<std::unique_ptr<DiscardedPerfEvent>> discarded_perf_event =
+        HandleOutOfOrderEvent(event->GetTimestamp());
+    if (discarded_perf_event.has_value()) {
+      event_queue_.PushEvent(std::move(discarded_perf_event.value()));
+    }
     return;
   }
   event_queue_.PushEvent(std::move(event));
+}
+
+// When a PerfEvent gets discarded, this method possibly generates a DiscardedPerfEvent in its
+// place. In particular, it reports a DiscardedPerfEvent that covers the time range between the
+// discarded event's timestamp and last_processed_timestamp_ns_.
+// A DiscardedPerfEvent is not always produced, though. If the time range of the DiscardedPerfEvent
+// that should be produced is entirely contained in the time range of the last DiscardedPerfEvent
+// (if any), no DiscardedPerfEvent is produced. This seems very specific (see the if-else chain
+// below), but is instead by far the most common case, as usually discarded events are caused by a
+// burst of events coming (late) all one after the other and all from the same ring buffer, hence
+// generally in order. So even from a considerable amount of discarded PerfEvents result only few
+// DiscardedPerfEvents.
+std::optional<std::unique_ptr<DiscardedPerfEvent>> PerfEventProcessor::HandleOutOfOrderEvent(
+    uint64_t event_timestamp_ns) {
+  uint64_t discarded_begin = event_timestamp_ns;
+  uint64_t discarded_end = last_processed_timestamp_ns_;
+
+  std::optional<std::unique_ptr<DiscardedPerfEvent>> optional_discarded_event = std::nullopt;
+
+  CHECK(discarded_end >= last_discarded_end_);
+  if (discarded_end == last_discarded_end_ && discarded_begin < last_discarded_begin_) {
+    optional_discarded_event = std::make_unique<DiscardedPerfEvent>(discarded_begin, discarded_end);
+    last_discarded_begin_ = discarded_begin;
+  } else if (discarded_end == last_discarded_end_ && discarded_begin >= last_discarded_begin_) {
+    // This is the only case that doesn't generate a DiscardedPerfEvent.
+  } else if (discarded_end > last_discarded_end_ && discarded_begin < last_discarded_begin_) {
+    optional_discarded_event = std::make_unique<DiscardedPerfEvent>(discarded_begin, discarded_end);
+    last_discarded_begin_ = discarded_begin;
+  } else if (discarded_end > last_discarded_end_ && discarded_begin <= last_discarded_end_) {
+    optional_discarded_event = std::make_unique<DiscardedPerfEvent>(discarded_begin, discarded_end);
+    // Don't update last_discarded_begin_.
+  } else if (discarded_end > last_discarded_end_ && discarded_begin > last_discarded_end_) {
+    optional_discarded_event = std::make_unique<DiscardedPerfEvent>(discarded_begin, discarded_end);
+    last_discarded_begin_ = discarded_begin;
+  } else {
+    UNREACHABLE();
+  }
+
+  last_discarded_end_ = discarded_end;
+
+  // The timestamp of DiscardedPerfEvent is last_processed_timestamp_ns_, so the event can be
+  // processed and it will probably be processed next.
+  return optional_discarded_event;
 }
 
 void PerfEventProcessor::ProcessAllEvents() {

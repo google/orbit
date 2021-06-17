@@ -24,7 +24,7 @@
 #include "GpuTracepointVisitor.h"
 #include "LinuxTracing/TracerListener.h"
 #include "LinuxTracingUtils.h"
-#include "LostEventVisitor.h"
+#include "LostAndDiscardedEventVisitor.h"
 #include "ManualInstrumentationConfig.h"
 #include "OrbitBase/Profiling.h"
 #include "PerfEvent.h"
@@ -89,7 +89,7 @@ class TracerThread {
 
   bool OpenInstrumentedTracepoints(const std::vector<int32_t>& cpus);
 
-  void InitLostEventVisitor();
+  void InitLostAndDiscardedEventVisitor();
 
   void ProcessForkEvent(const perf_event_header& header, PerfEventRingBuffer* ring_buffer);
   void ProcessExitEvent(const perf_event_header& header, PerfEventRingBuffer* ring_buffer);
@@ -173,7 +173,7 @@ class TracerThread {
   std::unique_ptr<UprobesUnwindingVisitor> uprobes_unwinding_visitor_;
   std::unique_ptr<SwitchesStatesNamesVisitor> switches_states_names_visitor_;
   std::unique_ptr<GpuTracepointVisitor> gpu_event_visitor_;
-  std::unique_ptr<LostEventVisitor> lost_event_visitor_;
+  std::unique_ptr<LostAndDiscardedEventVisitor> lost_and_discarded_event_visitor_;
   PerfEventProcessor event_processor_;
 
   struct EventStats {

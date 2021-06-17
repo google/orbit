@@ -27,6 +27,7 @@ namespace {
 class MockVisitor : public PerfEventVisitor {
  public:
   MOCK_METHOD(void, visit, (ForkPerfEvent * event), (override));
+  MOCK_METHOD(void, visit, (DiscardedPerfEvent * event), (override));
 };
 
 class PerfEventProcessorTest : public ::testing::Test {
@@ -42,7 +43,7 @@ class PerfEventProcessorTest : public ::testing::Test {
   MockVisitor mock_visitor_;
   std::atomic<uint64_t> discarded_out_of_order_counter_ = 0;
 
-  static constexpr uint64_t kDelayBeforeProcessOldEventsMs = 333;
+  static constexpr uint64_t kDelayBeforeProcessOldEventsMs = PerfEventProcessor::kProcessingDelayMs;
 };
 
 std::unique_ptr<PerfEvent> MakeFakePerfEvent(int origin_fd, uint64_t timestamp_ns) {
@@ -57,10 +58,21 @@ std::unique_ptr<PerfEvent> MakeFakePerfEvent(int origin_fd, uint64_t timestamp_n
   return event;
 }
 
+MATCHER_P2(UntypedDiscardedPerfEventEq, begin_timestamp_ns, end_timestamp_ns, "") {
+  const DiscardedPerfEvent& event = *arg;
+  return event.GetBeginTimestampNs() == begin_timestamp_ns &&
+         event.GetEndTimestampNs() == end_timestamp_ns;
+}
+
+auto DiscardedPerfEventEq(uint64_t begin_timestamp_ns, uint64_t end_timestamp_ns) {
+  return ::testing::Matcher<DiscardedPerfEvent*>(
+      UntypedDiscardedPerfEventEq<uint64_t, uint64_t>(begin_timestamp_ns, end_timestamp_ns));
+}
+
 }  // namespace
 
 TEST_F(PerfEventProcessorTest, ProcessOldEvents) {
-  EXPECT_CALL(mock_visitor_, visit).Times(0);
+  EXPECT_CALL(mock_visitor_, visit(A<ForkPerfEvent*>())).Times(0);
   processor_.AddEvent(MakeFakePerfEvent(11, orbit_base::CaptureTimestampNs()));
   processor_.AddEvent(MakeFakePerfEvent(11, orbit_base::CaptureTimestampNs()));
   processor_.AddEvent(MakeFakePerfEvent(22, orbit_base::CaptureTimestampNs()));
@@ -70,7 +82,7 @@ TEST_F(PerfEventProcessorTest, ProcessOldEvents) {
 
   std::this_thread::sleep_for(std::chrono::milliseconds(kDelayBeforeProcessOldEventsMs));
 
-  EXPECT_CALL(mock_visitor_, visit).Times(3);
+  EXPECT_CALL(mock_visitor_, visit(A<ForkPerfEvent*>())).Times(3);
   processor_.AddEvent(MakeFakePerfEvent(11, orbit_base::CaptureTimestampNs()));
   processor_.ProcessOldEvents();
   EXPECT_EQ(discarded_out_of_order_counter_, 0);
@@ -79,13 +91,13 @@ TEST_F(PerfEventProcessorTest, ProcessOldEvents) {
 
   std::this_thread::sleep_for(std::chrono::milliseconds(kDelayBeforeProcessOldEventsMs));
 
-  EXPECT_CALL(mock_visitor_, visit).Times(1);
+  EXPECT_CALL(mock_visitor_, visit(A<ForkPerfEvent*>())).Times(1);
   processor_.ProcessOldEvents();
   EXPECT_EQ(discarded_out_of_order_counter_, 0);
 }
 
 TEST_F(PerfEventProcessorTest, ProcessAllEvents) {
-  EXPECT_CALL(mock_visitor_, visit).Times(4);
+  EXPECT_CALL(mock_visitor_, visit(A<ForkPerfEvent*>())).Times(4);
   processor_.AddEvent(MakeFakePerfEvent(11, orbit_base::CaptureTimestampNs()));
   processor_.AddEvent(MakeFakePerfEvent(22, orbit_base::CaptureTimestampNs()));
   processor_.AddEvent(MakeFakePerfEvent(11, orbit_base::CaptureTimestampNs()));
@@ -96,13 +108,15 @@ TEST_F(PerfEventProcessorTest, ProcessAllEvents) {
 
   std::this_thread::sleep_for(std::chrono::milliseconds(kDelayBeforeProcessOldEventsMs));
 
-  EXPECT_CALL(mock_visitor_, visit).Times(0);
+  EXPECT_CALL(mock_visitor_, visit(A<ForkPerfEvent*>())).Times(0);
   processor_.ProcessAllEvents();
   EXPECT_EQ(discarded_out_of_order_counter_, 0);
 }
 
 TEST_F(PerfEventProcessorTest, DiscardedOutOfOrderCounter) {
-  EXPECT_CALL(mock_visitor_, visit).Times(4);
+  EXPECT_CALL(mock_visitor_, visit(A<ForkPerfEvent*>())).Times(4);
+  EXPECT_CALL(mock_visitor_, visit(A<DiscardedPerfEvent*>())).Times(1);
+
   processor_.AddEvent(MakeFakePerfEvent(11, orbit_base::CaptureTimestampNs()));
   processor_.AddEvent(MakeFakePerfEvent(11, orbit_base::CaptureTimestampNs()));
   uint64_t last_processed_timestamp_ns = orbit_base::CaptureTimestampNs();
@@ -118,6 +132,83 @@ TEST_F(PerfEventProcessorTest, DiscardedOutOfOrderCounter) {
 
   std::this_thread::sleep_for(std::chrono::milliseconds(kDelayBeforeProcessOldEventsMs));
   processor_.ProcessOldEvents();
+}
+
+TEST_F(PerfEventProcessorTest, DiscardedPerfEvents) {
+  EXPECT_CALL(mock_visitor_, visit(A<ForkPerfEvent*>())).Times(1);
+  EXPECT_CALL(mock_visitor_, visit(A<DiscardedPerfEvent*>())).Times(0);
+
+  uint64_t last_processed_timestamp_ns1 = orbit_base::CaptureTimestampNs();
+  processor_.AddEvent(
+      MakeFakePerfEvent(PerfEvent::kNotOrderedInAnyFileDescriptor, last_processed_timestamp_ns1));
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(kDelayBeforeProcessOldEventsMs));
+  processor_.ProcessOldEvents();
+
+  Mock::VerifyAndClearExpectations(&mock_visitor_);
+
+  // First discarded range.
+  EXPECT_CALL(mock_visitor_, visit(DiscardedPerfEventEq(last_processed_timestamp_ns1 - 10,
+                                                        last_processed_timestamp_ns1)))
+      .Times(1);
+  processor_.AddEvent(MakeFakePerfEvent(PerfEvent::kNotOrderedInAnyFileDescriptor,
+                                        last_processed_timestamp_ns1 - 10));
+
+  // Discarded range ends at the same timestamp as the previous one, but starts earlier causing a
+  // new DiscardedPerfEvent.
+  EXPECT_CALL(mock_visitor_, visit(DiscardedPerfEventEq(last_processed_timestamp_ns1 - 15,
+                                                        last_processed_timestamp_ns1)))
+      .Times(1);
+  processor_.AddEvent(MakeFakePerfEvent(PerfEvent::kNotOrderedInAnyFileDescriptor,
+                                        last_processed_timestamp_ns1 - 15));
+
+  // Discarded range ends at the same timestamp as the previous one, and starts later, so no new
+  // DiscardedPerfEvent is generated.
+  EXPECT_CALL(mock_visitor_, visit(DiscardedPerfEventEq(last_processed_timestamp_ns1 - 5,
+                                                        last_processed_timestamp_ns1)))
+      .Times(0);
+  processor_.AddEvent(MakeFakePerfEvent(PerfEvent::kNotOrderedInAnyFileDescriptor,
+                                        last_processed_timestamp_ns1 - 5));
+
+  EXPECT_CALL(mock_visitor_, visit(A<ForkPerfEvent*>())).Times(1);
+  uint64_t last_processed_timestamp_ns2 = orbit_base::CaptureTimestampNs();
+  processor_.AddEvent(
+      MakeFakePerfEvent(PerfEvent::kNotOrderedInAnyFileDescriptor, last_processed_timestamp_ns2));
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(kDelayBeforeProcessOldEventsMs));
+  processor_.ProcessOldEvents();
+
+  Mock::VerifyAndClearExpectations(&mock_visitor_);
+
+  // Discarded range starts in the previous discarded range, but ends after it, causing a new
+  // DiscardedPerfEvent.
+  EXPECT_CALL(mock_visitor_, visit(DiscardedPerfEventEq(last_processed_timestamp_ns1 - 5,
+                                                        last_processed_timestamp_ns2)))
+      .Times(1);
+  processor_.AddEvent(MakeFakePerfEvent(PerfEvent::kNotOrderedInAnyFileDescriptor,
+                                        last_processed_timestamp_ns1 - 5));
+
+  EXPECT_CALL(mock_visitor_, visit(A<ForkPerfEvent*>())).Times(1);
+  uint64_t last_processed_timestamp_ns3 = orbit_base::CaptureTimestampNs();
+  processor_.AddEvent(
+      MakeFakePerfEvent(PerfEvent::kNotOrderedInAnyFileDescriptor, last_processed_timestamp_ns3));
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(kDelayBeforeProcessOldEventsMs));
+  processor_.ProcessOldEvents();
+
+  Mock::VerifyAndClearExpectations(&mock_visitor_);
+
+  // Discarded range starts and ends after the previous one, causing a new DiscardedPerfEvent.
+  EXPECT_CALL(mock_visitor_, visit(DiscardedPerfEventEq(last_processed_timestamp_ns2 + 10,
+                                                        last_processed_timestamp_ns3)))
+      .Times(1);
+  processor_.AddEvent(MakeFakePerfEvent(PerfEvent::kNotOrderedInAnyFileDescriptor,
+                                        last_processed_timestamp_ns2 + 10));
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(kDelayBeforeProcessOldEventsMs));
+  processor_.ProcessOldEvents();
+
+  EXPECT_EQ(discarded_out_of_order_counter_, 5);
 }
 
 TEST_F(PerfEventProcessorTest, ProcessOldEventsNeedsVisitor) {

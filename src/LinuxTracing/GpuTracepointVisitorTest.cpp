@@ -42,6 +42,8 @@ class MockTracerListener : public TracerListener {
   MOCK_METHOD(void, OnErrorsWithPerfEventOpenEvent,
               (orbit_grpc_protos::ErrorsWithPerfEventOpenEvent), (override));
   MOCK_METHOD(void, OnLostPerfRecordsEvent, (orbit_grpc_protos::LostPerfRecordsEvent), (override));
+  MOCK_METHOD(void, OnOutOfOrderEventsDiscardedEvent,
+              (orbit_grpc_protos::OutOfOrderEventsDiscardedEvent), (override));
 };
 
 class GpuTracepointVisitorTest : public ::testing::Test {

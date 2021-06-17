@@ -18,12 +18,13 @@
 
 namespace orbit_linux_tracing {
 
-// This class receives perf_event_open events coming from several ring buffers
-// and processes them in order according to their timestamps.
-// Its implementation builds on the assumption that we never expect events with
-// a timestamp older than kProcessingDelayMs to be added. By not processing
-// events that are not older than this delay, we will never process events out
-// of order.
+// This class receives perf_event_open events (PerfEvents) coming from several ring buffers and
+// processes them in order according to their timestamps.
+// Its implementation builds on the assumption that we never expect events with a timestamp older
+// than kProcessingDelayMs to be added. By not processing events that are not older than this delay,
+// we will never process events out of order.
+// If events older than kProcessingDelayMs are encountered anyway, these are discarded, and
+// DiscardedPerfEvents are generated and processed in their place.
 class PerfEventProcessor {
  public:
   void AddEvent(std::unique_ptr<PerfEvent> event);
@@ -40,17 +41,23 @@ class PerfEventProcessor {
     discarded_out_of_order_counter_ = discarded_out_of_order_counter;
   }
 
- private:
   // Do not process events that are more recent than kProcessingDelayMs. Events
   // come out of order as they are read from different perf_event_open ring
   // buffers and this ensures that all events are processed in the correct
   // order.
   static constexpr uint64_t kProcessingDelayMs = 333;
+
+ private:
   uint64_t last_processed_timestamp_ns_ = 0;
   std::atomic<uint64_t>* discarded_out_of_order_counter_ = nullptr;
 
   PerfEventQueue event_queue_;
   std::vector<PerfEventVisitor*> visitors_;
+
+  [[nodiscard]] std::optional<std::unique_ptr<DiscardedPerfEvent>> HandleOutOfOrderEvent(
+      uint64_t event_timestamp_ns);
+  uint64_t last_discarded_begin_ = 0;
+  uint64_t last_discarded_end_ = 0;
 };
 
 }  // namespace orbit_linux_tracing
