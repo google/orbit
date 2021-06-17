@@ -43,7 +43,7 @@ class ServiceDeployManager : public QObject {
                                 const orbit_ssh::Context* context, orbit_ssh::Credentials creds,
                                 const GrpcPort& grpc_port, QObject* parent = nullptr);
 
-  ~ServiceDeployManager() noexcept;
+  ~ServiceDeployManager() noexcept override;
 
   outcome::result<GrpcPort> Exec();
 

@@ -60,14 +60,18 @@ std::filesystem::path CreateOrGetCacheDir() {
   return cache_dir;
 }
 
+std::filesystem::path GetPresetDirPriorTo1_65() { return CreateOrGetOrbitAppDataDir() / "presets"; }
+
+std::filesystem::path GetCaptureDirPriorTo1_65() { return CreateOrGetOrbitAppDataDir() / "output"; }
+
 std::filesystem::path CreateOrGetPresetDir() {
-  std::filesystem::path preset_dir = CreateOrGetOrbitAppDataDir() / "presets";
+  std::filesystem::path preset_dir = CreateOrGetOrbitUserDataDir() / "presets";
   CreateDirectoryOrDie(preset_dir);
   return preset_dir;
 }
 
 std::filesystem::path CreateOrGetCaptureDir() {
-  std::filesystem::path capture_dir = CreateOrGetOrbitAppDataDir() / "output";
+  std::filesystem::path capture_dir = CreateOrGetOrbitUserDataDir() / "captures";
   CreateDirectoryOrDie(capture_dir);
   return capture_dir;
 }
@@ -84,6 +88,18 @@ std::filesystem::path CreateOrGetOrbitAppDataDir() {
 #else
   std::filesystem::path path = std::filesystem::path(GetEnvVar("HOME")) / ".orbitprofiler";
 #endif
+  CreateDirectoryOrDie(path);
+  return path;
+}
+
+std::filesystem::path CreateOrGetOrbitUserDataDir() {
+#ifdef WIN32
+  std::filesystem::path path = std::filesystem::path(GetEnvVar("USERPROFILE"));
+#else
+  std::filesystem::path path = std::filesystem::path(GetEnvVar("HOME"));
+#endif
+  path = path / "Documents" / "Orbit";
+  const auto mkdir_result = orbit_base::CreateDirectory(path);
   CreateDirectoryOrDie(path);
   return path;
 }
