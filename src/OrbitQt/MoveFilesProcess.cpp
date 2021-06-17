@@ -46,19 +46,23 @@ void MoveFilesProcess::TryMoveFilesAndRemoveDirIfNeeded(const std::filesystem::p
     return;
   }
 
-  emit moveStarted(QString::fromStdString(src_dir.string()),
-                   QString::fromStdString(dest_dir.string()), files_or_error.value().size());
+  emit moveDirectoryStarted(QString::fromStdString(src_dir.string()),
+                            QString::fromStdString(dest_dir.string()),
+                            files_or_error.value().size());
   for (const auto& file_path : files_or_error.value()) {
     const auto& file_name = file_path.filename();
     const auto& new_file_path = dest_dir / file_name;
     LOG("Moving \"%s\" to \"%s\"...", file_path.string(), new_file_path.string());
+    emit moveFileStarted(QString::fromStdString(file_path.string()));
     auto move_result = orbit_base::MoveFile(file_path, new_file_path);
     if (move_result.has_error()) {
       ReportError(absl::StrFormat(R"(Unable to move "%s" to "%s": %s)", file_path.string(),
                                   new_file_path.string(), move_result.error().message()));
+    } else {
+      emit moveFileDone();
     }
   }
-  emit moveDone();
+  emit moveDirectoryDone();
 
   auto remove_result = orbit_base::RemoveFile(src_dir);
   if (remove_result.has_error()) {
