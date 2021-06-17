@@ -289,18 +289,18 @@ static void TryMoveSavedDataLocationIfNeeded() {
   orbit_qt::MoveFilesProcess process;
 
   QObject::connect(&process, &orbit_qt::MoveFilesProcess::generalError, &dialog,
-                   [&dialog, main_thread_id](const std::string& error_message) {
+                   [&dialog, main_thread_id](const QString& error_message) {
                      CHECK(main_thread_id == std::this_thread::get_id());
-                     dialog.AddText(absl::StrFormat("Error: %s", error_message));
+                     dialog.AddText(absl::StrFormat("Error: %s", error_message.toStdString()));
                    });
 
   QObject::connect(
       &process, &orbit_qt::MoveFilesProcess::moveStarted, &dialog,
-      [&dialog, main_thread_id](const std::filesystem::path& from_dir,
-                                const std::filesystem::path& to_dir, size_t number_of_files) {
+      [&dialog, main_thread_id](const QString& from_dir_path, const QString& to_dir_path,
+                                quint64 number_of_files) {
         CHECK(main_thread_id == std::this_thread::get_id());
         dialog.AddText(absl::StrFormat(R"(Moving %d files from "%s" to "%s" ...)", number_of_files,
-                                       from_dir.string(), to_dir.string()));
+                                       from_dir_path.toStdString(), to_dir_path.toStdString()));
       });
 
   QObject::connect(&process, &orbit_qt::MoveFilesProcess::moveDone, &dialog,

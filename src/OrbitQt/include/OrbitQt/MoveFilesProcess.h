@@ -21,12 +21,12 @@ class MoveFilesProcess : public QObject {
   void Start();
 
  signals:
-  void moveStarted(const std::filesystem::path& from_dir, const std::filesystem::path& to_dir,
-                   size_t number_of_files);
+  void moveStarted(const QString& from_dir_path, const QString& to_dir_path,
+                   quint64 number_of_files);
   void moveDone();
   void processFinished();
   // Called if something goes wrong before or after all files are moved.
-  void generalError(const std::string& error_message);
+  void generalError(const QString& error_message);
 
  private:
   void Run();
