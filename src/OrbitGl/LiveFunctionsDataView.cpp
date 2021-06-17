@@ -33,8 +33,6 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_grpc_protos::InstrumentedFunction;
 
-ABSL_DECLARE_FLAG(bool, enable_source_code_view);
-
 LiveFunctionsDataView::LiveFunctionsDataView(
     LiveFunctionsController* live_functions, OrbitApp* app,
     orbit_metrics_uploader::MetricsUploader* metrics_uploader)
@@ -218,7 +216,7 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
       enable_select |= !app_->IsFunctionSelected(instrumented_function);
       enable_unselect |= app_->IsFunctionSelected(instrumented_function);
       enable_disassembly = true;
-      enable_source_code = absl::GetFlag(FLAGS_enable_source_code_view);
+      enable_source_code = true;
     }
 
     const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(instrumented_function_id);

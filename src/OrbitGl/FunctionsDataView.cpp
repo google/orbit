@@ -34,8 +34,6 @@ using orbit_client_data::ProcessData;
 using orbit_client_model::CaptureData;
 using orbit_client_protos::FunctionInfo;
 
-ABSL_DECLARE_FLAG(bool, enable_source_code_view);
-
 FunctionsDataView::FunctionsDataView(OrbitApp* app)
     : orbit_data_views::DataView(orbit_data_views::DataViewType::kFunctions, app), app_{app} {}
 
@@ -190,7 +188,7 @@ std::vector<std::string> FunctionsDataView::GetContextMenu(
   if (enable_enable_frame_track) menu.emplace_back(kMenuActionEnableFrameTrack);
   if (enable_disable_frame_track) menu.emplace_back(kMenuActionDisableFrameTrack);
   menu.emplace_back(kMenuActionDisassembly);
-  if (absl::GetFlag(FLAGS_enable_source_code_view)) menu.emplace_back(kMenuActionSourceCode);
+  menu.emplace_back(kMenuActionSourceCode);
   Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
 }

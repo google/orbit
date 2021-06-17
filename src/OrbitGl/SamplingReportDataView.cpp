@@ -38,8 +38,6 @@ using orbit_client_data::ThreadID;
 using orbit_client_model::CaptureData;
 using orbit_client_protos::FunctionInfo;
 
-ABSL_DECLARE_FLAG(bool, enable_source_code_view);
-
 SamplingReportDataView::SamplingReportDataView(OrbitApp* app)
     : orbit_data_views::DataView(orbit_data_views::DataViewType::kSampling, app),
       callstack_data_view_(nullptr),
@@ -221,8 +219,7 @@ std::vector<std::string> SamplingReportDataView::GetContextMenu(
         GetFunctionsFromIndices(selected_indices);
 
     enable_disassembly = !selected_functions.empty();
-    enable_source_code =
-        !selected_functions.empty() && absl::GetFlag(FLAGS_enable_source_code_view);
+    enable_source_code = !selected_functions.empty();
 
     for (const FunctionInfo* function : selected_functions) {
       enable_select |= !app_->IsFunctionSelected(*function);
