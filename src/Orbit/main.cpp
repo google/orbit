@@ -283,27 +283,37 @@ static void TryMoveSavedDataLocationIfNeeded() {
     return;
   }
 
+  std::thread::id main_thread_id = std::this_thread::get_id();
+
   orbit_qt::MoveFilesDialog dialog;
   orbit_qt::MoveFilesProcess process;
 
-  QObject::connect(&process, &orbit_qt::MoveFilesProcess::generalError,
-                   [&dialog](const std::string& error_message) {
+  QObject::connect(&process, &orbit_qt::MoveFilesProcess::generalError, &dialog,
+                   [&dialog, main_thread_id](const std::string& error_message) {
+                     CHECK(main_thread_id == std::this_thread::get_id());
                      dialog.AddText(absl::StrFormat("Error: %s", error_message));
                    });
 
   QObject::connect(
-      &process, &orbit_qt::MoveFilesProcess::moveStarted,
-      [&dialog](const std::filesystem::path& from_dir, const std::filesystem::path& to_dir,
-                size_t number_of_files) {
+      &process, &orbit_qt::MoveFilesProcess::moveStarted, &dialog,
+      [&dialog, main_thread_id](const std::filesystem::path& from_dir,
+                                const std::filesystem::path& to_dir, size_t number_of_files) {
+        CHECK(main_thread_id == std::this_thread::get_id());
         dialog.AddText(absl::StrFormat(R"(Moving %d files from "%s" to "%s" ...)", number_of_files,
                                        from_dir.string(), to_dir.string()));
       });
 
-  QObject::connect(&process, &orbit_qt::MoveFilesProcess::moveDone,
-                   [&dialog]() { dialog.AddText("... done"); });
+  QObject::connect(&process, &orbit_qt::MoveFilesProcess::moveDone, &dialog,
+                   [&dialog, main_thread_id]() {
+                     CHECK(main_thread_id == std::this_thread::get_id());
+                     dialog.AddText("... done");
+                   });
 
-  QObject::connect(&process, &orbit_qt::MoveFilesProcess::processFinished,
-                   [&dialog]() { dialog.EnableCloseButton(); });
+  QObject::connect(&process, &orbit_qt::MoveFilesProcess::processFinished, &dialog,
+                   [&dialog, main_thread_id]() {
+                     CHECK(main_thread_id == std::this_thread::get_id());
+                     dialog.EnableCloseButton();
+                   });
 
   process.Start();
   dialog.exec();
