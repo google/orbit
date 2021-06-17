@@ -112,8 +112,7 @@ struct RelocatedInstruction {
                                                                        uint64_t new_address);
 
 // Strictly speaking the max tempoline size is a compile time constant, but we prefer to compute it
-// here since this captures every change to the constant caused by a change to the code constructing
-// the trampoline.
+// here since this captures every change to the code constructing the trampoline.
 [[nodiscard]] uint64_t GetMaxTrampolineSize();
 
 // Creates a trampoline for the function at `function_address`. The trampoline is build at
@@ -133,7 +132,7 @@ struct RelocatedInstruction {
     uint64_t trampoline_address, uint64_t payload_address, csh capstone_handle,
     absl::flat_hash_map<uint64_t, uint64_t>& relocation_map);
 
-// Instrument function at 'function_address' in rocess 'pid'. This simply overwrites the beginning
+// Instrument function at 'function_address' in process 'pid'. This simply overwrites the beginning
 // of the fuction with a jump to 'trampoline_address'. The trampoline needs to be constructed with
 // 'CreateTrampoline' above.
 [[nodiscard]] ErrorMessageOr<void> InstrumentFunction(pid_t pid, uint64_t function_address,
