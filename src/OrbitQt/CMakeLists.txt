@@ -10,10 +10,6 @@ target_compile_options(OrbitQt PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   OrbitQt
-  PUBLIC include/OrbitQt/MoveFilesProcess.h)
-
-target_sources(
-  OrbitQt
   PRIVATE AccessibilityAdapter.h
           AnnotatingSourceCodeDialog.h
           CallTreeViewItemModel.h
@@ -63,9 +59,6 @@ target_sources(
           ElidedLabel.cpp
           FilterPanelWidget.cpp
           FilterPanelWidgetAction.cpp
-          MoveFilesDialog.cpp
-          MoveFilesDialog.ui
-          MoveFilesProcess.cpp
           StatusListenerImpl.cpp
           DeploymentConfigurations.cpp
           orbitaboutdialog.cpp
@@ -103,7 +96,6 @@ target_sources(
           ../OrbitGl/ClientFlags.cpp)
 
 target_include_directories(OrbitQt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(OrbitQt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 target_link_libraries(
   OrbitQt
