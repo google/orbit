@@ -14,10 +14,6 @@ namespace orbit_core {
 [[nodiscard]] std::filesystem::path CreateOrGetCaptureDir();
 [[nodiscard]] std::filesystem::path CreateOrGetDumpDir();
 [[nodiscard]] std::filesystem::path CreateOrGetOrbitAppDataDir();
-[[nodiscard]] std::filesystem::path CreateOrGetOrbitUserDataDir();
 [[nodiscard]] std::filesystem::path CreateOrGetLogDir();
 [[nodiscard]] std::filesystem::path GetLogFilePath();
-
-[[nodiscard]] std::filesystem::path GetPresetDirPriorTo1_65();
-[[nodiscard]] std::filesystem::path GetCaptureDirPriorTo1_65();
 };  // namespace orbit_core
