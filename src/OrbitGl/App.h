@@ -98,8 +98,8 @@ class OrbitApp final : public DataViewFactory,
   void PostInit(bool is_connected);
   void MainTick();
 
-  [[nodiscard]] std::string GetCaptureTime() const;
-  [[nodiscard]] std::string GetCaptureTimeAt(uint64_t timestamp_ns) const;
+  [[nodiscard]] absl::Duration GetCaptureTime() const;
+  [[nodiscard]] absl::Duration GetCaptureTimeAt(uint64_t timestamp_ns) const;
 
   [[nodiscard]] std::string GetSaveFile(const std::string& extension) const override;
   void SetClipboard(const std::string& text) override;

@@ -106,7 +106,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
                        const std::string& assembly,
                        orbit_code_report::DisassemblyReport report) override;
 
-  void AppendToCaptureLog(CaptureLogSeverity severity, std::string_view capture_time,
+  void AppendToCaptureLog(CaptureLogSeverity severity, absl::Duration capture_time,
                           std::string_view message) override;
   void ShowWarningWithDontShowAgainCheckboxIfNeeded(
       std::string_view title, std::string_view text,
