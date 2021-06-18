@@ -25,7 +25,9 @@ TEST(OrbitGgpClient, CreateFailing) {
   {
     constexpr const char* kNonExistentProgram = "path/to/not/existing/program";
     auto client = Client::Create(nullptr, kNonExistentProgram);
-    EXPECT_THAT(client, HasError("No such file or directory"));
+    // The error messages on Windows and Linux are different, the only common part is the word
+    // "file".
+    EXPECT_THAT(client, HasError("file"));
   }
   {
     const std::filesystem::path mock_ggp_failing =

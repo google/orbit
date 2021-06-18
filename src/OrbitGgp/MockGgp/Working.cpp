@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
   // 1. The ggp cli which this program is mocking, does have quite a bit of delay, hence having a
   // delay in this mock program, mimics the behaviour of the real ggp cli more closely
   // 2. To test the timeout functionaliy in OrbitGgp::Client
-  std::this_thread::sleep_for(std::chrono::milliseconds{30});
+  std::this_thread::sleep_for(std::chrono::milliseconds{50});
 
   switch (argc) {
     case 2:
