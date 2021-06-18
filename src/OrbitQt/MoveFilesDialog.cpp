@@ -33,4 +33,20 @@ void MoveFilesDialog::EnableCloseButton() {
   ui_->closeButton->setEnabled(true);
 }
 
+void MoveFilesDialog::closeEvent(QCloseEvent* event) {
+  if (ui_->closeButton->isEnabled()) {
+    event->accept();
+  } else {
+    event->ignore();
+  }
+}
+
+void MoveFilesDialog::keyPressEvent(QKeyEvent* event) {
+  if (event->key() != Qt::Key_Escape || ui_->closeButton->isEnabled()) {
+    QDialog::keyPressEvent(event);
+  } else {
+    event->ignore();
+  }
+}
+
 }  // namespace orbit_qt
