@@ -69,10 +69,10 @@ void MoveFilesProcess::TryMoveFilesAndRemoveDirIfNeeded(const std::filesystem::p
 
 void MoveFilesProcess::Run() {
   CHECK(QThread::currentThread() == thread());
-  TryMoveFilesAndRemoveDirIfNeeded(orbit_core::GetCaptureDirPriorTo1_66(),
-                                   orbit_core::CreateOrGetCaptureDir());
   TryMoveFilesAndRemoveDirIfNeeded(orbit_core::GetPresetDirPriorTo1_66(),
                                    orbit_core::CreateOrGetPresetDir());
+  TryMoveFilesAndRemoveDirIfNeeded(orbit_core::GetCaptureDirPriorTo1_66(),
+                                   orbit_core::CreateOrGetCaptureDir());
   emit processFinished();
 }
 
