@@ -36,11 +36,10 @@ using orbit_base::ReadFileToString;
 // jmp 01020304         e9 04 03 02 01
 size_t kSizeOfJmp = 5;
 
-// We relocate most `kSizeOfJmp` instructions. When relocating for each instruction we are either
+// We relocate at most `kSizeOfJmp` instructions. When relocating for each instruction we are either
 // copying that instruction or we add a small sequence of instruction and data (see
-// RelocateInstruction below). The longest possible instruction in x64 is 16 bytes; the longest
-// sequence added in RelocateInstruction is also 16 bytes. So we get this (very generous) upper
-// bound.
+// RelocateInstruction below). Per instruction we add at most 16 bytes. So we get this (very
+// generous) upper bound.
 size_t kMaxRelocatedPrologSize = kSizeOfJmp * 16;
 
 [[nodiscard]] std::string InstructionBytesAsString(cs_insn* instruction) {
