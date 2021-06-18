@@ -115,7 +115,7 @@ struct RelocatedInstruction {
 // here since this captures every change to the code constructing the trampoline.
 [[nodiscard]] uint64_t GetMaxTrampolineSize();
 
-// Creates a trampoline for the function at `function_address`. The trampoline is build at
+// Creates a trampoline for the function at `function_address`. The trampoline is built at
 // `trampoline_address`. The trampoline will call `payload_address` with `function_address` as a
 // parameter. `function` contains the beginning of the function (kMaxFunctionPrologBackupSize bytes
 // or less if the function shorter). `capstone_handle` is a handle to the capstone disassembler

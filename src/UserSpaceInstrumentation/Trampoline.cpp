@@ -72,17 +72,33 @@ void AppendBackupCode(MachineCode& trampoline) {
   // top of the stack contains the return address. Above that are the parameters passed via the
   // stack.
   // Some of the general purpose and vector registers contain the parameters for the
-  // instrumented function not passed via the stack.
+  // instrumented function not passed via the stack. These need to be backed up - see explanation
+  // at the bottom of this comment.
 
-  // TODO(dfenner): mention status words (mxcsr, ...)
+  // There are other guarantees from the calling convention, but these do not require any work from
+  // our side:
 
-  // Compare section "3.2 Function Calling Sequence" in "System V Application Binary Interface"
-  // https://refspecs.linuxfoundation.org/elf/x86_64-abi-0.99.pdf
+  // x87 state: The calling convention requires the cpu to be in x87 state when entering a function.
+  // Since we don't alter the state in the machine code and the calling function and the payload
+  // function obey the calling convention we don't need to take care of anything here. We are in x87
+  // mode when we enter the trampoline and it will stay like this. If the payload switches to mmx it
+  // is guaranteed to switch back to x87 before returning.
 
-  // General purpose registers used for passing parameters are rdi, rsi, rdx, rcx, r8, r9
-  // in that order. rax is used to indicate the number of vector arguments passed to a function
-  // requiring a variable number of arguments. r10 is used for passing a function’s static chain
-  // pointer. All of these need to be backed up:
+  // The direction flag DF in the %rFLAGS register: must be clear (set to “forward” direction) on
+  // function entry and return. As above with the x87 state we don't need to care about that.
+
+  // Similar to this we do not need to do anything to obey the other requirements of the calling
+  // convention: The control bits of the MXCSR register are callee-saved, while the status bits are
+  // caller-saved. The x87 status word register is caller-saved, whereas the x87 control word is
+  // callee-saved.
+
+  // For all of the above compare section "3.2 Function Calling Sequence" in "System V Application
+  // Binary Interface" https://refspecs.linuxfoundation.org/elf/x86_64-abi-0.99.pdf
+
+  // General purpose registers used for passing parameters are rdi, rsi, rdx, rcx,
+  // r8, r9 in that order. rax is used to indicate the number of vector arguments
+  // passed to a function requiring a variable number of arguments. r10 is used for
+  // passing a function’s static chain pointer. All of these need to be backed up:
   // push rdi      57
   // push rsi      56
   // push rdx      52
