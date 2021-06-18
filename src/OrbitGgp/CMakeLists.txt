@@ -67,4 +67,4 @@ target_link_libraries(OrbitGgpTests PRIVATE
 set_target_properties(OrbitGgpTests PROPERTIES AUTOMOC ON)
 set_target_properties(OrbitGgpTests PROPERTIES AUTOUIC ON)
 
-register_test(OrbitGgpTests PROPERTIES DISABLED TRUE)
+register_test(OrbitGgpTests)
