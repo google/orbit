@@ -69,7 +69,7 @@ void TrivialLog(uint64_t function_address) {
   constexpr std::chrono::duration<int, std::ratio<1, 1000000>> k500Microseconds(500);
   static system_clock::time_point last_logged_event = system_clock::now() - 2 * k500Microseconds;
   static uint64_t skipped = 0;
-  // Rate limit log output to once every three milliseconds.
+  // Rate limit log output to once every 500 microseconds.
   const system_clock::time_point now = system_clock::now();
   if (now - last_logged_event > k500Microseconds) {
     if (skipped > 0) {

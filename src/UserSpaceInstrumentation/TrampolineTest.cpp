@@ -633,7 +633,7 @@ class InstrumentFunctionTest : public testing::Test {
   std::vector<uint8_t> function_code_;
 };
 
-// Function with an ordinary compiler synthesised prolog; performs some arithmetics. Most real world
+// Function with an ordinary compiler-synthesised prolog; performs some arithmetics. Most real world
 // functions will look like this (starting with pushing the stack frame...). Most functions below
 // are declared "naked", i.e. without the prolog and implemented entirely in assembly. This is done
 // to also cover edge cases.
@@ -898,9 +898,10 @@ extern "C" int CheckIntParameters(u_int64_t p0, u_int64_t p1, u_int64_t p2, u_in
   return 0;
 }
 
-// This test and the two tests below check for proper handling of parameters handed of the
+// This test and the two tests below check for proper handling of parameters handed to the
 // instrumented function. The payload that is called before the instrumented function is executed
-// clobbers
+// clobbers the respective set of registers. So the Check*Parameter methods can check if the backup
+// worked correctly.
 TEST_F(InstrumentFunctionTest, CheckIntParameters) {
   function_name_ = "CheckIntParameters";
   pid_ = fork();

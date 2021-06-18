@@ -62,7 +62,7 @@ size_t kMaxRelocatedPrologSize = kSizeOfJmp * 16;
 [[nodiscard]] std::string BytesAsString(const std::vector<uint8_t>& code) {
   std::string result;
   for (const auto& c : code) {
-    result = absl::StrCat(result, absl::StrFormat("%0.2x ", c));
+    result.append(absl::StrFormat("%0.2x ", c));
   }
   return result;
 }
@@ -688,7 +688,7 @@ ErrorMessageOr<void> InstrumentFunction(pid_t pid, uint64_t function_address,
         function_address, trampoline_address));
   }
   jump.AppendImmediate32(offset_or_error.value());
-  // Overwrite the remaining byte to the next instruction with 'nop's. This is not strictly needed
+  // Overwrite the remaining bytes to the next instruction with 'nop's. This is not strictly needed
   // but helps with debugging/disassembling.
   while (jump.GetResultAsVector().size() < address_after_prolog - function_address) {
     jump.AppendBytes({0x90});
@@ -707,7 +707,7 @@ void MoveInstructionPointersOutOfOverwrittenCode(
     RegisterState registers;
     ErrorMessageOr<void> backup_or_error = registers.BackupRegisters(tid);
     FAIL_IF(backup_or_error.has_error(),
-            "Failed to read registers in MoveInstructionPointersOutOfOverwrittenCode: /'%s/'",
+            "Failed to read registers in MoveInstructionPointersOutOfOverwrittenCode: \"%s\"",
             backup_or_error.error().message());
     const uint64_t rip = registers.GetGeneralPurposeRegisters()->x86_64.rip;
     auto relocation = relocation_map.find(rip);
@@ -715,7 +715,7 @@ void MoveInstructionPointersOutOfOverwrittenCode(
       registers.GetGeneralPurposeRegisters()->x86_64.rip = relocation->second;
       ErrorMessageOr<void> restore_or_error = registers.RestoreRegisters();
       FAIL_IF(restore_or_error.has_error(),
-              "Failed to write registers in MoveInstructionPointersOutOfOverwrittenCode: /'%s/'",
+              "Failed to write registers in MoveInstructionPointersOutOfOverwrittenCode: \"%s\"",
               restore_or_error.error().message());
     }
   }
