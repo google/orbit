@@ -535,7 +535,7 @@ class InstrumentFunctionTest : public testing::Test {
     auto modules = orbit_object_utils::ReadModules(pid_);
     CHECK(!modules.has_error());
     std::string module_file_path;
-    AddressRange address_range_code;
+    AddressRange address_range_code(0, 0);
     for (const auto& m : modules.value()) {
       if (m.name() == "UserSpaceInstrumentationTests") {
         module_file_path = m.file_path();
@@ -543,6 +543,7 @@ class InstrumentFunctionTest : public testing::Test {
         address_range_code.end = m.address_end();
       }
     }
+    CHECK(!module_file_path.empty());
     auto elf_file = orbit_object_utils::CreateElfFile(module_file_path);
     CHECK(!elf_file.has_error());
     auto syms = elf_file.value()->LoadDebugSymbols();
