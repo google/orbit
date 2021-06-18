@@ -330,7 +330,7 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
         FireRefreshCallbacks();
 
         main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kInfo,
-                                         GetPrettyTime(absl::ZeroDuration()), "Capture started.");
+                                         absl::ZeroDuration(), "Capture started.");
 
         absl::MutexLock lock(&mutex);
         initialization_complete = true;
@@ -1027,22 +1027,22 @@ void OrbitApp::ClearSelectionBottomUpView() {
   selection_bottom_up_view_callback_(std::make_unique<CallTreeView>());
 }
 
-std::string OrbitApp::GetCaptureTime() const {
+absl::Duration OrbitApp::GetCaptureTime() const {
   const TimeGraph* time_graph = GetTimeGraph();
   double time = (time_graph == nullptr) ? 0 : time_graph->GetCaptureTimeSpanUs();
-  return GetPrettyTime(absl::Microseconds(time));
+  return absl::Microseconds(time);
 }
 
-std::string OrbitApp::GetCaptureTimeAt(uint64_t timestamp_ns) const {
+absl::Duration OrbitApp::GetCaptureTimeAt(uint64_t timestamp_ns) const {
   const TimeGraph* time_graph = GetTimeGraph();
   if (time_graph == nullptr) {
-    return GetPrettyTime(absl::ZeroDuration());
+    return absl::ZeroDuration();
   }
   const uint64_t capture_min_timestamp_ns = time_graph->GetCaptureMin();
   if (timestamp_ns < capture_min_timestamp_ns) {
-    return GetPrettyTime(absl::ZeroDuration());
+    return absl::ZeroDuration();
   }
-  return GetPrettyTime(absl::Nanoseconds(timestamp_ns - capture_min_timestamp_ns));
+  return absl::Nanoseconds(timestamp_ns - capture_min_timestamp_ns);
 }
 
 std::string OrbitApp::GetSaveFile(const std::string& extension) const {

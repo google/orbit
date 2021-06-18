@@ -37,7 +37,7 @@ class MainWindowInterface {
                                orbit_code_report::DisassemblyReport report) = 0;
 
   enum class CaptureLogSeverity { kInfo, kWarning, kSevereWarning, kError };
-  virtual void AppendToCaptureLog(CaptureLogSeverity severity, std::string_view capture_time,
+  virtual void AppendToCaptureLog(CaptureLogSeverity severity, absl::Duration capture_time,
                                   std::string_view message) = 0;
 
   virtual ~MainWindowInterface() = default;

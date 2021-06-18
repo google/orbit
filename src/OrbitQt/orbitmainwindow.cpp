@@ -571,7 +571,8 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
 
   hint_frame_->setVisible(!has_data);
 
-  filter_panel_action_->SetTimerLabelText(QString::fromStdString(app_->GetCaptureTime()));
+  filter_panel_action_->SetTimerLabelText(
+      QString::fromStdString(GetPrettyTime(app_->GetCaptureTime())));
 
   UpdateCaptureToolbarIconOpacity();
 
@@ -891,7 +892,8 @@ void OrbitMainWindow::OnTimer() {
   }
 
   if (app_->IsCapturing()) {
-    filter_panel_action_->SetTimerLabelText(QString::fromStdString(app_->GetCaptureTime()));
+    filter_panel_action_->SetTimerLabelText(
+        QString::fromStdString(GetPrettyTime(app_->GetCaptureTime())));
   }
 }
 
@@ -1463,7 +1465,7 @@ void OrbitMainWindow::ShowDisassembly(const orbit_client_protos::FunctionInfo& f
       });
 }
 
-void OrbitMainWindow::AppendToCaptureLog(CaptureLogSeverity severity, std::string_view capture_time,
+void OrbitMainWindow::AppendToCaptureLog(CaptureLogSeverity severity, absl::Duration capture_time,
                                          std::string_view message) {
   QColor message_color;
   std::string severity_name;
@@ -1486,7 +1488,8 @@ void OrbitMainWindow::AppendToCaptureLog(CaptureLogSeverity severity, std::strin
       break;
   }
   ui->captureLogTextEdit->setTextColor(message_color);
+  std::string pretty_time = GetPrettyTime(capture_time);
   ui->captureLogTextEdit->append(
-      QString::fromStdString(absl::StrFormat("%s\t%s", capture_time, message)));
-  LOG("\"%s  %s\" with severity %s added to the capture log", capture_time, message, severity_name);
+      QString::fromStdString(absl::StrFormat("%s\t%s", pretty_time, message)));
+  LOG("\"%s  %s\" with severity %s added to the capture log", pretty_time, message, severity_name);
 }
