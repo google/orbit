@@ -25,6 +25,10 @@ class MoveFilesDialog : public QDialog {
   void AddText(std::string_view text);
   void EnableCloseButton();
 
+ protected:
+  void closeEvent(QCloseEvent* event) override;
+  void keyPressEvent(QKeyEvent* event) override;
+
  private:
   std::unique_ptr<class Ui::MoveFilesDialog> ui_;
 };
