@@ -1,3 +1,5 @@
+include(cmake_common)
+
 C_FLAGS=-march=broadwell -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -D_FORTIFY_SOURCE=2 -fstack-protector-all
 CXX_FLAGS=-march=broadwell -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all -fno-exceptions
 LD_FLAGS=-Wl,-z,relro,-z,now,-z,noexecstack
@@ -19,7 +21,6 @@ abseil:compiler.cppstd=17
 OrbitProfiler:with_gui=False
 
 [build_requires]
-&: cmake_installer/3.16.3@conan/stable
 ggp_sdk/1.43.0.14282@orbitdeps/stable
 ninja/1.9.0@
 
