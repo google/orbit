@@ -33,6 +33,7 @@ TimeGraphLayout::TimeGraphLayout() {
   right_margin_ = 10.f;
   scheduler_track_offset_ = 10.f;
   toolbar_icon_height_ = 24.f;
+  generic_fixed_spacer_width_ = 10.f;
   scale_ = 1.f;
   time_bar_height_ = 15.f;
   font_size_ = 14;
@@ -73,6 +74,7 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER_MIN_MAX(track_bottom_margin_, 0, 20.f);
   FLOAT_SLIDER_MIN_MAX(track_top_margin_, 0, 20.f);
   FLOAT_SLIDER(toolbar_icon_height_);
+  FLOAT_SLIDER(generic_fixed_spacer_width_);
   FLOAT_SLIDER_MIN_MAX(scale_, 0.05f, 20.f);
   ImGui::Checkbox("Draw Track Background", &draw_track_background_);
 
