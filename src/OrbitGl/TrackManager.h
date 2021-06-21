@@ -18,6 +18,7 @@
 #include "AsyncTrack.h"
 #include "FrameTrack.h"
 #include "GpuTrack.h"
+#include "GraphTrack.h"
 #include "MemoryTrack.h"
 #include "PickingManager.h"
 #include "SchedulerTrack.h"
@@ -63,9 +64,11 @@ class TrackManager {
   ThreadTrack* GetOrCreateThreadTrack(int32_t tid);
   GpuTrack* GetOrCreateGpuTrack(uint64_t timeline_hash);
   VariableTrack* GetOrCreateVariableTrack(const std::string& name);
-  orbit_gl::MemoryTrack* GetOrCreateMemoryTrack(const std::string& name);
   AsyncTrack* GetOrCreateAsyncTrack(const std::string& name);
   FrameTrack* GetOrCreateFrameTrack(const orbit_grpc_protos::InstrumentedFunction& function);
+  orbit_gl::SystemMemoryTrack* GetSystemMemoryTrack() const { return system_memory_track_.get(); }
+  orbit_gl::SystemMemoryTrack* CreateAndGetSystemMemoryTrack(
+      const std::array<std::string, orbit_gl::kSystemMemoryTrackDimension>& series_names);
 
   [[nodiscard]] bool GetIsDataFromSavedCapture() const { return data_from_saved_capture_; }
   void SetIsDataFromSavedCapture(bool value) { data_from_saved_capture_ = value; }
@@ -90,7 +93,6 @@ class TrackManager {
   absl::flat_hash_map<int32_t, std::shared_ptr<ThreadTrack>> thread_tracks_;
   std::map<std::string, std::shared_ptr<AsyncTrack>> async_tracks_;
   std::map<std::string, std::shared_ptr<VariableTrack>> variable_tracks_;
-  std::map<std::string, std::shared_ptr<orbit_gl::MemoryTrack>> memory_tracks_;
   // Mapping from timeline to GPU tracks. Timeline name is used for stable ordering. In particular
   // we want the marker tracks next to their queue track. E.g. "gfx" and "gfx_markers" should appear
   // next to each other.
@@ -100,6 +102,7 @@ class TrackManager {
   std::map<uint64_t, std::shared_ptr<FrameTrack>> frame_tracks_;
   std::shared_ptr<SchedulerTrack> scheduler_track_;
   ThreadTrack* tracepoints_system_wide_track_;
+  std::shared_ptr<orbit_gl::SystemMemoryTrack> system_memory_track_;
 
   TimeGraph* time_graph_;
   orbit_gl::Viewport* viewport_;

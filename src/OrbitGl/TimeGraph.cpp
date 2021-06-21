@@ -423,72 +423,59 @@ void TimeGraph::ProcessValueTrackingTimer(const TimerInfo& timer_info) {
 }
 
 void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
-  const std::string kUnusedLabel = "System Memory Unused (MB)";
-  const std::string kBuffersOrCachedLabel = "System Memory Buffers / Cached (MB)";
-  const std::string kUsedLabel = "System Memory Used (MB)";
-  const std::string kWarningThresholdLabel = "Production Limit";
-  const std::string kValueUpperBoundLabel = "System Memory Total";
-  const std::string kValueLowerBoundLabel = "Minimum: 0 GB";
-  const std::string kTrackValueLabelUnit = "MB";
-
-  constexpr double kValueLowerBoundRawValue = 0.0;
-  constexpr uint8_t kTrackValueDecimalDigits = 2;
-  constexpr uint64_t kKilobytesToBytes = 1024;
-  constexpr double kMegabytesToKilobytes = 1024.0;
-
-  uint64_t warning_threshold_kb = app_->GetMemoryWarningThresholdKb();
-  std::string warning_threshold_pretty_size =
-      GetPrettySize(warning_threshold_kb * kKilobytesToBytes);
-  std::string warning_threshold_pretty_label =
-      absl::StrFormat("%s: %s", kWarningThresholdLabel, warning_threshold_pretty_size);
-  double warning_threshold_raw_value =
-      static_cast<double>(warning_threshold_kb) / kMegabytesToKilobytes;
-
   int64_t total_kb = orbit_api::Decode<int64_t>(timer_info.registers(
       static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kTotalKb)));
-  std::string total_pretty_label;
-  double total_raw_value = 0.0;
-  if (total_kb != kMissingInfo) {
-    std::string total_pretty_size = GetPrettySize(total_kb * kKilobytesToBytes);
-    total_pretty_label = absl::StrFormat("%s: %s", kValueUpperBoundLabel, total_pretty_size);
-    total_raw_value = static_cast<double>(total_kb) / kMegabytesToKilobytes;
-  }
-
-  MemoryTrack* track;
   int64_t unused_kb = orbit_api::Decode<int64_t>(
       timer_info.registers(static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kFreeKb)));
   int64_t buffers_kb = orbit_api::Decode<int64_t>(timer_info.registers(
       static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kBuffersKb)));
   int64_t cached_kb = orbit_api::Decode<int64_t>(timer_info.registers(
       static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kCachedKb)));
-  if (buffers_kb != kMissingInfo && cached_kb != kMissingInfo) {
-    track = track_manager_->GetOrCreateMemoryTrack(kBuffersOrCachedLabel);
-    if (total_kb != kMissingInfo) {
-      track->SetValueUpperBoundWhenEmpty(total_pretty_label, total_raw_value);
-    }
-    track->SetValueLowerBoundWhenEmpty(kValueLowerBoundLabel, kValueLowerBoundRawValue);
-    track->SetLabelUnitWhenEmpty(kTrackValueLabelUnit);
-    track->SetValueDecimalDigitsWhenEmpty(kTrackValueDecimalDigits);
-    double buffers_or_cached_mb =
-        static_cast<double>(buffers_kb + cached_kb) / kMegabytesToKilobytes;
-    track->AddValue(buffers_or_cached_mb, timer_info.start());
+  if (total_kb == kMissingInfo || unused_kb == kMissingInfo || buffers_kb == kMissingInfo ||
+      cached_kb == kMissingInfo) {
+    return;
   }
 
-  if (total_kb != kMissingInfo && unused_kb != kMissingInfo && buffers_kb != kMissingInfo &&
-      cached_kb != kMissingInfo) {
-    track = track_manager_->GetOrCreateMemoryTrack(kUsedLabel);
-    track->SetValueUpperBoundWhenEmpty(total_pretty_label, total_raw_value);
-    track->SetValueLowerBoundWhenEmpty(kValueLowerBoundLabel, kValueLowerBoundRawValue);
-    if (absl::GetFlag(FLAGS_enable_warning_threshold)) {
-      track->SetWarningThresholdWhenEmpty(warning_threshold_pretty_label,
-                                          warning_threshold_raw_value);
-    }
-    track->SetLabelUnitWhenEmpty(kTrackValueLabelUnit);
-    track->SetValueDecimalDigitsWhenEmpty(kTrackValueDecimalDigits);
-    double used_mb =
-        static_cast<double>(total_kb - unused_kb - buffers_kb - cached_kb) / kMegabytesToKilobytes;
-    track->AddValue(used_mb, timer_info.start());
-    track->OnTimer(timer_info);
+  constexpr double kMegabytesToKilobytes = 1024.0;
+  orbit_gl::SystemMemoryTrack* track = track_manager_->GetSystemMemoryTrack();
+  if (track == nullptr) {
+    const std::array<std::string, orbit_gl::kSystemMemoryTrackDimension> kSeriesNames = {
+        "Used", "Buffers / Cached", "Unused"};
+    track = track_manager_->CreateAndGetSystemMemoryTrack(kSeriesNames);
+  }
+  double unused_mb = static_cast<double>(unused_kb) / kMegabytesToKilobytes;
+  double buffers_or_cached_mb = static_cast<double>(buffers_kb + cached_kb) / kMegabytesToKilobytes;
+  double used_mb =
+      static_cast<double>(total_kb) / kMegabytesToKilobytes - unused_mb - buffers_or_cached_mb;
+  track->AddValues(timer_info.start(), {used_mb, buffers_or_cached_mb, unused_mb});
+  track->OnTimer(timer_info);
+
+  constexpr uint64_t kKilobytesToBytes = 1024;
+  if (!track->GetValueUpperBound().has_value()) {
+    const std::string kValueUpperBoundLabel = "System Memory Total";
+    std::string total_pretty_size = GetPrettySize(total_kb * kKilobytesToBytes);
+    std::string total_pretty_label =
+        absl::StrFormat("%s: %s", kValueUpperBoundLabel, total_pretty_size);
+    double total_raw_value = static_cast<double>(total_kb) / kMegabytesToKilobytes;
+    track->TrySetValueUpperBound(total_pretty_label, total_raw_value);
+  }
+
+  if (!track->GetValueLowerBound().has_value()) {
+    const std::string kValueLowerBoundLabel = "Minimum: 0 GB";
+    constexpr double kValueLowerBoundRawValue = 0.0;
+    track->TrySetValueLowerBound(kValueLowerBoundLabel, kValueLowerBoundRawValue);
+  }
+
+  if (absl::GetFlag(FLAGS_enable_warning_threshold) && !track->GetWarningThreshold().has_value()) {
+    const std::string kWarningThresholdLabel = "Production Limit";
+    uint64_t warning_threshold_kb = app_->GetMemoryWarningThresholdKb();
+    std::string warning_threshold_pretty_size =
+        GetPrettySize(warning_threshold_kb * kKilobytesToBytes);
+    std::string warning_threshold_pretty_label =
+        absl::StrFormat("%s: %s", kWarningThresholdLabel, warning_threshold_pretty_size);
+    double warning_threshold_raw_value =
+        static_cast<double>(warning_threshold_kb) / kMegabytesToKilobytes;
+    track->SetWarningThreshold(warning_threshold_pretty_label, warning_threshold_raw_value);
   }
 }
 

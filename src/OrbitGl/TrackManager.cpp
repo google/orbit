@@ -33,6 +33,7 @@
 
 using orbit_client_data::CallstackData;
 using orbit_gl::MemoryTrack;
+using orbit_gl::SystemMemoryTrack;
 
 TrackManager::TrackManager(TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                            TimeGraphLayout* layout, OrbitApp* app,
@@ -92,8 +93,8 @@ void TrackManager::SortTracks() {
   }
 
   // Memory tracks.
-  for (const auto& memory_track : memory_tracks_) {
-    all_processes_sorted_tracks.push_back(memory_track.second.get());
+  if (system_memory_track_ != nullptr && !system_memory_track_->IsEmpty()) {
+    all_processes_sorted_tracks.push_back(system_memory_track_.get());
   }
 
   // Async tracks.
@@ -388,18 +389,6 @@ VariableTrack* TrackManager::GetOrCreateVariableTrack(const std::string& name) {
   return track.get();
 }
 
-MemoryTrack* TrackManager::GetOrCreateMemoryTrack(const std::string& name) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  std::shared_ptr<MemoryTrack> track = memory_tracks_[name];
-  if (track == nullptr) {
-    track = std::make_shared<MemoryTrack>(time_graph_, time_graph_, viewport_, layout_, name,
-                                          capture_data_);
-    AddTrack(track);
-    memory_tracks_[name] = track;
-  }
-  return track.get();
-}
-
 AsyncTrack* TrackManager::GetOrCreateAsyncTrack(const std::string& name) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<AsyncTrack> track = async_tracks_[name];
@@ -431,6 +420,25 @@ FrameTrack* TrackManager::GetOrCreateFrameTrack(
   AddFrameTrack(track);
 
   return track.get();
+}
+
+SystemMemoryTrack* TrackManager::CreateAndGetSystemMemoryTrack(
+    const std::array<std::string, orbit_gl::kSystemMemoryTrackDimension>& series_names) {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  if (system_memory_track_ == nullptr) {
+    constexpr uint8_t kTrackValueDecimalDigits = 2;
+    const std::string kTrackValueLabelUnit = "MB";
+    const std::string kTrackName =
+        absl::StrFormat("System Memory Usage (%s)", kTrackValueLabelUnit);
+
+    system_memory_track_ = std::make_shared<SystemMemoryTrack>(
+        time_graph_, time_graph_, viewport_, layout_, kTrackName, series_names, capture_data_);
+    system_memory_track_->SetLabelUnit(kTrackValueLabelUnit);
+    system_memory_track_->SetNumberOfDecimalDigits(kTrackValueDecimalDigits);
+    AddTrack(system_memory_track_);
+  }
+
+  return system_memory_track_.get();
 }
 
 uint32_t TrackManager::GetNumTimers() const {
