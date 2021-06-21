@@ -17,6 +17,7 @@ target_sources(
          AccessibleTimeGraph.h
          AccessibleTrack.h
          AccessibleTriangleToggle.h
+         AnnotationTrack.h
          App.h
          AsyncTrack.h
          Batcher.h
@@ -83,6 +84,7 @@ target_sources(
           AccessibleTimeGraph.cpp
           AccessibleTrack.cpp
           AccessibleTriangleToggle.cpp
+          AnnotationTrack.cpp
           App.cpp
           AsyncTrack.cpp
           Batcher.cpp
