@@ -39,6 +39,7 @@ target_sources(
          GpuDebugMarkerTrack.h
          GpuSubmissionTrack.h
          GpuTrack.h
+         GraphTrack.h         
          Images.h
          ImGuiOrbit.h
          IntrospectionWindow.h
@@ -103,6 +104,7 @@ target_sources(
           GpuDebugMarkerTrack.cpp
           GpuSubmissionTrack.cpp
           GpuTrack.cpp
+          GraphTrack.cpp          
           ImGuiOrbit.cpp
           IntrospectionWindow.cpp
           LiveFunctionsDataView.cpp

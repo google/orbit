@@ -40,6 +40,7 @@ class TimeGraphLayout {
   float GetSpaceBetweenTracksAndThread() const { return space_between_tracks_and_thread_ * scale_; }
   float GetSpaceBetweenGpuSubtracks() const { return space_between_gpu_subtracks_ * scale_; }
   float GetToolbarIconHeight() const { return toolbar_icon_height_; }
+  float GetGenericFixedSpacerWidth() const { return generic_fixed_spacer_width_; }
   float GetScale() const { return scale_; }
   void SetScale(float value) { scale_ = value; }
   void SetDrawProperties(bool value) { draw_properties_ = value; }
@@ -80,6 +81,7 @@ class TimeGraphLayout {
   float space_between_tracks_and_thread_;
   float space_between_gpu_subtracks_;
   float space_between_thread_blocks_;
+  float generic_fixed_spacer_width_;
 
   float toolbar_icon_height_;
   float scale_;
