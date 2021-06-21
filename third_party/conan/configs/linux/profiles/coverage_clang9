@@ -1,5 +1,5 @@
 include(clang9_relwithdebinfo)
 
 [env]
-CFLAGS=$C_FLAGS -fprofile-instr-generate="%m.profraw" -fcoverage-mapping
-CXXFLAGS=$CXX_FLAGS -fprofile-instr-generate="%m.profraw" -fcoverage-mapping
+CFLAGS=$C_FLAGS -fprofile-instr-generate="%m.profraw" -fcoverage-mapping -DORBIT_COVERAGE_BUILD
+CXXFLAGS=$CXX_FLAGS -fprofile-instr-generate="%m.profraw" -fcoverage-mapping -DORBIT_COVERAGE_BUILD

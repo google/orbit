@@ -8,11 +8,13 @@
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
+#include <cpuid.h>
 #include <unistd.h>
 
 #include <cstdint>
 #include <string>
 
+#include "AccessTraceesMemory.h"
 #include "AllocateInTracee.h"
 #include "MachineCode.h"
 #include "OrbitBase/ExecuteCommand.h"
@@ -29,6 +31,17 @@ namespace {
 using absl::numbers_internal::safe_strtou64_base;
 using orbit_base::ReadFileToString;
 
+// Number of bytes to overwrite at the beginning of the function. Relative jump to a signed 32 bit
+// offset looks like this:
+// jmp 01020304         e9 04 03 02 01
+size_t kSizeOfJmp = 5;
+
+// We relocate at most `kSizeOfJmp` instructions. When relocating for each instruction we are either
+// copying that instruction or we add a small sequence of instruction and data (see
+// RelocateInstruction below). Per instruction we add at most 16 bytes. So we get this (very
+// generous) upper bound.
+size_t kMaxRelocatedPrologueSize = kSizeOfJmp * 16;
+
 [[nodiscard]] std::string InstructionBytesAsString(cs_insn* instruction) {
   std::string result;
   for (int i = 0; i < instruction->size; i++) {
@@ -36,6 +49,299 @@ using orbit_base::ReadFileToString;
                                          : absl::StrFormat(" %0.2x", instruction->bytes[i]));
   }
   return result;
+}
+
+[[nodiscard]] bool HasAvx() {
+  uint32_t eax = 0;
+  uint32_t ebx = 0;
+  uint32_t ecx = 0;
+  uint32_t edx = 0;
+  return __get_cpuid(0x01, &eax, &ebx, &ecx, &edx) && (ecx & bit_AVX);
+}
+
+[[nodiscard]] std::string BytesAsString(const std::vector<uint8_t>& code) {
+  std::string result;
+  for (const auto& c : code) {
+    result.append(absl::StrFormat("%0.2x ", c));
+  }
+  return result;
+}
+
+void AppendBackupCode(MachineCode& trampoline) {
+  // This code is executed immediatly after the control is passed to the instrumented function. The
+  // top of the stack contains the return address. Above that are the parameters passed via the
+  // stack.
+  // Some of the general purpose and vector registers contain the parameters for the
+  // instrumented function not passed via the stack. These need to be backed up - see explanation
+  // at the bottom of this comment.
+
+  // There are other guarantees from the calling convention, but these do not require any work from
+  // our side:
+
+  // x87 state: The calling convention requires the cpu to be in x87 state when entering a function.
+  // Since we don't alter the state in the machine code and the calling function and the payload
+  // function obey the calling convention we don't need to take care of anything here. We are in x87
+  // mode when we enter the trampoline and it will stay like this. If the payload switches to mmx it
+  // is guaranteed to switch back to x87 before returning.
+
+  // The direction flag DF in the %rFLAGS register: must be clear (set to “forward” direction) on
+  // function entry and return. As above with the x87 state we don't need to care about that.
+
+  // Similar to this we do not need to do anything to obey the other requirements of the calling
+  // convention: The control bits of the MXCSR register are callee-saved, while the status bits are
+  // caller-saved. The x87 status word register is caller-saved, whereas the x87 control word is
+  // callee-saved.
+
+  // For all of the above compare section "3.2 Function Calling Sequence" in "System V Application
+  // Binary Interface" https://refspecs.linuxfoundation.org/elf/x86_64-abi-0.99.pdf
+
+  // General purpose registers used for passing parameters are rdi, rsi, rdx, rcx,
+  // r8, r9 in that order. rax is used to indicate the number of vector arguments
+  // passed to a function requiring a variable number of arguments. r10 is used for
+  // passing a function’s static chain pointer. All of these need to be backed up:
+  // push rdi      57
+  // push rsi      56
+  // push rdx      52
+  // push rcx      51
+  // push r8       41 50
+  // push r9       41 51
+  // push rax      50
+  // push r10      41 52
+  trampoline.AppendBytes({0x57})
+      .AppendBytes({0x56})
+      .AppendBytes({0x52})
+      .AppendBytes({0x51})
+      .AppendBytes({0x41, 0x50})
+      .AppendBytes({0x41, 0x51})
+      .AppendBytes({0x50})
+      .AppendBytes({0x41, 0x52});
+
+  // We align the stack to 32 bytes first: round down to a multiple of 32, subtract another 24 and
+  // then push 8 byte original rsp. So we are 32 byte aligned after these commands and we can 'pop
+  // rsp' later to undo this.
+  // mov rax, rsp
+  // and rsp, $0xffffffffffffffe0
+  // sub rsp, 0x18
+  // push rax
+  trampoline.AppendBytes({0x48, 0x89, 0xe0})
+      .AppendBytes({0x48, 0x83, 0xe4, 0xe0})
+      .AppendBytes({0x48, 0x83, 0xec, 0x18})
+      .AppendBytes({0x50});
+
+  // Backup vector registers on the stack. They are used to pass float parameters so they need to be
+  // preserved. If Avx is supported backup ymm{0,..,8} (which include the xmm{0,..,8} registers as
+  // their lower half).
+  if (HasAvx()) {
+    // sub       rsp, 32
+    // vmovdqa   (rsp), ymm0
+    // ...
+    // sub       rsp, 32
+    // vmovdqa   (rsp), ymm7
+    trampoline.AppendBytes({0x48, 0x83, 0xec, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x7f, 0x04, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x7f, 0x0c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x7f, 0x14, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x7f, 0x1c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x7f, 0x24, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x7f, 0x2c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x7f, 0x34, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x7f, 0x3c, 0x24});
+  } else {
+    // sub     rsp, 16
+    // movdqa  (rsp), xmm0,
+    // ...
+    // sub     rsp, 16
+    // movdqa  (rsp), xmm7
+    trampoline.AppendBytes({0x48, 0x83, 0xec, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x7f, 0x04, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x7f, 0x0c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x7f, 0x14, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x7f, 0x1c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x7f, 0x24, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x7f, 0x2c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x7f, 0x34, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x7f, 0x3c, 0x24});
+  }
+}
+
+// Append code to call the payload function. This is the actual instrumentation we add to the code.
+// The address of the instrumented function is handed over to the payload as a parameter such that
+// it can figure out which part of the tracee just got executed.
+void AppendCallToPayloadCode(uint64_t payload_address, uint64_t function_address,
+                             MachineCode& trampoline) {
+  // mov rax, payload_address
+  // mov rdi, function_address
+  // call rax
+  trampoline.AppendBytes({0x48, 0xb8})
+      .AppendImmediate64(payload_address)
+      .AppendBytes({0x48, 0xbf})
+      .AppendImmediate64(function_address)
+      .AppendBytes({0xff, 0xd0});
+}
+
+void AppendRestoreCode(MachineCode& trampoline) {
+  // Restore vector registers (see comment on AppendBackupCode above).
+  if (HasAvx()) {
+    // vmovdqa   ymm7, (esp)
+    // add       esp, 32
+    // ...
+    // vmovdqa   ymm0, (esp)
+    // add       esp, 32
+    trampoline.AppendBytes({0xc5, 0xfd, 0x6f, 0x3c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x6f, 0x34, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x6f, 0x2c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x6f, 0x24, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x6f, 0x1c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x6f, 0x14, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x6f, 0x0c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x6f, 0x04, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x20});
+  } else {
+    // movdqa   xmm7, (esp)
+    // add esp, $0x10
+    //...
+    // movdqa   xmm0, (esp)
+    // add esp, $0x10
+    trampoline.AppendBytes({0x66, 0x0f, 0x6f, 0x3c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x6f, 0x34, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x6f, 0x2c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x6f, 0x24, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x6f, 0x1c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x6f, 0x14, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x6f, 0x0c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x6f, 0x04, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x10});
+  }
+
+  // Undo the 32 byte alignment (see comment on AppendBackupCode above).
+  // pop rsp
+  trampoline.AppendBytes({0x5c});
+
+  // Restore the general purpose registers (see comment on AppendBackupCode above).
+  // pop r10
+  // pop rax
+  // pop r9
+  // pop r8
+  // pop rcx
+  // pop  rdx
+  // pop  rsi
+  // pop  rdi
+  trampoline.AppendBytes({0x41, 0x5a})
+      .AppendBytes({0x58})
+      .AppendBytes({0x41, 0x59})
+      .AppendBytes({0x41, 0x58})
+      .AppendBytes({0x59})
+      .AppendBytes({0x5a})
+      .AppendBytes({0x5e})
+      .AppendBytes({0x5f});
+}
+
+// Relocates instructions beginning at `function_address` into the trampoline until `kSizeOfJmp`
+// bytes at the beginning of the function are cleared.
+// Returns a mapping from old instruction start addresses in the function to new addresses in the
+// trampoline. The map is meant to be used to move instruction pointers inside the overwritten areas
+// into the correct positions in the trampoline. Therefore only the instructions after the first one
+// are included (function_address will contain a valid instruction - the jump into the trampoline -
+// when we are done).
+[[nodiscard]] ErrorMessageOr<uint64_t> AppendRelocatedPrologueCode(
+    uint64_t function_address, const std::vector<uint8_t>& function, uint64_t trampoline_address,
+    csh capstone_handle, absl::flat_hash_map<uint64_t, uint64_t>& global_relocation_map,
+    MachineCode& trampoline) {
+  cs_insn* instruction = cs_malloc(capstone_handle);
+  FAIL_IF(instruction == nullptr, "Failed to allocate memory for capstone disassembler.");
+  orbit_base::unique_resource scope_exit{instruction,
+                                         [](cs_insn* instruction) { cs_free(instruction, 1); }};
+  std::vector<uint8_t> trampoline_code;
+  const uint8_t* code_pointer = function.data();
+  size_t code_size = function.size();
+  uint64_t disassemble_address = function_address;
+  std::vector<size_t> relocateable_addresses;
+  absl::flat_hash_map<uint64_t, uint64_t> relocation_map;
+  while ((disassemble_address - function_address < kSizeOfJmp) &&
+         cs_disasm_iter(capstone_handle, &code_pointer, &code_size, &disassemble_address,
+                        instruction)) {
+    const uint64_t original_instruction_address = disassemble_address - instruction->size;
+    const uint64_t relocated_instruction_address =
+        trampoline_address + trampoline.GetResultAsVector().size() + trampoline_code.size();
+    relocation_map.insert_or_assign(original_instruction_address, relocated_instruction_address);
+    OUTCOME_TRY(relocated_instruction,
+                RelocateInstruction(instruction, original_instruction_address,
+                                    relocated_instruction_address));
+    if (relocated_instruction.position_of_absolute_address.has_value()) {
+      const size_t offset = relocated_instruction.position_of_absolute_address.value();
+      const size_t instruction_address = trampoline_code.size();
+      relocateable_addresses.push_back(instruction_address + offset);
+    }
+    trampoline_code.insert(trampoline_code.end(), relocated_instruction.code.begin(),
+                           relocated_instruction.code.end());
+  }
+
+  if (disassemble_address - function_address < kSizeOfJmp) {
+    return ErrorMessage(
+        absl::StrFormat("Unable to disassemble enough of the function to instrument it. Code: %s",
+                        BytesAsString(function)));
+  }
+
+  // Relocate addresses encoded in the trampoline.
+  for (size_t pos : relocateable_addresses) {
+    const uint64_t address_in_trampoline = *absl::bit_cast<uint64_t*>(trampoline_code.data() + pos);
+    auto it = relocation_map.find(address_in_trampoline);
+    if (it != relocation_map.end()) {
+      *absl::bit_cast<uint64_t*>(trampoline_code.data() + pos) = it->second;
+    }
+  }
+
+  trampoline.AppendBytes(trampoline_code);
+  global_relocation_map.insert(relocation_map.begin(), relocation_map.end());
+  return disassemble_address;
+}
+
+[[nodiscard]] ErrorMessageOr<void> AppendJumpBackCode(uint64_t address_after_prologue,
+                                                      uint64_t trampoline_address,
+                                                      MachineCode& trampoline) {
+  const uint64_t address_after_jmp =
+      trampoline_address + trampoline.GetResultAsVector().size() + kSizeOfJmp;
+  trampoline.AppendBytes({0xe9});
+  ErrorMessageOr<int32_t> new_offset_or_error =
+      AddressDifferenceAsInt32(address_after_prologue, address_after_jmp);
+  // This should not happen since the trampoline is allocated such that it is located in the +-2GB
+  // range of the instrumented code.
+  if (new_offset_or_error.has_error()) {
+    return ErrorMessage(absl::StrFormat(
+        "Unable to jump back to instrumented function since the instrumented function and the "
+        "trampoline are more then +-2GB apart. address_after_prologue: %#x trampoline_address: %#x",
+        address_after_prologue, trampoline_address));
+  }
+  trampoline.AppendImmediate32(new_offset_or_error.value());
+  return outcome::success();
 }
 
 }  // namespace
@@ -318,6 +624,104 @@ ErrorMessageOr<RelocatedInstruction> RelocateInstruction(cs_insn* instruction, u
   }
 
   return result;
+}
+
+uint64_t GetMaxTrampolineSize() {
+  // The maximum size of a trampoline is constant. So the calculation can be cached on first call.
+  static const uint64_t trampoline_size = []() -> uint64_t {
+    MachineCode unused_code;
+    AppendBackupCode(unused_code);
+    AppendCallToPayloadCode(0 /* payload_address*/, 0 /* function address */, unused_code);
+    AppendRestoreCode(unused_code);
+    unused_code.AppendBytes(std::vector<uint8_t>(kMaxRelocatedPrologueSize, 0));
+    auto result =
+        AppendJumpBackCode(0 /*address_after_prologue*/, 0 /*trampoline_address*/, unused_code);
+    CHECK(!result.has_error());
+
+    // Round up to the next multiple of 32 so we get aligned jump targets at the beginning of the
+    // each trampoline.
+    return static_cast<uint64_t>(((unused_code.GetResultAsVector().size() + 31) / 32) * 32);
+  }();
+
+  return trampoline_size;
+}
+
+ErrorMessageOr<uint64_t> CreateTrampoline(pid_t pid, uint64_t function_address,
+                                          const std::vector<uint8_t>& function,
+                                          uint64_t trampoline_address, uint64_t payload_address,
+                                          csh capstone_handle,
+                                          absl::flat_hash_map<uint64_t, uint64_t>& relocation_map) {
+  MachineCode trampoline;
+  // Add code to backup register state, execute the payload and restore the register state.
+  AppendBackupCode(trampoline);
+  AppendCallToPayloadCode(payload_address, function_address, trampoline);
+  AppendRestoreCode(trampoline);
+
+  // Relocate prologue into trampoline.
+  OUTCOME_TRY(address_after_prologue,
+              AppendRelocatedPrologueCode(function_address, function, trampoline_address,
+                                          capstone_handle, relocation_map, trampoline));
+
+  // Add code for jump from trampoline back into function.
+  OUTCOME_TRY(AppendJumpBackCode(address_after_prologue, trampoline_address, trampoline));
+
+  // Copy trampoline into tracee.
+  auto write_result_or_error =
+      WriteTraceesMemory(pid, trampoline_address, trampoline.GetResultAsVector());
+  if (write_result_or_error.has_error()) {
+    return write_result_or_error.error();
+  }
+
+  return address_after_prologue;
+}
+
+ErrorMessageOr<void> InstrumentFunction(pid_t pid, uint64_t function_address,
+                                        uint64_t address_after_prologue,
+                                        uint64_t trampoline_address) {
+  MachineCode jump;
+  jump.AppendBytes({0xe9});
+  ErrorMessageOr<int32_t> offset_or_error =
+      AddressDifferenceAsInt32(trampoline_address, function_address + kSizeOfJmp);
+  // This should not happen since the trampoline is allocated such that it is located in the +-2GB
+  // range of the instrumented code.
+  if (offset_or_error.has_error()) {
+    return ErrorMessage(absl::StrFormat(
+        "Unable to jump from instrumented function into trampoline since the locations are more "
+        "then +-2GB apart. function_address: %#x trampoline_address: %#x",
+        function_address, trampoline_address));
+  }
+  jump.AppendImmediate32(offset_or_error.value());
+  // Overwrite the remaining bytes to the next instruction with 'nop's. This is not strictly needed
+  // but helps with debugging/disassembling.
+  while (jump.GetResultAsVector().size() < address_after_prologue - function_address) {
+    jump.AppendBytes({0x90});
+  }
+  auto write_result_or_error = WriteTraceesMemory(pid, function_address, jump.GetResultAsVector());
+  if (write_result_or_error.has_error()) {
+    return write_result_or_error.error();
+  }
+  return outcome::success();
+}
+
+void MoveInstructionPointersOutOfOverwrittenCode(
+    pid_t pid, const absl::flat_hash_map<uint64_t, uint64_t>& relocation_map) {
+  std::vector<pid_t> tids = orbit_base::GetTidsOfProcess(pid);
+  for (pid_t tid : tids) {
+    RegisterState registers;
+    ErrorMessageOr<void> backup_or_error = registers.BackupRegisters(tid);
+    FAIL_IF(backup_or_error.has_error(),
+            "Failed to read registers in MoveInstructionPointersOutOfOverwrittenCode: \"%s\"",
+            backup_or_error.error().message());
+    const uint64_t rip = registers.GetGeneralPurposeRegisters()->x86_64.rip;
+    auto relocation = relocation_map.find(rip);
+    if (relocation != relocation_map.end()) {
+      registers.GetGeneralPurposeRegisters()->x86_64.rip = relocation->second;
+      ErrorMessageOr<void> restore_or_error = registers.RestoreRegisters();
+      FAIL_IF(restore_or_error.has_error(),
+              "Failed to write registers in MoveInstructionPointersOutOfOverwrittenCode: \"%s\"",
+              restore_or_error.error().message());
+    }
+  }
 }
 
 }  // namespace orbit_user_space_instrumentation

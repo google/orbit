@@ -5,6 +5,7 @@
 #ifndef USER_SPACE_INSTRUMENTATION_TRAMPOLINE_H_
 #define USER_SPACE_INSTRUMENTATION_TRAMPOLINE_H_
 
+#include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <capstone/capstone.h>
 #include <sys/types.h>
@@ -109,6 +110,39 @@ struct RelocatedInstruction {
 [[nodiscard]] ErrorMessageOr<RelocatedInstruction> RelocateInstruction(cs_insn* instruction,
                                                                        uint64_t old_address,
                                                                        uint64_t new_address);
+
+// Strictly speaking the max tempoline size is a compile time constant, but we prefer to compute it
+// here since this captures every change to the code constructing the trampoline.
+[[nodiscard]] uint64_t GetMaxTrampolineSize();
+
+// Creates a trampoline for the function at `function_address`. The trampoline is built at
+// `trampoline_address`. The trampoline will call `payload_address` with `function_address` as a
+// parameter. `function` contains the beginning of the function (kMaxFunctionPrologueBackupSize
+// bytes or less if the function shorter). `capstone_handle` is a handle to the capstone
+// disassembler library returned by cs_open. The function returns an error if it was not possible to
+// instrument the function. For details on that see the comments at AppendRelocatedPrologueCode. If
+// the function is successful it will insert an address pair into `relocation_map` for each
+// instruction it relocated from the beginning of the function into the trampoline (needed for
+// moving instruction pointers away from the overwritten bytes at the beginning of the function,
+// compare MoveInstructionPointersOutOfOverwrittenCode below). The return value is the address of
+// the first instruction not relocated into the trampoline (i.e. the address the trampoline jump
+// back to).
+[[nodiscard]] ErrorMessageOr<uint64_t> CreateTrampoline(
+    pid_t pid, uint64_t function_address, const std::vector<uint8_t>& function,
+    uint64_t trampoline_address, uint64_t payload_address, csh capstone_handle,
+    absl::flat_hash_map<uint64_t, uint64_t>& relocation_map);
+
+// Instrument function at 'function_address' in process 'pid'. This simply overwrites the beginning
+// of the fuction with a jump to 'trampoline_address'. The trampoline needs to be constructed with
+// 'CreateTrampoline' above.
+[[nodiscard]] ErrorMessageOr<void> InstrumentFunction(pid_t pid, uint64_t function_address,
+                                                      uint64_t address_of_instruction_after_jump,
+                                                      uint64_t trampoline_address);
+
+// Move every instruction pointer that was in the middle of an overwritten function prologue to
+// the corresponding place in the trampoline.
+void MoveInstructionPointersOutOfOverwrittenCode(
+    pid_t pid, const absl::flat_hash_map<uint64_t, uint64_t>& relocation_map);
 
 }  // namespace orbit_user_space_instrumentation
 
