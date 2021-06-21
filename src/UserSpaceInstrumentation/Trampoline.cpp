@@ -178,8 +178,11 @@ void AppendBackupCode(MachineCode& trampoline) {
   }
 }
 
-void AppendPayloadCode(uint64_t payload_address, uint64_t function_address,
-                       MachineCode& trampoline) {
+// Append code to call the payload function. This is the actual instrumentation we add to the code.
+// The address of the instrumented function is handed over to the payload as a parameter such that
+// it can figure out which part of the tracee just got executed.
+void AppendCallToPayloadCode(uint64_t payload_address, uint64_t function_address,
+                             MachineCode& trampoline) {
   // mov rax, payload_address
   // mov rdi, function_address
   // call rax
@@ -628,7 +631,7 @@ uint64_t GetMaxTrampolineSize() {
   static const uint64_t trampoline_size = []() -> uint64_t {
     MachineCode unused_code;
     AppendBackupCode(unused_code);
-    AppendPayloadCode(0 /* payload_address*/, 0 /* function address */, unused_code);
+    AppendCallToPayloadCode(0 /* payload_address*/, 0 /* function address */, unused_code);
     AppendRestoreCode(unused_code);
     unused_code.AppendBytes(std::vector<uint8_t>(kMaxRelocatedPrologueSize, 0));
     auto result =
@@ -651,7 +654,7 @@ ErrorMessageOr<uint64_t> CreateTrampoline(pid_t pid, uint64_t function_address,
   MachineCode trampoline;
   // Add code to backup register state, execute the payload and restore the register state.
   AppendBackupCode(trampoline);
-  AppendPayloadCode(payload_address, function_address, trampoline);
+  AppendCallToPayloadCode(payload_address, function_address, trampoline);
   AppendRestoreCode(trampoline);
 
   // Relocate prologue into trampoline.
