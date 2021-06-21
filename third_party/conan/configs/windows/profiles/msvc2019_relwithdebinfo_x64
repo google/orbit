@@ -1,18 +1,1 @@
-LINKER_FLAGS=/FIXED:NO /ignore:4099
-[settings]
-os=Windows
-os_build=Windows
-arch=x86_64
-arch_build=x86_64
-compiler=Visual Studio
-compiler.version=16
-build_type=RelWithDebInfo
-abseil:compiler=Visual Studio
-abseil:compiler.cppstd=17
-[options]
-OrbitProfiler:system_qt=False
-[build_requires]
-&: cmake_installer/3.16.3@conan/stable
-[env]
-CONAN_CMAKE_SYSTEM_VERSION=8.1
-LDFLAGS=$LINKER_FLAGS
+include(msvc2019_relwithdebinfo)

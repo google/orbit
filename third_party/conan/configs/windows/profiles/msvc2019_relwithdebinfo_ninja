@@ -3,9 +3,12 @@ include(msvc2019_relwithdebinfo)
 [settings]
 ninja:build_type=Release
 llvmpipe:build_type=Release
+
 [options]
 OrbitProfiler:deploy_opengl_software_renderer=True
+
 [build_requires]
 &: ninja/1.10.2
+
 [env]
 CONAN_CMAKE_GENERATOR=Ninja
