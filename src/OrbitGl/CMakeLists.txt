@@ -47,6 +47,7 @@ target_sources(
          ManualInstrumentationManager.h
          MemoryTrack.h
          ModulesDataView.h
+         MultivariateTimeSeries.h
          PickingManager.h
          SamplingReport.h
          SamplingReportDataView.h
@@ -175,6 +176,7 @@ target_sources(OrbitGlTests PRIVATE
                CaptureStatsTest.cpp
                GlUtilsTest.cpp
                GpuTrackTest.cpp
+               MultivariateTimeSeriesTest.cpp
                PickingManagerTest.cpp
                ScopedStatusTest.cpp
                ScopeTreeTest.cpp
