@@ -677,8 +677,8 @@ extern "C" __attribute__((naked)) int TooShort() {
 
 TEST_F(InstrumentFunctionTest, TooShort) {
 #ifdef ORBIT_COVERAGE_BUILD
-    GTEST_SKIP() << "Skipping since g++ is not handing __attribute__((naked)) appropriatly which "
-                    "is required for these tests.";
+  GTEST_SKIP() << "Skipping since g++ is not handing __attribute__((naked)) appropriatly which "
+                  "is required for these tests.";
 #endif
   RunChild(&TooShort, "TooShort");
   PrepareInstrumentation("TrivialLog");
@@ -889,8 +889,8 @@ extern "C" __attribute__((naked)) int Loop() {
 
 TEST_F(InstrumentFunctionTest, Loop) {
 #ifdef ORBIT_COVERAGE_BUILD
-    GTEST_SKIP() << "Skipping since g++ is not handing __attribute__((naked)) appropriatly which "
-                    "is required for these tests.";
+  GTEST_SKIP() << "Skipping since g++ is not handing __attribute__((naked)) appropriatly which "
+                  "is required for these tests.";
 #endif
   RunChild(&Loop, "Loop");
   PrepareInstrumentation("TrivialLog");
