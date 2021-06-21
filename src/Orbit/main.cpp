@@ -327,8 +327,19 @@ static void TryMoveSavedDataLocationIfNeeded() {
                    [&dialog, main_thread_id]() {
                      CHECK(main_thread_id == std::this_thread::get_id());
                      dialog.AddText("Finished.");
-                     dialog.EnableCloseButton();
+                     dialog.OnMoveFinished();
                    });
+
+  QObject::connect(&process, &orbit_qt::MoveFilesProcess::processInterrupted, &dialog,
+                   [&dialog, main_thread_id]() {
+                     CHECK(main_thread_id == std::this_thread::get_id());
+                     dialog.AddText("Interrupted.");
+                     dialog.OnMoveInterrupted();
+                   });
+
+  // Intentionally use the version of `QObject::connect` with three arguments.
+  QObject::connect(&dialog, &orbit_qt::MoveFilesDialog::interruptionRequested,
+                   [&process]() { process.RequestInterruption(); });
 
   process.Start();
   dialog.exec();

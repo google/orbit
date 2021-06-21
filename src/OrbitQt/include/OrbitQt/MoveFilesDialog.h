@@ -18,12 +18,18 @@ class MoveFilesDialog;  // NOLINT
 namespace orbit_qt {
 
 class MoveFilesDialog : public QDialog {
+  Q_OBJECT
+
  public:
   explicit MoveFilesDialog();
   ~MoveFilesDialog() noexcept override;
 
   void AddText(std::string_view text);
-  void EnableCloseButton();
+  void OnMoveFinished();
+  void OnMoveInterrupted();
+
+ signals:
+  void interruptionRequested();
 
  protected:
   void closeEvent(QCloseEvent* event) override;
@@ -31,6 +37,11 @@ class MoveFilesDialog : public QDialog {
 
  private:
   std::unique_ptr<class Ui::MoveFilesDialog> ui_;
+
+  void ShowRequestInterruptionConfirmation();
+
+  enum class Status { kInProgress, kInterruptionRequested, kDone };
+  Status status_ = Status::kInProgress;
 };
 
 }  // namespace orbit_qt
