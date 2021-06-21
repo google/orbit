@@ -1,0 +1,5 @@
+[settings]
+cmake_installer:build_type=Release
+
+[build_requires]
+&: cmake_installer/3.16.3@conan/stable
