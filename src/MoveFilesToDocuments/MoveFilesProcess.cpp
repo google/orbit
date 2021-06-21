@@ -2,13 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitQt/MoveFilesProcess.h"
+#include "MoveFilesProcess.h"
+
+#include <QMetaObject>
+#include <QThread>
 
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "Path.h"
 
-namespace orbit_qt {
+namespace orbit_move_files_to_documents {
 
 MoveFilesProcess::MoveFilesProcess() : QObject(nullptr) {
   background_thread_.start();
@@ -91,4 +94,4 @@ void MoveFilesProcess::Run() {
   }
 }
 
-}  // namespace orbit_qt
+}  // namespace orbit_move_files_to_documents

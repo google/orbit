@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitQt/MoveFilesDialog.h"
+#include "MoveFilesDialog.h"
 
 #include <QMessageBox>
 #include <QPlainTextEdit>
@@ -10,7 +10,7 @@
 
 #include "ui_MoveFilesDialog.h"
 
-namespace orbit_qt {
+namespace orbit_move_files_to_documents {
 
 MoveFilesDialog::MoveFilesDialog() : QDialog(nullptr), ui_(new Ui::MoveFilesDialog) {
   ui_->setupUi(this);
@@ -109,4 +109,4 @@ void MoveFilesDialog::ShowRequestInterruptionConfirmation() {
   }
 }
 
-}  // namespace orbit_qt
+}  // namespace orbit_move_files_to_documents

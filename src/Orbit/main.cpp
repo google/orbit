@@ -27,9 +27,8 @@
 #include <vector>
 
 #include "MetricsUploader/ScopedMetric.h"
+#include "MoveFilesToDocuments/MoveFilesToDocuments.h"
 #include "OrbitBase/File.h"
-#include "OrbitQt/MoveFilesDialog.h"
-#include "OrbitQt/MoveFilesProcess.h"
 
 #ifdef _WIN32
 #include <process.h>
@@ -256,95 +255,6 @@ static void LogAndMaybeWarnAboutClockResolution() {
   }
 }
 
-static bool IsDirectoryEmpty(const std::filesystem::path& directory) {
-  auto exists_or_error = orbit_base::FileExists(directory);
-  if (exists_or_error.has_error()) {
-    ERROR("Unable to check for existence of \"%s\": %s", directory.string(),
-          exists_or_error.error().message());
-    return false;
-  }
-
-  if (!exists_or_error.value()) {
-    return true;
-  }
-
-  auto file_list_or_error = orbit_base::ListFilesInDirectory(directory);
-  if (file_list_or_error.has_error()) {
-    ERROR("Unable to list directory \"%s\": %s", directory.string(),
-          file_list_or_error.error().message());
-    return false;
-  }
-
-  return file_list_or_error.value().empty();
-}
-
-static void TryMoveSavedDataLocationIfNeeded() {
-  if (IsDirectoryEmpty(orbit_core::GetPresetDirPriorTo1_66()) &&
-      IsDirectoryEmpty(orbit_core::GetCaptureDirPriorTo1_66())) {
-    return;
-  }
-
-  std::thread::id main_thread_id = std::this_thread::get_id();
-
-  orbit_qt::MoveFilesDialog dialog;
-  orbit_qt::MoveFilesProcess process;
-
-  QObject::connect(&process, &orbit_qt::MoveFilesProcess::generalError, &dialog,
-                   [&dialog, main_thread_id](const QString& error_message) {
-                     CHECK(main_thread_id == std::this_thread::get_id());
-                     dialog.AddText(absl::StrFormat("Error: %s", error_message.toStdString()));
-                   });
-
-  QObject::connect(
-      &process, &orbit_qt::MoveFilesProcess::moveDirectoryStarted, &dialog,
-      [&dialog, main_thread_id](const QString& from_dir_path, const QString& to_dir_path,
-                                quint64 number_of_files) {
-        CHECK(main_thread_id == std::this_thread::get_id());
-        dialog.AddText(absl::StrFormat(R"(Moving %d files from "%s" to "%s"...)", number_of_files,
-                                       from_dir_path.toStdString(), to_dir_path.toStdString()));
-      });
-
-  QObject::connect(&process, &orbit_qt::MoveFilesProcess::moveDirectoryDone, &dialog,
-                   [&dialog, main_thread_id]() {
-                     CHECK(main_thread_id == std::this_thread::get_id());
-                     dialog.AddText("Done.\n");
-                   });
-
-  QObject::connect(
-      &process, &orbit_qt::MoveFilesProcess::moveFileStarted, &dialog,
-      [&dialog, main_thread_id](const QString& from_path) {
-        CHECK(main_thread_id == std::this_thread::get_id());
-        dialog.AddText(absl::StrFormat("        Moving \"%s\"...", from_path.toStdString()));
-      });
-
-  QObject::connect(&process, &orbit_qt::MoveFilesProcess::moveFileDone, &dialog,
-                   [&dialog, main_thread_id]() {
-                     CHECK(main_thread_id == std::this_thread::get_id());
-                     dialog.AddText("        Done.");
-                   });
-
-  QObject::connect(&process, &orbit_qt::MoveFilesProcess::processFinished, &dialog,
-                   [&dialog, main_thread_id]() {
-                     CHECK(main_thread_id == std::this_thread::get_id());
-                     dialog.AddText("Finished.");
-                     dialog.OnMoveFinished();
-                   });
-
-  QObject::connect(&process, &orbit_qt::MoveFilesProcess::processInterrupted, &dialog,
-                   [&dialog, main_thread_id]() {
-                     CHECK(main_thread_id == std::this_thread::get_id());
-                     dialog.AddText("Interrupted.");
-                     dialog.OnMoveInterrupted();
-                   });
-
-  // Intentionally use the version of `QObject::connect` with three arguments.
-  QObject::connect(&dialog, &orbit_qt::MoveFilesDialog::interruptionRequested,
-                   [&process]() { process.RequestInterruption(); });
-
-  process.Start();
-  dialog.exec();
-}
-
 // Removes all source paths mappings from the persistent settings storage.
 static void ClearSourcePathsMappings() {
   orbit_source_paths_mapping::MappingManager mapping_manager{};
@@ -467,7 +377,7 @@ int main(int argc, char* argv[]) {
 
   LogAndMaybeWarnAboutClockResolution();
 
-  TryMoveSavedDataLocationIfNeeded();
+  orbit_move_files_to_documents::TryMoveSavedDataLocationIfNeeded();
 
   const DeploymentConfiguration deployment_configuration = FigureOutDeploymentConfiguration();
 
