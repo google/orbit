@@ -1,33 +1,15 @@
-CFLAGS= -march=sandybridge -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -D_FORTIFY_SOURCE=2 -fstack-protector-all -fPIC
-CXXFLAGS= -march=sandybridge -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all -fPIC -fno-exceptions
-SANITIZE_CFLAGS=-fsanitize=fuzzer-no-link,address
-SANITIZE_CXXFLAGS=-fsanitize=fuzzer-no-link,address
-[settings]
-os=Linux
-os_build=Linux
-arch=x86_64
-arch_build=x86_64
-compiler=clang
-compiler.version=9
-compiler.libcxx=libstdc++11
-compiler.fpo=False
-build_type=RelWithDebInfo
-abseil:compiler=clang
-abseil:compiler.cppstd=17
+include(clang9_relwithdebinfo)
+
 [options]
 OrbitProfiler:with_gui=False
 OrbitProfiler:run_tests=False
 llvm_object:allow_undefined_symbols=True
 llvm_symbolize:allow_undefined_symbols=True
-[build_requires]
-&: cmake_installer/3.16.3@conan/stable
+
 [env]
-CC=clang-9
-CXX=clang++-9
-CFLAGS=$CFLAGS
-CXXFLAGS=$CXXFLAGS
-OrbitProfiler:CFLAGS= $CFLAGS $SANITIZE_CFLAGS
-OrbitProfiler:CXXFLAGS= $CXXFLAGS $SANITIZE_CXXFLAGS
-llvm:CFLAGS= $CFLAGS $SANITIZE_CFLAGS
-llvm:CXXFLAGS= $CXXFLAGS $SANITIZE_CXXFLAGS
-LDFLAGS= -Wl,-z,relro,-z,now,-z,noexecstack
+CFLAGS=[-fPIC]
+CXXFLAGS=[-fPIC]
+OrbitProfiler:CFLAGS=[-fPIC,-fsanitize=fuzzer-no-link,address]
+OrbitProfiler:CXXFLAGS=[-fPIC,-fsanitize=fuzzer-no-link,address]
+llvm:CFLAGS=[-fPIC,-fsanitize=fuzzer-no-link,address]
+llvm:CXXFLAGS=[-fPIC,-fsanitize=fuzzer-no-link,address]
