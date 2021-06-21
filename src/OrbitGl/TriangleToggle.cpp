@@ -16,13 +16,13 @@
 #include "TimeGraph.h"
 #include "Track.h"
 
-TriangleToggle::TriangleToggle(State initial_state, StateChangeHandler handler,
+TriangleToggle::TriangleToggle(bool is_collapsed, bool is_collapsible, StateChangeHandler handler,
                                TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                                TimeGraphLayout* layout, Track* track, float size)
     : CaptureViewElement(track, time_graph, viewport, layout),
       track_(track),
-      state_(initial_state),
-      initial_state_(initial_state),
+      is_collapsed_(is_collapsed),
+      is_collapsible_(is_collapsible),
       handler_(std::move(handler)) {
   SetSize(size, size);
 }
@@ -37,7 +37,7 @@ void TriangleToggle::Draw(Batcher& batcher, TextRenderer& text_renderer,
   const bool picking = picking_mode != PickingMode::kNone;
   const Color kWhite(255, 255, 255, 255);
   const Color kGrey(100, 100, 100, 255);
-  Color color = state_ == State::kInactive ? kGrey : kWhite;
+  Color color = is_collapsible_ ? kWhite : kGrey;
 
   // Draw triangle.
   static float half_sqrt_three = 0.5f * sqrtf(3.f);
@@ -48,7 +48,7 @@ void TriangleToggle::Draw(Batcher& batcher, TextRenderer& text_renderer,
     Vec3 position(pos_[0], pos_[1], 0.0f);
 
     Triangle triangle;
-    if (state_ == State::kCollapsed) {
+    if (is_collapsed_) {
       triangle = Triangle(position + Vec3(-half_h, half_w, z), position + Vec3(-half_h, -half_w, z),
                           position + Vec3(half_w, 0.f, z));
     } else {
@@ -67,21 +67,15 @@ void TriangleToggle::Draw(Batcher& batcher, TextRenderer& text_renderer,
 }
 
 void TriangleToggle::OnRelease() {
-  if (IsInactive()) {
+  // Do not change the internal state when the toggle is not collapsible.
+  if (!IsCollapsible()) {
     return;
   }
 
   CaptureViewElement::OnRelease();
+  is_collapsed_ = !is_collapsed_;
 
-  state_ = IsCollapsed() ? State::kExpanded : State::kCollapsed;
-  handler_(state_);
-}
-
-void TriangleToggle::SetState(State state, InitialStateUpdate behavior) {
-  state_ = state;
-  if (behavior == InitialStateUpdate::kReplaceInitialState) {
-    initial_state_ = state;
-  }
+  handler_(is_collapsed_);
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface>

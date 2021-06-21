@@ -6,6 +6,7 @@
 
 #include <absl/time/time.h>
 
+#include <algorithm>
 #include <memory>
 
 #include "App.h"
@@ -32,10 +33,6 @@ GpuDebugMarkerTrack::GpuDebugMarkerTrack(CaptureViewElement* parent, TimeGraph* 
   SetLabel("Debug Markers");
   draw_background_ = false;
   string_manager_ = app->GetStringManager();
-
-  // Gpu subtracks are expanded by default, but are however not shown while the parent is collapsed.
-  collapse_toggle_->SetState(TriangleToggle::State::kExpanded,
-                             TriangleToggle::InitialStateUpdate::kReplaceInitialState);
 }
 
 std::string GpuDebugMarkerTrack::GetTooltip() const {
@@ -129,7 +126,7 @@ float GpuDebugMarkerTrack::GetYFromTimer(const TimerInfo& timer_info) const {
 
 float GpuDebugMarkerTrack::GetHeight() const {
   bool collapsed = collapse_toggle_->IsCollapsed();
-  uint32_t depth = collapsed ? 1 : GetDepth();
+  uint32_t depth = collapsed ? std::min<uint32_t>(1, GetDepth()) : GetDepth();
   return layout_->GetTrackTabHeight() + layout_->GetTextBoxHeight() * depth +
          layout_->GetTrackBottomMargin();
 }

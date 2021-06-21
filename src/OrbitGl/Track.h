@@ -89,7 +89,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
 
   [[nodiscard]] virtual Color GetTrackBackgroundColor() const;
 
-  virtual void OnCollapseToggle(TriangleToggle::State state);
+  virtual void OnCollapseToggle(bool is_collapsed);
   [[nodiscard]] virtual bool IsCollapsible() const { return false; }
   TriangleToggle* GetTriangleToggle() const { return collapse_toggle_.get(); }
   [[nodiscard]] int32_t GetProcessId() const { return process_id_; }

@@ -383,9 +383,8 @@ std::string ThreadTrack::GetTooltip() const {
 }
 
 float ThreadTrack::GetHeight() const {
-  const bool is_collapsed = collapse_toggle_->IsCollapsed();
-  const uint32_t collapsed_depth = (GetNumTimers() == 0) ? 0 : 1;
-  const uint32_t depth = is_collapsed ? collapsed_depth : GetDepth();
+  const uint32_t depth =
+      collapse_toggle_->IsCollapsed() ? std::min<uint32_t>(1, GetDepth()) : GetDepth();
 
   bool gap_between_tracks_and_timers =
       (!thread_state_bar_->IsEmpty() || !event_bar_->IsEmpty() || !tracepoint_bar_->IsEmpty()) &&
