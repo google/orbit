@@ -117,17 +117,16 @@ struct RelocatedInstruction {
 
 // Creates a trampoline for the function at `function_address`. The trampoline is built at
 // `trampoline_address`. The trampoline will call `payload_address` with `function_address` as a
-// parameter. `function` contains the beginning of the function (kMaxFunctionPrologBackupSize bytes
-// or less if the function shorter). `capstone_handle` is a handle to the capstone disassembler
-// library returned by cs_open.
-// The function returns an error if it was not possible to instrument the function. For details on
-// that see the comments at AppendRelocatedPrologCode. If the function is successful it will insert
-// an address pair into `relocation_map` for each instruction it relocated from the beginning of the
-// function into the trampoline (needed for moving instruction pointers away from the overwritten
-// bytes at the beginning of the function, compare MoveInstructionPointersOutOfOverwrittenCode
-// below).
-// The return value is the address of the first instruction not relocated into the trampoline (i.e.
-// the address the trampoline jump back to).
+// parameter. `function` contains the beginning of the function (kMaxFunctionPrologueBackupSize
+// bytes or less if the function shorter). `capstone_handle` is a handle to the capstone
+// disassembler library returned by cs_open. The function returns an error if it was not possible to
+// instrument the function. For details on that see the comments at AppendRelocatedPrologueCode. If
+// the function is successful it will insert an address pair into `relocation_map` for each
+// instruction it relocated from the beginning of the function into the trampoline (needed for
+// moving instruction pointers away from the overwritten bytes at the beginning of the function,
+// compare MoveInstructionPointersOutOfOverwrittenCode below). The return value is the address of
+// the first instruction not relocated into the trampoline (i.e. the address the trampoline jump
+// back to).
 [[nodiscard]] ErrorMessageOr<uint64_t> CreateTrampoline(
     pid_t pid, uint64_t function_address, const std::vector<uint8_t>& function,
     uint64_t trampoline_address, uint64_t payload_address, csh capstone_handle,
@@ -140,7 +139,7 @@ struct RelocatedInstruction {
                                                       uint64_t address_of_instruction_after_jump,
                                                       uint64_t trampoline_address);
 
-// Move every instruction pointer that was in the middle of an overwritten function prolog to
+// Move every instruction pointer that was in the middle of an overwritten function prologue to
 // the corresponding place in the trampoline.
 void MoveInstructionPointersOutOfOverwrittenCode(
     pid_t pid, const absl::flat_hash_map<uint64_t, uint64_t>& relocation_map);

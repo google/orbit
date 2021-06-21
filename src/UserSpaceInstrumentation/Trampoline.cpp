@@ -40,7 +40,7 @@ size_t kSizeOfJmp = 5;
 // copying that instruction or we add a small sequence of instruction and data (see
 // RelocateInstruction below). Per instruction we add at most 16 bytes. So we get this (very
 // generous) upper bound.
-size_t kMaxRelocatedPrologSize = kSizeOfJmp * 16;
+size_t kMaxRelocatedPrologueSize = kSizeOfJmp * 16;
 
 [[nodiscard]] std::string InstructionBytesAsString(cs_insn* instruction) {
   std::string result;
@@ -268,7 +268,7 @@ void AppendRestoreCode(MachineCode& trampoline) {
 // into the correct positions in the trampoline. Therefore only the instructions after the first one
 // are included (function_address will contain a valid instruction - the jump into the trampoline -
 // when we are done).
-[[nodiscard]] ErrorMessageOr<uint64_t> AppendRelocatedPrologCode(
+[[nodiscard]] ErrorMessageOr<uint64_t> AppendRelocatedPrologueCode(
     uint64_t function_address, const std::vector<uint8_t>& function, uint64_t trampoline_address,
     csh capstone_handle, absl::flat_hash_map<uint64_t, uint64_t>& global_relocation_map,
     MachineCode& trampoline) {
@@ -321,21 +321,21 @@ void AppendRestoreCode(MachineCode& trampoline) {
   return disassemble_address;
 }
 
-[[nodiscard]] ErrorMessageOr<void> AppendJumpBackCode(uint64_t address_after_prolog,
+[[nodiscard]] ErrorMessageOr<void> AppendJumpBackCode(uint64_t address_after_prologue,
                                                       uint64_t trampoline_address,
                                                       MachineCode& trampoline) {
   const uint64_t address_after_jmp =
       trampoline_address + trampoline.GetResultAsVector().size() + kSizeOfJmp;
   trampoline.AppendBytes({0xe9});
   ErrorMessageOr<int32_t> new_offset_or_error =
-      AddressDifferenceAsInt32(address_after_prolog, address_after_jmp);
+      AddressDifferenceAsInt32(address_after_prologue, address_after_jmp);
   // This should not happen since the trampoline is allocated such that it is located in the +-2GB
   // range of the instrumented code.
   if (new_offset_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat(
         "Unable to jump back to instrumented function since the instrumented function and the "
-        "trampoline are more then +-2GB apart. address_after_prolog: %#x trampoline_address: %#x",
-        address_after_prolog, trampoline_address));
+        "trampoline are more then +-2GB apart. address_after_prologue: %#x trampoline_address: %#x",
+        address_after_prologue, trampoline_address));
   }
   trampoline.AppendImmediate32(new_offset_or_error.value());
   return outcome::success();
@@ -630,9 +630,9 @@ uint64_t GetMaxTrampolineSize() {
     AppendBackupCode(unused_code);
     AppendPayloadCode(0 /* payload_address*/, 0 /* function address */, unused_code);
     AppendRestoreCode(unused_code);
-    unused_code.AppendBytes(std::vector<uint8_t>(kMaxRelocatedPrologSize, 0));
+    unused_code.AppendBytes(std::vector<uint8_t>(kMaxRelocatedPrologueSize, 0));
     auto result =
-        AppendJumpBackCode(0 /*address_after_prolog*/, 0 /*trampoline_address*/, unused_code);
+        AppendJumpBackCode(0 /*address_after_prologue*/, 0 /*trampoline_address*/, unused_code);
     CHECK(!result.has_error());
 
     // Round up to the next multiple of 32 so we get aligned jump targets at the beginning of the
@@ -654,13 +654,13 @@ ErrorMessageOr<uint64_t> CreateTrampoline(pid_t pid, uint64_t function_address,
   AppendPayloadCode(payload_address, function_address, trampoline);
   AppendRestoreCode(trampoline);
 
-  // Relocate prolog into trampoline.
-  OUTCOME_TRY(address_after_prolog,
-              AppendRelocatedPrologCode(function_address, function, trampoline_address,
-                                        capstone_handle, relocation_map, trampoline));
+  // Relocate prologue into trampoline.
+  OUTCOME_TRY(address_after_prologue,
+              AppendRelocatedPrologueCode(function_address, function, trampoline_address,
+                                          capstone_handle, relocation_map, trampoline));
 
   // Add code for jump from trampoline back into function.
-  OUTCOME_TRY(AppendJumpBackCode(address_after_prolog, trampoline_address, trampoline));
+  OUTCOME_TRY(AppendJumpBackCode(address_after_prologue, trampoline_address, trampoline));
 
   // Copy trampoline into tracee.
   auto write_result_or_error =
@@ -669,11 +669,11 @@ ErrorMessageOr<uint64_t> CreateTrampoline(pid_t pid, uint64_t function_address,
     return write_result_or_error.error();
   }
 
-  return address_after_prolog;
+  return address_after_prologue;
 }
 
 ErrorMessageOr<void> InstrumentFunction(pid_t pid, uint64_t function_address,
-                                        uint64_t address_after_prolog,
+                                        uint64_t address_after_prologue,
                                         uint64_t trampoline_address) {
   MachineCode jump;
   jump.AppendBytes({0xe9});
@@ -690,7 +690,7 @@ ErrorMessageOr<void> InstrumentFunction(pid_t pid, uint64_t function_address,
   jump.AppendImmediate32(offset_or_error.value());
   // Overwrite the remaining bytes to the next instruction with 'nop's. This is not strictly needed
   // but helps with debugging/disassembling.
-  while (jump.GetResultAsVector().size() < address_after_prolog - function_address) {
+  while (jump.GetResultAsVector().size() < address_after_prologue - function_address) {
     jump.AppendBytes({0x90});
   }
   auto write_result_or_error = WriteTraceesMemory(pid, function_address, jump.GetResultAsVector());
