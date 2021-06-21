@@ -49,6 +49,11 @@ else
     echo "CI machine detected. Adjusting remotes..."
     conan remote add -i 0 -f artifactory "http://artifactory.internal/artifactory/api/conan/conan" || exit $?
     conan_disable_public_remotes || exit $?
+
+    if [ -d "${DIR}/${OS}_ci" ]; then
+      echo "Found CI-specific Conan config. Installing that as well..."
+      conan config install "${DIR}/${OS}_ci" || exit $?
+    fi
   else
     LOCATION="$(curl -sI http://orbit-artifactory/ 2>/dev/null)"
 
