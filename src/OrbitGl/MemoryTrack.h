@@ -8,35 +8,46 @@
 #include <string>
 #include <utility>
 
+#include "AnnotationTrack.h"
+#include "GraphTrack.h"
 #include "Track.h"
-#include "VariableTrack.h"
 #include "Viewport.h"
 
 namespace orbit_gl {
 
-class MemoryTrack final : public VariableTrack {
+template <size_t Dimension>
+class MemoryTrack final : public GraphTrack<Dimension>, public AnnotationTrack {
  public:
   explicit MemoryTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string name,
+                       std::array<std::string, Dimension> series_names,
                        const orbit_client_model::CaptureData* capture_data)
-      : VariableTrack(parent, time_graph, viewport, layout, name, capture_data) {}
+      : GraphTrack<Dimension>(parent, time_graph, viewport, layout, name, series_names,
+                              capture_data),
+        AnnotationTrack() {}
   ~MemoryTrack() override = default;
-  [[nodiscard]] Type GetType() const override { return Type::kMemoryTrack; }
-
+  [[nodiscard]] Track::Type GetType() const override { return Track::Type::kMemoryTrack; }
   void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
             PickingMode picking_mode, float z_offset = 0) override;
 
-  void SetWarningThresholdWhenEmpty(const std::string& pretty_label, double raw_value);
-  void SetValueUpperBoundWhenEmpty(const std::string& pretty_label, double raw_value);
-  void SetValueLowerBoundWhenEmpty(const std::string& pretty_label, double raw_value);
+  void TrySetValueUpperBound(const std::string& pretty_label, double raw_value);
+  void TrySetValueLowerBound(const std::string& pretty_label, double raw_value);
+
+ protected:
+  [[nodiscard]] double GetGraphMaxValue() const override;
+  [[nodiscard]] double GetGraphMinValue() const override;
 
  private:
-  void UpdateMinAndMax(double value);
-
-  std::optional<std::pair<std::string, double>> warning_threshold_ = std::nullopt;
-  std::optional<std::pair<std::string, double>> value_upper_bound_ = std::nullopt;
-  std::optional<std::pair<std::string, double>> value_lower_bound_ = std::nullopt;
+  float GetAnnotatedTrackContentHeight() const override {
+    return this->size_[1] - this->layout_->GetTrackTabHeight() -
+           this->layout_->GetTrackBottomMargin() - this->GetLegendHeight();
+  }
+  Vec2 GetAnnotatedTrackPosition() const override { return this->pos_; };
+  Vec2 GetAnnotatedTrackSize() const override { return this->size_; };
 };
+
+constexpr size_t kSystemMemoryTrackDimension = 3;
+using SystemMemoryTrack = MemoryTrack<kSystemMemoryTrackDimension>;
 
 }  // namespace orbit_gl
 
