@@ -615,12 +615,14 @@ class InstrumentFunctionTest : public testing::Test {
     cs_close(&capstone_handle_);
 
     // Detach and end child.
-    CHECK(!DetachAndContinueProcess(pid_).has_error());
-    kill(pid_, SIGKILL);
-    waitpid(pid_, NULL, 0);
+    if (pid_ != -1) {
+      CHECK(!DetachAndContinueProcess(pid_).has_error());
+      kill(pid_, SIGKILL);
+      waitpid(pid_, NULL, 0);
+    }
   }
 
-  pid_t pid_;
+  pid_t pid_ = -1;
   cs_insn* instruction_ = nullptr;
   csh capstone_handle_ = 0;
   uint64_t max_trampoline_size_ = 0;
@@ -674,6 +676,10 @@ extern "C" __attribute__((naked)) int TooShort() {
 }
 
 TEST_F(InstrumentFunctionTest, TooShort) {
+#ifdef ORBIT_COVERAGE_BUILD
+    GTEST_SKIP() << "Skipping since g++ is not handing __attribute__((naked)) appropriatly which "
+                    "is required for these tests.";
+#endif
   RunChild(&TooShort, "TooShort");
   PrepareInstrumentation("TrivialLog");
   ErrorMessageOr<uint64_t> result =
@@ -882,6 +888,10 @@ extern "C" __attribute__((naked)) int Loop() {
 }
 
 TEST_F(InstrumentFunctionTest, Loop) {
+#ifdef ORBIT_COVERAGE_BUILD
+    GTEST_SKIP() << "Skipping since g++ is not handing __attribute__((naked)) appropriatly which "
+                    "is required for these tests.";
+#endif
   RunChild(&Loop, "Loop");
   PrepareInstrumentation("TrivialLog");
   ErrorMessageOr<uint64_t> result =
