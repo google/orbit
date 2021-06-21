@@ -98,7 +98,6 @@
 ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, local);
 ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
-ABSL_DECLARE_FLAG(bool, enable_capture_autosave);
 ABSL_DECLARE_FLAG(bool, enable_cgroup_memory);
 
 using orbit_capture_client::CaptureClient;
@@ -109,7 +108,6 @@ using orbit_capture_file::CaptureFile;
 
 using orbit_client_data::CallstackData;
 using orbit_client_data::ModuleData;
-using orbit_client_data::ModuleInMemory;
 using orbit_client_data::PostProcessedSamplingData;
 using orbit_client_data::ProcessData;
 using orbit_client_data::SampledFunction;
@@ -1104,11 +1102,6 @@ static std::unique_ptr<CaptureEventProcessor> CreateCaptureEventProcessor(
     CaptureListener* listener, const std::string& process_name,
     absl::flat_hash_set<uint64_t> frame_track_function_ids,
     const std::function<void(const ErrorMessage&)>& error_handler) {
-  if (!absl::GetFlag(FLAGS_enable_capture_autosave)) {
-    return CaptureEventProcessor::CreateForCaptureListener(listener, std::nullopt,
-                                                           std::move(frame_track_function_ids));
-  }
-
   std::filesystem::path file_path = orbit_core::CreateOrGetCaptureDir() /
                                     orbit_client_model::capture_serializer::GenerateCaptureFileName(
                                         process_name, absl::Now(), "_autosave");
@@ -2630,7 +2623,6 @@ void OrbitApp::CaptureMetricProcessApiTimer(const orbit_client_protos::TimerInfo
 void OrbitApp::TrySaveUserDefinedCaptureInfo() {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   CHECK(HasCaptureData());
-  if (!absl::GetFlag(FLAGS_enable_capture_autosave)) return;
   if (IsCapturing()) {
     // We are going to save it at the end of capture anyways.
     return;
