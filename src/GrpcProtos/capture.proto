@@ -459,6 +459,8 @@ message MetadataEvent {
 }
 
 message ClientCaptureEvent {
+  reserved 23, 28, 29;
+
   oneof event {
     // Note that field numbers from 1-15 take only 1 byte to encode
     // https://developers.google.com/protocol-buffers/docs/proto#assigning_field_numbers
@@ -475,7 +477,6 @@ message ClientCaptureEvent {
     CallstackSample callstack_sample = 1;
     CaptureFinished capture_finished = 27;
     CaptureStarted capture_started = 24;
-    CGroupMemoryUsage cgroup_memory_usage = 28;
     FunctionCall function_call = 2;
     GpuJob gpu_job = 3;
     GpuQueueSubmission gpu_queue_submission = 4;
@@ -483,12 +484,11 @@ message ClientCaptureEvent {
     InternedString interned_string = 18;
     InternedTracepointInfo interned_tracepoint_info = 19;
     IntrospectionScope introspection_scope = 20;
+    MemoryEventWrapper memory_event_wrapper = 31;
     MetadataEvent metadata_event = 30;
     ModulesSnapshot modules_snapshot = 25;
     ModuleUpdateEvent module_update_event = 21;
-    ProcessMemoryUsage process_memory_usage = 29;
     SchedulingSlice scheduling_slice = 6;
-    SystemMemoryUsage system_memory_usage = 23;
     ThreadName thread_name = 22;
     ThreadNamesSnapshot thread_names_snapshot = 26;
     ThreadStateSlice thread_state_slice = 7;
@@ -521,6 +521,7 @@ message ProducerCaptureEvent {
     InternedCallstack interned_callstack = 7;
     InternedString interned_string = 18;
     IntrospectionScope introspection_scope = 19;
+    MemoryEventWrapper memory_event_wrapper = 29;
     MetadataEvent metadata_event = 28;
     ModulesSnapshot modules_snapshot = 25;
     ModuleUpdateEvent module_update_event = 20;

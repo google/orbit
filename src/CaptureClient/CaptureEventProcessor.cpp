@@ -74,7 +74,7 @@ class CaptureEventProcessorForListener : public CaptureEventProcessor {
       orbit_grpc_protos::InternedTracepointInfo interned_tracepoint_info);
   void ProcessTracepointEvent(const orbit_grpc_protos::TracepointEvent& tracepoint_event);
   void ProcessGpuQueueSubmission(const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission);
-  void ProcessSystemMemoryUsage(const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage);
+  void ProcessMemoryEventWrapper(const orbit_grpc_protos::MemoryEventWrapper& memory_event_wrapper);
   void ProcessMetadataEvent(const orbit_grpc_protos::MetadataEvent& metadata_event);
 
   std::optional<std::filesystem::path> file_path_;
@@ -147,14 +147,8 @@ void CaptureEventProcessorForListener::ProcessEvent(const ClientCaptureEvent& ev
     case ClientCaptureEvent::kModuleUpdateEvent:
       ProcessModuleUpdate(event.module_update_event());
       break;
-    case ClientCaptureEvent::kCgroupMemoryUsage:
-      // TODO (http://b/185107371): Process the cgroup memory usage information.
-      break;
-    case ClientCaptureEvent::kProcessMemoryUsage:
-      // TODO (http://b/185107593): Process the process memory usage information.
-      break;
-    case ClientCaptureEvent::kSystemMemoryUsage:
-      ProcessSystemMemoryUsage(event.system_memory_usage());
+    case ClientCaptureEvent::kMemoryEventWrapper:
+      ProcessMemoryEventWrapper(event.memory_event_wrapper());
       break;
     case ClientCaptureEvent::kApiEvent:
       api_event_processor_.ProcessApiEvent(event.api_event());
@@ -363,9 +357,9 @@ void CaptureEventProcessorForListener::ProcessGpuQueueSubmission(
   }
 }
 
-void CaptureEventProcessorForListener::ProcessSystemMemoryUsage(
-    const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage) {
-  capture_listener_->OnSystemMemoryUsage(system_memory_usage);
+void CaptureEventProcessorForListener::ProcessMemoryEventWrapper(
+    const orbit_grpc_protos::MemoryEventWrapper& memory_event_wrapper) {
+  capture_listener_->OnMemoryEventWrapper(memory_event_wrapper);
 }
 
 void CaptureEventProcessorForListener::ProcessThreadName(const ThreadName& thread_name) {
