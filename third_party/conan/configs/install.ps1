@@ -40,6 +40,12 @@ if (Test-Path Env:ORBIT_OVERRIDE_ARTIFACTORY_URL) {
     if ($process.ExitCode -ne 0) { Throw "Error while adding conan remote." }
 
     conan_disable_public_remotes
+
+    if (Test-Path -Path "$PSScriptRoot\windows_ci") {
+      Write-Host "Found CI-specific Conan config. Installing that as well..."
+      $process = Start-Process $conan.Path -Wait -NoNewWindow -ErrorAction Stop -PassThru -ArgumentList "config", "install", "$PSScriptRoot\windows_ci"
+      if ($process.ExitCode -ne 0) { Throw "Error while installing conan config." }
+    }
   } catch {
     try {
       $response = Invoke-WebRequest -URI http://orbit-artifactory/ -ErrorAction Ignore -MaximumRedirection 0 -UseBasicParsing

@@ -1,6 +1,7 @@
-include(msvc2019_relwithdebinfo)
+include(msvc2019_common)
 
 [settings]
+build_type=RelWithDebInfo
 ninja:build_type=Release
 llvmpipe:build_type=Release
 
