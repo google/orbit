@@ -1,0 +1,8 @@
+include(clang_common)
+
+[settings]
+compiler.version=9
+
+[env]
+CC=clang-9
+CXX=clang++-9
