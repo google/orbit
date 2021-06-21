@@ -91,6 +91,7 @@ ProfilingTargetDialog::ProfilingTargetDialog(
       state_local_process_selected_(&state_local_connected_),
       state_local_no_process_selected_(&state_local_connected_) {
   CHECK(ssh_connection_artifacts != nullptr);
+  CHECK(metrics_uploader_ != nullptr);
 
   ui_->setupUi(this);
   ui_->stadiaWidget->SetSshConnectionArtifacts(ssh_connection_artifacts);
