@@ -58,10 +58,7 @@
     </widget>
    </item>
    <item alignment="Qt::AlignRight">
-    <widget class="QPushButton" name="closeButton">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
+    <widget class="QPushButton" name="button">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -69,29 +66,15 @@
       </sizepolicy>
      </property>
      <property name="text">
-      <string>Please wait...</string>
+      <string>Suspend for now</string>
+     </property>
+     <property name="autoDefault">
+      <bool>false</bool>
      </property>
     </widget>
    </item>
   </layout>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>closeButton</sender>
-   <signal>clicked()</signal>
-   <receiver>MoveFilesDialog</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>360</x>
-     <y>194</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>251</x>
-     <y>195</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>
