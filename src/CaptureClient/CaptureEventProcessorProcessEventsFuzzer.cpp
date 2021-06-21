@@ -40,8 +40,8 @@ class MyCaptureListener : public CaptureListener {
                         absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/) override {}
   void OnCaptureFinished(const orbit_grpc_protos::CaptureFinished& /*capture_finished*/) override {}
   void OnTimer(const TimerInfo& /*timer_info*/) override {}
-  void OnSystemMemoryUsage(
-      const orbit_grpc_protos::SystemMemoryUsage& /*system_memory_usage*/) override {}
+  void OnMemoryEventWrapper(
+      const orbit_grpc_protos::MemoryEventWrapper& /*memory_event_wrapper*/) override {}
   void OnKeyAndString(uint64_t /*key*/, std::string /*str*/) override {}
   void OnUniqueCallstack(uint64_t /*callstack_id*/, CallstackInfo /*callstack*/) override {}
   void OnCallstackEvent(CallstackEvent /*callstack_event*/) override {}

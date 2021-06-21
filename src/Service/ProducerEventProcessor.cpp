@@ -32,6 +32,7 @@ using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointInfo;
 using orbit_grpc_protos::IntrospectionScope;
+using orbit_grpc_protos::MemoryEventWrapper;
 using orbit_grpc_protos::MetadataEvent;
 using orbit_grpc_protos::ModulesSnapshot;
 using orbit_grpc_protos::ModuleUpdateEvent;
@@ -99,9 +100,7 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessThreadNamesSnapshot(ThreadNamesSnapshot* thread_names_snapshot);
   void ProcessThreadStateSlice(ThreadStateSlice* thread_state_slice);
   void ProcessFullTracepointEvent(FullTracepointEvent* full_tracepoint_event);
-  void ProcessCGroupMemoryUsage(CGroupMemoryUsage* cgroup_memory_usage);
-  void ProcessProcessMemoryUsage(ProcessMemoryUsage* process_memory_usage);
-  void ProcessSystemMemoryUsage(SystemMemoryUsage* system_memory_usage);
+  void ProcessMemoryEventWrapper(MemoryEventWrapper* memory_event_wrapper);
   void ProcessApiEvent(ApiEvent* api_event);
   void ProcessMetadataEvent(MetadataEvent* metadata_event);
 
@@ -347,22 +346,10 @@ void ProducerEventProcessorImpl::ProcessFullTracepointEvent(
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessCGroupMemoryUsage(CGroupMemoryUsage* cgroup_memory_usage) {
+void ProducerEventProcessorImpl::ProcessMemoryEventWrapper(
+    MemoryEventWrapper* memory_event_wrapper) {
   ClientCaptureEvent event;
-  *event.mutable_cgroup_memory_usage() = std::move(*cgroup_memory_usage);
-  capture_event_buffer_->AddEvent(std::move(event));
-}
-
-void ProducerEventProcessorImpl::ProcessProcessMemoryUsage(
-    ProcessMemoryUsage* process_memory_usage) {
-  ClientCaptureEvent event;
-  *event.mutable_process_memory_usage() = std::move(*process_memory_usage);
-  capture_event_buffer_->AddEvent(std::move(event));
-}
-
-void ProducerEventProcessorImpl::ProcessSystemMemoryUsage(SystemMemoryUsage* system_memory_usage) {
-  ClientCaptureEvent event;
-  *event.mutable_system_memory_usage() = std::move(*system_memory_usage);
+  *event.mutable_memory_event_wrapper() = std::move(*memory_event_wrapper);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
@@ -432,13 +419,13 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
       ProcessModulesSnapshot(event.mutable_modules_snapshot());
       break;
     case ProducerCaptureEvent::kCgroupMemoryUsage:
-      ProcessCGroupMemoryUsage(event.mutable_cgroup_memory_usage());
-      break;
+      UNREACHABLE();
     case ProducerCaptureEvent::kProcessMemoryUsage:
-      ProcessProcessMemoryUsage(event.mutable_process_memory_usage());
-      break;
+      UNREACHABLE();
     case ProducerCaptureEvent::kSystemMemoryUsage:
-      ProcessSystemMemoryUsage(event.mutable_system_memory_usage());
+      UNREACHABLE();
+    case ProducerCaptureEvent::kMemoryEventWrapper:
+      ProcessMemoryEventWrapper(event.mutable_memory_event_wrapper());
       break;
     case ProducerCaptureEvent::kApiEvent:
       ProcessApiEvent(event.mutable_api_event());

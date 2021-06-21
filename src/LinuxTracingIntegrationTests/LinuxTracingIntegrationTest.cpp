@@ -496,6 +496,8 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
       case orbit_grpc_protos::ProducerCaptureEvent::kCgroupMemoryUsage:
         // Cases of memory events are tested in MemoryTracingIntegrationTest.
         UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kMemoryEventWrapper:
+        UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kProcessMemoryUsage:
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kSystemMemoryUsage:

@@ -414,8 +414,12 @@ void OrbitApp::OnTimer(const TimerInfo& timer_info) {
   frame_track_online_processor_.ProcessTimer(timer_info, func);
 }
 
-void OrbitApp::OnSystemMemoryUsage(
-    const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage) {
+void OrbitApp::OnMemoryEventWrapper(
+    const orbit_grpc_protos::MemoryEventWrapper& memory_event_wrapper) {
+  if (!memory_event_wrapper.has_system_memory_usage()) return;
+
+  const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage =
+      memory_event_wrapper.system_memory_usage();
   TimerInfo timer_info;
   timer_info.set_type(TimerInfo::kSystemMemoryUsage);
   timer_info.set_start(system_memory_usage.timestamp_ns());

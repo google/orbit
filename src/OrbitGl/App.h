@@ -167,8 +167,8 @@ class OrbitApp final : public DataViewFactory,
     kCachedKb,
     kEnd
   };
-  void OnSystemMemoryUsage(
-      const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage) override;
+  void OnMemoryEventWrapper(
+      const orbit_grpc_protos::MemoryEventWrapper& memory_event_wrapper) override;
 
   void OnValidateFramePointers(
       std::vector<const orbit_client_data::ModuleData*> modules_to_validate);

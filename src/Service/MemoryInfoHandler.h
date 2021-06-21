@@ -5,6 +5,8 @@
 #ifndef SERVICE_MEMORY_INFO_HANDLER_H_
 #define SERVICE_MEMORY_INFO_HANDLER_H_
 
+#include <absl/container/flat_hash_map.h>
+
 #include "MemoryTracing/MemoryInfoListener.h"
 #include "MemoryTracing/MemoryInfoProducer.h"
 #include "OrbitBase/Logging.h"
@@ -36,10 +38,18 @@ class MemoryInfoHandler : public orbit_memory_tracing::MemoryInfoListener {
   void OnProcessMemoryUsage(orbit_grpc_protos::ProcessMemoryUsage process_memory_usage) override;
 
  private:
+  [[nodiscard]] uint64_t GetSamplingWindowId(uint64_t sample_timestamp) const;
+  void ProcessMemoryEventWrapperIfReady(uint64_t sampling_window_id);
+
   ProducerEventProcessor* producer_event_processor_;
   std::unique_ptr<orbit_memory_tracing::MemoryInfoProducer> cgroup_memory_info_producer_;
   std::unique_ptr<orbit_memory_tracing::MemoryInfoProducer> process_memory_info_producer_;
   std::unique_ptr<orbit_memory_tracing::MemoryInfoProducer> system_memory_info_producer_;
+  uint64_t sampling_start_timestamp_ns_;
+  uint64_t sampling_period_ns_;
+  bool enable_cgroup_memory_ = false;
+  absl::flat_hash_map<uint64_t, orbit_grpc_protos::MemoryEventWrapper> in_progress_wrappers_;
+  absl::Mutex in_progress_wrappers_mutex_;
 };
 
 }  // namespace orbit_service
