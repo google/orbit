@@ -2,14 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_QT_MOVE_FILES_PROCESS_H_
-#define ORBIT_QT_MOVE_FILES_PROCESS_H_
+#ifndef MOVE_FILES_TO_DOCUMENTS_MOVE_FILES_PROCESS_H_
+#define MOVE_FILES_TO_DOCUMENTS_MOVE_FILES_PROCESS_H_
 
 #include <QObject>
+#include <QString>
 #include <QThread>
+#include <atomic>
 #include <filesystem>
+#include <string>
 
-namespace orbit_qt {
+namespace orbit_move_files_to_documents {
 
 class MoveFilesProcess : public QObject {
   Q_OBJECT
@@ -46,5 +49,6 @@ class MoveFilesProcess : public QObject {
   std::atomic<bool> interruption_requested_ = false;
 };
 
-}  // namespace orbit_qt
-#endif  // ORBIT_QT_MOVE_FILES_PROCESS_H_
+}  // namespace orbit_move_files_to_documents
+
+#endif  // MOVE_FILES_TO_DOCUMENTS_MOVE_FILES_PROCESS_H_

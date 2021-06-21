@@ -2,11 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_QT_MOVE_FILES_DIALOG_H_
-#define ORBIT_QT_MOVE_FILES_DIALOG_H_
+#ifndef MOVE_FILES_TO_DOCUMENTS_MOVE_FILES_DIALOG_H_
+#define MOVE_FILES_TO_DOCUMENTS_MOVE_FILES_DIALOG_H_
 
 #include <QCloseEvent>
 #include <QDialog>
+#include <QKeyEvent>
 #include <QWidget>
 #include <memory>
 
@@ -15,7 +16,7 @@ namespace Ui {
 class MoveFilesDialog;  // NOLINT
 }  // namespace Ui
 
-namespace orbit_qt {
+namespace orbit_move_files_to_documents {
 
 class MoveFilesDialog : public QDialog {
   Q_OBJECT
@@ -44,6 +45,6 @@ class MoveFilesDialog : public QDialog {
   Status status_ = Status::kInProgress;
 };
 
-}  // namespace orbit_qt
+}  // namespace orbit_move_files_to_documents
 
-#endif  // ORBIT_QT_MOVE_FILES_DIALOG_H_
+#endif  // MOVE_FILES_TO_DOCUMENTS_MOVE_FILES_DIALOG_H_
