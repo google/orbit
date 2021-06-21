@@ -382,6 +382,13 @@ message CGroupMemoryUsage {
   int64 active_file_bytes = 12;
 }
 
+message MemoryEventWrapper {
+  uint64 timestamp_ns = 1;
+  SystemMemoryUsage system_memory_usage = 2;
+  ProcessMemoryUsage process_memory_usage = 3;
+  CGroupMemoryUsage cgroup_memory_usage = 4;
+}
+
 message ModulesSnapshot {
   int32 pid = 1;
   uint64 timestamp_ns = 2;
