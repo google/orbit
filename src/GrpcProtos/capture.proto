@@ -347,13 +347,16 @@ message SystemMemoryUsage {
 }
 
 message ProcessMemoryUsage {
+  reserved 3;
   int32 pid = 1;
   uint64 timestamp_ns = 2;
   // These fields are retrieved from /proc/<pid>/stat. See
   // https://man7.org/linux/man-pages/man5/proc.5.html for the documentation.
-  int64 rss_pages = 3;
   int64 minflt = 4;
   int64 majflt = 5;
+  // This field is retrieved from /proc/<pid>/status. See
+  // https://man7.org/linux/man-pages/man5/proc.5.html for the documentation.
+  int64 rss_anon_kb = 6;
 }
 
 message CGroupMemoryUsage {

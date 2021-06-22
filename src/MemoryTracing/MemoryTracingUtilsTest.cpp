@@ -33,11 +33,11 @@ void ExpectSystemMemoryUsageEq(const SystemMemoryUsage& system_memory_usage,
 }
 
 void ExpectProcessMemoryUsageEq(const ProcessMemoryUsage& process_memory_usage,
-                                int rss_pages = kMissingInfo, int minflt = kMissingInfo,
-                                int majflt = kMissingInfo) {
-  EXPECT_EQ(process_memory_usage.rss_pages(), rss_pages);
+                                int minflt = kMissingInfo, int majflt = kMissingInfo,
+                                int rss_anon_kb = kMissingInfo) {
   EXPECT_EQ(process_memory_usage.minflt(), minflt);
   EXPECT_EQ(process_memory_usage.majflt(), majflt);
+  EXPECT_EQ(process_memory_usage.rss_anon_kb(), rss_anon_kb);
 }
 
 void ExpectCGroupMemoryUsageEq(const CGroupMemoryUsage& cgroup_memory_usage,
@@ -350,13 +350,12 @@ nr_unstable 0)",
 }
 
 TEST(MemoryUtils, UpdateProcessMemoryUsageFromProcessStat) {
-  const int kRssPages = 2793;
   const int kMinorPageFaults = 20;
   const int kMajorPageFaults = 1;
 
   const std::string kValidProcessStat = absl::Substitute(
-      R"(9562 (TargetProcess) S 9561 9561 9561 0 -1 123456789 $1 3173 $2 0 7 18 1 7 20 0 10 0 123456789 123456789 $0 123456789 1 1 0 0 0 0 0 0 2 0 0 0 17 6 0 0 0 0 0 0 0 0 0 0 0 0 0)",
-      kRssPages, kMinorPageFaults, kMajorPageFaults);
+      R"(9562 (TargetProcess) S 9561 9561 9561 0 -1 123456789 $0 3173 $1 0 7 18 1 7 20 0 10 0 123456789 123456789 2793 123456789 1 1 0 0 0 0 0 0 2 0 0 0 17 6 0 0 0 0 0 0 0 0 0 0 0 0 0)",
+      kMinorPageFaults, kMajorPageFaults);
   const std::string kPartialProcessStat = R"(9562 (TargetProcess) S 9561 9561 9561)";
   const std::string kEmptyProcessStat = "";
 
@@ -365,7 +364,7 @@ TEST(MemoryUtils, UpdateProcessMemoryUsageFromProcessStat) {
     ErrorMessageOr<void> updating_result =
         UpdateProcessMemoryUsageFromProcessStat(kValidProcessStat, &process_memory_usage);
     EXPECT_FALSE(updating_result.has_error());
-    ExpectProcessMemoryUsageEq(process_memory_usage, kRssPages, kMinorPageFaults, kMajorPageFaults);
+    ExpectProcessMemoryUsageEq(process_memory_usage, kMinorPageFaults, kMajorPageFaults);
   }
 
   {
@@ -380,6 +379,96 @@ TEST(MemoryUtils, UpdateProcessMemoryUsageFromProcessStat) {
     ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
     ErrorMessageOr<void> updating_result =
         UpdateProcessMemoryUsageFromProcessStat(kEmptyProcessStat, &process_memory_usage);
+    EXPECT_TRUE(updating_result.has_error());
+    ExpectProcessMemoryUsageEq(process_memory_usage);
+  }
+}
+
+TEST(MemoryUtils, UpdateProcessMemoryUsageFromProcessStatus) {
+  const int kRssAnonKb = 10264;
+
+  const std::string kValidProcessStatus = absl::Substitute(
+      R"(Name:   bash
+Umask:  0022
+State:  S (sleeping)
+Tgid:   17248
+Ngid:   0
+Pid:    17248
+PPid:   17200
+TracerPid:      0
+Uid:    1000    1000    1000    1000
+Gid:    100     100     100     100
+FDSize: 256
+Groups: 16 33 100
+NStgid: 17248
+NSpid:  17248
+NSpgid: 17248
+NSsid:  17200
+VmPeak:     131168 kB
+VmSize:     131168 kB
+VmLck:           0 kB
+VmPin:           0 kB
+VmHWM:       13484 kB
+VmRSS:       13484 kB
+RssAnon:     $0 kB
+RssFile:      3220 kB
+RssShmem:        0 kB
+VmData:      10332 kB
+VmStk:         136 kB
+VmExe:         992 kB
+VmLib:        2104 kB
+VmPTE:          76 kB
+VmPMD:          12 kB
+VmSwap:          0 kB
+HugetlbPages:          0 kB
+CoreDumping:    0
+Threads:        1
+SigQ:   0/3067
+SigPnd: 0000000000000000
+ShdPnd: 0000000000000000
+SigBlk: 0000000000010000
+SigIgn: 0000000000384004
+SigCgt: 000000004b813efb
+CapInh: 0000000000000000
+CapPrm: 0000000000000000
+CapEff: 0000000000000000
+CapBnd: ffffffffffffffff
+CapAmb: 0000000000000000
+NoNewPrivs:     0
+Seccomp:        0
+Speculation_Store_Bypass:       vulnerable
+Cpus_allowed:   00000001
+Cpus_allowed_list:      0
+Mems_allowed:   1
+Mems_allowed_list:      0
+voluntary_ctxt_switches:        150
+nonvoluntary_ctxt_switches:     545)",
+      kRssAnonKb);
+  const std::string kPartialProcessStatus = R"(Name:   bash
+Umask:  0022
+State:  S (sleeping))";
+  const std::string kEmptyProcessStatus = "";
+
+  {
+    ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
+    ErrorMessageOr<void> updating_result =
+        UpdateProcessMemoryUsageFromProcessStatus(kValidProcessStatus, &process_memory_usage);
+    EXPECT_FALSE(updating_result.has_error());
+    ExpectProcessMemoryUsageEq(process_memory_usage, kMissingInfo, kMissingInfo, kRssAnonKb);
+  }
+
+  {
+    ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
+    ErrorMessageOr<void> updating_result =
+        UpdateProcessMemoryUsageFromProcessStatus(kPartialProcessStatus, &process_memory_usage);
+    EXPECT_TRUE(updating_result.has_error());
+    ExpectProcessMemoryUsageEq(process_memory_usage);
+  }
+
+  {
+    ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
+    ErrorMessageOr<void> updating_result =
+        UpdateProcessMemoryUsageFromProcessStatus(kEmptyProcessStatus, &process_memory_usage);
     EXPECT_TRUE(updating_result.has_error());
     ExpectProcessMemoryUsageEq(process_memory_usage);
   }

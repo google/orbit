@@ -26,6 +26,8 @@ namespace orbit_memory_tracing {
 [[nodiscard]] orbit_grpc_protos::ProcessMemoryUsage CreateAndInitializeProcessMemoryUsage();
 [[nodiscard]] ErrorMessageOr<void> UpdateProcessMemoryUsageFromProcessStat(
     std::string_view stat_content, orbit_grpc_protos::ProcessMemoryUsage* process_memory_usage);
+[[nodiscard]] ErrorMessageOr<void> UpdateProcessMemoryUsageFromProcessStatus(
+    std::string_view status_content, orbit_grpc_protos::ProcessMemoryUsage* process_memory_usage);
 [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ProcessMemoryUsage> GetProcessMemoryUsage(
     int32_t pid) noexcept;
 

@@ -150,7 +150,7 @@ ErrorMessageOr<SystemMemoryUsage> GetSystemMemoryUsage() noexcept {
 
 ProcessMemoryUsage CreateAndInitializeProcessMemoryUsage() {
   ProcessMemoryUsage process_memory_usage;
-  process_memory_usage.set_rss_pages(kMissingInfo);
+  process_memory_usage.set_rss_anon_kb(kMissingInfo);
   process_memory_usage.set_minflt(kMissingInfo);
   process_memory_usage.set_majflt(kMissingInfo);
   return process_memory_usage;
@@ -165,7 +165,6 @@ ErrorMessageOr<void> UpdateProcessMemoryUsageFromProcessStat(
   // the /proc/<PID>/stat file records 52 process status information on a single line, in a fixed
   // order. We are interested in the following fields:
   //   Field index | Name   | Format | Meaning
-  //    24         | rss    | %ld    | # of pages the process has in real memory
   //    10         | minflt | %lu    | # of minor faults the process has made
   //    12         | majflt | %lu    | # of major faults the process has made
   std::vector<std::string> splits = absl::StrSplit(stat_content, ' ', absl::SkipWhitespace{});
@@ -175,12 +174,6 @@ ErrorMessageOr<void> UpdateProcessMemoryUsageFromProcessStat(
 
   int64_t value;
   std::string error_message;
-  if (absl::SimpleAtoi(splits[23], &value)) {
-    process_memory_usage->set_rss_pages(value);
-  } else {
-    absl::StrAppend(&error_message, "Fail to extract rss value from: ", splits[23], "\n");
-  }
-
   if (absl::SimpleAtoi(splits[9], &value)) {
     process_memory_usage->set_minflt(value);
   } else {
@@ -197,15 +190,40 @@ ErrorMessageOr<void> UpdateProcessMemoryUsageFromProcessStat(
   return outcome::success();
 }
 
+ErrorMessageOr<void> UpdateProcessMemoryUsageFromProcessStatus(
+    std::string_view status_content, ProcessMemoryUsage* process_memory_usage) {
+  if (status_content.empty()) return ErrorMessage("Empty file content.");
+
+  std::vector<std::string> lines = absl::StrSplit(status_content, '\n', absl::SkipEmpty());
+  for (std::string_view line : lines) {
+    std::vector<std::string> splits =
+        absl::StrSplit(line, absl::ByAnyChar(": \t"), absl::SkipWhitespace{});
+    if (splits[0] == "RssAnon") {
+      if (splits.size() < 3 || splits[2] != "kB") {
+        return ErrorMessage(absl::StrFormat("Wrong format in line: %s\n", line));
+      }
+
+      int64_t value;
+      if (!absl::SimpleAtoi(splits[1], &value)) {
+        return ErrorMessage(absl::StrFormat("Fail to extract value in line: %s\n", line));
+      }
+
+      process_memory_usage->set_rss_anon_kb(value);
+      return outcome::success();
+    }
+  }
+
+  return ErrorMessage("RssAnon value not found in the file content.");
+}
+
 ErrorMessageOr<ProcessMemoryUsage> GetProcessMemoryUsage(int32_t pid) noexcept {
   ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
   process_memory_usage.set_pid(pid);
   process_memory_usage.set_timestamp_ns(orbit_base::CaptureTimestampNs());
 
-  const std::string kProcessMemoryUsageAndPageFaultsFilename =
-      absl::StrFormat("/proc/%d/stat", pid);
+  const std::string kProcessPageFaultsFilename = absl::StrFormat("/proc/%d/stat", pid);
   ErrorMessageOr<std::string> reading_result =
-      orbit_base::ReadFileToString(kProcessMemoryUsageAndPageFaultsFilename);
+      orbit_base::ReadFileToString(kProcessPageFaultsFilename);
   if (reading_result.has_error()) {
     ERROR("%s", reading_result.error().message());
     return reading_result.error();
@@ -213,8 +231,21 @@ ErrorMessageOr<ProcessMemoryUsage> GetProcessMemoryUsage(int32_t pid) noexcept {
   ErrorMessageOr<void> updating_result =
       UpdateProcessMemoryUsageFromProcessStat(reading_result.value(), &process_memory_usage);
   if (updating_result.has_error()) {
-    ERROR("Error while updating ProcessMemoryUsage from %s: %s",
-          kProcessMemoryUsageAndPageFaultsFilename, updating_result.error().message());
+    ERROR("Error while updating ProcessMemoryUsage from %s: %s", kProcessPageFaultsFilename,
+          updating_result.error().message());
+  }
+
+  const std::string kProcessMemoryUsageFilename = absl::StrFormat("/proc/%d/status", pid);
+  reading_result = orbit_base::ReadFileToString(kProcessMemoryUsageFilename);
+  if (reading_result.has_error()) {
+    ERROR("%s", reading_result.error().message());
+    return reading_result.error();
+  }
+  updating_result =
+      UpdateProcessMemoryUsageFromProcessStatus(reading_result.value(), &process_memory_usage);
+  if (updating_result.has_error()) {
+    ERROR("Error while updating ProcessMemoryUsage from %s: %s", kProcessMemoryUsageFilename,
+          updating_result.error().message());
   }
 
   return process_memory_usage;
@@ -272,8 +303,8 @@ ErrorMessageOr<void> UpdateCGroupMemoryUsageFromMemoryStat(std::string_view memo
   for (std::string_view line : lines) {
     std::vector<std::string> splits = absl::StrSplit(line, ' ', absl::SkipWhitespace{});
     // According to the document https://www.kernel.org/doc/Documentation/cgroup-v1/memory.txt:
-    // Each line of the memory.stat file consists of a parameter name, followed by a whitespace, and
-    // the value of the parameter. Also the memory size unit is fixed to "bytes".
+    // Each line of the memory.stat file consists of a parameter name, followed by a whitespace,
+    // and the value of the parameter. Also the memory size unit is fixed to "bytes".
     if (splits.size() < 2) {
       absl::StrAppend(&error_message, "Wrong format in line: ", line, "\n");
       continue;
