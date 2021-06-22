@@ -12,6 +12,7 @@
 #include "MoveFilesProcess.h"
 #include "OrbitBase/File.h"
 #include "Path.h"
+#include "absl/strings/ascii.h"
 #include "absl/strings/str_format.h"
 
 namespace orbit_move_files_to_documents {
@@ -39,6 +40,12 @@ static bool IsDirectoryEmpty(const std::filesystem::path& directory) {
 }
 
 void TryMoveSavedDataLocationIfNeeded() {
+  constexpr const char* kEnvDontMoveData = "ORBIT_DONT_MOVE_FROM_APPDATA";
+  if (char* value = std::getenv(kEnvDontMoveData);
+      value != nullptr && value != std::string{"0"} && absl::AsciiStrToLower(value) != "false") {
+    return;
+  }
+
   if (IsDirectoryEmpty(orbit_core::GetPresetDirPriorTo1_66()) &&
       IsDirectoryEmpty(orbit_core::GetCaptureDirPriorTo1_66())) {
     return;
