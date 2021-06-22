@@ -46,7 +46,7 @@
 #include "Path.h"
 #include "SessionSetup/Connections.h"
 #include "SessionSetup/DeploymentConfigurations.h"
-#include "SessionSetup/ProfilingTargetDialog.h"
+#include "SessionSetup/SessionSetupDialog.h"
 #include "SessionSetup/TargetConfiguration.h"
 #include "SessionSetup/servicedeploymanager.h"
 #include "SourcePathsMapping/MappingManager.h"
@@ -95,10 +95,10 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
   orbit_metrics_uploader::ScopedMetric metric{
       metrics_uploader.get(), orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_EXIT};
 
-  // If Orbit starts with loading a capture file, we skip ProfilingTargetDialog and create a
+  // If Orbit starts with loading a capture file, we skip SessionSetupDialog and create a
   // FileTarget from capture_file_path. After creating the FileTarget, we reset
   // skip_profiling_target_dialog as false such that if a user ends the previous session, Orbit
-  // will return to a ProfilingTargetDialog.
+  // will return to a SessionSetupDialog.
   bool skip_profiling_target_dialog = !capture_file_path.empty();
   while (true) {
     {
@@ -106,7 +106,7 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
         target_config = orbit_session_setup::FileTarget(capture_file_path);
         skip_profiling_target_dialog = false;
       } else {
-        orbit_session_setup::ProfilingTargetDialog target_dialog{
+        orbit_session_setup::SessionSetupDialog target_dialog{
             &ssh_connection_artifacts, std::move(target_config), metrics_uploader.get()};
         target_config = target_dialog.Exec();
 

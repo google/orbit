@@ -11,13 +11,13 @@
 #include "MetricsUploader/MetricsUploaderStub.h"
 #include "OrbitSsh/Context.h"
 #include "SessionSetup/Connections.h"
-#include "SessionSetup/ProfilingTargetDialog.h"
+#include "SessionSetup/SessionSetupDialog.h"
 
 namespace orbit_session_setup {
 
 // TODO(b/189838600) Add tests that check correctness.
 
-TEST(ProfilingTargetDialog, SmokeTest) {
+TEST(SessionSetupDialog, SmokeTest) {
   auto ssh_context = orbit_ssh::Context::Create();
   ASSERT_TRUE(ssh_context.has_value());
 
@@ -28,7 +28,7 @@ TEST(ProfilingTargetDialog, SmokeTest) {
 
   orbit_metrics_uploader::MetricsUploaderStub uploader{};
 
-  ProfilingTargetDialog dialog{&ssh_artifacts, std::nullopt, &uploader};
+  SessionSetupDialog dialog{&ssh_artifacts, std::nullopt, &uploader};
 
   QApplication::processEvents();
   EXPECT_TRUE(dialog.isEnabled());

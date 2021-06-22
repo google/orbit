@@ -13,12 +13,12 @@ namespace orbit_session_setup {
 
 /*
  * StadiaTarget describes a successful connection to an instance and a selected process. The
- * class is built in ProfilingTargetDialog and mainly used in OrbitMainWindow. This class is meant
- * to be constructed and then not modified anymore. Only ProfilingTargetDialog is allowed to modify
+ * class is built in SessionSetupDialog and mainly used in OrbitMainWindow. This class is meant
+ * to be constructed and then not modified anymore. Only SessionSetupDialog is allowed to modify
  * the members, which is used to move out members for reusing them.
  */
 class StadiaTarget {
-  friend class ProfilingTargetDialog;
+  friend class SessionSetupDialog;
 
  public:
   explicit StadiaTarget(StadiaConnection&& connection,
@@ -44,13 +44,13 @@ class StadiaTarget {
 
 /*
  * LocalTarget describes a successful connection to an OrbitService running on the local machine
- * and a selected process. The class is built in ProfilingTargetDialog and mainly used in
+ * and a selected process. The class is built in SessionSetupDialog and mainly used in
  * OrbitMainWindow. This class is meant to be constructed and then not modified anymore. Only
- * ProfilingTargetDialog is allowed to modify the members, which is used to move out members for
+ * SessionSetupDialog is allowed to modify the members, which is used to move out members for
  * reusing them.
  */
 class LocalTarget {
-  friend class ProfilingTargetDialog;
+  friend class SessionSetupDialog;
 
  public:
   explicit LocalTarget(LocalConnection&& connection,
