@@ -7,9 +7,9 @@
 #include <QSignalSpy>
 #include <QTest>
 
-#include "DoubleClickableLabel.h"
+#include "SessionSetup/DoubleClickableLabel.h"
 
-namespace orbit_qt {
+namespace orbit_session_setup {
 
 TEST(DoubleClickableLabel, DoubleClickedSignalledOnDoubleClick) {
   DoubleClickableLabel label;
@@ -27,4 +27,4 @@ TEST(DoubleClickableLabel, DoubleClickedNotSignalledOnSingleClick) {
   EXPECT_EQ(spy.count(), 0);
 }
 
-}  // namespace orbit_qt
+}  // namespace orbit_session_setup

@@ -205,7 +205,7 @@
                  </widget>
                 </item>
                </layout>
-               <widget class="orbit_qt::OverlayWidget" name="instancesTableOverlay" native="true">
+               <widget class="orbit_session_setup::OverlayWidget" name="instancesTableOverlay" native="true">
                 <property name="geometry">
                  <rect>
                   <x>0</x>
@@ -273,9 +273,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>orbit_qt::OverlayWidget</class>
+   <class>orbit_session_setup::OverlayWidget</class>
    <extends>QWidget</extends>
-   <header>OverlayWidget.h</header>
+   <header>SessionSetup/OverlayWidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ProfilingTargetDialog.h"
+#include "SessionSetup/ProfilingTargetDialog.h"
 
 #include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
@@ -41,15 +41,14 @@
 
 #include "CaptureFileInfo/LoadCaptureWidget.h"
 #include "ClientServices/ProcessManager.h"
-#include "ConnectToStadiaWidget.h"
-#include "Connections.h"
 #include "OrbitBase/Logging.h"
-#include "OverlayWidget.h"
 #include "Path.h"
-#include "ProcessItemModel.h"
-#include "TargetConfiguration.h"
+#include "SessionSetup/ConnectToStadiaWidget.h"
+#include "SessionSetup/Connections.h"
+#include "SessionSetup/OverlayWidget.h"
+#include "SessionSetup/ProcessItemModel.h"
+#include "SessionSetup/TargetConfiguration.h"
 #include "process.pb.h"
-#include "servicedeploymanager.h"
 #include "ui_ProfilingTargetDialog.h"
 
 ABSL_DECLARE_FLAG(bool, local);
@@ -59,7 +58,7 @@ namespace {
 constexpr int kProcessesRowHeight = 19;
 }  // namespace
 
-namespace orbit_qt {
+namespace orbit_session_setup {
 
 using orbit_capture_file_info::LoadCaptureWidget;
 using orbit_grpc_protos::ProcessInfo;
@@ -532,4 +531,4 @@ void ProfilingTargetDialog::SetTargetAndStateMachineInitialState(FileTarget targ
   state_machine_.setInitialState(&state_file_);
 }
 
-}  // namespace orbit_qt
+}  // namespace orbit_session_setup

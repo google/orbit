@@ -15,7 +15,6 @@
 #include <QMessageBox>
 #include <QMetaType>
 #include <QObject>
-#include <QProcessEnvironment>
 #include <QString>
 #include <Qt>
 #include <cstdint>
@@ -36,8 +35,6 @@
 #endif
 
 #include "AccessibilityAdapter.h"
-#include "Connections.h"
-#include "DeploymentConfigurations.h"
 #include "ImGuiOrbit.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/CrashHandler.h"
@@ -47,13 +44,15 @@
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "Path.h"
-#include "ProfilingTargetDialog.h"
+#include "SessionSetup/Connections.h"
+#include "SessionSetup/DeploymentConfigurations.h"
+#include "SessionSetup/ProfilingTargetDialog.h"
+#include "SessionSetup/TargetConfiguration.h"
+#include "SessionSetup/servicedeploymanager.h"
 #include "SourcePathsMapping/MappingManager.h"
 #include "Style/Style.h"
-#include "TargetConfiguration.h"
 #include "opengldetect.h"
 #include "orbitmainwindow.h"
-#include "servicedeploymanager.h"
 
 #ifdef ORBIT_CRASH_HANDLING
 #include "CrashHandler/CrashHandler.h"
@@ -61,20 +60,17 @@
 #endif
 
 ABSL_DECLARE_FLAG(uint16_t, grpc_port);
-ABSL_DECLARE_FLAG(std::string, collector_root_password);
-ABSL_DECLARE_FLAG(std::string, collector);
 ABSL_DECLARE_FLAG(bool, local);
 ABSL_DECLARE_FLAG(bool, devmode);
-ABSL_DECLARE_FLAG(bool, nodeploy);
 
 // This flag is needed by the E2E tests to ensure a clean state before running.
 ABSL_FLAG(bool, clear_source_paths_mappings, false, "Clear all the stored source paths mappings");
 
-using ServiceDeployManager = orbit_qt::ServiceDeployManager;
-using DeploymentConfiguration = orbit_qt::DeploymentConfiguration;
-using ScopedConnection = orbit_ssh_qt::ScopedConnection;
-using GrpcPort = ServiceDeployManager::GrpcPort;
-using Context = orbit_ssh::Context;
+using orbit_session_setup::DeploymentConfiguration;
+using orbit_session_setup::NoDeployment;
+using orbit_ssh_qt::ScopedConnection;
+using GrpcPort = orbit_session_setup::ServiceDeployManager::GrpcPort;
+using orbit_ssh::Context;
 
 Q_DECLARE_METATYPE(std::error_code);
 
@@ -86,10 +82,10 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
 
   const GrpcPort grpc_port{/*.grpc_port =*/absl::GetFlag(FLAGS_grpc_port)};
 
-  orbit_qt::SshConnectionArtifacts ssh_connection_artifacts{ssh_context, grpc_port,
-                                                            &deployment_configuration};
+  orbit_session_setup::SshConnectionArtifacts ssh_connection_artifacts{ssh_context, grpc_port,
+                                                                       &deployment_configuration};
 
-  std::optional<orbit_qt::TargetConfiguration> target_config;
+  std::optional<orbit_session_setup::TargetConfiguration> target_config;
 
   std::unique_ptr<orbit_metrics_uploader::MetricsUploader> metrics_uploader =
       orbit_metrics_uploader::MetricsUploader::CreateMetricsUploader();
@@ -107,10 +103,10 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
   while (true) {
     {
       if (skip_profiling_target_dialog) {
-        target_config = orbit_qt::FileTarget(capture_file_path);
+        target_config = orbit_session_setup::FileTarget(capture_file_path);
         skip_profiling_target_dialog = false;
       } else {
-        orbit_qt::ProfilingTargetDialog target_dialog{
+        orbit_session_setup::ProfilingTargetDialog target_dialog{
             &ssh_connection_artifacts, std::move(target_config), metrics_uploader.get()};
         target_config = target_dialog.Exec();
 
@@ -165,62 +161,6 @@ static QStringList ExtractCommandLineFlags(const std::vector<std::string>& comma
     }
   }
   return command_line_flags;
-}
-
-static std::optional<std::string> GetCollectorRootPassword(
-    const QProcessEnvironment& process_environment) {
-  constexpr const char* kEnvRootPassword = "ORBIT_COLLECTOR_ROOT_PASSWORD";
-  if (FLAGS_collector_root_password.IsSpecifiedOnCommandLine()) {
-    return absl::GetFlag(FLAGS_collector_root_password);
-  }
-
-  if (process_environment.contains(kEnvRootPassword)) {
-    return process_environment.value(kEnvRootPassword).toStdString();
-  }
-
-  return std::nullopt;
-}
-
-static std::optional<std::string> GetCollectorPath(const QProcessEnvironment& process_environment) {
-  constexpr const char* kEnvExecutablePath = "ORBIT_COLLECTOR_EXECUTABLE_PATH";
-  if (FLAGS_collector.IsSpecifiedOnCommandLine()) {
-    return absl::GetFlag(FLAGS_collector);
-  }
-
-  if (process_environment.contains(kEnvExecutablePath)) {
-    return process_environment.value(kEnvExecutablePath).toStdString();
-  }
-  return std::nullopt;
-}
-
-static orbit_qt::DeploymentConfiguration FigureOutDeploymentConfiguration() {
-  if (absl::GetFlag(FLAGS_nodeploy)) {
-    return orbit_qt::NoDeployment{};
-  }
-
-  constexpr const char* kEnvPackagePath = "ORBIT_COLLECTOR_PACKAGE_PATH";
-  constexpr const char* kEnvSignaturePath = "ORBIT_COLLECTOR_SIGNATURE_PATH";
-  constexpr const char* kEnvNoDeployment = "ORBIT_COLLECTOR_NO_DEPLOYMENT";
-
-  QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-  std::optional<std::string> collector_path = GetCollectorPath(env);
-  std::optional<std::string> collector_password = GetCollectorRootPassword(env);
-
-  if (collector_path.has_value() && collector_password.has_value()) {
-    return orbit_qt::BareExecutableAndRootPasswordDeployment{collector_path.value(),
-                                                             collector_password.value()};
-  }
-
-  if (env.contains(kEnvPackagePath) && env.contains(kEnvSignaturePath)) {
-    return orbit_qt::SignedDebianPackageDeployment{env.value(kEnvPackagePath).toStdString(),
-                                                   env.value(kEnvSignaturePath).toStdString()};
-  }
-
-  if (env.contains(kEnvNoDeployment)) {
-    return orbit_qt::NoDeployment{};
-  }
-
-  return orbit_qt::SignedDebianPackageDeployment{};
 }
 
 static void DisplayErrorToUser(const QString& message) {
@@ -379,7 +319,8 @@ int main(int argc, char* argv[]) {
 
   orbit_move_files_to_documents::TryMoveSavedDataLocationIfNeeded();
 
-  const DeploymentConfiguration deployment_configuration = FigureOutDeploymentConfiguration();
+  const DeploymentConfiguration deployment_configuration =
+      orbit_session_setup::FigureOutDeploymentConfiguration();
 
   auto context = Context::Create();
   if (!context) {

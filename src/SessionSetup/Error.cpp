@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "Error.h"
+#include "SessionSetup/Error.h"
 
 #include <absl/strings/str_format.h>
 
-namespace orbit_qt {
+namespace orbit_session_setup {
 
 std::string ErrorCategory::message(int condition) const {
   switch (static_cast<Error>(condition)) {
@@ -29,4 +29,4 @@ std::string ErrorCategory::message(int condition) const {
 
   return absl::StrFormat("Unknown error condition: %i.", condition);
 }
-}  // namespace orbit_qt
+}  // namespace orbit_session_setup

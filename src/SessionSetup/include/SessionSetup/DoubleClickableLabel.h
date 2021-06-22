@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_QT_DOUBLE_CLICKABLE_LABEL_H_
-#define ORBIT_QT_DOUBLE_CLICKABLE_LABEL_H_
+#ifndef SESSION_SETUP_DOUBLE_CLICKABLE_LABEL_H_
+#define SESSION_SETUP_DOUBLE_CLICKABLE_LABEL_H_
 
 #include <QLabel>
 #include <QMouseEvent>
 #include <QWidget>
 
-namespace orbit_qt {
+namespace orbit_session_setup {
 
 class DoubleClickableLabel : public QLabel {
   Q_OBJECT
@@ -27,6 +27,6 @@ class DoubleClickableLabel : public QLabel {
   }
 };
 
-}  // namespace orbit_qt
+}  // namespace orbit_session_setup
 
 #endif  // ORBIT_QT_DOUBLE_CLICKABLE_LABEL_H_

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ProcessItemModel.h"
+#include "SessionSetup/ProcessItemModel.h"
 
 #include <QFlags>
 #include <algorithm>
@@ -12,7 +12,7 @@
 #include "google/protobuf/util/message_differencer.h"
 #include "process.pb.h"
 
-namespace orbit_qt {
+namespace orbit_session_setup {
 
 using orbit_grpc_protos::ProcessInfo;
 
@@ -164,4 +164,4 @@ void ProcessItemModel::SetProcesses(std::vector<ProcessInfo> new_processes) {
   }
 }
 
-}  // namespace orbit_qt
+}  // namespace orbit_session_setup
