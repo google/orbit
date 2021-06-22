@@ -22,5 +22,6 @@ declare -rA docker_image_digest_mapping=(
   [ggp_release]="gcr.io/orbitprofiler/ggp_release@sha256:e52179e3b1c31a06d0ae92a8f750963c2696cf741506290baa340dfa63c437ca" \
   [ggp_relwithdebinfo]="gcr.io/orbitprofiler/ggp_release@sha256:e52179e3b1c31a06d0ae92a8f750963c2696cf741506290baa340dfa63c437ca" \
   [ggp_debug]="gcr.io/orbitprofiler/ggp_debug@sha256:e52179e3b1c31a06d0ae92a8f750963c2696cf741506290baa340dfa63c437ca" \
+  [iwyu]="gcr.io/orbitprofiler/iwyu@sha256:0cfab7678821b0df872595f2fdcb042bf6ad00ad20fba8873e65684cc7783be9" \
   [license_headers]="gcr.io/orbitprofiler/license_headers@sha256:f131914386ba4cd91610c89722bfcdf02eba1bf5d47ed49050a629df28173e93" \
 )
