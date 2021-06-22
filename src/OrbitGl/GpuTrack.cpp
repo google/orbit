@@ -70,8 +70,8 @@ GpuTrack::GpuTrack(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::
   submission_track_->SetName(absl::StrFormat("%s_submissions", timeline));
   marker_track_->SetName(absl::StrFormat("%s_marker", timeline));
 
-  // Gpu are expanded by default. Their subtracks are expanded by default, but are however not shown
-  // while the Gpu track is collapsed.
+  // Gpu are collapsed by default. Their subtracks are expanded by default, but are however not
+  // shown while the Gpu track is collapsed.
   collapse_toggle_->SetCollapsed(true);
 }
 

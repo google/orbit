@@ -16,9 +16,9 @@ AccessibleTriangleToggle::AccessibleTriangleToggle(TriangleToggle* triangle_togg
 
 orbit_accessibility::AccessibilityState AccessibleTriangleToggle::AccessibleState() const {
   if (triangle_toggle_->IsCollapsible()) {
-    return orbit_accessibility::AccessibilityState::Disabled;
+    return orbit_accessibility::AccessibilityState::Normal;
   }
-  return orbit_accessibility::AccessibilityState::Normal;
+  return orbit_accessibility::AccessibilityState::Disabled;
 }
 
 const orbit_accessibility::AccessibleInterface* AccessibleTriangleToggle::AccessibleParent() const {

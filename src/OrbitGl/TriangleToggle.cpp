@@ -16,13 +16,11 @@
 #include "TimeGraph.h"
 #include "Track.h"
 
-TriangleToggle::TriangleToggle(bool is_collapsed, bool is_collapsible, StateChangeHandler handler,
-                               TimeGraph* time_graph, orbit_gl::Viewport* viewport,
-                               TimeGraphLayout* layout, Track* track, float size)
+TriangleToggle::TriangleToggle(StateChangeHandler handler, TimeGraph* time_graph,
+                               orbit_gl::Viewport* viewport, TimeGraphLayout* layout, Track* track,
+                               float size)
     : CaptureViewElement(track, time_graph, viewport, layout),
       track_(track),
-      is_collapsed_(is_collapsed),
-      is_collapsible_(is_collapsible),
       handler_(std::move(handler)) {
   SetSize(size, size);
 }

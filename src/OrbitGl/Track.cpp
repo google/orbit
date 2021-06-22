@@ -31,7 +31,6 @@ Track::Track(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewpo
   constexpr uint32_t kMaxIndentationLevel = 5;
   uint32_t capped_indentation_level = std::min(indentation_level, kMaxIndentationLevel);
   collapse_toggle_ = std::make_shared<TriangleToggle>(
-      false /*is_collapsed*/, true /*is_collapsible*/,
       [this](bool is_collapsed) { OnCollapseToggle(is_collapsed); }, time_graph, viewport, layout,
       this, 10.f - capped_indentation_level);
 
