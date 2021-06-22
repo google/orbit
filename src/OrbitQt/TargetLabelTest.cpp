@@ -17,6 +17,7 @@ TEST(TargetLabel, Constructor) {
   EXPECT_TRUE(label.GetFileText().isEmpty());
   EXPECT_TRUE(label.GetToolTip().isEmpty());
   EXPECT_FALSE(label.GetIconType().has_value());
+  EXPECT_FALSE(label.GetFilePath().has_value());
 }
 
 TEST(TargetLabel, ChangeToFileTarget) {
@@ -31,6 +32,8 @@ TEST(TargetLabel, ChangeToFileTarget) {
   EXPECT_TRUE(label.GetTargetText().isEmpty());
   EXPECT_TRUE(label.GetToolTip().isEmpty());
   EXPECT_FALSE(label.GetIconType().has_value());
+  ASSERT_TRUE(label.GetFilePath().has_value());
+  EXPECT_EQ(label.GetFilePath().value(), path);
 }
 
 TEST(TargetLabel, ChangeToStadiaTarget) {
@@ -49,6 +52,7 @@ TEST(TargetLabel, ChangeToStadiaTarget) {
   EXPECT_NE(label.GetTargetColor(), initial_color);
   ASSERT_TRUE(label.GetIconType().has_value());
   EXPECT_EQ(label.GetIconType().value(), TargetLabel::IconType::kGreenConnectedIcon);
+  EXPECT_FALSE(label.GetFilePath().has_value());
 }
 
 TEST(TargetLabel, ChangeToLocalTarget) {
@@ -66,6 +70,7 @@ TEST(TargetLabel, ChangeToLocalTarget) {
   EXPECT_NE(label.GetTargetColor(), initial_color);
   ASSERT_TRUE(label.GetIconType().has_value());
   EXPECT_EQ(label.GetIconType().value(), TargetLabel::IconType::kGreenConnectedIcon);
+  EXPECT_FALSE(label.GetFilePath().has_value());
 }
 
 TEST(TargetLabel, SetProcessCpuUsageInPercent) {
@@ -83,6 +88,7 @@ TEST(TargetLabel, SetProcessCpuUsageInPercent) {
     EXPECT_EQ(label.GetToolTip(), initial_tool_tip);
     EXPECT_EQ(label.GetTargetColor(), initial_color);
     EXPECT_FALSE(label.GetIconType().has_value());
+    EXPECT_FALSE(label.GetFilePath().has_value());
   }
 
   label.ChangeToLocalTarget("test", 10.2);
@@ -101,6 +107,7 @@ TEST(TargetLabel, SetProcessCpuUsageInPercent) {
     EXPECT_EQ(label.GetTargetColor(), updated_color);
     ASSERT_TRUE(label.GetIconType().has_value());
     EXPECT_EQ(label.GetIconType().value(), TargetLabel::IconType::kGreenConnectedIcon);
+    EXPECT_FALSE(label.GetFilePath().has_value());
   }
 }
 
@@ -119,6 +126,7 @@ TEST(TargetLabel, SetProcessEnded) {
     EXPECT_EQ(label.GetToolTip(), initial_tool_tip);
     EXPECT_EQ(label.GetTargetColor(), initial_color);
     EXPECT_FALSE(label.GetIconType().has_value());
+    EXPECT_FALSE(label.GetFilePath().has_value());
   }
 
   label.ChangeToLocalTarget("test", 10.2);
@@ -137,6 +145,7 @@ TEST(TargetLabel, SetProcessEnded) {
     EXPECT_NE(label.GetTargetColor(), updated_color);
     ASSERT_TRUE(label.GetIconType().has_value());
     EXPECT_EQ(label.GetIconType().value(), TargetLabel::IconType::kOrangeDisconnectedIcon);
+    EXPECT_FALSE(label.GetFilePath().has_value());
   }
 }
 
@@ -155,6 +164,7 @@ TEST(TargetLabel, SetConnectionDead) {
     EXPECT_EQ(label.GetToolTip(), initial_tool_tip);
     EXPECT_EQ(label.GetTargetColor(), initial_color);
     EXPECT_FALSE(label.GetIconType().has_value());
+    EXPECT_FALSE(label.GetFilePath().has_value());
   }
 
   label.ChangeToLocalTarget("test", 10.2);
@@ -176,6 +186,7 @@ TEST(TargetLabel, SetConnectionDead) {
     EXPECT_NE(label.GetTargetColor(), updated_color);
     ASSERT_TRUE(label.GetIconType().has_value());
     EXPECT_EQ(label.GetIconType().value(), TargetLabel::IconType::kRedDisconnectedIcon);
+    EXPECT_FALSE(label.GetFilePath().has_value());
   }
 }
 
@@ -195,8 +206,10 @@ TEST(TargetLabel, SetFile) {
   EXPECT_NE(label.GetTargetColor(), initial_color);
   ASSERT_TRUE(label.GetIconType().has_value());
   EXPECT_EQ(label.GetIconType().value(), TargetLabel::IconType::kGreenConnectedIcon);
+  EXPECT_FALSE(label.GetFilePath().has_value());
 
-  label.SetFile("/some/file");
+  const std::filesystem::path path{"/some/file"};
+  label.SetFile(path);
 
   EXPECT_EQ(label.GetTargetText(), "test process (50%) @ test instance");
   EXPECT_EQ(label.GetFileText(), "file");
@@ -204,6 +217,8 @@ TEST(TargetLabel, SetFile) {
   EXPECT_NE(label.GetTargetColor(), initial_color);
   ASSERT_TRUE(label.GetIconType().has_value());
   EXPECT_EQ(label.GetIconType().value(), TargetLabel::IconType::kGreenConnectedIcon);
+  ASSERT_TRUE(label.GetFilePath().has_value());
+  EXPECT_EQ(label.GetFilePath().value(), path);
 }
 
 TEST(TargetLabel, Clear) {
@@ -224,7 +239,8 @@ TEST(TargetLabel, Clear) {
   EXPECT_TRUE(label.GetFileText().isEmpty());
   EXPECT_TRUE(label.GetToolTip().isEmpty());
   EXPECT_NE(label.GetTargetColor(), ended_color);
-  ASSERT_FALSE(label.GetIconType().has_value());
+  EXPECT_FALSE(label.GetIconType().has_value());
+  EXPECT_FALSE(label.GetFilePath().has_value());
 }
 
 TEST(TargetLabel, DifferentColors) {

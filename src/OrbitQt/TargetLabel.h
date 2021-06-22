@@ -7,6 +7,7 @@
 
 #include <QObject>
 #include <QWidget>
+#include <filesystem>
 #include <memory>
 #include <optional>
 
@@ -50,6 +51,9 @@ class TargetLabel : public QWidget {
   [[nodiscard]] QString GetFileText() const;
   [[nodiscard]] QString GetToolTip() const { return toolTip(); }
   [[nodiscard]] const std::optional<IconType>& GetIconType() const { return icon_type_; }
+  [[nodiscard]] const std::optional<std::filesystem::path>& GetFilePath() const {
+    return file_path_;
+  }
 
  signals:
   void SizeChanged();
@@ -59,10 +63,12 @@ class TargetLabel : public QWidget {
   QString process_;
   QString machine_;
   std::optional<IconType> icon_type_;
+  std::optional<std::filesystem::path> file_path_;
 
   void SetColor(const QColor& color);
   void SetIcon(IconType icon_type);
   void ClearIcon();
+  void OpenContainingFolder();
 };
 
 }  // namespace orbit_qt

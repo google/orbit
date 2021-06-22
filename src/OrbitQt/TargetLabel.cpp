@@ -4,12 +4,17 @@
 
 #include "TargetLabel.h"
 
+#include <QAction>
+#include <QDesktopServices>
 #include <QImage>
+#include <QMenu>
 #include <QPalette>
 #include <QPixmap>
+#include <QUrl>
 #include <memory>
 #include <optional>
 
+#include "DoubleClickableLabel.h"
 #include "ui_TargetLabel.h"
 
 namespace {
@@ -60,6 +65,20 @@ namespace fs = std::filesystem;
 TargetLabel::TargetLabel(QWidget* parent)
     : QWidget(parent), ui_(std::make_unique<Ui::TargetLabel>()) {
   ui_->setupUi(this);
+
+  QObject::connect(ui_->fileLabel, &DoubleClickableLabel::DoubleClicked, this,
+                   &TargetLabel::OpenContainingFolder);
+
+  QObject::connect(ui_->fileLabel, &DoubleClickableLabel::customContextMenuRequested, this,
+                   [this](const QPoint& pos) {
+                     QAction action{QIcon(":/actions/folder"), "Open Containing Folder", this};
+                     QObject::connect(&action, &QAction::triggered, this,
+                                      &TargetLabel::OpenContainingFolder);
+
+                     QMenu menu;
+                     menu.addAction(&action);
+                     menu.exec(mapToGlobal(pos));
+                   });
 }
 
 TargetLabel::~TargetLabel() = default;
@@ -69,6 +88,7 @@ void TargetLabel::ChangeToFileTarget(const FileTarget& file_target) {
 }
 
 void TargetLabel::SetFile(const std::filesystem::path& file_path) {
+  file_path_ = file_path;
   ui_->fileLabel->setText(QString::fromStdString(file_path.filename().string()));
   ui_->fileLabel->setToolTip(QString::fromStdString(file_path.string()));
   ui_->fileLabel->setVisible(true);
@@ -155,6 +175,7 @@ bool TargetLabel::SetConnectionDead(const QString& error_message) {
 void TargetLabel::Clear() {
   process_ = "";
   machine_ = "";
+  file_path_.reset();
   ui_->fileLabel->setText({});
   ui_->targetLabel->setText({});
   ui_->fileLabel->setVisible(false);
@@ -203,6 +224,14 @@ void TargetLabel::ClearIcon() {
   icon_type_ = std::nullopt;
   ui_->iconLabel->setPixmap(QPixmap{});
   ui_->iconLabel->setVisible(false);
+}
+
+void TargetLabel::OpenContainingFolder() {
+  if (!file_path_.has_value()) return;
+  QUrl url = QUrl::fromLocalFile(QString::fromStdString(file_path_->parent_path().string()));
+  if (!QDesktopServices::openUrl(url)) {
+    ERROR("Opening containing folder of \"%s\"", file_path_->string());
+  }
 }
 
 }  // namespace orbit_qt
