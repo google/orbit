@@ -10,6 +10,9 @@ declare -rA docker_image_tag_mapping=( \
   [iwyu]="2" \
   [coverage_clang9]="1" \
   [clang_format]="20210622T084030.289589958" \
+  [ggp_release]="20210622T105923.736243550" \
+  [ggp_relwithdebinfo]="20210622T110005.748389893" \
+  [ggp_debug]="20210622T110008.723567043" \
   [license_headers]="20210622T081800.703185280" \
 )
 

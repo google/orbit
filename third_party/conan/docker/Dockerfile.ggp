@@ -1,0 +1,26 @@
+# Copyright (c) 2021 The Orbit Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+FROM ubuntu:20.04
+
+RUN useradd -Ums /bin/bash conan && \
+    apt-get -qq update && \
+    DEBIAN_FRONTEND=noninteractive \
+        apt-get install -y --no-install-recommends \
+        cmake \
+        curl \
+        git \
+        gpg \
+        gpg-agent \
+        jq \
+        libtinfo5 `# libtinfo5 is needed by ggp-sdk. Dont remove it!`\
+        make \
+        ninja-build \
+        python3-pip \
+        zip && \
+    python3 -m pip install conan==1.36.0 && \
+    rm -rf /var/lib/apt/lists/*
+
+USER conan
+WORKDIR /home/conan
