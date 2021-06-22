@@ -6,5 +6,6 @@
 # Unlike tags digest hashes can't be overwritten and allows us to require
 # an exact version of a container.
 declare -rA docker_image_digest_mapping=(
+  [clang_format]="gcr.io/orbitprofiler/clang_format@sha256:6729c09de588cf10c7385dcd7efb3dfbeae9b1d866eda1f5ac23a4379835d216" \
   [license_headers]="gcr.io/orbitprofiler/license_headers@sha256:f131914386ba4cd91610c89722bfcdf02eba1bf5d47ed49050a629df28173e93" \
 )
