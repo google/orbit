@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ConnectToStadiaWidget.h"
+#include "SessionSetup/ConnectToStadiaWidget.h"
 
 #include <absl/strings/str_format.h>
 #include <grpcpp/create_channel.h>
@@ -28,24 +28,29 @@
 #include <system_error>
 #include <utility>
 
-#include "Error.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/InstanceItemModel.h"
 #include "OrbitSsh/AddrAndPort.h"
 #include "OrbitSshQt/ScopedConnection.h"
-#include "OverlayWidget.h"
-#include "servicedeploymanager.h"
+#include "SessionSetup/Error.h"
+#include "SessionSetup/OverlayWidget.h"
+#include "SessionSetup/servicedeploymanager.h"
+#include "ui_ConnectToStadiaWidget.h"
 
 namespace {
 const QString kRememberChosenInstance{"RememberChosenInstance"};
 }  // namespace
 
-namespace orbit_qt {
+namespace orbit_session_setup {
 
 using orbit_ggp::Instance;
 using orbit_ssh_qt::ScopedConnection;
+
+// The destructor needs to be defined here because it needs to see the type
+// `Ui::ConnectToStadiaWidget`. The header file only contains a forward declaration.
+ConnectToStadiaWidget::~ConnectToStadiaWidget() noexcept = default;
 
 ConnectToStadiaWidget::ConnectToStadiaWidget(QWidget* parent)
     : QWidget(parent),
@@ -290,18 +295,17 @@ void ConnectToStadiaWidget::DeployOrbitService() {
       ssh_connection_artifacts_->GetSshContext(), credentials,
       ssh_connection_artifacts_->GetGrpcPort());
 
-  ScopedConnection label_connection{QObject::connect(
-      service_deploy_manager_.get(), &orbit_qt::ServiceDeployManager::statusMessage,
-      ui_->instancesTableOverlay, &OverlayWidget::SetStatusMessage)};
+  ScopedConnection label_connection{
+      QObject::connect(service_deploy_manager_.get(), &ServiceDeployManager::statusMessage,
+                       ui_->instancesTableOverlay, &OverlayWidget::SetStatusMessage)};
   ScopedConnection cancel_connection{
       QObject::connect(ui_->instancesTableOverlay, &OverlayWidget::Cancelled,
-                       service_deploy_manager_.get(), &orbit_qt::ServiceDeployManager::Cancel)};
+                       service_deploy_manager_.get(), &ServiceDeployManager::Cancel)};
 
   const auto deployment_result = service_deploy_manager_->Exec();
   if (!deployment_result) {
     Disconnect();
-    if (deployment_result.error() ==
-        make_error_code(orbit_qt::Error::kUserCanceledServiceDeployment)) {
+    if (deployment_result.error() == make_error_code(Error::kUserCanceledServiceDeployment)) {
       return;
     }
     emit ErrorOccurred(QString("Orbit was unable to successfully connect to the Instance. The "
@@ -455,4 +459,6 @@ void ConnectToStadiaWidget::showEvent(QShowEvent* event) {
   DetachRadioButton();
 }
 
-}  // namespace orbit_qt
+bool ConnectToStadiaWidget::IsActive() const { return ui_->contentFrame->isEnabled(); }
+
+}  // namespace orbit_session_setup

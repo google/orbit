@@ -15,14 +15,9 @@ target_sources(
           CallTreeViewItemModel.h
           CallTreeWidget.h
           CaptureOptionsDialog.h
-          Connections.h
-          ConnectToStadiaWidget.h
           CopyKeySequenceEnabledTreeView.h
           CutoutWidget.h
-          DeploymentConfigurations.h
-          DoubleClickableLabel.h
           ElidedLabel.h
-          Error.h
           FilterPanelWidget.h
           FilterPanelWidgetAction.h
           orbitaboutdialog.h
@@ -35,13 +30,7 @@ target_sources(
           orbittablemodel.h
           orbittreeview.h
           opengldetect.h
-          ProcessItemModel.h
-          OverlayWidget.h
-          ProfilingTargetDialog.h
           resource.h
-          servicedeploymanager.h
-          TargetConfiguration.h
-          TargetLabel.h
           TutorialContent.h
           TutorialOverlay.h)
 
@@ -54,14 +43,10 @@ target_sources(
           CallTreeWidget.ui
           CaptureOptionsDialog.cpp
           CaptureOptionsDialog.ui
-          ConnectToStadiaWidget.cpp
-          ConnectToStadiaWidget.ui
-          Error.cpp
           ElidedLabel.cpp
           FilterPanelWidget.cpp
           FilterPanelWidgetAction.cpp
           StatusListenerImpl.cpp
-          DeploymentConfigurations.cpp
           orbitaboutdialog.cpp
           orbitaboutdialog.ui
           orbitdataviewpanel.cpp
@@ -78,14 +63,6 @@ target_sources(
           orbittablemodel.cpp
           orbittreeview.cpp
           opengldetect.cpp
-          ProcessItemModel.cpp
-          OverlayWidget.cpp
-          OverlayWidget.ui
-          ProfilingTargetDialog.cpp
-          ProfilingTargetDialog.ui
-          servicedeploymanager.cpp
-          TargetLabel.cpp
-          TargetLabel.ui
           TutorialContent.cpp
           TutorialOverlay.cpp
           TutorialOverlay.ui
@@ -112,6 +89,7 @@ target_link_libraries(
           OrbitSshQt
           OrbitVersion
           QtUtils
+          SessionSetup
           SourcePathsMapping
           SourcePathsMappingUI
           Qt5::Widgets
@@ -136,11 +114,7 @@ target_sources(OrbitQtTests
         PRIVATE AccessibilityAdapterTest.cpp
                 AnnotatingSourceCodeDialogTest.cpp
                 CallTreeViewItemModelTest.cpp
-                DoubleClickableLabelTest.cpp
-                ProcessItemModelTest.cpp
-                ProfilingTargetDialogTest.cpp
                 StatusListenerImplTest.cpp
-                TargetLabelTest.cpp
                 TutorialOverlayTest.cpp)
 
 target_include_directories(OrbitQtTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

@@ -11,11 +11,11 @@
 #include <string>
 
 #include "OrbitBase/Logging.h"
-#include "ProcessItemModel.h"
 #include "QtUtils/AssertNoQtLogWarnings.h"
+#include "SessionSetup/ProcessItemModel.h"
 #include "process.pb.h"
 
-namespace orbit_qt {
+namespace orbit_session_setup {
 
 TEST(ProcessItemModel, ProcessItemModel) {
   // This installs a QtMessageHandler for this scope. Any warning, critical or fatal message
@@ -54,4 +54,4 @@ TEST(ProcessItemModel, ProcessItemModel) {
   EXPECT_EQ(model.rowCount(), 0);
 }
 
-}  // namespace orbit_qt
+}  // namespace orbit_session_setup

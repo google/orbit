@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_QT_PROCESS_ITEM_MODEL_H_
-#define ORBIT_QT_PROCESS_ITEM_MODEL_H_
+#ifndef SESSION_SETUP_PROCESS_ITEM_MODEL_H_
+#define SESSION_SETUP_PROCESS_ITEM_MODEL_H_
 
 #include <QAbstractItemModel>
 #include <QModelIndex>
@@ -15,7 +15,7 @@
 
 #include "process.pb.h"
 
-namespace orbit_qt {
+namespace orbit_session_setup {
 
 class ProcessItemModel : public QAbstractItemModel {
   Q_OBJECT
@@ -39,8 +39,8 @@ class ProcessItemModel : public QAbstractItemModel {
   std::vector<orbit_grpc_protos::ProcessInfo> processes_;
 };
 
-}  // namespace orbit_qt
+}  // namespace orbit_session_setup
 
 Q_DECLARE_METATYPE(const orbit_grpc_protos::ProcessInfo*);
 
-#endif  // ORBIT_QT_PROCESS_ITEM_MODEL_H_
+#endif  // SESSION_SETUP_PROCESS_ITEM_MODEL_H_

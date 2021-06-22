@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_QT_CONNECTIONS_H_
-#define ORBIT_QT_CONNECTIONS_H_
+#ifndef SESSION_SETUP_CONNECTIONS_H_
+#define SESSION_SETUP_CONNECTIONS_H_
 
 #include <memory>
 #include <optional>
@@ -16,10 +16,10 @@
 #include "OrbitGgp/Instance.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSsh/Credentials.h"
+#include "SessionSetup/servicedeploymanager.h"
 #include "grpcpp/channel.h"
-#include "servicedeploymanager.h"
 
-namespace orbit_qt {
+namespace orbit_session_setup {
 
 /*
  * This class holds data that is required to establish a ssh connection. This includes the context,
@@ -106,6 +106,6 @@ class LocalConnection {
   std::shared_ptr<grpc::Channel> grpc_channel_;
 };
 
-}  // namespace orbit_qt
+}  // namespace orbit_session_setup
 
-#endif  // ORBIT_QT_CONNECTIONS_H_
+#endif  // SESSION_SETUP_CONNECTIONS_H_

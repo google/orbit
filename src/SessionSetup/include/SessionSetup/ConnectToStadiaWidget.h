@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_QT_CONNECT_TO_STADIA_WIDGET_H_
-#define ORBIT_QT_CONNECT_TO_STADIA_WIDGET_H_
+#ifndef SESSION_SETUP_CONNECT_TO_STADIA_WIDGET_H_
+#define SESSION_SETUP_CONNECT_TO_STADIA_WIDGET_H_
 
 #include <absl/container/flat_hash_map.h>
 #include <grpcpp/channel.h>
@@ -30,10 +30,13 @@
 #include "OrbitGgp/InstanceItemModel.h"
 #include "OrbitGgp/SshInfo.h"
 #include "OrbitSsh/Credentials.h"
-#include "servicedeploymanager.h"
-#include "ui_ConnectToStadiaWidget.h"
+#include "SessionSetup/servicedeploymanager.h"
 
-namespace orbit_qt {
+namespace Ui {
+class ConnectToStadiaWidget;
+}
+
+namespace orbit_session_setup {
 
 class ConnectToStadiaWidget : public QWidget {
   Q_OBJECT
@@ -41,8 +44,9 @@ class ConnectToStadiaWidget : public QWidget {
 
  public:
   explicit ConnectToStadiaWidget(QWidget* parent = nullptr);
+  ~ConnectToStadiaWidget() noexcept override;
   [[nodiscard]] std::optional<StadiaConnection> StopAndClearConnection();
-  [[nodiscard]] bool IsActive() const { return ui_->contentFrame->isEnabled(); }
+  [[nodiscard]] bool IsActive() const;
   [[nodiscard]] const std::shared_ptr<grpc::Channel>& GetGrpcChannel() { return grpc_channel_; }
   void SetSshConnectionArtifacts(SshConnectionArtifacts* ssh_connection_artifacts);
   void ClearSshConnectionArtifacts() { ssh_connection_artifacts_ = nullptr; }
@@ -110,6 +114,6 @@ class ConnectToStadiaWidget : public QWidget {
   void TrySelectRememberedInstance();
 };
 
-}  // namespace orbit_qt
+}  // namespace orbit_session_setup
 
-#endif  // ORBIT_QT_CONNECT_TO_STADIA_WIDGET_H_
+#endif  // SESSION_SETUP_CONNECT_TO_STADIA_WIDGET_H_

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TargetLabel.h"
+#include "SessionSetup/TargetLabel.h"
 
 #include <QAction>
 #include <QDesktopServices>
@@ -14,7 +14,7 @@
 #include <memory>
 #include <optional>
 
-#include "DoubleClickableLabel.h"
+#include "SessionSetup/DoubleClickableLabel.h"
 #include "ui_TargetLabel.h"
 
 namespace {
@@ -58,7 +58,7 @@ QPixmap GetRedDisconnectedIcon() {
 
 }  // namespace
 
-namespace orbit_qt {
+namespace orbit_session_setup {
 
 namespace fs = std::filesystem;
 
@@ -234,4 +234,4 @@ void TargetLabel::OpenContainingFolder() {
   }
 }
 
-}  // namespace orbit_qt
+}  // namespace orbit_session_setup

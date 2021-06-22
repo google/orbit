@@ -39,13 +39,13 @@
 #include "MainThreadExecutor.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/CrashHandler.h"
+#include "SessionSetup/TargetConfiguration.h"
+#include "SessionSetup/TargetLabel.h"
+#include "SessionSetup/servicedeploymanager.h"
 #include "StatusListener.h"
-#include "TargetConfiguration.h"
-#include "TargetLabel.h"
 #include "capture_data.pb.h"
 #include "orbitglwidget.h"
 #include "process.pb.h"
-#include "servicedeploymanager.h"
 
 namespace Ui {
 class OrbitMainWindow;
@@ -58,7 +58,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   static constexpr int kQuitOrbitReturnCode = 0;
   static constexpr int kEndSessionReturnCode = 1;
 
-  explicit OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration,
+  explicit OrbitMainWindow(orbit_session_setup::TargetConfiguration target_configuration,
                            const orbit_base::CrashHandler* crash_handler,
                            orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr,
                            const QStringList& command_line_flags = QStringList());
@@ -96,7 +96,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   void RestoreDefaultTabLayout();
 
-  [[nodiscard]] orbit_qt::TargetConfiguration ClearTargetConfiguration();
+  [[nodiscard]] orbit_session_setup::TargetConfiguration ClearTargetConfiguration();
 
   void ShowTooltip(std::string_view message) override;
   void ShowSourceCode(
@@ -170,9 +170,9 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   QTabWidget* FindParentTabWidget(const QWidget* widget) const;
 
-  void SetTarget(const orbit_qt::StadiaTarget& target);
-  void SetTarget(const orbit_qt::LocalTarget& target);
-  void SetTarget(const orbit_qt::FileTarget& target);
+  void SetTarget(const orbit_session_setup::StadiaTarget& target);
+  void SetTarget(const orbit_session_setup::LocalTarget& target);
+  void SetTarget(const orbit_session_setup::FileTarget& target);
 
   void OnProcessListUpdated(const std::vector<orbit_grpc_protos::ProcessInfo>& processes);
 
@@ -204,7 +204,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   std::vector<OrbitGLWidget*> gl_widgets_;
   std::unique_ptr<OrbitGLWidget> introspection_widget_ = nullptr;
   QFrame* hint_frame_ = nullptr;
-  orbit_qt::TargetLabel* target_label_ = nullptr;
+  orbit_session_setup::TargetLabel* target_label_ = nullptr;
   QPushButton* capture_log_button_ = nullptr;
 
   QStringList command_line_flags_;
@@ -226,7 +226,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   };
   std::map<QTabWidget*, TabWidgetLayout> default_tab_layout_;
 
-  orbit_qt::TargetConfiguration target_configuration_;
+  orbit_session_setup::TargetConfiguration target_configuration_;
 
   enum class TargetProcessState { kRunning, kEnded };
 

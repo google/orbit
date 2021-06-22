@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_QT_TARGET_CONFIGURATION_H_
-#define ORBIT_QT_TARGET_CONFIGURATION_H_
+#ifndef SESSION_SETUP_TARGET_CONFIGURATION_H_
+#define SESSION_SETUP_TARGET_CONFIGURATION_H_
 
 #include <utility>
 
-#include "Connections.h"
+#include "SessionSetup/Connections.h"
 
-namespace orbit_qt {
+namespace orbit_session_setup {
 
 /*
  * StadiaTarget describes a successful connection to an instance and a selected process. The
@@ -92,6 +92,6 @@ class FileTarget {
 
 using TargetConfiguration = std::variant<StadiaTarget, LocalTarget, FileTarget>;
 
-}  // namespace orbit_qt
+}  // namespace orbit_session_setup
 
-#endif  // ORBIT_QT_TARGET_CONFIGURATION_H_
+#endif  // SESSION_SETUP_TARGET_CONFIGURATION_H_

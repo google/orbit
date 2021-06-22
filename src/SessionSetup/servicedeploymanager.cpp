@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "servicedeploymanager.h"
+#include "SessionSetup/servicedeploymanager.h"
 
 #include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
@@ -22,7 +22,6 @@
 #include <variant>
 #include <vector>
 
-#include "Error.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Promise.h"
@@ -33,6 +32,7 @@
 #include "OrbitSshQt/SftpCopyToRemoteOperation.h"
 #include "OrbitSshQt/Task.h"
 #include "QtUtils/EventLoop.h"
+#include "SessionSetup/Error.h"
 
 ABSL_DECLARE_FLAG(bool, devmode);
 
@@ -42,7 +42,7 @@ static const std::string kSigDestinationPath = "/tmp/orbitprofiler.deb.asc";
 static const std::string_view kSshWatchdogPassphrase = "start_watchdog";
 static const std::chrono::milliseconds kSshWatchdogInterval(1000);
 
-namespace orbit_qt {
+namespace orbit_session_setup {
 
 namespace {
 template <typename Func>
@@ -552,7 +552,7 @@ outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::ExecImpl()
   } else if (std::holds_alternative<BareExecutableAndRootPasswordDeployment>(
                  *deployment_configuration_)) {
     const auto& config =
-        std::get<orbit_qt::BareExecutableAndRootPasswordDeployment>(*deployment_configuration_);
+        std::get<BareExecutableAndRootPasswordDeployment>(*deployment_configuration_);
     OUTCOME_TRY(CopyOrbitServiceExecutable(config));
     OUTCOME_TRY(CopyOrbitApiLibrary(config));
     OUTCOME_TRY(StartOrbitServicePrivileged(config));
@@ -654,4 +654,4 @@ void ServiceDeployManager::Shutdown() {
   });
 }
 
-}  // namespace orbit_qt
+}  // namespace orbit_session_setup

@@ -82,7 +82,7 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="orbit_qt::ConnectToStadiaWidget" name="stadiaWidget" native="true"/>
+          <widget class="orbit_session_setup::ConnectToStadiaWidget" name="stadiaWidget" native="true"/>
          </item>
          <item>
           <widget class="QFrame" name="localFrame">
@@ -244,7 +244,7 @@
                 </widget>
                </item>
               </layout>
-              <widget class="orbit_qt::OverlayWidget" name="processesTableOverlay" native="true">
+              <widget class="orbit_session_setup::OverlayWidget" name="processesTableOverlay" native="true">
                <property name="geometry">
                 <rect>
                  <x>0</x>
@@ -295,7 +295,7 @@
          </spacer>
         </item>
         <item>
-         <widget class="orbit_qt::TargetLabel" name="targetLabel" native="true"/>
+         <widget class="orbit_session_setup::TargetLabel" name="targetLabel" native="true"/>
         </item>
         <item>
          <widget class="QPushButton" name="confirmButton">
@@ -316,15 +316,15 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>orbit_qt::OverlayWidget</class>
+   <class>orbit_session_setup::OverlayWidget</class>
    <extends>QWidget</extends>
-   <header>OverlayWidget.h</header>
+   <header>SessionSetup/OverlayWidget.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>orbit_qt::ConnectToStadiaWidget</class>
+   <class>orbit_session_setup::ConnectToStadiaWidget</class>
    <extends>QWidget</extends>
-   <header>ConnectToStadiaWidget.h</header>
+   <header>SessionSetup/ConnectToStadiaWidget.h</header>
   </customwidget>
   <customwidget>
    <class>orbit_capture_file_info::LoadCaptureWidget</class>
@@ -332,9 +332,9 @@
    <header>CaptureFileInfo/LoadCaptureWidget.h</header>
   </customwidget>
   <customwidget>
-   <class>orbit_qt::TargetLabel</class>
+   <class>orbit_session_setup::TargetLabel</class>
    <extends>QWidget</extends>
-   <header>TargetLabel.h</header>
+   <header>SessionSetup/TargetLabel.h</header>
   </customwidget>
  </customwidgets>
  <resources>

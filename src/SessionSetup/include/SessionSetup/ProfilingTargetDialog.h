@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_QT_PROFILING_TARGET_DIALOG_H_
-#define ORBIT_QT_PROFILING_TARGET_DIALOG_H_
+#ifndef SESSION_SETUP_PROFILING_TARGET_DIALOG_H_
+#define SESSION_SETUP_PROFILING_TARGET_DIALOG_H_
 
 #include <QDialog>
 #include <QHistoryState>
@@ -32,7 +32,7 @@
 namespace Ui {
 class ProfilingTargetDialog;  // IWYU pragma: keep
 }
-namespace orbit_qt {
+namespace orbit_session_setup {
 
 class ProfilingTargetDialog : public QDialog {
   Q_OBJECT
@@ -109,6 +109,6 @@ class ProfilingTargetDialog : public QDialog {
   void SetTargetAndStateMachineInitialState(FileTarget target);
 };
 
-}  // namespace orbit_qt
+}  // namespace orbit_session_setup
 
-#endif  // ORBIT_QT_PROFILING_TARGET_DIALOG_H_
+#endif  // SESSION_SETUP_PROFILING_TARGET_DIALOG_H_

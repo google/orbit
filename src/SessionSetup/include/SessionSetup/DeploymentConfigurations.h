@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_QT_DEPLOYMENT_CONFIGURATIONS_H_
-#define ORBIT_QT_DEPLOYMENT_CONFIGURATIONS_H_
+#ifndef SESSION_SETUP_DEPLOYMENT_CONFIGURATIONS_H_
+#define SESSION_SETUP_DEPLOYMENT_CONFIGURATIONS_H_
 
 #include <filesystem>
 #include <string>
 #include <utility>
 #include <variant>
 
-namespace orbit_qt {
+namespace orbit_session_setup {
 
 struct SignedDebianPackageDeployment {
   SignedDebianPackageDeployment();
@@ -33,6 +33,8 @@ struct NoDeployment {};
 using DeploymentConfiguration = std::variant<SignedDebianPackageDeployment,
                                              BareExecutableAndRootPasswordDeployment, NoDeployment>;
 
-}  // namespace orbit_qt
+DeploymentConfiguration FigureOutDeploymentConfiguration();
 
-#endif  // ORBIT_QT_DEPLOYMENT_CONFIGURATIONS_H_
+}  // namespace orbit_session_setup
+
+#endif  // SESSION_SETUP_DEPLOYMENT_CONFIGURATIONS_H_

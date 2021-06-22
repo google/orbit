@@ -6,10 +6,10 @@
 
 #include <memory>
 
-#include "TargetLabel.h"
+#include "SessionSetup/TargetLabel.h"
 #include "process.pb.h"
 
-namespace orbit_qt {
+namespace orbit_session_setup {
 
 TEST(TargetLabel, Constructor) {
   TargetLabel label{};
@@ -277,4 +277,4 @@ TEST(TargetLabel, DifferentColors) {
   EXPECT_NE(process_ended_color, connection_dead_color);
 }
 
-}  // namespace orbit_qt
+}  // namespace orbit_session_setup

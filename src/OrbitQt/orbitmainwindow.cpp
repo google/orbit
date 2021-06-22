@@ -76,7 +76,6 @@
 #include "CodeViewer/Dialog.h"
 #include "CodeViewer/FontSizeInEm.h"
 #include "CodeViewer/OwningDialog.h"
-#include "Connections.h"
 #include "DataViewFactory.h"
 #include "DataViews/DataViewType.h"
 #include "GlCanvas.h"
@@ -92,14 +91,16 @@
 #include "Path.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "SamplingReport.h"
+#include "SessionSetup/Connections.h"
+#include "SessionSetup/TargetConfiguration.h"
+#include "SessionSetup/TargetLabel.h"
+#include "SessionSetup/servicedeploymanager.h"
 #include "SourcePathsMapping/Mapping.h"
 #include "SourcePathsMapping/MappingManager.h"
 #include "SourcePathsMappingUI/AskUserForFile.h"
 #include "StatusListenerImpl.h"
 #include "SyntaxHighlighter/Cpp.h"
 #include "SyntaxHighlighter/X86Assembly.h"
-#include "TargetConfiguration.h"
-#include "TargetLabel.h"
 #include "TutorialContent.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/match.h"
@@ -110,7 +111,6 @@
 #include "orbitglwidget.h"
 #include "orbitlivefunctions.h"
 #include "orbitsamplingreport.h"
-#include "servicedeploymanager.h"
 #include "services.pb.h"
 #include "types.h"
 #include "ui_orbitmainwindow.h"
@@ -129,7 +129,11 @@ using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_CHECK_FALSE;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
 
-using orbit_qt::ServiceDeployManager;
+using orbit_session_setup::LocalTarget;
+using orbit_session_setup::ServiceDeployManager;
+using orbit_session_setup::StadiaTarget;
+using orbit_session_setup::TargetConfiguration;
+using orbit_session_setup::TargetLabel;
 
 using orbit_data_views::DataViewType;
 
@@ -143,7 +147,7 @@ constexpr int kHintFrameWidth = 140;
 constexpr int kHintFrameHeight = 45;
 }  // namespace
 
-OrbitMainWindow::OrbitMainWindow(orbit_qt::TargetConfiguration target_configuration,
+OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
                                  const orbit_base::CrashHandler* crash_handler,
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader,
                                  const QStringList& command_line_flags)
@@ -411,7 +415,7 @@ void OrbitMainWindow::SetupHintFrame() {
 void OrbitMainWindow::SetupTargetLabel() {
   auto* target_widget = new QWidget();
   target_widget->setStyleSheet(QString("background-color: %1").arg(kMediumGrayColor));
-  target_label_ = new orbit_qt::TargetLabel{};
+  target_label_ = new TargetLabel{};
   target_label_->setContentsMargins(6, 0, 0, 0);
   auto* disconnect_target_button = new QPushButton("End Session");
   auto* target_layout = new QHBoxLayout();
@@ -425,12 +429,11 @@ void OrbitMainWindow::SetupTargetLabel() {
   QObject::connect(disconnect_target_button, &QPushButton::clicked, this,
                    [this] { on_actionEnd_Session_triggered(); });
 
-  QObject::connect(target_label_, &orbit_qt::TargetLabel::SizeChanged, this,
-                   [this, target_widget]() {
-                     target_label_->adjustSize();
-                     target_widget->adjustSize();
-                     ui->menuBar->setCornerWidget(target_widget, Qt::TopRightCorner);
-                   });
+  QObject::connect(target_label_, &TargetLabel::SizeChanged, this, [this, target_widget]() {
+    target_label_->adjustSize();
+    target_widget->adjustSize();
+    ui->menuBar->setCornerWidget(target_widget, Qt::TopRightCorner);
+  });
 }
 
 void OrbitMainWindow::SetupStatusBarLogButton() {
@@ -1238,8 +1241,8 @@ void OrbitMainWindow::closeEvent(QCloseEvent* event) {
 }
 
 void OrbitMainWindow::OnStadiaConnectionError(std::error_code error) {
-  CHECK(std::holds_alternative<orbit_qt::StadiaTarget>(target_configuration_));
-  const orbit_qt::StadiaTarget& target = std::get<orbit_qt::StadiaTarget>(target_configuration_);
+  CHECK(std::holds_alternative<StadiaTarget>(target_configuration_));
+  const StadiaTarget& target = std::get<StadiaTarget>(target_configuration_);
 
   target.GetProcessManager()->SetProcessListUpdateListener(nullptr);
 
@@ -1256,8 +1259,8 @@ void OrbitMainWindow::OnStadiaConnectionError(std::error_code error) {
   QMessageBox::critical(this, "Connection error", error_message, QMessageBox::Ok);
 }
 
-void OrbitMainWindow::SetTarget(const orbit_qt::StadiaTarget& target) {
-  const orbit_qt::StadiaConnection* connection = target.GetConnection();
+void OrbitMainWindow::SetTarget(const StadiaTarget& target) {
+  const orbit_session_setup::StadiaConnection* connection = target.GetConnection();
   ServiceDeployManager* service_deploy_manager = connection->GetServiceDeployManager();
   app_->SetSecureCopyCallback([service_deploy_manager](std::string_view source,
                                                        std::string_view destination) {
@@ -1285,8 +1288,8 @@ void OrbitMainWindow::SetTarget(const orbit_qt::StadiaTarget& target) {
   is_connected_ = true;
 }
 
-void OrbitMainWindow::SetTarget(const orbit_qt::LocalTarget& target) {
-  const orbit_qt::LocalConnection* connection = target.GetConnection();
+void OrbitMainWindow::SetTarget(const LocalTarget& target) {
+  const orbit_session_setup::LocalConnection* connection = target.GetConnection();
   app_->SetGrpcChannel(connection->GetGrpcChannel());
   app_->SetProcessManager(target.GetProcessManager());
   app_->SetTargetProcess(target.GetProcess());
@@ -1304,7 +1307,7 @@ void OrbitMainWindow::SetTarget(const orbit_qt::LocalTarget& target) {
   is_connected_ = true;
 }
 
-void OrbitMainWindow::SetTarget(const orbit_qt::FileTarget& target) {
+void OrbitMainWindow::SetTarget(const orbit_session_setup::FileTarget& target) {
   target_label_->ChangeToFileTarget(target);
   OpenCapture(target.GetCaptureFilePath().string());
 }
@@ -1328,13 +1331,13 @@ void OrbitMainWindow::OnProcessListUpdated(
   UpdateProcessConnectionStateDependentWidgets();
 }
 
-orbit_qt::TargetConfiguration OrbitMainWindow::ClearTargetConfiguration() {
-  if (std::holds_alternative<orbit_qt::StadiaTarget>(target_configuration_)) {
-    std::get<orbit_qt::StadiaTarget>(target_configuration_)
+TargetConfiguration OrbitMainWindow::ClearTargetConfiguration() {
+  if (std::holds_alternative<StadiaTarget>(target_configuration_)) {
+    std::get<StadiaTarget>(target_configuration_)
         .GetProcessManager()
         ->SetProcessListUpdateListener(nullptr);
-  } else if (std::holds_alternative<orbit_qt::LocalTarget>(target_configuration_)) {
-    std::get<orbit_qt::LocalTarget>(target_configuration_)
+  } else if (std::holds_alternative<LocalTarget>(target_configuration_)) {
+    std::get<LocalTarget>(target_configuration_)
         .GetProcessManager()
         ->SetProcessListUpdateListener(nullptr);
   }

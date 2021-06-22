@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_QT_SERVICE_DEPLOY_MANAGER_H_
-#define ORBIT_QT_SERVICE_DEPLOY_MANAGER_H_
+#ifndef SESSION_SETUP_SERVICE_DEPLOY_MANAGER_H_
+#define SESSION_SETUP_SERVICE_DEPLOY_MANAGER_H_
 
 #include <stdint.h>
 
@@ -29,7 +29,7 @@
 #include "OrbitSshQt/Task.h"
 #include "OrbitSshQt/Tunnel.h"
 
-namespace orbit_qt {
+namespace orbit_session_setup {
 
 class ServiceDeployManager : public QObject {
   Q_OBJECT
@@ -100,6 +100,6 @@ class ServiceDeployManager : public QObject {
   void handleSocketError(std::error_code);
 };
 
-}  // namespace orbit_qt
+}  // namespace orbit_session_setup
 
-#endif  // ORBIT_QT_SERVICE_DEPLOY_MANAGER_H_
+#endif  // SESSION_SETUP_SERVICE_DEPLOY_MANAGER_H_

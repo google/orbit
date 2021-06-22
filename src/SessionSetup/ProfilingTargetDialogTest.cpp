@@ -8,12 +8,12 @@
 #include <QPushButton>
 #include <optional>
 
-#include "Connections.h"
 #include "MetricsUploader/MetricsUploaderStub.h"
 #include "OrbitSsh/Context.h"
-#include "ProfilingTargetDialog.h"
+#include "SessionSetup/Connections.h"
+#include "SessionSetup/ProfilingTargetDialog.h"
 
-namespace orbit_qt {
+namespace orbit_session_setup {
 
 // TODO(b/189838600) Add tests that check correctness.
 
@@ -40,4 +40,4 @@ TEST(ProfilingTargetDialog, SmokeTest) {
   EXPECT_EQ(result, std::nullopt);
 }
 
-}  // namespace orbit_qt
+}  // namespace orbit_session_setup
