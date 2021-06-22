@@ -27,7 +27,10 @@
     <number>0</number>
    </property>
    <item>
-    <widget class="QLabel" name="fileLabel">
+    <widget class="orbit_qt::DoubleClickableLabel" name="fileLabel">
+     <property name="contextMenuPolicy">
+      <enum>Qt::CustomContextMenu</enum>
+     </property>
      <property name="text">
       <string/>
      </property>
@@ -58,6 +61,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>orbit_qt::DoubleClickableLabel</class>
+   <extends>QLabel</extends>
+   <header>DoubleClickableLabel.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="../../icons/orbiticons.qrc"/>
  </resources>

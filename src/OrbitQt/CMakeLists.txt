@@ -20,6 +20,7 @@ target_sources(
           CopyKeySequenceEnabledTreeView.h
           CutoutWidget.h
           DeploymentConfigurations.h
+          DoubleClickableLabel.h
           ElidedLabel.h
           Error.h
           FilterPanelWidget.h
@@ -134,6 +135,7 @@ target_sources(OrbitQtTests
         PRIVATE AccessibilityAdapterTest.cpp
                 AnnotatingSourceCodeDialogTest.cpp
                 CallTreeViewItemModelTest.cpp
+                DoubleClickableLabelTest.cpp
                 ProcessItemModelTest.cpp
                 ProfilingTargetDialogTest.cpp
                 StatusListenerImplTest.cpp
