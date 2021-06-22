@@ -297,7 +297,11 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
       break;
     }
     case TimerInfo::kSystemMemoryUsage: {
-      ProcessMemoryTrackingTimer(timer_info);
+      ProcessSystemMemoryTrackingTimer(timer_info);
+      break;
+    }
+    case TimerInfo::kCGroupAndProcessMemoryUsage: {
+      ProcessCGroupAndProcessMemoryTrackingTimer(timer_info);
       break;
     }
     case TimerInfo::kNone: {
@@ -425,7 +429,7 @@ void TimeGraph::ProcessValueTrackingTimer(const TimerInfo& timer_info) {
   }
 }
 
-void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
+void TimeGraph::ProcessSystemMemoryTrackingTimer(const TimerInfo& timer_info) {
   int64_t total_kb = orbit_api::Decode<int64_t>(timer_info.registers(
       static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kTotalKb)));
   int64_t unused_kb = orbit_api::Decode<int64_t>(
@@ -480,6 +484,60 @@ void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
     double warning_threshold_raw_value =
         static_cast<double>(warning_threshold_kb) / kMegabytesToKilobytes;
     track->SetWarningThreshold(warning_threshold_pretty_label, warning_threshold_raw_value);
+  }
+}
+
+void TimeGraph::ProcessCGroupAndProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
+  int64_t cgroup_limit_bytes = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(OrbitApp::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupLimitBytes)));
+  int64_t cgroup_rss_bytes = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(OrbitApp::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupRssBytes)));
+  int64_t cgroup_mapped_file_bytes =
+      orbit_api::Decode<int64_t>(timer_info.registers(static_cast<size_t>(
+          OrbitApp::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupMappedFileBytes)));
+  int64_t process_rss_anon_kb = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(OrbitApp::CGroupAndProcessMemoryUsageEncodingIndex::kProcessRssAnonKb)));
+
+  if (cgroup_limit_bytes == kMissingInfo || cgroup_rss_bytes == kMissingInfo ||
+      cgroup_mapped_file_bytes == kMissingInfo || process_rss_anon_kb == kMissingInfo) {
+    return;
+  }
+
+  constexpr double kMegabytesToBytes = 1024.0 * 1024.0;
+  constexpr double kMegabytesToKilobytes = 1024.0;
+  orbit_gl::CGroupAndProcessMemoryTrack* track = track_manager_->GetCGroupAndProcessMemoryTrack();
+  if (track == nullptr) {
+    const std::array<std::string, orbit_gl::kCGroupAndProcessMemoryTrackDimension> kSeriesNames = {
+        absl::StrFormat("Process [%s] Resident Anonymous Memory", capture_data_->process_name()),
+        "Other Processes Resident Anonymous Memory",
+        absl::StrFormat("CGroup [%s] Mapped File", timer_info.cgroup_name()),
+        absl::StrFormat("CGroup [%s] Unused", timer_info.cgroup_name())};
+    track = track_manager_->CreateAndGetCGroupAndProcessMemoryTrack(kSeriesNames);
+  }
+  double cgroup_limit_mb = static_cast<double>(cgroup_limit_bytes) / kMegabytesToBytes;
+  double cgroup_rss_anon_mb = static_cast<double>(cgroup_rss_bytes) / kMegabytesToBytes;
+  double cgroup_mapped_file_mb = static_cast<double>(cgroup_mapped_file_bytes) / kMegabytesToBytes;
+  double process_rss_anon_mb = static_cast<double>(process_rss_anon_kb) / kMegabytesToKilobytes;
+  double other_rss_anon_mb = cgroup_rss_anon_mb - process_rss_anon_mb;
+  double unused_mb = cgroup_limit_mb - cgroup_rss_anon_mb - cgroup_mapped_file_mb;
+  track->AddValues(timer_info.start(),
+                   {process_rss_anon_mb, other_rss_anon_mb, cgroup_mapped_file_mb, unused_mb});
+  track->OnTimer(timer_info);
+
+  if (!track->GetValueUpperBound().has_value()) {
+    const std::string kValueUpperBoundLabel =
+        absl::StrFormat("CGroup [%s] Memory Limit", timer_info.cgroup_name());
+    std::string cgroup_limit_pretty_size =
+        orbit_display_formats::GetDisplaySize(cgroup_limit_bytes);
+    std::string cgroup_limit_pretty_label =
+        absl::StrFormat("%s: %s", kValueUpperBoundLabel, cgroup_limit_pretty_size);
+    track->TrySetValueUpperBound(cgroup_limit_pretty_label, cgroup_limit_mb);
+  }
+
+  if (!track->GetValueLowerBound().has_value()) {
+    const std::string kValueLowerBoundLabel = "Minimum: 0 GB";
+    constexpr double kValueLowerBoundRawValue = 0.0;
+    track->TrySetValueLowerBound(kValueLowerBoundLabel, kValueLowerBoundRawValue);
   }
 }
 

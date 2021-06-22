@@ -32,6 +32,7 @@
 #include "Viewport.h"
 
 using orbit_client_data::CallstackData;
+using orbit_gl::CGroupAndProcessMemoryTrack;
 using orbit_gl::MemoryTrack;
 using orbit_gl::SystemMemoryTrack;
 
@@ -95,6 +96,9 @@ void TrackManager::SortTracks() {
   // Memory tracks.
   if (system_memory_track_ != nullptr && !system_memory_track_->IsEmpty()) {
     all_processes_sorted_tracks.push_back(system_memory_track_.get());
+  }
+  if (cgroup_and_process_memory_track_ != nullptr && !cgroup_and_process_memory_track_->IsEmpty()) {
+    all_processes_sorted_tracks.push_back(cgroup_and_process_memory_track_.get());
   }
 
   // Async tracks.
@@ -441,6 +445,24 @@ SystemMemoryTrack* TrackManager::CreateAndGetSystemMemoryTrack(
   }
 
   return system_memory_track_.get();
+}
+
+CGroupAndProcessMemoryTrack* TrackManager::CreateAndGetCGroupAndProcessMemoryTrack(
+    const std::array<std::string, orbit_gl::kCGroupAndProcessMemoryTrackDimension>& series_names) {
+  if (cgroup_and_process_memory_track_ == nullptr) {
+    constexpr uint8_t kTrackValueDecimalDigits = 2;
+    const std::string kTrackValueLabelUnit = "MB";
+    const std::string kTrackName =
+        absl::StrFormat("CGroup Memory Usage (%s)", kTrackValueLabelUnit);
+
+    cgroup_and_process_memory_track_ = std::make_shared<CGroupAndProcessMemoryTrack>(
+        time_graph_, time_graph_, viewport_, layout_, kTrackName, series_names, capture_data_);
+    cgroup_and_process_memory_track_->SetLabelUnit(kTrackValueLabelUnit);
+    cgroup_and_process_memory_track_->SetNumberOfDecimalDigits(kTrackValueDecimalDigits);
+    AddTrack(cgroup_and_process_memory_track_);
+  }
+
+  return cgroup_and_process_memory_track_.get();
 }
 
 uint32_t TrackManager::GetNumTimers() const {

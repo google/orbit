@@ -69,6 +69,11 @@ class TrackManager {
   orbit_gl::SystemMemoryTrack* GetSystemMemoryTrack() const { return system_memory_track_.get(); }
   orbit_gl::SystemMemoryTrack* CreateAndGetSystemMemoryTrack(
       const std::array<std::string, orbit_gl::kSystemMemoryTrackDimension>& series_names);
+  orbit_gl::CGroupAndProcessMemoryTrack* GetCGroupAndProcessMemoryTrack() const {
+    return cgroup_and_process_memory_track_.get();
+  }
+  orbit_gl::CGroupAndProcessMemoryTrack* CreateAndGetCGroupAndProcessMemoryTrack(
+      const std::array<std::string, orbit_gl::kCGroupAndProcessMemoryTrackDimension>& series_names);
 
   [[nodiscard]] bool GetIsDataFromSavedCapture() const { return data_from_saved_capture_; }
   void SetIsDataFromSavedCapture(bool value) { data_from_saved_capture_ = value; }
@@ -103,6 +108,7 @@ class TrackManager {
   std::shared_ptr<SchedulerTrack> scheduler_track_;
   ThreadTrack* tracepoints_system_wide_track_;
   std::shared_ptr<orbit_gl::SystemMemoryTrack> system_memory_track_;
+  std::shared_ptr<orbit_gl::CGroupAndProcessMemoryTrack> cgroup_and_process_memory_track_;
 
   TimeGraph* time_graph_;
   orbit_gl::Viewport* viewport_;

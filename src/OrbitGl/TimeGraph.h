@@ -192,7 +192,8 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   void ProcessValueTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
   void ProcessAsyncTimer(const std::string& track_name,
                          const orbit_client_protos::TimerInfo& timer_info);
-  void ProcessMemoryTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
+  void ProcessSystemMemoryTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
+  void ProcessCGroupAndProcessMemoryTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
 
  private:
   AccessibleInterfaceProvider* accessible_parent_;

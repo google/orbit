@@ -49,6 +49,9 @@ class MemoryTrack final : public GraphTrack<Dimension>, public AnnotationTrack {
 constexpr size_t kSystemMemoryTrackDimension = 3;
 using SystemMemoryTrack = MemoryTrack<kSystemMemoryTrackDimension>;
 
+constexpr size_t kCGroupAndProcessMemoryTrackDimension = 4;
+using CGroupAndProcessMemoryTrack = MemoryTrack<kCGroupAndProcessMemoryTrackDimension>;
+
 }  // namespace orbit_gl
 
 #endif  // ORBIT_GL_MEMORY_TRACK_H_
