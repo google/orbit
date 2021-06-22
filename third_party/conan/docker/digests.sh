@@ -7,6 +7,9 @@
 # an exact version of a container.
 declare -rA docker_image_digest_mapping=(
   [clang_format]="gcr.io/orbitprofiler/clang_format@sha256:6729c09de588cf10c7385dcd7efb3dfbeae9b1d866eda1f5ac23a4379835d216" \
+  [clang7_release]="gcr.io/orbitprofiler/clang7_release@sha256:bd8f405aad495dc67c0162401cae73996e5fa9a71ea352d53f9928c98cfc87f5" \
+  [clang7_relwithdebinfo]="gcr.io/orbitprofiler/clang7_release@sha256:bd8f405aad495dc67c0162401cae73996e5fa9a71ea352d53f9928c98cfc87f5" \
+  [clang7_debug]="gcr.io/orbitprofiler/clang7_debug@sha256:bd8f405aad495dc67c0162401cae73996e5fa9a71ea352d53f9928c98cfc87f5" \
   [clang8_release]="gcr.io/orbitprofiler/clang8_release@sha256:f9ec4c1ce0eb7e1a8d77569e36d3c7c230712bf8e215bc77ed25001015351ddb" \
   [clang8_relwithdebinfo]="gcr.io/orbitprofiler/clang8_release@sha256:f9ec4c1ce0eb7e1a8d77569e36d3c7c230712bf8e215bc77ed25001015351ddb" \
   [clang8_debug]="gcr.io/orbitprofiler/clang8_debug@sha256:f9ec4c1ce0eb7e1a8d77569e36d3c7c230712bf8e215bc77ed25001015351ddb" \
