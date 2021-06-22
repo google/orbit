@@ -65,7 +65,8 @@ target_compile_options(SessionSetupTest PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   SessionSetupTest
-  PRIVATE DoubleClickableLabelTest.cpp
+  PRIVATE ConnectToStadiaWidgetTest.cpp
+          DoubleClickableLabelTest.cpp
           ProcessItemModelTest.cpp
           SessionSetupDialogTest.cpp
           TargetLabelTest.cpp
