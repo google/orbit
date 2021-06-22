@@ -7,7 +7,6 @@
 # docker images that have versioning support enabled. For all other docker containers the tag `latest`
 # should be / will be assumed.
 declare -rA docker_image_tag_mapping=( \
-  [coverage_clang9]="1" \
   [clang_format]="20210622T084030.289589958" \
   [clang7_release]="20210622T125530.963597266" \
   [clang7_relwithdebinfo]="20210622T125713.264442242" \
@@ -18,6 +17,7 @@ declare -rA docker_image_tag_mapping=( \
   [clang9_release]="20210622T114306.097973571" \
   [clang9_relwithdebinfo]="20210622T114447.422662718" \
   [clang9_debug]="20210622T114450.448991866" \
+  [coverage_clang9]="20210622T165432.335719018" \
   [gcc9_release]="20210622T103629.868794602" \
   [gcc9_relwithdebinfo]="20210622T103809.023418816" \
   [gcc9_debug]="20210622T103812.061618308" \
