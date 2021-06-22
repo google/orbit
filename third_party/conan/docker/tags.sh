@@ -9,6 +9,7 @@
 declare -rA docker_image_tag_mapping=( \
   [iwyu]="2" \
   [coverage_clang9]="1" \
+  [clang_format]="20210622T084030.289589958" \
   [license_headers]="20210622T081800.703185280" \
 )
 
