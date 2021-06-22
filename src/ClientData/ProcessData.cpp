@@ -59,7 +59,8 @@ const std::string& ProcessData::build_id() const {
   return process_info_.build_id();
 }
 
-static bool IsModuleMapValid(const std::map<uint64_t, ModuleInMemory>& module_map) {
+[[maybe_unused]] static bool IsModuleMapValid(
+    const std::map<uint64_t, ModuleInMemory>& module_map) {
   // Check that modules do not intersect in the address space.
   uint64_t last_end_address = 0;
   for (const auto& [unused_address, module_in_memory] : module_map) {
@@ -81,7 +82,8 @@ void ProcessData::UpdateModuleInfos(absl::Span<const ModuleInfo> module_infos) {
     CHECK(success);
   }
 
-  CHECK(IsModuleMapValid(start_address_to_module_in_memory_));
+  // TODO(b/191732187): Re-enable after the bug is properly fixed.
+  // CHECK(IsModuleMapValid(start_address_to_module_in_memory_));
 }
 
 std::vector<std::string> ProcessData::FindModuleBuildIdsByPath(
@@ -121,7 +123,8 @@ void ProcessData::AddOrUpdateModuleInfo(const ModuleInfo& module_info) {
   start_address_to_module_in_memory_.insert_or_assign(module_info.address_start(),
                                                       module_in_memory);
 
-  CHECK(IsModuleMapValid(start_address_to_module_in_memory_));
+  // TODO(b/191732187): Re-enable after the bug is properly fixed.
+  // CHECK(IsModuleMapValid(start_address_to_module_in_memory_));
 }
 
 ErrorMessageOr<ModuleInMemory> ProcessData::FindModuleByAddress(uint64_t absolute_address) const {
