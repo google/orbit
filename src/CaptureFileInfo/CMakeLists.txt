@@ -44,12 +44,13 @@ target_sources(
   CaptureFileInfoTests 
   PRIVATE CaptureFileInfoTest.cpp
           ItemModelTest.cpp
+          LoadCaptureWidgetTest.cpp
           ManagerTest.cpp)
 
 target_link_libraries(
   CaptureFileInfoTests
   PRIVATE CaptureFileInfo
-          GTest::Main
+          GTest::QtGuiMain
           QtUtils
           Qt5::Test)
 
@@ -60,4 +61,10 @@ add_custom_command(TARGET CaptureFileInfoTests POST_BUILD
             ${CMAKE_CURRENT_SOURCE_DIR}/testdata/
             $<TARGET_FILE_DIR:CaptureFileInfoTests>/testdata/CaptureFileInfo)
 
-register_test(CaptureFileInfoTests)
+if (WIN32 AND "$ENV{QT_QPA_PLATFORM}" STREQUAL "offscreen")
+  register_test(CaptureFileInfoTests PROPERTIES DISABLED TRUE)
+endif()
+
+if (NOT WIN32)
+  register_test(CaptureFileInfoTests PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
+endif()
