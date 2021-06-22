@@ -434,6 +434,8 @@ message ClockResolutionEvent {
 
 message ErrorsWithPerfEventOpenEvent {
   uint64 timestamp_ns = 1;
+  // This is a string, we use bytes to avoid UTF-8 validation.
+  repeated bytes failed_to_open = 2;
 }
 
 message MetadataEvent {

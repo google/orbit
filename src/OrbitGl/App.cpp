@@ -575,19 +575,22 @@ void OrbitApp::OnMetadataEvent(const orbit_grpc_protos::MetadataEvent& metadata_
       } break;
 
       case orbit_grpc_protos::MetadataEvent::kErrorsWithPerfEventOpenEvent: {
-        constexpr const char* kMessage =
-            "There were errors with perf_event_open. Some information will probably be missing "
-            "from the capture.";
+        std::string log_message = absl::StrFormat(
+            "There were errors with perf_event_open, in particular with: %s.",
+            absl::StrJoin(metadata_event.errors_with_perf_event_open_event().failed_to_open(),
+                          ", "));
         main_window_->AppendToCaptureLog(
             MainWindowInterface::CaptureLogSeverity::kSevereWarning,
             GetCaptureTimeAt(metadata_event.errors_with_perf_event_open_event().timestamp_ns()),
-            kMessage);
+            log_message);
 
         if (!IsLoadingCapture()) {
+          std::string box_message =
+              log_message + "\n\nSome information will probably be missing from the capture.";
           constexpr const char* kDontShowAgainErrorsWithPerfEventOpenWarningKey =
               "DontShowAgainErrorsWithPerfEventOpenWarning";
           main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
-              "Errors with perf_event_open", kMessage,
+              "Errors with perf_event_open", box_message,
               kDontShowAgainErrorsWithPerfEventOpenWarningKey);
         }
       } break;
