@@ -18,8 +18,8 @@ target_sources(
           include/SessionSetup/Error.h
           include/SessionSetup/OverlayWidget.h
           include/SessionSetup/ProcessItemModel.h
-          include/SessionSetup/ProfilingTargetDialog.h
           include/SessionSetup/servicedeploymanager.h
+          include/SessionSetup/SessionSetupDialog.h
           include/SessionSetup/TargetConfiguration.h
           include/SessionSetup/TargetLabel.h)
 
@@ -34,9 +34,9 @@ target_sources(
           OverlayWidget.cpp
           OverlayWidget.ui
           ProcessItemModel.cpp
-          ProfilingTargetDialog.cpp
-          ProfilingTargetDialog.ui
           servicedeploymanager.cpp
+          SessionSetupDialog.cpp
+          SessionSetupDialog.ui
           TargetLabel.cpp
           TargetLabel.ui
           ../../icons/orbiticons.qrc)
@@ -67,7 +67,7 @@ target_sources(
   SessionSetupTest
   PRIVATE DoubleClickableLabelTest.cpp
           ProcessItemModelTest.cpp
-          ProfilingTargetDialogTest.cpp
+          SessionSetupDialogTest.cpp
           TargetLabelTest.cpp
           TestEnvironmentAbslFlags.cpp)
 

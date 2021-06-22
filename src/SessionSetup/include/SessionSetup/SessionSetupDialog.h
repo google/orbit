@@ -30,19 +30,19 @@
 #include "process.pb.h"
 
 namespace Ui {
-class ProfilingTargetDialog;  // IWYU pragma: keep
+class SessionSetupDialog;  // IWYU pragma: keep
 }
 namespace orbit_session_setup {
 
-class ProfilingTargetDialog : public QDialog {
+class SessionSetupDialog : public QDialog {
   Q_OBJECT
 
  public:
-  explicit ProfilingTargetDialog(SshConnectionArtifacts* ssh_connection_artifacts,
-                                 std::optional<TargetConfiguration> target_configuration_opt,
-                                 orbit_metrics_uploader::MetricsUploader* metrics_uploader,
-                                 QWidget* parent = nullptr);
-  ~ProfilingTargetDialog() noexcept override;
+  explicit SessionSetupDialog(SshConnectionArtifacts* ssh_connection_artifacts,
+                              std::optional<TargetConfiguration> target_configuration_opt,
+                              orbit_metrics_uploader::MetricsUploader* metrics_uploader,
+                              QWidget* parent = nullptr);
+  ~SessionSetupDialog() noexcept override;
 
   [[nodiscard]] std::optional<TargetConfiguration> Exec();
  private slots:
@@ -59,7 +59,7 @@ class ProfilingTargetDialog : public QDialog {
   void ProcessListUpdated();
 
  private:
-  std::unique_ptr<Ui::ProfilingTargetDialog> ui_;
+  std::unique_ptr<Ui::SessionSetupDialog> ui_;
 
   ProcessItemModel process_model_;
   QSortFilterProxyModel process_proxy_model_;

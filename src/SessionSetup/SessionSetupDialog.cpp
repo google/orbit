@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "SessionSetup/ProfilingTargetDialog.h"
+#include "SessionSetup/SessionSetupDialog.h"
 
 #include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
@@ -49,7 +49,7 @@
 #include "SessionSetup/ProcessItemModel.h"
 #include "SessionSetup/TargetConfiguration.h"
 #include "process.pb.h"
-#include "ui_ProfilingTargetDialog.h"
+#include "ui_SessionSetupDialog.h"
 
 ABSL_DECLARE_FLAG(bool, local);
 ABSL_DECLARE_FLAG(std::string, process_name);
@@ -63,12 +63,12 @@ namespace orbit_session_setup {
 using orbit_capture_file_info::LoadCaptureWidget;
 using orbit_grpc_protos::ProcessInfo;
 
-ProfilingTargetDialog::ProfilingTargetDialog(
-    SshConnectionArtifacts* ssh_connection_artifacts,
-    std::optional<TargetConfiguration> target_configuration_opt,
-    orbit_metrics_uploader::MetricsUploader* metrics_uploader, QWidget* parent)
+SessionSetupDialog::SessionSetupDialog(SshConnectionArtifacts* ssh_connection_artifacts,
+                                       std::optional<TargetConfiguration> target_configuration_opt,
+                                       orbit_metrics_uploader::MetricsUploader* metrics_uploader,
+                                       QWidget* parent)
     : QDialog{parent, Qt::Window},
-      ui_(std::make_unique<Ui::ProfilingTargetDialog>()),
+      ui_(std::make_unique<Ui::SessionSetupDialog>()),
       local_grpc_port_(ssh_connection_artifacts->GetGrpcPort().grpc_port),
       metrics_uploader_(metrics_uploader),
       state_stadia_(&state_machine_),
@@ -129,7 +129,7 @@ ProfilingTargetDialog::ProfilingTargetDialog(
                      if (!checked) ui_->localProfilingRadioButton->setChecked(true);
                    });
   QObject::connect(ui_->processesTableView->selectionModel(), &QItemSelectionModel::currentChanged,
-                   this, &ProfilingTargetDialog::ProcessSelectionChanged);
+                   this, &SessionSetupDialog::ProcessSelectionChanged);
   QObject::connect(ui_->processesTableView, &QTableView::doubleClicked, this, &QDialog::accept);
   QObject::connect(ui_->processFilterLineEdit, &QLineEdit::textChanged, &process_proxy_model_,
                    &QSortFilterProxyModel::setFilterFixedString);
@@ -152,7 +152,7 @@ ProfilingTargetDialog::ProfilingTargetDialog(
       orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_SESSION_SETUP_WINDOW_OPEN);
 }
 
-void ProfilingTargetDialog::SetStateMachineInitialState() {
+void SessionSetupDialog::SetStateMachineInitialState() {
   if (absl::GetFlag(FLAGS_local)) {
     state_machine_.setInitialState(&state_local_);
   } else if (ui_->stadiaWidget->IsActive()) {
@@ -162,9 +162,9 @@ void ProfilingTargetDialog::SetStateMachineInitialState() {
   }
 }
 
-ProfilingTargetDialog::~ProfilingTargetDialog() noexcept = default;
+SessionSetupDialog::~SessionSetupDialog() noexcept = default;
 
-std::optional<TargetConfiguration> ProfilingTargetDialog::Exec() {
+std::optional<TargetConfiguration> SessionSetupDialog::Exec() {
   ui_->stadiaWidget->Start();
   state_machine_.start();
 
@@ -201,7 +201,7 @@ std::optional<TargetConfiguration> ProfilingTargetDialog::Exec() {
   }
 }
 
-void ProfilingTargetDialog::ProcessSelectionChanged(const QModelIndex& current) {
+void SessionSetupDialog::ProcessSelectionChanged(const QModelIndex& current) {
   emit NoProcessSelected();
 
   if (!current.isValid()) {
@@ -215,7 +215,7 @@ void ProfilingTargetDialog::ProcessSelectionChanged(const QModelIndex& current) 
   emit ProcessSelected();
 }
 
-void ProfilingTargetDialog::SetupStadiaStates() {
+void SessionSetupDialog::SetupStadiaStates() {
   // Setup initial and default
   state_stadia_.setInitialState(&state_stadia_connecting_);
   state_stadia_history_.setDefaultState(&state_stadia_connecting_);
@@ -255,7 +255,7 @@ void ProfilingTargetDialog::SetupStadiaStates() {
   // STATE state_stadia_connecting_
   state_stadia_connecting_.addTransition(ui_->stadiaWidget, &ConnectToStadiaWidget::Connected,
                                          &state_stadia_connected_);
-  state_stadia_connecting_.addTransition(this, &ProfilingTargetDialog::StadiaIsConnected,
+  state_stadia_connecting_.addTransition(this, &SessionSetupDialog::StadiaIsConnected,
                                          &state_stadia_connected_);
   QObject::connect(&state_stadia_connecting_, &QState::entered, this, [this]() {
     if (ui_->stadiaWidget->GetGrpcChannel() != nullptr) {
@@ -265,20 +265,20 @@ void ProfilingTargetDialog::SetupStadiaStates() {
 
   // STATE state_stadia_connected_
   QObject::connect(&state_stadia_connected_, &QState::entered, this,
-                   &ProfilingTargetDialog::SetupStadiaProcessManager);
+                   &SessionSetupDialog::SetupStadiaProcessManager);
   QObject::connect(&state_stadia_connected_, &QState::exited, this,
-                   &ProfilingTargetDialog::TearDownProcessManager);
+                   &SessionSetupDialog::TearDownProcessManager);
 
   // STATE state_stadia_processes_loading_
-  state_stadia_processes_loading_.addTransition(this, &ProfilingTargetDialog::ProcessSelected,
+  state_stadia_processes_loading_.addTransition(this, &SessionSetupDialog::ProcessSelected,
                                                 &state_stadia_process_selected_);
 
   // STATE state_stadia_no_process_selected_
-  state_stadia_no_process_selected_.addTransition(this, &ProfilingTargetDialog::ProcessSelected,
+  state_stadia_no_process_selected_.addTransition(this, &SessionSetupDialog::ProcessSelected,
                                                   &state_stadia_process_selected_);
 
   // STATE s_s_process_selected
-  state_stadia_process_selected_.addTransition(this, &ProfilingTargetDialog::NoProcessSelected,
+  state_stadia_process_selected_.addTransition(this, &SessionSetupDialog::NoProcessSelected,
                                                &state_stadia_no_process_selected_);
   QObject::connect(&state_stadia_process_selected_, &QState::entered, this, [this] {
     CHECK(process_ != nullptr);
@@ -290,7 +290,7 @@ void ProfilingTargetDialog::SetupStadiaStates() {
                    &TargetLabel::Clear);
 }
 
-void ProfilingTargetDialog::SetupLocalStates() {
+void SessionSetupDialog::SetupLocalStates() {
   // Setup initial and default
   state_local_.setInitialState(&state_local_connecting_);
   state_local_history_.setDefaultState(&state_local_connecting_);
@@ -334,27 +334,27 @@ void ProfilingTargetDialog::SetupLocalStates() {
                              &state_file_history_);
 
   // STATE state_local_connecting_
-  state_local_connecting_.addTransition(this, &ProfilingTargetDialog::ProcessListUpdated,
+  state_local_connecting_.addTransition(this, &SessionSetupDialog::ProcessListUpdated,
                                         &state_local_connected_);
   QObject::connect(&state_local_connecting_, &QState::entered, this,
-                   &ProfilingTargetDialog::ConnectToLocal);
+                   &SessionSetupDialog::ConnectToLocal);
 
   // STATE state_local_connected_
   QObject::connect(&state_local_connected_, &QState::entered, this,
-                   &ProfilingTargetDialog::SetupLocalProcessManager);
+                   &SessionSetupDialog::SetupLocalProcessManager);
   QObject::connect(&state_local_connected_, &QState::exited, this,
-                   &ProfilingTargetDialog::TearDownProcessManager);
+                   &SessionSetupDialog::TearDownProcessManager);
 
   // STATE state_local_processes_loading_
-  state_local_processes_loading_.addTransition(this, &ProfilingTargetDialog::ProcessSelected,
+  state_local_processes_loading_.addTransition(this, &SessionSetupDialog::ProcessSelected,
                                                &state_local_process_selected_);
 
   // STATE state_local_no_process_selected_
-  state_local_no_process_selected_.addTransition(this, &ProfilingTargetDialog::ProcessSelected,
+  state_local_no_process_selected_.addTransition(this, &SessionSetupDialog::ProcessSelected,
                                                  &state_local_process_selected_);
 
   // STATE state_local_process_selected_
-  state_local_process_selected_.addTransition(this, &ProfilingTargetDialog::NoProcessSelected,
+  state_local_process_selected_.addTransition(this, &SessionSetupDialog::NoProcessSelected,
                                               &state_local_no_process_selected_);
   QObject::connect(&state_local_process_selected_, &QState::entered, this, [this] {
     CHECK(process_ != nullptr);
@@ -364,7 +364,7 @@ void ProfilingTargetDialog::SetupLocalStates() {
                    &TargetLabel::Clear);
 }
 
-void ProfilingTargetDialog::SetupFileStates() {
+void SessionSetupDialog::SetupFileStates() {
   // Setup initial and default
   state_file_.setInitialState(&state_file_no_selection_);
   state_file_history_.setDefaultState(&state_file_no_selection_);
@@ -397,7 +397,7 @@ void ProfilingTargetDialog::SetupFileStates() {
   QObject::connect(&state_file_selected_, &QState::exited, ui_->targetLabel, &TargetLabel::Clear);
 }
 
-void ProfilingTargetDialog::TearDownProcessManager() {
+void SessionSetupDialog::TearDownProcessManager() {
   process_model_.Clear();
 
   if (process_manager_ != nullptr) {
@@ -405,8 +405,7 @@ void ProfilingTargetDialog::TearDownProcessManager() {
   }
 }
 
-void ProfilingTargetDialog::SetupProcessManager(
-    const std::shared_ptr<grpc::Channel>& grpc_channel) {
+void SessionSetupDialog::SetupProcessManager(const std::shared_ptr<grpc::Channel>& grpc_channel) {
   CHECK(grpc_channel != nullptr);
 
   if (process_manager_ != nullptr) return;
@@ -419,11 +418,11 @@ void ProfilingTargetDialog::SetupProcessManager(
       });
 }
 
-void ProfilingTargetDialog::SetupStadiaProcessManager() {
+void SessionSetupDialog::SetupStadiaProcessManager() {
   SetupProcessManager(ui_->stadiaWidget->GetGrpcChannel());
 }
 
-bool ProfilingTargetDialog::TrySelectProcessByName(const std::string& process_name) {
+bool SessionSetupDialog::TrySelectProcessByName(const std::string& process_name) {
   QModelIndexList matches = process_proxy_model_.match(
       process_proxy_model_.index(0, static_cast<int>(ProcessItemModel::Column::kName)),
       Qt::DisplayRole, QVariant::fromValue(QString::fromStdString(process_name)));
@@ -435,7 +434,7 @@ bool ProfilingTargetDialog::TrySelectProcessByName(const std::string& process_na
   return true;
 }
 
-void ProfilingTargetDialog::OnProcessListUpdate(
+void SessionSetupDialog::OnProcessListUpdate(
     std::vector<orbit_grpc_protos::ProcessInfo> process_list) {
   QMetaObject::invokeMethod(this, [this, process_list = std::move(process_list)]() {
     bool had_processes_before = process_model_.HasProcesses();
@@ -458,7 +457,7 @@ void ProfilingTargetDialog::OnProcessListUpdate(
       return;
     }
 
-    // If process_ != nullptr here, that means it has been moved into the ProfilingTargetDialog and
+    // If process_ != nullptr here, that means it has been moved into the SessionSetupDialog and
     // the user was using this process before. TrySelectProcessByName attempts to select the process
     // again if it exists in process_model_.
     if (process_ != nullptr) {
@@ -490,7 +489,7 @@ void ProfilingTargetDialog::OnProcessListUpdate(
   });
 }
 
-void ProfilingTargetDialog::ConnectToLocal() {
+void SessionSetupDialog::ConnectToLocal() {
   if (local_grpc_channel_ == nullptr) {
     local_grpc_channel_ =
         grpc::CreateCustomChannel(absl::StrFormat("127.0.0.1:%d", local_grpc_port_),
@@ -500,9 +499,9 @@ void ProfilingTargetDialog::ConnectToLocal() {
   SetupLocalProcessManager();
 }
 
-void ProfilingTargetDialog::SetupLocalProcessManager() { SetupProcessManager(local_grpc_channel_); }
+void SessionSetupDialog::SetupLocalProcessManager() { SetupProcessManager(local_grpc_channel_); }
 
-void ProfilingTargetDialog::SetTargetAndStateMachineInitialState(StadiaTarget target) {
+void SessionSetupDialog::SetTargetAndStateMachineInitialState(StadiaTarget target) {
   state_machine_.setInitialState(&state_stadia_);
 
   if (target.connection_.GetGrpcChannel()->GetState(false) != GRPC_CHANNEL_READY) return;
@@ -514,7 +513,7 @@ void ProfilingTargetDialog::SetTargetAndStateMachineInitialState(StadiaTarget ta
   state_stadia_history_.setDefaultState(&state_stadia_connected_);
 }
 
-void ProfilingTargetDialog::SetTargetAndStateMachineInitialState(LocalTarget target) {
+void SessionSetupDialog::SetTargetAndStateMachineInitialState(LocalTarget target) {
   local_grpc_channel_ = target.GetConnection()->GetGrpcChannel();
   process_manager_ = std::move(target.process_manager_);
   process_ = std::move(target.process_);
@@ -524,7 +523,7 @@ void ProfilingTargetDialog::SetTargetAndStateMachineInitialState(LocalTarget tar
   state_machine_.setInitialState(&state_local_);
 }
 
-void ProfilingTargetDialog::SetTargetAndStateMachineInitialState(FileTarget target) {
+void SessionSetupDialog::SetTargetAndStateMachineInitialState(FileTarget target) {
   selected_file_path_ = target.GetCaptureFilePath();
   state_file_.setInitialState(&state_file_selected_);
   state_file_history_.setDefaultState(&state_file_selected_);
