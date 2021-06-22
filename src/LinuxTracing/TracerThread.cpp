@@ -8,6 +8,7 @@
 #include <absl/container/flat_hash_set.h>
 #include <absl/meta/type_traits.h>
 #include <absl/strings/str_format.h>
+#include <absl/strings/str_join.h>
 #include <pthread.h>
 #include <stddef.h>
 #include <unistd.h>
@@ -577,11 +578,18 @@ void TracerThread::Startup() {
   event_processor_.SetDiscardedOutOfOrderCounter(&stats_.discarded_out_of_order_count);
 
   bool perf_event_open_errors = false;
+  std::vector<std::string> perf_event_open_error_details;
 
-  perf_event_open_errors |= !OpenMmapTask(all_cpus);
+  if (bool opened = OpenMmapTask(all_cpus); !opened) {
+    perf_event_open_error_details.emplace_back("mmap events, fork and exit events");
+    perf_event_open_errors = true;
+  }
 
   if (!instrumented_functions_.empty()) {
-    perf_event_open_errors |= !OpenUserSpaceProbes(cpuset_cpus);
+    if (bool opened = OpenUserSpaceProbes(cpuset_cpus); !opened) {
+      perf_event_open_error_details.emplace_back("u(ret)probes");
+      perf_event_open_errors = true;
+    }
   }
 
   // This takes an initial snapshot of the maps. Note that, if at least one
@@ -594,13 +602,24 @@ void TracerThread::Startup() {
 
   if (unwinding_method_ == CaptureOptions::kFramePointers ||
       unwinding_method_ == CaptureOptions::kDwarf) {
-    perf_event_open_errors |= !OpenSampling(cpuset_cpus);
+    if (bool opened = OpenSampling(cpuset_cpus); !opened) {
+      perf_event_open_error_details.emplace_back("sampling");
+      perf_event_open_errors = true;
+    }
   }
 
   InitSwitchesStatesNamesVisitor();
-  perf_event_open_errors |= !OpenThreadNameTracepoints(all_cpus);
+  if (bool opened = OpenThreadNameTracepoints(all_cpus); !opened) {
+    perf_event_open_error_details.emplace_back(
+        "task:task_newtask and task:task_rename tracepoints");
+    perf_event_open_errors = true;
+  }
   if (trace_context_switches_ || trace_thread_state_) {
-    perf_event_open_errors |= !OpenContextSwitchAndThreadStateTracepoints(all_cpus);
+    if (bool opened = OpenContextSwitchAndThreadStateTracepoints(all_cpus); !opened) {
+      perf_event_open_error_details.emplace_back(
+          "sched:sched_switch and sched:sched_wakeup tracepoints");
+      perf_event_open_errors = true;
+    }
   }
 
   if (trace_gpu_driver_) {
@@ -612,12 +631,20 @@ void TracerThread::Startup() {
     }
   }
 
-  perf_event_open_errors |= !OpenInstrumentedTracepoints(all_cpus);
+  if (bool opened = OpenInstrumentedTracepoints(all_cpus); !opened) {
+    perf_event_open_error_details.emplace_back("selected tracepoints");
+    perf_event_open_errors = true;
+  }
 
   if (perf_event_open_errors) {
-    LOG("There were errors with perf_event_open: did you forget to run as root?");
+    ERROR("With perf_event_open: did you forget to run as root?");
+    LOG("In particular, there were errors with opening %s",
+        absl::StrJoin(perf_event_open_error_details, ", "));
     orbit_grpc_protos::ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event;
     errors_with_perf_event_open_event.set_timestamp_ns(orbit_base::CaptureTimestampNs());
+    for (std::string& detail : perf_event_open_error_details) {
+      errors_with_perf_event_open_event.add_failed_to_open(std::move(detail));
+    }
     listener_->OnErrorsWithPerfEventOpenEvent(std::move(errors_with_perf_event_open_event));
   }
 
@@ -1152,7 +1179,7 @@ void TracerThread::PrintStatsIfTimerElapsed() {
   static_assert(std::numeric_limits<double>::is_iec559);
 
   uint64_t unwind_error_count = stats_.unwind_error_count;
-  LOG("  unwind errors: %.0f/s (%lu) [%.1f%%])", unwind_error_count / actual_window_s,
+  LOG("  unwind errors: %.0f/s (%lu) [%.1f%%]", unwind_error_count / actual_window_s,
       unwind_error_count, 100.0 * unwind_error_count / stats_.sample_count);
   uint64_t discarded_samples_in_uretprobes_count = stats_.samples_in_uretprobes_count;
   LOG("  samples in u(ret)probes: %.0f/s (%lu) [%.1f%%]",
