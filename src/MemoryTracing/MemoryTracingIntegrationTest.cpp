@@ -187,7 +187,7 @@ void VerifyOrderAndContentOfEvents(const std::vector<ProducerCaptureEvent>& even
                   previous_process_memory_event_timestamp_ns);
 
         // Verify whether the contents of events are valid.
-        EXPECT_TRUE(event.process_memory_usage().rss_pages() >= 0);
+        EXPECT_TRUE(event.process_memory_usage().rss_anon_kb() >= 0);
         EXPECT_TRUE(event.process_memory_usage().minflt() >= 0);
         EXPECT_TRUE(event.process_memory_usage().majflt() >= 0);
 
