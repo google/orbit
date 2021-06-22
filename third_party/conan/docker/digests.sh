@@ -16,6 +16,7 @@ declare -rA docker_image_digest_mapping=(
   [clang9_release]="gcr.io/orbitprofiler/clang9_release@sha256:1ed8154b371a5503a90cdce9fd437c31ca68f91c7a738fe233ef9f8c5d5132de" \
   [clang9_relwithdebinfo]="gcr.io/orbitprofiler/clang9_release@sha256:1ed8154b371a5503a90cdce9fd437c31ca68f91c7a738fe233ef9f8c5d5132de" \
   [clang9_debug]="gcr.io/orbitprofiler/clang9_debug@sha256:1ed8154b371a5503a90cdce9fd437c31ca68f91c7a738fe233ef9f8c5d5132de" \
+  [coverage_clang9]="gcr.io/orbitprofiler/coverage_clang9@sha256:143ce8ddf40f63edb035c3833f85ceb904cae16f7595668b0e01bec4db58acc2" \
   [gcc9_release]="gcr.io/orbitprofiler/gcc9_release@sha256:0a2e07d422122cd9fb4413149ca1e16a69cd6d7dd5989ed7938b221b4be32f45" \
   [gcc9_relwithdebinfo]="gcr.io/orbitprofiler/gcc9_release@sha256:0a2e07d422122cd9fb4413149ca1e16a69cd6d7dd5989ed7938b221b4be32f45" \
   [gcc9_debug]="gcr.io/orbitprofiler/gcc9_debug@sha256:0a2e07d422122cd9fb4413149ca1e16a69cd6d7dd5989ed7938b221b4be32f45" \
