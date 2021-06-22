@@ -9,6 +9,7 @@
 declare -rA docker_image_tag_mapping=( \
   [iwyu]="2" \
   [coverage_clang9]="1" \
+  [license_headers]="20210622T081800.703185280" \
 )
 
 # Use `readonly DOCKER_IMAGE_TAG="${docker_image_tag_mapping[${CONAN_PROFILE}]-latest}"`

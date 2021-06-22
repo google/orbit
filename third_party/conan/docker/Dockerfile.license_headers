@@ -1,8 +1,13 @@
-FROM conanio/clang9:latest
+# Copyright (c) 2021 The Orbit Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
 
-RUN sudo apt-get -qq update \
-    && sudo apt-get install -y --no-install-recommends \
-    jq \
-    python2.7 \
-    zip \
-    && sudo rm -rf /var/lib/apt/lists/*
+FROM ubuntu:20.04
+
+RUN useradd -Ums /bin/bash conan && \
+    apt-get -qq update && \
+    apt-get install -y --no-install-recommends grep git && \
+    rm -rf /var/lib/apt/lists/*
+
+USER conan
+WORKDIR /home/conan

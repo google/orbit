@@ -6,4 +6,5 @@
 # Unlike tags digest hashes can't be overwritten and allows us to require
 # an exact version of a container.
 declare -rA docker_image_digest_mapping=(
+  [license_headers]="gcr.io/orbitprofiler/license_headers@sha256:f131914386ba4cd91610c89722bfcdf02eba1bf5d47ed49050a629df28173e93" \
 )
