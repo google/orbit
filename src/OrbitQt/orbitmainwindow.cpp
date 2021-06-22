@@ -829,11 +829,20 @@ void OrbitMainWindow::on_actionReport_Bug_triggered() {
 }
 
 void OrbitMainWindow::on_actionOpenUserDataDirectory_triggered() {
+  std::string user_data_dir = orbit_core::CreateOrGetOrbitUserDataDir().string();
+  QUrl user_data_url = QUrl::fromLocalFile(QString::fromStdString(user_data_dir));
+  if (!QDesktopServices::openUrl(user_data_url)) {
+    QMessageBox::critical(this, "Error opening directory",
+                          "Could not open Orbit user data directory");
+  }
+}
+
+void OrbitMainWindow::on_actionOpenAppDataDirectory_triggered() {
   std::string app_data_dir = orbit_core::CreateOrGetOrbitAppDataDir().string();
   QUrl app_data_url = QUrl::fromLocalFile(QString::fromStdString(app_data_dir));
   if (!QDesktopServices::openUrl(app_data_url)) {
     QMessageBox::critical(this, "Error opening directory",
-                          "Could not open Orbit user data directory");
+                          "Could not open Orbit app data directory");
   }
 }
 

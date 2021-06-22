@@ -121,6 +121,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
  private slots:
   void on_actionOpenUserDataDirectory_triggered();
+  void on_actionOpenAppDataDirectory_triggered();
   void on_actionAbout_triggered();
 
   void on_actionReport_Missing_Feature_triggered();
