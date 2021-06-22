@@ -70,5 +70,6 @@ double MemoryTrack<Dimension>::GetGraphMinValue() const {
 template class MemoryTrack<1>;
 template class MemoryTrack<2>;
 template class MemoryTrack<3>;
+template class MemoryTrack<4>;
 
 }  // namespace orbit_gl

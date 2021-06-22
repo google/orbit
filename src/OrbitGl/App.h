@@ -167,6 +167,13 @@ class OrbitApp final : public DataViewFactory,
     kCachedKb,
     kEnd
   };
+  enum class CGroupAndProcessMemoryUsageEncodingIndex {
+    kCGroupLimitBytes,
+    kCGroupRssBytes,
+    kCGroupMappedFileBytes,
+    kProcessRssAnonKb,
+    kEnd
+  };
   void OnMemoryEventWrapper(
       const orbit_grpc_protos::MemoryEventWrapper& memory_event_wrapper) override;
 

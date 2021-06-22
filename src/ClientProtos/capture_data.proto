@@ -160,6 +160,7 @@ message TimerInfo {
     kGpuDebugMarker = 6;
     kApiEvent = 7;
     kSystemMemoryUsage = 8;
+    kCGroupAndProcessMemoryUsage = 9;
   }
   Type type = 6;
 
@@ -170,6 +171,7 @@ message TimerInfo {
   uint64 timeline_hash = 11;
   repeated uint64 registers = 12;
   Color color = 13;
+  string cgroup_name = 14;
 }
 
 message Color {
