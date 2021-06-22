@@ -135,6 +135,7 @@ target_sources(OrbitQtTests
                 AnnotatingSourceCodeDialogTest.cpp
                 CallTreeViewItemModelTest.cpp
                 ProcessItemModelTest.cpp
+                ProfilingTargetDialogTest.cpp
                 StatusListenerImplTest.cpp
                 TargetLabelTest.cpp
                 TutorialOverlayTest.cpp)
