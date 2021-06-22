@@ -9,14 +9,20 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 source "${DIR}/tags.sh"
 
-if [ "$(uname -s)" == "Linux" ]; then
-  for profile in {clang{7,8,9},gcc{8,9},ggp}_{release,relwithdebinfo,debug} clang_format license_headers iwyu coverage_clang9; do
-    tag="${docker_image_tag_mapping[${profile}]-latest}"
-    docker push gcr.io/orbitprofiler/$profile:${tag} || exit $?
-  done
+if [ "$#" -eq 0 ]; then
+  if [ "$(uname -s)" == "Linux" ]; then
+    profiles=( {clang{7,8,9},gcc9,ggp}_{release,relwithdebinfo,debug} clang_format license_headers iwyu coverage_clang9 )
+  else
+    profiles=( msvc2019_{release,relwithdebinfo,debug} )
+  fi
 else
-  for profile in msvc{2017,2019}_{release,relwithdebinfo,debug}; do
-    tag="${docker_image_tag_mapping[${profile}]-latest}"
-    docker push gcr.io/orbitprofiler/$profile:${tag} || exit $?
-  done
+  profiles="$@"
 fi
+
+for profile in ${profiles[@]}; do
+  tag="${docker_image_tag_mapping[${profile}]-latest}"
+  docker push gcr.io/orbitprofiler/$profile:${tag} || exit $?
+
+  digest="$(docker inspect --format='{{index .RepoDigests 0}}' gcr.io/orbitprofiler/${profile}:${tag})"
+  sed -i "s|\\[${profile}\\]=\".*\"|[${profile}]=\"${digest}\"|" "${DIR}/digests.sh"
+done
