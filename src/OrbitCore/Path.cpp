@@ -53,10 +53,6 @@ static std::filesystem::path CreateAndGetConfigPath() {
   return config_dir;
 }
 
-std::filesystem::path GetFileMappingFileName() {
-  return CreateAndGetConfigPath() / "FileMapping.txt";
-}
-
 std::filesystem::path GetSymbolsFileName() { return CreateAndGetConfigPath() / "SymbolPaths.txt"; }
 
 std::filesystem::path CreateOrGetCacheDir() {
