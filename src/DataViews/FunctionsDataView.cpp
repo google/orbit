@@ -20,9 +20,9 @@
 #include "ClientData/ProcessData.h"
 #include "ClientModel/CaptureData.h"
 #include "CompareAscendingOrDescending.h"
-#include "CoreUtils.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataViewType.h"
+#include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 
 #ifdef _WIN32
@@ -192,7 +192,7 @@ std::vector<std::string> FunctionsDataView::GetContextMenu(
   if (enable_disable_frame_track) menu.emplace_back(kMenuActionDisableFrameTrack);
   menu.emplace_back(kMenuActionDisassembly);
   menu.emplace_back(kMenuActionSourceCode);
-  Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
+  orbit_base::Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
 }
 

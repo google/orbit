@@ -24,8 +24,8 @@
 #include "ClientData/CallstackData.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreMath.h"
-#include "CoreUtils.h"
 #include "GlCanvas.h"
+#include "OrbitBase/Append.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
@@ -144,10 +144,9 @@ void TrackManager::SortTracks() {
     sorted_tracks_.push_back(scheduler_track_.get());
   }
 
-  // For now, "external_pid_tracks" should only contain
-  // introspection tracks. Display them on top.
-  Append(sorted_tracks_, external_pid_tracks);
-  Append(sorted_tracks_, capture_pid_tracks);
+  // For now, "external_pid_tracks" should only contain introspection tracks. Display them on top.
+  orbit_base::Append(sorted_tracks_, external_pid_tracks);
+  orbit_base::Append(sorted_tracks_, capture_pid_tracks);
 
   last_thread_reorder_.Restart();
 

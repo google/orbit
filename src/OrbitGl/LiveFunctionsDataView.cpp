@@ -6,7 +6,6 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
-#include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
@@ -15,7 +14,6 @@
 #include <stddef.h>
 
 #include <functional>
-#include <limits>
 #include <memory>
 
 #include "App.h"
@@ -26,6 +24,7 @@
 #include "DataViews/FunctionsDataView.h"
 #include "GrpcProtos/Constants.h"
 #include "LiveFunctionsController.h"
+#include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 #include "capture_data.pb.h"
 
@@ -262,7 +261,7 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
                                kMenuActionJumpToMax});
     }
   }
-  Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
+  orbit_base::Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
 }
 

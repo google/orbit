@@ -27,6 +27,7 @@
 #include "CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"
+#include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"
@@ -246,7 +247,7 @@ std::vector<std::string> SamplingReportDataView::GetContextMenu(
   if (enable_load) menu.emplace_back(kMenuActionLoadSymbols);
   if (enable_disassembly) menu.emplace_back(kMenuActionDisassembly);
   if (enable_source_code) menu.emplace_back(kMenuActionSourceCode);
-  Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
+  orbit_base::Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
 }
 

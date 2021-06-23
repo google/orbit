@@ -16,9 +16,9 @@
 #include "App.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientModel/CaptureData.h"
-#include "CoreUtils.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"
+#include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 #include "capture_data.pb.h"
 
@@ -135,7 +135,7 @@ std::vector<std::string> CallstackDataView::GetContextMenu(
   if (enable_unselect) menu.emplace_back(kMenuActionUnselect);
   if (enable_disassembly) menu.emplace_back(kMenuActionDisassembly);
   if (enable_source_code) menu.emplace_back(kMenuActionSourceCode);
-  Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
+  orbit_base::Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
 }
 

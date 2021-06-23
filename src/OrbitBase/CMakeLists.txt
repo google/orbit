@@ -22,6 +22,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/Action.h
         include/OrbitBase/AnyInvocable.h
         include/OrbitBase/AnyMovable.h
+        include/OrbitBase/Append.h
         include/OrbitBase/CrashHandler.h
         include/OrbitBase/ExecutablePath.h
         include/OrbitBase/ExecuteCommand.h
@@ -89,6 +90,7 @@ target_compile_options(OrbitBaseTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(OrbitBaseTests PRIVATE
         AnyInvocableTest.cpp
         AnyMovableTest.cpp
+        AppendTest.cpp
         ExecutablePathTest.cpp
         ExecutorTest.cpp
         FileTest.cpp
