@@ -12,7 +12,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#include <xxhash.h>
 
 #include <algorithm>
 #include <cctype>
@@ -32,10 +31,6 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-inline uint64_t StringHash(std::string_view str) {
-  return XXH64(str.data(), str.size(), 0xBADDCAFEDEAD10CC);
-}
 
 template <class T>
 inline void Append(std::vector<T>& dest, const std::vector<T>& source) {

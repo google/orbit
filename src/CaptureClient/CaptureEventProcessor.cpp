@@ -8,11 +8,11 @@
 #include <absl/container/flat_hash_set.h>
 #include <google/protobuf/stubs/port.h>
 
+#include <string>
 #include <utility>
 
 #include "CaptureClient/ApiEventProcessor.h"
 #include "CaptureClient/GpuQueueSubmissionProcessor.h"
-#include "CoreUtils.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
 #include "capture_data.pb.h"
@@ -511,7 +511,7 @@ void orbit_capture_client::CaptureEventProcessorForListener::ProcessMetadataEven
 
 uint64_t CaptureEventProcessorForListener::GetStringHashAndSendToListenerIfNecessary(
     const std::string& str) {
-  uint64_t hash = StringHash(str);
+  uint64_t hash = std::hash<std::string>{}(str);
   if (!string_intern_pool_.contains(hash)) {
     string_intern_pool_.emplace(hash, str);
     capture_listener_->OnKeyAndString(hash, str);
