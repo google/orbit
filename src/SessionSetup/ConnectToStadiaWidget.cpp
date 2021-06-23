@@ -36,7 +36,7 @@
 #include "OrbitSshQt/ScopedConnection.h"
 #include "SessionSetup/Error.h"
 #include "SessionSetup/OverlayWidget.h"
-#include "SessionSetup/servicedeploymanager.h"
+#include "SessionSetup/ServiceDeployManager.h"
 #include "ui_ConnectToStadiaWidget.h"
 
 namespace {
