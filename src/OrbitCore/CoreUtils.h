@@ -49,35 +49,6 @@ inline void Append(std::vector<T>& dest, const std::vector<T>& source) {
   dest.insert(std::end(dest), std::begin(source), std::end(source));
 }
 
-enum class EllipsisPosition { kMiddle };
-
-inline std::string ShortenStringWithEllipsis(std::string_view text, size_t max_len,
-                                             EllipsisPosition pos = EllipsisPosition::kMiddle) {
-  // Parameter is mainly here to indicate how the util works,
-  // and to be potentially extended later
-  UNUSED(pos);
-  constexpr const size_t kNumCharsEllipsis = 3;
-
-  if (max_len <= kNumCharsEllipsis) {
-    return text.length() <= kNumCharsEllipsis ? std::string(text) : "...";
-  }
-  if (text.length() <= max_len) {
-    return std::string(text);
-  }
-
-  const size_t chars_to_cut = text.length() - max_len + kNumCharsEllipsis;
-  size_t l = text.length() - chars_to_cut;
-  // Integer division by two, rounded up
-  if (l & 0x1) {
-    l = (l + 1) >> 1;
-  } else {
-    l = l >> 1;
-  }
-
-  const size_t r = l + chars_to_cut;
-  return std::string(text.substr(0, l)) + "..." + std::string(text.substr(r));
-}
-
 inline std::string GetPrettySize(uint64_t size) {
   constexpr double KB = 1024.0;
   constexpr double MB = 1024.0 * KB;
