@@ -46,6 +46,9 @@ class GraphTrack : public Track {
   void SetNumberOfDecimalDigits(uint8_t value_decimal_digits) {
     series_.SetNumberOfDecimalDigits(value_decimal_digits);
   }
+  void SetSeriesColors(const std::array<Color, Dimension>& series_colors) {
+    series_colors_ = series_colors;
+  }
 
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllChains() const override;
@@ -54,6 +57,7 @@ class GraphTrack : public Track {
   }
 
  protected:
+  [[nodiscard]] virtual Color GetColor(size_t index) const;
   [[nodiscard]] virtual double GetGraphMaxValue() const { return series_.GetMax(); }
   [[nodiscard]] virtual double GetGraphMinValue() const { return series_.GetMin(); }
   [[nodiscard]] double GetGraphInverseValueRange() const {
@@ -79,6 +83,8 @@ class GraphTrack : public Track {
  private:
   void DrawSingleSeriesEntry(Batcher* batcher, uint64_t start_tick, uint64_t end_tick,
                              const std::array<float, Dimension>& normalized_values, float z);
+
+  std::optional<std::array<Color, Dimension>> series_colors_;
 };
 
 #endif  // ORBIT_GL_GRAPH_TRACK_H_

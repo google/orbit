@@ -124,6 +124,12 @@ std::vector<std::shared_ptr<TimerChain>> GraphTrack<Dimension>::GetAllChains() c
 }
 
 template <size_t Dimension>
+Color GraphTrack<Dimension>::GetColor(size_t index) const {
+  if (series_colors_.has_value()) return series_colors_.value()[index];
+  return TimeGraph::GetColor(index);
+}
+
+template <size_t Dimension>
 float GraphTrack<Dimension>::GetLabelYFromValues(
     const std::array<double, Dimension>& /*values*/) const {
   float content_height =
@@ -208,8 +214,7 @@ void GraphTrack<Dimension>::DrawLegend(Batcher& batcher, TextRenderer& text_rend
 
   for (size_t i = 0; i < Dimension; ++i) {
     batcher.AddShadedBox(Vec2(x0, y0 - legend_symbol_height / 2.f),
-                         Vec2(legend_symbol_width, legend_symbol_height), z,
-                         TimeGraph::GetColor(i));
+                         Vec2(legend_symbol_width, legend_symbol_height), z, GetColor(i));
     x0 += legend_symbol_width + kSpaceBetweenLegendSymbolAndText;
 
     float legend_text_width = text_renderer.GetStringWidth(series_names[i].c_str(), font_size);
@@ -262,7 +267,7 @@ void GraphTrack<Dimension>::DrawSingleSeriesEntry(
   float y0 = base_y;
   for (size_t i = 0; i < Dimension; ++i) {
     float height = normalized_values[i] * content_height;
-    batcher->AddShadedBox(Vec2(x0, y0), Vec2(width, height), z, TimeGraph::GetColor(i));
+    batcher->AddShadedBox(Vec2(x0, y0), Vec2(width, height), z, GetColor(i));
     y0 = y0 + height;
   }
 }
