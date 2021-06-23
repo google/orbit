@@ -33,12 +33,6 @@
 #include <utility>
 #include <vector>
 
-#include "OrbitBase/Logging.h"
-
-#define CONCAT_(x, y) x##y
-#define CONCAT(x, y) CONCAT_(x, y)
-#define UNIQUE_ID CONCAT(Id_, __LINE__)
-
 inline uint64_t StringHash(std::string_view str) {
   return XXH64(str.data(), str.size(), 0xBADDCAFEDEAD10CC);
 }
