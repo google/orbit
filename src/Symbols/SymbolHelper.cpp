@@ -169,7 +169,7 @@ ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const fs::path& symbols_pat
 }
 
 SymbolHelper::SymbolHelper()
-    : symbols_file_directories_(ReadSymbolsFile(orbit_core::GetSymbolsFileName())),
+    : symbols_file_directories_(ReadSymbolsFile(orbit_core::GetSymbolsFilePath())),
       cache_directory_(orbit_core::CreateOrGetCacheDir()),
       structured_debug_directories_(FindStructuredDebugDirectories()) {}
 

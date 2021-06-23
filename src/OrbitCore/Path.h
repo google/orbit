@@ -8,7 +8,7 @@
 #include <filesystem>
 
 namespace orbit_core {
-[[nodiscard]] std::filesystem::path GetSymbolsFileName();
+[[nodiscard]] std::filesystem::path GetSymbolsFilePath();
 [[nodiscard]] std::filesystem::path CreateOrGetCacheDir();
 [[nodiscard]] std::filesystem::path CreateOrGetPresetDir();
 [[nodiscard]] std::filesystem::path CreateOrGetCaptureDir();
