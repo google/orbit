@@ -24,6 +24,7 @@ RUN useradd -Ums /bin/bash conan && \
         ninja-build \
         python2.7 \
         python3-pip \
+        python-is-python2 \
         qt5-default \
         qtwebengine5-dev \
         zip && \
