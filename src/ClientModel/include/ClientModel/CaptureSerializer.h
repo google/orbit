@@ -23,21 +23,10 @@
 
 namespace orbit_client_model::capture_serializer {
 
-void WriteMessage(const google::protobuf::Message* message,
-                  google::protobuf::io::CodedOutputStream* output);
-
 std::string GenerateCaptureFileName(std::string_view process_name, absl::Time time,
                                     std::string_view suffix = "");
 
 void IncludeOrbitExtensionInFile(std::string& file_name);
-
-namespace internal {
-
-orbit_client_protos::CaptureInfo GenerateCaptureInfo(
-    const CaptureData& capture_data,
-    const absl::flat_hash_map<uint64_t, std::string>& key_to_string_map);
-
-}  // namespace internal
 
 }  // namespace orbit_client_model::capture_serializer
 
