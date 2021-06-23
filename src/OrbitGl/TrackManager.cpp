@@ -441,6 +441,7 @@ SystemMemoryTrack* TrackManager::CreateAndGetSystemMemoryTrack(
         time_graph_, time_graph_, viewport_, layout_, kTrackName, series_names, capture_data_);
     system_memory_track_->SetLabelUnit(kTrackValueLabelUnit);
     system_memory_track_->SetNumberOfDecimalDigits(kTrackValueDecimalDigits);
+    system_memory_track_->SetSeriesColors(orbit_gl::kSystemMemoryTrackColors);
     AddTrack(system_memory_track_);
   }
 
@@ -459,6 +460,7 @@ CGroupAndProcessMemoryTrack* TrackManager::CreateAndGetCGroupAndProcessMemoryTra
         time_graph_, time_graph_, viewport_, layout_, kTrackName, series_names, capture_data_);
     cgroup_and_process_memory_track_->SetLabelUnit(kTrackValueLabelUnit);
     cgroup_and_process_memory_track_->SetNumberOfDecimalDigits(kTrackValueDecimalDigits);
+    cgroup_and_process_memory_track_->SetSeriesColors(orbit_gl::kCGroupAndProcessMemoryTrackColors);
     AddTrack(cgroup_and_process_memory_track_);
   }
 
