@@ -7,6 +7,7 @@
 #include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
 #include <absl/strings/str_cat.h>
+#include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 #include <stddef.h>
 
@@ -18,11 +19,11 @@
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
 #include "ClientModel/CaptureData.h"
+#include "CompareAscendingOrDescending.h"
 #include "CoreUtils.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataViewType.h"
 #include "OrbitBase/Logging.h"
-#include "absl/strings/str_format.h"
 
 #ifdef _WIN32
 #include "oqpi.hpp"
@@ -116,14 +117,14 @@ std::string FunctionsDataView::GetValue(int row, int column) {
   }
 }
 
-#define ORBIT_FUNC_SORT(Member)                                                          \
-  [&](int a, int b) {                                                                    \
-    return orbit_core::Compare(functions_[a]->Member, functions_[b]->Member, ascending); \
+#define ORBIT_FUNC_SORT(Member)                                                                   \
+  [&](int a, int b) {                                                                             \
+    return CompareAscendingOrDescending(functions_[a]->Member, functions_[b]->Member, ascending); \
   }
 
-#define ORBIT_CUSTOM_FUNC_SORT(Func)                                                   \
-  [&](int a, int b) {                                                                  \
-    return orbit_core::Compare(Func(*functions_[a]), Func(*functions_[b]), ascending); \
+#define ORBIT_CUSTOM_FUNC_SORT(Func)                                                            \
+  [&](int a, int b) {                                                                           \
+    return CompareAscendingOrDescending(Func(*functions_[a]), Func(*functions_[b]), ascending); \
   }
 
 void FunctionsDataView::DoSort() {
