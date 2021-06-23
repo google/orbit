@@ -190,8 +190,7 @@ ErrorMessageOr<void> UpdateProcessMemoryUsageFromProcessStat(
   return outcome::success();
 }
 
-ErrorMessageOr<void> UpdateProcessMemoryUsageFromProcessStatus(
-    std::string_view status_content, ProcessMemoryUsage* process_memory_usage) {
+ErrorMessageOr<int64_t> ExtractRssAnonFromProcessStatus(std::string_view status_content) {
   if (status_content.empty()) return ErrorMessage("Empty file content.");
 
   std::vector<std::string> lines = absl::StrSplit(status_content, '\n', absl::SkipEmpty());
@@ -208,8 +207,7 @@ ErrorMessageOr<void> UpdateProcessMemoryUsageFromProcessStatus(
         return ErrorMessage(absl::StrFormat("Fail to extract value in line: %s\n", line));
       }
 
-      process_memory_usage->set_rss_anon_kb(value);
-      return outcome::success();
+      return value;
     }
   }
 
@@ -241,11 +239,13 @@ ErrorMessageOr<ProcessMemoryUsage> GetProcessMemoryUsage(int32_t pid) noexcept {
     ERROR("%s", reading_result.error().message());
     return reading_result.error();
   }
-  updating_result =
-      UpdateProcessMemoryUsageFromProcessStatus(reading_result.value(), &process_memory_usage);
-  if (updating_result.has_error()) {
-    ERROR("Error while updating ProcessMemoryUsage from %s: %s", kProcessMemoryUsageFilename,
-          updating_result.error().message());
+  ErrorMessageOr<int64_t> extracting_result =
+      ExtractRssAnonFromProcessStatus(reading_result.value());
+  if (extracting_result.has_error()) {
+    ERROR("Error while extracting process RssAnon from %s: %s", kProcessMemoryUsageFilename,
+          extracting_result.error().message());
+  } else {
+    process_memory_usage.set_rss_anon_kb(extracting_result.value());
   }
 
   return process_memory_usage;

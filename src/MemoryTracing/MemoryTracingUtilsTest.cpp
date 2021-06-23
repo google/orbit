@@ -18,46 +18,8 @@ using orbit_grpc_protos::SystemMemoryUsage;
 
 namespace {
 
-void ExpectSystemMemoryUsageEq(const SystemMemoryUsage& system_memory_usage,
-                               int total_kb = kMissingInfo, int free_kb = kMissingInfo,
-                               int available_kb = kMissingInfo, int buffers_kb = kMissingInfo,
-                               int cached_kb = kMissingInfo, int pgfault = kMissingInfo,
-                               int pgmajfault = kMissingInfo) {
-  EXPECT_EQ(system_memory_usage.total_kb(), total_kb);
-  EXPECT_EQ(system_memory_usage.free_kb(), free_kb);
-  EXPECT_EQ(system_memory_usage.available_kb(), available_kb);
-  EXPECT_EQ(system_memory_usage.buffers_kb(), buffers_kb);
-  EXPECT_EQ(system_memory_usage.cached_kb(), cached_kb);
-  EXPECT_EQ(system_memory_usage.pgfault(), pgfault);
-  EXPECT_EQ(system_memory_usage.pgmajfault(), pgmajfault);
-}
-
-void ExpectProcessMemoryUsageEq(const ProcessMemoryUsage& process_memory_usage,
-                                int minflt = kMissingInfo, int majflt = kMissingInfo,
-                                int rss_anon_kb = kMissingInfo) {
-  EXPECT_EQ(process_memory_usage.minflt(), minflt);
-  EXPECT_EQ(process_memory_usage.majflt(), majflt);
-  EXPECT_EQ(process_memory_usage.rss_anon_kb(), rss_anon_kb);
-}
-
-void ExpectCGroupMemoryUsageEq(const CGroupMemoryUsage& cgroup_memory_usage,
-                               int limit_bytes = kMissingInfo, int rss_bytes = kMissingInfo,
-                               int mapped_file_bytes = kMissingInfo, int pgfault = kMissingInfo,
-                               int pgmajfault = kMissingInfo, int unevictable_bytes = kMissingInfo,
-                               int inactive_anon_bytes = kMissingInfo,
-                               int active_anon_bytes = kMissingInfo,
-                               int inactive_file_bytes = kMissingInfo,
-                               int active_file_bytes = kMissingInfo) {
-  EXPECT_EQ(cgroup_memory_usage.limit_bytes(), limit_bytes);
-  EXPECT_EQ(cgroup_memory_usage.rss_bytes(), rss_bytes);
-  EXPECT_EQ(cgroup_memory_usage.mapped_file_bytes(), mapped_file_bytes);
-  EXPECT_EQ(cgroup_memory_usage.pgfault(), pgfault);
-  EXPECT_EQ(cgroup_memory_usage.pgmajfault(), pgmajfault);
-  EXPECT_EQ(cgroup_memory_usage.unevictable_bytes(), unevictable_bytes);
-  EXPECT_EQ(cgroup_memory_usage.inactive_anon_bytes(), inactive_anon_bytes);
-  EXPECT_EQ(cgroup_memory_usage.active_anon_bytes(), active_anon_bytes);
-  EXPECT_EQ(cgroup_memory_usage.inactive_file_bytes(), inactive_file_bytes);
-  EXPECT_EQ(cgroup_memory_usage.active_file_bytes(), active_file_bytes);
+MATCHER_P(MemoryProtoEq, expected, "") {
+  return arg.SerializeAsString() == expected.SerializeAsString();
 }
 
 }  // namespace
@@ -133,28 +95,43 @@ SwapCached:      0 kB)",
   const std::string kEmptyMeminfo = "";
 
   {
+    const SystemMemoryUsage kExpectedSystemMemoryUsage = [] {
+      SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
+      system_memory_usage.set_total_kb(kMemTotal);
+      system_memory_usage.set_free_kb(kMemFree);
+      system_memory_usage.set_available_kb(kMemAvailable);
+      system_memory_usage.set_buffers_kb(kBuffers);
+      system_memory_usage.set_cached_kb(kCached);
+      return system_memory_usage;
+    }();
     SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
     ErrorMessageOr<void> updating_result =
         UpdateSystemMemoryUsageFromMemInfo(kValidMeminfo, &system_memory_usage);
     EXPECT_FALSE(updating_result.has_error());
-    ExpectSystemMemoryUsageEq(system_memory_usage, kMemTotal, kMemFree, kMemAvailable, kBuffers,
-                              kCached);
+    EXPECT_THAT(system_memory_usage, MemoryProtoEq(kExpectedSystemMemoryUsage));
   }
 
   {
+    const SystemMemoryUsage kExpectedSystemMemoryUsage = [] {
+      SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
+      system_memory_usage.set_total_kb(kMemTotal);
+      system_memory_usage.set_free_kb(kMemFree);
+      return system_memory_usage;
+    }();
     SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
     ErrorMessageOr<void> updating_result =
         UpdateSystemMemoryUsageFromMemInfo(kPartialMeminfo, &system_memory_usage);
     EXPECT_FALSE(updating_result.has_error());
-    ExpectSystemMemoryUsageEq(system_memory_usage, kMemTotal, kMemFree);
+    EXPECT_THAT(system_memory_usage, MemoryProtoEq(kExpectedSystemMemoryUsage));
   }
 
   {
+    const SystemMemoryUsage kExpectedSystemMemoryUsage = CreateAndInitializeSystemMemoryUsage();
     SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
     ErrorMessageOr<void> updating_result =
         UpdateSystemMemoryUsageFromMemInfo(kEmptyMeminfo, &system_memory_usage);
     EXPECT_TRUE(updating_result.has_error());
-    ExpectSystemMemoryUsageEq(system_memory_usage);
+    EXPECT_THAT(system_memory_usage, MemoryProtoEq(kExpectedSystemMemoryUsage));
   }
 }
 
@@ -323,29 +300,39 @@ nr_unstable 0)",
   const std::string kEmptyProcVmStat = "";
 
   {
+    const SystemMemoryUsage kExpectedSystemMemoryUsage = [] {
+      SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
+      system_memory_usage.set_pgfault(kPageFaults);
+      system_memory_usage.set_pgmajfault(kMajorPageFaults);
+      return system_memory_usage;
+    }();
     SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
     ErrorMessageOr<void> updating_result =
         UpdateSystemMemoryUsageFromVmStat(kValidProcVmStat, &system_memory_usage);
     EXPECT_FALSE(updating_result.has_error());
-    ExpectSystemMemoryUsageEq(system_memory_usage, kMissingInfo, kMissingInfo, kMissingInfo,
-                              kMissingInfo, kMissingInfo, kPageFaults, kMajorPageFaults);
+    EXPECT_THAT(system_memory_usage, MemoryProtoEq(kExpectedSystemMemoryUsage));
   }
 
   {
+    const SystemMemoryUsage kExpectedSystemMemoryUsage = [] {
+      SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
+      system_memory_usage.set_pgfault(kPageFaults);
+      return system_memory_usage;
+    }();
     SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
     ErrorMessageOr<void> updating_result =
         UpdateSystemMemoryUsageFromVmStat(kPartialProcVmStat, &system_memory_usage);
     EXPECT_FALSE(updating_result.has_error());
-    ExpectSystemMemoryUsageEq(system_memory_usage, kMissingInfo, kMissingInfo, kMissingInfo,
-                              kMissingInfo, kMissingInfo, kPageFaults);
+    EXPECT_THAT(system_memory_usage, MemoryProtoEq(kExpectedSystemMemoryUsage));
   }
 
   {
+    const SystemMemoryUsage kExpectedSystemMemoryUsage = CreateAndInitializeSystemMemoryUsage();
     SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
     ErrorMessageOr<void> updating_result =
         UpdateSystemMemoryUsageFromVmStat(kEmptyProcVmStat, &system_memory_usage);
     EXPECT_TRUE(updating_result.has_error());
-    ExpectSystemMemoryUsageEq(system_memory_usage);
+    EXPECT_THAT(system_memory_usage, MemoryProtoEq(kExpectedSystemMemoryUsage));
   }
 }
 
@@ -360,31 +347,39 @@ TEST(MemoryUtils, UpdateProcessMemoryUsageFromProcessStat) {
   const std::string kEmptyProcessStat = "";
 
   {
+    const ProcessMemoryUsage kExpectedProcessMemoryUsage = [] {
+      ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
+      process_memory_usage.set_minflt(kMinorPageFaults);
+      process_memory_usage.set_majflt(kMajorPageFaults);
+      return process_memory_usage;
+    }();
     ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
     ErrorMessageOr<void> updating_result =
         UpdateProcessMemoryUsageFromProcessStat(kValidProcessStat, &process_memory_usage);
     EXPECT_FALSE(updating_result.has_error());
-    ExpectProcessMemoryUsageEq(process_memory_usage, kMinorPageFaults, kMajorPageFaults);
+    EXPECT_THAT(process_memory_usage, MemoryProtoEq(kExpectedProcessMemoryUsage));
   }
 
   {
+    const ProcessMemoryUsage kExpectedProcessMemoryUsage = CreateAndInitializeProcessMemoryUsage();
     ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
     ErrorMessageOr<void> updating_result =
         UpdateProcessMemoryUsageFromProcessStat(kPartialProcessStat, &process_memory_usage);
     EXPECT_TRUE(updating_result.has_error());
-    ExpectProcessMemoryUsageEq(process_memory_usage);
+    EXPECT_THAT(process_memory_usage, MemoryProtoEq(kExpectedProcessMemoryUsage));
   }
 
   {
+    const ProcessMemoryUsage kExpectedProcessMemoryUsage = CreateAndInitializeProcessMemoryUsage();
     ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
     ErrorMessageOr<void> updating_result =
         UpdateProcessMemoryUsageFromProcessStat(kEmptyProcessStat, &process_memory_usage);
     EXPECT_TRUE(updating_result.has_error());
-    ExpectProcessMemoryUsageEq(process_memory_usage);
+    EXPECT_THAT(process_memory_usage, MemoryProtoEq(kExpectedProcessMemoryUsage));
   }
 }
 
-TEST(MemoryUtils, UpdateProcessMemoryUsageFromProcessStatus) {
+TEST(MemoryUtils, ExtractRssAnonFromProcessStatus) {
   const int kRssAnonKb = 10264;
 
   const std::string kValidProcessStatus = absl::Substitute(
@@ -450,27 +445,22 @@ State:  S (sleeping))";
   const std::string kEmptyProcessStatus = "";
 
   {
-    ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
-    ErrorMessageOr<void> updating_result =
-        UpdateProcessMemoryUsageFromProcessStatus(kValidProcessStatus, &process_memory_usage);
-    EXPECT_FALSE(updating_result.has_error());
-    ExpectProcessMemoryUsageEq(process_memory_usage, kMissingInfo, kMissingInfo, kRssAnonKb);
+    ErrorMessageOr<int64_t> extracting_result =
+        ExtractRssAnonFromProcessStatus(kValidProcessStatus);
+    EXPECT_FALSE(extracting_result.has_error());
+    EXPECT_EQ(extracting_result.value(), kRssAnonKb);
   }
 
   {
-    ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
-    ErrorMessageOr<void> updating_result =
-        UpdateProcessMemoryUsageFromProcessStatus(kPartialProcessStatus, &process_memory_usage);
-    EXPECT_TRUE(updating_result.has_error());
-    ExpectProcessMemoryUsageEq(process_memory_usage);
+    ErrorMessageOr<int64_t> extracting_result =
+        ExtractRssAnonFromProcessStatus(kPartialProcessStatus);
+    EXPECT_TRUE(extracting_result.has_error());
   }
 
   {
-    ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
-    ErrorMessageOr<void> updating_result =
-        UpdateProcessMemoryUsageFromProcessStatus(kEmptyProcessStatus, &process_memory_usage);
-    EXPECT_TRUE(updating_result.has_error());
-    ExpectProcessMemoryUsageEq(process_memory_usage);
+    ErrorMessageOr<int64_t> extracting_result =
+        ExtractRssAnonFromProcessStatus(kEmptyProcessStatus);
+    EXPECT_TRUE(extracting_result.has_error());
   }
 }
 
@@ -565,30 +555,43 @@ rss_huge 0)";
   const std::string kEmptyCGroupMemoryStatus = "";
 
   {
+    const CGroupMemoryUsage kExpectedCGroupMemoryUsage = [] {
+      CGroupMemoryUsage cgroup_memory_usage = CreateAndInitializeCGroupMemoryUsage();
+      cgroup_memory_usage.set_rss_bytes(kRssInBytes);
+      cgroup_memory_usage.set_mapped_file_bytes(KMappedFileInBytes);
+      cgroup_memory_usage.set_pgfault(kPageFaults);
+      cgroup_memory_usage.set_pgmajfault(kMajorPageFaults);
+      cgroup_memory_usage.set_unevictable_bytes(kUnevictableInBytes);
+      cgroup_memory_usage.set_inactive_anon_bytes(kInactiveAnonInBytes);
+      cgroup_memory_usage.set_active_anon_bytes(kActiveAnonInBytes);
+      cgroup_memory_usage.set_inactive_file_bytes(kInactiveFileInBytes);
+      cgroup_memory_usage.set_active_file_bytes(kActiveFileInBytes);
+      return cgroup_memory_usage;
+    }();
+
     CGroupMemoryUsage cgroup_memory_usage = CreateAndInitializeCGroupMemoryUsage();
     ErrorMessageOr<void> updating_result =
         UpdateCGroupMemoryUsageFromMemoryStat(kValidCGroupMemoryStatus, &cgroup_memory_usage);
     EXPECT_FALSE(updating_result.has_error());
-    ExpectCGroupMemoryUsageEq(cgroup_memory_usage, kMissingInfo, kRssInBytes, KMappedFileInBytes,
-                              kPageFaults, kMajorPageFaults, kUnevictableInBytes,
-                              kInactiveAnonInBytes, kActiveAnonInBytes, kInactiveFileInBytes,
-                              kActiveFileInBytes);
+    EXPECT_THAT(cgroup_memory_usage, MemoryProtoEq(kExpectedCGroupMemoryUsage));
   }
 
   {
+    const CGroupMemoryUsage kExpectedCGroupMemoryUsage = CreateAndInitializeCGroupMemoryUsage();
     CGroupMemoryUsage cgroup_memory_usage = CreateAndInitializeCGroupMemoryUsage();
     ErrorMessageOr<void> updating_result =
         UpdateCGroupMemoryUsageFromMemoryStat(kPartialCGroupMemoryStatus, &cgroup_memory_usage);
     EXPECT_FALSE(updating_result.has_error());
-    ExpectCGroupMemoryUsageEq(cgroup_memory_usage);
+    EXPECT_THAT(cgroup_memory_usage, MemoryProtoEq(kExpectedCGroupMemoryUsage));
   }
 
   {
+    const CGroupMemoryUsage kExpectedCGroupMemoryUsage = CreateAndInitializeCGroupMemoryUsage();
     CGroupMemoryUsage cgroup_memory_usage = CreateAndInitializeCGroupMemoryUsage();
     ErrorMessageOr<void> updating_result =
         UpdateCGroupMemoryUsageFromMemoryStat(kEmptyCGroupMemoryStatus, &cgroup_memory_usage);
     EXPECT_TRUE(updating_result.has_error());
-    ExpectCGroupMemoryUsageEq(cgroup_memory_usage);
+    EXPECT_THAT(cgroup_memory_usage, MemoryProtoEq(kExpectedCGroupMemoryUsage));
   }
 }
 
