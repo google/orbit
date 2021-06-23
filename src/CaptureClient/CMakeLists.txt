@@ -31,8 +31,7 @@ target_sources(CaptureClient PRIVATE
 target_link_libraries(CaptureClient PUBLIC
         CaptureFile
         ClientData
-        GrpcProtos
-        OrbitCore)
+        GrpcProtos)
 
 add_fuzzer(CaptureEventProcessorProcessEventsFuzzer CaptureEventProcessorProcessEventsFuzzer.cpp)
 target_link_libraries(

@@ -87,7 +87,6 @@ inline bool Compare<std::string>(const std::string& a, const std::string& b, boo
   return asc ? a < b : a > b;
 }
 
-std::string FormatTime(absl::Time time);
 }  // namespace orbit_core
 
 #endif  // ORBIT_CORE_CORE_UTILS_H_
