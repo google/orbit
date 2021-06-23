@@ -30,7 +30,7 @@
 #include "OrbitGgp/InstanceItemModel.h"
 #include "OrbitGgp/SshInfo.h"
 #include "OrbitSsh/Credentials.h"
-#include "SessionSetup/servicedeploymanager.h"
+#include "SessionSetup/ServiceDeployManager.h"
 
 namespace Ui {
 class ConnectToStadiaWidget;

@@ -16,7 +16,7 @@
 #include "OrbitGgp/Instance.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSsh/Credentials.h"
-#include "SessionSetup/servicedeploymanager.h"
+#include "SessionSetup/ServiceDeployManager.h"
 #include "grpcpp/channel.h"
 
 namespace orbit_session_setup {
