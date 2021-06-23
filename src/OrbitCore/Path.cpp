@@ -53,7 +53,7 @@ static std::filesystem::path CreateAndGetConfigPath() {
   return config_dir;
 }
 
-std::filesystem::path GetSymbolsFileName() { return CreateAndGetConfigPath() / "SymbolPaths.txt"; }
+std::filesystem::path GetSymbolsFilePath() { return CreateAndGetConfigPath() / "SymbolPaths.txt"; }
 
 std::filesystem::path CreateOrGetCacheDir() {
   std::filesystem::path cache_dir = CreateOrGetOrbitAppDataDir() / "cache";
