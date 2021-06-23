@@ -5,18 +5,13 @@
 #include <gtest/gtest.h>
 #include <stdint.h>
 
-#include <algorithm>
 #include <memory>
 #include <string>
-#include <type_traits>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "Batcher.h"
-#include "BlockChain.h"
 #include "CoreMath.h"
-#include "CoreUtils.h"
 #include "Geometry.h"
 #include "PickingManager.h"
 #include "PickingManagerTest.h"
@@ -235,13 +230,11 @@ TEST(Batcher, MultipleDrawCalls) {
 
   batcher.StartNewFrame();
   PickingId id = MockRenderPickingColor(line_color);
-  const PickingUserData* rendered_data = nullptr;
-  EXPECT_DEATH(rendered_data = batcher.GetUserData(id), "size");
+  EXPECT_DEATH((void)batcher.GetUserData(id), "size");
   id = MockRenderPickingColor(triangle_color);
-  EXPECT_DEATH(rendered_data = batcher.GetUserData(id), "size");
+  EXPECT_DEATH((void)batcher.GetUserData(id), "size");
   id = MockRenderPickingColor(box_color);
-  EXPECT_DEATH(rendered_data = batcher.GetUserData(id), "size");
-  UNUSED(rendered_data);
+  EXPECT_DEATH((void)batcher.GetUserData(id), "size");
 }
 
 }  // namespace
