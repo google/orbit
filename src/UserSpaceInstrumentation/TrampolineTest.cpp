@@ -676,7 +676,7 @@ extern "C" __attribute__((naked)) int TooShort() {
 }
 
 TEST_F(InstrumentFunctionTest, TooShort) {
-#if defined(ORBIT_COVERAGE_BUILD) || (__GNUC__ == 9)
+#if defined(ORBIT_COVERAGE_BUILD) || (__GNUC__ == 9) || !defined(NDEBUG)
   GTEST_SKIP();
 #endif
   RunChild(&TooShort, "TooShort");

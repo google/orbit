@@ -40,8 +40,9 @@ void ClobberXmmRegisters(uint64_t) {
       "movdqu 0x12(%%rip), %%xmm5\n\t"
       "movdqu 0x0a(%%rip), %%xmm6\n\t"
       "movdqu 0x02(%%rip), %%xmm7\n\t"
-      "jmp .+0x12 \n\t"
+      "jmp label_clobber_xmm_after_data\n\t"
       ".quad 0xffffffffffffffff, 0xffffffffffffffff \n\t"
+      "label_clobber_xmm_after_data:\n\t"
       :
       :
       :);
@@ -57,8 +58,9 @@ void ClobberYmmRegisters(uint64_t) {
       "vmovdqu 0x12(%%rip), %%ymm5\n\t"
       "vmovdqu 0x0a(%%rip), %%ymm6\n\t"
       "vmovdqu 0x02(%%rip), %%ymm7\n\t"
-      "jmp .+0x22 \n\t"
+      "jmp label_clobber_ymm_after_data\n\t"
       ".quad 0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff \n\t"
+      "label_clobber_ymm_after_data:\n\t"
       :
       :
       :);
