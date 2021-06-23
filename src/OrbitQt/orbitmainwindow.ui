@@ -306,6 +306,9 @@ QPushButton:disabled {
     <property name="title">
      <string>Help</string>
     </property>
+    <property name="toolTipsVisible">
+     <bool>true</bool>
+    </property>
     <addaction name="actionOpenUserDataDirectory"/>
     <addaction name="actionOpenAppDataDirectory"/>
     <addaction name="separator"/>
@@ -523,6 +526,9 @@ QPushButton:disabled {
    <property name="text">
     <string>Open User Data Directory...</string>
    </property>
+   <property name="toolTip">
+    <string>This location contains presets and autosaved captures.</string>
+   </property>
   </action>
   <action name="actionOpenAppDataDirectory">
    <property name="icon">
@@ -531,6 +537,11 @@ QPushButton:disabled {
    </property>
    <property name="text">
     <string>Open App Data Directory...</string>
+   </property>
+   <property name="toolTip">
+    <string>This location contains logs, crash dumps, the symbol file cache, and the configuration file that specifies where to search for symbol files (SymbolPaths.txt).
+
+It used to also contain captures and presets, but these were moved to the User Data directory.</string>
    </property>
   </action>
  </widget>
