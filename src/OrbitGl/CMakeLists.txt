@@ -39,7 +39,7 @@ target_sources(
          GpuDebugMarkerTrack.h
          GpuSubmissionTrack.h
          GpuTrack.h
-         GraphTrack.h         
+         GraphTrack.h
          Images.h
          ImGuiOrbit.h
          IntrospectionWindow.h
@@ -55,6 +55,7 @@ target_sources(
          SchedulerTrack.h
          SchedulingStats.h
          ScopeTree.h
+         ShortenStringWithEllipsis.h
          StatusListener.h
          TextBox.h
          TextRenderer.h
@@ -104,7 +105,7 @@ target_sources(
           GpuDebugMarkerTrack.cpp
           GpuSubmissionTrack.cpp
           GpuTrack.cpp
-          GraphTrack.cpp          
+          GraphTrack.cpp
           ImGuiOrbit.cpp
           IntrospectionWindow.cpp
           LiveFunctionsDataView.cpp
@@ -182,6 +183,7 @@ target_sources(OrbitGlTests PRIVATE
                ScopedStatusTest.cpp
                ScopeTreeTest.cpp
                SliderTest.cpp
+               ShortenStringWithEllipsisTest.cpp
                TimerInfosIteratorTest.cpp
                ViewportTest.cpp)
 

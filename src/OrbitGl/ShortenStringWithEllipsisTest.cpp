@@ -4,11 +4,11 @@
 
 #include <gtest/gtest.h>
 
-#include <memory>
+#include "ShortenStringWithEllipsis.h"
 
-#include "CoreUtils.h"
+namespace orbit_gl {
 
-TEST(CoreUtils, TestEllipsis) {
+TEST(ShortenStringWithEllipsis, ShortenStringWithEllipsis) {
   EXPECT_EQ(ShortenStringWithEllipsis("17 char long text", 18), "17 char long text");
   EXPECT_EQ(ShortenStringWithEllipsis("17 char long text", 17), "17 char long text");
   EXPECT_EQ(ShortenStringWithEllipsis("17 char long text", 7), "17...xt");
@@ -23,3 +23,5 @@ TEST(CoreUtils, TestEllipsis) {
   EXPECT_EQ(ShortenStringWithEllipsis("abc", 1), "abc");
   EXPECT_EQ(ShortenStringWithEllipsis("abc", 0), "abc");
 }
+
+}  // namespace orbit_gl

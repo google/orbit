@@ -17,12 +17,12 @@
 #include "Batcher.h"
 #include "ClientData/CallstackData.h"
 #include "ClientModel/CaptureData.h"
-#include "CoreUtils.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "PickingManager.h"
+#include "ShortenStringWithEllipsis.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
@@ -204,7 +204,7 @@ bool CallstackThreadBar::IsEmpty() const {
 
   std::string fn_name =
       max_line_length >= 0
-          ? ShortenStringWithEllipsis(function_name, static_cast<size_t>(max_line_length))
+          ? orbit_gl::ShortenStringWithEllipsis(function_name, static_cast<size_t>(max_line_length))
           : function_name;
   // Simple HTML escaping
   return absl::StrReplaceAll(fn_name, {{"&", "&amp;"}, {"<", "&lt;"}, {">", "&gt;"}});

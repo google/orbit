@@ -48,7 +48,6 @@ add_executable(OrbitCoreTests)
 target_compile_options(OrbitCoreTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitCoreTests PRIVATE
-    CoreUtilsTest.cpp
     PathTest.cpp
     StringManagerTest.cpp)
 
