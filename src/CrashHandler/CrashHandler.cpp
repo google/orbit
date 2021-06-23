@@ -12,7 +12,7 @@
 #include <algorithm>
 #include <map>
 
-#include "CoreUtils.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitVersion/OrbitVersion.h"
 
 namespace {
