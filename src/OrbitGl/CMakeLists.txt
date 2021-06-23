@@ -94,6 +94,7 @@ target_sources(
           CaptureStats.cpp
           CaptureViewElement.cpp
           CaptureWindow.cpp
+          CompareAscendingOrDescending.h
           DataManager.cpp
           FramePointerValidatorClient.cpp
           FrameTrack.cpp
@@ -174,8 +175,8 @@ target_sources(OrbitGlTests PRIVATE
 target_sources(OrbitGlTests PRIVATE
                BatcherTest.cpp
                BlockChainTest.cpp
-               ClientFlags.cpp
                CaptureStatsTest.cpp
+               ClientFlags.cpp
                GlUtilsTest.cpp
                GpuTrackTest.cpp
                MultivariateTimeSeriesTest.cpp

@@ -75,18 +75,4 @@ inline std::string GetPrettyTime(absl::Duration duration) {
   return res;
 }
 
-namespace orbit_core {
-
-template <class T>
-inline bool Compare(const T& a, const T& b, bool asc) {
-  return asc ? a < b : a > b;
-}
-
-template <>
-inline bool Compare<std::string>(const std::string& a, const std::string& b, bool asc) {
-  return asc ? a < b : a > b;
-}
-
-}  // namespace orbit_core
-
 #endif  // ORBIT_CORE_CORE_UTILS_H_

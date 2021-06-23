@@ -5,6 +5,8 @@
 #include "DataViews/PresetsDataView.h"
 
 #include <absl/strings/str_cat.h>
+#include <absl/strings/str_format.h>
+#include <absl/strings/str_join.h>
 #include <absl/strings/str_split.h>
 #include <errno.h>
 
@@ -14,6 +16,7 @@
 #include <filesystem>
 #include <functional>
 
+#include "CompareAscendingOrDescending.h"
 #include "CoreUtils.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataViewType.h"
@@ -23,8 +26,6 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/SafeStrerror.h"
 #include "PresetFile/PresetFile.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/str_join.h"
 
 using orbit_preset_file::PresetFile;
 
@@ -49,8 +50,7 @@ namespace orbit_data_views {
 
 PresetsDataView::PresetsDataView(AppInterface* app,
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : DataView(DataViewType::kPresets, app),
-      metrics_uploader_(metrics_uploader) {}
+    : DataView(DataViewType::kPresets, app), metrics_uploader_(metrics_uploader) {}
 
 std::string PresetsDataView::GetModulesList(const std::vector<ModuleView>& modules) {
   return absl::StrJoin(modules, "\n", [](std::string* out, const ModuleView& module) {
@@ -98,11 +98,10 @@ std::string PresetsDataView::GetValue(int row, int column) {
 
 std::string PresetsDataView::GetToolTip(int row, int /*column*/) {
   const PresetFile& preset = GetPreset(row);
-  return absl::StrCat(
-      preset.file_path().string(),
-      app_->GetPresetLoadState(preset).state == PresetLoadState::kNotLoadable
-          ? "<br/><br/><i>None of the modules in the preset can be loaded.</i>"
-          : "");
+  return absl::StrCat(preset.file_path().string(),
+                      app_->GetPresetLoadState(preset).state == PresetLoadState::kNotLoadable
+                          ? "<br/><br/><i>None of the modules in the preset can be loaded.</i>"
+                          : "");
 }
 
 void PresetsDataView::DoSort() {
@@ -112,13 +111,14 @@ void PresetsDataView::DoSort() {
   switch (sorting_column_) {
     case kColumnLoadState:
       sorter = [&](int a, int b) {
-        return orbit_core::Compare(app_->GetPresetLoadState(presets_[a]).state,
-                                   app_->GetPresetLoadState(presets_[b]).state, ascending);
+        return CompareAscendingOrDescending(app_->GetPresetLoadState(presets_[a]).state,
+                                            app_->GetPresetLoadState(presets_[b]).state, ascending);
       };
       break;
     case kColumnPresetName:
       sorter = [&](int a, int b) {
-        return orbit_core::Compare(presets_[a].file_path(), presets_[b].file_path(), ascending);
+        return CompareAscendingOrDescending(presets_[a].file_path(), presets_[b].file_path(),
+                                            ascending);
       };
       break;
     default:

@@ -5,6 +5,7 @@
 #include "ModulesDataView.h"
 
 #include <absl/flags/declare.h>
+#include <absl/flags/flag.h>
 #include <absl/strings/ascii.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
@@ -16,10 +17,9 @@
 
 #include "App.h"
 #include "ClientData/ProcessData.h"
-#include "CoreUtils.h"
+#include "CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
 #include "OrbitBase/Logging.h"
-#include "absl/flags/flag.h"
 
 ABSL_DECLARE_FLAG(bool, enable_frame_pointer_validator);
 
@@ -65,16 +65,18 @@ std::string ModulesDataView::GetValue(int row, int col) {
   }
 }
 
-#define ORBIT_PROC_SORT(Member)                                                    \
-  [&](uint64_t a, uint64_t b) {                                                    \
-    return orbit_core::Compare(start_address_to_module_.at(a)->Member,             \
-                               start_address_to_module_.at(b)->Member, ascending); \
+#define ORBIT_PROC_SORT(Member)                                                           \
+  [&](uint64_t a, uint64_t b) {                                                           \
+    return orbit_gl::CompareAscendingOrDescending(start_address_to_module_.at(a)->Member, \
+                                                  start_address_to_module_.at(b)->Member, \
+                                                  ascending);                             \
   }
 
-#define ORBIT_MODULE_SPACE_SORT(Member)                                                     \
-  [&](uint64_t a, uint64_t b) {                                                             \
-    return orbit_core::Compare(start_address_to_module_in_memory_.at(a).Member,             \
-                               start_address_to_module_in_memory_.at(b).Member, ascending); \
+#define ORBIT_MODULE_SPACE_SORT(Member)                                                            \
+  [&](uint64_t a, uint64_t b) {                                                                    \
+    return orbit_gl::CompareAscendingOrDescending(start_address_to_module_in_memory_.at(a).Member, \
+                                                  start_address_to_module_in_memory_.at(b).Member, \
+                                                  ascending);                                      \
   }
 
 void ModulesDataView::DoSort() {

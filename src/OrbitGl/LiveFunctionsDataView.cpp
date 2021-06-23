@@ -21,6 +21,7 @@
 #include "App.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientModel/CaptureData.h"
+#include "CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"
 #include "GrpcProtos/Constants.h"
@@ -124,19 +125,21 @@ void LiveFunctionsDataView::OnSelect(const std::vector<int>& rows) {
   UpdateSelectedFunctionId();
 }
 
-#define ORBIT_FUNC_SORT(Member)                                                            \
-  [&](uint64_t a, uint64_t b) {                                                            \
-    return orbit_core::Compare(functions.at(a).Member, functions.at(b).Member, ascending); \
+#define ORBIT_FUNC_SORT(Member)                                                                   \
+  [&](uint64_t a, uint64_t b) {                                                                   \
+    return orbit_gl::CompareAscendingOrDescending(functions.at(a).Member, functions.at(b).Member, \
+                                                  ascending);                                     \
   }
-#define ORBIT_STAT_SORT(Member)                                                         \
-  [&](uint64_t a, uint64_t b) {                                                         \
-    const FunctionStats& stats_a = app_->GetCaptureData().GetFunctionStatsOrDefault(a); \
-    const FunctionStats& stats_b = app_->GetCaptureData().GetFunctionStatsOrDefault(b); \
-    return orbit_core::Compare(stats_a.Member, stats_b.Member, ascending);              \
+#define ORBIT_STAT_SORT(Member)                                                               \
+  [&](uint64_t a, uint64_t b) {                                                               \
+    const FunctionStats& stats_a = app_->GetCaptureData().GetFunctionStatsOrDefault(a);       \
+    const FunctionStats& stats_b = app_->GetCaptureData().GetFunctionStatsOrDefault(b);       \
+    return orbit_gl::CompareAscendingOrDescending(stats_a.Member, stats_b.Member, ascending); \
   }
-#define ORBIT_CUSTOM_FUNC_SORT(Func)                                                     \
-  [&](uint64_t a, uint64_t b) {                                                          \
-    return orbit_core::Compare(Func(functions.at(a)), Func(functions.at(b)), ascending); \
+#define ORBIT_CUSTOM_FUNC_SORT(Func)                                                            \
+  [&](uint64_t a, uint64_t b) {                                                                 \
+    return orbit_gl::CompareAscendingOrDescending(Func(functions.at(a)), Func(functions.at(b)), \
+                                                  ascending);                                   \
   }
 
 void LiveFunctionsDataView::DoSort() {

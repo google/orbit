@@ -7,6 +7,7 @@
 #include <absl/container/flat_hash_set.h>
 #include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
+#include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 #include <stddef.h>
 
@@ -23,14 +24,13 @@
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
 #include "ClientModel/CaptureData.h"
-#include "CoreUtils.h"
+#include "CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "SamplingReport.h"
-#include "absl/strings/str_format.h"
 
 using orbit_client_data::ModuleData;
 using orbit_client_data::ProcessData;
@@ -87,21 +87,23 @@ std::string SamplingReportDataView::GetValue(int row, int column) {
   }
 }
 
-#define ORBIT_PROC_SORT(Member)                                                      \
-  [&](int a, int b) {                                                                \
-    return orbit_core::Compare(functions[a].Member, functions[b].Member, ascending); \
+#define ORBIT_PROC_SORT(Member)                                                             \
+  [&](int a, int b) {                                                                       \
+    return orbit_gl::CompareAscendingOrDescending(functions[a].Member, functions[b].Member, \
+                                                  ascending);                               \
   }
 
-#define ORBIT_CUSTOM_FUNC_SORT(Func)                                               \
-  [&](int a, int b) {                                                              \
-    return orbit_core::Compare(Func(functions[a]), Func(functions[b]), ascending); \
+#define ORBIT_CUSTOM_FUNC_SORT(Func)                                                      \
+  [&](int a, int b) {                                                                     \
+    return orbit_gl::CompareAscendingOrDescending(Func(functions[a]), Func(functions[b]), \
+                                                  ascending);                             \
   }
 
-#define ORBIT_MODULE_NAME_FUNC_SORT                                                        \
-  [&](int a, int b) {                                                                      \
-    return orbit_core::Compare(std::filesystem::path(functions[a].module_path).filename(), \
-                               std::filesystem::path(functions[b].module_path).filename(), \
-                               ascending);                                                 \
+#define ORBIT_MODULE_NAME_FUNC_SORT                                             \
+  [&](int a, int b) {                                                           \
+    return orbit_gl::CompareAscendingOrDescending(                              \
+        std::filesystem::path(functions[a].module_path).filename(),             \
+        std::filesystem::path(functions[b].module_path).filename(), ascending); \
   }
 
 void SamplingReportDataView::DoSort() {
