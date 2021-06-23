@@ -27,6 +27,7 @@ target_link_libraries(DataViews PUBLIC
         ClientProtos
         MetricsUploader
         OrbitBase
+        OrbitCore
         PresetFile
         CONAN_PKG::abseil
         oqpi::oqpi)

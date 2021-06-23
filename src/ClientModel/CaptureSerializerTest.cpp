@@ -3,42 +3,21 @@
 // found in the LICENSE file.
 
 #include <absl/flags/flag.h>
-#include <gmock/gmock.h>
+#include <absl/strings/str_cat.h>
 #include <gtest/gtest.h>
-#include <sys/types.h>
 
 #include <cstdint>
 #include <string>
-#include <utility>
 #include <vector>
 
-#include "CaptureSerializationTestMatchers.h"
 #include "ClientData/ModuleManager.h"
-#include "ClientData/TracepointCustom.h"
 #include "ClientModel/CaptureData.h"
 #include "ClientModel/CaptureSerializer.h"
-#include "CoreUtils.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/strings/str_cat.h"
-#include "capture_data.pb.h"
 #include "module.pb.h"
-#include "tracepoint.pb.h"
 
 using orbit_client_data::ModuleManager;
 
-using orbit_client_protos::CallstackEvent;
-using orbit_client_protos::CallstackInfo;
-using orbit_client_protos::CaptureInfo;
-using orbit_client_protos::FunctionInfo;
-using orbit_client_protos::FunctionStats;
-using orbit_client_protos::LinuxAddressInfo;
-using orbit_client_protos::TracepointEventInfo;
-
 using orbit_grpc_protos::CaptureStarted;
-using orbit_grpc_protos::InstrumentedFunction;
-using orbit_grpc_protos::TracepointInfo;
-
-using ::testing::ElementsAreArray;
 
 namespace orbit_client_model {
 
@@ -63,7 +42,9 @@ TEST(CaptureSerializer, GenerateCaptureFileName) {
   capture_data.mutable_process()->UpdateModuleInfos({module_info});
 
   std::string expected_file_name = absl::StrCat(
-      "p_", orbit_core::FormatTime(capture_data.capture_start_time()), "_suffix.orbit");
+      "p_",
+      orbit_client_model_internal::FormatTimeWithUnderscores(capture_data.capture_start_time()),
+      "_suffix.orbit");
   EXPECT_EQ(expected_file_name,
             capture_serializer::GenerateCaptureFileName(
                 capture_data.process_name(), capture_data.capture_start_time(), "_suffix"));

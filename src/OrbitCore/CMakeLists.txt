@@ -17,8 +17,7 @@ target_sources(
 
 target_sources(
   OrbitCore
-  PRIVATE CoreUtils.cpp
-          Path.cpp
+  PRIVATE Path.cpp
           StringManager.cpp)
 
 target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})

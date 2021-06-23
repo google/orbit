@@ -21,6 +21,10 @@
 #include "OrbitBase/Result.h"
 #include "capture_data.pb.h"
 
+namespace orbit_client_model_internal {
+std::string FormatTimeWithUnderscores(absl::Time time);
+}  // namespace orbit_client_model_internal
+
 namespace orbit_client_model::capture_serializer {
 
 std::string GenerateCaptureFileName(std::string_view process_name, absl::Time time,
