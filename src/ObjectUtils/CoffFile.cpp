@@ -93,7 +93,10 @@ ErrorMessageOr<SymbolInfo> CoffFileImpl::CreateSymbolInfo(
   symbol_info.set_name(name);
   symbol_info.set_demangled_name(llvm::demangle(name));
   symbol_info.set_address(symbol_ref.getValue() + section_offset.value());
-  symbol_info.set_size(symbol_ref.getCommonSize());
+
+  llvm::object::COFFSymbolRef coff_symbol_ref = object_file_->getCOFFSymbol(symbol_ref);
+  symbol_info.set_size(coff_symbol_ref.getValue());
+
   return symbol_info;
 }
 
