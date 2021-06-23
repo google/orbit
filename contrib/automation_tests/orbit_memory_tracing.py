@@ -29,7 +29,7 @@ def main(argv):
         SetAndCheckMemorySamplingPeriod(memory_sampling_period='ab'),
         SetAndCheckMemorySamplingPeriod(memory_sampling_period='0'),
         Capture(collect_system_memory_usage=True),
-        FilterTracks(filter_string="Memory", expected_count=2),
+        FilterTracks(filter_string="Memory", expected_count=1),
         Capture(),
         FilterTracks(filter_string="Memory", expected_count=0)
     ]
