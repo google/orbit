@@ -156,7 +156,9 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
     return colors[id % colors.size()];
   }
   [[nodiscard]] static Color GetColor(uint64_t id) { return GetColor(static_cast<uint32_t>(id)); }
-  [[nodiscard]] static Color GetColor(const std::string& str) { return GetColor(StringHash(str)); }
+  [[nodiscard]] static Color GetColor(const std::string& str) {
+    return GetColor(std::hash<std::string>{}(str));
+  }
   [[nodiscard]] static Color GetThreadColor(int32_t tid) {
     return GetColor(static_cast<uint32_t>(tid));
   }
