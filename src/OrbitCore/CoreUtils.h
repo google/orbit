@@ -5,37 +5,8 @@
 #ifndef ORBIT_CORE_CORE_UTILS_H_
 #define ORBIT_CORE_CORE_UTILS_H_
 
-#include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
-#include <absl/strings/str_split.h>
 #include <absl/time/time.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <sys/types.h>
-
-#include <algorithm>
-#include <cctype>
-#include <cinttypes>
-#include <codecvt>
-#include <cstdarg>
-#include <cstdio>
-#include <cstring>
-#include <functional>
-#include <iomanip>
-#include <iterator>
-#include <map>
-#include <memory>
-#include <outcome.hpp>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-#include <utility>
-#include <vector>
-
-template <class T>
-inline void Append(std::vector<T>& dest, const std::vector<T>& source) {
-  dest.insert(std::end(dest), std::begin(source), std::end(source));
-}
 
 inline std::string GetPrettySize(uint64_t size) {
   constexpr double KB = 1024.0;
@@ -43,7 +14,7 @@ inline std::string GetPrettySize(uint64_t size) {
   constexpr double GB = 1024.0 * MB;
   constexpr double TB = 1024.0 * GB;
 
-  if (size < KB) return absl::StrFormat("%" PRIu64 " B", size);
+  if (size < KB) return absl::StrFormat("%u B", size);
   if (size < MB) return absl::StrFormat("%.2f KB", size / KB);
   if (size < GB) return absl::StrFormat("%.2f MB", size / MB);
   if (size < TB) return absl::StrFormat("%.2f GB", size / GB);

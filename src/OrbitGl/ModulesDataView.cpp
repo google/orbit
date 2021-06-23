@@ -19,6 +19,7 @@
 #include "ClientData/ProcessData.h"
 #include "CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
+#include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 
 ABSL_DECLARE_FLAG(bool, enable_frame_pointer_validator);
@@ -133,7 +134,7 @@ std::vector<std::string> ModulesDataView::GetContextMenu(int clicked_index,
   if (enable_verify && absl::GetFlag(FLAGS_enable_frame_pointer_validator)) {
     menu.emplace_back(kMenuActionVerifyFramePointers);
   }
-  Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
+  orbit_base::Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
 }
 

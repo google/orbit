@@ -17,12 +17,12 @@
 #include <functional>
 
 #include "CompareAscendingOrDescending.h"
-#include "CoreUtils.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/PresetLoadState.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "MetricsUploader/ScopedMetric.h"
+#include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/SafeStrerror.h"
 #include "PresetFile/PresetFile.h"
@@ -144,7 +144,7 @@ std::vector<std::string> PresetsDataView::GetContextMenu(int clicked_index,
     }
     menu.emplace_back(kMenuActionDelete);
   }
-  Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
+  orbit_base::Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
 }
 

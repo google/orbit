@@ -15,6 +15,7 @@
 #include "App.h"
 #include "CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
+#include "OrbitBase/Append.h"
 
 using orbit_grpc_protos::TracepointInfo;
 
@@ -119,7 +120,7 @@ std::vector<std::string> TracepointsDataView::GetContextMenu(
   if (enable_select) menu.emplace_back(kMenuActionSelect);
   if (enable_unselect) menu.emplace_back(kMenuActionUnselect);
 
-  Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
+  orbit_base::Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
   return menu;
 }
 

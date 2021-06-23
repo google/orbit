@@ -28,6 +28,7 @@
 #include "GrpcProtos/Constants.h"
 #include "ManualInstrumentationManager.h"
 #include "MemoryTrack.h"
+#include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/Tracing.h"
@@ -489,12 +490,12 @@ void TimeGraph::ProcessAsyncTimer(const std::string& track_name, const TimerInfo
 std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllTimerChains() const {
   std::vector<std::shared_ptr<TimerChain>> chains;
   for (const auto& track : track_manager_->GetAllTracks()) {
-    Append(chains, track->GetAllChains());
+    orbit_base::Append(chains, track->GetAllChains());
   }
   // Frame tracks are removable by users and cannot simply be thrown into the
   // tracks_ vector.
   for (const auto& track : track_manager_->GetFrameTracks()) {
-    Append(chains, track->GetAllChains());
+    orbit_base::Append(chains, track->GetAllChains());
   }
   return chains;
 }
@@ -502,7 +503,7 @@ std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllTimerChains() const {
 std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllThreadTrackTimerChains() const {
   std::vector<std::shared_ptr<TimerChain>> chains;
   for (const auto& track : track_manager_->GetThreadTracks()) {
-    Append(chains, track->GetAllChains());
+    orbit_base::Append(chains, track->GetAllChains());
   }
   return chains;
 }
@@ -510,7 +511,7 @@ std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllThreadTrackTimerChains
 std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllSerializableTimerChains() const {
   std::vector<std::shared_ptr<TimerChain>> chains;
   for (const auto& track : track_manager_->GetAllTracks()) {
-    Append(chains, track->GetAllSerializableChains());
+    orbit_base::Append(chains, track->GetAllSerializableChains());
   }
   return chains;
 }

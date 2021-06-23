@@ -4,8 +4,6 @@
 
 #include "CaptureWindow.h"
 
-#include <GteVector.h>
-#include <absl/container/flat_hash_map.h>
 #include <absl/time/time.h>
 #include <glad/glad.h>
 #include <imgui.h>
@@ -24,11 +22,11 @@
 #include "ClientData/CallstackData.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreMath.h"
-#include "CoreUtils.h"
 #include "Geometry.h"
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
+#include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/Tracing.h"
@@ -420,10 +418,10 @@ void CaptureWindow::Draw(bool viewport_was_dirty) {
   std::vector<float> all_layers{};
   if (time_graph_ != nullptr) {
     all_layers = time_graph_->GetBatcher().GetLayers();
-    Append(all_layers, time_graph_->GetTextRenderer()->GetLayers());
+    orbit_base::Append(all_layers, time_graph_->GetTextRenderer()->GetLayers());
   }
-  Append(all_layers, ui_batcher_.GetLayers());
-  Append(all_layers, text_renderer_.GetLayers());
+  orbit_base::Append(all_layers, ui_batcher_.GetLayers());
+  orbit_base::Append(all_layers, text_renderer_.GetLayers());
 
   // Sort and remove duplicates.
   std::sort(all_layers.begin(), all_layers.end());
