@@ -60,6 +60,8 @@ void GraphTrack<Dimension>::Draw(Batcher& batcher, TextRenderer& text_renderer,
   float label_z = GlCanvas::kZValueTrackLabel + z_offset;
   float text_z = GlCanvas::kZValueTrackText + z_offset;
 
+  if (collapse_toggle_->IsCollapsed()) return;
+
   // Draw label
   const std::array<double, Dimension>& values =
       series_.GetPreviousOrFirstEntry(current_mouse_time_ns)->second;
@@ -70,8 +72,9 @@ void GraphTrack<Dimension>::Draw(Batcher& batcher, TextRenderer& text_renderer,
   std::string text = GetLabelTextFromValues(values);
   DrawLabel(batcher, text_renderer, Vec2(point_x, point_y), text, kBlack, kWhite, label_z);
 
+  if (Dimension == 1) return;
+
   // Draw legends
-  if (Dimension == 1 || collapse_toggle_->IsCollapsed()) return;
   DrawLegend(batcher, text_renderer, series_.GetSeriesNames(), kWhite, text_z);
 }
 
