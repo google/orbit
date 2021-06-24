@@ -69,7 +69,7 @@ class GpuSubmissionTrack : public TimerTrack {
 
  private:
   uint64_t timeline_hash_;
-  StringManager* string_manager_;
+  orbit_gl::StringManager* string_manager_;
   Track* parent_;
 
   bool has_vulkan_layer_command_buffer_timers_ = false;

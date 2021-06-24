@@ -12,13 +12,11 @@ target_compile_options(OrbitCore PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(
   OrbitCore
   PUBLIC CoreUtils.h
-         Path.h
-         StringManager.h)
+         Path.h)
 
 target_sources(
   OrbitCore
-  PRIVATE Path.cpp
-          StringManager.cpp)
+  PRIVATE Path.cpp)
 
 target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
@@ -46,8 +44,7 @@ add_executable(OrbitCoreTests)
 target_compile_options(OrbitCoreTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitCoreTests PRIVATE
-    PathTest.cpp
-    StringManagerTest.cpp)
+    PathTest.cpp)
 
 target_link_libraries(
   OrbitCoreTests

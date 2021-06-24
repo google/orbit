@@ -39,7 +39,7 @@ class ManualInstrumentationManager {
  private:
   absl::flat_hash_set<AsyncTimerInfoListener*> async_timer_info_listeners_;
   absl::flat_hash_map<uint32_t, orbit_client_protos::TimerInfo> async_timer_info_start_by_id_;
-  StringManager string_manager_;
+  orbit_gl::StringManager string_manager_;
   absl::Mutex mutex_;
 };
 
