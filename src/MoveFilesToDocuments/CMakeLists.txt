@@ -24,7 +24,7 @@ target_sources(MoveFilesToDocuments PRIVATE
 
 target_link_libraries(MoveFilesToDocuments PUBLIC
         OrbitBase
-        OrbitCore
+        OrbitPaths
         Qt5::Widgets
         Qt5::Core
         CONAN_PKG::abseil)

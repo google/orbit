@@ -1,22 +1,23 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
 
 #include <filesystem>
-#include <initializer_list>
 #include <string>
 
 #include "OrbitBase/Logging.h"
-#include "Path.h"
+#include "OrbitPaths/Paths.h"
 
-TEST(Path, FileExistsEmptyFilename) {
+namespace orbit_paths {
+
+TEST(Paths, FileExistsEmptyFilename) {
   std::string filename{};
   EXPECT_FALSE(std::filesystem::exists(filename));
 }
 
-TEST(Path, FileExistsRootDir) {
+TEST(Paths, FileExistsRootDir) {
   std::string filename;
 #ifdef _WIN32
   filename = "C:\\";
@@ -27,16 +28,15 @@ TEST(Path, FileExistsRootDir) {
 }
 
 #ifndef _WIN32
-TEST(Path, FileExistsDevNull) {
+TEST(Paths, FileExistsDevNull) {
   std::string filename = "/dev/null";
   EXPECT_TRUE(std::filesystem::exists(filename));
 }
 #endif
 
 TEST(Path, AllAutoCreatedDirsExist) {
-  auto test_fns = {orbit_core::CreateOrGetOrbitAppDataDir, orbit_core::CreateOrGetDumpDir,
-                   orbit_core::CreateOrGetPresetDir,       orbit_core::CreateOrGetCacheDir,
-                   orbit_core::CreateOrGetCaptureDir,      orbit_core::CreateOrGetLogDir};
+  auto test_fns = {CreateOrGetOrbitAppDataDir, CreateOrGetDumpDir,    CreateOrGetPresetDir,
+                   CreateOrGetCacheDir,        CreateOrGetCaptureDir, CreateOrGetLogDir};
 
   for (auto fn : test_fns) {
     std::filesystem::path path = fn();
@@ -45,8 +45,8 @@ TEST(Path, AllAutoCreatedDirsExist) {
   }
 }
 
-TEST(Path, AllDirsOfFilesExist) {
-  auto test_fns = {orbit_core::GetLogFilePath};
+TEST(Paths, AllDirsOfFilesExist) {
+  auto test_fns = {GetLogFilePath};
 
   for (auto fn : test_fns) {
     std::filesystem::path path = fn().parent_path();
@@ -54,3 +54,5 @@ TEST(Path, AllDirsOfFilesExist) {
     EXPECT_TRUE(std::filesystem::is_directory(path));
   }
 }
+
+}  // namespace orbit_paths

@@ -1,8 +1,8 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "Path.h"
+#include "OrbitPaths/Paths.h"
 
 #include <absl/flags/flag.h>
 
@@ -19,7 +19,7 @@
 
 ABSL_FLAG(std::string, log_dir, "", "Set directory for the log.");
 
-namespace orbit_core {
+namespace orbit_paths {
 
 static std::string GetEnvVar(const char* variable_name) {
   std::string var;
@@ -142,4 +142,4 @@ std::filesystem::path GetLogFilePath() {
   return CreateOrGetLogDir() / orbit_base::GetLogFileName();
 }
 
-}  // namespace orbit_core
+}  // namespace orbit_paths

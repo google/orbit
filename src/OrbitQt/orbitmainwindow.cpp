@@ -87,8 +87,8 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/Tracing.h"
 #include "OrbitGgp/Instance.h"
+#include "OrbitPaths/Paths.h"
 #include "OrbitVersion/OrbitVersion.h"
-#include "Path.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "SamplingReport.h"
 #include "SessionSetup/Connections.h"
@@ -832,7 +832,7 @@ void OrbitMainWindow::on_actionReport_Bug_triggered() {
 }
 
 void OrbitMainWindow::on_actionOpenUserDataDirectory_triggered() {
-  std::string user_data_dir = orbit_core::CreateOrGetOrbitUserDataDir().string();
+  std::string user_data_dir = orbit_paths::CreateOrGetOrbitUserDataDir().string();
   QUrl user_data_url = QUrl::fromLocalFile(QString::fromStdString(user_data_dir));
   if (!QDesktopServices::openUrl(user_data_url)) {
     QMessageBox::critical(this, "Error opening directory",
@@ -841,7 +841,7 @@ void OrbitMainWindow::on_actionOpenUserDataDirectory_triggered() {
 }
 
 void OrbitMainWindow::on_actionOpenAppDataDirectory_triggered() {
-  std::string app_data_dir = orbit_core::CreateOrGetOrbitAppDataDir().string();
+  std::string app_data_dir = orbit_paths::CreateOrGetOrbitAppDataDir().string();
   QUrl app_data_url = QUrl::fromLocalFile(QString::fromStdString(app_data_dir));
   if (!QDesktopServices::openUrl(app_data_url)) {
     QMessageBox::critical(this, "Error opening directory",
@@ -926,7 +926,7 @@ void OrbitMainWindow::OnFilterTracksTextChanged(const QString& text) {
 void OrbitMainWindow::on_actionOpen_Preset_triggered() {
   QStringList list = QFileDialog::getOpenFileNames(
       this, "Select a file to open...",
-      QString::fromStdString(orbit_core::CreateOrGetPresetDir().string()), "*.opr");
+      QString::fromStdString(orbit_paths::CreateOrGetPresetDir().string()), "*.opr");
   for (const auto& file : list) {
     ErrorMessageOr<void> result = app_->OnLoadPreset(file.toStdString());
     if (result.has_error()) {
@@ -942,7 +942,7 @@ void OrbitMainWindow::on_actionOpen_Preset_triggered() {
 void OrbitMainWindow::on_actionSave_Preset_As_triggered() {
   QString file = QFileDialog::getSaveFileName(
       this, "Specify a file to save...",
-      QString::fromStdString(orbit_core::CreateOrGetPresetDir().string()), "*.opr");
+      QString::fromStdString(orbit_paths::CreateOrGetPresetDir().string()), "*.opr");
   if (file.isEmpty()) {
     return;
   }
@@ -1096,8 +1096,8 @@ void OrbitMainWindow::OnTimerSelectionChanged(const orbit_client_protos::TimerIn
 
 void OrbitMainWindow::on_actionOpen_Capture_triggered() {
   QString file = QFileDialog::getOpenFileName(
-      this, "Open capture...", QString::fromStdString(orbit_core::CreateOrGetCaptureDir().string()),
-      "*.orbit");
+      this, "Open capture...",
+      QString::fromStdString(orbit_paths::CreateOrGetCaptureDir().string()), "*.orbit");
   if (file.isEmpty()) {
     return;
   }

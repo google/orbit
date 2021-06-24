@@ -15,10 +15,11 @@ target_include_directories(Symbols PUBLIC
 target_compile_options(Symbols PRIVATE ${STRICT_COMPILE_FLAGS})
 target_compile_features(Symbols PUBLIC cxx_std_17)
 
-target_link_libraries(Symbols PUBLIC GrpcProtos
-                                     ObjectUtils
-                                     OrbitBase
-                                     OrbitCore)
+target_link_libraries(Symbols PUBLIC
+        GrpcProtos
+        ObjectUtils
+        OrbitBase
+        OrbitPaths)
 
 
 add_executable(SymbolsTests)

@@ -9,21 +9,14 @@ add_library(OrbitCore STATIC)
 
 target_compile_options(OrbitCore PRIVATE ${STRICT_COMPILE_FLAGS})
 
-target_sources(
-  OrbitCore
-  PUBLIC CoreUtils.h
-         Path.h)
-
-target_sources(
-  OrbitCore
-  PRIVATE Path.cpp)
+target_sources(OrbitCore PUBLIC
+        CoreUtils.h)
 
 target_include_directories(OrbitCore PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
-target_link_libraries(
-  OrbitCore
-  PUBLIC OrbitBase
-         CONAN_PKG::abseil)
+target_link_libraries(OrbitCore PUBLIC
+        OrbitBase
+        CONAN_PKG::abseil)
 
 if(WIN32)
   target_link_libraries(OrbitCore PRIVATE dbghelp.lib)
@@ -38,18 +31,3 @@ target_compile_definitions(OrbitCore PUBLIC UNICODE)
 target_compile_definitions(OrbitCore PUBLIC _UNICODE)
 
 target_compile_features(OrbitCore PUBLIC cxx_std_11)
-
-add_executable(OrbitCoreTests)
-
-target_compile_options(OrbitCoreTests PRIVATE ${STRICT_COMPILE_FLAGS})
-
-target_sources(OrbitCoreTests PRIVATE
-    PathTest.cpp)
-
-target_link_libraries(
-  OrbitCoreTests
-  PRIVATE OrbitCore
-          GTest::Main
-          CONAN_PKG::abseil)
-
-register_test(OrbitCoreTests)

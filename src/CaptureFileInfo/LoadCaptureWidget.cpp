@@ -14,7 +14,7 @@
 
 #include "CaptureFileInfo/Manager.h"
 #include "OrbitBase/Logging.h"
-#include "Path.h"
+#include "OrbitPaths/Paths.h"
 #include "ui_LoadCaptureWidget.h"
 
 constexpr int kRowHeight = 19;
@@ -30,7 +30,7 @@ LoadCaptureWidget::LoadCaptureWidget(QWidget* parent)
   Manager manager;
 
   if (manager.GetCaptureFileInfos().empty()) {
-    (void)manager.FillFromDirectory(orbit_core::CreateOrGetCaptureDir());
+    (void)manager.FillFromDirectory(orbit_paths::CreateOrGetCaptureDir());
   }
 
   item_model_.SetCaptureFileInfos(manager.GetCaptureFileInfos());
@@ -109,7 +109,7 @@ void LoadCaptureWidget::showEvent(QShowEvent* event) {
 
 void LoadCaptureWidget::SelectViaFilePicker() {
   QFileDialog file_picker(this, "Open Capture...",
-                          QString::fromStdString(orbit_core::CreateOrGetCaptureDir().string()),
+                          QString::fromStdString(orbit_paths::CreateOrGetCaptureDir().string()),
                           "*.orbit");
   file_picker.setFileMode(QFileDialog::ExistingFile);
   file_picker.setLabelText(QFileDialog::Accept, "Start Session");

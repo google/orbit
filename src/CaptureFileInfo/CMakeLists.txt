@@ -31,6 +31,7 @@ target_link_libraries(
   CaptureFileInfo
   PUBLIC  OrbitBase
           OrbitCore
+          OrbitPaths
           Qt5::Widgets)
 
 set_target_properties(CaptureFileInfo PROPERTIES AUTOMOC ON)
