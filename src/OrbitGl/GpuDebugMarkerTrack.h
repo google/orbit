@@ -53,7 +53,7 @@ class GpuDebugMarkerTrack : public TimerTrack {
   [[nodiscard]] std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const override;
 
  private:
-  StringManager* string_manager_;
+  orbit_gl::StringManager* string_manager_;
 };
 
 #endif  // ORBIT_GL_GPU_DEBUG_MARKER_TRACK_H_

@@ -10,6 +10,8 @@
 
 #include "OrbitBase/Logging.h"
 
+namespace orbit_gl {
+
 // TODO(b/181207737): Make this assert that it is not present and rename to "Add".
 bool StringManager::AddIfNotPresent(uint64_t key, std::string_view str) {
   absl::MutexLock lock{&mutex_};
@@ -44,3 +46,5 @@ void StringManager::Clear() {
   absl::MutexLock lock{&mutex_};
   key_to_string_.clear();
 }
+
+}  // namespace orbit_gl

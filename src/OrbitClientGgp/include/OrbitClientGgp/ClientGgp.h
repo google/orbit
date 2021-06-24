@@ -29,7 +29,6 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitClientGgp/ClientGgpOptions.h"
-#include "StringManager.h"
 #include "capture.pb.h"
 #include "capture_data.pb.h"
 #include "tracepoint.pb.h"

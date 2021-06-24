@@ -364,7 +364,7 @@ class OrbitApp final : public DataViewFactory,
       orbit_data_views::DataViewType type) override;
   [[nodiscard]] orbit_data_views::DataView* GetOrCreateSelectionCallstackDataView();
 
-  [[nodiscard]] StringManager* GetStringManager() { return &string_manager_; }
+  [[nodiscard]] orbit_gl::StringManager* GetStringManager() { return &string_manager_; }
   [[nodiscard]] orbit_client_services::ProcessManager* GetProcessManager() {
     return process_manager_;
   }
@@ -563,7 +563,7 @@ class OrbitApp final : public DataViewFactory,
   absl::flat_hash_map<std::pair<std::string, std::string>, orbit_base::Future<ErrorMessageOr<void>>>
       symbols_currently_loading_;
 
-  StringManager string_manager_;
+  orbit_gl::StringManager string_manager_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
 
   orbit_gl::MainWindowInterface* main_window_ = nullptr;

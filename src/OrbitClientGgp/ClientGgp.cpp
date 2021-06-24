@@ -34,7 +34,6 @@
 #include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "StringManager.h"
 #include "Symbols/SymbolHelper.h"
 #include "capture_data.pb.h"
 #include "module.pb.h"

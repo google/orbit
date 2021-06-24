@@ -118,6 +118,8 @@ target_sources(
           SamplingReportDataView.cpp
           SchedulerTrack.cpp
           SchedulingStats.cpp
+          StringManager.cpp
+          StringManager.h
           TextRenderer.cpp
           TimeGraph.cpp
           TimeGraphLayout.cpp
@@ -185,6 +187,7 @@ target_sources(OrbitGlTests PRIVATE
                ScopeTreeTest.cpp
                SliderTest.cpp
                ShortenStringWithEllipsisTest.cpp
+               StringManagerTest.cpp
                TimerInfosIteratorTest.cpp
                ViewportTest.cpp)
 
