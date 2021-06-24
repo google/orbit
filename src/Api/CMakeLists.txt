@@ -37,24 +37,4 @@ target_link_libraries(Api PUBLIC
 
 strip_symbols(Api)
 
-
-add_library(ApiLib STATIC)
-
-target_compile_options(ApiLib PRIVATE ${STRICT_COMPILE_FLAGS})
-
-target_compile_features(ApiLib PUBLIC cxx_std_17)
-
-target_sources(ApiLib PUBLIC
-        include/Api/EnableInTracee.h)
-
-target_sources(ApiLib PRIVATE
-        EnableInTracee.cpp)
-
-target_link_libraries(ApiLib PUBLIC
-        ApiInterface
-        ObjectUtils
-        OrbitBase
-        UserSpaceInstrumentation)
 endif()
-
-
