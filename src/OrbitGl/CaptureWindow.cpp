@@ -22,6 +22,7 @@
 #include "ClientData/CallstackData.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreMath.h"
+#include "DisplayFormats/DisplayFormats.h"
 #include "Geometry.h"
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
@@ -741,7 +742,7 @@ void CaptureWindow::RenderTimeBar() {
       double current_micros = norm_start_us + i * 1000 * norm_inc;
       if (current_micros < 0) continue;
 
-      std::string text = GetPrettyTime(absl::Microseconds(current_micros));
+      std::string text = orbit_display_formats::GetDisplayTime(absl::Microseconds(current_micros));
       float world_x = time_graph_->GetWorldFromUs(current_micros);
       text_renderer_.AddText(text.c_str(), world_x + x_margin, world_pos[1],
                              GlCanvas::kZValueTimeBar, Color(255, 255, 255, 255),
@@ -771,7 +772,7 @@ void CaptureWindow::RenderSelectionOverlay() {
   Vec2 pos(from_world, viewport_.GetWorldTopLeft()[1] - viewport_.GetVisibleWorldHeight());
   Vec2 size(size_x, viewport_.GetVisibleWorldHeight());
 
-  std::string text = GetPrettyTime(TicksToDuration(min_time, max_time));
+  std::string text = orbit_display_formats::GetDisplayTime(TicksToDuration(min_time, max_time));
   const Color color(0, 128, 0, 128);
 
   Box box(pos, size, GlCanvas::kZValueOverlay);

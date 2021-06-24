@@ -5,7 +5,7 @@
 #include "CaptureFileInfo/ItemModel.h"
 
 #include "CaptureFileInfo/CaptureFileInfo.h"
-#include "CoreUtils.h"
+#include "DisplayFormats/DisplayFormats.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_capture_file_info {
@@ -59,7 +59,8 @@ QVariant ItemModel::data(const QModelIndex& idx, int role) const {
 
   if (role == Qt::ToolTipRole) {
     return QString::fromStdString("%1 - %2")
-        .arg(QString::fromStdString(GetPrettySize(capture_file_info.FileSize())))
+        .arg(QString::fromStdString(
+            orbit_display_formats::GetDisplaySize(capture_file_info.FileSize())))
         .arg(capture_file_info.FilePath());
   }
 

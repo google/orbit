@@ -19,7 +19,7 @@
 #include "App.h"
 #include "AsyncTrack.h"
 #include "ClientData/FunctionUtils.h"
-#include "CoreUtils.h"
+#include "DisplayFormats/DisplayFormats.h"
 #include "FrameTrack.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
@@ -456,7 +456,8 @@ void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
   constexpr uint64_t kKilobytesToBytes = 1024;
   if (!track->GetValueUpperBound().has_value()) {
     const std::string kValueUpperBoundLabel = "System Memory Total";
-    std::string total_pretty_size = GetPrettySize(total_kb * kKilobytesToBytes);
+    std::string total_pretty_size =
+        orbit_display_formats::GetDisplaySize(total_kb * kKilobytesToBytes);
     std::string total_pretty_label =
         absl::StrFormat("%s: %s", kValueUpperBoundLabel, total_pretty_size);
     double total_raw_value = static_cast<double>(total_kb) / kMegabytesToKilobytes;
@@ -473,7 +474,7 @@ void TimeGraph::ProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
     const std::string kWarningThresholdLabel = "Production Limit";
     uint64_t warning_threshold_kb = app_->GetMemoryWarningThresholdKb();
     std::string warning_threshold_pretty_size =
-        GetPrettySize(warning_threshold_kb * kKilobytesToBytes);
+        orbit_display_formats::GetDisplaySize(warning_threshold_kb * kKilobytesToBytes);
     std::string warning_threshold_pretty_label =
         absl::StrFormat("%s: %s", kWarningThresholdLabel, warning_threshold_pretty_size);
     double warning_threshold_raw_value =
@@ -697,7 +698,7 @@ namespace {
 std::string GetTimeString(const TimerInfo& timer_a, const TimerInfo& timer_b) {
   absl::Duration duration = TicksToDuration(timer_a.start(), timer_b.start());
 
-  return GetPrettyTime(duration);
+  return orbit_display_formats::GetDisplayTime(duration);
 }
 
 [[nodiscard]] Color GetIteratorBoxColor(uint64_t index) {

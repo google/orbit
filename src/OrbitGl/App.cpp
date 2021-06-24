@@ -50,7 +50,6 @@
 #include "CodeReport/Disassembler.h"
 #include "CodeReport/DisassemblyReport.h"
 #include "CodeReport/SourceCodeReport.h"
-#include "CoreUtils.h"
 #include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"

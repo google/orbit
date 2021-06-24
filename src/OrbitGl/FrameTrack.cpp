@@ -13,7 +13,7 @@
 
 #include "Batcher.h"
 #include "ClientData/FunctionUtils.h"
-#include "CoreUtils.h"
+#include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
 #include "TextRenderer.h"
@@ -162,7 +162,8 @@ void FrameTrack::OnTimer(const TimerInfo& timer_info) {
 void FrameTrack::SetTimesliceText(const TimerInfo& timer_info, float min_x, float z_offset,
                                   TextBox* text_box) {
   if (text_box->GetText().empty()) {
-    std::string time = GetPrettyTime(absl::Nanoseconds(timer_info.end() - timer_info.start()));
+    std::string time = orbit_display_formats::GetDisplayTime(
+        absl::Nanoseconds(timer_info.end() - timer_info.start()));
     text_box->SetElapsedTimeTextLength(time.length());
 
     std::string text = absl::StrFormat("Frame #%u: %s", timer_info.user_data_key(), time.c_str());
@@ -201,9 +202,9 @@ std::string FrameTrack::GetTooltip() const {
       "<b>Average frame time:</b> %s<br/>",
       function_name, kHeightCapAverageMultipleUint64, function_name,
       orbit_client_data::function_utils::GetLoadedModuleNameByPath(function_.file_path()),
-      stats_.count(), GetPrettyTime(absl::Nanoseconds(stats_.max_ns())),
-      GetPrettyTime(absl::Nanoseconds(stats_.min_ns())),
-      GetPrettyTime(absl::Nanoseconds(stats_.average_time_ns())));
+      stats_.count(), orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats_.max_ns())),
+      orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats_.min_ns())),
+      orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats_.average_time_ns())));
 }
 
 std::string FrameTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
@@ -227,7 +228,7 @@ std::string FrameTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) cons
       function_name, kHeightCapAverageMultipleUint64, function_name,
       orbit_client_data::function_utils::GetLoadedModuleNameByPath(function_.file_path()),
       text_box->GetTimerInfo().user_data_key(),
-      GetPrettyTime(
+      orbit_display_formats::GetDisplayTime(
           TicksToDuration(text_box->GetTimerInfo().start(), text_box->GetTimerInfo().end())));
 }
 
@@ -244,7 +245,8 @@ void FrameTrack::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t cu
   Vec2 to(x + size_[0], y);
   float text_z = GlCanvas::kZValueTrackText + z_offset;
 
-  std::string avg_time = GetPrettyTime(absl::Nanoseconds(stats_.average_time_ns()));
+  std::string avg_time =
+      orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats_.average_time_ns()));
   std::string label = absl::StrFormat("Avg: %s", avg_time);
   uint32_t font_size = layout_->CalculateZoomedFontSize();
   float string_width = text_renderer.GetStringWidth(label.c_str(), font_size);

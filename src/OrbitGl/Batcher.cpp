@@ -10,7 +10,7 @@
 #include <math.h>
 #include <stddef.h>
 
-#include "CoreUtils.h"
+#include "DisplayFormats/DisplayFormats.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
 

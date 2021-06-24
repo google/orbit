@@ -78,6 +78,7 @@
 #include "CodeViewer/OwningDialog.h"
 #include "DataViewFactory.h"
 #include "DataViews/DataViewType.h"
+#include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "LiveFunctionsController.h"
 #include "LiveFunctionsDataView.h"
@@ -575,7 +576,7 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   hint_frame_->setVisible(!has_data);
 
   filter_panel_action_->SetTimerLabelText(
-      QString::fromStdString(GetPrettyTime(app_->GetCaptureTime())));
+      QString::fromStdString(orbit_display_formats::GetDisplayTime(app_->GetCaptureTime())));
 
   UpdateCaptureToolbarIconOpacity();
 
@@ -905,7 +906,7 @@ void OrbitMainWindow::OnTimer() {
 
   if (app_->IsCapturing()) {
     filter_panel_action_->SetTimerLabelText(
-        QString::fromStdString(GetPrettyTime(app_->GetCaptureTime())));
+        QString::fromStdString(orbit_display_formats::GetDisplayTime(app_->GetCaptureTime())));
   }
 }
 
@@ -1500,7 +1501,7 @@ void OrbitMainWindow::AppendToCaptureLog(CaptureLogSeverity severity, absl::Dura
       break;
   }
   ui->captureLogTextEdit->setTextColor(message_color);
-  std::string pretty_time = GetPrettyTime(capture_time);
+  std::string pretty_time = orbit_display_formats::GetDisplayTime(capture_time);
   ui->captureLogTextEdit->append(
       QString::fromStdString(absl::StrFormat("%s\t%s", pretty_time, message)));
   LOG("\"%s  %s\" with severity %s added to the capture log", pretty_time, message, severity_name);

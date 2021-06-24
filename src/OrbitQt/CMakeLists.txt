@@ -81,9 +81,9 @@ target_link_libraries(
   PUBLIC  CaptureFileInfo
           CodeViewer
           ConfigWidgets
+          DisplayFormats
           MetricsUploader
           OrbitAccessibility
-          OrbitCore
           OrbitGl
           OrbitGgp
           OrbitSshQt

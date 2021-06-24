@@ -17,7 +17,7 @@
 #include "Batcher.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientModel/CaptureData.h"
-#include "CoreUtils.h"
+#include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
 #include "ManualInstrumentationManager.h"
@@ -145,7 +145,7 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
       "<b>Module:</b> %s<br/>"
       "<b>Time:</b> %s",
       function_name, is_manual ? "manual" : "dynamic", module_name,
-      GetPrettyTime(
+      orbit_display_formats::GetDisplayTime(
           TicksToDuration(text_box->GetTimerInfo().start(), text_box->GetTimerInfo().end())));
 }
 
@@ -331,7 +331,8 @@ void ThreadTrack::SetTrackColor(Color color) {
 void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, float min_x, float z_offset,
                                    TextBox* text_box) {
   if (text_box->GetText().empty()) {
-    std::string time = GetPrettyTime(absl::Nanoseconds(timer_info.end() - timer_info.start()));
+    std::string time = orbit_display_formats::GetDisplayTime(
+        absl::Nanoseconds(timer_info.end() - timer_info.start()));
     text_box->SetElapsedTimeTextLength(time.length());
 
     const InstrumentedFunction* func = app_->GetInstrumentedFunction(timer_info.function_id());

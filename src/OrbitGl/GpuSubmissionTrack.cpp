@@ -10,7 +10,7 @@
 
 #include "App.h"
 #include "Batcher.h"
-#include "CoreUtils.h"
+#include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
 #include "OrbitBase/Logging.h"
@@ -165,7 +165,8 @@ bool GpuSubmissionTrack::TimerFilter(const TimerInfo& timer_info) const {
 void GpuSubmissionTrack::SetTimesliceText(const TimerInfo& timer_info, float min_x, float z_offset,
                                           TextBox* text_box) {
   if (text_box->GetText().empty()) {
-    std::string time = GetPrettyTime(absl::Nanoseconds(timer_info.end() - timer_info.start()));
+    std::string time = orbit_display_formats::GetDisplayTime(
+        absl::Nanoseconds(timer_info.end() - timer_info.start()));
 
     text_box->SetElapsedTimeTextLength(time.length());
 
@@ -256,7 +257,8 @@ std::string GpuSubmissionTrack::GetSwQueueTooltip(const TimerInfo& timer_info) c
       "<b>Time:</b> %s",
       capture_data_->GetThreadName(timer_info.process_id()), timer_info.process_id(),
       capture_data_->GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
-      GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
+      orbit_display_formats::GetDisplayTime(TicksToDuration(timer_info.start(), timer_info.end()))
+          .c_str());
 }
 
 std::string GpuSubmissionTrack::GetHwQueueTooltip(const TimerInfo& timer_info) const {
@@ -271,7 +273,8 @@ std::string GpuSubmissionTrack::GetHwQueueTooltip(const TimerInfo& timer_info) c
       "<b>Time:</b> %s",
       capture_data_->GetThreadName(timer_info.process_id()), timer_info.process_id(),
       capture_data_->GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
-      GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
+      orbit_display_formats::GetDisplayTime(TicksToDuration(timer_info.start(), timer_info.end()))
+          .c_str());
 }
 
 std::string GpuSubmissionTrack::GetHwExecutionTooltip(const TimerInfo& timer_info) const {
@@ -287,7 +290,8 @@ std::string GpuSubmissionTrack::GetHwExecutionTooltip(const TimerInfo& timer_inf
       "<b>Time:</b> %s",
       capture_data_->GetThreadName(timer_info.process_id()), timer_info.process_id(),
       capture_data_->GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
-      GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
+      orbit_display_formats::GetDisplayTime(TicksToDuration(timer_info.start(), timer_info.end()))
+          .c_str());
 }
 
 std::string GpuSubmissionTrack::GetCommandBufferTooltip(
@@ -304,5 +308,6 @@ std::string GpuSubmissionTrack::GetCommandBufferTooltip(
       "<b>Time:</b> %s",
       capture_data_->GetThreadName(timer_info.process_id()), timer_info.process_id(),
       capture_data_->GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
-      GetPrettyTime(TicksToDuration(timer_info.start(), timer_info.end())).c_str());
+      orbit_display_formats::GetDisplayTime(TicksToDuration(timer_info.start(), timer_info.end()))
+          .c_str());
 }

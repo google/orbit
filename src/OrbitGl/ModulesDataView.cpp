@@ -19,6 +19,7 @@
 #include "ClientData/ProcessData.h"
 #include "CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
+#include "DisplayFormats/DisplayFormats.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 
@@ -58,7 +59,7 @@ std::string ModulesDataView::GetValue(int row, int col) {
     case kColumnAddressRange:
       return memory_space.FormattedAddressRange();
     case kColumnFileSize:
-      return GetPrettySize(module->file_size());
+      return orbit_display_formats::GetDisplaySize(module->file_size());
     case kColumnLoaded:
       return module->is_loaded() ? "*" : "";
     default:

@@ -2,12 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CoreUtils.h"
+#include "DisplayFormats/DisplayFormats.h"
 
 #include <absl/strings/str_format.h>
 #include <absl/time/time.h>
 
-std::string GetPrettySize(uint64_t size) {
+namespace orbit_display_formats {
+
+std::string GetDisplaySize(uint64_t size) {
   constexpr double KB = 1024.0;
   constexpr double MB = 1024.0 * KB;
   constexpr double GB = 1024.0 * MB;
@@ -21,7 +23,7 @@ std::string GetPrettySize(uint64_t size) {
   return absl::StrFormat("%.2f TB", size / TB);
 }
 
-std::string GetPrettyTime(absl::Duration duration) {
+std::string GetDisplayTime(absl::Duration duration) {
   constexpr double Day = 24;
 
   std::string res;
@@ -44,3 +46,5 @@ std::string GetPrettyTime(absl::Duration duration) {
 
   return res;
 }
+
+}  // namespace orbit_display_formats
