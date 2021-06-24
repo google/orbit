@@ -21,7 +21,6 @@
 #include "CaptureViewElement.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreMath.h"
-#include "CoreUtils.h"
 #include "ManualInstrumentationManager.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"

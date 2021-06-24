@@ -29,8 +29,8 @@ target_sources(
 
 target_link_libraries(
   CaptureFileInfo
-  PUBLIC  OrbitBase
-          OrbitCore
+  PUBLIC  DisplayFormats
+          OrbitBase
           OrbitPaths
           Qt5::Widgets)
 

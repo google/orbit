@@ -22,6 +22,7 @@
 #include "CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"
+#include "DisplayFormats/DisplayFormats.h"
 #include "GrpcProtos/Constants.h"
 #include "LiveFunctionsController.h"
 #include "OrbitBase/Append.h"
@@ -84,13 +85,13 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
     case kColumnCount:
       return absl::StrFormat("%lu", stats.count());
     case kColumnTimeTotal:
-      return GetPrettyTime(absl::Nanoseconds(stats.total_time_ns()));
+      return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats.total_time_ns()));
     case kColumnTimeAvg:
-      return GetPrettyTime(absl::Nanoseconds(stats.average_time_ns()));
+      return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats.average_time_ns()));
     case kColumnTimeMin:
-      return GetPrettyTime(absl::Nanoseconds(stats.min_ns()));
+      return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats.min_ns()));
     case kColumnTimeMax:
-      return GetPrettyTime(absl::Nanoseconds(stats.max_ns()));
+      return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats.max_ns()));
     case kColumnModule:
       return function.module_path();
     case kColumnAddress:

@@ -148,10 +148,10 @@ target_link_libraries(
          ClientServices
          CodeReport
          DataViews
+         DisplayFormats
          GrpcProtos
          MetricsUploader
          OrbitAccessibility
-         OrbitCore
          OrbitPaths
          PresetFile
          Symbols
