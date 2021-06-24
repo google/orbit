@@ -2,8 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/strings/str_format.h>
+
 #include "OrbitVersion/OrbitVersion.h"
-#include "absl/strings/str_format.h"
 
 #define OrbitVersionStr "@VERSION_STRING@"
 #define OrbitCompilerStr "@COMPILER_STRING@"
@@ -14,7 +15,8 @@
   "(@BUILD_OS_PLATFORM@)"
 #define OrbitCommitHashStr "@COMMIT_HASH@"
 
-namespace orbit_core {
+namespace orbit_version {
+
 std::string GetVersion() { return OrbitVersionStr; }
 std::string GetCompiler() { return OrbitCompilerStr; }
 std::string GetBuildTimestamp() { return OrbitBuildTimestampStr; }
@@ -34,4 +36,5 @@ std::string GetBuildReport() {
 
   return result;
 }
-}  // namespace orbit_core
+
+}  // namespace orbit_version

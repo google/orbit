@@ -853,7 +853,7 @@ void OrbitMainWindow::on_actionAbout_triggered() {
   orbit_qt::OrbitAboutDialog dialog{this};
   dialog.setWindowTitle("About");
   dialog.SetVersionString(QCoreApplication::applicationVersion());
-  dialog.SetBuildInformation(QString::fromStdString(orbit_core::GetBuildReport()));
+  dialog.SetBuildInformation(QString::fromStdString(orbit_version::GetBuildReport()));
 
   QOpenGLContext* const current_context = QOpenGLContext::currentContext();
   if (current_context != nullptr) {

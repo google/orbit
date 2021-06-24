@@ -214,7 +214,7 @@ static void LogCommandLine(int argc, char* argv[]) {
 
 int main(int argc, char* argv[]) {
   absl::SetProgramUsageMessage("CPU Profiler");
-  absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &orbit_core::GetBuildReport, {}});
+  absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &orbit_version::GetBuildReport, {}});
   std::vector<char*> positional_args = absl::ParseCommandLine(argc, argv);
 
   QString orbit_executable = QString(argv[0]);
@@ -228,7 +228,7 @@ int main(int argc, char* argv[]) {
 
   std::filesystem::path log_file{orbit_paths::GetLogFilePath()};
   orbit_base::InitLogFile(log_file);
-  LOG("You are running Orbit Profiler version %s", orbit_core::GetVersion());
+  LOG("You are running Orbit Profiler version %s", orbit_version::GetVersion());
   LogCommandLine(argc, argv);
   ErrorMessageOr<void> remove_old_log_result =
       orbit_base::TryRemoveOldLogFiles(orbit_paths::CreateOrGetLogDir());
@@ -251,7 +251,7 @@ int main(int argc, char* argv[]) {
 
   // The application display name is automatically appended to all window titles when shown in the
   // title bar: <specific window title> - <application display name>
-  const auto version_string = QString::fromStdString(orbit_core::GetVersion());
+  const auto version_string = QString::fromStdString(orbit_version::GetVersion());
   auto display_name = QString{"Orbit Profiler %1 [BETA]"}.arg(version_string);
 
   if (absl::GetFlag(FLAGS_devmode)) {

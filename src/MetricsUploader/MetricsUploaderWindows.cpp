@@ -205,7 +205,7 @@ bool MetricsUploaderImpl::FillAndSendLogEvent(OrbitLogEvent partial_filled_event
     return false;
   }
 
-  partial_filled_event.set_orbit_version(orbit_core::GetVersion());
+  partial_filled_event.set_orbit_version(orbit_version::GetVersion());
   partial_filled_event.set_session_uuid(session_uuid_);
 
   int message_size = partial_filled_event.ByteSize();
