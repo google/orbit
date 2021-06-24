@@ -497,6 +497,7 @@ message ClientCaptureEvent {
 }
 
 message ProducerCaptureEvent {
+  reserved 22, 26, 27;
   oneof event {
     // Note that field numbers from 1-15 take only 1 byte to encode
     // https://developers.google.com/protocol-buffers/docs/proto#assigning_field_numbers
@@ -512,7 +513,6 @@ message ProducerCaptureEvent {
     // Even though AddressInfo is a high-frequency event
     // it is going to go away in the future when we switch to
     // frame-pointer based unwinding.
-    CGroupMemoryUsage cgroup_memory_usage = 26;
     FullAddressInfo full_address_info = 16;
     FullGpuJob full_gpu_job = 3;
     FullTracepointEvent full_tracepoint_event = 4;
@@ -525,9 +525,7 @@ message ProducerCaptureEvent {
     MetadataEvent metadata_event = 28;
     ModulesSnapshot modules_snapshot = 25;
     ModuleUpdateEvent module_update_event = 20;
-    ProcessMemoryUsage process_memory_usage = 27;
     SchedulingSlice scheduling_slice = 8;
-    SystemMemoryUsage system_memory_usage = 22;
     ThreadName thread_name = 21;
     ThreadNamesSnapshot thread_names_snapshot = 24;
     ThreadStateSlice thread_state_slice = 9;
