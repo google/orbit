@@ -5,29 +5,28 @@
 #ifndef ORBIT_CORE_STRING_MANAGER_H_
 #define ORBIT_CORE_STRING_MANAGER_H_
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/synchronization/mutex.h>
+
 #include <cstdint>
 #include <optional>
 #include <string>
 #include <string_view>
 
-#include "absl/container/flat_hash_map.h"
-#include "absl/synchronization/mutex.h"
-
+// This class is a thread-safe wrapper around `absl::flat_hash_map<uint64_t, std::string>`.
 class StringManager {
  public:
   StringManager() = default;
 
   // Returns true if insertion took place.
   bool AddIfNotPresent(uint64_t key, std::string_view str);
-  // Returns true if insertion took place.
+  // Returns true if a new insertion took place, false if the value was replaced.
   bool AddOrReplace(uint64_t key, std::string_view str);
+
   [[nodiscard]] std::optional<std::string> Get(uint64_t key) const;
   [[nodiscard]] bool Contains(uint64_t key) const;
-  void Clear();
 
-  [[nodiscard]] const absl::flat_hash_map<uint64_t, std::string>& GetKeyToStringMap() const {
-    return key_to_string_;
-  }
+  void Clear();
 
  private:
   absl::flat_hash_map<uint64_t, std::string> key_to_string_;
