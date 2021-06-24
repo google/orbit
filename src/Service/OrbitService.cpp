@@ -143,7 +143,7 @@ static std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {
 
 void OrbitService::Run(std::atomic<bool>* exit_requested) {
   PrintInstanceVersions();
-  LOG("Running Orbit Service version %s", orbit_core::GetVersion());
+  LOG("Running Orbit Service version %s", orbit_version::GetVersion());
 #ifndef NDEBUG
   LOG("**********************************");
   LOG("Orbit Service is running in DEBUG!");
