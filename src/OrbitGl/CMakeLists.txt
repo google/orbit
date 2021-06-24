@@ -152,6 +152,7 @@ target_link_libraries(
          MetricsUploader
          OrbitAccessibility
          OrbitCore
+         OrbitPaths
          PresetFile
          Symbols
          CONAN_PKG::Outcome

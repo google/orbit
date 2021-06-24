@@ -9,7 +9,7 @@
 
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
-#include "Path.h"
+#include "OrbitPaths/Paths.h"
 
 namespace orbit_move_files_to_documents {
 
@@ -83,10 +83,10 @@ void MoveFilesProcess::TryMoveFilesAndRemoveDirIfNeeded(const std::filesystem::p
 
 void MoveFilesProcess::Run() {
   CHECK(QThread::currentThread() == thread());
-  TryMoveFilesAndRemoveDirIfNeeded(orbit_core::GetPresetDirPriorTo1_66(),
-                                   orbit_core::CreateOrGetPresetDir());
-  TryMoveFilesAndRemoveDirIfNeeded(orbit_core::GetCaptureDirPriorTo1_66(),
-                                   orbit_core::CreateOrGetCaptureDir());
+  TryMoveFilesAndRemoveDirIfNeeded(orbit_paths::GetPresetDirPriorTo1_66(),
+                                   orbit_paths::CreateOrGetPresetDir());
+  TryMoveFilesAndRemoveDirIfNeeded(orbit_paths::GetCaptureDirPriorTo1_66(),
+                                   orbit_paths::CreateOrGetCaptureDir());
   if (interruption_requested_) {
     emit processInterrupted();
   } else {

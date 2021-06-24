@@ -11,7 +11,7 @@
 #include "MoveFilesDialog.h"
 #include "MoveFilesProcess.h"
 #include "OrbitBase/File.h"
-#include "Path.h"
+#include "OrbitPaths/Paths.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_format.h"
 
@@ -46,8 +46,8 @@ void TryMoveSavedDataLocationIfNeeded() {
     return;
   }
 
-  if (IsDirectoryEmpty(orbit_core::GetPresetDirPriorTo1_66()) &&
-      IsDirectoryEmpty(orbit_core::GetCaptureDirPriorTo1_66())) {
+  if (IsDirectoryEmpty(orbit_paths::GetPresetDirPriorTo1_66()) &&
+      IsDirectoryEmpty(orbit_paths::GetCaptureDirPriorTo1_66())) {
     return;
   }
 

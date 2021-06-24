@@ -28,7 +28,7 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/Tracing.h"
 #include "OrbitBase/WriteStringToFile.h"
-#include "Path.h"
+#include "OrbitPaths/Paths.h"
 
 using orbit_grpc_protos::ModuleSymbols;
 
@@ -169,8 +169,8 @@ ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const fs::path& symbols_pat
 }
 
 SymbolHelper::SymbolHelper()
-    : symbols_file_directories_(ReadSymbolsFile(orbit_core::GetSymbolsFilePath())),
-      cache_directory_(orbit_core::CreateOrGetCacheDir()),
+    : symbols_file_directories_(ReadSymbolsFile(orbit_paths::GetSymbolsFilePath())),
+      cache_directory_(orbit_paths::CreateOrGetCacheDir()),
       structured_debug_directories_(FindStructuredDebugDirectories()) {}
 
 ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsWithSymbolsPathFile(

@@ -20,7 +20,6 @@ target_sources(CrashHandler PUBLIC include/CrashHandler/CrashHandler.h
                             PRIVATE CrashHandler.cpp)
 target_link_libraries(CrashHandler PUBLIC CONAN_PKG::crashpad
                                    PRIVATE OrbitBase
-                                           OrbitCore
                                            OrbitVersion)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CrashOptions.cpp.in

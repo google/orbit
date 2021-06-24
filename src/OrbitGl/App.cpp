@@ -76,7 +76,7 @@
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/Tracing.h"
 #include "OrbitBase/UniqueResource.h"
-#include "Path.h"
+#include "OrbitPaths/Paths.h"
 #include "SamplingReport.h"
 #include "Symbols/SymbolHelper.h"
 #include "TimeGraph.h"
@@ -708,7 +708,7 @@ static std::vector<std::filesystem::path> ListRegularFilesWithExtension(
 
 void OrbitApp::ListPresets() {
   std::vector<std::filesystem::path> preset_filenames =
-      ListRegularFilesWithExtension(orbit_core::CreateOrGetPresetDir(), ".opr");
+      ListRegularFilesWithExtension(orbit_paths::CreateOrGetPresetDir(), ".opr");
   std::vector<PresetFile> presets;
   for (const std::filesystem::path& filename : preset_filenames) {
     ErrorMessageOr<PresetFile> preset_result = ReadPresetFromFile(filename);
@@ -1099,7 +1099,7 @@ ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
 
 ErrorMessageOr<PresetFile> OrbitApp::ReadPresetFromFile(const std::filesystem::path& filename) {
   std::filesystem::path file_path =
-      filename.is_absolute() ? filename : orbit_core::CreateOrGetPresetDir() / filename;
+      filename.is_absolute() ? filename : orbit_paths::CreateOrGetPresetDir() / filename;
 
   return orbit_preset_file::ReadPresetFromFile(file_path);
 }
@@ -1227,7 +1227,7 @@ static std::unique_ptr<CaptureEventProcessor> CreateCaptureEventProcessor(
     CaptureListener* listener, const std::string& process_name,
     absl::flat_hash_set<uint64_t> frame_track_function_ids,
     const std::function<void(const ErrorMessage&)>& error_handler) {
-  std::filesystem::path file_path = orbit_core::CreateOrGetCaptureDir() /
+  std::filesystem::path file_path = orbit_paths::CreateOrGetCaptureDir() /
                                     orbit_client_model::capture_serializer::GenerateCaptureFileName(
                                         process_name, absl::Now(), "_autosave");
 
@@ -1245,7 +1245,7 @@ static std::unique_ptr<CaptureEventProcessor> CreateCaptureEventProcessor(
     }
 
     std::string suffix = absl::StrFormat("_autosave(%d)", ++suffix_number);
-    file_path = orbit_core::CreateOrGetCaptureDir() /
+    file_path = orbit_paths::CreateOrGetCaptureDir() /
                 orbit_client_model::capture_serializer::GenerateCaptureFileName(
                     process_name, absl::Now(), suffix);
   }

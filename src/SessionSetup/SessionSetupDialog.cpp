@@ -42,7 +42,6 @@
 #include "CaptureFileInfo/LoadCaptureWidget.h"
 #include "ClientServices/ProcessManager.h"
 #include "OrbitBase/Logging.h"
-#include "Path.h"
 #include "SessionSetup/ConnectToStadiaWidget.h"
 #include "SessionSetup/Connections.h"
 #include "SessionSetup/OverlayWidget.h"

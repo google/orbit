@@ -17,7 +17,7 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/TemporaryFile.h"
 #include "OrbitBase/TestUtils.h"
-#include "Path.h"
+#include "OrbitPaths/Paths.h"
 #include "Symbols/SymbolHelper.h"
 #include "symbol.pb.h"
 
@@ -223,10 +223,10 @@ TEST(SymbolHelper, LoadFromFile) {
 }
 
 TEST(SymbolHelper, GenerateCachedFileName) {
-  SymbolHelper symbol_helper{{}, orbit_core::CreateOrGetCacheDir(), {}};
+  SymbolHelper symbol_helper{{}, orbit_paths::CreateOrGetCacheDir(), {}};
   const std::filesystem::path file_path = "/var/data/filename.elf";
   const std::filesystem::path cache_file_path =
-      orbit_core::CreateOrGetCacheDir() / "_var_data_filename.elf";
+      orbit_paths::CreateOrGetCacheDir() / "_var_data_filename.elf";
   EXPECT_EQ(symbol_helper.GenerateCachedFileName(file_path), cache_file_path);
 }
 
