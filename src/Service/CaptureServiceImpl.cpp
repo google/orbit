@@ -16,7 +16,7 @@
 #include <utility>
 #include <vector>
 
-#include "Api/EnableInTracee.h"
+#include "ApiLoader/EnableInTracee.h"
 #include "CaptureEventBuffer.h"
 #include "CaptureEventSender.h"
 #include "GrpcProtos/Constants.h"
@@ -299,7 +299,7 @@ grpc::Status CaptureServiceImpl::Capture(
   // Enable Orbit API in tracee.
   std::optional<std::string> error_enabling_orbit_api;
   if (capture_options.enable_api()) {
-    auto result = orbit_api::EnableApiInTracee(capture_options);
+    auto result = orbit_api_loader::EnableApiInTracee(capture_options);
     if (result.has_error()) {
       ERROR("Enabling Orbit Api: %s", result.error().message());
       error_enabling_orbit_api =
@@ -339,7 +339,7 @@ grpc::Status CaptureServiceImpl::Capture(
 
   // Disable Orbit API in tracee.
   if (capture_options.enable_api()) {
-    auto result = orbit_api::DisableApiInTracee(capture_options);
+    auto result = orbit_api_loader::DisableApiInTracee(capture_options);
     if (result.has_error()) {
       ERROR("Disabling Orbit Api: %s", result.error().message());
       producer_event_processor->ProcessEvent(

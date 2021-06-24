@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "Api/EnableInTracee.h"
+#include "ApiLoader/EnableInTracee.h"
 
 #include <absl/base/casts.h>
 #include <absl/container/flat_hash_map.h>
@@ -10,7 +10,6 @@
 
 #include <functional>
 
-#include "Api/Orbit.h"
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
@@ -69,7 +68,7 @@ ErrorMessageOr<std::string> GetLibOrbitPath() {
     }
   }
 
-  return ErrorMessage("Liborbit.so not found on system.");
+  return ErrorMessage("liborbit.so not found on system.");
 }
 
 ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options, bool enabled) {
@@ -122,7 +121,7 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
 
 }  // namespace
 
-namespace orbit_api {
+namespace orbit_api_loader {
 
 ErrorMessageOr<void> EnableApiInTracee(const orbit_grpc_protos::CaptureOptions& capture_options) {
   return ::SetApiEnabledInTracee(capture_options, /*enabled*/ true);
@@ -132,4 +131,4 @@ ErrorMessageOr<void> DisableApiInTracee(const orbit_grpc_protos::CaptureOptions&
   return ::SetApiEnabledInTracee(capture_options, /*enabled*/ false);
 }
 
-}  // namespace orbit_api
+}  // namespace orbit_api_loader
