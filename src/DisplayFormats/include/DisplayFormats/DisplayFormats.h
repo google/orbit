@@ -9,7 +9,7 @@
 
 namespace orbit_display_formats {
 
-std::string GetDisplaySize(uint64_t size);
+std::string GetDisplaySize(uint64_t size_bytes);
 
 std::string GetDisplayTime(absl::Duration duration);
 

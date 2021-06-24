@@ -23,3 +23,18 @@ target_sources(DisplayFormats PRIVATE
 target_link_libraries(DisplayFormats PUBLIC
         OrbitBase
         CONAN_PKG::abseil)
+
+
+add_executable(DisplayFormatsTests)
+
+target_compile_options(DisplayFormatsTests PRIVATE ${STRICT_COMPILE_FLAGS})
+
+target_sources(DisplayFormatsTests PRIVATE
+        DisplayFormatsTest.cpp)
+
+target_link_libraries(DisplayFormatsTests PRIVATE
+        DisplayFormats
+        OrbitBase
+        GTest::Main)
+
+register_test(DisplayFormatsTests)
