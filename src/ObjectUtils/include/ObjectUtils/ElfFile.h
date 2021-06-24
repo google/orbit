@@ -53,7 +53,8 @@ class ElfFile : public ObjectFile {
   //
   // This method returns load bias for the elf-file if program headers are
   // available. This should be the case for all loadable elf-files.
-  [[nodiscard]] virtual ErrorMessageOr<uint64_t> GetLoadBias() const = 0;
+  [[nodiscard]] virtual uint64_t GetLoadBias() const = 0;
+  [[nodiscard]] virtual uint64_t GetExecutableSegmentOffset() const = 0;
 
   [[nodiscard]] virtual bool HasDynsym() const = 0;
   [[nodiscard]] virtual bool HasDebugInfo() const = 0;

@@ -22,6 +22,7 @@
 #include "absl/strings/str_format.h"
 #include "symbol.pb.h"
 
+using orbit_base::HasError;
 using orbit_base::HasNoError;
 using orbit_grpc_protos::SymbolInfo;
 using orbit_object_utils::CreateElfFile;
@@ -96,7 +97,7 @@ TEST(ElfFile, LoadSymbolsFromDynsym) {
   EXPECT_EQ(symbol_info.size(), 591);
 }
 
-TEST(ElfFile, CalculateLoadBias) {
+TEST(ElfFile, LoadBiasAndExecutableSegmentOffset) {
   std::filesystem::path executable_dir = orbit_base::GetExecutableDir();
 
   {
@@ -104,9 +105,8 @@ TEST(ElfFile, CalculateLoadBias) {
         executable_dir / "testdata" / "hello_world_elf";
     auto elf_file_dynamic = CreateElfFile(test_elf_file_dynamic);
     ASSERT_THAT(elf_file_dynamic, HasNoError());
-    const auto load_bias = elf_file_dynamic.value()->GetLoadBias();
-    ASSERT_THAT(load_bias, HasNoError());
-    EXPECT_EQ(load_bias.value(), 0x0);
+    EXPECT_EQ(elf_file_dynamic.value()->GetLoadBias(), 0x0);
+    EXPECT_EQ(elf_file_dynamic.value()->GetExecutableSegmentOffset(), 0x1000);
   }
 
   {
@@ -114,9 +114,8 @@ TEST(ElfFile, CalculateLoadBias) {
         executable_dir / "testdata" / "hello_world_static_elf";
     auto elf_file_static = CreateElfFile(test_elf_file_static);
     ASSERT_THAT(elf_file_static, HasNoError());
-    const auto load_bias = elf_file_static.value()->GetLoadBias();
-    ASSERT_THAT(load_bias, HasNoError());
-    EXPECT_EQ(load_bias.value(), 0x400000);
+    EXPECT_EQ(elf_file_static.value()->GetLoadBias(), 0x400000);
+    EXPECT_EQ(elf_file_static.value()->GetExecutableSegmentOffset(), 0x1000);
   }
 }
 
@@ -125,14 +124,11 @@ TEST(ElfFile, CalculateLoadBiasNoProgramHeaders) {
       orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf_no_program_headers";
   auto elf_file_result = CreateElfFile(test_elf_file);
 
-  ASSERT_THAT(elf_file_result, HasNoError());
-  auto elf_file = std::move(elf_file_result.value());
-  const auto load_bias_or_error = elf_file->GetLoadBias();
-  ASSERT_TRUE(load_bias_or_error.has_error());
-  EXPECT_EQ(load_bias_or_error.error().message(),
-            absl::StrFormat(
-                "Unable to get load bias of ELF file: \"%s\". No executable PT_LOAD segment found.",
-                test_elf_file.string()));
+  ASSERT_THAT(
+      elf_file_result,
+      HasError(absl::StrFormat(
+          "Unable to get load bias of ELF file: \"%s\". No executable PT_LOAD segment found.",
+          test_elf_file.string())));
 }
 
 TEST(ElfFile, HasDebugSymbols) {
