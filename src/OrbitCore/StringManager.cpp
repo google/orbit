@@ -13,18 +13,17 @@
 // TODO(b/181207737): Make this assert that it is not present and rename to "Add".
 bool StringManager::AddIfNotPresent(uint64_t key, std::string_view str) {
   absl::MutexLock lock{&mutex_};
-  if (key_to_string_.contains(key)) {
-    ERROR("String collision for key: %ul and string: %s.", key, str);
-    return false;
+  bool inserted = key_to_string_.emplace(key, str).second;
+  if (!inserted) {
+    ERROR("String collision for key: %u and string: %s", key, str);
   }
-  key_to_string_.emplace(key, str);
-  return true;
+  return inserted;
 }
 
 bool StringManager::AddOrReplace(uint64_t key, std::string_view str) {
   absl::MutexLock lock{&mutex_};
-  auto result = key_to_string_.insert_or_assign(key, str);
-  return result.second;
+  bool inserted = key_to_string_.insert_or_assign(key, str).second;
+  return inserted;
 }
 
 std::optional<std::string> StringManager::Get(uint64_t key) const {
@@ -32,9 +31,8 @@ std::optional<std::string> StringManager::Get(uint64_t key) const {
   auto it = key_to_string_.find(key);
   if (it != key_to_string_.end()) {
     return it->second;
-  } else {
-    return std::optional<std::string>{};
   }
+  return std::nullopt;
 }
 
 bool StringManager::Contains(uint64_t key) const {
