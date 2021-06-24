@@ -418,12 +418,6 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
     case ProducerCaptureEvent::kModulesSnapshot:
       ProcessModulesSnapshot(event.mutable_modules_snapshot());
       break;
-    case ProducerCaptureEvent::kCgroupMemoryUsage:
-      UNREACHABLE();
-    case ProducerCaptureEvent::kProcessMemoryUsage:
-      UNREACHABLE();
-    case ProducerCaptureEvent::kSystemMemoryUsage:
-      UNREACHABLE();
     case ProducerCaptureEvent::kMemoryEventWrapper:
       ProcessMemoryEventWrapper(event.mutable_memory_event_wrapper());
       break;

@@ -493,14 +493,8 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         EXPECT_GE(event.module_update_event().timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.module_update_event().timestamp_ns();
         break;
-      case orbit_grpc_protos::ProducerCaptureEvent::kCgroupMemoryUsage:
-        // Cases of memory events are tested in MemoryTracingIntegrationTest.
-        UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kMemoryEventWrapper:
-        UNREACHABLE();
-      case orbit_grpc_protos::ProducerCaptureEvent::kProcessMemoryUsage:
-        UNREACHABLE();
-      case orbit_grpc_protos::ProducerCaptureEvent::kSystemMemoryUsage:
+        // Cases of memory events are tested in MemoryTracingIntegrationTest.
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kApiEvent:
         UNREACHABLE();
