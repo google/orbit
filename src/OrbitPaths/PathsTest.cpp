@@ -12,28 +12,6 @@
 
 namespace orbit_paths {
 
-TEST(Paths, FileExistsEmptyFilename) {
-  std::string filename{};
-  EXPECT_FALSE(std::filesystem::exists(filename));
-}
-
-TEST(Paths, FileExistsRootDir) {
-  std::string filename;
-#ifdef _WIN32
-  filename = "C:\\";
-#else
-  filename = "/";
-#endif
-  EXPECT_TRUE(std::filesystem::exists(filename));
-}
-
-#ifndef _WIN32
-TEST(Paths, FileExistsDevNull) {
-  std::string filename = "/dev/null";
-  EXPECT_TRUE(std::filesystem::exists(filename));
-}
-#endif
-
 TEST(Path, AllAutoCreatedDirsExist) {
   auto test_fns = {CreateOrGetOrbitAppDataDir, CreateOrGetDumpDir,    CreateOrGetPresetDir,
                    CreateOrGetCacheDir,        CreateOrGetCaptureDir, CreateOrGetLogDir};
