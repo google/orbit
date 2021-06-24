@@ -54,10 +54,13 @@ class ElfFileImpl : public ElfFile {
   ElfFileImpl(std::filesystem::path file_path,
               llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary);
 
+  ErrorMessageOr<void> Initialize();
+
   // Loads symbols from the .symtab section.
   [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadDebugSymbols() override;
   [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadSymbolsFromDynsym() override;
-  [[nodiscard]] ErrorMessageOr<uint64_t> GetLoadBias() const override;
+  [[nodiscard]] uint64_t GetLoadBias() const override;
+  [[nodiscard]] uint64_t GetExecutableSegmentOffset() const override;
   [[nodiscard]] bool HasDebugSymbols() const override;
   [[nodiscard]] bool HasDynsym() const override;
   [[nodiscard]] bool HasDebugInfo() const override;
@@ -75,8 +78,9 @@ class ElfFileImpl : public ElfFile {
   [[nodiscard]] std::optional<GnuDebugLinkInfo> GetGnuDebugLinkInfo() const override;
 
  private:
-  void InitSections();
-  void InitDynamicEntries(const llvm::object::ELFFile<ElfT>* elf_file);
+  ErrorMessageOr<void> InitSections();
+  ErrorMessageOr<void> InitProgramHeaders();
+  ErrorMessageOr<void> InitDynamicEntries();
   ErrorMessageOr<SymbolInfo> CreateSymbolInfo(const llvm::object::ELFSymbolRef& symbol_ref);
 
   const std::filesystem::path file_path_;
@@ -89,6 +93,9 @@ class ElfFileImpl : public ElfFile {
   bool has_dynsym_section_;
   bool has_debug_info_section_;
   std::optional<GnuDebugLinkInfo> gnu_debuglink_info_;
+
+  uint64_t load_bias_;
+  uint64_t executable_segment_offset_;
 };
 
 template <typename ElfT>
@@ -140,20 +147,32 @@ ElfFileImpl<ElfT>::ElfFileImpl(std::filesystem::path file_path,
                                llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary)
     : file_path_(std::move(file_path)),
       owning_binary_(std::move(owning_binary)),
+      object_file_(llvm::dyn_cast<llvm::object::ELFObjectFile<ElfT>>(owning_binary_.getBinary())),
       has_symtab_section_(false),
       has_dynsym_section_(false),
-      has_debug_info_section_(false) {
-  object_file_ = llvm::dyn_cast<llvm::object::ELFObjectFile<ElfT>>(owning_binary_.getBinary());
-  InitSections();
+      has_debug_info_section_(false),
+      load_bias_{0},
+      executable_segment_offset_{0} {}
+
+template <typename ElfT>
+ErrorMessageOr<void> ElfFileImpl<ElfT>::Initialize() {
+  OUTCOME_TRY(InitSections());
+  OUTCOME_TRY(InitDynamicEntries());
+  OUTCOME_TRY(InitProgramHeaders());
+  return outcome::success();
 }
 
 template <typename ElfT>
-void ElfFileImpl<ElfT>::InitDynamicEntries(const llvm::object::ELFFile<ElfT>* elf_file) {
+ErrorMessageOr<void> ElfFileImpl<ElfT>::InitDynamicEntries() {
+  const llvm::object::ELFFile<ElfT>* elf_file = object_file_->getELFFile();
   auto dynamic_entries_or_error = elf_file->dynamicEntries();
   if (!dynamic_entries_or_error) {
-    LOG("Unable to get dynamic entries from \"%s\": %s", file_path_.string(),
-        llvm::toString(dynamic_entries_or_error.takeError()));
-    return;
+    auto error_message =
+        absl::StrFormat("Unable to get dynamic entries from \"%s\": %s", file_path_.string(),
+                        llvm::toString(dynamic_entries_or_error.takeError()));
+    ERROR("%s (ignored)", error_message);
+    // Apparently empty dynamic section results in error - we are going to ignore it.
+    return outcome::success();
   }
 
   std::optional<uint64_t> soname_offset;
@@ -178,57 +197,66 @@ void ElfFileImpl<ElfT>::InitDynamicEntries(const llvm::object::ELFFile<ElfT>* el
 
   if (!soname_offset.has_value() || !dynamic_string_table_addr.has_value() ||
       !dynamic_string_table_size.has_value()) {
-    return;
+    return outcome::success();
   }
 
   auto strtab_last_byte_or_error = elf_file->toMappedAddr(dynamic_string_table_addr.value() +
                                                           dynamic_string_table_size.value() - 1);
   if (!strtab_last_byte_or_error) {
-    LOG("Unable get last byte address of dynamic string table \"%s\": %s", file_path_.string(),
-        llvm::toString(strtab_last_byte_or_error.takeError()));
-    return;
+    auto error_message =
+        absl::StrFormat("Unable to get last byte address of dynamic string table \"%s\": %s",
+                        file_path_.string(), llvm::toString(strtab_last_byte_or_error.takeError()));
+    ERROR("%s", error_message);
+    return ErrorMessage{error_message};
   }
 
   if (soname_offset.value() >= dynamic_string_table_size.value()) {
-    ERROR(
+    auto error_message = absl::StrFormat(
         "Soname offset is out of bounds of the string table (file=\"%s\", offset=%u "
         "strtab size=%u)",
         file_path_.string(), soname_offset.value(), dynamic_string_table_size.value());
-    return;
+    ERROR("%s", error_message);
+    return ErrorMessage{error_message};
   }
 
   if (*strtab_last_byte_or_error.get() != 0) {
-    ERROR("Dynamic string table is not null-termintated (file=\"%s\")", file_path_.string());
-    return;
+    auto error_message = absl::StrFormat(
+        "Dynamic string table is not null-termintated (file=\"%s\")", file_path_.string());
+    ERROR("%s", error_message);
+    return ErrorMessage{error_message};
   }
 
   auto strtab_addr_or_error = elf_file->toMappedAddr(dynamic_string_table_addr.value());
   if (!strtab_addr_or_error) {
-    LOG("Unable to get dynamic string table from DT_STRTAB in \"%s\": %s", file_path_.string(),
-        llvm::toString(strtab_addr_or_error.takeError()));
-    return;
+    auto error_message =
+        absl::StrFormat("Unable to get dynamic string table from DT_STRTAB in \"%s\": %s",
+                        file_path_.string(), llvm::toString(strtab_addr_or_error.takeError()));
+    ERROR("%s", error_message);
+    return ErrorMessage{error_message};
   }
 
   soname_ = absl::bit_cast<const char*>(strtab_addr_or_error.get()) + soname_offset.value();
+
+  return outcome::success();
 }
 
 template <typename ElfT>
-void ElfFileImpl<ElfT>::InitSections() {
+ErrorMessageOr<void> ElfFileImpl<ElfT>::InitSections() {
   const llvm::object::ELFFile<ElfT>* elf_file = object_file_->getELFFile();
 
-  llvm::Expected<typename ElfT::ShdrRange> sections_or_err = elf_file->sections();
-  if (!sections_or_err) {
-    LOG("Unable to load sections");
-    return;
+  llvm::Expected<typename ElfT::ShdrRange> sections_or_error = elf_file->sections();
+  if (!sections_or_error) {
+    auto error_message = absl::StrFormat("Unable to load sections: %s",
+                                         llvm::toString(sections_or_error.takeError()));
+    ERROR("%s", error_message);
+    return ErrorMessage{error_message};
   }
 
-  InitDynamicEntries(elf_file);
-
-  for (const typename ElfT::Shdr& section : sections_or_err.get()) {
+  for (const typename ElfT::Shdr& section : sections_or_error.get()) {
     llvm::Expected<llvm::StringRef> name_or_error = elf_file->getSectionName(&section);
     if (!name_or_error) {
-      LOG("Unable to get section name");
-      continue;
+      return ErrorMessage{absl::StrFormat("Unable to get section name: %s",
+                                          llvm::toString(name_or_error.takeError()))};
     }
     llvm::StringRef name = name_or_error.get();
 
@@ -258,7 +286,8 @@ void ElfFileImpl<ElfT>::InitSections() {
         }
       }
       if (error) {
-        LOG("Error while reading elf notes");
+        return ErrorMessage{
+            absl::StrFormat("Error while reading elf notes: %s", llvm::toString(std::move(error)))};
       }
       continue;
     }
@@ -268,12 +297,14 @@ void ElfFileImpl<ElfT>::InitSections() {
       if (error_or_info.has_value()) {
         gnu_debuglink_info_ = std::move(error_or_info.value());
       } else {
-        ERROR("Invalid .gnu_debuglink section in \"%s\". %s", file_path_.string(),
-              error_or_info.error().message());
+        return ErrorMessage{absl::StrFormat("Invalid .gnu_debuglink section in \"%s\". %s",
+                                            file_path_.string(), error_or_info.error().message())};
       }
       continue;
     }
   }
+
+  return outcome::success();
 }
 
 template <typename ElfT>
@@ -308,10 +339,8 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadDebugSymbols() {
     return ErrorMessage("ELF file does not have a .symtab section.");
   }
 
-  OUTCOME_TRY(load_bias, GetLoadBias());
-
   ModuleSymbols module_symbols;
-  module_symbols.set_load_bias(load_bias);
+  module_symbols.set_load_bias(load_bias_);
   module_symbols.set_symbols_file_path(file_path_.string());
 
   for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->symbols()) {
@@ -335,10 +364,8 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbolsFromDynsym() {
     return ErrorMessage("ELF file does not have a .dynsym section.");
   }
 
-  OUTCOME_TRY(load_bias, GetLoadBias());
-
   ModuleSymbols module_symbols;
-  module_symbols.set_load_bias(load_bias);
+  module_symbols.set_load_bias(load_bias_);
   module_symbols.set_symbols_file_path(file_path_.string());
 
   for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->getDynamicSymbolIterators()) {
@@ -357,14 +384,19 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbolsFromDynsym() {
 }
 
 template <typename ElfT>
-ErrorMessageOr<uint64_t> ElfFileImpl<ElfT>::GetLoadBias() const {
+uint64_t ElfFileImpl<ElfT>::GetLoadBias() const {
+  return load_bias_;
+}
+
+template <typename ElfT>
+ErrorMessageOr<void> ElfFileImpl<ElfT>::InitProgramHeaders() {
   const llvm::object::ELFFile<ElfT>* elf_file = object_file_->getELFFile();
   llvm::Expected<typename ElfT::PhdrRange> range = elf_file->program_headers();
 
   if (!range) {
-    std::string error =
-        absl::StrFormat("Unable to get load bias of ELF file: \"%s\". No program headers found.",
-                        file_path_.string());
+    std::string error = absl::StrFormat(
+        "Unable to get load bias of ELF file: \"%s\". Error loading program headers: %s",
+        file_path_.string(), llvm::toString(range.takeError()));
     ERROR("%s", error);
     return ErrorMessage(std::move(error));
   }
@@ -379,7 +411,9 @@ ErrorMessageOr<uint64_t> ElfFileImpl<ElfT>::GetLoadBias() const {
       continue;
     }
 
-    return phdr.p_vaddr - phdr.p_offset;
+    load_bias_ = phdr.p_vaddr - phdr.p_offset;
+    executable_segment_offset_ = phdr.p_offset;
+    return outcome::success();
   }
 
   std::string error = absl::StrFormat(
@@ -518,6 +552,11 @@ template <typename ElfT>
 std::optional<GnuDebugLinkInfo> ElfFileImpl<ElfT>::GetGnuDebugLinkInfo() const {
   return gnu_debuglink_info_;
 }
+
+template <typename ElfT>
+uint64_t ElfFileImpl<ElfT>::GetExecutableSegmentOffset() const {
+  return executable_segment_offset_;
+}
 }  // namespace
 
 ErrorMessageOr<std::unique_ptr<ElfFile>> CreateElfFileFromBuffer(
@@ -559,21 +598,23 @@ ErrorMessageOr<std::unique_ptr<ElfFile>> CreateElfFile(
     llvm::object::OwningBinary<llvm::object::ObjectFile>&& file) {
   llvm::object::ObjectFile* object_file = file.getBinary();
 
-  std::unique_ptr<ElfFile> result;
-
   // Create appropriate ElfFile implementation
   if (llvm::dyn_cast<llvm::object::ELF32LEObjectFile>(object_file) != nullptr) {
-    result = std::unique_ptr<ElfFile>(
-        new ElfFileImpl<llvm::object::ELF32LE>(file_path, std::move(file)));
-  } else if (llvm::dyn_cast<llvm::object::ELF64LEObjectFile>(object_file) != nullptr) {
-    result = std::unique_ptr<ElfFile>(
-        new ElfFileImpl<llvm::object::ELF64LE>(file_path, std::move(file)));
-  } else {
-    return ErrorMessage(absl::StrFormat(
-        "Unable to load \"%s\": Big-endian architectures are not supported.", file_path.string()));
+    auto elf_file =
+        std::make_unique<ElfFileImpl<llvm::object::ELF32LE>>(file_path, std::move(file));
+    OUTCOME_TRY(elf_file->Initialize());
+    return elf_file;
   }
 
-  return result;
+  if (llvm::dyn_cast<llvm::object::ELF64LEObjectFile>(object_file) != nullptr) {
+    auto elf_file =
+        std::make_unique<ElfFileImpl<llvm::object::ELF64LE>>(file_path, std::move(file));
+    OUTCOME_TRY(elf_file->Initialize());
+    return elf_file;
+  }
+
+  return ErrorMessage(absl::StrFormat(
+      "Unable to load \"%s\": Big-endian architectures are not supported.", file_path.string()));
 }
 
 ErrorMessageOr<uint32_t> ElfFile::CalculateDebuglinkChecksum(
