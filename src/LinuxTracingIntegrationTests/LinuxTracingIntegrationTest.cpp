@@ -288,6 +288,17 @@ class BufferTracerListener : public orbit_linux_tracing::TracerListener {
     }
   }
 
+  void OnLostPerfRecordsEvent(
+      orbit_grpc_protos::LostPerfRecordsEvent lost_perf_records_event) override {
+    orbit_grpc_protos::ProducerCaptureEvent event;
+    *event.mutable_metadata_event()->mutable_lost_perf_records_event() =
+        std::move(lost_perf_records_event);
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
+  }
+
   [[nodiscard]] std::vector<orbit_grpc_protos::ProducerCaptureEvent> GetAndClearEvents() {
     absl::MutexLock lock{&events_mutex_};
     std::vector<orbit_grpc_protos::ProducerCaptureEvent> events = std::move(events_);
@@ -515,12 +526,26 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
             previous_event_timestamp_ns =
                 metadata_event.errors_with_perf_event_open_event().timestamp_ns();
             break;
+          case orbit_grpc_protos::MetadataEvent::kLostPerfRecordsEvent:
+            EXPECT_GE(metadata_event.lost_perf_records_event().end_timestamp_ns(),
+                      previous_event_timestamp_ns);
+            previous_event_timestamp_ns =
+                metadata_event.lost_perf_records_event().end_timestamp_ns();
+            break;
           case orbit_grpc_protos::MetadataEvent::EVENT_NOT_SET:
             UNREACHABLE();
         }
       } break;
       case orbit_grpc_protos::ProducerCaptureEvent::EVENT_NOT_SET:
         UNREACHABLE();
+    }
+  }
+}
+
+void VerifyNoLostEvents(const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
+  for (const orbit_grpc_protos::ProducerCaptureEvent& event : events) {
+    if (event.has_metadata_event()) {
+      EXPECT_FALSE(event.metadata_event().has_lost_perf_records_event());
     }
   }
 }
@@ -549,6 +574,8 @@ TEST(LinuxTracingIntegrationTest, SchedulingSlices) {
       TraceAndGetEvents(&fixture, PuppetConstants::kSleepCommand);
 
   VerifyOrderOfAllEvents(events);
+
+  VerifyNoLostEvents(events);
 
   uint64_t scheduling_slice_count = 0;
   uint64_t last_out_timestamp_ns = 0;
@@ -683,6 +710,8 @@ TEST(LinuxTracingIntegrationTest, FunctionCalls) {
       TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
 
   VerifyOrderOfAllEvents(events);
+
+  VerifyNoLostEvents(events);
 
   VerifyFunctionCallsOfOuterAndInnerFunction(events, fixture.GetPuppetPid(), kOuterFunctionId,
                                              kInnerFunctionId);
@@ -884,6 +913,8 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesAndAddressInfos) {
 
   VerifyOrderOfAllEvents(events);
 
+  VerifyNoLostEvents(events);
+
   VerifyErrorsWithPerfEventOpenEvent(events);
 
   absl::flat_hash_set<uint64_t> address_infos_received =
@@ -917,6 +948,8 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesTogetherWithFunctionCalls) {
       TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
 
   VerifyOrderOfAllEvents(events);
+
+  VerifyNoLostEvents(events);
 
   VerifyFunctionCallsOfOuterAndInnerFunction(events, fixture.GetPuppetPid(), kOuterFunctionId,
                                              kInnerFunctionId);
@@ -956,6 +989,8 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointers) {
 
   VerifyOrderOfAllEvents(events);
 
+  VerifyNoLostEvents(events);
+
   VerifyErrorsWithPerfEventOpenEvent(events);
 
   // AddressInfos are not sent when unwinding with frame pointers as they are produced by
@@ -990,6 +1025,8 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointersTogetherWithF
 
   VerifyOrderOfAllEvents(events);
 
+  VerifyNoLostEvents(events);
+
   VerifyFunctionCallsOfOuterAndInnerFunction(events, fixture.GetPuppetPid(), kOuterFunctionId,
                                              kInnerFunctionId);
 
@@ -1010,6 +1047,8 @@ TEST(LinuxTracingIntegrationTest, ThreadStateSlices) {
       TraceAndGetEvents(&fixture, PuppetConstants::kSleepCommand);
 
   VerifyOrderOfAllEvents(events);
+
+  VerifyNoLostEvents(events);
 
   uint64_t running_slice_count = 0;
   uint64_t runnable_slice_count = 0;
@@ -1077,6 +1116,8 @@ TEST(LinuxTracingIntegrationTest, ThreadNames) {
 
   VerifyOrderOfAllEvents(events);
 
+  VerifyNoLostEvents(events);
+
   std::vector<std::string> changed_thread_names;
   std::vector<std::string> initial_thread_names;
   for (const auto& event : events) {
@@ -1125,6 +1166,8 @@ TEST(LinuxTracingIntegrationTest, ModuleUpdateOnDlopen) {
 
   VerifyOrderOfAllEvents(events);
 
+  VerifyNoLostEvents(events);
+
   VerifyErrorsWithPerfEventOpenEvent(events);
 
   bool module_update_found = false;
@@ -1163,6 +1206,8 @@ TEST(LinuxTracingIntegrationTest, GpuJobs) {
       TraceAndGetEvents(&fixture, PuppetConstants::kVulkanTutorialCommand);
 
   VerifyOrderOfAllEvents(events);
+
+  VerifyNoLostEvents(events);
 
   bool another_process_used_gpu = false;
   for (const auto& event : events) {

@@ -448,6 +448,11 @@ message ErrorsWithPerfEventOpenEvent {
   repeated bytes failed_to_open = 2;
 }
 
+message LostPerfRecordsEvent {
+  uint64 duration_ns = 1;
+  uint64 end_timestamp_ns = 2;
+}
+
 message MetadataEvent {
   oneof event {
     WarningEvent warning_event = 1;
@@ -455,6 +460,7 @@ message MetadataEvent {
     ErrorEnablingOrbitApiEvent error_enabling_orbit_api_event = 3;
     ClockResolutionEvent clock_resolution_event = 4;
     ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event = 5;
+    LostPerfRecordsEvent lost_perf_records_event = 6;
   }
 }
 

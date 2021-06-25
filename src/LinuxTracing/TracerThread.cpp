@@ -27,7 +27,6 @@
 #include "LibunwindstackUnwinder.h"
 #include "LinuxTracing/TracerListener.h"
 #include "LinuxTracingUtils.h"
-#include "ObjectUtils/ElfFile.h"
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/GetProcessIds.h"
@@ -527,6 +526,13 @@ bool TracerThread::OpenInstrumentedTracepoints(const std::vector<int32_t>& cpus)
   return !tracepoint_event_open_errors;
 }
 
+void TracerThread::InitLostEventVisitor() {
+  ORBIT_SCOPE_FUNCTION;
+  lost_event_visitor_ = std::make_unique<LostEventVisitor>();
+  lost_event_visitor_->SetListener(listener_);
+  event_processor_.AddVisitor(lost_event_visitor_.get());
+}
+
 static std::vector<ThreadName> RetrieveInitialThreadNamesSystemWide(uint64_t initial_timestamp_ns) {
   std::vector<ThreadName> thread_names;
   for (pid_t pid : GetAllPids()) {
@@ -576,6 +582,8 @@ void TracerThread::Startup() {
   SetMaxOpenFilesSoftLimit(GetMaxOpenFilesHardLimit());
 
   event_processor_.SetDiscardedOutOfOrderCounter(&stats_.discarded_out_of_order_count);
+
+  InitLostEventVisitor();
 
   bool perf_event_open_errors = false;
   std::vector<std::string> perf_event_open_error_details;
@@ -828,6 +836,9 @@ void TracerThread::ProcessForkEvent(const perf_event_header& header,
                                     PerfEventRingBuffer* ring_buffer) {
   auto event = make_unique_for_overwrite<ForkPerfEvent>();
   ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
+  fds_to_last_timestamp_ns_.insert_or_assign(ring_buffer->GetFileDescriptor(),
+                                             event->GetTimestamp());
+
   if (event->GetTimestamp() < effective_capture_start_timestamp_ns_) {
     return;
   }
@@ -842,6 +853,9 @@ void TracerThread::ProcessExitEvent(const perf_event_header& header,
                                     PerfEventRingBuffer* ring_buffer) {
   auto event = make_unique_for_overwrite<ExitPerfEvent>();
   ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
+  fds_to_last_timestamp_ns_.insert_or_assign(ring_buffer->GetFileDescriptor(),
+                                             event->GetTimestamp());
+
   if (event->GetTimestamp() < effective_capture_start_timestamp_ns_) {
     return;
   }
@@ -855,6 +869,8 @@ void TracerThread::ProcessExitEvent(const perf_event_header& header,
 void TracerThread::ProcessMmapEvent(const perf_event_header& header,
                                     PerfEventRingBuffer* ring_buffer) {
   auto event = ConsumeMmapPerfEvent(ring_buffer, header);
+  fds_to_last_timestamp_ns_.insert_or_assign(ring_buffer->GetFileDescriptor(),
+                                             event->GetTimestamp());
 
   if (event->pid() != target_pid_) {
     return;
@@ -871,6 +887,8 @@ void TracerThread::ProcessMmapEvent(const perf_event_header& header,
 void TracerThread::ProcessSampleEvent(const perf_event_header& header,
                                       PerfEventRingBuffer* ring_buffer) {
   uint64_t time = ReadSampleRecordTime(ring_buffer);
+  fds_to_last_timestamp_ns_.insert_or_assign(ring_buffer->GetFileDescriptor(), time);
+
   if (time < effective_capture_start_timestamp_ns_) {
     // Don't consider events that came before all file descriptors had been enabled.
     ring_buffer->SkipRecord(header);
@@ -1041,10 +1059,30 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
 
 void TracerThread::ProcessLostEvent(const perf_event_header& header,
                                     PerfEventRingBuffer* ring_buffer) {
-  LostPerfEvent event;
-  ring_buffer->ConsumeRecord(header, &event.ring_buffer_record);
-  stats_.lost_count += event.GetNumLost();
-  stats_.lost_count_per_buffer[ring_buffer] += event.GetNumLost();
+  auto event = std::make_unique<LostPerfEvent>();
+  ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
+
+  stats_.lost_count += event->GetNumLost();
+  stats_.lost_count_per_buffer[ring_buffer] += event->GetNumLost();
+
+  // Fetch the timestamp of the last event that preceded this PERF_RECORD_LOST in this same ring
+  // buffer.
+  uint64_t fd_previous_timestamp_ns = 0;
+  if (auto it = fds_to_last_timestamp_ns_.find(ring_buffer->GetFileDescriptor());
+      it != fds_to_last_timestamp_ns_.end()) {
+    fd_previous_timestamp_ns = it->second;
+  }
+  fds_to_last_timestamp_ns_.insert_or_assign(ring_buffer->GetFileDescriptor(),
+                                             event->GetTimestamp());
+  if (fd_previous_timestamp_ns == 0) {
+    // This shouldn't happen because PERF_RECORD_LOST is reported when a ring buffer is full, which
+    // means that there were other events in the same ring buffers, and they have already been read.
+    ERROR("Unknown previous timestamp for ring buffer '%s'", ring_buffer->GetName());
+    return;
+  }
+
+  event->SetPreviousTimestamp(fd_previous_timestamp_ns);
+  DeferEvent(std::move(event));
 }
 
 void TracerThread::ProcessThrottleUnthrottleEvent(const perf_event_header& header,
@@ -1052,6 +1090,7 @@ void TracerThread::ProcessThrottleUnthrottleEvent(const perf_event_header& heade
   // Throttle/unthrottle events are reported when sampling causes too much throttling on the CPU.
   // They are usually caused by/reproducible with a very high sampling frequency.
   uint64_t timestamp_ns = ReadThrottleUnthrottleRecordTime(ring_buffer);
+  fds_to_last_timestamp_ns_.insert_or_assign(ring_buffer->GetFileDescriptor(), timestamp_ns);
 
   ring_buffer->SkipRecord(header);
 
@@ -1133,6 +1172,7 @@ void TracerThread::Reset() {
   ORBIT_SCOPE_FUNCTION;
   tracing_fds_.clear();
   ring_buffers_.clear();
+  fds_to_last_timestamp_ns_.clear();
 
   uprobes_uretprobes_ids_to_function_.clear();
   uprobes_ids_.clear();
