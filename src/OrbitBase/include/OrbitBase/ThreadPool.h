@@ -5,13 +5,13 @@
 #ifndef ORBIT_BASE_THREAD_POOL_H_
 #define ORBIT_BASE_THREAD_POOL_H_
 
+#include <absl/time/time.h>
 #include <stddef.h>
 
 #include <memory>
 #include <utility>
 
 #include "OrbitBase/Executor.h"
-#include "absl/time/time.h"
 
 // This class implements a thread pool. ThreadPool allows to execute
 // actions in another thread without the need to manage creation and destruction
@@ -39,8 +39,6 @@ class ThreadPool : public orbit_base::Executor {
   // before the object is destroyed, usually after calling
   // Shutdown().
   virtual void Wait() = 0;
-
-  virtual void EnableAutoProfiling(bool value) = 0;
 
   void ShutdownAndWait() {
     Shutdown();
