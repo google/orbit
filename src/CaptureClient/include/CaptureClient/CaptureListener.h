@@ -27,8 +27,6 @@ class CaptureListener {
   virtual void OnCaptureFinished(const orbit_grpc_protos::CaptureFinished& capture_finished) = 0;
 
   virtual void OnTimer(const orbit_client_protos::TimerInfo& timer_info) = 0;
-  virtual void OnMemoryEventWrapper(
-      const orbit_grpc_protos::MemoryEventWrapper& memory_event_wrapper) = 0;
   virtual void OnKeyAndString(uint64_t key, std::string str) = 0;
   virtual void OnUniqueCallstack(uint64_t callstack_id,
                                  orbit_client_protos::CallstackInfo callstack) = 0;

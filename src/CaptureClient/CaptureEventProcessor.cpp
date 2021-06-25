@@ -74,8 +74,16 @@ class CaptureEventProcessorForListener : public CaptureEventProcessor {
       orbit_grpc_protos::InternedTracepointInfo interned_tracepoint_info);
   void ProcessTracepointEvent(const orbit_grpc_protos::TracepointEvent& tracepoint_event);
   void ProcessGpuQueueSubmission(const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission);
-  void ProcessMemoryEventWrapper(const orbit_grpc_protos::MemoryEventWrapper& memory_event_wrapper);
   void ProcessMetadataEvent(const orbit_grpc_protos::MetadataEvent& metadata_event);
+
+  void ProcessMemoryEventWrapper(const orbit_grpc_protos::MemoryEventWrapper& memory_event_wrapper);
+  void ExtractAndProcessSystemMemoryTrackingTimer(
+      uint64_t synchronized_timestamp_ns,
+      const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage);
+  void ExtractAndProcessCGroupAndProcessMemoryTrackingTimer(
+      uint64_t synchronized_timestamp_ns,
+      const orbit_grpc_protos::CGroupMemoryUsage& cgroup_memory_usage,
+      const orbit_grpc_protos::ProcessMemoryUsage& process_memory_usage);
 
   std::optional<std::filesystem::path> file_path_;
   absl::flat_hash_set<uint64_t> frame_track_function_ids_;
@@ -161,6 +169,8 @@ void CaptureEventProcessorForListener::ProcessEvent(const ClientCaptureEvent& ev
       break;
     case ClientCaptureEvent::EVENT_NOT_SET:
       ERROR("CaptureEvent::EVENT_NOT_SET read from Capture's gRPC stream");
+      break;
+    default:
       break;
   }
 }
@@ -359,7 +369,78 @@ void CaptureEventProcessorForListener::ProcessGpuQueueSubmission(
 
 void CaptureEventProcessorForListener::ProcessMemoryEventWrapper(
     const orbit_grpc_protos::MemoryEventWrapper& memory_event_wrapper) {
-  capture_listener_->OnMemoryEventWrapper(memory_event_wrapper);
+  if (memory_event_wrapper.has_system_memory_usage()) {
+    ExtractAndProcessSystemMemoryTrackingTimer(memory_event_wrapper.timestamp_ns(),
+                                               memory_event_wrapper.system_memory_usage());
+  }
+
+  if (memory_event_wrapper.has_cgroup_memory_usage() &&
+      memory_event_wrapper.has_process_memory_usage()) {
+    ExtractAndProcessCGroupAndProcessMemoryTrackingTimer(
+        memory_event_wrapper.timestamp_ns(), memory_event_wrapper.cgroup_memory_usage(),
+        memory_event_wrapper.process_memory_usage());
+  }
+}
+
+void CaptureEventProcessorForListener::ExtractAndProcessSystemMemoryTrackingTimer(
+    uint64_t synchronized_timestamp_ns,
+    const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage) {
+  TimerInfo timer;
+  timer.set_type(TimerInfo::kSystemMemoryUsage);
+  timer.set_start(synchronized_timestamp_ns);
+  timer.set_end(synchronized_timestamp_ns);
+
+  // The RepeatedField<Element>::Set(int index, const Element & value) method won't update the
+  // current_size_ of the repeated field. If the current_size_ == 0, the repeated field will be
+  // ignored when copying the protobuf. Therefore, if encoding the following memory information
+  // into TimerInfo registers with the Set method, the registers field of the copied TimerInfo
+  // would be empty.
+  std::vector<uint64_t> encoded_values(static_cast<size_t>(SystemMemoryUsageEncodingIndex::kEnd));
+  encoded_values[static_cast<size_t>(SystemMemoryUsageEncodingIndex::kTotalKb)] =
+      orbit_api::Encode<uint64_t>(system_memory_usage.total_kb());
+  encoded_values[static_cast<size_t>(SystemMemoryUsageEncodingIndex::kFreeKb)] =
+      orbit_api::Encode<uint64_t>(system_memory_usage.free_kb());
+  encoded_values[static_cast<size_t>(SystemMemoryUsageEncodingIndex::kAvailableKb)] =
+      orbit_api::Encode<uint64_t>(system_memory_usage.available_kb());
+  encoded_values[static_cast<size_t>(SystemMemoryUsageEncodingIndex::kBuffersKb)] =
+      orbit_api::Encode<uint64_t>(system_memory_usage.buffers_kb());
+  encoded_values[static_cast<size_t>(SystemMemoryUsageEncodingIndex::kCachedKb)] =
+      orbit_api::Encode<uint64_t>(system_memory_usage.cached_kb());
+
+  *timer.mutable_registers() = {encoded_values.begin(), encoded_values.end()};
+
+  capture_listener_->OnTimer(timer);
+}
+
+void CaptureEventProcessorForListener::ExtractAndProcessCGroupAndProcessMemoryTrackingTimer(
+    uint64_t synchronized_timestamp_ns,
+    const orbit_grpc_protos::CGroupMemoryUsage& cgroup_memory_usage,
+    const orbit_grpc_protos::ProcessMemoryUsage& process_memory_usage) {
+  TimerInfo timer;
+  timer.set_type(TimerInfo::kCGroupAndProcessMemoryUsage);
+  timer.set_start(synchronized_timestamp_ns);
+  timer.set_end(synchronized_timestamp_ns);
+  timer.set_process_id(process_memory_usage.pid());
+
+  // TODO(b/192335025): Change to use dedicated classes / structs to store information for
+  // `MemoryTrack`.
+  std::vector<uint64_t> encoded_values(
+      static_cast<size_t>(CGroupAndProcessMemoryUsageEncodingIndex::kEnd));
+  encoded_values[static_cast<size_t>(CGroupAndProcessMemoryUsageEncodingIndex::kCGroupNameHash)] =
+      GetStringHashAndSendToListenerIfNecessary(cgroup_memory_usage.cgroup_name());
+  encoded_values[static_cast<size_t>(CGroupAndProcessMemoryUsageEncodingIndex::kCGroupLimitBytes)] =
+      orbit_api::Encode<uint64_t>(cgroup_memory_usage.limit_bytes());
+  encoded_values[static_cast<size_t>(CGroupAndProcessMemoryUsageEncodingIndex::kCGroupRssBytes)] =
+      orbit_api::Encode<uint64_t>(cgroup_memory_usage.rss_bytes());
+  encoded_values[static_cast<size_t>(
+      CGroupAndProcessMemoryUsageEncodingIndex::kCGroupMappedFileBytes)] =
+      orbit_api::Encode<uint64_t>(cgroup_memory_usage.mapped_file_bytes());
+  encoded_values[static_cast<size_t>(CGroupAndProcessMemoryUsageEncodingIndex::kProcessRssAnonKb)] =
+      orbit_api::Encode<uint64_t>(process_memory_usage.rss_anon_kb());
+
+  *timer.mutable_registers() = {encoded_values.begin(), encoded_values.end()};
+
+  capture_listener_->OnTimer(timer);
 }
 
 void CaptureEventProcessorForListener::ProcessThreadName(const ThreadName& thread_name) {

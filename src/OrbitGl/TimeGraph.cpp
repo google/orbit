@@ -18,6 +18,7 @@
 
 #include "App.h"
 #include "AsyncTrack.h"
+#include "CaptureClient/CaptureEventProcessor.h"
 #include "ClientData/FunctionUtils.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "FrameTrack.h"
@@ -42,6 +43,7 @@
 
 ABSL_DECLARE_FLAG(bool, enable_warning_threshold);
 
+using orbit_capture_client::CaptureEventProcessor;
 using orbit_client_model::CaptureData;
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
@@ -431,13 +433,13 @@ void TimeGraph::ProcessValueTrackingTimer(const TimerInfo& timer_info) {
 
 void TimeGraph::ProcessSystemMemoryTrackingTimer(const TimerInfo& timer_info) {
   int64_t total_kb = orbit_api::Decode<int64_t>(timer_info.registers(
-      static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kTotalKb)));
-  int64_t unused_kb = orbit_api::Decode<int64_t>(
-      timer_info.registers(static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kFreeKb)));
+      static_cast<size_t>(CaptureEventProcessor::SystemMemoryUsageEncodingIndex::kTotalKb)));
+  int64_t unused_kb = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(CaptureEventProcessor::SystemMemoryUsageEncodingIndex::kFreeKb)));
   int64_t buffers_kb = orbit_api::Decode<int64_t>(timer_info.registers(
-      static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kBuffersKb)));
+      static_cast<size_t>(CaptureEventProcessor::SystemMemoryUsageEncodingIndex::kBuffersKb)));
   int64_t cached_kb = orbit_api::Decode<int64_t>(timer_info.registers(
-      static_cast<size_t>(OrbitApp::SystemMemoryUsageEncodingIndex::kCachedKb)));
+      static_cast<size_t>(CaptureEventProcessor::SystemMemoryUsageEncodingIndex::kCachedKb)));
   if (total_kb == kMissingInfo || unused_kb == kMissingInfo || buffers_kb == kMissingInfo ||
       cached_kb == kMissingInfo) {
     return;
@@ -488,15 +490,18 @@ void TimeGraph::ProcessSystemMemoryTrackingTimer(const TimerInfo& timer_info) {
 }
 
 void TimeGraph::ProcessCGroupAndProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
-  int64_t cgroup_limit_bytes = orbit_api::Decode<int64_t>(timer_info.registers(
-      static_cast<size_t>(OrbitApp::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupLimitBytes)));
-  int64_t cgroup_rss_bytes = orbit_api::Decode<int64_t>(timer_info.registers(
-      static_cast<size_t>(OrbitApp::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupRssBytes)));
-  int64_t cgroup_mapped_file_bytes =
-      orbit_api::Decode<int64_t>(timer_info.registers(static_cast<size_t>(
-          OrbitApp::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupMappedFileBytes)));
-  int64_t process_rss_anon_kb = orbit_api::Decode<int64_t>(timer_info.registers(
-      static_cast<size_t>(OrbitApp::CGroupAndProcessMemoryUsageEncodingIndex::kProcessRssAnonKb)));
+  uint64_t cgroup_name_hash = timer_info.registers(static_cast<size_t>(
+      CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupNameHash));
+  std::string cgroup_name = app_->GetStringManager()->Get(cgroup_name_hash).value_or("");
+  int64_t cgroup_limit_bytes = orbit_api::Decode<int64_t>(timer_info.registers(static_cast<size_t>(
+      CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupLimitBytes)));
+  int64_t cgroup_rss_bytes = orbit_api::Decode<int64_t>(timer_info.registers(static_cast<size_t>(
+      CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupRssBytes)));
+  int64_t cgroup_mapped_file_bytes = orbit_api::Decode<
+      int64_t>(timer_info.registers(static_cast<size_t>(
+      CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupMappedFileBytes)));
+  int64_t process_rss_anon_kb = orbit_api::Decode<int64_t>(timer_info.registers(static_cast<size_t>(
+      CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kProcessRssAnonKb)));
 
   if (cgroup_limit_bytes == kMissingInfo || cgroup_rss_bytes == kMissingInfo ||
       cgroup_mapped_file_bytes == kMissingInfo || process_rss_anon_kb == kMissingInfo) {
@@ -510,8 +515,8 @@ void TimeGraph::ProcessCGroupAndProcessMemoryTrackingTimer(const TimerInfo& time
     const std::array<std::string, orbit_gl::kCGroupAndProcessMemoryTrackDimension> kSeriesNames = {
         absl::StrFormat("Process [%s] Resident Anonymous Memory", capture_data_->process_name()),
         "Other Processes Resident Anonymous Memory",
-        absl::StrFormat("CGroup [%s] Mapped File", timer_info.cgroup_name()),
-        absl::StrFormat("CGroup [%s] Unused", timer_info.cgroup_name())};
+        absl::StrFormat("CGroup [%s] Mapped File", cgroup_name),
+        absl::StrFormat("CGroup [%s] Unused", cgroup_name)};
     track = track_manager_->CreateAndGetCGroupAndProcessMemoryTrack(kSeriesNames);
   }
   double cgroup_limit_mb = static_cast<double>(cgroup_limit_bytes) / kMegabytesToBytes;
@@ -524,9 +529,11 @@ void TimeGraph::ProcessCGroupAndProcessMemoryTrackingTimer(const TimerInfo& time
                    {process_rss_anon_mb, other_rss_anon_mb, cgroup_mapped_file_mb, unused_mb});
   track->OnTimer(timer_info);
 
+  // TODO(b/192235976) Move the checking and setting of value upper and lower bounds to where the
+  // track is created. Therefore we can avoid having the same checking process for every timer.
   if (!track->GetValueUpperBound().has_value()) {
     const std::string kValueUpperBoundLabel =
-        absl::StrFormat("CGroup [%s] Memory Limit", timer_info.cgroup_name());
+        absl::StrFormat("CGroup [%s] Memory Limit", cgroup_name);
     std::string cgroup_limit_pretty_size =
         orbit_display_formats::GetDisplaySize(cgroup_limit_bytes);
     std::string cgroup_limit_pretty_label =

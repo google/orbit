@@ -33,6 +33,23 @@ class CaptureEventProcessor {
 
   static std::unique_ptr<CaptureEventProcessor> CreateCompositeProcessor(
       std::vector<std::unique_ptr<CaptureEventProcessor>> event_processors);
+
+  enum class SystemMemoryUsageEncodingIndex {
+    kTotalKb,
+    kFreeKb,
+    kAvailableKb,
+    kBuffersKb,
+    kCachedKb,
+    kEnd
+  };
+  enum class CGroupAndProcessMemoryUsageEncodingIndex {
+    kCGroupNameHash,
+    kCGroupLimitBytes,
+    kCGroupRssBytes,
+    kCGroupMappedFileBytes,
+    kProcessRssAnonKb,
+    kEnd
+  };
 };
 
 }  // namespace orbit_capture_client

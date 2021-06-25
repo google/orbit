@@ -70,7 +70,6 @@ class MockCaptureListener : public CaptureListener {
               (override));
   MOCK_METHOD(void, OnCaptureFinished, (const CaptureFinished&), (override));
   MOCK_METHOD(void, OnTimer, (const TimerInfo&), (override));
-  MOCK_METHOD(void, OnMemoryEventWrapper, (const MemoryEventWrapper&), (override));
   MOCK_METHOD(void, OnKeyAndString, (uint64_t /*key*/, std::string), (override));
   MOCK_METHOD(void, OnUniqueCallstack, (uint64_t /*callstack_id*/, CallstackInfo /*callstack*/),
               (override));

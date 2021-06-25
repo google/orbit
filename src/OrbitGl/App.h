@@ -159,24 +159,6 @@ class OrbitApp final : public DataViewFactory,
                          std::vector<orbit_grpc_protos::ModuleInfo> module_infos) override;
   void OnMetadataEvent(const orbit_grpc_protos::MetadataEvent& metadata_event) override;
 
-  enum class SystemMemoryUsageEncodingIndex {
-    kTotalKb,
-    kFreeKb,
-    kAvailableKb,
-    kBuffersKb,
-    kCachedKb,
-    kEnd
-  };
-  enum class CGroupAndProcessMemoryUsageEncodingIndex {
-    kCGroupLimitBytes,
-    kCGroupRssBytes,
-    kCGroupMappedFileBytes,
-    kProcessRssAnonKb,
-    kEnd
-  };
-  void OnMemoryEventWrapper(
-      const orbit_grpc_protos::MemoryEventWrapper& memory_event_wrapper) override;
-
   void OnValidateFramePointers(
       std::vector<const orbit_client_data::ModuleData*> modules_to_validate);
 
