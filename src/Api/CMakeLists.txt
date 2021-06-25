@@ -14,6 +14,19 @@ target_sources(ApiInterface INTERFACE
 target_include_directories(ApiInterface INTERFACE
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
+add_executable(ApiInterfaceTests)
+
+target_compile_options(ApiInterfaceTests PRIVATE ${STRICT_COMPILE_FLAGS})
+
+target_sources(ApiInterfaceTests PRIVATE
+        EncodedEventTest.cpp)
+
+target_link_libraries(ApiInterfaceTests PRIVATE
+        ApiInterface
+        GTest::Main)
+
+register_test(ApiInterfaceTests)
+
 if(NOT WIN32)
 project(Api)
 

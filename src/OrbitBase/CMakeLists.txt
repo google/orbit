@@ -99,7 +99,6 @@ target_sources(OrbitBaseTests PRIVATE
         ImmediateExecutorTest.cpp
         JoinFuturesTest.cpp
         LoggingUtilsTest.cpp
-        OrbitApiTest.cpp
         ProfilingTest.cpp
         PromiseTest.cpp
         PromiseHelpersTest.cpp
