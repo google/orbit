@@ -122,6 +122,7 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   static unsigned kMaxNumberRealZLayers;
 
   static const Color kBackgroundColor;
+  static const Color kTimeBarBackgroundColor;
   static const Color kTabTextColorSelected;
 
  protected:

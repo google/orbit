@@ -490,8 +490,7 @@ void CaptureWindow::DrawScreenSpace() {
         Vec2(0, time_graph_->GetLayout().GetSliderWidth()),
         Vec2(viewport_.GetScreenWidth(), time_graph_->GetLayout().GetTimeBarHeight()),
         GlCanvas::kZValueTimeBarBg);
-    ui_batcher_.AddBox(background_box,
-                       Color(kBackgroundColor[0], kBackgroundColor[1], kBackgroundColor[2], 200));
+    ui_batcher_.AddBox(background_box, kTimeBarBackgroundColor);
   }
 }
 

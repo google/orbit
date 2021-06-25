@@ -284,6 +284,9 @@ void TrackManager::UpdateTracks(Batcher* batcher, uint64_t min_tick, uint64_t ma
     current_y -= (track->GetHeight() + layout_->GetSpaceBetweenTracks());
   }
 
+  // TODO: This margin should be treated in a different way (http://b/192070555).
+  current_y -= layout_->GetBottomMargin();
+
   // Tracks are drawn from 0 (top) to negative y-coordinates.
   tracks_total_height_ = std::abs(current_y);
 }

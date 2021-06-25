@@ -54,6 +54,7 @@ unsigned GlCanvas::kMaxNumberRealZLayers = kNumberOriginalLayers + kExtraLayersF
                                            kExtraLayersForSliderEpsilons;
 
 const Color GlCanvas::kBackgroundColor = Color(67, 67, 67, 255);
+const Color GlCanvas::kTimeBarBackgroundColor = Color(90, 90, 90, 255);
 const Color GlCanvas::kTabTextColorSelected = Color(100, 181, 246, 255);
 
 GlCanvas::GlCanvas()
