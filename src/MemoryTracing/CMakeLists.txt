@@ -20,6 +20,7 @@ target_sources(MemoryTracing PUBLIC
         include/MemoryTracing/MemoryInfoProducer.h)
 
 target_sources(MemoryTracing PRIVATE
+        MemoryInfoListener.cpp
         MemoryInfoProducer.cpp
         MemoryTracingUtils.cpp
         MemoryTracingUtils.h)

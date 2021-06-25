@@ -76,7 +76,7 @@ class CaptureEventProcessorForListener : public CaptureEventProcessor {
   void ProcessGpuQueueSubmission(const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission);
   void ProcessMetadataEvent(const orbit_grpc_protos::MetadataEvent& metadata_event);
 
-  void ProcessMemoryEventWrapper(const orbit_grpc_protos::MemoryEventWrapper& memory_event_wrapper);
+  void ProcessMemoryUsageEvent(const orbit_grpc_protos::MemoryUsageEvent& memory_usage_event);
   void ExtractAndProcessSystemMemoryTrackingTimer(
       uint64_t synchronized_timestamp_ns,
       const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage);
@@ -155,8 +155,8 @@ void CaptureEventProcessorForListener::ProcessEvent(const ClientCaptureEvent& ev
     case ClientCaptureEvent::kModuleUpdateEvent:
       ProcessModuleUpdate(event.module_update_event());
       break;
-    case ClientCaptureEvent::kMemoryEventWrapper:
-      ProcessMemoryEventWrapper(event.memory_event_wrapper());
+    case ClientCaptureEvent::kMemoryUsageEvent:
+      ProcessMemoryUsageEvent(event.memory_usage_event());
       break;
     case ClientCaptureEvent::kApiEvent:
       api_event_processor_.ProcessApiEvent(event.api_event());
@@ -367,18 +367,18 @@ void CaptureEventProcessorForListener::ProcessGpuQueueSubmission(
   }
 }
 
-void CaptureEventProcessorForListener::ProcessMemoryEventWrapper(
-    const orbit_grpc_protos::MemoryEventWrapper& memory_event_wrapper) {
-  if (memory_event_wrapper.has_system_memory_usage()) {
-    ExtractAndProcessSystemMemoryTrackingTimer(memory_event_wrapper.timestamp_ns(),
-                                               memory_event_wrapper.system_memory_usage());
+void CaptureEventProcessorForListener::ProcessMemoryUsageEvent(
+    const orbit_grpc_protos::MemoryUsageEvent& memory_usage_event) {
+  if (memory_usage_event.has_system_memory_usage()) {
+    ExtractAndProcessSystemMemoryTrackingTimer(memory_usage_event.timestamp_ns(),
+                                               memory_usage_event.system_memory_usage());
   }
 
-  if (memory_event_wrapper.has_cgroup_memory_usage() &&
-      memory_event_wrapper.has_process_memory_usage()) {
-    ExtractAndProcessCGroupAndProcessMemoryTrackingTimer(
-        memory_event_wrapper.timestamp_ns(), memory_event_wrapper.cgroup_memory_usage(),
-        memory_event_wrapper.process_memory_usage());
+  if (memory_usage_event.has_cgroup_memory_usage() &&
+      memory_usage_event.has_process_memory_usage()) {
+    ExtractAndProcessCGroupAndProcessMemoryTrackingTimer(memory_usage_event.timestamp_ns(),
+                                                         memory_usage_event.cgroup_memory_usage(),
+                                                         memory_usage_event.process_memory_usage());
   }
 }
 

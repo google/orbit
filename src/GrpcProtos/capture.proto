@@ -382,7 +382,7 @@ message CGroupMemoryUsage {
   int64 active_file_bytes = 12;
 }
 
-message MemoryEventWrapper {
+message MemoryUsageEvent {
   uint64 timestamp_ns = 1;
   SystemMemoryUsage system_memory_usage = 2;
   ProcessMemoryUsage process_memory_usage = 3;
@@ -484,7 +484,7 @@ message ClientCaptureEvent {
     InternedString interned_string = 18;
     InternedTracepointInfo interned_tracepoint_info = 19;
     IntrospectionScope introspection_scope = 20;
-    MemoryEventWrapper memory_event_wrapper = 31;
+    MemoryUsageEvent memory_usage_event = 31;
     MetadataEvent metadata_event = 30;
     ModulesSnapshot modules_snapshot = 25;
     ModuleUpdateEvent module_update_event = 21;
@@ -521,7 +521,7 @@ message ProducerCaptureEvent {
     InternedCallstack interned_callstack = 7;
     InternedString interned_string = 18;
     IntrospectionScope introspection_scope = 19;
-    MemoryEventWrapper memory_event_wrapper = 29;
+    MemoryUsageEvent memory_usage_event = 29;
     MetadataEvent metadata_event = 28;
     ModulesSnapshot modules_snapshot = 25;
     ModuleUpdateEvent module_update_event = 20;

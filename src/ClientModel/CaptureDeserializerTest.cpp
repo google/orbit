@@ -44,7 +44,6 @@ using orbit_client_protos::TracepointEventInfo;
 
 using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureStarted;
-using orbit_grpc_protos::MemoryEventWrapper;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::TracepointInfo;
 

@@ -36,7 +36,7 @@ using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointInfo;
 using orbit_grpc_protos::kMemoryInfoProducerId;
-using orbit_grpc_protos::MemoryEventWrapper;
+using orbit_grpc_protos::MemoryUsageEvent;
 using orbit_grpc_protos::MetadataEvent;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ModulesSnapshot;
@@ -1615,12 +1615,12 @@ TEST(ProducerEventProcessor, MetadataEvent) {
   EXPECT_EQ(actual_metadata_event.info_event().message(), kMessage);
 }
 
-TEST(ProducerEventProcessor, MemoryEventWrapper) {
+TEST(ProducerEventProcessor, MemoryUsageEvent) {
   ProducerCaptureEvent producer_capture_event;
-  MemoryEventWrapper* memory_event_wrapper = producer_capture_event.mutable_memory_event_wrapper();
-  memory_event_wrapper->set_timestamp_ns(kTimestampNs1);
+  MemoryUsageEvent* memory_usage_event = producer_capture_event.mutable_memory_usage_event();
+  memory_usage_event->set_timestamp_ns(kTimestampNs1);
 
-  SystemMemoryUsage* system_memory_usage = memory_event_wrapper->mutable_system_memory_usage();
+  SystemMemoryUsage* system_memory_usage = memory_usage_event->mutable_system_memory_usage();
   system_memory_usage->set_timestamp_ns(kTimestampNs2);
   system_memory_usage->set_total_kb(10);
   system_memory_usage->set_free_kb(20);
@@ -1630,7 +1630,7 @@ TEST(ProducerEventProcessor, MemoryEventWrapper) {
   system_memory_usage->set_pgfault(60);
   system_memory_usage->set_pgmajfault(70);
 
-  CGroupMemoryUsage* cgroup_memory_usage = memory_event_wrapper->mutable_cgroup_memory_usage();
+  CGroupMemoryUsage* cgroup_memory_usage = memory_usage_event->mutable_cgroup_memory_usage();
   cgroup_memory_usage->set_timestamp_ns(kTimestampNs2);
   cgroup_memory_usage->set_cgroup_name("memory_cgroup_name");
   cgroup_memory_usage->set_limit_bytes(10);
@@ -1644,7 +1644,7 @@ TEST(ProducerEventProcessor, MemoryEventWrapper) {
   cgroup_memory_usage->set_inactive_file_bytes(90);
   cgroup_memory_usage->set_active_file_bytes(100);
 
-  ProcessMemoryUsage* process_memory_usage = memory_event_wrapper->mutable_process_memory_usage();
+  ProcessMemoryUsage* process_memory_usage = memory_usage_event->mutable_process_memory_usage();
   process_memory_usage->set_timestamp_ns(kTimestampNs2);
   process_memory_usage->set_pid(1234);
   process_memory_usage->set_rss_anon_kb(10);
@@ -1657,11 +1657,9 @@ TEST(ProducerEventProcessor, MemoryEventWrapper) {
   EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kMemoryInfoProducerId, producer_capture_event);
-  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kMemoryEventWrapper);
-  const MemoryEventWrapper& actual_memory_event_wrapper =
-      client_capture_event.memory_event_wrapper();
-  ASSERT_EQ(actual_memory_event_wrapper.SerializeAsString(),
-            memory_event_wrapper->SerializeAsString());
+  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kMemoryUsageEvent);
+  const MemoryUsageEvent& actual_memory_usage_event = client_capture_event.memory_usage_event();
+  ASSERT_EQ(actual_memory_usage_event.SerializeAsString(), memory_usage_event->SerializeAsString());
 }
 
 }  // namespace orbit_service
