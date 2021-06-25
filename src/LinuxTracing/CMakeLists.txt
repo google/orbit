@@ -66,6 +66,7 @@ target_sources(LinuxTracing PRIVATE
 
 target_link_libraries(LinuxTracing PUBLIC
         GrpcProtos
+        Introspection
         ObjectUtils
         OrbitBase
         CONAN_PKG::abseil

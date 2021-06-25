@@ -20,13 +20,13 @@
 #include <string_view>
 #include <system_error>
 
+#include "Introspection/Introspection.h"
 #include "ObjectUtils/ElfFile.h"
 #include "ObjectUtils/ObjectFile.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/Tracing.h"
 #include "OrbitBase/WriteStringToFile.h"
 #include "OrbitPaths/Paths.h"
 

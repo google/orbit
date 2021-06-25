@@ -22,6 +22,7 @@
 #include <utility>
 
 #include "Function.h"
+#include "Introspection/Introspection.h"
 #include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"
 #include "LinuxTracing/TracerListener.h"
@@ -33,7 +34,6 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "OrbitBase/Tracing.h"
 #include "PerfEventOpen.h"
 #include "PerfEventReaders.h"
 #include "PerfEventRecords.h"

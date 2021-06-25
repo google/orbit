@@ -27,4 +27,5 @@ target_sources(ClientServices PRIVATE
 
 target_link_libraries(ClientServices PUBLIC
         GrpcProtos
+        Introspection
         OrbitBase)

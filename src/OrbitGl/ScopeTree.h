@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "BlockChain.h"
-#include "OrbitBase/Tracing.h"
+#include "Introspection/Introspection.h"
 #include "absl/container/btree_map.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"

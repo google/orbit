@@ -55,6 +55,7 @@ target_link_libraries(ServiceLib PUBLIC
         ApiLoader
         FramePointerValidator
         GrpcProtos
+        Introspection
         LinuxTracing
         MemoryTracing
         ObjectUtils

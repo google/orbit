@@ -45,7 +45,6 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/ThreadConstants.h
         include/OrbitBase/ThreadPool.h
         include/OrbitBase/ThreadUtils.h
-        include/OrbitBase/Tracing.h
         include/OrbitBase/UniqueResource.h
         include/OrbitBase/WriteStringToFile.h)
 
@@ -61,7 +60,6 @@ target_sources(OrbitBase PRIVATE
         SimpleExecutor.cpp
         TemporaryFile.cpp
         ThreadPool.cpp
-        Tracing.cpp
         WriteStringToFile.cpp)
 
 if (WIN32)
@@ -77,7 +75,6 @@ target_sources(OrbitBase PRIVATE
 endif()
 
 target_link_libraries(OrbitBase PUBLIC
-        ApiInterface # TODO(b/182473973): Move introspection into its own module.
         CONAN_PKG::Outcome
         CONAN_PKG::abseil
         std::filesystem)
@@ -106,7 +103,6 @@ target_sources(OrbitBaseTests PRIVATE
         SimpleExecutorTest.cpp
         TemporaryFileTest.cpp
         ThreadUtilsTest.cpp
-        TracingTest.cpp
         UniqueResourceTest.cpp
         WriteStringToFileTest.cpp
 )

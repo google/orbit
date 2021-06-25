@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/container/flat_hash_map.h>
 #include <gtest/gtest.h>
 #include <stddef.h>
 
@@ -10,21 +11,18 @@
 #include <thread>
 #include <vector>
 
+#include "Introspection/Introspection.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "OrbitBase/Tracing.h"
-#include "absl/container/flat_hash_map.h"
 
-using orbit_base::TracingListener;
-using orbit_base::TracingScope;
-using orbit_base::TracingTimerCallback;
-
-void TestScopes() {
+static void TestScopes() {
   ORBIT_SCOPE("TEST_ORBIT_SCOPE_1");
   ORBIT_SCOPE("TEST_ORBIT_SCOPE_2");
   ORBIT_SCOPE("TEST_ORBIT_SCOPE_3");
   ORBIT_START("TEST_ORBIT_START_4");
   ORBIT_STOP();
 }
+
+namespace orbit_introspection {
 
 TEST(Tracing, Scopes) {
   constexpr size_t kNumThreads = 10;
@@ -59,3 +57,5 @@ TEST(Tracing, Scopes) {
     EXPECT_EQ(pair.second.size(), kNumExpectedScopesPerThread);
   }
 }
+
+}  // namespace orbit_introspection

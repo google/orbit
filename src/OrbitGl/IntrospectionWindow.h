@@ -11,7 +11,7 @@
 
 #include "CaptureWindow.h"
 #include "ClientModel/CaptureData.h"
-#include "OrbitBase/Tracing.h"
+#include "Introspection/Introspection.h"
 
 class OrbitApp;
 
@@ -36,7 +36,7 @@ class IntrospectionWindow : public CaptureWindow {
   [[nodiscard]] const char* GetHelpText() const override;
   [[nodiscard]] bool ShouldAutoZoom() const override;
 
-  std::unique_ptr<orbit_base::TracingListener> introspection_listener_;
+  std::unique_ptr<orbit_introspection::TracingListener> introspection_listener_;
   std::unique_ptr<orbit_client_model::CaptureData> capture_data_;
 };
 

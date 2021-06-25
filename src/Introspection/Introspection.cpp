@@ -1,8 +1,8 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitBase/Tracing.h"
+#include "Introspection/Introspection.h"
 
 #include <absl/base/attributes.h>
 #include <absl/base/const_init.h>
@@ -19,9 +19,9 @@
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitBase/ThreadUtils.h"
 
-using orbit_base::TracingListener;
-using orbit_base::TracingScope;
-using orbit_base::TracingTimerCallback;
+using orbit_introspection::TracingListener;
+using orbit_introspection::TracingScope;
+using orbit_introspection::TracingTimerCallback;
 
 ABSL_CONST_INIT static absl::Mutex global_tracing_mutex(absl::kConstInit);
 ABSL_CONST_INIT static TracingListener* global_tracing_listener = nullptr;
@@ -29,7 +29,7 @@ ABSL_CONST_INIT static TracingListener* global_tracing_listener = nullptr;
 // Tracing uses the same function table used by the Orbit API, but specifies its own functions.
 orbit_api_v0 g_orbit_api_v0;
 
-namespace orbit_base {
+namespace orbit_introspection {
 
 void InitializeTracing();
 
@@ -46,7 +46,7 @@ TracingListener::TracingListener(TracingTimerCallback callback) {
   // Activate listener (only one listener instance is supported).
   absl::MutexLock lock(&global_tracing_mutex);
   CHECK(!IsActive());
-  orbit_base::InitializeTracing();
+  InitializeTracing();
   global_tracing_listener = this;
   active_ = true;
   shutdown_initiated_ = false;
@@ -72,7 +72,7 @@ TracingListener::~TracingListener() {
   global_tracing_listener = nullptr;
 }
 
-}  // namespace orbit_base
+}  // namespace orbit_introspection
 
 namespace {
 struct ScopeToggle {
@@ -184,7 +184,7 @@ void orbit_api_track_double(const char* name, double value, orbit_api_color colo
   TrackValue(orbit_api::kTrackDouble, name, orbit_api::Encode<uint64_t>(value), color);
 }
 
-namespace orbit_base {
+namespace orbit_introspection {
 
 void InitializeTracing() {
   if (g_orbit_api_v0.initialized != 0) return;
@@ -204,4 +204,4 @@ void InitializeTracing() {
   g_orbit_api_v0.enabled = 1;
 }
 
-}  // namespace orbit_base
+}  // namespace orbit_introspection

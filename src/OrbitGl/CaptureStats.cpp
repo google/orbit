@@ -5,7 +5,7 @@
 #include "CaptureStats.h"
 
 #include "CaptureWindow.h"
-#include "OrbitBase/Tracing.h"
+#include "Introspection/Introspection.h"
 #include "SchedulingStats.h"
 #include "absl/strings/str_format.h"
 #include "capture_data.pb.h"

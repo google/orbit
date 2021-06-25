@@ -14,8 +14,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/Tracing.h"
 #include "OrbitSsh/Error.h"
 #include "OrbitSshQt/Error.h"
 

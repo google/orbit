@@ -12,8 +12,8 @@
 #include <utility>
 #include <vector>
 
+#include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/Tracing.h"
 #include "services.grpc.pb.h"
 #include "services.pb.h"
 

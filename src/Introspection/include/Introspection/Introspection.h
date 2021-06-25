@@ -1,9 +1,9 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_BASE_TRACING_H_
-#define ORBIT_BASE_TRACING_H_
+#ifndef INTROSPECTION_INTROSPECTION_H_
+#define INTROSPECTION_INTROSPECTION_H_
 
 #include <stdint.h>
 
@@ -17,7 +17,7 @@
 
 #define ORBIT_SCOPE_FUNCTION ORBIT_SCOPE(__FUNCTION__)
 
-namespace orbit_base {
+namespace orbit_introspection {
 
 struct TracingScope {
   TracingScope(orbit_api::EventType type, const char* name = nullptr, uint64_t data = 0,
@@ -47,6 +47,6 @@ class TracingListener {
   inline static bool shutdown_initiated_ = true;
 };
 
-}  // namespace orbit_base
+}  // namespace orbit_introspection
 
-#endif  // ORBIT_BASE_TRACING_H_
+#endif  // INTROSPECTION_INTROSPECTION_H_

@@ -17,6 +17,7 @@ target_compile_features(Symbols PUBLIC cxx_std_17)
 
 target_link_libraries(Symbols PUBLIC
         GrpcProtos
+        Introspection
         ObjectUtils
         OrbitBase
         OrbitPaths)

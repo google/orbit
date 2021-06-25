@@ -11,8 +11,8 @@
 #include <stddef.h>
 
 #include "DisplayFormats/DisplayFormats.h"
+#include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/Tracing.h"
 
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                       std::unique_ptr<PickingUserData> user_data) {

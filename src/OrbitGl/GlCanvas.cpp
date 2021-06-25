@@ -15,10 +15,10 @@
 #include "CaptureWindow.h"
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
+#include "Introspection/Introspection.h"
 #include "IntrospectionWindow.h"
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/Tracing.h"
 
 // Tracks: 0.0 - 0.1
 // World Overlay: 0.4 - 0.5

@@ -150,6 +150,7 @@ target_link_libraries(
          DataViews
          DisplayFormats
          GrpcProtos
+         Introspection
          MetricsUploader
          OrbitAccessibility
          OrbitPaths

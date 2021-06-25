@@ -29,9 +29,11 @@ target_sources(CaptureClient PRIVATE
         SaveToFileEventProcessor.cpp)
 
 target_link_libraries(CaptureClient PUBLIC
+        ApiInterface
         CaptureFile
         ClientData
-        GrpcProtos)
+        GrpcProtos
+        Introspection)
 
 add_fuzzer(CaptureEventProcessorProcessEventsFuzzer CaptureEventProcessorProcessEventsFuzzer.cpp)
 target_link_libraries(

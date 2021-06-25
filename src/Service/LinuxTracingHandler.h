@@ -12,10 +12,10 @@
 #include <memory>
 #include <string>
 
+#include "Introspection/Introspection.h"
 #include "LinuxTracing/Tracer.h"
 #include "LinuxTracing/TracerListener.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/Tracing.h"
 #include "ProducerEventProcessor.h"
 #include "capture.pb.h"
 #include "tracepoint.pb.h"
@@ -56,7 +56,7 @@ class LinuxTracingHandler : public orbit_linux_tracing::TracerListener {
   std::unique_ptr<orbit_linux_tracing::Tracer> tracer_;
 
   // Manual instrumentation tracing listener.
-  std::unique_ptr<orbit_base::TracingListener> orbit_tracing_listener_;
+  std::unique_ptr<orbit_introspection::TracingListener> orbit_tracing_listener_;
 
   void SetupIntrospection();
 };
