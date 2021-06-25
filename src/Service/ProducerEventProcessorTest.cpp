@@ -19,6 +19,7 @@ using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::CallstackSample;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureStarted;
+using orbit_grpc_protos::CGroupMemoryUsage;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
@@ -34,12 +35,16 @@ using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointInfo;
+using orbit_grpc_protos::kMemoryInfoProducerId;
+using orbit_grpc_protos::MemoryEventWrapper;
 using orbit_grpc_protos::MetadataEvent;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ModulesSnapshot;
 using orbit_grpc_protos::ModuleUpdateEvent;
+using orbit_grpc_protos::ProcessMemoryUsage;
 using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_grpc_protos::SchedulingSlice;
+using orbit_grpc_protos::SystemMemoryUsage;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadNamesSnapshot;
 using orbit_grpc_protos::ThreadStateSlice;
@@ -1608,6 +1613,55 @@ TEST(ProducerEventProcessor, MetadataEvent) {
   ASSERT_EQ(actual_metadata_event.event_case(), MetadataEvent::kInfoEvent);
   EXPECT_EQ(actual_metadata_event.info_event().timestamp_ns(), kTimestampNs1);
   EXPECT_EQ(actual_metadata_event.info_event().message(), kMessage);
+}
+
+TEST(ProducerEventProcessor, MemoryEventWrapper) {
+  ProducerCaptureEvent producer_capture_event;
+  MemoryEventWrapper* memory_event_wrapper = producer_capture_event.mutable_memory_event_wrapper();
+  memory_event_wrapper->set_timestamp_ns(kTimestampNs1);
+
+  SystemMemoryUsage* system_memory_usage = memory_event_wrapper->mutable_system_memory_usage();
+  system_memory_usage->set_timestamp_ns(kTimestampNs2);
+  system_memory_usage->set_total_kb(10);
+  system_memory_usage->set_free_kb(20);
+  system_memory_usage->set_available_kb(30);
+  system_memory_usage->set_buffers_kb(40);
+  system_memory_usage->set_cached_kb(50);
+  system_memory_usage->set_pgfault(60);
+  system_memory_usage->set_pgmajfault(70);
+
+  CGroupMemoryUsage* cgroup_memory_usage = memory_event_wrapper->mutable_cgroup_memory_usage();
+  cgroup_memory_usage->set_timestamp_ns(kTimestampNs2);
+  cgroup_memory_usage->set_cgroup_name("memory_cgroup_name");
+  cgroup_memory_usage->set_limit_bytes(10);
+  cgroup_memory_usage->set_rss_bytes(20);
+  cgroup_memory_usage->set_mapped_file_bytes(30);
+  cgroup_memory_usage->set_pgfault(40);
+  cgroup_memory_usage->set_pgmajfault(50);
+  cgroup_memory_usage->set_unevictable_bytes(60);
+  cgroup_memory_usage->set_inactive_anon_bytes(70);
+  cgroup_memory_usage->set_active_anon_bytes(80);
+  cgroup_memory_usage->set_inactive_file_bytes(90);
+  cgroup_memory_usage->set_active_file_bytes(100);
+
+  ProcessMemoryUsage* process_memory_usage = memory_event_wrapper->mutable_process_memory_usage();
+  process_memory_usage->set_timestamp_ns(kTimestampNs2);
+  process_memory_usage->set_pid(1234);
+  process_memory_usage->set_rss_anon_kb(10);
+  process_memory_usage->set_minflt(20);
+  process_memory_usage->set_minflt(30);
+
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  ClientCaptureEvent client_capture_event;
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+
+  producer_event_processor->ProcessEvent(kMemoryInfoProducerId, producer_capture_event);
+  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kMemoryEventWrapper);
+  const MemoryEventWrapper& actual_memory_event_wrapper =
+      client_capture_event.memory_event_wrapper();
+  ASSERT_EQ(actual_memory_event_wrapper.SerializeAsString(),
+            memory_event_wrapper->SerializeAsString());
 }
 
 }  // namespace orbit_service
