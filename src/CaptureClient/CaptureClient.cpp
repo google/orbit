@@ -6,6 +6,8 @@
 
 #include <absl/container/flat_hash_set.h>
 #include <absl/flags/declare.h>
+#include <absl/flags/flag.h>
+#include <absl/strings/str_format.h>
 #include <absl/time/time.h>
 
 #include <cstdint>
@@ -18,12 +20,10 @@
 #include "CaptureClient/CaptureListener.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
+#include "Introspection/Introspection.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/Tracing.h"
-#include "absl/flags/flag.h"
-#include "absl/strings/str_format.h"
 #include "capture.pb.h"
 #include "tracepoint.pb.h"
 

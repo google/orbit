@@ -21,9 +21,9 @@
 #include <utility>
 
 #include "GlCanvas.h"
+#include "Introspection/Introspection.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/Tracing.h"
 
 struct vertex_t {
   float x, y, z;     // position

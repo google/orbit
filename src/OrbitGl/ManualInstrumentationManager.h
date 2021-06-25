@@ -10,8 +10,8 @@
 #include <optional>
 #include <string>
 
+#include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/Tracing.h"
 #include "StringManager.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"

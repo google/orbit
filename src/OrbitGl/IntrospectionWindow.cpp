@@ -40,8 +40,8 @@ void IntrospectionWindow::StartIntrospection() {
   CHECK(!IsIntrospecting());
   set_draw_help(false);
   CreateTimeGraph(capture_data_.get());
-  introspection_listener_ =
-      std::make_unique<orbit_base::TracingListener>([this](const orbit_base::TracingScope& scope) {
+  introspection_listener_ = std::make_unique<orbit_introspection::TracingListener>(
+      [this](const orbit_introspection::TracingScope& scope) {
         TimerInfo timer_info;
         timer_info.set_thread_id(scope.tid);
         timer_info.set_start(scope.begin);

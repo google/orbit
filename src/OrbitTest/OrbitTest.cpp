@@ -4,6 +4,7 @@
 
 #include "OrbitTest.h"
 
+#include <absl/strings/str_format.h>
 #include <absl/time/time.h>
 #include <stdio.h>
 
@@ -16,13 +17,12 @@
 #include <thread>
 
 #include "OrbitBase/ThreadUtils.h"
-#include "absl/strings/str_format.h"
 
-// TODO(b/182848566): OrbitBase defines an implementation of the Orbit API for introspection. To
-// prevent symbol clash with the header-only use of the API, we wrap the include of Orbit.h in a
-// namespace. This is only needed for internal projects that link with OrbitBase, basically only
-// OrbitTest. This should be removed once we split the introspection and manual instrumentation
-// apis.
+// TODO(b/182848566): Introspection defines an implementation of the Orbit API for introspection. To
+//  prevent symbol clash with the header-only use of the API, we wrap the include of Orbit.h in a
+//  namespace. This is only needed for internal projects that link with OrbitBase, basically only
+//  OrbitTest. This should be removed once we split the introspection and manual instrumentation
+//  apis.
 namespace orbit_api_wrapper {
 #include "Api/Orbit.h"
 ORBIT_API_INSTANTIATE;
