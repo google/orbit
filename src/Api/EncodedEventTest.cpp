@@ -8,7 +8,7 @@
 
 #include <string>
 
-#include "OrbitBase/Tracing.h"
+#include "Api/EncodedEvent.h"
 
 static orbit_api::Event Decode(uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a4, uint64_t a5,
                                uint64_t a6) {
@@ -16,7 +16,7 @@ static orbit_api::Event Decode(uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a
   return encoded_event.event;
 }
 
-TEST(OrbitApi, Encoding) {
+TEST(EncodedEvent, Encoding) {
   constexpr orbit_api::EventType kType = orbit_api::kTrackInt64;
   constexpr const char* kName = "The quick brown fox jumps over the lazy dog";
   constexpr double kData = 1234567.12345671234567;
