@@ -66,13 +66,15 @@ class TrackManager {
   VariableTrack* GetOrCreateVariableTrack(const std::string& name);
   AsyncTrack* GetOrCreateAsyncTrack(const std::string& name);
   FrameTrack* GetOrCreateFrameTrack(const orbit_grpc_protos::InstrumentedFunction& function);
-  orbit_gl::SystemMemoryTrack* GetSystemMemoryTrack() const { return system_memory_track_.get(); }
-  orbit_gl::SystemMemoryTrack* CreateAndGetSystemMemoryTrack(
+  [[nodiscard]] orbit_gl::SystemMemoryTrack* GetSystemMemoryTrack() const {
+    return system_memory_track_.get();
+  }
+  [[nodiscard]] orbit_gl::SystemMemoryTrack* CreateAndGetSystemMemoryTrack(
       const std::array<std::string, orbit_gl::kSystemMemoryTrackDimension>& series_names);
-  orbit_gl::CGroupAndProcessMemoryTrack* GetCGroupAndProcessMemoryTrack() const {
+  [[nodiscard]] orbit_gl::CGroupAndProcessMemoryTrack* GetCGroupAndProcessMemoryTrack() const {
     return cgroup_and_process_memory_track_.get();
   }
-  orbit_gl::CGroupAndProcessMemoryTrack* CreateAndGetCGroupAndProcessMemoryTrack(
+  [[nodiscard]] orbit_gl::CGroupAndProcessMemoryTrack* CreateAndGetCGroupAndProcessMemoryTrack(
       const std::array<std::string, orbit_gl::kCGroupAndProcessMemoryTrackDimension>& series_names);
 
   [[nodiscard]] bool GetIsDataFromSavedCapture() const { return data_from_saved_capture_; }

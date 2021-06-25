@@ -32,7 +32,7 @@ using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointInfo;
 using orbit_grpc_protos::IntrospectionScope;
-using orbit_grpc_protos::MemoryEventWrapper;
+using orbit_grpc_protos::MemoryUsageEvent;
 using orbit_grpc_protos::MetadataEvent;
 using orbit_grpc_protos::ModulesSnapshot;
 using orbit_grpc_protos::ModuleUpdateEvent;
@@ -100,7 +100,7 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessThreadNamesSnapshot(ThreadNamesSnapshot* thread_names_snapshot);
   void ProcessThreadStateSlice(ThreadStateSlice* thread_state_slice);
   void ProcessFullTracepointEvent(FullTracepointEvent* full_tracepoint_event);
-  void ProcessMemoryEventWrapper(MemoryEventWrapper* memory_event_wrapper);
+  void ProcessMemoryUsageEvent(MemoryUsageEvent* memory_usage_event);
   void ProcessApiEvent(ApiEvent* api_event);
   void ProcessMetadataEvent(MetadataEvent* metadata_event);
 
@@ -346,10 +346,9 @@ void ProducerEventProcessorImpl::ProcessFullTracepointEvent(
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessMemoryEventWrapper(
-    MemoryEventWrapper* memory_event_wrapper) {
+void ProducerEventProcessorImpl::ProcessMemoryUsageEvent(MemoryUsageEvent* memory_usage_event) {
   ClientCaptureEvent event;
-  *event.mutable_memory_event_wrapper() = std::move(*memory_event_wrapper);
+  *event.mutable_memory_usage_event() = std::move(*memory_usage_event);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
@@ -418,8 +417,8 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
     case ProducerCaptureEvent::kModulesSnapshot:
       ProcessModulesSnapshot(event.mutable_modules_snapshot());
       break;
-    case ProducerCaptureEvent::kMemoryEventWrapper:
-      ProcessMemoryEventWrapper(event.mutable_memory_event_wrapper());
+    case ProducerCaptureEvent::kMemoryUsageEvent:
+      ProcessMemoryUsageEvent(event.mutable_memory_usage_event());
       break;
     case ProducerCaptureEvent::kApiEvent:
       ProcessApiEvent(event.mutable_api_event());

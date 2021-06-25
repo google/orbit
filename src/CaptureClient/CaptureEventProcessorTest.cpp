@@ -47,7 +47,7 @@ using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointInfo;
 using orbit_grpc_protos::IntrospectionScope;
-using orbit_grpc_protos::MemoryEventWrapper;
+using orbit_grpc_protos::MemoryUsageEvent;
 using orbit_grpc_protos::MetadataEvent;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessMemoryUsage;
@@ -552,33 +552,33 @@ TEST(CaptureEventProcessor, CanHandleGpuJobs) {
   EXPECT_EQ(hw_excecution_timer.user_data_key(), actual_hw_execution_key);
 }
 
-TEST(CaptureEventProcessor, CanHandleMemoryEventWrapper) {
+TEST(CaptureEventProcessor, CanHandleMemoryUsageEvent) {
   MockCaptureListener listener;
   auto event_processor =
       CaptureEventProcessor::CreateForCaptureListener(&listener, std::filesystem::path{}, {});
 
   ClientCaptureEvent event;
-  MemoryEventWrapper* memory_event_wrapper = event.mutable_memory_event_wrapper();
-  SystemMemoryUsage* system_memory_usage = memory_event_wrapper->mutable_system_memory_usage();
+  MemoryUsageEvent* memory_usage_event = event.mutable_memory_usage_event();
+  SystemMemoryUsage* system_memory_usage = memory_usage_event->mutable_system_memory_usage();
   system_memory_usage->set_timestamp_ns(105);
   system_memory_usage->set_total_kb(10);
   system_memory_usage->set_free_kb(20);
   system_memory_usage->set_available_kb(30);
   system_memory_usage->set_buffers_kb(40);
   system_memory_usage->set_cached_kb(50);
-  CGroupMemoryUsage* cgroup_memory_usage = memory_event_wrapper->mutable_cgroup_memory_usage();
+  CGroupMemoryUsage* cgroup_memory_usage = memory_usage_event->mutable_cgroup_memory_usage();
   cgroup_memory_usage->set_timestamp_ns(110);
   cgroup_memory_usage->set_cgroup_name("memory_cgroup_name");
   cgroup_memory_usage->set_limit_bytes(10);
   cgroup_memory_usage->set_rss_bytes(20);
   cgroup_memory_usage->set_mapped_file_bytes(30);
-  ProcessMemoryUsage* process_memory_usage = memory_event_wrapper->mutable_process_memory_usage();
+  ProcessMemoryUsage* process_memory_usage = memory_usage_event->mutable_process_memory_usage();
   process_memory_usage->set_timestamp_ns(115);
   process_memory_usage->set_pid(1234);
   process_memory_usage->set_rss_anon_kb(10);
   // We take the arithmetic mean of the above events' timestamps as the synchronized timestamp in
   // `MemoryUsageEvent`.
-  memory_event_wrapper->set_timestamp_ns(110);
+  memory_usage_event->set_timestamp_ns(110);
 
   uint64_t actual_cgroup_name_key;
   EXPECT_CALL(listener, OnKeyAndString(_, cgroup_memory_usage->cgroup_name()))
@@ -594,8 +594,8 @@ TEST(CaptureEventProcessor, CanHandleMemoryEventWrapper) {
 
   event_processor->ProcessEvent(event);
 
-  EXPECT_EQ(system_timer.start(), memory_event_wrapper->timestamp_ns());
-  EXPECT_EQ(system_timer.end(), memory_event_wrapper->timestamp_ns());
+  EXPECT_EQ(system_timer.start(), memory_usage_event->timestamp_ns());
+  EXPECT_EQ(system_timer.end(), memory_usage_event->timestamp_ns());
   EXPECT_EQ(system_timer.type(), TimerInfo::kSystemMemoryUsage);
   EXPECT_EQ(system_timer.registers(static_cast<size_t>(
                 CaptureEventProcessor::SystemMemoryUsageEncodingIndex::kTotalKb)),
@@ -613,8 +613,8 @@ TEST(CaptureEventProcessor, CanHandleMemoryEventWrapper) {
                 CaptureEventProcessor::SystemMemoryUsageEncodingIndex::kCachedKb)),
             system_memory_usage->cached_kb());
 
-  EXPECT_EQ(cgroup_and_process_timer.start(), memory_event_wrapper->timestamp_ns());
-  EXPECT_EQ(cgroup_and_process_timer.end(), memory_event_wrapper->timestamp_ns());
+  EXPECT_EQ(cgroup_and_process_timer.start(), memory_usage_event->timestamp_ns());
+  EXPECT_EQ(cgroup_and_process_timer.end(), memory_usage_event->timestamp_ns());
   EXPECT_EQ(cgroup_and_process_timer.type(), TimerInfo::kCGroupAndProcessMemoryUsage);
   EXPECT_EQ(cgroup_and_process_timer.process_id(), process_memory_usage->pid());
   EXPECT_EQ(cgroup_and_process_timer.registers(static_cast<size_t>(
