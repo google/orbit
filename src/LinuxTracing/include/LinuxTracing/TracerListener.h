@@ -27,6 +27,8 @@ class TracerListener {
   virtual void OnModuleUpdate(orbit_grpc_protos::ModuleUpdateEvent module_update_event) = 0;
   virtual void OnErrorsWithPerfEventOpenEvent(
       orbit_grpc_protos::ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event) = 0;
+  virtual void OnLostPerfRecordsEvent(
+      orbit_grpc_protos::LostPerfRecordsEvent lost_perf_records_event) = 0;
 };
 
 }  // namespace orbit_linux_tracing

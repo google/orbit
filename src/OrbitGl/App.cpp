@@ -571,6 +571,10 @@ void OrbitApp::OnMetadataEvent(const orbit_grpc_protos::MetadataEvent& metadata_
         }
       } break;
 
+      case orbit_grpc_protos::MetadataEvent::kLostPerfRecordsEvent: {
+        // TODO(b/191236503): Handle LostPerfRecordsEvents.
+      } break;
+
       case orbit_grpc_protos::MetadataEvent::EVENT_NOT_SET:
         break;
     }

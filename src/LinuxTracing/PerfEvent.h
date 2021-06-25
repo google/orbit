@@ -154,6 +154,15 @@ class LostPerfEvent : public PerfEvent {
   uint64_t GetStreamId() const { return ring_buffer_record.sample_id.stream_id; }
 
   uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
+
+  void SetPreviousTimestamp(uint64_t previous_timestamp) {
+    previous_timestamp_ = previous_timestamp;
+  }
+  [[nodiscard]] uint64_t GetPreviousTimestamp() const { return previous_timestamp_; }
+
+ private:
+  // The last timestamp read from the ring buffer before the PERF_RECORD_LOST.
+  uint64_t previous_timestamp_ = 0;
 };
 
 struct dynamically_sized_perf_event_sample_stack_user {
