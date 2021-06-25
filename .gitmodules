@@ -1,0 +1,4 @@
+[submodule "kokoro"]
+	path = kokoro
+	url = rpc://team/yeti-devtools-eng/orbit_kokoro_config
+	branch = main
