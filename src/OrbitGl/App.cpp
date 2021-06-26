@@ -2191,7 +2191,8 @@ void OrbitApp::DeselectFunction(const orbit_client_protos::FunctionInfo& func) {
   const ModuleData* module = GetModuleByPathAndBuildId(module_path, module_build_id);
   if (module == nullptr) return false;
 
-  const uint64_t offset = absolute_address - module_base_address;
+  const uint64_t offset =
+      absolute_address - module_base_address + module->executable_segment_offset();
   const FunctionInfo* function = module->FindFunctionByOffset(offset, false);
   if (function == nullptr) return false;
 

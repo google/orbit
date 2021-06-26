@@ -4,7 +4,6 @@
 
 #include <absl/base/casts.h>
 #include <absl/strings/numbers.h>
-#include <absl/strings/str_split.h>
 #include <dlfcn.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -23,11 +22,9 @@
 #include "ObjectUtils/ElfFile.h"
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/ExecutablePath.h"
-#include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/TestUtils.h"
-#include "RegisterState.h"
 #include "Trampoline.h"
 #include "UserSpaceInstrumentation/Attach.h"
 #include "UserSpaceInstrumentation/InjectLibraryInTracee.h"
@@ -36,11 +33,9 @@ namespace orbit_user_space_instrumentation {
 
 namespace {
 
-using absl::numbers_internal::safe_strtou64_base;
 using orbit_base::HasError;
 using orbit_base::HasNoError;
 using orbit_base::HasValue;
-using orbit_base::ReadFileToString;
 using testing::ElementsAreArray;
 
 extern "C" __attribute__((noinline)) int DoubleAndIncrement(int i) {
@@ -552,7 +547,8 @@ class InstrumentFunctionTest : public testing::Test {
     uint64_t size = 0;
     for (const auto& sym : syms.value().symbol_infos()) {
       if (sym.name() == function_name_) {
-        address = sym.address() + address_range_code.start - syms.value().load_bias();
+        address = sym.address() + address_range_code.start - syms.value().load_bias() -
+                  elf_file.value()->GetExecutableSegmentOffset();
         size = sym.size();
       }
     }
@@ -618,12 +614,11 @@ class InstrumentFunctionTest : public testing::Test {
     if (pid_ != -1) {
       CHECK(!DetachAndContinueProcess(pid_).has_error());
       kill(pid_, SIGKILL);
-      waitpid(pid_, NULL, 0);
+      waitpid(pid_, nullptr, 0);
     }
   }
 
   pid_t pid_ = -1;
-  cs_insn* instruction_ = nullptr;
   csh capstone_handle_ = 0;
   uint64_t max_trampoline_size_ = 0;
   uint64_t trampoline_address_;
@@ -708,7 +703,7 @@ TEST_F(InstrumentFunctionTest, LongEnough) {
   ErrorMessageOr<uint64_t> address_after_prologue_or_error =
       CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
                        payload_function_address_, capstone_handle_, relocation_map_);
-  EXPECT_THAT(address_after_prologue_or_error, HasNoError());
+  ASSERT_THAT(address_after_prologue_or_error, HasNoError());
   ErrorMessageOr<void> result = InstrumentFunction(
       pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
   EXPECT_THAT(result, HasNoError());
@@ -812,7 +807,7 @@ TEST_F(InstrumentFunctionTest, CallFunction) {
   ErrorMessageOr<uint64_t> address_after_prologue_or_error =
       CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
                        payload_function_address_, capstone_handle_, relocation_map_);
-  EXPECT_THAT(address_after_prologue_or_error, HasNoError());
+  ASSERT_THAT(address_after_prologue_or_error, HasNoError());
   ErrorMessageOr<void> result = InstrumentFunction(
       pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
   EXPECT_THAT(result, HasNoError());

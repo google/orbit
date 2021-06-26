@@ -197,8 +197,8 @@ TEST(LinuxMap, ParseMaps) {
     EXPECT_EQ(hello_module_info->name(), "hello_world_elf");
     EXPECT_EQ(hello_module_info->file_path(), hello_world_path);
     EXPECT_EQ(hello_module_info->file_size(), 16616);
-    EXPECT_EQ(hello_module_info->address_start(), 0x7f6874285000);
-    EXPECT_EQ(hello_module_info->address_end(), 0x7f6874290000);
+    EXPECT_EQ(hello_module_info->address_start(), 0x7f6874288000);
+    EXPECT_EQ(hello_module_info->address_end(), 0x7f687428c000);
     EXPECT_EQ(hello_module_info->build_id(), "d12d54bc5b72ccce54a408bdeda65e2530740ac8");
     EXPECT_EQ(hello_module_info->load_bias(), 0x0);
 

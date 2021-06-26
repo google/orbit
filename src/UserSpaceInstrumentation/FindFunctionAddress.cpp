@@ -10,7 +10,6 @@
 
 #include "ObjectUtils/ElfFile.h"
 #include "ObjectUtils/LinuxMap.h"
-#include "OrbitBase/Logging.h"
 
 namespace orbit_user_space_instrumentation {
 
@@ -43,11 +42,12 @@ ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view module_
 
   for (const orbit_grpc_protos::SymbolInfo& symbol : symbols.value().symbol_infos()) {
     if (symbol.name() == function_name) {
-      return symbol.address() + module_base_address - symbols.value().load_bias();
+      return symbol.address() + module_base_address - elf_file->GetLoadBias() -
+             elf_file->GetExecutableSegmentOffset();
     }
   }
 
-  return ErrorMessage(absl::StrFormat("Unable to locate function symbol \"%s\" in module \"%s\".",
+  return ErrorMessage(absl::StrFormat(R"(Unable to locate function symbol "%s" in module "%s".)",
                                       function_name, module_soname));
 }
 }  // namespace orbit_user_space_instrumentation

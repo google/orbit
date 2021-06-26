@@ -77,14 +77,14 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddUprobeFromOffset(
   FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
   std::unique_ptr<orbit_object_utils::ElfFile>& elf_file = error_or_elf_file.value();
   std::string build_id = elf_file->GetBuildId();
-  ErrorMessageOr<uint64_t> error_or_load_bias = elf_file->GetLoadBias();
-  FAIL_IF(error_or_load_bias.has_error(), "%s", error_or_load_bias.error().message());
-  uint64_t load_bias = error_or_load_bias.value();
+  uint64_t load_bias = elf_file->GetLoadBias();
+  uint64_t executable_segment_offset = elf_file->GetExecutableSegmentOffset();
 
   orbit_grpc_protos::ModuleInfo module_info;
   module_info.set_file_path(file_path);
   module_info.set_build_id(build_id);
   module_info.set_load_bias(load_bias);
+  module_info.set_executable_segment_offset(executable_segment_offset);
   CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
 
   orbit_client_protos::FunctionInfo function_info;
@@ -104,14 +104,14 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddUprobeFromFunctionName(
   FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
   std::unique_ptr<orbit_object_utils::ElfFile>& elf_file = error_or_elf_file.value();
   std::string build_id = elf_file->GetBuildId();
-  ErrorMessageOr<uint64_t> error_or_load_bias = elf_file->GetLoadBias();
-  FAIL_IF(error_or_load_bias.has_error(), "%s", error_or_load_bias.error().message());
-  uint64_t load_bias = error_or_load_bias.value();
+  uint64_t load_bias = elf_file->GetLoadBias();
+  uint64_t executable_segment_offset = elf_file->GetExecutableSegmentOffset();
 
   orbit_grpc_protos::ModuleInfo module_info;
   module_info.set_file_path(file_path);
   module_info.set_build_id(build_id);
   module_info.set_load_bias(load_bias);
+  module_info.set_executable_segment_offset(executable_segment_offset);
   CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
 
   ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> symbols_or_error =

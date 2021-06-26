@@ -33,6 +33,9 @@ class ModuleData final {
   [[nodiscard]] uint64_t file_size() const { return module_info_.file_size(); }
   [[nodiscard]] const std::string& build_id() const { return module_info_.build_id(); }
   [[nodiscard]] uint64_t load_bias() const { return module_info_.load_bias(); }
+  [[nodiscard]] uint64_t executable_segment_offset() const {
+    return module_info_.executable_segment_offset();
+  }
   [[nodiscard]] bool is_loaded() const;
   // Returns true of module was unloaded and false otherwise
   [[nodiscard]] bool UpdateIfChangedAndUnload(orbit_grpc_protos::ModuleInfo info);
