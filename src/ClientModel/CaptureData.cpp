@@ -209,7 +209,8 @@ CaptureData::FindFunctionAbsoluteAddressByInstructionAbsoluteAddressUsingModules
   const auto* function_info = module->FindFunctionByOffset(offset, false);
   if (function_info == nullptr) return std::nullopt;
 
-  return module_base_address - module->load_bias() + function_info->address();
+  return module_base_address - module->load_bias() - module->executable_segment_offset() +
+         function_info->address();
 }
 
 const FunctionInfo* CaptureData::FindFunctionByModulePathBuildIdAndOffset(
@@ -254,15 +255,17 @@ const FunctionInfo* CaptureData::FindFunctionByAddress(uint64_t absolute_address
                                                        bool is_exact) const {
   const auto module_or_error = process_.FindModuleByAddress(absolute_address);
   if (module_or_error.has_error()) return nullptr;
-  const std::string& module_path = module_or_error.value().file_path();
-  const std::string& module_build_id = module_or_error.value().build_id();
-  const uint64_t module_base_address = module_or_error.value().start();
+  const auto& module_in_memory = module_or_error.value();
+  const std::string& module_path = module_in_memory.file_path();
+  const std::string& module_build_id = module_in_memory.build_id();
+  const uint64_t module_base_address = module_in_memory.start();
 
   const ModuleData* module =
       module_manager_->GetModuleByPathAndBuildId(module_path, module_build_id);
   if (module == nullptr) return nullptr;
 
-  const uint64_t offset = absolute_address - module_base_address;
+  const uint64_t offset =
+      absolute_address - module_base_address + module->executable_segment_offset();
   return module->FindFunctionByOffset(offset, is_exact);
 }
 

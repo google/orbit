@@ -63,7 +63,8 @@ std::optional<uint64_t> GetAbsoluteAddress(const orbit_client_protos::FunctionIn
 
   CHECK(!base_addresses.empty());
 
-  return func.address() + base_addresses.at(0) - module.load_bias();
+  return func.address() + base_addresses.at(0) - module.load_bias() -
+         module.executable_segment_offset();
 }
 
 bool IsOrbitFunctionFromType(const FunctionInfo::OrbitType& type) {

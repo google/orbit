@@ -67,18 +67,12 @@ ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path
     CHECK(elf_file != nullptr);
     module_info.set_build_id(elf_file->GetBuildId());
     module_info.set_soname(elf_file->GetSoname());
-
-    ErrorMessageOr<uint64_t> load_bias_or_error = elf_file->GetLoadBias();
-    // Every loadable ELF module contains a load bias.
-    if (load_bias_or_error.has_error()) {
-      return load_bias_or_error.error();
-    }
-    module_info.set_load_bias(load_bias_or_error.value());
+    module_info.set_load_bias(elf_file->GetLoadBias());
+    module_info.set_executable_segment_offset(elf_file->GetExecutableSegmentOffset());
   }
 
   // All fields we need to set for COFF files are already set, no need to handle COFF
   // specifically here.
-
   return module_info;
 }
 
@@ -89,15 +83,10 @@ ErrorMessageOr<std::vector<ModuleInfo>> ReadModules(int32_t pid) {
 }
 
 ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_data) {
-  struct AddressRange {
-    uint64_t start_address;
-    uint64_t end_address;
-    bool is_executable;
-  };
-
   const std::vector<std::string> proc_maps = absl::StrSplit(proc_maps_data, '\n');
 
-  std::map<std::string, AddressRange> address_map;
+  std::vector<ModuleInfo> result;
+
   for (const std::string& line : proc_maps) {
     std::vector<std::string> tokens = absl::StrSplit(line, ' ', absl::SkipEmpty());
     // tokens[4] is the inode column. If inode equals 0, then the memory is not
@@ -113,30 +102,16 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
     uint64_t end = std::stoull(addresses[1], nullptr, 16);
     bool is_executable = tokens[1].size() == 4 && tokens[1][2] == 'x';
 
-    auto iter = address_map.find(module_path);
-    if (iter == address_map.end()) {
-      address_map[module_path] = {start, end, is_executable};
-    } else {
-      AddressRange& address_range = iter->second;
-      address_range.start_address = std::min(address_range.start_address, start);
-      address_range.end_address = std::max(address_range.end_address, end);
-      address_range.is_executable |= is_executable;
-    }
-  }
+    // Skip non-executable mappings
+    if (!is_executable) continue;
+    ErrorMessageOr<ModuleInfo> module_info_or_error = CreateModule(module_path, start, end);
 
-  std::vector<ModuleInfo> result;
-  for (const auto& [module_path, address_range] : address_map) {
-    // Filter out entries which are not executable
-    if (!address_range.is_executable) continue;
-
-    ErrorMessageOr<ModuleInfo> module_info_or_error =
-        CreateModule(module_path, address_range.start_address, address_range.end_address);
     if (module_info_or_error.has_error()) {
       ERROR("Unable to create module: %s", module_info_or_error.error().message());
       continue;
     }
 
-    result.push_back(std::move(module_info_or_error.value()));
+    result.emplace_back(std::move(module_info_or_error.value()));
   }
 
   return result;
