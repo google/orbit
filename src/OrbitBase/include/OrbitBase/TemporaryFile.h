@@ -15,9 +15,8 @@ class TemporaryFile final {
   TemporaryFile(const TemporaryFile&) = delete;
   TemporaryFile& operator=(const TemporaryFile&) = delete;
 
-  TemporaryFile(TemporaryFile&& that) {
-    fd_ = std::move(that.fd_);
-    file_path_ = std::move(that.file_path_);
+  TemporaryFile(TemporaryFile&& that)
+      : fd_{std::move(that.fd_)}, file_path_{std::move(that.file_path_)} {
     that.file_path_.clear();
   }
 
@@ -49,4 +48,4 @@ class TemporaryFile final {
 
 }  // namespace orbit_base
 
-#endif  // ORBITBASE_TEMPORARY_FILE_H_
+#endif  // ORBIT_BASE_TEMPORARY_FILE_H_
