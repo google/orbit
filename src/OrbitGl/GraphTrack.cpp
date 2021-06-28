@@ -29,9 +29,6 @@ GraphTrack<Dimension>::GraphTrack(CaptureViewElement* parent, TimeGraph* time_gr
       series_(MultivariateTimeSeries<Dimension>(series_names)) {
   SetName(name);
   SetLabel(name);
-
-  collapse_toggle_->SetState(TriangleToggle::State::kExpanded,
-                             TriangleToggle::InitialStateUpdate::kReplaceInitialState);
 }
 
 template <size_t Dimension>
