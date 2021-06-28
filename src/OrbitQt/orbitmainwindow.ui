@@ -341,11 +341,7 @@ QPushButton:disabled {
    <addaction name="menuHelp"/>
    <addaction name="menuFeedback"/>
   </widget>
-  <widget class="QStatusBar" name="statusBar">
-   <property name="sizeGripEnabled">
-    <bool>false</bool>
-   </property>
-  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
   <action name="actionReport_Missing_Feature">
    <property name="icon">
     <iconset resource="../../icons/orbiticons.qrc">
