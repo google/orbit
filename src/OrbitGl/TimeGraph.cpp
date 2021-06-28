@@ -431,6 +431,11 @@ void TimeGraph::ProcessValueTrackingTimer(const TimerInfo& timer_info) {
   }
 }
 
+[[nodiscard]] static double RoundPrecision(double value, uint8_t num_of_decimal_digits) {
+  return std::round(value * std::pow(10, num_of_decimal_digits)) /
+         std::pow(10, num_of_decimal_digits);
+}
+
 void TimeGraph::ProcessSystemMemoryTrackingTimer(const TimerInfo& timer_info) {
   int64_t total_kb = orbit_api::Decode<int64_t>(timer_info.registers(
       static_cast<size_t>(CaptureEventProcessor::SystemMemoryUsageEncodingIndex::kTotalKb)));
@@ -452,10 +457,15 @@ void TimeGraph::ProcessSystemMemoryTrackingTimer(const TimerInfo& timer_info) {
         "Used", "Buffers / Cached", "Unused"};
     track = track_manager_->CreateAndGetSystemMemoryTrack(kSeriesNames);
   }
-  double unused_mb = static_cast<double>(unused_kb) / kMegabytesToKilobytes;
-  double buffers_or_cached_mb = static_cast<double>(buffers_kb + cached_kb) / kMegabytesToKilobytes;
+  CHECK(track->GetNumberOfDecimalDigits().has_value());
+  uint8_t num_of_decimal_digits = track->GetNumberOfDecimalDigits().value();
+  double unused_mb =
+      RoundPrecision(static_cast<double>(unused_kb) / kMegabytesToKilobytes, num_of_decimal_digits);
+  double buffers_or_cached_mb = RoundPrecision(
+      static_cast<double>(buffers_kb + cached_kb) / kMegabytesToKilobytes, num_of_decimal_digits);
   double used_mb =
-      static_cast<double>(total_kb) / kMegabytesToKilobytes - unused_mb - buffers_or_cached_mb;
+      RoundPrecision(static_cast<double>(total_kb) / kMegabytesToKilobytes, num_of_decimal_digits) -
+      unused_mb - buffers_or_cached_mb;
   track->AddValues(timer_info.start(), {used_mb, buffers_or_cached_mb, unused_mb});
   track->OnTimer(timer_info);
 
@@ -513,16 +523,21 @@ void TimeGraph::ProcessCGroupAndProcessMemoryTrackingTimer(const TimerInfo& time
   orbit_gl::CGroupAndProcessMemoryTrack* track = track_manager_->GetCGroupAndProcessMemoryTrack();
   if (track == nullptr) {
     const std::array<std::string, orbit_gl::kCGroupAndProcessMemoryTrackDimension> kSeriesNames = {
-        absl::StrFormat("Process [%s] Resident Anonymous Memory", capture_data_->process_name()),
-        "Other Processes Resident Anonymous Memory",
-        absl::StrFormat("CGroup [%s] Mapped File", cgroup_name),
+        absl::StrFormat("Process [%s] RssAnon", capture_data_->process_name()),
+        "Other Processes RssAnon", absl::StrFormat("CGroup [%s] Mapped File", cgroup_name),
         absl::StrFormat("CGroup [%s] Unused", cgroup_name)};
     track = track_manager_->CreateAndGetCGroupAndProcessMemoryTrack(kSeriesNames);
   }
-  double cgroup_limit_mb = static_cast<double>(cgroup_limit_bytes) / kMegabytesToBytes;
-  double cgroup_rss_anon_mb = static_cast<double>(cgroup_rss_bytes) / kMegabytesToBytes;
-  double cgroup_mapped_file_mb = static_cast<double>(cgroup_mapped_file_bytes) / kMegabytesToBytes;
-  double process_rss_anon_mb = static_cast<double>(process_rss_anon_kb) / kMegabytesToKilobytes;
+  CHECK(track->GetNumberOfDecimalDigits().has_value());
+  uint8_t num_of_decimal_digits = track->GetNumberOfDecimalDigits().value();
+  double cgroup_limit_mb = RoundPrecision(
+      static_cast<double>(cgroup_limit_bytes) / kMegabytesToBytes, num_of_decimal_digits);
+  double cgroup_rss_anon_mb = RoundPrecision(
+      static_cast<double>(cgroup_rss_bytes) / kMegabytesToBytes, num_of_decimal_digits);
+  double cgroup_mapped_file_mb = RoundPrecision(
+      static_cast<double>(cgroup_mapped_file_bytes) / kMegabytesToBytes, num_of_decimal_digits);
+  double process_rss_anon_mb = RoundPrecision(
+      static_cast<double>(process_rss_anon_kb) / kMegabytesToKilobytes, num_of_decimal_digits);
   double other_rss_anon_mb = cgroup_rss_anon_mb - process_rss_anon_mb;
   double unused_mb = cgroup_limit_mb - cgroup_rss_anon_mb - cgroup_mapped_file_mb;
   track->AddValues(timer_info.start(),
