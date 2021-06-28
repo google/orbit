@@ -61,8 +61,14 @@ class ThreadPool : public orbit_base::Executor {
   // until they hit thread_pool_min_size. thread_ttl specifies the duration
   // for the such a thread to remain in idle state before it finishes the
   // execution.
-  static std::shared_ptr<ThreadPool> Create(size_t thread_pool_min_size,
-                                            size_t thread_pool_max_size, absl::Duration thread_ttl);
+  //
+  // The run_action parameter allows to specify a function that will run an
+  // Action in a different way than simply calling Action::Execute. This can for
+  // example be used to run some operation before and/or after the original
+  // Action.
+  static std::shared_ptr<ThreadPool> Create(
+      size_t thread_pool_min_size, size_t thread_pool_max_size, absl::Duration thread_ttl,
+      std::function<void(const std::unique_ptr<Action>&)> run_action = nullptr);
 };
 
 #endif  // ORBIT_BASE_THREAD_POOL_H_

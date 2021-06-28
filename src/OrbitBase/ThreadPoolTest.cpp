@@ -490,3 +490,51 @@ TEST(ThreadPool, FutureWithMoveOnlyResult) {
 
   thread_pool->ShutdownAndWait();
 }
+
+TEST(ThreadPool, WithRunActionParameter) {
+  constexpr size_t kThreadPoolMinSize = 1;
+  constexpr size_t kThreadPoolMaxSize = 2;
+  constexpr absl::Duration kThreadTtl = absl::Milliseconds(5);
+
+  std::atomic<int> run_before_action_count = 0;
+  std::atomic<int> run_after_action_count = 0;
+  auto run_action = [&run_before_action_count,
+                     &run_after_action_count](const std::unique_ptr<Action>& action) {
+    ++run_before_action_count;
+    action->Execute();
+    ++run_after_action_count;
+  };
+
+  std::shared_ptr<ThreadPool> thread_pool =
+      ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl, run_action);
+
+  absl::Mutex mutex;
+  bool called = false;
+  {
+    absl::MutexLock called_lock(&mutex);
+    int run_before_action_count_during_execution = -1;
+    int run_after_action_count_during_execution = -1;
+
+    thread_pool->Schedule([&]() {
+      run_before_action_count_during_execution = run_before_action_count;
+      run_after_action_count_during_execution = run_after_action_count;
+      absl::MutexLock called_lock(&mutex);
+      called = true;
+    });
+
+    EXPECT_FALSE(called);
+
+    EXPECT_TRUE(mutex.AwaitWithTimeout(absl::Condition(&called), absl::Milliseconds(100)));
+
+    EXPECT_EQ(run_before_action_count_during_execution, 1);
+    EXPECT_EQ(run_after_action_count_during_execution, 0);
+    EXPECT_TRUE(called);
+    called = false;
+  }
+
+  thread_pool->ShutdownAndWait();
+
+  EXPECT_FALSE(called);
+  EXPECT_EQ(run_before_action_count, 1);
+  EXPECT_EQ(run_after_action_count, 1);
+}

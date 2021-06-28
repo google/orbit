@@ -247,7 +247,13 @@ OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
       metrics_uploader_(metrics_uploader) {
   CHECK(main_window_ != nullptr);
 
-  thread_pool_ = ThreadPool::Create(4 /*min_size*/, 256 /*max_size*/, absl::Seconds(1));
+  thread_pool_ = ThreadPool::Create(
+      /*thread_pool_min_size=*/4, /*thread_pool_max_size=*/256, /*thread_ttl=*/absl::Seconds(1),
+      /*run_action=*/[](const std::unique_ptr<Action>& action) {
+        ORBIT_START("Execute Action");
+        action->Execute();
+        ORBIT_STOP();
+      });
   main_thread_id_ = std::this_thread::get_id();
   data_manager_ = std::make_unique<DataManager>(main_thread_id_);
   module_manager_ = std::make_unique<orbit_client_data::ModuleManager>();

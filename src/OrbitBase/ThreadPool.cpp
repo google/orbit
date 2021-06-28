@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <list>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #include "OrbitBase/Logging.h"
@@ -20,7 +21,8 @@ namespace {
 class ThreadPoolImpl : public ThreadPool {
  public:
   explicit ThreadPoolImpl(size_t thread_pool_min_size, size_t thread_pool_max_size,
-                          absl::Duration thread_ttl);
+                          absl::Duration thread_ttl,
+                          std::function<void(const std::unique_ptr<Action>&)> run_action);
 
   size_t GetPoolSize() override;
   size_t GetNumberOfBusyThreads() override;
@@ -45,15 +47,18 @@ class ThreadPoolImpl : public ThreadPool {
   absl::Duration thread_ttl_;
   size_t idle_threads_;
   bool shutdown_initiated_;
+  std::function<void(const std::unique_ptr<Action>&)> run_action_ = nullptr;
 };
 
 ThreadPoolImpl::ThreadPoolImpl(size_t thread_pool_min_size, size_t thread_pool_max_size,
-                               absl::Duration thread_ttl)
+                               absl::Duration thread_ttl,
+                               std::function<void(const std::unique_ptr<Action>&)> run_action)
     : thread_pool_min_size_(thread_pool_min_size),
       thread_pool_max_size_(thread_pool_max_size),
       thread_ttl_(thread_ttl),
       idle_threads_(0),
-      shutdown_initiated_(false) {
+      shutdown_initiated_(false),
+      run_action_(std::move(run_action)) {
   CHECK(thread_pool_min_size > 0);
   CHECK(thread_pool_max_size >= thread_pool_min_size);
   // Ttl should not be too small
@@ -75,10 +80,15 @@ void ThreadPoolImpl::CreateWorker() {
 }
 
 void ThreadPoolImpl::ScheduleImpl(std::unique_ptr<Action> action) {
+  std::unique_ptr<Action> wrapped_action =
+      run_action_
+          ? CreateAction([this, action = std::move(action)]() mutable { run_action_(action); })
+          : std::move(action);
+
   absl::MutexLock lock(&mutex_);
   CHECK(!shutdown_initiated_);
 
-  scheduled_actions_.push_back(std::move(action));
+  scheduled_actions_.push_back(std::move(wrapped_action));
   if (idle_threads_ < scheduled_actions_.size() && worker_threads_.size() < thread_pool_max_size_) {
     CreateWorker();
   }
@@ -177,10 +187,11 @@ void ThreadPoolImpl::WorkerFunction() {
 
 }  // namespace
 
-std::shared_ptr<ThreadPool> ThreadPool::Create(size_t thread_pool_min_size,
-                                               size_t thread_pool_max_size,
-                                               absl::Duration thread_ttl) {
+std::shared_ptr<ThreadPool> ThreadPool::Create(
+    size_t thread_pool_min_size, size_t thread_pool_max_size, absl::Duration thread_ttl,
+    std::function<void(const std::unique_ptr<Action>&)> run_action) {
   // The base class `Executor` uses `std::enable_shared_from_this` and requires `ThreadPool` to be
   // created as a `shared_ptr`.
-  return std::make_shared<ThreadPoolImpl>(thread_pool_min_size, thread_pool_max_size, thread_ttl);
+  return std::make_shared<ThreadPoolImpl>(thread_pool_min_size, thread_pool_max_size, thread_ttl,
+                                          std::move(run_action));
 }
