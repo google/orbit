@@ -30,6 +30,9 @@ class GraphTrack : public Track {
   [[nodiscard]] Type GetType() const override { return Type::kGraphTrack; }
   [[nodiscard]] float GetHeight() const override;
   [[nodiscard]] float GetLegendHeight() const;
+  [[nodiscard]] std::optional<uint8_t> GetNumberOfDecimalDigits() const {
+    return series_.GetValueDecimalDigits();
+  }
 
   [[nodiscard]] bool IsCollapsible() const override { return true; }
   [[nodiscard]] bool IsEmpty() const override { return series_.IsEmpty(); }

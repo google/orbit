@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <iterator>
+#include <numeric>
 
 #include "Geometry.h"
 #include "GlCanvas.h"
@@ -240,17 +241,21 @@ void GraphTrack<Dimension>::DrawSeries(Batcher* batcher, uint64_t min_tick, uint
 
   auto current_iterator = entries.begin;
   while (current_iterator != entries.end) {
-    const std::array<double, Dimension>& values{current_iterator->second};
-    std::array<float, Dimension> normalized_values;
-    std::transform(values.begin(), values.end(), normalized_values.begin(),
-                   [min, inverse_value_range](double value) {
+    std::array<double, Dimension> cumulative_values{current_iterator->second};
+    std::partial_sum(cumulative_values.begin(), cumulative_values.end(), cumulative_values.begin());
+    // For the stacked graph, computing y positions from the normalized values results in some
+    // floating error. Event if the sum of values is fixed, the top of the stacked graph may not be
+    // flat. To address this problem, we compute y positions from the normalized cumulative values.
+    std::array<float, Dimension> normalized_cumulative_values;
+    std::transform(cumulative_values.begin(), cumulative_values.end(),
+                   normalized_cumulative_values.begin(), [min, inverse_value_range](double value) {
                      return static_cast<float>((value - min) * inverse_value_range);
                    });
 
     uint64_t current_time = std::max(current_iterator->first, min_tick);
     auto next_iterator = std::next(current_iterator);
     uint64_t next_time = std::min(next_iterator->first, max_tick);
-    DrawSingleSeriesEntry(batcher, current_time, next_time, normalized_values, z);
+    DrawSingleSeriesEntry(batcher, current_time, next_time, normalized_cumulative_values, z);
     current_iterator = next_iterator;
   }
 }
@@ -258,7 +263,7 @@ void GraphTrack<Dimension>::DrawSeries(Batcher* batcher, uint64_t min_tick, uint
 template <size_t Dimension>
 void GraphTrack<Dimension>::DrawSingleSeriesEntry(
     Batcher* batcher, uint64_t start_tick, uint64_t end_tick,
-    const std::array<float, Dimension>& normalized_values, float z) {
+    const std::array<float, Dimension>& normalized_cumulative_values, float z) {
   float x0 = time_graph_->GetWorldFromTick(start_tick);
   float width = time_graph_->GetWorldFromTick(end_tick) - x0;
   float content_height =
@@ -266,9 +271,9 @@ void GraphTrack<Dimension>::DrawSingleSeriesEntry(
   float base_y = pos_[1] - size_[1] + layout_->GetTrackBottomMargin();
   float y0 = base_y;
   for (size_t i = 0; i < Dimension; ++i) {
-    float height = normalized_values[i] * content_height;
+    float height = base_y + normalized_cumulative_values[i] * content_height - y0;
     batcher->AddShadedBox(Vec2(x0, y0), Vec2(width, height), z, GetColor(i));
-    y0 = y0 + height;
+    y0 += height;
   }
 }
 
