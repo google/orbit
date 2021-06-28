@@ -555,7 +555,8 @@ class InstrumentFunctionTest : public testing::Test {
     return {address, address + size};
   }
 
-  void PrepareInstrumentation(std::string_view payload_function_name) {
+  void PrepareInstrumentation(std::string_view entry_payload_function_name,
+                              std::string_view exit_payload_function_name) {
     // Stop the child process using our tooling.
     CHECK(AttachAndStopProcess(pid_).has_value());
 
@@ -565,10 +566,18 @@ class InstrumentFunctionTest : public testing::Test {
     auto library_handle_or_error = DlopenInTracee(pid_, library_path, RTLD_NOW);
     CHECK(library_handle_or_error.has_value());
     void* library_handle = library_handle_or_error.value();
-    auto payload_function_address_or_error =
-        DlsymInTracee(pid_, library_handle, payload_function_name);
-    CHECK(payload_function_address_or_error.has_value());
-    payload_function_address_ = absl::bit_cast<uint64_t>(payload_function_address_or_error.value());
+
+    auto entry_payload_function_address_or_error =
+        DlsymInTracee(pid_, library_handle, entry_payload_function_name);
+    CHECK(entry_payload_function_address_or_error.has_value());
+    entry_payload_function_address_ =
+        absl::bit_cast<uint64_t>(entry_payload_function_address_or_error.value());
+
+    auto exit_payload_function_address_or_error =
+        DlsymInTracee(pid_, library_handle, exit_payload_function_name);
+    CHECK(exit_payload_function_address_or_error.has_value());
+    exit_payload_function_address_ =
+        absl::bit_cast<uint64_t>(exit_payload_function_address_or_error.value());
 
     // Get address of the function to instrument.
     const AddressRange address_range_code = GetFunctionAddressRangeOrDie();
@@ -580,6 +589,14 @@ class InstrumentFunctionTest : public testing::Test {
         AllocateMemoryForTrampolines(pid_, address_range_code, max_trampoline_size_);
     CHECK(!trampoline_or_error.has_error());
     trampoline_address_ = trampoline_or_error.value();
+
+    // Get memory for return trampoline and create the return trampoline.
+    auto return_trampoline_or_error = AllocateInTracee(pid_, 0, GetReturnTrampolineSize());
+    CHECK(!return_trampoline_or_error.has_error());
+    return_trampoline_address_ = return_trampoline_or_error.value();
+    auto result = CreateReturnTrampoline(pid_, exit_payload_function_address_,
+                                         return_trampoline_or_error.value());
+    CHECK(!result.has_error());
 
     // Copy the beginning of the function over into this process.
     constexpr uint64_t kMaxFunctionPrologueBackupSize = 20;
@@ -622,7 +639,10 @@ class InstrumentFunctionTest : public testing::Test {
   csh capstone_handle_ = 0;
   uint64_t max_trampoline_size_ = 0;
   uint64_t trampoline_address_;
-  uint64_t payload_function_address_;
+  uint64_t return_trampoline_address_;
+  uint64_t entry_payload_function_address_;
+  uint64_t exit_payload_function_address_;
+
   absl::flat_hash_map<uint64_t, uint64_t> relocation_map_;
 
   std::string function_name_;
@@ -646,10 +666,10 @@ extern "C" int DoSomething() {
 
 TEST_F(InstrumentFunctionTest, DoSomething) {
   RunChild(&DoSomething, "DoSomething");
-  PrepareInstrumentation("TrivialLog");
-  ErrorMessageOr<uint64_t> address_after_prologue_or_error =
-      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
-                       payload_function_address_, capstone_handle_, relocation_map_);
+  PrepareInstrumentation("EntryPayload", "ExitPayload");
+  ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(address_after_prologue_or_error, HasNoError());
   ErrorMessageOr<void> result = InstrumentFunction(
       pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
@@ -675,10 +695,10 @@ TEST_F(InstrumentFunctionTest, TooShort) {
   GTEST_SKIP();
 #endif
   RunChild(&TooShort, "TooShort");
-  PrepareInstrumentation("TrivialLog");
-  ErrorMessageOr<uint64_t> result =
-      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
-                       payload_function_address_, capstone_handle_, relocation_map_);
+  PrepareInstrumentation("EntryPayload", "ExitPayload");
+  ErrorMessageOr<uint64_t> result = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(result, HasError("Unable to disassemble enough of the function to instrument it"));
   RestartAndRemoveInstrumentation();
 }
@@ -699,11 +719,19 @@ extern "C" __attribute__((naked)) int LongEnough() {
 
 TEST_F(InstrumentFunctionTest, LongEnough) {
   RunChild(&LongEnough, "LongEnough");
+<<<<<<< HEAD
   PrepareInstrumentation("TrivialLog");
   ErrorMessageOr<uint64_t> address_after_prologue_or_error =
       CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
                        payload_function_address_, capstone_handle_, relocation_map_);
   ASSERT_THAT(address_after_prologue_or_error, HasNoError());
+=======
+  PrepareInstrumentation("EntryPayload", "ExitPayload");
+  ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(address_after_prologue_or_error, HasNoError());
+>>>>>>> 8bbf90a8 (Instrument entry and exit of function.)
   ErrorMessageOr<void> result = InstrumentFunction(
       pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
   EXPECT_THAT(result, HasNoError());
@@ -725,10 +753,10 @@ extern "C" __attribute__((naked)) int RipRelativeAddressing() {
 
 TEST_F(InstrumentFunctionTest, RipRelativeAddressing) {
   RunChild(&RipRelativeAddressing, "RipRelativeAddressing");
-  PrepareInstrumentation("TrivialLog");
-  ErrorMessageOr<uint64_t> address_after_prologue_or_error =
-      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
-                       payload_function_address_, capstone_handle_, relocation_map_);
+  PrepareInstrumentation("EntryPayload", "ExitPayload");
+  ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(address_after_prologue_or_error, HasNoError());
   ErrorMessageOr<void> result = InstrumentFunction(
       pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
@@ -752,10 +780,10 @@ extern "C" __attribute__((naked)) int UnconditionalJump8BitOffset() {
 
 TEST_F(InstrumentFunctionTest, UnconditionalJump8BitOffset) {
   RunChild(&UnconditionalJump8BitOffset, "UnconditionalJump8BitOffset");
-  PrepareInstrumentation("TrivialLog");
-  ErrorMessageOr<uint64_t> address_after_prologue_or_error =
-      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
-                       payload_function_address_, capstone_handle_, relocation_map_);
+  PrepareInstrumentation("EntryPayload", "ExitPayload");
+  ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(address_after_prologue_or_error, HasNoError());
   ErrorMessageOr<void> result = InstrumentFunction(
       pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
@@ -777,10 +805,10 @@ extern "C" __attribute__((naked)) int UnconditionalJump32BitOffset() {
 
 TEST_F(InstrumentFunctionTest, UnconditionalJump32BitOffset) {
   RunChild(&UnconditionalJump32BitOffset, "UnconditionalJump32BitOffset");
-  PrepareInstrumentation("TrivialLog");
-  ErrorMessageOr<uint64_t> address_after_prologue_or_error =
-      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
-                       payload_function_address_, capstone_handle_, relocation_map_);
+  PrepareInstrumentation("EntryPayload", "ExitPayload");
+  ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(address_after_prologue_or_error, HasNoError());
   ErrorMessageOr<void> result = InstrumentFunction(
       pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
@@ -803,11 +831,19 @@ extern "C" __attribute__((naked)) int CallFunction() {
 
 TEST_F(InstrumentFunctionTest, CallFunction) {
   RunChild(&CallFunction, "CallFunction");
+<<<<<<< HEAD
   PrepareInstrumentation("TrivialLog");
   ErrorMessageOr<uint64_t> address_after_prologue_or_error =
       CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
                        payload_function_address_, capstone_handle_, relocation_map_);
   ASSERT_THAT(address_after_prologue_or_error, HasNoError());
+=======
+  PrepareInstrumentation("EntryPayload", "ExitPayload");
+  ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(address_after_prologue_or_error, HasNoError());
+>>>>>>> 8bbf90a8 (Instrument entry and exit of function.)
   ErrorMessageOr<void> result = InstrumentFunction(
       pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
   EXPECT_THAT(result, HasNoError());
@@ -830,10 +866,10 @@ extern "C" __attribute__((naked)) int ConditionalJump8BitOffset() {
 
 TEST_F(InstrumentFunctionTest, ConditionalJump8BitOffset) {
   RunChild(&ConditionalJump8BitOffset, "ConditionalJump8BitOffset");
-  PrepareInstrumentation("TrivialLog");
-  ErrorMessageOr<uint64_t> address_after_prologue_or_error =
-      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
-                       payload_function_address_, capstone_handle_, relocation_map_);
+  PrepareInstrumentation("EntryPayload", "ExitPayload");
+  ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(address_after_prologue_or_error, HasNoError());
   ErrorMessageOr<void> result = InstrumentFunction(
       pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
@@ -858,10 +894,10 @@ extern "C" __attribute__((naked)) int ConditionalJump32BitOffset() {
 
 TEST_F(InstrumentFunctionTest, ConditionalJump32BitOffset) {
   RunChild(&ConditionalJump32BitOffset, "ConditionalJump32BitOffset");
-  PrepareInstrumentation("TrivialLog");
-  ErrorMessageOr<uint64_t> address_after_prologue_or_error =
-      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
-                       payload_function_address_, capstone_handle_, relocation_map_);
+  PrepareInstrumentation("EntryPayload", "ExitPayload");
+  ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(address_after_prologue_or_error, HasNoError());
   ErrorMessageOr<void> result = InstrumentFunction(
       pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
@@ -886,10 +922,10 @@ TEST_F(InstrumentFunctionTest, Loop) {
   GTEST_SKIP();
 #endif
   RunChild(&Loop, "Loop");
-  PrepareInstrumentation("TrivialLog");
-  ErrorMessageOr<uint64_t> result =
-      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
-                       payload_function_address_, capstone_handle_, relocation_map_);
+  PrepareInstrumentation("EntryPayload", "ExitPayload");
+  ErrorMessageOr<uint64_t> result = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(result, HasError("Relocating a loop instruction is not supported."));
   RestartAndRemoveInstrumentation();
 }
@@ -915,10 +951,10 @@ TEST_F(InstrumentFunctionTest, CheckIntParameters) {
       sum += CheckIntParameters(0, 0, 0, 0, 0, 0, 0, 0);
     }
   }
-  PrepareInstrumentation("ClobberParameterRegisters");
-  ErrorMessageOr<uint64_t> address_after_prologue_or_error =
-      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
-                       payload_function_address_, capstone_handle_, relocation_map_);
+  PrepareInstrumentation("EntryPayloadClobberParameterRegisters", "ExitPayload");
+  ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(address_after_prologue_or_error, HasNoError());
   ErrorMessageOr<void> result = InstrumentFunction(
       pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
@@ -944,10 +980,10 @@ TEST_F(InstrumentFunctionTest, CheckFloatParameters) {
       sum += CheckFloatParameters(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
     }
   }
-  PrepareInstrumentation("ClobberXmmRegisters");
-  ErrorMessageOr<uint64_t> address_after_prologue_or_error =
-      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
-                       payload_function_address_, capstone_handle_, relocation_map_);
+  PrepareInstrumentation("EntryPayloadClobberXmmRegisters", "ExitPayload");
+  ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(address_after_prologue_or_error, HasNoError());
   ErrorMessageOr<void> result = InstrumentFunction(
       pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
@@ -978,10 +1014,10 @@ TEST_F(InstrumentFunctionTest, CheckM256iParameters) {
                                _mm256_set1_epi64x(0), _mm256_set1_epi64x(0));
     }
   }
-  PrepareInstrumentation("ClobberYmmRegisters");
-  ErrorMessageOr<uint64_t> address_after_prologue_or_error =
-      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
-                       payload_function_address_, capstone_handle_, relocation_map_);
+  PrepareInstrumentation("EntryPayloadClobberYmmRegisters", "ExitPayload");
+  ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(address_after_prologue_or_error, HasNoError());
   ErrorMessageOr<void> result = InstrumentFunction(
       pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);

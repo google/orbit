@@ -129,8 +129,25 @@ struct RelocatedInstruction {
 // back to).
 [[nodiscard]] ErrorMessageOr<uint64_t> CreateTrampoline(
     pid_t pid, uint64_t function_address, const std::vector<uint8_t>& function,
-    uint64_t trampoline_address, uint64_t payload_address, csh capstone_handle,
+    uint64_t trampoline_address, uint64_t entry_payload_function_address,
+    uint64_t return_trampoline_address, csh capstone_handle,
     absl::flat_hash_map<uint64_t, uint64_t>& relocation_map);
+
+// As above with 'GetMaxTrampolineSize' this is a compile time constant, but we prefer to compute it
+// here since this captures every change to the code constructing the return trampoline.
+[[nodiscard]] uint64_t GetReturnTrampolineSize();
+
+// Creates a "return trampoline" i.e. a bit of code that is used as a target for overwritten return
+// addresses. It calls the function 'exit_payload_function_address' and jumps to the return value of
+// that function. The return trampoline is constructed at address 'return_trampoline_address'.
+// Unlike from what is done in 'CreateTrampoline' we don't need an individual trampoline for each
+// function we instrument. The different functions are disambiguated by the order in which the
+// function exit appears (and it is the responsibility of the payload functions to keep track of
+// this). Also the return trampoline does not need to be located close (32 bit offset) to any
+// specific code location; all jumps involved are to absolute 64 bit addresses.
+[[nodiscard]] ErrorMessageOr<void> CreateReturnTrampoline(pid_t pid,
+                                                          uint64_t exit_payload_function_address,
+                                                          uint64_t return_trampoline_address);
 
 // Instrument function at 'function_address' in process 'pid'. This simply overwrites the beginning
 // of the fuction with a jump to 'trampoline_address'. The trampoline needs to be constructed with
