@@ -17,13 +17,16 @@
 #include "PerfEventRecords.h"
 #include "PerfEventVisitor.h"
 
+using ::testing::A;
+using ::testing::Mock;
+
 namespace orbit_linux_tracing {
 
 namespace {
 
 class MockVisitor : public PerfEventVisitor {
  public:
-  MOCK_METHOD(void, visit, (LostPerfEvent * event), (override));
+  MOCK_METHOD(void, visit, (ForkPerfEvent * event), (override));
 };
 
 class PerfEventProcessorTest : public ::testing::Test {
@@ -43,11 +46,14 @@ class PerfEventProcessorTest : public ::testing::Test {
 };
 
 std::unique_ptr<PerfEvent> MakeFakePerfEvent(int origin_fd, uint64_t timestamp_ns) {
-  // We use LostPerfEvent just because it's a simple one, but we could use any
+  // We use ForkPerfEvent just because it's a simple one, but we could use any
   // as we only need to set the file descriptor and the timestamp.
-  auto event = std::make_unique<LostPerfEvent>();
+  auto event = std::make_unique<ForkPerfEvent>();
   event->SetOrderedInFileDescriptor(origin_fd);
+  CHECK(event->GetOrderedInFileDescriptor() == origin_fd);
+  event->ring_buffer_record.time = timestamp_ns;
   event->ring_buffer_record.sample_id.time = timestamp_ns;
+  CHECK(event->GetTimestamp() == timestamp_ns);
   return event;
 }
 
@@ -60,7 +66,7 @@ TEST_F(PerfEventProcessorTest, ProcessOldEvents) {
   processor_.AddEvent(MakeFakePerfEvent(22, orbit_base::CaptureTimestampNs()));
   processor_.ProcessOldEvents();
 
-  ::testing::Mock::VerifyAndClearExpectations(&mock_visitor_);
+  Mock::VerifyAndClearExpectations(&mock_visitor_);
 
   std::this_thread::sleep_for(std::chrono::milliseconds(kDelayBeforeProcessOldEventsMs));
 
@@ -69,7 +75,7 @@ TEST_F(PerfEventProcessorTest, ProcessOldEvents) {
   processor_.ProcessOldEvents();
   EXPECT_EQ(discarded_out_of_order_counter_, 0);
 
-  ::testing::Mock::VerifyAndClearExpectations(&mock_visitor_);
+  Mock::VerifyAndClearExpectations(&mock_visitor_);
 
   std::this_thread::sleep_for(std::chrono::milliseconds(kDelayBeforeProcessOldEventsMs));
 
@@ -86,7 +92,7 @@ TEST_F(PerfEventProcessorTest, ProcessAllEvents) {
   processor_.AddEvent(MakeFakePerfEvent(33, orbit_base::CaptureTimestampNs()));
   processor_.ProcessAllEvents();
 
-  ::testing::Mock::VerifyAndClearExpectations(&mock_visitor_);
+  Mock::VerifyAndClearExpectations(&mock_visitor_);
 
   std::this_thread::sleep_for(std::chrono::milliseconds(kDelayBeforeProcessOldEventsMs));
 
