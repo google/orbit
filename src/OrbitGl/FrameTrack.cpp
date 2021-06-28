@@ -78,8 +78,7 @@ FrameTrack::FrameTrack(CaptureViewElement* parent, TimeGraph* time_graph,
   SetLabel(name);
 
   // Frame tracks are collapsed by default.
-  collapse_toggle_->SetState(TriangleToggle::State::kCollapsed,
-                             TriangleToggle::InitialStateUpdate::kReplaceInitialState);
+  collapse_toggle_->SetCollapsed(true);
 }
 
 float FrameTrack::GetHeaderHeight() const { return layout_->GetTrackTabHeight(); }

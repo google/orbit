@@ -40,10 +40,6 @@ GpuSubmissionTrack::GpuSubmissionTrack(Track* parent, TimeGraph* time_graph,
   timeline_hash_ = timeline_hash;
   string_manager_ = app->GetStringManager();
   parent_ = parent;
-
-  // Gpu subtracks are expanded by default, but are however not shown while the parent is collapsed.
-  collapse_toggle_->SetState(TriangleToggle::State::kExpanded,
-                             TriangleToggle::InitialStateUpdate::kReplaceInitialState);
 }
 
 std::string GpuSubmissionTrack::GetTooltip() const {

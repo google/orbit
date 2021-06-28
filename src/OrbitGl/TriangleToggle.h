@@ -17,11 +17,8 @@ class Track;
 class TriangleToggle : public orbit_gl::CaptureViewElement,
                        public std::enable_shared_from_this<TriangleToggle> {
  public:
-  enum class State { kInactive, kExpanded, kCollapsed };
-  enum class InitialStateUpdate { kKeepInitialState, kReplaceInitialState };
-
-  using StateChangeHandler = std::function<void(TriangleToggle::State)>;
-  explicit TriangleToggle(State initial_state, StateChangeHandler handler, TimeGraph* time_graph,
+  using StateChangeHandler = std::function<void(bool)>;
+  explicit TriangleToggle(StateChangeHandler handler, TimeGraph* time_graph,
                           orbit_gl::Viewport* viewport, TimeGraphLayout* layout, Track* track,
                           float size);
   ~TriangleToggle() override = default;
@@ -38,13 +35,10 @@ class TriangleToggle : public orbit_gl::CaptureViewElement,
   // Pickable
   void OnRelease() override;
 
-  State GetState() const { return state_; }
-  void SetState(State state,
-                InitialStateUpdate update_initial_state = InitialStateUpdate::kKeepInitialState);
-  void ResetToInitialState() { state_ = initial_state_; }
-  bool IsCollapsed() const { return state_ == State::kCollapsed; }
-  bool IsExpanded() const { return state_ == State::kExpanded; }
-  bool IsInactive() const { return state_ == State::kInactive; }
+  void SetCollapsed(bool is_collapsed) { is_collapsed_ = is_collapsed; }
+  [[nodiscard]] bool IsCollapsed() const { return is_collapsed_; }
+  void SetIsCollapsible(bool is_collapsible) { is_collapsible_ = is_collapsible; }
+  [[nodiscard]] bool IsCollapsible() const { return is_collapsible_; }
 
  protected:
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
@@ -55,8 +49,9 @@ class TriangleToggle : public orbit_gl::CaptureViewElement,
   // We require explicit knowledge about the parent.
   Track* track_;
 
-  State state_ = State::kInactive;
-  State initial_state_ = State::kInactive;
+  bool is_collapsed_ = false;
+  bool is_collapsible_ = true;
+
   StateChangeHandler handler_;
 };
 

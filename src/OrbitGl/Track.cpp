@@ -31,9 +31,8 @@ Track::Track(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewpo
   constexpr uint32_t kMaxIndentationLevel = 5;
   uint32_t capped_indentation_level = std::min(indentation_level, kMaxIndentationLevel);
   collapse_toggle_ = std::make_shared<TriangleToggle>(
-      TriangleToggle::State::kExpanded,
-      [this](TriangleToggle::State state) { OnCollapseToggle(state); }, time_graph, viewport,
-      layout, this, 10.f - capped_indentation_level);
+      [this](bool is_collapsed) { OnCollapseToggle(is_collapsed); }, time_graph, viewport, layout,
+      this, 10.f - capped_indentation_level);
 
   const Color kDarkGrey(50, 50, 50, 255);
   color_ = kDarkGrey;
@@ -161,11 +160,7 @@ void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current
   }
 
   // Collapse toggle state management.
-  if (!this->IsCollapsible()) {
-    collapse_toggle_->SetState(TriangleToggle::State::kInactive);
-  } else if (collapse_toggle_->IsInactive()) {
-    collapse_toggle_->ResetToInitialState();
-  }
+  collapse_toggle_->SetIsCollapsible(this->IsCollapsible());
 
   // Draw collapsing triangle.
   const float toggle_y_pos =
@@ -233,7 +228,7 @@ Color Track::GetTrackBackgroundColor() const {
   return color_;
 }
 
-void Track::OnCollapseToggle(TriangleToggle::State /*state*/) { RequestUpdate(); }
+void Track::OnCollapseToggle(bool /*is_collapsed*/) { RequestUpdate(); }
 
 void Track::OnDrag(int x, int y) {
   CaptureViewElement::OnDrag(x, y);
