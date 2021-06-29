@@ -732,13 +732,13 @@ uint64_t GetMaxTrampolineSize() {
   static const uint64_t trampoline_size = []() -> uint64_t {
     MachineCode unused_code;
     AppendBackupCode(unused_code);
-    AppendCallToEntryPayloadAndOverwriteReturnAddress(/*entry_payload_function_address=*/ 0,
-                                                      /*return_trampoline_address=*/ 0,
-                                                      /*function_address=*/ 0, unused_code);
+    AppendCallToEntryPayloadAndOverwriteReturnAddress(/*entry_payload_function_address=*/0,
+                                                      /*return_trampoline_address=*/0,
+                                                      /*function_address=*/0, unused_code);
     AppendRestoreCode(unused_code);
     unused_code.AppendBytes(std::vector<uint8_t>(kMaxRelocatedPrologueSize, 0));
-    auto result = AppendJumpBackCode(/*address_after_prologue=*/ 0, /*trampoline_address=*/ 0,
-                                     unused_code);
+    auto result =
+        AppendJumpBackCode(/*address_after_prologue=*/0, /*trampoline_address=*/0, unused_code);
     CHECK(!result.has_error());
 
     // Round up to the next multiple of 32 so we get aligned jump targets at the beginning of the
