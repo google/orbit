@@ -178,29 +178,47 @@ void AppendBackupCode(MachineCode& trampoline) {
   }
 }
 
-// Append code to call the payload function. This is the actual instrumentation we add to the code.
-// The address of the instrumented function is handed over to the payload as a parameter such that
-// it can figure out which part of the tracee just got executed.
-void AppendCallToPayloadCode(uint64_t payload_address, uint64_t function_address,
-                             MachineCode& trampoline) {
-  // mov rax, payload_address
-  // mov rdi, function_address
-  // call rax
-  trampoline.AppendBytes({0x48, 0xb8})
-      .AppendImmediate64(payload_address)
-      .AppendBytes({0x48, 0xbf})
+// Call the entry payload function with the return address and the address of the
+// instrumented function as parameters. Then overwrite the return address with
+// 'return_trampoline_address'.
+void AppendCallToEntryPayloadAndOverwriteReturnAddress(uint64_t entry_payload_function_address,
+                                                       uint64_t return_trampoline_address,
+                                                       uint64_t function_address,
+                                                       MachineCode& trampoline) {
+  // At this point rax is the rsp after pushing the general purpose registers, so adding 0x40 gets
+  // us the location of the return address (see above in 'AppendBackupCode').
+
+  // add rax, 0x40                                   48 83 c0 40
+  // push rax                                        50
+  // mov rdi, (rax)                                  48 8b 38
+  // mov rsi, function_address                       48 be addr
+  // mov rax, entry_payload_function_address         48 b8 addr
+  // call rax                                        ff d0
+  // pop rax                                         58
+  // mov rdi, return_trampoline_address              48 bf addr
+  // mov (rax), rdi                                  48 89 38
+  trampoline.AppendBytes({0x48, 0x83, 0xc0, 0x40})
+      .AppendBytes({0x50})
+      .AppendBytes({0x48, 0x8b, 0x38})
+      .AppendBytes({0x48, 0xbe})
       .AppendImmediate64(function_address)
-      .AppendBytes({0xff, 0xd0});
+      .AppendBytes({0x48, 0xb8})
+      .AppendImmediate64(entry_payload_function_address)
+      .AppendBytes({0xff, 0xd0})
+      .AppendBytes({0x5f})
+      .AppendBytes({0x48, 0xb8})
+      .AppendImmediate64(return_trampoline_address)
+      .AppendBytes({0x48, 0x89, 0x07});
 }
 
 void AppendRestoreCode(MachineCode& trampoline) {
   // Restore vector registers (see comment on AppendBackupCode above).
   if (HasAvx()) {
-    // vmovdqa   ymm7, (esp)
-    // add       esp, 32
+    // vmovdqa   ymm7, (rsp)
+    // add       rsp, 32
     // ...
-    // vmovdqa   ymm0, (esp)
-    // add       esp, 32
+    // vmovdqa   ymm0, (rsp)
+    // add       rsp, 32
     trampoline.AppendBytes({0xc5, 0xfd, 0x6f, 0x3c, 0x24})
         .AppendBytes({0x48, 0x83, 0xc4, 0x20})
         .AppendBytes({0xc5, 0xfd, 0x6f, 0x34, 0x24})
@@ -218,11 +236,11 @@ void AppendRestoreCode(MachineCode& trampoline) {
         .AppendBytes({0xc5, 0xfd, 0x6f, 0x04, 0x24})
         .AppendBytes({0x48, 0x83, 0xc4, 0x20});
   } else {
-    // movdqa   xmm7, (esp)
-    // add esp, $0x10
+    // movdqa   xmm7, (rsp)
+    // add rsp, $0x10
     //...
-    // movdqa   xmm0, (esp)
-    // add esp, $0x10
+    // movdqa   xmm0, (rsp)
+    // add rsp, $0x10
     trampoline.AppendBytes({0x66, 0x0f, 0x6f, 0x3c, 0x24})
         .AppendBytes({0x48, 0x83, 0xc4, 0x10})
         .AppendBytes({0x66, 0x0f, 0x6f, 0x34, 0x24})
@@ -251,9 +269,9 @@ void AppendRestoreCode(MachineCode& trampoline) {
   // pop r9
   // pop r8
   // pop rcx
-  // pop  rdx
-  // pop  rsi
-  // pop  rdi
+  // pop rdx
+  // pop rsi
+  // pop rdi
   trampoline.AppendBytes({0x41, 0x5a})
       .AppendBytes({0x58})
       .AppendBytes({0x41, 0x59})
@@ -342,6 +360,89 @@ void AppendRestoreCode(MachineCode& trampoline) {
   }
   trampoline.AppendImmediate32(new_offset_or_error.value());
   return outcome::success();
+}
+
+// First backup all the (potential) return values - compare section "3.2.3 Parameter Passing" in
+// "System V Application Binary Interface"
+// https://refspecs.linuxfoundation.org/elf/x86_64-abi-0.99.pdf. Then call the exit payload, restore
+// the return values and finally jump the actual return address.
+void AppendCallToExitPayloadAndJumpToReturnAddress(uint64_t exit_payload_function_address,
+                                                   MachineCode& return_trampoline) {
+  // Backup rax, rdx, st(0), st(1).
+  // push rax                                        50
+  // push rdx                                        52
+  // sub rsp, 0x0a                                   48 83 ec 0a
+  // fstpt (rsp)                                     db 3c 24
+  // sub rsp, 0x0a                                   48 83 ec 0a
+  // fstpt (rsp)                                     db 3c 24
+  return_trampoline.AppendBytes({0x50})
+      .AppendBytes({0x52})
+      .AppendBytes({0x48, 0x83, 0xec, 0x0a})
+      .AppendBytes({0xdb, 0x3c, 0x24})
+      .AppendBytes({0x48, 0x83, 0xec, 0x0a})
+      .AppendBytes({0xdb, 0x3c, 0x24});
+
+  // We align the stack to 32 bytes first: round down to a multiple of 32, subtract another 24 and
+  // then push 8 byte original rsp. So we are 32 byte aligned after these commands and we can 'pop
+  // rsp' later to undo this.
+  // mov rax, rsp                                    48 89 e0
+  // and rsp, 0xffffffffffffffe0                     48 83 e4 e0
+  // sub rsp, 0x18                                   48 83 ec 18
+  // push rax                                        50
+  return_trampoline.AppendBytes({0x48, 0x89, 0xe0})
+      .AppendBytes({0x48, 0x83, 0xe4, 0xe0})
+      .AppendBytes({0x48, 0x83, 0xec, 0x18})
+      .AppendBytes({0x50});
+
+  // Store xmm0 and xmm1 on the stack.
+  // sub     rsp, 16                                 48 83 ec 10
+  // movdqa  (rsp), xmm0                             66 0f 7f 04 24
+  // sub     rsp, 16                                 48 83 ec 10
+  // movdqa  (rsp), xmm1                             66 0f 7f 0c 24
+  return_trampoline.AppendBytes({0x48, 0x83, 0xec, 0x10})
+      .AppendBytes({0x66, 0x0f, 0x7f, 0x04, 0x24})
+      .AppendBytes({0x48, 0x83, 0xec, 0x10})
+      .AppendBytes({0x66, 0x0f, 0x7f, 0x0c, 0x24});
+
+  // Note that rsp is 32 byte aligned now - we can just do the call. Call the exit payload and move
+  // the return address (which is returned by the exit payload) to rdi.
+  // mov rax, exit_payload_function_address          48 b8 addr
+  // call rax                                        ff d0
+  // mov rdi, rax                                    48 89 c7
+  return_trampoline.AppendBytes({0x48, 0xb8})
+      .AppendImmediate64(exit_payload_function_address)
+      .AppendBytes({0xff, 0xd0})
+      .AppendBytes({0x48, 0x89, 0xc7});
+
+  // Restore in reverse order: xmm1, xmm0, pop rsp, st(1), st(0), rdx, rax
+  // movdqa   xmm1, (rsp)                            66 0f 6f 0c 24
+  // add rsp, 0x10                                   48 83 c4 10
+  // movdqa   xmm0, (rsp)                            66 0f 6f 04 24
+  // add rsp, 0x10                                   48 83 c4 10
+  return_trampoline.AppendBytes({0x66, 0x0f, 0x6f, 0x0c, 0x24})
+      .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+      .AppendBytes({0x66, 0x0f, 0x6f, 0x04, 0x24})
+      .AppendBytes({0x48, 0x83, 0xc4, 0x10});
+
+  // pop rsp                                         5c
+  return_trampoline.AppendBytes({0x5c});
+
+  // fldt (rsp)                                      db 2c 24
+  // add rsp, 0x0a                                   48 83 c4 0a
+  // fldt (rsp)                                      db 2c 24
+  // add rsp, 0x0a                                   48 83 c4 0a
+  // pop rdx                                         5a
+  // pop rax                                         58
+  return_trampoline.AppendBytes({0xdb, 0x2c, 0x24})
+      .AppendBytes({0x48, 0x83, 0xc4, 0x0a})
+      .AppendBytes({0xdb, 0x2c, 0x24})
+      .AppendBytes({0x48, 0x83, 0xc4, 0x0a})
+      .AppendBytes({0x5a})
+      .AppendBytes({0x58});
+
+  // Jump to the actual return address.
+  // jmp rdi                                         ff e7
+  return_trampoline.AppendBytes({0xff, 0xe7});
 }
 
 }  // namespace
@@ -631,11 +732,13 @@ uint64_t GetMaxTrampolineSize() {
   static const uint64_t trampoline_size = []() -> uint64_t {
     MachineCode unused_code;
     AppendBackupCode(unused_code);
-    AppendCallToPayloadCode(0 /* payload_address*/, 0 /* function address */, unused_code);
+    AppendCallToEntryPayloadAndOverwriteReturnAddress(/*entry_payload_function_address=*/0,
+                                                      /*return_trampoline_address=*/0,
+                                                      /*function_address=*/0, unused_code);
     AppendRestoreCode(unused_code);
     unused_code.AppendBytes(std::vector<uint8_t>(kMaxRelocatedPrologueSize, 0));
     auto result =
-        AppendJumpBackCode(0 /*address_after_prologue*/, 0 /*trampoline_address*/, unused_code);
+        AppendJumpBackCode(/*address_after_prologue=*/0, /*trampoline_address=*/0, unused_code);
     CHECK(!result.has_error());
 
     // Round up to the next multiple of 32 so we get aligned jump targets at the beginning of the
@@ -648,13 +751,15 @@ uint64_t GetMaxTrampolineSize() {
 
 ErrorMessageOr<uint64_t> CreateTrampoline(pid_t pid, uint64_t function_address,
                                           const std::vector<uint8_t>& function,
-                                          uint64_t trampoline_address, uint64_t payload_address,
-                                          csh capstone_handle,
+                                          uint64_t trampoline_address,
+                                          uint64_t entry_payload_function_address,
+                                          uint64_t return_trampoline_address, csh capstone_handle,
                                           absl::flat_hash_map<uint64_t, uint64_t>& relocation_map) {
   MachineCode trampoline;
   // Add code to backup register state, execute the payload and restore the register state.
   AppendBackupCode(trampoline);
-  AppendCallToPayloadCode(payload_address, function_address, trampoline);
+  AppendCallToEntryPayloadAndOverwriteReturnAddress(
+      entry_payload_function_address, return_trampoline_address, function_address, trampoline);
   AppendRestoreCode(trampoline);
 
   // Relocate prologue into trampoline.
@@ -673,6 +778,31 @@ ErrorMessageOr<uint64_t> CreateTrampoline(pid_t pid, uint64_t function_address,
   }
 
   return address_after_prologue;
+}
+
+uint64_t GetReturnTrampolineSize() {
+  // The size is constant. So the calculation can be cached on first call.
+  static const uint64_t return_trampoline_size = []() -> uint64_t {
+    MachineCode unused_code;
+    AppendCallToExitPayloadAndJumpToReturnAddress(/*exit_payload_function_address=*/0, unused_code);
+    return static_cast<uint64_t>(((unused_code.GetResultAsVector().size() + 31) / 32) * 32);
+  }();
+
+  return return_trampoline_size;
+}
+
+ErrorMessageOr<void> CreateReturnTrampoline(pid_t pid, uint64_t exit_payload_function_address,
+                                            uint64_t return_trampoline_address) {
+  MachineCode return_trampoline;
+  AppendCallToExitPayloadAndJumpToReturnAddress(exit_payload_function_address, return_trampoline);
+
+  // Copy into tracee.
+  auto write_result_or_error =
+      WriteTraceesMemory(pid, return_trampoline_address, return_trampoline.GetResultAsVector());
+  if (write_result_or_error.has_error()) {
+    return write_result_or_error.error();
+  }
+  return outcome::success();
 }
 
 ErrorMessageOr<void> InstrumentFunction(pid_t pid, uint64_t function_address,

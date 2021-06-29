@@ -7,6 +7,21 @@
 #include <stdio.h>
 
 #include <chrono>
+#include <stack>
+#include <thread>
+
+namespace {
+
+struct ReturnAddressOfFunction {
+  ReturnAddressOfFunction(uint64_t return_address, uint64_t function_address)
+      : return_address(return_address), function_address(function_address) {}
+  uint64_t return_address;
+  uint64_t function_address;
+};
+
+thread_local std::stack<ReturnAddressOfFunction> return_addresses;
+
+}  // namespace
 
 int TrivialFunction() { return 42; }
 
@@ -14,8 +29,37 @@ uint64_t TrivialSum(uint64_t p0, uint64_t p1, uint64_t p2, uint64_t p3, uint64_t
   return p0 + p1 + p2 + p3 + p4 + p5;
 }
 
+void EntryPayload(uint64_t return_address, uint64_t function_address) {
+  return_addresses.emplace(return_address, function_address);
+}
+
+uint64_t ExitPayload() {
+  ReturnAddressOfFunction current_return_address = return_addresses.top();
+  return_addresses.pop();
+
+  using std::chrono::system_clock;
+  constexpr std::chrono::duration<int, std::ratio<1, 1000000>> k500Microseconds(500);
+  static system_clock::time_point last_logged_event = system_clock::now() - 2 * k500Microseconds;
+  static uint64_t skipped = 0;
+  // Rate limit log output to once every 500 microseconds.
+  const system_clock::time_point now = system_clock::now();
+  if (now - last_logged_event > k500Microseconds) {
+    if (skipped > 0) {
+      printf(" ( %lu skipped events )\n", skipped);
+    }
+    printf("Returned from function %#lx\n", current_return_address.function_address);
+    last_logged_event = now;
+    skipped = 0;
+  } else {
+    skipped++;
+  }
+
+  return current_return_address.return_address;
+}
+
 // rdi, rsi, rdx, rcx, r8, r9, rax, r10
-void ClobberParameterRegisters(uint64_t) {
+void EntryPayloadClobberParameterRegisters(uint64_t return_address, uint64_t function_address) {
+  return_addresses.emplace(return_address, function_address);
   __asm__ __volatile__(
       "mov $0xffffffffffffffff, %%rdi\n\t"
       "mov $0xffffffffffffffff, %%rsi\n\t"
@@ -30,7 +74,8 @@ void ClobberParameterRegisters(uint64_t) {
       :);
 }
 
-void ClobberXmmRegisters(uint64_t) {
+void EntryPayloadClobberXmmRegisters(uint64_t return_address, uint64_t function_address) {
+  return_addresses.emplace(return_address, function_address);
   __asm__ __volatile__(
       "movdqu 0x3a(%%rip), %%xmm0\n\t"
       "movdqu 0x32(%%rip), %%xmm1\n\t"
@@ -48,7 +93,8 @@ void ClobberXmmRegisters(uint64_t) {
       :);
 }
 
-void ClobberYmmRegisters(uint64_t) {
+void EntryPayloadClobberYmmRegisters(uint64_t return_address, uint64_t function_address) {
+  return_addresses.emplace(return_address, function_address);
   __asm__ __volatile__(
       "vmovdqu 0x3a(%%rip), %%ymm0\n\t"
       "vmovdqu 0x32(%%rip), %%ymm1\n\t"
@@ -64,23 +110,4 @@ void ClobberYmmRegisters(uint64_t) {
       :
       :
       :);
-}
-
-void TrivialLog(uint64_t function_address) {
-  using std::chrono::system_clock;
-  constexpr std::chrono::duration<int, std::ratio<1, 1000000>> k500Microseconds(500);
-  static system_clock::time_point last_logged_event = system_clock::now() - 2 * k500Microseconds;
-  static uint64_t skipped = 0;
-  // Rate limit log output to once every 500 microseconds.
-  const system_clock::time_point now = system_clock::now();
-  if (now - last_logged_event > k500Microseconds) {
-    if (skipped > 0) {
-      printf(" ( %lu skipped events )\n", skipped);
-    }
-    printf("Called function at %#lx\n", function_address);
-    last_logged_event = now;
-    skipped = 0;
-  } else {
-    skipped++;
-  }
 }
