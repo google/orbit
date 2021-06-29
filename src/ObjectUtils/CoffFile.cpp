@@ -5,6 +5,7 @@
 #include "ObjectUtils/CoffFile.h"
 
 #include <absl/strings/str_format.h>
+#include <llvm/DebugInfo/DWARF/DWARFContext.h>
 #include <llvm/Demangle/Demangle.h>
 #include <llvm/Object/Binary.h>
 #include <llvm/Object/COFF.h>
@@ -38,82 +39,60 @@ class CoffFileImpl : public CoffFile {
   const std::filesystem::path file_path_;
   llvm::object::OwningBinary<llvm::object::ObjectFile> owning_binary_;
   llvm::object::COFFObjectFile* object_file_;
-  bool has_symbol_table_;
+  bool has_debug_info_;
 };
 
 CoffFileImpl::CoffFileImpl(std::filesystem::path file_path,
                            llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary)
     : file_path_(std::move(file_path)),
       owning_binary_(std::move(owning_binary)),
-      has_symbol_table_(false) {
+      has_debug_info_(false) {
   object_file_ = llvm::dyn_cast<llvm::object::COFFObjectFile>(owning_binary_.getBinary());
-  // Per specification, a COFF file has a symbol table if the pointer to the symbol table is not 0.
-  has_symbol_table_ = (object_file_->getSymbolTable() != 0);
+  const auto dwarf_context = llvm::DWARFContext::create(*owning_binary_.getBinary());
+  if (dwarf_context != nullptr) {
+    has_debug_info_ = true;
+  }
 }
 
-ErrorMessageOr<uint64_t> CoffFileImpl::GetSectionOffsetForSymbol(
-    const llvm::object::SymbolRef& symbol_ref) {
-  // Symbol addresses are relative virtual addresses (RVAs) that are relative to the
-  // start of the section. To get the address relative to the start of the object
-  // file, we need to find the section and add the base address of the section.
-  llvm::object::COFFSymbolRef coff_symbol_ref = object_file_->getCOFFSymbol(symbol_ref);
-  int32_t section_id = coff_symbol_ref.getSectionNumber();
-  const llvm::object::coff_section* section = nullptr;
-  std::error_code err = object_file_->getSection(section_id, section);
-  if (err) {
-    return ErrorMessage(absl::StrFormat("Section of symbol not found: %s", err.message()));
+static void FillDebugSymbolsFromDWARF(uint64_t image_base, llvm::DWARFContext* dwarf_context,
+                                      ModuleSymbols* module_symbols) {
+  for (const auto& info_section : dwarf_context->compile_units()) {
+    for (uint32_t index = 0; index < info_section->getNumDIEs(); ++index) {
+      llvm::DWARFDie full_die = info_section->getDIEAtIndex(index);
+      // We only want symbols of functions, which are DIEs with isSubprogramDIR()
+      // and not of inlined functions, which are DIEs with isSubroutineDIE().
+      if (full_die.isSubprogramDIE()) {
+        SymbolInfo symbol_info;
+        uint64_t low_pc;
+        uint64_t high_pc;
+        uint64_t unused_section_index;
+        if (!full_die.getLowAndHighPC(low_pc, high_pc, unused_section_index)) {
+          continue;
+        }
+        // The method getName will fallback to ShortName if LinkageName is
+        // not present, so this should never return an empty name.
+        std::string name(full_die.getName(llvm::DINameKind::LinkageName));
+        CHECK(!name.empty());
+        symbol_info.set_name(name);
+        symbol_info.set_demangled_name(llvm::demangle(name));
+        symbol_info.set_address(low_pc);
+        symbol_info.set_size(high_pc - low_pc);
+        *(module_symbols->add_symbol_infos()) = std::move(symbol_info);
+      }
+    }
   }
-  return section->VirtualAddress;
-}
-
-ErrorMessageOr<SymbolInfo> CoffFileImpl::CreateSymbolInfo(
-    const llvm::object::SymbolRef& symbol_ref) {
-  if ((symbol_ref.getFlags() & llvm::object::BasicSymbolRef::SF_Undefined) != 0) {
-    return ErrorMessage("Symbol is defined in another object file (SF_Undefined flag is set).");
-  }
-  const std::string name = symbol_ref.getName() ? symbol_ref.getName().get() : "";
-  // Unknown type - skip and generate a warning.
-  if (!symbol_ref.getType()) {
-    LOG("WARNING: Type is not set for symbol \"%s\" in \"%s\", skipping.", name,
-        file_path_.string());
-    return ErrorMessage(absl::StrFormat(R"(Type is not set for symbol "%s" in "%s", skipping.)",
-                                        name, file_path_.string()));
-  }
-  // Limit list of symbols to functions. Ignore sections and variables.
-  if (symbol_ref.getType().get() != llvm::object::SymbolRef::ST_Function) {
-    return ErrorMessage("Symbol is not a function.");
-  }
-
-  auto section_offset = GetSectionOffsetForSymbol(symbol_ref);
-  if (section_offset.has_error()) {
-    return ErrorMessage(absl::StrFormat("Error retrieving section offset for symbol \"%s\": %s",
-                                        name, section_offset.error().message()));
-  }
-  SymbolInfo symbol_info;
-  symbol_info.set_name(name);
-  symbol_info.set_demangled_name(llvm::demangle(name));
-  symbol_info.set_address(symbol_ref.getValue() + section_offset.value());
-
-  llvm::object::COFFSymbolRef coff_symbol_ref = object_file_->getCOFFSymbol(symbol_ref);
-  symbol_info.set_size(coff_symbol_ref.getValue());
-
-  return symbol_info;
 }
 
 ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadDebugSymbols() {
-  if (!has_symbol_table_) {
-    return ErrorMessage("COFF file does not have a symbol table.");
+  const auto dwarf_context = llvm::DWARFContext::create(*owning_binary_.getBinary());
+  if (dwarf_context == nullptr) {
+    return ErrorMessage("Could not create DWARF context.");
   }
 
   ModuleSymbols module_symbols;
   module_symbols.set_symbols_file_path(file_path_.string());
 
-  for (const auto& symbol_ref : object_file_->symbols()) {
-    auto symbol_or_error = CreateSymbolInfo(symbol_ref);
-    if (symbol_or_error.has_value()) {
-      *module_symbols.add_symbol_infos() = std::move(symbol_or_error.value());
-    }
-  }
+  FillDebugSymbolsFromDWARF(object_file_->getImageBase(), dwarf_context.get(), &module_symbols);
 
   if (module_symbols.symbol_infos_size() == 0) {
     return ErrorMessage(
@@ -123,7 +102,7 @@ ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadDebugSymbols() {
   return module_symbols;
 }
 
-bool CoffFileImpl::HasDebugSymbols() const { return has_symbol_table_; }
+bool CoffFileImpl::HasDebugSymbols() const { return has_debug_info_; }
 
 const std::filesystem::path& CoffFileImpl::GetFilePath() const { return file_path_; }
 
