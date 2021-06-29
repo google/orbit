@@ -13,17 +13,16 @@
 #include "CoreMath.h"
 #include "PickingManager.h"
 #include "TextBox.h"
+#include "Viewport.h"
 
-class GlCanvas;
+namespace orbit_gl {
 
 class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> {
  public:
   ~GlSlider() override = default;
 
   [[nodiscard]] bool Draggable() override { return true; }
-  virtual void Draw(GlCanvas* canvas) = 0;
-
-  void SetCanvas(GlCanvas* canvas) { canvas_ = canvas; }
+  virtual void Draw(Batcher& batcher, bool is_picked) = 0;
 
   void SetNormalizedPosition(float start_ratio);  // [0,1]
   void SetNormalizedLength(float length_ratio);   // [0,1]
@@ -52,20 +51,27 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
 
   [[nodiscard]] float GetMinSliderPixelLength() const { return min_slider_pixel_length_; }
 
-  [[nodiscard]] float GetPixelPos() const { return PosToPixel(pos_ratio_); }
-  [[nodiscard]] float GetPixelLength() const { return LenToPixel(length_ratio_); }
+  [[nodiscard]] float GetSliderPixelPos() const { return PosToPixel(pos_ratio_); }
+  [[nodiscard]] float GetSliderPixelLength() const { return LenToPixel(length_ratio_); }
 
   [[nodiscard]] bool CanResize() const { return can_resize_; }
 
+  [[nodiscard]] Vec2 GetPos() const;
+  [[nodiscard]] Vec2 GetSize() const;
+
+  void OnMouseEnter();
+  void OnMouseLeave();
+  virtual void OnMouseMove(int /*x*/, int /*y*/) {}
+
  protected:
-  explicit GlSlider(bool is_vertical);
+  explicit GlSlider(Viewport& viewport, bool is_vertical);
 
   static Color GetLighterColor(const Color& color);
   static Color GetDarkerColor(const Color& color);
 
-  void DrawBackground(GlCanvas* canvas, float x, float y, float width, float height);
-  void DrawSlider(GlCanvas* canvas, float x, float y, float width, float height,
-                  ShadingDirection shading_direction);
+  void DrawBackground(Batcher& batcher, float x, float y, float width, float height);
+  void DrawSlider(Batcher& batcher, float x, float y, float width, float height,
+                  ShadingDirection shading_direction, bool is_picked);
 
   [[nodiscard]] virtual int GetBarPixelLength() const = 0;
 
@@ -83,8 +89,9 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
  protected:
   static const float kGradientFactor;
   const bool is_vertical_;
+  bool is_mouse_over_ = false;
 
-  GlCanvas* canvas_;
+  Viewport& viewport_;
 
   float pos_ratio_;  // Position of the data window in [0, 1], relative to the visible data size
   float right_edge_ratio_;  // Right edge of the data in [0, 1], relative to the visible data size
@@ -111,9 +118,9 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
 
 class GlVerticalSlider : public GlSlider {
  public:
-  GlVerticalSlider() : GlSlider(true) {}
+  GlVerticalSlider(Viewport& viewport) : GlSlider(viewport, true) {}
 
-  void Draw(GlCanvas* canvas) override;
+  void Draw(Batcher& batcher, bool is_picked) override;
 
  protected:
   [[nodiscard]] int GetBarPixelLength() const override;
@@ -121,12 +128,14 @@ class GlVerticalSlider : public GlSlider {
 
 class GlHorizontalSlider : public GlSlider {
  public:
-  GlHorizontalSlider() : GlSlider(false) { can_resize_ = true; }
+  GlHorizontalSlider(Viewport& viewport) : GlSlider(viewport, false) { can_resize_ = true; }
 
-  void Draw(GlCanvas* canvas) override;
+  void Draw(Batcher& batcher, bool is_picked) override;
 
  protected:
   [[nodiscard]] int GetBarPixelLength() const override;
 };
+
+}  // namespace orbit_gl
 
 #endif  // ORBIT_GL_GL_SLIDER_H_

@@ -70,8 +70,8 @@ using orbit_client_protos::TimerInfo;
 CaptureWindow::CaptureWindow(OrbitApp* app) : GlCanvas(), app_{app} {
   draw_help_ = true;
 
-  slider_ = std::make_shared<GlHorizontalSlider>();
-  vertical_slider_ = std::make_shared<GlVerticalSlider>();
+  slider_ = std::make_shared<orbit_gl::GlHorizontalSlider>(viewport_);
+  vertical_slider_ = std::make_shared<orbit_gl::GlVerticalSlider>(viewport_);
 
   slider_->SetDragCallback([&](float ratio) {
     this->UpdateHorizontalScroll(ratio);
@@ -81,13 +81,11 @@ CaptureWindow::CaptureWindow(OrbitApp* app) : GlCanvas(), app_{app} {
     this->UpdateHorizontalZoom(normalized_start, normalized_end);
     RequestUpdatePrimitives();
   });
-  slider_->SetCanvas(this);
 
   vertical_slider_->SetDragCallback([&](float ratio) {
     this->UpdateVerticalScroll(ratio);
     RequestUpdatePrimitives();
   });
-  vertical_slider_->SetCanvas(this);
 
   vertical_slider_->SetOrthogonalSliderPixelHeight(slider_->GetPixelHeight());
   slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetPixelHeight());
@@ -466,11 +464,12 @@ void CaptureWindow::DrawScreenSpace() {
 
   if (time_span > 0) {
     UpdateHorizontalSliderFromWorld();
-    slider_->Draw(this);
+    slider_->Draw(ui_batcher_, picking_manager_.IsThisElementPicked(slider_.get()));
 
     UpdateVerticalSliderFromWorld();
     if (vertical_slider_->GetLengthRatio() < 1.f) {
-      vertical_slider_->Draw(this);
+      vertical_slider_->Draw(ui_batcher_,
+                             picking_manager_.IsThisElementPicked(vertical_slider_.get()));
       int slider_width = static_cast<int>(time_graph_->GetLayout().GetSliderWidth());
       right_margin += slider_width;
     }
