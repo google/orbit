@@ -93,6 +93,11 @@ ConnectToStadiaWidget::ConnectToStadiaWidget(QWidget* parent)
   SetupStateMachine();
 }
 
+ConnectToStadiaWidget::ConnectToStadiaWidget(QString ggp_executable_path)
+    : ConnectToStadiaWidget() {
+  ggp_executable_path_ = std::move(ggp_executable_path);
+}
+
 void ConnectToStadiaWidget::SetActive(bool value) {
   ui_->contentFrame->setEnabled(value);
   ui_->radioButton->setChecked(value);
@@ -124,7 +129,13 @@ void ConnectToStadiaWidget::Start() {
     return;
   }
 
-  auto client_result = orbit_ggp::Client::Create(this);
+  ErrorMessageOr<QPointer<orbit_ggp::Client>> client_result =
+      ErrorMessage("Internal error: unable to create orbit_ggp::Client instance");
+  if (ggp_executable_path_.isEmpty()) {
+    client_result = orbit_ggp::Client::Create(this);
+  } else {
+    client_result = orbit_ggp::Client::Create(this, ggp_executable_path_);
+  }
   if (client_result.has_error()) {
     ui_->radioButton->setToolTip(QString::fromStdString(client_result.error().message()));
     setEnabled(false);
