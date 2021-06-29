@@ -370,9 +370,11 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
 
 void CaptureWindow::SetIsMouseOver(bool value) {
   GlCanvas::SetIsMouseOver(value);
+
   if (!value && last_mouseover_slider_ != nullptr) {
     last_mouseover_slider_->OnMouseLeave();
     last_mouseover_slider_ = nullptr;
+    RequestRedraw();
   }
 }
 

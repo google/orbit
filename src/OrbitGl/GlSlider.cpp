@@ -38,6 +38,10 @@ void GlSlider::OnMouseEnter() { is_mouse_over_ = true; }
 
 void GlSlider::OnMouseLeave() { is_mouse_over_ = false; }
 
+void GlSlider::OnMouseMove(int x, int y) {
+  mouse_pos_ = Vec2i(x, y) - Vec2i(static_cast<int>(GetPos()[0]), static_cast<int>(GetPos()[1]));
+}
+
 bool GlSlider::ContainsScreenSpacePoint(int x, int y) const {
   return x >= GetPos()[0] && x <= GetPos()[0] + GetSize()[0] && y >= GetPos()[1] &&
          y <= GetPos()[1] + GetSize()[1];
@@ -158,7 +162,14 @@ void GlSlider::DrawBackground(Batcher& batcher, float x, float y, float width, f
 
 void GlSlider::DrawSlider(Batcher& batcher, float x, float y, float width, float height,
                           ShadingDirection shading_direction, bool is_picked) {
-  Color color = is_picked && drag_type_ == DragType::kPan ? selected_color_ : slider_color_;
+  bool mouse_over_slider = false;
+  int relevant_dim = is_vertical_ ? 1 : 0;
+  if (is_mouse_over_) {
+    mouse_over_slider = mouse_pos_[relevant_dim] >= GetSliderPixelPos() &&
+                        mouse_pos_[relevant_dim] <= GetSliderPixelPos() + GetSliderPixelLength();
+  }
+
+  Color color = mouse_over_slider ? selected_color_ : slider_color_;
   const Color dark_border_color = GetDarkerColor(bar_color_);
   const Color light_border_color = GetLighterColor(color);
   const float kEpsilon = 0.0001f;
@@ -173,8 +184,17 @@ void GlSlider::DrawSlider(Batcher& batcher, float x, float y, float width, float
   batcher.AddBox(light_border_box, light_border_color, shared_from_this());
 
   // Slider itself
-  batcher.AddShadedBox(Vec2(x + 2.f, y + 2.f), Vec2(width - 4.f, height - 4.f),
-                       GlCanvas::kZValueSlider, color, shared_from_this(), shading_direction);
+  const float kSliderOffset = 2.f;
+  if (!is_picked) {
+    batcher.AddShadedBox(Vec2(x + kSliderOffset, y + kSliderOffset),
+                         Vec2(width - 2.f * kSliderOffset, height - 2.f * kSliderOffset),
+                         GlCanvas::kZValueSlider, color, shared_from_this(), shading_direction);
+  } else {
+    batcher.AddBox(Box(Vec2(x + kSliderOffset, y + kSliderOffset),
+                       Vec2(width - 2.f * kSliderOffset, height - 2.f * kSliderOffset),
+                       GlCanvas::kZValueSlider),
+        slider_color_, shared_from_this());
+  }
 }
 
 bool GlSlider::HandlePageScroll(float click_value) {
@@ -216,8 +236,8 @@ void GlVerticalSlider::Draw(Batcher& batcher, bool is_picked) {
 
   float start = ceilf((1.0f - pos_ratio_) * non_slider_height + GetOrthogonalSliderSize());
 
-  DrawSlider(batcher, x, start, GetPixelHeight(), slider_height, ShadingDirection::kRightToLeft,
-             is_picked);
+  ShadingDirection shading_direction = ShadingDirection::kRightToLeft;
+  DrawSlider(batcher, x, start, GetPixelHeight(), slider_height, shading_direction, is_picked);
 }
 
 int GlVerticalSlider::GetBarPixelLength() const {
@@ -231,17 +251,12 @@ void GlHorizontalSlider::Draw(Batcher& batcher, bool is_picked) {
   float slider_width = ceilf(length_ratio_ * bar_pixel_len);
   float non_slider_width = bar_pixel_len - slider_width;
 
-  const Color dark_border_color = GetDarkerColor(bar_color_);
-
-  Color color = is_picked ? selected_color_ : slider_color_;
-  const Color light_border_color = GetLighterColor(color);
-
   DrawBackground(batcher, 0, y, bar_pixel_len, GetPixelHeight());
 
   float start = floorf(pos_ratio_ * non_slider_width);
 
-  DrawSlider(batcher, start, y, slider_width, GetPixelHeight(), ShadingDirection::kTopToBottom,
-             is_picked);
+  ShadingDirection shading_direction = ShadingDirection::kTopToBottom;
+  DrawSlider(batcher, start, y, slider_width, GetPixelHeight(), shading_direction, is_picked);
 
   const float kEpsilon = 0.0001f;
 

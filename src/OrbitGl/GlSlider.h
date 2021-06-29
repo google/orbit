@@ -61,7 +61,7 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
 
   void OnMouseEnter();
   void OnMouseLeave();
-  virtual void OnMouseMove(int /*x*/, int /*y*/) {}
+  void OnMouseMove(int x, int y);
   [[nodiscard]] bool ContainsScreenSpacePoint(int x, int y) const;
 
  protected:
@@ -91,6 +91,7 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
   static const float kGradientFactor;
   const bool is_vertical_;
   bool is_mouse_over_ = false;
+  Vec2i mouse_pos_ = Vec2i(-1, -1);
 
   Viewport& viewport_;
 
