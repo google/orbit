@@ -722,23 +722,11 @@ extern "C" __attribute__((naked)) int LongEnough() {
 
 TEST_F(InstrumentFunctionTest, LongEnough) {
   RunChild(&LongEnough, "LongEnough");
-<<<<<<< HEAD
-<<<<<<< HEAD
-  PrepareInstrumentation("TrivialLog");
-  ErrorMessageOr<uint64_t> address_after_prologue_or_error =
-      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
-                       payload_function_address_, capstone_handle_, relocation_map_);
-  ASSERT_THAT(address_after_prologue_or_error, HasNoError());
-=======
-  PrepareInstrumentation("EntryPayload", "ExitPayload");
-=======
   PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
->>>>>>> 21aabbc0 (address comments)
   ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(address_after_prologue_or_error, HasNoError());
->>>>>>> 8bbf90a8 (Instrument entry and exit of function.)
   ErrorMessageOr<void> result = InstrumentFunction(
       pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
   EXPECT_THAT(result, HasNoError());
@@ -838,23 +826,11 @@ extern "C" __attribute__((naked)) int CallFunction() {
 
 TEST_F(InstrumentFunctionTest, CallFunction) {
   RunChild(&CallFunction, "CallFunction");
-<<<<<<< HEAD
-<<<<<<< HEAD
-  PrepareInstrumentation("TrivialLog");
-  ErrorMessageOr<uint64_t> address_after_prologue_or_error =
-      CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
-                       payload_function_address_, capstone_handle_, relocation_map_);
-  ASSERT_THAT(address_after_prologue_or_error, HasNoError());
-=======
-  PrepareInstrumentation("EntryPayload", "ExitPayload");
-=======
   PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
->>>>>>> 21aabbc0 (address comments)
   ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(address_after_prologue_or_error, HasNoError());
->>>>>>> 8bbf90a8 (Instrument entry and exit of function.)
   ErrorMessageOr<void> result = InstrumentFunction(
       pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
   EXPECT_THAT(result, HasNoError());
