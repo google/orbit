@@ -34,19 +34,21 @@ TEST(CoffFile, LoadDebugSymbols) {
 
   std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
                                        symbols_result.value().symbol_infos().end());
-  EXPECT_EQ(symbol_infos.size(), 53);
+  EXPECT_EQ(symbol_infos.size(), 35);
 
-  SymbolInfo& symbol_info = symbol_infos[0];
+  SymbolInfo& symbol_info = symbol_infos[4];
   EXPECT_EQ(symbol_info.name(), "pre_c_init");
   EXPECT_EQ(symbol_info.demangled_name(), "pre_c_init");
   EXPECT_EQ(symbol_info.address(), 0x1000);
-  EXPECT_EQ(symbol_info.size(), 0);
+  // COFF symbols do not have a size, we expect 0 in this case.
+  EXPECT_EQ(symbol_info.size(), 0xc);
 
-  symbol_info = symbol_infos[7];
+  symbol_info = symbol_infos[5];
   EXPECT_EQ(symbol_info.name(), "PrintHelloWorld");
   EXPECT_EQ(symbol_info.demangled_name(), "PrintHelloWorld");
   EXPECT_EQ(symbol_info.address(), 0x13a0);
-  EXPECT_EQ(symbol_info.size(), 928);
+  // COFF symbols do not have a size, we expect 0 in this case.
+  EXPECT_EQ(symbol_info.size(), 0x1b);
 }
 
 TEST(CoffFile, HasDebugSymbols) {
