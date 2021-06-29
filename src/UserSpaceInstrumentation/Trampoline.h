@@ -140,7 +140,7 @@ struct RelocatedInstruction {
 // Creates a "return trampoline" i.e. a bit of code that is used as a target for overwritten return
 // addresses. It calls the function 'exit_payload_function_address' and jumps to the return value of
 // that function. The return trampoline is constructed at address 'return_trampoline_address'.
-// Unlike from what is done in 'CreateTrampoline' we don't need an individual trampoline for each
+// Unlike what is done in 'CreateTrampoline' we don't need an individual trampoline for each
 // function we instrument. The different functions are disambiguated by the order in which the
 // function exit appears (and it is the responsibility of the payload functions to keep track of
 // this). Also the return trampoline does not need to be located close (32 bit offset) to any

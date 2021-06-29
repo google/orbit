@@ -194,9 +194,9 @@ void AppendCallToEntryPayloadAndOverwriteReturnAddress(uint64_t entry_payload_fu
   // mov rsi, function_address                       48 be addr
   // mov rax, entry_payload_function_address         48 b8 addr
   // call rax                                        ff d0
-  // pop rdi                                         5f
-  // mov rax, return_trampoline_address              48 b8 addr
-  // mov (rdi), rax                                  48 89 07
+  // pop rax                                         58
+  // mov rdi, return_trampoline_address              48 bf addr
+  // mov (rax), rdi                                  48 89 38
   trampoline.AppendBytes({0x48, 0x83, 0xc0, 0x40})
       .AppendBytes({0x50})
       .AppendBytes({0x48, 0x8b, 0x38})
