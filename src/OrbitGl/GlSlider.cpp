@@ -7,6 +7,8 @@
 #include <GteVector.h>
 #include <math.h>
 
+#include <QCursor>
+#include <QGuiApplication>
 #include <algorithm>
 
 #include "Geometry.h"
@@ -34,12 +36,35 @@ Vec2 GlSlider::GetSize() const {
   }
 }
 
-void GlSlider::OnMouseEnter() { is_mouse_over_ = true; }
+void GlSlider::OnMouseEnter() {
+  is_mouse_over_ = true;
+  if (QGuiApplication::instance() != nullptr) {
+    QGuiApplication::setOverrideCursor(Qt::ArrowCursor);
+  }
+}
 
-void GlSlider::OnMouseLeave() { is_mouse_over_ = false; }
+void GlSlider::OnMouseLeave() {
+  is_mouse_over_ = false;
+  if (QGuiApplication::instance() != nullptr) {
+    QGuiApplication::restoreOverrideCursor();
+  }
+}
 
 void GlSlider::OnMouseMove(int x, int y) {
   mouse_pos_ = Vec2i(x, y) - Vec2i(static_cast<int>(GetPos()[0]), static_cast<int>(GetPos()[1]));
+
+  if (can_resize_ && QGuiApplication::instance() != nullptr) {
+    int relevant_dim = is_vertical_ ? 1 : 0;
+    int slider_rel_mouse = mouse_pos_[relevant_dim] - static_cast<int>(GetSliderPixelPos());
+    if ((slider_rel_mouse >= 0 && slider_rel_mouse <= slider_resize_pixel_margin_) ||
+        (slider_rel_mouse >= GetSliderPixelLength() - slider_resize_pixel_margin_ &&
+         slider_rel_mouse <= GetSliderPixelLength())) {
+      QCursor cursor = is_vertical_ ? Qt::SizeVerCursor : Qt::SizeHorCursor;
+      QGuiApplication::changeOverrideCursor(cursor);
+    } else {
+      QGuiApplication::changeOverrideCursor(Qt::ArrowCursor);
+    }
+  }
 }
 
 bool GlSlider::ContainsScreenSpacePoint(int x, int y) const {
@@ -193,7 +218,7 @@ void GlSlider::DrawSlider(Batcher& batcher, float x, float y, float width, float
     batcher.AddBox(Box(Vec2(x + kSliderOffset, y + kSliderOffset),
                        Vec2(width - 2.f * kSliderOffset, height - 2.f * kSliderOffset),
                        GlCanvas::kZValueSlider),
-        slider_color_, shared_from_this());
+                   slider_color_, shared_from_this());
   }
 }
 
