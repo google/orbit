@@ -13,6 +13,8 @@
 namespace {
 
 struct ReturnAddressOfFunction {
+  ReturnAddressOfFunction(uint64_t return_address, uint64_t function_address)
+      : return_address(return_address), function_address(function_address) {}
   uint64_t return_address;
   uint64_t function_address;
 };
@@ -28,11 +30,11 @@ uint64_t TrivialSum(uint64_t p0, uint64_t p1, uint64_t p2, uint64_t p3, uint64_t
 }
 
 void EntryPayload(uint64_t return_address, uint64_t function_address) {
-  return_addresses.emplace({return_address, function_address});
+  return_addresses.emplace(return_address, function_address);
 }
 
 uint64_t ExitPayload() {
-  ReturnAddressOfFunction r = return_addresses.top();
+  ReturnAddressOfFunction current_return_address = return_addresses.top();
   return_addresses.pop();
 
   using std::chrono::system_clock;
@@ -45,19 +47,19 @@ uint64_t ExitPayload() {
     if (skipped > 0) {
       printf(" ( %lu skipped events )\n", skipped);
     }
-    printf("Returned from function %#lx\n", r.function_address);
+    printf("Returned from function %#lx\n", current_return_address.function_address);
     last_logged_event = now;
     skipped = 0;
   } else {
     skipped++;
   }
 
-  return r.return_address;
+  return current_return_address.return_address;
 }
 
 // rdi, rsi, rdx, rcx, r8, r9, rax, r10
 void EntryPayloadClobberParameterRegisters(uint64_t return_address, uint64_t function_address) {
-  return_addresses.emplace({return_address, function_address});
+  return_addresses.emplace(return_address, function_address);
   __asm__ __volatile__(
       "mov $0xffffffffffffffff, %%rdi\n\t"
       "mov $0xffffffffffffffff, %%rsi\n\t"
@@ -73,7 +75,7 @@ void EntryPayloadClobberParameterRegisters(uint64_t return_address, uint64_t fun
 }
 
 void EntryPayloadClobberXmmRegisters(uint64_t return_address, uint64_t function_address) {
-  return_addresses.emplace({return_address, function_address});
+  return_addresses.emplace(return_address, function_address);
   __asm__ __volatile__(
       "movdqu 0x3a(%%rip), %%xmm0\n\t"
       "movdqu 0x32(%%rip), %%xmm1\n\t"
@@ -92,7 +94,7 @@ void EntryPayloadClobberXmmRegisters(uint64_t return_address, uint64_t function_
 }
 
 void EntryPayloadClobberYmmRegisters(uint64_t return_address, uint64_t function_address) {
-  return_addresses.emplace({return_address, function_address});
+  return_addresses.emplace(return_address, function_address);
   __asm__ __volatile__(
       "vmovdqu 0x3a(%%rip), %%ymm0\n\t"
       "vmovdqu 0x32(%%rip), %%ymm1\n\t"
