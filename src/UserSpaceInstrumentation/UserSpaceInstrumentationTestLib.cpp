@@ -12,12 +12,12 @@
 
 namespace {
 
-struct ReturnAddress {
+struct ReturnAddressOfFunction {
   uint64_t return_address;
   uint64_t function_address;
 };
 
-thread_local std::stack<ReturnAddress> return_addresses;
+thread_local std::stack<ReturnAddressOfFunction> return_addresses;
 
 }  // namespace
 
@@ -28,11 +28,11 @@ uint64_t TrivialSum(uint64_t p0, uint64_t p1, uint64_t p2, uint64_t p3, uint64_t
 }
 
 void EntryPayload(uint64_t return_address, uint64_t function_address) {
-  return_addresses.push({return_address, function_address});
+  return_addresses.emplace({return_address, function_address});
 }
 
 uint64_t ExitPayload() {
-  ReturnAddress r = return_addresses.top();
+  ReturnAddressOfFunction r = return_addresses.top();
   return_addresses.pop();
 
   using std::chrono::system_clock;
@@ -57,7 +57,7 @@ uint64_t ExitPayload() {
 
 // rdi, rsi, rdx, rcx, r8, r9, rax, r10
 void EntryPayloadClobberParameterRegisters(uint64_t return_address, uint64_t function_address) {
-  return_addresses.push({return_address, function_address});
+  return_addresses.emplace({return_address, function_address});
   __asm__ __volatile__(
       "mov $0xffffffffffffffff, %%rdi\n\t"
       "mov $0xffffffffffffffff, %%rsi\n\t"
@@ -73,7 +73,7 @@ void EntryPayloadClobberParameterRegisters(uint64_t return_address, uint64_t fun
 }
 
 void EntryPayloadClobberXmmRegisters(uint64_t return_address, uint64_t function_address) {
-  return_addresses.push({return_address, function_address});
+  return_addresses.emplace({return_address, function_address});
   __asm__ __volatile__(
       "movdqu 0x3a(%%rip), %%xmm0\n\t"
       "movdqu 0x32(%%rip), %%xmm1\n\t"
@@ -92,7 +92,7 @@ void EntryPayloadClobberXmmRegisters(uint64_t return_address, uint64_t function_
 }
 
 void EntryPayloadClobberYmmRegisters(uint64_t return_address, uint64_t function_address) {
-  return_addresses.push({return_address, function_address});
+  return_addresses.emplace({return_address, function_address});
   __asm__ __volatile__(
       "vmovdqu 0x3a(%%rip), %%ymm0\n\t"
       "vmovdqu 0x32(%%rip), %%ymm1\n\t"

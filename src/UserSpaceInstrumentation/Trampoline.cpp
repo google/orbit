@@ -371,9 +371,9 @@ void AppendCallToExitPayloadAndJumpToReturnAddress(uint64_t exit_payload_functio
   // Backup rax, rdx, st(0), st(1).
   // push rax                                        50
   // push rdx                                        52
-  // sub $0x0a, rsp                                  48 83 ec 0a
+  // sub rsp, 0x0a                                   48 83 ec 0a
   // fstpt (rsp)                                     db 3c 24
-  // sub $0x0a, rsp                                  48 83 ec 0a
+  // sub rsp, 0x0a                                   48 83 ec 0a
   // fstpt (rsp)                                     db 3c 24
   return_trampoline.AppendBytes({0x50})
       .AppendBytes({0x52})
@@ -386,7 +386,7 @@ void AppendCallToExitPayloadAndJumpToReturnAddress(uint64_t exit_payload_functio
   // then push 8 byte original rsp. So we are 32 byte aligned after these commands and we can 'pop
   // rsp' later to undo this.
   // mov rax, rsp                                    48 89 e0
-  // and rsp, $0xffffffffffffffe0                    48 83 e4 e0
+  // and rsp, 0xffffffffffffffe0                     48 83 e4 e0
   // sub rsp, 0x18                                   48 83 ec 18
   // push rax                                        50
   return_trampoline.AppendBytes({0x48, 0x89, 0xe0})
@@ -416,9 +416,9 @@ void AppendCallToExitPayloadAndJumpToReturnAddress(uint64_t exit_payload_functio
 
   // Restore in reverse order: xmm1, xmm0, pop rsp, st(1), st(0), rdx, rax
   // movdqa   xmm1, (rsp)                            66 0f 6f 0c 24
-  // add rsp, $0x10                                  48 83 c4 10
+  // add rsp, 0x10                                   48 83 c4 10
   // movdqa   xmm0, (rsp)                            66 0f 6f 04 24
-  // add rsp, $0x10                                  48 83 c4 10
+  // add rsp, 0x10                                   48 83 c4 10
   return_trampoline.AppendBytes({0x66, 0x0f, 0x6f, 0x0c, 0x24})
       .AppendBytes({0x48, 0x83, 0xc4, 0x10})
       .AppendBytes({0x66, 0x0f, 0x6f, 0x04, 0x24})
@@ -428,9 +428,9 @@ void AppendCallToExitPayloadAndJumpToReturnAddress(uint64_t exit_payload_functio
   return_trampoline.AppendBytes({0x5c});
 
   // fldt (rsp)                                      db 2c 24
-  // add $0x0a, rsp                                  48 83 c4 0a
+  // add rsp, 0x0a                                   48 83 c4 0a
   // fldt (rsp)                                      db 2c 24
-  // add $0x0a, rsp                                  48 83 c4 0a
+  // add rsp, 0x0a                                   48 83 c4 0a
   // pop rdx                                         5a
   // pop rax                                         58
   return_trampoline.AppendBytes({0xdb, 0x2c, 0x24})
@@ -732,13 +732,13 @@ uint64_t GetMaxTrampolineSize() {
   static const uint64_t trampoline_size = []() -> uint64_t {
     MachineCode unused_code;
     AppendBackupCode(unused_code);
-    AppendCallToEntryPayloadAndOverwriteReturnAddress(0 /*entry_payload_function_address*/,
-                                                      0 /*return_trampoline_address*/,
-                                                      0 /*function_address*/, unused_code);
+    AppendCallToEntryPayloadAndOverwriteReturnAddress(/*entry_payload_function_address=*/ 0,
+                                                      /*return_trampoline_address=*/ 0,
+                                                      /*function_address=*/ 0, unused_code);
     AppendRestoreCode(unused_code);
     unused_code.AppendBytes(std::vector<uint8_t>(kMaxRelocatedPrologueSize, 0));
-    auto result =
-        AppendJumpBackCode(0 /*address_after_prologue*/, 0 /*trampoline_address*/, unused_code);
+    auto result = AppendJumpBackCode(/*address_after_prologue=*/ 0, /*trampoline_address=*/ 0,
+                                     unused_code);
     CHECK(!result.has_error());
 
     // Round up to the next multiple of 32 so we get aligned jump targets at the beginning of the
@@ -784,7 +784,7 @@ uint64_t GetReturnTrampolineSize() {
   // The size is constant. So the calculation can be cached on first call.
   static const uint64_t return_trampoline_size = []() -> uint64_t {
     MachineCode unused_code;
-    AppendCallToExitPayloadAndJumpToReturnAddress(0 /*exit_payload_function_address*/, unused_code);
+    AppendCallToExitPayloadAndJumpToReturnAddress(/*exit_payload_function_address=*/0, unused_code);
     return static_cast<uint64_t>(((unused_code.GetResultAsVector().size() + 31) / 32) * 32);
   }();
 

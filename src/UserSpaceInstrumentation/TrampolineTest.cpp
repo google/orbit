@@ -38,6 +38,9 @@ using orbit_base::HasNoError;
 using orbit_base::HasValue;
 using testing::ElementsAreArray;
 
+static constexpr const char* kEntryPayloadFunctionName = "EntryPayload";
+static constexpr const char* kExitPayloadFunctionName = "ExitPayload";
+
 extern "C" __attribute__((noinline)) int DoubleAndIncrement(int i) {
   i = 2 * i;
   return i + 1;
@@ -666,7 +669,7 @@ extern "C" int DoSomething() {
 
 TEST_F(InstrumentFunctionTest, DoSomething) {
   RunChild(&DoSomething, "DoSomething");
-  PrepareInstrumentation("EntryPayload", "ExitPayload");
+  PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
   ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
@@ -695,7 +698,7 @@ TEST_F(InstrumentFunctionTest, TooShort) {
   GTEST_SKIP();
 #endif
   RunChild(&TooShort, "TooShort");
-  PrepareInstrumentation("EntryPayload", "ExitPayload");
+  PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
   ErrorMessageOr<uint64_t> result = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
@@ -720,6 +723,7 @@ extern "C" __attribute__((naked)) int LongEnough() {
 TEST_F(InstrumentFunctionTest, LongEnough) {
   RunChild(&LongEnough, "LongEnough");
 <<<<<<< HEAD
+<<<<<<< HEAD
   PrepareInstrumentation("TrivialLog");
   ErrorMessageOr<uint64_t> address_after_prologue_or_error =
       CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
@@ -727,6 +731,9 @@ TEST_F(InstrumentFunctionTest, LongEnough) {
   ASSERT_THAT(address_after_prologue_or_error, HasNoError());
 =======
   PrepareInstrumentation("EntryPayload", "ExitPayload");
+=======
+  PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
+>>>>>>> 21aabbc0 (address comments)
   ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
@@ -753,7 +760,7 @@ extern "C" __attribute__((naked)) int RipRelativeAddressing() {
 
 TEST_F(InstrumentFunctionTest, RipRelativeAddressing) {
   RunChild(&RipRelativeAddressing, "RipRelativeAddressing");
-  PrepareInstrumentation("EntryPayload", "ExitPayload");
+  PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
   ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
@@ -780,7 +787,7 @@ extern "C" __attribute__((naked)) int UnconditionalJump8BitOffset() {
 
 TEST_F(InstrumentFunctionTest, UnconditionalJump8BitOffset) {
   RunChild(&UnconditionalJump8BitOffset, "UnconditionalJump8BitOffset");
-  PrepareInstrumentation("EntryPayload", "ExitPayload");
+  PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
   ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
@@ -805,7 +812,7 @@ extern "C" __attribute__((naked)) int UnconditionalJump32BitOffset() {
 
 TEST_F(InstrumentFunctionTest, UnconditionalJump32BitOffset) {
   RunChild(&UnconditionalJump32BitOffset, "UnconditionalJump32BitOffset");
-  PrepareInstrumentation("EntryPayload", "ExitPayload");
+  PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
   ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
@@ -832,6 +839,7 @@ extern "C" __attribute__((naked)) int CallFunction() {
 TEST_F(InstrumentFunctionTest, CallFunction) {
   RunChild(&CallFunction, "CallFunction");
 <<<<<<< HEAD
+<<<<<<< HEAD
   PrepareInstrumentation("TrivialLog");
   ErrorMessageOr<uint64_t> address_after_prologue_or_error =
       CreateTrampoline(pid_, function_address_, function_code_, trampoline_address_,
@@ -839,6 +847,9 @@ TEST_F(InstrumentFunctionTest, CallFunction) {
   ASSERT_THAT(address_after_prologue_or_error, HasNoError());
 =======
   PrepareInstrumentation("EntryPayload", "ExitPayload");
+=======
+  PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
+>>>>>>> 21aabbc0 (address comments)
   ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
@@ -866,7 +877,7 @@ extern "C" __attribute__((naked)) int ConditionalJump8BitOffset() {
 
 TEST_F(InstrumentFunctionTest, ConditionalJump8BitOffset) {
   RunChild(&ConditionalJump8BitOffset, "ConditionalJump8BitOffset");
-  PrepareInstrumentation("EntryPayload", "ExitPayload");
+  PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
   ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
@@ -894,7 +905,7 @@ extern "C" __attribute__((naked)) int ConditionalJump32BitOffset() {
 
 TEST_F(InstrumentFunctionTest, ConditionalJump32BitOffset) {
   RunChild(&ConditionalJump32BitOffset, "ConditionalJump32BitOffset");
-  PrepareInstrumentation("EntryPayload", "ExitPayload");
+  PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
   ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
@@ -922,7 +933,7 @@ TEST_F(InstrumentFunctionTest, Loop) {
   GTEST_SKIP();
 #endif
   RunChild(&Loop, "Loop");
-  PrepareInstrumentation("EntryPayload", "ExitPayload");
+  PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
   ErrorMessageOr<uint64_t> result = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
@@ -951,7 +962,7 @@ TEST_F(InstrumentFunctionTest, CheckIntParameters) {
       sum += CheckIntParameters(0, 0, 0, 0, 0, 0, 0, 0);
     }
   }
-  PrepareInstrumentation("EntryPayloadClobberParameterRegisters", "ExitPayload");
+  PrepareInstrumentation("EntryPayloadClobberParameterRegisters", kExitPayloadFunctionName);
   ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
@@ -980,7 +991,7 @@ TEST_F(InstrumentFunctionTest, CheckFloatParameters) {
       sum += CheckFloatParameters(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
     }
   }
-  PrepareInstrumentation("EntryPayloadClobberXmmRegisters", "ExitPayload");
+  PrepareInstrumentation("EntryPayloadClobberXmmRegisters", kExitPayloadFunctionName);
   ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
@@ -1014,7 +1025,7 @@ TEST_F(InstrumentFunctionTest, CheckM256iParameters) {
                                _mm256_set1_epi64x(0), _mm256_set1_epi64x(0));
     }
   }
-  PrepareInstrumentation("EntryPayloadClobberYmmRegisters", "ExitPayload");
+  PrepareInstrumentation("EntryPayloadClobberYmmRegisters", kExitPayloadFunctionName);
   ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
