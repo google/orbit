@@ -125,7 +125,12 @@ void ConnectToStadiaWidget::SetConnection(StadiaConnection connection) {
 
 ErrorMessageOr<void> ConnectToStadiaWidget::Start() {
   if (ssh_connection_artifacts_ == nullptr) {
-    return ErrorMessage("ssh_connection_artifacts_ is not set");
+    std::string error{
+        "Internal error: Unable to start ConnectToStadiaWidget, ssh_connection_artifacts_ is not "
+        "set."};
+    ui_->radioButton->setToolTip(QString::fromStdString(error));
+    setEnabled(false);
+    return ErrorMessage(error);
   }
 
   ErrorMessageOr<QPointer<orbit_ggp::Client>> client_result =
@@ -136,9 +141,10 @@ ErrorMessageOr<void> ConnectToStadiaWidget::Start() {
     client_result = orbit_ggp::Client::Create(this, ggp_executable_path_);
   }
   if (client_result.has_error()) {
-    ui_->radioButton->setToolTip(QString::fromStdString(client_result.error().message()));
+    std::string error = "Unable to use ggp cli: " + client_result.error().message();
+    ui_->radioButton->setToolTip(QString::fromStdString(error));
     setEnabled(false);
-    return client_result.error();
+    return ErrorMessage{error};
   }
   ggp_client_ = client_result.value();
 
@@ -148,6 +154,7 @@ ErrorMessageOr<void> ConnectToStadiaWidget::Start() {
     state_machine_.setInitialState(&s_instances_loading_);
   }
 
+  setEnabled(true);
   state_machine_.start();
   return outcome::success();
 }
