@@ -155,6 +155,7 @@ target_link_libraries(
          OrbitAccessibility
          OrbitPaths
          PresetFile
+         Qt5::Gui
          Symbols
          CONAN_PKG::Outcome
          CONAN_PKG::freetype-gl
@@ -181,6 +182,7 @@ target_sources(OrbitGlTests PRIVATE
                BatcherTest.cpp
                BlockChainTest.cpp
                CaptureStatsTest.cpp
+               CaptureWindowTest.cpp
                ClientFlags.cpp
                GlUtilsTest.cpp
                GpuTrackTest.cpp
