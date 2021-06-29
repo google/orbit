@@ -14,11 +14,33 @@
 #include "OrbitBase/Logging.h"
 #include "PickingManager.h"
 
+namespace orbit_gl {
+
 const float GlSlider::kGradientFactor = 0.25f;
 
-GlSlider::GlSlider(bool is_vertical)
+Vec2 GlSlider::GetPos() const {
+  if (is_vertical_) {
+    return Vec2(viewport_.GetScreenWidth() - pixel_height_, 0);
+  } else {
+    return Vec2(0, viewport_.GetScreenHeight() - pixel_height_);
+  }
+}
+
+Vec2 GlSlider::GetSize() const {
+  if (is_vertical_) {
+    return Vec2(pixel_height_, viewport_.GetScreenHeight() - orthogonal_slider_size_);
+  } else {
+    return Vec2(viewport_.GetScreenWidth() - orthogonal_slider_size_, pixel_height_);
+  }
+}
+
+void GlSlider::OnMouseEnter() { is_mouse_over_ = true; }
+
+void GlSlider::OnMouseLeave() { is_mouse_over_ = false; }
+
+GlSlider::GlSlider(Viewport& viewport, bool is_vertical)
     : is_vertical_(is_vertical),
-      canvas_(nullptr),
+      viewport_(viewport),
       pos_ratio_(0),
       right_edge_ratio_(0),
       length_ratio_(0),
@@ -118,8 +140,7 @@ void GlSlider::OnPick(int x, int y) {
   }
 }
 
-void GlSlider::DrawBackground(GlCanvas* canvas, float x, float y, float width, float height) {
-  Batcher& batcher = canvas->GetBatcher();
+void GlSlider::DrawBackground(Batcher& batcher, float x, float y, float width, float height) {
   const Color dark_border_color = GetDarkerColor(bar_color_);
   const float kEpsilon = 0.0001f;
 
@@ -130,13 +151,9 @@ void GlSlider::DrawBackground(GlCanvas* canvas, float x, float y, float width, f
   batcher.AddBox(bar_box, bar_color_, shared_from_this());
 }
 
-void GlSlider::DrawSlider(GlCanvas* canvas, float x, float y, float width, float height,
-                          ShadingDirection shading_direction) {
-  Batcher& batcher = canvas->GetBatcher();
-  Color color =
-      canvas->GetPickingManager().IsThisElementPicked(this) && drag_type_ == DragType::kPan
-          ? selected_color_
-          : slider_color_;
+void GlSlider::DrawSlider(Batcher& batcher, float x, float y, float width, float height,
+                          ShadingDirection shading_direction, bool is_picked) {
+  Color color = is_picked && drag_type_ == DragType::kPan ? selected_color_ : slider_color_;
   const Color dark_border_color = GetDarkerColor(bar_color_);
   const Color light_border_color = GetLighterColor(color);
   const float kEpsilon = 0.0001f;
@@ -180,10 +197,8 @@ bool GlSlider::HandlePageScroll(float click_value) {
   return true;
 }
 
-void GlVerticalSlider::Draw(GlCanvas* canvas) {
-  CHECK(canvas == canvas_);
-
-  float x = canvas_->GetViewport().GetScreenWidth() - GetPixelHeight();
+void GlVerticalSlider::Draw(Batcher& batcher, bool is_picked) {
+  float x = viewport_.GetScreenWidth() - GetPixelHeight();
 
   float bar_pixel_len = GetBarPixelLength();
   float slider_height = ceilf(length_ratio_ * bar_pixel_len);
@@ -192,19 +207,19 @@ void GlVerticalSlider::Draw(GlCanvas* canvas) {
   const Color dark_border_color = GetDarkerColor(bar_color_);
 
   // Background
-  DrawBackground(canvas, x, GetOrthogonalSliderSize(), GetPixelHeight(), bar_pixel_len);
+  DrawBackground(batcher, x, GetOrthogonalSliderSize(), GetPixelHeight(), bar_pixel_len);
 
   float start = ceilf((1.0f - pos_ratio_) * non_slider_height + GetOrthogonalSliderSize());
 
-  DrawSlider(canvas, x, start, GetPixelHeight(), slider_height, ShadingDirection::kRightToLeft);
+  DrawSlider(batcher, x, start, GetPixelHeight(), slider_height, ShadingDirection::kRightToLeft,
+             is_picked);
 }
 
 int GlVerticalSlider::GetBarPixelLength() const {
-  return canvas_->GetViewport().GetScreenHeight() - GetOrthogonalSliderSize();
+  return viewport_.GetScreenHeight() - GetOrthogonalSliderSize();
 }
 
-void GlHorizontalSlider::Draw(GlCanvas* canvas) {
-  canvas_ = canvas;
+void GlHorizontalSlider::Draw(Batcher& batcher, bool is_picked) {
   static float y = 0;
 
   float bar_pixel_len = GetBarPixelLength();
@@ -213,17 +228,16 @@ void GlHorizontalSlider::Draw(GlCanvas* canvas) {
 
   const Color dark_border_color = GetDarkerColor(bar_color_);
 
-  Color color =
-      canvas->GetPickingManager().IsThisElementPicked(this) ? selected_color_ : slider_color_;
+  Color color = is_picked ? selected_color_ : slider_color_;
   const Color light_border_color = GetLighterColor(color);
 
-  DrawBackground(canvas, 0, y, bar_pixel_len, GetPixelHeight());
+  DrawBackground(batcher, 0, y, bar_pixel_len, GetPixelHeight());
 
   float start = floorf(pos_ratio_ * non_slider_width);
 
-  DrawSlider(canvas, start, y, slider_width, GetPixelHeight(), ShadingDirection::kTopToBottom);
+  DrawSlider(batcher, start, y, slider_width, GetPixelHeight(), ShadingDirection::kTopToBottom,
+             is_picked);
 
-  Batcher& batcher = canvas->GetBatcher();
   const float kEpsilon = 0.0001f;
 
   // Left / right resize arrows and separator
@@ -255,7 +269,7 @@ void GlHorizontalSlider::Draw(GlCanvas* canvas) {
                           kWhite, shared_from_this());
 
   // Highlight the scale part of the slider
-  if (canvas->GetPickingManager().IsThisElementPicked(this)) {
+  if (is_picked) {
     if (drag_type_ == DragType::kScaleMax) {
       batcher.AddShadedBox(Vec2(x + width - slider_resize_pixel_margin_, 2),
                            Vec2(slider_resize_pixel_margin_ - 2, pixel_height_ - 4),
@@ -270,5 +284,7 @@ void GlHorizontalSlider::Draw(GlCanvas* canvas) {
 }
 
 int GlHorizontalSlider::GetBarPixelLength() const {
-  return canvas_->GetViewport().GetScreenWidth() - GetOrthogonalSliderSize();
+  return viewport_.GetScreenWidth() - GetOrthogonalSliderSize();
 }
+
+}  // namespace orbit_gl

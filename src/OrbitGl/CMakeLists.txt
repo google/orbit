@@ -174,7 +174,8 @@ add_executable(OrbitGlTests)
 target_compile_options(OrbitGlTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitGlTests PRIVATE
-               PickingManagerTest.h)
+               PickingManagerTest.h
+               UnitTestSlider.h)
 
 target_sources(OrbitGlTests PRIVATE
                BatcherTest.cpp

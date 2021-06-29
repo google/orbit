@@ -83,8 +83,8 @@ class CaptureWindow : public GlCanvas {
 
   std::unique_ptr<TimeGraph> time_graph_ = nullptr;
   bool draw_help_;
-  std::shared_ptr<GlSlider> slider_;
-  std::shared_ptr<GlSlider> vertical_slider_;
+  std::shared_ptr<orbit_gl::GlSlider> slider_;
+  std::shared_ptr<orbit_gl::GlSlider> vertical_slider_;
 
   uint64_t select_start_time_ = 0;
   uint64_t select_stop_time_ = 0;

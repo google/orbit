@@ -10,8 +10,12 @@
 #include <memory>
 #include <utility>
 
-#include "GlCanvas.h"
+#include "Geometry.h"
 #include "GlSlider.h"
+#include "UnitTestSlider.h"
+#include "Viewport.h"
+
+namespace orbit_gl {
 
 template <int dim>
 void Pick(GlSlider& slider, int start, int other_dim = 0) {
@@ -51,12 +55,10 @@ void PickDragRelease(GlSlider& slider, int start, int end = -1, int other_dim = 
 }
 
 template <typename SliderClass>
-std::pair<std::unique_ptr<SliderClass>, std::unique_ptr<GlCanvas>> Setup() {
-  std::unique_ptr<GlCanvas> canvas = std::make_unique<GlCanvas>();
-  canvas->Resize(150, 1050);
+std::pair<std::unique_ptr<SliderClass>, std::unique_ptr<Viewport>> Setup() {
+  std::unique_ptr<Viewport> viewport = std::make_unique<Viewport>(150, 1050);
 
-  std::unique_ptr<SliderClass> slider = std::make_unique<SliderClass>();
-  slider->SetCanvas(canvas.get());
+  std::unique_ptr<SliderClass> slider = std::make_unique<SliderClass>(*viewport);
   slider->SetPixelHeight(10);
   slider->SetOrthogonalSliderPixelHeight(50);
 
@@ -64,15 +66,14 @@ std::pair<std::unique_ptr<SliderClass>, std::unique_ptr<GlCanvas>> Setup() {
   slider->SetNormalizedPosition(0.5f);
   slider->SetNormalizedLength(0.5f);
 
-  return std::make_pair<std::unique_ptr<SliderClass>, std::unique_ptr<GlCanvas>>(std::move(slider),
-                                                                                 std::move(canvas));
+  return std::make_pair(std::move(slider), std::move(viewport));
 }
 
 const float kEpsilon = 0.01f;
 
 template <typename SliderClass, int dim>
 static void TestDragType() {
-  auto [slider, canvas] = Setup<SliderClass>();
+  auto [slider, viewport] = Setup<SliderClass>();
 
   const float kPos = 0.5f;
   const float kSize = 0.5f;
@@ -146,7 +147,7 @@ TEST(Slider, DragType) {
 
 template <typename SliderClass, int dim>
 static void TestScroll(float slider_length = 0.25) {
-  auto [slider, canvas] = Setup<SliderClass>();
+  auto [slider, viewport] = Setup<SliderClass>();
 
   // Use different scales for x and y to make sure dims are chosen correctly
   int scale = static_cast<int>(pow(10, dim));
@@ -171,7 +172,7 @@ TEST(Slider, Scroll) {
 
 template <typename SliderClass, int dim>
 static void TestDrag(float slider_length = 0.25) {
-  auto [slider, canvas] = Setup<SliderClass>();
+  auto [slider, viewport] = Setup<SliderClass>();
 
   // Use different scales for x and y to make sure dims are chosen correctly
   int scale = static_cast<int>(pow(10, dim));
@@ -187,7 +188,7 @@ static void TestDrag(float slider_length = 0.25) {
   Drag<dim>(*slider, 100 * scale);
   EXPECT_NEAR(pos, 1.f, kEpsilon);
   EXPECT_EQ(slider->GetPosRatio(), pos);
-  Drag<dim>(*slider, 100 * scale - static_cast<int>(slider->GetPixelLength() / 2));
+  Drag<dim>(*slider, 100 * scale - static_cast<int>(slider->GetSliderPixelLength() / 2));
   EXPECT_NEAR(pos, 1.f, kEpsilon);
 
   // Drag to middle
@@ -219,7 +220,7 @@ TEST(Slider, DragBreakTests) {
 
 template <typename SliderClass, int dim>
 static void TestScaling() {
-  auto [slider, canvas] = Setup<SliderClass>();
+  auto [slider, viewport] = Setup<SliderClass>();
 
   if (!slider->CanResize()) {
     return;
@@ -281,7 +282,7 @@ TEST(Slider, Scale) {
 
 template <typename SliderClass, int dim>
 static void TestBreakScaling() {
-  auto [slider, canvas] = Setup<SliderClass>();
+  auto [slider, viewport] = Setup<SliderClass>();
 
   if (!slider->CanResize()) {
     return;
@@ -295,22 +296,34 @@ static void TestBreakScaling() {
   int scale = static_cast<int>(pow(10, dim));
 
   // Pick on the right, then drag across the end of the slider
-  pos = slider->GetPixelPos();
-  len = slider->GetPixelLength();
+  pos = slider->GetSliderPixelPos();
+  len = slider->GetSliderPixelLength();
   PickDragRelease<dim>(*slider, 75 * scale - kOffset, 0);
-  EXPECT_NEAR(slider->GetPixelPos(), pos, kEpsilon);
-  EXPECT_NEAR(slider->GetPixelLength(), slider->GetMinSliderPixelLength(), kEpsilon);
+  EXPECT_NEAR(slider->GetSliderPixelPos(), pos, kEpsilon);
+  EXPECT_NEAR(slider->GetSliderPixelLength(), slider->GetMinSliderPixelLength(), kEpsilon);
 
   slider->SetNormalizedPosition(0.5f);
   slider->SetNormalizedLength(0.5f);
 
   // Pick on the left, then drag across the end of the slider
   PickDragRelease<dim>(*slider, 25 * scale + kOffset, 100 * scale);
-  EXPECT_NEAR(slider->GetPixelPos(), pos + len - slider->GetMinSliderPixelLength(), kEpsilon);
-  EXPECT_NEAR(slider->GetPixelLength(), slider->GetMinSliderPixelLength(), kEpsilon);
+  EXPECT_NEAR(slider->GetSliderPixelPos(), pos + len - slider->GetMinSliderPixelLength(), kEpsilon);
+  EXPECT_NEAR(slider->GetSliderPixelLength(), slider->GetMinSliderPixelLength(), kEpsilon);
 }
 
 TEST(Slider, BreakScale) {
   TestBreakScaling<GlHorizontalSlider, 0>();
   TestBreakScaling<GlVerticalSlider, 1>();
 }
+
+TEST(Slider, MouseEnterAndLeave) {
+  Viewport viewport(100, 100);
+  UnitTestSlider slider(viewport, true);
+  EXPECT_FALSE(slider.IsMouseOver());
+  slider.OnMouseEnter();
+  EXPECT_TRUE(slider.IsMouseOver());
+  slider.OnMouseLeave();
+  EXPECT_FALSE(slider.IsMouseOver());
+}
+
+}  // namespace orbit_gl
