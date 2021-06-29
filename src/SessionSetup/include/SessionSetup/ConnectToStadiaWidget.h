@@ -54,7 +54,7 @@ class ConnectToStadiaWidget : public QWidget {
   void SetSshConnectionArtifacts(SshConnectionArtifacts* ssh_connection_artifacts);
   void ClearSshConnectionArtifacts() { ssh_connection_artifacts_ = nullptr; }
   void SetConnection(StadiaConnection connection);
-  void Start();
+  [[nodiscard]] ErrorMessageOr<void> Start();
   [[nodiscard]] std::optional<orbit_ggp::Instance> GetSelectedInstance() const {
     return selected_instance_;
   }
