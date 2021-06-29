@@ -22,6 +22,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/ModuleManager.h
         include/ClientData/PostProcessedSamplingData.h
         include/ClientData/ProcessData.h
+        include/ClientData/TimestampIntervalSet.h
         include/ClientData/TracepointCustom.h
         include/ClientData/TracepointData.h
         include/ClientData/UserDefinedCaptureData.h)
@@ -33,6 +34,7 @@ target_sources(ClientData PRIVATE
         ModuleManager.cpp
         PostProcessedSamplingData.cpp
         ProcessData.cpp
+        TimestampIntervalSet.cpp
         TracepointData.cpp
         UserDefinedCaptureData.cpp)
 
@@ -52,6 +54,7 @@ target_sources(ClientDataTests PRIVATE
         ModuleDataTest.cpp
         ModuleManagerTest.cpp
         ProcessDataTest.cpp
+        TimestampIntervalSetTest.cpp
         TracepointDataTest.cpp
         UserDefinedCaptureDataTest.cpp)
 
