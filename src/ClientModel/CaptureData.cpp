@@ -205,7 +205,8 @@ CaptureData::FindFunctionAbsoluteAddressByInstructionAbsoluteAddressUsingModules
       module_manager_->GetModuleByPathAndBuildId(module_path, module_build_id);
   if (module == nullptr) return std::nullopt;
 
-  const uint64_t offset = absolute_address - module_base_address;
+  const uint64_t offset =
+      absolute_address - module_base_address + module->executable_segment_offset();
   const auto* function_info = module->FindFunctionByOffset(offset, false);
   if (function_info == nullptr) return std::nullopt;
 
