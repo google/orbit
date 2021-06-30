@@ -101,6 +101,10 @@ void CaptureWindow::ZoomAll() {
 void CaptureWindow::MouseMoved(int x, int y, bool left, bool right, bool middle) {
   GlCanvas::MouseMoved(x, y, left, right, middle);
 
+  if (!(left || right || middle)) {
+    ProcessSliderMouseMoveEvents(x, y);
+  }
+
   if (time_graph_ == nullptr) return;
 
   // Pan
@@ -135,6 +139,8 @@ void CaptureWindow::LeftUp() {
     app_->set_selected_thread_id(orbit_base::kAllProcessThreadsTid);
     RequestUpdatePrimitives();
   }
+
+  ProcessSliderMouseMoveEvents(mouse_move_pos_screen_[0], mouse_move_pos_screen_[1]);
 }
 
 void CaptureWindow::HandlePickedElement(PickingMode picking_mode, PickingId picking_id, int x,
@@ -232,6 +238,8 @@ bool CaptureWindow::RightUp() {
       ERROR("%s", result.error().message());
     }
   }
+
+  ProcessSliderMouseMoveEvents(mouse_move_pos_screen_[0], mouse_move_pos_screen_[1]);
 
   return GlCanvas::RightUp();
 }
@@ -357,6 +365,14 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
       time_graph_->JumpToNeighborBox(app_->selected_text_box(), TimeGraph::JumpDirection::kDown,
                                      TimeGraph::JumpScope::kSameThread);
       break;
+  }
+}
+
+void CaptureWindow::SetIsMouseOver(bool value) {
+  GlCanvas::SetIsMouseOver(value);
+  if (!value && last_mouseover_slider_ != nullptr) {
+    last_mouseover_slider_->OnMouseLeave();
+    last_mouseover_slider_ = nullptr;
   }
 }
 
@@ -531,6 +547,23 @@ void CaptureWindow::UpdateHorizontalSliderFromWorld() {
   slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetPixelHeight());
 }
 
+void CaptureWindow::ProcessSliderMouseMoveEvents(int x, int y) {
+  orbit_gl::GlSlider* slider = FindSliderUnderMouseCursor(x, y);
+  if (slider != last_mouseover_slider_) {
+    if (last_mouseover_slider_ != nullptr) {
+      last_mouseover_slider_->OnMouseLeave();
+    }
+    last_mouseover_slider_ = slider;
+    if (slider != nullptr) {
+      slider->OnMouseEnter();
+    }
+  }
+
+  if (slider != nullptr) {
+    slider->OnMouseMove(x, y);
+  }
+}
+
 void CaptureWindow::UpdateVerticalSliderFromWorld() {
   if (time_graph_ == nullptr) return;
   float min = 0.0f;
@@ -550,6 +583,16 @@ void CaptureWindow::ToggleRecording() {
 #ifdef __linux__
   ZoomAll();
 #endif
+}
+
+orbit_gl::GlSlider* CaptureWindow::FindSliderUnderMouseCursor(int x, int y) {
+  for (orbit_gl::GlSlider* slider : {vertical_slider_.get(), slider_.get()}) {
+    if (slider->ContainsScreenSpacePoint(x, y)) {
+      return slider;
+    }
+  }
+
+  return nullptr;
 }
 
 bool CaptureWindow::ShouldSkipRendering() const {
