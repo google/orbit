@@ -704,13 +704,15 @@ GetOuterAndInnerFunctionVirtualAddressRanges(pid_t pid) {
   for (const orbit_grpc_protos::SymbolInfo& symbol : module_symbols.symbol_infos()) {
     if (symbol.name() == PuppetConstants::kOuterFunctionName) {
       CHECK(outer_function_virtual_address_start == 0 && outer_function_virtual_address_end == 0);
-      outer_function_virtual_address_start = module_info.address_start() + symbol.address();
+      outer_function_virtual_address_start =
+          module_info.address_start() - module_info.executable_segment_offset() + symbol.address();
       outer_function_virtual_address_end = outer_function_virtual_address_start + symbol.size() - 1;
     }
 
     if (symbol.name() == PuppetConstants::kInnerFunctionName) {
       CHECK(inner_function_virtual_address_start == 0 && inner_function_virtual_address_end == 0);
-      inner_function_virtual_address_start = module_info.address_start() + symbol.address();
+      inner_function_virtual_address_start =
+          module_info.address_start() - module_info.executable_segment_offset() + symbol.address();
       inner_function_virtual_address_end = inner_function_virtual_address_start + symbol.size() - 1;
     }
   }
