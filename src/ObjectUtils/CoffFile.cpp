@@ -30,6 +30,8 @@ class CoffFileImpl : public CoffFile {
   [[nodiscard]] bool HasDebugSymbols() const override;
   [[nodiscard]] std::string GetName() const override;
   [[nodiscard]] const std::filesystem::path& GetFilePath() const override;
+  [[nodiscard]] uint64_t GetLoadBias() const override;
+  [[nodiscard]] uint64_t GetExecutableSegmentOffset() const override;
   [[nodiscard]] bool IsElf() const override;
   [[nodiscard]] bool IsCoff() const override;
 
@@ -54,7 +56,7 @@ CoffFileImpl::CoffFileImpl(std::filesystem::path file_path,
   }
 }
 
-static void FillDebugSymbolsFromDWARF(uint64_t image_base, llvm::DWARFContext* dwarf_context,
+static void FillDebugSymbolsFromDWARF(llvm::DWARFContext* dwarf_context,
                                       ModuleSymbols* module_symbols) {
   for (const auto& info_section : dwarf_context->compile_units()) {
     for (uint32_t index = 0; index < info_section->getNumDIEs(); ++index) {
@@ -92,7 +94,7 @@ ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadDebugSymbols() {
   ModuleSymbols module_symbols;
   module_symbols.set_symbols_file_path(file_path_.string());
 
-  FillDebugSymbolsFromDWARF(object_file_->getImageBase(), dwarf_context.get(), &module_symbols);
+  FillDebugSymbolsFromDWARF(dwarf_context.get(), &module_symbols);
 
   if (module_symbols.symbol_infos_size() == 0) {
     return ErrorMessage(
@@ -107,6 +109,14 @@ bool CoffFileImpl::HasDebugSymbols() const { return has_debug_info_; }
 const std::filesystem::path& CoffFileImpl::GetFilePath() const { return file_path_; }
 
 std::string CoffFileImpl::GetName() const { return file_path_.filename().string(); }
+
+uint64_t CoffFileImpl::GetLoadBias() const { return object_file_->getImageBase(); }
+uint64_t CoffFileImpl::GetExecutableSegmentOffset() const {
+  CHECK(object_file_->is64());
+  const llvm::object::pe32plus_header* pe32plus_header;
+  object_file_->getPE32PlusHeader(pe32plus_header);
+  return pe32plus_header->BaseOfCode;
+}
 
 bool CoffFileImpl::IsElf() const { return false; }
 bool CoffFileImpl::IsCoff() const { return true; }
@@ -135,8 +145,12 @@ ErrorMessageOr<std::unique_ptr<CoffFile>> CreateCoffFile(const std::filesystem::
 ErrorMessageOr<std::unique_ptr<CoffFile>> CreateCoffFile(
     const std::filesystem::path& file_path,
     llvm::object::OwningBinary<llvm::object::ObjectFile>&& file) {
-  llvm::object::ObjectFile* object_file = file.getBinary();
-  if (llvm::dyn_cast<llvm::object::COFFObjectFile>(object_file) != nullptr) {
+  llvm::object::COFFObjectFile* coff_object_file =
+      llvm::dyn_cast<llvm::object::COFFObjectFile>(file.getBinary());
+  if (coff_object_file != nullptr) {
+    if (!coff_object_file->is64()) {
+      return ErrorMessage(absl::StrFormat("Only 64-bit object files are supported."));
+    }
     return std::unique_ptr<CoffFile>(new CoffFileImpl(file_path, std::move(file)));
   } else {
     return ErrorMessage(absl::StrFormat("Unable to load object file \"%s\":", file_path.string()));

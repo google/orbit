@@ -39,15 +39,16 @@ TEST(CoffFile, LoadDebugSymbols) {
   SymbolInfo& symbol_info = symbol_infos[4];
   EXPECT_EQ(symbol_info.name(), "pre_c_init");
   EXPECT_EQ(symbol_info.demangled_name(), "pre_c_init");
-  EXPECT_EQ(symbol_info.address(), 0x1000);
-  // COFF symbols do not have a size, we expect 0 in this case.
+  uint64_t expected_address =
+      0x0 + coff_file->GetExecutableSegmentOffset() + coff_file->GetLoadBias();
+  EXPECT_EQ(symbol_info.address(), expected_address);
   EXPECT_EQ(symbol_info.size(), 0xc);
 
   symbol_info = symbol_infos[5];
   EXPECT_EQ(symbol_info.name(), "PrintHelloWorld");
   EXPECT_EQ(symbol_info.demangled_name(), "PrintHelloWorld");
-  EXPECT_EQ(symbol_info.address(), 0x13a0);
-  // COFF symbols do not have a size, we expect 0 in this case.
+  expected_address = 0x03a0 + coff_file->GetExecutableSegmentOffset() + coff_file->GetLoadBias();
+  EXPECT_EQ(symbol_info.address(), expected_address);
   EXPECT_EQ(symbol_info.size(), 0x1b);
 }
 

@@ -76,10 +76,9 @@ TEST(LinuxMap, CreateCoffModule) {
   EXPECT_EQ(result.value().file_size(), 96441);
   EXPECT_EQ(result.value().address_start(), kStartAddress);
   EXPECT_EQ(result.value().address_end(), kEndAddress);
-
-  // These fields should have their default values.
+  EXPECT_EQ(result.value().load_bias(), 0x62640000);
+  EXPECT_EQ(result.value().executable_segment_offset(), 0x1000);
   EXPECT_EQ(result.value().build_id(), "");
-  EXPECT_EQ(result.value().load_bias(), 0x0);
 }
 
 TEST(LinuxMap, CreateModuleNotElf) {
