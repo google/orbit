@@ -326,4 +326,11 @@ TEST(Slider, MouseEnterAndLeave) {
   EXPECT_FALSE(slider.IsMouseOver());
 }
 
+TEST(Slider, ContainsScreenSpacePoint) {
+  Viewport viewport(100, 100);
+  GlVerticalSlider slider(viewport);
+  EXPECT_TRUE(slider.ContainsScreenSpacePoint(95, 50));
+  EXPECT_FALSE(slider.ContainsScreenSpacePoint(50, 50));
+}
+
 }  // namespace orbit_gl

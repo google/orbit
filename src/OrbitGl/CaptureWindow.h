@@ -41,6 +41,8 @@ class CaptureWindow : public GlCanvas {
   void MouseWheelMovedHorizontally(int x, int y, int delta, bool ctrl) override;
   void KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) override;
 
+  void SetIsMouseOver(bool value) override;
+
   void PostRender() override;
   void RenderImGuiDebugUI() override;
 
@@ -65,7 +67,8 @@ class CaptureWindow : public GlCanvas {
 
   virtual void ToggleRecording();
 
- private:
+  orbit_gl::GlSlider* FindSliderUnderMouseCursor(int x, int y);
+
   void RenderHelpUi();
   void RenderTimeBar();
   void RenderSelectionOverlay();
@@ -77,6 +80,8 @@ class CaptureWindow : public GlCanvas {
   void UpdateVerticalSliderFromWorld();
   void UpdateHorizontalSliderFromWorld();
 
+  void ProcessSliderMouseMoveEvents(int x, int y);
+
   [[nodiscard]] virtual const char* GetHelpText() const;
   [[nodiscard]] virtual bool ShouldAutoZoom() const;
   void HandlePickedElement(PickingMode picking_mode, PickingId picking_id, int x, int y) override;
@@ -85,6 +90,7 @@ class CaptureWindow : public GlCanvas {
   bool draw_help_;
   std::shared_ptr<orbit_gl::GlSlider> slider_;
   std::shared_ptr<orbit_gl::GlSlider> vertical_slider_;
+  orbit_gl::GlSlider* last_mouseover_slider_ = nullptr;
 
   uint64_t select_start_time_ = 0;
   uint64_t select_stop_time_ = 0;

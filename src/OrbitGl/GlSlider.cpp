@@ -38,6 +38,11 @@ void GlSlider::OnMouseEnter() { is_mouse_over_ = true; }
 
 void GlSlider::OnMouseLeave() { is_mouse_over_ = false; }
 
+bool GlSlider::ContainsScreenSpacePoint(int x, int y) const {
+  return x >= GetPos()[0] && x <= GetPos()[0] + GetSize()[0] && y >= GetPos()[1] &&
+         y <= GetPos()[1] + GetSize()[1];
+}
+
 GlSlider::GlSlider(Viewport& viewport, bool is_vertical)
     : is_vertical_(is_vertical),
       viewport_(viewport),

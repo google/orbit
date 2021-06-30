@@ -92,7 +92,7 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   void RequestRedraw() { redraw_requested_ = true; }
 
   [[nodiscard]] bool GetIsMouseOver() const { return is_mouse_over_; }
-  void SetIsMouseOver(bool value) { is_mouse_over_ = value; }
+  virtual void SetIsMouseOver(bool value) { is_mouse_over_ = value; }
 
   [[nodiscard]] PickingManager& GetPickingManager() { return picking_manager_; }
 
