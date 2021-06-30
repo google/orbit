@@ -26,6 +26,7 @@
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
+#include "ClientData/TimestampIntervalSet.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/TracepointData.h"
 #include "OrbitBase/Logging.h"
@@ -217,6 +218,14 @@ class CaptureData {
     post_processed_sampling_data_ = std::move(post_processed_sampling_data);
   }
 
+  [[nodiscard]] const orbit_client_data::TimestampIntervalSet& incomplete_data_intervals() const {
+    return incomplete_data_intervals_;
+  }
+
+  void AddIncompleteDataInterval(uint64_t start_timestamp_ns, uint64_t end_timestamp_ns) {
+    incomplete_data_intervals_.Add(start_timestamp_ns, end_timestamp_ns);
+  }
+
   void EnableFrameTrack(uint64_t instrumented_function_id);
   void DisableFrameTrack(uint64_t instrumented_function_id);
   [[nodiscard]] bool IsFrameTrackEnabled(uint64_t instrumented_function_id) const;
@@ -257,6 +266,9 @@ class CaptureData {
   absl::flat_hash_map<int32_t, std::vector<orbit_client_protos::ThreadStateSliceInfo>>
       thread_state_slices_;  // For each thread, assume sorted by timestamp and not overlapping.
   mutable std::unique_ptr<absl::Mutex> thread_state_slices_mutex_ = std::make_unique<absl::Mutex>();
+
+  // Only access this field from the main thread.
+  orbit_client_data::TimestampIntervalSet incomplete_data_intervals_;
 
   absl::Time capture_start_time_ = absl::Now();
 
