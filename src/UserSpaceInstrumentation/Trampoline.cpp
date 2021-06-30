@@ -6,22 +6,24 @@
 
 #include <absl/base/casts.h>
 #include <absl/strings/numbers.h>
+#include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 #include <cpuid.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <cstdint>
+#include <cstring>
+#include <limits>
 #include <string>
 
 #include "AccessTraceesMemory.h"
 #include "AllocateInTracee.h"
 #include "MachineCode.h"
-#include "OrbitBase/ExecuteCommand.h"
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
-#include "OrbitBase/UniqueResource.h"
 #include "RegisterState.h"
 
 namespace orbit_user_space_instrumentation {

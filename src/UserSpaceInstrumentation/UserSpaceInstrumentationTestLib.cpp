@@ -7,8 +7,8 @@
 #include <stdio.h>
 
 #include <chrono>
+#include <ratio>
 #include <stack>
-#include <thread>
 
 namespace {
 

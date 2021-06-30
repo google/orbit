@@ -3,13 +3,20 @@
 // found in the LICENSE file.
 
 #include <absl/base/casts.h>
-#include <absl/strings/numbers.h>
 #include <dlfcn.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <immintrin.h>
+#include <signal.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
+#include <filesystem>
+#include <limits>
+#include <numeric>
 #include <random>
 #include <string>
 #include <string_view>
@@ -23,7 +30,6 @@
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/TestUtils.h"
 #include "Trampoline.h"
 #include "UserSpaceInstrumentation/Attach.h"
