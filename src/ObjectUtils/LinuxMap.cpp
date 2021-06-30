@@ -61,14 +61,15 @@ ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path
   module_info.set_address_start(start_address);
   module_info.set_address_end(end_address);
   module_info.set_name(object_file_or_error.value()->GetName());
+  module_info.set_load_bias(object_file_or_error.value()->GetLoadBias());
+  module_info.set_executable_segment_offset(
+      object_file_or_error.value()->GetExecutableSegmentOffset());
 
   if (object_file_or_error.value()->IsElf()) {
     auto* elf_file = dynamic_cast<ElfFile*>((object_file_or_error.value().get()));
     CHECK(elf_file != nullptr);
     module_info.set_build_id(elf_file->GetBuildId());
     module_info.set_soname(elf_file->GetSoname());
-    module_info.set_load_bias(elf_file->GetLoadBias());
-    module_info.set_executable_segment_offset(elf_file->GetExecutableSegmentOffset());
   }
 
   // All fields we need to set for COFF files are already set, no need to handle COFF
