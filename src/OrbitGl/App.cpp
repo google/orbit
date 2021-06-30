@@ -354,6 +354,9 @@ Future<void> OrbitApp::OnCaptureComplete() {
       orbit_client_model::CreatePostProcessedSamplingData(*GetCaptureData().GetCallstackData(),
                                                           GetCaptureData());
 
+  LOG("The capture contains %u intervals with incomplete data",
+      GetCaptureData().incomplete_data_intervals().size());
+
   return main_thread_executor_->Schedule(
       [this, sampling_profiler = std::move(post_processed_sampling_data)]() mutable {
         ORBIT_SCOPE("OnCaptureComplete");
@@ -490,6 +493,10 @@ void OrbitApp::OnModulesSnapshot(uint64_t /*timestamp_ns*/, std::vector<ModuleIn
 
 void OrbitApp::OnMetadataEvent(const orbit_grpc_protos::MetadataEvent& metadata_event) {
   main_thread_executor_->Schedule([this, metadata_event]() {
+    constexpr const char* kIncompleteDataLogMessage =
+        "The capture contains one or more time ranges with incomplete data. Some information might "
+        "be inaccurate.";
+
     switch (metadata_event.event_case()) {
       case orbit_grpc_protos::MetadataEvent::kWarningEvent: {
         main_window_->AppendToCaptureLog(
@@ -572,11 +579,32 @@ void OrbitApp::OnMetadataEvent(const orbit_grpc_protos::MetadataEvent& metadata_
       } break;
 
       case orbit_grpc_protos::MetadataEvent::kLostPerfRecordsEvent: {
-        // TODO(b/191236503): Handle LostPerfRecordsEvents.
+        uint64_t lost_end_timestamp_ns =
+            metadata_event.lost_perf_records_event().end_timestamp_ns();
+        uint64_t lost_start_timestamp_ns =
+            lost_end_timestamp_ns - metadata_event.lost_perf_records_event().duration_ns();
+        if (capture_data_->incomplete_data_intervals().empty()) {
+          // This is only reported once in the Capture Log.
+          main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kWarning,
+                                           GetCaptureTimeAt(lost_start_timestamp_ns),
+                                           kIncompleteDataLogMessage);
+        }
+        capture_data_->AddIncompleteDataInterval(lost_start_timestamp_ns, lost_end_timestamp_ns);
       } break;
 
       case orbit_grpc_protos::MetadataEvent::kOutOfOrderEventsDiscardedEvent: {
-        // TODO(b/191236503): Handle OutOfOrderEventsDiscardedEvents.
+        uint64_t discarded_end_timestamp_ns =
+            metadata_event.out_of_order_events_discarded_event().end_timestamp_ns();
+        uint64_t discarded_start_timestamp_ns =
+            discarded_end_timestamp_ns -
+            metadata_event.out_of_order_events_discarded_event().duration_ns();
+        if (capture_data_->incomplete_data_intervals().empty()) {
+          main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kWarning,
+                                           GetCaptureTimeAt(discarded_start_timestamp_ns),
+                                           kIncompleteDataLogMessage);
+        }
+        capture_data_->AddIncompleteDataInterval(discarded_start_timestamp_ns,
+                                                 discarded_end_timestamp_ns);
       } break;
 
       case orbit_grpc_protos::MetadataEvent::EVENT_NOT_SET:
