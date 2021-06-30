@@ -171,14 +171,20 @@ void TrackManager::SetFilter(const std::string& filter) {
 }
 
 void TrackManager::UpdateVisibleTrackList() {
+  visible_tracks_.clear();
+
   if (filter_.empty()) {
-    visible_tracks_ = sorted_tracks_;
+    std::copy_if(sorted_tracks_.begin(), sorted_tracks_.end(), std::back_inserter(visible_tracks_),
+                 [](const Track* track) { return track->GetVisible(); });
     return;
   }
 
-  visible_tracks_.clear();
   std::vector<std::string> filters = absl::StrSplit(filter_, ' ', absl::SkipWhitespace());
   for (const auto& track : sorted_tracks_) {
+    if (!track->GetVisible()) {
+      continue;
+    }
+
     std::string lower_case_label = absl::AsciiStrToLower(track->GetLabel());
     for (auto& filter : filters) {
       if (absl::StrContains(lower_case_label, filter)) {
