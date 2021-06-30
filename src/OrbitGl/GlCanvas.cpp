@@ -25,11 +25,13 @@
 // UI: 0.6 - 0.7
 // ScreenSpace: 0.8 - 0.9
 float GlCanvas::kZValueTrack = 0.01f;
+float GlCanvas::kZValueIncompleteDataOverlayPicking = 0.02f;
 float GlCanvas::kZValueEventBar = 0.03f;
 float GlCanvas::kZValueBox = 0.05f;
 float GlCanvas::kZValueEvent = 0.07f;
 float GlCanvas::kZValueTrackText = 0.08f;
 float GlCanvas::kZValueTrackLabel = 0.09f;
+float GlCanvas::kZValueIncompleteDataOverlay = 0.42f;
 float GlCanvas::kZValueOverlay = 0.43f;
 float GlCanvas::kZValueOverlayTextBackground = 0.45f;
 float GlCanvas::kZValueEventBarPicking = 0.49f;
