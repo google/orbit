@@ -69,9 +69,9 @@ struct RelocatedInstruction {
   // the original instruction achieved.
   std::vector<uint8_t> code;
 
-  // Some relocated instructions contain an absolute address stored in the 'code' above. That
+  // Some relocated instructions contain an absolute address stored in the `code` above. That
   // address needs to be adjusted once all the relocations are done. The position of this absolute
-  // address in 'code' is what is stored here.
+  // address in `code` is what is stored here.
   // Example: A conditional jump to a forward position needs to know the
   // position of an instruction not yet processed.
   //
@@ -133,14 +133,14 @@ struct RelocatedInstruction {
     uint64_t return_trampoline_address, csh capstone_handle,
     absl::flat_hash_map<uint64_t, uint64_t>& relocation_map);
 
-// As above with 'GetMaxTrampolineSize' this is a compile time constant, but we prefer to compute it
+// As above with `GetMaxTrampolineSize` this is a compile time constant, but we prefer to compute it
 // here since this captures every change to the code constructing the return trampoline.
 [[nodiscard]] uint64_t GetReturnTrampolineSize();
 
 // Creates a "return trampoline" i.e. a bit of code that is used as a target for overwritten return
-// addresses. It calls the function 'exit_payload_function_address' and jumps to the return value of
-// that function. The return trampoline is constructed at address 'return_trampoline_address'.
-// Unlike what is done in 'CreateTrampoline' we don't need an individual trampoline for each
+// addresses. It calls the function `exit_payload_function_address` and jumps to the return value of
+// that function. The return trampoline is constructed at address `return_trampoline_address`.
+// Unlike what is done in `CreateTrampoline` we don't need an individual trampoline for each
 // function we instrument. The different functions are disambiguated by the order in which the
 // function exit appears (and it is the responsibility of the payload functions to keep track of
 // this). Also the return trampoline does not need to be located close (32 bit offset) to any
@@ -149,9 +149,9 @@ struct RelocatedInstruction {
                                                           uint64_t exit_payload_function_address,
                                                           uint64_t return_trampoline_address);
 
-// Instrument function at 'function_address' in process 'pid'. This simply overwrites the beginning
-// of the fuction with a jump to 'trampoline_address'. The trampoline needs to be constructed with
-// 'CreateTrampoline' above.
+// Instrument function at `function_address` in process `pid`. This simply overwrites the beginning
+// of the fuction with a jump to `trampoline_address`. The trampoline needs to be constructed with
+// `CreateTrampoline` above.
 [[nodiscard]] ErrorMessageOr<void> InstrumentFunction(pid_t pid, uint64_t function_address,
                                                       uint64_t address_of_instruction_after_jump,
                                                       uint64_t trampoline_address);

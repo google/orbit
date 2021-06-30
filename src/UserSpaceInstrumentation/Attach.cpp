@@ -34,7 +34,7 @@ namespace {
   if (ptrace(PTRACE_ATTACH, tid, nullptr, nullptr) == -1) {
     // If tid has ended already we get ESRCH; if the thread was in 'exit state' we get EPERM.
     // There are a bunch of other (non-relevant) cases. I haven't found documentation on this but it
-    // can be looked up in the function 'ptrace_attach' in 'ptrace.c' in the kernel sources.
+    // can be looked up in the function `ptrace_attach` in `ptrace.c` in the kernel sources.
     if (errno == ESRCH || errno == EPERM) {
       return false;
     }

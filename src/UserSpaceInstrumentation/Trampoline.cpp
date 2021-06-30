@@ -180,13 +180,13 @@ void AppendBackupCode(MachineCode& trampoline) {
 
 // Call the entry payload function with the return address and the address of the
 // instrumented function as parameters. Then overwrite the return address with
-// 'return_trampoline_address'.
+// `return_trampoline_address`.
 void AppendCallToEntryPayloadAndOverwriteReturnAddress(uint64_t entry_payload_function_address,
                                                        uint64_t return_trampoline_address,
                                                        uint64_t function_address,
                                                        MachineCode& trampoline) {
   // At this point rax is the rsp after pushing the general purpose registers, so adding 0x40 gets
-  // us the location of the return address (see above in 'AppendBackupCode').
+  // us the location of the return address (see above in `AppendBackupCode`).
 
   // add rax, 0x40                                   48 83 c0 40
   // push rax                                        50
