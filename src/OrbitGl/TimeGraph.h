@@ -52,6 +52,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   void DrawIteratorBox(Batcher& batcher, TextRenderer& text_renderer, Vec2 pos, Vec2 size,
                        const Color& color, const std::string& label, const std::string& time,
                        float text_box_y);
+  void DrawIncompleteDataIntervals(Batcher& batcher, PickingMode picking_mode);
   void DrawText(float layer);
 
   void RequestUpdate() override;

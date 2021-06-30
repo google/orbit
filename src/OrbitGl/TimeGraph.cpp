@@ -735,6 +735,7 @@ void TimeGraph::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t cur
   }
 
   DrawTracks(batcher, text_renderer, current_mouse_time_ns, picking_mode);
+  DrawIncompleteDataIntervals(batcher, picking_mode);
   DrawOverlay(batcher, text_renderer, picking_mode);
 
   redraw_requested_ = false;
@@ -894,6 +895,70 @@ void TimeGraph::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
     // 0.
     const Color kColorBlackTransparent(0, 0, 0, 0);
     DrawIteratorBox(batcher, text_renderer, pos, size, kColorBlackTransparent, label, time, text_y);
+  }
+}
+
+void TimeGraph::DrawIncompleteDataIntervals(Batcher& batcher, PickingMode picking_mode) {
+  if (picking_mode == PickingMode::kClick) return;  // Allow to click through.
+
+  auto min_visible_timestamp_ns =
+      capture_min_timestamp_ + static_cast<uint64_t>(GetMinTimeUs() * 1000L);
+  auto max_visible_timestamp_ns =
+      capture_min_timestamp_ + static_cast<uint64_t>(GetMaxTimeUs() * 1000L);
+
+  std::vector<std::pair<float, float>> x_ranges;
+  for (auto it = capture_data_->incomplete_data_intervals().LowerBound(min_visible_timestamp_ns);
+       it != capture_data_->incomplete_data_intervals().end() &&
+       it->start_inclusive() <= max_visible_timestamp_ns;
+       ++it) {
+    uint64_t start_timestamp_ns = it->start_inclusive();
+    uint64_t end_timestamp_ns = it->end_exclusive();
+
+    float start_x = GetWorldFromTick(start_timestamp_ns);
+    float end_x = GetWorldFromTick(end_timestamp_ns);
+    float width = end_x - start_x;
+    constexpr float kMinWidth = 9.0f;
+    // These intervals are very short, usually measurable in microseconds, but can have relatively
+    // large effects on the capture. Extend ranges in order to make them visible even when not
+    // zoomed very far in.
+    if (width < kMinWidth) {
+      const float center_x = (start_x + end_x) / 2;
+      start_x = center_x - kMinWidth / 2;
+      end_x = center_x + kMinWidth / 2;
+      width = end_x - start_x;
+    }
+
+    // Merge ranges that are now overlapping due to having been extended for visibility.
+    if (x_ranges.empty() || start_x > x_ranges.back().second) {
+      x_ranges.emplace_back(start_x, end_x);
+    } else {
+      x_ranges.back().second = end_x;
+    }
+  }
+
+  const float world_start_y = viewport_->GetWorldTopLeft()[1];
+  const float world_height = viewport_->GetVisibleWorldHeight();
+
+  // Actually draw the ranges.
+  for (const auto& [start_x, end_x] : x_ranges) {
+    const Vec2 pos{start_x, world_start_y};
+    const Vec2 size{end_x - start_x, -world_height};
+    float z_value = GlCanvas::kZValueIncompleteDataOverlay;
+
+    std::unique_ptr<PickingUserData> user_data = nullptr;
+    // Show a tooltip when hovering.
+    if (picking_mode == PickingMode::kHover) {
+      // This overlay is placed in front of the tracks (with transparency), but when it comes to
+      // tooltips give it a much lower Z value, so that it's possible to "hover through" it.
+      z_value = GlCanvas::kZValueIncompleteDataOverlayPicking;
+      user_data = std::make_unique<PickingUserData>(nullptr, [](PickingId /*id*/) {
+        return std::string{
+            "Capture data is incomplete in this time range. Some information might be inaccurate."};
+      });
+    }
+
+    static const Color kIncompleteDataIntervalOrange{255, 128, 0, 32};
+    batcher.AddBox(Box{pos, size, z_value}, kIncompleteDataIntervalOrange, std::move(user_data));
   }
 }
 
