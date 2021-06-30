@@ -81,6 +81,9 @@ class UnitTestTrack : public Track {
 };  // namespace orbit_gl
 
 class TrackManagerTest : public ::testing::Test {
+ public:
+  static const size_t kNumTracks = 2;
+
  protected:
   void SetUp() override {
     capture_data_ = GenerateTestCaptureData();
@@ -130,6 +133,25 @@ TEST_F(TrackManagerTest, NonEmptyTracksAreVisible) {
   CreateAndFillTracks();
   track_manager_->UpdateTracksForRendering();
   EXPECT_EQ(2ull, track_manager_->GetVisibleTracks().size());
+}
+
+// TODO(b/181671054): Once the scheduler track stays visible, this needs to be adjusted
+TEST_F(TrackManagerTest, SimpleFiltering) {
+  CreateAndFillTracks();
+  track_manager_->SetFilter("example thread");
+  track_manager_->UpdateTracksForRendering();
+  EXPECT_EQ(1ull, track_manager_->GetVisibleTracks().size());
+
+  track_manager_->SetFilter("nonsense");
+  track_manager_->UpdateTracksForRendering();
+  EXPECT_EQ(0ull, track_manager_->GetVisibleTracks().size());
+}
+
+TEST_F(TrackManagerTest, NonVisibleTracksAreNotInTheList) {
+  CreateAndFillTracks();
+  track_manager_->GetOrCreateSchedulerTrack()->SetVisible(false);
+  track_manager_->UpdateTracksForRendering();
+  EXPECT_EQ(kNumTracks - 1, track_manager_->GetVisibleTracks().size());
 }
 
 }  // namespace orbit_gl
