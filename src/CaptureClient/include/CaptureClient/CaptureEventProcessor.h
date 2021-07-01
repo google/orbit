@@ -35,20 +35,30 @@ class CaptureEventProcessor {
       std::vector<std::unique_ptr<CaptureEventProcessor>> event_processors);
 
   enum class SystemMemoryUsageEncodingIndex {
-    kTotalKb,
-    kFreeKb,
-    kAvailableKb,
-    kBuffersKb,
-    kCachedKb,
-    kEnd
+    kTotalKb = 0,
+    kFreeKb = 1,
+    kAvailableKb = 2,
+    kBuffersKb = 3,
+    kCachedKb = 4,
+    kEnd = 5
   };
   enum class CGroupAndProcessMemoryUsageEncodingIndex {
-    kCGroupNameHash,
-    kCGroupLimitBytes,
-    kCGroupRssBytes,
-    kCGroupMappedFileBytes,
-    kProcessRssAnonKb,
-    kEnd
+    kCGroupNameHash = 0,
+    kCGroupLimitBytes = 1,
+    kCGroupRssBytes = 2,
+    kCGroupMappedFileBytes = 3,
+    kProcessRssAnonKb = 4,
+    kEnd = 5
+  };
+  enum class PagefaultEncodingIndex {
+    kSystemPagefault = 0,
+    kSystemMajorPagefault = 1,
+    kCGroupNameHash = 2,
+    kCGroupPagefault = 3,
+    kCGroupMajorPagefault = 4,
+    kProcessMinorPagefault = 5,
+    kProcessMajorPagefault = 6,
+    kEnd = 7
   };
 };
 

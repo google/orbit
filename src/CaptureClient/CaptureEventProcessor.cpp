@@ -84,6 +84,11 @@ class CaptureEventProcessorForListener : public CaptureEventProcessor {
       uint64_t synchronized_timestamp_ns,
       const orbit_grpc_protos::CGroupMemoryUsage& cgroup_memory_usage,
       const orbit_grpc_protos::ProcessMemoryUsage& process_memory_usage);
+  void ExtractAndProcessPagefaultTrackingTimer(
+      uint64_t synchronized_timestamp_ns,
+      const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage,
+      const orbit_grpc_protos::CGroupMemoryUsage& cgroup_memory_usage,
+      const orbit_grpc_protos::ProcessMemoryUsage& process_memory_usage);
 
   std::optional<std::filesystem::path> file_path_;
   absl::flat_hash_set<uint64_t> frame_track_function_ids_;
@@ -380,6 +385,14 @@ void CaptureEventProcessorForListener::ProcessMemoryUsageEvent(
                                                          memory_usage_event.cgroup_memory_usage(),
                                                          memory_usage_event.process_memory_usage());
   }
+
+  if (memory_usage_event.has_system_memory_usage() &&
+      memory_usage_event.has_cgroup_memory_usage() &&
+      memory_usage_event.has_process_memory_usage()) {
+    ExtractAndProcessPagefaultTrackingTimer(
+        memory_usage_event.timestamp_ns(), memory_usage_event.system_memory_usage(),
+        memory_usage_event.cgroup_memory_usage(), memory_usage_event.process_memory_usage());
+  }
 }
 
 void CaptureEventProcessorForListener::ExtractAndProcessSystemMemoryTrackingTimer(
@@ -437,6 +450,38 @@ void CaptureEventProcessorForListener::ExtractAndProcessCGroupAndProcessMemoryTr
       orbit_api::Encode<uint64_t>(cgroup_memory_usage.mapped_file_bytes());
   encoded_values[static_cast<size_t>(CGroupAndProcessMemoryUsageEncodingIndex::kProcessRssAnonKb)] =
       orbit_api::Encode<uint64_t>(process_memory_usage.rss_anon_kb());
+
+  *timer.mutable_registers() = {encoded_values.begin(), encoded_values.end()};
+
+  capture_listener_->OnTimer(timer);
+}
+
+void CaptureEventProcessorForListener::ExtractAndProcessPagefaultTrackingTimer(
+    uint64_t synchronized_timestamp_ns,
+    const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage,
+    const orbit_grpc_protos::CGroupMemoryUsage& cgroup_memory_usage,
+    const orbit_grpc_protos::ProcessMemoryUsage& process_memory_usage) {
+  TimerInfo timer;
+  timer.set_type(TimerInfo::kPagefault);
+  timer.set_start(synchronized_timestamp_ns);
+  timer.set_end(synchronized_timestamp_ns);
+  timer.set_process_id(process_memory_usage.pid());
+
+  std::vector<uint64_t> encoded_values(static_cast<size_t>(PagefaultEncodingIndex::kEnd));
+  encoded_values[static_cast<size_t>(PagefaultEncodingIndex::kSystemPagefault)] =
+      orbit_api::Encode<uint64_t>(system_memory_usage.pgfault());
+  encoded_values[static_cast<size_t>(PagefaultEncodingIndex::kSystemMajorPagefault)] =
+      orbit_api::Encode<uint64_t>(system_memory_usage.pgmajfault());
+  encoded_values[static_cast<size_t>(PagefaultEncodingIndex::kCGroupNameHash)] =
+      GetStringHashAndSendToListenerIfNecessary(cgroup_memory_usage.cgroup_name());
+  encoded_values[static_cast<size_t>(PagefaultEncodingIndex::kCGroupPagefault)] =
+      orbit_api::Encode<uint64_t>(cgroup_memory_usage.pgfault());
+  encoded_values[static_cast<size_t>(PagefaultEncodingIndex::kCGroupMajorPagefault)] =
+      orbit_api::Encode<uint64_t>(cgroup_memory_usage.pgmajfault());
+  encoded_values[static_cast<size_t>(PagefaultEncodingIndex::kProcessMinorPagefault)] =
+      orbit_api::Encode<uint64_t>(process_memory_usage.minflt());
+  encoded_values[static_cast<size_t>(PagefaultEncodingIndex::kProcessMajorPagefault)] =
+      orbit_api::Encode<uint64_t>(process_memory_usage.majflt());
 
   *timer.mutable_registers() = {encoded_values.begin(), encoded_values.end()};
 
