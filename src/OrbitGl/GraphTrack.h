@@ -42,7 +42,7 @@ class GraphTrack : public Track {
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset = 0) override;
 
-  void AddValues(uint64_t timestamp_ns, const std::array<double, Dimension>& values) {
+  virtual void AddValues(uint64_t timestamp_ns, const std::array<double, Dimension>& values) {
     series_.AddValues(timestamp_ns, values);
   }
   void SetLabelUnit(std::string label_unit) { series_.SetValueUnit(label_unit); }

@@ -104,7 +104,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
 
   [[nodiscard]] virtual bool IsTrackSelected() const { return false; }
 
-  [[nodiscard]] bool IsCollapsed() const { return collapse_toggle_->IsCollapsed(); }
+  [[nodiscard]] virtual bool IsCollapsed() const { return collapse_toggle_->IsCollapsed(); }
 
   [[nodiscard]] virtual std::vector<CaptureViewElement*> GetVisibleChildren() { return {}; }
   [[nodiscard]] virtual int GetVisiblePrimitiveCount() const { return 0; }

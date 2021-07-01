@@ -34,7 +34,7 @@ GraphTrack<Dimension>::GraphTrack(CaptureViewElement* parent, TimeGraph* time_gr
 
 template <size_t Dimension>
 float GraphTrack<Dimension>::GetHeight() const {
-  float scale_factor = collapse_toggle_->IsCollapsed() ? 1 : Dimension;
+  float scale_factor = IsCollapsed() ? 1 : Dimension;
   float height = layout_->GetTrackTabHeight() + GetLegendHeight() +
                  layout_->GetTextBoxHeight() * scale_factor +
                  layout_->GetSpaceBetweenTracksAndThread() + layout_->GetEventTrackHeight() +
@@ -44,7 +44,7 @@ float GraphTrack<Dimension>::GetHeight() const {
 
 template <size_t Dimension>
 float GraphTrack<Dimension>::GetLegendHeight() const {
-  bool has_legend = !collapse_toggle_->IsCollapsed() && Dimension > 1;
+  bool has_legend = !IsCollapsed() && Dimension > 1;
   float legend_height = has_legend ? layout_->GetTextBoxHeight() : 0;
   return legend_height;
 }
@@ -61,7 +61,7 @@ void GraphTrack<Dimension>::Draw(Batcher& batcher, TextRenderer& text_renderer,
   float label_z = GlCanvas::kZValueTrackLabel + z_offset;
   float text_z = GlCanvas::kZValueTrackText + z_offset;
 
-  if (collapse_toggle_->IsCollapsed()) return;
+  if (IsCollapsed()) return;
 
   // Draw label
   const std::array<double, Dimension>& values =
