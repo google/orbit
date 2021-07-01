@@ -136,7 +136,6 @@ target_sources(
           TriangleToggle.cpp
           TracepointsDataView.cpp
           TracepointThreadBar.cpp
-          VariableTrack.cpp
           Viewport.cpp)
 
 target_include_directories(OrbitGl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
