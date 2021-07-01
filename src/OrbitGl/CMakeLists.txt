@@ -20,6 +20,7 @@ target_sources(
          AnnotationTrack.h
          App.h
          AsyncTrack.h
+         BasicPagefaultTrack.h
          Batcher.h
          BlockChain.h
          CallstackDataView.h
@@ -88,6 +89,7 @@ target_sources(
           AnnotationTrack.cpp
           App.cpp
           AsyncTrack.cpp
+          BasicPagefaultTrack.cpp
           Batcher.cpp
           CallstackDataView.cpp
           CallstackThreadBar.cpp

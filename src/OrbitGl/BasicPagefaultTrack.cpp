@@ -1,0 +1,94 @@
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#include "BasicPagefaultTrack.h"
+
+#include "GlCanvas.h"
+
+namespace orbit_gl {
+
+BasicPagefaultTrack::BasicPagefaultTrack(
+    Track* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+    std::string name, std::array<std::string, kBasicPagefaultTrackDimension> series_names,
+    const orbit_client_model::CaptureData* capture_data, uint32_t indentation_level)
+    : LineGraphTrack<kBasicPagefaultTrackDimension>(parent, time_graph, viewport, layout, name,
+                                                    series_names, capture_data, indentation_level),
+      AnnotationTrack(),
+      parent_(parent) {
+  draw_background_ = false;
+}
+
+void BasicPagefaultTrack::AddValues(
+    uint64_t timestamp_ns, const std::array<double, kBasicPagefaultTrackDimension>& values) {
+  if (previous_time_and_values_.has_value()) {
+    std::array<double, kBasicPagefaultTrackDimension> differences;
+    std::transform(values.begin(), values.end(), previous_time_and_values_.value().second.begin(),
+                   differences.begin(), std::minus<double>());
+    series_.AddValues(previous_time_and_values_.value().first, differences);
+  }
+
+  previous_time_and_values_ = std::make_pair(timestamp_ns, values);
+}
+
+void BasicPagefaultTrack::AddValuesAndUpdateAnnotations(
+    uint64_t timestamp_ns, const std::array<double, kBasicPagefaultTrackDimension>& values) {
+  AddValues(timestamp_ns, values);
+
+  double updated_max = GetGraphMaxValue();
+  std::optional<std::pair<std::string, double>> value_upper_bound = GetValueUpperBound();
+  if (!value_upper_bound.has_value() || value_upper_bound.value().second < updated_max) {
+    SetValueUpperBound(absl::StrFormat("Maximum count: %.0f", updated_max), updated_max);
+  }
+
+  double updated_min = GetGraphMinValue();
+  std::optional<std::pair<std::string, double>> value_lower_bound = GetValueLowerBound();
+  if (!value_lower_bound.has_value() || value_lower_bound.value().second > updated_min) {
+    SetValueLowerBound(absl::StrFormat("Minimum count: %.0f", updated_min), updated_min);
+  }
+}
+
+void BasicPagefaultTrack::SetIndexOfSeriesToHighlight(size_t series_index) {
+  if (series_index >= kBasicPagefaultTrackDimension) return;
+  index_of_series_to_highlight_ = series_index;
+}
+
+void BasicPagefaultTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
+                               uint64_t current_mouse_time_ns, PickingMode picking_mode,
+                               float z_offset) {
+  LineGraphTrack<kBasicPagefaultTrackDimension>::Draw(batcher, text_renderer, current_mouse_time_ns,
+                                                      picking_mode, z_offset);
+
+  if (picking_mode != PickingMode::kNone || IsCollapsed()) return;
+  AnnotationTrack::DrawAnnotation(batcher, text_renderer, layout_,
+                                  GlCanvas::kZValueTrackText + z_offset);
+}
+
+void BasicPagefaultTrack::DrawSingleSeriesEntry(
+    Batcher* batcher, uint64_t start_tick, uint64_t end_tick,
+    const std::array<float, kBasicPagefaultTrackDimension>& current_normalized_values,
+    const std::array<float, kBasicPagefaultTrackDimension>& next_normalized_values, float z,
+    bool is_last) {
+  LineGraphTrack<kBasicPagefaultTrackDimension>::DrawSingleSeriesEntry(
+      batcher, start_tick, end_tick, current_normalized_values, next_normalized_values, z, is_last);
+
+  if (!index_of_series_to_highlight_.has_value()) return;
+  if (current_normalized_values[index_of_series_to_highlight_.value()] == 0) return;
+
+  const Color kHightlightingColor(231, 68, 53, 100);
+  float x0 = time_graph_->GetWorldFromTick(start_tick);
+  float width = time_graph_->GetWorldFromTick(end_tick) - x0;
+  float content_height = GetGraphContentHeight();
+  float y0 = pos_[1] - size_[1] + layout_->GetTrackBottomMargin();
+  batcher->AddShadedBox(Vec2(x0, y0), Vec2(width, content_height), z, kHightlightingColor);
+}
+
+bool BasicPagefaultTrack::IsCollapsed() const {
+  return collapse_toggle_->IsCollapsed() || GetParent()->IsCollapsed();
+}
+
+float BasicPagefaultTrack::GetAnnotatedTrackContentHeight() const {
+  return GetGraphContentHeight();
+}
+
+}  // namespace orbit_gl
