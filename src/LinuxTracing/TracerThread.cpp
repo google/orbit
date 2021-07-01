@@ -752,14 +752,8 @@ void TracerThread::ProcessOneRecord(PerfEventRingBuffer* ring_buffer) {
       ProcessLostEvent(header, ring_buffer);
       break;
     case PERF_RECORD_THROTTLE:
-      // We don't use throttle/unthrottle events, but log them separately
-      // from the default 'Unexpected perf_event_header::type' case.
-      LOG("PERF_RECORD_THROTTLE in ring buffer '%s'", ring_buffer->GetName());
-      ring_buffer->SkipRecord(header);
-      break;
     case PERF_RECORD_UNTHROTTLE:
-      LOG("PERF_RECORD_UNTHROTTLE in ring buffer '%s'", ring_buffer->GetName());
-      ring_buffer->SkipRecord(header);
+      ProcessThrottleUnthrottleEvent(header, ring_buffer);
       break;
     default:
       ERROR("Unexpected perf_event_header::type in ring buffer '%s': %u", ring_buffer->GetName(),
@@ -1043,7 +1037,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     ERROR("PERF_EVENT_SAMPLE with unexpected stream_id: %lu", stream_id);
     ring_buffer->SkipRecord(header);
   }
-}  // namespace orbit_linux_tracing
+}
 
 void TracerThread::ProcessLostEvent(const perf_event_header& header,
                                     PerfEventRingBuffer* ring_buffer) {
@@ -1051,6 +1045,29 @@ void TracerThread::ProcessLostEvent(const perf_event_header& header,
   ring_buffer->ConsumeRecord(header, &event.ring_buffer_record);
   stats_.lost_count += event.GetNumLost();
   stats_.lost_count_per_buffer[ring_buffer] += event.GetNumLost();
+}
+
+void TracerThread::ProcessThrottleUnthrottleEvent(const perf_event_header& header,
+                                                  PerfEventRingBuffer* ring_buffer) {
+  // Throttle/unthrottle events are reported when sampling causes too much throttling on the CPU.
+  // They are usually caused by/reproducible with a very high sampling frequency.
+  uint64_t timestamp_ns = ReadThrottleUnthrottleRecordTime(ring_buffer);
+
+  ring_buffer->SkipRecord(header);
+
+  // Simply log throttle/unthrottle events. If they are generated, they are quite low frequency.
+  switch (header.type) {
+    case PERF_RECORD_THROTTLE:
+      LOG("PERF_RECORD_THROTTLE in ring buffer '%s' at timestamp %u", ring_buffer->GetName(),
+          timestamp_ns);
+      break;
+    case PERF_RECORD_UNTHROTTLE:
+      LOG("PERF_RECORD_UNTHROTTLE in ring buffer '%s' at timestamp %u", ring_buffer->GetName(),
+          timestamp_ns);
+      break;
+    default:
+      UNREACHABLE();
+  }
 }
 
 void TracerThread::DeferEvent(std::unique_ptr<PerfEvent> event) {
