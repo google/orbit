@@ -6,13 +6,12 @@
 #define USER_SPACE_INSTRUMENTATION_TRAMPOLINE_H_
 
 #include <absl/container/flat_hash_map.h>
-#include <absl/container/flat_hash_set.h>
 #include <capstone/capstone.h>
+#include <stddef.h>
 #include <sys/types.h>
 
 #include <cstdint>
 #include <optional>
-#include <utility>
 #include <vector>
 
 #include "AddressRange.h"

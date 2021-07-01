@@ -5,7 +5,9 @@
 #include "UserSpaceInstrumentation/InjectLibraryInTracee.h"
 
 #include <absl/base/casts.h>
+#include <absl/strings/str_format.h>
 
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -14,7 +16,6 @@
 #include "ExecuteMachineCode.h"
 #include "FindFunctionAddress.h"
 #include "MachineCode.h"
-#include "OrbitBase/Logging.h"
 #include "OrbitBase/UniqueResource.h"
 
 namespace orbit_user_space_instrumentation {
