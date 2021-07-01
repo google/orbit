@@ -89,8 +89,7 @@ void GraphTrack<Dimension>::UpdatePrimitives(Batcher* batcher, uint64_t min_tick
   float track_z = GlCanvas::kZValueTrack + z_offset;
   float graph_z = GlCanvas::kZValueEventBar + z_offset;
 
-  float content_height =
-      size_[1] - layout_->GetTrackTabHeight() - layout_->GetTrackBottomMargin() - GetLegendHeight();
+  float content_height = GetGraphContentHeight();
   Vec2 content_pos = pos_;
   content_pos[1] -= layout_->GetTrackTabHeight();
   Box box(content_pos, Vec2(size_[0], -content_height - GetLegendHeight()), track_z);
@@ -133,9 +132,7 @@ Color GraphTrack<Dimension>::GetColor(size_t index) const {
 template <size_t Dimension>
 float GraphTrack<Dimension>::GetLabelYFromValues(
     const std::array<double, Dimension>& /*values*/) const {
-  float content_height =
-      size_[1] - layout_->GetTrackTabHeight() - layout_->GetTrackBottomMargin() - GetLegendHeight();
-  return pos_[1] - layout_->GetTrackTabHeight() - GetLegendHeight() - content_height / 2.f;
+  return GetGraphContentBaseY() + GetGraphContentHeight() / 2.f;
 }
 
 template <size_t Dimension>
@@ -237,7 +234,7 @@ void GraphTrack<Dimension>::DrawSeries(Batcher* batcher, uint64_t min_tick, uint
   typename MultivariateTimeSeries<Dimension>::Range& entries{entries_affected_range_result.value()};
 
   double min = GetGraphMinValue();
-  double inverse_value_range = GetGraphInverseValueRange();
+  double inverse_value_range = GetInverseOfGraphValueRange();
 
   auto current_iterator = entries.begin;
   while (current_iterator != entries.end) {
@@ -266,9 +263,8 @@ void GraphTrack<Dimension>::DrawSingleSeriesEntry(
     const std::array<float, Dimension>& normalized_cumulative_values, float z) {
   float x0 = time_graph_->GetWorldFromTick(start_tick);
   float width = time_graph_->GetWorldFromTick(end_tick) - x0;
-  float content_height =
-      size_[1] - layout_->GetTrackTabHeight() - layout_->GetTrackBottomMargin() - GetLegendHeight();
-  float base_y = pos_[1] - size_[1] + layout_->GetTrackBottomMargin();
+  float content_height = GetGraphContentHeight();
+  float base_y = GetGraphContentBaseY();
   float y0 = base_y;
   for (size_t i = 0; i < Dimension; ++i) {
     float height = base_y + normalized_cumulative_values[i] * content_height - y0;
