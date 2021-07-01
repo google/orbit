@@ -24,6 +24,7 @@
 #include "DataViews/DataViewType.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ThreadPool.h"
 
 #ifdef _WIN32
 #include "oqpi.hpp"
@@ -38,7 +39,8 @@ using orbit_client_protos::FunctionInfo;
 
 namespace orbit_data_views {
 
-FunctionsDataView::FunctionsDataView(AppInterface* app) : DataView(DataViewType::kFunctions, app) {}
+FunctionsDataView::FunctionsDataView(AppInterface* app, ThreadPool* thread_pool)
+    : DataView(DataViewType::kFunctions, app), thread_pool_{thread_pool} {}
 
 const std::string FunctionsDataView::kUnselectedFunctionString = "";
 const std::string FunctionsDataView::kSelectedFunctionString = "✓";
