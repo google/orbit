@@ -566,16 +566,22 @@ TEST(CaptureEventProcessor, CanHandleMemoryUsageEvent) {
   system_memory_usage->set_available_kb(30);
   system_memory_usage->set_buffers_kb(40);
   system_memory_usage->set_cached_kb(50);
+  system_memory_usage->set_pgmajfault(60);
+  system_memory_usage->set_pgfault(70);
   CGroupMemoryUsage* cgroup_memory_usage = memory_usage_event->mutable_cgroup_memory_usage();
   cgroup_memory_usage->set_timestamp_ns(110);
   cgroup_memory_usage->set_cgroup_name("memory_cgroup_name");
   cgroup_memory_usage->set_limit_bytes(10);
   cgroup_memory_usage->set_rss_bytes(20);
   cgroup_memory_usage->set_mapped_file_bytes(30);
+  cgroup_memory_usage->set_pgmajfault(40);
+  cgroup_memory_usage->set_pgfault(50);
   ProcessMemoryUsage* process_memory_usage = memory_usage_event->mutable_process_memory_usage();
   process_memory_usage->set_timestamp_ns(115);
   process_memory_usage->set_pid(1234);
   process_memory_usage->set_rss_anon_kb(10);
+  process_memory_usage->set_majflt(20);
+  process_memory_usage->set_minflt(30);
   // We take the arithmetic mean of the above events' timestamps as the synchronized timestamp in
   // `MemoryUsageEvent`.
   memory_usage_event->set_timestamp_ns(110);
@@ -587,10 +593,12 @@ TEST(CaptureEventProcessor, CanHandleMemoryUsageEvent) {
 
   TimerInfo system_timer;
   TimerInfo cgroup_and_process_timer;
+  TimerInfo pagefault_timer;
   EXPECT_CALL(listener, OnTimer)
-      .Times(2)
+      .Times(3)
       .WillOnce(SaveArg<0>(&system_timer))
-      .WillOnce(SaveArg<0>(&cgroup_and_process_timer));
+      .WillOnce(SaveArg<0>(&cgroup_and_process_timer))
+      .WillOnce(SaveArg<0>(&pagefault_timer));
 
   event_processor->ProcessEvent(event);
 
@@ -635,6 +643,32 @@ TEST(CaptureEventProcessor, CanHandleMemoryUsageEvent) {
       cgroup_and_process_timer.registers(static_cast<size_t>(
           CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kProcessRssAnonKb)),
       process_memory_usage->rss_anon_kb());
+
+  EXPECT_EQ(pagefault_timer.start(), memory_usage_event->timestamp_ns());
+  EXPECT_EQ(pagefault_timer.end(), memory_usage_event->timestamp_ns());
+  EXPECT_EQ(pagefault_timer.type(), TimerInfo::kPagefault);
+  EXPECT_EQ(pagefault_timer.process_id(), process_memory_usage->pid());
+  EXPECT_EQ(pagefault_timer.registers(static_cast<size_t>(
+                CaptureEventProcessor::PagefaultEncodingIndex::kCGroupNameHash)),
+            actual_cgroup_name_key);
+  EXPECT_EQ(pagefault_timer.registers(static_cast<size_t>(
+                CaptureEventProcessor::PagefaultEncodingIndex::kSystemMajorPagefault)),
+            system_memory_usage->pgmajfault());
+  EXPECT_EQ(pagefault_timer.registers(static_cast<size_t>(
+                CaptureEventProcessor::PagefaultEncodingIndex::kSystemPagefault)),
+            system_memory_usage->pgfault());
+  EXPECT_EQ(pagefault_timer.registers(static_cast<size_t>(
+                CaptureEventProcessor::PagefaultEncodingIndex::kCGroupMajorPagefault)),
+            cgroup_memory_usage->pgmajfault());
+  EXPECT_EQ(pagefault_timer.registers(static_cast<size_t>(
+                CaptureEventProcessor::PagefaultEncodingIndex::kCGroupPagefault)),
+            cgroup_memory_usage->pgfault());
+  EXPECT_EQ(pagefault_timer.registers(static_cast<size_t>(
+                CaptureEventProcessor::PagefaultEncodingIndex::kProcessMajorPagefault)),
+            process_memory_usage->majflt());
+  EXPECT_EQ(pagefault_timer.registers(static_cast<size_t>(
+                CaptureEventProcessor::PagefaultEncodingIndex::kProcessMinorPagefault)),
+            process_memory_usage->minflt());
 }
 
 GpuQueueSubmissionMetaInfo* CreateGpuQueueSubmissionMetaInfo(GpuQueueSubmission* submission,

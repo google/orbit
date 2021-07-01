@@ -33,6 +33,7 @@
 #include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "PagefaultTrack.h"
 #include "PickingManager.h"
 #include "SchedulerTrack.h"
 #include "StringManager.h"
@@ -306,6 +307,10 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
       ProcessCGroupAndProcessMemoryTrackingTimer(timer_info);
       break;
     }
+    case TimerInfo::kPagefault: {
+      ProcessPagefaultTrackingTimer(timer_info);
+      break;
+    }
     case TimerInfo::kNone: {
       ThreadTrack* track = track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
       track->OnTimer(timer_info);
@@ -561,6 +566,54 @@ void TimeGraph::ProcessCGroupAndProcessMemoryTrackingTimer(const TimerInfo& time
     constexpr double kValueLowerBoundRawValue = 0.0;
     track->TrySetValueLowerBound(kValueLowerBoundLabel, kValueLowerBoundRawValue);
   }
+}
+
+void TimeGraph::ProcessPagefaultTrackingTimer(const orbit_client_protos::TimerInfo& timer_info) {
+  uint64_t cgroup_name_hash = timer_info.registers(
+      static_cast<size_t>(CaptureEventProcessor::PagefaultEncodingIndex::kCGroupNameHash));
+  std::string cgroup_name = app_->GetStringManager()->Get(cgroup_name_hash).value_or("");
+  int64_t system_pagefaults = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(CaptureEventProcessor::PagefaultEncodingIndex::kSystemPagefault)));
+  int64_t system_major_pagefaults = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(CaptureEventProcessor::PagefaultEncodingIndex::kSystemMajorPagefault)));
+  int64_t cgroup_pagefaults = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(CaptureEventProcessor::PagefaultEncodingIndex::kCGroupPagefault)));
+  int64_t cgroup_major_pagefaults = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(CaptureEventProcessor::PagefaultEncodingIndex::kCGroupMajorPagefault)));
+  int64_t process_minor_pagefaults = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(CaptureEventProcessor::PagefaultEncodingIndex::kProcessMinorPagefault)));
+  int64_t process_major_pagefaults = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(CaptureEventProcessor::PagefaultEncodingIndex::kProcessMajorPagefault)));
+
+  orbit_gl::PagefaultTrack* track = track_manager_->GetPagefaultTrack();
+  if (track == nullptr) {
+    const std::array<std::string, 3> kSeriesNames = {
+        absl::StrFormat("Process [%s]", capture_data_->process_name()),
+        absl::StrFormat("CGroup [%s]", cgroup_name), "System"};
+    track = track_manager_->CreateAndGetPagefaultTrack(kSeriesNames);
+  }
+  CHECK(track != nullptr);
+
+  if (system_major_pagefaults != kMissingInfo && cgroup_major_pagefaults != kMissingInfo &&
+      process_major_pagefaults != kMissingInfo) {
+    auto major_pagefault_track = track->GetMajorPagefaultTrack();
+    major_pagefault_track->AddValuesAndUpdateAnnotations(
+        timer_info.start(), {static_cast<double>(process_major_pagefaults),
+                             static_cast<double>(cgroup_major_pagefaults),
+                             static_cast<double>(system_major_pagefaults)});
+  }
+
+  if (system_pagefaults != kMissingInfo && system_major_pagefaults != kMissingInfo &&
+      cgroup_pagefaults != kMissingInfo && cgroup_major_pagefaults != kMissingInfo &&
+      process_minor_pagefaults != kMissingInfo) {
+    auto minor_pagefault_track = track->GetMinorPagefaultTrack();
+    minor_pagefault_track->AddValuesAndUpdateAnnotations(
+        timer_info.start(), {static_cast<double>(process_minor_pagefaults),
+                             static_cast<double>(cgroup_pagefaults - cgroup_major_pagefaults),
+                             static_cast<double>(system_pagefaults - system_major_pagefaults)});
+  }
+
+  track->OnTimer(timer_info);
 }
 
 void TimeGraph::ProcessAsyncTimer(const std::string& track_name, const TimerInfo& timer_info) {
