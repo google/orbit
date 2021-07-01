@@ -4,6 +4,7 @@
 
 #include <absl/flags/flag.h>
 #include <absl/strings/str_split.h>
+#include <absl/time/time.h>
 #include <absl/types/span.h>
 #include <gmock/gmock-actions.h>
 #include <gmock/gmock-cardinalities.h>
@@ -11,6 +12,7 @@
 #include <gmock/gmock-more-actions.h>
 #include <gtest/gtest.h>
 
+#include "OrbitBase/ThreadPool.h"
 #include "process.pb.h"
 
 #ifdef _WIN32
@@ -36,7 +38,9 @@
 namespace {
 struct FunctionsDataViewTest : public testing::Test {
  public:
-  explicit FunctionsDataViewTest() : view_{&app_} {
+  explicit FunctionsDataViewTest()
+      : thread_pool_{ThreadPool::Create(4, 4, absl::Milliseconds(50))},
+        view_{&app_, thread_pool_.get()} {
 #ifdef _WIN32
     oqpi::default_helpers::start_default_scheduler();
 #endif
@@ -96,11 +100,15 @@ struct FunctionsDataViewTest : public testing::Test {
     module_infos_.emplace_back(std::move(module_info2));
   }
 
+  ~FunctionsDataViewTest() override {
 #ifdef _WIN32
-  ~FunctionsDataViewTest() override { oqpi::default_helpers::stop_scheduler(); }
+    oqpi::default_helpers::stop_scheduler();
 #endif
+    thread_pool_->ShutdownAndWait();
+  }
 
  protected:
+  std::shared_ptr<ThreadPool> thread_pool_;
   orbit_data_views::MockAppInterface app_;
   orbit_data_views::FunctionsDataView view_;
   std::vector<orbit_client_protos::FunctionInfo> functions_;

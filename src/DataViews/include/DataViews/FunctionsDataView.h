@@ -10,12 +10,13 @@
 
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
+#include "OrbitBase/ThreadPool.h"
 #include "capture_data.pb.h"
 
 namespace orbit_data_views {
 class FunctionsDataView : public DataView {
  public:
-  explicit FunctionsDataView(AppInterface* app);
+  explicit FunctionsDataView(AppInterface* app, ThreadPool* thread_pool);
 
   static const std::string kUnselectedFunctionString;
   static const std::string kSelectedFunctionString;
@@ -67,6 +68,8 @@ class FunctionsDataView : public DataView {
   static bool ShouldShowFrameTrackIcon(AppInterface* app,
                                        const orbit_client_protos::FunctionInfo& function);
   std::vector<const orbit_client_protos::FunctionInfo*> functions_;
+
+  ThreadPool* thread_pool_;
 };
 
 }  // namespace orbit_data_views
