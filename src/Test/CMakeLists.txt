@@ -18,6 +18,6 @@ endif()
 
 if(NOT TARGET GTest::QtGuiMain AND TARGET Qt5::Widgets)
   add_library(GTest_QtGuiMain OBJECT EXCLUDE_FROM_ALL test_qtgui_main.cpp)
-  target_link_libraries(GTest_QtGuiMain PUBLIC GTest::GTest Qt5::Widgets)
+  target_link_libraries(GTest_QtGuiMain PUBLIC GTest::GTest Qt5::Widgets CONAN_PKG::abseil)
   add_library(GTest::QtGuiMain ALIAS GTest_QtGuiMain)
 endif()
