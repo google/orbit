@@ -6,6 +6,8 @@
 
 #include <GteVector.h>
 #include <absl/container/flat_hash_map.h>
+#include <absl/flags/declare.h>
+#include <absl/flags/flag.h>
 #include <absl/strings/ascii.h>
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
@@ -36,6 +38,8 @@ using orbit_gl::CGroupAndProcessMemoryTrack;
 using orbit_gl::MemoryTrack;
 using orbit_gl::SystemMemoryTrack;
 
+ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
+
 TrackManager::TrackManager(TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                            TimeGraphLayout* layout, OrbitApp* app,
                            const orbit_client_model::CaptureData* capture_data)
@@ -43,10 +47,7 @@ TrackManager::TrackManager(TimeGraph* time_graph, orbit_gl::Viewport* viewport,
       viewport_(viewport),
       layout_(layout),
       capture_data_{capture_data},
-      app_{app} {
-  GetOrCreateSchedulerTrack();
-  tracepoints_system_wide_track_ = GetOrCreateThreadTrack(orbit_base::kAllThreadsOfAllProcessesTid);
-}
+      app_{app} {}
 
 std::vector<Track*> TrackManager::GetAllTracks() const {
   std::vector<Track*> tracks;
@@ -107,12 +108,18 @@ void TrackManager::SortTracks() {
   }
 
   // Tracepoint tracks.
-  if (!tracepoints_system_wide_track_->IsEmpty()) {
-    all_processes_sorted_tracks.push_back(tracepoints_system_wide_track_);
+  if (absl::GetFlag(FLAGS_enable_tracepoint_feature)) {
+    if (app_ != nullptr && app_->HasCaptureData()) {
+      ThreadTrack* tracepoints_track =
+          GetOrCreateThreadTrack(orbit_base::kAllThreadsOfAllProcessesTid);
+      if (!tracepoints_track->IsEmpty()) {
+        all_processes_sorted_tracks.push_back(tracepoints_track);
+      }
+    }
   }
 
   // Process track.
-  if (app_->HasCaptureData()) {
+  if (app_ != nullptr && app_->HasCaptureData()) {
     ThreadTrack* process_track = GetOrCreateThreadTrack(orbit_base::kAllProcessThreadsTid);
     if (!process_track->IsEmpty()) {
       all_processes_sorted_tracks.push_back(process_track);
@@ -144,7 +151,7 @@ void TrackManager::SortTracks() {
   sorted_tracks_.clear();
 
   // Scheduler track.
-  if (!scheduler_track_->IsEmpty()) {
+  if (scheduler_track_ != nullptr && !scheduler_track_->IsEmpty()) {
     sorted_tracks_.push_back(scheduler_track_.get());
   }
 
@@ -271,10 +278,8 @@ int TrackManager::FindMovingTrackIndex() {
   return -1;
 }
 
-void TrackManager::UpdateTracks(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                PickingMode picking_mode) {
-  UpdateTracksOrder();
-
+void TrackManager::UpdateTrackPrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                                         PickingMode picking_mode) {
   // Make sure track tab fits in the viewport.
   float current_y = -layout_->GetSchedulerTrackOffset();
 
@@ -295,10 +300,10 @@ void TrackManager::UpdateTracks(Batcher* batcher, uint64_t min_tick, uint64_t ma
   tracks_total_height_ = std::abs(current_y);
 }
 
-void TrackManager::UpdateTracksOrder() {
+void TrackManager::UpdateTracksForRendering() {
   // Reorder threads if sorting isn't valid or once per second when capturing.
   if (sorting_invalidated_ ||
-      (app_->IsCapturing() && last_thread_reorder_.ElapsedMillis() > 1000.0)) {
+      (app_ != nullptr && app_->IsCapturing() && last_thread_reorder_.ElapsedMillis() > 1000.0)) {
     SortTracks();
   }
 
