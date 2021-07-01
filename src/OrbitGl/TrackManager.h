@@ -79,6 +79,9 @@ class TrackManager {
 
   void RemoveFrameTrack(uint64_t function_address);
 
+  void SetTrackTypeVisibility(Track::Type type, bool value);
+  [[nodiscard]] bool GetTrackTypeVisibility(Track::Type type) const;
+
  private:
   [[nodiscard]] int FindMovingTrackIndex();
   void UpdateMovingTrackPositionInVisibleTracks();
@@ -125,6 +128,7 @@ class TrackManager {
   OrbitApp* app_ = nullptr;
 
   bool data_from_saved_capture_ = false;
+  absl::flat_hash_map<Track::Type, bool> track_type_visibility_;
 };
 
 #endif  // ORBIT_GL_TRACK_MANAGER_H_
