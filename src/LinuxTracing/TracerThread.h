@@ -93,6 +93,8 @@ class TracerThread {
   void ProcessMmapEvent(const perf_event_header& header, PerfEventRingBuffer* ring_buffer);
   void ProcessSampleEvent(const perf_event_header& header, PerfEventRingBuffer* ring_buffer);
   void ProcessLostEvent(const perf_event_header& header, PerfEventRingBuffer* ring_buffer);
+  void ProcessThrottleUnthrottleEvent(const perf_event_header& header,
+                                      PerfEventRingBuffer* ring_buffer);
 
   void DeferEvent(std::unique_ptr<PerfEvent> event);
   std::vector<std::unique_ptr<PerfEvent>> ConsumeDeferredEvents();

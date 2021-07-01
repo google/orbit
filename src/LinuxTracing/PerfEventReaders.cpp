@@ -56,6 +56,17 @@ pid_t ReadSampleRecordPid(PerfEventRingBuffer* ring_buffer) {
   return pid;
 }
 
+uint64_t ReadThrottleUnthrottleRecordTime(PerfEventRingBuffer* ring_buffer) {
+  // Note that perf_event_throttle_unthrottle::time and
+  // perf_event_sample_id_tid_time_streamid_cpu::time differ a bit. Use the latter as we use that
+  // for all other events.
+  uint64_t time;
+  ring_buffer->ReadValueAtOffset(&time,
+                                 offsetof(perf_event_throttle_unthrottle, sample_id) +
+                                     offsetof(perf_event_sample_id_tid_time_streamid_cpu, time));
+  return time;
+}
+
 std::unique_ptr<MmapPerfEvent> ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                     const perf_event_header& header) {
   // Mmap records have the following layout:

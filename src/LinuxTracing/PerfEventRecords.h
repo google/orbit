@@ -134,13 +134,6 @@ struct __attribute__((__packed__)) perf_event_raw_sample_fixed {
   // The rest of the sample is a char[size] that we read dynamically.
 };
 
-struct __attribute__((__packed__)) perf_event_lost {
-  perf_event_header header;
-  uint64_t id;
-  uint64_t lost;
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
-};
-
 struct __attribute__((__packed__)) perf_event_mmap_up_to_pgoff {
   perf_event_header header;
   uint32_t pid;
@@ -150,6 +143,21 @@ struct __attribute__((__packed__)) perf_event_mmap_up_to_pgoff {
   uint64_t page_offset;
   // OMITTED: char filename[]
   // OMITTED: perf_event_sample_id_tid_time_streamid_cpu sample_id;
+};
+
+struct __attribute__((__packed__)) perf_event_lost {
+  perf_event_header header;
+  uint64_t id;
+  uint64_t lost;
+  perf_event_sample_id_tid_time_streamid_cpu sample_id;
+};
+
+struct __attribute__((__packed__)) perf_event_throttle_unthrottle {
+  perf_event_header header;
+  uint64_t time;
+  uint64_t id;
+  uint64_t lost;
+  perf_event_sample_id_tid_time_streamid_cpu sample_id;
 };
 
 }  // namespace orbit_linux_tracing
