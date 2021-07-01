@@ -36,6 +36,7 @@
 using orbit_client_data::CallstackData;
 using orbit_gl::CGroupAndProcessMemoryTrack;
 using orbit_gl::MemoryTrack;
+using orbit_gl::PagefaultTrack;
 using orbit_gl::SystemMemoryTrack;
 using orbit_gl::VariableTrack;
 
@@ -105,6 +106,11 @@ void TrackManager::SortTracks() {
   }
   if (cgroup_and_process_memory_track_ != nullptr && !cgroup_and_process_memory_track_->IsEmpty()) {
     all_processes_sorted_tracks.push_back(cgroup_and_process_memory_track_.get());
+  }
+
+  // Pagefault track.
+  if (pagefault_track_ != nullptr && !pagefault_track_->IsEmpty()) {
+    all_processes_sorted_tracks.push_back(pagefault_track_.get());
   }
 
   // Async tracks.
@@ -473,11 +479,12 @@ SystemMemoryTrack* TrackManager::CreateAndGetSystemMemoryTrack(
     AddTrack(system_memory_track_);
   }
 
-  return system_memory_track_.get();
+  return GetSystemMemoryTrack();
 }
 
 CGroupAndProcessMemoryTrack* TrackManager::CreateAndGetCGroupAndProcessMemoryTrack(
     const std::array<std::string, orbit_gl::kCGroupAndProcessMemoryTrackDimension>& series_names) {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   if (cgroup_and_process_memory_track_ == nullptr) {
     constexpr uint8_t kTrackValueDecimalDigits = 2;
     const std::string kTrackValueLabelUnit = "MB";
@@ -492,7 +499,22 @@ CGroupAndProcessMemoryTrack* TrackManager::CreateAndGetCGroupAndProcessMemoryTra
     AddTrack(cgroup_and_process_memory_track_);
   }
 
-  return cgroup_and_process_memory_track_.get();
+  return GetCGroupAndProcessMemoryTrack();
+}
+
+PagefaultTrack* TrackManager::CreateAndGetPagefaultTrack(
+    const std::array<std::string, orbit_gl::kBasicPagefaultTrackDimension>& series_names) {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  if (pagefault_track_ == nullptr) {
+    constexpr uint8_t kTrackValueDecimalDigits = 0;
+    pagefault_track_ = std::make_shared<PagefaultTrack>(time_graph_, time_graph_, viewport_,
+                                                        layout_, series_names, capture_data_);
+    pagefault_track_->GetMajorPagefaultTrack()->SetNumberOfDecimalDigits(kTrackValueDecimalDigits);
+    pagefault_track_->GetMajorPagefaultTrack()->SetIndexOfSeriesToHighlight(0);
+    pagefault_track_->GetMinorPagefaultTrack()->SetNumberOfDecimalDigits(kTrackValueDecimalDigits);
+    AddTrack(pagefault_track_);
+  }
+  return GetPagefaultTrack();
 }
 
 uint32_t TrackManager::GetNumTimers() const {
