@@ -83,6 +83,8 @@ class UnitTestTrack : public Track {
 class TrackManagerTest : public ::testing::Test {
  public:
   static const size_t kNumTracks = 2;
+  static const size_t kNumThreadTracks = 1;
+  static const size_t kNumSchedulerTracks = 1;
 
  protected:
   void SetUp() override {
@@ -152,6 +154,29 @@ TEST_F(TrackManagerTest, NonVisibleTracksAreNotInTheList) {
   track_manager_->GetOrCreateSchedulerTrack()->SetVisible(false);
   track_manager_->UpdateTracksForRendering();
   EXPECT_EQ(kNumTracks - 1, track_manager_->GetVisibleTracks().size());
+}
+
+TEST_F(TrackManagerTest, TrackTypeVisibilityAffectsVisibleTrackList) {
+  CreateAndFillTracks();
+
+  track_manager_->SetTrackTypeVisibility(Track::Type::kSchedulerTrack, false);
+  track_manager_->UpdateTracksForRendering();
+  EXPECT_EQ(kNumTracks - kNumSchedulerTracks, track_manager_->GetVisibleTracks().size());
+
+  track_manager_->SetTrackTypeVisibility(Track::Type::kThreadTrack, false);
+  track_manager_->UpdateTracksForRendering();
+  EXPECT_EQ(kNumTracks - kNumThreadTracks - kNumSchedulerTracks,
+            track_manager_->GetVisibleTracks().size());
+
+  track_manager_->GetOrCreateSchedulerTrack()->SetVisible(false);
+  track_manager_->SetTrackTypeVisibility(Track::Type::kSchedulerTrack, true);
+  track_manager_->UpdateTracksForRendering();
+  EXPECT_EQ(kNumTracks - kNumThreadTracks - kNumSchedulerTracks,
+            track_manager_->GetVisibleTracks().size());
+
+  track_manager_->GetOrCreateSchedulerTrack()->SetVisible(true);
+  track_manager_->UpdateTracksForRendering();
+  EXPECT_EQ(kNumTracks - kNumThreadTracks, track_manager_->GetVisibleTracks().size());
 }
 
 }  // namespace orbit_gl

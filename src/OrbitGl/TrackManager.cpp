@@ -47,7 +47,11 @@ TrackManager::TrackManager(TimeGraph* time_graph, orbit_gl::Viewport* viewport,
       viewport_(viewport),
       layout_(layout),
       capture_data_{capture_data},
-      app_{app} {}
+      app_{app} {
+  for (auto& type : Track::kAllTrackTypes) {
+    track_type_visibility_[type] = true;
+  }
+}
 
 std::vector<Track*> TrackManager::GetAllTracks() const {
   std::vector<Track*> tracks;
@@ -173,15 +177,19 @@ void TrackManager::SetFilter(const std::string& filter) {
 void TrackManager::UpdateVisibleTrackList() {
   visible_tracks_.clear();
 
+  auto track_should_be_shown = [this](const Track* track) {
+    return track->GetVisible() && track_type_visibility_[track->GetType()];
+  };
+
   if (filter_.empty()) {
     std::copy_if(sorted_tracks_.begin(), sorted_tracks_.end(), std::back_inserter(visible_tracks_),
-                 [](const Track* track) { return track->GetVisible(); });
+                 track_should_be_shown);
     return;
   }
 
   std::vector<std::string> filters = absl::StrSplit(filter_, ' ', absl::SkipWhitespace());
   for (const auto& track : sorted_tracks_) {
-    if (!track->GetVisible()) {
+    if (!track_should_be_shown(track)) {
       continue;
     }
 
@@ -351,6 +359,14 @@ void TrackManager::RemoveFrameTrack(uint64_t function_id) {
       sorted_tracks_.end());
   frame_tracks_.erase(function_id);
   visible_track_list_needs_update_ = true;
+}
+
+void TrackManager::SetTrackTypeVisibility(Track::Type type, bool value) {
+  track_type_visibility_[type] = value;
+}
+
+bool TrackManager::GetTrackTypeVisibility(Track::Type type) const {
+  return track_type_visibility_.at(type);
 }
 
 SchedulerTrack* TrackManager::GetOrCreateSchedulerTrack() {
