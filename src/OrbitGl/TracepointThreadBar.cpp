@@ -143,7 +143,7 @@ std::string TracepointThreadBar::GetTracepointTooltip(Batcher* batcher, PickingI
 }
 
 bool TracepointThreadBar::IsEmpty() const {
-  return capture_data_->GetNumTracepointsForThreadId(thread_id_) == 0;
+  return capture_data_ == nullptr || capture_data_->GetNumTracepointsForThreadId(thread_id_) == 0;
 }
 
 }  // namespace orbit_gl

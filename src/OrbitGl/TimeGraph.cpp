@@ -66,6 +66,7 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
   text_renderer_static_.SetViewport(viewport);
   batcher_.SetPickingManager(picking_manager);
   track_manager_ = std::make_unique<TrackManager>(this, viewport_, &GetLayout(), app, capture_data);
+  track_manager_->GetOrCreateSchedulerTrack();
 
   async_timer_info_listener_ =
       std::make_unique<ManualInstrumentationManager::AsyncTimerInfoListener>(
@@ -716,7 +717,8 @@ void TimeGraph::UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, ui
   uint64_t min_tick = GetTickFromUs(min_time_us_);
   uint64_t max_tick = GetTickFromUs(max_time_us_);
 
-  track_manager_->UpdateTracks(&batcher_, min_tick, max_tick, picking_mode);
+  track_manager_->UpdateTracksForRendering();
+  track_manager_->UpdateTrackPrimitives(&batcher_, min_tick, max_tick, picking_mode);
 
   update_primitives_requested_ = false;
 }
