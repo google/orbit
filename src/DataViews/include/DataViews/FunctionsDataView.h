@@ -39,12 +39,11 @@ class FunctionsDataView : public DataView {
  protected:
   void DoSort() override;
   void DoFilter() override;
-  void ParallelFilter();
   [[nodiscard]] const orbit_client_protos::FunctionInfo* GetFunction(int row) const {
     return functions_[indices_[row]];
   }
 
-  std::vector<std::string> m_FilterTokens;
+  std::vector<std::string> filter_tokens_;
 
   enum ColumnIndex {
     kColumnSelected,

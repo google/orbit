@@ -89,12 +89,6 @@
 #include "preset.pb.h"
 #include "symbol.pb.h"
 
-#ifdef _WIN32
-#include "oqpi.hpp"
-
-#define OQPI_USE_DEFAULT
-#endif
-
 ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, local);
 ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
@@ -264,10 +258,6 @@ OrbitApp::~OrbitApp() {
   AbortCapture();
 
   thread_pool_->ShutdownAndWait();
-
-#ifdef _WIN32
-  oqpi::default_helpers::stop_scheduler();
-#endif
 }
 
 void OrbitApp::OnCaptureFinished(const CaptureFinished& capture_finished) {
@@ -587,14 +577,8 @@ std::unique_ptr<OrbitApp> OrbitApp::Create(
     orbit_gl::MainWindowInterface* main_window, MainThreadExecutor* main_thread_executor,
     const orbit_base::CrashHandler* crash_handler,
     orbit_metrics_uploader::MetricsUploader* metrics_uploader) {
-  auto app = std::make_unique<OrbitApp>(main_window, main_thread_executor, crash_handler,
-                                        metrics_uploader);
-
-#ifdef _WIN32
-  oqpi::default_helpers::start_default_scheduler();
-#endif
-
-  return app;
+  return std::make_unique<OrbitApp>(main_window, main_thread_executor, crash_handler,
+                                    metrics_uploader);
 }
 
 void OrbitApp::PostInit(bool is_connected) {

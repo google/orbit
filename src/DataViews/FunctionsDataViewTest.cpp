@@ -12,15 +12,6 @@
 #include <gmock/gmock-more-actions.h>
 #include <gtest/gtest.h>
 
-#include "OrbitBase/ThreadPool.h"
-#include "process.pb.h"
-
-#ifdef _WIN32
-#include "oqpi.hpp"
-
-#define OQPI_USE_DEFAULT
-#endif
-
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
@@ -32,8 +23,10 @@
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/TemporaryFile.h"
 #include "OrbitBase/TestUtils.h"
+#include "OrbitBase/ThreadPool.h"
 #include "capture.pb.h"
 #include "capture_data.pb.h"
+#include "process.pb.h"
 
 namespace {
 struct FunctionsDataViewTest : public testing::Test {
@@ -41,10 +34,6 @@ struct FunctionsDataViewTest : public testing::Test {
   explicit FunctionsDataViewTest()
       : thread_pool_{ThreadPool::Create(4, 4, absl::Milliseconds(50))},
         view_{&app_, thread_pool_.get()} {
-#ifdef _WIN32
-    oqpi::default_helpers::start_default_scheduler();
-#endif
-
     orbit_client_protos::FunctionInfo function0;
     function0.set_name("foo");
     function0.set_pretty_name("void foo()");
@@ -100,12 +89,7 @@ struct FunctionsDataViewTest : public testing::Test {
     module_infos_.emplace_back(std::move(module_info2));
   }
 
-  ~FunctionsDataViewTest() override {
-#ifdef _WIN32
-    oqpi::default_helpers::stop_scheduler();
-#endif
-    thread_pool_->ShutdownAndWait();
-  }
+  ~FunctionsDataViewTest() override { thread_pool_->ShutdownAndWait(); }
 
  protected:
   std::shared_ptr<ThreadPool> thread_pool_;
