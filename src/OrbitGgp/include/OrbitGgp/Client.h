@@ -21,7 +21,6 @@
 namespace orbit_ggp {
 
 constexpr const char* kDefaultGgpProgram{"ggp"};
-constexpr std::chrono::milliseconds kDefaultTimeout{10'000};
 
 class Client : public QObject {
   Q_OBJECT
@@ -29,7 +28,7 @@ class Client : public QObject {
  public:
   static ErrorMessageOr<QPointer<Client>> Create(
       QObject* parent, QString ggp_program = kDefaultGgpProgram,
-      std::chrono::milliseconds timeout = kDefaultTimeout);
+      std::chrono::milliseconds timeout = GetDefaultTimeoutMs());
 
   void GetInstancesAsync(const std::function<void(outcome::result<QVector<Instance>>)>& callback,
                          int retry = 3);
@@ -39,6 +38,7 @@ class Client : public QObject {
  private:
   explicit Client(QObject* parent, QString ggp_program, std::chrono::milliseconds timeout)
       : QObject(parent), ggp_program_(std::move(ggp_program)), timeout_(timeout) {}
+  static std::chrono::milliseconds GetDefaultTimeoutMs();
 
   const QString ggp_program_;
   const std::chrono::milliseconds timeout_;
