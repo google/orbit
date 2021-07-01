@@ -61,6 +61,24 @@ struct FunctionsDataViewTest : public testing::Test {
     function2.set_size(66);
     functions_.emplace_back(std::move(function2));
 
+    orbit_client_protos::FunctionInfo function3;
+    function3.set_name("ffind");
+    function3.set_pretty_name("ffind(int)");
+    function3.set_module_path("/somewhere/else/foomodule");
+    function3.set_module_build_id("buildid4");
+    function3.set_address(0x33);
+    function3.set_size(66);
+    functions_.emplace_back(std::move(function3));
+
+    orbit_client_protos::FunctionInfo function4;
+    function4.set_name("bar");
+    function4.set_pretty_name("bar(const char*)");
+    function4.set_module_path("/somewhere/else/barmodule");
+    function4.set_module_build_id("buildid4");
+    function4.set_address(0x33);
+    function4.set_size(66);
+    functions_.emplace_back(std::move(function4));
+
     orbit_grpc_protos::ModuleInfo module_info0{};
     module_info0.set_name("module0");
     module_info0.set_file_path(functions_[0].module_path());
@@ -546,7 +564,8 @@ TEST_F(FunctionsDataViewTest, ColumnSorting) {
   EXPECT_EQ(view_.GetDefaultSortingColumn(), kAddressColumn);
 
   std::vector<orbit_client_protos::FunctionInfo> functions = functions_;
-  view_.AddFunctions({&functions_[0], &functions_[1], &functions_[2]});
+  view_.AddFunctions(
+      {&functions_[0], &functions_[1], &functions_[2], &functions_[3], &functions_[4]});
 
   const auto verify_correct_sorting = [&]() {
     // We won't check all columns because we control the test data and know that checking address
@@ -662,4 +681,117 @@ TEST_F(FunctionsDataViewTest, ContextMenuActionsCallCorrespondingFunctionsInAppI
 
   EXPECT_CALL(app_, ShowSourceCode).Times(1).WillRepeatedly(match_function);
   view_.OnContextMenu("Go to Source code", 0, {0});
+}
+
+TEST_F(FunctionsDataViewTest, FilteringByFunctionName) {
+  // This functionality is not tested in this test case.
+  EXPECT_CALL(app_, IsFunctionSelected)
+      .Times(testing::AnyNumber())
+      .WillRepeatedly(testing::Return(false));
+
+  // This functionality is not tested in this test case.
+  EXPECT_CALL(app_, IsFrameTrackEnabled)
+      .Times(testing::AnyNumber())
+      .WillRepeatedly(testing::Return(false));
+
+  // This functionality is not tested in this test case.
+  EXPECT_CALL(app_, HasCaptureData)
+      .Times(testing::AnyNumber())
+      .WillRepeatedly(testing::Return(false));
+
+  view_.AddFunctions(
+      {&functions_[0], &functions_[1], &functions_[2], &functions_[3], &functions_[4]});
+
+  // Filtering by an empty string should result in all functions listed -> No filtering.
+  view_.OnFilter("");
+  EXPECT_EQ(view_.GetNumElements(), functions_.size());
+
+  // We know that the function name of function 3 is unique, so we expect only the very same
+  // function as the filter result.
+  view_.OnFilter(functions_[3].name());
+  EXPECT_EQ(view_.GetNumElements(), 1);
+  EXPECT_EQ(view_.GetValue(0, 1), functions_[3].pretty_name());
+
+  // We know that the function name of function 4 is unique, so we expect only the very same
+  // function as the filter result.
+  view_.OnFilter(functions_[4].name());
+  EXPECT_EQ(view_.GetNumElements(), 1);
+  EXPECT_EQ(view_.GetValue(0, 1), functions_[4].pretty_name());
+
+  // The token `f` only appears in function 0 (foo) and 3 (ffind).
+  view_.OnFilter("f");
+  EXPECT_EQ(view_.GetNumElements(), 2);
+  EXPECT_THAT(
+      (std::array{view_.GetValue(0, 1), view_.GetValue(1, 1)}),
+      testing::UnorderedElementsAre(functions_[0].pretty_name(), functions_[3].pretty_name()));
+
+  // The token `ff` only appears in function 3 (ffind) while `in` appears both in function 1 (main)
+  // and 3 (ffind). Nevertheless the result should only list function 3 since all tokens are
+  // required to appear.
+  view_.OnFilter("ff in");
+  EXPECT_EQ(view_.GetNumElements(), 1);
+  EXPECT_EQ(view_.GetValue(0, 1), functions_[3].pretty_name());
+
+  // The same as the previous check, but with the tokens swapped.
+  view_.OnFilter("in ff");
+  EXPECT_EQ(view_.GetNumElements(), 1);
+  EXPECT_EQ(view_.GetValue(0, 1), functions_[3].pretty_name());
+}
+
+TEST_F(FunctionsDataViewTest, FilteringByModuleName) {
+  // This functionality is not tested in this test case.
+  EXPECT_CALL(app_, IsFunctionSelected)
+      .Times(testing::AnyNumber())
+      .WillRepeatedly(testing::Return(false));
+
+  // This functionality is not tested in this test case.
+  EXPECT_CALL(app_, IsFrameTrackEnabled)
+      .Times(testing::AnyNumber())
+      .WillRepeatedly(testing::Return(false));
+
+  // This functionality is not tested in this test case.
+  EXPECT_CALL(app_, HasCaptureData)
+      .Times(testing::AnyNumber())
+      .WillRepeatedly(testing::Return(false));
+
+  view_.AddFunctions(
+      {&functions_[0], &functions_[1], &functions_[2], &functions_[3], &functions_[4]});
+
+  // Only the filename is considered when filtering, so searching for the full file path results in
+  // an empty search result.
+  view_.OnFilter(functions_[4].module_path());
+  EXPECT_EQ(view_.GetNumElements(), 0);
+
+  view_.OnFilter(std::filesystem::path{functions_[4].module_path()}.filename().string());
+  EXPECT_EQ(view_.GetNumElements(), 1);
+  EXPECT_EQ(view_.GetValue(0, 1), functions_[4].pretty_name());
+}
+
+TEST_F(FunctionsDataViewTest, FilteringByFunctionAndModuleName) {
+  // This functionality is not tested in this test case.
+  EXPECT_CALL(app_, IsFunctionSelected)
+      .Times(testing::AnyNumber())
+      .WillRepeatedly(testing::Return(false));
+
+  // This functionality is not tested in this test case.
+  EXPECT_CALL(app_, IsFrameTrackEnabled)
+      .Times(testing::AnyNumber())
+      .WillRepeatedly(testing::Return(false));
+
+  // This functionality is not tested in this test case.
+  EXPECT_CALL(app_, HasCaptureData)
+      .Times(testing::AnyNumber())
+      .WillRepeatedly(testing::Return(false));
+
+  view_.AddFunctions(
+      {&functions_[0], &functions_[1], &functions_[2], &functions_[3], &functions_[4]});
+
+  // ffind is the name of the function while foomodule is the filename of the corresponding module.
+  view_.OnFilter("ffind foomodule");
+  EXPECT_EQ(view_.GetNumElements(), 1);
+  EXPECT_EQ(view_.GetValue(0, 1), functions_[3].pretty_name());
+
+  // No results when joining the tokens
+  view_.OnFilter("ffindfoomodule");
+  EXPECT_EQ(view_.GetNumElements(), 0);
 }
