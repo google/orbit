@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <functional>
+#include <numeric>
 
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
@@ -23,14 +24,9 @@
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataViewType.h"
 #include "OrbitBase/Append.h"
+#include "OrbitBase/JoinFutures.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadPool.h"
-
-#ifdef _WIN32
-#include "oqpi.hpp"
-
-#define OQPI_USE_DEFAULT
-#endif
 
 using orbit_client_data::ModuleData;
 using orbit_client_data::ProcessData;
@@ -246,78 +242,56 @@ void FunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
 }
 
 void FunctionsDataView::DoFilter() {
-  m_FilterTokens = absl::StrSplit(absl::AsciiStrToLower(filter_), ' ');
+  filter_tokens_ = absl::StrSplit(absl::AsciiStrToLower(filter_), ' ');
 
-#ifdef WIN32
-  ParallelFilter();
-#else
-  // TODO: port parallel filtering
-  std::vector<uint64_t> indices;
-  const std::vector<const FunctionInfo*>& functions(functions_);
-  for (size_t i = 0; i < functions.size(); ++i) {
-    const FunctionInfo* function = functions[i];
-    std::string name =
-        absl::AsciiStrToLower(orbit_client_data::function_utils::GetDisplayName(*function)) +
-        orbit_client_data::function_utils::GetLoadedModuleName(*function);
+  const size_t number_of_threads_available = thread_pool_->GetPoolSize();
+  constexpr size_t kNumberOfTasksPerThread = 7;
+  const size_t target_number_of_tasks = kNumberOfTasksPerThread * number_of_threads_available;
 
-    bool match = true;
+  constexpr size_t kMinimumNumberOfFunctionsPerTask = 512;
+  const size_t number_of_functions_per_task =
+      std::max(kMinimumNumberOfFunctionsPerTask, functions_.size() / target_number_of_tasks);
+  const size_t number_of_tasks_needed =
+      functions_.size() / number_of_functions_per_task +
+      ((functions_.size() % number_of_functions_per_task) > 0 ? 1 : 0);
 
-    for (std::string& filter_token : m_FilterTokens) {
-      if (name.find(filter_token) == std::string::npos) {
-        match = false;
-        break;
-      }
-    }
+  std::vector<orbit_base::Future<std::vector<uint64_t>>> filtered_indices_per_thread;
+  filtered_indices_per_thread.reserve(number_of_tasks_needed);
 
-    if (match) {
-      indices.push_back(i);
-    }
-  }
+  for (size_t task_idx = 0; task_idx < number_of_tasks_needed; ++task_idx) {
+    const size_t begin = task_idx * number_of_functions_per_task;
+    const size_t end = std::min((task_idx + 1) * number_of_functions_per_task, functions_.size());
 
-  indices_ = std::move(indices);
-#endif
-}
+    filtered_indices_per_thread.emplace_back(thread_pool_->Schedule([begin, end, this]() {
+      std::vector<uint64_t> indices_of_matches;
 
-void FunctionsDataView::ParallelFilter() {
-#ifdef _WIN32
-  const std::vector<const FunctionInfo*>& functions(functions_);
-  const auto prio = oqpi::task_priority::normal;
-  auto numWorkers = oqpi::default_helpers::scheduler().workersCount(prio);
-  // int numWorkers = oqpi::thread::hardware_concurrency();
-  std::vector<std::vector<int>> indicesArray;
-  indicesArray.resize(numWorkers);
+      for (size_t index = begin; index < end; ++index) {
+        const FunctionInfo* function = functions_[index];
+        std::string name =
+            absl::AsciiStrToLower(orbit_client_data::function_utils::GetDisplayName(*function));
+        std::string module = orbit_client_data::function_utils::GetLoadedModuleName(*function);
 
-  oqpi::default_helpers::parallel_for(
-      "FunctionsDataViewParallelFor", functions.size(),
-      [&](int32_t a_BlockIndex, int32_t a_ElementIndex) {
-        std::vector<int>& result = indicesArray[a_BlockIndex];
-        const std::string& name = absl::AsciiStrToLower(
-            orbit_client_data::function_utils::GetDisplayName(*functions[a_ElementIndex]));
-        const std::string& module =
-            orbit_client_data::function_utils::GetLoadedModuleName(*functions[a_ElementIndex]);
+        const auto is_token_found = [&name, &module](const std::string& token) {
+          return name.find(token) != std::string::npos || module.find(token) != std::string::npos;
+        };
 
-        for (std::string& filterToken : m_FilterTokens) {
-          if (name.find(filterToken) == std::string::npos &&
-              module.find(filterToken) == std::string::npos) {
-            return;
-          }
+        if (std::all_of(filter_tokens_.begin(), filter_tokens_.end(), is_token_found)) {
+          indices_of_matches.push_back(index);
         }
+      }
 
-        result.push_back(a_ElementIndex);
-      });
-
-  std::set<int> indicesSet;
-  for (std::vector<int>& results : indicesArray) {
-    for (int index : results) {
-      indicesSet.insert(index);
-    }
+      return indices_of_matches;
+    }));
   }
 
-  indices_.clear();
-  for (int i : indicesSet) {
-    indices_.push_back(i);
+  std::vector<std::vector<uint64_t>> filtered_indices =
+      orbit_base::JoinFutures(absl::MakeConstSpan(filtered_indices_per_thread)).Get();
+
+  std::vector<uint64_t> indices;
+  for (const auto& indices_from_one_thread : filtered_indices) {
+    indices.insert(indices.end(), indices_from_one_thread.begin(), indices_from_one_thread.end());
   }
-#endif
+  indices_ = std::move(indices);
 }
 
 void FunctionsDataView::AddFunctions(

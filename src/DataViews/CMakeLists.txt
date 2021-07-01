@@ -29,8 +29,7 @@ target_link_libraries(DataViews PUBLIC
         MetricsUploader
         OrbitBase
         PresetFile
-        CONAN_PKG::abseil
-        oqpi::oqpi)
+        CONAN_PKG::abseil)
 
 add_executable(DataViewsTests)
 target_compile_options(DataViewsTests PRIVATE ${STRICT_COMPILE_FLAGS})
