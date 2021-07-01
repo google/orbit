@@ -51,6 +51,7 @@ target_sources(
          MemoryTrack.h
          ModulesDataView.h
          MultivariateTimeSeries.h
+         PagefaultTrack.h
          PickingManager.h
          SamplingReport.h
          SamplingReportDataView.h
@@ -117,6 +118,7 @@ target_sources(
           ManualInstrumentationManager.cpp
           MemoryTrack.cpp
           ModulesDataView.cpp
+          PagefaultTrack.cpp
           PickingManager.cpp
           SamplingReport.cpp
           SamplingReportDataView.cpp
