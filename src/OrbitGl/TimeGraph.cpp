@@ -48,6 +48,7 @@ using orbit_client_model::CaptureData;
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
+using orbit_gl::VariableTrack;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::kMissingInfo;
 
@@ -403,22 +404,22 @@ void TimeGraph::ProcessValueTrackingTimer(const TimerInfo& timer_info) {
 
   switch (event.type) {
     case orbit_api::kTrackInt: {
-      track->AddValue(orbit_api::Decode<int32_t>(event.data), time);
+      track->AddValue(time, orbit_api::Decode<int32_t>(event.data));
     } break;
     case orbit_api::kTrackInt64: {
-      track->AddValue(orbit_api::Decode<int64_t>(event.data), time);
+      track->AddValue(time, orbit_api::Decode<int64_t>(event.data));
     } break;
     case orbit_api::kTrackUint: {
-      track->AddValue(orbit_api::Decode<uint32_t>(event.data), time);
+      track->AddValue(time, orbit_api::Decode<uint32_t>(event.data));
     } break;
     case orbit_api::kTrackUint64: {
-      track->AddValue(event.data, time);
+      track->AddValue(time, event.data);
     } break;
     case orbit_api::kTrackFloat: {
-      track->AddValue(orbit_api::Decode<float>(event.data), time);
+      track->AddValue(time, orbit_api::Decode<float>(event.data));
     } break;
     case orbit_api::kTrackDouble: {
-      track->AddValue(orbit_api::Decode<double>(event.data), time);
+      track->AddValue(time, orbit_api::Decode<double>(event.data));
     } break;
     default:
       ERROR("Unsupported value tracking type [%u]", event.type);
