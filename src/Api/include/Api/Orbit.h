@@ -40,6 +40,10 @@
 // deploy and dynamically load liborbit.so into the target process. Orbit will then write the proper
 // function addresses into the "g_orbit_api_v<N>" table.
 //
+// NOTE: To enable manual instrumentation, please make sure that:
+//       1. The "Enable Orbit Api in target" checkbox is ticked in the capture options.
+//       2. You have loaded debug symbols for modules in which "ORBIT_API_INSTANTIATE" was placed.
+//
 // Please note that this feature is still considered "experimental".
 //
 //
