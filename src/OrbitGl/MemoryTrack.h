@@ -38,9 +38,8 @@ class MemoryTrack final : public GraphTrack<Dimension>, public AnnotationTrack {
   [[nodiscard]] double GetGraphMinValue() const override;
 
  private:
-  float GetAnnotatedTrackContentHeight() const override {
-    return this->size_[1] - this->layout_->GetTrackTabHeight() -
-           this->layout_->GetTrackBottomMargin() - this->GetLegendHeight();
+  [[nodiscard]] float GetAnnotatedTrackContentHeight() const override {
+    return this->GetGraphContentHeight();
   }
   Vec2 GetAnnotatedTrackPosition() const override { return this->pos_; };
   Vec2 GetAnnotatedTrackSize() const override { return this->size_; };

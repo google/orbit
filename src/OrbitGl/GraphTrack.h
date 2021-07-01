@@ -63,9 +63,17 @@ class GraphTrack : public Track {
   [[nodiscard]] virtual Color GetColor(size_t index) const;
   [[nodiscard]] virtual double GetGraphMaxValue() const { return series_.GetMax(); }
   [[nodiscard]] virtual double GetGraphMinValue() const { return series_.GetMin(); }
-  [[nodiscard]] double GetGraphInverseValueRange() const {
+  [[nodiscard]] double GetInverseOfGraphValueRange() const {
     if (GetGraphMaxValue() <= GetGraphMinValue()) return 0;
     return 1.0 / (GetGraphMaxValue() - GetGraphMinValue());
+  }
+
+  [[nodiscard]] float GetGraphContentBaseY() const {
+    return pos_[1] - size_[1] + layout_->GetTrackBottomMargin();
+  }
+  [[nodiscard]] float GetGraphContentHeight() const {
+    return size_[1] - layout_->GetTrackTabHeight() - GetLegendHeight() -
+           layout_->GetTrackBottomMargin();
   }
 
   [[nodiscard]] virtual float GetLabelYFromValues(

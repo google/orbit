@@ -43,6 +43,7 @@ target_sources(
          Images.h
          ImGuiOrbit.h
          IntrospectionWindow.h
+         LineGraphTrack.h
          LiveFunctionsController.h
          LiveFunctionsDataView.h
          ManualInstrumentationManager.h
@@ -109,6 +110,7 @@ target_sources(
           GraphTrack.cpp
           ImGuiOrbit.cpp
           IntrospectionWindow.cpp
+          LineGraphTrack.cpp
           LiveFunctionsDataView.cpp
           ManualInstrumentationManager.cpp
           MemoryTrack.cpp
