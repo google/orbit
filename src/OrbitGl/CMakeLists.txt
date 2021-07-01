@@ -194,6 +194,7 @@ target_sources(OrbitGlTests PRIVATE
                ShortenStringWithEllipsisTest.cpp
                StringManagerTest.cpp
                TimerInfosIteratorTest.cpp
+               TrackManagerTest.cpp
                ViewportTest.cpp)
 
 target_link_libraries(
