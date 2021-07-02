@@ -107,8 +107,9 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
     if (module_info == nullptr) continue;
 
     // Get address of function table by calling "orbit_api_get_function_table_address_vN" in tracee.
-    void* api_function_address = absl::bit_cast<void*>(
-        module_info->address_start() + api_function.address() - module_info->load_bias());
+    void* api_function_address =
+        absl::bit_cast<void*>(module_info->address_start() + api_function.address() -
+                              module_info->load_bias() - module_info->executable_segment_offset());
     OUTCOME_TRY(function_table_address, ExecuteInProcess(pid, api_function_address));
 
     // Call "orbit_api_set_enabled" in tracee.
