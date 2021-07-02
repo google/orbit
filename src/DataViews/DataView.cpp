@@ -12,6 +12,7 @@
 #include "OrbitBase/Logging.h"
 
 namespace orbit_data_views {
+
 std::string FormatValueForCsv(std::string_view value) {
   std::string result;
   result.append("\"");
@@ -81,7 +82,7 @@ void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
   if (action == kMenuActionExportToCsv) {
     std::string save_file = app_->GetSaveFile(".csv");
     if (!save_file.empty()) {
-      auto result = ExportCSV(save_file);
+      auto result = ExportCsv(save_file);
       if (result.has_error()) {
         app_->SendErrorToUi("Export to CSV", result.error().message());
       }
@@ -101,7 +102,7 @@ std::vector<int> DataView::GetVisibleSelectedIndices() {
   return visible_selected_indices;
 }
 
-ErrorMessageOr<void> DataView::ExportCSV(const std::filesystem::path& file_path) {
+ErrorMessageOr<void> DataView::ExportCsv(const std::filesystem::path& file_path) {
   ErrorMessageOr<orbit_base::unique_fd> result = orbit_base::OpenFileForWriting(file_path);
   if (result.has_error()) {
     return ErrorMessage{absl::StrFormat("Failed to open \"%s\" file: %s", file_path.string(),

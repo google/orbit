@@ -25,7 +25,8 @@
 enum class RefreshMode { kOnFilter, kOnSort, kOther };
 
 namespace orbit_data_views {
-// Values in the dataview may contain commas, for example, functions with arguments. We quote all
+
+// Values in the DataView may contain commas, for example, functions with arguments. We quote all
 // values in the output and also escape quotes (with a second quote) in values to ensure the CSV
 // files can be imported correctly in spreadsheet applications. The formatting follows the
 // specification in https://tools.ietf.org/html/rfc4180.
@@ -95,7 +96,7 @@ class DataView {
   virtual void LinkDataView(DataView* /*data_view*/) {}
   virtual bool ScrollToBottom() { return false; }
   virtual bool SkipTimer() { return false; }
-  virtual ErrorMessageOr<void> ExportCSV(const std::filesystem::path& file_path);
+  virtual ErrorMessageOr<void> ExportCsv(const std::filesystem::path& file_path);
   virtual void CopySelection(const std::vector<int>& selection);
 
   int GetUpdatePeriodMs() const { return update_period_ms_; }
