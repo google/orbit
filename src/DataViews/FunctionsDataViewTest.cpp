@@ -487,8 +487,8 @@ TEST_F(FunctionsDataViewTest, GenericDataExportFunctionShowCorrectData) {
     EXPECT_CALL(app_, SetClipboard).Times(1).WillOnce(testing::SaveArg<0>(&clipboard));
     view_.OnContextMenu("Copy Selection", static_cast<int>(copy_selection_idx), {0});
     EXPECT_EQ(clipboard, absl::StrFormat(
-                             "Hooked, Function, Size, Module, Address in module\n"
-                             ", %s, %d, %s, %#x\n",
+                             "Hooked\tFunction\tSize\tModule\tAddress in module\n"
+                             "\t%s\t%d\t%s\t%#x\n",
                              functions_[0].pretty_name(), functions_[0].size(),
                              std::filesystem::path{functions_[0].module_path()}.filename().string(),
                              functions_[0].address()));

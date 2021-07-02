@@ -111,17 +111,20 @@ ErrorMessageOr<void> DataView::ExportCsv(const std::filesystem::path& file_path)
 
   const orbit_base::unique_fd& fd = result.value();
 
+  constexpr const char* kFieldSeparator = ",";
+  // CSV RFC requires lines to end with CRLF
+  constexpr const char* kLineSeparator = "\r\n";
+
   size_t num_columns = GetColumns().size();
 
   {
     std::string header_line;
     for (size_t i = 0; i < num_columns; ++i) {
       header_line.append(FormatValueForCsv(GetColumns()[i].header));
-      if (i < num_columns - 1) header_line.append(",");
+      if (i < num_columns - 1) header_line.append(kFieldSeparator);
     }
 
-    // CSV RFC requires lines to end with CRLF
-    header_line.append("\r\n");
+    header_line.append(kLineSeparator);
     auto write_result = orbit_base::WriteFully(fd, header_line);
     if (write_result.has_error()) {
       return ErrorMessage{absl::StrFormat("Error writing to \"%s\": %s", file_path.string(),
@@ -134,9 +137,9 @@ ErrorMessageOr<void> DataView::ExportCsv(const std::filesystem::path& file_path)
     std::string line;
     for (size_t j = 0; j < num_columns; ++j) {
       line.append(FormatValueForCsv(GetValue(i, j)));
-      if (j < num_columns - 1) line.append(",");
+      if (j < num_columns - 1) line.append(kFieldSeparator);
     }
-    line.append("\r\n");
+    line.append(kLineSeparator);
     auto write_result = orbit_base::WriteFully(fd, line);
     if (write_result.has_error()) {
       return ErrorMessage{absl::StrFormat("Error writing to \"%s\": %s", file_path.string(),
@@ -148,23 +151,25 @@ ErrorMessageOr<void> DataView::ExportCsv(const std::filesystem::path& file_path)
 }
 
 void DataView::CopySelection(const std::vector<int>& selection) {
+  constexpr const char* kFieldSeparator = "\t";
+  constexpr const char* kLineSeparator = "\n";
+
   std::string clipboard;
   size_t num_columns = GetColumns().size();
   for (size_t i = 0; i < num_columns; ++i) {
     clipboard += GetColumns()[i].header;
-    if (i < num_columns - 1) clipboard += ", ";
+    if (i < num_columns - 1) clipboard.append(kFieldSeparator);
   }
-  clipboard += "\n";
+  clipboard.append(kLineSeparator);
 
   size_t num_elements = GetNumElements();
   for (size_t i : selection) {
-    if (i < num_elements) {
-      for (size_t j = 0; j < num_columns; ++j) {
-        clipboard += GetValue(i, j);
-        if (j < num_columns - 1) clipboard += ", ";
-      }
-      clipboard += "\n";
+    if (i >= num_elements) continue;
+    for (size_t j = 0; j < num_columns; ++j) {
+      clipboard += GetValue(i, j);
+      if (j < num_columns - 1) clipboard.append(kFieldSeparator);
     }
+    clipboard.append(kLineSeparator);
   }
 
   app_->SetClipboard(clipboard);
