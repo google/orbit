@@ -60,6 +60,7 @@ void PagefaultTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
 
   SetPos(viewport_->GetWorldTopLeft()[0], pos_[1]);
   SetSize(track_width, track_height);
+  SetLabel(collapse_toggle_->IsCollapsed() ? "Major Pagefault Track" : "Pagefault Track");
 
   UpdatePositionOfSubtracks();
 
