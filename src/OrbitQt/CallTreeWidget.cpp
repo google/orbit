@@ -508,9 +508,8 @@ void CallTreeWidget::onSearchLineEditTextEdited(const QString& text) {
   search_proxy_model_->SetFilter(text.toStdString());
   ui_->callTreeTreeView->viewport()->update();
   if (!text.isEmpty()) {
-    ExpandCollapseBasedOnRole(
-        ui_->callTreeTreeView,
-        CallTreeWidget::HighlightCustomFilterSortFilterProxyModel::kMatchesCustomFilterRole);
+    ExpandCollapseBasedOnRole(ui_->callTreeTreeView,
+                              CallTreeViewItemModel::kMatchesCustomFilterRole);
   }
 }
 
@@ -522,7 +521,7 @@ QVariant CallTreeWidget::HighlightCustomFilterSortFilterProxyModel::data(const Q
     if (ItemMatchesFilter(index)) {
       return kHighlightColor;
     }
-  } else if (role == kMatchesCustomFilterRole) {
+  } else if (role == CallTreeViewItemModel::kMatchesCustomFilterRole) {
     return ItemMatchesFilter(index);
   }
   return QSortFilterProxyModel::data(index, role);
@@ -590,8 +589,7 @@ void CallTreeWidget::ProgressBarItemDelegate::paint(QPainter* painter,
     return;
   }
 
-  bool highlight =
-      index.data(HighlightCustomFilterSortFilterProxyModel::kMatchesCustomFilterRole).toBool();
+  bool highlight = index.data(CallTreeViewItemModel::kMatchesCustomFilterRole).toBool();
   if (option.state & QStyle::State_Selected) {
     painter->fillRect(option.rect, option.palette.highlight());
     // Don't highlight the progress bar text when the row is selected, for consistency with the
