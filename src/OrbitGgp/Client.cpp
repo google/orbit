@@ -4,6 +4,8 @@
 
 #include "OrbitGgp/Client.h"
 
+#include <absl/flags/flag.h>
+
 #include <QByteArray>
 #include <QIODevice>
 #include <QPointer>
@@ -17,6 +19,8 @@
 #include "OrbitGgp/Error.h"
 #include "OrbitGgp/Instance.h"
 #include "OrbitGgp/SshInfo.h"
+
+ABSL_FLAG(uint32_t, ggp_timeout_seconds, 20, "Timeout for Ggp commands in seconds");
 
 namespace orbit_ggp {
 
@@ -146,6 +150,12 @@ void Client::GetSshInfoAsync(const Instance& ggp_instance,
                             callback(SshInfo::CreateFromJson(result.value()));
                           }
                         });
+}
+
+std::chrono::milliseconds Client::GetDefaultTimeoutMs() {
+  static const uint32_t timeout_seconds = absl::GetFlag(FLAGS_ggp_timeout_seconds);
+  static const std::chrono::milliseconds default_timeout_ms(1'000 * timeout_seconds);
+  return default_timeout_ms;
 }
 
 }  // namespace orbit_ggp
