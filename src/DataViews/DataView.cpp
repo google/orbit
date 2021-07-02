@@ -117,7 +117,7 @@ ErrorMessageOr<void> DataView::ExportCsv(const std::filesystem::path& file_path)
     std::string header_line;
     for (size_t i = 0; i < num_columns; ++i) {
       header_line.append(FormatValueForCsv(GetColumns()[i].header));
-      if (i < num_columns - 1) header_line.append(", ");
+      if (i < num_columns - 1) header_line.append(",");
     }
 
     // CSV RFC requires lines to end with CRLF
@@ -134,7 +134,7 @@ ErrorMessageOr<void> DataView::ExportCsv(const std::filesystem::path& file_path)
     std::string line;
     for (size_t j = 0; j < num_columns; ++j) {
       line.append(FormatValueForCsv(GetValue(i, j)));
-      if (j < num_columns - 1) line.append(", ");
+      if (j < num_columns - 1) line.append(",");
     }
     line.append("\r\n");
     auto write_result = orbit_base::WriteFully(fd, line);
