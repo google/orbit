@@ -40,6 +40,7 @@ class CallTreeViewItemModel : public QAbstractItemModel {
     kColumnCount
   };
 
+  static const int kMatchesCustomFilterRole = Qt::UserRole;
   static const int kModulePathRole = Qt::UserRole + 1;
   static const int kModuleBuildIdRole = Qt::UserRole + 2;
 

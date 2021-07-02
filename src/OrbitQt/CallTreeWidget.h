@@ -80,7 +80,6 @@ class CallTreeWidget : public QWidget {
           absl::StrSplit(absl::AsciiStrToLower(filter), ' ', absl::SkipWhitespace());
     }
 
-    static const int kMatchesCustomFilterRole = Qt::UserRole;
     static const QColor kHighlightColor;
 
     QVariant data(const QModelIndex& index, int role) const override;
