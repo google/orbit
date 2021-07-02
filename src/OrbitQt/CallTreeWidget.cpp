@@ -235,17 +235,20 @@ static std::string BuildStringFromIndices(QTreeView* tree_view, const QModelInde
         buffer.push_back(kLineSeparator);
       }
 
-      buffer.append(2 * (item.ancestor_rows.size() - 1), ' ');
+      constexpr const char* kNoBreakSpace = "\u00A0";
+      for (size_t j = 0; j < 2 * (item.ancestor_rows.size() - 1); ++j) {
+        buffer.append(kNoBreakSpace);
+      }
 
       switch (item.expanded_state) {
         case ItemWithAncestorRows::kLeaf:
-          buffer.append("  ");
+          buffer.append(kNoBreakSpace).append(kNoBreakSpace);
           break;
         case ItemWithAncestorRows::kExpanded:
-          buffer.append("- ");
+          buffer.append("▾").append(kNoBreakSpace);
           break;
         case ItemWithAncestorRows::kCollapsed:
-          buffer.append("+ ");
+          buffer.append("▸").append(kNoBreakSpace);
           break;
       }
     } else {
