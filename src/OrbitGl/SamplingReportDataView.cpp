@@ -88,6 +88,22 @@ std::string SamplingReportDataView::GetValue(int row, int column) {
   }
 }
 
+// For columns with two values, a percentage and a raw number, only copy the percentage, so that it
+// can be interpreted as a number by a spreadsheet.
+std::string SamplingReportDataView::GetValueForCopy(int row, int column) {
+  const SampledFunction& func = GetSampledFunction(row);
+  switch (column) {
+    case kColumnExclusive:
+      return absl::StrFormat("%.2f%%", func.exclusive_percent);
+    case kColumnInclusive:
+      return absl::StrFormat("%.2f%%", func.inclusive_percent);
+    case kColumnUnwindErrors:
+      return (func.unwind_errors > 0) ? absl::StrFormat("%.2f%%", func.unwind_errors_percent) : "";
+    default:
+      return GetValue(row, column);
+  }
+}
+
 #define ORBIT_PROC_SORT(Member)                                                             \
   [&](int a, int b) {                                                                       \
     return orbit_gl::CompareAscendingOrDescending(functions[a].Member, functions[b].Member, \

@@ -43,6 +43,7 @@ class CallTreeViewItemModel : public QAbstractItemModel {
   static const int kMatchesCustomFilterRole = Qt::UserRole;
   static const int kModulePathRole = Qt::UserRole + 1;
   static const int kModuleBuildIdRole = Qt::UserRole + 2;
+  static const int kCopyableValueRole = Qt::UserRole + 3;
 
  private:
   [[nodiscard]] QVariant GetDisplayRoleData(const QModelIndex& index) const;
@@ -51,6 +52,7 @@ class CallTreeViewItemModel : public QAbstractItemModel {
   [[nodiscard]] QVariant GetForegroundRoleData(const QModelIndex& index) const;
   [[nodiscard]] QVariant GetModulePathRoleData(const QModelIndex& index) const;
   [[nodiscard]] QVariant GetModuleBuildIdRoleData(const QModelIndex& index) const;
+  [[nodiscard]] QVariant GetCopyableValueRoleData(const QModelIndex& index) const;
 
   std::unique_ptr<CallTreeView> call_tree_view_;
 };

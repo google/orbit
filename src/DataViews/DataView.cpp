@@ -136,7 +136,7 @@ ErrorMessageOr<void> DataView::ExportCsv(const std::filesystem::path& file_path)
   for (size_t i = 0; i < num_elements; ++i) {
     std::string line;
     for (size_t j = 0; j < num_columns; ++j) {
-      line.append(FormatValueForCsv(GetValue(i, j)));
+      line.append(FormatValueForCsv(GetValueForCopy(i, j)));
       if (j < num_columns - 1) line.append(kFieldSeparator);
     }
     line.append(kLineSeparator);
@@ -166,7 +166,7 @@ void DataView::CopySelection(const std::vector<int>& selection) {
   for (size_t i : selection) {
     if (i >= num_elements) continue;
     for (size_t j = 0; j < num_columns; ++j) {
-      clipboard += GetValue(i, j);
+      clipboard += GetValueForCopy(i, j);
       if (j < num_columns - 1) clipboard.append(kFieldSeparator);
     }
     clipboard.append(kLineSeparator);

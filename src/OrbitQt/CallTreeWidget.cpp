@@ -197,7 +197,7 @@ static std::string BuildStringFromIndices(QTreeView* tree_view, const QModelInde
   // order.
   for (const QModelIndex& index : indices) {
     ItemWithAncestorRows item;
-    item.data = index.data().toString().toStdString();
+    item.data = index.data(CallTreeViewItemModel::kCopyableValueRole).toString().toStdString();
 
     // row() is the position among siblings: also compare parent().
     item.is_first_in_row = !prev_index.has_value() || index.row() != prev_index->row() ||

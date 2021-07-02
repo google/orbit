@@ -28,6 +28,7 @@ class SamplingReportDataView : public orbit_data_views::DataView {
   std::vector<std::string> GetContextMenu(int clicked_index,
                                           const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
+  std::string GetValueForCopy(int row, int column) override;
   const std::string& GetName() { return name_; }
 
   void OnContextMenu(const std::string& action, int menu_index,
