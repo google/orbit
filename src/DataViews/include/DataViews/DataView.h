@@ -60,8 +60,9 @@ class DataView {
   virtual std::vector<std::string> GetContextMenu(int clicked_index,
                                                   const std::vector<int>& selected_indices);
   virtual size_t GetNumElements() { return indices_.size(); }
-  virtual std::string GetValue(int /*a_Row*/, int /*a_Column*/) { return ""; }
-  virtual std::string GetToolTip(int /*a_Row*/, int /*a_Column*/) { return ""; }
+  virtual std::string GetValue(int /*row*/, int /*column*/) { return ""; }
+  virtual std::string GetValueForCopy(int row, int column) { return GetValue(row, column); }
+  virtual std::string GetToolTip(int /*row*/, int /*column*/) { return ""; }
 
   // Called from UI layer.
   void OnFilter(const std::string& filter);

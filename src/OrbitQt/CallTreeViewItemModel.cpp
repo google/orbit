@@ -188,6 +188,45 @@ QVariant CallTreeViewItemModel::GetModuleBuildIdRoleData(const QModelIndex& inde
   return QVariant();
 }
 
+// For columns with two values, a percentage and a raw number, only copy the percentage, so that it
+// can be interpreted as a number by a spreadsheet.
+QVariant CallTreeViewItemModel::GetCopyableValueRoleData(const QModelIndex& index) const {
+  CHECK(index.isValid());
+  auto* item = static_cast<CallTreeNode*>(index.internalPointer());
+  auto* thread_item = dynamic_cast<CallTreeThread*>(item);
+  auto* function_item = dynamic_cast<CallTreeFunction*>(item);
+  auto* unwind_errors_item = dynamic_cast<CallTreeUnwindErrors*>(item);
+
+  if (thread_item != nullptr) {
+    switch (index.column()) {
+      case kInclusive:
+        return QString::fromStdString(absl::StrFormat(
+            "%.2f%%", thread_item->GetInclusivePercent(call_tree_view_->sample_count())));
+      case kExclusive:
+        return QString::fromStdString(absl::StrFormat(
+            "%.2f%%", thread_item->GetExclusivePercent(call_tree_view_->sample_count())));
+    }
+
+  } else if (function_item != nullptr) {
+    switch (index.column()) {
+      case kInclusive:
+        return QString::fromStdString(absl::StrFormat(
+            "%.2f%%", function_item->GetInclusivePercent(call_tree_view_->sample_count())));
+      case kExclusive:
+        return QString::fromStdString(absl::StrFormat(
+            "%.2f%%", function_item->GetExclusivePercent(call_tree_view_->sample_count())));
+    }
+
+  } else if (unwind_errors_item != nullptr) {
+    switch (index.column()) {
+      case kInclusive:
+        return QString::fromStdString(absl::StrFormat(
+            "%.2f%%", unwind_errors_item->GetInclusivePercent(call_tree_view_->sample_count())));
+    }
+  }
+  return GetDisplayRoleData(index);
+}
+
 QVariant CallTreeViewItemModel::data(const QModelIndex& index, int role) const {
   if (!index.isValid()) {
     return QVariant();
@@ -207,6 +246,8 @@ QVariant CallTreeViewItemModel::data(const QModelIndex& index, int role) const {
       return GetModulePathRoleData(index);
     case kModuleBuildIdRole:
       return GetModuleBuildIdRoleData(index);
+    case kCopyableValueRole:
+      return GetCopyableValueRoleData(index);
   }
   return QVariant();
 }
