@@ -18,7 +18,7 @@ TimeGraphLayout::TimeGraphLayout() {
   space_between_gpu_depths_ = 2.f;
   space_between_tracks_ = 10.f;
   space_between_tracks_and_thread_ = 5.f;
-  space_between_gpu_subtracks_ = -5.f;
+  space_between_subtracks_ = -5.f;
   space_between_thread_blocks_ = 35.f;
   track_label_offset_x_ = 30.f;
   slider_width_ = 15.f;
@@ -57,7 +57,7 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER(space_between_gpu_depths_);
   FLOAT_SLIDER(space_between_tracks_);
   FLOAT_SLIDER(space_between_tracks_and_thread_);
-  FLOAT_SLIDER(space_between_gpu_subtracks_);
+  FLOAT_SLIDER(space_between_subtracks_);
   FLOAT_SLIDER(space_between_thread_blocks_);
   FLOAT_SLIDER(slider_width_);
   FLOAT_SLIDER(time_bar_height_);
