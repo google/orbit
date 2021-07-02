@@ -224,12 +224,15 @@ static std::string BuildStringFromIndices(QTreeView* tree_view, const QModelInde
                    [](const ItemWithAncestorRows& lhs, const ItemWithAncestorRows& rhs) {
                      return lhs.ancestor_rows < rhs.ancestor_rows;
                    });
+
+  constexpr char kFieldSeparator = '\t';
+  constexpr char kLineSeparator = '\n';
   std::string buffer;
   for (size_t i = 0; i < items.size(); ++i) {
     const ItemWithAncestorRows& item = items[i];
     if (item.is_first_in_row) {
       if (i > 0) {
-        buffer.push_back('\n');
+        buffer.push_back(kLineSeparator);
       }
 
       buffer.append(2 * (item.ancestor_rows.size() - 1), ' ');
@@ -246,7 +249,7 @@ static std::string BuildStringFromIndices(QTreeView* tree_view, const QModelInde
           break;
       }
     } else {
-      buffer.append(", ");
+      buffer.push_back(kFieldSeparator);
     }
     buffer.append(item.data);
   }

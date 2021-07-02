@@ -247,9 +247,9 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
     std::string clipboard;
     EXPECT_CALL(app_, SetClipboard).Times(1).WillOnce(testing::SaveArg<0>(&clipboard));
     view_.OnContextMenu("Copy Selection", static_cast<int>(copy_selection_idx), {0});
-    EXPECT_EQ(clipboard,
-              absl::StrFormat("Loadable, Preset, Modules, Hooked Functions\nYes, %s, , \n",
-                              preset_filename0.filename().string()));
+    EXPECT_EQ(clipboard, absl::StrFormat("Loadable\tPreset\tModules\tHooked Functions\n"
+                                         "Yes\t%s\t\t\n",
+                                         preset_filename0.filename().string()));
   }
 
   // Export to CSV
