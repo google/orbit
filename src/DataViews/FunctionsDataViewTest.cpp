@@ -519,9 +519,9 @@ TEST_F(FunctionsDataViewTest, GenericDataExportFunctionShowCorrectData) {
 
     EXPECT_EQ(
         contents_or_error.value(),
-        absl::StrFormat(R"("Hooked", "Function", "Size", "Module", "Address in module")"
+        absl::StrFormat(R"("Hooked","Function","Size","Module","Address in module")"
                         "\r\n"
-                        R"("", "%s", "%d", "%s", "%#x")"
+                        R"("","%s","%d","%s","%#x")"
                         "\r\n",
                         functions_[0].pretty_name(), functions_[0].size(),
                         std::filesystem::path{functions_[0].module_path()}.filename().string(),

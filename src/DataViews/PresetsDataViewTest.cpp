@@ -273,9 +273,9 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
     ASSERT_THAT(contents_or_error, orbit_base::HasNoError());
 
     EXPECT_EQ(contents_or_error.value(),
-              absl::StrFormat(R"("Loadable", "Preset", "Modules", "Hooked Functions")"
+              absl::StrFormat(R"("Loadable","Preset","Modules","Hooked Functions")"
                               "\r\n"
-                              R"("Yes", "%s", "", "")"
+                              R"("Yes","%s","","")"
                               "\r\n",
                               preset_filename0.filename().string()));
   }
