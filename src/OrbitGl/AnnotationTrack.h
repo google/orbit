@@ -42,6 +42,7 @@ class AnnotationTrack {
   [[nodiscard]] virtual float GetAnnotatedTrackContentHeight() const = 0;
   [[nodiscard]] virtual Vec2 GetAnnotatedTrackPosition() const = 0;
   [[nodiscard]] virtual Vec2 GetAnnotatedTrackSize() const = 0;
+  [[nodiscard]] virtual uint32_t GetAnnotationFontSize() const = 0;
 
   std::optional<std::pair<std::string, double>> warning_threshold_ = std::nullopt;
   std::optional<std::pair<std::string, double>> value_upper_bound_ = std::nullopt;

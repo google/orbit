@@ -80,6 +80,7 @@ class GraphTrack : public Track {
       const std::array<double, Dimension>& values) const;
   [[nodiscard]] virtual std::string GetLabelTextFromValues(
       const std::array<double, Dimension>& values) const;
+  [[nodiscard]] uint32_t GetLegendFontSize() const;
 
   virtual void DrawLabel(Batcher& batcher, TextRenderer& text_renderer, Vec2 target_pos,
                          const std::string& text, const Color& text_color, const Color& font_color,

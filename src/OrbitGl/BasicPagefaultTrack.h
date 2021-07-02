@@ -55,6 +55,7 @@ class BasicPagefaultTrack final : public LineGraphTrack<kBasicPagefaultTrackDime
   [[nodiscard]] float GetAnnotatedTrackContentHeight() const override;
   [[nodiscard]] Vec2 GetAnnotatedTrackPosition() const override { return pos_; };
   [[nodiscard]] Vec2 GetAnnotatedTrackSize() const override { return size_; };
+  [[nodiscard]] uint32_t GetAnnotationFontSize() const override { return GetLegendFontSize(); }
 
   Track* parent_;
   std::optional<std::pair<uint64_t, std::array<double, kBasicPagefaultTrackDimension>>>
