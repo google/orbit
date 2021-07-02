@@ -109,6 +109,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
 
   [[nodiscard]] virtual std::vector<CaptureViewElement*> GetVisibleChildren() { return {}; }
   [[nodiscard]] virtual int GetVisiblePrimitiveCount() const { return 0; }
+  [[nodiscard]] virtual uint32_t GetIndent() const { return indentation_level_; }
 
  protected:
   // Returns the y-position of the triangle.

@@ -157,6 +157,17 @@ std::string GraphTrack<Dimension>::GetLabelTextFromValues(
 }
 
 template <size_t Dimension>
+uint32_t GraphTrack<Dimension>::GetLegendFontSize() const {
+  constexpr uint32_t kMinIndentationLevel = 1;
+  constexpr uint32_t kMaxIndentationLevel = 5;
+  uint32_t capped_indentation_level = std::max(GetIndent(), kMinIndentationLevel);
+  capped_indentation_level = std::min(capped_indentation_level, kMaxIndentationLevel);
+
+  uint32_t font_size = layout_->CalculateZoomedFontSize();
+  return (font_size * (10 - capped_indentation_level)) / 10;
+}
+
+template <size_t Dimension>
 void GraphTrack<Dimension>::DrawLabel(Batcher& batcher, TextRenderer& text_renderer,
                                       Vec2 target_pos, const std::string& text,
                                       const Color& text_color, const Color& font_color, float z) {
@@ -201,14 +212,13 @@ template <size_t Dimension>
 void GraphTrack<Dimension>::DrawLegend(Batcher& batcher, TextRenderer& text_renderer,
                                        const std::array<std::string, Dimension>& series_names,
                                        const Color& legend_text_color, float z) {
-  uint32_t font_size = layout_->CalculateZoomedFontSize();
-
   const float kSpaceBetweenLegendSymbolAndText = layout_->GetGenericFixedSpacerWidth();
   const float kSpaceBetweenLegendEntries = layout_->GetGenericFixedSpacerWidth() * 2;
   float legend_symbol_height = GetLegendHeight() / 2.f;
   float legend_symbol_width = legend_symbol_height;
   float x0 = pos_[0] + layout_->GetRightMargin();
   float y0 = pos_[1] - layout_->GetTrackTabHeight() - layout_->GetTextBoxHeight() / 2.f;
+  uint32_t font_size = GetLegendFontSize();
 
   for (size_t i = 0; i < Dimension; ++i) {
     batcher.AddShadedBox(Vec2(x0, y0 - legend_symbol_height / 2.f),
