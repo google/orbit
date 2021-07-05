@@ -380,6 +380,7 @@ void Batcher::DrawLayer(float layer, bool picking) const {
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_COLOR_ARRAY);
   glEnable(GL_TEXTURE_2D);
+  glLineWidth(2.0f);
 
   DrawBoxBuffer(layer, picking);
   DrawLineBuffer(layer, picking);
