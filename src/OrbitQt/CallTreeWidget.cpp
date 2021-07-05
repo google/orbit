@@ -186,22 +186,17 @@ static std::string BuildStringFromIndices(QTreeView* tree_view, const QModelInde
     enum ExpandedState { kLeaf = 0, kExpanded, kCollapsed };
 
     std::string data;
-    bool is_first_in_row = false;
     ExpandedState expanded_state = kLeaf;
     std::list<int> ancestor_rows;
+    int column = 0;
   };
   std::vector<ItemWithAncestorRows> items;
 
-  std::optional<QModelIndex> prev_index;
   // Note: the indices vector is sorted by row in order of selection and then by column in ascending
   // order.
   for (const QModelIndex& index : indices) {
     ItemWithAncestorRows item;
     item.data = index.data(CallTreeViewItemModel::kCopyableValueRole).toString().toStdString();
-
-    // row() is the position among siblings: also compare parent().
-    item.is_first_in_row = !prev_index.has_value() || index.row() != prev_index->row() ||
-                           index.parent() != prev_index->parent();
 
     if (index.model()->rowCount(index) == 0) {
       item.expanded_state = ItemWithAncestorRows::kLeaf;
@@ -215,60 +210,90 @@ static std::string BuildStringFromIndices(QTreeView* tree_view, const QModelInde
       item.ancestor_rows.emplace_front(temp_index.row());
     }
 
+    item.column = index.column();
+
     items.emplace_back(std::move(item));
-    prev_index = index;
   }
 
-  // Use stable_sort to maintain the order in the same row (i.e., across columns).
-  std::stable_sort(items.begin(), items.end(),
-                   [](const ItemWithAncestorRows& lhs, const ItemWithAncestorRows& rhs) {
-                     return lhs.ancestor_rows < rhs.ancestor_rows;
-                   });
+  std::sort(items.begin(), items.end(),
+            [](const ItemWithAncestorRows& lhs, const ItemWithAncestorRows& rhs) {
+              if (lhs.ancestor_rows == rhs.ancestor_rows) {
+                return lhs.column < rhs.column;
+              }
+              return lhs.ancestor_rows < rhs.ancestor_rows;
+            });
 
   constexpr char kFieldSeparator = '\t';
   constexpr char kLineSeparator = '\n';
   std::string buffer;
 
-  for (int section = 0; section < tree_view->model()->columnCount(); ++section) {
-    if (section > 0) {
-      buffer.push_back(kFieldSeparator);
+  // Copy the column headers.
+  {
+    // We are not always copying all columns. This keeps the index of the current column in the
+    // resulting string to copy, which might differ from the index of the current column in the UI.
+    int column_in_output = 0;
+    for (int column = 0; column < tree_view->model()->columnCount(); ++column) {
+      // If this column is not shown in the UI (e.g., it is hidden in the bottom-up view), then
+      // don't copy it.
+      if (tree_view->isColumnHidden(column)) {
+        continue;
+      }
+
+      if (column_in_output > 0) {
+        buffer.push_back(kFieldSeparator);
+      }
+      buffer.append(
+          tree_view->model()
+              ->headerData(column, Qt::Horizontal, CallTreeViewItemModel::kCopyableValueRole)
+              .toString()
+              .toStdString());
+      ++column_in_output;
     }
-    buffer.append(
-        tree_view->model()
-            ->headerData(section, Qt::Horizontal, CallTreeViewItemModel::kCopyableValueRole)
-            .toString()
-            .toStdString());
+    buffer.push_back(kLineSeparator);
   }
-  buffer.push_back(kLineSeparator);
 
-  for (size_t i = 0; i < items.size(); ++i) {
-    const ItemWithAncestorRows& item = items[i];
-    if (item.is_first_in_row) {
-      if (i > 0) {
-        buffer.push_back(kLineSeparator);
+  // Copy the actual data.
+  {
+    int column_in_output = 0;
+    for (size_t item_index = 0; item_index < items.size(); ++item_index) {
+      const ItemWithAncestorRows& item = items[item_index];
+      if (item.column == 0) {
+        column_in_output = 0;
+        if (item_index > 0) {
+          buffer.push_back(kLineSeparator);
+        }
       }
 
-      constexpr const char* kNoBreakSpace = "\u00A0";
-      for (size_t j = 0; j < 2 * (item.ancestor_rows.size() - 1); ++j) {
-        buffer.append(kNoBreakSpace);
+      if (tree_view->isColumnHidden(item.column)) {
+        continue;
       }
+      if (column_in_output > 0) {
+        buffer.push_back(kFieldSeparator);
+      }
+      if (item.column == 0) {
+        // Keep the tree representation when copying from the first UI column.
+        constexpr const char* kNoBreakSpace = "\u00A0";
+        for (size_t j = 0; j < 2 * (item.ancestor_rows.size() - 1); ++j) {
+          buffer.append(kNoBreakSpace);
+        }
 
-      switch (item.expanded_state) {
-        case ItemWithAncestorRows::kLeaf:
-          buffer.append(kNoBreakSpace).append(kNoBreakSpace);
-          break;
-        case ItemWithAncestorRows::kExpanded:
-          buffer.append("▾").append(kNoBreakSpace);
-          break;
-        case ItemWithAncestorRows::kCollapsed:
-          buffer.append("▸").append(kNoBreakSpace);
-          break;
+        switch (item.expanded_state) {
+          case ItemWithAncestorRows::kLeaf:
+            buffer.append(kNoBreakSpace).append(kNoBreakSpace);
+            break;
+          case ItemWithAncestorRows::kExpanded:
+            buffer.append("▾").append(kNoBreakSpace);
+            break;
+          case ItemWithAncestorRows::kCollapsed:
+            buffer.append("▸").append(kNoBreakSpace);
+            break;
+        }
       }
-    } else {
-      buffer.push_back(kFieldSeparator);
+      buffer.append(item.data);
+      ++column_in_output;
     }
-    buffer.append(item.data);
   }
+
   return buffer;
 }
 
