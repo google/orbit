@@ -181,6 +181,7 @@ target_compile_options(OrbitGlTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitGlTests PRIVATE
                PickingManagerTest.h
+               TrackManagerTest.h
                UnitTestSlider.h)
 
 target_sources(OrbitGlTests PRIVATE
