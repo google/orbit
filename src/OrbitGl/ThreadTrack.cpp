@@ -457,16 +457,17 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
 }
 
 void ThreadTrack::OnCaptureComplete() {
-  if (scope_tree_update_type_ == ScopeTreeUpdateType::kOnCaptureComplete) {
-    // Build ScopeTree from timer chains.
-    std::vector<std::shared_ptr<TimerChain>> timer_chains = GetAllChains();
-    for (std::shared_ptr<TimerChain> timer_chain : timer_chains) {
-      if (timer_chain == nullptr) return;
-      absl::MutexLock lock(&scope_tree_mutex_);
-      for (auto& block : *timer_chain) {
-        for (size_t k = 0; k < block.size(); ++k) {
-          scope_tree_.Insert(&block[k]);
-        }
+  if (scope_tree_update_type_ != ScopeTreeUpdateType::kOnCaptureComplete) {
+    return;
+  }
+  // Build ScopeTree from timer chains.
+  std::vector<std::shared_ptr<TimerChain>> timer_chains = GetAllChains();
+  for (const auto& timer_chain : timer_chains) {
+    if (timer_chain == nullptr) return;
+    absl::MutexLock lock(&scope_tree_mutex_);
+    for (auto& block : *timer_chain) {
+      for (size_t k = 0; k < block.size(); ++k) {
+        scope_tree_.Insert(&block[k]);
       }
     }
   }

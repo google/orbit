@@ -35,8 +35,6 @@ class ThreadTrack final : public TimerTrack {
 
   void InitializeNameAndLabel(int32_t thread_id);
 
-  [[nodiscard]] int32_t GetThreadId() const { return thread_id_; }
-
   [[nodiscard]] Type GetType() const override { return Type::kThreadTrack; }
   [[nodiscard]] std::string GetTooltip() const override;
 
@@ -48,7 +46,7 @@ class ThreadTrack final : public TimerTrack {
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset = 0) override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
-  [[nodiscard]] virtual float GetYFromDepth(uint32_t depth) const override;
+  [[nodiscard]] float GetYFromDepth(uint32_t depth) const override;
 
   void OnPick(int x, int y) override;
 
