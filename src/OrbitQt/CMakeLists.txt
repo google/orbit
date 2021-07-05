@@ -31,6 +31,8 @@ target_sources(
           orbittreeview.h
           opengldetect.h
           resource.h
+          TrackConfigurationWidget.h
+          TrackTypeItemModel.h
           TutorialContent.h
           TutorialOverlay.h)
 
@@ -63,6 +65,9 @@ target_sources(
           orbittablemodel.cpp
           orbittreeview.cpp
           opengldetect.cpp
+          TrackConfigurationWidget.cpp
+          TrackConfigurationWidget.ui
+          TrackTypeItemModel.cpp
           TutorialContent.cpp
           TutorialOverlay.cpp
           TutorialOverlay.ui
@@ -115,12 +120,15 @@ target_sources(OrbitQtTests
                 AnnotatingSourceCodeDialogTest.cpp
                 CallTreeViewItemModelTest.cpp
                 StatusListenerImplTest.cpp
-                TutorialOverlayTest.cpp)
+                TutorialOverlayTest.cpp
+                TrackTypeItemModelTest.cpp
+                ../OrbitGl/TrackManagerTest.cpp)
 
 target_include_directories(OrbitQtTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(OrbitQtTests
-  PRIVATE OrbitQt
+  PRIVATE OrbitGl
+          OrbitQt
           Qt5::Test
           GTest::QtGuiMain)
 
