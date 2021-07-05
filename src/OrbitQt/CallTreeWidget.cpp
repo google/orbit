@@ -228,6 +228,19 @@ static std::string BuildStringFromIndices(QTreeView* tree_view, const QModelInde
   constexpr char kFieldSeparator = '\t';
   constexpr char kLineSeparator = '\n';
   std::string buffer;
+
+  for (int section = 0; section < tree_view->model()->columnCount(); ++section) {
+    if (section > 0) {
+      buffer.push_back(kFieldSeparator);
+    }
+    buffer.append(
+        tree_view->model()
+            ->headerData(section, Qt::Horizontal, CallTreeViewItemModel::kCopyableValueRole)
+            .toString()
+            .toStdString());
+  }
+  buffer.push_back(kLineSeparator);
+
   for (size_t i = 0; i < items.size(); ++i) {
     const ItemWithAncestorRows& item = items[i];
     if (item.is_first_in_row) {
