@@ -265,7 +265,9 @@ QVariant CallTreeViewItemModel::headerData(int section, Qt::Orientation orientat
     return QVariant();
   }
   switch (role) {
-    case Qt::DisplayRole: {
+    case Qt::DisplayRole:
+      [[fallthrough]];
+    case kCopyableValueRole: {
       switch (section) {
         case Columns::kThreadOrFunction:
           return "Thread / Function";
