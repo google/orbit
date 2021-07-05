@@ -1,6 +1,8 @@
 // Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+#include "TrackManagerTest.h"
+
 #include <gtest/gtest.h>
 
 #include "ClientData/ModuleManager.h"
@@ -13,22 +15,11 @@
 
 using orbit_client_protos::TimerInfo;
 
-constexpr uint64_t kCallstackId = 1;
-constexpr uint64_t kFunctionAbsoluteAddress = 0x30;
-constexpr uint64_t kInstructionAbsoluteAddress = 0x31;
-constexpr int32_t kThreadId = 42;
-constexpr const char* kFunctionName = "example function";
-constexpr const char* kModuleName = "example module";
-constexpr const char* kThreadName = "example thread";
-
-constexpr size_t kTimerOnlyThreadId = 128;
-constexpr const char* kTimerOnlyThreadName = "timer only thread";
-
-namespace {
+namespace orbit_gl {
 
 // This is copied from CallTreeViewItemModelTest.cpp, we may want to supply this in a header,
 // but it is not clear what we want to be testing here in the future.
-std::unique_ptr<orbit_client_model::CaptureData> GenerateTestCaptureData() {
+std::unique_ptr<orbit_client_model::CaptureData> TrackTestData::GenerateTestCaptureData() {
   auto capture_data = std::make_unique<orbit_client_model::CaptureData>(
       nullptr, orbit_grpc_protos::CaptureStarted{}, std::nullopt, absl::flat_hash_set<uint64_t>{});
 
@@ -59,10 +50,6 @@ std::unique_ptr<orbit_client_model::CaptureData> GenerateTestCaptureData() {
   return capture_data;
 }
 
-}  // namespace
-
-namespace orbit_gl {
-
 class UnitTestTrack : public Track {
  public:
   explicit UnitTestTrack(TimeGraphLayout* layout, Track::Type type, const std::string& name)
@@ -91,19 +78,20 @@ const size_t kNumSchedulerTracks = 1;
 class TrackManagerTest : public ::testing::Test {
  public:
   explicit TrackManagerTest()
-      : capture_data_(GenerateTestCaptureData()),
+      : capture_data_(TrackTestData::GenerateTestCaptureData()),
         track_manager_(nullptr, nullptr, &layout_, nullptr, capture_data_.get()) {}
 
  protected:
   void CreateAndFillTracks() {
     auto* scheduler_track = track_manager_.GetOrCreateSchedulerTrack();
-    auto* thread_track = track_manager_.GetOrCreateThreadTrack(kThreadId);
-    auto* timer_only_thread_track = track_manager_.GetOrCreateThreadTrack(kTimerOnlyThreadId);
+    auto* thread_track = track_manager_.GetOrCreateThreadTrack(TrackTestData::kThreadId);
+    auto* timer_only_thread_track =
+        track_manager_.GetOrCreateThreadTrack(TrackTestData::kTimerOnlyThreadId);
 
     TimerInfo timer;
     timer.set_start(0);
     timer.set_end(100);
-    timer.set_thread_id(kThreadId);
+    timer.set_thread_id(TrackTestData::kThreadId);
     timer.set_processor(0);
     timer.set_depth(0);
     timer.set_type(TimerInfo::kCoreActivity);
@@ -112,7 +100,7 @@ class TrackManagerTest : public ::testing::Test {
     timer.set_type(TimerInfo::kCoreActivity);
     thread_track->OnTimer(timer);
 
-    timer.set_thread_id(kTimerOnlyThreadId);
+    timer.set_thread_id(TrackTestData::kTimerOnlyThreadId);
     scheduler_track->OnTimer(timer);
     timer.set_type(TimerInfo::kCoreActivity);
     timer_only_thread_track->OnTimer(timer);
@@ -163,7 +151,7 @@ TEST_F(TrackManagerTest, NonVisibleTracksAreNotInTheList) {
 
 TEST_F(TrackManagerTest, FiltersAndVisibilityWorkTogether) {
   CreateAndFillTracks();
-  track_manager_.GetOrCreateThreadTrack(kThreadId)->SetVisible(false);
+  track_manager_.GetOrCreateThreadTrack(TrackTestData::kThreadId)->SetVisible(false);
   track_manager_.SetFilter("thread");
   track_manager_.UpdateTracksForRendering();
   EXPECT_EQ(kNumThreadTracks - 1, track_manager_.GetVisibleTracks().size());
@@ -182,7 +170,7 @@ TEST_F(TrackManagerTest, TrackTypeVisibilityAffectsVisibleTrackList) {
             track_manager_.GetVisibleTracks().size());
   track_manager_.SetTrackTypeVisibility(Track::Type::kSchedulerTrack, true);
 
-  track_manager_.GetOrCreateThreadTrack(kThreadId)->SetVisible(false);
+  track_manager_.GetOrCreateThreadTrack(TrackTestData::kThreadId)->SetVisible(false);
   track_manager_.UpdateTracksForRendering();
   EXPECT_EQ(kNumTracks - kNumThreadTracks, track_manager_.GetVisibleTracks().size());
 
