@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="/actions">
+    <file alias="track_visibility_off">baseline_visibility_off_white_18dp.png</file>
+    <file alias="track_visibility_on">baseline_visibility_white_18dp.png</file>
     <file alias="bug_report">outline_bug_report_white_48dp.png</file>
     <file alias="search_small">outline_search_white_18dp.png</file>
     <file alias="filter_list_small_offset">outline_filter_list_white_18dp_offset.png</file>
