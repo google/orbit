@@ -42,7 +42,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
                      orbit_gl::Viewport* viewport,
                      const orbit_client_model::CaptureData* capture_data,
                      PickingManager* picking_manager);
-  ~TimeGraph();
+  ~TimeGraph() override;
 
   void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
             PickingMode picking_mode = PickingMode::kNone, float /*z_offset*/ = 0) override;
@@ -63,7 +63,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
                     const orbit_grpc_protos::InstrumentedFunction* function);
 
-  // TODO(b/176056427): TimeGraph should not store nor expose CaptureData.
   [[nodiscard]] const orbit_client_model::CaptureData* GetCaptureData() const {
     return capture_data_;
   }
@@ -76,7 +75,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   [[nodiscard]] uint64_t GetTickFromUs(double micros) const;
   [[nodiscard]] double GetUsFromTick(uint64_t time) const;
   [[nodiscard]] double GetTimeWindowUs() const { return time_window_us_; }
-  void GetWorldMinMax(float& min, float& max) const;
   void UpdateCaptureMinMaxTimestamps();
 
   void ZoomAll();
@@ -100,7 +98,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
 
   [[nodiscard]] double GetTime(double ratio) const;
   void SelectAndMakeVisible(const TextBox* text_box);
-  enum class JumpScope { kGlobal, kSameDepth, kSameThread, kSameFunction, kSameThreadSameFunction };
+  enum class JumpScope { kSameDepth, kSameThread, kSameFunction, kSameThreadSameFunction };
   enum class JumpDirection { kPrevious, kNext, kTop, kDown };
   void JumpToNeighborBox(const TextBox* from, JumpDirection jump_direction, JumpScope jump_scope);
   [[nodiscard]] const TextBox* FindPreviousFunctionCall(
@@ -120,12 +118,10 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   [[nodiscard]] bool IsPartlyVisible(uint64_t min, uint64_t max) const;
   [[nodiscard]] bool IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) const;
 
-  [[nodiscard]] int GetNumDrawnTextBoxes() { return num_drawn_text_boxes_; }
+  [[nodiscard]] int GetNumDrawnTextBoxes() const { return num_drawn_text_boxes_; }
   [[nodiscard]] TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
   [[nodiscard]] Batcher& GetBatcher() { return batcher_; }
-  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllTimerChains() const;
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllThreadTrackTimerChains() const;
-  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableTimerChains() const;
 
   void UpdateHorizontalScroll(float ratio);
   [[nodiscard]] double GetMinTimeUs() const { return min_time_us_; }
@@ -172,7 +168,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
 
   [[nodiscard]] uint64_t GetCaptureMin() const { return capture_min_timestamp_; }
   [[nodiscard]] uint64_t GetCaptureMax() const { return capture_max_timestamp_; }
-  [[nodiscard]] uint64_t GetCurrentMouseTimeNs() const { return current_mouse_time_ns_; }
 
   [[nodiscard]] bool HasFrameTrack(uint64_t function_id) const;
   void RemoveFrameTrack(uint64_t function_id);
@@ -182,7 +177,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   }
 
  protected:
-  [[nodiscard]] virtual std::unique_ptr<orbit_accessibility::AccessibleInterface>
+  [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleInterface>
   CreateAccessibleInterface() override;
 
   void ProcessOrbitFunctionTimer(orbit_client_protos::FunctionInfo::OrbitType type,
@@ -209,7 +204,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   double max_time_us_ = 0;
   uint64_t capture_min_timestamp_ = std::numeric_limits<uint64_t>::max();
   uint64_t capture_max_timestamp_ = 0;
-  uint64_t current_mouse_time_ns_ = 0;
   double time_window_us_ = 0;
   float world_start_x_ = 0;
   float world_width_ = 0;

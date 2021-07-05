@@ -46,10 +46,6 @@ class TrackManager {
   [[nodiscard]] std::vector<ThreadTrack*> GetThreadTracks() const;
   [[nodiscard]] std::vector<FrameTrack*> GetFrameTracks() const;
 
-  [[nodiscard]] ThreadTrack* GetTracepointsSystemWideTrack() const {
-    return tracepoints_system_wide_track_;
-  }
-
   void RequestTrackSorting() { sorting_invalidated_ = true; };
   void SetFilter(const std::string& filter);
 
@@ -105,7 +101,6 @@ class TrackManager {
   // next to each other.
   std::map<std::string, std::shared_ptr<GpuTrack>> gpu_tracks_;
   // Mapping from function address to frame tracks.
-  // TODO(b/175865913): Use Function info instead of their address as key to FrameTracks
   std::map<uint64_t, std::shared_ptr<FrameTrack>> frame_tracks_;
   std::shared_ptr<SchedulerTrack> scheduler_track_;
   ThreadTrack* tracepoints_system_wide_track_;

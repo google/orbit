@@ -22,7 +22,6 @@
 #include "TriangleToggle.h"
 
 using orbit_client_model::CaptureData;
-using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::InstrumentedFunction;
 
@@ -208,7 +207,7 @@ std::string FrameTrack::GetTooltip() const {
 
 std::string FrameTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
   const TextBox* text_box = batcher.GetTextBox(id);
-  if (!text_box) {
+  if (text_box == nullptr) {
     return "";
   }
   // TODO(b/169554463): Support manual instrumentation.

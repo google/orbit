@@ -48,7 +48,6 @@ using orbit_client_model::CaptureData;
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
-using orbit_gl::MemoryTrack;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::kMissingInfo;
 
@@ -61,6 +60,7 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
     : orbit_gl::CaptureViewElement(nullptr, this, viewport, &layout_),
       accessible_parent_{parent},
       batcher_(BatcherId::kTimeGraph),
+      manual_instrumentation_manager_{app->GetManualInstrumentationManager()},
       capture_data_{capture_data},
       app_{app} {
   text_renderer_static_.SetViewport(viewport);
@@ -72,15 +72,12 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
           [this](const std::string& name, const TimerInfo& timer_info) {
             ProcessAsyncTimer(name, timer_info);
           });
-  manual_instrumentation_manager_ = app_->GetManualInstrumentationManager();
   manual_instrumentation_manager_->AddAsyncTimerListener(async_timer_info_listener_.get());
 }
 
 TimeGraph::~TimeGraph() {
   manual_instrumentation_manager_->RemoveAsyncTimerListener(async_timer_info_listener_.get());
 }
-
-double GNumHistorySeconds = 2.f;
 
 void TimeGraph::UpdateCaptureMinMaxTimestamps() {
   auto [tracks_min_time, tracks_max_time] = track_manager_->GetTracksMinMaxTimestamps();
@@ -90,9 +87,10 @@ void TimeGraph::UpdateCaptureMinMaxTimestamps() {
 }
 
 void TimeGraph::ZoomAll() {
+  constexpr double kNumHistorySeconds = 2.f;
   UpdateCaptureMinMaxTimestamps();
   max_time_us_ = TicksToMicroseconds(capture_min_timestamp_, capture_max_timestamp_);
-  min_time_us_ = max_time_us_ - (GNumHistorySeconds * 1000 * 1000);
+  min_time_us_ = max_time_us_ - (kNumHistorySeconds * 1000 * 1000);
   if (min_time_us_ < 0) min_time_us_ = 0;
 
   RequestUpdate();
@@ -568,31 +566,10 @@ void TimeGraph::ProcessAsyncTimer(const std::string& track_name, const TimerInfo
   track->OnTimer(timer_info);
 }
 
-std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllTimerChains() const {
-  std::vector<std::shared_ptr<TimerChain>> chains;
-  for (const auto& track : track_manager_->GetAllTracks()) {
-    orbit_base::Append(chains, track->GetAllChains());
-  }
-  // Frame tracks are removable by users and cannot simply be thrown into the
-  // tracks_ vector.
-  for (const auto& track : track_manager_->GetFrameTracks()) {
-    orbit_base::Append(chains, track->GetAllChains());
-  }
-  return chains;
-}
-
 std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllThreadTrackTimerChains() const {
   std::vector<std::shared_ptr<TimerChain>> chains;
   for (const auto& track : track_manager_->GetThreadTracks()) {
     orbit_base::Append(chains, track->GetAllChains());
-  }
-  return chains;
-}
-
-std::vector<std::shared_ptr<TimerChain>> TimeGraph::GetAllSerializableTimerChains() const {
-  std::vector<std::shared_ptr<TimerChain>> chains;
-  for (const auto& track : track_manager_->GetAllTracks()) {
-    orbit_base::Append(chains, track->GetAllSerializableChains());
   }
   return chains;
 }
@@ -626,11 +603,6 @@ uint64_t TimeGraph::GetTickFromWorld(float world_x) const {
 uint64_t TimeGraph::GetTickFromUs(double micros) const {
   auto nanos = static_cast<uint64_t>(1000 * micros);
   return capture_min_timestamp_ + nanos;
-}
-
-void TimeGraph::GetWorldMinMax(float& min, float& max) const {
-  min = GetWorldFromTick(capture_min_timestamp_);
-  max = GetWorldFromTick(capture_max_timestamp_);
 }
 
 // Select a text_box. Also move the view in order to assure that the text_box and its track are
@@ -950,7 +922,7 @@ void TimeGraph::SelectAndZoom(const TextBox* text_box) {
 void TimeGraph::JumpToNeighborBox(const TextBox* from, JumpDirection jump_direction,
                                   JumpScope jump_scope) {
   const TextBox* goal = nullptr;
-  if (!from) {
+  if (from == nullptr) {
     return;
   }
   auto function_id = from->GetTimerInfo().function_id();
@@ -969,8 +941,7 @@ void TimeGraph::JumpToNeighborBox(const TextBox* from, JumpDirection jump_direct
         break;
       default:
         // Other choices are not implemented.
-        CHECK(false);
-        break;
+        UNREACHABLE();
     }
   }
   if (jump_direction == JumpDirection::kNext) {
@@ -985,8 +956,7 @@ void TimeGraph::JumpToNeighborBox(const TextBox* from, JumpDirection jump_direct
         goal = FindNextFunctionCall(function_id, current_time, thread_id);
         break;
       default:
-        CHECK(false);
-        break;
+        UNREACHABLE();
     }
   }
   if (jump_direction == JumpDirection::kTop) {
@@ -995,7 +965,7 @@ void TimeGraph::JumpToNeighborBox(const TextBox* from, JumpDirection jump_direct
   if (jump_direction == JumpDirection::kDown) {
     goal = FindDown(from);
   }
-  if (goal) {
+  if (goal != nullptr) {
     SelectAndMakeVisible(goal);
   }
 }
