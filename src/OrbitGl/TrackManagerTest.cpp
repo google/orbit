@@ -21,6 +21,9 @@ constexpr const char* kFunctionName = "example function";
 constexpr const char* kModuleName = "example module";
 constexpr const char* kThreadName = "example thread";
 
+constexpr size_t kTimerOnlyThreadId = 128;
+constexpr const char* kTimerOnlyThreadName = "timer only thread";
+
 namespace {
 
 // This is copied from CallTreeViewItemModelTest.cpp, we may want to supply this in a header,
@@ -51,6 +54,7 @@ std::unique_ptr<orbit_client_model::CaptureData> GenerateTestCaptureData() {
   capture_data->AddCallstackEvent(std::move(callstack_event));
 
   capture_data->AddOrAssignThreadName(kThreadId, kThreadName);
+  capture_data->AddOrAssignThreadName(kTimerOnlyThreadId, kTimerOnlyThreadName);
 
   return capture_data;
 }
@@ -80,22 +84,21 @@ class UnitTestTrack : public Track {
   Type type_;
 };  // namespace orbit_gl
 
+const size_t kNumTracks = 3;
+const size_t kNumThreadTracks = 2;
+const size_t kNumSchedulerTracks = 1;
+
 class TrackManagerTest : public ::testing::Test {
  public:
-  static const size_t kNumTracks = 2;
-  static const size_t kNumThreadTracks = 1;
-  static const size_t kNumSchedulerTracks = 1;
+  explicit TrackManagerTest()
+      : capture_data_(GenerateTestCaptureData()),
+        track_manager_(nullptr, nullptr, &layout_, nullptr, capture_data_.get()) {}
 
  protected:
-  void SetUp() override {
-    capture_data_ = GenerateTestCaptureData();
-    track_manager_ =
-        std::make_unique<TrackManager>(nullptr, nullptr, &layout_, nullptr, capture_data_.get());
-  }
-
   void CreateAndFillTracks() {
-    auto* scheduler_track = track_manager_->GetOrCreateSchedulerTrack();
-    auto* thread_track = track_manager_->GetOrCreateThreadTrack(kThreadId);
+    auto* scheduler_track = track_manager_.GetOrCreateSchedulerTrack();
+    auto* thread_track = track_manager_.GetOrCreateThreadTrack(kThreadId);
+    auto* timer_only_thread_track = track_manager_.GetOrCreateThreadTrack(kTimerOnlyThreadId);
 
     TimerInfo timer;
     timer.set_start(0);
@@ -108,75 +111,84 @@ class TrackManagerTest : public ::testing::Test {
     scheduler_track->OnTimer(timer);
     timer.set_type(TimerInfo::kCoreActivity);
     thread_track->OnTimer(timer);
+
+    timer.set_thread_id(kTimerOnlyThreadId);
+    scheduler_track->OnTimer(timer);
+    timer.set_type(TimerInfo::kCoreActivity);
+    timer_only_thread_track->OnTimer(timer);
   }
 
   TimeGraphLayout layout_;
   std::unique_ptr<orbit_client_model::CaptureData> capture_data_;
-  std::unique_ptr<TrackManager> track_manager_;
+  TrackManager track_manager_;
 };
 
 TEST_F(TrackManagerTest, GetOrCreateCreatesTracks) {
-  EXPECT_EQ(0ull, track_manager_->GetAllTracks().size());
+  EXPECT_EQ(0ull, track_manager_.GetAllTracks().size());
 
-  track_manager_->GetOrCreateSchedulerTrack();
-  EXPECT_EQ(1ull, track_manager_->GetAllTracks().size());
-  track_manager_->GetOrCreateThreadTrack(42);
-  EXPECT_EQ(2ull, track_manager_->GetAllTracks().size());
+  track_manager_.GetOrCreateSchedulerTrack();
+  EXPECT_EQ(1ull, track_manager_.GetAllTracks().size());
+  track_manager_.GetOrCreateThreadTrack(42);
+  EXPECT_EQ(2ull, track_manager_.GetAllTracks().size());
 }
 
-TEST_F(TrackManagerTest, EmptyTracksAreNotVisible) {
-  TrackManagerTest_GetOrCreateCreatesTracks_Test();
-  EXPECT_EQ(0ull, track_manager_->GetVisibleTracks().size());
-  track_manager_->UpdateTracksForRendering();
-  EXPECT_EQ(0ull, track_manager_->GetVisibleTracks().size());
-}
-
-TEST_F(TrackManagerTest, NonEmptyTracksAreVisible) {
+TEST_F(TrackManagerTest, AllButEmptyTracksAreVisible) {
   CreateAndFillTracks();
-  track_manager_->UpdateTracksForRendering();
-  EXPECT_EQ(2ull, track_manager_->GetVisibleTracks().size());
+  track_manager_.UpdateTracksForRendering();
+  EXPECT_EQ(kNumTracks, track_manager_.GetVisibleTracks().size());
 }
 
 // TODO(b/181671054): Once the scheduler track stays visible, this needs to be adjusted
 TEST_F(TrackManagerTest, SimpleFiltering) {
   CreateAndFillTracks();
-  track_manager_->SetFilter("example thread");
-  track_manager_->UpdateTracksForRendering();
-  EXPECT_EQ(1ull, track_manager_->GetVisibleTracks().size());
+  track_manager_.SetFilter("example");
+  track_manager_.UpdateTracksForRendering();
+  EXPECT_EQ(1ull, track_manager_.GetVisibleTracks().size());
 
-  track_manager_->SetFilter("nonsense");
-  track_manager_->UpdateTracksForRendering();
-  EXPECT_EQ(0ull, track_manager_->GetVisibleTracks().size());
+  track_manager_.SetFilter("thread");
+  track_manager_.UpdateTracksForRendering();
+  EXPECT_EQ(kNumThreadTracks, track_manager_.GetVisibleTracks().size());
+
+  track_manager_.SetFilter("nonsense");
+  track_manager_.UpdateTracksForRendering();
+  EXPECT_EQ(0ull, track_manager_.GetVisibleTracks().size());
 }
 
 TEST_F(TrackManagerTest, NonVisibleTracksAreNotInTheList) {
   CreateAndFillTracks();
-  track_manager_->GetOrCreateSchedulerTrack()->SetVisible(false);
-  track_manager_->UpdateTracksForRendering();
-  EXPECT_EQ(kNumTracks - 1, track_manager_->GetVisibleTracks().size());
+  track_manager_.GetOrCreateSchedulerTrack()->SetVisible(false);
+  track_manager_.UpdateTracksForRendering();
+  EXPECT_EQ(kNumTracks - 1, track_manager_.GetVisibleTracks().size());
+}
+
+TEST_F(TrackManagerTest, FiltersAndVisibilityWorkTogether) {
+  CreateAndFillTracks();
+  track_manager_.GetOrCreateThreadTrack(kThreadId)->SetVisible(false);
+  track_manager_.SetFilter("thread");
+  track_manager_.UpdateTracksForRendering();
+  EXPECT_EQ(kNumThreadTracks - 1, track_manager_.GetVisibleTracks().size());
 }
 
 TEST_F(TrackManagerTest, TrackTypeVisibilityAffectsVisibleTrackList) {
   CreateAndFillTracks();
 
-  track_manager_->SetTrackTypeVisibility(Track::Type::kSchedulerTrack, false);
-  track_manager_->UpdateTracksForRendering();
-  EXPECT_EQ(kNumTracks - kNumSchedulerTracks, track_manager_->GetVisibleTracks().size());
+  track_manager_.SetTrackTypeVisibility(Track::Type::kThreadTrack, false);
+  track_manager_.UpdateTracksForRendering();
+  EXPECT_EQ(kNumTracks - kNumThreadTracks, track_manager_.GetVisibleTracks().size());
 
-  track_manager_->SetTrackTypeVisibility(Track::Type::kThreadTrack, false);
-  track_manager_->UpdateTracksForRendering();
+  track_manager_.SetTrackTypeVisibility(Track::Type::kSchedulerTrack, false);
+  track_manager_.UpdateTracksForRendering();
   EXPECT_EQ(kNumTracks - kNumThreadTracks - kNumSchedulerTracks,
-            track_manager_->GetVisibleTracks().size());
+            track_manager_.GetVisibleTracks().size());
+  track_manager_.SetTrackTypeVisibility(Track::Type::kSchedulerTrack, true);
 
-  track_manager_->GetOrCreateSchedulerTrack()->SetVisible(false);
-  track_manager_->SetTrackTypeVisibility(Track::Type::kSchedulerTrack, true);
-  track_manager_->UpdateTracksForRendering();
-  EXPECT_EQ(kNumTracks - kNumThreadTracks - kNumSchedulerTracks,
-            track_manager_->GetVisibleTracks().size());
+  track_manager_.GetOrCreateThreadTrack(kThreadId)->SetVisible(false);
+  track_manager_.UpdateTracksForRendering();
+  EXPECT_EQ(kNumTracks - kNumThreadTracks, track_manager_.GetVisibleTracks().size());
 
-  track_manager_->GetOrCreateSchedulerTrack()->SetVisible(true);
-  track_manager_->UpdateTracksForRendering();
-  EXPECT_EQ(kNumTracks - kNumThreadTracks, track_manager_->GetVisibleTracks().size());
+  track_manager_.SetTrackTypeVisibility(Track::Type::kThreadTrack, true);
+  track_manager_.UpdateTracksForRendering();
+  EXPECT_EQ(kNumTracks - 1, track_manager_.GetVisibleTracks().size());
 }
 
 }  // namespace orbit_gl
