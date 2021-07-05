@@ -94,7 +94,7 @@ void LineGraphTrack<Dimension>::DrawSingleSeriesEntry(
     Batcher* batcher, uint64_t start_tick, uint64_t end_tick,
     const std::array<float, Dimension>& current_normalized_values,
     const std::array<float, Dimension>& next_normalized_values, float z, bool is_last) {
-  constexpr float kDotRadius = 2.f;
+  constexpr float kDotRadius = 3.f;
   float x0 = this->time_graph_->GetWorldFromTick(start_tick);
   float x1 = this->time_graph_->GetWorldFromTick(end_tick);
   float content_height = this->GetGraphContentHeight();
