@@ -13,25 +13,25 @@ namespace orbit_linux_tracing {
 class PerfEventVisitor {
  public:
   virtual ~PerfEventVisitor() = default;
-  virtual void visit(ForkPerfEvent*) {}
-  virtual void visit(ExitPerfEvent*) {}
-  virtual void visit(ContextSwitchPerfEvent*) {}
-  virtual void visit(SystemWideContextSwitchPerfEvent*) {}
-  virtual void visit(StackSamplePerfEvent*) {}
-  virtual void visit(CallchainSamplePerfEvent*) {}
-  virtual void visit(UprobesPerfEvent*) {}
-  virtual void visit(UretprobesPerfEvent*) {}
-  virtual void visit(LostPerfEvent*) {}
-  virtual void visit(DiscardedPerfEvent*) {}
-  virtual void visit(MmapPerfEvent*) {}
-  virtual void visit(TaskNewtaskPerfEvent*) {}
-  virtual void visit(TaskRenamePerfEvent*) {}
-  virtual void visit(SchedSwitchPerfEvent*) {}
-  virtual void visit(SchedWakeupPerfEvent*) {}
-  virtual void visit(AmdgpuCsIoctlPerfEvent*) {}
-  virtual void visit(AmdgpuSchedRunJobPerfEvent*) {}
-  virtual void visit(DmaFenceSignaledPerfEvent*) {}
-  virtual void visit(GenericTracepointPerfEvent*) {}
+  virtual void Visit(ForkPerfEvent* /*event*/) {}
+  virtual void Visit(ExitPerfEvent* /*event*/) {}
+  virtual void Visit(ContextSwitchPerfEvent* /*event*/) {}
+  virtual void Visit(SystemWideContextSwitchPerfEvent* /*event*/) {}
+  virtual void Visit(StackSamplePerfEvent* /*event*/) {}
+  virtual void Visit(CallchainSamplePerfEvent* /*event*/) {}
+  virtual void Visit(UprobesPerfEvent* /*event*/) {}
+  virtual void Visit(UretprobesPerfEvent* /*event*/) {}
+  virtual void Visit(LostPerfEvent* /*event*/) {}
+  virtual void Visit(DiscardedPerfEvent* /*event*/) {}
+  virtual void Visit(MmapPerfEvent* /*event*/) {}
+  virtual void Visit(TaskNewtaskPerfEvent* /*event*/) {}
+  virtual void Visit(TaskRenamePerfEvent* /*event*/) {}
+  virtual void Visit(SchedSwitchPerfEvent* /*event*/) {}
+  virtual void Visit(SchedWakeupPerfEvent* /*event*/) {}
+  virtual void Visit(AmdgpuCsIoctlPerfEvent* /*event*/) {}
+  virtual void Visit(AmdgpuSchedRunJobPerfEvent* /*event*/) {}
+  virtual void Visit(DmaFenceSignaledPerfEvent* /*event*/) {}
+  virtual void Visit(GenericTracepointPerfEvent* /*event*/) {}
 };
 
 }  // namespace orbit_linux_tracing

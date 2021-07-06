@@ -26,7 +26,7 @@ void SwitchesStatesNamesVisitor::ProcessInitialTidToPidAssociation(pid_t tid, pi
   }
 }
 
-void SwitchesStatesNamesVisitor::visit(ForkPerfEvent* event) {
+void SwitchesStatesNamesVisitor::Visit(ForkPerfEvent* event) {
   pid_t pid = event->GetPid();
   pid_t tid = event->GetTid();
   bool new_insertion = tid_to_pid_association_.insert_or_assign(tid, pid).second;
@@ -43,7 +43,7 @@ void SwitchesStatesNamesVisitor::visit(ForkPerfEvent* event) {
 // thread exit the pid field of the PERF_RECORD_SAMPLE has value -1. In such special cases we can
 // still use the pid from PERF_RECORD_EXIT and update the association just in time, as
 // PERF_RECORD_EXIT events precede context switches with pid -1.
-void SwitchesStatesNamesVisitor::visit(ExitPerfEvent* event) {
+void SwitchesStatesNamesVisitor::Visit(ExitPerfEvent* event) {
   pid_t pid = event->GetPid();
   pid_t tid = event->GetTid();
   tid_to_pid_association_.insert_or_assign(tid, pid);
@@ -85,7 +85,7 @@ void SwitchesStatesNamesVisitor::ProcessInitialState(uint64_t timestamp_ns, pid_
   state_manager_.OnInitialState(timestamp_ns, tid, initial_state.value());
 }
 
-void SwitchesStatesNamesVisitor::visit(TaskNewtaskPerfEvent* event) {
+void SwitchesStatesNamesVisitor::Visit(TaskNewtaskPerfEvent* event) {
   std::optional<pid_t> new_pid = GetPidOfTid(event->GetNewTid());
   ThreadName thread_name;
   thread_name.set_pid(new_pid.value_or(-1));
@@ -100,7 +100,7 @@ void SwitchesStatesNamesVisitor::visit(TaskNewtaskPerfEvent* event) {
   state_manager_.OnNewTask(event->GetTimestamp(), event->GetNewTid());
 }
 
-void SwitchesStatesNamesVisitor::visit(SchedSwitchPerfEvent* event) {
+void SwitchesStatesNamesVisitor::Visit(SchedSwitchPerfEvent* event) {
   // Note that context switches with tid 0 are associated with idle CPU, so we never consider them.
 
   // Process the context switch out for scheduling slices.
@@ -163,7 +163,7 @@ void SwitchesStatesNamesVisitor::visit(SchedSwitchPerfEvent* event) {
   }
 }
 
-void SwitchesStatesNamesVisitor::visit(SchedWakeupPerfEvent* event) {
+void SwitchesStatesNamesVisitor::Visit(SchedWakeupPerfEvent* event) {
   if (!TidMatchesPidFilter(event->GetWokenTid())) {
     return;
   }
@@ -190,7 +190,7 @@ void SwitchesStatesNamesVisitor::ProcessRemainingOpenStates(uint64_t timestamp_n
   }
 }
 
-void SwitchesStatesNamesVisitor::visit(TaskRenamePerfEvent* event) {
+void SwitchesStatesNamesVisitor::Visit(TaskRenamePerfEvent* event) {
   std::optional<pid_t> renamed_pid = GetPidOfTid(event->GetRenamedTid());
   ThreadName thread_name;
   thread_name.set_pid(renamed_pid.value_or(-1));

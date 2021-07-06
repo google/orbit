@@ -217,7 +217,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->visit(&event);
+  visitor_->Visit(&event);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
               ElementsAre(kTargetAddress1, kTargetAddress2, kTargetAddress3));
@@ -275,7 +275,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitEmptyStackSampleWithoutUprobesDoesNothi
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->visit(&event);
+  visitor_->Visit(&event);
 
   EXPECT_EQ(unwinding_errors, 0);
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
@@ -323,7 +323,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->visit(&event);
+  visitor_->Visit(&event);
 
   // On unwinding errors, only the first frame is added to the Callstack.
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kTargetAddress1));
@@ -381,7 +381,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->visit(&event);
+  visitor_->Visit(&event);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kTargetAddress1));
   EXPECT_EQ(actual_callstack_sample.callstack().type(),
@@ -444,7 +444,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitStackSampleWithinUprobeSendsInUprobesCa
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->visit(&event);
+  visitor_->Visit(&event);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kUprobesMapsStart));
   EXPECT_EQ(actual_callstack_sample.callstack().type(), orbit_grpc_protos::Callstack::kInUprobes);
@@ -501,7 +501,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitValidCallchainSampleWithoutUprobesSends
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->visit(&event);
+  visitor_->Visit(&event);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
               ElementsAre(kTargetAddress1, kTargetAddress2, kTargetAddress3));
@@ -542,7 +542,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitSingleFrameCallchainSampleDoesNothing) 
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->visit(&event);
+  visitor_->Visit(&event);
 
   EXPECT_EQ(unwinding_errors, 0);
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
@@ -586,7 +586,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleInsideUprobeCodeSendsInU
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->visit(&event);
+  visitor_->Visit(&event);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kUprobesMapsStart));
   EXPECT_EQ(actual_callstack_sample.callstack().type(), orbit_grpc_protos::Callstack::kInUprobes);
@@ -645,7 +645,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleWithUprobeSendsCompleteC
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->visit(&event);
+  visitor_->Visit(&event);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
               ElementsAre(kTargetAddress1, kTargetAddress2, kTargetAddress3));
@@ -695,7 +695,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->visit(&event);
+  visitor_->Visit(&event);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kTargetAddress1));
   EXPECT_EQ(actual_callstack_sample.callstack().type(),
@@ -759,7 +759,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->visit(&event);
+  visitor_->Visit(&event);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
               ElementsAre(kTargetAddress1, kTargetAddress2, kTargetAddress3));
@@ -807,7 +807,7 @@ TEST_F(
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->visit(&event);
+  visitor_->Visit(&event);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kTargetAddress1));
   EXPECT_EQ(actual_callstack_sample.callstack().type(),

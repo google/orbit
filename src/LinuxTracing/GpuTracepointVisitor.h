@@ -24,9 +24,9 @@ class GpuTracepointVisitor : public PerfEventVisitor {
  public:
   void SetListener(TracerListener* listener);
 
-  void visit(AmdgpuCsIoctlPerfEvent* event) override;
-  void visit(AmdgpuSchedRunJobPerfEvent* event) override;
-  void visit(DmaFenceSignaledPerfEvent* event) override;
+  void Visit(AmdgpuCsIoctlPerfEvent* event) override;
+  void Visit(AmdgpuSchedRunJobPerfEvent* event) override;
+  void Visit(DmaFenceSignaledPerfEvent* event) override;
 
  private:
   // Keys are context, seqno, and timeline.
