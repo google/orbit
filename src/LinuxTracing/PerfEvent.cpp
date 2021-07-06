@@ -43,42 +43,42 @@ std::array<uint64_t, PERF_REG_X86_64_MAX> perf_event_sample_regs_user_all_to_reg
 // PerfEventVisitor needs to be an incomplete type to avoid the circular
 // dependency between PerfEvent.h and PerfEventVisitor.h.
 
-void ForkPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
+void ForkPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
-void ExitPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
+void ExitPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
-void ContextSwitchPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
+void ContextSwitchPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
-void SystemWideContextSwitchPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
+void SystemWideContextSwitchPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
-void StackSamplePerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
+void StackSamplePerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
-void CallchainSamplePerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
+void CallchainSamplePerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
-void UprobesPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
+void UprobesPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
-void UretprobesPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
+void UretprobesPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
-void LostPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
+void LostPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
-void DiscardedPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
+void DiscardedPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
-void MmapPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
+void MmapPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
-void TaskNewtaskPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
+void TaskNewtaskPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
-void TaskRenamePerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
+void TaskRenamePerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
-void SchedSwitchPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
+void SchedSwitchPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
-void SchedWakeupPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
+void SchedWakeupPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
-void AmdgpuCsIoctlPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
+void AmdgpuCsIoctlPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
-void AmdgpuSchedRunJobPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
+void AmdgpuSchedRunJobPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
-void DmaFenceSignaledPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
+void DmaFenceSignaledPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
-void GenericTracepointPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->visit(this); }
+void GenericTracepointPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
 }  // namespace orbit_linux_tracing

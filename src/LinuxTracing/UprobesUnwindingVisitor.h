@@ -78,11 +78,11 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
     samples_in_uretprobes_counter_ = samples_in_uretprobes_counter;
   }
 
-  void visit(StackSamplePerfEvent* event) override;
-  void visit(CallchainSamplePerfEvent* event) override;
-  void visit(UprobesPerfEvent* event) override;
-  void visit(UretprobesPerfEvent* event) override;
-  void visit(MmapPerfEvent* event) override;
+  void Visit(StackSamplePerfEvent* event) override;
+  void Visit(CallchainSamplePerfEvent* event) override;
+  void Visit(UprobesPerfEvent* event) override;
+  void Visit(UretprobesPerfEvent* event) override;
+  void Visit(MmapPerfEvent* event) override;
 
  private:
   UprobesFunctionCallManager* function_call_manager_;

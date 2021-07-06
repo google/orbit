@@ -18,7 +18,7 @@ class LostAndDiscardedEventVisitor : public PerfEventVisitor {
  public:
   void SetListener(TracerListener* listener) { listener_ = listener; }
 
-  void visit(LostPerfEvent* event) override {
+  void Visit(LostPerfEvent* event) override {
     orbit_grpc_protos::LostPerfRecordsEvent lost_perf_records_event;
     lost_perf_records_event.set_duration_ns(event->GetTimestamp() - event->GetPreviousTimestamp());
     lost_perf_records_event.set_end_timestamp_ns(event->GetTimestamp());
@@ -27,7 +27,7 @@ class LostAndDiscardedEventVisitor : public PerfEventVisitor {
     listener_->OnLostPerfRecordsEvent(std::move(lost_perf_records_event));
   }
 
-  void visit(DiscardedPerfEvent* event) override {
+  void Visit(DiscardedPerfEvent* event) override {
     orbit_grpc_protos::OutOfOrderEventsDiscardedEvent out_of_order_events_discarded_event;
     out_of_order_events_discarded_event.set_duration_ns(event->GetEndTimestampNs() -
                                                         event->GetBeginTimestampNs());

@@ -129,7 +129,7 @@ void GpuTracepointVisitor::CreateGpuJobAndSendToListenerIfComplete(const Key& ke
 // map and then try to create a complete GPU execution event. This event is only
 // created when all three types of GPU events have been received.
 
-void GpuTracepointVisitor::visit(AmdgpuCsIoctlPerfEvent* event) {
+void GpuTracepointVisitor::Visit(AmdgpuCsIoctlPerfEvent* event) {
   AmdgpuCsIoctlEvent internal_event{event->GetPid(),       event->GetTid(),
                                     event->GetTimestamp(), event->GetContext(),
                                     event->GetSeqno(),     event->ExtractTimelineString()};
@@ -139,7 +139,7 @@ void GpuTracepointVisitor::visit(AmdgpuCsIoctlPerfEvent* event) {
   CreateGpuJobAndSendToListenerIfComplete(key);
 }
 
-void GpuTracepointVisitor::visit(AmdgpuSchedRunJobPerfEvent* event) {
+void GpuTracepointVisitor::Visit(AmdgpuSchedRunJobPerfEvent* event) {
   AmdgpuSchedRunJobEvent internal_event{event->GetTimestamp(), event->GetContext(),
                                         event->GetSeqno(), event->ExtractTimelineString()};
   Key key = std::make_tuple(event->GetContext(), event->GetSeqno(), event->ExtractTimelineString());
@@ -148,7 +148,7 @@ void GpuTracepointVisitor::visit(AmdgpuSchedRunJobPerfEvent* event) {
   CreateGpuJobAndSendToListenerIfComplete(key);
 }
 
-void GpuTracepointVisitor::visit(DmaFenceSignaledPerfEvent* event) {
+void GpuTracepointVisitor::Visit(DmaFenceSignaledPerfEvent* event) {
   DmaFenceSignaledEvent internal_event{event->GetTimestamp(), event->GetContext(),
                                        event->GetSeqno(), event->ExtractTimelineString()};
   Key key = std::make_tuple(event->GetContext(), event->GetSeqno(), event->ExtractTimelineString());

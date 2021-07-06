@@ -61,7 +61,7 @@ static void SendUprobesFullAddressInfoToListener(
   listener->OnAddressInfo(std::move(address_info));
 }
 
-void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
+void UprobesUnwindingVisitor::Visit(StackSamplePerfEvent* event) {
   CHECK(listener_ != nullptr);
   CHECK(current_maps_ != nullptr);
 
@@ -137,7 +137,7 @@ void UprobesUnwindingVisitor::visit(StackSamplePerfEvent* event) {
   listener_->OnCallstackSample(std::move(sample));
 }
 
-void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
+void UprobesUnwindingVisitor::Visit(CallchainSamplePerfEvent* event) {
   CHECK(listener_ != nullptr);
   CHECK(current_maps_ != nullptr);
 
@@ -243,7 +243,7 @@ void UprobesUnwindingVisitor::visit(CallchainSamplePerfEvent* event) {
   listener_->OnCallstackSample(std::move(sample));
 }
 
-void UprobesUnwindingVisitor::visit(UprobesPerfEvent* event) {
+void UprobesUnwindingVisitor::Visit(UprobesPerfEvent* event) {
   CHECK(listener_ != nullptr);
 
   // We are seeing that, on thread migration, uprobe events can sometimes be
@@ -285,7 +285,7 @@ void UprobesUnwindingVisitor::visit(UprobesPerfEvent* event) {
                                           event->GetReturnAddress());
 }
 
-void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
+void UprobesUnwindingVisitor::Visit(UretprobesPerfEvent* event) {
   CHECK(listener_ != nullptr);
 
   // Duplicate uprobe detection.
@@ -304,14 +304,14 @@ void UprobesUnwindingVisitor::visit(UretprobesPerfEvent* event) {
   return_address_manager_->ProcessUretprobes(event->GetTid());
 }
 
-void UprobesUnwindingVisitor::visit(MmapPerfEvent* event) {
+void UprobesUnwindingVisitor::Visit(MmapPerfEvent* event) {
   CHECK(listener_ != nullptr);
   CHECK(current_maps_ != nullptr);
 
   // Obviously the uprobes map cannot be successfully processed by orbit_object_utils::CreateModule,
   // but it's important that current_maps_ contain it.
   // For example, UprobesReturnAddressManager::PatchCallchain needs it to check whether a program
-  // counter is inside the uprobes map, and UprobesUnwindingVisitor::visit(StackSamplePerfEvent*)
+  // counter is inside the uprobes map, and UprobesUnwindingVisitor::Visit(StackSamplePerfEvent*)
   // needs it to throw away incorrectly-unwound samples.
   // As below we are only adding maps successfully parsed with orbit_object_utils::CreateModule,
   // we add the uprobes map manually. We are using the same values that that uprobes map would get
