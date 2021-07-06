@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>976</width>
-    <height>671</height>
+    <width>2481</width>
+    <height>1138</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -90,14 +90,105 @@ QPushButton:disabled {
            <addaction name="actionOpen_Capture"/>
            <addaction name="actionHelp"/>
            <addaction name="actionIntrospection"/>
+           <addaction name="actionConfigureTracks"/>
           </widget>
          </item>
          <item>
-          <widget class="OrbitGLWidget" name="CaptureGLWidget"/>
+          <widget class="QFrame" name="frame">
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+           <property name="lineWidth">
+            <number>0</number>
+           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <property name="spacing">
+             <number>7</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QSplitter" name="captureWindowSplitter">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="midLineWidth">
+               <number>0</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="opaqueResize">
+               <bool>true</bool>
+              </property>
+              <property name="handleWidth">
+               <number>20</number>
+              </property>
+              <property name="childrenCollapsible">
+               <bool>false</bool>
+              </property>
+              <widget class="orbit_qt::TrackConfigurationWidget" name="trackConfig" native="true">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="baseSize">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </widget>
+              <widget class="OrbitGLWidget" name="CaptureGLWidget">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>200</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </widget>
+             </widget>
+            </item>
+           </layout>
+          </widget>
          </item>
         </layout>
-        <zorder>CaptureGLWidget</zorder>
-        <zorder>capture_toolbar</zorder>
        </widget>
       </widget>
       <widget class="QSplitter" name="rightTabsAndLogSplitter">
@@ -286,8 +377,8 @@ QPushButton:disabled {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>976</width>
-     <height>20</height>
+     <width>2481</width>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -540,6 +631,21 @@ QPushButton:disabled {
 It used to also contain captures and presets, but these were moved to the User Data directory.</string>
    </property>
   </action>
+  <action name="actionConfigureTracks">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../../icons/orbiticons.qrc">
+     <normaloff>:/actions/track_settings</normaloff>:/actions/track_settings</iconset>
+   </property>
+   <property name="text">
+    <string>Toggle the track configuration pane</string>
+   </property>
+   <property name="toolTip">
+    <string>Configure tracks</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
@@ -567,6 +673,12 @@ It used to also contain captures and presets, but these were moved to the User D
    <class>CallTreeWidget</class>
    <extends>QWidget</extends>
    <header>CallTreeWidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>orbit_qt::TrackConfigurationWidget</class>
+   <extends>QWidget</extends>
+   <header>TrackConfigurationWidget.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

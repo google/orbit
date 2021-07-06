@@ -53,3 +53,6 @@ ABSL_FLAG(bool, enable_warning_threshold, false,
 
 ABSL_FLAG(bool, enable_cgroup_memory, false,
           "Enable collecting cgroup and process memory usage information");
+
+ABSL_FLAG(bool, enable_track_type_visibility_feature, false,
+          "Enable changing track visibility by type");
