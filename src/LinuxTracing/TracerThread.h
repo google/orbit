@@ -91,13 +91,18 @@ class TracerThread {
 
   void InitLostAndDiscardedEventVisitor();
 
-  void ProcessForkEvent(const perf_event_header& header, PerfEventRingBuffer* ring_buffer);
-  void ProcessExitEvent(const perf_event_header& header, PerfEventRingBuffer* ring_buffer);
-  void ProcessMmapEvent(const perf_event_header& header, PerfEventRingBuffer* ring_buffer);
-  void ProcessSampleEvent(const perf_event_header& header, PerfEventRingBuffer* ring_buffer);
-  void ProcessLostEvent(const perf_event_header& header, PerfEventRingBuffer* ring_buffer);
-  void ProcessThrottleUnthrottleEvent(const perf_event_header& header,
-                                      PerfEventRingBuffer* ring_buffer);
+  [[nodiscard]] uint64_t ProcessForkEventAndReturnTimestamp(const perf_event_header& header,
+                                                            PerfEventRingBuffer* ring_buffer);
+  [[nodiscard]] uint64_t ProcessExitEventAndReturnTimestamp(const perf_event_header& header,
+                                                            PerfEventRingBuffer* ring_buffer);
+  [[nodiscard]] uint64_t ProcessMmapEventAndReturnTimestamp(const perf_event_header& header,
+                                                            PerfEventRingBuffer* ring_buffer);
+  [[nodiscard]] uint64_t ProcessSampleEventAndReturnTimestamp(const perf_event_header& header,
+                                                              PerfEventRingBuffer* ring_buffer);
+  [[nodiscard]] uint64_t ProcessLostEventAndReturnTimestamp(const perf_event_header& header,
+                                                            PerfEventRingBuffer* ring_buffer);
+  [[nodiscard]] uint64_t ProcessThrottleUnthrottleEventAndReturnTimestamp(
+      const perf_event_header& header, PerfEventRingBuffer* ring_buffer);
 
   void DeferEvent(std::unique_ptr<PerfEvent> event);
   std::vector<std::unique_ptr<PerfEvent>> ConsumeDeferredEvents();
