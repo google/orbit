@@ -16,7 +16,9 @@ namespace orbit_linux_tracing {
 // MetadataEvents to the TracerListener.
 class LostAndDiscardedEventVisitor : public PerfEventVisitor {
  public:
-  void SetListener(TracerListener* listener) { listener_ = listener; }
+  explicit LostAndDiscardedEventVisitor(TracerListener* listener) : listener_{listener} {
+    CHECK(listener_ != nullptr);
+  }
 
   void Visit(LostPerfEvent* event) override {
     orbit_grpc_protos::LostPerfRecordsEvent lost_perf_records_event;
@@ -38,7 +40,7 @@ class LostAndDiscardedEventVisitor : public PerfEventVisitor {
   }
 
  private:
-  TracerListener* listener_ = nullptr;
+  TracerListener* listener_;
 };
 
 }  // namespace orbit_linux_tracing

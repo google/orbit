@@ -48,12 +48,8 @@ class MockTracerListener : public TracerListener {
 
 class GpuTracepointVisitorTest : public ::testing::Test {
  protected:
-  void SetUp() override { visitor_.SetListener(&mock_listener_); }
-
-  void TearDown() override {}
-
-  GpuTracepointVisitor visitor_;
   MockTracerListener mock_listener_;
+  GpuTracepointVisitor visitor_{&mock_listener_};
 };
 
 std::unique_ptr<AmdgpuCsIoctlPerfEvent> MakeFakeAmdgpuCsIoctlPerfEvent(
@@ -164,23 +160,7 @@ orbit_grpc_protos::FullGpuJob MakeGpuJob(int32_t pid, int32_t tid, uint32_t cont
 }  // namespace
 
 TEST(GpuTracepointVisitor, NeedsListener) {
-  static constexpr pid_t kPid = 41;
-  static constexpr pid_t kTid = 42;
-  static constexpr uint32_t kContext = 1;
-  static constexpr uint32_t kSeqno = 10;
-  static const std::string kTimeline = "timeline";
-  static constexpr uint64_t kTimestampA = 100;
-  static constexpr uint64_t kTimestampB = 200;
-  static constexpr uint64_t kTimestampD = 300;
-
-  GpuTracepointVisitor visitor;
-
-  MakeFakeAmdgpuCsIoctlPerfEvent(kPid, kTid, kTimestampA, kContext, kSeqno, kTimeline)
-      ->Accept(&visitor);
-  MakeFakeAmdgpuSchedRunJobPerfEvent(kTimestampB, kContext, kSeqno, kTimeline)->Accept(&visitor);
-  EXPECT_DEATH(
-      MakeFakeDmaFenceSignaledPerfEvent(kTimestampD, kContext, kSeqno, kTimeline)->Accept(&visitor),
-      "listener_ != nullptr");
+  EXPECT_DEATH(GpuTracepointVisitor{nullptr}, "listener_ != nullptr");
 }
 
 TEST_F(GpuTracepointVisitorTest, JobCreatedWithAllThreePerfEvents) {

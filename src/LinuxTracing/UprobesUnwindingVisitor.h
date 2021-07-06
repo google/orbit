@@ -46,16 +46,19 @@ namespace orbit_linux_tracing {
 
 class UprobesUnwindingVisitor : public PerfEventVisitor {
  public:
-  explicit UprobesUnwindingVisitor(UprobesFunctionCallManager* function_call_manager,
+  explicit UprobesUnwindingVisitor(TracerListener* listener,
+                                   UprobesFunctionCallManager* function_call_manager,
                                    UprobesReturnAddressManager* uprobes_return_address_manager,
                                    LibunwindstackMaps* initial_maps,
                                    LibunwindstackUnwinder* unwinder,
                                    LeafFunctionCallManager* leaf_function_call_manager)
-      : function_call_manager_{function_call_manager},
+      : listener_{listener},
+        function_call_manager_{function_call_manager},
         return_address_manager_{uprobes_return_address_manager},
         current_maps_{initial_maps},
         unwinder_{unwinder},
         leaf_function_call_manager_{leaf_function_call_manager} {
+    CHECK(listener_ != nullptr);
     CHECK(function_call_manager_ != nullptr);
     CHECK(return_address_manager_ != nullptr);
     CHECK(current_maps_ != nullptr);
@@ -68,8 +71,6 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
 
   UprobesUnwindingVisitor(UprobesUnwindingVisitor&&) = default;
   UprobesUnwindingVisitor& operator=(UprobesUnwindingVisitor&&) = default;
-
-  void SetListener(TracerListener* listener) { listener_ = listener; }
 
   void SetUnwindErrorsAndDiscardedSamplesCounters(
       std::atomic<uint64_t>* unwind_error_counter,
@@ -85,13 +86,13 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   void Visit(MmapPerfEvent* event) override;
 
  private:
+  TracerListener* listener_;
+
   UprobesFunctionCallManager* function_call_manager_;
   UprobesReturnAddressManager* return_address_manager_;
   LibunwindstackMaps* current_maps_;
   LibunwindstackUnwinder* unwinder_;
   LeafFunctionCallManager* leaf_function_call_manager_;
-
-  TracerListener* listener_ = nullptr;
 
   std::atomic<uint64_t>* unwind_error_counter_ = nullptr;
   std::atomic<uint64_t>* samples_in_uretprobes_counter_ = nullptr;
