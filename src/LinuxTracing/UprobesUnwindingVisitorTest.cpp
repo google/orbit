@@ -87,10 +87,9 @@ class MockUprobesFunctionCallManager : public UprobesFunctionCallManager {};
 class UprobesUnwindingVisitorTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    visitor_ =
-        std::make_unique<UprobesUnwindingVisitor>(&function_call_manager_, &return_address_manager_,
-                                                  &maps_, &unwinder_, &leaf_function_call_manager_);
-    visitor_->SetListener(&listener_);
+    visitor_ = std::make_unique<UprobesUnwindingVisitor>(&listener_, &function_call_manager_,
+                                                         &return_address_manager_, &maps_,
+                                                         &unwinder_, &leaf_function_call_manager_);
 
     EXPECT_CALL(maps_, Find(AllOf(Ge(kUprobesMapsStart), Lt(kUprobesMapsEnd))))
         .WillRepeatedly(Return(&kUprobesMapInfo));

@@ -63,21 +63,14 @@ class MockTracerListener : public TracerListener {
 
 class LostAndDiscardedEventVisitorTest : public ::testing::Test {
  protected:
-  void SetUp() override { visitor_.SetListener(&mock_listener_); }
-
-  void TearDown() override {}
-
-  LostAndDiscardedEventVisitor visitor_;
   MockTracerListener mock_listener_;
+  LostAndDiscardedEventVisitor visitor_{&mock_listener_};
 };
 
 }  // namespace
 
 TEST(LostAndDiscardedEventVisitor, NeedsVisitor) {
-  LostAndDiscardedEventVisitor visitor;
-
-  EXPECT_DEATH(MakeFakeLostPerfEvent(1111, 1234)->Accept(&visitor), "listener_ != nullptr");
-  EXPECT_DEATH(MakeFakeDiscardedPerfEvent(1111, 1234)->Accept(&visitor), "listener_ != nullptr");
+  EXPECT_DEATH(LostAndDiscardedEventVisitor{nullptr}, "listener_ != nullptr");
 }
 
 TEST_F(LostAndDiscardedEventVisitorTest, VisitLostPerfEventCallsOnLostPerfRecordsEvent) {

@@ -157,6 +157,4 @@ void GpuTracepointVisitor::Visit(DmaFenceSignaledPerfEvent* event) {
   CreateGpuJobAndSendToListenerIfComplete(key);
 }
 
-void GpuTracepointVisitor::SetListener(TracerListener* listener) { listener_ = listener; }
-
 }  // namespace orbit_linux_tracing

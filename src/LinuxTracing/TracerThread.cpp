@@ -117,9 +117,8 @@ void TracerThread::InitUprobesEventVisitor() {
   unwinder_ = LibunwindstackUnwinder::Create();
   leaf_function_call_manager_ = std::make_unique<LeafFunctionCallManager>(stack_dump_size_);
   uprobes_unwinding_visitor_ = std::make_unique<UprobesUnwindingVisitor>(
-      &function_call_manager_, &return_address_manager_, maps_.get(), unwinder_.get(),
+      listener_, &function_call_manager_, &return_address_manager_, maps_.get(), unwinder_.get(),
       leaf_function_call_manager_.get());
-  uprobes_unwinding_visitor_->SetListener(listener_);
   uprobes_unwinding_visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(
       &stats_.unwind_error_count, &stats_.samples_in_uretprobes_count);
   event_processor_.AddVisitor(uprobes_unwinding_visitor_.get());
@@ -445,8 +444,7 @@ bool TracerThread::OpenThreadNameTracepoints(const std::vector<int32_t>& cpus) {
 
 void TracerThread::InitSwitchesStatesNamesVisitor() {
   ORBIT_SCOPE_FUNCTION;
-  switches_states_names_visitor_ = std::make_unique<SwitchesStatesNamesVisitor>();
-  switches_states_names_visitor_->SetListener(listener_);
+  switches_states_names_visitor_ = std::make_unique<SwitchesStatesNamesVisitor>(listener_);
   switches_states_names_visitor_->SetProduceSchedulingSlices(trace_context_switches_);
   if (trace_thread_state_) {
     switches_states_names_visitor_->SetThreadStatePidFilter(target_pid_);
@@ -478,8 +476,7 @@ bool TracerThread::OpenContextSwitchAndThreadStateTracepoints(const std::vector<
 
 void TracerThread::InitGpuTracepointEventVisitor() {
   ORBIT_SCOPE_FUNCTION;
-  gpu_event_visitor_ = std::make_unique<GpuTracepointVisitor>();
-  gpu_event_visitor_->SetListener(listener_);
+  gpu_event_visitor_ = std::make_unique<GpuTracepointVisitor>(listener_);
   event_processor_.AddVisitor(gpu_event_visitor_.get());
 }
 
@@ -528,8 +525,7 @@ bool TracerThread::OpenInstrumentedTracepoints(const std::vector<int32_t>& cpus)
 
 void TracerThread::InitLostAndDiscardedEventVisitor() {
   ORBIT_SCOPE_FUNCTION;
-  lost_and_discarded_event_visitor_ = std::make_unique<LostAndDiscardedEventVisitor>();
-  lost_and_discarded_event_visitor_->SetListener(listener_);
+  lost_and_discarded_event_visitor_ = std::make_unique<LostAndDiscardedEventVisitor>(listener_);
   event_processor_.AddVisitor(lost_and_discarded_event_visitor_.get());
 }
 
