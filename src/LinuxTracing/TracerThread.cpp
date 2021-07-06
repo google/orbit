@@ -731,6 +731,8 @@ void TracerThread::Shutdown() {
 }
 
 void TracerThread::ProcessOneRecord(PerfEventRingBuffer* ring_buffer) {
+  uint64_t event_timestamp_ns = 0;
+
   perf_event_header header;
   ring_buffer->ReadHeader(&header);
 
@@ -745,29 +747,34 @@ void TracerThread::ProcessOneRecord(PerfEventRingBuffer* ring_buffer) {
       ERROR("Unexpected PERF_RECORD_SWITCH_CPU_WIDE in ring buffer '%s'", ring_buffer->GetName());
       break;
     case PERF_RECORD_FORK:
-      ProcessForkEvent(header, ring_buffer);
+      event_timestamp_ns = ProcessForkEventAndReturnTimestamp(header, ring_buffer);
       break;
     case PERF_RECORD_EXIT:
-      ProcessExitEvent(header, ring_buffer);
+      event_timestamp_ns = ProcessExitEventAndReturnTimestamp(header, ring_buffer);
       break;
     case PERF_RECORD_MMAP:
-      ProcessMmapEvent(header, ring_buffer);
+      event_timestamp_ns = ProcessMmapEventAndReturnTimestamp(header, ring_buffer);
       break;
     case PERF_RECORD_SAMPLE:
-      ProcessSampleEvent(header, ring_buffer);
+      event_timestamp_ns = ProcessSampleEventAndReturnTimestamp(header, ring_buffer);
       break;
     case PERF_RECORD_LOST:
-      ProcessLostEvent(header, ring_buffer);
+      event_timestamp_ns = ProcessLostEventAndReturnTimestamp(header, ring_buffer);
       break;
     case PERF_RECORD_THROTTLE:
     case PERF_RECORD_UNTHROTTLE:
-      ProcessThrottleUnthrottleEvent(header, ring_buffer);
+      event_timestamp_ns = ProcessThrottleUnthrottleEventAndReturnTimestamp(header, ring_buffer);
       break;
     default:
       ERROR("Unexpected perf_event_header::type in ring buffer '%s': %u", ring_buffer->GetName(),
             header.type);
       ring_buffer->SkipRecord(header);
       break;
+  }
+
+  if (event_timestamp_ns != 0) {
+    fds_to_last_timestamp_ns_.insert_or_assign(ring_buffer->GetFileDescriptor(),
+                                               event_timestamp_ns);
   }
 }
 
@@ -832,67 +839,69 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   Shutdown();
 }
 
-void TracerThread::ProcessForkEvent(const perf_event_header& header,
-                                    PerfEventRingBuffer* ring_buffer) {
+uint64_t TracerThread::ProcessForkEventAndReturnTimestamp(const perf_event_header& header,
+                                                          PerfEventRingBuffer* ring_buffer) {
   auto event = make_unique_for_overwrite<ForkPerfEvent>();
   ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
-  fds_to_last_timestamp_ns_.insert_or_assign(ring_buffer->GetFileDescriptor(),
-                                             event->GetTimestamp());
+  const uint64_t timestamp_ns = event->GetTimestamp();
 
-  if (event->GetTimestamp() < effective_capture_start_timestamp_ns_) {
-    return;
+  if (timestamp_ns < effective_capture_start_timestamp_ns_) {
+    return timestamp_ns;
   }
 
   // PERF_RECORD_FORK is used by SwitchesStatesNamesVisitor
   // to keep the association between tid and pid.
   event->SetOrderedInFileDescriptor(ring_buffer->GetFileDescriptor());
   DeferEvent(std::move(event));
+
+  return timestamp_ns;
 }
 
-void TracerThread::ProcessExitEvent(const perf_event_header& header,
-                                    PerfEventRingBuffer* ring_buffer) {
+uint64_t TracerThread::ProcessExitEventAndReturnTimestamp(const perf_event_header& header,
+                                                          PerfEventRingBuffer* ring_buffer) {
   auto event = make_unique_for_overwrite<ExitPerfEvent>();
   ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
-  fds_to_last_timestamp_ns_.insert_or_assign(ring_buffer->GetFileDescriptor(),
-                                             event->GetTimestamp());
+  const uint64_t timestamp_ns = event->GetTimestamp();
 
-  if (event->GetTimestamp() < effective_capture_start_timestamp_ns_) {
-    return;
+  if (timestamp_ns < effective_capture_start_timestamp_ns_) {
+    return timestamp_ns;
   }
 
   // PERF_RECORD_EXIT is also used by SwitchesStatesNamesVisitor
   // to keep the association between tid and pid.
   event->SetOrderedInFileDescriptor(ring_buffer->GetFileDescriptor());
   DeferEvent(std::move(event));
+
+  return timestamp_ns;
 }
 
-void TracerThread::ProcessMmapEvent(const perf_event_header& header,
-                                    PerfEventRingBuffer* ring_buffer) {
+uint64_t TracerThread::ProcessMmapEventAndReturnTimestamp(const perf_event_header& header,
+                                                          PerfEventRingBuffer* ring_buffer) {
   auto event = ConsumeMmapPerfEvent(ring_buffer, header);
-  fds_to_last_timestamp_ns_.insert_or_assign(ring_buffer->GetFileDescriptor(),
-                                             event->GetTimestamp());
+  uint64_t timestamp_ns = event->GetTimestamp();
 
   if (event->pid() != target_pid_) {
-    return;
+    return timestamp_ns;
   }
 
   if (event->GetTimestamp() < effective_capture_start_timestamp_ns_) {
-    return;
+    return timestamp_ns;
   }
 
   event->SetOrderedInFileDescriptor(ring_buffer->GetFileDescriptor());
   DeferEvent(std::move(event));
+
+  return timestamp_ns;
 }
 
-void TracerThread::ProcessSampleEvent(const perf_event_header& header,
-                                      PerfEventRingBuffer* ring_buffer) {
-  uint64_t time = ReadSampleRecordTime(ring_buffer);
-  fds_to_last_timestamp_ns_.insert_or_assign(ring_buffer->GetFileDescriptor(), time);
+uint64_t TracerThread::ProcessSampleEventAndReturnTimestamp(const perf_event_header& header,
+                                                            PerfEventRingBuffer* ring_buffer) {
+  uint64_t timestamp_ns = ReadSampleRecordTime(ring_buffer);
 
-  if (time < effective_capture_start_timestamp_ns_) {
+  if (timestamp_ns < effective_capture_start_timestamp_ns_) {
     // Don't consider events that came before all file descriptors had been enabled.
     ring_buffer->SkipRecord(header);
-    return;
+    return timestamp_ns;
   }
 
   uint64_t stream_id = ReadSampleRecordStreamId(ring_buffer);
@@ -924,7 +933,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     constexpr size_t kSizeOfUprobes = sizeof(perf_event_uprobe);
     CHECK(header.size == kSizeOfUprobes);
     if (event->GetPid() != target_pid_) {
-      return;
+      return timestamp_ns;
     }
 
     event->SetFunction(uprobes_uretprobes_ids_to_function_.at(event->GetStreamId()));
@@ -938,7 +947,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     constexpr size_t kSizeOfUretprobes = sizeof(perf_event_ax_sample);
     CHECK(header.size == kSizeOfUretprobes);
     if (event->GetPid() != target_pid_) {
-      return;
+      return timestamp_ns;
     }
 
     event->SetFunction(uprobes_uretprobes_ids_to_function_.at(event->GetStreamId()));
@@ -961,11 +970,11 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
       // might get a stack sample with pid and tid != 0 but still with
       // abi == PERF_SAMPLE_REGS_ABI_NONE and size == 0.
       ring_buffer->SkipRecord(header);
-      return;
+      return timestamp_ns;
     }
     if (pid != target_pid_) {
       ring_buffer->SkipRecord(header);
-      return;
+      return timestamp_ns;
     }
     // Do *not* filter out samples based on header.misc,
     // e.g., with header.misc == PERF_RECORD_MISC_KERNEL,
@@ -980,7 +989,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     pid_t pid = ReadSampleRecordPid(ring_buffer);
     if (pid != target_pid_) {
       ring_buffer->SkipRecord(header);
-      return;
+      return timestamp_ns;
     }
 
     auto event = ConsumeCallchainSamplePerfEvent(ring_buffer, header);
@@ -1034,7 +1043,7 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     auto it = ids_to_tracepoint_info_.find(stream_id);
 
     if (it == ids_to_tracepoint_info_.end()) {
-      return;
+      return timestamp_ns;
     }
 
     auto event = ConsumeGenericTracepointPerfEvent(ring_buffer, header);
@@ -1055,12 +1064,15 @@ void TracerThread::ProcessSampleEvent(const perf_event_header& header,
     ERROR("PERF_EVENT_SAMPLE with unexpected stream_id: %lu", stream_id);
     ring_buffer->SkipRecord(header);
   }
+
+  return timestamp_ns;
 }
 
-void TracerThread::ProcessLostEvent(const perf_event_header& header,
-                                    PerfEventRingBuffer* ring_buffer) {
+uint64_t TracerThread::ProcessLostEventAndReturnTimestamp(const perf_event_header& header,
+                                                          PerfEventRingBuffer* ring_buffer) {
   auto event = std::make_unique<LostPerfEvent>();
   ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
+  uint64_t timestamp_ns = event->GetTimestamp();
 
   stats_.lost_count += event->GetNumLost();
   stats_.lost_count_per_buffer[ring_buffer] += event->GetNumLost();
@@ -1072,25 +1084,24 @@ void TracerThread::ProcessLostEvent(const perf_event_header& header,
       it != fds_to_last_timestamp_ns_.end()) {
     fd_previous_timestamp_ns = it->second;
   }
-  fds_to_last_timestamp_ns_.insert_or_assign(ring_buffer->GetFileDescriptor(),
-                                             event->GetTimestamp());
   if (fd_previous_timestamp_ns == 0) {
     // This shouldn't happen because PERF_RECORD_LOST is reported when a ring buffer is full, which
     // means that there were other events in the same ring buffers, and they have already been read.
     ERROR("Unknown previous timestamp for ring buffer '%s'", ring_buffer->GetName());
-    return;
+    return timestamp_ns;
   }
 
   event->SetPreviousTimestamp(fd_previous_timestamp_ns);
   DeferEvent(std::move(event));
+
+  return timestamp_ns;
 }
 
-void TracerThread::ProcessThrottleUnthrottleEvent(const perf_event_header& header,
-                                                  PerfEventRingBuffer* ring_buffer) {
+uint64_t TracerThread::ProcessThrottleUnthrottleEventAndReturnTimestamp(
+    const perf_event_header& header, PerfEventRingBuffer* ring_buffer) {
   // Throttle/unthrottle events are reported when sampling causes too much throttling on the CPU.
   // They are usually caused by/reproducible with a very high sampling frequency.
   uint64_t timestamp_ns = ReadThrottleUnthrottleRecordTime(ring_buffer);
-  fds_to_last_timestamp_ns_.insert_or_assign(ring_buffer->GetFileDescriptor(), timestamp_ns);
 
   ring_buffer->SkipRecord(header);
 
@@ -1107,6 +1118,8 @@ void TracerThread::ProcessThrottleUnthrottleEvent(const perf_event_header& heade
     default:
       UNREACHABLE();
   }
+
+  return timestamp_ns;
 }
 
 void TracerThread::DeferEvent(std::unique_ptr<PerfEvent> event) {
