@@ -122,6 +122,7 @@ ABSL_DECLARE_FLAG(bool, enable_tutorials_feature);
 ABSL_DECLARE_FLAG(uint16_t, sampling_rate);
 ABSL_DECLARE_FLAG(uint16_t, stack_dump_size);
 ABSL_DECLARE_FLAG(bool, frame_pointer_unwinding);
+ABSL_DECLARE_FLAG(bool, enable_track_type_visibility_feature);
 
 using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureListener;
@@ -330,6 +331,7 @@ void OrbitMainWindow::SetupMainWindow() {
   }
 
   SetupCaptureToolbar();
+  SetupTrackConfigurationUi();
 
   icon_keyboard_arrow_left_ = QIcon(":/actions/keyboard_arrow_left");
   icon_keyboard_arrow_right_ = QIcon(":/actions/keyboard_arrow_right");
@@ -483,6 +485,22 @@ void OrbitMainWindow::SetupStatusBarLogButton() {
   });
 }
 
+void OrbitMainWindow::SetupTrackConfigurationUi() {
+  QList<int> sizes;
+  // Resize the splitter to force the track config UI to minimal size.
+  // Usually the size policies should take care of this, but for reasons
+  // unknown I can't get this to work with those two widgets...
+  sizes.append(0);
+  sizes.append(16777215);
+  ui->captureWindowSplitter->setSizes(sizes);
+  ui->trackConfig->hide();
+  QObject::connect(ui->actionConfigureTracks, &QAction::toggled,
+                   [this](bool checked) { ui->trackConfig->setVisible(checked); });
+  if (!absl::GetFlag(FLAGS_enable_track_type_visibility_feature)) {
+    ui->capture_toolbar->removeAction(ui->actionConfigureTracks);
+  }
+}
+
 void OrbitMainWindow::SetupAccessibleNamesForAutomation() {
   for (QTabWidget* tab_widget : {ui->MainTabWidget, ui->RightTabWidget}) {
     for (int i = 0; i < tab_widget->count(); ++i) {
@@ -570,6 +588,7 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   ui->actionOpen_Capture->setEnabled(!is_capturing);
   ui->actionOpen_Preset->setEnabled(!is_capturing && is_connected_);
   ui->actionSave_Preset_As->setEnabled(!is_capturing);
+  ui->actionConfigureTracks->setEnabled(has_data);
 
   filter_panel_action_->setEnabled(has_data);
 
@@ -586,14 +605,21 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   } else if (capture_state == CaptureClient::State::kStopped) {
     capture_log_button_->setChecked(false);
   }
+
+  if (has_data && absl::GetFlag(FLAGS_enable_track_type_visibility_feature)) {
+    TrackManager* track_manager = dynamic_cast<CaptureWindow*>(ui->CaptureGLWidget->GetCanvas())
+                                      ->GetTimeGraph()
+                                      ->GetTrackManager();
+    ui->trackConfig->SetTrackManager(track_manager);
+  }
 }
 
 void OrbitMainWindow::UpdateCaptureToolbarIconOpacity() {
   // Gray out disabled actions on the capture toolbar.
   for (QAction* action : ui->capture_toolbar->actions()) {
-    // setGraphicsEffect(effect) transfers the ownership of effect to the QWidget. If the effect is
-    // installed on a different item, setGraphicsEffect() will remove the effect from the original
-    // item and install it on this item.
+    // setGraphicsEffect(effect) transfers the ownership of effect to the QWidget. If the effect
+    // is installed on a different item, setGraphicsEffect() will remove the effect from the
+    // original item and install it on this item.
     auto* effect = new QGraphicsOpacityEffect;
     effect->setOpacity(action->isEnabled() ? 1 : 0.3);
     ui->capture_toolbar->widgetForAction(action)->setGraphicsEffect(effect);
@@ -638,8 +664,8 @@ void OrbitMainWindow::UpdateActiveTabsAfterSelection(bool selection_has_samples)
         selection_parent->setCurrentWidget(selection_tab);
       }
     } else {
-      // Empty selection: If the selection tab was visible, switch back to the first complete report
-      // that is in the same tab widget
+      // Empty selection: If the selection tab was visible, switch back to the first complete
+      // report that is in the same tab widget
       if (selection_parent->currentWidget() == selection_tab) {
         for (const auto& report_tab : report_tabs) {
           QTabWidget* report_parent = FindParentTabWidget(report_tab);

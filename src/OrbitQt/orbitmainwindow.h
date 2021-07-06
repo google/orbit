@@ -156,6 +156,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void SetupHintFrame();
   void SetupTargetLabel();
   void SetupStatusBarLogButton();
+  void SetupTrackConfigurationUi();
 
   void SetupAccessibleNamesForAutomation();
 
