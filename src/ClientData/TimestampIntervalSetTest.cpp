@@ -33,12 +33,9 @@ TEST(TimestampIntervalSet, EmptyAndSize) {
 
 TEST(TimestampIntervalSet, Add) {
   TimestampIntervalSet set;
-  set.Add(5, 4);
-  EXPECT_TRUE(set.empty());
-  set.Add(5, 5);
-  EXPECT_TRUE(set.empty());
+  EXPECT_DEATH(set.Add(5, 4), "");
+  EXPECT_DEATH(set.Add(5, 5), "");
 
-  set.Clear();
   set.Add(5, 10);
   EXPECT_THAT(std::vector(set.begin(), set.end()), ElementsAre(TimestampIntervalEq(5, 10)));
   set.Add(15, 20);

@@ -11,7 +11,7 @@
 namespace orbit_client_data {
 
 void TimestampIntervalSet::Add(uint64_t start_inclusive, uint64_t end_exclusive) {
-  if (start_inclusive >= end_exclusive) return;
+  CHECK(start_inclusive < end_exclusive);
 
   uint64_t new_start = start_inclusive;
   auto it = intervals_.upper_bound(start_inclusive);
