@@ -15,15 +15,13 @@ void MemoryInfoHandler::Start(orbit_grpc_protos::CaptureOptions capture_options)
 
   SetSamplingStartTimestampNs(orbit_base::CaptureTimestampNs());
   SetSamplingPeriodNs(capture_options.memory_sampling_period_ns());
-  SetEnableCGroupMemory(capture_options.enable_cgroup_memory());
-  SetEnableProcessMemory(capture_options.enable_cgroup_memory());
+  SetEnableCGroupMemory(true);
+  SetEnableProcessMemory(true);
 
   CHECK(system_memory_info_producer_ == nullptr);
   system_memory_info_producer_ = orbit_memory_tracing::CreateSystemMemoryInfoProducer(
       this, capture_options.memory_sampling_period_ns(), capture_options.pid());
   system_memory_info_producer_->Start();
-
-  if (!capture_options.enable_cgroup_memory()) return;
 
   CHECK(cgroup_memory_info_producer_ == nullptr);
   cgroup_memory_info_producer_ = orbit_memory_tracing::CreateCGroupMemoryInfoProducer(

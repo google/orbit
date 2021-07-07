@@ -50,6 +50,3 @@ ABSL_FLAG(bool, enable_tracepoint_feature, false,
 // threshold (i.e., production limit).
 ABSL_FLAG(bool, enable_warning_threshold, false,
           "Enable setting and showing the memory warning threshold");
-
-ABSL_FLAG(bool, enable_cgroup_memory, false,
-          "Enable collecting cgroup and process memory usage information");

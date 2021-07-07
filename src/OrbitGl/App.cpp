@@ -92,7 +92,6 @@
 ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, local);
 ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
-ABSL_DECLARE_FLAG(bool, enable_cgroup_memory);
 
 using orbit_base::Future;
 
@@ -1327,7 +1326,6 @@ void OrbitApp::StartCapture() {
 
   bool collect_memory_info = data_manager_->collect_memory_info();
   uint64_t memory_sampling_period_ms = data_manager_->memory_sampling_period_ms();
-  bool enable_cgroup_memory = absl::GetFlag(FLAGS_enable_cgroup_memory);
 
   // In metrics, -1 indicates memory collection was turned off. See also the comment in
   // orbit_log_event.proto
@@ -1374,7 +1372,7 @@ void OrbitApp::StartCapture() {
       collect_scheduling_info, collect_thread_states, collect_gpu_jobs, enable_api,
       enable_introspection, enable_user_space_instrumentation,
       max_local_marker_depth_per_command_buffer, collect_memory_info, memory_sampling_period_ms,
-      enable_cgroup_memory, std::move(capture_event_processor));
+      std::move(capture_event_processor));
 
   // TODO(b/187250643): Refactor this to be more readable and maybe remove parts that are not needed
   // here (capture cancelled)
