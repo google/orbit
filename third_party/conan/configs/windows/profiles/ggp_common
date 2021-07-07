@@ -1,4 +1,5 @@
 include(cmake_common)
+include(ninja_common)
 
 C_FLAGS=-march=broadwell -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -D_FORTIFY_SOURCE=2 -fstack-protector-all
 CXX_FLAGS=-march=broadwell -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all -fno-exceptions
@@ -22,7 +23,6 @@ OrbitProfiler:with_gui=False
 
 [build_requires]
 ggp_sdk/1.43.0.14282@orbitdeps/stable
-ninja/1.9.0@
 
 [env]
 CONAN_CMAKE_GENERATOR=Ninja
