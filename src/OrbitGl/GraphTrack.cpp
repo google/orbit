@@ -56,11 +56,6 @@ void GraphTrack<Dimension>::Draw(Batcher& batcher, TextRenderer& text_renderer,
   Track::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
   if (IsEmpty() || picking_mode != PickingMode::kNone) return;
 
-  const Color kBlack(0, 0, 0, 255);
-  const Color kWhite(255, 255, 255, 255);
-  float label_z = GlCanvas::kZValueTrackLabel + z_offset;
-  float text_z = GlCanvas::kZValueTrackText + z_offset;
-
   if (IsCollapsed()) return;
 
   // Draw label
@@ -71,11 +66,17 @@ void GraphTrack<Dimension>::Draw(Batcher& batcher, TextRenderer& text_renderer,
   float point_x = time_graph_->GetWorldFromTick(label_time);
   float point_y = GetLabelYFromValues(values);
   std::string text = GetLabelTextFromValues(values);
-  DrawLabel(batcher, text_renderer, Vec2(point_x, point_y), text, kBlack, kWhite, label_z);
+  const Color kBlack(0, 0, 0, 255);
+  const Color kTransparentWhite(255, 255, 255, 100);
+  float label_z = GlCanvas::kZValueTrackLabel + z_offset;
+  DrawLabel(batcher, text_renderer, Vec2(point_x, point_y), text, kBlack, kTransparentWhite,
+            label_z);
 
   if (Dimension == 1) return;
 
   // Draw legends
+  const Color kWhite(255, 255, 255, 255);
+  float text_z = GlCanvas::kZValueTrackText + z_offset;
   DrawLegend(batcher, text_renderer, series_.GetSeriesNames(), kWhite, text_z);
 }
 
@@ -171,24 +172,39 @@ template <size_t Dimension>
 void GraphTrack<Dimension>::DrawLabel(Batcher& batcher, TextRenderer& text_renderer,
                                       Vec2 target_pos, const std::string& text,
                                       const Color& text_color, const Color& font_color, float z) {
-  uint32_t font_size = layout_->CalculateZoomedFontSize();
+  uint32_t font_size = GetLegendFontSize();
+  const float kTextLeftMargin = 2.f;
+  const float kTextRightMargin = kTextLeftMargin;
+  const float kTextTopMargin = layout_->GetTextOffset();
+  const float kTextBottomMargin = kTextTopMargin;
+  const float kSpaceBetweenLines = layout_->GetTextOffset();
 
   std::vector<std::string> lines = absl::StrSplit(text, '\n');
   float text_width = 0;
   for (const std::string& line : lines) {
     text_width = std::max(text_width, text_renderer.GetStringWidth(line.c_str(), font_size));
   }
-  float text_height = layout_->GetTextBoxHeight() * lines.size();
+  float single_line_height = text_renderer.GetStringHeight(text.c_str(), font_size);
+  float text_height = single_line_height * lines.size() + kSpaceBetweenLines * (lines.size() - 1);
   Vec2 text_box_size(text_width, text_height);
 
   float arrow_width = text_box_size[1] / 2.f;
+  Vec2 arrow_box_size(text_box_size[0] + kTextLeftMargin + kTextRightMargin,
+                      text_box_size[1] + kTextTopMargin + kTextBottomMargin);
   bool arrow_is_left_directed =
-      target_pos[0] < viewport_->GetWorldTopLeft()[0] + text_box_size[0] + arrow_width;
+      target_pos[0] < viewport_->GetWorldTopLeft()[0] + arrow_box_size[0] + arrow_width;
   Vec2 text_box_position(
-      target_pos[0] + (arrow_is_left_directed ? arrow_width : -arrow_width - text_box_size[0]),
+      target_pos[0] + (arrow_is_left_directed ? arrow_width + kTextLeftMargin
+                                              : -arrow_width - kTextRightMargin - text_box_size[0]),
       target_pos[1] - text_box_size[1] / 2.f);
 
-  Box arrow_text_box(text_box_position, text_box_size, z);
+  float bottom_y_of_top_line = text_box_position[1] + text_box_size[1] - single_line_height;
+  text_renderer.AddText(text.c_str(), text_box_position[0], bottom_y_of_top_line, z, text_color,
+                        font_size, text_box_size[0]);
+
+  Vec2 arrow_box_position(text_box_position[0] - kTextLeftMargin,
+                          text_box_position[1] - kTextBottomMargin);
+  Box arrow_text_box(arrow_box_position, arrow_box_size, z);
   Vec3 arrow_extra_point(target_pos[0], target_pos[1], z);
 
   batcher.AddBox(arrow_text_box, font_color);
@@ -201,11 +217,6 @@ void GraphTrack<Dimension>::DrawLabel(Batcher& batcher, TextRenderer& text_rende
         Triangle(arrow_text_box.vertices[2], arrow_text_box.vertices[3], arrow_extra_point),
         font_color);
   }
-
-  text_renderer.AddText(text.c_str(), text_box_position[0],
-                        text_box_position[1] + text_box_size[1] - layout_->GetTextBoxHeight() +
-                            layout_->GetTextOffset(),
-                        z, text_color, font_size, text_box_size[0]);
 }
 
 template <size_t Dimension>
