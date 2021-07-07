@@ -84,8 +84,23 @@ class MockCaptureListener : public CaptureListener {
   MOCK_METHOD(void, OnUniqueTracepointInfo, (uint64_t /*key*/, TracepointInfo /*tracepoint_info*/),
               (override));
   MOCK_METHOD(void, OnTracepointEvent, (TracepointEventInfo), (override));
-  MOCK_METHOD(void, OnMetadataEvent, (const orbit_grpc_protos::MetadataEvent& /*metadata_event*/),
+  MOCK_METHOD(void, OnWarningEvent, (orbit_grpc_protos::WarningEvent /*warning_event*/),
               (override));
+  MOCK_METHOD(void, OnClockResolutionEvent,
+              (orbit_grpc_protos::ClockResolutionEvent /*clock_resolution_event*/), (override));
+  MOCK_METHOD(
+      void, OnErrorsWithPerfEventOpenEvent,
+      (orbit_grpc_protos::ErrorsWithPerfEventOpenEvent /*errors_with_perf_event_open_event*/),
+      (override));
+  MOCK_METHOD(void, OnErrorEnablingOrbitApiEvent,
+              (orbit_grpc_protos::ErrorEnablingOrbitApiEvent /*error_enabling_orbit_api_event*/),
+              (override));
+  MOCK_METHOD(void, OnLostPerfRecordsEvent,
+              (orbit_grpc_protos::LostPerfRecordsEvent /*lost_perf_records_event*/), (override));
+  MOCK_METHOD(
+      void, OnOutOfOrderEventsDiscardedEvent,
+      (orbit_grpc_protos::OutOfOrderEventsDiscardedEvent /*out_of_order_events_discarded_event*/),
+      (override));
 };
 
 TEST(CaptureDeserializer, LoadFileNotExists) {

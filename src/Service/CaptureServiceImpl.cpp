@@ -37,7 +37,6 @@ using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::CaptureStarted;
-using orbit_grpc_protos::MetadataEvent;
 using orbit_grpc_protos::ProducerCaptureEvent;
 
 namespace {
@@ -237,9 +236,8 @@ static ProducerCaptureEvent CreateCaptureStartedEvent(const CaptureOptions& capt
 static ProducerCaptureEvent CreateClockResolutionEvent(uint64_t timestamp_ns,
                                                        uint64_t resolution_ns) {
   ProducerCaptureEvent event;
-  MetadataEvent* metadata_event = event.mutable_metadata_event();
   orbit_grpc_protos::ClockResolutionEvent* clock_resolution_event =
-      metadata_event->mutable_clock_resolution_event();
+      event.mutable_clock_resolution_event();
   clock_resolution_event->set_timestamp_ns(timestamp_ns);
   clock_resolution_event->set_clock_resolution_ns(resolution_ns);
   return event;
@@ -248,9 +246,8 @@ static ProducerCaptureEvent CreateClockResolutionEvent(uint64_t timestamp_ns,
 static ProducerCaptureEvent CreateErrorEnablingOrbitApiEvent(uint64_t timestamp_ns,
                                                              std::string message) {
   ProducerCaptureEvent event;
-  MetadataEvent* metadata_event = event.mutable_metadata_event();
   orbit_grpc_protos::ErrorEnablingOrbitApiEvent* error_enabling_orbit_api_event =
-      metadata_event->mutable_error_enabling_orbit_api_event();
+      event.mutable_error_enabling_orbit_api_event();
   error_enabling_orbit_api_event->set_timestamp_ns(timestamp_ns);
   error_enabling_orbit_api_event->set_message(std::move(message));
   return event;
@@ -258,8 +255,7 @@ static ProducerCaptureEvent CreateErrorEnablingOrbitApiEvent(uint64_t timestamp_
 
 static ProducerCaptureEvent CreateWarningEvent(uint64_t timestamp_ns, std::string message) {
   ProducerCaptureEvent event;
-  MetadataEvent* metadata_event = event.mutable_metadata_event();
-  orbit_grpc_protos::WarningEvent* warning_event = metadata_event->mutable_warning_event();
+  orbit_grpc_protos::WarningEvent* warning_event = event.mutable_warning_event();
   warning_event->set_timestamp_ns(timestamp_ns);
   warning_event->set_message(std::move(message));
   return event;

@@ -144,23 +144,21 @@ void LinuxTracingHandler::OnModulesSnapshot(orbit_grpc_protos::ModulesSnapshot m
 void LinuxTracingHandler::OnErrorsWithPerfEventOpenEvent(
     orbit_grpc_protos::ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event) {
   ProducerCaptureEvent event;
-  *event.mutable_metadata_event()->mutable_errors_with_perf_event_open_event() =
-      std::move(errors_with_perf_event_open_event);
+  *event.mutable_errors_with_perf_event_open_event() = std::move(errors_with_perf_event_open_event);
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }
 
 void LinuxTracingHandler::OnLostPerfRecordsEvent(
     orbit_grpc_protos::LostPerfRecordsEvent lost_perf_records_event) {
   orbit_grpc_protos::ProducerCaptureEvent event;
-  *event.mutable_metadata_event()->mutable_lost_perf_records_event() =
-      std::move(lost_perf_records_event);
+  *event.mutable_lost_perf_records_event() = std::move(lost_perf_records_event);
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }
 
 void LinuxTracingHandler::OnOutOfOrderEventsDiscardedEvent(
     orbit_grpc_protos::OutOfOrderEventsDiscardedEvent out_of_order_events_discarded_event) {
   orbit_grpc_protos::ProducerCaptureEvent event;
-  *event.mutable_metadata_event()->mutable_out_of_order_events_discarded_event() =
+  *event.mutable_out_of_order_events_discarded_event() =
       std::move(out_of_order_events_discarded_event);
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }

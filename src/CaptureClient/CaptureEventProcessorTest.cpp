@@ -34,7 +34,10 @@ using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::CGroupMemoryUsage;
 using orbit_grpc_protos::ClientCaptureEvent;
+using orbit_grpc_protos::ClockResolutionEvent;
 using orbit_grpc_protos::Color;
+using orbit_grpc_protos::ErrorEnablingOrbitApiEvent;
+using orbit_grpc_protos::ErrorsWithPerfEventOpenEvent;
 using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::GpuCommandBuffer;
 using orbit_grpc_protos::GpuDebugMarker;
@@ -47,9 +50,10 @@ using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointInfo;
 using orbit_grpc_protos::IntrospectionScope;
+using orbit_grpc_protos::LostPerfRecordsEvent;
 using orbit_grpc_protos::MemoryUsageEvent;
-using orbit_grpc_protos::MetadataEvent;
 using orbit_grpc_protos::ModuleInfo;
+using orbit_grpc_protos::OutOfOrderEventsDiscardedEvent;
 using orbit_grpc_protos::ProcessMemoryUsage;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::SystemMemoryUsage;
@@ -57,6 +61,7 @@ using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadStateSlice;
 using orbit_grpc_protos::TracepointEvent;
 using orbit_grpc_protos::TracepointInfo;
+using orbit_grpc_protos::WarningEvent;
 
 using ::testing::_;
 using ::testing::DoAll;
@@ -87,8 +92,23 @@ class MockCaptureListener : public CaptureListener {
               (override));
   MOCK_METHOD(void, OnModulesSnapshot,
               (uint64_t /*timestamp_ns*/, std::vector<ModuleInfo> /*module_infos*/), (override));
-  MOCK_METHOD(void, OnMetadataEvent, (const orbit_grpc_protos::MetadataEvent& /*metadata_event*/),
+  MOCK_METHOD(void, OnWarningEvent, (orbit_grpc_protos::WarningEvent /*warning_event*/),
               (override));
+  MOCK_METHOD(void, OnClockResolutionEvent,
+              (orbit_grpc_protos::ClockResolutionEvent /*clock_resolution_event*/), (override));
+  MOCK_METHOD(
+      void, OnErrorsWithPerfEventOpenEvent,
+      (orbit_grpc_protos::ErrorsWithPerfEventOpenEvent /*errors_with_perf_event_open_event*/),
+      (override));
+  MOCK_METHOD(void, OnErrorEnablingOrbitApiEvent,
+              (orbit_grpc_protos::ErrorEnablingOrbitApiEvent /*error_enabling_orbit_api_event*/),
+              (override));
+  MOCK_METHOD(void, OnLostPerfRecordsEvent,
+              (orbit_grpc_protos::LostPerfRecordsEvent /*lost_perf_records_event*/), (override));
+  MOCK_METHOD(
+      void, OnOutOfOrderEventsDiscardedEvent,
+      (orbit_grpc_protos::OutOfOrderEventsDiscardedEvent /*out_of_order_events_discarded_event*/),
+      (override));
 };
 
 }  // namespace
@@ -1178,27 +1198,147 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
   EXPECT_EQ(actual_dead_thread_state_slice_info.thread_state(), ThreadStateSliceInfo::kDead);
 }
 
-TEST(CaptureEventProcessor, CanHandleMetadataEvents) {
+TEST(CaptureEventProcessor, CanHandleWarningEvents) {
   MockCaptureListener listener;
   auto event_processor =
       CaptureEventProcessor::CreateForCaptureListener(&listener, std::filesystem::path{}, {});
 
   ClientCaptureEvent event;
-  MetadataEvent* metadata_event = event.mutable_metadata_event();
-  orbit_grpc_protos::WarningEvent* warning_event = metadata_event->mutable_warning_event();
+  WarningEvent* warning_event = event.mutable_warning_event();
   constexpr uint64_t kTimestampNs = 100;
   warning_event->set_timestamp_ns(kTimestampNs);
   constexpr const char* kMessage = "message";
   warning_event->set_message(kMessage);
 
-  MetadataEvent actual_metadata_event;
-  EXPECT_CALL(listener, OnMetadataEvent).Times(1).WillOnce(SaveArg<0>(&actual_metadata_event));
+  WarningEvent actual_warning_event;
+  EXPECT_CALL(listener, OnWarningEvent).Times(1).WillOnce(SaveArg<0>(&actual_warning_event));
 
   event_processor->ProcessEvent(event);
 
-  ASSERT_EQ(actual_metadata_event.event_case(), MetadataEvent::kWarningEvent);
-  EXPECT_EQ(actual_metadata_event.warning_event().timestamp_ns(), kTimestampNs);
-  EXPECT_EQ(actual_metadata_event.warning_event().message(), kMessage);
+  EXPECT_EQ(actual_warning_event.timestamp_ns(), kTimestampNs);
+  EXPECT_EQ(actual_warning_event.message(), kMessage);
+}
+
+TEST(CaptureEventProcessor, CanHandleClockResolutionEvents) {
+  MockCaptureListener listener;
+  auto event_processor =
+      CaptureEventProcessor::CreateForCaptureListener(&listener, std::filesystem::path{}, {});
+
+  ClientCaptureEvent event;
+  ClockResolutionEvent* clock_resolution_event = event.mutable_clock_resolution_event();
+  constexpr uint64_t kTimestampNs = 100;
+  clock_resolution_event->set_timestamp_ns(kTimestampNs);
+  constexpr uint64_t kClockResolutionNs = 123;
+  clock_resolution_event->set_clock_resolution_ns(kClockResolutionNs);
+
+  ClockResolutionEvent actual_clock_resolution_event;
+  EXPECT_CALL(listener, OnClockResolutionEvent)
+      .Times(1)
+      .WillOnce(SaveArg<0>(&actual_clock_resolution_event));
+
+  event_processor->ProcessEvent(event);
+
+  EXPECT_EQ(actual_clock_resolution_event.timestamp_ns(), kTimestampNs);
+  EXPECT_EQ(actual_clock_resolution_event.clock_resolution_ns(), kClockResolutionNs);
+}
+
+TEST(CaptureEventProcessor, CanHandleErrorsWithPerfEventOpenEvents) {
+  MockCaptureListener listener;
+  auto event_processor =
+      CaptureEventProcessor::CreateForCaptureListener(&listener, std::filesystem::path{}, {});
+
+  ClientCaptureEvent event;
+  ErrorsWithPerfEventOpenEvent* errors_with_perf_event_open_event =
+      event.mutable_errors_with_perf_event_open_event();
+  constexpr uint64_t kTimestampNs = 100;
+  errors_with_perf_event_open_event->set_timestamp_ns(kTimestampNs);
+  constexpr const char* kFailedToOpen1 = "sampling";
+  constexpr const char* kFailedToOpen2 = "uprobes";
+  errors_with_perf_event_open_event->add_failed_to_open(kFailedToOpen1);
+  errors_with_perf_event_open_event->add_failed_to_open(kFailedToOpen2);
+
+  ErrorsWithPerfEventOpenEvent actual_errors_with_perf_event_open_event;
+  EXPECT_CALL(listener, OnErrorsWithPerfEventOpenEvent)
+      .Times(1)
+      .WillOnce(SaveArg<0>(&actual_errors_with_perf_event_open_event));
+
+  event_processor->ProcessEvent(event);
+
+  EXPECT_EQ(actual_errors_with_perf_event_open_event.timestamp_ns(), kTimestampNs);
+  EXPECT_THAT(std::vector(actual_errors_with_perf_event_open_event.failed_to_open().begin(),
+                          actual_errors_with_perf_event_open_event.failed_to_open().end()),
+              testing::ElementsAre(kFailedToOpen1, kFailedToOpen2));
+}
+
+TEST(CaptureEventProcessor, CanHandleErrorEnablingOrbitApiEvents) {
+  MockCaptureListener listener;
+  auto event_processor =
+      CaptureEventProcessor::CreateForCaptureListener(&listener, std::filesystem::path{}, {});
+
+  ClientCaptureEvent event;
+  ErrorEnablingOrbitApiEvent* error_enabling_orbit_api_event =
+      event.mutable_error_enabling_orbit_api_event();
+  constexpr uint64_t kTimestampNs = 100;
+  error_enabling_orbit_api_event->set_timestamp_ns(kTimestampNs);
+  constexpr const char* kMessage = "message";
+  error_enabling_orbit_api_event->set_message(kMessage);
+
+  ErrorEnablingOrbitApiEvent actual_error_enabling_orbit_api_event;
+  EXPECT_CALL(listener, OnErrorEnablingOrbitApiEvent)
+      .Times(1)
+      .WillOnce(SaveArg<0>(&actual_error_enabling_orbit_api_event));
+
+  event_processor->ProcessEvent(event);
+
+  EXPECT_EQ(actual_error_enabling_orbit_api_event.timestamp_ns(), kTimestampNs);
+  EXPECT_EQ(actual_error_enabling_orbit_api_event.message(), kMessage);
+}
+
+TEST(CaptureEventProcessor, CanHandleLostPerfRecordsEvents) {
+  MockCaptureListener listener;
+  auto event_processor =
+      CaptureEventProcessor::CreateForCaptureListener(&listener, std::filesystem::path{}, {});
+
+  ClientCaptureEvent event;
+  LostPerfRecordsEvent* lost_perf_records_event = event.mutable_lost_perf_records_event();
+  constexpr uint64_t kDurationNs = 42;
+  lost_perf_records_event->set_duration_ns(kDurationNs);
+  constexpr uint64_t kEndTimestampNs = 123;
+  lost_perf_records_event->set_end_timestamp_ns(kEndTimestampNs);
+
+  LostPerfRecordsEvent actual_lost_perf_records_event;
+  EXPECT_CALL(listener, OnLostPerfRecordsEvent)
+      .Times(1)
+      .WillOnce(SaveArg<0>(&actual_lost_perf_records_event));
+
+  event_processor->ProcessEvent(event);
+
+  EXPECT_EQ(actual_lost_perf_records_event.duration_ns(), kDurationNs);
+  EXPECT_EQ(actual_lost_perf_records_event.end_timestamp_ns(), kEndTimestampNs);
+}
+
+TEST(CaptureEventProcessor, CanHandleOutOfOrderEventsDiscardedEvents) {
+  MockCaptureListener listener;
+  auto event_processor =
+      CaptureEventProcessor::CreateForCaptureListener(&listener, std::filesystem::path{}, {});
+
+  ClientCaptureEvent event;
+  OutOfOrderEventsDiscardedEvent* out_of_order_events_discarded_event =
+      event.mutable_out_of_order_events_discarded_event();
+  constexpr uint64_t kDurationNs = 42;
+  out_of_order_events_discarded_event->set_duration_ns(kDurationNs);
+  constexpr uint64_t kEndTimestampNs = 123;
+  out_of_order_events_discarded_event->set_end_timestamp_ns(kEndTimestampNs);
+
+  OutOfOrderEventsDiscardedEvent actual_out_of_order_events_discarded_event;
+  EXPECT_CALL(listener, OnOutOfOrderEventsDiscardedEvent)
+      .Times(1)
+      .WillOnce(SaveArg<0>(&actual_out_of_order_events_discarded_event));
+
+  event_processor->ProcessEvent(event);
+
+  EXPECT_EQ(actual_out_of_order_events_discarded_event.duration_ns(), kDurationNs);
+  EXPECT_EQ(actual_out_of_order_events_discarded_event.end_timestamp_ns(), kEndTimestampNs);
 }
 
 TEST(CaptureEventProcessor, CanHandleMultipleEvents) {

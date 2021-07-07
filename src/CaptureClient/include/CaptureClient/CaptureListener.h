@@ -41,7 +41,17 @@ class CaptureListener {
                                       orbit_grpc_protos::TracepointInfo tracepoint_info) = 0;
   virtual void OnTracepointEvent(
       orbit_client_protos::TracepointEventInfo tracepoint_event_info) = 0;
-  virtual void OnMetadataEvent(const orbit_grpc_protos::MetadataEvent& metadata_event) = 0;
+  virtual void OnWarningEvent(orbit_grpc_protos::WarningEvent warning_event) = 0;
+  virtual void OnClockResolutionEvent(
+      orbit_grpc_protos::ClockResolutionEvent clock_resolution_event) = 0;
+  virtual void OnErrorsWithPerfEventOpenEvent(
+      orbit_grpc_protos::ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event) = 0;
+  virtual void OnErrorEnablingOrbitApiEvent(
+      orbit_grpc_protos::ErrorEnablingOrbitApiEvent error_enabling_orbit_api_event) = 0;
+  virtual void OnLostPerfRecordsEvent(
+      orbit_grpc_protos::LostPerfRecordsEvent lost_perf_records_event) = 0;
+  virtual void OnOutOfOrderEventsDiscardedEvent(
+      orbit_grpc_protos::OutOfOrderEventsDiscardedEvent out_of_order_events_discarded_event) = 0;
 };
 
 }  // namespace orbit_capture_client

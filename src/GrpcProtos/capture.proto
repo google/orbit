@@ -425,12 +425,6 @@ message WarningEvent {
   bytes message = 2;
 }
 
-message InfoEvent {
-  uint64 timestamp_ns = 1;
-  // This is a string, we use bytes to avoid UTF-8 validation.
-  bytes message = 2;
-}
-
 message ErrorEnablingOrbitApiEvent {
   uint64 timestamp_ns = 1;
   // This is a string, we use bytes to avoid UTF-8 validation.
@@ -458,20 +452,8 @@ message OutOfOrderEventsDiscardedEvent {
   uint64 end_timestamp_ns = 2;
 }
 
-message MetadataEvent {
-  oneof event {
-    WarningEvent warning_event = 1;
-    InfoEvent info_event = 2;
-    ErrorEnablingOrbitApiEvent error_enabling_orbit_api_event = 3;
-    ClockResolutionEvent clock_resolution_event = 4;
-    ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event = 5;
-    LostPerfRecordsEvent lost_perf_records_event = 6;
-    OutOfOrderEventsDiscardedEvent out_of_order_events_discarded_event = 7;
-  }
-}
-
 message ClientCaptureEvent {
-  reserved 23, 28, 29;
+  reserved 23, 28, 29, 30;
 
   oneof event {
     // Note that field numbers from 1-15 take only 1 byte to encode
@@ -479,6 +461,8 @@ message ClientCaptureEvent {
     // use them for high frequency events. For the rest please assign
     // numbers starting with 16.
     //
+    // Next high-frequency ID: 10
+    // Next lower-frequency ID: 38
     // Please keep these alphabetically ordered.
 
     // Even though AddressInfo is a high-frequency event
@@ -489,6 +473,9 @@ message ClientCaptureEvent {
     CallstackSample callstack_sample = 1;
     CaptureFinished capture_finished = 27;
     CaptureStarted capture_started = 24;
+    ClockResolutionEvent clock_resolution_event = 34;
+    ErrorEnablingOrbitApiEvent error_enabling_orbit_api_event = 33;
+    ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event = 35;
     FunctionCall function_call = 2;
     GpuJob gpu_job = 3;
     GpuQueueSubmission gpu_queue_submission = 4;
@@ -496,30 +483,38 @@ message ClientCaptureEvent {
     InternedString interned_string = 18;
     InternedTracepointInfo interned_tracepoint_info = 19;
     IntrospectionScope introspection_scope = 20;
+    LostPerfRecordsEvent lost_perf_records_event = 36;
     MemoryUsageEvent memory_usage_event = 31;
-    MetadataEvent metadata_event = 30;
     ModulesSnapshot modules_snapshot = 25;
     ModuleUpdateEvent module_update_event = 21;
+    OutOfOrderEventsDiscardedEvent out_of_order_events_discarded_event = 37;
     SchedulingSlice scheduling_slice = 6;
     ThreadName thread_name = 22;
     ThreadNamesSnapshot thread_names_snapshot = 26;
     ThreadStateSlice thread_state_slice = 7;
     TracepointEvent tracepoint_event = 8;
+    WarningEvent warning_event = 32;
   }
 }
 
 message ProducerCaptureEvent {
-  reserved 22, 26, 27;
+  reserved 22, 26, 27, 28;
   oneof event {
     // Note that field numbers from 1-15 take only 1 byte to encode
     // https://developers.google.com/protocol-buffers/docs/proto#assigning_field_numbers
     // use them for high frequency events. For the rest please assign
     // numbers starting with 16.
     //
+    // Next high-frequency ID: 11
+    // Next lower-frequency ID: 36
+    //
     // Please keep these alphabetically ordered.
     ApiEvent api_event = 10;
     CallstackSample callstack_sample = 1;
     CaptureStarted capture_started = 23;
+    ClockResolutionEvent clock_resolution_event = 32;
+    ErrorEnablingOrbitApiEvent error_enabling_orbit_api_event = 31;
+    ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event = 33;
     FullCallstackSample full_callstack_sample = 2;
 
     // Even though AddressInfo is a high-frequency event
@@ -533,13 +528,15 @@ message ProducerCaptureEvent {
     InternedCallstack interned_callstack = 7;
     InternedString interned_string = 18;
     IntrospectionScope introspection_scope = 19;
+    LostPerfRecordsEvent lost_perf_records_event = 34;
     MemoryUsageEvent memory_usage_event = 29;
-    MetadataEvent metadata_event = 28;
     ModulesSnapshot modules_snapshot = 25;
     ModuleUpdateEvent module_update_event = 20;
+    OutOfOrderEventsDiscardedEvent out_of_order_events_discarded_event = 35;
     SchedulingSlice scheduling_slice = 8;
     ThreadName thread_name = 21;
     ThreadNamesSnapshot thread_names_snapshot = 24;
     ThreadStateSlice thread_state_slice = 9;
+    WarningEvent warning_event = 30;
   }
 }

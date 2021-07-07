@@ -18,8 +18,10 @@ using orbit_grpc_protos::ApiEvent;
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::CallstackSample;
 using orbit_grpc_protos::CaptureStarted;
-using orbit_grpc_protos::CGroupMemoryUsage;
 using orbit_grpc_protos::ClientCaptureEvent;
+using orbit_grpc_protos::ClockResolutionEvent;
+using orbit_grpc_protos::ErrorEnablingOrbitApiEvent;
+using orbit_grpc_protos::ErrorsWithPerfEventOpenEvent;
 using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
 using orbit_grpc_protos::FullGpuJob;
@@ -32,18 +34,18 @@ using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointInfo;
 using orbit_grpc_protos::IntrospectionScope;
+using orbit_grpc_protos::LostPerfRecordsEvent;
 using orbit_grpc_protos::MemoryUsageEvent;
-using orbit_grpc_protos::MetadataEvent;
 using orbit_grpc_protos::ModulesSnapshot;
 using orbit_grpc_protos::ModuleUpdateEvent;
-using orbit_grpc_protos::ProcessMemoryUsage;
+using orbit_grpc_protos::OutOfOrderEventsDiscardedEvent;
 using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_grpc_protos::SchedulingSlice;
-using orbit_grpc_protos::SystemMemoryUsage;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadNamesSnapshot;
 using orbit_grpc_protos::ThreadStateSlice;
 using orbit_grpc_protos::TracepointEvent;
+using orbit_grpc_protos::WarningEvent;
 
 template <typename T>
 class InternPool final {
@@ -102,7 +104,15 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessFullTracepointEvent(FullTracepointEvent* full_tracepoint_event);
   void ProcessMemoryUsageEvent(MemoryUsageEvent* memory_usage_event);
   void ProcessApiEvent(ApiEvent* api_event);
-  void ProcessMetadataEvent(MetadataEvent* metadata_event);
+  void ProcessWarningEvent(WarningEvent* warning_event);
+  void ProcessClockResolutionEvent(ClockResolutionEvent* clock_resolution_event);
+  void ProcessErrorsWithPerfEventOpenEvent(
+      ErrorsWithPerfEventOpenEvent* errors_with_perf_event_open_event);
+  void ProcessErrorEnablingOrbitApiEvent(
+      ErrorEnablingOrbitApiEvent* error_enabling_orbit_api_event);
+  void ProcessLostPerfRecordsEvent(LostPerfRecordsEvent* lost_perf_records_event);
+  void ProcessOutOfOrderEventsDiscardedEvent(
+      OutOfOrderEventsDiscardedEvent* out_of_order_events_discarded_event);
 
   void SendInternedStringEvent(uint64_t key, std::string value);
 
@@ -358,9 +368,46 @@ void ProducerEventProcessorImpl::ProcessApiEvent(ApiEvent* api_event) {
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessMetadataEvent(MetadataEvent* metadata_event) {
+void ProducerEventProcessorImpl::ProcessWarningEvent(WarningEvent* warning_event) {
   ClientCaptureEvent event;
-  *event.mutable_metadata_event() = std::move(*metadata_event);
+  *event.mutable_warning_event() = std::move(*warning_event);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
+void ProducerEventProcessorImpl::ProcessErrorEnablingOrbitApiEvent(
+    ErrorEnablingOrbitApiEvent* error_enabling_orbit_api_event) {
+  ClientCaptureEvent event;
+  *event.mutable_error_enabling_orbit_api_event() = std::move(*error_enabling_orbit_api_event);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
+void ProducerEventProcessorImpl::ProcessClockResolutionEvent(
+    ClockResolutionEvent* clock_resolution_event) {
+  ClientCaptureEvent event;
+  *event.mutable_clock_resolution_event() = std::move(*clock_resolution_event);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
+void ProducerEventProcessorImpl::ProcessErrorsWithPerfEventOpenEvent(
+    ErrorsWithPerfEventOpenEvent* errors_with_perf_event_open_event) {
+  ClientCaptureEvent event;
+  *event.mutable_errors_with_perf_event_open_event() =
+      std::move(*errors_with_perf_event_open_event);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
+void ProducerEventProcessorImpl::ProcessLostPerfRecordsEvent(
+    LostPerfRecordsEvent* lost_perf_records_event) {
+  ClientCaptureEvent event;
+  *event.mutable_lost_perf_records_event() = std::move(*lost_perf_records_event);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
+void ProducerEventProcessorImpl::ProcessOutOfOrderEventsDiscardedEvent(
+    OutOfOrderEventsDiscardedEvent* out_of_order_events_discarded_event) {
+  ClientCaptureEvent event;
+  *event.mutable_out_of_order_events_discarded_event() =
+      std::move(*out_of_order_events_discarded_event);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
@@ -423,8 +470,23 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
     case ProducerCaptureEvent::kApiEvent:
       ProcessApiEvent(event.mutable_api_event());
       break;
-    case ProducerCaptureEvent::kMetadataEvent:
-      ProcessMetadataEvent(event.mutable_metadata_event());
+    case ProducerCaptureEvent::kWarningEvent:
+      ProcessWarningEvent(event.mutable_warning_event());
+      break;
+    case ProducerCaptureEvent::kClockResolutionEvent:
+      ProcessClockResolutionEvent(event.mutable_clock_resolution_event());
+      break;
+    case ProducerCaptureEvent::kErrorsWithPerfEventOpenEvent:
+      ProcessErrorsWithPerfEventOpenEvent(event.mutable_errors_with_perf_event_open_event());
+      break;
+    case ProducerCaptureEvent::kErrorEnablingOrbitApiEvent:
+      ProcessErrorEnablingOrbitApiEvent(event.mutable_error_enabling_orbit_api_event());
+      break;
+    case ProducerCaptureEvent::kLostPerfRecordsEvent:
+      ProcessLostPerfRecordsEvent(event.mutable_lost_perf_records_event());
+      break;
+    case ProducerCaptureEvent::kOutOfOrderEventsDiscardedEvent:
+      ProcessOutOfOrderEventsDiscardedEvent(event.mutable_out_of_order_events_discarded_event());
       break;
     case ProducerCaptureEvent::EVENT_NOT_SET:
       UNREACHABLE();

@@ -497,98 +497,99 @@ void OrbitApp::OnModulesSnapshot(uint64_t /*timestamp_ns*/, std::vector<ModuleIn
   main_thread_executor_->Schedule([this]() { FireRefreshCallbacks(DataViewType::kLiveFunctions); });
 }
 
-void OrbitApp::OnMetadataEvent(const orbit_grpc_protos::MetadataEvent& metadata_event) {
-  main_thread_executor_->Schedule([this, metadata_event]() {
-    constexpr const char* kIncompleteDataLogMessage =
-        "The capture contains one or more time ranges with incomplete data. Some information might "
-        "be inaccurate.";
+void OrbitApp::OnWarningEvent(orbit_grpc_protos::WarningEvent warning_event) {
+  main_thread_executor_->Schedule([this, warning_event = std::move(warning_event)]() {
+    main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kWarning,
+                                     GetCaptureTimeAt(warning_event.timestamp_ns()),
+                                     warning_event.message());
+  });
+}
 
-    switch (metadata_event.event_case()) {
-      case orbit_grpc_protos::MetadataEvent::kWarningEvent: {
-        main_window_->AppendToCaptureLog(
-            MainWindowInterface::CaptureLogSeverity::kWarning,
-            GetCaptureTimeAt(metadata_event.warning_event().timestamp_ns()),
-            metadata_event.warning_event().message());
-      } break;
+void OrbitApp::OnClockResolutionEvent(
+    orbit_grpc_protos::ClockResolutionEvent clock_resolution_event) {
+  main_thread_executor_->Schedule([this, clock_resolution_event]() {
+    constexpr uint64_t kClockResolutionWarningThresholdNs = 10 * 1000;
+    uint64_t timestamp_ns = clock_resolution_event.timestamp_ns();
+    const uint64_t clock_resolution_ns = clock_resolution_event.clock_resolution_ns();
 
-      case orbit_grpc_protos::MetadataEvent::kInfoEvent: {
-        main_window_->AppendToCaptureLog(
-            MainWindowInterface::CaptureLogSeverity::kInfo,
-            GetCaptureTimeAt(metadata_event.info_event().timestamp_ns()),
-            metadata_event.info_event().message());
-      } break;
+    if (clock_resolution_ns == 0) {
+      main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
+                                       GetCaptureTimeAt(timestamp_ns),
+                                       "Failed to estimate clock resolution.");
 
-      case orbit_grpc_protos::MetadataEvent::kErrorEnablingOrbitApiEvent: {
+    } else if (clock_resolution_ns < kClockResolutionWarningThresholdNs) {
+      main_window_->AppendToCaptureLog(
+          MainWindowInterface::CaptureLogSeverity::kInfo, GetCaptureTimeAt(timestamp_ns),
+          absl::StrFormat("Clock resolution is %u ns.", clock_resolution_ns));
+
+    } else {
+      std::string message = absl::StrFormat(
+          "Clock resolution is high (%u ns): some timings may be inaccurate.", clock_resolution_ns);
+      main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
+                                       GetCaptureTimeAt(timestamp_ns), message);
+
+      if (!IsLoadingCapture()) {
+        constexpr const char* kDontShowAgainHighClockResolutionWarningKey =
+            "DontShowAgainHighClockResolutionWarning";
+        main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
+            "High clock resolution", message, kDontShowAgainHighClockResolutionWarningKey);
+      }
+    }
+  });
+}
+
+void OrbitApp::OnErrorsWithPerfEventOpenEvent(
+    orbit_grpc_protos::ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event) {
+  main_thread_executor_->Schedule([this, errors_with_perf_event_open_event]() {
+    std::string log_message =
+        absl::StrFormat("There were errors with perf_event_open, in particular with: %s.",
+                        absl::StrJoin(errors_with_perf_event_open_event.failed_to_open(), ", "));
+    main_window_->AppendToCaptureLog(
+        MainWindowInterface::CaptureLogSeverity::kSevereWarning,
+        GetCaptureTimeAt(errors_with_perf_event_open_event.timestamp_ns()), log_message);
+
+    if (!IsLoadingCapture()) {
+      std::string box_message =
+          log_message + "\n\nSome information will probably be missing from the capture.";
+      constexpr const char* kDontShowAgainErrorsWithPerfEventOpenWarningKey =
+          "DontShowAgainErrorsWithPerfEventOpenWarning";
+      main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
+          "Errors with perf_event_open", box_message,
+          kDontShowAgainErrorsWithPerfEventOpenWarningKey);
+    }
+  });
+}
+
+void OrbitApp::OnErrorEnablingOrbitApiEvent(
+    orbit_grpc_protos::ErrorEnablingOrbitApiEvent error_enabling_orbit_api_event) {
+  main_thread_executor_->Schedule(
+      [this, error_enabling_orbit_api_event = std::move(error_enabling_orbit_api_event)]() {
         main_window_->AppendToCaptureLog(
             MainWindowInterface::CaptureLogSeverity::kSevereWarning,
-            GetCaptureTimeAt(metadata_event.error_enabling_orbit_api_event().timestamp_ns()),
-            metadata_event.error_enabling_orbit_api_event().message());
+            GetCaptureTimeAt(error_enabling_orbit_api_event.timestamp_ns()),
+            error_enabling_orbit_api_event.message());
 
         if (!IsLoadingCapture()) {
           constexpr const char* kDontShowAgainErrorEnablingOrbitApiWarningKey =
               "DontShowAgainErrorEnablingOrbitApiWarning";
           main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
-              "Could not enable Orbit API",
-              metadata_event.error_enabling_orbit_api_event().message(),
+              "Could not enable Orbit API", error_enabling_orbit_api_event.message(),
               kDontShowAgainErrorEnablingOrbitApiWarningKey);
         }
-      } break;
+      });
+}
 
-      case orbit_grpc_protos::MetadataEvent::kClockResolutionEvent: {
-        constexpr uint64_t kClockResolutionWarningThresholdNs = 10 * 1000;
-        uint64_t timestamp_ns = metadata_event.clock_resolution_event().timestamp_ns();
-        const uint64_t clock_resolution_ns =
-            metadata_event.clock_resolution_event().clock_resolution_ns();
-        if (clock_resolution_ns == 0) {
-          main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
-                                           GetCaptureTimeAt(timestamp_ns),
-                                           "Failed to estimate clock resolution.");
-        } else if (clock_resolution_ns < kClockResolutionWarningThresholdNs) {
-          main_window_->AppendToCaptureLog(
-              MainWindowInterface::CaptureLogSeverity::kInfo, GetCaptureTimeAt(timestamp_ns),
-              absl::StrFormat("Clock resolution is %u ns.", clock_resolution_ns));
-        } else {
-          std::string message =
-              absl::StrFormat("Clock resolution is high (%u ns): some timings may be inaccurate.",
-                              clock_resolution_ns);
-          main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
-                                           GetCaptureTimeAt(timestamp_ns), message);
+static constexpr const char* kIncompleteDataLogMessage =
+    "The capture contains one or more time ranges with incomplete data. Some information might "
+    "be inaccurate.";
 
-          if (!IsLoadingCapture()) {
-            constexpr const char* kDontShowAgainHighClockResolutionWarningKey =
-                "DontShowAgainHighClockResolutionWarning";
-            main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
-                "High clock resolution", message, kDontShowAgainHighClockResolutionWarningKey);
-          }
-        }
-      } break;
-
-      case orbit_grpc_protos::MetadataEvent::kErrorsWithPerfEventOpenEvent: {
-        std::string log_message = absl::StrFormat(
-            "There were errors with perf_event_open, in particular with: %s.",
-            absl::StrJoin(metadata_event.errors_with_perf_event_open_event().failed_to_open(),
-                          ", "));
-        main_window_->AppendToCaptureLog(
-            MainWindowInterface::CaptureLogSeverity::kSevereWarning,
-            GetCaptureTimeAt(metadata_event.errors_with_perf_event_open_event().timestamp_ns()),
-            log_message);
-
-        if (!IsLoadingCapture()) {
-          std::string box_message =
-              log_message + "\n\nSome information will probably be missing from the capture.";
-          constexpr const char* kDontShowAgainErrorsWithPerfEventOpenWarningKey =
-              "DontShowAgainErrorsWithPerfEventOpenWarning";
-          main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
-              "Errors with perf_event_open", box_message,
-              kDontShowAgainErrorsWithPerfEventOpenWarningKey);
-        }
-      } break;
-
-      case orbit_grpc_protos::MetadataEvent::kLostPerfRecordsEvent: {
-        uint64_t lost_end_timestamp_ns =
-            metadata_event.lost_perf_records_event().end_timestamp_ns();
+void OrbitApp::OnLostPerfRecordsEvent(
+    orbit_grpc_protos::LostPerfRecordsEvent lost_perf_records_event) {
+  main_thread_executor_->Schedule(
+      [this, lost_perf_records_event = std::move(lost_perf_records_event)]() {
+        uint64_t lost_end_timestamp_ns = lost_perf_records_event.end_timestamp_ns();
         uint64_t lost_start_timestamp_ns =
-            lost_end_timestamp_ns - metadata_event.lost_perf_records_event().duration_ns();
+            lost_end_timestamp_ns - lost_perf_records_event.duration_ns();
         if (capture_data_->incomplete_data_intervals().empty()) {
           // This is only reported once in the Capture Log.
           main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kWarning,
@@ -596,26 +597,23 @@ void OrbitApp::OnMetadataEvent(const orbit_grpc_protos::MetadataEvent& metadata_
                                            kIncompleteDataLogMessage);
         }
         capture_data_->AddIncompleteDataInterval(lost_start_timestamp_ns, lost_end_timestamp_ns);
-      } break;
+      });
+}
 
-      case orbit_grpc_protos::MetadataEvent::kOutOfOrderEventsDiscardedEvent: {
-        uint64_t discarded_end_timestamp_ns =
-            metadata_event.out_of_order_events_discarded_event().end_timestamp_ns();
-        uint64_t discarded_start_timestamp_ns =
-            discarded_end_timestamp_ns -
-            metadata_event.out_of_order_events_discarded_event().duration_ns();
-        if (capture_data_->incomplete_data_intervals().empty()) {
-          main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kWarning,
-                                           GetCaptureTimeAt(discarded_start_timestamp_ns),
-                                           kIncompleteDataLogMessage);
-        }
-        capture_data_->AddIncompleteDataInterval(discarded_start_timestamp_ns,
-                                                 discarded_end_timestamp_ns);
-      } break;
-
-      case orbit_grpc_protos::MetadataEvent::EVENT_NOT_SET:
-        break;
+void OrbitApp::OnOutOfOrderEventsDiscardedEvent(
+    orbit_grpc_protos::OutOfOrderEventsDiscardedEvent out_of_order_events_discarded_event) {
+  main_thread_executor_->Schedule([this, out_of_order_events_discarded_event =
+                                             std::move(out_of_order_events_discarded_event)]() {
+    uint64_t discarded_end_timestamp_ns = out_of_order_events_discarded_event.end_timestamp_ns();
+    uint64_t discarded_start_timestamp_ns =
+        discarded_end_timestamp_ns - out_of_order_events_discarded_event.duration_ns();
+    if (capture_data_->incomplete_data_intervals().empty()) {
+      main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kWarning,
+                                       GetCaptureTimeAt(discarded_start_timestamp_ns),
+                                       kIncompleteDataLogMessage);
     }
+    capture_data_->AddIncompleteDataInterval(discarded_start_timestamp_ns,
+                                             discarded_end_timestamp_ns);
   });
 }
 

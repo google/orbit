@@ -157,7 +157,17 @@ class OrbitApp final : public DataViewFactory,
   void OnModuleUpdate(uint64_t timestamp_ns, orbit_grpc_protos::ModuleInfo module_info) override;
   void OnModulesSnapshot(uint64_t timestamp_ns,
                          std::vector<orbit_grpc_protos::ModuleInfo> module_infos) override;
-  void OnMetadataEvent(const orbit_grpc_protos::MetadataEvent& metadata_event) override;
+  void OnWarningEvent(orbit_grpc_protos::WarningEvent warning_event) override;
+  void OnClockResolutionEvent(
+      orbit_grpc_protos::ClockResolutionEvent clock_resolution_event) override;
+  void OnErrorsWithPerfEventOpenEvent(
+      orbit_grpc_protos::ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event) override;
+  void OnErrorEnablingOrbitApiEvent(
+      orbit_grpc_protos::ErrorEnablingOrbitApiEvent error_enabling_orbit_api_event) override;
+  void OnLostPerfRecordsEvent(
+      orbit_grpc_protos::LostPerfRecordsEvent lost_perf_records_event) override;
+  void OnOutOfOrderEventsDiscardedEvent(orbit_grpc_protos::OutOfOrderEventsDiscardedEvent
+                                            out_of_order_events_discarded_event) override;
 
   void OnValidateFramePointers(
       std::vector<const orbit_client_data::ModuleData*> modules_to_validate);
