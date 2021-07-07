@@ -591,13 +591,13 @@ void TimeGraph::ProcessPagefaultTrackingTimer(const orbit_client_protos::TimerIn
         absl::StrFormat("Process [%s]", capture_data_->process_name()),
         absl::StrFormat("CGroup [%s]", cgroup_name), "System"};
     track = track_manager_->CreateAndGetPagefaultTrack(kSeriesNames);
+    track->SetIndexOfSeriesToHighlightForMajorPagefaultTrack(0);
   }
   CHECK(track != nullptr);
 
   if (system_major_pagefaults != kMissingInfo && cgroup_major_pagefaults != kMissingInfo &&
       process_major_pagefaults != kMissingInfo) {
-    auto major_pagefault_track = track->GetMajorPagefaultTrack();
-    major_pagefault_track->AddValuesAndUpdateAnnotations(
+    track->AddValuesAndUpdateAnnotationsForMajorPagefaultSubtrack(
         timer_info.start(), {static_cast<double>(process_major_pagefaults),
                              static_cast<double>(cgroup_major_pagefaults),
                              static_cast<double>(system_major_pagefaults)});
@@ -606,8 +606,7 @@ void TimeGraph::ProcessPagefaultTrackingTimer(const orbit_client_protos::TimerIn
   if (system_pagefaults != kMissingInfo && system_major_pagefaults != kMissingInfo &&
       cgroup_pagefaults != kMissingInfo && cgroup_major_pagefaults != kMissingInfo &&
       process_minor_pagefaults != kMissingInfo) {
-    auto minor_pagefault_track = track->GetMinorPagefaultTrack();
-    minor_pagefault_track->AddValuesAndUpdateAnnotations(
+    track->AddValuesAndUpdateAnnotationsForMinorPagefaultSubtrack(
         timer_info.start(), {static_cast<double>(process_minor_pagefaults),
                              static_cast<double>(cgroup_pagefaults - cgroup_major_pagefaults),
                              static_cast<double>(system_pagefaults - system_major_pagefaults)});

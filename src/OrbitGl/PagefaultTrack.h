@@ -28,13 +28,6 @@ class PagefaultTrack : public Track {
   [[nodiscard]] float GetHeight() const override;
   [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() override;
 
-  [[nodiscard]] BasicPagefaultTrack* GetMajorPagefaultTrack() const {
-    return major_pagefault_track_.get();
-  }
-  [[nodiscard]] BasicPagefaultTrack* GetMinorPagefaultTrack() const {
-    return minor_pagefault_track_.get();
-  }
-
   [[nodiscard]] bool IsEmpty() const override {
     return major_pagefault_track_->IsEmpty() && minor_pagefault_track_->IsEmpty();
   }
@@ -49,6 +42,22 @@ class PagefaultTrack : public Track {
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllChains() const override;
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains() const override {
     return GetAllChains();
+  }
+
+  void AddValuesAndUpdateAnnotationsForMajorPagefaultSubtrack(
+      uint64_t timestamp_ns, const std::array<double, kBasicPagefaultTrackDimension>& values) {
+    major_pagefault_track_->AddValuesAndUpdateAnnotations(timestamp_ns, values);
+  }
+  void AddValuesAndUpdateAnnotationsForMinorPagefaultSubtrack(
+      uint64_t timestamp_ns, const std::array<double, kBasicPagefaultTrackDimension>& values) {
+    minor_pagefault_track_->AddValuesAndUpdateAnnotations(timestamp_ns, values);
+  }
+  void SetNumberOfDecimalDigits(uint8_t value_decimal_digits) {
+    major_pagefault_track_->SetNumberOfDecimalDigits(value_decimal_digits);
+    minor_pagefault_track_->SetNumberOfDecimalDigits(value_decimal_digits);
+  }
+  void SetIndexOfSeriesToHighlightForMajorPagefaultTrack(size_t series_index) {
+    major_pagefault_track_->SetIndexOfSeriesToHighlight(series_index);
   }
 
  private:

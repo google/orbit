@@ -509,9 +509,7 @@ PagefaultTrack* TrackManager::CreateAndGetPagefaultTrack(
     constexpr uint8_t kTrackValueDecimalDigits = 0;
     pagefault_track_ = std::make_shared<PagefaultTrack>(time_graph_, time_graph_, viewport_,
                                                         layout_, series_names, capture_data_);
-    pagefault_track_->GetMajorPagefaultTrack()->SetNumberOfDecimalDigits(kTrackValueDecimalDigits);
-    pagefault_track_->GetMajorPagefaultTrack()->SetIndexOfSeriesToHighlight(0);
-    pagefault_track_->GetMinorPagefaultTrack()->SetNumberOfDecimalDigits(kTrackValueDecimalDigits);
+    pagefault_track_->SetNumberOfDecimalDigits(kTrackValueDecimalDigits);
     AddTrack(pagefault_track_);
   }
   return GetPagefaultTrack();
