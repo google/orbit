@@ -74,16 +74,16 @@ class MultivariateTimeSeries {
   }
 
   struct Range {
-    TimeSeriesEntryIter begin;
-    TimeSeriesEntryIter end;
+    TimeSeriesEntryIter start_inclusive;
+    TimeSeriesEntryIter end_inclusive;
   };
   // If there is no overlap between time range [min_time, max_time] and [StartTimeInNs(),
   // EndTimeInNs()], return std::nullopt. Otherwise return a range of entries affected by the time
   // range [min_time, max_time] where:
-  // * `Range::begin` points to the entry with the time key right before the time range (min_time,
-  // max_time) if exists; otherwise points to the fist entry.
-  // * `Range::end` points to the entry with the time key right after the time range (min_time,
-  // max_time) if exists; otherwise points to the last entry.
+  // * `Range::inclusive` points to the entry with the time key right before the time range
+  // (min_time, max_time) if exists; otherwise points to the fist entry.
+  // * `Range::inclusive` points to the entry with the time key right after the time range
+  // (min_time, max_time) if exists; otherwise points to the last entry.
   [[nodiscard]] std::optional<Range> GetEntriesAffectedByTimeRange(uint64_t min_time,
                                                                    uint64_t max_time) const {
     if (IsEmpty() || min_time >= max_time || min_time >= time_to_series_values_.rbegin()->first ||
