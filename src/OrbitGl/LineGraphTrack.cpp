@@ -56,12 +56,12 @@ void LineGraphTrack<Dimension>::DrawSeries(Batcher* batcher, uint64_t min_tick, 
   double min = this->GetGraphMinValue();
   double inverse_value_range = this->GetInverseOfGraphValueRange();
 
-  auto current_iterator = entries.begin;
+  auto current_iterator = entries.start_inclusive;
   uint64_t current_time = current_iterator->first;
   std::array<float, Dimension> current_normalized_values =
       GetNormalizedValues(current_iterator->second, min, inverse_value_range);
 
-  while (current_iterator != entries.end) {
+  while (current_iterator != entries.end_inclusive) {
     auto next_iterator = std::next(current_iterator);
     uint64_t next_time = next_iterator->first;
     std::array<float, Dimension> next_normalized_values =

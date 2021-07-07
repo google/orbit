@@ -246,8 +246,8 @@ void GraphTrack<Dimension>::DrawSeries(Batcher* batcher, uint64_t min_tick, uint
   double min = GetGraphMinValue();
   double inverse_value_range = GetInverseOfGraphValueRange();
 
-  auto current_iterator = entries.begin;
-  while (current_iterator != entries.end) {
+  auto current_iterator = entries.start_inclusive;
+  while (current_iterator != entries.end_inclusive) {
     std::array<double, Dimension> cumulative_values{current_iterator->second};
     std::partial_sum(cumulative_values.begin(), cumulative_values.end(), cumulative_values.begin());
     // For the stacked graph, computing y positions from the normalized values results in some

@@ -128,8 +128,8 @@ TEST(MultivariateTimeSeries, GetEntriesAffectedByTimeRange) {
     uint64_t min_time = 150;
     uint64_t max_time = 400;
     auto range = series.GetEntriesAffectedByTimeRange(min_time, max_time);
-    EXPECT_EQ(range.value().begin->first, timestamp_1);
-    EXPECT_EQ(range.value().end->first, timestamp_3);
+    EXPECT_EQ(range.value().start_inclusive->first, timestamp_1);
+    EXPECT_EQ(range.value().end_inclusive->first, timestamp_3);
   }
 }
 
