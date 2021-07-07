@@ -47,7 +47,7 @@ class CaptureClient {
       bool collect_scheduling_info, bool collect_thread_state, bool collect_gpu_jobs,
       bool enable_api, bool enable_introspection, bool enable_user_space_instrumentation,
       uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
-      uint64_t memory_sampling_period_ms, bool enable_cgroup_memory,
+      uint64_t memory_sampling_period_ms,
       std::unique_ptr<CaptureEventProcessor> capture_event_processor);
 
   // Returns true if stop was initiated and false otherwise.
@@ -82,8 +82,7 @@ class CaptureClient {
       bool collect_scheduling_info, bool collect_thread_state, bool collect_gpu_jobs,
       bool enable_api, bool enable_introspection, bool enable_user_space_instrumentation,
       uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
-      uint64_t memory_sampling_period_ms, bool enable_cgroup_memory,
-      CaptureEventProcessor* capture_event_processor);
+      uint64_t memory_sampling_period_ms, CaptureEventProcessor* capture_event_processor);
 
   void ProcessEvents(
       CaptureEventProcessor* capture_event_processor,
