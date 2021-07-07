@@ -280,7 +280,7 @@ class BufferTracerListener : public orbit_linux_tracing::TracerListener {
   void OnErrorsWithPerfEventOpenEvent(
       orbit_grpc_protos::ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event) override {
     orbit_grpc_protos::ProducerCaptureEvent event;
-    *event.mutable_metadata_event()->mutable_errors_with_perf_event_open_event() =
+    *event.mutable_errors_with_perf_event_open_event() =
         std::move(errors_with_perf_event_open_event);
     {
       absl::MutexLock lock{&events_mutex_};
@@ -291,8 +291,7 @@ class BufferTracerListener : public orbit_linux_tracing::TracerListener {
   void OnLostPerfRecordsEvent(
       orbit_grpc_protos::LostPerfRecordsEvent lost_perf_records_event) override {
     orbit_grpc_protos::ProducerCaptureEvent event;
-    *event.mutable_metadata_event()->mutable_lost_perf_records_event() =
-        std::move(lost_perf_records_event);
+    *event.mutable_lost_perf_records_event() = std::move(lost_perf_records_event);
     {
       absl::MutexLock lock{&events_mutex_};
       events_.emplace_back(std::move(event));
@@ -302,7 +301,7 @@ class BufferTracerListener : public orbit_linux_tracing::TracerListener {
   void OnOutOfOrderEventsDiscardedEvent(orbit_grpc_protos::OutOfOrderEventsDiscardedEvent
                                             out_of_order_events_discarded_event) override {
     orbit_grpc_protos::ProducerCaptureEvent event;
-    *event.mutable_metadata_event()->mutable_out_of_order_events_discarded_event() =
+    *event.mutable_out_of_order_events_discarded_event() =
         std::move(out_of_order_events_discarded_event);
     {
       absl::MutexLock lock{&events_mutex_};
@@ -520,39 +519,27 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kApiEvent:
         UNREACHABLE();
-      case orbit_grpc_protos::ProducerCaptureEvent::kMetadataEvent: {
-        const orbit_grpc_protos::MetadataEvent& metadata_event = event.metadata_event();
-        switch (metadata_event.event_case()) {
-          case orbit_grpc_protos::MetadataEvent::kWarningEvent:
-            UNREACHABLE();
-          case orbit_grpc_protos::MetadataEvent::kInfoEvent:
-            UNREACHABLE();
-          case orbit_grpc_protos::MetadataEvent::kErrorEnablingOrbitApiEvent:
-            UNREACHABLE();
-          case orbit_grpc_protos::MetadataEvent::kClockResolutionEvent:
-            UNREACHABLE();
-          case orbit_grpc_protos::MetadataEvent::kErrorsWithPerfEventOpenEvent:
-            EXPECT_GE(metadata_event.errors_with_perf_event_open_event().timestamp_ns(),
-                      previous_event_timestamp_ns);
-            previous_event_timestamp_ns =
-                metadata_event.errors_with_perf_event_open_event().timestamp_ns();
-            break;
-          case orbit_grpc_protos::MetadataEvent::kLostPerfRecordsEvent:
-            EXPECT_GE(metadata_event.lost_perf_records_event().end_timestamp_ns(),
-                      previous_event_timestamp_ns);
-            previous_event_timestamp_ns =
-                metadata_event.lost_perf_records_event().end_timestamp_ns();
-            break;
-          case orbit_grpc_protos::MetadataEvent::kOutOfOrderEventsDiscardedEvent:
-            EXPECT_GE(metadata_event.out_of_order_events_discarded_event().end_timestamp_ns(),
-                      previous_event_timestamp_ns);
-            previous_event_timestamp_ns =
-                metadata_event.out_of_order_events_discarded_event().end_timestamp_ns();
-            break;
-          case orbit_grpc_protos::MetadataEvent::EVENT_NOT_SET:
-            UNREACHABLE();
-        }
-      } break;
+      case orbit_grpc_protos::ProducerCaptureEvent::kWarningEvent:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kClockResolutionEvent:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kErrorsWithPerfEventOpenEvent:
+        EXPECT_GE(event.errors_with_perf_event_open_event().timestamp_ns(),
+                  previous_event_timestamp_ns);
+        previous_event_timestamp_ns = event.errors_with_perf_event_open_event().timestamp_ns();
+        break;
+      case orbit_grpc_protos::ProducerCaptureEvent::kErrorEnablingOrbitApiEvent:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kLostPerfRecordsEvent:
+        EXPECT_GE(event.lost_perf_records_event().end_timestamp_ns(), previous_event_timestamp_ns);
+        previous_event_timestamp_ns = event.lost_perf_records_event().end_timestamp_ns();
+        break;
+      case orbit_grpc_protos::ProducerCaptureEvent::kOutOfOrderEventsDiscardedEvent:
+        EXPECT_GE(event.out_of_order_events_discarded_event().end_timestamp_ns(),
+                  previous_event_timestamp_ns);
+        previous_event_timestamp_ns =
+            event.out_of_order_events_discarded_event().end_timestamp_ns();
+        break;
       case orbit_grpc_protos::ProducerCaptureEvent::EVENT_NOT_SET:
         UNREACHABLE();
     }
@@ -562,10 +549,8 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
 void VerifyNoLostOrDiscardedEvents(
     const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
   for (const orbit_grpc_protos::ProducerCaptureEvent& event : events) {
-    if (event.has_metadata_event()) {
-      EXPECT_FALSE(event.metadata_event().has_lost_perf_records_event());
-      EXPECT_FALSE(event.metadata_event().has_out_of_order_events_discarded_event());
-    }
+    EXPECT_FALSE(event.has_lost_perf_records_event());
+    EXPECT_FALSE(event.has_out_of_order_events_discarded_event());
   }
 }
 
@@ -573,9 +558,7 @@ void VerifyErrorsWithPerfEventOpenEvent(
     const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
   bool errors_with_perf_event_open_event_found = false;
   for (const auto& event : events) {
-    if (event.event_case() == orbit_grpc_protos::ProducerCaptureEvent::kMetadataEvent &&
-        event.metadata_event().event_case() ==
-            orbit_grpc_protos::MetadataEvent::kErrorsWithPerfEventOpenEvent) {
+    if (event.has_errors_with_perf_event_open_event()) {
       EXPECT_FALSE(errors_with_perf_event_open_event_found);
       errors_with_perf_event_open_event_found = true;
     }

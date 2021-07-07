@@ -74,7 +74,17 @@ class CaptureEventProcessorForListener : public CaptureEventProcessor {
       orbit_grpc_protos::InternedTracepointInfo interned_tracepoint_info);
   void ProcessTracepointEvent(const orbit_grpc_protos::TracepointEvent& tracepoint_event);
   void ProcessGpuQueueSubmission(const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission);
-  void ProcessMetadataEvent(const orbit_grpc_protos::MetadataEvent& metadata_event);
+  void ProcessWarningEvent(const orbit_grpc_protos::WarningEvent& warning_event);
+  void ProcessClockResolutionEvent(
+      const orbit_grpc_protos::ClockResolutionEvent& clock_resolution_event);
+  void ProcessErrorsWithPerfEventOpenEvent(
+      const orbit_grpc_protos::ErrorsWithPerfEventOpenEvent& errors_with_perf_event_open_event);
+  void ProcessErrorEnablingOrbitApiEvent(
+      const orbit_grpc_protos::ErrorEnablingOrbitApiEvent& error_enabling_orbit_api_event);
+  void ProcessLostPerfRecordsEvent(
+      const orbit_grpc_protos::LostPerfRecordsEvent& lost_perf_records_event);
+  void ProcessOutOfOrderEventsDiscardedEvent(
+      const orbit_grpc_protos::OutOfOrderEventsDiscardedEvent& out_of_order_events_discarded_event);
 
   void ProcessMemoryUsageEvent(const orbit_grpc_protos::MemoryUsageEvent& memory_usage_event);
   void ExtractAndProcessSystemMemoryTrackingTimer(
@@ -166,8 +176,23 @@ void CaptureEventProcessorForListener::ProcessEvent(const ClientCaptureEvent& ev
     case ClientCaptureEvent::kApiEvent:
       api_event_processor_.ProcessApiEvent(event.api_event());
       break;
-    case ClientCaptureEvent::kMetadataEvent:
-      ProcessMetadataEvent(event.metadata_event());
+    case ClientCaptureEvent::kWarningEvent:
+      ProcessWarningEvent(event.warning_event());
+      break;
+    case ClientCaptureEvent::kClockResolutionEvent:
+      ProcessClockResolutionEvent(event.clock_resolution_event());
+      break;
+    case ClientCaptureEvent::kErrorsWithPerfEventOpenEvent:
+      ProcessErrorsWithPerfEventOpenEvent(event.errors_with_perf_event_open_event());
+      break;
+    case ClientCaptureEvent::kErrorEnablingOrbitApiEvent:
+      ProcessErrorEnablingOrbitApiEvent(event.error_enabling_orbit_api_event());
+      break;
+    case ClientCaptureEvent::kLostPerfRecordsEvent:
+      ProcessLostPerfRecordsEvent(event.lost_perf_records_event());
+      break;
+    case ClientCaptureEvent::kOutOfOrderEventsDiscardedEvent:
+      ProcessOutOfOrderEventsDiscardedEvent(event.out_of_order_events_discarded_event());
       break;
     case ClientCaptureEvent::kCaptureFinished:
       ProcessCaptureFinished(event.capture_finished());
@@ -624,9 +649,34 @@ void CaptureEventProcessorForListener::ProcessTracepointEvent(
   capture_listener_->OnTracepointEvent(std::move(tracepoint_event_info));
 }
 
-void orbit_capture_client::CaptureEventProcessorForListener::ProcessMetadataEvent(
-    const orbit_grpc_protos::MetadataEvent& metadata_event) {
-  capture_listener_->OnMetadataEvent(metadata_event);
+void CaptureEventProcessorForListener::ProcessWarningEvent(
+    const orbit_grpc_protos::WarningEvent& warning_event) {
+  capture_listener_->OnWarningEvent(warning_event);
+}
+
+void CaptureEventProcessorForListener::ProcessClockResolutionEvent(
+    const orbit_grpc_protos::ClockResolutionEvent& clock_resolution_event) {
+  capture_listener_->OnClockResolutionEvent(clock_resolution_event);
+}
+
+void CaptureEventProcessorForListener::ProcessErrorsWithPerfEventOpenEvent(
+    const orbit_grpc_protos::ErrorsWithPerfEventOpenEvent& errors_with_perf_event_open_event) {
+  capture_listener_->OnErrorsWithPerfEventOpenEvent(errors_with_perf_event_open_event);
+}
+
+void CaptureEventProcessorForListener::ProcessErrorEnablingOrbitApiEvent(
+    const orbit_grpc_protos::ErrorEnablingOrbitApiEvent& error_enabling_orbit_api_event) {
+  capture_listener_->OnErrorEnablingOrbitApiEvent(error_enabling_orbit_api_event);
+}
+
+void CaptureEventProcessorForListener::ProcessLostPerfRecordsEvent(
+    const orbit_grpc_protos::LostPerfRecordsEvent& lost_perf_records_event) {
+  capture_listener_->OnLostPerfRecordsEvent(lost_perf_records_event);
+}
+
+void CaptureEventProcessorForListener::ProcessOutOfOrderEventsDiscardedEvent(
+    const orbit_grpc_protos::OutOfOrderEventsDiscardedEvent& out_of_order_events_discarded_event) {
+  capture_listener_->OnOutOfOrderEventsDiscardedEvent(out_of_order_events_discarded_event);
 }
 
 uint64_t CaptureEventProcessorForListener::GetStringHashAndSendToListenerIfNecessary(

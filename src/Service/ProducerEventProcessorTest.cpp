@@ -21,6 +21,9 @@ using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::CGroupMemoryUsage;
 using orbit_grpc_protos::ClientCaptureEvent;
+using orbit_grpc_protos::ClockResolutionEvent;
+using orbit_grpc_protos::ErrorEnablingOrbitApiEvent;
+using orbit_grpc_protos::ErrorsWithPerfEventOpenEvent;
 using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
 using orbit_grpc_protos::FullGpuJob;
@@ -36,11 +39,12 @@ using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointInfo;
 using orbit_grpc_protos::kMemoryInfoProducerId;
+using orbit_grpc_protos::LostPerfRecordsEvent;
 using orbit_grpc_protos::MemoryUsageEvent;
-using orbit_grpc_protos::MetadataEvent;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ModulesSnapshot;
 using orbit_grpc_protos::ModuleUpdateEvent;
+using orbit_grpc_protos::OutOfOrderEventsDiscardedEvent;
 using orbit_grpc_protos::ProcessMemoryUsage;
 using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_grpc_protos::SchedulingSlice;
@@ -49,6 +53,7 @@ using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadNamesSnapshot;
 using orbit_grpc_protos::ThreadStateSlice;
 using orbit_grpc_protos::TracepointEvent;
+using orbit_grpc_protos::WarningEvent;
 
 using ::testing::SaveArg;
 
@@ -1592,29 +1597,6 @@ TEST(ProducerEventProcessor, ThreadNamesSnapshot) {
   EXPECT_EQ(thread_name.timestamp_ns(), kTimestampNs2);
 }
 
-TEST(ProducerEventProcessor, MetadataEvent) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
-
-  ProducerCaptureEvent producer_capture_event;
-  MetadataEvent* metadata_event = producer_capture_event.mutable_metadata_event();
-  orbit_grpc_protos::InfoEvent* info_event = metadata_event->mutable_info_event();
-  info_event->set_timestamp_ns(kTimestampNs1);
-  constexpr const char* kMessage = "message";
-  info_event->set_message(kMessage);
-
-  ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
-
-  producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
-
-  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kMetadataEvent);
-  const MetadataEvent& actual_metadata_event = client_capture_event.metadata_event();
-  ASSERT_EQ(actual_metadata_event.event_case(), MetadataEvent::kInfoEvent);
-  EXPECT_EQ(actual_metadata_event.info_event().timestamp_ns(), kTimestampNs1);
-  EXPECT_EQ(actual_metadata_event.info_event().message(), kMessage);
-}
-
 TEST(ProducerEventProcessor, MemoryUsageEvent) {
   ProducerCaptureEvent producer_capture_event;
   MemoryUsageEvent* memory_usage_event = producer_capture_event.mutable_memory_usage_event();
@@ -1660,6 +1642,144 @@ TEST(ProducerEventProcessor, MemoryUsageEvent) {
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kMemoryUsageEvent);
   const MemoryUsageEvent& actual_memory_usage_event = client_capture_event.memory_usage_event();
   ASSERT_EQ(actual_memory_usage_event.SerializeAsString(), memory_usage_event->SerializeAsString());
+}
+
+TEST(ProducerEventProcessor, WarningEvent) {
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+
+  ProducerCaptureEvent producer_capture_event;
+  WarningEvent* warning_event = producer_capture_event.mutable_warning_event();
+  warning_event->set_timestamp_ns(kTimestampNs1);
+  constexpr const char* kMessage = "message";
+  warning_event->set_message(kMessage);
+
+  ClientCaptureEvent client_capture_event;
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+
+  producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
+
+  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kWarningEvent);
+  const WarningEvent& actual_warning_event = client_capture_event.warning_event();
+  EXPECT_EQ(actual_warning_event.timestamp_ns(), kTimestampNs1);
+  EXPECT_EQ(actual_warning_event.message(), kMessage);
+}
+
+TEST(ProducerEventProcessor, ClockResolutionEvent) {
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+
+  ProducerCaptureEvent producer_capture_event;
+  ClockResolutionEvent* clock_resolution_event =
+      producer_capture_event.mutable_clock_resolution_event();
+  clock_resolution_event->set_timestamp_ns(kTimestampNs1);
+  constexpr uint64_t kClockResolutionNs = 123;
+  clock_resolution_event->set_clock_resolution_ns(kClockResolutionNs);
+
+  ClientCaptureEvent client_capture_event;
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+
+  producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
+
+  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kClockResolutionEvent);
+  const ClockResolutionEvent& actual_clock_resolution_event =
+      client_capture_event.clock_resolution_event();
+  EXPECT_EQ(actual_clock_resolution_event.timestamp_ns(), kTimestampNs1);
+  EXPECT_EQ(actual_clock_resolution_event.clock_resolution_ns(), kClockResolutionNs);
+}
+
+TEST(ProducerEventProcessor, ErrorsWithPerfEventOpenEvent) {
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+
+  ProducerCaptureEvent producer_capture_event;
+  ErrorsWithPerfEventOpenEvent* errors_with_perf_event_open_event =
+      producer_capture_event.mutable_errors_with_perf_event_open_event();
+  errors_with_perf_event_open_event->set_timestamp_ns(kTimestampNs1);
+  constexpr const char* kFailedToOpen1 = "sampling";
+  constexpr const char* kFailedToOpen2 = "uprobes";
+  errors_with_perf_event_open_event->add_failed_to_open(kFailedToOpen1);
+  errors_with_perf_event_open_event->add_failed_to_open(kFailedToOpen2);
+
+  ClientCaptureEvent client_capture_event;
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+
+  producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
+
+  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kErrorsWithPerfEventOpenEvent);
+  const ErrorsWithPerfEventOpenEvent& actual_errors_with_perf_event_open_event =
+      client_capture_event.errors_with_perf_event_open_event();
+  EXPECT_EQ(actual_errors_with_perf_event_open_event.timestamp_ns(), kTimestampNs1);
+  EXPECT_THAT(std::vector(actual_errors_with_perf_event_open_event.failed_to_open().begin(),
+                          actual_errors_with_perf_event_open_event.failed_to_open().end()),
+              testing::ElementsAre(kFailedToOpen1, kFailedToOpen2));
+}
+
+TEST(ProducerEventProcessor, ErrorEnablingOrbitApiEvent) {
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+
+  ProducerCaptureEvent producer_capture_event;
+  ErrorEnablingOrbitApiEvent* error_enabling_orbit_api_event =
+      producer_capture_event.mutable_error_enabling_orbit_api_event();
+  error_enabling_orbit_api_event->set_timestamp_ns(kTimestampNs1);
+  constexpr const char* kMessage = "message";
+  error_enabling_orbit_api_event->set_message(kMessage);
+
+  ClientCaptureEvent client_capture_event;
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+
+  producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
+
+  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kErrorEnablingOrbitApiEvent);
+  const ErrorEnablingOrbitApiEvent& actual_error_enabling_orbit_api_event =
+      client_capture_event.error_enabling_orbit_api_event();
+  EXPECT_EQ(actual_error_enabling_orbit_api_event.timestamp_ns(), kTimestampNs1);
+  EXPECT_EQ(actual_error_enabling_orbit_api_event.message(), kMessage);
+}
+
+TEST(ProducerEventProcessor, LostPerfRecordsEvent) {
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+
+  ProducerCaptureEvent producer_capture_event;
+  LostPerfRecordsEvent* lost_perf_records_event =
+      producer_capture_event.mutable_lost_perf_records_event();
+  lost_perf_records_event->set_duration_ns(kDurationNs1);
+  lost_perf_records_event->set_end_timestamp_ns(kTimestampNs1);
+
+  ClientCaptureEvent client_capture_event;
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+
+  producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
+
+  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kLostPerfRecordsEvent);
+  const LostPerfRecordsEvent& actual_lost_perf_records_event =
+      client_capture_event.lost_perf_records_event();
+  EXPECT_EQ(actual_lost_perf_records_event.duration_ns(), kDurationNs1);
+  EXPECT_EQ(actual_lost_perf_records_event.end_timestamp_ns(), kTimestampNs1);
+}
+
+TEST(ProducerEventProcessor, OutOfOrderEventsDiscardedEvent) {
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+
+  ProducerCaptureEvent producer_capture_event;
+  OutOfOrderEventsDiscardedEvent* out_of_order_events_discarded_event =
+      producer_capture_event.mutable_out_of_order_events_discarded_event();
+  out_of_order_events_discarded_event->set_duration_ns(kDurationNs1);
+  out_of_order_events_discarded_event->set_end_timestamp_ns(kTimestampNs1);
+
+  ClientCaptureEvent client_capture_event;
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+
+  producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
+
+  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kOutOfOrderEventsDiscardedEvent);
+  const OutOfOrderEventsDiscardedEvent& actual_out_of_order_events_discarded_event =
+      client_capture_event.out_of_order_events_discarded_event();
+  EXPECT_EQ(actual_out_of_order_events_discarded_event.duration_ns(), kDurationNs1);
+  EXPECT_EQ(actual_out_of_order_events_discarded_event.end_timestamp_ns(), kTimestampNs1);
 }
 
 }  // namespace orbit_service
