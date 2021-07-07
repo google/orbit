@@ -652,6 +652,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     VkQueryPool query_pool = timer_query_pool_->GetQueryPool(device);
 
     if (!timer_query_pool_->NextReadyQuerySlot(device, slot_index)) {
+      // TODO(b/192998580): Send an appropriate CaptureEvent to notify the client that the Vulkan
+      //  layer was out of query slots in a certain time range.
       return false;
     }
     dispatch_table_->CmdWriteTimestamp(command_buffer)(command_buffer, pipeline_stage_flags,

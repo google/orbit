@@ -305,6 +305,8 @@ class VulkanLayerController {
   }
 
   [[nodiscard]] VkResult OnQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* present_info) {
+    // TODO(b/185454430): Consider calling  CompleteSubmits periodically on vkQueueSubmit instead of
+    //  on vkQueuePresentKHR.
     submission_tracker_.CompleteSubmits(queue_manager_.GetDeviceOfQueue(queue));
     return dispatch_table_.QueuePresentKHR(queue)(queue, present_info);
   }
