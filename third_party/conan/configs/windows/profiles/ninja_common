@@ -1,0 +1,9 @@
+[settings]
+ninja:os=Windows
+ninja:os_build=Windows
+ninja:arch=x86_64
+ninja:arch_build=x86_64
+ninja:build_type=Release
+
+[build_requires]
+ninja/1.9.0@
