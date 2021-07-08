@@ -179,8 +179,7 @@ void ModulesDataView::DoFilter() {
   std::vector<uint64_t> indices;
   std::vector<std::string> tokens = absl::StrSplit(absl::AsciiStrToLower(filter_), ' ');
 
-  for (uint64_t start_address : indices_) {
-    const ModuleInMemory& memory_space = start_address_to_module_in_memory_.at(start_address);
+  for (const auto& [start_address, memory_space] : start_address_to_module_in_memory_) {
     std::string module_string = absl::StrFormat("%s %s", memory_space.FormattedAddressRange(),
                                                 absl::AsciiStrToLower(memory_space.file_path()));
 
