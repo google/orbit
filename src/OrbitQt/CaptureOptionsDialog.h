@@ -66,7 +66,6 @@ class CaptureOptionsDialog : public QDialog {
   void ResetLocalMarkerDepthLineEdit();
   void ResetMemorySamplingPeriodMsLineEditWhenEmpty();
   void ResetMemoryWarningThresholdKbLineEditWhenEmpty();
-  void ShowSourcePathsMappingEditor();
 
  private:
   std::unique_ptr<Ui::CaptureOptionsDialog> ui_;

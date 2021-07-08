@@ -13,8 +13,6 @@
 #include <QWidget>
 #include <QtGui/QValidator>
 
-#include "ConfigWidgets/SourcePathsMappingDialog.h"
-#include "SourcePathsMapping/MappingManager.h"
 #include "ui_CaptureOptionsDialog.h"
 
 ABSL_DECLARE_FLAG(bool, devmode);
@@ -32,9 +30,6 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   ui_->localMarkerDepthLineEdit->setValidator(&uint64_validator_);
   ui_->memorySamplingPeriodMsLineEdit->setValidator(new UInt64Validator(1));
   ui_->memoryWarningThresholdKbLineEdit->setValidator(&uint64_validator_);
-
-  QObject::connect(ui_->openSourcePathsMappingDialog, &QAbstractButton::clicked, this,
-                   &CaptureOptionsDialog::ShowSourcePathsMappingEditor);
 
   if (!absl::GetFlag(FLAGS_enable_warning_threshold)) {
     ui_->memoryWarningThresholdKbLabel->hide();
@@ -93,18 +88,6 @@ uint64_t CaptureOptionsDialog::GetMaxLocalMarkerDepthPerCommandBuffer() const {
 void CaptureOptionsDialog::ResetLocalMarkerDepthLineEdit() {
   if (ui_->localMarkerDepthLineEdit->text().isEmpty()) {
     ui_->localMarkerDepthLineEdit->setText(QString::number(0));
-  }
-}
-
-void CaptureOptionsDialog::ShowSourcePathsMappingEditor() {
-  orbit_source_paths_mapping::MappingManager manager{};
-
-  orbit_config_widgets::SourcePathsMappingDialog dialog{this};
-  dialog.SetMappings(manager.GetMappings());
-  const int result_code = dialog.exec();
-
-  if (result_code == QDialog::Accepted) {
-    manager.SetMappings(dialog.GetMappings());
   }
 }
 

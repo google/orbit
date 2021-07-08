@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="/actions">
+    <file alias="source_path_mappings">outline_source_white_48dp.png</file>
     <file alias="track_settings">outline_tune_white_48dp.png</file>
     <file alias="track_visibility_off">baseline_visibility_off_white_18dp.png</file>
     <file alias="track_visibility_on">baseline_visibility_white_18dp.png</file>

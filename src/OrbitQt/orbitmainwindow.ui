@@ -427,7 +427,14 @@ QPushButton:disabled {
     </widget>
     <addaction name="menuCrash"/>
    </widget>
+   <widget class="QMenu" name="menuSettings">
+    <property name="title">
+     <string>Settings</string>
+    </property>
+    <addaction name="actionSourcePathMappings"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuSettings"/>
    <addaction name="menuDebug"/>
    <addaction name="menuHelp"/>
    <addaction name="menuFeedback"/>
@@ -640,10 +647,22 @@ It used to also contain captures and presets, but these were moved to the User D
      <normaloff>:/actions/track_settings</normaloff>:/actions/track_settings</iconset>
    </property>
    <property name="text">
-    <string>Toggle the track configuration pane</string>
+    <string>Track Configuration Pane</string>
    </property>
    <property name="toolTip">
-    <string>Configure tracks</string>
+    <string>Toggles the track configuration pane</string>
+   </property>
+  </action>
+  <action name="actionSourcePathMappings">
+   <property name="icon">
+    <iconset resource="../../icons/orbiticons.qrc">
+     <normaloff>:/actions/source_path_mappings</normaloff>:/actions/source_path_mappings</iconset>
+   </property>
+   <property name="text">
+    <string>Source Paths Mappings...</string>
+   </property>
+   <property name="toolTip">
+    <string>Configure path mappings for source code</string>
    </property>
   </action>
  </widget>
