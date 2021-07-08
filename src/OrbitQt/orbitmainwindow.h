@@ -139,7 +139,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void on_actionToggle_Capture_triggered();
   void on_actionOpen_Capture_triggered();
   void on_actionCaptureOptions_triggered();
-  void on_actionHelp_triggered();
+  void on_actionHelp_toggled(bool checked);
   void on_actionIntrospection_triggered();
 
   void on_actionCheckFalse_triggered();

@@ -498,7 +498,7 @@ void OrbitMainWindow::SetupTrackConfigurationUi() {
   QObject::connect(ui->actionConfigureTracks, &QAction::toggled,
                    [this](bool checked) { ui->trackConfig->setVisible(checked); });
   if (!absl::GetFlag(FLAGS_enable_track_type_visibility_feature)) {
-    ui->capture_toolbar->removeAction(ui->actionConfigureTracks);
+    ui->actionConfigureTracks->setVisible(false);
   }
 }
 
@@ -1082,7 +1082,11 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
   LoadCaptureOptionsIntoApp();
 }
 
-void OrbitMainWindow::on_actionHelp_triggered() { app_->ToggleDrawHelp(); }
+void OrbitMainWindow::on_actionHelp_toggled(bool checked) {
+  auto* capture_window = dynamic_cast<CaptureWindow*>(ui->CaptureGLWidget->GetCanvas());
+  CHECK(capture_window != nullptr);
+  capture_window->set_draw_help(checked);
+}
 
 void OrbitMainWindow::on_actionIntrospection_triggered() {
   if (introspection_widget_ == nullptr) {

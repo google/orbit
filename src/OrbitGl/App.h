@@ -132,7 +132,6 @@ class OrbitApp final : public DataViewFactory,
     return selection_report_ != nullptr && selection_report_->HasSamples();
   }
 
-  void ToggleDrawHelp();
   void ToggleCapture();
   void ListPresets();
   void RefreshCaptureView();

@@ -1453,12 +1453,6 @@ void OrbitApp::ClearCapture() {
   FireRefreshCallbacks();
 }
 
-void OrbitApp::ToggleDrawHelp() {
-  if (capture_window_ != nullptr) {
-    capture_window_->ToggleDrawHelp();
-  }
-}
-
 void OrbitApp::ToggleCapture() {
   if (IsCapturing()) {
     StopCapture();
