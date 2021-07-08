@@ -76,6 +76,7 @@ target_sources(
          TriangleToggle.h
          TracepointsDataView.h
          TracepointThreadBar.h
+         TrackTestData.h
          VariableTrack.h
          Viewport.h)
 
@@ -140,6 +141,7 @@ target_sources(
           TriangleToggle.cpp
           TracepointsDataView.cpp
           TracepointThreadBar.cpp
+          TrackTestData.cpp
           Viewport.cpp)
 
 target_include_directories(OrbitGl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -181,7 +183,6 @@ target_compile_options(OrbitGlTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitGlTests PRIVATE
                PickingManagerTest.h
-               TrackManagerTest.h
                UnitTestSlider.h)
 
 target_sources(OrbitGlTests PRIVATE

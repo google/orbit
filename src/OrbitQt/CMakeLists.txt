@@ -121,8 +121,7 @@ target_sources(OrbitQtTests
                 CallTreeViewItemModelTest.cpp
                 StatusListenerImplTest.cpp
                 TutorialOverlayTest.cpp
-                TrackTypeItemModelTest.cpp
-                ../OrbitGl/TrackManagerTest.cpp)
+                TrackTypeItemModelTest.cpp)
 
 target_include_directories(OrbitQtTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
