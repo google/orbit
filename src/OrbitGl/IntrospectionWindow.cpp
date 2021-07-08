@@ -91,4 +91,14 @@ void IntrospectionWindow::RenderImGuiDebugUI() {
   }
 }
 
+void IntrospectionWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) {
+  CaptureWindow::KeyPressed(key_code, ctrl, shift, alt);
+
+  switch (key_code) {
+    case 'H':
+      set_draw_help(!get_draw_help());
+      break;
+  }
+}
+
 bool IntrospectionWindow::ShouldAutoZoom() const { return IsIntrospecting(); }

@@ -49,8 +49,8 @@ class CaptureWindow : public GlCanvas {
   void RequestUpdatePrimitives();
   [[nodiscard]] bool IsRedrawNeeded() const override;
 
-  void ToggleDrawHelp();
   void set_draw_help(bool draw_help);
+  [[nodiscard]] bool get_draw_help() const { return draw_help_; }
 
   [[nodiscard]] TimeGraph* GetTimeGraph() { return time_graph_.get(); }
   void CreateTimeGraph(const orbit_client_model::CaptureData* capture_data);

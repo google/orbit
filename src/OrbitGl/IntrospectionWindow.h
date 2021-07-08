@@ -22,6 +22,8 @@ class IntrospectionWindow : public CaptureWindow {
   void ToggleRecording() override;
   void RenderImGuiDebugUI() override;
 
+  void KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) override;
+
   [[nodiscard]] bool IsIntrospecting() const;
   void StartIntrospection();
   void StopIntrospection();

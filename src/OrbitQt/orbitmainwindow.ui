@@ -87,7 +87,6 @@ QPushButton:disabled {
            </property>
            <addaction name="actionToggle_Capture"/>
            <addaction name="actionCaptureOptions"/>
-           <addaction name="actionOpen_Capture"/>
            <addaction name="actionHelp"/>
            <addaction name="actionIntrospection"/>
            <addaction name="actionConfigureTracks"/>
@@ -427,13 +426,23 @@ QPushButton:disabled {
     </widget>
     <addaction name="menuCrash"/>
    </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <addaction name="actionConfigureTracks"/>
+    <addaction name="actionIntrospection"/>
+    <addaction name="actionHelp"/>
+   </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
      <string>Settings</string>
     </property>
+    <addaction name="actionCaptureOptions"/>
     <addaction name="actionSourcePathMappings"/>
    </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuView"/>
    <addaction name="menuSettings"/>
    <addaction name="menuDebug"/>
    <addaction name="menuHelp"/>
@@ -485,7 +494,10 @@ QPushButton:disabled {
     <string>Toggle Capture</string>
    </property>
    <property name="toolTip">
-    <string>Toggle Capture</string>
+    <string>Toggle Capture (F5)</string>
+   </property>
+   <property name="shortcut">
+    <string>F5</string>
    </property>
   </action>
   <action name="actionCaptureOptions">
@@ -494,10 +506,10 @@ QPushButton:disabled {
      <normaloff>:/actions/settings</normaloff>:/actions/settings</iconset>
    </property>
    <property name="text">
-    <string>Capture Options</string>
+    <string>Capture Options...</string>
    </property>
    <property name="toolTip">
-    <string>Capture Options</string>
+    <string>Open the Capture Options Dialog</string>
    </property>
   </action>
   <action name="actionFilter_Tracks">
@@ -525,15 +537,21 @@ QPushButton:disabled {
    </property>
   </action>
   <action name="actionHelp">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="../../icons/orbiticons.qrc">
      <normaloff>:/actions/help</normaloff>:/actions/help</iconset>
    </property>
    <property name="text">
-    <string>Help</string>
+    <string>Capture Window Controls</string>
    </property>
    <property name="toolTip">
-    <string>Help</string>
+    <string>Toggle display of the capture window controls (Ctrl + H)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+H</string>
    </property>
   </action>
   <action name="actionIntrospection">
@@ -542,10 +560,10 @@ QPushButton:disabled {
      <normaloff>:/actions/info</normaloff>:/actions/info</iconset>
    </property>
    <property name="text">
-    <string>Introspection</string>
+    <string>Introspection Window</string>
    </property>
    <property name="toolTip">
-    <string>Introspection</string>
+    <string>Toggle display of the introspection window</string>
    </property>
   </action>
   <action name="actionEnd_Session">

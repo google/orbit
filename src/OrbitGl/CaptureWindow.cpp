@@ -319,9 +319,6 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
     case 'S':
       Zoom(ZoomDirection::kHorizontal, -1);
       break;
-    case 'H':
-      draw_help_ = !draw_help_;
-      break;
     case 'X':
       ToggleRecording();
       break;
@@ -602,8 +599,6 @@ bool CaptureWindow::ShouldSkipRendering() const {
   return app_->IsLoadingCapture();
 }
 
-void CaptureWindow::ToggleDrawHelp() { set_draw_help(!draw_help_); }
-
 void CaptureWindow::set_draw_help(bool draw_help) {
   draw_help_ = draw_help;
   RequestRedraw();
@@ -718,13 +713,13 @@ void CaptureWindow::RenderHelpUi() {
 
 const char* CaptureWindow::GetHelpText() const {
   const char* help_message =
-      "Start/Stop Capture: 'X'\n"
+      "Start/Stop Capture: 'F5'\n"
       "Pan: 'A','D' or \"Left Click + Drag\"\n"
       "Zoom: 'W', 'S', Scroll or \"Ctrl + Right Click + Drag\"\n"
       "Vertical Zoom: \"Ctrl + Scroll\"\n"
       "Select: Left Click\n"
       "Measure: \"Right Click + Drag\"\n"
-      "Toggle Help: 'H'";
+      "Toggle Help: Ctrl + 'H'";
   return help_message;
 }
 
