@@ -76,6 +76,7 @@
 #include "CodeViewer/Dialog.h"
 #include "CodeViewer/FontSizeInEm.h"
 #include "CodeViewer/OwningDialog.h"
+#include "ConfigWidgets/SourcePathsMappingDialog.h"
 #include "DataViewFactory.h"
 #include "DataViews/DataViewType.h"
 #include "DisplayFormats/DisplayFormats.h"
@@ -1196,6 +1197,18 @@ void OrbitMainWindow::on_actionServiceCheckFalse_triggered() {
 
 void OrbitMainWindow::on_actionServiceStackOverflow_triggered() {
   app_->CrashOrbitService(CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW);
+}
+
+void OrbitMainWindow::on_actionSourcePathMappings_triggered() {
+  orbit_source_paths_mapping::MappingManager manager{};
+
+  orbit_config_widgets::SourcePathsMappingDialog dialog{this};
+  dialog.SetMappings(manager.GetMappings());
+  const int result_code = dialog.exec();
+
+  if (result_code == QDialog::Accepted) {
+    manager.SetMappings(dialog.GetMappings());
+  }
 }
 
 void OrbitMainWindow::OnCaptureCleared() {

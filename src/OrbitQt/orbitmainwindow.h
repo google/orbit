@@ -147,6 +147,8 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void on_actionServiceCheckFalse_triggered();
   void on_actionServiceStackOverflow_triggered();
 
+  void on_actionSourcePathMappings_triggered();
+
   void OnTimerSelectionChanged(const orbit_client_protos::TimerInfo* timer_info);
 
  private:
