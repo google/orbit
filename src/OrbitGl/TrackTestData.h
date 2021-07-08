@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_TRACK_MANAGER_TEST_H_
-#define ORBIT_GL_TRACK_MANAGER_TEST_H_
+#ifndef ORBIT_GL_TRACK_TEST_DATA_H_
+#define ORBIT_GL_TRACK_TEST_DATA_H_
 
 #include <cstdint>
 #include <memory>
@@ -29,4 +29,4 @@ struct TrackTestData {
 
 }  // namespace orbit_gl
 
-#endif
+#endif  // ORBIT_GL_TRACK_TEST_DATA_H_
