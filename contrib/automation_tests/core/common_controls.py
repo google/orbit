@@ -31,23 +31,15 @@ class Track:
     name = property(lambda self: self._name)
 
 
-class DataViewPanel:
+class Table:
     def __init__(self, control: BaseWrapper):
-        self._panel = control
-        self._table = find_control(control, "Tree", "DataView")
-        self._refresh_button = find_control(control, "Button", "Refresh", raise_on_failure=False)
-        self._filter = find_control(control,  "Edit", "Filter")
-
-    panel = property(lambda self: self._panel)
-    table = property(lambda self: self._table)
-    refresh_button = property(lambda self: self._refresh_button)
-    filter = property(lambda self: self._filter)
+        self._table = control
 
     def get_row_count(self):
-        return self.table.iface_grid.CurrentRowCount
+        return self._table.iface_grid.CurrentRowCount
 
     def get_column_count(self):
-        return self.table.iface_grid.CurrentColumnCount
+        return self._table.iface_grid.CurrentColumnCount
 
     def get_item_at(self, row: int, col: int) -> BaseWrapper:
         """
@@ -59,11 +51,11 @@ class DataViewPanel:
 
         We really should not need to use the low-level API like this.
         """
-        element_info = UIAElementInfo(self.table.iface_grid.GetItem(row, col))
+        element_info = UIAElementInfo(self._table.iface_grid.GetItem(row, col))
         wrapper = UIAWrapper(element_info)
         return wrapper
 
-    def find_first_item_row(self, text: str, column: int, partial_match=False) -> int:
+    def find_first_item_row(self, text: str, column: int, partial_match=False) -> int or None:
         row_count = self.get_row_count()
         for i in range(row_count):
             item = self.get_item_at(i, column)
@@ -72,3 +64,29 @@ class DataViewPanel:
                 return i
 
         return None
+
+
+class DataViewPanel:
+    def __init__(self, control: BaseWrapper):
+        self._panel = control
+        self._table = find_control(control, "Tree", "DataView")
+        self._table_obj = Table(self._table)
+        self._refresh_button = find_control(control, "Button", "Refresh", raise_on_failure=False)
+        self._filter = find_control(control,  "Edit", "Filter")
+
+    panel = property(lambda self: self._panel)
+    table = property(lambda self: self._table)
+    refresh_button = property(lambda self: self._refresh_button)
+    filter = property(lambda self: self._filter)
+
+    def get_row_count(self):
+        return self._table_obj.get_row_count()
+
+    def get_column_count(self):
+        return self._table_obj.get_column_count()
+
+    def get_item_at(self, row: int, col: int) -> BaseWrapper:
+        return self._table_obj.get_item_at(row, col)
+
+    def find_first_item_row(self, text: str, column: int, partial_match=False) -> int:
+        return self.find_first_item_row(text, column, partial_match)
