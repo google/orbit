@@ -1,0 +1,15 @@
+--- a/liblog/logger.h	2021-07-14 09:41:39.390363642 +0200
++++ b/liblog/logger.h	2021-07-14 09:43:06.825691405 +0200
+@@ -16,7 +16,12 @@
+ 
+ #pragma once
+ 
++#ifdef __cplusplus
++#include <atomic>
++using std::atomic_int;
++#else
+ #include <stdatomic.h>
++#endif
+ #include <sys/cdefs.h>
+ 
+ #include <log/log.h>

@@ -1,0 +1,13 @@
+--- a/libbase/logging.cpp	2021-07-13 18:28:02.064081484 +0200
++++ b/libbase/logging.cpp	2021-07-13 18:28:33.463843152 +0200
+@@ -58,6 +58,10 @@
+ 
+ #include "logging_splitters.h"
+ 
++#ifndef __clang__
++#define __builtin_available(arg1,arg2) false
++#endif
++
+ namespace android {
+ namespace base {
+ 
