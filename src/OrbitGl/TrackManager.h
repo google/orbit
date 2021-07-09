@@ -16,10 +16,10 @@
 #include <vector>
 
 #include "AsyncTrack.h"
+#include "CGroupAndProcessMemoryTrack.h"
 #include "FrameTrack.h"
 #include "GpuTrack.h"
 #include "GraphTrack.h"
-#include "MemoryTrack.h"
 #include "PagefaultTrack.h"
 #include "PickingManager.h"
 #include "SchedulerTrack.h"
@@ -73,7 +73,7 @@ class TrackManager {
     return cgroup_and_process_memory_track_.get();
   }
   [[nodiscard]] orbit_gl::CGroupAndProcessMemoryTrack* CreateAndGetCGroupAndProcessMemoryTrack(
-      const std::array<std::string, orbit_gl::kCGroupAndProcessMemoryTrackDimension>& series_names);
+      const std::string& cgroup_name);
   orbit_gl::PagefaultTrack* GetPagefaultTrack() const { return pagefault_track_.get(); }
   orbit_gl::PagefaultTrack* CreateAndGetPagefaultTrack(
       const std::array<std::string, orbit_gl::kBasicPagefaultTrackDimension>& series_names);

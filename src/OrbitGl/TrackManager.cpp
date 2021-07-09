@@ -35,7 +35,6 @@
 
 using orbit_client_data::CallstackData;
 using orbit_gl::CGroupAndProcessMemoryTrack;
-using orbit_gl::MemoryTrack;
 using orbit_gl::PagefaultTrack;
 using orbit_gl::SystemMemoryTrack;
 using orbit_gl::VariableTrack;
@@ -477,19 +476,11 @@ SystemMemoryTrack* TrackManager::CreateAndGetSystemMemoryTrack() {
 }
 
 CGroupAndProcessMemoryTrack* TrackManager::CreateAndGetCGroupAndProcessMemoryTrack(
-    const std::array<std::string, orbit_gl::kCGroupAndProcessMemoryTrackDimension>& series_names) {
+    const std::string& cgroup_name) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   if (cgroup_and_process_memory_track_ == nullptr) {
-    constexpr uint8_t kTrackValueDecimalDigits = 2;
-    const std::string kTrackValueLabelUnit = "MB";
-    const std::string kTrackName =
-        absl::StrFormat("CGroup Memory Usage (%s)", kTrackValueLabelUnit);
-
     cgroup_and_process_memory_track_ = std::make_shared<CGroupAndProcessMemoryTrack>(
-        time_graph_, time_graph_, viewport_, layout_, kTrackName, series_names, capture_data_);
-    cgroup_and_process_memory_track_->SetLabelUnit(kTrackValueLabelUnit);
-    cgroup_and_process_memory_track_->SetNumberOfDecimalDigits(kTrackValueDecimalDigits);
-    cgroup_and_process_memory_track_->SetSeriesColors(orbit_gl::kCGroupAndProcessMemoryTrackColors);
+        time_graph_, time_graph_, viewport_, layout_, cgroup_name, capture_data_);
     AddTrack(cgroup_and_process_memory_track_);
   }
 

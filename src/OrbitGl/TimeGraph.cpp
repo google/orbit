@@ -18,6 +18,7 @@
 
 #include "App.h"
 #include "AsyncTrack.h"
+#include "CGroupAndProcessMemoryTrack.h"
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "ClientData/FunctionUtils.h"
 #include "DisplayFormats/DisplayFormats.h"
@@ -29,7 +30,6 @@
 #include "GrpcProtos/Constants.h"
 #include "Introspection/Introspection.h"
 #include "ManualInstrumentationManager.h"
-#include "MemoryTrack.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
@@ -50,6 +50,7 @@ using orbit_client_model::CaptureData;
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
+using orbit_gl::CGroupAndProcessMemoryTrack;
 using orbit_gl::SystemMemoryTrack;
 using orbit_gl::VariableTrack;
 using orbit_grpc_protos::InstrumentedFunction;
@@ -510,16 +511,13 @@ void TimeGraph::ProcessCGroupAndProcessMemoryTrackingTimer(const TimerInfo& time
     return;
   }
 
+  CGroupAndProcessMemoryTrack* track = track_manager_->GetCGroupAndProcessMemoryTrack();
+  if (track == nullptr) {
+    track = track_manager_->CreateAndGetCGroupAndProcessMemoryTrack(cgroup_name);
+  }
+
   constexpr double kMegabytesToBytes = 1024.0 * 1024.0;
   constexpr double kMegabytesToKilobytes = 1024.0;
-  orbit_gl::CGroupAndProcessMemoryTrack* track = track_manager_->GetCGroupAndProcessMemoryTrack();
-  if (track == nullptr) {
-    const std::array<std::string, orbit_gl::kCGroupAndProcessMemoryTrackDimension> kSeriesNames = {
-        absl::StrFormat("Process [%s] RssAnon", capture_data_->process_name()),
-        "Other Processes RssAnon", absl::StrFormat("CGroup [%s] Mapped File", cgroup_name),
-        absl::StrFormat("CGroup [%s] Unused", cgroup_name)};
-    track = track_manager_->CreateAndGetCGroupAndProcessMemoryTrack(kSeriesNames);
-  }
   CHECK(track->GetNumberOfDecimalDigits().has_value());
   uint8_t num_of_decimal_digits = track->GetNumberOfDecimalDigits().value();
   double cgroup_limit_mb = RoundPrecision(
@@ -532,26 +530,20 @@ void TimeGraph::ProcessCGroupAndProcessMemoryTrackingTimer(const TimerInfo& time
       static_cast<double>(process_rss_anon_kb) / kMegabytesToKilobytes, num_of_decimal_digits);
   double other_rss_anon_mb = cgroup_rss_anon_mb - process_rss_anon_mb;
   double unused_mb = cgroup_limit_mb - cgroup_rss_anon_mb - cgroup_mapped_file_mb;
-  track->AddValues(timer_info.start(),
-                   {process_rss_anon_mb, other_rss_anon_mb, cgroup_mapped_file_mb, unused_mb});
+
+  std::array<double, orbit_gl::kCGroupAndProcessMemoryTrackDimension> values;
+  values[static_cast<size_t>(CGroupAndProcessMemoryTrack::SeriesIndex::kProcessRssAnonMb)] =
+      process_rss_anon_mb;
+  values[static_cast<size_t>(CGroupAndProcessMemoryTrack::SeriesIndex::kOtherRssAnonMb)] =
+      other_rss_anon_mb;
+  values[static_cast<size_t>(CGroupAndProcessMemoryTrack::SeriesIndex::kCGroupMappedFileMb)] =
+      cgroup_mapped_file_mb;
+  values[static_cast<size_t>(CGroupAndProcessMemoryTrack::SeriesIndex::kUnusedMb)] = unused_mb;
+  track->AddValues(timer_info.start(), values);
   track->OnTimer(timer_info);
 
-  // TODO(b/192235976) Move the checking and setting of value upper and lower bounds to where the
-  // track is created. Therefore we can avoid having the same checking process for every timer.
   if (!track->GetValueUpperBound().has_value()) {
-    const std::string kValueUpperBoundLabel =
-        absl::StrFormat("CGroup [%s] Memory Limit", cgroup_name);
-    std::string cgroup_limit_pretty_size =
-        orbit_display_formats::GetDisplaySize(cgroup_limit_bytes);
-    std::string cgroup_limit_pretty_label =
-        absl::StrFormat("%s: %s", kValueUpperBoundLabel, cgroup_limit_pretty_size);
-    track->TrySetValueUpperBound(cgroup_limit_pretty_label, cgroup_limit_mb);
-  }
-
-  if (!track->GetValueLowerBound().has_value()) {
-    const std::string kValueLowerBoundLabel = "Minimum: 0 GB";
-    constexpr double kValueLowerBoundRawValue = 0.0;
-    track->TrySetValueLowerBound(kValueLowerBoundLabel, kValueLowerBoundRawValue);
+    track->TrySetValueUpperBound(cgroup_limit_mb);
   }
 }
 

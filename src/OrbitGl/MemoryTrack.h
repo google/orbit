@@ -48,16 +48,6 @@ class MemoryTrack : public GraphTrack<Dimension>, public AnnotationTrack {
   }
 };
 
-constexpr size_t kCGroupAndProcessMemoryTrackDimension = 4;
-using CGroupAndProcessMemoryTrack = MemoryTrack<kCGroupAndProcessMemoryTrackDimension>;
-
-const std::array<Color, kCGroupAndProcessMemoryTrackDimension> kCGroupAndProcessMemoryTrackColors{
-    Color(231, 68, 53, 255),   // red
-    Color(249, 96, 111, 255),  // warm red
-    Color(246, 196, 0, 255),   // orange
-    Color(87, 166, 74, 255)    // green
-};
-
 }  // namespace orbit_gl
 
 #endif  // ORBIT_GL_MEMORY_TRACK_H_
