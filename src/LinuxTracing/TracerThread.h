@@ -130,7 +130,7 @@ class TracerThread {
   static constexpr uint64_t GPU_TRACING_RING_BUFFER_SIZE_KB = 256;
   static constexpr uint64_t INSTRUMENTED_TRACEPOINTS_RING_BUFFER_SIZE_KB = 8 * 1024;
 
-  static constexpr uint32_t IDLE_TIME_ON_EMPTY_RING_BUFFERS_US = 100;
+  static constexpr uint32_t IDLE_TIME_ON_EMPTY_RING_BUFFERS_US = 1000;
   static constexpr uint32_t IDLE_TIME_ON_EMPTY_DEFERRED_EVENTS_US = 1000;
 
   bool trace_context_switches_;

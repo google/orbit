@@ -791,7 +791,6 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
 
       // Sleep if there was no new event in the last iteration so that we are
       // not constantly polling. Don't sleep so long that ring buffers overflow.
-      // TODO: Refine this sleeping pattern, possibly using exponential backoff.
       {
         ORBIT_SCOPE("Sleep");
         usleep(IDLE_TIME_ON_EMPTY_RING_BUFFERS_US);
