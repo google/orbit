@@ -487,14 +487,11 @@ CGroupAndProcessMemoryTrack* TrackManager::CreateAndGetCGroupAndProcessMemoryTra
   return GetCGroupAndProcessMemoryTrack();
 }
 
-PagefaultTrack* TrackManager::CreateAndGetPagefaultTrack(
-    const std::array<std::string, orbit_gl::kBasicPagefaultTrackDimension>& series_names) {
+PagefaultTrack* TrackManager::CreateAndGetPagefaultTrack(const std::string& cgroup_name) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   if (pagefault_track_ == nullptr) {
-    constexpr uint8_t kTrackValueDecimalDigits = 0;
     pagefault_track_ = std::make_shared<PagefaultTrack>(time_graph_, time_graph_, viewport_,
-                                                        layout_, series_names, capture_data_);
-    pagefault_track_->SetNumberOfDecimalDigits(kTrackValueDecimalDigits);
+                                                        layout_, cgroup_name, capture_data_);
     AddTrack(pagefault_track_);
   }
   return GetPagefaultTrack();

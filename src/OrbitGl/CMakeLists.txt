@@ -49,7 +49,9 @@ target_sources(
          LiveFunctionsController.h
          LiveFunctionsDataView.h
          ManualInstrumentationManager.h
+         MajorPagefaultTrack.h
          MemoryTrack.h
+         MinorPagefaultTrack.h
          ModulesDataView.h
          MultivariateTimeSeries.h
          PagefaultTrack.h
@@ -120,7 +122,9 @@ target_sources(
           LineGraphTrack.cpp
           LiveFunctionsDataView.cpp
           ManualInstrumentationManager.cpp
+          MajorPagefaultTrack.cpp
           MemoryTrack.cpp
+          MinorPagefaultTrack.cpp
           ModulesDataView.cpp
           PagefaultTrack.cpp
           PickingManager.cpp

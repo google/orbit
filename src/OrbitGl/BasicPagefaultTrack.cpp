@@ -8,15 +8,32 @@
 
 namespace orbit_gl {
 
-BasicPagefaultTrack::BasicPagefaultTrack(
-    Track* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-    std::string name, std::array<std::string, kBasicPagefaultTrackDimension> series_names,
-    const orbit_client_model::CaptureData* capture_data, uint32_t indentation_level)
-    : LineGraphTrack<kBasicPagefaultTrackDimension>(parent, time_graph, viewport, layout, name,
-                                                    series_names, capture_data, indentation_level),
+namespace {
+
+static std::array<std::string, kBasicPagefaultTrackDimension> CreateSeriesName(
+    const std::string& cgroup_name, const std::string& process_name) {
+  return {absl::StrFormat("Process [%s]", process_name),
+          absl::StrFormat("CGroup [%s]", cgroup_name), "System"};
+}
+
+}  // namespace
+
+BasicPagefaultTrack::BasicPagefaultTrack(Track* parent, TimeGraph* time_graph,
+                                         orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                                         const std::string& name, const std::string& cgroup_name,
+                                         const orbit_client_model::CaptureData* capture_data,
+                                         uint32_t indentation_level)
+    : LineGraphTrack<kBasicPagefaultTrackDimension>(
+          parent, time_graph, viewport, layout, name,
+          CreateSeriesName(cgroup_name, capture_data->process_name()), capture_data,
+          indentation_level),
       AnnotationTrack(),
+      cgroup_name_(cgroup_name),
       parent_(parent) {
   draw_background_ = false;
+
+  constexpr uint8_t kTrackValueDecimalDigits = 0;
+  SetNumberOfDecimalDigits(kTrackValueDecimalDigits);
 }
 
 void BasicPagefaultTrack::AddValues(
@@ -46,11 +63,6 @@ void BasicPagefaultTrack::AddValuesAndUpdateAnnotations(
   if (!value_lower_bound.has_value() || value_lower_bound.value().second > updated_min) {
     SetValueLowerBound(absl::StrFormat("Minimum count: %.0f", updated_min), updated_min);
   }
-}
-
-void BasicPagefaultTrack::SetIndexOfSeriesToHighlight(size_t series_index) {
-  if (series_index >= kBasicPagefaultTrackDimension) return;
-  index_of_series_to_highlight_ = series_index;
 }
 
 void BasicPagefaultTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
