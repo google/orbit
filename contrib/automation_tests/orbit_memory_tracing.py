@@ -7,7 +7,8 @@ found in the LICENSE file.
 from absl import app
 
 from core.orbit_e2e import E2ETestSuite
-from test_cases.capture_window import Capture, FilterTracks, SetAndCheckMemorySamplingPeriod
+from test_cases.capture_window import Capture, VerifyTracksExist, SetAndCheckMemorySamplingPeriod, \
+    VerifyTracksDoNotExist
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 
 """Smoke test for the memory tracing and visualization using pywinauto.
@@ -29,9 +30,9 @@ def main(argv):
         SetAndCheckMemorySamplingPeriod(memory_sampling_period='ab'),
         SetAndCheckMemorySamplingPeriod(memory_sampling_period='0'),
         Capture(collect_system_memory_usage=True),
-        FilterTracks(filter_string="Memory", expected_count=1),
+        VerifyTracksExist(track_names="*Memory*"),
         Capture(),
-        FilterTracks(filter_string="Memory", expected_count=0)
+        VerifyTracksDoNotExist(track_names="*Memory*")
     ]
     suite = E2ETestSuite(test_name="Collect System Memory Usage", test_cases=test_cases)
     suite.execute()
