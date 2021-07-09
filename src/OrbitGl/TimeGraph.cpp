@@ -37,6 +37,7 @@
 #include "PickingManager.h"
 #include "SchedulerTrack.h"
 #include "StringManager.h"
+#include "SystemMemoryTrack.h"
 #include "TextBox.h"
 #include "ThreadTrack.h"
 #include "TrackManager.h"
@@ -49,6 +50,7 @@ using orbit_client_model::CaptureData;
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
+using orbit_gl::SystemMemoryTrack;
 using orbit_gl::VariableTrack;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::kMissingInfo;
@@ -455,52 +457,37 @@ void TimeGraph::ProcessSystemMemoryTrackingTimer(const TimerInfo& timer_info) {
     return;
   }
 
-  constexpr double kMegabytesToKilobytes = 1024.0;
-  orbit_gl::SystemMemoryTrack* track = track_manager_->GetSystemMemoryTrack();
+  SystemMemoryTrack* track = track_manager_->GetSystemMemoryTrack();
   if (track == nullptr) {
-    const std::array<std::string, orbit_gl::kSystemMemoryTrackDimension> kSeriesNames = {
-        "Used", "Buffers / Cached", "Unused"};
-    track = track_manager_->CreateAndGetSystemMemoryTrack(kSeriesNames);
+    track = track_manager_->CreateAndGetSystemMemoryTrack();
   }
+
+  constexpr double kMegabytesToKilobytes = 1024.0;
   CHECK(track->GetNumberOfDecimalDigits().has_value());
   uint8_t num_of_decimal_digits = track->GetNumberOfDecimalDigits().value();
+  double total_mb =
+      RoundPrecision(static_cast<double>(total_kb) / kMegabytesToKilobytes, num_of_decimal_digits);
   double unused_mb =
       RoundPrecision(static_cast<double>(unused_kb) / kMegabytesToKilobytes, num_of_decimal_digits);
   double buffers_or_cached_mb = RoundPrecision(
       static_cast<double>(buffers_kb + cached_kb) / kMegabytesToKilobytes, num_of_decimal_digits);
-  double used_mb =
-      RoundPrecision(static_cast<double>(total_kb) / kMegabytesToKilobytes, num_of_decimal_digits) -
-      unused_mb - buffers_or_cached_mb;
-  track->AddValues(timer_info.start(), {used_mb, buffers_or_cached_mb, unused_mb});
+  double used_mb = total_mb - unused_mb - buffers_or_cached_mb;
+  std::array<double, orbit_gl::kSystemMemoryTrackDimension> values;
+  values[static_cast<size_t>(SystemMemoryTrack::SeriesIndex::kUsedMb)] = used_mb;
+  values[static_cast<size_t>(SystemMemoryTrack::SeriesIndex::kBuffersOrCachedMb)] =
+      buffers_or_cached_mb;
+  values[static_cast<size_t>(SystemMemoryTrack::SeriesIndex::kUnusedMb)] = unused_mb;
+  track->AddValues(timer_info.start(), values);
   track->OnTimer(timer_info);
 
-  constexpr uint64_t kKilobytesToBytes = 1024;
   if (!track->GetValueUpperBound().has_value()) {
-    const std::string kValueUpperBoundLabel = "System Memory Total";
-    std::string total_pretty_size =
-        orbit_display_formats::GetDisplaySize(total_kb * kKilobytesToBytes);
-    std::string total_pretty_label =
-        absl::StrFormat("%s: %s", kValueUpperBoundLabel, total_pretty_size);
-    double total_raw_value = static_cast<double>(total_kb) / kMegabytesToKilobytes;
-    track->TrySetValueUpperBound(total_pretty_label, total_raw_value);
-  }
-
-  if (!track->GetValueLowerBound().has_value()) {
-    const std::string kValueLowerBoundLabel = "Minimum: 0 GB";
-    constexpr double kValueLowerBoundRawValue = 0.0;
-    track->TrySetValueLowerBound(kValueLowerBoundLabel, kValueLowerBoundRawValue);
+    track->TrySetValueUpperBound(total_mb);
   }
 
   if (absl::GetFlag(FLAGS_enable_warning_threshold) && !track->GetWarningThreshold().has_value()) {
-    const std::string kWarningThresholdLabel = "Production Limit";
-    uint64_t warning_threshold_kb = app_->GetMemoryWarningThresholdKb();
-    std::string warning_threshold_pretty_size =
-        orbit_display_formats::GetDisplaySize(warning_threshold_kb * kKilobytesToBytes);
-    std::string warning_threshold_pretty_label =
-        absl::StrFormat("%s: %s", kWarningThresholdLabel, warning_threshold_pretty_size);
-    double warning_threshold_raw_value =
-        static_cast<double>(warning_threshold_kb) / kMegabytesToKilobytes;
-    track->SetWarningThreshold(warning_threshold_pretty_label, warning_threshold_raw_value);
+    double warning_threshold_mb =
+        static_cast<double>(app_->GetMemoryWarningThresholdKb()) / kMegabytesToKilobytes;
+    track->SetWarningThreshold(warning_threshold_mb);
   }
 }
 

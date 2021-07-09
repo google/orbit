@@ -24,6 +24,7 @@
 #include "PickingManager.h"
 #include "SchedulerTrack.h"
 #include "StringManager.h"
+#include "SystemMemoryTrack.h"
 #include "ThreadTrack.h"
 #include "Timer.h"
 #include "Track.h"
@@ -67,8 +68,7 @@ class TrackManager {
   [[nodiscard]] orbit_gl::SystemMemoryTrack* GetSystemMemoryTrack() const {
     return system_memory_track_.get();
   }
-  [[nodiscard]] orbit_gl::SystemMemoryTrack* CreateAndGetSystemMemoryTrack(
-      const std::array<std::string, orbit_gl::kSystemMemoryTrackDimension>& series_names);
+  [[nodiscard]] orbit_gl::SystemMemoryTrack* CreateAndGetSystemMemoryTrack();
   [[nodiscard]] orbit_gl::CGroupAndProcessMemoryTrack* GetCGroupAndProcessMemoryTrack() const {
     return cgroup_and_process_memory_track_.get();
   }
