@@ -5,7 +5,6 @@
 #include "UprobesUnwindingVisitor.h"
 
 #include <asm/perf_regs.h>
-#include <llvm/Demangle/Demangle.h>
 #include <sys/mman.h>
 #include <unwindstack/MapInfo.h>
 #include <unwindstack/Unwinder.h>
@@ -35,7 +34,7 @@ static void SendFullAddressInfoToListener(TracerListener* listener,
 
   FullAddressInfo address_info;
   address_info.set_absolute_address(libunwindstack_frame.pc);
-  address_info.set_function_name(llvm::demangle(libunwindstack_frame.function_name));
+  address_info.set_function_name(libunwindstack_frame.function_name);
   address_info.set_offset_in_function(libunwindstack_frame.function_offset);
   address_info.set_module_name(libunwindstack_frame.map_name);
 

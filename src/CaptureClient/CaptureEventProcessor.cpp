@@ -6,7 +6,7 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
-#include <google/protobuf/stubs/port.h>
+#include <llvm/Demangle/Demangle.h>
 
 #include <string>
 #include <utility>
@@ -581,7 +581,7 @@ void CaptureEventProcessorForListener::ProcessAddressInfo(const AddressInfo& add
   LinuxAddressInfo linux_address_info;
   linux_address_info.set_absolute_address(address_info.absolute_address());
   linux_address_info.set_module_path(module_name);
-  linux_address_info.set_function_name(function_name);
+  linux_address_info.set_function_name(llvm::demangle(function_name));
   linux_address_info.set_offset_in_function(address_info.offset_in_function());
   capture_listener_->OnAddressInfo(linux_address_info);
 }
