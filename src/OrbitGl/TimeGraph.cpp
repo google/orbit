@@ -629,6 +629,43 @@ void TimeGraph::ProcessPagefaultTrackingTimer(const orbit_client_protos::TimerIn
         absl::StrFormat("CGroup [%s]", cgroup_name), "System"};
     track = track_manager_->CreateAndGetPagefaultTrack(kSeriesNames);
     track->SetIndexOfSeriesToHighlightForMajorPagefaultTrack(0);
+
+    const std::string kProcessMajorPagefaultTooltips = absl::StrFormat(
+        "<b># of major pagefaults incurred by the %s process during the sampling "
+        "period.</b><br/><br/>"
+        "Derived from the <i>majflt</i> field in file <i>/proc/%d/stat</i>.",
+        capture_data_->process_name(), timer_info.process_id());
+    const std::string kCGroupMajorPagefaultTooltips = absl::StrFormat(
+        "<b># of major pagefaults incurred by the %s cgroup during the sampling "
+        "period.</b><br/><br/>"
+        "Derived from the <i>pgmajfault</i> field in file "
+        "<i>/sys/fs/cgroup/memory/%s/memory.stat</i>.",
+        cgroup_name, cgroup_name);
+    const std::string kSystemMajorPagefaultTooltips =
+        "<b># of system-wide major pagefaults occurred durning the sampling period.</b><br/><br/>"
+        "Derived from the <i>pgmajfault</i> field in file <i>/proc/vmstat</i>.";
+    track->SetLegendTooltipsForMajorPagefaultSubtrack({kProcessMajorPagefaultTooltips,
+                                                       kCGroupMajorPagefaultTooltips,
+                                                       kSystemMajorPagefaultTooltips});
+
+    const std::string kProcessMinorPagefaultTooltips = absl::StrFormat(
+        "<b># of minor pagefaults incurred by the %s process during the sampling "
+        "period.</b><br/><br/>"
+        "Derived from the <i>minflt</i> field in file <i>/proc/%d/stat</i>.",
+        capture_data_->process_name(), timer_info.process_id());
+    const std::string kCGroupMinorPagefaultTooltips = absl::StrFormat(
+        "<b># of minor pagefaults incurred by the %s cgroup during the sampling "
+        "period.</b><br/><br/>"
+        "Derived from <i>pgfault - pgmajfault</i>,"
+        "which are two fields in file <i>/sys/fs/cgroup/memory/%s/memory.stat</i>.",
+        cgroup_name, cgroup_name);
+    const std::string kSystemMinorPagefaultTooltips =
+        "<b># of system-wide minor pagefaults occurred during the sampling period.</b><br/><br/>"
+        "Derived from <i>pgfault - pgmajfault</i>, which are two fields in file "
+        "<i>/proc/vmstat</i>.";
+    track->SetLegendTooltipsForMinorPagefaultSubtrack({kProcessMinorPagefaultTooltips,
+                                                       kCGroupMinorPagefaultTooltips,
+                                                       kSystemMinorPagefaultTooltips});
   }
   CHECK(track != nullptr);
 

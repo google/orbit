@@ -59,6 +59,14 @@ class PagefaultTrack : public Track {
   void SetIndexOfSeriesToHighlightForMajorPagefaultTrack(size_t series_index) {
     major_pagefault_track_->SetIndexOfSeriesToHighlight(series_index);
   }
+  void SetLegendTooltipsForMajorPagefaultSubtrack(
+      std::array<std::string, kBasicPagefaultTrackDimension> tooltips) {
+    major_pagefault_track_->SetLegendTooltips(std::move(tooltips));
+  }
+  void SetLegendTooltipsForMinorPagefaultSubtrack(
+      std::array<std::string, kBasicPagefaultTrackDimension> tooltips) {
+    minor_pagefault_track_->SetLegendTooltips(std::move(tooltips));
+  }
 
  private:
   void UpdatePositionOfSubtracks();
