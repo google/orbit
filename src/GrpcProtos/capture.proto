@@ -17,6 +17,7 @@ message InstrumentedFunction {
   string file_build_id = 6;
   uint64 file_offset = 2;
   uint64 function_id = 3;
+  uint64 function_size = 7;
 
   enum FunctionType {
     kRegular = 0;
