@@ -34,6 +34,13 @@ class AnnotationTrack {
   virtual void SetValueLowerBound(const std::string& pretty_label, double raw_value) {
     value_lower_bound_ = std::make_pair(pretty_label, raw_value);
   }
+  void SetValueUpperBoundTooltips(std::string value_upper_bound_tooltips) {
+    value_upper_bound_tooltips_ = std::move(value_upper_bound_tooltips);
+  }
+
+  [[nodiscard]] std::string GetValueUpperBoundTooltips() const {
+    return value_upper_bound_tooltips_;
+  }
 
   void DrawAnnotation(Batcher& batcher, TextRenderer& text_renderer, TimeGraphLayout* layout,
                       float z);
@@ -47,6 +54,8 @@ class AnnotationTrack {
   std::optional<std::pair<std::string, double>> warning_threshold_ = std::nullopt;
   std::optional<std::pair<std::string, double>> value_upper_bound_ = std::nullopt;
   std::optional<std::pair<std::string, double>> value_lower_bound_ = std::nullopt;
+
+  std::string value_upper_bound_tooltips_;
 };
 
 #endif  // ORBIT_GL_ANNOTATION_TRACK_H_

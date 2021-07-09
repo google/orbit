@@ -568,6 +568,17 @@ void TimeGraph::ProcessCGroupAndProcessMemoryTrackingTimer(const TimerInfo& time
         cgroup_name, cgroup_name);
     track->SetLegendTooltips({kProcessRssAnonTooltips, kOtherRssAnonTooltips,
                               kCGroupMappedFileTooltips, kUnusedTooltips});
+
+    const std::string kGameCGroupName = "game";
+    constexpr float kGameCGroupLimitGB = 7;
+    if (cgroup_name == kGameCGroupName) {
+      const std::string kValueUpperBoundTooltips = absl::StrFormat(
+          "<b>The memory production limit of the %s cgroup is %.2fGB</b>.<br/><br/>"
+          "<i>To launch game with the production cgroup limits, add the flag "
+          "'--enforce-production-ram' to the 'ggp run' command</i>.",
+          kGameCGroupName, kGameCGroupLimitGB);
+      track->SetValueUpperBoundTooltips(kValueUpperBoundTooltips);
+    }
   }
 
   CHECK(track->GetNumberOfDecimalDigits().has_value());
