@@ -54,9 +54,7 @@ void GraphTrack<Dimension>::Draw(Batcher& batcher, TextRenderer& text_renderer,
                                  uint64_t current_mouse_time_ns, PickingMode picking_mode,
                                  float z_offset) {
   Track::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
-  if (IsEmpty() || picking_mode != PickingMode::kNone) return;
-
-  if (IsCollapsed()) return;
+  if (IsEmpty() || IsCollapsed()) return;
 
   // Draw label
   const std::array<double, Dimension>& values =
@@ -230,6 +228,7 @@ void GraphTrack<Dimension>::DrawLegend(Batcher& batcher, TextRenderer& text_rend
   float x0 = pos_[0] + layout_->GetRightMargin();
   float y0 = pos_[1] - layout_->GetTrackTabHeight() - layout_->GetTextBoxHeight() / 2.f;
   uint32_t font_size = GetLegendFontSize();
+  const Color kFullyTransparent(255, 255, 255, 0);
 
   for (size_t i = 0; i < Dimension; ++i) {
     batcher.AddShadedBox(Vec2(x0, y0 - legend_symbol_height / 2.f),
@@ -243,6 +242,11 @@ void GraphTrack<Dimension>::DrawLegend(Batcher& batcher, TextRenderer& text_rend
                           legend_text_box_position[1] + layout_->GetTextOffset(), z,
                           legend_text_color, font_size, legend_text_box_size[0]);
     x0 += legend_text_width + kSpaceBetweenLegendEntries;
+
+    auto user_data = std::make_unique<PickingUserData>(
+        nullptr, [&, i](PickingId /*id*/) { return this->GetLegendTooltips(i); });
+    batcher.AddShadedBox(legend_text_box_position, legend_text_box_size, z, kFullyTransparent,
+                         std::move(user_data));
   }
 }
 
