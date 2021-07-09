@@ -93,6 +93,7 @@ class GraphTrack : public Track {
   MultivariateTimeSeries<Dimension> series_;
 
  private:
+  [[nodiscard]] virtual std::string GetLegendTooltips(size_t /*legend_index*/) const { return ""; }
   void DrawSingleSeriesEntry(Batcher* batcher, uint64_t start_tick, uint64_t end_tick,
                              const std::array<float, Dimension>& normalized_values, float z);
 
