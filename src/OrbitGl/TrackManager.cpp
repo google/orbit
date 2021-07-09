@@ -465,20 +465,11 @@ FrameTrack* TrackManager::GetOrCreateFrameTrack(
   return track.get();
 }
 
-SystemMemoryTrack* TrackManager::CreateAndGetSystemMemoryTrack(
-    const std::array<std::string, orbit_gl::kSystemMemoryTrackDimension>& series_names) {
+SystemMemoryTrack* TrackManager::CreateAndGetSystemMemoryTrack() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   if (system_memory_track_ == nullptr) {
-    constexpr uint8_t kTrackValueDecimalDigits = 2;
-    const std::string kTrackValueLabelUnit = "MB";
-    const std::string kTrackName =
-        absl::StrFormat("System Memory Usage (%s)", kTrackValueLabelUnit);
-
-    system_memory_track_ = std::make_shared<SystemMemoryTrack>(
-        time_graph_, time_graph_, viewport_, layout_, kTrackName, series_names, capture_data_);
-    system_memory_track_->SetLabelUnit(kTrackValueLabelUnit);
-    system_memory_track_->SetNumberOfDecimalDigits(kTrackValueDecimalDigits);
-    system_memory_track_->SetSeriesColors(orbit_gl::kSystemMemoryTrackColors);
+    system_memory_track_ = std::make_shared<SystemMemoryTrack>(time_graph_, time_graph_, viewport_,
+                                                               layout_, capture_data_);
     AddTrack(system_memory_track_);
   }
 

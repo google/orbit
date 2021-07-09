@@ -1,0 +1,86 @@
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#include "SystemMemoryTrack.h"
+
+#include <absl/strings/str_format.h>
+
+#include "DisplayFormats/DisplayFormats.h"
+
+namespace orbit_gl {
+
+namespace {
+
+const std::string kTrackValueLabelUnit = "MB";
+const std::string kTrackName = absl::StrFormat("System Memory Usage (%s)", kTrackValueLabelUnit);
+const std::array<std::string, kSystemMemoryTrackDimension> kSeriesName = {
+    "Used", "Buffers / Cached", "Unused"};
+constexpr uint64_t kMegabytesToBytes = 1024 * 1024;
+
+}  // namespace
+
+SystemMemoryTrack::SystemMemoryTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+                                     orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                                     const orbit_client_model::CaptureData* capture_data)
+    : MemoryTrack<kSystemMemoryTrackDimension>(parent, time_graph, viewport, layout, kTrackName,
+                                               kSeriesName, capture_data) {
+  SetLabelUnit(kTrackValueLabelUnit);
+
+  constexpr uint8_t kTrackValueDecimalDigits = 2;
+  SetNumberOfDecimalDigits(kTrackValueDecimalDigits);
+
+  // Colors are selected from https://convertingcolors.com/list/avery.html.
+  // Use reddish colors for different used memories, yellowish colors for different cached memories
+  // and greenish colors for different unused memories.
+  const std::array<Color, kSystemMemoryTrackDimension> kSystemMemoryTrackColors{
+      Color(231, 68, 53, 255),  // red
+      Color(246, 196, 0, 255),  // orange
+      Color(87, 166, 74, 255)   // green
+  };
+  SetSeriesColors(kSystemMemoryTrackColors);
+
+  const std::string kValueLowerBoundLabel = "Minimum: 0 GB";
+  constexpr double kValueLowerBoundRawValue = 0.0;
+  TrySetValueLowerBound(kValueLowerBoundLabel, kValueLowerBoundRawValue);
+}
+
+std::string SystemMemoryTrack::GetTooltip() const {
+  return "Shows system-wide memory usage information.";
+}
+
+void SystemMemoryTrack::TrySetValueUpperBound(double total_mb) {
+  const std::string kValueUpperBoundLabel = "System Memory Total";
+  std::string pretty_size =
+      orbit_display_formats::GetDisplaySize(static_cast<uint64_t>(total_mb * kMegabytesToBytes));
+  std::string pretty_label = absl::StrFormat("%s: %s", kValueUpperBoundLabel, pretty_size);
+  MemoryTrack<kSystemMemoryTrackDimension>::TrySetValueUpperBound(pretty_label, total_mb);
+}
+
+void SystemMemoryTrack::SetWarningThreshold(double warning_threshold_mb) {
+  const std::string kWarningThresholdLabel = "Production Limit";
+  std::string pretty_size = orbit_display_formats::GetDisplaySize(
+      static_cast<uint64_t>(warning_threshold_mb * kMegabytesToBytes));
+  std::string pretty_label = absl::StrFormat("%s: %s", kWarningThresholdLabel, pretty_size);
+  MemoryTrack<kSystemMemoryTrackDimension>::SetWarningThreshold(pretty_label, warning_threshold_mb);
+}
+
+std::string SystemMemoryTrack::GetLegendTooltips(size_t legend_index) const {
+  switch (static_cast<SeriesIndex>(legend_index)) {
+    case SeriesIndex::kUsedMb:
+      return "<b>Memory used by the system.</b><br/><br/>"
+             "Derived from <i>MemTotal</i> - 'Unused' - 'Buffers / Cached', "
+             "where <i>MemTotal</i> is a field in file <i>/proc/meminfo</i>.";
+    case SeriesIndex::kBuffersOrCachedMb:
+      return "<b>Memory in buffer cache or pagecache.</b><br/><br/>"
+             "Derived from <i>Buffers</i> + <i>Cached</i>, which are two fields in file "
+             "<i>/proc/meminfo</i>.";
+    case SeriesIndex::kUnusedMb:
+      return "<b>Physical memory not used by the system</b><br/><br/>"
+             "Derived from the <i>MemFree</i> field in file <i>/proc/meminfo</i>";
+    default:
+      UNREACHABLE();
+  }
+}
+
+}  // namespace orbit_gl

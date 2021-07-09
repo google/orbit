@@ -60,6 +60,7 @@ target_sources(
          ScopeTree.h
          ShortenStringWithEllipsis.h
          StatusListener.h
+         SystemMemoryTrack.h
          TextBox.h
          TextRenderer.h
          ThreadBar.h
@@ -127,6 +128,7 @@ target_sources(
           SchedulingStats.cpp
           StringManager.cpp
           StringManager.h
+          SystemMemoryTrack.cpp
           TextRenderer.cpp
           TimeGraph.cpp
           TimeGraphLayout.cpp
