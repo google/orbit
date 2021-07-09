@@ -40,6 +40,7 @@ message ApiFunction {
   uint64 api_version = 5;
 }
 
+// NextId: 18
 message CaptureOptions {
   bool trace_context_switches = 1;
   int32 pid = 2;
@@ -53,6 +54,8 @@ message CaptureOptions {
     kDwarf = 2;
   }
   UnwindingMethod unwinding_method = 4;
+
+  bool enable_user_space_instrumentation = 17;
 
   repeated InstrumentedFunction instrumented_functions = 5;
 

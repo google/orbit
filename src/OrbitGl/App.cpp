@@ -1317,6 +1317,7 @@ void OrbitApp::StartCapture() {
   bool collect_gpu_jobs = true;
   bool enable_api = data_manager_->get_enable_api();
   bool enable_introspection = IsDevMode() && data_manager_->get_enable_introspection();
+  bool enable_user_space_instrumentation = IsDevMode() && data_manager_->get_enable_user_space_instrumentation();
   double samples_per_second = data_manager_->samples_per_second();
   uint16_t stack_dump_size = data_manager_->stack_dump_size();
   UnwindingMethod unwinding_method = data_manager_->unwinding_method();
@@ -1370,8 +1371,8 @@ void OrbitApp::StartCapture() {
       thread_pool_.get(), process->pid(), *module_manager_, std::move(selected_functions_map),
       std::move(selected_tracepoints), samples_per_second, stack_dump_size, unwinding_method,
       collect_scheduling_info, collect_thread_states, collect_gpu_jobs, enable_api,
-      enable_introspection, max_local_marker_depth_per_command_buffer, collect_memory_info,
-      memory_sampling_period_ms, enable_cgroup_memory, std::move(capture_event_processor));
+      enable_introspection, enable_user_space_instrumentation, max_local_marker_depth_per_command_buffer,
+      collect_memory_info, memory_sampling_period_ms, enable_cgroup_memory, std::move(capture_event_processor));
 
   // TODO(b/187250643): Refactor this to be more readable and maybe remove parts that are not needed
   // here (capture cancelled)
@@ -2143,6 +2144,10 @@ void OrbitApp::SetEnableApi(bool enable_api) { data_manager_->set_enable_api(ena
 
 void OrbitApp::SetEnableIntrospection(bool enable_introspection) {
   data_manager_->set_enable_introspection(enable_introspection);
+}
+
+void OrbitApp::SetEnableUserSpaceInstrumentation(bool enable) {
+  data_manager_->set_enable_user_space_instrumentation(enable);
 }
 
 void OrbitApp::SetSamplesPerSecond(double samples_per_second) {

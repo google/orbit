@@ -113,6 +113,7 @@ ErrorMessageOr<void> ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
   bool collect_gpu_jobs = true;
   bool enable_api = false;
   bool enable_introspection = false;
+  bool enable_user_space_instrumentation = false;
   uint64_t max_local_marker_depth_per_command_buffer =
       absl::GetFlag(FLAGS_max_local_marker_depth_per_command_buffer);
 
@@ -129,8 +130,8 @@ ErrorMessageOr<void> ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
       thread_pool, target_process_->pid(), module_manager_, selected_functions_,
       selected_tracepoints, options_.samples_per_second, options_.stack_dump_size, unwinding_method,
       collect_scheduling_info, collect_thread_state, collect_gpu_jobs, enable_api,
-      enable_introspection, max_local_marker_depth_per_command_buffer, false, 0, false,
-      std::move(event_processor));
+      enable_introspection, enable_user_space_instrumentation,
+      max_local_marker_depth_per_command_buffer, false, 0, false, std::move(event_processor));
 
   orbit_base::ImmediateExecutor executor;
 
