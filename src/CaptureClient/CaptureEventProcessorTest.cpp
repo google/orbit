@@ -418,34 +418,63 @@ TEST(CaptureEventProcessor, CanHandleAddressInfosWithInternedStrings) {
   auto event_processor =
       CaptureEventProcessor::CreateForCaptureListener(&listener, std::filesystem::path{}, {});
 
-  constexpr uint64_t kFunctionNameKey = 1;
-  ClientCaptureEvent interned_function_name_event =
-      CreateInternedStringEvent(kFunctionNameKey, "function");
+  constexpr uint64_t kDemangledFunctionNameKey = 1;
+  ClientCaptureEvent interned_demangled_function_name_event =
+      CreateInternedStringEvent(kDemangledFunctionNameKey, "already_demangled");
 
-  constexpr uint64_t kModuleNameKey = 2;
+  constexpr uint64_t kMangledFunctionNameKey = 2;
+  ClientCaptureEvent interned_mangled_function_name_event =
+      CreateInternedStringEvent(kMangledFunctionNameKey, "_Z1hic");
+
+  constexpr uint64_t kModuleNameKey = 3;
   ClientCaptureEvent interned_map_name_event = CreateInternedStringEvent(kModuleNameKey, "module");
 
-  ClientCaptureEvent address_info_event;
-  AddressInfo* address_info = address_info_event.mutable_address_info();
-  address_info->set_absolute_address(42);
-  address_info->set_function_name_key(kFunctionNameKey);
-  address_info->set_offset_in_function(14);
-  address_info->set_module_name_key(kModuleNameKey);
+  ClientCaptureEvent address_info_with_demangled_name_event;
+  AddressInfo* address_info_with_demangled_name =
+      address_info_with_demangled_name_event.mutable_address_info();
+  address_info_with_demangled_name->set_absolute_address(42);
+  address_info_with_demangled_name->set_function_name_key(kDemangledFunctionNameKey);
+  address_info_with_demangled_name->set_offset_in_function(14);
+  address_info_with_demangled_name->set_module_name_key(kModuleNameKey);
+
+  ClientCaptureEvent address_info_with_mangled_name_event;
+  AddressInfo* address_info_with_mangled_name =
+      address_info_with_mangled_name_event.mutable_address_info();
+  address_info_with_mangled_name->set_absolute_address(43);
+  address_info_with_mangled_name->set_function_name_key(kMangledFunctionNameKey);
+  address_info_with_mangled_name->set_offset_in_function(15);
+  address_info_with_mangled_name->set_module_name_key(kModuleNameKey);
 
   EXPECT_CALL(listener, OnKeyAndString(kModuleNameKey, "module")).Times(1);
-  EXPECT_CALL(listener, OnKeyAndString(kFunctionNameKey, "function")).Times(1);
+  EXPECT_CALL(listener, OnKeyAndString(kDemangledFunctionNameKey, "already_demangled")).Times(1);
+  EXPECT_CALL(listener, OnKeyAndString(kMangledFunctionNameKey, "_Z1hic")).Times(1);
 
-  LinuxAddressInfo actual_address_info;
-  EXPECT_CALL(listener, OnAddressInfo).Times(1).WillOnce(SaveArg<0>(&actual_address_info));
+  LinuxAddressInfo actual_address_info1;
+  LinuxAddressInfo actual_address_info2;
+  EXPECT_CALL(listener, OnAddressInfo)
+      .Times(2)
+      .WillOnce(SaveArg<0>(&actual_address_info1))
+      .WillOnce(SaveArg<0>(&actual_address_info2));
 
-  event_processor->ProcessEvent(interned_function_name_event);
+  event_processor->ProcessEvent(interned_demangled_function_name_event);
+  event_processor->ProcessEvent(interned_mangled_function_name_event);
   event_processor->ProcessEvent(interned_map_name_event);
-  event_processor->ProcessEvent(address_info_event);
+  event_processor->ProcessEvent(address_info_with_demangled_name_event);
+  event_processor->ProcessEvent(address_info_with_mangled_name_event);
 
-  EXPECT_EQ(actual_address_info.absolute_address(), address_info->absolute_address());
-  EXPECT_EQ(actual_address_info.function_name(), "function");
-  EXPECT_EQ(actual_address_info.offset_in_function(), address_info->offset_in_function());
-  EXPECT_EQ(actual_address_info.module_path(), "module");
+  EXPECT_EQ(actual_address_info1.absolute_address(),
+            address_info_with_demangled_name->absolute_address());
+  EXPECT_EQ(actual_address_info1.function_name(), "already_demangled");
+  EXPECT_EQ(actual_address_info1.offset_in_function(),
+            address_info_with_demangled_name->offset_in_function());
+  EXPECT_EQ(actual_address_info1.module_path(), "module");
+
+  EXPECT_EQ(actual_address_info2.absolute_address(),
+            address_info_with_mangled_name->absolute_address());
+  EXPECT_EQ(actual_address_info2.function_name(), "h(int, char)");
+  EXPECT_EQ(actual_address_info2.offset_in_function(),
+            address_info_with_mangled_name->offset_in_function());
+  EXPECT_EQ(actual_address_info2.module_path(), "module");
 }
 
 TEST(CaptureEventProcessor, CanHandleInternedTracepointEvents) {
