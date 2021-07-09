@@ -82,36 +82,40 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessEvent(uint64_t producer_id, ProducerCaptureEvent event) override;
 
  private:
-  void ProcessCaptureStarted(CaptureStarted* capture_started);
+  void ProcessCaptureStartedAndTransferOwnership(CaptureStarted* capture_started);
   void ProcessFullAddressInfo(FullAddressInfo* full_address_info);
   void ProcessFullCallstackSample(FullCallstackSample* full_callstack_sample);
-  void ProcessFunctionCall(FunctionCall* function_call);
+  void ProcessFunctionCallAndTransferOwnership(FunctionCall* function_call);
   void ProcessFullGpuJob(FullGpuJob* full_gpu_job_event);
-  void ProcessGpuQueueSubmission(uint64_t producer_id, GpuQueueSubmission* gpu_queue_submission);
+  void ProcessGpuQueueSubmissionAndTransferOwnership(uint64_t producer_id,
+                                                     GpuQueueSubmission* gpu_queue_submission);
   // ProcessInterned* functions remap producer intern_ids to the id space used in the client.
   // They keep track of these mappings in producer_interned_callstack_id_to_client_callstack_id_
   // and producer_interned_string_id_to_client_string_id_.
   void ProcessInternedCallstack(uint64_t producer_id, InternedCallstack* interned_callstack);
-  void ProcessCallstackSample(uint64_t producer_id, CallstackSample* callstack_sample);
+  void ProcessCallstackSampleAndTransferOwnership(uint64_t producer_id,
+                                                  CallstackSample* callstack_sample);
   void ProcessInternedString(uint64_t producer_id, InternedString* interned_string);
-  void ProcessIntrospectionScope(IntrospectionScope* introspection_scope);
-  void ProcessModuleUpdateEvent(ModuleUpdateEvent* module_update_event);
-  void ProcessModulesSnapshot(ModulesSnapshot* modules_snapshot);
-  void ProcessSchedulingSlice(SchedulingSlice* scheduling_slice);
-  void ProcessThreadName(ThreadName* thread_name);
-  void ProcessThreadNamesSnapshot(ThreadNamesSnapshot* thread_names_snapshot);
-  void ProcessThreadStateSlice(ThreadStateSlice* thread_state_slice);
+  void ProcessIntrospectionScopeAndTransferOwnership(IntrospectionScope* introspection_scope);
+  void ProcessModuleUpdateEventAndTransferOwnership(ModuleUpdateEvent* module_update_event);
+  void ProcessModulesSnapshotAndTransferOwnership(ModulesSnapshot* modules_snapshot);
+  void ProcessSchedulingSliceAndTransferOwnership(SchedulingSlice* scheduling_slice);
+  void ProcessThreadNameAndTransferOwnership(ThreadName* thread_name);
+  void ProcessThreadNamesSnapshotAndTransferOwnership(ThreadNamesSnapshot* thread_names_snapshot);
+  void ProcessThreadStateSliceAndTransferOwnership(ThreadStateSlice* thread_state_slice);
   void ProcessFullTracepointEvent(FullTracepointEvent* full_tracepoint_event);
-  void ProcessMemoryUsageEvent(MemoryUsageEvent* memory_usage_event);
-  void ProcessApiEvent(ApiEvent* api_event);
-  void ProcessWarningEvent(WarningEvent* warning_event);
-  void ProcessClockResolutionEvent(ClockResolutionEvent* clock_resolution_event);
-  void ProcessErrorsWithPerfEventOpenEvent(
+  void ProcessMemoryUsageEventAndTransferOwnership(MemoryUsageEvent* memory_usage_event);
+  void ProcessApiEventAndTransferOwnership(ApiEvent* api_event);
+  void ProcessWarningEventAndTransferOwnership(WarningEvent* warning_event);
+  void ProcessClockResolutionEventAndTransferOwnership(
+      ClockResolutionEvent* clock_resolution_event);
+  void ProcessErrorsWithPerfEventOpenEventAndTransferOwnership(
       ErrorsWithPerfEventOpenEvent* errors_with_perf_event_open_event);
-  void ProcessErrorEnablingOrbitApiEvent(
+  void ProcessErrorEnablingOrbitApiEventAndTransferOwnership(
       ErrorEnablingOrbitApiEvent* error_enabling_orbit_api_event);
-  void ProcessLostPerfRecordsEvent(LostPerfRecordsEvent* lost_perf_records_event);
-  void ProcessOutOfOrderEventsDiscardedEvent(
+  void ProcessLostPerfRecordsEventAndTransferOwnership(
+      LostPerfRecordsEvent* lost_perf_records_event);
+  void ProcessOutOfOrderEventsDiscardedEventAndTransferOwnership(
       OutOfOrderEventsDiscardedEvent* out_of_order_events_discarded_event);
 
   void SendInternedStringEvent(uint64_t key, std::string value);
@@ -155,9 +159,10 @@ void ProducerEventProcessorImpl::ProcessFullAddressInfo(FullAddressInfo* full_ad
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessFunctionCall(FunctionCall* function_call) {
+void ProducerEventProcessorImpl::ProcessFunctionCallAndTransferOwnership(
+    FunctionCall* function_call) {
   ClientCaptureEvent event;
-  *event.mutable_function_call() = std::move(*function_call);
+  event.set_allocated_function_call(function_call);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
@@ -183,7 +188,7 @@ void ProducerEventProcessorImpl::ProcessFullGpuJob(FullGpuJob* full_gpu_job_even
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessGpuQueueSubmission(
+void ProducerEventProcessorImpl::ProcessGpuQueueSubmissionAndTransferOwnership(
     uint64_t producer_id, GpuQueueSubmission* gpu_queue_submission) {
   // Translate debug marker keys
   for (GpuDebugMarker& mutable_marker : *gpu_queue_submission->mutable_completed_markers()) {
@@ -194,22 +199,22 @@ void ProducerEventProcessorImpl::ProcessGpuQueueSubmission(
   }
 
   ClientCaptureEvent event;
-  *event.mutable_gpu_queue_submission() = std::move(*gpu_queue_submission);
+  event.set_allocated_gpu_queue_submission(gpu_queue_submission);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
 void ProducerEventProcessorImpl::ProcessFullCallstackSample(
     FullCallstackSample* full_callstack_sample) {
-  Callstack* callstack = full_callstack_sample->mutable_callstack();
+  const Callstack& callstack = full_callstack_sample->callstack();
   std::pair<std::vector<uint64_t>, Callstack::CallstackType> callstack_data{
-      {callstack->pcs().begin(), callstack->pcs().end()}, callstack->type()};
+      {callstack.pcs().begin(), callstack.pcs().end()}, callstack.type()};
   auto [callstack_id, assigned] = callstack_pool_.GetOrAssignId(callstack_data);
 
   if (assigned) {
     ClientCaptureEvent interned_callstack_event;
     interned_callstack_event.mutable_interned_callstack()->set_key(callstack_id);
-    *interned_callstack_event.mutable_interned_callstack()->mutable_intern() =
-        std::move(*callstack);
+    interned_callstack_event.mutable_interned_callstack()->set_allocated_intern(
+        full_callstack_sample->release_callstack());
     capture_event_buffer_->AddEvent(std::move(interned_callstack_event));
   }
 
@@ -247,8 +252,8 @@ void ProducerEventProcessorImpl::ProcessInternedCallstack(uint64_t producer_id,
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessCallstackSample(uint64_t producer_id,
-                                                        CallstackSample* callstack_sample) {
+void ProducerEventProcessorImpl::ProcessCallstackSampleAndTransferOwnership(
+    uint64_t producer_id, CallstackSample* callstack_sample) {
   // translate producer id to client id
   auto it = producer_interned_callstack_id_to_client_callstack_id_.find(
       {producer_id, callstack_sample->callstack_id()});
@@ -257,7 +262,7 @@ void ProducerEventProcessorImpl::ProcessCallstackSample(uint64_t producer_id,
   callstack_sample->set_callstack_id(it->second);
 
   ClientCaptureEvent event;
-  *event.mutable_callstack_sample() = std::move(*callstack_sample);
+  event.set_allocated_callstack_sample(callstack_sample);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
@@ -282,54 +287,58 @@ void ProducerEventProcessorImpl::ProcessInternedString(uint64_t producer_id,
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessIntrospectionScope(
+void ProducerEventProcessorImpl::ProcessIntrospectionScopeAndTransferOwnership(
     IntrospectionScope* introspection_scope) {
   ClientCaptureEvent event;
-  *event.mutable_introspection_scope() = std::move(*introspection_scope);
+  event.set_allocated_introspection_scope(introspection_scope);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessModuleUpdateEvent(
+void ProducerEventProcessorImpl::ProcessModuleUpdateEventAndTransferOwnership(
     orbit_grpc_protos::ModuleUpdateEvent* module_update_event) {
   ClientCaptureEvent event;
-  *event.mutable_module_update_event() = std::move(*module_update_event);
+  event.set_allocated_module_update_event(module_update_event);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessModulesSnapshot(ModulesSnapshot* modules_snapshot) {
+void ProducerEventProcessorImpl::ProcessModulesSnapshotAndTransferOwnership(
+    ModulesSnapshot* modules_snapshot) {
   ClientCaptureEvent event;
-  *event.mutable_modules_snapshot() = std::move(*modules_snapshot);
+  event.set_allocated_modules_snapshot(modules_snapshot);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessCaptureStarted(CaptureStarted* capture_started) {
+void ProducerEventProcessorImpl::ProcessCaptureStartedAndTransferOwnership(
+    CaptureStarted* capture_started) {
   ClientCaptureEvent event;
-  *event.mutable_capture_started() = std::move(*capture_started);
+  event.set_allocated_capture_started(capture_started);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessSchedulingSlice(SchedulingSlice* scheduling_slice) {
+void ProducerEventProcessorImpl::ProcessSchedulingSliceAndTransferOwnership(
+    SchedulingSlice* scheduling_slice) {
   ClientCaptureEvent event;
-  *event.mutable_scheduling_slice() = std::move(*scheduling_slice);
+  event.set_allocated_scheduling_slice(scheduling_slice);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessThreadName(ThreadName* thread_name) {
+void ProducerEventProcessorImpl::ProcessThreadNameAndTransferOwnership(ThreadName* thread_name) {
   ClientCaptureEvent event;
-  *event.mutable_thread_name() = std::move(*thread_name);
+  event.set_allocated_thread_name(thread_name);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessThreadNamesSnapshot(
+void ProducerEventProcessorImpl::ProcessThreadNamesSnapshotAndTransferOwnership(
     ThreadNamesSnapshot* thread_names_snapshot) {
   ClientCaptureEvent event;
-  *event.mutable_thread_names_snapshot() = std::move(*thread_names_snapshot);
+  event.set_allocated_thread_names_snapshot(thread_names_snapshot);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessThreadStateSlice(ThreadStateSlice* thread_state_slice) {
+void ProducerEventProcessorImpl::ProcessThreadStateSliceAndTransferOwnership(
+    ThreadStateSlice* thread_state_slice) {
   ClientCaptureEvent event;
-  *event.mutable_thread_state_slice() = std::move(*thread_state_slice);
+  event.set_allocated_thread_state_slice(thread_state_slice);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
@@ -342,7 +351,8 @@ void ProducerEventProcessorImpl::ProcessFullTracepointEvent(
     ClientCaptureEvent event;
     InternedTracepointInfo* interned_tracepoint_info = event.mutable_interned_tracepoint_info();
     interned_tracepoint_info->set_key(tracepoint_key);
-    *interned_tracepoint_info->mutable_intern() = full_tracepoint_event->tracepoint_info();
+    interned_tracepoint_info->set_allocated_intern(
+        full_tracepoint_event->release_tracepoint_info());
     capture_event_buffer_->AddEvent(std::move(event));
   }
 
@@ -356,74 +366,74 @@ void ProducerEventProcessorImpl::ProcessFullTracepointEvent(
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessMemoryUsageEvent(MemoryUsageEvent* memory_usage_event) {
+void ProducerEventProcessorImpl::ProcessMemoryUsageEventAndTransferOwnership(
+    MemoryUsageEvent* memory_usage_event) {
   ClientCaptureEvent event;
-  *event.mutable_memory_usage_event() = std::move(*memory_usage_event);
+  event.set_allocated_memory_usage_event(memory_usage_event);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessApiEvent(ApiEvent* api_event) {
+void ProducerEventProcessorImpl::ProcessApiEventAndTransferOwnership(ApiEvent* api_event) {
   ClientCaptureEvent event;
-  *event.mutable_api_event() = std::move(*api_event);
+  event.set_allocated_api_event(api_event);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessWarningEvent(WarningEvent* warning_event) {
+void ProducerEventProcessorImpl::ProcessWarningEventAndTransferOwnership(
+    WarningEvent* warning_event) {
   ClientCaptureEvent event;
-  *event.mutable_warning_event() = std::move(*warning_event);
+  event.set_allocated_warning_event(warning_event);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessErrorEnablingOrbitApiEvent(
+void ProducerEventProcessorImpl::ProcessErrorEnablingOrbitApiEventAndTransferOwnership(
     ErrorEnablingOrbitApiEvent* error_enabling_orbit_api_event) {
   ClientCaptureEvent event;
-  *event.mutable_error_enabling_orbit_api_event() = std::move(*error_enabling_orbit_api_event);
+  event.set_allocated_error_enabling_orbit_api_event(error_enabling_orbit_api_event);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessClockResolutionEvent(
+void ProducerEventProcessorImpl::ProcessClockResolutionEventAndTransferOwnership(
     ClockResolutionEvent* clock_resolution_event) {
   ClientCaptureEvent event;
-  *event.mutable_clock_resolution_event() = std::move(*clock_resolution_event);
+  event.set_allocated_clock_resolution_event(clock_resolution_event);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessErrorsWithPerfEventOpenEvent(
+void ProducerEventProcessorImpl::ProcessErrorsWithPerfEventOpenEventAndTransferOwnership(
     ErrorsWithPerfEventOpenEvent* errors_with_perf_event_open_event) {
   ClientCaptureEvent event;
-  *event.mutable_errors_with_perf_event_open_event() =
-      std::move(*errors_with_perf_event_open_event);
+  event.set_allocated_errors_with_perf_event_open_event(errors_with_perf_event_open_event);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessLostPerfRecordsEvent(
+void ProducerEventProcessorImpl::ProcessLostPerfRecordsEventAndTransferOwnership(
     LostPerfRecordsEvent* lost_perf_records_event) {
   ClientCaptureEvent event;
-  *event.mutable_lost_perf_records_event() = std::move(*lost_perf_records_event);
+  event.set_allocated_lost_perf_records_event(lost_perf_records_event);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessOutOfOrderEventsDiscardedEvent(
+void ProducerEventProcessorImpl::ProcessOutOfOrderEventsDiscardedEventAndTransferOwnership(
     OutOfOrderEventsDiscardedEvent* out_of_order_events_discarded_event) {
   ClientCaptureEvent event;
-  *event.mutable_out_of_order_events_discarded_event() =
-      std::move(*out_of_order_events_discarded_event);
+  event.set_allocated_out_of_order_events_discarded_event(out_of_order_events_discarded_event);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
 void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCaptureEvent event) {
   switch (event.event_case()) {
     case ProducerCaptureEvent::kCaptureStarted:
-      ProcessCaptureStarted(event.mutable_capture_started());
+      ProcessCaptureStartedAndTransferOwnership(event.release_capture_started());
       break;
     case ProducerCaptureEvent::kInternedCallstack:
       ProcessInternedCallstack(producer_id, event.mutable_interned_callstack());
       break;
     case ProducerCaptureEvent::kSchedulingSlice:
-      ProcessSchedulingSlice(event.mutable_scheduling_slice());
+      ProcessSchedulingSliceAndTransferOwnership(event.release_scheduling_slice());
       break;
     case ProducerCaptureEvent::kCallstackSample:
-      ProcessCallstackSample(producer_id, event.mutable_callstack_sample());
+      ProcessCallstackSampleAndTransferOwnership(producer_id, event.release_callstack_sample());
       break;
     case ProducerCaptureEvent::kFullCallstackSample:
       ProcessFullCallstackSample(event.mutable_full_callstack_sample());
@@ -432,7 +442,7 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
       ProcessFullTracepointEvent(event.mutable_full_tracepoint_event());
       break;
     case ProducerCaptureEvent::kFunctionCall:
-      ProcessFunctionCall(event.mutable_function_call());
+      ProcessFunctionCallAndTransferOwnership(event.release_function_call());
       break;
     case ProducerCaptureEvent::kInternedString:
       ProcessInternedString(producer_id, event.mutable_interned_string());
@@ -441,52 +451,56 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
       ProcessFullGpuJob(event.mutable_full_gpu_job());
       break;
     case ProducerCaptureEvent::kGpuQueueSubmission:
-      ProcessGpuQueueSubmission(producer_id, event.mutable_gpu_queue_submission());
+      ProcessGpuQueueSubmissionAndTransferOwnership(producer_id,
+                                                    event.release_gpu_queue_submission());
       break;
     case ProducerCaptureEvent::kThreadName:
-      ProcessThreadName(event.mutable_thread_name());
+      ProcessThreadNameAndTransferOwnership(event.release_thread_name());
       break;
     case ProducerCaptureEvent::kThreadNamesSnapshot:
-      ProcessThreadNamesSnapshot(event.mutable_thread_names_snapshot());
+      ProcessThreadNamesSnapshotAndTransferOwnership(event.release_thread_names_snapshot());
       break;
     case ProducerCaptureEvent::kThreadStateSlice:
-      ProcessThreadStateSlice(event.mutable_thread_state_slice());
+      ProcessThreadStateSliceAndTransferOwnership(event.release_thread_state_slice());
       break;
     case ProducerCaptureEvent::kFullAddressInfo:
       ProcessFullAddressInfo(event.mutable_full_address_info());
       break;
     case ProducerCaptureEvent::kIntrospectionScope:
-      ProcessIntrospectionScope(event.mutable_introspection_scope());
+      ProcessIntrospectionScopeAndTransferOwnership(event.release_introspection_scope());
       break;
     case ProducerCaptureEvent::kModuleUpdateEvent:
-      ProcessModuleUpdateEvent(event.mutable_module_update_event());
+      ProcessModuleUpdateEventAndTransferOwnership(event.release_module_update_event());
       break;
     case ProducerCaptureEvent::kModulesSnapshot:
-      ProcessModulesSnapshot(event.mutable_modules_snapshot());
+      ProcessModulesSnapshotAndTransferOwnership(event.release_modules_snapshot());
       break;
     case ProducerCaptureEvent::kMemoryUsageEvent:
-      ProcessMemoryUsageEvent(event.mutable_memory_usage_event());
+      ProcessMemoryUsageEventAndTransferOwnership(event.release_memory_usage_event());
       break;
     case ProducerCaptureEvent::kApiEvent:
-      ProcessApiEvent(event.mutable_api_event());
+      ProcessApiEventAndTransferOwnership(event.release_api_event());
       break;
     case ProducerCaptureEvent::kWarningEvent:
-      ProcessWarningEvent(event.mutable_warning_event());
+      ProcessWarningEventAndTransferOwnership(event.release_warning_event());
       break;
     case ProducerCaptureEvent::kClockResolutionEvent:
-      ProcessClockResolutionEvent(event.mutable_clock_resolution_event());
+      ProcessClockResolutionEventAndTransferOwnership(event.release_clock_resolution_event());
       break;
     case ProducerCaptureEvent::kErrorsWithPerfEventOpenEvent:
-      ProcessErrorsWithPerfEventOpenEvent(event.mutable_errors_with_perf_event_open_event());
+      ProcessErrorsWithPerfEventOpenEventAndTransferOwnership(
+          event.release_errors_with_perf_event_open_event());
       break;
     case ProducerCaptureEvent::kErrorEnablingOrbitApiEvent:
-      ProcessErrorEnablingOrbitApiEvent(event.mutable_error_enabling_orbit_api_event());
+      ProcessErrorEnablingOrbitApiEventAndTransferOwnership(
+          event.release_error_enabling_orbit_api_event());
       break;
     case ProducerCaptureEvent::kLostPerfRecordsEvent:
-      ProcessLostPerfRecordsEvent(event.mutable_lost_perf_records_event());
+      ProcessLostPerfRecordsEventAndTransferOwnership(event.release_lost_perf_records_event());
       break;
     case ProducerCaptureEvent::kOutOfOrderEventsDiscardedEvent:
-      ProcessOutOfOrderEventsDiscardedEvent(event.mutable_out_of_order_events_discarded_event());
+      ProcessOutOfOrderEventsDiscardedEventAndTransferOwnership(
+          event.release_out_of_order_events_discarded_event());
       break;
     case ProducerCaptureEvent::EVENT_NOT_SET:
       UNREACHABLE();
