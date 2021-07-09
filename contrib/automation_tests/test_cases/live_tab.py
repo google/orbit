@@ -11,8 +11,6 @@ from pywinauto.base_wrapper import BaseWrapper
 
 from core.orbit_e2e import E2ETestCase, wait_for_condition
 
-from test_cases.capture_window import MatchTracks, CheckTimers
-
 
 class LiveTabTestCase(E2ETestCase):
     def __init__(self, **kwargs):
@@ -55,7 +53,7 @@ class AddIterator(LiveTabTestCase):
 
 class AddFrameTrack(LiveTabTestCase):
     """
-    Add a frame track to an already hooked function and verify its existence
+    Add a frame track to an already hooked function
     """
     def _execute(self, function_name):
         cell, index = self.find_function_cell(function_name)
@@ -64,15 +62,6 @@ class AddFrameTrack(LiveTabTestCase):
 
         tree_view = self.find_control('Tree', parent=self._live_tab)
         wait_for_condition(lambda: "F" in tree_view.children()[index - 1].window_text())
-
-        logging.info("Verifying existence of track in the Capture window")
-        track_name = "Frame track based on %s" % function_name
-        match_tracks = MatchTracks(expected_names=[track_name],
-                                   allow_additional_tracks=True)
-        match_tracks.execute(self.suite)
-
-        check_timers = CheckTimers(track_name_filter=track_name)
-        check_timers.execute(self.suite)
 
 
 class VerifyFunctionCallCount(LiveTabTestCase):

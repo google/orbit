@@ -7,7 +7,7 @@ found in the LICENSE file.
 from absl import app
 
 from core.orbit_e2e import E2ETestSuite
-from test_cases.capture_window import SelectTrack, DeselectTrack, MoveTrack, FilterTracks, MatchTracks, Capture
+from test_cases.capture_window import SelectTrack, DeselectTrack, MoveTrack, FilterTracks, VerifyTracksExist, Capture
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 
 
@@ -17,9 +17,8 @@ def main(argv):
         FilterAndSelectFirstProcess(process_filter="hello_ggp"),
         Capture(),
         # "sdma0" is not present on the DevKits, instead there is "vce0", so this tests for "sdma0 or vce0"
-        MatchTracks(expected_names=[
-            "Scheduler", ("*sdma0*", "*vce0*"), "gfx", "All Threads", "hello_ggp_stand"],
-            allow_additional_tracks=True),
+        VerifyTracksExist(track_names=[
+            "Scheduler", ("*sdma0*", "*vce0*"), "gfx", "All Threads", "hello_ggp_stand"]),
         SelectTrack(track_index=4),
         DeselectTrack(),
         SelectTrack(track_index=0, expect_failure=True),   # Scheduler track cannot be selected
@@ -29,10 +28,8 @@ def main(argv):
         # TODO: The numbers below are very pessimistic, but it's not assured additional tracks like
         # GgpSwapChain, GgpVideoIpcRead etc are present - GgpSwapChain is missing on the DevKit, others
         # depend on the samples that have been taken
-        FilterTracks(filter_string="hello", expected_count=2),
-        FilterTracks(filter_string="Hello", expected_count=2),
-        FilterTracks(filter_string="ggp", expected_count=2, allow_additional_tracks=True),
-        FilterTracks(filter_string="", expected_count=4, allow_additional_tracks=True)]
+        FilterTracks(filter_string="hello", expected_track_count=2),
+        FilterTracks(filter_string="Hello", expected_track_count=2)]
     suite = E2ETestSuite(test_name="Track Interaction", test_cases=test_cases)
     suite.execute()
 

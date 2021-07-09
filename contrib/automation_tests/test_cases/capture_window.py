@@ -136,52 +136,35 @@ class MoveTrack(CaptureWindowE2ETestCaseBase):
                        "Expected track index {} after reordering, got {}".format(expected_new_index, index))
 
 
-class MatchTracks(CaptureWindowE2ETestCaseBase):
+class VerifyTracksExist(CaptureWindowE2ETestCaseBase):
     """
-    Verify that the existing visible tracks match the expected tracks
+    Checks if one or multiple specified tracks are currently visible in the capture window.
     """
 
-    def _execute(self, expected_count: int = None, expected_names: List[str or Iterable[str]] = None,
-                 allow_additional_tracks=False):
+    def _execute(self, track_names: str or List[str or Iterable[str]] = None, allow_duplicates=False):
         """
-        You need to pass either expected_track_count, or expected_name_list. If both are passed, they need to match
-        w.r.t. expected number of tracks.
-        :param expected_count: # of tracks to be visible
-        :param expected_names: List of (partial) matching names of tracks to be visible.
-            The name is a partial match, but the exact number of tracks is expected. Each entry in this list can either
-            be a string or a list of strings. If an entry is a list of strings, the test expects at least on of the
+        :param track_names: List of (partial) matching names of tracks to be visible, or a single track name.
+            Names can be a partial match with wildcards (using fnmatch). Each entry in this list can either
+            be a string or a tuple of strings. If an entry is a tuple of strings, the test expects at least on of the
             names to be matched (i.e. this is an "or" condition on multiple possible track names)
-        :param allow_additional_tracks: If True, encountering additional tracks beyond the given list / number is not
-            considered an error
+        :param allow_duplicates: If False, it is considered an error if more than one track matches a name
         """
-        assert (expected_count is not None or expected_names)
-        if expected_count is not None and expected_names:
-            assert (expected_count == len(expected_names))
-        if expected_count is None:
-            expected_count = len(expected_names)
-
         tracks = self._find_tracks()
 
-        if not allow_additional_tracks:
-            self.expect_eq(len(tracks), expected_count, "# of tracks matches {}".format(expected_count))
-        else:
-            self.expect_true(len(tracks) >= expected_count, "# of tracks is at least {}".format(expected_count))
+        logging.info("Matching visible tracks against name list ({})".format(track_names))
+        if isinstance(track_names, str):
+            track_names = [track_names]
 
-        names_found = 0
-        if expected_names:
-            logging.info("Matching visible tracks against name list ({})".format(expected_names))
-            for name in expected_names:
-                found = False
-                for track in tracks:
-                    track_name = track.texts()[0]
-                    if self._match(name, track_name):
-                        found = True
-                        names_found += 1
-                        break
-                self.expect_true(found, "Found a match for track name '{}'".format(str(name)))
-
-        if expected_names and not allow_additional_tracks:
-            self.expect_eq(names_found, expected_count, "No additional tracks are found")
+        for name in track_names:
+            found = 0
+            for track in tracks:
+                track_name = track.texts()[0]
+                if self._match(name, track_name):
+                    found += 1
+            if allow_duplicates:
+                self.expect_true(found > 0, "Found a match for track name '{}'".format(str(name)))
+            else:
+                self.expect_true(found == 1, "Found exactly one match for track name '{}'".format(str(name)))
 
     @staticmethod
     def _match(expected_name: str or Iterable[str], found_name: str) -> bool:
@@ -248,13 +231,13 @@ class CollapseTrack(CollapsingTrackBase):
 
 class FilterTracks(CaptureWindowE2ETestCaseBase):
     """
-    Set a filter in the capture tab, and verify either the amount of visible tracks or their names
+    Set a filter in the capture tab
     """
 
-    def _execute(self, filter_string: str = "", expected_count: int = None, expected_names: List[str] = None,
-                 allow_additional_tracks=False):
+    def _execute(self, filter_string: str = "", expected_track_count=None):
         """
-        See MatchTracks._execute() for documentation.
+        :param filter_string: The string to be entered in the filter edit
+        :param expected_track_count: If not None, this test will verify the amount of tracks after filtering
         """
         toolbar = self.find_control("ToolBar", "CaptureToolBar")
         track_filter = self.find_control("Edit", "FilterTracks", parent=toolbar)
@@ -265,10 +248,9 @@ class FilterTracks(CaptureWindowE2ETestCaseBase):
         # Using send_keys instead of set_edit_text directly because set_edit_text ignores the wait timings...
         keyboard.send_keys(filter_string)
 
-        # Verify by re-using a MatchTracks Fragment
-        match_tracks = MatchTracks(expected_count=expected_count, expected_names=expected_names,
-                                   allow_additional_tracks=allow_additional_tracks)
-        match_tracks.execute(self.suite)
+        if expected_track_count is not None:
+            self.expect_true(len(self._find_tracks()) == expected_track_count,
+                             '# of tracks matches {}'.format(expected_track_count))
 
 
 class Capture(E2ETestCase):
@@ -314,7 +296,8 @@ class Capture(E2ETestCase):
 
     def _verify_existence_of_tracks(self):
         logging.info("Verifying existence of at least one track...")
-        MatchTracks(expected_count=1, allow_additional_tracks=True).execute(self.suite)
+        time_graph = self.find_control('Image', name='TimeGraph')
+        self.expect_true(len(time_graph.children()), 'Time graph exists and has at least one child')
 
     def _wait_for_capture_completion(self):
         logging.info("Waiting for capture to finalize...")
@@ -419,3 +402,22 @@ class SetAndCheckMemorySamplingPeriod(E2ETestCase):
         self.expect_true(result == expected,
                          'Memory sampling period is set to "{}" while it should be "{}"'.format(result, expected))
         self._close_capture_options_dialog()
+
+
+class VerifyTracksDoNotExist(CaptureWindowE2ETestCaseBase):
+    """
+    Checks if one or multiple specified tracks are NOT visible in the capture window.
+    """
+
+    def _execute(self, track_names: str or Iterable):
+        """
+        :param track_names: List of track names or a single track name. May contain wildcards (using fnmatch as
+        matching implementation).
+        """
+        if isinstance(track_names, str):
+            self.expect_true(len(self._find_tracks(track_names)) == 0,
+                             'Track {} was found, but should not have been'.format(track_names))
+        else:
+            for track_name in track_names:
+                self.expect_true(len(self._find_tracks(track_name)) == 0,
+                                 'Track {} was found, but should not have been'.format(track_name))
