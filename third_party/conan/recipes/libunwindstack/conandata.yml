@@ -1,0 +1,53 @@
+sources:
+  "20210709":
+    - url: https://android.googlesource.com/platform/system/unwinding/+archive/d5d45d0bcd25a4862daa127a67da692fd9eb8a1a/libunwindstack.tar.gz
+      destination: libunwindstack
+    - url: https://android.googlesource.com/platform/system/libbase/+archive/a211423cd63c054667c9fa830fbd3cefe3ed62b5.tar.gz
+      destination: libbase
+    - url: https://android.googlesource.com/platform/system/libprocinfo/+archive/de1562c75fae8a2e003f1009c32ba86c1bd73650.tar.gz
+      destination: libprocinfo
+    - url: https://android.googlesource.com/platform/system/logging/+archive/ddfe72cda0a854bebf01c3f7e6c841611a25b557/liblog.tar.gz
+      destination: liblog
+    - url: https://android.googlesource.com/platform/system/core/+archive/1f92dc1a07ec5c22711c0c4952df8d962480c3b5/libutils.tar.gz
+      destination: libutils
+    - url: https://android.googlesource.com/platform/system/core/+archive/1f92dc1a07ec5c22711c0c4952df8d962480c3b5/libcutils.tar.gz
+      destination: libcutils
+    - url: https://android.googlesource.com/platform/system/core/+archive/1f92dc1a07ec5c22711c0c4952df8d962480c3b5/libsystem.tar.gz
+      destination: libsystem
+patches:
+  "20210709":
+    - patch_file: patches/001-sigaction.diff
+      strip: 1
+    - patch_file: patches/002-missing-include.diff
+      strip: 1
+    - patch_file: patches/003-builtin-available.diff
+      strip: 1
+    - patch_file: patches/004-has-feature.diff
+      strip: 1
+    - patch_file: patches/005-atomic.diff
+      strip: 1
+    - patch_file: patches/006-remove-logd-stuff.diff
+      strip: 1
+license_files:
+  "20210709":
+    - src: libunwindstack/LICENSE_BSD
+      library_name: libunwinstack
+      library_url: https://android.googlesource.com/platform/system/unwinding/
+    - src: libbase/NOTICE
+      library_name: libbase
+      library_url: https://android.googlesource.com/platform/system/libbase/
+    - src: libbase/NOTICE
+      library_name: libprocinfo
+      library_url: https://android.googlesource.com/platform/system/libprocinfo/
+    - src: liblog/NOTICE
+      library_name: liblog
+      library_url: https://android.googlesource.com/platform/system/logging/
+    - src: libutils/NOTICE
+      library_name: libutils
+      library_url: https://android.googlesource.com/platform/system/core/
+    - src: libcutils/NOTICE
+      library_name: libcutils
+      library_url: https://android.googlesource.com/platform/system/core/
+    - src: libcutils/NOTICE
+      library_name: libsystem
+      library_url: https://android.googlesource.com/platform/system/core/
