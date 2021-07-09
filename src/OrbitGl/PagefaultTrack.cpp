@@ -26,6 +26,17 @@ PagefaultTrack::PagefaultTrack(CaptureViewElement* parent, TimeGraph* time_graph
           indentation_level + 1)} {
   SetName("Pagefault Track");
   SetLabel("Pagefault Track");
+
+  const std::string kMajorPagefaultSubtrackTabTooltip =
+      "Shows major pagefault statistics. A major pagefault occurs when the requested page does "
+      "not reside in the main memory or CPU cache, and has to be swapped from an external "
+      "storage. The major pagefaults might cause slow performance of the target process.";
+  major_pagefault_track_->SetTrackTabTooltip(kMajorPagefaultSubtrackTabTooltip);
+
+  const std::string kMinorPagefaultSubtrackTabTooltip =
+      "Shows minor pagefault statistics. A minor pagefault occurs when the requested page "
+      "resides in main memory but the process cannot access it.";
+  minor_pagefault_track_->SetTrackTabTooltip(kMinorPagefaultSubtrackTabTooltip);
 }
 
 float PagefaultTrack::GetHeight() const {
@@ -50,6 +61,11 @@ std::vector<orbit_gl::CaptureViewElement*> PagefaultTrack::GetVisibleChildren() 
   if (!major_pagefault_track_->IsEmpty()) result.push_back(major_pagefault_track_.get());
   if (!minor_pagefault_track_->IsEmpty()) result.push_back(minor_pagefault_track_.get());
   return result;
+}
+
+std::string PagefaultTrack::GetTooltip() const {
+  if (collapse_toggle_->IsCollapsed()) return major_pagefault_track_->GetTooltip();
+  return "Shows the minor and major pagefault statistics.";
 }
 
 void PagefaultTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,

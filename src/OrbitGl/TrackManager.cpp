@@ -470,12 +470,14 @@ SystemMemoryTrack* TrackManager::CreateAndGetSystemMemoryTrack(
     const std::string kTrackValueLabelUnit = "MB";
     const std::string kTrackName =
         absl::StrFormat("System Memory Usage (%s)", kTrackValueLabelUnit);
+    const std::string kTrackTabTooltip = "Shows system-wide memory usage information.";
 
     system_memory_track_ = std::make_shared<SystemMemoryTrack>(
         time_graph_, time_graph_, viewport_, layout_, kTrackName, series_names, capture_data_);
     system_memory_track_->SetLabelUnit(kTrackValueLabelUnit);
     system_memory_track_->SetNumberOfDecimalDigits(kTrackValueDecimalDigits);
     system_memory_track_->SetSeriesColors(orbit_gl::kSystemMemoryTrackColors);
+    system_memory_track_->SetTrackTabTooltip(kTrackTabTooltip);
     AddTrack(system_memory_track_);
   }
 
@@ -490,12 +492,17 @@ CGroupAndProcessMemoryTrack* TrackManager::CreateAndGetCGroupAndProcessMemoryTra
     const std::string kTrackValueLabelUnit = "MB";
     const std::string kTrackName =
         absl::StrFormat("CGroup Memory Usage (%s)", kTrackValueLabelUnit);
+    const std::string kTrackTabTooltip =
+        "Shows memory usage information for the target process and the memory cgroup it belongs "
+        "to. The target process will be killed when the overall used memory approaches the cgroup "
+        "limit.";
 
     cgroup_and_process_memory_track_ = std::make_shared<CGroupAndProcessMemoryTrack>(
         time_graph_, time_graph_, viewport_, layout_, kTrackName, series_names, capture_data_);
     cgroup_and_process_memory_track_->SetLabelUnit(kTrackValueLabelUnit);
     cgroup_and_process_memory_track_->SetNumberOfDecimalDigits(kTrackValueDecimalDigits);
     cgroup_and_process_memory_track_->SetSeriesColors(orbit_gl::kCGroupAndProcessMemoryTrackColors);
+    cgroup_and_process_memory_track_->SetTrackTabTooltip(kTrackTabTooltip);
     AddTrack(cgroup_and_process_memory_track_);
   }
 
