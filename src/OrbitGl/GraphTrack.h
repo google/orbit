@@ -52,6 +52,13 @@ class GraphTrack : public Track {
   void SetSeriesColors(const std::array<Color, Dimension>& series_colors) {
     series_colors_ = series_colors;
   }
+  void SetLegendTooltips(std::array<std::string, Dimension> legend_tooltips) {
+    legend_tooltips_ = std::move(legend_tooltips);
+  }
+  [[nodiscard]] std::string GetLegendTooltips(size_t i) const {
+    CHECK(i < Dimension);
+    return legend_tooltips_[i];
+  }
 
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllChains() const override;
@@ -97,6 +104,7 @@ class GraphTrack : public Track {
                              const std::array<float, Dimension>& normalized_values, float z);
 
   std::optional<std::array<Color, Dimension>> series_colors_;
+  std::array<std::string, Dimension> legend_tooltips_;
 };
 
 #endif  // ORBIT_GL_GRAPH_TRACK_H_

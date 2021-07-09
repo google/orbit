@@ -461,7 +461,20 @@ void TimeGraph::ProcessSystemMemoryTrackingTimer(const TimerInfo& timer_info) {
     const std::array<std::string, orbit_gl::kSystemMemoryTrackDimension> kSeriesNames = {
         "Used", "Buffers / Cached", "Unused"};
     track = track_manager_->CreateAndGetSystemMemoryTrack(kSeriesNames);
+    const std::string kUsedTooltips =
+        "<b>Memory used by the system.</b><br/><br/>"
+        "Derived from <i>MemTotal</i> - 'Unused' - 'Buffers / Cached', "
+        "where <i>MemTotal</i> is a field in file <i>/proc/meminfo</i>.";
+    const std::string kBuffersOrCachedTooltips =
+        "<b>Memory in buffer cache or pagecache.</b><br/><br/>"
+        "Derived from <i>Buffers</i> + <i>Cached</i>, which are two fields in file "
+        "<i>/proc/meminfo</i>.";
+    const std::string kUnusedTooltips =
+        "<b>Physical memory not used by the system</b><br/><br/>"
+        "Derived from the <i>MemFree</i> field in file <i>/proc/meminfo</i>";
+    track->SetLegendTooltips({kUsedTooltips, kBuffersOrCachedTooltips, kUnusedTooltips});
   }
+
   CHECK(track->GetNumberOfDecimalDigits().has_value());
   uint8_t num_of_decimal_digits = track->GetNumberOfDecimalDigits().value();
   double unused_mb =
@@ -532,7 +545,31 @@ void TimeGraph::ProcessCGroupAndProcessMemoryTrackingTimer(const TimerInfo& time
         "Other Processes RssAnon", absl::StrFormat("CGroup [%s] Mapped File", cgroup_name),
         absl::StrFormat("CGroup [%s] Unused", cgroup_name)};
     track = track_manager_->CreateAndGetCGroupAndProcessMemoryTrack(kSeriesNames);
+    const std::string kProcessRssAnonTooltips = absl::StrFormat(
+        "<b>Resident anonymous memory of the target process %s.</b><br/><br/>"
+        "Derived from the <i>RssAnon</i> field in file <i>/proc/%d/status</i>",
+        capture_data_->process_name(), timer_info.process_id());
+    const std::string kOtherRssAnonTooltips = absl::StrFormat(
+        "<b>Resident anonymous memory of other processes in the %s cgroup.</b><br/><br/>"
+        "Derived from the cgroup anonymous memory - 'Process [%s] RssAnon',<br/>"
+        "where the cgroup anonymous memory is extracted from the <i>rss</i> field in file "
+        "<i>/sys/fs/cgroup/memory/%s/memory.stat</i>",
+        cgroup_name, capture_data_->process_name(), cgroup_name);
+    const std::string kCGroupMappedFileTooltips = absl::StrFormat(
+        "<b>Resident file mapping of the %s cgroup.</b><br/><br/>"
+        "Derived from the <i>mapped\_file</i> field in file<br/>"
+        "<i>/sys/fs/cgroup/memory/%s/memory.stat</i>",
+        cgroup_name, cgroup_name);
+    std::string kUnusedTooltips = absl::StrFormat(
+        "<b>Unused memory in the %s cgroup.</b><br/><br/>"
+        "Derived from cgroup memory limit - cgroup rss - cgroup mapped_file.<br/> "
+        "The cgroup memory limit is extracted from file "
+        "<i>/sys/fs/cgroup/memory/%s/memory.limit_in_bytes</i>",
+        cgroup_name, cgroup_name);
+    track->SetLegendTooltips({kProcessRssAnonTooltips, kOtherRssAnonTooltips,
+                              kCGroupMappedFileTooltips, kUnusedTooltips});
   }
+
   CHECK(track->GetNumberOfDecimalDigits().has_value());
   uint8_t num_of_decimal_digits = track->GetNumberOfDecimalDigits().value();
   double cgroup_limit_mb = RoundPrecision(
