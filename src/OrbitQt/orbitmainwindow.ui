@@ -167,6 +167,9 @@ QPushButton:disabled {
                  <height>0</height>
                 </size>
                </property>
+               <property name="accessibleName">
+                <string>TrackConfigurationPane</string>
+               </property>
               </widget>
               <widget class="OrbitGLWidget" name="CaptureGLWidget">
                <property name="sizePolicy">

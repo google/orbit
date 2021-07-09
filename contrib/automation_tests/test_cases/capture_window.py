@@ -10,7 +10,7 @@ from fnmatch import fnmatch
 
 from typing import Tuple, List, Iterable
 
-from core.common_controls import Track
+from core.common_controls import Track, Table
 from core.orbit_e2e import E2ETestCase, E2ETestSuite, wait_for_condition
 from pywinauto import mouse, keyboard
 from pywinauto.base_wrapper import BaseWrapper
@@ -421,3 +421,27 @@ class VerifyTracksDoNotExist(CaptureWindowE2ETestCaseBase):
             for track_name in track_names:
                 self.expect_true(len(self._find_tracks(track_name)) == 0,
                                  'Track {} was found, but should not have been'.format(track_name))
+            toggle_button = self.find_control('CheckBox', 'Track Configuration Pane')
+            toggle_button.click_input()
+
+
+class ToggleTrackTypeVisibility(CaptureWindowE2ETestCaseBase):
+    """
+    Opens the track configuration pane, changes the visibility of certain track types. This does not verify the
+    result itself - use MatchTracks() for this.
+    """
+
+    def _execute(self, track_type: str):
+        control_pane = self._show_and_find_control_pane()
+        table = self.find_control("Table", "TrackTypeVisibility", parent=control_pane)
+        table_obj = Table(table)
+        row = table_obj.find_first_item_row(track_type, 1)
+        table_obj.get_item_at(row, 0).click_input(coords=(10, 10))
+
+    def _show_and_find_control_pane(self):
+        control_pane = self.find_control("Group", "TrackConfigurationPane", raise_on_failure=False)
+        if control_pane is None:
+            toggle_button = self.find_control('CheckBox', 'Track Configuration Pane')
+            toggle_button.click_input()
+        control_pane = self.find_control("Group", "TrackConfigurationPane")
+        return control_pane

@@ -73,6 +73,9 @@
          <property name="whatsThis">
           <string/>
          </property>
+         <property name="accessibleName">
+          <string>TrackTypeVisibility</string>
+         </property>
          <property name="styleSheet">
           <string notr="true">QTableView::indicator:checked { 
 image: url(&quot;:/actions/track_visibility_on&quot;); 
