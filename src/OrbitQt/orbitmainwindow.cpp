@@ -997,7 +997,8 @@ const QString OrbitMainWindow::kCollectThreadStatesSettingKey{"CollectThreadStat
 const QString OrbitMainWindow::kCollectMemoryInfoSettingKey{"CollectMemoryInfo"};
 const QString OrbitMainWindow::kEnableApiSettingKey{"EnableApi"};
 const QString OrbitMainWindow::kEnableIntrospectionSettingKey{"EnableIntrospection"};
-const QString OrbitMainWindow::kEnableUserSpaceInstrumentationSettingKey{"EnableUserSpaceInstrumentation"};
+const QString OrbitMainWindow::kEnableUserSpaceInstrumentationSettingKey{
+    "EnableUserSpaceInstrumentation"};
 const QString OrbitMainWindow::kMemorySamplingPeriodMsSettingKey{"MemorySamplingPeriodMs"};
 const QString OrbitMainWindow::kMemoryWarningThresholdKbSettingKey{"MemoryWarningThresholdKb"};
 const QString OrbitMainWindow::kLimitLocalMarkerDepthPerCommandBufferSettingsKey{

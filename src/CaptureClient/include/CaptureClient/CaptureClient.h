@@ -45,9 +45,9 @@ class CaptureClient {
       orbit_client_data::TracepointInfoSet selected_tracepoints, double samples_per_second,
       uint16_t stack_dump_size, orbit_grpc_protos::UnwindingMethod unwinding_method,
       bool collect_scheduling_info, bool collect_thread_state, bool collect_gpu_jobs,
-      bool enable_api, bool enable_introspection,
-      bool enable_user_space_instrumentation, uint64_t max_local_marker_depth_per_command_buffer,
-      bool collect_memory_info, uint64_t memory_sampling_period_ms, bool enable_cgroup_memory,
+      bool enable_api, bool enable_introspection, bool enable_user_space_instrumentation,
+      uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
+      uint64_t memory_sampling_period_ms, bool enable_cgroup_memory,
       std::unique_ptr<CaptureEventProcessor> capture_event_processor);
 
   // Returns true if stop was initiated and false otherwise.

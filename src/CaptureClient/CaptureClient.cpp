@@ -93,14 +93,15 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
        unwinding_method, collect_scheduling_info, collect_thread_state, collect_gpu_jobs,
        enable_api, enable_introspection, enable_user_space_instrumentation,
        max_local_marker_depth_per_command_buffer, collect_memory_info, memory_sampling_period_ms,
-       enable_cgroup_memory, capture_event_processor = std::move(capture_event_processor)]() mutable {
-        return CaptureSync(
-            process_id, module_manager, selected_functions, selected_tracepoints,
-            samples_per_second, stack_dump_size, unwinding_method, collect_scheduling_info,
-            collect_thread_state, collect_gpu_jobs, enable_api, enable_introspection,
-            enable_user_space_instrumentation, max_local_marker_depth_per_command_buffer,
-            collect_memory_info, memory_sampling_period_ms, enable_cgroup_memory,
-            capture_event_processor.get());
+       enable_cgroup_memory,
+       capture_event_processor = std::move(capture_event_processor)]() mutable {
+        return CaptureSync(process_id, module_manager, selected_functions, selected_tracepoints,
+                           samples_per_second, stack_dump_size, unwinding_method,
+                           collect_scheduling_info, collect_thread_state, collect_gpu_jobs,
+                           enable_api, enable_introspection, enable_user_space_instrumentation,
+                           max_local_marker_depth_per_command_buffer, collect_memory_info,
+                           memory_sampling_period_ms, enable_cgroup_memory,
+                           capture_event_processor.get());
       });
 
   return capture_result;

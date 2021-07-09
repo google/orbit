@@ -81,7 +81,9 @@ class DataManager final {
   }
   [[nodiscard]] bool get_enable_introspection() const { return enable_introspection_; }
 
-  void set_enable_user_space_instrumentation(bool enable) { enable_user_space_instrumentation_ = enable; }
+  void set_enable_user_space_instrumentation(bool enable) {
+    enable_user_space_instrumentation_ = enable;
+  }
   [[nodiscard]] bool get_enable_user_space_instrumentation() const {
     return enable_user_space_instrumentation_;
   }
