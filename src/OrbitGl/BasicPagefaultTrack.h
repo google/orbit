@@ -19,12 +19,12 @@ constexpr size_t kBasicPagefaultTrackDimension = 3;
 
 // This is a implementation of `LineGraphTrack` to display major or minor pagefault information,
 // used in the `PagefaultTrack`.
-class BasicPagefaultTrack final : public LineGraphTrack<kBasicPagefaultTrackDimension>,
-                                  public AnnotationTrack {
+class BasicPagefaultTrack : public LineGraphTrack<kBasicPagefaultTrackDimension>,
+                            public AnnotationTrack {
  public:
   explicit BasicPagefaultTrack(Track* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
-                               TimeGraphLayout* layout, std::string name,
-                               std::array<std::string, kBasicPagefaultTrackDimension> series_names,
+                               TimeGraphLayout* layout, const std::string& name,
+                               const std::string& cgroup_name,
                                const orbit_client_model::CaptureData* capture_data,
                                uint32_t indentation_level = 0);
 
@@ -38,10 +38,10 @@ class BasicPagefaultTrack final : public LineGraphTrack<kBasicPagefaultTrackDime
   void AddValuesAndUpdateAnnotations(
       uint64_t timestamp_ns, const std::array<double, kBasicPagefaultTrackDimension>& values);
 
-  void SetIndexOfSeriesToHighlight(size_t series_index);
-
   void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
             PickingMode picking_mode, float z_offset = 0) override;
+
+  enum class SeriesIndex { kProcess = 0, kCGroup = 1, kSystem = 2 };
 
  protected:
   void DrawSingleSeriesEntry(
@@ -49,6 +49,12 @@ class BasicPagefaultTrack final : public LineGraphTrack<kBasicPagefaultTrackDime
       const std::array<float, kBasicPagefaultTrackDimension>& current_normalized_values,
       const std::array<float, kBasicPagefaultTrackDimension>& next_normalized_values, float z,
       bool is_last) override;
+
+  // Once this is set, if values[index_of_series_to_highlight_] > 0 in the sampling window t, we
+  // will draw a colored box in this sampling window to highlight the occurrence of pagefault
+  // series_name[index_of_series_to_highlight_].
+  std::optional<size_t> index_of_series_to_highlight_ = std::nullopt;
+  std::string cgroup_name_;
 
  private:
   [[nodiscard]] bool IsCollapsed() const override;
@@ -60,10 +66,6 @@ class BasicPagefaultTrack final : public LineGraphTrack<kBasicPagefaultTrackDime
   Track* parent_;
   std::optional<std::pair<uint64_t, std::array<double, kBasicPagefaultTrackDimension>>>
       previous_time_and_values_ = std::nullopt;
-  // Once this is set, if values[index_of_series_to_highlight_] > 0 in the sampling window t, we
-  // will draw a colored box in this sampling window to highlight the occurrence of pagefault
-  // series_name[index_of_series_to_highlight_].
-  std::optional<size_t> index_of_series_to_highlight_ = std::nullopt;
 };
 
 }  // namespace orbit_gl

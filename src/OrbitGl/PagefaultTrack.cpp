@@ -12,20 +12,22 @@
 
 namespace orbit_gl {
 
+namespace {
+const std::string kTrackName = "PagefaultTrack";
+}  // namespace
+
 PagefaultTrack::PagefaultTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                                orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                               std::array<std::string, kBasicPagefaultTrackDimension> series_names,
+                               const std::string& cgroup_name,
                                const orbit_client_model::CaptureData* capture_data,
                                uint32_t indentation_level)
     : Track(parent, time_graph, viewport, layout, capture_data, indentation_level),
-      major_pagefault_track_{std::make_shared<BasicPagefaultTrack>(
-          this, time_graph, viewport, layout, "Major Pagefault Track", series_names, capture_data,
-          indentation_level + 1)},
-      minor_pagefault_track_{std::make_shared<BasicPagefaultTrack>(
-          this, time_graph, viewport, layout, "Minor Pagefault Track", series_names, capture_data,
-          indentation_level + 1)} {
-  SetName("Pagefault Track");
-  SetLabel("Pagefault Track");
+      major_pagefault_track_{std::make_shared<MajorPagefaultTrack>(
+          this, time_graph, viewport, layout, cgroup_name, capture_data, indentation_level + 1)},
+      minor_pagefault_track_{std::make_shared<MinorPagefaultTrack>(
+          this, time_graph, viewport, layout, cgroup_name, capture_data, indentation_level + 1)} {
+  SetName(kTrackName);
+  SetLabel(kTrackName);
 }
 
 float PagefaultTrack::GetHeight() const {
@@ -52,6 +54,11 @@ std::vector<orbit_gl::CaptureViewElement*> PagefaultTrack::GetVisibleChildren() 
   return result;
 }
 
+std::string PagefaultTrack::GetTooltip() const {
+  if (collapse_toggle_->IsCollapsed()) return major_pagefault_track_->GetTooltip();
+  return "Shows the minor and major pagefault statistics.";
+}
+
 void PagefaultTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
                           uint64_t current_mouse_time_ns, PickingMode picking_mode,
                           float z_offset) {
@@ -60,7 +67,7 @@ void PagefaultTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
 
   SetPos(viewport_->GetWorldTopLeft()[0], pos_[1]);
   SetSize(track_width, track_height);
-  SetLabel(collapse_toggle_->IsCollapsed() ? "Major Pagefault Track" : "Pagefault Track");
+  SetLabel(collapse_toggle_->IsCollapsed() ? major_pagefault_track_->GetName() : kTrackName);
 
   UpdatePositionOfSubtracks();
 

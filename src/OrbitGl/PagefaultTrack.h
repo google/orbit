@@ -5,7 +5,8 @@
 #ifndef ORBIT_GL_PAGEFAULT_TRACK_H_
 #define ORBIT_GL_PAGEFAULT_TRACK_H_
 
-#include "BasicPagefaultTrack.h"
+#include "MajorPagefaultTrack.h"
+#include "MinorPagefaultTrack.h"
 #include "Timer.h"
 #include "Track.h"
 #include "Viewport.h"
@@ -20,13 +21,14 @@ class PagefaultTrack : public Track {
  public:
   explicit PagefaultTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                           orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                          std::array<std::string, kBasicPagefaultTrackDimension> series_names,
+                          const std::string& cgroup_name,
                           const orbit_client_model::CaptureData* capture_data,
                           uint32_t indentation_level = 0);
 
   [[nodiscard]] Type GetType() const override { return Type::kPagefaultTrack; }
   [[nodiscard]] float GetHeight() const override;
   [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() override;
+  [[nodiscard]] std::string GetTooltip() const override;
 
   [[nodiscard]] bool IsEmpty() const override {
     return major_pagefault_track_->IsEmpty() && minor_pagefault_track_->IsEmpty();
@@ -52,19 +54,12 @@ class PagefaultTrack : public Track {
       uint64_t timestamp_ns, const std::array<double, kBasicPagefaultTrackDimension>& values) {
     minor_pagefault_track_->AddValuesAndUpdateAnnotations(timestamp_ns, values);
   }
-  void SetNumberOfDecimalDigits(uint8_t value_decimal_digits) {
-    major_pagefault_track_->SetNumberOfDecimalDigits(value_decimal_digits);
-    minor_pagefault_track_->SetNumberOfDecimalDigits(value_decimal_digits);
-  }
-  void SetIndexOfSeriesToHighlightForMajorPagefaultTrack(size_t series_index) {
-    major_pagefault_track_->SetIndexOfSeriesToHighlight(series_index);
-  }
 
  private:
   void UpdatePositionOfSubtracks();
 
-  std::shared_ptr<BasicPagefaultTrack> major_pagefault_track_;
-  std::shared_ptr<BasicPagefaultTrack> minor_pagefault_track_;
+  std::shared_ptr<MajorPagefaultTrack> major_pagefault_track_;
+  std::shared_ptr<MinorPagefaultTrack> minor_pagefault_track_;
 };
 
 }  // namespace orbit_gl

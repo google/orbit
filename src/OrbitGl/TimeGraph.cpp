@@ -51,6 +51,8 @@ using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_gl::CGroupAndProcessMemoryTrack;
+using orbit_gl::MajorPagefaultTrack;
+using orbit_gl::MinorPagefaultTrack;
 using orbit_gl::SystemMemoryTrack;
 using orbit_gl::VariableTrack;
 using orbit_grpc_protos::InstrumentedFunction;
@@ -566,29 +568,33 @@ void TimeGraph::ProcessPagefaultTrackingTimer(const orbit_client_protos::TimerIn
 
   orbit_gl::PagefaultTrack* track = track_manager_->GetPagefaultTrack();
   if (track == nullptr) {
-    const std::array<std::string, 3> kSeriesNames = {
-        absl::StrFormat("Process [%s]", capture_data_->process_name()),
-        absl::StrFormat("CGroup [%s]", cgroup_name), "System"};
-    track = track_manager_->CreateAndGetPagefaultTrack(kSeriesNames);
-    track->SetIndexOfSeriesToHighlightForMajorPagefaultTrack(0);
+    track = track_manager_->CreateAndGetPagefaultTrack(cgroup_name);
   }
   CHECK(track != nullptr);
 
   if (system_major_pagefaults != kMissingInfo && cgroup_major_pagefaults != kMissingInfo &&
       process_major_pagefaults != kMissingInfo) {
-    track->AddValuesAndUpdateAnnotationsForMajorPagefaultSubtrack(
-        timer_info.start(), {static_cast<double>(process_major_pagefaults),
-                             static_cast<double>(cgroup_major_pagefaults),
-                             static_cast<double>(system_major_pagefaults)});
+    std::array<double, orbit_gl::kBasicPagefaultTrackDimension> values;
+    values[static_cast<size_t>(MajorPagefaultTrack::SeriesIndex::kProcess)] =
+        static_cast<double>(process_major_pagefaults);
+    values[static_cast<size_t>(MajorPagefaultTrack::SeriesIndex::kCGroup)] =
+        static_cast<double>(cgroup_major_pagefaults);
+    values[static_cast<size_t>(MajorPagefaultTrack::SeriesIndex::kSystem)] =
+        static_cast<double>(system_major_pagefaults);
+    track->AddValuesAndUpdateAnnotationsForMajorPagefaultSubtrack(timer_info.start(), values);
   }
 
   if (system_pagefaults != kMissingInfo && system_major_pagefaults != kMissingInfo &&
       cgroup_pagefaults != kMissingInfo && cgroup_major_pagefaults != kMissingInfo &&
       process_minor_pagefaults != kMissingInfo) {
-    track->AddValuesAndUpdateAnnotationsForMinorPagefaultSubtrack(
-        timer_info.start(), {static_cast<double>(process_minor_pagefaults),
-                             static_cast<double>(cgroup_pagefaults - cgroup_major_pagefaults),
-                             static_cast<double>(system_pagefaults - system_major_pagefaults)});
+    std::array<double, orbit_gl::kBasicPagefaultTrackDimension> values;
+    values[static_cast<size_t>(MinorPagefaultTrack::SeriesIndex::kProcess)] =
+        static_cast<double>(process_minor_pagefaults);
+    values[static_cast<size_t>(MinorPagefaultTrack::SeriesIndex::kCGroup)] =
+        static_cast<double>(cgroup_pagefaults - cgroup_major_pagefaults);
+    values[static_cast<size_t>(MinorPagefaultTrack::SeriesIndex::kSystem)] =
+        static_cast<double>(system_pagefaults - system_major_pagefaults);
+    track->AddValuesAndUpdateAnnotationsForMinorPagefaultSubtrack(timer_info.start(), values);
   }
 
   track->OnTimer(timer_info);

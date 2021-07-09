@@ -75,8 +75,7 @@ class TrackManager {
   [[nodiscard]] orbit_gl::CGroupAndProcessMemoryTrack* CreateAndGetCGroupAndProcessMemoryTrack(
       const std::string& cgroup_name);
   orbit_gl::PagefaultTrack* GetPagefaultTrack() const { return pagefault_track_.get(); }
-  orbit_gl::PagefaultTrack* CreateAndGetPagefaultTrack(
-      const std::array<std::string, orbit_gl::kBasicPagefaultTrackDimension>& series_names);
+  orbit_gl::PagefaultTrack* CreateAndGetPagefaultTrack(const std::string& cgroup_name);
 
   [[nodiscard]] bool GetIsDataFromSavedCapture() const { return data_from_saved_capture_; }
   void SetIsDataFromSavedCapture(bool value) { data_from_saved_capture_ = value; }
