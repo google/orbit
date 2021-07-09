@@ -29,6 +29,7 @@ target_sources(
          CaptureStats.h
          CaptureViewElement.h
          CaptureWindow.h
+         CGroupAndProcessMemoryTrack.h
          CoreMath.h
          FramePointerValidatorClient.h
          FrameTrack.h
@@ -100,6 +101,7 @@ target_sources(
           CaptureStats.cpp
           CaptureViewElement.cpp
           CaptureWindow.cpp
+          CGroupAndProcessMemoryTrack.cpp
           CompareAscendingOrDescending.h
           DataManager.cpp
           FramePointerValidatorClient.cpp
