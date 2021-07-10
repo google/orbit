@@ -7,6 +7,7 @@
 namespace {
 
 const Color kWhite(255, 255, 255, 255);
+const Color kFullyTransparent(255, 255, 255, 0);
 const Color kThresholdColor(244, 67, 54, 255);
 
 }  // namespace
@@ -32,6 +33,13 @@ void AnnotationTrack::DrawAnnotation(Batcher& batcher, TextRenderer& text_render
     text_renderer.AddText(text.c_str(), text_box_position[0],
                           text_box_position[1] + layout->GetTextOffset(), z, kWhite, font_size,
                           text_box_size[0]);
+
+    if (!GetValueUpperBoundTooltip().empty()) {
+      auto user_data = std::make_unique<PickingUserData>(
+          nullptr, [&](PickingId /*id*/) { return this->GetValueUpperBoundTooltip(); });
+      batcher.AddShadedBox(text_box_position, text_box_size, z, kFullyTransparent,
+                           std::move(user_data));
+    }
   }
 
   // Add value lower bound text box.

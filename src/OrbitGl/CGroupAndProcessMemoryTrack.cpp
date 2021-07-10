@@ -103,4 +103,15 @@ std::string CGroupAndProcessMemoryTrack::GetLegendTooltips(size_t legend_index) 
   }
 }
 
+std::string CGroupAndProcessMemoryTrack::GetValueUpperBoundTooltip() const {
+  const std::string kGameCGroupName = "game";
+  constexpr float kGameCGroupLimitGB = 7;
+
+  if (cgroup_name_ != kGameCGroupName) return "";
+  return absl::StrFormat(
+      "<b>The memory production limit of the %s cgroup is %.2fGB</b>.<br/><br/>"
+      "<i>To launch game with the production cgroup limits, add the flag "
+      "'--enforce-production-ram' to the 'ggp run' command</i>.",
+      kGameCGroupName, kGameCGroupLimitGB);
+}
 }  // namespace orbit_gl

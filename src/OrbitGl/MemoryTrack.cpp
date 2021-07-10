@@ -18,7 +18,7 @@ void MemoryTrack<Dimension>::Draw(Batcher& batcher, TextRenderer& text_renderer,
   GraphTrack<Dimension>::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode,
                               z_offset);
 
-  if (picking_mode != PickingMode::kNone || this->collapse_toggle_->IsCollapsed()) return;
+  if (this->collapse_toggle_->IsCollapsed()) return;
   AnnotationTrack::DrawAnnotation(batcher, text_renderer, this->layout_,
                                   GlCanvas::kZValueTrackText + z_offset);
 }
