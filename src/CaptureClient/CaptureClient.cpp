@@ -186,6 +186,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
         orbit_client_data::function_utils::Offset(function, *module));
     instrumented_function->set_file_build_id(function.module_build_id());
     instrumented_function->set_function_id(function_id);
+    instrumented_function->set_function_size(function.size());
     instrumented_function->set_function_name(function.pretty_name());
     instrumented_function->set_function_type(
         InstrumentedFunctionTypeFromOrbitType(function.orbit_type()));
