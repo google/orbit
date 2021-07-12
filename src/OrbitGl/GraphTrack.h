@@ -90,6 +90,12 @@ class GraphTrack : public Track {
                           const Color& legend_text_color, float z);
   virtual void DrawSeries(Batcher* batcher, uint64_t min_tick, uint64_t max_tick, float z);
 
+  [[nodiscard]] double RoundPrecision(double value) {
+    CHECK(GetNumberOfDecimalDigits().has_value());
+    return std::round(value * std::pow(10, GetNumberOfDecimalDigits().value())) /
+           std::pow(10, GetNumberOfDecimalDigits().value());
+  }
+
   MultivariateTimeSeries<Dimension> series_;
 
  private:

@@ -25,6 +25,8 @@ class SystemMemoryTrack final : public MemoryTrack<kSystemMemoryTrackDimension> 
   void TrySetValueUpperBound(double total_mb);
   void SetWarningThreshold(double warning_threshold_mb);
 
+  void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
+
   enum class SeriesIndex { kUsedMb = 0, kBuffersOrCachedMb = 1, kUnusedMb = 2 };
 
  private:

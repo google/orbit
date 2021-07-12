@@ -447,47 +447,14 @@ void TimeGraph::ProcessValueTrackingTimer(const TimerInfo& timer_info) {
 }
 
 void TimeGraph::ProcessSystemMemoryTrackingTimer(const TimerInfo& timer_info) {
-  int64_t total_kb = orbit_api::Decode<int64_t>(timer_info.registers(
-      static_cast<size_t>(CaptureEventProcessor::SystemMemoryUsageEncodingIndex::kTotalKb)));
-  int64_t unused_kb = orbit_api::Decode<int64_t>(timer_info.registers(
-      static_cast<size_t>(CaptureEventProcessor::SystemMemoryUsageEncodingIndex::kFreeKb)));
-  int64_t buffers_kb = orbit_api::Decode<int64_t>(timer_info.registers(
-      static_cast<size_t>(CaptureEventProcessor::SystemMemoryUsageEncodingIndex::kBuffersKb)));
-  int64_t cached_kb = orbit_api::Decode<int64_t>(timer_info.registers(
-      static_cast<size_t>(CaptureEventProcessor::SystemMemoryUsageEncodingIndex::kCachedKb)));
-  if (total_kb == kMissingInfo || unused_kb == kMissingInfo || buffers_kb == kMissingInfo ||
-      cached_kb == kMissingInfo) {
-    return;
-  }
-
   SystemMemoryTrack* track = track_manager_->GetSystemMemoryTrack();
   if (track == nullptr) {
     track = track_manager_->CreateAndGetSystemMemoryTrack();
   }
-
-  constexpr double kMegabytesToKilobytes = 1024.0;
-  CHECK(track->GetNumberOfDecimalDigits().has_value());
-  uint8_t num_of_decimal_digits = track->GetNumberOfDecimalDigits().value();
-  double total_mb =
-      RoundPrecision(static_cast<double>(total_kb) / kMegabytesToKilobytes, num_of_decimal_digits);
-  double unused_mb =
-      RoundPrecision(static_cast<double>(unused_kb) / kMegabytesToKilobytes, num_of_decimal_digits);
-  double buffers_or_cached_mb = RoundPrecision(
-      static_cast<double>(buffers_kb + cached_kb) / kMegabytesToKilobytes, num_of_decimal_digits);
-  double used_mb = total_mb - unused_mb - buffers_or_cached_mb;
-  std::array<double, orbit_gl::kSystemMemoryTrackDimension> values;
-  values[static_cast<size_t>(SystemMemoryTrack::SeriesIndex::kUsedMb)] = used_mb;
-  values[static_cast<size_t>(SystemMemoryTrack::SeriesIndex::kBuffersOrCachedMb)] =
-      buffers_or_cached_mb;
-  values[static_cast<size_t>(SystemMemoryTrack::SeriesIndex::kUnusedMb)] = unused_mb;
-  track->AddValues(timer_info.start(), values);
   track->OnTimer(timer_info);
 
-  if (!track->GetValueUpperBound().has_value()) {
-    track->TrySetValueUpperBound(total_mb);
-  }
-
   if (absl::GetFlag(FLAGS_enable_warning_threshold) && !track->GetWarningThreshold().has_value()) {
+    constexpr double kMegabytesToKilobytes = 1024.0;
     double warning_threshold_mb =
         static_cast<double>(app_->GetMemoryWarningThresholdKb()) / kMegabytesToKilobytes;
     track->SetWarningThreshold(warning_threshold_mb);

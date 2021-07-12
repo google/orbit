@@ -6,11 +6,17 @@
 
 #include <absl/strings/str_format.h>
 
+#include "Api/EncodedEvent.h"
+#include "CaptureClient/CaptureEventProcessor.h"
 #include "DisplayFormats/DisplayFormats.h"
+#include "GrpcProtos/Constants.h"
 
 namespace orbit_gl {
 
 namespace {
+
+using orbit_capture_client::CaptureEventProcessor;
+using orbit_grpc_protos::kMissingInfo;
 
 const std::string kTrackValueLabelUnit = "MB";
 const std::string kTrackName = absl::StrFormat("System Memory Usage (%s)", kTrackValueLabelUnit);
@@ -72,7 +78,7 @@ std::string SystemMemoryTrack::GetLegendTooltips(size_t legend_index) const {
              "Derived from <i>MemTotal</i> - 'Unused' - 'Buffers / Cached', "
              "where <i>MemTotal</i> is a field in file <i>/proc/meminfo</i>.";
     case SeriesIndex::kBuffersOrCachedMb:
-      return "<b>Memory in buffer cache or pagecache.</b><br/><br/>"
+      return "<b>Memory in buffer cache or page cache.</b><br/><br/>"
              "Derived from <i>Buffers</i> + <i>Cached</i>, which are two fields in file "
              "<i>/proc/meminfo</i>.";
     case SeriesIndex::kUnusedMb:
@@ -81,6 +87,33 @@ std::string SystemMemoryTrack::GetLegendTooltips(size_t legend_index) const {
     default:
       UNREACHABLE();
   }
+}
+
+void SystemMemoryTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
+  int64_t total_kb = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(CaptureEventProcessor::SystemMemoryUsageEncodingIndex::kTotalKb)));
+  int64_t unused_kb = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(CaptureEventProcessor::SystemMemoryUsageEncodingIndex::kFreeKb)));
+  int64_t buffers_kb = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(CaptureEventProcessor::SystemMemoryUsageEncodingIndex::kBuffersKb)));
+  int64_t cached_kb = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(CaptureEventProcessor::SystemMemoryUsageEncodingIndex::kCachedKb)));
+  if (total_kb == kMissingInfo || unused_kb == kMissingInfo || buffers_kb == kMissingInfo ||
+      cached_kb == kMissingInfo) {
+    return;
+  }
+
+  constexpr double kMegabytesToKilobytes = 1024.0;
+  double total_mb = RoundPrecision(static_cast<double>(total_kb) / kMegabytesToKilobytes);
+  double unused_mb = RoundPrecision(static_cast<double>(unused_kb) / kMegabytesToKilobytes);
+  double buffers_or_cached_mb =
+      RoundPrecision(static_cast<double>(buffers_kb + cached_kb) / kMegabytesToKilobytes);
+  double used_mb = total_mb - unused_mb - buffers_or_cached_mb;
+  AddValues(timer_info.start(), {used_mb, buffers_or_cached_mb, unused_mb});
+
+  if (!GetValueUpperBound().has_value()) TrySetValueUpperBound(total_mb);
+
+  MemoryTrack<kSystemMemoryTrackDimension>::OnTimer(timer_info);
 }
 
 }  // namespace orbit_gl
