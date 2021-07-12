@@ -7,11 +7,17 @@
 #include <absl/strings/str_format.h>
 #include <absl/strings/substitute.h>
 
+#include "Api/EncodedEvent.h"
+#include "CaptureClient/CaptureEventProcessor.h"
 #include "DisplayFormats/DisplayFormats.h"
+#include "GrpcProtos/Constants.h"
 
 namespace orbit_gl {
 
 namespace {
+
+using orbit_capture_client::CaptureEventProcessor;
+using orbit_grpc_protos::kMissingInfo;
 
 const std::string kTrackValueLabelUnit = "MB";
 const std::string kTrackName = absl::StrFormat("CGroup Memory Usage (%s)", kTrackValueLabelUnit);
@@ -56,8 +62,8 @@ CGroupAndProcessMemoryTrack::CGroupAndProcessMemoryTrack(
 
 std::string CGroupAndProcessMemoryTrack::GetTooltip() const {
   return "Shows memory usage information for the target process and the memory cgroup it belongs "
-         "to. The target process will be killed when the overall used memory approaches the cgroup "
-         "limit.";
+         "to.<br/> The target process will be killed when the overall used memory approaches the "
+         "cgroup limit.";
 }
 
 void CGroupAndProcessMemoryTrack::TrySetValueUpperBound(double cgroup_limit_mb) {
@@ -104,6 +110,8 @@ std::string CGroupAndProcessMemoryTrack::GetLegendTooltips(size_t legend_index) 
 }
 
 std::string CGroupAndProcessMemoryTrack::GetValueUpperBoundTooltip() const {
+  // The developer instances have all of the same cgroup limits as the production instances, except
+  // the game cgroup limit. More detailed information can be found in go/gamelet-ram-budget.
   const std::string kGameCGroupName = "game";
   constexpr float kGameCGroupLimitGB = 7;
 
@@ -114,4 +122,41 @@ std::string CGroupAndProcessMemoryTrack::GetValueUpperBoundTooltip() const {
       "'--enforce-production-ram' to the 'ggp run' command</i>.",
       kGameCGroupName, kGameCGroupLimitGB);
 }
+
+void CGroupAndProcessMemoryTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
+  int64_t cgroup_limit_bytes = orbit_api::Decode<int64_t>(timer_info.registers(static_cast<size_t>(
+      CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupLimitBytes)));
+  int64_t cgroup_rss_bytes = orbit_api::Decode<int64_t>(timer_info.registers(static_cast<size_t>(
+      CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupRssBytes)));
+  int64_t cgroup_mapped_file_bytes = orbit_api::Decode<
+      int64_t>(timer_info.registers(static_cast<size_t>(
+      CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupMappedFileBytes)));
+  int64_t process_rss_anon_kb = orbit_api::Decode<int64_t>(timer_info.registers(static_cast<size_t>(
+      CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kProcessRssAnonKb)));
+
+  if (cgroup_limit_bytes == kMissingInfo || cgroup_rss_bytes == kMissingInfo ||
+      cgroup_mapped_file_bytes == kMissingInfo || process_rss_anon_kb == kMissingInfo) {
+    return;
+  }
+
+  constexpr double kMegabytesToBytes = 1024.0 * 1024.0;
+  constexpr double kMegabytesToKilobytes = 1024.0;
+  double cgroup_limit_mb =
+      RoundPrecision(static_cast<double>(cgroup_limit_bytes) / kMegabytesToBytes);
+  double cgroup_rss_anon_mb =
+      RoundPrecision(static_cast<double>(cgroup_rss_bytes) / kMegabytesToBytes);
+  double cgroup_mapped_file_mb =
+      RoundPrecision(static_cast<double>(cgroup_mapped_file_bytes) / kMegabytesToBytes);
+  double process_rss_anon_mb =
+      RoundPrecision(static_cast<double>(process_rss_anon_kb) / kMegabytesToKilobytes);
+  double other_rss_anon_mb = cgroup_rss_anon_mb - process_rss_anon_mb;
+  double unused_mb = cgroup_limit_mb - cgroup_rss_anon_mb - cgroup_mapped_file_mb;
+  AddValues(timer_info.start(),
+            {process_rss_anon_mb, other_rss_anon_mb, cgroup_mapped_file_mb, unused_mb});
+
+  if (!GetValueUpperBound().has_value()) TrySetValueUpperBound(cgroup_limit_mb);
+
+  MemoryTrack<kCGroupAndProcessMemoryTrackDimension>::OnTimer(timer_info);
+}
+
 }  // namespace orbit_gl

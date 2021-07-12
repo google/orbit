@@ -441,11 +441,6 @@ void TimeGraph::ProcessValueTrackingTimer(const TimerInfo& timer_info) {
   }
 }
 
-[[nodiscard]] static double RoundPrecision(double value, uint8_t num_of_decimal_digits) {
-  return std::round(value * std::pow(10, num_of_decimal_digits)) /
-         std::pow(10, num_of_decimal_digits);
-}
-
 void TimeGraph::ProcessSystemMemoryTrackingTimer(const TimerInfo& timer_info) {
   SystemMemoryTrack* track = track_manager_->GetSystemMemoryTrack();
   if (track == nullptr) {
@@ -465,55 +460,13 @@ void TimeGraph::ProcessCGroupAndProcessMemoryTrackingTimer(const TimerInfo& time
   uint64_t cgroup_name_hash = timer_info.registers(static_cast<size_t>(
       CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupNameHash));
   std::string cgroup_name = app_->GetStringManager()->Get(cgroup_name_hash).value_or("");
-  int64_t cgroup_limit_bytes = orbit_api::Decode<int64_t>(timer_info.registers(static_cast<size_t>(
-      CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupLimitBytes)));
-  int64_t cgroup_rss_bytes = orbit_api::Decode<int64_t>(timer_info.registers(static_cast<size_t>(
-      CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupRssBytes)));
-  int64_t cgroup_mapped_file_bytes = orbit_api::Decode<
-      int64_t>(timer_info.registers(static_cast<size_t>(
-      CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupMappedFileBytes)));
-  int64_t process_rss_anon_kb = orbit_api::Decode<int64_t>(timer_info.registers(static_cast<size_t>(
-      CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kProcessRssAnonKb)));
-
-  if (cgroup_limit_bytes == kMissingInfo || cgroup_rss_bytes == kMissingInfo ||
-      cgroup_mapped_file_bytes == kMissingInfo || process_rss_anon_kb == kMissingInfo) {
-    return;
-  }
+  if (cgroup_name.empty()) return;
 
   CGroupAndProcessMemoryTrack* track = track_manager_->GetCGroupAndProcessMemoryTrack();
   if (track == nullptr) {
     track = track_manager_->CreateAndGetCGroupAndProcessMemoryTrack(cgroup_name);
   }
-
-  constexpr double kMegabytesToBytes = 1024.0 * 1024.0;
-  constexpr double kMegabytesToKilobytes = 1024.0;
-  CHECK(track->GetNumberOfDecimalDigits().has_value());
-  uint8_t num_of_decimal_digits = track->GetNumberOfDecimalDigits().value();
-  double cgroup_limit_mb = RoundPrecision(
-      static_cast<double>(cgroup_limit_bytes) / kMegabytesToBytes, num_of_decimal_digits);
-  double cgroup_rss_anon_mb = RoundPrecision(
-      static_cast<double>(cgroup_rss_bytes) / kMegabytesToBytes, num_of_decimal_digits);
-  double cgroup_mapped_file_mb = RoundPrecision(
-      static_cast<double>(cgroup_mapped_file_bytes) / kMegabytesToBytes, num_of_decimal_digits);
-  double process_rss_anon_mb = RoundPrecision(
-      static_cast<double>(process_rss_anon_kb) / kMegabytesToKilobytes, num_of_decimal_digits);
-  double other_rss_anon_mb = cgroup_rss_anon_mb - process_rss_anon_mb;
-  double unused_mb = cgroup_limit_mb - cgroup_rss_anon_mb - cgroup_mapped_file_mb;
-
-  std::array<double, orbit_gl::kCGroupAndProcessMemoryTrackDimension> values;
-  values[static_cast<size_t>(CGroupAndProcessMemoryTrack::SeriesIndex::kProcessRssAnonMb)] =
-      process_rss_anon_mb;
-  values[static_cast<size_t>(CGroupAndProcessMemoryTrack::SeriesIndex::kOtherRssAnonMb)] =
-      other_rss_anon_mb;
-  values[static_cast<size_t>(CGroupAndProcessMemoryTrack::SeriesIndex::kCGroupMappedFileMb)] =
-      cgroup_mapped_file_mb;
-  values[static_cast<size_t>(CGroupAndProcessMemoryTrack::SeriesIndex::kUnusedMb)] = unused_mb;
-  track->AddValues(timer_info.start(), values);
   track->OnTimer(timer_info);
-
-  if (!track->GetValueUpperBound().has_value()) {
-    track->TrySetValueUpperBound(cgroup_limit_mb);
-  }
 }
 
 void TimeGraph::ProcessPagefaultTrackingTimer(const orbit_client_protos::TimerInfo& timer_info) {

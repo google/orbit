@@ -26,6 +26,8 @@ class CGroupAndProcessMemoryTrack final
 
   void TrySetValueUpperBound(double cgroup_limit_mb);
 
+  void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
+
   enum class SeriesIndex {
     kProcessRssAnonMb = 0,
     kOtherRssAnonMb = 1,
