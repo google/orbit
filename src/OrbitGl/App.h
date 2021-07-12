@@ -399,6 +399,9 @@ class OrbitApp final : public DataViewFactory,
   void SetMemorySamplingPeriodMs(uint64_t memory_sampling_period_ms) {
     data_manager_->set_memory_sampling_period_ms(memory_sampling_period_ms);
   }
+  [[nodiscard]] uint64_t GetMemorySamplingPeriodMs() const {
+    return data_manager_->memory_sampling_period_ms();
+  }
   void SetMemoryWarningThresholdKb(uint64_t memory_warning_threshold_kb) {
     data_manager_->set_memory_warning_threshold_kb(memory_warning_threshold_kb);
   }

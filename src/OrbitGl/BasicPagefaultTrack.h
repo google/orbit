@@ -24,7 +24,7 @@ class BasicPagefaultTrack : public LineGraphTrack<kBasicPagefaultTrackDimension>
  public:
   explicit BasicPagefaultTrack(Track* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                                TimeGraphLayout* layout, const std::string& name,
-                               const std::string& cgroup_name,
+                               const std::string& cgroup_name, uint64_t memory_sampling_period_ms,
                                const orbit_client_model::CaptureData* capture_data,
                                uint32_t indentation_level = 0);
 
@@ -55,6 +55,7 @@ class BasicPagefaultTrack : public LineGraphTrack<kBasicPagefaultTrackDimension>
   // series_name[index_of_series_to_highlight_].
   std::optional<size_t> index_of_series_to_highlight_ = std::nullopt;
   std::string cgroup_name_;
+  uint64_t memory_sampling_period_ms_;
 
  private:
   [[nodiscard]] bool IsCollapsed() const override;

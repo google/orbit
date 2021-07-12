@@ -21,7 +21,7 @@ class PagefaultTrack : public Track {
  public:
   explicit PagefaultTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                           orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                          const std::string& cgroup_name,
+                          const std::string& cgroup_name, uint64_t memory_sampling_period_ms,
                           const orbit_client_model::CaptureData* capture_data,
                           uint32_t indentation_level = 0);
 
@@ -54,6 +54,7 @@ class PagefaultTrack : public Track {
       uint64_t timestamp_ns, const std::array<double, kBasicPagefaultTrackDimension>& values) {
     minor_pagefault_track_->AddValuesAndUpdateAnnotations(timestamp_ns, values);
   }
+  void SetMemorySamplingPeriodMs(uint64_t memory_sampling_period_ms);
 
  private:
   void UpdatePositionOfSubtracks();

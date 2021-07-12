@@ -16,6 +16,7 @@ class MajorPagefaultTrack final : public BasicPagefaultTrack {
  public:
   explicit MajorPagefaultTrack(Track* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                                TimeGraphLayout* layout, const std::string& cgroup_name,
+                               uint64_t memory_sampling_period_ms,
                                const orbit_client_model::CaptureData* capture_data,
                                uint32_t indentation_level = 0);
 
