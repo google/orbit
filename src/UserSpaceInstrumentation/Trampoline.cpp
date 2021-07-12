@@ -529,7 +529,10 @@ ErrorMessageOr<AddressRange> FindAddressRangeForTrampoline(
                                         code_range.start, code_range.end));
   }
   while (optional_range_index.value() > 0) {
-    // Place directly to the left of the take interval we are in...
+    // Place directly to the left of the taken interval we are in...
+    if (unavailable_ranges[optional_range_index.value()].start < size) {
+      break;
+    }
     uint64_t trampoline_address = unavailable_ranges[optional_range_index.value()].start - size;
     // ... but round down to page boundary.
     trampoline_address = (trampoline_address / page_size) * page_size;
@@ -554,6 +557,11 @@ ErrorMessageOr<AddressRange> FindAddressRangeForTrampoline(
                                         code_range.start, code_range.end));
   }
   do {
+    // Check if we are so close to the end of the address space such that rounding up would
+    // overflow.
+    if (unavailable_ranges[optional_range_index.value()].end > kMax64BitAdress - (page_size - 1)) {
+      break;
+    }
     const uint64_t trampoline_address =
         ((unavailable_ranges[optional_range_index.value()].end + (page_size - 1)) / page_size) *
         page_size;

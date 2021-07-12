@@ -119,6 +119,7 @@ TEST(TrampolineTest, HighestIntersectingAddressRange) {
 }
 
 TEST(TrampolineTest, FindAddressRangeForTrampoline) {
+  constexpr uint64_t k1Kb = 0x400;
   constexpr uint64_t k64Kb = 0x10000;
   constexpr uint64_t kOneMb = 0x100000;
   constexpr uint64_t k256Mb = 0x10000000;
@@ -225,11 +226,39 @@ TEST(TrampolineTest, FindAddressRangeForTrampoline) {
       kUnavailableRanges9, {0x12 * kOneGb + kOneMb - 1, 0x12 * kOneGb + 2 * kOneMb}, kOneMb);
   ASSERT_TRUE(address_range_or_error.has_error());
 
-  // Fail on malformed into: first address range does not start at zero.
+  // Fail on malformed input: first address range does not start at zero.
   const std::vector<AddressRange> kUnavailableRanges10 = {{k64Kb, kOneGb}};
   EXPECT_DEATH(
       auto result = FindAddressRangeForTrampoline(kUnavailableRanges10, {k64Kb, kOneGb}, kOneMb),
       "needs to start at zero");
+
+  // Placement to the left fails since the requested memory chunk is too big. So we place to the
+  // right which fits trivially.
+  // The special case here is that the requested memory size (k256Mb + k64Kb) is larger than the
+  // left interval border of the second interval (k256Mb). This produced an artithmetic overflow in
+  // a previous version of the algorithm.
+  const std::vector<AddressRange> kUnavailableRanges11 = {{0, k64Kb}, {k256Mb, kOneGb}};
+  address_range_or_error =
+      FindAddressRangeForTrampoline(kUnavailableRanges11, {k256Mb, kOneGb}, k256Mb + k64Kb);
+  ASSERT_FALSE(address_range_or_error.has_error());
+  EXPECT_EQ(kOneGb, address_range_or_error.value().start);
+
+  // Placement to the left fails, placement to the right fails also because we are close to the end
+  // of the address space. This produced an artithmetic overflow in a previous version of the
+  // algorithm.
+  const std::vector<AddressRange> kUnavailableRanges12 = {
+      {0, k64Kb},
+      {UINT64_MAX - 10 * kOneGb, UINT64_MAX - k64Kb - 1},
+      {UINT64_MAX - k64Kb, UINT64_MAX - k1Kb}};
+  address_range_or_error = FindAddressRangeForTrampoline(
+      kUnavailableRanges12, {UINT64_MAX - k64Kb, UINT64_MAX - k1Kb}, k64Kb);
+  ASSERT_THAT(address_range_or_error, HasError("No place to fit"));
+
+  // We can not fit anything close to a range larger than 2GB.
+  const std::vector<AddressRange> kUnavailableRanges13 = {{0, k64Kb}, {kOneGb, 4 * kOneGb}};
+  address_range_or_error =
+      FindAddressRangeForTrampoline(kUnavailableRanges13, {kOneGb, 4 * kOneGb}, k64Kb);
+  ASSERT_THAT(address_range_or_error, HasError("No place to fit"));
 }
 
 TEST(TrampolineTest, AllocateMemoryForTrampolines) {
