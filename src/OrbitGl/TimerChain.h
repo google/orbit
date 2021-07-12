@@ -14,7 +14,6 @@
 #include "ClientData/TextBox.h"
 #include "OrbitBase/Logging.h"
 
-static constexpr int kBlockSize = 1024;
 class TimerChain;
 
 // TimerBlock is a straightforward specialization of Block (see BlockChain.h) with the added bonus
@@ -57,6 +56,8 @@ class TimerBlock {
   const orbit_client_data::TextBox& operator[](std::size_t idx) const { return data_[idx]; }
 
  private:
+  static constexpr size_t kBlockSize = 1024;
+
   TimerBlock* prev_;
   TimerBlock* next_;
   std::vector<orbit_client_data::TextBox> data_;
