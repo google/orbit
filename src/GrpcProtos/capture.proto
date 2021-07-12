@@ -17,6 +17,7 @@ message InstrumentedFunction {
   string file_build_id = 6;
   uint64 file_offset = 2;
   uint64 function_id = 3;
+  uint64 function_size = 7;
 
   enum FunctionType {
     kRegular = 0;
@@ -39,6 +40,7 @@ message ApiFunction {
   uint64 api_version = 5;
 }
 
+// NextId: 18
 message CaptureOptions {
   bool trace_context_switches = 1;
   int32 pid = 2;
@@ -52,6 +54,8 @@ message CaptureOptions {
     kDwarf = 2;
   }
   UnwindingMethod unwinding_method = 4;
+
+  bool enable_user_space_instrumentation = 17;
 
   repeated InstrumentedFunction instrumented_functions = 5;
 
@@ -437,6 +441,12 @@ message ErrorEnablingOrbitApiEvent {
   bytes message = 2;
 }
 
+message ErrorEnablingUserSpaceInstrumentationEvent {
+  uint64 timestamp_ns = 1;
+  // This is a string, we use bytes to avoid UTF-8 validation.
+  bytes message = 2;
+}
+
 message ClockResolutionEvent {
   uint64 timestamp_ns = 1;
   uint64 clock_resolution_ns = 2;
@@ -453,6 +463,7 @@ message MetadataEvent {
     WarningEvent warning_event = 1;
     InfoEvent info_event = 2;
     ErrorEnablingOrbitApiEvent error_enabling_orbit_api_event = 3;
+    ErrorEnablingUserSpaceInstrumentationEvent error_enabling_user_space_instrumentation_event = 6;
     ClockResolutionEvent clock_resolution_event = 4;
     ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event = 5;
   }

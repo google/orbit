@@ -115,17 +115,18 @@ struct RelocatedInstruction {
 [[nodiscard]] uint64_t GetMaxTrampolineSize();
 
 // Creates a trampoline for the function at `function_address`. The trampoline is built at
-// `trampoline_address`. The trampoline will call `payload_address` with `function_address` as a
-// parameter. `function` contains the beginning of the function (kMaxFunctionPrologueBackupSize
-// bytes or less if the function shorter). `capstone_handle` is a handle to the capstone
-// disassembler library returned by cs_open. The function returns an error if it was not possible to
-// instrument the function. For details on that see the comments at AppendRelocatedPrologueCode. If
-// the function is successful it will insert an address pair into `relocation_map` for each
-// instruction it relocated from the beginning of the function into the trampoline (needed for
-// moving instruction pointers away from the overwritten bytes at the beginning of the function,
-// compare MoveInstructionPointersOutOfOverwrittenCode below). The return value is the address of
-// the first instruction not relocated into the trampoline (i.e. the address the trampoline jump
-// back to).
+// `trampoline_address`. The trampoline will call `entry_payload_function_address` with
+// `return_address` and a function id as a parameter (this function id is written into the
+// trampoline by `InstrumentFunction`). `function` contains the beginning of the function
+// (kMaxFunctionPrologueBackupSize bytes or less if the function shorter). `capstone_handle` is a
+// handle to the capstone disassembler library returned by cs_open. The function returns an error if
+// it was not possible to instrument the function. For details on that see the comments at
+// AppendRelocatedPrologueCode. If the function is successful it will insert an address pair into
+// `relocation_map` for each instruction it relocated from the beginning of the function into the
+// trampoline (needed for moving instruction pointers away from the overwritten bytes at the
+// beginning of the function, compare MoveInstructionPointersOutOfOverwrittenCode below). The return
+// value is the address of the first instruction not relocated into the trampoline (i.e. the address
+// the trampoline jump back to).
 [[nodiscard]] ErrorMessageOr<uint64_t> CreateTrampoline(
     pid_t pid, uint64_t function_address, const std::vector<uint8_t>& function,
     uint64_t trampoline_address, uint64_t entry_payload_function_address,
@@ -152,6 +153,7 @@ struct RelocatedInstruction {
 // of the fuction with a jump to `trampoline_address`. The trampoline needs to be constructed with
 // `CreateTrampoline` above.
 [[nodiscard]] ErrorMessageOr<void> InstrumentFunction(pid_t pid, uint64_t function_address,
+                                                      uint64_t function_id,
                                                       uint64_t address_of_instruction_after_jump,
                                                       uint64_t trampoline_address);
 

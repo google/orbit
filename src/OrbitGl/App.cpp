@@ -521,6 +521,23 @@ void OrbitApp::OnMetadataEvent(const orbit_grpc_protos::MetadataEvent& metadata_
         }
       } break;
 
+      case orbit_grpc_protos::MetadataEvent::kErrorEnablingUserSpaceInstrumentationEvent: {
+        main_window_->AppendToCaptureLog(
+            MainWindowInterface::CaptureLogSeverity::kSevereWarning,
+            GetCaptureTimeAt(
+                metadata_event.error_enabling_user_space_instrumentation_event().timestamp_ns()),
+            metadata_event.error_enabling_user_space_instrumentation_event().message());
+
+        if (!IsLoadingCapture()) {
+          constexpr const char* kDontShowAgainErrorEnablingUserSpaceInstrumentationWarningKey =
+              "DontShowAgainErrorEnablingUserSpaceInstrumentationWarning";
+          main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
+              "Could not enable user space instrumentation",
+              metadata_event.error_enabling_user_space_instrumentation_event().message(),
+              kDontShowAgainErrorEnablingUserSpaceInstrumentationWarningKey);
+        }
+      } break;
+
       case orbit_grpc_protos::MetadataEvent::kClockResolutionEvent: {
         constexpr uint64_t kClockResolutionWarningThresholdNs = 10 * 1000;
         uint64_t timestamp_ns = metadata_event.clock_resolution_event().timestamp_ns();

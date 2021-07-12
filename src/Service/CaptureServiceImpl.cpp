@@ -28,6 +28,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
 #include "ProducerEventProcessor.h"
+#include "UserSpaceInstrumentation/InstrumentProcess.h"
 #include "capture.pb.h"
 
 namespace orbit_service {
@@ -169,6 +170,26 @@ class GrpcCaptureEventSender final : public CaptureEventSender {
   uint64_t total_number_of_bytes_sent_ = 0;
 };
 
+// Remove the functions with ids in `filter_function_ids` from instrumented_functions in
+// `capture_options`.
+void FilerOutInstrumentedFunctionsFromCaptureOptions(
+    const absl::flat_hash_set<uint64_t>& filter_function_ids, CaptureOptions& capture_options) {
+  // Move the entries that need to be deleted to the end of the repeated field and remove them with
+  // one single call to `DeleteSubrange`. This avoids quadratic complexity.
+  int first_to_delete = 0;
+  for (int i = 0; i < capture_options.instrumented_functions_size(); i++) {
+    const uint64_t function_id = capture_options.instrumented_functions(i).function_id();
+    if (!filter_function_ids.contains(function_id)) {
+      first_to_delete++;
+      if (i > first_to_delete - 1) {
+        capture_options.mutable_instrumented_functions()->SwapElements(i, first_to_delete - 1);
+      }
+    }
+  }
+  capture_options.mutable_instrumented_functions()->DeleteSubrange(
+      first_to_delete, capture_options.instrumented_functions_size() - first_to_delete);
+}
+
 }  // namespace
 
 // LinuxTracingHandler::Stop is blocking, until all perf_event_open events have been processed
@@ -256,6 +277,18 @@ static ProducerCaptureEvent CreateErrorEnablingOrbitApiEvent(uint64_t timestamp_
   return event;
 }
 
+static ProducerCaptureEvent CreateErrorEnablingUserSpaceInstrumentationEvent(uint64_t timestamp_ns,
+                                                                             std::string message) {
+  ProducerCaptureEvent event;
+  MetadataEvent* metadata_event = event.mutable_metadata_event();
+  orbit_grpc_protos::ErrorEnablingUserSpaceInstrumentationEvent*
+      error_enabling_user_space_instrumentation_event =
+          metadata_event->mutable_error_enabling_user_space_instrumentation_event();
+  error_enabling_user_space_instrumentation_event->set_timestamp_ns(timestamp_ns);
+  error_enabling_user_space_instrumentation_event->set_message(std::move(message));
+  return event;
+}
+
 static ProducerCaptureEvent CreateWarningEvent(uint64_t timestamp_ns, std::string message) {
   ProducerCaptureEvent event;
   MetadataEvent* metadata_event = event.mutable_metadata_event();
@@ -307,6 +340,26 @@ grpc::Status CaptureServiceImpl::Capture(
     }
   }
 
+  // We need to filter out the functions instrumented by user space instrumentation.
+  CaptureOptions capture_options_without_already_instrumented_functions;
+  capture_options_without_already_instrumented_functions.CopyFrom(capture_options);
+
+  // Enable user space instrumentation.
+  std::optional<std::string> error_enabling_user_space_instrumentation;
+  if (capture_options.enable_user_space_instrumentation()) {
+    LOG("********************* user space instrumentation ");
+    auto result = orbit_user_space_instrumentation::InstrumentProcess(capture_options);
+    if (result.has_error()) {
+      error_enabling_user_space_instrumentation = absl::StrFormat(
+          "Could not enable user space instrumentation: %s", result.error().message());
+    } else {
+      LOG("Using user space instrumentation for %u out of %u instrumented functions.",
+          result.value().size(), capture_options.instrumented_functions_size());
+      FilerOutInstrumentedFunctionsFromCaptureOptions(
+          result.value(), capture_options_without_already_instrumented_functions);
+    }
+  }
+
   uint64_t capture_start_timestamp_ns = orbit_base::CaptureTimestampNs();
   producer_event_processor->ProcessEvent(
       orbit_grpc_protos::kRootProducerId,
@@ -323,7 +376,15 @@ grpc::Status CaptureServiceImpl::Capture(
                                          std::move(error_enabling_orbit_api.value())));
   }
 
-  tracing_handler.Start(capture_options);
+  if (error_enabling_user_space_instrumentation.has_value()) {
+    producer_event_processor->ProcessEvent(
+        orbit_grpc_protos::kRootProducerId,
+        CreateErrorEnablingUserSpaceInstrumentationEvent(
+            capture_start_timestamp_ns,
+            std::move(error_enabling_user_space_instrumentation.value())));
+  }
+
+  tracing_handler.Start(capture_options_without_already_instrumented_functions);
 
   memory_info_handler.Start(request.capture_options());
   for (CaptureStartStopListener* listener : capture_start_stop_listeners_) {
@@ -347,6 +408,19 @@ grpc::Status CaptureServiceImpl::Capture(
           CreateWarningEvent(
               orbit_base::CaptureTimestampNs(),
               absl::StrFormat("Could not disable Orbit API: %s", result.error().message())));
+    }
+  }
+
+  // Disable user space instrumentation.
+  if (capture_options.enable_user_space_instrumentation()) {
+    auto result_tmp = orbit_user_space_instrumentation::UninstrumentProcess(capture_options);
+    if (result_tmp.has_error()) {
+      ERROR("Disabling user space instrumentation: %s", result_tmp.error().message());
+      producer_event_processor->ProcessEvent(
+          orbit_grpc_protos::kRootProducerId,
+          CreateWarningEvent(orbit_base::CaptureTimestampNs(),
+                             absl::StrFormat("Could not disable user space instrumentation: %s",
+                                             result_tmp.error().message())));
     }
   }
 

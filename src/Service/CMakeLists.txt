@@ -60,7 +60,8 @@ target_link_libraries(ServiceLib PUBLIC
         MemoryTracing
         ObjectUtils
         OrbitVersion
-        ProducerSideChannel)
+        ProducerSideChannel
+        UserSpaceInstrumentation)
 
 project(OrbitService)
 add_executable(OrbitService main.cpp)

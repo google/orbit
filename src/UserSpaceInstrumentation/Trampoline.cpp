@@ -44,6 +44,13 @@ size_t kSizeOfJmp = 5;
 // generous) upper bound.
 size_t kMaxRelocatedPrologueSize = kSizeOfJmp * 16;
 
+// This constants give the us the offset of the function id in the trampolines.
+// Since the function_id of a function changes from one profiling run to the next we need to
+// overwrite the id before each run. This happens in `InstrumentFunvtion`.
+// Whenever the code of the trampoline is changed this constants might need to be adjusted as well.
+// There is a CHECK in the code below to make sure the number is correct.
+constexpr uint64_t kOffsetOfFunctiunIdInCallToEntryPayload = 105;
+
 [[nodiscard]] std::string InstructionBytesAsString(cs_insn* instruction) {
   std::string result;
   for (int i = 0; i < instruction->size; i++) {
@@ -180,12 +187,10 @@ void AppendBackupCode(MachineCode& trampoline) {
   }
 }
 
-// Call the entry payload function with the return address and the address of the
-// instrumented function as parameters. Then overwrite the return address with
-// `return_trampoline_address`.
+// Call the entry payload function with the return address and the id of the instrumented function
+// as parameters. Then overwrite the return address with `return_trampoline_address`.
 void AppendCallToEntryPayloadAndOverwriteReturnAddress(uint64_t entry_payload_function_address,
                                                        uint64_t return_trampoline_address,
-                                                       uint64_t function_address,
                                                        MachineCode& trampoline) {
   // At this point rax is the rsp after pushing the general purpose registers, so adding 0x40 gets
   // us the location of the return address (see above in `AppendBackupCode`).
@@ -193,7 +198,7 @@ void AppendCallToEntryPayloadAndOverwriteReturnAddress(uint64_t entry_payload_fu
   // add rax, 0x40                                   48 83 c0 40
   // push rax                                        50
   // mov rdi, (rax)                                  48 8b 38
-  // mov rsi, function_address                       48 be addr
+  // mov rsi, function_id                            48 be function_id
   // mov rax, entry_payload_function_address         48 b8 addr
   // call rax                                        ff d0
   // pop rax                                         58
@@ -202,8 +207,10 @@ void AppendCallToEntryPayloadAndOverwriteReturnAddress(uint64_t entry_payload_fu
   trampoline.AppendBytes({0x48, 0x83, 0xc0, 0x40})
       .AppendBytes({0x50})
       .AppendBytes({0x48, 0x8b, 0x38})
-      .AppendBytes({0x48, 0xbe})
-      .AppendImmediate64(function_address)
+      .AppendBytes({0x48, 0xbe});
+  CHECK(trampoline.GetResultAsVector().size() == kOffsetOfFunctiunIdInCallToEntryPayload);
+  // The value of function id will be overwritten by every call to `InstrumentFunction`.
+  trampoline.AppendImmediate64(0)
       .AppendBytes({0x48, 0xb8})
       .AppendImmediate64(entry_payload_function_address)
       .AppendBytes({0xff, 0xd0})
@@ -529,7 +536,10 @@ ErrorMessageOr<AddressRange> FindAddressRangeForTrampoline(
                                         code_range.start, code_range.end));
   }
   while (optional_range_index.value() > 0) {
-    // Place directly to the left of the take interval we are in...
+    // Place directly to the left of the taken interval we are in...
+    if (unavailable_ranges[optional_range_index.value()].start < size) {
+      break;
+    }
     uint64_t trampoline_address = unavailable_ranges[optional_range_index.value()].start - size;
     // ... but round down to page boundary.
     trampoline_address = (trampoline_address / page_size) * page_size;
@@ -735,8 +745,7 @@ uint64_t GetMaxTrampolineSize() {
     MachineCode unused_code;
     AppendBackupCode(unused_code);
     AppendCallToEntryPayloadAndOverwriteReturnAddress(/*entry_payload_function_address=*/0,
-                                                      /*return_trampoline_address=*/0,
-                                                      /*function_address=*/0, unused_code);
+                                                      /*return_trampoline_address=*/0, unused_code);
     AppendRestoreCode(unused_code);
     unused_code.AppendBytes(std::vector<uint8_t>(kMaxRelocatedPrologueSize, 0));
     auto result =
@@ -760,8 +769,8 @@ ErrorMessageOr<uint64_t> CreateTrampoline(pid_t pid, uint64_t function_address,
   MachineCode trampoline;
   // Add code to backup register state, execute the payload and restore the register state.
   AppendBackupCode(trampoline);
-  AppendCallToEntryPayloadAndOverwriteReturnAddress(
-      entry_payload_function_address, return_trampoline_address, function_address, trampoline);
+  AppendCallToEntryPayloadAndOverwriteReturnAddress(entry_payload_function_address,
+                                                    return_trampoline_address, trampoline);
   AppendRestoreCode(trampoline);
 
   // Relocate prologue into trampoline.
@@ -807,7 +816,7 @@ ErrorMessageOr<void> CreateReturnTrampoline(pid_t pid, uint64_t exit_payload_fun
   return outcome::success();
 }
 
-ErrorMessageOr<void> InstrumentFunction(pid_t pid, uint64_t function_address,
+ErrorMessageOr<void> InstrumentFunction(pid_t pid, uint64_t function_address, uint64_t function_id,
                                         uint64_t address_after_prologue,
                                         uint64_t trampoline_address) {
   MachineCode jump;
@@ -828,10 +837,15 @@ ErrorMessageOr<void> InstrumentFunction(pid_t pid, uint64_t function_address,
   while (jump.GetResultAsVector().size() < address_after_prologue - function_address) {
     jump.AppendBytes({0x90});
   }
-  auto write_result_or_error = WriteTraceesMemory(pid, function_address, jump.GetResultAsVector());
-  if (write_result_or_error.has_error()) {
-    return write_result_or_error.error();
-  }
+  OUTCOME_TRY(WriteTraceesMemory(pid, function_address, jump.GetResultAsVector()));
+
+  // Write the current function_id into the trampoline.
+  MachineCode function_id_as_bytes;
+  function_id_as_bytes.AppendImmediate64(function_id);
+
+  OUTCOME_TRY(WriteTraceesMemory(pid, trampoline_address + kOffsetOfFunctiunIdInCallToEntryPayload,
+                                 function_id_as_bytes.GetResultAsVector()));
+
   return outcome::success();
 }
 

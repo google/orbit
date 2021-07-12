@@ -18,9 +18,9 @@ extern "C" uint64_t TrivialSum(uint64_t p0, uint64_t p1, uint64_t p2, uint64_t p
                                uint64_t p5);
 
 // Payload called on entry of an instrumented function. Needs to record the return address of the
-// function (in order to have it available in `ExitPayload`). `function_address` is the address of
-// the instrumented function.
-extern "C" void EntryPayload(uint64_t return_address, uint64_t function_address);
+// function (in order to have it available in `ExitPayload`). `function_id` is the id of the
+// instrumented function.
+extern "C" void EntryPayload(uint64_t return_address, uint64_t function_id);
 
 // Payload called on exit of an instrumented function. Needs to return the actual return address of
 // the function such that the execution can be continued there.
@@ -31,8 +31,8 @@ extern "C" uint64_t ExitPayload();
 // properly. The two functions below do the same thing for SSE/AVX registers that can be used to
 // hand over floating point parameters.
 extern "C" void EntryPayloadClobberParameterRegisters(uint64_t return_address,
-                                                      uint64_t function_address);
-extern "C" void EntryPayloadClobberXmmRegisters(uint64_t return_address, uint64_t function_address);
-extern "C" void EntryPayloadClobberYmmRegisters(uint64_t return_address, uint64_t function_address);
+                                                      uint64_t function_id);
+extern "C" void EntryPayloadClobberXmmRegisters(uint64_t return_address, uint64_t function_id);
+extern "C" void EntryPayloadClobberYmmRegisters(uint64_t return_address, uint64_t function_id);
 
 #endif  // USER_SPACE_INSTRUMENTATION_TEST_LIB_H_

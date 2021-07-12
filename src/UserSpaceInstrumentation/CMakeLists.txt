@@ -21,7 +21,8 @@ target_include_directories(UserSpaceInstrumentation PRIVATE
 target_sources(UserSpaceInstrumentation PUBLIC
         include/UserSpaceInstrumentation/Attach.h
         include/UserSpaceInstrumentation/ExecuteInProcess.h
-        include/UserSpaceInstrumentation/InjectLibraryInTracee.h)        
+        include/UserSpaceInstrumentation/InjectLibraryInTracee.h        
+        include/UserSpaceInstrumentation/InstrumentProcess.h)        
 
 target_sources(UserSpaceInstrumentation PRIVATE
         AccessTraceesMemory.cpp
@@ -36,6 +37,9 @@ target_sources(UserSpaceInstrumentation PRIVATE
         FindFunctionAddress.h
         FindFunctionAddress.cpp
         InjectLibraryInTracee.cpp
+        InstrumentedProcess.cpp
+        InstrumentedProcess.h
+        InstrumentProcess.cpp
         MachineCode.cpp
         MachineCode.h
         RegisterState.cpp
@@ -44,10 +48,31 @@ target_sources(UserSpaceInstrumentation PRIVATE
         Trampoline.h)
 
 target_link_libraries(UserSpaceInstrumentation PUBLIC
+        GrpcProtos
         LinuxTracing
         OrbitBase
         CONAN_PKG::abseil
         CONAN_PKG::capstone)
+
+# This lib is injected into the target process Orbit is profiling. It is providing the functions
+# executed on function entry/exit of an instrumented function.
+add_library(InjectUserSpaceInstrumentation SHARED)
+
+target_compile_options(InjectUserSpaceInstrumentation PRIVATE ${STRICT_COMPILE_FLAGS})
+
+target_compile_features(InjectUserSpaceInstrumentation PUBLIC cxx_std_17)
+
+target_include_directories(InjectUserSpaceInstrumentation PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR})
+
+target_sources(InjectUserSpaceInstrumentation PRIVATE
+        InjectUserSpaceInstrumentation.cpp
+        InjectUserSpaceInstrumentation.h)
+
+target_link_libraries(InjectUserSpaceInstrumentation PUBLIC
+        CaptureEventProducer
+        OrbitBase
+        ProducerSideChannel)
 
 # This test lib is merely used in UserSpaceInstrumentationTests below. The
 # binary libUserSpaceInstrumentationTestLib.so created from this target is used

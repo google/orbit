@@ -507,6 +507,8 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
             UNREACHABLE();
           case orbit_grpc_protos::MetadataEvent::kErrorEnablingOrbitApiEvent:
             UNREACHABLE();
+          case orbit_grpc_protos::MetadataEvent::kErrorEnablingUserSpaceInstrumentationEvent:
+            UNREACHABLE();
           case orbit_grpc_protos::MetadataEvent::kClockResolutionEvent:
             UNREACHABLE();
           case orbit_grpc_protos::MetadataEvent::kErrorsWithPerfEventOpenEvent:
