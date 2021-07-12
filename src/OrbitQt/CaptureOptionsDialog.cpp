@@ -39,6 +39,10 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   if (!absl::GetFlag(FLAGS_devmode)) {
     ui_->introspectionCheckBox->hide();
   }
+
+  if (absl::GetFlag(FLAGS_devmode)) {
+    ui_->userspaceCheckBox->show();
+  }
 }
 
 bool CaptureOptionsDialog::GetCollectThreadStates() const {
@@ -61,6 +65,14 @@ void CaptureOptionsDialog::SetEnableIntrospection(bool enable_introspection) {
 
 bool CaptureOptionsDialog::GetEnableIntrospection() const {
   return ui_->introspectionCheckBox->isChecked();
+}
+
+void CaptureOptionsDialog::SetEnableUserSpaceInstrumentation(bool enable) {
+  ui_->userspaceCheckBox->setChecked(enable);
+}
+
+bool CaptureOptionsDialog::GetEnableUserSpaceInstrumentation() const {
+  return ui_->userspaceCheckBox->isChecked();
 }
 
 void CaptureOptionsDialog::SetLimitLocalMarkerDepthPerCommandBuffer(

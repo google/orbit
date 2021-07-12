@@ -81,6 +81,13 @@ class DataManager final {
   }
   [[nodiscard]] bool get_enable_introspection() const { return enable_introspection_; }
 
+  void set_enable_user_space_instrumentation(bool enable) {
+    enable_user_space_instrumentation_ = enable;
+  }
+  [[nodiscard]] bool enable_user_space_instrumentation() const {
+    return enable_user_space_instrumentation_;
+  }
+
   void set_samples_per_second(double samples_per_second) {
     samples_per_second_ = samples_per_second;
   }
@@ -138,6 +145,7 @@ class DataManager final {
   bool collect_thread_states_ = false;
   bool enable_api_ = false;
   bool enable_introspection_ = false;
+  bool enable_user_space_instrumentation_ = false;
   uint64_t max_local_marker_depth_per_command_buffer_ = std::numeric_limits<uint64_t>::max();
   double samples_per_second_ = 0;
   uint16_t stack_dump_size_ = 0;

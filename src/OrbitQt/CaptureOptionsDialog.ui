@@ -86,6 +86,16 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QCheckBox" name="userspaceCheckBox">
+          <property name="text">
+           <string>Enable user space instrumentation</string>
+          </property>
+          <property name="visible">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>		
        </layout>
       </widget>
      </item>

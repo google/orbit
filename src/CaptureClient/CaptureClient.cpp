@@ -74,8 +74,8 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
     TracepointInfoSet selected_tracepoints, double samples_per_second, uint16_t stack_dump_size,
     UnwindingMethod unwinding_method, bool collect_scheduling_info, bool collect_thread_state,
     bool collect_gpu_jobs, bool enable_api, bool enable_introspection,
-    uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
-    uint64_t memory_sampling_period_ms, bool enable_cgroup_memory,
+    bool enable_user_space_instrumentation, uint64_t max_local_marker_depth_per_command_buffer,
+    bool collect_memory_info, uint64_t memory_sampling_period_ms, bool enable_cgroup_memory,
     std::unique_ptr<CaptureEventProcessor> capture_event_processor) {
   absl::MutexLock lock(&state_mutex_);
   if (state_ != State::kStopped) {
@@ -91,15 +91,17 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
       [this, process_id, &module_manager, selected_functions = std::move(selected_functions),
        selected_tracepoints = std::move(selected_tracepoints), samples_per_second, stack_dump_size,
        unwinding_method, collect_scheduling_info, collect_thread_state, collect_gpu_jobs,
-       enable_api, enable_introspection, max_local_marker_depth_per_command_buffer,
-       collect_memory_info, memory_sampling_period_ms, enable_cgroup_memory,
+       enable_api, enable_introspection, enable_user_space_instrumentation,
+       max_local_marker_depth_per_command_buffer, collect_memory_info, memory_sampling_period_ms,
+       enable_cgroup_memory,
        capture_event_processor = std::move(capture_event_processor)]() mutable {
-        return CaptureSync(
-            process_id, module_manager, selected_functions, selected_tracepoints,
-            samples_per_second, stack_dump_size, unwinding_method, collect_scheduling_info,
-            collect_thread_state, collect_gpu_jobs, enable_api, enable_introspection,
-            max_local_marker_depth_per_command_buffer, collect_memory_info,
-            memory_sampling_period_ms, enable_cgroup_memory, capture_event_processor.get());
+        return CaptureSync(process_id, module_manager, selected_functions, selected_tracepoints,
+                           samples_per_second, stack_dump_size, unwinding_method,
+                           collect_scheduling_info, collect_thread_state, collect_gpu_jobs,
+                           enable_api, enable_introspection, enable_user_space_instrumentation,
+                           max_local_marker_depth_per_command_buffer, collect_memory_info,
+                           memory_sampling_period_ms, enable_cgroup_memory,
+                           capture_event_processor.get());
       });
 
   return capture_result;
@@ -136,8 +138,8 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
     const TracepointInfoSet& selected_tracepoints, double samples_per_second,
     uint16_t stack_dump_size, UnwindingMethod unwinding_method, bool collect_scheduling_info,
     bool collect_thread_state, bool collect_gpu_jobs, bool enable_api, bool enable_introspection,
-    uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
-    uint64_t memory_sampling_period_ms, bool enable_cgroup_memory,
+    bool enable_user_space_instrumentation, uint64_t max_local_marker_depth_per_command_buffer,
+    bool collect_memory_info, uint64_t memory_sampling_period_ms, bool enable_cgroup_memory,
     CaptureEventProcessor* capture_event_processor) {
   ORBIT_SCOPE_FUNCTION;
   writes_done_failed_ = false;
@@ -201,6 +203,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
 
   capture_options->set_enable_api(enable_api);
   capture_options->set_enable_introspection(enable_introspection);
+  capture_options->set_enable_user_space_instrumentation(enable_user_space_instrumentation);
 
   auto api_functions = FindApiFunctions(module_manager);
   *(capture_options->mutable_api_functions()) = {api_functions.begin(), api_functions.end()};
