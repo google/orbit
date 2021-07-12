@@ -274,10 +274,10 @@ class Capture(E2ETestCase):
             collect_thread_states_checkbox.click_input()
 
         collect_system_memory_usage_checkbox = self.find_control('CheckBox',
-                                                                 'Collect system-wide memory usage information',
+                                                                 'Collect memory usage and pagefault information',
                                                                  parent=capture_options_dialog)
         if collect_system_memory_usage_checkbox.get_toggle_state() != collect_system_memory_usage:
-            logging.info('Toggling "Collect system-wide memory usage information" checkbox')
+            logging.info('Toggling "Collect memory usage and pagefault information" checkbox')
             collect_system_memory_usage_checkbox.click_input()
 
         logging.info('Saving "Capture Options"')
@@ -362,9 +362,9 @@ class SetAndCheckMemorySamplingPeriod(E2ETestCase):
         capture_options_button.click_input()
 
     def _enable_collect_system_memory_usage(self):
-        logging.info('Selecting "Collect system-wide memory usage information" checkbox')
+        logging.info('Selecting "Collect memory usage and pagefault information" checkbox')
         collect_system_memory_usage_checkbox = self.find_control(
-            'CheckBox', 'Collect system-wide memory usage information',
+            'CheckBox', 'Collect memory usage and pagefault information',
             parent=self.find_control('Window', 'Capture Options'))
         if not collect_system_memory_usage_checkbox.get_toggle_state():
             collect_system_memory_usage_checkbox.click_input()
