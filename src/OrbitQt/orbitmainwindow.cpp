@@ -123,7 +123,6 @@ ABSL_DECLARE_FLAG(bool, enable_tutorials_feature);
 ABSL_DECLARE_FLAG(uint16_t, sampling_rate);
 ABSL_DECLARE_FLAG(uint16_t, stack_dump_size);
 ABSL_DECLARE_FLAG(bool, frame_pointer_unwinding);
-ABSL_DECLARE_FLAG(bool, enable_track_type_visibility_feature);
 
 using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureListener;
@@ -497,9 +496,6 @@ void OrbitMainWindow::SetupTrackConfigurationUi() {
   ui->trackConfig->hide();
   QObject::connect(ui->actionConfigureTracks, &QAction::toggled,
                    [this](bool checked) { ui->trackConfig->setVisible(checked); });
-  if (!absl::GetFlag(FLAGS_enable_track_type_visibility_feature)) {
-    ui->actionConfigureTracks->setVisible(false);
-  }
 }
 
 void OrbitMainWindow::SetupAccessibleNamesForAutomation() {
@@ -607,7 +603,7 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
     capture_log_button_->setChecked(false);
   }
 
-  if (has_data && absl::GetFlag(FLAGS_enable_track_type_visibility_feature)) {
+  if (has_data) {
     TrackManager* track_manager = dynamic_cast<CaptureWindow*>(ui->CaptureGLWidget->GetCanvas())
                                       ->GetTimeGraph()
                                       ->GetTrackManager();
