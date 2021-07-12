@@ -168,10 +168,8 @@ bool TimerTrack::DrawTimer(const TextBox* prev_text_box, const TextBox* next_tex
                                        draw_data.world_start_x, draw_data.world_width);
 
     if (is_visible_width) {
-      Vec2 pos(world_x_info.world_x_start, world_timer_y);
-      Vec2 size(world_x_info.world_x_width, GetTextBoxHeight(current_timer_info));
-      current_text_box->SetPos(pos);
-      current_text_box->SetSize(size);
+      current_text_box->SetPos({world_x_info.world_x_start, world_timer_y});
+      current_text_box->SetSize({world_x_info.world_x_width, GetTextBoxHeight(current_timer_info)});
 
       SetTimesliceText(current_timer_info, draw_data.world_start_x, draw_data.z_offset,
                        current_text_box);

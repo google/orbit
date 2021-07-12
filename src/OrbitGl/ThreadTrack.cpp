@@ -368,12 +368,12 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, float min_x, flo
   }
 
   const Color kTextWhite(255, 255, 255, 255);
-  const Vec2& box_pos = text_box->GetPos();
-  const Vec2& box_size = text_box->GetSize();
-  float pos_x = std::max(box_pos[0], min_x);
-  float max_size = box_pos[0] + box_size[0] - pos_x;
+  const auto& box_pos = text_box->GetPos();
+  const auto& box_size = text_box->GetSize();
+  float pos_x = std::max(box_pos.first, min_x);
+  float max_size = box_pos.first + box_size.first - pos_x;
   text_renderer_->AddTextTrailingCharsPrioritized(
-      text_box->GetText().c_str(), pos_x, text_box->GetPos()[1] + layout_->GetTextOffset(),
+      text_box->GetText().c_str(), pos_x, box_pos.second + layout_->GetTextOffset(),
       GlCanvas::kZValueBox + z_offset, kTextWhite, text_box->GetElapsedTimeTextLength(),
       layout_->CalculateZoomedFontSize(), max_size);
 }
@@ -528,20 +528,22 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
       std::unique_ptr<PickingUserData> user_data = CreatePickingUserData(*batcher, text_box);
 
       ResizeTextBox(draw_data, time_graph_, world_timer_y, box_height_, &text_box);
-      const Vec2& pos = text_box.GetPos();
-      const Vec2& size = text_box.GetSize();
+      const auto& pos = text_box.GetPos();
+      const auto& size = text_box.GetSize();
 
       if (text_box.Duration() > draw_data.ns_per_pixel) {
         if (!collapse_toggle_->IsCollapsed()) {
           SetTimesliceText(text_box.GetTimerInfo(), draw_data.world_start_x, z_offset, &text_box);
         }
-        batcher->AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
+        batcher->AddShadedBox({pos.first, pos.second}, {size.first, size.second}, draw_data.z,
+                              color, std::move(user_data));
       } else {
-        batcher->AddVerticalLine(pos, box_height_, draw_data.z, color, std::move(user_data));
+        batcher->AddVerticalLine({pos.first, pos.second}, box_height_, draw_data.z, color,
+                                 std::move(user_data));
       }
 
       // Use the time at boundary of the next pixel as a threshold to avoid overdraw.
-      next_pixel_start_time_ns = GetNextPixelBoundaryTimeNs(pos[0] + size[0], draw_data);
+      next_pixel_start_time_ns = GetNextPixelBoundaryTimeNs(pos.first + size.first, draw_data);
     }
   }
 }
