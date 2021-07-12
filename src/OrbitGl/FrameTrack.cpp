@@ -13,6 +13,7 @@
 
 #include "Batcher.h"
 #include "ClientData/FunctionUtils.h"
+#include "ClientData/TextBox.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
@@ -158,7 +159,7 @@ void FrameTrack::OnTimer(const TimerInfo& timer_info) {
 }
 
 void FrameTrack::SetTimesliceText(const TimerInfo& timer_info, float min_x, float z_offset,
-                                  TextBox* text_box) {
+                                  orbit_client_data::TextBox* text_box) {
   if (text_box->GetText().empty()) {
     std::string time = orbit_display_formats::GetDisplayTime(
         absl::Nanoseconds(timer_info.end() - timer_info.start()));
@@ -206,7 +207,7 @@ std::string FrameTrack::GetTooltip() const {
 }
 
 std::string FrameTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
-  const TextBox* text_box = batcher.GetTextBox(id);
+  const orbit_client_data::TextBox* text_box = batcher.GetTextBox(id);
   if (text_box == nullptr) {
     return "";
   }

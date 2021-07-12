@@ -11,6 +11,7 @@
 
 #include "App.h"
 #include "Batcher.h"
+#include "ClientData/TextBox.h"
 #include "ClientModel/CaptureData.h"
 #include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
@@ -211,7 +212,8 @@ std::string GpuTrack::GetTooltip() const {
          "submissions and debug markers";
 }
 
-const TextBox* GpuTrack::GetLeft(const TextBox* textbox) const {
+const orbit_client_data::TextBox* GpuTrack::GetLeft(
+    const orbit_client_data::TextBox* textbox) const {
   const TimerInfo& timer_info = textbox->GetTimerInfo();
   switch (timer_info.type()) {
     case TimerInfo::kGpuActivity:
@@ -225,7 +227,8 @@ const TextBox* GpuTrack::GetLeft(const TextBox* textbox) const {
   }
 }
 
-const TextBox* GpuTrack::GetRight(const TextBox* textbox) const {
+const orbit_client_data::TextBox* GpuTrack::GetRight(
+    const orbit_client_data::TextBox* textbox) const {
   const TimerInfo& timer_info = textbox->GetTimerInfo();
   switch (timer_info.type()) {
     case TimerInfo::kGpuActivity:
@@ -239,7 +242,7 @@ const TextBox* GpuTrack::GetRight(const TextBox* textbox) const {
   }
 }
 
-const TextBox* GpuTrack::GetUp(const TextBox* textbox) const {
+const orbit_client_data::TextBox* GpuTrack::GetUp(const orbit_client_data::TextBox* textbox) const {
   const TimerInfo& timer_info = textbox->GetTimerInfo();
   switch (timer_info.type()) {
     case TimerInfo::kGpuActivity:
@@ -253,7 +256,8 @@ const TextBox* GpuTrack::GetUp(const TextBox* textbox) const {
   }
 }
 
-const TextBox* GpuTrack::GetDown(const TextBox* textbox) const {
+const orbit_client_data::TextBox* GpuTrack::GetDown(
+    const orbit_client_data::TextBox* textbox) const {
   const TimerInfo& timer_info = textbox->GetTimerInfo();
   switch (timer_info.type()) {
     case TimerInfo::kGpuActivity:

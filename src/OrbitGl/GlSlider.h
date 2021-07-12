@@ -10,9 +10,9 @@
 #include <utility>
 
 #include "Batcher.h"
+#include "ClientData/TextBox.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
-#include "TextBox.h"
 #include "Viewport.h"
 
 namespace orbit_gl {

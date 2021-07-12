@@ -7,7 +7,6 @@
 #include <GteVector.h>
 #include <absl/base/casts.h>
 #include <glad/glad.h>
-#include <limits.h>
 #include <math.h>
 
 #include "AccessibleInterfaceProvider.h"

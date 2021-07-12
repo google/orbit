@@ -43,6 +43,7 @@
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
+#include "ClientData/TextBox.h"
 #include "ClientData/UserDefinedCaptureData.h"
 #include "ClientModel/CaptureDeserializer.h"
 #include "ClientModel/CaptureSerializer.h"
@@ -2247,9 +2248,11 @@ void OrbitApp::set_selected_thread_id(ThreadID thread_id) {
   return data_manager_->set_selected_thread_id(thread_id);
 }
 
-const TextBox* OrbitApp::selected_text_box() const { return data_manager_->selected_text_box(); }
+const orbit_client_data::TextBox* OrbitApp::selected_text_box() const {
+  return data_manager_->selected_text_box();
+}
 
-void OrbitApp::SelectTextBox(const TextBox* text_box) {
+void OrbitApp::SelectTextBox(const orbit_client_data::TextBox* text_box) {
   data_manager_->set_selected_text_box(text_box);
   const TimerInfo* timer_info = text_box ? &text_box->GetTimerInfo() : nullptr;
   uint64_t function_id =
@@ -2266,7 +2269,7 @@ void OrbitApp::DeselectTextBox() {
 }
 
 uint64_t OrbitApp::GetFunctionIdToHighlight() const {
-  const TextBox* selected_textbox = selected_text_box();
+  const orbit_client_data::TextBox* selected_textbox = selected_text_box();
   const TimerInfo* selected_timer_info =
       selected_textbox ? &selected_textbox->GetTimerInfo() : nullptr;
   uint64_t selected_function_id =
@@ -2604,7 +2607,7 @@ void OrbitApp::AddFrameTrackTimers(uint64_t instrumented_function_id) {
     if (!chain) continue;
     for (const TimerBlock& block : *chain) {
       for (uint64_t i = 0; i < block.size(); ++i) {
-        const TextBox& box = block[i];
+        const orbit_client_data::TextBox& box = block[i];
         if (box.GetTimerInfo().function_id() == instrumented_function_id) {
           all_start_times.push_back(box.GetTimerInfo().start());
         }

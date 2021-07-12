@@ -12,12 +12,12 @@
 #include <string_view>
 
 #include "CallstackThreadBar.h"
+#include "ClientData/TextBox.h"
 #include "CoreMath.h"
 #include "GpuDebugMarkerTrack.h"
 #include "GpuSubmissionTrack.h"
 #include "PickingManager.h"
 #include "StringManager.h"
-#include "TextBox.h"
 #include "TimerTrack.h"
 #include "Track.h"
 #include "Viewport.h"
@@ -44,11 +44,15 @@ class GpuTrack : public Track {
                     uint32_t indentation_level = 0);
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 
-  [[nodiscard]] const TextBox* GetLeft(const TextBox* textbox) const;
-  [[nodiscard]] const TextBox* GetRight(const TextBox* textbox) const;
+  [[nodiscard]] const orbit_client_data::TextBox* GetLeft(
+      const orbit_client_data::TextBox* textbox) const;
+  [[nodiscard]] const orbit_client_data::TextBox* GetRight(
+      const orbit_client_data::TextBox* textbox) const;
 
-  [[nodiscard]] const TextBox* GetUp(const TextBox* textbox) const;
-  [[nodiscard]] const TextBox* GetDown(const TextBox* textbox) const;
+  [[nodiscard]] const orbit_client_data::TextBox* GetUp(
+      const orbit_client_data::TextBox* textbox) const;
+  [[nodiscard]] const orbit_client_data::TextBox* GetDown(
+      const orbit_client_data::TextBox* textbox) const;
 
   [[nodiscard]] Type GetType() const override { return Type::kGpuTrack; }
   [[nodiscard]] std::string GetTooltip() const override;

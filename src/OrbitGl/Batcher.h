@@ -18,19 +18,19 @@
 #include <vector>
 
 #include "BlockChain.h"
+#include "ClientData/TextBox.h"
 #include "CoreMath.h"
 #include "Geometry.h"
 #include "PickingManager.h"
-#include "TextBox.h"
 
 using TooltipCallback = std::function<std::string(PickingId)>;
 
 struct PickingUserData {
-  const TextBox* text_box_;
+  const orbit_client_data::TextBox* text_box_;
   TooltipCallback generate_tooltip_;
   const void* custom_data_ = nullptr;
 
-  explicit PickingUserData(const TextBox* text_box = nullptr,
+  explicit PickingUserData(const orbit_client_data::TextBox* text_box = nullptr,
                            TooltipCallback generate_tooltip = nullptr)
       : text_box_(text_box), generate_tooltip_(std::move(generate_tooltip)) {}
 };
@@ -171,7 +171,7 @@ class Batcher {
   [[nodiscard]] const PickingUserData* GetUserData(PickingId id) const;
   [[nodiscard]] PickingUserData* GetUserData(PickingId id);
 
-  [[nodiscard]] const TextBox* GetTextBox(PickingId id) const;
+  [[nodiscard]] const orbit_client_data::TextBox* GetTextBox(PickingId id) const;
 
   static constexpr uint32_t kNumArcSides = 16;
 

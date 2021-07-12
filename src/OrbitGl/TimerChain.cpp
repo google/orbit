@@ -6,6 +6,7 @@
 
 #include <algorithm>
 
+#include "ClientData/TextBox.h"
 #include "capture_data.pb.h"
 
 bool TimerBlock::Intersects(uint64_t min, uint64_t max) const {
@@ -26,13 +27,13 @@ TimerChain::~TimerChain() {
   }
 }
 
-TimerBlock* TimerChain::GetBlockContaining(const TextBox* element) const {
+TimerBlock* TimerChain::GetBlockContaining(const orbit_client_data::TextBox* element) const {
   TimerBlock* block = root_;
   while (block != nullptr) {
     uint32_t size = block->size();
     if (size != 0) {
-      TextBox* begin = &block->data_[0];
-      TextBox* end = &block->data_[size - 1];
+      orbit_client_data::TextBox* begin = &block->data_[0];
+      orbit_client_data::TextBox* end = &block->data_[size - 1];
       if (begin <= element && end >= element) {
         return block;
       }
@@ -43,10 +44,11 @@ TimerBlock* TimerChain::GetBlockContaining(const TextBox* element) const {
   return nullptr;
 }
 
-TextBox* TimerChain::GetElementAfter(const TextBox* element) const {
+orbit_client_data::TextBox* TimerChain::GetElementAfter(
+    const orbit_client_data::TextBox* element) const {
   TimerBlock* block = GetBlockContaining(element);
   if (block != nullptr) {
-    TextBox* begin = &block->data_[0];
+    orbit_client_data::TextBox* begin = &block->data_[0];
     uint32_t index = element - begin;
     if (index < block->size() - 1) {
       return &block->data_[++index];
@@ -58,10 +60,11 @@ TextBox* TimerChain::GetElementAfter(const TextBox* element) const {
   return nullptr;
 }
 
-TextBox* TimerChain::GetElementBefore(const TextBox* element) const {
+orbit_client_data::TextBox* TimerChain::GetElementBefore(
+    const orbit_client_data::TextBox* element) const {
   TimerBlock* block = GetBlockContaining(element);
   if (block != nullptr) {
-    TextBox* begin = &block->data_[0];
+    orbit_client_data::TextBox* begin = &block->data_[0];
     uint32_t index = element - begin;
     if (index > 0) {
       return &block->data_[--index];

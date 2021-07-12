@@ -4,11 +4,12 @@
 
 #include "CaptureStats.h"
 
+#include <absl/strings/str_format.h>
+
 #include "CaptureWindow.h"
+#include "ClientData/TextBox.h"
 #include "Introspection/Introspection.h"
 #include "SchedulingStats.h"
-#include "absl/strings/str_format.h"
-#include "capture_data.pb.h"
 
 ErrorMessageOr<void> CaptureStats::Generate(CaptureWindow* capture_window, uint64_t start_ns,
                                             uint64_t end_ns) {
@@ -22,7 +23,8 @@ ErrorMessageOr<void> CaptureStats::Generate(CaptureWindow* capture_window, uint6
   const orbit_client_model::CaptureData* capture_data = time_graph->GetCaptureData();
   if (capture_data == nullptr) return ErrorMessage("No capture data found");
 
-  std::vector<const TextBox*> sched_scopes = scheduler_track->GetScopesInRange(start_ns, end_ns);
+  std::vector<const orbit_client_data::TextBox*> sched_scopes =
+      scheduler_track->GetScopesInRange(start_ns, end_ns);
   SchedulingStats::ThreadNameProvider thread_name_provider = [capture_data](int32_t thread_id) {
     return capture_data->GetThreadName(thread_id);
   };

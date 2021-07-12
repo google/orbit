@@ -12,9 +12,9 @@
 #include <vector>
 
 #include "CallstackThreadBar.h"
+#include "ClientData/TextBox.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
-#include "TextBox.h"
 #include "TimerChain.h"
 #include "TimerTrack.h"
 #include "Track.h"
@@ -44,7 +44,7 @@ class FrameTrack : public TimerTrack {
   [[nodiscard]] float GetHeaderHeight() const override;
 
   void SetTimesliceText(const orbit_client_protos::TimerInfo& timer, float min_x, float z_offset,
-                        TextBox* text_box) override;
+                        orbit_client_data::TextBox* text_box) override;
   [[nodiscard]] std::string GetTooltip() const override;
   [[nodiscard]] std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const override;
 

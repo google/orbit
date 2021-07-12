@@ -11,8 +11,8 @@
 #include <iosfwd>
 #include <limits>
 
+#include "ClientData/TextBox.h"
 #include "OrbitBase/Logging.h"
-#include "TextBox.h"
 
 static constexpr int kBlockSize = 1024;
 class TimerChain;
@@ -37,9 +37,9 @@ class TimerBlock {
 
   // Append a new element to the end of the block using placement-new.
   template <class... Args>
-  TextBox& emplace_back(Args&&... args) {
+  orbit_client_data::TextBox& emplace_back(Args&&... args) {
     CHECK(size() < kBlockSize);
-    TextBox& text_box = data_.emplace_back(std::forward<Args>(args)...);
+    orbit_client_data::TextBox& text_box = data_.emplace_back(std::forward<Args>(args)...);
     min_timestamp_ = std::min(text_box.GetTimerInfo().start(), min_timestamp_);
     max_timestamp_ = std::max(text_box.GetTimerInfo().end(), max_timestamp_);
     return text_box;
@@ -53,13 +53,13 @@ class TimerBlock {
   [[nodiscard]] size_t size() const { return data_.size(); }
   [[nodiscard]] bool at_capacity() const { return size() == kBlockSize; }
 
-  TextBox& operator[](std::size_t idx) { return data_[idx]; }
-  const TextBox& operator[](std::size_t idx) const { return data_[idx]; }
+  orbit_client_data::TextBox& operator[](std::size_t idx) { return data_[idx]; }
+  const orbit_client_data::TextBox& operator[](std::size_t idx) const { return data_[idx]; }
 
  private:
   TimerBlock* prev_;
   TimerBlock* next_;
-  std::vector<TextBox> data_;
+  std::vector<orbit_client_data::TextBox> data_;
 
   uint64_t min_timestamp_;
   uint64_t max_timestamp_;
@@ -107,9 +107,9 @@ class TimerChain {
   // Append an item to the end of the current block. If capacity of the current block is reached, a
   // new blocked is allocated and the item is added to the new block.
   template <class... Args>
-  TextBox& emplace_back(Args&&... args) {
+  orbit_client_data::TextBox& emplace_back(Args&&... args) {
     if (current_->at_capacity()) AllocateNewBlock();
-    TextBox& text_box = current_->emplace_back(std::forward<Args>(args)...);
+    orbit_client_data::TextBox& text_box = current_->emplace_back(std::forward<Args>(args)...);
     ++num_items_;
     return text_box;
   }
@@ -117,11 +117,13 @@ class TimerChain {
   [[nodiscard]] bool empty() const { return num_items_ == 0; }
   [[nodiscard]] uint64_t size() const { return num_items_; }
 
-  [[nodiscard]] TimerBlock* GetBlockContaining(const TextBox* element) const;
+  [[nodiscard]] TimerBlock* GetBlockContaining(const orbit_client_data::TextBox* element) const;
 
-  [[nodiscard]] TextBox* GetElementAfter(const TextBox* element) const;
+  [[nodiscard]] orbit_client_data::TextBox* GetElementAfter(
+      const orbit_client_data::TextBox* element) const;
 
-  [[nodiscard]] TextBox* GetElementBefore(const TextBox* element) const;
+  [[nodiscard]] orbit_client_data::TextBox* GetElementBefore(
+      const orbit_client_data::TextBox* element) const;
 
   [[nodiscard]] TimerChainIterator begin() { return TimerChainIterator(root_); }
 

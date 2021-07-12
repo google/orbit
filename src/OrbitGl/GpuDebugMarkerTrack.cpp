@@ -11,6 +11,7 @@
 
 #include "App.h"
 #include "Batcher.h"
+#include "ClientData/TextBox.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
@@ -68,7 +69,7 @@ Color GpuDebugMarkerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_se
 }
 
 void GpuDebugMarkerTrack::SetTimesliceText(const TimerInfo& timer_info, float min_x, float z_offset,
-                                           TextBox* text_box) {
+                                           orbit_client_data::TextBox* text_box) {
   CHECK(timer_info.type() == TimerInfo::kGpuDebugMarker);
 
   if (text_box->GetText().empty()) {
@@ -92,7 +93,7 @@ void GpuDebugMarkerTrack::SetTimesliceText(const TimerInfo& timer_info, float mi
 }
 
 std::string GpuDebugMarkerTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
-  const TextBox* text_box = batcher.GetTextBox(id);
+  const orbit_client_data::TextBox* text_box = batcher.GetTextBox(id);
   if (text_box == nullptr) {
     return "";
   }

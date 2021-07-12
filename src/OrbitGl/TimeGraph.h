@@ -19,12 +19,12 @@
 #include "Batcher.h"
 #include "CallstackThreadBar.h"
 #include "CaptureViewElement.h"
+#include "ClientData/TextBox.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreMath.h"
 #include "ManualInstrumentationManager.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
-#include "TextBox.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
 #include "TimerChain.h"
@@ -98,17 +98,18 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   void VerticallyMoveIntoView(Track& track);
 
   [[nodiscard]] double GetTime(double ratio) const;
-  void SelectAndMakeVisible(const TextBox* text_box);
+  void SelectAndMakeVisible(const orbit_client_data::TextBox* text_box);
   enum class JumpScope { kSameDepth, kSameThread, kSameFunction, kSameThreadSameFunction };
   enum class JumpDirection { kPrevious, kNext, kTop, kDown };
-  void JumpToNeighborBox(const TextBox* from, JumpDirection jump_direction, JumpScope jump_scope);
-  [[nodiscard]] const TextBox* FindPreviousFunctionCall(
+  void JumpToNeighborBox(const orbit_client_data::TextBox* from, JumpDirection jump_direction,
+                         JumpScope jump_scope);
+  [[nodiscard]] const orbit_client_data::TextBox* FindPreviousFunctionCall(
       uint64_t function_address, uint64_t current_time,
       std::optional<int32_t> thread_id = std::nullopt) const;
-  [[nodiscard]] const TextBox* FindNextFunctionCall(
+  [[nodiscard]] const orbit_client_data::TextBox* FindNextFunctionCall(
       uint64_t function_address, uint64_t current_time,
       std::optional<int32_t> thread_id = std::nullopt) const;
-  void SelectAndZoom(const TextBox* text_box);
+  void SelectAndZoom(const orbit_client_data::TextBox* text_box);
   [[nodiscard]] double GetCaptureTimeSpanUs() const;
   [[nodiscard]] double GetCurrentTimeSpanUs() const;
   void RequestRedraw() { redraw_requested_ = true; }
@@ -132,12 +133,13 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   [[nodiscard]] float GetRightMargin() const { return right_margin_; }
   void UpdateRightMargin(float margin);
 
-  [[nodiscard]] const TextBox* FindPrevious(const TextBox* from);
-  [[nodiscard]] const TextBox* FindNext(const TextBox* from);
-  [[nodiscard]] const TextBox* FindTop(const TextBox* from);
-  [[nodiscard]] const TextBox* FindDown(const TextBox* from);
-  [[nodiscard]] std::pair<const TextBox*, const TextBox*> GetMinMaxTextBoxForFunction(
-      uint64_t function_id) const;
+  [[nodiscard]] const orbit_client_data::TextBox* FindPrevious(
+      const orbit_client_data::TextBox* from);
+  [[nodiscard]] const orbit_client_data::TextBox* FindNext(const orbit_client_data::TextBox* from);
+  [[nodiscard]] const orbit_client_data::TextBox* FindTop(const orbit_client_data::TextBox* from);
+  [[nodiscard]] const orbit_client_data::TextBox* FindDown(const orbit_client_data::TextBox* from);
+  [[nodiscard]] std::pair<const orbit_client_data::TextBox*, const orbit_client_data::TextBox*>
+  GetMinMaxTextBoxForFunction(uint64_t function_id) const;
 
   [[nodiscard]] static Color GetColor(uint32_t id) {
     constexpr unsigned char kAlpha = 255;
@@ -160,7 +162,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   }
 
   void SetIteratorOverlayData(
-      const absl::flat_hash_map<uint64_t, const TextBox*>& iterator_text_boxes,
+      const absl::flat_hash_map<uint64_t, const orbit_client_data::TextBox*>& iterator_text_boxes,
       const absl::flat_hash_map<uint64_t, uint64_t>& iterator_id_to_function_id) {
     iterator_text_boxes_ = iterator_text_boxes;
     iterator_id_to_function_id_ = iterator_id_to_function_id;
@@ -198,7 +200,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   int num_drawn_text_boxes_ = 0;
 
   // First member is id.
-  absl::flat_hash_map<uint64_t, const TextBox*> iterator_text_boxes_;
+  absl::flat_hash_map<uint64_t, const orbit_client_data::TextBox*> iterator_text_boxes_;
   absl::flat_hash_map<uint64_t, uint64_t> iterator_id_to_function_id_;
 
   double ref_time_us_ = 0;
