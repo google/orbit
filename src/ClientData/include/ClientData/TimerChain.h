@@ -14,8 +14,6 @@
 #include "ClientData/TextBox.h"
 #include "OrbitBase/Logging.h"
 
-class TimerChain;
-
 // TimerBlock is a straightforward specialization of Block (see BlockChain.h) with the added bonus
 // that it keeps track of the minimum and maximum timestamps of all timers added to it. This allows
 // trivial rejection of an entire block by using the Intersects(t_min, t_max) method. This

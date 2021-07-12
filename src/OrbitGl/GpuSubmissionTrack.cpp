@@ -11,6 +11,7 @@
 #include "App.h"
 #include "Batcher.h"
 #include "ClientData/TextBox.h"
+#include "ClientData/TimerChain.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
@@ -18,7 +19,6 @@
 #include "OrbitBase/ThreadConstants.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
-#include "TimerChain.h"
 #include "TriangleToggle.h"
 #include "absl/strings/str_format.h"
 

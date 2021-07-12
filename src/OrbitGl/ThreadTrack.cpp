@@ -17,6 +17,7 @@
 #include "Batcher.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/TextBox.h"
+#include "ClientData/TimerChain.h"
 #include "ClientModel/CaptureData.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
@@ -28,7 +29,6 @@
 #include "TextRenderer.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
-#include "TimerChain.h"
 #include "TriangleToggle.h"
 #include "Viewport.h"
 
