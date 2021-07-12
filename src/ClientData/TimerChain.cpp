@@ -9,17 +9,17 @@
 #include "ClientData/TextBox.h"
 #include "capture_data.pb.h"
 
-bool TimerBlock::Intersects(uint64_t min, uint64_t max) const {
+bool orbit_client_data::TimerBlock::Intersects(uint64_t min, uint64_t max) const {
   return (min <= max_timestamp_ && max >= min_timestamp_);
 }
 
-TimerChain::~TimerChain() {
+orbit_client_data::TimerChain::~TimerChain() {
   // Find last block in chain
   while (current_->next_ != nullptr) {
     current_ = current_->next_;
   }
 
-  TimerBlock* prev = current_;
+  orbit_client_data::TimerBlock* prev = current_;
   while (prev != nullptr) {
     prev = current_->prev_;
     delete current_;
@@ -27,8 +27,9 @@ TimerChain::~TimerChain() {
   }
 }
 
-TimerBlock* TimerChain::GetBlockContaining(const orbit_client_data::TextBox* element) const {
-  TimerBlock* block = root_;
+orbit_client_data::TimerBlock* orbit_client_data::TimerChain::GetBlockContaining(
+    const orbit_client_data::TextBox* element) const {
+  orbit_client_data::TimerBlock* block = root_;
   while (block != nullptr) {
     uint32_t size = block->size();
     if (size != 0) {
@@ -44,9 +45,9 @@ TimerBlock* TimerChain::GetBlockContaining(const orbit_client_data::TextBox* ele
   return nullptr;
 }
 
-orbit_client_data::TextBox* TimerChain::GetElementAfter(
+orbit_client_data::TextBox* orbit_client_data::TimerChain::GetElementAfter(
     const orbit_client_data::TextBox* element) const {
-  TimerBlock* block = GetBlockContaining(element);
+  orbit_client_data::TimerBlock* block = GetBlockContaining(element);
   if (block != nullptr) {
     orbit_client_data::TextBox* begin = &block->data_[0];
     uint32_t index = element - begin;
@@ -60,9 +61,9 @@ orbit_client_data::TextBox* TimerChain::GetElementAfter(
   return nullptr;
 }
 
-orbit_client_data::TextBox* TimerChain::GetElementBefore(
+orbit_client_data::TextBox* orbit_client_data::TimerChain::GetElementBefore(
     const orbit_client_data::TextBox* element) const {
-  TimerBlock* block = GetBlockContaining(element);
+  orbit_client_data::TimerBlock* block = GetBlockContaining(element);
   if (block != nullptr) {
     orbit_client_data::TextBox* begin = &block->data_[0];
     uint32_t index = element - begin;

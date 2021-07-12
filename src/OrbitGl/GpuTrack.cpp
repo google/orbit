@@ -4,6 +4,7 @@
 
 #include "GpuTrack.h"
 
+#include <absl/strings/str_format.h>
 #include <absl/time/time.h>
 
 #include <algorithm>
@@ -21,7 +22,6 @@
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
 #include "Viewport.h"
-#include "absl/strings/str_format.h"
 
 using orbit_client_protos::TimerInfo;
 
@@ -95,17 +95,20 @@ void GpuTrack::OnTimer(const TimerInfo& timer_info) {
   }
 }
 
-std::vector<std::shared_ptr<TimerChain>> GpuTrack::GetAllChains() const {
-  std::vector<std::shared_ptr<TimerChain>> all_chains = submission_track_->GetAllChains();
-  std::vector<std::shared_ptr<TimerChain>> marker_chains = marker_track_->GetAllChains();
+std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GpuTrack::GetAllChains() const {
+  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> all_chains =
+      submission_track_->GetAllChains();
+  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> marker_chains =
+      marker_track_->GetAllChains();
   all_chains.insert(all_chains.begin(), marker_chains.begin(), marker_chains.end());
   return all_chains;
 }
 
-std::vector<std::shared_ptr<TimerChain>> GpuTrack::GetAllSerializableChains() const {
-  std::vector<std::shared_ptr<TimerChain>> all_chains =
+std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GpuTrack::GetAllSerializableChains()
+    const {
+  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> all_chains =
       submission_track_->GetAllSerializableChains();
-  std::vector<std::shared_ptr<TimerChain>> marker_chains =
+  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> marker_chains =
       marker_track_->GetAllSerializableChains();
   all_chains.insert(all_chains.begin(), marker_chains.begin(), marker_chains.end());
   return all_chains;

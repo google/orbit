@@ -81,10 +81,14 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   }
 
   virtual void OnTimer(const orbit_client_protos::TimerInfo& /*timer_info*/) {}
-  [[nodiscard]] virtual std::vector<std::shared_ptr<TimerChain>> GetTimers() const { return {}; }
-  [[nodiscard]] virtual std::vector<std::shared_ptr<TimerChain>> GetAllChains() const = 0;
-  [[nodiscard]] virtual std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains()
+  [[nodiscard]] virtual std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GetTimers()
+      const {
+    return {};
+  }
+  [[nodiscard]] virtual std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GetAllChains()
       const = 0;
+  [[nodiscard]] virtual std::vector<std::shared_ptr<orbit_client_data::TimerChain>>
+  GetAllSerializableChains() const = 0;
   [[nodiscard]] bool IsPinned() const { return pinned_; }
   void SetPinned(bool value);
 
@@ -130,7 +134,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   bool draw_background_ = true;
   bool visible_ = true;
   bool pinned_ = false;
-  std::map<int, std::shared_ptr<TimerChain>> timers_;
+  std::map<int, std::shared_ptr<orbit_client_data::TimerChain>> timers_;
   std::atomic<uint32_t> num_timers_;
   std::atomic<uint64_t> min_time_;
   std::atomic<uint64_t> max_time_;

@@ -88,7 +88,7 @@ const orbit_client_data::TextBox* ThreadTrack::GetLeft(
     const orbit_client_data::TextBox* text_box) const {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   if (timer_info.thread_id() == thread_id_) {
-    std::shared_ptr<TimerChain> timers = GetTimers(timer_info.depth());
+    std::shared_ptr<orbit_client_data::TimerChain> timers = GetTimers(timer_info.depth());
     if (timers) return timers->GetElementBefore(text_box);
   }
   return nullptr;
@@ -98,7 +98,7 @@ const orbit_client_data::TextBox* ThreadTrack::GetRight(
     const orbit_client_data::TextBox* text_box) const {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   if (timer_info.thread_id() == thread_id_) {
-    std::shared_ptr<TimerChain> timers = GetTimers(timer_info.depth());
+    std::shared_ptr<orbit_client_data::TimerChain> timers = GetTimers(timer_info.depth());
     if (timers) return timers->GetElementAfter(text_box);
   }
   return nullptr;
@@ -442,9 +442,9 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
 
   // Thread tracks use a ScopeTree so we don't need to create one TimerChain per depth.
   // Allocate a single TimerChain into which all timers will be appended.
-  std::shared_ptr<TimerChain>& timer_chain = timers_[0];
+  std::shared_ptr<orbit_client_data::TimerChain>& timer_chain = timers_[0];
   if (timer_chain == nullptr) {
-    timer_chain = std::make_shared<TimerChain>();
+    timer_chain = std::make_shared<orbit_client_data::TimerChain>();
   }
 
   orbit_client_data::TextBox& text_box = timer_chain->emplace_back(timer_info);
@@ -464,7 +464,7 @@ void ThreadTrack::OnCaptureComplete() {
     return;
   }
   // Build ScopeTree from timer chains.
-  std::vector<std::shared_ptr<TimerChain>> timer_chains = GetAllChains();
+  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> timer_chains = GetAllChains();
   for (const auto& timer_chain : timer_chains) {
     if (timer_chain == nullptr) return;
     absl::MutexLock lock(&scope_tree_mutex_);

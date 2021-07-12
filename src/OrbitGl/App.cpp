@@ -82,7 +82,6 @@
 #include "Symbols/SymbolHelper.h"
 #include "TimeGraph.h"
 #include "Timer.h"
-#include "TimerInfosIterator.h"
 #include "capture.pb.h"
 #include "capture_data.pb.h"
 #include "module.pb.h"
@@ -2599,13 +2598,14 @@ void OrbitApp::AddFrameTrackTimers(uint64_t instrumented_function_id) {
     return;
   }
 
-  std::vector<std::shared_ptr<TimerChain>> chains = GetTimeGraph()->GetAllThreadTrackTimerChains();
+  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> chains =
+      GetTimeGraph()->GetAllThreadTrackTimerChains();
 
   std::vector<uint64_t> all_start_times;
 
   for (const auto& chain : chains) {
     if (!chain) continue;
-    for (const TimerBlock& block : *chain) {
+    for (const orbit_client_data::TimerBlock& block : *chain) {
       for (uint64_t i = 0; i < block.size(); ++i) {
         const orbit_client_data::TextBox& box = block[i];
         if (box.GetTimerInfo().function_id() == instrumented_function_id) {

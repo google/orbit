@@ -16,27 +16,6 @@ using orbit_client_protos::TimerInfo;
 
 namespace orbit_gl {
 
-class UnitTestTrack : public Track {
- public:
-  explicit UnitTestTrack(TimeGraphLayout* layout, Track::Type type, const std::string& name)
-      : Track(nullptr, nullptr, nullptr, layout, nullptr, 0), name_(name), type_(type){};
-
-  [[nodiscard]] Type GetType() const override { return type_; }
-  [[nodiscard]] float GetHeight() const override { return 100.f; }
-  [[nodiscard]] bool IsEmpty() const override { return false; }
-
-  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllChains() const override {
-    return {};
-  }
-  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains() const override {
-    return {};
-  }
-
- private:
-  std::string name_;
-  Type type_;
-};
-
 const size_t kNumTracks = 3;
 const size_t kNumThreadTracks = 2;
 const size_t kNumSchedulerTracks = 1;

@@ -170,17 +170,17 @@ void PagefaultTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   }
 
   constexpr uint32_t kDepth = 0;
-  std::shared_ptr<TimerChain> timer_chain = timers_[kDepth];
+  std::shared_ptr<orbit_client_data::TimerChain> timer_chain = timers_[kDepth];
   if (timer_chain == nullptr) {
-    timer_chain = std::make_shared<TimerChain>();
+    timer_chain = std::make_shared<orbit_client_data::TimerChain>();
     timers_[kDepth] = timer_chain;
   }
 
   timer_chain->emplace_back(timer_info);
 }
 
-std::vector<std::shared_ptr<TimerChain>> PagefaultTrack::GetAllChains() const {
-  std::vector<std::shared_ptr<TimerChain>> chains;
+std::vector<std::shared_ptr<orbit_client_data::TimerChain>> PagefaultTrack::GetAllChains() const {
+  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> chains;
   for (const auto& pair : timers_) {
     chains.push_back(pair.second);
   }

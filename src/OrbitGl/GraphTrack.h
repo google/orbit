@@ -22,8 +22,8 @@ template <size_t Dimension>
 class GraphTrack : public Track {
  public:
   explicit GraphTrack(CaptureViewElement* parent, TimeGraph* time_graph,
-                      orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string name,
-                      std::array<std::string, Dimension> series_names,
+                      orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                      const std::string& name, std::array<std::string, Dimension> series_names,
                       const orbit_client_model::CaptureData* capture_data,
                       uint32_t indentation_level = 0);
 
@@ -54,8 +54,10 @@ class GraphTrack : public Track {
   }
 
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
-  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllChains() const override;
-  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains() const override {
+  [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GetAllChains()
+      const override;
+  [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>>
+  GetAllSerializableChains() const override {
     return GetAllChains();
   }
 
