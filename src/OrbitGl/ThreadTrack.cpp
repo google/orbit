@@ -16,6 +16,7 @@
 #include "App.h"
 #include "Batcher.h"
 #include "ClientData/FunctionUtils.h"
+#include "ClientData/TextBox.h"
 #include "ClientModel/CaptureData.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
@@ -24,7 +25,6 @@
 #include "ManualInstrumentationManager.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "TextBox.h"
 #include "TextRenderer.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
@@ -84,7 +84,8 @@ void ThreadTrack::InitializeNameAndLabel(int32_t thread_id) {
   }
 }
 
-const TextBox* ThreadTrack::GetLeft(const TextBox* text_box) const {
+const orbit_client_data::TextBox* ThreadTrack::GetLeft(
+    const orbit_client_data::TextBox* text_box) const {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   if (timer_info.thread_id() == thread_id_) {
     std::shared_ptr<TimerChain> timers = GetTimers(timer_info.depth());
@@ -93,7 +94,8 @@ const TextBox* ThreadTrack::GetLeft(const TextBox* text_box) const {
   return nullptr;
 }
 
-const TextBox* ThreadTrack::GetRight(const TextBox* text_box) const {
+const orbit_client_data::TextBox* ThreadTrack::GetRight(
+    const orbit_client_data::TextBox* text_box) const {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   if (timer_info.thread_id() == thread_id_) {
     std::shared_ptr<TimerChain> timers = GetTimers(timer_info.depth());
@@ -103,7 +105,7 @@ const TextBox* ThreadTrack::GetRight(const TextBox* text_box) const {
 }
 
 std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
-  const TextBox* text_box = batcher.GetTextBox(id);
+  const orbit_client_data::TextBox* text_box = batcher.GetTextBox(id);
   if (!text_box || text_box->GetTimerInfo().type() == TimerInfo::kCoreActivity) {
     return "";
   }
@@ -187,7 +189,8 @@ bool ThreadTrack::IsTrackSelected() const {
   return ToColor(static_cast<uint64_t>(event.color));
 }
 
-Color ThreadTrack::GetTimerColor(const TextBox& text_box, const internal::DrawData& draw_data) {
+Color ThreadTrack::GetTimerColor(const orbit_client_data::TextBox& text_box,
+                                 const internal::DrawData& draw_data) {
   const TimerInfo& timer_info = text_box.GetTimerInfo();
   uint64_t function_id = timer_info.function_id();
   bool is_selected = &text_box == draw_data.selected_textbox;
@@ -329,7 +332,7 @@ void ThreadTrack::SetTrackColor(Color color) {
 }
 
 void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, float min_x, float z_offset,
-                                   TextBox* text_box) {
+                                   orbit_client_data::TextBox* text_box) {
   if (text_box->GetText().empty()) {
     std::string time = orbit_display_formats::GetDisplayTime(
         absl::Nanoseconds(timer_info.end() - timer_info.start()));
@@ -444,7 +447,7 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
     timer_chain = std::make_shared<TimerChain>();
   }
 
-  TextBox& text_box = timer_chain->emplace_back(timer_info);
+  orbit_client_data::TextBox& text_box = timer_chain->emplace_back(timer_info);
   ++num_timers_;
 
   if (timer_info.start() < min_time_) min_time_ = timer_info.start();
@@ -474,7 +477,8 @@ void ThreadTrack::OnCaptureComplete() {
 }
 
 static inline void ResizeTextBox(const internal::DrawData& draw_data, const TimeGraph* time_graph,
-                                 float world_pos_y, float world_size_y, TextBox* text_box) {
+                                 float world_pos_y, float world_size_y,
+                                 orbit_client_data::TextBox* text_box) {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   double start_us = time_graph->GetUsFromTick(timer_info.start());
   double end_us = time_graph->GetUsFromTick(timer_info.end());
@@ -520,7 +524,7 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
     uint64_t next_pixel_start_time_ns = min_tick;
 
     for (auto it = first_node_to_draw; it != ordered_nodes.end() && it->first < max_tick; ++it) {
-      TextBox& text_box = *it->second->GetScope();
+      orbit_client_data::TextBox& text_box = *it->second->GetScope();
       if (text_box.End() <= next_pixel_start_time_ns) continue;
       ++visible_timer_count_;
 

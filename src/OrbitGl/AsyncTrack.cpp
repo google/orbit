@@ -14,6 +14,7 @@
 #include "App.h"
 #include "Batcher.h"
 #include "ClientData/FunctionUtils.h"
+#include "ClientData/TextBox.h"
 #include "ClientModel/CaptureData.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
@@ -42,7 +43,7 @@ AsyncTrack::AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph,
 }
 
 [[nodiscard]] std::string AsyncTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
-  const TextBox* text_box = batcher.GetTextBox(id);
+  const orbit_client_data::TextBox* text_box = batcher.GetTextBox(id);
   if (text_box == nullptr) return "";
   auto* manual_inst_manager = app_->GetManualInstrumentationManager();
   TimerInfo timer_info = text_box->GetTimerInfo();
@@ -101,7 +102,7 @@ void AsyncTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
 }
 
 void AsyncTrack::SetTimesliceText(const TimerInfo& timer_info, float min_x, float z_offset,
-                                  TextBox* text_box) {
+                                  orbit_client_data::TextBox* text_box) {
   std::string time = orbit_display_formats::GetDisplayTime(
       absl::Nanoseconds(timer_info.end() - timer_info.start()));
   text_box->SetElapsedTimeTextLength(time.length());

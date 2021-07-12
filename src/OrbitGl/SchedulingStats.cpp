@@ -4,21 +4,23 @@
 
 #include "SchedulingStats.h"
 
+#include <absl/strings/str_format.h>
+
 #include "CaptureWindow.h"
-#include "absl/strings/str_format.h"
+#include "ClientData/TextBox.h"
 #include "capture_data.pb.h"
 
 using orbit_client_protos::TimerInfo;
 
 static constexpr double kNsToMs = 1 / 1000000.0;
 
-SchedulingStats::SchedulingStats(const std::vector<const TextBox*>& scheduling_scopes,
-                                 const ThreadNameProvider& thread_name_provider, uint64_t start_ns,
-                                 uint64_t end_ns) {
+SchedulingStats::SchedulingStats(
+    const std::vector<const orbit_client_data::TextBox*>& scheduling_scopes,
+    const ThreadNameProvider& thread_name_provider, uint64_t start_ns, uint64_t end_ns) {
   time_range_ms_ = static_cast<double>(end_ns - start_ns) * kNsToMs;
 
   // Iterate on every scope in the selected range to compute stats.
-  for (const TextBox* scope : scheduling_scopes) {
+  for (const orbit_client_data::TextBox* scope : scheduling_scopes) {
     const orbit_client_protos::TimerInfo& timer_info = scope->GetTimerInfo();
     uint64_t clipped_start_ns = std::max(start_ns, timer_info.start());
     uint64_t clipped_end_ns = std::min(end_ns, timer_info.end());

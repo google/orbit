@@ -20,6 +20,7 @@
 #include "AccessibleTimeGraph.h"
 #include "App.h"
 #include "ClientData/CallstackData.h"
+#include "ClientData/TextBox.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
@@ -153,7 +154,7 @@ void CaptureWindow::HandlePickedElement(PickingMode picking_mode, PickingId pick
 
   if (picking_mode == PickingMode::kClick) {
     background_clicked_ = false;
-    const TextBox* text_box = batcher.GetTextBox(picking_id);
+    const orbit_client_data::TextBox* text_box = batcher.GetTextBox(picking_id);
     if (text_box) {
       SelectTextBox(text_box);
     } else if (type == PickingType::kPickable) {
@@ -184,7 +185,7 @@ void CaptureWindow::HandlePickedElement(PickingMode picking_mode, PickingId pick
   }
 }
 
-void CaptureWindow::SelectTextBox(const TextBox* text_box) {
+void CaptureWindow::SelectTextBox(const orbit_client_data::TextBox* text_box) {
   CHECK(time_graph_ != nullptr);
   if (text_box == nullptr) return;
 

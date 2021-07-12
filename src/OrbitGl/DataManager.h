@@ -13,10 +13,10 @@
 #include <vector>
 
 #include "ClientData/FunctionInfoSet.h"
+#include "ClientData/TextBox.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
 #include "GrpcProtos/Constants.h"
-#include "TextBox.h"
 #include "capture_data.pb.h"
 #include "tracepoint.pb.h"
 
@@ -36,14 +36,14 @@ class DataManager final {
   void set_visible_function_ids(absl::flat_hash_set<uint64_t> visible_function_ids);
   void set_highlighted_function_id(uint64_t highlighted_function_id);
   void set_selected_thread_id(int32_t thread_id);
-  void set_selected_text_box(const TextBox* text_box);
+  void set_selected_text_box(const orbit_client_data::TextBox* text_box);
 
   [[nodiscard]] bool IsFunctionSelected(const orbit_client_protos::FunctionInfo& function) const;
   [[nodiscard]] std::vector<orbit_client_protos::FunctionInfo> GetSelectedFunctions() const;
   [[nodiscard]] bool IsFunctionVisible(uint64_t function_address) const;
   [[nodiscard]] uint64_t highlighted_function_id() const;
   [[nodiscard]] int32_t selected_thread_id() const;
-  [[nodiscard]] const TextBox* selected_text_box() const;
+  [[nodiscard]] const orbit_client_data::TextBox* selected_text_box() const;
 
   void SelectTracepoint(const orbit_grpc_protos::TracepointInfo& info);
   void DeselectTracepoint(const orbit_grpc_protos::TracepointInfo& info);
@@ -136,7 +136,7 @@ class DataManager final {
   orbit_client_data::TracepointInfoSet selected_tracepoints_;
 
   int32_t selected_thread_id_ = -1;
-  const TextBox* selected_text_box_ = nullptr;
+  const orbit_client_data::TextBox* selected_text_box_ = nullptr;
 
   // DataManager needs a copy of this so that we can persist user choices like frame tracks between
   // captures.

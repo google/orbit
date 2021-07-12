@@ -37,6 +37,7 @@
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
+#include "ClientData/TextBox.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
 #include "ClientModel/CaptureData.h"
@@ -71,7 +72,6 @@
 #include "StatusListener.h"
 #include "StringManager.h"
 #include "Symbols/SymbolHelper.h"
-#include "TextBox.h"
 #include "TracepointsDataView.h"
 #include "capture.pb.h"
 #include "capture_data.pb.h"
@@ -428,8 +428,8 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] orbit_client_data::ThreadID selected_thread_id() const;
   void set_selected_thread_id(orbit_client_data::ThreadID thread_id);
 
-  [[nodiscard]] const TextBox* selected_text_box() const;
-  void SelectTextBox(const TextBox* text_box);
+  [[nodiscard]] const orbit_client_data::TextBox* selected_text_box() const;
+  void SelectTextBox(const orbit_client_data::TextBox* text_box);
   void DeselectTextBox();
 
   [[nodiscard]] uint64_t GetFunctionIdToHighlight() const;

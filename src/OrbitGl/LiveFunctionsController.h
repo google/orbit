@@ -8,10 +8,10 @@
 #include <cstdint>
 #include <functional>
 
+#include "ClientData/TextBox.h"
 #include "LiveFunctionsDataView.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/Profiling.h"
-#include "TextBox.h"
 #include "absl/container/flat_hash_map.h"
 #include "capture_data.pb.h"
 
@@ -55,7 +55,7 @@ class LiveFunctionsController {
   LiveFunctionsDataView live_functions_data_view_;
 
   absl::flat_hash_map<uint64_t, uint64_t> iterator_id_to_function_id_;
-  absl::flat_hash_map<uint64_t, const TextBox*> current_textboxes_;
+  absl::flat_hash_map<uint64_t, const orbit_client_data::TextBox*> current_textboxes_;
 
   std::function<void(uint64_t, const orbit_client_protos::FunctionInfo*)> add_iterator_callback_;
 

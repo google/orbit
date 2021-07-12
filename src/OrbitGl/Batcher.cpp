@@ -10,6 +10,7 @@
 #include <math.h>
 #include <stddef.h>
 
+#include "ClientData/TextBox.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
@@ -302,7 +303,7 @@ PickingUserData* Batcher::GetUserData(PickingId id) {
   return const_cast<PickingUserData*>(static_cast<const Batcher*>(this)->GetUserData(id));
 }
 
-const TextBox* Batcher::GetTextBox(PickingId id) const {
+const orbit_client_data::TextBox* Batcher::GetTextBox(PickingId id) const {
   const PickingUserData* data = GetUserData(id);
 
   if (data && data->text_box_) {

@@ -12,7 +12,7 @@
 #include <utility>
 #include <vector>
 
-#include "TextBox.h"
+#include "ClientData/TextBox.h"
 #include "TimerChain.h"
 #include "TimerInfosIterator.h"
 #include "capture_data.pb.h"
@@ -24,7 +24,7 @@ TEST(TimerInfosIterator, Access) {
   std::shared_ptr<TimerChain> chain = std::make_shared<TimerChain>();
   TimerInfo timer;
   timer.set_function_id(1);
-  TextBox box{timer};
+  orbit_client_data::TextBox box{timer};
   chain->emplace_back(box);
   chains.emplace_back(chain);
 
@@ -43,7 +43,7 @@ TEST(TimerInfosIterator, Copy) {
   std::shared_ptr<TimerChain> chain = std::make_shared<TimerChain>();
   TimerInfo timer;
   timer.set_function_id(1);
-  TextBox box{timer};
+  orbit_client_data::TextBox box{timer};
   chain->emplace_back(box);
   chains.emplace_back(chain);
 
@@ -73,7 +73,7 @@ TEST(TimerInfosIterator, Move) {
   std::shared_ptr<TimerChain> chain = std::make_shared<TimerChain>();
   TimerInfo timer;
   timer.set_function_id(1);
-  TextBox box{timer};
+  orbit_client_data::TextBox box{timer};
   chain->emplace_back(box);
   chains.emplace_back(chain);
 
@@ -95,7 +95,7 @@ TEST(TimerInfosIterator, Equality) {
   std::shared_ptr<TimerChain> chain = std::make_shared<TimerChain>();
   TimerInfo timer;
   timer.set_function_id(1);
-  TextBox box{timer};
+  orbit_client_data::TextBox box{timer};
   chain->emplace_back(box);
   chains.emplace_back(chain);
 
@@ -146,7 +146,7 @@ TEST(TimerInfosIterator, ForEachLarge) {
       timer.set_function_id(count);
       timer.set_start(count);
       timer.set_end(count + 1);
-      TextBox box{timer};
+      orbit_client_data::TextBox box{timer};
       chain->emplace_back(box);
       expected.emplace_back(count);
       ++count;

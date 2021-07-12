@@ -17,9 +17,9 @@
 #include "CallstackThreadBar.h"
 #include "CaptureViewElement.h"
 #include "ClientData/CallstackTypes.h"
+#include "ClientData/TextBox.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
-#include "TextBox.h"
 #include "TextRenderer.h"
 #include "TimerChain.h"
 #include "TracepointThreadBar.h"
@@ -39,7 +39,7 @@ struct DrawData {
   uint64_t min_timegraph_tick;
   Batcher* batcher;
   orbit_gl::Viewport* viewport;
-  const TextBox* selected_textbox;
+  const orbit_client_data::TextBox* selected_textbox;
   double inv_time_window;
   float world_start_x;
   float world_width;
@@ -72,21 +72,31 @@ class TimerTrack : public Track {
   [[nodiscard]] uint32_t GetDepth() const { return depth_; }
   [[nodiscard]] std::string GetExtraInfo(const orbit_client_protos::TimerInfo& timer);
 
-  [[nodiscard]] const TextBox* GetFirstAfterTime(uint64_t time, uint32_t depth) const;
-  [[nodiscard]] const TextBox* GetFirstBeforeTime(uint64_t time, uint32_t depth) const;
+  [[nodiscard]] const orbit_client_data::TextBox* GetFirstAfterTime(uint64_t time,
+                                                                    uint32_t depth) const;
+  [[nodiscard]] const orbit_client_data::TextBox* GetFirstBeforeTime(uint64_t time,
+                                                                     uint32_t depth) const;
 
   // Must be overriden by child class for sensible behavior.
-  [[nodiscard]] virtual const TextBox* GetLeft(const TextBox* textbox) const { return textbox; };
+  [[nodiscard]] virtual const orbit_client_data::TextBox* GetLeft(
+      const orbit_client_data::TextBox* textbox) const {
+    return textbox;
+  };
   // Must be overriden by child class for sensible behavior.
-  [[nodiscard]] virtual const TextBox* GetRight(const TextBox* textbox) const { return textbox; };
+  [[nodiscard]] virtual const orbit_client_data::TextBox* GetRight(
+      const orbit_client_data::TextBox* textbox) const {
+    return textbox;
+  };
 
-  [[nodiscard]] virtual const TextBox* GetUp(const TextBox* textbox) const;
-  [[nodiscard]] virtual const TextBox* GetDown(const TextBox* textbox) const;
+  [[nodiscard]] virtual const orbit_client_data::TextBox* GetUp(
+      const orbit_client_data::TextBox* textbox) const;
+  [[nodiscard]] virtual const orbit_client_data::TextBox* GetDown(
+      const orbit_client_data::TextBox* textbox) const;
 
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllChains() const override;
   [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains() const override;
-  [[nodiscard]] std::vector<const TextBox*> GetScopesInRange(uint64_t start_ns,
-                                                             uint64_t end_ns) const;
+  [[nodiscard]] std::vector<const orbit_client_data::TextBox*> GetScopesInRange(
+      uint64_t start_ns, uint64_t end_ns) const;
   [[nodiscard]] bool IsEmpty() const override;
 
   [[nodiscard]] bool IsCollapsible() const override { return depth_ > 1; }
@@ -115,9 +125,11 @@ class TimerTrack : public Track {
     return true;
   }
 
-  [[nodiscard]] bool DrawTimer(const TextBox* prev_text_box, const TextBox* next_text_box,
-                               const internal::DrawData& draw_data, TextBox* current_text_box,
-                               uint64_t* min_ignore, uint64_t* max_ignore);
+  [[nodiscard]] bool DrawTimer(const orbit_client_data::TextBox* prev_text_box,
+                               const orbit_client_data::TextBox* next_text_box,
+                               const internal::DrawData& draw_data,
+                               orbit_client_data::TextBox* current_text_box, uint64_t* min_ignore,
+                               uint64_t* max_ignore);
 
   void UpdateDepth(uint32_t depth) {
     if (depth > depth_) depth_ = depth;
@@ -125,12 +137,12 @@ class TimerTrack : public Track {
   [[nodiscard]] std::shared_ptr<TimerChain> GetTimers(uint32_t depth) const;
 
   virtual void SetTimesliceText(const orbit_client_protos::TimerInfo& /*timer*/, float /*min_x*/,
-                                float /*z_offset*/, TextBox* /*text_box*/) {}
+                                float /*z_offset*/, orbit_client_data::TextBox* /*text_box*/) {}
 
   [[nodiscard]] static internal::DrawData GetDrawData(
       uint64_t min_tick, uint64_t max_tick, float z_offset, Batcher* batcher, TimeGraph* time_graph,
-      orbit_gl::Viewport* viewport, bool is_collapsed, const TextBox* selected_textbox,
-      uint64_t highlighted_function_id);
+      orbit_gl::Viewport* viewport, bool is_collapsed,
+      const orbit_client_data::TextBox* selected_textbox, uint64_t highlighted_function_id);
 
   TextRenderer* text_renderer_ = nullptr;
   uint32_t depth_ = 0;
@@ -138,8 +150,8 @@ class TimerTrack : public Track {
   int visible_timer_count_ = 0;
 
   [[nodiscard]] virtual std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const;
-  [[nodiscard]] std::unique_ptr<PickingUserData> CreatePickingUserData(const Batcher& batcher,
-                                                                       const TextBox& text_box) {
+  [[nodiscard]] std::unique_ptr<PickingUserData> CreatePickingUserData(
+      const Batcher& batcher, const orbit_client_data::TextBox& text_box) {
     return std::make_unique<PickingUserData>(
         &text_box, [this, &batcher](PickingId id) { return this->GetBoxTooltip(batcher, id); });
   }

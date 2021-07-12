@@ -12,10 +12,10 @@
 #include <string>
 
 #include "CallstackThreadBar.h"
+#include "ClientData/TextBox.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
 #include "ScopeTree.h"
-#include "TextBox.h"
 #include "ThreadStateBar.h"
 #include "TimerTrack.h"
 #include "TracepointThreadBar.h"
@@ -38,8 +38,10 @@ class ThreadTrack final : public TimerTrack {
   [[nodiscard]] Type GetType() const override { return Type::kThreadTrack; }
   [[nodiscard]] std::string GetTooltip() const override;
 
-  [[nodiscard]] const TextBox* GetLeft(const TextBox* textbox) const override;
-  [[nodiscard]] const TextBox* GetRight(const TextBox* textbox) const override;
+  [[nodiscard]] const orbit_client_data::TextBox* GetLeft(
+      const orbit_client_data::TextBox* textbox) const override;
+  [[nodiscard]] const orbit_client_data::TextBox* GetRight(
+      const orbit_client_data::TextBox* textbox) const override;
 
   void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
             PickingMode picking_mode, float z_offset = 0) override;
@@ -65,9 +67,10 @@ class ThreadTrack final : public TimerTrack {
 
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer, bool is_selected,
                                     bool is_highlighted) const override;
-  [[nodiscard]] Color GetTimerColor(const TextBox& text_box, const internal::DrawData& draw_data);
+  [[nodiscard]] Color GetTimerColor(const orbit_client_data::TextBox& text_box,
+                                    const internal::DrawData& draw_data);
   void SetTimesliceText(const orbit_client_protos::TimerInfo& timer, float min_x, float z_offset,
-                        TextBox* text_box) override;
+                        orbit_client_data::TextBox* text_box) override;
   [[nodiscard]] std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const override;
 
   [[nodiscard]] float GetHeight() const override;
@@ -83,7 +86,7 @@ class ThreadTrack final : public TimerTrack {
   std::shared_ptr<orbit_gl::TracepointThreadBar> tracepoint_bar_;
 
   absl::Mutex scope_tree_mutex_;
-  ScopeTree<TextBox> scope_tree_;
+  ScopeTree<orbit_client_data::TextBox> scope_tree_;
   ScopeTreeUpdateType scope_tree_update_type_ = ScopeTreeUpdateType::kAlways;
 };
 

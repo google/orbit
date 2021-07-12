@@ -12,12 +12,11 @@
 #include <string_view>
 
 #include "CallstackThreadBar.h"
+#include "ClientData/TextBox.h"
 #include "CoreMath.h"
 #include "GpuDebugMarkerTrack.h"
 #include "PickingManager.h"
 #include "StringManager.h"
-#include "TextBox.h"
-#include "TimerTrack.h"
 #include "Track.h"
 #include "capture_data.pb.h"
 
@@ -46,8 +45,10 @@ class GpuSubmissionTrack : public TimerTrack {
   [[nodiscard]] std::string GetTooltip() const override;
   [[nodiscard]] float GetHeight() const override;
 
-  [[nodiscard]] const TextBox* GetLeft(const TextBox* text_box) const override;
-  [[nodiscard]] const TextBox* GetRight(const TextBox* text_box) const override;
+  [[nodiscard]] const orbit_client_data::TextBox* GetLeft(
+      const orbit_client_data::TextBox* text_box) const override;
+  [[nodiscard]] const orbit_client_data::TextBox* GetRight(
+      const orbit_client_data::TextBox* text_box) const override;
 
   [[nodiscard]] float GetYFromTimer(
       const orbit_client_protos::TimerInfo& timer_info) const override;
@@ -64,7 +65,7 @@ class GpuSubmissionTrack : public TimerTrack {
                                     bool is_highlighted) const override;
   [[nodiscard]] bool TimerFilter(const orbit_client_protos::TimerInfo& timer) const override;
   void SetTimesliceText(const orbit_client_protos::TimerInfo& timer, float min_x, float z_offset,
-                        TextBox* text_box) override;
+                        orbit_client_data::TextBox* text_box) override;
   [[nodiscard]] std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const override;
 
  private:

@@ -64,7 +64,6 @@ target_sources(
          ShortenStringWithEllipsis.h
          StatusListener.h
          SystemMemoryTrack.h
-         TextBox.h
          TextRenderer.h
          ThreadBar.h
          ThreadStateBar.h

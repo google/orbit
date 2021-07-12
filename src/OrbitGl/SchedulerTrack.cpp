@@ -10,9 +10,9 @@
 
 #include "App.h"
 #include "Batcher.h"
+#include "ClientData/TextBox.h"
 #include "ClientModel/CaptureData.h"
 #include "OrbitBase/Logging.h"
-#include "TextBox.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
@@ -85,7 +85,7 @@ std::string SchedulerTrack::GetTooltip() const {
 void SchedulerTrack::UpdateBoxHeight() { box_height_ = layout_->GetTextCoresHeight(); }
 
 std::string SchedulerTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
-  const TextBox* text_box = batcher.GetTextBox(id);
+  const orbit_client_data::TextBox* text_box = batcher.GetTextBox(id);
   if (!text_box) {
     return "";
   }

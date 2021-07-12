@@ -10,6 +10,8 @@
 #include <string>
 #include <vector>
 
+#include "ClientData/TextBox.h"
+
 class CaptureData;
 class SchedulerTrack;
 class TextBox;
@@ -20,10 +22,10 @@ class TextBox;
 
 class SchedulingStats {
  public:
-  typedef std::function<std::string(int32_t)> ThreadNameProvider;
+  using ThreadNameProvider = std::function<std::string(int32_t)>;
 
   SchedulingStats() = delete;
-  SchedulingStats(const std::vector<const TextBox*>& scheduling_scopes,
+  SchedulingStats(const std::vector<const orbit_client_data::TextBox*>& scheduling_scopes,
                   const ThreadNameProvider& thread_name_provider, uint64_t start_ns,
                   uint64_t end_ns);
 

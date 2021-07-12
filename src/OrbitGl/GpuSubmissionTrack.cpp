@@ -10,6 +10,7 @@
 
 #include "App.h"
 #include "Batcher.h"
+#include "ClientData/TextBox.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
@@ -159,7 +160,7 @@ bool GpuSubmissionTrack::TimerFilter(const TimerInfo& timer_info) const {
 }
 
 void GpuSubmissionTrack::SetTimesliceText(const TimerInfo& timer_info, float min_x, float z_offset,
-                                          TextBox* text_box) {
+                                          orbit_client_data::TextBox* text_box) {
   if (text_box->GetText().empty()) {
     std::string time = orbit_display_formats::GetDisplayTime(
         absl::Nanoseconds(timer_info.end() - timer_info.start()));
@@ -196,7 +197,8 @@ float GpuSubmissionTrack::GetHeight() const {
          (num_gaps * layout_->GetSpaceBetweenGpuDepths()) + layout_->GetTrackBottomMargin();
 }
 
-const TextBox* GpuSubmissionTrack::GetLeft(const TextBox* text_box) const {
+const orbit_client_data::TextBox* GpuSubmissionTrack::GetLeft(
+    const orbit_client_data::TextBox* text_box) const {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   uint64_t timeline_hash = timer_info.user_data_key();
   if (timeline_hash == timeline_hash_) {
@@ -206,7 +208,8 @@ const TextBox* GpuSubmissionTrack::GetLeft(const TextBox* text_box) const {
   return nullptr;
 }
 
-const TextBox* GpuSubmissionTrack::GetRight(const TextBox* text_box) const {
+const orbit_client_data::TextBox* GpuSubmissionTrack::GetRight(
+    const orbit_client_data::TextBox* text_box) const {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   uint64_t timeline_hash = timer_info.user_data_key();
   if (timeline_hash == timeline_hash_) {
@@ -217,7 +220,7 @@ const TextBox* GpuSubmissionTrack::GetRight(const TextBox* text_box) const {
 }
 
 std::string GpuSubmissionTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
-  const TextBox* text_box = batcher.GetTextBox(id);
+  const orbit_client_data::TextBox* text_box = batcher.GetTextBox(id);
   if ((text_box == nullptr) || text_box->GetTimerInfo().type() == TimerInfo::kCoreActivity) {
     return "";
   }

@@ -12,10 +12,10 @@
 #include <string_view>
 
 #include "CallstackThreadBar.h"
+#include "ClientData/TextBox.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
 #include "StringManager.h"
-#include "TextBox.h"
 #include "TimerTrack.h"
 #include "Track.h"
 #include "capture_data.pb.h"
@@ -48,7 +48,7 @@ class GpuDebugMarkerTrack : public TimerTrack {
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer, bool is_selected,
                                     bool is_highlighted) const override;
   void SetTimesliceText(const orbit_client_protos::TimerInfo& timer, float min_x, float z_offset,
-                        TextBox* text_box) override;
+                        orbit_client_data::TextBox* text_box) override;
 
   [[nodiscard]] std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const override;
 

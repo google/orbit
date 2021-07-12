@@ -11,9 +11,9 @@
 #include <vector>
 
 #include "CallstackThreadBar.h"
+#include "ClientData/TextBox.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
-#include "TextBox.h"
 #include "TimerChain.h"
 #include "TimerTrack.h"
 #include "Track.h"
@@ -39,7 +39,7 @@ class AsyncTrack final : public TimerTrack {
 
  protected:
   void SetTimesliceText(const orbit_client_protos::TimerInfo& timer, float min_x, float z_offset,
-                        TextBox* text_box) override;
+                        orbit_client_data::TextBox* text_box) override;
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
                                     bool is_selected, bool is_highlighted) const override;
 

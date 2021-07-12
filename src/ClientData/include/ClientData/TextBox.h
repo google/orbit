@@ -2,13 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_TEXT_BOX_H_
-#define ORBIT_GL_TEXT_BOX_H_
+#ifndef CLIENT_DATA_TEXT_BOX_H_
+#define CLIENT_DATA_TEXT_BOX_H_
 
 #include <utility>
 
 #include "capture_data.pb.h"
 
+namespace orbit_client_data {
 class TextBox {
  public:
   TextBox() = default;
@@ -49,5 +50,6 @@ class TextBox {
   std::string text_;
   size_t elapsed_time_text_length_ = 0;
 };
+}  // namespace orbit_client_data
 
-#endif  // ORBIT_GL_TEXT_BOX_H_
+#endif  // CLIENT_DATA_TEXT_BOX_H_
