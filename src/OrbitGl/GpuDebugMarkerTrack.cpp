@@ -81,12 +81,12 @@ void GpuDebugMarkerTrack::SetTimesliceText(const TimerInfo& timer_info, float mi
   }
 
   const Color kTextWhite(255, 255, 255, 255);
-  const Vec2& box_pos = text_box->GetPos();
-  const Vec2& box_size = text_box->GetSize();
-  float pos_x = std::max(box_pos[0], min_x);
-  float max_size = box_pos[0] + box_size[0] - pos_x;
+  const auto& box_pos = text_box->GetPos();
+  const auto& box_size = text_box->GetSize();
+  float pos_x = std::max(box_pos.first, min_x);
+  float max_size = box_pos.first + box_size.first - pos_x;
   text_renderer_->AddTextTrailingCharsPrioritized(
-      text_box->GetText().c_str(), pos_x, text_box->GetPos()[1] + layout_->GetTextOffset(),
+      text_box->GetText().c_str(), pos_x, box_pos.second + layout_->GetTextOffset(),
       GlCanvas::kZValueBox + z_offset, kTextWhite, text_box->GetElapsedTimeTextLength(),
       layout_->CalculateZoomedFontSize(), max_size);
 }
