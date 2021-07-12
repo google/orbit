@@ -23,6 +23,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/PostProcessedSamplingData.h
         include/ClientData/ProcessData.h
         include/ClientData/TextBox.h
+        include/ClientData/TimerChain.h
         include/ClientData/TimestampIntervalSet.h
         include/ClientData/TracepointCustom.h
         include/ClientData/TracepointData.h
@@ -35,6 +36,7 @@ target_sources(ClientData PRIVATE
         ModuleManager.cpp
         PostProcessedSamplingData.cpp
         ProcessData.cpp
+        TimerChain.cpp
         TimestampIntervalSet.cpp
         TracepointData.cpp
         UserDefinedCaptureData.cpp)

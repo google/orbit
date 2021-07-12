@@ -71,7 +71,6 @@ target_sources(
          TimeGraph.h
          TimeGraphLayout.h
          Timer.h
-         TimerChain.h
          TimerInfosIterator.h
          TimerTrack.h
          Track.h
@@ -137,7 +136,6 @@ target_sources(
           TextRenderer.cpp
           TimeGraph.cpp
           TimeGraphLayout.cpp
-          TimerChain.cpp
           TimerInfosIterator.cpp
           TimerTrack.cpp
           ThreadBar.cpp
