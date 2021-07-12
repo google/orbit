@@ -21,6 +21,7 @@ static std::array<std::string, kBasicPagefaultTrackDimension> CreateSeriesName(
 BasicPagefaultTrack::BasicPagefaultTrack(Track* parent, TimeGraph* time_graph,
                                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                          const std::string& name, const std::string& cgroup_name,
+                                         uint64_t memory_sampling_period_ms,
                                          const orbit_client_model::CaptureData* capture_data,
                                          uint32_t indentation_level)
     : LineGraphTrack<kBasicPagefaultTrackDimension>(
@@ -29,6 +30,7 @@ BasicPagefaultTrack::BasicPagefaultTrack(Track* parent, TimeGraph* time_graph,
           indentation_level),
       AnnotationTrack(),
       cgroup_name_(cgroup_name),
+      memory_sampling_period_ms_(memory_sampling_period_ms),
       parent_(parent) {
   draw_background_ = false;
 
@@ -55,13 +57,17 @@ void BasicPagefaultTrack::AddValuesAndUpdateAnnotations(
   double updated_max = GetGraphMaxValue();
   std::optional<std::pair<std::string, double>> value_upper_bound = GetValueUpperBound();
   if (!value_upper_bound.has_value() || value_upper_bound.value().second < updated_max) {
-    SetValueUpperBound(absl::StrFormat("Maximum count: %.0f", updated_max), updated_max);
+    SetValueUpperBound(
+        absl::StrFormat("Maximum Rate: %.0f per %d MS", updated_max, memory_sampling_period_ms_),
+        updated_max);
   }
 
   double updated_min = GetGraphMinValue();
   std::optional<std::pair<std::string, double>> value_lower_bound = GetValueLowerBound();
   if (!value_lower_bound.has_value() || value_lower_bound.value().second > updated_min) {
-    SetValueLowerBound(absl::StrFormat("Minimum count: %.0f", updated_min), updated_min);
+    SetValueLowerBound(
+        absl::StrFormat("Minimum Rate: %.0f per %d MS", updated_min, memory_sampling_period_ms_),
+        updated_min);
   }
 }
 

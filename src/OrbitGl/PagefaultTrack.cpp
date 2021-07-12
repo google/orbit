@@ -4,7 +4,10 @@
 
 #include "PagefaultTrack.h"
 
+#include "Api/EncodedEvent.h"
+#include "CaptureClient/CaptureEventProcessor.h"
 #include "Geometry.h"
+#include "GrpcProtos/Constants.h"
 #include "TextRenderer.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
@@ -13,19 +16,23 @@
 namespace orbit_gl {
 
 namespace {
-const std::string kTrackName = "PagefaultTrack";
+using orbit_capture_client::CaptureEventProcessor;
+using orbit_grpc_protos::kMissingInfo;
 }  // namespace
 
 PagefaultTrack::PagefaultTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                                orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                               const std::string& cgroup_name,
+                               const std::string& cgroup_name, uint64_t memory_sampling_period_ms,
                                const orbit_client_model::CaptureData* capture_data,
                                uint32_t indentation_level)
     : Track(parent, time_graph, viewport, layout, capture_data, indentation_level),
       major_pagefault_track_{std::make_shared<MajorPagefaultTrack>(
-          this, time_graph, viewport, layout, cgroup_name, capture_data, indentation_level + 1)},
+          this, time_graph, viewport, layout, cgroup_name, memory_sampling_period_ms, capture_data,
+          indentation_level + 1)},
       minor_pagefault_track_{std::make_shared<MinorPagefaultTrack>(
-          this, time_graph, viewport, layout, cgroup_name, capture_data, indentation_level + 1)} {
+          this, time_graph, viewport, layout, cgroup_name, memory_sampling_period_ms, capture_data,
+          indentation_level + 1)} {
+  const std::string kTrackName = "Pagefault Track";
   SetName(kTrackName);
   SetLabel(kTrackName);
 }
@@ -67,7 +74,7 @@ void PagefaultTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
 
   SetPos(viewport_->GetWorldTopLeft()[0], pos_[1]);
   SetSize(track_width, track_height);
-  SetLabel(collapse_toggle_->IsCollapsed() ? major_pagefault_track_->GetName() : kTrackName);
+  SetLabel(collapse_toggle_->IsCollapsed() ? major_pagefault_track_->GetName() : GetName());
 
   UpdatePositionOfSubtracks();
 
@@ -124,6 +131,44 @@ void PagefaultTrack::UpdatePositionOfSubtracks() {
 }
 
 void PagefaultTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
+  int64_t system_pagefaults = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(CaptureEventProcessor::PagefaultEncodingIndex::kSystemPagefault)));
+  int64_t system_major_pagefaults = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(CaptureEventProcessor::PagefaultEncodingIndex::kSystemMajorPagefault)));
+  int64_t cgroup_pagefaults = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(CaptureEventProcessor::PagefaultEncodingIndex::kCGroupPagefault)));
+  int64_t cgroup_major_pagefaults = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(CaptureEventProcessor::PagefaultEncodingIndex::kCGroupMajorPagefault)));
+  int64_t process_minor_pagefaults = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(CaptureEventProcessor::PagefaultEncodingIndex::kProcessMinorPagefault)));
+  int64_t process_major_pagefaults = orbit_api::Decode<int64_t>(timer_info.registers(
+      static_cast<size_t>(CaptureEventProcessor::PagefaultEncodingIndex::kProcessMajorPagefault)));
+
+  if (system_major_pagefaults != kMissingInfo && cgroup_major_pagefaults != kMissingInfo &&
+      process_major_pagefaults != kMissingInfo) {
+    std::array<double, orbit_gl::kBasicPagefaultTrackDimension> values;
+    values[static_cast<size_t>(MajorPagefaultTrack::SeriesIndex::kProcess)] =
+        static_cast<double>(process_major_pagefaults);
+    values[static_cast<size_t>(MajorPagefaultTrack::SeriesIndex::kCGroup)] =
+        static_cast<double>(cgroup_major_pagefaults);
+    values[static_cast<size_t>(MajorPagefaultTrack::SeriesIndex::kSystem)] =
+        static_cast<double>(system_major_pagefaults);
+    AddValuesAndUpdateAnnotationsForMajorPagefaultSubtrack(timer_info.start(), values);
+  }
+
+  if (system_pagefaults != kMissingInfo && system_major_pagefaults != kMissingInfo &&
+      cgroup_pagefaults != kMissingInfo && cgroup_major_pagefaults != kMissingInfo &&
+      process_minor_pagefaults != kMissingInfo) {
+    std::array<double, orbit_gl::kBasicPagefaultTrackDimension> values;
+    values[static_cast<size_t>(MinorPagefaultTrack::SeriesIndex::kProcess)] =
+        static_cast<double>(process_minor_pagefaults);
+    values[static_cast<size_t>(MinorPagefaultTrack::SeriesIndex::kCGroup)] =
+        static_cast<double>(cgroup_pagefaults - cgroup_major_pagefaults);
+    values[static_cast<size_t>(MinorPagefaultTrack::SeriesIndex::kSystem)] =
+        static_cast<double>(system_pagefaults - system_major_pagefaults);
+    AddValuesAndUpdateAnnotationsForMinorPagefaultSubtrack(timer_info.start(), values);
+  }
+
   constexpr uint32_t kDepth = 0;
   std::shared_ptr<TimerChain> timer_chain = timers_[kDepth];
   if (timer_chain == nullptr) {
