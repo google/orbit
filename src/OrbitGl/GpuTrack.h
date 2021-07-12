@@ -64,8 +64,10 @@ class GpuTrack : public Track {
                         PickingMode picking_mode, float z_offset = 0) override;
   [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() override;
 
-  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllChains() const override;
-  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains() const override;
+  [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GetAllChains()
+      const override;
+  [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>>
+  GetAllSerializableChains() const override;
 
   [[nodiscard]] bool IsEmpty() const override {
     return submission_track_->IsEmpty() && marker_track_->IsEmpty();

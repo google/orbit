@@ -20,8 +20,9 @@
 using orbit_client_protos::TimerInfo;
 
 TEST(TimerInfosIterator, Access) {
-  std::vector<std::shared_ptr<TimerChain>> chains;
-  std::shared_ptr<TimerChain> chain = std::make_shared<TimerChain>();
+  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> chains;
+  std::shared_ptr<orbit_client_data::TimerChain> chain =
+      std::make_shared<orbit_client_data::TimerChain>();
   TimerInfo timer;
   timer.set_function_id(1);
   orbit_client_data::TextBox box{timer};
@@ -39,8 +40,9 @@ TEST(TimerInfosIterator, Access) {
 }
 
 TEST(TimerInfosIterator, Copy) {
-  std::vector<std::shared_ptr<TimerChain>> chains;
-  std::shared_ptr<TimerChain> chain = std::make_shared<TimerChain>();
+  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> chains;
+  std::shared_ptr<orbit_client_data::TimerChain> chain =
+      std::make_shared<orbit_client_data::TimerChain>();
   TimerInfo timer;
   timer.set_function_id(1);
   orbit_client_data::TextBox box{timer};
@@ -69,8 +71,9 @@ TEST(TimerInfosIterator, Copy) {
 }
 
 TEST(TimerInfosIterator, Move) {
-  std::vector<std::shared_ptr<TimerChain>> chains;
-  std::shared_ptr<TimerChain> chain = std::make_shared<TimerChain>();
+  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> chains;
+  std::shared_ptr<orbit_client_data::TimerChain> chain =
+      std::make_shared<orbit_client_data::TimerChain>();
   TimerInfo timer;
   timer.set_function_id(1);
   orbit_client_data::TextBox box{timer};
@@ -91,8 +94,9 @@ TEST(TimerInfosIterator, Move) {
 }
 
 TEST(TimerInfosIterator, Equality) {
-  std::vector<std::shared_ptr<TimerChain>> chains;
-  std::shared_ptr<TimerChain> chain = std::make_shared<TimerChain>();
+  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> chains;
+  std::shared_ptr<orbit_client_data::TimerChain> chain =
+      std::make_shared<orbit_client_data::TimerChain>();
   TimerInfo timer;
   timer.set_function_id(1);
   orbit_client_data::TextBox box{timer};
@@ -118,7 +122,7 @@ TEST(TimerInfosIterator, Equality) {
 }
 
 TEST(TimerInfosIterator, ForEachEmpty) {
-  std::vector<std::shared_ptr<TimerChain>> chains;
+  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> chains;
 
   TimerInfosIterator it_begin(chains.begin(), chains.end());
   TimerInfosIterator it_end(chains.begin(), chains.end());
@@ -131,7 +135,7 @@ TEST(TimerInfosIterator, ForEachEmpty) {
 }
 
 TEST(TimerInfosIterator, ForEachLarge) {
-  std::vector<std::shared_ptr<TimerChain>> chains;
+  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> chains;
   std::vector<uint64_t> expected;
 
   size_t count = 0;
@@ -140,7 +144,8 @@ TEST(TimerInfosIterator, ForEachLarge) {
   //  such that there are blocks inside the chains that are full (1024 elements),
   //  as well as blocks that are not full.
   for (size_t chain_count = 0; chain_count < 12; ++chain_count) {
-    std::shared_ptr<TimerChain> chain = std::make_shared<TimerChain>();
+    std::shared_ptr<orbit_client_data::TimerChain> chain =
+        std::make_shared<orbit_client_data::TimerChain>();
     for (size_t box_count = 0; box_count < max_timers; ++box_count) {
       TimerInfo timer;
       timer.set_function_id(count);

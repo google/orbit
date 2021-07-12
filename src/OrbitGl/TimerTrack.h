@@ -68,7 +68,8 @@ class TimerTrack : public Track {
                         PickingMode /*picking_mode*/, float z_offset = 0) override;
   [[nodiscard]] Type GetType() const override { return Type::kTimerTrack; }
 
-  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetTimers() const override;
+  [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GetTimers()
+      const override;
   [[nodiscard]] uint32_t GetDepth() const { return depth_; }
   [[nodiscard]] std::string GetExtraInfo(const orbit_client_protos::TimerInfo& timer);
 
@@ -93,8 +94,10 @@ class TimerTrack : public Track {
   [[nodiscard]] virtual const orbit_client_data::TextBox* GetDown(
       const orbit_client_data::TextBox* textbox) const;
 
-  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllChains() const override;
-  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllSerializableChains() const override;
+  [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GetAllChains()
+      const override;
+  [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>>
+  GetAllSerializableChains() const override;
   [[nodiscard]] std::vector<const orbit_client_data::TextBox*> GetScopesInRange(
       uint64_t start_ns, uint64_t end_ns) const;
   [[nodiscard]] bool IsEmpty() const override;
@@ -134,7 +137,7 @@ class TimerTrack : public Track {
   void UpdateDepth(uint32_t depth) {
     if (depth > depth_) depth_ = depth;
   }
-  [[nodiscard]] std::shared_ptr<TimerChain> GetTimers(uint32_t depth) const;
+  [[nodiscard]] std::shared_ptr<orbit_client_data::TimerChain> GetTimers(uint32_t depth) const;
 
   virtual void SetTimesliceText(const orbit_client_protos::TimerInfo& /*timer*/, float /*min_x*/,
                                 float /*z_offset*/, orbit_client_data::TextBox* /*text_box*/) {}

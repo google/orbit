@@ -123,7 +123,8 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   [[nodiscard]] int GetNumDrawnTextBoxes() const { return num_drawn_text_boxes_; }
   [[nodiscard]] TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
   [[nodiscard]] Batcher& GetBatcher() { return batcher_; }
-  [[nodiscard]] std::vector<std::shared_ptr<TimerChain>> GetAllThreadTrackTimerChains() const;
+  [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>>
+  GetAllThreadTrackTimerChains() const;
 
   void UpdateHorizontalScroll(float ratio);
   [[nodiscard]] double GetMinTimeUs() const { return min_time_us_; }

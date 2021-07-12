@@ -23,7 +23,8 @@
 template <size_t Dimension>
 GraphTrack<Dimension>::GraphTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                                   orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                                  std::string name, std::array<std::string, Dimension> series_names,
+                                  const std::string& name,
+                                  std::array<std::string, Dimension> series_names,
                                   const orbit_client_model::CaptureData* capture_data,
                                   uint32_t indentation_level)
     : Track(parent, time_graph, viewport, layout, capture_data, indentation_level),
@@ -104,9 +105,9 @@ void GraphTrack<Dimension>::UpdatePrimitives(Batcher* batcher, uint64_t min_tick
 template <size_t Dimension>
 void GraphTrack<Dimension>::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   constexpr uint32_t kDepth = 0;
-  std::shared_ptr<TimerChain> timer_chain = timers_[kDepth];
+  std::shared_ptr<orbit_client_data::TimerChain> timer_chain = timers_[kDepth];
   if (timer_chain == nullptr) {
-    timer_chain = std::make_shared<TimerChain>();
+    timer_chain = std::make_shared<orbit_client_data::TimerChain>();
     timers_[kDepth] = timer_chain;
   }
 
@@ -114,8 +115,9 @@ void GraphTrack<Dimension>::OnTimer(const orbit_client_protos::TimerInfo& timer_
 }
 
 template <size_t Dimension>
-std::vector<std::shared_ptr<TimerChain>> GraphTrack<Dimension>::GetAllChains() const {
-  std::vector<std::shared_ptr<TimerChain>> chains;
+std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GraphTrack<Dimension>::GetAllChains()
+    const {
+  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> chains;
   for (const auto& pair : timers_) {
     chains.push_back(pair.second);
   }
