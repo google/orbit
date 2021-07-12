@@ -1318,7 +1318,7 @@ void OrbitApp::StartCapture() {
   bool enable_api = data_manager_->get_enable_api();
   bool enable_introspection = IsDevMode() && data_manager_->get_enable_introspection();
   bool enable_user_space_instrumentation =
-      IsDevMode() && data_manager_->get_enable_user_space_instrumentation();
+      IsDevMode() && data_manager_->enable_user_space_instrumentation();
   double samples_per_second = data_manager_->samples_per_second();
   uint16_t stack_dump_size = data_manager_->stack_dump_size();
   UnwindingMethod unwinding_method = data_manager_->unwinding_method();
