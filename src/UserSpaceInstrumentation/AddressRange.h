@@ -5,8 +5,6 @@
 #ifndef USER_SPACE_INSTRUMENTATION_ADDRESS_RANGE_H_
 #define USER_SPACE_INSTRUMENTATION_ADDRESS_RANGE_H_
 
-#include <absl/hash/hash.h>
-
 #include <cstdint>
 #include <utility>
 
@@ -19,15 +17,14 @@ struct AddressRange {
   AddressRange() = default;
   AddressRange(uint64_t start, uint64_t end) : start(start), end(end) {}
 
-  friend bool operator==(const AddressRange& lhs, const AddressRange& rhs) {
-    return lhs.start == rhs.start && lhs.end == rhs.end;
-  }
-
   uint64_t start;
   uint64_t end;
 };
 
 // Make AddressRange hashable so we can use it as a key in a flat_hash_map.
+inline bool operator==(const AddressRange& lhs, const AddressRange& rhs) {
+  return lhs.start == rhs.start && lhs.end == rhs.end;
+}
 template <typename H>
 H AbslHashValue(H h, const AddressRange& a) {
   return H::combine(std::move(h), a.start, a.end);
