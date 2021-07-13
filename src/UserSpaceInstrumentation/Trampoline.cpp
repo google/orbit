@@ -515,7 +515,7 @@ ErrorMessageOr<AddressRange> FindAddressRangeForTrampoline(
     const std::vector<AddressRange>& unavailable_ranges, const AddressRange& code_range,
     uint64_t size) {
   constexpr uint64_t kMax32BitOffset = INT32_MAX;
-  constexpr uint64_t kMax64BitAdress = UINT64_MAX;
+  constexpr uint64_t kMax64BitAddress = UINT64_MAX;
   const uint64_t page_size = sysconf(_SC_PAGE_SIZE);
 
   FAIL_IF(unavailable_ranges.size() == 0 || unavailable_ranges[0].start != 0,
@@ -559,14 +559,14 @@ ErrorMessageOr<AddressRange> FindAddressRangeForTrampoline(
   do {
     // Check if we are so close to the end of the address space such that rounding up would
     // overflow.
-    if (unavailable_ranges[optional_range_index.value()].end > kMax64BitAdress - (page_size - 1)) {
+    if (unavailable_ranges[optional_range_index.value()].end > kMax64BitAddress - (page_size - 1)) {
       break;
     }
     const uint64_t trampoline_address =
         ((unavailable_ranges[optional_range_index.value()].end + (page_size - 1)) / page_size) *
         page_size;
     // Check if we ran out of address space.
-    if (trampoline_address >= kMax64BitAdress - size) {
+    if (trampoline_address >= kMax64BitAddress - size) {
       break;
     }
     AddressRange trampoline_range = {trampoline_address, trampoline_address + size};
