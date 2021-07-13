@@ -58,7 +58,7 @@ void BasicPagefaultTrack::AddValuesAndUpdateAnnotations(
   std::optional<std::pair<std::string, double>> value_upper_bound = GetValueUpperBound();
   if (!value_upper_bound.has_value() || value_upper_bound.value().second < updated_max) {
     SetValueUpperBound(
-        absl::StrFormat("Maximum Rate: %.0f per %d MS", updated_max, memory_sampling_period_ms_),
+        absl::StrFormat("Maximum Rate: %.0f per %d ms", updated_max, memory_sampling_period_ms_),
         updated_max);
   }
 
@@ -66,7 +66,7 @@ void BasicPagefaultTrack::AddValuesAndUpdateAnnotations(
   std::optional<std::pair<std::string, double>> value_lower_bound = GetValueLowerBound();
   if (!value_lower_bound.has_value() || value_lower_bound.value().second > updated_min) {
     SetValueLowerBound(
-        absl::StrFormat("Minimum Rate: %.0f per %d MS", updated_min, memory_sampling_period_ms_),
+        absl::StrFormat("Minimum Rate: %.0f per %d ms", updated_min, memory_sampling_period_ms_),
         updated_min);
   }
 }
