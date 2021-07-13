@@ -311,7 +311,7 @@
     "context": "host"
    },
    "29": {
-    "ref": "libunwindstack/80a734f14@orbitdeps/stable#0",
+    "ref": "libunwindstack/20210709@orbitdeps/stable#01cac911596286754869ea05ec87df51",
     "requires": [
      "26"
     ],
