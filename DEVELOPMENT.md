@@ -25,9 +25,9 @@ release from GitHub's [releases page](https://github.com/google/orbit/releases).
 
 To build Orbit you need a compiler capable of C++17. The following ones should be fine.
 
-- GCC 8 and above on Linux
+- GCC 9 and above on Linux
 - Clang 7 and above on Linux
-- MSVC 2017, 2019 and above on Windows
+- MSVC 2019 and above on Windows (MSVC 2017 is no longer supported by some dependencies)
 
 ## Dependencies
 
@@ -178,7 +178,7 @@ On Windows, we recommend getting `clang-format` directly from the
 LLVM.org website. They offer binary packages of `clang`, where
 `clang-format` is part of.
 
-Visual Studio 2017 ships `clang-format` as part of the IDE though.
+Visual Studio 2017+ ships `clang-format` as part of the IDE though.
 (https://devblogs.microsoft.com/cppblog/clangformat-support-in-visual-studio-2017-15-7-preview-1/)
 
 On most Linux distributions, there is a dedicated package called `clang-format`.
