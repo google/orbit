@@ -47,7 +47,7 @@ uint64_t ExitPayload() {
     if (skipped > 0) {
       printf(" ( %lu skipped events )\n", skipped);
     }
-    printf("Returned from function with id %#lx\n", current_return_address.function_id);
+    printf("Returned from function with id %lu\n", current_return_address.function_id);
     last_logged_event = now;
     skipped = 0;
   } else {

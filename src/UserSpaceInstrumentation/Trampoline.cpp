@@ -49,7 +49,7 @@ size_t kMaxRelocatedPrologueSize = kSizeOfJmp * 16;
 // before each run. This happens in `InstrumentFunction`. Whenever the code of the trampoline is
 // changed this constant needs to be adjusted as well. There is a CHECK in the code below to make
 // sure this number is correct.
-constexpr uint64_t kOffsetOfFunctiunIdInCallToEntryPayload = 105;
+constexpr uint64_t kOffsetOfFunctionIdInCallToEntryPayload = 105;
 
 [[nodiscard]] std::string InstructionBytesAsString(cs_insn* instruction) {
   std::string result;
@@ -209,11 +209,11 @@ void AppendCallToEntryPayloadAndOverwriteReturnAddress(uint64_t entry_payload_fu
       .AppendBytes({0x48, 0x8b, 0x38})
       .AppendBytes({0x48, 0xbe});
   // This fails if the code for the trampoline was changed - see the comment at the declaration of
-  // kOffsetOfFunctiunIdInCallToEntryPayload above.
-  CHECK(trampoline.GetResultAsVector().size() == kOffsetOfFunctiunIdInCallToEntryPayload);
+  // kOffsetOfFunctionIdInCallToEntryPayload above.
+  CHECK(trampoline.GetResultAsVector().size() == kOffsetOfFunctionIdInCallToEntryPayload);
   // The value of function id will be overwritten by every call to `InstrumentFunction`. The zero
   // here is just a placeholder.
-  trampoline.AppendImmediate64(0)
+  trampoline.AppendImmediate64(0xDEADBEEFDEADBEEF)
       .AppendBytes({0x48, 0xb8})
       .AppendImmediate64(entry_payload_function_address)
       .AppendBytes({0xff, 0xd0})
@@ -850,7 +850,7 @@ ErrorMessageOr<void> InstrumentFunction(pid_t pid, uint64_t function_address, ui
   // Patch the trampoline to hand over the current function_id to the entry payload.
   MachineCode function_id_as_bytes;
   function_id_as_bytes.AppendImmediate64(function_id);
-  OUTCOME_TRY(WriteTraceesMemory(pid, trampoline_address + kOffsetOfFunctiunIdInCallToEntryPayload,
+  OUTCOME_TRY(WriteTraceesMemory(pid, trampoline_address + kOffsetOfFunctionIdInCallToEntryPayload,
                                  function_id_as_bytes.GetResultAsVector()));
 
   return outcome::success();
