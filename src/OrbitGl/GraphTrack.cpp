@@ -65,7 +65,7 @@ void GraphTrack<Dimension>::Draw(Batcher& batcher, TextRenderer& text_renderer,
   float point_y = GetLabelYFromValues(values);
   std::string text = GetLabelTextFromValues(values);
   const Color kBlack(0, 0, 0, 255);
-  const Color kTransparentWhite(255, 255, 255, 100);
+  const Color kTransparentWhite(255, 255, 255, 180);
   float label_z = GlCanvas::kZValueTrackLabel + z_offset;
   DrawLabel(batcher, text_renderer, Vec2(point_x, point_y), text, kBlack, kTransparentWhite,
             label_z);
