@@ -709,8 +709,9 @@ TEST_F(InstrumentFunctionTest, DoSomething) {
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(address_after_prologue_or_error, HasNoError());
-  ErrorMessageOr<void> result = InstrumentFunction(
-      pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
+  ErrorMessageOr<void> result =
+      InstrumentFunction(pid_, function_address_, /*function_id=*/0,
+                         address_after_prologue_or_error.value(), trampoline_address_);
   EXPECT_THAT(result, HasNoError());
   RestartAndRemoveInstrumentation();
 }
@@ -762,8 +763,9 @@ TEST_F(InstrumentFunctionTest, LongEnough) {
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(address_after_prologue_or_error, HasNoError());
-  ErrorMessageOr<void> result = InstrumentFunction(
-      pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
+  ErrorMessageOr<void> result =
+      InstrumentFunction(pid_, function_address_, /*function_id=*/0,
+                         address_after_prologue_or_error.value(), trampoline_address_);
   EXPECT_THAT(result, HasNoError());
   RestartAndRemoveInstrumentation();
 }
@@ -788,8 +790,9 @@ TEST_F(InstrumentFunctionTest, RipRelativeAddressing) {
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(address_after_prologue_or_error, HasNoError());
-  ErrorMessageOr<void> result = InstrumentFunction(
-      pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
+  ErrorMessageOr<void> result =
+      InstrumentFunction(pid_, function_address_, /*function_id=*/0,
+                         address_after_prologue_or_error.value(), trampoline_address_);
   EXPECT_THAT(result, HasNoError());
   RestartAndRemoveInstrumentation();
 }
@@ -815,8 +818,9 @@ TEST_F(InstrumentFunctionTest, UnconditionalJump8BitOffset) {
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(address_after_prologue_or_error, HasNoError());
-  ErrorMessageOr<void> result = InstrumentFunction(
-      pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
+  ErrorMessageOr<void> result =
+      InstrumentFunction(pid_, function_address_, /*function_id=*/0,
+                         address_after_prologue_or_error.value(), trampoline_address_);
   EXPECT_THAT(result, HasNoError());
   RestartAndRemoveInstrumentation();
 }
@@ -840,8 +844,9 @@ TEST_F(InstrumentFunctionTest, UnconditionalJump32BitOffset) {
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(address_after_prologue_or_error, HasNoError());
-  ErrorMessageOr<void> result = InstrumentFunction(
-      pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
+  ErrorMessageOr<void> result =
+      InstrumentFunction(pid_, function_address_, /*function_id=*/0,
+                         address_after_prologue_or_error.value(), trampoline_address_);
   EXPECT_THAT(result, HasNoError());
   RestartAndRemoveInstrumentation();
 }
@@ -866,8 +871,9 @@ TEST_F(InstrumentFunctionTest, CallFunction) {
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(address_after_prologue_or_error, HasNoError());
-  ErrorMessageOr<void> result = InstrumentFunction(
-      pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
+  ErrorMessageOr<void> result =
+      InstrumentFunction(pid_, function_address_, /*function_id=*/0,
+                         address_after_prologue_or_error.value(), trampoline_address_);
   EXPECT_THAT(result, HasNoError());
   RestartAndRemoveInstrumentation();
 }
@@ -893,8 +899,9 @@ TEST_F(InstrumentFunctionTest, ConditionalJump8BitOffset) {
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(address_after_prologue_or_error, HasNoError());
-  ErrorMessageOr<void> result = InstrumentFunction(
-      pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
+  ErrorMessageOr<void> result =
+      InstrumentFunction(pid_, function_address_, /*function_id=*/0,
+                         address_after_prologue_or_error.value(), trampoline_address_);
   EXPECT_THAT(result, HasNoError());
   RestartAndRemoveInstrumentation();
 }
@@ -921,8 +928,9 @@ TEST_F(InstrumentFunctionTest, ConditionalJump32BitOffset) {
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(address_after_prologue_or_error, HasNoError());
-  ErrorMessageOr<void> result = InstrumentFunction(
-      pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
+  ErrorMessageOr<void> result =
+      InstrumentFunction(pid_, function_address_, /*function_id=*/0,
+                         address_after_prologue_or_error.value(), trampoline_address_);
   EXPECT_THAT(result, HasNoError());
   RestartAndRemoveInstrumentation();
 }
@@ -978,8 +986,9 @@ TEST_F(InstrumentFunctionTest, CheckIntParameters) {
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(address_after_prologue_or_error, HasNoError());
-  ErrorMessageOr<void> result = InstrumentFunction(
-      pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
+  ErrorMessageOr<void> result =
+      InstrumentFunction(pid_, function_address_, /*function_id=*/0,
+                         address_after_prologue_or_error.value(), trampoline_address_);
   EXPECT_THAT(result, HasNoError());
   RestartAndRemoveInstrumentation();
 }
@@ -1007,8 +1016,9 @@ TEST_F(InstrumentFunctionTest, CheckFloatParameters) {
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(address_after_prologue_or_error, HasNoError());
-  ErrorMessageOr<void> result = InstrumentFunction(
-      pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
+  ErrorMessageOr<void> result =
+      InstrumentFunction(pid_, function_address_, /*function_id=*/0,
+                         address_after_prologue_or_error.value(), trampoline_address_);
   EXPECT_THAT(result, HasNoError());
   RestartAndRemoveInstrumentation();
 }
@@ -1041,8 +1051,9 @@ TEST_F(InstrumentFunctionTest, CheckM256iParameters) {
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(address_after_prologue_or_error, HasNoError());
-  ErrorMessageOr<void> result = InstrumentFunction(
-      pid_, function_address_, address_after_prologue_or_error.value(), trampoline_address_);
+  ErrorMessageOr<void> result =
+      InstrumentFunction(pid_, function_address_, /*function_id=*/0,
+                         address_after_prologue_or_error.value(), trampoline_address_);
   EXPECT_THAT(result, HasNoError());
   RestartAndRemoveInstrumentation();
 }
