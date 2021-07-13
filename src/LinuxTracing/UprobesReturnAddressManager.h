@@ -80,7 +80,7 @@ class UprobesReturnAddressManager {
       uint64_t ip = callchain[i];
       unwindstack::MapInfo* map_info = maps->Find(ip);
 
-      if (map_info == nullptr || map_info->name != "[uprobes]") {
+      if (map_info == nullptr || map_info->name() != "[uprobes]") {
         continue;
       }
 

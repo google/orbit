@@ -174,7 +174,7 @@ void UprobesUnwindingVisitor::Visit(CallchainSamplePerfEvent* event) {
 
   // Some samples can actually fall inside u(ret)probes code. Set their type accordingly, as we
   // don't want to show the unnamed uprobes module in the samples.
-  if (top_ip_map_info == nullptr || top_ip_map_info->name == "[uprobes]") {
+  if (top_ip_map_info == nullptr || top_ip_map_info->name() == "[uprobes]") {
     if (samples_in_uretprobes_counter_ != nullptr) {
       ++(*samples_in_uretprobes_counter_);
     }
@@ -196,7 +196,7 @@ void UprobesUnwindingVisitor::Visit(CallchainSamplePerfEvent* event) {
   //  callstack.
   for (uint64_t frame_index = 1; frame_index < event->GetCallchainSize(); ++frame_index) {
     unwindstack::MapInfo* map_info = current_maps_->Find(event->GetCallchain()[frame_index]);
-    if (map_info == nullptr || (map_info->flags & PROT_EXEC) == 0) {
+    if (map_info == nullptr || (map_info->flags() & PROT_EXEC) == 0) {
       break;
     }
   }
