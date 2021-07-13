@@ -48,10 +48,10 @@ CGroupAndProcessMemoryTrack::CGroupAndProcessMemoryTrack(
   // Use reddish colors for different used memories, yellowish colors for different cached memories
   // and greenish colors for different unused memories.
   const std::array<Color, kCGroupAndProcessMemoryTrackDimension> kCGroupAndProcessMemoryTrackColors{
-      Color(231, 68, 53, 255),   // red
-      Color(249, 96, 111, 255),  // warm red
-      Color(246, 196, 0, 255),   // orange
-      Color(87, 166, 74, 255)    // green
+      Color(231, 68, 53, 255),    // red
+      Color(185, 117, 181, 255),  // purple
+      Color(246, 196, 0, 255),    // orange
+      Color(87, 166, 74, 255)     // green
   };
   SetSeriesColors(kCGroupAndProcessMemoryTrackColors);
 

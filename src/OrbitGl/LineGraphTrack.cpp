@@ -100,7 +100,7 @@ void LineGraphTrack<Dimension>::DrawSingleSeriesEntry(
   float content_height = this->GetGraphContentHeight();
   float base_y = this->GetGraphContentBaseY();
 
-  for (size_t i = 0; i < Dimension; ++i) {
+  for (size_t i = Dimension; i-- > 0;) {
     float y0 = base_y + current_normalized_values[i] * content_height;
     DrawSquareDot(batcher, Vec2(x0, y0), kDotRadius, z, this->GetColor(i));
     batcher->AddLine(Vec2(x0, y0), Vec2(x1, y0), z, this->GetColor(i));
