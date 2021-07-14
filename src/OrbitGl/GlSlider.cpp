@@ -54,11 +54,7 @@ void GlSlider::OnMouseMove(int x, int y) {
   mouse_pos_ = Vec2i(x, y) - Vec2i(static_cast<int>(GetPos()[0]), static_cast<int>(GetPos()[1]));
 
   if (can_resize_ && QGuiApplication::instance() != nullptr) {
-    int relevant_dim = is_vertical_ ? 1 : 0;
-    int slider_rel_mouse = mouse_pos_[relevant_dim] - static_cast<int>(GetSliderPixelPos());
-    if ((slider_rel_mouse >= 0 && slider_rel_mouse <= slider_resize_pixel_margin_) ||
-        (slider_rel_mouse >= GetSliderPixelLength() - slider_resize_pixel_margin_ &&
-         slider_rel_mouse <= GetSliderPixelLength())) {
+    if (PosIsInMinResizeArea(x, y) || PosIsInMaxResizeArea(x, y)) {
       QCursor cursor = is_vertical_ ? Qt::SizeVerCursor : Qt::SizeHorCursor;
       QGuiApplication::changeOverrideCursor(cursor);
     } else {
@@ -162,10 +158,10 @@ void GlSlider::OnPick(int x, int y) {
     return;
   }
 
-  if (value <= slider_pos + slider_resize_pixel_margin_ && can_resize_) {
+  if (can_resize_ && PosIsInMinResizeArea(x, y)) {
     drag_type_ = DragType::kScaleMin;
     picking_pixel_offset_ = value - slider_pos;
-  } else if (value >= slider_pos + slider_length - slider_resize_pixel_margin_ && can_resize_) {
+  } else if (can_resize_ && PosIsInMaxResizeArea(x, y)) {
     drag_type_ = DragType::kScaleMax;
     picking_pixel_offset_ = slider_pos + slider_length - value;
   } else {
@@ -188,10 +184,8 @@ void GlSlider::DrawBackground(Batcher& batcher, float x, float y, float width, f
 void GlSlider::DrawSlider(Batcher& batcher, float x, float y, float width, float height,
                           ShadingDirection shading_direction, bool is_picked) {
   bool mouse_over_slider = false;
-  int relevant_dim = is_vertical_ ? 1 : 0;
   if (is_mouse_over_) {
-    mouse_over_slider = mouse_pos_[relevant_dim] >= GetSliderPixelPos() &&
-                        mouse_pos_[relevant_dim] <= GetSliderPixelPos() + GetSliderPixelLength();
+    mouse_over_slider = PosIsInSlider(mouse_pos_[0], mouse_pos_[1]);
   }
 
   Color color = mouse_over_slider ? selected_color_ : slider_color_;
@@ -220,6 +214,23 @@ void GlSlider::DrawSlider(Batcher& batcher, float x, float y, float width, float
                        GlCanvas::kZValueSlider),
                    slider_color_, shared_from_this());
   }
+}
+
+bool GlSlider::PosIsInMinResizeArea(int x, int y) const {
+  int relevant_value = is_vertical_ ? y : x;
+  return PosIsInSlider(x, y) && relevant_value <= GetSliderPixelPos() + slider_resize_pixel_margin_;
+}
+
+bool GlSlider::PosIsInMaxResizeArea(int x, int y) const {
+  int relevant_value = is_vertical_ ? y : x;
+  return PosIsInSlider(x, y) && relevant_value >= GetSliderPixelPos() + GetSliderPixelLength() -
+                                                      slider_resize_pixel_margin_;
+}
+
+bool GlSlider::PosIsInSlider(int x, int y) const {
+  int relevant_value = is_vertical_ ? y : x;
+  return relevant_value >= GetSliderPixelPos() &&
+         relevant_value <= GetSliderPixelPos() + GetSliderPixelLength();
 }
 
 bool GlSlider::HandlePageScroll(float click_value) {
