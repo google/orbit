@@ -35,6 +35,10 @@ PagefaultTrack::PagefaultTrack(CaptureViewElement* parent, TimeGraph* time_graph
   const std::string kTrackName = "Pagefault Track";
   SetName(kTrackName);
   SetLabel(kTrackName);
+
+  // Pagefault track is collapsed by default. The major and minor pagefault subtracks are expanded
+  // by default, but not shown while the pagefault track is collapsed.
+  collapse_toggle_->SetCollapsed(true);
 }
 
 float PagefaultTrack::GetHeight() const {
