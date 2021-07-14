@@ -94,12 +94,32 @@ TEST_F(TrackManagerTest, NonVisibleTracksAreNotInTheList) {
   EXPECT_EQ(kNumTracks - 1, track_manager_.GetVisibleTracks().size());
 }
 
-TEST_F(TrackManagerTest, FiltersAndVisibilityWorkTogether) {
+TEST_F(TrackManagerTest, FiltersAndTrackVisibilityWorkTogether) {
   CreateAndFillTracks();
   track_manager_.GetOrCreateThreadTrack(TrackTestData::kThreadId)->SetVisible(false);
   track_manager_.SetFilter("thread");
   track_manager_.UpdateTracksForRendering();
   EXPECT_EQ(kNumThreadTracks - 1, track_manager_.GetVisibleTracks().size());
+}
+
+TEST_F(TrackManagerTest, FiltersAndTrackTypeVisibilityWorkTogether) {
+  CreateAndFillTracks();
+  track_manager_.SetTrackTypeVisibility(Track::Type::kThreadTrack, false);
+  track_manager_.SetFilter("thread");
+  track_manager_.UpdateTracksForRendering();
+  EXPECT_EQ(0, track_manager_.GetVisibleTracks().size());
+
+  track_manager_.SetTrackTypeVisibility(Track::Type::kThreadTrack, true);
+  track_manager_.UpdateTracksForRendering();
+  EXPECT_EQ(kNumThreadTracks, track_manager_.GetVisibleTracks().size());
+
+  track_manager_.SetFilter("");
+  EXPECT_EQ(kNumTracks, track_manager_.GetVisibleTracks().size());
+
+  track_manager_.SetFilter("thread");
+  track_manager_.SetTrackTypeVisibility(Track::Type::kThreadTrack, false);
+  track_manager_.UpdateTracksForRendering();
+  EXPECT_EQ(0, track_manager_.GetVisibleTracks().size());
 }
 
 TEST_F(TrackManagerTest, TrackTypeVisibilityAffectsVisibleTrackList) {
