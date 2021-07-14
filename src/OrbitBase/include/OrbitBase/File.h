@@ -86,7 +86,7 @@ ErrorMessageOr<void> WriteFully(const unique_fd& fd, const void* data, size_t si
 ErrorMessageOr<void> WriteFully(const unique_fd& fd, std::string_view content);
 
 ErrorMessageOr<void> WriteFullyAtOffset(const unique_fd& fd, const void* buffer, size_t size,
-                                        off_t offset);
+                                        int64_t offset);
 
 // Tries to read 'size' bytes from the file to the buffer, returns actual
 // number of bytes read. Note that the return value is less then size in
@@ -99,10 +99,10 @@ ErrorMessageOr<size_t> ReadFully(const unique_fd& fd, void* buffer, size_t size)
 // Same as above but tries to read from an offset. The file referenced by fd must be capable of
 // seeking. The same limitation for non-blocking reads as above applies here.
 ErrorMessageOr<size_t> ReadFullyAtOffset(const unique_fd& fd, void* buffer, size_t size,
-                                         off_t offset);
+                                         int64_t offset);
 
 template <typename T>
-ErrorMessageOr<T> ReadFullyAtOffset(const unique_fd& fd, off_t offset) {
+ErrorMessageOr<T> ReadFullyAtOffset(const unique_fd& fd, int64_t offset) {
   T value;
   auto size_or_error = ReadFullyAtOffset(fd, &value, sizeof(value), offset);
   if (size_or_error.has_error()) {
