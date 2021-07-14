@@ -74,6 +74,10 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
   void DrawSlider(Batcher& batcher, float x, float y, float width, float height,
                   ShadingDirection shading_direction, bool is_picked);
 
+  [[nodiscard]] bool PosIsInMinResizeArea(int x, int y) const;
+  [[nodiscard]] bool PosIsInMaxResizeArea(int x, int y) const;
+  [[nodiscard]] bool PosIsInSlider(int x, int y) const;
+
   [[nodiscard]] virtual int GetBarPixelLength() const = 0;
 
   [[nodiscard]] float PixelToLen(float value) const { return value / GetBarPixelLength(); }
