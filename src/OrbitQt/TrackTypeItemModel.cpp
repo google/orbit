@@ -7,13 +7,11 @@
 namespace orbit_qt {
 
 TrackTypeItemModel::TrackTypeItemModel(QObject* parent)
-    : QAbstractTableModel(parent), known_track_types_{Track::Type::kSchedulerTrack,
-                                                      Track::Type::kGpuTrack,
-                                                      Track::Type::kFrameTrack,
-                                                      Track::Type::kMemoryTrack,
-                                                      Track::Type::kPagefaultTrack,
-                                                      Track::Type::kThreadTrack,
-                                                      Track::Type::kVariableTrack} {}
+    : QAbstractTableModel(parent),
+      known_track_types_{Track::Type::kSchedulerTrack, Track::Type::kGpuTrack,
+                         Track::Type::kFrameTrack,     Track::Type::kMemoryTrack,
+                         Track::Type::kPagefaultTrack, Track::Type::kThreadTrack,
+                         Track::Type::kAsyncTrack,     Track::Type::kVariableTrack} {}
 
 int TrackTypeItemModel::columnCount(const QModelIndex& parent) const {
   return parent.isValid() ? 0 : static_cast<int>(Column::kEnd);
@@ -129,10 +127,10 @@ QString TrackTypeItemModel::GetTrackTypeDisplayName(Track::Type track_type) cons
       return "Pagefaults";
     case Track::Type::kThreadTrack:
       return "Threads";
+    case Track::Type::kAsyncTrack:
+      return "Async Events (Manual Instrumentation)";
     case Track::Type::kVariableTrack:
       return "Variables (Manual Instrumentation)";
-    case Track::Type::kAsyncTrack:
-      [[fallthrough]];
     case Track::Type::kGraphTrack:
       [[fallthrough]];
     case Track::Type::kTimerTrack:
