@@ -24,7 +24,10 @@ class MemoryTrack : public GraphTrack<Dimension>, public AnnotationTrack {
                        const orbit_client_model::CaptureData* capture_data)
       : GraphTrack<Dimension>(parent, time_graph, viewport, layout, name, series_names,
                               capture_data),
-        AnnotationTrack() {}
+        AnnotationTrack() {
+    // Memory tracks are collapsed by default.
+    this->collapse_toggle_->SetCollapsed(true);
+  }
   ~MemoryTrack() override = default;
   [[nodiscard]] Track::Type GetType() const override { return Track::Type::kMemoryTrack; }
   void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
