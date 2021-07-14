@@ -59,7 +59,8 @@ const std::string& ProcessData::build_id() const {
   return process_info_.build_id();
 }
 
-static bool IsModuleMapValid(const std::map<uint64_t, ModuleInMemory>& module_map) {
+[[maybe_unused]] static bool IsModuleMapValid(
+    const std::map<uint64_t, ModuleInMemory>& module_map) {
   // Check that modules do not intersect in the address space.
   uint64_t last_end_address = 0;
   for (const auto& [unused_address, module_in_memory] : module_map) {
@@ -81,7 +82,9 @@ void ProcessData::UpdateModuleInfos(absl::Span<const ModuleInfo> module_infos) {
     CHECK(success);
   }
 
-  CHECK(IsModuleMapValid(start_address_to_module_in_memory_));
+  // Files saved with Orbit 1.65 may have intersecting maps, this is why we use DCHECK here
+  // instead of CHECK
+  DCHECK(IsModuleMapValid(start_address_to_module_in_memory_));
 }
 
 std::vector<std::string> ProcessData::FindModuleBuildIdsByPath(
