@@ -84,7 +84,11 @@ constexpr uint64_t AlignUp(uint64_t value) {
 }
 
 ErrorMessageOr<uint64_t> GetEndOfFileOffset(const unique_fd& fd) {
-  off_t end_of_file = lseek(fd.get(), 0, SEEK_END);
+#if defined(_WIN32)
+  int64_t end_of_file = _lseeki64(fd.get(), 0, SEEK_END);
+#else
+  int64_t end_of_file = lseek64(fd.get(), 0, SEEK_END);
+#endif
   if (end_of_file == -1) {
     return ErrorMessage{SafeStrerror(errno)};
   }
