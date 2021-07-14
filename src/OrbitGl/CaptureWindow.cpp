@@ -194,9 +194,8 @@ void CaptureWindow::SelectTextBox(const TextBox* text_box) {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
 
   if (double_clicking_) {
-    // Zoom and center the text_box into the screen and make its track fully visible.
+    // Zoom and center the text_box into the screen.
     time_graph_->Zoom(timer_info);
-    time_graph_->SelectAndMakeVisible(text_box);
   }
 }
 
