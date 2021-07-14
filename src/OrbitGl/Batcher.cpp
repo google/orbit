@@ -48,8 +48,11 @@ void Batcher::AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
                       std::unique_ptr<PickingUserData> user_data) {
   Line line;
-  line.start_point = Vec3(floorf(from[0]), floorf(from[1]), z);
-  line.end_point = Vec3(floorf(to[0]), floorf(to[1]), z);
+  // We had the issue that some horizontal lines in graph tracks are missing when they are drawn
+  // at the margin of pixels. The problem can be addressed, in most cases, by drawing lines at the
+  // center of pixels.
+  line.start_point = Vec3(floorf(from[0]), floorf(from[1]) + 0.5f, z);
+  line.end_point = Vec3(floorf(to[0]), floorf(to[1]) + 0.5f, z);
   auto& buffer = primitive_buffers_by_layer_[z];
 
   buffer.line_buffer.lines_.emplace_back(line);
@@ -381,7 +384,6 @@ void Batcher::DrawLayer(float layer, bool picking) const {
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_COLOR_ARRAY);
   glEnable(GL_TEXTURE_2D);
-  glLineWidth(2.0f);
 
   DrawBoxBuffer(layer, picking);
   DrawLineBuffer(layer, picking);
