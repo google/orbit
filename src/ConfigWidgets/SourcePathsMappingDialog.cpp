@@ -81,7 +81,17 @@ void SourcePathsMappingDialog::OnSelectionChanged(const QItemSelection& selected
   if (!deselected.isEmpty()) {
     const auto* mapping = deselected.indexes().first().data(Qt::UserRole).value<const Mapping*>();
     const bool invalid_mapping_deselected = !mapping->IsValid();
-    if (invalid_mapping_deselected) model_.RemoveRows(deselected.indexes().first().row(), 1);
+    if (!invalid_mapping_deselected) return;
+
+    // This selection change could be triggered by a model change (i.e. removing rows),
+    // so we can't make any changes to the model here (i.e. request another removal of rows),
+    // but we can queue a request to be processed later.
+    QMetaObject::invokeMethod(
+        this,
+        [this, idx = QPersistentModelIndex{deselected.indexes().first()}]() {
+          if (idx.isValid()) model_.RemoveRows(idx.row(), 1);
+        },
+        Qt::QueuedConnection);
   }
 }
 
