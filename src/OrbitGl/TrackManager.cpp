@@ -181,6 +181,7 @@ void TrackManager::SetFilter(const std::string& filter) {
 }
 
 void TrackManager::UpdateVisibleTrackList() {
+  visible_track_list_needs_update_ = false;
   visible_tracks_.clear();
 
   auto track_should_be_shown = [this](const Track* track) {
@@ -207,7 +208,6 @@ void TrackManager::UpdateVisibleTrackList() {
       }
     }
   }
-  visible_track_list_needs_update_ = false;
 }
 
 std::vector<ThreadTrack*> TrackManager::GetSortedThreadTracks() {
@@ -372,6 +372,7 @@ void TrackManager::SetTrackTypeVisibility(Track::Type type, bool value) {
   if (time_graph_ != nullptr) {
     time_graph_->RequestUpdate();
   }
+  visible_track_list_needs_update_ = true;
 }
 
 bool TrackManager::GetTrackTypeVisibility(Track::Type type) const {
