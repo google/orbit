@@ -157,6 +157,19 @@ TEST(File, WriteFullyAtOffsetSmoke) {
   EXPECT_STREQ(read_back.data(), "ab\nef\n");
 }
 
+TEST(File, WriteFullyAtOffset2GOffset) {
+  constexpr uint64_t kLargeOffset = (1LL << 31) + 5;  // 2G + 5bytes
+  auto temporary_file_or_error = TemporaryFile::Create();
+  ASSERT_THAT(temporary_file_or_error, HasNoError());
+  TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
+
+  // Write at the beginning of the previously empty file.
+  std::array<char, 64> buffer{'a', 'b', '\n', 'c', 'd', '\n'};
+  ErrorMessageOr<void> write_result_or_error =
+      WriteFullyAtOffset(temporary_file.fd(), buffer.data(), 6, kLargeOffset);
+  ASSERT_THAT(write_result_or_error, HasNoError());
+}
+
 TEST(File, ReadFullySmoke) {
   const auto fd_or_error =
       OpenFileForReading(GetExecutableDir() / "testdata" / "OrbitBase" / "textfile.bin");
@@ -246,7 +259,7 @@ TEST(File, ReadStructureAtOffset) {
 
   auto fd = std::move(fd_or_error.value());
 
-  constexpr const off_t kOffset = 42;
+  constexpr const int64_t kOffset = 42;
   constexpr uint64_t kU64Value = 1121;
   constexpr const char* kCharArray = "abcdefg";
 

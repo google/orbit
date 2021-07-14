@@ -25,32 +25,32 @@ using ssize_t = int64_t;
 
 // There is no implementation for pread and pwrite in 'io.h' so we implement them on top of lseek,
 // read and write here.
-ssize_t pread(int fd, void* buffer, size_t size, off_t offset) {
-  off_t old_position = lseek(fd, 0, SEEK_CUR);
+ssize_t pread(int fd, void* buffer, size_t size, int64_t offset) {
+  int64_t old_position = _lseeki64(fd, 0, SEEK_CUR);
   if (old_position == -1) {
     return -1;
   }
-  if (lseek(fd, offset, SEEK_SET) == -1) {
+  if (_lseeki64(fd, offset, SEEK_SET) == -1) {
     return -1;
   }
   ssize_t bytes_read = read(fd, buffer, size);
-  if ((lseek(fd, old_position, SEEK_SET)) == -1) {
+  if ((_lseeki64(fd, old_position, SEEK_SET)) == -1) {
     return -1;
   }
   return bytes_read;
 }
 
-ssize_t pwrite(int fd, const void* buffer, size_t size, off_t offset) {
-  off_t cpos, opos;
-  off_t old_position = lseek(fd, 0, SEEK_CUR);
+ssize_t pwrite(int fd, const void* buffer, size_t size, int64_t offset) {
+  int64_t cpos, opos;
+  int64_t old_position = _lseeki64(fd, 0, SEEK_CUR);
   if (old_position == -1) {
     return -1;
   }
-  if (lseek(fd, offset, SEEK_SET) == -1) {
+  if (_lseeki64(fd, offset, SEEK_SET) == -1) {
     return -1;
   }
   ssize_t bytes_written = write(fd, buffer, size);
-  if (lseek(fd, old_position, SEEK_SET) == -1) {
+  if (_lseeki64(fd, old_position, SEEK_SET) == -1) {
     return -1;
   }
   return bytes_written;
@@ -144,7 +144,7 @@ ErrorMessageOr<void> WriteFully(const unique_fd& fd, std::string_view content) {
 }
 
 ErrorMessageOr<void> WriteFullyAtOffset(const unique_fd& fd, const void* buffer, size_t size,
-                                        off_t offset) {
+                                        int64_t offset) {
   const char* current_position = static_cast<const char*>(buffer);
 
   while (size > 0) {
@@ -181,7 +181,7 @@ ErrorMessageOr<size_t> ReadFully(const unique_fd& fd, void* buffer, size_t size)
 }
 
 ErrorMessageOr<size_t> ReadFullyAtOffset(const unique_fd& fd, void* buffer, size_t size,
-                                         off_t offset) {
+                                         int64_t offset) {
   uint8_t* current_position = static_cast<uint8_t*>(buffer);
   size_t bytes_read = 0;
   while (bytes_read < size) {
