@@ -211,8 +211,8 @@ void AppendCallToEntryPayloadAndOverwriteReturnAddress(uint64_t entry_payload_fu
   // This fails if the code for the trampoline was changed - see the comment at the declaration of
   // kOffsetOfFunctionIdInCallToEntryPayload above.
   CHECK(trampoline.GetResultAsVector().size() == kOffsetOfFunctionIdInCallToEntryPayload);
-  // The value of function id will be overwritten by every call to `InstrumentFunction`. The zero
-  // here is just a placeholder.
+  // The value of function id will be overwritten by every call to `InstrumentFunction`. This is
+  // just a placeholder.
   trampoline.AppendImmediate64(0xDEADBEEFDEADBEEF)
       .AppendBytes({0x48, 0xb8})
       .AppendImmediate64(entry_payload_function_address)
