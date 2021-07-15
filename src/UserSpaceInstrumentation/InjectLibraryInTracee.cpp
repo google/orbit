@@ -16,6 +16,7 @@
 #include "ExecuteMachineCode.h"
 #include "FindFunctionAddress.h"
 #include "MachineCode.h"
+#include "OrbitBase/File.h"
 #include "OrbitBase/UniqueResource.h"
 
 namespace orbit_user_space_instrumentation {
@@ -62,8 +63,9 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
 [[nodiscard]] ErrorMessageOr<void*> DlopenInTracee(pid_t pid, std::filesystem::path path,
                                                    uint32_t flag) {
   // Make sure file exists.
-  if (!std::filesystem::exists(path)) {
-    return ErrorMessage(absl::StrFormat("File not found (\"%s\")", path));
+  auto result_file_exists_or_error_or_error = orbit_base::FileExists(path);
+  if (result_file_exists_or_error.has_error() || result_file_exists_or_error.value() == false) {
+    return ErrorMessage(absl::StrFormat("Library does not exist at: \"%s\"", path));
   }
 
   // Figure out address of dlopen.
@@ -73,7 +75,12 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   // Allocate small memory area in the tracee. This is used for the code and the path name.
   const uint64_t path_length = path.string().length() + 1;  // Include terminating zero.
   const uint64_t memory_size = kCodeScratchPadSize + path_length;
-  OUTCOME_TRY(code_address, AllocateInTraceeAsUniqueResource(pid, 0, memory_size));
+  auto code_address_or_error = AllocateInTraceeAsUniqueResource(pid, 0, memory_size);
+  if (code_address_or_error.has_error()) {
+    return ErrorMessage(absl::StrFormat("Failed to allocate memory in tracee: %s",
+                                        code_address_or_error.error().message()));
+  }
+  auto code_address = std::move(code_address_or_error.value());
 
   // Write the name of the .so into memory at code_address with offset of kCodeScratchPadSize.
   std::vector<uint8_t> path_as_vector(path_length);
@@ -120,7 +127,12 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   // Allocate small memory area in the tracee. This is used for the code and the symbol name.
   const size_t symbol_name_length = symbol.length() + 1;  // include terminating zero
   const uint64_t memory_size = kCodeScratchPadSize + symbol_name_length;
-  OUTCOME_TRY(code_address, AllocateInTraceeAsUniqueResource(pid, 0, memory_size));
+  auto code_address_or_error = AllocateInTraceeAsUniqueResource(pid, 0, memory_size);
+  if (code_address_or_error.has_error()) {
+    return ErrorMessage(absl::StrFormat("Failed to allocate memory in tracee: %s",
+                                        code_address_or_error.error().message()));
+  }
+  auto code_address = std::move(code_address_or_error.value());
 
   // Write the name of symbol into memory at code_address with offset of kCodeScratchPadSize.
   std::vector<uint8_t> symbol_name_as_vector(symbol_name_length, 0);
@@ -164,7 +176,12 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
                                                                kLibcSoname, kDlcloseInLibc));
 
   // Allocate small memory area in the tracee.
-  OUTCOME_TRY(code_address, AllocateInTraceeAsUniqueResource(pid, 0, kCodeScratchPadSize));
+  auto code_address_or_error = AllocateInTraceeAsUniqueResource(pid, 0, kCodeScratchPadSize);
+  if (code_address_or_error.has_error()) {
+    return ErrorMessage(absl::StrFormat("Failed to allocate memory in tracee: %s",
+                                        code_address_or_error.error().message()));
+  }
+  auto code_address = std::move(code_address_or_error.value());
 
   // We want to do the following in the tracee:
   // dlclose(handle);
@@ -184,10 +201,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-  auto return_value_or_error = ExecuteMachineCode(pid, code_address.get(), code);
-  if (return_value_or_error.has_error()) {
-    return return_value_or_error.error();
-  }
+  OUTCOME_TRY(ExecuteMachineCode(pid, code_address.get(), code));
 
   return outcome::success();
 }

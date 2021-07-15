@@ -109,7 +109,7 @@ namespace {
   // Syscalls return -4095, ..., -1 on failure. And these are actually (-1 * errno)
   const int64_t result_as_int = absl::bit_cast<int64_t>(result);
   if (result_as_int > -4096 && result_as_int < 0) {
-    return ErrorMessage(absl::StrFormat("syscall failed. Return value: %s (%d)",
+    return ErrorMessage(absl::StrFormat("Syscall failed. Return value: %s (%d)",
                                         SafeStrerror(-result_as_int), result_as_int));
   }
 
@@ -139,8 +139,9 @@ namespace {
       pid, kSyscallNumberMmap, address, size, PROT_READ | PROT_WRITE | PROT_EXEC,
       MAP_PRIVATE | MAP_ANONYMOUS, static_cast<uint64_t>(-1), 0, /*exclude_address=*/0);
   if (result_or_error.has_error()) {
-    return ErrorMessage(absl::StrFormat("Failed to execute mmap syscall: \"%s\"",
-                                        result_or_error.error().message()));
+    return ErrorMessage(absl::StrFormat(
+        "Failed to execute mmap syscall with parameters address=%#x size= %u: \"%s\"", address,
+        size, result_or_error.error().message()));
   }
   const uint64_t result = result_or_error.value();
   if (address != 0 && result != address) {
