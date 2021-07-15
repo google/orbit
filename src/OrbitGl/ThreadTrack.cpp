@@ -253,7 +253,7 @@ bool ThreadTrack::IsEmpty() const {
 
 void ThreadTrack::UpdatePositionOfSubtracks() {
   const float thread_state_track_height = layout_->GetThreadStateTrackHeight();
-  const float event_track_height = layout_->GetEventTrackHeight();
+  const float event_track_height = layout_->GetEventTrackHeightFromTid(thread_id_);
   const float space_between_subtracks = layout_->GetSpaceBetweenTracksAndThread();
 
   float current_y = pos_[1] - layout_->GetTrackTabHeight();
@@ -284,8 +284,8 @@ void ThreadTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
   UpdatePositionOfSubtracks();
 
   const float thread_state_track_height = layout_->GetThreadStateTrackHeight();
-  const float event_track_height = layout_->GetEventTrackHeight();
-  const float tracepoint_track_height = layout_->GetEventTrackHeight();
+  const float event_track_height = layout_->GetEventTrackHeightFromTid(thread_id_);
+  const float tracepoint_track_height = layout_->GetEventTrackHeightFromTid(thread_id_);
   const float world_width = viewport_->GetVisibleWorldWidth();
 
   if (!thread_state_bar_->IsEmpty()) {
@@ -383,8 +383,13 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, float min_x, flo
 }
 
 std::string ThreadTrack::GetTooltip() const {
-  return "Shows collected samples and timings from dynamically instrumented "
-         "functions";
+  if (thread_id_ == orbit_base::kAllProcessThreadsTid) {
+    return "Shows collected samples for all threads of process " + capture_data_->process_name() +
+           " " + std::to_string(capture_data_->process_id());
+  } else {
+    return "Shows collected samples and timings from dynamically instrumented "
+           "functions";
+  }
 }
 
 float ThreadTrack::GetHeight() const {
@@ -401,8 +406,8 @@ float ThreadTrack::GetHeight() const {
 
 float ThreadTrack::GetHeaderHeight() const {
   const float thread_state_track_height = layout_->GetThreadStateTrackHeight();
-  const float event_track_height = layout_->GetEventTrackHeight();
-  const float tracepoint_track_height = layout_->GetEventTrackHeight();
+  const float event_track_height = layout_->GetEventTrackHeightFromTid(thread_id_);
+  const float tracepoint_track_height = layout_->GetEventTrackHeightFromTid(thread_id_);
   const float space_between_subtracks = layout_->GetSpaceBetweenTracksAndThread();
 
   float header_height = layout_->GetTrackTabHeight();

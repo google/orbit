@@ -19,6 +19,9 @@ static constexpr int32_t kAllThreadsOfAllProcessesTid = -2;
 // that are NOT in the current process.
 static constexpr int32_t kNotTargetProcessTid = -3;
 
+// Represents an invalid thread id.
+static constexpr int32_t kInvalidThreadTid = -4;
+
 }  // namespace orbit_base
 
 #endif  // ORBIT_BASE_THREAD_CONSTANTS_H
