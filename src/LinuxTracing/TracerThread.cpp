@@ -1137,15 +1137,8 @@ uint64_t TracerThread::ProcessThrottleUnthrottleEventAndReturnTimestamp(
 }
 
 void TracerThread::DeferEvent(std::unique_ptr<PerfEvent> event) {
-  std::lock_guard<std::mutex> lock(deferred_events_mutex_);
-  deferred_events_.emplace_back(std::move(event));
-}
-
-std::vector<std::unique_ptr<PerfEvent>> TracerThread::ConsumeDeferredEvents() {
-  std::lock_guard<std::mutex> lock(deferred_events_mutex_);
-  std::vector<std::unique_ptr<PerfEvent>> events(std::move(deferred_events_));
-  deferred_events_.clear();
-  return events;
+  absl::MutexLock lock{&deferred_events_being_buffered_mutex_};
+  deferred_events_being_buffered_.emplace_back(std::move(event));
 }
 
 void TracerThread::ProcessDeferredEvents() {
@@ -1156,22 +1149,31 @@ void TracerThread::ProcessDeferredEvents() {
     // When "should_exit" becomes true, we know that we have stopped generating
     // deferred events. The last iteration will consume all remaining events.
     should_exit = stop_deferred_thread_;
-    std::vector<std::unique_ptr<PerfEvent>> events = ConsumeDeferredEvents();
-    if (events.empty()) {
-      // TODO: use a wait/notify mechanism instead of check/sleep.
+
+    {
+      absl::MutexLock lock{&deferred_events_being_buffered_mutex_};
+      deferred_events_being_buffered_.swap(deferred_events_to_process_);
+    }
+
+    if (deferred_events_to_process_.empty()) {
       ORBIT_SCOPE("Sleep");
       usleep(IDLE_TIME_ON_EMPTY_DEFERRED_EVENTS_US);
-    } else {
-      {
-        ORBIT_SCOPE("AddEvents");
-        for (auto& event : events) {
-          event_processor_.AddEvent(std::move(event));
-        }
+      continue;
+    }
+
+    {
+      ORBIT_SCOPE("AddEvents");
+      for (auto& event : deferred_events_to_process_) {
+        event_processor_.AddEvent(std::move(event));
       }
-      {
-        ORBIT_SCOPE("ProcessOldEvents");
-        event_processor_.ProcessOldEvents();
-      }
+    }
+    // Note (https://en.cppreference.com/w/cpp/container/vector/clear): std::vector::clear() "Leaves
+    // the capacity() of the vector unchanged", which is desired as deferred_events_being_buffered_
+    // won't have to be grown again after the swap.
+    deferred_events_to_process_.clear();
+    {
+      ORBIT_SCOPE("ProcessOldEvents");
+      event_processor_.ProcessOldEvents();
     }
   }
 }
@@ -1220,7 +1222,8 @@ void TracerThread::Reset() {
   effective_capture_start_timestamp_ns_ = 0;
 
   stop_deferred_thread_ = false;
-  deferred_events_.clear();
+  deferred_events_being_buffered_.clear();
+  deferred_events_to_process_.clear();
   uprobes_unwinding_visitor_.reset();
   switches_states_names_visitor_.reset();
   gpu_event_visitor_.reset();
