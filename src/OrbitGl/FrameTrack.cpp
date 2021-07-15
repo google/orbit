@@ -158,7 +158,7 @@ void FrameTrack::OnTimer(const TimerInfo& timer_info) {
   TimerTrack::OnTimer(timer_info);
 }
 
-void FrameTrack::SetTimesliceText(const TimerInfo& timer_info, float min_x, float z_offset,
+void FrameTrack::SetTimesliceText(const TimerInfo& timer_info,
                                   orbit_client_data::TextBox* text_box) {
   if (text_box->GetText().empty()) {
     std::string time = orbit_display_formats::GetDisplayTime(
@@ -168,16 +168,6 @@ void FrameTrack::SetTimesliceText(const TimerInfo& timer_info, float min_x, floa
     std::string text = absl::StrFormat("Frame #%u: %s", timer_info.user_data_key(), time.c_str());
     text_box->SetText(text);
   }
-
-  const Color kTextWhite(255, 255, 255, 255);
-  const auto& box_pos = text_box->GetPos();
-  const auto& box_size = text_box->GetSize();
-  float pos_x = std::max(box_pos.first, min_x);
-  float max_size = box_pos.first + box_size.first - pos_x;
-  text_renderer_->AddTextTrailingCharsPrioritized(
-      text_box->GetText().c_str(), pos_x, box_pos.second + layout_->GetTextOffset(),
-      GlCanvas::kZValueBox + z_offset, kTextWhite, text_box->GetElapsedTimeTextLength(),
-      layout_->CalculateZoomedFontSize(), max_size);
 }
 
 std::string FrameTrack::GetTooltip() const {

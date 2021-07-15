@@ -73,7 +73,7 @@ class ThreadTrack final : public TimerTrack {
                                     bool is_highlighted) const override;
   [[nodiscard]] Color GetTimerColor(const orbit_client_data::TextBox& text_box,
                                     const internal::DrawData& draw_data);
-  void SetTimesliceText(const orbit_client_protos::TimerInfo& timer, float min_x, float z_offset,
+  void SetTimesliceText(const orbit_client_protos::TimerInfo& timer,
                         orbit_client_data::TextBox* text_box) override;
   [[nodiscard]] std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const override;
 

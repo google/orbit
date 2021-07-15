@@ -332,7 +332,7 @@ void ThreadTrack::SetTrackColor(Color color) {
   tracepoint_bar_->SetColor(color);
 }
 
-void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, float min_x, float z_offset,
+void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info,
                                    orbit_client_data::TextBox* text_box) {
   if (text_box->GetText().empty()) {
     std::string time = orbit_display_formats::GetDisplayTime(
@@ -370,16 +370,6 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, float min_x, flo
           func->function_name(), static_cast<int>(timer_info.type()));
     }
   }
-
-  const Color kTextWhite(255, 255, 255, 255);
-  const auto& box_pos = text_box->GetPos();
-  const auto& box_size = text_box->GetSize();
-  float pos_x = std::max(box_pos.first, min_x);
-  float max_size = box_pos.first + box_size.first - pos_x;
-  text_renderer_->AddTextTrailingCharsPrioritized(
-      text_box->GetText().c_str(), pos_x, box_pos.second + layout_->GetTextOffset(),
-      GlCanvas::kZValueBox + z_offset, kTextWhite, text_box->GetElapsedTimeTextLength(),
-      layout_->CalculateZoomedFontSize(), max_size);
 }
 
 std::string ThreadTrack::GetTooltip() const {
@@ -529,7 +519,7 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
 
       if (text_box.Duration() > draw_data.ns_per_pixel) {
         if (!collapse_toggle_->IsCollapsed()) {
-          SetTimesliceText(text_box.GetTimerInfo(), draw_data.world_start_x, z_offset, &text_box);
+          DrawTimesliceText(text_box.GetTimerInfo(), draw_data.world_start_x, z_offset, &text_box);
         }
         batcher->AddShadedBox({pos.first, pos.second}, {size.first, size.second}, draw_data.z,
                               color, std::move(user_data));

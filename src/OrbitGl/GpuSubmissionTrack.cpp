@@ -159,7 +159,7 @@ bool GpuSubmissionTrack::TimerFilter(const TimerInfo& timer_info) const {
   return true;
 }
 
-void GpuSubmissionTrack::SetTimesliceText(const TimerInfo& timer_info, float min_x, float z_offset,
+void GpuSubmissionTrack::SetTimesliceText(const TimerInfo& timer_info,
                                           orbit_client_data::TextBox* text_box) {
   if (text_box->GetText().empty()) {
     std::string time = orbit_display_formats::GetDisplayTime(
@@ -174,16 +174,6 @@ void GpuSubmissionTrack::SetTimesliceText(const TimerInfo& timer_info, float min
         "%s  %s", string_manager_->Get(timer_info.user_data_key()).value_or(""), time.c_str());
     text_box->SetText(text);
   }
-
-  const Color kTextWhite(255, 255, 255, 255);
-  const auto& box_pos = text_box->GetPos();
-  const auto& box_size = text_box->GetSize();
-  float pos_x = std::max(box_pos.first, min_x);
-  float max_size = box_pos.first + box_size.first - pos_x;
-  text_renderer_->AddTextTrailingCharsPrioritized(
-      text_box->GetText().c_str(), pos_x, box_pos.second + layout_->GetTextOffset(),
-      GlCanvas::kZValueBox + z_offset, kTextWhite, text_box->GetElapsedTimeTextLength(),
-      layout_->CalculateZoomedFontSize(), max_size);
 }
 
 float GpuSubmissionTrack::GetHeight() const {

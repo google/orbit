@@ -132,8 +132,11 @@ class TimerTrack : public Track {
     if (depth > depth_) depth_ = depth;
   }
 
-  virtual void SetTimesliceText(const orbit_client_protos::TimerInfo& /*timer*/, float /*min_x*/,
-                                float /*z_offset*/, orbit_client_data::TextBox* /*text_box*/) {}
+  virtual void SetTimesliceText(const orbit_client_protos::TimerInfo& /*timer*/,
+                                orbit_client_data::TextBox* /*text_box*/) {}
+
+  virtual void DrawTimesliceText(const orbit_client_protos::TimerInfo& /*timer*/, float /*min_x*/,
+                                 float /*z_offset*/, orbit_client_data::TextBox* /*text_box*/);
 
   [[nodiscard]] static internal::DrawData GetDrawData(
       uint64_t min_tick, uint64_t max_tick, float z_offset, Batcher* batcher, TimeGraph* time_graph,
