@@ -19,7 +19,7 @@ class MinorPagefaultTrack final : public BasicPagefaultTrack {
                                uint64_t memory_sampling_period_ms,
                                const orbit_client_model::CaptureData* capture_data,
                                uint32_t indentation_level = 0)
-      : BasicPagefaultTrack(parent, time_graph, viewport, layout, "Minor Pagefault Track",
+      : BasicPagefaultTrack(parent, time_graph, viewport, layout, "Page Faults: Minor",
                             cgroup_name, memory_sampling_period_ms, capture_data,
                             indentation_level) {}
 
