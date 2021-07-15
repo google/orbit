@@ -8,6 +8,7 @@
 
 #include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
+#include "TimeGraph.h"
 
 namespace orbit_gl {
 
@@ -20,6 +21,7 @@ void MemoryTrack<Dimension>::Draw(Batcher& batcher, TextRenderer& text_renderer,
 
   if (this->collapse_toggle_->IsCollapsed()) return;
   AnnotationTrack::DrawAnnotation(batcher, text_renderer, this->layout_,
+                                  this->time_graph_->GetRightMargin(),
                                   GlCanvas::kZValueTrackText + z_offset);
 }
 
