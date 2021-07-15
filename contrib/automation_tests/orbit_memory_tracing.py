@@ -16,8 +16,8 @@ from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToS
 This automation script covers a basic workflow:
  - start Orbit, connect to a gamelet, and then select a process
  - enable memory tracing, set and validate the memory sampling period
- - enable memory tracing, take a capture and verify the presence of memory tracks & pagefault track
- - disable memory tracing, take a capture and verify that memory tracks & pagefault track are gone
+ - enable memory tracing, take a capture and verify the presence of memory tracks & page faults track
+ - disable memory tracing, take a capture and verify that memory tracks & page faults track are gone
 """
 
 
@@ -30,20 +30,20 @@ def main(argv):
         SetAndCheckMemorySamplingPeriod(memory_sampling_period='ab'),
         SetAndCheckMemorySamplingPeriod(memory_sampling_period='0'),
         Capture(collect_system_memory_usage=True),
-        VerifyTracksExist(track_names="Pagefault*"),
-        ExpandTrack(expected_name="Pagefault Track"),
-        CollapseTrack(expected_name="Pagefault Track"),
-        VerifyTracksExist(track_names="System Memory*"),
-        ExpandTrack(expected_name="System Memory Usage (MB)"),
-        CollapseTrack(expected_name="System Memory Usage (MB)"),
-        VerifyTracksExist(track_names="CGroup Memory*"),
-        ExpandTrack(expected_name="CGroup Memory Usage (MB)"),
-        CollapseTrack(expected_name="CGroup Memory Usage (MB)"),
+        VerifyTracksExist(track_names="Page Faults*"),
+        ExpandTrack(expected_name="Page Faults"),
+        CollapseTrack(expected_name="Page Faults"),
+        VerifyTracksExist(track_names="Memory Usage: System*"),
+        ExpandTrack(expected_name="Memory Usage: System (MB)"),
+        CollapseTrack(expected_name="Memory Usage: System (MB)"),
+        VerifyTracksExist(track_names="Memory Usage: CGroup*"),
+        ExpandTrack(expected_name="Memory Usage: CGroup (MB)"),
+        CollapseTrack(expected_name="Memory Usage: CGroup (MB)"),
         Capture(),
-        VerifyTracksDoNotExist(track_names="Pagefault*"),
-        VerifyTracksDoNotExist(track_names="*Memory*")
+        VerifyTracksDoNotExist(track_names="Page Faults*"),
+        VerifyTracksDoNotExist(track_names="*Memory Usage*")
     ]
-    suite = E2ETestSuite(test_name="Collect Memory Usage & Pagefault Information", test_cases=test_cases)
+    suite = E2ETestSuite(test_name="Collect Memory Usage & Page Faults Information", test_cases=test_cases)
     suite.execute()
 
 
