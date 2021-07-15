@@ -5,6 +5,9 @@
 #ifndef PROTO_SECTION_INPUT_STREAM_IMPL_H_
 #define PROTO_SECTION_INPUT_STREAM_IMPL_H_
 
+#include <limits>
+#include <optional>
+
 #include "CaptureFile/ProtoSectionInputStream.h"
 #include "FileFragmentInputStream.h"
 #include "OrbitBase/File.h"
@@ -18,14 +21,20 @@ class ProtoSectionInputStreamImpl : public orbit_capture_file::ProtoSectionInput
                                        uint64_t capture_section_size)
       : fd_{fd},
         file_fragment_input_stream_{fd_, capture_section_offset, capture_section_size},
-        coded_input_stream_(&file_fragment_input_stream_) {}
+        coded_input_stream_{std::in_place, &file_fragment_input_stream_} {
+    coded_input_stream_->SetTotalBytesLimit(kCodedInputStreamTotalBytesLimit);
+  }
 
   ErrorMessageOr<void> ReadMessage(google::protobuf::Message* message) override;
 
  private:
+  static constexpr int kCodedInputStreamTotalBytesLimit = std::numeric_limits<int>::max();
+  static constexpr int kCodedInputStreamReinitializationThreshold =
+      kCodedInputStreamTotalBytesLimit / 2;
+
   orbit_base::unique_fd& fd_;
   FileFragmentInputStream file_fragment_input_stream_;
-  google::protobuf::io::CodedInputStream coded_input_stream_;
+  std::optional<google::protobuf::io::CodedInputStream> coded_input_stream_;
 };
 
 }  // namespace orbit_capture_file_internal
