@@ -328,9 +328,10 @@
     "context": "host"
    },
    "32": {
-    "ref": "crashpad/20200624@orbitdeps/stable#5a03308d7b9a649eced1ee4d63c3d6b4",
+    "ref": "crashpad/20200624@orbitdeps/stable#ef1544e21a3ad8c0e65d1c0042263bc9",
     "requires": [
-     "6"
+     "6",
+     "5"
     ],
     "context": "host"
    },
