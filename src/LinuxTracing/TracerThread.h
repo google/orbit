@@ -5,8 +5,10 @@
 #ifndef LINUX_TRACING_TRACER_THREAD_H_
 #define LINUX_TRACING_TRACER_THREAD_H_
 
+#include <absl/base/thread_annotations.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
+#include <absl/synchronization/mutex.h>
 #include <linux/perf_event.h>
 #include <sys/types.h>
 #include <tracepoint.pb.h>
@@ -15,7 +17,6 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
-#include <mutex>
 #include <optional>
 #include <vector>
 
@@ -104,7 +105,6 @@ class TracerThread {
       const perf_event_header& header, PerfEventRingBuffer* ring_buffer);
 
   void DeferEvent(std::unique_ptr<PerfEvent> event);
-  std::vector<std::unique_ptr<PerfEvent>> ConsumeDeferredEvents();
   void ProcessDeferredEvents();
 
   void RetrieveInitialTidToPidAssociationSystemWide();
@@ -167,8 +167,10 @@ class TracerThread {
   uint64_t effective_capture_start_timestamp_ns_ = 0;
 
   std::atomic<bool> stop_deferred_thread_ = false;
-  std::vector<std::unique_ptr<PerfEvent>> deferred_events_;
-  std::mutex deferred_events_mutex_;
+  std::vector<std::unique_ptr<PerfEvent>> deferred_events_being_buffered_
+      ABSL_GUARDED_BY(deferred_events_being_buffered_mutex_);
+  absl::Mutex deferred_events_being_buffered_mutex_;
+  std::vector<std::unique_ptr<PerfEvent>> deferred_events_to_process_;
 
   UprobesFunctionCallManager function_call_manager_;
   UprobesReturnAddressManager return_address_manager_;
