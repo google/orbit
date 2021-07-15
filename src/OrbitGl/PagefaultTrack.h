@@ -43,10 +43,6 @@ class PagefaultTrack : public Track {
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GetAllChains()
       const override;
-  [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>>
-  GetAllSerializableChains() const override {
-    return GetAllChains();
-  }
 
   void AddValuesAndUpdateAnnotationsForMajorPagefaultSubtrack(
       uint64_t timestamp_ns, const std::array<double, kBasicPagefaultTrackDimension>& values) {
@@ -56,7 +52,6 @@ class PagefaultTrack : public Track {
       uint64_t timestamp_ns, const std::array<double, kBasicPagefaultTrackDimension>& values) {
     minor_pagefault_track_->AddValuesAndUpdateAnnotations(timestamp_ns, values);
   }
-  void SetMemorySamplingPeriodMs(uint64_t memory_sampling_period_ms);
 
  private:
   void UpdatePositionOfSubtracks();

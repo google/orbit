@@ -441,11 +441,6 @@ std::vector<const orbit_client_data::TextBox*> TimerTrack::GetScopesInRange(uint
   return result;
 }
 
-std::vector<std::shared_ptr<orbit_client_data::TimerChain>> TimerTrack::GetAllSerializableChains()
-    const {
-  return GetAllChains();
-}
-
 bool TimerTrack::IsEmpty() const { return GetNumTimers() == 0; }
 
 std::string TimerTrack::GetBoxTooltip(const Batcher& /*batcher*/, PickingId /*id*/) const {
@@ -459,7 +454,7 @@ internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick,
                                            orbit_gl::Viewport* viewport, bool is_collapsed,
                                            const orbit_client_data::TextBox* selected_textbox,
                                            uint64_t highlighted_function_id) {
-  internal::DrawData draw_data;
+  internal::DrawData draw_data{};
   draw_data.min_tick = min_tick;
   draw_data.max_tick = max_tick;
   draw_data.z_offset = z_offset;

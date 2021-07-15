@@ -66,8 +66,6 @@ class GpuTrack : public Track {
 
   [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GetAllChains()
       const override;
-  [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>>
-  GetAllSerializableChains() const override;
 
   [[nodiscard]] bool IsEmpty() const override {
     return submission_track_->IsEmpty() && marker_track_->IsEmpty();
