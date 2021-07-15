@@ -18,7 +18,7 @@ if [ "$0" == "$SCRIPT" ]; then
   echo -e "> but changes outside of the scope of your PR won't affect the outcome"
   echo -e "> of this presubmit check.\n"
   while read line; do
-    if clang-format --output-replacements-xml $line | grep '<replacement ' > /dev/null; then
+    if clang-format-9 --output-replacements-xml $line | grep '<replacement ' > /dev/null; then
       echo $line
     fi
   done <<< $(find /mnt -name '*.cpp' -o -name '*.h' \
