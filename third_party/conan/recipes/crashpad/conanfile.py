@@ -1,4 +1,4 @@
-from conans import ConanFile, tools
+from conans import ConanFile, tools, RunEnvironment
 from conans.errors import ConanInvalidConfiguration
 import os
 import json
@@ -33,12 +33,13 @@ class CrashpadConan(ConanFile):
         return os.path.join(self._crashpad_source_base(), "crashpad")
 
     def build_requirements(self):
-        self.build_requires("depot_tools_installer/20200515@bincrafters/stable")
-        self.build_requires("ninja/1.9.0")
+        self.build_requires("depot_tools/20200407")
+        self.build_requires("ninja/1.10.2")
 
     def requirements(self):
         if self.settings.os == "Linux":
-            self.requires("openssl/1.1.1k@orbitdeps/stable")
+            self.requires("openssl/1.1.1k")
+        self.requires("zlib/1.2.11")
 
     def _mangle_spec_for_gclient(self, solutions):
         return json.dumps(solutions)          \
@@ -67,8 +68,13 @@ class CrashpadConan(ConanFile):
             raise ConanInvalidConfiguration("We only support compiling with fPIC enabled!")
 
     def source(self):
-        self.run("gclient config --spec=\"%s\"" % self._make_spec(), run_environment=True)
-        self.run("gclient sync --no-history", run_environment=True)
+        env = RunEnvironment(self).vars
+        # We have to enable auto-updating - depot_tools won't work otherwise
+        env["DEPOT_TOOLS_UPDATE"] = "1"
+
+        with tools.environment_append(env):
+            self.run("gclient config --spec=\"%s\"" % self._make_spec())
+            self.run("gclient sync --no-history")
 
         if self.settings.os == "Windows":
             tools.patch(base_path=os.path.join(self._source_dir, "third_party/mini_chromium/mini_chromium"),
@@ -143,6 +149,11 @@ class CrashpadConan(ConanFile):
             openssl_info = self.deps_cpp_info["openssl"]
             ldflags.append('"-L{}"'.format(openssl_info.lib_paths[0]))
             cxxflags.append('"-I{}"'.format(openssl_info.include_paths[0]))
+
+        if "zlib" in self.deps_cpp_info.deps:
+            zlib_info = self.deps_cpp_info["zlib"]
+            ldflags.append('"-L{}"'.format(zlib_info.lib_paths[0]))
+            cxxflags.append('"-I{}"'.format(zlib_info.include_paths[0]))
 
         tools.replace_in_file(BUILD_gn, 'ldflags = []', 'ldflags = [ {} ]'.format(", ".join(ldflags)))
         tools.replace_in_file(BUILD_gn, 'cflags_c = [ "-std=c11" ]', 'cflags_c = [ {} ]'.format(", ".join(cflags)))
