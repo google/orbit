@@ -141,7 +141,7 @@ done
 
 echo "Generating html summary"
 FORMATTED_DATE="$(date +'%Y-%m-%d %H:%M')"
-INDEX_HTML="<!doctype html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'><meta charset='UTF-8'><link rel='stylesheet' type='text/css' href='coverage_$COMPONENT/style.css'></head><body><h2>Coverage Report</h2><h4>Created: $FORMATTED_DATE</h4><p>Click <a href='http://clang.llvm.org/docs/SourceBasedCodeCoverage.html#interpreting-reports'>here</a> for information about interpreting this report.</p><div class='centered'><table><tr><td class='column-entry-bold'>Component</td><td class='column-entry-bold'>Function Coverage</td><td class='column-entry-bold'>Line Coverage</td><td class='column-entry-bold'>Region Coverage</td></tr>"
+INDEX_HTML="<!doctype html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'><meta charset='UTF-8'><link rel='stylesheet' type='text/css' href='coverage_OrbitQt/style.css'></head><body><h2>Coverage Report</h2><h4>Created: $FORMATTED_DATE</h4><p>Click <a href='http://clang.llvm.org/docs/SourceBasedCodeCoverage.html#interpreting-reports'>here</a> for information about interpreting this report.</p><div class='centered'><table><tr><td class='column-entry-bold'>Component</td><td class='column-entry-bold'>Function Coverage</td><td class='column-entry-bold'>Line Coverage</td><td class='column-entry-bold'>Region Coverage</td></tr>"
 INDEX_HTML+=$HTML_TABLE
 INDEX_HTML+="<tr class='light-row-bold'><td><pre>Totals</pre></td>$(generate_html_td $SUM_FUNCTIONS_COUNT $SUM_FUNCTIONS_COVERED)$(generate_html_td $SUM_LINES_COUNT $SUM_LINES_COVERED)$(generate_html_td $SUM_REGIONS_COUNT $SUM_REGIONS_COVERED)</tr></table></body></html>"
 
