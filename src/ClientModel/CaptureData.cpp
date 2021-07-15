@@ -93,7 +93,14 @@ void CaptureData::UpdateFunctionStats(uint64_t instrumented_function_id, uint64_
   FunctionStats& stats = functions_stats_[instrumented_function_id];
   stats.set_count(stats.count() + 1);
   stats.set_total_time_ns(stats.total_time_ns() + elapsed_nanos);
+  uint64_t old_avg = stats.average_time_ns();
   stats.set_average_time_ns(stats.total_time_ns() / stats.count());
+  // variance(N) = ( (N-1)*variance(N-1) + (x-avg(N))*(x-avg(N-1)) ) / N
+  stats.set_variance_ns(((stats.count() - 1) * stats.variance_ns() +
+                         (elapsed_nanos - stats.average_time_ns()) * (elapsed_nanos - old_avg)) /
+                        static_cast<double>(stats.count()));
+  // std_dev = sqrt(variance)
+  stats.set_std_dev_ns(static_cast<uint64_t>(sqrt(stats.variance_ns())));
 
   if (elapsed_nanos > stats.max_ns()) {
     stats.set_max_ns(elapsed_nanos);

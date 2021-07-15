@@ -70,6 +70,7 @@ class LiveFunctionsDataView : public orbit_data_views::DataView {
     kColumnTimeAvg,
     kColumnTimeMin,
     kColumnTimeMax,
+    kColumnStdDev,
     kColumnModule,
     kColumnAddress,
     kNumColumns
