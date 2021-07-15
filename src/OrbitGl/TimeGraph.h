@@ -193,7 +193,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
                          const orbit_client_protos::TimerInfo& timer_info);
   void ProcessSystemMemoryTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
   void ProcessCGroupAndProcessMemoryTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
-  void ProcessPagefaultTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
+  void ProcessPageFaultsTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
 
  private:
   AccessibleInterfaceProvider* accessible_parent_;

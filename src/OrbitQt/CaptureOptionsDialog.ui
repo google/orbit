@@ -108,7 +108,7 @@
         <item>
          <widget class="QCheckBox" name="collectMemoryInfoCheckBox">
           <property name="text">
-           <string>Collect memory usage and pagefault information</string>
+           <string>Collect memory usage and page faults information</string>
           </property>
          </widget>
         </item>

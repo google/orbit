@@ -34,7 +34,7 @@
 #include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "PagefaultTrack.h"
+#include "PageFaultsTrack.h"
 #include "PickingManager.h"
 #include "SchedulerTrack.h"
 #include "StringManager.h"
@@ -51,8 +51,7 @@ using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_gl::CGroupAndProcessMemoryTrack;
-using orbit_gl::MajorPagefaultTrack;
-using orbit_gl::MinorPagefaultTrack;
+using orbit_gl::PageFaultsTrack;
 using orbit_gl::SystemMemoryTrack;
 using orbit_gl::VariableTrack;
 using orbit_grpc_protos::InstrumentedFunction;
@@ -312,8 +311,8 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
       ProcessCGroupAndProcessMemoryTrackingTimer(timer_info);
       break;
     }
-    case TimerInfo::kPagefault: {
-      ProcessPagefaultTrackingTimer(timer_info);
+    case TimerInfo::kPageFaults: {
+      ProcessPageFaultsTrackingTimer(timer_info);
       break;
     }
     case TimerInfo::kNone: {
@@ -469,16 +468,16 @@ void TimeGraph::ProcessCGroupAndProcessMemoryTrackingTimer(const TimerInfo& time
   track->OnTimer(timer_info);
 }
 
-void TimeGraph::ProcessPagefaultTrackingTimer(const orbit_client_protos::TimerInfo& timer_info) {
+void TimeGraph::ProcessPageFaultsTrackingTimer(const orbit_client_protos::TimerInfo& timer_info) {
   uint64_t cgroup_name_hash = timer_info.registers(
-      static_cast<size_t>(CaptureEventProcessor::PagefaultEncodingIndex::kCGroupNameHash));
+      static_cast<size_t>(CaptureEventProcessor::PageFaultsEncodingIndex::kCGroupNameHash));
   std::string cgroup_name = app_->GetStringManager()->Get(cgroup_name_hash).value_or("");
   if (cgroup_name.empty()) return;
 
-  orbit_gl::PagefaultTrack* track = track_manager_->GetPagefaultTrack();
+  PageFaultsTrack* track = track_manager_->GetPageFaultsTrack();
   if (track == nullptr) {
     uint64_t memory_sampling_period_ms = app_->GetMemorySamplingPeriodMs();
-    track = track_manager_->CreateAndGetPagefaultTrack(cgroup_name, memory_sampling_period_ms);
+    track = track_manager_->CreateAndGetPageFaultsTrack(cgroup_name, memory_sampling_period_ms);
   }
   CHECK(track != nullptr);
   track->OnTimer(timer_info);

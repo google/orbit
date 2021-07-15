@@ -40,14 +40,14 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
     kSchedulerTrack,
     kAsyncTrack,
     kMemoryTrack,
-    kPagefaultTrack,
+    kPageFaultsTrack,
     kUnknown,
   };
 
   static constexpr std::initializer_list<Type> kAllTrackTypes = {
-      Type::kTimerTrack,  Type::kThreadTrack,    Type::kFrameTrack,     Type::kVariableTrack,
-      Type::kGpuTrack,    Type::kGraphTrack,     Type::kSchedulerTrack, Type::kAsyncTrack,
-      Type::kMemoryTrack, Type::kPagefaultTrack, Type::kUnknown};
+      Type::kTimerTrack,  Type::kThreadTrack,     Type::kFrameTrack,     Type::kVariableTrack,
+      Type::kGpuTrack,    Type::kGraphTrack,      Type::kSchedulerTrack, Type::kAsyncTrack,
+      Type::kMemoryTrack, Type::kPageFaultsTrack, Type::kUnknown};
 
   explicit Track(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                  TimeGraphLayout* layout, const orbit_client_model::CaptureData* capture_data,

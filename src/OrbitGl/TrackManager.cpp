@@ -35,7 +35,7 @@
 
 using orbit_client_data::CallstackData;
 using orbit_gl::CGroupAndProcessMemoryTrack;
-using orbit_gl::PagefaultTrack;
+using orbit_gl::PageFaultsTrack;
 using orbit_gl::SystemMemoryTrack;
 using orbit_gl::VariableTrack;
 
@@ -107,9 +107,9 @@ void TrackManager::SortTracks() {
     all_processes_sorted_tracks.push_back(cgroup_and_process_memory_track_.get());
   }
 
-  // Pagefault track.
-  if (pagefault_track_ != nullptr && !pagefault_track_->IsEmpty()) {
-    all_processes_sorted_tracks.push_back(pagefault_track_.get());
+  // PageFaults track.
+  if (page_faults_track_ != nullptr && !page_faults_track_->IsEmpty()) {
+    all_processes_sorted_tracks.push_back(page_faults_track_.get());
   }
 
   // Async tracks.
@@ -488,16 +488,16 @@ CGroupAndProcessMemoryTrack* TrackManager::CreateAndGetCGroupAndProcessMemoryTra
   return GetCGroupAndProcessMemoryTrack();
 }
 
-PagefaultTrack* TrackManager::CreateAndGetPagefaultTrack(const std::string& cgroup_name,
-                                                         uint64_t memory_sampling_period_ms) {
+PageFaultsTrack* TrackManager::CreateAndGetPageFaultsTrack(const std::string& cgroup_name,
+                                                           uint64_t memory_sampling_period_ms) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  if (pagefault_track_ == nullptr) {
-    pagefault_track_ =
-        std::make_shared<PagefaultTrack>(time_graph_, time_graph_, viewport_, layout_, cgroup_name,
-                                         memory_sampling_period_ms, capture_data_);
-    AddTrack(pagefault_track_);
+  if (page_faults_track_ == nullptr) {
+    page_faults_track_ =
+        std::make_shared<PageFaultsTrack>(time_graph_, time_graph_, viewport_, layout_, cgroup_name,
+                                          memory_sampling_period_ms, capture_data_);
+    AddTrack(page_faults_track_);
   }
-  return GetPagefaultTrack();
+  return GetPageFaultsTrack();
 }
 
 uint32_t TrackManager::GetNumTimers() const {
