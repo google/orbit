@@ -19,7 +19,7 @@ using orbit_capture_client::CaptureEventProcessor;
 using orbit_grpc_protos::kMissingInfo;
 
 const std::string kTrackValueLabelUnit = "MB";
-const std::string kTrackName = absl::StrFormat("System Memory Usage (%s)", kTrackValueLabelUnit);
+const std::string kTrackName = absl::StrFormat("Memory Usage: System (%s)", kTrackValueLabelUnit);
 const std::array<std::string, kSystemMemoryTrackDimension> kSeriesName = {
     "Used", "Buffers / Cached", "Unused"};
 constexpr uint64_t kMegabytesToBytes = 1024 * 1024;

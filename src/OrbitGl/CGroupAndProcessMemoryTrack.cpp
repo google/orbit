@@ -20,7 +20,7 @@ using orbit_capture_client::CaptureEventProcessor;
 using orbit_grpc_protos::kMissingInfo;
 
 const std::string kTrackValueLabelUnit = "MB";
-const std::string kTrackName = absl::StrFormat("CGroup Memory Usage (%s)", kTrackValueLabelUnit);
+const std::string kTrackName = absl::StrFormat("Memory Usage: CGroup (%s)", kTrackValueLabelUnit);
 
 static std::array<std::string, kCGroupAndProcessMemoryTrackDimension> CreateSeriesName(
     const std::string& cgroup_name, const std::string& process_name) {
