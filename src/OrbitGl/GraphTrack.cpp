@@ -38,8 +38,8 @@ float GraphTrack<Dimension>::GetHeight() const {
   float scale_factor = IsCollapsed() ? 1 : Dimension;
   float height = layout_->GetTrackTabHeight() + GetLegendHeight() +
                  layout_->GetTextBoxHeight() * scale_factor +
-                 layout_->GetSpaceBetweenTracksAndThread() + layout_->GetEventTrackHeight() +
-                 layout_->GetTrackBottomMargin();
+                 layout_->GetSpaceBetweenTracksAndThread() +
+                 layout_->GetEventTrackHeightFromTid(thread_id_) + layout_->GetTrackBottomMargin();
   return height;
 }
 

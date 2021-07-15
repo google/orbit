@@ -6,11 +6,14 @@
 
 #include <imgui.h>
 
+#include "OrbitBase/ThreadConstants.h"
+
 TimeGraphLayout::TimeGraphLayout() {
   text_box_height_ = 20.f;
   core_height_ = 10.f;
   thread_state_track_height_ = 4.0f;
   event_track_height_ = 10.f;
+  all_threads_event_track_scale_ = 2.f;
   variable_track_height_ = 20.f;
   track_bottom_margin_ = 5.f;
   track_top_margin_ = 5.f;
@@ -52,6 +55,7 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER(core_height_);
   FLOAT_SLIDER(thread_state_track_height_);
   FLOAT_SLIDER(event_track_height_);
+  FLOAT_SLIDER_MIN_MAX(all_threads_event_track_scale_, 0, 10.f);
   FLOAT_SLIDER(variable_track_height_);
   FLOAT_SLIDER(space_between_cores_);
   FLOAT_SLIDER(space_between_gpu_depths_);
@@ -85,4 +89,12 @@ float TimeGraphLayout::GetBottomMargin() const {
   // The bottom consists of the slider (where we have to take the width, as it
   // is rotated), and the time bar.
   return GetSliderWidth() + GetTimeBarHeight();
+}
+
+float TimeGraphLayout::GetEventTrackHeightFromTid(int32_t tid) const {
+  float height = GetEventTrackHeight();
+  if (tid == orbit_base::kAllProcessThreadsTid) {
+    height *= GetAllThreadsEventTrackScale();
+  }
+  return height;
 }
