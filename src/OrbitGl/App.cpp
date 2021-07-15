@@ -901,11 +901,8 @@ void OrbitApp::ShowSourceCode(const orbit_client_protos::FunctionInfo& function)
       });
 }
 
-Timer GMainTimer;
-
 void OrbitApp::MainTick() {
   ORBIT_SCOPE("OrbitApp::MainTick");
-  GMainTimer.Restart();
 
   if (DoZoom && HasCaptureData()) {
     capture_window_->ZoomAll();
