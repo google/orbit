@@ -265,11 +265,3 @@ void FrameTrack::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t cu
 void FrameTrack::UpdateBoxHeight() {
   box_height_ = kBoxHeightMultiplier * layout_->GetTextBoxHeight();
 }
-
-std::vector<std::shared_ptr<orbit_client_data::TimerChain>> FrameTrack::GetAllSerializableChains()
-    const {
-  // Frametracks are just displaying existing data in a different way.
-  // We don't want to write out all the timers of that track. Frame tracks are serialized
-  // by storing the function ids of all functions with frame tracks enabled.
-  return {};
-}

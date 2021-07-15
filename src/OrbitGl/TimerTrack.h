@@ -96,8 +96,6 @@ class TimerTrack : public Track {
 
   [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GetAllChains()
       const override;
-  [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>>
-  GetAllSerializableChains() const override;
   [[nodiscard]] std::vector<const orbit_client_data::TextBox*> GetScopesInRange(
       uint64_t start_ns, uint64_t end_ns) const;
   [[nodiscard]] bool IsEmpty() const override;

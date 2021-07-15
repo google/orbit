@@ -56,10 +56,6 @@ class GraphTrack : public Track {
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GetAllChains()
       const override;
-  [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>>
-  GetAllSerializableChains() const override {
-    return GetAllChains();
-  }
 
  protected:
   [[nodiscard]] virtual Color GetColor(size_t index) const;

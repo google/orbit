@@ -104,16 +104,6 @@ std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GpuTrack::GetAllChai
   return all_chains;
 }
 
-std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GpuTrack::GetAllSerializableChains()
-    const {
-  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> all_chains =
-      submission_track_->GetAllSerializableChains();
-  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> marker_chains =
-      marker_track_->GetAllSerializableChains();
-  all_chains.insert(all_chains.begin(), marker_chains.begin(), marker_chains.end());
-  return all_chains;
-}
-
 void GpuTrack::UpdatePositionOfSubtracks() {
   if (collapse_toggle_->IsCollapsed()) {
     submission_track_->SetPos(pos_[0], pos_[1]);
