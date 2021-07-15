@@ -76,7 +76,7 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
 
   // Allocation fails for ridiculous size.
   address_or_error = AllocateInTracee(pid, 0, 1ull << 63);
-  EXPECT_THAT(address_or_error, HasError("syscall failed. Return value: Cannot allocate memory"));
+  EXPECT_THAT(address_or_error, HasError("Syscall failed. Return value: Cannot allocate memory"));
 
   // Allocate a megabyte in the tracee.
   address_or_error = AllocateInTracee(pid, 0, kMemorySize);
