@@ -140,7 +140,7 @@ TEST(InjectLibraryInTraceeTest, NonExistingLibrary) {
   // Try to load non existing dynamic lib into tracee.
   const std::string kNonExistingLibName = "libNotFound.so";
   auto library_handle_or_error = DlopenInTracee(pid, kNonExistingLibName, RTLD_NOW);
-  ASSERT_THAT(library_handle_or_error, HasError("File not found"));
+  ASSERT_THAT(library_handle_or_error, HasError("Library does not exist at"));
 
   // Continue child process.
   CHECK(!DetachAndContinueProcess(pid).has_error());
