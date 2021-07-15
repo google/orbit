@@ -13,7 +13,7 @@ MajorPagefaultTrack::MajorPagefaultTrack(Track* parent, TimeGraph* time_graph,
                                          uint64_t memory_sampling_period_ms,
                                          const orbit_client_model::CaptureData* capture_data,
                                          uint32_t indentation_level)
-    : BasicPagefaultTrack(parent, time_graph, viewport, layout, "Major Pagefault Track",
+    : BasicPagefaultTrack(parent, time_graph, viewport, layout, "Page Faults: Major",
                           cgroup_name, memory_sampling_period_ms, capture_data, indentation_level) {
   index_of_series_to_highlight_ = static_cast<size_t>(SeriesIndex::kProcess);
 }

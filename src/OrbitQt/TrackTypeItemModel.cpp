@@ -124,7 +124,7 @@ QString TrackTypeItemModel::GetTrackTypeDisplayName(Track::Type track_type) cons
     case Track::Type::kMemoryTrack:
       return "Memory Usage";
     case Track::Type::kPagefaultTrack:
-      return "Pagefaults";
+      return "Page Faults";
     case Track::Type::kThreadTrack:
       return "Threads";
     case Track::Type::kAsyncTrack:

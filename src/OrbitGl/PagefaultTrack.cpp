@@ -32,7 +32,7 @@ PagefaultTrack::PagefaultTrack(CaptureViewElement* parent, TimeGraph* time_graph
       minor_pagefault_track_{std::make_shared<MinorPagefaultTrack>(
           this, time_graph, viewport, layout, cgroup_name, memory_sampling_period_ms, capture_data,
           indentation_level + 1)} {
-  const std::string kTrackName = "Pagefault Track";
+  const std::string kTrackName = "Page Faults";
   SetName(kTrackName);
   SetLabel(kTrackName);
 
