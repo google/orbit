@@ -42,7 +42,7 @@
     "context": "host"
    },
    "2": {
-    "ref": "bzip2/1.0.8@conan/stable#0",
+    "ref": "bzip2/1.0.8#9c8b632000a52af5af3f045d3a6db12f",
     "context": "host"
    },
    "3": {
