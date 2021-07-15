@@ -140,7 +140,7 @@ namespace {
       MAP_PRIVATE | MAP_ANONYMOUS, static_cast<uint64_t>(-1), 0, /*exclude_address=*/0);
   if (result_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat(
-        "Failed to execute mmap syscall with parameters address=%#x size= %u: \"%s\"", address,
+        "Failed to execute mmap syscall with parameters address=%#x size=%u: \"%s\"", address,
         size, result_or_error.error().message()));
   }
   const uint64_t result = result_or_error.value();
