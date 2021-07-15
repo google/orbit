@@ -202,8 +202,8 @@ const orbit_client_data::TextBox* GpuSubmissionTrack::GetLeft(
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   uint64_t timeline_hash = timer_info.user_data_key();
   if (timeline_hash == timeline_hash_) {
-    std::shared_ptr<orbit_client_data::TimerChain> timers = GetTimers(timer_info.depth());
-    if (timers) return timers->GetElementBefore(text_box);
+    orbit_client_data::TimerChain* chain = track_data_->GetChain(timer_info.depth());
+    if (chain != nullptr) return chain->GetElementBefore(text_box);
   }
   return nullptr;
 }
@@ -213,8 +213,8 @@ const orbit_client_data::TextBox* GpuSubmissionTrack::GetRight(
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   uint64_t timeline_hash = timer_info.user_data_key();
   if (timeline_hash == timeline_hash_) {
-    std::shared_ptr<orbit_client_data::TimerChain> timers = GetTimers(timer_info.depth());
-    if (timers) return timers->GetElementAfter(text_box);
+    orbit_client_data::TimerChain* chain = track_data_->GetChain(timer_info.depth());
+    if (chain != nullptr) return chain->GetElementAfter(text_box);
   }
   return nullptr;
 }

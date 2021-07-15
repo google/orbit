@@ -488,11 +488,10 @@ void TimeGraph::ProcessAsyncTimer(const std::string& track_name, const TimerInfo
   track->OnTimer(timer_info);
 }
 
-std::vector<std::shared_ptr<orbit_client_data::TimerChain>>
-TimeGraph::GetAllThreadTrackTimerChains() const {
-  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> chains;
+std::vector<orbit_client_data::TimerChain*> TimeGraph::GetAllThreadTrackTimerChains() {
+  std::vector<orbit_client_data::TimerChain*> chains;
   for (const auto& track : track_manager_->GetThreadTracks()) {
-    orbit_base::Append(chains, track->GetAllChains());
+    orbit_base::Append(chains, track->GetChains());
   }
   return chains;
 }
@@ -539,11 +538,10 @@ void TimeGraph::SelectAndMakeVisible(const orbit_client_data::TextBox* text_box)
 }
 
 const orbit_client_data::TextBox* TimeGraph::FindPreviousFunctionCall(
-    uint64_t function_id, uint64_t current_time, std::optional<int32_t> thread_id) const {
+    uint64_t function_id, uint64_t current_time, std::optional<int32_t> thread_id) {
   const orbit_client_data::TextBox* previous_box = nullptr;
   uint64_t previous_box_time = std::numeric_limits<uint64_t>::lowest();
-  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> chains =
-      GetAllThreadTrackTimerChains();
+  std::vector<orbit_client_data::TimerChain*> chains = GetAllThreadTrackTimerChains();
   for (auto& chain : chains) {
     if (!chain) continue;
     for (const auto& block : *chain) {
@@ -564,13 +562,12 @@ const orbit_client_data::TextBox* TimeGraph::FindPreviousFunctionCall(
 }
 
 const orbit_client_data::TextBox* TimeGraph::FindNextFunctionCall(
-    uint64_t function_id, uint64_t current_time, std::optional<int32_t> thread_id) const {
+    uint64_t function_id, uint64_t current_time, std::optional<int32_t> thread_id) {
   const orbit_client_data::TextBox* next_box = nullptr;
   uint64_t next_box_time = std::numeric_limits<uint64_t>::max();
-  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> chains =
-      GetAllThreadTrackTimerChains();
+  std::vector<orbit_client_data::TimerChain*> chains = GetAllThreadTrackTimerChains();
   for (auto& chain : chains) {
-    if (!chain) continue;
+    CHECK(chain != nullptr);
     for (const auto& block : *chain) {
       if (!block.Intersects(current_time, next_box_time)) continue;
       for (uint64_t i = 0; i < block.size(); i++) {
@@ -1008,13 +1005,12 @@ const orbit_client_data::TextBox* TimeGraph::FindDown(const orbit_client_data::T
 }
 
 std::pair<const orbit_client_data::TextBox*, const orbit_client_data::TextBox*>
-TimeGraph::GetMinMaxTextBoxForFunction(uint64_t function_id) const {
+TimeGraph::GetMinMaxTextBoxForFunction(uint64_t function_id) {
   const orbit_client_data::TextBox* min_box = nullptr;
   const orbit_client_data::TextBox* max_box = nullptr;
-  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> chains =
-      GetAllThreadTrackTimerChains();
+  std::vector<orbit_client_data::TimerChain*> chains = GetAllThreadTrackTimerChains();
   for (auto& chain : chains) {
-    if (!chain) continue;
+    CHECK(chain);
     for (auto& block : *chain) {
       for (size_t i = 0; i < block.size(); i++) {
         const orbit_client_data::TextBox& box = block[i];

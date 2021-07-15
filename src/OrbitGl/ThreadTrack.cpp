@@ -32,6 +32,7 @@
 #include "TriangleToggle.h"
 #include "Viewport.h"
 
+using orbit_client_data::TimerChain;
 using orbit_client_model::CaptureData;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
@@ -88,8 +89,8 @@ const orbit_client_data::TextBox* ThreadTrack::GetLeft(
     const orbit_client_data::TextBox* text_box) const {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   if (timer_info.thread_id() == thread_id_) {
-    std::shared_ptr<orbit_client_data::TimerChain> timers = GetTimers(timer_info.depth());
-    if (timers) return timers->GetElementBefore(text_box);
+    orbit_client_data::TimerChain* chain = track_data_->GetChain(timer_info.depth());
+    if (chain != nullptr) return chain->GetElementBefore(text_box);
   }
   return nullptr;
 }
@@ -98,15 +99,15 @@ const orbit_client_data::TextBox* ThreadTrack::GetRight(
     const orbit_client_data::TextBox* text_box) const {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   if (timer_info.thread_id() == thread_id_) {
-    std::shared_ptr<orbit_client_data::TimerChain> timers = GetTimers(timer_info.depth());
-    if (timers) return timers->GetElementAfter(text_box);
+    orbit_client_data::TimerChain* chain = track_data_->GetChain(timer_info.depth());
+    if (chain != nullptr) return chain->GetElementAfter(text_box);
   }
   return nullptr;
 }
 
 std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
   const orbit_client_data::TextBox* text_box = batcher.GetTextBox(id);
-  if (!text_box || text_box->GetTimerInfo().type() == TimerInfo::kCoreActivity) {
+  if (text_box == nullptr || text_box->GetTimerInfo().type() == TimerInfo::kCoreActivity) {
     return "";
   }
 
@@ -271,8 +272,8 @@ void ThreadTrack::UpdatePositionOfSubtracks() {
 }
 
 void ThreadTrack::UpdateMinMaxTimestamps() {
-  min_time_ = std::min(min_time_.load(), capture_data_->GetCallstackData()->min_time());
-  max_time_ = std::max(max_time_.load(), capture_data_->GetCallstackData()->max_time());
+  track_data_->UpdateMinTime(capture_data_->GetCallstackData()->min_time());
+  track_data_->UpdateMaxTime(capture_data_->GetCallstackData()->max_time());
 }
 
 void ThreadTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
@@ -442,16 +443,7 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
 
   // Thread tracks use a ScopeTree so we don't need to create one TimerChain per depth.
   // Allocate a single TimerChain into which all timers will be appended.
-  std::shared_ptr<orbit_client_data::TimerChain>& timer_chain = timers_[0];
-  if (timer_chain == nullptr) {
-    timer_chain = std::make_shared<orbit_client_data::TimerChain>();
-  }
-
-  orbit_client_data::TextBox& text_box = timer_chain->emplace_back(timer_info);
-  ++num_timers_;
-
-  if (timer_info.start() < min_time_) min_time_ = timer_info.start();
-  if (timer_info.end() > max_time_) max_time_ = timer_info.end();
+  orbit_client_data::TextBox& text_box = track_data_->AddTimer(/*depth=*/0, timer_info);
 
   if (scope_tree_update_type_ == ScopeTreeUpdateType::kAlways) {
     absl::MutexLock lock(&scope_tree_mutex_);
@@ -464,9 +456,9 @@ void ThreadTrack::OnCaptureComplete() {
     return;
   }
   // Build ScopeTree from timer chains.
-  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> timer_chains = GetAllChains();
-  for (const auto& timer_chain : timer_chains) {
-    if (timer_chain == nullptr) return;
+  std::vector<TimerChain*> timer_chains = track_data_->GetChains();
+  for (TimerChain* timer_chain : timer_chains) {
+    CHECK(timer_chain != nullptr);
     absl::MutexLock lock(&scope_tree_mutex_);
     for (auto& block : *timer_chain) {
       for (size_t k = 0; k < block.size(); ++k) {

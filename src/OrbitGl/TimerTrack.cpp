@@ -24,6 +24,7 @@
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 
+using orbit_client_data::TimerChain;
 using orbit_client_protos::TimerInfo;
 
 ABSL_DECLARE_FLAG(bool, show_return_values);
@@ -259,7 +260,7 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
 
   draw_data.z = GlCanvas::kZValueBox + z_offset;
 
-  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> chains_by_depth = GetTimers();
+  std::vector<orbit_client_data::TimerChain*> chains = track_data_->GetChains();
   draw_data.selected_textbox = app_->selected_text_box();
   draw_data.highlighted_function_id = app_->GetFunctionIdToHighlight();
 
@@ -271,8 +272,8 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
   draw_data.ns_per_pixel = time_window_ns / viewport_->GetScreenWidth();
   draw_data.min_timegraph_tick = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
 
-  for (auto& chain : chains_by_depth) {
-    if (!chain) continue;
+  for (TimerChain* chain : chains) {
+    CHECK(chain != nullptr);
     // In order to draw overlaps correctly, we need for every text box to be drawn (current),
     // its previous and next text box. In order to avoid looking ahead for the next text (which is
     // error-prone), we are doing just one traversal of the text boxes, while keeping track of the
@@ -323,17 +324,7 @@ void TimerTrack::OnTimer(const TimerInfo& timer_info) {
     process_id_ = timer_info.process_id();
   }
 
-  std::shared_ptr<orbit_client_data::TimerChain> timer_chain = timers_[timer_info.depth()];
-  if (timer_chain == nullptr) {
-    timer_chain = std::make_shared<orbit_client_data::TimerChain>();
-    timers_[timer_info.depth()] = timer_chain;
-  }
-
-  timer_chain->emplace_back(timer_info);
-
-  ++num_timers_;
-  if (timer_info.start() < min_time_) min_time_ = timer_info.start();
-  if (timer_info.end() > max_time_) max_time_ = timer_info.end();
+  track_data_->AddTimer(timer_info.depth(), timer_info);
 }
 
 float TimerTrack::GetHeight() const {
@@ -349,24 +340,15 @@ std::string TimerTrack::GetTooltip() const {
          "functions";
 }
 
-std::vector<std::shared_ptr<orbit_client_data::TimerChain>> TimerTrack::GetTimers() const {
-  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> timers;
-  absl::MutexLock lock(&mutex_);
-  for (auto& pair : timers_) {
-    timers.push_back(pair.second);
-  }
-  return timers;
-}
-
 const orbit_client_data::TextBox* TimerTrack::GetFirstAfterTime(uint64_t time,
                                                                 uint32_t depth) const {
-  std::shared_ptr<orbit_client_data::TimerChain> chain = GetTimers(depth);
+  orbit_client_data::TimerChain* chain = track_data_->GetChain(depth);
   if (chain == nullptr) return nullptr;
 
   // TODO: do better than linear search...
-  for (orbit_client_data::TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
-    for (size_t k = 0; k < it->size(); ++k) {
-      const orbit_client_data::TextBox& text_box = (*it)[k];
+  for (auto& it : *chain) {
+    for (size_t k = 0; k < it.size(); ++k) {
+      const orbit_client_data::TextBox& text_box = it[k];
       if (text_box.GetTimerInfo().start() > time) {
         return &text_box;
       }
@@ -377,15 +359,15 @@ const orbit_client_data::TextBox* TimerTrack::GetFirstAfterTime(uint64_t time,
 
 const orbit_client_data::TextBox* TimerTrack::GetFirstBeforeTime(uint64_t time,
                                                                  uint32_t depth) const {
-  std::shared_ptr<orbit_client_data::TimerChain> chain = GetTimers(depth);
+  orbit_client_data::TimerChain* chain = track_data_->GetChain(depth);
   if (chain == nullptr) return nullptr;
 
   const orbit_client_data::TextBox* text_box = nullptr;
 
   // TODO: do better than linear search...
-  for (orbit_client_data::TimerChainIterator it = chain->begin(); it != chain->end(); ++it) {
-    for (size_t k = 0; k < it->size(); ++k) {
-      const orbit_client_data::TextBox& box = (*it)[k];
+  for (auto& it : *chain) {
+    for (size_t k = 0; k < it.size(); ++k) {
+      const orbit_client_data::TextBox& box = it[k];
       if (box.GetTimerInfo().start() > time) {
         return text_box;
       }
@@ -393,13 +375,6 @@ const orbit_client_data::TextBox* TimerTrack::GetFirstBeforeTime(uint64_t time,
     }
   }
 
-  return nullptr;
-}
-
-std::shared_ptr<orbit_client_data::TimerChain> TimerTrack::GetTimers(uint32_t depth) const {
-  absl::MutexLock lock(&mutex_);
-  auto it = timers_.find(depth);
-  if (it != timers_.end()) return it->second;
   return nullptr;
 }
 
@@ -415,19 +390,11 @@ const orbit_client_data::TextBox* TimerTrack::GetDown(
   return GetFirstAfterTime(timer_info.start(), timer_info.depth() + 1);
 }
 
-std::vector<std::shared_ptr<orbit_client_data::TimerChain>> TimerTrack::GetAllChains() const {
-  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> chains;
-  for (const auto& pair : timers_) {
-    chains.push_back(pair.second);
-  }
-  return chains;
-}
-
 std::vector<const orbit_client_data::TextBox*> TimerTrack::GetScopesInRange(uint64_t start_ns,
                                                                             uint64_t end_ns) const {
   std::vector<const orbit_client_data::TextBox*> result;
-  for (auto chain : GetAllChains()) {
-    if (chain == nullptr) continue;
+  for (TimerChain* chain : track_data_->GetChains()) {
+    CHECK(chain != nullptr);
     for (const auto& block : *chain) {
       if (!block.Intersects(start_ns, end_ns)) continue;
       for (uint64_t i = 0; i < block.size(); ++i) {

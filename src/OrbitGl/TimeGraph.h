@@ -105,10 +105,10 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
                          JumpScope jump_scope);
   [[nodiscard]] const orbit_client_data::TextBox* FindPreviousFunctionCall(
       uint64_t function_address, uint64_t current_time,
-      std::optional<int32_t> thread_id = std::nullopt) const;
+      std::optional<int32_t> thread_id = std::nullopt);
   [[nodiscard]] const orbit_client_data::TextBox* FindNextFunctionCall(
       uint64_t function_address, uint64_t current_time,
-      std::optional<int32_t> thread_id = std::nullopt) const;
+      std::optional<int32_t> thread_id = std::nullopt);
   void SelectAndZoom(const orbit_client_data::TextBox* text_box);
   [[nodiscard]] double GetCaptureTimeSpanUs() const;
   [[nodiscard]] double GetCurrentTimeSpanUs() const;
@@ -123,8 +123,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   [[nodiscard]] int GetNumDrawnTextBoxes() const { return num_drawn_text_boxes_; }
   [[nodiscard]] TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
   [[nodiscard]] Batcher& GetBatcher() { return batcher_; }
-  [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>>
-  GetAllThreadTrackTimerChains() const;
+  [[nodiscard]] std::vector<orbit_client_data::TimerChain*> GetAllThreadTrackTimerChains();
 
   void UpdateHorizontalScroll(float ratio);
   [[nodiscard]] double GetMinTimeUs() const { return min_time_us_; }
@@ -140,7 +139,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   [[nodiscard]] const orbit_client_data::TextBox* FindTop(const orbit_client_data::TextBox* from);
   [[nodiscard]] const orbit_client_data::TextBox* FindDown(const orbit_client_data::TextBox* from);
   [[nodiscard]] std::pair<const orbit_client_data::TextBox*, const orbit_client_data::TextBox*>
-  GetMinMaxTextBoxForFunction(uint64_t function_id) const;
+  GetMinMaxTextBoxForFunction(uint64_t function_id);
 
   [[nodiscard]] static Color GetColor(uint32_t id) {
     constexpr unsigned char kAlpha = 255;

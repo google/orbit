@@ -69,6 +69,18 @@ class GpuTrack : public Track {
   }
   [[nodiscard]] bool IsCollapsible() const override { return true; }
 
+  [[nodiscard]] uint32_t GetNumTimers() const override {
+    return submission_track_->GetNumTimers() + marker_track_->GetNumTimers();
+  }
+
+  [[nodiscard]] uint64_t GetMinTime() const override {
+    return std::min(submission_track_->GetMinTime(), marker_track_->GetMinTime());
+  }
+
+  [[nodiscard]] uint64_t GetMaxTime() const override {
+    return std::max(submission_track_->GetMaxTime(), marker_track_->GetMaxTime());
+  }
+
  private:
   void UpdatePositionOfSubtracks();
   const std::shared_ptr<GpuSubmissionTrack> submission_track_;

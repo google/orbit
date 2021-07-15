@@ -60,6 +60,10 @@ class ThreadTrack final : public TimerTrack {
 
   void OnCaptureComplete();
 
+  [[nodiscard]] std::vector<orbit_client_data::TimerChain*> GetChains() {
+    return track_data_->GetChains();
+  }
+
  protected:
   [[nodiscard]] std::string GetThreadNameFromTid(uint32_t tid);
   [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const override;

@@ -91,7 +91,9 @@ class TimerChainIterator {
 
  private:
   TimerBlock* block_;
-};  // TimerChain is a specialization of the BlockChain data structure to make it
+};
+
+// TimerChain is a specialization of the BlockChain data structure to make it
 // easier to keep track of min and max timestamps in the blocks, which allows
 // for fast rejection of entire blocks when rendering timers. Note that there
 // is a difference compared with BlockChain in how the iterators work: Here,
