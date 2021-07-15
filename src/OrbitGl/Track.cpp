@@ -7,8 +7,6 @@
 #include <math.h>
 #include <stddef.h>
 
-#include <limits>
-
 #include "AccessibleTrack.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreMath.h"
@@ -19,10 +17,17 @@
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
 
+using orbit_client_data::TrackData;
+
 Track::Track(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
              TimeGraphLayout* layout, const orbit_client_model::CaptureData* capture_data,
              uint32_t indentation_level)
     : CaptureViewElement(parent, time_graph, viewport, layout),
+      num_prioritized_trailing_characters_{0},
+      thread_id_{-1},
+      process_id_{-1},
+      pinned_{false},
+      track_data_{std::make_unique<TrackData>()},
       layout_(layout),
       capture_data_(capture_data),
       indentation_level_(indentation_level) {
@@ -36,13 +41,6 @@ Track::Track(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewpo
 
   const Color kDarkGrey(50, 50, 50, 255);
   color_ = kDarkGrey;
-  num_timers_ = 0;
-  min_time_ = std::numeric_limits<uint64_t>::max();
-  max_time_ = std::numeric_limits<uint64_t>::min();
-  num_prioritized_trailing_characters_ = 0;
-  thread_id_ = -1;
-  process_id_ = -1;
-  SetPinned(false);
 }
 
 std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides) {

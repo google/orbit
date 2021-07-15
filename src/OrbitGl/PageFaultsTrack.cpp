@@ -175,14 +175,7 @@ void PageFaultsTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) 
     AddValuesAndUpdateAnnotationsForMinorPageFaultsSubtrack(timer_info.start(), values);
   }
 
-  constexpr uint32_t kDepth = 0;
-  std::shared_ptr<orbit_client_data::TimerChain> timer_chain = timers_[kDepth];
-  if (timer_chain == nullptr) {
-    timer_chain = std::make_shared<orbit_client_data::TimerChain>();
-    timers_[kDepth] = timer_chain;
-  }
-
-  timer_chain->emplace_back(timer_info);
+  track_data_->AddTimer(/*depth=*/0, timer_info);
 }
 
 }  // namespace orbit_gl

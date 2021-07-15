@@ -49,8 +49,7 @@ const orbit_client_data::TextBox* ClosestTo(uint64_t point, const orbit_client_d
   return box_b;
 }
 
-const orbit_client_data::TextBox* SnapToClosestStart(const TimeGraph* time_graph,
-                                                     uint64_t function_id) {
+const orbit_client_data::TextBox* SnapToClosestStart(TimeGraph* time_graph, uint64_t function_id) {
   double min_us = time_graph->GetMinTimeUs();
   double max_us = time_graph->GetMaxTimeUs();
   double center_us = 0.5 * max_us + 0.5 * min_us;
@@ -113,8 +112,8 @@ bool LiveFunctionsController::OnAllNextButton() {
   for (auto it : iterator_id_to_function_id_) {
     uint64_t function_id = it.second;
     const orbit_client_data::TextBox* current_box = current_textboxes_.find(it.first)->second;
-    const orbit_client_data::TextBox* box =
-        app_->GetTimeGraph()->FindNextFunctionCall(function_id, current_box->GetTimerInfo().end());
+    const orbit_client_data::TextBox* box = app_->GetMutableTimeGraph()->FindNextFunctionCall(
+        function_id, current_box->GetTimerInfo().end());
     if (box == nullptr) {
       return false;
     }
@@ -139,7 +138,7 @@ bool LiveFunctionsController::OnAllPreviousButton() {
   for (auto it : iterator_id_to_function_id_) {
     uint64_t function_id = it.second;
     const orbit_client_data::TextBox* current_box = current_textboxes_.find(it.first)->second;
-    const orbit_client_data::TextBox* box = app_->GetTimeGraph()->FindPreviousFunctionCall(
+    const orbit_client_data::TextBox* box = app_->GetMutableTimeGraph()->FindPreviousFunctionCall(
         function_id, current_box->GetTimerInfo().end());
     if (box == nullptr) {
       return false;
@@ -159,7 +158,7 @@ bool LiveFunctionsController::OnAllPreviousButton() {
 }
 
 void LiveFunctionsController::OnNextButton(uint64_t id) {
-  const orbit_client_data::TextBox* text_box = app_->GetTimeGraph()->FindNextFunctionCall(
+  const orbit_client_data::TextBox* text_box = app_->GetMutableTimeGraph()->FindNextFunctionCall(
       iterator_id_to_function_id_[id], current_textboxes_[id]->GetTimerInfo().end());
   // If text_box is nullptr, then we have reached the right end of the timeline.
   if (text_box != nullptr) {
@@ -169,8 +168,9 @@ void LiveFunctionsController::OnNextButton(uint64_t id) {
   Move();
 }
 void LiveFunctionsController::OnPreviousButton(uint64_t id) {
-  const orbit_client_data::TextBox* text_box = app_->GetTimeGraph()->FindPreviousFunctionCall(
-      iterator_id_to_function_id_[id], current_textboxes_[id]->GetTimerInfo().end());
+  const orbit_client_data::TextBox* text_box =
+      app_->GetMutableTimeGraph()->FindPreviousFunctionCall(
+          iterator_id_to_function_id_[id], current_textboxes_[id]->GetTimerInfo().end());
   // If text_box is nullptr, then we have reached the left end of the timeline.
   if (text_box != nullptr) {
     current_textboxes_[id] = text_box;
@@ -202,7 +202,7 @@ void LiveFunctionsController::AddIterator(uint64_t function_id, const FunctionIn
   // function, we search for the closest box to the current center of the
   // screen.
   if (!box || box->GetTimerInfo().function_id() != function_id) {
-    box = SnapToClosestStart(app_->GetTimeGraph(), function_id);
+    box = SnapToClosestStart(app_->GetMutableTimeGraph(), function_id);
   }
 
   iterator_id_to_function_id_.insert(std::make_pair(iterator_id, function_id));

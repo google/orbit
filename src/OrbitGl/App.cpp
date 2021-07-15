@@ -2554,24 +2554,26 @@ bool OrbitApp::HasFrameTrackInCaptureData(uint64_t instrumented_function_id) con
 void OrbitApp::JumpToTextBoxAndZoom(uint64_t function_id, JumpToTextBoxMode selection_mode) {
   switch (selection_mode) {
     case JumpToTextBoxMode::kFirst: {
-      const auto* first_box = GetTimeGraph()->FindNextFunctionCall(
+      const auto* first_box = GetMutableTimeGraph()->FindNextFunctionCall(
           function_id, std::numeric_limits<uint64_t>::lowest());
       if (first_box != nullptr) GetMutableTimeGraph()->SelectAndZoom(first_box);
       break;
     }
     case JumpToTextBoxMode::kLast: {
-      const auto* last_box = GetTimeGraph()->FindPreviousFunctionCall(
+      const auto* last_box = GetMutableTimeGraph()->FindPreviousFunctionCall(
           function_id, std::numeric_limits<uint64_t>::max());
       if (last_box != nullptr) GetMutableTimeGraph()->SelectAndZoom(last_box);
       break;
     }
     case JumpToTextBoxMode::kMin: {
-      auto [min_box, unused_max_box] = GetTimeGraph()->GetMinMaxTextBoxForFunction(function_id);
+      auto [min_box, unused_max_box] =
+          GetMutableTimeGraph()->GetMinMaxTextBoxForFunction(function_id);
       if (min_box != nullptr) GetMutableTimeGraph()->SelectAndZoom(min_box);
       break;
     }
     case JumpToTextBoxMode::kMax: {
-      auto [unused_min_box, max_box] = GetTimeGraph()->GetMinMaxTextBoxForFunction(function_id);
+      auto [unused_min_box, max_box] =
+          GetMutableTimeGraph()->GetMinMaxTextBoxForFunction(function_id);
       if (max_box != nullptr) GetMutableTimeGraph()->SelectAndZoom(max_box);
       break;
     }
@@ -2595,13 +2597,13 @@ void OrbitApp::AddFrameTrackTimers(uint64_t instrumented_function_id) {
     return;
   }
 
-  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> chains =
-      GetTimeGraph()->GetAllThreadTrackTimerChains();
+  std::vector<orbit_client_data::TimerChain*> chains =
+      GetMutableTimeGraph()->GetAllThreadTrackTimerChains();
 
   std::vector<uint64_t> all_start_times;
 
   for (const auto& chain : chains) {
-    if (!chain) continue;
+    CHECK(chain != nullptr);
     for (const orbit_client_data::TimerBlock& block : *chain) {
       for (uint64_t i = 0; i < block.size(); ++i) {
         const orbit_client_data::TextBox& box = block[i];

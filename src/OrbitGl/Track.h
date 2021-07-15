@@ -5,8 +5,6 @@
 #ifndef ORBIT_GL_TRACK_H_
 #define ORBIT_GL_TRACK_H_
 
-#include <ClientModel/CaptureData.h>
-#include <GteVector.h>
 #include <stdint.h>
 
 #include <algorithm>
@@ -20,7 +18,10 @@
 #include "CaptureViewElement.h"
 #include "ClientData/TextBox.h"
 #include "ClientData/TimerChain.h"
+#include "ClientData/TrackData.h"
+#include "ClientModel/CaptureData.h"
 #include "CoreMath.h"
+#include "GteVector.h"
 #include "OrbitBase/Profiling.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
@@ -62,7 +63,6 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   void OnDrag(int x, int y) override;
 
   [[nodiscard]] virtual Type GetType() const = 0;
-  [[nodiscard]] virtual bool Movable() { return !pinned_; }
 
   [[nodiscard]] virtual float GetHeight() const = 0;
   [[nodiscard]] bool GetVisible() const { return visible_; }
@@ -70,9 +70,9 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
 
   void SetColor(const Color& color) { color_ = color; }
 
-  [[nodiscard]] uint32_t GetNumTimers() const { return num_timers_; }
-  [[nodiscard]] virtual uint64_t GetMinTime() const { return min_time_; }
-  [[nodiscard]] virtual uint64_t GetMaxTime() const { return max_time_; }
+  [[nodiscard]] virtual uint32_t GetNumTimers() const { return track_data_->GetNumberOfTimers(); }
+  [[nodiscard]] virtual uint64_t GetMinTime() const { return track_data_->GetMinTime(); }
+  [[nodiscard]] virtual uint64_t GetMaxTime() const { return track_data_->GetMaxTime(); }
   void SetNumberOfPrioritizedTrailingCharacters(int num_characters) {
     num_prioritized_trailing_characters_ = num_characters;
   }
@@ -126,10 +126,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   bool draw_background_ = true;
   bool visible_ = true;
   bool pinned_ = false;
-  std::map<int, std::shared_ptr<orbit_client_data::TimerChain>> timers_;
-  std::atomic<uint32_t> num_timers_;
-  std::atomic<uint64_t> min_time_;
-  std::atomic<uint64_t> max_time_;
+  std::shared_ptr<orbit_client_data::TrackData> track_data_;
   Type type_ = Type::kUnknown;
   std::shared_ptr<TriangleToggle> collapse_toggle_;
 

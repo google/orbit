@@ -13,9 +13,7 @@
 #include "App.h"
 #include "Batcher.h"
 #include "ClientData/TextBox.h"
-#include "ClientData/TimerChain.h"
 #include "ClientModel/CaptureData.h"
-#include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "TimeGraph.h"
@@ -77,10 +75,6 @@ GpuTrack::GpuTrack(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::
 }
 
 void GpuTrack::OnTimer(const TimerInfo& timer_info) {
-  ++num_timers_;
-  if (timer_info.start() < min_time_) min_time_ = timer_info.start();
-  if (timer_info.end() > max_time_) max_time_ = timer_info.end();
-
   switch (timer_info.type()) {
     case TimerInfo::kGpuActivity:
       [[fallthrough]];
