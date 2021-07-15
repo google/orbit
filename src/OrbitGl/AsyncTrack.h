@@ -37,7 +37,7 @@ class AsyncTrack final : public TimerTrack {
   void UpdateBoxHeight() override;
 
  protected:
-  void SetTimesliceText(const orbit_client_protos::TimerInfo& timer, float min_x, float z_offset,
+  void SetTimesliceText(const orbit_client_protos::TimerInfo& timer,
                         orbit_client_data::TextBox* text_box) override;
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
                                     bool is_selected, bool is_highlighted) const override;
