@@ -12,6 +12,7 @@
 #include "CoreMath.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "TextRenderer.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
@@ -24,7 +25,7 @@ Track::Track(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewpo
              uint32_t indentation_level)
     : CaptureViewElement(parent, time_graph, viewport, layout),
       num_prioritized_trailing_characters_{0},
-      thread_id_{-1},
+      thread_id_{orbit_base::kInvalidThreadTid},
       process_id_{-1},
       pinned_{false},
       track_data_{std::make_unique<TrackData>()},

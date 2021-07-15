@@ -9,6 +9,9 @@
 
 namespace orbit_base {
 
+// Represents an invalid thread id.
+static constexpr int32_t kInvalidThreadTid = 0;
+
 // Represents a fake thread id to specify the set of all thread ids of the current process.
 static constexpr int32_t kAllProcessThreadsTid = -1;
 

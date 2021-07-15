@@ -99,7 +99,7 @@ void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, u
   ThreadBar::UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
 
   float z = GlCanvas::kZValueEvent + z_offset;
-  float track_height = layout_->GetEventTrackHeight();
+  float track_height = layout_->GetEventTrackHeightFromTid(thread_id_);
   const bool picking = picking_mode != PickingMode::kNone;
 
   const Color kWhite(255, 255, 255, 255);
