@@ -20,7 +20,7 @@
 #include "FrameTrack.h"
 #include "GpuTrack.h"
 #include "GraphTrack.h"
-#include "PagefaultTrack.h"
+#include "PageFaultsTrack.h"
 #include "PickingManager.h"
 #include "SchedulerTrack.h"
 #include "StringManager.h"
@@ -74,9 +74,9 @@ class TrackManager {
   }
   [[nodiscard]] orbit_gl::CGroupAndProcessMemoryTrack* CreateAndGetCGroupAndProcessMemoryTrack(
       const std::string& cgroup_name);
-  orbit_gl::PagefaultTrack* GetPagefaultTrack() const { return pagefault_track_.get(); }
-  orbit_gl::PagefaultTrack* CreateAndGetPagefaultTrack(const std::string& cgroup_name,
-                                                       uint64_t memory_sampling_period_ms);
+  orbit_gl::PageFaultsTrack* GetPageFaultsTrack() const { return page_faults_track_.get(); }
+  orbit_gl::PageFaultsTrack* CreateAndGetPageFaultsTrack(const std::string& cgroup_name,
+                                                         uint64_t memory_sampling_period_ms);
 
   [[nodiscard]] bool GetIsDataFromSavedCapture() const { return data_from_saved_capture_; }
   void SetIsDataFromSavedCapture(bool value) { data_from_saved_capture_ = value; }
@@ -112,7 +112,7 @@ class TrackManager {
   std::shared_ptr<SchedulerTrack> scheduler_track_;
   std::shared_ptr<orbit_gl::SystemMemoryTrack> system_memory_track_;
   std::shared_ptr<orbit_gl::CGroupAndProcessMemoryTrack> cgroup_and_process_memory_track_;
-  std::shared_ptr<orbit_gl::PagefaultTrack> pagefault_track_;
+  std::shared_ptr<orbit_gl::PageFaultsTrack> page_faults_track_;
 
   TimeGraph* time_graph_;
   orbit_gl::Viewport* viewport_;

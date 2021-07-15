@@ -50,14 +50,14 @@ class CaptureEventProcessor {
     kProcessRssAnonKb = 4,
     kEnd = 5
   };
-  enum class PagefaultEncodingIndex {
-    kSystemPagefault = 0,
-    kSystemMajorPagefault = 1,
+  enum class PageFaultsEncodingIndex {
+    kSystemPageFaults = 0,
+    kSystemMajorPageFaults = 1,
     kCGroupNameHash = 2,
-    kCGroupPagefault = 3,
-    kCGroupMajorPagefault = 4,
-    kProcessMinorPagefault = 5,
-    kProcessMajorPagefault = 6,
+    kCGroupPageFaults = 3,
+    kCGroupMajorPageFaults = 4,
+    kProcessMinorPageFaults = 5,
+    kProcessMajorPageFaults = 6,
     kEnd = 7
   };
 };

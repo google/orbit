@@ -642,12 +642,12 @@ TEST(CaptureEventProcessor, CanHandleMemoryUsageEvent) {
 
   TimerInfo system_timer;
   TimerInfo cgroup_and_process_timer;
-  TimerInfo pagefault_timer;
+  TimerInfo page_faults_timer;
   EXPECT_CALL(listener, OnTimer)
       .Times(3)
       .WillOnce(SaveArg<0>(&system_timer))
       .WillOnce(SaveArg<0>(&cgroup_and_process_timer))
-      .WillOnce(SaveArg<0>(&pagefault_timer));
+      .WillOnce(SaveArg<0>(&page_faults_timer));
 
   event_processor->ProcessEvent(event);
 
@@ -693,30 +693,30 @@ TEST(CaptureEventProcessor, CanHandleMemoryUsageEvent) {
           CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kProcessRssAnonKb)),
       process_memory_usage->rss_anon_kb());
 
-  EXPECT_EQ(pagefault_timer.start(), memory_usage_event->timestamp_ns());
-  EXPECT_EQ(pagefault_timer.end(), memory_usage_event->timestamp_ns());
-  EXPECT_EQ(pagefault_timer.type(), TimerInfo::kPagefault);
-  EXPECT_EQ(pagefault_timer.process_id(), process_memory_usage->pid());
-  EXPECT_EQ(pagefault_timer.registers(static_cast<size_t>(
-                CaptureEventProcessor::PagefaultEncodingIndex::kCGroupNameHash)),
+  EXPECT_EQ(page_faults_timer.start(), memory_usage_event->timestamp_ns());
+  EXPECT_EQ(page_faults_timer.end(), memory_usage_event->timestamp_ns());
+  EXPECT_EQ(page_faults_timer.type(), TimerInfo::kPageFaults);
+  EXPECT_EQ(page_faults_timer.process_id(), process_memory_usage->pid());
+  EXPECT_EQ(page_faults_timer.registers(static_cast<size_t>(
+                CaptureEventProcessor::PageFaultsEncodingIndex::kCGroupNameHash)),
             actual_cgroup_name_key);
-  EXPECT_EQ(pagefault_timer.registers(static_cast<size_t>(
-                CaptureEventProcessor::PagefaultEncodingIndex::kSystemMajorPagefault)),
+  EXPECT_EQ(page_faults_timer.registers(static_cast<size_t>(
+                CaptureEventProcessor::PageFaultsEncodingIndex::kSystemMajorPageFaults)),
             system_memory_usage->pgmajfault());
-  EXPECT_EQ(pagefault_timer.registers(static_cast<size_t>(
-                CaptureEventProcessor::PagefaultEncodingIndex::kSystemPagefault)),
+  EXPECT_EQ(page_faults_timer.registers(static_cast<size_t>(
+                CaptureEventProcessor::PageFaultsEncodingIndex::kSystemPageFaults)),
             system_memory_usage->pgfault());
-  EXPECT_EQ(pagefault_timer.registers(static_cast<size_t>(
-                CaptureEventProcessor::PagefaultEncodingIndex::kCGroupMajorPagefault)),
+  EXPECT_EQ(page_faults_timer.registers(static_cast<size_t>(
+                CaptureEventProcessor::PageFaultsEncodingIndex::kCGroupMajorPageFaults)),
             cgroup_memory_usage->pgmajfault());
-  EXPECT_EQ(pagefault_timer.registers(static_cast<size_t>(
-                CaptureEventProcessor::PagefaultEncodingIndex::kCGroupPagefault)),
+  EXPECT_EQ(page_faults_timer.registers(static_cast<size_t>(
+                CaptureEventProcessor::PageFaultsEncodingIndex::kCGroupPageFaults)),
             cgroup_memory_usage->pgfault());
-  EXPECT_EQ(pagefault_timer.registers(static_cast<size_t>(
-                CaptureEventProcessor::PagefaultEncodingIndex::kProcessMajorPagefault)),
+  EXPECT_EQ(page_faults_timer.registers(static_cast<size_t>(
+                CaptureEventProcessor::PageFaultsEncodingIndex::kProcessMajorPageFaults)),
             process_memory_usage->majflt());
-  EXPECT_EQ(pagefault_timer.registers(static_cast<size_t>(
-                CaptureEventProcessor::PagefaultEncodingIndex::kProcessMinorPagefault)),
+  EXPECT_EQ(page_faults_timer.registers(static_cast<size_t>(
+                CaptureEventProcessor::PageFaultsEncodingIndex::kProcessMinorPageFaults)),
             process_memory_usage->minflt());
 }
 

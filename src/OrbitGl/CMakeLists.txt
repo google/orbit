@@ -20,7 +20,7 @@ target_sources(
          AnnotationTrack.h
          App.h
          AsyncTrack.h
-         BasicPagefaultTrack.h
+         BasicPageFaultsTrack.h
          Batcher.h
          BlockChain.h
          CallstackDataView.h
@@ -49,12 +49,12 @@ target_sources(
          LiveFunctionsController.h
          LiveFunctionsDataView.h
          ManualInstrumentationManager.h
-         MajorPagefaultTrack.h
+         MajorPageFaultsTrack.h
          MemoryTrack.h
-         MinorPagefaultTrack.h
+         MinorPageFaultsTrack.h
          ModulesDataView.h
          MultivariateTimeSeries.h
-         PagefaultTrack.h
+         PageFaultsTrack.h
          PickingManager.h
          SamplingReport.h
          SamplingReportDataView.h
@@ -93,7 +93,7 @@ target_sources(
           AnnotationTrack.cpp
           App.cpp
           AsyncTrack.cpp
-          BasicPagefaultTrack.cpp
+          BasicPageFaultsTrack.cpp
           Batcher.cpp
           CallstackDataView.cpp
           CallstackThreadBar.cpp
@@ -120,11 +120,11 @@ target_sources(
           LineGraphTrack.cpp
           LiveFunctionsDataView.cpp
           ManualInstrumentationManager.cpp
-          MajorPagefaultTrack.cpp
+          MajorPageFaultsTrack.cpp
           MemoryTrack.cpp
-          MinorPagefaultTrack.cpp
+          MinorPageFaultsTrack.cpp
           ModulesDataView.cpp
-          PagefaultTrack.cpp
+          PageFaultsTrack.cpp
           PickingManager.cpp
           SamplingReport.cpp
           SamplingReportDataView.cpp

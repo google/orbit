@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_BASIC_PAGEFAULT_TRACK_H_
-#define ORBIT_GL_BASIC_PAGEFAULT_TRACK_H_
+#ifndef ORBIT_GL_BASIC_PAGE_FAULTS_TRACK_H_
+#define ORBIT_GL_BASIC_PAGE_FAULTS_TRACK_H_
 
 #include <string>
 #include <utility>
@@ -15,18 +15,18 @@
 
 namespace orbit_gl {
 
-constexpr size_t kBasicPagefaultTrackDimension = 3;
+constexpr size_t kBasicPageFaultsTrackDimension = 3;
 
-// This is a implementation of `LineGraphTrack` to display major or minor pagefault information,
-// used in the `PagefaultTrack`.
-class BasicPagefaultTrack : public LineGraphTrack<kBasicPagefaultTrackDimension>,
-                            public AnnotationTrack {
+// This is a implementation of `LineGraphTrack` to display major or minor page faults information,
+// used in the `PageFaultsTrack`.
+class BasicPageFaultsTrack : public LineGraphTrack<kBasicPageFaultsTrackDimension>,
+                             public AnnotationTrack {
  public:
-  explicit BasicPagefaultTrack(Track* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
-                               TimeGraphLayout* layout, const std::string& name,
-                               const std::string& cgroup_name, uint64_t memory_sampling_period_ms,
-                               const orbit_client_model::CaptureData* capture_data,
-                               uint32_t indentation_level = 0);
+  explicit BasicPageFaultsTrack(Track* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
+                                TimeGraphLayout* layout, const std::string& name,
+                                const std::string& cgroup_name, uint64_t memory_sampling_period_ms,
+                                const orbit_client_model::CaptureData* capture_data,
+                                uint32_t indentation_level = 0);
 
   [[nodiscard]] Track* GetParent() const override { return parent_; }
   // For subtracks there is no meaningful type and it should also not be exposed, though we use the
@@ -34,9 +34,9 @@ class BasicPagefaultTrack : public LineGraphTrack<kBasicPagefaultTrackDimension>
   [[nodiscard]] Track::Type GetType() const override { return Track::Type::kUnknown; }
 
   void AddValues(uint64_t timestamp_ns,
-                 const std::array<double, kBasicPagefaultTrackDimension>& values) override;
+                 const std::array<double, kBasicPageFaultsTrackDimension>& values) override;
   void AddValuesAndUpdateAnnotations(
-      uint64_t timestamp_ns, const std::array<double, kBasicPagefaultTrackDimension>& values);
+      uint64_t timestamp_ns, const std::array<double, kBasicPageFaultsTrackDimension>& values);
 
   void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
             PickingMode picking_mode, float z_offset = 0) override;
@@ -46,12 +46,12 @@ class BasicPagefaultTrack : public LineGraphTrack<kBasicPagefaultTrackDimension>
  protected:
   void DrawSingleSeriesEntry(
       Batcher* batcher, uint64_t start_tick, uint64_t end_tick,
-      const std::array<float, kBasicPagefaultTrackDimension>& current_normalized_values,
-      const std::array<float, kBasicPagefaultTrackDimension>& next_normalized_values, float z,
+      const std::array<float, kBasicPageFaultsTrackDimension>& current_normalized_values,
+      const std::array<float, kBasicPageFaultsTrackDimension>& next_normalized_values, float z,
       bool is_last) override;
 
   // Once this is set, if values[index_of_series_to_highlight_] > 0 in the sampling window t, we
-  // will draw a colored box in this sampling window to highlight the occurrence of pagefault
+  // will draw a colored box in this sampling window to highlight the occurrence of page faults
   // series_name[index_of_series_to_highlight_].
   std::optional<size_t> index_of_series_to_highlight_ = std::nullopt;
   std::string cgroup_name_;
@@ -65,10 +65,10 @@ class BasicPagefaultTrack : public LineGraphTrack<kBasicPagefaultTrackDimension>
   [[nodiscard]] uint32_t GetAnnotationFontSize() const override { return GetLegendFontSize(); }
 
   Track* parent_;
-  std::optional<std::pair<uint64_t, std::array<double, kBasicPagefaultTrackDimension>>>
+  std::optional<std::pair<uint64_t, std::array<double, kBasicPageFaultsTrackDimension>>>
       previous_time_and_values_ = std::nullopt;
 };
 
 }  // namespace orbit_gl
 
-#endif  // ORBIT_GL_BASIC_PAGEFAULT_TRACK_H_
+#endif  // ORBIT_GL_BASIC_PAGE_FAULTS_TRACK_H_

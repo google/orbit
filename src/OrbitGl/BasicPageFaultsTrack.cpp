@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "BasicPagefaultTrack.h"
+#include "BasicPageFaultsTrack.h"
 
 #include "GlCanvas.h"
 
@@ -10,7 +10,7 @@ namespace orbit_gl {
 
 namespace {
 
-static std::array<std::string, kBasicPagefaultTrackDimension> CreateSeriesName(
+static std::array<std::string, kBasicPageFaultsTrackDimension> CreateSeriesName(
     const std::string& cgroup_name, const std::string& process_name) {
   return {absl::StrFormat("Process [%s]", process_name),
           absl::StrFormat("CGroup [%s]", cgroup_name), "System"};
@@ -18,13 +18,13 @@ static std::array<std::string, kBasicPagefaultTrackDimension> CreateSeriesName(
 
 }  // namespace
 
-BasicPagefaultTrack::BasicPagefaultTrack(Track* parent, TimeGraph* time_graph,
-                                         orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                                         const std::string& name, const std::string& cgroup_name,
-                                         uint64_t memory_sampling_period_ms,
-                                         const orbit_client_model::CaptureData* capture_data,
-                                         uint32_t indentation_level)
-    : LineGraphTrack<kBasicPagefaultTrackDimension>(
+BasicPageFaultsTrack::BasicPageFaultsTrack(Track* parent, TimeGraph* time_graph,
+                                           orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                                           const std::string& name, const std::string& cgroup_name,
+                                           uint64_t memory_sampling_period_ms,
+                                           const orbit_client_model::CaptureData* capture_data,
+                                           uint32_t indentation_level)
+    : LineGraphTrack<kBasicPageFaultsTrackDimension>(
           parent, time_graph, viewport, layout, name,
           CreateSeriesName(cgroup_name, capture_data->process_name()), capture_data,
           indentation_level),
@@ -38,10 +38,10 @@ BasicPagefaultTrack::BasicPagefaultTrack(Track* parent, TimeGraph* time_graph,
   SetNumberOfDecimalDigits(kTrackValueDecimalDigits);
 }
 
-void BasicPagefaultTrack::AddValues(
-    uint64_t timestamp_ns, const std::array<double, kBasicPagefaultTrackDimension>& values) {
+void BasicPageFaultsTrack::AddValues(
+    uint64_t timestamp_ns, const std::array<double, kBasicPageFaultsTrackDimension>& values) {
   if (previous_time_and_values_.has_value()) {
-    std::array<double, kBasicPagefaultTrackDimension> differences;
+    std::array<double, kBasicPageFaultsTrackDimension> differences;
     std::transform(values.begin(), values.end(), previous_time_and_values_.value().second.begin(),
                    differences.begin(), std::minus<double>());
     series_.AddValues(previous_time_and_values_.value().first, differences);
@@ -50,8 +50,8 @@ void BasicPagefaultTrack::AddValues(
   previous_time_and_values_ = std::make_pair(timestamp_ns, values);
 }
 
-void BasicPagefaultTrack::AddValuesAndUpdateAnnotations(
-    uint64_t timestamp_ns, const std::array<double, kBasicPagefaultTrackDimension>& values) {
+void BasicPageFaultsTrack::AddValuesAndUpdateAnnotations(
+    uint64_t timestamp_ns, const std::array<double, kBasicPageFaultsTrackDimension>& values) {
   AddValues(timestamp_ns, values);
 
   double updated_max = GetGraphMaxValue();
@@ -71,23 +71,23 @@ void BasicPagefaultTrack::AddValuesAndUpdateAnnotations(
   }
 }
 
-void BasicPagefaultTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
-                               uint64_t current_mouse_time_ns, PickingMode picking_mode,
-                               float z_offset) {
-  LineGraphTrack<kBasicPagefaultTrackDimension>::Draw(batcher, text_renderer, current_mouse_time_ns,
-                                                      picking_mode, z_offset);
+void BasicPageFaultsTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
+                                uint64_t current_mouse_time_ns, PickingMode picking_mode,
+                                float z_offset) {
+  LineGraphTrack<kBasicPageFaultsTrackDimension>::Draw(
+      batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
 
   if (picking_mode != PickingMode::kNone || IsCollapsed()) return;
   AnnotationTrack::DrawAnnotation(batcher, text_renderer, layout_,
                                   GlCanvas::kZValueTrackText + z_offset);
 }
 
-void BasicPagefaultTrack::DrawSingleSeriesEntry(
+void BasicPageFaultsTrack::DrawSingleSeriesEntry(
     Batcher* batcher, uint64_t start_tick, uint64_t end_tick,
-    const std::array<float, kBasicPagefaultTrackDimension>& current_normalized_values,
-    const std::array<float, kBasicPagefaultTrackDimension>& next_normalized_values, float z,
+    const std::array<float, kBasicPageFaultsTrackDimension>& current_normalized_values,
+    const std::array<float, kBasicPageFaultsTrackDimension>& next_normalized_values, float z,
     bool is_last) {
-  LineGraphTrack<kBasicPagefaultTrackDimension>::DrawSingleSeriesEntry(
+  LineGraphTrack<kBasicPageFaultsTrackDimension>::DrawSingleSeriesEntry(
       batcher, start_tick, end_tick, current_normalized_values, next_normalized_values, z, is_last);
 
   if (!index_of_series_to_highlight_.has_value()) return;
@@ -101,11 +101,11 @@ void BasicPagefaultTrack::DrawSingleSeriesEntry(
   batcher->AddShadedBox(Vec2(x0, y0), Vec2(width, content_height), z, kHightlightingColor);
 }
 
-bool BasicPagefaultTrack::IsCollapsed() const {
+bool BasicPageFaultsTrack::IsCollapsed() const {
   return collapse_toggle_->IsCollapsed() || GetParent()->IsCollapsed();
 }
 
-float BasicPagefaultTrack::GetAnnotatedTrackContentHeight() const {
+float BasicPageFaultsTrack::GetAnnotatedTrackContentHeight() const {
   return GetGraphContentHeight();
 }
 
