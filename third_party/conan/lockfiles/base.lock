@@ -32,8 +32,7 @@
     "build_requires": [
      "71",
      "73",
-     "74",
-     "75"
+     "74"
     ],
     "path": "../../../conanfile.py",
     "context": "host"
@@ -602,10 +601,6 @@
    },
    "74": {
     "ref": "gtest/1.10.0#ef88ba8e54f5ffad7d706062d0731a40",
-    "context": "host"
-   },
-   "75": {
-    "ref": "nodejs/13.6.0@orbitdeps/stable#d07f6d3db886419fa9d0f65495ca23eb",
     "context": "host"
    }
   },

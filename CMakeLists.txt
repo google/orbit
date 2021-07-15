@@ -186,8 +186,6 @@ if(WITH_GUI)
   add_subdirectory(src/SourcePathsMappingUI)
   add_subdirectory(src/Style)
   add_subdirectory(src/SyntaxHighlighter)
-  add_subdirectory(src/WebEngine)
-  add_subdirectory(src/WebUI)
 endif()
 
 if(WITH_GUI AND WITH_CRASH_HANDLING)
