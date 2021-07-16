@@ -51,7 +51,7 @@ void TimerTrack::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t cu
   Track::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
 }
 
-std::string TimerTrack::GetExtraInfo(const TimerInfo& timer_info) {
+std::string TimerTrack::GetExtraInfo(const TimerInfo& timer_info) const {
   std::string info;
   static bool show_return_value = absl::GetFlag(FLAGS_show_return_values);
   if (show_return_value && timer_info.type() == TimerInfo::kNone) {
@@ -95,7 +95,7 @@ WorldXInfo ToWorldX(double start_us, double end_us, double inv_time_window, floa
 
 void TimerTrack::DrawTimesliceText(const orbit_client_protos::TimerInfo& timer, float min_x,
                                    float z_offset, orbit_client_data::TextBox* text_box) {
-  SetTimesliceText(timer, text_box);
+  std::string timeslice_text = GetTimesliceText(timer);
 
   const std::string elapsed_time =
       orbit_display_formats::GetDisplayTime(absl::Nanoseconds(timer.end() - timer.start()));
@@ -106,7 +106,7 @@ void TimerTrack::DrawTimesliceText(const orbit_client_protos::TimerInfo& timer, 
   float pos_x = std::max(box_pos.first, min_x);
   float max_size = box_pos.first + box_size.first - pos_x;
   text_renderer_->AddTextTrailingCharsPrioritized(
-      text_box->GetText().c_str(), pos_x, box_pos.second + layout_->GetTextOffset(),
+      timeslice_text.c_str(), pos_x, box_pos.second + layout_->GetTextOffset(),
       GlCanvas::kZValueBox + z_offset, kTextWhite, elapsed_time_length,
       layout_->CalculateZoomedFontSize(), max_size);
 }

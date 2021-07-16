@@ -69,7 +69,7 @@ class TimerTrack : public Track {
   [[nodiscard]] Type GetType() const override { return Type::kTimerTrack; }
 
   [[nodiscard]] uint32_t GetDepth() const { return depth_; }
-  [[nodiscard]] std::string GetExtraInfo(const orbit_client_protos::TimerInfo& timer);
+  [[nodiscard]] std::string GetExtraInfo(const orbit_client_protos::TimerInfo& timer) const;
 
   [[nodiscard]] const orbit_client_data::TextBox* GetFirstAfterTime(uint64_t time,
                                                                     uint32_t depth) const;
@@ -132,8 +132,10 @@ class TimerTrack : public Track {
     if (depth > depth_) depth_ = depth;
   }
 
-  virtual void SetTimesliceText(const orbit_client_protos::TimerInfo& /*timer*/,
-                                orbit_client_data::TextBox* /*text_box*/) {}
+  [[nodiscard]] virtual std::string GetTimesliceText(
+      const orbit_client_protos::TimerInfo& /*timer*/) const {
+    return "";
+  }
 
   virtual void DrawTimesliceText(const orbit_client_protos::TimerInfo& /*timer*/, float /*min_x*/,
                                  float /*z_offset*/, orbit_client_data::TextBox* /*text_box*/);

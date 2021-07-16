@@ -126,7 +126,7 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
                    timer_info.type() == TimerInfo::kApiEvent;
 
   if (!func && !is_manual) {
-    return text_box->GetText();
+    return GetTimesliceText(timer_info);
   }
 
   if (is_manual) {
@@ -332,43 +332,36 @@ void ThreadTrack::SetTrackColor(Color color) {
   tracepoint_bar_->SetColor(color);
 }
 
-void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info,
-                                   orbit_client_data::TextBox* text_box) {
-  if (text_box->GetText().empty()) {
-    std::string time = orbit_display_formats::GetDisplayTime(
-        absl::Nanoseconds(timer_info.end() - timer_info.start()));
+std::string ThreadTrack::GetTimesliceText(const TimerInfo& timer_info) const {
+  std::string time = orbit_display_formats::GetDisplayTime(
+      absl::Nanoseconds(timer_info.end() - timer_info.start()));
 
-    const InstrumentedFunction* func = app_->GetInstrumentedFunction(timer_info.function_id());
-    if (func != nullptr) {
-      std::string extra_info = GetExtraInfo(timer_info);
-      std::string name;
-      if (func->function_type() == InstrumentedFunction::kTimerStart) {
-        auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
-        name = api_event.name;
-      } else {
-        name = func->function_name();
-      }
-
-      std::string text = absl::StrFormat("%s %s %s", name, extra_info.c_str(), time.c_str());
-
-      text_box->SetText(text);
-    } else if (timer_info.type() == TimerInfo::kIntrospection) {
+  const InstrumentedFunction* func = app_->GetInstrumentedFunction(timer_info.function_id());
+  if (func != nullptr) {
+    std::string extra_info = GetExtraInfo(timer_info);
+    std::string name;
+    if (func->function_type() == InstrumentedFunction::kTimerStart) {
       auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
-      std::string text = absl::StrFormat("%s %s", api_event.name, time.c_str());
-      text_box->SetText(text);
-    } else if (timer_info.type() == TimerInfo::kApiEvent) {
-      auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
-      std::string extra_info = GetExtraInfo(timer_info);
-      std::string text =
-          absl::StrFormat("%s %s %s", api_event.name, extra_info.c_str(), time.c_str());
-      text_box->SetText(text);
+      name = api_event.name;
     } else {
-      ERROR(
-          "Unexpected case in ThreadTrack::SetTimesliceText, function=\"%s\", "
-          "type=%d",
-          func->function_name(), static_cast<int>(timer_info.type()));
+      name = func->function_name();
     }
+
+    return absl::StrFormat("%s %s %s", name, extra_info.c_str(), time);
+  } else if (timer_info.type() == TimerInfo::kIntrospection) {
+    auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
+    return absl::StrFormat("%s %s", api_event.name, time);
+  } else if (timer_info.type() == TimerInfo::kApiEvent) {
+    auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
+    std::string extra_info = GetExtraInfo(timer_info);
+    return absl::StrFormat("%s %s %s", api_event.name, extra_info.c_str(), time);
+  } else {
+    ERROR(
+        "Unexpected case in ThreadTrack::SetTimesliceText, function=\"%s\", "
+        "type=%d",
+        func->function_name(), static_cast<int>(timer_info.type()));
   }
+  return "";
 }
 
 std::string ThreadTrack::GetTooltip() const {

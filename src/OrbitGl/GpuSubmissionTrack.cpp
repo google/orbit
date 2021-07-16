@@ -159,19 +159,15 @@ bool GpuSubmissionTrack::TimerFilter(const TimerInfo& timer_info) const {
   return true;
 }
 
-void GpuSubmissionTrack::SetTimesliceText(const TimerInfo& timer_info,
-                                          orbit_client_data::TextBox* text_box) {
-  if (text_box->GetText().empty()) {
-    std::string time = orbit_display_formats::GetDisplayTime(
-        absl::Nanoseconds(timer_info.end() - timer_info.start()));
+std::string GpuSubmissionTrack::GetTimesliceText(const TimerInfo& timer_info) const {
+  std::string time = orbit_display_formats::GetDisplayTime(
+      absl::Nanoseconds(timer_info.end() - timer_info.start()));
 
-    CHECK(timer_info.type() == TimerInfo::kGpuActivity ||
-          timer_info.type() == TimerInfo::kGpuCommandBuffer);
+  CHECK(timer_info.type() == TimerInfo::kGpuActivity ||
+        timer_info.type() == TimerInfo::kGpuCommandBuffer);
 
-    std::string text = absl::StrFormat(
-        "%s  %s", string_manager_->Get(timer_info.user_data_key()).value_or(""), time.c_str());
-    text_box->SetText(text);
-  }
+  return absl::StrFormat("%s  %s", string_manager_->Get(timer_info.user_data_key()).value_or(""),
+                         time);
 }
 
 float GpuSubmissionTrack::GetHeight() const {
