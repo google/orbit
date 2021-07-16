@@ -5,6 +5,9 @@ build_type=RelWithDebInfo
 ninja:build_type=Release
 llvmpipe:build_type=Release
 
+# The openssl package does not support a RelWithDebInfo build.
+openssl:build_type=Release
+
 [options]
 OrbitProfiler:deploy_opengl_software_renderer=True
 
