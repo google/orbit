@@ -32,15 +32,18 @@ class grpcConan(ConanFile):
     requires = (
         "abseil/20200923.3",
         "zlib/1.2.11",
-        "openssl/1.0.2t",
+        "openssl/1.1.1k",
         "protobuf/3.9.1@bincrafters/stable",
-        "c-ares/1.15.0@conan/stable"
+        "c-ares/1.15.0"
     )
 
-    build_requires = (
-        "protoc_installer/3.9.1@bincrafters/stable",
-        "grpc_codegen/{}@orbitdeps/stable".format(version),
-    )
+    def build_requirements(self):
+        self.build_requires("protoc_installer/3.9.1@bincrafters/stable")
+
+        if self.user and self.channel:
+            self.build_requires("grpc_codegen/{}@{}/{}".format(self.version, self.user, self.channel))
+        else:
+            self.build_requires("grpc_codegen/{}".format(self.version))
 
     def configure(self):
         if self.settings.os == "Windows" and self.settings.compiler == "Visual Studio":
