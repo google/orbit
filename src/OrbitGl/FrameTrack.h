@@ -43,8 +43,8 @@ class FrameTrack : public TimerTrack {
       const orbit_client_protos::TimerInfo& timer_info) const override;
   [[nodiscard]] float GetHeaderHeight() const override;
 
-  void SetTimesliceText(const orbit_client_protos::TimerInfo& timer,
-                        orbit_client_data::TextBox* text_box) override;
+  [[nodiscard]] std::string GetTimesliceText(
+      const orbit_client_protos::TimerInfo& timer) const override;
   [[nodiscard]] std::string GetTooltip() const override;
   [[nodiscard]] std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const override;
 

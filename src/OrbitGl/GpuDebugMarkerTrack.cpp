@@ -68,18 +68,14 @@ Color GpuDebugMarkerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_se
   return TimeGraph::GetColor(marker_text);
 }
 
-void GpuDebugMarkerTrack::SetTimesliceText(const TimerInfo& timer_info,
-                                           orbit_client_data::TextBox* text_box) {
+std::string GpuDebugMarkerTrack::GetTimesliceText(const TimerInfo& timer_info) const {
   CHECK(timer_info.type() == TimerInfo::kGpuDebugMarker);
 
-  if (text_box->GetText().empty()) {
-    std::string time = orbit_display_formats::GetDisplayTime(
-        absl::Nanoseconds(timer_info.end() - timer_info.start()));
+  std::string time = orbit_display_formats::GetDisplayTime(
+      absl::Nanoseconds(timer_info.end() - timer_info.start()));
 
-    std::string text = absl::StrFormat(
-        "%s  %s", string_manager_->Get(timer_info.user_data_key()).value_or(""), time.c_str());
-    text_box->SetText(text);
-  }
+  return absl::StrFormat("%s  %s", string_manager_->Get(timer_info.user_data_key()).value_or(""),
+                         time);
 }
 
 std::string GpuDebugMarkerTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {

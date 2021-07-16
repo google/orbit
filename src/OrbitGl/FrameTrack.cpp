@@ -158,15 +158,11 @@ void FrameTrack::OnTimer(const TimerInfo& timer_info) {
   TimerTrack::OnTimer(timer_info);
 }
 
-void FrameTrack::SetTimesliceText(const TimerInfo& timer_info,
-                                  orbit_client_data::TextBox* text_box) {
-  if (text_box->GetText().empty()) {
-    std::string time = orbit_display_formats::GetDisplayTime(
-        absl::Nanoseconds(timer_info.end() - timer_info.start()));
+std::string FrameTrack::GetTimesliceText(const TimerInfo& timer_info) const {
+  std::string time = orbit_display_formats::GetDisplayTime(
+      absl::Nanoseconds(timer_info.end() - timer_info.start()));
 
-    std::string text = absl::StrFormat("Frame #%u: %s", timer_info.user_data_key(), time.c_str());
-    text_box->SetText(text);
-  }
+  return absl::StrFormat("Frame #%u: %s", timer_info.user_data_key(), time);
 }
 
 std::string FrameTrack::GetTooltip() const {

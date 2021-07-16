@@ -94,16 +94,14 @@ void AsyncTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   TimerTrack::OnTimer(new_timer_info);
 }
 
-void AsyncTrack::SetTimesliceText(const TimerInfo& timer_info,
-                                  orbit_client_data::TextBox* text_box) {
+std::string AsyncTrack::GetTimesliceText(const TimerInfo& timer_info) const {
   std::string time = orbit_display_formats::GetDisplayTime(
       absl::Nanoseconds(timer_info.end() - timer_info.start()));
 
   orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
   const uint64_t event_id = event.data;
   std::string name = app_->GetManualInstrumentationManager()->GetString(event_id);
-  std::string text = absl::StrFormat("%s %s", name, time.c_str());
-  text_box->SetText(text);
+  return absl::StrFormat("%s %s", name, time);
 }
 
 Color AsyncTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
