@@ -41,8 +41,6 @@ class PageFaultsTrack : public Track {
                         PickingMode picking_mode, float z_offset = 0) override;
 
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
-  [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GetAllChains()
-      const override;
 
   void AddValuesAndUpdateAnnotationsForMajorPageFaultsSubtrack(
       uint64_t timestamp_ns, const std::array<double, kBasicPageFaultsTrackDimension>& values) {
