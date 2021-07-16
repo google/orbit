@@ -337,7 +337,6 @@ void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info,
   if (text_box->GetText().empty()) {
     std::string time = orbit_display_formats::GetDisplayTime(
         absl::Nanoseconds(timer_info.end() - timer_info.start()));
-    text_box->SetElapsedTimeTextLength(time.length());
 
     const InstrumentedFunction* func = app_->GetInstrumentedFunction(timer_info.function_id());
     if (func != nullptr) {

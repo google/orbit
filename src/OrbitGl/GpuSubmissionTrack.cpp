@@ -165,8 +165,6 @@ void GpuSubmissionTrack::SetTimesliceText(const TimerInfo& timer_info,
     std::string time = orbit_display_formats::GetDisplayTime(
         absl::Nanoseconds(timer_info.end() - timer_info.start()));
 
-    text_box->SetElapsedTimeTextLength(time.length());
-
     CHECK(timer_info.type() == TimerInfo::kGpuActivity ||
           timer_info.type() == TimerInfo::kGpuCommandBuffer);
 

@@ -35,9 +35,6 @@ class TextBox {
 
   [[nodiscard]] const orbit_client_protos::TimerInfo& GetTimerInfo() const { return timer_info_; }
 
-  void SetElapsedTimeTextLength(size_t length) { elapsed_time_text_length_ = length; }
-  [[nodiscard]] size_t GetElapsedTimeTextLength() const { return elapsed_time_text_length_; }
-
   // Start() and End() are required in order to be used as node in a ScopeTree.
   [[nodiscard]] uint64_t Start() const { return timer_info_.start(); }
   [[nodiscard]] uint64_t End() const { return timer_info_.end(); }
@@ -48,7 +45,6 @@ class TextBox {
   std::pair<float, float> pos_ = {0, 0};
   std::pair<float, float> size_ = {0, 0};
   std::string text_;
-  size_t elapsed_time_text_length_ = 0;
 };
 }  // namespace orbit_client_data
 
