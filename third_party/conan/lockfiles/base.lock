@@ -30,9 +30,9 @@
      "52"
     ],
     "build_requires": [
-     "71",
-     "73",
-     "74"
+     "74",
+     "76",
+     "77"
     ],
     "path": "../../../conanfile.py",
     "context": "host"
@@ -50,13 +50,17 @@
     "context": "host"
    },
    "4": {
-    "ref": "grpc/1.27.3@orbitdeps/stable#e01163da5b2860c173f8c1eb8798a720",
+    "ref": "grpc/1.27.3@orbitdeps/stable#9c477a16563f75451b0bf3a847eff031",
     "requires": [
      "1",
      "5",
      "6",
      "7",
      "8"
+    ],
+    "build_requires": [
+     "71",
+     "73"
     ],
     "context": "host"
    },
@@ -65,10 +69,7 @@
     "context": "host"
    },
    "6": {
-    "ref": "openssl/1.1.1d@orbitdeps/stable#0",
-    "requires": [
-     "5"
-    ],
+    "ref": "openssl/1.1.1k#3555e93beb1e5904c8f0689e8fce854e",
     "context": "host"
    },
    "7": {
@@ -589,7 +590,7 @@
     "context": "host"
    },
    "73": {
-    "ref": "grpc_codegen/1.27.3@orbitdeps/stable#8728b94e133a18e7454c14a28959a148",
+    "ref": "grpc_codegen/1.27.3@orbitdeps/stable#a0b442cf66941a590b619c88b106f0e5",
     "requires": [
      "1",
      "8",
@@ -601,6 +602,29 @@
     "context": "host"
    },
    "74": {
+    "ref": "protoc_installer/3.9.1@bincrafters/stable#0",
+    "requires": [
+     "75"
+    ],
+    "context": "host"
+   },
+   "75": {
+    "ref": "protobuf/3.9.1@bincrafters/stable#0",
+    "context": "host"
+   },
+   "76": {
+    "ref": "grpc_codegen/1.27.3@orbitdeps/stable#a0b442cf66941a590b619c88b106f0e5",
+    "requires": [
+     "1",
+     "8",
+     "6",
+     "7",
+     "74",
+     "5"
+    ],
+    "context": "host"
+   },
+   "77": {
     "ref": "gtest/1.10.0#ef88ba8e54f5ffad7d706062d0731a40",
     "context": "host"
    }
