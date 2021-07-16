@@ -98,7 +98,6 @@ void AsyncTrack::SetTimesliceText(const TimerInfo& timer_info,
                                   orbit_client_data::TextBox* text_box) {
   std::string time = orbit_display_formats::GetDisplayTime(
       absl::Nanoseconds(timer_info.end() - timer_info.start()));
-  text_box->SetElapsedTimeTextLength(time.length());
 
   orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
   const uint64_t event_id = event.data;

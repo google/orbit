@@ -75,7 +75,7 @@ void GpuDebugMarkerTrack::SetTimesliceText(const TimerInfo& timer_info,
   if (text_box->GetText().empty()) {
     std::string time = orbit_display_formats::GetDisplayTime(
         absl::Nanoseconds(timer_info.end() - timer_info.start()));
-    text_box->SetElapsedTimeTextLength(time.length());
+
     std::string text = absl::StrFormat(
         "%s  %s", string_manager_->Get(timer_info.user_data_key()).value_or(""), time.c_str());
     text_box->SetText(text);

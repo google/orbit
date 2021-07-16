@@ -16,6 +16,7 @@
 #include "App.h"
 #include "Batcher.h"
 #include "ClientData/TextBox.h"
+#include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
@@ -96,6 +97,9 @@ void TimerTrack::DrawTimesliceText(const orbit_client_protos::TimerInfo& timer, 
                                    float z_offset, orbit_client_data::TextBox* text_box) {
   SetTimesliceText(timer, text_box);
 
+  const std::string elapsed_time =
+      orbit_display_formats::GetDisplayTime(absl::Nanoseconds(timer.end() - timer.start()));
+  const auto elapsed_time_length = elapsed_time.length();
   const Color kTextWhite(255, 255, 255, 255);
   const auto& box_pos = text_box->GetPos();
   const auto& box_size = text_box->GetSize();
@@ -103,7 +107,7 @@ void TimerTrack::DrawTimesliceText(const orbit_client_protos::TimerInfo& timer, 
   float max_size = box_pos.first + box_size.first - pos_x;
   text_renderer_->AddTextTrailingCharsPrioritized(
       text_box->GetText().c_str(), pos_x, box_pos.second + layout_->GetTextOffset(),
-      GlCanvas::kZValueBox + z_offset, kTextWhite, text_box->GetElapsedTimeTextLength(),
+      GlCanvas::kZValueBox + z_offset, kTextWhite, elapsed_time_length,
       layout_->CalculateZoomedFontSize(), max_size);
 }
 
