@@ -90,7 +90,7 @@ class OrbitConan(ConanFile):
         self.requires("llvm_object/9.0.1-3@orbitdeps/stable")
         self.requires("llvm_symbolize/9.0.1-3@orbitdeps/stable")
         self.requires("lzma_sdk/19.00@orbitdeps/stable#a7bc173325d7463a0757dee5b08bf7fd")
-        self.requires("openssl/1.1.1d@{}#0".format(self._orbit_channel))
+        self.requires("openssl/1.1.1k")
         self.requires("Outcome/3dae433e@orbitdeps/stable#0")
         self.requires(
             "libprotobuf-mutator/20200506@{}#90ce749ca62b40e9c061d20fae4410e0".format(self._orbit_channel))
