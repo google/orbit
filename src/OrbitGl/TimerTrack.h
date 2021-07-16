@@ -70,7 +70,7 @@ class TimerTrack : public Track {
 
   [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GetTimers() const;
   [[nodiscard]] uint32_t GetDepth() const { return depth_; }
-  [[nodiscard]] std::string GetExtraInfo(const orbit_client_protos::TimerInfo& timer);
+  [[nodiscard]] std::string GetExtraInfo(const orbit_client_protos::TimerInfo& timer) const;
 
   [[nodiscard]] const orbit_client_data::TextBox* GetFirstAfterTime(uint64_t time,
                                                                     uint32_t depth) const;
@@ -135,8 +135,13 @@ class TimerTrack : public Track {
   }
   [[nodiscard]] std::shared_ptr<orbit_client_data::TimerChain> GetTimers(uint32_t depth) const;
 
-  virtual void SetTimesliceText(const orbit_client_protos::TimerInfo& /*timer*/, float /*min_x*/,
-                                float /*z_offset*/, orbit_client_data::TextBox* /*text_box*/) {}
+  [[nodiscard]] virtual std::string GetTimesliceText(
+      const orbit_client_protos::TimerInfo& /*timer*/) const {
+    return "";
+  }
+
+  virtual void DrawTimesliceText(const orbit_client_protos::TimerInfo& /*timer*/, float /*min_x*/,
+                                 float /*z_offset*/, Vec2 /*box_pos*/, Vec2 /*box_size*/);
 
   [[nodiscard]] static internal::DrawData GetDrawData(
       uint64_t min_tick, uint64_t max_tick, float z_offset, Batcher* batcher, TimeGraph* time_graph,

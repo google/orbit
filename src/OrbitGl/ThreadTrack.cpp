@@ -125,7 +125,7 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
                    timer_info.type() == TimerInfo::kApiEvent;
 
   if (!func && !is_manual) {
-    return text_box->GetText();
+    return GetTimesliceText(timer_info);
   }
 
   if (is_manual) {
@@ -331,54 +331,36 @@ void ThreadTrack::SetTrackColor(Color color) {
   tracepoint_bar_->SetColor(color);
 }
 
-void ThreadTrack::SetTimesliceText(const TimerInfo& timer_info, float min_x, float z_offset,
-                                   orbit_client_data::TextBox* text_box) {
-  if (text_box->GetText().empty()) {
-    std::string time = orbit_display_formats::GetDisplayTime(
-        absl::Nanoseconds(timer_info.end() - timer_info.start()));
-    text_box->SetElapsedTimeTextLength(time.length());
+std::string ThreadTrack::GetTimesliceText(const TimerInfo& timer_info) const {
+  std::string time = orbit_display_formats::GetDisplayTime(
+      absl::Nanoseconds(timer_info.end() - timer_info.start()));
 
-    const InstrumentedFunction* func = app_->GetInstrumentedFunction(timer_info.function_id());
-    if (func != nullptr) {
-      std::string extra_info = GetExtraInfo(timer_info);
-      std::string name;
-      if (func->function_type() == InstrumentedFunction::kTimerStart) {
-        auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
-        name = api_event.name;
-      } else {
-        name = func->function_name();
-      }
-
-      std::string text = absl::StrFormat("%s %s %s", name, extra_info.c_str(), time.c_str());
-
-      text_box->SetText(text);
-    } else if (timer_info.type() == TimerInfo::kIntrospection) {
+  const InstrumentedFunction* func = app_->GetInstrumentedFunction(timer_info.function_id());
+  if (func != nullptr) {
+    std::string extra_info = GetExtraInfo(timer_info);
+    std::string name;
+    if (func->function_type() == InstrumentedFunction::kTimerStart) {
       auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
-      std::string text = absl::StrFormat("%s %s", api_event.name, time.c_str());
-      text_box->SetText(text);
-    } else if (timer_info.type() == TimerInfo::kApiEvent) {
-      auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
-      std::string extra_info = GetExtraInfo(timer_info);
-      std::string text =
-          absl::StrFormat("%s %s %s", api_event.name, extra_info.c_str(), time.c_str());
-      text_box->SetText(text);
+      name = api_event.name;
     } else {
-      ERROR(
-          "Unexpected case in ThreadTrack::SetTimesliceText, function=\"%s\", "
-          "type=%d",
-          func->function_name(), static_cast<int>(timer_info.type()));
+      name = func->function_name();
     }
-  }
 
-  const Color kTextWhite(255, 255, 255, 255);
-  const auto& box_pos = text_box->GetPos();
-  const auto& box_size = text_box->GetSize();
-  float pos_x = std::max(box_pos.first, min_x);
-  float max_size = box_pos.first + box_size.first - pos_x;
-  text_renderer_->AddTextTrailingCharsPrioritized(
-      text_box->GetText().c_str(), pos_x, box_pos.second + layout_->GetTextOffset(),
-      GlCanvas::kZValueBox + z_offset, kTextWhite, text_box->GetElapsedTimeTextLength(),
-      layout_->CalculateZoomedFontSize(), max_size);
+    return absl::StrFormat("%s %s %s", name, extra_info.c_str(), time.c_str());
+  } else if (timer_info.type() == TimerInfo::kIntrospection) {
+    auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
+    return absl::StrFormat("%s %s", api_event.name, time.c_str());
+  } else if (timer_info.type() == TimerInfo::kApiEvent) {
+    auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
+    std::string extra_info = GetExtraInfo(timer_info);
+    return absl::StrFormat("%s %s %s", api_event.name, extra_info.c_str(), time.c_str());
+  } else {
+    ERROR(
+        "Unexpected case in ThreadTrack::SetTimesliceText, function=\"%s\", "
+        "type=%d",
+        func->function_name(), static_cast<int>(timer_info.type()));
+  }
+  return "";
 }
 
 std::string ThreadTrack::GetTooltip() const {
@@ -476,20 +458,19 @@ void ThreadTrack::OnCaptureComplete() {
   }
 }
 
-static inline void ResizeTextBox(const internal::DrawData& draw_data, const TimeGraph* time_graph,
-                                 float world_pos_y, float world_size_y,
-                                 orbit_client_data::TextBox* text_box) {
+static inline std::pair<float, float> GetBoxPosXAndWidth(const internal::DrawData& draw_data,
+                                                         const TimeGraph* time_graph,
+                                                         orbit_client_data::TextBox* text_box) {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   double start_us = time_graph->GetUsFromTick(timer_info.start());
   double end_us = time_graph->GetUsFromTick(timer_info.end());
   double elapsed_us = end_us - start_us;
   double normalized_start = start_us * draw_data.inv_time_window;
   double normalized_length = elapsed_us * draw_data.inv_time_window;
-  float world_timer_width = static_cast<float>(normalized_length * draw_data.world_width);
   float world_timer_x =
       static_cast<float>(draw_data.world_start_x + normalized_start * draw_data.world_width);
-  text_box->SetPos({world_timer_x, world_pos_y});
-  text_box->SetSize({world_timer_width, world_size_y});
+  float world_timer_width = static_cast<float>(normalized_length * draw_data.world_width);
+  return {world_timer_x, world_timer_width};
 }
 
 [[nodiscard]] static inline uint64_t GetNextPixelBoundaryTimeNs(
@@ -531,23 +512,21 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
       Color color = GetTimerColor(text_box, draw_data);
       std::unique_ptr<PickingUserData> user_data = CreatePickingUserData(*batcher, text_box);
 
-      ResizeTextBox(draw_data, time_graph_, world_timer_y, box_height_, &text_box);
-      const auto& pos = text_box.GetPos();
-      const auto& size = text_box.GetSize();
+      const auto& [pos_x, size_x] = GetBoxPosXAndWidth(draw_data, time_graph_, &text_box);
+      const Vec2& pos = {pos_x, world_timer_y};
+      const Vec2& size = {size_x, box_height_};
 
       if (text_box.Duration() > draw_data.ns_per_pixel) {
         if (!collapse_toggle_->IsCollapsed()) {
-          SetTimesliceText(text_box.GetTimerInfo(), draw_data.world_start_x, z_offset, &text_box);
+          DrawTimesliceText(text_box.GetTimerInfo(), draw_data.world_start_x, z_offset, pos, size);
         }
-        batcher->AddShadedBox({pos.first, pos.second}, {size.first, size.second}, draw_data.z,
-                              color, std::move(user_data));
+        batcher->AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
       } else {
-        batcher->AddVerticalLine({pos.first, pos.second}, box_height_, draw_data.z, color,
-                                 std::move(user_data));
+        batcher->AddVerticalLine(pos, box_height_, draw_data.z, color, std::move(user_data));
       }
 
       // Use the time at boundary of the next pixel as a threshold to avoid overdraw.
-      next_pixel_start_time_ns = GetNextPixelBoundaryTimeNs(pos.first + size.first, draw_data);
+      next_pixel_start_time_ns = GetNextPixelBoundaryTimeNs(pos[0] + size[0], draw_data);
     }
   }
 }

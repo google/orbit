@@ -16,6 +16,7 @@
 #include "App.h"
 #include "Batcher.h"
 #include "ClientData/TextBox.h"
+#include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
@@ -49,7 +50,7 @@ void TimerTrack::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t cu
   Track::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
 }
 
-std::string TimerTrack::GetExtraInfo(const TimerInfo& timer_info) {
+std::string TimerTrack::GetExtraInfo(const TimerInfo& timer_info) const {
   std::string info;
   static bool show_return_value = absl::GetFlag(FLAGS_show_return_values);
   if (show_return_value && timer_info.type() == TimerInfo::kNone) {
@@ -90,6 +91,22 @@ WorldXInfo ToWorldX(double start_us, double end_us, double inv_time_window, floa
 }
 
 }  // namespace
+
+void TimerTrack::DrawTimesliceText(const orbit_client_protos::TimerInfo& timer, float min_x,
+                                   float z_offset, Vec2 box_pos, Vec2 box_size) {
+  std::string timeslice_text = GetTimesliceText(timer);
+
+  const std::string elapsed_time =
+      orbit_display_formats::GetDisplayTime(absl::Nanoseconds(timer.end() - timer.start()));
+  const auto elapsed_time_length = elapsed_time.length();
+  const Color kTextWhite(255, 255, 255, 255);
+  float pos_x = std::max(box_pos[0], min_x);
+  float max_size = box_pos[0] + box_size[0] - pos_x;
+  text_renderer_->AddTextTrailingCharsPrioritized(
+      timeslice_text.c_str(), pos_x, box_pos[1] + layout_->GetTextOffset(),
+      GlCanvas::kZValueBox + z_offset, kTextWhite, elapsed_time_length,
+      layout_->CalculateZoomedFontSize(), max_size);
+}
 
 bool TimerTrack::DrawTimer(const orbit_client_data::TextBox* prev_text_box,
                            const orbit_client_data::TextBox* next_text_box,
@@ -170,11 +187,10 @@ bool TimerTrack::DrawTimer(const orbit_client_data::TextBox* prev_text_box,
                                        draw_data.world_start_x, draw_data.world_width);
 
     if (is_visible_width) {
-      current_text_box->SetPos({world_x_info.world_x_start, world_timer_y});
-      current_text_box->SetSize({world_x_info.world_x_width, GetTextBoxHeight(current_timer_info)});
+      Vec2 pos{world_x_info.world_x_start, world_timer_y};
+      Vec2 size{world_x_info.world_x_width, GetTextBoxHeight(current_timer_info)};
 
-      SetTimesliceText(current_timer_info, draw_data.world_start_x, draw_data.z_offset,
-                       current_text_box);
+      DrawTimesliceText(current_timer_info, draw_data.world_start_x, draw_data.z_offset, pos, size);
     }
   }
 

@@ -94,27 +94,14 @@ void AsyncTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   TimerTrack::OnTimer(new_timer_info);
 }
 
-void AsyncTrack::SetTimesliceText(const TimerInfo& timer_info, float min_x, float z_offset,
-                                  orbit_client_data::TextBox* text_box) {
+std::string AsyncTrack::GetTimesliceText(const TimerInfo& timer_info) const {
   std::string time = orbit_display_formats::GetDisplayTime(
       absl::Nanoseconds(timer_info.end() - timer_info.start()));
-  text_box->SetElapsedTimeTextLength(time.length());
 
   orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
   const uint64_t event_id = event.data;
   std::string name = app_->GetManualInstrumentationManager()->GetString(event_id);
-  std::string text = absl::StrFormat("%s %s", name, time.c_str());
-  text_box->SetText(text);
-
-  const Color kTextWhite(255, 255, 255, 255);
-  const auto& box_pos = text_box->GetPos();
-  const auto& box_size = text_box->GetSize();
-  float pos_x = std::max(box_pos.first, min_x);
-  float max_size = box_pos.first + box_size.first - pos_x;
-  text_renderer_->AddTextTrailingCharsPrioritized(
-      text_box->GetText().c_str(), pos_x, box_pos.second + layout_->GetTextOffset(),
-      GlCanvas::kZValueBox + z_offset, kTextWhite, text_box->GetElapsedTimeTextLength(),
-      layout_->CalculateZoomedFontSize(), max_size);
+  return absl::StrFormat("%s %s", name, time.c_str());
 }
 
 Color AsyncTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
