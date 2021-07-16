@@ -24,12 +24,6 @@ class TextBox {
   TextBox(TextBox&& other) = default;
   TextBox& operator=(TextBox&& other) = delete;
 
-  void SetSize(std::pair<float, float> size) { size_ = std::move(size); }
-  void SetPos(std::pair<float, float> pos) { pos_ = std::move(pos); }
-
-  [[nodiscard]] const std::pair<float, float>& GetSize() const { return size_; }
-  [[nodiscard]] const std::pair<float, float>& GetPos() const { return pos_; }
-
   [[nodiscard]] const orbit_client_protos::TimerInfo& GetTimerInfo() const { return timer_info_; }
 
   // Start() and End() are required in order to be used as node in a ScopeTree.
@@ -39,8 +33,6 @@ class TextBox {
 
  protected:
   orbit_client_protos::TimerInfo timer_info_;
-  std::pair<float, float> pos_ = {0, 0};
-  std::pair<float, float> size_ = {0, 0};
 };
 }  // namespace orbit_client_data
 
