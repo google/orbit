@@ -448,20 +448,19 @@ void ThreadTrack::OnCaptureComplete() {
   }
 }
 
-static inline void ResizeTextBox(const internal::DrawData& draw_data, const TimeGraph* time_graph,
-                                 float world_pos_y, float world_size_y,
-                                 orbit_client_data::TextBox* text_box) {
+[[nodiscard]] static std::pair<float, float> GetBoxPosXAndWidth(
+    const internal::DrawData& draw_data, const TimeGraph* time_graph,
+    orbit_client_data::TextBox* text_box) {
   const TimerInfo& timer_info = text_box->GetTimerInfo();
   double start_us = time_graph->GetUsFromTick(timer_info.start());
   double end_us = time_graph->GetUsFromTick(timer_info.end());
   double elapsed_us = end_us - start_us;
   double normalized_start = start_us * draw_data.inv_time_window;
   double normalized_length = elapsed_us * draw_data.inv_time_window;
-  float world_timer_width = static_cast<float>(normalized_length * draw_data.world_width);
   float world_timer_x =
       static_cast<float>(draw_data.world_start_x + normalized_start * draw_data.world_width);
-  text_box->SetPos({world_timer_x, world_pos_y});
-  text_box->SetSize({world_timer_width, world_size_y});
+  float world_timer_width = static_cast<float>(normalized_length * draw_data.world_width);
+  return {world_timer_x, world_timer_width};
 }
 
 [[nodiscard]] static inline uint64_t GetNextPixelBoundaryTimeNs(
@@ -503,23 +502,21 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
       Color color = GetTimerColor(text_box, draw_data);
       std::unique_ptr<PickingUserData> user_data = CreatePickingUserData(*batcher, text_box);
 
-      ResizeTextBox(draw_data, time_graph_, world_timer_y, box_height_, &text_box);
-      const auto& pos = text_box.GetPos();
-      const auto& size = text_box.GetSize();
+      const auto [pos_x, size_x] = GetBoxPosXAndWidth(draw_data, time_graph_, &text_box);
+      const Vec2 pos = {pos_x, world_timer_y};
+      const Vec2 size = {size_x, box_height_};
 
       if (text_box.Duration() > draw_data.ns_per_pixel) {
         if (!collapse_toggle_->IsCollapsed()) {
-          DrawTimesliceText(text_box.GetTimerInfo(), draw_data.world_start_x, z_offset, &text_box);
+          DrawTimesliceText(text_box.GetTimerInfo(), draw_data.world_start_x, z_offset, pos, size);
         }
-        batcher->AddShadedBox({pos.first, pos.second}, {size.first, size.second}, draw_data.z,
-                              color, std::move(user_data));
+        batcher->AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
       } else {
-        batcher->AddVerticalLine({pos.first, pos.second}, box_height_, draw_data.z, color,
-                                 std::move(user_data));
+        batcher->AddVerticalLine(pos, box_height_, draw_data.z, color, std::move(user_data));
       }
 
       // Use the time at boundary of the next pixel as a threshold to avoid overdraw.
-      next_pixel_start_time_ns = GetNextPixelBoundaryTimeNs(pos.first + size.first, draw_data);
+      next_pixel_start_time_ns = GetNextPixelBoundaryTimeNs(pos[0] + size[0], draw_data);
     }
   }
 }

@@ -98,18 +98,16 @@ std::string TimerTrack::GetDisplayTime(const TimerInfo& timer) const {
 }
 
 void TimerTrack::DrawTimesliceText(const orbit_client_protos::TimerInfo& timer, float min_x,
-                                   float z_offset, orbit_client_data::TextBox* text_box) {
+                                   float z_offset, Vec2 box_pos, Vec2 box_size) {
   std::string timeslice_text = GetTimesliceText(timer);
 
   const std::string elapsed_time = GetDisplayTime(timer);
   const auto elapsed_time_length = elapsed_time.length();
   const Color kTextWhite(255, 255, 255, 255);
-  const auto& box_pos = text_box->GetPos();
-  const auto& box_size = text_box->GetSize();
-  float pos_x = std::max(box_pos.first, min_x);
-  float max_size = box_pos.first + box_size.first - pos_x;
+  float pos_x = std::max(box_pos[0], min_x);
+  float max_size = box_pos[0] + box_size[0] - pos_x;
   text_renderer_->AddTextTrailingCharsPrioritized(
-      timeslice_text.c_str(), pos_x, box_pos.second + layout_->GetTextOffset(),
+      timeslice_text.c_str(), pos_x, box_pos[1] + layout_->GetTextOffset(),
       GlCanvas::kZValueBox + z_offset, kTextWhite, elapsed_time_length,
       layout_->CalculateZoomedFontSize(), max_size);
 }
@@ -193,11 +191,10 @@ bool TimerTrack::DrawTimer(const orbit_client_data::TextBox* prev_text_box,
                                        draw_data.world_start_x, draw_data.world_width);
 
     if (is_visible_width) {
-      current_text_box->SetPos({world_x_info.world_x_start, world_timer_y});
-      current_text_box->SetSize({world_x_info.world_x_width, GetTextBoxHeight(current_timer_info)});
+      Vec2 pos{world_x_info.world_x_start, world_timer_y};
+      Vec2 size{world_x_info.world_x_width, GetTextBoxHeight(current_timer_info)};
 
-      DrawTimesliceText(current_timer_info, draw_data.world_start_x, draw_data.z_offset,
-                        current_text_box);
+      DrawTimesliceText(current_timer_info, draw_data.world_start_x, draw_data.z_offset, pos, size);
     }
   }
 
