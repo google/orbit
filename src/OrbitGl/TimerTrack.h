@@ -68,8 +68,7 @@ class TimerTrack : public Track {
                         PickingMode /*picking_mode*/, float z_offset = 0) override;
   [[nodiscard]] Type GetType() const override { return Type::kTimerTrack; }
 
-  [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GetTimers()
-      const override;
+  [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GetTimers() const;
   [[nodiscard]] uint32_t GetDepth() const { return depth_; }
   [[nodiscard]] std::string GetExtraInfo(const orbit_client_protos::TimerInfo& timer);
 
@@ -94,8 +93,7 @@ class TimerTrack : public Track {
   [[nodiscard]] virtual const orbit_client_data::TextBox* GetDown(
       const orbit_client_data::TextBox* textbox) const;
 
-  [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GetAllChains()
-      const override;
+  [[nodiscard]] std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GetAllChains() const;
   [[nodiscard]] std::vector<const orbit_client_data::TextBox*> GetScopesInRange(
       uint64_t start_ns, uint64_t end_ns) const;
   [[nodiscard]] bool IsEmpty() const override;

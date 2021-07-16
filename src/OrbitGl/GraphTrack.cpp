@@ -115,16 +115,6 @@ void GraphTrack<Dimension>::OnTimer(const orbit_client_protos::TimerInfo& timer_
 }
 
 template <size_t Dimension>
-std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GraphTrack<Dimension>::GetAllChains()
-    const {
-  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> chains;
-  for (const auto& pair : timers_) {
-    chains.push_back(pair.second);
-  }
-  return chains;
-}
-
-template <size_t Dimension>
 Color GraphTrack<Dimension>::GetColor(size_t index) const {
   if (series_colors_.has_value()) return series_colors_.value()[index];
   return TimeGraph::GetColor(index);

@@ -95,15 +95,6 @@ void GpuTrack::OnTimer(const TimerInfo& timer_info) {
   }
 }
 
-std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GpuTrack::GetAllChains() const {
-  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> all_chains =
-      submission_track_->GetAllChains();
-  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> marker_chains =
-      marker_track_->GetAllChains();
-  all_chains.insert(all_chains.begin(), marker_chains.begin(), marker_chains.end());
-  return all_chains;
-}
-
 void GpuTrack::UpdatePositionOfSubtracks() {
   if (collapse_toggle_->IsCollapsed()) {
     submission_track_->SetPos(pos_[0], pos_[1]);

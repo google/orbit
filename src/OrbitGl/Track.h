@@ -81,12 +81,6 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   }
 
   virtual void OnTimer(const orbit_client_protos::TimerInfo& /*timer_info*/) {}
-  [[nodiscard]] virtual std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GetTimers()
-      const {
-    return {};
-  }
-  [[nodiscard]] virtual std::vector<std::shared_ptr<orbit_client_data::TimerChain>> GetAllChains()
-      const = 0;
   [[nodiscard]] bool IsPinned() const { return pinned_; }
   void SetPinned(bool value);
 

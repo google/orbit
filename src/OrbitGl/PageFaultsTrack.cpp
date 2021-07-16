@@ -185,12 +185,4 @@ void PageFaultsTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) 
   timer_chain->emplace_back(timer_info);
 }
 
-std::vector<std::shared_ptr<orbit_client_data::TimerChain>> PageFaultsTrack::GetAllChains() const {
-  std::vector<std::shared_ptr<orbit_client_data::TimerChain>> chains;
-  for (const auto& pair : timers_) {
-    chains.push_back(pair.second);
-  }
-  return chains;
-}
-
 }  // namespace orbit_gl
