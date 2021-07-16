@@ -4,6 +4,7 @@
 
 #include "CaptureServiceImpl.h"
 
+#include <absl/base/thread_annotations.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
@@ -53,11 +54,11 @@ class SenderThreadCaptureEventBuffer final : public CaptureEventBuffer {
   }
 
   void AddEvent(ClientCaptureEvent&& event) override {
-    absl::MutexLock lock{&event_buffer_mutex_};
+    absl::MutexLock lock{&events_being_buffered_mutex_};
     if (stop_requested_) {
       return;
     }
-    event_buffer_.emplace_back(std::move(event));
+    events_being_buffered_.emplace_back(std::move(event));
   }
 
   void StopAndWait() {
@@ -65,7 +66,7 @@ class SenderThreadCaptureEventBuffer final : public CaptureEventBuffer {
     {
       // Protect stop_requested_ with event_buffer_mutex_ so that we can use stop_requested_
       // in Conditions for Await/LockWhen (specifically, in SenderThread).
-      absl::MutexLock lock{&event_buffer_mutex_};
+      absl::MutexLock lock{&events_being_buffered_mutex_};
       stop_requested_ = true;
     }
     sender_thread_.join();
@@ -84,29 +85,34 @@ class SenderThreadCaptureEventBuffer final : public CaptureEventBuffer {
     bool stopped = false;
     while (!stopped) {
       ORBIT_SCOPE("SenderThread iteration");
-      event_buffer_mutex_.LockWhenWithTimeout(absl::Condition(
-                                                  +[](SenderThreadCaptureEventBuffer* self) {
-                                                    return self->event_buffer_.size() >=
-                                                               kSendEventCountInterval ||
-                                                           self->stop_requested_;
-                                                  },
-                                                  this),
-                                              kSendTimeInterval);
+
+      events_being_buffered_mutex_.LockWhenWithTimeout(
+          absl::Condition(
+              +[](SenderThreadCaptureEventBuffer* self) {
+                return self->events_being_buffered_.size() >= kSendEventCountInterval ||
+                       self->stop_requested_;
+              },
+              this),
+          kSendTimeInterval);
       if (stop_requested_) {
         stopped = true;
       }
-      std::vector<ClientCaptureEvent> buffered_events = std::move(event_buffer_);
-      event_buffer_.clear();
-      event_buffer_mutex_.Unlock();
-      capture_event_sender_->SendEvents(std::move(buffered_events));
+      events_being_buffered_.swap(events_to_send_);
+      events_being_buffered_mutex_.Unlock();
+
+      capture_event_sender_->SendEvents(&events_to_send_);
+      // std::vector::clear() "Leaves the capacity() of the vector unchanged", which is desired.
+      events_to_send_.clear();
     }
   }
 
-  std::vector<ClientCaptureEvent> event_buffer_;
-  absl::Mutex event_buffer_mutex_;
+  std::vector<ClientCaptureEvent> events_being_buffered_
+      ABSL_GUARDED_BY(events_being_buffered_mutex_);
+  absl::Mutex events_being_buffered_mutex_;
+  std::vector<ClientCaptureEvent> events_to_send_;
   CaptureEventSender* capture_event_sender_;
   std::thread sender_thread_;
-  bool stop_requested_ = false;
+  bool stop_requested_ ABSL_GUARDED_BY(events_being_buffered_mutex_) = false;
 };
 
 class GrpcCaptureEventSender final : public CaptureEventSender {
@@ -129,17 +135,18 @@ class GrpcCaptureEventSender final : public CaptureEventSender {
     LOG("Average number of bytes per event: %.2f", average_bytes);
   }
 
-  void SendEvents(std::vector<ClientCaptureEvent>&& events) override {
+  void SendEvents(std::vector<ClientCaptureEvent>* events) override {
     ORBIT_SCOPE_FUNCTION;
-    ORBIT_UINT64("Number of buffered events sent", events.size());
-    if (events.empty()) {
+    CHECK(events != nullptr);
+    ORBIT_UINT64("Number of buffered events sent", events->size());
+    if (events->empty()) {
       return;
     }
 
     constexpr uint64_t kMaxEventsPerResponse = 10'000;
     uint64_t number_of_bytes_sent = 0;
     CaptureResponse response;
-    for (ClientCaptureEvent& event : events) {
+    for (ClientCaptureEvent& event : *events) {
       // We buffer to avoid sending countless tiny messages, but we also want to
       // avoid huge messages, which would cause the capture on the client to jump
       // forward in time in few big steps and not look live anymore.
@@ -155,10 +162,10 @@ class GrpcCaptureEventSender final : public CaptureEventSender {
 
     // Ensure we can divide by 0.f safely.
     static_assert(std::numeric_limits<float>::is_iec559);
-    float average_bytes = static_cast<float>(number_of_bytes_sent) / events.size();
+    float average_bytes = static_cast<float>(number_of_bytes_sent) / events->size();
 
     ORBIT_FLOAT("Average bytes per CaptureEvent", average_bytes);
-    total_number_of_events_sent_ += events.size();
+    total_number_of_events_sent_ += events->size();
     total_number_of_bytes_sent_ += number_of_bytes_sent;
   }
 
