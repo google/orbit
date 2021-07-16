@@ -730,7 +730,7 @@ extern "C" __attribute__((naked)) int TooShort() {
 }
 
 TEST_F(InstrumentFunctionTest, TooShort) {
-#if defined(ORBIT_COVERAGE_BUILD) || (__GNUC__ == 9) || !defined(NDEBUG)
+#if defined(ORBIT_COVERAGE_BUILD) || !defined(__clang__) || !defined(NDEBUG)
   GTEST_SKIP();
 #endif
   RunChild(&TooShort, "TooShort");
@@ -948,7 +948,7 @@ extern "C" __attribute__((naked)) int Loop() {
 }
 
 TEST_F(InstrumentFunctionTest, Loop) {
-#if defined(ORBIT_COVERAGE_BUILD) || (__GNUC__ == 9)
+#if defined(ORBIT_COVERAGE_BUILD) || !defined(__clang__)
   GTEST_SKIP();
 #endif
   RunChild(&Loop, "Loop");
