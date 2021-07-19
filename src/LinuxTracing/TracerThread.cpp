@@ -77,6 +77,7 @@ TracerThread::TracerThread(const CaptureOptions& capture_options)
   for (const InstrumentedFunction& instrumented_function :
        capture_options.instrumented_functions()) {
     uint64_t function_id = instrumented_function.function_id();
+    // TODO(b/193759921): Use record_arguments and record_return_value.
     instrumented_functions_.emplace_back(function_id, instrumented_function.file_path(),
                                          instrumented_function.file_offset());
 

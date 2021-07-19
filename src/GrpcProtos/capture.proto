@@ -26,6 +26,9 @@ message InstrumentedFunction {
   }
   FunctionType function_type = 4;
   string function_name = 5;
+
+  bool record_arguments = 8;
+  bool record_return_value = 9;
 }
 
 // Api functions are declared in Orbit.h. They are implemented in user code

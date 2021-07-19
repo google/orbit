@@ -92,6 +92,7 @@
 ABSL_DECLARE_FLAG(bool, devmode);
 ABSL_DECLARE_FLAG(bool, local);
 ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
+ABSL_DECLARE_FLAG(bool, show_return_values);
 
 using orbit_base::Future;
 
@@ -1365,6 +1366,7 @@ void OrbitApp::StartCapture() {
 
   Future<ErrorMessageOr<CaptureOutcome>> capture_result = capture_client_->Capture(
       thread_pool_.get(), process->pid(), *module_manager_, std::move(selected_functions_map),
+      /*always_record_arguments=*/false, absl::GetFlag(FLAGS_show_return_values),
       std::move(selected_tracepoints), samples_per_second, stack_dump_size, unwinding_method,
       collect_scheduling_info, collect_thread_states, collect_gpu_jobs, enable_api,
       enable_introspection, enable_user_space_instrumentation,
