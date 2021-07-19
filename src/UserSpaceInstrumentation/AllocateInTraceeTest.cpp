@@ -27,18 +27,27 @@ namespace orbit_user_space_instrumentation {
 namespace {
 
 using orbit_base::HasError;
+using orbit_base::HasNoError;
 using orbit_base::ReadFileToString;
 
-// Returns true if `pid` has a readable, writeable, and executable memory segment at `address`.
-[[nodiscard]] bool ProcessHasRwxMapAtAddress(pid_t pid, uint64_t address) {
+enum class ProtState { kWrite, kExec, kAny };
+
+// Returns true if the target process has a writeable (or executable; depending on `state`) memory
+// segment at `address`.
+[[nodiscard]] bool ProcessHasMapAtAddress(pid_t pid, uint64_t address, ProtState state) {
   auto maps_or_error = ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
   CHECK(maps_or_error.has_value());
   std::vector<std::string> lines = absl::StrSplit(maps_or_error.value(), '\n', absl::SkipEmpty());
   for (const auto& line : lines) {
     std::vector<std::string> tokens = absl::StrSplit(line, ' ', absl::SkipEmpty());
-    if (tokens.size() < 2 || tokens[1].size() != 4 || tokens[1][0] != 'r' || tokens[1][1] != 'w' ||
-        tokens[1][2] != 'x') {
-      continue;
+    if (state == ProtState::kWrite) {
+      if (tokens.size() < 2 || tokens[1].size() < 2 || tokens[1][1] != 'w') {
+        continue;
+      }
+    } else if (state == ProtState::kExec) {
+      if (tokens.size() < 2 || tokens[1].size() < 3 || tokens[1][2] != 'x') {
+        continue;
+      }
     }
     std::vector<std::string> addresses = absl::StrSplit(tokens[0], '-');
     if (addresses.size() != 2) {
@@ -49,6 +58,12 @@ using orbit_base::ReadFileToString;
     }
   }
   return false;
+}
+
+// Returns true if the target process has a writeable (or executable; depending on `state`) memory
+// segment at the address of `memory`.
+[[nodiscard]] bool ProcessHasMapAtAddress(const MemoryInTracee& memory, ProtState state) {
+  return ProcessHasMapAtAddress(memory.GetPid(), memory.GetAddress(), state);
 }
 
 }  // namespace
@@ -67,48 +82,76 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
 
   // Allocation fails for invalid process.
   constexpr uint64_t kMemorySize = 1024 * 1024;
-  auto address_or_error = AllocateInTracee(-1, 0, kMemorySize);
-  EXPECT_THAT(address_or_error, HasError("No such process"));
+  auto my_memory_or_error = MemoryInTracee::Create(-1, 0, kMemorySize);
+  EXPECT_THAT(my_memory_or_error, HasError("No such process"));
 
   // Allocation fails for non page aligned address.
-  address_or_error = AllocateInTracee(pid, 1, kMemorySize);
-  EXPECT_THAT(address_or_error, HasError("but got memory at a different adress"));
+  my_memory_or_error = MemoryInTracee::Create(pid, 1, kMemorySize);
+  EXPECT_THAT(my_memory_or_error, HasError("but got memory at a different adress"));
 
   // Allocation fails for ridiculous size.
-  address_or_error = AllocateInTracee(pid, 0, 1ull << 63);
-  EXPECT_THAT(address_or_error, HasError("Syscall failed. Return value: Cannot allocate memory"));
+  my_memory_or_error = MemoryInTracee::Create(pid, 1, 1ull << 63);
+  EXPECT_THAT(my_memory_or_error, HasError("Syscall failed. Return value: Cannot allocate memory"));
 
   // Allocate a megabyte in the tracee.
-  address_or_error = AllocateInTracee(pid, 0, kMemorySize);
-  ASSERT_TRUE(address_or_error.has_value());
-  EXPECT_TRUE(ProcessHasRwxMapAtAddress(pid, address_or_error.value()));
+  my_memory_or_error = MemoryInTracee::Create(pid, 0, kMemorySize);
+  ASSERT_THAT(my_memory_or_error, HasNoError());
+  EXPECT_TRUE(ProcessHasMapAtAddress(*my_memory_or_error.value(), ProtState::kWrite));
 
   // Free the memory.
-  ASSERT_FALSE(FreeInTracee(pid, address_or_error.value(), kMemorySize).has_error());
-  EXPECT_FALSE(ProcessHasRwxMapAtAddress(pid, address_or_error.value()));
+  ASSERT_THAT(my_memory_or_error.value()->Free(), HasNoError());
 
   // Allocate a megabyte at a low memory position.
   auto mmap_min_addr_or_error = ReadFileToString("/proc/sys/vm/mmap_min_addr");
   CHECK(mmap_min_addr_or_error.has_value());
   uint64_t mmap_min_addr = 0;
   CHECK(absl::SimpleAtoi(mmap_min_addr_or_error.value(), &mmap_min_addr));
-  address_or_error = AllocateInTracee(pid, mmap_min_addr, kMemorySize);
-  ASSERT_TRUE(address_or_error.has_value());
-  EXPECT_TRUE(ProcessHasRwxMapAtAddress(pid, address_or_error.value()));
+  my_memory_or_error = MemoryInTracee::Create(pid, mmap_min_addr, kMemorySize);
+  ASSERT_THAT(my_memory_or_error, HasNoError());
+  auto my_memory = std::move(my_memory_or_error.value());
+  EXPECT_TRUE(ProcessHasMapAtAddress(*my_memory, ProtState::kWrite));
+
+  // Make memory executable.
+  ASSERT_THAT(my_memory->EnsureMemoryExecutable(), HasNoError());
+  EXPECT_TRUE(ProcessHasMapAtAddress(*my_memory, ProtState::kExec));
+
+  // Make memory writable again.
+  ASSERT_THAT(my_memory->EnsureMemoryWritable(), HasNoError());
+  EXPECT_TRUE(ProcessHasMapAtAddress(*my_memory, ProtState::kWrite));
 
   // Free the memory.
-  ASSERT_FALSE(FreeInTracee(pid, address_or_error.value(), kMemorySize).has_error());
-  EXPECT_FALSE(ProcessHasRwxMapAtAddress(pid, address_or_error.value()));
+  uint64_t address = my_memory->GetAddress();
+  ASSERT_THAT(my_memory->Free(), HasNoError());
+  EXPECT_FALSE(ProcessHasMapAtAddress(pid, address, ProtState::kAny));
 
-  // Allocate as unique resource.
+  // Detach and end child.
+  CHECK(!DetachAndContinueProcess(pid).has_error());
+  kill(pid, SIGKILL);
+  waitpid(pid, nullptr, 0);
+}
+
+TEST(AllocateInTraceeTest, AutomaticAllocateAndFree) {
+  pid_t pid = fork();
+  CHECK(pid != -1);
+  if (pid == 0) {
+    // Child just runs an endless loop.
+    while (true) {
+    }
+  }
+
+  // Stop the process using our tooling.
+  CHECK(!AttachAndStopProcess(pid).has_error());
+
+  constexpr uint64_t kMemorySize = 1024 * 1024;
   uint64_t address = 0;
   {
-    auto unique_resource_or_error = AllocateInTraceeAsUniqueResource(pid, 0, kMemorySize);
-    ASSERT_TRUE(unique_resource_or_error.has_value());
-    address = unique_resource_or_error.value().get();
-    EXPECT_TRUE(ProcessHasRwxMapAtAddress(pid, address));
+    auto automatic_memory_or_error = AutomaticMemoryInTracee::Create(pid, 0, kMemorySize);
+    ASSERT_THAT(automatic_memory_or_error, HasNoError());
+    auto automatic_memory = std::move(automatic_memory_or_error.value());
+    EXPECT_TRUE(ProcessHasMapAtAddress(*automatic_memory, ProtState::kWrite));
+    address = automatic_memory->GetAddress();
   }
-  EXPECT_FALSE(ProcessHasRwxMapAtAddress(pid, address));
+  EXPECT_FALSE(ProcessHasMapAtAddress(pid, address, ProtState::kAny));
 
   // Detach and end child.
   CHECK(!DetachAndContinueProcess(pid).has_error());
