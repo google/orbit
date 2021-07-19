@@ -285,20 +285,20 @@ void ThreadTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
   const float thread_state_track_height = layout_->GetThreadStateTrackHeight();
   const float event_track_height = layout_->GetEventTrackHeight();
   const float tracepoint_track_height = layout_->GetEventTrackHeight();
-  const float world_width = viewport_->GetVisibleWorldWidth();
+  const float track_width = size_[0];
 
   if (!thread_state_bar_->IsEmpty()) {
-    thread_state_bar_->SetSize(world_width, thread_state_track_height);
+    thread_state_bar_->SetSize(track_width, thread_state_track_height);
     thread_state_bar_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
   }
 
   if (!event_bar_->IsEmpty()) {
-    event_bar_->SetSize(world_width, event_track_height);
+    event_bar_->SetSize(track_width, event_track_height);
     event_bar_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
   }
 
   if (!tracepoint_bar_->IsEmpty()) {
-    tracepoint_bar_->SetSize(world_width, tracepoint_track_height);
+    tracepoint_bar_->SetSize(track_width, tracepoint_track_height);
     tracepoint_bar_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
   }
 }
@@ -485,16 +485,16 @@ static inline void ResizeTextBox(const internal::DrawData& draw_data, const Time
   double elapsed_us = end_us - start_us;
   double normalized_start = start_us * draw_data.inv_time_window;
   double normalized_length = elapsed_us * draw_data.inv_time_window;
-  float world_timer_width = static_cast<float>(normalized_length * draw_data.world_width);
+  float world_timer_width = static_cast<float>(normalized_length * draw_data.track_width);
   float world_timer_x =
-      static_cast<float>(draw_data.world_start_x + normalized_start * draw_data.world_width);
+      static_cast<float>(draw_data.track_start_x + normalized_start * draw_data.track_width);
   text_box->SetPos({world_timer_x, world_pos_y});
   text_box->SetSize({world_timer_width, world_size_y});
 }
 
 [[nodiscard]] static inline uint64_t GetNextPixelBoundaryTimeNs(
     float world_x, const internal::DrawData& draw_data) {
-  float normalized_x = (world_x - draw_data.world_start_x) / draw_data.world_width;
+  float normalized_x = (world_x - draw_data.track_start_x) / draw_data.track_width;
   int pixel_x = static_cast<int>(ceil(normalized_x * draw_data.viewport->GetScreenWidth()));
   return draw_data.min_tick + pixel_x * draw_data.ns_per_pixel;
 }
@@ -510,7 +510,7 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
   UpdateBoxHeight();
 
   const internal::DrawData draw_data = GetDrawData(
-      min_tick, max_tick, z_offset, batcher, time_graph_, viewport_,
+      min_tick, max_tick, size_[0], z_offset, batcher, time_graph_, viewport_,
       collapse_toggle_->IsCollapsed(), app_->selected_text_box(), app_->GetFunctionIdToHighlight());
 
   absl::MutexLock lock(&scope_tree_mutex_);
@@ -537,7 +537,7 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
 
       if (text_box.Duration() > draw_data.ns_per_pixel) {
         if (!collapse_toggle_->IsCollapsed()) {
-          SetTimesliceText(text_box.GetTimerInfo(), draw_data.world_start_x, z_offset, &text_box);
+          SetTimesliceText(text_box.GetTimerInfo(), draw_data.track_start_x, z_offset, &text_box);
         }
         batcher->AddShadedBox({pos.first, pos.second}, {size.first, size.second}, draw_data.z,
                               color, std::move(user_data));
