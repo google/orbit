@@ -128,10 +128,12 @@ ErrorMessageOr<void> ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
 
   Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> result = capture_client_->Capture(
       thread_pool, target_process_->pid(), module_manager_, selected_functions_,
-      selected_tracepoints, options_.samples_per_second, options_.stack_dump_size, unwinding_method,
+      /*always_record_arguments=*/false, /*record_return_values=*/false, selected_tracepoints,
+      options_.samples_per_second, options_.stack_dump_size, unwinding_method,
       collect_scheduling_info, collect_thread_state, collect_gpu_jobs, enable_api,
       enable_introspection, enable_user_space_instrumentation,
-      max_local_marker_depth_per_command_buffer, false, 0, std::move(event_processor));
+      max_local_marker_depth_per_command_buffer, /*collect_memory_info=*/false, 0,
+      std::move(event_processor));
 
   orbit_base::ImmediateExecutor executor;
 

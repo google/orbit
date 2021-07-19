@@ -175,6 +175,8 @@ int main(int argc, char* argv[]) {
     LOG("file_path=%s", file_path);
     LOG("file_offset=%#x", file_offset);
   }
+  constexpr bool kAlwaysRecordArguments = false;
+  constexpr bool kRecordReturnValues = false;
   bool collect_scheduling_info = absl::GetFlag(FLAGS_scheduling);
   LOG("collect_scheduling_info=%d", collect_scheduling_info);
   bool collect_thread_state = absl::GetFlag(FLAGS_thread_state);
@@ -238,11 +240,12 @@ int main(int argc, char* argv[]) {
   auto capture_event_processor = std::make_unique<orbit_fake_client::FakeCaptureEventProcessor>();
 
   auto capture_outcome_future = capture_client.Capture(
-      thread_pool.get(), process_id, module_manager, selected_functions,
-      orbit_client_data::TracepointInfoSet{}, samples_per_second, kStackDumpSize, unwinding_method,
-      collect_scheduling_info, collect_thread_state, collect_gpu_jobs, kEnableApi,
-      kEnableIntrospection, kEnableUserSpaceInstrumentation, kMaxLocalMarkerDepthPerCommandBuffer,
-      collect_memory_info, memory_sampling_period_ms, std::move(capture_event_processor));
+      thread_pool.get(), process_id, module_manager, selected_functions, kAlwaysRecordArguments,
+      kRecordReturnValues, orbit_client_data::TracepointInfoSet{}, samples_per_second,
+      kStackDumpSize, unwinding_method, collect_scheduling_info, collect_thread_state,
+      collect_gpu_jobs, kEnableApi, kEnableIntrospection, kEnableUserSpaceInstrumentation,
+      kMaxLocalMarkerDepthPerCommandBuffer, collect_memory_info, memory_sampling_period_ms,
+      std::move(capture_event_processor));
   LOG("Asked to start capture");
 
   uint32_t duration_s = absl::GetFlag(FLAGS_duration);
