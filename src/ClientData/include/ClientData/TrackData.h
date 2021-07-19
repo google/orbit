@@ -8,6 +8,7 @@
 #include <absl/synchronization/mutex.h>
 
 #include "ClientData/TimerChain.h"
+#include "capture_data.pb.h"
 
 namespace orbit_client_data {
 
@@ -17,7 +18,8 @@ class TrackData {
   [[nodiscard]] uint64_t GetMinTime() const { return min_time_; }
   [[nodiscard]] uint64_t GetMaxTime() const { return max_time_; }
 
-  TextBox& AddTimer(uint64_t depth, orbit_client_protos::TimerInfo timer_info) {
+  orbit_client_protos::TimerInfo& AddTimer(uint64_t depth,
+                                           orbit_client_protos::TimerInfo timer_info) {
     TimerChain* timer_chain = GetOrCreateTimerChain(depth);
     UpdateMinTime(timer_info.start());
     UpdateMaxTime(timer_info.end());

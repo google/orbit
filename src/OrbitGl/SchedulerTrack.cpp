@@ -85,8 +85,8 @@ std::string SchedulerTrack::GetTooltip() const {
 void SchedulerTrack::UpdateBoxHeight() { box_height_ = layout_->GetTextCoresHeight(); }
 
 std::string SchedulerTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
-  const orbit_client_data::TextBox* text_box = batcher.GetTextBox(id);
-  if (!text_box) {
+  const orbit_client_protos::TimerInfo* timer_info = batcher.GetTimerInfo(id);
+  if (!timer_info) {
     return "";
   }
 
@@ -97,9 +97,7 @@ std::string SchedulerTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) 
       "<b>Core:</b> %d<br/>"
       "<b>Process:</b> %s [%d]<br/>"
       "<b>Thread:</b> %s [%d]<br/>",
-      text_box->GetTimerInfo().processor(),
-      capture_data_->GetThreadName(text_box->GetTimerInfo().process_id()),
-      text_box->GetTimerInfo().process_id(),
-      capture_data_->GetThreadName(text_box->GetTimerInfo().thread_id()),
-      text_box->GetTimerInfo().thread_id());
+      timer_info->processor(), capture_data_->GetThreadName(timer_info->process_id()),
+      timer_info->process_id(), capture_data_->GetThreadName(timer_info->thread_id()),
+      timer_info->thread_id());
 }

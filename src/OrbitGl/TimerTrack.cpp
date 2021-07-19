@@ -70,7 +70,7 @@ float TimerTrack::GetYFromDepth(uint32_t depth) const {
 
 void TimerTrack::UpdateBoxHeight() { box_height_ = layout_->GetTextBoxHeight(); }
 
-float TimerTrack::GetTextBoxHeight(const TimerInfo& /*timer_info*/) const { return box_height_; }
+float TimerTrack::GetBoxHeight(const TimerInfo& /*timer_info*/) const { return box_height_; }
 
 namespace {
 struct WorldXInfo {
@@ -112,65 +112,60 @@ void TimerTrack::DrawTimesliceText(const orbit_client_protos::TimerInfo& timer, 
       layout_->CalculateZoomedFontSize(), max_size);
 }
 
-bool TimerTrack::DrawTimer(const orbit_client_data::TextBox* prev_text_box,
-                           const orbit_client_data::TextBox* next_text_box,
-                           const internal::DrawData& draw_data,
-                           orbit_client_data::TextBox* current_text_box, uint64_t* min_ignore,
-                           uint64_t* max_ignore) {
+bool TimerTrack::DrawTimer(const TimerInfo* prev_timer_info, const TimerInfo* next_timer_info,
+                           const internal::DrawData& draw_data, TimerInfo* current_timer_info,
+                           uint64_t* min_ignore, uint64_t* max_ignore) {
   CHECK(min_ignore != nullptr);
   CHECK(max_ignore != nullptr);
-  if (current_text_box == nullptr) return false;
-  const TimerInfo& current_timer_info = current_text_box->GetTimerInfo();
-  if (draw_data.min_tick > current_timer_info.end() ||
-      draw_data.max_tick < current_timer_info.start()) {
+  if (current_timer_info == nullptr) return false;
+  if (draw_data.min_tick > current_timer_info->end() ||
+      draw_data.max_tick < current_timer_info->start()) {
     return false;
   }
-  if (current_timer_info.start() >= *min_ignore && current_timer_info.end() <= *max_ignore)
+  if (current_timer_info->start() >= *min_ignore && current_timer_info->end() <= *max_ignore)
     return false;
-  if (!TimerFilter(current_timer_info)) return false;
+  if (!TimerFilter(*current_timer_info)) return false;
 
-  UpdateDepth(current_timer_info.depth() + 1);
-  double start_us = time_graph_->GetUsFromTick(current_timer_info.start());
+  UpdateDepth(current_timer_info->depth() + 1);
+  double start_us = time_graph_->GetUsFromTick(current_timer_info->start());
   double start_or_prev_end_us = start_us;
-  double end_us = time_graph_->GetUsFromTick(current_timer_info.end());
+  double end_us = time_graph_->GetUsFromTick(current_timer_info->end());
   double end_or_next_start_us = end_us;
 
-  float world_timer_y = GetYFromTimer(current_timer_info);
-  float box_height = GetTextBoxHeight(current_timer_info);
+  float world_timer_y = GetYFromTimer(*current_timer_info);
+  float box_height = GetBoxHeight(*current_timer_info);
 
   // Check if the previous timer overlaps with the current one, and if so draw the overlap
   // as triangles rather than as overlapping rectangles.
-  if (prev_text_box != nullptr) {
-    const TimerInfo& prev_timer_info = prev_text_box->GetTimerInfo();
+  if (prev_timer_info != nullptr) {
     // TODO(b/179985943): Turn this back into a check.
-    if (prev_timer_info.start() < current_timer_info.start()) {
+    if (prev_timer_info->start() < current_timer_info->start()) {
       // Note, that for timers that are completely inside the previous one, we will keep drawing
       // them above each other, as a proper solution would require us to keep a list of all
       // prev. intersecting timers. Further, we also compare the type, as for the Gpu timers,
       // timers of different type but same depth are drawn below each other (and thus do not
       // overlap).
-      if (prev_timer_info.end() > current_timer_info.start() &&
-          prev_timer_info.end() <= current_timer_info.end() &&
-          prev_timer_info.type() == current_timer_info.type()) {
-        start_or_prev_end_us = time_graph_->GetUsFromTick(prev_timer_info.end());
+      if (prev_timer_info->end() > current_timer_info->start() &&
+          prev_timer_info->end() <= current_timer_info->end() &&
+          prev_timer_info->type() == current_timer_info->type()) {
+        start_or_prev_end_us = time_graph_->GetUsFromTick(prev_timer_info->end());
       }
     }
   }
 
   // Check if the next timer overlaps with the current one, and if so draw the overlap
   // as triangles rather than as overlapping rectangles.
-  if (next_text_box != nullptr) {
-    const TimerInfo& next_timer_info = next_text_box->GetTimerInfo();
+  if (next_timer_info != nullptr) {
     // TODO(b/179985943): Turn this back into a check.
-    if (current_timer_info.start() < next_timer_info.start()) {
+    if (current_timer_info->start() < next_timer_info->start()) {
       // Note, that for timers that are completely inside the next one, we will keep drawing
       // them above each other, as a proper solution would require us to keep a list of all
       // upcoming intersecting timers. We also compare the type, as for the Gpu timers, timers
       // of different type but same depth are drawn below each other (and thus do not overlap).
-      if (current_timer_info.end() > next_timer_info.start() &&
-          current_timer_info.end() <= next_timer_info.end() &&
-          next_timer_info.type() == current_timer_info.type()) {
-        end_or_next_start_us = time_graph_->GetUsFromTick(next_timer_info.start());
+      if (current_timer_info->end() > next_timer_info->start() &&
+          current_timer_info->end() <= next_timer_info->end() &&
+          next_timer_info->type() == current_timer_info->type()) {
+        end_or_next_start_us = time_graph_->GetUsFromTick(next_timer_info->start());
       }
     }
   }
@@ -192,19 +187,20 @@ bool TimerTrack::DrawTimer(const orbit_client_data::TextBox* prev_text_box,
 
     if (is_visible_width) {
       Vec2 pos{world_x_info.world_x_start, world_timer_y};
-      Vec2 size{world_x_info.world_x_width, GetTextBoxHeight(current_timer_info)};
+      Vec2 size{world_x_info.world_x_width, GetBoxHeight(*current_timer_info)};
 
-      DrawTimesliceText(current_timer_info, draw_data.world_start_x, draw_data.z_offset, pos, size);
+      DrawTimesliceText(*current_timer_info, draw_data.world_start_x, draw_data.z_offset, pos,
+                        size);
     }
   }
 
-  uint64_t function_id = current_timer_info.function_id();
+  uint64_t function_id = current_timer_info->function_id();
 
-  bool is_selected = current_text_box == draw_data.selected_textbox;
+  bool is_selected = current_timer_info == draw_data.selected_timer;
   bool is_highlighted = !is_selected && function_id != orbit_grpc_protos::kInvalidFunctionId &&
                         function_id == draw_data.highlighted_function_id;
 
-  Color color = GetTimerColor(current_timer_info, is_selected, is_highlighted);
+  Color color = GetTimerColor(*current_timer_info, is_selected, is_highlighted);
 
   bool is_visible_width =
       elapsed_us * draw_data.inv_time_window * draw_data.viewport->GetScreenWidth() > 1;
@@ -229,18 +225,19 @@ bool TimerTrack::DrawTimer(const orbit_client_data::TextBox* prev_text_box,
         world_timer_y, draw_data.z);
     Batcher* batcher = draw_data.batcher;
     draw_data.batcher->AddShadedTrapezium(top_left, bottom_left, bottom_right, top_right, color,
-                                          CreatePickingUserData(*batcher, *current_text_box));
+                                          CreatePickingUserData(*batcher, *current_timer_info));
   } else {
     Batcher* batcher = draw_data.batcher;
     auto user_data = std::make_unique<PickingUserData>(
-        current_text_box, [&, batcher](PickingId id) { return this->GetBoxTooltip(*batcher, id); });
+        current_timer_info,
+        [&, batcher](PickingId id) { return this->GetBoxTooltip(*batcher, id); });
 
     WorldXInfo world_x_info = ToWorldX(start_us, end_us, draw_data.inv_time_window,
                                        draw_data.world_start_x, draw_data.world_width);
 
     Vec2 pos(world_x_info.world_x_start, world_timer_y);
-    draw_data.batcher->AddVerticalLine(pos, GetTextBoxHeight(current_timer_info), draw_data.z,
-                                       color, std::move(user_data));
+    draw_data.batcher->AddVerticalLine(pos, GetBoxHeight(*current_timer_info), draw_data.z, color,
+                                       std::move(user_data));
     // For lines, we can ignore the entire pixel into which this event
     // falls. We align this precisely on the pixel x-coordinate of the
     // current line being drawn (in ticks). If ns_per_pixel is
@@ -249,7 +246,7 @@ bool TimerTrack::DrawTimer(const orbit_client_data::TextBox* prev_text_box,
     if (draw_data.ns_per_pixel != 0) {
       *min_ignore =
           draw_data.min_timegraph_tick +
-          ((current_timer_info.start() - draw_data.min_timegraph_tick) / draw_data.ns_per_pixel) *
+          ((current_timer_info->start() - draw_data.min_timegraph_tick) / draw_data.ns_per_pixel) *
               draw_data.ns_per_pixel;
       *max_ignore = *min_ignore + draw_data.ns_per_pixel;
     }
@@ -280,7 +277,7 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
   draw_data.z = GlCanvas::kZValueBox + z_offset;
 
   std::vector<orbit_client_data::TimerChain*> chains = track_data_->GetChains();
-  draw_data.selected_textbox = app_->selected_text_box();
+  draw_data.selected_timer = app_->selected_timer();
   draw_data.highlighted_function_id = app_->GetFunctionIdToHighlight();
 
   // We minimize overdraw when drawing lines for small events by discarding
@@ -299,9 +296,9 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
     // previous two timers, thus the currents iteration value being the "next" textbox.
     // Note: This will require us to draw the last timer after the traversal of the text boxes.
     // Also note: The draw method will take care of nullptr's being passed into (first iteration).
-    orbit_client_data::TextBox* prev_text_box = nullptr;
-    orbit_client_data::TextBox* current_text_box = nullptr;
-    orbit_client_data::TextBox* next_text_box = nullptr;
+    orbit_client_protos::TimerInfo* prev_timer_info = nullptr;
+    orbit_client_protos::TimerInfo* current_timer_info = nullptr;
+    orbit_client_protos::TimerInfo* next_timer_info = nullptr;
 
     // We have to reset this when we go to the next depth, as otherwise we
     // would miss drawing events that should be drawn.
@@ -313,21 +310,21 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
       for (size_t k = 0; k < block.size(); ++k) {
         // The current index (k) points to the "next" text box and we want to draw the text box
         // from the previous iteration ("current").
-        next_text_box = &block[k];
+        next_timer_info = &block[k];
 
-        if (DrawTimer(prev_text_box, next_text_box, draw_data, current_text_box, &min_ignore,
+        if (DrawTimer(prev_timer_info, next_timer_info, draw_data, current_timer_info, &min_ignore,
                       &max_ignore)) {
           ++visible_timer_count_;
         }
 
-        prev_text_box = current_text_box;
-        current_text_box = next_text_box;
+        prev_timer_info = current_timer_info;
+        current_timer_info = next_timer_info;
       }
     }
 
     // We still need to draw the last timer.
-    next_text_box = nullptr;
-    if (DrawTimer(prev_text_box, next_text_box, draw_data, current_text_box, &min_ignore,
+    next_timer_info = nullptr;
+    if (DrawTimer(prev_timer_info, next_timer_info, draw_data, current_timer_info, &min_ignore,
                   &max_ignore)) {
       ++visible_timer_count_;
     }
@@ -359,67 +356,61 @@ std::string TimerTrack::GetTooltip() const {
          "functions";
 }
 
-const orbit_client_data::TextBox* TimerTrack::GetFirstAfterTime(uint64_t time,
-                                                                uint32_t depth) const {
+const TimerInfo* TimerTrack::GetFirstAfterTime(uint64_t time, uint32_t depth) const {
   orbit_client_data::TimerChain* chain = track_data_->GetChain(depth);
   if (chain == nullptr) return nullptr;
 
   // TODO: do better than linear search...
   for (auto& it : *chain) {
     for (size_t k = 0; k < it.size(); ++k) {
-      const orbit_client_data::TextBox& text_box = it[k];
-      if (text_box.GetTimerInfo().start() > time) {
-        return &text_box;
+      const TimerInfo& timer_info = it[k];
+      if (timer_info.start() > time) {
+        return &timer_info;
       }
     }
   }
   return nullptr;
 }
 
-const orbit_client_data::TextBox* TimerTrack::GetFirstBeforeTime(uint64_t time,
-                                                                 uint32_t depth) const {
+const TimerInfo* TimerTrack::GetFirstBeforeTime(uint64_t time, uint32_t depth) const {
   orbit_client_data::TimerChain* chain = track_data_->GetChain(depth);
   if (chain == nullptr) return nullptr;
 
-  const orbit_client_data::TextBox* text_box = nullptr;
+  const TimerInfo* first_timer_before_time = nullptr;
 
   // TODO: do better than linear search...
   for (auto& it : *chain) {
     for (size_t k = 0; k < it.size(); ++k) {
-      const orbit_client_data::TextBox& box = it[k];
-      if (box.GetTimerInfo().start() > time) {
-        return text_box;
+      const TimerInfo& timer_info = it[k];
+      if (timer_info.start() > time) {
+        return first_timer_before_time;
       }
-      text_box = &box;
+      first_timer_before_time = &timer_info;
     }
   }
 
   return nullptr;
 }
 
-const orbit_client_data::TextBox* TimerTrack::GetUp(
-    const orbit_client_data::TextBox* text_box) const {
-  const TimerInfo& timer_info = text_box->GetTimerInfo();
+const TimerInfo* TimerTrack::GetUp(const TimerInfo& timer_info) const {
   return GetFirstBeforeTime(timer_info.start(), timer_info.depth() - 1);
 }
 
-const orbit_client_data::TextBox* TimerTrack::GetDown(
-    const orbit_client_data::TextBox* text_box) const {
-  const TimerInfo& timer_info = text_box->GetTimerInfo();
+const TimerInfo* TimerTrack::GetDown(const TimerInfo& timer_info) const {
   return GetFirstAfterTime(timer_info.start(), timer_info.depth() + 1);
 }
 
-std::vector<const orbit_client_data::TextBox*> TimerTrack::GetScopesInRange(uint64_t start_ns,
-                                                                            uint64_t end_ns) const {
-  std::vector<const orbit_client_data::TextBox*> result;
+std::vector<const orbit_client_protos::TimerInfo*> TimerTrack::GetScopesInRange(
+    uint64_t start_ns, uint64_t end_ns) const {
+  std::vector<const orbit_client_protos::TimerInfo*> result;
   for (TimerChain* chain : track_data_->GetChains()) {
     CHECK(chain != nullptr);
     for (const auto& block : *chain) {
       if (!block.Intersects(start_ns, end_ns)) continue;
       for (uint64_t i = 0; i < block.size(); ++i) {
-        const orbit_client_data::TextBox& box = block[i];
-        if (box.GetTimerInfo().start() <= end_ns && box.GetTimerInfo().end() > start_ns) {
-          result.push_back(&box);
+        const orbit_client_protos::TimerInfo& timer_info = block[i];
+        if (timer_info.start() <= end_ns && timer_info.end() > start_ns) {
+          result.push_back(&timer_info);
         }
       }
     }
@@ -438,7 +429,7 @@ float TimerTrack::GetHeaderHeight() const { return layout_->GetTrackTabHeight();
 internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick, float z_offset,
                                            Batcher* batcher, TimeGraph* time_graph,
                                            orbit_gl::Viewport* viewport, bool is_collapsed,
-                                           const orbit_client_data::TextBox* selected_textbox,
+                                           const orbit_client_protos::TimerInfo* selected_timer,
                                            uint64_t highlighted_function_id) {
   internal::DrawData draw_data{};
   draw_data.min_tick = min_tick;
@@ -451,7 +442,7 @@ internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick,
   draw_data.inv_time_window = 1.0 / time_graph->GetTimeWindowUs();
   draw_data.is_collapsed = is_collapsed;
   draw_data.z = GlCanvas::kZValueBox + z_offset;
-  draw_data.selected_textbox = selected_textbox;
+  draw_data.selected_timer = selected_timer;
   draw_data.highlighted_function_id = highlighted_function_id;
 
   uint64_t time_window_ns = static_cast<uint64_t>(1000 * time_graph->GetTimeWindowUs());

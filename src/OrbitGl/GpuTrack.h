@@ -44,15 +44,15 @@ class GpuTrack : public Track {
                     uint32_t indentation_level = 0);
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 
-  [[nodiscard]] const orbit_client_data::TextBox* GetLeft(
-      const orbit_client_data::TextBox* textbox) const;
-  [[nodiscard]] const orbit_client_data::TextBox* GetRight(
-      const orbit_client_data::TextBox* textbox) const;
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
+      const orbit_client_protos::TimerInfo& timer_info) const;
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetRight(
+      const orbit_client_protos::TimerInfo& timer_info) const;
 
-  [[nodiscard]] const orbit_client_data::TextBox* GetUp(
-      const orbit_client_data::TextBox* textbox) const;
-  [[nodiscard]] const orbit_client_data::TextBox* GetDown(
-      const orbit_client_data::TextBox* textbox) const;
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetUp(
+      const orbit_client_protos::TimerInfo& timer_info) const;
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetDown(
+      const orbit_client_protos::TimerInfo& timer_info) const;
 
   [[nodiscard]] Type GetType() const override { return Type::kGpuTrack; }
   [[nodiscard]] std::string GetTooltip() const override;

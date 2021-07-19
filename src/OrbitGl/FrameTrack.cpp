@@ -90,7 +90,7 @@ float FrameTrack::GetYFromTimer(const TimerInfo& /*timer_info*/) const {
   return pos_[1] - GetHeaderHeight() - GetMaximumBoxHeight();
 }
 
-float FrameTrack::GetTextBoxHeight(const TimerInfo& timer_info) const {
+float FrameTrack::GetBoxHeight(const TimerInfo& timer_info) const {
   uint64_t timer_duration_ns = timer_info.end() - timer_info.start();
   if (stats_.average_time_ns() == 0) {
     return 0.f;
@@ -189,8 +189,8 @@ std::string FrameTrack::GetTooltip() const {
 }
 
 std::string FrameTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
-  const orbit_client_data::TextBox* text_box = batcher.GetTextBox(id);
-  if (text_box == nullptr) {
+  const orbit_client_protos::TimerInfo* timer_info = batcher.GetTimerInfo(id);
+  if (timer_info == nullptr) {
     return "";
   }
   // TODO(b/169554463): Support manual instrumentation.
@@ -208,9 +208,9 @@ std::string FrameTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) cons
       "<b>Frame time:</b> %s",
       function_name, kHeightCapAverageMultipleUint64, function_name,
       orbit_client_data::function_utils::GetLoadedModuleNameByPath(function_.file_path()),
-      text_box->GetTimerInfo().user_data_key(),
+      timer_info->user_data_key(),
       orbit_display_formats::GetDisplayTime(
-          TicksToDuration(text_box->GetTimerInfo().start(), text_box->GetTimerInfo().end())));
+          TicksToDuration(timer_info->start(), timer_info->end())));
 }
 
 void FrameTrack::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,

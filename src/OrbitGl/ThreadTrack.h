@@ -38,10 +38,10 @@ class ThreadTrack final : public TimerTrack {
   [[nodiscard]] Type GetType() const override { return Type::kThreadTrack; }
   [[nodiscard]] std::string GetTooltip() const override;
 
-  [[nodiscard]] const orbit_client_data::TextBox* GetLeft(
-      const orbit_client_data::TextBox* textbox) const override;
-  [[nodiscard]] const orbit_client_data::TextBox* GetRight(
-      const orbit_client_data::TextBox* textbox) const override;
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
+      const orbit_client_protos::TimerInfo& timer_info) const override;
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetRight(
+      const orbit_client_protos::TimerInfo& timer_info) const override;
 
   void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
             PickingMode picking_mode, float z_offset = 0) override;
@@ -71,7 +71,7 @@ class ThreadTrack final : public TimerTrack {
 
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer, bool is_selected,
                                     bool is_highlighted) const override;
-  [[nodiscard]] Color GetTimerColor(const orbit_client_data::TextBox& text_box,
+  [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
                                     const internal::DrawData& draw_data);
   [[nodiscard]] std::string GetTimesliceText(
       const orbit_client_protos::TimerInfo& timer) const override;
@@ -90,7 +90,7 @@ class ThreadTrack final : public TimerTrack {
   std::shared_ptr<orbit_gl::TracepointThreadBar> tracepoint_bar_;
 
   absl::Mutex scope_tree_mutex_;
-  ScopeTree<orbit_client_data::TextBox> scope_tree_;
+  ScopeTree<orbit_client_protos::TimerInfo> scope_tree_;
   ScopeTreeUpdateType scope_tree_update_type_ = ScopeTreeUpdateType::kAlways;
 };
 

@@ -76,15 +76,14 @@ std::string GpuDebugMarkerTrack::GetTimesliceText(const TimerInfo& timer_info) c
 }
 
 std::string GpuDebugMarkerTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
-  const orbit_client_data::TextBox* text_box = batcher.GetTextBox(id);
-  if (text_box == nullptr) {
+  const TimerInfo* timer_info = batcher.GetTimerInfo(id);
+  if (timer_info == nullptr) {
     return "";
   }
 
-  const TimerInfo& timer_info = text_box->GetTimerInfo();
-  CHECK(timer_info.type() == TimerInfo::kGpuDebugMarker);
+  CHECK(timer_info->type() == TimerInfo::kGpuDebugMarker);
 
-  std::string marker_text = string_manager_->Get(timer_info.user_data_key()).value_or("");
+  std::string marker_text = string_manager_->Get(timer_info->user_data_key()).value_or("");
   return absl::StrFormat(
       "<b>Vulkan Debug Marker</b><br/>"
       "<i>At the marker's begin and end `vkCmdWriteTimestamp`s have been "
@@ -96,9 +95,9 @@ std::string GpuDebugMarkerTrack::GetBoxTooltip(const Batcher& batcher, PickingId
       "<b>Submitted from process:</b> %s [%d]<br/>"
       "<b>Submitted from thread:</b> %s [%d]<br/>"
       "<b>Time:</b> %s",
-      marker_text, capture_data_->GetThreadName(timer_info.process_id()), timer_info.process_id(),
-      capture_data_->GetThreadName(timer_info.thread_id()), timer_info.thread_id(),
-      orbit_display_formats::GetDisplayTime(TicksToDuration(timer_info.start(), timer_info.end()))
+      marker_text, capture_data_->GetThreadName(timer_info->process_id()), timer_info->process_id(),
+      capture_data_->GetThreadName(timer_info->thread_id()), timer_info->thread_id(),
+      orbit_display_formats::GetDisplayTime(TicksToDuration(timer_info->start(), timer_info->end()))
           .c_str());
 }
 

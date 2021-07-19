@@ -111,7 +111,7 @@ std::vector<int> LiveFunctionsDataView::GetVisibleSelectedIndices() {
 }
 
 void LiveFunctionsDataView::UpdateHighlightedFunctionId(const std::vector<int>& rows) {
-  app_->DeselectTextBox();
+  app_->DeselectTimer();
   if (rows.empty()) {
     app_->set_highlighted_function_id(orbit_grpc_protos::kInvalidFunctionId);
   } else {
@@ -300,19 +300,19 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
   } else if (action == kMenuActionJumpToFirst) {
     CHECK(item_indices.size() == 1);
     auto function_id = GetInstrumentedFunctionId(item_indices[0]);
-    app_->JumpToTextBoxAndZoom(function_id, OrbitApp::JumpToTextBoxMode::kFirst);
+    app_->JumpToTimerAndZoom(function_id, OrbitApp::JumpToTimerMode::kFirst);
   } else if (action == kMenuActionJumpToLast) {
     CHECK(item_indices.size() == 1);
     auto function_id = GetInstrumentedFunctionId(item_indices[0]);
-    app_->JumpToTextBoxAndZoom(function_id, OrbitApp::JumpToTextBoxMode::kLast);
+    app_->JumpToTimerAndZoom(function_id, OrbitApp::JumpToTimerMode::kLast);
   } else if (action == kMenuActionJumpToMin) {
     CHECK(item_indices.size() == 1);
     uint64_t function_id = GetInstrumentedFunctionId(item_indices[0]);
-    app_->JumpToTextBoxAndZoom(function_id, OrbitApp::JumpToTextBoxMode::kMin);
+    app_->JumpToTimerAndZoom(function_id, OrbitApp::JumpToTimerMode::kMin);
   } else if (action == kMenuActionJumpToMax) {
     CHECK(item_indices.size() == 1);
     uint64_t function_id = GetInstrumentedFunctionId(item_indices[0]);
-    app_->JumpToTextBoxAndZoom(function_id, OrbitApp::JumpToTextBoxMode::kMax);
+    app_->JumpToTimerAndZoom(function_id, OrbitApp::JumpToTimerMode::kMax);
   } else if (action == kMenuActionIterate) {
     for (int i : item_indices) {
       uint64_t instrumented_function_id = GetInstrumentedFunctionId(i);

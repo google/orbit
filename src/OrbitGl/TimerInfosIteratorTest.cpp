@@ -12,7 +12,6 @@
 #include <utility>
 #include <vector>
 
-#include "ClientData/TextBox.h"
 #include "ClientData/TimerChain.h"
 #include "TimerInfosIterator.h"
 #include "capture_data.pb.h"
@@ -25,13 +24,11 @@ TEST(TimerInfosIterator, Access) {
       std::make_shared<orbit_client_data::TimerChain>();
   TimerInfo timer;
   timer.set_function_id(1);
-  orbit_client_data::TextBox box{timer};
-  chain->emplace_back(box);
+  chain->emplace_back(timer);
   chains.emplace_back(chain);
 
   // Just validate setting worked as expected
   EXPECT_EQ(1, timer.function_id());
-  EXPECT_EQ(1, box.GetTimerInfo().function_id());
 
   // Now create an iterator and test to access it
   TimerInfosIterator it(chains.begin(), chains.end());
@@ -45,8 +42,7 @@ TEST(TimerInfosIterator, Copy) {
       std::make_shared<orbit_client_data::TimerChain>();
   TimerInfo timer;
   timer.set_function_id(1);
-  orbit_client_data::TextBox box{timer};
-  chain->emplace_back(box);
+  chain->emplace_back(timer);
   chains.emplace_back(chain);
 
   // Now create an iterator and test to access it
@@ -76,8 +72,7 @@ TEST(TimerInfosIterator, Move) {
       std::make_shared<orbit_client_data::TimerChain>();
   TimerInfo timer;
   timer.set_function_id(1);
-  orbit_client_data::TextBox box{timer};
-  chain->emplace_back(box);
+  chain->emplace_back(timer);
   chains.emplace_back(chain);
 
   // Now create an iterator and test to access it
@@ -99,8 +94,7 @@ TEST(TimerInfosIterator, Equality) {
       std::make_shared<orbit_client_data::TimerChain>();
   TimerInfo timer;
   timer.set_function_id(1);
-  orbit_client_data::TextBox box{timer};
-  chain->emplace_back(box);
+  chain->emplace_back(timer);
   chains.emplace_back(chain);
 
   // Now create an iterators and test equality
@@ -146,13 +140,12 @@ TEST(TimerInfosIterator, ForEachLarge) {
   for (size_t chain_count = 0; chain_count < 12; ++chain_count) {
     std::shared_ptr<orbit_client_data::TimerChain> chain =
         std::make_shared<orbit_client_data::TimerChain>();
-    for (size_t box_count = 0; box_count < max_timers; ++box_count) {
+    for (size_t timer_count = 0; timer_count < max_timers; ++timer_count) {
       TimerInfo timer;
       timer.set_function_id(count);
       timer.set_start(count);
       timer.set_end(count + 1);
-      orbit_client_data::TextBox box{timer};
-      chain->emplace_back(box);
+      chain->emplace_back(timer);
       expected.emplace_back(count);
       ++count;
     }

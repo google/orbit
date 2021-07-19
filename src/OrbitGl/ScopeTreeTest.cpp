@@ -15,17 +15,17 @@
 namespace {
 
 struct TestScope {
-  uint64_t Start() const { return start; }
-  uint64_t End() const { return end; }
-  uint64_t start;
-  uint64_t end;
+  uint64_t start() const { return start_; }
+  uint64_t end() const { return end_; }
+  uint64_t start_;
+  uint64_t end_;
 };
 
 TestScope* CreateScope(uint64_t start, uint64_t end) {
   static std::vector<std::unique_ptr<TestScope>> scope_buffer;
   auto scope = std::make_unique<TestScope>();
-  scope->start = start;
-  scope->end = end;
+  scope->start_ = start;
+  scope->end_ = end;
   scope_buffer.push_back(std::move(scope));
   return scope_buffer.back().get();
 }
