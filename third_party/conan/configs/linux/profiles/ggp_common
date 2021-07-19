@@ -19,11 +19,11 @@ abseil:compiler.cppstd=17
 
 [options]
 OrbitProfiler:with_gui=False
+ggp_sdk:extra_c_flags=$C_FLAGS
+ggp_sdk:extra_cxx_flags=$CXX_FLAGS
 
 [build_requires]
-ggp_sdk/1.43.0.14282@orbitdeps/stable
+ggp_sdk/1.43.0.14282@orbitdeps/stable#fd040bf6c348d57da36442df061faf4b
 
 [env]
-CFLAGS=$C_FLAGS
-CXXFLAGS=$CXX_FLAGS
 LDFLAGS=$LD_FLAGS
