@@ -13,12 +13,12 @@ const Color kThresholdColor(244, 67, 54, 255);
 }  // namespace
 
 void AnnotationTrack::DrawAnnotation(Batcher& batcher, TextRenderer& text_renderer,
-                                     TimeGraphLayout* layout, float track_right_margin, float z) {
+                                     TimeGraphLayout* layout, float z) {
   uint32_t font_size = GetAnnotationFontSize();
   Vec2 track_size = GetAnnotatedTrackSize();
   Vec2 track_pos = GetAnnotatedTrackPosition();
 
-  float content_right_x = track_pos[0] + track_size[0] - track_right_margin;
+  float content_right_x = track_pos[0] + track_size[0];
   float content_bottom_y = track_pos[1] - track_size[1] + layout->GetTrackBottomMargin();
   float content_height = GetAnnotatedTrackContentHeight();
 
