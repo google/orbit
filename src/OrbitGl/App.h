@@ -37,7 +37,6 @@
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
-#include "ClientData/TextBox.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
 #include "ClientModel/CaptureData.h"
@@ -428,9 +427,9 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] orbit_client_data::ThreadID selected_thread_id() const;
   void set_selected_thread_id(orbit_client_data::ThreadID thread_id);
 
-  [[nodiscard]] const orbit_client_data::TextBox* selected_text_box() const;
-  void SelectTextBox(const orbit_client_data::TextBox* text_box);
-  void DeselectTextBox();
+  [[nodiscard]] const orbit_client_protos::TimerInfo* selected_timer() const;
+  void SelectTimer(const orbit_client_protos::TimerInfo* timer_info);
+  void DeselectTimer();
 
   [[nodiscard]] uint64_t GetFunctionIdToHighlight() const;
 
@@ -467,8 +466,8 @@ class OrbitApp final : public DataViewFactory,
 
   [[nodiscard]] bool HasFrameTrackInCaptureData(uint64_t instrumented_function_id) const override;
 
-  enum class JumpToTextBoxMode { kFirst, kLast, kMin, kMax };
-  void JumpToTextBoxAndZoom(uint64_t function_id, JumpToTextBoxMode selection_mode);
+  enum class JumpToTimerMode { kFirst, kLast, kMin, kMax };
+  void JumpToTimerAndZoom(uint64_t function_id, JumpToTimerMode selection_mode);
 
  private:
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(

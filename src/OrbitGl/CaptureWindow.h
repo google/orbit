@@ -13,7 +13,6 @@
 
 #include "Batcher.h"
 #include "CaptureStats.h"
-#include "ClientData/TextBox.h"
 #include "GlCanvas.h"
 #include "GlSlider.h"
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
@@ -72,7 +71,7 @@ class CaptureWindow : public GlCanvas {
   void RenderHelpUi();
   void RenderTimeBar();
   void RenderSelectionOverlay();
-  void SelectTextBox(const orbit_client_data::TextBox* text_box);
+  void SelectTimer(const orbit_client_protos::TimerInfo* timer_info);
 
   void UpdateHorizontalScroll(float ratio);
   void UpdateVerticalScroll(float ratio);

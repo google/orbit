@@ -7,7 +7,6 @@
 #include <list>
 
 #include "CaptureStats.h"
-#include "ClientData/TextBox.h"
 #include "SchedulerTrack.h"
 #include "SchedulingStats.h"
 
@@ -18,7 +17,7 @@ TEST(CaptureStats, NullCaptureWindow) {
 }
 
 TEST(SchedulingStats, ZeroSchedulingScopes) {
-  std::vector<const orbit_client_data::TextBox*> scheduling_scopes;
+  std::vector<const orbit_client_protos::TimerInfo*> scheduling_scopes;
   SchedulingStats::ThreadNameProvider thread_name_provider = [](int32_t thread_id) {
     return std::to_string(thread_id);
   };
@@ -33,7 +32,8 @@ TEST(SchedulingStats, ZeroSchedulingScopes) {
 }
 
 TEST(SchedulingStats, SchedulingStats) {
-  std::list<orbit_client_data::TextBox> scope_buffer;  // Use a list as we need pointer stability.
+  std::list<orbit_client_protos::TimerInfo>
+      scope_buffer;  // Use a list as we need pointer stability.
   auto create_scope = [&scope_buffer](int32_t pid, int32_t tid, int32_t cpu, uint64_t start_ns,
                                       uint64_t end_ns) {
     orbit_client_protos::TimerInfo timer_info;
@@ -45,7 +45,7 @@ TEST(SchedulingStats, SchedulingStats) {
     return &scope_buffer.emplace_back(std::move(timer_info));
   };
 
-  std::vector<const orbit_client_data::TextBox*> scopes;
+  std::vector<const orbit_client_protos::TimerInfo*> scopes;
   SchedulingStats::ThreadNameProvider thread_name_provider = [](int32_t thread_id) {
     return std::to_string(thread_id);
   };

@@ -57,14 +57,14 @@ int32_t DataManager::selected_thread_id() const {
   return selected_thread_id_;
 }
 
-const orbit_client_data::TextBox* DataManager::selected_text_box() const {
+const orbit_client_protos::TimerInfo* DataManager::selected_timer() const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
-  return selected_text_box_;
+  return selected_timer_;
 }
 
-void DataManager::set_selected_text_box(const orbit_client_data::TextBox* text_box) {
+void DataManager::set_selected_timer(const orbit_client_protos::TimerInfo* timer_info) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
-  selected_text_box_ = text_box;
+  selected_timer_ = timer_info;
 }
 
 void DataManager::ClearSelectedFunctions() {

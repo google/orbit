@@ -12,7 +12,6 @@
 #include <string_view>
 
 #include "CallstackThreadBar.h"
-#include "ClientData/TextBox.h"
 #include "CoreMath.h"
 #include "GpuDebugMarkerTrack.h"
 #include "PickingManager.h"
@@ -45,10 +44,10 @@ class GpuSubmissionTrack : public TimerTrack {
   [[nodiscard]] std::string GetTooltip() const override;
   [[nodiscard]] float GetHeight() const override;
 
-  [[nodiscard]] const orbit_client_data::TextBox* GetLeft(
-      const orbit_client_data::TextBox* text_box) const override;
-  [[nodiscard]] const orbit_client_data::TextBox* GetRight(
-      const orbit_client_data::TextBox* text_box) const override;
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
+      const orbit_client_protos::TimerInfo& timer_info) const override;
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetRight(
+      const orbit_client_protos::TimerInfo& timer_info) const override;
 
   [[nodiscard]] float GetYFromTimer(
       const orbit_client_protos::TimerInfo& timer_info) const override;

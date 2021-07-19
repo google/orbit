@@ -43,20 +43,18 @@ AsyncTrack::AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph,
 }
 
 [[nodiscard]] std::string AsyncTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
-  const orbit_client_data::TextBox* text_box = batcher.GetTextBox(id);
-  if (text_box == nullptr) return "";
+  const TimerInfo* timer_info = batcher.GetTimerInfo(id);
+  if (timer_info == nullptr) return "";
   auto* manual_inst_manager = app_->GetManualInstrumentationManager();
-  TimerInfo timer_info = text_box->GetTimerInfo();
-  orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
+  orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(*timer_info);
 
   // The FunctionInfo here corresponds to one of the automatically instrumented empty stubs from
   // Orbit.h. Use it to retrieve the module from which the manually instrumented scope originated.
   const InstrumentedFunction* func =
-      capture_data_
-          ? capture_data_->GetInstrumentedFunctionById(text_box->GetTimerInfo().function_id())
-          : nullptr;
-  CHECK(func || timer_info.type() == TimerInfo::kIntrospection ||
-        timer_info.type() == TimerInfo::kApiEvent);
+      capture_data_ ? capture_data_->GetInstrumentedFunctionById(timer_info->function_id())
+                    : nullptr;
+  CHECK(func || timer_info->type() == TimerInfo::kIntrospection ||
+        timer_info->type() == TimerInfo::kApiEvent);
   std::string module_name =
       func != nullptr
           ? orbit_client_data::function_utils::GetLoadedModuleNameByPath(func->file_path())
@@ -72,7 +70,7 @@ AsyncTrack::AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph,
       "<b>Time:</b> %s",
       function_name, module_name,
       orbit_display_formats::GetDisplayTime(
-          TicksToDuration(text_box->GetTimerInfo().start(), text_box->GetTimerInfo().end())));
+          TicksToDuration(timer_info->start(), timer_info->end())));
 }
 
 void AsyncTrack::UpdateBoxHeight() {

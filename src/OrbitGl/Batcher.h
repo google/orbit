@@ -26,13 +26,13 @@
 using TooltipCallback = std::function<std::string(PickingId)>;
 
 struct PickingUserData {
-  const orbit_client_data::TextBox* text_box_;
+  const orbit_client_protos::TimerInfo* timer_info_;
   TooltipCallback generate_tooltip_;
   const void* custom_data_ = nullptr;
 
-  explicit PickingUserData(const orbit_client_data::TextBox* text_box = nullptr,
+  explicit PickingUserData(const orbit_client_protos::TimerInfo* timer_info = nullptr,
                            TooltipCallback generate_tooltip = nullptr)
-      : text_box_(text_box), generate_tooltip_(std::move(generate_tooltip)) {}
+      : timer_info_(timer_info), generate_tooltip_(std::move(generate_tooltip)) {}
 };
 
 struct LineBuffer {
@@ -171,7 +171,7 @@ class Batcher {
   [[nodiscard]] const PickingUserData* GetUserData(PickingId id) const;
   [[nodiscard]] PickingUserData* GetUserData(PickingId id);
 
-  [[nodiscard]] const orbit_client_data::TextBox* GetTextBox(PickingId id) const;
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetTimerInfo(PickingId id) const;
 
   static constexpr uint32_t kNumArcSides = 16;
 

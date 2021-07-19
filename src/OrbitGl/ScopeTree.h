@@ -40,8 +40,8 @@ class ScopeNode {
     return *children_by_start_time_;
   }
 
-  [[nodiscard]] uint64_t Start() const { return scope_->Start(); }
-  [[nodiscard]] uint64_t End() const { return scope_->End(); }
+  [[nodiscard]] uint64_t Start() const { return scope_->start(); }
+  [[nodiscard]] uint64_t End() const { return scope_->end(); }
   [[nodiscard]] uint32_t Height() const;
   [[nodiscard]] uint32_t Depth() const { return depth_; }
   [[nodiscard]] size_t CountNodesInSubtree() const;
@@ -155,9 +155,9 @@ std::string ScopeTree<ScopeT>::ToString() const {
 
 template <typename ScopeT>
 void ScopeNode<ScopeT>::ToString(const ScopeNode* node, std::string* str, uint32_t depth) {
-  absl::StrAppend(str, absl::StrFormat("d%u %s ScopeNode(%p) [%lu, %lu]\n", node->Depth(),
-                                       std::string(depth, ' '), node->scope_, node->scope_->Start(),
-                                       node->scope_->End()));
+  absl::StrAppend(
+      str, absl::StrFormat("d%u %s ScopeNode(%p) [%lu, %lu]\n", node->Depth(),
+                           std::string(depth, ' '), node->scope_, node->Start(), node->End()));
   for (auto& [unused_time, child_node] : node->GetChildrenByStartTime()) {
     ToString(child_node, str, depth + 1);
   }

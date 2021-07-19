@@ -32,13 +32,9 @@ class TimerInfosIterator {
 
   TimerInfosIterator& operator++();
 
-  const orbit_client_protos::TimerInfo& operator*() const {
-    return (*blocks_it_)[timer_index_].GetTimerInfo();
-  }
+  const orbit_client_protos::TimerInfo& operator*() const { return (*blocks_it_)[timer_index_]; }
 
-  const orbit_client_protos::TimerInfo* operator->() const {
-    return &(*blocks_it_)[timer_index_].GetTimerInfo();
-  }
+  const orbit_client_protos::TimerInfo* operator->() const { return &(*blocks_it_)[timer_index_]; }
 
   bool operator==(const TimerInfosIterator& other) const {
     return chains_it_ == other.chains_it_ && blocks_it_ == other.blocks_it_ &&
