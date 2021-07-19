@@ -28,14 +28,16 @@ orbit_client_data::TimerChain::~TimerChain() {
 }
 
 orbit_client_data::TimerBlock* orbit_client_data::TimerChain::GetBlockContaining(
-    const orbit_client_data::TextBox* element) const {
+    const orbit_client_protos::TimerInfo& element) const {
   orbit_client_data::TimerBlock* block = root_;
   while (block != nullptr) {
     uint32_t size = block->size();
     if (size != 0) {
-      orbit_client_data::TextBox* begin = &block->data_[0];
-      orbit_client_data::TextBox* end = &block->data_[size - 1];
-      if (begin <= element && end >= element) {
+      const orbit_client_protos::TimerInfo* begin = &block->data_[0];
+      const orbit_client_protos::TimerInfo* end = &block->data_[size - 1];
+      // TODO (http://b/194268700): Don't compare pointers in TimerChain as it is an undefined
+      // behavior
+      if (begin <= &element && end >= &element) {
         return block;
       }
     }
@@ -45,12 +47,12 @@ orbit_client_data::TimerBlock* orbit_client_data::TimerChain::GetBlockContaining
   return nullptr;
 }
 
-orbit_client_data::TextBox* orbit_client_data::TimerChain::GetElementAfter(
-    const orbit_client_data::TextBox* element) const {
+orbit_client_protos::TimerInfo* orbit_client_data::TimerChain::GetElementAfter(
+    const orbit_client_protos::TimerInfo& element) const {
   orbit_client_data::TimerBlock* block = GetBlockContaining(element);
   if (block != nullptr) {
-    orbit_client_data::TextBox* begin = &block->data_[0];
-    uint32_t index = element - begin;
+    orbit_client_protos::TimerInfo* begin = &block->data_[0];
+    uint32_t index = &element - begin;
     if (index < block->size() - 1) {
       return &block->data_[++index];
     }
@@ -61,12 +63,12 @@ orbit_client_data::TextBox* orbit_client_data::TimerChain::GetElementAfter(
   return nullptr;
 }
 
-orbit_client_data::TextBox* orbit_client_data::TimerChain::GetElementBefore(
-    const orbit_client_data::TextBox* element) const {
+orbit_client_protos::TimerInfo* orbit_client_data::TimerChain::GetElementBefore(
+    const orbit_client_protos::TimerInfo& element) const {
   orbit_client_data::TimerBlock* block = GetBlockContaining(element);
   if (block != nullptr) {
-    orbit_client_data::TextBox* begin = &block->data_[0];
-    uint32_t index = element - begin;
+    orbit_client_protos::TimerInfo* begin = &block->data_[0];
+    uint32_t index = &element - begin;
     if (index > 0) {
       return &block->data_[--index];
     }

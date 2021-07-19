@@ -178,47 +178,42 @@ float GpuSubmissionTrack::GetHeight() const {
          (num_gaps * layout_->GetSpaceBetweenGpuDepths()) + layout_->GetTrackBottomMargin();
 }
 
-const orbit_client_data::TextBox* GpuSubmissionTrack::GetLeft(
-    const orbit_client_data::TextBox* text_box) const {
-  const TimerInfo& timer_info = text_box->GetTimerInfo();
+const TimerInfo* GpuSubmissionTrack::GetLeft(const TimerInfo& timer_info) const {
   uint64_t timeline_hash = timer_info.user_data_key();
   if (timeline_hash == timeline_hash_) {
     orbit_client_data::TimerChain* chain = track_data_->GetChain(timer_info.depth());
-    if (chain != nullptr) return chain->GetElementBefore(text_box);
+    if (chain != nullptr) return chain->GetElementBefore(timer_info);
   }
   return nullptr;
 }
 
-const orbit_client_data::TextBox* GpuSubmissionTrack::GetRight(
-    const orbit_client_data::TextBox* text_box) const {
-  const TimerInfo& timer_info = text_box->GetTimerInfo();
+const TimerInfo* GpuSubmissionTrack::GetRight(const TimerInfo& timer_info) const {
   uint64_t timeline_hash = timer_info.user_data_key();
   if (timeline_hash == timeline_hash_) {
     orbit_client_data::TimerChain* chain = track_data_->GetChain(timer_info.depth());
-    if (chain != nullptr) return chain->GetElementAfter(text_box);
+    if (chain != nullptr) return chain->GetElementAfter(timer_info);
   }
   return nullptr;
 }
 
 std::string GpuSubmissionTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
-  const orbit_client_data::TextBox* text_box = batcher.GetTextBox(id);
-  if ((text_box == nullptr) || text_box->GetTimerInfo().type() == TimerInfo::kCoreActivity) {
+  const TimerInfo* timer_info = batcher.GetTimerInfo(id);
+  if ((timer_info == nullptr) || timer_info->type() == TimerInfo::kCoreActivity) {
     return "";
   }
 
-  std::string gpu_stage =
-      string_manager_->Get(text_box->GetTimerInfo().user_data_key()).value_or("");
+  std::string gpu_stage = string_manager_->Get(timer_info->user_data_key()).value_or("");
   if (gpu_stage == kSwQueueString) {
-    return GetSwQueueTooltip(text_box->GetTimerInfo());
+    return GetSwQueueTooltip(*timer_info);
   }
   if (gpu_stage == kHwQueueString) {
-    return GetHwQueueTooltip(text_box->GetTimerInfo());
+    return GetHwQueueTooltip(*timer_info);
   }
   if (gpu_stage == kHwExecutionString) {
-    return GetHwExecutionTooltip(text_box->GetTimerInfo());
+    return GetHwExecutionTooltip(*timer_info);
   }
   if (gpu_stage == kCmdBufferString) {
-    return GetCommandBufferTooltip(text_box->GetTimerInfo());
+    return GetCommandBufferTooltip(*timer_info);
   }
 
   return "";

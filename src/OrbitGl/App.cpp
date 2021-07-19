@@ -43,7 +43,6 @@
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
-#include "ClientData/TextBox.h"
 #include "ClientData/TimerChain.h"
 #include "ClientData/UserDefinedCaptureData.h"
 #include "ClientModel/CaptureDeserializer.h"
@@ -1443,7 +1442,7 @@ void OrbitApp::ClearCapture() {
   string_manager_.Clear();
 
   set_selected_thread_id(orbit_base::kAllProcessThreadsTid);
-  SelectTextBox(nullptr);
+  SelectTimer(nullptr);
 
   UpdateAfterCaptureCleared();
 
@@ -2246,13 +2245,12 @@ void OrbitApp::set_selected_thread_id(ThreadID thread_id) {
   return data_manager_->set_selected_thread_id(thread_id);
 }
 
-const orbit_client_data::TextBox* OrbitApp::selected_text_box() const {
-  return data_manager_->selected_text_box();
+const orbit_client_protos::TimerInfo* OrbitApp::selected_timer() const {
+  return data_manager_->selected_timer();
 }
 
-void OrbitApp::SelectTextBox(const orbit_client_data::TextBox* text_box) {
-  data_manager_->set_selected_text_box(text_box);
-  const TimerInfo* timer_info = text_box ? &text_box->GetTimerInfo() : nullptr;
+void OrbitApp::SelectTimer(const orbit_client_protos::TimerInfo* timer_info) {
+  data_manager_->set_selected_timer(timer_info);
   uint64_t function_id =
       timer_info ? timer_info->function_id() : orbit_grpc_protos::kInvalidFunctionId;
   data_manager_->set_highlighted_function_id(function_id);
@@ -2261,17 +2259,16 @@ void OrbitApp::SelectTextBox(const orbit_client_data::TextBox* text_box) {
   RequestUpdatePrimitives();
 }
 
-void OrbitApp::DeselectTextBox() {
-  data_manager_->set_selected_text_box(nullptr);
+void OrbitApp::DeselectTimer() {
+  data_manager_->set_selected_timer(nullptr);
   RequestUpdatePrimitives();
 }
 
 uint64_t OrbitApp::GetFunctionIdToHighlight() const {
-  const orbit_client_data::TextBox* selected_textbox = selected_text_box();
-  const TimerInfo* selected_timer_info =
-      selected_textbox ? &selected_textbox->GetTimerInfo() : nullptr;
+  const orbit_client_protos::TimerInfo* timer_info = selected_timer();
+
   uint64_t selected_function_id =
-      selected_timer_info ? selected_timer_info->function_id() : highlighted_function_id();
+      timer_info ? timer_info->function_id() : highlighted_function_id();
 
   // Highlighting of manually instrumented scopes is not yet supported.
   const InstrumentedFunction* function = GetInstrumentedFunction(selected_function_id);
@@ -2553,30 +2550,30 @@ bool OrbitApp::HasFrameTrackInCaptureData(uint64_t instrumented_function_id) con
   return GetTimeGraph()->HasFrameTrack(instrumented_function_id);
 }
 
-void OrbitApp::JumpToTextBoxAndZoom(uint64_t function_id, JumpToTextBoxMode selection_mode) {
+void OrbitApp::JumpToTimerAndZoom(uint64_t function_id, JumpToTimerMode selection_mode) {
   switch (selection_mode) {
-    case JumpToTextBoxMode::kFirst: {
-      const auto* first_box = GetMutableTimeGraph()->FindNextFunctionCall(
+    case JumpToTimerMode::kFirst: {
+      const auto* first_timer = GetMutableTimeGraph()->FindNextFunctionCall(
           function_id, std::numeric_limits<uint64_t>::lowest());
-      if (first_box != nullptr) GetMutableTimeGraph()->SelectAndZoom(first_box);
+      if (first_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(first_timer);
       break;
     }
-    case JumpToTextBoxMode::kLast: {
-      const auto* last_box = GetMutableTimeGraph()->FindPreviousFunctionCall(
+    case JumpToTimerMode::kLast: {
+      const auto* last_timer = GetMutableTimeGraph()->FindPreviousFunctionCall(
           function_id, std::numeric_limits<uint64_t>::max());
-      if (last_box != nullptr) GetMutableTimeGraph()->SelectAndZoom(last_box);
+      if (last_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(last_timer);
       break;
     }
-    case JumpToTextBoxMode::kMin: {
-      auto [min_box, unused_max_box] =
-          GetMutableTimeGraph()->GetMinMaxTextBoxForFunction(function_id);
-      if (min_box != nullptr) GetMutableTimeGraph()->SelectAndZoom(min_box);
+    case JumpToTimerMode::kMin: {
+      auto [min_timer, unused_max_timer] =
+          GetMutableTimeGraph()->GetMinMaxTimerInfoForFunction(function_id);
+      if (min_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(min_timer);
       break;
     }
-    case JumpToTextBoxMode::kMax: {
-      auto [unused_min_box, max_box] =
-          GetMutableTimeGraph()->GetMinMaxTextBoxForFunction(function_id);
-      if (max_box != nullptr) GetMutableTimeGraph()->SelectAndZoom(max_box);
+    case JumpToTimerMode::kMax: {
+      auto [unused_min_timer, max_timer] =
+          GetMutableTimeGraph()->GetMinMaxTimerInfoForFunction(function_id);
+      if (max_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(max_timer);
       break;
     }
   }
@@ -2608,9 +2605,9 @@ void OrbitApp::AddFrameTrackTimers(uint64_t instrumented_function_id) {
     CHECK(chain != nullptr);
     for (const orbit_client_data::TimerBlock& block : *chain) {
       for (uint64_t i = 0; i < block.size(); ++i) {
-        const orbit_client_data::TextBox& box = block[i];
-        if (box.GetTimerInfo().function_id() == instrumented_function_id) {
-          all_start_times.push_back(box.GetTimerInfo().start());
+        const orbit_client_protos::TimerInfo& timer_info = block[i];
+        if (timer_info.function_id() == instrumented_function_id) {
+          all_start_times.push_back(timer_info.start());
         }
       }
     }

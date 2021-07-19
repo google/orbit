@@ -21,7 +21,6 @@
 #include "CGroupAndProcessMemoryTrack.h"
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "ClientData/FunctionUtils.h"
-#include "ClientData/TextBox.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "FrameTrack.h"
 #include "Geometry.h"
@@ -488,7 +487,7 @@ void TimeGraph::ProcessAsyncTimer(const std::string& track_name, const TimerInfo
   track->OnTimer(timer_info);
 }
 
-std::vector<orbit_client_data::TimerChain*> TimeGraph::GetAllThreadTrackTimerChains() {
+std::vector<orbit_client_data::TimerChain*> TimeGraph::GetAllThreadTrackTimerChains() const {
   std::vector<orbit_client_data::TimerChain*> chains;
   for (const auto& track : track_manager_->GetThreadTracks()) {
     orbit_base::Append(chains, track->GetChains());
@@ -527,62 +526,62 @@ uint64_t TimeGraph::GetTickFromUs(double micros) const {
   return capture_min_timestamp_ + nanos;
 }
 
-// Select a text_box. Also move the view in order to assure that the text_box and its track are
+// Select a timer_info. Also move the view in order to assure that the timer_info and its track are
 // visible.
-void TimeGraph::SelectAndMakeVisible(const orbit_client_data::TextBox* text_box) {
-  CHECK(text_box != nullptr);
-  app_->SelectTextBox(text_box);
-  const TimerInfo& timer_info = text_box->GetTimerInfo();
-  HorizontallyMoveIntoView(VisibilityType::kPartlyVisible, timer_info);
-  VerticallyMoveIntoView(timer_info);
+void TimeGraph::SelectAndMakeVisible(const TimerInfo* timer_info) {
+  CHECK(timer_info != nullptr);
+  app_->SelectTimer(timer_info);
+  HorizontallyMoveIntoView(VisibilityType::kPartlyVisible, *timer_info);
+  VerticallyMoveIntoView(*timer_info);
 }
 
-const orbit_client_data::TextBox* TimeGraph::FindPreviousFunctionCall(
-    uint64_t function_id, uint64_t current_time, std::optional<int32_t> thread_id) {
-  const orbit_client_data::TextBox* previous_box = nullptr;
-  uint64_t previous_box_time = std::numeric_limits<uint64_t>::lowest();
+const TimerInfo* TimeGraph::FindPreviousFunctionCall(uint64_t function_address,
+                                                     uint64_t current_time,
+                                                     std::optional<int32_t> thread_id) {
+  const orbit_client_protos::TimerInfo* previous_timer = nullptr;
+  uint64_t goal_time = std::numeric_limits<uint64_t>::lowest();
   std::vector<orbit_client_data::TimerChain*> chains = GetAllThreadTrackTimerChains();
   for (auto& chain : chains) {
     if (!chain) continue;
     for (const auto& block : *chain) {
-      if (!block.Intersects(previous_box_time, current_time)) continue;
+      if (!block.Intersects(goal_time, current_time)) continue;
       for (uint64_t i = 0; i < block.size(); i++) {
-        const orbit_client_data::TextBox& box = block[i];
-        auto box_time = box.GetTimerInfo().end();
-        if ((box.GetTimerInfo().function_id() == function_id) &&
-            (!thread_id || thread_id.value() == box.GetTimerInfo().thread_id()) &&
-            (box_time < current_time) && (previous_box_time < box_time)) {
-          previous_box = &box;
-          previous_box_time = box_time;
+        const orbit_client_protos::TimerInfo& timer_info = block[i];
+        auto timer_end_time = timer_info.end();
+        if ((timer_info.function_id() == function_address) &&
+            (!thread_id || thread_id.value() == timer_info.thread_id()) &&
+            (timer_end_time < current_time) && (goal_time < timer_end_time)) {
+          previous_timer = &timer_info;
+          goal_time = timer_end_time;
         }
       }
     }
   }
-  return previous_box;
+  return previous_timer;
 }
 
-const orbit_client_data::TextBox* TimeGraph::FindNextFunctionCall(
-    uint64_t function_id, uint64_t current_time, std::optional<int32_t> thread_id) {
-  const orbit_client_data::TextBox* next_box = nullptr;
-  uint64_t next_box_time = std::numeric_limits<uint64_t>::max();
+const TimerInfo* TimeGraph::FindNextFunctionCall(uint64_t function_address, uint64_t current_time,
+                                                 std::optional<int32_t> thread_id) {
+  const orbit_client_protos::TimerInfo* next_timer = nullptr;
+  uint64_t goal_time = std::numeric_limits<uint64_t>::max();
   std::vector<orbit_client_data::TimerChain*> chains = GetAllThreadTrackTimerChains();
   for (auto& chain : chains) {
     CHECK(chain != nullptr);
     for (const auto& block : *chain) {
-      if (!block.Intersects(current_time, next_box_time)) continue;
+      if (!block.Intersects(current_time, goal_time)) continue;
       for (uint64_t i = 0; i < block.size(); i++) {
-        const orbit_client_data::TextBox& box = block[i];
-        auto box_time = box.GetTimerInfo().end();
-        if ((box.GetTimerInfo().function_id() == function_id) &&
-            (!thread_id || thread_id.value() == box.GetTimerInfo().thread_id()) &&
-            (box_time > current_time) && (next_box_time > box_time)) {
-          next_box = &box;
-          next_box_time = box_time;
+        const orbit_client_protos::TimerInfo& timer_info = block[i];
+        auto timer_end_time = timer_info.end();
+        if ((timer_info.function_id() == function_address) &&
+            (!thread_id || thread_id.value() == timer_info.thread_id()) &&
+            (timer_end_time > current_time) && (goal_time > timer_end_time)) {
+          next_timer = &timer_info;
+          goal_time = timer_end_time;
         }
       }
     }
   }
-  return next_box;
+  return next_timer;
 }
 
 void TimeGraph::RequestUpdate() {
@@ -717,25 +716,25 @@ void TimeGraph::DrawIteratorBox(Batcher& batcher, TextRenderer& text_renderer, V
 
 void TimeGraph::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
                             PickingMode picking_mode) {
-  if (picking_mode != PickingMode::kNone || iterator_text_boxes_.empty()) {
+  if (picking_mode != PickingMode::kNone || iterator_timer_info_.empty()) {
     return;
   }
 
-  std::vector<std::pair<uint64_t, const orbit_client_data::TextBox*>> boxes(
-      iterator_text_boxes_.size());
-  std::copy(iterator_text_boxes_.begin(), iterator_text_boxes_.end(), boxes.begin());
+  std::vector<std::pair<uint64_t, const orbit_client_protos::TimerInfo*>> timers(
+      iterator_timer_info_.size());
+  std::copy(iterator_timer_info_.begin(), iterator_timer_info_.end(), timers.begin());
 
-  // Sort boxes by start time.
-  std::sort(boxes.begin(), boxes.end(),
-            [](const std::pair<uint64_t, const orbit_client_data::TextBox*>& box_a,
-               const std::pair<uint64_t, const orbit_client_data::TextBox*>& box_b) -> bool {
-              return box_a.second->GetTimerInfo().start() < box_b.second->GetTimerInfo().start();
+  // Sort timers by start time.
+  std::sort(timers.begin(), timers.end(),
+            [](const std::pair<uint64_t, const orbit_client_protos::TimerInfo*>& timer_a,
+               const std::pair<uint64_t, const orbit_client_protos::TimerInfo*>& timer_b) -> bool {
+              return timer_a.second->start() < timer_b.second->start();
             });
 
   // We will need the world x coordinates for the timers multiple times, so
   // we avoid recomputing them and just cache them here.
   std::vector<float> x_coords;
-  x_coords.reserve(boxes.size());
+  x_coords.reserve(timers.size());
 
   float world_start_x = viewport_->GetWorldTopLeft()[0];
   float world_width = viewport_->GetVisibleWorldWidth();
@@ -746,10 +745,10 @@ void TimeGraph::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
   double inv_time_window = 1.0 / GetTimeWindowUs();
 
   // Draw lines for iterators.
-  for (const auto& box : boxes) {
-    const TimerInfo& timer_info = box.second->GetTimerInfo();
+  for (const auto& box : timers) {
+    const TimerInfo* timer_info = box.second;
 
-    double start_us = GetUsFromTick(timer_info.start());
+    double start_us = GetUsFromTick(timer_info->start());
     double normalized_start = start_us * inv_time_window;
     auto world_timer_x = static_cast<float>(world_start_x + normalized_start * world_width);
 
@@ -757,18 +756,18 @@ void TimeGraph::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
     x_coords.push_back(pos[0]);
 
     batcher.AddVerticalLine(pos, -world_height, GlCanvas::kZValueOverlay,
-                            GetThreadColor(timer_info.thread_id()));
+                            GetThreadColor(timer_info->thread_id()));
   }
 
-  // Draw boxes with timings between iterators.
-  for (size_t k = 1; k < boxes.size(); ++k) {
+  // Draw timers with timings between iterators.
+  for (size_t k = 1; k < timers.size(); ++k) {
     Vec2 pos(x_coords[k - 1], world_start_y - world_height);
     float size_x = x_coords[k] - pos[0];
     Vec2 size(size_x, world_height);
     Color color = GetIteratorBoxColor(k - 1);
 
-    uint64_t id_a = boxes[k - 1].first;
-    uint64_t id_b = boxes[k].first;
+    uint64_t id_a = timers[k - 1].first;
+    uint64_t id_b = timers[k].first;
     CHECK(iterator_id_to_function_id_.find(id_a) != iterator_id_to_function_id_.end());
     CHECK(iterator_id_to_function_id_.find(id_b) != iterator_id_to_function_id_.end());
     uint64_t function_a_id = iterator_id_to_function_id_.at(id_a);
@@ -781,8 +780,7 @@ void TimeGraph::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
     CHECK(function_a != nullptr);
     CHECK(function_b != nullptr);
     const std::string& label = GetLabelBetweenIterators(*function_a, *function_b);
-    const std::string& time =
-        GetTimeString(boxes[k - 1].second->GetTimerInfo(), boxes[k].second->GetTimerInfo());
+    const std::string& time = GetTimeString(*timers[k - 1].second, *timers[k].second);
 
     // Distance from the bottom where we don't want to draw.
     float bottom_margin = layout_.GetBottomMargin();
@@ -792,7 +790,7 @@ void TimeGraph::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
     // the box showing the overall time (see below) is at pos[1] + (world_height
     // / 2.f), corresponding to the case k == 0 in the formula for 'text_y'.
     float height_per_text = ((world_height / 2.f) - bottom_margin) /
-                            static_cast<float>(iterator_text_boxes_.size() - 1);
+                            static_cast<float>(iterator_timer_info_.size() - 1);
     float text_y = pos[1] + (world_height / 2.f) - static_cast<float>(k) * height_per_text;
 
     DrawIteratorBox(batcher, text_renderer, pos, size, color, label, time, text_y);
@@ -800,15 +798,14 @@ void TimeGraph::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
 
   // When we have at least 3 boxes, we also draw the total time from the first
   // to the last iterator.
-  if (boxes.size() > 2) {
-    size_t last_index = boxes.size() - 1;
+  if (timers.size() > 2) {
+    size_t last_index = timers.size() - 1;
 
     Vec2 pos(x_coords[0], world_start_y - world_height);
     float size_x = x_coords[last_index] - pos[0];
     Vec2 size(size_x, world_height);
 
-    std::string time =
-        GetTimeString(boxes[0].second->GetTimerInfo(), boxes[last_index].second->GetTimerInfo());
+    std::string time = GetTimeString(*timers[0].second, *timers[last_index].second);
     std::string label("Total");
 
     float text_y = pos[1] + (world_height / 2.f);
@@ -902,25 +899,26 @@ void TimeGraph::SetThreadFilter(const std::string& filter) {
   RequestUpdate();
 }
 
-void TimeGraph::SelectAndZoom(const orbit_client_data::TextBox* text_box) {
-  CHECK(text_box);
-  Zoom(text_box->GetTimerInfo());
-  SelectAndMakeVisible(text_box);
+void TimeGraph::SelectAndZoom(const TimerInfo* timer_info) {
+  CHECK(timer_info);
+  Zoom(*timer_info);
+  SelectAndMakeVisible(timer_info);
 }
 
-void TimeGraph::JumpToNeighborBox(const orbit_client_data::TextBox* from,
-                                  JumpDirection jump_direction, JumpScope jump_scope) {
-  const orbit_client_data::TextBox* goal = nullptr;
+void TimeGraph::JumpToNeighborTimer(const TimerInfo* from, JumpDirection jump_direction,
+                                    JumpScope jump_scope) {
+  // We will assume that jumping makes sense if from isn't nullptr.
   if (from == nullptr) {
     return;
   }
-  auto function_id = from->GetTimerInfo().function_id();
-  auto current_time = from->GetTimerInfo().end();
-  auto thread_id = from->GetTimerInfo().thread_id();
+  const orbit_client_protos::TimerInfo* goal = nullptr;
+  auto function_id = from->function_id();
+  auto current_time = from->end();
+  auto thread_id = from->thread_id();
   if (jump_direction == JumpDirection::kPrevious) {
     switch (jump_scope) {
       case JumpScope::kSameDepth:
-        goal = FindPrevious(from);
+        goal = FindPrevious(*from);
         break;
       case JumpScope::kSameFunction:
         goal = FindPreviousFunctionCall(function_id, current_time);
@@ -936,7 +934,7 @@ void TimeGraph::JumpToNeighborBox(const orbit_client_data::TextBox* from,
   if (jump_direction == JumpDirection::kNext) {
     switch (jump_scope) {
       case JumpScope::kSameDepth:
-        goal = FindNext(from);
+        goal = FindNext(*from);
         break;
       case JumpScope::kSameFunction:
         goal = FindNextFunctionCall(function_id, current_time);
@@ -949,10 +947,10 @@ void TimeGraph::JumpToNeighborBox(const orbit_client_data::TextBox* from,
     }
   }
   if (jump_direction == JumpDirection::kTop) {
-    goal = FindTop(from);
+    goal = FindTop(*from);
   }
   if (jump_direction == JumpDirection::kDown) {
-    goal = FindDown(from);
+    goal = FindDown(*from);
   }
   if (goal != nullptr) {
     SelectAndMakeVisible(goal);
@@ -968,67 +966,57 @@ void TimeGraph::UpdateRightMargin(float margin) {
   }
 }
 
-const orbit_client_data::TextBox* TimeGraph::FindPrevious(const orbit_client_data::TextBox* from) {
-  CHECK(from);
-  const TimerInfo& timer_info = from->GetTimerInfo();
-  if (timer_info.type() == TimerInfo::kGpuActivity) {
-    return track_manager_->GetOrCreateGpuTrack(timer_info.timeline_hash())->GetLeft(from);
+const TimerInfo* TimeGraph::FindPrevious(const TimerInfo& from) {
+  if (from.type() == TimerInfo::kGpuActivity) {
+    return track_manager_->GetOrCreateGpuTrack(from.timeline_hash())->GetLeft(from);
   }
-  return track_manager_->GetOrCreateThreadTrack(timer_info.thread_id())->GetLeft(from);
+  return track_manager_->GetOrCreateThreadTrack(from.thread_id())->GetLeft(from);
 }
 
-const orbit_client_data::TextBox* TimeGraph::FindNext(const orbit_client_data::TextBox* from) {
-  CHECK(from);
-  const TimerInfo& timer_info = from->GetTimerInfo();
-  if (timer_info.type() == TimerInfo::kGpuActivity) {
-    return track_manager_->GetOrCreateGpuTrack(timer_info.timeline_hash())->GetRight(from);
+const TimerInfo* TimeGraph::FindNext(const TimerInfo& from) {
+  if (from.type() == TimerInfo::kGpuActivity) {
+    return track_manager_->GetOrCreateGpuTrack(from.timeline_hash())->GetRight(from);
   }
-  return track_manager_->GetOrCreateThreadTrack(timer_info.thread_id())->GetRight(from);
+  return track_manager_->GetOrCreateThreadTrack(from.thread_id())->GetRight(from);
 }
 
-const orbit_client_data::TextBox* TimeGraph::FindTop(const orbit_client_data::TextBox* from) {
-  CHECK(from);
-  const TimerInfo& timer_info = from->GetTimerInfo();
-  if (timer_info.type() == TimerInfo::kGpuActivity) {
-    return track_manager_->GetOrCreateGpuTrack(timer_info.timeline_hash())->GetUp(from);
+const TimerInfo* TimeGraph::FindTop(const TimerInfo& from) {
+  if (from.type() == TimerInfo::kGpuActivity) {
+    return track_manager_->GetOrCreateGpuTrack(from.timeline_hash())->GetUp(from);
   }
-  return track_manager_->GetOrCreateThreadTrack(timer_info.thread_id())->GetUp(from);
+  return track_manager_->GetOrCreateThreadTrack(from.thread_id())->GetUp(from);
 }
 
-const orbit_client_data::TextBox* TimeGraph::FindDown(const orbit_client_data::TextBox* from) {
-  CHECK(from);
-  const TimerInfo& timer_info = from->GetTimerInfo();
-  if (timer_info.type() == TimerInfo::kGpuActivity) {
-    return track_manager_->GetOrCreateGpuTrack(timer_info.timeline_hash())->GetDown(from);
+const TimerInfo* TimeGraph::FindDown(const TimerInfo& from) {
+  if (from.type() == TimerInfo::kGpuActivity) {
+    return track_manager_->GetOrCreateGpuTrack(from.timeline_hash())->GetDown(from);
   }
-  return track_manager_->GetOrCreateThreadTrack(timer_info.thread_id())->GetDown(from);
+  return track_manager_->GetOrCreateThreadTrack(from.thread_id())->GetDown(from);
 }
 
-std::pair<const orbit_client_data::TextBox*, const orbit_client_data::TextBox*>
-TimeGraph::GetMinMaxTextBoxForFunction(uint64_t function_id) {
-  const orbit_client_data::TextBox* min_box = nullptr;
-  const orbit_client_data::TextBox* max_box = nullptr;
+std::pair<const orbit_client_protos::TimerInfo*, const orbit_client_protos::TimerInfo*>
+TimeGraph::GetMinMaxTimerInfoForFunction(uint64_t function_id) {
+  const orbit_client_protos::TimerInfo* min_timer = nullptr;
+  const orbit_client_protos::TimerInfo* max_timer = nullptr;
   std::vector<orbit_client_data::TimerChain*> chains = GetAllThreadTrackTimerChains();
   for (auto& chain : chains) {
     CHECK(chain);
     for (auto& block : *chain) {
       for (size_t i = 0; i < block.size(); i++) {
-        const orbit_client_data::TextBox& box = block[i];
-        if (box.GetTimerInfo().function_id() != function_id) continue;
+        const orbit_client_protos::TimerInfo& timer_info = block[i];
+        if (timer_info.function_id() != function_id) continue;
 
-        uint64_t elapsed_nanos = box.GetTimerInfo().end() - box.GetTimerInfo().start();
-        if (min_box == nullptr ||
-            elapsed_nanos < (min_box->GetTimerInfo().end() - min_box->GetTimerInfo().start())) {
-          min_box = &box;
+        uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
+        if (min_timer == nullptr || elapsed_nanos < (min_timer->end() - min_timer->start())) {
+          min_timer = &timer_info;
         }
-        if (max_box == nullptr ||
-            elapsed_nanos > (max_box->GetTimerInfo().end() - max_box->GetTimerInfo().start())) {
-          max_box = &box;
+        if (max_timer == nullptr || elapsed_nanos > (max_timer->end() - max_timer->start())) {
+          max_timer = &timer_info;
         }
       }
     }
   }
-  return std::make_pair(min_box, max_box);
+  return std::make_pair(min_timer, max_timer);
 }
 
 void TimeGraph::DrawText(float layer) {

@@ -190,60 +190,53 @@ std::string GpuTrack::GetTooltip() const {
          "submissions and debug markers";
 }
 
-const orbit_client_data::TextBox* GpuTrack::GetLeft(
-    const orbit_client_data::TextBox* textbox) const {
-  const TimerInfo& timer_info = textbox->GetTimerInfo();
+const TimerInfo* GpuTrack::GetLeft(const TimerInfo& timer_info) const {
   switch (timer_info.type()) {
     case TimerInfo::kGpuActivity:
       [[fallthrough]];
     case TimerInfo::kGpuCommandBuffer:
-      return submission_track_->GetLeft(textbox);
+      return submission_track_->GetLeft(timer_info);
     case TimerInfo::kGpuDebugMarker:
-      return marker_track_->GetLeft(textbox);
+      return marker_track_->GetLeft(timer_info);
     default:
       UNREACHABLE();
   }
 }
 
-const orbit_client_data::TextBox* GpuTrack::GetRight(
-    const orbit_client_data::TextBox* textbox) const {
-  const TimerInfo& timer_info = textbox->GetTimerInfo();
+const TimerInfo* GpuTrack::GetRight(const TimerInfo& timer_info) const {
   switch (timer_info.type()) {
     case TimerInfo::kGpuActivity:
       [[fallthrough]];
     case TimerInfo::kGpuCommandBuffer:
-      return submission_track_->GetRight(textbox);
+      return submission_track_->GetRight(timer_info);
     case TimerInfo::kGpuDebugMarker:
-      return marker_track_->GetRight(textbox);
+      return marker_track_->GetRight(timer_info);
     default:
       UNREACHABLE();
   }
 }
 
-const orbit_client_data::TextBox* GpuTrack::GetUp(const orbit_client_data::TextBox* textbox) const {
-  const TimerInfo& timer_info = textbox->GetTimerInfo();
+const TimerInfo* GpuTrack::GetUp(const TimerInfo& timer_info) const {
   switch (timer_info.type()) {
     case TimerInfo::kGpuActivity:
       [[fallthrough]];
     case TimerInfo::kGpuCommandBuffer:
-      return submission_track_->GetUp(textbox);
+      return submission_track_->GetUp(timer_info);
     case TimerInfo::kGpuDebugMarker:
-      return marker_track_->GetUp(textbox);
+      return marker_track_->GetUp(timer_info);
     default:
       UNREACHABLE();
   }
 }
 
-const orbit_client_data::TextBox* GpuTrack::GetDown(
-    const orbit_client_data::TextBox* textbox) const {
-  const TimerInfo& timer_info = textbox->GetTimerInfo();
+const TimerInfo* GpuTrack::GetDown(const TimerInfo& timer_info) const {
   switch (timer_info.type()) {
     case TimerInfo::kGpuActivity:
       [[fallthrough]];
     case TimerInfo::kGpuCommandBuffer:
-      return submission_track_->GetDown(textbox);
+      return submission_track_->GetDown(timer_info);
     case TimerInfo::kGpuDebugMarker:
-      return marker_track_->GetDown(textbox);
+      return marker_track_->GetDown(timer_info);
     default:
       UNREACHABLE();
   }

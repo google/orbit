@@ -306,11 +306,11 @@ PickingUserData* Batcher::GetUserData(PickingId id) {
   return const_cast<PickingUserData*>(static_cast<const Batcher*>(this)->GetUserData(id));
 }
 
-const orbit_client_data::TextBox* Batcher::GetTextBox(PickingId id) const {
+const orbit_client_protos::TimerInfo* Batcher::GetTimerInfo(PickingId id) const {
   const PickingUserData* data = GetUserData(id);
 
-  if (data && data->text_box_) {
-    return data->text_box_;
+  if (data && data->timer_info_) {
+    return data->timer_info_;
   }
 
   return nullptr;

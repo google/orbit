@@ -136,7 +136,7 @@ void CaptureWindow::LeftUp() {
   GlCanvas::LeftUp();
 
   if (!click_was_drag_ && background_clicked_) {
-    app_->SelectTextBox(nullptr);
+    app_->SelectTimer(nullptr);
     app_->set_selected_thread_id(orbit_base::kAllProcessThreadsTid);
     RequestUpdatePrimitives();
   }
@@ -154,9 +154,9 @@ void CaptureWindow::HandlePickedElement(PickingMode picking_mode, PickingId pick
 
   if (picking_mode == PickingMode::kClick) {
     background_clicked_ = false;
-    const orbit_client_data::TextBox* text_box = batcher.GetTextBox(picking_id);
-    if (text_box) {
-      SelectTextBox(text_box);
+    const orbit_client_protos::TimerInfo* timer_info = batcher.GetTimerInfo(picking_id);
+    if (timer_info != nullptr) {
+      SelectTimer(timer_info);
     } else if (type == PickingType::kPickable) {
       picking_manager_.Pick(picking_id, x, y);
     } else {
@@ -185,18 +185,16 @@ void CaptureWindow::HandlePickedElement(PickingMode picking_mode, PickingId pick
   }
 }
 
-void CaptureWindow::SelectTextBox(const orbit_client_data::TextBox* text_box) {
+void CaptureWindow::SelectTimer(const TimerInfo* timer_info) {
   CHECK(time_graph_ != nullptr);
-  if (text_box == nullptr) return;
+  if (timer_info == nullptr) return;
 
-  app_->SelectTextBox(text_box);
-  app_->set_selected_thread_id(text_box->GetTimerInfo().thread_id());
-
-  const TimerInfo& timer_info = text_box->GetTimerInfo();
+  app_->SelectTimer(timer_info);
+  app_->set_selected_thread_id(timer_info->thread_id());
 
   if (double_clicking_) {
     // Zoom and center the text_box into the screen.
-    time_graph_->Zoom(timer_info);
+    time_graph_->Zoom(*timer_info);
   }
 }
 
@@ -325,42 +323,42 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
     case 18:  // Left
       if (time_graph_ == nullptr) return;
       if (shift) {
-        time_graph_->JumpToNeighborBox(app_->selected_text_box(),
-                                       TimeGraph::JumpDirection::kPrevious,
-                                       TimeGraph::JumpScope::kSameFunction);
+        time_graph_->JumpToNeighborTimer(app_->selected_timer(),
+                                         TimeGraph::JumpDirection::kPrevious,
+                                         TimeGraph::JumpScope::kSameFunction);
       } else if (alt) {
-        time_graph_->JumpToNeighborBox(app_->selected_text_box(),
-                                       TimeGraph::JumpDirection::kPrevious,
-                                       TimeGraph::JumpScope::kSameThreadSameFunction);
+        time_graph_->JumpToNeighborTimer(app_->selected_timer(),
+                                         TimeGraph::JumpDirection::kPrevious,
+                                         TimeGraph::JumpScope::kSameThreadSameFunction);
       } else {
-        time_graph_->JumpToNeighborBox(app_->selected_text_box(),
-                                       TimeGraph::JumpDirection::kPrevious,
-                                       TimeGraph::JumpScope::kSameDepth);
+        time_graph_->JumpToNeighborTimer(app_->selected_timer(),
+                                         TimeGraph::JumpDirection::kPrevious,
+                                         TimeGraph::JumpScope::kSameDepth);
       }
       break;
     case 20:  // Right
       if (time_graph_ == nullptr) return;
       if (shift) {
-        time_graph_->JumpToNeighborBox(app_->selected_text_box(), TimeGraph::JumpDirection::kNext,
-                                       TimeGraph::JumpScope::kSameFunction);
+        time_graph_->JumpToNeighborTimer(app_->selected_timer(), TimeGraph::JumpDirection::kNext,
+                                         TimeGraph::JumpScope::kSameFunction);
       } else if (alt) {
-        time_graph_->JumpToNeighborBox(app_->selected_text_box(), TimeGraph::JumpDirection::kNext,
-                                       TimeGraph::JumpScope::kSameThreadSameFunction);
+        time_graph_->JumpToNeighborTimer(app_->selected_timer(), TimeGraph::JumpDirection::kNext,
+                                         TimeGraph::JumpScope::kSameThreadSameFunction);
       } else {
-        time_graph_->JumpToNeighborBox(app_->selected_text_box(), TimeGraph::JumpDirection::kNext,
-                                       TimeGraph::JumpScope::kSameDepth);
+        time_graph_->JumpToNeighborTimer(app_->selected_timer(), TimeGraph::JumpDirection::kNext,
+                                         TimeGraph::JumpScope::kSameDepth);
       }
       break;
     case 19:  // Up
 
       if (time_graph_ == nullptr) return;
-      time_graph_->JumpToNeighborBox(app_->selected_text_box(), TimeGraph::JumpDirection::kTop,
-                                     TimeGraph::JumpScope::kSameThread);
+      time_graph_->JumpToNeighborTimer(app_->selected_timer(), TimeGraph::JumpDirection::kTop,
+                                       TimeGraph::JumpScope::kSameThread);
       break;
     case 21:  // Down
       if (time_graph_ == nullptr) return;
-      time_graph_->JumpToNeighborBox(app_->selected_text_box(), TimeGraph::JumpDirection::kDown,
-                                     TimeGraph::JumpScope::kSameThread);
+      time_graph_->JumpToNeighborTimer(app_->selected_timer(), TimeGraph::JumpDirection::kDown,
+                                       TimeGraph::JumpScope::kSameThread);
       break;
   }
 }

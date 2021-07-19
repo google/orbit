@@ -22,12 +22,12 @@ using orbit_client_protos::FunctionInfo;
 namespace {
 
 std::pair<uint64_t, uint64_t> ComputeMinMaxTime(
-    const absl::flat_hash_map<uint64_t, const orbit_client_data::TextBox*>& text_boxes) {
+    const absl::flat_hash_map<uint64_t, const TimerInfo*>& timer_infos) {
   uint64_t min_time = std::numeric_limits<uint64_t>::max();
   uint64_t max_time = std::numeric_limits<uint64_t>::min();
-  for (auto& text_box : text_boxes) {
-    min_time = std::min(min_time, text_box.second->GetTimerInfo().start());
-    max_time = std::max(max_time, text_box.second->GetTimerInfo().start());
+  for (auto& timer_info : timer_infos) {
+    min_time = std::min(min_time, timer_info.second->start());
+    max_time = std::max(max_time, timer_info.second->start());
   }
   return std::make_pair(min_time, max_time);
 }
@@ -39,17 +39,19 @@ uint64_t AbsDiff(uint64_t a, uint64_t b) {
   return b - a;
 }
 
-const orbit_client_data::TextBox* ClosestTo(uint64_t point, const orbit_client_data::TextBox* box_a,
-                                            const orbit_client_data::TextBox* box_b) {
-  uint64_t a_diff = AbsDiff(point, box_a->GetTimerInfo().start());
-  uint64_t b_diff = AbsDiff(point, box_b->GetTimerInfo().start());
+const orbit_client_protos::TimerInfo* ClosestTo(uint64_t point,
+                                                const orbit_client_protos::TimerInfo* timer_a,
+                                                const orbit_client_protos::TimerInfo* timer_b) {
+  uint64_t a_diff = AbsDiff(point, timer_a->start());
+  uint64_t b_diff = AbsDiff(point, timer_b->start());
   if (a_diff <= b_diff) {
-    return box_a;
+    return timer_a;
   }
-  return box_b;
+  return timer_b;
 }
 
-const orbit_client_data::TextBox* SnapToClosestStart(TimeGraph* time_graph, uint64_t function_id) {
+const orbit_client_protos::TimerInfo* SnapToClosestStart(TimeGraph* time_graph,
+                                                         uint64_t function_id) {
   double min_us = time_graph->GetMinTimeUs();
   double max_us = time_graph->GetMaxTimeUs();
   double center_us = 0.5 * max_us + 0.5 * min_us;
@@ -59,11 +61,12 @@ const orbit_client_data::TextBox* SnapToClosestStart(TimeGraph* time_graph, uint
   // after center - 1 (we use center - 1 to make sure that center itself is
   // included in the timerange that we search). Note that FindNextFunctionCall
   // uses the end marker of the timer as a timestamp.
-  const orbit_client_data::TextBox* box = time_graph->FindNextFunctionCall(function_id, center - 1);
+  const orbit_client_protos::TimerInfo* timer_info =
+      time_graph->FindNextFunctionCall(function_id, center - 1);
 
   // If we cannot find a next function call, then the closest one is the first
   // call we find before center.
-  if (!box) {
+  if (!timer_info) {
     return time_graph->FindPreviousFunctionCall(function_id, center);
   }
 
@@ -71,125 +74,129 @@ const orbit_client_data::TextBox* SnapToClosestStart(TimeGraph* time_graph, uint
   // marker of 'box'. In this case, the closest box can be any of two boxes:
   // 'box' or the next one. It cannot be any box before 'box' because we are
   // using the start marker to measure the distance.
-  if (box->GetTimerInfo().start() <= center) {
-    const orbit_client_data::TextBox* next_box =
-        time_graph->FindNextFunctionCall(function_id, box->GetTimerInfo().end());
-    if (!next_box) {
-      return box;
+  if (timer_info->start() <= center) {
+    const orbit_client_protos::TimerInfo* next_timer_info =
+        time_graph->FindNextFunctionCall(function_id, timer_info->end());
+    if (!next_timer_info) {
+      return timer_info;
     }
 
-    return ClosestTo(center, box, next_box);
+    return ClosestTo(center, timer_info, next_timer_info);
   }
 
   // The center is to the left of 'box', so the closest box is either 'box' or
   // the next box to the left of the center.
-  const orbit_client_data::TextBox* previous_box =
-      time_graph->FindPreviousFunctionCall(function_id, box->GetTimerInfo().start());
+  const orbit_client_protos::TimerInfo* previous_timer_info =
+      time_graph->FindPreviousFunctionCall(function_id, timer_info->start());
 
-  if (!previous_box) {
-    return box;
+  if (!previous_timer_info) {
+    return timer_info;
   }
 
-  return ClosestTo(center, previous_box, box);
+  return ClosestTo(center, previous_timer_info, timer_info);
 }
 
 }  // namespace
 
 void LiveFunctionsController::Move() {
-  if (!current_textboxes_.empty()) {
-    auto min_max = ComputeMinMaxTime(current_textboxes_);
+  if (!current_timer_infos_.empty()) {
+    auto min_max = ComputeMinMaxTime(current_timer_infos_);
     app_->GetMutableTimeGraph()->HorizontallyMoveIntoView(TimeGraph::VisibilityType::kFullyVisible,
                                                           min_max.first, min_max.second, 0.5);
   }
-  app_->GetMutableTimeGraph()->SetIteratorOverlayData(current_textboxes_,
+  app_->GetMutableTimeGraph()->SetIteratorOverlayData(current_timer_infos_,
                                                       iterator_id_to_function_id_);
 }
 
 bool LiveFunctionsController::OnAllNextButton() {
-  absl::flat_hash_map<uint64_t, const orbit_client_data::TextBox*> next_boxes;
+  absl::flat_hash_map<uint64_t, const orbit_client_protos::TimerInfo*> next_timer_infos;
   uint64_t id_with_min_timestamp = 0;
   uint64_t min_timestamp = std::numeric_limits<uint64_t>::max();
   for (auto it : iterator_id_to_function_id_) {
     uint64_t function_id = it.second;
-    const orbit_client_data::TextBox* current_box = current_textboxes_.find(it.first)->second;
-    const orbit_client_data::TextBox* box = app_->GetMutableTimeGraph()->FindNextFunctionCall(
-        function_id, current_box->GetTimerInfo().end());
-    if (box == nullptr) {
+    const orbit_client_protos::TimerInfo* current_timer_info =
+        current_timer_infos_.find(it.first)->second;
+    const orbit_client_protos::TimerInfo* timer_info =
+        app_->GetMutableTimeGraph()->FindNextFunctionCall(function_id, current_timer_info->end());
+    if (timer_info == nullptr) {
       return false;
     }
-    if (box->GetTimerInfo().start() < min_timestamp) {
-      min_timestamp = box->GetTimerInfo().start();
+    if (timer_info->start() < min_timestamp) {
+      min_timestamp = timer_info->start();
       id_with_min_timestamp = it.first;
     }
-    next_boxes.insert(std::make_pair(it.first, box));
+    next_timer_infos.insert(std::make_pair(it.first, timer_info));
   }
 
   // We only want to commit to the new boxes when all boxes can be moved.
-  current_textboxes_ = next_boxes;
+  current_timer_infos_ = next_timer_infos;
   id_to_select_ = id_with_min_timestamp;
   Move();
   return true;
 }
 
 bool LiveFunctionsController::OnAllPreviousButton() {
-  absl::flat_hash_map<uint64_t, const orbit_client_data::TextBox*> next_boxes;
+  absl::flat_hash_map<uint64_t, const orbit_client_protos::TimerInfo*> next_timer_infos;
   uint64_t id_with_min_timestamp = 0;
   uint64_t min_timestamp = std::numeric_limits<uint64_t>::max();
   for (auto it : iterator_id_to_function_id_) {
     uint64_t function_id = it.second;
-    const orbit_client_data::TextBox* current_box = current_textboxes_.find(it.first)->second;
-    const orbit_client_data::TextBox* box = app_->GetMutableTimeGraph()->FindPreviousFunctionCall(
-        function_id, current_box->GetTimerInfo().end());
-    if (box == nullptr) {
+    const orbit_client_protos::TimerInfo* current_timer_info =
+        current_timer_infos_.find(it.first)->second;
+    const orbit_client_protos::TimerInfo* timer_info =
+        app_->GetMutableTimeGraph()->FindPreviousFunctionCall(function_id,
+                                                              current_timer_info->end());
+    if (timer_info == nullptr) {
       return false;
     }
-    if (box->GetTimerInfo().start() < min_timestamp) {
-      min_timestamp = box->GetTimerInfo().start();
+    if (timer_info->start() < min_timestamp) {
+      min_timestamp = timer_info->start();
       id_with_min_timestamp = it.first;
     }
-    next_boxes.insert(std::make_pair(it.first, box));
+    next_timer_infos.insert(std::make_pair(it.first, timer_info));
   }
 
   // We only want to commit to the new boxes when all boxes can be moved.
-  current_textboxes_ = next_boxes;
+  current_timer_infos_ = next_timer_infos;
   id_to_select_ = id_with_min_timestamp;
   Move();
   return true;
 }
 
 void LiveFunctionsController::OnNextButton(uint64_t id) {
-  const orbit_client_data::TextBox* text_box = app_->GetMutableTimeGraph()->FindNextFunctionCall(
-      iterator_id_to_function_id_[id], current_textboxes_[id]->GetTimerInfo().end());
+  const orbit_client_protos::TimerInfo* timer_info =
+      app_->GetMutableTimeGraph()->FindNextFunctionCall(iterator_id_to_function_id_[id],
+                                                        current_timer_infos_[id]->end());
   // If text_box is nullptr, then we have reached the right end of the timeline.
-  if (text_box != nullptr) {
-    current_textboxes_[id] = text_box;
+  if (timer_info != nullptr) {
+    current_timer_infos_[id] = timer_info;
   }
   id_to_select_ = id;
   Move();
 }
 void LiveFunctionsController::OnPreviousButton(uint64_t id) {
-  const orbit_client_data::TextBox* text_box =
-      app_->GetMutableTimeGraph()->FindPreviousFunctionCall(
-          iterator_id_to_function_id_[id], current_textboxes_[id]->GetTimerInfo().end());
+  const orbit_client_protos::TimerInfo* timer_info =
+      app_->GetMutableTimeGraph()->FindPreviousFunctionCall(iterator_id_to_function_id_[id],
+                                                            current_timer_infos_[id]->end());
   // If text_box is nullptr, then we have reached the left end of the timeline.
-  if (text_box != nullptr) {
-    current_textboxes_[id] = text_box;
+  if (timer_info != nullptr) {
+    current_timer_infos_[id] = timer_info;
   }
   id_to_select_ = id;
   Move();
 }
 
 void LiveFunctionsController::OnDeleteButton(uint64_t id) {
-  current_textboxes_.erase(id);
+  current_timer_infos_.erase(id);
   iterator_id_to_function_id_.erase(id);
   metrics_uploader_->SendLogEvent(
       orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_ITERATOR_REMOVE);
 
   // If we erase the iterator that was last used by the user, then
   // we need to switch last_id_pressed_ to an existing id.
-  if (id == id_to_select_ && !current_textboxes_.empty()) {
-    id_to_select_ = current_textboxes_.begin()->first;
-  } else if (current_textboxes_.empty()) {
+  if (id == id_to_select_ && !current_timer_infos_.empty()) {
+    id_to_select_ = current_timer_infos_.begin()->first;
+  } else if (current_timer_infos_.empty()) {
     id_to_select_ = orbit_grpc_protos::kInvalidFunctionId;
   }
   Move();
@@ -197,16 +204,16 @@ void LiveFunctionsController::OnDeleteButton(uint64_t id) {
 
 void LiveFunctionsController::AddIterator(uint64_t function_id, const FunctionInfo* function) {
   uint64_t iterator_id = next_iterator_id_++;
-  const orbit_client_data::TextBox* box = app_->selected_text_box();
+  const orbit_client_protos::TimerInfo* timer_info = app_->selected_timer();
   // If no box is currently selected or the selected box is a different
   // function, we search for the closest box to the current center of the
   // screen.
-  if (!box || box->GetTimerInfo().function_id() != function_id) {
-    box = SnapToClosestStart(app_->GetMutableTimeGraph(), function_id);
+  if (!timer_info || timer_info->function_id() != function_id) {
+    timer_info = SnapToClosestStart(app_->GetMutableTimeGraph(), function_id);
   }
 
   iterator_id_to_function_id_.insert(std::make_pair(iterator_id, function_id));
-  current_textboxes_.insert(std::make_pair(iterator_id, box));
+  current_timer_infos_.insert(std::make_pair(iterator_id, timer_info));
   id_to_select_ = iterator_id;
   if (add_iterator_callback_) {
     add_iterator_callback_(iterator_id, function);
@@ -215,9 +222,9 @@ void LiveFunctionsController::AddIterator(uint64_t function_id, const FunctionIn
 }
 
 uint64_t LiveFunctionsController::GetStartTime(uint64_t index) const {
-  const auto& it = current_textboxes_.find(index);
-  if (it != current_textboxes_.end()) {
-    return it->second->GetTimerInfo().start();
+  const auto& it = current_timer_infos_.find(index);
+  if (it != current_timer_infos_.end()) {
+    return it->second->start();
   }
   return GetCaptureMin();
 }
@@ -233,7 +240,7 @@ uint64_t LiveFunctionsController::GetCaptureMax() const {
 
 void LiveFunctionsController::Reset() {
   iterator_id_to_function_id_.clear();
-  current_textboxes_.clear();
+  current_timer_infos_.clear();
   TimeGraph* time_graph = app_->GetMutableTimeGraph();
   if (time_graph != nullptr) {
     app_->GetMutableTimeGraph()->SetIteratorOverlayData({}, {});

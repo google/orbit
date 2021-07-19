@@ -84,36 +84,30 @@ void ThreadTrack::InitializeNameAndLabel(int32_t thread_id) {
   }
 }
 
-const orbit_client_data::TextBox* ThreadTrack::GetLeft(
-    const orbit_client_data::TextBox* text_box) const {
-  const TimerInfo& timer_info = text_box->GetTimerInfo();
+const TimerInfo* ThreadTrack::GetLeft(const TimerInfo& timer_info) const {
   if (timer_info.thread_id() == thread_id_) {
     orbit_client_data::TimerChain* chain = track_data_->GetChain(timer_info.depth());
-    if (chain != nullptr) return chain->GetElementBefore(text_box);
+    if (chain != nullptr) return chain->GetElementBefore(timer_info);
   }
   return nullptr;
 }
 
-const orbit_client_data::TextBox* ThreadTrack::GetRight(
-    const orbit_client_data::TextBox* text_box) const {
-  const TimerInfo& timer_info = text_box->GetTimerInfo();
+const TimerInfo* ThreadTrack::GetRight(const TimerInfo& timer_info) const {
   if (timer_info.thread_id() == thread_id_) {
     orbit_client_data::TimerChain* chain = track_data_->GetChain(timer_info.depth());
-    if (chain != nullptr) return chain->GetElementAfter(text_box);
+    if (chain != nullptr) return chain->GetElementAfter(timer_info);
   }
   return nullptr;
 }
 
 std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
-  const orbit_client_data::TextBox* text_box = batcher.GetTextBox(id);
-  if (text_box == nullptr || text_box->GetTimerInfo().type() == TimerInfo::kCoreActivity) {
+  const TimerInfo* timer_info = batcher.GetTimerInfo(id);
+  if (timer_info == nullptr || timer_info->type() == TimerInfo::kCoreActivity) {
     return "";
   }
 
-  const TimerInfo& timer_info = text_box->GetTimerInfo();
-
   const InstrumentedFunction* func =
-      capture_data_->GetInstrumentedFunctionById(timer_info.function_id());
+      capture_data_->GetInstrumentedFunctionById(timer_info->function_id());
 
   FunctionInfo::OrbitType type{FunctionInfo::kNone};
   if (func != nullptr) {
@@ -122,14 +116,14 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
 
   std::string function_name;
   bool is_manual = (func != nullptr && type == FunctionInfo::kOrbitTimerStart) ||
-                   timer_info.type() == TimerInfo::kApiEvent;
+                   timer_info->type() == TimerInfo::kApiEvent;
 
   if (!func && !is_manual) {
-    return GetTimesliceText(timer_info);
+    return GetTimesliceText(*timer_info);
   }
 
   if (is_manual) {
-    auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
+    auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(*timer_info);
     function_name = api_event.name;
   } else {
     function_name = func->function_name();
@@ -148,7 +142,7 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
       "<b>Time:</b> %s",
       function_name, is_manual ? "manual" : "dynamic", module_name,
       orbit_display_formats::GetDisplayTime(
-          TicksToDuration(text_box->GetTimerInfo().start(), text_box->GetTimerInfo().end())));
+          TicksToDuration(timer_info->start(), timer_info->end())));
 }
 
 bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
@@ -189,11 +183,9 @@ bool ThreadTrack::IsTrackSelected() const {
   return ToColor(static_cast<uint64_t>(event.color));
 }
 
-Color ThreadTrack::GetTimerColor(const orbit_client_data::TextBox& text_box,
-                                 const internal::DrawData& draw_data) {
-  const TimerInfo& timer_info = text_box.GetTimerInfo();
+Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, const internal::DrawData& draw_data) {
   uint64_t function_id = timer_info.function_id();
-  bool is_selected = &text_box == draw_data.selected_textbox;
+  bool is_selected = &timer_info == draw_data.selected_timer;
   bool is_highlighted = !is_selected && function_id != orbit_grpc_protos::kInvalidFunctionId &&
                         function_id == draw_data.highlighted_function_id;
   return GetTimerColor(timer_info, is_selected, is_highlighted);
@@ -423,11 +415,14 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
 
   // Thread tracks use a ScopeTree so we don't need to create one TimerChain per depth.
   // Allocate a single TimerChain into which all timers will be appended.
-  orbit_client_data::TextBox& text_box = track_data_->AddTimer(/*depth=*/0, timer_info);
+
+  // Pass ownership to timer_chain. TODO(http://b/194268477): Pass timer_info as a value instead of
+  // reference to be able to move it.
+  auto& timer_info_chain_ref = track_data_->AddTimer(/*depth=*/0, timer_info);
 
   if (scope_tree_update_type_ == ScopeTreeUpdateType::kAlways) {
     absl::MutexLock lock(&scope_tree_mutex_);
-    scope_tree_.Insert(&text_box);
+    scope_tree_.Insert(&timer_info_chain_ref);
   }
 }
 
@@ -448,10 +443,9 @@ void ThreadTrack::OnCaptureComplete() {
   }
 }
 
-[[nodiscard]] static std::pair<float, float> GetBoxPosXAndWidth(
-    const internal::DrawData& draw_data, const TimeGraph* time_graph,
-    orbit_client_data::TextBox* text_box) {
-  const TimerInfo& timer_info = text_box->GetTimerInfo();
+[[nodiscard]] static std::pair<float, float> GetBoxPosXAndWidth(const internal::DrawData& draw_data,
+                                                                const TimeGraph* time_graph,
+                                                                TimerInfo& timer_info) {
   double start_us = time_graph->GetUsFromTick(timer_info.start());
   double end_us = time_graph->GetUsFromTick(timer_info.end());
   double elapsed_us = end_us - start_us;
@@ -482,7 +476,7 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
 
   const internal::DrawData draw_data = GetDrawData(
       min_tick, max_tick, z_offset, batcher, time_graph_, viewport_,
-      collapse_toggle_->IsCollapsed(), app_->selected_text_box(), app_->GetFunctionIdToHighlight());
+      collapse_toggle_->IsCollapsed(), app_->selected_timer(), app_->GetFunctionIdToHighlight());
 
   absl::MutexLock lock(&scope_tree_mutex_);
 
@@ -495,20 +489,21 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
     uint64_t next_pixel_start_time_ns = min_tick;
 
     for (auto it = first_node_to_draw; it != ordered_nodes.end() && it->first < max_tick; ++it) {
-      orbit_client_data::TextBox& text_box = *it->second->GetScope();
-      if (text_box.End() <= next_pixel_start_time_ns) continue;
+      orbit_client_protos::TimerInfo& timer_info = *it->second->GetScope();
+      if (timer_info.end() <= next_pixel_start_time_ns) continue;
       ++visible_timer_count_;
 
-      Color color = GetTimerColor(text_box, draw_data);
-      std::unique_ptr<PickingUserData> user_data = CreatePickingUserData(*batcher, text_box);
+      Color color = GetTimerColor(timer_info, draw_data);
+      std::unique_ptr<PickingUserData> user_data = CreatePickingUserData(*batcher, timer_info);
 
-      const auto [pos_x, size_x] = GetBoxPosXAndWidth(draw_data, time_graph_, &text_box);
+      const auto [pos_x, size_x] = GetBoxPosXAndWidth(draw_data, time_graph_, timer_info);
       const Vec2 pos = {pos_x, world_timer_y};
       const Vec2 size = {size_x, box_height_};
 
-      if (text_box.Duration() > draw_data.ns_per_pixel) {
+      auto timer_duration = timer_info.end() - timer_info.start();
+      if (timer_duration > draw_data.ns_per_pixel) {
         if (!collapse_toggle_->IsCollapsed()) {
-          DrawTimesliceText(text_box.GetTimerInfo(), draw_data.world_start_x, z_offset, pos, size);
+          DrawTimesliceText(timer_info, draw_data.world_start_x, z_offset, pos, size);
         }
         batcher->AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
       } else {
