@@ -22,7 +22,6 @@ target_sources(ClientData PUBLIC
         include/ClientData/ModuleManager.h
         include/ClientData/PostProcessedSamplingData.h
         include/ClientData/ProcessData.h
-        include/ClientData/TextBox.h
         include/ClientData/TimerChain.h
         include/ClientData/TimestampIntervalSet.h
         include/ClientData/TracepointCustom.h

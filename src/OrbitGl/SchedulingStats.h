@@ -10,11 +10,10 @@
 #include <string>
 #include <vector>
 
-#include "ClientData/TextBox.h"
+#include "capture_data.pb.h"
 
 class CaptureData;
 class SchedulerTrack;
-class TextBox;
 
 // SchedulingStats is a utility class to generate statistics about system-wide scheduling
 // information. This includes core occupancy information as well as system-wide process and thread

@@ -16,7 +16,6 @@
 #include "Batcher.h"
 #include "BlockChain.h"
 #include "CaptureViewElement.h"
-#include "ClientData/TextBox.h"
 #include "ClientData/TimerChain.h"
 #include "ClientData/TrackData.h"
 #include "ClientModel/CaptureData.h"

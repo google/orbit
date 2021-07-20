@@ -10,7 +10,6 @@
 #include <utility>
 
 #include "Batcher.h"
-#include "ClientData/TextBox.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
 #include "Viewport.h"

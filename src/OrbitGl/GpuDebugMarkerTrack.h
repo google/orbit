@@ -12,7 +12,6 @@
 #include <string_view>
 
 #include "CallstackThreadBar.h"
-#include "ClientData/TextBox.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
 #include "StringManager.h"

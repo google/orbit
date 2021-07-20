@@ -10,7 +10,6 @@
 
 #include "App.h"
 #include "Batcher.h"
-#include "ClientData/TextBox.h"
 #include "ClientData/TimerChain.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlUtils.h"
@@ -20,6 +19,7 @@
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
 #include "absl/strings/str_format.h"
+#include "capture_data.pb.h"
 
 using orbit_client_protos::TimerInfo;
 
