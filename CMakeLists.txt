@@ -163,6 +163,7 @@ add_subdirectory(src/OrbitTest)
 add_subdirectory(src/OrbitVersion)
 add_subdirectory(src/PresetFile)
 add_subdirectory(src/Symbols)
+add_subdirectory(src/TracingInterface)
 add_subdirectory(src/Test)
 
 if(WITH_GUI)

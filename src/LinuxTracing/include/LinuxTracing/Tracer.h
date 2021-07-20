@@ -10,15 +10,15 @@
 #include <thread>
 #include <utility>
 
-#include "LinuxTracing/TracerListener.h"
+#include "TracingInterface/Tracer.h"
 #include "capture.pb.h"
 
 namespace orbit_linux_tracing {
 
-class Tracer {
+class Tracer : public orbit_tracing_interface::Tracer {
  public:
   explicit Tracer(orbit_grpc_protos::CaptureOptions capture_options)
-      : capture_options_{std::move(capture_options)} {}
+      : orbit_tracing_interface::Tracer(std::move(capture_options)) {}
 
   ~Tracer() { Stop(); }
 
@@ -27,14 +27,12 @@ class Tracer {
   Tracer(Tracer&&) = default;
   Tracer& operator=(Tracer&&) = default;
 
-  void SetListener(TracerListener* listener) { listener_ = listener; }
-
-  void Start() {
+  void Start() override {
     *exit_requested_ = false;
     thread_ = std::make_shared<std::thread>(&Tracer::Run, this);
   }
 
-  void Stop() {
+  void Stop() override {
     *exit_requested_ = true;
     if (thread_ != nullptr && thread_->joinable()) {
       thread_->join();
@@ -43,10 +41,6 @@ class Tracer {
   }
 
  private:
-  orbit_grpc_protos::CaptureOptions capture_options_;
-
-  TracerListener* listener_ = nullptr;
-
   // exit_requested_ must outlive this object because it is used by thread_.
   // The control block of shared_ptr is thread safe (i.e., reference counting
   // and pointee's lifetime management are atomic and thread safe).

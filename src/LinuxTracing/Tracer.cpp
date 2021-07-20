@@ -9,8 +9,8 @@
 #include <atomic>
 #include <memory>
 
-#include "LinuxTracing/TracerListener.h"
 #include "TracerThread.h"
+#include "TracingInterface/TracerListener.h"
 #include "capture.pb.h"
 
 namespace orbit_linux_tracing {

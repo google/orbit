@@ -14,15 +14,15 @@
 
 #include "Introspection/Introspection.h"
 #include "LinuxTracing/Tracer.h"
-#include "LinuxTracing/TracerListener.h"
 #include "OrbitBase/Logging.h"
 #include "ProducerEventProcessor.h"
+#include "TracingInterface/TracerListener.h"
 #include "capture.pb.h"
 #include "tracepoint.pb.h"
 
 namespace orbit_service {
 
-class LinuxTracingHandler : public orbit_linux_tracing::TracerListener {
+class LinuxTracingHandler : public orbit_tracing_interface::TracerListener {
  public:
   explicit LinuxTracingHandler(ProducerEventProcessor* producer_event_processor)
       : producer_event_processor_{producer_event_processor} {}

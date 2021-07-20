@@ -44,7 +44,7 @@ class MockLibunwindstackUnwinder : public LibunwindstackUnwinder {
               (override));
 };
 
-class MockTracerListener : public TracerListener {
+class MockTracerListener : public orbit_tracing_interface::TracerListener {
  public:
   MOCK_METHOD(void, OnSchedulingSlice, (orbit_grpc_protos::SchedulingSlice), (override));
   MOCK_METHOD(void, OnCallstackSample, (orbit_grpc_protos::FullCallstackSample), (override));

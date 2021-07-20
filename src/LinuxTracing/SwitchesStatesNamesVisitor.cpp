@@ -10,8 +10,8 @@
 #include <utility>
 #include <vector>
 
-#include "LinuxTracing/TracerListener.h"
 #include "OrbitBase/Logging.h"
+#include "TracingInterface/TracerListener.h"
 
 namespace orbit_linux_tracing {
 
