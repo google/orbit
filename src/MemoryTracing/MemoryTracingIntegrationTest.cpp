@@ -127,7 +127,7 @@ class MemoryTracingIntegrationTestFixture {
 void VerifyOrderAndContentOfEvents(const std::vector<ProducerCaptureEvent>& events,
                                    uint64_t sampling_period_ns) {
   const uint64_t kMemoryEventsTimeDifferenceTolerace =
-      static_cast<uint64_t>(sampling_period_ns * 0.1);
+      static_cast<uint64_t>(sampling_period_ns * 0.2);
   uint64_t previous_memory_usage_event_timestamp_ns = 0;
 
   for (const auto& event : events) {
