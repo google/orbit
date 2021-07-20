@@ -93,12 +93,15 @@ WorldXInfo ToWorldX(double start_us, double end_us, double inv_time_window, floa
 
 }  // namespace
 
+std::string TimerTrack::GetDisplayTime(const TimerInfo& timer) const {
+  return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(timer.end() - timer.start()));
+}
+
 void TimerTrack::DrawTimesliceText(const orbit_client_protos::TimerInfo& timer, float min_x,
                                    float z_offset, orbit_client_data::TextBox* text_box) {
   std::string timeslice_text = GetTimesliceText(timer);
 
-  const std::string elapsed_time =
-      orbit_display_formats::GetDisplayTime(absl::Nanoseconds(timer.end() - timer.start()));
+  const std::string elapsed_time = GetDisplayTime(timer);
   const auto elapsed_time_length = elapsed_time.length();
   const Color kTextWhite(255, 255, 255, 255);
   const auto& box_pos = text_box->GetPos();

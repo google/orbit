@@ -13,7 +13,6 @@
 #include "ClientData/TextBox.h"
 #include "ClientData/TimerChain.h"
 #include "DisplayFormats/DisplayFormats.h"
-#include "GlCanvas.h"
 #include "GlUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
@@ -160,11 +159,9 @@ bool GpuSubmissionTrack::TimerFilter(const TimerInfo& timer_info) const {
 }
 
 std::string GpuSubmissionTrack::GetTimesliceText(const TimerInfo& timer_info) const {
-  std::string time = orbit_display_formats::GetDisplayTime(
-      absl::Nanoseconds(timer_info.end() - timer_info.start()));
-
   CHECK(timer_info.type() == TimerInfo::kGpuActivity ||
         timer_info.type() == TimerInfo::kGpuCommandBuffer);
+  std::string time = GetDisplayTime(timer_info);
 
   return absl::StrFormat("%s  %s", string_manager_->Get(timer_info.user_data_key()).value_or(""),
                          time);

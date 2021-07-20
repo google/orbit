@@ -20,7 +20,6 @@
 #include "ClientData/TimerChain.h"
 #include "ClientModel/CaptureData.h"
 #include "DisplayFormats/DisplayFormats.h"
-#include "GlCanvas.h"
 #include "GlUtils.h"
 #include "Introspection/Introspection.h"
 #include "ManualInstrumentationManager.h"
@@ -333,8 +332,7 @@ void ThreadTrack::SetTrackColor(Color color) {
 }
 
 std::string ThreadTrack::GetTimesliceText(const TimerInfo& timer_info) const {
-  std::string time = orbit_display_formats::GetDisplayTime(
-      absl::Nanoseconds(timer_info.end() - timer_info.start()));
+  std::string time = GetDisplayTime(timer_info);
 
   const InstrumentedFunction* func = app_->GetInstrumentedFunction(timer_info.function_id());
   if (func != nullptr) {

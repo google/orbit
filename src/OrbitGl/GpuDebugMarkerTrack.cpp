@@ -14,7 +14,6 @@
 #include "ClientData/TextBox.h"
 #include "ClientData/TimerChain.h"
 #include "DisplayFormats/DisplayFormats.h"
-#include "GlCanvas.h"
 #include "GlUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
@@ -71,9 +70,7 @@ Color GpuDebugMarkerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_se
 std::string GpuDebugMarkerTrack::GetTimesliceText(const TimerInfo& timer_info) const {
   CHECK(timer_info.type() == TimerInfo::kGpuDebugMarker);
 
-  std::string time = orbit_display_formats::GetDisplayTime(
-      absl::Nanoseconds(timer_info.end() - timer_info.start()));
-
+  std::string time = GetDisplayTime(timer_info);
   return absl::StrFormat("%s  %s", string_manager_->Get(timer_info.user_data_key()).value_or(""),
                          time);
 }
