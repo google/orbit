@@ -13,22 +13,31 @@
 namespace orbit_linux_tracing {
 class Function {
  public:
-  Function(uint64_t function_id, std::string file_path, uint64_t file_offset)
-      : function_id_{function_id}, file_path_{std::move(file_path)}, file_offset_{file_offset} {}
+  Function(uint64_t function_id, std::string file_path, uint64_t file_offset, bool record_arguments,
+           bool record_return_value)
+      : function_id_{function_id},
+        file_path_{std::move(file_path)},
+        file_offset_{file_offset},
+        record_arguments_{record_arguments},
+        record_return_value_{record_return_value} {}
 
   [[nodiscard]] uint64_t function_id() const { return function_id_; }
   [[nodiscard]] const std::string& file_path() const { return file_path_; }
   [[nodiscard]] uint64_t file_offset() const { return file_offset_; }
-
-  bool operator==(const Function& other) {
-    return (this->file_offset_ == other.file_offset_) && (this->file_path_ == other.file_path_);
-  }
+  [[nodiscard]] bool record_arguments() const { return record_arguments_; }
+  [[nodiscard]] bool record_return_value() const { return record_return_value_; }
 
  private:
   uint64_t function_id_;
   std::string file_path_;
   uint64_t file_offset_;
+  bool record_arguments_;
+  bool record_return_value_;
 };
+
+inline bool operator==(const Function& lhs, const Function& rhs) {
+  return (lhs.file_path() == rhs.file_path()) && (lhs.file_offset() == rhs.file_offset());
+}
 
 template <typename H>
 H AbslHashValue(H state, const Function& function) {

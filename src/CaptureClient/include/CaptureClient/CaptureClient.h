@@ -42,6 +42,7 @@ class CaptureClient {
       ThreadPool* thread_pool, int32_t process_id,
       const orbit_client_data::ModuleManager& module_manager,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
+      bool always_record_arguments, bool record_return_values,
       orbit_client_data::TracepointInfoSet selected_tracepoints, double samples_per_second,
       uint16_t stack_dump_size, orbit_grpc_protos::UnwindingMethod unwinding_method,
       bool collect_scheduling_info, bool collect_thread_state, bool collect_gpu_jobs,
@@ -77,6 +78,7 @@ class CaptureClient {
   ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureSync(
       int32_t process_id, const orbit_client_data::ModuleManager& module_manager,
       const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>& selected_functions,
+      bool always_record_arguments, bool record_return_values,
       const orbit_client_data::TracepointInfoSet& selected_tracepoints, double samples_per_second,
       uint16_t stack_dump_size, orbit_grpc_protos::UnwindingMethod unwinding_method,
       bool collect_scheduling_info, bool collect_thread_state, bool collect_gpu_jobs,

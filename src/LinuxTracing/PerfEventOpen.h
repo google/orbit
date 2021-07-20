@@ -84,6 +84,11 @@ static constexpr uint64_t SAMPLE_REGS_USER_ALL =
 // PerfEventRecords.h.
 static constexpr uint64_t SAMPLE_REGS_USER_AX = (1lu << PERF_REG_X86_AX);
 
+// This must be in sync with struct perf_event_sample_regs_user_sp_ip
+// in PerfEventRecords.h.
+static constexpr uint64_t SAMPLE_REGS_USER_SP_IP =
+    (1lu << PERF_REG_X86_SP) | (1lu << PERF_REG_X86_IP);
+
 // This must be in sync with struct perf_event_sample_regs_user_sp_ip_arguments
 // in PerfEventRecords.h.
 static constexpr uint64_t SAMPLE_REGS_USER_SP_IP_ARGUMENTS =
@@ -120,7 +125,13 @@ int callchain_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu,
 int uprobes_retaddr_event_open(const char* module, uint64_t function_offset, pid_t pid,
                                int32_t cpu);
 
+int uprobes_retaddr_args_event_open(const char* module, uint64_t function_offset, pid_t pid,
+                                    int32_t cpu);
+
 int uretprobes_event_open(const char* module, uint64_t function_offset, pid_t pid, int32_t cpu);
+
+int uretprobes_retval_event_open(const char* module, uint64_t function_offset, pid_t pid,
+                                 int32_t cpu);
 
 // Create the ring buffer to use perf_event_open in sampled mode.
 void* perf_event_open_mmap_ring_buffer(int fd, uint64_t mmap_length);

@@ -242,7 +242,10 @@ void UprobesUnwindingVisitor::Visit(CallchainSamplePerfEvent* event) {
   listener_->OnCallstackSample(std::move(sample));
 }
 
-void UprobesUnwindingVisitor::Visit(UprobesPerfEvent* event) {
+void UprobesUnwindingVisitor::OnUprobes(
+    uint64_t timestamp_ns, pid_t tid, uint32_t cpu, uint64_t sp, uint64_t ip,
+    uint64_t return_address, std::optional<perf_event_sample_regs_user_sp_ip_arguments> registers,
+    uint64_t function_id) {
   CHECK(listener_ != nullptr);
 
   // We are seeing that, on thread migration, uprobe events can sometimes be
@@ -255,52 +258,65 @@ void UprobesUnwindingVisitor::Visit(UprobesPerfEvent* event) {
   // pointers (the stack grows towards lower addresses).
 
   // Duplicate uprobe detection.
-  uint64_t uprobe_sp = event->GetSp();
-  uint64_t uprobe_ip = event->GetIp();
-  uint32_t uprobe_cpu = event->GetCpu();
   std::vector<std::tuple<uint64_t, uint64_t, uint32_t>>& uprobe_sps_ips_cpus =
-      uprobe_sps_ips_cpus_per_thread_[event->GetTid()];
+      uprobe_sps_ips_cpus_per_thread_[tid];
   if (!uprobe_sps_ips_cpus.empty()) {
     uint64_t last_uprobe_sp = std::get<0>(uprobe_sps_ips_cpus.back());
     uint64_t last_uprobe_ip = std::get<1>(uprobe_sps_ips_cpus.back());
     uint32_t last_uprobe_cpu = std::get<2>(uprobe_sps_ips_cpus.back());
     uprobe_sps_ips_cpus.pop_back();
-    if (uprobe_sp > last_uprobe_sp) {
+    if (sp > last_uprobe_sp) {
       ERROR("MISSING URETPROBE OR DUPLICATE UPROBE");
       return;
     }
-    if (uprobe_sp == last_uprobe_sp && uprobe_ip == last_uprobe_ip &&
-        uprobe_cpu != last_uprobe_cpu) {
+    if (sp == last_uprobe_sp && ip == last_uprobe_ip && cpu != last_uprobe_cpu) {
       ERROR("Duplicate uprobe on thread migration");
       return;
     }
   }
-  uprobe_sps_ips_cpus.emplace_back(uprobe_sp, uprobe_ip, uprobe_cpu);
+  uprobe_sps_ips_cpus.emplace_back(sp, ip, cpu);
 
-  function_call_manager_->ProcessUprobes(event->GetTid(), event->GetFunction()->function_id(),
-                                         event->GetTimestamp(), event->ring_buffer_record.regs);
+  function_call_manager_->ProcessUprobes(tid, function_id, timestamp_ns, registers);
 
-  return_address_manager_->ProcessUprobes(event->GetTid(), event->GetSp(),
-                                          event->GetReturnAddress());
+  return_address_manager_->ProcessUprobes(tid, sp, return_address);
 }
 
-void UprobesUnwindingVisitor::Visit(UretprobesPerfEvent* event) {
+void UprobesUnwindingVisitor::Visit(UprobesPerfEvent* event) {
+  OnUprobes(event->GetTimestamp(), event->GetTid(), event->GetCpu(), event->GetSp(), event->GetIp(),
+            event->GetReturnAddress(), std::nullopt, event->GetFunction()->function_id());
+}
+
+void UprobesUnwindingVisitor::Visit(UprobesWithArgumentsPerfEvent* event) {
+  OnUprobes(event->GetTimestamp(), event->GetTid(), event->GetCpu(), event->GetSp(), event->GetIp(),
+            event->GetReturnAddress(), event->GetRegisters(), event->GetFunction()->function_id());
+}
+
+void UprobesUnwindingVisitor::OnUretprobes(uint64_t timestamp_ns, pid_t pid, pid_t tid,
+                                           std::optional<uint64_t> ax) {
   CHECK(listener_ != nullptr);
 
   // Duplicate uprobe detection.
   std::vector<std::tuple<uint64_t, uint64_t, uint32_t>>& uprobe_sps_ips_cpus =
-      uprobe_sps_ips_cpus_per_thread_[event->GetTid()];
+      uprobe_sps_ips_cpus_per_thread_[tid];
   if (!uprobe_sps_ips_cpus.empty()) {
     uprobe_sps_ips_cpus.pop_back();
   }
 
-  std::optional<FunctionCall> function_call = function_call_manager_->ProcessUretprobes(
-      event->GetPid(), event->GetTid(), event->GetTimestamp(), event->GetAx());
+  std::optional<FunctionCall> function_call =
+      function_call_manager_->ProcessUretprobes(pid, tid, timestamp_ns, ax);
   if (function_call.has_value()) {
     listener_->OnFunctionCall(std::move(function_call.value()));
   }
 
-  return_address_manager_->ProcessUretprobes(event->GetTid());
+  return_address_manager_->ProcessUretprobes(tid);
+}
+
+void UprobesUnwindingVisitor::Visit(UretprobesPerfEvent* event) {
+  OnUretprobes(event->GetTimestamp(), event->GetPid(), event->GetTid(), std::nullopt);
+}
+
+void UprobesUnwindingVisitor::Visit(UretprobesWithReturnValuePerfEvent* event) {
+  OnUretprobes(event->GetTimestamp(), event->GetPid(), event->GetTid(), event->GetAx());
 }
 
 void UprobesUnwindingVisitor::Visit(MmapPerfEvent* event) {

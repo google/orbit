@@ -111,17 +111,35 @@ int uprobes_retaddr_event_open(const char* module, uint64_t function_offset, pid
   perf_event_attr pe = uprobe_event_attr(module, function_offset);
   pe.config = 0;
   pe.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
-  pe.sample_regs_user = SAMPLE_REGS_USER_SP_IP_ARGUMENTS;
+  pe.sample_regs_user = SAMPLE_REGS_USER_SP_IP;
 
-  // Only get the very top of the stack, where the return address has been
-  // pushed. We record it as it is about to be hijacked by the installation of
-  // the uretprobe.
+  // Only get the very top of the stack, where the return address has been pushed.
+  // We record it as it is about to be hijacked by the installation of the uretprobe.
+  pe.sample_stack_user = SAMPLE_STACK_USER_SIZE_8BYTES;
+
+  return generic_event_open(&pe, pid, cpu);
+}
+
+int uprobes_retaddr_args_event_open(const char* module, uint64_t function_offset, pid_t pid,
+                                    int32_t cpu) {
+  perf_event_attr pe = uprobe_event_attr(module, function_offset);
+  pe.config = 0;
+  pe.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
+  pe.sample_regs_user = SAMPLE_REGS_USER_SP_IP_ARGUMENTS;
   pe.sample_stack_user = SAMPLE_STACK_USER_SIZE_8BYTES;
 
   return generic_event_open(&pe, pid, cpu);
 }
 
 int uretprobes_event_open(const char* module, uint64_t function_offset, pid_t pid, int32_t cpu) {
+  perf_event_attr pe = uprobe_event_attr(module, function_offset);
+  pe.config = 1;  // Set bit 0 of config for uretprobe.
+
+  return generic_event_open(&pe, pid, cpu);
+}
+
+int uretprobes_retval_event_open(const char* module, uint64_t function_offset, pid_t pid,
+                                 int32_t cpu) {
   perf_event_attr pe = uprobe_event_attr(module, function_offset);
   pe.config = 1;  // Set bit 0 of config for uretprobe.
 

@@ -264,7 +264,7 @@ class CallchainSamplePerfEvent : public PerfEvent {
   [[nodiscard]] uint64_t GetStackSize() const { return stack.dyn_size; }
 };
 
-class AbstractUprobesPerfEvent {
+class PerfEventWithFunction : public PerfEvent {
  public:
   const Function* GetFunction() const { return function_; }
   void SetFunction(const Function* function) { function_ = function; }
@@ -273,13 +273,12 @@ class AbstractUprobesPerfEvent {
   const Function* function_ = nullptr;
 };
 
-class UprobesPerfEvent : public PerfEvent, public AbstractUprobesPerfEvent {
+template <typename RingBufferRecordT>
+class UprobesPerfEventBase : public PerfEventWithFunction {
  public:
-  perf_event_sp_ip_arguments_8bytes_sample ring_buffer_record;
+  RingBufferRecordT ring_buffer_record;
 
   uint64_t GetTimestamp() const override { return ring_buffer_record.sample_id.time; }
-
-  void Accept(PerfEventVisitor* visitor) override;
 
   pid_t GetPid() const { return ring_buffer_record.sample_id.pid; }
   pid_t GetTid() const { return ring_buffer_record.sample_id.tid; }
@@ -297,24 +296,48 @@ class UprobesPerfEvent : public PerfEvent, public AbstractUprobesPerfEvent {
   uint64_t GetReturnAddress() const { return ring_buffer_record.stack.top8bytes; }
 };
 
-class UretprobesPerfEvent : public PerfEvent, public AbstractUprobesPerfEvent {
+class UprobesPerfEvent : public UprobesPerfEventBase<perf_event_sp_ip_8bytes_sample> {
  public:
-  perf_event_ax_sample ring_buffer_record;
+  void Accept(PerfEventVisitor* visitor) override;
+};
+
+class UprobesWithArgumentsPerfEvent
+    : public UprobesPerfEventBase<perf_event_sp_ip_arguments_8bytes_sample> {
+ public:
+  void Accept(PerfEventVisitor* visitor) override;
+
+  const perf_event_sample_regs_user_sp_ip_arguments& GetRegisters() {
+    return ring_buffer_record.regs;
+  }
+};
+
+template <typename RingBufferRecordT>
+class UretprobesPerfEventBase : public PerfEventWithFunction {
+ public:
+  RingBufferRecordT ring_buffer_record;
 
   uint64_t GetTimestamp() const override { return ring_buffer_record.sample_id.time; }
-
-  void Accept(PerfEventVisitor* visitor) override;
 
   pid_t GetPid() const { return ring_buffer_record.sample_id.pid; }
   pid_t GetTid() const { return ring_buffer_record.sample_id.tid; }
 
-  // Get AX register which holds integer return value.
-  // See https://wiki.osdev.org/System_V_ABI.
-  uint64_t GetAx() const { return ring_buffer_record.regs.ax; }
-
   uint64_t GetStreamId() const { return ring_buffer_record.sample_id.stream_id; }
 
   uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
+};
+
+class UretprobesPerfEvent : public UretprobesPerfEventBase<perf_event_empty_sample> {
+ public:
+  void Accept(PerfEventVisitor* visitor) override;
+};
+
+class UretprobesWithReturnValuePerfEvent : public UretprobesPerfEventBase<perf_event_ax_sample> {
+ public:
+  void Accept(PerfEventVisitor* visitor) override;
+
+  // Get AX register which holds integer return value.
+  // See https://wiki.osdev.org/System_V_ABI.
+  uint64_t GetAx() const { return ring_buffer_record.regs.ax; }
 };
 
 class MmapPerfEvent : public PerfEvent {

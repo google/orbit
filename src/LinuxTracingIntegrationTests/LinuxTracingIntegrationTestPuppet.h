@@ -7,6 +7,8 @@
 
 #include <stdint.h>
 
+#include <array>
+
 namespace orbit_linux_tracing_integration_tests {
 
 struct LinuxTracingIntegrationTestPuppetConstants {
@@ -15,8 +17,10 @@ struct LinuxTracingIntegrationTestPuppetConstants {
   constexpr static uint64_t kSleepCount = 1000;
 
   constexpr static uint64_t kOuterFunctionCallCount = 2;
+  constexpr static uint64_t kOuterFunctionReturnValue = 0x0123456789ABCDEF;
   constexpr static const char* kOuterFunctionName = "OuterFunctionToInstrument";
   constexpr static uint64_t kInnerFunctionCallCount = 3;
+  constexpr static std::array<uint64_t, 6> kInnerFunctionCallArgs = {1, 2, 3, 4, 5, 6};
   constexpr static const char* kInnerFunctionName = "InnerFunctionToInstrument";
 
   constexpr static const char* kNewThreadName = "Thread Name";

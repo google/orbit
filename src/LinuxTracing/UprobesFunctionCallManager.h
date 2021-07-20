@@ -28,14 +28,13 @@ class UprobesFunctionCallManager {
   UprobesFunctionCallManager& operator=(UprobesFunctionCallManager&&) = default;
 
   void ProcessUprobes(pid_t tid, uint64_t function_id, uint64_t begin_timestamp,
-                      const perf_event_sample_regs_user_sp_ip_arguments& regs) {
+                      std::optional<perf_event_sample_regs_user_sp_ip_arguments> regs) {
     auto& tid_uprobes_stack = tid_uprobes_stacks_[tid];
     tid_uprobes_stack.emplace(function_id, begin_timestamp, regs);
   }
 
-  std::optional<orbit_grpc_protos::FunctionCall> ProcessUretprobes(pid_t pid, pid_t tid,
-                                                                   uint64_t end_timestamp,
-                                                                   uint64_t return_value) {
+  std::optional<orbit_grpc_protos::FunctionCall> ProcessUretprobes(
+      pid_t pid, pid_t tid, uint64_t end_timestamp, std::optional<uint64_t> return_value) {
     if (!tid_uprobes_stacks_.contains(tid)) {
       return std::optional<orbit_grpc_protos::FunctionCall>{};
     }
@@ -53,13 +52,17 @@ class UprobesFunctionCallManager {
     function_call.set_duration_ns(end_timestamp - tid_uprobe.begin_timestamp);
     function_call.set_end_timestamp_ns(end_timestamp);
     function_call.set_depth(tid_uprobes_stack.size() - 1);
-    function_call.set_return_value(return_value);
-    function_call.add_registers(tid_uprobe.registers.di);
-    function_call.add_registers(tid_uprobe.registers.si);
-    function_call.add_registers(tid_uprobe.registers.dx);
-    function_call.add_registers(tid_uprobe.registers.cx);
-    function_call.add_registers(tid_uprobe.registers.r8);
-    function_call.add_registers(tid_uprobe.registers.r9);
+    if (return_value.has_value()) {
+      function_call.set_return_value(return_value.value());
+    }
+    if (tid_uprobe.registers.has_value()) {
+      function_call.add_registers(tid_uprobe.registers.value().di);
+      function_call.add_registers(tid_uprobe.registers.value().si);
+      function_call.add_registers(tid_uprobe.registers.value().dx);
+      function_call.add_registers(tid_uprobe.registers.value().cx);
+      function_call.add_registers(tid_uprobe.registers.value().r8);
+      function_call.add_registers(tid_uprobe.registers.value().r9);
+    }
 
     tid_uprobes_stack.pop();
     if (tid_uprobes_stack.empty()) {
@@ -71,11 +74,11 @@ class UprobesFunctionCallManager {
  private:
   struct OpenUprobes {
     OpenUprobes(uint64_t function_id, uint64_t begin_timestamp,
-                const perf_event_sample_regs_user_sp_ip_arguments& regs)
-        : function_id{function_id}, begin_timestamp{begin_timestamp}, registers(regs) {}
+                std::optional<perf_event_sample_regs_user_sp_ip_arguments> regs)
+        : function_id{function_id}, begin_timestamp{begin_timestamp}, registers{regs} {}
     uint64_t function_id;
     uint64_t begin_timestamp;
-    perf_event_sample_regs_user_sp_ip_arguments registers;
+    std::optional<perf_event_sample_regs_user_sp_ip_arguments> registers;
   };
 
   // This map keeps the stack of the dynamically-instrumented functions entered.
