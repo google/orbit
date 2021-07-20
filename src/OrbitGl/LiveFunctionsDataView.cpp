@@ -58,8 +58,9 @@ const std::vector<orbit_data_views::DataView::Column>& LiveFunctionsDataView::Ge
     columns[kColumnTimeAvg] = {"Avg", .075f, SortingOrder::kDescending};
     columns[kColumnTimeMin] = {"Min", .075f, SortingOrder::kDescending};
     columns[kColumnTimeMax] = {"Max", .075f, SortingOrder::kDescending};
+    columns[kColumnStdDev] = {"Std Dev", .075f, SortingOrder::kDescending};
     columns[kColumnModule] = {"Module", .1f, SortingOrder::kAscending};
-    columns[kColumnAddress] = {"Address", .0f, SortingOrder::kAscending};
+    columns[kColumnAddress] = {"Address", .1f, SortingOrder::kAscending};
     return columns;
   }();
   return columns;
@@ -92,6 +93,8 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
       return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats.min_ns()));
     case kColumnTimeMax:
       return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats.max_ns()));
+    case kColumnStdDev:
+      return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats.std_dev_ns()));
     case kColumnModule:
       return function.module_path();
     case kColumnAddress:
@@ -173,6 +176,9 @@ void LiveFunctionsDataView::DoSort() {
       break;
     case kColumnTimeMax:
       sorter = ORBIT_STAT_SORT(max_ns());
+      break;
+    case kColumnStdDev:
+      sorter = ORBIT_STAT_SORT(std_dev_ns());
       break;
     case kColumnModule:
       sorter = ORBIT_CUSTOM_FUNC_SORT(orbit_client_data::function_utils::GetLoadedModuleName);

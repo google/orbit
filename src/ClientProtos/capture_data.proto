@@ -14,6 +14,8 @@ message FunctionStats {
   uint64 average_time_ns = 3;
   uint64 min_ns = 4;
   uint64 max_ns = 5;
+  double variance_ns = 6;
+  uint64 std_dev_ns = 7;
 }
 
 message ProcessInfo {
