@@ -209,7 +209,6 @@ file(COPY third_party/LLVM/LICENSE.TXT DESTINATION ${CMAKE_BINARY_DIR}/licenses/
 file(COPY third_party/lzma_sdk/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/lzma_sdk/licenses/)
 file(COPY third_party/freetype-gl/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/freetype-gl/licenses/)
 file(COPY third_party/fonts/VERA-COPYRIGHT DESTINATION ${CMAKE_BINARY_DIR}/licenses/fonts/)
-file(COPY third_party/OpenSSL/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/openssl/licenses/)
 file(COPY third_party/qtpropertybrowser/LICENSE.txt DESTINATION ${CMAKE_BINARY_DIR}/licenses/qtpropertybrowser/licenses/)
 file(COPY third_party/conan/LICENSE.md DESTINATION ${CMAKE_BINARY_DIR}/licenses/conan/licenses/)
 file(COPY third_party/vulkan/LICENSE.txt DESTINATION ${CMAKE_BINARY_DIR}/licenses/vulkan/licenses/)
