@@ -15,7 +15,7 @@ class TimeGraphLayout {
   float GetTextBoxHeight() const { return text_box_height_ * scale_; }
   float GetTextCoresHeight() const { return core_height_ * scale_; }
   float GetThreadStateTrackHeight() const { return thread_state_track_height_ * scale_; }
-  float GetEventTrackHeight() const { return event_track_height_ * scale_; }
+  float GetEventTrackHeightFromTid(int32_t tid) const;
   float GetVariableTrackHeight() const { return variable_track_height_ * scale_; }
   float GetTrackBottomMargin() const { return track_bottom_margin_ * scale_; }
   float GetTrackTopMargin() const { return track_top_margin_ * scale_; }
@@ -56,6 +56,7 @@ class TimeGraphLayout {
   float core_height_;
   float thread_state_track_height_;
   float event_track_height_;
+  float all_threads_event_track_scale_;
   float variable_track_height_;
   float track_bottom_margin_;
   float track_top_margin_;
@@ -88,6 +89,10 @@ class TimeGraphLayout {
 
   bool draw_properties_ = false;
   bool draw_track_background_ = true;
+
+ private:
+  float GetEventTrackHeight() const { return event_track_height_ * scale_; }
+  float GetAllThreadsEventTrackScale() const { return all_threads_event_track_scale_; }
 };
 
 #endif  // ORBIT_GL_TIME_GRAPH_LAYOUT_H_
