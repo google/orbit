@@ -4,7 +4,6 @@
 
 #include "ThreadTrack.h"
 
-#include <GteVector.h>
 #include <absl/strings/str_format.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
@@ -16,11 +15,9 @@
 #include "App.h"
 #include "Batcher.h"
 #include "ClientData/FunctionUtils.h"
-#include "ClientData/TextBox.h"
 #include "ClientData/TimerChain.h"
 #include "ClientModel/CaptureData.h"
 #include "DisplayFormats/DisplayFormats.h"
-#include "GlCanvas.h"
 #include "GlUtils.h"
 #include "Introspection/Introspection.h"
 #include "ManualInstrumentationManager.h"
@@ -31,6 +28,7 @@
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
 #include "Viewport.h"
+#include "capture_data.pb.h"
 
 using orbit_client_model::CaptureData;
 using orbit_client_protos::FunctionInfo;

@@ -10,7 +10,6 @@
 #include <math.h>
 #include <stddef.h>
 
-#include "ClientData/TextBox.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"

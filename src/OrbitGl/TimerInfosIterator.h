@@ -10,7 +10,6 @@
 #include <memory>
 #include <vector>
 
-#include "ClientData/TextBox.h"
 #include "ClientData/TimerChain.h"
 #include "capture_data.pb.h"
 

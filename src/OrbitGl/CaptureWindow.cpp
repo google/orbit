@@ -20,7 +20,6 @@
 #include "AccessibleTimeGraph.h"
 #include "App.h"
 #include "ClientData/CallstackData.h"
-#include "ClientData/TextBox.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
@@ -35,8 +34,6 @@
 #include "TextRenderer.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
-#include "Timer.h"
-#include "TrackManager.h"
 #include "absl/base/casts.h"
 #include "capture_data.pb.h"
 

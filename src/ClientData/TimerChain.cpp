@@ -6,7 +6,6 @@
 
 #include <algorithm>
 
-#include "ClientData/TextBox.h"
 #include "capture_data.pb.h"
 
 bool orbit_client_data::TimerBlock::Intersects(uint64_t min, uint64_t max) const {

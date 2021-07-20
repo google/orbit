@@ -13,7 +13,6 @@
 
 #include "Batcher.h"
 #include "ClientData/FunctionUtils.h"
-#include "ClientData/TextBox.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"

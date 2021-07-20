@@ -18,7 +18,6 @@
 #include "Batcher.h"
 #include "BlockChain.h"
 #include "CaptureViewElement.h"
-#include "ClientData/TextBox.h"
 #include "ClientData/TimerChain.h"
 #include "CoreMath.h"
 #include "OrbitBase/Profiling.h"

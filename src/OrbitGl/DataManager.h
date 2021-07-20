@@ -13,7 +13,6 @@
 #include <vector>
 
 #include "ClientData/FunctionInfoSet.h"
-#include "ClientData/TextBox.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
 #include "GrpcProtos/Constants.h"

@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "CallstackThreadBar.h"
-#include "ClientData/TextBox.h"
 #include "ClientData/TimerChain.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
