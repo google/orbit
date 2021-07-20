@@ -20,7 +20,8 @@ const std::array<Color, kVariableTrackDimension> kVariableTrackColor{Color(0, 12
 class VariableTrack final : public LineGraphTrack<kVariableTrackDimension> {
  public:
   explicit VariableTrack(CaptureViewElement* parent, TimeGraph* time_graph,
-                         orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string name,
+                         orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                         const std::string& name,
                          const orbit_client_model::CaptureData* capture_data,
                          uint32_t indentation_level = 0)
       : LineGraphTrack<kVariableTrackDimension>(parent, time_graph, viewport, layout, name,
@@ -32,6 +33,9 @@ class VariableTrack final : public LineGraphTrack<kVariableTrackDimension> {
   [[nodiscard]] bool IsCollapsible() const override { return false; }
   [[nodiscard]] Track::Type GetType() const override { return Track::Type::kVariableTrack; }
   void AddValue(uint64_t time, double value) { AddValues(time, {value}); }
+
+ private:
+  std::string GetLegendTooltips(size_t /*legend_index*/) const override { return ""; }
 };
 
 }  // namespace orbit_gl
