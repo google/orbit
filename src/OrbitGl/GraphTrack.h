@@ -56,6 +56,7 @@ class GraphTrack : public Track {
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 
  protected:
+  [[nodiscard]] virtual std::string GetLegendTooltips(size_t legend_index) const = 0;
   [[nodiscard]] virtual Color GetColor(size_t index) const;
   [[nodiscard]] virtual double GetGraphMaxValue() const { return series_.GetMax(); }
   [[nodiscard]] virtual double GetGraphMinValue() const { return series_.GetMin(); }
@@ -95,7 +96,6 @@ class GraphTrack : public Track {
   MultivariateTimeSeries<Dimension> series_;
 
  private:
-  [[nodiscard]] virtual std::string GetLegendTooltips(size_t /*legend_index*/) const { return ""; }
   void DrawSingleSeriesEntry(Batcher* batcher, uint64_t start_tick, uint64_t end_tick,
                              const std::array<float, Dimension>& normalized_values, float z);
 

@@ -18,8 +18,8 @@ template <size_t Dimension>
 class LineGraphTrack : public GraphTrack<Dimension> {
  public:
   explicit LineGraphTrack(CaptureViewElement* parent, TimeGraph* time_graph,
-                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string name,
-                          std::array<std::string, Dimension> series_names,
+                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                          const std::string& name, std::array<std::string, Dimension> series_names,
                           const orbit_client_model::CaptureData* capture_data,
                           uint32_t indentation_level = 0)
       : GraphTrack<Dimension>(parent, time_graph, viewport, layout, name, series_names,

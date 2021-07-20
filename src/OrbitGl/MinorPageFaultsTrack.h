@@ -25,7 +25,7 @@ class MinorPageFaultsTrack final : public BasicPageFaultsTrack {
 
   [[nodiscard]] std::string GetTooltip() const override;
 
- private:
+ protected:
   [[nodiscard]] std::string GetLegendTooltips(size_t legend_index) const override;
 };
 

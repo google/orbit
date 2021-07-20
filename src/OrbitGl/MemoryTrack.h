@@ -19,8 +19,8 @@ template <size_t Dimension>
 class MemoryTrack : public GraphTrack<Dimension>, public AnnotationTrack {
  public:
   explicit MemoryTrack(CaptureViewElement* parent, TimeGraph* time_graph,
-                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string name,
-                       std::array<std::string, Dimension> series_names,
+                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                       const std::string& name, std::array<std::string, Dimension> series_names,
                        const orbit_client_model::CaptureData* capture_data)
       : GraphTrack<Dimension>(parent, time_graph, viewport, layout, name, series_names,
                               capture_data),
