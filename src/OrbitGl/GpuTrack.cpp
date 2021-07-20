@@ -140,6 +140,12 @@ float GpuTrack::GetHeight() const {
 void GpuTrack::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
                     PickingMode picking_mode, float z_offset) {
   UpdatePositionOfSubtracks();
+  // If being collapsed, the gpu track will show a collapsed version of the submission subtrack.
+  // Hence, the height of submission subtrack should always be updated as long as the subtrack is
+  // not empty.
+  if (!submission_track_->IsEmpty()) {
+    submission_track_->SetSize(size_[0], submission_track_->GetHeight());
+  }
 
   Track::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
 
@@ -148,7 +154,6 @@ void GpuTrack::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t curr
   }
 
   if (!submission_track_->IsEmpty()) {
-    submission_track_->SetSize(size_[0], submission_track_->GetHeight());
     submission_track_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
   }
 

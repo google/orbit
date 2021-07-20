@@ -82,7 +82,6 @@ void GraphTrack<Dimension>::Draw(Batcher& batcher, TextRenderer& text_renderer,
 template <size_t Dimension>
 void GraphTrack<Dimension>::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                              PickingMode picking_mode, float z_offset) {
-  SetSize(GetSize()[0], GetHeight());
   pos_[0] = viewport_->GetWorldTopLeft()[0];
 
   float track_z = GlCanvas::kZValueTrack + z_offset;

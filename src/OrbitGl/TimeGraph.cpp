@@ -517,10 +517,9 @@ double TimeGraph::GetUsFromTick(uint64_t time) const {
 }
 
 uint64_t TimeGraph::GetTickFromWorld(float world_x) const {
+  float visible_width = world_width_ - right_margin_;
   double ratio =
-      world_width_ != 0
-          ? static_cast<double>((world_x - world_start_x_) / (world_width_ - right_margin_))
-          : 0;
+      visible_width > 0 ? static_cast<double>((world_x - world_start_x_) / visible_width) : 0;
   auto time_span_ns = static_cast<uint64_t>(1000 * GetTime(ratio));
   return capture_min_timestamp_ + time_span_ns;
 }
