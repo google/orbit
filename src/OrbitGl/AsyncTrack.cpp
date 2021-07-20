@@ -14,7 +14,6 @@
 #include "App.h"
 #include "Batcher.h"
 #include "ClientData/FunctionUtils.h"
-#include "ClientData/TextBox.h"
 #include "ClientModel/CaptureData.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"

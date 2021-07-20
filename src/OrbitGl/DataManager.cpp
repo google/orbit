@@ -8,8 +8,8 @@
 
 #include <utility>
 
-#include "ClientData/TextBox.h"
 #include "OrbitBase/Logging.h"
+#include "capture_data.pb.h"
 
 using orbit_client_data::TracepointInfoSet;
 using orbit_client_protos::FunctionInfo;

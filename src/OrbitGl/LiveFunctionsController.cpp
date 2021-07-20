@@ -13,9 +13,9 @@
 #include <utility>
 
 #include "App.h"
-#include "ClientData/TextBox.h"
 #include "ClientModel/CaptureData.h"
 #include "TimeGraph.h"
+#include "capture_data.pb.h"
 
 using orbit_client_protos::FunctionInfo;
 

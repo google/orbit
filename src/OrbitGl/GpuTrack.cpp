@@ -12,7 +12,6 @@
 
 #include "App.h"
 #include "Batcher.h"
-#include "ClientData/TextBox.h"
 #include "ClientModel/CaptureData.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
@@ -20,6 +19,7 @@
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
 #include "Viewport.h"
+#include "capture_data.pb.h"
 
 using orbit_client_protos::TimerInfo;
 
