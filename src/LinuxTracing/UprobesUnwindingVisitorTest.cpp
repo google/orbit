@@ -13,10 +13,10 @@
 using ::testing::_;
 using ::testing::AllOf;
 using ::testing::ElementsAre;
-using ::testing::ElementsAreArray;
 using ::testing::Ge;
 using ::testing::Invoke;
 using ::testing::Lt;
+using ::testing::Mock;
 using ::testing::Property;
 using ::testing::Return;
 using ::testing::SaveArg;
@@ -82,8 +82,6 @@ class MockLeafFunctionCallManager : public LeafFunctionCallManager {
               (override));
 };
 
-class MockUprobesFunctionCallManager : public UprobesFunctionCallManager {};
-
 class UprobesUnwindingVisitorTest : public ::testing::Test {
  protected:
   void SetUp() override {
@@ -104,7 +102,7 @@ class UprobesUnwindingVisitorTest : public ::testing::Test {
   void TearDown() override { visitor_.reset(); }
 
   static constexpr uint32_t kStackDumpSize = 128;
-  MockUprobesFunctionCallManager function_call_manager_;
+  UprobesFunctionCallManager function_call_manager_;
   MockUprobesReturnAddressManager return_address_manager_;
   MockLibunwindstackMaps maps_;
   MockLibunwindstackUnwinder unwinder_;
@@ -171,6 +169,183 @@ class UprobesUnwindingVisitorTest : public ::testing::Test {
 };
 
 }  // namespace
+
+TEST_F(UprobesUnwindingVisitorTest,
+       VisitUprobesAndUretprobesPerfEventsInVariousCombinationsSendsFunctionCalls) {
+  constexpr pid_t kPid = 42;
+  constexpr pid_t kTid = 43;
+  constexpr uint32_t kCpu = 1;
+
+  {
+    Function function1{1, "/path/to/module", 0x01, false, false};
+    UprobesPerfEvent uprobe1;
+    uprobe1.ring_buffer_record.sample_id.pid = kPid;
+    uprobe1.ring_buffer_record.sample_id.tid = kTid;
+    uprobe1.ring_buffer_record.sample_id.time = 100;
+    uprobe1.ring_buffer_record.sample_id.cpu = kCpu;
+    uprobe1.ring_buffer_record.regs.sp = 0x40;
+    uprobe1.ring_buffer_record.regs.ip = 0x01;
+    uprobe1.ring_buffer_record.stack.top8bytes = 0x00;
+    uprobe1.SetFunction(&function1);
+
+    EXPECT_CALL(return_address_manager_, ProcessUprobes(kTid, 0x40, 0x00)).Times(1);
+    visitor_->Visit(&uprobe1);
+    Mock::VerifyAndClearExpectations(&return_address_manager_);
+  }
+
+  {
+    Function function2{2, "/path/to/module", 0x02, true, false};
+    UprobesWithArgumentsPerfEvent uprobe2;
+    uprobe2.ring_buffer_record.sample_id.pid = kPid;
+    uprobe2.ring_buffer_record.sample_id.tid = kTid;
+    uprobe2.ring_buffer_record.sample_id.time = 200;
+    uprobe2.ring_buffer_record.sample_id.cpu = kCpu;
+    uprobe2.ring_buffer_record.regs.sp = 0x30;
+    uprobe2.ring_buffer_record.regs.ip = 0x02;
+    uprobe2.ring_buffer_record.stack.top8bytes = 0x01;
+    uprobe2.ring_buffer_record.regs.di = 1;
+    uprobe2.ring_buffer_record.regs.si = 2;
+    uprobe2.ring_buffer_record.regs.dx = 3;
+    uprobe2.ring_buffer_record.regs.cx = 4;
+    uprobe2.ring_buffer_record.regs.r8 = 5;
+    uprobe2.ring_buffer_record.regs.r9 = 6;
+    uprobe2.SetFunction(&function2);
+
+    EXPECT_CALL(return_address_manager_, ProcessUprobes(kTid, 0x30, 0x01)).Times(1);
+    visitor_->Visit(&uprobe2);
+    Mock::VerifyAndClearExpectations(&return_address_manager_);
+  }
+
+  {
+    Function function3{3, "/path/to/module", 0x03, false, true};
+    UprobesPerfEvent uprobe3;
+    uprobe3.ring_buffer_record.sample_id.pid = kPid;
+    uprobe3.ring_buffer_record.sample_id.tid = kTid;
+    uprobe3.ring_buffer_record.sample_id.time = 300;
+    uprobe3.ring_buffer_record.sample_id.cpu = kCpu;
+    uprobe3.ring_buffer_record.regs.sp = 0x20;
+    uprobe3.ring_buffer_record.regs.ip = 0x03;
+    uprobe3.ring_buffer_record.stack.top8bytes = 0x02;
+    uprobe3.SetFunction(&function3);
+
+    EXPECT_CALL(return_address_manager_, ProcessUprobes(kTid, 0x20, 0x02)).Times(1);
+    visitor_->Visit(&uprobe3);
+    Mock::VerifyAndClearExpectations(&return_address_manager_);
+  }
+
+  {
+    Function function4{4, "/path/to/module", 0x04, true, true};
+    UprobesWithArgumentsPerfEvent uprobe4;
+    uprobe4.ring_buffer_record.sample_id.pid = kPid;
+    uprobe4.ring_buffer_record.sample_id.tid = kTid;
+    uprobe4.ring_buffer_record.sample_id.time = 400;
+    uprobe4.ring_buffer_record.sample_id.cpu = kCpu;
+    uprobe4.ring_buffer_record.regs.sp = 0x10;
+    uprobe4.ring_buffer_record.regs.ip = 0x04;
+    uprobe4.ring_buffer_record.stack.top8bytes = 0x03;
+    uprobe4.ring_buffer_record.regs.di = 1;
+    uprobe4.ring_buffer_record.regs.si = 2;
+    uprobe4.ring_buffer_record.regs.dx = 3;
+    uprobe4.ring_buffer_record.regs.cx = 4;
+    uprobe4.ring_buffer_record.regs.r8 = 5;
+    uprobe4.ring_buffer_record.regs.r9 = 6;
+    uprobe4.SetFunction(&function4);
+
+    EXPECT_CALL(return_address_manager_, ProcessUprobes(kTid, 0x10, 0x03)).Times(1);
+    visitor_->Visit(&uprobe4);
+    Mock::VerifyAndClearExpectations(&return_address_manager_);
+  }
+
+  {
+    UretprobesWithReturnValuePerfEvent uretprobe4;
+    uretprobe4.ring_buffer_record.sample_id.pid = kPid;
+    uretprobe4.ring_buffer_record.sample_id.tid = kTid;
+    uretprobe4.ring_buffer_record.sample_id.time = 500;
+    uretprobe4.ring_buffer_record.regs.ax = 456;
+
+    EXPECT_CALL(return_address_manager_, ProcessUretprobes(kTid)).Times(1);
+    orbit_grpc_protos::FunctionCall actual_function_call;
+    EXPECT_CALL(listener_, OnFunctionCall).Times(1).WillOnce(SaveArg<0>(&actual_function_call));
+    visitor_->Visit(&uretprobe4);
+    Mock::VerifyAndClearExpectations(&return_address_manager_);
+    Mock::VerifyAndClearExpectations(&listener_);
+    EXPECT_EQ(actual_function_call.pid(), kPid);
+    EXPECT_EQ(actual_function_call.tid(), kTid);
+    EXPECT_EQ(actual_function_call.function_id(), 4);
+    EXPECT_EQ(actual_function_call.duration_ns(), 100);
+    EXPECT_EQ(actual_function_call.end_timestamp_ns(), 500);
+    EXPECT_EQ(actual_function_call.depth(), 3);
+    EXPECT_EQ(actual_function_call.return_value(), 456);
+    EXPECT_THAT(actual_function_call.registers(), ElementsAre(1, 2, 3, 4, 5, 6));
+  }
+
+  {
+    UretprobesWithReturnValuePerfEvent uretprobe3;
+    uretprobe3.ring_buffer_record.sample_id.pid = kPid;
+    uretprobe3.ring_buffer_record.sample_id.tid = kTid;
+    uretprobe3.ring_buffer_record.sample_id.time = 600;
+    uretprobe3.ring_buffer_record.regs.ax = 123;
+
+    EXPECT_CALL(return_address_manager_, ProcessUretprobes(kTid)).Times(1);
+    orbit_grpc_protos::FunctionCall actual_function_call;
+    EXPECT_CALL(listener_, OnFunctionCall).Times(1).WillOnce(SaveArg<0>(&actual_function_call));
+    visitor_->Visit(&uretprobe3);
+    Mock::VerifyAndClearExpectations(&return_address_manager_);
+    Mock::VerifyAndClearExpectations(&listener_);
+    EXPECT_EQ(actual_function_call.pid(), kPid);
+    EXPECT_EQ(actual_function_call.tid(), kTid);
+    EXPECT_EQ(actual_function_call.function_id(), 3);
+    EXPECT_EQ(actual_function_call.duration_ns(), 300);
+    EXPECT_EQ(actual_function_call.end_timestamp_ns(), 600);
+    EXPECT_EQ(actual_function_call.depth(), 2);
+    EXPECT_EQ(actual_function_call.return_value(), 123);
+    EXPECT_THAT(actual_function_call.registers(), ElementsAre());
+  }
+
+  {
+    UretprobesPerfEvent uretprobe2;
+    uretprobe2.ring_buffer_record.sample_id.pid = kPid;
+    uretprobe2.ring_buffer_record.sample_id.tid = kTid;
+    uretprobe2.ring_buffer_record.sample_id.time = 700;
+
+    EXPECT_CALL(return_address_manager_, ProcessUretprobes(kTid)).Times(1);
+    orbit_grpc_protos::FunctionCall actual_function_call;
+    EXPECT_CALL(listener_, OnFunctionCall).Times(1).WillOnce(SaveArg<0>(&actual_function_call));
+    visitor_->Visit(&uretprobe2);
+    Mock::VerifyAndClearExpectations(&return_address_manager_);
+    Mock::VerifyAndClearExpectations(&listener_);
+    EXPECT_EQ(actual_function_call.pid(), kPid);
+    EXPECT_EQ(actual_function_call.tid(), kTid);
+    EXPECT_EQ(actual_function_call.function_id(), 2);
+    EXPECT_EQ(actual_function_call.duration_ns(), 500);
+    EXPECT_EQ(actual_function_call.end_timestamp_ns(), 700);
+    EXPECT_EQ(actual_function_call.depth(), 1);
+    EXPECT_EQ(actual_function_call.return_value(), 0);
+    EXPECT_THAT(actual_function_call.registers(), ElementsAre(1, 2, 3, 4, 5, 6));
+  }
+
+  {
+    UretprobesPerfEvent uretprobe1;
+    uretprobe1.ring_buffer_record.sample_id.pid = kPid;
+    uretprobe1.ring_buffer_record.sample_id.tid = kTid;
+    uretprobe1.ring_buffer_record.sample_id.time = 800;
+
+    EXPECT_CALL(return_address_manager_, ProcessUretprobes(kTid)).Times(1);
+    orbit_grpc_protos::FunctionCall actual_function_call;
+    EXPECT_CALL(listener_, OnFunctionCall).Times(1).WillOnce(SaveArg<0>(&actual_function_call));
+    visitor_->Visit(&uretprobe1);
+    Mock::VerifyAndClearExpectations(&return_address_manager_);
+    Mock::VerifyAndClearExpectations(&listener_);
+    EXPECT_EQ(actual_function_call.pid(), kPid);
+    EXPECT_EQ(actual_function_call.tid(), kTid);
+    EXPECT_EQ(actual_function_call.function_id(), 1);
+    EXPECT_EQ(actual_function_call.duration_ns(), 700);
+    EXPECT_EQ(actual_function_call.end_timestamp_ns(), 800);
+    EXPECT_EQ(actual_function_call.depth(), 0);
+    EXPECT_EQ(actual_function_call.return_value(), 0);
+    EXPECT_THAT(actual_function_call.registers(), ElementsAre());
+  }
+}
 
 //-------------------------------//
 // VISIT STACK SAMPLE PERF EVENT //

@@ -20,7 +20,9 @@ class PerfEventVisitor {
   virtual void Visit(StackSamplePerfEvent* /*event*/) {}
   virtual void Visit(CallchainSamplePerfEvent* /*event*/) {}
   virtual void Visit(UprobesPerfEvent* /*event*/) {}
+  virtual void Visit(UprobesWithArgumentsPerfEvent* /*event*/) {}
   virtual void Visit(UretprobesPerfEvent* /*event*/) {}
+  virtual void Visit(UretprobesWithReturnValuePerfEvent* /*event*/) {}
   virtual void Visit(LostPerfEvent* /*event*/) {}
   virtual void Visit(DiscardedPerfEvent* /*event*/) {}
   virtual void Visit(MmapPerfEvent* /*event*/) {}

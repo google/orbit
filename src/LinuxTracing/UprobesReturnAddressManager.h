@@ -16,6 +16,7 @@
 #include "OrbitBase/Logging.h"
 
 namespace orbit_linux_tracing {
+
 // Keeps a stack, for every thread, of the return addresses at the top of the
 // stack when uprobes are hit, before they are hijacked by uretprobes. Patches
 // them into samples so that unwinding can continue past

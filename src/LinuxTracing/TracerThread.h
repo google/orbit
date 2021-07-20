@@ -152,7 +152,9 @@ class TracerThread {
 
   absl::flat_hash_map<uint64_t, const Function*> uprobes_uretprobes_ids_to_function_;
   absl::flat_hash_set<uint64_t> uprobes_ids_;
+  absl::flat_hash_set<uint64_t> uprobes_with_args_ids_;
   absl::flat_hash_set<uint64_t> uretprobes_ids_;
+  absl::flat_hash_set<uint64_t> uretprobes_with_retval_ids_;
   absl::flat_hash_set<uint64_t> stack_sampling_ids_;
   absl::flat_hash_set<uint64_t> callchain_sampling_ids_;
   absl::flat_hash_set<uint64_t> task_newtask_ids_;
@@ -212,7 +214,6 @@ class TracerThread {
   static constexpr uint64_t EVENT_STATS_WINDOW_S = 5;
   EventStats stats_{};
 
-  static constexpr uint64_t NS_PER_MILLISECOND = 1'000'000;
   static constexpr uint64_t NS_PER_SECOND = 1'000'000'000;
 };
 

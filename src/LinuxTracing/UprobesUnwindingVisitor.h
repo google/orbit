@@ -82,10 +82,18 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   void Visit(StackSamplePerfEvent* event) override;
   void Visit(CallchainSamplePerfEvent* event) override;
   void Visit(UprobesPerfEvent* event) override;
+  void Visit(UprobesWithArgumentsPerfEvent* event) override;
   void Visit(UretprobesPerfEvent* event) override;
+  void Visit(UretprobesWithReturnValuePerfEvent* event) override;
   void Visit(MmapPerfEvent* event) override;
 
  private:
+  void OnUprobes(uint64_t timestamp_ns, pid_t tid, uint32_t cpu, uint64_t sp, uint64_t ip,
+                 uint64_t return_address,
+                 std::optional<perf_event_sample_regs_user_sp_ip_arguments> registers,
+                 uint64_t function_id);
+  void OnUretprobes(uint64_t timestamp_ns, pid_t pid, pid_t tid, std::optional<uint64_t> ax);
+
   TracerListener* listener_;
 
   UprobesFunctionCallManager* function_call_manager_;

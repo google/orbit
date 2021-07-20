@@ -57,7 +57,11 @@ void CallchainSamplePerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visi
 
 void UprobesPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
+void UprobesWithArgumentsPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
+
 void UretprobesPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
+
+void UretprobesWithReturnValuePerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
 void LostPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 

@@ -626,6 +626,7 @@ void AddOuterAndInnerFunctionToCaptureOptions(orbit_grpc_protos::CaptureOptions*
       instrumented_function.set_file_offset(symbol.address() - module_symbols.load_bias());
       instrumented_function.set_function_id(outer_function_id);
       instrumented_function.set_function_name(symbol.name());
+      instrumented_function.set_record_return_value(true);
       capture_options->mutable_instrumented_functions()->Add(std::move(instrumented_function));
     }
 
@@ -637,6 +638,7 @@ void AddOuterAndInnerFunctionToCaptureOptions(orbit_grpc_protos::CaptureOptions*
       instrumented_function.set_file_offset(symbol.address() - module_symbols.load_bias());
       instrumented_function.set_function_id(inner_function_id);
       instrumented_function.set_function_name(symbol.name());
+      instrumented_function.set_record_arguments(true);
       capture_options->mutable_instrumented_functions()->Add(std::move(instrumented_function));
     }
   }
@@ -679,6 +681,8 @@ void VerifyFunctionCallsOfOuterAndInnerFunction(
                   function_calls[function_call_index - 1].end_timestamp_ns());
       }
       EXPECT_EQ(function_call.depth(), 1);
+      EXPECT_EQ(function_call.return_value(), 0);
+      EXPECT_THAT(function_call.registers(), testing::ElementsAre(1, 2, 3, 4, 5, 6));
       ++function_call_index;
     }
 
@@ -691,6 +695,8 @@ void VerifyFunctionCallsOfOuterAndInnerFunction(
                   function_calls[function_call_index - 1].end_timestamp_ns());
       }
       EXPECT_EQ(function_call.depth(), 0);
+      EXPECT_EQ(function_call.return_value(), PuppetConstants::kOuterFunctionReturnValue);
+      EXPECT_EQ(function_call.registers_size(), 0);
       ++function_call_index;
     }
   }
