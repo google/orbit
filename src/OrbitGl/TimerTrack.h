@@ -136,6 +136,7 @@ class TimerTrack : public Track {
       const orbit_client_protos::TimerInfo& /*timer*/) const {
     return "";
   }
+  [[nodiscard]] virtual std::string GetDisplayTime(const TimerInfo&) const;
 
   virtual void DrawTimesliceText(const orbit_client_protos::TimerInfo& /*timer*/, float /*min_x*/,
                                  float /*z_offset*/, orbit_client_data::TextBox* /*text_box*/);

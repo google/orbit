@@ -13,7 +13,6 @@
 
 #include "Batcher.h"
 #include "ClientData/FunctionUtils.h"
-#include "ClientData/TextBox.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
@@ -159,9 +158,7 @@ void FrameTrack::OnTimer(const TimerInfo& timer_info) {
 }
 
 std::string FrameTrack::GetTimesliceText(const TimerInfo& timer_info) const {
-  std::string time = orbit_display_formats::GetDisplayTime(
-      absl::Nanoseconds(timer_info.end() - timer_info.start()));
-
+  std::string time = GetDisplayTime(timer_info);
   return absl::StrFormat("Frame #%u: %s", timer_info.user_data_key(), time);
 }
 

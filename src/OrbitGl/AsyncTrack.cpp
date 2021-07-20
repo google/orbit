@@ -95,8 +95,7 @@ void AsyncTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
 }
 
 std::string AsyncTrack::GetTimesliceText(const TimerInfo& timer_info) const {
-  std::string time = orbit_display_formats::GetDisplayTime(
-      absl::Nanoseconds(timer_info.end() - timer_info.start()));
+  std::string time = GetDisplayTime(timer_info);
 
   orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
   const uint64_t event_id = event.data;
