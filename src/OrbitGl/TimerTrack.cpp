@@ -39,17 +39,6 @@ TimerTrack::TimerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
   text_renderer_ = time_graph->GetTextRenderer();
 }
 
-void TimerTrack::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-                      PickingMode picking_mode, float z_offset) {
-  float track_height = GetHeight();
-  float track_width = viewport_->GetVisibleWorldWidth();
-
-  SetPos(viewport_->GetWorldTopLeft()[0], pos_[1]);
-  SetSize(track_width, track_height);
-
-  Track::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
-}
-
 std::string TimerTrack::GetExtraInfo(const TimerInfo& timer_info) {
   std::string info;
   static bool show_return_value = absl::GetFlag(FLAGS_show_return_values);
@@ -77,16 +66,16 @@ struct WorldXInfo {
   float world_x_width;
 };
 
-WorldXInfo ToWorldX(double start_us, double end_us, double inv_time_window, float world_start_x,
-                    float world_width) {
+WorldXInfo ToWorldX(double start_us, double end_us, double inv_time_window, float track_start_x,
+                    float track_width) {
   double width_us = end_us - start_us;
 
   double normalized_start = start_us * inv_time_window;
   double normalized_width = width_us * inv_time_window;
 
   WorldXInfo result{};
-  result.world_x_start = static_cast<float>(world_start_x + normalized_start * world_width);
-  result.world_x_width = static_cast<float>(normalized_width * world_width);
+  result.world_x_start = static_cast<float>(track_start_x + normalized_start * track_width);
+  result.world_x_width = static_cast<float>(normalized_width * track_width);
   return result;
 }
 
@@ -168,13 +157,13 @@ bool TimerTrack::DrawTimer(const orbit_client_data::TextBox* prev_text_box,
     bool is_visible_width = ((text_x_end_us - text_x_start_us) * draw_data.inv_time_window *
                              draw_data.viewport->GetScreenWidth()) > 1;
     WorldXInfo world_x_info = ToWorldX(text_x_start_us, text_x_end_us, draw_data.inv_time_window,
-                                       draw_data.world_start_x, draw_data.world_width);
+                                       draw_data.track_start_x, draw_data.track_width);
 
     if (is_visible_width) {
       current_text_box->SetPos({world_x_info.world_x_start, world_timer_y});
       current_text_box->SetSize({world_x_info.world_x_width, GetTextBoxHeight(current_timer_info)});
 
-      SetTimesliceText(current_timer_info, draw_data.world_start_x, draw_data.z_offset,
+      SetTimesliceText(current_timer_info, draw_data.track_start_x, draw_data.z_offset,
                        current_text_box);
     }
   }
@@ -192,12 +181,12 @@ bool TimerTrack::DrawTimer(const orbit_client_data::TextBox* prev_text_box,
 
   if (is_visible_width) {
     WorldXInfo world_x_info_left_overlap =
-        ToWorldX(start_us, start_or_prev_end_us, draw_data.inv_time_window, draw_data.world_start_x,
-                 draw_data.world_width);
+        ToWorldX(start_us, start_or_prev_end_us, draw_data.inv_time_window, draw_data.track_start_x,
+                 draw_data.track_width);
 
     WorldXInfo world_x_info_right_overlap =
-        ToWorldX(end_or_next_start_us, end_us, draw_data.inv_time_window, draw_data.world_start_x,
-                 draw_data.world_width);
+        ToWorldX(end_or_next_start_us, end_us, draw_data.inv_time_window, draw_data.track_start_x,
+                 draw_data.track_width);
 
     Vec3 top_left(world_x_info_left_overlap.world_x_start, world_timer_y + box_height, draw_data.z);
     Vec3 bottom_left(
@@ -217,7 +206,7 @@ bool TimerTrack::DrawTimer(const orbit_client_data::TextBox* prev_text_box,
         current_text_box, [&, batcher](PickingId id) { return this->GetBoxTooltip(*batcher, id); });
 
     WorldXInfo world_x_info = ToWorldX(start_us, end_us, draw_data.inv_time_window,
-                                       draw_data.world_start_x, draw_data.world_width);
+                                       draw_data.track_start_x, draw_data.track_width);
 
     Vec2 pos(world_x_info.world_x_start, world_timer_y);
     draw_data.batcher->AddVerticalLine(pos, GetTextBoxHeight(current_timer_info), draw_data.z,
@@ -253,8 +242,8 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
   draw_data.batcher = batcher;
   draw_data.viewport = viewport_;
 
-  draw_data.world_start_x = viewport_->GetWorldTopLeft()[0];
-  draw_data.world_width = viewport_->GetVisibleWorldWidth();
+  draw_data.track_start_x = viewport_->GetWorldTopLeft()[0];
+  draw_data.track_width = size_[0];
   draw_data.inv_time_window = 1.0 / time_graph_->GetTimeWindowUs();
   draw_data.is_collapsed = collapse_toggle_->IsCollapsed();
 
@@ -416,8 +405,8 @@ std::string TimerTrack::GetBoxTooltip(const Batcher& /*batcher*/, PickingId /*id
 
 float TimerTrack::GetHeaderHeight() const { return layout_->GetTrackTabHeight(); }
 
-internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick, float z_offset,
-                                           Batcher* batcher, TimeGraph* time_graph,
+internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick, float track_width,
+                                           float z_offset, Batcher* batcher, TimeGraph* time_graph,
                                            orbit_gl::Viewport* viewport, bool is_collapsed,
                                            const orbit_client_data::TextBox* selected_textbox,
                                            uint64_t highlighted_function_id) {
@@ -427,8 +416,8 @@ internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick,
   draw_data.z_offset = z_offset;
   draw_data.batcher = batcher;
   draw_data.viewport = viewport;
-  draw_data.world_start_x = viewport->GetWorldTopLeft()[0];
-  draw_data.world_width = viewport->GetVisibleWorldWidth();
+  draw_data.track_start_x = viewport->GetWorldTopLeft()[0];
+  draw_data.track_width = track_width;
   draw_data.inv_time_window = 1.0 / time_graph->GetTimeWindowUs();
   draw_data.is_collapsed = is_collapsed;
   draw_data.z = GlCanvas::kZValueBox + z_offset;

@@ -73,29 +73,27 @@ std::string PageFaultsTrack::GetTooltip() const {
 void PageFaultsTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
                            uint64_t current_mouse_time_ns, PickingMode picking_mode,
                            float z_offset) {
-  float track_height = GetHeight();
-  float track_width = viewport_->GetVisibleWorldWidth();
-
-  SetPos(viewport_->GetWorldTopLeft()[0], pos_[1]);
-  SetSize(track_width, track_height);
   SetLabel(collapse_toggle_->IsCollapsed() ? major_page_faults_track_->GetName() : GetName());
 
   UpdatePositionOfSubtracks();
+  // If being collapsed, the page faults track will show a collapsed version of the major page
+  // faults subtrack. Hence, the height of major page faults subtrack should always be updated as
+  // long as the subtrack is not empty.
+  if (!major_page_faults_track_->IsEmpty()) {
+    major_page_faults_track_->SetSize(size_[0], major_page_faults_track_->GetHeight());
+  }
 
   Track::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
 
   if (collapse_toggle_->IsCollapsed()) return;
 
   if (!major_page_faults_track_->IsEmpty()) {
-    major_page_faults_track_->SetSize(viewport_->GetVisibleWorldWidth(),
-                                      major_page_faults_track_->GetHeight());
     major_page_faults_track_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode,
                                    z_offset);
   }
 
   if (!minor_page_faults_track_->IsEmpty()) {
-    minor_page_faults_track_->SetSize(viewport_->GetVisibleWorldWidth(),
-                                      minor_page_faults_track_->GetHeight());
+    minor_page_faults_track_->SetSize(size_[0], minor_page_faults_track_->GetHeight());
     minor_page_faults_track_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode,
                                    z_offset);
   }

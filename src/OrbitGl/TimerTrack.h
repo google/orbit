@@ -41,8 +41,8 @@ struct DrawData {
   orbit_gl::Viewport* viewport;
   const orbit_client_data::TextBox* selected_textbox;
   double inv_time_window;
-  float world_start_x;
-  float world_width;
+  float track_start_x;
+  float track_width;
   float z_offset;
   float z;
   bool is_collapsed;
@@ -58,8 +58,6 @@ class TimerTrack : public Track {
   ~TimerTrack() override = default;
 
   // Pickable
-  void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-            PickingMode picking_mode, float z_offset = 0) override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   [[nodiscard]] std::string GetTooltip() const override;
 
@@ -136,8 +134,8 @@ class TimerTrack : public Track {
                                 float /*z_offset*/, orbit_client_data::TextBox* /*text_box*/) {}
 
   [[nodiscard]] static internal::DrawData GetDrawData(
-      uint64_t min_tick, uint64_t max_tick, float z_offset, Batcher* batcher, TimeGraph* time_graph,
-      orbit_gl::Viewport* viewport, bool is_collapsed,
+      uint64_t min_tick, uint64_t max_tick, float track_width, float z_offset, Batcher* batcher,
+      TimeGraph* time_graph, orbit_gl::Viewport* viewport, bool is_collapsed,
       const orbit_client_data::TextBox* selected_textbox, uint64_t highlighted_function_id);
 
   TextRenderer* text_renderer_ = nullptr;

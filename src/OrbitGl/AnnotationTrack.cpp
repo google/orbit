@@ -18,8 +18,7 @@ void AnnotationTrack::DrawAnnotation(Batcher& batcher, TextRenderer& text_render
   Vec2 track_size = GetAnnotatedTrackSize();
   Vec2 track_pos = GetAnnotatedTrackPosition();
 
-  float content_right_x =
-      track_pos[0] + track_size[0] - layout->GetRightMargin() - layout->GetSliderWidth();
+  float content_right_x = track_pos[0] + track_size[0];
   float content_bottom_y = track_pos[1] - track_size[1] + layout->GetTrackBottomMargin();
   float content_height = GetAnnotatedTrackContentHeight();
 

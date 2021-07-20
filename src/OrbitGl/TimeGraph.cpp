@@ -500,7 +500,7 @@ float TimeGraph::GetWorldFromTick(uint64_t time) const {
   if (time_window_us_ > 0) {
     double start = TicksToMicroseconds(capture_min_timestamp_, time) - min_time_us_;
     double normalized_start = start / time_window_us_;
-    auto pos = float(world_start_x_ + normalized_start * world_width_);
+    auto pos = float(world_start_x_ + normalized_start * (world_width_ - right_margin_));
     return pos;
   }
 
@@ -516,8 +516,9 @@ double TimeGraph::GetUsFromTick(uint64_t time) const {
 }
 
 uint64_t TimeGraph::GetTickFromWorld(float world_x) const {
+  float visible_width = world_width_ - right_margin_;
   double ratio =
-      world_width_ != 0 ? static_cast<double>((world_x - world_start_x_) / world_width_) : 0;
+      visible_width > 0 ? static_cast<double>((world_x - world_start_x_) / visible_width) : 0;
   auto time_span_ns = static_cast<uint64_t>(1000 * GetTime(ratio));
   return capture_min_timestamp_ + time_span_ns;
 }
@@ -886,7 +887,12 @@ void TimeGraph::DrawIncompleteDataIntervals(Batcher& batcher, PickingMode pickin
 
 void TimeGraph::DrawTracks(Batcher& batcher, TextRenderer& text_renderer,
                            uint64_t current_mouse_time_ns, PickingMode picking_mode) {
+  float track_width = viewport_->GetVisibleWorldWidth() - GetRightMargin();
+  float track_pos_x = viewport_->GetWorldTopLeft()[0];
   for (auto& track : track_manager_->GetVisibleTracks()) {
+    track->SetSize(track_width, track->GetHeight());
+    track->SetPos(track_pos_x, track->GetPos()[1]);
+
     float z_offset = 0;
     if (track->IsPinned()) {
       z_offset = GlCanvas::kZOffsetPinnedTrack;
