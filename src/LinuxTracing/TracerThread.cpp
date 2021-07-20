@@ -78,8 +78,9 @@ TracerThread::TracerThread(const CaptureOptions& capture_options)
        capture_options.instrumented_functions()) {
     uint64_t function_id = instrumented_function.function_id();
     // TODO(b/193759921): Use record_arguments and record_return_value.
-    instrumented_functions_.emplace_back(function_id, instrumented_function.file_path(),
-                                         instrumented_function.file_offset());
+    instrumented_functions_.emplace_back(
+        function_id, instrumented_function.file_path(), instrumented_function.file_offset(),
+        instrumented_function.record_arguments(), instrumented_function.record_return_value());
 
     // Manual instrumentation.
     if (instrumented_function.function_type() == InstrumentedFunction::kTimerStart) {
@@ -132,10 +133,14 @@ bool TracerThread::OpenUprobes(const orbit_linux_tracing::Function& function,
   const char* module = function.file_path().c_str();
   const uint64_t offset = function.file_offset();
   for (int32_t cpu : cpus) {
-    int fd = uprobes_retaddr_event_open(module, offset, -1, cpu);
+    int fd;
+    if (function.record_arguments()) {
+      fd = uprobes_retaddr_args_event_open(module, offset, /*pid=*/-1, cpu);
+    } else {
+      fd = uprobes_retaddr_event_open(module, offset, /*pid=*/-1, cpu);
+    }
     if (fd < 0) {
-      ERROR("Opening uprobe %s+%#" PRIx64 " on cpu %d", function.file_path(),
-            function.file_offset(), cpu);
+      ERROR("Opening uprobe %s+%#x on cpu %d", function.file_path(), function.file_offset(), cpu);
       return false;
     }
     (*fds_per_cpu)[cpu] = fd;
@@ -150,10 +155,15 @@ bool TracerThread::OpenUretprobes(const orbit_linux_tracing::Function& function,
   const char* module = function.file_path().c_str();
   const uint64_t offset = function.file_offset();
   for (int32_t cpu : cpus) {
-    int fd = uretprobes_event_open(module, offset, -1, cpu);
+    int fd;
+    if (function.record_return_value()) {
+      fd = uretprobes_retval_event_open(module, offset, /*pid=*/-1, cpu);
+    } else {
+      fd = uretprobes_event_open(module, offset, /*pid=*/-1, cpu);
+    }
     if (fd < 0) {
-      ERROR("Opening uretprobe %s+%#" PRIx64 " on cpu %d", function.file_path(),
-            function.file_offset(), cpu);
+      ERROR("Opening uretprobe %s+%#x on cpu %d", function.file_path(), function.file_offset(),
+            cpu);
       return false;
     }
     (*fds_per_cpu)[cpu] = fd;
@@ -168,7 +178,11 @@ void TracerThread::AddUprobesFileDescriptors(
   for (const auto [cpu, fd] : uprobes_fds_per_cpu) {
     uint64_t stream_id = perf_event_get_id(fd);
     uprobes_uretprobes_ids_to_function_.emplace(stream_id, &function);
-    uprobes_ids_.insert(stream_id);
+    if (function.record_arguments()) {
+      uprobes_with_args_ids_.insert(stream_id);
+    } else {
+      uprobes_ids_.insert(stream_id);
+    }
     tracing_fds_.push_back(fd);
   }
 }
@@ -180,7 +194,11 @@ void TracerThread::AddUretprobesFileDescriptors(
   for (const auto [cpu, fd] : uretprobes_fds_per_cpu) {
     uint64_t stream_id = perf_event_get_id(fd);
     uprobes_uretprobes_ids_to_function_.emplace(stream_id, &function);
-    uretprobes_ids_.insert(stream_id);
+    if (function.record_return_value()) {
+      uretprobes_with_retval_ids_.insert(stream_id);
+    } else {
+      uretprobes_ids_.insert(stream_id);
+    }
     tracing_fds_.push_back(fd);
   }
 }
@@ -902,7 +920,9 @@ uint64_t TracerThread::ProcessSampleEventAndReturnTimestamp(const perf_event_hea
 
   uint64_t stream_id = ReadSampleRecordStreamId(ring_buffer);
   bool is_uprobe = uprobes_ids_.contains(stream_id);
+  bool is_uprobe_with_args = uprobes_with_args_ids_.contains(stream_id);
   bool is_uretprobe = uretprobes_ids_.contains(stream_id);
+  bool is_uretprobe_with_retval = uretprobes_with_retval_ids_.contains(stream_id);
   bool is_stack_sample = stack_sampling_ids_.contains(stream_id);
   bool is_callchain_sample = callchain_sampling_ids_.contains(stream_id);
   bool is_task_newtask = task_newtask_ids_.contains(stream_id);
@@ -923,29 +943,46 @@ uint64_t TracerThread::ProcessSampleEventAndReturnTimestamp(const perf_event_hea
   int fd = ring_buffer->GetFileDescriptor();
 
   if (is_uprobe) {
+    CHECK(header.size == sizeof(UprobesPerfEvent::ring_buffer_record));
     auto event = make_unique_for_overwrite<UprobesPerfEvent>();
     ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
-    using perf_event_uprobe = perf_event_sp_ip_arguments_8bytes_sample;
-    constexpr size_t kSizeOfUprobes = sizeof(perf_event_uprobe);
-    CHECK(header.size == kSizeOfUprobes);
     if (event->GetPid() != target_pid_) {
       return timestamp_ns;
     }
-
+    event->SetFunction(uprobes_uretprobes_ids_to_function_.at(event->GetStreamId()));
+    event->SetOrderedInFileDescriptor(fd);
+    DeferEvent(std::move(event));
+    ++stats_.uprobes_count;
+  } else if (is_uprobe_with_args) {
+    CHECK(header.size == sizeof(UprobesWithArgumentsPerfEvent::ring_buffer_record));
+    auto event = make_unique_for_overwrite<UprobesWithArgumentsPerfEvent>();
+    ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
+    if (event->GetPid() != target_pid_) {
+      return timestamp_ns;
+    }
     event->SetFunction(uprobes_uretprobes_ids_to_function_.at(event->GetStreamId()));
     event->SetOrderedInFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
 
   } else if (is_uretprobe) {
+    CHECK(header.size == sizeof(UretprobesPerfEvent::ring_buffer_record));
     auto event = make_unique_for_overwrite<UretprobesPerfEvent>();
     ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
-    constexpr size_t kSizeOfUretprobes = sizeof(perf_event_ax_sample);
-    CHECK(header.size == kSizeOfUretprobes);
     if (event->GetPid() != target_pid_) {
       return timestamp_ns;
     }
-
+    event->SetFunction(uprobes_uretprobes_ids_to_function_.at(event->GetStreamId()));
+    event->SetOrderedInFileDescriptor(fd);
+    DeferEvent(std::move(event));
+    ++stats_.uprobes_count;
+  } else if (is_uretprobe_with_retval) {
+    CHECK(header.size == sizeof(UretprobesWithReturnValuePerfEvent::ring_buffer_record));
+    auto event = make_unique_for_overwrite<UretprobesWithReturnValuePerfEvent>();
+    ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
+    if (event->GetPid() != target_pid_) {
+      return timestamp_ns;
+    }
     event->SetFunction(uprobes_uretprobes_ids_to_function_.at(event->GetStreamId()));
     event->SetOrderedInFileDescriptor(fd);
     DeferEvent(std::move(event));
@@ -1192,7 +1229,9 @@ void TracerThread::Reset() {
 
   uprobes_uretprobes_ids_to_function_.clear();
   uprobes_ids_.clear();
+  uprobes_with_args_ids_.clear();
   uretprobes_ids_.clear();
+  uretprobes_with_retval_ids_.clear();
   stack_sampling_ids_.clear();
   callchain_sampling_ids_.clear();
   task_newtask_ids_.clear();

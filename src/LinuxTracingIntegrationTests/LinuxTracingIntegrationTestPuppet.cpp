@@ -31,7 +31,10 @@ static void SleepRepeatedly() {
   }
 }
 
-extern "C" __attribute__((noinline)) double InnerFunctionToInstrument() {
+extern "C" __attribute__((noinline)) double InnerFunctionToInstrument(uint64_t di, uint64_t si,
+                                                                      uint64_t dx, uint64_t cx,
+                                                                      uint64_t r8, uint64_t r9) {
+  LOG("InnerFunctionToInstrument called with args: %u, %u, %u, %u, %u, %u", di, si, dx, cx, r8, r9);
   double result = 1;
   for (size_t i = 0; i < 1'000'000; ++i) {
     result = 1 / (2 + result);
@@ -39,15 +42,22 @@ extern "C" __attribute__((noinline)) double InnerFunctionToInstrument() {
   return 1 + result;
 }
 
-extern "C" __attribute__((noinline)) void OuterFunctionToInstrument() {
+extern "C" __attribute__((noinline)) uint64_t OuterFunctionToInstrument() {
   for (uint64_t i = 0; i < PuppetConstants::kInnerFunctionCallCount; ++i) {
-    LOG("InnerFunctionToInstrument returned: %f", InnerFunctionToInstrument());
+    LOG("InnerFunctionToInstrument returned: %f",
+        InnerFunctionToInstrument(
+            PuppetConstants::kInnerFunctionCallArgs[0], PuppetConstants::kInnerFunctionCallArgs[1],
+            PuppetConstants::kInnerFunctionCallArgs[2], PuppetConstants::kInnerFunctionCallArgs[3],
+            PuppetConstants::kInnerFunctionCallArgs[4],
+            PuppetConstants::kInnerFunctionCallArgs[5]));
   }
+  return PuppetConstants::kOuterFunctionReturnValue;
 }
 
 static void CallOuterFunctionToInstrument() {
   for (uint64_t i = 0; i < PuppetConstants::kOuterFunctionCallCount; ++i) {
-    OuterFunctionToInstrument();
+    uint64_t result = OuterFunctionToInstrument();
+    LOG("OuterFunctionToInstrument returned: %#x", result);
   }
 }
 
