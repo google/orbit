@@ -5,6 +5,10 @@
 #ifndef ORBIT_BASE_ACTION_H_
 #define ORBIT_BASE_ACTION_H_
 
+#include <memory>
+#include <type_traits>
+#include <utility>
+
 // Actions are executed by MainThreadExecutor
 // The Action is an abstract class which can
 // be executed.
