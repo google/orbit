@@ -36,9 +36,10 @@ class TimerBlock {
 
   // Append a new element to the end of the block using placement-new.
   template <class... Args>
-  orbit_client_protos::TimerInfo& emplace_back(Args&&... args) {
+  const orbit_client_protos::TimerInfo& emplace_back(Args&&... args) {
     CHECK(size() < kBlockSize);
-    orbit_client_protos::TimerInfo& timer_info = data_.emplace_back(std::forward<Args>(args)...);
+    const orbit_client_protos::TimerInfo& timer_info =
+        data_.emplace_back(std::forward<Args>(args)...);
     min_timestamp_ = std::min(timer_info.start(), min_timestamp_);
     max_timestamp_ = std::max(timer_info.end(), max_timestamp_);
     return timer_info;
@@ -52,7 +53,6 @@ class TimerBlock {
   [[nodiscard]] size_t size() const { return data_.size(); }
   [[nodiscard]] bool at_capacity() const { return size() == kBlockSize; }
 
-  [[nodiscard]] orbit_client_protos::TimerInfo& operator[](std::size_t idx) { return data_[idx]; }
   [[nodiscard]] const orbit_client_protos::TimerInfo& operator[](std::size_t idx) const {
     return data_[idx];
   }
@@ -85,10 +85,7 @@ class TimerChainIterator {
     return *this;
   }
 
-  TimerBlock& operator*() { return *block_; }
   const TimerBlock& operator*() const { return *block_; }
-
-  TimerBlock* operator->() { return block_; }
   const TimerBlock* operator->() const { return block_; }
 
  private:
@@ -108,9 +105,9 @@ class TimerChain {
   // Append an item to the end of the current block. If capacity of the current block is reached, a
   // new blocked is allocated and the item is added to the new block.
   template <class... Args>
-  orbit_client_protos::TimerInfo& emplace_back(Args&&... args) {
+  const orbit_client_protos::TimerInfo& emplace_back(Args&&... args) {
     if (current_->at_capacity()) AllocateNewBlock();
-    orbit_client_protos::TimerInfo& timer_info =
+    const orbit_client_protos::TimerInfo& timer_info =
         current_->emplace_back(std::forward<Args>(args)...);
     ++num_items_;
     return timer_info;
@@ -119,17 +116,18 @@ class TimerChain {
   [[nodiscard]] bool empty() const { return num_items_ == 0; }
   [[nodiscard]] uint64_t size() const { return num_items_; }
 
-  [[nodiscard]] TimerBlock* GetBlockContaining(const orbit_client_protos::TimerInfo& element) const;
-
-  [[nodiscard]] orbit_client_protos::TimerInfo* GetElementAfter(
+  [[nodiscard]] const TimerBlock* GetBlockContaining(
       const orbit_client_protos::TimerInfo& element) const;
 
-  [[nodiscard]] orbit_client_protos::TimerInfo* GetElementBefore(
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetElementAfter(
       const orbit_client_protos::TimerInfo& element) const;
 
-  [[nodiscard]] TimerChainIterator begin() { return TimerChainIterator(root_); }
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetElementBefore(
+      const orbit_client_protos::TimerInfo& element) const;
 
-  [[nodiscard]] TimerChainIterator end() { return TimerChainIterator(nullptr); }
+  [[nodiscard]] TimerChainIterator begin() const { return TimerChainIterator(root_); }
+
+  [[nodiscard]] TimerChainIterator end() const { return TimerChainIterator(nullptr); }
 
  private:
   void AllocateNewBlock() {

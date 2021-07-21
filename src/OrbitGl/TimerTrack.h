@@ -130,7 +130,7 @@ class TimerTrack : public Track {
   [[nodiscard]] bool DrawTimer(const orbit_client_protos::TimerInfo* prev_timer_info,
                                const orbit_client_protos::TimerInfo* next_timer_info,
                                const internal::DrawData& draw_data,
-                               orbit_client_protos::TimerInfo* current_timer_info,
+                               const orbit_client_protos::TimerInfo* current_timer_info,
                                uint64_t* min_ignore, uint64_t* max_ignore);
 
   void UpdateDepth(uint32_t depth) {

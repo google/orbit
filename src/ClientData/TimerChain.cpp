@@ -8,17 +8,21 @@
 
 #include "capture_data.pb.h"
 
-bool orbit_client_data::TimerBlock::Intersects(uint64_t min, uint64_t max) const {
+using orbit_client_protos::TimerInfo;
+
+namespace orbit_client_data {
+
+bool TimerBlock::Intersects(uint64_t min, uint64_t max) const {
   return (min <= max_timestamp_ && max >= min_timestamp_);
 }
 
-orbit_client_data::TimerChain::~TimerChain() {
+TimerChain::~TimerChain() {
   // Find last block in chain
   while (current_->next_ != nullptr) {
     current_ = current_->next_;
   }
 
-  orbit_client_data::TimerBlock* prev = current_;
+  TimerBlock* prev = current_;
   while (prev != nullptr) {
     prev = current_->prev_;
     delete current_;
@@ -26,14 +30,13 @@ orbit_client_data::TimerChain::~TimerChain() {
   }
 }
 
-orbit_client_data::TimerBlock* orbit_client_data::TimerChain::GetBlockContaining(
-    const orbit_client_protos::TimerInfo& element) const {
-  orbit_client_data::TimerBlock* block = root_;
+const TimerBlock* TimerChain::GetBlockContaining(const TimerInfo& element) const {
+  const TimerBlock* block = root_;
   while (block != nullptr) {
     uint32_t size = block->size();
     if (size != 0) {
-      const orbit_client_protos::TimerInfo* begin = &block->data_[0];
-      const orbit_client_protos::TimerInfo* end = &block->data_[size - 1];
+      const TimerInfo* begin = &block->data_[0];
+      const TimerInfo* end = &block->data_[size - 1];
       // TODO (http://b/194268700): Don't compare pointers in TimerChain as it is an undefined
       // behavior
       if (begin <= &element && end >= &element) {
@@ -46,11 +49,10 @@ orbit_client_data::TimerBlock* orbit_client_data::TimerChain::GetBlockContaining
   return nullptr;
 }
 
-orbit_client_protos::TimerInfo* orbit_client_data::TimerChain::GetElementAfter(
-    const orbit_client_protos::TimerInfo& element) const {
-  orbit_client_data::TimerBlock* block = GetBlockContaining(element);
+const TimerInfo* TimerChain::GetElementAfter(const TimerInfo& element) const {
+  const TimerBlock* block = GetBlockContaining(element);
   if (block != nullptr) {
-    orbit_client_protos::TimerInfo* begin = &block->data_[0];
+    const TimerInfo* begin = &block->data_[0];
     uint32_t index = &element - begin;
     if (index < block->size() - 1) {
       return &block->data_[++index];
@@ -62,11 +64,10 @@ orbit_client_protos::TimerInfo* orbit_client_data::TimerChain::GetElementAfter(
   return nullptr;
 }
 
-orbit_client_protos::TimerInfo* orbit_client_data::TimerChain::GetElementBefore(
-    const orbit_client_protos::TimerInfo& element) const {
-  orbit_client_data::TimerBlock* block = GetBlockContaining(element);
+const TimerInfo* TimerChain::GetElementBefore(const TimerInfo& element) const {
+  const TimerBlock* block = GetBlockContaining(element);
   if (block != nullptr) {
-    orbit_client_protos::TimerInfo* begin = &block->data_[0];
+    const TimerInfo* begin = &block->data_[0];
     uint32_t index = &element - begin;
     if (index > 0) {
       return &block->data_[--index];
@@ -77,3 +78,5 @@ orbit_client_protos::TimerInfo* orbit_client_data::TimerChain::GetElementBefore(
   }
   return nullptr;
 }
+
+}  // namespace orbit_client_data

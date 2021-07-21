@@ -104,7 +104,7 @@ void TimerTrack::DrawTimesliceText(const orbit_client_protos::TimerInfo& timer, 
 }
 
 bool TimerTrack::DrawTimer(const TimerInfo* prev_timer_info, const TimerInfo* next_timer_info,
-                           const internal::DrawData& draw_data, TimerInfo* current_timer_info,
+                           const internal::DrawData& draw_data, const TimerInfo* current_timer_info,
                            uint64_t* min_ignore, uint64_t* max_ignore) {
   CHECK(min_ignore != nullptr);
   CHECK(max_ignore != nullptr);
@@ -287,15 +287,15 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
     // previous two timers, thus the currents iteration value being the "next" textbox.
     // Note: This will require us to draw the last timer after the traversal of the text boxes.
     // Also note: The draw method will take care of nullptr's being passed into (first iteration).
-    orbit_client_protos::TimerInfo* prev_timer_info = nullptr;
-    orbit_client_protos::TimerInfo* current_timer_info = nullptr;
-    orbit_client_protos::TimerInfo* next_timer_info = nullptr;
+    const orbit_client_protos::TimerInfo* prev_timer_info = nullptr;
+    const orbit_client_protos::TimerInfo* current_timer_info = nullptr;
+    const orbit_client_protos::TimerInfo* next_timer_info = nullptr;
 
     // We have to reset this when we go to the next depth, as otherwise we
     // would miss drawing events that should be drawn.
     uint64_t min_ignore = std::numeric_limits<uint64_t>::max();
     uint64_t max_ignore = std::numeric_limits<uint64_t>::min();
-    for (orbit_client_data::TimerBlock& block : *chain) {
+    for (const orbit_client_data::TimerBlock& block : *chain) {
       if (!block.Intersects(min_tick, max_tick)) continue;
 
       for (size_t k = 0; k < block.size(); ++k) {
