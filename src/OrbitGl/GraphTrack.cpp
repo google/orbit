@@ -101,11 +101,6 @@ void GraphTrack<Dimension>::UpdatePrimitives(Batcher* batcher, uint64_t min_tick
 }
 
 template <size_t Dimension>
-void GraphTrack<Dimension>::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
-  track_data_->AddTimer(/*depth=*/0, timer_info);
-}
-
-template <size_t Dimension>
 Color GraphTrack<Dimension>::GetColor(size_t index) const {
   if (series_colors_.has_value()) return series_colors_.value()[index];
   return TimeGraph::GetColor(index);
@@ -279,6 +274,15 @@ void GraphTrack<Dimension>::DrawSingleSeriesEntry(
     batcher->AddShadedBox(Vec2(x0, y0), Vec2(width, height), z, GetColor(i));
     y0 += height;
   }
+}
+
+template <size_t Dimension>
+uint64_t GraphTrack<Dimension>::GetMinTime() const {
+  return series_.StartTimeInNs();
+}
+template <size_t Dimension>
+uint64_t GraphTrack<Dimension>::GetMaxTime() const {
+  return series_.EndTimeInNs();
 }
 
 template class GraphTrack<1>;

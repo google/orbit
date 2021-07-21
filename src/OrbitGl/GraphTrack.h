@@ -45,6 +45,10 @@ class GraphTrack : public Track {
   virtual void AddValues(uint64_t timestamp_ns, const std::array<double, Dimension>& values) {
     series_.AddValues(timestamp_ns, values);
   }
+
+  [[nodiscard]] uint64_t GetMinTime() const override;
+  [[nodiscard]] uint64_t GetMaxTime() const override;
+
   void SetLabelUnit(std::string label_unit) { series_.SetValueUnit(label_unit); }
   void SetNumberOfDecimalDigits(uint8_t value_decimal_digits) {
     series_.SetNumberOfDecimalDigits(value_decimal_digits);
@@ -52,8 +56,6 @@ class GraphTrack : public Track {
   void SetSeriesColors(const std::array<Color, Dimension>& series_colors) {
     series_colors_ = series_colors;
   }
-
-  void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 
  protected:
   [[nodiscard]] virtual Color GetColor(size_t index) const;

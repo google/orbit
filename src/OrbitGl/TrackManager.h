@@ -56,7 +56,6 @@ class TrackManager {
                              PickingMode picking_mode);
   [[nodiscard]] float GetTracksTotalHeight() const { return tracks_total_height_; }
 
-  [[nodiscard]] uint32_t GetNumTimers() const;
   [[nodiscard]] std::pair<uint64_t, uint64_t> GetTracksMinMaxTimestamps() const;
 
   SchedulerTrack* GetOrCreateSchedulerTrack();

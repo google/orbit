@@ -28,7 +28,6 @@ Track::Track(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewpo
       thread_id_{orbit_base::kInvalidThreadTid},
       process_id_{-1},
       pinned_{false},
-      track_data_{std::make_unique<TrackData>()},
       layout_(layout),
       capture_data_(capture_data),
       indentation_level_(indentation_level) {

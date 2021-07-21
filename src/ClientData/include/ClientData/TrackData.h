@@ -14,6 +14,7 @@ namespace orbit_client_data {
 
 class TrackData {
  public:
+  [[nodiscard]] bool IsEmpty() const { return num_timers_ == 0; }
   [[nodiscard]] size_t GetNumberOfTimers() const { return num_timers_; }
   [[nodiscard]] uint64_t GetMinTime() const { return min_time_; }
   [[nodiscard]] uint64_t GetMaxTime() const { return max_time_; }

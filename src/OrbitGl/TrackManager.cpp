@@ -228,8 +228,8 @@ std::vector<ThreadTrack*> TrackManager::GetSortedThreadTracks() {
   // The remaining tracks appear after, ordered by descending order of callstack events.
   std::sort(sorted_tracks.begin(), sorted_tracks.end(),
             [&num_events_by_track](ThreadTrack* a, ThreadTrack* b) {
-              return std::make_tuple(a->GetNumTimers(), num_events_by_track[a]) >
-                     std::make_tuple(b->GetNumTimers(), num_events_by_track[b]);
+              return std::make_tuple(a->GetNumberOfTimers(), num_events_by_track[a]) >
+                     std::make_tuple(b->GetNumberOfTimers(), num_events_by_track[b]);
             });
 
   return sorted_tracks;
@@ -498,20 +498,6 @@ PageFaultsTrack* TrackManager::CreateAndGetPageFaultsTrack(const std::string& cg
     AddTrack(page_faults_track_);
   }
   return GetPageFaultsTrack();
-}
-
-uint32_t TrackManager::GetNumTimers() const {
-  uint32_t num_timers = 0;
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  for (const auto& track : GetAllTracks()) {
-    num_timers += track->GetNumTimers();
-  }
-  // Frame tracks are removable by users and cannot simply be thrown into the
-  // tracks_ vector.
-  for (const auto& track : GetFrameTracks()) {
-    num_timers += track->GetNumTimers();
-  }
-  return num_timers;
 }
 
 std::pair<uint64_t, uint64_t> TrackManager::GetTracksMinMaxTimestamps() const {

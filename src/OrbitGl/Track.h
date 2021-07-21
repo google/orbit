@@ -67,11 +67,9 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   [[nodiscard]] bool GetVisible() const { return visible_; }
   void SetVisible(bool value) { visible_ = value; }
 
-  void SetColor(const Color& color) { color_ = color; }
+  [[nodiscard]] virtual uint64_t GetMinTime() const = 0;
+  [[nodiscard]] virtual uint64_t GetMaxTime() const = 0;
 
-  [[nodiscard]] virtual uint32_t GetNumTimers() const { return track_data_->GetNumberOfTimers(); }
-  [[nodiscard]] virtual uint64_t GetMinTime() const { return track_data_->GetMinTime(); }
-  [[nodiscard]] virtual uint64_t GetMaxTime() const { return track_data_->GetMaxTime(); }
   void SetNumberOfPrioritizedTrailingCharacters(int num_characters) {
     num_prioritized_trailing_characters_ = num_characters;
   }
@@ -125,7 +123,6 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   bool draw_background_ = true;
   bool visible_ = true;
   bool pinned_ = false;
-  std::shared_ptr<orbit_client_data::TrackData> track_data_;
   Type type_ = Type::kUnknown;
   std::shared_ptr<TriangleToggle> collapse_toggle_;
 

@@ -46,10 +46,14 @@ class PageFaultsTrack : public Track {
       uint64_t timestamp_ns, const std::array<double, kBasicPageFaultsTrackDimension>& values) {
     major_page_faults_track_->AddValuesAndUpdateAnnotations(timestamp_ns, values);
   }
+
   void AddValuesAndUpdateAnnotationsForMinorPageFaultsSubtrack(
       uint64_t timestamp_ns, const std::array<double, kBasicPageFaultsTrackDimension>& values) {
     minor_page_faults_track_->AddValuesAndUpdateAnnotations(timestamp_ns, values);
   }
+
+  [[nodiscard]] uint64_t GetMinTime() const override;
+  [[nodiscard]] uint64_t GetMaxTime() const override;
 
  private:
   void UpdatePositionOfSubtracks();
