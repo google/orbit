@@ -5,7 +5,6 @@
 #include "BasicPageFaultsTrack.h"
 
 #include "GlCanvas.h"
-#include "TimeGraph.h"
 
 namespace orbit_gl {
 
@@ -79,7 +78,7 @@ void BasicPageFaultsTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
       batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
 
   if (picking_mode != PickingMode::kNone || IsCollapsed()) return;
-  AnnotationTrack::DrawAnnotation(batcher, text_renderer, layout_, time_graph_->GetRightMargin(),
+  AnnotationTrack::DrawAnnotation(batcher, text_renderer, layout_,
                                   GlCanvas::kZValueTrackText + z_offset);
 }
 

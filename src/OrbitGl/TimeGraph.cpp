@@ -883,7 +883,12 @@ void TimeGraph::DrawIncompleteDataIntervals(Batcher& batcher, PickingMode pickin
 
 void TimeGraph::DrawTracks(Batcher& batcher, TextRenderer& text_renderer,
                            uint64_t current_mouse_time_ns, PickingMode picking_mode) {
+  float track_width = viewport_->GetVisibleWorldWidth() - GetRightMargin();
+  float track_pos_x = viewport_->GetWorldTopLeft()[0];
   for (auto& track : track_manager_->GetVisibleTracks()) {
+    track->SetSize(track_width, track->GetHeight());
+    track->SetPos(track_pos_x, track->GetPos()[1]);
+
     float z_offset = 0;
     if (track->IsPinned()) {
       z_offset = GlCanvas::kZOffsetPinnedTrack;

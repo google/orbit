@@ -58,8 +58,6 @@ class TimerTrack : public Track {
   ~TimerTrack() override = default;
 
   // Pickable
-  void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-            PickingMode picking_mode, float z_offset = 0) override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   [[nodiscard]] std::string GetTooltip() const override;
 
