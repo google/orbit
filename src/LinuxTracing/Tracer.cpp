@@ -9,6 +9,7 @@
 #include <atomic>
 #include <memory>
 
+#include "OrbitBase/ThreadUtils.h"
 #include "TracerThread.h"
 #include "TracingInterface/TracerListener.h"
 #include "capture.pb.h"
@@ -16,7 +17,7 @@
 namespace orbit_linux_tracing {
 
 void Tracer::Run() {
-  pthread_setname_np(pthread_self(), "Tracer::Run");
+  orbit_base::SetCurrentThreadName("Tracer::Run");
   TracerThread session{capture_options_};
   session.SetListener(listener_);
   session.Run(exit_requested_);

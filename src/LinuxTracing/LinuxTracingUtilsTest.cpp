@@ -48,7 +48,7 @@ TEST(GetThreadState, LinuxTracingTestsMainAndAnother) {
   std::thread thread{[&] {
     // Make sure /proc/<pid>/stat is parsed correctly
     // even when the thread name contains spaces and parentheses.
-    pthread_setname_np(pthread_self(), ") )  )()( )(  )");
+    orbit_base::SetCurrentThreadName(") )  )()( )(  )");
     {
       absl::MutexLock lock{&mutex};
       thread_tid = syscall(SYS_gettid);
