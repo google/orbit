@@ -19,8 +19,8 @@ class TrackData {
   [[nodiscard]] uint64_t GetMinTime() const { return min_time_; }
   [[nodiscard]] uint64_t GetMaxTime() const { return max_time_; }
 
-  orbit_client_protos::TimerInfo& AddTimer(uint64_t depth,
-                                           orbit_client_protos::TimerInfo timer_info) {
+  const orbit_client_protos::TimerInfo& AddTimer(uint64_t depth,
+                                                 orbit_client_protos::TimerInfo timer_info) {
     TimerChain* timer_chain = GetOrCreateTimerChain(depth);
     UpdateMinTime(timer_info.start());
     UpdateMaxTime(timer_info.end());

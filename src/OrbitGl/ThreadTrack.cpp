@@ -450,7 +450,7 @@ void ThreadTrack::OnCaptureComplete() {
 
 [[nodiscard]] static std::pair<float, float> GetBoxPosXAndWidth(const internal::DrawData& draw_data,
                                                                 const TimeGraph* time_graph,
-                                                                TimerInfo& timer_info) {
+                                                                const TimerInfo& timer_info) {
   double start_us = time_graph->GetUsFromTick(timer_info.start());
   double end_us = time_graph->GetUsFromTick(timer_info.end());
   double elapsed_us = end_us - start_us;
@@ -494,7 +494,7 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
     uint64_t next_pixel_start_time_ns = min_tick;
 
     for (auto it = first_node_to_draw; it != ordered_nodes.end() && it->first < max_tick; ++it) {
-      orbit_client_protos::TimerInfo& timer_info = *it->second->GetScope();
+      const orbit_client_protos::TimerInfo& timer_info = *it->second->GetScope();
       if (timer_info.end() <= next_pixel_start_time_ns) continue;
       ++visible_timer_count_;
 
