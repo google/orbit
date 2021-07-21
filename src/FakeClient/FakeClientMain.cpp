@@ -42,6 +42,7 @@ ABSL_FLAG(bool, thread_state, false, "Collect thread state information");
 ABSL_FLAG(bool, gpu_jobs, true, "Collect GPU jobs");
 ABSL_FLAG(uint16_t, memory_sampling_rate, 0,
           "Memory usage sampling rate in samples per second (0: no sampling)");
+ABSL_FLAG(bool, frame_time, true, "Instrument vkQueuePresentKHR to compute avg. frame time");
 
 namespace {
 std::atomic<bool> exit_requested = false;
@@ -215,8 +216,8 @@ int main(int argc, char* argv[]) {
         &module_manager, &selected_functions, file_path, file_offset, kInstrumentedFunctionId);
   }
 
-  // Instrument vkQueuePresentKHR, if possible.
-  {
+  if (absl::GetFlag(FLAGS_frame_time)) {
+    // Instrument vkQueuePresentKHR, if possible.
     ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> modules_or_error =
         orbit_object_utils::ReadModules(process_id);
     FAIL_IF(modules_or_error.has_error(), "%s", modules_or_error.error().message());
