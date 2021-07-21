@@ -461,7 +461,7 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
   for (const auto& event : events) {
     switch (event.event_case()) {
       case orbit_grpc_protos::ProducerCaptureEvent::kCaptureStarted:
-        // LinuxTracingHandler does not send this event.
+        // TracingHandler does not send this event.
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kSchedulingSlice:
         EXPECT_GE(event.scheduling_slice().out_timestamp_ns(), previous_event_timestamp_ns);

@@ -85,9 +85,9 @@ inline const QString testing_example =
 #include "CaptureEventBuffer.h"
 #include "CaptureEventSender.h"
 #include "CaptureServiceImpl.h"
-#include "LinuxTracingHandler.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
+#include "TracingHandler.h"
 #include "capture.pb.h"
 
 namespace orbit_service {
@@ -226,19 +226,19 @@ class GrpcCaptureEventSender final : public CaptureEventSender {
 
 }  // namespace
 
-// LinuxTracingHandler::Stop is blocking, until all perf_event_open events have been processed
+// TracingHandler::Stop is blocking, until all perf_event_open events have been processed
 // and all perf_event_open file descriptors have been closed.
 // CaptureStartStopListener::OnCaptureStopRequested is also to be assumed blocking,
 // for example until all CaptureEvents from external producers have been received.
 // Hence why these methods need to be called in parallel on different threads.
 static void StopTracingHandlerAndCaptureStartStopListenersInParallel(
-    LinuxTracingHandler* tracing_handler,
+    TracingHandler* tracing_handler,
     absl::flat_hash_set<CaptureStartStopListener*>* capture_start_stop_listeners) {
   std::vector<std::thread> stop_threads;
 
   stop_threads.emplace_back([&tracing_handler] {
     tracing_handler->Stop();
-    LOG("LinuxTracingHandler stopped: perf_event_open tracing is done");
+    LOG("TracingHandler stopped: perf_event_open tracing is done");
   });
 
   for (CaptureStartStopListener* listener : *capture_start_stop_listeners) {
@@ -266,7 +266,7 @@ grpc::Status CaptureServiceImpl::Capture(
 
   GrpcCaptureEventSender capture_event_sender{reader_writer};
   SenderThreadCaptureEventBuffer capture_event_buffer{&capture_event_sender};
-  LinuxTracingHandler tracing_handler{&capture_event_buffer};
+  TracingHandler tracing_handler{&capture_event_buffer};
 
   CaptureRequest request;
   reader_writer->Read(&request);
