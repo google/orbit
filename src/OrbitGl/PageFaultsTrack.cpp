@@ -172,8 +172,14 @@ void PageFaultsTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) 
         static_cast<double>(system_page_faults - system_major_page_faults);
     AddValuesAndUpdateAnnotationsForMinorPageFaultsSubtrack(timer_info.start(), values);
   }
+}
 
-  track_data_->AddTimer(/*depth=*/0, timer_info);
+uint64_t PageFaultsTrack::GetMinTime() const {
+  return std::min(minor_page_faults_track_->GetMinTime(), major_page_faults_track_->GetMinTime());
+}
+
+uint64_t PageFaultsTrack::GetMaxTime() const {
+  return std::max(minor_page_faults_track_->GetMaxTime(), major_page_faults_track_->GetMaxTime());
 }
 
 }  // namespace orbit_gl

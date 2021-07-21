@@ -31,6 +31,7 @@
 #include "capture_data.pb.h"
 
 using orbit_client_data::TimerChain;
+using orbit_client_data::TrackData;
 using orbit_client_model::CaptureData;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
@@ -238,7 +239,7 @@ void ThreadTrack::UpdateBoxHeight() {
 
 bool ThreadTrack::IsEmpty() const {
   return thread_state_bar_->IsEmpty() && event_bar_->IsEmpty() && tracepoint_bar_->IsEmpty() &&
-         (GetNumTimers() == 0);
+         track_data_->IsEmpty();
 }
 
 void ThreadTrack::UpdatePositionOfSubtracks() {

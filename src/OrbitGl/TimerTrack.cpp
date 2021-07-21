@@ -26,6 +26,7 @@
 #include "capture_data.pb.h"
 
 using orbit_client_data::TimerChain;
+using orbit_client_data::TrackData;
 using orbit_client_protos::TimerInfo;
 
 ABSL_DECLARE_FLAG(bool, show_return_values);
@@ -36,9 +37,10 @@ TimerTrack::TimerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
                        const orbit_client_model::CaptureData* capture_data,
                        uint32_t indentation_level)
-    : Track(parent, time_graph, viewport, layout, capture_data, indentation_level), app_{app} {
-  text_renderer_ = time_graph->GetTextRenderer();
-}
+    : Track(parent, time_graph, viewport, layout, capture_data, indentation_level),
+      text_renderer_{time_graph->GetTextRenderer()},
+      app_{app},
+      track_data_{std::make_unique<TrackData>()} {}
 
 std::string TimerTrack::GetExtraInfo(const TimerInfo& timer_info) const {
   std::string info;
@@ -407,7 +409,7 @@ std::vector<const orbit_client_protos::TimerInfo*> TimerTrack::GetScopesInRange(
   return result;
 }
 
-bool TimerTrack::IsEmpty() const { return GetNumTimers() == 0; }
+bool TimerTrack::IsEmpty() const { return track_data_->IsEmpty(); }
 
 std::string TimerTrack::GetBoxTooltip(const Batcher& /*batcher*/, PickingId /*id*/) const {
   return "";
@@ -439,3 +441,6 @@ internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick,
   draw_data.min_timegraph_tick = time_graph->GetTickFromUs(time_graph->GetMinTimeUs());
   return draw_data;
 }
+size_t TimerTrack::GetNumberOfTimers() const { return track_data_->GetNumberOfTimers(); }
+uint64_t TimerTrack::GetMinTime() const { return track_data_->GetMinTime(); }
+uint64_t TimerTrack::GetMaxTime() const { return track_data_->GetMaxTime(); }

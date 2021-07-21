@@ -8,11 +8,12 @@
 
 namespace orbit_client_data {
 
-TEST(TrackData, Empty) {
+TEST(TrackData, IsEmpty) {
   TrackData track_data;
   EXPECT_TRUE(track_data.GetChains().empty());
   EXPECT_EQ(track_data.GetChain(0), nullptr);
   EXPECT_EQ(track_data.GetChain(7), nullptr);
+  EXPECT_TRUE(track_data.IsEmpty());
   EXPECT_EQ(track_data.GetNumberOfTimers(), 0);
   EXPECT_EQ(track_data.GetMaxTime(), std::numeric_limits<uint64_t>::min());
   EXPECT_EQ(track_data.GetMinTime(), std::numeric_limits<uint64_t>::max());
@@ -26,6 +27,7 @@ TEST(TrackData, AddTimers) {
 
   track_data.AddTimer(0, timer_info);
 
+  EXPECT_FALSE(track_data.IsEmpty());
   EXPECT_EQ(track_data.GetNumberOfTimers(), 1);
   ASSERT_NE(track_data.GetChain(0), nullptr);
   EXPECT_EQ(track_data.GetChain(1), nullptr);
@@ -39,6 +41,7 @@ TEST(TrackData, AddTimers) {
 
   track_data.AddTimer(0, timer_info);
 
+  EXPECT_FALSE(track_data.IsEmpty());
   EXPECT_EQ(track_data.GetNumberOfTimers(), 2);
   ASSERT_NE(track_data.GetChain(0), nullptr);
   EXPECT_EQ(track_data.GetChain(1), nullptr);
@@ -53,6 +56,7 @@ TEST(TrackData, AddTimers) {
   track_data.AddTimer(1, timer_info);
 
   EXPECT_EQ(track_data.GetNumberOfTimers(), 3);
+  EXPECT_FALSE(track_data.IsEmpty());
   ASSERT_NE(track_data.GetChain(0), nullptr);
   ASSERT_NE(track_data.GetChain(1), nullptr);
   EXPECT_EQ(track_data.GetChain(0)->size(), 2);

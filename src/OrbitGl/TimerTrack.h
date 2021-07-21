@@ -107,6 +107,14 @@ class TimerTrack : public Track {
 
   float GetHeight() const override;
 
+  [[nodiscard]] std::vector<orbit_client_data::TimerChain*> GetChains() {
+    return track_data_->GetChains();
+  }
+
+  [[nodiscard]] size_t GetNumberOfTimers() const;
+  [[nodiscard]] uint64_t GetMinTime() const override;
+  [[nodiscard]] uint64_t GetMaxTime() const override;
+
  protected:
   [[nodiscard]] virtual bool IsTimerActive(
       const orbit_client_protos::TimerInfo& /*timer_info*/) const {
@@ -160,6 +168,8 @@ class TimerTrack : public Track {
   static const Color kHighlightColor;
 
   OrbitApp* app_ = nullptr;
+
+  std::unique_ptr<orbit_client_data::TrackData> track_data_;
 };
 
 #endif  // ORBIT_GL_TIMER_TRACK_H_
