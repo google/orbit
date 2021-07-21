@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef LINUX_TRACING_TRACER_LISTENER_H_
-#define LINUX_TRACING_TRACER_LISTENER_H_
+#ifndef TRACING_TRACER_LISTENER_H_
+#define TRACING_TRACER_LISTENER_H_
 
 #include "capture.pb.h"
 
-namespace orbit_linux_tracing {
+namespace orbit_tracing_interface {
 
 class TracerListener {
  public:
@@ -33,6 +33,6 @@ class TracerListener {
       orbit_grpc_protos::OutOfOrderEventsDiscardedEvent out_of_order_events_discarded_event) = 0;
 };
 
-}  // namespace orbit_linux_tracing
+}  // namespace orbit_tracing_interface
 
-#endif  // LINUX_TRACING_TRACER_LISTENER_H_
+#endif  // TRACING_TRACER_LISTENER_H_

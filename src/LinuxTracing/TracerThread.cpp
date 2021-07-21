@@ -25,7 +25,6 @@
 #include "Introspection/Introspection.h"
 #include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"
-#include "LinuxTracing/TracerListener.h"
 #include "LinuxTracingUtils.h"
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/ExecutablePath.h"
@@ -36,6 +35,7 @@
 #include "PerfEventOpen.h"
 #include "PerfEventReaders.h"
 #include "PerfEventRecords.h"
+#include "TracingInterface/TracerListener.h"
 #include "tracepoint.pb.h"
 
 namespace orbit_linux_tracing {

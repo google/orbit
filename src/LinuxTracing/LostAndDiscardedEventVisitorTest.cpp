@@ -10,17 +10,17 @@
 #include <string>
 #include <utility>
 
-#include "LinuxTracing/TracerListener.h"
 #include "LostAndDiscardedEventVisitor.h"
 #include "OrbitBase/Logging.h"
 #include "PerfEvent.h"
+#include "TracingInterface/TracerListener.h"
 #include "capture.pb.h"
 
 namespace orbit_linux_tracing {
 
 namespace {
 
-class MockTracerListener : public TracerListener {
+class MockTracerListener : public orbit_tracing_interface::TracerListener {
  public:
   MOCK_METHOD(void, OnSchedulingSlice, (orbit_grpc_protos::SchedulingSlice), (override));
   MOCK_METHOD(void, OnCallstackSample, (orbit_grpc_protos::FullCallstackSample), (override));

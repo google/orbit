@@ -20,7 +20,6 @@
 #include <utility>
 
 #include "LinuxTracing/Tracer.h"
-#include "LinuxTracing/TracerListener.h"
 #include "LinuxTracingIntegrationTestPuppet.h"
 #include "ObjectUtils/ElfFile.h"
 #include "ObjectUtils/LinuxMap.h"
@@ -28,6 +27,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/ThreadUtils.h"
+#include "TracingInterface/TracerListener.h"
 #include "capture.pb.h"
 
 namespace orbit_linux_tracing_integration_tests {
@@ -162,7 +162,7 @@ class ChildProcess {
   int writing_fd_ = -1;
 };
 
-class BufferTracerListener : public orbit_linux_tracing::TracerListener {
+class BufferTracerListener : public orbit_tracing_interface::TracerListener {
  public:
   void OnSchedulingSlice(orbit_grpc_protos::SchedulingSlice scheduling_slice) override {
     orbit_grpc_protos::ProducerCaptureEvent event;

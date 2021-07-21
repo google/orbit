@@ -22,7 +22,6 @@
 #include "ContextSwitchManager.h"
 #include "Function.h"
 #include "GpuTracepointVisitor.h"
-#include "LinuxTracing/TracerListener.h"
 #include "LinuxTracingUtils.h"
 #include "LostAndDiscardedEventVisitor.h"
 #include "ManualInstrumentationConfig.h"
@@ -31,6 +30,7 @@
 #include "PerfEventProcessor.h"
 #include "PerfEventRingBuffer.h"
 #include "SwitchesStatesNamesVisitor.h"
+#include "TracingInterface/TracerListener.h"
 #include "UprobesUnwindingVisitor.h"
 #include "capture.pb.h"
 
@@ -45,7 +45,7 @@ class TracerThread {
   TracerThread(TracerThread&&) = delete;
   TracerThread& operator=(TracerThread&&) = delete;
 
-  void SetListener(TracerListener* listener) { listener_ = listener; }
+  void SetListener(orbit_tracing_interface::TracerListener* listener) { listener_ = listener; }
 
   void Run(const std::shared_ptr<std::atomic<bool>>& exit_requested);
 
@@ -144,7 +144,7 @@ class TracerThread {
   bool trace_gpu_driver_;
   std::vector<orbit_grpc_protos::TracepointInfo> instrumented_tracepoints_;
 
-  TracerListener* listener_ = nullptr;
+  orbit_tracing_interface::TracerListener* listener_ = nullptr;
 
   std::vector<int> tracing_fds_;
   std::vector<PerfEventRingBuffer> ring_buffers_;
