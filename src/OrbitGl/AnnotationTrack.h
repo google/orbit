@@ -36,7 +36,7 @@ class AnnotationTrack {
   }
 
   void DrawAnnotation(Batcher& batcher, TextRenderer& text_renderer, TimeGraphLayout* layout,
-                      float track_right_margin, float z);
+                      float z);
 
  private:
   [[nodiscard]] virtual float GetAnnotatedTrackContentHeight() const = 0;

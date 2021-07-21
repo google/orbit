@@ -125,7 +125,6 @@ void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current
 
   // Draw rounded corners.
   if (!picking && draw_background_) {
-    float right_margin = time_graph_->GetRightMargin();
     float radius = std::min(layout_->GetRoundingRadius(), half_label_height);
     radius = std::min(radius, half_label_width);
     uint32_t sides = static_cast<uint32_t>(layout_->GetRoundingNumSides() + 0.5f);
@@ -142,9 +141,8 @@ void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current
     Vec2 tab_top_right(top_left[0] + label_width, top_left[1]);
     Vec2 tab_bottom_right(top_left[0] + label_width, top_left[1] - label_height + top_margin);
     Vec2 content_bottom_left(top_left[0] - tab_x0, top_left[1] - size_[1]);
-    Vec2 content_bottom_right(top_left[0] + size_[0] - right_margin, top_left[1] - size_[1]);
-    Vec2 content_top_right(top_left[0] + size_[0] - right_margin,
-                           top_left[1] - label_height + top_margin);
+    Vec2 content_bottom_right(top_left[0] + size_[0], top_left[1] - size_[1]);
+    Vec2 content_top_right(top_left[0] + size_[0], top_left[1] - label_height + top_margin);
 
     DrawTriangleFan(batcher, rounded_corner, top_left, GlCanvas::kBackgroundColor, -90.f, track_z);
     DrawTriangleFan(batcher, rounded_corner, tab_top_right, GlCanvas::kBackgroundColor, 180.f,
