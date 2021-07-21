@@ -74,7 +74,7 @@ class SenderThreadCaptureEventBuffer final : public CaptureEventBuffer {
 
  private:
   void SenderThread() {
-    pthread_setname_np(pthread_self(), "SenderThread");
+    orbit_base::SetCurrentThreadName("SenderThread");
     constexpr absl::Duration kSendTimeInterval = absl::Milliseconds(20);
     // This should be lower than kMaxEventsPerResponse in GrpcCaptureEventSender::SendEvents
     // as a few more events are likely to arrive after the condition becomes true.
@@ -271,7 +271,7 @@ static ClientCaptureEvent CreateCaptureFinishedEvent() {
 grpc::Status CaptureServiceImpl::Capture(
     grpc::ServerContext* /*context*/,
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
-  pthread_setname_np(pthread_self(), "CSImpl::Capture");
+  orbit_base::SetCurrentThreadName("CSImpl::Capture");
   if (is_capturing) {
     ERROR("Cannot start capture because another capture is already in progress");
     return grpc::Status(grpc::StatusCode::ALREADY_EXISTS,

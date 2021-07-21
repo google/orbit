@@ -16,6 +16,7 @@
 
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "VulkanTutorial/OffscreenRenderingVulkanTutorial.h"
 
 // This executable is used by LinuxTracingIntegrationTest to test the generation of specific
@@ -62,7 +63,7 @@ static void CallOuterFunctionToInstrument() {
 }
 
 static void ChangeCurrentThreadName() {
-  pthread_setname_np(pthread_self(), PuppetConstants::kNewThreadName);
+  orbit_base::SetCurrentThreadName(PuppetConstants::kNewThreadName);
 }
 
 static void LoadSoWithDlopenAndCallFunction() {

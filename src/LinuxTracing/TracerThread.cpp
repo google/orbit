@@ -1175,7 +1175,7 @@ std::vector<std::unique_ptr<PerfEvent>> TracerThread::ConsumeDeferredEvents() {
 }
 
 void TracerThread::ProcessDeferredEvents() {
-  pthread_setname_np(pthread_self(), "Proc.Def.Events");
+  orbit_base::SetCurrentThreadName("Proc.Def.Events");
   bool should_exit = false;
   while (!should_exit) {
     ORBIT_SCOPE("ProcessDeferredEvents iteration");
