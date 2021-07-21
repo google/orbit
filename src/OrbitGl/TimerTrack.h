@@ -41,8 +41,8 @@ struct DrawData {
   orbit_gl::Viewport* viewport;
   const orbit_client_protos::TimerInfo* selected_timer;
   double inv_time_window;
-  float world_start_x;
-  float world_width;
+  float track_start_x;
+  float track_width;
   float z_offset;
   float z;
   bool is_collapsed;
@@ -139,8 +139,8 @@ class TimerTrack : public Track {
                                  float /*z_offset*/, Vec2 /*box_pos*/, Vec2 /*box_size*/);
 
   [[nodiscard]] static internal::DrawData GetDrawData(
-      uint64_t min_tick, uint64_t max_tick, float z_offset, Batcher* batcher, TimeGraph* time_graph,
-      orbit_gl::Viewport* viewport, bool is_collapsed,
+      uint64_t min_tick, uint64_t max_tick, float track_width, float z_offset, Batcher* batcher,
+      TimeGraph* time_graph, orbit_gl::Viewport* viewport, bool is_collapsed,
       const orbit_client_protos::TimerInfo* selected_timer, uint64_t highlighted_function_id);
 
   TextRenderer* text_renderer_ = nullptr;
