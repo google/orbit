@@ -95,7 +95,7 @@ bool ClientGgp::InitClient() {
 }
 
 // Client requests to start the capture
-ErrorMessageOr<void> ClientGgp::RequestStartCapture(ThreadPool* thread_pool) {
+ErrorMessageOr<void> ClientGgp::RequestStartCapture(orbit_base::ThreadPool* thread_pool) {
   int32_t pid = target_process_->pid();
   if (pid == -1) {
     return ErrorMessage{

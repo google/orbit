@@ -68,7 +68,7 @@ InstrumentedFunction::FunctionType CaptureClient::InstrumentedFunctionTypeFromOr
 
 // TODO(b/187170164): This method contains a lot of arguments. Consider making it more structured.
 Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
-    ThreadPool* thread_pool, int32_t process_id,
+    orbit_base::ThreadPool* thread_pool, int32_t process_id,
     const orbit_client_data::ModuleManager& module_manager,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions, bool always_record_arguments,
     bool record_return_values, TracepointInfoSet selected_tracepoints, double samples_per_second,

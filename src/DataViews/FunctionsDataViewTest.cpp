@@ -32,7 +32,7 @@ namespace {
 struct FunctionsDataViewTest : public testing::Test {
  public:
   explicit FunctionsDataViewTest()
-      : thread_pool_{ThreadPool::Create(4, 4, absl::Milliseconds(50))},
+      : thread_pool_{orbit_base::ThreadPool::Create(4, 4, absl::Milliseconds(50))},
         view_{&app_, thread_pool_.get()} {
     orbit_client_protos::FunctionInfo function0;
     function0.set_name("foo");
@@ -110,7 +110,7 @@ struct FunctionsDataViewTest : public testing::Test {
   ~FunctionsDataViewTest() override { thread_pool_->ShutdownAndWait(); }
 
  protected:
-  std::shared_ptr<ThreadPool> thread_pool_;
+  std::shared_ptr<orbit_base::ThreadPool> thread_pool_;
   orbit_data_views::MockAppInterface app_;
   orbit_data_views::FunctionsDataView view_;
   std::vector<orbit_client_protos::FunctionInfo> functions_;

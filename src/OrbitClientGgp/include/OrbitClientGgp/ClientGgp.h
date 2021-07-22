@@ -40,7 +40,7 @@ class ClientGgp {
   explicit ClientGgp(ClientGgpOptions&& options) : options_(std::move(options)) {}
 
   bool InitClient();
-  ErrorMessageOr<void> RequestStartCapture(ThreadPool* thread_pool);
+  ErrorMessageOr<void> RequestStartCapture(orbit_base::ThreadPool* thread_pool);
   bool StopCapture();
   void UpdateCaptureFunctions(std::vector<std::string> capture_functions);
 

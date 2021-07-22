@@ -16,7 +16,7 @@
 namespace orbit_data_views {
 class FunctionsDataView : public DataView {
  public:
-  explicit FunctionsDataView(AppInterface* app, ThreadPool* thread_pool);
+  explicit FunctionsDataView(AppInterface* app, orbit_base::ThreadPool* thread_pool);
 
   static const std::string kUnselectedFunctionString;
   static const std::string kSelectedFunctionString;
@@ -68,7 +68,7 @@ class FunctionsDataView : public DataView {
                                        const orbit_client_protos::FunctionInfo& function);
   std::vector<const orbit_client_protos::FunctionInfo*> functions_;
 
-  ThreadPool* thread_pool_;
+  orbit_base::ThreadPool* thread_pool_;
 };
 
 }  // namespace orbit_data_views

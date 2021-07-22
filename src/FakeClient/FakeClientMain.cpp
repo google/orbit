@@ -206,7 +206,8 @@ int main(int argc, char* argv[]) {
   InstallSigintHandler();
 
   orbit_capture_client::CaptureClient capture_client{grpc_channel};
-  std::shared_ptr<ThreadPool> thread_pool = ThreadPool::Create(1, 1, absl::Seconds(1));
+  std::shared_ptr<orbit_base::ThreadPool> thread_pool =
+      orbit_base::ThreadPool::Create(1, 1, absl::Seconds(1));
 
   orbit_client_data::ModuleManager module_manager;
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;

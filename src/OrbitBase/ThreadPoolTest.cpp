@@ -14,6 +14,8 @@
 #include "absl/synchronization/mutex.h"
 #include "absl/time/clock.h"
 
+using orbit_base::ThreadPool;
+
 TEST(ThreadPool, Smoke) {
   constexpr size_t kThreadPoolMinSize = 1;
   constexpr size_t kThreadPoolMaxSize = 2;

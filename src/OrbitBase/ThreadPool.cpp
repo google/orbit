@@ -16,6 +16,7 @@
 
 #include "OrbitBase/Logging.h"
 
+namespace orbit_base {
 namespace {
 
 class ThreadPoolImpl : public ThreadPool {
@@ -195,3 +196,5 @@ std::shared_ptr<ThreadPool> ThreadPool::Create(
   return std::make_shared<ThreadPoolImpl>(thread_pool_min_size, thread_pool_max_size, thread_ttl,
                                           std::move(run_action));
 }
+
+}  // namespace orbit_base
