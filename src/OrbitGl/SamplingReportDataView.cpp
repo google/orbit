@@ -16,7 +16,6 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
-#include <outcome.hpp>
 #include <utility>
 
 #include "App.h"

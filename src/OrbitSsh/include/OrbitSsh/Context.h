@@ -5,7 +5,7 @@
 #ifndef ORBIT_SSH_CONTEXT_H_
 #define ORBIT_SSH_CONTEXT_H_
 
-#include <outcome.hpp>
+#include "OrbitBase/Result.h"
 
 namespace orbit_ssh {
 

@@ -91,7 +91,7 @@
     "context": "host"
    },
    "11": {
-    "ref": "Outcome/3dae433e@orbitdeps/stable#0",
+    "ref": "outcome/2.2.0#81f8926a070f1172386610857402c99a",
     "context": "host"
    },
    "12": {

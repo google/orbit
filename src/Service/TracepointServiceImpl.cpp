@@ -4,7 +4,6 @@
 
 #include "TracepointServiceImpl.h"
 
-#include <outcome.hpp>
 #include <vector>
 
 #include "OrbitBase/Logging.h"

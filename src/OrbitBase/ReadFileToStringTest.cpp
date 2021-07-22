@@ -6,7 +6,6 @@
 
 #include <filesystem>
 #include <memory>
-#include <outcome.hpp>
 
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/ReadFileToString.h"

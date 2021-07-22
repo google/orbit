@@ -66,7 +66,7 @@ outcome::result<void> SftpCopyToRemoteOperation::startup() {
     }
     case State::kStarted:
     case State::kLocalFileOpened: {
-      OUTCOME_TRY(sftp_file,
+      OUTCOME_TRY(auto&& sftp_file,
                   orbit_ssh::SftpFile::Open(
                       session_->GetRawSession(), channel_->GetRawSftp(), destination_.string(),
                       orbit_ssh::FxfFlags::kWrite | orbit_ssh::FxfFlags::kCreate |
@@ -82,7 +82,7 @@ outcome::result<void> SftpCopyToRemoteOperation::startup() {
           write_buffer_.append(local_file_.read(56 * 1024));
         }
 
-        OUTCOME_TRY(bytes_written,
+        OUTCOME_TRY(auto&& bytes_written,
                     sftp_file_->Write(std::string_view{write_buffer_.constData(),
                                                        static_cast<size_t>(write_buffer_.size())}));
 

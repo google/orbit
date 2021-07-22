@@ -7,9 +7,9 @@
 #include <QByteArray>
 #include <QString>
 #include <memory>
-#include <outcome.hpp>
 #include <utility>
 
+#include "OrbitBase/Result.h"
 #include "OrbitGgp/SshInfo.h"
 
 namespace orbit_ggp {

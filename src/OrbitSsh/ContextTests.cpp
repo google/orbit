@@ -5,9 +5,9 @@
 #include <gtest/gtest.h>
 
 #include <memory>
-#include <outcome.hpp>
 #include <utility>
 
+#include "OrbitBase/Result.h"
 #include "OrbitSsh/Context.h"
 
 namespace orbit_ssh {

@@ -12,7 +12,6 @@
 #include <filesystem>
 #include <map>
 #include <memory>
-#include <outcome.hpp>
 #include <string>
 #include <system_error>
 #include <type_traits>
@@ -22,6 +21,7 @@
 #include "ObjectUtils/ObjectFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_object_utils {
 
@@ -79,7 +79,7 @@ ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path
 
 ErrorMessageOr<std::vector<ModuleInfo>> ReadModules(int32_t pid) {
   std::filesystem::path proc_maps_path{absl::StrFormat("/proc/%d/maps", pid)};
-  OUTCOME_TRY(proc_maps_data, orbit_base::ReadFileToString(proc_maps_path));
+  OUTCOME_TRY(auto&& proc_maps_data, orbit_base::ReadFileToString(proc_maps_path));
   return ParseMaps(proc_maps_data);
 }
 

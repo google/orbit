@@ -10,7 +10,6 @@
 
 #include <filesystem>
 #include <memory>
-#include <outcome.hpp>
 #include <string>
 #include <string_view>
 #include <vector>

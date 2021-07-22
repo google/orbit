@@ -28,10 +28,10 @@ using orbit_base::ReadFileToString;
                                                                      uint64_t length) {
   CHECK(length != 0);
 
-  OUTCOME_TRY(fd, orbit_base::OpenFileForReading(absl::StrFormat("/proc/%d/mem", pid)));
+  OUTCOME_TRY(auto&& fd, orbit_base::OpenFileForReading(absl::StrFormat("/proc/%d/mem", pid)));
 
   std::vector<uint8_t> bytes(length);
-  OUTCOME_TRY(result, ReadFullyAtOffset(fd, bytes.data(), length, start_address));
+  OUTCOME_TRY(auto&& result, ReadFullyAtOffset(fd, bytes.data(), length, start_address));
 
   if (result < length) {
     return ErrorMessage(absl::StrFormat(
@@ -46,7 +46,7 @@ using orbit_base::ReadFileToString;
                                                       const std::vector<uint8_t>& bytes) {
   CHECK(!bytes.empty());
 
-  OUTCOME_TRY(fd, orbit_base::OpenFileForWriting(absl::StrFormat("/proc/%d/mem", pid)));
+  OUTCOME_TRY(auto&& fd, orbit_base::OpenFileForWriting(absl::StrFormat("/proc/%d/mem", pid)));
 
   OUTCOME_TRY(WriteFullyAtOffset(fd, bytes.data(), bytes.size(), start_address));
 
@@ -55,7 +55,7 @@ using orbit_base::ReadFileToString;
 
 [[nodiscard]] ErrorMessageOr<AddressRange> GetFirstExecutableMemoryRegion(
     pid_t pid, uint64_t exclude_address) {
-  OUTCOME_TRY(maps, ReadFileToString(absl::StrFormat("/proc/%d/maps", pid)));
+  OUTCOME_TRY(auto&& maps, ReadFileToString(absl::StrFormat("/proc/%d/maps", pid)));
   const std::vector<std::string> lines = absl::StrSplit(maps, '\n', absl::SkipEmpty());
   for (const auto& line : lines) {
     const std::vector<std::string> tokens = absl::StrSplit(line, ' ', absl::SkipEmpty());

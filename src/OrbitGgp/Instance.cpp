@@ -27,12 +27,12 @@ outcome::result<Instance> GetInstanceFromJson(const QJsonObject& obj) {
     }
   };
 
-  OUTCOME_TRY(display_name, process(obj.value("displayName")));
-  OUTCOME_TRY(id, process(obj.value("id")));
-  OUTCOME_TRY(ip_address, process(obj.value("ipAddress")));
-  OUTCOME_TRY(last_updated, process(obj.value("lastUpdated")));
-  OUTCOME_TRY(owner, process(obj.value("owner")));
-  OUTCOME_TRY(pool, process(obj.value("pool")));
+  OUTCOME_TRY(auto&& display_name, process(obj.value("displayName")));
+  OUTCOME_TRY(auto&& id, process(obj.value("id")));
+  OUTCOME_TRY(auto&& ip_address, process(obj.value("ipAddress")));
+  OUTCOME_TRY(auto&& last_updated, process(obj.value("lastUpdated")));
+  OUTCOME_TRY(auto&& owner, process(obj.value("owner")));
+  OUTCOME_TRY(auto&& pool, process(obj.value("pool")));
 
   auto last_updated_date_time = QDateTime::fromString(last_updated, Qt::ISODate);
   if (!last_updated_date_time.isValid()) {
@@ -65,7 +65,7 @@ outcome::result<QVector<Instance>> Instance::GetListFromJson(const QByteArray& j
   for (const auto& json_value : arr) {
     if (!json_value.isObject()) return Error::kUnableToParseJson;
 
-    OUTCOME_TRY(instance, GetInstanceFromJson(json_value.toObject()));
+    OUTCOME_TRY(auto&& instance, GetInstanceFromJson(json_value.toObject()));
     list.push_back(std::move(instance));
   }
 

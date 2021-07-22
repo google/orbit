@@ -11,11 +11,11 @@
 #include <QPointer>
 #include <QString>
 #include <optional>
-#include <outcome.hpp>
 #include <string>
 #include <string_view>
 #include <system_error>
 
+#include "OrbitBase/Result.h"
 #include "OrbitSsh/Channel.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitSshQt/Session.h"

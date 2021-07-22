@@ -7,7 +7,6 @@
 #include <gtest/gtest.h>
 #include <stdint.h>
 
-#include <outcome.hpp>
 #include <string>
 #include <utility>
 #include <vector>

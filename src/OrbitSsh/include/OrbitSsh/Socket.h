@@ -20,11 +20,11 @@
 #include <stddef.h>
 
 #include <optional>
-#include <outcome.hpp>
 #include <string>
 #include <string_view>
 #include <system_error>
 
+#include "OrbitBase/Result.h"
 #include "OrbitSsh/AddrAndPort.h"
 
 namespace orbit_ssh {

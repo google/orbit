@@ -9,9 +9,9 @@
 
 #include <filesystem>
 #include <memory>
-#include <outcome.hpp>
 #include <string>
 
+#include "OrbitBase/Result.h"
 #include "OrbitSsh/AddrAndPort.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSsh/Socket.h"

@@ -24,7 +24,6 @@
 #include <limits>
 #include <memory>
 #include <optional>
-#include <outcome.hpp>
 #include <ratio>
 #include <string>
 #include <thread>
@@ -1114,7 +1113,7 @@ ErrorMessageOr<PresetFile> OrbitApp::ReadPresetFromFile(const std::filesystem::p
 }
 
 ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
-  OUTCOME_TRY(preset_file, ReadPresetFromFile(filename));
+  OUTCOME_TRY(auto&& preset_file, ReadPresetFromFile(filename));
   LoadPreset(preset_file);
   return outcome::success();
 }
@@ -2647,7 +2646,7 @@ ErrorMessageOr<void> OrbitApp::ConvertPresetToNewFormatIfNecessary(const PresetF
   // Convert first
   PresetInfo new_info;
   for (const auto& module_path : preset_file.GetModulePaths()) {
-    OUTCOME_TRY(modules_data, GetLoadedModulesByPath(module_path.string()));
+    OUTCOME_TRY(auto&& modules_data, GetLoadedModulesByPath(module_path.string()));
     if (modules_data.empty()) {
       return ErrorMessage{
           absl::StrFormat("Module \"%s\" is not loaded by process.", module_path.string())};

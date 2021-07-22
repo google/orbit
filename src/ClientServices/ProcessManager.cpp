@@ -9,7 +9,6 @@
 
 #include <exception>
 #include <memory>
-#include <outcome.hpp>
 #include <string>
 #include <thread>
 #include <utility>

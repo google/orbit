@@ -8,12 +8,12 @@
 
 #include <algorithm>
 #include <memory>
-#include <outcome.hpp>
 #include <vector>
 
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
 #include "Introspection/Introspection.h"
+#include "OrbitBase/Result.h"
 
 using orbit_client_data::CallstackData;
 using orbit_client_data::ModuleData;

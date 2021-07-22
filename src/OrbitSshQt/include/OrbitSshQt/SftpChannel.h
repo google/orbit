@@ -9,9 +9,9 @@
 #include <QPointer>
 #include <QString>
 #include <optional>
-#include <outcome.hpp>
 #include <system_error>
 
+#include "OrbitBase/Result.h"
 #include "OrbitSsh/Sftp.h"
 #include "OrbitSshQt/Error.h"
 #include "OrbitSshQt/ScopedConnection.h"

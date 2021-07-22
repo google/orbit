@@ -7,9 +7,9 @@
 #include <QMetaObject>
 #include <Qt>
 #include <memory>
-#include <outcome.hpp>
 #include <system_error>
 
+#include "OrbitBase/Result.h"
 #include "QtUtils/EventLoop.h"
 
 TEST(EventLoop, exec) {

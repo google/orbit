@@ -7,7 +7,6 @@
 #include <gtest/gtest.h>
 
 #include <filesystem>
-#include <outcome.hpp>
 #include <string>
 
 #include "OrbitBase/ExecutablePath.h"

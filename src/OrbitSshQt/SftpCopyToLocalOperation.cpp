@@ -53,7 +53,7 @@ outcome::result<void> SftpCopyToLocalOperation::startup() {
   switch (CurrentState()) {
     case State::kInitial:
     case State::kNoOperation: {
-      OUTCOME_TRY(sftp_file,
+      OUTCOME_TRY(auto&& sftp_file,
                   orbit_ssh::SftpFile::Open(session_->GetRawSession(), channel_->GetRawSftp(),
                                             source_.string(), orbit_ssh::FxfFlags::kRead,
                                             0 /* mode - not applicable for kRead */));
@@ -75,7 +75,7 @@ outcome::result<void> SftpCopyToLocalOperation::startup() {
       constexpr size_t kReadBufferMaxSize = 1 * 1024 * 1024;
 
       while (true) {
-        OUTCOME_TRY(read_buffer, sftp_file_->Read(kReadBufferMaxSize));
+        OUTCOME_TRY(auto&& read_buffer, sftp_file_->Read(kReadBufferMaxSize));
         if (read_buffer.empty()) {
           // This is end of file
           SetState(State::kLocalFileWritten);

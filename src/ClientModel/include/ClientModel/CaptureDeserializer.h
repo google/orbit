@@ -12,7 +12,6 @@
 #include <atomic>
 #include <filesystem>
 #include <iosfwd>
-#include <outcome.hpp>
 #include <string>
 
 #include "CaptureClient/CaptureListener.h"

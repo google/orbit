@@ -10,10 +10,10 @@
 #include <QSocketNotifier>
 #include <QString>
 #include <optional>
-#include <outcome.hpp>
 #include <system_error>
 #include <utility>
 
+#include "OrbitBase/Result.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSsh/Credentials.h"
 #include "OrbitSsh/Session.h"

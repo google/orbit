@@ -20,7 +20,6 @@
 #include <QWidget>
 #include <memory>
 #include <optional>
-#include <outcome.hpp>
 #include <string>
 
 #include "Connections.h"

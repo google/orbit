@@ -6,9 +6,9 @@
 #include <unistd.h>
 
 #include <memory>
-#include <outcome.hpp>
 #include <string_view>
 
+#include "OrbitBase/Result.h"
 #include "Process.h"
 
 constexpr size_t kTaskCommLength = 16;

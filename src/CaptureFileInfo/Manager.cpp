@@ -82,7 +82,7 @@ void Manager::PurgeNonExistingFiles() {
 ErrorMessageOr<void> Manager::FillFromDirectory(const std::filesystem::path& directory) {
   Clear();
 
-  OUTCOME_TRY(files, orbit_base::ListFilesInDirectory(directory));
+  OUTCOME_TRY(auto&& files, orbit_base::ListFilesInDirectory(directory));
 
   for (const auto& file : files) {
     if (file.extension() != ".orbit") continue;

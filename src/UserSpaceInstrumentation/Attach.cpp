@@ -77,7 +77,7 @@ ErrorMessageOr<void> AttachAndStopProcess(pid_t pid) {
     return ErrorMessage(absl::StrFormat("There is no process with pid %d.", pid));
   }
 
-  OUTCOME_TRY(tracer_pid, orbit_base::GetTracerPidOfProcess(pid));
+  OUTCOME_TRY(auto&& tracer_pid, orbit_base::GetTracerPidOfProcess(pid));
   if (tracer_pid != 0) {
     return ErrorMessage(
         absl::StrFormat("Process %d is already being traced by %d. Please make sure no debugger is "

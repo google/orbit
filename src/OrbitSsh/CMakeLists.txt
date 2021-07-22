@@ -45,8 +45,10 @@ else()
   target_sources(OrbitSsh PRIVATE LinuxSocket.cpp)
 endif()
 
-target_link_libraries(OrbitSsh PUBLIC OrbitBase CONAN_PKG::Outcome
-                                      CONAN_PKG::libssh2)
+target_link_libraries(
+  OrbitSsh
+  PUBLIC OrbitBase
+         CONAN_PKG::libssh2)
 
 if(WIN32)
   target_compile_definitions(OrbitSsh PUBLIC WIN32_LEAN_AND_MEAN)

@@ -171,7 +171,7 @@ namespace {
 
 ErrorMessageOr<orbit_base::unique_resource<uint64_t, std::function<void(uint64_t)>>>
 AllocateInTraceeAsUniqueResource(pid_t pid, uint64_t address, uint64_t size) {
-  OUTCOME_TRY(allocated_address, AllocateInTracee(pid, address, size));
+  OUTCOME_TRY(auto&& allocated_address, AllocateInTracee(pid, address, size));
   std::function<void(uint64_t)> deleter = [pid, size](uint64_t address) {
     auto result = FreeInTracee(pid, address, size);
     if (result.has_error()) {

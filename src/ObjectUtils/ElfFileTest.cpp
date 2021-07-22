@@ -8,7 +8,6 @@
 #include <filesystem>
 #include <iterator>
 #include <memory>
-#include <outcome.hpp>
 #include <string>
 #include <utility>
 #include <vector>

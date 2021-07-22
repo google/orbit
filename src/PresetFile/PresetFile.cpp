@@ -111,15 +111,15 @@ std::vector<std::string> PresetFile::GetFrameTrackFunctionNamesForModule(
 }
 
 ErrorMessageOr<PresetFile> ReadPresetFromFile(const std::filesystem::path& file_path) {
-  OUTCOME_TRY(file_content, orbit_base::ReadFileToString(file_path));
+  OUTCOME_TRY(auto&& file_content, orbit_base::ReadFileToString(file_path));
 
   // If signature is not detected assume the file is in old format.
   if (!absl::StartsWith(file_content, kPresetFileSignature)) {
-    OUTCOME_TRY(preset_info_legacy, ReadLegacyPresetFromString(file_content));
+    OUTCOME_TRY(auto&& preset_info_legacy, ReadLegacyPresetFromString(file_content));
     return PresetFile{file_path, preset_info_legacy};
   }
 
-  OUTCOME_TRY(preset_info,
+  OUTCOME_TRY(auto&& preset_info,
               ReadPresetFromString(file_content.c_str() + strlen(kPresetFileSignature)));
   return PresetFile{file_path, preset_info};
 }
@@ -127,7 +127,7 @@ ErrorMessageOr<PresetFile> ReadPresetFromFile(const std::filesystem::path& file_
 ErrorMessageOr<void> PresetFile::SaveToFile() const {
   CHECK(!is_legacy_format_);
 
-  OUTCOME_TRY(fd, orbit_base::OpenFileForWriting(file_path_));
+  OUTCOME_TRY(auto&& fd, orbit_base::OpenFileForWriting(file_path_));
   LOG("Saving preset to \"%s\"", file_path_.string());
 
   auto write_result = orbit_base::WriteFully(fd, kPresetFileSignature);

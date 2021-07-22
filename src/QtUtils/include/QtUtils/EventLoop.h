@@ -7,7 +7,8 @@
 
 #include <QEventLoop>
 #include <optional>
-#include <outcome.hpp>
+
+#include "OrbitBase/Result.h"
 
 namespace orbit_qt_utils {
 

@@ -10,10 +10,10 @@
 #include <QVector>
 #include <Qt>
 #include <memory>
-#include <outcome.hpp>
 #include <system_error>
 #include <utility>
 
+#include "OrbitBase/Result.h"
 #include "OrbitGgp/Error.h"
 #include "OrbitGgp/Instance.h"
 

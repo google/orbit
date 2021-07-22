@@ -322,7 +322,7 @@ void AppendRestoreCode(MachineCode& trampoline) {
     const uint64_t relocated_instruction_address =
         trampoline_address + trampoline.GetResultAsVector().size() + trampoline_code.size();
     relocation_map.insert_or_assign(original_instruction_address, relocated_instruction_address);
-    OUTCOME_TRY(relocated_instruction,
+    OUTCOME_TRY(auto&& relocated_instruction,
                 RelocateInstruction(instruction, original_instruction_address,
                                     relocated_instruction_address));
     if (relocated_instruction.position_of_absolute_address.has_value()) {
@@ -485,14 +485,14 @@ std::optional<size_t> HighestIntersectingAddressRange(
 
 ErrorMessageOr<std::vector<AddressRange>> GetUnavailableAddressRanges(pid_t pid) {
   std::vector<AddressRange> result;
-  OUTCOME_TRY(mmap_min_addr, ReadFileToString("/proc/sys/vm/mmap_min_addr"));
+  OUTCOME_TRY(auto&& mmap_min_addr, ReadFileToString("/proc/sys/vm/mmap_min_addr"));
   uint64_t mmap_min_addr_as_uint64 = 0;
   if (!absl::SimpleAtoi(mmap_min_addr, &mmap_min_addr_as_uint64)) {
     return ErrorMessage("Failed to parse /proc/sys/vm/mmap_min_addr");
   }
   result.emplace_back(0, mmap_min_addr_as_uint64);
 
-  OUTCOME_TRY(maps, ReadFileToString(absl::StrFormat("/proc/%d/maps", pid)));
+  OUTCOME_TRY(auto&& maps, ReadFileToString(absl::StrFormat("/proc/%d/maps", pid)));
   std::vector<std::string> lines = absl::StrSplit(maps, '\n', absl::SkipEmpty());
   for (const auto& line : lines) {
     std::vector<std::string> tokens = absl::StrSplit(line, ' ', absl::SkipEmpty());
@@ -598,8 +598,9 @@ ErrorMessageOr<AddressRange> FindAddressRangeForTrampoline(
 
 ErrorMessageOr<uint64_t> AllocateMemoryForTrampolines(pid_t pid, const AddressRange& code_range,
                                                       uint64_t size) {
-  OUTCOME_TRY(unavailable_ranges, GetUnavailableAddressRanges(pid));
-  OUTCOME_TRY(address_range, FindAddressRangeForTrampoline(unavailable_ranges, code_range, size));
+  OUTCOME_TRY(auto&& unavailable_ranges, GetUnavailableAddressRanges(pid));
+  OUTCOME_TRY(auto&& address_range,
+              FindAddressRangeForTrampoline(unavailable_ranges, code_range, size));
   return AllocateInTracee(pid, address_range.start, size);
 }
 
@@ -782,7 +783,7 @@ ErrorMessageOr<uint64_t> CreateTrampoline(pid_t pid, uint64_t function_address,
   AppendRestoreCode(trampoline);
 
   // Relocate prologue into trampoline.
-  OUTCOME_TRY(address_after_prologue,
+  OUTCOME_TRY(auto&& address_after_prologue,
               AppendRelocatedPrologueCode(function_address, function, trampoline_address,
                                           capstone_handle, relocation_map, trampoline));
 

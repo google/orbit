@@ -81,8 +81,8 @@ outcome::result<void> Tunnel::startup() {
   switch (CurrentState()) {
     case State::kInitial:
     case State::kNoChannel: {
-      OUTCOME_TRY(channel, orbit_ssh::Channel::OpenTcpIpTunnel(session_->GetRawSession(),
-                                                               remote_host_, remote_port_));
+      OUTCOME_TRY(auto&& channel, orbit_ssh::Channel::OpenTcpIpTunnel(session_->GetRawSession(),
+                                                                      remote_host_, remote_port_));
       channel_ = std::move(channel);
       SetState(State::kChannelInitialized);
       ABSL_FALLTHROUGH_INTENDED;
@@ -206,7 +206,7 @@ outcome::result<void> Tunnel::writeToChannel() {
   ORBIT_SCOPE_FUNCTION;
   if (!write_buffer_.empty()) {
     const std::string_view buffer_view{write_buffer_.data(), write_buffer_.size()};
-    OUTCOME_TRY(bytes_written, channel_->Write(buffer_view));
+    OUTCOME_TRY(auto&& bytes_written, channel_->Write(buffer_view));
     CHECK(static_cast<size_t>(bytes_written) <= write_buffer_.size());
     write_buffer_.erase(write_buffer_.begin(), write_buffer_.begin() + bytes_written);
     ORBIT_UINT64("writeToChannel bytes written", bytes_written);
