@@ -41,7 +41,7 @@ using orbit_grpc_protos::UpdateSelectedFunctionsResponse;
 
 CaptureClientGgpServiceImpl::CaptureClientGgpServiceImpl()
     : orbit_grpc_protos::CaptureClientGgpService::Service{} {
-  thread_pool_ = ThreadPool::Create(1, 1, absl::Seconds(1));
+  thread_pool_ = orbit_base::ThreadPool::Create(1, 1, absl::Seconds(1));
   InitClientGgp();
 }
 

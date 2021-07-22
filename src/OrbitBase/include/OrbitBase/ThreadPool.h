@@ -13,6 +13,8 @@
 
 #include "OrbitBase/Executor.h"
 
+namespace orbit_base {
+
 // This class implements a thread pool. ThreadPool allows to execute
 // actions in another thread without the need to manage creation and destruction
 // of that thread.
@@ -70,5 +72,7 @@ class ThreadPool : public orbit_base::Executor {
       size_t thread_pool_min_size, size_t thread_pool_max_size, absl::Duration thread_ttl,
       std::function<void(const std::unique_ptr<Action>&)> run_action = nullptr);
 };
+
+}  // namespace orbit_base
 
 #endif  // ORBIT_BASE_THREAD_POOL_H_

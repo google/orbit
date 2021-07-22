@@ -240,7 +240,7 @@ OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
       metrics_uploader_(metrics_uploader) {
   CHECK(main_window_ != nullptr);
 
-  thread_pool_ = ThreadPool::Create(
+  thread_pool_ = orbit_base::ThreadPool::Create(
       /*thread_pool_min_size=*/4, /*thread_pool_max_size=*/256, /*thread_ttl=*/absl::Seconds(1),
       /*run_action=*/[](const std::unique_ptr<Action>& action) {
         ORBIT_START("Execute Action");
@@ -253,7 +253,7 @@ OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
   // occur on standard Linux or Windows.
   CHECK(number_of_logical_cores > 0);
 
-  core_count_sized_thread_pool_ = ThreadPool::Create(
+  core_count_sized_thread_pool_ = orbit_base::ThreadPool::Create(
       /*thread_pool_min_size=*/number_of_logical_cores,
       /*thread_pool_max_size=*/number_of_logical_cores, /*thread_ttl=*/absl::Seconds(1),
       /*run_action=*/[](const std::unique_ptr<Action>& action) {

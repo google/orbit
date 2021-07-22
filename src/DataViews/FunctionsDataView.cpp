@@ -35,7 +35,7 @@ using orbit_client_protos::FunctionInfo;
 
 namespace orbit_data_views {
 
-FunctionsDataView::FunctionsDataView(AppInterface* app, ThreadPool* thread_pool)
+FunctionsDataView::FunctionsDataView(AppInterface* app, orbit_base::ThreadPool* thread_pool)
     : DataView(DataViewType::kFunctions, app), thread_pool_{thread_pool} {}
 
 const std::string FunctionsDataView::kUnselectedFunctionString = "";

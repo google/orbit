@@ -40,7 +40,8 @@ TracingScope::TracingScope(orbit_api::EventType type, const char* name, uint64_t
 TracingListener::TracingListener(TracingTimerCallback callback) {
   constexpr size_t kMinNumThreads = 1;
   constexpr size_t kMaxNumThreads = 1;
-  thread_pool_ = ThreadPool::Create(kMinNumThreads, kMaxNumThreads, absl::Milliseconds(500));
+  thread_pool_ =
+      orbit_base::ThreadPool::Create(kMinNumThreads, kMaxNumThreads, absl::Milliseconds(500));
   user_callback_ = std::move(callback);
 
   // Activate listener (only one listener instance is supported).

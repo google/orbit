@@ -39,7 +39,7 @@ class CaptureClient {
       : capture_service_{orbit_grpc_protos::CaptureService::NewStub(channel)} {}
 
   orbit_base::Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> Capture(
-      ThreadPool* thread_pool, int32_t process_id,
+      orbit_base::ThreadPool* thread_pool, int32_t process_id,
       const orbit_client_data::ModuleManager& module_manager,
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       bool always_record_arguments, bool record_return_values,
