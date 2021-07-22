@@ -20,8 +20,6 @@ target_sources(ServiceLib PRIVATE
         CrashServiceImpl.h
         FramePointerValidatorServiceImpl.cpp
         FramePointerValidatorServiceImpl.h
-        LinuxTracingHandler.cpp
-        LinuxTracingHandler.h
         MemoryInfoHandler.cpp
         MemoryInfoHandler.h
         OrbitGrpcServer.cpp
@@ -42,6 +40,8 @@ target_sources(ServiceLib PRIVATE
         ProducerSideServiceImpl.h
         TracepointServiceImpl.h
         TracepointServiceImpl.cpp
+        TracingHandler.cpp
+        TracingHandler.h
         ServiceUtils.cpp
         ServiceUtils.h)
 

@@ -22,16 +22,16 @@
 
 namespace orbit_service {
 
-class LinuxTracingHandler : public orbit_tracing_interface::TracerListener {
+class TracingHandler : public orbit_tracing_interface::TracerListener {
  public:
-  explicit LinuxTracingHandler(ProducerEventProcessor* producer_event_processor)
+  explicit TracingHandler(ProducerEventProcessor* producer_event_processor)
       : producer_event_processor_{producer_event_processor} {}
 
-  ~LinuxTracingHandler() override = default;
-  LinuxTracingHandler(const LinuxTracingHandler&) = delete;
-  LinuxTracingHandler& operator=(const LinuxTracingHandler&) = delete;
-  LinuxTracingHandler(LinuxTracingHandler&&) = delete;
-  LinuxTracingHandler& operator=(LinuxTracingHandler&&) = delete;
+  ~TracingHandler() override = default;
+  TracingHandler(const TracingHandler&) = delete;
+  TracingHandler& operator=(const TracingHandler&) = delete;
+  TracingHandler(TracingHandler&&) = delete;
+  TracingHandler& operator=(TracingHandler&&) = delete;
 
   void Start(orbit_grpc_protos::CaptureOptions capture_options);
   void Stop();
@@ -57,7 +57,7 @@ class LinuxTracingHandler : public orbit_tracing_interface::TracerListener {
 
  private:
   ProducerEventProcessor* producer_event_processor_;
-  std::unique_ptr<orbit_linux_tracing::Tracer> tracer_;
+  std::unique_ptr<orbit_tracing_interface::Tracer> tracer_;
 
   // Manual instrumentation tracing listener.
   std::unique_ptr<orbit_introspection::TracingListener> orbit_tracing_listener_;
