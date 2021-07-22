@@ -13,6 +13,7 @@
 
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
+#include "Introspection/Introspection.h"
 
 using orbit_client_data::CallstackData;
 using orbit_client_data::ModuleData;
@@ -108,6 +109,40 @@ void CaptureData::UpdateFunctionStats(uint64_t instrumented_function_id, uint64_
 
   if (stats.min_ns() == 0 || elapsed_nanos < stats.min_ns()) {
     stats.set_min_ns(elapsed_nanos);
+  }
+}
+
+void CaptureData::OnCaptureComplete(std::vector<orbit_client_data::TimerChain*> chains) {
+  // Recalculate standard deviation as the running calculation may have introduced error.
+  ORBIT_SCOPE_FUNCTION;
+  for (auto& pair : functions_stats_) {
+    FunctionStats& stats = pair.second;
+    stats.set_variance_ns(0);
+  }
+
+  for (orbit_client_data::TimerChain* chain : chains) {
+    CHECK(chain);
+    for (const orbit_client_data::TimerBlock& block : *chain) {
+      for (uint64_t i = 0; i < block.size(); i++) {
+        const orbit_client_protos::TimerInfo& timer_info = block[i];
+        const auto& stats_it = functions_stats_.find(timer_info.function_id());
+        if (stats_it == functions_stats_.end()) continue;
+        FunctionStats& stats = stats_it->second;
+        if (stats.count() > 0) {
+          uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
+          int64_t deviation = elapsed_nanos - stats.average_time_ns();
+          stats.set_variance_ns(stats.variance_ns() + deviation * deviation);
+        }
+      }
+    }
+  }
+
+  for (auto& pair : functions_stats_) {
+    FunctionStats& stats = pair.second;
+    if (stats.count() > 0) {
+      stats.set_variance_ns(stats.variance_ns() / static_cast<double>(stats.count()));
+      stats.set_std_dev_ns(static_cast<uint64_t>(sqrt(stats.variance_ns())));
+    }
   }
 }
 
