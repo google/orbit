@@ -10,7 +10,6 @@
 #include <algorithm>
 #include <iterator>
 #include <optional>
-#include <outcome.hpp>
 #include <utility>
 #include <vector>
 

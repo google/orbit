@@ -8,7 +8,26 @@
 #include <string>
 #include <type_traits>
 
-#include "outcome.hpp"
+// Qt's MOC has some problems parsing outcome.hpp,
+// but that's not a big deal as we can just exclude
+// it from parsing without any side-effects.
+#ifndef Q_MOC_RUN
+
+#include <outcome.hpp>  // IWYU pragma: export
+
+// Outcome has a versioned namespace scheme to allow
+// mixing different versions of Outcome in the same
+// project without having ABI problems.
+//
+// That's why we have to use a namespace alias.
+//
+// We used to have that alias definition in the conan
+// package, but since we have been transitioning to the
+// official conan package of Outcome, the namespace alias
+// needs to move somewhere.
+namespace outcome = OUTCOME_V2_NAMESPACE;
+
+#endif  // Q_MOC_RUN
 
 class [[nodiscard]] ErrorMessage final {
  public:

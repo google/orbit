@@ -140,7 +140,7 @@ outcome::result<void> Socket::SendBlocking(std::string_view data) {
 
 outcome::result<void> Socket::WaitDisconnect() {
   OUTCOME_TRY(CanBeRead());
-  OUTCOME_TRY(data, Receive());
+  OUTCOME_TRY(auto&& data, Receive());
 
   if (data.empty()) return outcome::success();
 

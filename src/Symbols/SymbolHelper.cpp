@@ -15,7 +15,6 @@
 #include <algorithm>
 #include <filesystem>
 #include <memory>
-#include <outcome.hpp>
 #include <set>
 #include <string_view>
 #include <system_error>

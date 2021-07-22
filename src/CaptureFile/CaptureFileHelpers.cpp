@@ -13,7 +13,7 @@ namespace orbit_capture_file {
 ErrorMessageOr<void> WriteUserData(
     const std::filesystem::path& capture_file_path,
     const orbit_client_protos::UserDefinedCaptureInfo& user_defined_capture_info) {
-  OUTCOME_TRY(capture_file, CaptureFile::OpenForReadWrite(capture_file_path));
+  OUTCOME_TRY(auto&& capture_file, CaptureFile::OpenForReadWrite(capture_file_path));
 
   uint32_t message_size = user_defined_capture_info.ByteSizeLong();
   const size_t buf_size =
@@ -30,7 +30,7 @@ ErrorMessageOr<void> WriteUserData(
   if (section_index.has_value()) {
     OUTCOME_TRY(capture_file->ExtendSection(section_index.value(), buf_size));
   } else {
-    OUTCOME_TRY(section_number, capture_file->AddUserDataSection(buf_size));
+    OUTCOME_TRY(auto&& section_number, capture_file->AddUserDataSection(buf_size));
     section_index = section_number;
   }
 

@@ -20,12 +20,12 @@
 #include <chrono>
 #include <filesystem>
 #include <optional>
-#include <outcome.hpp>
 #include <string>
 #include <string_view>
 #include <system_error>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSsh/Credentials.h"
 #include "OrbitSshQt/Session.h"

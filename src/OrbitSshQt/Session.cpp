@@ -20,7 +20,7 @@ outcome::result<void> Session::startup() {
   switch (CurrentState()) {
     case State::kInitial:
     case State::kDisconnected: {
-      OUTCOME_TRY(socket, orbit_ssh::Socket::Create());
+      OUTCOME_TRY(auto&& socket, orbit_ssh::Socket::Create());
       socket_ = std::move(socket);
       notifiers_.emplace(socket_->GetFileDescriptor(), this);
       QObject::connect(&notifiers_->read, &QSocketNotifier::activated, this, &Session::OnEvent);
@@ -34,7 +34,7 @@ outcome::result<void> Session::startup() {
       ABSL_FALLTHROUGH_INTENDED;
     }
     case State::kSocketConnected: {
-      OUTCOME_TRY(session, orbit_ssh::Session::Create(context_));
+      OUTCOME_TRY(auto&& session, orbit_ssh::Session::Create(context_));
       session_ = std::move(session);
       session_->SetBlocking(false);
       SetState(State::kSessionCreated);

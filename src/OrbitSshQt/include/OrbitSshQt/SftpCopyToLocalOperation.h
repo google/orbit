@@ -11,9 +11,9 @@
 #include <QString>
 #include <filesystem>
 #include <optional>
-#include <outcome.hpp>
 #include <system_error>
 
+#include "OrbitBase/Result.h"
 #include "OrbitSsh/SftpFile.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitSshQt/Session.h"

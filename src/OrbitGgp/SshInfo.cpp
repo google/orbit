@@ -26,11 +26,11 @@ outcome::result<SshInfo> SshInfo::CreateFromJson(const QByteArray& json) {
     }
   };
 
-  OUTCOME_TRY(host, process(obj.value("host")));
-  OUTCOME_TRY(key_path, process(obj.value("keyPath")));
-  OUTCOME_TRY(known_hosts_path, process(obj.value("knownHostsPath")));
-  OUTCOME_TRY(port, process(obj.value("port")));
-  OUTCOME_TRY(user, process(obj.value("user")));
+  OUTCOME_TRY(auto&& host, process(obj.value("host")));
+  OUTCOME_TRY(auto&& key_path, process(obj.value("keyPath")));
+  OUTCOME_TRY(auto&& known_hosts_path, process(obj.value("knownHostsPath")));
+  OUTCOME_TRY(auto&& port, process(obj.value("port")));
+  OUTCOME_TRY(auto&& user, process(obj.value("user")));
 
   // The json has the port formatted as a string ("port":"333"), hence this
   // conversion. This is standard the Qt way to check whether the casting worked

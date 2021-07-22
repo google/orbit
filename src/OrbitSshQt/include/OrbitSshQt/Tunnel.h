@@ -14,10 +14,10 @@
 #include <QTcpSocket>
 #include <deque>
 #include <optional>
-#include <outcome.hpp>
 #include <string>
 #include <system_error>
 
+#include "OrbitBase/Result.h"
 #include "OrbitSsh/Channel.h"
 #include "OrbitSshQt/Error.h"
 #include "OrbitSshQt/ScopedConnection.h"

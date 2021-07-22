@@ -114,7 +114,7 @@ outcome::result<void> Task::run() {
 
   // write
   if (!write_buffer_.empty()) {
-    OUTCOME_TRY(result, channel_->Write(write_buffer_));
+    OUTCOME_TRY(auto&& result, channel_->Write(write_buffer_));
     write_buffer_ = write_buffer_.substr(result);
     emit bytesWritten(result);
   }
@@ -136,7 +136,7 @@ outcome::result<void> Task::startup() {
         return orbit_ssh::Error::kEagain;
       }
 
-      OUTCOME_TRY(channel, orbit_ssh::Channel::OpenChannel(session_->GetRawSession()));
+      OUTCOME_TRY(auto&& channel, orbit_ssh::Channel::OpenChannel(session_->GetRawSession()));
       channel_ = std::move(channel);
       SetState(State::kChannelInitialized);
       ABSL_FALLTHROUGH_INTENDED;

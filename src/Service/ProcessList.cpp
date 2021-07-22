@@ -9,10 +9,10 @@
 #include <stdint.h>
 
 #include <filesystem>
-#include <outcome.hpp>
 #include <string>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "ServiceUtils.h"
 
 namespace orbit_service {

@@ -12,7 +12,6 @@
 #include <stdint.h>
 
 #include <filesystem>
-#include <outcome.hpp>
 #include <string>
 
 #include "CaptureData.h"

@@ -19,7 +19,6 @@
 #include <map>
 #include <memory>
 #include <numeric>
-#include <outcome.hpp>
 #include <set>
 #include <string>
 #include <string_view>

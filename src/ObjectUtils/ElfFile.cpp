@@ -29,7 +29,6 @@
 #include <llvm/Support/MathExtras.h>
 #include <llvm/Support/MemoryBuffer.h>
 
-#include <outcome.hpp>
 #include <type_traits>
 #include <utility>
 #include <vector>

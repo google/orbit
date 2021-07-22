@@ -30,7 +30,7 @@ using orbit_user_space_instrumentation::ExecuteInProcess;
 namespace {
 
 ErrorMessageOr<absl::flat_hash_map<std::string, ModuleInfo>> GetModulesByPathForPid(int32_t pid) {
-  OUTCOME_TRY(module_infos, orbit_object_utils::ReadModules(pid));
+  OUTCOME_TRY(auto&& module_infos, orbit_object_utils::ReadModules(pid));
   absl::flat_hash_map<std::string, ModuleInfo> result;
   for (ModuleInfo& module_info : module_infos) {
     result.emplace(module_info.file_path(), std::move(module_info));
@@ -90,13 +90,14 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
                                          }};
 
   // Load liborbit.so and find api table initialization function.
-  OUTCOME_TRY(liborbit_path, GetLibOrbitPath());
+  OUTCOME_TRY(auto&& liborbit_path, GetLibOrbitPath());
   constexpr const char* kSetEnabledFunction = "orbit_api_set_enabled";
-  OUTCOME_TRY(handle, DlopenInTracee(pid, liborbit_path, RTLD_NOW));
-  OUTCOME_TRY(orbit_api_set_enabled_function, DlsymInTracee(pid, handle, kSetEnabledFunction));
+  OUTCOME_TRY(auto&& handle, DlopenInTracee(pid, liborbit_path, RTLD_NOW));
+  OUTCOME_TRY(auto&& orbit_api_set_enabled_function,
+              DlsymInTracee(pid, handle, kSetEnabledFunction));
 
   // Initialize all api function tables.
-  OUTCOME_TRY(modules_by_path, GetModulesByPathForPid(pid));
+  OUTCOME_TRY(auto&& modules_by_path, GetModulesByPathForPid(pid));
   for (const ApiFunction& api_function : capture_options.api_functions()) {
     // Filter api functions.
     constexpr const char* kOrbitApiGetAddressPrefix = "orbit_api_get_function_table_address_v";
@@ -110,7 +111,7 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
     void* api_function_address =
         absl::bit_cast<void*>(module_info->address_start() + api_function.address() -
                               module_info->load_bias() - module_info->executable_segment_offset());
-    OUTCOME_TRY(function_table_address, ExecuteInProcess(pid, api_function_address));
+    OUTCOME_TRY(auto&& function_table_address, ExecuteInProcess(pid, api_function_address));
 
     // Call "orbit_api_set_enabled" in tracee.
     OUTCOME_TRY(ExecuteInProcess(pid, orbit_api_set_enabled_function, function_table_address,

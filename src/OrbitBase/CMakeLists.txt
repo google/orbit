@@ -75,8 +75,8 @@ target_sources(OrbitBase PRIVATE
 endif()
 
 target_link_libraries(OrbitBase PUBLIC
-        CONAN_PKG::Outcome
         CONAN_PKG::abseil
+        CONAN_PKG::outcome
         std::filesystem)
 
 

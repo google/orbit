@@ -11,7 +11,6 @@
 #include <iterator>
 #include <memory>
 #include <optional>
-#include <outcome.hpp>
 #include <string>
 #include <vector>
 

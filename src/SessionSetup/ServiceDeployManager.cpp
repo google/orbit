@@ -171,7 +171,7 @@ outcome::result<bool> ServiceDeployManager::CheckIfInstalled() {
 
   check_if_installed_task.Start();
 
-  OUTCOME_TRY(result, loop.exec());
+  OUTCOME_TRY(auto&& result, loop.exec());
   if (result == 0) {
     // Already installed
     emit statusMessage("The correct version of OrbitService is already installed.");
@@ -531,11 +531,11 @@ outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::ExecImpl()
   CHECK(QThread::currentThread() == thread());
   OUTCOME_TRY(ConnectToServer());
 
-  OUTCOME_TRY(sftp_channel, StartSftpChannel());
+  OUTCOME_TRY(auto&& sftp_channel, StartSftpChannel());
   sftp_channel_ = std::move(sftp_channel);
   // Release mode: Deploying a signed debian package. No password required.
   if (std::holds_alternative<SignedDebianPackageDeployment>(*deployment_configuration_)) {
-    OUTCOME_TRY(service_already_installed, CheckIfInstalled());
+    OUTCOME_TRY(auto&& service_already_installed, CheckIfInstalled());
 
     if (!service_already_installed) {
       OUTCOME_TRY(CopyOrbitServicePackage());
@@ -580,7 +580,7 @@ outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::ExecImpl()
     retry--;
   }
 
-  OUTCOME_TRY(local_grpc_port, local_grpc_port_result);
+  OUTCOME_TRY(auto&& local_grpc_port, local_grpc_port_result);
 
   emit statusMessage("Successfully set up port forwarding!");
 

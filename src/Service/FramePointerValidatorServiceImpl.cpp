@@ -8,7 +8,6 @@
 
 #include <memory>
 #include <optional>
-#include <outcome.hpp>
 #include <vector>
 
 #include "FramePointerValidator/FramePointerValidator.h"

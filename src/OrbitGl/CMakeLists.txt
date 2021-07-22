@@ -169,7 +169,6 @@ target_link_libraries(
          PresetFile
          Qt5::Gui
          Symbols
-         CONAN_PKG::Outcome
          CONAN_PKG::freetype-gl
          CONAN_PKG::freetype
          CONAN_PKG::glad

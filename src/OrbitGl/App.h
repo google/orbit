@@ -18,7 +18,6 @@
 #include <map>
 #include <memory>
 #include <optional>
-#include <outcome.hpp>
 #include <string>
 #include <string_view>
 #include <thread>

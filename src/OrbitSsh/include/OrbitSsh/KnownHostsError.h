@@ -7,10 +7,11 @@
 
 #include <libssh2.h>
 
-#include <outcome.hpp>
 #include <string>
 #include <system_error>
 #include <type_traits>
+
+#include "OrbitBase/Result.h"
 
 namespace orbit_ssh {
 

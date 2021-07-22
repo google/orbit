@@ -12,7 +12,6 @@
 #include <filesystem>
 #include <iterator>
 #include <optional>
-#include <outcome.hpp>
 #include <string>
 #include <vector>
 

@@ -73,8 +73,9 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   }
 
   // Figure out address of dlopen.
-  OUTCOME_TRY(dlopen_address, FindFunctionAddressWithFallback(pid, kLibdlSoname, kDlopenInLibdl,
-                                                              kLibcSoname, kDlopenInLibc));
+  OUTCOME_TRY(auto&& dlopen_address,
+              FindFunctionAddressWithFallback(pid, kLibdlSoname, kDlopenInLibdl, kLibcSoname,
+                                              kDlopenInLibc));
 
   // Allocate small memory area in the tracee. This is used for the code and the path name.
   const uint64_t path_length = path.string().length() + 1;  // Include terminating zero.
@@ -117,7 +118,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-  OUTCOME_TRY(return_value, ExecuteMachineCode(pid, code_address.get(), code));
+  OUTCOME_TRY(auto&& return_value, ExecuteMachineCode(pid, code_address.get(), code));
 
   return absl::bit_cast<void*>(return_value);
 }
@@ -125,8 +126,9 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
 [[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(pid_t pid, void* handle,
                                                   std::string_view symbol) {
   // Figure out address of dlsym.
-  OUTCOME_TRY(dlsym_address, FindFunctionAddressWithFallback(pid, kLibdlSoname, kDlsymInLibdl,
-                                                             kLibcSoname, kDlsymInLibc));
+  OUTCOME_TRY(
+      auto&& dlsym_address,
+      FindFunctionAddressWithFallback(pid, kLibdlSoname, kDlsymInLibdl, kLibcSoname, kDlsymInLibc));
 
   // Allocate small memory area in the tracee. This is used for the code and the symbol name.
   const size_t symbol_name_length = symbol.length() + 1;  // include terminating zero
@@ -169,15 +171,16 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-  OUTCOME_TRY(return_value, ExecuteMachineCode(pid, code_address.get(), code));
+  OUTCOME_TRY(auto&& return_value, ExecuteMachineCode(pid, code_address.get(), code));
 
   return absl::bit_cast<void*>(return_value);
 }
 
 [[nodiscard]] ErrorMessageOr<void> DlcloseInTracee(pid_t pid, void* handle) {
   // Figure out address of dlclose.
-  OUTCOME_TRY(dlclose_address, FindFunctionAddressWithFallback(pid, kLibdlSoname, kDlcloseInLibdl,
-                                                               kLibcSoname, kDlcloseInLibc));
+  OUTCOME_TRY(auto&& dlclose_address,
+              FindFunctionAddressWithFallback(pid, kLibdlSoname, kDlcloseInLibdl, kLibcSoname,
+                                              kDlcloseInLibc));
 
   // Allocate small memory area in the tracee.
   auto code_address_or_error = AllocateInTraceeAsUniqueResource(pid, 0, kCodeScratchPadSize);

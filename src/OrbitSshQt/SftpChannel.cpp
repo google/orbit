@@ -42,7 +42,7 @@ outcome::result<void> SftpChannel::startup() {
   switch (CurrentState()) {
     case State::kInitial:
     case State::kNoChannel: {
-      OUTCOME_TRY(sftp, orbit_ssh::Sftp::Init(session_->GetRawSession()));
+      OUTCOME_TRY(auto&& sftp, orbit_ssh::Sftp::Init(session_->GetRawSession()));
       sftp_ = std::move(sftp);
       SetState(State::kChannelInitialized);
       ABSL_FALLTHROUGH_INTENDED;

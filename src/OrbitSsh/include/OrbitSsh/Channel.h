@@ -9,11 +9,11 @@
 
 #include <memory>
 #include <optional>
-#include <outcome.hpp>
 #include <string>
 #include <string_view>
 
 #include "Error.h"
+#include "OrbitBase/Result.h"
 #include "Session.h"
 
 namespace orbit_ssh {

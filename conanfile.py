@@ -90,7 +90,7 @@ class OrbitConan(ConanFile):
         self.requires("llvm-core/12.0.0")
         self.requires("lzma_sdk/19.00@orbitdeps/stable#a7bc173325d7463a0757dee5b08bf7fd")
         self.requires("openssl/1.1.1k")
-        self.requires("Outcome/3dae433e@orbitdeps/stable#0")
+        self.requires("outcome/2.2.0")
         self.requires(
             "libprotobuf-mutator/20200506@{}#90ce749ca62b40e9c061d20fae4410e0".format(self._orbit_channel))
         if self.settings.os != "Windows":

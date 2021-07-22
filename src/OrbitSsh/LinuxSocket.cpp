@@ -7,11 +7,11 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include <outcome.hpp>
 #include <string>
 #include <system_error>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/SafeStrerror.h"
 #include "OrbitSsh/Socket.h"
 

@@ -7,13 +7,13 @@
 #include <libssh2.h>
 
 #include <memory>
-#include <outcome.hpp>
 #include <system_error>
 #include <type_traits>
 #include <utility>
 
 #include "LibSsh2Utils.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitSsh/Error.h"
 #include "OrbitSsh/Session.h"
 

@@ -31,8 +31,7 @@ target_link_libraries(
   PUBLIC GrpcProtos
          OrbitBase
          CONAN_PKG::abseil
-         CONAN_PKG::llvm-core
-         CONAN_PKG::Outcome)
+         CONAN_PKG::llvm-core)
 
 add_executable(ObjectUtilsTests)
 

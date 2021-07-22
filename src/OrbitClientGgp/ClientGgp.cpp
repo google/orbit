@@ -17,7 +17,6 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
-#include <outcome.hpp>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -121,10 +120,10 @@ ErrorMessageOr<void> ClientGgp::RequestStartCapture(orbit_base::ThreadPool* thre
 
   LOG("Saving capture to \"%s\"", file_path.string());
 
-  OUTCOME_TRY(event_processor, CaptureEventProcessor::CreateSaveToFileProcessor(
-                                   GenerateFilePath(), [](const ErrorMessage& error) {
-                                     ERROR("%s", error.message());
-                                   }));
+  OUTCOME_TRY(auto&& event_processor, CaptureEventProcessor::CreateSaveToFileProcessor(
+                                          GenerateFilePath(), [](const ErrorMessage& error) {
+                                            ERROR("%s", error.message());
+                                          }));
 
   Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> result = capture_client_->Capture(
       thread_pool, target_process_->pid(), module_manager_, selected_functions_,
@@ -170,7 +169,7 @@ std::filesystem::path ClientGgp::GenerateFilePath() {
 
 ErrorMessageOr<std::unique_ptr<ProcessData>> ClientGgp::GetOrbitProcessByPid(int32_t pid) {
   // We retrieve the information of the process to later get the module corresponding to its binary
-  OUTCOME_TRY(process_infos, process_client_->GetProcessList());
+  OUTCOME_TRY(auto&& process_infos, process_client_->GetProcessList());
   LOG("List of processes:");
   for (const ProcessInfo& info : process_infos) {
     LOG("pid:%d, name:%s, path:%s, is64:%d", info.pid(), info.name(), info.full_path(),
@@ -190,7 +189,7 @@ ErrorMessageOr<std::unique_ptr<ProcessData>> ClientGgp::GetOrbitProcessByPid(int
 
 ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
   // Load modules for target_process_
-  OUTCOME_TRY(module_infos, process_client_->LoadModuleList(target_process_->pid()));
+  OUTCOME_TRY(auto&& module_infos, process_client_->LoadModuleList(target_process_->pid()));
 
   LOG("List of modules");
   std::string target_process_build_id;
@@ -222,10 +221,10 @@ ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
   // Load symbols for the module
   const std::string& module_path = main_module_->file_path();
   LOG("Looking for debug info file for %s", module_path);
-  OUTCOME_TRY(main_executable_debug_file, process_client_->FindDebugInfoFile(module_path));
+  OUTCOME_TRY(auto&& main_executable_debug_file, process_client_->FindDebugInfoFile(module_path));
   LOG("Found file: %s", main_executable_debug_file);
   LOG("Loading symbols");
-  OUTCOME_TRY(symbols,
+  OUTCOME_TRY(auto&& symbols,
               orbit_symbols::SymbolHelper::LoadSymbolsFromFile(main_executable_debug_file));
   main_module_->AddSymbols(symbols);
   return outcome::success();

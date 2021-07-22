@@ -33,7 +33,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view module_
         absl::StrFormat("There is no module \"%s\" in process %d.", module_soname, pid));
   }
 
-  OUTCOME_TRY(elf_file, orbit_object_utils::CreateElfFile(module_file_path));
+  OUTCOME_TRY(auto&& elf_file, orbit_object_utils::CreateElfFile(module_file_path));
   auto symbols = elf_file->LoadSymbolsFromDynsym();
   if (symbols.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to load symbols for module \"%s\": %s",

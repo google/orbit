@@ -49,7 +49,7 @@ AddressRange AddressRangeFromString(const std::string& string_address) {
 
 // Get the address range of the first consecutive mappings. We can read this range but not more.
 [[nodiscard]] ErrorMessageOr<AddressRange> GetFirstContinuousAddressRange(pid_t pid) {
-  OUTCOME_TRY(maps, orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid)));
+  OUTCOME_TRY(auto&& maps, orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid)));
   const std::vector<std::string> lines = absl::StrSplit(maps, '\n', absl::SkipEmpty());
   bool is_first = true;
   AddressRange result;

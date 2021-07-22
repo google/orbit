@@ -114,7 +114,7 @@ ErrorMessageOr<void> CaptureFileImpl::Initialize() {
 ErrorMessageOr<void> CaptureFileImpl::CalculateCaptureSectionSize() {
   // If there are no additional sections the capture section ends at the EOF
   if (header_.section_list_offset == 0) {
-    OUTCOME_TRY(end_of_file_offset, GetEndOfFileOffset(fd_));
+    OUTCOME_TRY(auto&& end_of_file_offset, GetEndOfFileOffset(fd_));
     capture_section_size_ = end_of_file_offset - header_.capture_section_offset;
     return outcome::success();
   }
@@ -142,7 +142,7 @@ ErrorMessageOr<void> CaptureFileImpl::ReadSectionList() {
     return outcome::success();
   }
 
-  OUTCOME_TRY(number_of_sections,
+  OUTCOME_TRY(auto&& number_of_sections,
               orbit_base::ReadFullyAtOffset<uint64_t>(fd_, header_.section_list_offset));
   if (number_of_sections > kMaxNumberOfSections) {
     return ErrorMessage{absl::StrFormat("The section list is too large: %d (must be <= %d)",
@@ -150,7 +150,7 @@ ErrorMessageOr<void> CaptureFileImpl::ReadSectionList() {
   }
 
   std::vector<CaptureFileSection> section_list{number_of_sections};
-  OUTCOME_TRY(bytes_read,
+  OUTCOME_TRY(auto&& bytes_read,
               orbit_base::ReadFullyAtOffset(
                   fd_, section_list.data(), number_of_sections * sizeof(CaptureFileSection),
                   header_.section_list_offset + sizeof(number_of_sections)));
@@ -167,7 +167,7 @@ ErrorMessageOr<void> CaptureFileImpl::ReadSectionList() {
 }
 
 ErrorMessageOr<void> CaptureFileImpl::ReadHeader() {
-  OUTCOME_TRY(header, orbit_base::ReadFullyAtOffset<CaptureFileHeader>(fd_, 0));
+  OUTCOME_TRY(auto&& header, orbit_base::ReadFullyAtOffset<CaptureFileHeader>(fd_, 0));
   header_ = header;
 
   if (std::memcmp(header_.signature.data(), kFileSignature.data(), kFileSignature.size()) != 0) {
@@ -225,7 +225,7 @@ ErrorMessageOr<uint64_t> CaptureFileImpl::AddUserDataSection(uint64_t section_si
   // section_list move section list to the end of the file.
   if (header_.section_list_offset == 0 || IsThereSectionWithOffsetAfterSectionList()) {
     CHECK(section_list.empty());
-    OUTCOME_TRY(end_of_file, GetEndOfFileOffset(fd_));
+    OUTCOME_TRY(auto&& end_of_file, GetEndOfFileOffset(fd_));
     section_list_offset = AlignUp<8>(end_of_file);
   }
 
@@ -267,7 +267,7 @@ ErrorMessageOr<void> CaptureFileImpl::ReadFromSection(uint64_t section_number,
   const CaptureFileSection& section = section_list_[section_number];
   CHECK(offset_in_section + size <= section.size);
 
-  OUTCOME_TRY(bytes_read,
+  OUTCOME_TRY(auto&& bytes_read,
               orbit_base::ReadFullyAtOffset(fd_, data, size, section.offset + offset_in_section));
 
   // This shouldn't happen, it probably means someone has truncated the file while we were working

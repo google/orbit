@@ -90,7 +90,7 @@ std::vector<pid_t> GetTidsOfProcess(pid_t pid) {
 
 ErrorMessageOr<pid_t> GetTracerPidOfProcess(pid_t pid) {
   std::string status_file_name = absl::StrFormat("/proc/%i/status", pid);
-  OUTCOME_TRY(status_file_content, orbit_base::ReadFileToString(status_file_name));
+  OUTCOME_TRY(auto&& status_file_content, orbit_base::ReadFileToString(status_file_name));
   std::istringstream status_file_content_ss{status_file_content};
   std::string line;
   std::optional<pid_t> tracer_pid;

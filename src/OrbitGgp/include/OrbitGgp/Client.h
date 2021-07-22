@@ -11,7 +11,6 @@
 #include <QVector>
 #include <chrono>
 #include <functional>
-#include <outcome.hpp>
 #include <string>
 
 #include "Instance.h"

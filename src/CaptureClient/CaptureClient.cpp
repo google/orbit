@@ -11,7 +11,6 @@
 #include <absl/time/time.h>
 
 #include <cstdint>
-#include <outcome.hpp>
 #include <string>
 #include <type_traits>
 #include <utility>

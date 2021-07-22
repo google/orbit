@@ -5,11 +5,11 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
-#include <outcome.hpp>
 #include <string>
 #include <string_view>
 #include <thread>
 
+#include "OrbitBase/Result.h"
 #include "OrbitSsh/AddrAndPort.h"
 #include "OrbitSsh/Error.h"
 #include "OrbitSsh/Socket.h"

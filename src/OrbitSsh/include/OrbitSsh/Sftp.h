@@ -9,8 +9,8 @@
 #include <libssh2_sftp.h>
 
 #include <memory>
-#include <outcome.hpp>
 
+#include "OrbitBase/Result.h"
 #include "OrbitSsh/Error.h"
 #include "OrbitSsh/Session.h"
 

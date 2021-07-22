@@ -10,8 +10,9 @@
 #include <QMetaType>
 #include <QString>
 #include <QVector>
-#include <outcome.hpp>
 #include <tuple>
+
+#include "OrbitBase/Result.h"
 
 namespace orbit_ggp {
 

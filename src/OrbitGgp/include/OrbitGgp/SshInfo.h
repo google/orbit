@@ -7,7 +7,8 @@
 
 #include <QByteArray>
 #include <QString>
-#include <outcome.hpp>
+
+#include "OrbitBase/Result.h"
 
 namespace orbit_ggp {
 
