@@ -48,10 +48,8 @@ std::string CallstackThreadBar::GetTooltip() const {
 }
 
 void CallstackThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
-                              uint64_t current_mouse_time_ns, PickingMode picking_mode,
-                              uint32_t indentation_level, float z_offset) {
-  ThreadBar::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, indentation_level,
-                  z_offset);
+                              const DrawContext& draw_context) {
+  ThreadBar::Draw(batcher, text_renderer, draw_context);
 
   if (thread_id_ == orbit_base::kAllThreadsOfAllProcessesTid) {
     return;
@@ -61,9 +59,10 @@ void CallstackThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
   // have a tooltip. For picking, we want to draw the event bar over them if
   // handling a click, and underneath otherwise.
   // This simulates "click-through" behavior.
-  float event_bar_z = picking_mode == PickingMode::kClick ? GlCanvas::kZValueEventBarPicking
-                                                          : GlCanvas::kZValueEventBar;
-  event_bar_z += z_offset;
+  float event_bar_z = draw_context.picking_mode == PickingMode::kClick
+                          ? GlCanvas::kZValueEventBarPicking
+                          : GlCanvas::kZValueEventBar;
+  event_bar_z += draw_context.z_offset;
   Color color = color_;
   Box box(pos_, Vec2(size_[0], -size_[1]), event_bar_z);
   batcher.AddBox(box, color, shared_from_this());
@@ -90,7 +89,8 @@ void CallstackThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
     y1 = y0 - size_[1];
 
     Color picked_color(0, 128, 255, 128);
-    Box picked_box(Vec2(x0, y0), Vec2(x1 - x0, -size_[1]), GlCanvas::kZValueUi + z_offset);
+    Box picked_box(Vec2(x0, y0), Vec2(x1 - x0, -size_[1]),
+                   GlCanvas::kZValueUi + draw_context.z_offset);
     batcher.AddBox(picked_box, picked_color, shared_from_this());
   }
 }

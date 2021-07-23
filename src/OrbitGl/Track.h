@@ -53,8 +53,8 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
                  TimeGraphLayout* layout, const orbit_client_model::CaptureData* capture_data);
   ~Track() override = default;
 
-  void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-            PickingMode picking_mode, uint32_t indentation_level, float z_offset = 0) override;
+  void Draw(Batcher& batcher, TextRenderer& text_renderer,
+            const DrawContext& draw_context) override;
 
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset = 0) override;
@@ -105,8 +105,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
  protected:
   // Returns the y-position of the triangle.
   float DrawCollapsingTriangle(Batcher& batcher, TextRenderer& text_renderer,
-                               uint64_t current_mouse_time_ns, PickingMode picking_mode,
-                               float z_offset, int indentation_level);
+                               const DrawContext& draw_context);
   void DrawTriangleFan(Batcher& batcher, const std::vector<Vec2>& points, const Vec2& pos,
                        const Color& color, float rotation, float z);
 

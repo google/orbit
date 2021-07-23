@@ -121,8 +121,8 @@ float GpuTrack::GetHeight() const {
   return height;
 }
 
-void GpuTrack::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-                    PickingMode picking_mode, uint32_t indentation_level, float z_offset) {
+void GpuTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
+                    const DrawContext& draw_context) {
   UpdatePositionOfSubtracks();
   // If being collapsed, the gpu track will show a collapsed version of the submission subtrack.
   // Hence, the height of submission subtrack should always be updated as long as the subtrack is
@@ -131,22 +131,19 @@ void GpuTrack::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t curr
     submission_track_->SetSize(size_[0], submission_track_->GetHeight());
   }
 
-  Track::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, indentation_level,
-              z_offset);
+  Track::Draw(batcher, text_renderer, draw_context);
 
   if (collapse_toggle_->IsCollapsed()) {
     return;
   }
-
+  const DrawContext sub_track_draw_context = draw_context.IncreasedIndentationLevel();
   if (!submission_track_->IsEmpty()) {
-    submission_track_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode,
-                            indentation_level + 1, z_offset);
+    submission_track_->Draw(batcher, text_renderer, sub_track_draw_context);
   }
 
   if (!marker_track_->IsEmpty()) {
     marker_track_->SetSize(size_[0], marker_track_->GetHeight());
-    marker_track_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode,
-                        indentation_level + 1, z_offset);
+    marker_track_->Draw(batcher, text_renderer, sub_track_draw_context);
   }
 }
 

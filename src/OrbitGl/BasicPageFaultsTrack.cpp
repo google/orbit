@@ -70,14 +70,12 @@ void BasicPageFaultsTrack::AddValuesAndUpdateAnnotations(
 }
 
 void BasicPageFaultsTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
-                                uint64_t current_mouse_time_ns, PickingMode picking_mode,
-                                uint32_t indentation_level, float z_offset) {
-  LineGraphTrack<kBasicPageFaultsTrackDimension>::Draw(
-      batcher, text_renderer, current_mouse_time_ns, picking_mode, indentation_level, z_offset);
+                                const DrawContext& draw_context) {
+  LineGraphTrack<kBasicPageFaultsTrackDimension>::Draw(batcher, text_renderer, draw_context);
 
-  if (picking_mode != PickingMode::kNone || IsCollapsed()) return;
-  AnnotationTrack::DrawAnnotation(batcher, text_renderer, layout_, indentation_level,
-                                  GlCanvas::kZValueTrackText + z_offset);
+  if (draw_context.picking_mode != PickingMode::kNone || IsCollapsed()) return;
+  AnnotationTrack::DrawAnnotation(batcher, text_renderer, layout_, draw_context.indentation_level,
+                                  GlCanvas::kZValueTrackText + draw_context.z_offset);
 }
 
 void BasicPageFaultsTrack::DrawSingleSeriesEntry(

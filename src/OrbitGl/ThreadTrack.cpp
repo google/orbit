@@ -268,10 +268,8 @@ void ThreadTrack::UpdateMinMaxTimestamps() {
 }
 
 void ThreadTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
-                       uint64_t current_mouse_time_ns, PickingMode picking_mode,
-                       uint32_t indentation_level, float z_offset) {
-  TimerTrack::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, indentation_level,
-                   z_offset);
+                       const DrawContext& draw_context) {
+  TimerTrack::Draw(batcher, text_renderer, draw_context);
 
   UpdateMinMaxTimestamps();
   UpdatePositionOfSubtracks();
@@ -281,22 +279,21 @@ void ThreadTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
   const float tracepoint_track_height = layout_->GetEventTrackHeightFromTid(thread_id_);
   const float track_width = size_[0];
 
+  DrawContext inner_draw_context = draw_context.IncreasedIndentationLevel();
+
   if (!thread_state_bar_->IsEmpty()) {
     thread_state_bar_->SetSize(track_width, thread_state_track_height);
-    thread_state_bar_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode,
-                            indentation_level + 1, z_offset);
+    thread_state_bar_->Draw(batcher, text_renderer, inner_draw_context);
   }
 
   if (!event_bar_->IsEmpty()) {
     event_bar_->SetSize(track_width, event_track_height);
-    event_bar_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode,
-                     indentation_level + 1, z_offset);
+    event_bar_->Draw(batcher, text_renderer, inner_draw_context);
   }
 
   if (!tracepoint_bar_->IsEmpty()) {
     tracepoint_bar_->SetSize(track_width, tracepoint_track_height);
-    tracepoint_bar_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode,
-                          indentation_level + 1, z_offset);
+    tracepoint_bar_->Draw(batcher, text_renderer, inner_draw_context);
   }
 }
 

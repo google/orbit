@@ -22,9 +22,28 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
  public:
   explicit CaptureViewElement(CaptureViewElement* parent, TimeGraph* time_graph,
                               orbit_gl::Viewport* viewport, TimeGraphLayout* layout);
+
+  struct DrawContext {
+    constexpr const static uint32_t kMaxIndentationLevel = 5;
+    uint64_t current_mouse_time_ns;
+    PickingMode picking_mode;
+    uint32_t indentation_level;
+    float z_offset = 0;
+
+    [[nodiscard]] DrawContext IncreasedIndentationLevel() const {
+      auto copy = *this;
+      copy.indentation_level = std::min(kMaxIndentationLevel, copy.indentation_level + 1);
+      return copy;
+    };
+
+    [[nodiscard]] DrawContext UpdatedZOffset(float z_offset) const {
+      auto copy = *this;
+      copy.z_offset = z_offset;
+      return copy;
+    }
+  };
   virtual void Draw(Batcher& /*batcher*/, TextRenderer& /*text_renderer*/,
-                    uint64_t /*current_mouse_time_ns*/, PickingMode /*picking_mode*/,
-                    uint32_t /*indentation_level*/ = 0, float /*z_offset*/ = 0) {}
+                    const DrawContext& /*draw_context*/) {}
 
   virtual void UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, uint64_t /*max_tick*/,
                                 PickingMode /*picking_mode*/, float /*z_offset*/ = 0){};

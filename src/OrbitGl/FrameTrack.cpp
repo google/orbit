@@ -217,10 +217,9 @@ std::string FrameTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) cons
           TicksToDuration(timer_info->start(), timer_info->end())));
 }
 
-void FrameTrack::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-                      PickingMode picking_mode, uint32_t indentation_level, float z_offset) {
-  TimerTrack::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, indentation_level,
-                   z_offset);
+void FrameTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
+                      const DrawContext& draw_context) {
+  TimerTrack::Draw(batcher, text_renderer, draw_context);
 
   const Color kWhiteColor(255, 255, 255, 255);
   const Color kBlackColor(0, 0, 0, 255);
@@ -229,7 +228,7 @@ void FrameTrack::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t cu
   float x = pos_[0];
   Vec2 from(x, y);
   Vec2 to(x + size_[0], y);
-  float text_z = GlCanvas::kZValueTrackText + z_offset;
+  float text_z = GlCanvas::kZValueTrackText + draw_context.z_offset;
 
   std::string avg_time =
       orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats_.average_time_ns()));

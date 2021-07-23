@@ -23,21 +23,19 @@ TriangleToggle::TriangleToggle(StateChangeHandler handler, TimeGraph* time_graph
       handler_(std::move(handler)) {}
 
 void TriangleToggle::Draw(Batcher& batcher, TextRenderer& text_renderer,
-                          uint64_t current_mouse_time_ns, PickingMode picking_mode,
-                          uint32_t indentation_level, float z_offset) {
-  CaptureViewElement::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode,
-                           indentation_level, z_offset);
+                          const DrawContext& draw_context) {
+  CaptureViewElement::Draw(batcher, text_renderer, draw_context);
 
-  const float z = GlCanvas::kZValueTrack + z_offset;
+  const float z = GlCanvas::kZValueTrack + draw_context.z_offset;
 
-  const bool picking = picking_mode != PickingMode::kNone;
+  const bool picking = draw_context.picking_mode != PickingMode::kNone;
   const Color kWhite(255, 255, 255, 255);
   const Color kGrey(100, 100, 100, 255);
   Color color = is_collapsible_ ? kWhite : kGrey;
 
   // Draw triangle.
   static float half_sqrt_three = 0.5f * sqrtf(3.f);
-  float half_w = 0.5f * layout_->GetCollapseButtonSize(indentation_level);
+  float half_w = 0.5f * layout_->GetCollapseButtonSize(draw_context.indentation_level);
   float half_h = half_sqrt_three * half_w;
 
   if (!picking) {

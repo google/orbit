@@ -646,18 +646,18 @@ const std::vector<CallstackEvent>& TimeGraph::GetSelectedCallstackEvents(int32_t
   return selected_callstack_events_per_thread_[tid];
 }
 
-void TimeGraph::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-                     PickingMode picking_mode, uint32_t, float z_offset) {
+void TimeGraph::Draw(Batcher& batcher, TextRenderer& text_renderer,
+                     const DrawContext& draw_context) {
   ORBIT_SCOPE("TimeGraph::Draw");
 
-  const bool picking = picking_mode != PickingMode::kNone;
+  const bool picking = draw_context.picking_mode != PickingMode::kNone;
   if ((!picking && update_primitives_requested_) || picking) {
-    UpdatePrimitives(nullptr, 0, 0, picking_mode, z_offset);
+    UpdatePrimitives(nullptr, 0, 0, draw_context.picking_mode, draw_context.z_offset);
   }
 
-  DrawTracks(batcher, text_renderer, current_mouse_time_ns, picking_mode);
-  DrawIncompleteDataIntervals(batcher, picking_mode);
-  DrawOverlay(batcher, text_renderer, picking_mode);
+  DrawTracks(batcher, text_renderer, draw_context);
+  DrawIncompleteDataIntervals(batcher, draw_context.picking_mode);
+  DrawOverlay(batcher, text_renderer, draw_context.picking_mode);
 
   redraw_requested_ = false;
 }
@@ -883,7 +883,7 @@ void TimeGraph::DrawIncompleteDataIntervals(Batcher& batcher, PickingMode pickin
 }
 
 void TimeGraph::DrawTracks(Batcher& batcher, TextRenderer& text_renderer,
-                           uint64_t current_mouse_time_ns, PickingMode picking_mode) {
+                           const DrawContext& draw_context) {
   float track_width = viewport_->GetVisibleWorldWidth() - GetRightMargin();
   float track_pos_x = viewport_->GetWorldTopLeft()[0];
   for (auto& track : track_manager_->GetVisibleTracks()) {
@@ -896,7 +896,8 @@ void TimeGraph::DrawTracks(Batcher& batcher, TextRenderer& text_renderer,
     } else if (track->IsMoving()) {
       z_offset = GlCanvas::kZOffsetMovingTrack;
     }
-    track->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, 0, z_offset);
+    const DrawContext updated_draw_context = draw_context.UpdatedZOffset(z_offset);
+    track->Draw(batcher, text_renderer, updated_draw_context);
   }
 }
 

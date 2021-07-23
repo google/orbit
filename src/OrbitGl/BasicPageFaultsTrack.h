@@ -37,8 +37,8 @@ class BasicPageFaultsTrack : public LineGraphTrack<kBasicPageFaultsTrackDimensio
   void AddValuesAndUpdateAnnotations(
       uint64_t timestamp_ns, const std::array<double, kBasicPageFaultsTrackDimension>& values);
 
-  void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-            PickingMode picking_mode, uint32_t indentation_level, float z_offset = 0) override;
+  void Draw(Batcher& batcher, TextRenderer& text_renderer,
+            const DrawContext& draw_context) override;
 
   enum class SeriesIndex { kProcess = 0, kCGroup = 1, kSystem = 2 };
 
