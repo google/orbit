@@ -84,15 +84,19 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER_MIN_MAX(track_top_margin_, 0, 20.f);
   FLOAT_SLIDER(toolbar_icon_height_);
   FLOAT_SLIDER(generic_fixed_spacer_width_);
-  FLOAT_SLIDER_MIN_MAX(scale_, 0.05f, 20.f);
+  FLOAT_SLIDER_MIN_MAX(scale_, kMinScale, kMaxScale);
   ImGui::Checkbox("Draw Track Background", &draw_track_background_);
 
   return needs_redraw;
 }
 
 float TimeGraphLayout::GetCollapseButtonSize(int indentation_level) const {
-  return collapse_button_size_ -
-         collapse_button_decrease_per_indentation_ * static_cast<float>(indentation_level);
+  float button_size_without_scaling =
+      collapse_button_size_ -
+      collapse_button_decrease_per_indentation_ * static_cast<float>(indentation_level);
+
+  // We want the button to scale slower than other elements, so we use sqrt() function.
+  return button_size_without_scaling * sqrt(scale_);
 }
 
 float TimeGraphLayout::GetBottomMargin() const {

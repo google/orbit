@@ -152,20 +152,23 @@ void TimeGraph::VerticalZoom(float zoom_value, float mouse_relative_position) {
 
   const float ratio = (zoom_value > 0) ? (1 + kIncrementRatio) : (1 / (1 + kIncrementRatio));
 
+  // We have to scale every item in the layout.
+  const float old_scale = layout_.GetScale();
+  layout_.SetScale(old_scale / ratio);
+
+  // We are limiting the maximum and minimum zoom-level, so the real ratio could be different.
+  const float capped_ratio = old_scale / layout_.GetScale();
+
   const float world_height = viewport_->GetVisibleWorldHeight();
   const float y_mouse_position =
       viewport_->GetWorldTopLeft()[1] - mouse_relative_position * world_height;
   const float top_distance = viewport_->GetWorldTopLeft()[1] - y_mouse_position;
 
-  const float new_y_mouse_position = y_mouse_position / ratio;
+  const float new_y_mouse_position = y_mouse_position / capped_ratio;
 
   float new_world_top_left_y = new_y_mouse_position + top_distance;
 
   viewport_->SetWorldTopLeftY(new_world_top_left_y);
-
-  // Finally, we have to scale every item in the layout.
-  const float old_scale = layout_.GetScale();
-  layout_.SetScale(old_scale / ratio);
 }
 
 void TimeGraph::SetMinMax(double min_time_us, double max_time_us) {

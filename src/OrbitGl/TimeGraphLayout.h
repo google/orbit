@@ -8,9 +8,14 @@
 #include <math.h>
 #include <stdint.h>
 
+#include <algorithm>
+
 class TimeGraphLayout {
  public:
   TimeGraphLayout();
+
+  const float kMinScale = 0.333f;
+  const float kMaxScale = 3.f;
 
   float GetTextBoxHeight() const { return text_box_height_ * scale_; }
   float GetTextCoresHeight() const { return core_height_ * scale_; }
@@ -43,7 +48,7 @@ class TimeGraphLayout {
   float GetToolbarIconHeight() const { return toolbar_icon_height_; }
   float GetGenericFixedSpacerWidth() const { return generic_fixed_spacer_width_; }
   float GetScale() const { return scale_; }
-  void SetScale(float value) { scale_ = value; }
+  void SetScale(float value) { scale_ = std::clamp(value, kMinScale, kMaxScale); }
   void SetDrawProperties(bool value) { draw_properties_ = value; }
   bool DrawProperties();
   bool GetDrawTrackBackground() const { return draw_track_background_; }
