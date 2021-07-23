@@ -25,9 +25,8 @@ GraphTrack<Dimension>::GraphTrack(CaptureViewElement* parent, TimeGraph* time_gr
                                   orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                   const std::string& name,
                                   std::array<std::string, Dimension> series_names,
-                                  const orbit_client_model::CaptureData* capture_data,
-                                  uint32_t indentation_level)
-    : Track(parent, time_graph, viewport, layout, capture_data, indentation_level),
+                                  const orbit_client_model::CaptureData* capture_data)
+    : Track(parent, time_graph, viewport, layout, capture_data),
       series_(MultivariateTimeSeries<Dimension>(series_names)) {
   SetName(name);
   SetLabel(name);
@@ -53,8 +52,9 @@ float GraphTrack<Dimension>::GetLegendHeight() const {
 template <size_t Dimension>
 void GraphTrack<Dimension>::Draw(Batcher& batcher, TextRenderer& text_renderer,
                                  uint64_t current_mouse_time_ns, PickingMode picking_mode,
-                                 float z_offset) {
-  Track::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
+                                 uint32_t indentation_level, float z_offset) {
+  Track::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, indentation_level,
+              z_offset);
   if (IsEmpty() || IsCollapsed()) return;
 
   // Draw label
@@ -69,14 +69,14 @@ void GraphTrack<Dimension>::Draw(Batcher& batcher, TextRenderer& text_renderer,
   const Color kTransparentWhite(255, 255, 255, 180);
   float label_z = GlCanvas::kZValueTrackLabel + z_offset;
   DrawLabel(batcher, text_renderer, Vec2(point_x, point_y), text, kBlack, kTransparentWhite,
-            label_z);
+            indentation_level, label_z);
 
   if (Dimension == 1) return;
 
   // Draw legends
   const Color kWhite(255, 255, 255, 255);
   float text_z = GlCanvas::kZValueTrackText + z_offset;
-  DrawLegend(batcher, text_renderer, series_.GetSeriesNames(), kWhite, text_z);
+  DrawLegend(batcher, text_renderer, series_.GetSeriesNames(), kWhite, indentation_level, text_z);
 }
 
 template <size_t Dimension>
@@ -134,11 +134,11 @@ std::string GraphTrack<Dimension>::GetLabelTextFromValues(
 }
 
 template <size_t Dimension>
-uint32_t GraphTrack<Dimension>::GetLegendFontSize() const {
+uint32_t GraphTrack<Dimension>::GetLegendFontSize(uint32_t indentation_level) const {
   constexpr uint32_t kMinIndentationLevel = 1;
   constexpr uint32_t kMaxIndentationLevel = 5;
-  uint32_t capped_indentation_level = std::max(GetIndent(), kMinIndentationLevel);
-  capped_indentation_level = std::min(capped_indentation_level, kMaxIndentationLevel);
+  int capped_indentation_level =
+      std::clamp(indentation_level, kMinIndentationLevel, kMaxIndentationLevel);
 
   uint32_t font_size = layout_->CalculateZoomedFontSize();
   return (font_size * (10 - capped_indentation_level)) / 10;
@@ -147,8 +147,9 @@ uint32_t GraphTrack<Dimension>::GetLegendFontSize() const {
 template <size_t Dimension>
 void GraphTrack<Dimension>::DrawLabel(Batcher& batcher, TextRenderer& text_renderer,
                                       Vec2 target_pos, const std::string& text,
-                                      const Color& text_color, const Color& font_color, float z) {
-  uint32_t font_size = GetLegendFontSize();
+                                      const Color& text_color, const Color& font_color,
+                                      uint32_t indentation_level, float z) {
+  uint32_t font_size = GetLegendFontSize(indentation_level);
   const float kTextLeftMargin = 2.f;
   const float kTextRightMargin = kTextLeftMargin;
   const float kTextTopMargin = layout_->GetTextOffset();
@@ -198,14 +199,15 @@ void GraphTrack<Dimension>::DrawLabel(Batcher& batcher, TextRenderer& text_rende
 template <size_t Dimension>
 void GraphTrack<Dimension>::DrawLegend(Batcher& batcher, TextRenderer& text_renderer,
                                        const std::array<std::string, Dimension>& series_names,
-                                       const Color& legend_text_color, float z) {
+                                       const Color& legend_text_color, uint32_t indentation_level,
+                                       float z) {
   const float kSpaceBetweenLegendSymbolAndText = layout_->GetGenericFixedSpacerWidth();
   const float kSpaceBetweenLegendEntries = layout_->GetGenericFixedSpacerWidth() * 2;
   float legend_symbol_height = GetLegendHeight() / 2.f;
   float legend_symbol_width = legend_symbol_height;
   float x0 = pos_[0] + layout_->GetRightMargin();
   float y0 = pos_[1] - layout_->GetTrackTabHeight() - layout_->GetTextBoxHeight() / 2.f;
-  uint32_t font_size = GetLegendFontSize();
+  uint32_t font_size = GetLegendFontSize(indentation_level);
   const Color kFullyTransparent(255, 255, 255, 0);
 
   for (size_t i = 0; i < Dimension; ++i) {

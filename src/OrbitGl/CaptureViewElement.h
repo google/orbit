@@ -24,7 +24,7 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
                               orbit_gl::Viewport* viewport, TimeGraphLayout* layout);
   virtual void Draw(Batcher& /*batcher*/, TextRenderer& /*text_renderer*/,
                     uint64_t /*current_mouse_time_ns*/, PickingMode /*picking_mode*/,
-                    float /*z_offset*/ = 0) {}
+                    uint32_t /*indentation_level*/ = 0, float /*z_offset*/ = 0) {}
 
   virtual void UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, uint64_t /*max_tick*/,
                                 PickingMode /*picking_mode*/, float /*z_offset*/ = 0){};

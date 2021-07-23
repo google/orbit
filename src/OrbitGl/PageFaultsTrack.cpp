@@ -23,15 +23,14 @@ using orbit_grpc_protos::kMissingInfo;
 PageFaultsTrack::PageFaultsTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                                  orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                  const std::string& cgroup_name, uint64_t memory_sampling_period_ms,
-                                 const orbit_client_model::CaptureData* capture_data,
-                                 uint32_t indentation_level)
-    : Track(parent, time_graph, viewport, layout, capture_data, indentation_level),
-      major_page_faults_track_{std::make_shared<MajorPageFaultsTrack>(
-          this, time_graph, viewport, layout, cgroup_name, memory_sampling_period_ms, capture_data,
-          indentation_level + 1)},
-      minor_page_faults_track_{std::make_shared<MinorPageFaultsTrack>(
-          this, time_graph, viewport, layout, cgroup_name, memory_sampling_period_ms, capture_data,
-          indentation_level + 1)} {
+                                 const orbit_client_model::CaptureData* capture_data)
+    : Track(parent, time_graph, viewport, layout, capture_data),
+      major_page_faults_track_{
+          std::make_shared<MajorPageFaultsTrack>(this, time_graph, viewport, layout, cgroup_name,
+                                                 memory_sampling_period_ms, capture_data)},
+      minor_page_faults_track_{
+          std::make_shared<MinorPageFaultsTrack>(this, time_graph, viewport, layout, cgroup_name,
+                                                 memory_sampling_period_ms, capture_data)} {
   const std::string kTrackName = "Page Faults";
   SetName(kTrackName);
   SetLabel(kTrackName);
@@ -72,7 +71,7 @@ std::string PageFaultsTrack::GetTooltip() const {
 
 void PageFaultsTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
                            uint64_t current_mouse_time_ns, PickingMode picking_mode,
-                           float z_offset) {
+                           uint32_t indentation_level, float z_offset) {
   SetLabel(collapse_toggle_->IsCollapsed() ? major_page_faults_track_->GetName() : GetName());
 
   UpdatePositionOfSubtracks();
@@ -83,19 +82,20 @@ void PageFaultsTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
     major_page_faults_track_->SetSize(size_[0], major_page_faults_track_->GetHeight());
   }
 
-  Track::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
+  Track::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, indentation_level,
+              z_offset);
 
   if (collapse_toggle_->IsCollapsed()) return;
 
   if (!major_page_faults_track_->IsEmpty()) {
     major_page_faults_track_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode,
-                                   z_offset);
+                                   indentation_level + 1, z_offset);
   }
 
   if (!minor_page_faults_track_->IsEmpty()) {
     minor_page_faults_track_->SetSize(size_[0], minor_page_faults_track_->GetHeight());
     minor_page_faults_track_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode,
-                                   z_offset);
+                                   indentation_level + 1, z_offset);
   }
 }
 

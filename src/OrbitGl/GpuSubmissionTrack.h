@@ -31,8 +31,7 @@ class GpuSubmissionTrack : public TimerTrack {
  public:
   explicit GpuSubmissionTrack(Track* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                               TimeGraphLayout* layout, uint64_t timeline_hash, OrbitApp* app,
-                              const orbit_client_model::CaptureData* capture_data,
-                              uint32_t indentation_level);
+                              const orbit_client_model::CaptureData* capture_data);
   ~GpuSubmissionTrack() override = default;
 
   [[nodiscard]] Track* GetParent() const override { return parent_; }

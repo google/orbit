@@ -38,8 +38,9 @@ bool ThreadStateBar::IsEmpty() const {
 
 void ThreadStateBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
                           uint64_t current_mouse_time_ns, PickingMode picking_mode,
-                          float z_offset) {
-  ThreadBar::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
+                          uint32_t indentation_level, float z_offset) {
+  ThreadBar::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, indentation_level,
+                  z_offset);
 
   // Similarly to CallstackThreadBar::Draw, the thread state slices don't respond to clicks, but
   // have a tooltip. For picking, we want to draw the event bar over them if handling a click, and

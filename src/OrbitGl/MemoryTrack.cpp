@@ -14,12 +14,12 @@ namespace orbit_gl {
 template <size_t Dimension>
 void MemoryTrack<Dimension>::Draw(Batcher& batcher, TextRenderer& text_renderer,
                                   uint64_t current_mouse_time_ns, PickingMode picking_mode,
-                                  float z_offset) {
+                                  uint32_t indentation_level, float z_offset) {
   GraphTrack<Dimension>::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode,
-                              z_offset);
+                              indentation_level, z_offset);
 
   if (this->collapse_toggle_->IsCollapsed()) return;
-  AnnotationTrack::DrawAnnotation(batcher, text_renderer, this->layout_,
+  AnnotationTrack::DrawAnnotation(batcher, text_renderer, this->layout_, indentation_level,
                                   GlCanvas::kZValueTrackText + z_offset);
 }
 

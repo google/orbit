@@ -17,11 +17,9 @@ class MinorPageFaultsTrack final : public BasicPageFaultsTrack {
   explicit MinorPageFaultsTrack(Track* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                                 TimeGraphLayout* layout, const std::string& cgroup_name,
                                 uint64_t memory_sampling_period_ms,
-                                const orbit_client_model::CaptureData* capture_data,
-                                uint32_t indentation_level = 0)
+                                const orbit_client_model::CaptureData* capture_data)
       : BasicPageFaultsTrack(parent, time_graph, viewport, layout, "Page Faults: Minor",
-                             cgroup_name, memory_sampling_period_ms, capture_data,
-                             indentation_level) {}
+                             cgroup_name, memory_sampling_period_ms, capture_data) {}
 
   [[nodiscard]] std::string GetTooltip() const override;
 

@@ -13,8 +13,8 @@ const Color kThresholdColor(244, 67, 54, 255);
 }  // namespace
 
 void AnnotationTrack::DrawAnnotation(Batcher& batcher, TextRenderer& text_renderer,
-                                     TimeGraphLayout* layout, float z) {
-  uint32_t font_size = GetAnnotationFontSize();
+                                     TimeGraphLayout* layout, int indentation_level, float z) {
+  uint32_t font_size = GetAnnotationFontSize(indentation_level);
   Vec2 track_size = GetAnnotatedTrackSize();
   Vec2 track_pos = GetAnnotatedTrackPosition();
 

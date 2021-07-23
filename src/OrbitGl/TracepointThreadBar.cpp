@@ -38,8 +38,9 @@ TracepointThreadBar::TracepointThreadBar(CaptureViewElement* parent, OrbitApp* a
 
 void TracepointThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
                                uint64_t current_mouse_time_ns, PickingMode picking_mode,
-                               float z_offset) {
-  ThreadBar::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
+                               uint32_t indentation_level, float z_offset) {
+  ThreadBar::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, indentation_level,
+                  z_offset);
 
   if (IsEmpty()) {
     return;

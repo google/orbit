@@ -26,6 +26,7 @@ class TimeGraphLayout {
   float GetTrackTabHeight() const { return track_tab_height_ * scale_; }
   float GetTrackTabOffset() const { return track_tab_offset_; }
   float GetTrackIntentOffset() const { return track_intent_offset_; }
+  float GetCollapseButtonSize(int indentation_level) const;
   float GetCollapseButtonOffset() const { return collapse_button_offset_; }
   float GetRoundingRadius() const { return rounding_radius_ * scale_; }
   float GetRoundingNumSides() const { return rounding_num_sides_; }
@@ -68,6 +69,8 @@ class TimeGraphLayout {
   float track_tab_offset_;
   float track_intent_offset_;
   float collapse_button_offset_;
+  float collapse_button_size_;
+  float collapse_button_decrease_per_indentation_;
   float rounding_radius_;
   float rounding_num_sides_;
   float text_offset_;

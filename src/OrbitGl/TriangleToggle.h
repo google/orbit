@@ -19,8 +19,7 @@ class TriangleToggle : public orbit_gl::CaptureViewElement,
  public:
   using StateChangeHandler = std::function<void(bool)>;
   explicit TriangleToggle(StateChangeHandler handler, TimeGraph* time_graph,
-                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout, Track* track,
-                          float size);
+                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout, Track* track);
   ~TriangleToggle() override = default;
 
   TriangleToggle() = delete;
@@ -30,7 +29,7 @@ class TriangleToggle : public orbit_gl::CaptureViewElement,
   TriangleToggle& operator=(TriangleToggle&&) = delete;
 
   void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-            PickingMode picking_mode, float z_offset = 0) override;
+            PickingMode picking_mode, uint32_t indentation_level = 0, float z_offset = 0) override;
 
   // Pickable
   void OnRelease() override;

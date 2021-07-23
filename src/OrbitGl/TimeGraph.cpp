@@ -647,7 +647,7 @@ const std::vector<CallstackEvent>& TimeGraph::GetSelectedCallstackEvents(int32_t
 }
 
 void TimeGraph::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-                     PickingMode picking_mode, float z_offset) {
+                     PickingMode picking_mode, uint32_t, float z_offset) {
   ORBIT_SCOPE("TimeGraph::Draw");
 
   const bool picking = picking_mode != PickingMode::kNone;
@@ -896,7 +896,7 @@ void TimeGraph::DrawTracks(Batcher& batcher, TextRenderer& text_renderer,
     } else if (track->IsMoving()) {
       z_offset = GlCanvas::kZOffsetMovingTrack;
     }
-    track->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
+    track->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, 0, z_offset);
   }
 }
 

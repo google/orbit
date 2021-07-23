@@ -21,23 +21,20 @@
 using orbit_client_data::TrackData;
 
 Track::Track(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
-             TimeGraphLayout* layout, const orbit_client_model::CaptureData* capture_data,
-             uint32_t indentation_level)
+             TimeGraphLayout* layout, const orbit_client_model::CaptureData* capture_data)
     : CaptureViewElement(parent, time_graph, viewport, layout),
       num_prioritized_trailing_characters_{0},
       thread_id_{orbit_base::kInvalidThreadTid},
       process_id_{-1},
       pinned_{false},
       layout_(layout),
-      capture_data_(capture_data),
-      indentation_level_(indentation_level) {
+      capture_data_(capture_data) {
   // We decrease the size of the collapse toggle per indentation, but as it becomes too small after
   // 5 indentations, we cap the size here.
-  constexpr uint32_t kMaxIndentationLevel = 5;
-  uint32_t capped_indentation_level = std::min(indentation_level, kMaxIndentationLevel);
+
   collapse_toggle_ = std::make_shared<TriangleToggle>(
       [this](bool is_collapsed) { OnCollapseToggle(is_collapsed); }, time_graph, viewport, layout,
-      this, 10.f - capped_indentation_level);
+      this);
 }
 
 std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides) {
@@ -92,8 +89,9 @@ std::unique_ptr<orbit_accessibility::AccessibleInterface> Track::CreateAccessibl
 }
 
 void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-                 PickingMode picking_mode, float z_offset) {
-  CaptureViewElement::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
+                 PickingMode picking_mode, uint32_t indentation_level, float z_offset) {
+  CaptureViewElement::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode,
+                           indentation_level, z_offset);
 
   const bool picking = picking_mode != PickingMode::kNone;
 
@@ -115,7 +113,7 @@ void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current
   float half_label_width = 0.5f * label_width;
   float tab_x0 = x0 + layout_->GetTrackTabOffset();
 
-  const float indentation_x0 = tab_x0 + (indentation_level_ * layout_->GetTrackIntentOffset());
+  const float indentation_x0 = tab_x0 + (indentation_level * layout_->GetTrackIntentOffset());
   Box box(Vec2(indentation_x0, y0), Vec2(label_width, -label_height), track_z);
   batcher.AddBox(box, track_background_color, shared_from_this());
 
@@ -156,8 +154,8 @@ void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current
   collapse_toggle_->SetIsCollapsible(this->IsCollapsible());
 
   // Draw collapsing triangle.
-  const float toggle_y_pos =
-      DrawCollapsingTriangle(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
+  const float toggle_y_pos = DrawCollapsingTriangle(batcher, text_renderer, current_mouse_time_ns,
+                                                    picking_mode, z_offset, 0);
 
   // Draw label.
   if (!picking) {
@@ -165,7 +163,7 @@ void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current
     // For the first 5 indentations, we decrease the font_size by 10 percent points (per
     // indentation).
     constexpr uint32_t kMaxIndentationLevel = 5;
-    uint32_t capped_indentation_level = std::min(indentation_level_, kMaxIndentationLevel);
+    uint32_t capped_indentation_level = std::min(indentation_level, kMaxIndentationLevel);
     font_size = (font_size * (10 - capped_indentation_level)) / 10;
     float label_offset_x = layout_->GetTrackLabelOffsetX();
     float label_offset_y = text_renderer.GetStringHeight("o", font_size) / 2.f;
@@ -191,17 +189,18 @@ void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current
 
 float Track::DrawCollapsingTriangle(Batcher& batcher, TextRenderer& text_renderer,
                                     uint64_t current_mouse_time_ns, PickingMode picking_mode,
-                                    float z_offset) {
+                                    float z_offset, int indentation_level) {
   const float label_height = layout_->GetTrackTabHeight();
   const float half_label_height = 0.5f * label_height;
   const float x0 = pos_[0];
   const float tab_x0 = x0 + layout_->GetTrackTabOffset();
-  const float intent_x0 = tab_x0 + (indentation_level_ * layout_->GetTrackIntentOffset());
+  const float intent_x0 = tab_x0 + (indentation_level * layout_->GetTrackIntentOffset());
   const float button_offset = layout_->GetCollapseButtonOffset();
   const float toggle_y_pos = pos_[1] - half_label_height;
   Vec2 toggle_pos = Vec2(intent_x0 + button_offset, toggle_y_pos);
   collapse_toggle_->SetPos(toggle_pos[0], toggle_pos[1]);
-  collapse_toggle_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
+  collapse_toggle_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode,
+                         indentation_level, z_offset);
   return toggle_y_pos;
 }
 

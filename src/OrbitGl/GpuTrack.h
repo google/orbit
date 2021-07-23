@@ -39,8 +39,7 @@ class GpuTrack : public Track {
  public:
   explicit GpuTrack(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                     TimeGraphLayout* layout, uint64_t timeline_hash, OrbitApp* app,
-                    const orbit_client_model::CaptureData* capture_data,
-                    uint32_t indentation_level = 0);
+                    const orbit_client_model::CaptureData* capture_data);
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
@@ -58,7 +57,7 @@ class GpuTrack : public Track {
   [[nodiscard]] float GetHeight() const override;
 
   void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-            PickingMode picking_mode, float z_offset = 0) override;
+            PickingMode picking_mode, uint32_t indentation_level = 0, float z_offset = 0) override;
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset = 0) override;
   [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() override;

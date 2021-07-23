@@ -53,8 +53,7 @@ class TimerTrack : public Track {
  public:
   explicit TimerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
-                      const orbit_client_model::CaptureData* capture_data,
-                      uint32_t indentation_level = 0);
+                      const orbit_client_model::CaptureData* capture_data);
   ~TimerTrack() override = default;
 
   // Pickable

@@ -17,18 +17,16 @@
 #include "Track.h"
 
 TriangleToggle::TriangleToggle(StateChangeHandler handler, TimeGraph* time_graph,
-                               orbit_gl::Viewport* viewport, TimeGraphLayout* layout, Track* track,
-                               float size)
+                               orbit_gl::Viewport* viewport, TimeGraphLayout* layout, Track* track)
     : CaptureViewElement(track, time_graph, viewport, layout),
       track_(track),
-      handler_(std::move(handler)) {
-  SetSize(size, size);
-}
+      handler_(std::move(handler)) {}
 
 void TriangleToggle::Draw(Batcher& batcher, TextRenderer& text_renderer,
                           uint64_t current_mouse_time_ns, PickingMode picking_mode,
-                          float z_offset) {
-  CaptureViewElement::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
+                          uint32_t indentation_level, float z_offset) {
+  CaptureViewElement::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode,
+                           indentation_level, z_offset);
 
   const float z = GlCanvas::kZValueTrack + z_offset;
 
@@ -39,7 +37,7 @@ void TriangleToggle::Draw(Batcher& batcher, TextRenderer& text_renderer,
 
   // Draw triangle.
   static float half_sqrt_three = 0.5f * sqrtf(3.f);
-  float half_w = 0.5f * size_[0];
+  float half_w = 0.5f * layout_->GetCollapseButtonSize(indentation_level);
   float half_h = half_sqrt_three * half_w;
 
   if (!picking) {
