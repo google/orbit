@@ -72,13 +72,6 @@ AsyncTrack::AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph,
           TicksToDuration(timer_info->start(), timer_info->end())));
 }
 
-void AsyncTrack::UpdateBoxHeight() {
-  box_height_ = layout_->GetTextBoxHeight();
-  if (collapse_toggle_->IsCollapsed() && depth_ > 0) {
-    box_height_ /= static_cast<float>(depth_);
-  }
-}
-
 void AsyncTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   // Find the first row that that can receive the new timeslice with no overlap.
   // If none of the existing rows works, add a new row.
@@ -89,6 +82,14 @@ void AsyncTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   orbit_client_protos::TimerInfo new_timer_info = timer_info;
   new_timer_info.set_depth(depth);
   TimerTrack::OnTimer(new_timer_info);
+}
+
+float AsyncTrack::GetDefaultBoxHeight() const {
+  auto box_height = layout_->GetTextBoxHeight();
+  if (collapse_toggle_->IsCollapsed() && depth_ > 0) {
+    return box_height / static_cast<float>(depth_);
+  }
+  return box_height;
 }
 
 std::string AsyncTrack::GetTimesliceText(const TimerInfo& timer_info) const {

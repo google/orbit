@@ -182,6 +182,14 @@ bool ThreadTrack::IsTrackSelected() const {
   return ToColor(static_cast<uint64_t>(event.color));
 }
 
+float ThreadTrack::GetDefaultBoxHeight() const {
+  auto box_height = layout_->GetTextBoxHeight();
+  if (collapse_toggle_->IsCollapsed() && depth_ > 0) {
+    return box_height / static_cast<float>(depth_);
+  }
+  return box_height;
+}
+
 Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, const internal::DrawData& draw_data) {
   uint64_t function_id = timer_info.function_id();
   bool is_selected = &timer_info == draw_data.selected_timer;
@@ -227,13 +235,6 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
   }
 
   return color;
-}
-
-void ThreadTrack::UpdateBoxHeight() {
-  box_height_ = layout_->GetTextBoxHeight();
-  if (collapse_toggle_->IsCollapsed() && depth_ > 0) {
-    box_height_ /= static_cast<float>(depth_);
-  }
 }
 
 bool ThreadTrack::IsEmpty() const {
@@ -407,7 +408,7 @@ float ThreadTrack::GetYFromDepth(uint32_t depth) const {
       !thread_state_bar_->IsEmpty() || !event_bar_->IsEmpty() || !tracepoint_bar_->IsEmpty();
   return pos_[1] - GetHeaderHeight() -
          (gap_between_tracks_and_timers ? layout_->GetSpaceBetweenTracksAndThread() : 0) -
-         box_height_ * static_cast<float>(depth + 1);
+         GetDefaultBoxHeight() * static_cast<float>(depth + 1);
 }
 
 void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
@@ -476,7 +477,6 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
   CHECK(batcher);
   visible_timer_count_ = 0;
   UpdatePrimitivesOfSubtracks(batcher, min_tick, max_tick, picking_mode, z_offset);
-  UpdateBoxHeight();
 
   const internal::DrawData draw_data = GetDrawData(
       min_tick, max_tick, size_[0], z_offset, batcher, time_graph_, viewport_,
@@ -500,9 +500,10 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
       Color color = GetTimerColor(timer_info, draw_data);
       std::unique_ptr<PickingUserData> user_data = CreatePickingUserData(*batcher, timer_info);
 
+      auto box_height = GetDefaultBoxHeight();
       const auto [pos_x, size_x] = GetBoxPosXAndWidth(draw_data, time_graph_, timer_info);
       const Vec2 pos = {pos_x, world_timer_y};
-      const Vec2 size = {size_x, box_height_};
+      const Vec2 size = {size_x, box_height};
 
       auto timer_duration = timer_info.end() - timer_info.start();
       if (timer_duration > draw_data.ns_per_pixel) {
@@ -511,7 +512,7 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
         }
         batcher->AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
       } else {
-        batcher->AddVerticalLine(pos, box_height_, draw_data.z, color, std::move(user_data));
+        batcher->AddVerticalLine(pos, box_height, draw_data.z, color, std::move(user_data));
       }
 
       // Use the time at boundary of the next pixel as a threshold to avoid overdraw.

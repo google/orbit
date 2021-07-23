@@ -32,7 +32,7 @@ class SchedulerTrack final : public TimerTrack {
   [[nodiscard]] float GetHeight() const override;
   [[nodiscard]] bool IsCollapsible() const override { return false; }
 
-  void UpdateBoxHeight() override;
+  [[nodiscard]] float GetDefaultBoxHeight() const override { return layout_->GetTextCoresHeight(); }
   [[nodiscard]] float GetYFromTimer(
       const orbit_client_protos::TimerInfo& timer_info) const override;
 

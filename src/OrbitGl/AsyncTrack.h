@@ -33,9 +33,9 @@ class AsyncTrack final : public TimerTrack {
   [[nodiscard]] Type GetType() const override { return Type::kAsyncTrack; };
   [[nodiscard]] std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
-  void UpdateBoxHeight() override;
 
  protected:
+  [[nodiscard]] virtual float GetDefaultBoxHeight() const override;
   [[nodiscard]] std::string GetTimesliceText(
       const orbit_client_protos::TimerInfo& timer) const override;
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
