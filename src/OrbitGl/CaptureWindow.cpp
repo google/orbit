@@ -19,6 +19,7 @@
 
 #include "AccessibleTimeGraph.h"
 #include "App.h"
+#include "CaptureViewElement.h"
 #include "ClientData/CallstackData.h"
 #include "ClientModel/CaptureData.h"
 #include "CoreMath.h"
@@ -396,8 +397,8 @@ void CaptureWindow::Draw(bool viewport_was_dirty) {
     }
     uint64_t timegraph_current_mouse_time_ns =
         time_graph_->GetTickFromWorld(viewport_.ScreenToWorldPos(GetMouseScreenPos())[0]);
-    time_graph_->Draw(GetBatcher(), GetTextRenderer(), timegraph_current_mouse_time_ns,
-                      picking_mode_, 0);
+    time_graph_->Draw(GetBatcher(), GetTextRenderer(),
+                      {timegraph_current_mouse_time_ns, picking_mode_, 0, 0});
     viewport_.SetWorldExtents(viewport_.GetScreenWidth(),
                               time_graph_->GetTrackManager()->GetTracksTotalHeight());
   }

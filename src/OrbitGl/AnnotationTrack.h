@@ -9,6 +9,7 @@
 #include <string>
 
 #include "Batcher.h"
+#include "CaptureViewElement.h"
 #include "CoreMath.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"

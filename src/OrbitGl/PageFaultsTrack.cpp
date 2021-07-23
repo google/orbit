@@ -70,8 +70,7 @@ std::string PageFaultsTrack::GetTooltip() const {
 }
 
 void PageFaultsTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
-                           uint64_t current_mouse_time_ns, PickingMode picking_mode,
-                           uint32_t indentation_level, float z_offset) {
+                           const DrawContext& draw_context) {
   SetLabel(collapse_toggle_->IsCollapsed() ? major_page_faults_track_->GetName() : GetName());
 
   UpdatePositionOfSubtracks();
@@ -82,20 +81,18 @@ void PageFaultsTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
     major_page_faults_track_->SetSize(size_[0], major_page_faults_track_->GetHeight());
   }
 
-  Track::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, indentation_level,
-              z_offset);
+  Track::Draw(batcher, text_renderer, draw_context);
 
   if (collapse_toggle_->IsCollapsed()) return;
 
+  const DrawContext sub_track_draw_context = draw_context.IncreasedIndentationLevel();
   if (!major_page_faults_track_->IsEmpty()) {
-    major_page_faults_track_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode,
-                                   indentation_level + 1, z_offset);
+    major_page_faults_track_->Draw(batcher, text_renderer, sub_track_draw_context);
   }
 
   if (!minor_page_faults_track_->IsEmpty()) {
     minor_page_faults_track_->SetSize(size_[0], minor_page_faults_track_->GetHeight());
-    minor_page_faults_track_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode,
-                                   indentation_level + 1, z_offset);
+    minor_page_faults_track_->Draw(batcher, text_renderer, sub_track_draw_context);
   }
 }
 

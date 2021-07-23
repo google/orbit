@@ -9,6 +9,7 @@
 #include <utility>
 
 #include "AnnotationTrack.h"
+#include "CaptureViewElement.h"
 #include "GraphTrack.h"
 #include "Track.h"
 #include "Viewport.h"
@@ -30,8 +31,8 @@ class MemoryTrack : public GraphTrack<Dimension>, public AnnotationTrack {
   }
   ~MemoryTrack() override = default;
   [[nodiscard]] Track::Type GetType() const override { return Track::Type::kMemoryTrack; }
-  void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-            PickingMode picking_mode, uint32_t indentation_level, float z_offset = 0) override;
+  void Draw(Batcher& batcher, TextRenderer& text_renderer,
+            const CaptureViewElement::DrawContext& draw_context) override;
 
   void TrySetValueUpperBound(const std::string& pretty_label, double raw_value);
   void TrySetValueLowerBound(const std::string& pretty_label, double raw_value);
