@@ -82,8 +82,6 @@ std::string SchedulerTrack::GetTooltip() const {
   return "Shows scheduling information for CPU cores";
 }
 
-void SchedulerTrack::UpdateBoxHeight() { box_height_ = layout_->GetTextCoresHeight(); }
-
 std::string SchedulerTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
   const orbit_client_protos::TimerInfo* timer_info = batcher.GetTimerInfo(id);
   if (!timer_info) {

@@ -95,9 +95,11 @@ class TimerTrack : public Track {
 
   [[nodiscard]] bool IsCollapsible() const override { return depth_ > 1; }
 
-  virtual void UpdateBoxHeight();
-  [[nodiscard]] virtual float GetBoxHeight(
-      const orbit_client_protos::TimerInfo& /*timer_info*/) const;
+  [[nodiscard]] virtual float GetDefaultBoxHeight() const { return layout_->GetTextBoxHeight(); }
+  [[nodiscard]] virtual float GetDynamicBoxHeight(
+      const orbit_client_protos::TimerInfo& /*timer_info*/) const {
+    return GetDefaultBoxHeight();
+  }
   [[nodiscard]] virtual float GetYFromTimer(const orbit_client_protos::TimerInfo& timer_info) const;
   [[nodiscard]] virtual float GetYFromDepth(uint32_t depth) const;
 
@@ -162,8 +164,6 @@ class TimerTrack : public Track {
     return std::make_unique<PickingUserData>(
         &timer_info, [this, &batcher](PickingId id) { return this->GetBoxTooltip(batcher, id); });
   }
-
-  float box_height_ = 0.0f;
 
   static const Color kHighlightColor;
 

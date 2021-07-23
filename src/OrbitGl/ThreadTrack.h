@@ -51,7 +51,6 @@ class ThreadTrack final : public TimerTrack {
 
   void OnPick(int x, int y) override;
 
-  void UpdateBoxHeight() override;
   void SetTrackColor(Color color);
   [[nodiscard]] bool IsEmpty() const override;
 
@@ -64,6 +63,7 @@ class ThreadTrack final : public TimerTrack {
   [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const override;
   [[nodiscard]] bool IsTrackSelected() const override;
 
+  [[nodiscard]] float GetDefaultBoxHeight() const override;
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer, bool is_selected,
                                     bool is_highlighted) const override;
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,

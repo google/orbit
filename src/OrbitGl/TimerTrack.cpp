@@ -56,12 +56,8 @@ float TimerTrack::GetYFromTimer(const TimerInfo& timer_info) const {
 }
 
 float TimerTrack::GetYFromDepth(uint32_t depth) const {
-  return pos_[1] - GetHeaderHeight() - box_height_ * static_cast<float>(depth + 1);
+  return pos_[1] - GetHeaderHeight() - GetDefaultBoxHeight() * static_cast<float>(depth + 1);
 }
-
-void TimerTrack::UpdateBoxHeight() { box_height_ = layout_->GetTextBoxHeight(); }
-
-float TimerTrack::GetBoxHeight(const TimerInfo& /*timer_info*/) const { return box_height_; }
 
 namespace {
 struct WorldXInfo {
@@ -124,7 +120,7 @@ bool TimerTrack::DrawTimer(const TimerInfo* prev_timer_info, const TimerInfo* ne
   double end_or_next_start_us = end_us;
 
   float world_timer_y = GetYFromTimer(*current_timer_info);
-  float box_height = GetBoxHeight(*current_timer_info);
+  float box_height = GetDynamicBoxHeight(*current_timer_info);
 
   // Check if the previous timer overlaps with the current one, and if so draw the overlap
   // as triangles rather than as overlapping rectangles.
@@ -178,7 +174,7 @@ bool TimerTrack::DrawTimer(const TimerInfo* prev_timer_info, const TimerInfo* ne
 
     if (is_visible_width) {
       Vec2 pos{world_x_info.world_x_start, world_timer_y};
-      Vec2 size{world_x_info.world_x_width, GetBoxHeight(*current_timer_info)};
+      Vec2 size{world_x_info.world_x_width, GetDynamicBoxHeight(*current_timer_info)};
 
       DrawTimesliceText(*current_timer_info, draw_data.track_start_x, draw_data.z_offset, pos,
                         size);
@@ -227,8 +223,8 @@ bool TimerTrack::DrawTimer(const TimerInfo* prev_timer_info, const TimerInfo* ne
                                        draw_data.track_start_x, draw_data.track_width);
 
     Vec2 pos(world_x_info.world_x_start, world_timer_y);
-    draw_data.batcher->AddVerticalLine(pos, GetBoxHeight(*current_timer_info), draw_data.z, color,
-                                       std::move(user_data));
+    draw_data.batcher->AddVerticalLine(pos, GetDynamicBoxHeight(*current_timer_info), draw_data.z,
+                                       color, std::move(user_data));
     // For lines, we can ignore the entire pixel into which this event
     // falls. We align this precisely on the pixel x-coordinate of the
     // current line being drawn (in ticks). If ns_per_pixel is
@@ -248,8 +244,6 @@ bool TimerTrack::DrawTimer(const TimerInfo* prev_timer_info, const TimerInfo* ne
 
 void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                   PickingMode /*picking_mode*/, float z_offset) {
-  UpdateBoxHeight();
-
   visible_timer_count_ = 0;
 
   internal::DrawData draw_data{};

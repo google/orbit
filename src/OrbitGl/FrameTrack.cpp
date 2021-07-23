@@ -52,7 +52,7 @@ float FrameTrack::GetMaximumBoxHeight() const {
   if (scale_factor == 0.f) {
     return 0.f;
   }
-  return scale_factor * box_height_ / box_height_normalizer;
+  return scale_factor * GetDefaultBoxHeight() / box_height_normalizer;
 }
 
 float FrameTrack::GetAverageBoxHeight() const {
@@ -62,7 +62,7 @@ float FrameTrack::GetAverageBoxHeight() const {
   if (scale_factor == 0.f) {
     return 0.f;
   }
-  return box_height_ / box_height_normalizer;
+  return GetDefaultBoxHeight() / box_height_normalizer;
 }
 
 FrameTrack::FrameTrack(CaptureViewElement* parent, TimeGraph* time_graph,
@@ -90,7 +90,11 @@ float FrameTrack::GetYFromTimer(const TimerInfo& /*timer_info*/) const {
   return pos_[1] - GetHeaderHeight() - GetMaximumBoxHeight();
 }
 
-float FrameTrack::GetBoxHeight(const TimerInfo& timer_info) const {
+float FrameTrack::GetDefaultBoxHeight() const {
+  return kBoxHeightMultiplier * layout_->GetTextBoxHeight();
+}
+
+float FrameTrack::GetDynamicBoxHeight(const TimerInfo& timer_info) const {
   uint64_t timer_duration_ns = timer_info.end() - timer_info.start();
   if (stats_.average_time_ns() == 0) {
     return 0.f;
@@ -242,8 +246,4 @@ void FrameTrack::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t cu
   text_renderer.AddText(label.c_str(), white_text_box_position[0],
                         white_text_box_position[1] + layout_->GetTextOffset(), text_z, kWhiteColor,
                         font_size, white_text_box_size[0]);
-}
-
-void FrameTrack::UpdateBoxHeight() {
-  box_height_ = kBoxHeightMultiplier * layout_->GetTextBoxHeight();
 }

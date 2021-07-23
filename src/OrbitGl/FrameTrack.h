@@ -38,7 +38,9 @@ class FrameTrack : public TimerTrack {
       const orbit_client_protos::TimerInfo& timer_info) const override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 
-  [[nodiscard]] float GetBoxHeight(const orbit_client_protos::TimerInfo& timer_info) const override;
+  [[nodiscard]] float GetDefaultBoxHeight() const override;
+  [[nodiscard]] float GetDynamicBoxHeight(
+      const orbit_client_protos::TimerInfo& timer_info) const override;
   [[nodiscard]] float GetHeaderHeight() const override;
 
   [[nodiscard]] std::string GetTimesliceText(
@@ -48,8 +50,6 @@ class FrameTrack : public TimerTrack {
 
   void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
             PickingMode picking_mode, float z_offset = 0) override;
-
-  void UpdateBoxHeight() override;
 
  protected:
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
