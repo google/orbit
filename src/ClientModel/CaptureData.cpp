@@ -112,7 +112,7 @@ void CaptureData::UpdateFunctionStats(uint64_t instrumented_function_id, uint64_
   }
 }
 
-void CaptureData::OnCaptureComplete(std::vector<orbit_client_data::TimerChain*> chains) {
+void CaptureData::OnCaptureComplete(std::vector<const orbit_client_data::TimerChain*> chains) {
   // Recalculate standard deviation as the running calculation may have introduced error.
   ORBIT_SCOPE_FUNCTION;
   for (auto& pair : functions_stats_) {
@@ -120,7 +120,7 @@ void CaptureData::OnCaptureComplete(std::vector<orbit_client_data::TimerChain*> 
     stats.set_variance_ns(0);
   }
 
-  for (orbit_client_data::TimerChain* chain : chains) {
+  for (const orbit_client_data::TimerChain* chain : chains) {
     CHECK(chain);
     for (const orbit_client_data::TimerBlock& block : *chain) {
       for (uint64_t i = 0; i < block.size(); i++) {

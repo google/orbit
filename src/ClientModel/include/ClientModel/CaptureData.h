@@ -145,7 +145,7 @@ class CaptureData {
 
   void UpdateFunctionStats(uint64_t instrumented_function_id, uint64_t elapsed_nanos);
 
-  void OnCaptureComplete(std::vector<orbit_client_data::TimerChain*> chains);
+  void OnCaptureComplete(std::vector<const orbit_client_data::TimerChain*> chains);
 
   [[nodiscard]] const orbit_client_data::CallstackData* GetCallstackData() const {
     return callstack_data_.get();
