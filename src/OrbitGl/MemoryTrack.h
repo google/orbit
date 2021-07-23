@@ -31,7 +31,7 @@ class MemoryTrack : public GraphTrack<Dimension>, public AnnotationTrack {
   ~MemoryTrack() override = default;
   [[nodiscard]] Track::Type GetType() const override { return Track::Type::kMemoryTrack; }
   void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-            PickingMode picking_mode, float z_offset = 0) override;
+            PickingMode picking_mode, uint32_t indentation_level, float z_offset = 0) override;
 
   void TrySetValueUpperBound(const std::string& pretty_label, double raw_value);
   void TrySetValueLowerBound(const std::string& pretty_label, double raw_value);
@@ -46,8 +46,8 @@ class MemoryTrack : public GraphTrack<Dimension>, public AnnotationTrack {
   }
   [[nodiscard]] Vec2 GetAnnotatedTrackPosition() const override { return this->pos_; };
   [[nodiscard]] Vec2 GetAnnotatedTrackSize() const override { return this->size_; };
-  [[nodiscard]] uint32_t GetAnnotationFontSize() const override {
-    return this->GetLegendFontSize();
+  [[nodiscard]] uint32_t GetAnnotationFontSize(int indentation_level) const override {
+    return this->GetLegendFontSize(indentation_level);
   }
 };
 

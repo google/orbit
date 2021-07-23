@@ -22,12 +22,10 @@ BasicPageFaultsTrack::BasicPageFaultsTrack(Track* parent, TimeGraph* time_graph,
                                            orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                            const std::string& name, const std::string& cgroup_name,
                                            uint64_t memory_sampling_period_ms,
-                                           const orbit_client_model::CaptureData* capture_data,
-                                           uint32_t indentation_level)
+                                           const orbit_client_model::CaptureData* capture_data)
     : LineGraphTrack<kBasicPageFaultsTrackDimension>(
           parent, time_graph, viewport, layout, name,
-          CreateSeriesName(cgroup_name, capture_data->process_name()), capture_data,
-          indentation_level),
+          CreateSeriesName(cgroup_name, capture_data->process_name()), capture_data),
       AnnotationTrack(),
       cgroup_name_(cgroup_name),
       memory_sampling_period_ms_(memory_sampling_period_ms),
@@ -73,12 +71,12 @@ void BasicPageFaultsTrack::AddValuesAndUpdateAnnotations(
 
 void BasicPageFaultsTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
                                 uint64_t current_mouse_time_ns, PickingMode picking_mode,
-                                float z_offset) {
+                                uint32_t indentation_level, float z_offset) {
   LineGraphTrack<kBasicPageFaultsTrackDimension>::Draw(
-      batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
+      batcher, text_renderer, current_mouse_time_ns, picking_mode, indentation_level, z_offset);
 
   if (picking_mode != PickingMode::kNone || IsCollapsed()) return;
-  AnnotationTrack::DrawAnnotation(batcher, text_renderer, layout_,
+  AnnotationTrack::DrawAnnotation(batcher, text_renderer, layout_, indentation_level,
                                   GlCanvas::kZValueTrackText + z_offset);
 }
 

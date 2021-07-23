@@ -50,12 +50,11 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
       Type::kMemoryTrack, Type::kPageFaultsTrack, Type::kUnknown};
 
   explicit Track(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
-                 TimeGraphLayout* layout, const orbit_client_model::CaptureData* capture_data,
-                 uint32_t indentation_level);
+                 TimeGraphLayout* layout, const orbit_client_model::CaptureData* capture_data);
   ~Track() override = default;
 
   void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-            PickingMode picking_mode, float z_offset = 0) override;
+            PickingMode picking_mode, uint32_t indentation_level, float z_offset = 0) override;
 
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset = 0) override;
@@ -102,13 +101,12 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
 
   [[nodiscard]] virtual std::vector<CaptureViewElement*> GetVisibleChildren() { return {}; }
   [[nodiscard]] virtual int GetVisiblePrimitiveCount() const { return 0; }
-  [[nodiscard]] virtual uint32_t GetIndent() const { return indentation_level_; }
 
  protected:
   // Returns the y-position of the triangle.
   float DrawCollapsingTriangle(Batcher& batcher, TextRenderer& text_renderer,
                                uint64_t current_mouse_time_ns, PickingMode picking_mode,
-                               float z_offset = 0);
+                               float z_offset, int indentation_level);
   void DrawTriangleFan(Batcher& batcher, const std::vector<Vec2>& points, const Vec2& pos,
                        const Color& color, float rotation, float z);
 
@@ -128,9 +126,6 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   TimeGraphLayout* layout_;
 
   const orbit_client_model::CaptureData* capture_data_ = nullptr;
-
- private:
-  const uint32_t indentation_level_;
 };
 
 #endif

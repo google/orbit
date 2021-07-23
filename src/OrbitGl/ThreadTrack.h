@@ -30,7 +30,7 @@ class ThreadTrack final : public TimerTrack {
   explicit ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout, int32_t thread_id,
                        OrbitApp* app, const orbit_client_model::CaptureData* capture_data,
-                       ScopeTreeUpdateType scope_tree_update_type, uint32_t indentation_level = 0);
+                       ScopeTreeUpdateType scope_tree_update_type);
 
   void InitializeNameAndLabel(int32_t thread_id);
 
@@ -43,7 +43,7 @@ class ThreadTrack final : public TimerTrack {
       const orbit_client_protos::TimerInfo& timer_info) const override;
 
   void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-            PickingMode picking_mode, float z_offset = 0) override;
+            PickingMode picking_mode, uint32_t indentation_level, float z_offset = 0) override;
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset = 0) override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;

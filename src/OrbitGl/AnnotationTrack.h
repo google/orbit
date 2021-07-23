@@ -36,13 +36,13 @@ class AnnotationTrack {
   }
 
   void DrawAnnotation(Batcher& batcher, TextRenderer& text_renderer, TimeGraphLayout* layout,
-                      float z);
+                      int indentation_level, float z);
 
  private:
   [[nodiscard]] virtual float GetAnnotatedTrackContentHeight() const = 0;
   [[nodiscard]] virtual Vec2 GetAnnotatedTrackPosition() const = 0;
   [[nodiscard]] virtual Vec2 GetAnnotatedTrackSize() const = 0;
-  [[nodiscard]] virtual uint32_t GetAnnotationFontSize() const = 0;
+  [[nodiscard]] virtual uint32_t GetAnnotationFontSize(int indentation_level) const = 0;
   [[nodiscard]] virtual std::string GetValueUpperBoundTooltip() const { return ""; }
 
   std::optional<std::pair<std::string, double>> warning_threshold_ = std::nullopt;

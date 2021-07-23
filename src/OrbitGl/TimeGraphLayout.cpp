@@ -30,6 +30,8 @@ TimeGraphLayout::TimeGraphLayout() {
   track_tab_offset_ = 0.f;
   track_intent_offset_ = 5.f;
   collapse_button_offset_ = 15.f;
+  collapse_button_size_ = 10.f;
+  collapse_button_decrease_per_indentation_ = 2.f;
   rounding_radius_ = 8.f;
   rounding_num_sides_ = 16;
   text_offset_ = 5.f;
@@ -68,6 +70,9 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER(track_tab_height_);
   FLOAT_SLIDER(track_tab_offset_);
   FLOAT_SLIDER(track_intent_offset_);
+  FLOAT_SLIDER(collapse_button_size_);
+  FLOAT_SLIDER(collapse_button_decrease_per_indentation_);
+
   FLOAT_SLIDER(collapse_button_offset_);
   FLOAT_SLIDER(rounding_radius_);
   FLOAT_SLIDER(rounding_num_sides_);
@@ -83,6 +88,11 @@ bool TimeGraphLayout::DrawProperties() {
   ImGui::Checkbox("Draw Track Background", &draw_track_background_);
 
   return needs_redraw;
+}
+
+float TimeGraphLayout::GetCollapseButtonSize(int indentation_level) const {
+  return collapse_button_size_ -
+         collapse_button_decrease_per_indentation_ * static_cast<float>(indentation_level);
 }
 
 float TimeGraphLayout::GetBottomMargin() const {

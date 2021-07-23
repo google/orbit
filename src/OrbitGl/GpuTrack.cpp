@@ -51,13 +51,12 @@ std::string MapGpuTimelineToTrackLabel(std::string_view timeline) {
 
 GpuTrack::GpuTrack(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                    TimeGraphLayout* layout, uint64_t timeline_hash, OrbitApp* app,
-                   const orbit_client_model::CaptureData* capture_data, uint32_t indentation_level)
-    : Track(parent, time_graph, viewport, layout, capture_data, indentation_level),
+                   const orbit_client_model::CaptureData* capture_data)
+    : Track(parent, time_graph, viewport, layout, capture_data),
       submission_track_{std::make_shared<GpuSubmissionTrack>(this, time_graph, viewport, layout,
-                                                             timeline_hash, app, capture_data,
-                                                             indentation_level + 1)},
+                                                             timeline_hash, app, capture_data)},
       marker_track_{std::make_shared<GpuDebugMarkerTrack>(this, time_graph, viewport, layout, app,
-                                                          capture_data, indentation_level + 1)} {
+                                                          capture_data)} {
   timeline_hash_ = timeline_hash;
 
   std::string timeline =
@@ -123,7 +122,7 @@ float GpuTrack::GetHeight() const {
 }
 
 void GpuTrack::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-                    PickingMode picking_mode, float z_offset) {
+                    PickingMode picking_mode, uint32_t indentation_level, float z_offset) {
   UpdatePositionOfSubtracks();
   // If being collapsed, the gpu track will show a collapsed version of the submission subtrack.
   // Hence, the height of submission subtrack should always be updated as long as the subtrack is
@@ -132,19 +131,22 @@ void GpuTrack::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t curr
     submission_track_->SetSize(size_[0], submission_track_->GetHeight());
   }
 
-  Track::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
+  Track::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, indentation_level,
+              z_offset);
 
   if (collapse_toggle_->IsCollapsed()) {
     return;
   }
 
   if (!submission_track_->IsEmpty()) {
-    submission_track_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
+    submission_track_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode,
+                            indentation_level + 1, z_offset);
   }
 
   if (!marker_track_->IsEmpty()) {
     marker_track_->SetSize(size_[0], marker_track_->GetHeight());
-    marker_track_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
+    marker_track_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode,
+                        indentation_level + 1, z_offset);
   }
 }
 

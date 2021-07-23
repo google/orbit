@@ -25,8 +25,7 @@ class BasicPageFaultsTrack : public LineGraphTrack<kBasicPageFaultsTrackDimensio
   explicit BasicPageFaultsTrack(Track* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                                 TimeGraphLayout* layout, const std::string& name,
                                 const std::string& cgroup_name, uint64_t memory_sampling_period_ms,
-                                const orbit_client_model::CaptureData* capture_data,
-                                uint32_t indentation_level = 0);
+                                const orbit_client_model::CaptureData* capture_data);
 
   [[nodiscard]] Track* GetParent() const override { return parent_; }
   // For subtracks there is no meaningful type and it should also not be exposed, though we use the
@@ -39,7 +38,7 @@ class BasicPageFaultsTrack : public LineGraphTrack<kBasicPageFaultsTrackDimensio
       uint64_t timestamp_ns, const std::array<double, kBasicPageFaultsTrackDimension>& values);
 
   void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-            PickingMode picking_mode, float z_offset = 0) override;
+            PickingMode picking_mode, uint32_t indentation_level, float z_offset = 0) override;
 
   enum class SeriesIndex { kProcess = 0, kCGroup = 1, kSystem = 2 };
 
@@ -62,7 +61,9 @@ class BasicPageFaultsTrack : public LineGraphTrack<kBasicPageFaultsTrackDimensio
   [[nodiscard]] float GetAnnotatedTrackContentHeight() const override;
   [[nodiscard]] Vec2 GetAnnotatedTrackPosition() const override { return pos_; };
   [[nodiscard]] Vec2 GetAnnotatedTrackSize() const override { return size_; };
-  [[nodiscard]] uint32_t GetAnnotationFontSize() const override { return GetLegendFontSize(); }
+  [[nodiscard]] uint32_t GetAnnotationFontSize(int indentation_level) const override {
+    return GetLegendFontSize(indentation_level);
+  }
 
   Track* parent_;
   std::optional<std::pair<uint64_t, std::array<double, kBasicPageFaultsTrackDimension>>>

@@ -68,8 +68,8 @@ float FrameTrack::GetAverageBoxHeight() const {
 FrameTrack::FrameTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                        InstrumentedFunction function, OrbitApp* app,
-                       const CaptureData* capture_data, uint32_t indentation_level)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, indentation_level),
+                       const CaptureData* capture_data)
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data),
       function_(std::move(function)) {
   // TODO(b/169554463): Support manual instrumentation.
   std::string name = absl::StrFormat("Frame track based on %s", function_.function_name());
@@ -218,8 +218,9 @@ std::string FrameTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) cons
 }
 
 void FrameTrack::Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-                      PickingMode picking_mode, float z_offset) {
-  TimerTrack::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
+                      PickingMode picking_mode, uint32_t indentation_level, float z_offset) {
+  TimerTrack::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, indentation_level,
+                   z_offset);
 
   const Color kWhiteColor(255, 255, 255, 255);
   const Color kBlackColor(0, 0, 0, 255);

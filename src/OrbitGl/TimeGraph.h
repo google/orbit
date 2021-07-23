@@ -44,7 +44,8 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   ~TimeGraph() override;
 
   void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-            PickingMode picking_mode = PickingMode::kNone, float z_offset = 0) override;
+            PickingMode picking_mode = PickingMode::kNone, uint32_t /*indentation_level*/ = 0,
+            float z_offset = 0) override;
   void DrawTracks(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
                   PickingMode picking_mode = PickingMode::kNone);
   void DrawOverlay(Batcher& batcher, TextRenderer& text_renderer, PickingMode picking_mode);

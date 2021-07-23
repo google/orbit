@@ -20,10 +20,9 @@ class LineGraphTrack : public GraphTrack<Dimension> {
   explicit LineGraphTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                           orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                           const std::string& name, std::array<std::string, Dimension> series_names,
-                          const orbit_client_model::CaptureData* capture_data,
-                          uint32_t indentation_level = 0)
+                          const orbit_client_model::CaptureData* capture_data)
       : GraphTrack<Dimension>(parent, time_graph, viewport, layout, name, series_names,
-                              capture_data, indentation_level) {}
+                              capture_data) {}
   ~LineGraphTrack() override = default;
 
  protected:

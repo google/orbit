@@ -27,9 +27,8 @@ using orbit_client_protos::TimerInfo;
 GpuDebugMarkerTrack::GpuDebugMarkerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                          OrbitApp* app,
-                                         const orbit_client_model::CaptureData* capture_data,
-                                         uint32_t indentation_level)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, indentation_level) {
+                                         const orbit_client_model::CaptureData* capture_data)
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data) {
   SetLabel("Debug Markers");
   draw_background_ = false;
   string_manager_ = app->GetStringManager();

@@ -22,8 +22,7 @@ class PageFaultsTrack : public Track {
   explicit PageFaultsTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                            orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                            const std::string& cgroup_name, uint64_t memory_sampling_period_ms,
-                           const orbit_client_model::CaptureData* capture_data,
-                           uint32_t indentation_level = 0);
+                           const orbit_client_model::CaptureData* capture_data);
 
   [[nodiscard]] Type GetType() const override { return Type::kPageFaultsTrack; }
   [[nodiscard]] float GetHeight() const override;
@@ -36,7 +35,7 @@ class PageFaultsTrack : public Track {
   [[nodiscard]] bool IsCollapsible() const override { return true; }
 
   void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-            PickingMode picking_mode, float z_offset = 0) override;
+            PickingMode picking_mode, uint32_t indentation_level, float z_offset = 0) override;
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset = 0) override;
 

@@ -24,8 +24,7 @@ class GraphTrack : public Track {
   explicit GraphTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                       const std::string& name, std::array<std::string, Dimension> series_names,
-                      const orbit_client_model::CaptureData* capture_data,
-                      uint32_t indentation_level = 0);
+                      const orbit_client_model::CaptureData* capture_data);
 
   [[nodiscard]] Type GetType() const override { return Type::kGraphTrack; }
   [[nodiscard]] float GetHeight() const override;
@@ -38,7 +37,7 @@ class GraphTrack : public Track {
   [[nodiscard]] bool IsEmpty() const override { return series_.IsEmpty(); }
 
   void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-            PickingMode picking_mode, float z_offset = 0) override;
+            PickingMode picking_mode, uint32_t indentation_level, float z_offset = 0) override;
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset = 0) override;
 
@@ -78,14 +77,14 @@ class GraphTrack : public Track {
       const std::array<double, Dimension>& values) const;
   [[nodiscard]] virtual std::string GetLabelTextFromValues(
       const std::array<double, Dimension>& values) const;
-  [[nodiscard]] uint32_t GetLegendFontSize() const;
+  [[nodiscard]] uint32_t GetLegendFontSize(uint32_t indentation_level = 0) const;
 
   virtual void DrawLabel(Batcher& batcher, TextRenderer& text_renderer, Vec2 target_pos,
                          const std::string& text, const Color& text_color, const Color& font_color,
-                         float z);
+                         uint32_t indentation_level, float z);
   virtual void DrawLegend(Batcher& batcher, TextRenderer& text_renderer,
                           const std::array<std::string, Dimension>& series_names,
-                          const Color& legend_text_color, float z);
+                          const Color& legend_text_color, uint32_t indentation_level, float z);
   virtual void DrawSeries(Batcher* batcher, uint64_t min_tick, uint64_t max_tick, float z);
 
   [[nodiscard]] double RoundPrecision(double value) {

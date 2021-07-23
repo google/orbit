@@ -27,8 +27,7 @@ class FrameTrack : public TimerTrack {
   explicit FrameTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                       orbit_grpc_protos::InstrumentedFunction function, OrbitApp* app,
-                      const orbit_client_model::CaptureData* capture_data,
-                      uint32_t indentation_level = 0);
+                      const orbit_client_model::CaptureData* capture_data);
 
   [[nodiscard]] Type GetType() const override { return Type::kFrameTrack; }
   [[nodiscard]] uint64_t GetFunctionId() const { return function_.function_id(); }
@@ -49,7 +48,7 @@ class FrameTrack : public TimerTrack {
   [[nodiscard]] std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const override;
 
   void Draw(Batcher& batcher, TextRenderer& text_renderer, uint64_t current_mouse_time_ns,
-            PickingMode picking_mode, float z_offset = 0) override;
+            PickingMode picking_mode, uint32_t indentation_level, float z_offset = 0) override;
 
  protected:
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,

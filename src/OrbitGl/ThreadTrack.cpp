@@ -38,9 +38,9 @@ using orbit_grpc_protos::InstrumentedFunction;
 
 ThreadTrack::ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout, int32_t thread_id,
-                         OrbitApp* app, const CaptureData* capture_data,
-                         ScopeTreeUpdateType scope_tree_update_type, uint32_t indentation_level)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, indentation_level) {
+                         OrbitApp* app, const orbit_client_model::CaptureData* capture_data,
+                         ScopeTreeUpdateType scope_tree_update_type)
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data) {
   thread_id_ = thread_id;
   InitializeNameAndLabel(thread_id);
 
@@ -268,8 +268,10 @@ void ThreadTrack::UpdateMinMaxTimestamps() {
 }
 
 void ThreadTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
-                       uint64_t current_mouse_time_ns, PickingMode picking_mode, float z_offset) {
-  TimerTrack::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
+                       uint64_t current_mouse_time_ns, PickingMode picking_mode,
+                       uint32_t indentation_level, float z_offset) {
+  TimerTrack::Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, indentation_level,
+                   z_offset);
 
   UpdateMinMaxTimestamps();
   UpdatePositionOfSubtracks();
@@ -281,17 +283,20 @@ void ThreadTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
 
   if (!thread_state_bar_->IsEmpty()) {
     thread_state_bar_->SetSize(track_width, thread_state_track_height);
-    thread_state_bar_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
+    thread_state_bar_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode,
+                            indentation_level + 1, z_offset);
   }
 
   if (!event_bar_->IsEmpty()) {
     event_bar_->SetSize(track_width, event_track_height);
-    event_bar_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
+    event_bar_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode,
+                     indentation_level + 1, z_offset);
   }
 
   if (!tracepoint_bar_->IsEmpty()) {
     tracepoint_bar_->SetSize(track_width, tracepoint_track_height);
-    tracepoint_bar_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode, z_offset);
+    tracepoint_bar_->Draw(batcher, text_renderer, current_mouse_time_ns, picking_mode,
+                          indentation_level + 1, z_offset);
   }
 }
 
