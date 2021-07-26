@@ -22,6 +22,15 @@ TEST(Align, AlignDownSmoke) {
   EXPECT_EQ(AlignDown<4>(3), 0);
   EXPECT_EQ(AlignDown<4>(4), 4);
   EXPECT_EQ(AlignDown<16>(17), 16);
+
+  EXPECT_EQ(AlignDown(0, 4), 0);
+  EXPECT_EQ(AlignDown(1, 4), 0);
+  EXPECT_EQ(AlignDown(3, 4), 0);
+  EXPECT_EQ(AlignDown(4, 4), 4);
+  EXPECT_EQ(AlignDown(17, 16), 16);
+
+  // Not a power of 2
+  EXPECT_DEATH(AlignDown(10, 12), "Check failed");
 }
 
 }  // namespace orbit_base
