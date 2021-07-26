@@ -80,12 +80,12 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
     }                                   \
   } while (0)
 
-#define CHECK(assertion)                \
-  do {                                  \
-    if (UNLIKELY(!(assertion))) {       \
-      LOG("Check failed: " #assertion); \
-      PLATFORM_ABORT();                 \
-    }                                   \
+#define CHECK(assertion)                   \
+  do {                                     \
+    if (UNLIKELY(!(assertion))) {          \
+      LOG("Check failed: %s", #assertion); \
+      PLATFORM_ABORT();                    \
+    }                                      \
   } while (0)
 
 #ifndef NDEBUG
