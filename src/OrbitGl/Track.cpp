@@ -38,9 +38,6 @@ Track::Track(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewpo
   collapse_toggle_ = std::make_shared<TriangleToggle>(
       [this](bool is_collapsed) { OnCollapseToggle(is_collapsed); }, time_graph, viewport, layout,
       this, 10.f - capped_indentation_level);
-
-  const Color kDarkGrey(50, 50, 50, 255);
-  color_ = kDarkGrey;
 }
 
 std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides) {
@@ -216,12 +213,14 @@ void Track::SetPinned(bool value) { pinned_ = value; }
 Color Track::GetTrackBackgroundColor() const {
   int32_t capture_process_id = capture_data_->process_id();
 
-  if (process_id_ != -1 && process_id_ != capture_process_id) {
+  if (process_id_ != -1 && process_id_ != capture_process_id &&
+      GetType() != Type::kSchedulerTrack) {
     const Color kExternalProcessColor(30, 30, 40, 255);
     return kExternalProcessColor;
   }
 
-  return color_;
+  const Color kDarkGrey(50, 50, 50, 255);
+  return kDarkGrey;
 }
 
 void Track::OnCollapseToggle(bool /*is_collapsed*/) { RequestUpdate(); }

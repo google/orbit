@@ -119,7 +119,6 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   int num_prioritized_trailing_characters_;
   int32_t thread_id_;
   int32_t process_id_;
-  Color color_;
   bool draw_background_ = true;
   bool visible_ = true;
   bool pinned_ = false;
