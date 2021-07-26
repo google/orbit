@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gtest/gtest.h>
+
 #include <QApplication>
 #include <QFont>
 #include <QFontDatabase>
@@ -13,7 +15,6 @@
 #include <limits>
 
 #include "CodeViewer/Viewer.h"
-#include "gtest/gtest.h"
 
 namespace orbit_code_viewer {
 

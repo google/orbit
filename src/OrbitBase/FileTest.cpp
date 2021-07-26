@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #include <absl/strings/str_join.h>
-#include <gmock/gmock-matchers.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "OrbitBase/ExecutablePath.h"

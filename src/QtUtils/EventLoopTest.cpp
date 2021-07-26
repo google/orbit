@@ -11,7 +11,6 @@
 #include <system_error>
 
 #include "QtUtils/EventLoop.h"
-#include "gtest/gtest.h"
 
 TEST(EventLoop, exec) {
   // Case 1: The event loop finishes successfully

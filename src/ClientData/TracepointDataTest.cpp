@@ -13,7 +13,6 @@
 #include "ClientData/TracepointData.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "capture_data.pb.h"
-#include "gtest/gtest.h"
 #include "tracepoint.pb.h"
 
 using ::testing::UnorderedElementsAre;
