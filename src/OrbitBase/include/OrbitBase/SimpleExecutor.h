@@ -5,7 +5,7 @@
 #ifndef ORBIT_BASE_SIMPLE_EXECUTOR_H_
 #define ORBIT_BASE_SIMPLE_EXECUTOR_H_
 
-#include <absl/base/internal/thread_annotations.h>
+#include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
 
 #include <deque>
@@ -34,7 +34,7 @@ class SimpleExecutor : public Executor {
 
  private:
   absl::Mutex mutex_;
-  std::deque<std::unique_ptr<Action>> scheduled_tasks_ GUARDED_BY(mutex_);
+  std::deque<std::unique_ptr<Action>> scheduled_tasks_ ABSL_GUARDED_BY(mutex_);
 };
 
 }  // namespace orbit_base

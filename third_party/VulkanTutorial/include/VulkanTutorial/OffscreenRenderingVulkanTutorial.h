@@ -76,7 +76,7 @@ class OffscreenRenderingVulkanTutorial {
   VkFence fence_ = VK_NULL_HANDLE;
 
   absl::Mutex stop_requested_mutex_;
-  bool stop_requested_ GUARDED_BY(stop_requested_mutex_) = false;
+  bool stop_requested_ ABSL_GUARDED_BY(stop_requested_mutex_) = false;
 };
 
 }  // namespace orbit_vulkan_tutorial
