@@ -31,7 +31,9 @@ class FrameTrack : public TimerTrack {
 
   [[nodiscard]] Type GetType() const override { return Type::kFrameTrack; }
   [[nodiscard]] uint64_t GetFunctionId() const { return function_.function_id(); }
-  [[nodiscard]] bool IsCollapsible() const override { return GetMaximumScaleFactor() > 0.f; }
+  [[nodiscard]] bool IsCollapsible() const override {
+    return GetCappedMaximumToAverageRatio() > 0.f;
+  }
 
   [[nodiscard]] float GetYFromTimer(
       const orbit_client_protos::TimerInfo& timer_info) const override;
@@ -56,7 +58,7 @@ class FrameTrack : public TimerTrack {
   [[nodiscard]] float GetHeight() const override;
 
  private:
-  [[nodiscard]] float GetMaximumScaleFactor() const;
+  [[nodiscard]] float GetCappedMaximumToAverageRatio() const;
   [[nodiscard]] float GetMaximumBoxHeight() const;
   [[nodiscard]] float GetAverageBoxHeight() const;
 

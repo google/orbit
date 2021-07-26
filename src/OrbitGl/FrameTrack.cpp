@@ -9,6 +9,7 @@
 #include <absl/time/time.h>
 
 #include <algorithm>
+#include <limits>
 #include <utility>
 
 #include "Batcher.h"
@@ -27,42 +28,33 @@ using orbit_grpc_protos::InstrumentedFunction;
 
 namespace {
 constexpr const double kHeightCapAverageMultipleDouble = 6.0;
+constexpr const double kFrameTrackExpandedScaleFactor = 6.0;
 constexpr const uint64_t kHeightCapAverageMultipleUint64 = 6;
 constexpr const float kBoxHeightMultiplier = 3.f;
 }  // namespace
 
-float FrameTrack::GetMaximumScaleFactor() const {
+float FrameTrack::GetCappedMaximumToAverageRatio() const {
   if (stats_.average_time_ns() == 0) {
-    return 0.f;
+    return std::numeric_limits<float>::max();
   }
   // Compute the scale factor in double first as we convert time values in nanoseconds to
   // floating point. Single-precision floating point (float type) can only exactly
   // represent all integer values up to 2^24 - 1, which given the ns time unit is fairly
   // small (only ~16ms).
-  double scale_factor =
+  double max_average_ratio =
       static_cast<double>(stats_.max_ns()) / static_cast<double>(stats_.average_time_ns());
-  scale_factor = std::min(scale_factor, kHeightCapAverageMultipleDouble);
-  return static_cast<float>(scale_factor);
+  max_average_ratio = std::min(max_average_ratio, kHeightCapAverageMultipleDouble);
+  return static_cast<float>(max_average_ratio);
 }
 
 float FrameTrack::GetMaximumBoxHeight() const {
   const bool is_collapsed = collapse_toggle_->IsCollapsed();
-  float scale_factor = GetMaximumScaleFactor();
-  const float box_height_normalizer = is_collapsed ? scale_factor : 1.f;
-  if (scale_factor == 0.f) {
-    return 0.f;
-  }
-  return scale_factor * GetDefaultBoxHeight() / box_height_normalizer;
+  float scale_factor = is_collapsed ? 1.f : kFrameTrackExpandedScaleFactor;
+  return scale_factor * GetDefaultBoxHeight();
 }
 
 float FrameTrack::GetAverageBoxHeight() const {
-  const bool is_collapsed = collapse_toggle_->IsCollapsed();
-  float scale_factor = GetMaximumScaleFactor();
-  const float box_height_normalizer = is_collapsed ? scale_factor : 1.f;
-  if (scale_factor == 0.f) {
-    return 0.f;
-  }
-  return GetDefaultBoxHeight() / box_height_normalizer;
+  return GetMaximumBoxHeight() / GetCappedMaximumToAverageRatio();
 }
 
 FrameTrack::FrameTrack(CaptureViewElement* parent, TimeGraph* time_graph,
