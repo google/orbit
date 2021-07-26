@@ -20,6 +20,7 @@ target_include_directories(OrbitBase PRIVATE
 
 target_sources(OrbitBase PRIVATE
         include/OrbitBase/Action.h
+        include/OrbitBase/Align.h
         include/OrbitBase/AnyInvocable.h
         include/OrbitBase/AnyMovable.h
         include/OrbitBase/Append.h
@@ -85,6 +86,7 @@ add_executable(OrbitBaseTests)
 target_compile_options(OrbitBaseTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitBaseTests PRIVATE
+        AlignTest.cpp
         AnyInvocableTest.cpp
         AnyMovableTest.cpp
         AppendTest.cpp
