@@ -14,6 +14,13 @@ constexpr uint64_t AlignUp(uint64_t value) {
   return (value + (alignment - 1)) & ~(alignment - 1);
 }
 
+// alignment must be a power of 2
+template <uint64_t alignment>
+constexpr uint64_t AlignDown(uint64_t value) {
+  static_assert((alignment & (alignment - 1)) == 0);
+  return value & ~(alignment - 1);
+}
+
 }  // namespace orbit_base
 
 #endif  // ORBIT_BASE_ALIGN_H_
