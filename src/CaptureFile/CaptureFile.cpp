@@ -5,6 +5,7 @@
 #include "CaptureFile/CaptureFile.h"
 
 #include "CaptureFileConstants.h"
+#include "OrbitBase/Align.h"
 #include "OrbitBase/File.h"
 #include "ProtoSectionInputStreamImpl.h"
 
@@ -75,13 +76,6 @@ class CaptureFileImpl : public CaptureFile {
 
   std::vector<CaptureFileSection> section_list_;
 };
-
-template <uint64_t alignment>
-constexpr uint64_t AlignUp(uint64_t value) {
-  // alignment must be a power of 2
-  static_assert((alignment & (alignment - 1)) == 0);
-  return (value + (alignment - 1)) & ~(alignment - 1);
-}
 
 ErrorMessageOr<uint64_t> GetEndOfFileOffset(const unique_fd& fd) {
 #if defined(_WIN32)
@@ -226,7 +220,7 @@ ErrorMessageOr<uint64_t> CaptureFileImpl::AddUserDataSection(uint64_t section_si
   if (header_.section_list_offset == 0 || IsThereSectionWithOffsetAfterSectionList()) {
     CHECK(section_list.empty());
     OUTCOME_TRY(auto&& end_of_file, GetEndOfFileOffset(fd_));
-    section_list_offset = AlignUp<8>(end_of_file);
+    section_list_offset = orbit_base::AlignUp<8>(end_of_file);
   }
 
   uint64_t number_of_sections = section_list.size() + 1;
@@ -234,7 +228,7 @@ ErrorMessageOr<uint64_t> CaptureFileImpl::AddUserDataSection(uint64_t section_si
   uint64_t section_list_size =
       sizeof(number_of_sections) + number_of_sections * sizeof(CaptureFileSection);
 
-  uint64_t new_section_offset = AlignUp<8>(section_list_offset + section_list_size);
+  uint64_t new_section_offset = orbit_base::AlignUp<8>(section_list_offset + section_list_size);
 
   // Add USER_DATA section to the end of file - after section list
   section_list.push_back(CaptureFileSection{/*.type = */ kSectionTypeUserData,
