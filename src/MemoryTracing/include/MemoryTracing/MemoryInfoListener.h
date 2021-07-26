@@ -40,7 +40,7 @@ class MemoryInfoListener {
   virtual void OnMemoryUsageEvent(orbit_grpc_protos::MemoryUsageEvent memory_usage_event) = 0;
 
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::MemoryUsageEvent>
-      in_progress_memory_usage_events_ GUARDED_BY(in_progress_memory_usage_events_mutex_);
+      in_progress_memory_usage_events_ ABSL_GUARDED_BY(in_progress_memory_usage_events_mutex_);
   absl::Mutex in_progress_memory_usage_events_mutex_;
   uint64_t sampling_start_timestamp_ns_;
   uint64_t sampling_period_ns_;

@@ -5,6 +5,7 @@
 #ifndef CLIENT_DATA_TRACK_DATA_H_
 #define CLIENT_DATA_TRACK_DATA_H_
 
+#include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
 
 #include "ClientData/TimerChain.h"
@@ -75,7 +76,7 @@ class TrackData {
   }
 
   mutable absl::Mutex mutex_;
-  std::map<uint64_t, std::unique_ptr<TimerChain>> timers_ GUARDED_BY(mutex_);
+  std::map<uint64_t, std::unique_ptr<TimerChain>> timers_ ABSL_GUARDED_BY(mutex_);
   std::atomic<size_t> num_timers_{0};
   std::atomic<uint64_t> min_time_{std::numeric_limits<uint64_t>::max()};
   std::atomic<uint64_t> max_time_{std::numeric_limits<uint64_t>::min()};
