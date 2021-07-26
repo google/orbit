@@ -2,8 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gmock/gmock-matchers.h>
-#include <gmock/gmock-more-matchers.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <QAbstractItemModelTester>

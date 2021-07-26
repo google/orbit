@@ -13,7 +13,6 @@
 #include "OrbitBase/Result.h"
 #include "ProcessList.h"
 #include "ServiceUtils.h"
-#include "gtest/gtest.h"
 
 namespace orbit_service {
 

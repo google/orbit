@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 #include <sys/types.h>
 #include <syscall.h>
 
@@ -15,8 +17,6 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "absl/synchronization/mutex.h"
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
 
 namespace orbit_base {
 

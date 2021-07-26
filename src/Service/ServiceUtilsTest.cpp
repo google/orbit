@@ -19,7 +19,6 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Result.h"
 #include "ServiceUtils.h"
-#include "gtest/gtest.h"
 #include "tracepoint.pb.h"
 
 namespace orbit_service::utils {

@@ -5,7 +5,7 @@
 #ifndef CLIENT_MODEL_CAPTURE_SERIALIZATION_TEST_MATCHERS_H_
 #define CLIENT_MODEL_CAPTURE_SERIALIZATION_TEST_MATCHERS_H_
 
-#include <gmock/gmock-generated-matchers.h>
+#include <gmock/gmock.h>
 
 #include "capture_data.pb.h"
 

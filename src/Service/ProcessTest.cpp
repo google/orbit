@@ -10,7 +10,6 @@
 #include <string_view>
 
 #include "Process.h"
-#include "gtest/gtest.h"
 
 constexpr size_t kTaskCommLength = 16;
 

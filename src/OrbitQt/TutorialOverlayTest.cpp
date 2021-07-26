@@ -15,7 +15,6 @@
 #include <utility>
 
 #include "TutorialOverlay.h"
-#include "gtest/gtest.h"
 
 // TODO: These tests use the actual Tutorial UI and can be broken
 // by updating this UI... it should use a dedicated unit testing UI

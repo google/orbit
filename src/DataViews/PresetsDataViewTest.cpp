@@ -3,9 +3,7 @@
 // found in the LICENSE file.
 
 #include <absl/strings/str_split.h>
-#include <gmock/gmock-actions.h>
-#include <gmock/gmock-cardinalities.h>
-#include <gmock/gmock-matchers.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <filesystem>
