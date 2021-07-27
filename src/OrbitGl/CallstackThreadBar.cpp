@@ -51,7 +51,7 @@ void CallstackThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
                               const DrawContext& draw_context) {
   ThreadBar::Draw(batcher, text_renderer, draw_context);
 
-  if (thread_id_ == orbit_base::kAllThreadsOfAllProcessesTid) {
+  if (GetThreadId() == orbit_base::kAllThreadsOfAllProcessesTid) {
     return;
   }
 
@@ -100,7 +100,7 @@ void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, u
   ThreadBar::UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
 
   float z = GlCanvas::kZValueEvent + z_offset;
-  float track_height = layout_->GetEventTrackHeightFromTid(thread_id_);
+  float track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
   const bool picking = picking_mode != PickingMode::kNone;
 
   const Color kWhite(255, 255, 255, 255);
@@ -122,18 +122,18 @@ void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, u
       batcher->AddVerticalLine(pos, -track_height, z, color);
     };
 
-    if (thread_id_ == orbit_base::kAllProcessThreadsTid) {
+    if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
       capture_data_->GetCallstackData()->ForEachCallstackEventInTimeRange(
           min_tick, max_tick, action_on_callstack_events);
     } else {
       capture_data_->GetCallstackData()->ForEachCallstackEventOfTidInTimeRange(
-          thread_id_, min_tick, max_tick, action_on_callstack_events);
+          GetThreadId(), min_tick, max_tick, action_on_callstack_events);
     }
 
     // Draw selected events
     std::array<Color, 2> selected_color;
     selected_color.fill(kGreenSelection);
-    for (const CallstackEvent& event : time_graph_->GetSelectedCallstackEvents(thread_id_)) {
+    for (const CallstackEvent& event : time_graph_->GetSelectedCallstackEvents(GetThreadId())) {
       Vec2 pos(time_graph_->GetWorldFromTick(event.time()), pos_[1]);
       batcher->AddVerticalLine(pos, -track_height, z, kGreenSelection);
     }
@@ -154,12 +154,12 @@ void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, u
       user_data->custom_data_ = &event;
       batcher->AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
     };
-    if (thread_id_ == orbit_base::kAllProcessThreadsTid) {
+    if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
       capture_data_->GetCallstackData()->ForEachCallstackEventInTimeRange(
           min_tick, max_tick, action_on_callstack_events);
     } else {
       capture_data_->GetCallstackData()->ForEachCallstackEventOfTidInTimeRange(
-          thread_id_, min_tick, max_tick, action_on_callstack_events);
+          GetThreadId(), min_tick, max_tick, action_on_callstack_events);
     }
   }
 }
@@ -171,14 +171,14 @@ void CallstackThreadBar::OnRelease() {
 
 void CallstackThreadBar::OnPick(int x, int y) {
   CaptureViewElement::OnPick(x, y);
-  app_->set_selected_thread_id(thread_id_);
+  app_->set_selected_thread_id(GetThreadId());
 }
 
 void CallstackThreadBar::SelectCallstacks() {
   Vec2& from = mouse_pos_last_click_;
   Vec2& to = mouse_pos_cur_;
 
-  time_graph_->SelectCallstacks(from[0], to[0], thread_id_);
+  time_graph_->SelectCallstacks(from[0], to[0], GetThreadId());
 }
 
 bool CallstackThreadBar::IsEmpty() const {
@@ -187,9 +187,9 @@ bool CallstackThreadBar::IsEmpty() const {
   }
 
   const uint32_t callstack_count =
-      (thread_id_ == orbit_base::kAllProcessThreadsTid)
+      (GetThreadId() == orbit_base::kAllProcessThreadsTid)
           ? capture_data_->GetCallstackData()->GetCallstackEventsCount()
-          : capture_data_->GetCallstackData()->GetCallstackEventsOfTidCount(thread_id_);
+          : capture_data_->GetCallstackData()->GetCallstackEventsOfTidCount(GetThreadId());
   return callstack_count == 0;
 }
 

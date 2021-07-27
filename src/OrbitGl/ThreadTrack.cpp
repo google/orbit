@@ -40,19 +40,17 @@ ThreadTrack::ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout, int32_t thread_id,
                          OrbitApp* app, const orbit_client_model::CaptureData* capture_data,
                          ScopeTreeUpdateType scope_tree_update_type)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data) {
-  thread_id_ = thread_id;
-  InitializeNameAndLabel(thread_id);
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data), thread_id_{thread_id} {
+  InitializeNameAndLabel();
 
   thread_state_bar_ = std::make_shared<orbit_gl::ThreadStateBar>(this, app_, time_graph, viewport,
-                                                                 layout, capture_data, thread_id_);
+                                                                 layout, capture_data, thread_id);
 
   event_bar_ = std::make_shared<orbit_gl::CallstackThreadBar>(this, app_, time_graph, viewport,
-                                                              layout, capture_data, thread_id_);
-  event_bar_->SetThreadId(thread_id);
+                                                              layout, capture_data, thread_id);
 
   tracepoint_bar_ = std::make_shared<orbit_gl::TracepointThreadBar>(
-      this, app_, time_graph, viewport, layout, capture_data, thread_id_);
+      this, app_, time_graph, viewport, layout, capture_data, thread_id);
   SetTrackColor(TimeGraph::GetThreadColor(thread_id));
 
   scope_tree_update_type_ = scope_tree_update_type;
@@ -62,11 +60,11 @@ std::string ThreadTrack::GetThreadNameFromTid(uint32_t thread_id) {
   return capture_data_->GetThreadName(thread_id);
 }
 
-void ThreadTrack::InitializeNameAndLabel(int32_t thread_id) {
-  if (thread_id == orbit_base::kAllThreadsOfAllProcessesTid) {
+void ThreadTrack::InitializeNameAndLabel() {
+  if (GetThreadId() == orbit_base::kAllThreadsOfAllProcessesTid) {
     SetName("All tracepoint events");
     SetLabel("All tracepoint events");
-  } else if (thread_id == orbit_base::kAllProcessThreadsTid) {
+  } else if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
     // This is the process track.
     std::string process_name = capture_data_->process_name();
     SetName("All Threads");
@@ -74,9 +72,9 @@ void ThreadTrack::InitializeNameAndLabel(int32_t thread_id) {
     SetLabel(process_name.append(all_threads));
     SetNumberOfPrioritizedTrailingCharacters(all_threads.size() - 1);
   } else {
-    const std::string& thread_name = GetThreadNameFromTid(thread_id);
+    const std::string& thread_name = GetThreadNameFromTid(GetThreadId());
     SetName(thread_name);
-    std::string tid_str = std::to_string(thread_id);
+    std::string tid_str = std::to_string(GetThreadId());
     std::string track_label = absl::StrFormat("%s [%s]", thread_name, tid_str);
     SetLabel(track_label);
     SetNumberOfPrioritizedTrailingCharacters(tid_str.size() + 2);
@@ -84,7 +82,7 @@ void ThreadTrack::InitializeNameAndLabel(int32_t thread_id) {
 }
 
 const TimerInfo* ThreadTrack::GetLeft(const TimerInfo& timer_info) const {
-  if (timer_info.thread_id() == thread_id_) {
+  if (timer_info.thread_id() == GetThreadId()) {
     const TimerChain* chain = track_data_->GetChain(timer_info.depth());
     if (chain != nullptr) return chain->GetElementBefore(timer_info);
   }
@@ -92,7 +90,7 @@ const TimerInfo* ThreadTrack::GetLeft(const TimerInfo& timer_info) const {
 }
 
 const TimerInfo* ThreadTrack::GetRight(const TimerInfo& timer_info) const {
-  if (timer_info.thread_id() == thread_id_) {
+  if (timer_info.thread_id() == GetThreadId()) {
     const TimerChain* chain = track_data_->GetChain(timer_info.depth());
     if (chain != nullptr) return chain->GetElementAfter(timer_info);
   }
@@ -146,8 +144,8 @@ bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
 }
 
 bool ThreadTrack::IsTrackSelected() const {
-  return thread_id_ != orbit_base::kAllProcessThreadsTid &&
-         app_->selected_thread_id() == thread_id_;
+  return GetThreadId() != orbit_base::kAllProcessThreadsTid &&
+         app_->selected_thread_id() == GetThreadId();
 }
 
 [[nodiscard]] static inline Color ToColor(uint64_t val) {
@@ -225,7 +223,7 @@ bool ThreadTrack::IsEmpty() const {
 
 void ThreadTrack::UpdatePositionOfSubtracks() {
   const float thread_state_track_height = layout_->GetThreadStateTrackHeight();
-  const float event_track_height = layout_->GetEventTrackHeightFromTid(thread_id_);
+  const float event_track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
   const float space_between_subtracks = layout_->GetSpaceBetweenTracksAndThread();
 
   float current_y = pos_[1] - layout_->GetTrackTabHeight();
@@ -256,8 +254,8 @@ void ThreadTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
   UpdatePositionOfSubtracks();
 
   const float thread_state_track_height = layout_->GetThreadStateTrackHeight();
-  const float event_track_height = layout_->GetEventTrackHeightFromTid(thread_id_);
-  const float tracepoint_track_height = layout_->GetEventTrackHeightFromTid(thread_id_);
+  const float event_track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
+  const float tracepoint_track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
   const float track_width = size_[0];
 
   DrawContext inner_draw_context = draw_context.IncreasedIndentationLevel();
@@ -280,7 +278,7 @@ void ThreadTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
 
 void ThreadTrack::OnPick(int x, int y) {
   Track::OnPick(x, y);
-  app_->set_selected_thread_id(thread_id_);
+  app_->set_selected_thread_id(GetThreadId());
 }
 
 std::vector<orbit_gl::CaptureViewElement*> ThreadTrack::GetVisibleChildren() {
@@ -331,7 +329,7 @@ std::string ThreadTrack::GetTimesliceText(const TimerInfo& timer_info) const {
 }
 
 std::string ThreadTrack::GetTooltip() const {
-  if (thread_id_ == orbit_base::kAllProcessThreadsTid) {
+  if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
     return "Shows collected samples for all threads of process " + capture_data_->process_name() +
            " " + std::to_string(capture_data_->process_id());
   } else {
@@ -354,8 +352,8 @@ float ThreadTrack::GetHeight() const {
 
 float ThreadTrack::GetHeaderHeight() const {
   const float thread_state_track_height = layout_->GetThreadStateTrackHeight();
-  const float event_track_height = layout_->GetEventTrackHeightFromTid(thread_id_);
-  const float tracepoint_track_height = layout_->GetEventTrackHeightFromTid(thread_id_);
+  const float event_track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
+  const float tracepoint_track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
   const float space_between_subtracks = layout_->GetSpaceBetweenTracksAndThread();
 
   float header_height = layout_->GetTrackTabHeight();

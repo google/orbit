@@ -58,7 +58,7 @@ void TracepointThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, 
   ThreadBar::UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
 
   float z = GlCanvas::kZValueEvent + z_offset;
-  float track_height = layout_->GetEventTrackHeightFromTid(thread_id_);
+  float track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
   const bool picking = picking_mode != PickingMode::kNone;
 
   const Color kWhite(255, 255, 255, 255);
@@ -69,12 +69,12 @@ void TracepointThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, 
 
   if (!picking) {
     capture_data_->ForEachTracepointEventOfThreadInTimeRange(
-        thread_id_, min_tick, max_tick,
+        GetThreadId(), min_tick, max_tick,
         [&](const orbit_client_protos::TracepointEventInfo& tracepoint) {
           uint64_t time = tracepoint.time();
           float radius = track_height / 4;
           Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
-          if (thread_id_ == orbit_base::kAllThreadsOfAllProcessesTid) {
+          if (GetThreadId() == orbit_base::kAllThreadsOfAllProcessesTid) {
             const Color color = tracepoint.pid() == capture_data_->process_id() ? kGrey : kWhite;
             batcher->AddVerticalLine(pos, -track_height, z, color);
           } else {
@@ -91,7 +91,7 @@ void TracepointThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, 
     constexpr float kPickingBoxOffset = kPickingBoxWidth / 2.0f;
 
     capture_data_->ForEachTracepointEventOfThreadInTimeRange(
-        thread_id_, min_tick, max_tick,
+        GetThreadId(), min_tick, max_tick,
         [&](const orbit_client_protos::TracepointEventInfo& tracepoint) {
           uint64_t time = tracepoint.time();
           Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset,
@@ -121,7 +121,7 @@ std::string TracepointThreadBar::GetTracepointTooltip(Batcher* batcher, PickingI
   orbit_grpc_protos::TracepointInfo tracepoint_info =
       capture_data_->GetTracepointInfo(tracepoint_info_key);
 
-  if (thread_id_ == orbit_base::kAllThreadsOfAllProcessesTid) {
+  if (GetThreadId() == orbit_base::kAllThreadsOfAllProcessesTid) {
     return absl::StrFormat(
         "<b>%s : %s</b><br/>"
         "<i>Tracepoint event</i><br/>"
@@ -143,7 +143,8 @@ std::string TracepointThreadBar::GetTracepointTooltip(Batcher* batcher, PickingI
 }
 
 bool TracepointThreadBar::IsEmpty() const {
-  return capture_data_ == nullptr || capture_data_->GetNumTracepointsForThreadId(thread_id_) == 0;
+  return capture_data_ == nullptr ||
+         capture_data_->GetNumTracepointsForThreadId(GetThreadId()) == 0;
 }
 
 }  // namespace orbit_gl

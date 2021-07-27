@@ -33,7 +33,7 @@ ThreadStateBar::ThreadStateBar(CaptureViewElement* parent, OrbitApp* app, TimeGr
 }
 
 bool ThreadStateBar::IsEmpty() const {
-  return capture_data_ == nullptr || !capture_data_->HasThreadStatesForThread(thread_id_);
+  return capture_data_ == nullptr || !capture_data_->HasThreadStatesForThread(GetThreadId());
 }
 
 void ThreadStateBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
@@ -176,7 +176,7 @@ void ThreadStateBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint6
 
   CHECK(capture_data_ != nullptr);
   capture_data_->ForEachThreadStateSliceIntersectingTimeRange(
-      thread_id_, min_tick, max_tick, [&](const ThreadStateSliceInfo& slice) {
+      GetThreadId(), min_tick, max_tick, [&](const ThreadStateSliceInfo& slice) {
         if (slice.end_timestamp_ns() <= ignore_until_ns) {
           // Reduce overdraw by not drawing slices whose entire width would only draw over a
           // previous slice. Similar to TimerTrack::UpdatePrimitives.
@@ -220,7 +220,7 @@ void ThreadStateBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint6
 
 void ThreadStateBar::OnPick(int x, int y) {
   ThreadBar::OnPick(x, y);
-  app_->set_selected_thread_id(thread_id_);
+  app_->set_selected_thread_id(GetThreadId());
 }
 
 }  // namespace orbit_gl
