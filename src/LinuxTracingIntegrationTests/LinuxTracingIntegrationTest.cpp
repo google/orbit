@@ -20,6 +20,7 @@
 
 #include "LinuxTracing/Tracer.h"
 #include "LinuxTracingIntegrationTestPuppet.h"
+#include "ObjectUtils/Address.h"
 #include "ObjectUtils/ElfFile.h"
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/ExecutablePath.h"

@@ -8,6 +8,7 @@
 
 #include <string>
 
+#include "ObjectUtils/Address.h"
 #include "ObjectUtils/ElfFile.h"
 #include "ObjectUtils/LinuxMap.h"
 
