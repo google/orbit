@@ -44,6 +44,8 @@ target_sources(ClientData PRIVATE
 target_link_libraries(ClientData PUBLIC
         ClientProtos
         GrpcProtos
+         # TODO(b/191248550): Remove ObjectUtils once GetAbsoluteAddress is removed
+        ObjectUtils
         OrbitBase
         xxHash::xxHash)
 
