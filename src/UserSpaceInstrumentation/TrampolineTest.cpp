@@ -26,6 +26,7 @@
 #include "AccessTraceesMemory.h"
 #include "AllocateInTracee.h"
 #include "MachineCode.h"
+#include "ObjectUtils/Address.h"
 #include "ObjectUtils/ElfFile.h"
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/ExecutablePath.h"
