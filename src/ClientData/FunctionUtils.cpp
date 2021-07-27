@@ -4,6 +4,7 @@
 
 #include "ClientData/FunctionUtils.h"
 
+#include <OrbitBase/Align.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_join.h>
 
@@ -45,26 +46,33 @@ uint64_t Offset(const FunctionInfo& func, const ModuleData& module) {
 
 std::optional<uint64_t> GetAbsoluteAddress(const orbit_client_protos::FunctionInfo& func,
                                            const ProcessData& process, const ModuleData& module) {
-  std::vector<uint64_t> base_addresses =
+  // Ideally this should be coming from the server (we want page size of the process' system)
+  // But since we plan to get rid of this function at some point it is ok'ish to hardcode this for
+  // now.
+  constexpr const uint64_t kPageSize = 0x1000;
+  std::vector<uint64_t> page_aligned_base_addresses =
       process.GetModuleBaseAddresses(module.file_path(), module.build_id());
-  if (base_addresses.empty()) {
+
+  if (page_aligned_base_addresses.empty()) {
     return std::nullopt;
   }
 
-  if (base_addresses.size() > 1) {
+  if (page_aligned_base_addresses.size() > 1) {
     ERROR(
         "Found multiple mappings for \"%s\" with build_id=%s [%s]: "
         "will use the first one as a base address",
         module.file_path(), module.build_id(),
-        absl::StrJoin(base_addresses, ",", [](std::string* out, uint64_t address) {
+        absl::StrJoin(page_aligned_base_addresses, ",", [](std::string* out, uint64_t address) {
           return out->append(absl::StrFormat("%#x", address));
         }));
   }
 
-  CHECK(!base_addresses.empty());
+  CHECK(!page_aligned_base_addresses.empty());
+  CHECK((page_aligned_base_addresses.at(0) % kPageSize) == 0);
+  CHECK((module.load_bias() % kPageSize) == 0);
 
-  return func.address() + base_addresses.at(0) - module.load_bias() -
-         module.executable_segment_offset();
+  return func.address() + page_aligned_base_addresses.at(0) - module.load_bias() -
+         orbit_base::AlignDown<kPageSize>(module.executable_segment_offset());
 }
 
 bool IsOrbitFunctionFromType(const FunctionInfo::OrbitType& type) {

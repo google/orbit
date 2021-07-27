@@ -585,8 +585,9 @@ class InstrumentFunctionTest : public testing::Test {
     uint64_t size = 0;
     for (const auto& sym : syms.value().symbol_infos()) {
       if (sym.name() == function_name_) {
-        address = sym.address() + address_range_code.start - syms.value().load_bias() -
-                  elf_file.value()->GetExecutableSegmentOffset();
+        address = orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+            sym.address(), address_range_code.start, syms.value().load_bias(),
+            elf_file.value()->GetExecutableSegmentOffset());
         size = sym.size();
       }
     }
@@ -599,7 +600,7 @@ class InstrumentFunctionTest : public testing::Test {
     CHECK(AttachAndStopProcess(pid_).has_value());
 
     // Inject the payload for the instrumentation.
-    const std::string kLibName = "libUserSpaceInstrumentationTestLib.so";
+    constexpr std::string_view kLibName = "libUserSpaceInstrumentationTestLib.so";
     const std::string library_path = orbit_base::GetExecutableDir() / ".." / "lib" / kLibName;
     auto library_handle_or_error = DlopenInTracee(pid_, library_path, RTLD_NOW);
     CHECK(library_handle_or_error.has_value());

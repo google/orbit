@@ -11,6 +11,7 @@
 #include <functional>
 
 #include "ObjectUtils/LinuxMap.h"
+#include "OrbitBase/Align.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/UniqueResource.h"
@@ -108,9 +109,12 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
     if (module_info == nullptr) continue;
 
     // Get address of function table by calling "orbit_api_get_function_table_address_vN" in tracee.
+    // Note that the address start is always page_aligned and we need to account for that by
+    // aligning executable_segment_offset as well.
     void* api_function_address =
-        absl::bit_cast<void*>(module_info->address_start() + api_function.address() -
-                              module_info->load_bias() - module_info->executable_segment_offset());
+        absl::bit_cast<void*>(orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+            api_function.address(), module_info->address_start(), module_info->load_bias(),
+            module_info->executable_segment_offset()));
     OUTCOME_TRY(auto&& function_table_address, ExecuteInProcess(pid, api_function_address));
 
     // Call "orbit_api_set_enabled" in tracee.
