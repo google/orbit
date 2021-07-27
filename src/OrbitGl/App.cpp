@@ -15,26 +15,21 @@
 #include <absl/time/time.h>
 #include <imgui.h>
 
-#include <algorithm>
 #include <chrono>
 #include <cinttypes>
 #include <cstddef>
-#include <cstdint>
-#include <exception>
 #include <limits>
 #include <memory>
 #include <optional>
 #include <ratio>
 #include <string>
 #include <thread>
-#include <type_traits>
 #include <utility>
 
 #include "CallstackDataView.h"
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureFile/CaptureFile.h"
 #include "CaptureFile/CaptureFileHelpers.h"
-#include "CaptureFileInfo/Manager.h"
 #include "CaptureWindow.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/FunctionUtils.h"
@@ -65,6 +60,7 @@
 #include "MetricsUploader/MetricsUploader.h"
 #include "MetricsUploader/ScopedMetric.h"
 #include "ModulesDataView.h"
+#include "ObjectUtils/Address.h"
 #include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Future.h"
@@ -79,7 +75,6 @@
 #include "SamplingReport.h"
 #include "Symbols/SymbolHelper.h"
 #include "TimeGraph.h"
-#include "Timer.h"
 #include "capture.pb.h"
 #include "capture_data.pb.h"
 #include "module.pb.h"
@@ -2195,8 +2190,8 @@ void OrbitApp::DeselectFunction(const orbit_client_protos::FunctionInfo& func) {
   const ModuleData* module = GetModuleByPathAndBuildId(module_path, module_build_id);
   if (module == nullptr) return false;
 
-  const uint64_t offset =
-      absolute_address - module_base_address + module->executable_segment_offset();
+  const uint64_t offset = orbit_object_utils::SymbolAbsoluteAddressToOffset(
+      absolute_address, module_base_address, module->executable_segment_offset());
   const FunctionInfo* function = module->FindFunctionByOffset(offset, false);
   if (function == nullptr) return false;
 

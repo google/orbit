@@ -13,6 +13,7 @@
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
 #include "Introspection/Introspection.h"
+#include "ObjectUtils/Address.h"
 #include "OrbitBase/Result.h"
 
 using orbit_client_data::CallstackData;
@@ -247,13 +248,14 @@ CaptureData::FindFunctionAbsoluteAddressByInstructionAbsoluteAddressUsingModules
       module_manager_->GetModuleByPathAndBuildId(module_path, module_build_id);
   if (module == nullptr) return std::nullopt;
 
-  const uint64_t offset =
-      absolute_address - module_base_address + module->executable_segment_offset();
+  const uint64_t offset = orbit_object_utils::SymbolAbsoluteAddressToOffset(
+      absolute_address, module_base_address, module->executable_segment_offset());
   const auto* function_info = module->FindFunctionByOffset(offset, false);
   if (function_info == nullptr) return std::nullopt;
 
-  return module_base_address - module->load_bias() - module->executable_segment_offset() +
-         function_info->address();
+  return orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+      function_info->address(), module_base_address, module->load_bias(),
+      module->executable_segment_offset());
 }
 
 const FunctionInfo* CaptureData::FindFunctionByModulePathBuildIdAndOffset(
@@ -307,8 +309,8 @@ const FunctionInfo* CaptureData::FindFunctionByAddress(uint64_t absolute_address
       module_manager_->GetModuleByPathAndBuildId(module_path, module_build_id);
   if (module == nullptr) return nullptr;
 
-  const uint64_t offset =
-      absolute_address - module_base_address + module->executable_segment_offset();
+  const uint64_t offset = orbit_object_utils::SymbolAbsoluteAddressToOffset(
+      absolute_address, module_base_address, module->executable_segment_offset());
   return module->FindFunctionByOffset(offset, is_exact);
 }
 
