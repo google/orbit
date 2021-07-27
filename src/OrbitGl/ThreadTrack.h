@@ -32,7 +32,7 @@ class ThreadTrack final : public TimerTrack {
                        OrbitApp* app, const orbit_client_model::CaptureData* capture_data,
                        ScopeTreeUpdateType scope_tree_update_type);
 
-  void InitializeNameAndLabel(int32_t thread_id);
+  void InitializeNameAndLabel();
 
   [[nodiscard]] Type GetType() const override { return Type::kThreadTrack; }
   [[nodiscard]] std::string GetTooltip() const override;
@@ -60,6 +60,7 @@ class ThreadTrack final : public TimerTrack {
 
  protected:
   [[nodiscard]] std::string GetThreadNameFromTid(uint32_t tid);
+  [[nodiscard]] int64_t GetThreadId() const { return thread_id_; }
   [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const override;
   [[nodiscard]] bool IsTrackSelected() const override;
 
@@ -79,6 +80,8 @@ class ThreadTrack final : public TimerTrack {
   void UpdatePrimitivesOfSubtracks(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                    PickingMode picking_mode, float z_offset);
   void UpdateMinMaxTimestamps();
+
+  int64_t thread_id_;
 
   std::shared_ptr<orbit_gl::ThreadStateBar> thread_state_bar_;
   std::shared_ptr<orbit_gl::CallstackThreadBar> event_bar_;
