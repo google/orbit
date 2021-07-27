@@ -737,14 +737,18 @@ GetOuterAndInnerFunctionVirtualAddressRanges(pid_t pid) {
     if (symbol.name() == PuppetConstants::kOuterFunctionName) {
       CHECK(outer_function_virtual_address_start == 0 && outer_function_virtual_address_end == 0);
       outer_function_virtual_address_start =
-          module_info.address_start() - module_info.executable_segment_offset() + symbol.address();
+          orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+              symbol.address(), module_info.address_start(), module_info.load_bias(),
+              module_info.executable_segment_offset());
       outer_function_virtual_address_end = outer_function_virtual_address_start + symbol.size() - 1;
     }
 
     if (symbol.name() == PuppetConstants::kInnerFunctionName) {
       CHECK(inner_function_virtual_address_start == 0 && inner_function_virtual_address_end == 0);
       inner_function_virtual_address_start =
-          module_info.address_start() - module_info.executable_segment_offset() + symbol.address();
+          orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+              symbol.address(), module_info.address_start(), module_info.load_bias(),
+              module_info.executable_segment_offset());
       inner_function_virtual_address_end = inner_function_virtual_address_start + symbol.size() - 1;
     }
   }
