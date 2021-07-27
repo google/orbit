@@ -8,7 +8,6 @@
 #include <absl/strings/str_join.h>
 
 #include <filesystem>
-#include <utility>
 
 #include "ObjectUtils/Address.h"
 #include "OrbitBase/Logging.h"
@@ -16,18 +15,16 @@
 #include "absl/strings/match.h"
 #include "xxhash.h"
 
-namespace orbit_client_data {
+namespace orbit_client_data::function_utils {
+
+using orbit_client_protos::FunctionInfo;
+using orbit_grpc_protos::SymbolInfo;
 
 namespace {
 uint64_t StringHash(const std::string& string) {
   return XXH64(string.data(), string.size(), 0xBADDCAFEDEAD10CC);
 }
 }  // namespace
-
-namespace function_utils {
-
-using orbit_client_protos::FunctionInfo;
-using orbit_grpc_protos::SymbolInfo;
 
 std::string GetLoadedModuleName(const FunctionInfo& func) {
   return GetLoadedModuleNameByPath(func.module_path());
@@ -38,7 +35,6 @@ std::string GetLoadedModuleNameByPath(std::string_view module_path) {
 }
 
 uint64_t GetHash(const FunctionInfo& func) { return StringHash(func.pretty_name()); }
-uint64_t GetHash(std::string_view function_name) { return StringHash(std::string(function_name)); }
 
 uint64_t Offset(const FunctionInfo& func, const ModuleData& module) {
   return func.address() - module.load_bias();
@@ -95,7 +91,7 @@ std::unique_ptr<FunctionInfo> CreateFunctionInfo(const SymbolInfo& symbol_info,
 }
 
 const absl::flat_hash_map<std::string, FunctionInfo::OrbitType>& GetFunctionNameToOrbitTypeMap() {
-  const char* kStubParams =
+  constexpr const char* kStubParams =
       "(unsigned long, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long)";
   static absl::flat_hash_map<std::string, FunctionInfo::OrbitType> function_name_to_type_map{
       {absl::StrCat("orbit_api::Start", kStubParams), FunctionInfo::kOrbitTimerStart},
@@ -124,6 +120,4 @@ void SetOrbitTypeFromName(FunctionInfo* func) {
   func->set_orbit_type(GetOrbitTypeByName(GetDisplayName(*func)));
 }
 
-}  // namespace function_utils
-
-}  // namespace orbit_client_data
+}  // namespace orbit_client_data::function_utils
