@@ -19,6 +19,7 @@
 
 #include "ObjectUtils/ElfFile.h"
 #include "ObjectUtils/ObjectFile.h"
+#include "OrbitBase/Align.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
@@ -116,6 +117,17 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
   }
 
   return result;
+}
+
+uint64_t SymbolVirtualAddressToAbsoluteAddress(uint64_t symbol_address,
+                                               uint64_t module_base_address,
+                                               uint64_t module_load_bias,
+                                               uint64_t module_executable_section_offset) {
+  static const uint64_t page_size = sysconf(_SC_PAGESIZE);
+  CHECK((module_base_address % page_size) == 0);
+  CHECK((module_load_bias % page_size) == 0);
+  return symbol_address + module_base_address - module_load_bias -
+         orbit_base::AlignDown(module_executable_section_offset, page_size);
 }
 
 }  // namespace orbit_object_utils
