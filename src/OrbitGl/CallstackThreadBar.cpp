@@ -39,9 +39,9 @@ namespace orbit_gl {
 CallstackThreadBar::CallstackThreadBar(CaptureViewElement* parent, OrbitApp* app,
                                        TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                                        TimeGraphLayout* layout, const CaptureData* capture_data,
-                                       ThreadID thread_id)
-    : ThreadBar(parent, app, time_graph, viewport, layout, capture_data, thread_id, "Callstacks"),
-      color_{0, 255, 0, 255} {}
+                                       ThreadID thread_id, const Color& color)
+    : ThreadBar(parent, app, time_graph, viewport, layout, capture_data, thread_id, "Callstacks",
+                color) {}
 
 std::string CallstackThreadBar::GetTooltip() const {
   return "Left-click and drag to select samples";
@@ -63,7 +63,7 @@ void CallstackThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
                           ? GlCanvas::kZValueEventBarPicking
                           : GlCanvas::kZValueEventBar;
   event_bar_z += draw_context.z_offset;
-  Color color = color_;
+  Color color = GetColor();
   Box box(pos_, Vec2(size_[0], -size_[1]), event_bar_z);
   batcher.AddBox(box, color, shared_from_this());
 

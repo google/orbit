@@ -42,17 +42,15 @@ ThreadTrack::ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                          ScopeTreeUpdateType scope_tree_update_type)
     : TimerTrack(parent, time_graph, viewport, layout, app, capture_data), thread_id_{thread_id} {
   InitializeNameAndLabel();
+  Color color = TimeGraph::GetThreadColor(thread_id);
+  thread_state_bar_ = std::make_shared<orbit_gl::ThreadStateBar>(
+      this, app_, time_graph, viewport, layout, capture_data, thread_id, color);
 
-  thread_state_bar_ = std::make_shared<orbit_gl::ThreadStateBar>(this, app_, time_graph, viewport,
-                                                                 layout, capture_data, thread_id);
-
-  event_bar_ = std::make_shared<orbit_gl::CallstackThreadBar>(this, app_, time_graph, viewport,
-                                                              layout, capture_data, thread_id);
+  event_bar_ = std::make_shared<orbit_gl::CallstackThreadBar>(
+      this, app_, time_graph, viewport, layout, capture_data, thread_id, color);
 
   tracepoint_bar_ = std::make_shared<orbit_gl::TracepointThreadBar>(
-      this, app_, time_graph, viewport, layout, capture_data, thread_id);
-  SetTrackColor(TimeGraph::GetThreadColor(thread_id));
-
+      this, app_, time_graph, viewport, layout, capture_data, thread_id, color);
   scope_tree_update_type_ = scope_tree_update_type;
 }
 
@@ -296,12 +294,6 @@ std::vector<orbit_gl::CaptureViewElement*> ThreadTrack::GetVisibleChildren() {
   }
 
   return result;
-}
-
-void ThreadTrack::SetTrackColor(Color color) {
-  absl::MutexLock lock(&mutex_);
-  event_bar_->SetColor(color);
-  tracepoint_bar_->SetColor(color);
 }
 
 std::string ThreadTrack::GetTimesliceText(const TimerInfo& timer_info) const {

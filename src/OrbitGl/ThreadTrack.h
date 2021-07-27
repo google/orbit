@@ -51,7 +51,6 @@ class ThreadTrack final : public TimerTrack {
 
   void OnPick(int x, int y) override;
 
-  void SetTrackColor(Color color);
   [[nodiscard]] bool IsEmpty() const override;
 
   [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() override;

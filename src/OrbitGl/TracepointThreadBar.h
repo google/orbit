@@ -20,7 +20,7 @@ class TracepointThreadBar : public ThreadBar {
   explicit TracepointThreadBar(CaptureViewElement* parent, OrbitApp* app, TimeGraph* time_graph,
                                orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                const orbit_client_model::CaptureData* capture_data,
-                               int32_t thread_id);
+                               int32_t thread_id, const Color& color);
 
   void Draw(Batcher& batcher, TextRenderer& text_renderer,
             const DrawContext& draw_context) override;
@@ -30,12 +30,8 @@ class TracepointThreadBar : public ThreadBar {
 
   [[nodiscard]] bool IsEmpty() const override;
 
-  void SetColor(const Color& color) { color_ = color; }
-
  private:
   std::string GetTracepointTooltip(Batcher* batcher, PickingId id) const;
-
-  Color color_;
 };
 
 }  // namespace orbit_gl

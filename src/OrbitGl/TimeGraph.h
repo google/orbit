@@ -144,6 +144,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
                           const orbit_client_protos::TimerInfo*>
   GetMinMaxTimerInfoForFunction(uint64_t function_id) const;
 
+  // TODO(http://b/194777907): Move GetColor outside TimeGraph
   [[nodiscard]] static Color GetColor(uint32_t id) {
     constexpr unsigned char kAlpha = 255;
     static std::vector<Color> colors{
