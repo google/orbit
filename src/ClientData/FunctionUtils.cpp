@@ -4,13 +4,13 @@
 
 #include "ClientData/FunctionUtils.h"
 
-#include <OrbitBase/Align.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_join.h>
 
 #include <filesystem>
 #include <utility>
 
+#include "ObjectUtils/Address.h"
 #include "OrbitBase/Logging.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/match.h"
@@ -46,10 +46,6 @@ uint64_t Offset(const FunctionInfo& func, const ModuleData& module) {
 
 std::optional<uint64_t> GetAbsoluteAddress(const orbit_client_protos::FunctionInfo& func,
                                            const ProcessData& process, const ModuleData& module) {
-  // Ideally this should be coming from the server (we want page size of the process' system)
-  // But since we plan to get rid of this function at some point it is ok'ish to hardcode this for
-  // now.
-  constexpr const uint64_t kPageSize = 0x1000;
   std::vector<uint64_t> page_aligned_base_addresses =
       process.GetModuleBaseAddresses(module.file_path(), module.build_id());
 
@@ -68,11 +64,10 @@ std::optional<uint64_t> GetAbsoluteAddress(const orbit_client_protos::FunctionIn
   }
 
   CHECK(!page_aligned_base_addresses.empty());
-  CHECK((page_aligned_base_addresses.at(0) % kPageSize) == 0);
-  CHECK((module.load_bias() % kPageSize) == 0);
 
-  return func.address() + page_aligned_base_addresses.at(0) - module.load_bias() -
-         orbit_base::AlignDown<kPageSize>(module.executable_segment_offset());
+  return orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+      func.address(), page_aligned_base_addresses.at(0), module.load_bias(),
+      module.executable_segment_offset());
 }
 
 bool IsOrbitFunctionFromType(const FunctionInfo::OrbitType& type) {
