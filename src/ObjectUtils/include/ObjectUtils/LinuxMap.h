@@ -26,6 +26,11 @@ ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ReadModules(int32_t p
 ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ParseMaps(
     std::string_view proc_maps_data);
 
+uint64_t SymbolVirtualAddressToAbsoluteAddress(uint64_t symbol_address,
+                                               uint64_t module_base_address,
+                                               uint64_t module_load_bias,
+                                               uint64_t module_executable_section_offset);
+
 }  // namespace orbit_object_utils
 
 #endif  // defined(__linux)

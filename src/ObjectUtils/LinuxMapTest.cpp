@@ -22,9 +22,10 @@
 
 using orbit_base::HasNoError;
 
+namespace orbit_object_utils {
+
 TEST(LinuxMap, CreateModuleHelloWorld) {
   using orbit_grpc_protos::ModuleInfo;
-  using orbit_object_utils::CreateModule;
 
   const std::filesystem::path hello_world_path =
       orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf";
@@ -45,7 +46,6 @@ TEST(LinuxMap, CreateModuleHelloWorld) {
 
 TEST(LinuxMap, CreateModuleOnDev) {
   using orbit_grpc_protos::ModuleInfo;
-  using orbit_object_utils::CreateModule;
 
   const std::filesystem::path dev_zero_path = "/dev/zero";
 
@@ -59,7 +59,6 @@ TEST(LinuxMap, CreateModuleOnDev) {
 
 TEST(LinuxMap, CreateCoffModule) {
   using orbit_grpc_protos::ModuleInfo;
-  using orbit_object_utils::CreateModule;
 
   const std::filesystem::path dll_path =
       orbit_base::GetExecutableDir() / "testdata" / "libtest.dll";
@@ -82,7 +81,6 @@ TEST(LinuxMap, CreateCoffModule) {
 
 TEST(LinuxMap, CreateModuleNotElf) {
   using orbit_grpc_protos::ModuleInfo;
-  using orbit_object_utils::CreateModule;
 
   const std::filesystem::path text_file =
       orbit_base::GetExecutableDir() / "testdata" / "textfile.txt";
@@ -97,7 +95,6 @@ TEST(LinuxMap, CreateModuleNotElf) {
 
 TEST(LinuxMan, CreateModuleWithSoname) {
   using orbit_grpc_protos::ModuleInfo;
-  using orbit_object_utils::CreateModule;
 
   const std::filesystem::path hello_world_path =
       orbit_base::GetExecutableDir() / "testdata" / "libtest-1.0.so";
@@ -118,7 +115,6 @@ TEST(LinuxMan, CreateModuleWithSoname) {
 
 TEST(LinuxMap, CreateModuleFileDoesNotExist) {
   using orbit_grpc_protos::ModuleInfo;
-  using orbit_object_utils::CreateModule;
 
   const std::filesystem::path file_path = "/not/a/valid/file/path";
 
@@ -130,13 +126,12 @@ TEST(LinuxMap, CreateModuleFileDoesNotExist) {
 }
 
 TEST(LinuxMap, ReadModules) {
-  const auto result = orbit_object_utils::ReadModules(getpid());
+  const auto result = ReadModules(getpid());
   EXPECT_THAT(result, HasNoError());
 }
 
 TEST(LinuxMap, ParseMaps) {
   using orbit_grpc_protos::ModuleInfo;
-  using orbit_object_utils::ParseMaps;
 
   {
     // Empty data
@@ -209,3 +204,20 @@ TEST(LinuxMap, ParseMaps) {
     EXPECT_EQ(no_symbols_module_info->load_bias(), 0x400000);
   }
 }
+
+TEST(LinuxMap, SymbolVirtualAddressToAbsoluteAddress) {
+  EXPECT_EQ(SymbolVirtualAddressToAbsoluteAddress(0x10, 0x1000, 0, 0), 0x1010);
+  EXPECT_EQ(SymbolVirtualAddressToAbsoluteAddress(0x1010, 0x2000, 0x1000, 0), 0x2010);
+  EXPECT_EQ(SymbolVirtualAddressToAbsoluteAddress(0x100, 0x1000, 0, 0xFF), 0x1100);
+  EXPECT_EQ(SymbolVirtualAddressToAbsoluteAddress(0x1100, 0x5000, 0x1000, 0x10FF), 0x4100);
+
+  // Invalid input
+  EXPECT_DEATH(SymbolVirtualAddressToAbsoluteAddress(0x1100, 0x5001, 0x1000, 0x10FF),
+               "Check failed");
+  EXPECT_DEATH(SymbolVirtualAddressToAbsoluteAddress(0x1100, 0x5001, 0x1001, 0x10FF),
+               "Check failed");
+  EXPECT_DEATH(SymbolVirtualAddressToAbsoluteAddress(0x1100, 0x5000, 0x1001, 0x10FF),
+               "Check failed");
+}
+
+}  // namespace orbit_object_utils
