@@ -27,4 +27,16 @@ TEST(Address, SymbolVirtualAddressToAbsoluteAddress) {
                "Check failed");
 }
 
+TEST(Address, SymbolAbsoluteAddressToOffset) {
+  EXPECT_EQ(SymbolAbsoluteAddressToOffset(0x10005, 0x10000, 0xE001), 0xE005);
+  EXPECT_EQ(SymbolAbsoluteAddressToOffset(0x10005, 0x10000, 0xE000), 0xE005);
+  EXPECT_EQ(SymbolAbsoluteAddressToOffset(0x10005, 0x10000, 0x1), 0x5);
+  EXPECT_EQ(SymbolAbsoluteAddressToOffset(0x10005, 0x10000, 0x0), 0x5);
+
+  // Invalid input
+  EXPECT_DEATH(SymbolAbsoluteAddressToOffset(0xE005, 0x10000, 0x0), "Check failed");
+  EXPECT_DEATH(SymbolAbsoluteAddressToOffset(0x1E005, 0x10020, 0x0), "Check failed");
+  EXPECT_DEATH(SymbolAbsoluteAddressToOffset(0x10005, 0x10000, 0x1010), "Check failed");
+}
+
 }  // namespace orbit_object_utils
