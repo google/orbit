@@ -5,8 +5,6 @@
 #ifndef ORBIT_BASE_ALIGN_H_
 #define ORBIT_BASE_ALIGN_H_
 
-#include "OrbitBase/Logging.h"
-
 namespace orbit_base {
 
 // alignment must be a power of 2
@@ -20,12 +18,6 @@ constexpr uint64_t AlignUp(uint64_t value) {
 template <uint64_t alignment>
 constexpr uint64_t AlignDown(uint64_t value) {
   static_assert((alignment & (alignment - 1)) == 0);
-  return value & ~(alignment - 1);
-}
-
-// alignment must be a power of 2
-inline uint64_t AlignDown(uint64_t value, uint64_t alignment) {
-  CHECK((alignment & (alignment - 1)) == 0);
   return value & ~(alignment - 1);
 }
 
