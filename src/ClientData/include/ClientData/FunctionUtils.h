@@ -16,9 +16,7 @@
 #include "capture_data.pb.h"
 #include "symbol.pb.h"
 
-namespace orbit_client_data {
-
-namespace function_utils {
+namespace orbit_client_data::function_utils {
 
 [[nodiscard]] inline const std::string& GetDisplayName(
     const orbit_client_protos::FunctionInfo& func) {
@@ -28,7 +26,6 @@ namespace function_utils {
 [[nodiscard]] std::string GetLoadedModuleNameByPath(std::string_view module_path);
 [[nodiscard]] std::string GetLoadedModuleName(const orbit_client_protos::FunctionInfo& func);
 [[nodiscard]] uint64_t GetHash(const orbit_client_protos::FunctionInfo& func);
-[[nodiscard]] uint64_t GetHash(std::string_view function_name);
 
 // Calculates and returns the absolute address of the function.
 [[nodiscard]] uint64_t Offset(const orbit_client_protos::FunctionInfo& func,
@@ -58,8 +55,6 @@ GetFunctionNameToOrbitTypeMap();
     const std::string& function_name);
 void SetOrbitTypeFromName(orbit_client_protos::FunctionInfo* func);
 
-}  // namespace function_utils
-
-}  // namespace orbit_client_data
+}  // namespace orbit_client_data::function_utils
 
 #endif  // CLIENT_DATA_FUNCTION_UTILS_H_
