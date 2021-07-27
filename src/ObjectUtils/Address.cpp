@@ -30,4 +30,12 @@ uint64_t SymbolVirtualAddressToAbsoluteAddress(uint64_t symbol_address,
          orbit_base::AlignDown<kPageSize>(module_executable_section_offset);
 }
 
+uint64_t SymbolAbsoluteAddressToOffset(uint64_t absolute_address, uint64_t module_base_address,
+                                       uint64_t module_executable_section_offset) {
+  CHECK((module_base_address % kPageSize) == 0);
+  CHECK(absolute_address >= (module_base_address + module_executable_section_offset % kPageSize));
+  return absolute_address - module_base_address +
+         orbit_base::AlignDown<kPageSize>(module_executable_section_offset);
+}
+
 }  // namespace orbit_object_utils
