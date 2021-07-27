@@ -53,7 +53,6 @@ ErrorMessageOr<uint64_t> ExecuteInProcess(pid_t pid, void* function_address, uin
       .AppendBytes({0xff, 0xd0})
       .AppendBytes({0xcc});
 
-
   OUTCOME_TRY(auto&& memory, AutomaticMemoryInTracee::Create(pid, 0, kCodeScratchPadSize));
 
   OUTCOME_TRY(auto&& return_value, ExecuteMachineCode(*memory, code));
