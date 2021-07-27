@@ -122,7 +122,7 @@ Color GpuSubmissionTrack::GetTimerColor(const TimerInfo& timer_info, bool is_sel
 
 float GpuSubmissionTrack::GetYFromTimer(const TimerInfo& timer_info) const {
   auto adjusted_depth = static_cast<float>(timer_info.depth());
-  if (ShouldShowCollapsed()) {
+  if (IsCollapsed()) {
     adjusted_depth = 0.f;
   }
   CHECK(timer_info.type() == TimerInfo::kGpuActivity ||
@@ -152,7 +152,7 @@ float GpuSubmissionTrack::GetYFromTimer(const TimerInfo& timer_info) const {
 
 // When track or its parent is collapsed, only draw "hardware execution" timers.
 bool GpuSubmissionTrack::TimerFilter(const TimerInfo& timer_info) const {
-  if (ShouldShowCollapsed()) {
+  if (IsCollapsed()) {
     std::string gpu_stage = string_manager_->Get(timer_info.user_data_key()).value_or("");
     return gpu_stage == kHwExecutionString;
   }
@@ -169,7 +169,7 @@ std::string GpuSubmissionTrack::GetTimesliceText(const TimerInfo& timer_info) co
 }
 
 float GpuSubmissionTrack::GetHeight() const {
-  bool collapsed = ShouldShowCollapsed();
+  bool collapsed = IsCollapsed();
   uint32_t depth = collapsed ? 1 : GetDepth();
   uint32_t num_gaps = depth > 0 ? depth - 1 : 0;
   if (has_vulkan_layer_command_buffer_timers_ && !collapsed) {

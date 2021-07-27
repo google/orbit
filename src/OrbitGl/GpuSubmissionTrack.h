@@ -57,6 +57,9 @@ class GpuSubmissionTrack : public TimerTrack {
   [[nodiscard]] bool IsCollapsible() const override {
     return depth_ > 1 || has_vulkan_layer_command_buffer_timers_;
   }
+  [[nodiscard]] virtual bool IsCollapsed() const override {
+    return Track::IsCollapsed() || GetParent()->IsCollapsed();
+  }
 
  protected:
   [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const override;
@@ -82,10 +85,6 @@ class GpuSubmissionTrack : public TimerTrack {
       const orbit_client_protos::TimerInfo& timer_info) const;
   [[nodiscard]] std::string GetCommandBufferTooltip(
       const orbit_client_protos::TimerInfo& timer_info) const;
-
-  [[nodiscard]] bool ShouldShowCollapsed() const {
-    return IsCollapsed() || GetParent()->IsCollapsed();
-  }
 };
 
 #endif  // ORBIT_GL_GPU_SUBMISSION_TRACK_H_

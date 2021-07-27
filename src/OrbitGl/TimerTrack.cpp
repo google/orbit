@@ -263,7 +263,7 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
   draw_data.track_start_x = viewport_->GetWorldTopLeft()[0];
   draw_data.track_width = size_[0];
   draw_data.inv_time_window = 1.0 / time_graph_->GetTimeWindowUs();
-  draw_data.is_collapsed = collapse_toggle_->IsCollapsed();
+  draw_data.is_collapsed = IsCollapsed();
 
   draw_data.z = GlCanvas::kZValueBox + z_offset;
 
