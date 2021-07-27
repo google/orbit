@@ -32,9 +32,9 @@ TracepointThreadBar::TracepointThreadBar(CaptureViewElement* parent, OrbitApp* a
                                          TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                                          TimeGraphLayout* layout,
                                          const orbit_client_model::CaptureData* capture_data,
-                                         int32_t thread_id)
-    : ThreadBar(parent, app, time_graph, viewport, layout, capture_data, thread_id, "Tracepoints"),
-      color_{255, 0, 0, 255} {}
+                                         int32_t thread_id, const Color& color)
+    : ThreadBar(parent, app, time_graph, viewport, layout, capture_data, thread_id, "Tracepoints",
+                color) {}
 
 void TracepointThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
                                const DrawContext& draw_context) {
@@ -48,7 +48,7 @@ void TracepointThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
                           ? GlCanvas::kZValueEventBarPicking
                           : GlCanvas::kZValueEventBar;
   event_bar_z += draw_context.z_offset;
-  Color color = color_;
+  Color color = GetColor();
   Box box(pos_, Vec2(size_[0], -size_[1]), event_bar_z);
   batcher.AddBox(box, color, shared_from_this());
 }

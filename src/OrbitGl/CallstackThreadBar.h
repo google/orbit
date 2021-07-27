@@ -27,7 +27,7 @@ class CallstackThreadBar : public ThreadBar {
   explicit CallstackThreadBar(CaptureViewElement* parent, OrbitApp* app, TimeGraph* time_graph,
                               orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                               const orbit_client_model::CaptureData* capture_data,
-                              orbit_client_data::ThreadID thread_id);
+                              orbit_client_data::ThreadID thread_id, const Color& color);
 
   std::string GetTooltip() const override;
 
@@ -41,8 +41,6 @@ class CallstackThreadBar : public ThreadBar {
 
   [[nodiscard]] bool IsEmpty() const override;
 
-  void SetColor(const Color& color) { color_ = color; }
-
  private:
   void SelectCallstacks();
   [[nodiscard]] std::string SafeGetFormattedFunctionName(
@@ -53,8 +51,6 @@ class CallstackThreadBar : public ThreadBar {
       int max_lines = 20, int bottom_n_lines = 5) const;
 
   [[nodiscard]] std::string GetSampleTooltip(const Batcher& batcher, PickingId id) const;
-
-  Color color_;
 };
 
 }  // namespace orbit_gl

@@ -22,12 +22,13 @@ class ThreadBar : public CaptureViewElement, public std::enable_shared_from_this
   explicit ThreadBar(CaptureViewElement* parent, OrbitApp* app, TimeGraph* time_graph,
                      orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                      const orbit_client_model::CaptureData* capture_data, int64_t thread_id,
-                     std::string name)
+                     std::string name, const Color& color)
       : CaptureViewElement(parent, time_graph, viewport, layout),
         app_(app),
         capture_data_(capture_data),
         thread_id_(thread_id),
-        name_(std::move(name)) {}
+        name_(std::move(name)),
+        color_(color) {}
 
   [[nodiscard]] virtual bool IsEmpty() const { return false; }
 
@@ -37,6 +38,7 @@ class ThreadBar : public CaptureViewElement, public std::enable_shared_from_this
   [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleInterface>
   CreateAccessibleInterface() override;
   [[nodiscard]] int64_t GetThreadId() const { return thread_id_; }
+  [[nodiscard]] virtual Color GetColor() const { return color_; }
 
   OrbitApp* app_;
   const orbit_client_model::CaptureData* capture_data_;
@@ -44,6 +46,9 @@ class ThreadBar : public CaptureViewElement, public std::enable_shared_from_this
  private:
   int64_t thread_id_;
   std::string name_;
+  // TODO(http://b/194777907): Color could be deduced from thread_id after moving method outside
+  // TimeGraph.
+  Color color_;
 };
 
 }  // namespace orbit_gl
