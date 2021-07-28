@@ -83,10 +83,6 @@ target_link_libraries(ServiceTests PRIVATE
         ServiceLib
         GTest::Main)
 
-add_custom_command(TARGET ServiceTests POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/testdata
-        $<TARGET_FILE_DIR:ServiceTests>/testdata)
-
 register_test(ServiceTests PROPERTIES TIMEOUT 10)
 
 add_fuzzer(OrbitServiceUtilsFindSymbolsFilePathFuzzer

@@ -15,9 +15,9 @@
 #include <string>
 #include <vector>
 
-#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Result.h"
 #include "ServiceUtils.h"
+#include "Test/Path.h"
 #include "tracepoint.pb.h"
 
 namespace orbit_service::utils {
@@ -60,8 +60,7 @@ TEST(ServiceUtils, GetCumulativeCpuTimeFromProcess) {
 }
 
 TEST(ServiceUtils, FindSymbolsFilePath) {
-  const auto executable_path = orbit_base::GetExecutableDir();
-  const Path test_path = executable_path / "testdata";
+  const Path test_path = orbit_test::GetTestdataDir();
 
   {
     // same file
