@@ -7,9 +7,9 @@
 #include <filesystem>
 #include <memory>
 
-#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
+#include "Test/Path.h"
 
 TEST(ReadFileToString, InvalidFile) {
   const auto fd_or_error = orbit_base::ReadFileToString("non/existing/filename");
@@ -17,8 +17,8 @@ TEST(ReadFileToString, InvalidFile) {
 }
 
 TEST(ReadFileToString, Smoke) {
-  const auto fd_or_error = orbit_base::ReadFileToString(orbit_base::GetExecutableDir() /
-                                                        "testdata" / "OrbitBase" / "textfile.bin");
+  const auto fd_or_error =
+      orbit_base::ReadFileToString(orbit_test::GetTestdataDir() / "textfile.bin");
   ASSERT_FALSE(fd_or_error.has_error()) << fd_or_error.error().message();
   EXPECT_EQ(fd_or_error.value(), "content\nnew line");
 }

@@ -6,12 +6,12 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/TemporaryFile.h"
 #include "OrbitBase/TestUtils.h"
 #include "OrbitBase/WriteStringToFile.h"
+#include "Test/Path.h"
 
 namespace orbit_base {
 
@@ -31,8 +31,7 @@ TEST(File, EmptyUnuqueFdCanBeReleased) {
 TEST(File, MoveAssingToExisingUniqueFd) {
   unique_fd fd;
 
-  auto fd_or_error =
-      OpenFileForReading(GetExecutableDir() / "testdata" / "OrbitBase" / "textfile.bin");
+  auto fd_or_error = OpenFileForReading(orbit_test::GetTestdataDir() / "textfile.bin");
 
   ASSERT_TRUE(fd_or_error.has_value()) << fd_or_error.error().message();
   fd = std::move(fd_or_error.value());
@@ -43,8 +42,7 @@ TEST(File, MoveAssingToExisingUniqueFd) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wself-move"
 TEST(File, UniqueFdSelfMove) {
-  auto fd_or_error =
-      OpenFileForReading(GetExecutableDir() / "testdata" / "OrbitBase" / "textfile.bin");
+  auto fd_or_error = OpenFileForReading(orbit_test::GetTestdataDir() / "textfile.bin");
   ASSERT_TRUE(fd_or_error.has_value()) << fd_or_error.error().message();
   unique_fd valid_fd{std::move(fd_or_error.value())};
 
@@ -59,8 +57,7 @@ TEST(File, AcccessInvalidUniqueFd) {
   EXPECT_FALSE(fd.valid());
   EXPECT_DEATH((void)fd.get(), "");
 
-  auto fd_or_error =
-      OpenFileForReading(GetExecutableDir() / "testdata" / "OrbitBase" / "textfile.bin");
+  auto fd_or_error = OpenFileForReading(orbit_test::GetTestdataDir() / "textfile.bin");
 
   fd = std::move(fd_or_error.value());
   EXPECT_TRUE(fd.valid());
@@ -171,8 +168,7 @@ TEST(File, WriteFullyAtOffset2GOffset) {
 }
 
 TEST(File, ReadFullySmoke) {
-  const auto fd_or_error =
-      OpenFileForReading(GetExecutableDir() / "testdata" / "OrbitBase" / "textfile.bin");
+  const auto fd_or_error = OpenFileForReading(orbit_test::GetTestdataDir() / "textfile.bin");
   ASSERT_FALSE(fd_or_error.has_error()) << fd_or_error.error().message();
   const auto& fd = fd_or_error.value();
   ASSERT_TRUE(fd.valid());
@@ -199,8 +195,7 @@ TEST(File, ReadFullySmoke) {
 }
 
 TEST(File, ReadFullyAtOffsetSmoke) {
-  const auto fd_or_error =
-      OpenFileForReading(GetExecutableDir() / "testdata" / "OrbitBase" / "textfile.bin");
+  const auto fd_or_error = OpenFileForReading(orbit_test::GetTestdataDir() / "textfile.bin");
   CHECK(!fd_or_error.has_error());
   const auto& fd = fd_or_error.value();
   CHECK(fd.valid());
