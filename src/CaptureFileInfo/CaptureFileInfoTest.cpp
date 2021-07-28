@@ -8,7 +8,7 @@
 #include <string_view>
 
 #include "CaptureFileInfo/CaptureFileInfo.h"
-#include "OrbitBase/ExecutablePath.h"
+#include "Test/Path.h"
 
 namespace orbit_capture_file_info {
 
@@ -42,8 +42,7 @@ TEST(CaptureFileInfo, PathLastUsedConstructor) {
 
 TEST(CaptureFileInfo, FileExistsAndCreated) {
   {
-    const std::filesystem::path path =
-        orbit_base::GetExecutableDir() / "testdata" / "CaptureFileInfo" / "test_file.txt";
+    const std::filesystem::path path = orbit_test::GetTestdataDir() / "test_file.txt";
 
     CaptureFileInfo capture_file_info{QString::fromStdString(path.string())};
 
@@ -54,8 +53,7 @@ TEST(CaptureFileInfo, FileExistsAndCreated) {
   }
 
   {
-    const std::filesystem::path path = orbit_base::GetExecutableDir() / "testdata" /
-                                       "CaptureFileInfo" / "not_existing_test_file.txt";
+    const std::filesystem::path path = orbit_test::GetTestdataDir() / "not_existing_test_file.txt";
 
     CaptureFileInfo capture_file_info{QString::fromStdString(path.string())};
 
@@ -94,8 +92,7 @@ TEST(CaptureFileInfo, FileSize) {
     EXPECT_EQ(capture_file_info.FileSize(), 0);
   }
   {
-    const std::filesystem::path path =
-        orbit_base::GetExecutableDir() / "testdata" / "CaptureFileInfo" / "test_file.txt";
+    const std::filesystem::path path = orbit_test::GetTestdataDir() / "test_file.txt";
 
     CaptureFileInfo capture_file_info{QString::fromStdString(path.string())};
 
