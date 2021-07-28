@@ -62,8 +62,9 @@ TEST(GetProcessIdsLinux, GetTidsOfProcess) {
   }
   thread.join();
 
-  std::vector<pid_t> expected_tids{main_tid, thread_tid};
-  EXPECT_THAT(returned_tids, ::testing::UnorderedElementsAreArray(expected_tids));
+  // There might be more than these two threads (i.e. when compiled with sanitizers enabled)
+  EXPECT_THAT(returned_tids, ::testing::Contains(main_tid));
+  EXPECT_THAT(returned_tids, ::testing::Contains(thread_tid));
 }
 
 TEST(GetProcessIdsLinux, GetTracerPidOfProcess) {

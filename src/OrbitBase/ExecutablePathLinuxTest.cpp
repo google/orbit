@@ -12,6 +12,10 @@
 #include "OrbitBase/Result.h"
 
 TEST(ExecutablePathLinux, GetExecutablePathWithPid) {
+  /* copybara:insert(executable is named differently)
+  GTEST_SKIP();
+  */
+
   const auto path_or_error = orbit_base::GetExecutablePath(getpid());
   ASSERT_FALSE(path_or_error.has_error()) << path_or_error.error().message();
   EXPECT_EQ(path_or_error.value().filename(), "OrbitBaseTests");

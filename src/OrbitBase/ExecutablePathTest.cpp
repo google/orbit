@@ -10,6 +10,10 @@
 #include "OrbitBase/ExecutablePath.h"
 
 TEST(ExecutablePath, GetExecutablePath) {
+  /* copybara:insert(executable is named differently)
+  GTEST_SKIP();
+  */
+
   std::filesystem::path path = orbit_base::GetExecutablePath();
 #ifdef _WIN32
   const std::string executable_name = "OrbitBaseTests.exe";
@@ -21,5 +25,9 @@ TEST(ExecutablePath, GetExecutablePath) {
 }
 
 TEST(ExecutablePath, GetExecutableDir) {
+  /* copybara:insert(executable's directory is named differently)
+  GTEST_SKIP();
+  */
+
   EXPECT_EQ(orbit_base::GetExecutableDir().filename(), "bin");
 }
