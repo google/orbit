@@ -15,12 +15,12 @@
 #include "CodeReport/AnnotatingLine.h"
 #include "CodeReport/DisassemblyReport.h"
 #include "CodeViewer/OwningDialog.h"
-#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "SourcePathsMapping/Mapping.h"
 #include "SourcePathsMapping/MappingManager.h"
 #include "SyntaxHighlighter/X86Assembly.h"
+#include "Test/Path.h"
 #include "capture_data.pb.h"
 
 using namespace std::string_view_literals;
@@ -33,14 +33,13 @@ TEST(AnnotatingSourceCodeDialog, SmokeTest) {
   QCoreApplication::setOrganizationName(kOrgName);
   QCoreApplication::setApplicationName("AnnotatingSourceCodeDialog.SmokeTest");
 
-  const std::filesystem::path file_path =
-      orbit_base::GetExecutableDir() / "testdata" / "line_info_test_binary";
+  const std::filesystem::path file_path = orbit_test::GetTestdataDir() / "line_info_test_binary";
 
   {
     orbit_source_paths_mapping::MappingManager manager{};
     manager.SetMappings({});
-    manager.AppendMapping(orbit_source_paths_mapping::Mapping{
-        std::filesystem::path{"."} / "..", orbit_base::GetExecutableDir() / "testdata"});
+    manager.AppendMapping(orbit_source_paths_mapping::Mapping{std::filesystem::path{"."} / "..",
+                                                              orbit_test::GetTestdataDir()});
   }
 
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> program =
@@ -53,7 +52,7 @@ TEST(AnnotatingSourceCodeDialog, SmokeTest) {
   ASSERT_TRUE(decl_line_info.has_value()) << decl_line_info.error().message();
 
   const std::filesystem::path source_file_path =
-      orbit_base::GetExecutableDir() / "testdata" / "LineInfoTestBinary.cpp";
+      orbit_test::GetTestdataDir() / "LineInfoTestBinary.cpp";
 
   ASSERT_TRUE(std::filesystem::exists(source_file_path));
 
