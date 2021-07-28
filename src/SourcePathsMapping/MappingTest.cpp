@@ -4,10 +4,10 @@
 
 #include <gtest/gtest.h>
 
-#include "OrbitBase/ExecutablePath.h"
 #include "SourcePathsMapping/Mapping.h"
+#include "Test/Path.h"
 
-const std::filesystem::path testdata_directory = orbit_base::GetExecutableDir() / "testdata";
+const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
 
 static bool AlwaysTruePredicate(const std::filesystem::path& /*target_path*/) { return true; }
 
@@ -87,9 +87,9 @@ TEST(Mapping, MapToFirstMatchingTargetEmpty) {
 TEST(Mapping, MapToFirstExistingTargetSimple) {
   Mapping mapping{"/src/project", testdata_directory};
 
-  const auto file_txt = MapToFirstExistingTarget({mapping}, "/src/project/Makefile");
+  const auto file_txt = MapToFirstExistingTarget({mapping}, "/src/project/plain.txt");
   ASSERT_TRUE(file_txt.has_value());
-  EXPECT_EQ(file_txt.value(), testdata_directory / "Makefile");
+  EXPECT_EQ(file_txt.value(), testdata_directory / "plain.txt");
 
   const auto other_txt = MapToFirstExistingTarget({mapping}, "/src/project/other.txt");
   ASSERT_FALSE(other_txt.has_value());
@@ -101,9 +101,9 @@ TEST(Mapping, MapToFirstExistingTargetMultiple) {
   Mapping mapping2{"/src/project", testdata_directory};
 
   const auto file_txt =
-      MapToFirstExistingTarget({mapping0, mapping1, mapping2}, "/src/project/Makefile");
+      MapToFirstExistingTarget({mapping0, mapping1, mapping2}, "/src/project/plain.txt");
   ASSERT_TRUE(file_txt.has_value());
-  EXPECT_EQ(file_txt.value(), testdata_directory / "Makefile");
+  EXPECT_EQ(file_txt.value(), testdata_directory / "plain.txt");
 
   const auto other_txt =
       MapToFirstExistingTarget({mapping0, mapping1, mapping2}, "/build/project/other.txt");
