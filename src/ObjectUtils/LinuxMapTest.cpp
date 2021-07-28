@@ -15,9 +15,9 @@
 #include <vector>
 
 #include "ObjectUtils/LinuxMap.h"
-#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/TestUtils.h"
+#include "Test/Path.h"
 #include "module.pb.h"
 
 using orbit_base::HasNoError;
@@ -27,8 +27,7 @@ namespace orbit_object_utils {
 TEST(LinuxMap, CreateModuleHelloWorld) {
   using orbit_grpc_protos::ModuleInfo;
 
-  const std::filesystem::path hello_world_path =
-      orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf";
+  const std::filesystem::path hello_world_path = orbit_test::GetTestdataDir() / "hello_world_elf";
 
   constexpr uint64_t kStartAddress = 23;
   constexpr uint64_t kEndAddress = 8004;
@@ -60,8 +59,7 @@ TEST(LinuxMap, CreateModuleOnDev) {
 TEST(LinuxMap, CreateCoffModule) {
   using orbit_grpc_protos::ModuleInfo;
 
-  const std::filesystem::path dll_path =
-      orbit_base::GetExecutableDir() / "testdata" / "libtest.dll";
+  const std::filesystem::path dll_path = orbit_test::GetTestdataDir() / "libtest.dll";
 
   constexpr uint64_t kStartAddress = 23;
   constexpr uint64_t kEndAddress = 8004;
@@ -82,8 +80,7 @@ TEST(LinuxMap, CreateCoffModule) {
 TEST(LinuxMap, CreateModuleNotElf) {
   using orbit_grpc_protos::ModuleInfo;
 
-  const std::filesystem::path text_file =
-      orbit_base::GetExecutableDir() / "testdata" / "textfile.txt";
+  const std::filesystem::path text_file = orbit_test::GetTestdataDir() / "textfile.txt";
 
   constexpr uint64_t kStartAddress = 23;
   constexpr uint64_t kEndAddress = 8004;
@@ -96,8 +93,7 @@ TEST(LinuxMap, CreateModuleNotElf) {
 TEST(LinuxMan, CreateModuleWithSoname) {
   using orbit_grpc_protos::ModuleInfo;
 
-  const std::filesystem::path hello_world_path =
-      orbit_base::GetExecutableDir() / "testdata" / "libtest-1.0.so";
+  const std::filesystem::path hello_world_path = orbit_test::GetTestdataDir() / "libtest-1.0.so";
 
   constexpr uint64_t kStartAddress = 23;
   constexpr uint64_t kEndAddress = 8004;
@@ -140,7 +136,7 @@ TEST(LinuxMap, ParseMaps) {
     EXPECT_TRUE(result.value().empty());
   }
 
-  const std::filesystem::path test_path = orbit_base::GetExecutableDir() / "testdata";
+  const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path hello_world_path = test_path / "hello_world_elf";
   const std::filesystem::path text_file = test_path / "textfile.txt";
 
