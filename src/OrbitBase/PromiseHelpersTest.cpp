@@ -3,7 +3,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gtest/gtest-typed-test.h>
 #include <gtest/gtest.h>
 
 #include "OrbitBase/Promise.h"
