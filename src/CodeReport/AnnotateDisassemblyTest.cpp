@@ -10,9 +10,9 @@
 #include "CodeReport/AnnotateDisassembly.h"
 #include "CodeReport/AnnotatingLine.h"
 #include "CodeReport/DisassemblyReport.h"
-#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "Test/Path.h"
 #include "capture_data.pb.h"
 
 using namespace std::string_view_literals;
@@ -20,8 +20,7 @@ const std::string_view kMainFunctionInstructions =
     "\x50\xbf\x04\x20\x40\x00\xe8\xe5\xfe\xff\xff\x31\xc0\x59\xc3\x90"sv;
 
 static void TestSimple(bool windows_line_endings) {
-  const std::filesystem::path file_path =
-      orbit_base::GetExecutableDir() / "testdata" / "line_info_test_binary";
+  const std::filesystem::path file_path = orbit_test::GetTestdataDir() / "line_info_test_binary";
 
   auto program = orbit_object_utils::CreateElfFile(file_path);
   ASSERT_TRUE(program.has_value()) << program.error().message();
@@ -32,7 +31,7 @@ static void TestSimple(bool windows_line_endings) {
   ASSERT_TRUE(decl_line_info.has_value()) << decl_line_info.error().message();
 
   const std::filesystem::path source_file_path =
-      orbit_base::GetExecutableDir() / "testdata" / "LineInfoTestBinary.cpp";
+      orbit_test::GetTestdataDir() / "LineInfoTestBinary.cpp";
 
   ASSERT_TRUE(std::filesystem::exists(source_file_path));
 
