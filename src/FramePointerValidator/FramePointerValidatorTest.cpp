@@ -16,9 +16,9 @@
 
 #include "FramePointerValidator/FramePointerValidator.h"
 #include "ObjectUtils/ElfFile.h"
-#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "Test/Path.h"
 #include "code_block.pb.h"
 #include "symbol.pb.h"
 
@@ -26,8 +26,7 @@ using orbit_grpc_protos::CodeBlock;
 using orbit_grpc_protos::SymbolInfo;
 
 TEST(FramePointerValidator, GetFpoFunctions) {
-  const std::filesystem::path executable_dir = orbit_base::GetExecutableDir();
-  const std::filesystem::path test_elf_file = executable_dir / "testdata" / "hello_world_elf";
+  const std::filesystem::path test_elf_file = orbit_test::GetTestdataDir() / "hello_world_elf";
 
   auto elf_file = orbit_object_utils::CreateElfFile(test_elf_file);
   ASSERT_FALSE(elf_file.has_error()) << elf_file.error().message();
