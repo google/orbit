@@ -37,9 +37,6 @@ class ModuleManager final {
   [[nodiscard]] std::vector<ModuleData*> AddOrUpdateNotLoadedModules(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
 
-  [[nodiscard]] std::vector<orbit_client_protos::FunctionInfo> GetOrbitFunctionsOfProcess(
-      const ProcessData& process) const;
-
   [[nodiscard]] std::vector<const ModuleData*> GetAllModuleData() const;
 
   [[nodiscard]] std::vector<const ModuleData*> GetModulesByFilename(

@@ -40,20 +40,9 @@ namespace orbit_client_data::function_utils {
     const orbit_client_protos::FunctionInfo& func, const ProcessData& process,
     const ModuleData& module);
 
-[[nodiscard]] bool IsOrbitFunctionFromType(
-    const orbit_client_protos::FunctionInfo::OrbitType& type);
-
-[[nodiscard]] bool IsOrbitFunctionFromName(const std::string& function_name);
-
 [[nodiscard]] std::unique_ptr<orbit_client_protos::FunctionInfo> CreateFunctionInfo(
     const orbit_grpc_protos::SymbolInfo& symbol_info, const std::string& module_path,
     const std::string& module_build_id);
-
-[[nodiscard]] const absl::flat_hash_map<std::string, orbit_client_protos::FunctionInfo::OrbitType>&
-GetFunctionNameToOrbitTypeMap();
-[[nodiscard]] orbit_client_protos::FunctionInfo::OrbitType GetOrbitTypeByName(
-    const std::string& function_name);
-void SetOrbitTypeFromName(orbit_client_protos::FunctionInfo* func);
 
 }  // namespace orbit_client_data::function_utils
 

@@ -170,37 +170,11 @@ orbit_data_views::PresetLoadState GetPresetLoadStateForProcess(const PresetFile&
 }
 
 orbit_metrics_uploader::CaptureStartData CreateCaptureStartData(
-    const std::vector<FunctionInfo>& all_instrumented_functions, int64_t number_of_frame_tracks,
+    const std::vector<FunctionInfo>& instrumented_functions, int64_t number_of_frame_tracks,
     bool thread_states, int64_t memory_information_sampling_period_ms,
     bool lib_orbit_vulkan_layer_loaded, uint64_t max_local_marker_depth_per_command_buffer) {
   orbit_metrics_uploader::CaptureStartData capture_start_data{};
-
-  for (const auto& function : all_instrumented_functions) {
-    switch (function.orbit_type()) {
-      case orbit_client_protos::FunctionInfo_OrbitType_kNone:
-        capture_start_data.number_of_instrumented_functions++;
-        break;
-      case orbit_client_protos::FunctionInfo_OrbitType_kOrbitTimerStart:
-        capture_start_data.number_of_manual_start_functions++;
-        break;
-      case orbit_client_protos::FunctionInfo_OrbitType_kOrbitTimerStop:
-        capture_start_data.number_of_manual_stop_functions++;
-        break;
-      case orbit_client_protos::FunctionInfo_OrbitType_kOrbitTimerStartAsync:
-        capture_start_data.number_of_manual_start_async_functions++;
-        break;
-      case orbit_client_protos::FunctionInfo_OrbitType_kOrbitTimerStopAsync:
-        capture_start_data.number_of_manual_stop_async_functions++;
-        break;
-      case orbit_client_protos::FunctionInfo_OrbitType_kOrbitTrackValue:
-        capture_start_data.number_of_manual_tracked_values++;
-        break;
-      default:
-        UNREACHABLE();
-        break;
-    }
-  }
-
+  capture_start_data.number_of_instrumented_functions = instrumented_functions.size();
   capture_start_data.number_of_frame_tracks = number_of_frame_tracks;
   capture_start_data.thread_states =
       thread_states ? orbit_metrics_uploader::OrbitCaptureData_ThreadStates_THREAD_STATES_ENABLED
@@ -1078,9 +1052,6 @@ ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
   PresetInfo preset;
 
   for (const auto& function : data_manager_->GetSelectedFunctions()) {
-    // GetSelectedFunctions should not contain orbit functions
-    CHECK(!orbit_client_data::function_utils::IsOrbitFunctionFromType(function.orbit_type()));
-
     (*preset.mutable_modules())[function.module_path()].add_function_names(function.pretty_name());
   }
 
@@ -1284,9 +1255,6 @@ void OrbitApp::StartCapture() {
   }
 
   std::vector<FunctionInfo> selected_functions = data_manager_->GetSelectedFunctions();
-  std::vector<FunctionInfo> orbit_functions = module_manager_->GetOrbitFunctionsOfProcess(*process);
-  selected_functions.insert(selected_functions.end(), orbit_functions.begin(),
-                            orbit_functions.end());
 
   UserDefinedCaptureData user_defined_capture_data = data_manager_->user_defined_capture_data();
 
@@ -1362,7 +1330,7 @@ void OrbitApp::StartCapture() {
 
   Future<ErrorMessageOr<CaptureOutcome>> capture_result = capture_client_->Capture(
       thread_pool_.get(), process->pid(), *module_manager_, std::move(selected_functions_map),
-      /*always_record_arguments=*/false, absl::GetFlag(FLAGS_show_return_values),
+      /*record_arguments=*/false, absl::GetFlag(FLAGS_show_return_values),
       std::move(selected_tracepoints), samples_per_second, stack_dump_size, unwinding_method,
       collect_scheduling_info, collect_thread_states, collect_gpu_jobs, enable_api,
       enable_introspection, enable_user_space_instrumentation,
@@ -2208,22 +2176,7 @@ void OrbitApp::SetVisibleFunctionIds(absl::flat_hash_set<uint64_t> visible_funct
 }
 
 bool OrbitApp::IsFunctionVisible(uint64_t function_address) {
-  if (data_manager_->IsFunctionVisible(function_address)) {
-    return true;
-  }
-
-  // TODO(b/179225487): Filtering for manually instrumented scopes is not yet supported.
-  // All "Orbit" functions are considered visible. Note: this code will change shortly as
-  // we will introduce a TimerInfo type for Orbit API events which will allow faster filtering.
-  const auto& instrumented_functions = GetCaptureData().instrumented_functions();
-  auto it = instrumented_functions.find(function_address);
-  if (it != instrumented_functions.end()) {
-    if (orbit_client_data::function_utils::IsOrbitFunctionFromName(it->second.function_name())) {
-      return true;
-    }
-  }
-
-  return false;
+  return data_manager_->IsFunctionVisible(function_address);
 }
 
 uint64_t OrbitApp::highlighted_function_id() const {
@@ -2265,12 +2218,11 @@ uint64_t OrbitApp::GetFunctionIdToHighlight() const {
   const orbit_client_protos::TimerInfo* timer_info = selected_timer();
 
   uint64_t selected_function_id =
-      timer_info ? timer_info->function_id() : highlighted_function_id();
+      timer_info != nullptr ? timer_info->function_id() : highlighted_function_id();
 
   // Highlighting of manually instrumented scopes is not yet supported.
   const InstrumentedFunction* function = GetInstrumentedFunction(selected_function_id);
-  if (function == nullptr ||
-      orbit_client_data::function_utils::IsOrbitFunctionFromName(function->function_name())) {
+  if (function == nullptr) {
     return orbit_grpc_protos::kInvalidFunctionId;
   }
 

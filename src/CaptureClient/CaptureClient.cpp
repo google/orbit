@@ -44,32 +44,11 @@ using orbit_grpc_protos::UnwindingMethod;
 
 using orbit_base::Future;
 
-InstrumentedFunction::FunctionType CaptureClient::InstrumentedFunctionTypeFromOrbitType(
-    FunctionInfo::OrbitType orbit_type) {
-  switch (orbit_type) {
-    case FunctionInfo::kOrbitTimerStart:
-      return InstrumentedFunction::kTimerStart;
-    case FunctionInfo::kOrbitTimerStop:
-      return InstrumentedFunction::kTimerStop;
-    case FunctionInfo::kOrbitTimerStartAsync:
-    case FunctionInfo::kOrbitTimerStopAsync:
-    case FunctionInfo::kOrbitTrackValue:
-    case FunctionInfo::kNone:
-      return InstrumentedFunction::kRegular;
-    case orbit_client_protos::
-        FunctionInfo_OrbitType_FunctionInfo_OrbitType_INT_MIN_SENTINEL_DO_NOT_USE_:
-    case orbit_client_protos::
-        FunctionInfo_OrbitType_FunctionInfo_OrbitType_INT_MAX_SENTINEL_DO_NOT_USE_:
-      UNREACHABLE();
-  }
-  UNREACHABLE();
-}
-
 // TODO(b/187170164): This method contains a lot of arguments. Consider making it more structured.
 Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
     orbit_base::ThreadPool* thread_pool, int32_t process_id,
     const orbit_client_data::ModuleManager& module_manager,
-    absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions, bool always_record_arguments,
+    absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions, bool record_arguments,
     bool record_return_values, TracepointInfoSet selected_tracepoints, double samples_per_second,
     uint16_t stack_dump_size, UnwindingMethod unwinding_method, bool collect_scheduling_info,
     bool collect_thread_state, bool collect_gpu_jobs, bool enable_api, bool enable_introspection,
@@ -88,13 +67,13 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
 
   auto capture_result = thread_pool->Schedule(
       [this, process_id, &module_manager, selected_functions = std::move(selected_functions),
-       always_record_arguments, record_return_values,
+       record_arguments, record_return_values,
        selected_tracepoints = std::move(selected_tracepoints), samples_per_second, stack_dump_size,
        unwinding_method, collect_scheduling_info, collect_thread_state, collect_gpu_jobs,
        enable_api, enable_introspection, enable_user_space_instrumentation,
        max_local_marker_depth_per_command_buffer, collect_memory_info, memory_sampling_period_ms,
        capture_event_processor = std::move(capture_event_processor)]() mutable {
-        return CaptureSync(process_id, module_manager, selected_functions, always_record_arguments,
+        return CaptureSync(process_id, module_manager, selected_functions, record_arguments,
                            record_return_values, selected_tracepoints, samples_per_second,
                            stack_dump_size, unwinding_method, collect_scheduling_info,
                            collect_thread_state, collect_gpu_jobs, enable_api, enable_introspection,
@@ -133,14 +112,13 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
 
 ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
     int32_t process_id, const orbit_client_data::ModuleManager& module_manager,
-    const absl::flat_hash_map<uint64_t, FunctionInfo>& selected_functions,
-    bool always_record_arguments, bool record_return_values,
-    const TracepointInfoSet& selected_tracepoints, double samples_per_second,
-    uint16_t stack_dump_size, UnwindingMethod unwinding_method, bool collect_scheduling_info,
-    bool collect_thread_state, bool collect_gpu_jobs, bool enable_api, bool enable_introspection,
-    bool enable_user_space_instrumentation, uint64_t max_local_marker_depth_per_command_buffer,
-    bool collect_memory_info, uint64_t memory_sampling_period_ms,
-    CaptureEventProcessor* capture_event_processor) {
+    const absl::flat_hash_map<uint64_t, FunctionInfo>& selected_functions, bool record_arguments,
+    bool record_return_values, const TracepointInfoSet& selected_tracepoints,
+    double samples_per_second, uint16_t stack_dump_size, UnwindingMethod unwinding_method,
+    bool collect_scheduling_info, bool collect_thread_state, bool collect_gpu_jobs, bool enable_api,
+    bool enable_introspection, bool enable_user_space_instrumentation,
+    uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
+    uint64_t memory_sampling_period_ms, CaptureEventProcessor* capture_event_processor) {
   ORBIT_SCOPE_FUNCTION;
   writes_done_failed_ = false;
   try_abort_ = false;
@@ -189,10 +167,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
     instrumented_function->set_function_id(function_id);
     instrumented_function->set_function_size(function.size());
     instrumented_function->set_function_name(function.pretty_name());
-    instrumented_function->set_function_type(
-        InstrumentedFunctionTypeFromOrbitType(function.orbit_type()));
-    instrumented_function->set_record_arguments(always_record_arguments ||
-                                                (function.orbit_type() != FunctionInfo::kNone));
+    instrumented_function->set_record_arguments(record_arguments);
     instrumented_function->set_record_return_value(record_return_values);
     instrumented_functions.insert_or_assign(function_id, *instrumented_function);
   }

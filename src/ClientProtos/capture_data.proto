@@ -38,23 +38,13 @@ message ModuleInfo {
 }
 
 message FunctionInfo {
-  reserved 4, 6, 8, 9, 11;
+  reserved 4, 6, 8, 9, 10, 11;
   string name = 1;
   string pretty_name = 2;
   string module_path = 3;
   string module_build_id = 12;
   uint64 address = 5;
   uint64 size = 7;
-
-  enum OrbitType {
-    kNone = 0;
-    kOrbitTimerStart = 1;
-    kOrbitTimerStop = 2;
-    kOrbitTimerStartAsync = 3;
-    kOrbitTimerStopAsync = 4;
-    kOrbitTrackValue = 5;
-  }
-  OrbitType orbit_type = 10;
 }
 
 message CallstackEvent {

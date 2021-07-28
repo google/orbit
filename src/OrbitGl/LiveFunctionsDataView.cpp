@@ -414,10 +414,6 @@ void LiveFunctionsDataView::OnDataChanged() {
       return;
     }
 
-    if (orbit_client_data::function_utils::IsOrbitFunctionFromName(function_info->pretty_name())) {
-      continue;
-    }
-
     functions_.insert_or_assign(function_id, std::move(*function_info));
     indices_.push_back(function_id);
   }
@@ -472,7 +468,6 @@ std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrum
   result.set_module_build_id(instrumented_function.file_build_id());
   result.set_address(module_data->load_bias() + instrumented_function.file_offset());
   // size is unknown
-  orbit_client_data::function_utils::SetOrbitTypeFromName(&result);
 
   return result;
 }

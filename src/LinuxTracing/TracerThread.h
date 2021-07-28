@@ -24,7 +24,6 @@
 #include "GpuTracepointVisitor.h"
 #include "LinuxTracingUtils.h"
 #include "LostAndDiscardedEventVisitor.h"
-#include "ManualInstrumentationConfig.h"
 #include "OrbitBase/Profiling.h"
 #include "PerfEvent.h"
 #include "PerfEventProcessor.h"
@@ -139,7 +138,6 @@ class TracerThread {
   uint16_t stack_dump_size_;
   orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method_;
   std::vector<Function> instrumented_functions_;
-  ManualInstrumentationConfig manual_instrumentation_config_;
   bool trace_thread_state_;
   bool trace_gpu_driver_;
   std::vector<orbit_grpc_protos::TracepointInfo> instrumented_tracepoints_;

@@ -4,14 +4,12 @@
 
 #include "ClientData/FunctionUtils.h"
 
-#include <absl/strings/str_cat.h>
 #include <absl/strings/str_join.h>
 
 #include <filesystem>
 
 #include "ObjectUtils/Address.h"
 #include "OrbitBase/Logging.h"
-#include "absl/container/flat_hash_map.h"
 #include "absl/strings/match.h"
 #include "xxhash.h"
 
@@ -66,14 +64,6 @@ std::optional<uint64_t> GetAbsoluteAddress(const orbit_client_protos::FunctionIn
       module.executable_segment_offset());
 }
 
-bool IsOrbitFunctionFromType(const FunctionInfo::OrbitType& type) {
-  return type != FunctionInfo::kNone;
-}
-
-bool IsOrbitFunctionFromName(const std::string& function_name) {
-  return GetOrbitTypeByName(function_name) != FunctionInfo::kNone;
-}
-
 std::unique_ptr<FunctionInfo> CreateFunctionInfo(const SymbolInfo& symbol_info,
                                                  const std::string& module_path,
                                                  const std::string& module_build_id) {
@@ -85,39 +75,7 @@ std::unique_ptr<FunctionInfo> CreateFunctionInfo(const SymbolInfo& symbol_info,
   function_info->set_size(symbol_info.size());
   function_info->set_module_path(module_path);
   function_info->set_module_build_id(module_build_id);
-
-  SetOrbitTypeFromName(function_info.get());
   return function_info;
-}
-
-const absl::flat_hash_map<std::string, FunctionInfo::OrbitType>& GetFunctionNameToOrbitTypeMap() {
-  constexpr const char* kStubParams =
-      "(unsigned long, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long)";
-  static absl::flat_hash_map<std::string, FunctionInfo::OrbitType> function_name_to_type_map{
-      {absl::StrCat("orbit_api::Start", kStubParams), FunctionInfo::kOrbitTimerStart},
-      {absl::StrCat("orbit_api::Stop", kStubParams), FunctionInfo::kOrbitTimerStop},
-      {absl::StrCat("orbit_api::StartAsync", kStubParams), FunctionInfo::kOrbitTimerStartAsync},
-      {absl::StrCat("orbit_api::StopAsync", kStubParams), FunctionInfo::kOrbitTimerStopAsync},
-      {absl::StrCat("orbit_api::TrackValue", kStubParams), FunctionInfo::kOrbitTrackValue}};
-  return function_name_to_type_map;
-}
-
-FunctionInfo::OrbitType GetOrbitTypeByName(const std::string& function_name) {
-  if (absl::StartsWith(function_name, "orbit_api::")) {
-    for (const auto& pair : GetFunctionNameToOrbitTypeMap()) {
-      if (absl::StrContains(function_name, pair.first)) {
-        return pair.second;
-      }
-    }
-  }
-
-  return FunctionInfo::kNone;
-}
-
-// Detect Orbit API functions by looking for special function names part of the
-// orbit_api namespace. On a match, set the corresponding function type.
-void SetOrbitTypeFromName(FunctionInfo* func) {
-  func->set_orbit_type(GetOrbitTypeByName(GetDisplayName(*func)));
 }
 
 }  // namespace orbit_client_data::function_utils

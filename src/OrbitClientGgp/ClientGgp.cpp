@@ -127,7 +127,7 @@ ErrorMessageOr<void> ClientGgp::RequestStartCapture(orbit_base::ThreadPool* thre
 
   Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> result = capture_client_->Capture(
       thread_pool, target_process_->pid(), module_manager_, selected_functions_,
-      /*always_record_arguments=*/false, /*record_return_values=*/false, selected_tracepoints,
+      /*record_arguments=*/false, /*record_return_values=*/false, selected_tracepoints,
       options_.samples_per_second, options_.stack_dump_size, unwinding_method,
       collect_scheduling_info, collect_thread_state, collect_gpu_jobs, enable_api,
       enable_introspection, enable_user_space_instrumentation,
