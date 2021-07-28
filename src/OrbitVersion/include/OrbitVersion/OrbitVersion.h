@@ -9,6 +9,36 @@
 
 namespace orbit_version {
 
+struct Version final {
+  uint32_t major_version;
+  uint32_t minor_version;
+
+  friend bool operator<(const Version& left, const Version& right) {
+    return std::tie(left.major_version, left.minor_version) <
+           std::tie(right.major_version, right.minor_version);
+  }
+
+  friend bool operator<=(const Version& left, const Version& right) {
+    return std::tie(left.major_version, left.minor_version) <=
+           std::tie(right.major_version, right.minor_version);
+  }
+
+  friend bool operator==(const Version& left, const Version& right) {
+    return std::tie(left.major_version, left.minor_version) ==
+           std::tie(right.major_version, right.minor_version);
+  }
+
+  friend bool operator!=(const Version& left, const Version& right) {
+    return std::tie(left.major_version, left.minor_version) !=
+           std::tie(right.major_version, right.minor_version);
+  }
+
+  friend bool operator>=(const Version& left, const Version& right) { return right <= left; }
+
+  friend bool operator>(const Version& left, const Version& right) { return right < left; }
+};
+
+[[nodiscard]] Version GetVersionNumber();
 std::string GetVersion();
 std::string GetCompiler();
 std::string GetBuildTimestamp();
