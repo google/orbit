@@ -13,18 +13,13 @@ import "tracepoint.proto";
 option cc_enable_arenas = true;
 
 message InstrumentedFunction {
+  reserved 4;
+
   string file_path = 1;
   string file_build_id = 6;
   uint64 file_offset = 2;
   uint64 function_id = 3;
   uint64 function_size = 7;
-
-  enum FunctionType {
-    kRegular = 0;
-    kTimerStart = 1;
-    kTimerStop = 2;
-  }
-  FunctionType function_type = 4;
   string function_name = 5;
 
   bool record_arguments = 8;

@@ -91,7 +91,6 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddUprobeFromOffset(
   function_info.set_module_path(file_path);
   function_info.set_module_build_id(build_id);
   function_info.set_address(load_bias + file_offset);
-  function_info.set_orbit_type(orbit_client_protos::FunctionInfo::kNone);
   selected_functions->emplace(function_id, function_info);
 }
 
@@ -132,7 +131,6 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddUprobeFromFunctionName(
   function_info.set_module_path(file_path);
   function_info.set_module_build_id(build_id);
   function_info.set_address(address.value());
-  function_info.set_orbit_type(orbit_client_protos::FunctionInfo::kNone);
   selected_functions->emplace(function_id, function_info);
 }
 

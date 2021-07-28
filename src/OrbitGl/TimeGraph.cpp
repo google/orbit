@@ -258,23 +258,6 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
   capture_min_timestamp_ = std::min(capture_min_timestamp_, timer_info.start());
   capture_max_timestamp_ = std::max(capture_max_timestamp_, timer_info.end());
 
-  // Functions for manual instrumentation scopes and tracked values are those with orbit_type() !=
-  // FunctionInfo::kNone. All proper timers for these have timer_info.type() == TimerInfo::kNone. It
-  // is possible to add frame tracks for these special functions, as they are simply hooked
-  // functions, but in those cases the timer type is TimerInfo::kFrame. We need to exclude those
-  // frame track timers from the special processing here as they do not represent manual
-  // instrumentation scopes.
-  FunctionInfo::OrbitType orbit_type = FunctionInfo::kNone;
-  if (function != nullptr) {
-    orbit_type = orbit_client_data::function_utils::GetOrbitTypeByName(function->function_name());
-  }
-
-  if (function != nullptr &&
-      orbit_client_data::function_utils::IsOrbitFunctionFromType(orbit_type) &&
-      timer_info.type() == TimerInfo::kNone) {
-    ProcessOrbitFunctionTimer(orbit_type, timer_info);
-  }
-
   // TODO(b/175869409): Change the way to create and get the tracks. Move this part to TrackManager.
   switch (timer_info.type()) {
     // All GPU timers are handled equally here.
@@ -332,21 +315,6 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
   }
 
   RequestUpdate();
-}
-
-void TimeGraph::ProcessOrbitFunctionTimer(FunctionInfo::OrbitType type,
-                                          const TimerInfo& timer_info) {
-  switch (type) {
-    case FunctionInfo::kOrbitTrackValue:
-      ProcessValueTrackingTimer(timer_info);
-      break;
-    case FunctionInfo::kOrbitTimerStartAsync:
-    case FunctionInfo::kOrbitTimerStopAsync:
-      manual_instrumentation_manager_->ProcessAsyncTimerDeprecated(timer_info);
-      break;
-    default:
-      break;
-  }
 }
 
 void TimeGraph::ProcessApiEventTimer(const TimerInfo& timer_info) {

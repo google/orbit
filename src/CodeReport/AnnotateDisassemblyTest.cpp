@@ -56,8 +56,6 @@ static void TestSimple(bool windows_line_endings) {
   function_info.set_module_path("line_info_test_binary");
   function_info.set_address(0x401140);
   function_info.set_size(kMainFunctionInstructions.size());
-  function_info.set_orbit_type(
-      orbit_client_protos::FunctionInfo_OrbitType::FunctionInfo_OrbitType_kNone);
 
   orbit_code_report::Disassembler disassembler{};
   disassembler.Disassemble(static_cast<const void*>(kMainFunctionInstructions.data()),

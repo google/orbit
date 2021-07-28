@@ -37,7 +37,6 @@ target_sources(LinuxTracing PRIVATE
         LinuxTracingUtils.h
         LinuxTracingUtils.cpp
         LostAndDiscardedEventVisitor.h
-        ManualInstrumentationConfig.h
         PerfEvent.cpp
         PerfEvent.h
         PerfEventOpen.cpp

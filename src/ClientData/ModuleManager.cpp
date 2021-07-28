@@ -87,25 +87,6 @@ ModuleData* ModuleManager::GetMutableModuleByPathAndBuildId(const std::string& p
   return &it->second;
 }
 
-std::vector<FunctionInfo> ModuleManager::GetOrbitFunctionsOfProcess(
-    const ProcessData& process) const {
-  auto module_keys = process.GetUniqueModulesPathAndBuildId();
-
-  absl::MutexLock lock(&mutex_);
-  std::vector<FunctionInfo> result;
-  for (const auto& module_key : module_keys) {
-    auto it = module_map_.find(module_key);
-    CHECK(it != module_map_.end());
-    const ModuleData* module = &it->second;
-    CHECK(module != nullptr);
-    if (!module->is_loaded()) continue;
-
-    const std::vector<FunctionInfo>& orbit_functions = module->GetOrbitFunctions();
-    result.insert(result.end(), orbit_functions.begin(), orbit_functions.end());
-  }
-  return result;
-}
-
 std::vector<const ModuleData*> ModuleManager::GetAllModuleData() const {
   absl::MutexLock lock(&mutex_);
   std::vector<const ModuleData*> result;

@@ -19,11 +19,6 @@ namespace {
 constexpr CaptureStartData kTestStartData{
     1 /*number_of_instrumented_functions*/,
     2 /*number_of_frame_tracks*/,
-    3 /*number_of_manual_start_functions*/,
-    4 /*number_of_manual_stop_functions*/,
-    5 /*number_of_manual_start_async_functions*/,
-    6 /*number_of_manual_stop_async_functions*/,
-    7 /*number_of_manual_tracked_values*/,
     OrbitCaptureData_ThreadStates_THREAD_STATES_ENABLED /*thread_states*/,
     10 /*memory_information_sampling_period_ms*/,
     OrbitCaptureData_LibOrbitVulkanLayer_LIB_LOADED /*lib_orbit_vulkan_layer*/,
@@ -49,19 +44,14 @@ bool HasSameCaptureStartData(const OrbitCaptureData& capture_data,
   return capture_data.number_of_instrumented_functions() ==
              start_data.number_of_instrumented_functions &&
          capture_data.number_of_frame_tracks() == start_data.number_of_frame_tracks &&
-         capture_data.number_of_manual_start_functions() ==
-             start_data.number_of_manual_start_functions &&
-         capture_data.number_of_manual_stop_functions() ==
-             start_data.number_of_manual_stop_functions &&
-         capture_data.number_of_manual_start_async_functions() ==
-             start_data.number_of_manual_start_async_functions &&
-         capture_data.number_of_manual_stop_async_functions() ==
-             start_data.number_of_manual_stop_async_functions &&
-         capture_data.number_of_manual_tracked_values() ==
-             start_data.number_of_manual_tracked_values &&
          capture_data.thread_states() == start_data.thread_states &&
          capture_data.memory_information_sampling_period_ms() ==
-             start_data.memory_information_sampling_period_ms;
+             start_data.memory_information_sampling_period_ms &&
+         capture_data.lib_orbit_vulkan_layer() == start_data.lib_orbit_vulkan_layer &&
+         capture_data.local_marker_depth_per_command_buffer() ==
+             start_data.local_marker_depth_per_command_buffer &&
+         capture_data.max_local_marker_depth_per_command_buffer() ==
+             start_data.max_local_marker_depth_per_command_buffer;
 }
 
 bool HasSameCaptureCompleteData(const OrbitCaptureData& capture_data,

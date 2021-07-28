@@ -108,16 +108,10 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
   const InstrumentedFunction* func =
       capture_data_->GetInstrumentedFunctionById(timer_info->function_id());
 
-  FunctionInfo::OrbitType type{FunctionInfo::kNone};
-  if (func != nullptr) {
-    type = orbit_client_data::function_utils::GetOrbitTypeByName(func->function_name());
-  }
-
   std::string function_name;
-  bool is_manual = (func != nullptr && type == FunctionInfo::kOrbitTimerStart) ||
-                   timer_info->type() == TimerInfo::kApiEvent;
+  bool is_manual = timer_info->type() == TimerInfo::kApiEvent;
 
-  if (!func && !is_manual) {
+  if (func == nullptr && !is_manual) {
     return GetTimesliceText(*timer_info);
   }
 
@@ -145,6 +139,7 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
 }
 
 bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
+  // TODO(b/179225487): Filtering for manually instrumented scopes is not yet supported.
   return timer_info.type() == TimerInfo::kIntrospection ||
          timer_info.type() == TimerInfo::kApiEvent ||
          app_->IsFunctionVisible(timer_info.function_id());
@@ -159,18 +154,8 @@ bool ThreadTrack::IsTrackSelected() const {
   return Color((val >> 24) & 0xFF, (val >> 16) & 0xFF, (val >> 8) & 0xFF, val & 0xFF);
 }
 
-[[nodiscard]] static std::optional<Color> GetUserColor(const TimerInfo& timer_info,
-                                                       const InstrumentedFunction* function) {
-  FunctionInfo::OrbitType type{FunctionInfo::kNone};
-  if (function != nullptr) {
-    type = orbit_client_data::function_utils::GetOrbitTypeByName(function->function_name());
-  }
-
-  bool manual_instrumentation_timer =
-      (type == FunctionInfo::kOrbitTimerStart || type == FunctionInfo::kOrbitTimerStartAsync ||
-       timer_info.type() == TimerInfo::kApiEvent);
-
-  if (!manual_instrumentation_timer) {
+[[nodiscard]] static std::optional<Color> GetUserColor(const TimerInfo& timer_info) {
+  if (timer_info.type() != TimerInfo::kApiEvent) {
     return std::nullopt;
   }
 
@@ -212,11 +197,7 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
     return kInactiveColor;
   }
 
-  uint64_t function_id = timer_info.function_id();
-  const InstrumentedFunction* instrumented_function = app_->GetInstrumentedFunction(function_id);
-  CHECK(instrumented_function != nullptr || timer_info.type() == TimerInfo::kIntrospection ||
-        timer_info.type() == TimerInfo::kApiEvent);
-  std::optional<Color> user_color = GetUserColor(timer_info, instrumented_function);
+  std::optional<Color> user_color = GetUserColor(timer_info);
 
   Color color = kInactiveColor;
   if (user_color.has_value()) {
@@ -331,28 +312,21 @@ std::string ThreadTrack::GetTimesliceText(const TimerInfo& timer_info) const {
   const InstrumentedFunction* func = app_->GetInstrumentedFunction(timer_info.function_id());
   if (func != nullptr) {
     std::string extra_info = GetExtraInfo(timer_info);
-    std::string name;
-    if (func->function_type() == InstrumentedFunction::kTimerStart) {
-      auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
-      name = api_event.name;
-    } else {
-      name = func->function_name();
-    }
-
+    const std::string& name = func->function_name();
     return absl::StrFormat("%s %s %s", name, extra_info.c_str(), time);
-  } else if (timer_info.type() == TimerInfo::kIntrospection) {
+  }
+  if (timer_info.type() == TimerInfo::kIntrospection) {
     auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
     return absl::StrFormat("%s %s", api_event.name, time);
-  } else if (timer_info.type() == TimerInfo::kApiEvent) {
+  }
+  if (timer_info.type() == TimerInfo::kApiEvent) {
     auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
     std::string extra_info = GetExtraInfo(timer_info);
     return absl::StrFormat("%s %s %s", api_event.name, extra_info.c_str(), time);
-  } else {
-    ERROR(
-        "Unexpected case in ThreadTrack::SetTimesliceText, function=\"%s\", "
-        "type=%d",
-        func->function_name(), static_cast<int>(timer_info.type()));
   }
+
+  ERROR("Unexpected case in ThreadTrack::SetTimesliceText: function=\"%s\", type=%d",
+        func->function_name(), static_cast<int>(timer_info.type()));
   return "";
 }
 

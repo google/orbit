@@ -179,16 +179,4 @@ std::vector<const FunctionInfo*> ModuleData::GetFunctions() const {
   return result;
 }
 
-std::vector<FunctionInfo> ModuleData::GetOrbitFunctions() const {
-  absl::MutexLock lock(&mutex_);
-  CHECK(is_loaded_);
-  std::vector<FunctionInfo> result;
-  for (const auto& [_, function] : functions_) {
-    if (function_utils::IsOrbitFunctionFromType(function->orbit_type())) {
-      result.emplace_back(*function);
-    }
-  }
-  return result;
-}
-
 }  // namespace orbit_client_data

@@ -80,13 +80,6 @@ TracerThread::TracerThread(const CaptureOptions& capture_options)
     instrumented_functions_.emplace_back(
         function_id, instrumented_function.file_path(), instrumented_function.file_offset(),
         instrumented_function.record_arguments(), instrumented_function.record_return_value());
-
-    // Manual instrumentation.
-    if (instrumented_function.function_type() == InstrumentedFunction::kTimerStart) {
-      manual_instrumentation_config_.AddTimerStartFunctionId(function_id);
-    } else if (instrumented_function.function_type() == InstrumentedFunction::kTimerStop) {
-      manual_instrumentation_config_.AddTimerStopFunctionId(function_id);
-    }
   }
 
   for (const orbit_grpc_protos::TracepointInfo& instrumented_tracepoint :
@@ -211,31 +204,13 @@ bool TracerThread::OpenUserSpaceProbes(const std::vector<int32_t>& cpus) {
     absl::flat_hash_map<int32_t, int> uprobes_fds_per_cpu;
     absl::flat_hash_map<int32_t, int> uretprobes_fds_per_cpu;
 
-    if (manual_instrumentation_config_.IsTimerStartFunction(function.function_id())) {
-      // Only open uprobes for a "timer start" manual instrumentation function.
-      if (!OpenUprobes(function, cpus, &uprobes_fds_per_cpu)) {
-        CloseFileDescriptors(uprobes_fds_per_cpu);
-        uprobes_event_open_errors = true;
-        continue;
-      }
-    } else if (manual_instrumentation_config_.IsTimerStopFunction(function.function_id())) {
-      // Only open uretprobes for a "timer stop" manual instrumentation
-      // function.
-      if (!OpenUretprobes(function, cpus, &uretprobes_fds_per_cpu)) {
-        CloseFileDescriptors(uretprobes_fds_per_cpu);
-        uprobes_event_open_errors = true;
-        continue;
-      }
-    } else {
-      // Open both uprobes and uretprobes for regular functions.
-      bool success = OpenUprobes(function, cpus, &uprobes_fds_per_cpu) &&
-                     OpenUretprobes(function, cpus, &uretprobes_fds_per_cpu);
-      if (!success) {
-        CloseFileDescriptors(uprobes_fds_per_cpu);
-        CloseFileDescriptors(uretprobes_fds_per_cpu);
-        uprobes_event_open_errors = true;
-        continue;
-      }
+    bool success = OpenUprobes(function, cpus, &uprobes_fds_per_cpu) &&
+                   OpenUretprobes(function, cpus, &uretprobes_fds_per_cpu);
+    if (!success) {
+      CloseFileDescriptors(uprobes_fds_per_cpu);
+      CloseFileDescriptors(uretprobes_fds_per_cpu);
+      uprobes_event_open_errors = true;
+      continue;
     }
 
     // Uretprobe need to be enabled before uprobes as we support temporarily

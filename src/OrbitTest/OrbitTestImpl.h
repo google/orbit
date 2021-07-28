@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef ORBIT_TEST_ORBIT_TEST_H_
+#define ORBIT_TEST_ORBIT_TEST_H_
 
 #include <stdint.h>
 
@@ -12,28 +13,30 @@
 
 #include "OrbitBase/ThreadPool.h"
 
-class OrbitTest {
+class OrbitTestImpl {
  public:
-  OrbitTest();
-  OrbitTest(uint32_t num_threads, uint32_t recurse_depth, uint32_t sleep_us);
-  ~OrbitTest();
+  OrbitTestImpl();
+  OrbitTestImpl(uint32_t num_threads, uint32_t recurse_depth, uint32_t sleep_us);
+  ~OrbitTestImpl();
 
   void Start();
 
  private:
   void Init();
   void Loop();
-  void TestFunc(uint32_t a_Depth = 0);
-  void TestFunc2(uint32_t a_Depth = 0);
+  void TestFunc(uint32_t depth = 0);
+  void TestFunc2(uint32_t depth = 0);
   void BusyWork(uint64_t microseconds);
   void ManualInstrumentationApiTest();
   void OutputOrbitApiState();
 
  private:
-  bool m_ExitRequested = false;
-  std::vector<std::shared_ptr<std::thread>> m_Threads;
+  bool exit_requested_ = false;
+  std::vector<std::shared_ptr<std::thread>> threads_;
   uint32_t num_threads_ = 10;
   uint32_t recurse_depth_ = 10;
   uint32_t sleep_us_ = 100'000;
   std::shared_ptr<orbit_base::ThreadPool> thread_pool_;
 };
+
+#endif  // ORBIT_TEST_ORBIT_TEST_IMPL_H_
