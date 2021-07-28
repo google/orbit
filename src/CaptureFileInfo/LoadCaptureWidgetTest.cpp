@@ -13,7 +13,7 @@
 
 #include "CaptureFileInfo/LoadCaptureWidget.h"
 #include "CaptureFileInfo/Manager.h"
-#include "OrbitBase/ExecutablePath.h"
+#include "Test/Path.h"
 
 namespace orbit_capture_file_info {
 
@@ -76,8 +76,7 @@ TEST(LoadCaptureWidget, SelectFromTableView) {
   QCoreApplication::setOrganizationName(kOrgName);
   QCoreApplication::setApplicationName("LoadCaptureWidget.SelectFromTableView");
 
-  const std::filesystem::path test_file_path{orbit_base::GetExecutableDir() / "testdata" /
-                                             "CaptureFileInfo" / "test_file.txt"};
+  const std::filesystem::path test_file_path{orbit_test::GetTestdataDir() / "test_file.txt"};
 
   // To make sure there is one table entry, it is set here.
   Manager manager{};

@@ -55,13 +55,6 @@ target_link_libraries(
           QtUtils
           Qt5::Test)
 
-add_custom_command(TARGET CaptureFileInfoTests POST_BUILD 
-          COMMAND ${CMAKE_COMMAND} -E remove_directory 
-            $<TARGET_FILE_DIR:CaptureFileInfoTests>/testdata/CaptureFileInfo
-          COMMAND ${CMAKE_COMMAND} -E copy_directory 
-            ${CMAKE_CURRENT_SOURCE_DIR}/testdata/
-            $<TARGET_FILE_DIR:CaptureFileInfoTests>/testdata/CaptureFileInfo)
-
 if (WIN32 AND "$ENV{QT_QPA_PLATFORM}" STREQUAL "offscreen")
   register_test(CaptureFileInfoTests PROPERTIES DISABLED TRUE)
 endif()

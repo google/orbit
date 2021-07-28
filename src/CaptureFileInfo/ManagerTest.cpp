@@ -11,8 +11,8 @@
 #include <thread>
 
 #include "CaptureFileInfo/Manager.h"
-#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/TestUtils.h"
+#include "Test/Path.h"
 
 namespace orbit_capture_file_info {
 
@@ -97,8 +97,7 @@ TEST(CaptureFileInfoManager, PurgeNonExistingFiles) {
   manager.PurgeNonExistingFiles();
   EXPECT_TRUE(manager.GetCaptureFileInfos().empty());
 
-  const std::filesystem::path existing_file =
-      orbit_base::GetExecutableDir() / "testdata" / "CaptureFileInfo" / "test_file.txt";
+  const std::filesystem::path existing_file = orbit_test::GetTestdataDir() / "test_file.txt";
   manager.AddOrTouchCaptureFile(existing_file);
   EXPECT_FALSE(manager.GetCaptureFileInfos().empty());
 
@@ -123,8 +122,7 @@ TEST(CaptureFileInfoManager, Persistency) {
     EXPECT_TRUE(manager.GetCaptureFileInfos().empty());
   }
 
-  const std::filesystem::path existing_file =
-      orbit_base::GetExecutableDir() / "testdata" / "CaptureFileInfo" / "test_file.txt";
+  const std::filesystem::path existing_file = orbit_test::GetTestdataDir() / "test_file.txt";
   {
     Manager manager;
     manager.AddOrTouchCaptureFile(existing_file);
@@ -160,8 +158,7 @@ TEST(CaptureFileInfoManager, FillFromDirectory) {
   }
 
   {  // Success
-    std::filesystem::path test_data_dir =
-        orbit_base::GetExecutableDir() / "testdata" / "CaptureFileInfo";
+    std::filesystem::path test_data_dir = orbit_test::GetTestdataDir();
     ErrorMessageOr<void> result = manager.FillFromDirectory(test_data_dir);
     ASSERT_FALSE(result.has_error());
 
