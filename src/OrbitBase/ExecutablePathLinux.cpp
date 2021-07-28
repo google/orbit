@@ -10,7 +10,6 @@
 #include <filesystem>
 #include <string>
 
-#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/SafeStrerror.h"
