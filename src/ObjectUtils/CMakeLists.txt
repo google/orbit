@@ -58,10 +58,6 @@ target_link_libraries(
           CONAN_PKG::llvm-core
           CONAN_PKG::abseil)
 
-add_custom_command(TARGET ObjectUtilsTests POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/testdata
-  $<TARGET_FILE_DIR:ObjectUtilsTests>/testdata)
-
 register_test(ObjectUtilsTests)
 
 

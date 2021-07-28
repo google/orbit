@@ -10,8 +10,8 @@
 #include <vector>
 
 #include "ObjectUtils/CoffFile.h"
-#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/TestUtils.h"
+#include "Test/Path.h"
 #include "absl/strings/ascii.h"
 #include "symbol.pb.h"
 
@@ -21,7 +21,7 @@ using orbit_object_utils::CoffFile;
 using orbit_object_utils::CreateCoffFile;
 
 TEST(CoffFile, LoadDebugSymbols) {
-  std::filesystem::path file_path = orbit_base::GetExecutableDir() / "testdata" / "libtest.dll";
+  std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libtest.dll";
 
   auto coff_file_result = CreateCoffFile(file_path);
   ASSERT_THAT(coff_file_result, HasNoError());
@@ -53,7 +53,7 @@ TEST(CoffFile, LoadDebugSymbols) {
 }
 
 TEST(CoffFile, HasDebugSymbols) {
-  std::filesystem::path file_path = orbit_base::GetExecutableDir() / "testdata" / "libtest.dll";
+  std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libtest.dll";
 
   auto coff_file_result = CreateCoffFile(file_path);
   ASSERT_THAT(coff_file_result, HasNoError());
@@ -62,7 +62,7 @@ TEST(CoffFile, HasDebugSymbols) {
 }
 
 TEST(CoffFile, GetFilePath) {
-  std::filesystem::path file_path = orbit_base::GetExecutableDir() / "testdata" / "libtest.dll";
+  std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libtest.dll";
 
   auto coff_file_result = CreateCoffFile(file_path);
   ASSERT_THAT(coff_file_result, HasNoError());
@@ -71,8 +71,7 @@ TEST(CoffFile, GetFilePath) {
 }
 
 TEST(CoffFile, FileDoesNotExist) {
-  const std::filesystem::path file_path =
-      orbit_base::GetExecutableDir() / "testdata" / "does_not_exist";
+  const std::filesystem::path file_path = orbit_test::GetTestdataDir() / "does_not_exist";
 
   auto coff_file_or_error = CreateCoffFile(file_path);
   ASSERT_TRUE(coff_file_or_error.has_error());

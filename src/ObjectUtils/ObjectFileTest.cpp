@@ -6,8 +6,8 @@
 #include <gtest/gtest.h>
 
 #include "ObjectUtils/ObjectFile.h"
-#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/TestUtils.h"
+#include "Test/Path.h"
 
 using ::orbit_base::HasNoError;
 using ::orbit_object_utils::CreateObjectFile;
@@ -17,7 +17,7 @@ using ::orbit_object_utils::CreateObjectFile;
 
 TEST(ObjectFile, CorrectObjectTypeForElf) {
   std::filesystem::path file_path =
-      orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf_with_debug_info";
+      orbit_test::GetTestdataDir() / "hello_world_elf_with_debug_info";
 
   auto object_file = CreateObjectFile(file_path);
   ASSERT_THAT(object_file, HasNoError());
@@ -27,7 +27,7 @@ TEST(ObjectFile, CorrectObjectTypeForElf) {
 }
 
 TEST(ObjectFile, CorrectObjectTypeForCoff) {
-  std::filesystem::path file_path = orbit_base::GetExecutableDir() / "testdata" / "libtest.dll";
+  std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libtest.dll";
 
   auto object_file = CreateObjectFile(file_path);
   ASSERT_THAT(object_file, HasNoError());
@@ -37,7 +37,7 @@ TEST(ObjectFile, CorrectObjectTypeForCoff) {
 }
 
 TEST(ObjectFile, LoadsCoffFileWithSymbols) {
-  std::filesystem::path file_path = orbit_base::GetExecutableDir() / "testdata" / "libtest.dll";
+  std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libtest.dll";
 
   auto object_file = CreateObjectFile(file_path);
   ASSERT_THAT(object_file, HasNoError());
@@ -49,7 +49,7 @@ TEST(ObjectFile, LoadsCoffFileWithSymbols) {
 
 TEST(ObjectFile, LoadsElfFileWithSymbols) {
   std::filesystem::path file_path =
-      orbit_base::GetExecutableDir() / "testdata" / "hello_world_elf_with_debug_info";
+      orbit_test::GetTestdataDir() / "hello_world_elf_with_debug_info";
 
   auto object_file = CreateObjectFile(file_path);
   ASSERT_THAT(object_file, HasNoError());
@@ -60,7 +60,7 @@ TEST(ObjectFile, LoadsElfFileWithSymbols) {
 }
 
 TEST(ObjectFile, LoadsElfFileWithoutSymbols) {
-  std::filesystem::path file_path = orbit_base::GetExecutableDir() / "testdata" / "no_symbols_elf";
+  std::filesystem::path file_path = orbit_test::GetTestdataDir() / "no_symbols_elf";
 
   auto object_file = CreateObjectFile(file_path);
   ASSERT_THAT(object_file, HasNoError());
@@ -69,7 +69,7 @@ TEST(ObjectFile, LoadsElfFileWithoutSymbols) {
 }
 
 TEST(ObjectFile, UsesFilenameAsName) {
-  std::filesystem::path file_path = orbit_base::GetExecutableDir() / "testdata" / "libtest.dll";
+  std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libtest.dll";
 
   auto object_file = CreateObjectFile(file_path);
   ASSERT_THAT(object_file, HasNoError());
@@ -78,8 +78,7 @@ TEST(ObjectFile, UsesFilenameAsName) {
 }
 
 TEST(ObjectFile, UsesSonameAsNameForElfIfSonameIsPresent) {
-  const std::filesystem::path file_path =
-      orbit_base::GetExecutableDir() / "testdata" / "libtest-1.0.so";
+  const std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libtest-1.0.so";
 
   auto object_file = CreateObjectFile(file_path);
   ASSERT_THAT(object_file, HasNoError());
