@@ -14,9 +14,12 @@
   "@BUILD_OS_NAME@ @BUILD_OS_RELEASE@ @BUILD_OS_VERSION@ " \
   "(@BUILD_OS_PLATFORM@)"
 #define OrbitCommitHashStr "@COMMIT_HASH@"
+#define OrbitMajorVersion @MAJOR_VERSION@
+#define OrbitMinorVersion @MINOR_VERSION@
 
 namespace orbit_version {
 
+Version GetVersionNumber() { return {OrbitMajorVersion, OrbitMinorVersion}; }
 std::string GetVersion() { return OrbitVersionStr; }
 std::string GetCompiler() { return OrbitCompilerStr; }
 std::string GetBuildTimestamp() { return OrbitBuildTimestampStr; }

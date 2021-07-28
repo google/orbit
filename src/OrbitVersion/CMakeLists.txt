@@ -25,3 +25,15 @@ GenerateVersionFile("${CMAKE_CURRENT_BINARY_DIR}/OrbitVersion.cpp"
                     "${CMAKE_CURRENT_SOURCE_DIR}/OrbitVersion.cpp.in" OrbitVersion)
 target_sources(OrbitVersion PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/OrbitVersion.cpp")
 
+add_executable(OrbitVersionTests)
+
+target_compile_options(OrbitVersionTests PRIVATE ${STRICT_COMPILE_FLAGS})
+
+target_sources(OrbitVersionTests PRIVATE OrbitVersionTest.cpp)
+
+target_link_libraries(OrbitVersionTests PRIVATE
+        OrbitVersion
+        GTest::GTest
+        GTest::Main)
+
+register_test(OrbitVersionTests)
