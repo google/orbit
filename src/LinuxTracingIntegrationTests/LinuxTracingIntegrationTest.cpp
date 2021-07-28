@@ -518,6 +518,28 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kApiEvent:
         UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kApiScopeStart:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kApiScopeStartAsync:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kApiScopeStop:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kApiScopeStopAsync:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kApiStringEvent:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackDouble:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackFloat:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackInt:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackInt64:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackUint:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackUint64:
+        UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kWarningEvent:
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kClockResolutionEvent:

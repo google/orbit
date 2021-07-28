@@ -176,6 +176,28 @@ void CaptureEventProcessorForListener::ProcessEvent(const ClientCaptureEvent& ev
     case ClientCaptureEvent::kApiEvent:
       api_event_processor_.ProcessApiEvent(event.api_event());
       break;
+    case ClientCaptureEvent::kApiScopeStart:
+      UNREACHABLE();
+    case ClientCaptureEvent::kApiScopeStartAsync:
+      UNREACHABLE();
+    case ClientCaptureEvent::kApiScopeStop:
+      UNREACHABLE();
+    case ClientCaptureEvent::kApiScopeStopAsync:
+      UNREACHABLE();
+    case ClientCaptureEvent::kApiStringEvent:
+      UNREACHABLE();
+    case ClientCaptureEvent::kApiTrackDouble:
+      UNREACHABLE();
+    case ClientCaptureEvent::kApiTrackFloat:
+      UNREACHABLE();
+    case ClientCaptureEvent::kApiTrackInt:
+      UNREACHABLE();
+    case ClientCaptureEvent::kApiTrackInt64:
+      UNREACHABLE();
+    case ClientCaptureEvent::kApiTrackUint:
+      UNREACHABLE();
+    case ClientCaptureEvent::kApiTrackUint64:
+      UNREACHABLE();
     case ClientCaptureEvent::kWarningEvent:
       ProcessWarningEvent(event.warning_event());
       break;

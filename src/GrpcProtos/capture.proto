@@ -139,6 +139,150 @@ message ApiEvent {
   fixed64 r5 = 9;
 }
 
+message ApiScopeStart {
+  int32 pid = 1;
+  int32 tid = 2;
+  uint64 timestamp_ns = 3;
+
+  fixed64 encoded_name_01 = 4;
+  fixed64 encoded_name_02 = 5;
+  fixed64 encoded_name_03 = 6;
+  fixed64 encoded_name_04 = 7;
+  fixed64 encoded_name_05 = 8;
+  fixed64 encoded_name_06 = 9;
+  fixed64 encoded_name_07 = 10;
+  fixed64 encoded_name_08 = 11;
+  fixed64 encoded_name_09 = 12;
+  fixed64 encoded_name_10 = 13;
+  fixed64 encoded_name_11 = 14;
+  fixed64 encoded_name_12 = 15;
+  fixed64 encoded_name_13 = 16;
+  fixed64 encoded_name_14 = 17;
+  fixed64 encoded_name_15 = 18;
+  fixed64 encoded_name_16 = 19;
+
+  bytes additional_encoded_name = 20;
+
+  Color color = 21;
+  uint64 group_id = 22;
+  uint64 address_in_function = 23;
+}
+
+message ApiScopeStop {
+  int32 pid = 1;
+  int32 tid = 2;
+  uint64 timestamp_ns = 3;
+}
+
+message ApiScopeStartAsync {
+  int32 pid = 1;
+  int32 tid = 2;
+  uint64 timestamp_ns = 3;
+
+  fixed64 encoded_name_01 = 4;
+  fixed64 encoded_name_02 = 5;
+  fixed64 encoded_name_03 = 6;
+  fixed64 encoded_name_04 = 7;
+  fixed64 encoded_name_05 = 8;
+  fixed64 encoded_name_06 = 9;
+  fixed64 encoded_name_07 = 10;
+  fixed64 encoded_name_08 = 11;
+  fixed64 encoded_name_09 = 12;
+  fixed64 encoded_name_10 = 13;
+  fixed64 encoded_name_11 = 14;
+  fixed64 encoded_name_12 = 15;
+  fixed64 encoded_name_13 = 16;
+  fixed64 encoded_name_14 = 17;
+  fixed64 encoded_name_15 = 18;
+  fixed64 encoded_name_16 = 19;
+
+  bytes additional_encoded_name = 20;
+
+  Color color = 21;
+  uint64 id = 22;
+  uint64 address_in_function = 23;
+}
+
+message ApiScopeStopAsync {
+  int32 pid = 1;
+  int32 tid = 2;
+  uint64 timestamp_ns = 3;
+}
+
+message ApiStringEvent {
+  int32 pid = 1;
+  int32 tid = 2;
+  uint64 timestamp_ns = 3;
+
+  fixed64 encoded_name_01 = 4;
+  fixed64 encoded_name_02 = 5;
+  fixed64 encoded_name_03 = 6;
+  fixed64 encoded_name_04 = 7;
+  fixed64 encoded_name_05 = 8;
+  fixed64 encoded_name_06 = 9;
+  fixed64 encoded_name_07 = 10;
+  fixed64 encoded_name_08 = 11;
+  fixed64 encoded_name_09 = 12;
+  fixed64 encoded_name_10 = 13;
+  fixed64 encoded_name_11 = 14;
+  fixed64 encoded_name_12 = 15;
+  fixed64 encoded_name_13 = 16;
+  fixed64 encoded_name_14 = 17;
+  fixed64 encoded_name_15 = 18;
+  fixed64 encoded_name_16 = 19;
+
+  bytes additional_encoded_name = 20;
+  uint64 id = 21;
+}
+
+message ApiTrackInt {
+  int32 pid = 1;
+  int32 tid = 2;
+  uint64 timestamp_ns = 3;
+
+  int32 data = 4;
+}
+
+message ApiTrackInt64 {
+  int32 pid = 1;
+  int32 tid = 2;
+  uint64 timestamp_ns = 3;
+
+  int64 data = 4;
+}
+
+message ApiTrackUint {
+  int32 pid = 1;
+  int32 tid = 2;
+  uint64 timestamp_ns = 3;
+
+  uint32 data = 4;
+}
+
+message ApiTrackUint64 {
+  int32 pid = 1;
+  int32 tid = 2;
+  uint64 timestamp_ns = 3;
+
+  uint64 data = 4;
+}
+
+message ApiTrackFloat {
+  int32 pid = 1;
+  int32 tid = 2;
+  uint64 timestamp_ns = 3;
+
+  float data = 4;
+}
+
+message ApiTrackDouble {
+  int32 pid = 1;
+  int32 tid = 2;
+  uint64 timestamp_ns = 3;
+
+  double data = 4;
+}
+
 message Callstack {
   repeated uint64 pcs = 1;
 
@@ -467,8 +611,8 @@ message ClientCaptureEvent {
     // use them for high frequency events. For the rest please assign
     // numbers starting with 16.
     //
-    // Next high-frequency ID: 10
-    // Next lower-frequency ID: 38
+    // Next high-frequency ID: -- out of numbers
+    // Next lower-frequency ID: 43
     // Please keep these alphabetically ordered.
 
     // Even though AddressInfo is a high-frequency event
@@ -476,6 +620,17 @@ message ClientCaptureEvent {
     // frame-pointer based unwinding.
     AddressInfo address_info = 16;
     ApiEvent api_event = 9;
+    ApiScopeStart api_scope_start = 10;
+    ApiScopeStartAsync api_scope_start_async = 11;
+    ApiScopeStart api_scope_stop = 12;
+    ApiScopeStartAsync api_scope_stop_async = 13;
+    ApiStringEvent api_string_event = 14;
+    ApiTrackDouble api_track_double = 15;
+    ApiTrackFloat api_track_float = 38;
+    ApiTrackInt api_track_int = 39;
+    ApiTrackInt64 api_track_int64 = 40;
+    ApiTrackUint api_track_uint = 41;
+    ApiTrackUint64 api_track_uint64 = 42;
     CallstackSample callstack_sample = 1;
     CaptureFinished capture_finished = 27;
     CaptureStarted capture_started = 24;
@@ -511,11 +666,22 @@ message ProducerCaptureEvent {
     // use them for high frequency events. For the rest please assign
     // numbers starting with 16.
     //
-    // Next high-frequency ID: 11
-    // Next lower-frequency ID: 36
+    // Next high-frequency ID: -- out of numbers
+    // Next lower-frequency ID: 44
     //
     // Please keep these alphabetically ordered.
     ApiEvent api_event = 10;
+    ApiScopeStart api_scope_start = 11;
+    ApiScopeStartAsync api_scope_start_async = 12;
+    ApiScopeStart api_scope_stop = 13;
+    ApiScopeStartAsync api_scope_stop_async = 14;
+    ApiStringEvent api_string_event = 15;
+    ApiTrackDouble api_track_double = 38;
+    ApiTrackFloat api_track_float = 39;
+    ApiTrackInt api_track_int = 40;
+    ApiTrackInt64 api_track_int64 = 41;
+    ApiTrackUint api_track_uint = 42;
+    ApiTrackUint64 api_track_uint64 = 43;
     CallstackSample callstack_sample = 1;
     CaptureStarted capture_started = 23;
     ClockResolutionEvent clock_resolution_event = 32;
