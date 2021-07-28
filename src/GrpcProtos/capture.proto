@@ -41,7 +41,7 @@ message ApiFunction {
 // NextId: 18
 message CaptureOptions {
   bool trace_context_switches = 1;
-  int32 pid = 2;
+  uint32 pid = 2;
   double samples_per_second = 3;
   // Expected to be "uint16".
   uint32 stack_dump_size = 16;
@@ -88,8 +88,8 @@ message CaptureOptions {
 
 message SchedulingSlice {
   reserved 4;
-  int32 pid = 1;
-  int32 tid = 2;
+  uint32 pid = 1;
+  uint32 tid = 2;
   int32 core = 3;
   uint64 duration_ns = 6;
   uint64 out_timestamp_ns = 5;
@@ -97,8 +97,8 @@ message SchedulingSlice {
 
 message FunctionCall {
   reserved 4;
-  int32 pid = 1;
-  int32 tid = 2;
+  uint32 pid = 1;
+  uint32 tid = 2;
   uint64 function_id = 3;
   uint64 duration_ns = 9;
   uint64 end_timestamp_ns = 5;
@@ -108,8 +108,8 @@ message FunctionCall {
 }
 
 message ApiEvent {
-  int32 pid = 1;
-  int32 tid = 2;
+  uint32 pid = 1;
+  uint32 tid = 2;
   uint64 timestamp_ns = 3;
 
   // The fields below are used to encode orbit_api::EncodedEvent events. This is
@@ -368,15 +368,15 @@ message InternedCallstack {
 }
 
 message CallstackSample {
-  int32 pid = 1;
-  int32 tid = 2;
+  uint32 pid = 1;
+  uint32 tid = 2;
   uint64 callstack_id = 3;
   uint64 timestamp_ns = 4;
 }
 
 message FullCallstackSample {
-  int32 pid = 1;
-  int32 tid = 2;
+  uint32 pid = 1;
+  uint32 tid = 2;
   Callstack callstack = 3;
   uint64 timestamp_ns = 4;
 }
@@ -393,24 +393,24 @@ message InternedTracepointInfo {
 }
 
 message TracepointEvent {
-  int32 pid = 1;
-  int32 tid = 2;
+  uint32 pid = 1;
+  uint32 tid = 2;
   uint64 timestamp_ns = 3;
   int32 cpu = 4;
   uint64 tracepoint_info_key = 5;
 }
 
 message FullTracepointEvent {
-  int32 pid = 1;
-  int32 tid = 2;
+  uint32 pid = 1;
+  uint32 tid = 2;
   uint64 timestamp_ns = 3;
   int32 cpu = 4;
   TracepointInfo tracepoint_info = 5;
 }
 
 message FullGpuJob {
-  int32 pid = 1;
-  int32 tid = 2;
+  uint32 pid = 1;
+  uint32 tid = 2;
   uint32 context = 3;
   uint32 seqno = 4;
   int32 depth = 5;
@@ -423,8 +423,8 @@ message FullGpuJob {
 }
 
 message GpuJob {
-  int32 pid = 1;
-  int32 tid = 2;
+  uint32 pid = 1;
+  uint32 tid = 2;
   uint32 context = 3;
   uint32 seqno = 4;
   int32 depth = 5;
@@ -444,8 +444,8 @@ message GpuQueueSubmission {
 }
 
 message GpuQueueSubmissionMetaInfo {
-  int32 tid = 1;
-  int32 pid = 4;
+  uint32 tid = 1;
+  uint32 pid = 4;
   uint64 pre_submission_cpu_timestamp = 2;
   uint64 post_submission_cpu_timestamp = 3;
 }
@@ -484,8 +484,8 @@ message Color {
 }
 
 message ThreadName {
-  int32 pid = 1;
-  int32 tid = 2;
+  uint32 pid = 1;
+  uint32 tid = 2;
   // This is a string, we use bytes to avoid UTF-8 validation.
   bytes name = 3;
   uint64 timestamp_ns = 4;
@@ -493,8 +493,8 @@ message ThreadName {
 
 message ThreadStateSlice {
   reserved 4;
-  int32 pid = 1;  // pid is currently not set as we don't have the information.
-  int32 tid = 2;
+  uint32 pid = 1;  // pid is currently not set as we don't have the information.
+  uint32 tid = 2;
 
   // These are the ones listed in
   // /sys/kernel/debug/tracing/events/sched/sched_switch/format and in
@@ -538,7 +538,7 @@ message FullAddressInfo {
 }
 
 message ModuleUpdateEvent {
-  int32 pid = 1;
+  uint32 pid = 1;
   uint64 timestamp_ns = 2;
   ModuleInfo module = 3;
 }
@@ -560,7 +560,7 @@ message SystemMemoryUsage {
 
 message ProcessMemoryUsage {
   reserved 3;
-  int32 pid = 1;
+  uint32 pid = 1;
   uint64 timestamp_ns = 2;
   // These fields are retrieved from /proc/<pid>/stat. See
   // https://man7.org/linux/man-pages/man5/proc.5.html for the documentation.
@@ -602,7 +602,7 @@ message MemoryUsageEvent {
 }
 
 message ModulesSnapshot {
-  int32 pid = 1;
+  uint32 pid = 1;
   uint64 timestamp_ns = 2;
   repeated ModuleInfo modules = 3;
 }
@@ -625,7 +625,7 @@ message CaptureFinished {
 
 message CaptureStarted {
   // NextID: 9
-  int32 process_id = 1;
+  uint32 process_id = 1;
   string executable_path = 2;
   string executable_build_id = 3;
   uint64 capture_start_timestamp_ns = 4;

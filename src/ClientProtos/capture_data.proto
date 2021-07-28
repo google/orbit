@@ -19,7 +19,7 @@ message FunctionStats {
 }
 
 message ProcessInfo {
-  int32 pid = 1;
+  uint32 pid = 1;
   string name = 2;
   double cpu_usage = 3;
   string full_path = 4;
@@ -50,7 +50,7 @@ message FunctionInfo {
 message CallstackEvent {
   uint64 time = 1;
   uint64 callstack_id = 2;
-  int32 thread_id = 3;
+  uint32 thread_id = 3;
 }
 
 message CallstackInfo {
@@ -74,7 +74,7 @@ message CallstackInfo {
 
 message ThreadStateSliceInfo {
   // pid is absent as we don't yet get that information from the service.
-  int32 tid = 1;
+  uint32 tid = 1;
   enum ThreadState {
     kRunning = 0;
     kRunnable = 1;
@@ -99,8 +99,8 @@ message TracepointInfo {
 }
 
 message TracepointEventInfo {
-  int32 pid = 1;
-  int32 tid = 2;
+  uint32 pid = 1;
+  uint32 tid = 2;
   int64 time = 3;
   int32 cpu = 4;
   uint64 tracepoint_info_key = 5;
@@ -139,8 +139,8 @@ message TimerInfo {
   // NextID: 18
   uint64 start = 1;
   uint64 end = 2;
-  int32 process_id = 3;
-  int32 thread_id = 4;
+  uint32 process_id = 3;
+  uint32 thread_id = 4;
   uint32 depth = 5;
 
   enum Type {
