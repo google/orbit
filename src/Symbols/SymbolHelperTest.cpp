@@ -16,13 +16,14 @@
 #include "OrbitBase/TestUtils.h"
 #include "OrbitPaths/Paths.h"
 #include "Symbols/SymbolHelper.h"
+#include "Test/Path.h"
 #include "symbol.pb.h"
 
 using orbit_grpc_protos::ModuleSymbols;
 using orbit_symbols::SymbolHelper;
 namespace fs = std::filesystem;
 
-static const std::filesystem::path testdata_directory = orbit_base::GetExecutableDir() / "testdata";
+static const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
 
 TEST(ReadSymbolsFile, Empty) {
   auto temp_file_or_error = orbit_base::TemporaryFile::Create();
