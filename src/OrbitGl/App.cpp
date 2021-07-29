@@ -11,6 +11,7 @@
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
+#include <absl/strings/substitute.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
 #include <imgui.h>
@@ -72,6 +73,7 @@
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/UniqueResource.h"
 #include "OrbitPaths/Paths.h"
+#include "OrbitVersion/OrbitVersion.h"
 #include "SamplingReport.h"
 #include "Symbols/SymbolHelper.h"
 #include "TimeGraph.h"
@@ -312,6 +314,18 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
         main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kInfo,
                                          absl::ZeroDuration(), "Capture started.");
 
+        orbit_version::Version capture_version{capture_started.orbit_version_major(),
+                                               capture_started.orbit_version_minor()};
+        orbit_version::Version current_version = orbit_version::GetVersionNumber();
+        if (capture_version > current_version) {
+          std::string warning_message = absl::Substitute(
+              "The capture was taken with Orbit version $0.$1, which is higher than the "
+              "current version. Please open the capture using Orbit v$0.$1 or above.",
+              capture_version.major_version, capture_version.minor_version);
+          main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
+                                           absl::ZeroDuration(), warning_message);
+          SendWarningToUi("Capture", warning_message);
+        }
         absl::MutexLock lock(&mutex);
         initialization_complete = true;
       });
