@@ -17,9 +17,29 @@ target_link_libraries(ConfigWidgets PUBLIC OrbitBase
                                            Qt5::Widgets)
 
 target_sources(
-  ConfigWidgets PUBLIC include/ConfigWidgets/SourcePathsMappingDialog.h)
+  ConfigWidgets PUBLIC include/ConfigWidgets/SourcePathsMappingDialog.h
+                       include/ConfigWidgets/SymbolsDialog.h)
 target_sources(ConfigWidgets PRIVATE SourcePathsMappingDialog.cpp
-                                     SourcePathsMappingDialog.ui)
+                                     SourcePathsMappingDialog.ui
+                                     SymbolsDialog.cpp
+                                     SymbolsDialog.ui)
 
 set_target_properties(ConfigWidgets PROPERTIES AUTOMOC ON)
 set_target_properties(ConfigWidgets PROPERTIES AUTOUIC ON)
+
+add_executable(ConfigWidgetsTest)
+
+target_compile_options(ConfigWidgetsTest PRIVATE ${STRICT_COMPILE_FLAGS})
+
+target_sources(ConfigWidgetsTest PRIVATE SymbolsDialogTest.cpp)
+
+target_link_libraries(ConfigWidgetsTest PRIVATE ConfigWidgets
+                                                GTest::QtGuiMain)
+
+if (WIN32 AND "$ENV{QT_QPA_PLATFORM}" STREQUAL "offscreen")
+  register_test(ConfigWidgetsTest PROPERTIES DISABLED TRUE)
+endif()
+
+if (NOT WIN32)
+  register_test(ConfigWidgetsTest PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
+endif()
