@@ -155,7 +155,7 @@ message ApiScopeStart {
   fixed64 encoded_name_6 = 9;
   fixed64 encoded_name_7 = 10;
   fixed64 encoded_name_8 = 11;
-  bytes encoded_name_additional = 12;
+  repeated fixed64 encoded_name_additional = 12;
 
   uint32 color_rgba = 13;
   uint64 group_id = 14;
@@ -189,7 +189,7 @@ message ApiScopeStartAsync {
   fixed64 encoded_name_6 = 9;
   fixed64 encoded_name_7 = 10;
   fixed64 encoded_name_8 = 11;
-  bytes encoded_name_additional = 12;
+  repeated fixed64 encoded_name_additional = 12;
 
   uint32 color_rgba = 13;
   uint64 id = 14;
@@ -224,7 +224,7 @@ message ApiStringEvent {
   fixed64 encoded_name_6 = 9;
   fixed64 encoded_name_7 = 10;
   fixed64 encoded_name_8 = 11;
-  bytes encoded_name_additional = 12;
+  repeated fixed64 encoded_name_additional = 12;
 
   uint64 id = 13;
 }

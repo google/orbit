@@ -4,6 +4,7 @@
 
 #include <GrpcProtos/Constants.h>
 #include <gmock/gmock.h>
+#include <google/protobuf/util/message_differencer.h>
 #include <gtest/gtest.h>
 #include <stdint.h>
 
@@ -66,6 +67,7 @@ using orbit_grpc_protos::ThreadStateSlice;
 using orbit_grpc_protos::TracepointEvent;
 using orbit_grpc_protos::WarningEvent;
 
+using google::protobuf::util::MessageDifferencer;
 using ::testing::ElementsAre;
 using ::testing::SaveArg;
 
@@ -127,7 +129,7 @@ constexpr uint64_t kEncodedName5 = 55;
 constexpr uint64_t kEncodedName6 = 66;
 constexpr uint64_t kEncodedName7 = 77;
 constexpr uint64_t kEncodedName8 = 88;
-constexpr uint8_t kEncodedNameAdditional1 = 99;
+constexpr uint64_t kEncodedNameAdditional1 = 99;
 
 constexpr int32_t kInt = 42;
 constexpr int64_t kInt64 = 64;
@@ -1694,7 +1696,9 @@ TEST(ProducerEventProcessor, ApiScopeStart) {
   api_scope_start->set_encoded_name_6(kEncodedName6);
   api_scope_start->set_encoded_name_7(kEncodedName7);
   api_scope_start->set_encoded_name_8(kEncodedName8);
-  api_scope_start->mutable_encoded_name_additional()->push_back(kEncodedNameAdditional1);
+  api_scope_start->add_encoded_name_additional(kEncodedNameAdditional1);
+
+  ApiScopeStart api_scope_start_copy = *api_scope_start;
 
   MockCaptureEventBuffer buffer;
   auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
@@ -1704,21 +1708,7 @@ TEST(ProducerEventProcessor, ApiScopeStart) {
   producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiScopeStart);
   const ApiScopeStart& actual_event = client_capture_event.api_scope_start();
-  EXPECT_EQ(actual_event.pid(), kPid1);
-  EXPECT_EQ(actual_event.tid(), kTid1);
-  EXPECT_EQ(actual_event.timestamp_ns(), kTimestampNs1);
-  EXPECT_EQ(actual_event.color_rgba(), kColor1);
-  EXPECT_EQ(actual_event.group_id(), kGroupId1);
-  EXPECT_EQ(actual_event.address_in_function(), kFunctionId1);
-  EXPECT_EQ(actual_event.encoded_name_1(), kEncodedName1);
-  EXPECT_EQ(actual_event.encoded_name_2(), kEncodedName2);
-  EXPECT_EQ(actual_event.encoded_name_3(), kEncodedName3);
-  EXPECT_EQ(actual_event.encoded_name_4(), kEncodedName4);
-  EXPECT_EQ(actual_event.encoded_name_5(), kEncodedName5);
-  EXPECT_EQ(actual_event.encoded_name_6(), kEncodedName6);
-  EXPECT_EQ(actual_event.encoded_name_7(), kEncodedName7);
-  EXPECT_EQ(actual_event.encoded_name_8(), kEncodedName8);
-  EXPECT_THAT(actual_event.encoded_name_additional(), ElementsAre(kEncodedNameAdditional1));
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_scope_start_copy, actual_event));
 }
 
 TEST(ProducerEventProcessor, ApiScopeStop) {
@@ -1727,6 +1717,7 @@ TEST(ProducerEventProcessor, ApiScopeStop) {
   api_scope_stop->set_pid(kPid1);
   api_scope_stop->set_tid(kTid1);
   api_scope_stop->set_timestamp_ns(kTimestampNs1);
+  ApiScopeStop api_scope_stop_copy = *api_scope_stop;
 
   MockCaptureEventBuffer buffer;
   auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
@@ -1736,9 +1727,7 @@ TEST(ProducerEventProcessor, ApiScopeStop) {
   producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiScopeStop);
   const ApiScopeStop& actual_event = client_capture_event.api_scope_stop();
-  EXPECT_EQ(actual_event.pid(), kPid1);
-  EXPECT_EQ(actual_event.tid(), kTid1);
-  EXPECT_EQ(actual_event.timestamp_ns(), kTimestampNs1);
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_scope_stop_copy, actual_event));
 }
 
 TEST(ProducerEventProcessor, ApiScopeStartAsync) {
@@ -1759,7 +1748,8 @@ TEST(ProducerEventProcessor, ApiScopeStartAsync) {
   api_scope_start_async->set_encoded_name_6(kEncodedName6);
   api_scope_start_async->set_encoded_name_7(kEncodedName7);
   api_scope_start_async->set_encoded_name_8(kEncodedName8);
-  api_scope_start_async->mutable_encoded_name_additional()->push_back(kEncodedNameAdditional1);
+  api_scope_start_async->add_encoded_name_additional(kEncodedNameAdditional1);
+  ApiScopeStartAsync api_scope_start_async_copy = *api_scope_start_async;
 
   MockCaptureEventBuffer buffer;
   auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
@@ -1769,21 +1759,7 @@ TEST(ProducerEventProcessor, ApiScopeStartAsync) {
   producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiScopeStartAsync);
   const ApiScopeStartAsync& actual_event = client_capture_event.api_scope_start_async();
-  EXPECT_EQ(actual_event.pid(), kPid1);
-  EXPECT_EQ(actual_event.tid(), kTid1);
-  EXPECT_EQ(actual_event.timestamp_ns(), kTimestampNs1);
-  EXPECT_EQ(actual_event.color_rgba(), kColor1);
-  EXPECT_EQ(actual_event.id(), kGroupId1);
-  EXPECT_EQ(actual_event.address_in_function(), kFunctionId1);
-  EXPECT_EQ(actual_event.encoded_name_1(), kEncodedName1);
-  EXPECT_EQ(actual_event.encoded_name_2(), kEncodedName2);
-  EXPECT_EQ(actual_event.encoded_name_3(), kEncodedName3);
-  EXPECT_EQ(actual_event.encoded_name_4(), kEncodedName4);
-  EXPECT_EQ(actual_event.encoded_name_5(), kEncodedName5);
-  EXPECT_EQ(actual_event.encoded_name_6(), kEncodedName6);
-  EXPECT_EQ(actual_event.encoded_name_7(), kEncodedName7);
-  EXPECT_EQ(actual_event.encoded_name_8(), kEncodedName8);
-  EXPECT_THAT(actual_event.encoded_name_additional(), ElementsAre(kEncodedNameAdditional1));
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_scope_start_async_copy, actual_event));
 }
 
 TEST(ProducerEventProcessor, ApiScopeStopAsync) {
@@ -1793,6 +1769,7 @@ TEST(ProducerEventProcessor, ApiScopeStopAsync) {
   api_scope_stop_async->set_tid(kTid1);
   api_scope_stop_async->set_timestamp_ns(kTimestampNs1);
   api_scope_stop_async->set_id(kGroupId1);
+  ApiScopeStopAsync api_scope_stop_async_copy = *api_scope_stop_async;
 
   MockCaptureEventBuffer buffer;
   auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
@@ -1802,10 +1779,7 @@ TEST(ProducerEventProcessor, ApiScopeStopAsync) {
   producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiScopeStopAsync);
   const ApiScopeStopAsync& actual_event = client_capture_event.api_scope_stop_async();
-  EXPECT_EQ(actual_event.pid(), kPid1);
-  EXPECT_EQ(actual_event.tid(), kTid1);
-  EXPECT_EQ(actual_event.timestamp_ns(), kTimestampNs1);
-  EXPECT_EQ(actual_event.id(), kGroupId1);
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_scope_stop_async_copy, actual_event));
 }
 
 TEST(ProducerEventProcessor, ApiStringEvent) {
@@ -1823,7 +1797,8 @@ TEST(ProducerEventProcessor, ApiStringEvent) {
   api_string_event->set_encoded_name_6(kEncodedName6);
   api_string_event->set_encoded_name_7(kEncodedName7);
   api_string_event->set_encoded_name_8(kEncodedName8);
-  api_string_event->mutable_encoded_name_additional()->push_back(kEncodedNameAdditional1);
+  api_string_event->add_encoded_name_additional(kEncodedNameAdditional1);
+  ApiStringEvent api_string_event_copy = *api_string_event;
 
   MockCaptureEventBuffer buffer;
   auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
@@ -1833,19 +1808,7 @@ TEST(ProducerEventProcessor, ApiStringEvent) {
   producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiStringEvent);
   const ApiStringEvent& actual_event = client_capture_event.api_string_event();
-  EXPECT_EQ(actual_event.pid(), kPid1);
-  EXPECT_EQ(actual_event.tid(), kTid1);
-  EXPECT_EQ(actual_event.timestamp_ns(), kTimestampNs1);
-  EXPECT_EQ(actual_event.id(), kGroupId1);
-  EXPECT_EQ(actual_event.encoded_name_1(), kEncodedName1);
-  EXPECT_EQ(actual_event.encoded_name_2(), kEncodedName2);
-  EXPECT_EQ(actual_event.encoded_name_3(), kEncodedName3);
-  EXPECT_EQ(actual_event.encoded_name_4(), kEncodedName4);
-  EXPECT_EQ(actual_event.encoded_name_5(), kEncodedName5);
-  EXPECT_EQ(actual_event.encoded_name_6(), kEncodedName6);
-  EXPECT_EQ(actual_event.encoded_name_7(), kEncodedName7);
-  EXPECT_EQ(actual_event.encoded_name_8(), kEncodedName8);
-  EXPECT_THAT(actual_event.encoded_name_additional(), ElementsAre(kEncodedNameAdditional1));
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_string_event_copy, actual_event));
 }
 
 TEST(ProducerEventProcessor, ApiTrackInt) {
@@ -1855,6 +1818,7 @@ TEST(ProducerEventProcessor, ApiTrackInt) {
   api_track_int->set_tid(kTid1);
   api_track_int->set_timestamp_ns(kTimestampNs1);
   api_track_int->set_data(kInt);
+  ApiTrackInt api_track_int_copy = *api_track_int;
 
   MockCaptureEventBuffer buffer;
   auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
@@ -1864,10 +1828,7 @@ TEST(ProducerEventProcessor, ApiTrackInt) {
   producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiTrackInt);
   const ApiTrackInt& actual_event = client_capture_event.api_track_int();
-  EXPECT_EQ(actual_event.pid(), kPid1);
-  EXPECT_EQ(actual_event.tid(), kTid1);
-  EXPECT_EQ(actual_event.timestamp_ns(), kTimestampNs1);
-  EXPECT_EQ(actual_event.data(), kInt);
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_track_int_copy, actual_event));
 }
 
 TEST(ProducerEventProcessor, ApiTrackInt64) {
@@ -1877,6 +1838,7 @@ TEST(ProducerEventProcessor, ApiTrackInt64) {
   api_track_int64->set_tid(kTid1);
   api_track_int64->set_timestamp_ns(kTimestampNs1);
   api_track_int64->set_data(kInt64);
+  ApiTrackInt64 api_track_int64_copy = *api_track_int64;
 
   MockCaptureEventBuffer buffer;
   auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
@@ -1886,10 +1848,7 @@ TEST(ProducerEventProcessor, ApiTrackInt64) {
   producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiTrackInt64);
   const ApiTrackInt64& actual_event = client_capture_event.api_track_int64();
-  EXPECT_EQ(actual_event.pid(), kPid1);
-  EXPECT_EQ(actual_event.tid(), kTid1);
-  EXPECT_EQ(actual_event.timestamp_ns(), kTimestampNs1);
-  EXPECT_EQ(actual_event.data(), kInt64);
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_track_int64_copy, actual_event));
 }
 
 TEST(ProducerEventProcessor, ApiTrackUint) {
@@ -1899,6 +1858,7 @@ TEST(ProducerEventProcessor, ApiTrackUint) {
   api_track_uint->set_tid(kTid1);
   api_track_uint->set_timestamp_ns(kTimestampNs1);
   api_track_uint->set_data(kUint);
+  ApiTrackUint api_track_uint_copy = *api_track_uint;
 
   MockCaptureEventBuffer buffer;
   auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
@@ -1908,10 +1868,7 @@ TEST(ProducerEventProcessor, ApiTrackUint) {
   producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiTrackUint);
   const ApiTrackUint& actual_event = client_capture_event.api_track_uint();
-  EXPECT_EQ(actual_event.pid(), kPid1);
-  EXPECT_EQ(actual_event.tid(), kTid1);
-  EXPECT_EQ(actual_event.timestamp_ns(), kTimestampNs1);
-  EXPECT_EQ(actual_event.data(), kUint);
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_track_uint_copy, actual_event));
 }
 
 TEST(ProducerEventProcessor, ApiTrackUint64) {
@@ -1921,6 +1878,7 @@ TEST(ProducerEventProcessor, ApiTrackUint64) {
   api_track_uint64->set_tid(kTid1);
   api_track_uint64->set_timestamp_ns(kTimestampNs1);
   api_track_uint64->set_data(kUint64);
+  ApiTrackUint64 api_track_uint64_copy = *api_track_uint64;
 
   MockCaptureEventBuffer buffer;
   auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
@@ -1930,10 +1888,7 @@ TEST(ProducerEventProcessor, ApiTrackUint64) {
   producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiTrackUint64);
   const ApiTrackUint64& actual_event = client_capture_event.api_track_uint64();
-  EXPECT_EQ(actual_event.pid(), kPid1);
-  EXPECT_EQ(actual_event.tid(), kTid1);
-  EXPECT_EQ(actual_event.timestamp_ns(), kTimestampNs1);
-  EXPECT_EQ(actual_event.data(), kUint64);
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_track_uint64_copy, actual_event));
 }
 
 TEST(ProducerEventProcessor, ApiTrackFloat) {
@@ -1943,6 +1898,7 @@ TEST(ProducerEventProcessor, ApiTrackFloat) {
   api_track_float->set_tid(kTid1);
   api_track_float->set_timestamp_ns(kTimestampNs1);
   api_track_float->set_data(kFloat);
+  ApiTrackFloat api_track_float_copy = *api_track_float;
 
   MockCaptureEventBuffer buffer;
   auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
@@ -1952,10 +1908,7 @@ TEST(ProducerEventProcessor, ApiTrackFloat) {
   producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiTrackFloat);
   const ApiTrackFloat& actual_event = client_capture_event.api_track_float();
-  EXPECT_EQ(actual_event.pid(), kPid1);
-  EXPECT_EQ(actual_event.tid(), kTid1);
-  EXPECT_EQ(actual_event.timestamp_ns(), kTimestampNs1);
-  EXPECT_EQ(actual_event.data(), kFloat);
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_track_float_copy, actual_event));
 }
 
 TEST(ProducerEventProcessor, ApiTrackDouble) {
@@ -1965,6 +1918,7 @@ TEST(ProducerEventProcessor, ApiTrackDouble) {
   api_track_double->set_tid(kTid1);
   api_track_double->set_timestamp_ns(kTimestampNs1);
   api_track_double->set_data(kDouble);
+  ApiTrackDouble api_track_double_copy = *api_track_double;
 
   MockCaptureEventBuffer buffer;
   auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
@@ -1974,10 +1928,7 @@ TEST(ProducerEventProcessor, ApiTrackDouble) {
   producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiTrackDouble);
   const ApiTrackDouble& actual_event = client_capture_event.api_track_double();
-  EXPECT_EQ(actual_event.pid(), kPid1);
-  EXPECT_EQ(actual_event.tid(), kTid1);
-  EXPECT_EQ(actual_event.timestamp_ns(), kTimestampNs1);
-  EXPECT_EQ(actual_event.data(), kDouble);
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_track_double_copy, actual_event));
 }
 
 TEST(ProducerEventProcessor, WarningEvent) {
