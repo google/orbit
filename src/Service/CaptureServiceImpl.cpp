@@ -204,6 +204,7 @@ static void StopInternalProducersAndCaptureStartStopListenersInParallel(
 }
 
 static ProducerCaptureEvent CreateCaptureStartedEvent(const CaptureOptions& capture_options,
+                                                      absl::Time capture_start_time,
                                                       uint64_t capture_start_timestamp_ns) {
   ProducerCaptureEvent event;
   CaptureStarted* capture_started = event.mutable_capture_started();
@@ -228,6 +229,7 @@ static ProducerCaptureEvent CreateCaptureStartedEvent(const CaptureOptions& capt
     ERROR("%s", executable_path_or_error.error().message());
   }
 
+  capture_started->set_capture_start_unix_time_ns(absl::ToUnixNanos(capture_start_time));
   capture_started->set_capture_start_timestamp_ns(capture_start_timestamp_ns);
   orbit_version::Version version = orbit_version::GetVersionNumber();
   capture_started->set_orbit_version_major(version.major_version);
@@ -306,10 +308,13 @@ grpc::Status CaptureServiceImpl::Capture(
     }
   }
 
+  // These are not in precise sync but they do not have to be.
+  absl::Time capture_start_time = absl::Now();
   uint64_t capture_start_timestamp_ns = orbit_base::CaptureTimestampNs();
+
   producer_event_processor->ProcessEvent(
       orbit_grpc_protos::kRootProducerId,
-      CreateCaptureStartedEvent(capture_options, capture_start_timestamp_ns));
+      CreateCaptureStartedEvent(capture_options, capture_start_time, capture_start_timestamp_ns));
 
   producer_event_processor->ProcessEvent(
       orbit_grpc_protos::kRootProducerId,

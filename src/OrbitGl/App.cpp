@@ -311,8 +311,12 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
 
         FireRefreshCallbacks();
 
-        main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kInfo,
-                                         absl::ZeroDuration(), "Capture started.");
+        main_window_->AppendToCaptureLog(
+            MainWindowInterface::CaptureLogSeverity::kInfo, absl::ZeroDuration(),
+            absl::StrFormat(
+                "Capture started on %s.",
+                absl::FormatTime(absl::FromUnixNanos(capture_started.capture_start_unix_time_ns()),
+                                 absl::LocalTimeZone())));
 
         orbit_version::Version capture_version{capture_started.orbit_version_major(),
                                                capture_started.orbit_version_minor()};
