@@ -625,8 +625,8 @@ message ClientCaptureEvent {
     ApiEvent api_event = 9;
     ApiScopeStart api_scope_start = 10;
     ApiScopeStartAsync api_scope_start_async = 11;
-    ApiScopeStart api_scope_stop = 12;
-    ApiScopeStartAsync api_scope_stop_async = 13;
+    ApiScopeStop api_scope_stop = 12;
+    ApiScopeStopAsync api_scope_stop_async = 13;
     ApiStringEvent api_string_event = 14;
     ApiTrackDouble api_track_double = 15;
     ApiTrackFloat api_track_float = 38;
@@ -676,8 +676,8 @@ message ProducerCaptureEvent {
     ApiEvent api_event = 10;
     ApiScopeStart api_scope_start = 11;
     ApiScopeStartAsync api_scope_start_async = 12;
-    ApiScopeStart api_scope_stop = 13;
-    ApiScopeStartAsync api_scope_stop_async = 14;
+    ApiScopeStop api_scope_stop = 13;
+    ApiScopeStopAsync api_scope_stop_async = 14;
     ApiStringEvent api_string_event = 15;
     ApiTrackDouble api_track_double = 38;
     ApiTrackFloat api_track_float = 39;
