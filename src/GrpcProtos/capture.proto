@@ -162,8 +162,7 @@ message ApiScopeStart {
   fixed64 encoded_name_8 = 11;
   bytes encoded_name_additional = 12;
 
-  // "rgba" syntax.
-  uint32 color = 13;
+  uint32 color_rgba = 13;
   uint64 group_id = 14;
   uint64 address_in_function = 15;
 }
@@ -197,8 +196,7 @@ message ApiScopeStartAsync {
   fixed64 encoded_name_8 = 11;
   bytes encoded_name_additional = 12;
 
-  // "rgba" syntax.
-  uint32 color = 13;
+  uint32 color_rgba = 13;
   uint64 id = 14;
   uint64 address_in_function = 15;
 }
