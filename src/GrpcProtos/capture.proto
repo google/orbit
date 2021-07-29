@@ -148,7 +148,7 @@ message ApiScopeStart {
 
   // We encode the first 64 characters of the scope's name/label using fixed64
   // values, in order to avoid an additional allocation (for the internal
-  // vector) for short strings. Those allocations has shown a huge performance
+  // vector) for short strings. Those allocations have shown a huge performance
   // impact.
   // If the name exceeds the 64 characters, the `encoded_name_additional` will
   // be used to encode the additional characters.
@@ -162,7 +162,8 @@ message ApiScopeStart {
   fixed64 encoded_name_8 = 11;
   bytes encoded_name_additional = 12;
 
-  Color color = 13;
+  // "rgba" syntax.
+  uint32 color = 13;
   uint64 group_id = 14;
   uint64 address_in_function = 15;
 }
@@ -182,7 +183,7 @@ message ApiScopeStartAsync {
 
   // We encode the first 64 characters of the scope's name/label using fixed64
   // values, in order to avoid an additional allocation (for the internal
-  // vector) for short strings. Those allocations has shown a huge performance
+  // vector) for short strings. Those allocations have shown a huge performance
   // impact.
   // If the name exceeds the 64 characters, the `encoded_name_additional` will
   // be used to encode the additional characters.
@@ -196,7 +197,8 @@ message ApiScopeStartAsync {
   fixed64 encoded_name_8 = 11;
   bytes encoded_name_additional = 12;
 
-  Color color = 13;
+  // "rgba" syntax.
+  uint32 color = 13;
   uint64 id = 14;
   uint64 address_in_function = 15;
 }
@@ -216,7 +218,7 @@ message ApiStringEvent {
 
   // We encode the first 64 characters of the scope's name/label using fixed64
   // values, in order to avoid an additional allocation (for the internal
-  // vector) for short strings. Those allocations has shown a huge performance
+  // vector) for short strings. Those allocations have shown a huge performance
   // impact.
   // If the name exceeds the 64 characters, the `encoded_name_additional` will
   // be used to encode the additional characters.
