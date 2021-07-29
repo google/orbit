@@ -200,6 +200,7 @@ message ApiScopeStopAsync {
   int32 pid = 1;
   int32 tid = 2;
   uint64 timestamp_ns = 3;
+  uint64 id = 4;
 }
 
 message ApiStringEvent {

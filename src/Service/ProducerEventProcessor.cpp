@@ -15,6 +15,17 @@ namespace {
 
 using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::ApiEvent;
+using orbit_grpc_protos::ApiScopeStart;
+using orbit_grpc_protos::ApiScopeStartAsync;
+using orbit_grpc_protos::ApiScopeStop;
+using orbit_grpc_protos::ApiScopeStopAsync;
+using orbit_grpc_protos::ApiStringEvent;
+using orbit_grpc_protos::ApiTrackDouble;
+using orbit_grpc_protos::ApiTrackFloat;
+using orbit_grpc_protos::ApiTrackInt;
+using orbit_grpc_protos::ApiTrackInt64;
+using orbit_grpc_protos::ApiTrackUint;
+using orbit_grpc_protos::ApiTrackUint64;
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::CallstackSample;
 using orbit_grpc_protos::CaptureStarted;
@@ -106,6 +117,17 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessFullTracepointEvent(FullTracepointEvent* full_tracepoint_event);
   void ProcessMemoryUsageEventAndTransferOwnership(MemoryUsageEvent* memory_usage_event);
   void ProcessApiEventAndTransferOwnership(ApiEvent* api_event);
+  void ProcessApiScopeStartAndTransferOwnership(ApiScopeStart* api_scope_start);
+  void ProcessApiScopeStartAsyncAndTransferOwnership(ApiScopeStartAsync* api_scope_start_async);
+  void ProcessApiScopeStopAndTransferOwnership(ApiScopeStop* api_scope_stop);
+  void ProcessApiScopeStopAsyncAndTransferOwnership(ApiScopeStopAsync* api_scope_stop_async);
+  void ProcessApiStringEventAndTransferOwnership(ApiStringEvent* api_string_event);
+  void ProcessApiTrackDoubleAndTransferOwnership(ApiTrackDouble* api_track_double);
+  void ProcessApiTrackFloatAndTransferOwnership(ApiTrackFloat* api_track_float);
+  void ProcessApiTrackIntAndTransferOwnership(ApiTrackInt* api_track_int);
+  void ProcessApiTrackInt64AndTransferOwnership(ApiTrackInt64* api_track_int64);
+  void ProcessApiTrackUintAndTransferOwnership(ApiTrackUint* api_track_uint);
+  void ProcessApiTrackUint64AndTransferOwnership(ApiTrackUint64* api_track_uint64);
   void ProcessWarningEventAndTransferOwnership(WarningEvent* warning_event);
   void ProcessClockResolutionEventAndTransferOwnership(
       ClockResolutionEvent* clock_resolution_event);
@@ -379,6 +401,83 @@ void ProducerEventProcessorImpl::ProcessApiEventAndTransferOwnership(ApiEvent* a
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
+void orbit_service::ProducerEventProcessorImpl::ProcessApiScopeStartAndTransferOwnership(
+    ApiScopeStart* api_scope_start) {
+  ClientCaptureEvent event;
+  event.set_allocated_api_scope_start(api_scope_start);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
+void orbit_service::ProducerEventProcessorImpl::ProcessApiScopeStartAsyncAndTransferOwnership(
+    ApiScopeStartAsync* api_scope_start_async) {
+  ClientCaptureEvent event;
+  event.set_allocated_api_scope_start_async(api_scope_start_async);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
+void orbit_service::ProducerEventProcessorImpl::ProcessApiScopeStopAndTransferOwnership(
+    ApiScopeStop* api_scope_stop) {
+  ClientCaptureEvent event;
+  event.set_allocated_api_scope_stop(api_scope_stop);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
+void orbit_service::ProducerEventProcessorImpl::ProcessApiScopeStopAsyncAndTransferOwnership(
+    ApiScopeStopAsync* api_scope_stop_async) {
+  ClientCaptureEvent event;
+  event.set_allocated_api_scope_stop_async(api_scope_stop_async);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
+void orbit_service::ProducerEventProcessorImpl::ProcessApiStringEventAndTransferOwnership(
+    ApiStringEvent* api_string_event) {
+  ClientCaptureEvent event;
+  event.set_allocated_api_string_event(api_string_event);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
+void orbit_service::ProducerEventProcessorImpl::ProcessApiTrackDoubleAndTransferOwnership(
+    ApiTrackDouble* api_track_double) {
+  ClientCaptureEvent event;
+  event.set_allocated_api_track_double(api_track_double);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
+void orbit_service::ProducerEventProcessorImpl::ProcessApiTrackFloatAndTransferOwnership(
+    ApiTrackFloat* api_track_float) {
+  ClientCaptureEvent event;
+  event.set_allocated_api_track_float(api_track_float);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
+void orbit_service::ProducerEventProcessorImpl::ProcessApiTrackIntAndTransferOwnership(
+    ApiTrackInt* api_track_int) {
+  ClientCaptureEvent event;
+  event.set_allocated_api_track_int(api_track_int);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
+void orbit_service::ProducerEventProcessorImpl::ProcessApiTrackInt64AndTransferOwnership(
+    ApiTrackInt64* api_track_int64) {
+  ClientCaptureEvent event;
+  event.set_allocated_api_track_int64(api_track_int64);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
+void orbit_service::ProducerEventProcessorImpl::ProcessApiTrackUintAndTransferOwnership(
+    ApiTrackUint* api_track_uint) {
+  ClientCaptureEvent event;
+  event.set_allocated_api_track_uint(api_track_uint);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
+void orbit_service::ProducerEventProcessorImpl::ProcessApiTrackUint64AndTransferOwnership(
+    ApiTrackUint64* api_track_uint64) {
+  ClientCaptureEvent event;
+  event.set_allocated_api_track_uint64(api_track_uint64);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
 void ProducerEventProcessorImpl::ProcessWarningEventAndTransferOwnership(
     WarningEvent* warning_event) {
   ClientCaptureEvent event;
@@ -482,27 +581,38 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
       ProcessApiEventAndTransferOwnership(event.release_api_event());
       break;
     case orbit_grpc_protos::ProducerCaptureEvent::kApiScopeStart:
-      UNREACHABLE();
+      ProcessApiScopeStartAndTransferOwnership(event.release_api_scope_start());
+      break;
     case orbit_grpc_protos::ProducerCaptureEvent::kApiScopeStartAsync:
-      UNREACHABLE();
+      ProcessApiScopeStartAsyncAndTransferOwnership(event.release_api_scope_start_async());
+      break;
     case orbit_grpc_protos::ProducerCaptureEvent::kApiScopeStop:
-      UNREACHABLE();
+      ProcessApiScopeStopAndTransferOwnership(event.release_api_scope_stop());
+      break;
     case orbit_grpc_protos::ProducerCaptureEvent::kApiScopeStopAsync:
-      UNREACHABLE();
+      ProcessApiScopeStopAsyncAndTransferOwnership(event.release_api_scope_stop_async());
+      break;
     case orbit_grpc_protos::ProducerCaptureEvent::kApiStringEvent:
-      UNREACHABLE();
+      ProcessApiStringEventAndTransferOwnership(event.release_api_string_event());
+      break;
     case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackDouble:
-      UNREACHABLE();
+      ProcessApiTrackDoubleAndTransferOwnership(event.release_api_track_double());
+      break;
     case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackFloat:
-      UNREACHABLE();
+      ProcessApiTrackFloatAndTransferOwnership(event.release_api_track_float());
+      break;
     case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackInt:
-      UNREACHABLE();
+      ProcessApiTrackIntAndTransferOwnership(event.release_api_track_int());
+      break;
     case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackInt64:
-      UNREACHABLE();
+      ProcessApiTrackInt64AndTransferOwnership(event.release_api_track_int64());
+      break;
     case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackUint:
-      UNREACHABLE();
+      ProcessApiTrackUintAndTransferOwnership(event.release_api_track_uint());
+      break;
     case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackUint64:
-      UNREACHABLE();
+      ProcessApiTrackUint64AndTransferOwnership(event.release_api_track_uint64());
+      break;
     case ProducerCaptureEvent::kWarningEvent:
       ProcessWarningEventAndTransferOwnership(event.release_warning_event());
       break;
