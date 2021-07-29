@@ -15,6 +15,7 @@ target_sources(
   PUBLIC include/ObjectUtils/Address.h
          include/ObjectUtils/CoffFile.h
          include/ObjectUtils/ElfFile.h
+         include/ObjectUtils/PdbFile.h
          include/ObjectUtils/LinuxMap.h)
 
 target_sources(
@@ -23,6 +24,7 @@ target_sources(
         Address.cpp
         CoffFile.cpp
         ElfFile.cpp
+        PdbFile.cpp
         ObjectFile.cpp)
 
 if (NOT WIN32)
@@ -45,6 +47,7 @@ target_sources(ObjectUtilsTests PRIVATE
         CoffFileTest.cpp
         ElfFileTest.cpp
         ObjectFileTest.cpp
+        PdbFileTest.cpp
 )
 
 if (NOT WIN32)
@@ -59,7 +62,6 @@ target_link_libraries(
           CONAN_PKG::abseil)
 
 register_test(ObjectUtilsTests)
-
 
 add_fuzzer(ElfFileLoadSymbolsFuzzer ElfFileLoadSymbolsFuzzer.cpp)
 target_link_libraries(ElfFileLoadSymbolsFuzzer ObjectUtils)
