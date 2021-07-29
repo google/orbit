@@ -481,6 +481,28 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
     case ProducerCaptureEvent::kApiEvent:
       ProcessApiEventAndTransferOwnership(event.release_api_event());
       break;
+    case orbit_grpc_protos::ProducerCaptureEvent::kApiScopeStart:
+      UNREACHABLE();
+    case orbit_grpc_protos::ProducerCaptureEvent::kApiScopeStartAsync:
+      UNREACHABLE();
+    case orbit_grpc_protos::ProducerCaptureEvent::kApiScopeStop:
+      UNREACHABLE();
+    case orbit_grpc_protos::ProducerCaptureEvent::kApiScopeStopAsync:
+      UNREACHABLE();
+    case orbit_grpc_protos::ProducerCaptureEvent::kApiStringEvent:
+      UNREACHABLE();
+    case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackDouble:
+      UNREACHABLE();
+    case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackFloat:
+      UNREACHABLE();
+    case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackInt:
+      UNREACHABLE();
+    case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackInt64:
+      UNREACHABLE();
+    case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackUint:
+      UNREACHABLE();
+    case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackUint64:
+      UNREACHABLE();
     case ProducerCaptureEvent::kWarningEvent:
       ProcessWarningEventAndTransferOwnership(event.release_warning_event());
       break;
