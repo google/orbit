@@ -66,8 +66,8 @@ using orbit_grpc_protos::ThreadStateSlice;
 using orbit_grpc_protos::TracepointEvent;
 using orbit_grpc_protos::WarningEvent;
 
-using ::testing::SaveArg;
 using ::testing::ElementsAre;
+using ::testing::SaveArg;
 
 class MockCaptureEventBuffer : public CaptureEventBuffer {
  public:
@@ -1743,7 +1743,8 @@ TEST(ProducerEventProcessor, ApiScopeStop) {
 
 TEST(ProducerEventProcessor, ApiScopeStartAsync) {
   ProducerCaptureEvent producer_capture_event;
-  ApiScopeStartAsync* api_scope_start_async = producer_capture_event.mutable_api_scope_start_async();
+  ApiScopeStartAsync* api_scope_start_async =
+      producer_capture_event.mutable_api_scope_start_async();
   api_scope_start_async->set_pid(kPid1);
   api_scope_start_async->set_tid(kTid1);
   api_scope_start_async->set_timestamp_ns(kTimestampNs1);
