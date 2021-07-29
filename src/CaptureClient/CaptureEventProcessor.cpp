@@ -110,7 +110,6 @@ class CaptureEventProcessorForListener : public CaptureEventProcessor {
   absl::flat_hash_set<uint64_t> callstack_hashes_seen_;
   void SendCallstackToListenerIfNecessary(uint64_t callstack_id,
                                           const orbit_grpc_protos::Callstack& callstack);
-  absl::flat_hash_set<uint64_t> string_hashes_seen_;
   uint64_t GetStringHashAndSendToListenerIfNecessary(const std::string& str);
 
   GpuQueueSubmissionProcessor gpu_queue_submission_processor_;
