@@ -26,6 +26,7 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
+#include "OrbitVersion/OrbitVersion.h"
 #include "ProducerEventProcessor.h"
 #include "TracingHandler.h"
 #include "capture.pb.h"
@@ -227,8 +228,10 @@ static ProducerCaptureEvent CreateCaptureStartedEvent(const CaptureOptions& capt
     ERROR("%s", executable_path_or_error.error().message());
   }
 
-  capture_started->mutable_capture_options()->CopyFrom(capture_options);
   capture_started->set_capture_start_timestamp_ns(capture_start_timestamp_ns);
+  orbit_version::Version version = orbit_version::GetVersionNumber();
+  capture_started->set_orbit_version_major(version.major_version);
+  capture_started->set_orbit_version_minor(version.minor_version);
   capture_started->mutable_capture_options()->CopyFrom(capture_options);
   return event;
 }

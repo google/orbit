@@ -562,10 +562,13 @@ message CaptureFinished {
 }
 
 message CaptureStarted {
+  // NextID: 8
   int32 process_id = 1;
   string executable_path = 2;
   string executable_build_id = 3;
   uint64 capture_start_timestamp_ns = 4;
+  uint32 orbit_version_major = 6;
+  uint32 orbit_version_minor = 7;
   CaptureOptions capture_options = 5;
 }
 
