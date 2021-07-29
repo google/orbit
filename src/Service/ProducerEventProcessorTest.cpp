@@ -4,6 +4,7 @@
 
 #include <GrpcProtos/Constants.h>
 #include <gmock/gmock.h>
+#include <google/protobuf/util/message_differencer.h>
 #include <gtest/gtest.h>
 #include <stdint.h>
 
@@ -15,6 +16,17 @@ namespace orbit_service {
 namespace {
 
 using orbit_grpc_protos::AddressInfo;
+using orbit_grpc_protos::ApiScopeStart;
+using orbit_grpc_protos::ApiScopeStartAsync;
+using orbit_grpc_protos::ApiScopeStop;
+using orbit_grpc_protos::ApiScopeStopAsync;
+using orbit_grpc_protos::ApiStringEvent;
+using orbit_grpc_protos::ApiTrackDouble;
+using orbit_grpc_protos::ApiTrackFloat;
+using orbit_grpc_protos::ApiTrackInt;
+using orbit_grpc_protos::ApiTrackInt64;
+using orbit_grpc_protos::ApiTrackUint;
+using orbit_grpc_protos::ApiTrackUint64;
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::CallstackSample;
 using orbit_grpc_protos::CaptureOptions;
@@ -55,6 +67,8 @@ using orbit_grpc_protos::ThreadStateSlice;
 using orbit_grpc_protos::TracepointEvent;
 using orbit_grpc_protos::WarningEvent;
 
+using google::protobuf::util::MessageDifferencer;
+using ::testing::ElementsAre;
 using ::testing::SaveArg;
 
 class MockCaptureEventBuffer : public CaptureEventBuffer {
@@ -102,6 +116,27 @@ constexpr float kAlpha2 = 2.1f;
 constexpr float kRed2 = 2.2f;
 constexpr float kGreen2 = 2.3f;
 constexpr float kBlue2 = 2.4f;
+
+constexpr uint32_t kColor1 = 0x11223344;
+
+constexpr uint64_t kGroupId1 = 42;
+
+constexpr uint64_t kEncodedName1 = 11;
+constexpr uint64_t kEncodedName2 = 22;
+constexpr uint64_t kEncodedName3 = 33;
+constexpr uint64_t kEncodedName4 = 44;
+constexpr uint64_t kEncodedName5 = 55;
+constexpr uint64_t kEncodedName6 = 66;
+constexpr uint64_t kEncodedName7 = 77;
+constexpr uint64_t kEncodedName8 = 88;
+constexpr uint64_t kEncodedNameAdditional1 = 99;
+
+constexpr int32_t kInt = 42;
+constexpr int64_t kInt64 = 64;
+constexpr uint32_t kUint = 42;
+constexpr uint64_t kUint64 = 64;
+constexpr float kFloat = 1.1f;
+constexpr double kDouble = 2.2;
 
 constexpr const char* kExecutablePath = "/path/to/executable";
 constexpr const char* kBuildId1 = "build_id_1";
@@ -1642,6 +1677,258 @@ TEST(ProducerEventProcessor, MemoryUsageEvent) {
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kMemoryUsageEvent);
   const MemoryUsageEvent& actual_memory_usage_event = client_capture_event.memory_usage_event();
   ASSERT_EQ(actual_memory_usage_event.SerializeAsString(), memory_usage_event->SerializeAsString());
+}
+
+TEST(ProducerEventProcessor, ApiScopeStart) {
+  ProducerCaptureEvent producer_capture_event;
+  ApiScopeStart* api_scope_start = producer_capture_event.mutable_api_scope_start();
+  api_scope_start->set_pid(kPid1);
+  api_scope_start->set_tid(kTid1);
+  api_scope_start->set_timestamp_ns(kTimestampNs1);
+  api_scope_start->set_color_rgba(kColor1);
+  api_scope_start->set_group_id(kGroupId1);
+  api_scope_start->set_address_in_function(kFunctionId1);
+  api_scope_start->set_encoded_name_1(kEncodedName1);
+  api_scope_start->set_encoded_name_2(kEncodedName2);
+  api_scope_start->set_encoded_name_3(kEncodedName3);
+  api_scope_start->set_encoded_name_4(kEncodedName4);
+  api_scope_start->set_encoded_name_5(kEncodedName5);
+  api_scope_start->set_encoded_name_6(kEncodedName6);
+  api_scope_start->set_encoded_name_7(kEncodedName7);
+  api_scope_start->set_encoded_name_8(kEncodedName8);
+  api_scope_start->add_encoded_name_additional(kEncodedNameAdditional1);
+
+  ApiScopeStart api_scope_start_copy = *api_scope_start;
+
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  ClientCaptureEvent client_capture_event;
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+
+  producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
+  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiScopeStart);
+  const ApiScopeStart& actual_event = client_capture_event.api_scope_start();
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_scope_start_copy, actual_event));
+}
+
+TEST(ProducerEventProcessor, ApiScopeStop) {
+  ProducerCaptureEvent producer_capture_event;
+  ApiScopeStop* api_scope_stop = producer_capture_event.mutable_api_scope_stop();
+  api_scope_stop->set_pid(kPid1);
+  api_scope_stop->set_tid(kTid1);
+  api_scope_stop->set_timestamp_ns(kTimestampNs1);
+  ApiScopeStop api_scope_stop_copy = *api_scope_stop;
+
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  ClientCaptureEvent client_capture_event;
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+
+  producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
+  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiScopeStop);
+  const ApiScopeStop& actual_event = client_capture_event.api_scope_stop();
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_scope_stop_copy, actual_event));
+}
+
+TEST(ProducerEventProcessor, ApiScopeStartAsync) {
+  ProducerCaptureEvent producer_capture_event;
+  ApiScopeStartAsync* api_scope_start_async =
+      producer_capture_event.mutable_api_scope_start_async();
+  api_scope_start_async->set_pid(kPid1);
+  api_scope_start_async->set_tid(kTid1);
+  api_scope_start_async->set_timestamp_ns(kTimestampNs1);
+  api_scope_start_async->set_color_rgba(kColor1);
+  api_scope_start_async->set_id(kGroupId1);
+  api_scope_start_async->set_address_in_function(kFunctionId1);
+  api_scope_start_async->set_encoded_name_1(kEncodedName1);
+  api_scope_start_async->set_encoded_name_2(kEncodedName2);
+  api_scope_start_async->set_encoded_name_3(kEncodedName3);
+  api_scope_start_async->set_encoded_name_4(kEncodedName4);
+  api_scope_start_async->set_encoded_name_5(kEncodedName5);
+  api_scope_start_async->set_encoded_name_6(kEncodedName6);
+  api_scope_start_async->set_encoded_name_7(kEncodedName7);
+  api_scope_start_async->set_encoded_name_8(kEncodedName8);
+  api_scope_start_async->add_encoded_name_additional(kEncodedNameAdditional1);
+  ApiScopeStartAsync api_scope_start_async_copy = *api_scope_start_async;
+
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  ClientCaptureEvent client_capture_event;
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+
+  producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
+  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiScopeStartAsync);
+  const ApiScopeStartAsync& actual_event = client_capture_event.api_scope_start_async();
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_scope_start_async_copy, actual_event));
+}
+
+TEST(ProducerEventProcessor, ApiScopeStopAsync) {
+  ProducerCaptureEvent producer_capture_event;
+  ApiScopeStopAsync* api_scope_stop_async = producer_capture_event.mutable_api_scope_stop_async();
+  api_scope_stop_async->set_pid(kPid1);
+  api_scope_stop_async->set_tid(kTid1);
+  api_scope_stop_async->set_timestamp_ns(kTimestampNs1);
+  api_scope_stop_async->set_id(kGroupId1);
+  ApiScopeStopAsync api_scope_stop_async_copy = *api_scope_stop_async;
+
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  ClientCaptureEvent client_capture_event;
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+
+  producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
+  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiScopeStopAsync);
+  const ApiScopeStopAsync& actual_event = client_capture_event.api_scope_stop_async();
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_scope_stop_async_copy, actual_event));
+}
+
+TEST(ProducerEventProcessor, ApiStringEvent) {
+  ProducerCaptureEvent producer_capture_event;
+  ApiStringEvent* api_string_event = producer_capture_event.mutable_api_string_event();
+  api_string_event->set_pid(kPid1);
+  api_string_event->set_tid(kTid1);
+  api_string_event->set_timestamp_ns(kTimestampNs1);
+  api_string_event->set_id(kGroupId1);
+  api_string_event->set_encoded_name_1(kEncodedName1);
+  api_string_event->set_encoded_name_2(kEncodedName2);
+  api_string_event->set_encoded_name_3(kEncodedName3);
+  api_string_event->set_encoded_name_4(kEncodedName4);
+  api_string_event->set_encoded_name_5(kEncodedName5);
+  api_string_event->set_encoded_name_6(kEncodedName6);
+  api_string_event->set_encoded_name_7(kEncodedName7);
+  api_string_event->set_encoded_name_8(kEncodedName8);
+  api_string_event->add_encoded_name_additional(kEncodedNameAdditional1);
+  ApiStringEvent api_string_event_copy = *api_string_event;
+
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  ClientCaptureEvent client_capture_event;
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+
+  producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
+  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiStringEvent);
+  const ApiStringEvent& actual_event = client_capture_event.api_string_event();
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_string_event_copy, actual_event));
+}
+
+TEST(ProducerEventProcessor, ApiTrackInt) {
+  ProducerCaptureEvent producer_capture_event;
+  ApiTrackInt* api_track_int = producer_capture_event.mutable_api_track_int();
+  api_track_int->set_pid(kPid1);
+  api_track_int->set_tid(kTid1);
+  api_track_int->set_timestamp_ns(kTimestampNs1);
+  api_track_int->set_data(kInt);
+  ApiTrackInt api_track_int_copy = *api_track_int;
+
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  ClientCaptureEvent client_capture_event;
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+
+  producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
+  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiTrackInt);
+  const ApiTrackInt& actual_event = client_capture_event.api_track_int();
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_track_int_copy, actual_event));
+}
+
+TEST(ProducerEventProcessor, ApiTrackInt64) {
+  ProducerCaptureEvent producer_capture_event;
+  ApiTrackInt64* api_track_int64 = producer_capture_event.mutable_api_track_int64();
+  api_track_int64->set_pid(kPid1);
+  api_track_int64->set_tid(kTid1);
+  api_track_int64->set_timestamp_ns(kTimestampNs1);
+  api_track_int64->set_data(kInt64);
+  ApiTrackInt64 api_track_int64_copy = *api_track_int64;
+
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  ClientCaptureEvent client_capture_event;
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+
+  producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
+  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiTrackInt64);
+  const ApiTrackInt64& actual_event = client_capture_event.api_track_int64();
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_track_int64_copy, actual_event));
+}
+
+TEST(ProducerEventProcessor, ApiTrackUint) {
+  ProducerCaptureEvent producer_capture_event;
+  ApiTrackUint* api_track_uint = producer_capture_event.mutable_api_track_uint();
+  api_track_uint->set_pid(kPid1);
+  api_track_uint->set_tid(kTid1);
+  api_track_uint->set_timestamp_ns(kTimestampNs1);
+  api_track_uint->set_data(kUint);
+  ApiTrackUint api_track_uint_copy = *api_track_uint;
+
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  ClientCaptureEvent client_capture_event;
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+
+  producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
+  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiTrackUint);
+  const ApiTrackUint& actual_event = client_capture_event.api_track_uint();
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_track_uint_copy, actual_event));
+}
+
+TEST(ProducerEventProcessor, ApiTrackUint64) {
+  ProducerCaptureEvent producer_capture_event;
+  ApiTrackUint64* api_track_uint64 = producer_capture_event.mutable_api_track_uint64();
+  api_track_uint64->set_pid(kPid1);
+  api_track_uint64->set_tid(kTid1);
+  api_track_uint64->set_timestamp_ns(kTimestampNs1);
+  api_track_uint64->set_data(kUint64);
+  ApiTrackUint64 api_track_uint64_copy = *api_track_uint64;
+
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  ClientCaptureEvent client_capture_event;
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+
+  producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
+  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiTrackUint64);
+  const ApiTrackUint64& actual_event = client_capture_event.api_track_uint64();
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_track_uint64_copy, actual_event));
+}
+
+TEST(ProducerEventProcessor, ApiTrackFloat) {
+  ProducerCaptureEvent producer_capture_event;
+  ApiTrackFloat* api_track_float = producer_capture_event.mutable_api_track_float();
+  api_track_float->set_pid(kPid1);
+  api_track_float->set_tid(kTid1);
+  api_track_float->set_timestamp_ns(kTimestampNs1);
+  api_track_float->set_data(kFloat);
+  ApiTrackFloat api_track_float_copy = *api_track_float;
+
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  ClientCaptureEvent client_capture_event;
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+
+  producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
+  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiTrackFloat);
+  const ApiTrackFloat& actual_event = client_capture_event.api_track_float();
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_track_float_copy, actual_event));
+}
+
+TEST(ProducerEventProcessor, ApiTrackDouble) {
+  ProducerCaptureEvent producer_capture_event;
+  ApiTrackDouble* api_track_double = producer_capture_event.mutable_api_track_double();
+  api_track_double->set_pid(kPid1);
+  api_track_double->set_tid(kTid1);
+  api_track_double->set_timestamp_ns(kTimestampNs1);
+  api_track_double->set_data(kDouble);
+  ApiTrackDouble api_track_double_copy = *api_track_double;
+
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  ClientCaptureEvent client_capture_event;
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+
+  producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
+  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiTrackDouble);
+  const ApiTrackDouble& actual_event = client_capture_event.api_track_double();
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_track_double_copy, actual_event));
 }
 
 TEST(ProducerEventProcessor, WarningEvent) {
