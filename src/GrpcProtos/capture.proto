@@ -140,10 +140,18 @@ message ApiEvent {
 }
 
 message ApiScopeStart {
+  // NextID: 16
+
   int32 pid = 1;
   int32 tid = 2;
   uint64 timestamp_ns = 3;
 
+  // We encode the first 64 characters of the scope's name/label using fixed64
+  // values, in order to avoid an additional allocation (for the internal
+  // vector) for short strings. Those allocations has shown a huge performance
+  // impact.
+  // If the name exceeds the 64 characters, the `additional_encode_name` will
+  // be used to encode the additional characters.
   fixed64 encoded_name_01 = 4;
   fixed64 encoded_name_02 = 5;
   fixed64 encoded_name_03 = 6;
@@ -152,20 +160,11 @@ message ApiScopeStart {
   fixed64 encoded_name_06 = 9;
   fixed64 encoded_name_07 = 10;
   fixed64 encoded_name_08 = 11;
-  fixed64 encoded_name_09 = 12;
-  fixed64 encoded_name_10 = 13;
-  fixed64 encoded_name_11 = 14;
-  fixed64 encoded_name_12 = 15;
-  fixed64 encoded_name_13 = 16;
-  fixed64 encoded_name_14 = 17;
-  fixed64 encoded_name_15 = 18;
-  fixed64 encoded_name_16 = 19;
+  bytes additional_encoded_name = 12;
 
-  bytes additional_encoded_name = 20;
-
-  Color color = 21;
-  uint64 group_id = 22;
-  uint64 address_in_function = 23;
+  Color color = 13;
+  uint64 group_id = 14;
+  uint64 address_in_function = 15;
 }
 
 message ApiScopeStop {
@@ -175,10 +174,18 @@ message ApiScopeStop {
 }
 
 message ApiScopeStartAsync {
+  // NextID: 16
+
   int32 pid = 1;
   int32 tid = 2;
   uint64 timestamp_ns = 3;
 
+  // We encode the first 64 characters of the scope's name/label using fixed64
+  // values, in order to avoid an additional allocation (for the internal
+  // vector) for short strings. Those allocations has shown a huge performance
+  // impact.
+  // If the name exceeds the 64 characters, the `additional_encode_name` will
+  // be used to encode the additional characters.
   fixed64 encoded_name_01 = 4;
   fixed64 encoded_name_02 = 5;
   fixed64 encoded_name_03 = 6;
@@ -187,20 +194,11 @@ message ApiScopeStartAsync {
   fixed64 encoded_name_06 = 9;
   fixed64 encoded_name_07 = 10;
   fixed64 encoded_name_08 = 11;
-  fixed64 encoded_name_09 = 12;
-  fixed64 encoded_name_10 = 13;
-  fixed64 encoded_name_11 = 14;
-  fixed64 encoded_name_12 = 15;
-  fixed64 encoded_name_13 = 16;
-  fixed64 encoded_name_14 = 17;
-  fixed64 encoded_name_15 = 18;
-  fixed64 encoded_name_16 = 19;
+  bytes additional_encoded_name = 12;
 
-  bytes additional_encoded_name = 20;
-
-  Color color = 21;
-  uint64 id = 22;
-  uint64 address_in_function = 23;
+  Color color = 13;
+  uint64 id = 14;
+  uint64 address_in_function = 15;
 }
 
 message ApiScopeStopAsync {
@@ -210,10 +208,18 @@ message ApiScopeStopAsync {
 }
 
 message ApiStringEvent {
+  // NextID: 14
+
   int32 pid = 1;
   int32 tid = 2;
   uint64 timestamp_ns = 3;
 
+  // We encode the first 64 characters of the scope's name/label using fixed64
+  // values, in order to avoid an additional allocation (for the internal
+  // vector) for short strings. Those allocations has shown a huge performance
+  // impact.
+  // If the name exceeds the 64 characters, the `additional_encode_name` will
+  // be used to encode the additional characters.
   fixed64 encoded_name_01 = 4;
   fixed64 encoded_name_02 = 5;
   fixed64 encoded_name_03 = 6;
@@ -222,17 +228,9 @@ message ApiStringEvent {
   fixed64 encoded_name_06 = 9;
   fixed64 encoded_name_07 = 10;
   fixed64 encoded_name_08 = 11;
-  fixed64 encoded_name_09 = 12;
-  fixed64 encoded_name_10 = 13;
-  fixed64 encoded_name_11 = 14;
-  fixed64 encoded_name_12 = 15;
-  fixed64 encoded_name_13 = 16;
-  fixed64 encoded_name_14 = 17;
-  fixed64 encoded_name_15 = 18;
-  fixed64 encoded_name_16 = 19;
+  bytes additional_encoded_name = 12;
 
-  bytes additional_encoded_name = 20;
-  uint64 id = 21;
+  uint64 id = 13;
 }
 
 message ApiTrackInt {
@@ -311,7 +309,12 @@ message CallstackSample {
   uint64 callstack_id = 3;
   uint64 timestamp_ns = 4;
 }
-
+// We encode the first 64 characters of the scope's name/label using fixed64
+// values, in order to avoid an additional allocation (for the internal
+// vector) for short strings. Those allocations has shown a huge performance
+// impact.
+// If the name exceeds the 64 characters, the `additional_encode_name` will
+// be used to encode the additional characters.
 message FullCallstackSample {
   int32 pid = 1;
   int32 tid = 2;
