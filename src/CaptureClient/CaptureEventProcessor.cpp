@@ -338,8 +338,8 @@ void CaptureEventProcessorForListener::ProcessModulesSnapshot(
 void CaptureEventProcessorForListener::ProcessGpuJob(const GpuJob& gpu_job) {
   uint64_t timeline_key = gpu_job.timeline_key();
 
-  int32_t process_id = gpu_job.pid();
-  int32_t thread_id = gpu_job.tid();
+  uint32_t process_id = gpu_job.pid();
+  uint32_t thread_id = gpu_job.tid();
   uint64_t amdgpu_cs_ioctl_time_ns = gpu_job.amdgpu_cs_ioctl_time_ns();
 
   constexpr const char* kSwQueue = "sw queue";

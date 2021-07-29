@@ -55,8 +55,8 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   void RequestUpdate() override;
   void UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, uint64_t /*max_tick*/,
                         PickingMode /*picking_mode*/, float /*z_offset*/ = 0) override;
-  void SelectCallstacks(float world_start, float world_end, int32_t thread_id);
-  const std::vector<orbit_client_protos::CallstackEvent>& GetSelectedCallstackEvents(int32_t tid);
+  void SelectCallstacks(float world_start, float world_end, uint32_t thread_id);
+  const std::vector<orbit_client_protos::CallstackEvent>& GetSelectedCallstackEvents(uint32_t tid);
 
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
                     const orbit_grpc_protos::InstrumentedFunction* function);
@@ -104,10 +104,10 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
                            JumpScope jump_scope);
   [[nodiscard]] const orbit_client_protos::TimerInfo* FindPreviousFunctionCall(
       uint64_t function_address, uint64_t current_time,
-      std::optional<int32_t> thread_id = std::nullopt) const;
+      std::optional<uint32_t> thread_id = std::nullopt) const;
   [[nodiscard]] const orbit_client_protos::TimerInfo* FindNextFunctionCall(
       uint64_t function_address, uint64_t current_time,
-      std::optional<int32_t> thread_id = std::nullopt) const;
+      std::optional<uint32_t> thread_id = std::nullopt) const;
   void SelectAndZoom(const orbit_client_protos::TimerInfo* timer_info);
   [[nodiscard]] double GetCaptureTimeSpanUs() const;
   [[nodiscard]] double GetCurrentTimeSpanUs() const;
@@ -165,7 +165,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   [[nodiscard]] static Color GetColor(const std::string& str) {
     return GetColor(std::hash<std::string>{}(str));
   }
-  [[nodiscard]] static Color GetThreadColor(int32_t tid) {
+  [[nodiscard]] static Color GetThreadColor(uint32_t tid) {
     return GetColor(static_cast<uint32_t>(tid));
   }
 
@@ -234,7 +234,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
 
   std::unique_ptr<TrackManager> track_manager_;
 
-  absl::flat_hash_map<int32_t, std::vector<orbit_client_protos::CallstackEvent>>
+  absl::flat_hash_map<uint32_t, std::vector<orbit_client_protos::CallstackEvent>>
       selected_callstack_events_per_thread_;
 
   ManualInstrumentationManager* manual_instrumentation_manager_;

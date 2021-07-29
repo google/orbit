@@ -9,7 +9,7 @@
 
 namespace orbit_client_data {
 
-using ThreadID = int32_t;
+using ThreadID = uint32_t;
 
 }  // namespace orbit_client_data
 

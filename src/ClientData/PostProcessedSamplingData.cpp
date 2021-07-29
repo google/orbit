@@ -89,7 +89,7 @@ PostProcessedSamplingData::GetSortedCallstackReportFromFunctionAddresses(
 }
 
 const ThreadSampleData* PostProcessedSamplingData::GetThreadSampleDataByThreadId(
-    int32_t thread_id) const {
+    uint32_t thread_id) const {
   auto it = thread_id_to_sample_data_.find(thread_id);
   if (it == thread_id_to_sample_data_.end()) {
     return nullptr;

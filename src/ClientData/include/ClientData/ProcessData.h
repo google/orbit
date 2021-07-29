@@ -60,7 +60,7 @@ class ProcessData final {
 
   void SetProcessInfo(const orbit_grpc_protos::ProcessInfo& process_info);
 
-  [[nodiscard]] int32_t pid() const;
+  [[nodiscard]] uint32_t pid() const;
   [[nodiscard]] const std::string& name() const;
   [[nodiscard]] double cpu_usage() const;
   [[nodiscard]] const std::string& full_path() const;

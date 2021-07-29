@@ -28,7 +28,7 @@ class ThreadTrack final : public TimerTrack {
  public:
   enum class ScopeTreeUpdateType { kAlways, kOnCaptureComplete, kNever };
   explicit ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph,
-                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout, int32_t thread_id,
+                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout, uint32_t thread_id,
                        OrbitApp* app, const orbit_client_data::CaptureData* capture_data,
                        orbit_client_data::TrackData* track_data,
                        ScopeTreeUpdateType scope_tree_update_type);

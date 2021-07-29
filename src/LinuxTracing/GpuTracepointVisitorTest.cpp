@@ -112,8 +112,8 @@ std::unique_ptr<DmaFenceSignaledPerfEvent> MakeFakeDmaFenceSignaledPerfEvent(
   return event;
 }
 
-orbit_grpc_protos::FullGpuJob MakeGpuJob(int32_t pid, int32_t tid, uint32_t context, uint32_t seqno,
-                                         std::string timeline, int32_t depth,
+orbit_grpc_protos::FullGpuJob MakeGpuJob(uint32_t pid, uint32_t tid, uint32_t context,
+                                         uint32_t seqno, std::string timeline, int32_t depth,
                                          uint64_t amdgpu_cs_ioctl_time_ns,
                                          uint64_t amdgpu_sched_run_job_time_ns,
                                          uint64_t gpu_hardware_start_time_ns,

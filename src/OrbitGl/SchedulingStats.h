@@ -31,7 +31,7 @@ class SchedulingStats {
   [[nodiscard]] std::string ToString() const;
 
   struct ThreadStats {
-    int32_t tid = -1;
+    uint32_t tid = -1;
     uint64_t time_on_core_ns = 0;
     std::string thread_name;
   };
@@ -39,7 +39,7 @@ class SchedulingStats {
   struct ProcessStats {
     std::map<int32_t, ThreadStats> thread_stats_by_tid;
     std::vector<ThreadStats*> thread_stats_sorted_by_time_on_core;
-    int32_t pid = -1;
+    uint32_t pid = -1;
     uint64_t time_on_core_ns = 0;
     std::string process_name;
   };

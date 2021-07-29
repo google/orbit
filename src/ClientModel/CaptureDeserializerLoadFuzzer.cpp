@@ -33,7 +33,7 @@ class MockCaptureListener : public orbit_capture_client::CaptureListener {
   void OnUniqueCallstack(uint64_t /*callstack_id*/,
                          orbit_client_protos::CallstackInfo /*callstack*/) override {}
   void OnCallstackEvent(orbit_client_protos::CallstackEvent /*callstack_event*/) override {}
-  void OnThreadName(int32_t /*thread_id*/, std::string /*thread_name*/) override {}
+  void OnThreadName(uint32_t /*thread_id*/, std::string /*thread_name*/) override {}
   void OnThreadStateSlice(
       orbit_client_protos::ThreadStateSliceInfo /*thread_state_slice*/) override {}
   void OnAddressInfo(orbit_client_protos::LinuxAddressInfo /*address_info*/) override {}

@@ -87,23 +87,23 @@ class GpuQueueSubmissionProcessor {
   // Finds the GpuJob that is fully inside the given timestamps and happened on the given thread id.
   // Returns `nullptr` if there is no such job.
   [[nodiscard]] const orbit_grpc_protos::GpuJob* FindMatchingGpuJob(
-      int32_t thread_id, uint64_t pre_submission_cpu_timestamp,
+      uint32_t thread_id, uint64_t pre_submission_cpu_timestamp,
       uint64_t post_submission_cpu_timestamp);
 
   // Finds the GpuQueueSubmission that fully contains the given timestamp and happened on the given
   // thread id. Returns `nullptr` if there is no such submission.
   [[nodiscard]] const orbit_grpc_protos::GpuQueueSubmission* FindMatchingGpuQueueSubmission(
-      int32_t thread_id, uint64_t submit_time);
+      uint32_t thread_id, uint64_t submit_time);
 
-  [[nodiscard]] bool HasUnprocessedBeginMarkers(int32_t thread_id,
+  [[nodiscard]] bool HasUnprocessedBeginMarkers(uint32_t thread_id,
                                                 uint64_t post_submission_timestamp) const;
 
-  void DecrementUnprocessedBeginMarkers(int32_t thread_id, uint64_t submission_timestamp,
+  void DecrementUnprocessedBeginMarkers(uint32_t thread_id, uint64_t submission_timestamp,
                                         uint64_t post_submission_timestamp);
 
-  void DeleteSavedGpuJob(int32_t thread_id, uint64_t submission_timestamp);
+  void DeleteSavedGpuJob(uint32_t thread_id, uint64_t submission_timestamp);
 
-  void DeleteSavedGpuSubmission(int32_t thread_id, uint64_t post_submission_timestamp);
+  void DeleteSavedGpuSubmission(uint32_t thread_id, uint64_t post_submission_timestamp);
 
   absl::node_hash_map<int32_t, std::map<uint64_t, orbit_grpc_protos::GpuJob>>
       tid_to_submission_time_to_gpu_job_;

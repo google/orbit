@@ -46,7 +46,7 @@ using orbit_base::Future;
 
 // TODO(b/187170164): This method contains a lot of arguments. Consider making it more structured.
 Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
-    orbit_base::ThreadPool* thread_pool, int32_t process_id,
+    orbit_base::ThreadPool* thread_pool, uint32_t process_id,
     const orbit_client_data::ModuleManager& module_manager,
     absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions, bool record_arguments,
     bool record_return_values, TracepointInfoSet selected_tracepoints, double samples_per_second,
@@ -111,7 +111,7 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
 }
 
 ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
-    int32_t process_id, const orbit_client_data::ModuleManager& module_manager,
+    uint32_t process_id, const orbit_client_data::ModuleManager& module_manager,
     const absl::flat_hash_map<uint64_t, FunctionInfo>& selected_functions, bool record_arguments,
     bool record_return_values, const TracepointInfoSet& selected_tracepoints,
     double samples_per_second, uint16_t stack_dump_size, UnwindingMethod unwinding_method,

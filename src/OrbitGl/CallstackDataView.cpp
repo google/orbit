@@ -169,7 +169,7 @@ void CallstackDataView::OnContextMenu(const std::string& action, int menu_index,
     }
 
   } else if (action == kMenuActionDisassembly) {
-    const int32_t pid = app_->GetCaptureData().process_id();
+    const uint32_t pid = app_->GetCaptureData().process_id();
     for (int i : item_indices) {
       app_->Disassemble(pid, *GetFrameFromRow(i).function);
     }

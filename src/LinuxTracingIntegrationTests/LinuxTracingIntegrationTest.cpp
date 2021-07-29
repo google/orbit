@@ -137,7 +137,7 @@ class ChildProcess {
     CHECK(waitpid(child_pid_, nullptr, 0) == child_pid_);
   }
 
-  [[nodiscard]] pid_t GetChildPid() const { return child_pid_; }
+  [[nodiscard]] pid_t GetChildPidNative() const { return child_pid_; }
 
   void WriteLine(std::string_view str) {
     std::string string_with_newline = std::string{str}.append("\n");
@@ -328,7 +328,10 @@ class LinuxTracingIntegrationTestFixture {
  public:
   LinuxTracingIntegrationTestFixture() : puppet_{&LinuxTracingIntegrationTestPuppetMain} {}
 
-  [[nodiscard]] pid_t GetPuppetPid() const { return puppet_.GetChildPid(); }
+  [[nodiscard]] pid_t GetPuppetPidNative() const { return puppet_.GetChildPidNative(); }
+  [[nodiscard]] uint32_t GetPuppetPid() const {
+    return orbit_base::GetThreadIdFromNative(GetPuppetPidNative());
+  }
 
   void WriteLineToPuppet(std::string_view str) { puppet_.WriteLine(str); }
 
@@ -337,7 +340,7 @@ class LinuxTracingIntegrationTestFixture {
   [[nodiscard]] orbit_grpc_protos::CaptureOptions BuildDefaultCaptureOptions() {
     orbit_grpc_protos::CaptureOptions capture_options;
     capture_options.set_trace_context_switches(true);
-    capture_options.set_pid(puppet_.GetChildPid());
+    capture_options.set_pid(puppet_.GetChildPidNative());
     capture_options.set_samples_per_second(1000.0);
     capture_options.set_stack_dump_size(65000);
     capture_options.set_unwinding_method(orbit_grpc_protos::CaptureOptions::kDwarf);
@@ -1134,7 +1137,7 @@ TEST(LinuxTracingIntegrationTest, ThreadNames) {
 
   // We also collect the initial name of each thread of the target at the start of the capture:
   // save the actual initial name so that we can later verify that it was received.
-  std::string initial_puppet_name = orbit_base::GetThreadName(fixture.GetPuppetPid());
+  std::string initial_puppet_name = orbit_base::GetThreadNameNative(fixture.GetPuppetPidNative());
 
   std::vector<orbit_grpc_protos::ProducerCaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kPthreadSetnameNpCommand);

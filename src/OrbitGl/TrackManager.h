@@ -58,7 +58,7 @@ class TrackManager {
   [[nodiscard]] std::pair<uint64_t, uint64_t> GetTracksMinMaxTimestamps() const;
 
   SchedulerTrack* GetOrCreateSchedulerTrack();
-  ThreadTrack* GetOrCreateThreadTrack(int32_t tid);
+  ThreadTrack* GetOrCreateThreadTrack(uint32_t tid);
   GpuTrack* GetOrCreateGpuTrack(uint64_t timeline_hash);
   orbit_gl::VariableTrack* GetOrCreateVariableTrack(const std::string& name);
   AsyncTrack* GetOrCreateAsyncTrack(const std::string& name);
@@ -98,7 +98,7 @@ class TrackManager {
   mutable std::recursive_mutex mutex_;
 
   std::vector<std::shared_ptr<Track>> all_tracks_;
-  absl::flat_hash_map<int32_t, std::shared_ptr<ThreadTrack>> thread_tracks_;
+  absl::flat_hash_map<uint32_t, std::shared_ptr<ThreadTrack>> thread_tracks_;
   std::map<std::string, std::shared_ptr<AsyncTrack>> async_tracks_;
   std::map<std::string, std::shared_ptr<orbit_gl::VariableTrack>> variable_tracks_;
   // Mapping from timeline to GPU tracks. Timeline name is used for stable ordering. In particular

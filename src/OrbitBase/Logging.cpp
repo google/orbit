@@ -35,7 +35,7 @@ std::string GetLogFileName() {
   std::string timestamp_string = absl::FormatTime(orbit_base_internal::kLogFileNameTimeFormat,
                                                   absl::Now(), absl::UTCTimeZone());
   return absl::StrFormat(orbit_base_internal::kLogFileNameDelimiter, timestamp_string,
-                         static_cast<uint32_t>(orbit_base::GetCurrentProcessId()));
+                         orbit_base::GetCurrentProcessId_not_native());
 }
 
 ErrorMessageOr<void> TryRemoveOldLogFiles(const std::filesystem::path& log_dir) {

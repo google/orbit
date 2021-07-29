@@ -49,12 +49,12 @@ class ProcessManager {
       const std::function<void(std::vector<orbit_grpc_protos::ProcessInfo>)>& listener) = 0;
 
   virtual ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> LoadModuleList(
-      int32_t pid) = 0;
+      uint32_t pid) = 0;
 
-  virtual ErrorMessageOr<std::string> LoadProcessMemory(int32_t pid, uint64_t address,
+  virtual ErrorMessageOr<std::string> LoadProcessMemory(uint32_t pid, uint64_t address,
                                                         uint64_t size) = 0;
 
-  virtual ErrorMessageOr<std::string> LoadNullTerminatedString(int32_t pid, uint64_t address) = 0;
+  virtual ErrorMessageOr<std::string> LoadNullTerminatedString(uint32_t pid, uint64_t address) = 0;
 
   virtual ErrorMessageOr<std::string> FindDebugInfoFile(const std::string& module_path) = 0;
 

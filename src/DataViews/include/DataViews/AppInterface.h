@@ -73,7 +73,7 @@ class AppInterface {
   virtual void AddFrameTrack(const orbit_client_protos::FunctionInfo& function) = 0;
   virtual void RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function) = 0;
 
-  virtual void Disassemble(int32_t pid, const orbit_client_protos::FunctionInfo& function) = 0;
+  virtual void Disassemble(uint32_t pid, const orbit_client_protos::FunctionInfo& function) = 0;
   virtual void ShowSourceCode(const orbit_client_protos::FunctionInfo& function) = 0;
 };
 

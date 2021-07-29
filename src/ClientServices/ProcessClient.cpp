@@ -63,7 +63,7 @@ ErrorMessageOr<std::vector<orbit_grpc_protos::ProcessInfo>> ProcessClient::GetPr
   return std::vector<ProcessInfo>(processes.begin(), processes.end());
 }
 
-ErrorMessageOr<std::vector<ModuleInfo>> ProcessClient::LoadModuleList(int32_t pid) {
+ErrorMessageOr<std::vector<ModuleInfo>> ProcessClient::LoadModuleList(uint32_t pid) {
   ORBIT_SCOPE_FUNCTION;
   GetModuleListRequest request;
   GetModuleListResponse response;
@@ -100,7 +100,7 @@ ErrorMessageOr<std::string> ProcessClient::FindDebugInfoFile(const std::string& 
   return response.debug_info_file_path();
 }
 
-ErrorMessageOr<std::string> ProcessClient::LoadProcessMemory(int32_t pid, uint64_t address,
+ErrorMessageOr<std::string> ProcessClient::LoadProcessMemory(uint32_t pid, uint64_t address,
                                                              uint64_t size) {
   ORBIT_SCOPE_FUNCTION;
   GetProcessMemoryRequest request;

@@ -51,7 +51,7 @@ CaptureData::CaptureData(ModuleManager* module_manager, const CaptureStarted& ca
 }
 
 void CaptureData::ForEachThreadStateSliceIntersectingTimeRange(
-    int32_t thread_id, uint64_t min_timestamp, uint64_t max_timestamp,
+    uint32_t thread_id, uint64_t min_timestamp, uint64_t max_timestamp,
     const std::function<void(const ThreadStateSliceInfo&)>& action) const {
   absl::MutexLock lock{&thread_state_slices_mutex_};
   auto tid_thread_state_slices_it = thread_state_slices_.find(thread_id);
@@ -313,7 +313,7 @@ const FunctionInfo* CaptureData::FindFunctionByAddress(uint64_t absolute_address
                                                            result.value().build_id());
 }
 
-int32_t CaptureData::process_id() const { return process_.pid(); }
+uint32_t CaptureData::process_id() const { return process_.pid(); }
 
 std::string CaptureData::process_name() const { return process_.name(); }
 

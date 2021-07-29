@@ -28,9 +28,9 @@ MATCHER(CallstackEventEq, "") {
 TEST(CallstackData, FilterCallstackEventsBasedOnMajorityStart) {
   CallstackData callstack_data;
 
-  const int32_t tid = 42;
-  const int32_t tid_with_no_complete = 43;
-  const int32_t tid_without_supermajority = 44;
+  const uint32_t tid = 42;
+  const uint32_t tid_with_no_complete = 43;
+  const uint32_t tid_without_supermajority = 44;
 
   const uint64_t cs1_id = 12;
   const uint64_t cs1_outer = 0x10;

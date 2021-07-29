@@ -39,7 +39,7 @@ void DataManager::set_highlighted_function_id(uint64_t highlighted_function_id) 
   highlighted_function_id_ = highlighted_function_id;
 }
 
-void DataManager::set_selected_thread_id(int32_t thread_id) {
+void DataManager::set_selected_thread_id(uint32_t thread_id) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   selected_thread_id_ = thread_id;
 }

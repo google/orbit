@@ -33,6 +33,7 @@
 #include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "Symbols/SymbolHelper.h"
 #include "capture_data.pb.h"
 #include "module.pb.h"
@@ -94,8 +95,8 @@ bool ClientGgp::InitClient() {
 
 // Client requests to start the capture
 ErrorMessageOr<void> ClientGgp::RequestStartCapture(orbit_base::ThreadPool* thread_pool) {
-  int32_t pid = target_process_->pid();
-  if (pid == -1) {
+  uint32_t pid = target_process_->pid();
+  if (pid == orbit_base::kInvalidThreadId) {
     return ErrorMessage{
         "Error starting capture: "
         "No process selected. Please choose a target process for the capture."};
@@ -166,7 +167,7 @@ std::filesystem::path ClientGgp::GenerateFilePath() {
   return std::filesystem::path(options_.capture_file_directory) / file_name;
 }
 
-ErrorMessageOr<std::unique_ptr<ProcessData>> ClientGgp::GetOrbitProcessByPid(int32_t pid) {
+ErrorMessageOr<std::unique_ptr<ProcessData>> ClientGgp::GetOrbitProcessByPid(uint32_t pid) {
   // We retrieve the information of the process to later get the module corresponding to its binary
   OUTCOME_TRY(auto&& process_infos, process_client_->GetProcessList());
   LOG("List of processes:");

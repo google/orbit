@@ -439,11 +439,11 @@ void SessionSetupDialog::OnProcessListUpdate(
 
     // In case there is a selection already, do not change anything, only update the cpu usage
     if (ui_->processesTableView->selectionModel()->hasSelection()) {
-      const int32_t selected_process_id = ui_->processesTableView->selectionModel()
-                                              ->selectedRows()[0]
-                                              .data(Qt::UserRole)
-                                              .value<const ProcessInfo*>()
-                                              ->pid();
+      const uint32_t selected_process_id = ui_->processesTableView->selectionModel()
+                                               ->selectedRows()[0]
+                                               .data(Qt::UserRole)
+                                               .value<const ProcessInfo*>()
+                                               ->pid();
       const auto it =
           std::find_if(process_list.begin(), process_list.end(),
                        [&](const auto& process) { return process.pid() == selected_process_id; });

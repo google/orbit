@@ -105,7 +105,7 @@ float TimeGraphLayout::GetBottomMargin() const {
   return GetSliderWidth() + GetTimeBarHeight();
 }
 
-float TimeGraphLayout::GetEventTrackHeightFromTid(int32_t tid) const {
+float TimeGraphLayout::GetEventTrackHeightFromTid(uint32_t tid) const {
   float height = GetEventTrackHeight();
   if (tid == orbit_base::kAllProcessThreadsTid) {
     height *= GetAllThreadsEventTrackScale();

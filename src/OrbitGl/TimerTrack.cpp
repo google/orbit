@@ -319,7 +319,7 @@ void TimerTrack::OnTimer(const TimerInfo& timer_info) {
     UpdateMaxDepth(timer_info.depth() + 1);
   }
 
-  if (process_id_ == -1) {
+  if (process_id_ == orbit_base::kInvalidProcessId) {
     process_id_ = timer_info.process_id();
   }
 

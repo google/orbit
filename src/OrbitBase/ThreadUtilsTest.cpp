@@ -18,15 +18,10 @@
 #include "OrbitBase/ThreadUtils.h"
 
 TEST(ThreadUtils, GetCurrentThreadId) {
-#ifdef _WIN32
-  uint32_t current_tid = orbit_base::GetCurrentThreadId();
+  uint32_t current_tid = orbit_base::GetCurrentThreadId_not_native();
   uint32_t worker_tid = 0;
-#else
-  pid_t current_tid = orbit_base::GetCurrentThreadId();
-  pid_t worker_tid = 0;
-#endif
 
-  std::thread t([&worker_tid]() { worker_tid = orbit_base::GetCurrentThreadId(); });
+  std::thread t([&worker_tid]() { worker_tid = orbit_base::GetCurrentThreadId_not_native(); });
   t.join();
   EXPECT_TRUE(worker_tid != 0);
   EXPECT_TRUE(worker_tid != current_tid);
@@ -36,7 +31,7 @@ TEST(ThreadUtils, GetSetCurrentThreadShortName) {
   // Set thread name of exactly 15 characters. This should work on both Linux and Windows.
   static const char* kThreadName = "123456789012345";
   orbit_base::SetCurrentThreadName(kThreadName);
-  std::string thread_name = orbit_base::GetThreadName(orbit_base::GetCurrentThreadId());
+  std::string thread_name = orbit_base::GetThreadNameNative(orbit_base::GetCurrentThreadIdNative());
   EXPECT_EQ(kThreadName, thread_name);
 }
 
@@ -49,7 +44,8 @@ TEST(ThreadUtils, GetSetCurrentThreadLongName) {
   static const char* kLongThreadName = "1234567890123456";
   EXPECT_GT(strlen(kLongThreadName), kMaxNonZeroCharactersLinux);
   orbit_base::SetCurrentThreadName(kLongThreadName);
-  std::string long_thread_name = orbit_base::GetThreadName(orbit_base::GetCurrentThreadId());
+  std::string long_thread_name =
+      orbit_base::GetThreadNameNative(orbit_base::GetCurrentThreadIdNative());
   EXPECT_EQ(long_thread_name.substr(0, kMaxNonZeroCharactersLinux),
             std::string(kLongThreadName, kMaxNonZeroCharactersLinux));
 
@@ -65,18 +61,13 @@ TEST(ThreadUtils, GetSetCurrentThreadEmptyName) {
   // Set thread name of exactly 15 characters. This should work on both Linux and Windows.
   static const char* kEmptyThreadName = "";
   orbit_base::SetCurrentThreadName(kEmptyThreadName);
-  std::string thread_name = orbit_base::GetThreadName(orbit_base::GetCurrentThreadId());
+  std::string thread_name = orbit_base::GetThreadNameNative(orbit_base::GetCurrentThreadIdNative());
   EXPECT_EQ(kEmptyThreadName, thread_name);
 }
 
 TEST(ThreadUtils, GetThreadName) {
   absl::Mutex mutex;
-#if _WIN32
-  using PidType = uint32_t;
-#else
-  using PidType = pid_t;
-#endif
-  PidType other_tid = 0;
+  uint32_t other_tid = 0;
   bool other_name_read = false;
   static const char* kThreadName = "OtherThread";
 
@@ -84,7 +75,7 @@ TEST(ThreadUtils, GetThreadName) {
     orbit_base::SetCurrentThreadName(kThreadName);
     {
       absl::MutexLock lock{&mutex};
-      other_tid = orbit_base::GetCurrentThreadId();
+      other_tid = orbit_base::GetCurrentThreadId_not_native();
     }
     {
       absl::MutexLock lock{&mutex};
@@ -100,7 +91,7 @@ TEST(ThreadUtils, GetThreadName) {
     mutex.Await(absl::Condition(
         +[](PidType* other_tid) { return *other_tid != 0; }, &other_tid));
   }
-  std::string other_name = orbit_base::GetThreadName(other_tid);
+  std::string other_name = orbit_base::GetThreadNameNative(other_tid);
   EXPECT_EQ(other_name, kThreadName);
   {
     absl::MutexLock lock{&mutex};

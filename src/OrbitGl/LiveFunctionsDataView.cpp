@@ -293,7 +293,7 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
         app_->DisableFrameTrack(selected_function);
         app_->RemoveFrameTrack(selected_function);
       } else if (action == kMenuActionDisassembly) {
-        int32_t pid = capture_data.process_id();
+        uint32_t pid = capture_data.process_id();
         app_->Disassemble(pid, selected_function);
       } else if (action == kMenuActionSourceCode) {
         app_->ShowSourceCode(selected_function);

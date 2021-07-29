@@ -58,7 +58,8 @@ class ClientGgp {
   std::unique_ptr<orbit_capture_client::CaptureClient> capture_client_;
   std::unique_ptr<orbit_client_services::ProcessClient> process_client_;
 
-  ErrorMessageOr<std::unique_ptr<orbit_client_data::ProcessData>> GetOrbitProcessByPid(int32_t pid);
+  ErrorMessageOr<std::unique_ptr<orbit_client_data::ProcessData>> GetOrbitProcessByPid(
+      uint32_t pid);
   bool InitCapture();
   ErrorMessageOr<void> LoadModuleAndSymbols();
   void LoadSelectedFunctions();

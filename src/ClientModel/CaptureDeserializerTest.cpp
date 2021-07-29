@@ -80,7 +80,8 @@ class MockCaptureListener : public CaptureListener {
               (override));
   MOCK_METHOD(void, OnModulesSnapshot,
               (uint64_t /*timestamp_ns*/, std::vector<ModuleInfo> /*module_infos*/), (override));
-  MOCK_METHOD(void, OnThreadName, (int32_t /*thread_id*/, std::string /*thread_name*/), (override));
+  MOCK_METHOD(void, OnThreadName, (uint32_t /*thread_id*/, std::string /*thread_name*/),
+              (override));
   MOCK_METHOD(void, OnThreadStateSlice, (ThreadStateSliceInfo), (override));
   MOCK_METHOD(void, OnAddressInfo, (LinuxAddressInfo), (override));
   MOCK_METHOD(void, OnUniqueTracepointInfo, (uint64_t /*key*/, TracepointInfo /*tracepoint_info*/),

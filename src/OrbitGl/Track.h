@@ -103,7 +103,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
 
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
 
-  int32_t process_id_;
+  uint32_t process_id_;
   bool draw_background_ = true;
   bool visible_ = true;
   bool pinned_ = false;

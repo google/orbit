@@ -64,7 +64,7 @@ class CaptureData {
   [[nodiscard]] std::optional<uint64_t> FindInstrumentedFunctionIdSlow(
       const orbit_client_protos::FunctionInfo& function) const;
 
-  [[nodiscard]] int32_t process_id() const;
+  [[nodiscard]] uint32_t process_id() const;
 
   [[nodiscard]] std::string process_name() const;
 
@@ -105,13 +105,13 @@ class CaptureData {
     return thread_names_;
   }
 
-  [[nodiscard]] const std::string& GetThreadName(int32_t thread_id) const {
+  [[nodiscard]] const std::string& GetThreadName(uint32_t thread_id) const {
     static const std::string kEmptyString;
     auto it = thread_names_.find(thread_id);
     return it != thread_names_.end() ? it->second : kEmptyString;
   }
 
-  void AddOrAssignThreadName(int32_t thread_id, std::string thread_name) {
+  void AddOrAssignThreadName(uint32_t thread_id, std::string thread_name) {
     thread_names_.insert_or_assign(thread_id, std::move(thread_name));
   }
 
@@ -121,7 +121,7 @@ class CaptureData {
     return thread_state_slices_;
   }
 
-  [[nodiscard]] bool HasThreadStatesForThread(int32_t tid) const {
+  [[nodiscard]] bool HasThreadStatesForThread(uint32_t tid) const {
     absl::MutexLock lock{&thread_state_slices_mutex_};
     return thread_state_slices_.count(tid) > 0;
   }
@@ -134,7 +134,7 @@ class CaptureData {
   // Allows the caller to iterate `action` over all the thread state slices of the specified thread
   // in the time range while holding for the whole time the internal mutex, acquired only once.
   void ForEachThreadStateSliceIntersectingTimeRange(
-      int32_t thread_id, uint64_t min_timestamp, uint64_t max_timestamp,
+      uint32_t thread_id, uint64_t min_timestamp, uint64_t max_timestamp,
       const std::function<void(const orbit_client_protos::ThreadStateSliceInfo&)>& action) const;
 
   [[nodiscard]] const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats>&
@@ -156,13 +156,13 @@ class CaptureData {
   }
 
   void ForEachTracepointEventOfThreadInTimeRange(
-      int32_t thread_id, uint64_t min_tick, uint64_t max_tick,
+      uint32_t thread_id, uint64_t min_tick, uint64_t max_tick,
       const std::function<void(const orbit_client_protos::TracepointEventInfo&)>& action) const {
     return tracepoint_data_.ForEachTracepointEventOfThreadInTimeRange(thread_id, min_tick, max_tick,
                                                                       action);
   }
 
-  uint32_t GetNumTracepointsForThreadId(int32_t thread_id) const {
+  uint32_t GetNumTracepointsForThreadId(uint32_t thread_id) const {
     return tracepoint_data_.GetNumTracepointEventsForThreadId(thread_id);
   }
 
@@ -184,7 +184,7 @@ class CaptureData {
   }
 
   void AddTracepointEventAndMapToThreads(uint64_t time, uint64_t tracepoint_hash,
-                                         int32_t process_id, int32_t thread_id, int32_t cpu,
+                                         uint32_t process_id, uint32_t thread_id, int32_t cpu,
                                          bool is_same_pid_as_target) {
     tracepoint_data_.EmplaceTracepointEvent(time, tracepoint_hash, process_id, thread_id, cpu,
                                             is_same_pid_as_target);

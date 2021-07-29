@@ -288,7 +288,7 @@ void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_i
     }
     app_->RetrieveModulesAndLoadSymbols(modules_to_load);
   } else if (action == kMenuActionDisassembly) {
-    int32_t pid = app_->GetCaptureData().process_id();
+    uint32_t pid = app_->GetCaptureData().process_id();
     for (const FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {
       app_->Disassemble(pid, *function);
     }

@@ -142,12 +142,12 @@ void TrackManager::SortTracks() {
   }
 
   // Separate "capture_pid" tracks from tracks that originate from other processes.
-  int32_t capture_pid = capture_data_->process_id();
+  uint32_t capture_pid = capture_data_->process_id();
   std::vector<Track*> capture_pid_tracks;
   std::vector<Track*> external_pid_tracks;
   for (auto& track : all_processes_sorted_tracks) {
-    int32_t pid = track->GetProcessId();
-    if (pid != -1 && pid != capture_pid) {
+    uint32_t pid = track->GetProcessId();
+    if (pid != orbit_base::kInvalidProcessId && pid != capture_pid) {
       external_pid_tracks.push_back(track);
     } else {
       capture_pid_tracks.push_back(track);
@@ -386,7 +386,7 @@ SchedulerTrack* TrackManager::GetOrCreateSchedulerTrack() {
   return scheduler_track_.get();
 }
 
-ThreadTrack* TrackManager::GetOrCreateThreadTrack(int32_t tid) {
+ThreadTrack* TrackManager::GetOrCreateThreadTrack(uint32_t tid) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<ThreadTrack> track = thread_tracks_[tid];
   if (track == nullptr) {

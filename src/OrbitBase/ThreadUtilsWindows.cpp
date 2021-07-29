@@ -22,12 +22,12 @@ static FunctionPrototypeT GetProcAddress(const std::string& library, const std::
   return reinterpret_cast<FunctionPrototypeT>(::GetProcAddress(module_handle, procedure.c_str()));
 }
 
-uint32_t GetCurrentThreadId() {
+uint32_t GetCurrentThreadIdNative() {
   thread_local uint32_t current_tid = ::GetCurrentThreadId();
   return current_tid;
 }
 
-std::string GetThreadName(uint32_t tid) {
+std::string GetThreadNameNative(uint32_t tid) {
   static const std::string kEmptyString;
 
   // Find "GetThreadDescription" procedure.
@@ -58,7 +58,7 @@ std::string GetThreadName(uint32_t tid) {
   return kEmptyString;
 }
 
-void SetCurrentThreadName(const char* name) {
+void SetCurrentThreadNameNative(const char* name) {
   static auto set_thread_description =
       GetProcAddress<HRESULT(WINAPI*)(HANDLE, PCWSTR)>("kernel32.dll", "SetThreadDescription");
   std::wstring wide_name(name, name + strlen(name));
@@ -68,6 +68,6 @@ void SetCurrentThreadName(const char* name) {
   }
 }
 
-uint32_t GetCurrentProcessId() { return ::GetCurrentProcessId(); }
+uint32_t GetCurrentProcessIdNative() { return ::GetCurrentProcessId(); }
 
 }  // namespace orbit_base
