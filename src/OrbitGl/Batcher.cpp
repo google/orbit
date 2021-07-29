@@ -47,11 +47,8 @@ void Batcher::AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
                       std::unique_ptr<PickingUserData> user_data) {
   Line line;
-  // We had the issue that some horizontal lines in graph tracks are missing when they are drawn
-  // at the margin of pixels. The problem can be addressed, in most cases, by drawing lines at the
-  // center of pixels.
-  line.start_point = Vec3(floorf(from[0]), floorf(from[1]) + 0.5f, z);
-  line.end_point = Vec3(floorf(to[0]), floorf(to[1]) + 0.5f, z);
+  line.start_point = Vec3(floorf(from[0]), floorf(from[1]), z);
+  line.end_point = Vec3(floorf(to[0]), floorf(to[1]), z);
   auto& buffer = primitive_buffers_by_layer_[z];
 
   buffer.line_buffer.lines_.emplace_back(line);
@@ -424,7 +421,7 @@ void Batcher::DrawLineBuffer(float layer, bool picking) const {
   const Block<Color, LineBuffer::NUM_LINES_PER_BLOCK * 2>* color_block;
 
   color_block = !picking ? line_buffer.colors_.root() : line_buffer.picking_colors_.root();
-
+  glEnable(GL_LINE_SMOOTH);
   while (line_block != nullptr) {
     if (auto num_elems = line_block->size()) {
       glVertexPointer(3, GL_FLOAT, sizeof(Vec3), line_block->data());
@@ -435,6 +432,7 @@ void Batcher::DrawLineBuffer(float layer, bool picking) const {
     line_block = line_block->next();
     color_block = color_block->next();
   }
+  glDisable(GL_LINE_SMOOTH);
 }
 
 void Batcher::DrawTriangleBuffer(float layer, bool picking) const {
