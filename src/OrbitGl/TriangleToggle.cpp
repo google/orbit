@@ -33,9 +33,13 @@ void TriangleToggle::Draw(Batcher& batcher, TextRenderer& text_renderer,
   const Color kGrey(100, 100, 100, 255);
   Color color = is_collapsible_ ? kWhite : kGrey;
 
+  // Set the size such that the triangle toggle can be selected in the E2E test.
+  float size = layout_->GetCollapseButtonSize(draw_context.indentation_level);
+  SetSize(size, size);
+
   // Draw triangle.
   static float half_sqrt_three = 0.5f * sqrtf(3.f);
-  float half_w = 0.5f * layout_->GetCollapseButtonSize(draw_context.indentation_level);
+  float half_w = 0.5f * size;
   float half_h = half_sqrt_three * half_w;
 
   if (!picking) {
