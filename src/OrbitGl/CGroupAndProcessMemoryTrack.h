@@ -22,6 +22,7 @@ class CGroupAndProcessMemoryTrack final
                                        const std::string& cgroup_name,
                                        const orbit_client_data::CaptureData* capture_data);
 
+  [[nodiscard]] std::string GetName() const override;
   [[nodiscard]] std::string GetTooltip() const override;
 
   void TrySetValueUpperBound(double cgroup_limit_mb);

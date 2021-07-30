@@ -23,17 +23,21 @@ class VariableTrack final : public LineGraphTrack<kVariableTrackDimension> {
                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                          const std::string& name,
                          const orbit_client_data::CaptureData* capture_data)
-      : LineGraphTrack<kVariableTrackDimension>(parent, time_graph, viewport, layout, name,
+      : LineGraphTrack<kVariableTrackDimension>(parent, time_graph, viewport, layout,
                                                 std::array<std::string, kVariableTrackDimension>{},
-                                                capture_data) {
+                                                capture_data),
+        name_(name) {
     SetSeriesColors(kVariableTrackColor);
   }
 
   [[nodiscard]] bool IsCollapsible() const override { return false; }
+  [[nodiscard]] std::string GetName() const override { return name_; }
   [[nodiscard]] Track::Type GetType() const override { return Track::Type::kVariableTrack; }
   void AddValue(uint64_t time, double value) { AddValues(time, {value}); }
 
  private:
+  std::string name_;
+
   std::string GetLegendTooltips(size_t /*legend_index*/) const override { return ""; }
 };
 

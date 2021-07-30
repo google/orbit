@@ -42,6 +42,12 @@ GpuSubmissionTrack::GpuSubmissionTrack(Track* parent, TimeGraph* time_graph,
   parent_ = parent;
 }
 
+std::string GpuSubmissionTrack::GetName() const {
+  return absl::StrFormat(
+      "%s_submissions",
+      string_manager_->Get(timeline_hash_).value_or(std::to_string(timeline_hash_)));
+}
+
 std::string GpuSubmissionTrack::GetTooltip() const {
   return "Shows scheduling and execution times for selected GPU job "
          "submissions";

@@ -24,14 +24,10 @@
 template <size_t Dimension>
 GraphTrack<Dimension>::GraphTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                                   orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                                  const std::string& name,
                                   std::array<std::string, Dimension> series_names,
                                   const orbit_client_data::CaptureData* capture_data)
     : Track(parent, time_graph, viewport, layout, capture_data),
-      series_(MultivariateTimeSeries<Dimension>(series_names)) {
-  SetName(name);
-  SetLabel(name);
-}
+      series_(MultivariateTimeSeries<Dimension>(series_names)) {}
 
 template <size_t Dimension>
 float GraphTrack<Dimension>::GetHeight() const {
@@ -53,6 +49,7 @@ float GraphTrack<Dimension>::GetLegendHeight() const {
 template <size_t Dimension>
 void GraphTrack<Dimension>::Draw(Batcher& batcher, TextRenderer& text_renderer,
                                  const DrawContext& draw_context) {
+  SetLabel(GetName());
   Track::Draw(batcher, text_renderer, draw_context);
   if (IsEmpty() || IsCollapsed()) return;
 

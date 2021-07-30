@@ -19,7 +19,6 @@ using orbit_capture_client::CaptureEventProcessor;
 using orbit_grpc_protos::kMissingInfo;
 
 const std::string kTrackValueLabelUnit = "MB";
-const std::string kTrackName = absl::StrFormat("Memory Usage: System (%s)", kTrackValueLabelUnit);
 const std::array<std::string, kSystemMemoryTrackDimension> kSeriesName = {
     "Used", "Buffers / Cached", "Unused"};
 constexpr uint64_t kMegabytesToBytes = 1024 * 1024;
@@ -29,8 +28,8 @@ constexpr uint64_t kMegabytesToBytes = 1024 * 1024;
 SystemMemoryTrack::SystemMemoryTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                                      orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                      const orbit_client_data::CaptureData* capture_data)
-    : MemoryTrack<kSystemMemoryTrackDimension>(parent, time_graph, viewport, layout, kTrackName,
-                                               kSeriesName, capture_data) {
+    : MemoryTrack<kSystemMemoryTrackDimension>(parent, time_graph, viewport, layout, kSeriesName,
+                                               capture_data) {
   SetLabelUnit(kTrackValueLabelUnit);
 
   constexpr uint8_t kTrackValueDecimalDigits = 2;
@@ -49,6 +48,10 @@ SystemMemoryTrack::SystemMemoryTrack(CaptureViewElement* parent, TimeGraph* time
   const std::string kValueLowerBoundLabel = "Minimum: 0 GB";
   constexpr double kValueLowerBoundRawValue = 0.0;
   TrySetValueLowerBound(kValueLowerBoundLabel, kValueLowerBoundRawValue);
+}
+
+std::string SystemMemoryTrack::GetName() const {
+  return absl::StrFormat("Memory Usage: System (%s)", kTrackValueLabelUnit);
 }
 
 std::string SystemMemoryTrack::GetTooltip() const {

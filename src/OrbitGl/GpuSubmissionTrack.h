@@ -36,6 +36,7 @@ class GpuSubmissionTrack : public TimerTrack {
 
   [[nodiscard]] Track* GetParent() const override { return parent_; }
 
+  [[nodiscard]] std::string GetName() const override;
   // The type is currently only used by the TrackManger. We are moving towards removing it
   // completely. For subtracks there is no meaningful type and it should also not be exposed,
   // though we use the unknown type.

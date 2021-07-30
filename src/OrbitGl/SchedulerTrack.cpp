@@ -27,7 +27,6 @@ SchedulerTrack::SchedulerTrack(CaptureViewElement* parent, TimeGraph* time_graph
                                const orbit_client_data::CaptureData* capture_data)
     : TimerTrack(parent, time_graph, viewport, layout, app, capture_data) {
   SetPinned(false);
-  SetName("Scheduler");
   SetLabel("Scheduler (0 cores)");
   num_cores_ = 0;
 }

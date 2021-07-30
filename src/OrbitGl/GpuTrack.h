@@ -39,6 +39,7 @@ class GpuTrack : public Track {
   explicit GpuTrack(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                     TimeGraphLayout* layout, uint64_t timeline_hash, OrbitApp* app,
                     const orbit_client_data::CaptureData* capture_data);
+
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
@@ -51,6 +52,9 @@ class GpuTrack : public Track {
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetDown(
       const orbit_client_protos::TimerInfo& timer_info) const;
 
+  [[nodiscard]] std::string GetName() const override {
+    return string_manager_->Get(timeline_hash_).value_or(std::to_string(timeline_hash_));
+  }
   [[nodiscard]] Type GetType() const override { return Type::kGpuTrack; }
   [[nodiscard]] std::string GetTooltip() const override;
   [[nodiscard]] float GetHeight() const override;
@@ -76,6 +80,7 @@ class GpuTrack : public Track {
 
  private:
   void UpdatePositionOfSubtracks();
+  orbit_string_manager::StringManager* string_manager_;
   const std::shared_ptr<GpuSubmissionTrack> submission_track_;
   const std::shared_ptr<GpuDebugMarkerTrack> marker_track_;
 

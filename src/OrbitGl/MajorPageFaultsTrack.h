@@ -19,6 +19,7 @@ class MajorPageFaultsTrack final : public BasicPageFaultsTrack {
                                 uint64_t memory_sampling_period_ms,
                                 const orbit_client_data::CaptureData* capture_data);
 
+  [[nodiscard]] std::string GetName() const override { return "Page Faults: Major"; }
   [[nodiscard]] std::string GetTooltip() const override;
 
  private:

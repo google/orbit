@@ -34,6 +34,7 @@ class ThreadTrack final : public TimerTrack {
 
   void InitializeNameAndLabel();
 
+  [[nodiscard]] std::string GetName() const override;
   [[nodiscard]] Type GetType() const override { return Type::kThreadTrack; }
   [[nodiscard]] std::string GetTooltip() const override;
 
