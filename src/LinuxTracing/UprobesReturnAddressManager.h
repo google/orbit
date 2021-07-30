@@ -13,6 +13,7 @@
 #include <stack>
 #include <vector>
 
+#include "LibunwindstackMaps.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_linux_tracing {
