@@ -69,21 +69,14 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   [[nodiscard]] virtual uint64_t GetMinTime() const = 0;
   [[nodiscard]] virtual uint64_t GetMaxTime() const = 0;
 
-  void SetNumberOfPrioritizedTrailingCharacters(int num_characters) {
-    num_prioritized_trailing_characters_ = num_characters;
-  }
-  [[nodiscard]] int GetNumberOfPrioritizedTrailingCharacters() const {
-    return num_prioritized_trailing_characters_;
-  }
-
   virtual void OnTimer(const orbit_client_protos::TimerInfo& /*timer_info*/) {}
   [[nodiscard]] bool IsPinned() const { return pinned_; }
   void SetPinned(bool value);
 
   [[nodiscard]] bool IsMoving() const { return picked_ && mouse_pos_last_click_ != mouse_pos_cur_; }
   [[nodiscard]] virtual std::string GetName() const = 0;
-  void SetLabel(const std::string& label) { label_ = label; }
-  [[nodiscard]] const std::string& GetLabel() const { return label_; }
+  [[nodiscard]] virtual std::string GetLabel() const { return GetName(); }
+  [[nodiscard]] virtual int GetNumberOfPrioritizedTrailingCharacters() const { return 0; }
 
   [[nodiscard]] virtual Color GetTrackBackgroundColor() const;
 
@@ -110,8 +103,6 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
 
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
 
-  std::string label_;
-  int num_prioritized_trailing_characters_;
   int32_t process_id_;
   bool draw_background_ = true;
   bool visible_ = true;

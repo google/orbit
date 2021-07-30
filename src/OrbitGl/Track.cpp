@@ -23,7 +23,6 @@ using orbit_client_data::TrackData;
 Track::Track(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
              TimeGraphLayout* layout, const orbit_client_data::CaptureData* capture_data)
     : CaptureViewElement(parent, time_graph, viewport, layout),
-      num_prioritized_trailing_characters_{0},
       process_id_{-1},
       pinned_{false},
       layout_(layout),
@@ -169,10 +168,10 @@ void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, const DrawContex
     const Color kColor =
         IsTrackSelected() ? GlCanvas::kTabTextColorSelected : Color(255, 255, 255, 255);
 
-    text_renderer.AddTextTrailingCharsPrioritized(label_.c_str(), indentation_x0 + label_offset_x,
-                                                  toggle_y_pos - label_offset_y, text_z, kColor,
-                                                  GetNumberOfPrioritizedTrailingCharacters(),
-                                                  font_size, label_width - label_offset_x);
+    text_renderer.AddTextTrailingCharsPrioritized(
+        GetLabel().c_str(), indentation_x0 + label_offset_x, toggle_y_pos - label_offset_y, text_z,
+        kColor, GetNumberOfPrioritizedTrailingCharacters(), font_size,
+        label_width - label_offset_x);
   }
 
   // Draw track's content background.

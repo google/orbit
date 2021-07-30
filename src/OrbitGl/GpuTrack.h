@@ -55,6 +55,9 @@ class GpuTrack : public Track {
   [[nodiscard]] std::string GetName() const override {
     return string_manager_->Get(timeline_hash_).value_or(std::to_string(timeline_hash_));
   }
+  [[nodiscard]] std::string GetLabel() const override {
+    return orbit_gl::MapGpuTimelineToTrackLabel(GetName());
+  }
   [[nodiscard]] Type GetType() const override { return Type::kGpuTrack; }
   [[nodiscard]] std::string GetTooltip() const override;
   [[nodiscard]] float GetHeight() const override;
