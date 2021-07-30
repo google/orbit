@@ -38,8 +38,8 @@ struct Version final {
   friend bool operator>(const Version& left, const Version& right) { return right < left; }
 };
 
-[[nodiscard]] Version GetVersionNumber();
-std::string GetVersion();
+[[nodiscard]] Version GetVersion();
+std::string GetVersionString();
 std::string GetCompiler();
 std::string GetBuildTimestamp();
 std::string GetBuildMachine();
