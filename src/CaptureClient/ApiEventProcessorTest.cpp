@@ -42,7 +42,8 @@ class MockCaptureListener : public CaptureListener {
   MOCK_METHOD(void, OnUniqueCallstack, (uint64_t /*callstack_id*/, CallstackInfo /*callstack*/),
               (override));
   MOCK_METHOD(void, OnCallstackEvent, (orbit_client_protos::CallstackEvent), (override));
-  MOCK_METHOD(void, OnThreadName, (int32_t /*thread_id*/, std::string /*thread_name*/), (override));
+  MOCK_METHOD(void, OnThreadName, (uint32_t /*thread_id*/, std::string /*thread_name*/),
+              (override));
   MOCK_METHOD(void, OnThreadStateSlice, (orbit_client_protos::ThreadStateSliceInfo), (override));
   MOCK_METHOD(void, OnAddressInfo, (orbit_client_protos::LinuxAddressInfo), (override));
   MOCK_METHOD(void, OnUniqueTracepointInfo,

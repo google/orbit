@@ -18,13 +18,9 @@
 
 namespace orbit_base {
 
-uint32_t GetCurrentThreadId_not_native() {
-  return GetThreadIdFromNative(GetCurrentThreadIdNative());
-}
+uint32_t GetCurrentThreadId() { return GetThreadIdFromNative(GetCurrentThreadIdNative()); }
 
-uint32_t GetCurrentProcessId_not_native() {
-  return GetProcessIdFromNative(GetCurrentProcessIdNative());
-}
+uint32_t GetCurrentProcessId() { return GetProcessIdFromNative(GetCurrentProcessIdNative()); }
 
 [[nodiscard]] std::string GetThreadName(uint32_t tid) {
   return GetThreadNameNative(GetNativeThreadId(tid));

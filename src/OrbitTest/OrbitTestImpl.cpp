@@ -73,7 +73,7 @@ void OrbitTestImpl::Start() {
 }
 
 void OrbitTestImpl::Loop() {
-  uint32_t tid = orbit_base::GetCurrentThreadId_not_native();
+  uint32_t tid = orbit_base::GetCurrentThreadId();
   orbit_base::SetCurrentThreadName(absl::StrFormat("OrbitThread_%s", std::to_string(tid)).c_str());
   uint32_t count = 0;
   while (!exit_requested_) {

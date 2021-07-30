@@ -365,8 +365,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     queue_submission.queue = queue;
     queue_submission.meta_information.pre_submission_cpu_timestamp =
         orbit_base::CaptureTimestampNs();
-    queue_submission.meta_information.thread_id = orbit_base::GetCurrentThreadId_not_native();
-    queue_submission.meta_information.process_id = orbit_base::GetCurrentProcessId_not_native();
+    queue_submission.meta_information.thread_id = orbit_base::GetCurrentThreadId();
+    queue_submission.meta_information.process_id = orbit_base::GetCurrentProcessId();
 
     for (uint32_t submit_index = 0; submit_index < submit_count; ++submit_index) {
       VkSubmitInfo submit_info = submits[submit_index];

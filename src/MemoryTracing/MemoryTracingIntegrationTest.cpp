@@ -70,7 +70,7 @@ class MemoryTracingIntegrationTestFixture {
     listener_->SetSamplingPeriodNs(memory_sampling_period_ns_);
     // Collect the cgroup memory information only if the process's memory cgroup and the cgroup
     // memory.stat file can be found successfully
-    uint32_t pid = orbit_base::GetCurrentProcessId_not_native();
+    uint32_t pid = orbit_base::GetCurrentProcessId();
     listener_->SetEnableCGroupMemory(GetCGroupMemoryUsage(pid).has_value());
     listener_->SetEnableProcessMemory(true);
 

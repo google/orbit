@@ -18,10 +18,10 @@
 #include "OrbitBase/ThreadUtils.h"
 
 TEST(ThreadUtils, GetCurrentThreadId) {
-  uint32_t current_tid = orbit_base::GetCurrentThreadId_not_native();
+  uint32_t current_tid = orbit_base::GetCurrentThreadId();
   uint32_t worker_tid = 0;
 
-  std::thread t([&worker_tid]() { worker_tid = orbit_base::GetCurrentThreadId_not_native(); });
+  std::thread t([&worker_tid]() { worker_tid = orbit_base::GetCurrentThreadId(); });
   t.join();
   EXPECT_TRUE(worker_tid != 0);
   EXPECT_TRUE(worker_tid != current_tid);
@@ -75,7 +75,7 @@ TEST(ThreadUtils, GetThreadName) {
     orbit_base::SetCurrentThreadName(kThreadName);
     {
       absl::MutexLock lock{&mutex};
-      other_tid = orbit_base::GetCurrentThreadId_not_native();
+      other_tid = orbit_base::GetCurrentThreadId();
     }
     {
       absl::MutexLock lock{&mutex};

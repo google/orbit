@@ -24,13 +24,9 @@ static [[nodiscard]] bool IsInvalidWindowsProcessId(uint32_t pid) {
   return pid == kInvalidWindowsProcessId_0 || pid == kInvalidWindowsProcessId_1;
 }
 
-uint32_t GetCurrentThreadId_not_native() {
-  return GetThreadIdFromNative(GetCurrentThreadIdNative());
-}
+uint32_t GetCurrentThreadId() { return GetThreadIdFromNative(GetCurrentThreadIdNative()); }
 
-uint32_t GetCurrentProcessId_not_native() {
-  return GetProcessIdFromNative(GetCurrentProcessIdNative());
-}
+uint32_t GetCurrentProcessId() { return GetProcessIdFromNative(GetCurrentProcessIdNative()); }
 
 template <typename FunctionPrototypeT>
 static FunctionPrototypeT GetProcAddress(const std::string& library, const std::string& procedure) {

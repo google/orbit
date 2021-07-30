@@ -196,7 +196,7 @@ IntrospectionWindow::IntrospectionWindow(OrbitApp* app)
       api_event_processor_{capture_listener_.get()} {
   // Create CaptureData.
   CaptureStarted capture_started;
-  capture_started.set_process_id(orbit_base::GetCurrentProcessId_not_native());
+  capture_started.set_process_id(orbit_base::GetCurrentProcessId());
   capture_started.set_executable_path("Orbit");
   absl::flat_hash_set<uint64_t> frame_track_function_ids;
   capture_data_ = std::make_unique<CaptureData>(/*module_manager=*/nullptr, capture_started,
