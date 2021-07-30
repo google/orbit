@@ -27,7 +27,6 @@ SchedulerTrack::SchedulerTrack(CaptureViewElement* parent, TimeGraph* time_graph
                                const orbit_client_data::CaptureData* capture_data)
     : TimerTrack(parent, time_graph, viewport, layout, app, capture_data) {
   SetPinned(false);
-  SetLabel("Scheduler (0 cores)");
   num_cores_ = 0;
 }
 
@@ -35,7 +34,6 @@ void SchedulerTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   TimerTrack::OnTimer(timer_info);
   if (num_cores_ <= static_cast<uint32_t>(timer_info.processor())) {
     num_cores_ = timer_info.processor() + 1;
-    SetLabel(absl::StrFormat("Scheduler (%u cores)", num_cores_));
   }
 }
 

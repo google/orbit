@@ -59,8 +59,6 @@ GpuTrack::GpuTrack(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::
       marker_track_{std::make_shared<GpuDebugMarkerTrack>(this, time_graph, viewport, layout,
                                                           timeline_hash, app, capture_data)},
       timeline_hash_(timeline_hash) {
-  SetLabel(orbit_gl::MapGpuTimelineToTrackLabel(GetName()));
-
   // Gpu are collapsed by default. Their subtracks are expanded by default, but are however not
   // shown while the Gpu track is collapsed.
   collapse_toggle_->SetCollapsed(true);

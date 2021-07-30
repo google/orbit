@@ -30,7 +30,6 @@ GpuDebugMarkerTrack::GpuDebugMarkerTrack(CaptureViewElement* parent, TimeGraph* 
                                          const orbit_client_data::CaptureData* capture_data)
     : TimerTrack(parent, time_graph, viewport, layout, app, capture_data),
       timeline_hash_{timeline_hash} {
-  SetLabel("Debug Markers");
   draw_background_ = false;
   string_manager_ = app->GetStringManager();
 }

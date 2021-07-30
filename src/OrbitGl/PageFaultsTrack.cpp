@@ -31,11 +31,14 @@ PageFaultsTrack::PageFaultsTrack(CaptureViewElement* parent, TimeGraph* time_gra
       minor_page_faults_track_{
           std::make_shared<MinorPageFaultsTrack>(this, time_graph, viewport, layout, cgroup_name,
                                                  memory_sampling_period_ms, capture_data)} {
-  SetLabel(GetName());
 
   // PageFaults track is collapsed by default. The major and minor page faults subtracks are
   // expanded by default, but not shown while the page faults track is collapsed.
   collapse_toggle_->SetCollapsed(true);
+}
+
+std::string PageFaultsTrack::GetLabel() const {
+  return collapse_toggle_->IsCollapsed() ? major_page_faults_track_->GetName() : GetName();
 }
 
 float PageFaultsTrack::GetHeight() const {
@@ -69,8 +72,6 @@ std::string PageFaultsTrack::GetTooltip() const {
 
 void PageFaultsTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
                            const DrawContext& draw_context) {
-  SetLabel(collapse_toggle_->IsCollapsed() ? major_page_faults_track_->GetName() : GetName());
-
   UpdatePositionOfSubtracks();
   // If being collapsed, the page faults track will show a collapsed version of the major page
   // faults subtrack. Hence, the height of major page faults subtrack should always be updated as

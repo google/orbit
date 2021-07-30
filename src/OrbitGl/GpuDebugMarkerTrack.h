@@ -34,6 +34,7 @@ class GpuDebugMarkerTrack : public TimerTrack {
   ~GpuDebugMarkerTrack() override = default;
 
   [[nodiscard]] std::string GetName() const override;
+  [[nodiscard]] std::string GetLabel() const override { return "Debug Markers"; }
   // The type is currently only used by the TrackManager. We are moving towards removing it
   // completely. For subtracks there is no meaningful type and it should also not be exposed,
   // though we use the unknown type.

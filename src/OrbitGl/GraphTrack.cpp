@@ -49,7 +49,6 @@ float GraphTrack<Dimension>::GetLegendHeight() const {
 template <size_t Dimension>
 void GraphTrack<Dimension>::Draw(Batcher& batcher, TextRenderer& text_renderer,
                                  const DrawContext& draw_context) {
-  SetLabel(GetName());
   Track::Draw(batcher, text_renderer, draw_context);
   if (IsEmpty() || IsCollapsed()) return;
 

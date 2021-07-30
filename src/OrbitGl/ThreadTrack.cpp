@@ -43,7 +43,6 @@ ThreadTrack::ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                          OrbitApp* app, const CaptureData* capture_data,
                          ScopeTreeUpdateType scope_tree_update_type)
     : TimerTrack(parent, time_graph, viewport, layout, app, capture_data), thread_id_{thread_id} {
-  InitializeNameAndLabel();
   Color color = TimeGraph::GetThreadColor(thread_id);
   thread_state_bar_ = std::make_shared<orbit_gl::ThreadStateBar>(
       this, app_, time_graph, viewport, layout, capture_data, thread_id, color);
@@ -68,25 +67,32 @@ std::string ThreadTrack::GetName() const {
     return "All Threads";
   }
   return capture_data_->GetThreadName(thread_id);
-  ;
 }
 
-void ThreadTrack::InitializeNameAndLabel() {
-  if (GetThreadId() == orbit_base::kAllThreadsOfAllProcessesTid) {
-    SetLabel("All tracepoint events");
-  } else if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
-    // This is the process track.
+constexpr std::string_view kAllThreads = " (all_threads)";
+std::string ThreadTrack::GetLabel() const {
+  auto thread_id = GetThreadId();
+  auto name = GetName();
+  if (thread_id == orbit_base::kAllThreadsOfAllProcessesTid) {
+    return name;
+  } else if (thread_id == orbit_base::kAllProcessThreadsTid) {
     std::string process_name = capture_data_->process_name();
-    const std::string_view all_threads = " (all_threads)";
-    SetLabel(process_name.append(all_threads));
-    SetNumberOfPrioritizedTrailingCharacters(all_threads.size() - 1);
-  } else {
-    const std::string& thread_name = GetThreadNameFromTid(GetThreadId());
-    std::string tid_str = std::to_string(GetThreadId());
-    std::string track_label = absl::StrFormat("%s [%s]", thread_name, tid_str);
-    SetLabel(track_label);
-    SetNumberOfPrioritizedTrailingCharacters(tid_str.size() + 2);
+    return process_name.append(kAllThreads);
   }
+  return absl::StrFormat("%s [%d]", name, thread_id);
+}
+
+// Make sure some trailing characters have higher priority if there is no space for the full label.
+int ThreadTrack::GetNumberOfPrioritizedTrailingCharacters() const {
+  auto thread_id = GetThreadId();
+  if (GetThreadId() == orbit_base::kAllThreadsOfAllProcessesTid) {
+    return 0;
+  } else if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
+    // Example: proc... all_threads)
+    return kAllThreads.size() - 1;
+  }
+  // Example: thread_na... [85023]
+  return std::to_string(thread_id).size() + 2;
 }
 
 const TimerInfo* ThreadTrack::GetLeft(const TimerInfo& timer_info) const {
