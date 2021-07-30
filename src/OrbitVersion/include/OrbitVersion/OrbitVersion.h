@@ -39,14 +39,14 @@ struct Version final {
 };
 
 [[nodiscard]] Version GetVersion();
-std::string GetVersionString();
-std::string GetCompiler();
-std::string GetBuildTimestamp();
-std::string GetBuildMachine();
-std::string GetCommitHash();
+[[nodiscard]] std::string GetVersionString();
+[[nodiscard]] std::string GetCompiler();
+[[nodiscard]] std::string GetBuildTimestamp();
+[[nodiscard]] std::string GetBuildMachine();
+[[nodiscard]] std::string GetCommitHash();
 
 // For usage with a "--version" command line flag
-std::string GetBuildReport();
+[[nodiscard]] std::string GetBuildReport();
 
 }  // namespace orbit_version
 
