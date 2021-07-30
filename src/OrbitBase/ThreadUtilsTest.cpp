@@ -89,7 +89,7 @@ TEST(ThreadUtils, GetThreadName) {
     absl::MutexLock lock{&mutex};
     // Wait for other_thread to set its own name and communicate its pid.
     mutex.Await(absl::Condition(
-        +[](PidType* other_tid) { return *other_tid != 0; }, &other_tid));
+        +[](uint32_t* other_tid) { return *other_tid != 0; }, &other_tid));
   }
   std::string other_name = orbit_base::GetThreadNameNative(other_tid);
   EXPECT_EQ(other_name, kThreadName);

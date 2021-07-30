@@ -12,6 +12,26 @@
 
 namespace orbit_base {
 
+static constexpr uint32_t kInvalidWindowsThreadId = 0;
+static constexpr uint32_t kInvalidWindowsProcessId_0 = 0;
+static constexpr uint32_t kInvalidWindowsProcessId_1 = 0xffffffff;
+
+static [[nodiscard]] bool IsInvalidWindowsThreadId(uint32_t tid) {
+  return tid == kInvalidWindowsThreadId;
+}
+
+static [[nodiscard]] bool IsInvalidWindowsProcessId(uint32_t pid) {
+  return pid == kInvalidWindowsProcessId_0 || pid == kInvalidWindowsProcessId_1;
+}
+
+uint32_t GetCurrentThreadId_not_native() {
+  return GetThreadIdFromNative(GetCurrentThreadIdNative());
+}
+
+uint32_t GetCurrentProcessId_not_native() {
+  return GetProcessIdFromNative(GetCurrentProcessIdNative());
+}
+
 template <typename FunctionPrototypeT>
 static FunctionPrototypeT GetProcAddress(const std::string& library, const std::string& procedure) {
   HMODULE module_handle = LoadLibraryA(library.c_str());
@@ -58,7 +78,7 @@ std::string GetThreadNameNative(uint32_t tid) {
   return kEmptyString;
 }
 
-void SetCurrentThreadNameNative(const char* name) {
+void SetCurrentThreadName(const char* name) {
   static auto set_thread_description =
       GetProcAddress<HRESULT(WINAPI*)(HANDLE, PCWSTR)>("kernel32.dll", "SetThreadDescription");
   std::wstring wide_name(name, name + strlen(name));
@@ -69,5 +89,33 @@ void SetCurrentThreadNameNative(const char* name) {
 }
 
 uint32_t GetCurrentProcessIdNative() { return ::GetCurrentProcessId(); }
+
+uint32_t GetThreadIdFromNative(uint32_t tid) {
+  if (IsInvalidWindowsThreadId(tid)) {
+    return orbit_base::kInvalidThreadId;
+  }
+  return tid;
+}
+
+uint32_t GetProcessIdFromNative(uint32_t pid) {
+  if (IsInvalidWindowsProcessId(pid)) {
+    return orbit_base::kInvalidProcessId;
+  }
+  return pid;
+}
+
+uint32_t GetNativeThreadId(uint32_t tid) {
+  if (tid == orbit_base::kInvalidThreadId) {
+    return kInvalidWindowsThreadId;
+  }
+  return tid;
+}
+
+uint32_t GetNativeProcessId(uint32_t pid) {
+  if (pid == orbit_base::kInvalidProcessId) {
+    return kInvalidWindowsProcessId_0;
+  }
+  return pid;
+}
 
 }  // namespace orbit_base
