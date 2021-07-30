@@ -38,6 +38,6 @@ TEST(OrbitVersion, Compare) {
   EXPECT_FALSE((Version{1, 2} >= Version{2, 1}));
 }
 
-TEST(OrbitVersion, MajorVersionIsAlwaysOne) { EXPECT_EQ(GetVersionNumber().major_version, 1); }
+TEST(OrbitVersion, MajorVersionIsAlwaysOne) { EXPECT_EQ(GetVersion().major_version, 1); }
 
 }  // namespace orbit_version

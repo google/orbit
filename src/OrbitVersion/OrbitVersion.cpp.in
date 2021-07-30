@@ -19,8 +19,8 @@
 
 namespace orbit_version {
 
-Version GetVersionNumber() { return {OrbitMajorVersion, OrbitMinorVersion}; }
-std::string GetVersion() { return OrbitVersionStr; }
+Version GetVersion() { return {OrbitMajorVersion, OrbitMinorVersion}; }
+std::string GetVersionString() { return OrbitVersionStr; }
 std::string GetCompiler() { return OrbitCompilerStr; }
 std::string GetBuildTimestamp() { return OrbitBuildTimestampStr; }
 std::string GetBuildMachine() { return OrbitBuildMachineStr; }
@@ -30,7 +30,7 @@ std::string GetCommitHash() { return OrbitCommitHashStr; }
 std::string GetBuildReport() {
   std::string result{};
 
-  result += absl::StrFormat("Orbit version %s\n\n", GetVersion());
+  result += absl::StrFormat("Orbit version %s\n\n", GetVersionString());
   result += absl::StrFormat("Compiler: %s\n", GetCompiler());
   result += absl::StrFormat("Build host: %s\n", GetBuildMachine());
   result += absl::StrFormat("Build time: %s\n", GetBuildTimestamp());

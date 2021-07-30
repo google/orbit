@@ -316,7 +316,7 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
 
         orbit_version::Version capture_version{capture_started.orbit_version_major(),
                                                capture_started.orbit_version_minor()};
-        orbit_version::Version current_version = orbit_version::GetVersionNumber();
+        orbit_version::Version current_version = orbit_version::GetVersion();
         if (capture_version > current_version) {
           std::string warning_message = absl::Substitute(
               "The capture was taken with Orbit version $0.$1, which is higher than the "

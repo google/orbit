@@ -229,7 +229,7 @@ static ProducerCaptureEvent CreateCaptureStartedEvent(const CaptureOptions& capt
   }
 
   capture_started->set_capture_start_timestamp_ns(capture_start_timestamp_ns);
-  orbit_version::Version version = orbit_version::GetVersionNumber();
+  orbit_version::Version version = orbit_version::GetVersion();
   capture_started->set_orbit_version_major(version.major_version);
   capture_started->set_orbit_version_minor(version.minor_version);
   capture_started->mutable_capture_options()->CopyFrom(capture_options);
