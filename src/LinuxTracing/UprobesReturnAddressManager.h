@@ -24,6 +24,7 @@ namespace orbit_linux_tracing {
 class UprobesReturnAddressManager {
  public:
   UprobesReturnAddressManager() = default;
+  virtual ~UprobesReturnAddressManager() = default;
 
   UprobesReturnAddressManager(const UprobesReturnAddressManager&) = delete;
   UprobesReturnAddressManager& operator=(const UprobesReturnAddressManager&) = delete;
