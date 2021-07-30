@@ -27,12 +27,14 @@ class TextRenderer;
 class GpuDebugMarkerTrack : public TimerTrack {
  public:
   explicit GpuDebugMarkerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
-                               orbit_gl::Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
+                               orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                               uint64_t timeline_hash, OrbitApp* app,
                                const orbit_client_data::CaptureData* capture_data);
 
   ~GpuDebugMarkerTrack() override = default;
 
-  // The type is currently only used by the TrackManger. We are moving towards removing it
+  [[nodiscard]] std::string GetName() const override;
+  // The type is currently only used by the TrackManager. We are moving towards removing it
   // completely. For subtracks there is no meaningful type and it should also not be exposed,
   // though we use the unknown type.
   [[nodiscard]] Type GetType() const override { return Type::kUnknown; }
@@ -52,6 +54,7 @@ class GpuDebugMarkerTrack : public TimerTrack {
 
  private:
   orbit_string_manager::StringManager* string_manager_;
+  uint64_t timeline_hash_;
 };
 
 #endif  // ORBIT_GL_GPU_DEBUG_MARKER_TRACK_H_

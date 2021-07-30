@@ -20,11 +20,11 @@ static std::array<std::string, kBasicPageFaultsTrackDimension> CreateSeriesName(
 
 BasicPageFaultsTrack::BasicPageFaultsTrack(Track* parent, TimeGraph* time_graph,
                                            orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                                           const std::string& name, const std::string& cgroup_name,
+                                           const std::string& cgroup_name,
                                            uint64_t memory_sampling_period_ms,
                                            const orbit_client_data::CaptureData* capture_data)
     : LineGraphTrack<kBasicPageFaultsTrackDimension>(
-          parent, time_graph, viewport, layout, name,
+          parent, time_graph, viewport, layout,
           CreateSeriesName(cgroup_name, capture_data->process_name()), capture_data),
       AnnotationTrack(),
       cgroup_name_(cgroup_name),

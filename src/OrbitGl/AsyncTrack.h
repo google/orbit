@@ -29,6 +29,7 @@ class AsyncTrack final : public TimerTrack {
                       const std::string& name, OrbitApp* app,
                       const orbit_client_data::CaptureData* capture_data);
 
+  [[nodiscard]] std::string GetName() const override { return name_; };
   [[nodiscard]] Type GetType() const override { return Type::kAsyncTrack; };
   [[nodiscard]] std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
@@ -40,6 +41,7 @@ class AsyncTrack final : public TimerTrack {
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
                                     bool is_selected, bool is_highlighted) const override;
 
+  std::string name_;
   // Used for determining what row can receive a new timer with no overlap.
   absl::flat_hash_map<uint32_t, uint64_t> max_span_time_by_depth_;
 };

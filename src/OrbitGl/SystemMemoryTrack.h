@@ -20,6 +20,7 @@ class SystemMemoryTrack final : public MemoryTrack<kSystemMemoryTrackDimension> 
                              orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                              const orbit_client_data::CaptureData* capture_data);
 
+  [[nodiscard]] std::string GetName() const override;
   [[nodiscard]] std::string GetTooltip() const override;
 
   void TrySetValueUpperBound(double total_mb);

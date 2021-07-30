@@ -64,9 +64,7 @@ FrameTrack::FrameTrack(CaptureViewElement* parent, TimeGraph* time_graph,
     : TimerTrack(parent, time_graph, viewport, layout, app, capture_data),
       function_(std::move(function)) {
   // TODO(b/169554463): Support manual instrumentation.
-  std::string name = absl::StrFormat("Frame track based on %s", function_.function_name());
-  SetName(name);
-  SetLabel(name);
+  SetLabel(GetName());
 
   // Frame tracks are collapsed by default.
   collapse_toggle_->SetCollapsed(true);

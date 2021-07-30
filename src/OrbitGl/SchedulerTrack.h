@@ -25,6 +25,7 @@ class SchedulerTrack final : public TimerTrack {
   ~SchedulerTrack() override = default;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 
+  [[nodiscard]] std::string GetName() const override { return "Scheduler"; }
   [[nodiscard]] Type GetType() const override { return Type::kSchedulerTrack; }
   [[nodiscard]] std::string GetTooltip() const override;
 

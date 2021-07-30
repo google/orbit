@@ -23,8 +23,8 @@ class BasicPageFaultsTrack : public LineGraphTrack<kBasicPageFaultsTrackDimensio
                              public AnnotationTrack {
  public:
   explicit BasicPageFaultsTrack(Track* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
-                                TimeGraphLayout* layout, const std::string& name,
-                                const std::string& cgroup_name, uint64_t memory_sampling_period_ms,
+                                TimeGraphLayout* layout, const std::string& cgroup_name,
+                                uint64_t memory_sampling_period_ms,
                                 const orbit_client_data::CaptureData* capture_data);
 
   [[nodiscard]] Track* GetParent() const override { return parent_; }

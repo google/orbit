@@ -18,9 +18,10 @@ class MinorPageFaultsTrack final : public BasicPageFaultsTrack {
                                 TimeGraphLayout* layout, const std::string& cgroup_name,
                                 uint64_t memory_sampling_period_ms,
                                 const orbit_client_data::CaptureData* capture_data)
-      : BasicPageFaultsTrack(parent, time_graph, viewport, layout, "Page Faults: Minor",
-                             cgroup_name, memory_sampling_period_ms, capture_data) {}
+      : BasicPageFaultsTrack(parent, time_graph, viewport, layout, cgroup_name,
+                             memory_sampling_period_ms, capture_data) {}
 
+  [[nodiscard]] std::string GetName() const override { return "Page Faults: Minor"; }
   [[nodiscard]] std::string GetTooltip() const override;
 
  private:

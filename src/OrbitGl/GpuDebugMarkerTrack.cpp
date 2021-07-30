@@ -26,12 +26,18 @@ using orbit_client_protos::TimerInfo;
 
 GpuDebugMarkerTrack::GpuDebugMarkerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                                         OrbitApp* app,
+                                         uint64_t timeline_hash, OrbitApp* app,
                                          const orbit_client_data::CaptureData* capture_data)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data) {
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data),
+      timeline_hash_{timeline_hash} {
   SetLabel("Debug Markers");
   draw_background_ = false;
   string_manager_ = app->GetStringManager();
+}
+
+std::string GpuDebugMarkerTrack::GetName() const {
+  return absl::StrFormat(
+      "%s_marker", string_manager_->Get(timeline_hash_).value_or(std::to_string(timeline_hash_)));
 }
 
 std::string GpuDebugMarkerTrack::GetTooltip() const {

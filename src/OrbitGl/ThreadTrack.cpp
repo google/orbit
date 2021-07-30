@@ -60,20 +60,28 @@ std::string ThreadTrack::GetThreadNameFromTid(uint32_t thread_id) {
   return capture_data_->GetThreadName(thread_id);
 }
 
+std::string ThreadTrack::GetName() const {
+  auto thread_id = GetThreadId();
+  if (thread_id == orbit_base::kAllThreadsOfAllProcessesTid) {
+    return "All tracepoint events";
+  } else if (thread_id == orbit_base::kAllProcessThreadsTid) {
+    return "All Threads";
+  }
+  return capture_data_->GetThreadName(thread_id);
+  ;
+}
+
 void ThreadTrack::InitializeNameAndLabel() {
   if (GetThreadId() == orbit_base::kAllThreadsOfAllProcessesTid) {
-    SetName("All tracepoint events");
     SetLabel("All tracepoint events");
   } else if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
     // This is the process track.
     std::string process_name = capture_data_->process_name();
-    SetName("All Threads");
     const std::string_view all_threads = " (all_threads)";
     SetLabel(process_name.append(all_threads));
     SetNumberOfPrioritizedTrailingCharacters(all_threads.size() - 1);
   } else {
     const std::string& thread_name = GetThreadNameFromTid(GetThreadId());
-    SetName(thread_name);
     std::string tid_str = std::to_string(GetThreadId());
     std::string track_label = absl::StrFormat("%s [%s]", thread_name, tid_str);
     SetLabel(track_label);

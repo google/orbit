@@ -34,8 +34,7 @@ AsyncTrack::AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                        const std::string& name, OrbitApp* app,
                        const orbit_client_data::CaptureData* capture_data)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data) {
-  SetName(name);
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data), name_(name) {
   SetLabel(name);
 }
 

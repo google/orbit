@@ -21,15 +21,15 @@ class MemoryTrack : public GraphTrack<Dimension>, public AnnotationTrack {
  public:
   explicit MemoryTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                       const std::string& name, std::array<std::string, Dimension> series_names,
+                       std::array<std::string, Dimension> series_names,
                        const orbit_client_data::CaptureData* capture_data)
-      : GraphTrack<Dimension>(parent, time_graph, viewport, layout, name, series_names,
-                              capture_data),
+      : GraphTrack<Dimension>(parent, time_graph, viewport, layout, series_names, capture_data),
         AnnotationTrack() {
     // Memory tracks are collapsed by default.
     this->collapse_toggle_->SetCollapsed(true);
   }
   ~MemoryTrack() override = default;
+
   [[nodiscard]] Track::Type GetType() const override { return Track::Type::kMemoryTrack; }
   void Draw(Batcher& batcher, TextRenderer& text_renderer,
             const CaptureViewElement::DrawContext& draw_context) override;

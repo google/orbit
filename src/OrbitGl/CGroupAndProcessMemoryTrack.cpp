@@ -20,7 +20,6 @@ using orbit_capture_client::CaptureEventProcessor;
 using orbit_grpc_protos::kMissingInfo;
 
 const std::string kTrackValueLabelUnit = "MB";
-const std::string kTrackName = absl::StrFormat("Memory Usage: CGroup (%s)", kTrackValueLabelUnit);
 
 static std::array<std::string, kCGroupAndProcessMemoryTrackDimension> CreateSeriesName(
     const std::string& cgroup_name, const std::string& process_name) {
@@ -36,7 +35,7 @@ CGroupAndProcessMemoryTrack::CGroupAndProcessMemoryTrack(
     TimeGraphLayout* layout, const std::string& cgroup_name,
     const orbit_client_data::CaptureData* capture_data)
     : MemoryTrack<kCGroupAndProcessMemoryTrackDimension>(
-          parent, time_graph, viewport, layout, kTrackName,
+          parent, time_graph, viewport, layout,
           CreateSeriesName(cgroup_name, capture_data->process_name()), capture_data),
       cgroup_name_(cgroup_name) {
   SetLabelUnit(kTrackValueLabelUnit);
@@ -58,6 +57,10 @@ CGroupAndProcessMemoryTrack::CGroupAndProcessMemoryTrack(
   const std::string kValueLowerBoundLabel = "Minimum: 0 GB";
   constexpr double kValueLowerBoundRawValue = 0.0;
   TrySetValueLowerBound(kValueLowerBoundLabel, kValueLowerBoundRawValue);
+}
+
+std::string CGroupAndProcessMemoryTrack::GetName() const {
+  return absl::StrFormat("Memory Usage: CGroup (%s)", kTrackValueLabelUnit);
 }
 
 std::string CGroupAndProcessMemoryTrack::GetTooltip() const {

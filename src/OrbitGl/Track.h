@@ -81,8 +81,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   void SetPinned(bool value);
 
   [[nodiscard]] bool IsMoving() const { return picked_ && mouse_pos_last_click_ != mouse_pos_cur_; }
-  void SetName(const std::string& name) { name_ = name; }
-  [[nodiscard]] const std::string& GetName() const { return name_; }
+  [[nodiscard]] virtual std::string GetName() const = 0;
   void SetLabel(const std::string& label) { label_ = label; }
   [[nodiscard]] const std::string& GetLabel() const { return label_; }
 
@@ -111,7 +110,6 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
 
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
 
-  std::string name_;
   std::string label_;
   int num_prioritized_trailing_characters_;
   int32_t process_id_;
