@@ -81,6 +81,8 @@ class CaptureEventProcessorForListener : public CaptureEventProcessor {
       const orbit_grpc_protos::ErrorsWithPerfEventOpenEvent& errors_with_perf_event_open_event);
   void ProcessErrorEnablingOrbitApiEvent(
       const orbit_grpc_protos::ErrorEnablingOrbitApiEvent& error_enabling_orbit_api_event);
+  void ProcessErrorEnablingUserSpaceInstrumentationEvent(
+      const orbit_grpc_protos::ErrorEnablingUserSpaceInstrumentationEvent& error_event);
   void ProcessLostPerfRecordsEvent(
       const orbit_grpc_protos::LostPerfRecordsEvent& lost_perf_records_event);
   void ProcessOutOfOrderEventsDiscardedEvent(
@@ -208,6 +210,10 @@ void CaptureEventProcessorForListener::ProcessEvent(const ClientCaptureEvent& ev
       break;
     case ClientCaptureEvent::kErrorEnablingOrbitApiEvent:
       ProcessErrorEnablingOrbitApiEvent(event.error_enabling_orbit_api_event());
+      break;
+    case ClientCaptureEvent::kErrorEnablingUserSpaceInstrumentationEvent:
+      ProcessErrorEnablingUserSpaceInstrumentationEvent(
+          event.error_enabling_user_space_instrumentation_event());
       break;
     case ClientCaptureEvent::kLostPerfRecordsEvent:
       ProcessLostPerfRecordsEvent(event.lost_perf_records_event());
@@ -688,6 +694,11 @@ void CaptureEventProcessorForListener::ProcessErrorsWithPerfEventOpenEvent(
 void CaptureEventProcessorForListener::ProcessErrorEnablingOrbitApiEvent(
     const orbit_grpc_protos::ErrorEnablingOrbitApiEvent& error_enabling_orbit_api_event) {
   capture_listener_->OnErrorEnablingOrbitApiEvent(error_enabling_orbit_api_event);
+}
+
+void CaptureEventProcessorForListener::ProcessErrorEnablingUserSpaceInstrumentationEvent(
+    const orbit_grpc_protos::ErrorEnablingUserSpaceInstrumentationEvent& error_event) {
+  capture_listener_->OnErrorEnablingUserSpaceInstrumentationEvent(error_event);
 }
 
 void CaptureEventProcessorForListener::ProcessLostPerfRecordsEvent(

@@ -37,6 +37,7 @@ using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::ClockResolutionEvent;
 using orbit_grpc_protos::Color;
 using orbit_grpc_protos::ErrorEnablingOrbitApiEvent;
+using orbit_grpc_protos::ErrorEnablingUserSpaceInstrumentationEvent;
 using orbit_grpc_protos::ErrorsWithPerfEventOpenEvent;
 using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::GpuCommandBuffer;
@@ -102,6 +103,9 @@ class MockCaptureListener : public CaptureListener {
       (override));
   MOCK_METHOD(void, OnErrorEnablingOrbitApiEvent,
               (orbit_grpc_protos::ErrorEnablingOrbitApiEvent /*error_enabling_orbit_api_event*/),
+              (override));
+  MOCK_METHOD(void, OnErrorEnablingUserSpaceInstrumentationEvent,
+              (orbit_grpc_protos::ErrorEnablingUserSpaceInstrumentationEvent /*error_event*/),
               (override));
   MOCK_METHOD(void, OnLostPerfRecordsEvent,
               (orbit_grpc_protos::LostPerfRecordsEvent /*lost_perf_records_event*/), (override));
@@ -1321,6 +1325,30 @@ TEST(CaptureEventProcessor, CanHandleErrorEnablingOrbitApiEvents) {
 
   EXPECT_EQ(actual_error_enabling_orbit_api_event.timestamp_ns(), kTimestampNs);
   EXPECT_EQ(actual_error_enabling_orbit_api_event.message(), kMessage);
+}
+
+TEST(CaptureEventProcessor, CanHandleErrorEnablingUserSpaceInstrumentationEvents) {
+  MockCaptureListener listener;
+  auto event_processor =
+      CaptureEventProcessor::CreateForCaptureListener(&listener, std::filesystem::path{}, {});
+
+  ClientCaptureEvent event;
+  ErrorEnablingUserSpaceInstrumentationEvent* error_event =
+      event.mutable_error_enabling_user_space_instrumentation_event();
+  constexpr uint64_t kTimestampNs = 100;
+  error_event->set_timestamp_ns(kTimestampNs);
+  constexpr const char* kMessage = "message";
+  error_event->set_message(kMessage);
+
+  ErrorEnablingUserSpaceInstrumentationEvent actual_error_event;
+  EXPECT_CALL(listener, OnErrorEnablingUserSpaceInstrumentationEvent)
+      .Times(1)
+      .WillOnce(SaveArg<0>(&actual_error_event));
+
+  event_processor->ProcessEvent(event);
+
+  EXPECT_EQ(actual_error_event.timestamp_ns(), kTimestampNs);
+  EXPECT_EQ(actual_error_event.message(), kMessage);
 }
 
 TEST(CaptureEventProcessor, CanHandleLostPerfRecordsEvents) {

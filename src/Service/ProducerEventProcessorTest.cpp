@@ -35,6 +35,7 @@ using orbit_grpc_protos::CGroupMemoryUsage;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::ClockResolutionEvent;
 using orbit_grpc_protos::ErrorEnablingOrbitApiEvent;
+using orbit_grpc_protos::ErrorEnablingUserSpaceInstrumentationEvent;
 using orbit_grpc_protos::ErrorsWithPerfEventOpenEvent;
 using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
@@ -2023,6 +2024,30 @@ TEST(ProducerEventProcessor, ErrorEnablingOrbitApiEvent) {
       client_capture_event.error_enabling_orbit_api_event();
   EXPECT_EQ(actual_error_enabling_orbit_api_event.timestamp_ns(), kTimestampNs1);
   EXPECT_EQ(actual_error_enabling_orbit_api_event.message(), kMessage);
+}
+
+TEST(ProducerEventProcessor, ErrorEnablingUserSpaceInstrumentationEvent) {
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+
+  ProducerCaptureEvent producer_capture_event;
+  ErrorEnablingUserSpaceInstrumentationEvent* error_event =
+      producer_capture_event.mutable_error_enabling_user_space_instrumentation_event();
+  error_event->set_timestamp_ns(kTimestampNs1);
+  constexpr const char* kMessage = "message";
+  error_event->set_message(kMessage);
+
+  ClientCaptureEvent client_capture_event;
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+
+  producer_event_processor->ProcessEvent(kDefaultProducerId, producer_capture_event);
+
+  ASSERT_EQ(client_capture_event.event_case(),
+            ClientCaptureEvent::kErrorEnablingUserSpaceInstrumentationEvent);
+  const ErrorEnablingUserSpaceInstrumentationEvent& actual_error_event =
+      client_capture_event.error_enabling_user_space_instrumentation_event();
+  EXPECT_EQ(actual_error_event.timestamp_ns(), kTimestampNs1);
+  EXPECT_EQ(actual_error_event.message(), kMessage);
 }
 
 TEST(ProducerEventProcessor, LostPerfRecordsEvent) {

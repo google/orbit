@@ -32,6 +32,7 @@ using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::ClockResolutionEvent;
 using orbit_grpc_protos::ErrorEnablingOrbitApiEvent;
+using orbit_grpc_protos::ErrorEnablingUserSpaceInstrumentationEvent;
 using orbit_grpc_protos::ErrorsWithPerfEventOpenEvent;
 using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
@@ -135,6 +136,8 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
       ErrorsWithPerfEventOpenEvent* errors_with_perf_event_open_event);
   void ProcessErrorEnablingOrbitApiEventAndTransferOwnership(
       ErrorEnablingOrbitApiEvent* error_enabling_orbit_api_event);
+  void ProcessErrorEnablingUserSpaceInstrumentationEventAndTransferOwnership(
+      ErrorEnablingUserSpaceInstrumentationEvent* error_event);
   void ProcessLostPerfRecordsEventAndTransferOwnership(
       LostPerfRecordsEvent* lost_perf_records_event);
   void ProcessOutOfOrderEventsDiscardedEventAndTransferOwnership(
@@ -492,6 +495,14 @@ void ProducerEventProcessorImpl::ProcessErrorEnablingOrbitApiEventAndTransferOwn
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
+void ProducerEventProcessorImpl::
+    ProcessErrorEnablingUserSpaceInstrumentationEventAndTransferOwnership(
+        ErrorEnablingUserSpaceInstrumentationEvent* error_event) {
+  ClientCaptureEvent event;
+  event.set_allocated_error_enabling_user_space_instrumentation_event(error_event);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
 void ProducerEventProcessorImpl::ProcessClockResolutionEventAndTransferOwnership(
     ClockResolutionEvent* clock_resolution_event) {
   ClientCaptureEvent event;
@@ -626,6 +637,10 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
     case ProducerCaptureEvent::kErrorEnablingOrbitApiEvent:
       ProcessErrorEnablingOrbitApiEventAndTransferOwnership(
           event.release_error_enabling_orbit_api_event());
+      break;
+    case ProducerCaptureEvent::kErrorEnablingUserSpaceInstrumentationEvent:
+      ProcessErrorEnablingUserSpaceInstrumentationEventAndTransferOwnership(
+          event.release_error_enabling_user_space_instrumentation_event());
       break;
     case ProducerCaptureEvent::kLostPerfRecordsEvent:
       ProcessLostPerfRecordsEventAndTransferOwnership(event.release_lost_perf_records_event());
