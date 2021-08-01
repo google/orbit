@@ -58,6 +58,11 @@ class SymbolHelper {
 
 [[nodiscard]] std::vector<std::filesystem::path> ReadSymbolsFile(
     const std::filesystem::path& file_name);
+
+ErrorMessageOr<bool> FileStartsWithDeprecationNote(const std::filesystem::path& file_name);
+
+ErrorMessageOr<void> AddDeprecationNoteToFile(const std::filesystem::path& file_name);
+
 }  // namespace orbit_symbols
 
 #endif  // SYMBOLS_SYMBOL_HELPER_H_

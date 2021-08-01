@@ -6,6 +6,7 @@
 
 #include <absl/strings/ascii.h>
 #include <absl/strings/match.h>
+#include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
 #include <absl/strings/str_split.h>
@@ -35,6 +36,11 @@ namespace fs = std::filesystem;
 using ::orbit_object_utils::CreateObjectFile;
 using ::orbit_object_utils::ElfFile;
 using ::orbit_object_utils::ObjectFile;
+
+constexpr const char* kDeprecationNote =
+    "// !!! Do not remove this comment !!!\n// This file has been migrated in Orbit 1.68. Please "
+    "use: Menu > Settings > Symbol Locations...\n// This file can still used by Orbit versions "
+    "prior to 1.68. If that is relevant to you, do not delete this file.\n";
 
 namespace orbit_symbols {
 
@@ -328,6 +334,25 @@ ErrorMessageOr<fs::path> SymbolHelper::FindDebugInfoFileInDebugStore(
 
   return ErrorMessage{absl::StrFormat("Unable to stat the file \"%s\": %s", full_file_path.string(),
                                       error.message())};
+}
+
+ErrorMessageOr<bool> FileStartsWithDeprecationNote(const std::filesystem::path& file_name) {
+  OUTCOME_TRY(auto&& file_content, orbit_base::ReadFileToString(file_name));
+
+  return absl::StartsWith(file_content, kDeprecationNote);
+}
+
+ErrorMessageOr<void> AddDeprecationNoteToFile(const std::filesystem::path& file_name) {
+  OUTCOME_TRY(auto&& already_contains_note, FileStartsWithDeprecationNote(file_name));
+
+  if (already_contains_note) return ErrorMessage("File already contains deprecation note");
+
+  OUTCOME_TRY(auto&& file_content, orbit_base::ReadFileToString(file_name));
+
+  OUTCOME_TRY(
+      orbit_base::WriteStringToFile(file_name, absl::StrCat(kDeprecationNote, file_content)));
+
+  return outcome::success();
 }
 
 }  // namespace orbit_symbols

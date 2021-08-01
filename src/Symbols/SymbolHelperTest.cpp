@@ -19,6 +19,7 @@
 #include "Test/Path.h"
 #include "symbol.pb.h"
 
+using orbit_base::HasError;
 using orbit_grpc_protos::ModuleSymbols;
 using orbit_symbols::SymbolHelper;
 namespace fs = std::filesystem;
@@ -311,4 +312,94 @@ TEST(SymbolHelper, FindSymbolsInStructedDebugStore) {
 
   ASSERT_FALSE(symbols_path_result.has_error()) << symbols_path_result.error().message();
   EXPECT_EQ(symbols_path_result.value(), symbols_path);
+}
+
+TEST(FileStartsWithDeprecationNote, FileDoesNotExist) {
+  ErrorMessageOr<bool> error_result =
+      orbit_symbols::FileStartsWithDeprecationNote("non/existing/path/");
+
+  EXPECT_THAT(error_result, orbit_base::HasError("Unable to open file"));
+}
+
+TEST(FileStartsWithDeprecationNote, EmptyFile) {
+  auto tmp_file_or_error = orbit_base::TemporaryFile::Create();
+  ASSERT_THAT(tmp_file_or_error, orbit_base::HasNoError());
+
+  ErrorMessageOr<bool> result =
+      orbit_symbols::FileStartsWithDeprecationNote(tmp_file_or_error.value().file_path());
+
+  ASSERT_TRUE(result.has_value());
+  EXPECT_FALSE(result.value());
+}
+
+TEST(FileStartsWithDeprecationNote, NoDeprecationNote) {
+  auto tmp_file_or_error = orbit_base::TemporaryFile::Create();
+  ASSERT_THAT(tmp_file_or_error, orbit_base::HasNoError());
+
+  ASSERT_THAT(orbit_base::WriteFully(tmp_file_or_error.value().fd(),
+                                     "Some file content.\nC:\\path\n\\\\ This is a comment"),
+              orbit_base::HasNoError());
+
+  ErrorMessageOr<bool> result =
+      orbit_symbols::FileStartsWithDeprecationNote(tmp_file_or_error.value().file_path());
+
+  ASSERT_TRUE(result.has_value());
+  EXPECT_FALSE(result.value());
+}
+
+TEST(FileStartsWithDeprecationNote, HasDeprecationNote) {
+  auto tmp_file_or_error = orbit_base::TemporaryFile::Create();
+  ASSERT_THAT(tmp_file_or_error, orbit_base::HasNoError());
+
+  ASSERT_THAT(orbit_base::WriteFully(
+                  tmp_file_or_error.value().fd(),
+                  "// !!! Do not remove this comment !!!\n// This file has been migrated in Orbit "
+                  "1.68. Please use: Menu > Settings > Symbol Locations...\n// This file can still "
+                  "used by Orbit versions prior to 1.68. If that is relevant to you, do not delete "
+                  "this file.\n"),
+              orbit_base::HasNoError());
+  ASSERT_THAT(
+      orbit_base::WriteFully(tmp_file_or_error.value().fd(), "Some more content.\n// Comment"),
+      orbit_base::HasNoError());
+
+  ErrorMessageOr<bool> result =
+      orbit_symbols::FileStartsWithDeprecationNote(tmp_file_or_error.value().file_path());
+
+  ASSERT_TRUE(result.has_value());
+  EXPECT_TRUE(result.value());
+}
+
+TEST(AddDeprecationNoteToFile, FileDoesNotExist) {
+  ErrorMessageOr<void> error_result = orbit_symbols::AddDeprecationNoteToFile("non/existing/path/");
+
+  EXPECT_THAT(error_result, orbit_base::HasError("Unable to open file"));
+}
+
+TEST(AddDeprecationNoteToFile, AddNote) {
+  auto tmp_file_or_error = orbit_base::TemporaryFile::Create();
+  ASSERT_THAT(tmp_file_or_error, orbit_base::HasNoError());
+  orbit_base::TemporaryFile& file{tmp_file_or_error.value()};
+
+  constexpr std::string_view kFileContent = "Some file content.\nC:\\path\n\\\\ This is a comment";
+  ASSERT_THAT(orbit_base::WriteFully(file.fd(), kFileContent), orbit_base::HasNoError());
+
+  {
+    ErrorMessageOr<void> add_result = orbit_symbols::AddDeprecationNoteToFile(file.file_path());
+    ASSERT_TRUE(add_result.has_value());
+
+    ErrorMessageOr<bool> check_result =
+        orbit_symbols::FileStartsWithDeprecationNote(file.file_path());
+    ASSERT_TRUE(check_result.has_value());
+    EXPECT_TRUE(check_result.value());
+  }
+
+  {  // Adding the deprecation note, when there already is one, will fail
+    ErrorMessageOr<void> add_result = orbit_symbols::AddDeprecationNoteToFile(file.file_path());
+    EXPECT_FALSE(add_result.has_value());
+
+    ErrorMessageOr<bool> check_result =
+        orbit_symbols::FileStartsWithDeprecationNote(file.file_path());
+    ASSERT_TRUE(check_result.has_value());
+    EXPECT_TRUE(check_result.value());
+  }
 }
