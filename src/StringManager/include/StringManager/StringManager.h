@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_STRING_MANAGER_H_
-#define ORBIT_GL_STRING_MANAGER_H_
+#ifndef STRING_MANAGER_STRING_MANAGER_H_
+#define STRING_MANAGER_STRING_MANAGER_H_
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/synchronization/mutex.h>
@@ -13,7 +13,7 @@
 #include <string>
 #include <string_view>
 
-namespace orbit_gl {
+namespace orbit_string_manager {
 
 // This class is a thread-safe wrapper around `absl::flat_hash_map<uint64_t, std::string>`.
 class StringManager {
@@ -35,6 +35,6 @@ class StringManager {
   mutable absl::Mutex mutex_;
 };
 
-}  // namespace orbit_gl
+}  // namespace orbit_string_manager
 
-#endif  // ORBIT_GL_STRING_MANAGER_H_
+#endif  // STRING_MANAGER_STRING_MANAGER_H_

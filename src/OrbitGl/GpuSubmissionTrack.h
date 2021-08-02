@@ -15,7 +15,7 @@
 #include "CoreMath.h"
 #include "GpuDebugMarkerTrack.h"
 #include "PickingManager.h"
-#include "StringManager.h"
+#include "StringManager/StringManager.h"
 #include "Track.h"
 #include "capture_data.pb.h"
 
@@ -56,7 +56,7 @@ class GpuSubmissionTrack : public TimerTrack {
   [[nodiscard]] bool IsCollapsible() const override {
     return depth_ > 1 || has_vulkan_layer_command_buffer_timers_;
   }
-  [[nodiscard]] virtual bool IsCollapsed() const override {
+  [[nodiscard]] bool IsCollapsed() const override {
     return Track::IsCollapsed() || GetParent()->IsCollapsed();
   }
 
@@ -72,7 +72,7 @@ class GpuSubmissionTrack : public TimerTrack {
 
  private:
   uint64_t timeline_hash_;
-  orbit_gl::StringManager* string_manager_;
+  orbit_string_manager::StringManager* string_manager_;
   Track* parent_;
 
   bool has_vulkan_layer_command_buffer_timers_ = false;

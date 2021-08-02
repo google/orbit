@@ -12,7 +12,7 @@
 
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
-#include "StringManager.h"
+#include "StringManager/StringManager.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/synchronization/mutex.h"
@@ -37,8 +37,7 @@ class ManualInstrumentationManager {
 
  private:
   absl::flat_hash_set<AsyncTimerInfoListener*> async_timer_info_listeners_;
-  absl::flat_hash_map<uint32_t, orbit_client_protos::TimerInfo> async_timer_info_start_by_id_;
-  orbit_gl::StringManager string_manager_;
+  orbit_string_manager::StringManager string_manager_;
   absl::Mutex mutex_;
 };
 

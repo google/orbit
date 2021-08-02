@@ -23,7 +23,6 @@
 #include "PageFaultsTrack.h"
 #include "PickingManager.h"
 #include "SchedulerTrack.h"
-#include "StringManager.h"
 #include "SystemMemoryTrack.h"
 #include "ThreadTrack.h"
 #include "Timer.h"

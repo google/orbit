@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "StringManager.h"
+#include "StringManager/StringManager.h"
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/strings/string_view.h>
@@ -10,7 +10,7 @@
 
 #include "OrbitBase/Logging.h"
 
-namespace orbit_gl {
+namespace orbit_string_manager {
 
 // TODO(b/181207737): Make this assert that it is not present and rename to "Add".
 bool StringManager::AddIfNotPresent(uint64_t key, std::string_view str) {
@@ -47,4 +47,4 @@ void StringManager::Clear() {
   key_to_string_.clear();
 }
 
-}  // namespace orbit_gl
+}  // namespace orbit_string_manager

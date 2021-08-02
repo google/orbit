@@ -6,7 +6,6 @@
 
 #include "App.h"
 #include "OrbitBase/Logging.h"
-#include "StringManager.h"
 #include "TimeGraph.h"
 #include "capture_data.pb.h"
 
