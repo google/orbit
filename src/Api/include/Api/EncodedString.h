@@ -11,7 +11,7 @@
 
 // In order to avoid expensive allocations in proto buffers, we encode the first 64 characters in
 // eight fixed64 fields (byte by byte). Any additional characters will be also encoded in a sequence
-// of 64bit fields. So a string [0x11, 0x22, 0x33] would get encoded as 0x1122330000000000, all
+// of 64bit fields. So a string [0x11, 0x22, 0x33] would get encoded as 0x0000000000332211, all
 // other fields are zero and there are no additional fields.
 namespace orbit_api {
 

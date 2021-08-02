@@ -6,44 +6,11 @@
 
 #include <absl/base/casts.h>
 
+#include <cstring>
+
 #include "capture.pb.h"
 
 namespace orbit_api {
-
-namespace {
-inline void DecodeString(uint64_t encoded_name, std::string* out) {
-  for (int32_t i = 56; i >= 0; i -= 8) {
-    char c = static_cast<char>((encoded_name & (0xffL << i)) >> i);
-    if (c == '\0') {
-      return;
-    }
-    out->push_back(c);
-  }
-}
-
-inline bool EncodeFirstChunk(const char* source, uint64_t* out) {
-  uint64_t result = 0;
-  for (size_t i = 0; i < 8; i++) {
-    auto current = absl::bit_cast<unsigned char>(source[i]);
-    if (current == '\0') {
-      *out = result;
-      return false;
-    }
-    result |= (static_cast<uint64_t>(current) << (7 - i) * 8);
-  }
-  *out = result;
-  return true;
-}
-
-#define ENCODE_CHUNK_NUMBER(i)                                                                   \
-  do {                                                                                           \
-    bool continue_reading = EncodeFirstChunk(source + ((i - 1) * 8), &encoded_first_four_bytes); \
-    (dest->*write_chunk_##i)(encoded_first_four_bytes);                                          \
-    if (!continue_reading) {                                                                     \
-      return;                                                                                    \
-    }                                                                                            \
-  } while (0)
-}  // namespace
 
 std::string DecodeString(uint64_t encoded_name_1, uint64_t encoded_name_2, uint64_t encoded_name_3,
                          uint64_t encoded_name_4, uint64_t encoded_name_5, uint64_t encoded_name_6,
@@ -52,33 +19,42 @@ std::string DecodeString(uint64_t encoded_name_1, uint64_t encoded_name_2, uint6
                          size_t encoded_name_addition_count) {
   std::string result{};
   if (encoded_name_1 == 0) return result;
-  DecodeString(encoded_name_1, &result);
+  char* encoded_name_bytes = absl::bit_cast<char*>(&encoded_name_1);
+  result.append(encoded_name_bytes, std::min(strlen(encoded_name_bytes), sizeof(uint64_t)));
 
   if (encoded_name_2 == 0) return result;
-  DecodeString(encoded_name_2, &result);
+  encoded_name_bytes = absl::bit_cast<char*>(&encoded_name_2);
+  result.append(encoded_name_bytes, std::min(strlen(encoded_name_bytes), sizeof(uint64_t)));
 
   if (encoded_name_3 == 0) return result;
-  DecodeString(encoded_name_3, &result);
+  encoded_name_bytes = absl::bit_cast<char*>(&encoded_name_3);
+  result.append(encoded_name_bytes, std::min(strlen(encoded_name_bytes), sizeof(uint64_t)));
 
   if (encoded_name_4 == 0) return result;
-  DecodeString(encoded_name_4, &result);
+  encoded_name_bytes = absl::bit_cast<char*>(&encoded_name_4);
+  result.append(encoded_name_bytes, std::min(strlen(encoded_name_bytes), sizeof(uint64_t)));
 
   if (encoded_name_5 == 0) return result;
-  DecodeString(encoded_name_5, &result);
+  encoded_name_bytes = absl::bit_cast<char*>(&encoded_name_5);
+  result.append(encoded_name_bytes, std::min(strlen(encoded_name_bytes), sizeof(uint64_t)));
 
   if (encoded_name_6 == 0) return result;
-  DecodeString(encoded_name_6, &result);
+  encoded_name_bytes = absl::bit_cast<char*>(&encoded_name_6);
+  result.append(encoded_name_bytes, std::min(strlen(encoded_name_bytes), sizeof(uint64_t)));
 
   if (encoded_name_7 == 0) return result;
-  DecodeString(encoded_name_7, &result);
+  encoded_name_bytes = absl::bit_cast<char*>(&encoded_name_7);
+  result.append(encoded_name_bytes, std::min(strlen(encoded_name_bytes), sizeof(uint64_t)));
 
   if (encoded_name_8 == 0) return result;
-  DecodeString(encoded_name_8, &result);
+  encoded_name_bytes = absl::bit_cast<char*>(&encoded_name_8);
+  result.append(encoded_name_bytes, std::min(strlen(encoded_name_bytes), sizeof(uint64_t)));
 
   for (size_t i = 0; i < encoded_name_addition_count; i++) {
     uint64_t current_encoded_name_additional = encoded_name_additional[i];
     if (current_encoded_name_additional == 0) return result;
-    DecodeString(current_encoded_name_additional, &result);
+    encoded_name_bytes = absl::bit_cast<char*>(&current_encoded_name_additional);
+    result.append(encoded_name_bytes, std::min(strlen(encoded_name_bytes), sizeof(uint64_t)));
   }
   return result;
 }
@@ -90,23 +66,78 @@ void EncodeString(const char* source, Dest* dest, void (Dest::*write_chunk_1)(ui
                   void (Dest::*write_chunk_6)(uint64_t), void (Dest::*write_chunk_7)(uint64_t),
                   void (Dest::*write_chunk_8)(uint64_t),
                   void (Dest::*append_additional_chunk)(uint64_t)) {
-  uint64_t encoded_first_four_bytes = 0;
-  ENCODE_CHUNK_NUMBER(1);
-  ENCODE_CHUNK_NUMBER(2);
-  ENCODE_CHUNK_NUMBER(3);
-  ENCODE_CHUNK_NUMBER(4);
-  ENCODE_CHUNK_NUMBER(5);
-  ENCODE_CHUNK_NUMBER(6);
-  ENCODE_CHUNK_NUMBER(7);
-  ENCODE_CHUNK_NUMBER(8);
+  uint64_t encoded_eight_bytes = 0;
+  strncpy(absl::bit_cast<char*>(&encoded_eight_bytes), source, sizeof(uint64_t));
+  (dest->*write_chunk_1)(encoded_eight_bytes);
+  if (strlen(source) <= sizeof(uint64_t)) {
+    return;
+  }
+  source += sizeof(uint64_t);
 
-  bool continue_reading = true;
-  source += 64;
-  while (continue_reading) {
-    continue_reading = EncodeFirstChunk(source, &encoded_first_four_bytes);
-    if (encoded_first_four_bytes == 0) return;
-    (dest->*append_additional_chunk)(encoded_first_four_bytes);
-    source += 8;
+  encoded_eight_bytes = 0;
+  strncpy(absl::bit_cast<char*>(&encoded_eight_bytes), source, sizeof(uint64_t));
+  (dest->*write_chunk_2)(encoded_eight_bytes);
+  if (strlen(source) <= sizeof(uint64_t)) {
+    return;
+  }
+  source += sizeof(uint64_t);
+
+  encoded_eight_bytes = 0;
+  strncpy(absl::bit_cast<char*>(&encoded_eight_bytes), source, sizeof(uint64_t));
+  (dest->*write_chunk_3)(encoded_eight_bytes);
+  if (strlen(source) <= sizeof(uint64_t)) {
+    return;
+  }
+  source += sizeof(uint64_t);
+
+  encoded_eight_bytes = 0;
+  strncpy(absl::bit_cast<char*>(&encoded_eight_bytes), source, sizeof(uint64_t));
+  (dest->*write_chunk_4)(encoded_eight_bytes);
+  if (strlen(source) <= sizeof(uint64_t)) {
+    return;
+  }
+  source += sizeof(uint64_t);
+
+  encoded_eight_bytes = 0;
+  strncpy(absl::bit_cast<char*>(&encoded_eight_bytes), source, sizeof(uint64_t));
+  (dest->*write_chunk_5)(encoded_eight_bytes);
+  if (strlen(source) <= sizeof(uint64_t)) {
+    return;
+  }
+  source += sizeof(uint64_t);
+
+  encoded_eight_bytes = 0;
+  strncpy(absl::bit_cast<char*>(&encoded_eight_bytes), source, sizeof(uint64_t));
+  (dest->*write_chunk_6)(encoded_eight_bytes);
+  if (strlen(source) <= sizeof(uint64_t)) {
+    return;
+  }
+  source += sizeof(uint64_t);
+
+  encoded_eight_bytes = 0;
+  strncpy(absl::bit_cast<char*>(&encoded_eight_bytes), source, sizeof(uint64_t));
+  (dest->*write_chunk_7)(encoded_eight_bytes);
+  if (strlen(source) <= sizeof(uint64_t)) {
+    return;
+  }
+  source += sizeof(uint64_t);
+
+  encoded_eight_bytes = 0;
+  strncpy(absl::bit_cast<char*>(&encoded_eight_bytes), source, sizeof(uint64_t));
+  (dest->*write_chunk_8)(encoded_eight_bytes);
+  if (strlen(source) <= sizeof(uint64_t)) {
+    return;
+  }
+  source += sizeof(uint64_t);
+
+  while (true) {
+    encoded_eight_bytes = 0;
+    strncpy(absl::bit_cast<char*>(&encoded_eight_bytes), source, sizeof(uint64_t));
+    (dest->*append_additional_chunk)(encoded_eight_bytes);
+    if (strlen(source) <= sizeof(uint64_t)) {
+      return;
+    }
+    source += sizeof(uint64_t);
   }
 }
 
