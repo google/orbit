@@ -12,46 +12,47 @@
 
 namespace orbit_api {
 
-std::string DecodeString(uint64_t encoded_name_1, uint64_t encoded_name_2, uint64_t encoded_name_3,
-                         uint64_t encoded_name_4, uint64_t encoded_name_5, uint64_t encoded_name_6,
-                         uint64_t encoded_name_7, uint64_t encoded_name_8,
-                         const uint64_t* encoded_name_additional,
-                         size_t encoded_name_addition_count) {
+std::string DecodeString(uint64_t encoded_chunk_1, uint64_t encoded_chunk_2,
+                         uint64_t encoded_chunk_3, uint64_t encoded_chunk_4,
+                         uint64_t encoded_chunk_5, uint64_t encoded_chunk_6,
+                         uint64_t encoded_chunk_7, uint64_t encoded_chunk_8,
+                         const uint64_t* encoded_chunk_additional,
+                         size_t encoded_chunk_addition_count) {
   std::string result{};
-  if (encoded_name_1 == 0) return result;
-  char* encoded_name_bytes = absl::bit_cast<char*>(&encoded_name_1);
+  if (encoded_chunk_1 == 0) return result;
+  char* encoded_name_bytes = absl::bit_cast<char*>(&encoded_chunk_1);
   result.append(encoded_name_bytes, std::min(strlen(encoded_name_bytes), sizeof(uint64_t)));
 
-  if (encoded_name_2 == 0) return result;
-  encoded_name_bytes = absl::bit_cast<char*>(&encoded_name_2);
+  if (encoded_chunk_2 == 0) return result;
+  encoded_name_bytes = absl::bit_cast<char*>(&encoded_chunk_2);
   result.append(encoded_name_bytes, std::min(strlen(encoded_name_bytes), sizeof(uint64_t)));
 
-  if (encoded_name_3 == 0) return result;
-  encoded_name_bytes = absl::bit_cast<char*>(&encoded_name_3);
+  if (encoded_chunk_3 == 0) return result;
+  encoded_name_bytes = absl::bit_cast<char*>(&encoded_chunk_3);
   result.append(encoded_name_bytes, std::min(strlen(encoded_name_bytes), sizeof(uint64_t)));
 
-  if (encoded_name_4 == 0) return result;
-  encoded_name_bytes = absl::bit_cast<char*>(&encoded_name_4);
+  if (encoded_chunk_4 == 0) return result;
+  encoded_name_bytes = absl::bit_cast<char*>(&encoded_chunk_4);
   result.append(encoded_name_bytes, std::min(strlen(encoded_name_bytes), sizeof(uint64_t)));
 
-  if (encoded_name_5 == 0) return result;
-  encoded_name_bytes = absl::bit_cast<char*>(&encoded_name_5);
+  if (encoded_chunk_5 == 0) return result;
+  encoded_name_bytes = absl::bit_cast<char*>(&encoded_chunk_5);
   result.append(encoded_name_bytes, std::min(strlen(encoded_name_bytes), sizeof(uint64_t)));
 
-  if (encoded_name_6 == 0) return result;
-  encoded_name_bytes = absl::bit_cast<char*>(&encoded_name_6);
+  if (encoded_chunk_6 == 0) return result;
+  encoded_name_bytes = absl::bit_cast<char*>(&encoded_chunk_6);
   result.append(encoded_name_bytes, std::min(strlen(encoded_name_bytes), sizeof(uint64_t)));
 
-  if (encoded_name_7 == 0) return result;
-  encoded_name_bytes = absl::bit_cast<char*>(&encoded_name_7);
+  if (encoded_chunk_7 == 0) return result;
+  encoded_name_bytes = absl::bit_cast<char*>(&encoded_chunk_7);
   result.append(encoded_name_bytes, std::min(strlen(encoded_name_bytes), sizeof(uint64_t)));
 
-  if (encoded_name_8 == 0) return result;
-  encoded_name_bytes = absl::bit_cast<char*>(&encoded_name_8);
+  if (encoded_chunk_8 == 0) return result;
+  encoded_name_bytes = absl::bit_cast<char*>(&encoded_chunk_8);
   result.append(encoded_name_bytes, std::min(strlen(encoded_name_bytes), sizeof(uint64_t)));
 
-  for (size_t i = 0; i < encoded_name_addition_count; i++) {
-    uint64_t current_encoded_name_additional = encoded_name_additional[i];
+  for (size_t i = 0; i < encoded_chunk_addition_count; i++) {
+    uint64_t current_encoded_name_additional = encoded_chunk_additional[i];
     if (current_encoded_name_additional == 0) return result;
     encoded_name_bytes = absl::bit_cast<char*>(&current_encoded_name_additional);
     result.append(encoded_name_bytes, std::min(strlen(encoded_name_bytes), sizeof(uint64_t)));
