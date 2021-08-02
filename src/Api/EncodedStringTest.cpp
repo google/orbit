@@ -64,12 +64,12 @@ TEST(EncodedString, Decode64ByteString) {
 }
 
 TEST(EncodedString, Decode65ByteStringIncludingOneAdditionalCharacter) {
-  std::vector<uint64_t> additional_char;
-  additional_char.push_back(0x0000000000000011);
+  std::vector<uint64_t> additional_chunks;
+  additional_chunks.push_back(0x0000000000000011);
   std::string decoded =
       DecodeString(0x8877665544332211, 0x8877665544332211, 0x8877665544332211, 0x8877665544332211,
                    0x8877665544332211, 0x8877665544332211, 0x8877665544332211, 0x8877665544332211,
-                   additional_char.data(), additional_char.size());
+                   additional_chunks.data(), additional_chunks.size());
   std::string expected{0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88),  // 1
                        0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88),  // 2
                        0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88),  // 3
@@ -84,13 +84,13 @@ TEST(EncodedString, Decode65ByteStringIncludingOneAdditionalCharacter) {
 }
 
 TEST(EncodedString, Decode80ByteStringIncluding16AdditionalCharacters) {
-  std::vector<uint64_t> additional_char;
-  additional_char.push_back(0x8877665544332211);
-  additional_char.push_back(0x8877665544332211);
+  std::vector<uint64_t> additional_chunks;
+  additional_chunks.push_back(0x8877665544332211);
+  additional_chunks.push_back(0x8877665544332211);
   std::string decoded =
       DecodeString(0x8877665544332211, 0x8877665544332211, 0x8877665544332211, 0x8877665544332211,
                    0x8877665544332211, 0x8877665544332211, 0x8877665544332211, 0x8877665544332211,
-                   additional_char.data(), additional_char.size());
+                   additional_chunks.data(), additional_chunks.size());
   std::string expected{
       0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88),  // 1
       0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88),  // 2
@@ -123,8 +123,7 @@ TEST(EncodedString, EncodeEmptyString) {
 
 TEST(EncodedString, Encode1ByteString) {
   ApiScopeStart encoded_string;
-  std::string decoded_string;
-  decoded_string.push_back(0x11);
+  std::string decoded_string{0x11};
   EncodeString(decoded_string.c_str(), &encoded_string);
   EXPECT_EQ(encoded_string.encoded_name_1(), 0x0000000000000011);
   EXPECT_EQ(encoded_string.encoded_name_2(), 0);
@@ -139,11 +138,7 @@ TEST(EncodedString, Encode1ByteString) {
 
 TEST(EncodedString, Encode4ByteString) {
   ApiScopeStart encoded_string;
-  std::string decoded_string;
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
+  std::string decoded_string{0x11, 0x22, 0x33, 0x44};
   EncodeString(decoded_string.c_str(), &encoded_string);
   EXPECT_EQ(encoded_string.encoded_name_1(), 0x0000000044332211);
   EXPECT_EQ(encoded_string.encoded_name_2(), 0);
@@ -158,15 +153,7 @@ TEST(EncodedString, Encode4ByteString) {
 
 TEST(EncodedString, Encode8ByteString) {
   ApiScopeStart encoded_string;
-  std::string decoded_string;
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
+  std::string decoded_string{0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88)};
   EncodeString(decoded_string.c_str(), &encoded_string);
   EXPECT_EQ(encoded_string.encoded_name_1(), 0x8877665544332211);
   EXPECT_EQ(encoded_string.encoded_name_2(), 0);
@@ -181,16 +168,8 @@ TEST(EncodedString, Encode8ByteString) {
 
 TEST(EncodedString, Encode9ByteString) {
   ApiScopeStart encoded_string;
-  std::string decoded_string;
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-  decoded_string.push_back(0x99);
+  std::string decoded_string{
+      0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88), static_cast<char>(0x99)};
   EncodeString(decoded_string.c_str(), &encoded_string);
   EXPECT_EQ(encoded_string.encoded_name_1(), 0x8877665544332211);
   EXPECT_EQ(encoded_string.encoded_name_2(), 0x0000000000000099);
@@ -205,78 +184,16 @@ TEST(EncodedString, Encode9ByteString) {
 
 TEST(EncodedString, Encode64ByteString) {
   ApiScopeStart encoded_string;
-  std::string decoded_string;
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
+  std::string decoded_string{
+      0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88),  // 1
+      0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88),  // 2
+      0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88),  // 3
+      0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88),  // 4
+      0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88),  // 5
+      0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88),  // 6
+      0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88),  // 7
+      0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88),  // 8
+  };
 
   EncodeString(decoded_string.c_str(), &encoded_string);
   EXPECT_EQ(encoded_string.encoded_name_1(), 0x8877665544332211);
@@ -292,80 +209,17 @@ TEST(EncodedString, Encode64ByteString) {
 
 TEST(EncodedString, Encode65ByteStringWithIncludingOneAdditionalByte) {
   ApiScopeStart encoded_string;
-  std::string decoded_string;
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
+  std::string decoded_string{
+      0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88),  // 1
+      0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88),  // 2
+      0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88),  // 3
+      0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88),  // 4
+      0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88),  // 5
+      0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88),  // 6
+      0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88),  // 7
+      0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, static_cast<char>(0x88),  // 8
+      0x11,
+  };
 
   EncodeString(decoded_string.c_str(), &encoded_string);
   EXPECT_EQ(encoded_string.encoded_name_1(), 0x8877665544332211);
@@ -381,96 +235,88 @@ TEST(EncodedString, Encode65ByteStringWithIncludingOneAdditionalByte) {
 
 TEST(EncodedString, Encode80ByteStringWithIncludingOneAdditionalByte) {
   ApiScopeStart encoded_string;
-  std::string decoded_string;
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x11);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x88);
-
-  decoded_string.push_back(0x88);
-  decoded_string.push_back(0x77);
-  decoded_string.push_back(0x66);
-  decoded_string.push_back(0x55);
-  decoded_string.push_back(0x44);
-  decoded_string.push_back(0x33);
-  decoded_string.push_back(0x22);
-  decoded_string.push_back(0x11);
+  std::string decoded_string{
+      0x11,
+      0x22,
+      0x33,
+      0x44,
+      0x55,
+      0x66,
+      0x77,
+      static_cast<char>(0x88),  // 1
+      0x11,
+      0x22,
+      0x33,
+      0x44,
+      0x55,
+      0x66,
+      0x77,
+      static_cast<char>(0x88),  // 2
+      0x11,
+      0x22,
+      0x33,
+      0x44,
+      0x55,
+      0x66,
+      0x77,
+      static_cast<char>(0x88),  // 3
+      0x11,
+      0x22,
+      0x33,
+      0x44,
+      0x55,
+      0x66,
+      0x77,
+      static_cast<char>(0x88),  // 4
+      0x11,
+      0x22,
+      0x33,
+      0x44,
+      0x55,
+      0x66,
+      0x77,
+      static_cast<char>(0x88),  // 5
+      0x11,
+      0x22,
+      0x33,
+      0x44,
+      0x55,
+      0x66,
+      0x77,
+      static_cast<char>(0x88),  // 6
+      0x11,
+      0x22,
+      0x33,
+      0x44,
+      0x55,
+      0x66,
+      0x77,
+      static_cast<char>(0x88),  // 7
+      0x11,
+      0x22,
+      0x33,
+      0x44,
+      0x55,
+      0x66,
+      0x77,
+      static_cast<char>(0x88),  // 8
+      0x11,
+      0x22,
+      0x33,
+      0x44,
+      0x55,
+      0x66,
+      0x77,
+      static_cast<char>(0x88),  // 9
+      static_cast<char>(0x88),
+      0x77,
+      0x66,
+      0x55,
+      0x44,
+      0x33,
+      0x22,
+      0x11,  // 10
+  };
 
   EncodeString(decoded_string.c_str(), &encoded_string);
   EXPECT_EQ(encoded_string.encoded_name_1(), 0x8877665544332211);
@@ -503,7 +349,7 @@ TEST(EncodedString, SmokeSmallString) {
 TEST(EncodedString, SmokeLargeString) {
   std::string expected_string =
       "na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na "
-      "na na na na na na na na na nana na na na na na na na na na na na na na na na na na na na "
+      "na na na na na na na na na na na na na na na na na na na na na na na na na na na na na na "
       "BATMAN!";
   ApiScopeStart encoded_string;
   EncodeString(expected_string.c_str(), &encoded_string);
