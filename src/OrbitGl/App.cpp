@@ -567,6 +567,23 @@ void OrbitApp::OnErrorEnablingOrbitApiEvent(
       });
 }
 
+void OrbitApp::OnErrorEnablingUserSpaceInstrumentationEvent(
+    orbit_grpc_protos::ErrorEnablingUserSpaceInstrumentationEvent error_event) {
+  main_thread_executor_->Schedule([this, error_event = std::move(error_event)]() {
+    main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
+                                     GetCaptureTimeAt(error_event.timestamp_ns()),
+                                     error_event.message());
+
+    if (!IsLoadingCapture()) {
+      constexpr const char* kDontShowAgainErrorEnablingUserSpaceInstrumentationWarningKey =
+          "DontShowAgainErrorEnablingUserSpaceInstrumentationWarning";
+      main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
+          "Could not enable user space instrumentation", error_event.message(),
+          kDontShowAgainErrorEnablingUserSpaceInstrumentationWarningKey);
+    }
+  });
+}
+
 static constexpr const char* kIncompleteDataLogMessage =
     "The capture contains one or more time ranges with incomplete data. Some information might "
     "be inaccurate.";

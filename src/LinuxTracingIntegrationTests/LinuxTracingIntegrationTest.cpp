@@ -552,6 +552,8 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         break;
       case orbit_grpc_protos::ProducerCaptureEvent::kErrorEnablingOrbitApiEvent:
         UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kErrorEnablingUserSpaceInstrumentationEvent:
+        UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kLostPerfRecordsEvent:
         EXPECT_GE(event.lost_perf_records_event().end_timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.lost_perf_records_event().end_timestamp_ns();

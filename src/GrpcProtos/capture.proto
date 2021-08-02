@@ -585,6 +585,12 @@ message ErrorEnablingOrbitApiEvent {
   bytes message = 2;
 }
 
+message ErrorEnablingUserSpaceInstrumentationEvent {
+  uint64 timestamp_ns = 1;
+  // This is a string, we use bytes to avoid UTF-8 validation.
+  bytes message = 2;
+}
+
 message ClockResolutionEvent {
   uint64 timestamp_ns = 1;
   uint64 clock_resolution_ns = 2;
@@ -616,7 +622,7 @@ message ClientCaptureEvent {
     // numbers starting with 16.
     //
     // Next high-frequency ID: 12
-    // Next lower-frequency ID: 47
+    // Next lower-frequency ID: 48
     // Please keep these alphabetically ordered.
 
     // Even though AddressInfo is a high-frequency event
@@ -640,6 +646,8 @@ message ClientCaptureEvent {
     CaptureStarted capture_started = 24;
     ClockResolutionEvent clock_resolution_event = 34;
     ErrorEnablingOrbitApiEvent error_enabling_orbit_api_event = 33;
+    ErrorEnablingUserSpaceInstrumentationEvent
+        error_enabling_user_space_instrumentation_event = 47;
     ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event = 35;
     FunctionCall function_call = 2;
     GpuJob gpu_job = 3;
@@ -671,7 +679,7 @@ message ProducerCaptureEvent {
     // numbers starting with 16.
     //
     // Next high-frequency ID: 13
-    // Next lower-frequency ID: 45
+    // Next lower-frequency ID: 46
     //
     // Please keep these alphabetically ordered.
     ApiEvent api_event = 10;
@@ -690,6 +698,8 @@ message ProducerCaptureEvent {
     CaptureStarted capture_started = 23;
     ClockResolutionEvent clock_resolution_event = 32;
     ErrorEnablingOrbitApiEvent error_enabling_orbit_api_event = 31;
+    ErrorEnablingUserSpaceInstrumentationEvent
+        error_enabling_user_space_instrumentation_event = 45;
     ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event = 33;
     FullCallstackSample full_callstack_sample = 2;
 
