@@ -1,0 +1,55 @@
+--- cmake/config-ix.cmake
++++ cmake/config-ix.cmake
+@@ -143,6 +143,9 @@
+   elseif(NOT LLVM_USE_SANITIZER MATCHES "Memory.*")
+     find_package(LibXml2)
+   endif()
++  set(LIBXML2_FOUND 1)
++  list(GET LibXml2_INCLUDE_DIRS -1 LIBXML2_INCLUDE_DIR)
++  set(LIBXML2_LIBRARIES ${LibXml2_LIBRARIES})
+   if(LibXml2_FOUND)
+     # Check if libxml2 we found is usable; for example, we may have found a 32-bit
+     # library on a 64-bit system which would result in a link-time failure.
+@@ -335,7 +335,7 @@
+     message(FATAL_ERROR "libffi includes are not found.")
+   endif()
+ 
+-  find_library(FFI_LIBRARY_PATH ffi PATHS ${FFI_LIBRARY_DIR})
++  find_library(FFI_LIBRARY_PATH NAMES ffi libffi PATHS ${FFI_LIBRARY_DIR})
+   if( NOT FFI_LIBRARY_PATH )
+     message(FATAL_ERROR "libffi is not found.")
+   endif()
+--- cmake/modules/TableGen.cmake
++++ cmake/modules/TableGen.cmake
+@@ -132,12 +132,7 @@
+ macro(add_tablegen target project)
+   set(${target}_OLD_LLVM_LINK_COMPONENTS ${LLVM_LINK_COMPONENTS})
+   set(LLVM_LINK_COMPONENTS ${LLVM_LINK_COMPONENTS} TableGen)
+-
+-  # CMake doesn't let compilation units depend on their dependent libraries on some generators.
+-  if(NOT CMAKE_GENERATOR STREQUAL "Ninja" AND NOT XCODE)
+-    # FIXME: It leaks to user, callee of add_tablegen.
+-    set(LLVM_ENABLE_OBJLIB ON)
+-  endif()
++  set(LLVM_ENABLE_OBJLIB OFF)
+ 
+   add_llvm_executable(${target} DISABLE_LLVM_LINK_LLVM_DYLIB ${ARGN})
+   set(LLVM_LINK_COMPONENTS ${${target}_OLD_LLVM_LINK_COMPONENTS})
+--- lib/WindowsManifest/CMakeLists.txt
++++ lib/WindowsManifest/CMakeLists.txt
+@@ -21,14 +21,5 @@
+ # This block is only needed for llvm-config. When we deprecate llvm-config and
+ # move to using CMake export, this block can be removed.
+ if(LLVM_ENABLE_LIBXML2)
+-  # CMAKE_BUILD_TYPE is only meaningful to single-configuration generators.
+-  if(CMAKE_BUILD_TYPE)
+-    string(TOUPPER ${CMAKE_BUILD_TYPE} build_type)
+-    get_property(libxml2_library TARGET LibXml2::LibXml2 PROPERTY LOCATION_${build_type})
+-  endif()
+-  if(NOT zlib_library)
+-    get_property(libxml2_library TARGET LibXml2::LibXml2 PROPERTY LOCATION)
+-  endif()
+-  get_library_name(${libxml2_library} libxml2_library)
+-  set_property(TARGET LLVMWindowsManifest PROPERTY LLVM_SYSTEM_LIBS ${libxml2_library})
++  set_property(TARGET LLVMWindowsManifest PROPERTY LLVM_SYSTEM_LIBS ${LIBXML2_LIBRARIES})
+ endif()
