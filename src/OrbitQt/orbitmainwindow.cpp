@@ -80,6 +80,7 @@
 #include "CodeViewer/FontSizeInEm.h"
 #include "CodeViewer/OwningDialog.h"
 #include "ConfigWidgets/SourcePathsMappingDialog.h"
+#include "ConfigWidgets/SymbolsDialog.h"
 #include "DataViewFactory.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/LiveFunctionsDataView.h"
@@ -1264,6 +1265,16 @@ void OrbitMainWindow::on_actionSourcePathMappings_triggered() {
 
   if (result_code == QDialog::Accepted) {
     manager.SetMappings(dialog.GetMappings());
+  }
+}
+
+void OrbitMainWindow::on_actionSymbolsDialog_triggered() {
+  orbit_config_widgets::SymbolsDialog dialog{this};
+  dialog.SetSymbolPaths(orbit_symbol_paths::LoadPaths());
+  const int result_code = dialog.exec();
+
+  if (result_code == QDialog::Accepted) {
+    orbit_symbol_paths::SavePaths(dialog.GetSymbolPaths());
   }
 }
 
