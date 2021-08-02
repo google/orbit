@@ -14,7 +14,7 @@
 #include "CallstackThreadBar.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
-#include "StringManager.h"
+#include "StringManager/StringManager.h"
 #include "TimerTrack.h"
 #include "Track.h"
 #include "capture_data.pb.h"
@@ -51,7 +51,7 @@ class GpuDebugMarkerTrack : public TimerTrack {
   [[nodiscard]] std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const override;
 
  private:
-  orbit_gl::StringManager* string_manager_;
+  orbit_string_manager::StringManager* string_manager_;
 };
 
 #endif  // ORBIT_GL_GPU_DEBUG_MARKER_TRACK_H_

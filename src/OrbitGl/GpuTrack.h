@@ -16,7 +16,6 @@
 #include "GpuDebugMarkerTrack.h"
 #include "GpuSubmissionTrack.h"
 #include "PickingManager.h"
-#include "StringManager.h"
 #include "TimerTrack.h"
 #include "Track.h"
 #include "Viewport.h"

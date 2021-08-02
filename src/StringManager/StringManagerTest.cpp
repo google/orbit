@@ -4,9 +4,9 @@
 
 #include <gtest/gtest.h>
 
-#include "StringManager.h"
+#include "StringManager/StringManager.h"
 
-namespace orbit_gl {
+namespace orbit_string_manager {
 
 TEST(StringManager, AddIfNotPresent) {
   StringManager string_manager;

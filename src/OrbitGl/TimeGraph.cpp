@@ -36,7 +36,6 @@
 #include "PageFaultsTrack.h"
 #include "PickingManager.h"
 #include "SchedulerTrack.h"
-#include "StringManager.h"
 #include "SystemMemoryTrack.h"
 #include "ThreadTrack.h"
 #include "TrackManager.h"
@@ -48,14 +47,12 @@ using orbit_capture_client::CaptureEventProcessor;
 using orbit_client_data::TimerChain;
 using orbit_client_model::CaptureData;
 using orbit_client_protos::CallstackEvent;
-using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_gl::CGroupAndProcessMemoryTrack;
 using orbit_gl::PageFaultsTrack;
 using orbit_gl::SystemMemoryTrack;
 using orbit_gl::VariableTrack;
 using orbit_grpc_protos::InstrumentedFunction;
-using orbit_grpc_protos::kMissingInfo;
 
 TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
                      orbit_gl::Viewport* viewport, const CaptureData* capture_data,

@@ -130,8 +130,6 @@ target_sources(
           SamplingReportDataView.cpp
           SchedulerTrack.cpp
           SchedulingStats.cpp
-          StringManager.cpp
-          StringManager.h
           SystemMemoryTrack.cpp
           TextRenderer.cpp
           TimeGraph.cpp
@@ -167,6 +165,7 @@ target_link_libraries(
          OrbitAccessibility
          OrbitPaths
          PresetFile
+         StringManager
          Qt5::Gui
          Symbols
          CONAN_PKG::freetype-gl
@@ -203,7 +202,6 @@ target_sources(OrbitGlTests PRIVATE
                ScopeTreeTest.cpp
                SliderTest.cpp
                ShortenStringWithEllipsisTest.cpp
-               StringManagerTest.cpp
                TimerInfosIteratorTest.cpp
                TrackManagerTest.cpp
                ViewportTest.cpp)

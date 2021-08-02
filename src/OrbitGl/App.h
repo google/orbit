@@ -68,7 +68,7 @@
 #include "SamplingReport.h"
 #include "ScopedStatus.h"
 #include "StatusListener.h"
-#include "StringManager.h"
+#include "StringManager/StringManager.h"
 #include "Symbols/SymbolHelper.h"
 #include "TracepointsDataView.h"
 #include "capture.pb.h"
@@ -360,7 +360,7 @@ class OrbitApp final : public DataViewFactory,
       orbit_data_views::DataViewType type) override;
   [[nodiscard]] orbit_data_views::DataView* GetOrCreateSelectionCallstackDataView();
 
-  [[nodiscard]] orbit_gl::StringManager* GetStringManager() { return &string_manager_; }
+  [[nodiscard]] orbit_string_manager::StringManager* GetStringManager() { return &string_manager_; }
   [[nodiscard]] orbit_client_services::ProcessManager* GetProcessManager() {
     return process_manager_;
   }
@@ -563,7 +563,7 @@ class OrbitApp final : public DataViewFactory,
   absl::flat_hash_map<std::pair<std::string, std::string>, orbit_base::Future<ErrorMessageOr<void>>>
       symbols_currently_loading_;
 
-  orbit_gl::StringManager string_manager_;
+  orbit_string_manager::StringManager string_manager_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
 
   orbit_gl::MainWindowInterface* main_window_ = nullptr;
