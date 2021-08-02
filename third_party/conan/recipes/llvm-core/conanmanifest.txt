@@ -1,0 +1,8 @@
+1623780344
+conandata.yml: b7426654cbe81670515ad87389f66e5b
+conanfile.py: f9fe955bf192d1e02a1ce14d954f0199
+export_source/CMakeLists.txt: da79458f65853eeac14bd4aa9ea7f8c1
+export_source/patches/11x/11.1.0-cmake.patch: 8cbcdef751166834476ad5bdcca791de
+export_source/patches/11x/11.1.0-native.patch: 519eea2b6ffc9fc65751e08585218585
+export_source/patches/12x/12.0.0-cmake.patch: a3c326b86989bcf72ca8997b4e56c45c
+export_source/patches/12x/12.0.0-native.patch: 2d5f62e311539c787c9242f1b2cc865e
