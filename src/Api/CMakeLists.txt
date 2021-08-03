@@ -14,15 +14,29 @@ target_sources(ApiInterface INTERFACE
 target_include_directories(ApiInterface INTERFACE
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
+
+add_library(ApiBase STATIC)
+target_compile_options(ApiBase PRIVATE ${STRICT_COMPILE_FLAGS})
+target_compile_features(ApiBase PUBLIC cxx_std_17)
+
+target_sources(ApiBase PUBLIC
+        include/Api/EncodedString.h)
+target_sources(ApiBase PRIVATE
+        EncodedString.cpp)
+target_link_libraries(ApiBase PUBLIC
+        GrpcProtos)
+
 add_executable(ApiInterfaceTests)
 
 target_compile_options(ApiInterfaceTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(ApiInterfaceTests PRIVATE
-        EncodedEventTest.cpp)
+        EncodedEventTest.cpp
+        EncodedStringTest.cpp)
 
 target_link_libraries(ApiInterfaceTests PRIVATE
         ApiInterface
+        ApiBase
         GTest::Main)
 
 register_test(ApiInterfaceTests)
