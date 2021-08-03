@@ -33,6 +33,7 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/TestUtils.h"
+#include "TestUtils.h"
 #include "Trampoline.h"
 #include "UserSpaceInstrumentation/Attach.h"
 #include "UserSpaceInstrumentation/InjectLibraryInTracee.h"
@@ -567,33 +568,7 @@ class InstrumentFunctionTest : public testing::Test {
   }
 
   AddressRange GetFunctionAddressRangeOrDie() {
-    auto modules = orbit_object_utils::ReadModules(pid_);
-    CHECK(!modules.has_error());
-    std::string module_file_path;
-    AddressRange address_range_code(0, 0);
-    for (const auto& m : modules.value()) {
-      if (m.name() == "UserSpaceInstrumentationTests") {
-        module_file_path = m.file_path();
-        address_range_code.start = m.address_start();
-        address_range_code.end = m.address_end();
-      }
-    }
-    CHECK(!module_file_path.empty());
-    auto elf_file = orbit_object_utils::CreateElfFile(module_file_path);
-    CHECK(!elf_file.has_error());
-    auto syms = elf_file.value()->LoadDebugSymbols();
-    CHECK(!syms.has_error());
-    uint64_t address = 0;
-    uint64_t size = 0;
-    for (const auto& sym : syms.value().symbol_infos()) {
-      if (sym.name() == function_name_) {
-        address = orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
-            sym.address(), address_range_code.start, syms.value().load_bias(),
-            elf_file.value()->GetExecutableSegmentOffset());
-        size = sym.size();
-      }
-    }
-    return {address, address + size};
+    return GetFunctionAbsoluteAddressRangeOrDie(function_name_);
   }
 
   void PrepareInstrumentation(std::string_view entry_payload_function_name,

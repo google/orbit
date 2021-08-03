@@ -85,6 +85,9 @@ target_sources(UserSpaceInstrumentationTests PRIVATE
         RegisterStateTest.cpp
         TestProcess.cpp
         TestProcess.h
+        TestUtils.cpp
+        TestUtils.h
+        TestUtilsTest.cpp
         TrampolineTest.cpp)
 
 target_link_libraries(UserSpaceInstrumentationTests PRIVATE
