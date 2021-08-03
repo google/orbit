@@ -363,3 +363,19 @@ TEST(ElfFile, GetDeclarationLocationOfFunction) {
   EXPECT_EQ(std::filesystem::path{decl_line_info.value().source_file()}.filename().string(),
             "LineInfoTestBinary.cpp");
 }
+
+TEST(ElfFile, GetDeclarationLocationOfFunctionLibc) {
+  const std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libc.debug";
+
+  auto program = CreateElfFile(file_path);
+  ASSERT_THAT(program, HasNoError());
+
+  constexpr uint64_t kAddressOfFunction = 0x20b20;
+  ErrorMessageOr<orbit_grpc_protos::LineInfo> decl_line_info =
+      program.value()->GetDeclarationLocationOfFunction(kAddressOfFunction);
+  ASSERT_THAT(decl_line_info, HasNoError());
+
+  EXPECT_EQ(decl_line_info.value().source_line(), 31);
+  EXPECT_EQ(std::filesystem::path{decl_line_info.value().source_file()}.filename().string(),
+            "gconv_open.c");
+}
