@@ -103,7 +103,6 @@ target_sources(
           CaptureWindow.cpp
           CGroupAndProcessMemoryTrack.cpp
           CompareAscendingOrDescending.h
-          DataManager.cpp
           FramePointerValidatorClient.cpp
           FrameTrack.cpp
           FrameTrackOnlineProcessor.cpp

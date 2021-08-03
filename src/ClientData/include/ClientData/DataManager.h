@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_DATA_MANAGER_H_
-#define ORBIT_GL_DATA_MANAGER_H_
+#ifndef CLIENT_DATA_DATA_MANAGER_H_
+#define CLIENT_DATA_DATA_MANAGER_H_
 
 #include <absl/container/flat_hash_set.h>
 #include <absl/container/node_hash_map.h>
@@ -23,7 +23,6 @@
 // navigating data on the client side. Note that
 // every method of this class should be called
 // on the main thread.
-
 class DataManager final {
  public:
   explicit DataManager(std::thread::id thread_id = std::this_thread::get_id())
@@ -155,4 +154,4 @@ class DataManager final {
   uint64_t memory_warning_threshold_kb_ = 1024 * 1024 * 8;
 };
 
-#endif  // ORBIT_GL_DATA_MANAGER_H_
+#endif  // CLIENT_DATA_DATA_MANAGER_H_
