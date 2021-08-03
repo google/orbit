@@ -46,7 +46,6 @@ AddressRange GetFunctionAbsoluteAddressRangeOrDie(std::string_view function_name
     }
   }
   UNREACHABLE();
-  return AddressRange();
 }
 
 AddressRange GetFunctionRelativeAddressRangeOrDie(std::string_view function_name) {
@@ -60,7 +59,6 @@ AddressRange GetFunctionRelativeAddressRangeOrDie(std::string_view function_name
     }
   }
   UNREACHABLE();
-  return AddressRange();
 }
 
 void DumpDisassembly(const std::vector<uint8_t>& code, uint64_t start_address) {
