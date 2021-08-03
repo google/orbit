@@ -14,13 +14,11 @@ target_include_directories(ClientModel PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(ClientModel PUBLIC
-        include/ClientModel/CaptureData.h
         include/ClientModel/CaptureDeserializer.h
         include/ClientModel/CaptureSerializer.h
         include/ClientModel/SamplingDataPostProcessor.h)
 
 target_sources(ClientModel PRIVATE
-        CaptureData.cpp
         CaptureDeserializer.cpp
         CaptureSerializer.cpp
         SamplingDataPostProcessor.cpp)

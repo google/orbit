@@ -14,8 +14,8 @@
 #include <utility>
 #include <vector>
 
+#include "ClientData/CaptureData.h"
 #include "ClientData/PostProcessedSamplingData.h"
-#include "ClientModel/CaptureData.h"
 
 class CallTreeThread;
 class CallTreeFunction;
@@ -141,12 +141,12 @@ class CallTreeView : public CallTreeNode {
  public:
   [[nodiscard]] static std::unique_ptr<CallTreeView> CreateTopDownViewFromPostProcessedSamplingData(
       const orbit_client_data::PostProcessedSamplingData& post_processed_sampling_data,
-      const orbit_client_model::CaptureData& capture_data);
+      const orbit_client_data::CaptureData& capture_data);
 
   [[nodiscard]] static std::unique_ptr<CallTreeView>
   CreateBottomUpViewFromPostProcessedSamplingData(
       const orbit_client_data::PostProcessedSamplingData& post_processed_sampling_data,
-      const orbit_client_model::CaptureData& capture_data);
+      const orbit_client_data::CaptureData& capture_data);
 
   CallTreeView() : CallTreeNode{nullptr} {}
 };

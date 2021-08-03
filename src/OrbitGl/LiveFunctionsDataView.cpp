@@ -17,8 +17,8 @@
 #include <memory>
 
 #include "App.h"
+#include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
-#include "ClientModel/CaptureData.h"
 #include "CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"
@@ -29,10 +29,12 @@
 #include "OrbitBase/Logging.h"
 #include "capture_data.pb.h"
 
+using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;
-using orbit_client_model::CaptureData;
+
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
+
 using orbit_grpc_protos::InstrumentedFunction;
 
 LiveFunctionsDataView::LiveFunctionsDataView(

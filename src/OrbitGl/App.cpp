@@ -98,6 +98,7 @@ using orbit_capture_client::CaptureListener;
 using orbit_capture_file::CaptureFile;
 
 using orbit_client_data::CallstackData;
+using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;
 using orbit_client_data::PostProcessedSamplingData;
 using orbit_client_data::ProcessData;
@@ -107,8 +108,6 @@ using orbit_client_data::TimerBlock;
 using orbit_client_data::TimerChain;
 using orbit_client_data::TracepointInfoSet;
 using orbit_client_data::UserDefinedCaptureData;
-
-using orbit_client_model::CaptureData;
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;

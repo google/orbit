@@ -44,7 +44,7 @@ class TrackTypeItemModelTest : public ::testing::Test {
   TrackTypeItemModel model_;
 
   TimeGraphLayout layout_;
-  std::unique_ptr<orbit_client_model::CaptureData> capture_data_ =
+  std::unique_ptr<orbit_client_data::CaptureData> capture_data_ =
       orbit_gl::TrackTestData::GenerateTestCaptureData();
   TrackManager track_manager_ =
       TrackManager(nullptr, nullptr, &layout_, nullptr, capture_data_.get());
@@ -65,8 +65,8 @@ TEST_F(TrackTypeItemModelTest, ReadAndWriteData) {
   // This is an arbitrary example of a track type that we expect to be in the model.
   int found_row = FindRowByTrackType(Track::Type::kThreadTrack);
   EXPECT_TRUE(found_row >= 0);
-  const int kNameCol = static_cast<int>(TrackTypeItemModel::Column::kName);
-  const int kVisCol = static_cast<int>(TrackTypeItemModel::Column::kVisibility);
+  constexpr int kNameCol = static_cast<int>(TrackTypeItemModel::Column::kName);
+  constexpr int kVisCol = static_cast<int>(TrackTypeItemModel::Column::kVisibility);
   QModelIndex kNameIndex = model_.index(found_row, kNameCol);
   QModelIndex kVisIndex = model_.index(found_row, kVisCol);
 

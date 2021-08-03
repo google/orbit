@@ -18,12 +18,12 @@
 
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
+#include "ClientData/CaptureData.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
-#include "ClientModel/CaptureData.h"
 #include "ClientServices/ProcessClient.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"

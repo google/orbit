@@ -23,7 +23,7 @@ using orbit_grpc_protos::kMissingInfo;
 PageFaultsTrack::PageFaultsTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                                  orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                  const std::string& cgroup_name, uint64_t memory_sampling_period_ms,
-                                 const orbit_client_model::CaptureData* capture_data)
+                                 const orbit_client_data::CaptureData* capture_data)
     : Track(parent, time_graph, viewport, layout, capture_data),
       major_page_faults_track_{
           std::make_shared<MajorPageFaultsTrack>(this, time_graph, viewport, layout, cgroup_name,

@@ -8,7 +8,7 @@
 #include <stddef.h>
 
 #include "AccessibleTrack.h"
-#include "ClientModel/CaptureData.h"
+#include "ClientData/CaptureData.h"
 #include "CoreMath.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
@@ -21,7 +21,7 @@
 using orbit_client_data::TrackData;
 
 Track::Track(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
-             TimeGraphLayout* layout, const orbit_client_model::CaptureData* capture_data)
+             TimeGraphLayout* layout, const orbit_client_data::CaptureData* capture_data)
     : CaptureViewElement(parent, time_graph, viewport, layout),
       num_prioritized_trailing_characters_{0},
       process_id_{-1},

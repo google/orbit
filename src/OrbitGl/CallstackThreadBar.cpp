@@ -16,7 +16,7 @@
 #include "App.h"
 #include "Batcher.h"
 #include "ClientData/CallstackData.h"
-#include "ClientModel/CaptureData.h"
+#include "ClientData/CaptureData.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
@@ -29,8 +29,8 @@
 #include "capture_data.pb.h"
 
 using orbit_client_data::CallstackData;
+using orbit_client_data::CaptureData;
 using orbit_client_data::ThreadID;
-using orbit_client_model::CaptureData;
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;
 

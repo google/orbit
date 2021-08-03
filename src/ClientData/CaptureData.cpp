@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ClientModel/CaptureData.h"
+#include "ClientData/CaptureData.h"
 
 #include <absl/container/flat_hash_map.h>
 
@@ -12,13 +12,8 @@
 
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
-#include "Introspection/Introspection.h"
 #include "ObjectUtils/Address.h"
 #include "OrbitBase/Result.h"
-
-using orbit_client_data::CallstackData;
-using orbit_client_data::ModuleData;
-using orbit_client_data::TracepointData;
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
@@ -29,10 +24,9 @@ using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ProcessInfo;
 
-namespace orbit_client_model {
+namespace orbit_client_data {
 
-CaptureData::CaptureData(orbit_client_data::ModuleManager* module_manager,
-                         const CaptureStarted& capture_started,
+CaptureData::CaptureData(ModuleManager* module_manager, const CaptureStarted& capture_started,
                          std::optional<std::filesystem::path> file_path,
                          absl::flat_hash_set<uint64_t> frame_track_function_ids)
     : module_manager_{module_manager},
@@ -113,9 +107,9 @@ void CaptureData::UpdateFunctionStats(uint64_t instrumented_function_id, uint64_
   }
 }
 
-void CaptureData::OnCaptureComplete(std::vector<const orbit_client_data::TimerChain*> chains) {
+void CaptureData::OnCaptureComplete(
+    const std::vector<const orbit_client_data::TimerChain*>& chains) {
   // Recalculate standard deviation as the running calculation may have introduced error.
-  ORBIT_SCOPE_FUNCTION;
   for (auto& pair : functions_stats_) {
     FunctionStats& stats = pair.second;
     stats.set_variance_ns(0);
@@ -344,4 +338,4 @@ void CaptureData::DisableFrameTrack(uint64_t instrumented_function_id) {
   return frame_track_function_ids_.contains(instrumented_function_id);
 }
 
-}  // namespace orbit_client_model
+}  // namespace orbit_client_data

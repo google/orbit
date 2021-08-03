@@ -22,7 +22,7 @@ class VariableTrack final : public LineGraphTrack<kVariableTrackDimension> {
   explicit VariableTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                          const std::string& name,
-                         const orbit_client_model::CaptureData* capture_data)
+                         const orbit_client_data::CaptureData* capture_data)
       : LineGraphTrack<kVariableTrackDimension>(parent, time_graph, viewport, layout, name,
                                                 std::array<std::string, kVariableTrackDimension>{},
                                                 capture_data) {

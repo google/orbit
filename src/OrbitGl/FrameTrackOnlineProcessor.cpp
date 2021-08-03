@@ -10,9 +10,9 @@
 #include <limits>
 #include <utility>
 
+#include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfoSet.h"
 #include "ClientData/UserDefinedCaptureData.h"
-#include "ClientModel/CaptureData.h"
 #include "TimeGraph.h"
 
 namespace orbit_gl {
@@ -31,7 +31,7 @@ void CreateFrameTrackTimer(uint64_t function_id, uint64_t start_ns, uint64_t end
 }
 
 FrameTrackOnlineProcessor::FrameTrackOnlineProcessor(
-    const orbit_client_model::CaptureData& capture_data, TimeGraph* time_graph)
+    const orbit_client_data::CaptureData& capture_data, TimeGraph* time_graph)
     : time_graph_(time_graph) {
   const auto& frame_track_function_ids = capture_data.frame_track_function_ids();
   for (const auto& function_id : frame_track_function_ids) {

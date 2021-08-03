@@ -10,11 +10,12 @@
 #include <string>
 #include <vector>
 
+#include "ClientData/CaptureData.h"
 #include "ClientData/ModuleManager.h"
-#include "ClientModel/CaptureData.h"
 #include "ClientModel/CaptureSerializer.h"
 #include "module.pb.h"
 
+using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleManager;
 
 using orbit_grpc_protos::CaptureStarted;

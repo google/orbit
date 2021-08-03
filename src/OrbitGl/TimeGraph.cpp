@@ -44,14 +44,18 @@
 ABSL_DECLARE_FLAG(bool, enable_warning_threshold);
 
 using orbit_capture_client::CaptureEventProcessor;
+
+using orbit_client_data::CaptureData;
 using orbit_client_data::TimerChain;
-using orbit_client_model::CaptureData;
+
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::TimerInfo;
+
 using orbit_gl::CGroupAndProcessMemoryTrack;
 using orbit_gl::PageFaultsTrack;
 using orbit_gl::SystemMemoryTrack;
 using orbit_gl::VariableTrack;
+
 using orbit_grpc_protos::InstrumentedFunction;
 
 TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,

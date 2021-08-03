@@ -14,10 +14,9 @@
 #include "OrbitBase/ThreadConstants.h"
 #include "capture_data.pb.h"
 
+using orbit_client_data::CaptureData;
 using orbit_client_data::PostProcessedSamplingData;
 using orbit_client_data::ThreadSampleData;
-
-using orbit_client_model::CaptureData;
 
 using orbit_client_protos::CallstackInfo;
 

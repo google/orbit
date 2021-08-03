@@ -20,9 +20,9 @@
 
 #include "App.h"
 #include "CallstackDataView.h"
+#include "ClientData/CaptureData.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
-#include "ClientModel/CaptureData.h"
 #include "CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"
@@ -32,11 +32,12 @@
 #include "OrbitBase/ThreadConstants.h"
 #include "SamplingReport.h"
 
+using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;
 using orbit_client_data::ProcessData;
 using orbit_client_data::SampledFunction;
 using orbit_client_data::ThreadID;
-using orbit_client_model::CaptureData;
+
 using orbit_client_protos::FunctionInfo;
 
 SamplingReportDataView::SamplingReportDataView(OrbitApp* app)

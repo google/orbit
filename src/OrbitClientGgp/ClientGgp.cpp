@@ -47,10 +47,9 @@ using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureEventProcessor;
 using orbit_capture_client::CaptureListener;
 
+using orbit_client_data::CaptureData;
 using orbit_client_data::ProcessData;
 using orbit_client_data::TracepointInfoSet;
-
-using orbit_client_model::CaptureData;
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;

@@ -11,7 +11,7 @@ MajorPageFaultsTrack::MajorPageFaultsTrack(Track* parent, TimeGraph* time_graph,
                                            orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                            const std::string& cgroup_name,
                                            uint64_t memory_sampling_period_ms,
-                                           const orbit_client_model::CaptureData* capture_data)
+                                           const orbit_client_data::CaptureData* capture_data)
     : BasicPageFaultsTrack(parent, time_graph, viewport, layout, "Page Faults: Major", cgroup_name,
                            memory_sampling_period_ms, capture_data) {
   index_of_series_to_highlight_ = static_cast<size_t>(SeriesIndex::kProcess);

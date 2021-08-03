@@ -22,7 +22,7 @@ BasicPageFaultsTrack::BasicPageFaultsTrack(Track* parent, TimeGraph* time_graph,
                                            orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                            const std::string& name, const std::string& cgroup_name,
                                            uint64_t memory_sampling_period_ms,
-                                           const orbit_client_model::CaptureData* capture_data)
+                                           const orbit_client_data::CaptureData* capture_data)
     : LineGraphTrack<kBasicPageFaultsTrackDimension>(
           parent, time_graph, viewport, layout, name,
           CreateSeriesName(cgroup_name, capture_data->process_name()), capture_data),

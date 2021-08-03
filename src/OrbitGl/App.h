@@ -32,13 +32,13 @@
 #include "CaptureFileInfo/Manager.h"
 #include "CaptureWindow.h"
 #include "ClientData/CallstackTypes.h"
+#include "ClientData/CaptureData.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
-#include "ClientModel/CaptureData.h"
 #include "ClientServices/CrashManager.h"
 #include "ClientServices/ProcessManager.h"
 #include "ClientServices/TracepointServiceClient.h"
@@ -117,11 +117,11 @@ class OrbitApp final : public DataViewFactory,
   void AbortCapture();
   void ClearCapture();
   [[nodiscard]] bool HasCaptureData() const override { return capture_data_ != nullptr; }
-  [[nodiscard]] orbit_client_model::CaptureData& GetMutableCaptureData() {
+  [[nodiscard]] orbit_client_data::CaptureData& GetMutableCaptureData() {
     CHECK(capture_data_ != nullptr);
     return *capture_data_;
   }
-  [[nodiscard]] const orbit_client_model::CaptureData& GetCaptureData() const override {
+  [[nodiscard]] const orbit_client_data::CaptureData& GetCaptureData() const override {
     CHECK(capture_data_ != nullptr);
     return *capture_data_;
   }
@@ -193,23 +193,23 @@ class OrbitApp final : public DataViewFactory,
       absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
           unique_callstacks,
       bool has_summary);
-  void SetTopDownView(const orbit_client_model::CaptureData& capture_data);
+  void SetTopDownView(const orbit_client_data::CaptureData& capture_data);
   void ClearTopDownView();
   void SetSelectionTopDownView(
       const orbit_client_data::PostProcessedSamplingData& selection_post_processed_data,
-      const orbit_client_model::CaptureData& capture_data);
+      const orbit_client_data::CaptureData& capture_data);
   void ClearSelectionTopDownView();
 
-  void SetBottomUpView(const orbit_client_model::CaptureData& capture_data);
+  void SetBottomUpView(const orbit_client_data::CaptureData& capture_data);
   void ClearBottomUpView();
   void SetSelectionBottomUpView(
       const orbit_client_data::PostProcessedSamplingData& selection_post_processed_data,
-      const orbit_client_model::CaptureData& capture_data);
+      const orbit_client_data::CaptureData& capture_data);
   void ClearSelectionBottomUpView();
 
   // This needs to be called from the main thread.
   [[nodiscard]] bool IsCaptureConnected(
-      const orbit_client_model::CaptureData& capture) const override;
+      const orbit_client_data::CaptureData& capture) const override;
 
   [[nodiscard]] bool IsDevMode() const;
 
@@ -591,7 +591,7 @@ class OrbitApp final : public DataViewFactory,
   // TODO(b/166767590): This is mostly written during capture by the capture thread on the
   //  CaptureListener parts of App, but may be read also during capturing by all threads.
   //  Currently, it is not properly synchronized (and thus it can't live at DataManager).
-  std::unique_ptr<orbit_client_model::CaptureData> capture_data_;
+  std::unique_ptr<orbit_client_data::CaptureData> capture_data_;
 
   orbit_gl::FrameTrackOnlineProcessor frame_track_online_processor_;
 

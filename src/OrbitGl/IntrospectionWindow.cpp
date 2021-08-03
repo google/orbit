@@ -9,7 +9,7 @@
 #include "TimeGraph.h"
 #include "capture_data.pb.h"
 
-using orbit_client_model::CaptureData;
+using orbit_client_data::CaptureData;
 using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::CaptureStarted;
 

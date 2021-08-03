@@ -13,7 +13,7 @@
 #include "App.h"
 #include "Batcher.h"
 #include "CaptureViewElement.h"
-#include "ClientModel/CaptureData.h"
+#include "ClientData/CaptureData.h"
 #include "ClientServices/TracepointServiceClient.h"
 #include "CoreMath.h"
 #include "Geometry.h"
@@ -31,7 +31,7 @@ namespace orbit_gl {
 TracepointThreadBar::TracepointThreadBar(CaptureViewElement* parent, OrbitApp* app,
                                          TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                                          TimeGraphLayout* layout,
-                                         const orbit_client_model::CaptureData* capture_data,
+                                         const orbit_client_data::CaptureData* capture_data,
                                          int32_t thread_id, const Color& color)
     : ThreadBar(parent, app, time_graph, viewport, layout, capture_data, thread_id, "Tracepoints",
                 color) {}

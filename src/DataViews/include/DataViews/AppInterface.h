@@ -10,9 +10,9 @@
 
 #include <string>
 
+#include "ClientData/CaptureData.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
-#include "ClientModel/CaptureData.h"
 #include "DataViews/PresetLoadState.h"
 #include "OrbitBase/Future.h"
 #include "PresetFile/PresetFile.h"
@@ -45,11 +45,11 @@ class AppInterface {
       uint64_t instrumented_function_id) const = 0;
 
   [[nodiscard]] virtual bool HasCaptureData() const = 0;
-  [[nodiscard]] virtual const orbit_client_model::CaptureData& GetCaptureData() const = 0;
+  [[nodiscard]] virtual const orbit_client_data::CaptureData& GetCaptureData() const = 0;
 
   // This needs to be called from the main thread.
   [[nodiscard]] virtual bool IsCaptureConnected(
-      const orbit_client_model::CaptureData& capture) const = 0;
+      const orbit_client_data::CaptureData& capture) const = 0;
 
   [[nodiscard]] virtual const orbit_client_data::ProcessData* GetTargetProcess() const = 0;
 

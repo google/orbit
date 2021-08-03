@@ -24,7 +24,7 @@ class GraphTrack : public Track {
   explicit GraphTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                       const std::string& name, std::array<std::string, Dimension> series_names,
-                      const orbit_client_model::CaptureData* capture_data);
+                      const orbit_client_data::CaptureData* capture_data);
 
   [[nodiscard]] Type GetType() const override { return Type::kGraphTrack; }
   [[nodiscard]] float GetHeight() const override;

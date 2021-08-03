@@ -14,9 +14,9 @@
 
 #include "App.h"
 #include "Batcher.h"
+#include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/TimerChain.h"
-#include "ClientModel/CaptureData.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlUtils.h"
 #include "Introspection/Introspection.h"
@@ -30,15 +30,17 @@
 #include "Viewport.h"
 #include "capture_data.pb.h"
 
+using orbit_client_data::CaptureData;
 using orbit_client_data::TimerChain;
-using orbit_client_model::CaptureData;
+
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
+
 using orbit_grpc_protos::InstrumentedFunction;
 
 ThreadTrack::ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout, int32_t thread_id,
-                         OrbitApp* app, const orbit_client_model::CaptureData* capture_data,
+                         OrbitApp* app, const CaptureData* capture_data,
                          ScopeTreeUpdateType scope_tree_update_type)
     : TimerTrack(parent, time_graph, viewport, layout, app, capture_data), thread_id_{thread_id} {
   InitializeNameAndLabel();

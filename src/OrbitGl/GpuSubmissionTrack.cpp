@@ -32,7 +32,7 @@ constexpr const char* kCmdBufferString = "command buffer";
 GpuSubmissionTrack::GpuSubmissionTrack(Track* parent, TimeGraph* time_graph,
                                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                        uint64_t timeline_hash, OrbitApp* app,
-                                       const orbit_client_model::CaptureData* capture_data)
+                                       const orbit_client_data::CaptureData* capture_data)
     : TimerTrack(parent, time_graph, viewport, layout, app, capture_data) {
   SetLabel("Submissions");
   draw_background_ = false;
