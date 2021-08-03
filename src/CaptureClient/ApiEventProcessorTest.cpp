@@ -47,6 +47,8 @@ class EmptyCaptureListener : public CaptureListener {
                               orbit_grpc_protos::TracepointInfo /*tracepoint_info*/) override {}
   void OnTracepointEvent(
       orbit_client_protos::TracepointEventInfo /*tracepoint_event_info*/) override {}
+  void OnApiStringEvent(const orbit_client_protos::ApiStringEvent& /*api_string_event*/) override {}
+  void OnApiTrackValue(const orbit_client_protos::ApiTrackValue& /*api_track_value*/) override {}
   void OnWarningEvent(orbit_grpc_protos::WarningEvent /*warning_event*/) override {}
   void OnClockResolutionEvent(
       orbit_grpc_protos::ClockResolutionEvent /*clock_resolution_event*/) override {}
