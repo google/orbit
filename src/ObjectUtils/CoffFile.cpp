@@ -11,6 +11,7 @@
 #include <llvm/Object/COFF.h>
 #include <llvm/Object/CVDebugRecord.h>
 #include <llvm/Object/ObjectFile.h>
+#include <llvm/Support/Error.h>
 
 #include <system_error>
 
@@ -117,9 +118,7 @@ std::string CoffFileImpl::GetName() const { return file_path_.filename().string(
 uint64_t CoffFileImpl::GetLoadBias() const { return object_file_->getImageBase(); }
 uint64_t CoffFileImpl::GetExecutableSegmentOffset() const {
   CHECK(object_file_->is64());
-  const llvm::object::pe32plus_header* pe32plus_header;
-  object_file_->getPE32PlusHeader(pe32plus_header);
-  return pe32plus_header->BaseOfCode;
+  return object_file_->getPE32PlusHeader()->BaseOfCode;
 }
 
 bool CoffFileImpl::IsElf() const { return false; }
@@ -132,10 +131,10 @@ ErrorMessageOr<PdbDebugInfo> CoffFileImpl::GetDebugPdbInfo() const {
   // If 'this' was successfully created with CreateCoffFile, 'object_file_' cannot be nullptr.
   CHECK(object_file_ != nullptr);
 
-  std::error_code error = object_file_->getDebugPDBInfo(debug_info, pdb_file_path);
+  llvm::Error error = object_file_->getDebugPDBInfo(debug_info, pdb_file_path);
   if (error) {
-    return ErrorMessage(
-        absl::StrFormat("Unable to load debug PDB info with error: %s", error.message()));
+    return ErrorMessage(absl::StrFormat("Unable to load debug PDB info with error: %s",
+                                        llvm::toString(std::move(error))));
   }
   if (debug_info == nullptr) {
     // Per llvm documentation, this indicates that the file does not have the requested info.
