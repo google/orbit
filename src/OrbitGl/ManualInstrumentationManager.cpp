@@ -41,7 +41,7 @@ orbit_api::Event ManualInstrumentationManager::ApiEventFromTimerInfo(
   return encoded_event.event;
 }
 
-void ManualInstrumentationManager::ProcessAsyncTimer(
+void ManualInstrumentationManager::ProcessAsyncTimerLegacy(
     const orbit_client_protos::TimerInfo& timer_info) {
   orbit_api::Event start_event = ApiEventFromTimerInfo(timer_info);
   absl::MutexLock lock(&mutex_);
@@ -50,7 +50,7 @@ void ManualInstrumentationManager::ProcessAsyncTimer(
   }
 }
 
-void ManualInstrumentationManager::ProcessStringEvent(const orbit_api::Event& event) {
+void ManualInstrumentationManager::ProcessStringEventLegacy(const orbit_api::Event& event) {
   // A string can be sent in chunks so we append the current value to any existing one.
   const uint64_t event_id = event.data;
   auto result = string_manager_.Get(event_id);
@@ -58,5 +58,17 @@ void ManualInstrumentationManager::ProcessStringEvent(const orbit_api::Event& ev
     string_manager_.AddOrReplace(event_id, result.value() + event.name);
   } else {
     string_manager_.AddOrReplace(event_id, event.name);
+  }
+}
+
+void ManualInstrumentationManager::ProcessStringEvent(
+    const orbit_client_protos::ApiStringEvent& string_event) {
+  string_manager_.AddOrReplace(string_event.async_scope_id(), string_event.name());
+}
+
+void ManualInstrumentationManager::ProcessAsyncTimer(const TimerInfo& timer_info) {
+  absl::MutexLock lock(&mutex_);
+  for (auto* listener : async_timer_info_listeners_) {
+    (*listener)(timer_info.api_scope_name(), timer_info);
   }
 }

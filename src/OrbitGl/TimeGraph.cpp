@@ -47,7 +47,7 @@ using orbit_capture_client::CaptureEventProcessor;
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::TimerChain;
-
+using orbit_client_protos::ApiTrackValue;
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::TimerInfo;
 
@@ -308,7 +308,16 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
       break;
     }
     case TimerInfo::kApiEvent: {
-      ProcessApiEventTimer(timer_info);
+      ProcessApiEventTimerLegacy(timer_info);
+      break;
+    }
+    case TimerInfo::kApiScope: {
+      ThreadTrack* track = track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
+      track->OnTimer(timer_info);
+      break;
+    }
+    case TimerInfo::kApiScopeAsync: {
+      manual_instrumentation_manager_->ProcessAsyncTimer(timer_info);
       break;
     }
     default:
@@ -318,7 +327,7 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
   RequestUpdate();
 }
 
-void TimeGraph::ProcessApiEventTimer(const TimerInfo& timer_info) {
+void TimeGraph::ProcessApiEventTimerLegacy(const TimerInfo& timer_info) {
   orbit_api::Event api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
   switch (api_event.type) {
     case orbit_api::kScopeStart:
@@ -329,7 +338,7 @@ void TimeGraph::ProcessApiEventTimer(const TimerInfo& timer_info) {
     }
     case orbit_api::kScopeStartAsync:
     case orbit_api::kScopeStopAsync:
-      manual_instrumentation_manager_->ProcessAsyncTimer(timer_info);
+      manual_instrumentation_manager_->ProcessAsyncTimerLegacy(timer_info);
       break;
 
     case orbit_api::kTrackInt:
@@ -339,7 +348,7 @@ void TimeGraph::ProcessApiEventTimer(const TimerInfo& timer_info) {
     case orbit_api::kTrackFloat:
     case orbit_api::kTrackDouble:
     case orbit_api::kString:
-      ProcessValueTrackingTimer(timer_info);
+      ProcessValueTrackingTimerLegacy(timer_info);
       break;
     case orbit_api::kNone:
       UNREACHABLE();
@@ -356,7 +365,7 @@ void TimeGraph::ProcessIntrospectionTimer(const TimerInfo& timer_info) {
     } break;
     case orbit_api::kScopeStartAsync:
     case orbit_api::kScopeStopAsync:
-      manual_instrumentation_manager_->ProcessAsyncTimer(timer_info);
+      manual_instrumentation_manager_->ProcessAsyncTimerLegacy(timer_info);
       break;
     case orbit_api::kTrackInt:
     case orbit_api::kTrackInt64:
@@ -365,18 +374,51 @@ void TimeGraph::ProcessIntrospectionTimer(const TimerInfo& timer_info) {
     case orbit_api::kTrackFloat:
     case orbit_api::kTrackDouble:
     case orbit_api::kString:
-      ProcessValueTrackingTimer(timer_info);
+      ProcessValueTrackingTimerLegacy(timer_info);
       break;
     default:
       ERROR("Unhandled introspection type [%u]", event.type);
   }
 }
 
-void TimeGraph::ProcessValueTrackingTimer(const TimerInfo& timer_info) {
+void TimeGraph::ProcessApiStringEvent(const orbit_client_protos::ApiStringEvent& string_event) {
+  manual_instrumentation_manager_->ProcessStringEvent(string_event);
+}
+
+void TimeGraph::ProcessApiTrackValueEvent(const orbit_client_protos::ApiTrackValue& track_event) {
+  VariableTrack* track = track_manager_->GetOrCreateVariableTrack(track_event.name());
+
+  uint64_t time = track_event.timestamp_ns();
+
+  switch (track_event.data_case()) {
+    case ApiTrackValue::kDataDouble:
+      track->AddValue(time, track_event.data_double());
+      break;
+    case ApiTrackValue::kDataFloat:
+      track->AddValue(time, track_event.data_float());
+      break;
+    case ApiTrackValue::kDataInt:
+      track->AddValue(time, track_event.data_int());
+      break;
+    case ApiTrackValue::kDataInt64:
+      track->AddValue(time, track_event.data_int64());
+      break;
+    case ApiTrackValue::kDataUint:
+      track->AddValue(time, track_event.data_uint());
+      break;
+    case ApiTrackValue::kDataUint64:
+      track->AddValue(time, track_event.data_uint64());
+      break;
+    default:
+      UNREACHABLE();
+  }
+}
+
+void TimeGraph::ProcessValueTrackingTimerLegacy(const TimerInfo& timer_info) {
   orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
 
   if (event.type == orbit_api::kString) {
-    manual_instrumentation_manager_->ProcessStringEvent(event);
+    manual_instrumentation_manager_->ProcessStringEventLegacy(event);
     return;
   }
 
