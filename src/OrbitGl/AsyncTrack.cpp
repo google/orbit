@@ -5,11 +5,10 @@
 #include "AsyncTrack.h"
 
 #include <GteVector.h>
-#include <absl/container/flat_hash_map.h>
 #include <absl/strings/str_format.h>
-#include <absl/time/time.h>
 
 #include <algorithm>
+#include <ctime>
 
 #include "App.h"
 #include "Batcher.h"
@@ -104,13 +103,13 @@ std::string AsyncTrack::GetTimesliceText(const TimerInfo& timer_info) const {
   std::string time = GetDisplayTime(timer_info);
 
   std::string name{};
-  if (timer_info.type() == TimerInfo::kApiEvent) {
+  if (timer_info.type() == TimerInfo::kApiScopeAsync) {
+    name = timer_info.api_scope_name();
+  } else {
+    CHECK(timer_info.type() == TimerInfo::kApiEvent);
     orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
     const uint64_t event_id = event.data;
     name = app_->GetManualInstrumentationManager()->GetString(event_id);
-  } else {
-    CHECK(timer_info.type() == TimerInfo::kApiScopeAsync);
-    name = timer_info.api_scope_name();
   }
   return absl::StrFormat("%s %s", name, time);
 }
