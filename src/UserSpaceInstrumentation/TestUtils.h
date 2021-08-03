@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef USER_SPACE_INSTRUMENTATION_DUMP_DISASSEMBLY_H_
-#define USER_SPACE_INSTRUMENTATION_DUMP_DISASSEMBLY_H_
+#ifndef USER_SPACE_INSTRUMENTATION_TEST_UTILS_H_
+#define USER_SPACE_INSTRUMENTATION_TEST_UTILS_H_
 
 #include <cstdint>
 #include <string_view>
@@ -13,11 +13,12 @@
 
 namespace orbit_user_space_instrumentation {
 
-// Returns the file offset of function `function_name` in the test executable.
-AddressRange GetFunctionAddressRangeInFileOrDie(std::string_view function_name);
+// Returns the relative address of the function `function_name` in the test executable.
+AddressRange GetFunctionRelativeAddressRangeOrDie(std::string_view function_name);
 
-// Returns the virtual memory address range of function `function_name` in the test executable.
-AddressRange GetFunctionAddressRangeInMemoryOrDie(std::string_view function_name);
+// Returns the absolute virtual memory address range of function `function_name` in the test
+// executable.
+AddressRange GetFunctionAbsoluteAddressRangeOrDie(std::string_view function_name);
 
 // This is for debugging only. Disassembles the `code` and dumps it into the log. `start_address` is
 // the address of the code in virtual memory. If this is not applicable or you don't have it just
@@ -26,4 +27,4 @@ void DumpDisassembly(const std::vector<uint8_t>& code, uint64_t start_address);
 
 }  // namespace orbit_user_space_instrumentation
 
-#endif  // USER_SPACE_INSTRUMENTATION_DUMP_DISASSEMBLY_H_
+#endif  // USER_SPACE_INSTRUMENTATION_TEST_UTILS_H_

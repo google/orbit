@@ -44,7 +44,7 @@ TEST(TestUtilTest, Disassemble) {
   CHECK(!AttachAndStopProcess(pid).has_error());
 
   constexpr const char* kFunctionName = "SomethingToDisassemble";
-  const AddressRange range = GetFunctionAddressRangeInMemoryOrDie(kFunctionName);
+  const AddressRange range = GetFunctionAbsoluteAddressRangeOrDie(kFunctionName);
   auto function_code_or_error = ReadTraceesMemory(pid, range.start, range.end - range.start);
   CHECK(!function_code_or_error.has_error());
 
@@ -59,7 +59,7 @@ TEST(TestUtilTest, Disassemble) {
 
 TEST(TestUtilTest, GetFunctionAddressRangeInFile) {
   constexpr const char* kFunctionName = "SomethingToDisassemble";
-  AddressRange range = GetFunctionAddressRangeInFileOrDie(kFunctionName);
+  AddressRange range = GetFunctionRelativeAddressRangeOrDie(kFunctionName);
   EXPECT_NE(0, range.start);
   EXPECT_LT(range.start, range.end);
 }

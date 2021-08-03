@@ -568,7 +568,7 @@ class InstrumentFunctionTest : public testing::Test {
   }
 
   AddressRange GetFunctionAddressRangeOrDie() {
-    return GetFunctionAddressRangeInMemoryOrDie(function_name_);
+    return GetFunctionAbsoluteAddressRangeOrDie(function_name_);
   }
 
   void PrepareInstrumentation(std::string_view entry_payload_function_name,
