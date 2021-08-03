@@ -181,4 +181,41 @@ TEST(ScopeTree, OutOfOrderScopes) {
   }
 }
 
+TEST(ScopeTree, FindNodesAtDepth) {
+  /* Create a tree to test edge cases:
+      root
+      /   \
+      n10   n11
+    /  |  \   \
+  n20 n21 n22  n23
+  */
+  ScopeTree<TestScope> tree;
+  std::vector<TestScope*> depth1 = {CreateScope(0, 49), CreateScope(50, 99)};
+  std::vector<TestScope*> depth2 = {CreateScope(1, 5), CreateScope(7, 10), CreateScope(12, 40),
+                                    CreateScope(55, 58)};
+  std::vector<std::vector<TestScope*>> depths = {depth1, depth2};
+  for (const std::vector<TestScope*>& depth : depths) {
+    for (TestScope* scope : depth) {
+      tree.Insert(scope);
+    }
+  }
+
+  // Test Next/Prev for each node.
+  for (const auto& depth : depths) {
+    TestScope* expect_prev = nullptr;
+    for (size_t i = 0; i < depth.size(); ++i) {
+      TestScope* current = depth.at(i);
+      const TestScope* next = tree.FindNextScopeAtDepth(*current);
+      if (i + 1 == depth.size()) {
+        EXPECT_EQ(next, nullptr);
+      } else {
+        EXPECT_EQ(next, depth.at(i + 1));
+      }
+      const TestScope* prev = tree.FindPreviousScopeAtDepth(*current);
+      EXPECT_EQ(expect_prev, prev);
+      expect_prev = current;
+    }
+  }
+}
+
 }  // namespace
