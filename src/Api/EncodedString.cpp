@@ -158,4 +158,22 @@ template void EncodeString<orbit_grpc_protos::ApiScopeStartAsync>(
 
 template void EncodeString<orbit_grpc_protos::ApiStringEvent>(
     const char* source, orbit_grpc_protos::ApiStringEvent* out);
+
+template void EncodeString<orbit_grpc_protos::ApiTrackDouble>(
+    const char* source, orbit_grpc_protos::ApiTrackDouble* out);
+
+template void EncodeString<orbit_grpc_protos::ApiTrackFloat>(const char* source,
+                                                             orbit_grpc_protos::ApiTrackFloat* out);
+
+template void EncodeString<orbit_grpc_protos::ApiTrackInt>(const char* source,
+                                                           orbit_grpc_protos::ApiTrackInt* out);
+
+template void EncodeString<orbit_grpc_protos::ApiTrackInt64>(const char* source,
+                                                             orbit_grpc_protos::ApiTrackInt64* out);
+
+template void EncodeString<orbit_grpc_protos::ApiTrackUint>(const char* source,
+                                                            orbit_grpc_protos::ApiTrackUint* out);
+
+template void EncodeString<orbit_grpc_protos::ApiTrackUint64>(
+    const char* source, orbit_grpc_protos::ApiTrackUint64* out);
 }  // namespace orbit_api

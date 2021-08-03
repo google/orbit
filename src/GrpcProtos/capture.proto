@@ -236,51 +236,165 @@ message ApiStringEvent {
 }
 
 message ApiTrackInt {
+  // NextID: 14
   int32 pid = 1;
   int32 tid = 2;
   uint64 timestamp_ns = 3;
 
   int32 data = 4;
+
+  // We encode the first 64 characters of the scope's name/label using fixed64
+  // values, in order to avoid an additional allocation (for the internal
+  // vector) for short strings. Those allocations have shown a huge performance
+  // impact.
+  // If the name exceeds the 64 characters, the `encoded_name_additional` will
+  // be used to encode the additional characters. This is also a sequence of
+  // `fixed64` instead of a `bytes` field so that it can be allocated on an
+  // `Arena` (`std::string`s cannot be allocated in `Arena`s).
+  fixed64 encoded_name_1 = 5;
+  fixed64 encoded_name_2 = 6;
+  fixed64 encoded_name_3 = 7;
+  fixed64 encoded_name_4 = 8;
+  fixed64 encoded_name_5 = 9;
+  fixed64 encoded_name_6 = 10;
+  fixed64 encoded_name_7 = 11;
+  fixed64 encoded_name_8 = 12;
+  repeated fixed64 encoded_name_additional = 13;
 }
 
 message ApiTrackInt64 {
+  // NextID: 14
   int32 pid = 1;
   int32 tid = 2;
   uint64 timestamp_ns = 3;
 
   int64 data = 4;
+
+  // We encode the first 64 characters of the scope's name/label using fixed64
+  // values, in order to avoid an additional allocation (for the internal
+  // vector) for short strings. Those allocations have shown a huge performance
+  // impact.
+  // If the name exceeds the 64 characters, the `encoded_name_additional` will
+  // be used to encode the additional characters. This is also a sequence of
+  // `fixed64` instead of a `bytes` field so that it can be allocated on an
+  // `Arena` (`std::string`s cannot be allocated in `Arena`s).
+  fixed64 encoded_name_1 = 5;
+  fixed64 encoded_name_2 = 6;
+  fixed64 encoded_name_3 = 7;
+  fixed64 encoded_name_4 = 8;
+  fixed64 encoded_name_5 = 9;
+  fixed64 encoded_name_6 = 10;
+  fixed64 encoded_name_7 = 11;
+  fixed64 encoded_name_8 = 12;
+  repeated fixed64 encoded_name_additional = 13;
 }
 
 message ApiTrackUint {
+  // NextID: 14
   int32 pid = 1;
   int32 tid = 2;
   uint64 timestamp_ns = 3;
 
   uint32 data = 4;
+
+  // We encode the first 64 characters of the scope's name/label using fixed64
+  // values, in order to avoid an additional allocation (for the internal
+  // vector) for short strings. Those allocations have shown a huge performance
+  // impact.
+  // If the name exceeds the 64 characters, the `encoded_name_additional` will
+  // be used to encode the additional characters. This is also a sequence of
+  // `fixed64` instead of a `bytes` field so that it can be allocated on an
+  // `Arena` (`std::string`s cannot be allocated in `Arena`s).
+  fixed64 encoded_name_1 = 5;
+  fixed64 encoded_name_2 = 6;
+  fixed64 encoded_name_3 = 7;
+  fixed64 encoded_name_4 = 8;
+  fixed64 encoded_name_5 = 9;
+  fixed64 encoded_name_6 = 10;
+  fixed64 encoded_name_7 = 11;
+  fixed64 encoded_name_8 = 12;
+  repeated fixed64 encoded_name_additional = 13;
 }
 
 message ApiTrackUint64 {
+  // NextID: 14
   int32 pid = 1;
   int32 tid = 2;
   uint64 timestamp_ns = 3;
 
   uint64 data = 4;
+
+  // We encode the first 64 characters of the scope's name/label using fixed64
+  // values, in order to avoid an additional allocation (for the internal
+  // vector) for short strings. Those allocations have shown a huge performance
+  // impact.
+  // If the name exceeds the 64 characters, the `encoded_name_additional` will
+  // be used to encode the additional characters. This is also a sequence of
+  // `fixed64` instead of a `bytes` field so that it can be allocated on an
+  // `Arena` (`std::string`s cannot be allocated in `Arena`s).
+  fixed64 encoded_name_1 = 5;
+  fixed64 encoded_name_2 = 6;
+  fixed64 encoded_name_3 = 7;
+  fixed64 encoded_name_4 = 8;
+  fixed64 encoded_name_5 = 9;
+  fixed64 encoded_name_6 = 10;
+  fixed64 encoded_name_7 = 11;
+  fixed64 encoded_name_8 = 12;
+  repeated fixed64 encoded_name_additional = 13;
 }
 
 message ApiTrackFloat {
+  // NextID: 14
   int32 pid = 1;
   int32 tid = 2;
   uint64 timestamp_ns = 3;
 
   float data = 4;
+
+  // We encode the first 64 characters of the scope's name/label using fixed64
+  // values, in order to avoid an additional allocation (for the internal
+  // vector) for short strings. Those allocations have shown a huge performance
+  // impact.
+  // If the name exceeds the 64 characters, the `encoded_name_additional` will
+  // be used to encode the additional characters. This is also a sequence of
+  // `fixed64` instead of a `bytes` field so that it can be allocated on an
+  // `Arena` (`std::string`s cannot be allocated in `Arena`s).
+  fixed64 encoded_name_1 = 5;
+  fixed64 encoded_name_2 = 6;
+  fixed64 encoded_name_3 = 7;
+  fixed64 encoded_name_4 = 8;
+  fixed64 encoded_name_5 = 9;
+  fixed64 encoded_name_6 = 10;
+  fixed64 encoded_name_7 = 11;
+  fixed64 encoded_name_8 = 12;
+  repeated fixed64 encoded_name_additional = 13;
 }
 
 message ApiTrackDouble {
+  // NextID: 14
   int32 pid = 1;
   int32 tid = 2;
   uint64 timestamp_ns = 3;
 
   double data = 4;
+
+  // We encode the first 64 characters of the scope's name/label using fixed64
+  // values, in order to avoid an additional allocation (for the internal
+  // vector) for short strings. Those allocations have shown a huge performance
+  // impact.
+  // If the name exceeds the 64 characters, the `encoded_name_additional` will
+  // be used to encode the additional characters. This is also a sequence of
+  // `fixed64` instead of a `bytes` field so that it can be allocated on an
+  // `Arena` (`std::string`s cannot be allocated in `Arena`s).
+  fixed64 encoded_name_1 = 5;
+  fixed64 encoded_name_2 = 6;
+  fixed64 encoded_name_3 = 7;
+  fixed64 encoded_name_4 = 8;
+  fixed64 encoded_name_5 = 9;
+  fixed64 encoded_name_6 = 10;
+  fixed64 encoded_name_7 = 11;
+  fixed64 encoded_name_8 = 12;
+  repeated fixed64 encoded_name_additional = 13;
 }
 
 message Callstack {
