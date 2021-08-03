@@ -29,6 +29,7 @@ target_sources(CaptureClient PRIVATE
         SaveToFileEventProcessor.cpp)
 
 target_link_libraries(CaptureClient PUBLIC
+        ApiBase
         ApiInterface
         CaptureFile
         ClientData
