@@ -28,7 +28,7 @@ constexpr uint64_t kMegabytesToBytes = 1024 * 1024;
 
 SystemMemoryTrack::SystemMemoryTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                                      orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                                     const orbit_client_model::CaptureData* capture_data)
+                                     const orbit_client_data::CaptureData* capture_data)
     : MemoryTrack<kSystemMemoryTrackDimension>(parent, time_graph, viewport, layout, kTrackName,
                                                kSeriesName, capture_data) {
   SetLabelUnit(kTrackValueLabelUnit);

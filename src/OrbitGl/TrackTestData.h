@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <memory>
 
-#include "ClientModel/CaptureData.h"
+#include "ClientData/CaptureData.h"
 
 namespace orbit_gl {
 
@@ -24,7 +24,7 @@ struct TrackTestData {
   static constexpr size_t kTimerOnlyThreadId = 128;
   static constexpr const char* kTimerOnlyThreadName = "timer only thread";
 
-  static std::unique_ptr<orbit_client_model::CaptureData> GenerateTestCaptureData();
+  static std::unique_ptr<orbit_client_data::CaptureData> GenerateTestCaptureData();
 };
 
 }  // namespace orbit_gl

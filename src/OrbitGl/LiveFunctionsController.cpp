@@ -13,7 +13,7 @@
 #include <utility>
 
 #include "App.h"
-#include "ClientModel/CaptureData.h"
+#include "ClientData/CaptureData.h"
 #include "TimeGraph.h"
 #include "capture_data.pb.h"
 

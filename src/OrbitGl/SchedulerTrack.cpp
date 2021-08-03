@@ -10,7 +10,7 @@
 
 #include "App.h"
 #include "Batcher.h"
-#include "ClientModel/CaptureData.h"
+#include "ClientData/CaptureData.h"
 #include "OrbitBase/Logging.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
@@ -24,7 +24,7 @@ const Color kSelectionColor(0, 128, 255, 255);
 
 SchedulerTrack::SchedulerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                                orbit_gl::Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
-                               const orbit_client_model::CaptureData* capture_data)
+                               const orbit_client_data::CaptureData* capture_data)
     : TimerTrack(parent, time_graph, viewport, layout, app, capture_data) {
   SetPinned(false);
   SetName("Scheduler");

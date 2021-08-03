@@ -3,8 +3,8 @@
 // found in the LICENSE file.
 #include <gtest/gtest.h>
 
+#include "ClientData/CaptureData.h"
 #include "ClientData/ModuleManager.h"
-#include "ClientModel/CaptureData.h"
 #include "TimeGraph.h"
 #include "Track.h"
 #include "TrackManager.h"
@@ -52,7 +52,7 @@ class TrackManagerTest : public ::testing::Test {
   }
 
   TimeGraphLayout layout_;
-  std::unique_ptr<orbit_client_model::CaptureData> capture_data_;
+  std::unique_ptr<orbit_client_data::CaptureData> capture_data_;
   TrackManager track_manager_;
 };
 

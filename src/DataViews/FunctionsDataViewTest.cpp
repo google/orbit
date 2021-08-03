@@ -12,11 +12,11 @@
 #include <gmock/gmock-more-actions.h>
 #include <gtest/gtest.h>
 
+#include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
-#include "ClientModel/CaptureData.h"
 #include "DataViews/DataView.h"
 #include "DataViews/FunctionsDataView.h"
 #include "MockAppInterface.h"
@@ -294,7 +294,7 @@ TEST_F(FunctionsDataViewTest, FrameTrackSelectionAppearsInFirstColumnWhenACaptur
 
   EXPECT_CALL(app_, HasCaptureData).Times(2).WillRepeatedly(testing::Return(true));
 
-  orbit_client_model::CaptureData capture_data{&module_manager, capture_started, std::nullopt, {}};
+  orbit_client_data::CaptureData capture_data{&module_manager, capture_started, std::nullopt, {}};
   EXPECT_CALL(app_, GetCaptureData).Times(2).WillRepeatedly(testing::ReturnPointee(&capture_data));
 
   // Note that `CaptureData` also keeps a list of enabled frame track function ids, but this list is

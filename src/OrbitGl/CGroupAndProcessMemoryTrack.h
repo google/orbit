@@ -20,7 +20,7 @@ class CGroupAndProcessMemoryTrack final
   explicit CGroupAndProcessMemoryTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                        const std::string& cgroup_name,
-                                       const orbit_client_model::CaptureData* capture_data);
+                                       const orbit_client_data::CaptureData* capture_data);
 
   [[nodiscard]] std::string GetTooltip() const override;
 

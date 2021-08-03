@@ -10,8 +10,8 @@
 
 #include "CallTreeView.h"
 #include "CallTreeViewItemModel.h"
+#include "ClientData/CaptureData.h"
 #include "ClientData/PostProcessedSamplingData.h"
-#include "ClientModel/CaptureData.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
 #include "QtUtils/AssertNoQtLogWarnings.h"
 #include "capture.pb.h"
@@ -27,9 +27,11 @@ constexpr const char* kThreadName = "example thread";
 
 namespace {
 
-std::unique_ptr<orbit_client_model::CaptureData> GenerateTestCaptureData() {
-  auto capture_data = std::make_unique<orbit_client_model::CaptureData>(
-      nullptr, orbit_grpc_protos::CaptureStarted{}, std::nullopt, absl::flat_hash_set<uint64_t>{});
+using orbit_client_data::CaptureData;
+
+std::unique_ptr<CaptureData> GenerateTestCaptureData() {
+  auto capture_data = std::make_unique<CaptureData>(nullptr, orbit_grpc_protos::CaptureStarted{},
+                                                    std::nullopt, absl::flat_hash_set<uint64_t>{});
 
   // AddressInfo
   orbit_client_protos::LinuxAddressInfo address_info;
@@ -70,7 +72,7 @@ TEST(CallTreeViewItemModel, AbstractItemModelTesterEmptyModel) {
 TEST(CallTreeViewItemModel, AbstractItemModelTesterFilledModel) {
   orbit_qt_utils::AssertNoQtLogWarnings message_handler{};
 
-  std::unique_ptr<orbit_client_model::CaptureData> capture_data = GenerateTestCaptureData();
+  std::unique_ptr<CaptureData> capture_data = GenerateTestCaptureData();
   orbit_client_data::PostProcessedSamplingData sampling_data =
       orbit_client_model::CreatePostProcessedSamplingData(*capture_data->GetCallstackData(),
                                                           *capture_data);
@@ -84,7 +86,7 @@ TEST(CallTreeViewItemModel, AbstractItemModelTesterFilledModel) {
 }
 
 TEST(CallTreeViewItemModel, SummaryItem) {
-  std::unique_ptr<orbit_client_model::CaptureData> capture_data = GenerateTestCaptureData();
+  std::unique_ptr<CaptureData> capture_data = GenerateTestCaptureData();
 
   {
     bool generate_summary = false;
@@ -115,7 +117,7 @@ TEST(CallTreeViewItemModel, SummaryItem) {
 }
 
 TEST(CallTreeViewItemModel, GetDisplayRoleData) {
-  std::unique_ptr<orbit_client_model::CaptureData> capture_data = GenerateTestCaptureData();
+  std::unique_ptr<CaptureData> capture_data = GenerateTestCaptureData();
   // do not create summary, because this creates an additional top level row (all threads) and this
   // is not tested here
   orbit_client_data::PostProcessedSamplingData sampling_data =
@@ -200,7 +202,7 @@ TEST(CallTreeViewItemModel, GetDisplayRoleData) {
 }
 
 TEST(CallTreeViewItemModel, GetEditRoleData) {
-  std::unique_ptr<orbit_client_model::CaptureData> capture_data = GenerateTestCaptureData();
+  std::unique_ptr<CaptureData> capture_data = GenerateTestCaptureData();
   // do not create summary, because this creates an additional top level row (all threads) and this
   // is not tested here
   orbit_client_data::PostProcessedSamplingData sampling_data =

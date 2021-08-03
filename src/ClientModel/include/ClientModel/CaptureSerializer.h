@@ -14,7 +14,7 @@
 #include <filesystem>
 #include <string>
 
-#include "CaptureData.h"
+#include "ClientData/CaptureData.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"

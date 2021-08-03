@@ -12,7 +12,7 @@
 #include <string>
 
 #include "ClientData/CallstackTypes.h"
-#include "ClientModel/CaptureData.h"
+#include "ClientData/CaptureData.h"
 #include "CoreMath.h"
 #include "ThreadBar.h"
 #include "Viewport.h"
@@ -26,7 +26,7 @@ class CallstackThreadBar : public ThreadBar {
  public:
   explicit CallstackThreadBar(CaptureViewElement* parent, OrbitApp* app, TimeGraph* time_graph,
                               orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                              const orbit_client_model::CaptureData* capture_data,
+                              const orbit_client_data::CaptureData* capture_data,
                               orbit_client_data::ThreadID thread_id, const Color& color);
 
   std::string GetTooltip() const override;

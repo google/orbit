@@ -18,7 +18,7 @@ class SystemMemoryTrack final : public MemoryTrack<kSystemMemoryTrackDimension> 
  public:
   explicit SystemMemoryTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                              orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                             const orbit_client_model::CaptureData* capture_data);
+                             const orbit_client_data::CaptureData* capture_data);
 
   [[nodiscard]] std::string GetTooltip() const override;
 

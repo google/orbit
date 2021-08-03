@@ -24,7 +24,7 @@
 
 #include "App.h"
 #include "ClientData/CallstackData.h"
-#include "ClientModel/CaptureData.h"
+#include "ClientData/CaptureData.h"
 #include "CoreMath.h"
 #include "GlCanvas.h"
 #include "OrbitBase/Append.h"
@@ -43,7 +43,7 @@ ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
 
 TrackManager::TrackManager(TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                            TimeGraphLayout* layout, OrbitApp* app,
-                           const orbit_client_model::CaptureData* capture_data)
+                           const orbit_client_data::CaptureData* capture_data)
     : time_graph_(time_graph),
       viewport_(viewport),
       layout_(layout),

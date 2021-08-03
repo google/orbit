@@ -19,8 +19,8 @@
 #include "Batcher.h"
 #include "CallstackThreadBar.h"
 #include "CaptureViewElement.h"
+#include "ClientData/CaptureData.h"
 #include "ClientData/TimerChain.h"
-#include "ClientModel/CaptureData.h"
 #include "CoreMath.h"
 #include "ManualInstrumentationManager.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
@@ -39,7 +39,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
  public:
   explicit TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
                      orbit_gl::Viewport* viewport,
-                     const orbit_client_model::CaptureData* capture_data,
+                     const orbit_client_data::CaptureData* capture_data,
                      PickingManager* picking_manager);
   ~TimeGraph() override;
 
@@ -62,7 +62,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
                     const orbit_grpc_protos::InstrumentedFunction* function);
 
-  [[nodiscard]] const orbit_client_model::CaptureData* GetCaptureData() const {
+  [[nodiscard]] const orbit_client_data::CaptureData* GetCaptureData() const {
     return capture_data_;
   }
   [[nodiscard]] TrackManager* GetTrackManager() { return track_manager_.get(); }
@@ -239,7 +239,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
 
   ManualInstrumentationManager* manual_instrumentation_manager_;
   std::unique_ptr<ManualInstrumentationManager::AsyncTimerInfoListener> async_timer_info_listener_;
-  const orbit_client_model::CaptureData* capture_data_ = nullptr;
+  const orbit_client_data::CaptureData* capture_data_ = nullptr;
 
   OrbitApp* app_ = nullptr;
 };

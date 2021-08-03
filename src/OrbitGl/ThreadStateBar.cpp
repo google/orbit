@@ -12,7 +12,7 @@
 #include "App.h"
 #include "Batcher.h"
 #include "CaptureViewElement.h"
-#include "ClientModel/CaptureData.h"
+#include "ClientData/CaptureData.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
@@ -27,7 +27,7 @@ namespace orbit_gl {
 
 ThreadStateBar::ThreadStateBar(CaptureViewElement* parent, OrbitApp* app, TimeGraph* time_graph,
                                orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                               const orbit_client_model::CaptureData* capture_data,
+                               const orbit_client_data::CaptureData* capture_data,
                                ThreadID thread_id, const Color& color)
     : ThreadBar(parent, app, time_graph, viewport, layout, capture_data, thread_id, "ThreadState",
                 color) {}

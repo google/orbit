@@ -21,7 +21,7 @@
 #include "App.h"
 #include "CaptureViewElement.h"
 #include "ClientData/CallstackData.h"
-#include "ClientModel/CaptureData.h"
+#include "ClientData/CaptureData.h"
 #include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Geometry.h"
@@ -40,7 +40,8 @@
 
 using orbit_accessibility::AccessibleInterface;
 using orbit_accessibility::AccessibleWidgetBridge;
-using orbit_client_model::CaptureData;
+
+using orbit_client_data::CaptureData;
 
 class AccessibleCaptureWindow : public AccessibleWidgetBridge {
  public:

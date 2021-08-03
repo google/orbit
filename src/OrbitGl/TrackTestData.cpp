@@ -4,11 +4,13 @@
 
 #include "TrackTestData.h"
 
+using orbit_client_data::CaptureData;
+
 namespace orbit_gl {
 
-std::unique_ptr<orbit_client_model::CaptureData> TrackTestData::GenerateTestCaptureData() {
-  auto capture_data = std::make_unique<orbit_client_model::CaptureData>(
-      nullptr, orbit_grpc_protos::CaptureStarted{}, std::nullopt, absl::flat_hash_set<uint64_t>{});
+std::unique_ptr<CaptureData> TrackTestData::GenerateTestCaptureData() {
+  auto capture_data = std::make_unique<CaptureData>(nullptr, orbit_grpc_protos::CaptureStarted{},
+                                                    std::nullopt, absl::flat_hash_set<uint64_t>{});
 
   // AddressInfo
   orbit_client_protos::LinuxAddressInfo address_info;

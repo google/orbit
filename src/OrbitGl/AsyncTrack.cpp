@@ -13,8 +13,8 @@
 
 #include "App.h"
 #include "Batcher.h"
+#include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
-#include "ClientModel/CaptureData.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
@@ -34,7 +34,7 @@ using orbit_grpc_protos::InstrumentedFunction;
 AsyncTrack::AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                        const std::string& name, OrbitApp* app,
-                       const orbit_client_model::CaptureData* capture_data)
+                       const orbit_client_data::CaptureData* capture_data)
     : TimerTrack(parent, time_graph, viewport, layout, app, capture_data) {
   SetName(name);
   SetLabel(name);

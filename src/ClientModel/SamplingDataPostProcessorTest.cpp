@@ -8,13 +8,14 @@
 
 #include <vector>
 
+#include "ClientData/CaptureData.h"
 #include "ClientData/ModuleManager.h"
-#include "ClientModel/CaptureData.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "capture_data.pb.h"
 
 using orbit_client_data::CallstackCount;
+using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleManager;
 using orbit_client_data::PostProcessedSamplingData;
 using orbit_client_data::SampledFunction;

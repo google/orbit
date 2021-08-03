@@ -16,10 +16,10 @@
 #include <functional>
 #include <numeric>
 
+#include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
-#include "ClientModel/CaptureData.h"
 #include "CompareAscendingOrDescending.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataViewType.h"
@@ -28,9 +28,9 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadPool.h"
 
+using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;
 using orbit_client_data::ProcessData;
-using orbit_client_model::CaptureData;
 using orbit_client_protos::FunctionInfo;
 
 namespace orbit_data_views {

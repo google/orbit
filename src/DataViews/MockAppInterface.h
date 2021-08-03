@@ -11,9 +11,9 @@
 
 #include <string>
 
+#include "ClientData/CaptureData.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
-#include "ClientModel/CaptureData.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/PresetLoadState.h"
 #include "OrbitBase/Future.h"
@@ -39,10 +39,10 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(bool, HasFrameTrackInCaptureData, (uint64_t), (const));
 
   MOCK_METHOD(bool, HasCaptureData, (), (const));
-  MOCK_METHOD(const orbit_client_model::CaptureData&, GetCaptureData, (), (const));
+  MOCK_METHOD(const orbit_client_data::CaptureData&, GetCaptureData, (), (const));
 
   // This needs to be called from the main thread.
-  MOCK_METHOD(bool, IsCaptureConnected, (const orbit_client_model::CaptureData&), (const));
+  MOCK_METHOD(bool, IsCaptureConnected, (const orbit_client_data::CaptureData&), (const));
 
   MOCK_METHOD(const orbit_client_data::ProcessData*, GetTargetProcess, (), (const));
 

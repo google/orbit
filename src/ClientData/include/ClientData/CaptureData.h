@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CLIENT_MODEL_CAPTURE_DATA_H_
-#define CLIENT_MODEL_CAPTURE_DATA_H_
+#ifndef CLIENT_DATA_CAPTURE_DATA_H_
+#define CLIENT_DATA_CAPTURE_DATA_H_
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
@@ -36,7 +36,7 @@
 #include "process.pb.h"
 #include "tracepoint.pb.h"
 
-namespace orbit_client_model {
+namespace orbit_client_data {
 
 class CaptureData {
  public:
@@ -145,7 +145,7 @@ class CaptureData {
 
   void UpdateFunctionStats(uint64_t instrumented_function_id, uint64_t elapsed_nanos);
 
-  void OnCaptureComplete(std::vector<const orbit_client_data::TimerChain*> chains);
+  void OnCaptureComplete(const std::vector<const orbit_client_data::TimerChain*>& chains);
 
   [[nodiscard]] const orbit_client_data::CallstackData* GetCallstackData() const {
     return callstack_data_.get();
@@ -280,6 +280,6 @@ class CaptureData {
   std::optional<std::filesystem::path> file_path_;
 };
 
-}  // namespace orbit_client_model
+}  // namespace orbit_client_data
 
-#endif  // CLIENT_MODEL_CAPTURE_DATA_H_
+#endif  // CLIENT_DATA_CAPTURE_DATA_H_

@@ -16,9 +16,9 @@
 #include "Batcher.h"
 #include "BlockChain.h"
 #include "CaptureViewElement.h"
+#include "ClientData/CaptureData.h"
 #include "ClientData/TimerChain.h"
 #include "ClientData/TrackData.h"
-#include "ClientModel/CaptureData.h"
 #include "CoreMath.h"
 #include "GteVector.h"
 #include "OrbitBase/Profiling.h"
@@ -50,7 +50,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
       Type::kMemoryTrack, Type::kPageFaultsTrack, Type::kUnknown};
 
   explicit Track(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
-                 TimeGraphLayout* layout, const orbit_client_model::CaptureData* capture_data);
+                 TimeGraphLayout* layout, const orbit_client_data::CaptureData* capture_data);
   ~Track() override = default;
 
   void Draw(Batcher& batcher, TextRenderer& text_renderer,
@@ -123,7 +123,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
 
   TimeGraphLayout* layout_;
 
-  const orbit_client_model::CaptureData* capture_data_ = nullptr;
+  const orbit_client_data::CaptureData* capture_data_ = nullptr;
 };
 
 #endif

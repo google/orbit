@@ -15,7 +15,7 @@
 #include <string>
 
 #include "CaptureClient/CaptureListener.h"
-#include "CaptureData.h"
+#include "ClientData/CaptureData.h"
 #include "ClientData/ModuleManager.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Result.h"
