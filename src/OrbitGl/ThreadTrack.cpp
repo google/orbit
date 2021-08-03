@@ -96,19 +96,11 @@ int ThreadTrack::GetNumberOfPrioritizedTrailingCharacters() const {
 }
 
 const TimerInfo* ThreadTrack::GetLeft(const TimerInfo& timer_info) const {
-  if (timer_info.thread_id() == GetThreadId()) {
-    const TimerChain* chain = track_data_->GetChain(timer_info.depth());
-    if (chain != nullptr) return chain->GetElementBefore(timer_info);
-  }
-  return nullptr;
+  return scope_tree_.FindPreviousScopeAtDepth(timer_info);
 }
 
 const TimerInfo* ThreadTrack::GetRight(const TimerInfo& timer_info) const {
-  if (timer_info.thread_id() == GetThreadId()) {
-    const TimerChain* chain = track_data_->GetChain(timer_info.depth());
-    if (chain != nullptr) return chain->GetElementAfter(timer_info);
-  }
-  return nullptr;
+  return scope_tree_.FindNextScopeAtDepth(timer_info);
 }
 
 std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {

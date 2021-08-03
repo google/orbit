@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_SCOPE_TREE_H_
 #define ORBIT_GL_SCOPE_TREE_H_
 
+#include <cstdint>
 #include <memory>
 #include <set>
 #include <vector>
@@ -85,8 +86,11 @@ class ScopeTree {
   GetOrderedNodesByDepth() const {
     return ordered_nodes_by_depth_;
   }
+  [[nodiscard]] const ScopeT* FindNextScopeAtDepth(const ScopeT& scope) const;
+  [[nodiscard]] const ScopeT* FindPreviousScopeAtDepth(const ScopeT& scope) const;
 
  private:
+  [[nodiscard]] const ScopeNodeT* FindScopeNode(const ScopeT& scope) const;
   [[nodiscard]] ScopeNodeT* CreateNode(ScopeT* scope);
   void UpdateDepthInSubtree(ScopeNodeT* node, uint32_t depth);
 
@@ -107,6 +111,37 @@ template <typename ScopeT>
 ScopeNode<ScopeT>* ScopeTree<ScopeT>::CreateNode(ScopeT* scope) {
   ScopeNode<ScopeT>& new_node = nodes_.emplace_back(ScopeNodeT(scope));
   return &new_node;
+}
+
+template <typename ScopeT>
+const ScopeNode<ScopeT>* ScopeTree<ScopeT>::FindScopeNode(const ScopeT& scope) const {
+  for (ScopeNode<ScopeT>* node = root_; node != nullptr;
+       node = node->GetLastChildBeforeOrAtTime(scope.start())) {
+    if (node->Start() == scope.start() && node->End() == scope.end()) {
+      return node;
+    }
+  }
+  return nullptr;
+}
+
+template <typename ScopeT>
+const ScopeT* ScopeTree<ScopeT>::FindNextScopeAtDepth(const ScopeT& scope) const {
+  const ScopeNode<ScopeT>* node = FindScopeNode(scope);
+  CHECK(node != nullptr);
+  auto nodes_at_depth = GetOrderedNodesByDepth().at(node->Depth());
+  auto node_it = nodes_at_depth.upper_bound(node->Start());
+  if (node_it == nodes_at_depth.end()) return nullptr;
+  return node_it->second->GetScope();
+}
+
+template <typename ScopeT>
+const ScopeT* ScopeTree<ScopeT>::FindPreviousScopeAtDepth(const ScopeT& scope) const {
+  const ScopeNode<ScopeT>* node = FindScopeNode(scope);
+  CHECK(node != nullptr);
+  auto nodes_at_depth = GetOrderedNodesByDepth().at(node->Depth());
+  auto node_it = nodes_at_depth.lower_bound(node->Start());
+  if (node_it == nodes_at_depth.begin()) return nullptr;
+  return (--node_it)->second->GetScope();
 }
 
 template <typename ScopeT>
