@@ -601,8 +601,12 @@ ErrorMessageOr<std::unique_ptr<ElfFile>> CreateElfFileFromBuffer(
 }
 
 ErrorMessageOr<std::unique_ptr<ElfFile>> CreateElfFile(const std::filesystem::path& file_path) {
+  // TODO(hebecker): Remove this explicit construction of StringRef when we switch to LLVM10.
+  const std::string file_path_str = file_path.string();
+  const llvm::StringRef file_path_llvm{file_path_str};
+
   llvm::Expected<llvm::object::OwningBinary<llvm::object::ObjectFile>> object_file_or_error =
-      llvm::object::ObjectFile::createObjectFile(file_path.string());
+      llvm::object::ObjectFile::createObjectFile(file_path_llvm);
 
   if (!object_file_or_error) {
     return ErrorMessage(absl::StrFormat("Unable to load ELF file \"%s\": %s", file_path.string(),
