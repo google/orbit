@@ -8,8 +8,10 @@
 #include <llvm/Object/Binary.h>
 #include <llvm/Object/ObjectFile.h>
 
+#include <array>
 #include <filesystem>
 #include <memory>
+#include <optional>
 
 #include "ObjectUtils/ObjectFile.h"
 #include "OrbitBase/Result.h"
@@ -17,10 +19,19 @@
 
 namespace orbit_object_utils {
 
+struct PdbDebugInfo {
+  std::filesystem::path pdb_file_path;
+
+  std::array<uint8_t, 16> guid;
+  uint32_t age;
+};
+
 class CoffFile : public ObjectFile {
  public:
   CoffFile() = default;
   virtual ~CoffFile() = default;
+
+  [[nodiscard]] virtual ErrorMessageOr<PdbDebugInfo> GetDebugPdbInfo() const = 0;
 };
 
 [[nodiscard]] ErrorMessageOr<std::unique_ptr<CoffFile>> CreateCoffFile(
