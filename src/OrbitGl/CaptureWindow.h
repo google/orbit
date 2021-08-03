@@ -52,7 +52,7 @@ class CaptureWindow : public GlCanvas {
   [[nodiscard]] bool get_draw_help() const { return draw_help_; }
 
   [[nodiscard]] TimeGraph* GetTimeGraph() { return time_graph_.get(); }
-  void CreateTimeGraph(const orbit_client_data::CaptureData* capture_data);
+  void CreateTimeGraph(orbit_client_data::CaptureData* capture_data);
   void ClearTimeGraph() { time_graph_.reset(nullptr); }
 
   Batcher& GetBatcherById(BatcherId batcher_id);

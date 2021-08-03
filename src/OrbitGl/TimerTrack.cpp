@@ -34,11 +34,11 @@ const Color TimerTrack::kHighlightColor = Color(100, 181, 246, 255);
 
 TimerTrack::TimerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
-                       const orbit_client_data::CaptureData* capture_data)
+                       const orbit_client_data::CaptureData* capture_data, TrackData* track_data)
     : Track(parent, time_graph, viewport, layout, capture_data),
       text_renderer_{time_graph->GetTextRenderer()},
       app_{app},
-      track_data_{std::make_unique<TrackData>()} {}
+      track_data_{track_data} {}
 
 std::string TimerTrack::GetExtraInfo(const TimerInfo& timer_info) const {
   std::string info;

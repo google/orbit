@@ -40,7 +40,7 @@ class TrackManager {
  public:
   explicit TrackManager(TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                         TimeGraphLayout* layout, OrbitApp* app,
-                        const orbit_client_data::CaptureData* capture_data);
+                        orbit_client_data::CaptureData* capture_data);
 
   [[nodiscard]] std::vector<Track*> GetAllTracks() const;
   [[nodiscard]] std::vector<Track*> GetVisibleTracks() const { return visible_tracks_; }
@@ -125,7 +125,7 @@ class TrackManager {
   std::vector<Track*> visible_tracks_;
 
   float tracks_total_height_ = 0.0f;
-  const orbit_client_data::CaptureData* capture_data_ = nullptr;
+  orbit_client_data::CaptureData* capture_data_ = nullptr;
 
   OrbitApp* app_ = nullptr;
 

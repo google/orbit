@@ -31,10 +31,11 @@ using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::InstrumentedFunction;
 
 AsyncTrack::AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph,
-                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                       const std::string& name, OrbitApp* app,
-                       const orbit_client_data::CaptureData* capture_data)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data), name_(name) {}
+                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string name,
+                       OrbitApp* app, const orbit_client_data::CaptureData* capture_data,
+                       orbit_client_data::TrackData* track_data)
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, track_data),
+      name_(std::move(name)) {}
 
 [[nodiscard]] std::string AsyncTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
   const TimerInfo* timer_info = batcher.GetTimerInfo(id);

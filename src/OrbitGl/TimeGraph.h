@@ -38,8 +38,7 @@ class OrbitApp;
 class TimeGraph : public orbit_gl::CaptureViewElement {
  public:
   explicit TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
-                     orbit_gl::Viewport* viewport,
-                     const orbit_client_data::CaptureData* capture_data,
+                     orbit_gl::Viewport* viewport, orbit_client_data::CaptureData* capture_data,
                      PickingManager* picking_manager);
   ~TimeGraph() override;
 

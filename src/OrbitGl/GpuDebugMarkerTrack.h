@@ -29,7 +29,8 @@ class GpuDebugMarkerTrack : public TimerTrack {
   explicit GpuDebugMarkerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                                orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                uint64_t timeline_hash, OrbitApp* app,
-                               const orbit_client_data::CaptureData* capture_data);
+                               const orbit_client_data::CaptureData* capture_data,
+                               orbit_client_data::TrackData* track_data);
 
   ~GpuDebugMarkerTrack() override = default;
 
