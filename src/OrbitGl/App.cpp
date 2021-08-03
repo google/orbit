@@ -234,7 +234,7 @@ OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
       });
 
   main_thread_id_ = std::this_thread::get_id();
-  data_manager_ = std::make_unique<DataManager>(main_thread_id_);
+  data_manager_ = std::make_unique<orbit_client_data::DataManager>(main_thread_id_);
   module_manager_ = std::make_unique<orbit_client_data::ModuleManager>();
   manual_instrumentation_manager_ = std::make_unique<ManualInstrumentationManager>();
 }

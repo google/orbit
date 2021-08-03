@@ -578,7 +578,7 @@ class OrbitApp final : public DataViewFactory,
   std::unique_ptr<orbit_capture_client::CaptureClient> capture_client_;
   orbit_client_services::ProcessManager* process_manager_ = nullptr;
   std::unique_ptr<orbit_client_data::ModuleManager> module_manager_;
-  std::unique_ptr<DataManager> data_manager_;
+  std::unique_ptr<orbit_client_data::DataManager> data_manager_;
   std::unique_ptr<orbit_client_services::CrashManager> crash_manager_;
   std::unique_ptr<ManualInstrumentationManager> manual_instrumentation_manager_;
 

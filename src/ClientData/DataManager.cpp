@@ -15,6 +15,8 @@ using orbit_client_data::TracepointInfoSet;
 using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::TracepointInfo;
 
+namespace orbit_client_data {
+
 void DataManager::SelectFunction(const FunctionInfo& function) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   if (!selected_functions_.contains(function)) {
@@ -110,3 +112,5 @@ void DataManager::DisableFrameTrack(const FunctionInfo& function) {
 }
 
 void DataManager::ClearUserDefinedCaptureData() { user_defined_capture_data_.Clear(); }
+
+}  // namespace orbit_client_data
