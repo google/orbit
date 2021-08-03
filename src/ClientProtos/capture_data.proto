@@ -168,7 +168,7 @@ message TimerInfo {
   repeated uint64 registers = 12;
   Color color = 13;
   uint64 group_id = 14;
-  uint64 id = 15;
+  uint64 async_scope_id = 15;
   uint64 address_in_function = 16;
   string name = 17;
 }
@@ -178,7 +178,7 @@ message ApiStringEvent {
   int32 thread_id = 2;
   uint64 timestamp_ns = 3;
 
-  uint64 id = 4;
+  uint64 async_scope_id = 4;
   string name = 5;
 }
 
