@@ -176,15 +176,19 @@ class LLVMCoreConan(ConanFile):
         cmake.definitions['LLVM_ENABLE_LIBEDIT'] = False
         cmake.definitions['LLVM_ENABLE_FFI'] = self.options.with_ffi
         cmake.definitions['LLVM_ENABLE_ZLIB'] = \
-            self.options.get_safe('with_zlib', False)
+            'FORCE_ON' if self.options.get_safe('with_zlib', False) else False
         cmake.definitions['LLVM_ENABLE_LIBXML2'] = \
             self.options.get_safe('with_xml2', False)
         return cmake
 
+    @property
+    def _zlib_library_name(self):
+        # The library's filename is different on Windows
+        return self.deps_cpp_info["zlib"].libs[0]
+
     def config_options(self):
         if self.settings.os == 'Windows':
             del self.options.fPIC
-            del self.options.with_zlib
             del self.options.with_xml2
 
     def requirements(self):
@@ -225,6 +229,7 @@ class LLVMCoreConan(ConanFile):
         cmake = self._configure_cmake()
         cmake.install()
 
+
         if not self.options.shared:
             for ext in ['.a', '.lib']:
                 lib = '**/lib/*LLVMTableGenGlobalISel{}'.format(ext)
@@ -244,9 +249,10 @@ class LLVMCoreConan(ConanFile):
                 if not target.startswith('LLVM'):
                     dummy_targets[target].append(dep)
 
+
             cmake_targets = {
                 'libffi::libffi': 'ffi',
-                'ZLIB::ZLIB': 'z',
+                'ZLIB::ZLIB': self._zlib_library_name,
                 'Iconv::Iconv': 'iconv',
                 'LibXml2::LibXml2': 'xml2'
             }
@@ -282,8 +288,8 @@ class LLVMCoreConan(ConanFile):
 
         if not self.options.shared:
             if self.options.get_safe('with_zlib', False):
-                if not 'z' in components['LLVMSupport']:
-                    components['LLVMSupport'].append('z')
+                if not self._zlib_library_name in components['LLVMSupport']:
+                    components['LLVMSupport'].append(self.zlib_library_name)
             components_path = \
                 os.path.join(self.package_folder, 'lib', 'components.json')
             with open(components_path, 'w') as components_file:
@@ -308,10 +314,10 @@ class LLVMCoreConan(ConanFile):
         with open(components_path, 'r') as components_file:
             components = json.load(components_file)
 
-        dependencies = ['ffi', 'z', 'iconv', 'xml2']
+        dependencies = ['ffi', self._zlib_library_name, 'iconv', 'xml2']
         targets = {
             'ffi': 'libffi::libffi',
-            'z': 'zlib::zlib',
+            self._zlib_library_name: 'zlib::zlib',
             'xml2': 'libxml2::libxml2'
         }
 

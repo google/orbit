@@ -1,0 +1,47 @@
+--- cmake/config-ix.cmake
++++ cmake/config-ix.cmake
+@@ -122,18 +122,6 @@
+   elseif(NOT LLVM_USE_SANITIZER MATCHES "Memory.*")
+     find_package(ZLIB)
+   endif()
+-  if(ZLIB_FOUND)
+-    # Check if zlib we found is usable; for example, we may have found a 32-bit
+-    # library on a 64-bit system which would result in a link-time failure.
+-    cmake_push_check_state()
+-    list(APPEND CMAKE_REQUIRED_INCLUDES ${ZLIB_INCLUDE_DIRS})
+-    list(APPEND CMAKE_REQUIRED_LIBRARIES ${ZLIB_LIBRARY})
+-    check_symbol_exists(compress2 zlib.h HAVE_ZLIB)
+-    cmake_pop_check_state()
+-    if(LLVM_ENABLE_ZLIB STREQUAL FORCE_ON AND NOT HAVE_ZLIB)
+-      message(FATAL_ERROR "Failed to configure zlib")
+-    endif()
+-  endif()
+-  set(LLVM_ENABLE_ZLIB "${HAVE_ZLIB}")
++  set(LLVM_ENABLE_ZLIB "${ZLIB_FOUND}")
+ endif()
+
+ if(LLVM_ENABLE_LIBXML2)
+--- lib/Support/CMakeLists.txt
++++ lib/Support/CMakeLists.txt
+@@ -233,20 +233,7 @@
+ 
+ set(llvm_system_libs ${system_libs})
+ 
+-# This block is only needed for llvm-config. When we deprecate llvm-config and
+-# move to using CMake export, this block can be removed.
+-if(LLVM_ENABLE_ZLIB)
+-  # CMAKE_BUILD_TYPE is only meaningful to single-configuration generators.
+-  if(CMAKE_BUILD_TYPE)
+-    string(TOUPPER ${CMAKE_BUILD_TYPE} build_type)
+-    get_property(zlib_library TARGET ZLIB::ZLIB PROPERTY LOCATION_${build_type})
+-  endif()
+-  if(NOT zlib_library)
+-    get_property(zlib_library TARGET ZLIB::ZLIB PROPERTY LOCATION)
+-  endif()
+-  get_library_name(${zlib_library} zlib_library)
+-  set(llvm_system_libs ${llvm_system_libs} "${zlib_library}")
+-endif()
++# We don't use llvm-config in the conan package
+ 
+ if(LLVM_ENABLE_TERMINFO)
+   get_library_name(${TERMINFO_LIB} terminfo_library)
