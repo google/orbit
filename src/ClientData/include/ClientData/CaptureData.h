@@ -30,6 +30,8 @@
 #include "ClientData/TimestampIntervalSet.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/TracepointData.h"
+#include "ClientData/TrackData.h"
+#include "ClientData/TrackDataManager.h"
 #include "OrbitBase/Logging.h"
 #include "capture.pb.h"
 #include "capture_data.pb.h"
@@ -231,6 +233,10 @@ class CaptureData {
     return frame_track_function_ids_;
   }
 
+  [[nodiscard]] std::pair<uint64_t, TrackData*> CreateTrackData() {
+    return track_data_manager_.CreateTrackData();
+  }
+
  private:
   [[nodiscard]] std::optional<uint64_t>
   FindFunctionAbsoluteAddressByInstructionAbsoluteAddressUsingModulesInMemory(
@@ -243,7 +249,6 @@ class CaptureData {
   orbit_client_data::ModuleManager* module_manager_;
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions_;
 
-  orbit_client_data::TracepointInfoSet selected_tracepoints_;
   orbit_client_data::CallstackData callstack_data_;
   // selection_callstack_data_ is subset of callstack_data_
   std::unique_ptr<orbit_client_data::CallstackData> selection_callstack_data_;
@@ -271,6 +276,8 @@ class CaptureData {
   absl::flat_hash_set<uint64_t> frame_track_function_ids_;
 
   std::optional<std::filesystem::path> file_path_;
+
+  TrackDataManager track_data_manager_;
 };
 
 }  // namespace orbit_client_data

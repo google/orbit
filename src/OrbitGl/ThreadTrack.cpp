@@ -41,8 +41,11 @@ using orbit_grpc_protos::InstrumentedFunction;
 ThreadTrack::ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout, int32_t thread_id,
                          OrbitApp* app, const CaptureData* capture_data,
+                         orbit_client_data::TrackData* track_data,
                          ScopeTreeUpdateType scope_tree_update_type)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data), thread_id_{thread_id} {
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, track_data),
+      thread_id_{thread_id},
+      scope_tree_update_type_{scope_tree_update_type} {
   Color color = TimeGraph::GetThreadColor(thread_id);
   thread_state_bar_ = std::make_shared<orbit_gl::ThreadStateBar>(
       this, app_, time_graph, viewport, layout, capture_data, thread_id, color);
@@ -52,7 +55,6 @@ ThreadTrack::ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph,
 
   tracepoint_bar_ = std::make_shared<orbit_gl::TracepointThreadBar>(
       this, app_, time_graph, viewport, layout, capture_data, thread_id, color);
-  scope_tree_update_type_ = scope_tree_update_type;
 }
 
 std::string ThreadTrack::GetThreadNameFromTid(uint32_t thread_id) {

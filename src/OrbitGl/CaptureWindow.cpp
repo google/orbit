@@ -601,7 +601,7 @@ void CaptureWindow::set_draw_help(bool draw_help) {
   RequestRedraw();
 }
 
-void CaptureWindow::CreateTimeGraph(const CaptureData* capture_data) {
+void CaptureWindow::CreateTimeGraph(CaptureData* capture_data) {
   time_graph_ =
       std::make_unique<TimeGraph>(this, app_, &viewport_, capture_data, &GetPickingManager());
 }

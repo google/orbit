@@ -26,6 +26,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/TimestampIntervalSet.h
         include/ClientData/TracepointCustom.h
         include/ClientData/TracepointData.h
+        include/ClientData/TrackDataManager.h
         include/ClientData/TrackData.h
         include/ClientData/UserDefinedCaptureData.h)
 
