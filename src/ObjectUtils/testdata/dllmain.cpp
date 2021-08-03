@@ -4,7 +4,9 @@
 
 // Compile on Windows with
 //   cl /LD /Zi dllmain.cpp
-// to generate both the .dll and the .pdb file.
+// to generate both the .dll and the .pdb file. Make sure you are using the
+// 64-bit flavor of the compiler, for example, by using the 64-bit Visual Studio
+// command prompt.
 
 #include <windows.h>
 

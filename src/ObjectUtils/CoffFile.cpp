@@ -9,7 +9,10 @@
 #include <llvm/Demangle/Demangle.h>
 #include <llvm/Object/Binary.h>
 #include <llvm/Object/COFF.h>
+#include <llvm/Object/CVDebugRecord.h>
 #include <llvm/Object/ObjectFile.h>
+
+#include <system_error>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -34,6 +37,7 @@ class CoffFileImpl : public CoffFile {
   [[nodiscard]] uint64_t GetExecutableSegmentOffset() const override;
   [[nodiscard]] bool IsElf() const override;
   [[nodiscard]] bool IsCoff() const override;
+  [[nodiscard]] ErrorMessageOr<PdbDebugInfo> GetDebugPdbInfo() const override;
 
  private:
   ErrorMessageOr<uint64_t> GetSectionOffsetForSymbol(const llvm::object::SymbolRef& symbol_ref);
@@ -120,6 +124,34 @@ uint64_t CoffFileImpl::GetExecutableSegmentOffset() const {
 
 bool CoffFileImpl::IsElf() const { return false; }
 bool CoffFileImpl::IsCoff() const { return true; }
+
+ErrorMessageOr<PdbDebugInfo> CoffFileImpl::GetDebugPdbInfo() const {
+  const llvm::codeview::DebugInfo* debug_info = nullptr;
+  llvm::StringRef pdb_file_path;
+
+  // If 'this' was successfully created with CreateCoffFile, 'object_file_' cannot be nullptr.
+  CHECK(object_file_ != nullptr);
+
+  std::error_code error = object_file_->getDebugPDBInfo(debug_info, pdb_file_path);
+  if (error) {
+    return ErrorMessage(
+        absl::StrFormat("Unable to load debug PDB info with error: %s", error.message()));
+  }
+  if (debug_info == nullptr) {
+    // Per llvm documentation, this indicates that the file does not have the requested info.
+    return ErrorMessage("Object file does not have debug PDB info.");
+  }
+  // Only support PDB 70 until we learn otherwise.
+  constexpr uint32_t kPdb70Signature = 0x53445352;
+  CHECK(debug_info->PDB70.CVSignature == kPdb70Signature);
+
+  PdbDebugInfo pdb_debug_info;
+  pdb_debug_info.pdb_file_path = pdb_file_path.str();
+  std::copy(std::begin(debug_info->PDB70.Signature), std::end(debug_info->PDB70.Signature),
+            std::begin(pdb_debug_info.guid));
+  pdb_debug_info.age = debug_info->PDB70.Age;
+  return pdb_debug_info;
+}
 
 }  // namespace
 

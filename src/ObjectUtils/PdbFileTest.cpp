@@ -7,6 +7,7 @@
 
 #include <filesystem>
 
+#include "ObjectUtils/CoffFile.h"
 #include "ObjectUtils/PdbFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/TestUtils.h"
@@ -15,6 +16,8 @@
 using orbit_base::HasError;
 using orbit_base::HasNoError;
 using orbit_grpc_protos::SymbolInfo;
+using orbit_object_utils::CreateCoffFile;
+using orbit_object_utils::PdbDebugInfo;
 using ::testing::ElementsAre;
 
 TEST(PdbFile, LoadDebugSymbols) {
@@ -31,22 +34,22 @@ TEST(PdbFile, LoadDebugSymbols) {
 
   std::vector<SymbolInfo> symbol_infos(symbols.symbol_infos().begin(),
                                        symbols.symbol_infos().end());
-  EXPECT_EQ(symbol_infos.size(), 4982);
+  EXPECT_EQ(symbol_infos.size(), 5469);
 
   SymbolInfo symbol = symbol_infos[0];
   EXPECT_EQ(symbol.name(), "PrintHelloWorldInternal");
   EXPECT_EQ(symbol.demangled_name(), "PrintHelloWorldInternal");
-  EXPECT_EQ(symbol.address(), 0xdc20);
-  EXPECT_EQ(symbol.size(), 0x23);
+  EXPECT_EQ(symbol.address(), 0xdf90);
+  EXPECT_EQ(symbol.size(), 0x2b);
 
   symbol = symbol_infos[1];
   EXPECT_EQ(symbol.name(), "PrintHelloWorld");
   EXPECT_EQ(symbol.demangled_name(), "PrintHelloWorld");
-  EXPECT_EQ(symbol.address(), 0xdc50);
-  EXPECT_EQ(symbol.size(), 0xa);
+  EXPECT_EQ(symbol.address(), 0xdfd0);
+  EXPECT_EQ(symbol.size(), 0xe);
 }
 
-TEST(PdbFile, GetGuidAndAge) {
+TEST(PdbFile, CanObtainGuidAndAgeFromPdbAndDll) {
   std::filesystem::path file_path_pdb = orbit_test::GetTestdataDir() / "dllmain.pdb";
 
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::PdbFile>> pdb_file_result =
@@ -54,12 +57,17 @@ TEST(PdbFile, GetGuidAndAge) {
   ASSERT_THAT(pdb_file_result, HasNoError());
   std::unique_ptr<orbit_object_utils::PdbFile> pdb_file = std::move(pdb_file_result.value());
 
-  EXPECT_EQ(pdb_file->GetAge(), 1);
+  // We load the PDB debug info from the dll to see if it matches the data in the pdb.
+  std::filesystem::path file_path = orbit_test::GetTestdataDir() / "dllmain.dll";
 
-  std::array<uint8_t, 16> guid = pdb_file->GetGuid();
-  EXPECT_THAT(std::vector(guid.begin(), guid.end()),
-              ElementsAre(0xef, 0xae, 0xcd, 0x92, 0xf7, 0x73, 0xbb, 0x4e, 0xbc, 0xf2, 0x13, 0xb8,
-                          0x4f, 0x43, 0xb3, 0x22));
+  auto coff_file_or_error = CreateCoffFile(file_path);
+  ASSERT_THAT(coff_file_or_error, HasNoError());
+
+  auto pdb_debug_info_or_error = coff_file_or_error.value()->GetDebugPdbInfo();
+  ASSERT_THAT(pdb_debug_info_or_error, HasNoError());
+
+  EXPECT_EQ(pdb_file->GetAge(), pdb_debug_info_or_error.value().age);
+  EXPECT_THAT(pdb_file->GetGuid(), testing::ElementsAreArray(pdb_debug_info_or_error.value().guid));
 }
 
 TEST(PdbFile, CreatePdbFailsOnNonPdbFile) {
