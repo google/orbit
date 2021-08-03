@@ -8,7 +8,6 @@ project(ObjectUtils)
 add_library(ObjectUtils STATIC)
 
 target_compile_options(ObjectUtils PRIVATE ${STRICT_COMPILE_FLAGS})
-target_compile_features(ObjectUtils PUBLIC cxx_std_17)
 
 target_sources(
   ObjectUtils
@@ -38,7 +37,8 @@ target_link_libraries(
   PUBLIC GrpcProtos
          OrbitBase
          CONAN_PKG::abseil
-         CONAN_PKG::llvm-core)
+         CONAN_PKG::llvm_object
+         CONAN_PKG::llvm_symbolize)
 
 add_executable(ObjectUtilsTests)
 
@@ -58,7 +58,7 @@ target_link_libraries(
   ObjectUtilsTests
   PRIVATE ObjectUtils
           GTest::Main
-          CONAN_PKG::llvm-core
+          CONAN_PKG::llvm_object
           CONAN_PKG::abseil)
 
 register_test(ObjectUtilsTests)

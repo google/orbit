@@ -10,7 +10,6 @@
 #include <llvm/Object/Binary.h>
 #include <llvm/Object/COFF.h>
 #include <llvm/Object/ObjectFile.h>
-#include <llvm/Support/Error.h>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -114,7 +113,9 @@ std::string CoffFileImpl::GetName() const { return file_path_.filename().string(
 uint64_t CoffFileImpl::GetLoadBias() const { return object_file_->getImageBase(); }
 uint64_t CoffFileImpl::GetExecutableSegmentOffset() const {
   CHECK(object_file_->is64());
-  return object_file_->getPE32PlusHeader()->BaseOfCode;
+  const llvm::object::pe32plus_header* pe32plus_header;
+  object_file_->getPE32PlusHeader(pe32plus_header);
+  return pe32plus_header->BaseOfCode;
 }
 
 bool CoffFileImpl::IsElf() const { return false; }
