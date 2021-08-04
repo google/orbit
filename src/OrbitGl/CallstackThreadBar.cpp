@@ -115,7 +115,7 @@ void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, u
       CHECK(time >= min_tick && time <= max_tick);
       Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
       Color color = kWhite;
-      if (capture_data_->GetCallstackData()->GetCallstack(event.callstack_id())->type() !=
+      if (capture_data_->GetCallstackData().GetCallstack(event.callstack_id())->type() !=
           CallstackInfo::kComplete) {
         color = kGreyError;
       }
@@ -123,10 +123,10 @@ void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, u
     };
 
     if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
-      capture_data_->GetCallstackData()->ForEachCallstackEventInTimeRange(
+      capture_data_->GetCallstackData().ForEachCallstackEventInTimeRange(
           min_tick, max_tick, action_on_callstack_events);
     } else {
-      capture_data_->GetCallstackData()->ForEachCallstackEventOfTidInTimeRange(
+      capture_data_->GetCallstackData().ForEachCallstackEventOfTidInTimeRange(
           GetThreadId(), min_tick, max_tick, action_on_callstack_events);
     }
 
@@ -155,10 +155,10 @@ void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, u
       batcher->AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
     };
     if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
-      capture_data_->GetCallstackData()->ForEachCallstackEventInTimeRange(
+      capture_data_->GetCallstackData().ForEachCallstackEventInTimeRange(
           min_tick, max_tick, action_on_callstack_events);
     } else {
-      capture_data_->GetCallstackData()->ForEachCallstackEventOfTidInTimeRange(
+      capture_data_->GetCallstackData().ForEachCallstackEventOfTidInTimeRange(
           GetThreadId(), min_tick, max_tick, action_on_callstack_events);
     }
   }
@@ -188,8 +188,8 @@ bool CallstackThreadBar::IsEmpty() const {
 
   const uint32_t callstack_count =
       (GetThreadId() == orbit_base::kAllProcessThreadsTid)
-          ? capture_data_->GetCallstackData()->GetCallstackEventsCount()
-          : capture_data_->GetCallstackData()->GetCallstackEventsOfTidCount(GetThreadId());
+          ? capture_data_->GetCallstackData().GetCallstackEventsCount()
+          : capture_data_->GetCallstackData().GetCallstackEventsOfTidCount(GetThreadId());
   return callstack_count == 0;
 }
 
@@ -248,11 +248,11 @@ std::string CallstackThreadBar::GetSampleTooltip(const Batcher& batcher, Picking
   }
 
   CHECK(capture_data_ != nullptr);
-  const CallstackData* callstack_data = capture_data_->GetCallstackData();
+  const CallstackData& callstack_data = capture_data_->GetCallstackData();
   const auto* callstack_event = static_cast<const CallstackEvent*>(user_data->custom_data_);
 
   uint64_t callstack_id = callstack_event->callstack_id();
-  const CallstackInfo* callstack = callstack_data->GetCallstack(callstack_id);
+  const CallstackInfo* callstack = callstack_data.GetCallstack(callstack_id);
   if (callstack == nullptr) {
     return unknown_return_text;
   }

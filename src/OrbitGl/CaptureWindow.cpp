@@ -662,8 +662,8 @@ void CaptureWindow::RenderImGuiDebugUI() {
       IMGUI_VAR_TO_TEXT(time_graph_->GetTimeWindowUs());
       const CaptureData* capture_data = time_graph_->GetCaptureData();
       if (capture_data != nullptr) {
-        IMGUI_VAR_TO_TEXT(capture_data->GetCallstackData()->callstack_events_by_tid().size());
-        IMGUI_VAR_TO_TEXT(capture_data->GetCallstackData()->GetCallstackEventsCount());
+        IMGUI_VAR_TO_TEXT(capture_data->GetCallstackData().callstack_events_by_tid().size());
+        IMGUI_VAR_TO_TEXT(capture_data->GetCallstackData().GetCallstackEventsCount());
       }
     }
   }

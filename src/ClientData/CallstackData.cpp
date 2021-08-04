@@ -146,11 +146,11 @@ void CallstackData::ForEachCallstackEventOfTidInTimeRange(
 }
 
 void CallstackData::AddCallstackFromKnownCallstackData(const CallstackEvent& event,
-                                                       const CallstackData* known_callstack_data) {
+                                                       const CallstackData& known_callstack_data) {
   std::lock_guard lock(mutex_);
   uint64_t callstack_id = event.callstack_id();
   std::shared_ptr<orbit_client_protos::CallstackInfo> unique_callstack =
-      known_callstack_data->GetCallstackPtr(callstack_id);
+      known_callstack_data.GetCallstackPtr(callstack_id);
   if (unique_callstack == nullptr) {
     return;
   }

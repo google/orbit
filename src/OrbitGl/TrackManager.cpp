@@ -213,15 +213,14 @@ void TrackManager::UpdateVisibleTrackList() {
 std::vector<ThreadTrack*> TrackManager::GetSortedThreadTracks() {
   std::vector<ThreadTrack*> sorted_tracks;
   absl::flat_hash_map<ThreadTrack*, uint32_t> num_events_by_track;
-  const CallstackData* callstack_data = capture_data_->GetCallstackData();
+  const CallstackData& callstack_data = capture_data_->GetCallstackData();
 
   for (auto& [tid, track] : thread_tracks_) {
     if (tid == orbit_base::kAllProcessThreadsTid) {
       continue;  // "kAllProcessThreadsTid" is handled separately.
     }
     sorted_tracks.push_back(track.get());
-    uint32_t num_events = callstack_data ? callstack_data->GetCallstackEventsOfTidCount(tid) : 0;
-    num_events_by_track[track.get()] = num_events;
+    num_events_by_track[track.get()] = callstack_data.GetCallstackEventsOfTidCount(tid);
   }
 
   // Tracks with instrumented timers appear first, ordered by descending order of timers.

@@ -36,7 +36,7 @@ class CallstackData {
   void AddCallstackEvent(orbit_client_protos::CallstackEvent callstack_event);
   void AddUniqueCallstack(uint64_t callstack_id, orbit_client_protos::CallstackInfo callstack);
   void AddCallstackFromKnownCallstackData(const orbit_client_protos::CallstackEvent& event,
-                                          const CallstackData* known_callstack_data);
+                                          const CallstackData& known_callstack_data);
 
   [[nodiscard]] const absl::flat_hash_map<int32_t,
                                           std::map<uint64_t, orbit_client_protos::CallstackEvent>>&

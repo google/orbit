@@ -30,9 +30,7 @@ CaptureData::CaptureData(ModuleManager* module_manager, const CaptureStarted& ca
                          std::optional<std::filesystem::path> file_path,
                          absl::flat_hash_set<uint64_t> frame_track_function_ids)
     : module_manager_{module_manager},
-      callstack_data_(std::make_unique<CallstackData>()),
       selection_callstack_data_(std::make_unique<CallstackData>()),
-      tracepoint_data_(std::make_unique<TracepointData>()),
       frame_track_function_ids_{std::move(frame_track_function_ids)},
       file_path_{std::move(file_path)} {
   ProcessInfo process_info;
@@ -55,7 +53,7 @@ CaptureData::CaptureData(ModuleManager* module_manager, const CaptureStarted& ca
 void CaptureData::ForEachThreadStateSliceIntersectingTimeRange(
     int32_t thread_id, uint64_t min_timestamp, uint64_t max_timestamp,
     const std::function<void(const ThreadStateSliceInfo&)>& action) const {
-  absl::MutexLock lock{thread_state_slices_mutex_.get()};
+  absl::MutexLock lock{&thread_state_slices_mutex_};
   auto tid_thread_state_slices_it = thread_state_slices_.find(thread_id);
   if (tid_thread_state_slices_it == thread_state_slices_.end()) {
     return;

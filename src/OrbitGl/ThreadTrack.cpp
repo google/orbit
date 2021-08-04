@@ -242,8 +242,8 @@ void ThreadTrack::UpdatePositionOfSubtracks() {
 }
 
 void ThreadTrack::UpdateMinMaxTimestamps() {
-  track_data_->UpdateMinTime(capture_data_->GetCallstackData()->min_time());
-  track_data_->UpdateMaxTime(capture_data_->GetCallstackData()->max_time());
+  track_data_->UpdateMinTime(capture_data_->GetCallstackData().min_time());
+  track_data_->UpdateMaxTime(capture_data_->GetCallstackData().max_time());
 }
 
 void ThreadTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,

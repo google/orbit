@@ -344,7 +344,7 @@ Future<void> OrbitApp::OnCaptureComplete() {
 
   GetMutableCaptureData().FilterBrokenCallstacks();
   PostProcessedSamplingData post_processed_sampling_data =
-      orbit_client_model::CreatePostProcessedSamplingData(*GetCaptureData().GetCallstackData(),
+      orbit_client_model::CreatePostProcessedSamplingData(GetCaptureData().GetCallstackData(),
                                                           GetCaptureData());
 
   LOG("The capture contains %u intervals with incomplete data",
@@ -359,7 +359,7 @@ Future<void> OrbitApp::OnCaptureComplete() {
         RefreshCaptureView();
 
         SetSamplingReport(std::move(sampling_profiler),
-                          GetCaptureData().GetCallstackData()->GetUniqueCallstacksCopy());
+                          GetCaptureData().GetCallstackData().GetUniqueCallstacksCopy());
         SetTopDownView(GetCaptureData());
         SetBottomUpView(GetCaptureData());
 
@@ -843,7 +843,7 @@ void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
     orbit_code_report::DisassemblyReport report(
         disasm, absolute_address, *thread_sample_data,
         post_processed_sampling_data.GetCountOfFunction(absolute_address),
-        capture_data.GetCallstackData()->GetCallstackEventsCount());
+        capture_data.GetCallstackData().GetCallstackEventsCount());
     SendDisassemblyToUi(function, disasm.GetResult(), std::move(report));
   });
 }
@@ -891,7 +891,7 @@ void OrbitApp::ShowSourceCode(const orbit_client_protos::FunctionInfo& function)
                 code_report = std::make_unique<orbit_code_report::SourceCodeReport>(
                     line_info.source_file(), function, absolute_address.value(),
                     elf_file.value().get(), *summary,
-                    GetCaptureData().GetCallstackData()->GetCallstackEventsCount());
+                    GetCaptureData().GetCallstackData().GetCallstackEventsCount());
               }
             }
 
@@ -2265,7 +2265,7 @@ uint64_t OrbitApp::GetFunctionIdToHighlight() const {
 
 void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected_callstack_events,
                                      int32_t thread_id) {
-  const CallstackData* callstack_data = GetCaptureData().GetCallstackData();
+  const CallstackData& callstack_data = GetCaptureData().GetCallstackData();
   std::unique_ptr<CallstackData> selection_callstack_data = std::make_unique<CallstackData>();
   for (const CallstackEvent& event : selected_callstack_events) {
     selection_callstack_data->AddCallstackFromKnownCallstackData(event, callstack_data);
@@ -2295,10 +2295,10 @@ void OrbitApp::UpdateAfterSymbolLoading() {
 
   if (sampling_report_ != nullptr) {
     PostProcessedSamplingData post_processed_sampling_data =
-        orbit_client_model::CreatePostProcessedSamplingData(*capture_data.GetCallstackData(),
+        orbit_client_model::CreatePostProcessedSamplingData(capture_data.GetCallstackData(),
                                                             capture_data);
     sampling_report_->UpdateReport(post_processed_sampling_data,
-                                   capture_data.GetCallstackData()->GetUniqueCallstacksCopy());
+                                   capture_data.GetCallstackData().GetUniqueCallstacksCopy());
     GetMutableCaptureData().set_post_processed_sampling_data(post_processed_sampling_data);
     SetTopDownView(capture_data);
     SetBottomUpView(capture_data);
