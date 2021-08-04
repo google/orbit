@@ -31,6 +31,8 @@ using orbit_capture_client::CaptureListener;
 using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleManager;
 
+using orbit_client_protos::ApiStringEvent;
+using orbit_client_protos::ApiTrackValue;
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::CaptureHeader;
@@ -84,6 +86,8 @@ class MockCaptureListener : public CaptureListener {
   MOCK_METHOD(void, OnUniqueTracepointInfo, (uint64_t /*key*/, TracepointInfo /*tracepoint_info*/),
               (override));
   MOCK_METHOD(void, OnTracepointEvent, (TracepointEventInfo), (override));
+  MOCK_METHOD(void, OnApiStringEvent, (const ApiStringEvent&), (override));
+  MOCK_METHOD(void, OnApiTrackValue, (const ApiTrackValue&), (override));
   MOCK_METHOD(void, OnWarningEvent, (orbit_grpc_protos::WarningEvent /*warning_event*/),
               (override));
   MOCK_METHOD(void, OnClockResolutionEvent,

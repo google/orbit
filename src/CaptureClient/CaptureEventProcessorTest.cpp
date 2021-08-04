@@ -20,6 +20,8 @@
 
 namespace orbit_capture_client {
 
+using orbit_client_protos::ApiStringEvent;
+using orbit_client_protos::ApiTrackValue;
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::LinuxAddressInfo;
@@ -93,6 +95,8 @@ class MockCaptureListener : public CaptureListener {
               (override));
   MOCK_METHOD(void, OnModulesSnapshot,
               (uint64_t /*timestamp_ns*/, std::vector<ModuleInfo> /*module_infos*/), (override));
+  MOCK_METHOD(void, OnApiStringEvent, (const ApiStringEvent&), (override));
+  MOCK_METHOD(void, OnApiTrackValue, (const ApiTrackValue&), (override));
   MOCK_METHOD(void, OnWarningEvent, (orbit_grpc_protos::WarningEvent /*warning_event*/),
               (override));
   MOCK_METHOD(void, OnClockResolutionEvent,

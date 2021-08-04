@@ -41,6 +41,8 @@ class CaptureListener {
                                       orbit_grpc_protos::TracepointInfo tracepoint_info) = 0;
   virtual void OnTracepointEvent(
       orbit_client_protos::TracepointEventInfo tracepoint_event_info) = 0;
+  virtual void OnApiStringEvent(const orbit_client_protos::ApiStringEvent&) = 0;
+  virtual void OnApiTrackValue(const orbit_client_protos::ApiTrackValue&) = 0;
   virtual void OnWarningEvent(orbit_grpc_protos::WarningEvent warning_event) = 0;
   virtual void OnClockResolutionEvent(
       orbit_grpc_protos::ClockResolutionEvent clock_resolution_event) = 0;

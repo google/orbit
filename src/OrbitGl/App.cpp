@@ -2771,3 +2771,11 @@ void OrbitApp::TrySaveUserDefinedCaptureInfo() {
     }
   });
 }
+
+void OrbitApp::OnApiStringEvent(const orbit_client_protos::ApiStringEvent& /*api_string_event*/) {
+  UNREACHABLE();
+}
+
+void OrbitApp::OnApiTrackValue(const orbit_client_protos::ApiTrackValue& /*api_track_value*/) {
+  UNREACHABLE();
+}
