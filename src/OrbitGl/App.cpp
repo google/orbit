@@ -410,6 +410,15 @@ void OrbitApp::OnTimer(const TimerInfo& timer_info) {
   frame_track_online_processor_.ProcessTimer(timer_info, func);
 }
 
+void OrbitApp::OnApiStringEvent(const orbit_client_protos::ApiStringEvent& api_string_event) {
+  GetMutableTimeGraph()->ProcessApiStringEvent(api_string_event);
+}
+
+void OrbitApp::OnApiTrackValue(const orbit_client_protos::ApiTrackValue& api_track_value) {
+  metrics_capture_complete_data_.number_of_manual_tracked_value_timers++;
+  GetMutableTimeGraph()->ProcessApiTrackValueEvent(api_track_value);
+}
+
 void OrbitApp::OnKeyAndString(uint64_t key, std::string str) {
   string_manager_.AddIfNotPresent(key, std::move(str));
 }
@@ -2703,6 +2712,12 @@ void OrbitApp::CaptureMetricProcessTimer(const orbit_client_protos::TimerInfo& t
     case orbit_client_protos::TimerInfo_Type_kApiEvent:
       CaptureMetricProcessApiTimer(timer);
       break;
+    case orbit_client_protos::TimerInfo_Type_kApiScope:
+      metrics_capture_complete_data_.number_of_manual_start_timers++;
+      break;
+    case orbit_client_protos::TimerInfo_Type_kApiScopeAsync:
+      metrics_capture_complete_data_.number_of_manual_start_async_timers++;
+      break;
     default:
       break;
   }
@@ -2770,12 +2785,4 @@ void OrbitApp::TrySaveUserDefinedCaptureInfo() {
                                                    write_result.error().message()));
     }
   });
-}
-
-void OrbitApp::OnApiStringEvent(const orbit_client_protos::ApiStringEvent& /*api_string_event*/) {
-  UNREACHABLE();
-}
-
-void OrbitApp::OnApiTrackValue(const orbit_client_protos::ApiTrackValue& /*api_track_value*/) {
-  UNREACHABLE();
 }

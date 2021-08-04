@@ -107,15 +107,21 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
       capture_data_->GetInstrumentedFunctionById(timer_info->function_id());
 
   std::string function_name;
-  bool is_manual = timer_info->type() == TimerInfo::kApiEvent;
+  bool is_manual =
+      timer_info->type() == TimerInfo::kApiEvent || timer_info->type() == TimerInfo::kApiScope;
 
   if (func == nullptr && !is_manual) {
     return GetTimesliceText(*timer_info);
   }
 
   if (is_manual) {
-    auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(*timer_info);
-    function_name = api_event.name;
+    if (timer_info->type() == TimerInfo::kApiEvent) {
+      auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(*timer_info);
+      function_name = api_event.name;
+    } else {
+      CHECK(timer_info->type() == TimerInfo::kApiScope);
+      function_name = timer_info->api_scope_name();
+    }
   } else {
     function_name = func->function_name();
   }
@@ -139,7 +145,7 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
 bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
   // TODO(b/179225487): Filtering for manually instrumented scopes is not yet supported.
   return timer_info.type() == TimerInfo::kIntrospection ||
-         timer_info.type() == TimerInfo::kApiEvent ||
+         timer_info.type() == TimerInfo::kApiEvent || timer_info.type() == TimerInfo::kApiScope ||
          app_->IsFunctionVisible(timer_info.function_id());
 }
 
@@ -153,6 +159,20 @@ bool ThreadTrack::IsTrackSelected() const {
 }
 
 [[nodiscard]] static std::optional<Color> GetUserColor(const TimerInfo& timer_info) {
+  if (timer_info.type() == TimerInfo::kApiScope) {
+    if (!timer_info.has_color()) {
+      return std::nullopt;
+    }
+    CHECK(timer_info.color().red() < 256);
+    CHECK(timer_info.color().green() < 256);
+    CHECK(timer_info.color().blue() < 256);
+    CHECK(timer_info.color().alpha() < 256);
+    return Color(static_cast<uint8_t>(timer_info.color().red()),
+                 static_cast<uint8_t>(timer_info.color().green()),
+                 static_cast<uint8_t>(timer_info.color().blue()),
+                 static_cast<uint8_t>(timer_info.color().alpha()));
+  }
+
   if (timer_info.type() != TimerInfo::kApiEvent) {
     return std::nullopt;
   }
@@ -316,6 +336,10 @@ std::string ThreadTrack::GetTimesliceText(const TimerInfo& timer_info) const {
     std::string extra_info = GetExtraInfo(timer_info);
     return absl::StrFormat("%s %s %s", api_event.name, extra_info.c_str(), time);
   }
+  if (timer_info.type() == TimerInfo::kApiScope) {
+    std::string extra_info = GetExtraInfo(timer_info);
+    return absl::StrFormat("%s %s %s", timer_info.api_scope_name(), extra_info.c_str(), time);
+  }
 
   ERROR("Unexpected case in ThreadTrack::SetTimesliceText: function=\"%s\", type=%d",
         func->function_name(), static_cast<int>(timer_info.type()));
@@ -326,10 +350,9 @@ std::string ThreadTrack::GetTooltip() const {
   if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
     return "Shows collected samples for all threads of process " + capture_data_->process_name() +
            " " + std::to_string(capture_data_->process_id());
-  } else {
-    return "Shows collected samples and timings from dynamically instrumented "
-           "functions";
   }
+  return "Shows collected samples and timings from dynamically instrumented "
+         "functions";
 }
 
 float ThreadTrack::GetHeight() const {

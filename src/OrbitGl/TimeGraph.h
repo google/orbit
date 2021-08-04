@@ -61,6 +61,8 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
 
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
                     const orbit_grpc_protos::InstrumentedFunction* function);
+  void ProcessApiStringEvent(const orbit_client_protos::ApiStringEvent& string_event);
+  void ProcessApiTrackValueEvent(const orbit_client_protos::ApiTrackValue& track_event);
 
   [[nodiscard]] const orbit_client_data::CaptureData* GetCaptureData() const {
     return capture_data_;
@@ -188,9 +190,12 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleInterface>
   CreateAccessibleInterface() override;
 
-  void ProcessApiEventTimer(const orbit_client_protos::TimerInfo& timer_info);
+  [[deprecated]] void ProcessApiEventTimerLegacy(const orbit_client_protos::TimerInfo& timer_info);
+  void ProcessApiScopeTimer(const orbit_client_protos::TimerInfo& timer_info);
+  void ProcessApiScopeAsyncTimer(const orbit_client_protos::TimerInfo& timer_info);
   void ProcessIntrospectionTimer(const orbit_client_protos::TimerInfo& timer_info);
-  void ProcessValueTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
+  [[deprecated]] void ProcessValueTrackingTimerLegacy(
+      const orbit_client_protos::TimerInfo& timer_info);
   void ProcessAsyncTimer(const std::string& track_name,
                          const orbit_client_protos::TimerInfo& timer_info);
   void ProcessSystemMemoryTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
