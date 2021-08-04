@@ -30,7 +30,6 @@
 #include "OrbitVersion/OrbitVersion.h"
 #include "ProducerEventProcessor.h"
 #include "TracingHandler.h"
-#include "UserSpaceInstrumentation/InstrumentProcess.h"
 #include "capture.pb.h"
 
 namespace orbit_service {
@@ -188,7 +187,7 @@ void FilterOutInstrumentedFunctionsFromCaptureOptions(
     const uint64_t function_id = capture_options.instrumented_functions(i).function_id();
     if (!filter_function_ids.contains(function_id)) {
       first_to_delete++;
-      if (i > first_to_delete - 1) {
+      if (i >= first_to_delete) {
         capture_options.mutable_instrumented_functions()->SwapElements(i, first_to_delete - 1);
       }
     }
@@ -348,20 +347,20 @@ grpc::Status CaptureServiceImpl::Capture(
   }
 
   // We need to filter out the functions instrumented by user space instrumentation.
-  CaptureOptions capture_options_without_already_instrumented_functions;
-  capture_options_without_already_instrumented_functions.CopyFrom(capture_options);
+  CaptureOptions uprobe_tracing_capture_options;
+  uprobe_tracing_capture_options.CopyFrom(capture_options);
 
   // Enable user space instrumentation.
   std::optional<std::string> error_enabling_user_space_instrumentation;
   if (capture_options.enable_user_space_instrumentation()) {
-    auto result = orbit_user_space_instrumentation::InstrumentProcess(capture_options);
+    auto result = user_space_instrumentation_->InstrumentProcess(capture_options);
     if (result.has_error()) {
       error_enabling_user_space_instrumentation = absl::StrFormat(
           "Could not enable user space instrumentation: %s", result.error().message());
-      ERROR("%s",error_enabling_user_space_instrumentation.value());
+      ERROR("%s", error_enabling_user_space_instrumentation.value());
     } else {
-      FilterOutInstrumentedFunctionsFromCaptureOptions(
-          result.value(), capture_options_without_already_instrumented_functions);
+      FilterOutInstrumentedFunctionsFromCaptureOptions(result.value(),
+                                                       uprobe_tracing_capture_options);
       LOG("User space instrumentation enabled for %u out of %u instrumented functions.",
           result.value().size(), capture_options.instrumented_functions_size());
     }
@@ -394,7 +393,7 @@ grpc::Status CaptureServiceImpl::Capture(
             std::move(error_enabling_user_space_instrumentation.value())));
   }
 
-  tracing_handler.Start(capture_options_without_already_instrumented_functions);
+  tracing_handler.Start(uprobe_tracing_capture_options);
 
   memory_info_handler.Start(request.capture_options());
   for (CaptureStartStopListener* listener : capture_start_stop_listeners_) {
@@ -423,7 +422,7 @@ grpc::Status CaptureServiceImpl::Capture(
 
   // Disable user space instrumentation.
   if (capture_options.enable_user_space_instrumentation()) {
-    auto result_tmp = orbit_user_space_instrumentation::UninstrumentProcess(capture_options);
+    auto result_tmp = user_space_instrumentation_->UninstrumentProcess(capture_options.pid());
     if (result_tmp.has_error()) {
       ERROR("Disabling user space instrumentation: %s", result_tmp.error().message());
       producer_event_processor->ProcessEvent(

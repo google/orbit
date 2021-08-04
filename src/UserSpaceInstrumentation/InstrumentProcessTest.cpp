@@ -31,18 +31,25 @@ namespace {
 using orbit_base::HasError;
 using orbit_base::HasNoError;
 
-orbit_grpc_protos::CaptureOptions GetCaptureOptions() {
+constexpr int kFunctionId = 42;
+
+orbit_grpc_protos::CaptureOptions BuildCaptureOptions() {
   orbit_grpc_protos::CaptureOptions capture_options;
   constexpr const char* kFunctionName = "SomethingToInstrument";
   AddressRange range = GetFunctionRelativeAddressRangeOrDie(kFunctionName);
   orbit_grpc_protos::InstrumentedFunction* my_function =
       capture_options.add_instrumented_functions();
-  my_function->set_function_id(42);
+  my_function->set_function_id(kFunctionId);
   my_function->set_file_offset(range.start);
   my_function->set_function_size(range.end - range.start);
   my_function->set_function_name(kFunctionName);
   my_function->set_file_path(orbit_base::GetExecutablePath());
   return capture_options;
+}
+
+[[nodiscard]] UserSpaceInstrumentation* GetUserSpaceInstrumentation() {
+  static std::unique_ptr<UserSpaceInstrumentation> u = UserSpaceInstrumentation::Create();
+  return u.get();
 }
 
 }  // namespace
@@ -55,6 +62,8 @@ extern "C" int SomethingToInstrument() {
 }
 
 TEST(InstrumentProcessTest, FailToInstrumentAlreadyAttached) {
+  UserSpaceInstrumentation* user_space_instrumentation = GetUserSpaceInstrumentation();
+
   // Skip if not running as root. We need to trace a child process.
   if (geteuid() != 0) {
     GTEST_SKIP();
@@ -84,7 +93,7 @@ TEST(InstrumentProcessTest, FailToInstrumentAlreadyAttached) {
 
   orbit_grpc_protos::CaptureOptions capture_options;
   capture_options.set_pid(pid);
-  auto function_ids_or_error = InstrumentProcess(capture_options);
+  auto function_ids_or_error = user_space_instrumentation->InstrumentProcess(capture_options);
   ASSERT_THAT(function_ids_or_error, HasError("is already being traced by"));
 
   // End tracer process, end child process.
@@ -95,22 +104,25 @@ TEST(InstrumentProcessTest, FailToInstrumentAlreadyAttached) {
 }
 
 TEST(InstrumentProcessTest, FailToInstrumentInvalidPid) {
+  UserSpaceInstrumentation* user_space_instrumentation = GetUserSpaceInstrumentation();
   orbit_grpc_protos::CaptureOptions capture_options;
   capture_options.set_pid(-1);
-  auto function_ids_or_error = InstrumentProcess(capture_options);
+  auto function_ids_or_error = user_space_instrumentation->InstrumentProcess(capture_options);
   ASSERT_THAT(function_ids_or_error, HasError("There is no process with pid"));
 }
 
 TEST(InstrumentProcessTest, FailToInstrumentThisProcess) {
+  UserSpaceInstrumentation* user_space_instrumentation = GetUserSpaceInstrumentation();
   orbit_grpc_protos::CaptureOptions capture_options;
   capture_options.set_pid(getpid());
-  auto function_ids_or_error = InstrumentProcess(capture_options);
+  auto function_ids_or_error = user_space_instrumentation->InstrumentProcess(capture_options);
   // We do not fail but just instrument nothing.
   ASSERT_THAT(function_ids_or_error, HasNoError());
   EXPECT_TRUE(function_ids_or_error.value().empty());
 }
 
 TEST(InstrumentProcessTest, Instrument) {
+  UserSpaceInstrumentation* user_space_instrumentation = GetUserSpaceInstrumentation();
   const pid_t pid_process_1 = fork();
   CHECK(pid_process_1 != -1);
   if (pid_process_1 == 0) {
@@ -120,12 +132,12 @@ TEST(InstrumentProcessTest, Instrument) {
     }
   }
 
-  orbit_grpc_protos::CaptureOptions capture_options = GetCaptureOptions();
+  orbit_grpc_protos::CaptureOptions capture_options = BuildCaptureOptions();
   capture_options.set_pid(pid_process_1);
-  auto function_ids_or_error = InstrumentProcess(capture_options);
+  auto function_ids_or_error = user_space_instrumentation->InstrumentProcess(capture_options);
   ASSERT_THAT(function_ids_or_error, HasNoError());
-  EXPECT_TRUE(function_ids_or_error.value().contains(42));
-  auto result = UninstrumentProcess(capture_options);
+  EXPECT_TRUE(function_ids_or_error.value().contains(kFunctionId));
+  auto result = user_space_instrumentation->UninstrumentProcess(pid_process_1);
   ASSERT_THAT(result, HasNoError());
 
   // End child pid_process_1.
@@ -145,10 +157,10 @@ TEST(InstrumentProcessTest, Instrument) {
 
   capture_options.set_pid(pid_process_2);
   for (int i = 0; i < 5; i++) {
-    function_ids_or_error = InstrumentProcess(capture_options);
+    function_ids_or_error = user_space_instrumentation->InstrumentProcess(capture_options);
     ASSERT_THAT(function_ids_or_error, HasNoError());
-    EXPECT_TRUE(function_ids_or_error.value().contains(42));
-    result = UninstrumentProcess(capture_options);
+    EXPECT_TRUE(function_ids_or_error.value().contains(kFunctionId));
+    result = user_space_instrumentation->UninstrumentProcess(pid_process_2);
     ASSERT_THAT(result, HasNoError());
   }
 

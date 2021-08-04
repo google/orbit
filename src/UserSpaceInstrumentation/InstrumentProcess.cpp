@@ -5,12 +5,10 @@
 #include "UserSpaceInstrumentation/InstrumentProcess.h"
 
 #include <absl/base/casts.h>
-#include <absl/container/flat_hash_map.h>
 #include <dlfcn.h>
 #include <unistd.h>
 
 #include <filesystem>
-#include <memory>
 #include <vector>
 
 #include "AccessTraceesMemory.h"
@@ -32,10 +30,34 @@ namespace {
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::ModuleInfo;
 
+ErrorMessageOr<std::filesystem::path> GetLibraryPath() {
+  // When packaged, libOrbitUserSpaceInstrumentation.so is found alongside OrbitService. In
+  // development, it is found in "../lib", relative to OrbitService.
+  constexpr const char* kLibName = "libOrbitUserSpaceInstrumentation.so";
+  const std::filesystem::path exe_dir = orbit_base::GetExecutableDir();
+  std::vector<std::filesystem::path> potential_paths = {exe_dir / kLibName,
+                                                        exe_dir / ".." / "lib" / kLibName};
+  for (const auto& path : potential_paths) {
+    if (std::filesystem::exists(path)) {
+      return path;
+    }
+  }
+  return ErrorMessage(absl::StrFormat("%s not found on system.", kLibName));
+}
+
+bool ProcessWithPidExists(pid_t pid) {
+  const std::string pid_dirname = absl::StrFormat("/proc/%d", pid);
+  auto result = orbit_base::FileExists(pid_dirname);
+  FAIL_IF(result.has_error(), "Accessing \"%s\" failed: %s", pid_dirname, result.error().message());
+  return result.value();
+}
+
+}  // namespace
+
 // Holds all the data necessary to keep track of a process we instrument.
 // Needs to be created via the static factory function `Create`. This will inject the shared library
-// with out instrumentaion code into the target process and create the return trampoline. Once
-// created we can instrument functions in the target process and deactiveate the instrumentation
+// with our instrumentaion code into the target process and create the return trampoline. Once
+// created we can instrument functions in the target process and deactivate the instrumentation
 // again (see `InstrumentFunctions`, `UninstrumentFunctions` below).
 class InstrumentedProcess {
  public:
@@ -55,7 +77,7 @@ class InstrumentedProcess {
 
   // Removes the instrumentation for all functions in capture_options.instrumented_functions that
   // have been instrumented previously.
-  [[nodiscard]] ErrorMessageOr<void> UninstrumentFunctions(const CaptureOptions& capture_options);
+  [[nodiscard]] ErrorMessageOr<void> UninstrumentFunctions();
 
   // Returns the pid of the process.
   [[nodiscard]] pid_t GetPid() const { return pid_; }
@@ -66,15 +88,16 @@ class InstrumentedProcess {
   // Returns an address where we can construct a new trampoline for some function in the module
   // identified by `address_range`. Handles the allocation in the tracee and the tracks the
   // allocated memory in `trampolines_for_modules_` below.
-  ErrorMessageOr<uint64_t> GetTrampolineMemory(AddressRange address_range);
-  // Releases the address priviously obtained by `GetTrampolineMemory` such that it can be reused.
+  [[nodiscard]] ErrorMessageOr<uint64_t> GetTrampolineMemory(AddressRange address_range);
+  // Releases the address previously obtained by `GetTrampolineMemory` such that it can be reused.
   // Note that this must only be called once for each call to `GetTrampolineMemory`.
-  ErrorMessageOr<void> ReleaseMostRecentlyAllocatedTrampolineMemory(AddressRange address_range);
+  [[nodiscard]] ErrorMessageOr<void> ReleaseMostRecentlyAllocatedTrampolineMemory(
+      AddressRange address_range);
 
   [[nodiscard]] ErrorMessageOr<void> EnsureTrampolinesWritable();
   [[nodiscard]] ErrorMessageOr<void> EnsureTrampolinesExecutable();
 
-  ErrorMessageOr<std::vector<ModuleInfo>> ModulesFromModulePath(std::string path);
+  [[nodiscard]] ErrorMessageOr<std::vector<ModuleInfo>> ModulesFromModulePath(std::string path);
 
   pid_t pid_ = -1;
 
@@ -84,14 +107,16 @@ class InstrumentedProcess {
 
   uint64_t return_trampoline_address_ = 0;
 
-  // Keep track of each relocted instruction that has been moved into a trampoline. Used to move the
-  // instruction pointers out of overwritten memory areas after the instrumentaion has been done.
+  // Keep track of each relocated instruction that has been moved into a trampoline. Used to move
+  // the instruction pointers out of overwritten memory areas after the instrumentation has been
+  // done.
   absl::flat_hash_map<uint64_t, uint64_t> relocation_map_;
 
   // Keep track of all trampolines we created for this process.
   struct TrampolineData {
     uint64_t trampoline_address;
     uint64_t address_after_prologue;
+    // The first few bytes of the function. Guaranteed to contain everything that was overwritten.
     std::vector<uint8_t> function_data;
   };
   // Maps function addresses to TrampolineData.
@@ -111,30 +136,17 @@ class InstrumentedProcess {
     std::unique_ptr<MemoryInTracee> memory;
     int first_available = 0;
   };
-  typedef std::vector<TrampolineMemoryChunk> TrampolineMemoryChunks;
+  using TrampolineMemoryChunks = std::vector<TrampolineMemoryChunk>;
   absl::flat_hash_map<AddressRange, TrampolineMemoryChunks> trampolines_for_modules_;
 
   // Map path of a module in the process to all loaded instances of that module (usually there will
   // only be one, but a module can be loaded more than once).
   absl::flat_hash_map<std::string, std::vector<ModuleInfo>> modules_from_path_;
+
+  // When instrumenting a function we record the address here. This is used when we uninstrument: we
+  // look up the original bytes in `trampoline_map_` above.
+  absl::flat_hash_set<uint64_t> addresses_of_instrumented_functions_;
 };
-
-typedef absl::flat_hash_map<pid_t, std::unique_ptr<InstrumentedProcess>> ProcessMap;
-
-ErrorMessageOr<std::filesystem::path> GetLibraryPath() {
-  // When packaged, libOrbitUserSpaceInstrumentation.so is found alongside OrbitService. In
-  // development, it is found in "../lib", relative to OrbitService.
-  constexpr const char* kLibName = "libOrbitUserSpaceInstrumentation.so";
-  const std::filesystem::path exe_dir = orbit_base::GetExecutableDir();
-  std::vector<std::filesystem::path> potential_paths = {exe_dir / kLibName,
-                                                        exe_dir / ".." / "lib" / kLibName};
-  for (const auto& path : potential_paths) {
-    if (std::filesystem::exists(path)) {
-      return path;
-    }
-  }
-  return ErrorMessage(absl::StrFormat("%s not found on system.", kLibName));
-}
 
 ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create(
     const CaptureOptions& capture_options) {
@@ -228,10 +240,10 @@ ErrorMessageOr<absl::flat_hash_set<uint64_t>> InstrumentedProcess::InstrumentFun
     // address to instrument for each of them.
     OUTCOME_TRY(auto&& modules, ModulesFromModulePath(function.file_path()));
     for (const auto& module : modules) {
-      // TODO: there is a function for that now, right? The page alignment is not handled here...
       const uint64_t function_address =
           module.address_start() + function.file_offset() - module.executable_segment_offset();
-
+      // const uint64_t function_address = SymbolOffsetToAbsoluteAddress(
+      //     function.file_offset(), module.address_start(), module.executable_segment_offset());
       if (!trampoline_map_.contains(function_address)) {
         const AddressRange module_address_range(module.address_start(), module.address_end());
         auto trampoline_address_or_error = GetTrampolineMemory(module_address_range);
@@ -267,8 +279,9 @@ ErrorMessageOr<absl::flat_hash_set<uint64_t>> InstrumentedProcess::InstrumentFun
                                        trampoline_data.address_after_prologue,
                                        trampoline_data.trampoline_address);
       if (result.has_error()) {
-        LOG("Unable to instrument %s: %s", function.function_name(), result.error().message());
+        ERROR("Unable to instrument %s: %s", function.function_name(), result.error().message());
       } else {
+        addresses_of_instrumented_functions_.insert(function_address);
         instrumented_function_ids.insert(function_id);
       }
     }
@@ -281,32 +294,24 @@ ErrorMessageOr<absl::flat_hash_set<uint64_t>> InstrumentedProcess::InstrumentFun
   return instrumented_function_ids;
 }
 
-ErrorMessageOr<void> InstrumentedProcess::UninstrumentFunctions(
-    const CaptureOptions& capture_options) {
+ErrorMessageOr<void> InstrumentedProcess::UninstrumentFunctions() {
   OUTCOME_TRY(AttachAndStopProcess(pid_));
   orbit_base::unique_resource detach_on_exit{pid_, [](int32_t pid) {
                                                if (DetachAndContinueProcess(pid).has_error()) {
                                                  ERROR("Detaching from %i", pid);
                                                }
                                              }};
-
-  for (const auto& function : capture_options.instrumented_functions()) {
-    OUTCOME_TRY(auto&& modules, ModulesFromModulePath(function.file_path()));
-    for (const auto& module : modules) {
-      const uint64_t function_address =
-          module.address_start() + function.file_offset() - module.executable_segment_offset();
-      auto it = trampoline_map_.find(function_address);
-      // Skip if this function was not instrumented.
-      if (it == trampoline_map_.end()) continue;
-      const TrampolineData& trampoline_data = it->second;
-      std::vector<uint8_t> code(trampoline_data.function_data.begin(),
-                                trampoline_data.function_data.begin() +
-                                    (trampoline_data.address_after_prologue - function_address));
-      auto write_result_or_error = WriteTraceesMemory(pid_, function_address, code);
-      CHECK(!write_result_or_error.has_error());
-    }
+  for (uint64_t function_address : addresses_of_instrumented_functions_) {
+    auto it = trampoline_map_.find(function_address);
+    // Skip if this function was not instrumented.
+    if (it == trampoline_map_.end()) continue;
+    const TrampolineData& trampoline_data = it->second;
+    std::vector<uint8_t> code(trampoline_data.function_data.begin(),
+                              trampoline_data.function_data.begin() +
+                                  (trampoline_data.address_after_prologue - function_address));
+    auto write_result_or_error = WriteTraceesMemory(pid_, function_address, code);
+    FAIL_IF(write_result_or_error.has_error(), "%s", write_result_or_error.error().message());
   }
-
   return outcome::success();
 }
 
@@ -333,7 +338,7 @@ ErrorMessageOr<uint64_t> InstrumentedProcess::GetTrampolineMemory(AddressRange a
 ErrorMessageOr<void> InstrumentedProcess::ReleaseMostRecentlyAllocatedTrampolineMemory(
     AddressRange address_range) {
   if (!trampolines_for_modules_.contains(address_range)) {
-    return ErrorMessage("Tried to release trampoline memory for an non existent address range");
+    return ErrorMessage("Tried to release trampoline memory for a non existent address range");
   }
   trampolines_for_modules_.find(address_range)->second.back().first_available--;
   return outcome::success();
@@ -375,22 +380,16 @@ ErrorMessageOr<void> InstrumentedProcess::EnsureTrampolinesExecutable() {
   return outcome::success();
 }
 
-// Return the singleton map containing the instrumented processes.
-ProcessMap& GetInstrumentedProcesses() {
-  static ProcessMap instrumented_processes;
-  return instrumented_processes;
+std::unique_ptr<UserSpaceInstrumentation> UserSpaceInstrumentation::Create() {
+  static bool first_call = true;
+  FAIL_IF(!first_call, "UserSpaceInstrumentation should be globally unique.");
+  first_call = false;
+  return std::unique_ptr<UserSpaceInstrumentation>(new UserSpaceInstrumentation());
 }
 
-bool ProcessWithPidExists(pid_t pid) {
-  const std::string pid_dirname = absl::StrFormat("/proc/%d", pid);
-  auto result = orbit_base::FileExists(pid_dirname);
-  FAIL_IF(result.has_error(), "Accessing \"%s\" failed: %s", pid_dirname, result.error().message());
-  return result.value();
-}
+UserSpaceInstrumentation::~UserSpaceInstrumentation() {}
 
-}  // namespace
-
-ErrorMessageOr<absl::flat_hash_set<uint64_t>> InstrumentProcess(
+ErrorMessageOr<absl::flat_hash_set<uint64_t>> UserSpaceInstrumentation::InstrumentProcess(
     const CaptureOptions& capture_options) {
   const pid_t pid = capture_options.pid();
 
@@ -400,36 +399,31 @@ ErrorMessageOr<absl::flat_hash_set<uint64_t>> InstrumentProcess(
     return absl::flat_hash_set<uint64_t>();
   }
 
-  ProcessMap& instrumented_processes = GetInstrumentedProcesses();
-  if (!instrumented_processes.contains(pid)) {
+  if (!process_map_.contains(pid)) {
     // Delete entries belonging to processes that are not running anymore.
-    auto it = instrumented_processes.begin();
-    while (it != instrumented_processes.end()) {
+    auto it = process_map_.begin();
+    while (it != process_map_.end()) {
       if (!ProcessWithPidExists(it->second->GetPid())) {
-        instrumented_processes.erase(it++);
+        process_map_.erase(it++);
       } else {
         it++;
       }
     }
 
-    // InstrumentedProcess process;
-    // auto init_result = process.Init(capture_options);
     auto process_or_error = InstrumentedProcess::Create(capture_options);
     if (process_or_error.has_error()) {
       return ErrorMessage(absl::StrFormat("Unable to initialize process %d: %s", pid,
                                           process_or_error.error().message()));
     }
-    instrumented_processes.emplace(pid, std::move(process_or_error.value()));
+    process_map_.emplace(pid, std::move(process_or_error.value()));
   }
   OUTCOME_TRY(auto&& instrumented_function_ids,
-              instrumented_processes[pid]->InstrumentFunctions(capture_options));
+              process_map_[pid]->InstrumentFunctions(capture_options));
 
   return std::move(instrumented_function_ids);
 }
 
-ErrorMessageOr<void> UninstrumentProcess(const CaptureOptions& capture_options) {
-  const pid_t pid = capture_options.pid();
-
+ErrorMessageOr<void> UserSpaceInstrumentation::UninstrumentProcess(pid_t pid) {
   // If the user tries to instrument this instance of OrbitService we can't use user space
   // instrumentation: We would need to attach to / stop our own process. Therefore nothing was
   // instrumented in the first place and we can just return here.
@@ -437,9 +431,8 @@ ErrorMessageOr<void> UninstrumentProcess(const CaptureOptions& capture_options) 
     return outcome::success();
   }
 
-  ProcessMap& instrumented_processes = GetInstrumentedProcesses();
-  if (instrumented_processes.contains(pid)) {
-    OUTCOME_TRY(instrumented_processes[pid]->UninstrumentFunctions(capture_options));
+  if (process_map_.contains(pid)) {
+    OUTCOME_TRY(process_map_[pid]->UninstrumentFunctions());
   }
 
   return outcome::success();

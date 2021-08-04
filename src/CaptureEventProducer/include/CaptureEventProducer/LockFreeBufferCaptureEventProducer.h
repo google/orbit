@@ -34,13 +34,13 @@ namespace orbit_capture_event_producer {
 template <typename IntermediateEventT>
 class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
  public:
-  void BuildAndStart(const std::shared_ptr<grpc::Channel>& channel) override {
+  void BuildAndStart(const std::shared_ptr<grpc::Channel>& channel) override final {
     CaptureEventProducer::BuildAndStart(channel);
 
     forwarder_thread_ = std::thread{&LockFreeBufferCaptureEventProducer::ForwarderThread, this};
   }
 
-  void ShutdownAndWait() override {
+  void ShutdownAndWait() override final {
     shutdown_requested_ = true;
 
     CHECK(forwarder_thread_.joinable());

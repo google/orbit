@@ -8,10 +8,12 @@
 #include <grpcpp/grpcpp.h>
 
 #include <atomic>
+#include <memory>
 
 #include "CaptureStartStopListener.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
+#include "UserSpaceInstrumentation/InstrumentProcess.h"
 #include "absl/container/flat_hash_set.h"
 #include "services.grpc.pb.h"
 #include "services.pb.h"
@@ -23,6 +25,8 @@ class CaptureServiceImpl final : public orbit_grpc_protos::CaptureService::Servi
   CaptureServiceImpl() {
     // We want to estimate clock resolution once, not at the beginning of every capture.
     EstimateAndLogClockResolution();
+    user_space_instrumentation_ =
+        orbit_user_space_instrumentation::UserSpaceInstrumentation::Create();
   }
 
   grpc::Status Capture(
@@ -36,6 +40,9 @@ class CaptureServiceImpl final : public orbit_grpc_protos::CaptureService::Servi
  private:
   std::atomic<bool> is_capturing = false;
   absl::flat_hash_set<CaptureStartStopListener*> capture_start_stop_listeners_;
+
+  std::unique_ptr<orbit_user_space_instrumentation::UserSpaceInstrumentation>
+      user_space_instrumentation_;
 
   uint64_t clock_resolution_ns_ = 0;
   void EstimateAndLogClockResolution();
