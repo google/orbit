@@ -17,24 +17,39 @@ namespace orbit_capture_client {
 // transforming them into TimerInfo objects that are relayed to a CaptureListener. Internal state
 // is maintained to cache "start" events until a corresponding "stop" event is received. The pair
 // is then used to create a single TimerInfo object. "Tracking" events don't need to be cached
-// however, they are translated to TImerInfo objects that are directly passed to the listener.
+// however, they are translated to TimerInfo objects that are directly passed to the listener.
 class ApiEventProcessor {
  public:
   explicit ApiEventProcessor(CaptureListener* listener);
-  void ProcessApiEvent(const orbit_grpc_protos::ApiEvent& event_buffer);
+  // The new manual instrumentation events (see below) could not use `ApiEvent`, so this is
+  // deprecated. The methods for the concrete (new) events should be used instead.
+  [[deprecated]] void ProcessApiEvent(const orbit_grpc_protos::ApiEvent& event_buffer);
+  void ProcessApiScopeStart(const orbit_grpc_protos::ApiScopeStart& event_buffer);
+  void ProcessApiScopeStartAsync(const orbit_grpc_protos::ApiScopeStartAsync& event_buffer);
+  void ProcessApiScopeStop(const orbit_grpc_protos::ApiScopeStop& event_buffer);
+  void ProcessApiScopeStopAsync(const orbit_grpc_protos::ApiScopeStopAsync& event_buffer);
+  void ProcessApiStringEvent(const orbit_grpc_protos::ApiStringEvent& event_buffer);
+  void ProcessApiTrackDouble(const orbit_grpc_protos::ApiTrackDouble& event_buffer);
+  void ProcessApiTrackFloat(const orbit_grpc_protos::ApiTrackFloat& event_buffer);
+  void ProcessApiTrackInt(const orbit_grpc_protos::ApiTrackInt& event_buffer);
+  void ProcessApiTrackInt64(const orbit_grpc_protos::ApiTrackInt64& event_buffer);
+  void ProcessApiTrackUint(const orbit_grpc_protos::ApiTrackUint& event_buffer);
+  void ProcessApiTrackUint64(const orbit_grpc_protos::ApiTrackUint64& event_buffer);
 
  private:
-  void ProcessApiEvent(const orbit_api::ApiEvent& api_event);
-  void ProcessStartEvent(const orbit_api::ApiEvent& api_event);
-  void ProcessStopEvent(const orbit_api::ApiEvent& api_event);
-  void ProcessAsyncStartEvent(const orbit_api::ApiEvent& api_event);
-  void ProcessAsyncStopEvent(const orbit_api::ApiEvent& api_event);
-  void ProcessTrackingEvent(const orbit_api::ApiEvent& api_event);
+  [[deprecated]] void ProcessApiEvent(const orbit_api::ApiEvent& api_event);
+  [[deprecated]] void ProcessStartEvent(const orbit_api::ApiEvent& api_event);
+  [[deprecated]] void ProcessStopEvent(const orbit_api::ApiEvent& api_event);
+  [[deprecated]] void ProcessAsyncStartEvent(const orbit_api::ApiEvent& api_event);
+  [[deprecated]] void ProcessAsyncStopEvent(const orbit_api::ApiEvent& api_event);
+  [[deprecated]] void ProcessTrackingEvent(const orbit_api::ApiEvent& api_event);
 
- private:
   CaptureListener* capture_listener_ = nullptr;
   absl::flat_hash_map<int32_t, std::vector<orbit_api::ApiEvent>> synchronous_event_stack_by_tid_;
+  absl::flat_hash_map<int32_t, std::vector<orbit_grpc_protos::ApiScopeStart>>
+      synchronous_scopes_stack_by_tid_;
   absl::flat_hash_map<int32_t, orbit_api::ApiEvent> asynchronous_events_by_id_;
+  absl::flat_hash_map<int32_t, orbit_grpc_protos::ApiScopeStartAsync> asynchronous_scopes_by_id_;
 };
 
 }  // namespace orbit_capture_client

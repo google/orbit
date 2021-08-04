@@ -178,27 +178,38 @@ void CaptureEventProcessorForListener::ProcessEvent(const ClientCaptureEvent& ev
       api_event_processor_.ProcessApiEvent(event.api_event());
       break;
     case ClientCaptureEvent::kApiScopeStart:
-      UNREACHABLE();
+      api_event_processor_.ProcessApiScopeStart(event.api_scope_start());
+      break;
     case ClientCaptureEvent::kApiScopeStartAsync:
-      UNREACHABLE();
+      api_event_processor_.ProcessApiScopeStartAsync(event.api_scope_start_async());
+      break;
     case ClientCaptureEvent::kApiScopeStop:
-      UNREACHABLE();
+      api_event_processor_.ProcessApiScopeStop(event.api_scope_stop());
+      break;
     case ClientCaptureEvent::kApiScopeStopAsync:
-      UNREACHABLE();
+      api_event_processor_.ProcessApiScopeStopAsync(event.api_scope_stop_async());
+      break;
     case ClientCaptureEvent::kApiStringEvent:
-      UNREACHABLE();
+      api_event_processor_.ProcessApiStringEvent(event.api_string_event());
+      break;
     case ClientCaptureEvent::kApiTrackDouble:
-      UNREACHABLE();
+      api_event_processor_.ProcessApiTrackDouble(event.api_track_double());
+      break;
     case ClientCaptureEvent::kApiTrackFloat:
-      UNREACHABLE();
+      api_event_processor_.ProcessApiTrackFloat(event.api_track_float());
+      break;
     case ClientCaptureEvent::kApiTrackInt:
-      UNREACHABLE();
+      api_event_processor_.ProcessApiTrackInt(event.api_track_int());
+      break;
     case ClientCaptureEvent::kApiTrackInt64:
-      UNREACHABLE();
+      api_event_processor_.ProcessApiTrackInt64(event.api_track_int64());
+      break;
     case ClientCaptureEvent::kApiTrackUint:
-      UNREACHABLE();
+      api_event_processor_.ProcessApiTrackUint(event.api_track_uint());
+      break;
     case ClientCaptureEvent::kApiTrackUint64:
-      UNREACHABLE();
+      api_event_processor_.ProcessApiTrackUint64(event.api_track_uint64());
+      break;
     case ClientCaptureEvent::kWarningEvent:
       ProcessWarningEvent(event.warning_event());
       break;
