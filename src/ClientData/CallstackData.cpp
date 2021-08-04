@@ -10,7 +10,6 @@
 #include <cstdint>
 #include <utility>
 
-#include "ClientData/CallstackTypes.h"
 #include "OrbitBase/Logging.h"
 #include "capture_data.pb.h"
 
@@ -64,15 +63,6 @@ std::vector<orbit_client_protos::CallstackEvent> CallstackData::GetCallstackEven
     }
   }
   return callstack_events;
-}
-
-absl::flat_hash_map<int32_t, uint32_t> CallstackData::GetCallstackEventsCountsPerTid() const {
-  std::lock_guard lock(mutex_);
-  absl::flat_hash_map<int32_t, uint32_t> counts;
-  for (const auto& tid_and_events : callstack_events_by_tid_) {
-    counts.emplace(tid_and_events.first, tid_and_events.second.size());
-  }
-  return counts;
 }
 
 uint32_t CallstackData::GetCallstackEventsOfTidCount(int32_t thread_id) const {
@@ -180,14 +170,6 @@ void CallstackData::ForEachUniqueCallstack(
   std::lock_guard lock(mutex_);
   for (const auto& [callstack_id, callstack_ptr] : unique_callstacks_) {
     action(callstack_id, *callstack_ptr);
-  }
-}
-
-void CallstackData::ForEachFrameInCallstack(uint64_t callstack_id,
-                                            const std::function<void(uint64_t)>& action) const {
-  std::lock_guard lock(mutex_);
-  for (uint64_t frame : unique_callstacks_.at(callstack_id)->frames()) {
-    action(frame);
   }
 }
 

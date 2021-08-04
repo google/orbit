@@ -38,18 +38,10 @@ class CallstackData {
   void AddCallstackFromKnownCallstackData(const orbit_client_protos::CallstackEvent& event,
                                           const CallstackData& known_callstack_data);
 
-  [[nodiscard]] const absl::flat_hash_map<int32_t,
-                                          std::map<uint64_t, orbit_client_protos::CallstackEvent>>&
-  callstack_events_by_tid() const {
-    return callstack_events_by_tid_;
-  }
-
   [[nodiscard]] uint32_t GetCallstackEventsCount() const;
 
   [[nodiscard]] std::vector<orbit_client_protos::CallstackEvent> GetCallstackEventsInTimeRange(
       uint64_t time_begin, uint64_t time_end) const;
-
-  [[nodiscard]] absl::flat_hash_map<int32_t, uint32_t> GetCallstackEventsCountsPerTid() const;
 
   [[nodiscard]] uint32_t GetCallstackEventsOfTidCount(int32_t thread_id) const;
 
@@ -85,9 +77,6 @@ class CallstackData {
       const std::function<void(uint64_t callstack_id,
                                const orbit_client_protos::CallstackInfo& callstack)>& action) const;
 
-  void ForEachFrameInCallstack(uint64_t callstack_id,
-                               const std::function<void(uint64_t)>& action) const;
-
   [[nodiscard]] absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
   GetUniqueCallstacksCopy() const;
 
@@ -107,12 +96,12 @@ class CallstackData {
   // E.g., one might want to nest ForEachCallstackEvent and ForEachFrameInCallstack.
   mutable std::recursive_mutex mutex_;
   absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
-      unique_callstacks_;
+      unique_callstacks_ GUARDED_BY(mutex_);
   absl::flat_hash_map<int32_t, std::map<uint64_t, orbit_client_protos::CallstackEvent>>
-      callstack_events_by_tid_;
+      callstack_events_by_tid_ GUARDED_BY(mutex_);
 
-  uint64_t max_time_ = 0;
-  uint64_t min_time_ = std::numeric_limits<uint64_t>::max();
+  uint64_t max_time_ GUARDED_BY(mutex_) = 0;
+  uint64_t min_time_ GUARDED_BY(mutex_) = std::numeric_limits<uint64_t>::max();
 };
 
 }  // namespace orbit_client_data
