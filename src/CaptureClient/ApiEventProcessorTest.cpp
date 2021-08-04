@@ -81,7 +81,7 @@ class ApiEventCaptureListenerLegacy : public EmptyCaptureListener {
   std::vector<TimerInfo> timers_;
 };
 
-// ApiTesterLegacy exposes methods that mocks the Orbit API and internally creates grpc events that
+// ApiTesterLegacy exposes methods that mock the Orbit API and internally creates grpc events that
 // it forwards to both a CaptureEventProcessor and an ApiEventProcessor. The test makes sure that
 // both processors forward the same information to their listener. Note that a CaptureEventProcessor
 // owns an ApiEventProcessor to which it forwards ApiEvent events. To help readability of test code,
@@ -405,7 +405,7 @@ class ApiEventProcessorTest : public ::testing::Test {
     result.set_timestamp_ns(timestamp_ns);
     result.set_process_id(process_id);
     result.set_thread_id(thread_id);
-    result.set_id(id);
+    result.set_async_scope_id(id);
     result.set_name(name);
 
     return result;
@@ -425,7 +425,7 @@ class ApiEventProcessorTest : public ::testing::Test {
     return result;
   }
   template <typename DataType>
-  static orbit_client_protos::ApiTrackValue CreateUserTrackValue(
+  static orbit_client_protos::ApiTrackValue CreateClientTrackValue(
       uint64_t timestamp_ns, int32_t process_id, int32_t thread_id, const char* name,
       void (orbit_client_protos::ApiTrackValue::*set_data)(DataType), DataType data) {
     orbit_client_protos::ApiTrackValue result;
@@ -442,7 +442,7 @@ class ApiEventProcessorTest : public ::testing::Test {
   static orbit_client_protos::TimerInfo CreateTimerInfo(uint64_t start, uint64_t end,
                                                         int32_t process_id, int32_t thread_id,
                                                         const char* name, uint32_t depth,
-                                                        uint64_t group_id, uint64_t id,
+                                                        uint64_t group_id, uint64_t async_scope_id,
                                                         uint64_t address_in_function,
                                                         TimerInfo::Type type) {
     orbit_client_protos::TimerInfo timer;
@@ -450,10 +450,10 @@ class ApiEventProcessorTest : public ::testing::Test {
     timer.set_end(end);
     timer.set_process_id(process_id);
     timer.set_thread_id(thread_id);
-    timer.set_name(name);
+    timer.set_api_scope_name(name);
     timer.set_type(type);
     timer.set_group_id(group_id);
-    timer.set_id(id);
+    timer.set_api_async_scope_id(async_scope_id);
     timer.set_address_in_function(address_in_function);
     timer.set_depth(depth);
 
@@ -617,8 +617,8 @@ TEST_F(ApiEventProcessorTest, TrackDouble) {
       1, kProcessId, kThreadId1, "Some name", 3.14);
 
   auto expected_track_value =
-      CreateUserTrackValue<double>(1, kProcessId, kThreadId1, "Some name",
-                                   &orbit_client_protos::ApiTrackValue::set_data_double, 3.14);
+      CreateClientTrackValue<double>(1, kProcessId, kThreadId1, "Some name",
+                                     &orbit_client_protos::ApiTrackValue::set_data_double, 3.14);
 
   orbit_client_protos::ApiTrackValue actual_track_value;
   EXPECT_CALL(capture_listener_, OnApiTrackValue)
@@ -635,8 +635,8 @@ TEST_F(ApiEventProcessorTest, TrackFloat) {
       1, kProcessId, kThreadId1, "Some name", 3.14f);
 
   auto expected_track_value =
-      CreateUserTrackValue<float>(1, kProcessId, kThreadId1, "Some name",
-                                  &orbit_client_protos::ApiTrackValue::set_data_float, 3.14f);
+      CreateClientTrackValue<float>(1, kProcessId, kThreadId1, "Some name",
+                                    &orbit_client_protos::ApiTrackValue::set_data_float, 3.14f);
 
   orbit_client_protos::ApiTrackValue actual_track_value;
   EXPECT_CALL(capture_listener_, OnApiTrackValue)
@@ -652,7 +652,7 @@ TEST_F(ApiEventProcessorTest, TrackInt) {
   auto track_int = CreateTrackValue<int32_t, orbit_grpc_protos::ApiTrackInt>(
       1, kProcessId, kThreadId1, "Some name", 3);
 
-  auto expected_track_value = CreateUserTrackValue<int32_t>(
+  auto expected_track_value = CreateClientTrackValue<int32_t>(
       1, kProcessId, kThreadId1, "Some name", &orbit_client_protos::ApiTrackValue::set_data_int, 3);
 
   orbit_client_protos::ApiTrackValue actual_track_value;
@@ -670,8 +670,8 @@ TEST_F(ApiEventProcessorTest, TrackInt64) {
       1, kProcessId, kThreadId1, "Some name", 3);
 
   auto expected_track_value =
-      CreateUserTrackValue<int64_t>(1, kProcessId, kThreadId1, "Some name",
-                                    &orbit_client_protos::ApiTrackValue::set_data_int64, 3);
+      CreateClientTrackValue<int64_t>(1, kProcessId, kThreadId1, "Some name",
+                                      &orbit_client_protos::ApiTrackValue::set_data_int64, 3);
 
   orbit_client_protos::ApiTrackValue actual_track_value;
   EXPECT_CALL(capture_listener_, OnApiTrackValue)
@@ -688,8 +688,8 @@ TEST_F(ApiEventProcessorTest, TrackUint) {
       1, kProcessId, kThreadId1, "Some name", 3);
 
   auto expected_track_value =
-      CreateUserTrackValue<uint32_t>(1, kProcessId, kThreadId1, "Some name",
-                                     &orbit_client_protos::ApiTrackValue::set_data_uint, 3);
+      CreateClientTrackValue<uint32_t>(1, kProcessId, kThreadId1, "Some name",
+                                       &orbit_client_protos::ApiTrackValue::set_data_uint, 3);
 
   orbit_client_protos::ApiTrackValue actual_track_value;
   EXPECT_CALL(capture_listener_, OnApiTrackValue)
@@ -706,8 +706,8 @@ TEST_F(ApiEventProcessorTest, TrackUint64) {
       1, kProcessId, kThreadId1, "Some name", 3);
 
   auto expected_track_value =
-      CreateUserTrackValue<uint64_t>(1, kProcessId, kThreadId1, "Some name",
-                                     &orbit_client_protos::ApiTrackValue::set_data_uint64, 3);
+      CreateClientTrackValue<uint64_t>(1, kProcessId, kThreadId1, "Some name",
+                                       &orbit_client_protos::ApiTrackValue::set_data_uint64, 3);
 
   orbit_client_protos::ApiTrackValue actual_track_value;
   EXPECT_CALL(capture_listener_, OnApiTrackValue)

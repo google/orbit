@@ -17,10 +17,12 @@ namespace orbit_capture_client {
 // transforming them into TimerInfo objects that are relayed to a CaptureListener. Internal state
 // is maintained to cache "start" events until a corresponding "stop" event is received. The pair
 // is then used to create a single TimerInfo object. "Tracking" events don't need to be cached
-// however, they are translated to TImerInfo objects that are directly passed to the listener.
+// however, they are translated to TimerInfo objects that are directly passed to the listener.
 class ApiEventProcessor {
  public:
   explicit ApiEventProcessor(CaptureListener* listener);
+  // The new manual instrumentation events (see below) could not use `ApiEvent`, so this is
+  // deprecated. The methods for the concrete (new) events should be used instead.
   [[deprecated]] void ProcessApiEvent(const orbit_grpc_protos::ApiEvent& event_buffer);
   void ProcessApiScopeStart(const orbit_grpc_protos::ApiScopeStart& event_buffer);
   void ProcessApiScopeStartAsync(const orbit_grpc_protos::ApiScopeStartAsync& event_buffer);
