@@ -19,12 +19,22 @@ TEST(Address, SymbolVirtualAddressToAbsoluteAddress) {
   EXPECT_EQ(SymbolVirtualAddressToAbsoluteAddress(0x1100, 0x5000, 0x1000, 0x10FF), 0x4100);
 
   // Invalid input
-  EXPECT_DEATH(SymbolVirtualAddressToAbsoluteAddress(0x1100, 0x5001, 0x1000, 0x10FF),
+  EXPECT_DEATH((void)SymbolVirtualAddressToAbsoluteAddress(0x1100, 0x5001, 0x1000, 0x10FF),
                "Check failed");
-  EXPECT_DEATH(SymbolVirtualAddressToAbsoluteAddress(0x1100, 0x5001, 0x1001, 0x10FF),
+  EXPECT_DEATH((void)SymbolVirtualAddressToAbsoluteAddress(0x1100, 0x5001, 0x1001, 0x10FF),
                "Check failed");
-  EXPECT_DEATH(SymbolVirtualAddressToAbsoluteAddress(0x1100, 0x5000, 0x1001, 0x10FF),
+  EXPECT_DEATH((void)SymbolVirtualAddressToAbsoluteAddress(0x1100, 0x5000, 0x1001, 0x10FF),
                "Check failed");
+}
+
+TEST(Address, SymbolOffsetToAbsoluteAddress) {
+  EXPECT_EQ(SymbolOffsetToAbsoluteAddress(0x10, 0x1000, 0), 0x1010);
+  EXPECT_EQ(SymbolOffsetToAbsoluteAddress(0x1010, 0x2000, 0), 0x3010);
+  EXPECT_EQ(SymbolOffsetToAbsoluteAddress(0x100, 0x1000, 0xFF), 0x1100);
+  EXPECT_EQ(SymbolOffsetToAbsoluteAddress(0x1100, 0x5000, 0x10FF), 0x5100);
+
+  // Invalid input
+  EXPECT_DEATH((void)SymbolOffsetToAbsoluteAddress(0x1100, 0x5001, 0x10FF), "Check failed");
 }
 
 TEST(Address, SymbolAbsoluteAddressToOffset) {
@@ -34,9 +44,9 @@ TEST(Address, SymbolAbsoluteAddressToOffset) {
   EXPECT_EQ(SymbolAbsoluteAddressToOffset(0x10005, 0x10000, 0x0), 0x5);
 
   // Invalid input
-  EXPECT_DEATH(SymbolAbsoluteAddressToOffset(0xE005, 0x10000, 0x0), "Check failed");
-  EXPECT_DEATH(SymbolAbsoluteAddressToOffset(0x1E005, 0x10020, 0x0), "Check failed");
-  EXPECT_DEATH(SymbolAbsoluteAddressToOffset(0x10005, 0x10000, 0x1010), "Check failed");
+  EXPECT_DEATH((void)SymbolAbsoluteAddressToOffset(0xE005, 0x10000, 0x0), "Check failed");
+  EXPECT_DEATH((void)SymbolAbsoluteAddressToOffset(0x1E005, 0x10020, 0x0), "Check failed");
+  EXPECT_DEATH((void)SymbolAbsoluteAddressToOffset(0x10005, 0x10000, 0x1010), "Check failed");
 }
 
 }  // namespace orbit_object_utils
