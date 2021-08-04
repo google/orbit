@@ -614,9 +614,9 @@ void TimeGraph::UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, ui
   text_renderer_static_.Clear();
 
   capture_min_timestamp_ =
-      std::min(capture_min_timestamp_, capture_data_->GetCallstackData()->min_time());
+      std::min(capture_min_timestamp_, capture_data_->GetCallstackData().min_time());
   capture_max_timestamp_ =
-      std::max(capture_max_timestamp_, capture_data_->GetCallstackData()->max_time());
+      std::max(capture_max_timestamp_, capture_data_->GetCallstackData().max_time());
 
   time_window_us_ = max_time_us_ - min_time_us_;
   world_start_x_ = viewport_->GetWorldTopLeft()[0];
@@ -641,9 +641,8 @@ void TimeGraph::SelectCallstacks(float world_start, float world_end, int32_t thr
   CHECK(capture_data_);
   std::vector<CallstackEvent> selected_callstack_events =
       (thread_id == orbit_base::kAllProcessThreadsTid)
-          ? capture_data_->GetCallstackData()->GetCallstackEventsInTimeRange(t0, t1)
-          : capture_data_->GetCallstackData()->GetCallstackEventsOfTidInTimeRange(thread_id, t0,
-                                                                                  t1);
+          ? capture_data_->GetCallstackData().GetCallstackEventsInTimeRange(t0, t1)
+          : capture_data_->GetCallstackData().GetCallstackEventsOfTidInTimeRange(thread_id, t0, t1);
 
   selected_callstack_events_per_thread_.clear();
   for (CallstackEvent& event : selected_callstack_events) {

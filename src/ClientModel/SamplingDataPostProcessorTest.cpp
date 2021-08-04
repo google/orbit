@@ -344,12 +344,12 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
   }
 
   void CreatePostProcessedSamplingDataWithoutSummary() {
-    ppsd_ = CreatePostProcessedSamplingData(*capture_data_.GetCallstackData(), capture_data_,
+    ppsd_ = CreatePostProcessedSamplingData(capture_data_.GetCallstackData(), capture_data_,
                                             /*generate_summary=*/false);
   }
 
   void CreatePostProcessedSamplingDataWithSummary() {
-    ppsd_ = CreatePostProcessedSamplingData(*capture_data_.GetCallstackData(), capture_data_,
+    ppsd_ = CreatePostProcessedSamplingData(capture_data_.GetCallstackData(), capture_data_,
                                             /*generate_summary=*/true);
   }
 
