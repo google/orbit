@@ -25,6 +25,8 @@ struct ReturnAddressOfFunction {
       : return_address(return_address),
         function_id(function_id),
         timestamp_on_entry_ns(timestamp_on_entry_ns) {
+    // The amount of data we store for each call is relevant for the overall performance. The assert
+    // is here for awareness and to avoid packing issues in the struct.
     static_assert(sizeof(ReturnAddressOfFunction) == 24,
                   "ReturnAddressOfFunction should be 24 bytes.");
   }
@@ -33,7 +35,11 @@ struct ReturnAddressOfFunction {
   uint64_t timestamp_on_entry_ns;
 };
 
-thread_local std::stack<ReturnAddressOfFunction> return_addresses;
+std::stack<ReturnAddressOfFunction>& GetReturnAddressStack() {
+  thread_local std::stack<ReturnAddressOfFunction> return_addresses;
+  return return_addresses;
+}
+
 uint64_t start_current_capture_timestamp = 0;
 
 struct FunctionCallEvent {
@@ -45,6 +51,8 @@ struct FunctionCallEvent {
         function_id(function_id),
         duration_ns(duration_ns),
         end_timestamp_ns(end_timestamp_ns) {
+    // The amount of data we transmit for each call is relevant for the overall performance. The
+    // assert is here for awareness and to avoid packing issues in the struct.
     static_assert(sizeof(FunctionCallEvent) == 32, "FunctionCallEvent should be 32 bytes.");
   }
   int32_t pid;
@@ -86,13 +94,15 @@ void StartNewCapture() { start_current_capture_timestamp = CaptureTimestampNs();
 
 void EntryPayload(uint64_t return_address, uint64_t function_id) {
   const uint64_t timestamp_on_entry_ns = CaptureTimestampNs();
-  return_addresses.emplace(return_address, function_id, timestamp_on_entry_ns);
+  auto& return_address_stack = GetReturnAddressStack();
+  return_address_stack.emplace(return_address, function_id, timestamp_on_entry_ns);
 }
 
 uint64_t ExitPayload() {
   const uint64_t timestamp_on_exit_ns = CaptureTimestampNs();
-  ReturnAddressOfFunction current_return_address = return_addresses.top();
-  return_addresses.pop();
+  auto& return_address_stack = GetReturnAddressStack();
+  ReturnAddressOfFunction current_return_address = return_address_stack.top();
+  return_address_stack.pop();
 
   static LockFreeUserSpaceInstrumentationEventProducer producer;
   // Skip emitting an event if we are not capturing or the event belongs to a previous capture.

@@ -286,8 +286,8 @@ static ProducerCaptureEvent CreateErrorEnablingOrbitApiEvent(uint64_t timestamp_
   return event;
 }
 
-static ProducerCaptureEvent CreateErrorEnablingUserSpaceInstrumentationEvent(uint64_t timestamp_ns,
-                                                                             std::string message) {
+[[nodiscard]] static ProducerCaptureEvent CreateErrorEnablingUserSpaceInstrumentationEvent(
+    uint64_t timestamp_ns, std::string message) {
   ProducerCaptureEvent event;
   orbit_grpc_protos::ErrorEnablingUserSpaceInstrumentationEvent*
       error_enabling_user_space_instrumentation_event =
@@ -356,9 +356,9 @@ grpc::Status CaptureServiceImpl::Capture(
   if (capture_options.enable_user_space_instrumentation()) {
     auto result = orbit_user_space_instrumentation::InstrumentProcess(capture_options);
     if (result.has_error()) {
-      ERROR("Could not enable user space instrumentation: %s", result.error().message());
       error_enabling_user_space_instrumentation = absl::StrFormat(
           "Could not enable user space instrumentation: %s", result.error().message());
+      ERROR("%s",error_enabling_user_space_instrumentation.value());
     } else {
       FilterOutInstrumentedFunctionsFromCaptureOptions(
           result.value(), capture_options_without_already_instrumented_functions);
