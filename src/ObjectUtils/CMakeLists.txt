@@ -42,6 +42,8 @@ target_link_libraries(
 
 add_executable(ObjectUtilsTests)
 
+target_compile_options(ObjectUtilsTests PRIVATE ${STRICT_COMPILE_FLAGS})
+
 target_sources(ObjectUtilsTests PRIVATE
         AddressTest.cpp
         CoffFileTest.cpp
