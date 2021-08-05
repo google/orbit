@@ -17,12 +17,14 @@
 #include <functional>
 
 #include "CompareAscendingOrDescending.h"
+#include "DataViewUtils.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/PresetLoadState.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "MetricsUploader/ScopedMetric.h"
 #include "OrbitBase/Append.h"
+#include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/SafeStrerror.h"
 #include "PresetFile/PresetFile.h"
@@ -33,16 +35,28 @@ constexpr const char* kLoadableColumnName = "Loadable";
 constexpr const char* kPresetColumnName = "Preset";
 constexpr const char* kModulesColumnName = "Modules";
 constexpr const char* kHookedFunctionsColumnName = "Hooked Functions";
+constexpr const char* kDateModifiedColumnName = "Date Modified";
 
 constexpr const float kLoadableColumnWidth = 0.14f;
 constexpr const float kPresetColumnWidth = 0.34f;
-constexpr const float kModulesColumnWidth = 0.34f;
+constexpr const float kModulesColumnWidth = 0.20f;
 constexpr const float kHookedFunctionsColumnWidth = 0.16f;
+constexpr const float kDateModifiedColumnWidth = 0.16f;
 
 namespace {
 std::string GetLoadStateString(orbit_data_views::AppInterface* app, const PresetFile& preset) {
   orbit_data_views::PresetLoadState load_state = app->GetPresetLoadState(preset);
   return load_state.GetName();
+}
+
+std::string GetDateModifiedString(const PresetFile& preset) {
+  auto datetime_or_error = orbit_base::GetFileDateModified(preset.file_path());
+  if (datetime_or_error.has_error()) {
+    ERROR("%s", datetime_or_error.error().message());
+    return "";
+  }
+
+  return orbit_data_views::FormatShortDatetime(datetime_or_error.value());
 }
 }  // namespace
 
@@ -74,6 +88,8 @@ const std::vector<DataView::Column>& PresetsDataView::GetColumns() {
     columns[kColumnModules] = {kModulesColumnName, kModulesColumnWidth, SortingOrder::kAscending};
     columns[kColumnFunctionCount] = {kHookedFunctionsColumnName, kHookedFunctionsColumnWidth,
                                      SortingOrder::kAscending};
+    columns[kColumnDateModified] = {kDateModifiedColumnName, kDateModifiedColumnWidth,
+                                    SortingOrder::kDescending};
     return columns;
   }();
   return columns;
@@ -91,6 +107,8 @@ std::string PresetsDataView::GetValue(int row, int column) {
       return GetModulesList(GetModules(row));
     case kColumnFunctionCount:
       return GetFunctionCountList(GetModules(row));
+    case kColumnDateModified:
+      return GetDateModifiedString(preset);
     default:
       return "";
   }

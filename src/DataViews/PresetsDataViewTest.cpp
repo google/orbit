@@ -11,6 +11,7 @@
 #include <tuple>
 #include <vector>
 
+#include "DataViewUtils.h"
 #include "DataViews/DataView.h"
 #include "DataViews/PresetLoadState.h"
 #include "DataViews/PresetsDataView.h"
@@ -230,6 +231,8 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
   const std::filesystem::path preset_filename0 = temporary_preset_file.value().file_path();
   orbit_preset_file::PresetFile preset_file0{preset_filename0, orbit_client_protos::PresetInfo{}};
   ASSERT_THAT(preset_file0.SaveToFile(), orbit_base::HasNoError());
+  auto date_modified = orbit_base::GetFileDateModified(preset_filename0);
+  ASSERT_THAT(date_modified, orbit_base::HasNoError());
 
   view_.SetPresets({preset_file0});
   std::vector<std::string> context_menu = view_.GetContextMenu(0, {0});
@@ -245,9 +248,11 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
     std::string clipboard;
     EXPECT_CALL(app_, SetClipboard).Times(1).WillOnce(testing::SaveArg<0>(&clipboard));
     view_.OnContextMenu("Copy Selection", static_cast<int>(copy_selection_idx), {0});
-    EXPECT_EQ(clipboard, absl::StrFormat("Loadable\tPreset\tModules\tHooked Functions\n"
-                                         "Yes\t%s\t\t\n",
-                                         preset_filename0.filename().string()));
+    EXPECT_EQ(clipboard,
+              absl::StrFormat("Loadable\tPreset\tModules\tHooked Functions\tDate Modified\n"
+                              "Yes\t%s\t\t\t%s\n",
+                              preset_filename0.filename().string(),
+                              FormatShortDatetime(date_modified.value())));
   }
 
   // Export to CSV
@@ -271,11 +276,12 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
     ASSERT_THAT(contents_or_error, orbit_base::HasNoError());
 
     EXPECT_EQ(contents_or_error.value(),
-              absl::StrFormat(R"("Loadable","Preset","Modules","Hooked Functions")"
+              absl::StrFormat(R"("Loadable","Preset","Modules","Hooked Functions","Date Modified")"
                               "\r\n"
-                              R"("Yes","%s","","")"
+                              R"("Yes","%s","","","%s")"
                               "\r\n",
-                              preset_filename0.filename().string()));
+                              preset_filename0.filename().string(),
+                              FormatShortDatetime(date_modified.value())));
   }
 
   // Load Preset

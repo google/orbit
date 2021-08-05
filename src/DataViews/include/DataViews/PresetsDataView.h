@@ -66,6 +66,7 @@ class PresetsDataView : public DataView {
     kColumnPresetName,
     kColumnModules,
     kColumnFunctionCount,
+    kColumnDateModified,
     kNumColumns
   };
 
