@@ -224,7 +224,7 @@ void ConnectToStadiaWidget::SetupStateMachine() {
 
   // STATE s_waiting_for_creds_
   QObject::connect(&s_waiting_for_creds_, &QState::entered, this,
-                   &ConnectToStadiaWidget::CheckCredentialsAvailable);
+                   &ConnectToStadiaWidget::CheckCredentialsAvailableOrLoad);
 
   s_waiting_for_creds_.addTransition(this, &ConnectToStadiaWidget::ReceivedSshInfo,
                                      &s_waiting_for_creds_);
@@ -232,7 +232,7 @@ void ConnectToStadiaWidget::SetupStateMachine() {
   s_waiting_for_creds_.addTransition(ui_->instancesTableOverlay, &OverlayWidget::Cancelled,
                                      &s_instance_selected_);
   s_waiting_for_creds_.addTransition(this, &ConnectToStadiaWidget::ErrorOccurred,
-                                     &s_instances_loading_);
+                                     &s_instance_selected_);
 
   // STATE s_deploying_
   QObject::connect(&s_deploying_, &QState::entered, this,
@@ -264,12 +264,22 @@ void ConnectToStadiaWidget::ReloadInstances() {
   });
 }
 
-void ConnectToStadiaWidget::CheckCredentialsAvailable() {
+void ConnectToStadiaWidget::CheckCredentialsAvailableOrLoad() {
   CHECK(selected_instance_.has_value());
 
   const std::string instance_id = selected_instance_->id.toStdString();
 
-  if (!instance_credentials_.contains(instance_id)) return;
+  if (!instance_credentials_.contains(instance_id)) {
+    if (!instance_credentials_loading_.contains(instance_id)) {
+      instance_credentials_loading_.emplace(instance_id);
+      ggp_client_->GetSshInfoAsync(
+          selected_instance_.value(),
+          [this, instance_id](outcome::result<orbit_ggp::SshInfo> ssh_info_result) {
+            OnSshInfoLoaded(std::move(ssh_info_result), instance_id);
+          });
+    }
+    return;
+  }
 
   if (instance_credentials_.at(instance_id).has_error()) {
     emit ErrorOccurred(
@@ -395,25 +405,12 @@ void ConnectToStadiaWidget::OnInstancesLoaded(
   emit ReceivedInstances();
 
   TrySelectRememberedInstance();
-
-  for (const auto& instance : instances.value()) {
-    std::string instance_id = instance.id.toStdString();
-
-    if (instance_credentials_.contains(instance_id) &&
-        instance_credentials_.at(instance_id).has_value()) {
-      continue;
-    }
-
-    ggp_client_->GetSshInfoAsync(instance,
-                                 [this, instance_id = std::move(instance_id)](
-                                     outcome::result<orbit_ggp::SshInfo> ssh_info_result) {
-                                   OnSshInfoLoaded(std::move(ssh_info_result), instance_id);
-                                 });
-  }
 }
 
 void ConnectToStadiaWidget::OnSshInfoLoaded(outcome::result<orbit_ggp::SshInfo> ssh_info_result,
                                             std::string instance_id) {
+  instance_credentials_loading_.erase(instance_id);
+
   if (!ssh_info_result) {
     std::string error_message =
         absl::StrFormat("Unable to load encryption credentials for instance with id %s: %s",
