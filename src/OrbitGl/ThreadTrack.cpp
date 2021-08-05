@@ -103,6 +103,14 @@ const TimerInfo* ThreadTrack::GetRight(const TimerInfo& timer_info) const {
   return scope_tree_.FindNextScopeAtDepth(timer_info);
 }
 
+const TimerInfo* ThreadTrack::GetUp(const TimerInfo& timer_info) const {
+  return scope_tree_.FindParent(timer_info);
+}
+
+const TimerInfo* ThreadTrack::GetDown(const TimerInfo& timer_info) const {
+  return scope_tree_.FindFirstChild(timer_info);
+}
+
 std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
   const TimerInfo* timer_info = batcher.GetTimerInfo(id);
   if (timer_info == nullptr || timer_info->type() == TimerInfo::kCoreActivity) {

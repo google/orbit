@@ -181,7 +181,7 @@ TEST(ScopeTree, OutOfOrderScopes) {
   }
 }
 
-TEST(ScopeTree, FindNodesAtDepth) {
+TEST(ScopeTree, FindRelationships) {
   /* Create a tree to test edge cases:
       root
       /   \
@@ -216,6 +216,15 @@ TEST(ScopeTree, FindNodesAtDepth) {
       expect_prev = current;
     }
   }
+
+  // Test Up/Down Relationships.
+  EXPECT_EQ(tree.FindParent(*depth1.at(0)), nullptr);
+  EXPECT_EQ(tree.FindParent(*depth2.at(0)), depth1.at(0));
+  EXPECT_EQ(tree.FindParent(*depth2.at(1)), depth1.at(0));
+  EXPECT_EQ(tree.FindParent(*depth2.at(3)), depth1.at(1));
+  EXPECT_EQ(tree.FindFirstChild(*depth1.at(0)), depth2.at(0));
+  EXPECT_EQ(tree.FindFirstChild(*depth1.at(1)), depth2.at(3));
+  EXPECT_EQ(tree.FindFirstChild(*depth2.at(0)), nullptr);
 }
 
 }  // namespace

@@ -45,9 +45,11 @@ class ScopeNode {
   [[nodiscard]] uint64_t End() const { return scope_->end(); }
   [[nodiscard]] uint32_t Height() const;
   [[nodiscard]] uint32_t Depth() const { return depth_; }
+  [[nodiscard]] ScopeNode* Parent() const { return parent_; }
   [[nodiscard]] size_t CountNodesInSubtree() const;
   [[nodiscard]] std::set<const ScopeNode*> GetAllNodesInSubtree() const;
   void SetDepth(uint32_t depth) { depth_ = depth; }
+  void SetParent(ScopeNode* parent) { parent_ = parent; }
   ScopeT* GetScope() { return scope_; }
 
  private:
@@ -60,6 +62,7 @@ class ScopeNode {
  private:
   ScopeT* scope_ = nullptr;
   uint32_t depth_ = 0;
+  ScopeNode* parent_ = nullptr;
 
   // We use std::unique_ptr to work around an issue with absl::btree_map which complains about not
   // knowing the size of ScopeT, which is not needed since ScopeNode only stores a ScopeTree*.
@@ -88,6 +91,8 @@ class ScopeTree {
   }
   [[nodiscard]] const ScopeT* FindNextScopeAtDepth(const ScopeT& scope) const;
   [[nodiscard]] const ScopeT* FindPreviousScopeAtDepth(const ScopeT& scope) const;
+  [[nodiscard]] const ScopeT* FindParent(const ScopeT& scope) const;
+  [[nodiscard]] const ScopeT* FindFirstChild(const ScopeT& scope) const;
 
  private:
   [[nodiscard]] const ScopeNodeT* FindScopeNode(const ScopeT& scope) const;
@@ -122,6 +127,23 @@ const ScopeNode<ScopeT>* ScopeTree<ScopeT>::FindScopeNode(const ScopeT& scope) c
     }
   }
   return nullptr;
+}
+
+template <typename ScopeT>
+const ScopeT* ScopeTree<ScopeT>::FindParent(const ScopeT& scope) const {
+  const ScopeNode<ScopeT>* node = FindScopeNode(scope);
+  CHECK(node != nullptr);
+  if (node->Parent() == root_) return nullptr;
+  return node->Parent()->GetScope();
+}
+
+template <typename ScopeT>
+const ScopeT* ScopeTree<ScopeT>::FindFirstChild(const ScopeT& scope) const {
+  const ScopeNode<ScopeT>* node = FindScopeNode(scope);
+  CHECK(node != nullptr);
+  const auto children = node->GetChildrenByStartTime();
+  if (children.empty()) return nullptr;
+  return children.begin()->second->GetScope();
 }
 
 template <typename ScopeT>
@@ -296,11 +318,13 @@ void ScopeNode<ScopeT>::Insert(ScopeNode<ScopeT>* node) {
   // in ScopeTree::UpdateDepthInSubtree as the tree also needs to update another data structure.
   ScopeNode* parent_node = FindDeepestParentForNode(node);
   node->SetDepth(parent_node->Depth() + 1);
+  node->SetParent(parent_node);
 
   // Migrate current children of the parent that are encompassed by the new node to the new node.
   for (ScopeNode* encompassed_node : parent_node->GetChildrenInRange(node->Start(), node->End())) {
     parent_node->children_by_start_time_->erase(encompassed_node->Start());
     node->children_by_start_time_->emplace(encompassed_node->Start(), encompassed_node);
+    encompassed_node->SetParent(node);
   }
 
   // Add new node as child of parent_node.

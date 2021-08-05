@@ -44,6 +44,10 @@ class ThreadTrack final : public TimerTrack {
       const orbit_client_protos::TimerInfo& timer_info) const override;
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetRight(
       const orbit_client_protos::TimerInfo& timer_info) const override;
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetUp(
+      const orbit_client_protos::TimerInfo& timer_info) const override;
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetDown(
+      const orbit_client_protos::TimerInfo& timer_info) const override;
 
   void Draw(Batcher& batcher, TextRenderer& text_renderer,
             const DrawContext& draw_context) override;
