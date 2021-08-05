@@ -60,7 +60,7 @@ class ConnectToStadiaWidget : public QWidget {
 
  private slots:
   void ReloadInstances();
-  void CheckCredentialsAvailable();
+  void CheckCredentialsAvailableOrLoad();
   void DeployOrbitService();
   void Disconnect();
   void OnConnectToStadiaRadioButtonClicked(bool checked);
@@ -103,6 +103,7 @@ class ConnectToStadiaWidget : public QWidget {
   QState s_deploying_;
   QState s_connected_;
 
+  absl::flat_hash_set<std::string> instance_credentials_loading_;
   absl::flat_hash_map<std::string, ErrorMessageOr<orbit_ssh::Credentials>> instance_credentials_;
 
   void DetachRadioButton();
