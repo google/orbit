@@ -9,6 +9,8 @@ add_library(DataViews STATIC)
 target_sources(DataViews PRIVATE
         CompareAscendingOrDescending.h
         DataView.cpp
+        DataViewUtils.h
+        DataViewUtils.cpp
         FunctionsDataView.cpp
         PresetsDataView.cpp)
 
@@ -34,6 +36,7 @@ target_link_libraries(DataViews PUBLIC
 add_executable(DataViewsTests)
 target_compile_options(DataViewsTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(DataViewsTests PRIVATE DataViewTest.cpp
+                                      DataViewUtilsTest.cpp
                                       FunctionsDataViewTest.cpp
                                       MockAppInterface.h
                                       PresetsDataViewTest.cpp)
