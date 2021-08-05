@@ -201,7 +201,7 @@ message ApiScopeStopAsync {
 }
 
 message ApiStringEvent {
-  // NextID: 14
+  // NextID: 15
 
   int32 pid = 1;
   int32 tid = 2;
@@ -219,10 +219,12 @@ message ApiStringEvent {
   repeated fixed64 encoded_name_additional = 12;
 
   uint64 id = 13;
+
+  uint32 color_rgba = 14;
 }
 
 message ApiTrackInt {
-  // NextID: 14
+  // NextID: 15
   int32 pid = 1;
   int32 tid = 2;
   uint64 timestamp_ns = 3;
@@ -239,10 +241,12 @@ message ApiTrackInt {
   fixed64 encoded_name_7 = 11;
   fixed64 encoded_name_8 = 12;
   repeated fixed64 encoded_name_additional = 13;
+
+  uint32 color_rgba = 14;
 }
 
 message ApiTrackInt64 {
-  // NextID: 14
+  // NextID: 15
   int32 pid = 1;
   int32 tid = 2;
   uint64 timestamp_ns = 3;
@@ -259,10 +263,12 @@ message ApiTrackInt64 {
   fixed64 encoded_name_7 = 11;
   fixed64 encoded_name_8 = 12;
   repeated fixed64 encoded_name_additional = 13;
+
+  uint32 color_rgba = 14;
 }
 
 message ApiTrackUint {
-  // NextID: 14
+  // NextID: 15
   int32 pid = 1;
   int32 tid = 2;
   uint64 timestamp_ns = 3;
@@ -279,10 +285,12 @@ message ApiTrackUint {
   fixed64 encoded_name_7 = 11;
   fixed64 encoded_name_8 = 12;
   repeated fixed64 encoded_name_additional = 13;
+
+  uint32 color_rgba = 14;
 }
 
 message ApiTrackUint64 {
-  // NextID: 14
+  // NextID: 15
   int32 pid = 1;
   int32 tid = 2;
   uint64 timestamp_ns = 3;
@@ -299,10 +307,12 @@ message ApiTrackUint64 {
   fixed64 encoded_name_7 = 11;
   fixed64 encoded_name_8 = 12;
   repeated fixed64 encoded_name_additional = 13;
+
+  uint32 color_rgba = 14;
 }
 
 message ApiTrackFloat {
-  // NextID: 14
+  // NextID: 15
   int32 pid = 1;
   int32 tid = 2;
   uint64 timestamp_ns = 3;
@@ -319,10 +329,12 @@ message ApiTrackFloat {
   fixed64 encoded_name_7 = 11;
   fixed64 encoded_name_8 = 12;
   repeated fixed64 encoded_name_additional = 13;
+
+  uint32 color_rgba = 14;
 }
 
 message ApiTrackDouble {
-  // NextID: 14
+  // NextID: 15
   int32 pid = 1;
   int32 tid = 2;
   uint64 timestamp_ns = 3;
@@ -339,6 +351,8 @@ message ApiTrackDouble {
   fixed64 encoded_name_7 = 11;
   fixed64 encoded_name_8 = 12;
   repeated fixed64 encoded_name_additional = 13;
+
+  uint32 color_rgba = 14;
 }
 
 message Callstack {

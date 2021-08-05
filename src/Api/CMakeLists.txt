@@ -8,22 +8,25 @@ add_library(ApiInterface INTERFACE)
 
 target_sources(ApiInterface INTERFACE
         include/Api/EncodedEvent.h
-        include/Api/LockFreeApiEventProducer.h
         include/Api/Orbit.h)
 
 target_include_directories(ApiInterface INTERFACE
         ${CMAKE_CURRENT_LIST_DIR}/include)
-
 
 add_library(ApiBase STATIC)
 target_compile_options(ApiBase PRIVATE ${STRICT_COMPILE_FLAGS})
 target_compile_features(ApiBase PUBLIC cxx_std_17)
 
 target_sources(ApiBase PUBLIC
-        include/Api/EncodedString.h)
+        include/Api/Event.h
+        include/Api/EncodedString.h
+        include/Api/LockFreeApiEventProducer.h)
 target_sources(ApiBase PRIVATE
-        EncodedString.cpp)
+        EncodedString.cpp
+        LockFreeApiEventProducer.cpp)
 target_link_libraries(ApiBase PUBLIC
+        OrbitBase
+        CaptureEventProducer
         GrpcProtos)
 
 add_executable(ApiInterfaceTests)
@@ -57,6 +60,7 @@ target_sources(Api PRIVATE
 
 target_link_libraries(Api PUBLIC
         ApiInterface
+        ApiBase
         CaptureEventProducer
         GrpcProtos
         OrbitBase
