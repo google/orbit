@@ -374,6 +374,23 @@ outcome::result<void> ServiceDeployManager::CopyOrbitApiLibrary(
   return outcome::success();
 }
 
+outcome::result<void> ServiceDeployManager::CopyOrbitUserSpaceInstrumentationLibrary(
+    const BareExecutableAndRootPasswordDeployment& config) {
+  CHECK(QThread::currentThread() == thread());
+  emit statusMessage("Copying liborbituserspaceinstrumentation.so to the remote instance...");
+
+  const std::string library_destination_path = "/tmp/liborbituserspaceinstrumentation.so";
+  const auto library_source_path =
+      config.path_to_executable.parent_path() / "../lib/liborbituserspaceinstrumentation.so";
+  OUTCOME_TRY(CopyFileToRemote(
+      library_source_path.string(), library_destination_path,
+      orbit_ssh_qt::SftpCopyToRemoteOperation::FileMode::kUserWritableAllExecutable));
+
+  emit statusMessage(
+      "Finished copying liborbituserspaceinstrumentation.so to the remote instance.");
+  return outcome::success();
+}
+
 outcome::result<void> ServiceDeployManager::StartOrbitService() {
   CHECK(QThread::currentThread() == thread());
   emit statusMessage("Starting OrbitService on the remote instance...");
@@ -555,6 +572,7 @@ outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::ExecImpl()
         std::get<BareExecutableAndRootPasswordDeployment>(*deployment_configuration_);
     OUTCOME_TRY(CopyOrbitServiceExecutable(config));
     OUTCOME_TRY(CopyOrbitApiLibrary(config));
+    OUTCOME_TRY(CopyOrbitUserSpaceInstrumentationLibrary(config));
     OUTCOME_TRY(StartOrbitServicePrivileged(config));
     // TODO(hebecker): Replace this timeout by waiting for a
     // stdout-greeting-message.

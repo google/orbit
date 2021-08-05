@@ -245,6 +245,8 @@ class OrbitConan(ConanFile):
                       dst="{}-{}/opt/developer/tools/".format(self.name, self._version()))
             self.copy("liborbit.so", src="lib/",
                       dst="{}-{}/opt/developer/tools/".format(self.name, self._version()))
+            self.copy("liborbituserspaceinstrumentation.so", src="lib/",
+                      dst="{}-{}/opt/developer/tools/".format(self.name, self._version()))
             self.copy("NOTICE",
                       dst="{}-{}/usr/share/doc/{}/".format(self.name, self._version(), self.name))
             self.copy("LICENSE",
@@ -294,6 +296,7 @@ chmod -v 4775 /opt/developer/tools/OrbitService
         self.copy("NOTICE.Chromium.csv")
         self.copy("LICENSE")
         self.copy("liborbit.so", src="lib/", dst="lib")
+        self.copy("liborbituserspaceinstrumentation.so", src="lib/", dst="lib")
         self.copy("libOrbitVulkanLayer.so", src="lib/", dst="lib")
         self.copy("VkLayer_Orbit_implicit.json", src="lib/", dst="lib")
         self.copy("LinuxTracingIntegrationTests", src="bin/", dst="bin")

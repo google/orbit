@@ -32,9 +32,9 @@ using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::ModuleInfo;
 
 ErrorMessageOr<std::filesystem::path> GetLibraryPath() {
-  // When packaged, libOrbitUserSpaceInstrumentation.so is found alongside OrbitService. In
+  // When packaged, liborbituserspaceinstrumentation.so is found alongside OrbitService. In
   // development, it is found in "../lib", relative to OrbitService.
-  constexpr const char* kLibName = "libOrbitUserSpaceInstrumentation.so";
+  constexpr const char* kLibName = "liborbituserspaceinstrumentation.so";
   const std::filesystem::path exe_dir = orbit_base::GetExecutableDir();
   std::vector<std::filesystem::path> potential_paths = {exe_dir / kLibName,
                                                         exe_dir / ".." / "lib" / kLibName};
