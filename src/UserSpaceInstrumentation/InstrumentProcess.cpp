@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #include <filesystem>
+#include <mutex>
 #include <vector>
 
 #include "AccessTraceesMemory.h"
@@ -71,7 +72,7 @@ class InstrumentedProcess {
       const CaptureOptions& capture_options);
 
   // Instruments the functions capture_options.instrumented_functions and returns a set of
-  // function_id's of succefully instrumented functions.
+  // function_id's of successfully instrumented functions.
   [[nodiscard]] ErrorMessageOr<absl::flat_hash_set<uint64_t>> InstrumentFunctions(
       const CaptureOptions& capture_options);
 
@@ -129,7 +130,7 @@ class InstrumentedProcess {
   static constexpr int kTrampolinesPerChunk = 4096;
   struct TrampolineMemoryChunk {
     TrampolineMemoryChunk() = default;
-    TrampolineMemoryChunk(std::unique_ptr<MemoryInTracee>&& m, int first_available)
+    TrampolineMemoryChunk(std::unique_ptr<MemoryInTracee> m, int first_available)
         : first_available(first_available) {
       memory = std::move(m);
     }
@@ -234,6 +235,7 @@ ErrorMessageOr<absl::flat_hash_set<uint64_t>> InstrumentedProcess::InstrumentFun
     const uint64_t backup_size = std::min(kMaxFunctionPrologueBackupSize, function.function_size());
     if (backup_size == 0) {
       // Can't instrument function of size zero
+      ERROR("Can't instrument function \"%s\" since it has size zero.", function.function_name());
       continue;
     }
     // Get all modules with the right path (usually one, but might be more) and get a function
@@ -248,8 +250,8 @@ ErrorMessageOr<absl::flat_hash_set<uint64_t>> InstrumentedProcess::InstrumentFun
         const AddressRange module_address_range(module.address_start(), module.address_end());
         auto trampoline_address_or_error = GetTrampolineMemory(module_address_range);
         if (trampoline_address_or_error.has_error()) {
-          LOG("Failed to allocate memory for trampoline: %s",
-              trampoline_address_or_error.error().message());
+          ERROR("Failed to allocate memory for trampoline: %s",
+                trampoline_address_or_error.error().message());
           continue;
         }
         const uint64_t trampoline_address = trampoline_address_or_error.value();
@@ -262,7 +264,8 @@ ErrorMessageOr<absl::flat_hash_set<uint64_t>> InstrumentedProcess::InstrumentFun
                              entry_payload_function_address_, return_trampoline_address_,
                              capstone_handle, relocation_map_);
         if (address_after_prologue_or_error.has_error()) {
-          LOG("Failed to create trampoline: %s", address_after_prologue_or_error.error().message());
+          ERROR("Failed to create trampoline: %s",
+                address_after_prologue_or_error.error().message());
           OUTCOME_TRY(ReleaseMostRecentlyAllocatedTrampolineMemory(module_address_range));
           continue;
         }
@@ -279,7 +282,8 @@ ErrorMessageOr<absl::flat_hash_set<uint64_t>> InstrumentedProcess::InstrumentFun
                                        trampoline_data.address_after_prologue,
                                        trampoline_data.trampoline_address);
       if (result.has_error()) {
-        ERROR("Unable to instrument %s: %s", function.function_name(), result.error().message());
+        ERROR("Unable to instrument \"%s\": %s", function.function_name(),
+              result.error().message());
       } else {
         addresses_of_instrumented_functions_.insert(function_address);
         instrumented_function_ids.insert(function_id);
@@ -355,7 +359,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> InstrumentedProcess::ModulesFromModulePa
       }
     }
     if (result.empty()) {
-      return ErrorMessage(absl::StrFormat("Unable to find module for path %s", path));
+      return ErrorMessage(absl::StrFormat("Unable to find module for path \"%s\"", path));
     }
     modules_from_path_.emplace(path, result);
   }
@@ -380,16 +384,18 @@ ErrorMessageOr<void> InstrumentedProcess::EnsureTrampolinesExecutable() {
   return outcome::success();
 }
 
-std::unique_ptr<UserSpaceInstrumentation> UserSpaceInstrumentation::Create() {
+std::unique_ptr<InstrumentationManager> InstrumentationManager::Create() {
+  static std::mutex mutex;
+  std::unique_lock<std::mutex> lock(mutex);
   static bool first_call = true;
-  FAIL_IF(!first_call, "UserSpaceInstrumentation should be globally unique.");
+  FAIL_IF(!first_call, "InstrumentationManager should be globally unique.");
   first_call = false;
-  return std::unique_ptr<UserSpaceInstrumentation>(new UserSpaceInstrumentation());
+  return std::unique_ptr<InstrumentationManager>(new InstrumentationManager());
 }
 
-UserSpaceInstrumentation::~UserSpaceInstrumentation() {}
+InstrumentationManager::~InstrumentationManager() {}
 
-ErrorMessageOr<absl::flat_hash_set<uint64_t>> UserSpaceInstrumentation::InstrumentProcess(
+ErrorMessageOr<absl::flat_hash_set<uint64_t>> InstrumentationManager::InstrumentProcess(
     const CaptureOptions& capture_options) {
   const pid_t pid = capture_options.pid();
 
@@ -423,7 +429,7 @@ ErrorMessageOr<absl::flat_hash_set<uint64_t>> UserSpaceInstrumentation::Instrume
   return std::move(instrumented_function_ids);
 }
 
-ErrorMessageOr<void> UserSpaceInstrumentation::UninstrumentProcess(pid_t pid) {
+ErrorMessageOr<void> InstrumentationManager::UninstrumentProcess(pid_t pid) {
   // If the user tries to instrument this instance of OrbitService we can't use user space
   // instrumentation: We would need to attach to / stop our own process. Therefore nothing was
   // instrumented in the first place and we can just return here.

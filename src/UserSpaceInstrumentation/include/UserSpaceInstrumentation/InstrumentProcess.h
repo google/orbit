@@ -19,18 +19,18 @@ namespace orbit_user_space_instrumentation {
 
 class InstrumentedProcess;
 
-// `UserSpaceInstrumentation` is a globally unique object containing the bookkeeping for all user
-// space instrumentaion (in the `process_map_` member). It's lifetime is pretty much identical with
-// the lifetime of the profiling service.
-class UserSpaceInstrumentation {
+// `InstrumentationManager` is a globally unique object containing the bookkeeping for all user
+// space instrumentaion (in the `process_map_` member). Its lifetime is pretty much identical to the
+// lifetime of the profiling service.
+class InstrumentationManager {
  public:
-  UserSpaceInstrumentation(const UserSpaceInstrumentation&) = delete;
-  UserSpaceInstrumentation(UserSpaceInstrumentation&&) = delete;
-  UserSpaceInstrumentation& operator=(const UserSpaceInstrumentation&) = delete;
-  UserSpaceInstrumentation& operator=(UserSpaceInstrumentation&&) = delete;
-  ~UserSpaceInstrumentation();
+  InstrumentationManager(const InstrumentationManager&) = delete;
+  InstrumentationManager(InstrumentationManager&&) = delete;
+  InstrumentationManager& operator=(const InstrumentationManager&) = delete;
+  InstrumentationManager& operator=(InstrumentationManager&&) = delete;
+  ~InstrumentationManager();
 
-  [[nodiscard]] static std::unique_ptr<UserSpaceInstrumentation> Create();
+  [[nodiscard]] static std::unique_ptr<InstrumentationManager> Create();
 
   // On the first call to this function we inject OrbitUserSpaceInstrumentation.so into the target
   // process and create the return trampoline. On each call we create trampolines for functions that
@@ -45,7 +45,7 @@ class UserSpaceInstrumentation {
   [[nodiscard]] ErrorMessageOr<void> UninstrumentProcess(pid_t pid);
 
  private:
-  UserSpaceInstrumentation() = default;
+  InstrumentationManager() = default;
 
   absl::flat_hash_map<pid_t, std::unique_ptr<InstrumentedProcess>> process_map_;
 };
