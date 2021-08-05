@@ -385,4 +385,15 @@ TEST(File, ListFilesInDirectory) {
          });
 }
 
+TEST(File, GetFileDateModified) {
+  absl::Time now = absl::Now();
+  auto tmp_file_or_error = TemporaryFile::Create();
+  ASSERT_THAT(tmp_file_or_error, HasNoError());
+  auto tmp_file = std::move(tmp_file_or_error.value());
+
+  auto file_time_or_error = GetFileDateModified(tmp_file.file_path());
+  ASSERT_THAT(file_time_or_error, HasNoError());
+  EXPECT_LE(file_time_or_error.value() - now, absl::Seconds(1));
+}
+
 }  // namespace orbit_base

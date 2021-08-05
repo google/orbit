@@ -6,6 +6,7 @@
 #define ORBIT_BASE_FILE_H_
 
 #include <absl/strings/str_format.h>
+#include <absl/time/time.h>
 #include <fcntl.h>
 
 #include <filesystem>
@@ -126,6 +127,7 @@ ErrorMessageOr<void> ResizeFile(const std::filesystem::path& file_path, uint64_t
 // Returns all files in directory; non recursively.
 ErrorMessageOr<std::vector<std::filesystem::path>> ListFilesInDirectory(
     const std::filesystem::path& directory);
+ErrorMessageOr<absl::Time> GetFileDateModified(const std::filesystem::path& path);
 
 }  // namespace orbit_base
 
