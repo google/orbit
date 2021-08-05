@@ -4,6 +4,7 @@
 
 #include "OrbitBase/File.h"
 
+#include <chrono>
 #include <cstdint>
 
 #include "OrbitBase/Logging.h"
@@ -59,6 +60,18 @@ ssize_t pwrite(int fd, const void* buffer, size_t size, int64_t offset) {
 }  // namespace
 
 #endif
+
+namespace {
+
+template <typename TimePoint>
+std::time_t to_time_t(TimePoint time_point) {
+  // TODO(vickyliu): Switch this to `file_clock::to_sys()` once we migregate to C++20.
+  auto sc_time_point = std::chrono::time_point_cast<std::chrono::system_clock::duration>(
+      time_point - TimePoint::clock::now() + std::chrono::system_clock::now());
+  return std::chrono::system_clock::to_time_t(sc_time_point);
+}
+
+}  // namespace
 
 namespace orbit_base {
 
@@ -279,6 +292,17 @@ ErrorMessageOr<std::vector<std::filesystem::path>> ListFilesInDirectory(
   }
 
   return files;
+}
+
+ErrorMessageOr<absl::Time> GetFileDateModified(const std::filesystem::path& path) {
+  std::error_code error;
+  auto ftime = std::filesystem::last_write_time(path, error);
+  if (error) {
+    return ErrorMessage{absl::StrFormat("Fail to get the last write time of file %s: %s",
+                                        path.string(), error.message())};
+  }
+
+  return absl::FromTimeT(to_time_t(ftime));
 }
 
 }  // namespace orbit_base
