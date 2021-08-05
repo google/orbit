@@ -7,8 +7,8 @@
 
 #include <variant>
 
-#include "Api/Event.h"
 #include "CaptureEventProducer/LockFreeBufferCaptureEventProducer.h"
+#include "Event.h"
 #include "ProducerSideChannel/ProducerSideChannel.h"
 
 namespace orbit_api {
