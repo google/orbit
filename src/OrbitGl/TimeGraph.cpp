@@ -127,6 +127,9 @@ double TimeGraph::GetCurrentTimeSpanUs() const { return max_time_us_ - min_time_
 void TimeGraph::ZoomTime(float zoom_value, double mouse_ratio) {
   static double increment_ratio = 0.1;
   double scale = (zoom_value > 0) ? (1 + increment_ratio) : (1 / (1 + increment_ratio));
+  // The horizontal zoom could have been triggered from the margin of TimeGraph, so we clamp the
+  // mouse_ratio to ensure it is between 0 and 1.
+  mouse_ratio = std::clamp(mouse_ratio, 0., 1.);
 
   double current_time_window_us = max_time_us_ - min_time_us_;
   ref_time_us_ = min_time_us_ + mouse_ratio * current_time_window_us;

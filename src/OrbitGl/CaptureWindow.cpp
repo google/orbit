@@ -248,8 +248,8 @@ void CaptureWindow::Zoom(ZoomDirection dir, int delta) {
   if (time_graph_ != nullptr) {
     switch (dir) {
       case ZoomDirection::kHorizontal: {
-        double mouse_ratio =
-            static_cast<double>(mouse_move_pos_screen_[0]) / viewport_.GetScreenWidth();
+        double mouse_ratio = static_cast<double>(mouse_move_pos_screen_[0]) /
+                             (viewport_.GetScreenWidth() - time_graph_->GetRightMargin());
         time_graph_->ZoomTime(delta_float, mouse_ratio);
         break;
       }
