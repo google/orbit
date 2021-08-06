@@ -133,6 +133,9 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   [[nodiscard]] TimeGraphLayout& GetLayout() { return layout_; }
   [[nodiscard]] float GetRightMargin() const { return right_margin_; }
   void UpdateRightMargin(float margin);
+  [[nodiscard]] float GetVisibleWidth() const {
+    return viewport_->GetScreenWidth() - GetRightMargin();
+  }
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* FindPrevious(
       const orbit_client_protos::TimerInfo& from);
