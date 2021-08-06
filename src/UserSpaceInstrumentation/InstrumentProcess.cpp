@@ -14,6 +14,7 @@
 
 #include "AccessTraceesMemory.h"
 #include "AllocateInTracee.h"
+#include "ObjectUtils/Address.h"
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/File.h"
@@ -242,10 +243,8 @@ ErrorMessageOr<absl::flat_hash_set<uint64_t>> InstrumentedProcess::InstrumentFun
     // address to instrument for each of them.
     OUTCOME_TRY(auto&& modules, ModulesFromModulePath(function.file_path()));
     for (const auto& module : modules) {
-      const uint64_t function_address =
-          module.address_start() + function.file_offset() - module.executable_segment_offset();
-      // const uint64_t function_address = SymbolOffsetToAbsoluteAddress(
-      //     function.file_offset(), module.address_start(), module.executable_segment_offset());
+      const uint64_t function_address = orbit_object_utils::SymbolOffsetToAbsoluteAddress(
+          function.file_offset(), module.address_start(), module.executable_segment_offset());
       if (!trampoline_map_.contains(function_address)) {
         const AddressRange module_address_range(module.address_start(), module.address_end());
         auto trampoline_address_or_error = GetTrampolineMemory(module_address_range);
