@@ -25,7 +25,7 @@ TEST(FutureWatcher, WaitFor) {
   completion_timer.start(std::chrono::milliseconds{0});
 
   FutureWatcher watcher{};
-  EXPECT_EQ(watcher.WaitFor(std::move(future), std::chrono::milliseconds{20}),
+  EXPECT_EQ(watcher.WaitFor(std::move(future), std::chrono::milliseconds{40}),
             FutureWatcher::Reason::kFutureCompleted);
 }
 
@@ -35,10 +35,10 @@ TEST(FutureWatcher, WaitForWithTimeout) {
 
   QTimer completion_timer{};
   QObject::connect(&completion_timer, &QTimer::timeout, [&]() { promise.MarkFinished(); });
-  completion_timer.start(std::chrono::milliseconds{40});
+  completion_timer.start(std::chrono::milliseconds{80});
 
   FutureWatcher watcher{};
-  EXPECT_EQ(watcher.WaitFor(std::move(future), std::chrono::milliseconds{20}),
+  EXPECT_EQ(watcher.WaitFor(std::move(future), std::chrono::milliseconds{40}),
             FutureWatcher::Reason::kTimeout);
 }
 
@@ -48,7 +48,7 @@ TEST(FutureWatcher, WaitForWithAbort) {
 
   QTimer completion_timer{};
   QObject::connect(&completion_timer, &QTimer::timeout, [&]() { promise.MarkFinished(); });
-  completion_timer.start(std::chrono::milliseconds{40});
+  completion_timer.start(std::chrono::milliseconds{80});
 
   FutureWatcher watcher{};
 
@@ -56,7 +56,7 @@ TEST(FutureWatcher, WaitForWithAbort) {
   QObject::connect(&abort_timer, &QTimer::timeout, &watcher, &FutureWatcher::Abort);
   abort_timer.start(std::chrono::milliseconds{10});
 
-  EXPECT_EQ(watcher.WaitFor(std::move(future), std::chrono::milliseconds{20}),
+  EXPECT_EQ(watcher.WaitFor(std::move(future), std::chrono::milliseconds{40}),
             FutureWatcher::Reason::kAbortRequested);
 }
 
