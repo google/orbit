@@ -855,7 +855,7 @@ void TimeGraph::DrawIncompleteDataIntervals(Batcher& batcher, PickingMode pickin
 
 void TimeGraph::DrawTracks(Batcher& batcher, TextRenderer& text_renderer,
                            const DrawContext& draw_context) {
-  float track_width = viewport_->GetVisibleWorldWidth() - GetRightMargin();
+  float track_width = GetVisibleWidth();
   float track_pos_x = viewport_->GetWorldTopLeft()[0];
   for (auto& track : track_manager_->GetVisibleTracks()) {
     track->SetSize(track_width, track->GetHeight());
