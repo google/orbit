@@ -14,7 +14,10 @@
 #include "OrbitBase/ThreadUtils.h"
 
 namespace {
-std::unique_ptr<orbit_api::LockFreeApiEventProducer> producer;
+orbit_api::LockFreeApiEventProducer& GetEventProducer() {
+  static orbit_api::LockFreeApiEventProducer producer;
+  return producer;
+}
 
 template <typename Event, typename... Types>
 void EnqueueApiEvent(Types... args) {

@@ -7,15 +7,15 @@
 namespace orbit_api {
 namespace {
 
-template <typename CaptureEvent>
-inline void SetMetaData(const ApiEventMetaData& meta_data, CaptureEvent* out) {
+template <typename CaptureEventT>
+inline void SetMetaData(const ApiEventMetaData& meta_data, CaptureEventT* out) {
   out->set_pid(meta_data.pid);
   out->set_tid(meta_data.tid);
   out->set_timestamp_ns(meta_data.timestamp_ns);
 }
 
-template <typename CaptureEvent>
-inline void SetEncodedName(const ApiEncodedString& encoded_name, CaptureEvent* out) {
+template <typename CaptureEventT>
+inline void SetEncodedName(const ApiEncodedString& encoded_name, CaptureEventT* out) {
   out->set_encoded_name_1(encoded_name.encoded_name_1);
   out->set_encoded_name_2(encoded_name.encoded_name_2);
   out->set_encoded_name_3(encoded_name.encoded_name_3);
@@ -127,7 +127,7 @@ inline void CreateCaptureEvent(const ApiTrackUint64& track_uint64,
 // constructable. However, that state is never expected to be called in the visitor.
 inline void CreateCaptureEvent(const std::monostate& /*unused*/,
                                orbit_grpc_protos::ProducerCaptureEvent* /*unused*/) {
-  // UNREACHABLE();
+  UNREACHABLE();
 }
 
 }  // namespace

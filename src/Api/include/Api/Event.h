@@ -22,9 +22,9 @@ namespace orbit_api {
 struct ApiEventMetaData {
   ApiEventMetaData(int32_t pid, int32_t tid, uint64_t timestamp_ns)
       : pid(pid), tid(tid), timestamp_ns(timestamp_ns) {}
-  int32_t pid{};
-  int32_t tid{};
-  uint64_t timestamp_ns{};
+  int32_t pid = 0;
+  int32_t tid = 0;
+  uint64_t timestamp_ns = 0;
 };
 
 struct ApiEncodedString {
@@ -38,14 +38,14 @@ struct ApiEncodedString {
   void set_encoded_name_7(uint64_t value) { encoded_name_7 = value; }
   void set_encoded_name_8(uint64_t value) { encoded_name_8 = value; }
   void add_encoded_name_additional(uint64_t value) { encoded_name_additional.push_back(value); }
-  uint64_t encoded_name_1{};
-  uint64_t encoded_name_2{};
-  uint64_t encoded_name_3{};
-  uint64_t encoded_name_4{};
-  uint64_t encoded_name_5{};
-  uint64_t encoded_name_6{};
-  uint64_t encoded_name_7{};
-  uint64_t encoded_name_8{};
+  uint64_t encoded_name_1 = 0;
+  uint64_t encoded_name_2 = 0;
+  uint64_t encoded_name_3 = 0;
+  uint64_t encoded_name_4 = 0;
+  uint64_t encoded_name_5 = 0;
+  uint64_t encoded_name_6 = 0;
+  uint64_t encoded_name_7 = 0;
+  uint64_t encoded_name_8 = 0;
   std::vector<uint64_t> encoded_name_additional{};
 };
 
@@ -60,12 +60,10 @@ struct ApiScopeStart {
         color_rgba(color_rgba) {}
 
   ApiEventMetaData meta_data;
-  uint64_t group_id{};
-  uint64_t address_in_function{};
-
+  uint64_t group_id = 0;
+  uint64_t address_in_function = 0;
   ApiEncodedString encoded_name;
-
-  uint32_t color_rgba{};
+  uint32_t color_rgba = 0;
 };
 
 struct ApiScopeStop {
@@ -85,12 +83,10 @@ struct ApiScopeStartAsync {
         color_rgba(color_rgba) {}
 
   ApiEventMetaData meta_data;
-  uint64_t id{};
-  uint64_t address_in_function{};
-
+  uint64_t id = 0;
+  uint64_t address_in_function = 0;
   ApiEncodedString encoded_name;
-
-  uint32_t color_rgba{};
+  uint32_t color_rgba = 0;
 };
 
 struct ApiScopeStopAsync {
@@ -98,7 +94,7 @@ struct ApiScopeStopAsync {
       : meta_data(pid, tid, timestamp_ns), id(id) {}
 
   ApiEventMetaData meta_data;
-  uint64_t id{};
+  uint64_t id = 0;
 };
 
 struct ApiStringEvent {
@@ -107,10 +103,9 @@ struct ApiStringEvent {
       : meta_data(pid, tid, timestamp_ns), id(id), encoded_name(name), color_rgba(color_rgba) {}
 
   ApiEventMetaData meta_data;
-  uint64_t id{};
-
+  uint64_t id = 0;
   ApiEncodedString encoded_name;
-  uint32_t color_rgba{};
+  uint32_t color_rgba = 0;
 };
 
 struct ApiTrackInt {
@@ -119,12 +114,9 @@ struct ApiTrackInt {
       : meta_data(pid, tid, timestamp_ns), encoded_name(name), data(data), color_rgba(color_rgba) {}
 
   ApiEventMetaData meta_data;
-
   ApiEncodedString encoded_name;
-
-  int32_t data{};
-
-  uint32_t color_rgba{};
+  int32_t data = 0;
+  uint32_t color_rgba = 0;
 };
 
 struct ApiTrackInt64 {
@@ -133,12 +125,9 @@ struct ApiTrackInt64 {
       : meta_data(pid, tid, timestamp_ns), encoded_name(name), data(data), color_rgba(color_rgba) {}
 
   ApiEventMetaData meta_data;
-
   ApiEncodedString encoded_name;
-
-  int64_t data{};
-
-  uint32_t color_rgba{};
+  int64_t data = 0;
+  uint32_t color_rgba = 0;
 };
 
 struct ApiTrackUint {
@@ -147,12 +136,9 @@ struct ApiTrackUint {
       : meta_data(pid, tid, timestamp_ns), encoded_name(name), data(data), color_rgba(color_rgba) {}
 
   ApiEventMetaData meta_data;
-
   ApiEncodedString encoded_name;
-
-  uint32_t data{};
-
-  uint32_t color_rgba{};
+  uint32_t data = 0;
+  uint32_t color_rgba = 0;
 };
 
 struct ApiTrackUint64 {
@@ -161,12 +147,9 @@ struct ApiTrackUint64 {
       : meta_data(pid, tid, timestamp_ns), encoded_name(name), data(data), color_rgba(color_rgba) {}
 
   ApiEventMetaData meta_data;
-
   ApiEncodedString encoded_name;
-
-  uint64_t data{};
-
-  uint32_t color_rgba{};
+  uint64_t data = 0;
+  uint32_t color_rgba = 0;
 };
 
 struct ApiTrackDouble {
@@ -175,12 +158,9 @@ struct ApiTrackDouble {
       : meta_data(pid, tid, timestamp_ns), encoded_name(name), data(data), color_rgba(color_rgba) {}
 
   ApiEventMetaData meta_data;
-
   ApiEncodedString encoded_name;
-
-  double data{};
-
-  uint32_t color_rgba{};
+  double data = 0.;
+  uint32_t color_rgba = 0;
 };
 
 struct ApiTrackFloat {
@@ -189,12 +169,9 @@ struct ApiTrackFloat {
       : meta_data(pid, tid, timestamp_ns), encoded_name(name), data(data), color_rgba(color_rgba) {}
 
   ApiEventMetaData meta_data;
-
   ApiEncodedString encoded_name;
-
-  float data{};
-
-  uint32_t color_rgba{};
+  float data = 0.f;
+  uint32_t color_rgba = 0;
 };
 
 // Used in `LockFreeApiEventProducer`. The `std::monostate` is required make this variant default
