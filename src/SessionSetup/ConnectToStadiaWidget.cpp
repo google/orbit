@@ -342,6 +342,7 @@ void ConnectToStadiaWidget::Disconnect() {
   //   service_deploy_manager_->Shutdown();
   // }
   service_deploy_manager_ = nullptr;
+  ui_->rememberCheckBox->setChecked(false);
 
   emit Disconnected();
 }
