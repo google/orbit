@@ -76,6 +76,8 @@ class ServiceDeployManager : public QObject {
   outcome::result<void> CopyOrbitServiceExecutable(
       const BareExecutableAndRootPasswordDeployment& config);
   outcome::result<void> CopyOrbitApiLibrary(const BareExecutableAndRootPasswordDeployment& config);
+  outcome::result<void> CopyOrbitUserSpaceInstrumentationLibrary(
+      const BareExecutableAndRootPasswordDeployment& config);
   outcome::result<void> InstallOrbitServicePackage();
   outcome::result<void> StartOrbitService();
   outcome::result<void> StartOrbitServicePrivileged(

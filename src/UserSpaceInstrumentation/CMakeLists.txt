@@ -58,6 +58,8 @@ add_library(OrbitUserSpaceInstrumentation SHARED)
 
 target_compile_options(OrbitUserSpaceInstrumentation PRIVATE ${STRICT_COMPILE_FLAGS})
 
+set_target_properties(OrbitUserSpaceInstrumentation PROPERTIES OUTPUT_NAME "orbituserspaceinstrumentation")
+
 target_compile_features(OrbitUserSpaceInstrumentation PUBLIC cxx_std_17)
 
 target_include_directories(OrbitUserSpaceInstrumentation PRIVATE
@@ -71,6 +73,8 @@ target_link_libraries(OrbitUserSpaceInstrumentation PUBLIC
         CaptureEventProducer
         OrbitBase
         ProducerSideChannel)
+
+strip_symbols(OrbitUserSpaceInstrumentation)
 
 # This test lib is merely used in UserSpaceInstrumentationTests below. The
 # binary libUserSpaceInstrumentationTestLib.so created from this target is used
