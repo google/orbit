@@ -46,8 +46,16 @@ function(DoGenerateVersionFile OUTPUT_FILE INPUT_FILE GIT_COMMIT_STATE_FILE
   string(REGEX MATCH "([0-9]+)\\." MAJOR_VERSION "${VERSION_STRING}")
   set(MAJOR_VERSION "${CMAKE_MATCH_1}")
 
+  if(NOT MAJOR_VERSION)
+    set(MAJOR_VERSION 0)
+  endif()
+
   string(REGEX MATCH "\\.([0-9]+)" MINOR_VERSION "${VERSION_STRING}")
   set(MINOR_VERSION "${CMAKE_MATCH_1}")
+
+  if(NOT MINOR_VERSION)
+    set(MINOR_VERSION 0)
+  endif()
 
   set(PATCH_VERSION "0")
 
