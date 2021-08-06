@@ -25,7 +25,7 @@ class LockFreeApiEventProducer
   ~LockFreeApiEventProducer() { ShutdownAndWait(); }
 
  protected:
-  [[nodiscard]] virtual orbit_grpc_protos::ProducerCaptureEvent* TranslateIntermediateEvent(
+  [[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent* TranslateIntermediateEvent(
       ApiEventVariant&& raw_api_event, google::protobuf::Arena* arena) override;
 };
 

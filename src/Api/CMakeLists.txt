@@ -27,7 +27,8 @@ target_sources(ApiBase PRIVATE
 target_link_libraries(ApiBase PUBLIC
         OrbitBase
         CaptureEventProducer
-        GrpcProtos)
+        GrpcProtos
+        ProducerSideChannel)
 
 add_executable(ApiInterfaceTests)
 

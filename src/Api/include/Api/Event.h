@@ -197,6 +197,8 @@ struct ApiTrackFloat {
   uint32_t color_rgba{};
 };
 
+// Used in `LockFreeApiEventProducer`. The `std::monostate` is required make this variant default
+// constructable. However, real (fully instantiated) values will never be of type `std::monostate`.
 using ApiEventVariant =
     std::variant<std::monostate, ApiScopeStart, ApiScopeStop, ApiScopeStartAsync, ApiScopeStopAsync,
                  ApiStringEvent, ApiTrackDouble, ApiTrackFloat, ApiTrackInt, ApiTrackInt64,
