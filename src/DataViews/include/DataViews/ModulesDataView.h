@@ -1,9 +1,9 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_MODULES_DATA_VIEW_H_
-#define ORBIT_GL_MODULES_DATA_VIEW_H_
+#ifndef DATA_VIEWS_MODULES_DATA_VIEW_H_
+#define DATA_VIEWS_MODULES_DATA_VIEW_H_
 
 #include <absl/container/flat_hash_map.h>
 #include <stdint.h>
@@ -16,9 +16,11 @@
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
 
-class ModulesDataView : public orbit_data_views::DataView {
+namespace orbit_data_views {
+
+class ModulesDataView : public DataView {
  public:
-  explicit ModulesDataView(orbit_data_views::AppInterface* app);
+  explicit ModulesDataView(AppInterface* app);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnFileSize; }
@@ -63,4 +65,6 @@ class ModulesDataView : public orbit_data_views::DataView {
   static const std::string kMenuActionVerifyFramePointers;
 };
 
-#endif  // ORBIT_GL_MODULES_DATA_VIEW_H_
+}  // namespace orbit_data_views
+
+#endif  // DATA_VIEWS_MODULES_DATA_VIEW_H_

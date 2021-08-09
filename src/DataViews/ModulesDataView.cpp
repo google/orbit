@@ -1,8 +1,8 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ModulesDataView.h"
+#include "DataViews/ModulesDataView.h"
 
 #include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
@@ -28,10 +28,11 @@ using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleInMemory;
 using orbit_client_data::ProcessData;
 
-ModulesDataView::ModulesDataView(orbit_data_views::AppInterface* app)
-    : orbit_data_views::DataView(orbit_data_views::DataViewType::kModules, app) {}
+namespace orbit_data_views {
 
-const std::vector<orbit_data_views::DataView::Column>& ModulesDataView::GetColumns() {
+ModulesDataView::ModulesDataView(AppInterface* app) : DataView(DataViewType::kModules, app) {}
+
+const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
@@ -66,18 +67,17 @@ std::string ModulesDataView::GetValue(int row, int col) {
   }
 }
 
-#define ORBIT_PROC_SORT(Member)                                                           \
-  [&](uint64_t a, uint64_t b) {                                                           \
-    return orbit_gl::CompareAscendingOrDescending(start_address_to_module_.at(a)->Member, \
-                                                  start_address_to_module_.at(b)->Member, \
-                                                  ascending);                             \
+#define ORBIT_PROC_SORT(Member)                                                             \
+  [&](uint64_t a, uint64_t b) {                                                             \
+    return CompareAscendingOrDescending(start_address_to_module_.at(a)->Member,             \
+                                        start_address_to_module_.at(b)->Member, ascending); \
   }
 
-#define ORBIT_MODULE_SPACE_SORT(Member)                                                            \
-  [&](uint64_t a, uint64_t b) {                                                                    \
-    return orbit_gl::CompareAscendingOrDescending(start_address_to_module_in_memory_.at(a).Member, \
-                                                  start_address_to_module_in_memory_.at(b).Member, \
-                                                  ascending);                                      \
+#define ORBIT_MODULE_SPACE_SORT(Member)                                                  \
+  [&](uint64_t a, uint64_t b) {                                                          \
+    return CompareAscendingOrDescending(start_address_to_module_in_memory_.at(a).Member, \
+                                        start_address_to_module_in_memory_.at(b).Member, \
+                                        ascending);                                      \
   }
 
 void ModulesDataView::DoSort() {
@@ -239,3 +239,5 @@ bool ModulesDataView::GetDisplayColor(int row, int /*column*/, unsigned char& re
   }
   return true;
 }
+
+}  // namespace orbit_data_views

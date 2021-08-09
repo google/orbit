@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef DATA_VIEWS_PRESET_DATA_VIEW_H_
-#define DATA_VIEWS_PRESET_DATA_VIEW_H_
+#ifndef DATA_VIEWS_PRESETS_DATA_VIEW_H_
+#define DATA_VIEWS_PRESETS_DATA_VIEW_H_
 
 #include <stdint.h>
 
@@ -79,4 +79,4 @@ class PresetsDataView : public DataView {
 
 }  // namespace orbit_data_views
 
-#endif  // DATA_VIEWS_PRESET_DATA_VIEW_H_
+#endif  // DATA_VIEWS_PRESETS_DATA_VIEW_H_
