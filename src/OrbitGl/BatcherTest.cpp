@@ -85,6 +85,10 @@ class MockBatcher : public Batcher {
     }
   }
 
+  const PrimitiveBuffers& GetInternalBuffers(float layer) {
+    return primitive_buffers_by_layer_.at(layer);
+  }
+
  private:
   mutable std::vector<Color> drawn_line_colors_;
   mutable std::vector<Color> drawn_triangle_colors_;
@@ -235,6 +239,43 @@ TEST(Batcher, MultipleDrawCalls) {
   EXPECT_DEATH((void)batcher.GetUserData(id), "size");
   id = MockRenderPickingColor(box_color);
   EXPECT_DEATH((void)batcher.GetUserData(id), "size");
+}
+
+bool LineEq(const Line& lhs, const Line& rhs) {
+  return lhs.start_point == rhs.start_point && lhs.end_point == rhs.end_point;
+}
+
+TEST(Batcher, TranslationsAreAutomaticallyAdded) {
+  MockBatcher batcher(BatcherId::kUi);
+  batcher.AddLine(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
+
+  const PrimitiveBuffers& buffers = batcher.GetInternalBuffers(0.f);
+  const Line original_expectation{Vec3(0.f, 0.f, 0.f), Vec3(1.f, 1.f, 0.f)};
+  const Vec3 transform(10.f, 100.f, 0.1f);
+  const Line transformed_expectation{original_expectation.start_point + transform,
+                                     original_expectation.end_point + transform};
+  auto it = buffers.line_buffer.lines_.begin();
+
+  const auto add_line_assert_eq = [&batcher, &it](const Line& expectation) {
+    batcher.AddLine(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
+    ++it;
+    ASSERT_TRUE(LineEq(expectation, *it));
+  };
+
+  ASSERT_TRUE(LineEq(original_expectation, *it));
+
+  batcher.PushTranslation(10, 100, 0.1f);
+  // Should not affect previously added lines
+  ASSERT_TRUE(LineEq(original_expectation, *it));
+
+  add_line_assert_eq(transformed_expectation);
+  batcher.PushTranslation(0, 0, 0.f);
+  add_line_assert_eq(transformed_expectation);
+  batcher.PopTranslation();
+  add_line_assert_eq(transformed_expectation);
+  batcher.PopTranslation();
+  add_line_assert_eq(original_expectation);
+  ASSERT_DEATH(batcher.PopTranslation(), "Check failed");
 }
 
 }  // namespace

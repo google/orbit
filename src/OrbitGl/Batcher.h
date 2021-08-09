@@ -117,6 +117,9 @@ class Batcher {
   Batcher(const Batcher&) = delete;
   Batcher(Batcher&&) = delete;
 
+  void PushTranslation(float x, float y, float z = 0.f);
+  void PopTranslation();
+
   void AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
@@ -157,7 +160,7 @@ class Batcher {
   void AddTriangle(const Triangle& triangle, const Color& color,
                    std::shared_ptr<Pickable> pickable);
 
-  void AddCircle(Vec2 position, float radius, float z, Color color);
+  void AddCircle(const Vec2& position, float radius, float z, Color color);
   [[nodiscard]] std::vector<float> GetLayers() const;
   void DrawLayer(float layer, bool picking = false) const;
   virtual void Draw(bool picking = false) const;
@@ -193,6 +196,8 @@ class Batcher {
                    const Color& picking_color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
 
+  [[nodiscard]] Vec3 TransformVertex(const Vec3 input) const;
+
   BatcherId batcher_id_;
   PickingManager* picking_manager_;
   std::unordered_map<float, PrimitiveBuffers> primitive_buffers_by_layer_;
@@ -200,6 +205,9 @@ class Batcher {
   std::vector<std::unique_ptr<PickingUserData>> user_data_;
 
   std::vector<Vec2> circle_points;
+
+  std::vector<Vec3> translation_stack_;
+  Vec3 current_translation_ = Vec3(0.f, 0.f, 0.f);
 };
 
 #endif
