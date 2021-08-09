@@ -506,7 +506,8 @@ void CaptureWindow::DrawScreenSpace() {
   // Time bar background
   if (time_graph_->GetCaptureTimeSpanUs() > 0) {
     Box background_box(
-        Vec2(0, time_graph_->GetLayout().GetSliderWidth()),
+        Vec2(0, viewport_.GetScreenHeight() - time_graph_->GetLayout().GetSliderWidth() -
+                    time_graph_->GetLayout().GetTimeBarHeight()),
         Vec2(viewport_.GetScreenWidth(), time_graph_->GetLayout().GetTimeBarHeight()),
         GlCanvas::kZValueTimeBarBg);
     ui_batcher_.AddBox(background_box, kTimeBarBackgroundColor);
@@ -702,10 +703,10 @@ void CaptureWindow::RenderHelpUi() {
   Vec2 text_bounding_box_pos;
   Vec2 text_bounding_box_size;
   // TODO(b/180312795): Use TimeGraphLayout's font size again.
-  text_renderer_.AddText(GetHelpText(), world_pos[0], world_pos[1], GlCanvas::kZValueTextUi,
-                         Color(255, 255, 255, 255), 14, -1.f /*max_size*/,
-                         false /*right_justified*/, &text_bounding_box_pos,
-                         &text_bounding_box_size);
+  text_renderer_.AddText(
+      GetHelpText(), world_pos[0], world_pos[1], GlCanvas::kZValueTextUi,
+      {14, Color(255, 255, 255, 255), -1.f /*max_size*/, TextRenderer::HAlign::Right},
+      &text_bounding_box_pos, &text_bounding_box_size);
 
   const Color kBoxColor(50, 50, 50, 230);
   const float kMargin = 15.f;
@@ -773,10 +774,11 @@ void CaptureWindow::RenderTimeBar() {
     double norm_start_us = 1000.0 * static_cast<int>(start_ms / norm_inc) * norm_inc;
 
     static constexpr int kPixelMargin = 2;
-    int screen_y = viewport_.GetScreenHeight() - static_cast<int>(time_bar_height) - kPixelMargin;
+    int screen_y =
+        viewport_.GetScreenHeight() - static_cast<int>(time_bar_height) - slider_->GetPixelHeight();
     Vec2 world_pos = viewport_.ScreenToWorldPos(Vec2i(0, screen_y));
 
-    float height = time_graph_->GetLayout().GetTimeBarHeight() - kPixelMargin;
+    float height = time_bar_height - kPixelMargin;
     float x_margin = viewport_.ScreenToWorldWidth(4);
 
     for (int i = 0; i < num_time_points; ++i) {
@@ -785,14 +787,13 @@ void CaptureWindow::RenderTimeBar() {
 
       std::string text = orbit_display_formats::GetDisplayTime(absl::Microseconds(current_micros));
       float world_x = time_graph_->GetWorldFromUs(current_micros);
-      text_renderer_.AddText(text.c_str(), world_x + x_margin, world_pos[1],
-                             GlCanvas::kZValueTimeBar, Color(255, 255, 255, 255),
-                             time_graph_->GetLayout().GetFontSize());
+      text_renderer_.AddText(text.c_str(), world_x + x_margin, world_pos[1] - height,
+                             GlCanvas::kZValueTimeBar,
+                             {time_graph_->GetLayout().GetFontSize(), Color(255, 255, 255, 255),
+                              -1.f, TextRenderer::HAlign::Left, TextRenderer::VAlign::Bottom});
+      int screen_x = viewport_.WorldToScreenPos(Vec2(world_x, 0))[0];
 
-      // Lines from time bar are drawn in screen space.
-      Vec2i pos =
-          viewport_.QtToGlScreenPos(viewport_.WorldToScreenPos(Vec2(world_x, world_pos[1])));
-      ui_batcher_.AddVerticalLine(Vec2(pos[0], pos[1]), height, GlCanvas::kZValueTimeBar,
+      ui_batcher_.AddVerticalLine(Vec2(screen_x, screen_y), height, GlCanvas::kZValueTimeBar,
                                   Color(255, 255, 255, 255));
     }
   }
@@ -822,8 +823,9 @@ void CaptureWindow::RenderSelectionOverlay() {
   const Color text_color(255, 255, 255, 255);
   float pos_x = pos[0] + size[0];
 
-  text_renderer_.AddText(text.c_str(), pos_x, select_stop_pos_world_[1], GlCanvas::kZValueTextUi,
-                         text_color, time_graph_->GetLayout().GetFontSize(), size[0], true);
+  text_renderer_.AddText(
+      text.c_str(), pos_x, select_stop_pos_world_[1], GlCanvas::kZValueTextUi,
+      {time_graph_->GetLayout().GetFontSize(), text_color, size[0], TextRenderer::HAlign::Right});
 
   const unsigned char g = 100;
   Color grey(g, g, g, 255);

@@ -169,7 +169,7 @@ void GraphTrack<Dimension>::DrawLabel(Batcher& batcher, TextRenderer& text_rende
   float label_z = GlCanvas::kZValueTrackLabel + draw_context.z_offset;
   float bottom_y_of_top_line = text_box_position[1] + text_box_size[1] - single_line_height;
   text_renderer.AddText(text.c_str(), text_box_position[0], bottom_y_of_top_line, label_z,
-                        text_color, font_size, text_box_size[0]);
+                        {font_size, text_color, text_box_size[0]});
 
   Vec2 arrow_box_position(text_box_position[0] - kTextLeftMargin,
                           text_box_position[1] - kTextBottomMargin);
@@ -213,7 +213,7 @@ void GraphTrack<Dimension>::DrawLegend(Batcher& batcher, TextRenderer& text_rend
     Vec2 legend_text_box_position(x0, y0 - layout_->GetTextBoxHeight() / 2.f);
     text_renderer.AddText(series_names[i].c_str(), legend_text_box_position[0],
                           legend_text_box_position[1] + layout_->GetTextOffset(), text_z,
-                          legend_text_color, font_size, legend_text_box_size[0]);
+                          {font_size, legend_text_color, legend_text_box_size[0]});
     x0 += legend_text_width + kSpaceBetweenLegendEntries;
 
     auto user_data = std::make_unique<PickingUserData>(

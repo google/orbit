@@ -93,8 +93,8 @@ void TimerTrack::DrawTimesliceText(const orbit_client_protos::TimerInfo& timer, 
   float max_size = box_pos[0] + box_size[0] - pos_x;
   text_renderer_->AddTextTrailingCharsPrioritized(
       timeslice_text.c_str(), pos_x, box_pos[1] + layout_->GetTextOffset(),
-      GlCanvas::kZValueBox + z_offset, kTextWhite, elapsed_time_length,
-      layout_->CalculateZoomedFontSize(), max_size);
+      GlCanvas::kZValueBox + z_offset, {layout_->CalculateZoomedFontSize(), kTextWhite, max_size},
+      elapsed_time_length);
 }
 
 bool TimerTrack::DrawTimer(const TimerInfo* prev_timer_info, const TimerInfo* next_timer_info,

@@ -30,6 +30,17 @@ struct texture_font_t;
 
 class TextRenderer {
  public:
+  enum class HAlign { Left, Right };
+  enum class VAlign { Top, Middle, Bottom };
+
+  struct TextFormatting {
+    uint32_t font_size = 14;
+    Color color = Color(255, 255, 255, 255);
+    float max_size = -1.f;
+    HAlign halign = HAlign::Left;
+    VAlign valign = VAlign::Top;
+  };
+
   explicit TextRenderer();
   ~TextRenderer();
 
@@ -41,13 +52,11 @@ class TextRenderer {
   void RenderDebug(Batcher* batcher);
   [[nodiscard]] std::vector<float> GetLayers() const;
 
-  void AddText(const char* text, float x, float y, float z, const Color& color, uint32_t font_size,
-               float max_size = -1.f, bool right_justified = false, Vec2* out_text_pos = nullptr,
-               Vec2* out_text_size = nullptr);
+  void AddText(const char* text, float x, float y, float z, TextFormatting formatting,
+               Vec2* out_text_pos = nullptr, Vec2* out_text_size = nullptr);
 
   float AddTextTrailingCharsPrioritized(const char* text, float x, float y, float z,
-                                        const Color& color, size_t trailing_chars_length,
-                                        uint32_t font_size, float max_size);
+                                        TextFormatting formatting, size_t trailing_chars_length);
 
   [[nodiscard]] float GetStringWidth(const char* text, uint32_t font_size);
   [[nodiscard]] float GetStringHeight(const char* text, uint32_t font_size);
@@ -55,12 +64,9 @@ class TextRenderer {
   static void SetDrawOutline(bool value) { draw_outline_ = value; }
 
  protected:
-  void AddTextInternal(ftgl::texture_font_t* font, const char* text, const ftgl::vec4& color,
-                       ftgl::vec2* pen, float max_size = -1.f, float z = -0.01f,
+  void AddTextInternal(const char* text, ftgl::vec2* pen, const TextFormatting& formatting, float z,
                        ftgl::vec2* out_text_pos = nullptr, ftgl::vec2* out_text_size = nullptr);
 
-  void ToScreenSpace(float x, float y, float& o_x, float& o_y);
-  [[nodiscard]] float ToScreenSpace(float width);
   [[nodiscard]] int GetStringWidthScreenSpace(const char* text, uint32_t font_size);
   [[nodiscard]] int GetStringHeightScreenSpace(const char* text, uint32_t font_size);
   [[nodiscard]] ftgl::texture_font_t* GetFont(uint32_t size);

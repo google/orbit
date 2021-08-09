@@ -172,8 +172,8 @@ void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, const DrawContex
 
     text_renderer.AddTextTrailingCharsPrioritized(
         GetLabel().c_str(), indentation_x0 + label_offset_x, toggle_y_pos - label_offset_y, text_z,
-        kColor, GetNumberOfPrioritizedTrailingCharacters(), font_size,
-        label_width - label_offset_x);
+        {font_size, kColor, label_width - label_offset_x},
+        GetNumberOfPrioritizedTrailingCharacters());
   }
 
   // Draw track's content background.

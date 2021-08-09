@@ -30,8 +30,8 @@ void AnnotationTrack::DrawAnnotation(Batcher& batcher, TextRenderer& text_render
     Vec2 text_box_position(content_right_x - text_box_size[0],
                            content_bottom_y + content_height - text_box_size[1]);
     text_renderer.AddText(text.c_str(), text_box_position[0],
-                          text_box_position[1] + layout->GetTextOffset(), z, kWhite, font_size,
-                          text_box_size[0]);
+                          text_box_position[1] + layout->GetTextOffset(), z,
+                          {font_size, kWhite, text_box_size[0]});
 
     if (!GetValueUpperBoundTooltip().empty()) {
       auto user_data = std::make_unique<PickingUserData>(
@@ -48,8 +48,8 @@ void AnnotationTrack::DrawAnnotation(Batcher& batcher, TextRenderer& text_render
     Vec2 text_box_size(string_width, layout->GetTextBoxHeight());
     Vec2 text_box_position(content_right_x - text_box_size[0], content_bottom_y);
     text_renderer.AddText(text.c_str(), text_box_position[0],
-                          text_box_position[1] + layout->GetTextOffset(), z, kWhite, font_size,
-                          text_box_size[0]);
+                          text_box_position[1] + layout->GetTextOffset(), z,
+                          {font_size, kWhite, text_box_size[0]});
   }
 
   // Add warning threshold text box and line.
@@ -68,8 +68,8 @@ void AnnotationTrack::DrawAnnotation(Batcher& batcher, TextRenderer& text_render
     Vec2 text_box_size(string_width, layout->GetTextBoxHeight());
     Vec2 text_box_position(track_pos[0] + layout->GetRightMargin(), y - text_box_size[1] / 2.f);
     text_renderer.AddText(text.c_str(), text_box_position[0],
-                          text_box_position[1] + layout->GetTextOffset(), z, kThresholdColor,
-                          font_size, text_box_size[0]);
+                          text_box_position[1] + layout->GetTextOffset(), z,
+                          {font_size, kThresholdColor, text_box_size[0]});
 
     Vec2 from(track_pos[0], y);
     Vec2 to(track_pos[0] + track_size[0], y);
