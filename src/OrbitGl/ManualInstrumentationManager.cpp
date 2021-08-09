@@ -63,7 +63,14 @@ void ManualInstrumentationManager::ProcessStringEventLegacy(const orbit_api::Eve
 
 void ManualInstrumentationManager::ProcessStringEvent(
     const orbit_client_protos::ApiStringEvent& string_event) {
-  string_manager_.AddOrReplace(string_event.async_scope_id(), string_event.name());
+  // A string can be sent in chunks so we append the current value to any existing one.
+  uint64_t event_id = string_event.async_scope_id();
+  auto result = string_manager_.Get(event_id);
+  if (result.has_value()) {
+    string_manager_.AddOrReplace(event_id, result.value() + string_event.name());
+  } else {
+    string_manager_.AddOrReplace(event_id, string_event.name());
+  }
 }
 
 void ManualInstrumentationManager::ProcessAsyncTimer(const TimerInfo& timer_info) {

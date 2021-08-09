@@ -23,7 +23,7 @@ class ApiEventProcessor {
   explicit ApiEventProcessor(CaptureListener* listener);
   // The new manual instrumentation events (see below) could not use `ApiEvent`, so this is
   // deprecated. The methods for the concrete (new) events should be used instead.
-  [[deprecated]] void ProcessApiEvent(const orbit_grpc_protos::ApiEvent& event_buffer);
+  [[deprecated]] void ProcessApiEventLegacy(const orbit_grpc_protos::ApiEvent& event_buffer);
   void ProcessApiScopeStart(const orbit_grpc_protos::ApiScopeStart& event_buffer);
   void ProcessApiScopeStartAsync(const orbit_grpc_protos::ApiScopeStartAsync& event_buffer);
   void ProcessApiScopeStop(const orbit_grpc_protos::ApiScopeStop& event_buffer);
@@ -37,12 +37,13 @@ class ApiEventProcessor {
   void ProcessApiTrackUint64(const orbit_grpc_protos::ApiTrackUint64& event_buffer);
 
  private:
-  [[deprecated]] void ProcessApiEvent(const orbit_api::ApiEvent& api_event);
-  [[deprecated]] void ProcessStartEvent(const orbit_api::ApiEvent& api_event);
-  [[deprecated]] void ProcessStopEvent(const orbit_api::ApiEvent& api_event);
-  [[deprecated]] void ProcessAsyncStartEvent(const orbit_api::ApiEvent& api_event);
-  [[deprecated]] void ProcessAsyncStopEvent(const orbit_api::ApiEvent& api_event);
-  [[deprecated]] void ProcessTrackingEvent(const orbit_api::ApiEvent& api_event);
+  [[deprecated]] void ProcessApiEventLegacy(const orbit_api::ApiEvent& api_event);
+  [[deprecated]] void ProcessStartEventLegacy(const orbit_api::ApiEvent& api_event);
+  [[deprecated]] void ProcessStopEventLegacy(const orbit_api::ApiEvent& api_event);
+  [[deprecated]] void ProcessAsyncStartEventLegacy(const orbit_api::ApiEvent& api_event);
+  [[deprecated]] void ProcessAsyncStopEventLegacy(const orbit_api::ApiEvent& api_event);
+  [[deprecated]] void ProcessTrackingEventLegacy(const orbit_api::ApiEvent& api_event);
+  [[deprecated]] void ProcessStringEventLegacy(const orbit_api::ApiEvent& api_event);
 
   CaptureListener* capture_listener_ = nullptr;
   absl::flat_hash_map<int32_t, std::vector<orbit_api::ApiEvent>> synchronous_event_stack_by_tid_;

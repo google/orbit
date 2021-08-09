@@ -27,125 +27,6 @@ inline std::string DecodeString(const Source& encoded_source) {
                                  encoded_source.encoded_name_additional_size());
 }
 
-inline TimerInfo TimerInfoFromEncodedEvent(const orbit_api::EncodedEvent& encoded_event,
-                                           uint64_t start, uint64_t end, int32_t pid, int32_t tid,
-                                           uint32_t depth) {
-  TimerInfo timer_info;
-  timer_info.set_start(start);
-  timer_info.set_end(end);
-  timer_info.set_process_id(pid);
-  timer_info.set_thread_id(tid);
-  timer_info.set_depth(depth);
-  timer_info.set_type(TimerInfo::kApiEvent);
-  timer_info.mutable_registers()->Reserve(6);
-  timer_info.add_registers(encoded_event.args[0]);
-  timer_info.add_registers(encoded_event.args[1]);
-  timer_info.add_registers(encoded_event.args[2]);
-  timer_info.add_registers(encoded_event.args[3]);
-  timer_info.add_registers(encoded_event.args[4]);
-  timer_info.add_registers(encoded_event.args[5]);
-  return timer_info;
-}
-}  // namespace
-
-ApiEventProcessor::ApiEventProcessor(CaptureListener* listener) : capture_listener_(listener) {
-  CHECK(listener != nullptr);
-}
-
-void ApiEventProcessor::ProcessApiEvent(const orbit_grpc_protos::ApiEvent& grpc_api_event) {
-  orbit_api::ApiEvent api_event;
-  api_event.pid = grpc_api_event.pid();
-  api_event.tid = grpc_api_event.tid();
-  api_event.timestamp_ns = grpc_api_event.timestamp_ns();
-  api_event.encoded_event.args[0] = grpc_api_event.r0();
-  api_event.encoded_event.args[1] = grpc_api_event.r1();
-  api_event.encoded_event.args[2] = grpc_api_event.r2();
-  api_event.encoded_event.args[3] = grpc_api_event.r3();
-  api_event.encoded_event.args[4] = grpc_api_event.r4();
-  api_event.encoded_event.args[5] = grpc_api_event.r5();
-  ProcessApiEvent(api_event);
-}
-
-void ApiEventProcessor::ProcessApiEvent(const orbit_api::ApiEvent& api_event) {
-  orbit_api::EventType event_type = api_event.Type();
-
-  switch (event_type) {
-    case orbit_api::kScopeStart:
-      ProcessStartEvent(api_event);
-      break;
-    case orbit_api::kScopeStop:
-      ProcessStopEvent(api_event);
-      break;
-    case orbit_api::kScopeStartAsync:
-      ProcessAsyncStartEvent(api_event);
-      break;
-    case orbit_api::kScopeStopAsync:
-      ProcessAsyncStopEvent(api_event);
-      break;
-    case orbit_api::kTrackInt:
-    case orbit_api::kTrackInt64:
-    case orbit_api::kTrackUint:
-    case orbit_api::kTrackUint64:
-    case orbit_api::kTrackFloat:
-    case orbit_api::kTrackDouble:
-    case orbit_api::kString:
-      ProcessTrackingEvent(api_event);
-      break;
-    case orbit_api::kNone:
-      UNREACHABLE();
-  }
-}
-
-void ApiEventProcessor::ProcessStartEvent(const orbit_api::ApiEvent& api_event) {
-  synchronous_event_stack_by_tid_[api_event.tid].emplace_back(api_event);
-}
-
-void ApiEventProcessor::ProcessStopEvent(const orbit_api::ApiEvent& stop_event) {
-  std::vector<orbit_api::ApiEvent>& event_stack = synchronous_event_stack_by_tid_[stop_event.tid];
-  if (event_stack.empty()) {
-    // We received a stop event with no matching start event, which is possible if the capture was
-    // started between the event's start and stop times.
-    return;
-  }
-
-  const orbit_api::ApiEvent& start_event = event_stack.back();
-  TimerInfo timer_info = TimerInfoFromEncodedEvent(
-      start_event.encoded_event, start_event.timestamp_ns, stop_event.timestamp_ns, stop_event.pid,
-      stop_event.tid, /*depth=*/event_stack.size() - 1);
-  capture_listener_->OnTimer(timer_info);
-  event_stack.pop_back();
-}
-
-void ApiEventProcessor::ProcessAsyncStartEvent(const orbit_api::ApiEvent& start_event) {
-  const uint64_t event_id = start_event.encoded_event.event.data;
-  asynchronous_events_by_id_[event_id] = start_event;
-}
-
-void ApiEventProcessor::ProcessAsyncStopEvent(const orbit_api::ApiEvent& stop_event) {
-  const uint64_t event_id = stop_event.encoded_event.event.data;
-  if (asynchronous_events_by_id_.count(event_id) == 0) {
-    // We received a stop event with no matching start event, which is possible if the capture was
-    // started between the event's start and stop times.
-    return;
-  }
-
-  orbit_api::ApiEvent& start_event = asynchronous_events_by_id_[event_id];
-  TimerInfo timer_info = TimerInfoFromEncodedEvent(
-      start_event.encoded_event, start_event.timestamp_ns, stop_event.timestamp_ns, stop_event.pid,
-      stop_event.tid, /*depth=*/0);
-  capture_listener_->OnTimer(timer_info);
-
-  asynchronous_events_by_id_.erase(event_id);
-}
-
-void ApiEventProcessor::ProcessTrackingEvent(const orbit_api::ApiEvent& api_event) {
-  TimerInfo timer_info =
-      TimerInfoFromEncodedEvent(api_event.encoded_event, api_event.timestamp_ns,
-                                api_event.timestamp_ns, api_event.pid, api_event.tid, /*depth=*/0);
-  capture_listener_->OnTimer(timer_info);
-}
-
-namespace {
 void EncodedColorToColor(uint32_t encoded_color, orbit_client_protos::Color* color) {
   color->set_red((encoded_color & (0xff << 24)) >> 24);
   color->set_green((encoded_color & (0xff << 16)) >> 16);
@@ -153,6 +34,185 @@ void EncodedColorToColor(uint32_t encoded_color, orbit_client_protos::Color* col
   color->set_alpha(encoded_color & 0xff);
 }
 }  // namespace
+
+ApiEventProcessor::ApiEventProcessor(CaptureListener* listener) : capture_listener_(listener) {
+  CHECK(listener != nullptr);
+}
+
+void ApiEventProcessor::ProcessApiEventLegacy(const orbit_grpc_protos::ApiEvent& event_buffer) {
+  orbit_api::ApiEvent api_event;
+  api_event.pid = event_buffer.pid();
+  api_event.tid = event_buffer.tid();
+  api_event.timestamp_ns = event_buffer.timestamp_ns();
+  api_event.encoded_event.args[0] = event_buffer.r0();
+  api_event.encoded_event.args[1] = event_buffer.r1();
+  api_event.encoded_event.args[2] = event_buffer.r2();
+  api_event.encoded_event.args[3] = event_buffer.r3();
+  api_event.encoded_event.args[4] = event_buffer.r4();
+  api_event.encoded_event.args[5] = event_buffer.r5();
+  ProcessApiEventLegacy(api_event);
+}
+
+void ApiEventProcessor::ProcessApiEventLegacy(const orbit_api::ApiEvent& api_event) {
+  orbit_api::EventType event_type = api_event.Type();
+
+  switch (event_type) {
+    case orbit_api::kScopeStart:
+      ProcessStartEventLegacy(api_event);
+      break;
+    case orbit_api::kScopeStop:
+      ProcessStopEventLegacy(api_event);
+      break;
+    case orbit_api::kScopeStartAsync:
+      ProcessAsyncStartEventLegacy(api_event);
+      break;
+    case orbit_api::kScopeStopAsync:
+      ProcessAsyncStopEventLegacy(api_event);
+      break;
+    case orbit_api::kString:
+      ProcessStringEventLegacy(api_event);
+      break;
+    case orbit_api::kTrackInt:
+    case orbit_api::kTrackInt64:
+    case orbit_api::kTrackUint:
+    case orbit_api::kTrackUint64:
+    case orbit_api::kTrackFloat:
+    case orbit_api::kTrackDouble:
+      ProcessTrackingEventLegacy(api_event);
+      break;
+    case orbit_api::kNone:
+      UNREACHABLE();
+  }
+}
+
+void ApiEventProcessor::ProcessStartEventLegacy(const orbit_api::ApiEvent& api_event) {
+  synchronous_event_stack_by_tid_[api_event.tid].emplace_back(api_event);
+}
+
+void ApiEventProcessor::ProcessStopEventLegacy(const orbit_api::ApiEvent& api_event) {
+  std::vector<orbit_api::ApiEvent>& event_stack = synchronous_event_stack_by_tid_[api_event.tid];
+  if (event_stack.empty()) {
+    // We received a stop event with no matching start event, which is possible if the capture was
+    // started between the event's start and stop times.
+    return;
+  }
+
+  const orbit_api::ApiEvent& start_event = event_stack.back();
+
+  TimerInfo timer_info;
+  timer_info.set_start(start_event.timestamp_ns);
+  timer_info.set_end(api_event.timestamp_ns);
+  timer_info.set_process_id(api_event.pid);
+  timer_info.set_thread_id(api_event.tid);
+  timer_info.set_depth(event_stack.size() - 1);
+  timer_info.set_type(TimerInfo::kApiScope);
+
+  if (start_event.encoded_event.event.color != kOrbitColorAuto) {
+    EncodedColorToColor(start_event.encoded_event.event.color, timer_info.mutable_color());
+  }
+
+  timer_info.set_api_scope_name(start_event.encoded_event.event.name);
+
+  timer_info.set_group_id(0);
+  timer_info.set_address_in_function(0);
+
+  capture_listener_->OnTimer(timer_info);
+  event_stack.pop_back();
+}
+
+void ApiEventProcessor::ProcessAsyncStartEventLegacy(const orbit_api::ApiEvent& api_event) {
+  const uint64_t event_id = api_event.encoded_event.event.data;
+  asynchronous_events_by_id_[event_id] = api_event;
+}
+
+void ApiEventProcessor::ProcessAsyncStopEventLegacy(const orbit_api::ApiEvent& api_event) {
+  const uint64_t event_id = api_event.encoded_event.event.data;
+  if (asynchronous_events_by_id_.count(event_id) == 0) {
+    // We received a stop event with no matching start event, which is possible if the capture was
+    // started between the event's start and stop times.
+    return;
+  }
+
+  orbit_api::ApiEvent& start_event = asynchronous_events_by_id_[event_id];
+  TimerInfo timer_info;
+  timer_info.set_start(start_event.timestamp_ns);
+  timer_info.set_end(api_event.timestamp_ns);
+  timer_info.set_process_id(api_event.pid);
+  timer_info.set_thread_id(api_event.tid);
+  timer_info.set_depth(0);
+  timer_info.set_type(TimerInfo::kApiScopeAsync);
+
+  if (start_event.encoded_event.event.color != kOrbitColorAuto) {
+    EncodedColorToColor(start_event.encoded_event.event.color, timer_info.mutable_color());
+  }
+  timer_info.set_api_async_scope_id(api_event.encoded_event.event.data);
+  timer_info.set_api_scope_name(start_event.encoded_event.event.name);
+
+  timer_info.set_address_in_function(0);
+
+  capture_listener_->OnTimer(timer_info);
+
+  asynchronous_events_by_id_.erase(event_id);
+}
+
+void ApiEventProcessor::ProcessStringEventLegacy(const orbit_api::ApiEvent& api_event) {
+  ApiStringEvent api_string_event;
+  api_string_event.set_process_id(api_event.pid);
+  api_string_event.set_thread_id(api_event.tid);
+  api_string_event.set_timestamp_ns(api_event.timestamp_ns);
+  api_string_event.set_async_scope_id(api_event.encoded_event.event.data);
+  api_string_event.set_name(api_event.encoded_event.event.name);
+  capture_listener_->OnApiStringEvent(api_string_event);
+}
+
+void ApiEventProcessor::ProcessTrackingEventLegacy(const orbit_api::ApiEvent& api_event) {
+  ApiTrackValue api_track_value;
+  api_track_value.set_process_id(api_event.pid);
+  api_track_value.set_thread_id(api_event.tid);
+  api_track_value.set_timestamp_ns(api_event.timestamp_ns);
+
+  api_track_value.set_name(api_event.encoded_event.event.name);
+
+  switch (api_event.Type()) {
+    case orbit_api::kTrackInt:
+      api_track_value.set_data_int(orbit_api::Decode<int32_t>(api_event.encoded_event.event.data));
+      break;
+    case orbit_api::kTrackInt64:
+      api_track_value.set_data_int64(
+          orbit_api::Decode<int64_t>(api_event.encoded_event.event.data));
+      break;
+    case orbit_api::kTrackUint:
+      api_track_value.set_data_uint(
+          orbit_api::Decode<uint32_t>(api_event.encoded_event.event.data));
+      break;
+    case orbit_api::kTrackUint64:
+      api_track_value.set_data_uint64(
+          orbit_api::Decode<uint64_t>(api_event.encoded_event.event.data));
+      break;
+    case orbit_api::kTrackFloat:
+      api_track_value.set_data_float(orbit_api::Decode<float>(api_event.encoded_event.event.data));
+      break;
+    case orbit_api::kTrackDouble:
+      api_track_value.set_data_double(
+          orbit_api::Decode<double>(api_event.encoded_event.event.data));
+      break;
+
+    case orbit_api::kNone:
+      [[fallthrough]];
+    case orbit_api::kScopeStart:
+      [[fallthrough]];
+    case orbit_api::kScopeStop:
+      [[fallthrough]];
+    case orbit_api::kScopeStartAsync:
+      [[fallthrough]];
+    case orbit_api::kScopeStopAsync:
+      [[fallthrough]];
+    case orbit_api::kString:
+      UNREACHABLE();
+  }
+
+  capture_listener_->OnApiTrackValue(api_track_value);
+}
 
 void ApiEventProcessor::ProcessApiScopeStart(const orbit_grpc_protos::ApiScopeStart& event_buffer) {
   synchronous_scopes_stack_by_tid_[event_buffer.tid()].emplace_back(event_buffer);
@@ -176,7 +236,9 @@ void ApiEventProcessor::ProcessApiScopeStop(const orbit_grpc_protos::ApiScopeSto
   timer_info.set_depth(event_stack.size() - 1);
   timer_info.set_type(TimerInfo::kApiScope);
 
-  EncodedColorToColor(start_event.color_rgba(), timer_info.mutable_color());
+  if (start_event.color_rgba() != kOrbitColorAuto) {
+    EncodedColorToColor(start_event.color_rgba(), timer_info.mutable_color());
+  }
 
   timer_info.set_group_id(start_event.group_id());
   timer_info.set_address_in_function(start_event.address_in_function());
@@ -211,7 +273,9 @@ void ApiEventProcessor::ProcessApiScopeStopAsync(
   timer_info.set_depth(0);
   timer_info.set_type(TimerInfo::kApiScopeAsync);
 
-  EncodedColorToColor(start_event.color_rgba(), timer_info.mutable_color());
+  if (start_event.color_rgba() != kOrbitColorAuto) {
+    EncodedColorToColor(start_event.color_rgba(), timer_info.mutable_color());
+  }
 
   timer_info.set_api_async_scope_id(event_id);
   timer_info.set_address_in_function(start_event.address_in_function());

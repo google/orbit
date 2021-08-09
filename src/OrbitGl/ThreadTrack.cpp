@@ -113,21 +113,15 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
       capture_data_->GetInstrumentedFunctionById(timer_info->function_id());
 
   std::string function_name;
-  bool is_manual =
-      timer_info->type() == TimerInfo::kApiEvent || timer_info->type() == TimerInfo::kApiScope;
+  bool is_manual = timer_info->type() == TimerInfo::kApiScope;
 
   if (func == nullptr && !is_manual) {
     return GetTimesliceText(*timer_info);
   }
 
   if (is_manual) {
-    if (timer_info->type() == TimerInfo::kApiEvent) {
-      auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(*timer_info);
-      function_name = api_event.name;
-    } else {
-      CHECK(timer_info->type() == TimerInfo::kApiScope);
-      function_name = timer_info->api_scope_name();
-    }
+    CHECK(timer_info->type() == TimerInfo::kApiScope);
+    function_name = timer_info->api_scope_name();
   } else {
     function_name = func->function_name();
   }
@@ -151,7 +145,7 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
 bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
   // TODO(b/179225487): Filtering for manually instrumented scopes is not yet supported.
   return timer_info.type() == TimerInfo::kIntrospection ||
-         timer_info.type() == TimerInfo::kApiEvent || timer_info.type() == TimerInfo::kApiScope ||
+         timer_info.type() == TimerInfo::kApiScope ||
          app_->IsFunctionVisible(timer_info.function_id());
 }
 
@@ -179,16 +173,7 @@ bool ThreadTrack::IsTrackSelected() const {
                  static_cast<uint8_t>(timer_info.color().alpha()));
   }
 
-  if (timer_info.type() != TimerInfo::kApiEvent) {
-    return std::nullopt;
-  }
-
-  orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
-  if (event.color == kOrbitColorAuto) {
-    return std::nullopt;
-  }
-
-  return ToColor(static_cast<uint64_t>(event.color));
+  return std::nullopt;
 }
 
 float ThreadTrack::GetDefaultBoxHeight() const {
@@ -336,11 +321,6 @@ std::string ThreadTrack::GetTimesliceText(const TimerInfo& timer_info) const {
   if (timer_info.type() == TimerInfo::kIntrospection) {
     auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
     return absl::StrFormat("%s %s", api_event.name, time);
-  }
-  if (timer_info.type() == TimerInfo::kApiEvent) {
-    auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
-    std::string extra_info = GetExtraInfo(timer_info);
-    return absl::StrFormat("%s %s %s", api_event.name, extra_info.c_str(), time);
   }
   if (timer_info.type() == TimerInfo::kApiScope) {
     std::string extra_info = GetExtraInfo(timer_info);

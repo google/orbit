@@ -175,7 +175,7 @@ void CaptureEventProcessorForListener::ProcessEvent(const ClientCaptureEvent& ev
       ProcessMemoryUsageEvent(event.memory_usage_event());
       break;
     case ClientCaptureEvent::kApiEvent:
-      api_event_processor_.ProcessApiEvent(event.api_event());
+      api_event_processor_.ProcessApiEventLegacy(event.api_event());
       break;
     case ClientCaptureEvent::kApiScopeStart:
       api_event_processor_.ProcessApiScopeStart(event.api_scope_start());

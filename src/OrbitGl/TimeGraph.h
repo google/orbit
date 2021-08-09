@@ -193,9 +193,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleInterface>
   CreateAccessibleInterface() override;
 
-  [[deprecated]] void ProcessApiEventTimerLegacy(const orbit_client_protos::TimerInfo& timer_info);
-  void ProcessApiScopeTimer(const orbit_client_protos::TimerInfo& timer_info);
-  void ProcessApiScopeAsyncTimer(const orbit_client_protos::TimerInfo& timer_info);
   void ProcessIntrospectionTimer(const orbit_client_protos::TimerInfo& timer_info);
   [[deprecated]] void ProcessValueTrackingTimerLegacy(
       const orbit_client_protos::TimerInfo& timer_info);
