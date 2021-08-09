@@ -184,8 +184,7 @@ float GpuSubmissionTrack::GetHeight() const {
 }
 
 const TimerInfo* GpuSubmissionTrack::GetLeft(const TimerInfo& timer_info) const {
-  uint64_t timeline_hash = timer_info.user_data_key();
-  if (timeline_hash == timeline_hash_) {
+  if (timer_info.timeline_hash() == timeline_hash_) {
     const TimerChain* chain = track_data_->GetChain(timer_info.depth());
     if (chain != nullptr) return chain->GetElementBefore(timer_info);
   }
@@ -193,8 +192,7 @@ const TimerInfo* GpuSubmissionTrack::GetLeft(const TimerInfo& timer_info) const 
 }
 
 const TimerInfo* GpuSubmissionTrack::GetRight(const TimerInfo& timer_info) const {
-  uint64_t timeline_hash = timer_info.user_data_key();
-  if (timeline_hash == timeline_hash_) {
+  if (timer_info.timeline_hash() == timeline_hash_) {
     const TimerChain* chain = track_data_->GetChain(timer_info.depth());
     if (chain != nullptr) return chain->GetElementAfter(timer_info);
   }
