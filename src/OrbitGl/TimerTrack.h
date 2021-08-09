@@ -65,7 +65,6 @@ class TimerTrack : public Track {
                         PickingMode /*picking_mode*/, float z_offset = 0) override;
   [[nodiscard]] Type GetType() const override { return Type::kTimerTrack; }
 
-  [[nodiscard]] uint32_t GetDepth() const { return depth_; }
   [[nodiscard]] std::string GetExtraInfo(const orbit_client_protos::TimerInfo& timer) const;
 
   [[nodiscard]] const TimerInfo* GetFirstAfterTime(uint64_t time, uint32_t depth) const;
@@ -92,7 +91,7 @@ class TimerTrack : public Track {
       uint64_t start_ns, uint64_t end_ns) const;
   [[nodiscard]] bool IsEmpty() const override;
 
-  [[nodiscard]] bool IsCollapsible() const override { return depth_ > 1; }
+  [[nodiscard]] bool IsCollapsible() const override { return GetDepth() > 1; }
 
   [[nodiscard]] virtual float GetDefaultBoxHeight() const { return layout_->GetTextBoxHeight(); }
   [[nodiscard]] virtual float GetDynamicBoxHeight(
@@ -134,9 +133,8 @@ class TimerTrack : public Track {
                                const orbit_client_protos::TimerInfo* current_timer_info,
                                uint64_t* min_ignore, uint64_t* max_ignore);
 
-  void UpdateDepth(uint32_t depth) {
-    if (depth > depth_) depth_ = depth;
-  }
+  [[nodiscard]] uint32_t GetDepth() const { return depth_; }
+  void UpdateMaxDepth(uint32_t depth) { depth_ = std::max(depth_, depth); }
 
   [[nodiscard]] virtual std::string GetTimesliceText(
       const orbit_client_protos::TimerInfo& /*timer*/) const {
@@ -154,7 +152,6 @@ class TimerTrack : public Track {
 
   TextRenderer* text_renderer_ = nullptr;
   uint32_t depth_ = 0;
-  mutable absl::Mutex mutex_;
   int visible_timer_count_ = 0;
 
   [[nodiscard]] virtual std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const;

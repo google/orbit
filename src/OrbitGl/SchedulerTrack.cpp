@@ -38,8 +38,8 @@ void SchedulerTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
 }
 
 float SchedulerTrack::GetHeight() const {
-  uint32_t num_gaps = depth_ > 0 ? depth_ - 1 : 0;
-  return GetHeaderHeight() + (depth_ * layout_->GetTextCoresHeight()) +
+  uint32_t num_gaps = std::max(GetDepth() - 1, 0u);
+  return GetHeaderHeight() + (GetDepth() * layout_->GetTextCoresHeight()) +
          (num_gaps * layout_->GetSpaceBetweenCores()) + layout_->GetTrackBottomMargin();
 }
 

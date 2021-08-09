@@ -112,7 +112,7 @@ bool TimerTrack::DrawTimer(const TimerInfo* prev_timer_info, const TimerInfo* ne
     return false;
   if (!TimerFilter(*current_timer_info)) return false;
 
-  UpdateDepth(current_timer_info->depth() + 1);
+  UpdateMaxDepth(current_timer_info->depth() + 1);
   double start_us = time_graph_->GetUsFromTick(current_timer_info->start());
   double start_or_prev_end_us = start_us;
   double end_us = time_graph_->GetUsFromTick(current_timer_info->end());
@@ -317,7 +317,7 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
 
 void TimerTrack::OnTimer(const TimerInfo& timer_info) {
   if (timer_info.type() != TimerInfo::kCoreActivity) {
-    UpdateDepth(timer_info.depth() + 1);
+    UpdateMaxDepth(timer_info.depth() + 1);
   }
 
   if (process_id_ == -1) {

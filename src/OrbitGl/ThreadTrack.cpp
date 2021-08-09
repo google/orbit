@@ -193,8 +193,8 @@ bool ThreadTrack::IsTrackSelected() const {
 
 float ThreadTrack::GetDefaultBoxHeight() const {
   auto box_height = layout_->GetTextBoxHeight();
-  if (collapse_toggle_->IsCollapsed() && depth_ > 0) {
-    return box_height / static_cast<float>(depth_);
+  if (collapse_toggle_->IsCollapsed() && GetDepth() > 0) {
+    return box_height / static_cast<float>(GetDepth());
   }
   return box_height;
 }
@@ -409,7 +409,7 @@ float ThreadTrack::GetYFromDepth(uint32_t depth) const {
 }
 
 void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
-  UpdateDepth(timer_info.depth() + 1);
+  UpdateMaxDepth(timer_info.depth() + 1);
 
   if (process_id_ == -1) {
     process_id_ = timer_info.process_id();
@@ -485,7 +485,7 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
     auto first_node_to_draw = ordered_nodes.lower_bound(min_tick);
     if (first_node_to_draw != ordered_nodes.begin()) --first_node_to_draw;
 
-    UpdateDepth(depth);
+    UpdateMaxDepth(depth);
     float world_timer_y = GetYFromDepth(depth - 1);
     uint64_t next_pixel_start_time_ns = min_tick;
 
