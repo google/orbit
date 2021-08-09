@@ -21,16 +21,15 @@ orbit_api::LockFreeApiEventProducer& GetEventProducer() {
 
 template <typename Event, typename... Types>
 void EnqueueApiEvent(Types... args) {
-  if (producer == nullptr) {
-    producer = std::make_unique<orbit_api::LockFreeApiEventProducer>();
-  }
-  if (!producer->IsCapturing()) return;
+  orbit_api::LockFreeApiEventProducer& producer = GetEventProducer();
+
+  if (!producer.IsCapturing()) return;
 
   static pid_t pid = orbit_base::GetCurrentProcessId();
   thread_local pid_t tid = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
   Event event{pid, tid, timestamp_ns, args...};
-  producer->EnqueueIntermediateEvent(event);
+  producer.EnqueueIntermediateEvent(event);
 }
 }  // namespace
 

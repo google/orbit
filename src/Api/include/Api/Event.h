@@ -54,15 +54,15 @@ struct ApiScopeStart {
                 orbit_api_color color_rgba = kOrbitColorAuto, uint64_t group_id = 0,
                 uint64_t address_in_function = 0)
       : meta_data(pid, tid, timestamp_ns),
+        encoded_name(name),
         group_id(group_id),
         address_in_function(address_in_function),
-        encoded_name(name),
         color_rgba(color_rgba) {}
 
   ApiEventMetaData meta_data;
+  ApiEncodedString encoded_name;
   uint64_t group_id = 0;
   uint64_t address_in_function = 0;
-  ApiEncodedString encoded_name;
   uint32_t color_rgba = 0;
 };
 
@@ -77,15 +77,15 @@ struct ApiScopeStartAsync {
   ApiScopeStartAsync(int32_t pid, int32_t tid, uint64_t timestamp_ns, const char* name, uint64_t id,
                      orbit_api_color color_rgba = kOrbitColorAuto, uint64_t address_in_function = 0)
       : meta_data(pid, tid, timestamp_ns),
+        encoded_name(name),
         id(id),
         address_in_function(address_in_function),
-        encoded_name(name),
         color_rgba(color_rgba) {}
 
   ApiEventMetaData meta_data;
+  ApiEncodedString encoded_name;
   uint64_t id = 0;
   uint64_t address_in_function = 0;
-  ApiEncodedString encoded_name;
   uint32_t color_rgba = 0;
 };
 
@@ -100,11 +100,11 @@ struct ApiScopeStopAsync {
 struct ApiStringEvent {
   ApiStringEvent(int32_t pid, int32_t tid, uint64_t timestamp_ns, const char* name, uint64_t id,
                  orbit_api_color color_rgba = kOrbitColorAuto)
-      : meta_data(pid, tid, timestamp_ns), id(id), encoded_name(name), color_rgba(color_rgba) {}
+      : meta_data(pid, tid, timestamp_ns), encoded_name(name), id(id), color_rgba(color_rgba) {}
 
   ApiEventMetaData meta_data;
-  uint64_t id = 0;
   ApiEncodedString encoded_name;
+  uint64_t id = 0;
   uint32_t color_rgba = 0;
 };
 
