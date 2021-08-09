@@ -56,4 +56,4 @@ TEST(StringManager, Clear) {
   EXPECT_FALSE(string_manager.Contains(1));
 }
 
-}  // namespace orbit_gl
+}  // namespace orbit_string_manager
