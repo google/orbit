@@ -10,17 +10,20 @@ set -e
 if [ -z "${CONAN_PROFILE}" ]; then
   CONAN_PROFILE="$(basename $(dirname "${KOKORO_JOB_NAME}"))"
 
-  # That's a temporary work-around. As long as the kokoro jobs don't carry the
-  # conan profile in its name this mapping will do the trick.
+  # Profile mappings. Use that for testing different profiles
+  # without changing the Kokoro config.
   declare -A profile_mapping=( \
-    [gcp_ubuntu]="clang7_relwithdebinfo" \
-    [gcp_ubuntu_ggp]="ggp_relwithdebinfo" \
-    [gcp_ubuntu_test]="clang7_relwithdebinfo" \
-    [gcp_windows]="msvc2017_relwithdebinfo" \
-    [gcp_windows_test]="msvc2017_relwithdebinfo" \
   )
 
   CONAN_PROFILE="${profile_mapping[${CONAN_PROFILE}]-${CONAN_PROFILE}}"
+
+  # If the conan profile matches `${profile_name}_public` we will
+  # build the conan profile `${profile_name}` using the public conan
+  # remotes.
+  if [[ "${CONAN_PROFILE}" == *_public ]]; then
+    CONAN_PROFILE="${CONAN_PROFILE%_public}"
+    readonly PUBLIC_BUILD="yes"
+  fi
 fi
 
 if [ -z "${CONAN_PROFILE}" ]; then
@@ -110,7 +113,7 @@ if [ -n "$1" ]; then
   pip3 install conan==1.36.0
 
   echo "Installing conan configuration (profiles, settings, etc.)..."
-  ${REPO_ROOT}/third_party/conan/configs/install.sh
+  ${REPO_ROOT}/third_party/conan/configs/install.sh ${PUBLIC_BUILD:+--force-public-remotes}
 
 
   if [ "$(uname -s)" == "Linux" ]; then
