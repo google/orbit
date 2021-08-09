@@ -233,6 +233,6 @@ void FrameTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
                   kWhiteColor);
 
   text_renderer.AddText(label.c_str(), white_text_box_position[0],
-                        white_text_box_position[1] + layout_->GetTextOffset(), text_z, kWhiteColor,
-                        font_size, white_text_box_size[0]);
+                        white_text_box_position[1] + layout_->GetTextOffset(), text_z,
+                        {font_size, kWhiteColor, white_text_box_size[0]});
 }
