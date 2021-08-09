@@ -197,8 +197,8 @@ bool ThreadTrack::IsTrackSelected() const {
 
 float ThreadTrack::GetDefaultBoxHeight() const {
   auto box_height = layout_->GetTextBoxHeight();
-  if (collapse_toggle_->IsCollapsed() && GetDepth() > 0) {
-    return box_height / static_cast<float>(GetDepth());
+  if (collapse_toggle_->IsCollapsed() && track_data_->GetMaxDepth() > 0) {
+    return box_height / static_cast<float>(track_data_->GetMaxDepth());
   }
   return box_height;
 }
@@ -361,8 +361,9 @@ std::string ThreadTrack::GetTooltip() const {
 }
 
 float ThreadTrack::GetHeight() const {
-  const uint32_t depth =
-      collapse_toggle_->IsCollapsed() ? std::min<uint32_t>(1, GetDepth()) : GetDepth();
+  const uint32_t depth = collapse_toggle_->IsCollapsed()
+                             ? std::min<uint32_t>(1, track_data_->GetMaxDepth())
+                             : track_data_->GetMaxDepth();
 
   bool gap_between_tracks_and_timers =
       (!thread_state_bar_->IsEmpty() || !event_bar_->IsEmpty() || !tracepoint_bar_->IsEmpty()) &&
@@ -408,8 +409,6 @@ float ThreadTrack::GetYFromDepth(uint32_t depth) const {
 }
 
 void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
-  UpdateMaxDepth(timer_info.depth() + 1);
-
   if (process_id_ == -1) {
     process_id_ = timer_info.process_id();
   }
@@ -484,7 +483,6 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
     auto first_node_to_draw = ordered_nodes.lower_bound(min_tick);
     if (first_node_to_draw != ordered_nodes.begin()) --first_node_to_draw;
 
-    UpdateMaxDepth(depth);
     float world_timer_y = GetYFromDepth(depth - 1);
     uint64_t next_pixel_start_time_ns = min_tick;
 

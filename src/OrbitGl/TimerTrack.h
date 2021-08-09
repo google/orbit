@@ -92,7 +92,7 @@ class TimerTrack : public Track {
       uint64_t start_ns, uint64_t end_ns) const;
   [[nodiscard]] bool IsEmpty() const override;
 
-  [[nodiscard]] bool IsCollapsible() const override { return GetDepth() > 1; }
+  [[nodiscard]] bool IsCollapsible() const override { return track_data_->GetMaxDepth() > 1; }
 
   [[nodiscard]] virtual float GetDefaultBoxHeight() const { return layout_->GetTextBoxHeight(); }
   [[nodiscard]] virtual float GetDynamicBoxHeight(
@@ -134,9 +134,6 @@ class TimerTrack : public Track {
                                const orbit_client_protos::TimerInfo* current_timer_info,
                                uint64_t* min_ignore, uint64_t* max_ignore);
 
-  [[nodiscard]] uint32_t GetDepth() const { return depth_; }
-  void UpdateMaxDepth(uint32_t depth) { depth_ = std::max(depth_, depth); }
-
   [[nodiscard]] virtual std::string GetTimesliceText(
       const orbit_client_protos::TimerInfo& /*timer*/) const {
     return "";
@@ -151,10 +148,6 @@ class TimerTrack : public Track {
       TimeGraph* time_graph, orbit_gl::Viewport* viewport, bool is_collapsed,
       const orbit_client_protos::TimerInfo* selected_timer, uint64_t highlighted_function_id);
 
-  TextRenderer* text_renderer_ = nullptr;
-  uint32_t depth_ = 0;
-  int visible_timer_count_ = 0;
-
   [[nodiscard]] virtual std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const;
   [[nodiscard]] std::unique_ptr<PickingUserData> CreatePickingUserData(
       const Batcher& batcher, const orbit_client_protos::TimerInfo& timer_info) {
@@ -163,7 +156,8 @@ class TimerTrack : public Track {
   }
 
   static const Color kHighlightColor;
-
+  TextRenderer* text_renderer_ = nullptr;
+  int visible_timer_count_ = 0;
   OrbitApp* app_ = nullptr;
 
   orbit_client_data::TrackData* track_data_;

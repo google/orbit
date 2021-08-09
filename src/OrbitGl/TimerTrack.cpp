@@ -111,7 +111,6 @@ bool TimerTrack::DrawTimer(const TimerInfo* prev_timer_info, const TimerInfo* ne
     return false;
   if (!TimerFilter(*current_timer_info)) return false;
 
-  UpdateMaxDepth(current_timer_info->depth() + 1);
   double start_us = time_graph_->GetUsFromTick(current_timer_info->start());
   double start_or_prev_end_us = start_us;
   double end_us = time_graph_->GetUsFromTick(current_timer_info->end());
@@ -315,10 +314,6 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
 }
 
 void TimerTrack::OnTimer(const TimerInfo& timer_info) {
-  if (timer_info.type() != TimerInfo::kCoreActivity) {
-    UpdateMaxDepth(timer_info.depth() + 1);
-  }
-
   if (process_id_ == -1) {
     process_id_ = timer_info.process_id();
   }
@@ -327,8 +322,8 @@ void TimerTrack::OnTimer(const TimerInfo& timer_info) {
 }
 
 float TimerTrack::GetHeight() const {
-  uint32_t collapsed_depth = std::min<uint32_t>(1, GetDepth());
-  uint32_t depth = collapse_toggle_->IsCollapsed() ? collapsed_depth : GetDepth();
+  uint32_t collapsed_depth = std::min<uint32_t>(1, track_data_->GetMaxDepth());
+  uint32_t depth = collapse_toggle_->IsCollapsed() ? collapsed_depth : track_data_->GetMaxDepth();
   return GetHeaderHeight() + layout_->GetTextBoxHeight() * depth +
          (depth > 0 ? layout_->GetSpaceBetweenTracksAndThread() : 0) +
          layout_->GetTrackBottomMargin();

@@ -19,6 +19,7 @@ class TrackData final {
   [[nodiscard]] size_t GetNumberOfTimers() const { return num_timers_; }
   [[nodiscard]] uint64_t GetMinTime() const { return min_time_; }
   [[nodiscard]] uint64_t GetMaxTime() const { return max_time_; }
+  [[nodiscard]] uint32_t GetMaxDepth() const { return max_depth_; }
 
   const orbit_client_protos::TimerInfo& AddTimer(uint64_t depth,
                                                  orbit_client_protos::TimerInfo timer_info) {
@@ -26,6 +27,7 @@ class TrackData final {
     UpdateMinTime(timer_info.start());
     UpdateMaxTime(timer_info.end());
     ++num_timers_;
+    UpdateMaxDepth(timer_info.depth() + 1);
 
     return timer_chain->emplace_back(std::move(timer_info));
   }
@@ -63,6 +65,8 @@ class TrackData final {
   }
 
  private:
+  void UpdateMaxDepth(uint32_t depth) { max_depth_ = std::max(max_depth_, depth); }
+
   [[nodiscard]] TimerChain* GetOrCreateTimerChain(uint64_t depth) {
     absl::MutexLock lock(&mutex_);
     auto it = timers_.find(depth);
@@ -75,6 +79,7 @@ class TrackData final {
     return inserted_it->second.get();
   }
 
+  uint32_t max_depth_ = 0;
   mutable absl::Mutex mutex_;
   std::map<uint64_t, std::unique_ptr<TimerChain>> timers_ ABSL_GUARDED_BY(mutex_);
   std::atomic<size_t> num_timers_{0};
