@@ -13,7 +13,8 @@ target_sources(DataViews PRIVATE
         DataViewUtils.cpp
         FunctionsDataView.cpp
         ModulesDataView.cpp
-        PresetsDataView.cpp)
+        PresetsDataView.cpp
+        ../OrbitGl/ClientFlags.cpp)
 
 target_sources(DataViews PUBLIC
         include/DataViews/AppInterface.h
@@ -42,6 +43,7 @@ target_sources(DataViewsTests PRIVATE DataViewTest.cpp
                                       DataViewUtilsTest.cpp
                                       FunctionsDataViewTest.cpp
                                       MockAppInterface.h
+                                      ModulesDataViewTest.cpp
                                       PresetsDataViewTest.cpp)
 target_link_libraries(DataViewsTests PRIVATE
         DataViews
