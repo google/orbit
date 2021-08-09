@@ -199,18 +199,22 @@ void ModulesDataView::DoFilter() {
   indices_ = std::move(indices);
 }
 
+void ModulesDataView::AddModule(uint64_t start_address, ModuleData* module,
+                                ModuleInMemory module_in_memory) {
+  start_address_to_module_.insert_or_assign(start_address, std::move(module));
+  start_address_to_module_in_memory_.insert_or_assign(start_address, std::move(module_in_memory));
+  indices_.push_back(start_address);
+}
+
 void ModulesDataView::UpdateModules(const ProcessData* process) {
   start_address_to_module_.clear();
   start_address_to_module_in_memory_.clear();
   auto memory_map = process->GetMemoryMapCopy();
-  indices_.resize(memory_map.size());
-  size_t index = 0;
+  indices_.clear();
   for (const auto& [start_address, module_in_memory] : memory_map) {
     ModuleData* module = app_->GetMutableModuleByPathAndBuildId(module_in_memory.file_path(),
                                                                 module_in_memory.build_id());
-    start_address_to_module_.insert_or_assign(start_address, module);
-    start_address_to_module_in_memory_.insert_or_assign(start_address, module_in_memory);
-    indices_[index++] = start_address;
+    AddModule(start_address, std::move(module), module_in_memory);
   }
 
   OnDataChanged();
