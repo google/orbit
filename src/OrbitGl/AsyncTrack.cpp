@@ -90,8 +90,8 @@ void AsyncTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
 
 float AsyncTrack::GetDefaultBoxHeight() const {
   auto box_height = layout_->GetTextBoxHeight();
-  if (collapse_toggle_->IsCollapsed() && depth_ > 0) {
-    return box_height / static_cast<float>(depth_);
+  if (collapse_toggle_->IsCollapsed() && GetDepth() > 0) {
+    return box_height / static_cast<float>(GetDepth());
   }
   return box_height;
 }
