@@ -52,7 +52,6 @@ target_sources(
          MajorPageFaultsTrack.h
          MemoryTrack.h
          MinorPageFaultsTrack.h
-         ModulesDataView.h
          MultivariateTimeSeries.h
          PageFaultsTrack.h
          PickingManager.h
@@ -122,7 +121,6 @@ target_sources(
           MajorPageFaultsTrack.cpp
           MemoryTrack.cpp
           MinorPageFaultsTrack.cpp
-          ModulesDataView.cpp
           PageFaultsTrack.cpp
           PickingManager.cpp
           SamplingReport.cpp

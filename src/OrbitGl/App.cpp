@@ -49,6 +49,7 @@
 #include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"
+#include "DataViews/ModulesDataView.h"
 #include "DataViews/PresetsDataView.h"
 #include "FrameTrackOnlineProcessor.h"
 #include "GlCanvas.h"
@@ -60,7 +61,6 @@
 #include "MetricsUploader/CaptureMetric.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "MetricsUploader/ScopedMetric.h"
-#include "ModulesDataView.h"
 #include "ObjectUtils/Address.h"
 #include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/File.h"
@@ -2365,7 +2365,7 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
     case DataViewType::kModules:
       if (!modules_data_view_) {
-        modules_data_view_ = std::make_unique<ModulesDataView>(this);
+        modules_data_view_ = std::make_unique<orbit_data_views::ModulesDataView>(this);
         panels_.push_back(modules_data_view_.get());
       }
       return modules_data_view_.get();

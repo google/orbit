@@ -12,6 +12,7 @@ target_sources(DataViews PRIVATE
         DataViewUtils.h
         DataViewUtils.cpp
         FunctionsDataView.cpp
+        ModulesDataView.cpp
         PresetsDataView.cpp)
 
 target_sources(DataViews PUBLIC
@@ -19,6 +20,7 @@ target_sources(DataViews PUBLIC
         include/DataViews/DataView.h
         include/DataViews/DataViewType.h
         include/DataViews/FunctionsDataView.h
+        include/DataViews/ModulesDataView.h
         include/DataViews/PresetsDataView.h
         include/DataViews/PresetLoadState.h)
 
@@ -28,6 +30,7 @@ target_link_libraries(DataViews PUBLIC
         ClientData
         ClientModel
         ClientProtos
+        DisplayFormats
         MetricsUploader
         OrbitBase
         PresetFile

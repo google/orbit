@@ -48,6 +48,7 @@
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"
+#include "DataViews/ModulesDataView.h"
 #include "DataViews/PresetLoadState.h"
 #include "DataViews/PresetsDataView.h"
 #include "FramePointerValidatorClient.h"
@@ -59,7 +60,6 @@
 #include "ManualInstrumentationManager.h"
 #include "MetricsUploader/CaptureMetric.h"
 #include "MetricsUploader/MetricsUploader.h"
-#include "ModulesDataView.h"
 #include "OrbitBase/CrashHandler.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
@@ -545,7 +545,7 @@ class OrbitApp final : public DataViewFactory,
 
   std::vector<orbit_data_views::DataView*> panels_;
 
-  std::unique_ptr<ModulesDataView> modules_data_view_;
+  std::unique_ptr<orbit_data_views::ModulesDataView> modules_data_view_;
   std::unique_ptr<orbit_data_views::FunctionsDataView> functions_data_view_;
   std::unique_ptr<CallstackDataView> callstack_data_view_;
   std::unique_ptr<CallstackDataView> selection_callstack_data_view_;
