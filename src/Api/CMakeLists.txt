@@ -19,16 +19,13 @@ target_compile_features(ApiBase PUBLIC cxx_std_17)
 
 target_sources(ApiBase PUBLIC
         include/Api/Event.h
-        include/Api/EncodedString.h
-        include/Api/LockFreeApiEventProducer.h)
+        include/Api/EncodedString.h)
 target_sources(ApiBase PRIVATE
-        EncodedString.cpp
-        LockFreeApiEventProducer.cpp)
+        EncodedString.cpp)
 target_link_libraries(ApiBase PUBLIC
-        OrbitBase
-        CaptureEventProducer
         GrpcProtos
-        ProducerSideChannel)
+        OrbitBase)
+target_include_directories(ApiBase PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
 add_executable(ApiInterfaceTests)
 
@@ -57,6 +54,8 @@ target_compile_options(Api PRIVATE ${STRICT_COMPILE_FLAGS})
 target_compile_features(Api PUBLIC cxx_std_17)
 
 target_sources(Api PRIVATE
+        LockFreeApiEventProducer.h
+        LockFreeApiEventProducer.cpp
         Orbit.cpp)
 
 target_link_libraries(Api PUBLIC

@@ -7,9 +7,8 @@
 
 #include <absl/base/casts.h>
 
-#include "Api/EncodedEvent.h"
 #include "Api/Event.h"
-#include "Api/LockFreeApiEventProducer.h"
+#include "LockFreeApiEventProducer.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
 
