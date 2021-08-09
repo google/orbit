@@ -238,7 +238,7 @@ void GlCanvas::PrepareScreenSpaceViewport() {
   glViewport(0, 0, viewport_.GetScreenWidth(), viewport_.GetScreenHeight());
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  glOrtho(0, viewport_.GetScreenWidth(), 0, viewport_.GetScreenHeight(), -1, 1);
+  glOrtho(0, viewport_.GetScreenWidth(), viewport_.GetScreenHeight(), 0.f, -1, 1);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 }

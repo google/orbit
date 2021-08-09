@@ -259,7 +259,7 @@ bool GlSlider::HandlePageScroll(float click_value) {
 }
 
 void GlVerticalSlider::Draw(Batcher& batcher, bool is_picked) {
-  float x = viewport_.GetScreenWidth() - GetPixelHeight();
+  batcher.PushTranslation(static_cast<int>(GetPos()[0]), static_cast<int>(GetPos()[1]));
 
   float bar_pixel_len = GetBarPixelLength();
   float slider_height = ceilf(length_ratio_ * bar_pixel_len);
@@ -268,12 +268,14 @@ void GlVerticalSlider::Draw(Batcher& batcher, bool is_picked) {
   const Color dark_border_color = GetDarkerColor(bar_color_);
 
   // Background
-  DrawBackground(batcher, x, GetOrthogonalSliderSize(), GetPixelHeight(), bar_pixel_len);
+  DrawBackground(batcher, 0, 0, GetPixelHeight(), bar_pixel_len);
 
-  float start = ceilf((1.0f - pos_ratio_) * non_slider_height + GetOrthogonalSliderSize());
+  float start = ceilf(pos_ratio_ * non_slider_height);
 
   ShadingDirection shading_direction = ShadingDirection::kRightToLeft;
-  DrawSlider(batcher, x, start, GetPixelHeight(), slider_height, shading_direction, is_picked);
+  DrawSlider(batcher, 0, start, GetPixelHeight(), slider_height, shading_direction, is_picked);
+
+  batcher.PopTranslation();
 }
 
 int GlVerticalSlider::GetBarPixelLength() const {
@@ -281,18 +283,18 @@ int GlVerticalSlider::GetBarPixelLength() const {
 }
 
 void GlHorizontalSlider::Draw(Batcher& batcher, bool is_picked) {
-  static float y = 0;
+  batcher.PushTranslation(static_cast<int>(GetPos()[0]), static_cast<int>(GetPos()[1]));
 
   float bar_pixel_len = GetBarPixelLength();
   float slider_width = ceilf(length_ratio_ * bar_pixel_len);
   float non_slider_width = bar_pixel_len - slider_width;
 
-  DrawBackground(batcher, 0, y, bar_pixel_len, GetPixelHeight());
+  DrawBackground(batcher, 0, 0, bar_pixel_len, GetPixelHeight());
 
   float start = floorf(pos_ratio_ * non_slider_width);
 
   ShadingDirection shading_direction = ShadingDirection::kTopToBottom;
-  DrawSlider(batcher, start, y, slider_width, GetPixelHeight(), shading_direction, is_picked);
+  DrawSlider(batcher, start, 0, slider_width, GetPixelHeight(), shading_direction, is_picked);
 
   const float kEpsilon = 0.0001f;
 
@@ -337,6 +339,8 @@ void GlHorizontalSlider::Draw(Batcher& batcher, bool is_picked) {
                            ShadingDirection::kTopToBottom);
     }
   }
+
+  batcher.PopTranslation();
 }
 
 int GlHorizontalSlider::GetBarPixelLength() const {
