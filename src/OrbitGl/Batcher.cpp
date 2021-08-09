@@ -14,6 +14,18 @@
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
 
+void Batcher::PushTranslation(float x, float y, float z) {
+  const Vec3 translation(x, y, z);
+  translation_stack_.push_back(current_translation_);
+  current_translation_ += translation;
+}
+
+void Batcher::PopTranslation() {
+  CHECK(!translation_stack_.empty());
+  current_translation_ = *translation_stack_.crbegin();
+  translation_stack_.pop_back();
+}
+
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                       std::unique_ptr<PickingUserData> user_data) {
   Color picking_color = PickingId::ToColor(PickingType::kLine, user_data_.size(), batcher_id_);
@@ -53,8 +65,8 @@ static void MoveLineToPixelCenterIfHorizontal(Line& line) {
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
                       std::unique_ptr<PickingUserData> user_data) {
   Line line;
-  line.start_point = Vec3(floorf(from[0]), floorf(from[1]), z);
-  line.end_point = Vec3(floorf(to[0]), floorf(to[1]), z);
+  line.start_point = TransformVertex(Vec3(from[0], from[1], z));
+  line.end_point = TransformVertex(Vec3(to[0], to[1], z));
   // TODO(b/195386885) This is a hack to address the issue that some horizontal lines in the graph
   // tracks are missing. We need a better solution for this issue.
   MoveLineToPixelCenterIfHorizontal(line);
@@ -200,8 +212,7 @@ void Batcher::AddBox(const Box& box, const std::array<Color, 4>& colors, const C
                      std::unique_ptr<PickingUserData> user_data) {
   Box rounded_box = box;
   for (size_t v = 0; v < 4; ++v) {
-    rounded_box.vertices[v][0] = floorf(rounded_box.vertices[v][0]);
-    rounded_box.vertices[v][1] = floorf(rounded_box.vertices[v][1]);
+    rounded_box.vertices[v] = TransformVertex(rounded_box.vertices[v]);
   }
   float layer_z_value = rounded_box.vertices[0][2];
   auto& buffer = primitive_buffers_by_layer_[layer_z_value];
@@ -253,9 +264,8 @@ void Batcher::AddShadedTrapezium(const Vec3& top_left, const Vec3& bottom_left,
 void Batcher::AddTriangle(const Triangle& triangle, const std::array<Color, 3>& colors,
                           const Color& picking_color, std::unique_ptr<PickingUserData> user_data) {
   Triangle rounded_tri = triangle;
-  for (auto& vertice : rounded_tri.vertices) {
-    vertice[0] = floorf(vertice[0]);
-    vertice[1] = floorf(vertice[1]);
+  for (auto& vertex : rounded_tri.vertices) {
+    vertex = TransformVertex(vertex);
   }
   float layer_z_value = rounded_tri.vertices[0][2];
   auto& buffer = primitive_buffers_by_layer_[layer_z_value];
@@ -265,19 +275,24 @@ void Batcher::AddTriangle(const Triangle& triangle, const std::array<Color, 3>& 
   user_data_.push_back(std::move(user_data));
 }
 
-void Batcher::AddCircle(Vec2 position, float radius, float z, Color color) {
+Vec3 Batcher::TransformVertex(const Vec3 input) const {
+  const Vec3 result = input + current_translation_;
+  return Vec3(floorf(result[0]), floorf(result[1]), result[2]);
+}
+
+void Batcher::AddCircle(const Vec2& position, float radius, float z, Color color) {
   std::vector<Vec2> circle_points_scaled_by_radius;
   for (auto& point : circle_points) {
     circle_points_scaled_by_radius.emplace_back(radius * point);
   }
 
-  position = Vec2(floorf(position[0]), floorf(position[1]));
+  Vec3 final_position = TransformVertex(Vec3(position[0], position[1], z));
 
-  Vec3 prev_point(position[0], position[1] - radius, z);
-  Vec3 point_0 = Vec3(position[0], position[1], z);
+  Vec3 prev_point(final_position[0], final_position[1] - radius, z);
+  Vec3 point_0 = final_position;
   for (size_t i = 0; i < circle_points_scaled_by_radius.size(); ++i) {
-    Vec3 new_point(position[0] + circle_points_scaled_by_radius[i][0],
-                   position[1] - circle_points_scaled_by_radius[i][1], z);
+    Vec3 new_point(final_position[0] + circle_points_scaled_by_radius[i][0],
+                   final_position[1] - circle_points_scaled_by_radius[i][1], z);
     Vec3 point_1 = Vec3(prev_point[0], prev_point[1], z);
     Vec3 point_2 = Vec3(new_point[0], new_point[1], z);
     Triangle triangle(point_0, point_1, point_2);
