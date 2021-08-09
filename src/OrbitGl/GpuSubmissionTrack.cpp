@@ -175,7 +175,7 @@ std::string GpuSubmissionTrack::GetTimesliceText(const TimerInfo& timer_info) co
 
 float GpuSubmissionTrack::GetHeight() const {
   bool collapsed = IsCollapsed();
-  uint32_t depth = collapsed ? 1 : GetDepth();
+  uint32_t depth = collapsed ? 1 : track_data_->GetMaxDepth();
   uint32_t num_gaps = depth > 0 ? depth - 1 : 0;
   if (has_vulkan_layer_command_buffer_timers_ && !collapsed) {
     depth *= 2;
