@@ -41,6 +41,9 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(bool, HasCaptureData, (), (const));
   MOCK_METHOD(const orbit_client_data::CaptureData&, GetCaptureData, (), (const));
 
+  MOCK_METHOD(void, OnValidateFramePointers, (std::vector<const orbit_client_data::ModuleData*>));
+  MOCK_METHOD(void, UpdateProcessAndModuleList, ());
+
   // This needs to be called from the main thread.
   MOCK_METHOD(bool, IsCaptureConnected, (const orbit_client_data::CaptureData&), (const));
 
@@ -48,6 +51,10 @@ class MockAppInterface : public AppInterface {
 
   MOCK_METHOD(const orbit_client_data::ModuleData*, GetModuleByPathAndBuildId,
               (const std::string&, const std::string&), (const));
+  MOCK_METHOD(orbit_client_data::ModuleData*, GetMutableModuleByPathAndBuildId,
+              (const std::string&, const std::string&), (const));
+  MOCK_METHOD(orbit_base::Future<void>, RetrieveModulesAndLoadSymbols,
+              (absl::Span<const orbit_client_data::ModuleData* const>));
 
   MOCK_METHOD(void, SelectFunction, (const orbit_client_protos::FunctionInfo&));
   MOCK_METHOD(void, DeselectFunction, (const orbit_client_protos::FunctionInfo&));

@@ -171,7 +171,7 @@ class OrbitApp final : public DataViewFactory,
                                             out_of_order_events_discarded_event) override;
 
   void OnValidateFramePointers(
-      std::vector<const orbit_client_data::ModuleData*> modules_to_validate);
+      std::vector<const orbit_client_data::ModuleData*> modules_to_validate) override;
 
   void SetCaptureWindow(CaptureWindow* capture);
   [[nodiscard]] const TimeGraph* GetTimeGraph() const {
@@ -316,7 +316,7 @@ class OrbitApp final : public DataViewFactory,
   orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModule(
       const std::string& module_path, const std::string& build_id);
   orbit_base::Future<void> RetrieveModulesAndLoadSymbols(
-      absl::Span<const orbit_client_data::ModuleData* const> modules);
+      absl::Span<const orbit_client_data::ModuleData* const> modules) override;
 
   // RetrieveModuleAndSymbols is a helper function which first retrieves the module by calling
   // `RetrieveModule` and afterwards load the symbols by calling `LoadSymbols`.
@@ -332,7 +332,7 @@ class OrbitApp final : public DataViewFactory,
   orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleWithDebugInfo(
       const std::string& module_path, const std::string& build_id);
 
-  void UpdateProcessAndModuleList();
+  void UpdateProcessAndModuleList() override;
   orbit_base::Future<std::vector<ErrorMessageOr<void>>> ReloadModules(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
   void RefreshUIAfterModuleReload();
@@ -377,7 +377,7 @@ class OrbitApp final : public DataViewFactory,
     return manual_instrumentation_manager_.get();
   }
   [[nodiscard]] orbit_client_data::ModuleData* GetMutableModuleByPathAndBuildId(
-      const std::string& path, const std::string& build_id) const {
+      const std::string& path, const std::string& build_id) const override {
     return module_manager_->GetMutableModuleByPathAndBuildId(path, build_id);
   }
   [[nodiscard]] const orbit_client_data::ModuleData* GetModuleByPathAndBuildId(
