@@ -37,6 +37,8 @@ class ModulesDataView : public DataView {
   std::string GetLabel() override { return "Modules"; }
   [[nodiscard]] bool HasRefreshButton() const override { return true; }
   void OnRefreshButtonClicked() override;
+  void AddModule(uint64_t start_address, orbit_client_data::ModuleData* module,
+                 orbit_client_data::ModuleInMemory module_in_memory);
   void UpdateModules(const orbit_client_data::ProcessData* process);
 
  protected:
