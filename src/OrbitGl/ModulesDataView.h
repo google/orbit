@@ -13,13 +13,12 @@
 
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
+#include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
-
-class OrbitApp;
 
 class ModulesDataView : public orbit_data_views::DataView {
  public:
-  explicit ModulesDataView(OrbitApp* app);
+  explicit ModulesDataView(orbit_data_views::AppInterface* app);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnFileSize; }
@@ -62,10 +61,6 @@ class ModulesDataView : public orbit_data_views::DataView {
 
   static const std::string kMenuActionLoadSymbols;
   static const std::string kMenuActionVerifyFramePointers;
-
-  // TODO(b/185090791): This is temporary and will be removed once this data view has been ported
-  // and move to orbit_data_views.
-  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_MODULES_DATA_VIEW_H_

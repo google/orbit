@@ -47,6 +47,11 @@ class AppInterface {
   [[nodiscard]] virtual bool HasCaptureData() const = 0;
   [[nodiscard]] virtual const orbit_client_data::CaptureData& GetCaptureData() const = 0;
 
+  // Functions needed by ModulesDataView
+  virtual void OnValidateFramePointers(
+      std::vector<const orbit_client_data::ModuleData*> modules_to_validate) = 0;
+  virtual void UpdateProcessAndModuleList() = 0;
+
   // This needs to be called from the main thread.
   [[nodiscard]] virtual bool IsCaptureConnected(
       const orbit_client_data::CaptureData& capture) const = 0;
@@ -55,6 +60,10 @@ class AppInterface {
 
   [[nodiscard]] virtual const orbit_client_data::ModuleData* GetModuleByPathAndBuildId(
       const std::string& path, const std::string& build_id) const = 0;
+  [[nodiscard]] virtual orbit_client_data::ModuleData* GetMutableModuleByPathAndBuildId(
+      const std::string& path, const std::string& build_id) const = 0;
+  virtual orbit_base::Future<void> RetrieveModulesAndLoadSymbols(
+      absl::Span<const orbit_client_data::ModuleData* const> modules) = 0;
 
   virtual void SelectFunction(const orbit_client_protos::FunctionInfo& func) = 0;
   virtual void DeselectFunction(const orbit_client_protos::FunctionInfo& func) = 0;

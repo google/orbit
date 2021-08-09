@@ -15,7 +15,6 @@
 #include <cstdint>
 #include <functional>
 
-#include "App.h"
 #include "ClientData/ProcessData.h"
 #include "CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
@@ -29,8 +28,8 @@ using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleInMemory;
 using orbit_client_data::ProcessData;
 
-ModulesDataView::ModulesDataView(OrbitApp* app)
-    : orbit_data_views::DataView(orbit_data_views::DataViewType::kModules, app), app_{app} {}
+ModulesDataView::ModulesDataView(orbit_data_views::AppInterface* app)
+    : orbit_data_views::DataView(orbit_data_views::DataViewType::kModules, app) {}
 
 const std::vector<orbit_data_views::DataView::Column>& ModulesDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
