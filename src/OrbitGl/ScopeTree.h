@@ -132,7 +132,7 @@ const ScopeNode<ScopeT>* ScopeTree<ScopeT>::FindScopeNode(const ScopeT& scope) c
 template <typename ScopeT>
 const ScopeT* ScopeTree<ScopeT>::FindParent(const ScopeT& scope) const {
   const ScopeNode<ScopeT>* node = FindScopeNode(scope);
-  CHECK(node != nullptr);
+  if (node == nullptr) return nullptr;
   if (node->Parent() == root_) return nullptr;
   return node->Parent()->GetScope();
 }
@@ -140,7 +140,7 @@ const ScopeT* ScopeTree<ScopeT>::FindParent(const ScopeT& scope) const {
 template <typename ScopeT>
 const ScopeT* ScopeTree<ScopeT>::FindFirstChild(const ScopeT& scope) const {
   const ScopeNode<ScopeT>* node = FindScopeNode(scope);
-  CHECK(node != nullptr);
+  if (node == nullptr) return nullptr;
   const auto children = node->GetChildrenByStartTime();
   if (children.empty()) return nullptr;
   return children.begin()->second->GetScope();
@@ -149,7 +149,7 @@ const ScopeT* ScopeTree<ScopeT>::FindFirstChild(const ScopeT& scope) const {
 template <typename ScopeT>
 const ScopeT* ScopeTree<ScopeT>::FindNextScopeAtDepth(const ScopeT& scope) const {
   const ScopeNode<ScopeT>* node = FindScopeNode(scope);
-  CHECK(node != nullptr);
+  if (node == nullptr) return nullptr;
   auto nodes_at_depth = GetOrderedNodesByDepth().at(node->Depth());
   auto node_it = nodes_at_depth.upper_bound(node->Start());
   if (node_it == nodes_at_depth.end()) return nullptr;
@@ -159,7 +159,7 @@ const ScopeT* ScopeTree<ScopeT>::FindNextScopeAtDepth(const ScopeT& scope) const
 template <typename ScopeT>
 const ScopeT* ScopeTree<ScopeT>::FindPreviousScopeAtDepth(const ScopeT& scope) const {
   const ScopeNode<ScopeT>* node = FindScopeNode(scope);
-  CHECK(node != nullptr);
+  if (node == nullptr) return nullptr;
   auto nodes_at_depth = GetOrderedNodesByDepth().at(node->Depth());
   auto node_it = nodes_at_depth.lower_bound(node->Start());
   if (node_it == nodes_at_depth.begin()) return nullptr;
