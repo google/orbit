@@ -16,7 +16,6 @@
 #include <functional>
 #include <memory>
 
-#include "App.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
 #include "CompareAscendingOrDescending.h"
@@ -38,13 +37,12 @@ using orbit_client_protos::FunctionStats;
 using orbit_grpc_protos::InstrumentedFunction;
 
 LiveFunctionsDataView::LiveFunctionsDataView(
-    LiveFunctionsController* live_functions, OrbitApp* app,
+    LiveFunctionsController* live_functions, orbit_data_views::AppInterface* app,
     orbit_metrics_uploader::MetricsUploader* metrics_uploader)
     : orbit_data_views::DataView(orbit_data_views::DataViewType::kLiveFunctions, app),
       live_functions_(live_functions),
       selected_function_id_(orbit_grpc_protos::kInvalidFunctionId),
-      metrics_uploader_(metrics_uploader),
-      app_{app} {
+      metrics_uploader_(metrics_uploader) {
   update_period_ms_ = 300;
   LiveFunctionsDataView::OnDataChanged();
 }
@@ -115,14 +113,14 @@ std::vector<int> LiveFunctionsDataView::GetVisibleSelectedIndices() {
 void LiveFunctionsDataView::UpdateHighlightedFunctionId(const std::vector<int>& rows) {
   app_->DeselectTimer();
   if (rows.empty()) {
-    app_->set_highlighted_function_id(orbit_grpc_protos::kInvalidFunctionId);
+    app_->SetHighlightedFunctionId(orbit_grpc_protos::kInvalidFunctionId);
   } else {
-    app_->set_highlighted_function_id(GetInstrumentedFunctionId(rows[0]));
+    app_->SetHighlightedFunctionId(GetInstrumentedFunctionId(rows[0]));
   }
 }
 
 void LiveFunctionsDataView::UpdateSelectedFunctionId() {
-  selected_function_id_ = app_->highlighted_function_id();
+  selected_function_id_ = app_->GetHighlightedFunctionId();
 }
 
 void LiveFunctionsDataView::OnSelect(const std::vector<int>& rows) {
@@ -302,19 +300,19 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
   } else if (action == kMenuActionJumpToFirst) {
     CHECK(item_indices.size() == 1);
     auto function_id = GetInstrumentedFunctionId(item_indices[0]);
-    app_->JumpToTimerAndZoom(function_id, OrbitApp::JumpToTimerMode::kFirst);
+    app_->JumpToTimerAndZoom(function_id, orbit_data_views::AppInterface::JumpToTimerMode::kFirst);
   } else if (action == kMenuActionJumpToLast) {
     CHECK(item_indices.size() == 1);
     auto function_id = GetInstrumentedFunctionId(item_indices[0]);
-    app_->JumpToTimerAndZoom(function_id, OrbitApp::JumpToTimerMode::kLast);
+    app_->JumpToTimerAndZoom(function_id, orbit_data_views::AppInterface::JumpToTimerMode::kLast);
   } else if (action == kMenuActionJumpToMin) {
     CHECK(item_indices.size() == 1);
     uint64_t function_id = GetInstrumentedFunctionId(item_indices[0]);
-    app_->JumpToTimerAndZoom(function_id, OrbitApp::JumpToTimerMode::kMin);
+    app_->JumpToTimerAndZoom(function_id, orbit_data_views::AppInterface::JumpToTimerMode::kMin);
   } else if (action == kMenuActionJumpToMax) {
     CHECK(item_indices.size() == 1);
     uint64_t function_id = GetInstrumentedFunctionId(item_indices[0]);
-    app_->JumpToTimerAndZoom(function_id, OrbitApp::JumpToTimerMode::kMax);
+    app_->JumpToTimerAndZoom(function_id, orbit_data_views::AppInterface::JumpToTimerMode::kMax);
   } else if (action == kMenuActionIterate) {
     for (int i : item_indices) {
       uint64_t instrumented_function_id = GetInstrumentedFunctionId(i);

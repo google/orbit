@@ -109,7 +109,7 @@ class OrbitApp final : public DataViewFactory,
   void OnLoadCaptureCancelRequested();
 
   [[nodiscard]] orbit_capture_client::CaptureClient::State GetCaptureState() const;
-  [[nodiscard]] bool IsCapturing() const;
+  [[nodiscard]] bool IsCapturing() const override;
   [[nodiscard]] bool IsLoadingCapture() const;
 
   void StartCapture();
@@ -421,18 +421,18 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] const orbit_grpc_protos::InstrumentedFunction* GetInstrumentedFunction(
       uint64_t function_id) const;
 
-  void SetVisibleFunctionIds(absl::flat_hash_set<uint64_t> visible_functions);
+  void SetVisibleFunctionIds(absl::flat_hash_set<uint64_t> visible_functions) override;
   [[nodiscard]] bool IsFunctionVisible(uint64_t function_id);
 
-  [[nodiscard]] uint64_t highlighted_function_id() const;
-  void set_highlighted_function_id(uint64_t highlighted_function_id);
+  [[nodiscard]] uint64_t GetHighlightedFunctionId() const override;
+  void SetHighlightedFunctionId(uint64_t highlighted_function_id) override;
 
   [[nodiscard]] orbit_client_data::ThreadID selected_thread_id() const;
   void set_selected_thread_id(orbit_client_data::ThreadID thread_id);
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* selected_timer() const;
   void SelectTimer(const orbit_client_protos::TimerInfo* timer_info);
-  void DeselectTimer();
+  void DeselectTimer() override;
 
   [[nodiscard]] uint64_t GetFunctionIdToHighlight() const;
   [[nodiscard]] uint64_t GetGroupIdToHighlight() const;
@@ -461,17 +461,16 @@ class OrbitApp final : public DataViewFactory,
   // capture data, *if* the captures contains function calls to the function and the function
   // was instrumented.
   void AddFrameTrack(const orbit_client_protos::FunctionInfo& function) override;
-  void AddFrameTrack(uint64_t instrumented_function_id);
+  void AddFrameTrack(uint64_t instrumented_function_id) override;
 
   // Removes the frame track from the capture settings and also removes the frame track
   // (if it exists) from the capture data.
   void RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function) override;
-  void RemoveFrameTrack(uint64_t instrumented_function_id);
+  void RemoveFrameTrack(uint64_t instrumented_function_id) override;
 
   [[nodiscard]] bool HasFrameTrackInCaptureData(uint64_t instrumented_function_id) const override;
 
-  enum class JumpToTimerMode { kFirst, kLast, kMin, kMax };
-  void JumpToTimerAndZoom(uint64_t function_id, JumpToTimerMode selection_mode);
+  void JumpToTimerAndZoom(uint64_t function_id, JumpToTimerMode selection_mode) override;
 
  private:
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(

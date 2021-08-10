@@ -2216,11 +2216,11 @@ bool OrbitApp::IsFunctionVisible(uint64_t function_address) {
   return data_manager_->IsFunctionVisible(function_address);
 }
 
-uint64_t OrbitApp::highlighted_function_id() const {
+uint64_t OrbitApp::GetHighlightedFunctionId() const {
   return data_manager_->highlighted_function_id();
 }
 
-void OrbitApp::set_highlighted_function_id(uint64_t highlighted_function_id) {
+void OrbitApp::SetHighlightedFunctionId(uint64_t highlighted_function_id) {
   data_manager_->set_highlighted_function_id(highlighted_function_id);
   RequestUpdatePrimitives();
 }
@@ -2259,7 +2259,7 @@ uint64_t OrbitApp::GetFunctionIdToHighlight() const {
   const orbit_client_protos::TimerInfo* timer_info = selected_timer();
 
   uint64_t selected_function_id =
-      timer_info != nullptr ? timer_info->function_id() : highlighted_function_id();
+      timer_info != nullptr ? timer_info->function_id() : GetHighlightedFunctionId();
 
   // Highlighting of manually instrumented scopes is not yet supported.
   const InstrumentedFunction* function = GetInstrumentedFunction(selected_function_id);

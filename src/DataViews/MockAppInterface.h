@@ -35,6 +35,13 @@ class MockAppInterface : public AppInterface {
 
   MOCK_METHOD(bool, IsFunctionSelected, (const orbit_client_protos::FunctionInfo&), (const));
 
+  MOCK_METHOD(uint64_t, GetHighlightedFunctionId, (), (const));
+  MOCK_METHOD(void, SetHighlightedFunctionId, (uint64_t highlighted_function_id));
+  MOCK_METHOD(void, SetVisibleFunctionIds, (absl::flat_hash_set<uint64_t> visible_functions));
+  MOCK_METHOD(void, DeselectTimer, ());
+  MOCK_METHOD(bool, IsCapturing, (), (const));
+  MOCK_METHOD(void, JumpToTimerAndZoom, (uint64_t function_id, JumpToTimerMode selection_mode));
+
   MOCK_METHOD(bool, IsFrameTrackEnabled, (const orbit_client_protos::FunctionInfo&), (const));
   MOCK_METHOD(bool, HasFrameTrackInCaptureData, (uint64_t), (const));
 
@@ -62,7 +69,9 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(void, EnableFrameTrack, (const orbit_client_protos::FunctionInfo&));
   MOCK_METHOD(void, DisableFrameTrack, (const orbit_client_protos::FunctionInfo&));
   MOCK_METHOD(void, AddFrameTrack, (const orbit_client_protos::FunctionInfo&));
+  MOCK_METHOD(void, AddFrameTrack, (uint64_t instrumented_function_id));
   MOCK_METHOD(void, RemoveFrameTrack, (const orbit_client_protos::FunctionInfo&));
+  MOCK_METHOD(void, RemoveFrameTrack, (uint64_t instrumented_function_id));
 
   MOCK_METHOD(void, Disassemble, (int32_t pid, const orbit_client_protos::FunctionInfo&));
   MOCK_METHOD(void, ShowSourceCode, (const orbit_client_protos::FunctionInfo&));

@@ -98,6 +98,12 @@ const orbit_client_protos::TimerInfo* SnapToClosestStart(TimeGraph* time_graph,
 
 }  // namespace
 
+LiveFunctionsController::LiveFunctionsController(
+    OrbitApp* app, orbit_metrics_uploader::MetricsUploader* metrics_uploader)
+    : live_functions_data_view_(this, app, metrics_uploader),
+      app_{app},
+      metrics_uploader_(metrics_uploader) {}
+
 void LiveFunctionsController::Move() {
   if (!current_timer_infos_.empty()) {
     auto min_max = ComputeMinMaxTime(current_timer_infos_);
