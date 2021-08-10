@@ -411,7 +411,7 @@ void CaptureWindow::Draw() {
 
     Vec2 pos = viewport_.ScreenToWorldPos(Vec2i(mouse_move_pos_screen_[0], 0));
     // Vertical green line at mouse x position
-    ui_batcher_.AddVerticalLine(pos, -viewport_.GetVisibleWorldHeight(), kZValueUi,
+    ui_batcher_.AddVerticalLine(pos, viewport_.GetVisibleWorldHeight(), kZValueUi,
                                 Color(0, 255, 0, 127));
 
     if (draw_help_) {
@@ -522,13 +522,10 @@ void CaptureWindow::UpdateHorizontalScroll(float ratio) {
 void CaptureWindow::UpdateVerticalScroll(float ratio) {
   if (time_graph_ == nullptr) return;
   float min = viewport_.GetWorldMin()[1];
-  float max = viewport_.GetVisibleWorldHeight() - viewport_.GetWorldExtents()[1] +
-              viewport_.GetWorldMin()[1];
+  float max = viewport_.GetWorldExtents()[1] - viewport_.GetVisibleWorldHeight() - min;
   float range = max - min;
   float new_top_left_y = min + ratio * range;
-  if (new_top_left_y != viewport_.GetWorldTopLeft()[1]) {
-    viewport_.SetWorldTopLeftY(new_top_left_y);
-  }
+  viewport_.SetWorldTopLeftY(new_top_left_y);
 }
 
 void CaptureWindow::UpdateHorizontalZoom(float normalized_start, float normalized_end) {
@@ -572,7 +569,7 @@ void CaptureWindow::ProcessSliderMouseMoveEvents(int x, int y) {
 void CaptureWindow::UpdateVerticalSliderFromWorld() {
   if (time_graph_ == nullptr) return;
   float min = 0.0f;
-  float max = viewport_.GetVisibleWorldHeight() - viewport_.GetWorldExtents()[1];
+  float max = viewport_.GetWorldExtents()[1] - viewport_.GetVisibleWorldHeight();
   float ratio = (viewport_.GetWorldTopLeft()[1] - min) / (max - min);
   float vertical_ratio = viewport_.GetVisibleWorldHeight() / viewport_.GetWorldExtents()[1];
   int slider_width = static_cast<int>(time_graph_->GetLayout().GetSliderWidth());
@@ -703,10 +700,9 @@ void CaptureWindow::RenderHelpUi() {
   Vec2 text_bounding_box_pos;
   Vec2 text_bounding_box_size;
   // TODO(b/180312795): Use TimeGraphLayout's font size again.
-  text_renderer_.AddText(
-      GetHelpText(), world_pos[0], world_pos[1], GlCanvas::kZValueTextUi,
-      {14, Color(255, 255, 255, 255), -1.f /*max_size*/, TextRenderer::HAlign::Right},
-      &text_bounding_box_pos, &text_bounding_box_size);
+  text_renderer_.AddText(GetHelpText(), world_pos[0], world_pos[1], GlCanvas::kZValueTextUi,
+                         {14, Color(255, 255, 255, 255), -1.f /*max_size*/}, &text_bounding_box_pos,
+                         &text_bounding_box_size);
 
   const Color kBoxColor(50, 50, 50, 230);
   const float kMargin = 15.f;
@@ -787,7 +783,7 @@ void CaptureWindow::RenderTimeBar() {
 
       std::string text = orbit_display_formats::GetDisplayTime(absl::Microseconds(current_micros));
       float world_x = time_graph_->GetWorldFromUs(current_micros);
-      text_renderer_.AddText(text.c_str(), world_x + x_margin, world_pos[1] - height,
+      text_renderer_.AddText(text.c_str(), world_x + x_margin, world_pos[1] + height,
                              GlCanvas::kZValueTimeBar,
                              {time_graph_->GetLayout().GetFontSize(), Color(255, 255, 255, 255),
                               -1.f, TextRenderer::HAlign::Left, TextRenderer::VAlign::Bottom});
@@ -809,9 +805,10 @@ void CaptureWindow::RenderSelectionOverlay() {
 
   float from_world = time_graph_->GetWorldFromTick(min_time);
   float to_world = time_graph_->GetWorldFromTick(max_time);
+  float stop_pos_world = time_graph_->GetWorldFromTick(select_stop_time_);
 
   float size_x = to_world - from_world;
-  Vec2 pos(from_world, viewport_.GetWorldTopLeft()[1] - viewport_.GetVisibleWorldHeight());
+  Vec2 pos(from_world, viewport_.GetWorldTopLeft()[1]);
   Vec2 size(size_x, viewport_.GetVisibleWorldHeight());
 
   std::string text = orbit_display_formats::GetDisplayTime(TicksToDuration(min_time, max_time));
@@ -821,11 +818,13 @@ void CaptureWindow::RenderSelectionOverlay() {
   ui_batcher_.AddBox(box, color);
 
   const Color text_color(255, 255, 255, 255);
-  float pos_x = pos[0] + size[0];
+  TextRenderer::HAlign alignment = select_stop_pos_world_[0] < select_start_pos_world_[0]
+                                       ? TextRenderer::HAlign::Left
+                                       : TextRenderer::HAlign::Right;
 
-  text_renderer_.AddText(
-      text.c_str(), pos_x, select_stop_pos_world_[1], GlCanvas::kZValueTextUi,
-      {time_graph_->GetLayout().GetFontSize(), text_color, size[0], TextRenderer::HAlign::Right});
+  text_renderer_.AddText(text.c_str(), stop_pos_world, select_stop_pos_world_[1],
+                         GlCanvas::kZValueTextUi,
+                         {time_graph_->GetLayout().GetFontSize(), text_color, size[0], alignment});
 
   const unsigned char g = 100;
   Color grey(g, g, g, 255);
