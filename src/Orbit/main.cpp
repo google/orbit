@@ -59,9 +59,7 @@
 #include "CrashHandler/CrashOptions.h"
 #endif
 
-ABSL_DECLARE_FLAG(uint16_t, grpc_port);
-ABSL_DECLARE_FLAG(bool, local);
-ABSL_DECLARE_FLAG(bool, devmode);
+#include "ClientFlags/ClientFlags.h"
 
 // This flag is needed by the E2E tests to ensure a clean state before running.
 ABSL_FLAG(bool, clear_source_paths_mappings, false, "Clear all the stored source paths mappings");

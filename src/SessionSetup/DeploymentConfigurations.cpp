@@ -4,7 +4,6 @@
 
 #include "SessionSetup/DeploymentConfigurations.h"
 
-#include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
 
 #include <QChar>
@@ -14,9 +13,7 @@
 #include <QProcessEnvironment>
 #include <QString>
 
-ABSL_DECLARE_FLAG(bool, nodeploy);
-ABSL_DECLARE_FLAG(std::string, collector);
-ABSL_DECLARE_FLAG(std::string, collector_root_password);
+#include "ClientFlags/ClientFlags.h"
 
 static const char* const kSignatureExtension = ".asc";
 static const char* const kPackageNameTemplate = "OrbitProfiler-%1.deb";

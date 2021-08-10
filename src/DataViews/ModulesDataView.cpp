@@ -16,13 +16,12 @@
 #include <functional>
 
 #include "ClientData/ProcessData.h"
+#include "ClientFlags/ClientFlags.h"
 #include "CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
-
-ABSL_DECLARE_FLAG(bool, enable_frame_pointer_validator);
 
 using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleInMemory;

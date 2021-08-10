@@ -70,6 +70,7 @@
 #include "CaptureOptionsDialog.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ProcessData.h"
+#include "ClientFlags/ClientFlags.h"
 #include "ClientModel/CaptureSerializer.h"
 #include "ClientServices/ProcessManager.h"
 #include "CodeReport/DisassemblyReport.h"
@@ -116,13 +117,6 @@
 #include "services.pb.h"
 #include "types.h"
 #include "ui_orbitmainwindow.h"
-
-ABSL_DECLARE_FLAG(bool, devmode);
-ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
-ABSL_DECLARE_FLAG(bool, enable_tutorials_feature);
-ABSL_DECLARE_FLAG(uint16_t, sampling_rate);
-ABSL_DECLARE_FLAG(uint16_t, stack_dump_size);
-ABSL_DECLARE_FLAG(bool, frame_pointer_unwinding);
 
 using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureListener;

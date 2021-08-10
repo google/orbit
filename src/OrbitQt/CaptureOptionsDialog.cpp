@@ -13,11 +13,8 @@
 #include <QWidget>
 #include <QtGui/QValidator>
 
+#include "ClientFlags/ClientFlags.h"
 #include "ui_CaptureOptionsDialog.h"
-
-ABSL_DECLARE_FLAG(bool, devmode);
-ABSL_DECLARE_FLAG(bool, enable_warning_threshold);
-
 namespace orbit_qt {
 
 CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)

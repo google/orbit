@@ -51,6 +51,7 @@ target_sources(
 target_link_libraries(
   CaptureFileInfoTests
   PRIVATE CaptureFileInfo
+          ClientFlags
           GTest::QtGuiMain
           QtUtils
           Qt5::Test)

@@ -4,7 +4,6 @@
 
 #include "SessionSetup/SessionSetupDialog.h"
 
-#include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
 #include <absl/strings/str_format.h>
 #include <absl/time/time.h>
@@ -40,6 +39,7 @@
 #include <vector>
 
 #include "CaptureFileInfo/LoadCaptureWidget.h"
+#include "ClientFlags/ClientFlags.h"
 #include "ClientServices/ProcessManager.h"
 #include "OrbitBase/Logging.h"
 #include "SessionSetup/ConnectToStadiaWidget.h"
@@ -49,9 +49,6 @@
 #include "SessionSetup/TargetConfiguration.h"
 #include "process.pb.h"
 #include "ui_SessionSetupDialog.h"
-
-ABSL_DECLARE_FLAG(bool, local);
-ABSL_DECLARE_FLAG(std::string, process_name);
 
 namespace {
 constexpr int kProcessesRowHeight = 19;

@@ -7,6 +7,7 @@ project(Orbit CXX)
 add_executable(Orbit main.cpp)
 target_compile_options(Orbit PRIVATE ${STRICT_COMPILE_FLAGS})
 target_link_libraries(Orbit PRIVATE
+        ClientFlags
         MoveFilesToDocuments
         OrbitQt
         Style)

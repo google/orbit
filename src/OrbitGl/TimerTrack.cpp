@@ -15,6 +15,7 @@
 
 #include "App.h"
 #include "Batcher.h"
+#include "ClientFlags/ClientFlags.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "TimeGraph.h"
@@ -28,8 +29,6 @@
 using orbit_client_data::TimerChain;
 using orbit_client_data::TrackData;
 using orbit_client_protos::TimerInfo;
-
-ABSL_DECLARE_FLAG(bool, show_return_values);
 
 const Color TimerTrack::kHighlightColor = Color(100, 181, 246, 255);
 
