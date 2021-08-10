@@ -149,6 +149,7 @@ target_link_libraries(
   PUBLIC CaptureClient
          CaptureFileInfo
          ClientData
+         ClientFlags
          ClientModel
          ClientServices
          CodeReport
@@ -191,7 +192,6 @@ target_sources(OrbitGlTests PRIVATE
                BlockChainTest.cpp
                CaptureStatsTest.cpp
                CaptureWindowTest.cpp
-               ClientFlags.cpp
                GlUtilsTest.cpp
                GpuTrackTest.cpp
                MultivariateTimeSeriesTest.cpp

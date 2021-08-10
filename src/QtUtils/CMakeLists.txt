@@ -24,5 +24,5 @@ add_executable(QtUtilsTests)
 target_sources(QtUtilsTests PRIVATE EventLoopTest.cpp
                                     FutureWatcherTest.cpp
                                     MainThreadExecutorImplTest.cpp)
-target_link_libraries(QtUtilsTests PRIVATE QtUtils GTest::QtCoreMain)
+target_link_libraries(QtUtilsTests PRIVATE ClientFlags QtUtils GTest::QtCoreMain)
 register_test(QtUtilsTests)

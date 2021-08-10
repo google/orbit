@@ -6,7 +6,6 @@
 
 #include <GteVector.h>
 #include <absl/container/flat_hash_map.h>
-#include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
 #include <absl/strings/str_format.h>
 #include <absl/time/time.h>
@@ -21,6 +20,7 @@
 #include "CGroupAndProcessMemoryTrack.h"
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "ClientData/FunctionUtils.h"
+#include "ClientFlags/ClientFlags.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "FrameTrack.h"
 #include "Geometry.h"
@@ -40,8 +40,6 @@
 #include "ThreadTrack.h"
 #include "TrackManager.h"
 #include "VariableTrack.h"
-
-ABSL_DECLARE_FLAG(bool, enable_warning_threshold);
 
 using orbit_capture_client::CaptureEventProcessor;
 

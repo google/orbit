@@ -40,6 +40,7 @@
 #include "ClientData/ProcessData.h"
 #include "ClientData/TimerChain.h"
 #include "ClientData/UserDefinedCaptureData.h"
+#include "ClientFlags/ClientFlags.h"
 #include "ClientModel/CaptureDeserializer.h"
 #include "ClientModel/CaptureSerializer.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
@@ -83,11 +84,6 @@
 #include "orbit_log_event.pb.h"
 #include "preset.pb.h"
 #include "symbol.pb.h"
-
-ABSL_DECLARE_FLAG(bool, devmode);
-ABSL_DECLARE_FLAG(bool, local);
-ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
-ABSL_DECLARE_FLAG(bool, show_return_values);
 
 using orbit_base::Future;
 

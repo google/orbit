@@ -25,6 +25,7 @@
 #include "App.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/CaptureData.h"
+#include "ClientFlags/ClientFlags.h"
 #include "CoreMath.h"
 #include "GlCanvas.h"
 #include "OrbitBase/Append.h"
@@ -38,8 +39,6 @@ using orbit_gl::CGroupAndProcessMemoryTrack;
 using orbit_gl::PageFaultsTrack;
 using orbit_gl::SystemMemoryTrack;
 using orbit_gl::VariableTrack;
-
-ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
 
 TrackManager::TrackManager(TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                            TimeGraphLayout* layout, OrbitApp* app,

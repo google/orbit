@@ -13,8 +13,7 @@ target_sources(DataViews PRIVATE
         DataViewUtils.cpp
         FunctionsDataView.cpp
         ModulesDataView.cpp
-        PresetsDataView.cpp
-        ../OrbitGl/ClientFlags.cpp)
+        PresetsDataView.cpp)
 
 target_sources(DataViews PUBLIC
         include/DataViews/AppInterface.h
@@ -28,6 +27,7 @@ target_sources(DataViews PUBLIC
 target_include_directories(DataViews PUBLIC include/)
 target_link_libraries(DataViews PUBLIC
         ClientData
+        ClientFlags
         ClientModel
         ClientProtos
         DisplayFormats

@@ -171,6 +171,7 @@ add_subdirectory(src/Test)
 
 if(WITH_GUI)
   add_subdirectory(src/CaptureFileInfo)
+  add_subdirectory(src/ClientFlags)
   add_subdirectory(src/CodeReport)
   add_subdirectory(src/CodeViewer)
   add_subdirectory(src/CodeViewerDemo)

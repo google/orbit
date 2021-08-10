@@ -4,7 +4,6 @@
 
 #include "SessionSetup/ServiceDeployManager.h"
 
-#include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
@@ -22,6 +21,7 @@
 #include <variant>
 #include <vector>
 
+#include "ClientFlags/ClientFlags.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Promise.h"
@@ -33,8 +33,6 @@
 #include "OrbitSshQt/Task.h"
 #include "QtUtils/EventLoop.h"
 #include "SessionSetup/Error.h"
-
-ABSL_DECLARE_FLAG(bool, devmode);
 
 static const std::string kLocalhost = "127.0.0.1";
 static const std::string kDebDestinationPath = "/tmp/orbitprofiler.deb";
