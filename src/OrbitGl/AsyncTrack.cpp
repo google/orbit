@@ -59,12 +59,13 @@ AsyncTrack::AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph,
       capture_data_->GetFunctionNameByAddress(timer_info->address_in_function());
 
   if (timer_info->address_in_function() != 0) {
-    const auto* function =
+    const orbit_client_protos::FunctionInfo* function =
         capture_data_->FindFunctionByAddress(timer_info->address_in_function(), false);
     if (function != nullptr) {
       function_name = function->pretty_name();
     }
-    const auto* module = capture_data_->FindModuleByAddress(timer_info->address_in_function());
+    const orbit_client_protos::ModuleInfo* module =
+        capture_data_->FindModuleByAddress(timer_info->address_in_function());
     if (module != nullptr) {
       module_name = module->name();
     }
