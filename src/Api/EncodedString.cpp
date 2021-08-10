@@ -9,6 +9,7 @@
 #include <cstring>
 
 #include "capture.pb.h"
+#include "include/Api/Event.h"
 
 namespace orbit_api {
 
@@ -176,4 +177,6 @@ template void EncodeString<orbit_grpc_protos::ApiTrackUint>(const char* source,
 
 template void EncodeString<orbit_grpc_protos::ApiTrackUint64>(
     const char* source, orbit_grpc_protos::ApiTrackUint64* out);
+
+template void EncodeString<ApiEncodedString>(const char* source, ApiEncodedString* out);
 }  // namespace orbit_api
