@@ -41,19 +41,9 @@ AsyncTrack::AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph,
   if (timer_info == nullptr) return "";
   auto* manual_inst_manager = app_->GetManualInstrumentationManager();
 
-  // The FunctionInfo here corresponds to one of the automatically instrumented empty stubs from
-  // Orbit.h. Use it to retrieve the module from which the manually instrumented scope originated.
-  const InstrumentedFunction* func =
-      capture_data_ != nullptr
-          ? capture_data_->GetInstrumentedFunctionById(timer_info->function_id())
-          : nullptr;
-  CHECK(func != nullptr || timer_info->type() == TimerInfo::kIntrospection ||
+  CHECK(timer_info->type() == TimerInfo::kIntrospection ||
         timer_info->type() == TimerInfo::kApiScopeAsync);
 
-  std::string module_name =
-      func != nullptr
-          ? orbit_client_data::function_utils::GetLoadedModuleNameByPath(func->file_path())
-          : "unknown";
   uint64_t event_id = 0;
   if (timer_info->type() == TimerInfo::kApiScopeAsync) {
     event_id = timer_info->api_async_scope_id();
@@ -62,15 +52,32 @@ AsyncTrack::AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph,
     orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(*timer_info);
     event_id = event.data;
   }
-  std::string function_name = manual_inst_manager->GetString(event_id);
+  std::string label = manual_inst_manager->GetString(event_id);
+
+  std::string module_name = orbit_client_data::CaptureData::kUnknownFunctionOrModuleName;
+  std::string function_name =
+      capture_data_->GetFunctionNameByAddress(timer_info->address_in_function());
+
+  if (timer_info->address_in_function() != 0) {
+    const auto* function =
+        capture_data_->FindFunctionByAddress(timer_info->address_in_function(), false);
+    if (function != nullptr) {
+      function_name = function->pretty_name();
+    }
+    const auto* module = capture_data_->FindModuleByAddress(timer_info->address_in_function());
+    if (module != nullptr) {
+      module_name = module->name();
+    }
+  }
 
   return absl::StrFormat(
       "<b>%s</b><br/>"
       "<i>Timing measured through manual instrumentation</i>"
       "<br/><br/>"
+      "<b>Function:</b> %s<br/>"
       "<b>Module:</b> %s<br/>"
       "<b>Time:</b> %s",
-      function_name, module_name,
+      label, function_name, module_name,
       orbit_display_formats::GetDisplayTime(
           TicksToDuration(timer_info->start(), timer_info->end())));
 }

@@ -35,13 +35,17 @@ void EnqueueApiEvent(Types... args) {
 extern "C" {
 
 void orbit_api_start(const char* name, orbit_api_color color) {
-  EnqueueApiEvent<orbit_api::ApiScopeStart>(name, color);
+  auto return_address =
+      absl::bit_cast<uint64_t>(__builtin_extract_return_addr(__builtin_return_address(0)));
+  EnqueueApiEvent<orbit_api::ApiScopeStart>(name, color, 0LU /*group_id*/, return_address);
 }
 
 void orbit_api_stop() { EnqueueApiEvent<orbit_api::ApiScopeStop>(); }
 
 void orbit_api_start_async(const char* name, uint64_t id, orbit_api_color color) {
-  EnqueueApiEvent<orbit_api::ApiScopeStartAsync>(name, id, color);
+  auto return_address =
+      absl::bit_cast<uint64_t>(__builtin_extract_return_addr(__builtin_return_address(0)));
+  EnqueueApiEvent<orbit_api::ApiScopeStartAsync>(name, id, color, return_address);
 }
 
 void orbit_api_stop_async(uint64_t id) { EnqueueApiEvent<orbit_api::ApiScopeStopAsync>(id); }
