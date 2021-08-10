@@ -55,8 +55,8 @@ std::vector<Vec2> RotatePoints(const std::vector<Vec2>& points, float rotation) 
   float sin_r = sinf(kPiFloat * rotation / 180.f);
   std::vector<Vec2> result;
   for (const Vec2& point : points) {
-    float x_rotated = cos_r * point[0] - sin_r * point[1];
-    float y_rotated = sin_r * point[0] + cos_r * point[1];
+    float x_rotated = cos_r * point[0] + sin_r * point[1];
+    float y_rotated = sin_r * point[0] - cos_r * point[1];
     result.emplace_back(x_rotated, y_rotated);
   }
   return result;
@@ -95,7 +95,6 @@ void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, const DrawContex
   float y0 = pos_[1];
   float track_z = GlCanvas::kZValueTrack + draw_context.z_offset;
   float text_z = GlCanvas::kZValueTrackText + draw_context.z_offset;
-  float top_margin = layout_->GetTrackTopMargin();
 
   Color track_background_color = GetTrackBackgroundColor();
   if (!draw_background_) {
@@ -111,7 +110,7 @@ void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, const DrawContex
 
   const float indentation_x0 =
       tab_x0 + (draw_context.indentation_level * layout_->GetTrackIntentOffset());
-  Box box(Vec2(indentation_x0, y0), Vec2(label_width, -label_height), track_z);
+  Box box(Vec2(indentation_x0, y0), Vec2(label_width, label_height), track_z);
   batcher.AddBox(box, track_background_color, shared_from_this());
 
   Vec2 track_size = GetSize();
@@ -130,21 +129,25 @@ void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, const DrawContex
     // |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|
     // \__________________________________/
     // content_bottom_left                      content_bottom_right
+    //
+    // In addition, there is a small margin before and after the track content
+    // defined by TrackContentTopMargin and TrackContentBottomMargin.
+    // Both margins are factored into the total height of each track.
     Vec2 top_left(indentation_x0, y0);
     Vec2 tab_top_right(top_left[0] + label_width, top_left[1]);
-    Vec2 tab_bottom_right(top_left[0] + label_width, top_left[1] - label_height + top_margin);
-    Vec2 content_bottom_left(top_left[0] - tab_x0, top_left[1] - track_size[1]);
-    Vec2 content_bottom_right(top_left[0] + track_size[0], top_left[1] - track_size[1]);
-    Vec2 content_top_right(top_left[0] + track_size[0], top_left[1] - label_height + top_margin);
+    Vec2 tab_bottom_right(top_left[0] + label_width, top_left[1] + label_height);
+    Vec2 content_bottom_left(top_left[0] - tab_x0, top_left[1] + track_size[1]);
+    Vec2 content_bottom_right(top_left[0] + track_size[0], top_left[1] + track_size[1]);
+    Vec2 content_top_right(top_left[0] + track_size[0], top_left[1] + label_height);
 
-    DrawTriangleFan(batcher, rounded_corner, top_left, GlCanvas::kBackgroundColor, -90.f, track_z);
+    DrawTriangleFan(batcher, rounded_corner, top_left, GlCanvas::kBackgroundColor, 90.f, track_z);
     DrawTriangleFan(batcher, rounded_corner, tab_top_right, GlCanvas::kBackgroundColor, 180.f,
                     track_z);
     DrawTriangleFan(batcher, rounded_corner, tab_bottom_right, track_background_color, 0, track_z);
     DrawTriangleFan(batcher, rounded_corner, content_bottom_left, GlCanvas::kBackgroundColor, 0,
                     track_z);
-    DrawTriangleFan(batcher, rounded_corner, content_bottom_right, GlCanvas::kBackgroundColor, 90.f,
-                    track_z);
+    DrawTriangleFan(batcher, rounded_corner, content_bottom_right, GlCanvas::kBackgroundColor,
+                    -90.f, track_z);
     DrawTriangleFan(batcher, rounded_corner, content_top_right, GlCanvas::kBackgroundColor, 180.f,
                     track_z);
   }
@@ -153,7 +156,7 @@ void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, const DrawContex
   collapse_toggle_->SetIsCollapsible(this->IsCollapsible());
 
   // Draw collapsing triangle.
-  const float toggle_y_pos = DrawCollapsingTriangle(batcher, text_renderer, draw_context);
+  DrawCollapsingTriangle(batcher, text_renderer, draw_context);
 
   // Draw label.
   if (!picking) {
@@ -165,29 +168,29 @@ void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, const DrawContex
         std::min(draw_context.indentation_level, kMaxIndentationLevel);
     font_size = (font_size * (10 - capped_indentation_level)) / 10;
     float label_offset_x = layout_->GetTrackLabelOffsetX();
-    float label_offset_y = text_renderer.GetStringHeight("o", font_size) / 2.f;
 
     const Color kColor =
         IsTrackSelected() ? GlCanvas::kTabTextColorSelected : Color(255, 255, 255, 255);
 
+    TextRenderer::TextFormatting formatting{font_size, kColor, label_width - label_offset_x};
+    formatting.valign = TextRenderer::VAlign::Middle;
+
     text_renderer.AddTextTrailingCharsPrioritized(
-        GetLabel().c_str(), indentation_x0 + label_offset_x, toggle_y_pos - label_offset_y, text_z,
-        {font_size, kColor, label_width - label_offset_x},
-        GetNumberOfPrioritizedTrailingCharacters());
+        GetLabel().c_str(), indentation_x0 + label_offset_x, y0 + half_label_height, text_z,
+        formatting, GetNumberOfPrioritizedTrailingCharacters());
   }
 
   // Draw track's content background.
   if (!picking) {
     if (layout_->GetDrawTrackBackground()) {
-      Box box(Vec2(x0, y0 - label_height + top_margin),
-              Vec2(track_size[0], -track_size[1] + label_height - top_margin), track_z);
+      Box box(Vec2(x0, y0 + label_height), Vec2(GetWidth(), GetHeight() - label_height), track_z);
       batcher.AddBox(box, track_background_color, shared_from_this());
     }
   }
 }
 
-float Track::DrawCollapsingTriangle(Batcher& batcher, TextRenderer& text_renderer,
-                                    const DrawContext& draw_context) {
+void Track::DrawCollapsingTriangle(Batcher& batcher, TextRenderer& text_renderer,
+                                   const DrawContext& draw_context) {
   const float label_height = layout_->GetTrackTabHeight();
   const float half_label_height = 0.5f * label_height;
   const float x0 = pos_[0];
@@ -195,11 +198,10 @@ float Track::DrawCollapsingTriangle(Batcher& batcher, TextRenderer& text_rendere
   const float intent_x0 =
       tab_x0 + (draw_context.indentation_level * layout_->GetTrackIntentOffset());
   const float button_offset = layout_->GetCollapseButtonOffset();
-  const float toggle_y_pos = pos_[1] - half_label_height;
+  const float toggle_y_pos = pos_[1] + half_label_height;
   Vec2 toggle_pos = Vec2(intent_x0 + button_offset, toggle_y_pos);
   collapse_toggle_->SetPos(toggle_pos[0], toggle_pos[1]);
   collapse_toggle_->Draw(batcher, text_renderer, draw_context);
-  return toggle_y_pos;
 }
 
 void Track::UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*t_min*/, uint64_t /*t_max*/,

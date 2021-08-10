@@ -15,8 +15,8 @@ TimeGraphLayout::TimeGraphLayout() {
   event_track_height_ = 10.f;
   all_threads_event_track_scale_ = 2.f;
   variable_track_height_ = 20.f;
-  track_bottom_margin_ = 5.f;
-  track_top_margin_ = 5.f;
+  track_content_bottom_margin_ = 5.f;
+  track_content_top_margin_ = 5.f;
   space_between_cores_ = 2.f;
   space_between_gpu_depths_ = 2.f;
   space_between_tracks_ = 10.f;
@@ -26,7 +26,7 @@ TimeGraphLayout::TimeGraphLayout() {
   track_label_offset_x_ = 30.f;
   slider_width_ = 15.f;
   track_tab_width_ = 350.f;
-  track_tab_height_ = 30.f;
+  track_tab_height_ = 25.f;
   track_tab_offset_ = 0.f;
   track_intent_offset_ = 5.f;
   collapse_button_offset_ = 15.f;
@@ -80,8 +80,8 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER(right_margin_);
   FLOAT_SLIDER(scheduler_track_offset_);
   FLOAT_SLIDER_MIN_MAX(track_tab_width_, 0, 1000.f);
-  FLOAT_SLIDER_MIN_MAX(track_bottom_margin_, 0, 20.f);
-  FLOAT_SLIDER_MIN_MAX(track_top_margin_, 0, 20.f);
+  FLOAT_SLIDER_MIN_MAX(track_content_bottom_margin_, 0, 20.f);
+  FLOAT_SLIDER_MIN_MAX(track_content_top_margin_, 0, 20.f);
   FLOAT_SLIDER(toolbar_icon_height_);
   FLOAT_SLIDER(generic_fixed_spacer_width_);
   FLOAT_SLIDER_MIN_MAX(scale_, kMinScale, kMaxScale);

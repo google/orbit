@@ -234,9 +234,9 @@ void TimeGraph::VerticallyMoveIntoView(Track& track) {
   float height = track.GetHeight();
   float world_top_left_y = viewport_->GetWorldTopLeft()[1];
 
-  float min_world_top_left_y = pos;
-  float max_world_top_left_y =
-      pos + viewport_->GetVisibleWorldHeight() - height - layout_.GetBottomMargin();
+  float max_world_top_left_y = pos;
+  float min_world_top_left_y =
+      pos + height - viewport_->GetVisibleWorldHeight() + layout_.GetBottomMargin();
   viewport_->SetWorldTopLeftY(
       std::clamp(world_top_left_y, min_world_top_left_y, max_world_top_left_y));
 }
@@ -535,7 +535,7 @@ void TimeGraph::UpdateTracksPosition() {
   // Track height including space between them
   for (auto& track : track_manager_->GetVisibleTracks()) {
     if (!track->IsMoving()) {
-      track->SetPos(track_pos_x, -current_y);
+      track->SetPos(track_pos_x, current_y);
     }
     track->SetWidth(GetWidth());
     current_y += (track->GetHeight() + layout_.GetSpaceBetweenTracks());

@@ -111,15 +111,15 @@ float GpuDebugMarkerTrack::GetYFromTimer(const TimerInfo& timer_info) const {
   if (collapse_toggle_->IsCollapsed()) {
     depth = 0;
   }
-  return pos_[1] - layout_->GetTrackTabHeight() - layout_->GetTextBoxHeight() * (depth + 1.f);
+  return pos_[1] + layout_->GetTrackTabHeight() + layout_->GetTextBoxHeight() * depth;
 }
 
 float GpuDebugMarkerTrack::GetHeight() const {
   bool collapsed = collapse_toggle_->IsCollapsed();
   uint32_t depth =
       collapsed ? std::min<uint32_t>(1, track_data_->GetMaxDepth()) : track_data_->GetMaxDepth();
-  return layout_->GetTrackTabHeight() + layout_->GetTextBoxHeight() * depth +
-         layout_->GetTrackBottomMargin();
+  return layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin() +
+         layout_->GetTextBoxHeight() * depth + layout_->GetTrackContentBottomMargin();
 }
 
 bool GpuDebugMarkerTrack::TimerFilter(const TimerInfo& timer_info) const {

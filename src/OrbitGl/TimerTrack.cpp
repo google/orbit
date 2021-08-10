@@ -54,7 +54,7 @@ float TimerTrack::GetYFromTimer(const TimerInfo& timer_info) const {
 }
 
 float TimerTrack::GetYFromDepth(uint32_t depth) const {
-  return pos_[1] - GetHeaderHeight() - GetDefaultBoxHeight() * static_cast<float>(depth + 1);
+  return pos_[1] + GetHeaderHeight() + GetDefaultBoxHeight() * static_cast<float>(depth);
 }
 
 namespace {
@@ -91,10 +91,13 @@ void TimerTrack::DrawTimesliceText(const orbit_client_protos::TimerInfo& timer, 
   const Color kTextWhite(255, 255, 255, 255);
   float pos_x = std::max(box_pos[0], min_x);
   float max_size = box_pos[0] + box_size[0] - pos_x;
+
+  TextRenderer::TextFormatting formatting{layout_->CalculateZoomedFontSize(), kTextWhite, max_size};
+  formatting.valign = TextRenderer::VAlign::Bottom;
+
   text_renderer_->AddTextTrailingCharsPrioritized(
-      timeslice_text.c_str(), pos_x, box_pos[1] + layout_->GetTextOffset(),
-      GlCanvas::kZValueBox + z_offset, {layout_->CalculateZoomedFontSize(), kTextWhite, max_size},
-      elapsed_time_length);
+      timeslice_text.c_str(), pos_x, box_pos[1] + box_size[1] - layout_->GetTextOffset(),
+      GlCanvas::kZValueBox + z_offset, formatting, elapsed_time_length);
 }
 
 bool TimerTrack::DrawTimer(const TimerInfo* prev_timer_info, const TimerInfo* next_timer_info,
@@ -197,15 +200,14 @@ bool TimerTrack::DrawTimer(const TimerInfo* prev_timer_info, const TimerInfo* ne
         ToWorldX(end_or_next_start_us, end_us, draw_data.inv_time_window, draw_data.track_start_x,
                  draw_data.track_width);
 
-    Vec3 top_left(world_x_info_left_overlap.world_x_start, world_timer_y + box_height, draw_data.z);
+    Vec3 top_left(world_x_info_left_overlap.world_x_start, world_timer_y, draw_data.z);
     Vec3 bottom_left(
         world_x_info_left_overlap.world_x_start + world_x_info_left_overlap.world_x_width,
-        world_timer_y, draw_data.z);
-    Vec3 top_right(world_x_info_right_overlap.world_x_start, world_timer_y + box_height,
-                   draw_data.z);
+        world_timer_y + box_height, draw_data.z);
+    Vec3 top_right(world_x_info_right_overlap.world_x_start, world_timer_y, draw_data.z);
     Vec3 bottom_right(
         world_x_info_right_overlap.world_x_start + world_x_info_right_overlap.world_x_width,
-        world_timer_y, draw_data.z);
+        world_timer_y + box_height, draw_data.z);
     Batcher* batcher = draw_data.batcher;
     draw_data.batcher->AddShadedTrapezium(top_left, bottom_left, bottom_right, top_right, color,
                                           CreatePickingUserData(*batcher, *current_timer_info));
@@ -323,9 +325,10 @@ void TimerTrack::OnTimer(const TimerInfo& timer_info) {
 float TimerTrack::GetHeight() const {
   uint32_t collapsed_depth = std::min<uint32_t>(1, track_data_->GetMaxDepth());
   uint32_t depth = collapse_toggle_->IsCollapsed() ? collapsed_depth : track_data_->GetMaxDepth();
-  return GetHeaderHeight() + layout_->GetTextBoxHeight() * depth +
+  return GetHeaderHeight() + layout_->GetTrackContentTopMargin() +
+         layout_->GetTextBoxHeight() * depth +
          (depth > 0 ? layout_->GetSpaceBetweenTracksAndThread() : 0) +
-         layout_->GetTrackBottomMargin();
+         layout_->GetTrackContentBottomMargin();
 }
 
 std::string TimerTrack::GetTooltip() const {
@@ -401,7 +404,9 @@ std::string TimerTrack::GetBoxTooltip(const Batcher& /*batcher*/, PickingId /*id
   return "";
 }
 
-float TimerTrack::GetHeaderHeight() const { return layout_->GetTrackTabHeight(); }
+float TimerTrack::GetHeaderHeight() const {
+  return layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin();
+}
 
 internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick, float track_width,
                                            float z_offset, Batcher* batcher, TimeGraph* time_graph,

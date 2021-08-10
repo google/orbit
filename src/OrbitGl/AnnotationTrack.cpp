@@ -19,7 +19,7 @@ void AnnotationTrack::DrawAnnotation(Batcher& batcher, TextRenderer& text_render
   Vec2 track_pos = GetAnnotatedTrackPosition();
 
   float content_right_x = track_pos[0] + track_size[0];
-  float content_bottom_y = track_pos[1] - track_size[1] + layout->GetTrackBottomMargin();
+  float content_bottom_y = track_pos[1] + track_size[1] - layout->GetTrackContentBottomMargin();
   float content_height = GetAnnotatedTrackContentHeight();
 
   // Add value upper bound text box (e.g., the "System Memory Total" text box for memory tracks).
@@ -27,10 +27,8 @@ void AnnotationTrack::DrawAnnotation(Batcher& batcher, TextRenderer& text_render
     std::string text = value_upper_bound_.value().first;
     float string_width = text_renderer.GetStringWidth(text.c_str(), font_size);
     Vec2 text_box_size(string_width, layout->GetTextBoxHeight());
-    Vec2 text_box_position(content_right_x - text_box_size[0],
-                           content_bottom_y + content_height - text_box_size[1]);
-    text_renderer.AddText(text.c_str(), text_box_position[0],
-                          text_box_position[1] + layout->GetTextOffset(), z,
+    Vec2 text_box_position(content_right_x - text_box_size[0], content_bottom_y - content_height);
+    text_renderer.AddText(text.c_str(), text_box_position[0], text_box_position[1], z,
                           {font_size, kWhite, text_box_size[0]});
 
     if (!GetValueUpperBoundTooltip().empty()) {
@@ -47,9 +45,10 @@ void AnnotationTrack::DrawAnnotation(Batcher& batcher, TextRenderer& text_render
     float string_width = text_renderer.GetStringWidth(text.c_str(), font_size);
     Vec2 text_box_size(string_width, layout->GetTextBoxHeight());
     Vec2 text_box_position(content_right_x - text_box_size[0], content_bottom_y);
-    text_renderer.AddText(text.c_str(), text_box_position[0],
-                          text_box_position[1] + layout->GetTextOffset(), z,
-                          {font_size, kWhite, text_box_size[0]});
+
+    TextRenderer::TextFormatting formatting{font_size, kWhite, text_box_size[0]};
+    formatting.valign = TextRenderer::VAlign::Bottom;
+    text_renderer.AddText(text.c_str(), text_box_position[0], text_box_position[1], z, formatting);
   }
 
   // Add warning threshold text box and line.
@@ -67,13 +66,12 @@ void AnnotationTrack::DrawAnnotation(Batcher& batcher, TextRenderer& text_render
     float string_width = text_renderer.GetStringWidth(text.c_str(), font_size);
     Vec2 text_box_size(string_width, layout->GetTextBoxHeight());
     Vec2 text_box_position(track_pos[0] + layout->GetRightMargin(), y - text_box_size[1] / 2.f);
-    text_renderer.AddText(text.c_str(), text_box_position[0],
-                          text_box_position[1] + layout->GetTextOffset(), z,
+    text_renderer.AddText(text.c_str(), text_box_position[0], text_box_position[1], z,
                           {font_size, kThresholdColor, text_box_size[0]});
 
     Vec2 from(track_pos[0], y);
     Vec2 to(track_pos[0] + track_size[0], y);
     batcher.AddLine(from, from + Vec2(layout->GetRightMargin() / 2.f, 0), z, kThresholdColor);
-    batcher.AddLine(Vec2(text_box_position[0] + text_box_size[0], y), to, z, kThresholdColor);
+    batcher.AddLine(Vec2(text_box_position[0] - text_box_size[0], y), to, z, kThresholdColor);
   }
 }

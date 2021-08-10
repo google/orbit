@@ -51,8 +51,8 @@ void TriangleToggle::Draw(Batcher& batcher, TextRenderer& text_renderer,
       triangle = Triangle(position + Vec3(-half_h, half_w, z), position + Vec3(-half_h, -half_w, z),
                           position + Vec3(half_w, 0.f, z));
     } else {
-      triangle = Triangle(position + Vec3(half_w, half_h, z), position + Vec3(-half_w, half_h, z),
-                          position + Vec3(0.f, -half_w, z));
+      triangle = Triangle(position + Vec3(half_w, -half_h, z), position + Vec3(-half_w, -half_h, z),
+                          position + Vec3(0.f, half_w, z));
     }
     batcher.AddTriangle(triangle, color, shared_from_this());
   } else {

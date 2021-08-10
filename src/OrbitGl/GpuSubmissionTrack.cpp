@@ -151,8 +151,7 @@ float GpuSubmissionTrack::GetYFromTimer(const TimerInfo& timer_info) const {
   if (timer_info.type() == TimerInfo::kGpuCommandBuffer) {
     adjusted_depth += 1.f;
   }
-  return pos_[1] - layout_->GetTrackTabHeight() -
-         layout_->GetTextBoxHeight() * (adjusted_depth + 1.f) - gap_space;
+  return pos_[1] + GetHeaderHeight() + layout_->GetTextBoxHeight() * adjusted_depth - gap_space;
 }
 
 // When track or its parent is collapsed, only draw "hardware execution" timers.
@@ -180,8 +179,9 @@ float GpuSubmissionTrack::GetHeight() const {
   if (has_vulkan_layer_command_buffer_timers_ && !collapsed) {
     depth *= 2;
   }
-  return layout_->GetTrackTabHeight() + layout_->GetTextBoxHeight() * depth +
-         (num_gaps * layout_->GetSpaceBetweenGpuDepths()) + layout_->GetTrackBottomMargin();
+  return layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin() +
+         layout_->GetTextBoxHeight() * depth + (num_gaps * layout_->GetSpaceBetweenGpuDepths()) +
+         layout_->GetTrackContentBottomMargin();
 }
 
 const TimerInfo* GpuSubmissionTrack::GetLeft(const TimerInfo& timer_info) const {

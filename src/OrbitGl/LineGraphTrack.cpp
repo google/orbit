@@ -32,16 +32,16 @@ template <size_t Dimension>
 float LineGraphTrack<Dimension>::GetLabelYFromValues(
     const std::array<double, Dimension>& values) const {
   float content_height = this->GetGraphContentHeight();
-  float base_y = this->GetGraphContentBaseY();
+  float base_y = this->GetGraphContentBottomY();
   double min = this->GetGraphMinValue();
   double inverse_value_range = this->GetInverseOfGraphValueRange();
   std::array<float, Dimension> normalized_values =
       GetNormalizedValues(values, min, inverse_value_range);
   // The label will point to the only value.
-  if (Dimension == 1) return base_y + normalized_values[0] * content_height;
+  if (Dimension == 1) return base_y - normalized_values[0] * content_height;
 
   // The label will be centred on the track.
-  return base_y + content_height / 2.0f;
+  return base_y - content_height / 2.0f;
 }
 
 template <size_t Dimension>
@@ -98,14 +98,14 @@ void LineGraphTrack<Dimension>::DrawSingleSeriesEntry(
   float x0 = this->time_graph_->GetWorldFromTick(start_tick);
   float x1 = this->time_graph_->GetWorldFromTick(end_tick);
   float content_height = this->GetGraphContentHeight();
-  float base_y = this->GetGraphContentBaseY();
+  float base_y = this->GetGraphContentBottomY();
 
   for (size_t i = Dimension; i-- > 0;) {
-    float y0 = base_y + current_normalized_values[i] * content_height;
+    float y0 = base_y - current_normalized_values[i] * content_height;
     DrawSquareDot(batcher, Vec2(x0, y0), kDotRadius, z, this->GetColor(i));
     batcher->AddLine(Vec2(x0, y0), Vec2(x1, y0), z, this->GetColor(i));
     if (!is_last) {
-      float y1 = base_y + next_normalized_values[i] * content_height;
+      float y1 = base_y - next_normalized_values[i] * content_height;
       batcher->AddLine(Vec2(x1, y0), Vec2(x1, y1), z, this->GetColor(i));
     }
   }

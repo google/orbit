@@ -112,14 +112,14 @@ void PageFaultsTrack::UpdatePositionOfSubtracks() {
     return;
   }
 
-  float current_y = pos_[1] - layout_->GetTrackTabHeight();
+  float current_y = pos_[1] + layout_->GetTrackTabHeight();
   if (!major_page_faults_track_->IsEmpty()) {
-    current_y -= layout_->GetSpaceBetweenSubtracks();
+    current_y += layout_->GetSpaceBetweenSubtracks();
   }
   major_page_faults_track_->SetPos(pos_[0], current_y);
 
   if (!minor_page_faults_track_->IsEmpty()) {
-    current_y -= (layout_->GetSpaceBetweenSubtracks() + major_page_faults_track_->GetHeight());
+    current_y += (layout_->GetSpaceBetweenSubtracks() + major_page_faults_track_->GetHeight());
   }
   minor_page_faults_track_->SetPos(pos_[0], current_y);
 }

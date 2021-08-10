@@ -65,13 +65,10 @@ class GraphTrack : public Track {
     return 1.0 / (GetGraphMaxValue() - GetGraphMinValue());
   }
 
-  [[nodiscard]] float GetGraphContentBaseY() const {
-    return pos_[1] - GetSize()[1] + layout_->GetTrackBottomMargin();
+  [[nodiscard]] float GetGraphContentBottomY() const {
+    return pos_[1] + GetSize()[1] - layout_->GetTrackContentBottomMargin();
   }
-  [[nodiscard]] float GetGraphContentHeight() const {
-    return GetSize()[1] - layout_->GetTrackTabHeight() - GetLegendHeight() -
-           layout_->GetTrackBottomMargin();
-  }
+  [[nodiscard]] float GetGraphContentHeight() const;
 
   [[nodiscard]] virtual float GetLabelYFromValues(
       const std::array<double, Dimension>& values) const;

@@ -247,16 +247,16 @@ void ThreadTrack::UpdatePositionOfSubtracks() {
   const float event_track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
   const float space_between_subtracks = layout_->GetSpaceBetweenTracksAndThread();
 
-  float current_y = pos_[1] - layout_->GetTrackTabHeight();
+  float current_y = pos_[1] + layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin();
 
   thread_state_bar_->SetPos(pos_[0], current_y);
   if (!thread_state_bar_->IsEmpty()) {
-    current_y -= (space_between_subtracks + thread_state_track_height);
+    current_y += (space_between_subtracks + thread_state_track_height);
   }
 
   event_bar_->SetPos(pos_[0], current_y);
   if (!event_bar_->IsEmpty()) {
-    current_y -= (space_between_subtracks + event_track_height);
+    current_y += (space_between_subtracks + event_track_height);
   }
 
   tracepoint_bar_->SetPos(pos_[0], current_y);
@@ -341,7 +341,7 @@ float ThreadTrack::GetHeight() const {
       (depth > 0);
   return GetHeaderHeight() +
          (gap_between_tracks_and_timers ? layout_->GetSpaceBetweenTracksAndThread() : 0) +
-         layout_->GetTextBoxHeight() * depth + layout_->GetTrackBottomMargin();
+         layout_->GetTextBoxHeight() * depth + layout_->GetTrackContentBottomMargin();
 }
 
 // TODO(b/176216022): Make a general interface for capture view elements for setting the width to
@@ -359,7 +359,7 @@ float ThreadTrack::GetHeaderHeight() const {
   const float tracepoint_track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
   const float space_between_subtracks = layout_->GetSpaceBetweenTracksAndThread();
 
-  float header_height = layout_->GetTrackTabHeight();
+  float header_height = layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin();
   int track_count = 0;
   if (!thread_state_bar_->IsEmpty()) {
     header_height += thread_state_track_height;
@@ -383,9 +383,9 @@ float ThreadTrack::GetHeaderHeight() const {
 float ThreadTrack::GetYFromDepth(uint32_t depth) const {
   bool gap_between_tracks_and_timers =
       !thread_state_bar_->IsEmpty() || !event_bar_->IsEmpty() || !tracepoint_bar_->IsEmpty();
-  return pos_[1] - GetHeaderHeight() -
-         (gap_between_tracks_and_timers ? layout_->GetSpaceBetweenTracksAndThread() : 0) -
-         GetDefaultBoxHeight() * static_cast<float>(depth + 1);
+  return pos_[1] + GetHeaderHeight() +
+         (gap_between_tracks_and_timers ? layout_->GetSpaceBetweenTracksAndThread() : 0) +
+         GetDefaultBoxHeight() * static_cast<float>(depth);
 }
 
 void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
