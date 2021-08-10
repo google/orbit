@@ -24,7 +24,7 @@
 //  OrbitTest. This should be removed once we split the introspection and manual instrumentation
 //  apis.
 namespace orbit_api_wrapper {
-#include "../ApiInterface/include/ApiInterface/Orbit.h"
+#include "ApiInterface/Orbit.h"
 ORBIT_API_INSTANTIATE;
 }  // namespace orbit_api_wrapper
 

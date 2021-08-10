@@ -1,3 +1,7 @@
+# Copyright (c) 2021 The Orbit Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 add_library(ApiUtils STATIC)
 target_compile_options(ApiUtils PRIVATE ${STRICT_COMPILE_FLAGS})
 target_compile_features(ApiUtils PUBLIC cxx_std_17)
@@ -9,6 +13,7 @@ target_sources(ApiUtils PUBLIC
 target_sources(ApiUtils PRIVATE
         EncodedString.cpp)
 target_link_libraries(ApiUtils PUBLIC
+        ApiInterface
         GrpcProtos
         OrbitBase)
 target_include_directories(ApiUtils PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)

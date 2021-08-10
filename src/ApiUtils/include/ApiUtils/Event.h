@@ -9,7 +9,7 @@
 #include <variant>
 #include <vector>
 
-#include "../../../ApiInterface/include/ApiInterface/Orbit.h"
+#include "ApiInterface/Orbit.h"
 #include "EncodedString.h"
 #include "OrbitBase/Logging.h"
 #include "absl/base/casts.h"

@@ -3,11 +3,11 @@
 // found in the LICENSE file.
 
 #define ORBIT_API_INTERNAL_IMPL
-#include "../ApiInterface/include/ApiInterface/Orbit.h"
+#include "ApiInterface/Orbit.h"
 
 #include <absl/base/casts.h>
 
-#include "../ApiUtils/include/ApiUtils/Event.h"
+#include "ApiUtils/Event.h"
 #include "LockFreeApiEventProducer.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"

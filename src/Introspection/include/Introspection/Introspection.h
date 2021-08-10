@@ -10,8 +10,8 @@
 #include <functional>
 #include <memory>
 
-#include "../../../ApiInterface/include/ApiInterface/Orbit.h"
-#include "../../../ApiUtils/include/ApiUtils/EncodedEvent.h"
+#include "ApiInterface/Orbit.h"
+#include "ApiUtils/EncodedEvent.h"
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitBase/ThreadUtils.h"
 

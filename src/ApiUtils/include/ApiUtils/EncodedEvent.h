@@ -9,7 +9,7 @@
 
 #include <cstring>
 
-#include "../../../ApiInterface/include/ApiInterface/Orbit.h"
+#include "ApiInterface/Orbit.h"
 
 namespace orbit_api {
 
