@@ -310,10 +310,6 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
       track->OnTimer(timer_info);
       break;
     }
-    case TimerInfo::kApiEvent: {
-      ProcessApiEventTimerLegacy(timer_info);
-      break;
-    }
     case TimerInfo::kApiScope: {
       ThreadTrack* track = track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
       track->OnTimer(timer_info);
@@ -328,34 +324,6 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
   }
 
   RequestUpdate();
-}
-
-void TimeGraph::ProcessApiEventTimerLegacy(const TimerInfo& timer_info) {
-  orbit_api::Event api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
-  switch (api_event.type) {
-    case orbit_api::kScopeStart:
-    case orbit_api::kScopeStop: {
-      ThreadTrack* track = track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
-      track->OnTimer(timer_info);
-      break;
-    }
-    case orbit_api::kScopeStartAsync:
-    case orbit_api::kScopeStopAsync:
-      manual_instrumentation_manager_->ProcessAsyncTimerLegacy(timer_info);
-      break;
-
-    case orbit_api::kTrackInt:
-    case orbit_api::kTrackInt64:
-    case orbit_api::kTrackUint:
-    case orbit_api::kTrackUint64:
-    case orbit_api::kTrackFloat:
-    case orbit_api::kTrackDouble:
-    case orbit_api::kString:
-      ProcessValueTrackingTimerLegacy(timer_info);
-      break;
-    case orbit_api::kNone:
-      UNREACHABLE();
-  }
 }
 
 void TimeGraph::ProcessIntrospectionTimer(const TimerInfo& timer_info) {

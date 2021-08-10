@@ -48,7 +48,6 @@ AsyncTrack::AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph,
           ? capture_data_->GetInstrumentedFunctionById(timer_info->function_id())
           : nullptr;
   CHECK(func != nullptr || timer_info->type() == TimerInfo::kIntrospection ||
-        timer_info->type() == TimerInfo::kApiEvent ||
         timer_info->type() == TimerInfo::kApiScopeAsync);
 
   std::string module_name =
@@ -59,7 +58,7 @@ AsyncTrack::AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph,
   if (timer_info->type() == TimerInfo::kApiScopeAsync) {
     event_id = timer_info->api_async_scope_id();
   } else {
-    CHECK(timer_info->type() == TimerInfo::kApiEvent);
+    CHECK(timer_info->type() == TimerInfo::kIntrospection);
     orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(*timer_info);
     event_id = event.data;
   }
@@ -98,16 +97,15 @@ float AsyncTrack::GetDefaultBoxHeight() const {
 
 std::string AsyncTrack::GetTimesliceText(const TimerInfo& timer_info) const {
   std::string time = GetDisplayTime(timer_info);
-
-  std::string name{};
+  uint64_t event_id = 0;
   if (timer_info.type() == TimerInfo::kApiScopeAsync) {
-    name = timer_info.api_scope_name();
+    event_id = timer_info.api_async_scope_id();
   } else {
-    CHECK(timer_info.type() == TimerInfo::kApiEvent);
+    CHECK(timer_info.type() == TimerInfo::kIntrospection);
     orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
-    const uint64_t event_id = event.data;
-    name = app_->GetManualInstrumentationManager()->GetString(event_id);
+    event_id = event.data;
   }
+  std::string name = app_->GetManualInstrumentationManager()->GetString(event_id);
   return absl::StrFormat("%s %s", name, time);
 }
 
@@ -140,7 +138,7 @@ Color AsyncTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
   if (timer_info.type() == TimerInfo::kApiScopeAsync) {
     event_id = timer_info.api_async_scope_id();
   } else {
-    CHECK(timer_info.type() == TimerInfo::kApiEvent);
+    CHECK(timer_info.type() == TimerInfo::kIntrospection);
     orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
     event_id = event.data;
   }

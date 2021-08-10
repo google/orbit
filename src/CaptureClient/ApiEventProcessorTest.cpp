@@ -30,247 +30,6 @@ using orbit_grpc_protos::ApiEvent;
 using orbit_grpc_protos::ClientCaptureEvent;
 
 namespace {
-
-// Empty implementation of CaptureListener used as helper to reduce the complexity in subclasses.
-class EmptyCaptureListener : public CaptureListener {
- public:
-  void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& /*capture_started*/,
-                        std::optional<std::filesystem::path> /*file_path*/,
-                        absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/) override {}
-  void OnCaptureFinished(const orbit_grpc_protos::CaptureFinished& /*capture_finished*/) override {}
-  void OnTimer(const orbit_client_protos::TimerInfo& /*timer_info*/) override {}
-  void OnKeyAndString(uint64_t /*key*/, std::string /*str*/) override {}
-  void OnUniqueCallstack(uint64_t /*callstack_id*/, CallstackInfo /*callstack*/) override {}
-  void OnCallstackEvent(orbit_client_protos::CallstackEvent /*callstack_event*/) override {}
-  void OnThreadName(int32_t /*thread_id*/, std::string /*thread_name*/) override {}
-  void OnModuleUpdate(uint64_t /*timestamp_ns*/,
-                      orbit_grpc_protos::ModuleInfo /*module_info*/) override {}
-  void OnModulesSnapshot(uint64_t /*timestamp_ns*/,
-                         std::vector<orbit_grpc_protos::ModuleInfo> /*module_infos*/) override {}
-  void OnThreadStateSlice(
-      orbit_client_protos::ThreadStateSliceInfo /*thread_state_slice*/) override {}
-  void OnAddressInfo(orbit_client_protos::LinuxAddressInfo /*address_info*/) override {}
-  void OnUniqueTracepointInfo(uint64_t /*key*/,
-                              orbit_grpc_protos::TracepointInfo /*tracepoint_info*/) override {}
-  void OnTracepointEvent(
-      orbit_client_protos::TracepointEventInfo /*tracepoint_event_info*/) override {}
-  void OnApiStringEvent(const orbit_client_protos::ApiStringEvent& /*api_string_event*/) override {}
-  void OnApiTrackValue(const orbit_client_protos::ApiTrackValue& /*api_track_value*/) override {}
-  void OnWarningEvent(orbit_grpc_protos::WarningEvent /*warning_event*/) override {}
-  void OnClockResolutionEvent(
-      orbit_grpc_protos::ClockResolutionEvent /*clock_resolution_event*/) override {}
-  void OnErrorsWithPerfEventOpenEvent(
-      orbit_grpc_protos::ErrorsWithPerfEventOpenEvent /*errors_with_perf_event_open_event*/)
-      override {}
-  void OnErrorEnablingOrbitApiEvent(
-      orbit_grpc_protos::ErrorEnablingOrbitApiEvent /*error_enabling_orbit_api_event*/) override {}
-  void OnErrorEnablingUserSpaceInstrumentationEvent(
-      orbit_grpc_protos::ErrorEnablingUserSpaceInstrumentationEvent /*error_event*/) override {}
-  void OnLostPerfRecordsEvent(
-      orbit_grpc_protos::LostPerfRecordsEvent /*lost_perf_records_event*/) override {}
-  void OnOutOfOrderEventsDiscardedEvent(orbit_grpc_protos::OutOfOrderEventsDiscardedEvent
-                                        /*out_of_order_events_discarded_event*/) override {}
-};
-
-// Test CaptureListener used to validate TimerInfo data produced by api events.
-class ApiEventCaptureListenerLegacy : public EmptyCaptureListener {
- public:
-  void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override {
-    timers_.emplace_back(timer_info);
-  }
-  std::vector<TimerInfo> timers_;
-};
-
-// ApiTesterLegacy exposes methods that mock the Orbit API and internally creates grpc events that
-// it forwards to both a CaptureEventProcessor and an ApiEventProcessor. The test makes sure that
-// both processors forward the same information to their listener. Note that a CaptureEventProcessor
-// owns an ApiEventProcessor to which it forwards ApiEvent events. To help readability of test code,
-// the api methods return an ApiTesterLegacy reference so that we can chain function calls.
-class ApiTesterLegacy {
- public:
-  ApiTesterLegacy()
-      : api_event_processor_{&api_event_listener_},
-        capture_event_processor_{CaptureEventProcessor::CreateForCaptureListener(
-            &capture_event_listener_, std::nullopt, {})} {}
-
-  ApiTesterLegacy& Start(const char* name = nullptr, orbit_api_color color = kOrbitColorAuto) {
-    EnqueueApiEvent(orbit_api::kScopeStart, name, 0, color);
-    return *this;
-  }
-  ApiTesterLegacy& Stop() {
-    EnqueueApiEvent(orbit_api::kScopeStop);
-    return *this;
-  }
-  ApiTesterLegacy& StartAsync(uint64_t id, const char* name = nullptr,
-                              orbit_api_color color = kOrbitColorAuto) {
-    EnqueueApiEvent(orbit_api::kScopeStartAsync, name, id, color);
-    return *this;
-  }
-  ApiTesterLegacy& StopAsync(uint64_t id) {
-    EnqueueApiEvent(orbit_api::kScopeStopAsync, /*name=*/nullptr, id);
-    return *this;
-  }
-  ApiTesterLegacy& TrackValue(const char* name, uint64_t value,
-                              orbit_api_color color = kOrbitColorAuto) {
-    EnqueueApiEvent(orbit_api::kTrackUint64, name, value, color);
-    return *this;
-  }
-
-  ApiTesterLegacy& ExpectNumTimers(size_t num_timers) {
-    EXPECT_EQ(api_event_listener_.timers_.size(), num_timers);
-    EXPECT_EQ(capture_event_listener_.timers_.size(), num_timers);
-    return *this;
-  }
-
-  size_t CountTimersOfType(orbit_api::EventType type) {
-    const std::vector<TimerInfo>& timers = api_event_listener_.timers_;
-    return std::count_if(timers.begin(), timers.end(), [type](const TimerInfo& timer_info) {
-      return ApiEventFromTimerInfo(timer_info).type == type;
-    });
-  }
-
-  ApiTesterLegacy& ExpectNumScopeTimers(size_t num_timers) {
-    EXPECT_EQ(CountTimersOfType(orbit_api::kScopeStart), num_timers);
-    return *this;
-  }
-
-  ApiTesterLegacy& ExpectNumAsyncScopeTimers(size_t num_timers) {
-    EXPECT_EQ(CountTimersOfType(orbit_api::kScopeStartAsync), num_timers);
-    return *this;
-  }
-
-  ApiTesterLegacy& ExpectNumTrackingTimers(size_t num_timers) {
-    EXPECT_EQ(CountTimersOfType(orbit_api::kTrackUint64), num_timers);
-    return *this;
-  }
-
- private:
-  void EnqueueApiEvent(orbit_api::EventType type, const char* name = nullptr, uint64_t data = 0,
-                       orbit_api_color color = kOrbitColorAuto) {
-    orbit_api::EncodedEvent encoded_event(type, name, data, color);
-    ClientCaptureEvent client_capture_event;
-    ApiEvent* api_event = client_capture_event.mutable_api_event();
-    api_event->set_timestamp_ns(orbit_base::CaptureTimestampNs());
-    api_event->set_pid(orbit_base::GetCurrentProcessId());
-    api_event->set_tid(orbit_base::GetCurrentThreadId());
-    api_event->set_r0(encoded_event.args[0]);
-    api_event->set_r1(encoded_event.args[1]);
-    api_event->set_r2(encoded_event.args[2]);
-    api_event->set_r3(encoded_event.args[3]);
-    api_event->set_r4(encoded_event.args[4]);
-    api_event->set_r5(encoded_event.args[5]);
-
-    api_event_processor_.ProcessApiEvent(*api_event);
-    capture_event_processor_->ProcessEvent(client_capture_event);
-  }
-
-  [[nodiscard]] static orbit_api::Event ApiEventFromTimerInfo(
-      const orbit_client_protos::TimerInfo& timer_info) {
-    // On x64 Linux, 6 registers are used for integer argument passing.
-    // Manual instrumentation uses those registers to encode orbit_api::Event
-    // objects.
-    constexpr size_t kNumIntegerRegisters = 6;
-    CHECK(timer_info.registers_size() == kNumIntegerRegisters);
-    uint64_t arg_0 = timer_info.registers(0);
-    uint64_t arg_1 = timer_info.registers(1);
-    uint64_t arg_2 = timer_info.registers(2);
-    uint64_t arg_3 = timer_info.registers(3);
-    uint64_t arg_4 = timer_info.registers(4);
-    uint64_t arg_5 = timer_info.registers(5);
-    orbit_api::EncodedEvent encoded_event(arg_0, arg_1, arg_2, arg_3, arg_4, arg_5);
-    return encoded_event.event;
-  }
-
-  // ApiEventProcessor in isolation.
-  ApiEventCaptureListenerLegacy api_event_listener_;
-  ApiEventProcessor api_event_processor_;
-
-  // ApiEventProcessor as part of a CaptureEventProcessor.
-  ApiEventCaptureListenerLegacy capture_event_listener_;
-  std::shared_ptr<CaptureEventProcessor> capture_event_processor_;
-};
-
-TEST(ApiEventProcessor, ScopesLegacy) {
-  ApiTesterLegacy api;
-  api.Start("Scope0").ExpectNumTimers(0);
-  api.Start("Scope1").ExpectNumTimers(0);
-  api.Start("Scope2").ExpectNumTimers(0);
-  api.Stop().ExpectNumTimers(1);
-  api.Stop().ExpectNumTimers(2);
-  api.Stop().ExpectNumTimers(3);
-
-  api.ExpectNumScopeTimers(3);
-  api.ExpectNumAsyncScopeTimers(0);
-  api.ExpectNumTrackingTimers(0);
-}
-
-TEST(ApiEventProcessor, AsyncScopesLegacy) {
-  ApiTesterLegacy api;
-  api.StartAsync(0, "AsyncScope0").ExpectNumTimers(0);
-  api.StartAsync(1, "AsyncScope1").ExpectNumTimers(0);
-  api.StartAsync(2, "AsyncScope2").ExpectNumTimers(0);
-  api.StopAsync(1).ExpectNumTimers(1);
-  api.StopAsync(0).ExpectNumTimers(2);
-  api.StopAsync(2).ExpectNumTimers(3);
-
-  api.ExpectNumScopeTimers(0);
-  api.ExpectNumAsyncScopeTimers(3);
-  api.ExpectNumTrackingTimers(0);
-}
-
-TEST(ApiEventProcessor, ValueTrackingLegacy) {
-  ApiTesterLegacy api;
-  api.TrackValue("ValueA", 0).ExpectNumTimers(1);
-  api.TrackValue("ValueA", 1).ExpectNumTimers(2);
-  api.TrackValue("ValueA", 2).ExpectNumTimers(3);
-  api.TrackValue("ValueA", 3).ExpectNumTimers(4);
-
-  api.ExpectNumScopeTimers(0);
-  api.ExpectNumAsyncScopeTimers(0);
-  api.ExpectNumTrackingTimers(4);
-}
-
-TEST(ApiEventProcessor, ScopesWithMissingStartLegacy) {
-  ApiTesterLegacy api;
-  api.Start("Scope1").ExpectNumTimers(0);
-  api.Start("Scope2").ExpectNumTimers(0);
-  api.Stop().ExpectNumTimers(1);
-  api.Stop().ExpectNumTimers(2);
-  api.Stop().ExpectNumTimers(2);
-
-  api.ExpectNumScopeTimers(2);
-  api.ExpectNumAsyncScopeTimers(0);
-  api.ExpectNumTrackingTimers(0);
-}
-
-TEST(ApiEventProcessor, ScopesWithMissingStopLegacy) {
-  ApiTesterLegacy api;
-  api.Start("Scope0").ExpectNumTimers(0);
-  api.Start("Scope1").ExpectNumTimers(0);
-  api.Start("Scope2").ExpectNumTimers(0);
-  api.Stop().ExpectNumTimers(1);
-  api.Stop().ExpectNumTimers(2);
-
-  api.ExpectNumScopeTimers(2);
-  api.ExpectNumAsyncScopeTimers(0);
-  api.ExpectNumTrackingTimers(0);
-}
-
-TEST(ApiEventProcessor, MixedEventsLegacy) {
-  ApiTesterLegacy api;
-  api.Start("Scope0").ExpectNumTimers(0);
-  api.StartAsync(0, "AsyncScope0").ExpectNumTimers(0);
-  api.TrackValue("ValueA", 0).ExpectNumTimers(1).ExpectNumTrackingTimers(1);
-  api.TrackValue("ValueA", 0).ExpectNumTimers(2).ExpectNumTrackingTimers(2);
-  api.Start("Scope1").ExpectNumTimers(2).ExpectNumScopeTimers(0);
-  api.Start("Scope2").ExpectNumTimers(2).ExpectNumScopeTimers(0);
-  api.Stop().ExpectNumTimers(3).ExpectNumScopeTimers(1);
-  api.Stop().ExpectNumTimers(4).ExpectNumScopeTimers(2);
-  api.TrackValue("ValueA", 0).ExpectNumTimers(5).ExpectNumTrackingTimers(3);
-  api.StopAsync(0).ExpectNumTimers(6).ExpectNumAsyncScopeTimers(1);
-  api.Stop().ExpectNumTimers(7).ExpectNumScopeTimers(3);
-}
-
 class MockCaptureListener : public CaptureListener {
  public:
   MOCK_METHOD(void, OnCaptureStarted,
@@ -437,6 +196,24 @@ class ApiEventProcessorTest : public ::testing::Test {
     (result.*set_data)(data);
 
     return result;
+  }
+
+  [[deprecated]] static orbit_grpc_protos::ApiEvent CreateApiEventLegacy(
+      int32_t pid, int32_t tid, uint64_t timestamp_ns, orbit_api::EventType type,
+      const char* name = nullptr, uint64_t data = 0, orbit_api_color color = kOrbitColorAuto) {
+    orbit_api::EncodedEvent encoded_event(type, name, data, color);
+    ApiEvent api_event;
+    api_event.set_timestamp_ns(timestamp_ns);
+    api_event.set_pid(pid);
+    api_event.set_tid(tid);
+    api_event.set_r0(encoded_event.args[0]);
+    api_event.set_r1(encoded_event.args[1]);
+    api_event.set_r2(encoded_event.args[2]);
+    api_event.set_r3(encoded_event.args[3]);
+    api_event.set_r4(encoded_event.args[4]);
+    api_event.set_r5(encoded_event.args[5]);
+
+    return api_event;
   }
 
   static orbit_client_protos::TimerInfo CreateTimerInfo(uint64_t start, uint64_t end,
@@ -715,6 +492,264 @@ TEST_F(ApiEventProcessorTest, TrackUint64) {
       .WillOnce(SaveArg<0>(&actual_track_value));
 
   api_event_processor_.ProcessApiTrackUint64(track_uint64);
+
+  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_track_value, actual_track_value));
+}
+
+TEST_F(ApiEventProcessorTest, ScopesFromSameThreadLegacy) {
+  ApiEvent start_0 =
+      CreateApiEventLegacy(kProcessId, kThreadId1, 1, orbit_api::EventType::kScopeStart, "Scope0");
+  ApiEvent start_1 =
+      CreateApiEventLegacy(kProcessId, kThreadId1, 2, orbit_api::EventType::kScopeStart, "Scope1");
+  ApiEvent start_2 =
+      CreateApiEventLegacy(kProcessId, kThreadId1, 3, orbit_api::EventType::kScopeStart, "Scope2");
+
+  ApiEvent stop_2 =
+      CreateApiEventLegacy(kProcessId, kThreadId1, 4, orbit_api::EventType::kScopeStop);
+  ApiEvent stop_1 =
+      CreateApiEventLegacy(kProcessId, kThreadId1, 5, orbit_api::EventType::kScopeStop);
+  ApiEvent stop_0 =
+      CreateApiEventLegacy(kProcessId, kThreadId1, 6, orbit_api::EventType::kScopeStop);
+
+  EXPECT_CALL(capture_listener_, OnTimer).Times(0);
+  api_event_processor_.ProcessApiEventLegacy(start_0);
+  api_event_processor_.ProcessApiEventLegacy(start_1);
+  api_event_processor_.ProcessApiEventLegacy(start_2);
+
+  ::testing::Mock::VerifyAndClearExpectations(&capture_listener_);
+
+  std::vector<orbit_client_protos::TimerInfo> actual_timers;
+
+  EXPECT_CALL(capture_listener_, OnTimer)
+      .Times(3)
+      .WillRepeatedly(
+          Invoke([&actual_timers](const TimerInfo& timer) { actual_timers.push_back(timer); }));
+
+  api_event_processor_.ProcessApiEventLegacy(stop_2);
+  api_event_processor_.ProcessApiEventLegacy(stop_1);
+  api_event_processor_.ProcessApiEventLegacy(stop_0);
+
+  auto expected_timer_2 =
+      CreateTimerInfo(3, 4, kProcessId, kThreadId1, "Scope2", 2, 0, 0, 0, TimerInfo::kApiScope);
+  auto expected_timer_1 =
+      CreateTimerInfo(2, 5, kProcessId, kThreadId1, "Scope1", 1, 0, 0, 0, TimerInfo::kApiScope);
+  auto expected_timer_0 =
+      CreateTimerInfo(1, 6, kProcessId, kThreadId1, "Scope0", 0, 0, 0, 0, TimerInfo::kApiScope);
+
+  ASSERT_THAT(actual_timers.size(), 3);
+
+  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_timer_2, actual_timers[0]));
+  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_timer_1, actual_timers[1]));
+  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_timer_0, actual_timers[2]));
+}
+
+TEST_F(ApiEventProcessorTest, ScopesFromDifferentThreadsLegacy) {
+  auto start_0 =
+      CreateApiEventLegacy(kProcessId, kThreadId1, 1, orbit_api::EventType::kScopeStart, "Scope0");
+  auto start_1 =
+      CreateApiEventLegacy(kProcessId, kThreadId2, 2, orbit_api::EventType::kScopeStart, "Scope1");
+  auto stop_0 = CreateApiEventLegacy(kProcessId, kThreadId1, 4, orbit_api::EventType::kScopeStop);
+  auto stop_1 = CreateApiEventLegacy(kProcessId, kThreadId2, 5, orbit_api::EventType::kScopeStop);
+
+  EXPECT_CALL(capture_listener_, OnTimer).Times(0);
+  api_event_processor_.ProcessApiEventLegacy(start_0);
+  api_event_processor_.ProcessApiEventLegacy(start_1);
+
+  ::testing::Mock::VerifyAndClearExpectations(&capture_listener_);
+
+  std::vector<orbit_client_protos::TimerInfo> actual_timers;
+
+  EXPECT_CALL(capture_listener_, OnTimer)
+      .Times(2)
+      .WillRepeatedly(
+          Invoke([&actual_timers](const TimerInfo& timer) { actual_timers.push_back(timer); }));
+
+  api_event_processor_.ProcessApiEventLegacy(stop_0);
+  api_event_processor_.ProcessApiEventLegacy(stop_1);
+
+  auto expected_timer_0 =
+      CreateTimerInfo(1, 4, kProcessId, kThreadId1, "Scope0", 0, 0, 0, 0, TimerInfo::kApiScope);
+  auto expected_timer_1 =
+      CreateTimerInfo(2, 5, kProcessId, kThreadId2, "Scope1", 0, 0, 0, 0, TimerInfo::kApiScope);
+
+  ASSERT_THAT(actual_timers.size(), 2);
+
+  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_timer_0, actual_timers[0]));
+  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_timer_1, actual_timers[1]));
+}
+
+TEST_F(ApiEventProcessorTest, AsyncScopesLegacy) {
+  auto start_0 = CreateApiEventLegacy(kProcessId, kThreadId1, 1,
+                                      orbit_api::EventType::kScopeStartAsync, "AsyncScope0", kId1);
+  auto start_1 = CreateApiEventLegacy(kProcessId, kThreadId1, 2,
+                                      orbit_api::EventType::kScopeStartAsync, "AsyncScope1", kId2);
+  auto start_2 = CreateApiEventLegacy(kProcessId, kThreadId1, 3,
+                                      orbit_api::EventType::kScopeStartAsync, "AsyncScope2", kId3);
+
+  auto stop_2 = CreateApiEventLegacy(kProcessId, kThreadId1, 4,
+                                     orbit_api::EventType::kScopeStopAsync, nullptr, kId3);
+  auto stop_1 = CreateApiEventLegacy(kProcessId, kThreadId1, 5,
+                                     orbit_api::EventType::kScopeStopAsync, nullptr, kId2);
+  auto stop_0 = CreateApiEventLegacy(kProcessId, kThreadId1, 6,
+                                     orbit_api::EventType::kScopeStopAsync, nullptr, kId1);
+
+  EXPECT_CALL(capture_listener_, OnTimer).Times(0);
+  api_event_processor_.ProcessApiEventLegacy(start_0);
+  api_event_processor_.ProcessApiEventLegacy(start_1);
+  api_event_processor_.ProcessApiEventLegacy(start_2);
+
+  ::testing::Mock::VerifyAndClearExpectations(&capture_listener_);
+
+  std::vector<orbit_client_protos::TimerInfo> actual_timers;
+
+  EXPECT_CALL(capture_listener_, OnTimer)
+      .Times(3)
+      .WillRepeatedly(
+          Invoke([&actual_timers](const TimerInfo& timer) { actual_timers.push_back(timer); }));
+
+  api_event_processor_.ProcessApiEventLegacy(stop_2);
+  api_event_processor_.ProcessApiEventLegacy(stop_1);
+  api_event_processor_.ProcessApiEventLegacy(stop_0);
+
+  auto expected_timer_2 = CreateTimerInfo(3, 4, kProcessId, kThreadId1, "AsyncScope2", 0, 0, kId3,
+                                          0, TimerInfo::kApiScopeAsync);
+  auto expected_timer_1 = CreateTimerInfo(2, 5, kProcessId, kThreadId1, "AsyncScope1", 0, 0, kId2,
+                                          0, TimerInfo::kApiScopeAsync);
+  auto expected_timer_0 = CreateTimerInfo(1, 6, kProcessId, kThreadId1, "AsyncScope0", 0, 0, kId1,
+                                          0, TimerInfo::kApiScopeAsync);
+
+  ASSERT_THAT(actual_timers.size(), 3);
+
+  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_timer_2, actual_timers[0]));
+  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_timer_1, actual_timers[1]));
+  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_timer_0, actual_timers[2]));
+}
+
+TEST_F(ApiEventProcessorTest, StringEventLegacy) {
+  auto string_event = CreateApiEventLegacy(kProcessId, kThreadId1, 1, orbit_api::EventType::kString,
+                                           "Some string for this id", kId1);
+
+  auto expected_string_event =
+      CreateClientStringEvent(1, kProcessId, kThreadId1, kId1, "Some string for this id");
+
+  orbit_client_protos::ApiStringEvent actual_string_event;
+  EXPECT_CALL(capture_listener_, OnApiStringEvent)
+      .Times(1)
+      .WillOnce(SaveArg<0>(&actual_string_event));
+
+  api_event_processor_.ProcessApiEventLegacy(string_event);
+
+  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_string_event, actual_string_event));
+}
+
+TEST_F(ApiEventProcessorTest, TrackDoubleLegacy) {
+  auto track_double =
+      CreateApiEventLegacy(kProcessId, kThreadId1, 1, orbit_api::EventType::kTrackDouble,
+                           "Some name", orbit_api::Encode<uint64_t>(3.14));
+
+  auto expected_track_value =
+      CreateClientTrackValue<double>(1, kProcessId, kThreadId1, "Some name",
+                                     &orbit_client_protos::ApiTrackValue::set_data_double, 3.14);
+
+  orbit_client_protos::ApiTrackValue actual_track_value;
+  EXPECT_CALL(capture_listener_, OnApiTrackValue)
+      .Times(1)
+      .WillOnce(SaveArg<0>(&actual_track_value));
+
+  api_event_processor_.ProcessApiEventLegacy(track_double);
+
+  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_track_value, actual_track_value));
+}
+
+TEST_F(ApiEventProcessorTest, TrackFloatLegacy) {
+  auto track_float =
+      CreateApiEventLegacy(kProcessId, kThreadId1, 1, orbit_api::EventType::kTrackFloat,
+                           "Some name", orbit_api::Encode<uint64_t>(3.14f));
+
+  auto expected_track_value =
+      CreateClientTrackValue<float>(1, kProcessId, kThreadId1, "Some name",
+                                    &orbit_client_protos::ApiTrackValue::set_data_float, 3.14f);
+
+  orbit_client_protos::ApiTrackValue actual_track_value;
+  EXPECT_CALL(capture_listener_, OnApiTrackValue)
+      .Times(1)
+      .WillOnce(SaveArg<0>(&actual_track_value));
+
+  api_event_processor_.ProcessApiEventLegacy(track_float);
+
+  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_track_value, actual_track_value));
+}
+
+TEST_F(ApiEventProcessorTest, TrackIntLegacy) {
+  auto track_int = CreateApiEventLegacy(kProcessId, kThreadId1, 1, orbit_api::EventType::kTrackInt,
+                                        "Some name", orbit_api::Encode<uint64_t>(3));
+
+  auto expected_track_value = CreateClientTrackValue<int32_t>(
+      1, kProcessId, kThreadId1, "Some name", &orbit_client_protos::ApiTrackValue::set_data_int, 3);
+
+  orbit_client_protos::ApiTrackValue actual_track_value;
+  EXPECT_CALL(capture_listener_, OnApiTrackValue)
+      .Times(1)
+      .WillOnce(SaveArg<0>(&actual_track_value));
+
+  api_event_processor_.ProcessApiEventLegacy(track_int);
+
+  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_track_value, actual_track_value));
+}
+
+TEST_F(ApiEventProcessorTest, TrackInt64Legacy) {
+  auto track_int64 =
+      CreateApiEventLegacy(kProcessId, kThreadId1, 1, orbit_api::EventType::kTrackInt64,
+                           "Some name", orbit_api::Encode<uint64_t>(3));
+
+  auto expected_track_value =
+      CreateClientTrackValue<int64_t>(1, kProcessId, kThreadId1, "Some name",
+                                      &orbit_client_protos::ApiTrackValue::set_data_int64, 3);
+
+  orbit_client_protos::ApiTrackValue actual_track_value;
+  EXPECT_CALL(capture_listener_, OnApiTrackValue)
+      .Times(1)
+      .WillOnce(SaveArg<0>(&actual_track_value));
+
+  api_event_processor_.ProcessApiEventLegacy(track_int64);
+
+  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_track_value, actual_track_value));
+}
+
+TEST_F(ApiEventProcessorTest, TrackUintLegacy) {
+  auto track_uint =
+      CreateApiEventLegacy(kProcessId, kThreadId1, 1, orbit_api::EventType::kTrackUint, "Some name",
+                           orbit_api::Encode<uint64_t>(3));
+
+  auto expected_track_value =
+      CreateClientTrackValue<uint32_t>(1, kProcessId, kThreadId1, "Some name",
+                                       &orbit_client_protos::ApiTrackValue::set_data_uint, 3);
+
+  orbit_client_protos::ApiTrackValue actual_track_value;
+  EXPECT_CALL(capture_listener_, OnApiTrackValue)
+      .Times(1)
+      .WillOnce(SaveArg<0>(&actual_track_value));
+
+  api_event_processor_.ProcessApiEventLegacy(track_uint);
+
+  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_track_value, actual_track_value));
+}
+
+TEST_F(ApiEventProcessorTest, TrackUint64Legacy) {
+  auto track_uint64 =
+      CreateApiEventLegacy(kProcessId, kThreadId1, 1, orbit_api::EventType::kTrackUint64,
+                           "Some name", orbit_api::Encode<uint64_t>(3));
+
+  auto expected_track_value =
+      CreateClientTrackValue<uint64_t>(1, kProcessId, kThreadId1, "Some name",
+                                       &orbit_client_protos::ApiTrackValue::set_data_uint64, 3);
+
+  orbit_client_protos::ApiTrackValue actual_track_value;
+  EXPECT_CALL(capture_listener_, OnApiTrackValue)
+      .Times(1)
+      .WillOnce(SaveArg<0>(&actual_track_value));
+
+  api_event_processor_.ProcessApiEventLegacy(track_uint64);
 
   EXPECT_TRUE(MessageDifferencer::Equivalent(expected_track_value, actual_track_value));
 }
