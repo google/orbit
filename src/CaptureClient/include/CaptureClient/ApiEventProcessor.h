@@ -26,16 +26,17 @@ class ApiEventProcessor {
   [[deprecated]] void ProcessApiEventLegacy(const orbit_grpc_protos::ApiEvent& grpc_api_event);
   void ProcessApiScopeStart(const orbit_grpc_protos::ApiScopeStart& api_scope_start);
   void ProcessApiScopeStartAsync(
-      const orbit_grpc_protos::ApiScopeStartAsync& api_scope_start_async);
-  void ProcessApiScopeStop(const orbit_grpc_protos::ApiScopeStop& api_scope_stop);
-  void ProcessApiScopeStopAsync(const orbit_grpc_protos::ApiScopeStopAsync& api_scope_stop_async);
-  void ProcessApiStringEvent(const orbit_grpc_protos::ApiStringEvent& api_string_event);
-  void ProcessApiTrackDouble(const orbit_grpc_protos::ApiTrackDouble& api_track_double);
-  void ProcessApiTrackFloat(const orbit_grpc_protos::ApiTrackFloat& api_track_float);
-  void ProcessApiTrackInt(const orbit_grpc_protos::ApiTrackInt& api_track_int);
-  void ProcessApiTrackInt64(const orbit_grpc_protos::ApiTrackInt64& api_track_int64);
-  void ProcessApiTrackUint(const orbit_grpc_protos::ApiTrackUint& api_track_uint);
-  void ProcessApiTrackUint64(const orbit_grpc_protos::ApiTrackUint64& api_track_uint64);
+      const orbit_grpc_protos::ApiScopeStartAsync& grpc_api_scope_start_async);
+  void ProcessApiScopeStop(const orbit_grpc_protos::ApiScopeStop& grpc_api_scope_stop);
+  void ProcessApiScopeStopAsync(
+      const orbit_grpc_protos::ApiScopeStopAsync& grpc_api_scope_stop_async);
+  void ProcessApiStringEvent(const orbit_grpc_protos::ApiStringEvent& grpc_api_string_event);
+  void ProcessApiTrackDouble(const orbit_grpc_protos::ApiTrackDouble& grpc_api_track_double);
+  void ProcessApiTrackFloat(const orbit_grpc_protos::ApiTrackFloat& grpc_api_track_float);
+  void ProcessApiTrackInt(const orbit_grpc_protos::ApiTrackInt& grpc_api_track_int);
+  void ProcessApiTrackInt64(const orbit_grpc_protos::ApiTrackInt64& grpc_api_track_int64);
+  void ProcessApiTrackUint(const orbit_grpc_protos::ApiTrackUint& grpc_api_track_uint);
+  void ProcessApiTrackUint64(const orbit_grpc_protos::ApiTrackUint64& grpc_api_track_uint64);
 
  private:
   [[deprecated]] void ProcessApiEventLegacy(const orbit_api::ApiEvent& api_event);
