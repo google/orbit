@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "include/Api/EncodedString.h"
+#include "include/ApiUtils/EncodedString.h"
 
 #include <absl/base/casts.h>
 
 #include <cstring>
 
 #include "capture.pb.h"
-#include "include/Api/Event.h"
+#include "include/ApiUtils/Event.h"
 
 namespace orbit_api {
 

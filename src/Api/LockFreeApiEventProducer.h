@@ -7,7 +7,7 @@
 
 #include <variant>
 
-#include "Api/Event.h"
+#include "../ApiUtils/include/ApiUtils/Event.h"
 #include "CaptureEventProducer/LockFreeBufferCaptureEventProducer.h"
 #include "ProducerSideChannel/ProducerSideChannel.h"
 

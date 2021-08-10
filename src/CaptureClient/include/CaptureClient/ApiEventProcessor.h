@@ -7,7 +7,7 @@
 
 #include <absl/container/flat_hash_map.h>
 
-#include "Api/EncodedEvent.h"
+#include "../../../ApiUtils/include/ApiUtils/EncodedEvent.h"
 #include "CaptureClient/CaptureListener.h"
 #include "capture.pb.h"
 
