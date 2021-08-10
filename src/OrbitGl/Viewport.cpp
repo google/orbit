@@ -79,7 +79,7 @@ void Viewport::SetWorldMin(const Vec2& value) {
 const Vec2& Viewport::GetWorldMin() const { return world_min_; }
 
 void Viewport::SetWorldTopLeftY(float y) {
-  float clamped = std::min(std::max(y, visible_world_height_ - world_extents_[1] + world_min_[1]),
+  float clamped = std::max(std::min(y, world_extents_[1] - visible_world_height_ + world_min_[1]),
                            world_min_[1]);
   if (world_top_left_[1] == clamped) return;
 
@@ -102,7 +102,7 @@ Vec2 Viewport::ScreenToWorldPos(const Vec2i& screen_pos) const {
   Vec2 world_pos;
   world_pos[0] =
       world_top_left_[0] + screen_pos[0] / static_cast<float>(screen_width_) * visible_world_width_;
-  world_pos[1] = world_top_left_[1] -
+  world_pos[1] = world_top_left_[1] +
                  screen_pos[1] / static_cast<float>(screen_height_) * visible_world_height_;
   return world_pos;
 }
@@ -120,7 +120,7 @@ Vec2i Viewport::WorldToScreenPos(const Vec2& world_pos) const {
   screen_pos[0] = static_cast<int>(
       floorf((world_pos[0] - world_top_left_[0]) / visible_world_width_ * GetScreenWidth()));
   screen_pos[1] = static_cast<int>(
-      floorf((world_top_left_[1] - world_pos[1]) / visible_world_height_ * GetScreenHeight()));
+      floorf((world_pos[1] - world_top_left_[1]) / visible_world_height_ * GetScreenHeight()));
   return screen_pos;
 }
 
@@ -130,14 +130,6 @@ int Viewport::WorldToScreenHeight(float height) const {
 
 int Viewport::WorldToScreenWidth(float width) const {
   return static_cast<int>(width / visible_world_width_ * GetScreenWidth());
-}
-
-// TODO(b/177350599): Unify QtScreen and GlScreen
-// QtScreen(x,y) --> GlScreen(x,height-y)
-Vec2i Viewport::QtToGlScreenPos(const Vec2i& qt_pos) const {
-  Vec2i gl_pos = qt_pos;
-  gl_pos[1] = screen_height_ - qt_pos[1];
-  return gl_pos;
 }
 
 }  // namespace orbit_gl

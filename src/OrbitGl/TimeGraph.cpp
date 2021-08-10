@@ -684,13 +684,13 @@ void TimeGraph::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
     Vec2 pos(world_timer_x, world_start_y);
     x_coords.push_back(pos[0]);
 
-    batcher.AddVerticalLine(pos, -world_height, GlCanvas::kZValueOverlay,
+    batcher.AddVerticalLine(pos, world_height, GlCanvas::kZValueOverlay,
                             GetThreadColor(timer_info->thread_id()));
   }
 
   // Draw timers with timings between iterators.
   for (size_t k = 1; k < timers.size(); ++k) {
-    Vec2 pos(x_coords[k - 1], world_start_y - world_height);
+    Vec2 pos(x_coords[k - 1], world_start_y);
     float size_x = x_coords[k] - pos[0];
     Vec2 size(size_x, world_height);
     Color color = GetIteratorBoxColor(k - 1);
@@ -720,7 +720,8 @@ void TimeGraph::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
     // / 2.f), corresponding to the case k == 0 in the formula for 'text_y'.
     float height_per_text = ((world_height / 2.f) - bottom_margin) /
                             static_cast<float>(iterator_timer_info_.size() - 1);
-    float text_y = pos[1] + (world_height / 2.f) - static_cast<float>(k) * height_per_text;
+    float text_y = pos[1] + (world_height / 2.f) + static_cast<float>(k) * height_per_text -
+                   layout_.GetTextBoxHeight();
 
     DrawIteratorBox(batcher, text_renderer, pos, size, color, label, time, text_y);
   }
@@ -730,7 +731,7 @@ void TimeGraph::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
   if (timers.size() > 2) {
     size_t last_index = timers.size() - 1;
 
-    Vec2 pos(x_coords[0], world_start_y - world_height);
+    Vec2 pos(x_coords[0], world_start_y);
     float size_x = x_coords[last_index] - pos[0];
     Vec2 size(size_x, world_height);
 
@@ -790,7 +791,7 @@ void TimeGraph::DrawIncompleteDataIntervals(Batcher& batcher, PickingMode pickin
   // Actually draw the ranges.
   for (const auto& [start_x, end_x] : x_ranges) {
     const Vec2 pos{start_x, world_start_y};
-    const Vec2 size{end_x - start_x, -world_height};
+    const Vec2 size{end_x - start_x, world_height};
     float z_value = GlCanvas::kZValueIncompleteDataOverlay;
 
     std::unique_ptr<PickingUserData> user_data = nullptr;

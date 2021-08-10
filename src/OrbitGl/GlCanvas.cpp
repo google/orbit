@@ -126,7 +126,7 @@ void GlCanvas::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle
   // Pan
   if (left && !picking_manager_.IsDragging()) {
     viewport_.SetWorldTopLeftX(mouse_click_pos_world_[0] - viewport_.ScreenToWorldWidth(x));
-    viewport_.SetWorldTopLeftY(mouse_click_pos_world_[1] + viewport_.ScreenToWorldHeight(y));
+    viewport_.SetWorldTopLeftY(mouse_click_pos_world_[1] - viewport_.ScreenToWorldHeight(y));
   }
 
   if (left) {
@@ -218,23 +218,17 @@ bool GlCanvas::ControlPressed() { return control_key_; }
 
 /** Inits the OpenGL viewport for drawing in 2D. */
 void GlCanvas::PrepareWorldSpaceViewport() {
-  const int top_left_x = 0, top_left_y = 0, bottom_right_x = viewport_.GetScreenWidth(),
-            bottom_right_y = viewport_.GetScreenHeight();
-  glViewport(top_left_x, top_left_y, bottom_right_x - top_left_x, bottom_right_y - top_left_y);
+  Vec2 top_left = viewport_.GetWorldTopLeft();
+  glViewport(0, 0, viewport_.GetScreenWidth(), viewport_.GetScreenHeight());
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-
-  Vec2 top_left = viewport_.GetWorldTopLeft();
-  float width = viewport_.GetVisibleWorldWidth();
-  float height = viewport_.GetVisibleWorldHeight();
-
-  glOrtho(top_left[0], top_left[0] + width, top_left[1] - height, top_left[1], -1, 1);
+  glOrtho(top_left[0], top_left[0] + viewport_.GetScreenWidth(),
+          viewport_.GetScreenHeight() + top_left[1], top_left[1], -1, 1);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 }
 
 void GlCanvas::PrepareScreenSpaceViewport() {
-  ORBIT_SCOPE_FUNCTION;
   glViewport(0, 0, viewport_.GetScreenWidth(), viewport_.GetScreenHeight());
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();

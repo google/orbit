@@ -15,11 +15,12 @@ namespace orbit_gl {
 // Uses the following coordinate systems:
 //
 // World:
-//    +y
-//    ^
-//    |
-//    |
 //  (0, 0) ----> +x
+//    |
+//    |
+//    v
+//    +y
+//
 //
 // Screen:
 //  (0, 0) ----> +x
@@ -28,15 +29,11 @@ namespace orbit_gl {
 //    v
 //    +y
 //
-// where world(0, 0) is initially anchored at screen(0, 0), i.e. top left (meaning basically all
-// world y coordinates are negative). Viewport clamps scrolling X values to be >= world_min, and
-// scrollingY values to be <= world_min.
+// where world(0, 0) is initially anchored at screen(0, 0), i.e. top left. Viewport clamps scrolling
+// X values to be >= world_min, and scrollingY values to be <= world_min.
 //
 // Viewport will indicate if any changes happened that require redraw of the contents in between
 // frames. See Viewport::IsDirty() for usage.
-//
-// NOTE: The screen coordinate system is different from what is referred to as "ScreenSpaceViewport"
-// in GlCanvas! See TODO(b/177350599): Unify QtScreen and GlScreen
 
 class Viewport {
  public:
@@ -80,8 +77,6 @@ class Viewport {
   // to convert sizes instead of positions.
   [[nodiscard]] int WorldToScreenWidth(float width) const;
   [[nodiscard]] int WorldToScreenHeight(float height) const;
-
-  [[nodiscard]] Vec2i QtToGlScreenPos(const Vec2i& qt_pos) const;
 
   // "Dirty" indicates that any action has been performed that requires redraw of
   // the viewport contents. The flag must explicitely be cleared in each frame.
