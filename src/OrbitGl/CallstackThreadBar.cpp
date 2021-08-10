@@ -64,7 +64,7 @@ void CallstackThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
                           : GlCanvas::kZValueEventBar;
   event_bar_z += draw_context.z_offset;
   Color color = GetColor();
-  Box box(pos_, Vec2(GetWidth(), -GetHeight()), event_bar_z);
+  Box box(pos_, Vec2(GetWidth(), GetHeight()), event_bar_z);
   batcher.AddBox(box, color, shared_from_this());
 
   if (batcher.GetPickingManager()->IsThisElementPicked(this)) {
@@ -74,7 +74,7 @@ void CallstackThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
   float x0 = pos_[0];
   float y0 = pos_[1];
   float x1 = x0 + GetWidth();
-  float y1 = y0 - GetHeight();
+  float y1 = y0 + GetHeight();
 
   batcher.AddLine(pos_, Vec2(x1, y0), event_bar_z, color, shared_from_this());
   batcher.AddLine(Vec2(x1, y1), Vec2(x0, y1), event_bar_z, color, shared_from_this());
@@ -86,10 +86,10 @@ void CallstackThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
     x0 = from[0];
     y0 = pos_[1];
     x1 = to[0];
-    y1 = y0 - GetHeight();
+    y1 = y0 + GetHeight();
 
     Color picked_color(0, 128, 255, 128);
-    Box picked_box(Vec2(x0, y0), Vec2(x1 - x0, -GetHeight()),
+    Box picked_box(Vec2(x0, y0), Vec2(x1 - x0, GetHeight()),
                    GlCanvas::kZValueUi + draw_context.z_offset);
     batcher.AddBox(picked_box, picked_color, shared_from_this());
   }
@@ -119,7 +119,7 @@ void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, u
           CallstackInfo::kComplete) {
         color = kGreyError;
       }
-      batcher->AddVerticalLine(pos, -track_height, z, color);
+      batcher->AddVerticalLine(pos, track_height, z, color);
     };
 
     if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
@@ -135,7 +135,7 @@ void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, u
     selected_color.fill(kGreenSelection);
     for (const CallstackEvent& event : time_graph_->GetSelectedCallstackEvents(GetThreadId())) {
       Vec2 pos(time_graph_->GetWorldFromTick(event.time()), pos_[1]);
-      batcher->AddVerticalLine(pos, -track_height, z, kGreenSelection);
+      batcher->AddVerticalLine(pos, track_height, z, kGreenSelection);
     }
   } else {
     // Draw boxes instead of lines to make picking easier, even if this may
@@ -146,7 +146,7 @@ void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, u
     auto action_on_callstack_events = [=](const CallstackEvent& event) {
       const uint64_t time = event.time();
       CHECK(time >= min_tick && time <= max_tick);
-      Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset, pos_[1] - track_height + 1);
+      Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset, pos_[1] + track_height - 1);
       Vec2 size(kPickingBoxWidth, track_height);
       auto user_data = std::make_unique<PickingUserData>(
           nullptr,

@@ -69,14 +69,12 @@ FrameTrack::FrameTrack(CaptureViewElement* parent, TimeGraph* time_graph,
   collapse_toggle_->SetCollapsed(true);
 }
 
-float FrameTrack::GetHeaderHeight() const { return layout_->GetTrackTabHeight(); }
-
 float FrameTrack::GetHeight() const {
-  return GetHeaderHeight() + GetMaximumBoxHeight() + layout_->GetTrackBottomMargin();
+  return GetHeaderHeight() + GetMaximumBoxHeight() + layout_->GetTrackContentBottomMargin();
 }
 
-float FrameTrack::GetYFromTimer(const TimerInfo& /*timer_info*/) const {
-  return pos_[1] - GetHeaderHeight() - GetMaximumBoxHeight();
+float FrameTrack::GetYFromTimer(const TimerInfo& timer_info) const {
+  return pos_[1] + GetHeaderHeight() + (GetMaximumBoxHeight() - GetDynamicBoxHeight(timer_info));
 }
 
 float FrameTrack::GetDefaultBoxHeight() const {
@@ -213,7 +211,7 @@ void FrameTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
   const Color kWhiteColor(255, 255, 255, 255);
   const Color kBlackColor(0, 0, 0, 255);
 
-  float y = pos_[1] - GetHeaderHeight() - GetMaximumBoxHeight() + GetAverageBoxHeight();
+  float y = pos_[1] + GetHeaderHeight() + GetMaximumBoxHeight() - GetAverageBoxHeight();
   float x = pos_[0];
   Vec2 from(x, y);
   Vec2 to(x + GetWidth(), y);
@@ -224,15 +222,14 @@ void FrameTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
   std::string label = absl::StrFormat("Avg: %s", avg_time);
   uint32_t font_size = layout_->CalculateZoomedFontSize();
   float string_width = text_renderer.GetStringWidth(label.c_str(), font_size);
-  Vec2 white_text_box_size(string_width, layout_->GetTextBoxHeight());
-  Vec2 white_text_box_position(pos_[0] + layout_->GetRightMargin(),
-                               y - layout_->GetTextBoxHeight() / 2.f);
+  Vec2 white_text_box_position(pos_[0] + layout_->GetRightMargin(), y);
 
   batcher.AddLine(from, from + Vec2(layout_->GetRightMargin() / 2.f, 0), text_z, kWhiteColor);
-  batcher.AddLine(Vec2(white_text_box_position[0] + white_text_box_size[0], y), to, text_z,
-                  kWhiteColor);
+  batcher.AddLine(Vec2(white_text_box_position[0] + string_width, y), to, text_z, kWhiteColor);
 
-  text_renderer.AddText(label.c_str(), white_text_box_position[0],
-                        white_text_box_position[1] + layout_->GetTextOffset(), text_z,
-                        {font_size, kWhiteColor, white_text_box_size[0]});
+  TextRenderer::TextFormatting formatting{font_size, kWhiteColor, string_width};
+  formatting.valign = TextRenderer::VAlign::Middle;
+
+  text_renderer.AddText(label.c_str(), white_text_box_position[0], white_text_box_position[1],
+                        text_z, formatting);
 }

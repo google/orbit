@@ -95,9 +95,8 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   [[nodiscard]] virtual int GetVisiblePrimitiveCount() const { return 0; }
 
  protected:
-  // Returns the y-position of the triangle.
-  float DrawCollapsingTriangle(Batcher& batcher, TextRenderer& text_renderer,
-                               const DrawContext& draw_context);
+  void DrawCollapsingTriangle(Batcher& batcher, TextRenderer& text_renderer,
+                              const DrawContext& draw_context);
   void DrawTriangleFan(Batcher& batcher, const std::vector<Vec2>& points, const Vec2& pos,
                        const Color& color, float rotation, float z);
   virtual void UpdatePositionOfSubtracks() {}

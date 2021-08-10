@@ -21,6 +21,10 @@
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
 
+namespace {
+constexpr const float kBoxHeightMultiplier = 1.5f;
+}  // namespace
+
 template <size_t Dimension>
 GraphTrack<Dimension>::GraphTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                                   orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
@@ -31,19 +35,22 @@ GraphTrack<Dimension>::GraphTrack(CaptureViewElement* parent, TimeGraph* time_gr
 
 template <size_t Dimension>
 float GraphTrack<Dimension>::GetHeight() const {
-  float scale_factor = IsCollapsed() ? 1 : Dimension;
-  float height = layout_->GetTrackTabHeight() + GetLegendHeight() +
-                 layout_->GetTextBoxHeight() * scale_factor +
-                 layout_->GetSpaceBetweenTracksAndThread() + layout_->GetEventTrackHeightFromTid() +
-                 layout_->GetTrackBottomMargin();
+  // Top content margin is counted twice because it it inserted before and after the legend
+  float height = layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin() * 2 +
+                 GetLegendHeight() + GetGraphContentHeight() +
+                 layout_->GetTrackContentBottomMargin();
   return height;
 }
 
 template <size_t Dimension>
 float GraphTrack<Dimension>::GetLegendHeight() const {
-  bool has_legend = !IsCollapsed() && Dimension > 1;
-  float legend_height = has_legend ? layout_->GetTextBoxHeight() : 0;
-  return legend_height;
+  if (IsCollapsed() || Dimension <= 1) {
+    return 0;
+  }
+  // This is a bit of an arbitrary choice - I don't want to introduce an additional layout
+  // parameter just for the legend size, but it should be smaller than all regular textboxes
+  // across Orbit.
+  return layout_->GetTextBoxHeight() / 2.f;
 }
 
 template <size_t Dimension>
@@ -82,8 +89,8 @@ void GraphTrack<Dimension>::UpdatePrimitives(Batcher* batcher, uint64_t min_tick
 
   float content_height = GetGraphContentHeight();
   Vec2 content_pos = pos_;
-  content_pos[1] -= layout_->GetTrackTabHeight();
-  Box box(content_pos, Vec2(GetWidth(), -content_height - GetLegendHeight()), track_z);
+  content_pos[1] += layout_->GetTrackTabHeight();
+  Box box(content_pos, Vec2(GetWidth(), content_height + GetLegendHeight()), track_z);
   batcher->AddBox(box, GetTrackBackgroundColor(), shared_from_this());
 
   const bool picking = picking_mode != PickingMode::kNone;
@@ -100,9 +107,18 @@ Color GraphTrack<Dimension>::GetColor(size_t index) const {
 }
 
 template <size_t Dimension>
+float GraphTrack<Dimension>::GetGraphContentHeight() const {
+  float result = layout_->GetTextBoxHeight() * kBoxHeightMultiplier;
+  if (!IsCollapsed()) {
+    result *= Dimension;
+  }
+  return result;
+}
+
+template <size_t Dimension>
 float GraphTrack<Dimension>::GetLabelYFromValues(
     const std::array<double, Dimension>& /*values*/) const {
-  return GetGraphContentBaseY() + GetGraphContentHeight() / 2.f;
+  return GetGraphContentBottomY() - GetGraphContentHeight() / 2.f;
 }
 
 template <size_t Dimension>
@@ -167,8 +183,7 @@ void GraphTrack<Dimension>::DrawLabel(Batcher& batcher, TextRenderer& text_rende
       target_pos[1] - text_box_size[1] / 2.f);
 
   float label_z = GlCanvas::kZValueTrackLabel + draw_context.z_offset;
-  float bottom_y_of_top_line = text_box_position[1] + text_box_size[1] - single_line_height;
-  text_renderer.AddText(text.c_str(), text_box_position[0], bottom_y_of_top_line, label_z,
+  text_renderer.AddText(text.c_str(), text_box_position[0], text_box_position[1], label_z,
                         {font_size, text_color, text_box_size[0]});
 
   Vec2 arrow_box_position(text_box_position[0] - kTextLeftMargin,
@@ -195,30 +210,33 @@ void GraphTrack<Dimension>::DrawLegend(Batcher& batcher, TextRenderer& text_rend
                                        const Color& legend_text_color) {
   const float kSpaceBetweenLegendSymbolAndText = layout_->GetGenericFixedSpacerWidth();
   const float kSpaceBetweenLegendEntries = layout_->GetGenericFixedSpacerWidth() * 2;
-  float legend_symbol_height = GetLegendHeight() / 2.f;
-  float legend_symbol_width = legend_symbol_height;
+  const float legend_symbol_height = GetLegendHeight();
+  const float legend_symbol_width = legend_symbol_height;
   float x0 = pos_[0] + layout_->GetRightMargin();
-  float y0 = pos_[1] - layout_->GetTrackTabHeight() - layout_->GetTextBoxHeight() / 2.f;
+  const float y0 = pos_[1] + layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin();
   uint32_t font_size = GetLegendFontSize(draw_context.indentation_level);
   const Color kFullyTransparent(255, 255, 255, 0);
 
   float text_z = GlCanvas::kZValueTrackText + draw_context.z_offset;
   for (size_t i = 0; i < Dimension; ++i) {
-    batcher.AddShadedBox(Vec2(x0, y0 - legend_symbol_height / 2.f),
-                         Vec2(legend_symbol_width, legend_symbol_height), text_z, GetColor(i));
+    batcher.AddShadedBox(Vec2(x0, y0), Vec2(legend_symbol_width, legend_symbol_height), text_z,
+                         GetColor(i));
     x0 += legend_symbol_width + kSpaceBetweenLegendSymbolAndText;
 
-    float legend_text_width = text_renderer.GetStringWidth(series_names[i].c_str(), font_size);
-    Vec2 legend_text_box_size(legend_text_width, layout_->GetTextBoxHeight());
-    Vec2 legend_text_box_position(x0, y0 - layout_->GetTextBoxHeight() / 2.f);
-    text_renderer.AddText(series_names[i].c_str(), legend_text_box_position[0],
-                          legend_text_box_position[1] + layout_->GetTextOffset(), text_z,
-                          {font_size, legend_text_color, legend_text_box_size[0]});
+    const float legend_text_width =
+        text_renderer.GetStringWidth(series_names[i].c_str(), font_size);
+    const Vec2 legend_text_box_size(legend_text_width, layout_->GetTextBoxHeight());
+
+    TextRenderer::TextFormatting formatting{font_size, legend_text_color, legend_text_box_size[0]};
+    formatting.valign = TextRenderer::VAlign::Middle;
+
+    text_renderer.AddText(series_names[i].c_str(), x0, y0 + legend_symbol_height / 2.f, text_z,
+                          formatting);
     x0 += legend_text_width + kSpaceBetweenLegendEntries;
 
     auto user_data = std::make_unique<PickingUserData>(
         nullptr, [this, i](PickingId /*id*/) { return GetLegendTooltips(i); });
-    batcher.AddShadedBox(legend_text_box_position, legend_text_box_size, text_z, kFullyTransparent,
+    batcher.AddShadedBox(Vec2(x0, y0), legend_text_box_size, text_z, kFullyTransparent,
                          std::move(user_data));
   }
 }
@@ -259,15 +277,16 @@ template <size_t Dimension>
 void GraphTrack<Dimension>::DrawSingleSeriesEntry(
     Batcher* batcher, uint64_t start_tick, uint64_t end_tick,
     const std::array<float, Dimension>& normalized_cumulative_values, float z) {
-  float x0 = time_graph_->GetWorldFromTick(start_tick);
-  float width = time_graph_->GetWorldFromTick(end_tick) - x0;
-  float content_height = GetGraphContentHeight();
-  float base_y = GetGraphContentBaseY();
+  const float x0 = time_graph_->GetWorldFromTick(start_tick);
+  const float width = time_graph_->GetWorldFromTick(end_tick) - x0;
+  const float content_height = GetGraphContentHeight();
+  const float base_y = GetGraphContentBottomY();
   float y0 = base_y;
+  // Draw the stacked values from bottom to top
   for (size_t i = 0; i < Dimension; ++i) {
-    float height = base_y + normalized_cumulative_values[i] * content_height - y0;
+    float height = normalized_cumulative_values[i] * content_height - (base_y - y0);
+    y0 -= height;
     batcher->AddShadedBox(Vec2(x0, y0), Vec2(width, height), z, GetColor(i));
-    y0 += height;
   }
 }
 

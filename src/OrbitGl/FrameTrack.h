@@ -46,7 +46,6 @@ class FrameTrack : public TimerTrack {
   [[nodiscard]] float GetDefaultBoxHeight() const override;
   [[nodiscard]] float GetDynamicBoxHeight(
       const orbit_client_protos::TimerInfo& timer_info) const override;
-  [[nodiscard]] float GetHeaderHeight() const override;
 
   [[nodiscard]] std::string GetTimesliceText(
       const orbit_client_protos::TimerInfo& timer) const override;

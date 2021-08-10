@@ -24,8 +24,8 @@ class TimeGraphLayout {
   float GetThreadStateTrackHeight() const { return thread_state_track_height_ * scale_; }
   float GetEventTrackHeightFromTid(int32_t tid = orbit_base::kInvalidThreadTid) const;
   float GetVariableTrackHeight() const { return variable_track_height_ * scale_; }
-  float GetTrackBottomMargin() const { return track_bottom_margin_ * scale_; }
-  float GetTrackTopMargin() const { return track_top_margin_ * scale_; }
+  float GetTrackContentBottomMargin() const { return track_content_bottom_margin_ * scale_; }
+  float GetTrackContentTopMargin() const { return track_content_top_margin_ * scale_; }
   float GetTrackLabelOffsetX() const { return track_label_offset_x_; }
   float GetSliderWidth() const { return slider_width_; }
   float GetTimeBarHeight() const { return time_bar_height_; }
@@ -66,8 +66,8 @@ class TimeGraphLayout {
   float event_track_height_;
   float all_threads_event_track_scale_;
   float variable_track_height_;
-  float track_bottom_margin_;
-  float track_top_margin_;
+  float track_content_bottom_margin_;
+  float track_content_top_margin_;
   float track_label_offset_x_;
   float slider_width_;
   float time_bar_height_;

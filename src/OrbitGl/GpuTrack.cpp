@@ -87,13 +87,13 @@ void GpuTrack::UpdatePositionOfSubtracks() {
     submission_track_->SetPos(pos_[0], pos_[1]);
     return;
   }
-  float current_y = pos_[1] - layout_->GetTrackTabHeight();
+  float current_y = pos_[1] + layout_->GetTrackTabHeight();
   if (!submission_track_->IsEmpty()) {
-    current_y -= layout_->GetSpaceBetweenSubtracks();
+    current_y += layout_->GetSpaceBetweenSubtracks();
   }
   submission_track_->SetPos(pos_[0], current_y);
   if (!marker_track_->IsEmpty()) {
-    current_y -= (layout_->GetSpaceBetweenSubtracks() + submission_track_->GetHeight());
+    current_y += (layout_->GetSpaceBetweenSubtracks() + submission_track_->GetHeight());
   }
 
   marker_track_->SetPos(pos_[0], current_y);
