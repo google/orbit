@@ -120,7 +120,6 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
   }
 
   if (is_manual) {
-    CHECK(timer_info->type() == TimerInfo::kApiScope);
     function_name = timer_info->api_scope_name();
   } else {
     function_name = func->function_name();
