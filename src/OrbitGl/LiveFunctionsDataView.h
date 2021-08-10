@@ -13,17 +13,18 @@
 #include <utility>
 #include <vector>
 
+#include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "capture.pb.h"
 #include "capture_data.pb.h"
 
 class LiveFunctionsController;
-class OrbitApp;
 
 class LiveFunctionsDataView : public orbit_data_views::DataView {
  public:
-  explicit LiveFunctionsDataView(LiveFunctionsController* live_functions, OrbitApp* app,
+  explicit LiveFunctionsDataView(LiveFunctionsController* live_functions,
+                                 orbit_data_views::AppInterface* app,
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader);
 
   const std::vector<Column>& GetColumns() override;
@@ -90,10 +91,6 @@ class LiveFunctionsDataView : public orbit_data_views::DataView {
 
  private:
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
-
-  // TODO(b/185090791): This is temporary and will be removed once this data view has been ported
-  // and move to orbit_data_views.
-  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_LIVE_FUNCTIONS_DATA_VIEW_H_

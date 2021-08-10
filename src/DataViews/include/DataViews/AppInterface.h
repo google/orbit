@@ -39,6 +39,15 @@ class AppInterface {
   [[nodiscard]] virtual bool IsFunctionSelected(
       const orbit_client_protos::FunctionInfo& func) const = 0;
 
+  // Functions needed by LiveFunctionsDataView
+  enum class JumpToTimerMode { kFirst, kLast, kMin, kMax };
+  virtual void JumpToTimerAndZoom(uint64_t function_id, JumpToTimerMode selection_mode) = 0;
+  [[nodiscard]] virtual uint64_t GetHighlightedFunctionId() const = 0;
+  virtual void SetHighlightedFunctionId(uint64_t highlighted_function_id) = 0;
+  virtual void SetVisibleFunctionIds(absl::flat_hash_set<uint64_t> visible_functions) = 0;
+  virtual void DeselectTimer() = 0;
+  [[nodiscard]] virtual bool IsCapturing() const = 0;
+
   [[nodiscard]] virtual bool IsFrameTrackEnabled(
       const orbit_client_protos::FunctionInfo& function) const = 0;
   [[nodiscard]] virtual bool HasFrameTrackInCaptureData(
@@ -71,7 +80,9 @@ class AppInterface {
   virtual void EnableFrameTrack(const orbit_client_protos::FunctionInfo& function) = 0;
   virtual void DisableFrameTrack(const orbit_client_protos::FunctionInfo& function) = 0;
   virtual void AddFrameTrack(const orbit_client_protos::FunctionInfo& function) = 0;
+  virtual void AddFrameTrack(uint64_t instrumented_function_id) = 0;
   virtual void RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function) = 0;
+  virtual void RemoveFrameTrack(uint64_t instrumented_function_id) = 0;
 
   virtual void Disassemble(int32_t pid, const orbit_client_protos::FunctionInfo& function) = 0;
   virtual void ShowSourceCode(const orbit_client_protos::FunctionInfo& function) = 0;

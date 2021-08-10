@@ -653,16 +653,22 @@ TEST_F(FunctionsDataViewTest, ContextMenuActionsCallCorrespondingFunctionsInAppI
 
   EXPECT_CALL(app_, DeselectFunction).Times(1).WillRepeatedly(match_function);
   EXPECT_CALL(app_, DisableFrameTrack).Times(1).WillRepeatedly(match_function);
-  EXPECT_CALL(app_, RemoveFrameTrack).Times(1).WillRepeatedly(match_function);
+  EXPECT_CALL(app_, RemoveFrameTrack(testing::A<const orbit_client_protos::FunctionInfo&>()))
+      .Times(1)
+      .WillRepeatedly(match_function);
   view_.OnContextMenu("Unhook", 0, {0});
 
   EXPECT_CALL(app_, SelectFunction).Times(1).WillRepeatedly(match_function);
   EXPECT_CALL(app_, EnableFrameTrack).Times(1).WillRepeatedly(match_function);
-  EXPECT_CALL(app_, AddFrameTrack).Times(1).WillRepeatedly(match_function);
+  EXPECT_CALL(app_, AddFrameTrack(testing::A<const orbit_client_protos::FunctionInfo&>()))
+      .Times(1)
+      .WillRepeatedly(match_function);
   view_.OnContextMenu("Enable frame track(s)", 0, {0});
 
   EXPECT_CALL(app_, DisableFrameTrack).Times(1).WillRepeatedly(match_function);
-  EXPECT_CALL(app_, RemoveFrameTrack).Times(1).WillRepeatedly(match_function);
+  EXPECT_CALL(app_, RemoveFrameTrack(testing::A<const orbit_client_protos::FunctionInfo&>()))
+      .Times(1)
+      .WillRepeatedly(match_function);
   view_.OnContextMenu("Disable frame track(s)", 0, {0});
 
   constexpr int kRandomPid = 4242;

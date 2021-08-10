@@ -19,10 +19,7 @@ class OrbitApp;
 class LiveFunctionsController {
  public:
   explicit LiveFunctionsController(OrbitApp* app,
-                                   orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-      : live_functions_data_view_(this, app, metrics_uploader),
-        app_{app},
-        metrics_uploader_(metrics_uploader) {}
+                                   orbit_metrics_uploader::MetricsUploader* metrics_uploader);
 
   LiveFunctionsDataView& GetDataView() { return live_functions_data_view_; }
 
