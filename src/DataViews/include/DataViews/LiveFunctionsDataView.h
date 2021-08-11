@@ -47,6 +47,7 @@ class LiveFunctionsDataView : public DataView {
                  const RefreshMode& mode) override;
   [[nodiscard]] bool ResetOnRefresh() const override { return false; }
   std::optional<int> GetRowFromFunctionId(uint64_t function_id);
+  void AddFunction(uint64_t function_id, orbit_client_protos::FunctionInfo function_info);
 
  protected:
   void DoFilter() override;

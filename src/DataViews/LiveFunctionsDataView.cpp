@@ -383,6 +383,12 @@ void LiveFunctionsDataView::DoFilter() {
   app_->SetVisibleFunctionIds(std::move(visible_function_ids));
 }
 
+void LiveFunctionsDataView::AddFunction(uint64_t function_id,
+                                        orbit_client_protos::FunctionInfo function_info) {
+  functions_.insert_or_assign(function_id, std::move(function_info));
+  indices_.push_back(function_id);
+}
+
 void LiveFunctionsDataView::OnDataChanged() {
   functions_.clear();
   indices_.clear();
@@ -414,8 +420,7 @@ void LiveFunctionsDataView::OnDataChanged() {
       return;
     }
 
-    functions_.insert_or_assign(function_id, std::move(*function_info));
-    indices_.push_back(function_id);
+    AddFunction(function_id, std::move(*function_info));
   }
 
   DataView::OnDataChanged();
