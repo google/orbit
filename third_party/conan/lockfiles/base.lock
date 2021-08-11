@@ -383,7 +383,7 @@
     "context": "host"
    },
    "57": {
-    "ref": "grpc_codegen/1.27.3@orbitdeps/stable#8728b94e133a18e7454c14a28959a148",
+    "ref": "grpc_codegen/1.27.3@orbitdeps/stable#a0b442cf66941a590b619c88b106f0e5",
     "requires": [
      "1",
      "8",
@@ -406,7 +406,7 @@
     "context": "host"
    },
    "60": {
-    "ref": "grpc_codegen/1.27.3@orbitdeps/stable#8728b94e133a18e7454c14a28959a148",
+    "ref": "grpc_codegen/1.27.3@orbitdeps/stable#a0b442cf66941a590b619c88b106f0e5",
     "requires": [
      "1",
      "8",
