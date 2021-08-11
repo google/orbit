@@ -10,8 +10,6 @@ add_library(Api SHARED)
 
 set_target_properties(Api PROPERTIES OUTPUT_NAME "orbit")
 
-target_compile_features(Api PUBLIC cxx_std_17)
-
 target_sources(Api PRIVATE
         LockFreeApiEventProducer.h
         LockFreeApiEventProducer.cpp

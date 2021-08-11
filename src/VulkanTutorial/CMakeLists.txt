@@ -9,8 +9,6 @@ project(VulkanTutorial)
 
 add_library(OffscreenRenderingVulkanTutorialLib STATIC)
 
-target_compile_features(OffscreenRenderingVulkanTutorialLib PUBLIC cxx_std_17)
-
 target_include_directories(OffscreenRenderingVulkanTutorialLib PUBLIC
         ${CMAKE_SOURCE_DIR}/third_party/VulkanTutorial/include)
 

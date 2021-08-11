@@ -3,8 +3,6 @@
 # found in the LICENSE file.
 
 add_library(ApiUtils STATIC)
-target_compile_features(ApiUtils PUBLIC cxx_std_17)
-
 target_sources(ApiUtils PUBLIC
         include/ApiUtils/Event.h
         include/ApiUtils/EncodedEvent.h

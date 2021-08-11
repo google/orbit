@@ -8,7 +8,6 @@ project(OrbitSshQt)
 
 add_library(OrbitSshQt STATIC)
 
-target_compile_features(OrbitSshQt PUBLIC cxx_std_17)
 target_include_directories(OrbitSshQt PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
 target_sources(

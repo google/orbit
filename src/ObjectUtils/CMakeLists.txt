@@ -7,8 +7,6 @@ cmake_minimum_required(VERSION 3.15)
 project(ObjectUtils)
 add_library(ObjectUtils STATIC)
 
-target_compile_features(ObjectUtils PUBLIC cxx_std_17)
-
 target_sources(
   ObjectUtils
   PUBLIC include/ObjectUtils/Address.h

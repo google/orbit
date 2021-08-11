@@ -8,8 +8,6 @@ project(Introspection)
 
 add_library(Introspection STATIC)
 
-target_compile_features(Introspection PUBLIC cxx_std_17)
-
 target_include_directories(Introspection PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
