@@ -68,7 +68,8 @@ class OrbitTreeView : public QTreeView {
   std::unique_ptr<OrbitTableModel> model_;
   std::unique_ptr<QTimer> timer_;
   std::vector<OrbitTreeView*> links_;
-  bool auto_resize_;
+  std::vector<float> column_ratios_;
+  bool maintain_user_column_ratios_ = false;
   bool is_internal_refresh_ = false;
   bool is_multi_selection_ = false;
 };
