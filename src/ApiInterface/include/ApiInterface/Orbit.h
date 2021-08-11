@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_API_ORBIT_H_
-#define ORBIT_API_ORBIT_H_
+#ifndef ORBIT_API_INTERFACE_ORBIT_H_
+#define ORBIT_API_INTERFACE_ORBIT_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -351,4 +351,4 @@ struct Scope {
 
 #endif  // __cplusplus
 
-#endif  // ORBIT_API_ORBIT_H
+#endif  // ORBIT_API_INTERFACE_ORBIT_H_

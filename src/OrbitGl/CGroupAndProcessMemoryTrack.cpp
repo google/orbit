@@ -7,7 +7,7 @@
 #include <absl/strings/str_format.h>
 #include <absl/strings/substitute.h>
 
-#include "Api/EncodedEvent.h"
+#include "ApiUtils/EncodedEvent.h"
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GrpcProtos/Constants.h"

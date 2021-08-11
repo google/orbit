@@ -2,20 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_API_EVENT_H_
-#define ORBIT_API_EVENT_H_
+#ifndef ORBIT_API_UTILS_EVENT_H_
+#define ORBIT_API_UTILS_EVENT_H_
 
 #include <cstdint>
 #include <variant>
 #include <vector>
 
+#include "ApiInterface/Orbit.h"
 #include "EncodedString.h"
-#include "Orbit.h"
 #include "OrbitBase/Logging.h"
 #include "absl/base/casts.h"
 
 // We don't want to store protos in the LockFreeApiEventProducer's buffer, as they introduce
-// expensive and unnessesary indirections and allocations. Therefore, we use the a std::variant of
+// expensive and unnecessary indirections and allocations. Therefore, we use the a std::variant of
 // the following structs. The structs must be kept up-to-date with the protos in capture.proto.
 namespace orbit_api {
 
@@ -183,4 +183,4 @@ using ApiEventVariant =
 
 }  // namespace orbit_api
 
-#endif  // ORBIT_API_EVENT_H_
+#endif  // ORBIT_API_UTILS_EVENT_H_

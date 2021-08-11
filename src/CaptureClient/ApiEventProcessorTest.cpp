@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "Api/EncodedString.h"
+#include "ApiUtils/EncodedString.h"
 #include "CaptureClient/ApiEventProcessor.h"
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureClient/CaptureListener.h"

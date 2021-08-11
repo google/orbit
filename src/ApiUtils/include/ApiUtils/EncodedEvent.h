@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_API_ENCODED_EVENT_H_
-#define ORBIT_API_ENCODED_EVENT_H_
+#ifndef ORBIT_API_UTILS_ENCODED_EVENT_H_
+#define ORBIT_API_UTILS_ENCODED_EVENT_H_
 
 #include <stdint.h>
 
 #include <cstring>
 
-#include "Orbit.h"
+#include "ApiInterface/Orbit.h"
 
 namespace orbit_api {
 
@@ -107,4 +107,4 @@ inline Dest Decode(const Source& source) {
 
 }  // namespace orbit_api
 
-#endif  // ORBIT_API_ENCODED_EVENT_H_
+#endif  // ORBIT_API_UTILS_ENCODED_EVENT_H_

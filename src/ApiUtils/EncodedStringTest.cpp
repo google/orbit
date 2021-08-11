@@ -6,8 +6,8 @@
 #include <google/protobuf/util/message_differencer.h>
 #include <gtest/gtest.h>
 
+#include "ApiUtils/EncodedString.h"
 #include "capture.pb.h"
-#include "include/Api/EncodedString.h"
 using orbit_grpc_protos::ApiScopeStart;
 
 using ::testing::ElementsAre;

@@ -4,7 +4,7 @@
 
 #include "CaptureClient/ApiEventProcessor.h"
 
-#include "Api/EncodedString.h"
+#include "ApiUtils/EncodedString.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_capture_client {

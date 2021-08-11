@@ -4,7 +4,7 @@
 
 #include "PageFaultsTrack.h"
 
-#include "Api/EncodedEvent.h"
+#include "ApiUtils/EncodedEvent.h"
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "Geometry.h"
 #include "GrpcProtos/Constants.h"

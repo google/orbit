@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_API_ENCODED_STRING_H_
-#define ORBIT_API_ENCODED_STRING_H_
+#ifndef ORBIT_API_UTILS_ENCODED_STRING_H_
+#define ORBIT_API_UTILS_ENCODED_STRING_H_
 
 #include <cstddef>
 #include <cstdint>
@@ -37,4 +37,4 @@ std::string DecodeString(uint64_t encoded_chunk_1, uint64_t encoded_chunk_2,
 
 }  // namespace orbit_api
 
-#endif  // ORBIT_API_ENCODED_STRING_H_
+#endif  // ORBIT_API_UTILS_ENCODED_STRING_H_

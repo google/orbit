@@ -23,6 +23,7 @@ target_sources(Introspection PRIVATE
 
 target_link_libraries(Introspection PUBLIC
         ApiInterface
+        ApiUtils
         OrbitBase)
 
 add_executable(IntrospectionTests)
