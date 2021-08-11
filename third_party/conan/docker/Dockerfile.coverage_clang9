@@ -8,6 +8,7 @@ RUN useradd -Ums /bin/bash conan && \
     apt-get -qq update && \
     DEBIAN_FRONTEND=noninteractive \
         apt-get install -y --no-install-recommends \
+        bc \
         clang-9 \
         cmake \
         curl \
@@ -18,6 +19,8 @@ RUN useradd -Ums /bin/bash conan && \
         libqt5websockets5-dev \
         libxi-dev \
         libxmu-dev \
+        llvm-9 `# Needed for llvm-profdata-9` \
+        llvm-10 `# llvm-cov-9 has a bug, so we use llvm-cov-10 to generate the report.` \
         make \
         mesa-common-dev \
         ninja-build \
@@ -29,10 +32,6 @@ RUN useradd -Ums /bin/bash conan && \
         zip && \
     python3 -m pip install conan==1.36.0 && \
     rm -rf /var/lib/apt/lists/*
-
-RUN apt-get -qq update \
-    && apt-get install -y --no-install-recommends llvm-9 bc \
-    && rm -rf /var/lib/apt/lists/*
 
 USER conan
 WORKDIR /home/conan
