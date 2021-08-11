@@ -8,8 +8,8 @@
 #include <cstdint>
 #include <functional>
 
+#include "DataViews/LiveFunctionsDataView.h"
 #include "DataViews/LiveFunctionsInterface.h"
-#include "LiveFunctionsDataView.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/Profiling.h"
 #include "absl/container/flat_hash_map.h"
@@ -22,7 +22,7 @@ class LiveFunctionsController : public orbit_data_views::LiveFunctionsInterface 
   explicit LiveFunctionsController(OrbitApp* app,
                                    orbit_metrics_uploader::MetricsUploader* metrics_uploader);
 
-  LiveFunctionsDataView& GetDataView() { return live_functions_data_view_; }
+  orbit_data_views::LiveFunctionsDataView& GetDataView() { return live_functions_data_view_; }
 
   bool OnAllNextButton();
   bool OnAllPreviousButton();
@@ -49,7 +49,7 @@ class LiveFunctionsController : public orbit_data_views::LiveFunctionsInterface 
  private:
   void Move();
 
-  LiveFunctionsDataView live_functions_data_view_;
+  orbit_data_views::LiveFunctionsDataView live_functions_data_view_;
 
   absl::flat_hash_map<uint64_t, uint64_t> iterator_id_to_function_id_;
   absl::flat_hash_map<uint64_t, const orbit_client_protos::TimerInfo*> current_timer_infos_;

@@ -1,8 +1,8 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "LiveFunctionsDataView.h"
+#include "DataViews/LiveFunctionsDataView.h"
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
@@ -35,10 +35,12 @@ using orbit_client_protos::FunctionStats;
 
 using orbit_grpc_protos::InstrumentedFunction;
 
+namespace orbit_data_views {
+
 LiveFunctionsDataView::LiveFunctionsDataView(
-    orbit_data_views::LiveFunctionsInterface* live_functions, orbit_data_views::AppInterface* app,
+    LiveFunctionsInterface* live_functions, AppInterface* app,
     orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : orbit_data_views::DataView(orbit_data_views::DataViewType::kLiveFunctions, app),
+    : DataView(DataViewType::kLiveFunctions, app),
       live_functions_(live_functions),
       selected_function_id_(orbit_grpc_protos::kInvalidFunctionId),
       metrics_uploader_(metrics_uploader) {
@@ -46,7 +48,7 @@ LiveFunctionsDataView::LiveFunctionsDataView(
   LiveFunctionsDataView::OnDataChanged();
 }
 
-const std::vector<orbit_data_views::DataView::Column>& LiveFunctionsDataView::GetColumns() {
+const std::vector<DataView::Column>& LiveFunctionsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
@@ -79,7 +81,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
   const FunctionInfo& function = GetInstrumentedFunction(row);
   switch (column) {
     case kColumnSelected:
-      return orbit_data_views::FunctionsDataView::BuildSelectedColumnsString(app_, function);
+      return FunctionsDataView::BuildSelectedColumnsString(app_, function);
     case kColumnName:
       return orbit_client_data::function_utils::GetDisplayName(function);
     case kColumnCount:
@@ -127,21 +129,20 @@ void LiveFunctionsDataView::OnSelect(const std::vector<int>& rows) {
   UpdateSelectedFunctionId();
 }
 
-#define ORBIT_FUNC_SORT(Member)                                                                   \
+#define ORBIT_FUNC_SORT(Member)                                                         \
+  [&](uint64_t a, uint64_t b) {                                                         \
+    return CompareAscendingOrDescending(functions.at(a).Member, functions.at(b).Member, \
+                                        ascending);                                     \
+  }
+#define ORBIT_STAT_SORT(Member)                                                         \
+  [&](uint64_t a, uint64_t b) {                                                         \
+    const FunctionStats& stats_a = app_->GetCaptureData().GetFunctionStatsOrDefault(a); \
+    const FunctionStats& stats_b = app_->GetCaptureData().GetFunctionStatsOrDefault(b); \
+    return CompareAscendingOrDescending(stats_a.Member, stats_b.Member, ascending);     \
+  }
+#define ORBIT_CUSTOM_FUNC_SORT(Func)                                                              \
   [&](uint64_t a, uint64_t b) {                                                                   \
-    return orbit_gl::CompareAscendingOrDescending(functions.at(a).Member, functions.at(b).Member, \
-                                                  ascending);                                     \
-  }
-#define ORBIT_STAT_SORT(Member)                                                               \
-  [&](uint64_t a, uint64_t b) {                                                               \
-    const FunctionStats& stats_a = app_->GetCaptureData().GetFunctionStatsOrDefault(a);       \
-    const FunctionStats& stats_b = app_->GetCaptureData().GetFunctionStatsOrDefault(b);       \
-    return orbit_gl::CompareAscendingOrDescending(stats_a.Member, stats_b.Member, ascending); \
-  }
-#define ORBIT_CUSTOM_FUNC_SORT(Func)                                                            \
-  [&](uint64_t a, uint64_t b) {                                                                 \
-    return orbit_gl::CompareAscendingOrDescending(Func(functions.at(a)), Func(functions.at(b)), \
-                                                  ascending);                                   \
+    return CompareAscendingOrDescending(Func(functions.at(a)), Func(functions.at(b)), ascending); \
   }
 
 void LiveFunctionsDataView::DoSort() {
@@ -299,19 +300,19 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
   } else if (action == kMenuActionJumpToFirst) {
     CHECK(item_indices.size() == 1);
     auto function_id = GetInstrumentedFunctionId(item_indices[0]);
-    app_->JumpToTimerAndZoom(function_id, orbit_data_views::AppInterface::JumpToTimerMode::kFirst);
+    app_->JumpToTimerAndZoom(function_id, AppInterface::JumpToTimerMode::kFirst);
   } else if (action == kMenuActionJumpToLast) {
     CHECK(item_indices.size() == 1);
     auto function_id = GetInstrumentedFunctionId(item_indices[0]);
-    app_->JumpToTimerAndZoom(function_id, orbit_data_views::AppInterface::JumpToTimerMode::kLast);
+    app_->JumpToTimerAndZoom(function_id, AppInterface::JumpToTimerMode::kLast);
   } else if (action == kMenuActionJumpToMin) {
     CHECK(item_indices.size() == 1);
     uint64_t function_id = GetInstrumentedFunctionId(item_indices[0]);
-    app_->JumpToTimerAndZoom(function_id, orbit_data_views::AppInterface::JumpToTimerMode::kMin);
+    app_->JumpToTimerAndZoom(function_id, AppInterface::JumpToTimerMode::kMin);
   } else if (action == kMenuActionJumpToMax) {
     CHECK(item_indices.size() == 1);
     uint64_t function_id = GetInstrumentedFunctionId(item_indices[0]);
-    app_->JumpToTimerAndZoom(function_id, orbit_data_views::AppInterface::JumpToTimerMode::kMax);
+    app_->JumpToTimerAndZoom(function_id, AppInterface::JumpToTimerMode::kMax);
   } else if (action == kMenuActionIterate) {
     for (int i : item_indices) {
       uint64_t instrumented_function_id = GetInstrumentedFunctionId(i);
@@ -470,3 +471,5 @@ std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrum
 
   return result;
 }
+
+}  // namespace orbit_data_views

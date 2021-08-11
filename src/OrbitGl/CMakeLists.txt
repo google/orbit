@@ -45,7 +45,6 @@ target_sources(
          IntrospectionWindow.h
          LineGraphTrack.h
          LiveFunctionsController.h
-         LiveFunctionsDataView.h
          ManualInstrumentationManager.h
          MajorPageFaultsTrack.h
          MemoryTrack.h
@@ -103,7 +102,6 @@ target_sources(
           FramePointerValidatorClient.cpp
           FrameTrack.cpp
           FrameTrackOnlineProcessor.cpp
-          LiveFunctionsController.cpp
           GlCanvas.cpp
           GlSlider.cpp
           GlUtils.cpp
@@ -114,7 +112,7 @@ target_sources(
           ImGuiOrbit.cpp
           IntrospectionWindow.cpp
           LineGraphTrack.cpp
-          LiveFunctionsDataView.cpp
+          LiveFunctionsController.cpp
           ManualInstrumentationManager.cpp
           MajorPageFaultsTrack.cpp
           MemoryTrack.cpp
