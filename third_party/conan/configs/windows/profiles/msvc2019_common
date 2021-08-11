@@ -11,6 +11,8 @@ compiler=Visual Studio
 compiler.version=16
 abseil:compiler=Visual Studio
 abseil:compiler.cppstd=17
+gtest:compiler=Visual Studio
+gtest:compiler.cppstd=17
 
 [options]
 OrbitProfiler:system_qt=False
@@ -18,3 +20,4 @@ OrbitProfiler:system_qt=False
 [env]
 CONAN_CMAKE_SYSTEM_VERSION=8.1
 LDFLAGS=$LD_FLAGS
+gtest:CXXFLAGS=$CXX_FLAGS -std=c++17

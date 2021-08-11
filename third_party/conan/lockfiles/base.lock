@@ -418,7 +418,7 @@
     "context": "host"
    },
    "61": {
-    "ref": "gtest/1.10.0#ef88ba8e54f5ffad7d706062d0731a40",
+    "ref": "gtest/1.11.0#088aa58a3c2115519f99667eee50d0a1",
     "context": "host"
    }
   },
