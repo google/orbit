@@ -1,9 +1,9 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_LIVE_FUNCTIONS_DATA_VIEW_H_
-#define ORBIT_GL_LIVE_FUNCTIONS_DATA_VIEW_H_
+#ifndef DATA_VIEWS_LIVE_FUNCTIONS_DATA_VIEW_H_
+#define DATA_VIEWS_LIVE_FUNCTIONS_DATA_VIEW_H_
 
 #include <absl/container/flat_hash_map.h>
 #include <stdint.h>
@@ -20,10 +20,11 @@
 #include "capture.pb.h"
 #include "capture_data.pb.h"
 
-class LiveFunctionsDataView : public orbit_data_views::DataView {
+namespace orbit_data_views {
+
+class LiveFunctionsDataView : public DataView {
  public:
-  explicit LiveFunctionsDataView(orbit_data_views::LiveFunctionsInterface* live_functions,
-                                 orbit_data_views::AppInterface* app,
+  explicit LiveFunctionsDataView(LiveFunctionsInterface* live_functions, AppInterface* app,
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader);
 
   const std::vector<Column>& GetColumns() override;
@@ -59,7 +60,7 @@ class LiveFunctionsDataView : public orbit_data_views::DataView {
 
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> functions_{};
 
-  orbit_data_views::LiveFunctionsInterface* live_functions_;
+  LiveFunctionsInterface* live_functions_;
   uint64_t selected_function_id_;
 
   enum ColumnIndex {
@@ -92,4 +93,6 @@ class LiveFunctionsDataView : public orbit_data_views::DataView {
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 };
 
-#endif  // ORBIT_GL_LIVE_FUNCTIONS_DATA_VIEW_H_
+}  // namespace orbit_data_views
+
+#endif  // DATA_VIEWS_LIVE_FUNCTIONS_DATA_VIEW_H_

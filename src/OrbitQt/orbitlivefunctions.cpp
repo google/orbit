@@ -18,7 +18,7 @@
 
 #include "App.h"
 #include "DataViews/DataView.h"
-#include "LiveFunctionsDataView.h"
+#include "DataViews/LiveFunctionsDataView.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "orbitdataviewpanel.h"
 #include "orbittablemodel.h"

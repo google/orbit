@@ -80,11 +80,11 @@
 #include "ConfigWidgets/SourcePathsMappingDialog.h"
 #include "DataViewFactory.h"
 #include "DataViews/DataViewType.h"
+#include "DataViews/LiveFunctionsDataView.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "Introspection/Introspection.h"
 #include "LiveFunctionsController.h"
-#include "LiveFunctionsDataView.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
@@ -1116,7 +1116,7 @@ void OrbitMainWindow::OnTimerSelectionChanged(const orbit_client_protos::TimerIn
     uint64_t function_id = timer_info->function_id();
     const auto live_functions_controller = ui->liveFunctions->GetLiveFunctionsController();
     CHECK(live_functions_controller.has_value());
-    LiveFunctionsDataView& live_functions_data_view =
+    orbit_data_views::LiveFunctionsDataView& live_functions_data_view =
         live_functions_controller.value()->GetDataView();
     selected_row = live_functions_data_view.GetRowFromFunctionId(function_id);
     live_functions_data_view.UpdateSelectedFunctionId();
