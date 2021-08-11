@@ -5,8 +5,6 @@
 project(CaptureEventProducer)
 
 add_library(CaptureEventProducer STATIC)
-target_compile_options(CaptureEventProducer PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_sources(CaptureEventProducer PUBLIC
         include/CaptureEventProducer/CaptureEventProducer.h
         include/CaptureEventProducer/FakeProducerSideService.h
@@ -27,8 +25,6 @@ target_link_libraries(CaptureEventProducer PUBLIC
         CONAN_PKG::abseil)
 
 add_executable(CaptureEventProducerTests)
-
-target_compile_options(CaptureEventProducerTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(CaptureEventProducerTests PRIVATE
         CaptureEventProducerTest.cpp

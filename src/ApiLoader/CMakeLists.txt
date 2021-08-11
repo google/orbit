@@ -8,8 +8,6 @@ project(ApiLoader)
 
 add_library(ApiLoader STATIC)
 
-target_compile_options(ApiLoader PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_compile_features(ApiLoader PUBLIC cxx_std_17)
 
 target_include_directories(ApiLoader PUBLIC

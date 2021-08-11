@@ -7,8 +7,6 @@ cmake_minimum_required(VERSION 3.15)
 project(DisplayFormats)
 add_library(DisplayFormats STATIC)
 
-target_compile_options(DisplayFormats PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_compile_features(DisplayFormats PUBLIC cxx_std_17)
 
 target_include_directories(DisplayFormats PUBLIC
@@ -26,8 +24,6 @@ target_link_libraries(DisplayFormats PUBLIC
 
 
 add_executable(DisplayFormatsTests)
-
-target_compile_options(DisplayFormatsTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(DisplayFormatsTests PRIVATE
         DisplayFormatsTest.cpp)

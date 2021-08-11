@@ -7,8 +7,6 @@ cmake_minimum_required(VERSION 3.15)
 project(StringManager)
 add_library(StringManager STATIC)
 
-target_compile_options(StringManager PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_sources(
   StringManager
   PUBLIC include/StringManager/StringManager.h)
@@ -24,8 +22,6 @@ target_link_libraries(
   PUBLIC OrbitBase)
 
 add_executable(StringManagerTests)
-
-target_compile_options(StringManagerTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(StringManagerTests PRIVATE
         StringManagerTest.cpp)

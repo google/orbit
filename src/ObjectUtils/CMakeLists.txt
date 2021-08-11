@@ -7,7 +7,6 @@ cmake_minimum_required(VERSION 3.15)
 project(ObjectUtils)
 add_library(ObjectUtils STATIC)
 
-target_compile_options(ObjectUtils PRIVATE ${STRICT_COMPILE_FLAGS})
 target_compile_features(ObjectUtils PUBLIC cxx_std_17)
 
 target_sources(
@@ -41,8 +40,6 @@ target_link_libraries(
          CONAN_PKG::llvm-core)
 
 add_executable(ObjectUtilsTests)
-
-target_compile_options(ObjectUtilsTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(ObjectUtilsTests PRIVATE
         AddressTest.cpp

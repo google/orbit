@@ -8,8 +8,6 @@ project(LinuxTracingIntegrationTests)
 
 add_library(LinuxTracingIntegrationTestPuppetSharedObject SHARED)
 
-target_compile_options(LinuxTracingIntegrationTestPuppetSharedObject PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_sources(LinuxTracingIntegrationTestPuppetSharedObject PRIVATE
         LinuxTracingIntegrationTestPuppetSharedObject.cpp)
 
@@ -20,8 +18,6 @@ target_link_libraries(LinuxTracingIntegrationTestPuppetSharedObject PUBLIC
 strip_symbols(LinuxTracingIntegrationTestPuppetSharedObject)
 
 add_executable(LinuxTracingIntegrationTests)
-
-target_compile_options(LinuxTracingIntegrationTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(LinuxTracingIntegrationTests PRIVATE
         LinuxTracingIntegrationTest.cpp

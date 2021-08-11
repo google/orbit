@@ -7,8 +7,6 @@ cmake_minimum_required(VERSION 3.15)
 project(OrbitGl CXX)
 add_library(OrbitGl STATIC)
 
-target_compile_options(OrbitGl PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_sources(
   OrbitGl
   PUBLIC AccessibleCaptureViewElement.h
@@ -183,8 +181,6 @@ endif()
 
 
 add_executable(OrbitGlTests)
-
-target_compile_options(OrbitGlTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitGlTests PRIVATE
                PickingManagerTest.h

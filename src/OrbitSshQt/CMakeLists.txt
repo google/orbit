@@ -8,7 +8,6 @@ project(OrbitSshQt)
 
 add_library(OrbitSshQt STATIC)
 
-target_compile_options(OrbitSshQt PRIVATE ${STRICT_COMPILE_FLAGS})
 target_compile_features(OrbitSshQt PUBLIC cxx_std_17)
 target_include_directories(OrbitSshQt PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
@@ -44,13 +43,11 @@ target_link_libraries(OrbitSshQt PUBLIC
 set_target_properties(OrbitSshQt PROPERTIES AUTOMOC ON)
 
 add_executable(OrbitSshQtIntegrationTests)
-target_compile_options(OrbitSshQtIntegrationTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(OrbitSshQtIntegrationTests PRIVATE IntegrationTests.cpp)
 target_link_libraries(OrbitSshQtIntegrationTests PUBLIC OrbitSshQt GTest::GTest)
 
 # tests
 #add_executable(OrbitSshQtTests)
-#target_compile_options(OrbitSshQtTests PRIVATE ${STRICT_COMPILE_FLAGS})
 #target_sources(OrbitSshQtTests PRIVATE SocketTests.cpp ContextTests.cpp)
 #target_link_libraries(OrbitSshQtTests PRIVATE OrbitSshQt GTest::Main)
 

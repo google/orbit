@@ -7,7 +7,6 @@ cmake_minimum_required(VERSION 3.15)
 project(GrpcProtos)
 
 add_library(GrpcProtos STATIC)
-target_compile_options(GrpcProtos PRIVATE ${STRICT_COMPILE_FLAGS})
 
 if(WIN32)
     target_compile_definitions(GrpcProtos PUBLIC -D_WIN32_WINNT=0x0700)

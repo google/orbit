@@ -25,34 +25,34 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_MINSIZEREL ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(STRICT_COMPILE_FLAGS -Werror=all
-                           -Werror=float-conversion
-                           -Werror=format=2
-                           -Werror=ignored-attributes
-                           -Werror=implicit-fallthrough
-                           -Werror=inconsistent-missing-override
-                           -Werror=old-style-cast
-                           -Werror=unused-parameter
-                           -Werror=unused-variable
-                           -Werror=writable-strings
-                           -Werror=sign-compare)
+  add_compile_options(-Werror=all
+                      -Werror=float-conversion
+                      -Werror=format=2
+                      -Werror=ignored-attributes
+                      -Werror=implicit-fallthrough
+                      -Werror=inconsistent-missing-override
+                      -Werror=old-style-cast
+                      -Werror=unused-parameter
+                      -Werror=unused-variable
+                      -Werror=writable-strings
+                      -Werror=sign-compare)
 
   if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 8)
-    list(APPEND STRICT_COMPILE_FLAGS -Werror=defaulted-function-deleted)
+    add_compile_options(-Werror=defaulted-function-deleted)
   endif()
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  set(STRICT_COMPILE_FLAGS -Werror=all
-                           # gcc does not behave consistently here; what is fine with gcc9 fails with gcc10
-                           # and vice versa, see https://github.com/google/orbit/issues/1624 for details.
-                           -Wno-stringop-truncation
-                           -Werror=float-conversion
-                           -Werror=format=2
-                           -Werror=ignored-attributes
-                           -Werror=old-style-cast
-                           -Werror=unused-parameter
-                           -Werror=unused-variable
-                           -Werror=sign-compare)
+  add_compile_options(-Werror=all
+                      # gcc does not behave consistently here; what is fine with gcc9 fails with gcc10
+                      # and vice versa, see https://github.com/google/orbit/issues/1624 for details.
+                      -Wno-stringop-truncation
+                      -Werror=float-conversion
+                      -Werror=format=2
+                      -Werror=ignored-attributes
+                      -Werror=old-style-cast
+                      -Werror=unused-parameter
+                      -Werror=unused-variable
+                      -Werror=sign-compare)
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

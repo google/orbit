@@ -5,8 +5,6 @@
 project(ClientServices)
 add_library(ClientServices STATIC)
 
-target_compile_options(ClientServices PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_include_directories(ClientServices PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/include)
 

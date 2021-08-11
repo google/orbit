@@ -7,8 +7,6 @@ cmake_minimum_required(VERSION 3.15)
 project(SessionSetup)
 add_library(SessionSetup STATIC)
 
-target_compile_options(SessionSetup PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_sources(
   SessionSetup
   PUBLIC  include/SessionSetup/Connections.h
@@ -60,8 +58,6 @@ set_target_properties(SessionSetup PROPERTIES AUTOMOC ON)
 set_target_properties(SessionSetup PROPERTIES AUTOUIC ON)
 
 add_executable(SessionSetupTest)
-
-target_compile_options(SessionSetupTest PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   SessionSetupTest

@@ -8,8 +8,6 @@ project(OrbitPaths)
 
 add_library(OrbitPaths STATIC)
 
-target_compile_options(OrbitPaths PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_compile_features(OrbitPaths PUBLIC cxx_std_17)
 
 target_include_directories(OrbitPaths PUBLIC
@@ -26,8 +24,6 @@ target_link_libraries(OrbitPaths PUBLIC
         CONAN_PKG::abseil)
 
 add_executable(OrbitPathsTests)
-
-target_compile_options(OrbitPathsTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitPathsTests PRIVATE
         PathsTest.cpp)

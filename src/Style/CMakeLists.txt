@@ -14,5 +14,4 @@ target_include_directories(Style PUBLIC
 
 target_link_libraries(Style PUBLIC Qt5::Widgets)
 
-target_compile_options(Style PRIVATE ${STRICT_COMPILE_FLAGS})
 target_compile_features(Style PUBLIC cxx_std_17)

@@ -7,7 +7,6 @@ cmake_minimum_required(VERSION 3.15)
 project(SourcePathsMapping)
 add_library(SourcePathsMapping STATIC)
 
-target_compile_options(SourcePathsMapping PRIVATE ${STRICT_COMPILE_FLAGS})
 target_include_directories(SourcePathsMapping PUBLIC include/)
 target_link_libraries(SourcePathsMapping PUBLIC OrbitBase
                                                 QtUtils
@@ -25,7 +24,6 @@ target_sources(SourcePathsMapping PRIVATE Mapping.cpp
 set_target_properties(SourcePathsMapping PROPERTIES AUTOMOC ON)
 
 add_executable(SourcePathsMappingTests)
-target_compile_options(SourcePathsMappingTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(SourcePathsMappingTests PRIVATE MappingTest.cpp
                                                MappingItemModelTest.cpp
                                                MappingManagerTest.cpp)

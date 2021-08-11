@@ -6,9 +6,6 @@ project(OrbitCaptureGgpService)
 
 add_executable(OrbitCaptureGgpService main.cpp)
 
-target_compile_options(OrbitCaptureGgpService PRIVATE 
-        ${STRICT_COMPILE_FLAGS})
-
 target_include_directories(OrbitCaptureGgpService PRIVATE 
         ${CMAKE_CURRENT_LIST_DIR})
 

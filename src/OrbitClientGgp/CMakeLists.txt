@@ -6,9 +6,6 @@ project(OrbitClientGgpLib)
 
 add_library(OrbitClientGgpLib STATIC)
 
-target_compile_options(OrbitClientGgpLib PRIVATE
-    ${STRICT_COMPILE_FLAGS})
-
 target_include_directories(OrbitClientGgpLib PUBLIC 
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
@@ -37,8 +34,5 @@ add_executable(OrbitClientGgp main.cpp)
 
 target_link_libraries(OrbitClientGgp PRIVATE 
     OrbitClientGgpLib)
-
-target_compile_options(OrbitClientGgp PRIVATE 
-    ${STRICT_COMPILE_FLAGS})
 
 strip_symbols(OrbitClientGgp)

@@ -8,7 +8,6 @@
 project(ServiceLib)
 
 add_library(ServiceLib STATIC)
-target_compile_options(ServiceLib PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(ServiceLib PRIVATE
         CaptureEventBuffer.h
@@ -66,12 +65,10 @@ target_link_libraries(ServiceLib PUBLIC
 project(OrbitService)
 add_executable(OrbitService main.cpp)
 target_link_libraries(OrbitService PRIVATE ServiceLib)
-target_compile_options(OrbitService PRIVATE ${STRICT_COMPILE_FLAGS})
 
 strip_symbols(OrbitService)
 
 add_executable(ServiceTests)
-target_compile_options(ServiceTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(ServiceTests PRIVATE
         ProcessListTest.cpp

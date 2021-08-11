@@ -10,7 +10,6 @@ function(add_fuzzer target_name)
   # the code to a static library on other compilers instead.
   if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_executable(${target_name} ${ARGN})
-    target_compile_options(${target_name} PRIVATE ${STRICT_COMPILE_FLAGS})
 
     if (ENV{LIB_FUZZING_ENGINE})
       message(STATUS "Adding linker flags according to LIB_FUZZING_ENGINE env variable: $ENV{LIB_FUZZING_ENGINE}")
@@ -26,7 +25,6 @@ function(add_fuzzer target_name)
       PROPERTY LINK_OPTIONS ${FUZZING_OPTION})
   else()
     add_library(${target_name} STATIC ${ARGN})
-    target_compile_options(${target_name} PRIVATE ${STRICT_COMPILE_FLAGS})
   endif()
 endfunction()
 

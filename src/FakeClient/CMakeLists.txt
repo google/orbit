@@ -8,8 +8,6 @@ project(FakeClient)
 
 add_executable(OrbitFakeClient)
 
-target_compile_options(OrbitFakeClient PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_sources(OrbitFakeClient PRIVATE
         FakeCaptureEventProcessor.h
         FakeClientMain.cpp)

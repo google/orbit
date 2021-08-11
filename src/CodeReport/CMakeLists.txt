@@ -7,7 +7,6 @@ cmake_minimum_required(VERSION 3.15)
 project(CodeReport)
 add_library(CodeReport OBJECT)
 
-target_compile_options(CodeReport PRIVATE ${STRICT_COMPILE_FLAGS})
 target_include_directories(CodeReport PUBLIC include/)
 target_link_libraries(CodeReport PUBLIC OrbitBase
                                         ClientData
@@ -29,7 +28,6 @@ target_sources(CodeReport PRIVATE AnnotateDisassembly.cpp
                                   SourceCodeReport.cpp)
 
 add_executable(CodeReportTests)
-target_compile_options(CodeReportTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(CodeReportTests PRIVATE AnnotateDisassemblyTest.cpp
                                        AssemblyTestLiterals.h
                                        DisassemblerTest.cpp

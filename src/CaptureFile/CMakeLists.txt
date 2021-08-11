@@ -7,8 +7,6 @@ cmake_minimum_required(VERSION 3.15)
 project(CaptureFile)
 add_library(CaptureFile STATIC)
 
-target_compile_options(CaptureFile PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_sources(
   CaptureFile
   PUBLIC include/CaptureFile/CaptureFile.h
@@ -38,8 +36,6 @@ target_link_libraries(
          CONAN_PKG::protobuf)
 
 add_executable(CaptureFileTests)
-
-target_compile_options(CaptureFileTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(CaptureFileTests PRIVATE
   CaptureFileHelpersTest.cpp
