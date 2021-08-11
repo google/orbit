@@ -11,7 +11,7 @@
 #include <memory>
 
 #include "ApiInterface/Orbit.h"
-#include "ApiUtils/EncodedEvent.h"
+#include "ApiUtils/Event.h"
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitBase/ThreadUtils.h"
 
@@ -19,29 +19,19 @@
 
 namespace orbit_introspection {
 
-struct TracingScope {
-  TracingScope(orbit_api::EventType type, const char* name = nullptr, uint64_t data = 0,
-               orbit_api_color color = kOrbitColorAuto);
-  uint64_t begin = 0;
-  uint64_t end = 0;
-  uint32_t depth = 0;
-  uint32_t tid = 0;
-  orbit_api::EncodedEvent encoded_event;
-};
-
-using TracingTimerCallback = std::function<void(const TracingScope& scope)>;
+using TracingEventCallback = std::function<void(const orbit_api::ApiEventVariant& api_event)>;
 
 class TracingListener {
  public:
-  explicit TracingListener(TracingTimerCallback callback);
+  explicit TracingListener(TracingEventCallback callback);
   ~TracingListener();
 
-  static void DeferScopeProcessing(const TracingScope& scope);
+  static void DeferApiEventProcessing(const orbit_api::ApiEventVariant& api_event);
   [[nodiscard]] inline static bool IsActive() { return active_; }
   [[nodiscard]] inline static bool IsShutdownInitiated() { return shutdown_initiated_; }
 
  private:
-  TracingTimerCallback user_callback_ = nullptr;
+  TracingEventCallback user_callback_ = nullptr;
   std::shared_ptr<orbit_base::ThreadPool> thread_pool_ = {};
   inline static bool active_ = false;
   inline static bool shutdown_initiated_ = true;

@@ -146,7 +146,7 @@ message TimerInfo {
   enum Type {
     kNone = 0;
     kCoreActivity = 1;
-    kIntrospection = 2;
+    // kIntrospection = 2;
     kGpuActivity = 3;
     kFrame = 4;
     kGpuCommandBuffer = 5;

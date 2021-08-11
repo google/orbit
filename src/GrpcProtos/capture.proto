@@ -107,16 +107,6 @@ message FunctionCall {
   repeated uint64 registers = 8;
 }
 
-message IntrospectionScope {
-  reserved 3;
-  int32 pid = 1;
-  int32 tid = 2;
-  uint64 duration_ns = 7;
-  uint64 end_timestamp_ns = 4;
-  int32 depth = 5;
-  repeated uint64 registers = 6;
-}
-
 message ApiEvent {
   int32 pid = 1;
   int32 tid = 2;
@@ -685,7 +675,7 @@ message OutOfOrderEventsDiscardedEvent {
 }
 
 message ClientCaptureEvent {
-  reserved 23, 28, 29, 30;
+  reserved 20, 23, 28, 29, 30;
 
   oneof event {
     // Note that field numbers from 1-15 take only 1 byte to encode
@@ -727,7 +717,6 @@ message ClientCaptureEvent {
     InternedCallstack interned_callstack = 5;
     InternedString interned_string = 18;
     InternedTracepointInfo interned_tracepoint_info = 19;
-    IntrospectionScope introspection_scope = 20;
     LostPerfRecordsEvent lost_perf_records_event = 36;
     MemoryUsageEvent memory_usage_event = 31;
     ModulesSnapshot modules_snapshot = 25;
@@ -743,7 +732,7 @@ message ClientCaptureEvent {
 }
 
 message ProducerCaptureEvent {
-  reserved 22, 26, 27, 28;
+  reserved 19, 22, 26, 27, 28;
   oneof event {
     // Note that field numbers from 1-15 take only 1 byte to encode
     // https://developers.google.com/protocol-buffers/docs/proto#assigning_field_numbers
@@ -785,7 +774,6 @@ message ProducerCaptureEvent {
     GpuQueueSubmission gpu_queue_submission = 6;
     InternedCallstack interned_callstack = 7;
     InternedString interned_string = 18;
-    IntrospectionScope introspection_scope = 19;
     LostPerfRecordsEvent lost_perf_records_event = 34;
     MemoryUsageEvent memory_usage_event = 29;
     ModulesSnapshot modules_snapshot = 25;

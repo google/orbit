@@ -5,10 +5,10 @@
 #include "TracingHandler.h"
 
 #include <absl/synchronization/mutex.h>
-#include <unistd.h>
 
 #include <utility>
 
+#include "ApiUtils/Event.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
 
@@ -19,7 +19,6 @@ using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
 using orbit_grpc_protos::FullGpuJob;
 using orbit_grpc_protos::FunctionCall;
-using orbit_grpc_protos::IntrospectionScope;
 using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
@@ -40,23 +39,87 @@ void TracingHandler::Start(CaptureOptions capture_options) {
   }
 }
 
+namespace {
+inline void CreateCaptureEvent(const orbit_api::ApiScopeStart& scope_start,
+                               orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_api_scope_start();
+  scope_start.CopyToGrpcProto(api_event);
+}
+
+inline void CreateCaptureEvent(const orbit_api::ApiScopeStop& scope_stop,
+                               orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_api_scope_stop();
+  scope_stop.CopyToGrpcProto(api_event);
+}
+
+inline void CreateCaptureEvent(const orbit_api::ApiScopeStartAsync& scope_start_async,
+                               orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_api_scope_start_async();
+  scope_start_async.CopyToGrpcProto(api_event);
+}
+
+inline void CreateCaptureEvent(const orbit_api::ApiScopeStopAsync& scope_stop_async,
+                               orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_api_scope_stop_async();
+  scope_stop_async.CopyToGrpcProto(api_event);
+}
+
+inline void CreateCaptureEvent(const orbit_api::ApiStringEvent& string_event,
+                               orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_api_string_event();
+  string_event.CopyToGrpcProto(api_event);
+}
+
+inline void CreateCaptureEvent(const orbit_api::ApiTrackDouble& track_double,
+                               orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_api_track_double();
+  track_double.CopyToGrpcProto(api_event);
+}
+
+inline void CreateCaptureEvent(const orbit_api::ApiTrackFloat& track_float,
+                               orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_api_track_float();
+  track_float.CopyToGrpcProto(api_event);
+}
+
+inline void CreateCaptureEvent(const orbit_api::ApiTrackInt& track_int,
+                               orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_api_track_int();
+  track_int.CopyToGrpcProto(api_event);
+}
+
+inline void CreateCaptureEvent(const orbit_api::ApiTrackInt64& track_int64,
+                               orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_api_track_int64();
+  track_int64.CopyToGrpcProto(api_event);
+}
+
+inline void CreateCaptureEvent(const orbit_api::ApiTrackUint& track_uint,
+                               orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_api_track_uint();
+  track_uint.CopyToGrpcProto(api_event);
+}
+inline void CreateCaptureEvent(const orbit_api::ApiTrackUint64& track_uint64,
+                               orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_api_track_uint64();
+  track_uint64.CopyToGrpcProto(api_event);
+}
+
+// The variant type `ApiEventVariant` requires to contain `std::monostate` in order to be default-
+// constructable. However, that state is never expected to be called in the visitor.
+inline void CreateCaptureEvent(const std::monostate& /*unused*/, ProducerCaptureEvent* /*unused*/) {
+  UNREACHABLE();
+}
+}  // namespace
+
 void TracingHandler::SetupIntrospection() {
   orbit_tracing_listener_ = std::make_unique<orbit_introspection::TracingListener>(
-      [this](const orbit_introspection::TracingScope& scope) {
-        IntrospectionScope introspection_scope;
-        introspection_scope.set_pid(getpid());
-        introspection_scope.set_tid(scope.tid);
-        introspection_scope.set_duration_ns(scope.end - scope.begin);
-        introspection_scope.set_end_timestamp_ns(scope.end);
-        introspection_scope.set_depth(scope.depth);
-        introspection_scope.mutable_registers()->Reserve(6);
-        introspection_scope.add_registers(scope.encoded_event.args[0]);
-        introspection_scope.add_registers(scope.encoded_event.args[1]);
-        introspection_scope.add_registers(scope.encoded_event.args[2]);
-        introspection_scope.add_registers(scope.encoded_event.args[3]);
-        introspection_scope.add_registers(scope.encoded_event.args[4]);
-        introspection_scope.add_registers(scope.encoded_event.args[5]);
-        OnIntrospectionScope(introspection_scope);
+      [this](const orbit_api::ApiEventVariant& api_event_variant) {
+        ProducerCaptureEvent capture_event;
+        std::visit([&capture_event](
+                       const auto& api_event) { CreateCaptureEvent(api_event, &capture_event); },
+                   api_event_variant);
+        producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(capture_event));
       });
 }
 
@@ -81,13 +144,6 @@ void TracingHandler::OnCallstackSample(FullCallstackSample callstack_sample) {
 void TracingHandler::OnFunctionCall(FunctionCall function_call) {
   ProducerCaptureEvent event;
   *event.mutable_function_call() = std::move(function_call);
-  producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
-}
-
-void TracingHandler::OnIntrospectionScope(
-    orbit_grpc_protos::IntrospectionScope introspection_scope) {
-  ProducerCaptureEvent event;
-  *event.mutable_introspection_scope() = std::move(introspection_scope);
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }
 

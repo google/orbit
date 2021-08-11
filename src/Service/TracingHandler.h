@@ -39,7 +39,6 @@ class TracingHandler : public orbit_tracing_interface::TracerListener {
   void OnSchedulingSlice(orbit_grpc_protos::SchedulingSlice scheduling_slice) override;
   void OnCallstackSample(orbit_grpc_protos::FullCallstackSample callstack_sample) override;
   void OnFunctionCall(orbit_grpc_protos::FunctionCall function_call) override;
-  void OnIntrospectionScope(orbit_grpc_protos::IntrospectionScope introspection_call) override;
   void OnGpuJob(orbit_grpc_protos::FullGpuJob gpu_job) override;
   void OnThreadName(orbit_grpc_protos::ThreadName thread_name) override;
   void OnThreadNamesSnapshot(orbit_grpc_protos::ThreadNamesSnapshot thread_names_snapshot) override;

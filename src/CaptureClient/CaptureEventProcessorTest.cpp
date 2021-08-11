@@ -52,7 +52,6 @@ using orbit_grpc_protos::GpuSubmitInfo;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointInfo;
-using orbit_grpc_protos::IntrospectionScope;
 using orbit_grpc_protos::LostPerfRecordsEvent;
 using orbit_grpc_protos::MemoryUsageEvent;
 using orbit_grpc_protos::ModuleInfo;
@@ -361,39 +360,6 @@ TEST(CaptureEventProcessor, CanHandleFunctionCalls) {
     EXPECT_EQ(actual_timer.registers(i), function_call->registers(i));
   }
   EXPECT_EQ(actual_timer.type(), TimerInfo::kNone);
-}
-
-TEST(CaptureEventProcessor, CanHandleIntrospectionScopes) {
-  MockCaptureListener listener;
-  auto event_processor =
-      CaptureEventProcessor::CreateForCaptureListener(&listener, std::filesystem::path{}, {});
-
-  ClientCaptureEvent event;
-  IntrospectionScope* introspection_scope = event.mutable_introspection_scope();
-  introspection_scope->set_pid(42);
-  introspection_scope->set_tid(24);
-  introspection_scope->set_duration_ns(97);
-  introspection_scope->set_end_timestamp_ns(100);
-  introspection_scope->set_depth(3);
-  introspection_scope->add_registers(4);
-  introspection_scope->add_registers(5);
-
-  TimerInfo actual_timer;
-  EXPECT_CALL(listener, OnTimer).Times(1).WillOnce(SaveArg<0>(&actual_timer));
-
-  event_processor->ProcessEvent(event);
-
-  EXPECT_EQ(actual_timer.process_id(), introspection_scope->pid());
-  EXPECT_EQ(actual_timer.thread_id(), introspection_scope->tid());
-  EXPECT_EQ(actual_timer.start(),
-            introspection_scope->end_timestamp_ns() - introspection_scope->duration_ns());
-  EXPECT_EQ(actual_timer.end(), introspection_scope->end_timestamp_ns());
-  EXPECT_EQ(actual_timer.depth(), introspection_scope->depth());
-  ASSERT_EQ(actual_timer.registers_size(), introspection_scope->registers_size());
-  for (int i = 0; i < actual_timer.registers_size(); ++i) {
-    EXPECT_EQ(actual_timer.registers(i), introspection_scope->registers(i));
-  }
-  EXPECT_EQ(actual_timer.type(), TimerInfo::kIntrospection);
 }
 
 TEST(CaptureEventProcessor, CanHandleThreadNames) {

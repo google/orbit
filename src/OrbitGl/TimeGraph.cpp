@@ -279,10 +279,6 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
       track->OnTimer(timer_info);
       break;
     }
-    case TimerInfo::kIntrospection: {
-      ProcessIntrospectionTimer(timer_info);
-      break;
-    }
     case TimerInfo::kCoreActivity: {
       // TODO(b/176962090): We need to create the `ThreadTrack` here even we don't use it, as we
       //  don't create it on new callstack events, yet.
@@ -324,32 +320,6 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
   RequestUpdate();
 }
 
-void TimeGraph::ProcessIntrospectionTimer(const TimerInfo& timer_info) {
-  orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
-
-  switch (event.type) {
-    case orbit_api::kScopeStart: {
-      ThreadTrack* track = track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
-      track->OnTimer(timer_info);
-    } break;
-    case orbit_api::kScopeStartAsync:
-    case orbit_api::kScopeStopAsync:
-      manual_instrumentation_manager_->ProcessAsyncTimerLegacy(timer_info);
-      break;
-    case orbit_api::kTrackInt:
-    case orbit_api::kTrackInt64:
-    case orbit_api::kTrackUint:
-    case orbit_api::kTrackUint64:
-    case orbit_api::kTrackFloat:
-    case orbit_api::kTrackDouble:
-    case orbit_api::kString:
-      ProcessValueTrackingTimerLegacy(timer_info);
-      break;
-    default:
-      ERROR("Unhandled introspection type [%u]", event.type);
-  }
-}
-
 void TimeGraph::ProcessApiStringEvent(const orbit_client_protos::ApiStringEvent& string_event) {
   manual_instrumentation_manager_->ProcessStringEvent(string_event);
 }
@@ -380,46 +350,6 @@ void TimeGraph::ProcessApiTrackValueEvent(const orbit_client_protos::ApiTrackVal
       break;
     default:
       UNREACHABLE();
-  }
-}
-
-void TimeGraph::ProcessValueTrackingTimerLegacy(const TimerInfo& timer_info) {
-  orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
-
-  if (event.type == orbit_api::kString) {
-    manual_instrumentation_manager_->ProcessStringEventLegacy(event);
-    return;
-  }
-
-  VariableTrack* track = track_manager_->GetOrCreateVariableTrack(event.name);
-  uint64_t time = timer_info.start();
-
-  switch (event.type) {
-    case orbit_api::kTrackInt: {
-      track->AddValue(time, orbit_api::Decode<int32_t>(event.data));
-    } break;
-    case orbit_api::kTrackInt64: {
-      track->AddValue(time, orbit_api::Decode<int64_t>(event.data));
-    } break;
-    case orbit_api::kTrackUint: {
-      track->AddValue(time, orbit_api::Decode<uint32_t>(event.data));
-    } break;
-    case orbit_api::kTrackUint64: {
-      track->AddValue(time, event.data);
-    } break;
-    case orbit_api::kTrackFloat: {
-      track->AddValue(time, orbit_api::Decode<float>(event.data));
-    } break;
-    case orbit_api::kTrackDouble: {
-      track->AddValue(time, orbit_api::Decode<double>(event.data));
-    } break;
-    default:
-      ERROR("Unsupported value tracking type [%u]", event.type);
-      break;
-  }
-
-  if (track->GetProcessId() == -1) {
-    track->SetProcessId(timer_info.process_id());
   }
 }
 

@@ -195,15 +195,6 @@ class BufferTracerListener : public orbit_tracing_interface::TracerListener {
     }
   }
 
-  void OnIntrospectionScope(orbit_grpc_protos::IntrospectionScope introspection_scope) override {
-    orbit_grpc_protos::ProducerCaptureEvent event;
-    *event.mutable_introspection_scope() = std::move(introspection_scope);
-    {
-      absl::MutexLock lock{&events_mutex_};
-      events_.emplace_back(std::move(event));
-    }
-  }
-
   void OnGpuJob(orbit_grpc_protos::FullGpuJob full_gpu_job_event) override {
     orbit_grpc_protos::ProducerCaptureEvent event;
     *event.mutable_full_gpu_job() = std::move(full_gpu_job_event);
@@ -481,8 +472,6 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         EXPECT_GE(event.function_call().end_timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.function_call().end_timestamp_ns();
         break;
-      case orbit_grpc_protos::ProducerCaptureEvent::kIntrospectionScope:
-        UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kInternedString:
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kModulesSnapshot:
