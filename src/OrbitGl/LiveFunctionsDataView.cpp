@@ -23,7 +23,6 @@
 #include "DataViews/FunctionsDataView.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GrpcProtos/Constants.h"
-#include "LiveFunctionsController.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 #include "capture_data.pb.h"
@@ -37,7 +36,7 @@ using orbit_client_protos::FunctionStats;
 using orbit_grpc_protos::InstrumentedFunction;
 
 LiveFunctionsDataView::LiveFunctionsDataView(
-    LiveFunctionsController* live_functions, orbit_data_views::AppInterface* app,
+    orbit_data_views::LiveFunctionsInterface* live_functions, orbit_data_views::AppInterface* app,
     orbit_metrics_uploader::MetricsUploader* metrics_uploader)
     : orbit_data_views::DataView(orbit_data_views::DataViewType::kLiveFunctions, app),
       live_functions_(live_functions),

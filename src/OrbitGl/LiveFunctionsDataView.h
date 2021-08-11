@@ -15,15 +15,14 @@
 
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
+#include "DataViews/LiveFunctionsInterface.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "capture.pb.h"
 #include "capture_data.pb.h"
 
-class LiveFunctionsController;
-
 class LiveFunctionsDataView : public orbit_data_views::DataView {
  public:
-  explicit LiveFunctionsDataView(LiveFunctionsController* live_functions,
+  explicit LiveFunctionsDataView(orbit_data_views::LiveFunctionsInterface* live_functions,
                                  orbit_data_views::AppInterface* app,
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader);
 
@@ -60,7 +59,7 @@ class LiveFunctionsDataView : public orbit_data_views::DataView {
 
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> functions_{};
 
-  LiveFunctionsController* live_functions_;
+  orbit_data_views::LiveFunctionsInterface* live_functions_;
   uint64_t selected_function_id_;
 
   enum ColumnIndex {
