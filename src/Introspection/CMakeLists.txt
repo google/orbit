@@ -8,8 +8,6 @@ project(Introspection)
 
 add_library(Introspection STATIC)
 
-target_compile_options(Introspection PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_compile_features(Introspection PUBLIC cxx_std_17)
 
 target_include_directories(Introspection PUBLIC
@@ -27,8 +25,6 @@ target_link_libraries(Introspection PUBLIC
         OrbitBase)
 
 add_executable(IntrospectionTests)
-
-target_compile_options(IntrospectionTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(IntrospectionTests PRIVATE
         IntrospectionTest.cpp)

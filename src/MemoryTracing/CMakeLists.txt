@@ -7,8 +7,6 @@ cmake_minimum_required(VERSION 3.15)
 project(MemoryTracing)
 add_library(MemoryTracing STATIC)
 
-target_compile_options(MemoryTracing PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_include_directories(MemoryTracing PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
@@ -31,8 +29,6 @@ target_link_libraries(MemoryTracing PUBLIC
         CONAN_PKG::abseil)
 
 add_executable(MemoryTracingTests)
-
-target_compile_options(MemoryTracingTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(MemoryTracingTests PRIVATE 
         MemoryTracingIntegrationTest.cpp

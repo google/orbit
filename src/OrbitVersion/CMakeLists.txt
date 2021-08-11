@@ -8,8 +8,6 @@ project(OrbitVersion)
 
 add_library(OrbitVersion STATIC)
 
-target_compile_options(OrbitVersion PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_compile_features(OrbitVersion PUBLIC cxx_std_17)
 
 target_include_directories(OrbitVersion PUBLIC
@@ -26,8 +24,6 @@ GenerateVersionFile("${CMAKE_CURRENT_BINARY_DIR}/OrbitVersion.cpp"
 target_sources(OrbitVersion PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/OrbitVersion.cpp")
 
 add_executable(OrbitVersionTests)
-
-target_compile_options(OrbitVersionTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitVersionTests PRIVATE OrbitVersionTest.cpp)
 

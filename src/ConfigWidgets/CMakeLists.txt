@@ -7,7 +7,6 @@ cmake_minimum_required(VERSION 3.15)
 project(ConfigWidgets)
 add_library(ConfigWidgets STATIC)
 
-target_compile_options(ConfigWidgets PRIVATE ${STRICT_COMPILE_FLAGS})
 target_include_directories(ConfigWidgets PUBLIC include/)
 target_include_directories(ConfigWidgets PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(ConfigWidgets PUBLIC OrbitBase
@@ -28,8 +27,6 @@ set_target_properties(ConfigWidgets PROPERTIES AUTOMOC ON)
 set_target_properties(ConfigWidgets PROPERTIES AUTOUIC ON)
 
 add_executable(ConfigWidgetsTest)
-
-target_compile_options(ConfigWidgetsTest PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(ConfigWidgetsTest PRIVATE SymbolsDialogTest.cpp)
 

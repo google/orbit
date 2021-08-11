@@ -8,8 +8,6 @@ project(OrbitBase)
 
 add_library(OrbitBase STATIC)
 
-target_compile_options(OrbitBase PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_compile_features(OrbitBase PUBLIC cxx_std_17)
 
 target_include_directories(OrbitBase PUBLIC
@@ -82,8 +80,6 @@ target_link_libraries(OrbitBase PUBLIC
 
 
 add_executable(OrbitBaseTests)
-
-target_compile_options(OrbitBaseTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitBaseTests PRIVATE
         AlignTest.cpp

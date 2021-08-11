@@ -7,7 +7,6 @@ cmake_minimum_required(VERSION 3.15)
 project(FramePointerValidator)
 
 add_library(FramePointerValidator STATIC)
-target_compile_options(FramePointerValidator PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_include_directories(FramePointerValidator PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/include)
@@ -30,8 +29,6 @@ target_link_libraries(FramePointerValidator PUBLIC
         CONAN_PKG::capstone)
 
 add_executable(FramePointerValidatorTests)
-
-target_compile_options(FramePointerValidatorTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(FramePointerValidatorTests PRIVATE
         FramePointerValidatorTest.cpp

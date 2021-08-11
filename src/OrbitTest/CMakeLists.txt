@@ -6,8 +6,6 @@ project(OrbitTest)
 
 add_executable(OrbitTest)
 
-target_compile_options(OrbitTest PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_sources(OrbitTest PRIVATE OrbitTest.cpp OrbitTestImpl.h OrbitTestImpl.cpp)
 
 target_include_directories(OrbitTest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
@@ -18,6 +16,5 @@ target_link_libraries(OrbitTest PRIVATE dl)
 endif()
 
 add_executable(OrbitTestShortLivedThreads)
-target_compile_options(OrbitTestShortLivedThreads PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(OrbitTestShortLivedThreads PRIVATE OrbitTestShortLivedThreads.cpp)
 target_link_libraries(OrbitTestShortLivedThreads PRIVATE Threads::Threads)

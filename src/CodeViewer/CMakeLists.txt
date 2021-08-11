@@ -7,7 +7,6 @@ cmake_minimum_required(VERSION 3.15)
 project(CodeViewer)
 add_library(CodeViewer STATIC)
 
-target_compile_options(CodeViewer PRIVATE ${STRICT_COMPILE_FLAGS})
 target_include_directories(CodeViewer PUBLIC include/)
 target_link_libraries(CodeViewer PUBLIC CodeReport
                                         OrbitBase
@@ -31,7 +30,6 @@ target_sources(CodeViewer PRIVATE Dialog.cpp
 set_target_properties(CodeViewer PROPERTIES AUTOMOC ON AUTOUIC ON)
 
 add_executable(CodeViewerTests)
-target_compile_options(CodeViewerTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(CodeViewerTests PRIVATE FontSizeInEmTest.cpp ViewerTest.cpp)
 target_link_libraries(CodeViewerTests PRIVATE CodeViewer GTest::QtGuiMain)
 

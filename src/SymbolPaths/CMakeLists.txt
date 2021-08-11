@@ -7,7 +7,6 @@ cmake_minimum_required(VERSION 3.15)
 project(SymbolPaths)
 add_library(SymbolPaths STATIC)
 
-target_compile_options(SymbolPaths PRIVATE ${STRICT_COMPILE_FLAGS})
 target_include_directories(SymbolPaths PUBLIC include/)
 target_link_libraries(SymbolPaths PUBLIC Qt5::Core)
 
@@ -17,7 +16,6 @@ target_sources(
 target_sources(SymbolPaths PRIVATE QSettingsWrapper.cpp)
 
 add_executable(SymbolPathsTests)
-target_compile_options(SymbolPathsTests PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(SymbolPathsTests PRIVATE QSettingsWrapperTest.cpp)
 
 target_link_libraries(SymbolPathsTests PRIVATE SymbolPaths

@@ -7,8 +7,6 @@ cmake_minimum_required(VERSION 3.15)
 project(OrbitAccessibility CXX)
 add_library(OrbitAccessibility STATIC)
 
-target_compile_options(OrbitAccessibility PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_include_directories(OrbitAccessibility PUBLIC 
         ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
@@ -33,8 +31,6 @@ target_link_libraries(
   PUBLIC OrbitBase)
 
 add_executable(OrbitAccessibilityTests)
-
-target_compile_options(OrbitAccessibilityTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitAccessibilityTests PRIVATE)
 

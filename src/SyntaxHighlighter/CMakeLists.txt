@@ -7,7 +7,6 @@ cmake_minimum_required(VERSION 3.15)
 project(SyntaxHighlighter)
 add_library(SyntaxHighlighter STATIC)
 
-target_compile_options(SyntaxHighlighter PRIVATE ${STRICT_COMPILE_FLAGS})
 target_include_directories(SyntaxHighlighter PUBLIC include/)
 target_link_libraries(SyntaxHighlighter PUBLIC OrbitBase Qt5::Gui)
 set_target_properties(SyntaxHighlighter PROPERTIES AUTOMOC ON)

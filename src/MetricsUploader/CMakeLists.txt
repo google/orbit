@@ -8,8 +8,6 @@ project(MetricsUploader)
 
 add_library(MetricsUploader STATIC)
 
-target_compile_options(MetricsUploader PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_compile_features(MetricsUploader PUBLIC cxx_std_17)
 
 target_include_directories(MetricsUploader PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include
@@ -72,8 +70,6 @@ endif()
 
 # add tests
 add_executable(MetricsUploaderTests)
-
-target_compile_options(MetricsUploaderTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(MetricsUploaderTests PRIVATE CaptureMetricTest.cpp
                                             ScopedMetricTest.cpp)

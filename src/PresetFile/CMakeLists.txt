@@ -7,8 +7,6 @@ cmake_minimum_required(VERSION 3.15)
 project(PresetFile)
 add_library(PresetFile STATIC)
 
-target_compile_options(PresetFile PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_sources(
   PresetFile
   PUBLIC include/PresetFile/PresetFile.h)
@@ -26,8 +24,6 @@ target_link_libraries(
          CONAN_PKG::protobuf)
 
 add_executable(PresetFileTests)
-
-target_compile_options(PresetFileTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(PresetFileTests PRIVATE
         PresetFileTest.cpp)

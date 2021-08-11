@@ -7,8 +7,6 @@ cmake_minimum_required(VERSION 3.15)
 project(CaptureFileInfo)
 add_library(CaptureFileInfo STATIC)
 
-target_compile_options(CaptureFileInfo PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_sources(
   CaptureFileInfo
   PUBLIC  include/CaptureFileInfo/CaptureFileInfo.h
@@ -38,8 +36,6 @@ set_target_properties(CaptureFileInfo PROPERTIES AUTOMOC ON)
 set_target_properties(CaptureFileInfo PROPERTIES AUTOUIC ON)
 
 add_executable(CaptureFileInfoTests)
-
-target_compile_options(CaptureFileInfoTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(
   CaptureFileInfoTests 

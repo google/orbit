@@ -6,8 +6,6 @@ project(OrbitGgp CXX)
 
 add_library(OrbitGgp)
 
-target_compile_options(OrbitGgp PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_compile_features(OrbitBase PUBLIC cxx_std_17)
 
 target_include_directories(OrbitGgp PUBLIC
@@ -38,17 +36,13 @@ set_target_properties(OrbitGgp PROPERTIES AUTOUIC ON)
 
 # Mock ggp clients
 add_executable(OrbitMockGgpFailing)
-target_compile_options(OrbitMockGgpFailing PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(OrbitMockGgpFailing PRIVATE MockGgp/Failing.cpp)
 
 add_executable(OrbitMockGgpWorking)
-target_compile_options(OrbitMockGgpWorking PRIVATE ${STRICT_COMPILE_FLAGS})
 target_sources(OrbitMockGgpWorking PRIVATE MockGgp/Working.cpp)
 
 # Tests
 add_executable(OrbitGgpTests)
-
-target_compile_options(OrbitGgpTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitGgpTests PRIVATE 
           ClientTest.cpp

@@ -5,8 +5,6 @@
 project(OrbitTriggerCaptureVulkanLayer)
 add_library(OrbitTriggerCaptureVulkanLayer SHARED)
 
-target_compile_options(OrbitTriggerCaptureVulkanLayer PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_include_directories(OrbitTriggerCaptureVulkanLayer PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 

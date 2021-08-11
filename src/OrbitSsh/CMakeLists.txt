@@ -8,8 +8,6 @@ project(OrbitSsh)
 
 add_library(OrbitSsh STATIC)
 
-target_compile_options(OrbitSsh PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_compile_features(OrbitSsh PUBLIC cxx_std_17)
 
 target_include_directories(OrbitSsh PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
@@ -58,8 +56,6 @@ endif()
 
 # tests
 add_executable(OrbitSshTests)
-target_compile_options(OrbitSshTests PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_sources(OrbitSshTests PRIVATE SocketTests.cpp ContextTests.cpp)
 
 target_link_libraries(OrbitSshTests PRIVATE OrbitSsh CONAN_PKG::libssh2

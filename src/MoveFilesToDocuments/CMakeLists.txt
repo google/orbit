@@ -6,8 +6,6 @@ project(MoveFilesToDocuments CXX)
 
 add_library(MoveFilesToDocuments OBJECT)
 
-target_compile_options(MoveFilesToDocuments PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_include_directories(MoveFilesToDocuments PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include)
 

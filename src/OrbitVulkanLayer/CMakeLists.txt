@@ -6,8 +6,6 @@ project(OrbitVulkanLayer)
 
 add_library(OrbitVulkanLayerInterface STATIC)
 
-target_compile_options(OrbitVulkanLayerInterface PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_sources(OrbitVulkanLayerInterface PRIVATE
         DeviceManager.h
         DispatchTable.cpp
@@ -32,8 +30,6 @@ target_link_libraries(OrbitVulkanLayerInterface PUBLIC
 
 add_library(OrbitVulkanLayer SHARED)
 
-target_compile_options(OrbitVulkanLayer PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_sources(OrbitVulkanLayer PRIVATE
         EntryPoints.cpp)
 
@@ -47,8 +43,6 @@ target_link_libraries(OrbitVulkanLayer PRIVATE
 strip_symbols(OrbitVulkanLayer)
 
 add_executable(OrbitVulkanLayerTests)
-
-target_compile_options(OrbitVulkanLayerTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitVulkanLayerTests PRIVATE
         DeviceManagerTest.cpp

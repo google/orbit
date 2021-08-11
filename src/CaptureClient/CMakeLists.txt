@@ -5,8 +5,6 @@
 project(CaptureClient)
 add_library(CaptureClient STATIC)
 
-target_compile_options(CaptureClient PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_include_directories(CaptureClient PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
@@ -42,8 +40,6 @@ target_link_libraries(
   PRIVATE CaptureClient CONAN_PKG::libprotobuf-mutator)
 
 add_executable(CaptureClientTests)
-
-target_compile_options(CaptureClientTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(CaptureClientTests PRIVATE
         ApiEventProcessorTest.cpp

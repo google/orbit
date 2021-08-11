@@ -6,8 +6,6 @@ project(OrbitQt CXX)
 
 add_library(OrbitQt OBJECT)
 
-target_compile_options(OrbitQt PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_sources(
   OrbitQt
   PRIVATE AccessibilityAdapter.h
@@ -108,8 +106,6 @@ set_target_properties(OrbitQt PROPERTIES AUTORCC ON)
 iwyu_add_dependency(OrbitQt)
 
 add_executable(OrbitQtTests)
-
-target_compile_options(OrbitQtTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OrbitQtTests
         PRIVATE AccessibilityAdapter.h

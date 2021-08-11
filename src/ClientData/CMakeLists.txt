@@ -5,8 +5,6 @@
 project(ClientData)
 add_library(ClientData STATIC)
 
-target_compile_options(ClientData PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_include_directories(ClientData PUBLIC 
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
@@ -55,8 +53,6 @@ target_link_libraries(ClientData PUBLIC
 
 
 add_executable(ClientDataTests)
-target_compile_options(ClientDataTests PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_sources(ClientDataTests PRIVATE
         CallstackDataTest.cpp
         FunctionInfoSetTest.cpp

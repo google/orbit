@@ -8,8 +8,6 @@ project(UserSpaceInstrumentation)
 
 add_library(UserSpaceInstrumentation STATIC)
 
-target_compile_options(UserSpaceInstrumentation PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_compile_features(UserSpaceInstrumentation PUBLIC cxx_std_17)
 
 target_include_directories(UserSpaceInstrumentation PUBLIC
@@ -56,8 +54,6 @@ target_link_libraries(UserSpaceInstrumentation PUBLIC
 # executed on function entry/exit of an instrumented function.
 add_library(OrbitUserSpaceInstrumentation SHARED)
 
-target_compile_options(OrbitUserSpaceInstrumentation PRIVATE ${STRICT_COMPILE_FLAGS})
-
 set_target_properties(OrbitUserSpaceInstrumentation PROPERTIES OUTPUT_NAME "orbituserspaceinstrumentation")
 
 target_compile_features(OrbitUserSpaceInstrumentation PUBLIC cxx_std_17)
@@ -81,8 +77,6 @@ strip_symbols(OrbitUserSpaceInstrumentation)
 # to test the injection mechanism.
 add_library(UserSpaceInstrumentationTestLib SHARED)
 
-target_compile_options(UserSpaceInstrumentationTestLib PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_compile_features(UserSpaceInstrumentationTestLib PUBLIC cxx_std_17)
 
 target_include_directories(UserSpaceInstrumentationTestLib PRIVATE
@@ -94,8 +88,6 @@ target_sources(UserSpaceInstrumentationTestLib PRIVATE
 
 # The tests for UserSpaceInstrumentation        
 add_executable(UserSpaceInstrumentationTests)
-
-target_compile_options(UserSpaceInstrumentationTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_include_directories(UserSpaceInstrumentationTests PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})

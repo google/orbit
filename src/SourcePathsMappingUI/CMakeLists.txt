@@ -14,5 +14,4 @@ target_include_directories(SourcePathsMappingUI PUBLIC
 
 target_link_libraries(SourcePathsMappingUI PUBLIC SourcePathsMapping Qt5::Widgets)
 
-target_compile_options(SourcePathsMappingUI PRIVATE ${STRICT_COMPILE_FLAGS})
 target_compile_features(SourcePathsMappingUI PUBLIC cxx_std_17)

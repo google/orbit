@@ -8,8 +8,6 @@ project(LinuxTracing)
 
 add_library(LinuxTracing STATIC)
 
-target_compile_options(LinuxTracing PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_compile_features(LinuxTracing PUBLIC cxx_std_17)
 
 target_include_directories(LinuxTracing PUBLIC
@@ -73,8 +71,6 @@ target_link_libraries(LinuxTracing PUBLIC
         CONAN_PKG::libunwindstack)
 
 add_executable(LinuxTracingTests)
-
-target_compile_options(LinuxTracingTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(LinuxTracingTests PRIVATE
         ContextSwitchManagerTest.cpp

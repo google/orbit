@@ -5,8 +5,6 @@
 project(ClientModel)
 add_library(ClientModel STATIC)
 
-target_compile_options(ClientModel PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_include_directories(ClientModel PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
@@ -29,8 +27,6 @@ target_link_libraries(ClientModel PUBLIC
         ClientProtos)
 
 add_executable(ClientModelTests)
-
-target_compile_options(ClientModelTests PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(ClientModelTests PRIVATE
         CaptureDeserializerTest.cpp

@@ -9,8 +9,6 @@ project(VulkanTutorial)
 
 add_library(OffscreenRenderingVulkanTutorialLib STATIC)
 
-target_compile_options(OffscreenRenderingVulkanTutorialLib PRIVATE ${STRICT_COMPILE_FLAGS})
-
 target_compile_features(OffscreenRenderingVulkanTutorialLib PUBLIC cxx_std_17)
 
 target_include_directories(OffscreenRenderingVulkanTutorialLib PUBLIC
@@ -30,8 +28,6 @@ target_link_libraries(OffscreenRenderingVulkanTutorialLib PUBLIC
 
 
 add_executable(OffscreenRenderingVulkanTutorial)
-
-target_compile_options(OffscreenRenderingVulkanTutorial PRIVATE ${STRICT_COMPILE_FLAGS})
 
 target_sources(OffscreenRenderingVulkanTutorial PRIVATE
         OffscreenRenderingVulkanTutorialMain.cpp)
