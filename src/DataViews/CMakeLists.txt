@@ -20,6 +20,7 @@ target_sources(DataViews PUBLIC
         include/DataViews/DataView.h
         include/DataViews/DataViewType.h
         include/DataViews/FunctionsDataView.h
+        include/DataViews/LiveFunctionsInterface.h
         include/DataViews/ModulesDataView.h
         include/DataViews/PresetsDataView.h
         include/DataViews/PresetLoadState.h)
