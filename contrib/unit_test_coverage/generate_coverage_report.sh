@@ -105,7 +105,7 @@ do
   SOURCE_FILES=$(find $SOURCE_DIR/$COMPONENT -regex ".*\.\(h\|cpp\)" | grep -v "$SOURCE_FILE_FILTER")
 
   echo "$COMPONENT: generating html report"
-  llvm-cov-9 show -format=html \
+  llvm-cov-10 show -format=html \
     -show-line-counts-or-regions -show-instantiations=false \
     -output-dir=$OUTPUT_DIR/coverage_$COMPONENT \
     -instr-profile=$BUILD_DIR/$COMPONENT.profdata \
@@ -113,7 +113,7 @@ do
     $SOURCE_FILES
 
   echo "$COMPONENT: generating json summary"
-  JSON=$(llvm-cov-9 export -summary-only \
+  JSON=$(llvm-cov-10 export -summary-only \
     -instr-profile=$BUILD_DIR/$COMPONENT.profdata \
     $FORMATTED_BINARY_FILES $SOURCE_FILES 2>/dev/null \
     | jq -c '.data[0].totals')
