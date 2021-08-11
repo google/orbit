@@ -17,6 +17,8 @@ compiler.libcxx=libc++
 compiler.fpo=False
 abseil:compiler=clang
 abseil:compiler.cppstd=17
+gtest:compiler=clang
+gtest:compiler.cppstd=17
 
 [options]
 OrbitProfiler:with_gui=False
@@ -31,3 +33,4 @@ CONAN_CMAKE_GENERATOR=Ninja
 CFLAGS=$C_FLAGS
 CXXFLAGS=$CXX_FLAGS
 LDFLAGS=$LD_FLAGS
+gtest:CXXFLAGS=$CXX_FLAGS -std=c++17
