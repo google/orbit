@@ -8,8 +8,6 @@ project(OrbitSsh)
 
 add_library(OrbitSsh STATIC)
 
-target_compile_features(OrbitSsh PUBLIC cxx_std_17)
-
 target_include_directories(OrbitSsh PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
 target_sources(

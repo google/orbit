@@ -13,5 +13,3 @@ target_include_directories(SourcePathsMappingUI PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
 target_link_libraries(SourcePathsMappingUI PUBLIC SourcePathsMapping Qt5::Widgets)
-
-target_compile_features(SourcePathsMappingUI PUBLIC cxx_std_17)

@@ -8,8 +8,6 @@ project(OrbitPaths)
 
 add_library(OrbitPaths STATIC)
 
-target_compile_features(OrbitPaths PUBLIC cxx_std_17)
-
 target_include_directories(OrbitPaths PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/include)
 

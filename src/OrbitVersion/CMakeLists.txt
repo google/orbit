@@ -8,8 +8,6 @@ project(OrbitVersion)
 
 add_library(OrbitVersion STATIC)
 
-target_compile_features(OrbitVersion PUBLIC cxx_std_17)
-
 target_include_directories(OrbitVersion PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/include)
 

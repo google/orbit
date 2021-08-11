@@ -13,5 +13,3 @@ target_include_directories(Style PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
 target_link_libraries(Style PUBLIC Qt5::Widgets)
-
-target_compile_features(Style PUBLIC cxx_std_17)

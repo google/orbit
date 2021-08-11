@@ -8,8 +8,6 @@ project(UserSpaceInstrumentation)
 
 add_library(UserSpaceInstrumentation STATIC)
 
-target_compile_features(UserSpaceInstrumentation PUBLIC cxx_std_17)
-
 target_include_directories(UserSpaceInstrumentation PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
@@ -56,8 +54,6 @@ add_library(OrbitUserSpaceInstrumentation SHARED)
 
 set_target_properties(OrbitUserSpaceInstrumentation PROPERTIES OUTPUT_NAME "orbituserspaceinstrumentation")
 
-target_compile_features(OrbitUserSpaceInstrumentation PUBLIC cxx_std_17)
-
 target_include_directories(OrbitUserSpaceInstrumentation PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
@@ -76,8 +72,6 @@ strip_symbols(OrbitUserSpaceInstrumentation)
 # binary libUserSpaceInstrumentationTestLib.so created from this target is used
 # to test the injection mechanism.
 add_library(UserSpaceInstrumentationTestLib SHARED)
-
-target_compile_features(UserSpaceInstrumentationTestLib PUBLIC cxx_std_17)
 
 target_include_directories(UserSpaceInstrumentationTestLib PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})

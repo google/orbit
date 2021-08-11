@@ -8,8 +8,6 @@ project(CrashHandler)
 
 add_library(CrashHandler STATIC)
 
-target_compile_features(CrashHandler PUBLIC cxx_std_17)
-
 target_include_directories(CrashHandler PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include
                                         PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 

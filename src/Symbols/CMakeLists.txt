@@ -12,8 +12,6 @@ target_sources(Symbols PUBLIC include/Symbols/SymbolHelper.h)
 target_include_directories(Symbols PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
-target_compile_features(Symbols PUBLIC cxx_std_17)
-
 target_link_libraries(Symbols PUBLIC
         GrpcProtos
         Introspection
