@@ -24,3 +24,8 @@ if(NOT TARGET GTest::QtGuiMain AND TARGET Qt5::Widgets)
   target_link_libraries(GTest_QtGuiMain PUBLIC OrbitBase GTest::GTest Qt5::Widgets CONAN_PKG::abseil)
   add_library(GTest::QtGuiMain ALIAS GTest_QtGuiMain)
 endif()
+
+add_executable(TestTests StringViewTest.cpp)
+target_link_libraries(TestTests PRIVATE GTest::Main)
+target_compile_options(TestTests PRIVATE ${STRICT_COMPILE_FLAGS})
+register_test(TestTests)
