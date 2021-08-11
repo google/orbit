@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <functional>
 
+#include "DataViews/LiveFunctionsInterface.h"
 #include "LiveFunctionsDataView.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/Profiling.h"
@@ -16,7 +17,7 @@
 
 class OrbitApp;
 
-class LiveFunctionsController {
+class LiveFunctionsController : public orbit_data_views::LiveFunctionsInterface {
  public:
   explicit LiveFunctionsController(OrbitApp* app,
                                    orbit_metrics_uploader::MetricsUploader* metrics_uploader);
@@ -43,7 +44,7 @@ class LiveFunctionsController {
   [[nodiscard]] uint64_t GetStartTime(uint64_t index) const;
 
   void AddIterator(uint64_t instrumented_function_id,
-                   const orbit_client_protos::FunctionInfo* function);
+                   const orbit_client_protos::FunctionInfo* function) override;
 
  private:
   void Move();
