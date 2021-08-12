@@ -105,6 +105,11 @@ void CaptureData::UpdateFunctionStats(uint64_t instrumented_function_id, uint64_
   }
 }
 
+void CaptureData::AddFunctionStats(uint64_t instrumented_function_id,
+                                   orbit_client_protos::FunctionStats stats) {
+  functions_stats_.insert_or_assign(instrumented_function_id, std::move(stats));
+}
+
 void CaptureData::OnCaptureComplete(
     const std::vector<const orbit_client_data::TimerChain*>& chains) {
   // Recalculate standard deviation as the running calculation may have introduced error.
