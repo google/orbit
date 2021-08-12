@@ -22,7 +22,7 @@ namespace orbit_object_utils {
 ErrorMessageOr<orbit_grpc_protos::ModuleInfo> CreateModule(const std::filesystem::path& module_path,
                                                            uint64_t start_address,
                                                            uint64_t end_address);
-ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ReadModules(int32_t pid);
+ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ReadModules(uint32_t pid);
 ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ParseMaps(
     std::string_view proc_maps_data);
 

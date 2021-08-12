@@ -78,8 +78,8 @@ ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path
   return module_info;
 }
 
-ErrorMessageOr<std::vector<ModuleInfo>> ReadModules(int32_t pid) {
-  std::filesystem::path proc_maps_path{absl::StrFormat("/proc/%d/maps", pid)};
+ErrorMessageOr<std::vector<ModuleInfo>> ReadModules(uint32_t pid) {
+  std::filesystem::path proc_maps_path{absl::StrFormat("/proc/%u/maps", pid)};
   OUTCOME_TRY(auto&& proc_maps_data, orbit_base::ReadFileToString(proc_maps_path));
   return ParseMaps(proc_maps_data);
 }

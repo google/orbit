@@ -43,7 +43,7 @@ class MyCaptureListener : public CaptureListener {
   void OnKeyAndString(uint64_t /*key*/, std::string /*str*/) override {}
   void OnUniqueCallstack(uint64_t /*callstack_id*/, CallstackInfo /*callstack*/) override {}
   void OnCallstackEvent(CallstackEvent /*callstack_event*/) override {}
-  void OnThreadName(int32_t /*thread_id*/, std::string /*thread_name*/) override {}
+  void OnThreadName(uint32_t /*thread_id*/, std::string /*thread_name*/) override {}
   void OnThreadStateSlice(
       orbit_client_protos::ThreadStateSliceInfo /*thread_state_slice*/) override {}
   void OnAddressInfo(LinuxAddressInfo /*address_info*/) override {}

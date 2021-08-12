@@ -32,8 +32,8 @@ void EnqueueApiEvent(Types... args) {
 
   if (!producer.IsCapturing()) return;
 
-  static pid_t pid = orbit_base::GetCurrentProcessId();
-  thread_local pid_t tid = orbit_base::GetCurrentThreadId();
+  static uint32_t pid = orbit_base::GetCurrentProcessId();
+  thread_local uint32_t tid = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
   Event event{pid, tid, timestamp_ns, args...};
   producer.EnqueueIntermediateEvent(event);

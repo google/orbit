@@ -30,7 +30,7 @@ using orbit_user_space_instrumentation::ExecuteInProcess;
 
 namespace {
 
-ErrorMessageOr<absl::flat_hash_map<std::string, ModuleInfo>> GetModulesByPathForPid(int32_t pid) {
+ErrorMessageOr<absl::flat_hash_map<std::string, ModuleInfo>> GetModulesByPathForPid(uint32_t pid) {
   OUTCOME_TRY(auto&& module_infos, orbit_object_utils::ReadModules(pid));
   absl::flat_hash_map<std::string, ModuleInfo> result;
   for (ModuleInfo& module_info : module_infos) {
@@ -79,12 +79,12 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
     return outcome::success();
   }
 
-  int32_t pid = capture_options.pid();
+  uint32_t pid = capture_options.pid();
 
   OUTCOME_TRY(AttachAndStopProcess(pid));
 
   // Make sure we resume the target process, even on early-outs.
-  orbit_base::unique_resource scope_exit{pid, [](int32_t pid) {
+  orbit_base::unique_resource scope_exit{pid, [](uint32_t pid) {
                                            if (DetachAndContinueProcess(pid).has_error()) {
                                              ERROR("Detaching from %i", pid);
                                            }

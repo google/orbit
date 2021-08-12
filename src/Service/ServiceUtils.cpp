@@ -410,7 +410,7 @@ ErrorMessageOr<fs::path> FindSymbolsFilePath(
   return ErrorMessage("Unknown object file type.");
 }
 
-bool ReadProcessMemory(int32_t pid, uintptr_t address, void* buffer, uint64_t size,
+bool ReadProcessMemory(uint32_t pid, uintptr_t address, void* buffer, uint64_t size,
                        uint64_t* num_bytes_read) noexcept {
   iovec local_iov[] = {{buffer, size}};
   iovec remote_iov[] = {{absl::bit_cast<void*>(address), size}};

@@ -214,12 +214,12 @@ ErrorMessageOr<int64_t> ExtractRssAnonFromProcessStatus(std::string_view status_
   return ErrorMessage("RssAnon value not found in the file content.");
 }
 
-ErrorMessageOr<ProcessMemoryUsage> GetProcessMemoryUsage(int32_t pid) noexcept {
+ErrorMessageOr<ProcessMemoryUsage> GetProcessMemoryUsage(uint32_t pid) noexcept {
   ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
   process_memory_usage.set_pid(pid);
   process_memory_usage.set_timestamp_ns(orbit_base::CaptureTimestampNs());
 
-  const std::string kProcessPageFaultsFilename = absl::StrFormat("/proc/%d/stat", pid);
+  const std::string kProcessPageFaultsFilename = absl::StrFormat("/proc/%u/stat", pid);
   ErrorMessageOr<std::string> reading_result =
       orbit_base::ReadFileToString(kProcessPageFaultsFilename);
   if (reading_result.has_error()) {
@@ -233,7 +233,7 @@ ErrorMessageOr<ProcessMemoryUsage> GetProcessMemoryUsage(int32_t pid) noexcept {
           updating_result.error().message());
   }
 
-  const std::string kProcessMemoryUsageFilename = absl::StrFormat("/proc/%d/status", pid);
+  const std::string kProcessMemoryUsageFilename = absl::StrFormat("/proc/%u/status", pid);
   reading_result = orbit_base::ReadFileToString(kProcessMemoryUsageFilename);
   if (reading_result.has_error()) {
     ERROR("%s", reading_result.error().message());
@@ -341,10 +341,10 @@ ErrorMessageOr<void> UpdateCGroupMemoryUsageFromMemoryStat(std::string_view memo
   return outcome::success();
 }
 
-ErrorMessageOr<CGroupMemoryUsage> GetCGroupMemoryUsage(int32_t pid) noexcept {
+ErrorMessageOr<CGroupMemoryUsage> GetCGroupMemoryUsage(uint32_t pid) noexcept {
   uint64_t current_timestamp_ns = orbit_base::CaptureTimestampNs();
 
-  const std::string kProcessCGroupsFilename = absl::StrFormat("/proc/%d/cgroup", pid);
+  const std::string kProcessCGroupsFilename = absl::StrFormat("/proc/%u/cgroup", pid);
   ErrorMessageOr<std::string> reading_result =
       orbit_base::ReadFileToString(kProcessCGroupsFilename);
   if (reading_result.has_error()) {
@@ -354,7 +354,7 @@ ErrorMessageOr<CGroupMemoryUsage> GetCGroupMemoryUsage(int32_t pid) noexcept {
   std::string cgroup_name = GetProcessMemoryCGroupName(reading_result.value());
   if (cgroup_name.empty()) {
     std::string error_message =
-        absl::StrFormat("Fail to extract the cgroup name of the target process %d.", pid);
+        absl::StrFormat("Fail to extract the cgroup name of the target process %u.", pid);
     ERROR("%s", error_message);
     return ErrorMessage{std::move(error_message)};
   }

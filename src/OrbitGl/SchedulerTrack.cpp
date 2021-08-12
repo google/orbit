@@ -12,6 +12,7 @@
 #include "Batcher.h"
 #include "ClientData/CaptureData.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
@@ -46,12 +47,14 @@ float SchedulerTrack::GetHeight() const {
 
 bool SchedulerTrack::IsTimerActive(const TimerInfo& timer_info) const {
   bool is_same_tid_as_selected = timer_info.thread_id() == app_->selected_thread_id();
+
   CHECK(capture_data_ != nullptr);
-  int32_t capture_process_id = capture_data_->process_id();
+  uint32_t capture_process_id = capture_data_->process_id();
   bool is_same_pid_as_target =
       capture_process_id == 0 || capture_process_id == timer_info.process_id();
 
-  return is_same_tid_as_selected || (app_->selected_thread_id() == -1 && is_same_pid_as_target);
+  return is_same_tid_as_selected ||
+         (app_->selected_thread_id() == orbit_base::kAllProcessThreadsTid && is_same_pid_as_target);
 }
 
 Color SchedulerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,

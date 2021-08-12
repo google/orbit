@@ -99,7 +99,7 @@ class PostProcessedSamplingData {
   [[nodiscard]] const std::vector<ThreadSampleData>& GetThreadSampleData() const {
     return sorted_thread_sample_data_;
   }
-  [[nodiscard]] const ThreadSampleData* GetThreadSampleDataByThreadId(int32_t thread_id) const;
+  [[nodiscard]] const ThreadSampleData* GetThreadSampleDataByThreadId(uint32_t thread_id) const;
 
   [[nodiscard]] const ThreadSampleData* GetSummary() const;
   [[nodiscard]] uint32_t GetCountOfFunction(uint64_t function_address) const;

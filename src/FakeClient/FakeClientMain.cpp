@@ -154,7 +154,7 @@ int main(int argc, char* argv[]) {
               (absl::GetFlag(FLAGS_instrument_offset) == 0),
           "Binary path and offset of the function to instrument need to be specified together");
 
-  int32_t process_id = absl::GetFlag(FLAGS_pid);
+  uint32_t process_id = absl::GetFlag(FLAGS_pid);
   LOG("process_id=%d", process_id);
   uint16_t samples_per_second = absl::GetFlag(FLAGS_sampling_rate);
   LOG("samples_per_second=%u", samples_per_second);

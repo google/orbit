@@ -134,7 +134,7 @@ class OrbitApp final : public DataViewFactory,
   void ToggleCapture();
   void ListPresets();
   void RefreshCaptureView();
-  void Disassemble(int32_t pid, const orbit_client_protos::FunctionInfo& function) override;
+  void Disassemble(uint32_t pid, const orbit_client_protos::FunctionInfo& function) override;
   void ShowSourceCode(const orbit_client_protos::FunctionInfo& function) override;
 
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
@@ -146,7 +146,7 @@ class OrbitApp final : public DataViewFactory,
   void OnUniqueCallstack(uint64_t callstack_id,
                          orbit_client_protos::CallstackInfo callstack) override;
   void OnCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) override;
-  void OnThreadName(int32_t thread_id, std::string thread_name) override;
+  void OnThreadName(uint32_t thread_id, std::string thread_name) override;
   void OnThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo thread_state_slice) override;
   void OnAddressInfo(orbit_client_protos::LinuxAddressInfo address_info) override;
   void OnUniqueTracepointInfo(uint64_t key,
@@ -440,7 +440,7 @@ class OrbitApp final : public DataViewFactory,
 
   void SelectCallstackEvents(
       const std::vector<orbit_client_protos::CallstackEvent>& selected_callstack_events,
-      int32_t thread_id);
+      uint32_t thread_id);
 
   void SelectTracepoint(const orbit_grpc_protos::TracepointInfo& info);
   void DeselectTracepoint(const orbit_grpc_protos::TracepointInfo& tracepoint);

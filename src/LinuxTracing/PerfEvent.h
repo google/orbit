@@ -342,7 +342,7 @@ class UretprobesWithReturnValuePerfEvent : public UretprobesPerfEventBase<perf_e
 
 class MmapPerfEvent : public PerfEvent {
  public:
-  MmapPerfEvent(int32_t pid, uint64_t timestamp, const perf_event_mmap_up_to_pgoff& mmap_event,
+  MmapPerfEvent(pid_t pid, uint64_t timestamp, const perf_event_mmap_up_to_pgoff& mmap_event,
                 std::string filename)
       : pid_{pid}, timestamp_{timestamp}, mmap_event_{mmap_event}, filename_{std::move(filename)} {}
 
@@ -351,13 +351,13 @@ class MmapPerfEvent : public PerfEvent {
   void Accept(PerfEventVisitor* visitor) override;
 
   [[nodiscard]] const std::string& filename() const { return filename_; }
-  [[nodiscard]] int32_t pid() const { return pid_; }
+  [[nodiscard]] pid_t pid() const { return pid_; }
   [[nodiscard]] uint64_t address() const { return mmap_event_.address; }
   [[nodiscard]] uint64_t length() const { return mmap_event_.length; }
   [[nodiscard]] uint64_t page_offset() const { return mmap_event_.page_offset; }
 
  private:
-  int32_t pid_;
+  pid_t pid_;
   uint64_t timestamp_;
   perf_event_mmap_up_to_pgoff mmap_event_;
   std::string filename_;

@@ -52,9 +52,7 @@ pid_t GetNativeProcessId(uint32_t pid) {
   return pid == kInvalidProcessId ? kInvalidLinuxProcessId : static_cast<pid_t>(pid);
 }
 
-[[nodiscard]] std::string GetThreadName(uint32_t tid) {
-  return GetThreadNameNative(GetNativeThreadId(tid));
-}
+std::string GetThreadName(uint32_t tid) { return GetThreadNameNative(GetNativeThreadId(tid)); }
 
 std::string GetThreadNameNative(pid_t tid) {
   std::string comm_filename = absl::StrFormat("/proc/%d/comm", tid);

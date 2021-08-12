@@ -16,7 +16,7 @@ using orbit_client_protos::TracepointEventInfo;
 namespace orbit_client_data {
 
 void TracepointData::EmplaceTracepointEvent(uint64_t time, uint64_t tracepoint_hash,
-                                            int32_t process_id, int32_t thread_id, int32_t cpu,
+                                            uint32_t process_id, uint32_t thread_id, int32_t cpu,
                                             bool is_same_pid_as_target) {
   absl::MutexLock lock(&mutex_);
   num_total_tracepoint_events_++;
@@ -68,7 +68,7 @@ void ForEachTracepointEventInRange(
 }  // namespace
 
 void TracepointData::ForEachTracepointEventOfThreadInTimeRange(
-    int32_t thread_id, uint64_t min_tick, uint64_t max_tick_exclusive,
+    uint32_t thread_id, uint64_t min_tick, uint64_t max_tick_exclusive,
     const std::function<void(const orbit_client_protos::TracepointEventInfo&)>& action) const {
   absl::MutexLock lock(&mutex_);
   if (thread_id == orbit_base::kAllThreadsOfAllProcessesTid) {
@@ -91,7 +91,7 @@ void TracepointData::ForEachTracepointEventOfThreadInTimeRange(
   }
 }
 
-uint32_t TracepointData::GetNumTracepointEventsForThreadId(int32_t thread_id) const {
+uint32_t TracepointData::GetNumTracepointEventsForThreadId(uint32_t thread_id) const {
   absl::MutexLock lock(&mutex_);
   if (thread_id == orbit_base::kAllThreadsOfAllProcessesTid) {
     return num_total_tracepoint_events_;

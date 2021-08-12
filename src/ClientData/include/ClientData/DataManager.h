@@ -37,7 +37,7 @@ class DataManager final {
   void set_visible_function_ids(absl::flat_hash_set<uint64_t> visible_function_ids);
   void set_highlighted_function_id(uint64_t highlighted_function_id);
   void set_highlighted_group_id(uint64_t highlighted_function_id);
-  void set_selected_thread_id(int32_t thread_id);
+  void set_selected_thread_id(uint32_t thread_id);
   void set_selected_timer(const orbit_client_protos::TimerInfo* timer_info);
 
   [[nodiscard]] bool IsFunctionSelected(const orbit_client_protos::FunctionInfo& function) const;

@@ -36,20 +36,22 @@ uint32_t GetCurrentThreadIdNative() {
 uint32_t GetCurrentProcessIdNative() { return ::GetCurrentProcessId(); }
 
 uint32_t GetThreadIdFromNative(uint32_t tid) {
-  return IsInvalidWindowsThreadId(tid)) ? orbit_base::kInvalidThreadId : tid;
+  return IsInvalidWindowsThreadId(tid) ? orbit_base::kInvalidThreadId : tid;
 }
 
 uint32_t GetProcessIdFromNative(uint32_t pid) {
-  return IsInvalidWindowsProcessId(pid)) ? orbit_base::kInvalidProcessId : pid;
+  return IsInvalidWindowsProcessId(pid) ? orbit_base::kInvalidProcessId : pid;
 }
 
 uint32_t GetNativeThreadId(uint32_t tid) {
-  return tid == orbit_base::kInvalidThreadId) ? kInvalidWindowsThreadId : tid;
+  return tid == orbit_base::kInvalidThreadId ? kInvalidWindowsThreadId : tid;
 }
 
 uint32_t GetNativeProcessId(uint32_t pid) {
   return pid == orbit_base::kInvalidProcessId ? kInvalidWindowsProcessId_0 : pid;
 }
+
+std::string GetThreadName(uint32_t tid) { return GetThreadNameNative(GetNativeThreadId(tid)); }
 
 template <typename FunctionPrototypeT>
 static FunctionPrototypeT GetProcAddress(const std::string& library, const std::string& procedure) {

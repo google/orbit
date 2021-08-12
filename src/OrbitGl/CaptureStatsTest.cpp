@@ -18,7 +18,7 @@ TEST(CaptureStats, NullCaptureWindow) {
 
 TEST(SchedulingStats, ZeroSchedulingScopes) {
   std::vector<const orbit_client_protos::TimerInfo*> scheduling_scopes;
-  SchedulingStats::ThreadNameProvider thread_name_provider = [](int32_t thread_id) {
+  SchedulingStats::ThreadNameProvider thread_name_provider = [](uint32_t thread_id) {
     return std::to_string(thread_id);
   };
   SchedulingStats scheduling_stats(scheduling_scopes, thread_name_provider, 0, 0);
@@ -34,7 +34,7 @@ TEST(SchedulingStats, ZeroSchedulingScopes) {
 TEST(SchedulingStats, SchedulingStats) {
   std::list<orbit_client_protos::TimerInfo>
       scope_buffer;  // Use a list as we need pointer stability.
-  auto create_scope = [&scope_buffer](int32_t pid, int32_t tid, int32_t cpu, uint64_t start_ns,
+  auto create_scope = [&scope_buffer](uint32_t pid, uint32_t tid, int32_t cpu, uint64_t start_ns,
                                       uint64_t end_ns) {
     orbit_client_protos::TimerInfo timer_info;
     timer_info.set_start(start_ns);
@@ -46,7 +46,7 @@ TEST(SchedulingStats, SchedulingStats) {
   };
 
   std::vector<const orbit_client_protos::TimerInfo*> scopes;
-  SchedulingStats::ThreadNameProvider thread_name_provider = [](int32_t thread_id) {
+  SchedulingStats::ThreadNameProvider thread_name_provider = [](uint32_t thread_id) {
     return std::to_string(thread_id);
   };
 

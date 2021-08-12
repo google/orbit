@@ -10,7 +10,7 @@
 
 #include <algorithm>
 
-#include "OrbitBase/ThreadConstants.h"
+#include "OrbitBase/ThreadUtils.h"
 
 class TimeGraphLayout {
  public:
@@ -22,7 +22,7 @@ class TimeGraphLayout {
   float GetTextBoxHeight() const { return text_box_height_ * scale_; }
   float GetTextCoresHeight() const { return core_height_ * scale_; }
   float GetThreadStateTrackHeight() const { return thread_state_track_height_ * scale_; }
-  float GetEventTrackHeightFromTid(int32_t tid = orbit_base::kInvalidThreadTid) const;
+  float GetEventTrackHeightFromTid(uint32_t tid = orbit_base::kInvalidThreadId) const;
   float GetVariableTrackHeight() const { return variable_track_height_ * scale_; }
   float GetTrackContentBottomMargin() const { return track_content_bottom_margin_ * scale_; }
   float GetTrackContentTopMargin() const { return track_content_top_margin_ * scale_; }

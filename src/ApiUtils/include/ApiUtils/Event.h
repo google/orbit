@@ -21,10 +21,10 @@
 namespace orbit_api {
 
 struct ApiEventMetaData {
-  ApiEventMetaData(int32_t pid, int32_t tid, uint64_t timestamp_ns)
+  ApiEventMetaData(uint32_t pid, uint32_t tid, uint64_t timestamp_ns)
       : pid(pid), tid(tid), timestamp_ns(timestamp_ns) {}
-  int32_t pid = 0;
-  int32_t tid = 0;
+  uint32_t pid = 0;
+  uint32_t tid = 0;
   uint64_t timestamp_ns = 0;
 };
 
@@ -51,7 +51,7 @@ struct ApiEncodedString {
 };
 
 struct ApiScopeStart {
-  ApiScopeStart(int32_t pid, int32_t tid, uint64_t timestamp_ns, const char* name,
+  ApiScopeStart(uint32_t pid, uint32_t tid, uint64_t timestamp_ns, const char* name,
                 orbit_api_color color_rgba = kOrbitColorAuto, uint64_t group_id = 0,
                 uint64_t address_in_function = 0)
       : meta_data(pid, tid, timestamp_ns),
@@ -70,7 +70,7 @@ struct ApiScopeStart {
 };
 
 struct ApiScopeStop {
-  ApiScopeStop(int32_t pid, int32_t tid, uint64_t timestamp_ns)
+  ApiScopeStop(uint32_t pid, uint32_t tid, uint64_t timestamp_ns)
       : meta_data(pid, tid, timestamp_ns) {}
 
   void CopyToGrpcProto(orbit_grpc_protos::ApiScopeStop* grpc_proto) const;
@@ -79,8 +79,9 @@ struct ApiScopeStop {
 };
 
 struct ApiScopeStartAsync {
-  ApiScopeStartAsync(int32_t pid, int32_t tid, uint64_t timestamp_ns, const char* name, uint64_t id,
-                     orbit_api_color color_rgba = kOrbitColorAuto, uint64_t address_in_function = 0)
+  ApiScopeStartAsync(uint32_t pid, uint32_t tid, uint64_t timestamp_ns, const char* name,
+                     uint64_t id, orbit_api_color color_rgba = kOrbitColorAuto,
+                     uint64_t address_in_function = 0)
       : meta_data(pid, tid, timestamp_ns),
         encoded_name(name),
         id(id),
@@ -97,7 +98,7 @@ struct ApiScopeStartAsync {
 };
 
 struct ApiScopeStopAsync {
-  ApiScopeStopAsync(int32_t pid, int32_t tid, uint64_t timestamp_ns, uint64_t id)
+  ApiScopeStopAsync(uint32_t pid, uint32_t tid, uint64_t timestamp_ns, uint64_t id)
       : meta_data(pid, tid, timestamp_ns), id(id) {}
 
   void CopyToGrpcProto(orbit_grpc_protos::ApiScopeStopAsync* grpc_proto) const;
@@ -107,7 +108,7 @@ struct ApiScopeStopAsync {
 };
 
 struct ApiStringEvent {
-  ApiStringEvent(int32_t pid, int32_t tid, uint64_t timestamp_ns, const char* name, uint64_t id,
+  ApiStringEvent(uint32_t pid, uint32_t tid, uint64_t timestamp_ns, const char* name, uint64_t id,
                  orbit_api_color color_rgba = kOrbitColorAuto)
       : meta_data(pid, tid, timestamp_ns), encoded_name(name), id(id), color_rgba(color_rgba) {}
 
@@ -120,7 +121,7 @@ struct ApiStringEvent {
 };
 
 struct ApiTrackInt {
-  ApiTrackInt(int32_t pid, int32_t tid, uint64_t timestamp_ns, const char* name, int32_t data,
+  ApiTrackInt(uint32_t pid, uint32_t tid, uint64_t timestamp_ns, const char* name, int32_t data,
               orbit_api_color color_rgba = kOrbitColorAuto)
       : meta_data(pid, tid, timestamp_ns), encoded_name(name), data(data), color_rgba(color_rgba) {}
 
@@ -133,7 +134,7 @@ struct ApiTrackInt {
 };
 
 struct ApiTrackInt64 {
-  ApiTrackInt64(int32_t pid, int32_t tid, uint64_t timestamp_ns, const char* name, int64_t data,
+  ApiTrackInt64(uint32_t pid, uint32_t tid, uint64_t timestamp_ns, const char* name, int64_t data,
                 orbit_api_color color_rgba = kOrbitColorAuto)
       : meta_data(pid, tid, timestamp_ns), encoded_name(name), data(data), color_rgba(color_rgba) {}
 
@@ -146,7 +147,7 @@ struct ApiTrackInt64 {
 };
 
 struct ApiTrackUint {
-  ApiTrackUint(int32_t pid, int32_t tid, uint64_t timestamp_ns, const char* name, uint32_t data,
+  ApiTrackUint(uint32_t pid, uint32_t tid, uint64_t timestamp_ns, const char* name, uint32_t data,
                orbit_api_color color_rgba = kOrbitColorAuto)
       : meta_data(pid, tid, timestamp_ns), encoded_name(name), data(data), color_rgba(color_rgba) {}
 
@@ -159,7 +160,7 @@ struct ApiTrackUint {
 };
 
 struct ApiTrackUint64 {
-  ApiTrackUint64(int32_t pid, int32_t tid, uint64_t timestamp_ns, const char* name, uint64_t data,
+  ApiTrackUint64(uint32_t pid, uint32_t tid, uint64_t timestamp_ns, const char* name, uint64_t data,
                  orbit_api_color color_rgba = kOrbitColorAuto)
       : meta_data(pid, tid, timestamp_ns), encoded_name(name), data(data), color_rgba(color_rgba) {}
 
@@ -172,7 +173,7 @@ struct ApiTrackUint64 {
 };
 
 struct ApiTrackDouble {
-  ApiTrackDouble(int32_t pid, int32_t tid, uint64_t timestamp_ns, const char* name, double data,
+  ApiTrackDouble(uint32_t pid, uint32_t tid, uint64_t timestamp_ns, const char* name, double data,
                  orbit_api_color color_rgba = kOrbitColorAuto)
       : meta_data(pid, tid, timestamp_ns), encoded_name(name), data(data), color_rgba(color_rgba) {}
 
@@ -185,7 +186,7 @@ struct ApiTrackDouble {
 };
 
 struct ApiTrackFloat {
-  ApiTrackFloat(int32_t pid, int32_t tid, uint64_t timestamp_ns, const char* name, float data,
+  ApiTrackFloat(uint32_t pid, uint32_t tid, uint64_t timestamp_ns, const char* name, float data,
                 orbit_api_color color_rgba = kOrbitColorAuto)
       : meta_data(pid, tid, timestamp_ns), encoded_name(name), data(data), color_rgba(color_rgba) {}
 

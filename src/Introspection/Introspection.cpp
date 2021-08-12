@@ -103,8 +103,8 @@ void TracingListener::DeferApiEventProcessing(const orbit_api::ApiEventVariant& 
 }
 
 void orbit_api_start_v1(const char* name, orbit_api_color color, uint64_t group_id) {
-  int32_t process_id = orbit_base::GetCurrentProcessId();
-  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint32_t process_id = orbit_base::GetCurrentProcessId();
+  uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
 #ifdef WIN32
   void* return_address = _ReturnAddress();
@@ -126,16 +126,16 @@ void orbit_api_start_v1(const char* name, orbit_api_color color, uint64_t group_
 }
 
 void orbit_api_stop() {
-  int32_t process_id = orbit_base::GetCurrentProcessId();
-  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint32_t process_id = orbit_base::GetCurrentProcessId();
+  uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
   orbit_api::ApiScopeStop api_scope_stop{process_id, thread_id, timestamp_ns};
   TracingListener::DeferApiEventProcessing(api_scope_stop);
 }
 
 void orbit_api_start_async(const char* name, uint64_t id, orbit_api_color color) {
-  int32_t process_id = orbit_base::GetCurrentProcessId();
-  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint32_t process_id = orbit_base::GetCurrentProcessId();
+  uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
 #ifdef WIN32
   void* return_address = _ReturnAddress();
@@ -158,64 +158,64 @@ void orbit_api_start_async(const char* name, uint64_t id, orbit_api_color color)
 }
 
 void orbit_api_stop_async(uint64_t id) {
-  int32_t process_id = orbit_base::GetCurrentProcessId();
-  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint32_t process_id = orbit_base::GetCurrentProcessId();
+  uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
   orbit_api::ApiScopeStopAsync api_scope_stop_async{process_id, thread_id, timestamp_ns, id};
   TracingListener::DeferApiEventProcessing(api_scope_stop_async);
 }
 
 void orbit_api_async_string(const char* str, uint64_t id, orbit_api_color color) {
-  int32_t process_id = orbit_base::GetCurrentProcessId();
-  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint32_t process_id = orbit_base::GetCurrentProcessId();
+  uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
   orbit_api::ApiStringEvent api_string_event{process_id, thread_id, timestamp_ns, str, id, color};
   TracingListener::DeferApiEventProcessing(api_string_event);
 }
 
 void orbit_api_track_int(const char* name, int value, orbit_api_color color) {
-  int32_t process_id = orbit_base::GetCurrentProcessId();
-  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint32_t process_id = orbit_base::GetCurrentProcessId();
+  uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
   orbit_api::ApiTrackInt api_track{process_id, thread_id, timestamp_ns, name, value, color};
   TracingListener::DeferApiEventProcessing(api_track);
 }
 
 void orbit_api_track_int64(const char* name, int64_t value, orbit_api_color color) {
-  int32_t process_id = orbit_base::GetCurrentProcessId();
-  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint32_t process_id = orbit_base::GetCurrentProcessId();
+  uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
   orbit_api::ApiTrackInt64 api_track{process_id, thread_id, timestamp_ns, name, value, color};
   TracingListener::DeferApiEventProcessing(api_track);
 }
 
 void orbit_api_track_uint(const char* name, uint32_t value, orbit_api_color color) {
-  int32_t process_id = orbit_base::GetCurrentProcessId();
-  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint32_t process_id = orbit_base::GetCurrentProcessId();
+  uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
   orbit_api::ApiTrackUint api_track{process_id, thread_id, timestamp_ns, name, value, color};
   TracingListener::DeferApiEventProcessing(api_track);
 }
 
 void orbit_api_track_uint64(const char* name, uint64_t value, orbit_api_color color) {
-  int32_t process_id = orbit_base::GetCurrentProcessId();
-  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint32_t process_id = orbit_base::GetCurrentProcessId();
+  uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
   orbit_api::ApiTrackUint64 api_track{process_id, thread_id, timestamp_ns, name, value, color};
   TracingListener::DeferApiEventProcessing(api_track);
 }
 
 void orbit_api_track_float(const char* name, float value, orbit_api_color color) {
-  int32_t process_id = orbit_base::GetCurrentProcessId();
-  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint32_t process_id = orbit_base::GetCurrentProcessId();
+  uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
   orbit_api::ApiTrackFloat api_track{process_id, thread_id, timestamp_ns, name, value, color};
   TracingListener::DeferApiEventProcessing(api_track);
 }
 
 void orbit_api_track_double(const char* name, double value, orbit_api_color color) {
-  int32_t process_id = orbit_base::GetCurrentProcessId();
-  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint32_t process_id = orbit_base::GetCurrentProcessId();
+  uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
   orbit_api::ApiTrackDouble api_track{process_id, thread_id, timestamp_ns, name, value, color};
   TracingListener::DeferApiEventProcessing(api_track);

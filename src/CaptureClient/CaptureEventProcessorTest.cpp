@@ -84,7 +84,8 @@ class MockCaptureListener : public CaptureListener {
   MOCK_METHOD(void, OnUniqueCallstack, (uint64_t /*callstack_id*/, CallstackInfo /*callstack*/),
               (override));
   MOCK_METHOD(void, OnCallstackEvent, (CallstackEvent), (override));
-  MOCK_METHOD(void, OnThreadName, (int32_t /*thread_id*/, std::string /*thread_name*/), (override));
+  MOCK_METHOD(void, OnThreadName, (uint32_t /*thread_id*/, std::string /*thread_name*/),
+              (override));
   MOCK_METHOD(void, OnThreadStateSlice, (ThreadStateSliceInfo), (override));
   MOCK_METHOD(void, OnAddressInfo, (LinuxAddressInfo), (override));
   MOCK_METHOD(void, OnUniqueTracepointInfo, (uint64_t /*key*/, TracepointInfo /*tracepoint_info*/),
@@ -754,7 +755,7 @@ void ExpectCommandBufferTimerEq(const TimerInfo& actual_timer, const GpuJob& gpu
 }
 
 void ExpectDebugMarkerTimerEq(const TimerInfo& actual_timer, uint64_t cpu_begin, uint64_t cpu_end,
-                              int32_t thread_id, int32_t process_id, uint32_t depth,
+                              uint32_t thread_id, uint32_t process_id, uint32_t depth,
                               uint64_t timeline_key, uint64_t marker_key) {
   EXPECT_EQ(actual_timer.start(), cpu_begin);
   EXPECT_EQ(actual_timer.end(), cpu_end);

@@ -450,7 +450,7 @@ void TimeGraph::SelectAndMakeVisible(const TimerInfo* timer_info) {
 
 const TimerInfo* TimeGraph::FindPreviousFunctionCall(uint64_t function_address,
                                                      uint64_t current_time,
-                                                     std::optional<int32_t> thread_id) const {
+                                                     std::optional<uint32_t> thread_id) const {
   const orbit_client_protos::TimerInfo* previous_timer = nullptr;
   uint64_t goal_time = std::numeric_limits<uint64_t>::lowest();
   std::vector<const TimerChain*> chains = GetAllThreadTrackTimerChains();
@@ -473,7 +473,7 @@ const TimerInfo* TimeGraph::FindPreviousFunctionCall(uint64_t function_address,
 }
 
 const TimerInfo* TimeGraph::FindNextFunctionCall(uint64_t function_address, uint64_t current_time,
-                                                 std::optional<int32_t> thread_id) const {
+                                                 std::optional<uint32_t> thread_id) const {
   const orbit_client_protos::TimerInfo* next_timer = nullptr;
   uint64_t goal_time = std::numeric_limits<uint64_t>::max();
   std::vector<const TimerChain*> chains = GetAllThreadTrackTimerChains();
@@ -542,7 +542,7 @@ void TimeGraph::UpdateTracksPosition() {
   }
 }
 
-void TimeGraph::SelectCallstacks(float world_start, float world_end, int32_t thread_id) {
+void TimeGraph::SelectCallstacks(float world_start, float world_end, uint32_t thread_id) {
   if (world_start > world_end) {
     std::swap(world_end, world_start);
   }
@@ -567,7 +567,7 @@ void TimeGraph::SelectCallstacks(float world_start, float world_end, int32_t thr
   RequestUpdate();
 }
 
-const std::vector<CallstackEvent>& TimeGraph::GetSelectedCallstackEvents(int32_t tid) {
+const std::vector<CallstackEvent>& TimeGraph::GetSelectedCallstackEvents(uint32_t tid) {
   return selected_callstack_events_per_thread_[tid];
 }
 

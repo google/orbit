@@ -46,7 +46,7 @@ ErrorMessageOr<void> ProcessList::Refresh() {
     const std::filesystem::path& path = it->path();
     std::string folder_name = path.filename().string();
 
-    int32_t pid;
+    uint32_t pid;
     if (!absl::SimpleAtoi(folder_name, &pid)) continue;
 
     const auto iter = processes_.find(pid);

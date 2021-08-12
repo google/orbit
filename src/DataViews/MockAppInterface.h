@@ -73,7 +73,7 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(void, RemoveFrameTrack, (const orbit_client_protos::FunctionInfo&));
   MOCK_METHOD(void, RemoveFrameTrack, (uint64_t instrumented_function_id));
 
-  MOCK_METHOD(void, Disassemble, (int32_t pid, const orbit_client_protos::FunctionInfo&));
+  MOCK_METHOD(void, Disassemble, (uint32_t pid, const orbit_client_protos::FunctionInfo&));
   MOCK_METHOD(void, ShowSourceCode, (const orbit_client_protos::FunctionInfo&));
 };
 

@@ -63,7 +63,7 @@ void SystemMemoryInfoProducerRunFn(MemoryInfoListener* listener, int32_t /*pid*/
 
 std::unique_ptr<MemoryInfoProducer> CreateSystemMemoryInfoProducer(MemoryInfoListener* listener,
                                                                    uint64_t sampling_period_ns,
-                                                                   int32_t pid) {
+                                                                   uint32_t pid) {
   std::unique_ptr<MemoryInfoProducer> system_memory_info_producer =
       std::make_unique<MemoryInfoProducer>(
           sampling_period_ns, pid, [](MemoryInfoListener* listener, int32_t /*pid*/) {
@@ -79,10 +79,10 @@ std::unique_ptr<MemoryInfoProducer> CreateSystemMemoryInfoProducer(MemoryInfoLis
 
 std::unique_ptr<MemoryInfoProducer> CreateCGroupMemoryInfoProducer(MemoryInfoListener* listener,
                                                                    uint64_t sampling_period_ns,
-                                                                   int32_t pid) {
+                                                                   uint32_t pid) {
   std::unique_ptr<MemoryInfoProducer> cgroup_memory_info_producer =
       std::make_unique<MemoryInfoProducer>(
-          sampling_period_ns, pid, [](MemoryInfoListener* listener, int32_t pid) {
+          sampling_period_ns, pid, [](MemoryInfoListener* listener, uint32_t pid) {
             ErrorMessageOr<CGroupMemoryUsage> cgroup_memory_usage = GetCGroupMemoryUsage(pid);
             if (cgroup_memory_usage.has_value()) {
               listener->OnCGroupMemoryUsage(cgroup_memory_usage.value());
@@ -95,10 +95,10 @@ std::unique_ptr<MemoryInfoProducer> CreateCGroupMemoryInfoProducer(MemoryInfoLis
 
 std::unique_ptr<MemoryInfoProducer> CreateProcessMemoryInfoProducer(MemoryInfoListener* listener,
                                                                     uint64_t sampling_period_ns,
-                                                                    int32_t pid) {
+                                                                    uint32_t pid) {
   std::unique_ptr<MemoryInfoProducer> process_memory_info_producer =
       std::make_unique<MemoryInfoProducer>(
-          sampling_period_ns, pid, [](MemoryInfoListener* listener, int32_t pid) {
+          sampling_period_ns, pid, [](MemoryInfoListener* listener, uint32_t pid) {
             ErrorMessageOr<ProcessMemoryUsage> process_memory_usage = GetProcessMemoryUsage(pid);
             if (process_memory_usage.has_value()) {
               listener->OnProcessMemoryUsage(process_memory_usage.value());

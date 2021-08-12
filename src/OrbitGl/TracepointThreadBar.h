@@ -20,7 +20,7 @@ class TracepointThreadBar : public ThreadBar {
   explicit TracepointThreadBar(CaptureViewElement* parent, OrbitApp* app, TimeGraph* time_graph,
                                orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                const orbit_client_data::CaptureData* capture_data,
-                               int32_t thread_id, const Color& color);
+                               uint32_t thread_id, const Color& color);
 
   void Draw(Batcher& batcher, TextRenderer& text_renderer,
             const DrawContext& draw_context) override;

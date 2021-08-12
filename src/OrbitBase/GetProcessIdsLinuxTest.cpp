@@ -68,7 +68,7 @@ TEST(GetProcessIdsLinux, GetTidsOfProcess) {
 }
 
 TEST(GetProcessIdsLinux, GetTracerPidOfProcess) {
-  pid_t current_pid = orbit_base::GetCurrentProcessId();
+  pid_t current_pid = orbit_base::GetCurrentProcessIdNative();
   auto pid_or_error = orbit_base::GetTracerPidOfProcess(current_pid);
   EXPECT_FALSE(pid_or_error.has_error()) << pid_or_error.error().message();
   constexpr int kNoTracerPid = 0;
