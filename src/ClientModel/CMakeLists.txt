@@ -12,12 +12,10 @@ target_include_directories(ClientModel PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(ClientModel PUBLIC
-        include/ClientModel/CaptureDeserializer.h
         include/ClientModel/CaptureSerializer.h
         include/ClientModel/SamplingDataPostProcessor.h)
 
 target_sources(ClientModel PRIVATE
-        CaptureDeserializer.cpp
         CaptureSerializer.cpp
         SamplingDataPostProcessor.cpp)
 
@@ -29,8 +27,6 @@ target_link_libraries(ClientModel PUBLIC
 add_executable(ClientModelTests)
 
 target_sources(ClientModelTests PRIVATE
-        CaptureDeserializerTest.cpp
-        CaptureSerializationTestMatchers.h
         CaptureSerializerTest.cpp
         SamplingDataPostProcessorTest.cpp)
 
@@ -39,9 +35,3 @@ target_link_libraries(ClientModelTests PRIVATE
         GTest::Main)
 
 register_test(ClientModelTests)
-
-add_fuzzer(CaptureDeserializerLoadFuzzer CaptureDeserializerLoadFuzzer.cpp)
-target_link_libraries(CaptureDeserializerLoadFuzzer
-                      PRIVATE ClientModel
-                              CONAN_PKG::libprotobuf-mutator
-                              GTest::GTest)
