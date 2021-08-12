@@ -103,8 +103,8 @@ void TracingListener::DeferApiEventProcessing(const orbit_api::ApiEventVariant& 
 }
 
 void orbit_api_start(const char* name, orbit_api_color color) {
-  int32_t process_id = orbit_base::GetCurrentProcessId();
-  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint32_t process_id = orbit_base::GetCurrentProcessId();
+  uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
 #ifdef WIN32
   void* return_address = _ReturnAddress();
