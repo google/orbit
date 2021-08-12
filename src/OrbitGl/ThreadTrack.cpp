@@ -120,7 +120,7 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
   const InstrumentedFunction* func =
       capture_data_->GetInstrumentedFunctionById(timer_info->function_id());
 
-  std::string function_name;
+  std::string label;
   bool is_manual = timer_info->type() == TimerInfo::kApiScope;
 
   if (func == nullptr && !is_manual) {
@@ -128,23 +128,33 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
   }
 
   if (is_manual) {
-    function_name = timer_info->api_scope_name();
+    label = timer_info->api_scope_name();
   } else {
-    function_name = func->function_name();
+    label = func->function_name();
   }
 
-  std::string module_name =
-      func != nullptr
-          ? orbit_client_data::function_utils::GetLoadedModuleNameByPath(func->file_path())
-          : "unknown";
+  std::string module_name = orbit_client_data::CaptureData::kUnknownFunctionOrModuleName;
+  std::string function_name = orbit_client_data::CaptureData::kUnknownFunctionOrModuleName;
+  if (func != nullptr) {
+    module_name = orbit_client_data::function_utils::GetLoadedModuleNameByPath(func->file_path());
+    function_name = label;
+  } else if (timer_info->address_in_function() != 0) {
+    const auto* module = capture_data_->FindModuleByAddress(timer_info->address_in_function());
+    if (module != nullptr) {
+      module_name = module->name();
+    }
+
+    function_name = capture_data_->GetFunctionNameByAddress(timer_info->address_in_function());
+  }
 
   return absl::StrFormat(
       "<b>%s</b><br/>"
       "<i>Timing measured through %s instrumentation</i>"
       "<br/><br/>"
+      "<b>Function:</b> %s<br/>"
       "<b>Module:</b> %s<br/>"
       "<b>Time:</b> %s",
-      function_name, is_manual ? "manual" : "dynamic", module_name,
+      label, is_manual ? "manual" : "dynamic", function_name, module_name,
       orbit_display_formats::GetDisplayTime(
           TicksToDuration(timer_info->start(), timer_info->end())));
 }

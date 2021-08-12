@@ -35,13 +35,25 @@ void EnqueueApiEvent(Types... args) {
 extern "C" {
 
 void orbit_api_start(const char* name, orbit_api_color color) {
-  EnqueueApiEvent<orbit_api::ApiScopeStart>(name, color);
+  // `__builtin_return_address(0)` will return us the (possibly encoded) return address of the
+  // current function (level "0" refers to this frame, "1" would be the callers return address and
+  // so on).
+  // To decode the return address, we call `__builtin_extract_return_addr`.
+  auto return_address =
+      absl::bit_cast<uint64_t>(__builtin_extract_return_addr(__builtin_return_address(0)));
+  EnqueueApiEvent<orbit_api::ApiScopeStart>(name, color, 0LU /*group_id*/, return_address);
 }
 
 void orbit_api_stop() { EnqueueApiEvent<orbit_api::ApiScopeStop>(); }
 
 void orbit_api_start_async(const char* name, uint64_t id, orbit_api_color color) {
-  EnqueueApiEvent<orbit_api::ApiScopeStartAsync>(name, id, color);
+  // `__builtin_return_address(0)` will return us the (possibly encoded) return address of the
+  // current function (level "0" refers to this frame, "1" would be the callers return address and
+  // so on).
+  // To decode the return address, we call `__builtin_extract_return_addr`.
+  auto return_address =
+      absl::bit_cast<uint64_t>(__builtin_extract_return_addr(__builtin_return_address(0)));
+  EnqueueApiEvent<orbit_api::ApiScopeStartAsync>(name, id, color, return_address);
 }
 
 void orbit_api_stop_async(uint64_t id) { EnqueueApiEvent<orbit_api::ApiScopeStopAsync>(id); }
