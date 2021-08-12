@@ -7,9 +7,9 @@
 #include <absl/base/attributes.h>
 #include <absl/base/const_init.h>
 #include <absl/synchronization/mutex.h>
-#include <absl/time/time.h>
-#include <string.h>
 
+#include <cstring>
+#include <ctime>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -19,9 +19,15 @@
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitBase/ThreadUtils.h"
 
+#ifdef WIN32
+#include <intrin.h>
+
+#pragma intrinsic(_ReturnAddress)
+#endif
+
+using orbit_api::ApiEventVariant;
+using orbit_introspection::TracingEventCallback;
 using orbit_introspection::TracingListener;
-using orbit_introspection::TracingScope;
-using orbit_introspection::TracingTimerCallback;
 
 ABSL_CONST_INIT static absl::Mutex global_tracing_mutex(absl::kConstInit);
 ABSL_CONST_INIT static TracingListener* global_tracing_listener = nullptr;
@@ -33,16 +39,12 @@ namespace orbit_introspection {
 
 void InitializeTracing();
 
-TracingScope::TracingScope(orbit_api::EventType type, const char* name, uint64_t data,
-                           orbit_api_color color)
-    : encoded_event(type, name, data, color) {}
-
-TracingListener::TracingListener(TracingTimerCallback callback) {
+TracingListener::TracingListener(TracingEventCallback callback)
+    : user_callback_{std::move(callback)} {
   constexpr size_t kMinNumThreads = 1;
   constexpr size_t kMaxNumThreads = 1;
   thread_pool_ =
       orbit_base::ThreadPool::Create(kMinNumThreads, kMaxNumThreads, absl::Milliseconds(500));
-  user_callback_ = std::move(callback);
 
   // Activate listener (only one listener instance is supported).
   absl::MutexLock lock(&global_tracing_mutex);
@@ -84,7 +86,7 @@ struct ScopeToggle {
 };
 }  // namespace
 
-void TracingListener::DeferScopeProcessing(const TracingScope& scope) {
+void TracingListener::DeferApiEventProcessing(const orbit_api::ApiEventVariant& api_event) {
   // Prevent reentry to avoid feedback loop.
   thread_local bool is_internal_update = false;
   if (is_internal_update) return;
@@ -92,97 +94,131 @@ void TracingListener::DeferScopeProcessing(const TracingScope& scope) {
   // User callback is called from a worker thread to minimize contention on instrumented threads.
   absl::MutexLock lock(&global_tracing_mutex);
   if (IsShutdownInitiated()) return;
-  global_tracing_listener->thread_pool_->Schedule([scope]() {
+  global_tracing_listener->thread_pool_->Schedule([api_event]() {
     ScopeToggle scope_toggle(&is_internal_update, true);
     absl::MutexLock lock(&global_tracing_mutex);
     if (!IsActive()) return;
-    global_tracing_listener->user_callback_(scope);
+    global_tracing_listener->user_callback_(api_event);
   });
 }
 
-static std::vector<TracingScope>& GetThreadLocalScopes() {
-  thread_local std::vector<TracingScope> thread_local_scopes;
-  return thread_local_scopes;
-}
-
 void orbit_api_start(const char* name, orbit_api_color color) {
-  GetThreadLocalScopes().emplace_back(
-      TracingScope(orbit_api::kScopeStart, name, /*data*/ 0, color));
-  auto& scope = GetThreadLocalScopes().back();
-  scope.begin = orbit_base::CaptureTimestampNs();
+  int32_t process_id = orbit_base::GetCurrentProcessId();
+  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
+#ifdef WIN32
+  void* return_address = _ReturnAddress();
+#else
+  // `__builtin_return_address(0)` will return us the (possibly encoded) return address of the
+  // current function (level "0" refers to this frame, "1" would be the callers return address and
+  // so on).
+  // To decode the return address, we call `__builtin_extract_return_addr`.
+  void* return_address = __builtin_extract_return_addr(__builtin_return_address(0));
+#endif
+  orbit_api::ApiScopeStart api_scope_start{process_id,
+                                           thread_id,
+                                           timestamp_ns,
+                                           name,
+                                           color,
+                                           0,
+                                           absl::bit_cast<uint64_t>(return_address)};
+  TracingListener::DeferApiEventProcessing(api_scope_start);
 }
 
 void orbit_api_stop() {
-  std::vector<TracingScope>& thread_local_scopes = GetThreadLocalScopes();
-  if (thread_local_scopes.size() == 0) return;
-  auto& scope = thread_local_scopes.back();
-  scope.end = orbit_base::CaptureTimestampNs();
-  scope.depth = GetThreadLocalScopes().size() - 1;
-  scope.tid = static_cast<uint32_t>(orbit_base::GetCurrentThreadId());
-  TracingListener::DeferScopeProcessing(scope);
-  GetThreadLocalScopes().pop_back();
+  int32_t process_id = orbit_base::GetCurrentProcessId();
+  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
+  orbit_api::ApiScopeStop api_scope_stop{process_id, thread_id, timestamp_ns};
+  TracingListener::DeferApiEventProcessing(api_scope_stop);
 }
 
 void orbit_api_start_async(const char* name, uint64_t id, orbit_api_color color) {
-  TracingScope scope(orbit_api::kScopeStartAsync, name, id, color);
-  scope.begin = orbit_base::CaptureTimestampNs();
-  scope.end = scope.begin;
-  scope.tid = static_cast<uint32_t>(orbit_base::GetCurrentThreadId());
-  TracingListener::DeferScopeProcessing(scope);
+  int32_t process_id = orbit_base::GetCurrentProcessId();
+  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
+#ifdef WIN32
+  void* return_address = _ReturnAddress();
+#else
+  // `__builtin_return_address(0)` will return us the (possibly encoded) return address of the
+  // current function (level "0" refers to this frame, "1" would be the callers return address and
+  // so on).
+  // To decode the return address, we call `__builtin_extract_return_addr`.
+  void* return_address = __builtin_extract_return_addr(__builtin_return_address(0));
+#endif
+  orbit_api::ApiScopeStartAsync api_scope_start_async{process_id,
+                                                      thread_id,
+                                                      timestamp_ns,
+                                                      name,
+                                                      id,
+                                                      color,
+                                                      absl::bit_cast<uint64_t>(return_address)};
+
+  TracingListener::DeferApiEventProcessing(api_scope_start_async);
 }
 
 void orbit_api_stop_async(uint64_t id) {
-  TracingScope scope(orbit_api::kScopeStopAsync, /*name*/ nullptr, id);
-  scope.begin = orbit_base::CaptureTimestampNs();
-  scope.end = scope.begin;
-  scope.tid = static_cast<uint32_t>(orbit_base::GetCurrentThreadId());
-  TracingListener::DeferScopeProcessing(scope);
+  int32_t process_id = orbit_base::GetCurrentProcessId();
+  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
+  orbit_api::ApiScopeStopAsync api_scope_stop_async{process_id, thread_id, timestamp_ns, id};
+  TracingListener::DeferApiEventProcessing(api_scope_stop_async);
 }
 
 void orbit_api_async_string(const char* str, uint64_t id, orbit_api_color color) {
-  if (str == nullptr) return;
-  TracingScope scope(orbit_api::kString, /*name*/ nullptr, id, color);
-  auto& e = scope.encoded_event;
-  constexpr size_t chunk_size = orbit_api::kMaxEventStringSize - 1;
-  const char* end = str + strlen(str);
-  while (str < end) {
-    std::strncpy(e.event.name, str, chunk_size);
-    e.event.name[chunk_size] = 0;
-    TracingListener::DeferScopeProcessing(scope);
-    str += chunk_size;
-  }
-}
-
-static inline void TrackValue(orbit_api::EventType type, const char* name, uint64_t value,
-                              orbit_api_color color) {
-  TracingScope scope(type, name, value, color);
-  scope.begin = orbit_base::CaptureTimestampNs();
-  scope.tid = static_cast<uint32_t>(orbit_base::GetCurrentThreadId());
-  TracingListener::DeferScopeProcessing(scope);
+  int32_t process_id = orbit_base::GetCurrentProcessId();
+  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
+  orbit_api::ApiStringEvent api_string_event{process_id, thread_id, timestamp_ns, str, id, color};
+  TracingListener::DeferApiEventProcessing(api_string_event);
 }
 
 void orbit_api_track_int(const char* name, int value, orbit_api_color color) {
-  TrackValue(orbit_api::kTrackInt, name, orbit_api::Encode<uint64_t>(value), color);
+  int32_t process_id = orbit_base::GetCurrentProcessId();
+  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
+  orbit_api::ApiTrackInt api_track{process_id, thread_id, timestamp_ns, name, value, color};
+  TracingListener::DeferApiEventProcessing(api_track);
 }
 
 void orbit_api_track_int64(const char* name, int64_t value, orbit_api_color color) {
-  TrackValue(orbit_api::kTrackInt64, name, orbit_api::Encode<uint64_t>(value), color);
+  int32_t process_id = orbit_base::GetCurrentProcessId();
+  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
+  orbit_api::ApiTrackInt64 api_track{process_id, thread_id, timestamp_ns, name, value, color};
+  TracingListener::DeferApiEventProcessing(api_track);
 }
 
 void orbit_api_track_uint(const char* name, uint32_t value, orbit_api_color color) {
-  TrackValue(orbit_api::kTrackUint, name, orbit_api::Encode<uint64_t>(value), color);
+  int32_t process_id = orbit_base::GetCurrentProcessId();
+  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
+  orbit_api::ApiTrackUint api_track{process_id, thread_id, timestamp_ns, name, value, color};
+  TracingListener::DeferApiEventProcessing(api_track);
 }
 
 void orbit_api_track_uint64(const char* name, uint64_t value, orbit_api_color color) {
-  TrackValue(orbit_api::kTrackUint64, name, orbit_api::Encode<uint64_t>(value), color);
+  int32_t process_id = orbit_base::GetCurrentProcessId();
+  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
+  orbit_api::ApiTrackUint64 api_track{process_id, thread_id, timestamp_ns, name, value, color};
+  TracingListener::DeferApiEventProcessing(api_track);
 }
 
 void orbit_api_track_float(const char* name, float value, orbit_api_color color) {
-  TrackValue(orbit_api::kTrackFloat, name, orbit_api::Encode<uint64_t>(value), color);
+  int32_t process_id = orbit_base::GetCurrentProcessId();
+  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
+  orbit_api::ApiTrackFloat api_track{process_id, thread_id, timestamp_ns, name, value, color};
+  TracingListener::DeferApiEventProcessing(api_track);
 }
 
 void orbit_api_track_double(const char* name, double value, orbit_api_color color) {
-  TrackValue(orbit_api::kTrackDouble, name, orbit_api::Encode<uint64_t>(value), color);
+  int32_t process_id = orbit_base::GetCurrentProcessId();
+  int32_t thread_id = orbit_base::GetCurrentThreadId();
+  uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
+  orbit_api::ApiTrackDouble api_track{process_id, thread_id, timestamp_ns, name, value, color};
+  TracingListener::DeferApiEventProcessing(api_track);
 }
 
 namespace orbit_introspection {

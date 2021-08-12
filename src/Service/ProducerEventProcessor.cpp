@@ -45,7 +45,6 @@ using orbit_grpc_protos::GpuQueueSubmission;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointInfo;
-using orbit_grpc_protos::IntrospectionScope;
 using orbit_grpc_protos::LostPerfRecordsEvent;
 using orbit_grpc_protos::MemoryUsageEvent;
 using orbit_grpc_protos::ModulesSnapshot;
@@ -108,7 +107,6 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessCallstackSampleAndTransferOwnership(uint64_t producer_id,
                                                   CallstackSample* callstack_sample);
   void ProcessInternedString(uint64_t producer_id, InternedString* interned_string);
-  void ProcessIntrospectionScopeAndTransferOwnership(IntrospectionScope* introspection_scope);
   void ProcessModuleUpdateEventAndTransferOwnership(ModuleUpdateEvent* module_update_event);
   void ProcessModulesSnapshotAndTransferOwnership(ModulesSnapshot* modules_snapshot);
   void ProcessSchedulingSliceAndTransferOwnership(SchedulingSlice* scheduling_slice);
@@ -309,13 +307,6 @@ void ProducerEventProcessorImpl::ProcessInternedString(uint64_t producer_id,
 
   ClientCaptureEvent event;
   *event.mutable_interned_string() = std::move(*interned_string);
-  capture_event_buffer_->AddEvent(std::move(event));
-}
-
-void ProducerEventProcessorImpl::ProcessIntrospectionScopeAndTransferOwnership(
-    IntrospectionScope* introspection_scope) {
-  ClientCaptureEvent event;
-  event.set_allocated_introspection_scope(introspection_scope);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
@@ -575,9 +566,6 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
       break;
     case ProducerCaptureEvent::kFullAddressInfo:
       ProcessFullAddressInfo(event.mutable_full_address_info());
-      break;
-    case ProducerCaptureEvent::kIntrospectionScope:
-      ProcessIntrospectionScopeAndTransferOwnership(event.release_introspection_scope());
       break;
     case ProducerCaptureEvent::kModuleUpdateEvent:
       ProcessModuleUpdateEventAndTransferOwnership(event.release_module_update_event());

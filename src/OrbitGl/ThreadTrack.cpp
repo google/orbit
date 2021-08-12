@@ -163,18 +163,13 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
 
 bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
   // TODO(b/179225487): Filtering for manually instrumented scopes is not yet supported.
-  return timer_info.type() == TimerInfo::kIntrospection ||
-         timer_info.type() == TimerInfo::kApiScope ||
+  return timer_info.type() == TimerInfo::kApiScope ||
          app_->IsFunctionVisible(timer_info.function_id());
 }
 
 bool ThreadTrack::IsTrackSelected() const {
   return GetThreadId() != orbit_base::kAllProcessThreadsTid &&
          app_->selected_thread_id() == GetThreadId();
-}
-
-[[nodiscard]] static inline Color ToColor(uint64_t val) {
-  return Color((val >> 24) & 0xFF, (val >> 16) & 0xFF, (val >> 8) & 0xFF, val & 0xFF);
 }
 
 [[nodiscard]] static std::optional<Color> GetUserColor(const TimerInfo& timer_info) {
@@ -230,10 +225,6 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
   Color color = kInactiveColor;
   if (user_color.has_value()) {
     color = user_color.value();
-  } else if (timer_info.type() == TimerInfo::kIntrospection) {
-    orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
-    color = event.color == kOrbitColorAuto ? TimeGraph::GetColor(event.name)
-                                           : ToColor(static_cast<uint64_t>(event.color));
   } else {
     color = TimeGraph::GetThreadColor(timer_info.thread_id());
   }
@@ -336,10 +327,6 @@ std::string ThreadTrack::GetTimesliceText(const TimerInfo& timer_info) const {
     std::string extra_info = GetExtraInfo(timer_info);
     const std::string& name = func->function_name();
     return absl::StrFormat("%s %s %s", name, extra_info.c_str(), time);
-  }
-  if (timer_info.type() == TimerInfo::kIntrospection) {
-    auto api_event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
-    return absl::StrFormat("%s %s", api_event.name, time);
   }
   if (timer_info.type() == TimerInfo::kApiScope) {
     std::string extra_info = GetExtraInfo(timer_info);

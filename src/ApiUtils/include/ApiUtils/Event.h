@@ -13,6 +13,7 @@
 #include "EncodedString.h"
 #include "OrbitBase/Logging.h"
 #include "absl/base/casts.h"
+#include "capture.pb.h"
 
 // We don't want to store protos in the LockFreeApiEventProducer's buffer, as they introduce
 // expensive and unnecessary indirections and allocations. Therefore, we use the a std::variant of
@@ -59,6 +60,8 @@ struct ApiScopeStart {
         address_in_function(address_in_function),
         color_rgba(color_rgba) {}
 
+  void CopyToGrpcProto(orbit_grpc_protos::ApiScopeStart* grpc_proto) const;
+
   ApiEventMetaData meta_data;
   ApiEncodedString encoded_name;
   uint64_t group_id = 0;
@@ -69,6 +72,8 @@ struct ApiScopeStart {
 struct ApiScopeStop {
   ApiScopeStop(int32_t pid, int32_t tid, uint64_t timestamp_ns)
       : meta_data(pid, tid, timestamp_ns) {}
+
+  void CopyToGrpcProto(orbit_grpc_protos::ApiScopeStop* grpc_proto) const;
 
   ApiEventMetaData meta_data;
 };
@@ -82,6 +87,8 @@ struct ApiScopeStartAsync {
         address_in_function(address_in_function),
         color_rgba(color_rgba) {}
 
+  void CopyToGrpcProto(orbit_grpc_protos::ApiScopeStartAsync* grpc_proto) const;
+
   ApiEventMetaData meta_data;
   ApiEncodedString encoded_name;
   uint64_t id = 0;
@@ -93,6 +100,8 @@ struct ApiScopeStopAsync {
   ApiScopeStopAsync(int32_t pid, int32_t tid, uint64_t timestamp_ns, uint64_t id)
       : meta_data(pid, tid, timestamp_ns), id(id) {}
 
+  void CopyToGrpcProto(orbit_grpc_protos::ApiScopeStopAsync* grpc_proto) const;
+
   ApiEventMetaData meta_data;
   uint64_t id = 0;
 };
@@ -101,6 +110,8 @@ struct ApiStringEvent {
   ApiStringEvent(int32_t pid, int32_t tid, uint64_t timestamp_ns, const char* name, uint64_t id,
                  orbit_api_color color_rgba = kOrbitColorAuto)
       : meta_data(pid, tid, timestamp_ns), encoded_name(name), id(id), color_rgba(color_rgba) {}
+
+  void CopyToGrpcProto(orbit_grpc_protos::ApiStringEvent* grpc_proto) const;
 
   ApiEventMetaData meta_data;
   ApiEncodedString encoded_name;
@@ -113,6 +124,8 @@ struct ApiTrackInt {
               orbit_api_color color_rgba = kOrbitColorAuto)
       : meta_data(pid, tid, timestamp_ns), encoded_name(name), data(data), color_rgba(color_rgba) {}
 
+  void CopyToGrpcProto(orbit_grpc_protos::ApiTrackInt* grpc_proto) const;
+
   ApiEventMetaData meta_data;
   ApiEncodedString encoded_name;
   int32_t data = 0;
@@ -123,6 +136,8 @@ struct ApiTrackInt64 {
   ApiTrackInt64(int32_t pid, int32_t tid, uint64_t timestamp_ns, const char* name, int64_t data,
                 orbit_api_color color_rgba = kOrbitColorAuto)
       : meta_data(pid, tid, timestamp_ns), encoded_name(name), data(data), color_rgba(color_rgba) {}
+
+  void CopyToGrpcProto(orbit_grpc_protos::ApiTrackInt64* grpc_proto) const;
 
   ApiEventMetaData meta_data;
   ApiEncodedString encoded_name;
@@ -135,6 +150,8 @@ struct ApiTrackUint {
                orbit_api_color color_rgba = kOrbitColorAuto)
       : meta_data(pid, tid, timestamp_ns), encoded_name(name), data(data), color_rgba(color_rgba) {}
 
+  void CopyToGrpcProto(orbit_grpc_protos::ApiTrackUint* grpc_proto) const;
+
   ApiEventMetaData meta_data;
   ApiEncodedString encoded_name;
   uint32_t data = 0;
@@ -145,6 +162,8 @@ struct ApiTrackUint64 {
   ApiTrackUint64(int32_t pid, int32_t tid, uint64_t timestamp_ns, const char* name, uint64_t data,
                  orbit_api_color color_rgba = kOrbitColorAuto)
       : meta_data(pid, tid, timestamp_ns), encoded_name(name), data(data), color_rgba(color_rgba) {}
+
+  void CopyToGrpcProto(orbit_grpc_protos::ApiTrackUint64* grpc_proto) const;
 
   ApiEventMetaData meta_data;
   ApiEncodedString encoded_name;
@@ -157,6 +176,8 @@ struct ApiTrackDouble {
                  orbit_api_color color_rgba = kOrbitColorAuto)
       : meta_data(pid, tid, timestamp_ns), encoded_name(name), data(data), color_rgba(color_rgba) {}
 
+  void CopyToGrpcProto(orbit_grpc_protos::ApiTrackDouble* grpc_proto) const;
+
   ApiEventMetaData meta_data;
   ApiEncodedString encoded_name;
   double data = 0.;
@@ -167,6 +188,8 @@ struct ApiTrackFloat {
   ApiTrackFloat(int32_t pid, int32_t tid, uint64_t timestamp_ns, const char* name, float data,
                 orbit_api_color color_rgba = kOrbitColorAuto)
       : meta_data(pid, tid, timestamp_ns), encoded_name(name), data(data), color_rgba(color_rgba) {}
+
+  void CopyToGrpcProto(orbit_grpc_protos::ApiTrackFloat* grpc_proto) const;
 
   ApiEventMetaData meta_data;
   ApiEncodedString encoded_name;

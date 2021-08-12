@@ -191,10 +191,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
  protected:
   [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleInterface>
   CreateAccessibleInterface() override;
-
-  void ProcessIntrospectionTimer(const orbit_client_protos::TimerInfo& timer_info);
-  [[deprecated]] void ProcessValueTrackingTimerLegacy(
-      const orbit_client_protos::TimerInfo& timer_info);
   void ProcessAsyncTimer(const std::string& track_name,
                          const orbit_client_protos::TimerInfo& timer_info);
   void ProcessSystemMemoryTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);

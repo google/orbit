@@ -8,7 +8,8 @@ target_sources(ApiUtils PUBLIC
         include/ApiUtils/EncodedEvent.h
         include/ApiUtils/EncodedString.h)
 target_sources(ApiUtils PRIVATE
-        EncodedString.cpp)
+        EncodedString.cpp
+        Event.cpp)
 target_link_libraries(ApiUtils PUBLIC
         ApiInterface
         GrpcProtos

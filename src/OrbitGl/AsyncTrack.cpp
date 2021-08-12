@@ -42,29 +42,16 @@ AsyncTrack::AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph,
   if (timer_info == nullptr) return "";
   auto* manual_inst_manager = app_->GetManualInstrumentationManager();
 
-  CHECK(timer_info->type() == TimerInfo::kIntrospection ||
-        timer_info->type() == TimerInfo::kApiScopeAsync);
+  CHECK(timer_info->type() == TimerInfo::kApiScopeAsync);
 
-  uint64_t event_id = 0;
-  if (timer_info->type() == TimerInfo::kApiScopeAsync) {
-    event_id = timer_info->api_async_scope_id();
-  } else {
-    CHECK(timer_info->type() == TimerInfo::kIntrospection);
-    orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(*timer_info);
-    event_id = event.data;
-  }
+  uint64_t event_id = timer_info->api_async_scope_id();
   std::string label = manual_inst_manager->GetString(event_id);
 
-  std::string module_name = orbit_client_data::CaptureData::kUnknownFunctionOrModuleName;
   std::string function_name =
       capture_data_->GetFunctionNameByAddress(timer_info->address_in_function());
 
+  std::string module_name = orbit_client_data::CaptureData::kUnknownFunctionOrModuleName;
   if (timer_info->address_in_function() != 0) {
-    const orbit_client_protos::FunctionInfo* function =
-        capture_data_->FindFunctionByAddress(timer_info->address_in_function(), false);
-    if (function != nullptr) {
-      function_name = function->pretty_name();
-    }
     const orbit_client_data::ModuleData* module =
         capture_data_->FindModuleByAddress(timer_info->address_in_function());
     if (module != nullptr) {
@@ -105,21 +92,16 @@ float AsyncTrack::GetDefaultBoxHeight() const {
 }
 
 std::string AsyncTrack::GetTimesliceText(const TimerInfo& timer_info) const {
+  CHECK(timer_info.type() == TimerInfo::kApiScopeAsync);
   std::string time = GetDisplayTime(timer_info);
-  uint64_t event_id = 0;
-  if (timer_info.type() == TimerInfo::kApiScopeAsync) {
-    event_id = timer_info.api_async_scope_id();
-  } else {
-    CHECK(timer_info.type() == TimerInfo::kIntrospection);
-    orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
-    event_id = event.data;
-  }
+  uint64_t event_id = timer_info.api_async_scope_id();
   std::string name = app_->GetManualInstrumentationManager()->GetString(event_id);
   return absl::StrFormat("%s %s", name, time);
 }
 
 Color AsyncTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
                                 bool is_highlighted) const {
+  CHECK(timer_info.type() == TimerInfo::kApiScopeAsync);
   const Color kInactiveColor(100, 100, 100, 255);
   const Color kSelectionColor(0, 128, 255, 255);
   if (is_highlighted) {
@@ -143,15 +125,8 @@ Color AsyncTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
                  static_cast<uint8_t>(timer_info.color().alpha()));
   }
 
-  uint64_t event_id = 0;
-  if (timer_info.type() == TimerInfo::kApiScopeAsync) {
-    event_id = timer_info.api_async_scope_id();
-  } else {
-    CHECK(timer_info.type() == TimerInfo::kIntrospection);
-    orbit_api::Event event = ManualInstrumentationManager::ApiEventFromTimerInfo(timer_info);
-    event_id = event.data;
-  }
-
+  uint64_t event_id = timer_info.api_async_scope_id();
+  ;
   std::string name = app_->GetManualInstrumentationManager()->GetString(event_id);
   Color color = TimeGraph::GetColor(name);
 

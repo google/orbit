@@ -9,6 +9,7 @@
 
 #include <memory>
 
+#include "CaptureClient/ApiEventProcessor.h"
 #include "CaptureWindow.h"
 #include "ClientData/CaptureData.h"
 #include "Introspection/Introspection.h"
@@ -40,6 +41,9 @@ class IntrospectionWindow : public CaptureWindow {
 
   std::unique_ptr<orbit_introspection::TracingListener> introspection_listener_;
   std::unique_ptr<orbit_client_data::CaptureData> capture_data_;
+
+  std::unique_ptr<orbit_capture_client::CaptureListener> capture_listener_;
+  orbit_capture_client::ApiEventProcessor api_event_processor_;
 };
 
 #endif  // ORBIT_GL_INTROSPECTION_WINDOW_H_

@@ -34,7 +34,6 @@ using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::GpuQueueSubmission;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
-using orbit_grpc_protos::IntrospectionScope;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadStateSlice;
@@ -60,7 +59,6 @@ class CaptureEventProcessorForListener : public CaptureEventProcessor {
   void ProcessInternedCallstack(orbit_grpc_protos::InternedCallstack interned_callstack);
   void ProcessCallstackSample(const orbit_grpc_protos::CallstackSample& callstack_sample);
   void ProcessFunctionCall(const orbit_grpc_protos::FunctionCall& function_call);
-  void ProcessIntrospectionScope(const orbit_grpc_protos::IntrospectionScope& introspection_scope);
   void ProcessInternedString(orbit_grpc_protos::InternedString interned_string);
   void ProcessModuleUpdate(orbit_grpc_protos::ModuleUpdateEvent module_update);
   void ProcessModulesSnapshot(const orbit_grpc_protos::ModulesSnapshot& modules_snapshot);
@@ -134,9 +132,6 @@ void CaptureEventProcessorForListener::ProcessEvent(const ClientCaptureEvent& ev
       break;
     case ClientCaptureEvent::kFunctionCall:
       ProcessFunctionCall(event.function_call());
-      break;
-    case ClientCaptureEvent::kIntrospectionScope:
-      ProcessIntrospectionScope(event.introspection_scope());
       break;
     case ClientCaptureEvent::kInternedString:
       ProcessInternedString(event.interned_string());
@@ -313,26 +308,6 @@ void CaptureEventProcessorForListener::ProcessFunctionCall(const FunctionCall& f
   for (int i = 0; i < function_call.registers_size(); ++i) {
     timer_info.add_registers(function_call.registers(i));
   }
-
-  gpu_queue_submission_processor_.UpdateBeginCaptureTime(begin_timestamp_ns);
-
-  capture_listener_->OnTimer(timer_info);
-}
-
-void CaptureEventProcessorForListener::ProcessIntrospectionScope(
-    const IntrospectionScope& introspection_scope) {
-  TimerInfo timer_info;
-  timer_info.set_process_id(introspection_scope.pid());
-  timer_info.set_thread_id(introspection_scope.tid());
-  uint64_t begin_timestamp_ns =
-      introspection_scope.end_timestamp_ns() - introspection_scope.duration_ns();
-  timer_info.set_start(begin_timestamp_ns);
-  timer_info.set_end(introspection_scope.end_timestamp_ns());
-  timer_info.set_depth(static_cast<uint8_t>(introspection_scope.depth()));
-  timer_info.set_function_id(orbit_grpc_protos::kInvalidFunctionId);  // function id n/a, set to 0
-  timer_info.set_processor(-1);  // cpu info not available, set to invalid value
-  timer_info.set_type(TimerInfo::kIntrospection);
-  timer_info.mutable_registers()->CopyFrom(introspection_scope.registers());
 
   gpu_queue_submission_processor_.UpdateBeginCaptureTime(begin_timestamp_ns);
 
