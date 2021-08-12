@@ -25,7 +25,7 @@ target_link_libraries(Introspection PUBLIC
 add_executable(IntrospectionTests)
 
 target_sources(IntrospectionTests PRIVATE
-        IntrospectionTest.cpp)
+        IntrospectionSmokeTest.cpp)
 
 target_link_libraries(IntrospectionTests PRIVATE
         Introspection
