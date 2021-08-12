@@ -14,78 +14,78 @@ using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::CaptureStarted;
 
 namespace {
-inline void HandleCaptureEvent(const orbit_api::ApiScopeStart& scope_start,
-                               orbit_capture_client::ApiEventProcessor* api_event_processor) {
+void HandleCaptureEvent(const orbit_api::ApiScopeStart& scope_start,
+                        orbit_capture_client::ApiEventProcessor* api_event_processor) {
   orbit_grpc_protos::ApiScopeStart api_event;
   scope_start.CopyToGrpcProto(&api_event);
   api_event_processor->ProcessApiScopeStart(api_event);
 }
 
-inline void HandleCaptureEvent(const orbit_api::ApiScopeStop& scope_stop,
-                               orbit_capture_client::ApiEventProcessor* api_event_processor) {
+void HandleCaptureEvent(const orbit_api::ApiScopeStop& scope_stop,
+                        orbit_capture_client::ApiEventProcessor* api_event_processor) {
   orbit_grpc_protos::ApiScopeStop api_event;
   scope_stop.CopyToGrpcProto(&api_event);
   api_event_processor->ProcessApiScopeStop(api_event);
 }
 
-inline void HandleCaptureEvent(const orbit_api::ApiScopeStartAsync& scope_start_async,
-                               orbit_capture_client::ApiEventProcessor* api_event_processor) {
+void HandleCaptureEvent(const orbit_api::ApiScopeStartAsync& scope_start_async,
+                        orbit_capture_client::ApiEventProcessor* api_event_processor) {
   orbit_grpc_protos::ApiScopeStartAsync api_event;
   scope_start_async.CopyToGrpcProto(&api_event);
   api_event_processor->ProcessApiScopeStartAsync(api_event);
 }
 
-inline void HandleCaptureEvent(const orbit_api::ApiScopeStopAsync& scope_stop_async,
-                               orbit_capture_client::ApiEventProcessor* api_event_processor) {
+void HandleCaptureEvent(const orbit_api::ApiScopeStopAsync& scope_stop_async,
+                        orbit_capture_client::ApiEventProcessor* api_event_processor) {
   orbit_grpc_protos::ApiScopeStopAsync api_event;
   scope_stop_async.CopyToGrpcProto(&api_event);
   api_event_processor->ProcessApiScopeStopAsync(api_event);
 }
 
-inline void HandleCaptureEvent(const orbit_api::ApiStringEvent& string_event,
-                               orbit_capture_client::ApiEventProcessor* api_event_processor) {
+void HandleCaptureEvent(const orbit_api::ApiStringEvent& string_event,
+                        orbit_capture_client::ApiEventProcessor* api_event_processor) {
   orbit_grpc_protos::ApiStringEvent api_event;
   string_event.CopyToGrpcProto(&api_event);
   api_event_processor->ProcessApiStringEvent(api_event);
 }
 
-inline void HandleCaptureEvent(const orbit_api::ApiTrackDouble& track_double,
-                               orbit_capture_client::ApiEventProcessor* api_event_processor) {
+void HandleCaptureEvent(const orbit_api::ApiTrackDouble& track_double,
+                        orbit_capture_client::ApiEventProcessor* api_event_processor) {
   orbit_grpc_protos::ApiTrackDouble api_event;
   track_double.CopyToGrpcProto(&api_event);
   api_event_processor->ProcessApiTrackDouble(api_event);
 }
 
-inline void HandleCaptureEvent(const orbit_api::ApiTrackFloat& track_float,
-                               orbit_capture_client::ApiEventProcessor* api_event_processor) {
+void HandleCaptureEvent(const orbit_api::ApiTrackFloat& track_float,
+                        orbit_capture_client::ApiEventProcessor* api_event_processor) {
   orbit_grpc_protos::ApiTrackFloat api_event;
   track_float.CopyToGrpcProto(&api_event);
   api_event_processor->ProcessApiTrackFloat(api_event);
 }
 
-inline void HandleCaptureEvent(const orbit_api::ApiTrackInt& track_int,
-                               orbit_capture_client::ApiEventProcessor* api_event_processor) {
+void HandleCaptureEvent(const orbit_api::ApiTrackInt& track_int,
+                        orbit_capture_client::ApiEventProcessor* api_event_processor) {
   orbit_grpc_protos::ApiTrackInt api_event;
   track_int.CopyToGrpcProto(&api_event);
   api_event_processor->ProcessApiTrackInt(api_event);
 }
 
-inline void HandleCaptureEvent(const orbit_api::ApiTrackInt64& track_int64,
-                               orbit_capture_client::ApiEventProcessor* api_event_processor) {
+void HandleCaptureEvent(const orbit_api::ApiTrackInt64& track_int64,
+                        orbit_capture_client::ApiEventProcessor* api_event_processor) {
   orbit_grpc_protos::ApiTrackInt64 api_event;
   track_int64.CopyToGrpcProto(&api_event);
   api_event_processor->ProcessApiTrackInt64(api_event);
 }
 
-inline void HandleCaptureEvent(const orbit_api::ApiTrackUint& track_uint,
-                               orbit_capture_client::ApiEventProcessor* api_event_processor) {
+void HandleCaptureEvent(const orbit_api::ApiTrackUint& track_uint,
+                        orbit_capture_client::ApiEventProcessor* api_event_processor) {
   orbit_grpc_protos::ApiTrackUint api_event;
   track_uint.CopyToGrpcProto(&api_event);
   api_event_processor->ProcessApiTrackUint(api_event);
 }
 
-inline void HandleCaptureEvent(const orbit_api::ApiTrackUint64& track_uint64,
-                               orbit_capture_client::ApiEventProcessor* api_event_processor) {
+void HandleCaptureEvent(const orbit_api::ApiTrackUint64& track_uint64,
+                        orbit_capture_client::ApiEventProcessor* api_event_processor) {
   orbit_grpc_protos::ApiTrackUint64 api_event;
   track_uint64.CopyToGrpcProto(&api_event);
   api_event_processor->ProcessApiTrackUint64(api_event);
@@ -93,8 +93,8 @@ inline void HandleCaptureEvent(const orbit_api::ApiTrackUint64& track_uint64,
 
 // The variant type `ApiEventVariant` requires to contain `std::monostate` in order to be default-
 // constructable. However, that state is never expected to be called in the visitor.
-inline void HandleCaptureEvent(const std::monostate& /*unused*/,
-                               orbit_capture_client::ApiEventProcessor* /*unused*/) {
+void HandleCaptureEvent(const std::monostate& /*unused*/,
+                        orbit_capture_client::ApiEventProcessor* /*unused*/) {
   UNREACHABLE();
 }
 
