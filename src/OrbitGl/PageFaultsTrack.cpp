@@ -72,12 +72,6 @@ std::string PageFaultsTrack::GetTooltip() const {
 void PageFaultsTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
                            const DrawContext& draw_context) {
   UpdatePositionOfSubtracks();
-  // If being collapsed, the page faults track will show a collapsed version of the major page
-  // faults subtrack. Hence, the height of major page faults subtrack should always be updated as
-  // long as the subtrack is not empty.
-  if (!major_page_faults_track_->IsEmpty()) {
-    major_page_faults_track_->SetSize(size_[0], major_page_faults_track_->GetHeight());
-  }
 
   Track::Draw(batcher, text_renderer, draw_context);
 
@@ -89,7 +83,6 @@ void PageFaultsTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
   }
 
   if (!minor_page_faults_track_->IsEmpty()) {
-    minor_page_faults_track_->SetSize(size_[0], minor_page_faults_track_->GetHeight());
     minor_page_faults_track_->Draw(batcher, text_renderer, sub_track_draw_context);
   }
 }

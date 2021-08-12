@@ -799,7 +799,7 @@ void TimeGraph::DrawTracks(Batcher& batcher, TextRenderer& text_renderer,
   float track_width = GetVisibleWidth();
   float track_pos_x = viewport_->GetWorldTopLeft()[0];
   for (auto& track : track_manager_->GetVisibleTracks()) {
-    track->SetSize(track_width, track->GetHeight());
+    track->SetWidth(track_width);
     track->SetPos(track_pos_x, track->GetPos()[1]);
 
     float z_offset = 0;

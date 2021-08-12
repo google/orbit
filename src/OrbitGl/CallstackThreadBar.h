@@ -35,6 +35,9 @@ class CallstackThreadBar : public ThreadBar {
             const DrawContext& draw_context) override;
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset = 0) override;
+  [[nodiscard]] float GetHeight() const override {
+    return layout_->GetEventTrackHeightFromTid(GetThreadId());
+  }
 
   void OnPick(int x, int y) override;
   void OnRelease() override;

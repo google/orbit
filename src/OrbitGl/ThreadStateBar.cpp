@@ -49,7 +49,7 @@ void ThreadStateBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
   thread_state_bar_z += draw_context.z_offset;
 
   // Draw a transparent track just for clicking.
-  Box box(pos_, Vec2(size_[0], -size_[1]), thread_state_bar_z);
+  Box box(pos_, Vec2(GetWidth(), -GetHeight()), thread_state_bar_z);
   static const Color kTransparent{0, 0, 0, 0};
   batcher.AddBox(box, kTransparent, shared_from_this());
 }
@@ -188,7 +188,7 @@ void ThreadStateBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint6
         const float width = x1 - x0;
 
         const Vec2 pos{x0, pos_[1]};
-        const Vec2 size{width, -size_[1]};
+        const Vec2 size{width, -GetHeight()};
 
         const Color color = GetThreadStateColor(slice.thread_state());
 

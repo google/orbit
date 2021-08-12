@@ -68,6 +68,7 @@ class GpuTrack : public Track {
             const DrawContext& draw_context) override;
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset = 0) override;
+  void SetWidth(float width) override;
   [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() override;
 
   [[nodiscard]] bool IsEmpty() const override {

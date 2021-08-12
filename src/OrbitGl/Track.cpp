@@ -114,6 +114,8 @@ void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, const DrawContex
   Box box(Vec2(indentation_x0, y0), Vec2(label_width, -label_height), track_z);
   batcher.AddBox(box, track_background_color, shared_from_this());
 
+  Vec2 track_size = GetSize();
+
   // Draw rounded corners.
   if (!picking && draw_background_) {
     float radius = std::min(layout_->GetRoundingRadius(), half_label_height);
@@ -131,9 +133,9 @@ void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, const DrawContex
     Vec2 top_left(indentation_x0, y0);
     Vec2 tab_top_right(top_left[0] + label_width, top_left[1]);
     Vec2 tab_bottom_right(top_left[0] + label_width, top_left[1] - label_height + top_margin);
-    Vec2 content_bottom_left(top_left[0] - tab_x0, top_left[1] - size_[1]);
-    Vec2 content_bottom_right(top_left[0] + size_[0], top_left[1] - size_[1]);
-    Vec2 content_top_right(top_left[0] + size_[0], top_left[1] - label_height + top_margin);
+    Vec2 content_bottom_left(top_left[0] - tab_x0, top_left[1] - track_size[1]);
+    Vec2 content_bottom_right(top_left[0] + track_size[0], top_left[1] - track_size[1]);
+    Vec2 content_top_right(top_left[0] + track_size[0], top_left[1] - label_height + top_margin);
 
     DrawTriangleFan(batcher, rounded_corner, top_left, GlCanvas::kBackgroundColor, -90.f, track_z);
     DrawTriangleFan(batcher, rounded_corner, tab_top_right, GlCanvas::kBackgroundColor, 180.f,
@@ -178,7 +180,7 @@ void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, const DrawContex
   if (!picking) {
     if (layout_->GetDrawTrackBackground()) {
       Box box(Vec2(x0, y0 - label_height + top_margin),
-              Vec2(size_[0], -size_[1] + label_height - top_margin), track_z);
+              Vec2(track_size[0], -track_size[1] + label_height - top_margin), track_z);
       batcher.AddBox(box, track_background_color, shared_from_this());
     }
   }

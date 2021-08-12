@@ -53,7 +53,7 @@ class TrackManager {
   void UpdateTracksForRendering();
   void UpdateTrackPrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                              PickingMode picking_mode);
-  [[nodiscard]] float GetTracksTotalHeight() const { return tracks_total_height_; }
+  [[nodiscard]] float GetVisibleTracksTotalHeight() const { return tracks_total_height_; }
 
   [[nodiscard]] std::pair<uint64_t, uint64_t> GetTracksMinMaxTimestamps() const;
 

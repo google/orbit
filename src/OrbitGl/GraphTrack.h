@@ -66,10 +66,10 @@ class GraphTrack : public Track {
   }
 
   [[nodiscard]] float GetGraphContentBaseY() const {
-    return pos_[1] - size_[1] + layout_->GetTrackBottomMargin();
+    return pos_[1] - GetSize()[1] + layout_->GetTrackBottomMargin();
   }
   [[nodiscard]] float GetGraphContentHeight() const {
-    return size_[1] - layout_->GetTrackTabHeight() - GetLegendHeight() -
+    return GetSize()[1] - layout_->GetTrackTabHeight() - GetLegendHeight() -
            layout_->GetTrackBottomMargin();
   }
 

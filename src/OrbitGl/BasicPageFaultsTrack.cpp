@@ -93,7 +93,7 @@ void BasicPageFaultsTrack::DrawSingleSeriesEntry(
   float x0 = time_graph_->GetWorldFromTick(start_tick);
   float width = time_graph_->GetWorldFromTick(end_tick) - x0;
   float content_height = GetGraphContentHeight();
-  float y0 = pos_[1] - size_[1] + layout_->GetTrackBottomMargin();
+  float y0 = pos_[1] - GetHeight() + layout_->GetTrackBottomMargin();
   batcher->AddShadedBox(Vec2(x0, y0), Vec2(width, content_height), z, kHightlightingColor);
 }
 

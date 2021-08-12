@@ -35,7 +35,8 @@ void TriangleToggle::Draw(Batcher& batcher, TextRenderer& text_renderer,
 
   // Set the size such that the triangle toggle can be selected in the E2E test.
   float size = layout_->GetCollapseButtonSize(draw_context.indentation_level);
-  SetSize(size, size);
+  SetWidth(size);
+  SetHeight(size);
 
   // Draw triangle.
   static float half_sqrt_three = 0.5f * sqrtf(3.f);

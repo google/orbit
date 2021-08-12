@@ -27,6 +27,9 @@ class TracepointThreadBar : public ThreadBar {
 
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset = 0) override;
+  [[nodiscard]] float GetHeight() const override {
+    return layout_->GetEventTrackHeightFromTid(GetThreadId());
+  }
 
   [[nodiscard]] bool IsEmpty() const override;
 

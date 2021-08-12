@@ -274,25 +274,17 @@ void ThreadTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
   UpdateMinMaxTimestamps();
   UpdatePositionOfSubtracks();
 
-  const float thread_state_track_height = layout_->GetThreadStateTrackHeight();
-  const float event_track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
-  const float tracepoint_track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
-  const float track_width = size_[0];
-
   DrawContext inner_draw_context = draw_context.IncreasedIndentationLevel();
 
   if (!thread_state_bar_->IsEmpty()) {
-    thread_state_bar_->SetSize(track_width, thread_state_track_height);
     thread_state_bar_->Draw(batcher, text_renderer, inner_draw_context);
   }
 
   if (!event_bar_->IsEmpty()) {
-    event_bar_->SetSize(track_width, event_track_height);
     event_bar_->Draw(batcher, text_renderer, inner_draw_context);
   }
 
   if (!tracepoint_bar_->IsEmpty()) {
-    tracepoint_bar_->SetSize(track_width, tracepoint_track_height);
     tracepoint_bar_->Draw(batcher, text_renderer, inner_draw_context);
   }
 }
@@ -358,6 +350,15 @@ float ThreadTrack::GetHeight() const {
   return GetHeaderHeight() +
          (gap_between_tracks_and_timers ? layout_->GetSpaceBetweenTracksAndThread() : 0) +
          layout_->GetTextBoxHeight() * depth + layout_->GetTrackBottomMargin();
+}
+
+// TODO(b/176216022): Make a general interface for capture view elements for setting the width to
+// every child.
+void ThreadTrack::SetWidth(float width) {
+  Track::SetWidth(width);
+  thread_state_bar_->SetWidth(width);
+  event_bar_->SetWidth(width);
+  tracepoint_bar_->SetWidth(width);
 }
 
 float ThreadTrack::GetHeaderHeight() const {
@@ -461,7 +462,7 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
   UpdatePrimitivesOfSubtracks(batcher, min_tick, max_tick, picking_mode, z_offset);
 
   const internal::DrawData draw_data = GetDrawData(
-      min_tick, max_tick, size_[0], z_offset, batcher, time_graph_, viewport_,
+      min_tick, max_tick, GetWidth(), z_offset, batcher, time_graph_, viewport_,
       collapse_toggle_->IsCollapsed(), app_->selected_timer(), app_->GetFunctionIdToHighlight());
 
   absl::MutexLock lock(&scope_tree_mutex_);

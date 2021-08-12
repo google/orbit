@@ -49,7 +49,7 @@ void TracepointThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
                           : GlCanvas::kZValueEventBar;
   event_bar_z += draw_context.z_offset;
   Color color = GetColor();
-  Box box(pos_, Vec2(size_[0], -size_[1]), event_bar_z);
+  Box box(pos_, Vec2(GetWidth(), -GetHeight()), event_bar_z);
   batcher.AddBox(box, color, shared_from_this());
 }
 
