@@ -60,7 +60,7 @@ class BasicPageFaultsTrack : public LineGraphTrack<kBasicPageFaultsTrackDimensio
   [[nodiscard]] bool IsCollapsed() const override;
   [[nodiscard]] float GetAnnotatedTrackContentHeight() const override;
   [[nodiscard]] Vec2 GetAnnotatedTrackPosition() const override { return pos_; };
-  [[nodiscard]] Vec2 GetAnnotatedTrackSize() const override { return size_; };
+  [[nodiscard]] Vec2 GetAnnotatedTrackSize() const override { return GetSize(); };
   [[nodiscard]] uint32_t GetAnnotationFontSize(int indentation_level) const override {
     return GetLegendFontSize(indentation_level);
   }

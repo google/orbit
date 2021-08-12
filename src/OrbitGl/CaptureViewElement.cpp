@@ -15,6 +15,13 @@ CaptureViewElement::CaptureViewElement(CaptureViewElement* parent, TimeGraph* ti
   CHECK(layout != nullptr);
 }
 
+void CaptureViewElement::SetWidth(float width) {
+  if (width != width_) {
+    width_ = width;
+    RequestUpdate();
+  }
+}
+
 void CaptureViewElement::OnPick(int x, int y) {
   mouse_pos_last_click_ = viewport_->ScreenToWorldPos(Vec2i(x, y));
   picking_offset_ = mouse_pos_last_click_ - pos_;

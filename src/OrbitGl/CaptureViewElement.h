@@ -55,9 +55,12 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   void SetPos(float x, float y) { pos_ = Vec2(x, y); }
   // TODO(b/185854980): This should not be virtual as soon as we have meaningful track children.
   [[nodiscard]] virtual Vec2 GetPos() const { return pos_; }
-  void SetSize(float width, float height) { size_ = Vec2(width, height); }
   // TODO(b/185854980): This should not be virtual as soon as we have meaningful track children.
-  [[nodiscard]] virtual Vec2 GetSize() const { return size_; }
+  virtual void SetWidth(float width);
+  [[nodiscard]] float GetWidth() const { return width_; }
+  // Height should be defined in every particular capture view element.
+  [[nodiscard]] virtual float GetHeight() const = 0;
+  [[nodiscard]] Vec2 GetSize() const { return Vec2(GetWidth(), GetHeight()); }
 
   // Pickable
   void OnPick(int x, int y) override;
@@ -74,7 +77,7 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
 
   TimeGraph* time_graph_;
   Vec2 pos_ = Vec2(0, 0);
-  Vec2 size_ = Vec2(0, 0);
+  float width_ = 0.;
 
   Vec2 mouse_pos_last_click_;
   Vec2 mouse_pos_cur_;

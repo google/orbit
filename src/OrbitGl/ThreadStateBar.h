@@ -33,6 +33,7 @@ class ThreadStateBar final : public ThreadBar {
             const DrawContext& draw_context) override;
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset) override;
+  [[nodiscard]] float GetHeight() const override { return layout_->GetThreadStateTrackHeight(); }
 
   void OnPick(int x, int y) override;
 

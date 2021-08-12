@@ -216,7 +216,7 @@ void FrameTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
   float y = pos_[1] - GetHeaderHeight() - GetMaximumBoxHeight() + GetAverageBoxHeight();
   float x = pos_[0];
   Vec2 from(x, y);
-  Vec2 to(x + size_[0], y);
+  Vec2 to(x + GetWidth(), y);
   float text_z = GlCanvas::kZValueTrackText + draw_context.z_offset;
 
   std::string avg_time =

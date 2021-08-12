@@ -30,12 +30,14 @@ class FakeTrackTab : public CaptureViewElement {
         track_(track) {
     // Compute and set the size (which would usually be done by the parent). As the position may
     // change, we override the GetPos() function.
-    SetSize(layout_->GetTrackTabWidth(), layout_->GetTrackTabHeight());
+    SetWidth(layout_->GetTrackTabWidth());
   }
 
   [[nodiscard]] std::unique_ptr<AccessibleInterface> CreateAccessibleInterface() override {
     return std::make_unique<AccessibleTrackTab>(this, track_);
   }
+
+  [[nodiscard]] float GetHeight() const override { return layout_->GetTrackTabHeight(); }
 
   [[nodiscard]] Vec2 GetPos() const override {
     Vec2 track_pos = track_->GetPos();
@@ -72,11 +74,11 @@ class FakeTimerPane : public CaptureViewElement {
     return pos;
   }
 
-  [[nodiscard]] Vec2 GetSize() const override {
-    Vec2 size = track_->GetSize();
+  [[nodiscard]] float GetHeight() const override {
+    float height = track_->GetHeight();
     float track_header_height = track_->GetPos()[1] - GetPos()[1];
-    size[1] -= track_header_height;
-    return size;
+    height -= track_header_height;
+    return height;
   }
 
  private:

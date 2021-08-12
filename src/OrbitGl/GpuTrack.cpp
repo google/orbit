@@ -115,15 +115,17 @@ float GpuTrack::GetHeight() const {
   return height;
 }
 
+// TODO(b/176216022): Make a general interface for capture view elements for setting the width to
+// every child.
+void GpuTrack::SetWidth(float width) {
+  Track::SetWidth(width);
+  submission_track_->SetWidth(width);
+  marker_track_->SetWidth(width);
+}
+
 void GpuTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
                     const DrawContext& draw_context) {
   UpdatePositionOfSubtracks();
-  // If being collapsed, the gpu track will show a collapsed version of the submission subtrack.
-  // Hence, the height of submission subtrack should always be updated as long as the subtrack is
-  // not empty.
-  if (!submission_track_->IsEmpty()) {
-    submission_track_->SetSize(size_[0], submission_track_->GetHeight());
-  }
 
   Track::Draw(batcher, text_renderer, draw_context);
 
@@ -136,7 +138,6 @@ void GpuTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
   }
 
   if (!marker_track_->IsEmpty()) {
-    marker_track_->SetSize(size_[0], marker_track_->GetHeight());
     marker_track_->Draw(batcher, text_renderer, sub_track_draw_context);
   }
 }

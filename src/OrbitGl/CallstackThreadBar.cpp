@@ -64,7 +64,7 @@ void CallstackThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
                           : GlCanvas::kZValueEventBar;
   event_bar_z += draw_context.z_offset;
   Color color = GetColor();
-  Box box(pos_, Vec2(size_[0], -size_[1]), event_bar_z);
+  Box box(pos_, Vec2(GetWidth(), -GetHeight()), event_bar_z);
   batcher.AddBox(box, color, shared_from_this());
 
   if (batcher.GetPickingManager()->IsThisElementPicked(this)) {
@@ -73,8 +73,8 @@ void CallstackThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
 
   float x0 = pos_[0];
   float y0 = pos_[1];
-  float x1 = x0 + size_[0];
-  float y1 = y0 - size_[1];
+  float x1 = x0 + GetWidth();
+  float y1 = y0 - GetHeight();
 
   batcher.AddLine(pos_, Vec2(x1, y0), event_bar_z, color, shared_from_this());
   batcher.AddLine(Vec2(x1, y1), Vec2(x0, y1), event_bar_z, color, shared_from_this());
@@ -86,10 +86,10 @@ void CallstackThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
     x0 = from[0];
     y0 = pos_[1];
     x1 = to[0];
-    y1 = y0 - size_[1];
+    y1 = y0 - GetHeight();
 
     Color picked_color(0, 128, 255, 128);
-    Box picked_box(Vec2(x0, y0), Vec2(x1 - x0, -size_[1]),
+    Box picked_box(Vec2(x0, y0), Vec2(x1 - x0, -GetHeight()),
                    GlCanvas::kZValueUi + draw_context.z_offset);
     batcher.AddBox(picked_box, picked_color, shared_from_this());
   }

@@ -42,6 +42,9 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
                      PickingManager* picking_manager);
   ~TimeGraph() override;
 
+  [[nodiscard]] float GetHeight() const override {
+    return track_manager_->GetVisibleTracksTotalHeight();
+  }
   void Draw(Batcher& batcher, TextRenderer& text_renderer,
             const DrawContext& draw_context) override;
   void DrawTracks(Batcher& batcher, TextRenderer& text_renderer, const DrawContext& draw_context);

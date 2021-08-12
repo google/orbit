@@ -392,7 +392,7 @@ void CaptureWindow::Draw(bool viewport_was_dirty) {
   if (time_graph_ != nullptr) {
     if (viewport_was_dirty) {
       time_graph_->SetPos(0, 0);
-      time_graph_->SetSize(viewport_.GetWorldExtents()[0], viewport_.GetWorldExtents()[1]);
+      time_graph_->SetWidth(viewport_.GetWorldExtents()[0]);
 
       time_graph_->RequestUpdate();
     }
@@ -401,7 +401,7 @@ void CaptureWindow::Draw(bool viewport_was_dirty) {
     time_graph_->Draw(GetBatcher(), GetTextRenderer(),
                       {timegraph_current_mouse_time_ns, picking_mode_, 0, 0});
     viewport_.SetWorldExtents(viewport_.GetScreenWidth(),
-                              time_graph_->GetTrackManager()->GetTracksTotalHeight());
+                              time_graph_->GetTrackManager()->GetVisibleTracksTotalHeight());
   }
 
   RenderSelectionOverlay();

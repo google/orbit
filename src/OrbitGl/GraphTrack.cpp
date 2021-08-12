@@ -83,7 +83,7 @@ void GraphTrack<Dimension>::UpdatePrimitives(Batcher* batcher, uint64_t min_tick
   float content_height = GetGraphContentHeight();
   Vec2 content_pos = pos_;
   content_pos[1] -= layout_->GetTrackTabHeight();
-  Box box(content_pos, Vec2(size_[0], -content_height - GetLegendHeight()), track_z);
+  Box box(content_pos, Vec2(GetWidth(), -content_height - GetLegendHeight()), track_z);
   batcher->AddBox(box, GetTrackBackgroundColor(), shared_from_this());
 
   const bool picking = picking_mode != PickingMode::kNone;
