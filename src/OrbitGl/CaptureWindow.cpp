@@ -250,7 +250,7 @@ void CaptureWindow::Zoom(ZoomDirection dir, int delta) {
     switch (dir) {
       case ZoomDirection::kHorizontal: {
         double mouse_ratio =
-            static_cast<double>(mouse_move_pos_screen_[0]) / time_graph_->GetVisibleWidth();
+            static_cast<double>(mouse_move_pos_screen_[0]) / time_graph_->GetWidth();
         time_graph_->ZoomTime(delta_float, mouse_ratio);
         break;
       }
@@ -378,7 +378,7 @@ std::unique_ptr<AccessibleInterface> CaptureWindow::CreateAccessibleInterface() 
   return std::make_unique<AccessibleCaptureWindow>(this);
 }
 
-void CaptureWindow::Draw(bool viewport_was_dirty) {
+void CaptureWindow::Draw() {
   ORBIT_SCOPE("CaptureWindow::Draw");
 
   if (ShouldSkipRendering()) {
@@ -390,18 +390,18 @@ void CaptureWindow::Draw(bool viewport_was_dirty) {
   }
 
   if (time_graph_ != nullptr) {
-    if (viewport_was_dirty) {
-      time_graph_->SetPos(0, 0);
-      time_graph_->SetWidth(viewport_.GetWorldExtents()[0]);
+    // We need to update the visible track list to know the total height of them (used in the
+    // viewport).
+    time_graph_->GetTrackManager()->UpdateTracksForRendering();
 
-      time_graph_->RequestUpdate();
-    }
+    viewport_.SetWorldExtents(viewport_.GetScreenWidth(), time_graph_->GetHeight());
+
+    UpdateChildrenPosAndSize();
+
     uint64_t timegraph_current_mouse_time_ns =
         time_graph_->GetTickFromWorld(viewport_.ScreenToWorldPos(GetMouseScreenPos())[0]);
     time_graph_->Draw(GetBatcher(), GetTextRenderer(),
                       {timegraph_current_mouse_time_ns, picking_mode_, 0, 0});
-    viewport_.SetWorldExtents(viewport_.GetScreenWidth(),
-                              time_graph_->GetTrackManager()->GetVisibleTracksTotalHeight());
   }
 
   RenderSelectionOverlay();
@@ -463,6 +463,23 @@ void CaptureWindow::Draw(bool viewport_was_dirty) {
   }
 }
 
+void CaptureWindow::UpdateChildrenPosAndSize() {
+  UpdateHorizontalSliderFromWorld();
+  UpdateVerticalSliderFromWorld();
+
+  const TimeGraphLayout& layout = time_graph_->GetLayout();
+  float right_margin = layout.GetRightMargin();
+  if (vertical_slider_->IsVisible()) {
+    int slider_width = static_cast<int>(time_graph_->GetLayout().GetSliderWidth());
+    right_margin += slider_width;
+  }
+
+  UpdateRightMargin(right_margin);
+
+  time_graph_->SetPos(0, 0);
+  time_graph_->SetWidth(viewport_.GetScreenWidth() - right_margin);
+}
+
 void CaptureWindow::DrawScreenSpace() {
   ORBIT_SCOPE("CaptureWindow::DrawScreenSpace");
   if (time_graph_ == nullptr) return;
@@ -471,26 +488,17 @@ void CaptureWindow::DrawScreenSpace() {
   Color col = slider_->GetBarColor();
   auto canvas_height = static_cast<float>(viewport_.GetScreenHeight());
 
-  const TimeGraphLayout& layout = time_graph_->GetLayout();
-  float right_margin = layout.GetRightMargin();
-
   if (time_span > 0) {
-    UpdateHorizontalSliderFromWorld();
     slider_->Draw(ui_batcher_, picking_manager_.IsThisElementPicked(slider_.get()));
-
-    UpdateVerticalSliderFromWorld();
-    if (vertical_slider_->GetLengthRatio() < 1.f) {
+    if (vertical_slider_->IsVisible()) {
       vertical_slider_->Draw(ui_batcher_,
                              picking_manager_.IsThisElementPicked(vertical_slider_.get()));
-      int slider_width = static_cast<int>(time_graph_->GetLayout().GetSliderWidth());
-      right_margin += slider_width;
     }
   }
 
   // Right vertical margin.
-  time_graph_->UpdateRightMargin(right_margin);
   auto margin_x1 = static_cast<float>(viewport_.GetScreenWidth());
-  float margin_x0 = margin_x1 - right_margin;
+  float margin_x0 = margin_x1 - GetRightMargin();
 
   Box box(Vec2(margin_x0, 0), Vec2(margin_x1 - margin_x0, canvas_height), GlCanvas::kZValueMargin);
   ui_batcher_.AddBox(box, kBackgroundColor);

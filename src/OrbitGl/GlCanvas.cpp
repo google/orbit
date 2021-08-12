@@ -290,10 +290,7 @@ void GlCanvas::Render(int width, int height) {
   // Reset picking manager before each draw.
   picking_manager_.Reset();
 
-  bool viewport_was_dirty = viewport_.IsDirty();
-  // Clear viewport dirty flag so it can be set again during rendering if needed
-  viewport_.ClearDirtyFlag();
-  Draw(viewport_was_dirty);
+  Draw();
 
   if (picking_mode_ == PickingMode::kNone) {
     for (const auto& render_callback : render_callbacks_) {
@@ -307,6 +304,7 @@ void GlCanvas::Render(int width, int height) {
   PostRender();
 
   double_clicking_ = false;
+  viewport_.ClearDirtyFlag();
 }
 
 void GlCanvas::PreRender() {

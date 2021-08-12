@@ -205,6 +205,11 @@ float Track::DrawCollapsingTriangle(Batcher& batcher, TextRenderer& text_rendere
 void Track::UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*t_min*/, uint64_t /*t_max*/,
                              PickingMode /*  picking_mode*/, float /*z_offset*/) {}
 
+void Track::SetPos(float x, float y) {
+  pos_ = Vec2(x, y);
+  UpdatePositionOfSubtracks();
+}
+
 void Track::SetPinned(bool value) { pinned_ = value; }
 
 Color Track::GetTrackBackgroundColor() const {

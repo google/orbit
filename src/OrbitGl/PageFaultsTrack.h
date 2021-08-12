@@ -40,6 +40,7 @@ class PageFaultsTrack : public Track {
             const DrawContext& draw_context) override;
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset = 0) override;
+  void SetWidth(float width) override;
 
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 
@@ -57,7 +58,7 @@ class PageFaultsTrack : public Track {
   [[nodiscard]] uint64_t GetMaxTime() const override;
 
  private:
-  void UpdatePositionOfSubtracks();
+  void UpdatePositionOfSubtracks() override;
 
   std::shared_ptr<MajorPageFaultsTrack> major_page_faults_track_;
   std::shared_ptr<MinorPageFaultsTrack> minor_page_faults_track_;

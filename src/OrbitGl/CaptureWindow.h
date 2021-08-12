@@ -58,9 +58,12 @@ class CaptureWindow : public GlCanvas {
   Batcher& GetBatcherById(BatcherId batcher_id);
 
  protected:
-  void Draw(bool viewport_was_dirty) override;
+  void Draw() override;
+  void UpdateChildrenPosAndSize();
 
   virtual void DrawScreenSpace();
+  [[nodiscard]] float GetRightMargin() const { return right_margin_; }
+  void UpdateRightMargin(float margin) { right_margin_ = margin; }
   virtual void RenderText(float layer);
   virtual bool ShouldSkipRendering() const;
 
@@ -89,6 +92,7 @@ class CaptureWindow : public GlCanvas {
   bool draw_help_;
   std::shared_ptr<orbit_gl::GlSlider> slider_;
   std::shared_ptr<orbit_gl::GlSlider> vertical_slider_;
+  float right_margin_ = 0;
   orbit_gl::GlSlider* last_mouseover_slider_ = nullptr;
 
   uint64_t select_start_time_ = 0;

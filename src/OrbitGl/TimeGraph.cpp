@@ -217,8 +217,6 @@ void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, uint64_t min, 
   }
 
   SetMinMax(mid - current_time_window_us * (1 - distance), mid + current_time_window_us * distance);
-
-  RequestUpdate();
 }
 
 void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, const TimerInfo& timer_info,
@@ -413,7 +411,7 @@ float TimeGraph::GetWorldFromTick(uint64_t time) const {
   if (time_window_us_ > 0) {
     double start = TicksToMicroseconds(capture_min_timestamp_, time) - min_time_us_;
     double normalized_start = start / time_window_us_;
-    auto pos = float(world_start_x_ + normalized_start * (world_width_ - right_margin_));
+    auto pos = float(world_start_x_ + normalized_start * world_width_);
     return pos;
   }
 
@@ -429,7 +427,7 @@ double TimeGraph::GetUsFromTick(uint64_t time) const {
 }
 
 uint64_t TimeGraph::GetTickFromWorld(float world_x) const {
-  float visible_width = world_width_ - right_margin_;
+  float visible_width = world_width_;
   double ratio =
       visible_width > 0 ? static_cast<double>((world_x - world_start_x_) / visible_width) : 0;
   auto time_span_ns = static_cast<uint64_t>(1000 * GetTime(ratio));
@@ -523,10 +521,25 @@ void TimeGraph::UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, ui
   uint64_t min_tick = GetTickFromUs(min_time_us_);
   uint64_t max_tick = GetTickFromUs(max_time_us_);
 
-  track_manager_->UpdateTracksForRendering();
   track_manager_->UpdateTrackPrimitives(&batcher_, min_tick, max_tick, picking_mode);
 
   update_primitives_requested_ = false;
+}
+
+void TimeGraph::UpdateTracksPosition() {
+  // Update position of a track which is currently being moved.
+  const float track_pos_x = pos_[0];
+
+  float current_y = layout_.GetSchedulerTrackOffset();
+
+  // Track height including space between them
+  for (auto& track : track_manager_->GetVisibleTracks()) {
+    if (!track->IsMoving()) {
+      track->SetPos(track_pos_x, -current_y);
+    }
+    track->SetWidth(GetWidth());
+    current_y += (track->GetHeight() + layout_.GetSpaceBetweenTracks());
+  }
 }
 
 void TimeGraph::SelectCallstacks(float world_start, float world_end, int32_t thread_id) {
@@ -561,6 +574,9 @@ const std::vector<CallstackEvent>& TimeGraph::GetSelectedCallstackEvents(int32_t
 void TimeGraph::Draw(Batcher& batcher, TextRenderer& text_renderer,
                      const DrawContext& draw_context) {
   ORBIT_SCOPE("TimeGraph::Draw");
+
+  track_manager_->UpdateTracksForRendering();
+  UpdateTracksPosition();
 
   const bool picking = draw_context.picking_mode != PickingMode::kNone;
   if ((!picking && update_primitives_requested_) || picking) {
@@ -796,12 +812,7 @@ void TimeGraph::DrawIncompleteDataIntervals(Batcher& batcher, PickingMode pickin
 
 void TimeGraph::DrawTracks(Batcher& batcher, TextRenderer& text_renderer,
                            const DrawContext& draw_context) {
-  float track_width = GetVisibleWidth();
-  float track_pos_x = viewport_->GetWorldTopLeft()[0];
   for (auto& track : track_manager_->GetVisibleTracks()) {
-    track->SetWidth(track_width);
-    track->SetPos(track_pos_x, track->GetPos()[1]);
-
     float z_offset = 0;
     if (track->IsPinned()) {
       z_offset = GlCanvas::kZOffsetPinnedTrack;
@@ -873,15 +884,6 @@ void TimeGraph::JumpToNeighborTimer(const TimerInfo* from, JumpDirection jump_di
   }
   if (goal != nullptr) {
     SelectAndMakeVisible(goal);
-  }
-}
-
-void TimeGraph::UpdateRightMargin(float margin) {
-  {
-    if (right_margin_ != margin) {
-      right_margin_ = margin;
-      RequestUpdate();
-    }
   }
 }
 

@@ -174,10 +174,27 @@ void TrackManager::SortTracks() {
 
 void TrackManager::SetFilter(const std::string& filter) {
   filter_ = absl::AsciiStrToLower(filter);
-  UpdateVisibleTrackList();
+  visible_track_list_needs_update_ = true;
+}
+
+// This function assumes visible track list is updated.
+float TrackManager::GetVisibleTracksTotalHeight() const {
+  // Top and Bottom Margin. TODO: Margins should be treated in a different way (http://b/192070555).
+  float total_height = layout_->GetSchedulerTrackOffset() + layout_->GetBottomMargin();
+
+  // Track height including space between them
+  for (auto& track : visible_tracks_) {
+    total_height += (track->GetHeight() + layout_->GetSpaceBetweenTracks());
+  }
+  return total_height;
 }
 
 void TrackManager::UpdateVisibleTrackList() {
+  // This function assumes we asked before for a update for the visible track list and that tracks
+  // are already sorted (in sorted_tracks_).
+  CHECK(visible_track_list_needs_update_);
+  CHECK(!sorting_invalidated_);
+
   visible_track_list_needs_update_ = false;
   visible_tracks_.clear();
 
@@ -188,22 +205,24 @@ void TrackManager::UpdateVisibleTrackList() {
   if (filter_.empty()) {
     std::copy_if(sorted_tracks_.begin(), sorted_tracks_.end(), std::back_inserter(visible_tracks_),
                  track_should_be_shown);
-    return;
-  }
+  } else {
+    std::vector<std::string> filters = absl::StrSplit(filter_, ' ', absl::SkipWhitespace());
+    for (const auto& track : sorted_tracks_) {
+      if (!track_should_be_shown(track)) {
+        continue;
+      }
 
-  std::vector<std::string> filters = absl::StrSplit(filter_, ' ', absl::SkipWhitespace());
-  for (const auto& track : sorted_tracks_) {
-    if (!track_should_be_shown(track)) {
-      continue;
-    }
-
-    std::string lower_case_label = absl::AsciiStrToLower(track->GetLabel());
-    for (auto& filter : filters) {
-      if (absl::StrContains(lower_case_label, filter)) {
-        visible_tracks_.push_back(track);
-        break;
+      std::string lower_case_label = absl::AsciiStrToLower(track->GetLabel());
+      for (auto& filter : filters) {
+        if (absl::StrContains(lower_case_label, filter)) {
+          visible_tracks_.push_back(track);
+          break;
+        }
       }
     }
+  }
+  if (time_graph_ != nullptr) {
+    time_graph_->RequestUpdate();
   }
 }
 
@@ -296,24 +315,10 @@ int TrackManager::FindMovingTrackIndex() {
 
 void TrackManager::UpdateTrackPrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                          PickingMode picking_mode) {
-  // Make sure track tab fits in the viewport.
-  float current_y = -layout_->GetSchedulerTrackOffset();
-
-  // Draw tracks
   for (auto& track : visible_tracks_) {
     const float z_offset = track->IsMoving() ? GlCanvas::kZOffsetMovingTrack : 0.f;
-    if (!track->IsMoving()) {
-      track->SetPos(track->GetPos()[0], current_y);
-    }
     track->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-    current_y -= (track->GetHeight() + layout_->GetSpaceBetweenTracks());
   }
-
-  // TODO: This margin should be treated in a different way (http://b/192070555).
-  current_y -= layout_->GetBottomMargin();
-
-  // Tracks are drawn from 0 (top) to negative y-coordinates.
-  tracks_total_height_ = std::abs(current_y);
 }
 
 void TrackManager::UpdateTracksForRendering() {
@@ -328,13 +333,13 @@ void TrackManager::UpdateTracksForRendering() {
     UpdateVisibleTrackList();
   }
 
-  // Update position of a track which is currently being moved.
   UpdateMovingTrackPositionInVisibleTracks();
 }
 
 void TrackManager::AddTrack(const std::shared_ptr<Track>& track) {
   all_tracks_.push_back(track);
   sorting_invalidated_ = true;
+  visible_track_list_needs_update_ = true;
 }
 
 void TrackManager::AddFrameTrack(const std::shared_ptr<FrameTrack>& frame_track) {
@@ -360,6 +365,7 @@ void TrackManager::RemoveFrameTrack(uint64_t function_id) {
       std::remove(sorted_tracks_.begin(), sorted_tracks_.end(), frame_tracks_[function_id].get()),
       sorted_tracks_.end());
   frame_tracks_.erase(function_id);
+
   visible_track_list_needs_update_ = true;
 }
 
@@ -396,8 +402,8 @@ ThreadTrack* TrackManager::GetOrCreateThreadTrack(int32_t tid) {
     auto [unused, track_data] = capture_data_->CreateTrackData();
     track = std::make_shared<ThreadTrack>(time_graph_, time_graph_, viewport_, layout_, tid, app_,
                                           capture_data_, track_data, scope_tree_update_type);
-    AddTrack(track);
     thread_tracks_[tid] = track;
+    AddTrack(track);
   }
   return track.get();
 }
@@ -413,8 +419,8 @@ GpuTrack* TrackManager::GetOrCreateGpuTrack(uint64_t timeline_hash) {
     track =
         std::make_shared<GpuTrack>(time_graph_, time_graph_, viewport_, layout_, timeline_hash,
                                    app_, capture_data_, submission_track_data, marker_track_data);
-    AddTrack(track);
     gpu_tracks_[timeline] = track;
+    AddTrack(track);
   }
   return track.get();
 }
@@ -425,8 +431,8 @@ VariableTrack* TrackManager::GetOrCreateVariableTrack(const std::string& name) {
   if (track == nullptr) {
     track = std::make_shared<VariableTrack>(time_graph_, time_graph_, viewport_, layout_, name,
                                             capture_data_);
-    AddTrack(track);
     variable_tracks_[name] = track;
+    AddTrack(track);
   }
   return track.get();
 }
@@ -438,8 +444,8 @@ AsyncTrack* TrackManager::GetOrCreateAsyncTrack(const std::string& name) {
     auto [unused, track_data] = capture_data_->CreateTrackData();
     track = std::make_shared<AsyncTrack>(time_graph_, time_graph_, viewport_, layout_, name, app_,
                                          capture_data_, track_data);
-    AddTrack(track);
     async_tracks_[name] = track;
+    AddTrack(track);
   }
 
   return track.get();

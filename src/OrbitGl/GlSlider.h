@@ -21,6 +21,7 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
   ~GlSlider() override = default;
 
   [[nodiscard]] bool Draggable() override { return true; }
+  [[nodiscard]] virtual bool IsVisible() const { return true; }
   virtual void Draw(Batcher& batcher, bool is_picked) = 0;
 
   void SetNormalizedPosition(float start_ratio);  // [0,1]
@@ -126,6 +127,7 @@ class GlVerticalSlider : public GlSlider {
   GlVerticalSlider(Viewport& viewport) : GlSlider(viewport, true) {}
 
   void Draw(Batcher& batcher, bool is_picked) override;
+  [[nodiscard]] bool IsVisible() const override { return GetLengthRatio() < 1.f; }
 
  protected:
   [[nodiscard]] int GetBarPixelLength() const override;

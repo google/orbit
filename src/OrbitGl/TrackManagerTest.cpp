@@ -114,6 +114,7 @@ TEST_F(TrackManagerTest, FiltersAndTrackTypeVisibilityWorkTogether) {
   EXPECT_EQ(kNumThreadTracks, track_manager_.GetVisibleTracks().size());
 
   track_manager_.SetFilter("");
+  track_manager_.UpdateTracksForRendering();
   EXPECT_EQ(kNumTracks, track_manager_.GetVisibleTracks().size());
 
   track_manager_.SetFilter("thread");

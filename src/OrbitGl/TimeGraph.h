@@ -58,6 +58,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   void RequestUpdate() override;
   void UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, uint64_t /*max_tick*/,
                         PickingMode /*picking_mode*/, float /*z_offset*/ = 0) override;
+  void UpdateTracksPosition();
   void SelectCallstacks(float world_start, float world_end, int32_t thread_id);
   const std::vector<orbit_client_protos::CallstackEvent>& GetSelectedCallstackEvents(int32_t tid);
 
@@ -133,11 +134,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   [[nodiscard]] double GetMaxTimeUs() const { return max_time_us_; }
   [[nodiscard]] const TimeGraphLayout& GetLayout() const { return layout_; }
   [[nodiscard]] TimeGraphLayout& GetLayout() { return layout_; }
-  [[nodiscard]] float GetRightMargin() const { return right_margin_; }
-  void UpdateRightMargin(float margin);
-  [[nodiscard]] float GetVisibleWidth() const {
-    return viewport_->GetScreenWidth() - GetRightMargin();
-  }
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* FindPrevious(
       const orbit_client_protos::TimerInfo& from);
@@ -217,7 +213,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   double time_window_us_ = 0;
   float world_start_x_ = 0;
   float world_width_ = 0;
-  float right_margin_ = 0;
 
   TimeGraphLayout layout_;
 
