@@ -85,7 +85,7 @@ class GpuTrack : public Track {
   }
 
  private:
-  void UpdatePositionOfSubtracks();
+  void UpdatePositionOfSubtracks() override;
   orbit_string_manager::StringManager* string_manager_;
   const std::shared_ptr<GpuSubmissionTrack> submission_track_;
   const std::shared_ptr<GpuDebugMarkerTrack> marker_track_;

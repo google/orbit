@@ -58,6 +58,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
 
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset = 0) override;
+  void SetPos(float x, float y) override;
   void OnDrag(int x, int y) override;
 
   [[nodiscard]] virtual Type GetType() const = 0;
@@ -99,6 +100,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
                                const DrawContext& draw_context);
   void DrawTriangleFan(Batcher& batcher, const std::vector<Vec2>& points, const Vec2& pos,
                        const Color& color, float rotation, float z);
+  virtual void UpdatePositionOfSubtracks() {}
 
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
 

@@ -125,8 +125,6 @@ void GpuTrack::SetWidth(float width) {
 
 void GpuTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
                     const DrawContext& draw_context) {
-  UpdatePositionOfSubtracks();
-
   Track::Draw(batcher, text_renderer, draw_context);
 
   if (collapse_toggle_->IsCollapsed()) {
@@ -144,8 +142,6 @@ void GpuTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
 
 void GpuTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                 PickingMode picking_mode, float z_offset) {
-  UpdatePositionOfSubtracks();
-
   const bool is_collapsed = collapse_toggle_->IsCollapsed();
 
   if (!submission_track_->IsEmpty()) {

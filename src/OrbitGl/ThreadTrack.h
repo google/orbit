@@ -84,7 +84,7 @@ class ThreadTrack final : public TimerTrack {
   [[nodiscard]] float GetHeight() const override;
   [[nodiscard]] float GetHeaderHeight() const override;
 
-  void UpdatePositionOfSubtracks();
+  void UpdatePositionOfSubtracks() override;
   void UpdatePrimitivesOfSubtracks(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                    PickingMode picking_mode, float z_offset);
   void UpdateMinMaxTimestamps();

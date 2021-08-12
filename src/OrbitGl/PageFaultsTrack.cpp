@@ -55,6 +55,14 @@ float PageFaultsTrack::GetHeight() const {
   return height;
 }
 
+// TODO(b/176216022): Make a general interface for capture view elements for setting the width to
+// every child.
+void PageFaultsTrack::SetWidth(float width) {
+  Track::SetWidth(width);
+  minor_page_faults_track_->SetWidth(width);
+  major_page_faults_track_->SetWidth(width);
+}
+
 std::vector<orbit_gl::CaptureViewElement*> PageFaultsTrack::GetVisibleChildren() {
   std::vector<CaptureViewElement*> result;
   if (collapse_toggle_->IsCollapsed()) return result;
@@ -71,8 +79,6 @@ std::string PageFaultsTrack::GetTooltip() const {
 
 void PageFaultsTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
                            const DrawContext& draw_context) {
-  UpdatePositionOfSubtracks();
-
   Track::Draw(batcher, text_renderer, draw_context);
 
   if (collapse_toggle_->IsCollapsed()) return;
@@ -89,8 +95,6 @@ void PageFaultsTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
 
 void PageFaultsTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                        PickingMode picking_mode, float z_offset) {
-  UpdatePositionOfSubtracks();
-
   if (!major_page_faults_track_->IsEmpty()) {
     major_page_faults_track_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
   }

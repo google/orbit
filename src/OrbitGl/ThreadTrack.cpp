@@ -271,17 +271,9 @@ void ThreadTrack::UpdatePositionOfSubtracks() {
   tracepoint_bar_->SetPos(pos_[0], current_y);
 }
 
-void ThreadTrack::UpdateMinMaxTimestamps() {
-  track_data_->UpdateMinTime(capture_data_->GetCallstackData().min_time());
-  track_data_->UpdateMaxTime(capture_data_->GetCallstackData().max_time());
-}
-
 void ThreadTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
                        const DrawContext& draw_context) {
   TimerTrack::Draw(batcher, text_renderer, draw_context);
-
-  UpdateMinMaxTimestamps();
-  UpdatePositionOfSubtracks();
 
   DrawContext inner_draw_context = draw_context.IncreasedIndentationLevel();
 
@@ -519,8 +511,6 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
 void ThreadTrack::UpdatePrimitivesOfSubtracks(Batcher* batcher, uint64_t min_tick,
                                               uint64_t max_tick, PickingMode picking_mode,
                                               float z_offset) {
-  UpdatePositionOfSubtracks();
-
   if (!thread_state_bar_->IsEmpty()) {
     thread_state_bar_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
   }

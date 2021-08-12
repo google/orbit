@@ -29,7 +29,7 @@ class IntrospectionWindow : public CaptureWindow {
   void StopIntrospection();
 
  protected:
-  void Draw(bool viewport_was_dirty) override;
+  void Draw() override;
   void DrawScreenSpace() override;
   void RenderText(float layer) override;
   bool ShouldSkipRendering() const override { return false; };

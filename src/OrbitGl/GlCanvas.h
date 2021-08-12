@@ -128,7 +128,7 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   static const Color kTabTextColorSelected;
 
  protected:
-  virtual void Draw(bool /*viewport_was_dirty*/) {}
+  virtual void Draw() {}
 
   void UpdateSpecialKeys(bool ctrl, bool shift, bool alt);
   bool ControlPressed();

@@ -50,10 +50,10 @@ class TrackManager {
   void RequestTrackSorting() { sorting_invalidated_ = true; };
   void SetFilter(const std::string& filter);
 
+  [[nodiscard]] float GetVisibleTracksTotalHeight() const;
   void UpdateTracksForRendering();
   void UpdateTrackPrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                              PickingMode picking_mode);
-  [[nodiscard]] float GetVisibleTracksTotalHeight() const { return tracks_total_height_; }
 
   [[nodiscard]] std::pair<uint64_t, uint64_t> GetTracksMinMaxTimestamps() const;
 
@@ -124,7 +124,6 @@ class TrackManager {
   std::string filter_;
   std::vector<Track*> visible_tracks_;
 
-  float tracks_total_height_ = 0.0f;
   orbit_client_data::CaptureData* capture_data_ = nullptr;
 
   OrbitApp* app_ = nullptr;

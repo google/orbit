@@ -52,7 +52,8 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
 
   [[nodiscard]] orbit_gl::Viewport* GetViewport() const { return viewport_; }
 
-  void SetPos(float x, float y) { pos_ = Vec2(x, y); }
+  // TODO(b/185854980): This should not be virtual as soon as we have meaningful track children.
+  virtual void SetPos(float x, float y) { pos_ = Vec2(x, y); }
   // TODO(b/185854980): This should not be virtual as soon as we have meaningful track children.
   [[nodiscard]] virtual Vec2 GetPos() const { return pos_; }
   // TODO(b/185854980): This should not be virtual as soon as we have meaningful track children.
