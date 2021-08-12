@@ -16,17 +16,67 @@
 
 namespace orbit_base {
 
-#ifdef _WIN32
-[[nodiscard]] uint32_t GetCurrentThreadId();
-[[nodiscard]] std::string GetThreadName(uint32_t tid);
-[[nodiscard]] uint32_t GetCurrentProcessId();
-#else
-[[nodiscard]] pid_t GetCurrentThreadId();
-[[nodiscard]] std::string GetThreadName(pid_t tid);
-[[nodiscard]] pid_t GetCurrentProcessId();
-#endif
+static constexpr uint32_t kInvalidThreadId = 0xffffffff;
+static constexpr uint32_t kInvalidProcessId = 0xffffffff;
 
+// We use uint32_t as our cross-platform thread id and process id type. Platform-specific invalid
+// ids are converted into cross-platform kInvalidThreadId or kInvalidProcessId (both 0xffffffff):
+//
+// +----------------------------------------------------------------------+
+// |                             Thread Id                                |
+// +-------------+-----------------+---------------------+----------------+
+// |             | Windows         | Linux               | Cross Platform |
+// +-------------+-----------------+---------------------+----------------+
+// | Type        | uint32_t        | int32_t             | uint32_t       |
+// +-------------+-----------------+---------------------+----------------+
+// | Valid Range | [4, 2^32-4]     | [0, 2^31-1]         | [0, 2^32-4]    |
+// +-------------+-----------------+---------------------+----------------+
+// | Invalid Id  | 0               | -1                  | 0xffffffff     |
+// +-------------+-----------------+---------------------+----------------+
+// | Note        | Multiples of 4  | “Swapper” has tid 0 |                |
+// +-------------+-----------------+---------------------+----------------+
+//
+//
+// +----------------------------------------------------------------------+
+// |                            Process Id                                |
+// +-------------+-----------------+---------------------+----------------+
+// |             | Windows         | Linux               | Cross Platform |
+// +-------------+-----------------+---------------------+----------------+
+// | Type        | uint32_t        | int32_t             | uint32_t       |
+// +-------------+-----------------+---------------------+----------------+
+// | Valid Range | [4, 2^32-4]     | [0, 2^31-1]         | [0, 2^32-4]    |
+// +-------------+-----------------+---------------------+----------------+
+// | Invalid Id  | 0, 0xffffffff   | -1                  | 0xffffffff     |
+// +-------------+-----------------+---------------------+----------------+
+// | Note        | Multiples of 4  | “Swapper” has pid 0 |                |
+// +-------------+-----------------+---------------------+----------------+
+
+// Cross-platform.
+[[nodiscard]] uint32_t GetCurrentThreadId();
+[[nodiscard]] uint32_t GetCurrentProcessId();
 void SetCurrentThreadName(const char* thread_name);
+[[nodiscard]] std::string GetThreadName(uint32_t tid);
+
+// Platform-specific.
+#ifdef _WIN32
+[[nodiscard]] uint32_t GetCurrentThreadIdNative();
+[[nodiscard]] std::string GetThreadNameNative(uint32_t tid);
+[[nodiscard]] uint32_t GetCurrentProcessIdNative();
+
+[[nodiscard]] uint32_t GetThreadIdFromNative(uint32_t tid);
+[[nodiscard]] uint32_t GetProcessIdFromNative(uint32_t pid);
+
+#else
+[[nodiscard]] pid_t GetCurrentThreadIdNative();
+[[nodiscard]] std::string GetThreadNameNative(pid_t tid);
+[[nodiscard]] pid_t GetCurrentProcessIdNative();
+
+[[nodiscard]] uint32_t GetThreadIdFromNative(pid_t tid);
+[[nodiscard]] uint32_t GetProcessIdFromNative(pid_t pid);
+
+[[nodiscard]] pid_t GetNativeThreadId(uint32_t tid);
+[[nodiscard]] pid_t GetNativeProcessId(uint32_t tid);
+#endif
 
 }  // namespace orbit_base
 

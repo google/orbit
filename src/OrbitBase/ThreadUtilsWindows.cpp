@@ -12,6 +12,45 @@
 
 namespace orbit_base {
 
+static constexpr uint32_t kInvalidWindowsThreadId = 0;
+static constexpr uint32_t kInvalidWindowsProcessId_0 = 0;
+static constexpr uint32_t kInvalidWindowsProcessId_1 = 0xffffffff;
+
+static [[nodiscard]] bool IsInvalidWindowsThreadId(uint32_t tid) {
+  return tid == kInvalidWindowsThreadId;
+}
+
+static [[nodiscard]] bool IsInvalidWindowsProcessId(uint32_t pid) {
+  return pid == kInvalidWindowsProcessId_0 || pid == kInvalidWindowsProcessId_1;
+}
+
+uint32_t GetCurrentThreadId() { return GetThreadIdFromNative(GetCurrentThreadIdNative()); }
+
+uint32_t GetCurrentProcessId() { return GetProcessIdFromNative(GetCurrentProcessIdNative()); }
+
+uint32_t GetCurrentThreadIdNative() {
+  thread_local uint32_t current_tid = ::GetCurrentThreadId();
+  return current_tid;
+}
+
+uint32_t GetCurrentProcessIdNative() { return ::GetCurrentProcessId(); }
+
+uint32_t GetThreadIdFromNative(uint32_t tid) {
+  return IsInvalidWindowsThreadId(tid)) ? orbit_base::kInvalidThreadId : tid;
+}
+
+uint32_t GetProcessIdFromNative(uint32_t pid) {
+  return IsInvalidWindowsProcessId(pid)) ? orbit_base::kInvalidProcessId : pid;
+}
+
+uint32_t GetNativeThreadId(uint32_t tid) {
+  return tid == orbit_base::kInvalidThreadId) ? kInvalidWindowsThreadId : tid;
+}
+
+uint32_t GetNativeProcessId(uint32_t pid) {
+  return pid == orbit_base::kInvalidProcessId ? kInvalidWindowsProcessId_0 : pid;
+}
+
 template <typename FunctionPrototypeT>
 static FunctionPrototypeT GetProcAddress(const std::string& library, const std::string& procedure) {
   HMODULE module_handle = LoadLibraryA(library.c_str());
@@ -22,12 +61,7 @@ static FunctionPrototypeT GetProcAddress(const std::string& library, const std::
   return reinterpret_cast<FunctionPrototypeT>(::GetProcAddress(module_handle, procedure.c_str()));
 }
 
-uint32_t GetCurrentThreadId() {
-  thread_local uint32_t current_tid = ::GetCurrentThreadId();
-  return current_tid;
-}
-
-std::string GetThreadName(uint32_t tid) {
+std::string GetThreadNameNative(uint32_t tid) {
   static const std::string kEmptyString;
 
   // Find "GetThreadDescription" procedure.
@@ -67,7 +101,5 @@ void SetCurrentThreadName(const char* name) {
     ERROR("Setting thread name %s with proc[%llx]", name, set_thread_description);
   }
 }
-
-uint32_t GetCurrentProcessId() { return ::GetCurrentProcessId(); }
 
 }  // namespace orbit_base

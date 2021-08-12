@@ -22,12 +22,41 @@ namespace orbit_base {
 // including the terminating null byte ('\0')".
 static constexpr size_t kMaxThreadNameLength = 16;
 
-pid_t GetCurrentThreadId() {
+static constexpr int32_t kInvalidLinuxThreadId = -1;
+static constexpr int32_t kInvalidLinuxProcessId = -1;
+
+uint32_t GetCurrentThreadId() { return GetThreadIdFromNative(GetCurrentThreadIdNative()); }
+
+uint32_t GetCurrentProcessId() { return GetProcessIdFromNative(GetCurrentProcessIdNative()); }
+
+pid_t GetCurrentThreadIdNative() {
   thread_local pid_t current_tid = syscall(__NR_gettid);
   return current_tid;
 }
 
-std::string GetThreadName(pid_t tid) {
+pid_t GetCurrentProcessIdNative() { return getpid(); }
+
+uint32_t GetThreadIdFromNative(pid_t tid) {
+  return tid == kInvalidLinuxThreadId ? orbit_base::kInvalidThreadId : static_cast<uint32_t>(tid);
+}
+
+uint32_t GetProcessIdFromNative(pid_t pid) {
+  return pid == kInvalidLinuxProcessId ? orbit_base::kInvalidProcessId : static_cast<uint32_t>(pid);
+}
+
+pid_t GetNativeThreadId(uint32_t tid) {
+  return tid == kInvalidThreadId ? kInvalidLinuxThreadId : static_cast<pid_t>(tid);
+}
+
+pid_t GetNativeProcessId(uint32_t pid) {
+  return pid == kInvalidProcessId ? kInvalidLinuxProcessId : static_cast<pid_t>(pid);
+}
+
+[[nodiscard]] std::string GetThreadName(uint32_t tid) {
+  return GetThreadNameNative(GetNativeThreadId(tid));
+}
+
+std::string GetThreadNameNative(pid_t tid) {
   std::string comm_filename = absl::StrFormat("/proc/%d/comm", tid);
   ErrorMessageOr<std::string> comm_content = ReadFileToString(comm_filename);
   if (!comm_content.has_value()) {
@@ -49,10 +78,8 @@ void SetCurrentThreadName(const char* thread_name) {
 
   int result = pthread_setname_np(pthread_self(), thread_name);
   if (result != 0) {
-    ERROR("Setting thread name for tid %d. Error %d", GetCurrentThreadId(), result);
+    ERROR("Setting thread name for tid %d. Error %d", GetCurrentThreadIdNative(), result);
   }
 }
-
-pid_t GetCurrentProcessId() { return getpid(); }
 
 }  // namespace orbit_base
