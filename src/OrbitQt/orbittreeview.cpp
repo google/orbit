@@ -30,7 +30,7 @@
 #include "DataViews/DataViewType.h"
 #include "orbitglwidget.h"
 
-OrbitTreeView::OrbitTreeView(QWidget* parent) : QTreeView(parent), auto_resize_(true) {
+OrbitTreeView::OrbitTreeView(QWidget* parent) : QTreeView(parent) {
   header()->setSortIndicatorShown(true);
   header()->setSectionsClickable(true);
 
@@ -164,12 +164,21 @@ void OrbitTreeView::Refresh(RefreshMode refresh_mode) {
 }
 
 void OrbitTreeView::resizeEvent(QResizeEvent* event) {
-  if (auto_resize_ && model_ != nullptr && model_->GetDataView()) {
-    QSize header_size = size();
-    for (size_t i = 0; i < model_->GetDataView()->GetColumns().size(); ++i) {
-      float ratio = model_->GetDataView()->GetColumns()[i].ratio;
+  const bool width_resized = event->size().width() != event->oldSize().width();
+  if (width_resized && model_ != nullptr && model_->GetDataView()) {
+    // Get initial column ratios once.
+    if (column_ratios_.size() == 0) {
+      for (const auto& column : model_->GetDataView()->GetColumns()) {
+        column_ratios_.emplace_back(column.ratio);
+      }
+    }
+
+    // Resize columns based on current ratios.
+    float header_width = static_cast<float>(size().width());
+    for (size_t i = 0; i < column_ratios_.size(); ++i) {
+      float ratio = column_ratios_[i];
       if (ratio > 0.f) {
-        header()->resizeSection(i, static_cast<int>(header_size.width() * ratio));
+        header()->resizeSection(i, static_cast<int>(header_width * ratio));
       }
     }
   }
@@ -331,8 +340,15 @@ void OrbitTreeView::OnRefreshButtonClicked() {
   }
 }
 
-void OrbitTreeView::columnResized(int /*column*/, int /*oldSize*/, int /*newSize*/) {
-  if (QApplication::mouseButtons() == Qt::LeftButton) {
-    auto_resize_ = false;
+void OrbitTreeView::columnResized(int column, int /*oldSize*/, int newSize) {
+  // We'd need to run this only when a column is being resized directly, not when the entire table
+  // is being resized and in turn triggers column resize events, otherwise the ratios can be set
+  // to 0 when shrinking the table width to 0 which we can't recover from. For this reason,
+  // maintain_user_column_ratios_ defaults to "false", the code can be enabled once we find the
+  // proper event filtering magic that will let us differentiate between direct and indirect column
+  // resizing.
+  if (maintain_user_column_ratios_ && column_ratios_.size()) {
+    CHECK(column < static_cast<int>(column_ratios_.size()));
+    column_ratios_[column] = static_cast<float>(newSize) / size().width();
   }
 }
