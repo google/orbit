@@ -44,7 +44,6 @@ class ElfFile : public ObjectFile {
   [[nodiscard]] virtual bool HasGnuDebuglink() const = 0;
   [[nodiscard]] virtual bool Is64Bit() const = 0;
   [[nodiscard]] virtual std::string GetSoname() const = 0;
-  [[nodiscard]] virtual std::string GetBuildId() const = 0;
   [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::LineInfo> GetLineInfo(
       uint64_t address) = 0;
   [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::LineInfo>

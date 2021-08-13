@@ -104,3 +104,23 @@ TEST(CoffFile, FailsWithErrorIfPdbDataNotPresent) {
   auto pdb_debug_info_or_error = coff_file_or_error.value()->GetDebugPdbInfo();
   ASSERT_THAT(pdb_debug_info_or_error, HasError("Object file does not have debug PDB info."));
 }
+
+TEST(CoffFile, GetsCorrectBuildIdIfPdbInfoIsPresent) {
+  // Note that our test library libtest.dll does not have a PDB file path.
+  std::filesystem::path file_path = orbit_test::GetTestdataDir() / "dllmain.dll";
+
+  auto coff_file_or_error = CreateCoffFile(file_path);
+  ASSERT_THAT(coff_file_or_error, HasNoError());
+
+  EXPECT_EQ("efaecd92f773bb4ebcf213b84f43b322-3", coff_file_or_error.value()->GetBuildId());
+}
+
+TEST(CoffFile, GetsEmptyBuildIdIfPdbInfoIsNotPresent) {
+  // Note that our test library libtest.dll does not have a PDB file path.
+  std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libtest.dll";
+
+  auto coff_file_or_error = CreateCoffFile(file_path);
+  ASSERT_THAT(coff_file_or_error, HasNoError());
+
+  EXPECT_EQ("", coff_file_or_error.value()->GetBuildId());
+}
