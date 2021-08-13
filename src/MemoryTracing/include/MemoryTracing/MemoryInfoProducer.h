@@ -50,13 +50,13 @@ class MemoryInfoProducer {
 
 std::unique_ptr<MemoryInfoProducer> CreateSystemMemoryInfoProducer(MemoryInfoListener* listener,
                                                                    uint64_t sampling_period_ns,
-                                                                   uint32_t pid);
+                                                                   int32_t pid);
 std::unique_ptr<MemoryInfoProducer> CreateCGroupMemoryInfoProducer(MemoryInfoListener* listener,
                                                                    uint64_t sampling_period_ns,
-                                                                   uint32_t pid);
+                                                                   int32_t pid);
 std::unique_ptr<MemoryInfoProducer> CreateProcessMemoryInfoProducer(MemoryInfoListener* listener,
                                                                     uint64_t sampling_period_ns,
-                                                                    uint32_t pid);
+                                                                    int32_t pid);
 
 }  // namespace orbit_memory_tracing
 

@@ -98,3 +98,43 @@ TEST(ThreadUtils, GetThreadName) {
   }
   other_thread.join();
 }
+
+TEST(ThreadUtils, ValidIds) {
+#ifdef __linux
+  std::vector<int32_t> valid_native_thread_ids{0, 1, 2, 3, INT_MAX - 1, INT_MAX};
+  std::vector<int32_t>& valid_native_process_ids = valid_native_thread_ids;
+#else  // Windows
+  std::vector<uint32_t> valid_native_thread_ids{4, 8, UINT_MAX - 7, UINT_MAX - 3};
+  std::vector<uint32_t>& valid_native_process_ids = valid_native_thread_ids;
+#endif
+
+  for (auto native_tid : valid_native_thread_ids) {
+    uint32_t tid = orbit_base::GetThreadIdFromNative(native_tid);
+    EXPECT_TRUE(orbit_base::IsValidThreadId(tid)) << "tid == " << tid;
+  }
+
+  for (auto native_pid : valid_native_process_ids) {
+    uint32_t pid = orbit_base::GetProcessIdFromNative(native_pid);
+    EXPECT_TRUE(orbit_base::IsValidProcessId(pid)) << "pid == " << pid;
+  }
+}
+
+TEST(ThreadUtils, InvalidIds) {
+#ifdef __linux
+  std::vector<int32_t> invalid_native_thread_ids{-INT_MAX, -2, -1};
+  const std::vector<int32_t>& invalid_native_process_ids = invalid_native_thread_ids;
+#else  // Windows
+  std::vector<uint32_t> invalid_native_thread_ids{0, 1, 2, 3, 5};
+  std::vector<uint32_t> invalid_native_process_ids = {0, 0xffffffff, 1, 2, 3, 5};
+#endif
+
+  for (auto invalid_native_thread_id : invalid_native_thread_ids) {
+    uint32_t tid = orbit_base::GetThreadIdFromNative(invalid_native_thread_id);
+    EXPECT_FALSE(orbit_base::IsValidThreadId(tid)) << "tid == " << tid;
+  }
+
+  for (auto invalid_native_process_id : invalid_native_process_ids) {
+    uint32_t pid = orbit_base::GetProcessIdFromNative(invalid_native_process_id);
+    EXPECT_FALSE(orbit_base::IsValidProcessId(pid)) << "pid == " << pid;
+  }
+}

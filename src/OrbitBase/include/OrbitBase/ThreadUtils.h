@@ -54,6 +54,8 @@ static constexpr uint32_t kInvalidProcessId = 0xffffffff;
 // Cross-platform.
 [[nodiscard]] uint32_t GetCurrentThreadId();
 [[nodiscard]] uint32_t GetCurrentProcessId();
+[[nodiscard]] bool IsValidThreadId(uint32_t tid);
+[[nodiscard]] bool IsValidProcessId(uint32_t pid);
 void SetCurrentThreadName(const char* thread_name);
 [[nodiscard]] std::string GetThreadName(uint32_t tid);
 

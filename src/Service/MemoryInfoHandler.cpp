@@ -7,6 +7,7 @@
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
+#include "OrbitBase/ThreadUtils.h"
 
 namespace orbit_service {
 
@@ -18,19 +19,21 @@ void MemoryInfoHandler::Start(orbit_grpc_protos::CaptureOptions capture_options)
   SetEnableCGroupMemory(true);
   SetEnableProcessMemory(true);
 
+  const int32_t pid = orbit_base::GetNativeProcessId(capture_options.pid());
+
   CHECK(system_memory_info_producer_ == nullptr);
   system_memory_info_producer_ = orbit_memory_tracing::CreateSystemMemoryInfoProducer(
-      this, capture_options.memory_sampling_period_ns(), capture_options.pid());
+      this, capture_options.memory_sampling_period_ns(), pid);
   system_memory_info_producer_->Start();
 
   CHECK(cgroup_memory_info_producer_ == nullptr);
   cgroup_memory_info_producer_ = orbit_memory_tracing::CreateCGroupMemoryInfoProducer(
-      this, capture_options.memory_sampling_period_ns(), capture_options.pid());
+      this, capture_options.memory_sampling_period_ns(), pid);
   cgroup_memory_info_producer_->Start();
 
   CHECK(process_memory_info_producer_ == nullptr);
   process_memory_info_producer_ = orbit_memory_tracing::CreateProcessMemoryInfoProducer(
-      this, capture_options.memory_sampling_period_ns(), capture_options.pid());
+      this, capture_options.memory_sampling_period_ns(), pid);
   process_memory_info_producer_->Start();
 }
 

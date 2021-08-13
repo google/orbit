@@ -103,7 +103,7 @@ std::unique_ptr<MmapPerfEvent> ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_bu
 
   // Workaround for gcc's "cannot bind packed field ... to ‘long unsigned int&’"
   uint64_t timestamp = sample_id.time;
-  uint32_t pid = sample_id.pid;
+  int32_t pid = static_cast<int32_t>(sample_id.pid);
 
   // Consider moving this to MMAP2 event which has more information (like flags)
   return std::make_unique<MmapPerfEvent>(pid, timestamp, mmap_event, std::move(filename));

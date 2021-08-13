@@ -16,17 +16,35 @@ static constexpr uint32_t kInvalidWindowsThreadId = 0;
 static constexpr uint32_t kInvalidWindowsProcessId_0 = 0;
 static constexpr uint32_t kInvalidWindowsProcessId_1 = 0xffffffff;
 
-static [[nodiscard]] bool IsInvalidWindowsThreadId(uint32_t tid) {
-  return tid == kInvalidWindowsThreadId;
+namespace {
+
+// On Windows, thread and process ids are observed to be multiples of 4. Even though there is no
+// formal guarantee for this property, the current implementation of cross platform thread process
+// ids rely on it. https://devblogs.microsoft.com/oldnewthing/20080228-00/?p=23283
+inline [[nodiscard]] bool IsMultipleOfFour(uint32_t value) { return (value & 3) == 0; }
+
+[[nodiscard]] bool IsValidThreadIdNative(uint32_t tid) {
+  return tid != kInvalidWindowsThreadId && IsMultipleOfFour(tid);
 }
 
-static [[nodiscard]] bool IsInvalidWindowsProcessId(uint32_t pid) {
-  return pid == kInvalidWindowsProcessId_0 || pid == kInvalidWindowsProcessId_1;
+[[nodiscard]] bool IsValidProcessIdNative(uint32_t pid) {
+  return pid != kInvalidWindowsProcessId_0 && pid != kInvalidWindowsProcessId_1 &&
+         IsMultipleOfFour(pid);
 }
+
+}  // namespace
 
 uint32_t GetCurrentThreadId() { return GetThreadIdFromNative(GetCurrentThreadIdNative()); }
 
 uint32_t GetCurrentProcessId() { return GetProcessIdFromNative(GetCurrentProcessIdNative()); }
+
+bool IsValidThreadId(uint32_t tid) {
+  return tid != orbit_base::kInvalidThreadId && IsMultipleOfFour(tid);
+}
+
+bool IsValidProcessId(uint32_t pid) {
+  return pid != orbit_base::kInvalidProcessId && IsMultipleOfFour(pid);
+}
 
 uint32_t GetCurrentThreadIdNative() {
   thread_local uint32_t current_tid = ::GetCurrentThreadId();
@@ -36,19 +54,19 @@ uint32_t GetCurrentThreadIdNative() {
 uint32_t GetCurrentProcessIdNative() { return ::GetCurrentProcessId(); }
 
 uint32_t GetThreadIdFromNative(uint32_t tid) {
-  return IsInvalidWindowsThreadId(tid) ? orbit_base::kInvalidThreadId : tid;
+  return IsValidThreadIdNative(tid) ? tid : orbit_base::kInvalidThreadId;
 }
 
 uint32_t GetProcessIdFromNative(uint32_t pid) {
-  return IsInvalidWindowsProcessId(pid) ? orbit_base::kInvalidProcessId : pid;
+  return IsValidProcessIdNative(pid) ? pid : orbit_base::kInvalidProcessId;
 }
 
 uint32_t GetNativeThreadId(uint32_t tid) {
-  return tid == orbit_base::kInvalidThreadId ? kInvalidWindowsThreadId : tid;
+  return IsValidThreadId(tid) ? tid : kInvalidWindowsThreadId;
 }
 
 uint32_t GetNativeProcessId(uint32_t pid) {
-  return pid == orbit_base::kInvalidProcessId ? kInvalidWindowsProcessId_0 : pid;
+  return IsValidProcessId(pid) ? pid : kInvalidWindowsProcessId_0;
 }
 
 std::string GetThreadName(uint32_t tid) { return GetThreadNameNative(GetNativeThreadId(tid)); }

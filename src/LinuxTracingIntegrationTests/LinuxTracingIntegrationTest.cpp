@@ -330,7 +330,7 @@ class LinuxTracingIntegrationTestFixture {
 
   [[nodiscard]] pid_t GetPuppetPidNative() const { return puppet_.GetChildPidNative(); }
   [[nodiscard]] uint32_t GetPuppetPid() const {
-    return orbit_base::GetThreadIdFromNative(GetPuppetPidNative());
+    return orbit_base::GetProcessIdFromNative(GetPuppetPidNative());
   }
 
   void WriteLineToPuppet(std::string_view str) { puppet_.WriteLine(str); }
@@ -340,7 +340,7 @@ class LinuxTracingIntegrationTestFixture {
   [[nodiscard]] orbit_grpc_protos::CaptureOptions BuildDefaultCaptureOptions() {
     orbit_grpc_protos::CaptureOptions capture_options;
     capture_options.set_trace_context_switches(true);
-    capture_options.set_pid(puppet_.GetChildPidNative());
+    capture_options.set_pid(orbit_base::GetProcessIdFromNative(puppet_.GetChildPidNative()));
     capture_options.set_samples_per_second(1000.0);
     capture_options.set_stack_dump_size(65000);
     capture_options.set_unwinding_method(orbit_grpc_protos::CaptureOptions::kDwarf);
