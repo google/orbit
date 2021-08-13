@@ -41,7 +41,6 @@
 #include "ClientData/TimerChain.h"
 #include "ClientData/UserDefinedCaptureData.h"
 #include "ClientFlags/ClientFlags.h"
-#include "ClientModel/CaptureDeserializer.h"
 #include "ClientModel/CaptureSerializer.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
 #include "CodeReport/Disassembler.h"
@@ -1189,9 +1188,8 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
     if (capture_file_or_error.has_value()) {
       load_result = LoadCaptureFromNewFormat(this, capture_file_or_error.value().get(),
                                              &capture_loading_cancellation_requested_);
-    } else {  // Fall back to old capture format.
-      load_result = orbit_client_model::capture_deserializer::Load(
-          file_path, this, module_manager_.get(), &capture_loading_cancellation_requested_);
+    } else {
+      load_result = capture_file_or_error.error();
     }
 
     if (load_result.has_error()) {
