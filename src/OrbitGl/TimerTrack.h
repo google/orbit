@@ -72,21 +72,10 @@ class TimerTrack : public Track {
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetFirstBeforeTime(uint64_t time,
                                                                          uint32_t depth) const;
 
-  // Must be overriden by child class for sensible behavior.
-  [[nodiscard]] virtual const orbit_client_protos::TimerInfo* GetLeft(
-      const orbit_client_protos::TimerInfo& timer_info) const {
-    return &timer_info;
-  };
-  // Must be overriden by child class for sensible behavior.
-  [[nodiscard]] virtual const orbit_client_protos::TimerInfo* GetRight(
-      const orbit_client_protos::TimerInfo& timer_info) const {
-    return &timer_info;
-  };
-
-  [[nodiscard]] virtual const orbit_client_protos::TimerInfo* GetUp(
-      const orbit_client_protos::TimerInfo& timer_info) const;
-  [[nodiscard]] virtual const orbit_client_protos::TimerInfo* GetDown(
-      const orbit_client_protos::TimerInfo& timer_info) const;
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetUp(
+      const orbit_client_protos::TimerInfo& timer_info) const override;
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetDown(
+      const orbit_client_protos::TimerInfo& timer_info) const override;
 
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetScopesInRange(
       uint64_t start_ns, uint64_t end_ns) const;

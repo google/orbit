@@ -838,9 +838,13 @@ void TimeGraph::SelectAndZoom(const TimerInfo* timer_info) {
 
 void TimeGraph::JumpToNeighborTimer(const TimerInfo* from, JumpDirection jump_direction,
                                     JumpScope jump_scope) {
-  // We will assume that jumping makes sense if from isn't nullptr.
-  if (from == nullptr) {
+  if (from == nullptr || !TrackManager::IteratableType(from->type())) {
     return;
+  }
+  if ((jump_scope == JumpScope::kSameFunction ||
+       jump_scope == JumpScope::kSameThreadSameFunction) &&
+      !TrackManager::FunctionIteratableType(from->type())) {
+    jump_scope = JumpScope::kSameDepth;
   }
   const orbit_client_protos::TimerInfo* goal = nullptr;
   auto function_id = from->function_id();
@@ -889,31 +893,27 @@ void TimeGraph::JumpToNeighborTimer(const TimerInfo* from, JumpDirection jump_di
 }
 
 const TimerInfo* TimeGraph::FindPrevious(const TimerInfo& from) {
-  if (from.type() == TimerInfo::kGpuActivity) {
-    return track_manager_->GetOrCreateGpuTrack(from.timeline_hash())->GetLeft(from);
-  }
-  return track_manager_->GetOrCreateThreadTrack(from.thread_id())->GetLeft(from);
+  Track* track = track_manager_->GetOrCreateTrackFromTimerInfo(from);
+  if (track == nullptr) return nullptr;
+  return track->GetLeft(from);
 }
 
 const TimerInfo* TimeGraph::FindNext(const TimerInfo& from) {
-  if (from.type() == TimerInfo::kGpuActivity) {
-    return track_manager_->GetOrCreateGpuTrack(from.timeline_hash())->GetRight(from);
-  }
-  return track_manager_->GetOrCreateThreadTrack(from.thread_id())->GetRight(from);
+  Track* track = track_manager_->GetOrCreateTrackFromTimerInfo(from);
+  if (track == nullptr) return nullptr;
+  return track->GetRight(from);
 }
 
 const TimerInfo* TimeGraph::FindTop(const TimerInfo& from) {
-  if (from.type() == TimerInfo::kGpuActivity) {
-    return track_manager_->GetOrCreateGpuTrack(from.timeline_hash())->GetUp(from);
-  }
-  return track_manager_->GetOrCreateThreadTrack(from.thread_id())->GetUp(from);
+  Track* track = track_manager_->GetOrCreateTrackFromTimerInfo(from);
+  if (track == nullptr) return nullptr;
+  return track->GetUp(from);
 }
 
 const TimerInfo* TimeGraph::FindDown(const TimerInfo& from) {
-  if (from.type() == TimerInfo::kGpuActivity) {
-    return track_manager_->GetOrCreateGpuTrack(from.timeline_hash())->GetDown(from);
-  }
-  return track_manager_->GetOrCreateThreadTrack(from.thread_id())->GetDown(from);
+  Track* track = track_manager_->GetOrCreateTrackFromTimerInfo(from);
+  if (track == nullptr) return nullptr;
+  return track->GetDown(from);
 }
 
 std::pair<const TimerInfo*, const TimerInfo*> TimeGraph::GetMinMaxTimerInfoForFunction(

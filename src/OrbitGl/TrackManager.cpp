@@ -26,6 +26,7 @@
 #include "ClientFlags/ClientFlags.h"
 #include "GlCanvas.h"
 #include "OrbitBase/Append.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
@@ -379,6 +380,59 @@ void TrackManager::SetTrackTypeVisibility(Track::Type type, bool value) {
 
 bool TrackManager::GetTrackTypeVisibility(Track::Type type) const {
   return track_type_visibility_.at(type);
+}
+
+bool TrackManager::IteratableType(orbit_client_protos::TimerInfo_Type type) {
+  switch (type) {
+    case TimerInfo::kNone:
+    case TimerInfo::kApiScope:
+    case TimerInfo::kGpuActivity:
+    case TimerInfo::kGpuCommandBuffer:
+    case TimerInfo::kGpuDebugMarker:
+      return true;
+    default:
+      return false;
+  }
+}
+
+bool TrackManager::FunctionIteratableType(orbit_client_protos::TimerInfo_Type type) {
+  switch (type) {
+    case TimerInfo::kNone:
+    case TimerInfo::kApiScope:
+      return true;
+    default:
+      return false;
+  }
+}
+
+Track* TrackManager::GetOrCreateTrackFromTimerInfo(const TimerInfo& timer_info) {
+  switch (timer_info.type()) {
+    case TimerInfo::kNone:
+    case TimerInfo::kApiScope:
+    case TimerInfo::kApiEvent:
+      return GetOrCreateThreadTrack(timer_info.thread_id());
+    case TimerInfo::kCoreActivity:
+      return GetOrCreateSchedulerTrack();
+    case TimerInfo::kFrame:
+      return GetOrCreateFrameTrack(
+          capture_data_->instrumented_functions().at(timer_info.function_id()));
+    case TimerInfo::kGpuActivity:
+    case TimerInfo::kGpuCommandBuffer:
+    case TimerInfo::kGpuDebugMarker:
+      return GetOrCreateGpuTrack(timer_info.timeline_hash());
+    case TimerInfo::kApiScopeAsync:
+      return GetOrCreateAsyncTrack(timer_info.api_scope_name());
+    case TimerInfo::kSystemMemoryUsage:
+      return GetSystemMemoryTrack();
+    case TimerInfo::kCGroupAndProcessMemoryUsage:
+      return GetCGroupAndProcessMemoryTrack();
+    case TimerInfo::kPageFaults:
+      return GetPageFaultsTrack();
+    case orbit_client_protos::TimerInfo_Type_TimerInfo_Type_INT_MIN_SENTINEL_DO_NOT_USE_:
+    case orbit_client_protos::TimerInfo_Type_TimerInfo_Type_INT_MAX_SENTINEL_DO_NOT_USE_:
+      UNREACHABLE();
+  }
+  return nullptr;
 }
 
 SchedulerTrack* TrackManager::GetOrCreateSchedulerTrack() {
