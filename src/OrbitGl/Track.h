@@ -94,6 +94,27 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   [[nodiscard]] virtual std::vector<CaptureViewElement*> GetVisibleChildren() { return {}; }
   [[nodiscard]] virtual int GetVisiblePrimitiveCount() const { return 0; }
 
+  // Must be overriden by child class for sensible behavior.
+  [[nodiscard]] virtual const orbit_client_protos::TimerInfo* GetLeft(
+      const orbit_client_protos::TimerInfo& /*timer_info*/) const {
+    return nullptr;
+  };
+  // Must be overriden by child class for sensible behavior.
+  [[nodiscard]] virtual const orbit_client_protos::TimerInfo* GetRight(
+      const orbit_client_protos::TimerInfo& /*timer_info*/) const {
+    return nullptr;
+  };
+  // Must be overriden by child class for sensible behavior.
+  [[nodiscard]] virtual const orbit_client_protos::TimerInfo* GetUp(
+      const orbit_client_protos::TimerInfo& /*timer_info*/) const {
+    return nullptr;
+  };
+  // Must be overriden by child class for sensible behavior.
+  [[nodiscard]] virtual const orbit_client_protos::TimerInfo* GetDown(
+      const orbit_client_protos::TimerInfo& /*timer_info*/) const {
+    return nullptr;
+  };
+
  protected:
   void DrawCollapsingTriangle(Batcher& batcher, TextRenderer& text_renderer,
                               const DrawContext& draw_context);

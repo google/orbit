@@ -57,6 +57,10 @@ class TrackManager {
 
   [[nodiscard]] std::pair<uint64_t, uint64_t> GetTracksMinMaxTimestamps() const;
 
+  [[nodiscard]] static bool IteratableType(orbit_client_protos::TimerInfo_Type type);
+  [[nodiscard]] static bool FunctionIteratableType(orbit_client_protos::TimerInfo_Type type);
+
+  Track* GetOrCreateTrackFromTimerInfo(const TimerInfo& timer_info);
   SchedulerTrack* GetOrCreateSchedulerTrack();
   ThreadTrack* GetOrCreateThreadTrack(int32_t tid);
   GpuTrack* GetOrCreateGpuTrack(uint64_t timeline_hash);

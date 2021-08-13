@@ -45,14 +45,14 @@ class GpuTrack : public Track {
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
-      const orbit_client_protos::TimerInfo& timer_info) const;
+      const orbit_client_protos::TimerInfo& timer_info) const override;
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetRight(
-      const orbit_client_protos::TimerInfo& timer_info) const;
+      const orbit_client_protos::TimerInfo& timer_info) const override;
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetUp(
-      const orbit_client_protos::TimerInfo& timer_info) const;
+      const orbit_client_protos::TimerInfo& timer_info) const override;
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetDown(
-      const orbit_client_protos::TimerInfo& timer_info) const;
+      const orbit_client_protos::TimerInfo& timer_info) const override;
 
   [[nodiscard]] std::string GetName() const override {
     return string_manager_->Get(timeline_hash_).value_or(std::to_string(timeline_hash_));
