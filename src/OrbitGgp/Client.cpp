@@ -16,6 +16,7 @@
 #include <type_traits>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitGgp/Error.h"
 #include "OrbitGgp/Instance.h"
 #include "OrbitGgp/SshInfo.h"
@@ -28,7 +29,7 @@ namespace {
 
 void RunProcessWithTimeout(const QString& program, const QStringList& arguments,
                            std::chrono::milliseconds timeout, QObject* parent,
-                           const std::function<void(outcome::result<QByteArray>)>& callback) {
+                           const std::function<void(ErrorMessageOr<QByteArray>)>& callback) {
   const auto process = QPointer{new QProcess{parent}};
   process->setProgram(program);
   process->setArguments(arguments);
@@ -37,10 +38,16 @@ void RunProcessWithTimeout(const QString& program, const QStringList& arguments,
 
   QObject::connect(timeout_timer, &QTimer::timeout, parent,
                    [process, timeout_timer, timeout, callback]() {
-                     if (process && process->state() != QProcess::NotRunning) {
-                       ERROR("Process request timed out after %dms", timeout.count());
-                       callback(Error::kRequestTimedOut);
-                       if (process) {
+                     if ((process != nullptr) && process->state() != QProcess::NotRunning) {
+                       std::string error_message =
+                           absl::StrFormat("Process request timed out after %dms", timeout.count());
+                       ERROR("%s", error_message);
+                       callback(ErrorMessage{error_message});
+                       if (process != nullptr) {
+                         // `process` will also emit an `errorOccured` signal when terminate has
+                         // been called, but we don't want that. Hence we have to call
+                         // `QObject::disconnect` before-hand.
+                         QObject::disconnect(process, nullptr, nullptr, nullptr);
                          process->terminate();
                          process->deleteLater();
                        }
@@ -60,11 +67,12 @@ void RunProcessWithTimeout(const QString& program, const QStringList& arguments,
                      }
 
                      if (exit_status != QProcess::NormalExit || exit_code != 0) {
-                       ERROR(
+                       std::string error_message = absl::StrFormat(
                            "Ggp list instances request failed with error: %s (exit code: "
                            "%d)",
                            process->errorString().toStdString(), exit_code);
-                       callback(Error::kGgpListInstancesFailed);
+                       ERROR("%s", error_message);
+                       callback(ErrorMessage{error_message});
                        return;
                      }
 
@@ -78,8 +86,10 @@ void RunProcessWithTimeout(const QString& program, const QStringList& arguments,
       timeout_timer->stop();
       timeout_timer->deleteLater();
     }
-    ERROR("Ggp list instances request failed with error: %s", process->errorString().toStdString());
-    callback(Error::kGgpListInstancesFailed);
+    std::string error_message = absl::StrFormat("Ggp list instances request failed with error: %s",
+                                                process->errorString().toStdString());
+    ERROR("%s", error_message);
+    callback(ErrorMessage{error_message});
     process->deleteLater();
   });
 
@@ -120,12 +130,12 @@ ErrorMessageOr<QPointer<Client>> Client::Create(QObject* parent, QString ggp_pro
 }
 
 void Client::GetInstancesAsync(
-    const std::function<void(outcome::result<QVector<Instance>>)>& callback, int retry) {
+    const std::function<void(ErrorMessageOr<QVector<Instance>>)>& callback, int retry) {
   CHECK(callback);
 
   RunProcessWithTimeout(ggp_program_, {"instance", "list", "-s"}, timeout_, this,
-                        [this, callback, retry](outcome::result<QByteArray> result) {
-                          if (!result) {
+                        [this, callback, retry](ErrorMessageOr<QByteArray> result) {
+                          if (result.has_error()) {
                             if (retry < 1) {
                               callback(result.error());
                             } else {
@@ -138,13 +148,13 @@ void Client::GetInstancesAsync(
 }
 
 void Client::GetSshInfoAsync(const Instance& ggp_instance,
-                             const std::function<void(outcome::result<SshInfo>)>& callback) {
+                             const std::function<void(ErrorMessageOr<SshInfo>)>& callback) {
   CHECK(callback);
 
   const QStringList arguments{"ssh", "init", "-s", "--instance", ggp_instance.id};
   RunProcessWithTimeout(ggp_program_, arguments, timeout_, this,
-                        [callback](outcome::result<QByteArray> result) {
-                          if (!result) {
+                        [callback](ErrorMessageOr<QByteArray> result) {
+                          if (result.has_error()) {
                             callback(result.error());
                           } else {
                             callback(SshInfo::CreateFromJson(result.value()));

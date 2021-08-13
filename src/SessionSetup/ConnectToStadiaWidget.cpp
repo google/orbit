@@ -259,7 +259,7 @@ void ConnectToStadiaWidget::ReloadInstances() {
   CHECK(ggp_client_ != nullptr);
   instance_model_.SetInstances({});
 
-  ggp_client_->GetInstancesAsync([this](outcome::result<QVector<Instance>> instances) {
+  ggp_client_->GetInstancesAsync([this](ErrorMessageOr<QVector<Instance>> instances) {
     OnInstancesLoaded(std::move(instances));
   });
 }
@@ -274,7 +274,7 @@ void ConnectToStadiaWidget::CheckCredentialsAvailableOrLoad() {
       instance_credentials_loading_.emplace(instance_id);
       ggp_client_->GetSshInfoAsync(
           selected_instance_.value(),
-          [this, instance_id](outcome::result<orbit_ggp::SshInfo> ssh_info_result) {
+          [this, instance_id](ErrorMessageOr<orbit_ggp::SshInfo> ssh_info_result) {
             OnSshInfoLoaded(std::move(ssh_info_result), instance_id);
           });
     }
@@ -393,8 +393,8 @@ void ConnectToStadiaWidget::UpdateRememberInstance(bool value) {
 }
 
 void ConnectToStadiaWidget::OnInstancesLoaded(
-    outcome::result<QVector<orbit_ggp::Instance>> instances) {
-  if (!instances) {
+    ErrorMessageOr<QVector<orbit_ggp::Instance>> instances) {
+  if (instances.has_error()) {
     emit ErrorOccurred(QString("Orbit was unable to retrieve the list of available Stadia "
                                "instances. The error message was: %1")
                            .arg(QString::fromStdString(instances.error().message())));
@@ -407,11 +407,11 @@ void ConnectToStadiaWidget::OnInstancesLoaded(
   TrySelectRememberedInstance();
 }
 
-void ConnectToStadiaWidget::OnSshInfoLoaded(outcome::result<orbit_ggp::SshInfo> ssh_info_result,
+void ConnectToStadiaWidget::OnSshInfoLoaded(ErrorMessageOr<orbit_ggp::SshInfo> ssh_info_result,
                                             std::string instance_id) {
   instance_credentials_loading_.erase(instance_id);
 
-  if (!ssh_info_result) {
+  if (ssh_info_result.has_error()) {
     std::string error_message =
         absl::StrFormat("Unable to load encryption credentials for instance with id %s: %s",
                         instance_id, ssh_info_result.error().message());

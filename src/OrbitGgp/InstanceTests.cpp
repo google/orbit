@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <QDateTime>
@@ -14,6 +15,7 @@
 #include <utility>
 
 #include "OrbitBase/Result.h"
+#include "OrbitBase/TestUtils.h"
 #include "OrbitGgp/Error.h"
 #include "OrbitGgp/Instance.h"
 
@@ -23,21 +25,21 @@ TEST(InstanceTests, GetListFromJson) {
   {
     // invalid json
     const auto json = QString("json").toUtf8();
-    EXPECT_FALSE(Instance::GetListFromJson(json));
+    EXPECT_THAT(Instance::GetListFromJson(json), orbit_base::HasError("Unable to parse JSON"));
   }
 
   {
     // empty json
     const auto json = QString("[]").toUtf8();
     const auto empty_instances = Instance::GetListFromJson(json);
-    ASSERT_TRUE(empty_instances);
+    ASSERT_THAT(empty_instances, orbit_base::HasValue());
     EXPECT_TRUE(empty_instances.value().empty());
   }
 
   {
     // one empty json object
     const auto json = QString("[{}]").toUtf8();
-    EXPECT_FALSE(Instance::GetListFromJson(json));
+    EXPECT_THAT(Instance::GetListFromJson(json), orbit_base::HasError("Unable to parse JSON"));
   }
 
   {
@@ -65,8 +67,7 @@ TEST(InstanceTests, GetListFromJson) {
                           "key\":\"object value\"}}]")
                           .toUtf8();
     const auto result = Instance::GetListFromJson(json);
-    ASSERT_FALSE(result);
-    EXPECT_EQ(result.error().value(), static_cast<int>(orbit_ggp::Error::kUnableToParseJson));
+    EXPECT_THAT(result, orbit_base::HasError("Unable to parse JSON"));
   }
 
   {
@@ -93,8 +94,8 @@ TEST(InstanceTests, GetListFromJson) {
                           "key\":\"other value\",\"other complex object\":{\"object "
                           "key\":\"object value\"}}]")
                           .toUtf8();
-    const auto result = Instance::GetListFromJson(json);
-    ASSERT_TRUE(result);
+    auto result = Instance::GetListFromJson(json);
+    ASSERT_THAT(result, orbit_base::HasValue());
     const QVector<Instance> instances = std::move(result.value());
     ASSERT_EQ(instances.size(), 1);
     const Instance instance = instances[0];

@@ -46,7 +46,7 @@ TEST(OrbitGgpClient, GetInstancesAsyncWorking) {
 
   bool callback_was_called = false;
   client.value()->GetInstancesAsync(
-      [&callback_was_called](outcome::result<QVector<Instance>> instances) {
+      [&callback_was_called](ErrorMessageOr<QVector<Instance>> instances) {
         QCoreApplication::exit();
         callback_was_called = true;
         ASSERT_TRUE(instances.has_value());
@@ -68,10 +68,10 @@ TEST(OrbitGgpClient, GetInstancesAsyncTimeout) {
 
   bool callback_was_called = false;
   client.value()->GetInstancesAsync(
-      [&callback_was_called](const outcome::result<QVector<Instance>>& instances) {
+      [&callback_was_called](const ErrorMessageOr<QVector<Instance>>& instances) {
         QCoreApplication::exit();
         callback_was_called = true;
-        EXPECT_TRUE(instances.has_error());
+        EXPECT_THAT(instances, HasError("Process request timed out after 5ms"));
       },
       0);
 
@@ -92,7 +92,7 @@ TEST(OrbitGgpClient, GetSshInfoAsyncWorking) {
 
   bool callback_was_called = false;
   client.value()->GetSshInfoAsync(test_instance,
-                                  [&callback_was_called](const outcome::result<SshInfo>& ssh_info) {
+                                  [&callback_was_called](const ErrorMessageOr<SshInfo>& ssh_info) {
                                     QCoreApplication::exit();
                                     callback_was_called = true;
                                     EXPECT_TRUE(ssh_info.has_value());
@@ -114,12 +114,12 @@ TEST(OrbitGgpClient, GetSshInfoAsyncTimeout) {
   ASSERT_THAT(client, HasValue());
 
   bool callback_was_called = false;
-  client.value()->GetSshInfoAsync(test_instance,
-                                  [&callback_was_called](const outcome::result<SshInfo>& ssh_info) {
-                                    QCoreApplication::exit();
-                                    callback_was_called = true;
-                                    EXPECT_TRUE(ssh_info.has_error());
-                                  });
+  client.value()->GetSshInfoAsync(
+      test_instance, [&callback_was_called](const ErrorMessageOr<SshInfo>& ssh_info) {
+        QCoreApplication::exit();
+        callback_was_called = true;
+        EXPECT_THAT(ssh_info, HasError("Process request timed out after 5ms"));
+      });
 
   QCoreApplication::exec();
 
