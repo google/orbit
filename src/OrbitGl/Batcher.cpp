@@ -275,7 +275,7 @@ void Batcher::AddTriangle(const Triangle& triangle, const std::array<Color, 3>& 
   user_data_.push_back(std::move(user_data));
 }
 
-Vec3 Batcher::TransformVertex(const Vec3 input) const {
+Vec3 Batcher::TransformVertex(const Vec3& input) const {
   const Vec3 result = input + current_translation_;
   return Vec3(floorf(result[0]), floorf(result[1]), result[2]);
 }
