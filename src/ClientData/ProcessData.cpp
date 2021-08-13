@@ -130,15 +130,14 @@ void ProcessData::AddOrUpdateModuleInfo(const ModuleInfo& module_info) {
 ErrorMessageOr<ModuleInMemory> ProcessData::FindModuleByAddress(uint64_t absolute_address) const {
   absl::MutexLock lock(&mutex_);
   if (start_address_to_module_in_memory_.empty()) {
-    return ErrorMessage(absl::StrFormat("Unable to find module for address %016" PRIx64
-                                        ": No modules loaded by process %s",
-                                        absolute_address, process_info_.name()));
+    return ErrorMessage(
+        absl::StrFormat("Unable to find module for address %016x: No modules loaded by process %s",
+                        absolute_address, process_info_.name()));
   }
 
-  ErrorMessage not_found_error =
-      ErrorMessage(absl::StrFormat("Unable to find module for address %016" PRIx64
-                                   ": No module loaded at this address by process %s",
-                                   absolute_address, process_info_.name()));
+  ErrorMessage not_found_error = ErrorMessage(absl::StrFormat(
+      "Unable to find module for address %016x: No module loaded at this address by process %s",
+      absolute_address, process_info_.name()));
 
   auto it = start_address_to_module_in_memory_.upper_bound(absolute_address);
   if (it == start_address_to_module_in_memory_.begin()) return not_found_error;

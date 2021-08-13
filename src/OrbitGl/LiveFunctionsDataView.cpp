@@ -100,7 +100,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
     case kColumnModule:
       return function.module_path();
     case kColumnAddress:
-      return absl::StrFormat("%#" PRIx64, function.address());
+      return absl::StrFormat("%#x", function.address());
     default:
       return "";
   }
