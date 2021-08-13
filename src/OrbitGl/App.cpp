@@ -1188,7 +1188,7 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
     if (capture_file_or_error.has_value()) {
       load_result = LoadCaptureFromNewFormat(this, capture_file_or_error.value().get(),
                                              &capture_loading_cancellation_requested_);
-    } else {  // The old format is not supported anymore.
+    } else {
       load_result = capture_file_or_error.error();
     }
 
