@@ -1189,7 +1189,7 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
       load_result = LoadCaptureFromNewFormat(this, capture_file_or_error.value().get(),
                                              &capture_loading_cancellation_requested_);
     } else {  // The old format is not supported anymore.
-      load_result = ErrorMessage("Old captures are not supported anymore.");
+      load_result = capture_file_or_error.error();
     }
 
     if (load_result.has_error()) {
