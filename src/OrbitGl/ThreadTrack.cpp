@@ -497,7 +497,7 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
 
       auto timer_duration = timer_info.end() - timer_info.start();
       if (timer_duration > draw_data.ns_per_pixel) {
-        if (!collapse_toggle_->IsCollapsed()) {
+        if (!collapse_toggle_->IsCollapsed() && BoxHasRoomForText(size[0])) {
           DrawTimesliceText(timer_info, draw_data.track_start_x, z_offset, pos, size);
         }
         batcher->AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));

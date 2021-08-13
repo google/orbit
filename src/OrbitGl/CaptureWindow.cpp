@@ -381,6 +381,8 @@ std::unique_ptr<AccessibleInterface> CaptureWindow::CreateAccessibleInterface() 
 void CaptureWindow::Draw() {
   ORBIT_SCOPE("CaptureWindow::Draw");
 
+  text_renderer_.Init();
+
   if (ShouldSkipRendering()) {
     return;
   }

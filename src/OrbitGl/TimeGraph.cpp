@@ -68,6 +68,7 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
       manual_instrumentation_manager_{app->GetManualInstrumentationManager()},
       capture_data_{capture_data},
       app_{app} {
+  text_renderer_static_.Init();
   text_renderer_static_.SetViewport(viewport);
   batcher_.SetPickingManager(picking_manager);
   track_manager_ = std::make_unique<TrackManager>(this, viewport_, &GetLayout(), app, capture_data);

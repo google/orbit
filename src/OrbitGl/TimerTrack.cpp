@@ -167,13 +167,10 @@ bool TimerTrack::DrawTimer(const TimerInfo* prev_timer_info, const TimerInfo* ne
     double text_x_start_us = start_or_prev_end_us - (.25 * left_overlap_width_us);
     double right_overlap_width_us = end_us - end_or_next_start_us;
     double text_x_end_us = end_or_next_start_us + (.25 * right_overlap_width_us);
-
-    bool is_visible_width = ((text_x_end_us - text_x_start_us) * draw_data.inv_time_window *
-                             viewport_->WorldToScreenWidth(draw_data.track_width)) > 1;
     WorldXInfo world_x_info = ToWorldX(text_x_start_us, text_x_end_us, draw_data.inv_time_window,
                                        draw_data.track_start_x, draw_data.track_width);
 
-    if (is_visible_width) {
+    if (BoxHasRoomForText(world_x_info.world_x_width)) {
       Vec2 pos{world_x_info.world_x_start, world_timer_y};
       Vec2 size{world_x_info.world_x_width, GetDynamicBoxHeight(*current_timer_info)};
 

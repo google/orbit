@@ -146,6 +146,10 @@ class TimerTrack : public Track {
         &timer_info, [this, &batcher](PickingId id) { return this->GetBoxTooltip(batcher, id); });
   }
 
+  [[nodiscard]] inline bool BoxHasRoomForText(const float width) {
+    return text_renderer_->GetStringWidth("w", layout_->CalculateZoomedFontSize()) < width;
+  }
+
   static const Color kHighlightColor;
   TextRenderer* text_renderer_ = nullptr;
   int visible_timer_count_ = 0;
