@@ -137,16 +137,23 @@ if [ -n "$1" ]; then
     readonly PACKAGING_OPTION=""
   fi
 
+  BUILD_OPTION=""
+
+  if [[ -v ORBIT_BUILD_MISSING_PACKAGES ]]; then
+    echo "Environment variable ORBIT_BUILD_MISSING_PACKAGES is set. Building with '--build outdated'."
+    readonly BUILD_OPTION="--build outdated"
+  fi
+
   echo "Invoking conan lock."
   conan lock create "${REPO_ROOT}/conanfile.py" --user=orbitdeps --channel=stable \
-    --build=outdated \
+    ${BUILD_OPTION} \
     --lockfile="${REPO_ROOT}/third_party/conan/lockfiles/base.lock" -u -pr ${CONAN_PROFILE} \
     -o crashdump_server="$CRASHDUMP_SERVER" $PACKAGING_OPTION \
     --lockfile-out="${REPO_ROOT}/build/conan.lock"
 
   echo "Installs the requirements (conan install)."
   conan install -if "${REPO_ROOT}/build/" \
-          --build outdated \
+          ${BUILD_OPTION} \
           --lockfile="${REPO_ROOT}/build/conan.lock" \
           "${REPO_ROOT}" | sed 's/^crashdump_server=.*$/crashump_server=<<hidden>>/'
   echo "Starting the build (conan build)."
@@ -288,6 +295,7 @@ if [ "$(uname -s)" == "Linux" ]; then
   docker run --rm -v ${KOKORO_ARTIFACTS_DIR}:/mnt \
     -e KOKORO_JOB_NAME -e CONAN_PROFILE -e BUILD_TYPE \
     -e OAUTH_TOKEN_HEADER -e ORBIT_BYPASS_RELEASE_CHECK \
+    -e ORBIT_BUILD_MISSING_PACKAGES \
     ${CONTAINER} \
     /mnt/github/orbitprofiler/kokoro/builds/build.sh in_docker
 else
@@ -297,6 +305,7 @@ else
   docker run --rm -v ${KOKORO_ARTIFACTS_DIR}:C:/mnt \
     -e KOKORO_JOB_NAME -e CONAN_PROFILE -e BUILD_TYPE \
     -e OAUTH_TOKEN_HEADER -e ORBIT_BYPASS_RELEASE_CHECK \
+    -e ORBIT_BUILD_MISSING_PACKAGES \
     --isolation=process --storage-opt 'size=50GB' \
     ${CONTAINER} \
     'C:/Program Files/Git/bin/bash.exe' -c \
