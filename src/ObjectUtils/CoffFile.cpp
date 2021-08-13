@@ -4,6 +4,7 @@
 
 #include "ObjectUtils/CoffFile.h"
 
+#include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <llvm/DebugInfo/DWARF/DWARFContext.h>
 #include <llvm/Demangle/Demangle.h>
@@ -35,6 +36,7 @@ class CoffFileImpl : public CoffFile {
   [[nodiscard]] std::string GetName() const override;
   [[nodiscard]] const std::filesystem::path& GetFilePath() const override;
   [[nodiscard]] uint64_t GetLoadBias() const override;
+  [[nodiscard]] std::string GetBuildId() const override;
   [[nodiscard]] uint64_t GetExecutableSegmentOffset() const override;
   [[nodiscard]] bool IsElf() const override;
   [[nodiscard]] bool IsCoff() const override;
@@ -150,6 +152,23 @@ ErrorMessageOr<PdbDebugInfo> CoffFileImpl::GetDebugPdbInfo() const {
             std::begin(pdb_debug_info.guid));
   pdb_debug_info.age = debug_info->PDB70.Age;
   return pdb_debug_info;
+}
+
+std::string CoffFileImpl::GetBuildId() const {
+  ErrorMessageOr<PdbDebugInfo> pdb_debug_info = GetDebugPdbInfo();
+  if (pdb_debug_info.has_error()) {
+    LOG("WARNING: No PDB debug info found, cannot form build id (ignoring).");
+    return "";
+  }
+  std::string build_id;
+  for (const uint8_t& byte : pdb_debug_info.value().guid) {
+    absl::StrAppend(&build_id, absl::Hex(byte, absl::kZeroPad2));
+  }
+
+  // The dash ("-") is intentional to make it easy to distinguish the age when debugging issues
+  // related to build id.
+  absl::StrAppend(&build_id, absl::StrFormat("-%i", pdb_debug_info.value().age));
+  return build_id;
 }
 
 }  // namespace

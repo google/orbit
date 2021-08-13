@@ -25,6 +25,13 @@ class ObjectFile {
   [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbols() = 0;
   [[nodiscard]] virtual bool HasDebugSymbols() const = 0;
   [[nodiscard]] virtual std::string GetName() const = 0;
+
+  // For ELF files, the string returned by GetBuildId() is the standard build id that can be found
+  // in the .note.gnu.build-id section, formatted as a human readable string.
+  // PE/COFF object files are uniquely identfied by the PDB debug info consisting of a GUID and age.
+  // The build id is formed from these to provide a string that uniquely identifies this object file
+  // and the corresponding PDB debug info.
+  [[nodiscard]] virtual std::string GetBuildId() const = 0;
   [[nodiscard]] virtual const std::filesystem::path& GetFilePath() const = 0;
 
   // Background and some terminology
