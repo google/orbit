@@ -300,14 +300,22 @@ void TextRenderer::AddTextInternal(const char* text, ftgl::vec2* pen,
 
 void TextRenderer::AddText(const char* text, float x, float y, float z, TextFormatting formatting,
                            Vec2* out_text_pos, Vec2* out_text_size) {
+  if (strlen(text) == 0) {
+    return;
+  }
+
   Vec2i pen_pos = viewport_->WorldToScreenPos(Vec2(x, y));
   pen_.x = pen_pos[0];
   pen_.y = pen_pos[1];
 
+  float min_width = GetStringWidth(".", formatting.font_size);
+  if (formatting.max_size >= 0 && min_width > formatting.max_size) {
+    return;
+  }
+
   if (formatting.halign == HAlign::Right) {
-    int string_width = GetStringWidthScreenSpace(text, formatting.font_size);
-    pen_.x -= std::min(static_cast<float>(string_width),
-                       formatting.max_size > 0 ? formatting.max_size : FLT_MAX);
+    float string_width = GetStringWidth(text, formatting.font_size);
+    pen_.x -= std::min(string_width, formatting.max_size > 0 ? formatting.max_size : FLT_MAX);
   }
 
   ftgl::vec2 out_screen_pos;
@@ -352,6 +360,17 @@ float TextRenderer::AddTextTrailingCharsPrioritized(const char* text, float x, f
     Init();
   }
 
+  const size_t text_length = strlen(text);
+  if (text_length == 0) {
+    return 0.f;
+  }
+
+  // Early-out: If we can't fit a single char, there's no use to do all the expensive
+  // calculations below - this is a major bottleneck in some cases
+  if (formatting.max_size >= 0 && GetStringWidth(".", formatting.font_size) > formatting.max_size) {
+    return 0.f;
+  }
+
   float temp_pen_x = viewport_->WorldToScreenPos(Vec2(x, y))[0];
   float max_width =
       formatting.max_size == -1.f ? FLT_MAX : viewport_->WorldToScreenWidth(formatting.max_size);
@@ -359,7 +378,6 @@ float TextRenderer::AddTextTrailingCharsPrioritized(const char* text, float x, f
   int min_x = INT_MAX;
   int max_x = -INT_MAX;
 
-  const size_t text_length = strlen(text);
   ftgl::texture_font_t* font = GetFont(formatting.font_size);
   size_t i;
   for (i = 0; i < text_length; ++i) {
