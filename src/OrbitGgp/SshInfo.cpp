@@ -8,22 +8,22 @@
 #include <QJsonObject>
 #include <QJsonValue>
 
+#include "OrbitBase/Result.h"
 #include "OrbitGgp/Error.h"
 
 namespace orbit_ggp {
 
-outcome::result<SshInfo> SshInfo::CreateFromJson(const QByteArray& json) {
+ErrorMessageOr<SshInfo> SshInfo::CreateFromJson(const QByteArray& json) {
   const QJsonDocument doc = QJsonDocument::fromJson(json);
 
-  if (!doc.isObject()) return Error::kUnableToParseJson;
+  if (!doc.isObject()) return ErrorMessage{"Unable to parse JSON: Object expected."};
   const QJsonObject obj = doc.object();
 
-  const auto process = [](const QJsonValue& val) -> outcome::result<QString> {
+  const auto process = [](const QJsonValue& val) -> ErrorMessageOr<QString> {
     if (!val.isString()) {
-      return Error::kUnableToParseJson;
-    } else {
-      return val.toString();
+      return ErrorMessage{"Unable to parse JSON: String expected."};
     }
+    return val.toString();
   };
 
   OUTCOME_TRY(auto&& host, process(obj.value("host")));
@@ -36,7 +36,7 @@ outcome::result<SshInfo> SshInfo::CreateFromJson(const QByteArray& json) {
   // conversion. This is standard the Qt way to check whether the casting worked
   bool ok;
   int port_int = port.toInt(&ok);
-  if (!ok) return Error::kUnableToParseJson;
+  if (!ok) return ErrorMessage{"Unable to parse JSON: Integer expected."};
 
   SshInfo ggp_ssh_info;
 

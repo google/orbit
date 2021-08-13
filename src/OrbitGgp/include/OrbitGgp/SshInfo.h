@@ -19,7 +19,7 @@ struct SshInfo {
   int port;
   QString user;
 
-  static outcome::result<SshInfo> CreateFromJson(const QByteArray& json);
+  static ErrorMessageOr<SshInfo> CreateFromJson(const QByteArray& json);
 };
 
 }  // namespace orbit_ggp

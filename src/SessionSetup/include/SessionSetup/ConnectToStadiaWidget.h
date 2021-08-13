@@ -108,9 +108,8 @@ class ConnectToStadiaWidget : public QWidget {
 
   void DetachRadioButton();
   void SetupStateMachine();
-  void OnInstancesLoaded(outcome::result<QVector<orbit_ggp::Instance>> instances);
-  void OnSshInfoLoaded(outcome::result<orbit_ggp::SshInfo> ssh_info_result,
-                       std::string instance_id);
+  void OnInstancesLoaded(ErrorMessageOr<QVector<orbit_ggp::Instance>> instances);
+  void OnSshInfoLoaded(ErrorMessageOr<orbit_ggp::SshInfo> ssh_info_result, std::string instance_id);
   void TrySelectRememberedInstance();
 };
 

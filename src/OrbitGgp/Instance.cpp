@@ -12,19 +12,19 @@
 #include <Qt>
 #include <utility>
 
+#include "OrbitBase/Result.h"
 #include "OrbitGgp/Error.h"
 
 namespace orbit_ggp {
 
 namespace {
 
-outcome::result<Instance> GetInstanceFromJson(const QJsonObject& obj) {
-  const auto process = [](const QJsonValue& val) -> outcome::result<QString> {
+ErrorMessageOr<Instance> GetInstanceFromJson(const QJsonObject& obj) {
+  const auto process = [](const QJsonValue& val) -> ErrorMessageOr<QString> {
     if (!val.isString()) {
-      return Error::kUnableToParseJson;
-    } else {
-      return val.toString();
+      return ErrorMessage{"Unable to parse JSON: String expected."};
     }
+    return val.toString();
   };
 
   OUTCOME_TRY(auto&& display_name, process(obj.value("displayName")));
@@ -36,7 +36,7 @@ outcome::result<Instance> GetInstanceFromJson(const QJsonObject& obj) {
 
   auto last_updated_date_time = QDateTime::fromString(last_updated, Qt::ISODate);
   if (!last_updated_date_time.isValid()) {
-    return Error::kUnableToParseJson;
+    return ErrorMessage{"Unable to parse JSON: DateTime expected."};
   }
 
   Instance inst{};
@@ -53,17 +53,17 @@ outcome::result<Instance> GetInstanceFromJson(const QJsonObject& obj) {
 
 }  // namespace
 
-outcome::result<QVector<Instance>> Instance::GetListFromJson(const QByteArray& json) {
+ErrorMessageOr<QVector<Instance>> Instance::GetListFromJson(const QByteArray& json) {
   const QJsonDocument doc = QJsonDocument::fromJson(json);
 
-  if (!doc.isArray()) return Error::kUnableToParseJson;
+  if (!doc.isArray()) return ErrorMessage{"Unable to parse JSON: Array expected."};
 
   const QJsonArray arr = doc.array();
 
   QVector<Instance> list;
 
   for (const auto& json_value : arr) {
-    if (!json_value.isObject()) return Error::kUnableToParseJson;
+    if (!json_value.isObject()) return ErrorMessage{"Unable to parse JSON: Object expected."};
 
     OUTCOME_TRY(auto&& instance, GetInstanceFromJson(json_value.toObject()));
     list.push_back(std::move(instance));

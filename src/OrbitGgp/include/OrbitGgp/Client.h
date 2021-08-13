@@ -29,10 +29,10 @@ class Client : public QObject {
       QObject* parent, QString ggp_program = kDefaultGgpProgram,
       std::chrono::milliseconds timeout = GetDefaultTimeoutMs());
 
-  void GetInstancesAsync(const std::function<void(outcome::result<QVector<Instance>>)>& callback,
+  void GetInstancesAsync(const std::function<void(ErrorMessageOr<QVector<Instance>>)>& callback,
                          int retry = 3);
   void GetSshInfoAsync(const Instance& ggp_instance,
-                       const std::function<void(outcome::result<SshInfo>)>& callback);
+                       const std::function<void(ErrorMessageOr<SshInfo>)>& callback);
 
  private:
   explicit Client(QObject* parent, QString ggp_program, std::chrono::milliseconds timeout)

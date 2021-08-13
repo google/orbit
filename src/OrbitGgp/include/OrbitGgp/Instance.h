@@ -24,7 +24,7 @@ struct Instance {
   QString owner;
   QString pool;
 
-  static outcome::result<QVector<Instance>> GetListFromJson(const QByteArray& json);
+  static ErrorMessageOr<QVector<Instance>> GetListFromJson(const QByteArray& json);
   static bool CmpById(const Instance& lhs, const Instance& rhs);
 
   friend bool operator==(const Instance& lhs, const Instance& rhs) {
