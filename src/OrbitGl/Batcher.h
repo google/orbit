@@ -196,7 +196,7 @@ class Batcher {
                    const Color& picking_color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
 
-  [[nodiscard]] Vec3 TransformVertex(const Vec3 input) const;
+  [[nodiscard]] Vec3 TransformVertex(const Vec3& input) const;
 
   BatcherId batcher_id_;
   PickingManager* picking_manager_;
