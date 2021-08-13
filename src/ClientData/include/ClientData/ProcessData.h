@@ -40,7 +40,7 @@ class ModuleInMemory {
   [[nodiscard]] const std::string& file_path() const { return file_path_; }
   [[nodiscard]] const std::string& build_id() const { return build_id_; }
   [[nodiscard]] std::string FormattedAddressRange() const {
-    return absl::StrFormat("[%016" PRIx64 " - %016" PRIx64 "]", start_, end_);
+    return absl::StrFormat("[%016x - %016x]", start_, end_);
   }
 
  private:

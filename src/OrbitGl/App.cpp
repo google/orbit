@@ -2163,8 +2163,8 @@ void OrbitApp::SetMaxLocalMarkerDepthPerCommandBuffer(
 }
 
 void OrbitApp::SelectFunction(const orbit_client_protos::FunctionInfo& func) {
-  LOG("Selected %s (address_=0x%" PRIx64 ", loaded_module_path_=%s)", func.pretty_name(),
-      func.address(), func.module_path());
+  LOG("Selected %s (address_=%#x, loaded_module_path_=%s)", func.pretty_name(), func.address(),
+      func.module_path());
   data_manager_->SelectFunction(func);
 }
 
