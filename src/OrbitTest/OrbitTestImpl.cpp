@@ -16,19 +16,9 @@
 #include <string>
 #include <thread>
 
-#include "OrbitBase/ThreadUtils.h"
-
-// TODO(b/182848566): Introspection defines an implementation of the Orbit API for introspection. To
-//  prevent symbol clash with the header-only use of the API, we wrap the include of Orbit.h in a
-//  namespace. This is only needed for internal projects that link with OrbitBase, basically only
-//  OrbitTest. This should be removed once we split the introspection and manual instrumentation
-//  apis.
-namespace orbit_api_wrapper {
 #include "ApiInterface/Orbit.h"
+#include "OrbitBase/ThreadUtils.h"
 ORBIT_API_INSTANTIATE;
-}  // namespace orbit_api_wrapper
-
-using namespace orbit_api_wrapper;
 
 #if __linux__
 #define NO_INLINE __attribute__((noinline))
@@ -112,6 +102,11 @@ static void NO_INLINE SleepFor2Ms() {
   ORBIT_SCOPE("Sleep for two milliseconds");
   ORBIT_SCOPE_WITH_COLOR("Sleep for two milliseconds", kOrbitColorTeal);
   ORBIT_SCOPE_WITH_COLOR("Sleep for two milliseconds", kOrbitColorOrange);
+  thread_local uint64_t group_id = 0;
+  uint64_t current_id = group_id++;
+  ORBIT_SCOPE_WITH_GROUP_ID("Sleeping for two milliseconds with group id", current_id);
+  ORBIT_SCOPE_WITH_COLOR_AND_GROUP_ID("Sleeping for two milliseconds with group id",
+                                      kOrbitColorBlueGrey, current_id);
   SleepFor1Ms();
   SleepFor1Ms();
 }
@@ -132,7 +127,7 @@ static void ExecuteTask(uint32_t id) {
 void OrbitTestImpl::OutputOrbitApiState() {
   while (!exit_requested_) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    LOG("g_orbit_api_v0.enabled = %u", g_orbit_api_v0.enabled);
+    LOG("g_orbit_api_v1.enabled = %u", g_orbit_api_v1.enabled);
   }
 }
 
@@ -145,6 +140,15 @@ void OrbitTestImpl::ManualInstrumentationApiTest() {
 
     ORBIT_START_WITH_COLOR("ORBIT_START_TEST", kOrbitColorRed);
     std::this_thread::sleep_for(std::chrono::microseconds(500));
+    ORBIT_STOP();
+
+    thread_local uint64_t group_id = 0;
+    uint64_t current_id = group_id++;
+    ORBIT_START_WITH_GROUP_ID("ORBIT_START_TEST with group id", current_id);
+    ORBIT_START_WITH_COLOR_AND_GROUP_ID("ORBIT_START_TEST with group id",
+                                        kOrbitColorBlueGrey, current_id);
+    std::this_thread::sleep_for(std::chrono::microseconds(500));
+    ORBIT_STOP();
     ORBIT_STOP();
 
     ORBIT_START_ASYNC_WITH_COLOR("ORBIT_START_ASYNC_TEST", 0, kOrbitColorLightBlue);

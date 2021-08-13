@@ -13,7 +13,8 @@ set_target_properties(Api PROPERTIES OUTPUT_NAME "orbit")
 target_sources(Api PRIVATE
         LockFreeApiEventProducer.h
         LockFreeApiEventProducer.cpp
-        Orbit.cpp)
+        Orbit.cpp
+        OrbitV0.h)
 
 target_link_libraries(Api PUBLIC
         ApiInterface
