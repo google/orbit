@@ -46,6 +46,7 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(bool, HasFrameTrackInCaptureData, (uint64_t), (const));
 
   MOCK_METHOD(bool, HasCaptureData, (), (const));
+  MOCK_METHOD(orbit_client_data::CaptureData&, GetMutableCaptureData, ());
   MOCK_METHOD(const orbit_client_data::CaptureData&, GetCaptureData, (), (const));
 
   MOCK_METHOD(void, OnValidateFramePointers, (std::vector<const orbit_client_data::ModuleData*>));
