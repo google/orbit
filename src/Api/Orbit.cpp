@@ -87,7 +87,10 @@ void orbit_api_async_string(const char* str, uint64_t id, orbit_api_color color)
   EnqueueApiEvent<orbit_api::ApiStringEvent>(str, id, color);
 }
 
-void orbit_api_initialize_and_set_enabled_v0(orbit_api_v0* api, bool enabled) {
+template <typename orbit_api_current>
+void orbit_api_initialize_and_set_enabled(
+    orbit_api_current* api, void (*orbit_api_initialize_function_table)(orbit_api_current*),
+    bool enabled) {
   if (api->initialized == 0u) {
     // The api function table is accessed by user code using this pattern:
     //
@@ -98,17 +101,7 @@ void orbit_api_initialize_and_set_enabled_v0(orbit_api_v0* api, bool enabled) {
     //
     // We use acquire and release semantics to make sure that when api->initialized is set, all the
     // function pointers have been assigned and are visible to other cores.
-    api->start = &orbit_api_start;
-    api->stop = &orbit_api_stop;
-    api->start_async = &orbit_api_start_async;
-    api->stop_async = &orbit_api_stop_async;
-    api->async_string = &orbit_api_async_string;
-    api->track_int = &orbit_api_track_int;
-    api->track_int64 = &orbit_api_track_int64;
-    api->track_uint = &orbit_api_track_uint;
-    api->track_uint64 = &orbit_api_track_uint64;
-    api->track_float = &orbit_api_track_float;
-    api->track_double = &orbit_api_track_double;
+    (*orbit_api_initialize_function_table)(api);
     std::atomic_thread_fence(std::memory_order_release);
     api->initialized = 1;
   }
@@ -120,37 +113,32 @@ void orbit_api_initialize_and_set_enabled_v0(orbit_api_v0* api, bool enabled) {
   api->enabled = static_cast<uint32_t>(enabled);
 }
 
-void orbit_api_initialize_and_set_enabled_v1(orbit_api_v1* api, bool enabled) {
-  if (api->initialized == 0u) {
-    // The api function table is accessed by user code using this pattern:
-    //
-    // bool initialized = api.initialized;
-    // std::atomic_thread_fence(std::memory_order_acquire)
-    // if (initialized && api->enabled && api->orbit_api_function_name)
-    // api->orbit_api_function_name()
-    //
-    // We use acquire and release semantics to make sure that when api->initialized is set, all the
-    // function pointers have been assigned and are visible to other cores.
-    api->start = &orbit_api_start_v1;
-    api->stop = &orbit_api_stop;
-    api->start_async = &orbit_api_start_async;
-    api->stop_async = &orbit_api_stop_async;
-    api->async_string = &orbit_api_async_string;
-    api->track_int = &orbit_api_track_int;
-    api->track_int64 = &orbit_api_track_int64;
-    api->track_uint = &orbit_api_track_uint;
-    api->track_uint64 = &orbit_api_track_uint64;
-    api->track_float = &orbit_api_track_float;
-    api->track_double = &orbit_api_track_double;
-    std::atomic_thread_fence(std::memory_order_release);
-    api->initialized = 1;
-  }
-  // By the time we reach this, the "initialized" guard variable has been set to 1 and we know
-  // that all function pointers have been written to and published to other cores by the use of
-  // acquire/release fences. The "enabled" flag serves as a global toggle which is always used in
-  // conjunction with the "initialized" flag to determine if the Api is active. See
-  // orbit_api_active() in Orbit.h.
-  api->enabled = static_cast<uint32_t>(enabled);
+void orbit_api_initialize_v0(orbit_api_v0* api) {
+  api->start = &orbit_api_start;
+  api->stop = &orbit_api_stop;
+  api->start_async = &orbit_api_start_async;
+  api->stop_async = &orbit_api_stop_async;
+  api->async_string = &orbit_api_async_string;
+  api->track_int = &orbit_api_track_int;
+  api->track_int64 = &orbit_api_track_int64;
+  api->track_uint = &orbit_api_track_uint;
+  api->track_uint64 = &orbit_api_track_uint64;
+  api->track_float = &orbit_api_track_float;
+  api->track_double = &orbit_api_track_double;
+}
+
+void orbit_api_initialize_v1(orbit_api_v1* api) {
+  api->start = &orbit_api_start_v1;
+  api->stop = &orbit_api_stop;
+  api->start_async = &orbit_api_start_async;
+  api->stop_async = &orbit_api_stop_async;
+  api->async_string = &orbit_api_async_string;
+  api->track_int = &orbit_api_track_int;
+  api->track_int64 = &orbit_api_track_int64;
+  api->track_uint = &orbit_api_track_uint;
+  api->track_uint64 = &orbit_api_track_uint64;
+  api->track_float = &orbit_api_track_float;
+  api->track_double = &orbit_api_track_double;
 }
 
 }  // namespace
@@ -173,12 +161,12 @@ void orbit_api_set_enabled(uint64_t address, uint64_t api_version, bool enabled)
   switch (api_version) {
     case 0: {
       auto* api_v0 = absl::bit_cast<orbit_api_v0*>(address);
-      orbit_api_initialize_and_set_enabled_v0(api_v0, enabled);
+      orbit_api_initialize_and_set_enabled(api_v0, &orbit_api_initialize_v0, enabled);
       return;
     }
     case 1: {
       auto* api_v1 = absl::bit_cast<orbit_api_v1*>(address);
-      orbit_api_initialize_and_set_enabled_v1(api_v1, enabled);
+      orbit_api_initialize_and_set_enabled(api_v1, &orbit_api_initialize_v1, enabled);
       return;
     }
     default:
