@@ -87,10 +87,10 @@ void orbit_api_async_string(const char* str, uint64_t id, orbit_api_color color)
   EnqueueApiEvent<orbit_api::ApiStringEvent>(str, id, color);
 }
 
-template <typename OrbitApiCurrentT>
-void orbit_api_initialize_and_set_enabled(
-    OrbitApiCurrentT* api, void (*orbit_api_initialize_function_table)(OrbitApiCurrentT*),
-    bool enabled) {
+template <typename OrbitApiT>
+void orbit_api_initialize_and_set_enabled(OrbitApiT* api,
+                                          void (*orbit_api_initialize_function_table)(OrbitApiT*),
+                                          bool enabled) {
   if (api->initialized == 0u) {
     // The api function table is accessed by user code using this pattern:
     //
