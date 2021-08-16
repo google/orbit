@@ -40,19 +40,19 @@ void EnqueueApiEvent(Types... args) {
 }
 
 void orbit_api_start_v1(const char* name, orbit_api_color color, uint64_t group_id) {
-  auto return_address = ORBIT_GET_CALLER_PC();
+  uint64_t return_address = ORBIT_GET_CALLER_PC();
   EnqueueApiEvent<orbit_api::ApiScopeStart>(name, color, group_id, return_address);
 }
 
 void orbit_api_start(const char* name, orbit_api_color color) {
-  auto return_address = ORBIT_GET_CALLER_PC();
+  uint64_t return_address = ORBIT_GET_CALLER_PC();
   EnqueueApiEvent<orbit_api::ApiScopeStart>(name, color, kOrbitDefaultGroupId, return_address);
 }
 
 void orbit_api_stop() { EnqueueApiEvent<orbit_api::ApiScopeStop>(); }
 
 void orbit_api_start_async(const char* name, uint64_t id, orbit_api_color color) {
-  auto return_address = ORBIT_GET_CALLER_PC();
+  uint64_t return_address = ORBIT_GET_CALLER_PC();
   EnqueueApiEvent<orbit_api::ApiScopeStartAsync>(name, id, color, return_address);
 }
 
@@ -87,9 +87,9 @@ void orbit_api_async_string(const char* str, uint64_t id, orbit_api_color color)
   EnqueueApiEvent<orbit_api::ApiStringEvent>(str, id, color);
 }
 
-template <typename orbit_api_current>
+template <typename OrbitApiCurrentT>
 void orbit_api_initialize_and_set_enabled(
-    orbit_api_current* api, void (*orbit_api_initialize_function_table)(orbit_api_current*),
+    OrbitApiCurrentT* api, void (*orbit_api_initialize_function_table)(OrbitApiCurrentT*),
     bool enabled) {
   if (api->initialized == 0u) {
     // The api function table is accessed by user code using this pattern:
