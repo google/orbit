@@ -64,9 +64,9 @@ class TrackData final {
     }
   }
 
- private:
   void UpdateMaxDepth(uint32_t depth) { max_depth_ = std::max(max_depth_, depth); }
 
+ private:
   [[nodiscard]] TimerChain* GetOrCreateTimerChain(uint64_t depth) {
     absl::MutexLock lock(&mutex_);
     auto it = timers_.find(depth);
