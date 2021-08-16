@@ -78,7 +78,7 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
   [[nodiscard]] bool PosIsInMaxResizeArea(int x, int y) const;
   [[nodiscard]] bool PosIsInSlider(int x, int y) const;
 
-  [[nodiscard]] virtual int GetBarPixelLength() const = 0;
+  [[nodiscard]] virtual float GetBarPixelLength() const = 0;
 
   [[nodiscard]] float PixelToLen(float value) const { return value / GetBarPixelLength(); }
   [[nodiscard]] float LenToPixel(float value) const { return value * GetBarPixelLength(); }
@@ -130,7 +130,7 @@ class GlVerticalSlider : public GlSlider {
   [[nodiscard]] bool IsVisible() const override { return GetLengthRatio() < 1.f; }
 
  protected:
-  [[nodiscard]] int GetBarPixelLength() const override;
+  [[nodiscard]] float GetBarPixelLength() const override;
 };
 
 class GlHorizontalSlider : public GlSlider {
@@ -140,7 +140,7 @@ class GlHorizontalSlider : public GlSlider {
   void Draw(Batcher& batcher, bool is_picked) override;
 
  protected:
-  [[nodiscard]] int GetBarPixelLength() const override;
+  [[nodiscard]] float GetBarPixelLength() const override;
 };
 
 }  // namespace orbit_gl
