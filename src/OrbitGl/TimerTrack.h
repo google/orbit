@@ -35,6 +35,7 @@ struct DrawData {
   uint64_t min_tick;
   uint64_t max_tick;
   uint64_t highlighted_function_id;
+  uint64_t highlighted_group_id;
   uint64_t ns_per_pixel;
   uint64_t min_timegraph_tick;
   Batcher* batcher;
@@ -146,7 +147,8 @@ class TimerTrack : public Track {
   [[nodiscard]] static internal::DrawData GetDrawData(
       uint64_t min_tick, uint64_t max_tick, float track_width, float z_offset, Batcher* batcher,
       TimeGraph* time_graph, orbit_gl::Viewport* viewport, bool is_collapsed,
-      const orbit_client_protos::TimerInfo* selected_timer, uint64_t highlighted_function_id);
+      const orbit_client_protos::TimerInfo* selected_timer, uint64_t highlighted_function_id,
+      uint64_t highlighted_group_id);
 
   [[nodiscard]] virtual std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const;
   [[nodiscard]] std::unique_ptr<PickingUserData> CreatePickingUserData(

@@ -435,6 +435,7 @@ class OrbitApp final : public DataViewFactory,
   void DeselectTimer();
 
   [[nodiscard]] uint64_t GetFunctionIdToHighlight() const;
+  [[nodiscard]] uint64_t GetGroupIdToHighlight() const;
 
   void SelectCallstackEvents(
       const std::vector<orbit_client_protos::CallstackEvent>& selected_callstack_events,

@@ -5,7 +5,7 @@
 project(ClientData)
 add_library(ClientData STATIC)
 
-target_include_directories(ClientData PUBLIC 
+target_include_directories(ClientData PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
 target_include_directories(ClientData PRIVATE
@@ -45,9 +45,10 @@ target_sources(ClientData PRIVATE
         UserDefinedCaptureData.cpp)
 
 target_link_libraries(ClientData PUBLIC
+        ApiInterface
         ClientProtos
         GrpcProtos
-         # TODO(b/191248550): Remove ObjectUtils once GetAbsoluteAddress is removed
+        # TODO(b/191248550): Remove ObjectUtils once GetAbsoluteAddress is removed
         ObjectUtils
         OrbitBase
         xxHash::xxHash)
@@ -73,5 +74,5 @@ register_test(ClientDataTests)
 
 add_fuzzer(ModuleLoadSymbolsFuzzer ModuleLoadSymbolsFuzzer.cpp)
 target_link_libraries(
-  ModuleLoadSymbolsFuzzer PRIVATE ClientData
-                                  CONAN_PKG::libprotobuf-mutator)
+        ModuleLoadSymbolsFuzzer PRIVATE ClientData
+        CONAN_PKG::libprotobuf-mutator)

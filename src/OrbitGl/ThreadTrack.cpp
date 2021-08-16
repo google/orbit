@@ -12,6 +12,7 @@
 #include <atomic>
 #include <optional>
 
+#include "ApiInterface/Orbit.h"
 #include "App.h"
 #include "Batcher.h"
 #include "ClientData/CaptureData.h"
@@ -206,9 +207,13 @@ float ThreadTrack::GetDefaultBoxHeight() const {
 
 Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, const internal::DrawData& draw_data) {
   uint64_t function_id = timer_info.function_id();
+  uint64_t group_id = timer_info.group_id();
   bool is_selected = &timer_info == draw_data.selected_timer;
-  bool is_highlighted = !is_selected && function_id != orbit_grpc_protos::kInvalidFunctionId &&
-                        function_id == draw_data.highlighted_function_id;
+  bool is_function_id_highlighted = function_id != orbit_grpc_protos::kInvalidFunctionId &&
+                                    function_id == draw_data.highlighted_function_id;
+  bool is_group_id_highlighted =
+      group_id != kOrbitDefaultGroupId && group_id == draw_data.highlighted_group_id;
+  bool is_highlighted = !is_selected && (is_function_id_highlighted || is_group_id_highlighted);
   return GetTimerColor(timer_info, is_selected, is_highlighted);
 }
 
@@ -459,9 +464,10 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
   visible_timer_count_ = 0;
   UpdatePrimitivesOfSubtracks(batcher, min_tick, max_tick, picking_mode, z_offset);
 
-  const internal::DrawData draw_data = GetDrawData(
-      min_tick, max_tick, GetWidth(), z_offset, batcher, time_graph_, viewport_,
-      collapse_toggle_->IsCollapsed(), app_->selected_timer(), app_->GetFunctionIdToHighlight());
+  const internal::DrawData draw_data =
+      GetDrawData(min_tick, max_tick, GetWidth(), z_offset, batcher, time_graph_, viewport_,
+                  collapse_toggle_->IsCollapsed(), app_->selected_timer(),
+                  app_->GetFunctionIdToHighlight(), app_->GetGroupIdToHighlight());
 
   absl::MutexLock lock(&scope_tree_mutex_);
 
