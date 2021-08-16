@@ -145,8 +145,8 @@ void OrbitTestImpl::ManualInstrumentationApiTest() {
     thread_local uint64_t group_id = 0;
     uint64_t current_id = group_id++;
     ORBIT_START_WITH_GROUP_ID("ORBIT_START_TEST with group id", current_id);
-    ORBIT_START_WITH_COLOR_AND_GROUP_ID("ORBIT_START_TEST with group id",
-                                        kOrbitColorBlueGrey, current_id);
+    ORBIT_START_WITH_COLOR_AND_GROUP_ID("ORBIT_START_TEST with group id", kOrbitColorBlueGrey,
+                                        current_id);
     std::this_thread::sleep_for(std::chrono::microseconds(500));
     ORBIT_STOP();
     ORBIT_STOP();

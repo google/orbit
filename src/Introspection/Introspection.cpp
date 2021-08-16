@@ -102,7 +102,7 @@ void TracingListener::DeferApiEventProcessing(const orbit_api::ApiEventVariant& 
   });
 }
 
-void orbit_api_start(const char* name, orbit_api_color color, uint64_t group_id) {
+void orbit_api_start_v1(const char* name, orbit_api_color color, uint64_t group_id) {
   int32_t process_id = orbit_base::GetCurrentProcessId();
   int32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
@@ -225,7 +225,7 @@ namespace orbit_introspection {
 
 void InitializeTracing() {
   if (g_orbit_api_v1.initialized != 0) return;
-  g_orbit_api_v1.start = &orbit_api_start;
+  g_orbit_api_v1.start = &orbit_api_start_v1;
   g_orbit_api_v1.stop = &orbit_api_stop;
   g_orbit_api_v1.start_async = &orbit_api_start_async;
   g_orbit_api_v1.stop_async = &orbit_api_stop_async;

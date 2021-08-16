@@ -11,11 +11,6 @@
 // =================================================================================================
 // Orbit Manual Instrumentation API.
 // =================================================================================================
-#ifdef __linux
-#define ORBIT_EXPORT __attribute__((visibility("default")))
-#else
-#define ORBIT_EXPORT __declspec(dllexport)
-#endif
 
 #ifdef __cplusplus
 extern "C" {

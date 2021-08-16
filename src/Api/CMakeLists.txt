@@ -14,7 +14,7 @@ target_sources(Api PRIVATE
         LockFreeApiEventProducer.h
         LockFreeApiEventProducer.cpp
         Orbit.cpp
-        OrbitV0.h)
+        OrbitApiVersions.h)
 
 target_link_libraries(Api PUBLIC
         ApiInterface
