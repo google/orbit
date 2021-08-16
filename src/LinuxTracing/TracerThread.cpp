@@ -51,7 +51,7 @@ using orbit_grpc_protos::ThreadNamesSnapshot;
 
 TracerThread::TracerThread(const CaptureOptions& capture_options)
     : trace_context_switches_{capture_options.trace_context_switches()},
-      target_pid_{orbit_base::GetNativeProcessId(capture_options.pid())},
+      target_pid_{orbit_base::ToNativeProcessId(capture_options.pid())},
       unwinding_method_{capture_options.unwinding_method()},
       trace_thread_state_{capture_options.trace_thread_state()},
       trace_gpu_driver_{capture_options.trace_gpu_driver()} {

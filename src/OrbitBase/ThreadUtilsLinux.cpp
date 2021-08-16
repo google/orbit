@@ -27,9 +27,9 @@ static constexpr int32_t kInvalidLinuxProcessId = -1;
 
 static constexpr uint32_t kIntMax = static_cast<uint32_t>(INT_MAX);
 
-uint32_t GetCurrentThreadId() { return GetThreadIdFromNative(GetCurrentThreadIdNative()); }
+uint32_t GetCurrentThreadId() { return FromNativeThreadId(GetCurrentThreadIdNative()); }
 
-uint32_t GetCurrentProcessId() { return GetProcessIdFromNative(GetCurrentProcessIdNative()); }
+uint32_t GetCurrentProcessId() { return FromNativeProcessId(GetCurrentProcessIdNative()); }
 
 bool IsValidThreadId(uint32_t tid) { return tid <= kIntMax && tid != kInvalidThreadId; }
 
@@ -42,23 +42,25 @@ pid_t GetCurrentThreadIdNative() {
 
 pid_t GetCurrentProcessIdNative() { return getpid(); }
 
-uint32_t GetThreadIdFromNative(pid_t tid) {
-  return tid >= 0 ? static_cast<uint32_t>(tid) : orbit_base::kInvalidThreadId;
+uint32_t FromNativeThreadId(pid_t tid) {
+  CHECK(tid == kInvalidLinuxThreadId || tid >= 0);
+  return static_cast<uint32_t>(tid);
 }
 
-uint32_t GetProcessIdFromNative(pid_t pid) {
-  return pid >= 0 ? static_cast<uint32_t>(pid) : orbit_base::kInvalidProcessId;
+uint32_t FromNativeProcessId(pid_t pid) {
+  CHECK(pid == kInvalidLinuxProcessId || pid >= 0);
+  return static_cast<uint32_t>(pid);
 }
 
-pid_t GetNativeThreadId(uint32_t tid) {
+pid_t ToNativeThreadId(uint32_t tid) {
   return IsValidThreadId(tid) ? static_cast<pid_t>(tid) : kInvalidLinuxThreadId;
 }
 
-pid_t GetNativeProcessId(uint32_t pid) {
+pid_t ToNativeProcessId(uint32_t pid) {
   return IsValidProcessId(pid) ? static_cast<pid_t>(pid) : kInvalidLinuxProcessId;
 }
 
-std::string GetThreadName(uint32_t tid) { return GetThreadNameNative(GetNativeThreadId(tid)); }
+std::string GetThreadName(uint32_t tid) { return GetThreadNameNative(ToNativeThreadId(tid)); }
 
 std::string GetThreadNameNative(pid_t tid) {
   std::string comm_filename = absl::StrFormat("/proc/%d/comm", tid);

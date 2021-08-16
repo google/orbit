@@ -154,7 +154,7 @@ class InstrumentedProcess {
 ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create(
     const CaptureOptions& capture_options) {
   std::unique_ptr<InstrumentedProcess> process(new InstrumentedProcess());
-  const pid_t pid = orbit_base::GetNativeProcessId(capture_options.pid());
+  const pid_t pid = orbit_base::ToNativeProcessId(capture_options.pid());
   process->pid_ = pid;
   OUTCOME_TRY(AttachAndStopProcess(pid));
   orbit_base::unique_resource detach_on_exit{pid, [](int32_t pid) {
@@ -397,7 +397,7 @@ InstrumentationManager::~InstrumentationManager() {}
 
 ErrorMessageOr<absl::flat_hash_set<uint64_t>> InstrumentationManager::InstrumentProcess(
     const CaptureOptions& capture_options) {
-  const pid_t pid = orbit_base::GetNativeProcessId(capture_options.pid());
+  const pid_t pid = orbit_base::ToNativeProcessId(capture_options.pid());
 
   // If the user tries to instrument this instance of OrbitService we can't use user space
   // instrumentation: We would need to attach to / stop our own process.

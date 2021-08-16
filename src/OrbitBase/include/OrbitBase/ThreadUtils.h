@@ -14,10 +14,9 @@
 
 #include <string>
 
-namespace orbit_base {
+#include "OrbitBase/ThreadConstants.h"
 
-static constexpr uint32_t kInvalidThreadId = 0xffffffff;
-static constexpr uint32_t kInvalidProcessId = 0xffffffff;
+namespace orbit_base {
 
 // We use uint32_t as our cross-platform thread id and process id type. Platform-specific invalid
 // ids are converted into cross-platform kInvalidThreadId or kInvalidProcessId (both 0xffffffff):
@@ -54,8 +53,10 @@ static constexpr uint32_t kInvalidProcessId = 0xffffffff;
 // Cross-platform.
 [[nodiscard]] uint32_t GetCurrentThreadId();
 [[nodiscard]] uint32_t GetCurrentProcessId();
+
 [[nodiscard]] bool IsValidThreadId(uint32_t tid);
 [[nodiscard]] bool IsValidProcessId(uint32_t pid);
+
 void SetCurrentThreadName(const char* thread_name);
 [[nodiscard]] std::string GetThreadName(uint32_t tid);
 
@@ -65,19 +66,19 @@ void SetCurrentThreadName(const char* thread_name);
 [[nodiscard]] std::string GetThreadNameNative(uint32_t tid);
 [[nodiscard]] uint32_t GetCurrentProcessIdNative();
 
-[[nodiscard]] uint32_t GetThreadIdFromNative(uint32_t tid);
-[[nodiscard]] uint32_t GetProcessIdFromNative(uint32_t pid);
+[[nodiscard]] uint32_t FromNativeThreadId(uint32_t tid);
+[[nodiscard]] uint32_t FromNativeProcessId(uint32_t pid);
 
 #else
 [[nodiscard]] pid_t GetCurrentThreadIdNative();
 [[nodiscard]] std::string GetThreadNameNative(pid_t tid);
 [[nodiscard]] pid_t GetCurrentProcessIdNative();
 
-[[nodiscard]] uint32_t GetThreadIdFromNative(pid_t tid);
-[[nodiscard]] uint32_t GetProcessIdFromNative(pid_t pid);
+[[nodiscard]] uint32_t FromNativeThreadId(pid_t tid);
+[[nodiscard]] uint32_t FromNativeProcessId(pid_t pid);
 
-[[nodiscard]] pid_t GetNativeThreadId(uint32_t tid);
-[[nodiscard]] pid_t GetNativeProcessId(uint32_t tid);
+[[nodiscard]] pid_t ToNativeThreadId(uint32_t tid);
+[[nodiscard]] pid_t ToNativeProcessId(uint32_t tid);
 #endif
 
 }  // namespace orbit_base

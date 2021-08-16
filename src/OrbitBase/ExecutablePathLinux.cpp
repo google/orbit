@@ -27,7 +27,7 @@ std::filesystem::path GetExecutablePath() {
   return std::filesystem::path(std::string(buffer, length));
 }
 
-ErrorMessageOr<std::filesystem::path> GetExecutablePath(int32_t pid) {
+ErrorMessageOr<std::filesystem::path> GetExecutablePath(pid_t pid) {
   char buffer[PATH_MAX];
 
   ssize_t length = readlink(absl::StrFormat("/proc/%i/exe", pid).c_str(), buffer, sizeof(buffer));

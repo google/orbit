@@ -34,9 +34,9 @@ inline [[nodiscard]] bool IsMultipleOfFour(uint32_t value) { return (value & 3) 
 
 }  // namespace
 
-uint32_t GetCurrentThreadId() { return GetThreadIdFromNative(GetCurrentThreadIdNative()); }
+uint32_t GetCurrentThreadId() { return FromNativeThreadId(GetCurrentThreadIdNative()); }
 
-uint32_t GetCurrentProcessId() { return GetProcessIdFromNative(GetCurrentProcessIdNative()); }
+uint32_t GetCurrentProcessId() { return FromNativeProcessId(GetCurrentProcessIdNative()); }
 
 bool IsValidThreadId(uint32_t tid) {
   return tid != orbit_base::kInvalidThreadId && IsMultipleOfFour(tid);
@@ -53,23 +53,23 @@ uint32_t GetCurrentThreadIdNative() {
 
 uint32_t GetCurrentProcessIdNative() { return ::GetCurrentProcessId(); }
 
-uint32_t GetThreadIdFromNative(uint32_t tid) {
+uint32_t FromNativeThreadId(uint32_t tid) {
   return IsValidThreadIdNative(tid) ? tid : orbit_base::kInvalidThreadId;
 }
 
-uint32_t GetProcessIdFromNative(uint32_t pid) {
+uint32_t FromNativeProcessId(uint32_t pid) {
   return IsValidProcessIdNative(pid) ? pid : orbit_base::kInvalidProcessId;
 }
 
-uint32_t GetNativeThreadId(uint32_t tid) {
+uint32_t ToNativeThreadId(uint32_t tid) {
   return IsValidThreadId(tid) ? tid : kInvalidWindowsThreadId;
 }
 
-uint32_t GetNativeProcessId(uint32_t pid) {
+uint32_t ToNativeProcessId(uint32_t pid) {
   return IsValidProcessId(pid) ? pid : kInvalidWindowsProcessId_0;
 }
 
-std::string GetThreadName(uint32_t tid) { return GetThreadNameNative(GetNativeThreadId(tid)); }
+std::string GetThreadName(uint32_t tid) { return GetThreadNameNative(ToNativeThreadId(tid)); }
 
 template <typename FunctionPrototypeT>
 static FunctionPrototypeT GetProcAddress(const std::string& library, const std::string& procedure) {

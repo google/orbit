@@ -80,7 +80,7 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
     return outcome::success();
   }
 
-  int32_t pid = orbit_base::GetNativeProcessId(capture_options.pid());
+  int32_t pid = orbit_base::ToNativeProcessId(capture_options.pid());
 
   OUTCOME_TRY(AttachAndStopProcess(pid));
 
