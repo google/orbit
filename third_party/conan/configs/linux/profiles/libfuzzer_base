@@ -18,4 +18,4 @@ OrbitProfiler:run_tests=False
 [build_requires]
 
 [env]
-gtest:CXXFLAGS=$CXX_FLAGS -std=c++17
+gtest:CXXFLAGS=$BASE_CXXFLAGS -std=c++17
