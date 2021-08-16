@@ -318,7 +318,7 @@ TEST(Slider, BreakScale) {
 
 TEST(Slider, MouseEnterAndLeave) {
   Viewport viewport(100, 100);
-  UnitTestSlider slider(viewport, true);
+  UnitTestVerticalSlider slider(viewport);
   EXPECT_FALSE(slider.IsMouseOver());
   slider.OnMouseEnter();
   EXPECT_TRUE(slider.IsMouseOver());

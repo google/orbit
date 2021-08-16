@@ -20,22 +20,6 @@ namespace orbit_gl {
 
 const float GlSlider::kGradientFactor = 0.25f;
 
-Vec2 GlSlider::GetPos() const {
-  if (is_vertical_) {
-    return Vec2(viewport_.GetScreenWidth() - pixel_height_, 0);
-  } else {
-    return Vec2(0, viewport_.GetScreenHeight() - pixel_height_);
-  }
-}
-
-Vec2 GlSlider::GetSize() const {
-  if (is_vertical_) {
-    return Vec2(pixel_height_, viewport_.GetScreenHeight() - orthogonal_slider_size_);
-  } else {
-    return Vec2(viewport_.GetScreenWidth() - orthogonal_slider_size_, pixel_height_);
-  }
-}
-
 void GlSlider::OnMouseEnter() {
   is_mouse_over_ = true;
   if (QGuiApplication::instance() != nullptr) {
