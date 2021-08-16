@@ -11,15 +11,20 @@
 
 namespace orbit_gl {
 
-class UnitTestSlider : public GlSlider {
+class UnitTestHorizontalSlider : public GlHorizontalSlider {
  public:
-  explicit UnitTestSlider(Viewport& viewport, bool is_vertical) : GlSlider(viewport, is_vertical){};
+  explicit UnitTestHorizontalSlider(Viewport& viewport) : GlHorizontalSlider(viewport){};
   void Draw(Batcher& /*batcher*/, bool /*is_picked*/) override{};
 
   bool IsMouseOver() { return is_mouse_over_; }
+};
 
- protected:
-  [[nodiscard]] virtual float GetBarPixelLength() const override { return 0.f; }
+class UnitTestVerticalSlider : public GlVerticalSlider {
+ public:
+  explicit UnitTestVerticalSlider(Viewport& viewport) : GlVerticalSlider(viewport){};
+  void Draw(Batcher& /*batcher*/, bool /*is_picked*/) override{};
+
+  bool IsMouseOver() { return is_mouse_over_; }
 };
 
 }  // namespace orbit_gl

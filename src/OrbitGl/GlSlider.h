@@ -24,6 +24,9 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
   [[nodiscard]] virtual bool IsVisible() const { return true; }
   virtual void Draw(Batcher& batcher, bool is_picked) = 0;
 
+  [[nodiscard]] virtual Vec2 GetPos() const = 0;
+  [[nodiscard]] virtual Vec2 GetSize() const = 0;
+
   void SetNormalizedPosition(float start_ratio);  // [0,1]
   void SetNormalizedLength(float length_ratio);   // [0,1]
 
@@ -56,9 +59,6 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
 
   [[nodiscard]] bool CanResize() const { return can_resize_; }
 
-  [[nodiscard]] Vec2 GetPos() const;
-  [[nodiscard]] Vec2 GetSize() const;
-
   void OnMouseEnter();
   void OnMouseLeave();
   void OnMouseMove(int x, int y);
@@ -78,8 +78,6 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
   [[nodiscard]] bool PosIsInMaxResizeArea(int x, int y) const;
   [[nodiscard]] bool PosIsInSlider(int x, int y) const;
 
-  [[nodiscard]] virtual float GetBarPixelLength() const = 0;
-
   [[nodiscard]] float PixelToLen(float value) const { return value / GetBarPixelLength(); }
   [[nodiscard]] float LenToPixel(float value) const { return value * GetBarPixelLength(); }
   [[nodiscard]] float PixelToPos(float value) const {
@@ -92,6 +90,8 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
   [[nodiscard]] bool HandlePageScroll(float click_value);
 
  protected:
+  [[nodiscard]] virtual float GetBarPixelLength() const = 0;
+
   static const float kGradientFactor;
   const bool is_vertical_;
   bool is_mouse_over_ = false;
@@ -129,6 +129,13 @@ class GlVerticalSlider : public GlSlider {
   void Draw(Batcher& batcher, bool is_picked) override;
   [[nodiscard]] bool IsVisible() const override { return GetLengthRatio() < 1.f; }
 
+  [[nodiscard]] Vec2 GetPos() const override {
+    return Vec2(viewport_.GetScreenWidth() - pixel_height_, 0);
+  }
+  [[nodiscard]] Vec2 GetSize() const override {
+    return Vec2(pixel_height_, viewport_.GetScreenHeight() - orthogonal_slider_size_);
+  }
+
  protected:
   [[nodiscard]] float GetBarPixelLength() const override;
 };
@@ -138,6 +145,13 @@ class GlHorizontalSlider : public GlSlider {
   GlHorizontalSlider(Viewport& viewport) : GlSlider(viewport, false) { can_resize_ = true; }
 
   void Draw(Batcher& batcher, bool is_picked) override;
+
+  [[nodiscard]] virtual Vec2 GetPos() const override {
+    return Vec2(0, viewport_.GetScreenHeight() - pixel_height_);
+  }
+  [[nodiscard]] virtual Vec2 GetSize() const override {
+    return Vec2(viewport_.GetScreenWidth() - orthogonal_slider_size_, pixel_height_);
+  }
 
  protected:
   [[nodiscard]] float GetBarPixelLength() const override;

@@ -12,8 +12,8 @@ namespace orbit_gl {
 class UnitTestCaptureWindow : public CaptureWindow, public testing::Test {
  public:
   explicit UnitTestCaptureWindow() : CaptureWindow(nullptr) {
-    slider_ = std::make_unique<UnitTestSlider>(viewport_, false);
-    vertical_slider_ = std::make_unique<UnitTestSlider>(viewport_, true);
+    slider_ = std::make_unique<UnitTestHorizontalSlider>(viewport_);
+    vertical_slider_ = std::make_unique<UnitTestVerticalSlider>(viewport_);
   }
 };
 
@@ -29,8 +29,11 @@ TEST_F(UnitTestCaptureWindow, SlidersRespondToMouseOver) {
   slider = FindSliderUnderMouseCursor(95, 195);
   EXPECT_EQ(nullptr, slider);
 
-  UnitTestSlider* unit_test_slider = dynamic_cast<UnitTestSlider*>(slider_.get());
-  UnitTestSlider* unit_test_vertical_slider = dynamic_cast<UnitTestSlider*>(vertical_slider_.get());
+  UnitTestHorizontalSlider* unit_test_slider =
+      dynamic_cast<UnitTestHorizontalSlider*>(slider_.get());
+  UnitTestVerticalSlider* unit_test_vertical_slider =
+      dynamic_cast<UnitTestVerticalSlider*>(vertical_slider_.get());
+  ;
 
   MouseMoved(95, 10, false, false, false);
   EXPECT_TRUE(unit_test_vertical_slider->IsMouseOver());
@@ -40,7 +43,7 @@ TEST_F(UnitTestCaptureWindow, SlidersRespondToMouseOver) {
   EXPECT_TRUE(unit_test_slider->IsMouseOver());
 
   MouseMoved(50, 50, false, false, false);
-  EXPECT_FALSE(dynamic_cast<UnitTestSlider*>(vertical_slider_.get())->IsMouseOver());
+  EXPECT_FALSE(dynamic_cast<UnitTestVerticalSlider*>(vertical_slider_.get())->IsMouseOver());
   EXPECT_FALSE(unit_test_slider->IsMouseOver());
 }
 
@@ -48,8 +51,10 @@ TEST_F(UnitTestCaptureWindow, SlidersBehaveCorrectlyWithMouseDown) {
   Resize(100, 200);
   MouseMoved(5, 195, true, false, false);
 
-  UnitTestSlider* unit_test_slider = dynamic_cast<UnitTestSlider*>(slider_.get());
-  UnitTestSlider* unit_test_vertical_slider = dynamic_cast<UnitTestSlider*>(vertical_slider_.get());
+  UnitTestHorizontalSlider* unit_test_slider =
+      dynamic_cast<UnitTestHorizontalSlider*>(slider_.get());
+  UnitTestVerticalSlider* unit_test_vertical_slider =
+      dynamic_cast<UnitTestVerticalSlider*>(vertical_slider_.get());
 
   EXPECT_FALSE(unit_test_vertical_slider->IsMouseOver());
   EXPECT_FALSE(unit_test_slider->IsMouseOver());
@@ -67,7 +72,8 @@ TEST_F(UnitTestCaptureWindow, SlidersRespondToMouseLeave) {
   Resize(100, 200);
   MouseMoved(95, 10, false, false, false);
 
-  UnitTestSlider* unit_test_vertical_slider = dynamic_cast<UnitTestSlider*>(vertical_slider_.get());
+  UnitTestVerticalSlider* unit_test_vertical_slider =
+      dynamic_cast<UnitTestVerticalSlider*>(vertical_slider_.get());
   EXPECT_TRUE(unit_test_vertical_slider->IsMouseOver());
   SetIsMouseOver(false);
   EXPECT_FALSE(unit_test_vertical_slider->IsMouseOver());
