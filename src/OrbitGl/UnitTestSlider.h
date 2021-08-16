@@ -19,7 +19,7 @@ class UnitTestSlider : public GlSlider {
   bool IsMouseOver() { return is_mouse_over_; }
 
  protected:
-  [[nodiscard]] virtual int GetBarPixelLength() const override { return 0; }
+  [[nodiscard]] virtual float GetBarPixelLength() const override { return 0.f; }
 };
 
 }  // namespace orbit_gl

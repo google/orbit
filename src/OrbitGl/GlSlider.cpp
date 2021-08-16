@@ -91,7 +91,7 @@ void GlSlider::SetNormalizedPosition(float start_ratio)  // [0,1]
 
 void GlSlider::SetNormalizedLength(float length_ratio)  // [0,1]
 {
-  float min_length = static_cast<float>(min_slider_pixel_length_) / GetBarPixelLength();
+  float min_length = min_slider_pixel_length_ / GetBarPixelLength();
   length_ratio_ = std::clamp(length_ratio, min_length, 1.f);
   right_edge_ratio_ = pos_ratio_ * (1.0f - length_ratio_) + length_ratio_;
 }
@@ -278,9 +278,7 @@ void GlVerticalSlider::Draw(Batcher& batcher, bool is_picked) {
   batcher.PopTranslation();
 }
 
-int GlVerticalSlider::GetBarPixelLength() const {
-  return viewport_.GetScreenHeight() - GetOrthogonalSliderSize();
-}
+float GlVerticalSlider::GetBarPixelLength() const { return GetSize()[1]; }
 
 void GlHorizontalSlider::Draw(Batcher& batcher, bool is_picked) {
   batcher.PushTranslation(static_cast<int>(GetPos()[0]), static_cast<int>(GetPos()[1]));
@@ -343,8 +341,6 @@ void GlHorizontalSlider::Draw(Batcher& batcher, bool is_picked) {
   batcher.PopTranslation();
 }
 
-int GlHorizontalSlider::GetBarPixelLength() const {
-  return viewport_.GetScreenWidth() - GetOrthogonalSliderSize();
-}
+float GlHorizontalSlider::GetBarPixelLength() const { return GetSize()[0]; }
 
 }  // namespace orbit_gl
