@@ -149,7 +149,7 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
     function_name = capture_data_->GetFunctionNameByAddress(timer_info->address_in_function());
   }
 
-  return absl::StrFormat(
+  std::string result = absl::StrFormat(
       "<b>%s</b><br/>"
       "<i>Timing measured through %s instrumentation</i>"
       "<br/><br/>"
@@ -159,6 +159,12 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
       label, is_manual ? "manual" : "dynamic", function_name, module_name,
       orbit_display_formats::GetDisplayTime(
           TicksToDuration(timer_info->start(), timer_info->end())));
+
+  if (timer_info->group_id() != kOrbitDefaultGroupId) {
+    result += absl::StrFormat("<br/><b>Group Id:</b> %lu", timer_info->group_id());
+  }
+
+  return result;
 }
 
 bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
