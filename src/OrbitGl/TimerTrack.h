@@ -138,10 +138,10 @@ class TimerTrack : public Track {
       const orbit_client_protos::TimerInfo& /*timer*/) const {
     return "";
   }
-  [[nodiscard]] virtual std::string GetDisplayTime(const orbit_client_protos::TimerInfo&) const;
+  [[nodiscard]] std::string GetDisplayTime(const orbit_client_protos::TimerInfo&) const;
 
-  virtual void DrawTimesliceText(const orbit_client_protos::TimerInfo& /*timer*/, float /*min_x*/,
-                                 float /*z_offset*/, Vec2 /*box_pos*/, Vec2 /*box_size*/);
+  void DrawTimesliceText(const orbit_client_protos::TimerInfo& timer, float min_x, float z_offset,
+                         Vec2 box_pos, Vec2 box_size);
 
   [[nodiscard]] static internal::DrawData GetDrawData(
       uint64_t min_tick, uint64_t max_tick, float track_width, float z_offset, Batcher* batcher,
