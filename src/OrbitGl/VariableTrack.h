@@ -18,6 +18,8 @@ constexpr size_t kVariableTrackDimension = 1;
 const std::array<Color, kVariableTrackDimension> kVariableTrackColor{Color(0, 128, 255, 128)};
 
 class VariableTrack final : public LineGraphTrack<kVariableTrackDimension> {
+  static constexpr uint8_t kTrackValueDecimalDigits = 6;
+
  public:
   explicit VariableTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
@@ -25,7 +27,7 @@ class VariableTrack final : public LineGraphTrack<kVariableTrackDimension> {
                          const orbit_client_data::CaptureData* capture_data)
       : LineGraphTrack<kVariableTrackDimension>(parent, time_graph, viewport, layout,
                                                 std::array<std::string, kVariableTrackDimension>{},
-                                                capture_data),
+                                                kTrackValueDecimalDigits, capture_data),
         name_(name) {
     SetSeriesColors(kVariableTrackColor);
   }

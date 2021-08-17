@@ -24,14 +24,13 @@ class GraphTrack : public Track {
   explicit GraphTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                       std::array<std::string, Dimension> series_names,
+                      uint8_t series_value_decimal_digits,
                       const orbit_client_data::CaptureData* capture_data);
 
   [[nodiscard]] Type GetType() const override { return Type::kGraphTrack; }
   [[nodiscard]] float GetHeight() const override;
   [[nodiscard]] float GetLegendHeight() const;
-  [[nodiscard]] std::optional<uint8_t> GetNumberOfDecimalDigits() const {
-    return series_.GetValueDecimalDigits();
-  }
+  [[nodiscard]] uint8_t GetNumberOfDecimalDigits() const { return series_.GetValueDecimalDigits(); }
 
   [[nodiscard]] bool IsCollapsible() const override { return true; }
   [[nodiscard]] bool IsEmpty() const override { return series_.IsEmpty(); }
@@ -49,9 +48,6 @@ class GraphTrack : public Track {
   [[nodiscard]] uint64_t GetMaxTime() const override;
 
   void SetLabelUnit(std::string label_unit) { series_.SetValueUnit(label_unit); }
-  void SetNumberOfDecimalDigits(uint8_t value_decimal_digits) {
-    series_.SetNumberOfDecimalDigits(value_decimal_digits);
-  }
   void SetSeriesColors(const std::array<Color, Dimension>& series_colors) {
     series_colors_ = series_colors;
   }
@@ -86,9 +82,8 @@ class GraphTrack : public Track {
   virtual void DrawSeries(Batcher* batcher, uint64_t min_tick, uint64_t max_tick, float z);
 
   [[nodiscard]] double RoundPrecision(double value) {
-    CHECK(GetNumberOfDecimalDigits().has_value());
-    return std::round(value * std::pow(10, GetNumberOfDecimalDigits().value())) /
-           std::pow(10, GetNumberOfDecimalDigits().value());
+    return std::round(value * std::pow(10, GetNumberOfDecimalDigits())) /
+           std::pow(10, GetNumberOfDecimalDigits());
   }
 
   MultivariateTimeSeries<Dimension> series_;

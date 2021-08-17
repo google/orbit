@@ -17,8 +17,9 @@ class MultivariateTimeSeries {
   static_assert(Dimension >= 1, "Dimension must be at least 1");
 
  public:
-  explicit MultivariateTimeSeries(std::array<std::string, Dimension> series_names)
-      : series_names_(std::move(series_names)) {}
+  explicit MultivariateTimeSeries(std::array<std::string, Dimension> series_names,
+                                  uint8_t value_decimal_digits)
+      : series_names_(std::move(series_names)), value_decimal_digits_{value_decimal_digits} {}
 
   [[nodiscard]] const std::array<std::string, Dimension>& GetSeriesNames() const {
     return series_names_;
@@ -29,9 +30,7 @@ class MultivariateTimeSeries {
   }
   [[nodiscard]] double GetMin() const { return min_; }
   [[nodiscard]] double GetMax() const { return max_; }
-  [[nodiscard]] std::optional<uint8_t> GetValueDecimalDigits() const {
-    return value_decimal_digits_;
-  }
+  [[nodiscard]] uint8_t GetValueDecimalDigits() const { return value_decimal_digits_; }
   [[nodiscard]] std::string GetValueUnit() const { return value_unit_; }
 
   void AddValues(uint64_t timestamp_ns, const std::array<double, Dimension>& values) {
@@ -41,9 +40,6 @@ class MultivariateTimeSeries {
     }
   }
   void SetValueUnit(std::string value_unit) { value_unit_ = std::move(value_unit); }
-  void SetNumberOfDecimalDigits(uint8_t value_decimal_digits) {
-    value_decimal_digits_ = value_decimal_digits;
-  }
 
   [[nodiscard]] bool IsEmpty() const { return time_to_series_values_.empty(); }
 
@@ -102,11 +98,11 @@ class MultivariateTimeSeries {
     min_ = std::min(min_, value);
   }
 
-  std::array<std::string, Dimension> series_names_;
+  const std::array<std::string, Dimension> series_names_;
   std::map<uint64_t, std::array<double, Dimension>> time_to_series_values_;
   double min_ = std::numeric_limits<double>::max();
   double max_ = std::numeric_limits<double>::lowest();
-  std::optional<uint8_t> value_decimal_digits_ = std::nullopt;
+  const uint8_t value_decimal_digits_;
   std::string value_unit_;
 };
 

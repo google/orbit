@@ -29,9 +29,10 @@ template <size_t Dimension>
 GraphTrack<Dimension>::GraphTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                                   orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                   std::array<std::string, Dimension> series_names,
+                                  uint8_t series_value_decimal_digits,
                                   const orbit_client_data::CaptureData* capture_data)
     : Track(parent, time_graph, viewport, layout, capture_data),
-      series_(MultivariateTimeSeries<Dimension>(series_names)) {}
+      series_{series_names, series_value_decimal_digits} {}
 
 template <size_t Dimension>
 float GraphTrack<Dimension>::GetHeight() const {
@@ -133,9 +134,7 @@ std::string GraphTrack<Dimension>::GetLabelTextFromValues(
     std::string formatted_name =
         series_names[i].empty() ? "" : absl::StrFormat("%s: ", series_names[i]);
     std::string formatted_value =
-        value_decimal_digits.has_value()
-            ? absl::StrFormat("%.*f", value_decimal_digits.value(), values[i])
-            : std::to_string(values[i]);
+        absl::StrFormat("%.*f", value_decimal_digits.value_or(6), values[i]);
     absl::StrAppend(&text, delimiter, formatted_name, formatted_value, value_unit);
     delimiter = "\n";
   }

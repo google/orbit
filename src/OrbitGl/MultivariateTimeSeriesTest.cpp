@@ -8,9 +8,12 @@
 
 namespace orbit_gl {
 
+static constexpr uint8_t kDefaultValueDesimalDigits = 6;
+
 TEST(MultivariateTimeSeries, BasicSetAndGet) {
   std::array<std::string, 3> series_names = {"Series A", "Series B", "Series C"};
-  MultivariateTimeSeries<3> series = MultivariateTimeSeries<3>(series_names);
+  MultivariateTimeSeries<3> series =
+      MultivariateTimeSeries<3>(series_names, kDefaultValueDesimalDigits);
   EXPECT_EQ(series.GetSeriesNames(), series_names);
   EXPECT_TRUE(series.IsEmpty());
 
@@ -32,7 +35,7 @@ TEST(MultivariateTimeSeries, BasicSetAndGet) {
 
 TEST(MultivariateTimeSeries, GetPreviousOrFirstEntry) {
   MultivariateTimeSeries<3> series =
-      MultivariateTimeSeries<3>({"Series A", "Series B", "Series C"});
+      MultivariateTimeSeries<3>({"Series A", "Series B", "Series C"}, kDefaultValueDesimalDigits);
   uint64_t timestamp_1 = 100;
   std::array<double, 3> values_1 = {1.1, 1.2, 1.3};
   uint64_t timestamp_2 = 200;
@@ -64,7 +67,7 @@ TEST(MultivariateTimeSeries, GetPreviousOrFirstEntry) {
 
 TEST(MultivariateTimeSeries, GetNextOrLastEntry) {
   MultivariateTimeSeries<3> series =
-      MultivariateTimeSeries<3>({"Series A", "Series B", "Series C"});
+      MultivariateTimeSeries<3>({"Series A", "Series B", "Series C"}, kDefaultValueDesimalDigits);
   uint64_t timestamp_1 = 100;
   std::array<double, 3> values_1 = {1.1, 1.2, 1.3};
   uint64_t timestamp_2 = 200;
@@ -96,7 +99,7 @@ TEST(MultivariateTimeSeries, GetNextOrLastEntry) {
 
 TEST(MultivariateTimeSeries, GetEntriesAffectedByTimeRange) {
   MultivariateTimeSeries<3> series =
-      MultivariateTimeSeries<3>({"Series A", "Series B", "Series C"});
+      MultivariateTimeSeries<3>({"Series A", "Series B", "Series C"}, kDefaultValueDesimalDigits);
   uint64_t timestamp_1 = 100;
   std::array<double, 3> values_1 = {1.1, 1.2, 1.3};
   uint64_t timestamp_2 = 200;
@@ -132,5 +135,9 @@ TEST(MultivariateTimeSeries, GetEntriesAffectedByTimeRange) {
     EXPECT_EQ(range.value().end_inclusive->first, timestamp_3);
   }
 }
-
+TEST(MultivariateTimeSeries, GetValueDecimalDigits) {
+  MultivariateTimeSeries<3> series =
+      MultivariateTimeSeries<3>({"Series A", "Series B", "Series C"}, 42);
+  EXPECT_EQ(series.GetValueDecimalDigits(), 42);
+}
 }  // namespace orbit_gl
