@@ -25,15 +25,13 @@ constexpr uint64_t kMegabytesToBytes = 1024 * 1024;
 
 }  // namespace
 
+constexpr uint8_t kTrackValueDecimalDigits = 2;
 SystemMemoryTrack::SystemMemoryTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                                      orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                      const orbit_client_data::CaptureData* capture_data)
     : MemoryTrack<kSystemMemoryTrackDimension>(parent, time_graph, viewport, layout, kSeriesName,
-                                               capture_data) {
+                                               kTrackValueDecimalDigits, capture_data) {
   SetLabelUnit(kTrackValueLabelUnit);
-
-  constexpr uint8_t kTrackValueDecimalDigits = 2;
-  SetNumberOfDecimalDigits(kTrackValueDecimalDigits);
 
   // Colors are selected from https://convertingcolors.com/list/avery.html.
   // Use reddish colors for different used memories, yellowish colors for different cached memories

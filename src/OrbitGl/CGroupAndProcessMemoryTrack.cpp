@@ -30,18 +30,18 @@ static std::array<std::string, kCGroupAndProcessMemoryTrackDimension> CreateSeri
 
 }  // namespace
 
+static constexpr uint8_t kTrackValueDecimalDigits = 2;
+
 CGroupAndProcessMemoryTrack::CGroupAndProcessMemoryTrack(
     CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
     TimeGraphLayout* layout, const std::string& cgroup_name,
     const orbit_client_data::CaptureData* capture_data)
     : MemoryTrack<kCGroupAndProcessMemoryTrackDimension>(
           parent, time_graph, viewport, layout,
-          CreateSeriesName(cgroup_name, capture_data->process_name()), capture_data),
+          CreateSeriesName(cgroup_name, capture_data->process_name()), kTrackValueDecimalDigits,
+          capture_data),
       cgroup_name_(cgroup_name) {
   SetLabelUnit(kTrackValueLabelUnit);
-
-  constexpr uint8_t kTrackValueDecimalDigits = 2;
-  SetNumberOfDecimalDigits(kTrackValueDecimalDigits);
 
   // Colors are selected from https://convertingcolors.com/list/avery.html.
   // Use reddish colors for different used memories, yellowish colors for different cached memories
