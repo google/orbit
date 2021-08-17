@@ -53,10 +53,12 @@ uint32_t FromNativeProcessId(pid_t pid) {
 }
 
 pid_t ToNativeThreadId(uint32_t tid) {
+  CHECK(tid <= kIntMax || tid == kInvalidThreadId);
   return IsValidThreadId(tid) ? static_cast<pid_t>(tid) : kInvalidLinuxThreadId;
 }
 
 pid_t ToNativeProcessId(uint32_t pid) {
+  CHECK(pid <= kIntMax || pid == kInvalidProcessId);
   return IsValidProcessId(pid) ? static_cast<pid_t>(pid) : kInvalidLinuxProcessId;
 }
 

@@ -23,15 +23,6 @@ namespace {
 // ids rely on it. https://devblogs.microsoft.com/oldnewthing/20080228-00/?p=23283
 inline [[nodiscard]] bool IsMultipleOfFour(uint32_t value) { return (value & 3) == 0; }
 
-[[nodiscard]] bool IsValidThreadIdNative(uint32_t tid) {
-  return tid != kInvalidWindowsThreadId && IsMultipleOfFour(tid);
-}
-
-[[nodiscard]] bool IsValidProcessIdNative(uint32_t pid) {
-  return pid != kInvalidWindowsProcessId_0 && pid != kInvalidWindowsProcessId_1 &&
-         IsMultipleOfFour(pid);
-}
-
 }  // namespace
 
 uint32_t GetCurrentThreadId() { return FromNativeThreadId(GetCurrentThreadIdNative()); }
@@ -54,11 +45,14 @@ uint32_t GetCurrentThreadIdNative() {
 uint32_t GetCurrentProcessIdNative() { return ::GetCurrentProcessId(); }
 
 uint32_t FromNativeThreadId(uint32_t tid) {
-  return IsValidThreadIdNative(tid) ? tid : orbit_base::kInvalidThreadId;
+  CHECK(IsMultipleOfFour(tid));
+  return tid != kInvalidWindowsThreadId ? tid : orbit_base::kInvalidThreadId;
 }
 
 uint32_t FromNativeProcessId(uint32_t pid) {
-  return IsValidProcessIdNative(pid) ? pid : orbit_base::kInvalidProcessId;
+  CHECK(IsMultipleOfFour(pid));
+  bool is_invalid_id = (pid == kInvalidWindowsProcessId_0 || pid == kInvalidWindowsProcessId_1);
+  return !is_invalid_id ? pid : orbit_base::kInvalidProcessId;
 }
 
 uint32_t ToNativeThreadId(uint32_t tid) {

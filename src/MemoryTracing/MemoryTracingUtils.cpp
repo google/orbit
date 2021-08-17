@@ -214,12 +214,12 @@ ErrorMessageOr<int64_t> ExtractRssAnonFromProcessStatus(std::string_view status_
   return ErrorMessage("RssAnon value not found in the file content.");
 }
 
-ErrorMessageOr<ProcessMemoryUsage> GetProcessMemoryUsage(uint32_t pid) noexcept {
+ErrorMessageOr<ProcessMemoryUsage> GetProcessMemoryUsage(pid_t pid) noexcept {
   ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
   process_memory_usage.set_pid(pid);
   process_memory_usage.set_timestamp_ns(orbit_base::CaptureTimestampNs());
 
-  const std::string kProcessPageFaultsFilename = absl::StrFormat("/proc/%u/stat", pid);
+  const std::string kProcessPageFaultsFilename = absl::StrFormat("/proc/%d/stat", pid);
   ErrorMessageOr<std::string> reading_result =
       orbit_base::ReadFileToString(kProcessPageFaultsFilename);
   if (reading_result.has_error()) {
@@ -341,10 +341,10 @@ ErrorMessageOr<void> UpdateCGroupMemoryUsageFromMemoryStat(std::string_view memo
   return outcome::success();
 }
 
-ErrorMessageOr<CGroupMemoryUsage> GetCGroupMemoryUsage(uint32_t pid) noexcept {
+ErrorMessageOr<CGroupMemoryUsage> GetCGroupMemoryUsage(pid_t pid) noexcept {
   uint64_t current_timestamp_ns = orbit_base::CaptureTimestampNs();
 
-  const std::string kProcessCGroupsFilename = absl::StrFormat("/proc/%u/cgroup", pid);
+  const std::string kProcessCGroupsFilename = absl::StrFormat("/proc/%d/cgroup", pid);
   ErrorMessageOr<std::string> reading_result =
       orbit_base::ReadFileToString(kProcessCGroupsFilename);
   if (reading_result.has_error()) {
