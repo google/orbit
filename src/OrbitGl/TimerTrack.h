@@ -28,7 +28,6 @@
 #include "capture_data.pb.h"
 
 class OrbitApp;
-using orbit_client_protos::TimerInfo;
 
 namespace internal {
 struct DrawData {
@@ -69,7 +68,8 @@ class TimerTrack : public Track {
 
   [[nodiscard]] std::string GetExtraInfo(const orbit_client_protos::TimerInfo& timer) const;
 
-  [[nodiscard]] const TimerInfo* GetFirstAfterTime(uint64_t time, uint32_t depth) const;
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetFirstAfterTime(uint64_t time,
+                                                                        uint32_t depth) const;
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetFirstBeforeTime(uint64_t time,
                                                                          uint32_t depth) const;
 

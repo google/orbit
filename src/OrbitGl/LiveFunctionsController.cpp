@@ -18,6 +18,7 @@
 #include "capture_data.pb.h"
 
 using orbit_client_protos::FunctionInfo;
+using orbit_client_protos::TimerInfo;
 
 namespace {
 
@@ -25,7 +26,7 @@ std::pair<uint64_t, uint64_t> ComputeMinMaxTime(
     const absl::flat_hash_map<uint64_t, const TimerInfo*>& timer_infos) {
   uint64_t min_time = std::numeric_limits<uint64_t>::max();
   uint64_t max_time = std::numeric_limits<uint64_t>::min();
-  for (auto& timer_info : timer_infos) {
+  for (const auto& timer_info : timer_infos) {
     min_time = std::min(min_time, timer_info.second->start());
     max_time = std::max(max_time, timer_info.second->start());
   }
