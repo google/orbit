@@ -466,8 +466,9 @@ void CaptureWindow::Draw() {
 }
 
 void CaptureWindow::UpdateChildrenPosAndSize() {
-  UpdateHorizontalSliderFromWorld();
   UpdateVerticalSliderFromWorld();
+  // Horizontal slider width depends on the visibility of vertical slider.
+  UpdateHorizontalSliderFromWorld();
 
   const TimeGraphLayout& layout = time_graph_->GetLayout();
   float right_margin = layout.GetRightMargin();
@@ -548,7 +549,8 @@ void CaptureWindow::UpdateHorizontalSliderFromWorld() {
   slider_->SetPixelHeight(slider_width);
   slider_->SetNormalizedPosition(static_cast<float>(ratio));
   slider_->SetNormalizedLength(static_cast<float>(width / time_span));
-  slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetPixelHeight());
+  slider_->SetOrthogonalSliderPixelHeight(
+      vertical_slider_->IsVisible() ? vertical_slider_->GetPixelHeight() : 0.);
 }
 
 void CaptureWindow::ProcessSliderMouseMoveEvents(int x, int y) {
