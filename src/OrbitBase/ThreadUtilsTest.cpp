@@ -129,11 +129,10 @@ TEST(ThreadUtils, InvalidIds) {
 #endif
 
   for (auto tid : invalid_native_thread_ids) {
-    EXPECT_DEATH(orbit_base::FromNativeThreadId(tid), "Check failed") << "tid == " << tid;
+    EXPECT_DEATH((void)orbit_base::FromNativeThreadId(tid), "Check failed") << "tid == " << tid;
   }
 
   for (auto pid : invalid_native_process_ids) {
-    EXPECT_DEATH(orbit_base::FromNativeProcessId(pid), "Check failed") << "pid == " << pid;
-    EXPECT_FALSE(orbit_base::IsValidProcessId(pid)) << "pid == " << pid;
+    EXPECT_DEATH((void)orbit_base::FromNativeProcessId(pid), "Check failed") << "pid == " << pid;
   }
 }
