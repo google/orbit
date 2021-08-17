@@ -121,20 +121,19 @@ TEST(ThreadUtils, ValidIds) {
 
 TEST(ThreadUtils, InvalidIds) {
 #ifdef __linux
-  std::vector<int32_t> invalid_native_thread_ids{-1};
+  std::vector<int32_t> invalid_native_thread_ids{-INT_MAX, -2};
   const std::vector<int32_t>& invalid_native_process_ids = invalid_native_thread_ids;
 #else  // Windows
-  std::vector<uint32_t> invalid_native_thread_ids{0, 1, 2, 3, 5};
-  std::vector<uint32_t> invalid_native_process_ids = {0, 0xffffffff, 1, 2, 3, 5};
+  std::vector<uint32_t> invalid_native_thread_ids{1, 2, 3, 5};
+  std::vector<uint32_t> invalid_native_process_ids = {1, 2, 3, 5};
 #endif
 
-  for (auto invalid_native_thread_id : invalid_native_thread_ids) {
-    uint32_t tid = orbit_base::FromNativeThreadId(invalid_native_thread_id);
-    EXPECT_FALSE(orbit_base::IsValidThreadId(tid)) << "tid == " << tid;
+  for (auto tid : invalid_native_thread_ids) {
+    EXPECT_DEATH(orbit_base::FromNativeThreadId(tid), "Check failed") << "tid == " << tid;
   }
 
-  for (auto invalid_native_process_id : invalid_native_process_ids) {
-    uint32_t pid = orbit_base::FromNativeProcessId(invalid_native_process_id);
+  for (auto pid : invalid_native_process_ids) {
+    EXPECT_DEATH(orbit_base::FromNativeProcessId(pid), "Check failed") << "pid == " << pid;
     EXPECT_FALSE(orbit_base::IsValidProcessId(pid)) << "pid == " << pid;
   }
 }

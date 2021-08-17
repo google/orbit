@@ -16,14 +16,10 @@ static constexpr uint32_t kInvalidWindowsThreadId = 0;
 static constexpr uint32_t kInvalidWindowsProcessId_0 = 0;
 static constexpr uint32_t kInvalidWindowsProcessId_1 = 0xffffffff;
 
-namespace {
-
 // On Windows, thread and process ids are observed to be multiples of 4. Even though there is no
 // formal guarantee for this property, the current implementation of cross platform thread process
 // ids rely on it. https://devblogs.microsoft.com/oldnewthing/20080228-00/?p=23283
-inline [[nodiscard]] bool IsMultipleOfFour(uint32_t value) { return (value & 3) == 0; }
-
-}  // namespace
+static inline [[nodiscard]] bool IsMultipleOfFour(uint32_t value) { return (value & 3) == 0; }
 
 uint32_t GetCurrentThreadId() { return FromNativeThreadId(GetCurrentThreadIdNative()); }
 
@@ -45,14 +41,14 @@ uint32_t GetCurrentThreadIdNative() {
 uint32_t GetCurrentProcessIdNative() { return ::GetCurrentProcessId(); }
 
 uint32_t FromNativeThreadId(uint32_t tid) {
-  CHECK(IsMultipleOfFour(tid));
+  CHECK(IsMultipleOfFour(tid) || tid == kInvalidWindowsThreadId);
   return tid != kInvalidWindowsThreadId ? tid : orbit_base::kInvalidThreadId;
 }
 
 uint32_t FromNativeProcessId(uint32_t pid) {
-  CHECK(IsMultipleOfFour(pid));
-  bool is_invalid_id = (pid == kInvalidWindowsProcessId_0 || pid == kInvalidWindowsProcessId_1);
-  return !is_invalid_id ? pid : orbit_base::kInvalidProcessId;
+  bool is_invalid_pid = (pid == kInvalidWindowsProcessId_0 || pid == kInvalidWindowsProcessId_1);
+  CHECK(IsMultipleOfFour(pid) || is_invalid_pid);
+  return !is_invalid_pid ? pid : orbit_base::kInvalidProcessId;
 }
 
 uint32_t ToNativeThreadId(uint32_t tid) {
