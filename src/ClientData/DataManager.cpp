@@ -39,6 +39,11 @@ void DataManager::set_highlighted_function_id(uint64_t highlighted_function_id) 
   highlighted_function_id_ = highlighted_function_id;
 }
 
+void DataManager::set_highlighted_group_id(uint64_t highlighted_group_id) {
+  CHECK(std::this_thread::get_id() == main_thread_id_);
+  highlighted_function_id_ = highlighted_group_id;
+}
+
 void DataManager::set_selected_thread_id(int32_t thread_id) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   selected_thread_id_ = thread_id;
@@ -52,6 +57,11 @@ bool DataManager::IsFunctionVisible(uint64_t function_id) const {
 uint64_t DataManager::highlighted_function_id() const {
   CHECK(std::this_thread::get_id() == main_thread_id_);
   return highlighted_function_id_;
+}
+
+uint64_t DataManager::highlighted_group_id() const {
+  CHECK(std::this_thread::get_id() == main_thread_id_);
+  return highlighted_group_id_;
 }
 
 int32_t DataManager::selected_thread_id() const {

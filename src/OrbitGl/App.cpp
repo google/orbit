@@ -2239,8 +2239,12 @@ const orbit_client_protos::TimerInfo* OrbitApp::selected_timer() const {
 void OrbitApp::SelectTimer(const orbit_client_protos::TimerInfo* timer_info) {
   data_manager_->set_selected_timer(timer_info);
   uint64_t function_id =
-      timer_info ? timer_info->function_id() : orbit_grpc_protos::kInvalidFunctionId;
+      timer_info != nullptr ? timer_info->function_id() : orbit_grpc_protos::kInvalidFunctionId;
   data_manager_->set_highlighted_function_id(function_id);
+
+  uint64_t group_id = timer_info != nullptr ? timer_info->group_id() : kOrbitDefaultGroupId;
+  data_manager_->set_highlighted_group_id(group_id);
+
   CHECK(timer_selected_callback_);
   timer_selected_callback_(timer_info);
   RequestUpdatePrimitives();
@@ -2264,6 +2268,15 @@ uint64_t OrbitApp::GetFunctionIdToHighlight() const {
   }
 
   return selected_function_id;
+}
+
+uint64_t OrbitApp::GetGroupIdToHighlight() const {
+  const orbit_client_protos::TimerInfo* timer_info = selected_timer();
+
+  uint64_t selected_group_id =
+      timer_info != nullptr ? timer_info->group_id() : data_manager_->highlighted_group_id();
+
+  return selected_group_id;
 }
 
 void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected_callstack_events,

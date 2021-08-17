@@ -13,6 +13,7 @@
 #include <limits>
 #include <utility>
 
+#include "ApiInterface/Orbit.h"
 #include "App.h"
 #include "Batcher.h"
 #include "ClientFlags/ClientFlags.h"
@@ -182,10 +183,14 @@ bool TimerTrack::DrawTimer(const TimerInfo* prev_timer_info, const TimerInfo* ne
   }
 
   uint64_t function_id = current_timer_info->function_id();
+  uint64_t group_id = current_timer_info->group_id();
 
   bool is_selected = current_timer_info == draw_data.selected_timer;
-  bool is_highlighted = !is_selected && function_id != orbit_grpc_protos::kInvalidFunctionId &&
-                        function_id == draw_data.highlighted_function_id;
+  bool is_function_id_highlighted = function_id != orbit_grpc_protos::kInvalidFunctionId &&
+                                    function_id == draw_data.highlighted_function_id;
+  bool is_group_id_highlighted =
+      group_id != kOrbitDefaultGroupId && group_id == draw_data.highlighted_group_id;
+  bool is_highlighted = !is_selected && (is_function_id_highlighted || is_group_id_highlighted);
 
   Color color = GetTimerColor(*current_timer_info, is_selected, is_highlighted);
 
@@ -262,6 +267,7 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
   std::vector<const orbit_client_data::TimerChain*> chains = track_data_->GetChains();
   draw_data.selected_timer = app_->selected_timer();
   draw_data.highlighted_function_id = app_->GetFunctionIdToHighlight();
+  draw_data.highlighted_group_id = app_->GetGroupIdToHighlight();
 
   // We minimize overdraw when drawing lines for small events by discarding
   // events that would just draw over an already drawn line. When zoomed in
@@ -412,7 +418,8 @@ internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick,
                                            float z_offset, Batcher* batcher, TimeGraph* time_graph,
                                            orbit_gl::Viewport* viewport, bool is_collapsed,
                                            const orbit_client_protos::TimerInfo* selected_timer,
-                                           uint64_t highlighted_function_id) {
+                                           uint64_t highlighted_function_id,
+                                           uint64_t highlighted_group_id) {
   internal::DrawData draw_data{};
   draw_data.min_tick = min_tick;
   draw_data.max_tick = max_tick;
@@ -426,6 +433,7 @@ internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick,
   draw_data.z = GlCanvas::kZValueBox + z_offset;
   draw_data.selected_timer = selected_timer;
   draw_data.highlighted_function_id = highlighted_function_id;
+  draw_data.highlighted_group_id = highlighted_group_id;
 
   uint64_t time_window_ns = static_cast<uint64_t>(1000 * time_graph->GetTimeWindowUs());
   draw_data.ns_per_pixel = static_cast<uint64_t>(time_window_ns / track_width);
