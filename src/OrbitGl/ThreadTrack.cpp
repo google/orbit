@@ -451,7 +451,8 @@ void ThreadTrack::OnCaptureComplete() {
 [[nodiscard]] static inline uint64_t GetNextPixelBoundaryTimeNs(
     float world_x, const internal::DrawData& draw_data) {
   float normalized_x = (world_x - draw_data.track_start_x) / draw_data.track_width;
-  int pixel_x = static_cast<int>(ceil(normalized_x * draw_data.viewport->GetScreenWidth()));
+  int pixel_x = static_cast<int>(
+      ceil(normalized_x * draw_data.viewport->WorldToScreenWidth(draw_data.track_width)));
   return draw_data.min_tick + pixel_x * draw_data.ns_per_pixel;
 }
 
