@@ -168,8 +168,8 @@ bool TimerTrack::DrawTimer(const TimerInfo* prev_timer_info, const TimerInfo* ne
     double right_overlap_width_us = end_us - end_or_next_start_us;
     double text_x_end_us = end_or_next_start_us + (.25 * right_overlap_width_us);
 
-    bool is_visible_width =
-        ((text_x_end_us - text_x_start_us) * draw_data.inv_time_window * draw_data.track_width) > 1;
+    bool is_visible_width = ((text_x_end_us - text_x_start_us) * draw_data.inv_time_window *
+                             viewport_->WorldToScreenWidth(draw_data.track_width)) > 1;
     WorldXInfo world_x_info = ToWorldX(text_x_start_us, text_x_end_us, draw_data.inv_time_window,
                                        draw_data.track_start_x, draw_data.track_width);
 
@@ -199,7 +199,7 @@ bool TimerTrack::DrawTimer(const TimerInfo* prev_timer_info, const TimerInfo* ne
   if (is_visible_width) {
     WorldXInfo world_x_info_left_overlap =
         ToWorldX(start_us, start_or_prev_end_us, draw_data.inv_time_window, draw_data.track_start_x,
-                 draw_data.track_width);
+                 viewport_->WorldToScreenWidth(draw_data.track_width));
 
     WorldXInfo world_x_info_right_overlap =
         ToWorldX(end_or_next_start_us, end_us, draw_data.inv_time_window, draw_data.track_start_x,
@@ -274,7 +274,7 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
   // enough that all events are drawn as boxes, this has no effect. When zoomed
   // out, many events will be discarded quickly.
   uint64_t time_window_ns = static_cast<uint64_t>(1000 * time_graph_->GetTimeWindowUs());
-  draw_data.ns_per_pixel = static_cast<uint64_t>(time_window_ns / GetWidth());
+  draw_data.ns_per_pixel = time_window_ns / viewport_->WorldToScreenWidth(GetWidth());
   draw_data.min_timegraph_tick = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
 
   for (const TimerChain* chain : chains) {
@@ -436,7 +436,7 @@ internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick,
   draw_data.highlighted_group_id = highlighted_group_id;
 
   uint64_t time_window_ns = static_cast<uint64_t>(1000 * time_graph->GetTimeWindowUs());
-  draw_data.ns_per_pixel = static_cast<uint64_t>(time_window_ns / track_width);
+  draw_data.ns_per_pixel = time_window_ns / viewport->WorldToScreenWidth(track_width);
   draw_data.min_timegraph_tick = time_graph->GetTickFromUs(time_graph->GetMinTimeUs());
   return draw_data;
 }

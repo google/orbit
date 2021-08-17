@@ -22,7 +22,8 @@ namespace orbit_gl {
 AccessibilityRect TimeGraphAccessibility::AccessibleRect() const {
   const Viewport* viewport = time_graph_->GetViewport();
 
-  return AccessibilityRect(0, 0, viewport->GetScreenWidth(), viewport->GetScreenHeight());
+  return AccessibilityRect(0, 0, viewport->WorldToScreenWidth(time_graph_->GetWidth()),
+                           viewport->GetScreenHeight());
 }
 
 AccessibilityState TimeGraphAccessibility::AccessibleState() const {
