@@ -52,11 +52,13 @@ uint32_t FromNativeProcessId(uint32_t pid) {
 }
 
 uint32_t ToNativeThreadId(uint32_t tid) {
-  return IsValidThreadId(tid) ? tid : kInvalidWindowsThreadId;
+  CHECK(IsMultipleOfFour(tid) || tid == orbit_base::kInvalidThreadId);
+  return tid != orbit_base::kInvalidThreadId ? tid : kInvalidWindowsThreadId;
 }
 
 uint32_t ToNativeProcessId(uint32_t pid) {
-  return IsValidProcessId(pid) ? pid : kInvalidWindowsProcessId_0;
+  CHECK(IsMultipleOfFour(tid) || pid == orbit_base::kInvalidProcessId);
+  return pid != orbit_base::kInvalidProcessId : kInvalidWindowsProcessId_0;
 }
 
 std::string GetThreadName(uint32_t tid) { return GetThreadNameNative(ToNativeThreadId(tid)); }

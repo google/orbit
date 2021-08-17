@@ -20,7 +20,7 @@ using MemoryInfoProducerRunFn = std::function<void(MemoryInfoListener*, int32_t)
 // specified in sampling_period_ns_, and send the extracted information to the listener.
 class MemoryInfoProducer {
  public:
-  explicit MemoryInfoProducer(uint64_t sampling_period_ns, uint32_t pid, MemoryInfoProducerRunFn fn)
+  explicit MemoryInfoProducer(uint64_t sampling_period_ns, int32_t pid, MemoryInfoProducerRunFn fn)
       : sampling_period_ns_(sampling_period_ns), pid_(pid), producer_run_fn_(std::move(fn)) {}
 
   MemoryInfoProducer(const MemoryInfoProducer&) = delete;
