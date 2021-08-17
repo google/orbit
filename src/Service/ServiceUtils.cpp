@@ -31,6 +31,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "absl/strings/str_format.h"
 #include "module.pb.h"
 
@@ -414,7 +415,8 @@ bool ReadProcessMemory(uint32_t pid, uintptr_t address, void* buffer, uint64_t s
                        uint64_t* num_bytes_read) noexcept {
   iovec local_iov[] = {{buffer, size}};
   iovec remote_iov[] = {{absl::bit_cast<void*>(address), size}};
-  *num_bytes_read = process_vm_readv(pid, local_iov, ABSL_ARRAYSIZE(local_iov), remote_iov,
+  pid_t native_pid = orbit_base::ToNativeProcessId(pid);
+  *num_bytes_read = process_vm_readv(native_pid, local_iov, ABSL_ARRAYSIZE(local_iov), remote_iov,
                                      ABSL_ARRAYSIZE(remote_iov), 0);
   return *num_bytes_read == size;
 }

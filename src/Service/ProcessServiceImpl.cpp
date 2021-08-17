@@ -83,10 +83,8 @@ Status ProcessServiceImpl::GetProcessMemory(ServerContext*, const GetProcessMemo
   uint64_t size = std::min(request->size(), kMaxGetProcessMemoryResponseSize);
   response->mutable_memory()->resize(size);
   uint64_t num_bytes_read = 0;
-  uint32_t pid = request->pid();
-  CHECK(orbit_base::IsValidProcessId(pid));
-  if (utils::ReadProcessMemory(pid, request->address(), response->mutable_memory()->data(), size,
-                               &num_bytes_read)) {
+  if (utils::ReadProcessMemory(request->pid(), request->address(),
+                               response->mutable_memory()->data(), size, &num_bytes_read)) {
     response->mutable_memory()->resize(num_bytes_read);
     return Status::OK;
   }

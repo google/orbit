@@ -54,12 +54,12 @@ uint32_t FromNativeProcessId(pid_t pid) {
 
 pid_t ToNativeThreadId(uint32_t tid) {
   CHECK(tid <= kIntMax || tid == kInvalidThreadId);
-  return IsValidThreadId(tid) ? static_cast<pid_t>(tid) : kInvalidLinuxThreadId;
+  return static_cast<pid_t>(tid);
 }
 
 pid_t ToNativeProcessId(uint32_t pid) {
   CHECK(pid <= kIntMax || pid == kInvalidProcessId);
-  return IsValidProcessId(pid) ? static_cast<pid_t>(pid) : kInvalidLinuxProcessId;
+  return static_cast<pid_t>(pid);
 }
 
 std::string GetThreadName(uint32_t tid) { return GetThreadNameNative(ToNativeThreadId(tid)); }
