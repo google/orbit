@@ -50,4 +50,7 @@ ABSL_DECLARE_FLAG(bool, enable_tracepoint_feature);
 // threshold (i.e., production limit).
 ABSL_DECLARE_FLAG(bool, enable_warning_threshold);
 
+// additional folder in which OrbitService will look for symbols
+ABSL_DECLARE_FLAG(std::string, instance_symbols_folder);
+
 #endif  // CLIENT_FLAGS_CLIENT_FLAGS_H_
