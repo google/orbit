@@ -50,3 +50,7 @@ ABSL_FLAG(bool, enable_tracepoint_feature, false,
 // threshold (i.e., production limit).
 ABSL_FLAG(bool, enable_warning_threshold, false,
           "Enable setting and showing the memory warning threshold");
+
+// Additional folder in which OrbitService will look for symbols
+ABSL_FLAG(std::string, instance_symbols_folder, "",
+          "Additional folder in which OrbitService will look for symbols");

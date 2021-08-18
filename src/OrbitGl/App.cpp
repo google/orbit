@@ -1527,7 +1527,11 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
 
   orbit_base::Future<ErrorMessageOr<std::string>> check_file_on_remote =
       thread_pool_->Schedule([process_manager = GetProcessManager(), module_file_path]() {
-        return process_manager->FindDebugInfoFile(module_file_path, {});
+        if (absl::GetFlag(FLAGS_instance_symbols_folder).empty()) {
+          return process_manager->FindDebugInfoFile(module_file_path, {});
+        }
+        return process_manager->FindDebugInfoFile(module_file_path,
+                                                  {absl::GetFlag(FLAGS_instance_symbols_folder)});
       });
 
   auto download_file =
