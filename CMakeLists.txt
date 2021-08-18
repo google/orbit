@@ -125,6 +125,7 @@ add_definitions(-DUNICODE -D_UNICODE)
 
 if(WIN32)
   add_definitions(-DWIN32)
+  add_definitions(/MP)
 else()
   add_subdirectory(src/Api)
   add_subdirectory(src/ApiLoader)
