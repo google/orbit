@@ -198,6 +198,10 @@
 #ifdef __cplusplus
 
 #ifdef WIN32
+#include <intrin.h>
+
+#pragma intrinsic(_ReturnAddress)
+
 #define ORBIT_GET_CALLER_PC() reinterpret_cast<uint64_t>(_ReturnAddress())
 #else
 // `__builtin_return_address(0)` will return us the (possibly encoded) return address of the

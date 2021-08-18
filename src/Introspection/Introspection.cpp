@@ -19,12 +19,6 @@
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitBase/ThreadUtils.h"
 
-#ifdef WIN32
-#include <intrin.h>
-
-#pragma intrinsic(_ReturnAddress)
-#endif
-
 using orbit_api::ApiEventVariant;
 using orbit_introspection::TracingEventCallback;
 using orbit_introspection::TracingListener;
