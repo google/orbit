@@ -30,9 +30,10 @@ GraphTrack<Dimension>::GraphTrack(CaptureViewElement* parent, TimeGraph* time_gr
                                   orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                   std::array<std::string, Dimension> series_names,
                                   uint8_t series_value_decimal_digits,
+                                  std::string series_value_units,
                                   const orbit_client_data::CaptureData* capture_data)
     : Track(parent, time_graph, viewport, layout, capture_data),
-      series_{series_names, series_value_decimal_digits} {}
+      series_{series_names, series_value_decimal_digits, std::move(series_value_units)} {}
 
 template <size_t Dimension>
 float GraphTrack<Dimension>::GetHeight() const {

@@ -39,10 +39,8 @@ CGroupAndProcessMemoryTrack::CGroupAndProcessMemoryTrack(
     : MemoryTrack<kCGroupAndProcessMemoryTrackDimension>(
           parent, time_graph, viewport, layout,
           CreateSeriesName(cgroup_name, capture_data->process_name()), kTrackValueDecimalDigits,
-          capture_data),
+          kTrackValueLabelUnit, capture_data),
       cgroup_name_(cgroup_name) {
-  SetLabelUnit(kTrackValueLabelUnit);
-
   // Colors are selected from https://convertingcolors.com/list/avery.html.
   // Use reddish colors for different used memories, yellowish colors for different cached memories
   // and greenish colors for different unused memories.

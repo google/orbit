@@ -17,13 +17,7 @@ namespace orbit_gl {
 template <size_t Dimension>
 class LineGraphTrack : public GraphTrack<Dimension> {
  public:
-  explicit LineGraphTrack(CaptureViewElement* parent, TimeGraph* time_graph,
-                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                          std::array<std::string, Dimension> series_names,
-                          uint8_t series_value_decimal_digits,
-                          const orbit_client_data::CaptureData* capture_data)
-      : GraphTrack<Dimension>(parent, time_graph, viewport, layout, series_names,
-                              series_value_decimal_digits, capture_data) {}
+  using GraphTrack<Dimension>::GraphTrack;
   ~LineGraphTrack() override = default;
 
  protected:

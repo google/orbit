@@ -18,8 +18,10 @@ class MultivariateTimeSeries {
 
  public:
   explicit MultivariateTimeSeries(std::array<std::string, Dimension> series_names,
-                                  uint8_t value_decimal_digits)
-      : series_names_(std::move(series_names)), value_decimal_digits_{value_decimal_digits} {}
+                                  uint8_t value_decimal_digits, std::string value_unit)
+      : series_names_(std::move(series_names)),
+        value_decimal_digits_{value_decimal_digits},
+        value_unit_{std::move(value_unit)} {}
 
   [[nodiscard]] const std::array<std::string, Dimension>& GetSeriesNames() const {
     return series_names_;
@@ -39,7 +41,6 @@ class MultivariateTimeSeries {
       UpdateMinAndMax(value);
     }
   }
-  void SetValueUnit(std::string value_unit) { value_unit_ = std::move(value_unit); }
 
   [[nodiscard]] bool IsEmpty() const { return time_to_series_values_.empty(); }
 
@@ -103,7 +104,7 @@ class MultivariateTimeSeries {
   double min_ = std::numeric_limits<double>::max();
   double max_ = std::numeric_limits<double>::lowest();
   const uint8_t value_decimal_digits_;
-  std::string value_unit_;
+  const std::string value_unit_;
 };
 
 #endif  // ORBIT_GL_MULTIVARIATE_TIME_SERIES_H_

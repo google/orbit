@@ -19,6 +19,8 @@ static std::array<std::string, kBasicPageFaultsTrackDimension> CreateSeriesName(
 }  // namespace
 
 static constexpr uint8_t kTrackValueDecimalDigits = 0;
+static constexpr const char* kTrackValueUnits = "";
+
 BasicPageFaultsTrack::BasicPageFaultsTrack(Track* parent, TimeGraph* time_graph,
                                            orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                            std::string cgroup_name,
@@ -27,7 +29,7 @@ BasicPageFaultsTrack::BasicPageFaultsTrack(Track* parent, TimeGraph* time_graph,
     : LineGraphTrack<kBasicPageFaultsTrackDimension>(
           parent, time_graph, viewport, layout,
           CreateSeriesName(cgroup_name, capture_data->process_name()), kTrackValueDecimalDigits,
-          capture_data),
+          kTrackValueUnits, capture_data),
       AnnotationTrack(),
       cgroup_name_(std::move(cgroup_name)),
       memory_sampling_period_ms_(memory_sampling_period_ms),
