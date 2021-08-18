@@ -19,16 +19,17 @@ const std::array<Color, kVariableTrackDimension> kVariableTrackColor{Color(0, 12
 
 class VariableTrack final : public LineGraphTrack<kVariableTrackDimension> {
   static constexpr uint8_t kTrackValueDecimalDigits = 6;
+  static constexpr const char* kTrackValueUnits = "";
 
  public:
   explicit VariableTrack(CaptureViewElement* parent, TimeGraph* time_graph,
-                         orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                         const std::string& name,
+                         orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string name,
                          const orbit_client_data::CaptureData* capture_data)
       : LineGraphTrack<kVariableTrackDimension>(parent, time_graph, viewport, layout,
                                                 std::array<std::string, kVariableTrackDimension>{},
-                                                kTrackValueDecimalDigits, capture_data),
-        name_(name) {
+                                                kTrackValueDecimalDigits, kTrackValueUnits,
+                                                capture_data),
+        name_{std::move(name)} {
     SetSeriesColors(kVariableTrackColor);
   }
 

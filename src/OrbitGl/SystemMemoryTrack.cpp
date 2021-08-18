@@ -30,9 +30,8 @@ SystemMemoryTrack::SystemMemoryTrack(CaptureViewElement* parent, TimeGraph* time
                                      orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                      const orbit_client_data::CaptureData* capture_data)
     : MemoryTrack<kSystemMemoryTrackDimension>(parent, time_graph, viewport, layout, kSeriesName,
-                                               kTrackValueDecimalDigits, capture_data) {
-  SetLabelUnit(kTrackValueLabelUnit);
-
+                                               kTrackValueDecimalDigits, kTrackValueLabelUnit,
+                                               capture_data) {
   // Colors are selected from https://convertingcolors.com/list/avery.html.
   // Use reddish colors for different used memories, yellowish colors for different cached memories
   // and greenish colors for different unused memories.
