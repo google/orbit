@@ -196,6 +196,18 @@
 #if ORBIT_API_ENABLED
 
 #ifdef __cplusplus
+
+#ifdef WIN32
+#define ORBIT_GET_CALLER_PC() reinterpret_cast<uint64_t>(_ReturnAddress())
+#else
+// `__builtin_return_address(0)` will return us the (possibly encoded) return address of the
+// current function (level "0" refers to this frame, "1" would be the callers return address and
+// so on).
+// To decode the return address, we call `__builtin_extract_return_addr`.
+#define ORBIT_GET_CALLER_PC() \
+  reinterpret_cast<uint64_t>(__builtin_extract_return_addr(__builtin_return_address(0)))
+#endif
+
 #define ORBIT_SCOPE(name) ORBIT_SCOPE_WITH_COLOR(name, kOrbitColorAuto)
 #define ORBIT_SCOPE_WITH_COLOR(name, col) \
   ORBIT_SCOPE_WITH_COLOR_AND_GROUP_ID(name, col, kOrbitDefaultGroupId)
@@ -312,6 +324,8 @@ struct orbit_api_v1 {
   uint32_t enabled;
   uint32_t initialized;
   void (*start)(const char* name, orbit_api_color color, uint64_t group_id);
+  void (*start_with_explicit_caller)(const char* name, orbit_api_color color, uint64_t group_id,
+                                     uint64_t caller_address);
   void (*stop)();
   void (*start_async)(const char* name, uint64_t id, orbit_api_color color);
   void (*stop_async)(uint64_t id);
@@ -356,7 +370,8 @@ inline bool orbit_api_active() {
 namespace orbit_api {
 struct Scope {
   Scope(const char* name, orbit_api_color color, uint64_t group_id) {
-    ORBIT_CALL(start, name, color, group_id);
+    uint64_t return_address = ORBIT_GET_CALLER_PC();
+    ORBIT_CALL(start_with_explicit_caller, name, color, group_id, return_address);
   }
   ~Scope() { ORBIT_CALL(stop); }
 };
