@@ -69,7 +69,8 @@ TEST(ServiceUtils, FindSymbolsFilePath) {
     const Path hello_world_path = test_path / "hello_world_elf";
     GetDebugInfoFileRequest request;
     request.set_module_path(hello_world_path.string());
-    const auto result = FindSymbolsFilePath(request, {test_path});
+    request.add_additional_search_directories(test_path);
+    const auto result = FindSymbolsFilePath(request);
     ASSERT_TRUE(result.has_value()) << result.error().message();
     EXPECT_EQ(result.value(), hello_world_path);
   }
@@ -80,7 +81,8 @@ TEST(ServiceUtils, FindSymbolsFilePath) {
     const Path symbols_path = test_path / "no_symbols_elf.debug";
     GetDebugInfoFileRequest request;
     request.set_module_path(no_symbols_path.string());
-    const auto result = FindSymbolsFilePath(request, {test_path});
+    request.add_additional_search_directories(test_path);
+    const auto result = FindSymbolsFilePath(request);
     ASSERT_TRUE(result.has_value()) << result.error().message();
     EXPECT_EQ(result.value(), symbols_path);
   }
@@ -90,7 +92,8 @@ TEST(ServiceUtils, FindSymbolsFilePath) {
     const Path not_existing_file = test_path / "not_existing_file";
     GetDebugInfoFileRequest request;
     request.set_module_path(not_existing_file.string());
-    const auto result = FindSymbolsFilePath(request, {test_path});
+    request.add_additional_search_directories(test_path);
+    const auto result = FindSymbolsFilePath(request);
     ASSERT_TRUE(result.has_error());
     EXPECT_THAT(result.error().message(), testing::HasSubstr("Unable to load ELF file"));
   }
@@ -100,7 +103,8 @@ TEST(ServiceUtils, FindSymbolsFilePath) {
     const Path hello_world_elf_no_build_id = test_path / "hello_world_elf_no_build_id";
     GetDebugInfoFileRequest request;
     request.set_module_path(hello_world_elf_no_build_id.string());
-    const auto result = FindSymbolsFilePath(request, {test_path});
+    request.add_additional_search_directories(test_path);
+    const auto result = FindSymbolsFilePath(request);
     ASSERT_TRUE(result.has_value()) << result.error().message();
     EXPECT_EQ(result.value(), hello_world_elf_no_build_id);
   }
@@ -110,7 +114,8 @@ TEST(ServiceUtils, FindSymbolsFilePath) {
     const Path no_symbols_no_build_id = test_path / "no_symbols_no_build_id";
     GetDebugInfoFileRequest request;
     request.set_module_path(no_symbols_no_build_id.string());
-    const auto result = FindSymbolsFilePath(request, {test_path});
+    request.add_additional_search_directories(test_path);
+    const auto result = FindSymbolsFilePath(request);
     ASSERT_TRUE(result.has_error());
     EXPECT_THAT(result.error().message(), testing::HasSubstr("Module does not contain a build id"));
   }
