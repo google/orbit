@@ -105,9 +105,12 @@ Qt::ItemFlags TrackTypeItemModel::flags(const QModelIndex& index) const {
 }
 
 void TrackTypeItemModel::SetTrackManager(TrackManager* track_manager) {
-  beginRemoveRows({}, 0, rowCount() - 1);
-  track_manager_ = nullptr;
-  endRemoveRows();
+  int row_count = rowCount();
+  if (row_count > 0) {
+    beginRemoveRows({}, 0, rowCount() - 1);
+    track_manager_ = nullptr;
+    endRemoveRows();
+  }
   beginInsertRows({}, 0, known_track_types_.size() - 1);
   track_manager_ = track_manager;
   endInsertRows();
