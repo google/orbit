@@ -5,6 +5,7 @@
 #ifndef CLIENT_SERVICES_PROCESS_CLIENT_H_
 #define CLIENT_SERVICES_PROCESS_CLIENT_H_
 
+#include <absl/types/span.h>
 #include <grpcpp/grpcpp.h>
 #include <stdint.h>
 
@@ -32,7 +33,8 @@ class ProcessClient {
   [[nodiscard]] ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> LoadModuleList(
       uint32_t pid);
 
-  [[nodiscard]] ErrorMessageOr<std::string> FindDebugInfoFile(const std::string& module_path);
+  [[nodiscard]] ErrorMessageOr<std::string> FindDebugInfoFile(
+      const std::string& module_path, absl::Span<const std::string> additional_search_directories);
 
   [[nodiscard]] ErrorMessageOr<std::string> LoadProcessMemory(uint32_t pid, uint64_t address,
                                                               uint64_t size);

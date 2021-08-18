@@ -45,7 +45,9 @@ class ProcessManagerImpl final : public ProcessManager {
 
   ErrorMessageOr<std::string> LoadNullTerminatedString(uint32_t pid, uint64_t address) override;
 
-  ErrorMessageOr<std::string> FindDebugInfoFile(const std::string& module_path) override;
+  ErrorMessageOr<std::string> FindDebugInfoFile(
+      const std::string& module_path,
+      absl::Span<const std::string> additional_search_directories) override;
 
   void Start();
   void ShutdownAndWait() noexcept override;
@@ -81,8 +83,9 @@ ErrorMessageOr<std::vector<ModuleInfo>> ProcessManagerImpl::LoadModuleList(uint3
   return process_client_->LoadModuleList(pid);
 }
 
-ErrorMessageOr<std::string> ProcessManagerImpl::FindDebugInfoFile(const std::string& module_path) {
-  return process_client_->FindDebugInfoFile(module_path);
+ErrorMessageOr<std::string> ProcessManagerImpl::FindDebugInfoFile(
+    const std::string& module_path, absl::Span<const std::string> additional_search_directories) {
+  return process_client_->FindDebugInfoFile(module_path, additional_search_directories);
 }
 
 void ProcessManagerImpl::Start() {
