@@ -99,7 +99,8 @@ Status ProcessServiceImpl::GetProcessMemory(ServerContext*, const GetProcessMemo
 
 Status ProcessServiceImpl::GetDebugInfoFile(ServerContext*, const GetDebugInfoFileRequest* request,
                                             GetDebugInfoFileResponse* response) {
-  const auto symbols_path = utils::FindSymbolsFilePath(request->module_path());
+  CHECK(request != nullptr);
+  const auto symbols_path = utils::FindSymbolsFilePath(*request);
   if (symbols_path.has_error()) {
     return Status(StatusCode::NOT_FOUND, symbols_path.error().message());
   }

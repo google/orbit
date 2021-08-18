@@ -391,20 +391,21 @@ static ErrorMessageOr<fs::path> FindSymbolsFilePathElf(
 }
 
 ErrorMessageOr<fs::path> FindSymbolsFilePath(
-    const fs::path& module_path, const std::vector<fs::path>& search_directories) noexcept {
-  auto object_file_or_error = CreateObjectFile(module_path);
+    const orbit_grpc_protos::GetDebugInfoFileRequest& request,
+    const std::vector<fs::path>& search_directories) noexcept {
+  auto object_file_or_error = CreateObjectFile(request.module_path());
   if (object_file_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat("Unable to create object file: %s",
                                         object_file_or_error.error().message()));
   }
 
   if (object_file_or_error.value()->IsElf()) {
-    return FindSymbolsFilePathElf(module_path,
+    return FindSymbolsFilePathElf(request.module_path(),
                                   dynamic_cast<ElfFile*>(object_file_or_error.value().get()),
                                   search_directories);
   }
   if (object_file_or_error.value()->IsCoff()) {
-    return FindSymbolsFilePathCoff(module_path,
+    return FindSymbolsFilePathCoff(request.module_path(),
                                    dynamic_cast<CoffFile*>(object_file_or_error.value().get()));
   }
 

@@ -19,6 +19,7 @@
 
 #include "OrbitBase/Result.h"
 #include "module.pb.h"
+#include "services.pb.h"
 #include "tracepoint.pb.h"
 
 namespace orbit_service::utils {
@@ -43,7 +44,7 @@ std::optional<TotalCpuTime> GetCumulativeTotalCpuTime() noexcept;
 std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid) noexcept;
 
 ErrorMessageOr<std::filesystem::path> FindSymbolsFilePath(
-    const std::filesystem::path& module_path,
+    const orbit_grpc_protos::GetDebugInfoFileRequest& request,
     const std::vector<std::filesystem::path>& search_directories = {
         "/home/cloudcast/", "/home/cloudcast/debug_symbols/", "/mnt/developer/",
         "/mnt/developer/debug_symbols/", "/srv/game/assets/", "/srv/game/assets/debug_symbols/",

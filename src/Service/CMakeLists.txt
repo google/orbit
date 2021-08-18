@@ -85,4 +85,6 @@ register_test(ServiceTests PROPERTIES TIMEOUT 10)
 
 add_fuzzer(OrbitServiceUtilsFindSymbolsFilePathFuzzer
            OrbitServiceUtilsFindSymbolsFilePathFuzzer.cpp)
-target_link_libraries(OrbitServiceUtilsFindSymbolsFilePathFuzzer PRIVATE ServiceLib)
+target_link_libraries(
+        OrbitServiceUtilsFindSymbolsFilePathFuzzer PRIVATE ServiceLib
+        CONAN_PKG::libprotobuf-mutator)
