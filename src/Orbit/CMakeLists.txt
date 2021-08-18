@@ -19,6 +19,7 @@ endif()
 
 if(WIN32)
   set_target_properties(Orbit PROPERTIES WIN32_EXECUTABLE ON)
+  remove_definitions(/MP)
 
   include(${CMAKE_SOURCE_DIR}/cmake/version.cmake)
   GenerateVersionFile("${CMAKE_CURRENT_BINARY_DIR}/Orbit.rc"
