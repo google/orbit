@@ -76,7 +76,7 @@ union EncodedEvent {
 // It reuses existing EncodedEvent logic but adds information otherwise retrieved through uprobes.
 struct ApiEvent {
   ApiEvent() = default;
-  ApiEvent(int32_t pid, int32_t tid, uint64_t timestamp_ns, orbit_api::EventType type,
+  ApiEvent(uint32_t pid, uint32_t tid, uint64_t timestamp_ns, orbit_api::EventType type,
            const char* name = nullptr, uint64_t data = 0, orbit_api_color color = kOrbitColorAuto)
       : encoded_event(type, name, data, color), pid(pid), tid(tid), timestamp_ns(timestamp_ns) {
     static_assert(sizeof(ApiEvent) == 64, "orbit_api::ApiEvent should be 64 bytes.");
@@ -84,8 +84,8 @@ struct ApiEvent {
   orbit_api::EventType Type() const { return encoded_event.Type(); }
 
   EncodedEvent encoded_event;
-  int32_t pid;
-  int32_t tid;
+  uint32_t pid;
+  uint32_t tid;
   uint64_t timestamp_ns;
 };
 

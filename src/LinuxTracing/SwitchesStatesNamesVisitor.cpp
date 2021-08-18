@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "TracingInterface/TracerListener.h"
 
 namespace orbit_linux_tracing {
@@ -121,7 +122,7 @@ void SwitchesStatesNamesVisitor::Visit(SchedSwitchPerfEvent* event) {
         prev_pid, event->GetPrevTid(), event->GetCpu(), event->GetTimestamp());
     if (scheduling_slice.has_value()) {
       CHECK(listener_ != nullptr);
-      if (scheduling_slice->pid() == -1) {
+      if (scheduling_slice->pid() == orbit_base::kInvalidProcessId) {
         ERROR("SchedulingSlice with unknown pid");
       }
       listener_->OnSchedulingSlice(std::move(scheduling_slice.value()));

@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include "OrbitBase/ThreadUtils.h"
 #include "capture_data.pb.h"
 
 class CaptureData;
@@ -31,7 +32,7 @@ class SchedulingStats {
   [[nodiscard]] std::string ToString() const;
 
   struct ThreadStats {
-    int32_t tid = -1;
+    uint32_t tid = orbit_base::kInvalidThreadId;
     uint64_t time_on_core_ns = 0;
     std::string thread_name;
   };
@@ -39,7 +40,7 @@ class SchedulingStats {
   struct ProcessStats {
     std::map<int32_t, ThreadStats> thread_stats_by_tid;
     std::vector<ThreadStats*> thread_stats_sorted_by_time_on_core;
-    int32_t pid = -1;
+    uint32_t pid = orbit_base::kInvalidThreadId;
     uint64_t time_on_core_ns = 0;
     std::string process_name;
   };

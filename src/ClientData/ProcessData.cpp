@@ -24,7 +24,7 @@ void ProcessData::SetProcessInfo(const orbit_grpc_protos::ProcessInfo& process_i
   process_info_ = process_info;
 }
 
-int32_t ProcessData::pid() const {
+uint32_t ProcessData::pid() const {
   absl::MutexLock lock(&mutex_);
   return process_info_.pid();
 }

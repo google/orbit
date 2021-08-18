@@ -28,7 +28,7 @@ using testing::ElementsAre;
 namespace orbit_client_data {
 
 TEST(ProcessData, Constructor) {
-  int32_t pid = 10;
+  uint32_t pid = 10;
   const std::string name = "Process name";
   const double cpu_usage = 55.5;
   const std::string full_path = "/example/path";

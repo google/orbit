@@ -236,7 +236,7 @@ static ProducerCaptureEvent CreateCaptureStartedEvent(const CaptureOptions& capt
   ProducerCaptureEvent event;
   CaptureStarted* capture_started = event.mutable_capture_started();
 
-  int32_t target_pid = capture_options.pid();
+  pid_t target_pid = orbit_base::ToNativeProcessId(capture_options.pid());
 
   capture_started->set_process_id(target_pid);
   auto executable_path_or_error = orbit_base::GetExecutablePath(target_pid);
@@ -422,7 +422,8 @@ grpc::Status CaptureServiceImpl::Capture(
 
   // Disable user space instrumentation.
   if (capture_options.enable_user_space_instrumentation()) {
-    auto result_tmp = instrumentation_manager_->UninstrumentProcess(capture_options.pid());
+    const pid_t target_process_id = orbit_base::ToNativeProcessId(capture_options.pid());
+    auto result_tmp = instrumentation_manager_->UninstrumentProcess(target_process_id);
     if (result_tmp.has_error()) {
       ERROR("Disabling user space instrumentation: %s", result_tmp.error().message());
       producer_event_processor->ProcessEvent(

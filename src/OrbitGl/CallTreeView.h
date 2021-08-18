@@ -36,9 +36,9 @@ class CallTreeNode {
 
   [[nodiscard]] std::vector<const CallTreeNode*> children() const;
 
-  [[nodiscard]] CallTreeThread* GetThreadOrNull(int32_t thread_id);
+  [[nodiscard]] CallTreeThread* GetThreadOrNull(uint32_t thread_id);
 
-  [[nodiscard]] CallTreeThread* AddAndGetThread(int32_t thread_id, std::string thread_name);
+  [[nodiscard]] CallTreeThread* AddAndGetThread(uint32_t thread_id, std::string thread_name);
 
   [[nodiscard]] CallTreeFunction* GetFunctionOrNull(uint64_t function_absolute_address);
 
@@ -120,15 +120,15 @@ class CallTreeFunction : public CallTreeNode {
 
 class CallTreeThread : public CallTreeNode {
  public:
-  explicit CallTreeThread(int32_t thread_id, std::string thread_name, CallTreeNode* parent)
+  explicit CallTreeThread(uint32_t thread_id, std::string thread_name, CallTreeNode* parent)
       : CallTreeNode{parent}, thread_id_{thread_id}, thread_name_{std::move(thread_name)} {}
 
-  [[nodiscard]] int32_t thread_id() const { return thread_id_; }
+  [[nodiscard]] uint32_t thread_id() const { return thread_id_; }
 
   [[nodiscard]] const std::string& thread_name() const { return thread_name_; }
 
  private:
-  int32_t thread_id_;
+  uint32_t thread_id_;
   std::string thread_name_;
 };
 

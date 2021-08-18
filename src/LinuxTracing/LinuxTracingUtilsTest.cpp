@@ -28,7 +28,7 @@ namespace orbit_linux_tracing {
 TEST(GetThreadName, LinuxTracingTests) {
   // Thread names have a length limit of 15 characters.
   std::string expected_name = std::string{"LinuxTracingTests"}.substr(0, 15);
-  std::string returned_name = orbit_base::GetThreadName(getpid());
+  std::string returned_name = orbit_base::GetThreadNameNative(getpid());
   EXPECT_EQ(returned_name, expected_name);
 }
 

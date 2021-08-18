@@ -16,6 +16,7 @@
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "ServiceUtils.h"
 #include "module.pb.h"
 #include "process.pb.h"
@@ -62,7 +63,7 @@ Status ProcessServiceImpl::GetProcessList(ServerContext*, const GetProcessListRe
 Status ProcessServiceImpl::GetModuleList(ServerContext* /*context*/,
                                          const GetModuleListRequest* request,
                                          GetModuleListResponse* response) {
-  int32_t pid = request->process_id();
+  pid_t pid = orbit_base::ToNativeProcessId(request->process_id());
   LOG("Sending modules for process %d", pid);
 
   const auto module_infos = orbit_object_utils::ReadModules(pid);

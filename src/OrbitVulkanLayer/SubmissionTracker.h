@@ -57,8 +57,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   struct SubmissionMetaInformation {
     uint64_t pre_submission_cpu_timestamp;
     uint64_t post_submission_cpu_timestamp;
-    int32_t thread_id;
-    int32_t process_id;
+    uint32_t thread_id;
+    uint32_t process_id;
   };
 
   // A persistent version of a command buffer that was submitted and its begin/end slot in the

@@ -30,11 +30,11 @@ class ProcessClient {
   [[nodiscard]] ErrorMessageOr<std::vector<orbit_grpc_protos::ProcessInfo>> GetProcessList();
 
   [[nodiscard]] ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> LoadModuleList(
-      int32_t pid);
+      uint32_t pid);
 
   [[nodiscard]] ErrorMessageOr<std::string> FindDebugInfoFile(const std::string& module_path);
 
-  [[nodiscard]] ErrorMessageOr<std::string> LoadProcessMemory(int32_t pid, uint64_t address,
+  [[nodiscard]] ErrorMessageOr<std::string> LoadProcessMemory(uint32_t pid, uint64_t address,
                                                               uint64_t size);
 
  private:

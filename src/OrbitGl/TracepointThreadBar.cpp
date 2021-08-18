@@ -32,7 +32,7 @@ TracepointThreadBar::TracepointThreadBar(CaptureViewElement* parent, OrbitApp* a
                                          TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                                          TimeGraphLayout* layout,
                                          const orbit_client_data::CaptureData* capture_data,
-                                         int32_t thread_id, const Color& color)
+                                         uint32_t thread_id, const Color& color)
     : ThreadBar(parent, app, time_graph, viewport, layout, capture_data, thread_id, "Tracepoints",
                 color) {}
 

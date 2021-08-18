@@ -34,7 +34,7 @@ std::vector<const CallTreeNode*> CallTreeNode::children() const {
   return children;
 }
 
-CallTreeThread* CallTreeNode::GetThreadOrNull(int32_t thread_id) {
+CallTreeThread* CallTreeNode::GetThreadOrNull(uint32_t thread_id) {
   auto thread_it = thread_children_.find(thread_id);
   if (thread_it == thread_children_.end()) {
     return nullptr;
@@ -42,7 +42,7 @@ CallTreeThread* CallTreeNode::GetThreadOrNull(int32_t thread_id) {
   return &thread_it->second;
 }
 
-CallTreeThread* CallTreeNode::AddAndGetThread(int32_t thread_id, std::string thread_name) {
+CallTreeThread* CallTreeNode::AddAndGetThread(uint32_t thread_id, std::string thread_name) {
   const auto& [it, inserted] = thread_children_.try_emplace(
       thread_id, CallTreeThread{thread_id, std::move(thread_name), this});
   CHECK(inserted);
@@ -148,7 +148,7 @@ static void AddUnwindErrorToTopDownThread(CallTreeThread* thread_node,
 }
 
 [[nodiscard]] static CallTreeThread* GetOrCreateThreadNode(
-    CallTreeNode* current_node, int32_t tid, const std::string& process_name,
+    CallTreeNode* current_node, uint32_t tid, const std::string& process_name,
     const absl::flat_hash_map<int32_t, std::string>& thread_names) {
   CallTreeThread* thread_node = current_node->GetThreadOrNull(tid);
   if (thread_node == nullptr) {
@@ -172,7 +172,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
 
   for (const ThreadSampleData& thread_sample_data :
        post_processed_sampling_data.GetThreadSampleData()) {
-    const int32_t tid = thread_sample_data.thread_id;
+    const uint32_t tid = thread_sample_data.thread_id;
 
     for (const auto& [callstack_id, sample_count] :
          thread_sample_data.sampled_callstack_id_to_count) {
@@ -244,7 +244,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromPostProcessedS
 
   for (const ThreadSampleData& thread_sample_data :
        post_processed_sampling_data.GetThreadSampleData()) {
-    const int32_t tid = thread_sample_data.thread_id;
+    const uint32_t tid = thread_sample_data.thread_id;
     if (tid == orbit_base::kAllProcessThreadsTid) {
       continue;
     }

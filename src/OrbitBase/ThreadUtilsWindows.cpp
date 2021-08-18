@@ -12,6 +12,57 @@
 
 namespace orbit_base {
 
+static constexpr uint32_t kInvalidWindowsThreadId = 0;
+static constexpr uint32_t kInvalidWindowsProcessId_0 = 0;
+static constexpr uint32_t kInvalidWindowsProcessId_1 = 0xffffffff;
+
+// On Windows, thread and process ids are observed to be multiples of 4. Even though there is no
+// formal guarantee for this property, the current implementation of cross platform thread process
+// ids rely on it. https://devblogs.microsoft.com/oldnewthing/20080228-00/?p=23283
+static inline [[nodiscard]] bool IsMultipleOfFour(uint32_t value) { return (value & 3) == 0; }
+
+uint32_t GetCurrentThreadId() { return FromNativeThreadId(GetCurrentThreadIdNative()); }
+
+uint32_t GetCurrentProcessId() { return FromNativeProcessId(GetCurrentProcessIdNative()); }
+
+bool IsValidThreadId(uint32_t tid) {
+  return tid != orbit_base::kInvalidThreadId && IsMultipleOfFour(tid);
+}
+
+bool IsValidProcessId(uint32_t pid) {
+  return pid != orbit_base::kInvalidProcessId && IsMultipleOfFour(pid);
+}
+
+uint32_t GetCurrentThreadIdNative() {
+  thread_local uint32_t current_tid = ::GetCurrentThreadId();
+  return current_tid;
+}
+
+uint32_t GetCurrentProcessIdNative() { return ::GetCurrentProcessId(); }
+
+uint32_t FromNativeThreadId(uint32_t tid) {
+  CHECK(IsMultipleOfFour(tid) || tid == kInvalidWindowsThreadId);
+  return tid != kInvalidWindowsThreadId ? tid : orbit_base::kInvalidThreadId;
+}
+
+uint32_t FromNativeProcessId(uint32_t pid) {
+  bool is_invalid_pid = (pid == kInvalidWindowsProcessId_0 || pid == kInvalidWindowsProcessId_1);
+  CHECK(IsMultipleOfFour(pid) || is_invalid_pid);
+  return !is_invalid_pid ? pid : orbit_base::kInvalidProcessId;
+}
+
+uint32_t ToNativeThreadId(uint32_t tid) {
+  CHECK(IsMultipleOfFour(tid) || tid == orbit_base::kInvalidThreadId);
+  return tid != orbit_base::kInvalidThreadId ? tid : kInvalidWindowsThreadId;
+}
+
+uint32_t ToNativeProcessId(uint32_t pid) {
+  CHECK(IsMultipleOfFour(pid) || pid == orbit_base::kInvalidProcessId);
+  return pid != orbit_base::kInvalidProcessId ? pid : kInvalidWindowsProcessId_0;
+}
+
+std::string GetThreadName(uint32_t tid) { return GetThreadNameNative(ToNativeThreadId(tid)); }
+
 template <typename FunctionPrototypeT>
 static FunctionPrototypeT GetProcAddress(const std::string& library, const std::string& procedure) {
   HMODULE module_handle = LoadLibraryA(library.c_str());
@@ -22,12 +73,7 @@ static FunctionPrototypeT GetProcAddress(const std::string& library, const std::
   return reinterpret_cast<FunctionPrototypeT>(::GetProcAddress(module_handle, procedure.c_str()));
 }
 
-uint32_t GetCurrentThreadId() {
-  thread_local uint32_t current_tid = ::GetCurrentThreadId();
-  return current_tid;
-}
-
-std::string GetThreadName(uint32_t tid) {
+std::string GetThreadNameNative(uint32_t tid) {
   static const std::string kEmptyString;
 
   // Find "GetThreadDescription" procedure.
@@ -67,7 +113,5 @@ void SetCurrentThreadName(const char* name) {
     ERROR("Setting thread name %s with proc[%llx]", name, set_thread_description);
   }
 }
-
-uint32_t GetCurrentProcessId() { return ::GetCurrentProcessId(); }
 
 }  // namespace orbit_base

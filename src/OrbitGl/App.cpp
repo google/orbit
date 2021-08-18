@@ -426,7 +426,7 @@ void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
   GetMutableCaptureData().AddCallstackEvent(std::move(callstack_event));
 }
 
-void OrbitApp::OnThreadName(int32_t thread_id, std::string thread_name) {
+void OrbitApp::OnThreadName(uint32_t thread_id, std::string thread_name) {
   GetMutableCaptureData().AddOrAssignThreadName(thread_id, std::move(thread_name));
 }
 
@@ -444,7 +444,7 @@ void OrbitApp::OnUniqueTracepointInfo(uint64_t key,
 }
 
 void OrbitApp::OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracepoint_event_info) {
-  int32_t capture_process_id = GetCaptureData().process_id();
+  uint32_t capture_process_id = GetCaptureData().process_id();
   bool is_same_pid_as_target = capture_process_id == tracepoint_event_info.pid();
 
   GetMutableCaptureData().AddTracepointEventAndMapToThreads(
@@ -797,7 +797,7 @@ void OrbitApp::RenderImGuiDebugUI() {
   debug_canvas_->RequestRedraw();
 }
 
-void OrbitApp::Disassemble(int32_t pid, const FunctionInfo& function) {
+void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
   CHECK(process_ != nullptr);
   const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(function.module_path(),
                                                                         function.module_build_id());
@@ -2280,7 +2280,7 @@ uint64_t OrbitApp::GetGroupIdToHighlight() const {
 }
 
 void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected_callstack_events,
-                                     int32_t thread_id) {
+                                     uint32_t thread_id) {
   const CallstackData& callstack_data = GetCaptureData().GetCallstackData();
   std::unique_ptr<CallstackData> selection_callstack_data = std::make_unique<CallstackData>();
   for (const CallstackEvent& event : selected_callstack_events) {

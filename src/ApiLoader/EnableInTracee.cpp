@@ -14,6 +14,7 @@
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "OrbitBase/UniqueResource.h"
 #include "UserSpaceInstrumentation/Attach.h"
 #include "UserSpaceInstrumentation/ExecuteInProcess.h"
@@ -79,7 +80,7 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
     return outcome::success();
   }
 
-  int32_t pid = capture_options.pid();
+  int32_t pid = orbit_base::ToNativeProcessId(capture_options.pid());
 
   OUTCOME_TRY(AttachAndStopProcess(pid));
 

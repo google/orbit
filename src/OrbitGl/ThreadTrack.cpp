@@ -24,6 +24,7 @@
 #include "ManualInstrumentationManager.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "TextRenderer.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
@@ -40,7 +41,7 @@ using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::InstrumentedFunction;
 
 ThreadTrack::ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph,
-                         orbit_gl::Viewport* viewport, TimeGraphLayout* layout, int32_t thread_id,
+                         orbit_gl::Viewport* viewport, TimeGraphLayout* layout, uint32_t thread_id,
                          OrbitApp* app, const CaptureData* capture_data,
                          orbit_client_data::TrackData* track_data,
                          ScopeTreeUpdateType scope_tree_update_type)
@@ -400,7 +401,7 @@ float ThreadTrack::GetYFromDepth(uint32_t depth) const {
 }
 
 void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
-  if (process_id_ == -1) {
+  if (process_id_ == orbit_base::kInvalidProcessId) {
     process_id_ = timer_info.process_id();
   }
 

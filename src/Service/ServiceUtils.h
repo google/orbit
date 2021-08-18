@@ -48,7 +48,7 @@ ErrorMessageOr<std::filesystem::path> FindSymbolsFilePath(
         "/home/cloudcast/", "/home/cloudcast/debug_symbols/", "/mnt/developer/",
         "/mnt/developer/debug_symbols/", "/srv/game/assets/",
         "/srv/game/assets/debug_symbols/"}) noexcept;
-bool ReadProcessMemory(int32_t pid, uintptr_t address, void* buffer, uint64_t size,
+bool ReadProcessMemory(uint32_t pid, uintptr_t address, void* buffer, uint64_t size,
                        uint64_t* num_bytes_read) noexcept;
 }  // namespace orbit_service::utils
 

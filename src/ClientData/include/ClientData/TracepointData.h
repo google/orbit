@@ -37,17 +37,17 @@ namespace orbit_client_data {
 class TracepointData {
  public:
   // Assume that the corresponding tracepoint of tracepoint_hash is already in unique_tracepoints_
-  void EmplaceTracepointEvent(uint64_t time, uint64_t tracepoint_hash, int32_t process_id,
-                              int32_t thread_id, int32_t cpu, bool is_same_pid_as_target);
+  void EmplaceTracepointEvent(uint64_t time, uint64_t tracepoint_hash, uint32_t process_id,
+                              uint32_t thread_id, int32_t cpu, bool is_same_pid_as_target);
 
   void ForEachTracepointEventOfThreadInTimeRange(
-      int32_t thread_id, uint64_t min_tick, uint64_t max_tick_exclusive,
+      uint32_t thread_id, uint64_t min_tick, uint64_t max_tick_exclusive,
       const std::function<void(const orbit_client_protos::TracepointEventInfo&)>& action) const;
 
   void ForEachTracepointEvent(
       const std::function<void(const orbit_client_protos::TracepointEventInfo&)>& action) const;
 
-  uint32_t GetNumTracepointEventsForThreadId(int32_t thread_id) const;
+  uint32_t GetNumTracepointEventsForThreadId(uint32_t thread_id) const;
 
   bool AddUniqueTracepointInfo(uint64_t key, orbit_grpc_protos::TracepointInfo tracepoint);
 
@@ -63,7 +63,7 @@ class TracepointData {
   mutable absl::Mutex mutex_;
   mutable absl::Mutex unique_tracepoints_mutex_;
 
-  absl::flat_hash_map<int32_t, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >
+  absl::flat_hash_map<uint32_t, std::map<uint64_t, orbit_client_protos::TracepointEventInfo> >
       thread_id_to_time_to_tracepoint_;
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::TracepointInfo> unique_tracepoints_;
 };

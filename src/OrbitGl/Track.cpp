@@ -12,7 +12,7 @@
 #include "CoreMath.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
-#include "OrbitBase/ThreadConstants.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "TextRenderer.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
@@ -23,7 +23,7 @@ using orbit_client_data::TrackData;
 Track::Track(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
              TimeGraphLayout* layout, const orbit_client_data::CaptureData* capture_data)
     : CaptureViewElement(parent, time_graph, viewport, layout),
-      process_id_{-1},
+      process_id_{orbit_base::kInvalidProcessId},
       pinned_{false},
       layout_(layout),
       capture_data_(capture_data) {
@@ -215,9 +215,9 @@ void Track::SetPos(float x, float y) {
 void Track::SetPinned(bool value) { pinned_ = value; }
 
 Color Track::GetTrackBackgroundColor() const {
-  int32_t capture_process_id = capture_data_->process_id();
+  uint32_t capture_process_id = capture_data_->process_id();
 
-  if (GetProcessId() != -1 && GetProcessId() != capture_process_id &&
+  if (GetProcessId() != orbit_base::kInvalidProcessId && GetProcessId() != capture_process_id &&
       GetType() != Type::kSchedulerTrack) {
     const Color kExternalProcessColor(30, 30, 40, 255);
     return kExternalProcessColor;

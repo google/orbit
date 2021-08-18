@@ -146,7 +146,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
     capture_data_.AddUniqueCallstack(callstack_id, std::move(callstack_info));
   }
 
-  void AddCallstackEvent(uint64_t callstack_id, int32_t thread_id) {
+  void AddCallstackEvent(uint64_t callstack_id, uint32_t thread_id) {
     current_callstack_timestamp_ns_ += 100;
     CallstackEvent callstack_event;
     callstack_event.set_time(current_callstack_timestamp_ns_);
@@ -805,7 +805,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
     EXPECT_EQ(ppsd_.GetCountOfFunction(kFunction4Instruction1AbsoluteAddress), 1);
   }
 
-  void VerifyEmptySortedCallstackReport(int32_t thread_id) {
+  void VerifyEmptySortedCallstackReport(uint32_t thread_id) {
     EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses({}, thread_id),
                 SortedCallstackReportEq(MakeSortedCallstackReport({})));
 
@@ -853,7 +853,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
                 SortedCallstackReportEq(MakeSortedCallstackReport({})));
   }
 
-  void VerifySortedCallstackReportForCallstackEventsAllInTheSameThread(int32_t thread_id) {
+  void VerifySortedCallstackReportForCallstackEventsAllInTheSameThread(uint32_t thread_id) {
     EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses({}, thread_id),
                 SortedCallstackReportEq(MakeSortedCallstackReport({})));
 
@@ -910,7 +910,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
 
   void
   VerifySortedCallstackReportForCallstackEventsAllInTheSameThreadWithOnlyNonCompleteCallstackInfos(
-      int32_t thread_id) {
+      uint32_t thread_id) {
     EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses({}, thread_id),
                 SortedCallstackReportEq(MakeSortedCallstackReport({})));
 
@@ -962,7 +962,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
   }
 
   void VerifySortedCallstackReportForCallstackEventsAllInTheSameThreadWithMixedCallstackTypes(
-      int32_t thread_id) {
+      uint32_t thread_id) {
     EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses({}, thread_id),
                 SortedCallstackReportEq(MakeSortedCallstackReport({})));
 
@@ -1016,7 +1016,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
   }
 
   void VerifySortedCallstackReportForCallstackEventsAllInTheSameThreadWithoutAddressInfo(
-      int32_t thread_id) {
+      uint32_t thread_id) {
     EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses({}, thread_id),
                 SortedCallstackReportEq(MakeSortedCallstackReport({})));
 
@@ -1072,7 +1072,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
   }
 
   void VerifySortedCallstackReportForCallstackEventsInThreadId1() {
-    int32_t thread_id = kThreadId1;
+    uint32_t thread_id = kThreadId1;
 
     EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses({}, thread_id),
                 SortedCallstackReportEq(MakeSortedCallstackReport({})));
@@ -1126,7 +1126,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
   }
 
   void VerifySortedCallstackReportForCallstackEventsInThreadId2() {
-    int32_t thread_id = kThreadId2;
+    uint32_t thread_id = kThreadId2;
 
     EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses({}, thread_id),
                 SortedCallstackReportEq(MakeSortedCallstackReport({})));
@@ -1179,7 +1179,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
   }
 
   void VerifySortedCallstackReportForCallstackEventsInThreadId1WithMixedCallstackTypes() {
-    int32_t thread_id = kThreadId1;
+    uint32_t thread_id = kThreadId1;
 
     EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses({}, thread_id),
                 SortedCallstackReportEq(MakeSortedCallstackReport({})));
@@ -1231,7 +1231,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
   }
 
   void VerifySortedCallstackReportForCallstackEventsInThreadId2WithMixedCallstackTypes() {
-    int32_t thread_id = kThreadId2;
+    uint32_t thread_id = kThreadId2;
 
     EXPECT_THAT(*ppsd_.GetSortedCallstackReportFromFunctionAddresses({}, thread_id),
                 SortedCallstackReportEq(MakeSortedCallstackReport({})));
