@@ -13,19 +13,21 @@
 
 namespace orbit_service {
 
-class Process : public orbit_grpc_protos::ProcessInfo {
+class Process {
  public:
-  using orbit_grpc_protos::ProcessInfo::ProcessInfo;
-
   void UpdateCpuUsage(utils::Jiffies process_cpu_time, utils::TotalCpuTime total_cpu_time);
 
   // Creates a `Process` by reading details from the `/proc` filesystem.
   // This might fail due to a non existing pid or due to permission problems.
   static ErrorMessageOr<Process> FromPid(pid_t pid);
 
+  // NOLINTNEXTLINE
+  [[nodiscard]] const orbit_grpc_protos::ProcessInfo& process_info() const { return process_info_; }
+
  private:
   utils::Jiffies previous_process_cpu_time_ = {};
   utils::Jiffies previous_total_cpu_time_ = {};
+  orbit_grpc_protos::ProcessInfo process_info_;
 };
 
 }  // namespace orbit_service
