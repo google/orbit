@@ -2,15 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <stddef.h>
-#include <stdint.h>
-
-#include <string>
+#include <libfuzzer/libfuzzer_macro.h>
 
 #include "ServiceUtils.h"
 
-extern "C" int LLVMFuzzerTestOneInput(uint8_t* buf, size_t len) {
-  (void)orbit_service::utils::FindSymbolsFilePath(
-      std::string{reinterpret_cast<const char*>(buf), len});
-  return 0;
+DEFINE_PROTO_FUZZER(const orbit_grpc_protos::GetDebugInfoFileRequest& request) {
+  (void)orbit_service::utils::FindSymbolsFilePath(request);
 }
