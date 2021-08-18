@@ -6,6 +6,7 @@
 #define CLIENT_SERVICES_PROCESS_MANAGER_H_
 
 #include <absl/time/time.h>
+#include <absl/types/span.h>
 #include <grpcpp/grpcpp.h>
 #include <stdint.h>
 
@@ -56,7 +57,9 @@ class ProcessManager {
 
   virtual ErrorMessageOr<std::string> LoadNullTerminatedString(uint32_t pid, uint64_t address) = 0;
 
-  virtual ErrorMessageOr<std::string> FindDebugInfoFile(const std::string& module_path) = 0;
+  virtual ErrorMessageOr<std::string> FindDebugInfoFile(
+      const std::string& module_path,
+      absl::Span<const std::string> additional_search_directories) = 0;
 
   // Note that this method waits for the worker thread to stop, which could
   // take up to refresh_timeout.

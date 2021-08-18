@@ -38,6 +38,7 @@
 #include "capture_data.pb.h"
 #include "module.pb.h"
 #include "process.pb.h"
+#include "services.pb.h"
 
 ABSL_DECLARE_FLAG(bool, thread_state);
 ABSL_DECLARE_FLAG(uint64_t, max_local_marker_depth_per_command_buffer);
@@ -221,7 +222,8 @@ ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
   // Load symbols for the module
   const std::string& module_path = main_module_->file_path();
   LOG("Looking for debug info file for %s", module_path);
-  OUTCOME_TRY(auto&& main_executable_debug_file, process_client_->FindDebugInfoFile(module_path));
+  OUTCOME_TRY(auto&& main_executable_debug_file,
+              process_client_->FindDebugInfoFile(module_path, {}));
   LOG("Found file: %s", main_executable_debug_file);
   LOG("Loading symbols");
   OUTCOME_TRY(auto&& symbols,

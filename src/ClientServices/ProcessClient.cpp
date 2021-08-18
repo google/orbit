@@ -4,6 +4,7 @@
 
 #include "ClientServices/ProcessClient.h"
 
+#include <absl/types/span.h>
 #include <grpcpp/grpcpp.h>
 
 #include <chrono>
@@ -82,12 +83,15 @@ ErrorMessageOr<std::vector<ModuleInfo>> ProcessClient::LoadModuleList(uint32_t p
   return std::vector<ModuleInfo>(modules.begin(), modules.end());
 }
 
-ErrorMessageOr<std::string> ProcessClient::FindDebugInfoFile(const std::string& module_path) {
+ErrorMessageOr<std::string> ProcessClient::FindDebugInfoFile(
+    const std::string& module_path, absl::Span<const std::string> additional_search_directories) {
   ORBIT_SCOPE_FUNCTION;
   GetDebugInfoFileRequest request;
   GetDebugInfoFileResponse response;
 
   request.set_module_path(module_path);
+  *request.mutable_additional_search_directories() = {additional_search_directories.begin(),
+                                                      additional_search_directories.end()};
 
   std::unique_ptr<grpc::ClientContext> context = CreateContext();
 
