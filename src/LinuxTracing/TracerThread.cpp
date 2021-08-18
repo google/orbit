@@ -9,6 +9,7 @@
 #include <absl/meta/type_traits.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
+#include <absl/synchronization/mutex.h>
 #include <pthread.h>
 #include <stddef.h>
 #include <unistd.h>
@@ -1222,7 +1223,10 @@ void TracerThread::Reset() {
   effective_capture_start_timestamp_ns_ = 0;
 
   stop_deferred_thread_ = false;
-  deferred_events_being_buffered_.clear();
+  {
+    absl::MutexLock lock{&deferred_events_being_buffered_mutex_};
+    deferred_events_being_buffered_.clear();
+  }
   deferred_events_to_process_.clear();
   uprobes_unwinding_visitor_.reset();
   switches_states_names_visitor_.reset();
