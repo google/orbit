@@ -48,6 +48,13 @@ using ::orbit_object_utils::ObjectFile;
 
 static const char* kLinuxTracingEventsDirectory = "/sys/kernel/debug/tracing/events/";
 
+const std::vector<fs::path>& kHardcodedSearchDirectories{
+    "/home/cloudcast/",        "/home/cloudcast/debug_symbols/",
+    "/mnt/developer/",         "/mnt/developer/debug_symbols/",
+    "/srv/game/assets/",       "/srv/game/assets/debug_symbols/",
+    "/home/cloudcast/symbols", "/mnt/developer/symbols",
+    "/srv/game/assets/symbols"};
+
 ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints() {
   std::vector<TracepointInfo> result;
 
@@ -391,13 +398,17 @@ static ErrorMessageOr<fs::path> FindSymbolsFilePathElf(
 }
 
 ErrorMessageOr<fs::path> FindSymbolsFilePath(
-    const orbit_grpc_protos::GetDebugInfoFileRequest& request,
-    const std::vector<fs::path>& search_directories) noexcept {
+    const orbit_grpc_protos::GetDebugInfoFileRequest& request) noexcept {
   auto object_file_or_error = CreateObjectFile(request.module_path());
   if (object_file_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat("Unable to create object file: %s",
                                         object_file_or_error.error().message()));
   }
+
+  std::vector<fs::path> search_directories{kHardcodedSearchDirectories};
+  const auto& additional_search_directories = request.additional_search_directories();
+  search_directories.insert(search_directories.end(), additional_search_directories.begin(),
+                            additional_search_directories.end());
 
   if (object_file_or_error.value()->IsElf()) {
     return FindSymbolsFilePathElf(request.module_path(),

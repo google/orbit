@@ -58,6 +58,7 @@ message GetProcessMemoryResponse {
 message GetDebugInfoFileRequest {
   reserved 2;
   string module_path = 1;
+  repeated string additional_search_directories = 3;
 }
 
 message GetDebugInfoFileResponse {

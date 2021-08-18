@@ -44,11 +44,7 @@ std::optional<TotalCpuTime> GetCumulativeTotalCpuTime() noexcept;
 std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid) noexcept;
 
 ErrorMessageOr<std::filesystem::path> FindSymbolsFilePath(
-    const orbit_grpc_protos::GetDebugInfoFileRequest& request,
-    const std::vector<std::filesystem::path>& search_directories = {
-        "/home/cloudcast/", "/home/cloudcast/debug_symbols/", "/mnt/developer/",
-        "/mnt/developer/debug_symbols/", "/srv/game/assets/", "/srv/game/assets/debug_symbols/",
-        "/home/cloudcast/symbols", "/mnt/developer/symbols", "/srv/game/assets/symbols"}) noexcept;
+    const orbit_grpc_protos::GetDebugInfoFileRequest& request) noexcept;
 bool ReadProcessMemory(uint32_t pid, uintptr_t address, void* buffer, uint64_t size,
                        uint64_t* num_bytes_read) noexcept;
 }  // namespace orbit_service::utils
