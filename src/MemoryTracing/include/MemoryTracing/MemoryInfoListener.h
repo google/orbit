@@ -36,7 +36,8 @@ class MemoryInfoListener {
   void OnProcessMemoryUsage(orbit_grpc_protos::ProcessMemoryUsage process_memory_usage);
 
  private:
-  void ProcessMemoryUsageEventIfReady(uint64_t sampling_window_id);
+  void ProcessMemoryUsageEventIfReady(uint64_t sampling_window_id)
+      EXCLUSIVE_LOCKS_REQUIRED(in_progress_memory_usage_events_mutex_);
   virtual void OnMemoryUsageEvent(orbit_grpc_protos::MemoryUsageEvent memory_usage_event) = 0;
 
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::MemoryUsageEvent>
