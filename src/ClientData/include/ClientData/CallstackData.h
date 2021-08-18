@@ -96,12 +96,12 @@ class CallstackData {
   // E.g., one might want to nest ForEachCallstackEvent and ForEachFrameInCallstack.
   mutable std::recursive_mutex mutex_;
   absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
-      unique_callstacks_ GUARDED_BY(mutex_);
+      unique_callstacks_;
   absl::flat_hash_map<int32_t, std::map<uint64_t, orbit_client_protos::CallstackEvent>>
-      callstack_events_by_tid_ GUARDED_BY(mutex_);
+      callstack_events_by_tid_;
 
-  uint64_t max_time_ GUARDED_BY(mutex_) = 0;
-  uint64_t min_time_ GUARDED_BY(mutex_) = std::numeric_limits<uint64_t>::max();
+  uint64_t max_time_ = 0;
+  uint64_t min_time_ = std::numeric_limits<uint64_t>::max();
 };
 
 }  // namespace orbit_client_data
