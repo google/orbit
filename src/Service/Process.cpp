@@ -38,7 +38,7 @@ void Process::UpdateCpuUsage(utils::Jiffies process_cpu_time, utils::TotalCpuTim
 
   // TODO(hebecker): Rename cpu_usage to cpu_usage_rate and normalize. Being in percent was
   // surprising
-  set_cpu_usage(cpu_usage * 100.0);
+  process_info_.set_cpu_usage(cpu_usage * 100.0);
 
   previous_process_cpu_time_ = process_cpu_time;
   previous_total_cpu_time_ = total_cpu_time.jiffies;
@@ -66,15 +66,15 @@ ErrorMessageOr<Process> Process::FromPid(pid_t pid) {
   }
 
   Process process{};
-  process.set_pid(pid);
-  process.set_name(name);
+  process.process_info_.set_pid(pid);
+  process.process_info_.set_name(name);
 
   const auto total_cpu_time = utils::GetCumulativeTotalCpuTime();
-  const auto cpu_time = utils::GetCumulativeCpuTimeFromProcess(process.pid());
+  const auto cpu_time = utils::GetCumulativeCpuTimeFromProcess(process.process_info().pid());
   if (cpu_time && total_cpu_time) {
     process.UpdateCpuUsage(cpu_time.value(), total_cpu_time.value());
   } else {
-    LOG("Could not update the CPU usage of process %d", process.pid());
+    LOG("Could not update the CPU usage of process %d", process.process_info().pid());
   }
 
   // "The command-line arguments appear [...] as a set of strings
@@ -88,16 +88,16 @@ ErrorMessageOr<Process> Process::FromPid(pid_t pid) {
 
   std::string cmdline = std::move(cmdline_file_result.value());
   std::replace(cmdline.begin(), cmdline.end(), '\0', ' ');
-  process.set_command_line(cmdline);
+  process.process_info_.set_command_line(cmdline);
 
   auto file_path_result = orbit_base::GetExecutablePath(pid);
   if (!file_path_result.has_error()) {
-    process.set_full_path(file_path_result.value());
+    process.process_info_.set_full_path(file_path_result.value());
 
     const auto& elf_file = orbit_object_utils::CreateElfFile(file_path_result.value());
     if (!elf_file.has_error()) {
-      process.set_is_64_bit(elf_file.value()->Is64Bit());
-      process.set_build_id(elf_file.value()->GetBuildId());
+      process.process_info_.set_is_64_bit(elf_file.value()->Is64Bit());
+      process.process_info_.set_build_id(elf_file.value()->GetBuildId());
     } else {
       LOG("Warning: Unable to parse the executable \"%s\" as elf file. (pid: %d): %s",
           file_path_result.value(), pid, elf_file.error().message());

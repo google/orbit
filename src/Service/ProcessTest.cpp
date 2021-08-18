@@ -8,6 +8,7 @@
 #include <memory>
 #include <string_view>
 
+#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Result.h"
 #include "Process.h"
 
@@ -21,8 +22,9 @@ TEST(Process, FromPid) {
 
   auto& process = potential_process.value();
 
-  EXPECT_EQ(process.pid(), getpid());
-  EXPECT_EQ(process.name(), std::string_view{"ServiceTests"}.substr(0, kTaskCommLength - 1));
+  EXPECT_EQ(process.process_info().pid(), getpid());
+  EXPECT_EQ(process.process_info().name(),
+            orbit_base::GetExecutablePath().filename().string().substr(0, kTaskCommLength - 1));
 }
 
 }  // namespace orbit_service

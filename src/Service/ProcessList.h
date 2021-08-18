@@ -27,9 +27,8 @@ class ProcessList {
     std::vector<orbit_grpc_protos::ProcessInfo> processes;
     processes.reserve(processes_.size());
 
-    std::transform(
-        processes_.begin(), processes_.end(), std::back_inserter(processes),
-        [](const auto& pair) { return static_cast<orbit_grpc_protos::ProcessInfo>(pair.second); });
+    std::transform(processes_.begin(), processes_.end(), std::back_inserter(processes),
+                   [](const auto& pair) { return pair.second.process_info(); });
     return processes;
   }
 
