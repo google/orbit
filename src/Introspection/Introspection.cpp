@@ -96,27 +96,14 @@ void TracingListener::DeferApiEventProcessing(const orbit_api::ApiEventVariant& 
   });
 }
 
-void orbit_api_start_v1(const char* name, orbit_api_color color, uint64_t group_id) {
+void orbit_api_start_v1(const char* name, orbit_api_color color, uint64_t group_id,
+                        uint64_t caller_address) {
   uint32_t process_id = orbit_base::GetCurrentProcessId();
   uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
-  uint64_t return_address = ORBIT_GET_CALLER_PC();
-  orbit_api::ApiScopeStart api_scope_start{process_id,
-                                           thread_id,
-                                           timestamp_ns,
-                                           name,
-                                           color,
-                                           group_id,
-                                           absl::bit_cast<uint64_t>(return_address)};
-  TracingListener::DeferApiEventProcessing(api_scope_start);
-}
-
-void orbit_api_start_with_explicit_caller_v1(const char* name, orbit_api_color color,
-                                             uint64_t group_id, uint64_t caller_address) {
-  uint32_t process_id = orbit_base::GetCurrentProcessId();
-  uint32_t thread_id = orbit_base::GetCurrentThreadId();
-  uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
-
+  if (caller_address == kOrbitCallerAddressAuto) {
+    caller_address = ORBIT_GET_CALLER_PC();
+  }
   orbit_api::ApiScopeStart api_scope_start{process_id, thread_id, timestamp_ns,  name,
                                            color,      group_id,  caller_address};
   TracingListener::DeferApiEventProcessing(api_scope_start);
@@ -135,13 +122,8 @@ void orbit_api_start_async(const char* name, uint64_t id, orbit_api_color color)
   uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
   uint64_t return_address = ORBIT_GET_CALLER_PC();
-  orbit_api::ApiScopeStartAsync api_scope_start_async{process_id,
-                                                      thread_id,
-                                                      timestamp_ns,
-                                                      name,
-                                                      id,
-                                                      color,
-                                                      absl::bit_cast<uint64_t>(return_address)};
+  orbit_api::ApiScopeStartAsync api_scope_start_async{process_id, thread_id, timestamp_ns,  name,
+                                                      id,         color,     return_address};
 
   TracingListener::DeferApiEventProcessing(api_scope_start_async);
 }
@@ -215,7 +197,6 @@ namespace orbit_introspection {
 void InitializeTracing() {
   if (g_orbit_api_v1.initialized != 0) return;
   g_orbit_api_v1.start = &orbit_api_start_v1;
-  g_orbit_api_v1.start_with_explicit_caller = &orbit_api_start_with_explicit_caller_v1;
   g_orbit_api_v1.stop = &orbit_api_stop;
   g_orbit_api_v1.start_async = &orbit_api_start_async;
   g_orbit_api_v1.stop_async = &orbit_api_stop_async;

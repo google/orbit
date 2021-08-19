@@ -32,13 +32,11 @@ void EnqueueApiEvent(Types... args) {
   producer.EnqueueIntermediateEvent(event);
 }
 
-void orbit_api_start_v1(const char* name, orbit_api_color color, uint64_t group_id) {
-  uint64_t return_address = ORBIT_GET_CALLER_PC();
-  EnqueueApiEvent<orbit_api::ApiScopeStart>(name, color, group_id, return_address);
-}
-
-void orbit_api_start_with_explicit_caller_v1(const char* name, orbit_api_color color,
-                                             uint64_t group_id, uint64_t caller_address) {
+void orbit_api_start_v1(const char* name, orbit_api_color color, uint64_t group_id,
+                        uint64_t caller_address) {
+  if (caller_address == kOrbitCallerAddressAuto) {
+    caller_address = ORBIT_GET_CALLER_PC();
+  }
   EnqueueApiEvent<orbit_api::ApiScopeStart>(name, color, group_id, caller_address);
 }
 
@@ -127,7 +125,6 @@ void orbit_api_initialize_v0(orbit_api_v0* api) {
 
 void orbit_api_initialize_v1(orbit_api_v1* api) {
   api->start = &orbit_api_start_v1;
-  api->start_with_explicit_caller = &orbit_api_start_with_explicit_caller_v1;
   api->stop = &orbit_api_stop;
   api->start_async = &orbit_api_start_async;
   api->stop_async = &orbit_api_stop_async;
