@@ -43,8 +43,9 @@ void TriangleToggle::Draw(Batcher& batcher, TextRenderer& text_renderer,
   float half_w = 0.5f * size;
   float half_h = half_sqrt_three * half_w;
 
+  const Vec2 pos = GetPos();
   if (!picking) {
-    Vec3 position(pos_[0], pos_[1], 0.0f);
+    Vec3 position(pos[0], pos[1], 0.0f);
 
     Triangle triangle;
     if (is_collapsed_) {
@@ -59,8 +60,8 @@ void TriangleToggle::Draw(Batcher& batcher, TextRenderer& text_renderer,
     // When picking, draw a big square for easier picking.
     float original_width = 2 * half_w;
     float large_width = 2 * original_width;
-    Box box(Vec2(pos_[0] - original_width, pos_[1] - original_width),
-            Vec2(large_width, large_width), z);
+    Box box(Vec2(pos[0] - original_width, pos[1] - original_width), Vec2(large_width, large_width),
+            z);
     batcher.AddBox(box, color, shared_from_this());
   }
 }

@@ -91,8 +91,8 @@ void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, const DrawContex
 
   const bool picking = draw_context.picking_mode != PickingMode::kNone;
 
-  float x0 = pos_[0];
-  float y0 = pos_[1];
+  const float x0 = GetPos()[0];
+  const float y0 = GetPos()[1];
   float track_z = GlCanvas::kZValueTrack + draw_context.z_offset;
   float text_z = GlCanvas::kZValueTrackText + draw_context.z_offset;
 
@@ -193,12 +193,12 @@ void Track::DrawCollapsingTriangle(Batcher& batcher, TextRenderer& text_renderer
                                    const DrawContext& draw_context) {
   const float label_height = layout_->GetTrackTabHeight();
   const float half_label_height = 0.5f * label_height;
-  const float x0 = pos_[0];
+  const float x0 = GetPos()[0];
   const float tab_x0 = x0 + layout_->GetTrackTabOffset();
   const float intent_x0 =
       tab_x0 + (draw_context.indentation_level * layout_->GetTrackIntentOffset());
   const float button_offset = layout_->GetCollapseButtonOffset();
-  const float toggle_y_pos = pos_[1] + half_label_height;
+  const float toggle_y_pos = GetPos()[1] + half_label_height;
   Vec2 toggle_pos = Vec2(intent_x0 + button_offset, toggle_y_pos);
   collapse_toggle_->SetPos(toggle_pos[0], toggle_pos[1]);
   collapse_toggle_->Draw(batcher, text_renderer, draw_context);
@@ -208,7 +208,7 @@ void Track::UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*t_min*/, uint64_t 
                              PickingMode /*  picking_mode*/, float /*z_offset*/) {}
 
 void Track::SetPos(float x, float y) {
-  pos_ = Vec2(x, y);
+  CaptureViewElement::SetPos(x, y);
   UpdatePositionOfSubtracks();
 }
 

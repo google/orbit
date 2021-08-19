@@ -74,7 +74,8 @@ float FrameTrack::GetHeight() const {
 }
 
 float FrameTrack::GetYFromTimer(const TimerInfo& timer_info) const {
-  return pos_[1] + GetHeaderHeight() + (GetMaximumBoxHeight() - GetDynamicBoxHeight(timer_info));
+  return GetPos()[1] + GetHeaderHeight() +
+         (GetMaximumBoxHeight() - GetDynamicBoxHeight(timer_info));
 }
 
 float FrameTrack::GetDefaultBoxHeight() const {
@@ -210,9 +211,10 @@ void FrameTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
 
   const Color kWhiteColor(255, 255, 255, 255);
   const Color kBlackColor(0, 0, 0, 255);
+  const Vec2 pos = GetPos();
 
-  float y = pos_[1] + GetHeaderHeight() + GetMaximumBoxHeight() - GetAverageBoxHeight();
-  float x = pos_[0];
+  const float x = pos[0];
+  const float y = pos[1] + GetHeaderHeight() + GetMaximumBoxHeight() - GetAverageBoxHeight();
   Vec2 from(x, y);
   Vec2 to(x + GetWidth(), y);
   float text_z = GlCanvas::kZValueTrackText + draw_context.z_offset;
@@ -222,7 +224,7 @@ void FrameTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
   std::string label = absl::StrFormat("Avg: %s", avg_time);
   uint32_t font_size = layout_->CalculateZoomedFontSize();
   float string_width = text_renderer.GetStringWidth(label.c_str(), font_size);
-  Vec2 white_text_box_position(pos_[0] + layout_->GetRightMargin(), y);
+  Vec2 white_text_box_position(pos[0] + layout_->GetRightMargin(), y);
 
   batcher.AddLine(from, from + Vec2(layout_->GetRightMargin() / 2.f, 0), text_z, kWhiteColor);
   batcher.AddLine(Vec2(white_text_box_position[0] + string_width, y), to, text_z, kWhiteColor);

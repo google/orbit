@@ -55,7 +55,7 @@ float TimerTrack::GetYFromTimer(const TimerInfo& timer_info) const {
 }
 
 float TimerTrack::GetYFromDepth(uint32_t depth) const {
-  return pos_[1] + GetHeaderHeight() + GetDefaultBoxHeight() * static_cast<float>(depth);
+  return GetPos()[1] + GetHeaderHeight() + GetDefaultBoxHeight() * static_cast<float>(depth);
 }
 
 namespace {
