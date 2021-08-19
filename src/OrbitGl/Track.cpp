@@ -232,6 +232,6 @@ void Track::OnCollapseToggle(bool /*is_collapsed*/) { RequestUpdate(); }
 void Track::OnDrag(int x, int y) {
   CaptureViewElement::OnDrag(x, y);
 
-  pos_[1] = mouse_pos_cur_[1] - picking_offset_[1];
+  SetPos(GetPos()[0], mouse_pos_cur_[1] - picking_offset_[1]);
   time_graph_->VerticallyMoveIntoView(*this);
 }
