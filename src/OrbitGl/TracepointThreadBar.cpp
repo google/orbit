@@ -49,7 +49,7 @@ void TracepointThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
                           : GlCanvas::kZValueEventBar;
   event_bar_z += draw_context.z_offset;
   Color color = GetColor();
-  Box box(pos_, Vec2(GetWidth(), -GetHeight()), event_bar_z);
+  Box box(GetPos(), Vec2(GetWidth(), -GetHeight()), event_bar_z);
   batcher.AddBox(box, color, shared_from_this());
 }
 
@@ -73,7 +73,7 @@ void TracepointThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, 
         [&](const orbit_client_protos::TracepointEventInfo& tracepoint) {
           uint64_t time = tracepoint.time();
           float radius = track_height / 4;
-          Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
+          const Vec2 pos(time_graph_->GetWorldFromTick(time), GetPos()[1]);
           if (GetThreadId() == orbit_base::kAllThreadsOfAllProcessesTid) {
             const Color color = tracepoint.pid() == capture_data_->process_id() ? kGrey : kWhite;
             batcher->AddVerticalLine(pos, -track_height, z, color);
@@ -95,7 +95,7 @@ void TracepointThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, 
         [&](const orbit_client_protos::TracepointEventInfo& tracepoint) {
           uint64_t time = tracepoint.time();
           Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset,
-                   pos_[1] - track_height + 1);
+                   GetPos()[1] - track_height + 1);
           Vec2 size(kPickingBoxWidth, track_height);
           auto user_data =
               std::make_unique<PickingUserData>(nullptr, [&, batcher](PickingId id) -> std::string {

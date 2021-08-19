@@ -111,7 +111,7 @@ float GpuDebugMarkerTrack::GetYFromTimer(const TimerInfo& timer_info) const {
   if (collapse_toggle_->IsCollapsed()) {
     depth = 0;
   }
-  return pos_[1] + layout_->GetTrackTabHeight() + layout_->GetTextBoxHeight() * depth;
+  return GetPos()[1] + layout_->GetTrackTabHeight() + layout_->GetTextBoxHeight() * depth;
 }
 
 float GpuDebugMarkerTrack::GetHeight() const {

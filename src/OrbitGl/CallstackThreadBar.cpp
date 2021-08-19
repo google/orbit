@@ -64,19 +64,20 @@ void CallstackThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
                           : GlCanvas::kZValueEventBar;
   event_bar_z += draw_context.z_offset;
   Color color = GetColor();
-  Box box(pos_, Vec2(GetWidth(), GetHeight()), event_bar_z);
+  const Vec2 pos = GetPos();
+  Box box(pos, Vec2(GetWidth(), GetHeight()), event_bar_z);
   batcher.AddBox(box, color, shared_from_this());
 
   if (batcher.GetPickingManager()->IsThisElementPicked(this)) {
     color = Color(255, 255, 255, 255);
   }
 
-  float x0 = pos_[0];
-  float y0 = pos_[1];
+  float x0 = pos[0];
+  float y0 = pos[1];
   float x1 = x0 + GetWidth();
   float y1 = y0 + GetHeight();
 
-  batcher.AddLine(pos_, Vec2(x1, y0), event_bar_z, color, shared_from_this());
+  batcher.AddLine(pos, Vec2(x1, y0), event_bar_z, color, shared_from_this());
   batcher.AddLine(Vec2(x1, y1), Vec2(x0, y1), event_bar_z, color, shared_from_this());
 
   if (picked_) {
@@ -84,7 +85,7 @@ void CallstackThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
     Vec2& to = mouse_pos_cur_;
 
     x0 = from[0];
-    y0 = pos_[1];
+    y0 = pos[1];
     x1 = to[0];
     y1 = y0 + GetHeight();
 
@@ -113,7 +114,7 @@ void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, u
     auto action_on_callstack_events = [=](const CallstackEvent& event) {
       const uint64_t time = event.time();
       CHECK(time >= min_tick && time <= max_tick);
-      Vec2 pos(time_graph_->GetWorldFromTick(time), pos_[1]);
+      Vec2 pos(time_graph_->GetWorldFromTick(time), GetPos()[1]);
       Color color = kWhite;
       if (capture_data_->GetCallstackData().GetCallstack(event.callstack_id())->type() !=
           CallstackInfo::kComplete) {
@@ -134,7 +135,7 @@ void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, u
     std::array<Color, 2> selected_color;
     selected_color.fill(kGreenSelection);
     for (const CallstackEvent& event : time_graph_->GetSelectedCallstackEvents(GetThreadId())) {
-      Vec2 pos(time_graph_->GetWorldFromTick(event.time()), pos_[1]);
+      Vec2 pos(time_graph_->GetWorldFromTick(event.time()), GetPos()[1]);
       batcher->AddVerticalLine(pos, track_height, z, kGreenSelection);
     }
   } else {
@@ -146,7 +147,8 @@ void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, u
     auto action_on_callstack_events = [=](const CallstackEvent& event) {
       const uint64_t time = event.time();
       CHECK(time >= min_tick && time <= max_tick);
-      Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset, pos_[1] + track_height - 1);
+      Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset,
+               GetPos()[1] + track_height - 1);
       Vec2 size(kPickingBoxWidth, track_height);
       auto user_data = std::make_unique<PickingUserData>(
           nullptr,

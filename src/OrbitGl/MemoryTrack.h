@@ -48,7 +48,7 @@ class MemoryTrack : public GraphTrack<Dimension>, public AnnotationTrack {
   [[nodiscard]] float GetAnnotatedTrackContentHeight() const override {
     return this->GetGraphContentHeight();
   }
-  [[nodiscard]] Vec2 GetAnnotatedTrackPosition() const override { return this->pos_; };
+  [[nodiscard]] Vec2 GetAnnotatedTrackPosition() const override { return this->GetPos(); };
   [[nodiscard]] Vec2 GetAnnotatedTrackSize() const override { return this->GetSize(); };
   [[nodiscard]] uint32_t GetAnnotationFontSize(int indentation_level) const override {
     return this->GetLegendFontSize(indentation_level);

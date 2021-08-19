@@ -77,8 +77,6 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   TimeGraphLayout* layout_;
 
   TimeGraph* time_graph_;
-  Vec2 pos_ = Vec2(0, 0);
-  float width_ = 0.;
 
   Vec2 mouse_pos_last_click_;
   Vec2 mouse_pos_cur_;
@@ -86,6 +84,8 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   bool picked_ = false;
 
  private:
+  float width_ = 0.;
+  Vec2 pos_ = Vec2(0, 0);
   CaptureViewElement* parent_;
 };
 }  // namespace orbit_gl

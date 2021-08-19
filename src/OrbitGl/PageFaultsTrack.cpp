@@ -107,21 +107,22 @@ void PageFaultsTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint
 }
 
 void PageFaultsTrack::UpdatePositionOfSubtracks() {
+  const Vec2 pos = GetPos();
   if (collapse_toggle_->IsCollapsed()) {
-    major_page_faults_track_->SetPos(pos_[0], pos_[1]);
+    major_page_faults_track_->SetPos(pos[0], pos[1]);
     return;
   }
 
-  float current_y = pos_[1] + layout_->GetTrackTabHeight();
+  float current_y = pos[1] + layout_->GetTrackTabHeight();
   if (!major_page_faults_track_->IsEmpty()) {
     current_y += layout_->GetSpaceBetweenSubtracks();
   }
-  major_page_faults_track_->SetPos(pos_[0], current_y);
+  major_page_faults_track_->SetPos(pos[0], current_y);
 
   if (!minor_page_faults_track_->IsEmpty()) {
     current_y += (layout_->GetSpaceBetweenSubtracks() + major_page_faults_track_->GetHeight());
   }
-  minor_page_faults_track_->SetPos(pos_[0], current_y);
+  minor_page_faults_track_->SetPos(pos[0], current_y);
 }
 
 void PageFaultsTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {

@@ -84,13 +84,11 @@ void GraphTrack<Dimension>::Draw(Batcher& batcher, TextRenderer& text_renderer,
 template <size_t Dimension>
 void GraphTrack<Dimension>::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                              PickingMode picking_mode, float z_offset) {
-  pos_[0] = viewport_->GetWorldTopLeft()[0];
-
   float track_z = GlCanvas::kZValueTrack + z_offset;
   float graph_z = GlCanvas::kZValueEventBar + z_offset;
 
   float content_height = GetGraphContentHeight();
-  Vec2 content_pos = pos_;
+  Vec2 content_pos = GetPos();
   content_pos[1] += layout_->GetTrackTabHeight();
   Box box(content_pos, Vec2(GetWidth(), content_height + GetLegendHeight()), track_z);
   batcher->AddBox(box, GetTrackBackgroundColor(), shared_from_this());
@@ -212,8 +210,8 @@ void GraphTrack<Dimension>::DrawLegend(Batcher& batcher, TextRenderer& text_rend
   const float kSpaceBetweenLegendEntries = layout_->GetGenericFixedSpacerWidth() * 2;
   const float legend_symbol_height = GetLegendHeight();
   const float legend_symbol_width = legend_symbol_height;
-  float x0 = pos_[0] + layout_->GetRightMargin();
-  const float y0 = pos_[1] + layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin();
+  float x0 = GetPos()[0] + layout_->GetRightMargin();
+  const float y0 = GetPos()[1] + layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin();
   uint32_t font_size = GetLegendFontSize(draw_context.indentation_level);
   const Color kFullyTransparent(255, 255, 255, 0);
 

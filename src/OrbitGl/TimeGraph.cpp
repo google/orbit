@@ -529,7 +529,7 @@ void TimeGraph::UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, ui
 
 void TimeGraph::UpdateTracksPosition() {
   // Update position of a track which is currently being moved.
-  const float track_pos_x = pos_[0];
+  const float track_pos_x = GetPos()[0];
 
   float current_y = layout_.GetSchedulerTrackOffset();
 

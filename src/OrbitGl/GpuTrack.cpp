@@ -83,20 +83,21 @@ void GpuTrack::OnTimer(const TimerInfo& timer_info) {
 }
 
 void GpuTrack::UpdatePositionOfSubtracks() {
+  const Vec2 pos = GetPos();
   if (collapse_toggle_->IsCollapsed()) {
-    submission_track_->SetPos(pos_[0], pos_[1]);
+    submission_track_->SetPos(pos[0], pos[1]);
     return;
   }
-  float current_y = pos_[1] + layout_->GetTrackTabHeight();
+  float current_y = pos[1] + layout_->GetTrackTabHeight();
   if (!submission_track_->IsEmpty()) {
     current_y += layout_->GetSpaceBetweenSubtracks();
   }
-  submission_track_->SetPos(pos_[0], current_y);
+  submission_track_->SetPos(pos[0], current_y);
   if (!marker_track_->IsEmpty()) {
     current_y += (layout_->GetSpaceBetweenSubtracks() + submission_track_->GetHeight());
   }
 
-  marker_track_->SetPos(pos_[0], current_y);
+  marker_track_->SetPos(pos[0], current_y);
 }
 
 float GpuTrack::GetHeight() const {
