@@ -19,12 +19,6 @@
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitBase/ThreadUtils.h"
 
-#ifdef WIN32
-#include <intrin.h>
-
-#pragma intrinsic(_ReturnAddress)
-#endif
-
 using orbit_api::ApiEventVariant;
 using orbit_introspection::TracingEventCallback;
 using orbit_introspection::TracingListener;
@@ -102,26 +96,16 @@ void TracingListener::DeferApiEventProcessing(const orbit_api::ApiEventVariant& 
   });
 }
 
-void orbit_api_start_v1(const char* name, orbit_api_color color, uint64_t group_id) {
+void orbit_api_start_v1(const char* name, orbit_api_color color, uint64_t group_id,
+                        uint64_t caller_address) {
   uint32_t process_id = orbit_base::GetCurrentProcessId();
   uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
-#ifdef WIN32
-  void* return_address = _ReturnAddress();
-#else
-  // `__builtin_return_address(0)` will return us the (possibly encoded) return address of the
-  // current function (level "0" refers to this frame, "1" would be the callers return address and
-  // so on).
-  // To decode the return address, we call `__builtin_extract_return_addr`.
-  void* return_address = __builtin_extract_return_addr(__builtin_return_address(0));
-#endif
-  orbit_api::ApiScopeStart api_scope_start{process_id,
-                                           thread_id,
-                                           timestamp_ns,
-                                           name,
-                                           color,
-                                           group_id,
-                                           absl::bit_cast<uint64_t>(return_address)};
+  if (caller_address == kOrbitCallerAddressAuto) {
+    caller_address = ORBIT_GET_CALLER_PC();
+  }
+  orbit_api::ApiScopeStart api_scope_start{process_id, thread_id, timestamp_ns,  name,
+                                           color,      group_id,  caller_address};
   TracingListener::DeferApiEventProcessing(api_scope_start);
 }
 
@@ -137,22 +121,9 @@ void orbit_api_start_async(const char* name, uint64_t id, orbit_api_color color)
   uint32_t process_id = orbit_base::GetCurrentProcessId();
   uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
-#ifdef WIN32
-  void* return_address = _ReturnAddress();
-#else
-  // `__builtin_return_address(0)` will return us the (possibly encoded) return address of the
-  // current function (level "0" refers to this frame, "1" would be the callers return address and
-  // so on).
-  // To decode the return address, we call `__builtin_extract_return_addr`.
-  void* return_address = __builtin_extract_return_addr(__builtin_return_address(0));
-#endif
-  orbit_api::ApiScopeStartAsync api_scope_start_async{process_id,
-                                                      thread_id,
-                                                      timestamp_ns,
-                                                      name,
-                                                      id,
-                                                      color,
-                                                      absl::bit_cast<uint64_t>(return_address)};
+  uint64_t return_address = ORBIT_GET_CALLER_PC();
+  orbit_api::ApiScopeStartAsync api_scope_start_async{process_id, thread_id, timestamp_ns,  name,
+                                                      id,         color,     return_address};
 
   TracingListener::DeferApiEventProcessing(api_scope_start_async);
 }

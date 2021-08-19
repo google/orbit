@@ -195,7 +195,23 @@
 #define ORBIT_API_ENABLED 1
 #if ORBIT_API_ENABLED
 
+#ifdef WIN32
+#include <intrin.h>
+
+#pragma intrinsic(_ReturnAddress)
+
+#define ORBIT_GET_CALLER_PC() reinterpret_cast<uint64_t>(_ReturnAddress())
+#else
+// `__builtin_return_address(0)` will return us the (possibly encoded) return address of the
+// current function (level "0" refers to this frame, "1" would be the callers return address and
+// so on).
+// To decode the return address, we call `__builtin_extract_return_addr`.
+#define ORBIT_GET_CALLER_PC() \
+  reinterpret_cast<uint64_t>(__builtin_extract_return_addr(__builtin_return_address(0)))
+#endif
+
 #ifdef __cplusplus
+
 #define ORBIT_SCOPE(name) ORBIT_SCOPE_WITH_COLOR(name, kOrbitColorAuto)
 #define ORBIT_SCOPE_WITH_COLOR(name, col) \
   ORBIT_SCOPE_WITH_COLOR_AND_GROUP_ID(name, col, kOrbitDefaultGroupId)
@@ -205,7 +221,8 @@
   orbit_api::Scope ORBIT_VAR(name, col, group_id)
 #endif
 
-#define ORBIT_START(name) ORBIT_CALL(start, name, kOrbitColorAuto, kOrbitDefaultGroupId)
+#define ORBIT_START(name) \
+  ORBIT_CALL(start, name, kOrbitColorAuto, kOrbitDefaultGroupId, kOrbitCallerAddressAuto)
 #define ORBIT_STOP() ORBIT_CALL(stop, )
 #define ORBIT_START_ASYNC(name, id) ORBIT_CALL(start_async, name, id, kOrbitColorAuto)
 #define ORBIT_STOP_ASYNC(id) ORBIT_CALL(stop_async, id)
@@ -217,7 +234,8 @@
 #define ORBIT_FLOAT(name, value) ORBIT_CALL(track_float, name, value, kOrbitColorAuto)
 #define ORBIT_DOUBLE(name, value) ORBIT_CALL(track_double, name, value, kOrbitColorAuto)
 
-#define ORBIT_START_WITH_COLOR(name, color) ORBIT_CALL(start, name, color, kOrbitDefaultGroupId)
+#define ORBIT_START_WITH_COLOR(name, color) \
+  ORBIT_CALL(start, name, color, kOrbitDefaultGroupId, kOrbitCallerAddressAuto)
 #define ORBIT_START_ASYNC_WITH_COLOR(name, id, color) ORBIT_CALL(start_async, name, id, color)
 #define ORBIT_ASYNC_STRING_WITH_COLOR(string, id, color) ORBIT_CALL(async_string, string, id, color)
 #define ORBIT_INT_WITH_COLOR(name, value, color) ORBIT_CALL(track_int, name, value, color)
@@ -227,9 +245,10 @@
 #define ORBIT_FLOAT_WITH_COLOR(name, value, color) ORBIT_CALL(track_float, name, value, color)
 #define ORBIT_DOUBLE_WITH_COLOR(name, value, color) ORBIT_CALL(track_double, name, value, color)
 
-#define ORBIT_START_WITH_GROUP_ID(name, group_id) ORBIT_CALL(start, name, kOrbitColorAuto, group_id)
+#define ORBIT_START_WITH_GROUP_ID(name, group_id) \
+  ORBIT_CALL(start, name, kOrbitColorAuto, group_id, kOrbitCallerAddressAuto)
 #define ORBIT_START_WITH_COLOR_AND_GROUP_ID(name, color, group_id) \
-  ORBIT_CALL(start, name, color, group_id)
+  ORBIT_CALL(start, name, color, group_id, kOrbitCallerAddressAuto)
 
 #else  // ORBIT_API_ENABLED
 
@@ -305,13 +324,15 @@ typedef enum {
 } orbit_api_color;
 
 constexpr uint64_t kOrbitDefaultGroupId = 0;
+constexpr uint64_t kOrbitCallerAddressAuto = 0;
 
 enum { kOrbitApiVersion = 1 };
 
 struct orbit_api_v1 {
   uint32_t enabled;
   uint32_t initialized;
-  void (*start)(const char* name, orbit_api_color color, uint64_t group_id);
+  void (*start)(const char* name, orbit_api_color color, uint64_t group_id,
+                uint64_t caller_address);
   void (*stop)();
   void (*start_async)(const char* name, uint64_t id, orbit_api_color color);
   void (*stop_async)(uint64_t id);
@@ -356,7 +377,8 @@ inline bool orbit_api_active() {
 namespace orbit_api {
 struct Scope {
   Scope(const char* name, orbit_api_color color, uint64_t group_id) {
-    ORBIT_CALL(start, name, color, group_id);
+    uint64_t return_address = ORBIT_GET_CALLER_PC();
+    ORBIT_CALL(start, name, color, group_id, return_address);
   }
   ~Scope() { ORBIT_CALL(stop); }
 };

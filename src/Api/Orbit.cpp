@@ -13,13 +13,6 @@
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
 
-// `__builtin_return_address(0)` will return us the (possibly encoded) return address of the
-// current function (level "0" refers to this frame, "1" would be the callers return address and
-// so on).
-// To decode the return address, we call `__builtin_extract_return_addr`.
-#define ORBIT_GET_CALLER_PC() \
-  absl::bit_cast<uint64_t>(__builtin_extract_return_addr(__builtin_return_address(0)))
-
 namespace {
 orbit_api::LockFreeApiEventProducer& GetEventProducer() {
   static orbit_api::LockFreeApiEventProducer producer;
@@ -39,9 +32,12 @@ void EnqueueApiEvent(Types... args) {
   producer.EnqueueIntermediateEvent(event);
 }
 
-void orbit_api_start_v1(const char* name, orbit_api_color color, uint64_t group_id) {
-  uint64_t return_address = ORBIT_GET_CALLER_PC();
-  EnqueueApiEvent<orbit_api::ApiScopeStart>(name, color, group_id, return_address);
+void orbit_api_start_v1(const char* name, orbit_api_color color, uint64_t group_id,
+                        uint64_t caller_address) {
+  if (caller_address == kOrbitCallerAddressAuto) {
+    caller_address = ORBIT_GET_CALLER_PC();
+  }
+  EnqueueApiEvent<orbit_api::ApiScopeStart>(name, color, group_id, caller_address);
 }
 
 void orbit_api_start(const char* name, orbit_api_color color) {
