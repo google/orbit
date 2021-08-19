@@ -123,6 +123,10 @@ enable_testing()
 add_definitions(-DNOMINMAX)
 add_definitions(-DUNICODE -D_UNICODE)
 
+if (MSVC)
+  string(APPEND CMAKE_CXX_FLAGS " /MP")
+endif()
+
 if(WIN32)
   add_definitions(-DWIN32)
 else()
