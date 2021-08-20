@@ -6,6 +6,7 @@
 #define CLIENT_SERVICES_PROCESS_MANAGER_H_
 
 #include <absl/time/time.h>
+#include <grpcpp/grpcpp.h>
 #include <stdint.h>
 
 #include <functional>
@@ -16,7 +17,6 @@
 
 #include "OrbitBase/Result.h"
 #include "absl/synchronization/mutex.h"
-#include "grpcpp/grpcpp.h"
 #include "module.pb.h"
 #include "process.pb.h"
 #include "symbol.pb.h"

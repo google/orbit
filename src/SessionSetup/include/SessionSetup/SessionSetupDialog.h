@@ -5,6 +5,8 @@
 #ifndef SESSION_SETUP_PROFILING_TARGET_DIALOG_H_
 #define SESSION_SETUP_PROFILING_TARGET_DIALOG_H_
 
+#include <grpcpp/channel.h>
+
 #include <QDialog>
 #include <QHistoryState>
 #include <QModelIndex>
@@ -26,7 +28,6 @@
 #include "MetricsUploader/MetricsUploader.h"
 #include "ProcessItemModel.h"
 #include "TargetConfiguration.h"
-#include "grpcpp/channel.h"
 #include "process.pb.h"
 
 namespace Ui {

@@ -5,11 +5,12 @@
 #ifndef CLIENT_SERVICES_TRACEPOINT_SERVICE_CLIENT_H_
 #define CLIENT_SERVICES_TRACEPOINT_SERVICE_CLIENT_H_
 
+#include <grpcpp/channel.h>
+
 #include <memory>
 #include <vector>
 
 #include "OrbitBase/Result.h"
-#include "grpcpp/channel.h"
 #include "services.grpc.pb.h"
 #include "tracepoint.pb.h"
 

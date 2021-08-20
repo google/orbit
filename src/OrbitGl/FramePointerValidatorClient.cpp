@@ -19,7 +19,6 @@
 #include "OrbitBase/Logging.h"
 #include "capture_data.pb.h"
 #include "code_block.pb.h"
-#include "grpcpp/grpcpp.h"
 #include "services.grpc.pb.h"
 #include "services.pb.h"
 

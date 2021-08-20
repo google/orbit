@@ -5,9 +5,10 @@
 #ifndef CLIENT_SERVICES_CRASH_MANAGER_H_
 #define CLIENT_SERVICES_CRASH_MANAGER_H_
 
+#include <grpcpp/grpcpp.h>
+
 #include <memory>
 
-#include "grpcpp/grpcpp.h"
 #include "services.pb.h"
 
 namespace orbit_client_services {

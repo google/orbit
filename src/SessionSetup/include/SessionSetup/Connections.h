@@ -5,6 +5,8 @@
 #ifndef SESSION_SETUP_CONNECTIONS_H_
 #define SESSION_SETUP_CONNECTIONS_H_
 
+#include <grpcpp/channel.h>
+
 #include <memory>
 #include <optional>
 #include <utility>
@@ -17,7 +19,6 @@
 #include "OrbitSsh/Context.h"
 #include "OrbitSsh/Credentials.h"
 #include "SessionSetup/ServiceDeployManager.h"
-#include "grpcpp/channel.h"
 
 namespace orbit_session_setup {
 

@@ -5,7 +5,8 @@
 #ifndef CAPTURE_EVENT_PRODUCER_FAKE_PRODUCER_SIDE_SERVICE_H_
 #define CAPTURE_EVENT_PRODUCER_FAKE_PRODUCER_SIDE_SERVICE_H_
 
-#include "grpcpp/grpcpp.h"
+#include <grpcpp/grpcpp.h>
+
 #include "producer_side_services.grpc.pb.h"
 
 namespace orbit_capture_event_producer {

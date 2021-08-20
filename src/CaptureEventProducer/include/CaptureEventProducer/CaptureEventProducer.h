@@ -14,7 +14,6 @@
 
 #include "absl/synchronization/mutex.h"
 #include "capture.pb.h"
-#include "grpcpp/grpcpp.h"
 #include "producer_side_services.grpc.pb.h"
 #include "producer_side_services.pb.h"
 

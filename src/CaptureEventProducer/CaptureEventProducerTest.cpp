@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #include <gmock/gmock.h>
-#include <grpcpp/server_impl.h>
+#include <grpcpp/grpcpp.h>
 #include <grpcpp/support/channel_arguments.h>
 #include <gtest/gtest.h>
 #include <stdint.h>
@@ -15,7 +15,6 @@
 
 #include "CaptureEventProducer/CaptureEventProducer.h"
 #include "CaptureEventProducer/FakeProducerSideService.h"
-#include "grpcpp/grpcpp.h"
 #include "producer_side_services.pb.h"
 
 namespace orbit_capture_event_producer {
