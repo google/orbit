@@ -8,7 +8,6 @@
 #include <errno.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/security/server_credentials.h>
-#include <grpcpp/server_impl.h>
 #include <sys/stat.h>
 
 #include <string>

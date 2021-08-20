@@ -5,6 +5,7 @@
 #ifndef CLIENT_SERVICES_PROCESS_CLIENT_H_
 #define CLIENT_SERVICES_PROCESS_CLIENT_H_
 
+#include <grpcpp/grpcpp.h>
 #include <stdint.h>
 
 #include <chrono>
@@ -14,7 +15,6 @@
 #include <vector>
 
 #include "OrbitBase/Result.h"
-#include "grpcpp/grpcpp.h"
 #include "module.pb.h"
 #include "process.pb.h"
 #include "services.grpc.pb.h"

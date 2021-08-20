@@ -4,7 +4,7 @@
 
 #include <gmock/gmock.h>
 #include <google/protobuf/arena.h>
-#include <grpcpp/server_impl.h>
+#include <grpcpp/grpcpp.h>
 #include <grpcpp/support/channel_arguments.h>
 #include <gtest/gtest.h>
 #include <stdint.h>
@@ -20,7 +20,6 @@
 #include "CaptureEventProducer/FakeProducerSideService.h"
 #include "CaptureEventProducer/LockFreeBufferCaptureEventProducer.h"
 #include "capture.pb.h"
-#include "grpcpp/grpcpp.h"
 
 namespace orbit_capture_event_producer {
 

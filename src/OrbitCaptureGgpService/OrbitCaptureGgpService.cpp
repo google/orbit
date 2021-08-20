@@ -5,10 +5,10 @@
 #include "OrbitCaptureGgpService.h"
 
 #include <absl/strings/str_format.h>
+#include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
 #include <grpcpp/security/server_credentials.h>
-#include <grpcpp/server_impl.h>
 
 #include <chrono>
 #include <memory>
@@ -17,7 +17,6 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitCaptureGgpServiceImpl.h"
-#include "grpcpp/ext/proto_server_reflection_plugin.h"
 
 using grpc::Server;
 using grpc::ServerBuilder;

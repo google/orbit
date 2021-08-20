@@ -5,6 +5,8 @@
 #ifndef ORBIT_SERVICE_TARGET_SIDE_SERVER_H_
 #define ORBIT_SERVICE_TARGET_SIDE_SERVER_H_
 
+#include <grpcpp/grpcpp.h>
+
 #include <memory>
 #include <string_view>
 
@@ -13,7 +15,6 @@
 #include "OrbitBase/Logging.h"
 #include "ProducerSideServiceImpl.h"
 #include "capture.pb.h"
-#include "grpcpp/grpcpp.h"
 
 namespace orbit_service {
 
