@@ -63,7 +63,7 @@ void GraphTrack<Dimension>::Draw(Batcher& batcher, TextRenderer& text_renderer,
 
   // Draw label
   const std::array<double, Dimension>& values =
-      series_.GetPreviousOrFirstEntry(draw_context.current_mouse_time_ns)->second;
+      series_.GetPreviousOrFirstEntry(draw_context.current_mouse_time_ns);
   uint64_t first_time = series_.StartTimeInNs();
   uint64_t label_time = std::max(draw_context.current_mouse_time_ns, first_time);
   float point_x = time_graph_->GetWorldFromTick(label_time);
@@ -96,7 +96,7 @@ void GraphTrack<Dimension>::UpdatePrimitives(Batcher* batcher, uint64_t min_tick
   const bool picking = picking_mode != PickingMode::kNone;
   if (picking) return;
   double time_range = static_cast<double>(max_tick - min_tick);
-  if (series_.GetTimeToSeriesValues().size() < 2 || time_range == 0) return;
+  if (series_.GetTimeToSeriesValuesSize() < 2 || time_range == 0) return;
   DrawSeries(batcher, min_tick, max_tick, graph_z);
 }
 
@@ -242,17 +242,18 @@ void GraphTrack<Dimension>::DrawLegend(Batcher& batcher, TextRenderer& text_rend
 template <size_t Dimension>
 void GraphTrack<Dimension>::DrawSeries(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                        float z) {
-  auto entries_affected_range_result = series_.GetEntriesAffectedByTimeRange(min_tick, max_tick);
-  if (!entries_affected_range_result.has_value()) return;
-
-  typename MultivariateTimeSeries<Dimension>::Range& entries{entries_affected_range_result.value()};
+  auto entries = series_.GetEntriesAffectedByTimeRange(min_tick, max_tick);
+  if (entries.empty()) return;
 
   double min = GetGraphMinValue();
   double inverse_value_range = GetInverseOfGraphValueRange();
+  auto current_it = entries.begin();
+  auto last_it = std::prev(entries.end());
 
-  auto current_iterator = entries.start_inclusive;
-  while (current_iterator != entries.end_inclusive) {
-    std::array<double, Dimension> cumulative_values{current_iterator->second};
+  // We skip the last element because we can't calculate time passed between last element
+  // and the next one.
+  while (current_it != last_it) {
+    std::array<double, Dimension> cumulative_values{current_it->second};
     std::partial_sum(cumulative_values.begin(), cumulative_values.end(), cumulative_values.begin());
     // For the stacked graph, computing y positions from the normalized values results in some
     // floating error. Event if the sum of values is fixed, the top of the stacked graph may not be
@@ -263,11 +264,11 @@ void GraphTrack<Dimension>::DrawSeries(Batcher* batcher, uint64_t min_tick, uint
                      return static_cast<float>((value - min) * inverse_value_range);
                    });
 
-    uint64_t current_time = std::max(current_iterator->first, min_tick);
-    auto next_iterator = std::next(current_iterator);
-    uint64_t next_time = std::min(next_iterator->first, max_tick);
+    uint64_t current_time = std::max(current_it->first, min_tick);
+    auto next_it = std::next(current_it);
+    uint64_t next_time = std::min(next_it->first, max_tick);
     DrawSingleSeriesEntry(batcher, current_time, next_time, normalized_cumulative_values, z);
-    current_iterator = next_iterator;
+    current_it = next_it;
   }
 }
 
