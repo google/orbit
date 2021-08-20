@@ -107,7 +107,8 @@ bool CaptureEventProducer::NotifyAllEventsSent() {
   return write_succeeded;
 }
 
-void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
+// TODO(http://b/197310492): Fix the thread safety warning - more details in the bug.
+void CaptureEventProducer::ConnectAndReceiveCommandsThread() NO_THREAD_SAFETY_ANALYSIS {
   CHECK(producer_side_service_stub_ != nullptr);
 
   while (true) {
