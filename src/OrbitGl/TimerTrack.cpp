@@ -191,12 +191,14 @@ bool TimerTrack::DrawTimer(const TimerInfo* prev_timer_info, const TimerInfo* ne
 
   Color color = GetTimerColor(*current_timer_info, is_selected, is_highlighted);
 
-  bool is_visible_width = elapsed_us * draw_data.inv_time_window * draw_data.track_width > 1;
+  bool is_visible_width = elapsed_us * draw_data.inv_time_window *
+                              viewport_->WorldToScreenWidth(draw_data.track_width) >
+                          1;
 
   if (is_visible_width) {
     WorldXInfo world_x_info_left_overlap =
         ToWorldX(start_us, start_or_prev_end_us, draw_data.inv_time_window, draw_data.track_start_x,
-                 viewport_->WorldToScreenWidth(draw_data.track_width));
+                 draw_data.track_width);
 
     WorldXInfo world_x_info_right_overlap =
         ToWorldX(end_or_next_start_us, end_us, draw_data.inv_time_window, draw_data.track_start_x,
