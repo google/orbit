@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_MULTIVARIATE_TIME_SERIES_H_
 #define ORBIT_GL_MULTIVARIATE_TIME_SERIES_H_
 
+#include <absl/synchronization/mutex.h>
+
 #include <array>
 #include <map>
 #include <optional>
@@ -26,83 +28,119 @@ class MultivariateTimeSeries {
   [[nodiscard]] const std::array<std::string, Dimension>& GetSeriesNames() const {
     return series_names_;
   }
-  [[nodiscard]] const std::map<uint64_t, std::array<double, Dimension>>& GetTimeToSeriesValues()
-      const {
-    return time_to_series_values_;
+
+  [[nodiscard]] size_t GetTimeToSeriesValuesSize() const {
+    absl::MutexLock lock(&mutex_);
+    return time_to_series_values_.size();
   }
-  [[nodiscard]] double GetMin() const { return min_; }
-  [[nodiscard]] double GetMax() const { return max_; }
+
+  [[nodiscard]] double GetMin() const {
+    absl::MutexLock lock(&mutex_);
+    return min_;
+  }
+
+  [[nodiscard]] double GetMax() const {
+    absl::MutexLock lock(&mutex_);
+    return max_;
+  }
   [[nodiscard]] uint8_t GetValueDecimalDigits() const { return value_decimal_digits_; }
   [[nodiscard]] std::string GetValueUnit() const { return value_unit_; }
 
   void AddValues(uint64_t timestamp_ns, const std::array<double, Dimension>& values) {
+    absl::MutexLock lock(&mutex_);
     time_to_series_values_[timestamp_ns] = values;
     for (double value : values) {
       UpdateMinAndMax(value);
     }
   }
 
-  [[nodiscard]] bool IsEmpty() const { return time_to_series_values_.empty(); }
+  [[nodiscard]] bool IsEmpty() const {
+    absl::MutexLock lock(&mutex_);
+    return time_to_series_values_.empty();
+  }
 
   [[nodiscard]] uint64_t StartTimeInNs() const {
-    CHECK(!IsEmpty());
+    absl::MutexLock lock(&mutex_);
+    CHECK(!time_to_series_values_.empty());
     return time_to_series_values_.begin()->first;
   }
   [[nodiscard]] uint64_t EndTimeInNs() const {
-    CHECK(!IsEmpty());
+    absl::MutexLock lock(&mutex_);
+    CHECK(!time_to_series_values_.empty());
     return time_to_series_values_.rbegin()->first;
+  }
+
+  const std::array<double, Dimension>& GetPreviousOrFirstEntry(uint64_t time) const {
+    absl::MutexLock lock(&mutex_);
+    return GetPreviousOrFirstEntryIterator(time)->second;
   }
 
   using TimeSeriesEntryIter =
       typename std::map<uint64_t, std::array<double, Dimension>>::const_iterator;
-  [[nodiscard]] TimeSeriesEntryIter GetPreviousOrFirstEntry(uint64_t time) const {
-    CHECK(!IsEmpty());
-
-    auto iterator_lower = time_to_series_values_.upper_bound(time);
-    if (iterator_lower != time_to_series_values_.begin()) --iterator_lower;
-    return iterator_lower;
-  }
-  [[nodiscard]] TimeSeriesEntryIter GetNextOrLastEntry(uint64_t time) const {
-    CHECK(!IsEmpty());
-
-    auto iterator_higher = time_to_series_values_.lower_bound(time);
-    if (iterator_higher == time_to_series_values_.end()) --iterator_higher;
-    return iterator_higher;
-  }
 
   struct Range {
     TimeSeriesEntryIter start_inclusive;
     TimeSeriesEntryIter end_inclusive;
   };
   // If there is no overlap between time range [min_time, max_time] and [StartTimeInNs(),
-  // EndTimeInNs()], return std::nullopt. Otherwise return a range of entries affected by the time
+  // EndTimeInNs()], return empty array. Otherwise return a range of entries affected by the time
   // range [min_time, max_time] where:
-  // * `Range::inclusive` points to the entry with the time key right before the time range
+  // * the first entry with the time key right before the time range
   // (min_time, max_time) if exists; otherwise points to the fist entry.
-  // * `Range::inclusive` points to the entry with the time key right after the time range
+  // * the last entry with the time key right after the time range
   // (min_time, max_time) if exists; otherwise points to the last entry.
-  [[nodiscard]] std::optional<Range> GetEntriesAffectedByTimeRange(uint64_t min_time,
-                                                                   uint64_t max_time) const {
-    if (IsEmpty() || min_time >= max_time || min_time >= time_to_series_values_.rbegin()->first ||
+  [[nodiscard]] std::vector<std::pair<uint64_t, std::array<double, Dimension>>>
+  GetEntriesAffectedByTimeRange(uint64_t min_time, uint64_t max_time) const {
+    absl::MutexLock lock(&mutex_);
+    if (time_to_series_values_.empty() || min_time >= max_time ||
+        min_time >= time_to_series_values_.rbegin()->first ||
         max_time <= time_to_series_values_.begin()->first) {
-      return std::nullopt;
+      return {};
     }
 
-    auto first_iterator = GetPreviousOrFirstEntry(min_time);
-    auto last_iterator = GetNextOrLastEntry(max_time);
-    return Range{first_iterator, last_iterator};
+    auto current_it = GetPreviousOrFirstEntryIterator(min_time);
+    auto last_iterator = GetNextOrLastEntryIterator(max_time);
+
+    std::vector<std::pair<uint64_t, std::array<double, Dimension>>> result;
+    result.push_back(*current_it);
+    do {
+      ++current_it;
+      result.push_back(*current_it);
+    } while (current_it != last_iterator);
+
+    return result;
   }
 
  private:
-  void UpdateMinAndMax(double value) {
+  [[nodiscard]] TimeSeriesEntryIter GetPreviousOrFirstEntryIterator(uint64_t time) const
+      EXCLUSIVE_LOCKS_REQUIRED(mutex_) {
+    CHECK(!time_to_series_values_.empty());
+
+    auto iterator_lower = time_to_series_values_.upper_bound(time);
+    if (iterator_lower != time_to_series_values_.begin()) --iterator_lower;
+    return iterator_lower;
+  }
+
+  [[nodiscard]] TimeSeriesEntryIter GetNextOrLastEntryIterator(uint64_t time) const
+      EXCLUSIVE_LOCKS_REQUIRED(mutex_) {
+    CHECK(!time_to_series_values_.empty());
+
+    auto iterator_higher = time_to_series_values_.lower_bound(time);
+    if (iterator_higher == time_to_series_values_.end()) --iterator_higher;
+    return iterator_higher;
+  }
+
+  void UpdateMinAndMax(double value) EXCLUSIVE_LOCKS_REQUIRED(mutex_) {
     max_ = std::max(max_, value);
     min_ = std::min(min_, value);
   }
 
+  mutable absl::Mutex mutex_;
+  std::map<uint64_t, std::array<double, Dimension>> time_to_series_values_ GUARDED_BY(mutex_);
+  double min_ GUARDED_BY(mutex_) = std::numeric_limits<double>::max();
+  double max_ GUARDED_BY(mutex_) = std::numeric_limits<double>::lowest();
+
   const std::array<std::string, Dimension> series_names_;
-  std::map<uint64_t, std::array<double, Dimension>> time_to_series_values_;
-  double min_ = std::numeric_limits<double>::max();
-  double max_ = std::numeric_limits<double>::lowest();
   const uint8_t value_decimal_digits_;
   const std::string value_unit_;
 };

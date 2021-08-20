@@ -47,21 +47,19 @@ float LineGraphTrack<Dimension>::GetLabelYFromValues(
 template <size_t Dimension>
 void LineGraphTrack<Dimension>::DrawSeries(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                            float z) {
-  auto entries_affected_range_result =
-      this->series_.GetEntriesAffectedByTimeRange(min_tick, max_tick);
-  if (!entries_affected_range_result.has_value()) return;
-
-  typename MultivariateTimeSeries<Dimension>::Range& entries{entries_affected_range_result.value()};
+  auto entries = this->series_.GetEntriesAffectedByTimeRange(min_tick, max_tick);
+  if (entries.empty()) return;
 
   double min = this->GetGraphMinValue();
   double inverse_value_range = this->GetInverseOfGraphValueRange();
 
-  auto current_iterator = entries.start_inclusive;
+  auto current_iterator = entries.begin();
+  auto last_iterator = std::prev(entries.end());
   uint64_t current_time = current_iterator->first;
   std::array<float, Dimension> current_normalized_values =
       GetNormalizedValues(current_iterator->second, min, inverse_value_range);
 
-  while (current_iterator != entries.end_inclusive) {
+  while (current_iterator != last_iterator) {
     auto next_iterator = std::next(current_iterator);
     uint64_t next_time = next_iterator->first;
     std::array<float, Dimension> next_normalized_values =
