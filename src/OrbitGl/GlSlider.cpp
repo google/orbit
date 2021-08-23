@@ -63,8 +63,8 @@ GlSlider::GlSlider(Viewport& viewport, bool is_vertical)
       slider_color_(68, 68, 68, 255),
       bar_color_(61, 61, 61, 255),
       min_slider_pixel_length_(20),
-      pixel_height_(20),
-      orthogonal_slider_size_(20),
+      pixel_height_(15),
+      orthogonal_slider_size_(15),
       slider_resize_pixel_margin_(6) {}
 
 void GlSlider::SetNormalizedPosition(float start_ratio)  // [0,1]

@@ -59,7 +59,7 @@ std::pair<std::unique_ptr<SliderClass>, std::unique_ptr<Viewport>> Setup() {
   std::unique_ptr<Viewport> viewport = std::make_unique<Viewport>(150, 1050);
 
   std::unique_ptr<SliderClass> slider = std::make_unique<SliderClass>(*viewport);
-  slider->SetPixelHeight(10);
+  slider->SetPixelHeight(15);
   slider->SetOrthogonalSliderPixelHeight(50);
 
   // Set the slider to be 50% of the maximum size, position in the middle

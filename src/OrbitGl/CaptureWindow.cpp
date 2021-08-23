@@ -549,8 +549,7 @@ void CaptureWindow::UpdateHorizontalSliderFromWorld() {
   slider_->SetPixelHeight(slider_width);
   slider_->SetNormalizedPosition(static_cast<float>(ratio));
   slider_->SetNormalizedLength(static_cast<float>(width / time_span));
-  slider_->SetOrthogonalSliderPixelHeight(
-      vertical_slider_->IsVisible() ? vertical_slider_->GetPixelHeight() : 0.);
+  slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->IsVisible() ? slider_width : 0);
 }
 
 void CaptureWindow::ProcessSliderMouseMoveEvents(int x, int y) {
@@ -580,7 +579,7 @@ void CaptureWindow::UpdateVerticalSliderFromWorld() {
   vertical_slider_->SetPixelHeight(slider_width);
   vertical_slider_->SetNormalizedPosition(ratio);
   vertical_slider_->SetNormalizedLength(vertical_ratio);
-  vertical_slider_->SetOrthogonalSliderPixelHeight(slider_->GetPixelHeight());
+  vertical_slider_->SetOrthogonalSliderPixelHeight(slider_width);
 }
 
 void CaptureWindow::ToggleRecording() {
