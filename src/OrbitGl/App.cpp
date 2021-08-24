@@ -865,7 +865,7 @@ void OrbitApp::ShowSourceCode(const orbit_client_protos::FunctionInfo& function)
            function](const std::filesystem::path& local_file_path) -> ErrorMessageOr<void> {
             const auto elf_file = orbit_object_utils::CreateElfFile(local_file_path);
             const auto decl_line_info_or_error =
-                elf_file.value()->GetDeclarationLocationOfFunction(function.address());
+                elf_file.value()->GetLocationOfFunction(function.address());
 
             if (decl_line_info_or_error.has_error()) {
               return ErrorMessage{absl::StrFormat(
