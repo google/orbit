@@ -46,12 +46,20 @@ class ElfFile : public ObjectFile {
   [[nodiscard]] virtual std::string GetSoname() const = 0;
   [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::LineInfo> GetLineInfo(
       uint64_t address) = 0;
+
+  // Returns the declaration location of the given function (subprogram) address
+  // if available in the DWARF debug information.
   [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::LineInfo>
   GetDeclarationLocationOfFunction(uint64_t address) = 0;
   [[nodiscard]] virtual std::optional<GnuDebugLinkInfo> GetGnuDebugLinkInfo() const = 0;
 
   [[nodiscard]] static ErrorMessageOr<uint32_t> CalculateDebuglinkChecksum(
       const std::filesystem::path& file_path);
+
+  // Returns GetDeclarationLocationOfFunction(address) if available. If not, it falls back to
+  // returning the source code location of the first instruction.
+  [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::LineInfo> GetLocationOfFunction(
+      uint64_t address) = 0;
 };
 
 [[nodiscard]] ErrorMessageOr<std::unique_ptr<ElfFile>> CreateElfFile(
