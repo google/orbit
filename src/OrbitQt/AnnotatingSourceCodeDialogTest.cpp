@@ -48,7 +48,7 @@ TEST(AnnotatingSourceCodeDialog, SmokeTest) {
 
   constexpr uint64_t kAddressOfMainFunction = 0x401140;
   ErrorMessageOr<orbit_grpc_protos::LineInfo> decl_line_info =
-      program.value()->GetDeclarationLocationOfFunction(kAddressOfMainFunction);
+      program.value()->GetLocationOfFunction(kAddressOfMainFunction);
   ASSERT_TRUE(decl_line_info.has_value()) << decl_line_info.error().message();
 
   const std::filesystem::path source_file_path =

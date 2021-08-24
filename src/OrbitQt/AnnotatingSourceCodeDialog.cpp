@@ -70,7 +70,7 @@ bool AnnotatingSourceCodeDialog::LoadElfFile(const std::filesystem::path& local_
 }
 bool AnnotatingSourceCodeDialog::LoadLocationInformationFromElf() {
   ErrorMessageOr<orbit_grpc_protos::LineInfo> location_or_error =
-      elf_file_->GetDeclarationLocationOfFunction(function_info_.address());
+      elf_file_->GetLocationOfFunction(function_info_.address());
   if (location_or_error.has_error()) {
     SetStatusMessage(QString::fromStdString(location_or_error.error().message()), "Hide");
     awaited_button_action_ = ButtonAction::kHide;
