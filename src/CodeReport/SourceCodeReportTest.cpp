@@ -30,6 +30,8 @@ class MockElfFile : public orbit_object_utils::ElfFile {
               (uint64_t), (override));
   MOCK_METHOD(std::optional<orbit_object_utils::GnuDebugLinkInfo>, GetGnuDebugLinkInfo, (),
               (const, override));
+  MOCK_METHOD(ErrorMessageOr<orbit_grpc_protos::LineInfo>, GetLocationOfFunction, (uint64_t),
+              (override));
 
   MOCK_METHOD(ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>, LoadDebugSymbols, (), (override));
   MOCK_METHOD(bool, HasDebugSymbols, (), (const, override));

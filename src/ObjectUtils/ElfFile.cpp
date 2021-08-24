@@ -29,6 +29,7 @@
 #include <llvm/Support/MathExtras.h>
 #include <llvm/Support/MemoryBuffer.h>
 
+#include <cstdint>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -75,6 +76,7 @@ class ElfFileImpl : public ElfFile {
   [[nodiscard]] ErrorMessageOr<LineInfo> GetDeclarationLocationOfFunction(
       uint64_t address) override;
   [[nodiscard]] std::optional<GnuDebugLinkInfo> GetGnuDebugLinkInfo() const override;
+  [[nodiscard]] ErrorMessageOr<LineInfo> GetLocationOfFunction(uint64_t address) override;
 
  private:
   ErrorMessageOr<void> InitSections();
@@ -551,6 +553,19 @@ ErrorMessageOr<LineInfo> orbit_object_utils::ElfFileImpl<ElfT>::GetDeclarationLo
   line_info.set_source_line(subroutine.getDeclLine());
   line_info.set_source_file(file_path);
   return line_info;
+}
+
+template <typename ElfT>
+ErrorMessageOr<LineInfo> orbit_object_utils::ElfFileImpl<ElfT>::GetLocationOfFunction(
+    uint64_t address) {
+  ErrorMessageOr<LineInfo> declaration_location = GetDeclarationLocationOfFunction(address);
+  if (declaration_location.has_value()) return declaration_location;
+
+  // If the DWARF information doesn't contain a DECL_FILE and DECL_LINE entry we will fall back to
+  // determining the beginning of the function through the location of the first line. This is not
+  // ideal because it won't point to the function header but better than refusing to show source
+  // code.
+  return GetLineInfo(address);
 }
 
 template <>
