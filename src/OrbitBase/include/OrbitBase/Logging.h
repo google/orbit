@@ -123,7 +123,14 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
   }
 
 // Internal.
-#if defined(_WIN32)
+#if defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
+namespace orbit_base {
+struct FuzzingException {};
+}  // namespace orbit_base
+#define PLATFORM_LOG(message) (void)(message)  // No logging in fuzzing mode.
+#define PLATFORM_ABORT() \
+  throw orbit_base::FuzzingException {}
+#elif defined(_WIN32)
 #define PLATFORM_LOG(message)       \
   do {                              \
     fprintf(stderr, "%s", message); \
