@@ -9,9 +9,13 @@
 #include "OrbitBase/File.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/TemporaryFile.h"
-#include "OrbitBase/TestUtils.h"
 #include "OrbitBase/WriteStringToFile.h"
 #include "Test/Path.h"
+#include "TestUtils/TestUtils.h"
+
+using orbit_test_utils::HasError;
+using orbit_test_utils::HasNoError;
+using orbit_test_utils::HasValue;
 
 namespace orbit_base {
 

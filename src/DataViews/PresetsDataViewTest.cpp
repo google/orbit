@@ -20,8 +20,8 @@
 #include "OrbitBase/File.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/TemporaryFile.h"
-#include "OrbitBase/TestUtils.h"
 #include "PresetFile/PresetFile.h"
+#include "TestUtils/TestUtils.h"
 #include "preset.pb.h"
 
 namespace {
@@ -225,14 +225,14 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
       .WillRepeatedly(testing::Return(PresetLoadState::kLoadable));
 
   auto temporary_preset_file = orbit_base::TemporaryFile::Create();
-  ASSERT_THAT(temporary_preset_file, orbit_base::HasNoError());
+  ASSERT_THAT(temporary_preset_file, orbit_test_utils::HasNoError());
   temporary_preset_file.value().CloseAndRemove();
 
   const std::filesystem::path preset_filename0 = temporary_preset_file.value().file_path();
   orbit_preset_file::PresetFile preset_file0{preset_filename0, orbit_client_protos::PresetInfo{}};
-  ASSERT_THAT(preset_file0.SaveToFile(), orbit_base::HasNoError());
+  ASSERT_THAT(preset_file0.SaveToFile(), orbit_test_utils::HasNoError());
   auto date_modified = orbit_base::GetFileDateModified(preset_filename0);
-  ASSERT_THAT(date_modified, orbit_base::HasNoError());
+  ASSERT_THAT(date_modified, orbit_test_utils::HasNoError());
 
   view_.SetPresets({preset_file0});
   std::vector<std::string> context_menu = view_.GetContextMenu(0, {0});
@@ -264,7 +264,7 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
 
     ErrorMessageOr<orbit_base::TemporaryFile> temporary_file_or_error =
         orbit_base::TemporaryFile::Create();
-    ASSERT_THAT(temporary_file_or_error, orbit_base::HasNoError());
+    ASSERT_THAT(temporary_file_or_error, orbit_test_utils::HasNoError());
     const std::filesystem::path temporary_file_path = temporary_file_or_error.value().file_path();
     temporary_file_or_error.value().CloseAndRemove();
 
@@ -273,7 +273,7 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
 
     ErrorMessageOr<std::string> contents_or_error =
         orbit_base::ReadFileToString(temporary_file_path);
-    ASSERT_THAT(contents_or_error, orbit_base::HasNoError());
+    ASSERT_THAT(contents_or_error, orbit_test_utils::HasNoError());
 
     EXPECT_EQ(contents_or_error.value(),
               absl::StrFormat(R"("Loadable","Preset","Modules","Hooked Functions","Date Modified")"
@@ -307,7 +307,7 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
     view_.OnContextMenu("Delete Preset", static_cast<int>(delete_preset_idx), {0});
 
     const auto file_exists = orbit_base::FileExists(preset_filename0);
-    ASSERT_THAT(file_exists, orbit_base::HasNoError());
+    ASSERT_THAT(file_exists, orbit_test_utils::HasNoError());
     EXPECT_FALSE(file_exists.value());
 
     EXPECT_EQ(view_.GetNumElements(), 0);

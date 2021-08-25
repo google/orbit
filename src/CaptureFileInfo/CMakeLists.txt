@@ -50,6 +50,7 @@ target_link_libraries(
           ClientFlags
           GTest::QtGuiMain
           QtUtils
+          TestUtils
           Qt5::Test)
 
 if (WIN32 AND "$ENV{QT_QPA_PLATFORM}" STREQUAL "offscreen")

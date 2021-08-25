@@ -17,8 +17,8 @@
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/TestUtils.h"
 #include "TestUtils.h"
+#include "TestUtils/TestUtils.h"
 #include "UserSpaceInstrumentation/Attach.h"
 
 namespace orbit_user_space_instrumentation {

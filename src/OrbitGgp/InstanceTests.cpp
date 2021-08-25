@@ -15,9 +15,9 @@
 #include <utility>
 
 #include "OrbitBase/Result.h"
-#include "OrbitBase/TestUtils.h"
 #include "OrbitGgp/Error.h"
 #include "OrbitGgp/Instance.h"
+#include "TestUtils/TestUtils.h"
 
 namespace orbit_ggp {
 
@@ -25,21 +25,23 @@ TEST(InstanceTests, GetListFromJson) {
   {
     // invalid json
     const auto json = QString("json").toUtf8();
-    EXPECT_THAT(Instance::GetListFromJson(json), orbit_base::HasError("Unable to parse JSON"));
+    EXPECT_THAT(Instance::GetListFromJson(json),
+                orbit_test_utils::HasError("Unable to parse JSON"));
   }
 
   {
     // empty json
     const auto json = QString("[]").toUtf8();
     const auto empty_instances = Instance::GetListFromJson(json);
-    ASSERT_THAT(empty_instances, orbit_base::HasValue());
+    ASSERT_THAT(empty_instances, orbit_test_utils::HasValue());
     EXPECT_TRUE(empty_instances.value().empty());
   }
 
   {
     // one empty json object
     const auto json = QString("[{}]").toUtf8();
-    EXPECT_THAT(Instance::GetListFromJson(json), orbit_base::HasError("Unable to parse JSON"));
+    EXPECT_THAT(Instance::GetListFromJson(json),
+                orbit_test_utils::HasError("Unable to parse JSON"));
   }
 
   {
@@ -67,7 +69,7 @@ TEST(InstanceTests, GetListFromJson) {
                           "key\":\"object value\"}}]")
                           .toUtf8();
     const auto result = Instance::GetListFromJson(json);
-    EXPECT_THAT(result, orbit_base::HasError("Unable to parse JSON"));
+    EXPECT_THAT(result, orbit_test_utils::HasError("Unable to parse JSON"));
   }
 
   {
@@ -95,7 +97,7 @@ TEST(InstanceTests, GetListFromJson) {
                           "key\":\"object value\"}}]")
                           .toUtf8();
     auto result = Instance::GetListFromJson(json);
-    ASSERT_THAT(result, orbit_base::HasValue());
+    ASSERT_THAT(result, orbit_test_utils::HasValue());
     const QVector<Instance> instances = std::move(result.value());
     ASSERT_EQ(instances.size(), 1);
     const Instance instance = instances[0];

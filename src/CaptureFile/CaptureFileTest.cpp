@@ -12,13 +12,13 @@
 #include "CaptureFile/CaptureFileOutputStream.h"
 #include "CaptureFileConstants.h"
 #include "OrbitBase/TemporaryFile.h"
-#include "OrbitBase/TestUtils.h"
+#include "TestUtils/TestUtils.h"
 
 namespace orbit_capture_file {
 
-using orbit_base::HasError;
-using orbit_base::HasNoError;
-using orbit_base::HasValue;
+using orbit_test_utils::HasError;
+using orbit_test_utils::HasNoError;
+using orbit_test_utils::HasValue;
 
 static constexpr const char* kAnswerString =
     "Answer to the Ultimate Question of Life, The Universe, and Everything";

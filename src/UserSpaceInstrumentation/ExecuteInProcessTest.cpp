@@ -12,15 +12,15 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/TestUtils.h"
+#include "TestUtils/TestUtils.h"
 #include "UserSpaceInstrumentation/Attach.h"
 #include "UserSpaceInstrumentation/ExecuteInProcess.h"
 #include "UserSpaceInstrumentation/InjectLibraryInTracee.h"
 
 namespace orbit_user_space_instrumentation {
 
-using orbit_base::HasNoError;
-using orbit_base::HasValue;
+using orbit_test_utils::HasNoError;
+using orbit_test_utils::HasValue;
 
 TEST(ExecuteInProcessTest, ExecuteInProcess) {
   pid_t pid = fork();

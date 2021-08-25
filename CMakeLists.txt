@@ -173,6 +173,7 @@ add_subdirectory(src/StringManager)
 add_subdirectory(src/Symbols)
 add_subdirectory(src/TracingInterface)
 add_subdirectory(src/Test)
+add_subdirectory(src/TestUtils)
 
 if(WITH_GUI)
   add_subdirectory(src/CaptureFileInfo)

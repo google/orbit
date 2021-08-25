@@ -21,7 +21,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/TestUtils.h"
+#include "TestUtils/TestUtils.h"
 #include "UserSpaceInstrumentation/Attach.h"
 #include "UserSpaceInstrumentation/InjectLibraryInTracee.h"
 
@@ -29,8 +29,8 @@ namespace orbit_user_space_instrumentation {
 
 namespace {
 
-using orbit_base::HasError;
-using orbit_base::HasNoError;
+using orbit_test_utils::HasError;
+using orbit_test_utils::HasNoError;
 
 void OpenUseAndCloseLibrary(pid_t pid) {
   // Stop the child process using our tooling.

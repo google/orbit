@@ -10,8 +10,8 @@
 #include <utility>
 
 #include "OrbitBase/Result.h"
-#include "OrbitBase/TestUtils.h"
 #include "OrbitGgp/SshInfo.h"
+#include "TestUtils/TestUtils.h"
 
 namespace orbit_ggp {
 
@@ -19,25 +19,25 @@ TEST(SshInfoTest, CreateFromJson) {
   // Empty json
   {
     QByteArray json = QString("").toUtf8();
-    EXPECT_THAT(SshInfo::CreateFromJson(json), orbit_base::HasError("Unable to parse JSON"));
+    EXPECT_THAT(SshInfo::CreateFromJson(json), orbit_test_utils::HasError("Unable to parse JSON"));
   }
 
   // invalid json
   {
     QByteArray json = QString("{..dfP}").toUtf8();
-    EXPECT_THAT(SshInfo::CreateFromJson(json), orbit_base::HasError("Unable to parse JSON"));
+    EXPECT_THAT(SshInfo::CreateFromJson(json), orbit_test_utils::HasError("Unable to parse JSON"));
   }
 
   // empty object
   {
     QByteArray json = QString("{}").toUtf8();
-    EXPECT_THAT(SshInfo::CreateFromJson(json), orbit_base::HasError("Unable to parse JSON"));
+    EXPECT_THAT(SshInfo::CreateFromJson(json), orbit_test_utils::HasError("Unable to parse JSON"));
   }
 
   // object without all necessary fields
   {
     QByteArray json = QString("{\"host\":\"0.0.0.1\"}").toUtf8();
-    EXPECT_THAT(SshInfo::CreateFromJson(json), orbit_base::HasError("Unable to parse JSON"));
+    EXPECT_THAT(SshInfo::CreateFromJson(json), orbit_test_utils::HasError("Unable to parse JSON"));
   }
 
   // valid object
@@ -57,7 +57,7 @@ TEST(SshInfoTest, CreateFromJson) {
                           "known_hosts\",\"port\":\"11123\",\"user\":\"a username\"}")
                           .toUtf8();
     const auto ssh_info_result = SshInfo::CreateFromJson(json);
-    ASSERT_THAT(ssh_info_result, orbit_base::HasValue());
+    ASSERT_THAT(ssh_info_result, orbit_test_utils::HasValue());
     const SshInfo ssh_info = std::move(ssh_info_result.value());
     EXPECT_EQ(ssh_info.host, "1.1.0.1");
     EXPECT_EQ(ssh_info.key_path,
@@ -78,7 +78,7 @@ TEST(SshInfoTest, CreateFromJson) {
                           "known_hosts\",\"port\":11123,\"user\":\"a username\"}")
                           .toUtf8();
     // This is supposed to fail, since its expected that the port is a string
-    EXPECT_THAT(SshInfo::CreateFromJson(json), orbit_base::HasError("Unable to parse JSON"));
+    EXPECT_THAT(SshInfo::CreateFromJson(json), orbit_test_utils::HasError("Unable to parse JSON"));
   }
 }
 

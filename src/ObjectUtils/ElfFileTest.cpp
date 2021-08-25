@@ -15,18 +15,18 @@
 #include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/TestUtils.h"
 #include "Test/Path.h"
+#include "TestUtils/TestUtils.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_format.h"
 #include "symbol.pb.h"
 
-using orbit_base::HasError;
-using orbit_base::HasNoError;
 using orbit_grpc_protos::SymbolInfo;
 using orbit_object_utils::CreateElfFile;
 using orbit_object_utils::CreateElfFileFromBuffer;
 using orbit_object_utils::ElfFile;
+using orbit_test_utils::HasError;
+using orbit_test_utils::HasNoError;
 
 TEST(ElfFile, LoadDebugSymbols) {
   std::filesystem::path file_path =
@@ -404,7 +404,7 @@ TEST(ElfFile, GetLocationOfFunctionNoSubroutine) {
 
   constexpr uint64_t kAddressOfFunction = 0x10a0e0;
   EXPECT_THAT(program.value()->GetDeclarationLocationOfFunction(kAddressOfFunction),
-              orbit_base::HasError("Address not associated with any subroutine"));
+              orbit_test_utils::HasError("Address not associated with any subroutine"));
 
   ErrorMessageOr<orbit_grpc_protos::LineInfo> function_location =
       program.value()->GetLocationOfFunction(kAddressOfFunction);

@@ -32,8 +32,8 @@
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/TestUtils.h"
 #include "TestUtils.h"
+#include "TestUtils/TestUtils.h"
 #include "Trampoline.h"
 #include "UserSpaceInstrumentation/Attach.h"
 #include "UserSpaceInstrumentation/InjectLibraryInTracee.h"
@@ -42,9 +42,9 @@ namespace orbit_user_space_instrumentation {
 
 namespace {
 
-using orbit_base::HasError;
-using orbit_base::HasNoError;
-using orbit_base::HasValue;
+using orbit_test_utils::HasError;
+using orbit_test_utils::HasNoError;
+using orbit_test_utils::HasValue;
 using testing::ElementsAreArray;
 
 static constexpr const char* kEntryPayloadFunctionName = "EntryPayload";

@@ -9,14 +9,14 @@
 #include <sys/wait.h>
 
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/TestUtils.h"
 #include "RegisterState.h"
+#include "TestUtils/TestUtils.h"
 
 namespace orbit_user_space_instrumentation {
 
 namespace {
 
-using orbit_base::HasError;
+using orbit_test_utils::HasError;
 
 // Let the parent trace us, write into rax and ymm0, then enter a breakpoint. While the child is
 // stopped the parent modifies the registers and continues the child. The child then reads back the

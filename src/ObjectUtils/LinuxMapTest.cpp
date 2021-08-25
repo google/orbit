@@ -16,11 +16,11 @@
 
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/TestUtils.h"
 #include "Test/Path.h"
+#include "TestUtils/TestUtils.h"
 #include "module.pb.h"
 
-using orbit_base::HasNoError;
+using orbit_test_utils::HasNoError;
 
 namespace orbit_object_utils {
 

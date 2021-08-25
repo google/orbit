@@ -49,6 +49,7 @@ target_sources(DataViewsTests PRIVATE DataViewTest.cpp
                                       PresetsDataViewTest.cpp)
 target_link_libraries(DataViewsTests PRIVATE
         DataViews
+        TestUtils
         GTest::Main)
 
 register_test(DataViewsTests)

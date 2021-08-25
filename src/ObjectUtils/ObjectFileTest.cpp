@@ -6,11 +6,11 @@
 #include <gtest/gtest.h>
 
 #include "ObjectUtils/ObjectFile.h"
-#include "OrbitBase/TestUtils.h"
 #include "Test/Path.h"
+#include "TestUtils/TestUtils.h"
 
-using ::orbit_base::HasNoError;
 using ::orbit_object_utils::CreateObjectFile;
+using ::orbit_test_utils::HasNoError;
 
 // Only tests methods that are in the interface for ObjectFile itself. More detailed tests
 // specific to ElfFile and CoffFile are in their own tests.

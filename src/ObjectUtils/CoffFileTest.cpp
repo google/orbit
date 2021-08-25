@@ -10,17 +10,17 @@
 #include <vector>
 
 #include "ObjectUtils/CoffFile.h"
-#include "OrbitBase/TestUtils.h"
 #include "Test/Path.h"
+#include "TestUtils/TestUtils.h"
 #include "absl/strings/ascii.h"
 #include "symbol.pb.h"
 
-using orbit_base::HasError;
-using orbit_base::HasNoError;
 using orbit_grpc_protos::SymbolInfo;
 using orbit_object_utils::CoffFile;
 using orbit_object_utils::CreateCoffFile;
 using orbit_object_utils::PdbDebugInfo;
+using orbit_test_utils::HasError;
+using orbit_test_utils::HasNoError;
 
 TEST(CoffFile, LoadDebugSymbols) {
   std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libtest.dll";

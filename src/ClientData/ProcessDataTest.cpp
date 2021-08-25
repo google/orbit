@@ -14,14 +14,14 @@
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/TestUtils.h"
+#include "TestUtils/TestUtils.h"
 #include "module.pb.h"
 #include "process.pb.h"
 
-using orbit_base::HasError;
-using orbit_base::HasNoError;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
+using orbit_test_utils::HasError;
+using orbit_test_utils::HasNoError;
 
 using testing::ElementsAre;
 

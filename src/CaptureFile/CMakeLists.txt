@@ -47,6 +47,7 @@ target_sources(CaptureFileTests PRIVATE
 target_link_libraries(
   CaptureFileTests
   PRIVATE CaptureFile
+          TestUtils
           GTest::Main
           CONAN_PKG::abseil)
 

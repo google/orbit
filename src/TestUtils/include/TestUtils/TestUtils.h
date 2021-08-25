@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_BASE_TEST_UTILS_H_
-#define ORBIT_BASE_TEST_UTILS_H_
+#ifndef TEST_UTILS_TEST_UTILS_H_
+#define TEST_UTILS_TEST_UTILS_H_
 
 #include <absl/strings/match.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <gmock/gmock.h>
 
-namespace orbit_base {
+namespace orbit_test_utils {
 
 MATCHER(HasValue, absl::StrCat(negation ? "Has no" : "Has a", " value.")) {
   if (arg.has_error()) {
@@ -35,6 +35,6 @@ MATCHER_P(HasError, value,
   return arg.has_error() && absl::StrContains(arg.error().message(), value);
 }
 
-}  // namespace orbit_base
+}  // namespace orbit_test_utils
 
-#endif  // ORBIT_BASE_TEST_UTILS_H_
+#endif  // TEST_UTILS_TEST_UTILS_H_
