@@ -76,4 +76,4 @@ register_test(ClientDataTests)
 add_fuzzer(ModuleLoadSymbolsFuzzer ModuleLoadSymbolsFuzzer.cpp)
 target_link_libraries(
         ModuleLoadSymbolsFuzzer PRIVATE ClientData
-        CONAN_PKG::libprotobuf-mutator)
+        FuzzingUtils)
