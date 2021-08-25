@@ -25,7 +25,7 @@ Dialog::Dialog(QWidget* parent) : QDialog{parent}, ui_{std::make_unique<Ui::Code
                    [this]() { emit StatusMessageButtonClicked(); });
 }
 
-Dialog::~Dialog() noexcept = default;
+Dialog::~Dialog() = default;
 
 void Dialog::SetMainContent(const QString& code) {
   ui_->viewer->setPlainText(code);

@@ -13,7 +13,7 @@ namespace orbit_base {
 /* unique_resource helps to manage a unique identity which is not a pointer,
    so unique_ptr cannot be used. Typical examples are file or window handles
    from C libraries. The resource (handle) is typically small and trivially
-   copyable, but that's not required. Though we require it to be noexcept
+   copyable, but that's not required. Though we require it to be
    moveable.
 
    Unlike unique_ptr this resource requires you to provide a Deleter type.
@@ -38,7 +38,7 @@ class unique_resource {
       : resource_(std::move(other.resource_)), deleter_(std::move(other.deleter_)) {
     other.resource_ = std::nullopt;
   }
-  unique_resource& operator=(unique_resource&& other) noexcept {
+  unique_resource& operator=(unique_resource&& other) {
     if (&other != this) {
       RunDeleter();
 
@@ -50,15 +50,15 @@ class unique_resource {
     return *this;
   }
 
-  ~unique_resource() noexcept { RunDeleter(); }
+  ~unique_resource() { RunDeleter(); }
 
-  Resource get() const noexcept { return resource_.value(); }
-  Deleter& get_deleter() noexcept { return deleter_; }
-  const Deleter& get_deleter() const noexcept { return deleter_; }
+  Resource get() const { return resource_.value(); }
+  Deleter& get_deleter() { return deleter_; }
+  const Deleter& get_deleter() const { return deleter_; }
 
-  void release() noexcept { resource_ = std::nullopt; }
+  void release() { resource_ = std::nullopt; }
 
-  explicit operator bool() const noexcept { return resource_.has_value(); }
+  explicit operator bool() const { return resource_.has_value(); }
 
   void reset(Resource resource) {
     RunDeleter();

@@ -155,8 +155,8 @@ std::string GetLogFileName();
 // applications. If so, both the file name and the error message will be recorded in the log file.
 ErrorMessageOr<void> TryRemoveOldLogFiles(const std::filesystem::path& log_dir);
 
-void InitLogFile(const std::filesystem::path& path) noexcept;
-void LogToFile(const std::string& message) noexcept;
+void InitLogFile(const std::filesystem::path& path);
+void LogToFile(const std::string& message);
 
 void LogStacktrace();
 }  // namespace orbit_base

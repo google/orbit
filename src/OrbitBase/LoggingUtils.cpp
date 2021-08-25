@@ -22,7 +22,7 @@ const int kTimestampStartPos = 6;
 const int kTimestampStringLength = 19;
 
 std::vector<std::filesystem::path> ListFilesRecursivelyIgnoreErrors(
-    const std::filesystem::path& dir) noexcept {
+    const std::filesystem::path& dir) {
   std::vector<std::filesystem::path> files_in_dir;
   std::error_code error;
   auto directory_iterator = std::filesystem::recursive_directory_iterator(dir, error);
@@ -54,7 +54,7 @@ std::vector<std::filesystem::path> ListFilesRecursivelyIgnoreErrors(
   return files_in_dir;
 }
 
-ErrorMessageOr<absl::Time> ParseLogFileTimestamp(const std::string& log_file_name) noexcept {
+ErrorMessageOr<absl::Time> ParseLogFileTimestamp(const std::string& log_file_name) {
   if (log_file_name.size() < kTimestampStartPos + kTimestampStringLength) {
     return ErrorMessage(
         absl::StrFormat("Unable to extract time information from log file: %s", log_file_name));
@@ -72,7 +72,7 @@ ErrorMessageOr<absl::Time> ParseLogFileTimestamp(const std::string& log_file_nam
 }
 
 std::vector<std::filesystem::path> FindOldLogFiles(
-    const std::vector<std::filesystem::path>& file_paths) noexcept {
+    const std::vector<std::filesystem::path>& file_paths) {
   std::vector<std::filesystem::path> old_files;
   absl::Time expiration_time = absl::Now() - kLogFileLifetime;
   for (const std::filesystem::path& log_file_path : file_paths) {
@@ -89,7 +89,7 @@ std::vector<std::filesystem::path> FindOldLogFiles(
   return old_files;
 }
 
-ErrorMessageOr<void> RemoveFiles(const std::vector<std::filesystem::path>& file_paths) noexcept {
+ErrorMessageOr<void> RemoveFiles(const std::vector<std::filesystem::path>& file_paths) {
   std::string error_message;
   for (const auto& file_path : file_paths) {
     std::error_code file_remove_error;

@@ -38,7 +38,7 @@ MoveFilesDialog::MoveFilesDialog() : QDialog(nullptr), ui_(new Ui::MoveFilesDial
   });
 }
 
-MoveFilesDialog::~MoveFilesDialog() noexcept = default;
+MoveFilesDialog::~MoveFilesDialog() = default;
 
 void MoveFilesDialog::AddText(std::string_view text) {
   ui_->log->append(QString::fromUtf8(text.data(), text.size()));

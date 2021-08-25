@@ -28,16 +28,16 @@ constexpr int kInvalidFd = -1;
 
 class unique_fd {
  public:
-  constexpr unique_fd() noexcept = default;
-  constexpr explicit unique_fd(int fd) noexcept : fd_{fd} {}
-  ~unique_fd() noexcept { release(); }
+  constexpr unique_fd() = default;
+  constexpr explicit unique_fd(int fd) : fd_{fd} {}
+  ~unique_fd() { release(); }
 
   unique_fd(const unique_fd&) = delete;
   unique_fd& operator=(const unique_fd&) = delete;
 
-  constexpr unique_fd(unique_fd&& other) noexcept : fd_{other.fd_} { other.fd_ = kInvalidFd; }
+  constexpr unique_fd(unique_fd&& other) : fd_{other.fd_} { other.fd_ = kInvalidFd; }
 
-  unique_fd& operator=(unique_fd&& other) noexcept {
+  unique_fd& operator=(unique_fd&& other) {
     if (&other == this) return *this;
 
     reset(other.fd_);
@@ -46,20 +46,20 @@ class unique_fd {
     return *this;
   }
 
-  void release() noexcept {
+  void release() {
     if (fd_ != kInvalidFd) close(fd_);
     fd_ = kInvalidFd;
   }
 
-  [[nodiscard]] constexpr bool valid() const noexcept { return fd_ != kInvalidFd; }
+  [[nodiscard]] constexpr bool valid() const { return fd_ != kInvalidFd; }
 
-  [[nodiscard]] int get() const noexcept {
+  [[nodiscard]] int get() const {
     CHECK(valid());
     return fd_;
   }
 
  private:
-  void reset(int fd) noexcept {
+  void reset(int fd) {
     release();
     fd_ = fd;
   }

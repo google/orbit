@@ -23,16 +23,16 @@ namespace {
 class CaptureFileOutputStreamImpl final : public CaptureFileOutputStream {
  public:
   explicit CaptureFileOutputStreamImpl(std::filesystem::path path) : path_{std::move(path)} {}
-  ~CaptureFileOutputStreamImpl() noexcept override;
+  ~CaptureFileOutputStreamImpl() override;
 
   [[nodiscard]] ErrorMessageOr<void> Initialize();
   [[nodiscard]] ErrorMessageOr<void> WriteCaptureEvent(
       const orbit_grpc_protos::ClientCaptureEvent& event) override;
-  [[nodiscard]] ErrorMessageOr<void> Close() noexcept override;
-  [[nodiscard]] bool IsOpen() noexcept override;
+  [[nodiscard]] ErrorMessageOr<void> Close() override;
+  [[nodiscard]] bool IsOpen() override;
 
  private:
-  void Reset() noexcept;
+  void Reset();
   [[nodiscard]] ErrorMessageOr<void> WriteHeader();
   // Handles write error by cleaning up the file and generating error message.
   [[nodiscard]] ErrorMessage HandleWriteError(const char* section_name,
@@ -47,7 +47,7 @@ class CaptureFileOutputStreamImpl final : public CaptureFileOutputStream {
   std::optional<google::protobuf::io::CodedOutputStream> coded_output_;
 };
 
-CaptureFileOutputStreamImpl::~CaptureFileOutputStreamImpl() noexcept {
+CaptureFileOutputStreamImpl::~CaptureFileOutputStreamImpl() {
   // The destructor is not default to make sure close for streams and the file are called in
   // the correct order.
   Reset();
@@ -68,7 +68,7 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::Initialize() {
   return outcome::success();
 }
 
-ErrorMessageOr<void> CaptureFileOutputStreamImpl::Close() noexcept {
+ErrorMessageOr<void> CaptureFileOutputStreamImpl::Close() {
   coded_output_->Trim();
   if (coded_output_->HadError()) {
     return HandleWriteError("Unknown", SafeStrerror(file_output_stream_->GetErrno()));
@@ -78,13 +78,13 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::Close() noexcept {
   return outcome::success();
 }
 
-void CaptureFileOutputStreamImpl::Reset() noexcept {
+void CaptureFileOutputStreamImpl::Reset() {
   coded_output_.reset();
   file_output_stream_.reset();
   fd_.release();
 }
 
-bool CaptureFileOutputStreamImpl::IsOpen() noexcept { return fd_.valid(); }
+bool CaptureFileOutputStreamImpl::IsOpen() { return fd_.valid(); }
 
 void CaptureFileOutputStreamImpl::CloseAndTryRemoveFileAfterError() {
   Reset();

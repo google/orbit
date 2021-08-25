@@ -17,7 +17,7 @@ constexpr const char* kFileDialogSavedDirectoryKey = "symbols_file_dialog_saved_
 
 namespace orbit_config_widgets {
 
-SymbolsDialog::~SymbolsDialog() noexcept = default;
+SymbolsDialog::~SymbolsDialog() = default;
 
 SymbolsDialog::SymbolsDialog(QWidget* parent)
     : QDialog(parent), ui_(std::make_unique<Ui::SymbolsDialog>()) {

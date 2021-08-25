@@ -8,7 +8,7 @@
 
 namespace orbit_code_viewer {
 
-OwningDialog::~OwningDialog() noexcept {
+OwningDialog::~OwningDialog() {
   // `code_report_` is deleted before the base class is deleted, so we have to clear the code report
   // pointer from the base class first.
   ClearHeatmap();

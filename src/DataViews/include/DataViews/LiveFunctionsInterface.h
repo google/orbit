@@ -13,7 +13,7 @@ namespace orbit_data_views {
 
 class LiveFunctionsInterface {
  public:
-  virtual ~LiveFunctionsInterface() noexcept = default;
+  virtual ~LiveFunctionsInterface() = default;
 
   virtual void AddIterator(uint64_t instrumented_function_id,
                            const orbit_client_protos::FunctionInfo* function) = 0;

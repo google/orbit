@@ -50,7 +50,7 @@ class ProcessManagerImpl final : public ProcessManager {
       absl::Span<const std::string> additional_search_directories) override;
 
   void Start();
-  void ShutdownAndWait() noexcept override;
+  void ShutdownAndWait() override;
 
  private:
   void WorkerFunction();
@@ -93,7 +93,7 @@ void ProcessManagerImpl::Start() {
   worker_thread_ = std::thread([this] { WorkerFunction(); });
 }
 
-void ProcessManagerImpl::ShutdownAndWait() noexcept {
+void ProcessManagerImpl::ShutdownAndWait() {
   shutdown_mutex_.Lock();
   shutdown_initiated_ = true;
   shutdown_mutex_.Unlock();

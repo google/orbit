@@ -18,7 +18,7 @@ TrackConfigurationWidget::TrackConfigurationWidget(QWidget* parent)
   ui_->trackTypesTable->setModel(&track_type_item_model_);
 }
 
-TrackConfigurationWidget::~TrackConfigurationWidget() noexcept = default;
+TrackConfigurationWidget::~TrackConfigurationWidget() = default;
 
 void TrackConfigurationWidget::SetTrackManager(TrackManager* track_manager) {
   track_type_item_model_.SetTrackManager(track_manager);

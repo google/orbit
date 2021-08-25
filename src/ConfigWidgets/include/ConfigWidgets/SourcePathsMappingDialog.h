@@ -20,7 +20,7 @@ class SourcePathsMappingDialog : public QDialog {
   Q_OBJECT
  public:
   explicit SourcePathsMappingDialog(QWidget* parent = nullptr);
-  ~SourcePathsMappingDialog() noexcept override;
+  ~SourcePathsMappingDialog() override;
 
   void SetMappings(std::vector<orbit_source_paths_mapping::Mapping> new_mappings) {
     model_.SetMappings(std::move(new_mappings));

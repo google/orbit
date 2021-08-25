@@ -21,7 +21,7 @@ namespace orbit_config_widgets {
 class SymbolsDialog : public QDialog {
  public:
   explicit SymbolsDialog(QWidget* parent = nullptr);
-  ~SymbolsDialog() noexcept override;
+  ~SymbolsDialog() override;
 
   void SetSymbolPaths(absl::Span<const std::filesystem::path> paths);
   // TryAddSymbolPath will only add the path if its not in the list of paths. In case it is, an

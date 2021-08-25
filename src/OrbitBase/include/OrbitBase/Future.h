@@ -48,9 +48,9 @@ class InternalFutureBase {
  public:
   InternalFutureBase(const InternalFutureBase&) = default;
   InternalFutureBase& operator=(const InternalFutureBase&) = default;
-  InternalFutureBase(InternalFutureBase&&) noexcept = default;
-  InternalFutureBase& operator=(InternalFutureBase&&) noexcept = default;
-  ~InternalFutureBase() noexcept = default;
+  InternalFutureBase(InternalFutureBase&&) = default;
+  InternalFutureBase& operator=(InternalFutureBase&&) = default;
+  ~InternalFutureBase() = default;
 
   [[nodiscard]] bool IsValid() const { return shared_state_.use_count() > 0; }
 

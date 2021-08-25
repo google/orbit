@@ -126,7 +126,7 @@ ServiceDeployManager::ServiceDeployManager(const DeploymentConfiguration* deploy
   moveToThread(&background_thread_);
 }
 
-ServiceDeployManager::~ServiceDeployManager() noexcept {
+ServiceDeployManager::~ServiceDeployManager() {
   // ssh_watchdog_timer is registered in background_thread_, so it has to be stopped there to
   // not trigger a race condition.
   QMetaObject::invokeMethod(

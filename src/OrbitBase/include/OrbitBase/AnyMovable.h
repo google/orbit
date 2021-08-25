@@ -55,14 +55,14 @@ class AnyMovable {
     constexpr explicit Storage(const T& value) : value_(value) {}
     constexpr explicit Storage(T&& value) : value_(std::move(value)) {}
 
-    [[nodiscard]] void* AccessValue() noexcept override { return static_cast<void*>(&value_); }
+    [[nodiscard]] void* AccessValue() override { return static_cast<void*>(&value_); }
   };
 
   std::unique_ptr<Base> storage_;
   const std::type_info* type_info_;
 
  public:
-  explicit AnyMovable() noexcept = default;
+  explicit AnyMovable() = default;
 
   template <typename T, typename = std::enable_if<!std::is_same_v<std::decay_t<T>, AnyMovable>>>
   explicit AnyMovable(T&& value)
@@ -75,37 +75,37 @@ class AnyMovable {
                                                             std::forward<Args>(args)...)},
         type_info_{&typeid(std::decay_t<T>)} {}
 
-  void Reset() noexcept { storage_.reset(); }
+  void Reset() { storage_.reset(); }
 
-  [[nodiscard]] bool HasValue() const noexcept { return storage_ != nullptr; }
+  [[nodiscard]] bool HasValue() const { return storage_ != nullptr; }
 
   template <typename ValueType, typename... Args>
-  std::decay_t<ValueType>& Emplace(Args&&... args) noexcept {
+  std::decay_t<ValueType>& Emplace(Args&&... args) {
     storage_ = std::make_unique<Storage<ValueType>>(std::in_place, std::forward<Args>(args)...);
     type_info_ = &typeid(ValueType);
     return *static_cast<ValueType*>(storage_->AccessValue());
   }
 
-  [[nodiscard]] const std::type_info& type() const noexcept { return *type_info_; }
+  [[nodiscard]] const std::type_info& type() const { return *type_info_; }
 
   template <typename T>
-  friend T* any_movable_cast(AnyMovable*) noexcept;
+  friend T* any_movable_cast(AnyMovable*);
 
   template <typename T>
-  friend const T* any_movable_cast(const AnyMovable*) noexcept;
+  friend const T* any_movable_cast(const AnyMovable*);
 };
 
 // This is deviating from Google's naming style to be in line with `static_cast` and others.
 // Abseil is doing the same with `abseil::bit_cast`.
 template <typename T>
-[[nodiscard]] T* any_movable_cast(AnyMovable* movable) noexcept {
+[[nodiscard]] T* any_movable_cast(AnyMovable* movable) {
   if (!(movable->type() == typeid(T))) return nullptr;
 
   return static_cast<T*>(movable->storage_->AccessValue());
 }
 
 template <typename T>
-[[nodiscard]] const T* any_movable_cast(const AnyMovable* movable) noexcept {
+[[nodiscard]] const T* any_movable_cast(const AnyMovable* movable) {
   if (!(movable->type() == typeid(T))) return nullptr;
 
   return static_cast<const T*>(movable->storage_->AccessValue());

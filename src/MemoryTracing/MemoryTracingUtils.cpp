@@ -115,7 +115,7 @@ ErrorMessageOr<void> UpdateSystemMemoryUsageFromVmStat(std::string_view vmstat_c
   return outcome::success();
 }
 
-ErrorMessageOr<SystemMemoryUsage> GetSystemMemoryUsage() noexcept {
+ErrorMessageOr<SystemMemoryUsage> GetSystemMemoryUsage() {
   SystemMemoryUsage system_memory_usage = CreateAndInitializeSystemMemoryUsage();
   system_memory_usage.set_timestamp_ns(orbit_base::CaptureTimestampNs());
 
@@ -214,7 +214,7 @@ ErrorMessageOr<int64_t> ExtractRssAnonFromProcessStatus(std::string_view status_
   return ErrorMessage("RssAnon value not found in the file content.");
 }
 
-ErrorMessageOr<ProcessMemoryUsage> GetProcessMemoryUsage(pid_t pid) noexcept {
+ErrorMessageOr<ProcessMemoryUsage> GetProcessMemoryUsage(pid_t pid) {
   ProcessMemoryUsage process_memory_usage = CreateAndInitializeProcessMemoryUsage();
   process_memory_usage.set_pid(pid);
   process_memory_usage.set_timestamp_ns(orbit_base::CaptureTimestampNs());
@@ -341,7 +341,7 @@ ErrorMessageOr<void> UpdateCGroupMemoryUsageFromMemoryStat(std::string_view memo
   return outcome::success();
 }
 
-ErrorMessageOr<CGroupMemoryUsage> GetCGroupMemoryUsage(pid_t pid) noexcept {
+ErrorMessageOr<CGroupMemoryUsage> GetCGroupMemoryUsage(pid_t pid) {
   uint64_t current_timestamp_ns = orbit_base::CaptureTimestampNs();
 
   const std::string kProcessCGroupsFilename = absl::StrFormat("/proc/%d/cgroup", pid);

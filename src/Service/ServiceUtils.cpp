@@ -115,7 +115,7 @@ ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints()
   return result;
 }
 
-std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid) noexcept {
+std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid) {
   const auto stat = std::filesystem::path{"/proc"} / std::to_string(pid) / "stat";
 
   // /proc/[pid]/stat looks like so (example - all in one line):
@@ -184,7 +184,7 @@ std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid) noexcept {
   return Jiffies{utime + stime};
 }
 
-std::optional<TotalCpuTime> GetCumulativeTotalCpuTime() noexcept {
+std::optional<TotalCpuTime> GetCumulativeTotalCpuTime() {
   ErrorMessageOr<std::string> stat_content_or_error = orbit_base::ReadFileToString("/proc/stat");
   if (stat_content_or_error.has_error()) {
     ERROR("%s", stat_content_or_error.error().message());
@@ -281,7 +281,7 @@ static ErrorMessageOr<fs::path> FindSymbolsFilePathInStructuredDebugStore(
 }
 
 static ErrorMessageOr<fs::path> FindSymbolsFilePathCoff(const fs::path& module_path,
-                                                        const CoffFile* module_coff_file) noexcept {
+                                                        const CoffFile* module_coff_file) {
   CHECK(module_coff_file != nullptr);
 
   // For Coff files, we currently only support debug symbols embedded in the object file.
@@ -295,7 +295,7 @@ static ErrorMessageOr<fs::path> FindSymbolsFilePathCoff(const fs::path& module_p
 
 static ErrorMessageOr<fs::path> FindSymbolsFilePathElf(
     const fs::path& module_path, const ElfFile* module_elf_file,
-    const std::vector<fs::path>& search_directories) noexcept {
+    const std::vector<fs::path>& search_directories) {
   CHECK(module_elf_file != nullptr);
 
   if (module_elf_file->HasDebugSymbols()) {
@@ -398,7 +398,7 @@ static ErrorMessageOr<fs::path> FindSymbolsFilePathElf(
 }
 
 ErrorMessageOr<fs::path> FindSymbolsFilePath(
-    const orbit_grpc_protos::GetDebugInfoFileRequest& request) noexcept {
+    const orbit_grpc_protos::GetDebugInfoFileRequest& request) {
   auto object_file_or_error = CreateObjectFile(request.module_path());
   if (object_file_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat("Unable to create object file: %s",
@@ -424,7 +424,7 @@ ErrorMessageOr<fs::path> FindSymbolsFilePath(
 }
 
 bool ReadProcessMemory(uint32_t pid, uintptr_t address, void* buffer, uint64_t size,
-                       uint64_t* num_bytes_read) noexcept {
+                       uint64_t* num_bytes_read) {
   iovec local_iov[] = {{buffer, size}};
   iovec remote_iov[] = {{absl::bit_cast<void*>(address), size}};
   pid_t native_pid = orbit_base::ToNativeProcessId(pid);

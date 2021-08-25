@@ -69,7 +69,7 @@ PerfEventRingBuffer::PerfEventRingBuffer(int perf_event_fd, uint64_t size_kb, st
   CHECK(metadata_page_->data_offset == GetPageSize());
 }
 
-PerfEventRingBuffer::PerfEventRingBuffer(PerfEventRingBuffer&& o) noexcept {
+PerfEventRingBuffer::PerfEventRingBuffer(PerfEventRingBuffer&& o) {
   std::swap(mmap_length_, o.mmap_length_);
   std::swap(metadata_page_, o.metadata_page_);
   std::swap(ring_buffer_, o.ring_buffer_);
@@ -79,7 +79,7 @@ PerfEventRingBuffer::PerfEventRingBuffer(PerfEventRingBuffer&& o) noexcept {
   std::swap(name_, o.name_);
 }
 
-PerfEventRingBuffer& PerfEventRingBuffer::operator=(PerfEventRingBuffer&& o) noexcept {
+PerfEventRingBuffer& PerfEventRingBuffer::operator=(PerfEventRingBuffer&& o) {
   if (&o != this) {
     std::swap(mmap_length_, o.mmap_length_);
     std::swap(metadata_page_, o.metadata_page_);

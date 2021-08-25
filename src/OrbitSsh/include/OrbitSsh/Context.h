@@ -16,10 +16,10 @@ class Context {
   Context(const Context&) = delete;
   Context& operator=(const Context&) = delete;
 
-  Context(Context&&) noexcept;
-  Context& operator=(Context&&) noexcept;
+  Context(Context&&);
+  Context& operator=(Context&&);
 
-  ~Context() noexcept;
+  ~Context();
 
   [[nodiscard]] bool active() const { return active_; }
 

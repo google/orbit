@@ -50,7 +50,7 @@ using orbit_ssh_qt::ScopedConnection;
 
 // The destructor needs to be defined here because it needs to see the type
 // `Ui::ConnectToStadiaWidget`. The header file only contains a forward declaration.
-ConnectToStadiaWidget::~ConnectToStadiaWidget() noexcept = default;
+ConnectToStadiaWidget::~ConnectToStadiaWidget() = default;
 
 ConnectToStadiaWidget::ConnectToStadiaWidget(QWidget* parent)
     : QWidget(parent),

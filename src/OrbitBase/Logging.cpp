@@ -46,7 +46,7 @@ ErrorMessageOr<void> TryRemoveOldLogFiles(const std::filesystem::path& log_dir) 
   return orbit_base_internal::RemoveFiles(old_files);
 }
 
-void InitLogFile(const std::filesystem::path& path) noexcept {
+void InitLogFile(const std::filesystem::path& path) {
   absl::MutexLock lock(&log_file_mutex);
   // Do not call CHECK here - it will end up calling LogToFile,
   // which tries to lock on the same mutex a second time. This will
@@ -72,7 +72,7 @@ void InitLogFile(const std::filesystem::path& path) noexcept {
   }
 }
 
-void LogToFile(const std::string& message) noexcept {
+void LogToFile(const std::string& message) {
   absl::MutexLock lock(&log_file_mutex);
   if (log_file.get() != nullptr) {
     // Ignore any errors that can happen, we cannot do anything about them at this

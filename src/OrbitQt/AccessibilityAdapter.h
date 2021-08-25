@@ -54,9 +54,9 @@ class AdapterRegistry {
  public:
   ~AdapterRegistry() { CHECK(all_interfaces_map_.size() == 0); }
   AdapterRegistry(const AdapterRegistry&) = delete;
-  AdapterRegistry(AdapterRegistry&&) noexcept = delete;
+  AdapterRegistry(AdapterRegistry&&) = delete;
   AdapterRegistry& operator=(const AdapterRegistry&) = delete;
-  AdapterRegistry& operator=(AdapterRegistry&&) noexcept = delete;
+  AdapterRegistry& operator=(AdapterRegistry&&) = delete;
 
   [[nodiscard]] static AdapterRegistry& Get();
 

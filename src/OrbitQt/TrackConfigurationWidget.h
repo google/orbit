@@ -22,7 +22,7 @@ class TrackConfigurationWidget : public QWidget {
 
  public:
   explicit TrackConfigurationWidget(QWidget* parent = nullptr);
-  ~TrackConfigurationWidget() noexcept override;
+  ~TrackConfigurationWidget() override;
   void SetTrackManager(TrackManager* track_manager);
 
  private:

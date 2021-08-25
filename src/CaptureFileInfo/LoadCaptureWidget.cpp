@@ -23,7 +23,7 @@ namespace orbit_capture_file_info {
 
 // The destructor needs to be defined here because it needs to see the type
 // `Ui::LoadCaptureWidget`. The header file only contains a forward declaration.
-LoadCaptureWidget::~LoadCaptureWidget() noexcept = default;
+LoadCaptureWidget::~LoadCaptureWidget() = default;
 
 LoadCaptureWidget::LoadCaptureWidget(QWidget* parent)
     : QWidget(parent), ui_(std::make_unique<Ui::LoadCaptureWidget>()) {

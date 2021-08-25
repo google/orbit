@@ -49,7 +49,7 @@ class Dialog : public QDialog {
   using LineNumberTypes = Viewer::LineNumberTypes;
 
   explicit Dialog(QWidget* parent = nullptr);
-  ~Dialog() noexcept override;
+  ~Dialog() override;
 
   void SetMainContent(const QString& code);
   void SetMainContent(const QString& code, std::unique_ptr<QSyntaxHighlighter> syntax_highlighter);

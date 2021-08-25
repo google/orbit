@@ -23,7 +23,7 @@ class MoveFilesDialog : public QDialog {
 
  public:
   explicit MoveFilesDialog();
-  ~MoveFilesDialog() noexcept override;
+  ~MoveFilesDialog() override;
 
   void AddText(std::string_view text);
   void OnMoveFinished();

@@ -29,9 +29,7 @@ class Session {
                                      const std::filesystem::path& key_path,
                                      const std::string& pass_phrase = "");
   outcome::result<void> Disconnect(const std::string& message = "Disconnecting normally");
-  [[nodiscard]] LIBSSH2_SESSION* GetRawSessionPtr() const noexcept {
-    return raw_session_ptr_.get();
-  }
+  [[nodiscard]] LIBSSH2_SESSION* GetRawSessionPtr() const { return raw_session_ptr_.get(); }
   void SetBlocking(bool value);
 
  private:

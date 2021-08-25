@@ -20,7 +20,7 @@ class TemporaryFile final {
     that.file_path_.clear();
   }
 
-  TemporaryFile& operator=(TemporaryFile&& that) noexcept {
+  TemporaryFile& operator=(TemporaryFile&& that) {
     if (&that == this) return *this;
 
     CloseAndRemove();
@@ -31,7 +31,7 @@ class TemporaryFile final {
     return *this;
   }
 
-  void CloseAndRemove() noexcept;
+  void CloseAndRemove();
 
   [[nodiscard]] const unique_fd& fd() const { return fd_; }
   [[nodiscard]] const std::filesystem::path& file_path() const { return file_path_; }

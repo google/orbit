@@ -43,7 +43,7 @@ class SessionSetupDialog : public QDialog {
                               std::optional<TargetConfiguration> target_configuration_opt,
                               orbit_metrics_uploader::MetricsUploader* metrics_uploader,
                               QWidget* parent = nullptr);
-  ~SessionSetupDialog() noexcept override;
+  ~SessionSetupDialog() override;
 
   [[nodiscard]] std::optional<TargetConfiguration> Exec();
  private slots:

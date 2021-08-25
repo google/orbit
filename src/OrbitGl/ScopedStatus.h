@@ -50,7 +50,7 @@ class ScopedStatus final {
 
   ScopedStatus(ScopedStatus&& that) = default;
 
-  ScopedStatus& operator=(ScopedStatus&& that) noexcept {
+  ScopedStatus& operator=(ScopedStatus&& that) {
     if (this == &that) {
       return *this;
     }
@@ -74,7 +74,7 @@ class ScopedStatus final {
   }
 
  private:
-  void reset() noexcept {
+  void reset() {
     if (!data_) {
       return;
     }
