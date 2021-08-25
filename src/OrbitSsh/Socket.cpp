@@ -22,12 +22,12 @@ namespace orbit_ssh {
 
 Socket::Socket(Descriptor file_descriptor) : descriptor_(file_descriptor) {}
 
-Socket::Socket(Socket&& other) noexcept {
+Socket::Socket(Socket&& other) {
   descriptor_ = other.descriptor_;
   other.descriptor_ = LIBSSH2_INVALID_SOCKET;
 }
 
-Socket& Socket::operator=(Socket&& other) noexcept {
+Socket& Socket::operator=(Socket&& other) {
   if (this != &other) {
     descriptor_ = other.descriptor_;
     other.descriptor_ = LIBSSH2_INVALID_SOCKET;

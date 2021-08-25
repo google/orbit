@@ -43,12 +43,12 @@ namespace orbit_capture_file {
 // Note: Write after close or error will result in CHECK failure.
 class CaptureFileOutputStream {
  public:
-  virtual ~CaptureFileOutputStream() noexcept = default;
+  virtual ~CaptureFileOutputStream() = default;
   [[nodiscard]] virtual ErrorMessageOr<void> WriteCaptureEvent(
       const orbit_grpc_protos::ClientCaptureEvent& event) = 0;
-  virtual ErrorMessageOr<void> Close() noexcept = 0;
+  virtual ErrorMessageOr<void> Close() = 0;
 
-  [[nodiscard]] virtual bool IsOpen() noexcept = 0;
+  [[nodiscard]] virtual bool IsOpen() = 0;
 
   // Create new capture file output stream. If the file exists it is going to be
   // overwritten.

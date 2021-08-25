@@ -21,7 +21,7 @@ namespace orbit_session_setup {
 
 // The destructor needs to be defined here because it needs to see the type
 // `Ui::LoadCaptureWidget`. The header file only contains a forward declaration.
-OverlayWidget::~OverlayWidget() noexcept = default;
+OverlayWidget::~OverlayWidget() = default;
 
 OverlayWidget::OverlayWidget(QWidget* parent)
     : QWidget(parent), ui_(std::make_unique<Ui::OverlayWidget>()) {

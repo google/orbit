@@ -23,7 +23,7 @@ class OrbitAboutDialog : public QDialog {
   void SetBuildInformation(const QString& build_info);
   void SetOpenGlRenderer(const QString& opengl_renderer, bool software_rendering);
 
-  ~OrbitAboutDialog() noexcept override = default;
+  ~OrbitAboutDialog() override = default;
 
  private:
   std::unique_ptr<Ui::OrbitAboutDialog> ui_;

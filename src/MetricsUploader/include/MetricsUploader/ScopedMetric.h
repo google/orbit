@@ -17,8 +17,8 @@ class ScopedMetric {
   explicit ScopedMetric(MetricsUploader* uploader, OrbitLogEvent_LogEventType log_event_type);
   ScopedMetric(const ScopedMetric& other) = delete;
   ScopedMetric& operator=(const ScopedMetric& other) = delete;
-  ScopedMetric(ScopedMetric&& other) noexcept;
-  ScopedMetric& operator=(ScopedMetric&& other) noexcept;
+  ScopedMetric(ScopedMetric&& other);
+  ScopedMetric& operator=(ScopedMetric&& other);
   ~ScopedMetric();
 
   void SetStatusCode(OrbitLogEvent_StatusCode status_code) { status_code_ = status_code; }

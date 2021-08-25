@@ -44,7 +44,7 @@ class SftpFile {
   outcome::result<void> Close();
   outcome::result<size_t> Write(std::string_view data);
 
-  [[nodiscard]] LIBSSH2_SFTP_HANDLE* GetRawFilePtr() const noexcept { return file_ptr_.get(); }
+  [[nodiscard]] LIBSSH2_SFTP_HANDLE* GetRawFilePtr() const { return file_ptr_.get(); }
 
  private:
   SftpFile(LIBSSH2_SFTP_HANDLE* file_ptr, Session* session, std::string_view filepath)

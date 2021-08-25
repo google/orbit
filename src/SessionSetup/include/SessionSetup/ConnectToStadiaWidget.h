@@ -43,7 +43,7 @@ class ConnectToStadiaWidget : public QWidget {
 
  public:
   explicit ConnectToStadiaWidget(QWidget* parent = nullptr);
-  ~ConnectToStadiaWidget() noexcept override;
+  ~ConnectToStadiaWidget() override;
   [[nodiscard]] std::optional<StadiaConnection> StopAndClearConnection();
   [[nodiscard]] bool IsActive() const;
   [[nodiscard]] const std::shared_ptr<grpc::Channel>& GetGrpcChannel() { return grpc_channel_; }

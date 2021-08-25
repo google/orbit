@@ -11,7 +11,7 @@
 #include "OrbitBase/Result.h"
 
 namespace orbit_base {
-ErrorMessageOr<std::string> ReadFileToString(const std::filesystem::path& file_name) noexcept;
+ErrorMessageOr<std::string> ReadFileToString(const std::filesystem::path& file_name);
 }
 
 #endif  // ORBIT_BASE_READ_FILE_TO_STRING_H_

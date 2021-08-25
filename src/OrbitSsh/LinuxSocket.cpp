@@ -27,7 +27,7 @@ outcome::result<Socket> Socket::Create(int domain, int type, int protocol) {
   return Socket(descriptor);
 }
 
-Socket::~Socket() noexcept {
+Socket::~Socket() {
   if (descriptor_ == LIBSSH2_INVALID_SOCKET) return;
 
   if (close(descriptor_) == 0) {

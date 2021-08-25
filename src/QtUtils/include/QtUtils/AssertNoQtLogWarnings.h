@@ -51,7 +51,7 @@ class AssertNoQtLogWarnings {
  public:
   explicit AssertNoQtLogWarnings() { qInstallMessageHandler(MessageHandlerTest); }
 
-  ~AssertNoQtLogWarnings() noexcept {
+  ~AssertNoQtLogWarnings() {
     // Install default message handler
     qInstallMessageHandler(nullptr);
   }

@@ -24,7 +24,7 @@ class LoadCaptureWidget : public QWidget {
 
  public:
   explicit LoadCaptureWidget(QWidget* parent = nullptr);
-  ~LoadCaptureWidget() noexcept override;
+  ~LoadCaptureWidget() override;
 
   [[nodiscard]] bool IsActive() const;
 

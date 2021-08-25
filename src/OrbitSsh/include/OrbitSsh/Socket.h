@@ -38,10 +38,10 @@ class Socket {
   Socket(const Socket&) = delete;
   Socket& operator=(const Socket&) = delete;
 
-  Socket(Socket&& other) noexcept;
-  Socket& operator=(Socket&& other) noexcept;
+  Socket(Socket&& other);
+  Socket& operator=(Socket&& other);
 
-  ~Socket() noexcept;
+  ~Socket();
 
   static outcome::result<Socket> Create(int domain = AF_INET, int type = SOCK_STREAM,
                                         int protocol = IPPROTO_TCP);

@@ -20,9 +20,9 @@ outcome::result<Context> Context::Create() {
   return Context{};
 }
 
-Context::Context(Context&& other) noexcept : active_(other.active_) { other.active_ = false; }
+Context::Context(Context&& other) : active_(other.active_) { other.active_ = false; }
 
-Context& Context::operator=(Context&& other) noexcept {
+Context& Context::operator=(Context&& other) {
   if (&other != this) {
     active_ = other.active_;
     other.active_ = false;
@@ -31,7 +31,7 @@ Context& Context::operator=(Context&& other) noexcept {
   return *this;
 }
 
-Context::~Context() noexcept {
+Context::~Context() {
   if (active_) {
     libssh2_exit();
   }

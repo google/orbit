@@ -19,8 +19,8 @@ class PerfEventRingBuffer {
   explicit PerfEventRingBuffer(int perf_event_fd, uint64_t size_kb, std::string name);
   ~PerfEventRingBuffer();
 
-  PerfEventRingBuffer(PerfEventRingBuffer&&) noexcept;
-  PerfEventRingBuffer& operator=(PerfEventRingBuffer&&) noexcept;
+  PerfEventRingBuffer(PerfEventRingBuffer&&);
+  PerfEventRingBuffer& operator=(PerfEventRingBuffer&&);
 
   PerfEventRingBuffer(const PerfEventRingBuffer&) = delete;
   PerfEventRingBuffer& operator=(const PerfEventRingBuffer&) = delete;

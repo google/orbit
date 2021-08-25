@@ -463,7 +463,7 @@ TEST(ThreadPool, FutureWithMoveOnlyResult) {
     MoveOnlyInt& operator=(const MoveOnlyInt&) = delete;
     MoveOnlyInt(MoveOnlyInt&&) = default;
     MoveOnlyInt& operator=(MoveOnlyInt&&) = default;
-    ~MoveOnlyInt() noexcept = default;
+    ~MoveOnlyInt() = default;
   };
 
   constexpr size_t kThreadPoolMinSize = 1;

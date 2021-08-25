@@ -40,13 +40,13 @@ struct TotalCpuTime {
   size_t cpus;
 };
 
-std::optional<TotalCpuTime> GetCumulativeTotalCpuTime() noexcept;
-std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid) noexcept;
+std::optional<TotalCpuTime> GetCumulativeTotalCpuTime();
+std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid);
 
 ErrorMessageOr<std::filesystem::path> FindSymbolsFilePath(
-    const orbit_grpc_protos::GetDebugInfoFileRequest& request) noexcept;
+    const orbit_grpc_protos::GetDebugInfoFileRequest& request);
 bool ReadProcessMemory(uint32_t pid, uintptr_t address, void* buffer, uint64_t size,
-                       uint64_t* num_bytes_read) noexcept;
+                       uint64_t* num_bytes_read);
 }  // namespace orbit_service::utils
 
 #endif  // ORBIT_SERVICE_SERVICE_UTILS_H_

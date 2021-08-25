@@ -25,7 +25,7 @@ class FontSizeInEm {
   constexpr explicit FontSizeInEm() = default;
   constexpr explicit FontSizeInEm(float value) : value_{value} {}
 
-  [[nodiscard]] int ToPixels(const QFontMetrics&) const noexcept;
+  [[nodiscard]] int ToPixels(const QFontMetrics&) const;
 
   [[nodiscard]] explicit operator float() const { return value_; }
 

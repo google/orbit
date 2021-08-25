@@ -17,7 +17,7 @@ using orbit_source_paths_mapping::Mapping;
 
 // The destructor needs to be defined here because it needs to see the type
 // `Ui::SourcePathsMappingDialog`. The header file only contains a forward declaration.
-SourcePathsMappingDialog::~SourcePathsMappingDialog() noexcept = default;
+SourcePathsMappingDialog::~SourcePathsMappingDialog() = default;
 
 SourcePathsMappingDialog::SourcePathsMappingDialog(QWidget* parent) : QDialog{parent} {
   ui_ = std::make_unique<Ui::SourcePathsMappingDialog>();

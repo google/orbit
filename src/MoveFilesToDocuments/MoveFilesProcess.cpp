@@ -18,7 +18,7 @@ MoveFilesProcess::MoveFilesProcess() : QObject(nullptr) {
   moveToThread(&background_thread_);
 }
 
-MoveFilesProcess::~MoveFilesProcess() noexcept {
+MoveFilesProcess::~MoveFilesProcess() {
   background_thread_.quit();
   background_thread_.wait();
 }

@@ -32,7 +32,7 @@ class OwningDialog : public Dialog {
 
  public:
   using Dialog::Dialog;
-  ~OwningDialog() noexcept override;
+  ~OwningDialog() override;
 
   void SetOwningHeatmap(FontSizeInEm heatmap_bar_width,
                         std::unique_ptr<orbit_code_report::CodeReport> code_report);

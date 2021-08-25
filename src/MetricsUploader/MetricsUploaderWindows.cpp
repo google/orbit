@@ -28,9 +28,9 @@ class MetricsUploaderImpl : public MetricsUploader {
                                Result (*shutdown_connection)(),
                                HMODULE metrics_uploader_client_dll);
   MetricsUploaderImpl(const MetricsUploaderImpl& other) = delete;
-  MetricsUploaderImpl(MetricsUploaderImpl&& other) noexcept;
+  MetricsUploaderImpl(MetricsUploaderImpl&& other);
   MetricsUploaderImpl& operator=(const MetricsUploaderImpl& other) = delete;
-  MetricsUploaderImpl& operator=(MetricsUploaderImpl&& other) noexcept;
+  MetricsUploaderImpl& operator=(MetricsUploaderImpl&& other);
 
   // Unload metrics_uploader_client.dll
   ~MetricsUploaderImpl() override;
@@ -64,7 +64,7 @@ MetricsUploaderImpl::MetricsUploaderImpl(std::string client_name, std::string se
       shutdown_connection_addr_(shutdown_connection_addr),
       metrics_uploader_client_dll_(metrics_uploader_client_dll) {}
 
-MetricsUploaderImpl::MetricsUploaderImpl(MetricsUploaderImpl&& other) noexcept
+MetricsUploaderImpl::MetricsUploaderImpl(MetricsUploaderImpl&& other)
     : client_name_(std::move(other.client_name_)),
       session_uuid_(std::move(other.session_uuid_)),
       metrics_uploader_client_dll_(other.metrics_uploader_client_dll_),
@@ -75,7 +75,7 @@ MetricsUploaderImpl::MetricsUploaderImpl(MetricsUploaderImpl&& other) noexcept
   other.shutdown_connection_addr_ = nullptr;
 }
 
-MetricsUploaderImpl& MetricsUploaderImpl::operator=(MetricsUploaderImpl&& other) noexcept {
+MetricsUploaderImpl& MetricsUploaderImpl::operator=(MetricsUploaderImpl&& other) {
   if (&other == this) {
     return *this;
   }

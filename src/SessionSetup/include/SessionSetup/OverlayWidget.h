@@ -30,7 +30,7 @@ class OverlayWidget : public QWidget {
 
  public:
   explicit OverlayWidget(QWidget* parent);
-  ~OverlayWidget() noexcept override;
+  ~OverlayWidget() override;
 
  protected:
   void paintEvent(QPaintEvent* /*event*/) override;

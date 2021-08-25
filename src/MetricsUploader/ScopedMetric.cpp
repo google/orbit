@@ -21,7 +21,7 @@ ScopedMetric::~ScopedMetric() {
   uploader_->SendLogEvent(log_event_type_, duration, status_code_);
 }
 
-ScopedMetric::ScopedMetric(ScopedMetric&& other) noexcept
+ScopedMetric::ScopedMetric(ScopedMetric&& other)
     : uploader_(other.uploader_),
       log_event_type_(other.log_event_type_),
       status_code_(other.status_code_),
@@ -29,7 +29,7 @@ ScopedMetric::ScopedMetric(ScopedMetric&& other) noexcept
   other.uploader_ = nullptr;
 }
 
-ScopedMetric& ScopedMetric::operator=(ScopedMetric&& other) noexcept {
+ScopedMetric& ScopedMetric::operator=(ScopedMetric&& other) {
   if (&other == this) {
     return *this;
   }

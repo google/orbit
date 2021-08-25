@@ -158,7 +158,7 @@ void SessionSetupDialog::SetStateMachineInitialState() {
   }
 }
 
-SessionSetupDialog::~SessionSetupDialog() noexcept = default;
+SessionSetupDialog::~SessionSetupDialog() = default;
 
 std::optional<TargetConfiguration> SessionSetupDialog::Exec() {
   ui_->stadiaWidget->Start();

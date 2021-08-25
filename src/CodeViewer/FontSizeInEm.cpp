@@ -8,7 +8,7 @@
 
 namespace orbit_code_viewer {
 
-int FontSizeInEm::ToPixels(const QFontMetrics& font_metrics) const noexcept {
+int FontSizeInEm::ToPixels(const QFontMetrics& font_metrics) const {
   const int pixels_per_em = font_metrics.horizontalAdvance('M');
   return static_cast<int>(std::ceil(static_cast<float>(pixels_per_em) * value_));
 }

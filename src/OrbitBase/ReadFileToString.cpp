@@ -28,7 +28,7 @@
 
 namespace orbit_base {
 
-ErrorMessageOr<std::string> ReadFileToString(const std::filesystem::path& file_name) noexcept {
+ErrorMessageOr<std::string> ReadFileToString(const std::filesystem::path& file_name) {
   ErrorMessageOr<unique_fd> fd_or_error = OpenFileForReading(file_name);
   if (fd_or_error.has_error()) {
     return fd_or_error.error();

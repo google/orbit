@@ -19,7 +19,7 @@ class MoveFilesProcess : public QObject {
 
  public:
   explicit MoveFilesProcess();
-  ~MoveFilesProcess() noexcept override;
+  ~MoveFilesProcess() override;
 
   void Start();
 

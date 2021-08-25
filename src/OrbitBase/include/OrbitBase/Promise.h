@@ -26,7 +26,7 @@ class PromiseBase {
   PromiseBase& operator=(const PromiseBase&) = delete;
   PromiseBase(PromiseBase&&) = default;
   PromiseBase& operator=(PromiseBase&&) = default;
-  ~PromiseBase() noexcept = default;
+  ~PromiseBase() = default;
 
   [[nodiscard]] orbit_base::Future<T> GetFuture() const {
     return orbit_base::Future<T>{shared_state_};

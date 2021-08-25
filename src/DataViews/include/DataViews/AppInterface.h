@@ -22,7 +22,7 @@ namespace orbit_data_views {
 
 class AppInterface {
  public:
-  virtual ~AppInterface() noexcept = default;
+  virtual ~AppInterface() = default;
 
   // Functions needed by DataView
   virtual void SetClipboard(const std::string& contents) = 0;

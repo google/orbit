@@ -28,8 +28,8 @@ template <typename R, typename... Args>
 class AnyInvocable<R(Args...)> {
   struct Base {
     constexpr Base() = default;
-    constexpr Base(Base&&) noexcept = default;
-    constexpr Base& operator=(Base&&) noexcept = default;
+    constexpr Base(Base&&) = default;
+    constexpr Base& operator=(Base&&) = default;
 
     constexpr Base(const Base&) = delete;
     constexpr Base& operator=(const Base&) = delete;
@@ -52,7 +52,7 @@ class AnyInvocable<R(Args...)> {
     constexpr explicit Storage(const T& value) : value_(value) {}
     constexpr explicit Storage(T&& value) : value_(std::move(value)) {}
 
-    constexpr R invoke(Args... args) noexcept override {
+    constexpr R invoke(Args... args) override {
       return std::invoke(value_, std::forward<Args>(args)...);
     }
   };
@@ -64,7 +64,7 @@ class AnyInvocable<R(Args...)> {
   constexpr explicit AnyInvocable(F&& func)
       : storage_{std::make_unique<Storage<std::decay_t<F>>>(std::forward<F>(func))} {}
 
-  constexpr explicit operator bool() const noexcept { return storage_ != nullptr; }
+  constexpr explicit operator bool() const { return storage_ != nullptr; }
 
   constexpr R operator()(Args... args) { return storage_->invoke(std::forward<Args>(args)...); }
 

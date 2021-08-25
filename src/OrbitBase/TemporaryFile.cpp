@@ -61,7 +61,7 @@ ErrorMessageOr<void> TemporaryFile::Init() {
   return outcome::success();
 }
 
-void TemporaryFile::CloseAndRemove() noexcept {
+void TemporaryFile::CloseAndRemove() {
   fd_.release();
   if (!file_path_.empty()) {
     unlink(file_path_.string().c_str());
