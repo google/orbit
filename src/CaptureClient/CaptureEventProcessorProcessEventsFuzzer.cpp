@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_set.h>
-#include <libfuzzer/libfuzzer_macro.h>
 #include <stdint.h>
 
 #include <string>
@@ -13,6 +12,7 @@
 #include "ClientData/ProcessData.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
+#include "FuzzingUtils/ProtoFuzzer.h"
 #include "OrbitBase/Result.h"
 #include "absl/flags/flag.h"
 #include "capture.pb.h"
@@ -74,7 +74,7 @@ class MyCaptureListener : public CaptureListener {
 };
 }  // namespace
 
-DEFINE_PROTO_FUZZER(const CaptureResponse& response) {
+ORBIT_DEFINE_PROTO_FUZZER(const CaptureResponse& response) {
   MyCaptureListener listener;
   auto processor =
       CaptureEventProcessor::CreateForCaptureListener(&listener, std::filesystem::path{}, {});

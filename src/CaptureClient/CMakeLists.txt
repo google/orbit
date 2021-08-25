@@ -37,7 +37,7 @@ target_link_libraries(CaptureClient PUBLIC
 add_fuzzer(CaptureEventProcessorProcessEventsFuzzer CaptureEventProcessorProcessEventsFuzzer.cpp)
 target_link_libraries(
   CaptureEventProcessorProcessEventsFuzzer
-  PRIVATE CaptureClient CONAN_PKG::libprotobuf-mutator)
+  PRIVATE CaptureClient FuzzingUtils)
 
 add_executable(CaptureClientTests)
 
