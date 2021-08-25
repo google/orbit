@@ -22,15 +22,15 @@
 #include "AccessTraceesMemory.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
-#include "OrbitBase/TestUtils.h"
 #include "RegisterState.h"
+#include "TestUtils/TestUtils.h"
 #include "UserSpaceInstrumentation/Attach.h"
 
 namespace orbit_user_space_instrumentation {
 
 namespace {
 
-using orbit_base::HasError;
+using orbit_test_utils::HasError;
 
 AddressRange AddressRangeFromString(const std::string& string_address) {
   AddressRange result;

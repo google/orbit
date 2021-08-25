@@ -54,6 +54,7 @@ endif()
 target_link_libraries(
   ObjectUtilsTests
   PRIVATE ObjectUtils
+          TestUtils
           GTest::Main
           CONAN_PKG::llvm-core
           CONAN_PKG::abseil)

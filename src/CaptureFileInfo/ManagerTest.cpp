@@ -11,12 +11,12 @@
 #include <thread>
 
 #include "CaptureFileInfo/Manager.h"
-#include "OrbitBase/TestUtils.h"
 #include "Test/Path.h"
+#include "TestUtils/TestUtils.h"
 
 namespace orbit_capture_file_info {
 
-using orbit_base::HasError;
+using orbit_test_utils::HasError;
 
 constexpr const char* kOrgName = "The Orbit Authors";
 

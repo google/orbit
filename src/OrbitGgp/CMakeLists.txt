@@ -52,6 +52,7 @@ target_sources(OrbitGgpTests PRIVATE
 target_link_libraries(OrbitGgpTests PRIVATE 
           OrbitGgp
           OrbitBase
+          TestUtils
           GTest::QtCoreMain
           Qt5::Core
 )

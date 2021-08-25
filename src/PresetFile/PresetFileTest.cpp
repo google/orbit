@@ -6,8 +6,8 @@
 #include <gtest/gtest.h>
 
 #include "OrbitBase/TemporaryFile.h"
-#include "OrbitBase/TestUtils.h"
 #include "PresetFile/PresetFile.h"
+#include "TestUtils/TestUtils.h"
 #include "preset.pb.h"
 
 namespace orbit_preset_file {
@@ -95,13 +95,13 @@ TEST(PresetFile, SaveAndLoad) {
                      "/path/to/non/existing/module"),
                  "Check failed: IsLegacyFileFormat\\(\\)");
 
-    ASSERT_THAT(original_file.SaveToFile(), orbit_base::HasNoError());
+    ASSERT_THAT(original_file.SaveToFile(), orbit_test_utils::HasNoError());
   }
 
   // Load it
   {
     auto preset_file_or_error = orbit_preset_file::ReadPresetFromFile(temporary_file.file_path());
-    ASSERT_THAT(preset_file_or_error, orbit_base::HasNoError());
+    ASSERT_THAT(preset_file_or_error, orbit_test_utils::HasNoError());
     auto& preset_file = preset_file_or_error.value();
 
     EXPECT_FALSE(preset_file.IsLegacyFileFormat());

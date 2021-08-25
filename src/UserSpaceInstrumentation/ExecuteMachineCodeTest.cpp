@@ -13,13 +13,13 @@
 #include "MachineCode.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/TestUtils.h"
+#include "TestUtils/TestUtils.h"
 #include "UserSpaceInstrumentation/Attach.h"
 
 namespace orbit_user_space_instrumentation {
 
-using orbit_base::HasError;
-using orbit_base::HasNoError;
+using orbit_test_utils::HasError;
+using orbit_test_utils::HasNoError;
 
 TEST(ExecuteMachineCodeTest, ExecuteMachineCode) {
   pid_t pid = fork();

@@ -10,13 +10,13 @@
 #include <vector>
 
 #include "OrbitBase/GetProcessIds.h"
-#include "OrbitBase/TestUtils.h"
 #include "TestProcess.h"
+#include "TestUtils/TestUtils.h"
 #include "UserSpaceInstrumentation/Attach.h"
 
 namespace orbit_user_space_instrumentation {
 
-using orbit_base::HasError;
+using orbit_test_utils::HasError;
 
 TEST(AttachTest, AttachAndStopProcess) {
   TestProcess test_process;

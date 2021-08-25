@@ -13,22 +13,22 @@
 #include "OrbitBase/File.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/TemporaryFile.h"
-#include "OrbitBase/TestUtils.h"
 #include "OrbitPaths/Paths.h"
 #include "Symbols/SymbolHelper.h"
 #include "Test/Path.h"
+#include "TestUtils/TestUtils.h"
 #include "symbol.pb.h"
 
-using orbit_base::HasError;
 using orbit_grpc_protos::ModuleSymbols;
 using orbit_symbols::SymbolHelper;
+using orbit_test_utils::HasError;
 namespace fs = std::filesystem;
 
 static const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
 
 TEST(ReadSymbolsFile, Empty) {
   auto temp_file_or_error = orbit_base::TemporaryFile::Create();
-  ASSERT_THAT(temp_file_or_error, orbit_base::HasNoError());
+  ASSERT_THAT(temp_file_or_error, orbit_test_utils::HasNoError());
 
   std::vector<fs::path> paths =
       orbit_symbols::ReadSymbolsFile(temp_file_or_error.value().file_path());
@@ -38,14 +38,14 @@ TEST(ReadSymbolsFile, Empty) {
 
 TEST(ReadSymbolsFile, EmptyWithComments) {
   auto temp_file_or_error = orbit_base::TemporaryFile::Create();
-  ASSERT_THAT(temp_file_or_error, orbit_base::HasNoError());
+  ASSERT_THAT(temp_file_or_error, orbit_test_utils::HasNoError());
 
   ASSERT_THAT(
       orbit_base::WriteFully(temp_file_or_error.value().fd(),
                              "// C:\\Users\\username - Looks like a path but is a comment.\n"
                              "\t// A comment with a sneaky whitespace at the beginning.\n"
                              "\n"),  // Empty line as well
-      orbit_base::HasNoError());
+      orbit_test_utils::HasNoError());
 
   std::vector<fs::path> paths =
       orbit_symbols::ReadSymbolsFile(temp_file_or_error.value().file_path());
@@ -55,11 +55,11 @@ TEST(ReadSymbolsFile, EmptyWithComments) {
 
 TEST(ReadSymbolsFile, OnePath) {
   auto temp_file_or_error = orbit_base::TemporaryFile::Create();
-  ASSERT_THAT(temp_file_or_error, orbit_base::HasNoError());
+  ASSERT_THAT(temp_file_or_error, orbit_test_utils::HasNoError());
 
   ASSERT_THAT(orbit_base::WriteFully(temp_file_or_error.value().fd(),
                                      orbit_base::GetExecutableDir().string()),
-              orbit_base::HasNoError());
+              orbit_test_utils::HasNoError());
 
   std::vector<fs::path> paths =
       orbit_symbols::ReadSymbolsFile(temp_file_or_error.value().file_path());
@@ -69,14 +69,14 @@ TEST(ReadSymbolsFile, OnePath) {
 
 TEST(ReadSymbolsFile, TwoPaths) {
   auto temp_file_or_error = orbit_base::TemporaryFile::Create();
-  ASSERT_THAT(temp_file_or_error, orbit_base::HasNoError());
+  ASSERT_THAT(temp_file_or_error, orbit_test_utils::HasNoError());
 
   ASSERT_THAT(orbit_base::WriteFully(temp_file_or_error.value().fd(),
                                      orbit_base::GetExecutableDir().string() + '\n'),
-              orbit_base::HasNoError());
+              orbit_test_utils::HasNoError());
   ASSERT_THAT(
       orbit_base::WriteFully(temp_file_or_error.value().fd(), testdata_directory.string() + '\n'),
-      orbit_base::HasNoError());
+      orbit_test_utils::HasNoError());
 
   std::vector<fs::path> paths =
       orbit_symbols::ReadSymbolsFile(temp_file_or_error.value().file_path());
@@ -86,12 +86,12 @@ TEST(ReadSymbolsFile, TwoPaths) {
 
 TEST(ReadSymbolsFile, OnePathInQuotes) {
   auto temp_file_or_error = orbit_base::TemporaryFile::Create();
-  ASSERT_THAT(temp_file_or_error, orbit_base::HasNoError());
+  ASSERT_THAT(temp_file_or_error, orbit_test_utils::HasNoError());
 
   ASSERT_THAT(
       orbit_base::WriteFully(temp_file_or_error.value().fd(),
                              absl::StrFormat("\"%s\"\n", orbit_base::GetExecutableDir().string())),
-      orbit_base::HasNoError());
+      orbit_test_utils::HasNoError());
 
   std::vector<fs::path> paths =
       orbit_symbols::ReadSymbolsFile(temp_file_or_error.value().file_path());
@@ -101,12 +101,12 @@ TEST(ReadSymbolsFile, OnePathInQuotes) {
 
 TEST(ReadSymbolsFile, OnePathTrailingWhitespace) {
   auto temp_file_or_error = orbit_base::TemporaryFile::Create();
-  ASSERT_THAT(temp_file_or_error, orbit_base::HasNoError());
+  ASSERT_THAT(temp_file_or_error, orbit_test_utils::HasNoError());
 
   ASSERT_THAT(
       orbit_base::WriteFully(temp_file_or_error.value().fd(),
                              absl::StrFormat("%s \t\n", orbit_base::GetExecutableDir().string())),
-      orbit_base::HasNoError());
+      orbit_test_utils::HasNoError());
 
   std::vector<fs::path> paths =
       orbit_symbols::ReadSymbolsFile(temp_file_or_error.value().file_path());
@@ -318,12 +318,12 @@ TEST(FileStartsWithDeprecationNote, FileDoesNotExist) {
   ErrorMessageOr<bool> error_result =
       orbit_symbols::FileStartsWithDeprecationNote("non/existing/path/");
 
-  EXPECT_THAT(error_result, orbit_base::HasError("Unable to open file"));
+  EXPECT_THAT(error_result, orbit_test_utils::HasError("Unable to open file"));
 }
 
 TEST(FileStartsWithDeprecationNote, EmptyFile) {
   auto tmp_file_or_error = orbit_base::TemporaryFile::Create();
-  ASSERT_THAT(tmp_file_or_error, orbit_base::HasNoError());
+  ASSERT_THAT(tmp_file_or_error, orbit_test_utils::HasNoError());
 
   ErrorMessageOr<bool> result =
       orbit_symbols::FileStartsWithDeprecationNote(tmp_file_or_error.value().file_path());
@@ -334,11 +334,11 @@ TEST(FileStartsWithDeprecationNote, EmptyFile) {
 
 TEST(FileStartsWithDeprecationNote, NoDeprecationNote) {
   auto tmp_file_or_error = orbit_base::TemporaryFile::Create();
-  ASSERT_THAT(tmp_file_or_error, orbit_base::HasNoError());
+  ASSERT_THAT(tmp_file_or_error, orbit_test_utils::HasNoError());
 
   ASSERT_THAT(orbit_base::WriteFully(tmp_file_or_error.value().fd(),
                                      "Some file content.\nC:\\path\n\\\\ This is a comment"),
-              orbit_base::HasNoError());
+              orbit_test_utils::HasNoError());
 
   ErrorMessageOr<bool> result =
       orbit_symbols::FileStartsWithDeprecationNote(tmp_file_or_error.value().file_path());
@@ -349,7 +349,7 @@ TEST(FileStartsWithDeprecationNote, NoDeprecationNote) {
 
 TEST(FileStartsWithDeprecationNote, HasDeprecationNote) {
   auto tmp_file_or_error = orbit_base::TemporaryFile::Create();
-  ASSERT_THAT(tmp_file_or_error, orbit_base::HasNoError());
+  ASSERT_THAT(tmp_file_or_error, orbit_test_utils::HasNoError());
 
   ASSERT_THAT(orbit_base::WriteFully(
                   tmp_file_or_error.value().fd(),
@@ -357,10 +357,10 @@ TEST(FileStartsWithDeprecationNote, HasDeprecationNote) {
                   "1.68. Please use: Menu > Settings > Symbol Locations...\n// This file can still "
                   "used by Orbit versions prior to 1.68. If that is relevant to you, do not delete "
                   "this file.\n"),
-              orbit_base::HasNoError());
+              orbit_test_utils::HasNoError());
   ASSERT_THAT(
       orbit_base::WriteFully(tmp_file_or_error.value().fd(), "Some more content.\n// Comment"),
-      orbit_base::HasNoError());
+      orbit_test_utils::HasNoError());
 
   ErrorMessageOr<bool> result =
       orbit_symbols::FileStartsWithDeprecationNote(tmp_file_or_error.value().file_path());
@@ -372,16 +372,16 @@ TEST(FileStartsWithDeprecationNote, HasDeprecationNote) {
 TEST(AddDeprecationNoteToFile, FileDoesNotExist) {
   ErrorMessageOr<void> error_result = orbit_symbols::AddDeprecationNoteToFile("non/existing/path/");
 
-  EXPECT_THAT(error_result, orbit_base::HasError("Unable to open file"));
+  EXPECT_THAT(error_result, orbit_test_utils::HasError("Unable to open file"));
 }
 
 TEST(AddDeprecationNoteToFile, AddNote) {
   auto tmp_file_or_error = orbit_base::TemporaryFile::Create();
-  ASSERT_THAT(tmp_file_or_error, orbit_base::HasNoError());
+  ASSERT_THAT(tmp_file_or_error, orbit_test_utils::HasNoError());
   orbit_base::TemporaryFile& file{tmp_file_or_error.value()};
 
   constexpr std::string_view kFileContent = "Some file content.\nC:\\path\n\\\\ This is a comment";
-  ASSERT_THAT(orbit_base::WriteFully(file.fd(), kFileContent), orbit_base::HasNoError());
+  ASSERT_THAT(orbit_base::WriteFully(file.fd(), kFileContent), orbit_test_utils::HasNoError());
 
   {
     ErrorMessageOr<void> add_result = orbit_symbols::AddDeprecationNoteToFile(file.file_path());

@@ -17,7 +17,7 @@
 #include "OrbitBase/File.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/TemporaryFile.h"
-#include "OrbitBase/TestUtils.h"
+#include "TestUtils/TestUtils.h"
 #include "module.pb.h"
 
 using orbit_client_data::ModuleData;
@@ -161,7 +161,7 @@ TEST_F(ModulesDataViewTest, ContextMenuActionsAreInvoked) {
 
     ErrorMessageOr<orbit_base::TemporaryFile> temporary_file_or_error =
         orbit_base::TemporaryFile::Create();
-    ASSERT_THAT(temporary_file_or_error, orbit_base::HasNoError());
+    ASSERT_THAT(temporary_file_or_error, orbit_test_utils::HasNoError());
     const std::filesystem::path temporary_file_path = temporary_file_or_error.value().file_path();
     temporary_file_or_error.value().CloseAndRemove();
 
@@ -170,7 +170,7 @@ TEST_F(ModulesDataViewTest, ContextMenuActionsAreInvoked) {
 
     ErrorMessageOr<std::string> contents_or_error =
         orbit_base::ReadFileToString(temporary_file_path);
-    ASSERT_THAT(contents_or_error, orbit_base::HasNoError());
+    ASSERT_THAT(contents_or_error, orbit_test_utils::HasNoError());
 
     EXPECT_EQ(contents_or_error.value(),
               absl::StrFormat(R"("Name","Path","Address Range","File Size","Loaded")"

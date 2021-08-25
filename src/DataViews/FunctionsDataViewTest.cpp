@@ -22,8 +22,8 @@
 #include "MockAppInterface.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/TemporaryFile.h"
-#include "OrbitBase/TestUtils.h"
 #include "OrbitBase/ThreadPool.h"
+#include "TestUtils/TestUtils.h"
 #include "capture.pb.h"
 #include "capture_data.pb.h"
 #include "process.pb.h"
@@ -512,7 +512,7 @@ TEST_F(FunctionsDataViewTest, GenericDataExportFunctionShowCorrectData) {
 
     ErrorMessageOr<orbit_base::TemporaryFile> temporary_file_or_error =
         orbit_base::TemporaryFile::Create();
-    ASSERT_THAT(temporary_file_or_error, orbit_base::HasNoError());
+    ASSERT_THAT(temporary_file_or_error, orbit_test_utils::HasNoError());
     const std::filesystem::path temporary_file_path = temporary_file_or_error.value().file_path();
 
     // We actually only need a temporary file path, so let's call `CloseAndRemove` and reuse the
@@ -525,7 +525,7 @@ TEST_F(FunctionsDataViewTest, GenericDataExportFunctionShowCorrectData) {
 
     ErrorMessageOr<std::string> contents_or_error =
         orbit_base::ReadFileToString(temporary_file_path);
-    ASSERT_THAT(contents_or_error, orbit_base::HasNoError());
+    ASSERT_THAT(contents_or_error, orbit_test_utils::HasNoError());
 
     EXPECT_EQ(
         contents_or_error.value(),

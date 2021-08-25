@@ -11,15 +11,15 @@
 
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/TestUtils.h"
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/Instance.h"
 #include "OrbitGgp/SshInfo.h"
+#include "TestUtils/TestUtils.h"
 
 namespace orbit_ggp {
 
-using orbit_base::HasError;
-using orbit_base::HasValue;
+using orbit_test_utils::HasError;
+using orbit_test_utils::HasValue;
 
 TEST(OrbitGgpClient, CreateFailing) {
   {

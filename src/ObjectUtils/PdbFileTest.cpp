@@ -10,14 +10,14 @@
 #include "ObjectUtils/CoffFile.h"
 #include "ObjectUtils/PdbFile.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/TestUtils.h"
 #include "Test/Path.h"
+#include "TestUtils/TestUtils.h"
 
-using orbit_base::HasError;
-using orbit_base::HasNoError;
 using orbit_grpc_protos::SymbolInfo;
 using orbit_object_utils::CreateCoffFile;
 using orbit_object_utils::PdbDebugInfo;
+using orbit_test_utils::HasError;
+using orbit_test_utils::HasNoError;
 using ::testing::ElementsAre;
 
 TEST(PdbFile, LoadDebugSymbols) {

@@ -19,8 +19,8 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/TestUtils.h"
 #include "TestUtils.h"
+#include "TestUtils/TestUtils.h"
 #include "UserSpaceInstrumentation/Attach.h"
 #include "UserSpaceInstrumentation/InstrumentProcess.h"
 
@@ -28,8 +28,8 @@ namespace orbit_user_space_instrumentation {
 
 namespace {
 
-using orbit_base::HasError;
-using orbit_base::HasNoError;
+using orbit_test_utils::HasError;
+using orbit_test_utils::HasNoError;
 
 constexpr int kFunctionId = 42;
 

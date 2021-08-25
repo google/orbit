@@ -19,16 +19,16 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
-#include "OrbitBase/TestUtils.h"
+#include "TestUtils/TestUtils.h"
 #include "UserSpaceInstrumentation/Attach.h"
 
 namespace orbit_user_space_instrumentation {
 
 namespace {
 
-using orbit_base::HasError;
-using orbit_base::HasNoError;
 using orbit_base::ReadFileToString;
+using orbit_test_utils::HasError;
+using orbit_test_utils::HasNoError;
 
 enum class ProtState { kWrite, kExec, kAny };
 

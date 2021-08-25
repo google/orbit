@@ -22,5 +22,5 @@ target_link_libraries(Symbols PUBLIC
 
 add_executable(SymbolsTests)
 target_sources(SymbolsTests PRIVATE SymbolHelperTest.cpp)
-target_link_libraries(SymbolsTests PRIVATE Symbols GTest::Main)
+target_link_libraries(SymbolsTests PRIVATE Symbols TestUtils GTest::Main)
 register_test(SymbolsTests)
