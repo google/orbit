@@ -6,10 +6,7 @@
 #include <absl/strings/str_split.h>
 #include <absl/time/time.h>
 #include <absl/types/span.h>
-#include <gmock/gmock-actions.h>
-#include <gmock/gmock-cardinalities.h>
-#include <gmock/gmock-matchers.h>
-#include <gmock/gmock-more-actions.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "ClientData/CaptureData.h"
