@@ -179,7 +179,7 @@ SymbolHelper::SymbolHelper()
     : cache_directory_(orbit_paths::CreateOrGetCacheDir()),
       structured_debug_directories_(FindStructuredDebugDirectories()) {}
 
-ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsWithSymbolsPathFile(
+ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
     const fs::path& module_path, const std::string& build_id,
     absl::Span<const fs::path> directories) const {
   if (build_id.empty()) {

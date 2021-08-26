@@ -1721,7 +1721,7 @@ static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
 
   std::string error_message;
   {
-    const auto symbols_path = symbol_helper.FindSymbolsWithSymbolsPathFile(
+    const auto symbols_path = symbol_helper.FindSymbolsFileLocally(
         module_path, build_id, orbit_symbols::ReadSymbolsFile(orbit_paths::GetSymbolsFilePath()));
     if (symbols_path.has_value()) {
       LOG("Found symbols for module \"%s\" in user provided symbol folder. Symbols filename: "
