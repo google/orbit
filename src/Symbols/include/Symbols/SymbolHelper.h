@@ -30,7 +30,7 @@ class SymbolHelper {
       : cache_directory_(std::move(cache_directory)),
         structured_debug_directories_{std::move(structured_debug_directories)} {};
 
-  [[nodiscard]] ErrorMessageOr<fs::path> FindSymbolsWithSymbolsPathFile(
+  [[nodiscard]] ErrorMessageOr<fs::path> FindSymbolsFileLocally(
       const fs::path& module_path, const std::string& build_id,
       absl::Span<const fs::path> directories) const;
   [[nodiscard]] ErrorMessageOr<fs::path> FindSymbolsInCache(const fs::path& module_path,

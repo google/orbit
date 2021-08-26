@@ -114,13 +114,13 @@ TEST(ReadSymbolsFile, OnePathTrailingWhitespace) {
   EXPECT_THAT(paths, testing::ElementsAre(orbit_base::GetExecutableDir()));
 }
 
-TEST(SymbolHelper, FindSymbolsWithSymbolsPathFile) {
+TEST(SymbolHelper, FindSymbolsFileLocally) {
   SymbolHelper symbol_helper("", {});
   {
     const fs::path file_path = testdata_directory / "no_symbols_elf";
     const fs::path symbols_path = testdata_directory / "no_symbols_elf.debug";
 
-    const auto symbols_path_result = symbol_helper.FindSymbolsWithSymbolsPathFile(
+    const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
         file_path, "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b", {testdata_directory});
     ASSERT_FALSE(symbols_path_result.has_error()) << symbols_path_result.error().message();
     EXPECT_EQ(symbols_path_result.value(), symbols_path);
@@ -128,7 +128,7 @@ TEST(SymbolHelper, FindSymbolsWithSymbolsPathFile) {
 
   {
     const fs::path non_existing_path = "file.not.exist";
-    const auto symbols_path_result = symbol_helper.FindSymbolsWithSymbolsPathFile(
+    const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
         non_existing_path, "irrelevant build id", {testdata_directory});
     ASSERT_TRUE(symbols_path_result.has_error());
     EXPECT_THAT(absl::AsciiStrToLower(symbols_path_result.error().message()),
@@ -137,8 +137,8 @@ TEST(SymbolHelper, FindSymbolsWithSymbolsPathFile) {
 
   {
     const fs::path file_path = testdata_directory / "no_symbols_elf";
-    const auto symbols_path_result = symbol_helper.FindSymbolsWithSymbolsPathFile(
-        file_path, "wrong build id", {testdata_directory});
+    const auto symbols_path_result =
+        symbol_helper.FindSymbolsFileLocally(file_path, "wrong build id", {testdata_directory});
     ASSERT_TRUE(symbols_path_result.has_error());
     EXPECT_THAT(absl::AsciiStrToLower(symbols_path_result.error().message()),
                 testing::HasSubstr("could not find"));
@@ -147,7 +147,7 @@ TEST(SymbolHelper, FindSymbolsWithSymbolsPathFile) {
   {
     const fs::path file_path = testdata_directory / "no_symbols_elf";
     const auto symbols_path_result =
-        symbol_helper.FindSymbolsWithSymbolsPathFile(file_path, "", {testdata_directory});
+        symbol_helper.FindSymbolsFileLocally(file_path, "", {testdata_directory});
     ASSERT_TRUE(symbols_path_result.has_error());
     EXPECT_THAT(absl::AsciiStrToLower(symbols_path_result.error().message()),
                 testing::HasSubstr("could not find"));
@@ -308,7 +308,7 @@ TEST(SymbolHelper, FindSymbolsInStructedDebugStore) {
   const fs::path symbols_path = testdata_directory / "debugstore" / ".build-id" / "b5" /
                                 "413574bbacec6eacb3b89b1012d0e2cd92ec6b.debug";
 
-  const auto symbols_path_result = symbol_helper.FindSymbolsWithSymbolsPathFile(
+  const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
       file_path, "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b", {testdata_directory});
 
   ASSERT_FALSE(symbols_path_result.has_error()) << symbols_path_result.error().message();
