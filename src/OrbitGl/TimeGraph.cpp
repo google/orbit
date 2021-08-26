@@ -518,7 +518,7 @@ void TimeGraph::UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, ui
 
   time_window_us_ = max_time_us_ - min_time_us_;
   world_start_x_ = viewport_->GetWorldTopLeft()[0];
-  world_width_ = viewport_->GetVisibleWorldWidth();
+  world_width_ = GetWidth();
   uint64_t min_tick = GetTickFromUs(min_time_us_);
   uint64_t max_tick = GetTickFromUs(max_time_us_);
 
@@ -667,7 +667,7 @@ void TimeGraph::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
   x_coords.reserve(timers.size());
 
   float world_start_x = viewport_->GetWorldTopLeft()[0];
-  float world_width = viewport_->GetVisibleWorldWidth();
+  float world_width = GetWidth();
 
   float world_start_y = viewport_->GetWorldTopLeft()[1];
   float world_height = viewport_->GetVisibleWorldHeight();
