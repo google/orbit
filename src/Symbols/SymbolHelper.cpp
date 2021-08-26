@@ -10,6 +10,7 @@
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
 #include <absl/strings/str_split.h>
+#include <absl/types/span.h>
 #include <llvm/Object/Binary.h>
 #include <llvm/Object/ObjectFile.h>
 
@@ -19,6 +20,7 @@
 #include <set>
 #include <string_view>
 #include <system_error>
+#include <vector>
 
 #include "Introspection/Introspection.h"
 #include "ObjectUtils/ElfFile.h"
@@ -174,12 +176,12 @@ ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const fs::path& symbols_pat
 }
 
 SymbolHelper::SymbolHelper()
-    : symbols_file_directories_(ReadSymbolsFile(orbit_paths::GetSymbolsFilePath())),
-      cache_directory_(orbit_paths::CreateOrGetCacheDir()),
+    : cache_directory_(orbit_paths::CreateOrGetCacheDir()),
       structured_debug_directories_(FindStructuredDebugDirectories()) {}
 
 ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsWithSymbolsPathFile(
-    const fs::path& module_path, const std::string& build_id) const {
+    const fs::path& module_path, const std::string& build_id,
+    absl::Span<const fs::path> directories) const {
   if (build_id.empty()) {
     return ErrorMessage(absl::StrFormat(
         "Could not find symbols file for module \"%s\", because it does not contain a build id",
@@ -199,7 +201,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsWithSymbolsPathFile(
   filename_plus_debug.replace_extension(filename.extension().string() + ".debug");
 
   std::set<fs::path> search_paths;
-  for (const auto& directory : symbols_file_directories_) {
+  for (const auto& directory : directories) {
     search_paths.insert(directory / filename_dot_debug);
     search_paths.insert(directory / filename_plus_debug);
     search_paths.insert(directory / filename);
@@ -297,10 +299,10 @@ fs::path SymbolHelper::GenerateCachedFileName(const fs::path& file_path) const {
   return true;
 }
 
-ErrorMessageOr<fs::path> SymbolHelper::FindDebugInfoFileLocally(std::string_view filename,
-                                                                uint32_t checksum) const {
+ErrorMessageOr<fs::path> SymbolHelper::FindDebugInfoFileLocally(
+    std::string_view filename, uint32_t checksum, absl::Span<const fs::path> directories) const {
   std::set<fs::path> search_paths;
-  for (const auto& directory : symbols_file_directories_) {
+  for (const auto& directory : directories) {
     search_paths.insert(directory / filename);
   }
 

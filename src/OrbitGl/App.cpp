@@ -1692,8 +1692,9 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
 
         const auto debuglink = elf_file.value()->GetGnuDebugLinkInfo().value();
         ErrorMessageOr<std::filesystem::path> local_debuginfo_path =
-            symbol_helper_.FindDebugInfoFileLocally(debuglink.path.filename().string(),
-                                                    debuglink.crc32_checksum);
+            symbol_helper_.FindDebugInfoFileLocally(
+                debuglink.path.filename().string(), debuglink.crc32_checksum,
+                orbit_symbols::ReadSymbolsFile(orbit_paths::GetSymbolsFilePath()));
         if (local_debuginfo_path.has_error()) {
           return ErrorMessage{absl::StrFormat(
               "Module \"%s\" doesn't include debug info, and a separate "
@@ -1720,7 +1721,8 @@ static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
 
   std::string error_message;
   {
-    const auto symbols_path = symbol_helper.FindSymbolsWithSymbolsPathFile(module_path, build_id);
+    const auto symbols_path = symbol_helper.FindSymbolsWithSymbolsPathFile(
+        module_path, build_id, orbit_symbols::ReadSymbolsFile(orbit_paths::GetSymbolsFilePath()));
     if (symbols_path.has_value()) {
       LOG("Found symbols for module \"%s\" in user provided symbol folder. Symbols filename: "
           "\"%s\"",
