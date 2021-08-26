@@ -160,6 +160,7 @@ target_link_libraries(
          OrbitPaths
          PresetFile
          StringManager
+         SymbolPaths
          Qt5::Gui
          Symbols
          CONAN_PKG::freetype-gl
