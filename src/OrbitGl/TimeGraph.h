@@ -212,7 +212,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   uint64_t capture_max_timestamp_ = 0;
   double time_window_us_ = 0;
   float world_start_x_ = 0;
-  float world_width_ = 0;
 
   TimeGraphLayout layout_;
 
