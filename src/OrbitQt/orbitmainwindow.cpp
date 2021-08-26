@@ -4,6 +4,7 @@
 
 #include "orbitmainwindow.h"
 
+#include <absl/container/flat_hash_set.h>
 #include <absl/flags/declare.h>
 
 #include <QAbstractButton>
@@ -61,6 +62,7 @@
 #include <system_error>
 #include <utility>
 #include <variant>
+#include <vector>
 
 #include "AnnotatingSourceCodeDialog.h"
 #include "App.h"
@@ -102,6 +104,8 @@
 #include "SourcePathsMapping/MappingManager.h"
 #include "SourcePathsMappingUI/AskUserForFile.h"
 #include "StatusListenerImpl.h"
+#include "SymbolPaths/QSettingsWrapper.h"
+#include "Symbols/SymbolHelper.h"
 #include "SyntaxHighlighter/Cpp.h"
 #include "SyntaxHighlighter/X86Assembly.h"
 #include "TutorialContent.h"
@@ -190,6 +194,56 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
 
   metrics_uploader_->SendLogEvent(
       orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_OPEN);
+
+  // SymbolPaths.txt deprecation code
+  // If file does not exist, do nothing. (It means the user never used an older Orbit version or
+  // manually deleted the file)
+  if (!fs::is_regular_file(orbit_paths::GetSymbolsFilePath())) return;
+
+  // If it exists, check if it starts with deprecation note.
+  ErrorMessageOr<bool> symbol_paths_file_has_depr_note =
+      orbit_symbols::FileStartsWithDeprecationNote(orbit_paths::GetSymbolsFilePath());
+  if (symbol_paths_file_has_depr_note.has_error()) {
+    ERROR("Unable to check SymbolPaths.txt file for depreciation note, error: %s",
+          symbol_paths_file_has_depr_note.error().message());
+    return;
+  }
+
+  // If file already has the deprecation note, that means it was already added to QSettings. Dont do
+  // anything else.
+  if (symbol_paths_file_has_depr_note.value()) return;
+
+  // Otherwise, read SymbolPaths.txt file and merge contents with QSettings paths
+
+  // Note: There is no std::hash implementation for std::filesystem::path. It is also not trivial to
+  // compare if 2 paths are pointing to the same target (compare: /foo/bar and /foo/bar/../bar).
+  // This merging here via a hash set of the std::string representation only accomplishes that
+  // paths with the same string representation are only added once.
+  absl::flat_hash_set<std::string> already_seen_paths;
+  std::vector<fs::path> dirs_to_save;
+
+  for (const auto& dir : orbit_symbols::ReadSymbolsFile(orbit_paths::GetSymbolsFilePath())) {
+    if (!already_seen_paths.contains(dir.string())) {
+      already_seen_paths.insert(dir.string());
+      dirs_to_save.push_back(dir);
+    }
+  }
+
+  for (const auto& dir : orbit_symbol_paths::LoadPaths()) {
+    if (!already_seen_paths.contains(dir.string())) {
+      already_seen_paths.insert(dir.string());
+      dirs_to_save.push_back(dir);
+    }
+  }
+
+  orbit_symbol_paths::SavePaths(dirs_to_save);
+
+  ErrorMessageOr<void> add_depr_note_result =
+      orbit_symbols::AddDeprecationNoteToFile(orbit_paths::GetSymbolsFilePath());
+  if (add_depr_note_result.has_error()) {
+    ERROR("Unable to add deprecation note to SymbolPaths.txt, error: %s",
+          add_depr_note_result.error().message());
+  }
 }
 
 void OrbitMainWindow::SetupMainWindow() {
