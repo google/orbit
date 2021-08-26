@@ -115,21 +115,30 @@ TEST(ReadSymbolsFile, OnePathTrailingWhitespace) {
 }
 
 TEST(SymbolHelper, FindSymbolsWithSymbolsPathFile) {
-  SymbolHelper symbol_helper({testdata_directory}, "", {});
+  SymbolHelper symbol_helper("", {});
   {
     const fs::path file_path = testdata_directory / "no_symbols_elf";
     const fs::path symbols_path = testdata_directory / "no_symbols_elf.debug";
 
     const auto symbols_path_result = symbol_helper.FindSymbolsWithSymbolsPathFile(
-        file_path, "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b");
+        file_path, "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b", {testdata_directory});
     ASSERT_FALSE(symbols_path_result.has_error()) << symbols_path_result.error().message();
     EXPECT_EQ(symbols_path_result.value(), symbols_path);
   }
 
   {
     const fs::path non_existing_path = "file.not.exist";
-    const auto symbols_path_result =
-        symbol_helper.FindSymbolsWithSymbolsPathFile(non_existing_path, "irrelevant build id");
+    const auto symbols_path_result = symbol_helper.FindSymbolsWithSymbolsPathFile(
+        non_existing_path, "irrelevant build id", {testdata_directory});
+    ASSERT_TRUE(symbols_path_result.has_error());
+    EXPECT_THAT(absl::AsciiStrToLower(symbols_path_result.error().message()),
+                testing::HasSubstr("could not find"));
+  }
+
+  {
+    const fs::path file_path = testdata_directory / "no_symbols_elf";
+    const auto symbols_path_result = symbol_helper.FindSymbolsWithSymbolsPathFile(
+        file_path, "wrong build id", {testdata_directory});
     ASSERT_TRUE(symbols_path_result.has_error());
     EXPECT_THAT(absl::AsciiStrToLower(symbols_path_result.error().message()),
                 testing::HasSubstr("could not find"));
@@ -138,15 +147,7 @@ TEST(SymbolHelper, FindSymbolsWithSymbolsPathFile) {
   {
     const fs::path file_path = testdata_directory / "no_symbols_elf";
     const auto symbols_path_result =
-        symbol_helper.FindSymbolsWithSymbolsPathFile(file_path, "wrong build id");
-    ASSERT_TRUE(symbols_path_result.has_error());
-    EXPECT_THAT(absl::AsciiStrToLower(symbols_path_result.error().message()),
-                testing::HasSubstr("could not find"));
-  }
-
-  {
-    const fs::path file_path = testdata_directory / "no_symbols_elf";
-    const auto symbols_path_result = symbol_helper.FindSymbolsWithSymbolsPathFile(file_path, "");
+        symbol_helper.FindSymbolsWithSymbolsPathFile(file_path, "", {testdata_directory});
     ASSERT_TRUE(symbols_path_result.has_error());
     EXPECT_THAT(absl::AsciiStrToLower(symbols_path_result.error().message()),
                 testing::HasSubstr("could not find"));
@@ -156,7 +157,7 @@ TEST(SymbolHelper, FindSymbolsWithSymbolsPathFile) {
 }
 
 TEST(SymbolHelper, FindSymbolsInCache) {
-  SymbolHelper symbol_helper({}, testdata_directory, {});
+  SymbolHelper symbol_helper(testdata_directory, {});
 
   // This is more of a smoke test (looking for the same file)
   {
@@ -222,7 +223,7 @@ TEST(SymbolHelper, LoadFromFile) {
 }
 
 TEST(SymbolHelper, GenerateCachedFileName) {
-  SymbolHelper symbol_helper{{}, orbit_paths::CreateOrGetCacheDir(), {}};
+  SymbolHelper symbol_helper{orbit_paths::CreateOrGetCacheDir(), {}};
   const std::filesystem::path file_path = "/var/data/filename.elf";
   const std::filesystem::path cache_file_path =
       orbit_paths::CreateOrGetCacheDir() / "_var_data_filename.elf";
@@ -267,11 +268,11 @@ TEST(SymbolHelper, VerifySymbolsFile) {
 }
 
 TEST(SymbolHelper, FindDebugInfoFileLocally) {
-  SymbolHelper symbol_helper({testdata_directory}, "", {});
+  SymbolHelper symbol_helper("", {});
   constexpr uint32_t kExpectedChecksum = 0x2bf887bf;
 
-  const auto symbols_path_result =
-      symbol_helper.FindDebugInfoFileLocally("hello_world_elf.debug", kExpectedChecksum);
+  const auto symbols_path_result = symbol_helper.FindDebugInfoFileLocally(
+      "hello_world_elf.debug", kExpectedChecksum, {testdata_directory});
   ASSERT_FALSE(symbols_path_result.has_error()) << symbols_path_result.error().message();
   EXPECT_EQ(symbols_path_result.value().filename(), "hello_world_elf.debug");
   EXPECT_EQ(symbols_path_result.value().parent_path(), testdata_directory);
@@ -301,14 +302,14 @@ TEST(SymbolHelper, FindDebugInfoFileInDebugStore) {
 }
 
 TEST(SymbolHelper, FindSymbolsInStructedDebugStore) {
-  SymbolHelper symbol_helper({}, "", {testdata_directory / "debugstore"});
+  SymbolHelper symbol_helper("", {testdata_directory / "debugstore"});
 
   const fs::path file_path = testdata_directory / "no_symbols_elf";
   const fs::path symbols_path = testdata_directory / "debugstore" / ".build-id" / "b5" /
                                 "413574bbacec6eacb3b89b1012d0e2cd92ec6b.debug";
 
   const auto symbols_path_result = symbol_helper.FindSymbolsWithSymbolsPathFile(
-      file_path, "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b");
+      file_path, "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b", {testdata_directory});
 
   ASSERT_FALSE(symbols_path_result.has_error()) << symbols_path_result.error().message();
   EXPECT_EQ(symbols_path_result.value(), symbols_path);
