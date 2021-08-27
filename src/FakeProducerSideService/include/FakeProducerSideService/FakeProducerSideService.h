@@ -2,14 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CAPTURE_EVENT_PRODUCER_FAKE_PRODUCER_SIDE_SERVICE_H_
-#define CAPTURE_EVENT_PRODUCER_FAKE_PRODUCER_SIDE_SERVICE_H_
+#ifndef FAKE_PRODUCER_SIDE_SERVICE_FAKE_PRODUCER_SIDE_SERVICE_H_
+#define FAKE_PRODUCER_SIDE_SERVICE_FAKE_PRODUCER_SIDE_SERVICE_H_
 
+#include <gmock/gmock.h>
 #include <grpcpp/grpcpp.h>
+#include <gtest/gtest.h>
 
 #include "producer_side_services.grpc.pb.h"
 
-namespace orbit_capture_event_producer {
+namespace orbit_fake_producer_side_service {
 
 // This class fakes a ProducerSideService for use in tests.
 class FakeProducerSideService : public orbit_grpc_protos::ProducerSideService::Service {
@@ -100,6 +102,6 @@ class FakeProducerSideService : public orbit_grpc_protos::ProducerSideService::S
   std::atomic<bool> rpc_allowed_ = true;
 };
 
-}  // namespace orbit_capture_event_producer
+}  // namespace orbit_fake_producer_side_service
 
-#endif  // CAPTURE_EVENT_PRODUCER_FAKE_PRODUCER_SIDE_SERVICE_H_
+#endif  // FAKE_PRODUCER_SIDE_SERVICE_FAKE_PRODUCER_SIDE_SERVICE_H_
