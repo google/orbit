@@ -5,6 +5,7 @@
 #include "TestProcess.h"
 
 #include <absl/time/clock.h>
+#include <sys/wait.h>
 
 #include <chrono>
 #include <string>
