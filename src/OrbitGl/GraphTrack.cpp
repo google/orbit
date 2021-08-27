@@ -230,12 +230,12 @@ void GraphTrack<Dimension>::DrawLegend(Batcher& batcher, TextRenderer& text_rend
 
     text_renderer.AddText(series_names[i].c_str(), x0, y0 + legend_symbol_height / 2.f, text_z,
                           formatting);
-    x0 += legend_text_width + kSpaceBetweenLegendEntries;
-
     auto user_data = std::make_unique<PickingUserData>(
         nullptr, [this, i](PickingId /*id*/) { return GetLegendTooltips(i); });
     batcher.AddShadedBox(Vec2(x0, y0), legend_text_box_size, text_z, kFullyTransparent,
                          std::move(user_data));
+
+    x0 += legend_text_width + kSpaceBetweenLegendEntries;
   }
 }
 
