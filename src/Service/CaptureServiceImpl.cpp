@@ -88,7 +88,7 @@ class SenderThreadCaptureEventBuffer final : public CaptureEventBuffer {
 
       events_being_buffered_mutex_.LockWhenWithTimeout(
           absl::Condition(
-              +[](SenderThreadCaptureEventBuffer* self) EXCLUSIVE_LOCKS_REQUIRED(
+              +[](SenderThreadCaptureEventBuffer* self) ABSL_EXCLUSIVE_LOCKS_REQUIRED(
                    self->events_being_buffered_mutex_) {
                 return self->events_being_buffered_.size() >= kSendEventCountInterval ||
                        self->stop_requested_;

@@ -60,7 +60,7 @@ TEST(FutureWatcher, WaitForWithAbort) {
             FutureWatcher::Reason::kAbortRequested);
 }
 
-TEST(FutureWatcher, WaitForWithThreadPool) NO_THREAD_SAFETY_ANALYSIS {
+TEST(FutureWatcher, WaitForWithThreadPool) ABSL_NO_THREAD_SAFETY_ANALYSIS {
   // One background job which is supposed to succeed. (No timeout, no abort)
 
   constexpr size_t kThreadPoolMinSize = 1;
@@ -79,7 +79,7 @@ TEST(FutureWatcher, WaitForWithThreadPool) NO_THREAD_SAFETY_ANALYSIS {
 
   // The lambda will be executed by the event loop, running inside of watcher.WaitFor.
   QTimer::singleShot(std::chrono::milliseconds{5},
-                     [&]() NO_THREAD_SAFETY_ANALYSIS { mutex.Unlock(); });
+                     [&]() ABSL_NO_THREAD_SAFETY_ANALYSIS { mutex.Unlock(); });
 
   FutureWatcher watcher{};
   const auto reason = watcher.WaitFor(std::move(future), std::nullopt);
@@ -115,7 +115,7 @@ TEST(FutureWatcher, WaitForWithThreadPoolAndTimeout) {
   thread_pool->ShutdownAndWait();
 }
 
-TEST(FutureWatcher, WaitForAllWithThreadPool) NO_THREAD_SAFETY_ANALYSIS {
+TEST(FutureWatcher, WaitForAllWithThreadPool) ABSL_NO_THREAD_SAFETY_ANALYSIS {
   // Multiple background jobs which are all supposed to succeed.
 
   constexpr size_t kThreadPoolMinSize = 1;
@@ -138,7 +138,7 @@ TEST(FutureWatcher, WaitForAllWithThreadPool) NO_THREAD_SAFETY_ANALYSIS {
 
   // The lambda will be executed by the event loop, running inside of watcher.WaitFor.
   QTimer::singleShot(std::chrono::milliseconds{5},
-                     [&]() NO_THREAD_SAFETY_ANALYSIS { mutex.Unlock(); });
+                     [&]() ABSL_NO_THREAD_SAFETY_ANALYSIS { mutex.Unlock(); });
 
   FutureWatcher watcher{};
   const auto reason = watcher.WaitForAll(absl::MakeSpan(futures), std::nullopt);
@@ -148,7 +148,7 @@ TEST(FutureWatcher, WaitForAllWithThreadPool) NO_THREAD_SAFETY_ANALYSIS {
   thread_pool->ShutdownAndWait();
 }
 
-TEST(FutureWatcher, WaitForAllWithThreadPoolAndTimeout) NO_THREAD_SAFETY_ANALYSIS {
+TEST(FutureWatcher, WaitForAllWithThreadPoolAndTimeout) ABSL_NO_THREAD_SAFETY_ANALYSIS {
   // Multiple background jobs which are all supposed to time out.
 
   constexpr size_t kThreadPoolMinSize = 1;
@@ -174,7 +174,7 @@ TEST(FutureWatcher, WaitForAllWithThreadPoolAndTimeout) NO_THREAD_SAFETY_ANALYSI
 
   // The lambda will be executed by the event loop, running inside of watcher.WaitFor.
   QTimer::singleShot(std::chrono::milliseconds{5},
-                     [&]() NO_THREAD_SAFETY_ANALYSIS { mutex.Unlock(); });
+                     [&]() ABSL_NO_THREAD_SAFETY_ANALYSIS { mutex.Unlock(); });
 
   // The timer starts execution of background jobs after 5ms. Every background job takes 1ms and
   // they can't run in parallel due to the mutex. That means in total 15ms of execution time is

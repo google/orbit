@@ -113,7 +113,7 @@ class MultivariateTimeSeries {
 
  private:
   [[nodiscard]] TimeSeriesEntryIter GetPreviousOrFirstEntryIterator(uint64_t time) const
-      EXCLUSIVE_LOCKS_REQUIRED(mutex_) {
+      ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_) {
     CHECK(!time_to_series_values_.empty());
 
     auto iterator_lower = time_to_series_values_.upper_bound(time);
@@ -122,7 +122,7 @@ class MultivariateTimeSeries {
   }
 
   [[nodiscard]] TimeSeriesEntryIter GetNextOrLastEntryIterator(uint64_t time) const
-      EXCLUSIVE_LOCKS_REQUIRED(mutex_) {
+      ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_) {
     CHECK(!time_to_series_values_.empty());
 
     auto iterator_higher = time_to_series_values_.lower_bound(time);
@@ -130,7 +130,7 @@ class MultivariateTimeSeries {
     return iterator_higher;
   }
 
-  void UpdateMinAndMax(double value) EXCLUSIVE_LOCKS_REQUIRED(mutex_) {
+  void UpdateMinAndMax(double value) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_) {
     max_ = std::max(max_, value);
     min_ = std::min(min_, value);
   }
