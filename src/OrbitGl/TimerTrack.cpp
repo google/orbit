@@ -256,7 +256,7 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
   draw_data.batcher = batcher;
   draw_data.viewport = viewport_;
 
-  draw_data.track_start_x = viewport_->GetWorldTopLeft()[0];
+  draw_data.track_start_x = GetPos()[0];
   draw_data.track_width = GetWidth();
   draw_data.inv_time_window = 1.0 / time_graph_->GetTimeWindowUs();
   draw_data.is_collapsed = IsCollapsed();
@@ -425,7 +425,7 @@ internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick,
   draw_data.z_offset = z_offset;
   draw_data.batcher = batcher;
   draw_data.viewport = viewport;
-  draw_data.track_start_x = viewport->GetWorldTopLeft()[0];
+  draw_data.track_start_x = time_graph->GetPos()[0];
   draw_data.track_width = track_width;
   draw_data.inv_time_window = 1.0 / time_graph->GetTimeWindowUs();
   draw_data.is_collapsed = is_collapsed;
