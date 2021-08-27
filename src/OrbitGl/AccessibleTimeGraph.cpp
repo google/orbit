@@ -23,7 +23,7 @@ AccessibilityRect TimeGraphAccessibility::AccessibleRect() const {
   const Viewport* viewport = time_graph_->GetViewport();
 
   return AccessibilityRect(0, 0, viewport->WorldToScreenWidth(time_graph_->GetWidth()),
-                           viewport->GetScreenHeight());
+                           viewport->WorldToScreenHeight(time_graph_->GetHeight()));
 }
 
 AccessibilityState TimeGraphAccessibility::AccessibleState() const {
