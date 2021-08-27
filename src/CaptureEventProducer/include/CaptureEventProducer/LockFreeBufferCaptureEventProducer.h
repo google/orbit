@@ -164,7 +164,7 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
         }
       }
 
-      static constexpr std::chrono::duration kSleepOnEmptyQueue = std::chrono::microseconds{1000};
+      constexpr std::chrono::microseconds kSleepOnEmptyQueue{1000};
       // Wait for lock_free_queue_ to fill up with new CaptureEvents.
       std::this_thread::sleep_for(kSleepOnEmptyQueue);
     }

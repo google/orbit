@@ -151,7 +151,7 @@ class ProducerSideServiceImplTest : public ::testing::Test {
   std::optional<FakeProducer> fake_producer_;
 };
 
-constexpr std::chrono::duration kWaitMessagesSentDuration = std::chrono::milliseconds(25);
+constexpr std::chrono::milliseconds kWaitMessagesSentDuration{25};
 
 void ExpectDurationBetweenMs(const std::function<void(void)>& action, uint64_t min_ms,
                              uint64_t max_ms) {

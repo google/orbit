@@ -80,7 +80,7 @@ const std::string VulkanLayerProducerImplTest::kInternedString3 = "c";
 const uint64_t VulkanLayerProducerImplTest::kExpectedInternedString3Key =
     std::hash<std::string>{}(kInternedString3);
 
-constexpr std::chrono::duration kWaitMessagesSentDuration = std::chrono::milliseconds(25);
+constexpr std::chrono::milliseconds kWaitMessagesSentDuration{25};
 
 const orbit_grpc_protos::CaptureOptions kFakeCaptureOptions = [] {
   orbit_grpc_protos::CaptureOptions capture_options;

@@ -73,7 +73,7 @@ class LockFreeBufferCaptureEventProducerTest : public ::testing::Test {
   std::optional<LockFreeBufferCaptureEventProducerImpl> buffer_producer_;
 };
 
-constexpr std::chrono::duration kWaitMessagesSentDuration = std::chrono::milliseconds(25);
+constexpr std::chrono::milliseconds kWaitMessagesSentDuration{25};
 
 }  // namespace
 
