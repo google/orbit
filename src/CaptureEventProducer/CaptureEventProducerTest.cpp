@@ -14,7 +14,7 @@
 #include <thread>
 
 #include "CaptureEventProducer/CaptureEventProducer.h"
-#include "CaptureEventProducer/FakeProducerSideService.h"
+#include "FakeProducerSideService/FakeProducerSideService.h"
 #include "producer_side_services.pb.h"
 
 namespace orbit_capture_event_producer {
@@ -78,7 +78,7 @@ class CaptureEventProducerTest : public ::testing::Test {
     fake_server_.reset();
   }
 
-  std::optional<FakeProducerSideService> fake_service_;
+  std::optional<orbit_fake_producer_side_service::FakeProducerSideService> fake_service_;
   std::unique_ptr<grpc::Server> fake_server_;
   std::optional<CaptureEventProducerImpl> producer_;
 };

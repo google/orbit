@@ -55,6 +55,7 @@ target_sources(OrbitVulkanLayerTests PRIVATE
 
 target_link_libraries(
         OrbitVulkanLayerTests PRIVATE
+        FakeProducerSideService
         OrbitVulkanLayerInterface
         GTest::Main)
 

@@ -7,7 +7,6 @@ project(CaptureEventProducer)
 add_library(CaptureEventProducer STATIC)
 target_sources(CaptureEventProducer PUBLIC
         include/CaptureEventProducer/CaptureEventProducer.h
-        include/CaptureEventProducer/FakeProducerSideService.h
         include/CaptureEventProducer/LockFreeBufferCaptureEventProducer.h)
 
 target_sources(CaptureEventProducer PRIVATE
@@ -32,6 +31,7 @@ target_sources(CaptureEventProducerTests PRIVATE
 
 target_link_libraries(CaptureEventProducerTests PRIVATE
         CaptureEventProducer
+        FakeProducerSideService
         GTest::Main)
 
 register_test(CaptureEventProducerTests)
