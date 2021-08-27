@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 #include <absl/synchronization/mutex.h>
-#include <gtest/gtest.h>
 #include <unistd.h>
 
 #include <filesystem>
