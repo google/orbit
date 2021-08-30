@@ -107,8 +107,7 @@ bool CaptureEventProducer::NotifyAllEventsSent() {
   return write_succeeded;
 }
 
-// TODO(http://b/197310492): Fix the thread safety warning - more details in the bug.
-void CaptureEventProducer::ConnectAndReceiveCommandsThread() NO_THREAD_SAFETY_ANALYSIS {
+void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
   CHECK(producer_side_service_stub_ != nullptr);
 
   while (true) {
@@ -134,13 +133,10 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() NO_THREAD_SAFETY_AN
       // This is the reason why we protect shutdown_requested_ with an absl::Mutex instead
       // of using an std::atomic<bool>: so that we can use (Reader)LockWhenWithTimeout
       // to wait for reconnection_delay_ms_ or until shutdown_requested_ has become true.
-      if (shutdown_requested_mutex_.ReaderLockWhenWithTimeout(
-              absl::Condition(
-                  +[](bool* shutdown_requested) { return *shutdown_requested; },
-                  &shutdown_requested_),
-              absl::Milliseconds(static_cast<int64_t>(reconnection_delay_ms_)))) {
-        shutdown_requested_mutex_.ReaderUnlock();
-      }
+      shutdown_requested_mutex_.ReaderLockWhenWithTimeout(
+          absl::Condition(&shutdown_requested_),
+          absl::Milliseconds(static_cast<int64_t>(reconnection_delay_ms_)));
+      shutdown_requested_mutex_.ReaderUnlock();
       continue;
     }
     LOG("Called ReceiveCommandsAndSendEvents on ProducerSideService");
@@ -173,9 +169,7 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() NO_THREAD_SAFETY_AN
 
         // Wait to avoid continuously trying to reconnect when OrbitService is not reachable.
         shutdown_requested_mutex_.ReaderLockWhenWithTimeout(
-            absl::Condition(
-                +[](bool* shutdown_requested) { return *shutdown_requested; },
-                &shutdown_requested_),
+            absl::Condition(&shutdown_requested_),
             absl::Milliseconds(static_cast<int64_t>(reconnection_delay_ms_)));
         shutdown_requested_mutex_.ReaderUnlock();
         break;
