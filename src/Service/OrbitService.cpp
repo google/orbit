@@ -105,10 +105,10 @@ static bool IsSshConnectionAlive(
              .count() < timeout_in_seconds;
 }
 
-static std::unique_ptr<OrbitGrpcServer> CreateGrpcServer(uint16_t grpc_port) {
+static std::unique_ptr<OrbitGrpcServer> CreateGrpcServer(uint16_t grpc_port, bool dev_mode) {
   std::string grpc_address = absl::StrFormat("127.0.0.1:%d", grpc_port);
   LOG("Starting gRPC server at %s", grpc_address);
-  std::unique_ptr<OrbitGrpcServer> grpc_server = OrbitGrpcServer::Create(grpc_address);
+  std::unique_ptr<OrbitGrpcServer> grpc_server = OrbitGrpcServer::Create(grpc_address, dev_mode);
   if (grpc_server == nullptr) {
     ERROR("Unable to start gRPC server");
     return nullptr;
@@ -150,7 +150,7 @@ void OrbitService::Run(std::atomic<bool>* exit_requested) {
   LOG("**********************************");
 #endif
 
-  std::unique_ptr<OrbitGrpcServer> grpc_server = CreateGrpcServer(grpc_port_);
+  std::unique_ptr<OrbitGrpcServer> grpc_server = CreateGrpcServer(grpc_port_, dev_mode_);
   if (grpc_server == nullptr) {
     return;
   }

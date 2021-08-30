@@ -20,8 +20,6 @@
 #include "ProcessServiceImpl.h"
 #include "TracepointServiceImpl.h"
 
-ABSL_DECLARE_FLAG(bool, devmode);
-
 namespace orbit_service {
 
 namespace {
@@ -32,7 +30,7 @@ class OrbitGrpcServerImpl final : public OrbitGrpcServer {
   OrbitGrpcServerImpl(const OrbitGrpcServerImpl&) = delete;
   OrbitGrpcServerImpl& operator=(OrbitGrpcServerImpl&) = delete;
 
-  [[nodiscard]] bool Init(std::string_view server_address);
+  [[nodiscard]] bool Init(std::string_view server_address, bool dev_mode);
 
   void Shutdown() override;
   void Wait() override;
@@ -49,7 +47,7 @@ class OrbitGrpcServerImpl final : public OrbitGrpcServer {
   std::unique_ptr<grpc::Server> server_;
 };
 
-bool OrbitGrpcServerImpl::Init(std::string_view server_address) {
+bool OrbitGrpcServerImpl::Init(std::string_view server_address, bool dev_mode) {
   grpc::EnableDefaultHealthCheckService(true);
   grpc::reflection::InitProtoReflectionServerBuilderPlugin();
 
@@ -60,7 +58,7 @@ bool OrbitGrpcServerImpl::Init(std::string_view server_address) {
   builder.RegisterService(&process_service_);
   builder.RegisterService(&tracepoint_service_);
   builder.RegisterService(&frame_pointer_validator_service_);
-  if (absl::GetFlag(FLAGS_devmode)) {
+  if (dev_mode) {
     builder.RegisterService(&crash_service_);
   }
 
@@ -83,10 +81,11 @@ void OrbitGrpcServerImpl::RemoveCaptureStartStopListener(CaptureStartStopListene
 
 }  // namespace
 
-std::unique_ptr<OrbitGrpcServer> OrbitGrpcServer::Create(std::string_view server_address) {
+std::unique_ptr<OrbitGrpcServer> OrbitGrpcServer::Create(std::string_view server_address,
+                                                         bool dev_mode) {
   std::unique_ptr<OrbitGrpcServerImpl> server_impl = std::make_unique<OrbitGrpcServerImpl>();
 
-  if (!server_impl->Init(server_address)) {
+  if (!server_impl->Init(server_address, dev_mode)) {
     return nullptr;
   }
 
