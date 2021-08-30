@@ -162,7 +162,7 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
         LOG("Terminating call to ReceiveCommandsAndSendEvents");
         {
           absl::WriterMutexLock lock{&context_and_stream_mutex_};
-          stream_->Finish();
+          stream_->Finish().IgnoreError();
           context_ = nullptr;
           stream_ = nullptr;
         }
