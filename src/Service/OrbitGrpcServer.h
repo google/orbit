@@ -33,7 +33,8 @@ class OrbitGrpcServer {
 
   // Creates a server listening specified address and registers all
   // necessary services.
-  [[nodiscard]] static std::unique_ptr<OrbitGrpcServer> Create(std::string_view server_address);
+  [[nodiscard]] static std::unique_ptr<OrbitGrpcServer> Create(std::string_view server_address,
+                                                               bool dev_mode);
 };
 
 }  // namespace orbit_service
