@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>478</width>
-    <height>381</height>
+    <height>469</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,37 +23,6 @@
    <property name="verticalSpacing">
     <number>9</number>
    </property>
-   <item row="2" column="0">
-    <widget class="Line" name="line">
-     <property name="styleSheet">
-      <string notr="true">background: #353535</string>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="0">
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
-     <item>
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>These settings will only apply starting from your next capture.</string>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDialogButtonBox" name="buttonBox">
-       <property name="standardButtons">
-        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="verticalLayout">
      <property name="spacing">
@@ -65,6 +34,77 @@
         <string>General</string>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="QWidget" name="samplingWidget" native="true">
+          <layout class="QVBoxLayout" name="samplingVerticalLayout">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QCheckBox" name="samplingCheckBox">
+             <property name="text">
+              <string>Enable callstack sampling</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="samplingPeriodMsHorizontalLayout">
+             <item>
+              <widget class="QLabel" name="samplingPeriodMsLabel">
+               <property name="text">
+                <string>Callstack sampling period (ms):</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QDoubleSpinBox" name="samplingPeriodMsDoubleSpinBox">
+               <property name="decimals">
+                <number>1</number>
+               </property>
+               <property name="minimum">
+                <double>0.100000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>1000.000000000000000</double>
+               </property>
+               <property name="stepType">
+                <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
+               </property>
+               <property name="value">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="samplingPeriodMsHorizontalSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
         <item>
          <widget class="QCheckBox" name="threadStateCheckBox">
           <property name="text">
@@ -88,14 +128,14 @@
         </item>
         <item>
          <widget class="QCheckBox" name="userspaceCheckBox">
+          <property name="visible">
+           <bool>true</bool>
+          </property>
           <property name="text">
            <string>Enable user space instrumentation</string>
           </property>
-          <property name="visible">
-           <bool>false</bool>
-          </property>
          </widget>
-        </item>		
+        </item>
        </layout>
       </widget>
      </item>
@@ -153,7 +193,7 @@
           <item>
            <widget class="QLabel" name="memoryWarningThresholdKbLabel">
             <property name="text">
-             <string>Warning threshold (kb):</string>
+             <string>Warning threshold (kB):</string>
             </property>
            </widget>
           </item>
@@ -188,7 +228,7 @@
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout">
+         <layout class="QHBoxLayout" name="localMarkerDepthHorizontalLayout">
           <item>
            <widget class="QCheckBox" name="localMarkerDepthCheckBox">
             <property name="text">
@@ -227,11 +267,42 @@ Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</s
      </property>
      <property name="sizeHint" stdset="0">
       <size>
-       <width>20</width>
-       <height>40</height>
+       <width>0</width>
+       <height>0</height>
       </size>
      </property>
     </spacer>
+   </item>
+   <item row="2" column="0">
+    <widget class="Line" name="line">
+     <property name="styleSheet">
+      <string notr="true">background: #353535</string>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>These settings will only apply starting from your next capture.</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>
@@ -330,6 +401,22 @@ Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</s
     <hint type="destinationlabel">
      <x>239</x>
      <y>203</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>samplingCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>samplingPeriodMsDoubleSpinBox</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>238</x>
+     <y>51</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>202</x>
+     <y>80</y>
     </hint>
    </hints>
   </connection>
