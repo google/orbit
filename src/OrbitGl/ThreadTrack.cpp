@@ -468,8 +468,8 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
   UpdatePrimitivesOfSubtracks(batcher, min_tick, max_tick, picking_mode, z_offset);
 
   const internal::DrawData draw_data =
-      GetDrawData(min_tick, max_tick, GetWidth(), z_offset, batcher, time_graph_, viewport_,
-                  collapse_toggle_->IsCollapsed(), app_->selected_timer(),
+      GetDrawData(min_tick, max_tick, GetPos()[0], GetWidth(), z_offset, batcher, time_graph_,
+                  viewport_, collapse_toggle_->IsCollapsed(), app_->selected_timer(),
                   app_->GetFunctionIdToHighlight(), app_->GetGroupIdToHighlight());
 
   absl::MutexLock lock(&scope_tree_mutex_);

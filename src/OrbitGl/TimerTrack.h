@@ -134,8 +134,8 @@ class TimerTrack : public Track {
                          Vec2 box_pos, Vec2 box_size);
 
   [[nodiscard]] static internal::DrawData GetDrawData(
-      uint64_t min_tick, uint64_t max_tick, float track_width, float z_offset, Batcher* batcher,
-      TimeGraph* time_graph, orbit_gl::Viewport* viewport, bool is_collapsed,
+      uint64_t min_tick, uint64_t max_tick, float track_pos_x, float track_width, float z_offset,
+      Batcher* batcher, TimeGraph* time_graph, orbit_gl::Viewport* viewport, bool is_collapsed,
       const orbit_client_protos::TimerInfo* selected_timer, uint64_t highlighted_function_id,
       uint64_t highlighted_group_id);
 
