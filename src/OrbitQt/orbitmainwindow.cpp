@@ -179,7 +179,6 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
 
   app_->PostInit(is_connected_);
 
-  app_->SetSamplesPerSecond(absl::GetFlag(FLAGS_sampling_rate));
   uint16_t stack_dump_size = absl::GetFlag(FLAGS_stack_dump_size);
   CHECK(stack_dump_size <= 65000 && stack_dump_size > 0);
   app_->SetStackDumpSize(stack_dump_size);
@@ -1039,6 +1038,8 @@ void OrbitMainWindow::on_actionQuit_triggered() {
 
 void OrbitMainWindow::on_actionToggle_Capture_triggered() { app_->ToggleCapture(); }
 
+const QString OrbitMainWindow::kEnableCallstackSamplingSettingKey{"EnableCallstackSampling"};
+const QString OrbitMainWindow::kCallstackSamplingPeriodMsSettingKey{"CallstackSamplingPeriodMs"};
 const QString OrbitMainWindow::kCollectThreadStatesSettingKey{"CollectThreadStates"};
 const QString OrbitMainWindow::kCollectMemoryInfoSettingKey{"CollectMemoryInfo"};
 const QString OrbitMainWindow::kEnableApiSettingKey{"EnableApi"};
@@ -1052,11 +1053,30 @@ const QString OrbitMainWindow::kLimitLocalMarkerDepthPerCommandBufferSettingsKey
 const QString OrbitMainWindow::kMaxLocalMarkerDepthPerCommandBufferSettingsKey{
     "MaxLocalMarkerDepthPerCommandBuffer"};
 
+constexpr double kCallstackSamplingPeriodMsDefaultValue = 1.0;
 constexpr uint64_t kMemorySamplingPeriodMsDefaultValue = 10;
 constexpr uint64_t kMemoryWarningThresholdKbDefaultValue = 1024 * 1024 * 8;  // 8Gb
 
 void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
   QSettings settings;
+  if (settings.value(kEnableCallstackSamplingSettingKey, true).toBool()) {
+    bool conversion_succeeded = false;
+    double sampling_period_ms =
+        settings.value(kCallstackSamplingPeriodMsSettingKey, kCallstackSamplingPeriodMsDefaultValue)
+            .toDouble(&conversion_succeeded);
+    if (!conversion_succeeded || sampling_period_ms <= 0.0) {
+      ERROR("Invalid value for setting \"%s\", resetting to %.1f",
+            kCallstackSamplingPeriodMsSettingKey.toStdString(),
+            kCallstackSamplingPeriodMsDefaultValue);
+      settings.setValue(kCallstackSamplingPeriodMsSettingKey,
+                        kCallstackSamplingPeriodMsDefaultValue);
+      sampling_period_ms = kCallstackSamplingPeriodMsDefaultValue;
+    }
+    app_->SetSamplesPerSecond(1000.0 / sampling_period_ms);
+  } else {
+    app_->SetSamplesPerSecond(0.0);
+  }
+
   app_->SetCollectThreadStates(settings.value(kCollectThreadStatesSettingKey, false).toBool());
   app_->SetEnableApi(settings.value(kEnableApiSettingKey, true).toBool());
   app_->SetEnableIntrospection(settings.value(kEnableIntrospectionSettingKey, false).toBool());
@@ -1092,6 +1112,10 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
   QSettings settings;
 
   orbit_qt::CaptureOptionsDialog dialog{this};
+  dialog.SetEnableSampling(settings.value(kEnableCallstackSamplingSettingKey, true).toBool());
+  dialog.SetSamplingPeriodMs(
+      settings.value(kCallstackSamplingPeriodMsSettingKey, kCallstackSamplingPeriodMsDefaultValue)
+          .toDouble());
   dialog.SetCollectThreadStates(settings.value(kCollectThreadStatesSettingKey, false).toBool());
   dialog.SetEnableApi(settings.value(kEnableApiSettingKey, true).toBool());
   dialog.SetEnableIntrospection(settings.value(kEnableIntrospectionSettingKey, true).toBool());
@@ -1118,6 +1142,8 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
     return;
   }
 
+  settings.setValue(kEnableCallstackSamplingSettingKey, dialog.GetEnableSampling());
+  settings.setValue(kCallstackSamplingPeriodMsSettingKey, dialog.GetSamplingPeriodMs());
   settings.setValue(kCollectThreadStatesSettingKey, dialog.GetCollectThreadStates());
   settings.setValue(kEnableApiSettingKey, dialog.GetEnableApi());
   settings.setValue(kEnableIntrospectionSettingKey, dialog.GetEnableIntrospection());

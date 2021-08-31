@@ -24,6 +24,10 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   QObject::connect(ui_->buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
   QObject::connect(ui_->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
+  if (!absl::GetFlag(FLAGS_devmode)) {
+    ui_->samplingWidget->hide();
+  }
+
   ui_->localMarkerDepthLineEdit->setValidator(&uint64_validator_);
   ui_->memorySamplingPeriodMsLineEdit->setValidator(new UInt64Validator(1));
   ui_->memoryWarningThresholdKbLineEdit->setValidator(&uint64_validator_);
@@ -42,12 +46,26 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   }
 }
 
-bool CaptureOptionsDialog::GetCollectThreadStates() const {
-  return ui_->threadStateCheckBox->isChecked();
+void CaptureOptionsDialog::SetEnableSampling(bool enable_sampling) {
+  ui_->samplingCheckBox->setChecked(enable_sampling);
+}
+
+bool CaptureOptionsDialog::GetEnableSampling() const { return ui_->samplingCheckBox->isChecked(); }
+
+void CaptureOptionsDialog::SetSamplingPeriodMs(double sampling_period_ms) {
+  ui_->samplingPeriodMsDoubleSpinBox->setValue(sampling_period_ms);
+}
+
+double CaptureOptionsDialog::GetSamplingPeriodMs() const {
+  return ui_->samplingPeriodMsDoubleSpinBox->value();
 }
 
 void CaptureOptionsDialog::SetCollectThreadStates(bool collect_thread_state) {
   ui_->threadStateCheckBox->setChecked(collect_thread_state);
+}
+
+bool CaptureOptionsDialog::GetCollectThreadStates() const {
+  return ui_->threadStateCheckBox->isChecked();
 }
 
 void CaptureOptionsDialog::SetEnableApi(bool enable_api) {

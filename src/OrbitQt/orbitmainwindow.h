@@ -181,6 +181,8 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   void OnProcessListUpdated(const std::vector<orbit_grpc_protos::ProcessInfo>& processes);
 
+  static const QString kEnableCallstackSamplingSettingKey;
+  static const QString kCallstackSamplingPeriodMsSettingKey;
   static const QString kCollectThreadStatesSettingKey;
   static const QString kCollectMemoryInfoSettingKey;
   static const QString kEnableApiSettingKey;

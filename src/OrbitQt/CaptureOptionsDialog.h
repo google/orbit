@@ -44,6 +44,10 @@ class CaptureOptionsDialog : public QDialog {
  public:
   explicit CaptureOptionsDialog(QWidget* parent = nullptr);
 
+  void SetEnableSampling(bool enable_sampling);
+  [[nodiscard]] bool GetEnableSampling() const;
+  void SetSamplingPeriodMs(double sampling_period_ms);
+  [[nodiscard]] double GetSamplingPeriodMs() const;
   void SetCollectThreadStates(bool collect_thread_state);
   [[nodiscard]] bool GetCollectThreadStates() const;
   void SetEnableApi(bool enable_api);
@@ -52,6 +56,7 @@ class CaptureOptionsDialog : public QDialog {
   [[nodiscard]] bool GetEnableIntrospection() const;
   void SetEnableUserSpaceInstrumentation(bool enable);
   [[nodiscard]] bool GetEnableUserSpaceInstrumentation() const;
+
   void SetLimitLocalMarkerDepthPerCommandBuffer(bool limit_local_marker_depth_per_command_buffer);
   [[nodiscard]] bool GetLimitLocalMarkerDepthPerCommandBuffer() const;
   void SetMaxLocalMarkerDepthPerCommandBuffer(uint64_t local_marker_depth_per_command_buffer);
