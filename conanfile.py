@@ -293,6 +293,7 @@ chmod -v 4775 /opt/developer/tools/OrbitService
         self.copy("OrbitClientGgp", src="bin/", dst="bin")
         self.copy("OrbitClientGgp.exe", src="bin/", dst="bin")
         self.copy("OrbitClientGgp.debug", src="bin/", dst="bin")
+        self.copy("crashpad_handler", src="bin/", dst="bin")
         self.copy("crashpad_handler.exe", src="bin/", dst="bin")
         self.copy("NOTICE")
         self.copy("NOTICE.Chromium")
