@@ -39,7 +39,9 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
                       -Werror=thread-safety)
 
   if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 8)
-    add_compile_options(-Werror=defaulted-function-deleted)
+    add_compile_options(-Werror=defaulted-function-deleted
+                        # Required by Google-internal builds
+                        -Werror=ctad-maybe-unsupported)
   endif()
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
