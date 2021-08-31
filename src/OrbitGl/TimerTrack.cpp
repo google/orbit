@@ -256,7 +256,7 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
   draw_data.batcher = batcher;
   draw_data.viewport = viewport_;
 
-  draw_data.track_start_x = viewport_->GetWorldTopLeft()[0];
+  draw_data.track_start_x = GetPos()[0];
   draw_data.track_width = GetWidth();
   draw_data.inv_time_window = 1.0 / time_graph_->GetTimeWindowUs();
   draw_data.is_collapsed = IsCollapsed();
@@ -413,9 +413,10 @@ float TimerTrack::GetHeaderHeight() const {
   return layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin();
 }
 
-internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick, float track_width,
-                                           float z_offset, Batcher* batcher, TimeGraph* time_graph,
-                                           orbit_gl::Viewport* viewport, bool is_collapsed,
+internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick, float track_pos_x,
+                                           float track_width, float z_offset, Batcher* batcher,
+                                           TimeGraph* time_graph, orbit_gl::Viewport* viewport,
+                                           bool is_collapsed,
                                            const orbit_client_protos::TimerInfo* selected_timer,
                                            uint64_t highlighted_function_id,
                                            uint64_t highlighted_group_id) {
@@ -425,7 +426,7 @@ internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick,
   draw_data.z_offset = z_offset;
   draw_data.batcher = batcher;
   draw_data.viewport = viewport;
-  draw_data.track_start_x = viewport->GetWorldTopLeft()[0];
+  draw_data.track_start_x = track_pos_x;
   draw_data.track_width = track_width;
   draw_data.inv_time_window = 1.0 / time_graph->GetTimeWindowUs();
   draw_data.is_collapsed = is_collapsed;

@@ -412,7 +412,7 @@ float TimeGraph::GetWorldFromTick(uint64_t time) const {
   if (time_window_us_ > 0) {
     double start = TicksToMicroseconds(capture_min_timestamp_, time) - min_time_us_;
     double normalized_start = start / time_window_us_;
-    auto pos = float(world_start_x_ + normalized_start * GetWidth());
+    auto pos = float(viewport_->GetWorldTopLeft()[0] + normalized_start * GetWidth());
     return pos;
   }
 
@@ -428,7 +428,9 @@ double TimeGraph::GetUsFromTick(uint64_t time) const {
 }
 
 uint64_t TimeGraph::GetTickFromWorld(float world_x) const {
-  double ratio = GetWidth() > 0 ? static_cast<double>((world_x - world_start_x_) / GetWidth()) : 0;
+  double ratio = GetWidth() > 0
+                     ? static_cast<double>((world_x - viewport_->GetWorldTopLeft()[0]) / GetWidth())
+                     : 0;
   auto time_span_ns = static_cast<uint64_t>(1000 * GetTime(ratio));
   return capture_min_timestamp_ + time_span_ns;
 }
@@ -515,7 +517,6 @@ void TimeGraph::UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, ui
       std::max(capture_max_timestamp_, capture_data_->GetCallstackData().max_time());
 
   time_window_us_ = max_time_us_ - min_time_us_;
-  world_start_x_ = viewport_->GetWorldTopLeft()[0];
   uint64_t min_tick = GetTickFromUs(min_time_us_);
   uint64_t max_tick = GetTickFromUs(max_time_us_);
 
