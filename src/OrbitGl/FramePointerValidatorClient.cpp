@@ -55,7 +55,8 @@ void FramePointerValidatorClient::AnalyzeModules(const std::vector<const ModuleD
       function_info->set_size(function->size());
     }
     grpc::ClientContext context;
-    std::chrono::time_point deadline = std::chrono::system_clock::now() + std::chrono::minutes(1);
+    std::chrono::system_clock::time_point deadline =
+        std::chrono::system_clock::now() + std::chrono::minutes(1);
     context.set_deadline(deadline);
 
     // careful this is the synchronous call (maybe async is better)

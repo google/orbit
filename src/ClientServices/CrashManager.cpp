@@ -40,7 +40,7 @@ void CrashManagerImpl::CrashOrbitService(CrashOrbitServiceRequest_CrashType cras
   request.set_crash_type(crash_type);
 
   grpc::ClientContext context;
-  std::chrono::time_point deadline =
+  std::chrono::system_clock::time_point deadline =
       std::chrono::system_clock::now() + std::chrono::milliseconds(kTimeoutMilliseconds);
   context.set_deadline(deadline);
 
