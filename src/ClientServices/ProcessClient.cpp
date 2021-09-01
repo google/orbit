@@ -37,7 +37,7 @@ constexpr uint64_t kGrpcDefaultTimeoutMilliseconds = 3000;
 std::unique_ptr<grpc::ClientContext> CreateContext(
     uint64_t timeout_milliseconds = kGrpcDefaultTimeoutMilliseconds) {
   auto context = std::make_unique<grpc::ClientContext>();
-  std::chrono::time_point deadline =
+  std::chrono::system_clock::time_point deadline =
       std::chrono::system_clock::now() + std::chrono::milliseconds(timeout_milliseconds);
   context->set_deadline(deadline);
 
