@@ -36,7 +36,7 @@ PFN_vkResetQueryPoolEXT dummy_reset_query_pool_function =
 TEST(TimerQueryPool, ATimerQueryPoolMustGetInitialized) {
   MockDispatchTable dispatch_table;
   uint32_t num_slots = 4;
-  TimerQueryPool query_pool(&dispatch_table, num_slots);
+  TimerQueryPool<MockDispatchTable> query_pool(&dispatch_table, num_slots);
   VkDevice device = {};
 
   uint32_t slot_index = 32;
