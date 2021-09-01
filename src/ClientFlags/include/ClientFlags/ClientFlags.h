@@ -26,9 +26,6 @@ ABSL_DECLARE_FLAG(std::string, process_name);
 
 ABSL_DECLARE_FLAG(bool, enable_tutorials_feature);
 
-// TODO(b/160549506): Remove this flag once it can be specified in the ui.
-ABSL_DECLARE_FLAG(uint16_t, sampling_rate);
-
 // Max to pass to perf_event_open without getting an error is (1u << 16u) - 8,
 // because the kernel stores this in a short and because of alignment reasons.
 // But the size the kernel actually returns is smaller and we leave some extra room (see
