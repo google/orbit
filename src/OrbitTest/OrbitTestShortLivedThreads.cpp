@@ -24,7 +24,7 @@ void Worker(int ttl_ms) {
       break;
     }
   }
-  std::lock_guard lock(g_joinable_mutex);
+  std::lock_guard<std::mutex> lock(g_joinable_mutex);
   g_joinable_threads.emplace(std::this_thread::get_id());
 }
 
@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
     // Join the finished threads.
     for (auto& t : ts) {
       auto id = t.get_id();
-      std::lock_guard lock(g_joinable_mutex);
+      std::lock_guard<std::mutex> lock(g_joinable_mutex);
       if (g_joinable_threads.count(id) != 0) {
         g_joinable_threads.erase(id);
         t.join();
