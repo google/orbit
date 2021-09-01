@@ -36,8 +36,13 @@ conan config install "$DIR/$OS" || exit $?
 
 
 if [ "$FORCE_PUBLIC_REMOTES" == "yes" ]; then
-  echo "Using public remotes for conan."
-
+  if curl -s http://invalid-name.internal/ >/dev/null 2>&1; then
+    echo "Using public remotes for conan."
+  elif curl -s http://artifactory.internal/ >/dev/null 2>&1; then
+    echo "CI machine detected, but forced to use public remotes. Will be using caching proxy of the public remotes though."
+    conan remote add -i 0 -f artifactory "http://artifactory.internal/artifactory/api/conan/conan-public" || exit $?
+    conan_disable_public_remotes || exit $?
+  fi
 elif [ -n "$ORBIT_OVERRIDE_ARTIFACTORY_URL" ]; then
   echo "Artifactory override detected. Adjusting remotes..."
   conan remote add -i 0 -f artifactory "$ORBIT_OVERRIDE_ARTIFACTORY_URL" || exit $?
