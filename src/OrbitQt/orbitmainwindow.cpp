@@ -1203,7 +1203,7 @@ void OrbitMainWindow::OpenCapture(const std::string& filepath) {
       ~Qt::WindowCloseButtonHint & ~Qt::WindowSystemMenuHint);
   loading_capture_dialog->setFixedSize(loading_capture_dialog->size());
 
-  auto loading_capture_cancel_button = QPointer{new QPushButton{this}};
+  auto loading_capture_cancel_button = QPointer<QPushButton>{new QPushButton{this}};
   loading_capture_cancel_button->setText("Cancel");
   QObject::connect(loading_capture_dialog, &QProgressDialog::canceled, this,
                    [this]() { app_->OnLoadCaptureCancelRequested(); });
