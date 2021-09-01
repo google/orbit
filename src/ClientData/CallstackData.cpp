@@ -8,6 +8,7 @@
 #include <absl/container/flat_hash_set.h>
 
 #include <cstdint>
+#include <mutex>
 #include <utility>
 
 #include "OrbitBase/Logging.h"
@@ -19,7 +20,7 @@ using orbit_client_protos::CallstackInfo;
 namespace orbit_client_data {
 
 void CallstackData::AddCallstackEvent(CallstackEvent callstack_event) {
-  std::lock_guard lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   CHECK(unique_callstacks_.contains(callstack_event.callstack_id()));
   RegisterTime(callstack_event.time());
   callstack_events_by_tid_[callstack_event.thread_id()][callstack_event.time()] =
@@ -33,13 +34,13 @@ void CallstackData::RegisterTime(uint64_t time) {
 
 void CallstackData::AddUniqueCallstack(uint64_t callstack_id,
                                        orbit_client_protos::CallstackInfo callstack) {
-  std::lock_guard lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   unique_callstacks_[callstack_id] =
       std::make_shared<orbit_client_protos::CallstackInfo>(std::move(callstack));
 }
 
 uint32_t CallstackData::GetCallstackEventsCount() const {
-  std::lock_guard lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   uint32_t count = 0;
   for (const auto& tid_and_events : callstack_events_by_tid_) {
     count += tid_and_events.second.size();
@@ -49,7 +50,7 @@ uint32_t CallstackData::GetCallstackEventsCount() const {
 
 std::vector<orbit_client_protos::CallstackEvent> CallstackData::GetCallstackEventsInTimeRange(
     uint64_t time_begin, uint64_t time_end) const {
-  std::lock_guard lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::vector<CallstackEvent> callstack_events;
   for (const auto& tid_and_events : callstack_events_by_tid_) {
     const std::map<uint64_t, CallstackEvent>& events = tid_and_events.second;
@@ -66,7 +67,7 @@ std::vector<orbit_client_protos::CallstackEvent> CallstackData::GetCallstackEven
 }
 
 uint32_t CallstackData::GetCallstackEventsOfTidCount(uint32_t thread_id) const {
-  std::lock_guard lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   const auto& tid_and_events_it = callstack_events_by_tid_.find(thread_id);
   if (tid_and_events_it == callstack_events_by_tid_.end()) {
     return 0;
@@ -76,7 +77,7 @@ uint32_t CallstackData::GetCallstackEventsOfTidCount(uint32_t thread_id) const {
 
 std::vector<CallstackEvent> CallstackData::GetCallstackEventsOfTidInTimeRange(
     uint32_t tid, uint64_t time_begin, uint64_t time_end) const {
-  std::lock_guard lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::vector<CallstackEvent> callstack_events;
 
   auto tid_and_events_it = callstack_events_by_tid_.find(tid);
@@ -98,7 +99,7 @@ std::vector<CallstackEvent> CallstackData::GetCallstackEventsOfTidInTimeRange(
 
 void CallstackData::ForEachCallstackEvent(
     const std::function<void(const orbit_client_protos::CallstackEvent&)>& action) const {
-  std::lock_guard lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   for (const auto& [unused_tid, events] : callstack_events_by_tid_) {
     for (const auto& [unused_timestamp, event] : events) {
       action(event);
@@ -109,7 +110,7 @@ void CallstackData::ForEachCallstackEvent(
 void CallstackData::ForEachCallstackEventInTimeRange(
     uint64_t min_timestamp, uint64_t max_timestamp,
     const std::function<void(const orbit_client_protos::CallstackEvent&)>& action) const {
-  std::lock_guard lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   CHECK(min_timestamp <= max_timestamp);
   for (const auto& [unused_tid, events] : callstack_events_by_tid_) {
     for (auto event_it = events.lower_bound(min_timestamp);
@@ -122,7 +123,7 @@ void CallstackData::ForEachCallstackEventInTimeRange(
 void CallstackData::ForEachCallstackEventOfTidInTimeRange(
     uint32_t tid, uint64_t min_timestamp, uint64_t max_timestamp,
     const std::function<void(const orbit_client_protos::CallstackEvent&)>& action) const {
-  std::lock_guard lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   CHECK(min_timestamp <= max_timestamp);
   const auto& tid_and_events_it = callstack_events_by_tid_.find(tid);
   if (tid_and_events_it == callstack_events_by_tid_.end()) {
@@ -137,7 +138,7 @@ void CallstackData::ForEachCallstackEventOfTidInTimeRange(
 
 void CallstackData::AddCallstackFromKnownCallstackData(const CallstackEvent& event,
                                                        const CallstackData& known_callstack_data) {
-  std::lock_guard lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   uint64_t callstack_id = event.callstack_id();
   std::shared_ptr<orbit_client_protos::CallstackInfo> unique_callstack =
       known_callstack_data.GetCallstackPtr(callstack_id);
@@ -151,7 +152,7 @@ void CallstackData::AddCallstackFromKnownCallstackData(const CallstackEvent& eve
 }
 
 const orbit_client_protos::CallstackInfo* CallstackData::GetCallstack(uint64_t callstack_id) const {
-  std::lock_guard lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   auto it = unique_callstacks_.find(callstack_id);
   if (it != unique_callstacks_.end()) {
     return it->second.get();
@@ -160,14 +161,14 @@ const orbit_client_protos::CallstackInfo* CallstackData::GetCallstack(uint64_t c
 }
 
 bool CallstackData::HasCallstack(uint64_t callstack_id) const {
-  std::lock_guard lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   return unique_callstacks_.contains(callstack_id);
 }
 
 void CallstackData::ForEachUniqueCallstack(
     const std::function<void(uint64_t callstack_id,
                              const orbit_client_protos::CallstackInfo& callstack)>& action) const {
-  std::lock_guard lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   for (const auto& [callstack_id, callstack_ptr] : unique_callstacks_) {
     action(callstack_id, *callstack_ptr);
   }
@@ -175,7 +176,7 @@ void CallstackData::ForEachUniqueCallstack(
 
 absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
 CallstackData::GetUniqueCallstacksCopy() const {
-  std::lock_guard lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   return unique_callstacks_;
 }
 
@@ -189,7 +190,7 @@ std::shared_ptr<orbit_client_protos::CallstackInfo> CallstackData::GetCallstackP
 }
 
 void CallstackData::UpdateCallstackTypeBasedOnMajorityStart() {
-  std::lock_guard lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   absl::flat_hash_set<uint64_t> callstack_ids_to_filter;
 
