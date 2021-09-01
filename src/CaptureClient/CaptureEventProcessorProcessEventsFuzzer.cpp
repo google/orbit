@@ -20,9 +20,6 @@
 #include "services.pb.h"
 #include "tracepoint.pb.h"
 
-ABSL_FLAG(uint16_t, sampling_rate, 1000, "Frequency of callstack sampling in samples per second");
-ABSL_FLAG(bool, frame_pointer_unwinding, false, "Use frame pointers for unwinding");
-
 namespace orbit_capture_client {
 
 using orbit_client_protos::CallstackEvent;
