@@ -30,11 +30,11 @@ namespace {
 void RunProcessWithTimeout(const QString& program, const QStringList& arguments,
                            std::chrono::milliseconds timeout, QObject* parent,
                            const std::function<void(ErrorMessageOr<QByteArray>)>& callback) {
-  const auto process = QPointer{new QProcess{parent}};
+  const auto process = QPointer<QProcess>{new QProcess{parent}};
   process->setProgram(program);
   process->setArguments(arguments);
 
-  const auto timeout_timer = QPointer{new QTimer{parent}};
+  const auto timeout_timer = QPointer<QTimer>{new QTimer{parent}};
 
   QObject::connect(timeout_timer, &QTimer::timeout, parent,
                    [process, timeout_timer, timeout, callback]() {

@@ -196,7 +196,7 @@ QPointer<AnnotatingSourceCodeDialog> OpenAndDeleteOnClose(
     std::unique_ptr<AnnotatingSourceCodeDialog> dialog) {
   dialog->open();
   dialog->setAttribute(Qt::WA_DeleteOnClose);
-  return QPointer{dialog.release()};
+  return QPointer<AnnotatingSourceCodeDialog>{dialog.release()};
 }
 
 }  // namespace orbit_qt

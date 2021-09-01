@@ -38,7 +38,7 @@ FutureWatcher::Reason FutureWatcher::WaitFor(
   }
 
   const orbit_base::FutureRegisterContinuationResult result = future.RegisterContinuation(
-      [loop = QPointer{&loop}] { QMetaObject::invokeMethod(loop, &QEventLoop::quit); });
+      [loop = QPointer<QEventLoop>{&loop}] { QMetaObject::invokeMethod(loop, &QEventLoop::quit); });
 
   if (result != orbit_base::FutureRegisterContinuationResult::kSuccessfullyRegistered) {
     return Reason::kFutureCompleted;

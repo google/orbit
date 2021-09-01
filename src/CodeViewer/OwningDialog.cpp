@@ -29,7 +29,7 @@ void OwningDialog::ClearOwningHeatmap() {
 QPointer<OwningDialog> OpenAndDeleteOnClose(std::unique_ptr<OwningDialog> dialog) {
   dialog->open();
   dialog->setAttribute(Qt::WA_DeleteOnClose);
-  return QPointer{dialog.release()};
+  return QPointer<OwningDialog>{dialog.release()};
 }
 
 }  // namespace orbit_code_viewer
