@@ -45,7 +45,7 @@ AddressRange GetFunctionAbsoluteAddressRangeOrDie(std::string_view function_name
       return {address, address + size};
     }
   }
-  UNREACHABLE();
+  FATAL("GetFunctionAbsoluteAddressRangeOrDie hasn't found a function '%s'", function_name);
 }
 
 AddressRange GetFunctionRelativeAddressRangeOrDie(std::string_view function_name) {
@@ -58,7 +58,7 @@ AddressRange GetFunctionRelativeAddressRangeOrDie(std::string_view function_name
       return AddressRange(sym.address(), sym.address() + sym.size());
     }
   }
-  UNREACHABLE();
+  FATAL("GetFunctionRelativeAddressRangeOrDie hasn't found a function '%s'", function_name);
 }
 
 void DumpDisassembly(const std::vector<uint8_t>& code, uint64_t start_address) {
