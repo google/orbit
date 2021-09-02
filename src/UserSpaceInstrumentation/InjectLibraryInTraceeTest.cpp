@@ -95,7 +95,10 @@ TEST(InjectLibraryInTraceeTest, OpenUseAndCloseLibraryInUserCode) {
   pid_t pid = fork();
   CHECK(pid != -1);
   if (pid == 0) {
+    volatile uint64_t counter = 0;
     while (true) {
+      ++counter;  // Endless loops without side effects are UB and recent versions of clang optimize
+                  // it away.
     }
   }
 

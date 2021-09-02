@@ -34,7 +34,9 @@ TEST(TestUtilTest, Disassemble) {
   pid_t pid = fork();
   CHECK(pid != -1);
   if (pid == 0) {
-    int sum = 0;
+    // Endless loops without side effects are UB and recent versions of clang optimize
+    // it away. Making `sum` volatile avoids that problem.
+    volatile int sum = 0;
     while (true) {
       sum += SomethingToDisassemble();
     }

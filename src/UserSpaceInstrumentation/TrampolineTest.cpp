@@ -269,7 +269,9 @@ TEST(TrampolineTest, AllocateMemoryForTrampolines) {
   CHECK(pid != -1);
   if (pid == 0) {
     uint64_t sum = 0;
-    int i = 0;
+    // Endless loops without side effects are UB and recent versions of clang optimize
+    // it away. Making `i` volatile avoids that problem.
+    volatile int i = 0;
     while (true) {
       i = (i + 1) & 3;
       sum += DoubleAndIncrement(i);
@@ -560,7 +562,9 @@ class InstrumentFunctionTest : public testing::Test {
     pid_ = fork();
     CHECK(pid_ != -1);
     if (pid_ == 0) {
-      uint64_t sum = 0;
+      // Endless loops without side effects are UB and recent versions of clang optimize
+      // it away. Making `sum` volatile avoids that problem.
+      volatile uint64_t sum = 0;
       while (true) {
         sum += (*function_pointer)();
       }
@@ -959,9 +963,11 @@ TEST_F(InstrumentFunctionTest, CheckIntParameters) {
   pid_ = fork();
   CHECK(pid_ != -1);
   if (pid_ == 0) {
-    uint64_t sum = 0;
+    volatile uint64_t sum = 0;
     while (true) {
       sum += CheckIntParameters(0, 0, 0, 0, 0, 0, 0, 0);
+      // Endless loops without side effects are UB and recent versions of clang optimize
+      // it away.
     }
   }
   PrepareInstrumentation("EntryPayloadClobberParameterRegisters", kExitPayloadFunctionName);
@@ -989,7 +995,9 @@ TEST_F(InstrumentFunctionTest, CheckFloatParameters) {
   pid_ = fork();
   CHECK(pid_ != -1);
   if (pid_ == 0) {
-    uint64_t sum = 0;
+    // Endless loops without side effects are UB and recent versions of clang optimize
+    // it away. Making `sum` volatile avoids that problem.
+    volatile uint64_t sum = 0;
     while (true) {
       sum += CheckFloatParameters(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
     }
@@ -1021,7 +1029,9 @@ TEST_F(InstrumentFunctionTest, CheckM256iParameters) {
   pid_ = fork();
   CHECK(pid_ != -1);
   if (pid_ == 0) {
-    uint64_t sum = 0;
+    // Endless loops without side effects are UB and recent versions of clang optimize
+    // it away. Making `sum` volatile avoids that problem.
+    volatile uint64_t sum = 0;
     while (true) {
       sum +=
           CheckM256iParameters(_mm256_set1_epi64x(0), _mm256_set1_epi64x(0), _mm256_set1_epi64x(0),

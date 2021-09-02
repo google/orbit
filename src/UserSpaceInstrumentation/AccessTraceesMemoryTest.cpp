@@ -76,7 +76,10 @@ TEST(AccessTraceesMemoryTest, ReadFailures) {
   CHECK(pid != -1);
   if (pid == 0) {
     // Child just runs an endless loop.
+    volatile uint64_t counter = 0;
     while (true) {
+      ++counter;  // Endless loops without side effects are UB and recent versions of clang optimize
+                  // it away.
     }
   }
 
@@ -119,7 +122,10 @@ TEST(AccessTraceesMemoryTest, WriteFailures) {
   CHECK(pid != -1);
   if (pid == 0) {
     // Child just runs an endless loop.
+    volatile uint64_t counter = 0;
     while (true) {
+      ++counter;  // Endless loops without side effects are UB and recent versions of clang optimize
+                  // it away.
     }
   }
 
@@ -170,7 +176,10 @@ TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
   CHECK(pid != -1);
   if (pid == 0) {
     // Child just runs an endless loop.
+    volatile uint64_t counter = 0;
     while (true) {
+      ++counter;  // Endless loops without side effects are UB and recent versions of clang optimize
+                  // it away.
     }
   }
 
