@@ -8,6 +8,7 @@
 
 #include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"
+#include "MockTracerListener.h"
 #include "UprobesUnwindingVisitor.h"
 
 using ::testing::_;
@@ -42,26 +43,6 @@ class MockLibunwindstackUnwinder : public LibunwindstackUnwinder {
               (pid_t, unwindstack::Maps*, (const std::array<uint64_t, PERF_REG_X86_64_MAX>&),
                const void*, uint64_t, bool, size_t),
               (override));
-};
-
-class MockTracerListener : public orbit_tracing_interface::TracerListener {
- public:
-  MOCK_METHOD(void, OnSchedulingSlice, (orbit_grpc_protos::SchedulingSlice), (override));
-  MOCK_METHOD(void, OnCallstackSample, (orbit_grpc_protos::FullCallstackSample), (override));
-  MOCK_METHOD(void, OnFunctionCall, (orbit_grpc_protos::FunctionCall), (override));
-  MOCK_METHOD(void, OnGpuJob, (orbit_grpc_protos::FullGpuJob), (override));
-  MOCK_METHOD(void, OnThreadName, (orbit_grpc_protos::ThreadName), (override));
-  MOCK_METHOD(void, OnThreadNamesSnapshot, (orbit_grpc_protos::ThreadNamesSnapshot), (override));
-  MOCK_METHOD(void, OnThreadStateSlice, (orbit_grpc_protos::ThreadStateSlice), (override));
-  MOCK_METHOD(void, OnAddressInfo, (orbit_grpc_protos::FullAddressInfo), (override));
-  MOCK_METHOD(void, OnTracepointEvent, (orbit_grpc_protos::FullTracepointEvent), (override));
-  MOCK_METHOD(void, OnModulesSnapshot, (orbit_grpc_protos::ModulesSnapshot), (override));
-  MOCK_METHOD(void, OnModuleUpdate, (orbit_grpc_protos::ModuleUpdateEvent), (override));
-  MOCK_METHOD(void, OnErrorsWithPerfEventOpenEvent,
-              (orbit_grpc_protos::ErrorsWithPerfEventOpenEvent), (override));
-  MOCK_METHOD(void, OnLostPerfRecordsEvent, (orbit_grpc_protos::LostPerfRecordsEvent), (override));
-  MOCK_METHOD(void, OnOutOfOrderEventsDiscardedEvent,
-              (orbit_grpc_protos::OutOfOrderEventsDiscardedEvent), (override));
 };
 
 class MockUprobesReturnAddressManager : public UprobesReturnAddressManager {

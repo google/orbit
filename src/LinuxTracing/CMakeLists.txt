@@ -76,6 +76,7 @@ target_sources(LinuxTracingTests PRIVATE
         LeafFunctionCallManagerTest.cpp
         LinuxTracingUtilsTest.cpp
         LostAndDiscardedEventVisitorTest.cpp
+        MockTracerListener.h
         PerfEventProcessorTest.cpp
         PerfEventQueueTest.cpp
         SwitchesStatesNamesVisitorTest.cpp
