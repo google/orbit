@@ -174,7 +174,7 @@ void GraphTrack<Dimension>::DrawLabel(Batcher& batcher, TextRenderer& text_rende
   Vec2 arrow_box_size(text_box_size[0] + kTextLeftMargin + kTextRightMargin,
                       text_box_size[1] + kTextTopMargin + kTextBottomMargin);
   bool arrow_is_left_directed =
-      target_pos[0] < viewport_->GetWorldTopLeft()[0] + arrow_box_size[0] + arrow_width;
+      target_pos[0] < viewport_->GetScreenTopLeftInWorld()[0] + arrow_box_size[0] + arrow_width;
   Vec2 text_box_position(
       target_pos[0] + (arrow_is_left_directed ? arrow_width + kTextLeftMargin
                                               : -arrow_width - kTextRightMargin - text_box_size[0]),

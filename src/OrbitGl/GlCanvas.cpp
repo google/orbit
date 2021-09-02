@@ -125,8 +125,9 @@ void GlCanvas::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle
 
   // Pan
   if (left && !picking_manager_.IsDragging()) {
-    viewport_.SetWorldTopLeftX(mouse_click_pos_world_[0] - viewport_.ScreenToWorldWidth(x));
-    viewport_.SetWorldTopLeftY(mouse_click_pos_world_[1] - viewport_.ScreenToWorldHeight(y));
+    viewport_.SetScreenTopLeftInWorldX(mouse_click_pos_world_[0] - viewport_.ScreenToWorldWidth(x));
+    viewport_.SetScreenTopLeftInWorldY(mouse_click_pos_world_[1] -
+                                       viewport_.ScreenToWorldHeight(y));
   }
 
   if (left) {
@@ -218,7 +219,7 @@ bool GlCanvas::ControlPressed() { return control_key_; }
 
 /** Inits the OpenGL viewport for drawing in 2D. */
 void GlCanvas::PrepareWorldSpaceViewport() {
-  Vec2 top_left = viewport_.GetWorldTopLeft();
+  Vec2 top_left = viewport_.GetScreenTopLeftInWorld();
   glViewport(0, 0, viewport_.GetScreenWidth(), viewport_.GetScreenHeight());
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
