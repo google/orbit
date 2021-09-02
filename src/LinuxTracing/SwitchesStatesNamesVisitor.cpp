@@ -121,7 +121,6 @@ void SwitchesStatesNamesVisitor::Visit(SchedSwitchPerfEvent* event) {
     std::optional<SchedulingSlice> scheduling_slice = switch_manager_.ProcessContextSwitchOut(
         prev_pid, event->GetPrevTid(), event->GetCpu(), event->GetTimestamp());
     if (scheduling_slice.has_value()) {
-      CHECK(listener_ != nullptr);
       if (scheduling_slice->pid() == orbit_base::kInvalidProcessId) {
         ERROR("SchedulingSlice with unknown pid");
       }
@@ -142,7 +141,6 @@ void SwitchesStatesNamesVisitor::Visit(SchedSwitchPerfEvent* event) {
     std::optional<ThreadStateSlice> out_slice =
         state_manager_.OnSchedSwitchOut(event->GetTimestamp(), event->GetPrevTid(), new_state);
     if (out_slice.has_value()) {
-      CHECK(listener_ != nullptr);
       listener_->OnThreadStateSlice(std::move(out_slice.value()));
       if (thread_state_counter_ != nullptr) {
         ++(*thread_state_counter_);
@@ -155,7 +153,6 @@ void SwitchesStatesNamesVisitor::Visit(SchedSwitchPerfEvent* event) {
     std::optional<ThreadStateSlice> in_slice =
         state_manager_.OnSchedSwitchIn(event->GetTimestamp(), event->GetNextTid());
     if (in_slice.has_value()) {
-      CHECK(listener_ != nullptr);
       listener_->OnThreadStateSlice(std::move(in_slice.value()));
       if (thread_state_counter_ != nullptr) {
         ++(*thread_state_counter_);
@@ -172,7 +169,6 @@ void SwitchesStatesNamesVisitor::Visit(SchedWakeupPerfEvent* event) {
   std::optional<ThreadStateSlice> state_slice =
       state_manager_.OnSchedWakeup(event->GetTimestamp(), event->GetWokenTid());
   if (state_slice.has_value()) {
-    CHECK(listener_ != nullptr);
     listener_->OnThreadStateSlice(std::move(state_slice.value()));
     if (thread_state_counter_ != nullptr) {
       ++(*thread_state_counter_);
@@ -183,7 +179,6 @@ void SwitchesStatesNamesVisitor::Visit(SchedWakeupPerfEvent* event) {
 void SwitchesStatesNamesVisitor::ProcessRemainingOpenStates(uint64_t timestamp_ns) {
   std::vector<ThreadStateSlice> state_slices = state_manager_.OnCaptureFinished(timestamp_ns);
   for (ThreadStateSlice& slice : state_slices) {
-    CHECK(listener_ != nullptr);
     listener_->OnThreadStateSlice(slice);
     if (thread_state_counter_ != nullptr) {
       ++(*thread_state_counter_);
