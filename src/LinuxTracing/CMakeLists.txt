@@ -78,6 +78,7 @@ target_sources(LinuxTracingTests PRIVATE
         LostAndDiscardedEventVisitorTest.cpp
         PerfEventProcessorTest.cpp
         PerfEventQueueTest.cpp
+        SwitchesStatesNamesVisitorTest.cpp
         ThreadStateManagerTest.cpp
         UprobesFunctionCallManagerTest.cpp
         UprobesReturnAddressManagerTest.cpp
