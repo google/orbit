@@ -16,6 +16,7 @@
 
 #include "AllocateInTracee.h"
 #include "ExecuteMachineCode.h"
+#include "GetTestLibLibraryPath.h"
 #include "MachineCode.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
@@ -36,21 +37,22 @@ void OpenUseAndCloseLibrary(pid_t pid) {
   // Stop the child process using our tooling.
   CHECK(!AttachAndStopProcess(pid).has_error());
 
+  auto library_path_or_error = GetTestLibLibraryPath();
+  ASSERT_THAT(library_path_or_error, HasNoError());
+  std::filesystem::path library_path = std::move(library_path_or_error.value());
+
   // Tracee does not have the dynamic lib loaded, obviously.
-  const std::string kLibName = "libUserSpaceInstrumentationTestLib.so";
   auto maps_before = orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
   CHECK(maps_before.has_value());
-  EXPECT_FALSE(absl::StrContains(maps_before.value(), kLibName));
+  EXPECT_FALSE(absl::StrContains(maps_before.value(), library_path.filename().string()));
 
-  // Load dynamic lib into tracee.
-  auto library_handle_or_error =
-      DlopenInTracee(pid, orbit_base::GetExecutableDir() / ".." / "lib" / kLibName, RTLD_NOW);
+  auto library_handle_or_error = DlopenInTracee(pid, library_path, RTLD_NOW);
   ASSERT_TRUE(library_handle_or_error.has_value());
 
   // Tracee now does have the dynamic lib loaded.
   auto maps_after_open = orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
   CHECK(maps_after_open.has_value());
-  EXPECT_TRUE(absl::StrContains(maps_after_open.value(), kLibName));
+  EXPECT_TRUE(absl::StrContains(maps_after_open.value(), library_path.filename().string()));
 
   // Look up symbol for "TrivialFunction" in the dynamic lib.
   auto dlsym_or_error = DlsymInTracee(pid, library_handle_or_error.value(), "TrivialFunction");
@@ -84,7 +86,7 @@ void OpenUseAndCloseLibrary(pid_t pid) {
   // Now, again, the lib is absent from the tracee.
   auto maps_after_close = orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
   CHECK(maps_after_close.has_value());
-  EXPECT_FALSE(absl::StrContains(maps_after_close.value(), kLibName));
+  EXPECT_FALSE(absl::StrContains(maps_after_close.value(), library_path.filename().string()));
 
   CHECK(!DetachAndContinueProcess(pid).has_error());
 }

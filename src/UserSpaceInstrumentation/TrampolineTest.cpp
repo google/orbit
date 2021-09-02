@@ -27,6 +27,7 @@
 #include "AccessTraceesMemory.h"
 #include "AddressRange.h"
 #include "AllocateInTracee.h"
+#include "GetTestLibLibraryPath.h"
 #include "MachineCode.h"
 #include "ObjectUtils/Address.h"
 #include "ObjectUtils/ElfFile.h"
@@ -581,9 +582,11 @@ class InstrumentFunctionTest : public testing::Test {
     // Stop the child process using our tooling.
     CHECK(AttachAndStopProcess(pid_).has_value());
 
+    auto library_path_or_error = GetTestLibLibraryPath();
+    ASSERT_THAT(library_path_or_error, HasNoError());
+    std::filesystem::path library_path = std::move(library_path_or_error.value());
+
     // Inject the payload for the instrumentation.
-    constexpr std::string_view kLibName = "libUserSpaceInstrumentationTestLib.so";
-    const std::string library_path = orbit_base::GetExecutableDir() / ".." / "lib" / kLibName;
     auto library_handle_or_error = DlopenInTracee(pid_, library_path, RTLD_NOW);
     CHECK(library_handle_or_error.has_value());
     void* library_handle = library_handle_or_error.value();

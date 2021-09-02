@@ -7,8 +7,10 @@
 #include <sys/wait.h>
 
 #include <csignal>
+#include <filesystem>
 #include <string>
 
+#include "GetTestLibLibraryPath.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -35,9 +37,11 @@ TEST(ExecuteInProcessTest, ExecuteInProcess) {
 
   CHECK(!AttachAndStopProcess(pid).has_error());
 
+  auto library_path_or_error = GetTestLibLibraryPath();
+  ASSERT_THAT(library_path_or_error, HasNoError());
+  std::filesystem::path library_path = std::move(library_path_or_error.value());
+
   // Load dynamic lib into tracee.
-  const std::string kLibName = "libUserSpaceInstrumentationTestLib.so";
-  const std::string library_path = orbit_base::GetExecutableDir() / ".." / "lib" / kLibName;
   auto library_handle_or_error = DlopenInTracee(pid, library_path, RTLD_NOW);
   CHECK(library_handle_or_error.has_value());
   void* library_handle = library_handle_or_error.value();
