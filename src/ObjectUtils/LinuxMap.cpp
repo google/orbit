@@ -9,6 +9,7 @@
 #include <absl/strings/str_split.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <filesystem>
 #include <map>
 #include <memory>
@@ -17,6 +18,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "ObjectUtils/CoffFile.h"
 #include "ObjectUtils/ElfFile.h"
 #include "ObjectUtils/ObjectFile.h"
 #include "OrbitBase/Align.h"
@@ -71,6 +73,9 @@ ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path
     auto* elf_file = dynamic_cast<ElfFile*>((object_file_or_error.value().get()));
     CHECK(elf_file != nullptr);
     module_info.set_soname(elf_file->GetSoname());
+    module_info.set_object_file_type(ModuleInfo::kElfFile);
+  } else if (object_file_or_error.value()->IsCoff()) {
+    module_info.set_object_file_type(ModuleInfo::kCoffFile);
   }
 
   // All fields we need to set for COFF files are already set, no need to handle COFF

@@ -27,6 +27,7 @@ TEST(ModuleData, Constructor) {
   uint64_t file_size = 1000;
   std::string build_id = "test build id";
   uint64_t load_bias = 4000;
+  ModuleInfo::ObjectFileType object_file_type = ModuleInfo::kElfFile;
 
   ModuleInfo module_info{};
   module_info.set_name(name);
@@ -34,6 +35,7 @@ TEST(ModuleData, Constructor) {
   module_info.set_file_size(file_size);
   module_info.set_build_id(build_id);
   module_info.set_load_bias(load_bias);
+  module_info.set_object_file_type(object_file_type);
 
   ModuleData module{module_info};
 
@@ -42,6 +44,7 @@ TEST(ModuleData, Constructor) {
   EXPECT_EQ(module.file_size(), file_size);
   EXPECT_EQ(module.build_id(), build_id);
   EXPECT_EQ(module.load_bias(), load_bias);
+  EXPECT_EQ(module.object_file_type(), object_file_type);
   EXPECT_FALSE(module.is_loaded());
   EXPECT_TRUE(module.GetFunctions().empty());
 }
@@ -194,6 +197,7 @@ TEST(ModuleData, UpdateIfChanged) {
   uint64_t file_size = 1000;
   std::string build_id{};
   uint64_t load_bias = 4000;
+  ModuleInfo::ObjectFileType object_file_type = ModuleInfo::kElfFile;
 
   ModuleInfo module_info{};
   module_info.set_name(name);
@@ -201,6 +205,7 @@ TEST(ModuleData, UpdateIfChanged) {
   module_info.set_file_size(file_size);
   module_info.set_build_id(build_id);
   module_info.set_load_bias(load_bias);
+  module_info.set_object_file_type(object_file_type);
 
   ModuleData module{module_info};
 
@@ -209,6 +214,7 @@ TEST(ModuleData, UpdateIfChanged) {
   EXPECT_EQ(module.file_size(), file_size);
   EXPECT_EQ(module.build_id(), build_id);
   EXPECT_EQ(module.load_bias(), load_bias);
+  EXPECT_EQ(module.object_file_type(), object_file_type);
   EXPECT_FALSE(module.is_loaded());
   EXPECT_TRUE(module.GetFunctions().empty());
 
@@ -240,6 +246,10 @@ TEST(ModuleData, UpdateIfChanged) {
   // as well as build_id
   module_info.set_build_id("yet another build id");
   EXPECT_DEATH((void)module.UpdateIfChangedAndUnload(module_info), "Check failed");
+
+  // and object_file_type
+  module_info.set_object_file_type(ModuleInfo::kUnknown);
+  EXPECT_DEATH((void)module.UpdateIfChangedAndUnload(module_info), "Check failed");
 }
 
 TEST(ModuleData, UpdateIfChangedAndNotLoaded) {
@@ -248,6 +258,7 @@ TEST(ModuleData, UpdateIfChangedAndNotLoaded) {
   uint64_t file_size = 1000;
   std::string build_id{};
   uint64_t load_bias = 4000;
+  ModuleInfo::ObjectFileType object_file_type = ModuleInfo::kElfFile;
 
   ModuleInfo module_info{};
   module_info.set_name(name);
@@ -255,6 +266,7 @@ TEST(ModuleData, UpdateIfChangedAndNotLoaded) {
   module_info.set_file_size(file_size);
   module_info.set_build_id(build_id);
   module_info.set_load_bias(load_bias);
+  module_info.set_object_file_type(object_file_type);
 
   ModuleData module{module_info};
 
@@ -263,6 +275,7 @@ TEST(ModuleData, UpdateIfChangedAndNotLoaded) {
   EXPECT_EQ(module.file_size(), file_size);
   EXPECT_EQ(module.build_id(), build_id);
   EXPECT_EQ(module.load_bias(), load_bias);
+  EXPECT_EQ(module.object_file_type(), object_file_type);
   EXPECT_FALSE(module.is_loaded());
   EXPECT_TRUE(module.GetFunctions().empty());
 
@@ -295,6 +308,10 @@ TEST(ModuleData, UpdateIfChangedAndNotLoaded) {
   // as well as build_id
   module_info.set_build_id("yet another build id");
   EXPECT_DEATH((void)module.UpdateIfChangedAndNotLoaded(module_info), "Check failed");
+
+  // and object_file_type
+  module_info.set_object_file_type(ModuleInfo::kUnknown);
+  EXPECT_DEATH((void)module.UpdateIfChangedAndUnload(module_info), "Check failed");
 }
 
 TEST(ModuleData, UpdateIfChangedWithBuildId) {
@@ -303,6 +320,7 @@ TEST(ModuleData, UpdateIfChangedWithBuildId) {
   uint64_t file_size = 1000;
   std::string build_id = "build_id_27";
   uint64_t load_bias = 4000;
+  ModuleInfo::ObjectFileType object_file_type = ModuleInfo::kElfFile;
 
   ModuleInfo module_info{};
   module_info.set_name(name);
@@ -310,6 +328,7 @@ TEST(ModuleData, UpdateIfChangedWithBuildId) {
   module_info.set_file_size(file_size);
   module_info.set_build_id(build_id);
   module_info.set_load_bias(load_bias);
+  module_info.set_object_file_type(object_file_type);
 
   ModuleData module{module_info};
 
@@ -318,6 +337,7 @@ TEST(ModuleData, UpdateIfChangedWithBuildId) {
   EXPECT_EQ(module.file_size(), file_size);
   EXPECT_EQ(module.build_id(), build_id);
   EXPECT_EQ(module.load_bias(), load_bias);
+  EXPECT_EQ(module.object_file_type(), object_file_type);
   EXPECT_FALSE(module.is_loaded());
   EXPECT_TRUE(module.GetFunctions().empty());
 

@@ -41,6 +41,7 @@ TEST(LinuxMap, CreateModuleHelloWorld) {
   EXPECT_EQ(result.value().address_end(), kEndAddress);
   EXPECT_EQ(result.value().build_id(), "d12d54bc5b72ccce54a408bdeda65e2530740ac8");
   EXPECT_EQ(result.value().load_bias(), 0x0);
+  EXPECT_EQ(result.value().object_file_type(), ModuleInfo::kElfFile);
 }
 
 TEST(LinuxMap, CreateModuleOnDev) {
@@ -75,6 +76,7 @@ TEST(LinuxMap, CreateCoffModule) {
   EXPECT_EQ(result.value().load_bias(), 0x62640000);
   EXPECT_EQ(result.value().executable_segment_offset(), 0x1000);
   EXPECT_EQ(result.value().build_id(), "");
+  EXPECT_EQ(result.value().object_file_type(), ModuleInfo::kCoffFile);
 }
 
 TEST(LinuxMap, CreateModuleNotElf) {
@@ -107,6 +109,7 @@ TEST(LinuxMan, CreateModuleWithSoname) {
   EXPECT_EQ(result.value().address_end(), kEndAddress);
   EXPECT_EQ(result.value().build_id(), "2e70049c5cf42e6c5105825b57104af5882a40a2");
   EXPECT_EQ(result.value().load_bias(), 0x0);
+  EXPECT_EQ(result.value().object_file_type(), ModuleInfo::kElfFile);
 }
 
 TEST(LinuxMap, CreateModuleFileDoesNotExist) {
@@ -190,6 +193,7 @@ TEST(LinuxMap, ParseMaps) {
     EXPECT_EQ(hello_module_info->address_end(), 0x7f687428c000);
     EXPECT_EQ(hello_module_info->build_id(), "d12d54bc5b72ccce54a408bdeda65e2530740ac8");
     EXPECT_EQ(hello_module_info->load_bias(), 0x0);
+    EXPECT_EQ(hello_module_info->object_file_type(), ModuleInfo::kElfFile);
 
     EXPECT_EQ(no_symbols_module_info->name(), "no_symbols_elf");
     EXPECT_EQ(no_symbols_module_info->file_path(), no_symbols_path);
@@ -198,6 +202,7 @@ TEST(LinuxMap, ParseMaps) {
     EXPECT_EQ(no_symbols_module_info->address_end(), 0x1000);
     EXPECT_EQ(no_symbols_module_info->build_id(), "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b");
     EXPECT_EQ(no_symbols_module_info->load_bias(), 0x400000);
+    EXPECT_EQ(no_symbols_module_info->object_file_type(), ModuleInfo::kElfFile);
   }
 }
 

@@ -9,7 +9,7 @@ package orbit_grpc_protos;
 message ModuleInfo {
   // General purpose name of the module, can be used as a pretty name in the UI.
   // If you need the ELF specific soname, use the field "soname" below.
-  // NextId: 10
+  // NextId: 11
   string name = 1;
   string file_path = 2;
   uint64 file_size = 3;
@@ -21,4 +21,11 @@ message ModuleInfo {
   uint64 load_bias = 7;
   uint64 executable_segment_offset = 8;
   string soname = 9;
+
+  enum ObjectFileType {
+    kUnknown = 0;
+    kElfFile = 1;
+    kCoffFile = 2;
+  }
+  ObjectFileType object_file_type = 10;
 }
