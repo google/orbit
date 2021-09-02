@@ -164,14 +164,14 @@ void TimeGraph::VerticalZoom(float zoom_value, float mouse_relative_position) {
 
   const float world_height = viewport_->GetVisibleWorldHeight();
   const float y_mouse_position =
-      viewport_->GetWorldTopLeft()[1] - mouse_relative_position * world_height;
-  const float top_distance = viewport_->GetWorldTopLeft()[1] - y_mouse_position;
+      viewport_->GetScreenTopLeftInWorld()[1] - mouse_relative_position * world_height;
+  const float top_distance = viewport_->GetScreenTopLeftInWorld()[1] - y_mouse_position;
 
   const float new_y_mouse_position = y_mouse_position / capped_ratio;
 
   float new_world_top_left_y = new_y_mouse_position + top_distance;
 
-  viewport_->SetWorldTopLeftY(new_world_top_left_y);
+  viewport_->SetScreenTopLeftInWorldY(new_world_top_left_y);
 }
 
 void TimeGraph::SetMinMax(double min_time_us, double max_time_us) {
@@ -233,12 +233,12 @@ void TimeGraph::VerticallyMoveIntoView(const TimerInfo& timer_info) {
 void TimeGraph::VerticallyMoveIntoView(Track& track) {
   float pos = track.GetPos()[1];
   float height = track.GetHeight();
-  float world_top_left_y = viewport_->GetWorldTopLeft()[1];
+  float world_top_left_y = viewport_->GetScreenTopLeftInWorld()[1];
 
   float max_world_top_left_y = pos;
   float min_world_top_left_y =
       pos + height - viewport_->GetVisibleWorldHeight() + layout_.GetBottomMargin();
-  viewport_->SetWorldTopLeftY(
+  viewport_->SetScreenTopLeftInWorldY(
       std::clamp(world_top_left_y, min_world_top_left_y, max_world_top_left_y));
 }
 
@@ -412,7 +412,7 @@ float TimeGraph::GetWorldFromTick(uint64_t time) const {
   if (time_window_us_ > 0) {
     double start = TicksToMicroseconds(capture_min_timestamp_, time) - min_time_us_;
     double normalized_start = start / time_window_us_;
-    auto pos = float(viewport_->GetWorldTopLeft()[0] + normalized_start * GetWidth());
+    auto pos = float(viewport_->GetScreenTopLeftInWorld()[0] + normalized_start * GetWidth());
     return pos;
   }
 
@@ -428,9 +428,10 @@ double TimeGraph::GetUsFromTick(uint64_t time) const {
 }
 
 uint64_t TimeGraph::GetTickFromWorld(float world_x) const {
-  double ratio = GetWidth() > 0
-                     ? static_cast<double>((world_x - viewport_->GetWorldTopLeft()[0]) / GetWidth())
-                     : 0;
+  double ratio =
+      GetWidth() > 0
+          ? static_cast<double>((world_x - viewport_->GetScreenTopLeftInWorld()[0]) / GetWidth())
+          : 0;
   auto time_span_ns = static_cast<uint64_t>(1000 * GetTime(ratio));
   return capture_min_timestamp_ + time_span_ns;
 }
@@ -664,10 +665,10 @@ void TimeGraph::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
   std::vector<float> x_coords;
   x_coords.reserve(timers.size());
 
-  float world_start_x = viewport_->GetWorldTopLeft()[0];
+  float world_start_x = viewport_->GetScreenTopLeftInWorld()[0];
   float world_width = GetWidth();
 
-  float world_start_y = viewport_->GetWorldTopLeft()[1];
+  float world_start_y = viewport_->GetScreenTopLeftInWorld()[1];
   float world_height = viewport_->GetVisibleWorldHeight();
 
   double inv_time_window = 1.0 / GetTimeWindowUs();
@@ -784,7 +785,7 @@ void TimeGraph::DrawIncompleteDataIntervals(Batcher& batcher, PickingMode pickin
     }
   }
 
-  const float world_start_y = viewport_->GetWorldTopLeft()[1];
+  const float world_start_y = viewport_->GetScreenTopLeftInWorld()[1];
   const float world_height = viewport_->GetVisibleWorldHeight();
 
   // Actually draw the ranges.

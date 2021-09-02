@@ -528,7 +528,7 @@ void CaptureWindow::UpdateVerticalScroll(float ratio) {
   float max = viewport_.GetWorldExtents()[1] - viewport_.GetVisibleWorldHeight() - min;
   float range = max - min;
   float new_top_left_y = min + ratio * range;
-  viewport_.SetWorldTopLeftY(new_top_left_y);
+  viewport_.SetScreenTopLeftInWorldY(new_top_left_y);
 }
 
 void CaptureWindow::UpdateHorizontalZoom(float normalized_start, float normalized_end) {
@@ -573,7 +573,7 @@ void CaptureWindow::UpdateVerticalSliderFromWorld() {
   if (time_graph_ == nullptr) return;
   float min = 0.0f;
   float max = viewport_.GetWorldExtents()[1] - viewport_.GetVisibleWorldHeight();
-  float ratio = (viewport_.GetWorldTopLeft()[1] - min) / (max - min);
+  float ratio = (viewport_.GetScreenTopLeftInWorld()[1] - min) / (max - min);
   float vertical_ratio = viewport_.GetVisibleWorldHeight() / viewport_.GetWorldExtents()[1];
   int slider_width = static_cast<int>(time_graph_->GetLayout().GetSliderWidth());
   vertical_slider_->SetPixelHeight(slider_width);
@@ -655,8 +655,8 @@ void CaptureWindow::RenderImGuiDebugUI() {
     IMGUI_VAR_TO_TEXT(viewport_.GetScreenHeight());
     IMGUI_VAR_TO_TEXT(viewport_.GetVisibleWorldHeight());
     IMGUI_VAR_TO_TEXT(viewport_.GetVisibleWorldWidth());
-    IMGUI_VAR_TO_TEXT(viewport_.GetWorldTopLeft()[0]);
-    IMGUI_VAR_TO_TEXT(viewport_.GetWorldTopLeft()[1]);
+    IMGUI_VAR_TO_TEXT(viewport_.GetScreenTopLeftInWorld()[0]);
+    IMGUI_VAR_TO_TEXT(viewport_.GetScreenTopLeftInWorld()[1]);
     IMGUI_VAR_TO_TEXT(viewport_.GetWorldExtents()[0]);
     IMGUI_VAR_TO_TEXT(viewport_.GetWorldExtents()[1]);
     IMGUI_VAR_TO_TEXT(mouse_move_pos_screen_[0]);
@@ -811,7 +811,7 @@ void CaptureWindow::RenderSelectionOverlay() {
   float stop_pos_world = time_graph_->GetWorldFromTick(select_stop_time_);
 
   float size_x = to_world - from_world;
-  Vec2 pos(from_world, viewport_.GetWorldTopLeft()[1]);
+  Vec2 pos(from_world, viewport_.GetScreenTopLeftInWorld()[1]);
   Vec2 size(size_x, viewport_.GetVisibleWorldHeight());
 
   std::string text = orbit_display_formats::GetDisplayTime(TicksToDuration(min_time, max_time));
