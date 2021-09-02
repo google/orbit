@@ -45,7 +45,7 @@ AddressRange GetFunctionAbsoluteAddressRangeOrDie(std::string_view function_name
       return {address, address + size};
     }
   }
-  UNREACHABLE();
+  FATAL("GetFunctionAbsoluteAddressOrDie hasn't found a function '%s'", function_name);
 }
 
 AddressRange GetFunctionRelativeAddressRangeOrDie(std::string_view function_name) {
