@@ -13,7 +13,8 @@ target_sources(
          include/ObjectUtils/CoffFile.h
          include/ObjectUtils/ElfFile.h
          include/ObjectUtils/PdbFile.h
-         include/ObjectUtils/LinuxMap.h)
+         include/ObjectUtils/LinuxMap.h
+         include/ObjectUtils/WindowsBuildIdUtils.h)
 
 target_sources(
   ObjectUtils
@@ -22,7 +23,8 @@ target_sources(
         CoffFile.cpp
         ElfFile.cpp
         PdbFile.cpp
-        ObjectFile.cpp)
+        ObjectFile.cpp
+        WindowsBuildIdUtils.cpp)
 
 if (NOT WIN32)
 target_sources(ObjectUtils PRIVATE LinuxMap.cpp)
@@ -45,6 +47,7 @@ target_sources(ObjectUtilsTests PRIVATE
         ElfFileTest.cpp
         ObjectFileTest.cpp
         PdbFileTest.cpp
+        WindowsBuildIdUtilsTest.cpp
 )
 
 if (NOT WIN32)

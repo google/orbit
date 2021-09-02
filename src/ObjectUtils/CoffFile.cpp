@@ -16,6 +16,7 @@
 
 #include <system_error>
 
+#include "ObjectUtils/WindowsBuildIdUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "symbol.pb.h"
@@ -160,15 +161,7 @@ std::string CoffFileImpl::GetBuildId() const {
     LOG("WARNING: No PDB debug info found, cannot form build id (ignoring).");
     return "";
   }
-  std::string build_id;
-  for (const uint8_t& byte : pdb_debug_info.value().guid) {
-    absl::StrAppend(&build_id, absl::Hex(byte, absl::kZeroPad2));
-  }
-
-  // The dash ("-") is intentional to make it easy to distinguish the age when debugging issues
-  // related to build id.
-  absl::StrAppend(&build_id, absl::StrFormat("-%i", pdb_debug_info.value().age));
-  return build_id;
+  return ComputeWindowsBuildId(pdb_debug_info.value().guid, pdb_debug_info.value().age);
 }
 
 }  // namespace
