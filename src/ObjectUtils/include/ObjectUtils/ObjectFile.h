@@ -12,17 +12,18 @@
 #include <memory>
 #include <string>
 
+#include "ObjectUtils/SymbolsFile.h"
 #include "OrbitBase/Result.h"
 #include "symbol.pb.h"
 
 namespace orbit_object_utils {
 
-class ObjectFile {
+class ObjectFile : public SymbolsFile {
  public:
   ObjectFile() = default;
   virtual ~ObjectFile() = default;
 
-  [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbols() = 0;
+  [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbols() override = 0;
   [[nodiscard]] virtual bool HasDebugSymbols() const = 0;
   [[nodiscard]] virtual std::string GetName() const = 0;
 
@@ -31,8 +32,8 @@ class ObjectFile {
   // PE/COFF object files are uniquely identfied by the PDB debug info consisting of a GUID and age.
   // The build id is formed from these to provide a string that uniquely identifies this object file
   // and the corresponding PDB debug info.
-  [[nodiscard]] virtual std::string GetBuildId() const = 0;
-  [[nodiscard]] virtual const std::filesystem::path& GetFilePath() const = 0;
+  [[nodiscard]] std::string GetBuildId() const override = 0;
+  [[nodiscard]] const std::filesystem::path& GetFilePath() const override = 0;
 
   // Background and some terminology
   // When an elf file is loaded to memory it has its load segments

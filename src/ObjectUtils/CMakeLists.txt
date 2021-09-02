@@ -14,6 +14,7 @@ target_sources(
          include/ObjectUtils/ElfFile.h
          include/ObjectUtils/PdbFile.h
          include/ObjectUtils/LinuxMap.h
+         include/ObjectUtils/SymbolsFile.h
          include/ObjectUtils/WindowsBuildIdUtils.h)
 
 target_sources(
@@ -24,6 +25,7 @@ target_sources(
         ElfFile.cpp
         PdbFile.cpp
         ObjectFile.cpp
+        SymbolsFile.cpp
         WindowsBuildIdUtils.cpp)
 
 if (NOT WIN32)
@@ -47,6 +49,7 @@ target_sources(ObjectUtilsTests PRIVATE
         ElfFileTest.cpp
         ObjectFileTest.cpp
         PdbFileTest.cpp
+        SymbolsFileTest.cpp
         WindowsBuildIdUtilsTest.cpp
 )
 
