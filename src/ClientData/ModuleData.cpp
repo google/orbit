@@ -34,6 +34,7 @@ bool ModuleData::UpdateIfChangedAndUnload(ModuleInfo info) {
 
   CHECK(file_path() == info.file_path());
   CHECK(build_id() == info.build_id());
+  CHECK(object_file_type() == info.object_file_type());
 
   if (!NeedsUpdate(info)) return false;
 
@@ -61,6 +62,7 @@ bool ModuleData::UpdateIfChangedAndNotLoaded(orbit_grpc_protos::ModuleInfo info)
 
   CHECK(file_path() == info.file_path());
   CHECK(build_id() == info.build_id());
+  CHECK(object_file_type() == info.object_file_type());
 
   if (!NeedsUpdate(info)) return true;
 
