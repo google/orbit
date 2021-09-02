@@ -22,6 +22,7 @@
 
 #include <memory>
 
+#include "ObjectUtils/WindowsBuildIdUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "symbol.pb.h"
@@ -77,6 +78,9 @@ class PdbFileImpl : public PdbFile {
   }
 
   [[nodiscard]] uint32_t GetAge() const override { return session_->getGlobalScope()->getAge(); }
+  [[nodiscard]] std::string GetBuildId() const override {
+    return ComputeWindowsBuildId(GetGuid(), GetAge());
+  }
 
  private:
   std::filesystem::path file_path_;
@@ -156,7 +160,7 @@ ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFile(const std::filesystem::pa
   llvm::Error error =
       llvm::pdb::loadDataForPDB(llvm::pdb::PDB_ReaderType::Native, pdb_path, session);
   if (error) {
-    return ErrorMessage(absl::StrFormat("Unable to load PDB file %s with error %s:",
+    return ErrorMessage(absl::StrFormat("Unable to load PDB file %s with error: %s",
                                         file_path.string(), llvm::toString(std::move(error))));
   }
   return std::make_unique<PdbFileImpl>(file_path, std::move(session));

@@ -68,6 +68,8 @@ TEST(PdbFile, CanObtainGuidAndAgeFromPdbAndDll) {
 
   EXPECT_EQ(pdb_file->GetAge(), pdb_debug_info_or_error.value().age);
   EXPECT_THAT(pdb_file->GetGuid(), testing::ElementsAreArray(pdb_debug_info_or_error.value().guid));
+
+  EXPECT_EQ(pdb_file->GetBuildId(), coff_file_or_error.value()->GetBuildId());
 }
 
 TEST(PdbFile, CreatePdbFailsOnNonPdbFile) {
