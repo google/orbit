@@ -2,18 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <GrpcProtos/Constants.h>
 #include <gmock/gmock.h>
 #include <google/protobuf/util/message_differencer.h>
 #include <gtest/gtest.h>
 #include <stdint.h>
 
-#include "ProducerEventProcessor.h"
+#include "CaptureService/ProducerEventProcessor.h"
+#include "GrpcProtos/Constants.h"
 #include "capture.pb.h"
-
-namespace orbit_service {
-
-namespace {
 
 using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::ApiScopeStart;
@@ -71,6 +67,10 @@ using orbit_grpc_protos::WarningEvent;
 using google::protobuf::util::MessageDifferencer;
 using ::testing::ElementsAre;
 using ::testing::SaveArg;
+
+namespace orbit_capture_service {
+
+namespace {
 
 class MockCaptureEventBuffer : public CaptureEventBuffer {
  public:
@@ -2094,4 +2094,4 @@ TEST(ProducerEventProcessor, OutOfOrderEventsDiscardedEvent) {
   EXPECT_EQ(actual_out_of_order_events_discarded_event.end_timestamp_ns(), kTimestampNs1);
 }
 
-}  // namespace orbit_service
+}  // namespace orbit_capture_service

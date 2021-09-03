@@ -20,7 +20,7 @@ using orbit_grpc_protos::ProducerCaptureEvent;
 
 void ProducerSideServiceImpl::OnCaptureStartRequested(
     orbit_grpc_protos::CaptureOptions capture_options,
-    ProducerEventProcessor* producer_event_processor) {
+    orbit_capture_service::ProducerEventProcessor* producer_event_processor) {
   CHECK(producer_event_processor != nullptr);
   LOG("About to send StartCaptureCommand to CaptureEventProducers (if any)");
   {

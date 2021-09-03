@@ -2,16 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef SERVICE_MEMORY_INFO_HANDLER_H_
-#define SERVICE_MEMORY_INFO_HANDLER_H_
+#ifndef CAPTURE_SERVICE_MEMORY_INFO_HANDLER_H_
+#define CAPTURE_SERVICE_MEMORY_INFO_HANDLER_H_
 
+#include "CaptureService/ProducerEventProcessor.h"
 #include "MemoryTracing/MemoryInfoListener.h"
 #include "MemoryTracing/MemoryInfoProducer.h"
 #include "OrbitBase/Logging.h"
-#include "ProducerEventProcessor.h"
 #include "capture.pb.h"
 
-namespace orbit_service {
+namespace orbit_capture_service {
 
 // This class controls the start and stop of the `MemoryInfoProducer`s. It receives the
 // `SystemMemoryUsage`, `CGroupMemoryUsage` and `ProcessMemoryUsage` events from different
@@ -42,6 +42,6 @@ class MemoryInfoHandler : public orbit_memory_tracing::MemoryInfoListener {
   std::unique_ptr<orbit_memory_tracing::MemoryInfoProducer> system_memory_info_producer_;
 };
 
-}  // namespace orbit_service
+}  // namespace orbit_capture_service
 
-#endif  // SERVICE_MEMORY_INFO_HANDLER_H_
+#endif  // CAPTURE_SERVICE_MEMORY_INFO_HANDLER_H_

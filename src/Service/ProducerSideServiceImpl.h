@@ -5,6 +5,7 @@
 #ifndef ORBIT_SERVICE_PRODUCER_SIDE_SERVICE_IMPL_H_
 #define ORBIT_SERVICE_PRODUCER_SIDE_SERVICE_IMPL_H_
 
+#include <absl/base/thread_annotations.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/synchronization/mutex.h>
 #include <grpcpp/grpcpp.h>
@@ -12,10 +13,10 @@
 
 #include <atomic>
 
-#include "CaptureEventBuffer.h"
-#include "CaptureStartStopListener.h"
+#include "CaptureService/CaptureEventBuffer.h"
+#include "CaptureService/CaptureStartStopListener.h"
+#include "CaptureService/ProducerEventProcessor.h"
 #include "GrpcProtos/Constants.h"
-#include "ProducerEventProcessor.h"
 #include "capture.pb.h"
 #include "producer_side_services.grpc.pb.h"
 #include "producer_side_services.pb.h"
@@ -31,13 +32,14 @@ namespace orbit_service {
 // allows to specify a timeout for that method.
 // OnExitRequest disconnects all producers, preparing this service for shutdown.
 class ProducerSideServiceImpl final : public orbit_grpc_protos::ProducerSideService::Service,
-                                      public CaptureStartStopListener {
+                                      public orbit_capture_service::CaptureStartStopListener {
  public:
   // This method causes the StartCaptureCommand to be sent to connected producers
   // (but if it's called multiple times in a row, the command will only be sent once).
   // CaptureEvents received from producers will be added to capture_event_buffer.
-  void OnCaptureStartRequested(orbit_grpc_protos::CaptureOptions capture_options,
-                               ProducerEventProcessor* producer_event_processor) override;
+  void OnCaptureStartRequested(
+      orbit_grpc_protos::CaptureOptions capture_options,
+      orbit_capture_service::ProducerEventProcessor* producer_event_processor) override;
 
   // This method causes the StopCaptureCommand to be sent to connected producers
   // (but if it's called multiple times in a row, the command will only be sent once).
@@ -76,7 +78,8 @@ class ProducerSideServiceImpl final : public orbit_grpc_protos::ProducerSideServ
       uint64_t producer_id, bool* all_events_sent_received);
 
  private:
-  absl::flat_hash_set<grpc::ServerContext*> server_contexts_;
+  absl::flat_hash_set<grpc::ServerContext*> server_contexts_
+      ABSL_GUARDED_BY(server_contexts_mutex_);
   absl::Mutex server_contexts_mutex_;
 
   enum class CaptureStatus { kCaptureStarted, kCaptureStopping, kCaptureFinished };
@@ -85,10 +88,11 @@ class ProducerSideServiceImpl final : public orbit_grpc_protos::ProducerSideServ
     std::optional<orbit_grpc_protos::CaptureOptions> capture_options;
     int32_t producers_remaining = 0;
     bool exit_requested = false;
-  } service_state_;
+  } service_state_ ABSL_GUARDED_BY(service_state_mutex_);
   absl::Mutex service_state_mutex_;
 
-  ProducerEventProcessor* producer_event_processor_ = nullptr;
+  orbit_capture_service::ProducerEventProcessor* producer_event_processor_
+      ABSL_GUARDED_BY(producer_event_processor_mutex_) = nullptr;
   absl::Mutex producer_event_processor_mutex_;
 
   std::atomic<uint64_t> producer_id_counter_ = orbit_grpc_protos::kExternalProducerStartingId;
