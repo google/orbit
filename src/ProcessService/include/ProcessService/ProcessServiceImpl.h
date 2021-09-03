@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_SERVICE_PROCESS_SERVICE_IMPL_H_
-#define ORBIT_SERVICE_PROCESS_SERVICE_IMPL_H_
+#ifndef PROCESS_SERVICE_PROCESS_SERVICE_IMPL_H_
+#define PROCESS_SERVICE_PROCESS_SERVICE_IMPL_H_
 
 #include <absl/synchronization/mutex.h>
 #include <grpcpp/grpcpp.h>
@@ -12,11 +12,11 @@
 #include <memory>
 #include <string>
 
-#include "ProcessList.h"
+#include "ProcessService/ProcessList.h"
 #include "services.grpc.pb.h"
 #include "services.pb.h"
 
-namespace orbit_service {
+namespace orbit_process_service {
 
 class ProcessServiceImpl final : public orbit_grpc_protos::ProcessService::Service {
  public:
@@ -38,11 +38,11 @@ class ProcessServiceImpl final : public orbit_grpc_protos::ProcessService::Servi
 
  private:
   absl::Mutex mutex_;
-  ProcessList process_list_;
+  orbit_process_service_internal::ProcessList process_list_;
 
   static constexpr size_t kMaxGetProcessMemoryResponseSize = 8 * 1024 * 1024;
 };
 
-}  // namespace orbit_service
+}  // namespace orbit_process_service
 
-#endif  // ORBIT_SERVICE_PROCESS_SERVICE_IMPL_H_
+#endif  // PROCESS_SERVICE_PROCESS_SERVICE_IMPL_H_

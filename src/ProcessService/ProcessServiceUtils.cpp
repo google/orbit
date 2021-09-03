@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ServiceUtils.h"
+#include "ProcessServiceUtils.h"
 
 #include <absl/base/casts.h>
 #include <absl/base/macros.h>
@@ -35,13 +35,16 @@
 #include "absl/strings/str_format.h"
 #include "module.pb.h"
 
-namespace orbit_service::utils {
+namespace orbit_process_service {
 
 namespace fs = std::filesystem;
 
 using orbit_object_utils::CreateObjectFile;
 using orbit_object_utils::CreateSymbolsFile;
 using orbit_object_utils::SymbolsFile;
+
+using orbit_process_service_internal::Jiffies;
+using orbit_process_service_internal::TotalCpuTime;
 
 const std::vector<fs::path>& kHardcodedSearchDirectories{
     "/home/cloudcast/",        "/home/cloudcast/debug_symbols/",
@@ -333,4 +336,4 @@ bool ReadProcessMemory(uint32_t pid, uintptr_t address, void* buffer, uint64_t s
   return *num_bytes_read == size;
 }
 
-}  // namespace orbit_service::utils
+}  // namespace orbit_process_service

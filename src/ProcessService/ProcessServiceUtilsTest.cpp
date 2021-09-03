@@ -16,20 +16,20 @@
 #include <vector>
 
 #include "OrbitBase/Result.h"
-#include "ServiceUtils.h"
+#include "ProcessServiceUtils.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
 #include "services.pb.h"
 #include "tracepoint.pb.h"
 
-namespace orbit_service::utils {
+namespace orbit_process_service {
 
 using Path = std::filesystem::path;
 using orbit_grpc_protos::GetDebugInfoFileRequest;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasValue;
 
-TEST(ServiceUtils, GetCumulativeTotalCpuTime) {
+TEST(ProcessServiceUtils, GetCumulativeTotalCpuTime) {
   // There is not much invariance here which we can test.
   // We know the optional should return a value and we know it's positive and
   // monotonically increasing.
@@ -47,7 +47,7 @@ TEST(ServiceUtils, GetCumulativeTotalCpuTime) {
   ASSERT_TRUE(total_cpu_time2->jiffies.value >= total_cpu_time1->jiffies.value);
 }
 
-TEST(ServiceUtils, GetCumulativeCpuTimeFromProcess) {
+TEST(ProcessServiceUtils, GetCumulativeCpuTimeFromProcess) {
   const auto& jiffies1 = GetCumulativeCpuTimeFromProcess(getpid());
   ASSERT_TRUE(jiffies1.has_value());
 
@@ -64,7 +64,7 @@ TEST(ServiceUtils, GetCumulativeCpuTimeFromProcess) {
   ASSERT_TRUE(jiffies2->value <= total_cpu_time->jiffies.value);
 }
 
-TEST(ServiceUtils, FindSymbolsFilePath) {
+TEST(ProcessServiceUtils, FindSymbolsFilePath) {
   const Path test_directory = orbit_test::GetTestdataDir();
 
   {  // elf - same file
@@ -138,4 +138,4 @@ TEST(ServiceUtils, FindSymbolsFilePath) {
   }
 }
 
-}  // namespace orbit_service::utils
+}  // namespace orbit_process_service

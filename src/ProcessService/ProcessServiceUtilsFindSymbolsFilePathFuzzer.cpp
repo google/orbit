@@ -3,8 +3,8 @@
 // found in the LICENSE file.
 
 #include "FuzzingUtils/ProtoFuzzer.h"
-#include "ServiceUtils.h"
+#include "ProcessServiceUtils.h"
 
 ORBIT_DEFINE_PROTO_FUZZER(const orbit_grpc_protos::GetDebugInfoFileRequest& request) {
-  (void)orbit_service::utils::FindSymbolsFilePath(request);
+  (void)orbit_process_service::FindSymbolsFilePath(request);
 }

@@ -2,9 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_SERVICE_PROCESS_LIST_
-#define ORBIT_SERVICE_PROCESS_LIST_
+#ifndef PROCESS_SERVICE_PROCESS_LIST_H_
+#define PROCESS_SERVICE_PROCESS_LIST_H_
 
+#include <absl/container/flat_hash_map.h>
 #include <sys/types.h>
 
 #include <algorithm>
@@ -15,10 +16,9 @@
 
 #include "OrbitBase/Result.h"
 #include "Process.h"
-#include "absl/container/flat_hash_map.h"
 #include "process.pb.h"
 
-namespace orbit_service {
+namespace orbit_process_service_internal {
 
 class ProcessList {
  public:
@@ -45,6 +45,6 @@ class ProcessList {
   absl::flat_hash_map<pid_t, Process> processes_;
 };
 
-}  // namespace orbit_service
+}  // namespace orbit_process_service_internal
 
-#endif  // ORBIT_SERVICE_PROCESS_LIST_
+#endif  // PROCESS_SERVICE_PROCESS_LIST_H_
