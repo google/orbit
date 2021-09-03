@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "ApiLoader/EnableInTracee.h"
+#include "ApiUtils/Event.h"
 #include "CaptureEventBuffer.h"
 #include "CaptureEventSender.h"
 #include "GrpcProtos/Constants.h"
@@ -197,6 +198,21 @@ static void FilterOutInstrumentedFunctionsFromCaptureOptions(
   }
   capture_options.mutable_instrumented_functions()->DeleteSubrange(
       first_to_delete, capture_options.instrumented_functions_size() - first_to_delete);
+}
+
+[[nodiscard]] static std::unique_ptr<orbit_introspection::IntrospectionListener>
+CreateIntrospectionListener(ProducerEventProcessor* producer_event_processor) {
+  return std::make_unique<orbit_introspection::IntrospectionListener>(
+      [producer_event_processor](const orbit_api::ApiEventVariant& api_event_variant) {
+        ProducerCaptureEvent capture_event;
+        std::visit(
+            [&capture_event](const auto& api_event) {
+              orbit_api::FillProducerCaptureEventFromApiEvent(api_event, &capture_event);
+            },
+            api_event_variant);
+        producer_event_processor->ProcessEvent(orbit_grpc_protos::kIntrospectionProducerId,
+                                               std::move(capture_event));
+      });
 }
 
 // TracingHandler::Stop is blocking, until all perf_event_open events have been processed
@@ -395,6 +411,11 @@ grpc::Status CaptureServiceImpl::Capture(
             std::move(error_enabling_user_space_instrumentation.value())));
   }
 
+  std::unique_ptr<orbit_introspection::IntrospectionListener> introspection_listener;
+  if (capture_options.enable_introspection()) {
+    introspection_listener = CreateIntrospectionListener(producer_event_processor.get());
+  }
+
   tracing_handler.Start(linux_tracing_capture_options);
 
   memory_info_handler.Start(request.capture_options());
@@ -438,6 +459,9 @@ grpc::Status CaptureServiceImpl::Capture(
 
   StopInternalProducersAndCaptureStartStopListenersInParallel(
       &tracing_handler, &memory_info_handler, &capture_start_stop_listeners_);
+
+  // The destructor of IntrospectionListener takes care of actually disabling introspection.
+  introspection_listener.reset();
 
   capture_event_buffer.AddEvent(CreateCaptureFinishedEvent());
 

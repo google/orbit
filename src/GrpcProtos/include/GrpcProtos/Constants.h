@@ -17,6 +17,7 @@ constexpr int kMissingInfo = -1;
 constexpr uint64_t kRootProducerId = 0;
 constexpr uint64_t kLinuxTracingProducerId = 1;
 constexpr uint64_t kMemoryInfoProducerId = 2;
+constexpr uint64_t kIntrospectionProducerId = 3;
 constexpr uint64_t kExternalProducerStartingId = 1024;
 
 enum class UnwindingMethod { kDwarfUnwinding, kFramePointerUnwinding };

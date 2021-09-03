@@ -57,11 +57,6 @@ class TracingHandler : public orbit_tracing_interface::TracerListener {
  private:
   ProducerEventProcessor* producer_event_processor_;
   std::unique_ptr<orbit_tracing_interface::Tracer> tracer_;
-
-  // Manual instrumentation tracing listener.
-  std::unique_ptr<orbit_introspection::IntrospectionListener> introspection_listener_;
-
-  void SetupIntrospection();
 };
 
 }  // namespace orbit_service

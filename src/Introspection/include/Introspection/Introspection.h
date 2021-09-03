@@ -26,6 +26,11 @@ class IntrospectionListener {
   explicit IntrospectionListener(IntrospectionEventCallback callback);
   ~IntrospectionListener();
 
+  IntrospectionListener(const IntrospectionListener& other) = delete;
+  IntrospectionListener& operator=(const IntrospectionListener& other) = delete;
+  IntrospectionListener(IntrospectionListener&& other) = delete;
+  IntrospectionListener& operator=(IntrospectionListener&& other) = delete;
+
   static void DeferApiEventProcessing(const orbit_api::ApiEventVariant& api_event);
   [[nodiscard]] static bool IsActive() { return active_; }
   [[nodiscard]] static bool IsShutdownInitiated() { return shutdown_initiated_; }
