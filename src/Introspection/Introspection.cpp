@@ -24,7 +24,8 @@ using orbit_introspection::IntrospectionEventCallback;
 using orbit_introspection::IntrospectionListener;
 
 ABSL_CONST_INIT static absl::Mutex global_introspection_mutex(absl::kConstInit);
-ABSL_CONST_INIT static IntrospectionListener* global_introspection_listener = nullptr;
+ABSL_CONST_INIT static IntrospectionListener* global_introspection_listener
+    ABSL_GUARDED_BY(global_introspection_mutex) = nullptr;
 
 // Tracing uses the same function table used by the Orbit API, but specifies its own functions.
 orbit_api_v1 g_orbit_api_v1;
