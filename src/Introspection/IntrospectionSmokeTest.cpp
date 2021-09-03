@@ -65,7 +65,7 @@ TEST(Tracing, Scopes) {
   std::once_flag thread_id_set_flag;
   uint32_t callback_thread_id = 0;
   {
-    TracingListener tracing_listener(
+    IntrospectionListener tracing_listener(
         [&scopes_by_thread_id, &thread_id_set_flag,
          &callback_thread_id](const orbit_api::ApiEventVariant& api_event) {
           // Check that callback is called from a single thread.

@@ -19,19 +19,19 @@
 
 namespace orbit_introspection {
 
-using TracingEventCallback = std::function<void(const orbit_api::ApiEventVariant& api_event)>;
+using IntrospectionEventCallback = std::function<void(const orbit_api::ApiEventVariant& api_event)>;
 
-class TracingListener {
+class IntrospectionListener {
  public:
-  explicit TracingListener(TracingEventCallback callback);
-  ~TracingListener();
+  explicit IntrospectionListener(IntrospectionEventCallback callback);
+  ~IntrospectionListener();
 
   static void DeferApiEventProcessing(const orbit_api::ApiEventVariant& api_event);
-  [[nodiscard]] inline static bool IsActive() { return active_; }
-  [[nodiscard]] inline static bool IsShutdownInitiated() { return shutdown_initiated_; }
+  [[nodiscard]] static bool IsActive() { return active_; }
+  [[nodiscard]] static bool IsShutdownInitiated() { return shutdown_initiated_; }
 
  private:
-  TracingEventCallback user_callback_ = nullptr;
+  IntrospectionEventCallback user_callback_ = nullptr;
   std::shared_ptr<orbit_base::ThreadPool> thread_pool_ = {};
   inline static bool active_ = false;
   inline static bool shutdown_initiated_ = true;

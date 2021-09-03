@@ -219,7 +219,7 @@ void IntrospectionWindow::StartIntrospection() {
   CHECK(!IsIntrospecting());
   set_draw_help(false);
   CreateTimeGraph(capture_data_.get());
-  introspection_listener_ = std::make_unique<orbit_introspection::TracingListener>(
+  introspection_listener_ = std::make_unique<orbit_introspection::IntrospectionListener>(
       [this](const orbit_api::ApiEventVariant& api_event_variant) {
         std::visit(
             [this](const auto& api_event) { HandleCaptureEvent(api_event, &api_event_processor_); },
