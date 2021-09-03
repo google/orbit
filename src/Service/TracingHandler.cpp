@@ -28,28 +28,9 @@ using orbit_grpc_protos::kLinuxTracingProducerId;
 
 void TracingHandler::Start(CaptureOptions capture_options) {
   CHECK(tracer_ == nullptr);
-  bool enable_introspection = capture_options.enable_introspection();
-
   tracer_ = std::make_unique<orbit_linux_tracing::Tracer>(std::move(capture_options));
   tracer_->SetListener(this);
   tracer_->Start();
-
-  if (enable_introspection) {
-    SetupIntrospection();
-  }
-}
-
-void TracingHandler::SetupIntrospection() {
-  introspection_listener_ = std::make_unique<orbit_introspection::IntrospectionListener>(
-      [this](const orbit_api::ApiEventVariant& api_event_variant) {
-        ProducerCaptureEvent capture_event;
-        std::visit(
-            [&capture_event](const auto& api_event) {
-              orbit_api::FillProducerCaptureEventFromApiEvent(api_event, &capture_event);
-            },
-            api_event_variant);
-        producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(capture_event));
-      });
 }
 
 void TracingHandler::Stop() {
