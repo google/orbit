@@ -4,8 +4,6 @@
 
 #include "OrbitGrpcServer.h"
 
-#include <absl/flags/declare.h>
-#include <absl/flags/flag.h>
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
@@ -15,7 +13,7 @@
 #include <utility>
 
 #include "CaptureServiceImpl.h"
-#include "CrashServiceImpl.h"
+#include "CrashServiceImpl/CrashServiceImpl.h"
 #include "FramePointerValidatorServiceImpl.h"
 #include "ProcessServiceImpl.h"
 #include "TracepointServiceImpl.h"
@@ -43,7 +41,7 @@ class OrbitGrpcServerImpl final : public OrbitGrpcServer {
   ProcessServiceImpl process_service_;
   TracepointServiceImpl tracepoint_service_;
   FramePointerValidatorServiceImpl frame_pointer_validator_service_;
-  CrashServiceImpl crash_service_;
+  orbit_crash_service_impl::CrashServiceImpl crash_service_;
   std::unique_ptr<grpc::Server> server_;
 };
 

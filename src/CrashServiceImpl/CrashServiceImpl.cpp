@@ -2,18 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CrashServiceImpl.h"
+#include "CrashServiceImpl/CrashServiceImpl.h"
 
 #include "OrbitBase/Logging.h"
 #include "services.pb.h"
 
-namespace orbit_service {
+namespace orbit_crash_service_impl {
 
-using grpc::ServerContext;
-using grpc::Status;
 using orbit_grpc_protos::CrashOrbitServiceRequest;
-using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_CHECK_FALSE;
-using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
 using orbit_grpc_protos::CrashOrbitServiceResponse;
 
 static void InfiniteRecursion(int num) {
@@ -23,14 +19,15 @@ static void InfiniteRecursion(int num) {
   LOG("%i", num);
 }
 
-Status CrashServiceImpl::CrashOrbitService(ServerContext*, const CrashOrbitServiceRequest* request,
-                                           CrashOrbitServiceResponse*) {
+grpc::Status CrashServiceImpl::CrashOrbitService(grpc::ServerContext* /*context*/,
+                                                 const CrashOrbitServiceRequest* request,
+                                                 CrashOrbitServiceResponse* /*response*/) {
   switch (request->crash_type()) {
-    case CrashOrbitServiceRequest_CrashType_CHECK_FALSE: {
+    case CrashOrbitServiceRequest::CHECK_FALSE: {
       CHECK(false);
       break;
     }
-    case CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW: {
+    case CrashOrbitServiceRequest::STACK_OVERFLOW: {
       InfiniteRecursion(0);
       break;
     }
@@ -38,7 +35,7 @@ Status CrashServiceImpl::CrashOrbitService(ServerContext*, const CrashOrbitServi
       break;
   }
 
-  return Status::OK;
+  return grpc::Status::OK;
 }
 
-}  // namespace orbit_service
+}  // namespace orbit_crash_service_impl
