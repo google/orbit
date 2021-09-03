@@ -18,7 +18,7 @@
 #include "CaptureViewElement.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/TimerChain.h"
-#include "ClientData/TrackData.h"
+#include "ClientData/TrackPaneData.h"
 #include "CoreMath.h"
 #include "GteVector.h"
 #include "OrbitBase/Profiling.h"

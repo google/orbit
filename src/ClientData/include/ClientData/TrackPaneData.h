@@ -13,7 +13,7 @@
 
 namespace orbit_client_data {
 
-class TrackData final {
+class TrackPaneData final {
  public:
   [[nodiscard]] bool IsEmpty() const { return num_timers_ == 0; }
   [[nodiscard]] size_t GetNumberOfTimers() const { return num_timers_; }

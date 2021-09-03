@@ -28,14 +28,15 @@
 #include "capture_data.pb.h"
 
 using orbit_client_data::TimerChain;
-using orbit_client_data::TrackData;
+using orbit_client_data::TrackPaneData;
 using orbit_client_protos::TimerInfo;
 
 const Color TimerTrack::kHighlightColor = Color(100, 181, 246, 255);
 
 TimerTrack::TimerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
-                       const orbit_client_data::CaptureData* capture_data, TrackData* track_data)
+                       const orbit_client_data::CaptureData* capture_data,
+                       TrackPaneData* track_data)
     : Track(parent, time_graph, viewport, layout, capture_data),
       text_renderer_{time_graph->GetTextRenderer()},
       app_{app},

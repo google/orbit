@@ -30,8 +30,8 @@
 #include "ClientData/TimestampIntervalSet.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/TracepointData.h"
-#include "ClientData/TrackData.h"
 #include "ClientData/TrackDataManager.h"
+#include "ClientData/TrackPaneData.h"
 #include "OrbitBase/Logging.h"
 #include "capture.pb.h"
 #include "capture_data.pb.h"
@@ -235,7 +235,7 @@ class CaptureData {
     return frame_track_function_ids_;
   }
 
-  [[nodiscard]] std::pair<uint64_t, TrackData*> CreateTrackData() {
+  [[nodiscard]] std::pair<uint64_t, TrackPaneData*> CreateTrackData() {
     return track_data_manager_.CreateTrackData();
   }
 

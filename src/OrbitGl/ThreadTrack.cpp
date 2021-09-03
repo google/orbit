@@ -43,7 +43,7 @@ using orbit_grpc_protos::InstrumentedFunction;
 ThreadTrack::ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout, uint32_t thread_id,
                          OrbitApp* app, const CaptureData* capture_data,
-                         orbit_client_data::TrackData* track_data,
+                         orbit_client_data::TrackPaneData* track_data,
                          ScopeTreeUpdateType scope_tree_update_type)
     : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, track_data),
       thread_id_{thread_id},
