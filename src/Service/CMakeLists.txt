@@ -79,6 +79,7 @@ target_sources(ServiceTests PRIVATE
 
 target_link_libraries(ServiceTests PRIVATE
         ServiceLib
+        TestUtils
         GTest::Main)
 
 register_test(ServiceTests PROPERTIES TIMEOUT 10)
