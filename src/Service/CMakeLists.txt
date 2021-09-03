@@ -33,8 +33,6 @@ target_sources(ServiceLib PRIVATE
         ProducerSideServer.h
         ProducerSideServiceImpl.cpp
         ProducerSideServiceImpl.h
-        TracepointServiceImpl.h
-        TracepointServiceImpl.cpp
         TracingHandler.cpp
         TracingHandler.h
         ServiceUtils.cpp
@@ -57,6 +55,7 @@ target_link_libraries(ServiceLib PUBLIC
         ObjectUtils
         OrbitVersion
         ProducerSideChannel
+        TracepointService
         UserSpaceInstrumentation)
 
 project(OrbitService)

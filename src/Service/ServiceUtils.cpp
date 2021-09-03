@@ -39,12 +39,9 @@ namespace orbit_service::utils {
 
 namespace fs = std::filesystem;
 
-using orbit_grpc_protos::TracepointInfo;
 using orbit_object_utils::CreateObjectFile;
 using orbit_object_utils::CreateSymbolsFile;
 using orbit_object_utils::SymbolsFile;
-
-static const char* kLinuxTracingEventsDirectory = "/sys/kernel/debug/tracing/events/";
 
 const std::vector<fs::path>& kHardcodedSearchDirectories{
     "/home/cloudcast/",        "/home/cloudcast/debug_symbols/",
@@ -52,66 +49,6 @@ const std::vector<fs::path>& kHardcodedSearchDirectories{
     "/srv/game/assets/",       "/srv/game/assets/debug_symbols/",
     "/home/cloudcast/symbols", "/mnt/developer/symbols",
     "/srv/game/assets/symbols"};
-
-ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints() {
-  std::vector<TracepointInfo> result;
-
-  std::error_code error;
-  auto category_directory_iterator = fs::directory_iterator(kLinuxTracingEventsDirectory, error);
-  if (error) {
-    return ErrorMessage{absl::StrFormat("Unable to scan \"%s\" directory: %s",
-                                        kLinuxTracingEventsDirectory, error.message())};
-  }
-
-  for (auto category_it = fs::begin(category_directory_iterator),
-            category_end = fs::end(category_directory_iterator);
-       category_it != category_end; category_it.increment(error)) {
-    if (error) {
-      return ErrorMessage{absl::StrFormat("Unable to scan \"%s\" directory: %s",
-                                          kLinuxTracingEventsDirectory, error.message())};
-    }
-
-    const fs::path& category_path = category_it->path();
-    bool is_directory = fs::is_directory(category_path, error);
-    if (error) {
-      return ErrorMessage{
-          absl::StrFormat("Unable to stat \"%s\": %s", category_path.string(), error.message())};
-    }
-
-    if (!is_directory) continue;
-
-    auto name_directory_iterator = fs::directory_iterator(category_path, error);
-    if (error) {
-      return ErrorMessage{absl::StrFormat("Unable to scan \"%s\" directory: %s",
-                                          category_path.string(), error.message())};
-    }
-
-    for (auto it = fs::begin(name_directory_iterator), end = fs::end(name_directory_iterator);
-         it != end; it.increment(error)) {
-      if (error) {
-        return ErrorMessage{absl::StrFormat("Unable to scan \"%s\" directory: %s",
-                                            category_path.string(), error.message())};
-      }
-
-      bool is_directory = it->is_directory(error);
-      if (error) {
-        return ErrorMessage{
-            absl::StrFormat("Unable to stat \"%s\": %s", it->path().string(), error.message())};
-      }
-
-      if (!is_directory) {
-        continue;
-      }
-
-      TracepointInfo tracepoint_info;
-      tracepoint_info.set_name(it->path().filename());
-      tracepoint_info.set_category(category_path.filename());
-      result.emplace_back(tracepoint_info);
-    }
-  }
-
-  return result;
-}
 
 std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid) {
   const auto stat = std::filesystem::path{"/proc"} / std::to_string(pid) / "stat";
