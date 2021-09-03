@@ -25,9 +25,8 @@
 #include <system_error>
 #include <utility>
 
-#include "ObjectUtils/CoffFile.h"
-#include "ObjectUtils/ElfFile.h"
 #include "ObjectUtils/ObjectFile.h"
+#include "ObjectUtils/SymbolsFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
@@ -40,11 +39,10 @@ namespace orbit_service::utils {
 namespace fs = std::filesystem;
 
 using orbit_grpc_protos::TracepointInfo;
-using ::orbit_object_utils::CoffFile;
-using ::orbit_object_utils::CreateElfFile;
 using ::orbit_object_utils::CreateObjectFile;
-using ::orbit_object_utils::ElfFile;
+using ::orbit_object_utils::CreateSymbolsFile;
 using ::orbit_object_utils::ObjectFile;
+using ::orbit_object_utils::SymbolsFile;
 
 static const char* kLinuxTracingEventsDirectory = "/sys/kernel/debug/tracing/events/";
 
@@ -280,147 +278,114 @@ static ErrorMessageOr<fs::path> FindSymbolsFilePathInStructuredDebugStore(
       absl::StrFormat("File does not exist: %s", path_in_structured_debug_store.string())};
 }
 
-static ErrorMessageOr<fs::path> FindSymbolsFilePathCoff(const fs::path& module_path,
-                                                        const CoffFile* module_coff_file) {
-  CHECK(module_coff_file != nullptr);
+ErrorMessageOr<fs::path> FindSymbolsFilePath(
+    const orbit_grpc_protos::GetDebugInfoFileRequest& request) {
+  const fs::path module_path{request.module_path()};
 
-  // For Coff files, we currently only support debug symbols embedded in the object file.
-  if (module_coff_file->HasDebugSymbols()) {
+  // 1. Create object file for the module and check if it contains symbols itself.
+  auto object_file_or_error = CreateObjectFile(module_path);
+  if (object_file_or_error.has_error()) {
+    return ErrorMessage(absl::StrFormat("Unable to create object file: %s",
+                                        object_file_or_error.error().message()));
+  }
+  if (object_file_or_error.value()->HasDebugSymbols()) {
     return module_path;
   }
-  std::string error_message_for_client{absl::StrFormat(
-      "Unable to find debug symbols on the instance for module \"%s\". ", module_path)};
-  return ErrorMessage(error_message_for_client);
-}
-
-static ErrorMessageOr<fs::path> FindSymbolsFilePathElf(
-    const fs::path& module_path, const ElfFile* module_elf_file,
-    const std::vector<fs::path>& search_directories) {
-  CHECK(module_elf_file != nullptr);
-
-  if (module_elf_file->HasDebugSymbols()) {
-    return module_path;
-  }
-
-  if (module_elf_file->GetBuildId().empty()) {
-    return ErrorMessage(absl::StrFormat(
-        "Unable to find symbols for module \"%s\". Module does not contain a build id",
-        module_path));
-  }
-
-  std::string build_id = module_elf_file->GetBuildId();
-
-  if (build_id.size() < 3) {
+  // 2. If module does not contain a build id, no searching for separate symbol files can be done
+  if (object_file_or_error.value()->GetBuildId().empty()) {
     return ErrorMessage{
-        absl::StrFormat("The build id of \"%s\" is malformed: %s", module_path, build_id)};
+        absl::StrFormat("Module \"%s\" does not contain symbols and does not contain a build id, "
+                        "therefore Orbit cannot search for a separate symbols file",
+                        module_path.string())};
   }
-
+  const std::string& build_id = object_file_or_error.value()->GetBuildId();
+  if (build_id.size() < 3) {
+    return ErrorMessage{absl::StrFormat("The build id of \"%s\" is malformed, build id: %s",
+                                        module_path.string(), build_id)};
+  }
+  // 3. Search in structured symbols stores.
   const fs::path structured_debug_store{"/usr/lib/debug"};
   ErrorMessageOr<fs::path> debug_store_result =
       FindSymbolsFilePathInStructuredDebugStore(structured_debug_store, build_id);
   if (debug_store_result.has_value()) return debug_store_result.value();
+
+  // 4. Search in hardcoded directories + additional directoried (user provided) + next to the
+  // module
+  std::vector<fs::path> search_directories{kHardcodedSearchDirectories};
+  const auto& additional_search_directories = request.additional_search_directories();
+  search_directories.insert(search_directories.end(), additional_search_directories.begin(),
+                            additional_search_directories.end());
+  search_directories.push_back(object_file_or_error.value()->GetFilePath().parent_path());
 
   const fs::path& filename = module_path.filename();
   fs::path filename_dot_debug = filename;
   filename_dot_debug.replace_extension(".debug");
   fs::path filename_plus_debug = filename;
   filename_plus_debug.replace_extension(filename.extension().string() + ".debug");
+  fs::path filename_dot_pdb = filename;
+  filename_dot_pdb.replace_extension(".pdb");
+  fs::path filename_plus_pdb = filename;
+  filename_plus_debug.replace_extension(filename.extension().string() + ".pdb");
 
   std::set<fs::path> search_paths;
   for (const auto& directory : search_directories) {
     search_paths.insert(directory / filename_dot_debug);
     search_paths.insert(directory / filename_plus_debug);
     search_paths.insert(directory / filename);
+    search_paths.insert(directory / filename_dot_pdb);
+    search_paths.insert(directory / filename_plus_pdb);
   }
 
   std::vector<std::string> error_messages;
 
-  for (const auto& symbols_path : search_paths) {
+  for (const auto& search_path : search_paths) {
     std::error_code error;
-    bool path_exists = std::filesystem::exists(symbols_path, error);
+    bool path_exists = fs::exists(search_path, error);
     if (error) {
       std::string error_message =
-          absl::StrFormat("Unable to stat \"%s\": %s", symbols_path, error.message());
+          absl::StrFormat("Unable to stat \"%s\": %s", search_path, error.message());
       ERROR("%s", error_message);
-      error_messages.emplace_back("* " + std::move(error_message));
+      error_messages.emplace_back(std::move(error_message));
       continue;
     }
 
-    if (!path_exists) continue;
+    if (!path_exists) {
+      // no error message when file simply does not exist
+      continue;
+    }
 
-    ErrorMessageOr<std::unique_ptr<ElfFile>> symbols_file_or_error =
-        CreateElfFile(symbols_path.string());
+    auto symbols_file_or_error = CreateSymbolsFile(search_path);
     if (symbols_file_or_error.has_error()) {
-      std::string error_message =
-          absl::StrFormat("Potential symbols file \"%s\" cannot be read as an elf file: %s",
-                          symbols_path, symbols_file_or_error.error().message());
-      ERROR("%s", error_message);
-      error_messages.emplace_back("* " + std::move(error_message));
+      error_messages.push_back(symbols_file_or_error.error().message());
       continue;
     }
 
-    std::unique_ptr<ElfFile>& symbols_file = symbols_file_or_error.value();
+    const std::unique_ptr<SymbolsFile>& symbols_file{symbols_file_or_error.value()};
 
-    if (!symbols_file->HasDebugSymbols()) {
-      std::string error_message =
-          absl::StrFormat("Potential symbols file \"%s\" does not contain symbols.", symbols_path);
-      ERROR("%s (It does not contain a .symtab section)", error_message);
-      error_messages.emplace_back("* " + std::move(error_message));
-      continue;
-    }
     if (symbols_file->GetBuildId().empty()) {
-      std::string error_message =
-          absl::StrFormat("Potential symbols file \"%s\" does not have a build id", symbols_path);
-      ERROR("%s", error_message);
-      error_messages.emplace_back("* " + std::move(error_message));
-      continue;
-    }
-    const std::string& build_id = symbols_file->GetBuildId();
-    if (build_id != module_elf_file->GetBuildId()) {
-      std::string error_message = absl::StrFormat(
-          "Potential symbols file \"%s\" has a different build id than the module requested by the "
-          "client. \"%s\" != \"%s\"",
-          symbols_path, build_id, module_elf_file->GetBuildId());
-      ERROR("%s", error_message);
-      error_messages.emplace_back("* " + std::move(error_message));
+      error_messages.push_back(
+          absl::StrFormat("Potential symbols file \"%s\" does not have a build id.", search_path));
       continue;
     }
 
-    return symbols_path;
+    if (symbols_file->GetBuildId() != build_id) {
+      error_messages.push_back(absl::StrFormat(
+          "Potential symbols file \"%s\" has a different build id than the module requested by "
+          "the client. \"%s\" != \"%s\"",
+          search_path, symbols_file->GetBuildId(), build_id));
+      continue;
+    }
+
+    return search_path;
   }
 
   std::string error_message_for_client{absl::StrFormat(
       "Unable to find debug symbols on the instance for module \"%s\". ", module_path)};
   if (!error_messages.empty()) {
-    absl::StrAppend(&error_message_for_client, "\nDetails:\n", absl::StrJoin(error_messages, "\n"));
+    absl::StrAppend(&error_message_for_client, "\nDetails:\n* ",
+                    absl::StrJoin(error_messages, "\n* "));
   }
   return ErrorMessage(error_message_for_client);
-}
-
-ErrorMessageOr<fs::path> FindSymbolsFilePath(
-    const orbit_grpc_protos::GetDebugInfoFileRequest& request) {
-  auto object_file_or_error = CreateObjectFile(request.module_path());
-  if (object_file_or_error.has_error()) {
-    return ErrorMessage(absl::StrFormat("Unable to create object file: %s",
-                                        object_file_or_error.error().message()));
-  }
-
-  std::vector<fs::path> search_directories{kHardcodedSearchDirectories};
-  const auto& additional_search_directories = request.additional_search_directories();
-  search_directories.insert(search_directories.end(), additional_search_directories.begin(),
-                            additional_search_directories.end());
-
-  if (object_file_or_error.value()->IsElf()) {
-    return FindSymbolsFilePathElf(request.module_path(),
-                                  dynamic_cast<ElfFile*>(object_file_or_error.value().get()),
-                                  search_directories);
-  }
-  if (object_file_or_error.value()->IsCoff()) {
-    return FindSymbolsFilePathCoff(request.module_path(),
-                                   dynamic_cast<CoffFile*>(object_file_or_error.value().get()));
-  }
-
-  return ErrorMessage("Unknown object file type.");
 }
 
 bool ReadProcessMemory(uint32_t pid, uintptr_t address, void* buffer, uint64_t size,
