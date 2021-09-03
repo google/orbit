@@ -105,4 +105,77 @@ void ApiTrackFloat::CopyToGrpcProto(orbit_grpc_protos::ApiTrackFloat* grpc_proto
   grpc_proto->set_data(data);
   grpc_proto->set_color_rgba(color_rgba);
 }
+
+void FillProducerCaptureEventFromApiEvent(const ApiScopeStart& scope_start,
+                                          orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_api_scope_start();
+  scope_start.CopyToGrpcProto(api_event);
+}
+
+void FillProducerCaptureEventFromApiEvent(const ApiScopeStop& scope_stop,
+                                          orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_api_scope_stop();
+  scope_stop.CopyToGrpcProto(api_event);
+}
+
+void FillProducerCaptureEventFromApiEvent(const ApiScopeStartAsync& scope_start_async,
+                                          orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_api_scope_start_async();
+  scope_start_async.CopyToGrpcProto(api_event);
+}
+
+void FillProducerCaptureEventFromApiEvent(const ApiScopeStopAsync& scope_stop_async,
+                                          orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_api_scope_stop_async();
+  scope_stop_async.CopyToGrpcProto(api_event);
+}
+
+void FillProducerCaptureEventFromApiEvent(const ApiStringEvent& string_event,
+                                          orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_api_string_event();
+  string_event.CopyToGrpcProto(api_event);
+}
+
+void FillProducerCaptureEventFromApiEvent(const ApiTrackDouble& track_double,
+                                          orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_api_track_double();
+  track_double.CopyToGrpcProto(api_event);
+}
+
+void FillProducerCaptureEventFromApiEvent(const ApiTrackFloat& track_float,
+                                          orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_api_track_float();
+  track_float.CopyToGrpcProto(api_event);
+}
+
+void FillProducerCaptureEventFromApiEvent(const ApiTrackInt& track_int,
+                                          orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_api_track_int();
+  track_int.CopyToGrpcProto(api_event);
+}
+
+void FillProducerCaptureEventFromApiEvent(const ApiTrackInt64& track_int64,
+                                          orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_api_track_int64();
+  track_int64.CopyToGrpcProto(api_event);
+}
+
+void FillProducerCaptureEventFromApiEvent(const ApiTrackUint& track_uint,
+                                          orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_api_track_uint();
+  track_uint.CopyToGrpcProto(api_event);
+}
+
+void FillProducerCaptureEventFromApiEvent(const ApiTrackUint64& track_uint64,
+                                          orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_api_track_uint64();
+  track_uint64.CopyToGrpcProto(api_event);
+}
+
+void FillProducerCaptureEventFromApiEvent(
+    const std::monostate& /*monostate*/,
+    orbit_grpc_protos::ProducerCaptureEvent* /*capture_event*/) {
+  UNREACHABLE();
+}
+
 }  // namespace orbit_api

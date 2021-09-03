@@ -205,6 +205,45 @@ using ApiEventVariant =
                  ApiStringEvent, ApiTrackDouble, ApiTrackFloat, ApiTrackInt, ApiTrackInt64,
                  ApiTrackUint, ApiTrackUint64>;
 
+void FillProducerCaptureEventFromApiEvent(const ApiScopeStart& scope_start,
+                                          orbit_grpc_protos::ProducerCaptureEvent* capture_event);
+
+void FillProducerCaptureEventFromApiEvent(const ApiScopeStop& scope_stop,
+                                          orbit_grpc_protos::ProducerCaptureEvent* capture_event);
+
+void FillProducerCaptureEventFromApiEvent(const ApiScopeStartAsync& scope_start_async,
+                                          orbit_grpc_protos::ProducerCaptureEvent* capture_event);
+
+void FillProducerCaptureEventFromApiEvent(const ApiScopeStopAsync& scope_stop_async,
+                                          orbit_grpc_protos::ProducerCaptureEvent* capture_event);
+
+void FillProducerCaptureEventFromApiEvent(const ApiStringEvent& string_event,
+                                          orbit_grpc_protos::ProducerCaptureEvent* capture_event);
+
+void FillProducerCaptureEventFromApiEvent(const ApiTrackDouble& track_double,
+                                          orbit_grpc_protos::ProducerCaptureEvent* capture_event);
+
+void FillProducerCaptureEventFromApiEvent(const ApiTrackFloat& track_float,
+                                          orbit_grpc_protos::ProducerCaptureEvent* capture_event);
+
+void FillProducerCaptureEventFromApiEvent(const ApiTrackInt& track_int,
+                                          orbit_grpc_protos::ProducerCaptureEvent* capture_event);
+
+void FillProducerCaptureEventFromApiEvent(const ApiTrackInt64& track_int64,
+                                          orbit_grpc_protos::ProducerCaptureEvent* capture_event);
+
+void FillProducerCaptureEventFromApiEvent(const ApiTrackUint& track_uint,
+                                          orbit_grpc_protos::ProducerCaptureEvent* capture_event);
+
+void FillProducerCaptureEventFromApiEvent(const ApiTrackUint64& track_uint64,
+                                          orbit_grpc_protos::ProducerCaptureEvent* capture_event);
+
+// The variant type `ApiEventVariant` requires to contain `std::monostate` in order to be default-
+// constructable. However, that state is never expected to be called in the visitor.
+void FillProducerCaptureEventFromApiEvent(
+    const std::monostate& /*monostate*/,
+    orbit_grpc_protos::ProducerCaptureEvent* /*capture_event*/);
+
 }  // namespace orbit_api
 
 #endif  // ORBIT_API_UTILS_EVENT_H_

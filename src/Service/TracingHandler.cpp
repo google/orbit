@@ -39,86 +39,15 @@ void TracingHandler::Start(CaptureOptions capture_options) {
   }
 }
 
-namespace {
-void CreateCaptureEvent(const orbit_api::ApiScopeStart& scope_start,
-                        orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
-  auto* api_event = capture_event->mutable_api_scope_start();
-  scope_start.CopyToGrpcProto(api_event);
-}
-
-void CreateCaptureEvent(const orbit_api::ApiScopeStop& scope_stop,
-                        orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
-  auto* api_event = capture_event->mutable_api_scope_stop();
-  scope_stop.CopyToGrpcProto(api_event);
-}
-
-void CreateCaptureEvent(const orbit_api::ApiScopeStartAsync& scope_start_async,
-                        orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
-  auto* api_event = capture_event->mutable_api_scope_start_async();
-  scope_start_async.CopyToGrpcProto(api_event);
-}
-
-void CreateCaptureEvent(const orbit_api::ApiScopeStopAsync& scope_stop_async,
-                        orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
-  auto* api_event = capture_event->mutable_api_scope_stop_async();
-  scope_stop_async.CopyToGrpcProto(api_event);
-}
-
-void CreateCaptureEvent(const orbit_api::ApiStringEvent& string_event,
-                        orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
-  auto* api_event = capture_event->mutable_api_string_event();
-  string_event.CopyToGrpcProto(api_event);
-}
-
-void CreateCaptureEvent(const orbit_api::ApiTrackDouble& track_double,
-                        orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
-  auto* api_event = capture_event->mutable_api_track_double();
-  track_double.CopyToGrpcProto(api_event);
-}
-
-void CreateCaptureEvent(const orbit_api::ApiTrackFloat& track_float,
-                        orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
-  auto* api_event = capture_event->mutable_api_track_float();
-  track_float.CopyToGrpcProto(api_event);
-}
-
-void CreateCaptureEvent(const orbit_api::ApiTrackInt& track_int,
-                        orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
-  auto* api_event = capture_event->mutable_api_track_int();
-  track_int.CopyToGrpcProto(api_event);
-}
-
-void CreateCaptureEvent(const orbit_api::ApiTrackInt64& track_int64,
-                        orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
-  auto* api_event = capture_event->mutable_api_track_int64();
-  track_int64.CopyToGrpcProto(api_event);
-}
-
-void CreateCaptureEvent(const orbit_api::ApiTrackUint& track_uint,
-                        orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
-  auto* api_event = capture_event->mutable_api_track_uint();
-  track_uint.CopyToGrpcProto(api_event);
-}
-void CreateCaptureEvent(const orbit_api::ApiTrackUint64& track_uint64,
-                        orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
-  auto* api_event = capture_event->mutable_api_track_uint64();
-  track_uint64.CopyToGrpcProto(api_event);
-}
-
-// The variant type `ApiEventVariant` requires to contain `std::monostate` in order to be default-
-// constructable. However, that state is never expected to be called in the visitor.
-void CreateCaptureEvent(const std::monostate& /*unused*/, ProducerCaptureEvent* /*unused*/) {
-  UNREACHABLE();
-}
-}  // namespace
-
 void TracingHandler::SetupIntrospection() {
   introspection_listener_ = std::make_unique<orbit_introspection::IntrospectionListener>(
       [this](const orbit_api::ApiEventVariant& api_event_variant) {
         ProducerCaptureEvent capture_event;
-        std::visit([&capture_event](
-                       const auto& api_event) { CreateCaptureEvent(api_event, &capture_event); },
-                   api_event_variant);
+        std::visit(
+            [&capture_event](const auto& api_event) {
+              orbit_api::FillProducerCaptureEventFromApiEvent(api_event, &capture_event);
+            },
+            api_event_variant);
         producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(capture_event));
       });
 }
