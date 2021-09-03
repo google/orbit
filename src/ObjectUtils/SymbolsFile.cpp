@@ -19,7 +19,7 @@ namespace orbit_object_utils {
 ErrorMessageOr<std::unique_ptr<SymbolsFile>> CreateSymbolsFile(
     const std::filesystem::path& file_path) {
   std::string error_message{
-      absl::StrFormat("Unable to create symbols file from \"%s\".", file_path)};
+      absl::StrFormat("Unable to create symbols file from \"%s\".", file_path.string())};
 
   std::error_code error;
   bool exists = std::filesystem::exists(file_path, error);
