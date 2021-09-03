@@ -15,8 +15,6 @@ target_sources(ServiceLib PRIVATE
         CaptureServiceImpl.cpp
         CaptureServiceImpl.h
         CaptureStartStopListener.h
-        FramePointerValidatorServiceImpl.cpp
-        FramePointerValidatorServiceImpl.h
         MemoryInfoHandler.cpp
         MemoryInfoHandler.h
         OrbitGrpcServer.cpp
@@ -51,7 +49,7 @@ target_include_directories(ServiceLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(ServiceLib PUBLIC
         ApiLoader
         CrashServiceImpl
-        FramePointerValidator
+        FramePointerValidatorService
         GrpcProtos
         Introspection
         LinuxTracing
