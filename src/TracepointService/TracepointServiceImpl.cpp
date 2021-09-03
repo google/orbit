@@ -2,24 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TracepointServiceImpl.h"
-
-#include <vector>
+#include "TracepointService/TracepointServiceImpl.h"
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "ServiceUtils.h"
+#include "ReadTracepoints.h"
 #include "services.pb.h"
-#include "tracepoint.pb.h"
 
-namespace orbit_service {
+namespace orbit_tracepoint_service {
 
-grpc::Status TracepointServiceImpl::GetTracepointList(grpc::ServerContext*,
-                                                      const GetTracepointListRequest*,
+grpc::Status TracepointServiceImpl::GetTracepointList(grpc::ServerContext* /*context*/,
+                                                      const GetTracepointListRequest* /*request*/,
                                                       GetTracepointListResponse* response) {
   LOG("Sending tracepoints");
 
-  const auto tracepoint_infos = utils::ReadTracepoints();
+  const auto tracepoint_infos = ReadTracepoints();
   if (tracepoint_infos.has_error()) {
     return grpc::Status(grpc::StatusCode::NOT_FOUND, tracepoint_infos.error().message());
   }
@@ -30,4 +27,4 @@ grpc::Status TracepointServiceImpl::GetTracepointList(grpc::ServerContext*,
   return grpc::Status::OK;
 }
 
-}  // namespace orbit_service
+}  // namespace orbit_tracepoint_service

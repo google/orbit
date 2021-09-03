@@ -23,7 +23,6 @@
 #include "tracepoint.pb.h"
 
 namespace orbit_service::utils {
-ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> ReadTracepoints();
 
 // In the linux world, Jiffies is a global counter which increments on tick (caused by a CPU timer
 // interrupt). This struct is a poor man's strong type to ensure that this measure is not mistakenly
