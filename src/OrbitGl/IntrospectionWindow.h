@@ -39,7 +39,7 @@ class IntrospectionWindow : public CaptureWindow {
   [[nodiscard]] const char* GetHelpText() const override;
   [[nodiscard]] bool ShouldAutoZoom() const override;
 
-  std::unique_ptr<orbit_introspection::TracingListener> introspection_listener_;
+  std::unique_ptr<orbit_introspection::IntrospectionListener> introspection_listener_;
   std::unique_ptr<orbit_client_data::CaptureData> capture_data_;
 
   std::unique_ptr<orbit_capture_client::CaptureListener> capture_listener_;

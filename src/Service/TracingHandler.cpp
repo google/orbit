@@ -113,7 +113,7 @@ void CreateCaptureEvent(const std::monostate& /*unused*/, ProducerCaptureEvent* 
 }  // namespace
 
 void TracingHandler::SetupIntrospection() {
-  orbit_tracing_listener_ = std::make_unique<orbit_introspection::TracingListener>(
+  introspection_listener_ = std::make_unique<orbit_introspection::IntrospectionListener>(
       [this](const orbit_api::ApiEventVariant& api_event_variant) {
         ProducerCaptureEvent capture_event;
         std::visit([&capture_event](

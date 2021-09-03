@@ -59,7 +59,7 @@ class TracingHandler : public orbit_tracing_interface::TracerListener {
   std::unique_ptr<orbit_tracing_interface::Tracer> tracer_;
 
   // Manual instrumentation tracing listener.
-  std::unique_ptr<orbit_introspection::TracingListener> orbit_tracing_listener_;
+  std::unique_ptr<orbit_introspection::IntrospectionListener> introspection_listener_;
 
   void SetupIntrospection();
 };
