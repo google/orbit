@@ -88,11 +88,11 @@ class SenderThreadCaptureEventBuffer final : public CaptureEventBuffer {
 
       events_being_buffered_mutex_.LockWhenWithTimeout(
           absl::Condition(
-              +[](SenderThreadCaptureEventBuffer* self) ABSL_EXCLUSIVE_LOCKS_REQUIRED(
-                   self->events_being_buffered_mutex_) {
-                return self->events_being_buffered_.size() >= kSendEventCountInterval ||
-                       self->stop_requested_;
-              },
+              +[](SenderThreadCaptureEventBuffer* self)
+                   ABSL_EXCLUSIVE_LOCKS_REQUIRED(self->events_being_buffered_mutex_) {
+                     return self->events_being_buffered_.size() >= kSendEventCountInterval ||
+                            self->stop_requested_;
+                   },
               this),
           kSendTimeInterval);
       if (stop_requested_) {
@@ -177,9 +177,11 @@ class GrpcCaptureEventSender final : public CaptureEventSender {
   uint64_t total_number_of_bytes_sent_ = 0;
 };
 
+}  // namespace
+
 // Remove the functions with ids in `filter_function_ids` from instrumented_functions in
 // `capture_options`.
-void FilterOutInstrumentedFunctionsFromCaptureOptions(
+static void FilterOutInstrumentedFunctionsFromCaptureOptions(
     const absl::flat_hash_set<uint64_t>& filter_function_ids, CaptureOptions& capture_options) {
   // Move the entries that need to be deleted to the end of the repeated field and remove them with
   // one single call to `DeleteSubrange`. This avoids quadratic complexity.
@@ -196,8 +198,6 @@ void FilterOutInstrumentedFunctionsFromCaptureOptions(
   capture_options.mutable_instrumented_functions()->DeleteSubrange(
       first_to_delete, capture_options.instrumented_functions_size() - first_to_delete);
 }
-
-}  // namespace
 
 // TracingHandler::Stop is blocking, until all perf_event_open events have been processed
 // and all perf_event_open file descriptors have been closed.
@@ -231,9 +231,9 @@ static void StopInternalProducersAndCaptureStartStopListenersInParallel(
   }
 }
 
-static ProducerCaptureEvent CreateCaptureStartedEvent(const CaptureOptions& capture_options,
-                                                      absl::Time capture_start_time,
-                                                      uint64_t capture_start_timestamp_ns) {
+[[nodiscard]] static ProducerCaptureEvent CreateCaptureStartedEvent(
+    const CaptureOptions& capture_options, absl::Time capture_start_time,
+    uint64_t capture_start_timestamp_ns) {
   ProducerCaptureEvent event;
   CaptureStarted* capture_started = event.mutable_capture_started();
 
@@ -266,8 +266,8 @@ static ProducerCaptureEvent CreateCaptureStartedEvent(const CaptureOptions& capt
   return event;
 }
 
-static ProducerCaptureEvent CreateClockResolutionEvent(uint64_t timestamp_ns,
-                                                       uint64_t resolution_ns) {
+[[nodiscard]] static ProducerCaptureEvent CreateClockResolutionEvent(uint64_t timestamp_ns,
+                                                                     uint64_t resolution_ns) {
   ProducerCaptureEvent event;
   orbit_grpc_protos::ClockResolutionEvent* clock_resolution_event =
       event.mutable_clock_resolution_event();
@@ -276,8 +276,8 @@ static ProducerCaptureEvent CreateClockResolutionEvent(uint64_t timestamp_ns,
   return event;
 }
 
-static ProducerCaptureEvent CreateErrorEnablingOrbitApiEvent(uint64_t timestamp_ns,
-                                                             std::string message) {
+[[nodiscard]] static ProducerCaptureEvent CreateErrorEnablingOrbitApiEvent(uint64_t timestamp_ns,
+                                                                           std::string message) {
   ProducerCaptureEvent event;
   orbit_grpc_protos::ErrorEnablingOrbitApiEvent* error_enabling_orbit_api_event =
       event.mutable_error_enabling_orbit_api_event();
@@ -297,7 +297,8 @@ static ProducerCaptureEvent CreateErrorEnablingOrbitApiEvent(uint64_t timestamp_
   return event;
 }
 
-static ProducerCaptureEvent CreateWarningEvent(uint64_t timestamp_ns, std::string message) {
+[[nodiscard]] static ProducerCaptureEvent CreateWarningEvent(uint64_t timestamp_ns,
+                                                             std::string message) {
   ProducerCaptureEvent event;
   orbit_grpc_protos::WarningEvent* warning_event = event.mutable_warning_event();
   warning_event->set_timestamp_ns(timestamp_ns);
@@ -305,7 +306,7 @@ static ProducerCaptureEvent CreateWarningEvent(uint64_t timestamp_ns, std::strin
   return event;
 }
 
-static ClientCaptureEvent CreateCaptureFinishedEvent() {
+[[nodiscard]] static ClientCaptureEvent CreateCaptureFinishedEvent() {
   ClientCaptureEvent event;
   CaptureFinished* capture_finished = event.mutable_capture_finished();
   capture_finished->set_status(CaptureFinished::kSuccessful);
