@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <absl/strings/ascii.h>
+#include <gmock/gmock-matchers.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -119,7 +120,7 @@ TEST(ReadSymbolsFile, OnePathTrailingWhitespace) {
 
 TEST(SymbolHelper, FindSymbolsFileLocally) {
   SymbolHelper symbol_helper("", {});
-  {
+  {  // Find .debug successfully
     const fs::path file_path = testdata_directory / "no_symbols_elf";
     const fs::path symbols_path = testdata_directory / "no_symbols_elf.debug";
 
@@ -129,25 +130,49 @@ TEST(SymbolHelper, FindSymbolsFileLocally) {
     EXPECT_EQ(symbols_path_result.value(), symbols_path);
   }
 
-  {
+  {  // Find .pdb successfully
+    const fs::path file_path = testdata_directory / "dllmain.dll";
+    const fs::path symbols_path = testdata_directory / "dllmain.pdb";
+
+    const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
+        file_path, "efaecd92f773bb4ebcf213b84f43b322-3", {testdata_directory});
+    ASSERT_THAT(symbols_path_result, HasValue());
+    EXPECT_EQ(symbols_path_result.value(), symbols_path);
+  }
+
+  {  // Non existing file
     const fs::path non_existing_path = "file.not.exist";
     const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
         non_existing_path, "irrelevant build id", {testdata_directory});
-    EXPECT_THAT(symbols_path_result, HasError("could not find"));
+    EXPECT_THAT(symbols_path_result, HasError("Could not find"));
   }
 
-  {
+  {  // Find .debug fails because of wrong build id
     const fs::path file_path = testdata_directory / "no_symbols_elf";
     const auto symbols_path_result =
         symbol_helper.FindSymbolsFileLocally(file_path, "wrong build id", {testdata_directory});
-    EXPECT_THAT(symbols_path_result, HasError("could not find"));
+    EXPECT_THAT(symbols_path_result, HasError("Could not find"));
   }
 
-  {
+  {  // Find .pdb fails because of wrong build id
+    const fs::path file_path = testdata_directory / "dllmain.dll";
+    const auto symbols_path_result =
+        symbol_helper.FindSymbolsFileLocally(file_path, "wrong build id", {testdata_directory});
+    EXPECT_THAT(symbols_path_result, HasError("Could not find"));
+  }
+
+  {  // Find .debug fails because of empty build id
     const fs::path file_path = testdata_directory / "no_symbols_elf";
     const auto symbols_path_result =
         symbol_helper.FindSymbolsFileLocally(file_path, "", {testdata_directory});
     EXPECT_THAT(symbols_path_result, HasError("Could not find"));
+    EXPECT_THAT(symbols_path_result, HasError("does not contain a build id"));
+  }
+
+  {  // Find .pdb fails because of empty build id
+    const fs::path file_path = testdata_directory / "dllmain.dll";
+    const auto symbols_path_result =
+        symbol_helper.FindSymbolsFileLocally(file_path, "", {testdata_directory});
     EXPECT_THAT(symbols_path_result, HasError("does not contain a build id"));
   }
 }
@@ -155,7 +180,7 @@ TEST(SymbolHelper, FindSymbolsFileLocally) {
 TEST(SymbolHelper, FindSymbolsInCache) {
   SymbolHelper symbol_helper(testdata_directory, {});
 
-  // This is more of a smoke test (looking for the same file)
+  // This is more of a smoke test (looking for the same elf file)
   {
     const fs::path file = "no_symbols_elf.debug";
     const auto result =
@@ -164,7 +189,16 @@ TEST(SymbolHelper, FindSymbolsInCache) {
     EXPECT_EQ(result.value(), testdata_directory / file);
   }
 
-  // file in cache does not have symbols
+  // This is more of a smoke test (looking for the same pdb file)
+  {
+    const fs::path file = "dllmain.pdb";
+    const auto result =
+        symbol_helper.FindSymbolsInCache(file, "efaecd92f773bb4ebcf213b84f43b322-3");
+    ASSERT_THAT(result, HasValue());
+    EXPECT_THAT(result.value(), testdata_directory / file);
+  }
+
+  // elf file in cache does not have symbols
   {
     const fs::path file_path = "no_symbols_elf";
     const auto result =
@@ -172,16 +206,31 @@ TEST(SymbolHelper, FindSymbolsInCache) {
     EXPECT_THAT(result, HasError("does not contain symbols"));
   }
 
-  // file in cache has different build id
+  // coff file in cache does not have symbols
+  {
+    const fs::path file_path = "dllmain.dll";
+    const auto result =
+        symbol_helper.FindSymbolsInCache(file_path, "efaecd92f773bb4ebcf213b84f43b322-3");
+    EXPECT_THAT(result, HasError("does not contain symbols"));
+  }
+
+  // elf file in cache has different build id
   {
     const fs::path file_path = "no_symbols_elf.debug";
     const auto result = symbol_helper.FindSymbolsInCache(file_path, "non matching build id");
     EXPECT_THAT(result, HasError("has a different build id"));
   }
+
+  // pdb in cache has different build id
+  {
+    const fs::path file_path = "dllmain.pdb";
+    const auto result = symbol_helper.FindSymbolsInCache(file_path, "non matching build id");
+    EXPECT_THAT(result, HasError("has a different build id"));
+  }
 }
 
-TEST(SymbolHelper, LoadFromFile) {
-  // contains symbols
+TEST(SymbolHelper, LoadSymbolsFromFile) {
+  // .debug contains symbols
   {
     const fs::path file_path = testdata_directory / "no_symbols_elf.debug";
     const auto result = SymbolHelper::LoadSymbolsFromFile(file_path);
@@ -193,18 +242,38 @@ TEST(SymbolHelper, LoadFromFile) {
     EXPECT_FALSE(symbols.symbol_infos().empty());
   }
 
-  // does not contain symbols
+  // .pdb contains symbols
+  {
+    const fs::path file_path = testdata_directory / "dllmain.pdb";
+    const auto result = SymbolHelper::LoadSymbolsFromFile(file_path);
+
+    ASSERT_THAT(result, HasValue());
+    const ModuleSymbols& symbols = result.value();
+
+    EXPECT_EQ(symbols.symbols_file_path(), file_path);
+    EXPECT_FALSE(symbols.symbol_infos().empty());
+  }
+
+  // elf does not contain symbols
   {
     const fs::path file_path = testdata_directory / "no_symbols_elf";
     const auto result = SymbolHelper::LoadSymbolsFromFile(file_path);
-    EXPECT_THAT(result, HasError("does not have a .symtab section"));
+    EXPECT_THAT(result, HasError("does not contain symbols"));
+  }
+
+  // coff does not contain symbols
+  {
+    const fs::path file_path = testdata_directory / "dllmain.dll";
+    const auto result = SymbolHelper::LoadSymbolsFromFile(file_path);
+    EXPECT_THAT(result, HasError("does not contain symbols"));
   }
 
   // invalid file
   {
     const fs::path file_path = testdata_directory / "file_does_not_exist";
     const auto result = SymbolHelper::LoadSymbolsFromFile(file_path);
-    EXPECT_THAT(result, HasError("No such file or directory"));
+    EXPECT_THAT(result, HasError("Unable to create symbols file"));
+    EXPECT_THAT(result, HasError("File does not exist"));
   }
 }
 
@@ -218,23 +287,44 @@ TEST(SymbolHelper, GenerateCachedFileName) {
 
 TEST(SymbolHelper, VerifySymbolsFile) {
   {
-    // valid file containing symbols and matching build id
+    // valid elf file containing symbols and matching build id
     fs::path symbols_file = testdata_directory / "no_symbols_elf.debug";
     std::string build_id = "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b";
     const auto result = SymbolHelper::VerifySymbolsFile(symbols_file, build_id);
     EXPECT_THAT(result, HasNoError());
   }
   {
-    // valid file containing symbols, build id not matching;
+    // valid elf file containing symbols, build id not matching;
     fs::path symbols_file = testdata_directory / "no_symbols_elf.debug";
     std::string build_id = "incorrect build id";
     const auto result = SymbolHelper::VerifySymbolsFile(symbols_file, build_id);
     EXPECT_THAT(result, HasError("has a different build id"));
   }
   {
-    // valid file no symbols and matching build id
+    // valid elf file no symbols and matching build id
     fs::path symbols_file = testdata_directory / "no_symbols_elf";
     std::string build_id = "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b";
+    const auto result = SymbolHelper::VerifySymbolsFile(symbols_file, build_id);
+    EXPECT_THAT(result, HasError("does not contain symbols"));
+  }
+  {
+    // valid pdb file containing symbols and matching build id
+    fs::path symbols_file = testdata_directory / "dllmain.pdb";
+    std::string build_id = "efaecd92f773bb4ebcf213b84f43b322-3";
+    const auto result = SymbolHelper::VerifySymbolsFile(symbols_file, build_id);
+    EXPECT_THAT(result, HasValue());
+  }
+  {
+    // valid pdb file containing symbols, build id not matching
+    fs::path symbols_file = testdata_directory / "dllmain.pdb";
+    std::string build_id = "incorrect build id";
+    const auto result = SymbolHelper::VerifySymbolsFile(symbols_file, build_id);
+    EXPECT_THAT(result, HasError("has a different build id"));
+  }
+  {
+    // valid coff file no symbols and matching build id
+    fs::path symbols_file = testdata_directory / "dllmain.dll";
+    std::string build_id = "efaecd92f773bb4ebcf213b84f43b322-3";
     const auto result = SymbolHelper::VerifySymbolsFile(symbols_file, build_id);
     EXPECT_THAT(result, HasError("does not contain symbols"));
   }
@@ -243,7 +333,7 @@ TEST(SymbolHelper, VerifySymbolsFile) {
     fs::path symbols_file = "path/to/invalid_file";
     std::string build_id = "build id does not matter";
     const auto result = SymbolHelper::VerifySymbolsFile(symbols_file, build_id);
-    EXPECT_THAT(result, HasError("Unable to load object file"));
+    EXPECT_THAT(result, HasError("Unable to create symbols file"));
   }
 }
 
