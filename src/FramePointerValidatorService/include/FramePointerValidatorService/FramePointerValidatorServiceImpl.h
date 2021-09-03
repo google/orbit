@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CORE_FRAME_POINTER_VALIDATOR_SERVICE_H_
-#define ORBIT_CORE_FRAME_POINTER_VALIDATOR_SERVICE_H_
+#ifndef FRAME_POINTER_VALIDATOR_SERVICE_FRAME_POINTER_VALIDATOR_SERVICE_IMPL_H_
+#define FRAME_POINTER_VALIDATOR_SERVICE_FRAME_POINTER_VALIDATOR_SERVICE_IMPL_H_
 
 #include <grpcpp/grpcpp.h>
 
 #include "services.grpc.pb.h"
 #include "services.pb.h"
 
-namespace orbit_service {
+namespace orbit_frame_pointer_validator_service {
 
 // Runs on the service and receives requests from FramePointerValidatorClient to
 // validate whether certain modules are compiled with frame pointers.
@@ -24,6 +24,6 @@ class FramePointerValidatorServiceImpl final
       orbit_grpc_protos::ValidateFramePointersResponse* response) override;
 };
 
-}  // namespace orbit_service
+}  // namespace orbit_frame_pointer_validator_service
 
-#endif  // ORBIT_CORE_FRAME_POINTER_VALIDATOR_SERVICE_H_
+#endif  // FRAME_POINTER_VALIDATOR_SERVICE_FRAME_POINTER_VALIDATOR_SERVICE_IMPL_H_

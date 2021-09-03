@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "FramePointerValidatorServiceImpl.h"
+#include "FramePointerValidatorService/FramePointerValidatorServiceImpl.h"
 
 #include <absl/strings/str_format.h>
 
@@ -12,17 +12,16 @@
 
 #include "FramePointerValidator/FramePointerValidator.h"
 #include "ObjectUtils/ElfFile.h"
-#include "OrbitBase/Result.h"
 #include "code_block.pb.h"
 
-namespace orbit_service {
+namespace orbit_frame_pointer_validator_service {
 
 using orbit_grpc_protos::CodeBlock;
 using orbit_grpc_protos::ValidateFramePointersRequest;
 using orbit_grpc_protos::ValidateFramePointersResponse;
 
 grpc::Status FramePointerValidatorServiceImpl::ValidateFramePointers(
-    grpc::ServerContext*, const ValidateFramePointersRequest* request,
+    grpc::ServerContext* /*context*/, const ValidateFramePointersRequest* request,
     ValidateFramePointersResponse* response) {
   // Even though this information should be available on the client,
   // we want not rely on this here, and for this particular use case we are
@@ -57,4 +56,4 @@ grpc::Status FramePointerValidatorServiceImpl::ValidateFramePointers(
   return grpc::Status::OK;
 }
 
-}  // namespace orbit_service
+}  // namespace orbit_frame_pointer_validator_service
