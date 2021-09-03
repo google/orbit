@@ -18,6 +18,7 @@
 #include "OrbitBase/Result.h"
 #include "ServiceUtils.h"
 #include "Test/Path.h"
+#include "TestUtils/TestUtils.h"
 #include "services.pb.h"
 #include "tracepoint.pb.h"
 
@@ -25,6 +26,8 @@ namespace orbit_service::utils {
 
 using Path = std::filesystem::path;
 using orbit_grpc_protos::GetDebugInfoFileRequest;
+using orbit_test_utils::HasError;
+using orbit_test_utils::HasValue;
 
 TEST(ServiceUtils, GetCumulativeTotalCpuTime) {
   // There is not much invariance here which we can test.
@@ -71,7 +74,7 @@ TEST(ServiceUtils, FindSymbolsFilePath) {
     request.set_module_path(hello_world_path.string());
     request.add_additional_search_directories(test_path);
     const auto result = FindSymbolsFilePath(request);
-    ASSERT_TRUE(result.has_value()) << result.error().message();
+    ASSERT_THAT(result, HasValue());
     EXPECT_EQ(result.value(), hello_world_path);
   }
 
@@ -83,7 +86,7 @@ TEST(ServiceUtils, FindSymbolsFilePath) {
     request.set_module_path(no_symbols_path.string());
     request.add_additional_search_directories(test_path);
     const auto result = FindSymbolsFilePath(request);
-    ASSERT_TRUE(result.has_value()) << result.error().message();
+    ASSERT_THAT(result, HasValue());
     EXPECT_EQ(result.value(), symbols_path);
   }
 
@@ -94,8 +97,7 @@ TEST(ServiceUtils, FindSymbolsFilePath) {
     request.set_module_path(not_existing_file.string());
     request.add_additional_search_directories(test_path);
     const auto result = FindSymbolsFilePath(request);
-    ASSERT_TRUE(result.has_error());
-    EXPECT_THAT(result.error().message(), testing::HasSubstr("Unable to load ELF file"));
+    EXPECT_THAT(result, HasError("Unable to load ELF file"));
   }
 
   {
@@ -105,7 +107,7 @@ TEST(ServiceUtils, FindSymbolsFilePath) {
     request.set_module_path(hello_world_elf_no_build_id.string());
     request.add_additional_search_directories(test_path);
     const auto result = FindSymbolsFilePath(request);
-    ASSERT_TRUE(result.has_value()) << result.error().message();
+    ASSERT_THAT(result, HasValue());
     EXPECT_EQ(result.value(), hello_world_elf_no_build_id);
   }
 
@@ -116,8 +118,7 @@ TEST(ServiceUtils, FindSymbolsFilePath) {
     request.set_module_path(no_symbols_no_build_id.string());
     request.add_additional_search_directories(test_path);
     const auto result = FindSymbolsFilePath(request);
-    ASSERT_TRUE(result.has_error());
-    EXPECT_THAT(result.error().message(), testing::HasSubstr("Module does not contain a build id"));
+    EXPECT_THAT(result, HasError("Module does not contain a build id"));
   }
 }
 
