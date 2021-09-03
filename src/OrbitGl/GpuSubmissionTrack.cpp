@@ -33,7 +33,7 @@ GpuSubmissionTrack::GpuSubmissionTrack(Track* parent, TimeGraph* time_graph,
                                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                        uint64_t timeline_hash, OrbitApp* app,
                                        const orbit_client_data::CaptureData* capture_data,
-                                       orbit_client_data::TrackData* track_data)
+                                       orbit_client_data::TrackPaneData* track_data)
     : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, track_data),
       timeline_hash_{timeline_hash},
       string_manager_{app->GetStringManager()},

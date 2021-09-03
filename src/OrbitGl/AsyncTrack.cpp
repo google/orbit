@@ -33,7 +33,7 @@ using orbit_grpc_protos::InstrumentedFunction;
 AsyncTrack::AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string name,
                        OrbitApp* app, const orbit_client_data::CaptureData* capture_data,
-                       orbit_client_data::TrackData* track_data)
+                       orbit_client_data::TrackPaneData* track_data)
     : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, track_data),
       name_(std::move(name)) {}
 

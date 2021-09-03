@@ -28,7 +28,7 @@ class FrameTrack : public TimerTrack {
                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                       orbit_grpc_protos::InstrumentedFunction function, OrbitApp* app,
                       const orbit_client_data::CaptureData* capture_data,
-                      orbit_client_data::TrackData* track_data);
+                      orbit_client_data::TrackPaneData* track_data);
 
   [[nodiscard]] std::string GetName() const override {
     return absl::StrFormat("Frame track based on %s", function_.function_name());

@@ -4,12 +4,12 @@
 
 #include <gtest/gtest.h>
 
-#include "ClientData/TrackData.h"
+#include "ClientData/TrackPaneData.h"
 
 namespace orbit_client_data {
 
 TEST(TrackData, IsEmpty) {
-  TrackData track_data;
+  TrackPaneData track_data;
   EXPECT_TRUE(track_data.GetChains().empty());
   EXPECT_EQ(track_data.GetChain(0), nullptr);
   EXPECT_EQ(track_data.GetChain(7), nullptr);
@@ -20,7 +20,7 @@ TEST(TrackData, IsEmpty) {
 }
 
 TEST(TrackData, AddTimers) {
-  TrackData track_data;
+  TrackPaneData track_data;
   orbit_client_protos::TimerInfo timer_info;
   timer_info.set_start(2);
   timer_info.set_end(5);
