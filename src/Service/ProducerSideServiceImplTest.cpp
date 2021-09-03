@@ -14,7 +14,7 @@
 #include <optional>
 #include <thread>
 
-#include "CaptureEventBuffer.h"
+#include "CaptureService/ProducerEventProcessor.h"
 #include "ProducerSideServiceImpl.h"
 #include "capture.pb.h"
 #include "producer_side_services.grpc.pb.h"
@@ -106,7 +106,7 @@ class FakeProducer {
   std::thread read_thread_;
 };
 
-class MockProducerEventProcessor : public ProducerEventProcessor {
+class MockProducerEventProcessor : public orbit_capture_service::ProducerEventProcessor {
  public:
   MOCK_METHOD(void, ProcessEvent, (uint64_t, orbit_grpc_protos::ProducerCaptureEvent event),
               (override));

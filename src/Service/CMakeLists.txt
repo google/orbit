@@ -10,13 +10,6 @@ project(ServiceLib)
 add_library(ServiceLib STATIC)
 
 target_sources(ServiceLib PRIVATE
-        CaptureEventBuffer.h
-        CaptureEventSender.h
-        CaptureServiceImpl.cpp
-        CaptureServiceImpl.h
-        CaptureStartStopListener.h
-        MemoryInfoHandler.cpp
-        MemoryInfoHandler.h
         OrbitGrpcServer.cpp
         OrbitGrpcServer.h
         OrbitService.cpp
@@ -27,14 +20,10 @@ target_sources(ServiceLib PRIVATE
         ProcessList.h
         ProcessServiceImpl.cpp
         ProcessServiceImpl.h
-        ProducerEventProcessor.cpp
-        ProducerEventProcessor.h
         ProducerSideServer.cpp
         ProducerSideServer.h
         ProducerSideServiceImpl.cpp
         ProducerSideServiceImpl.h
-        TracingHandler.cpp
-        TracingHandler.h
         ServiceUtils.cpp
         ServiceUtils.h)
 
@@ -45,18 +34,14 @@ endif()
 target_include_directories(ServiceLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(ServiceLib PUBLIC
-        ApiLoader
+        CaptureService
         CrashService
         FramePointerValidatorService
         GrpcProtos
-        Introspection
-        LinuxTracing
-        MemoryTracing
         ObjectUtils
         OrbitVersion
         ProducerSideChannel
-        TracepointService
-        UserSpaceInstrumentation)
+        TracepointService)
 
 project(OrbitService)
 add_executable(OrbitService main.cpp)
@@ -69,7 +54,6 @@ add_executable(ServiceTests)
 target_sources(ServiceTests PRIVATE
         ProcessListTest.cpp
         ProcessTest.cpp
-        ProducerEventProcessorTest.cpp
         ProducerSideServiceImplTest.cpp
         ServiceUtilsTest.cpp)
 

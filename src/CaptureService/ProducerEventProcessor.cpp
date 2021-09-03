@@ -2,16 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ProducerEventProcessor.h"
+#include "CaptureService/ProducerEventProcessor.h"
 
 #include <absl/container/flat_hash_map.h>
 
 #include "OrbitBase/Logging.h"
 #include "capture.pb.h"
-
-namespace orbit_service {
-
-namespace {
 
 using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::ApiEvent;
@@ -57,6 +53,10 @@ using orbit_grpc_protos::ThreadNamesSnapshot;
 using orbit_grpc_protos::ThreadStateSlice;
 using orbit_grpc_protos::TracepointEvent;
 using orbit_grpc_protos::WarningEvent;
+
+namespace orbit_capture_service {
+
+namespace {
 
 template <typename T>
 class InternPool final {
@@ -395,77 +395,77 @@ void ProducerEventProcessorImpl::ProcessApiEventAndTransferOwnership(ApiEvent* a
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void orbit_service::ProducerEventProcessorImpl::ProcessApiScopeStartAndTransferOwnership(
+void ProducerEventProcessorImpl::ProcessApiScopeStartAndTransferOwnership(
     ApiScopeStart* api_scope_start) {
   ClientCaptureEvent event;
   event.set_allocated_api_scope_start(api_scope_start);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void orbit_service::ProducerEventProcessorImpl::ProcessApiScopeStartAsyncAndTransferOwnership(
+void ProducerEventProcessorImpl::ProcessApiScopeStartAsyncAndTransferOwnership(
     ApiScopeStartAsync* api_scope_start_async) {
   ClientCaptureEvent event;
   event.set_allocated_api_scope_start_async(api_scope_start_async);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void orbit_service::ProducerEventProcessorImpl::ProcessApiScopeStopAndTransferOwnership(
+void ProducerEventProcessorImpl::ProcessApiScopeStopAndTransferOwnership(
     ApiScopeStop* api_scope_stop) {
   ClientCaptureEvent event;
   event.set_allocated_api_scope_stop(api_scope_stop);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void orbit_service::ProducerEventProcessorImpl::ProcessApiScopeStopAsyncAndTransferOwnership(
+void ProducerEventProcessorImpl::ProcessApiScopeStopAsyncAndTransferOwnership(
     ApiScopeStopAsync* api_scope_stop_async) {
   ClientCaptureEvent event;
   event.set_allocated_api_scope_stop_async(api_scope_stop_async);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void orbit_service::ProducerEventProcessorImpl::ProcessApiStringEventAndTransferOwnership(
+void ProducerEventProcessorImpl::ProcessApiStringEventAndTransferOwnership(
     ApiStringEvent* api_string_event) {
   ClientCaptureEvent event;
   event.set_allocated_api_string_event(api_string_event);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void orbit_service::ProducerEventProcessorImpl::ProcessApiTrackDoubleAndTransferOwnership(
+void ProducerEventProcessorImpl::ProcessApiTrackDoubleAndTransferOwnership(
     ApiTrackDouble* api_track_double) {
   ClientCaptureEvent event;
   event.set_allocated_api_track_double(api_track_double);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void orbit_service::ProducerEventProcessorImpl::ProcessApiTrackFloatAndTransferOwnership(
+void ProducerEventProcessorImpl::ProcessApiTrackFloatAndTransferOwnership(
     ApiTrackFloat* api_track_float) {
   ClientCaptureEvent event;
   event.set_allocated_api_track_float(api_track_float);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void orbit_service::ProducerEventProcessorImpl::ProcessApiTrackIntAndTransferOwnership(
+void ProducerEventProcessorImpl::ProcessApiTrackIntAndTransferOwnership(
     ApiTrackInt* api_track_int) {
   ClientCaptureEvent event;
   event.set_allocated_api_track_int(api_track_int);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void orbit_service::ProducerEventProcessorImpl::ProcessApiTrackInt64AndTransferOwnership(
+void ProducerEventProcessorImpl::ProcessApiTrackInt64AndTransferOwnership(
     ApiTrackInt64* api_track_int64) {
   ClientCaptureEvent event;
   event.set_allocated_api_track_int64(api_track_int64);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void orbit_service::ProducerEventProcessorImpl::ProcessApiTrackUintAndTransferOwnership(
+void ProducerEventProcessorImpl::ProcessApiTrackUintAndTransferOwnership(
     ApiTrackUint* api_track_uint) {
   ClientCaptureEvent event;
   event.set_allocated_api_track_uint(api_track_uint);
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void orbit_service::ProducerEventProcessorImpl::ProcessApiTrackUint64AndTransferOwnership(
+void ProducerEventProcessorImpl::ProcessApiTrackUint64AndTransferOwnership(
     ApiTrackUint64* api_track_uint64) {
   ClientCaptureEvent event;
   event.set_allocated_api_track_uint64(api_track_uint64);
@@ -657,4 +657,4 @@ std::unique_ptr<ProducerEventProcessor> ProducerEventProcessor::Create(
   return std::make_unique<ProducerEventProcessorImpl>(capture_event_buffer);
 }
 
-}  // namespace orbit_service
+}  // namespace orbit_capture_service

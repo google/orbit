@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_SERVICE_CAPTURE_EVENT_BUFFER_H_
-#define ORBIT_SERVICE_CAPTURE_EVENT_BUFFER_H_
+#ifndef CAPTURE_SERVICE_CAPTURE_EVENT_BUFFER_H_
+#define CAPTURE_SERVICE_CAPTURE_EVENT_BUFFER_H_
 
 #include "capture.pb.h"
 
-namespace orbit_service {
+namespace orbit_capture_service {
 
 // Interface used to buffer CaptureEvents so that multiple CaptureEvents
 // can be processed at the same time (e.g., grouped into fewer bigger CaptureResponses).
@@ -18,6 +18,6 @@ class CaptureEventBuffer {
   virtual void AddEvent(orbit_grpc_protos::ClientCaptureEvent&& event) = 0;
 };
 
-}  // namespace orbit_service
+}  // namespace orbit_capture_service
 
-#endif  // ORBIT_SERVICE_CAPTURE_EVENT_BUFFER_H_
+#endif  // CAPTURE_SERVICE_CAPTURE_EVENT_BUFFER_H_

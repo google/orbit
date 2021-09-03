@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CaptureServiceImpl.h"
+#include "include/CaptureService/CaptureServiceImpl.h"
 
 #include <absl/base/thread_annotations.h>
 #include <absl/container/flat_hash_set.h>
@@ -19,8 +19,9 @@
 
 #include "ApiLoader/EnableInTracee.h"
 #include "ApiUtils/Event.h"
-#include "CaptureEventBuffer.h"
 #include "CaptureEventSender.h"
+#include "CaptureService/CaptureEventBuffer.h"
+#include "CaptureService/ProducerEventProcessor.h"
 #include "GrpcProtos/Constants.h"
 #include "Introspection/Introspection.h"
 #include "MemoryInfoHandler.h"
@@ -29,11 +30,8 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitVersion/OrbitVersion.h"
-#include "ProducerEventProcessor.h"
 #include "TracingHandler.h"
 #include "capture.pb.h"
-
-namespace orbit_service {
 
 using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureOptions;
@@ -41,6 +39,8 @@ using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::ProducerCaptureEvent;
+
+namespace orbit_capture_service {
 
 namespace {
 
@@ -491,4 +491,4 @@ void CaptureServiceImpl::EstimateAndLogClockResolution() {
   }
 }
 
-}  // namespace orbit_service
+}  // namespace orbit_capture_service

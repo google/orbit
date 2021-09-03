@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_SERVICE_LINUX_TRACING_HANDLER_H_
-#define ORBIT_SERVICE_LINUX_TRACING_HANDLER_H_
+#ifndef CAPTURE_SERVICE_LINUX_TRACING_HANDLER_H_
+#define CAPTURE_SERVICE_LINUX_TRACING_HANDLER_H_
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
@@ -12,15 +12,15 @@
 #include <memory>
 #include <string>
 
+#include "CaptureService/ProducerEventProcessor.h"
 #include "Introspection/Introspection.h"
 #include "LinuxTracing/Tracer.h"
 #include "OrbitBase/Logging.h"
-#include "ProducerEventProcessor.h"
 #include "TracingInterface/TracerListener.h"
 #include "capture.pb.h"
 #include "tracepoint.pb.h"
 
-namespace orbit_service {
+namespace orbit_capture_service {
 
 class TracingHandler : public orbit_tracing_interface::TracerListener {
  public:
@@ -59,6 +59,6 @@ class TracingHandler : public orbit_tracing_interface::TracerListener {
   std::unique_ptr<orbit_tracing_interface::Tracer> tracer_;
 };
 
-}  // namespace orbit_service
+}  // namespace orbit_capture_service
 
-#endif  // ORBIT_SERVICE_LINUX_TRACING_HANDLER_H_
+#endif  // CAPTURE_SERVICE_LINUX_TRACING_HANDLER_H_

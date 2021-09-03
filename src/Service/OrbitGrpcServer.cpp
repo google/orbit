@@ -12,7 +12,8 @@
 #include <string>
 #include <utility>
 
-#include "CaptureServiceImpl.h"
+#include "CaptureService/CaptureServiceImpl.h"
+#include "CaptureService/CaptureStartStopListener.h"
 #include "CrashService/CrashServiceImpl.h"
 #include "FramePointerValidatorService/FramePointerValidatorServiceImpl.h"
 #include "ProcessServiceImpl.h"
@@ -33,11 +34,13 @@ class OrbitGrpcServerImpl final : public OrbitGrpcServer {
   void Shutdown() override;
   void Wait() override;
 
-  void AddCaptureStartStopListener(CaptureStartStopListener* listener) override;
-  void RemoveCaptureStartStopListener(CaptureStartStopListener* listener) override;
+  void AddCaptureStartStopListener(
+      orbit_capture_service::CaptureStartStopListener* listener) override;
+  void RemoveCaptureStartStopListener(
+      orbit_capture_service::CaptureStartStopListener* listener) override;
 
  private:
-  CaptureServiceImpl capture_service_;
+  orbit_capture_service::CaptureServiceImpl capture_service_;
   ProcessServiceImpl process_service_;
   orbit_tracepoint_service::TracepointServiceImpl tracepoint_service_;
   orbit_frame_pointer_validator_service::FramePointerValidatorServiceImpl
@@ -70,11 +73,13 @@ void OrbitGrpcServerImpl::Shutdown() { server_->Shutdown(); }
 
 void OrbitGrpcServerImpl::Wait() { server_->Wait(); }
 
-void OrbitGrpcServerImpl::AddCaptureStartStopListener(CaptureStartStopListener* listener) {
+void OrbitGrpcServerImpl::AddCaptureStartStopListener(
+    orbit_capture_service::CaptureStartStopListener* listener) {
   capture_service_.AddCaptureStartStopListener(listener);
 }
 
-void OrbitGrpcServerImpl::RemoveCaptureStartStopListener(CaptureStartStopListener* listener) {
+void OrbitGrpcServerImpl::RemoveCaptureStartStopListener(
+    orbit_capture_service::CaptureStartStopListener* listener) {
   capture_service_.RemoveCaptureStartStopListener(listener);
 }
 
