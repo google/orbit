@@ -7,11 +7,10 @@
 
 #include <memory>
 
-#include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "Process.h"
+#include "ProcessService/Process.h"
 
-namespace orbit_service {
+namespace orbit_process_service_internal {
 
 TEST(Process, FromPid) {
   auto potential_process = Process::FromPid(getpid());
@@ -23,4 +22,4 @@ TEST(Process, FromPid) {
   EXPECT_EQ(process.process_info().name(), orbit_base::GetThreadNameNative(getpid()));
 }
 
-}  // namespace orbit_service
+}  // namespace orbit_process_service_internal

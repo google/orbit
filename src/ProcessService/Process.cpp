@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "Process.h"
+#include "ProcessService/Process.h"
 
 #include <absl/strings/ascii.h>
 #include <absl/strings/str_format.h>
@@ -18,11 +18,11 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
-#include "ServiceUtils.h"
+#include "ProcessServiceUtils.h"
 
-namespace orbit_service {
+namespace orbit_process_service_internal {
 
-void Process::UpdateCpuUsage(utils::Jiffies process_cpu_time, utils::TotalCpuTime total_cpu_time) {
+void Process::UpdateCpuUsage(Jiffies process_cpu_time, TotalCpuTime total_cpu_time) {
   const auto diff_process_cpu_time =
       static_cast<double>(process_cpu_time.value - previous_process_cpu_time_.value);
   const auto diff_total_cpu_time =
@@ -69,8 +69,9 @@ ErrorMessageOr<Process> Process::FromPid(pid_t pid) {
   process.process_info_.set_pid(pid);
   process.process_info_.set_name(name);
 
-  const auto total_cpu_time = utils::GetCumulativeTotalCpuTime();
-  const auto cpu_time = utils::GetCumulativeCpuTimeFromProcess(process.process_info().pid());
+  const auto total_cpu_time = orbit_process_service::GetCumulativeTotalCpuTime();
+  const auto cpu_time =
+      orbit_process_service::GetCumulativeCpuTimeFromProcess(process.process_info().pid());
   if (cpu_time && total_cpu_time) {
     process.UpdateCpuUsage(cpu_time.value(), total_cpu_time.value());
   } else {
@@ -107,4 +108,4 @@ ErrorMessageOr<Process> Process::FromPid(pid_t pid) {
   return process;
 }
 
-}  // namespace orbit_service
+}  // namespace orbit_process_service_internal

@@ -1,0 +1,38 @@
+// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#ifndef PROCESS_SERVICE_PROCESS_SERVICE_UTILS_H_
+#define PROCESS_SERVICE_PROCESS_SERVICE_UTILS_H_
+
+#include <stdint.h>
+
+#include <ctime>
+#include <filesystem>
+#include <functional>
+#include <map>
+#include <memory>
+#include <optional>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+#include "OrbitBase/Result.h"
+#include "ProcessService/CpuTime.h"
+#include "module.pb.h"
+#include "services.pb.h"
+#include "tracepoint.pb.h"
+
+namespace orbit_process_service {
+
+std::optional<orbit_process_service_internal::TotalCpuTime> GetCumulativeTotalCpuTime();
+std::optional<orbit_process_service_internal::Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid);
+
+ErrorMessageOr<std::filesystem::path> FindSymbolsFilePath(
+    const orbit_grpc_protos::GetDebugInfoFileRequest& request);
+bool ReadProcessMemory(uint32_t pid, uintptr_t address, void* buffer, uint64_t size,
+                       uint64_t* num_bytes_read);
+
+}  // namespace orbit_process_service
+
+#endif  // PROCESS_SERVICE_PROCESS_SERVICE_UTILS_H_

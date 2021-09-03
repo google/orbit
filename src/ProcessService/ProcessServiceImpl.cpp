@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ProcessServiceImpl.h"
+#include "ProcessService/ProcessServiceImpl.h"
 
 #include <absl/strings/str_format.h>
 #include <stdint.h>
@@ -15,13 +15,11 @@
 
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "ServiceUtils.h"
-#include "module.pb.h"
+#include "ProcessServiceUtils.h"
 #include "process.pb.h"
 
-namespace orbit_service {
+namespace orbit_process_service {
 
 using grpc::ServerContext;
 using grpc::Status;
@@ -37,7 +35,8 @@ using orbit_grpc_protos::GetProcessMemoryRequest;
 using orbit_grpc_protos::GetProcessMemoryResponse;
 using orbit_grpc_protos::ProcessInfo;
 
-Status ProcessServiceImpl::GetProcessList(ServerContext*, const GetProcessListRequest*,
+Status ProcessServiceImpl::GetProcessList(ServerContext* /*context*/,
+                                          const GetProcessListRequest* /*request*/,
                                           GetProcessListResponse* response) {
   {
     absl::MutexLock lock(&mutex_);
@@ -78,13 +77,14 @@ Status ProcessServiceImpl::GetModuleList(ServerContext* /*context*/,
   return Status::OK;
 }
 
-Status ProcessServiceImpl::GetProcessMemory(ServerContext*, const GetProcessMemoryRequest* request,
+Status ProcessServiceImpl::GetProcessMemory(ServerContext* /*context*/,
+                                            const GetProcessMemoryRequest* request,
                                             GetProcessMemoryResponse* response) {
   uint64_t size = std::min(request->size(), kMaxGetProcessMemoryResponseSize);
   response->mutable_memory()->resize(size);
   uint64_t num_bytes_read = 0;
-  if (utils::ReadProcessMemory(request->pid(), request->address(),
-                               response->mutable_memory()->data(), size, &num_bytes_read)) {
+  if (ReadProcessMemory(request->pid(), request->address(), response->mutable_memory()->data(),
+                        size, &num_bytes_read)) {
     response->mutable_memory()->resize(num_bytes_read);
     return Status::OK;
   }
@@ -97,10 +97,11 @@ Status ProcessServiceImpl::GetProcessMemory(ServerContext*, const GetProcessMemo
                                 request->address(), request->pid()));
 }
 
-Status ProcessServiceImpl::GetDebugInfoFile(ServerContext*, const GetDebugInfoFileRequest* request,
+Status ProcessServiceImpl::GetDebugInfoFile(ServerContext* /*context*/,
+                                            const GetDebugInfoFileRequest* request,
                                             GetDebugInfoFileResponse* response) {
   CHECK(request != nullptr);
-  const auto symbols_path = utils::FindSymbolsFilePath(*request);
+  const auto symbols_path = FindSymbolsFilePath(*request);
   if (symbols_path.has_error()) {
     return Status(StatusCode::NOT_FOUND, symbols_path.error().message());
   }
@@ -109,4 +110,4 @@ Status ProcessServiceImpl::GetDebugInfoFile(ServerContext*, const GetDebugInfoFi
   return Status::OK;
 }
 
-}  // namespace orbit_service
+}  // namespace orbit_process_service

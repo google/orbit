@@ -14,18 +14,10 @@ target_sources(ServiceLib PRIVATE
         OrbitGrpcServer.h
         OrbitService.cpp
         OrbitService.h
-        Process.cpp
-        Process.h
-        ProcessList.cpp
-        ProcessList.h
-        ProcessServiceImpl.cpp
-        ProcessServiceImpl.h
         ProducerSideServer.cpp
         ProducerSideServer.h
         ProducerSideServiceImpl.cpp
-        ProducerSideServiceImpl.h
-        ServiceUtils.cpp
-        ServiceUtils.h)
+        ProducerSideServiceImpl.h)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   set_target_properties(ServiceLib PROPERTIES COMPILE_FLAGS /wd4127)
@@ -38,8 +30,8 @@ target_link_libraries(ServiceLib PUBLIC
         CrashService
         FramePointerValidatorService
         GrpcProtos
-        ObjectUtils
         OrbitVersion
+        ProcessService
         ProducerSideChannel
         TracepointService)
 
@@ -52,10 +44,7 @@ strip_symbols(OrbitService)
 add_executable(ServiceTests)
 
 target_sources(ServiceTests PRIVATE
-        ProcessListTest.cpp
-        ProcessTest.cpp
-        ProducerSideServiceImplTest.cpp
-        ServiceUtilsTest.cpp)
+        ProducerSideServiceImplTest.cpp)
 
 target_link_libraries(ServiceTests PRIVATE
         ServiceLib
@@ -63,9 +52,3 @@ target_link_libraries(ServiceTests PRIVATE
         GTest::Main)
 
 register_test(ServiceTests PROPERTIES TIMEOUT 10)
-
-add_fuzzer(OrbitServiceUtilsFindSymbolsFilePathFuzzer
-           OrbitServiceUtilsFindSymbolsFilePathFuzzer.cpp)
-target_link_libraries(
-        OrbitServiceUtilsFindSymbolsFilePathFuzzer PRIVATE ServiceLib
-        FuzzingUtils)

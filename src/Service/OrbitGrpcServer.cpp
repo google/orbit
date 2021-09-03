@@ -16,7 +16,7 @@
 #include "CaptureService/CaptureStartStopListener.h"
 #include "CrashService/CrashServiceImpl.h"
 #include "FramePointerValidatorService/FramePointerValidatorServiceImpl.h"
-#include "ProcessServiceImpl.h"
+#include "ProcessService/ProcessServiceImpl.h"
 #include "TracepointService/TracepointServiceImpl.h"
 
 namespace orbit_service {
@@ -41,7 +41,7 @@ class OrbitGrpcServerImpl final : public OrbitGrpcServer {
 
  private:
   orbit_capture_service::CaptureServiceImpl capture_service_;
-  ProcessServiceImpl process_service_;
+  orbit_process_service::ProcessServiceImpl process_service_;
   orbit_tracepoint_service::TracepointServiceImpl tracepoint_service_;
   orbit_frame_pointer_validator_service::FramePointerValidatorServiceImpl
       frame_pointer_validator_service_;

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ProcessList.h"
+#include "ProcessService/ProcessList.h"
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/strings/numbers.h>
@@ -13,9 +13,9 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "ServiceUtils.h"
+#include "ProcessServiceUtils.h"
 
-namespace orbit_service {
+namespace orbit_process_service_internal {
 
 ErrorMessageOr<void> ProcessList::Refresh() {
   absl::flat_hash_map<pid_t, Process> updated_processes{};
@@ -54,8 +54,8 @@ ErrorMessageOr<void> ProcessList::Refresh() {
     if (iter != processes_.end()) {
       auto process = processes_.extract(iter);
 
-      const auto total_cpu_time = utils::GetCumulativeTotalCpuTime();
-      const auto cpu_time = utils::GetCumulativeCpuTimeFromProcess(process.key());
+      const auto total_cpu_time = orbit_process_service::GetCumulativeTotalCpuTime();
+      const auto cpu_time = orbit_process_service::GetCumulativeCpuTimeFromProcess(process.key());
       if (cpu_time && total_cpu_time) {
         process.mapped().UpdateCpuUsage(cpu_time.value(), total_cpu_time.value());
       } else {
@@ -91,4 +91,4 @@ ErrorMessageOr<void> ProcessList::Refresh() {
   return outcome::success();
 }
 
-}  // namespace orbit_service
+}  // namespace orbit_process_service_internal
