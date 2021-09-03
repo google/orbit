@@ -65,26 +65,26 @@ TEST(ServiceUtils, GetCumulativeCpuTimeFromProcess) {
 }
 
 TEST(ServiceUtils, FindSymbolsFilePath) {
-  const Path test_path = orbit_test::GetTestdataDir();
+  const Path test_directory = orbit_test::GetTestdataDir();
 
   {
     // same file
-    const Path hello_world_path = test_path / "hello_world_elf";
+    const Path module_path = test_directory / "hello_world_elf";
     GetDebugInfoFileRequest request;
-    request.set_module_path(hello_world_path.string());
-    request.add_additional_search_directories(test_path);
+    request.set_module_path(module_path.string());
+    request.add_additional_search_directories(test_directory);
     const auto result = FindSymbolsFilePath(request);
     ASSERT_THAT(result, HasValue());
-    EXPECT_EQ(result.value(), hello_world_path);
+    EXPECT_EQ(result.value(), module_path);
   }
 
   {
     // separate file
-    const Path no_symbols_path = test_path / "no_symbols_elf";
-    const Path symbols_path = test_path / "no_symbols_elf.debug";
+    const Path module_path = test_directory / "no_symbols_elf";
+    const Path symbols_path = test_directory / "no_symbols_elf.debug";
     GetDebugInfoFileRequest request;
-    request.set_module_path(no_symbols_path.string());
-    request.add_additional_search_directories(test_path);
+    request.set_module_path(module_path.string());
+    request.add_additional_search_directories(test_directory);
     const auto result = FindSymbolsFilePath(request);
     ASSERT_THAT(result, HasValue());
     EXPECT_EQ(result.value(), symbols_path);
@@ -92,31 +92,31 @@ TEST(ServiceUtils, FindSymbolsFilePath) {
 
   {
     // non exising elf_file
-    const Path not_existing_file = test_path / "not_existing_file";
+    const Path module_path = test_directory / "not_existing_file";
     GetDebugInfoFileRequest request;
-    request.set_module_path(not_existing_file.string());
-    request.add_additional_search_directories(test_path);
+    request.set_module_path(module_path.string());
+    request.add_additional_search_directories(test_directory);
     const auto result = FindSymbolsFilePath(request);
     EXPECT_THAT(result, HasError("Unable to load ELF file"));
   }
 
   {
     // no build id, but does include symbols
-    const Path hello_world_elf_no_build_id = test_path / "hello_world_elf_no_build_id";
+    const Path module_path = test_directory / "hello_world_elf_no_build_id";
     GetDebugInfoFileRequest request;
-    request.set_module_path(hello_world_elf_no_build_id.string());
-    request.add_additional_search_directories(test_path);
+    request.set_module_path(module_path.string());
+    request.add_additional_search_directories(test_directory);
     const auto result = FindSymbolsFilePath(request);
     ASSERT_THAT(result, HasValue());
-    EXPECT_EQ(result.value(), hello_world_elf_no_build_id);
+    EXPECT_EQ(result.value(), module_path);
   }
 
   {
     // no build id, no symbols
-    const Path no_symbols_no_build_id = test_path / "no_symbols_no_build_id";
+    const Path module_path = test_directory / "no_symbols_no_build_id";
     GetDebugInfoFileRequest request;
-    request.set_module_path(no_symbols_no_build_id.string());
-    request.add_additional_search_directories(test_path);
+    request.set_module_path(module_path.string());
+    request.add_additional_search_directories(test_directory);
     const auto result = FindSymbolsFilePath(request);
     EXPECT_THAT(result, HasError("Module does not contain a build id"));
   }
