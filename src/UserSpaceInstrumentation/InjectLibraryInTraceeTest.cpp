@@ -5,6 +5,7 @@
 #include <absl/base/casts.h>
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
+#include <absl/strings/str_split.h>
 #include <dlfcn.h>
 #include <gtest/gtest.h>
 #include <sys/wait.h>
@@ -12,6 +13,7 @@
 #include <chrono>
 #include <csignal>
 #include <string>
+#include <string_view>
 #include <thread>
 
 #include "AllocateInTracee.h"
@@ -32,6 +34,35 @@ namespace {
 
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;
+using orbit_test_utils::HasValue;
+using testing::Eq;
+
+static ErrorMessageOr<bool> IsInodeInMapsFile(ino_t inode, pid_t pid) {
+  OUTCOME_TRY(auto&& maps_contents,
+              orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid)));
+  std::vector<std::string_view> lines = absl::StrSplit(maps_contents, '\n');
+
+  for (auto line : lines) {
+    std::vector<std::string_view> fields = absl::StrSplit(line, ' ', absl::SkipEmpty{});
+    constexpr int kInodeFieldIndex = 4;
+    if (fields.size() < kInodeFieldIndex) continue;
+
+    ino_t current_inode{};
+    if (!absl::SimpleAtoi(fields[kInodeFieldIndex], &current_inode)) continue;
+
+    if (current_inode == inode) return true;
+  }
+
+  return false;
+}
+
+static ErrorMessageOr<ino_t> GetInodeFromFilePath(const std::string& file_path) {
+  struct stat stat_buf {};
+  if (stat(file_path.c_str(), &stat_buf) != 0) {
+    return ErrorMessage{absl::StrFormat("Failed to obtain inode of '%s'", file_path)};
+  }
+  return stat_buf.st_ino;
+}
 
 void OpenUseAndCloseLibrary(pid_t pid) {
   // Stop the child process using our tooling.
@@ -41,18 +72,19 @@ void OpenUseAndCloseLibrary(pid_t pid) {
   ASSERT_THAT(library_path_or_error, HasNoError());
   std::filesystem::path library_path = std::move(library_path_or_error.value());
 
+  ErrorMessageOr<ino_t> inode_of_library = GetInodeFromFilePath(library_path);
+  ASSERT_THAT(inode_of_library, HasNoError());
+
   // Tracee does not have the dynamic lib loaded, obviously.
-  auto maps_before = orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
-  CHECK(maps_before.has_value());
-  EXPECT_FALSE(absl::StrContains(maps_before.value(), library_path.filename().string()));
+  EXPECT_THAT(IsInodeInMapsFile(inode_of_library.value(), pid),
+              orbit_test_utils::HasValue(Eq(false)));
 
   auto library_handle_or_error = DlopenInTracee(pid, library_path, RTLD_NOW);
   ASSERT_TRUE(library_handle_or_error.has_value());
 
   // Tracee now does have the dynamic lib loaded.
-  auto maps_after_open = orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
-  CHECK(maps_after_open.has_value());
-  EXPECT_TRUE(absl::StrContains(maps_after_open.value(), library_path.filename().string()));
+  EXPECT_THAT(IsInodeInMapsFile(inode_of_library.value(), pid),
+              orbit_test_utils::HasValue(Eq(true)));
 
   // Look up symbol for "TrivialFunction" in the dynamic lib.
   auto dlsym_or_error = DlsymInTracee(pid, library_handle_or_error.value(), "TrivialFunction");
@@ -84,9 +116,8 @@ void OpenUseAndCloseLibrary(pid_t pid) {
   ASSERT_THAT(result_dlclose, HasNoError());
 
   // Now, again, the lib is absent from the tracee.
-  auto maps_after_close = orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
-  CHECK(maps_after_close.has_value());
-  EXPECT_FALSE(absl::StrContains(maps_after_close.value(), library_path.filename().string()));
+  EXPECT_THAT(IsInodeInMapsFile(inode_of_library.value(), pid),
+              orbit_test_utils::HasValue(Eq(false)));
 
   CHECK(!DetachAndContinueProcess(pid).has_error());
 }
