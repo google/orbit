@@ -134,6 +134,7 @@ endif()
 
 if(WIN32)
   add_definitions(-DWIN32)
+  add_subdirectory(src/WindowsTracing)
 else()
   add_subdirectory(src/Api)
   add_subdirectory(src/ApiLoader)
