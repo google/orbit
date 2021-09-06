@@ -491,8 +491,8 @@ class OrbitApp final : public DataViewFactory,
   void SelectFunctionsByName(const orbit_client_data::ModuleData* module,
                              absl::Span<const std::string> function_names);
 
-  ErrorMessageOr<std::filesystem::path> FindModuleLocally(const std::filesystem::path& module_path,
-                                                          const std::string& build_id);
+  ErrorMessageOr<std::filesystem::path> FindModuleLocally(
+      const orbit_client_data::ModuleData& module_data);
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<void>> LoadSymbols(
       const std::filesystem::path& symbols_path, const std::string& module_file_path,
       const std::string& module_build_id);

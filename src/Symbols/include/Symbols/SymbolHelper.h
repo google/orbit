@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "OrbitBase/Result.h"
+#include "module.pb.h"
 #include "symbol.pb.h"
 
 namespace fs = std::filesystem;
@@ -32,6 +33,7 @@ class SymbolHelper {
 
   [[nodiscard]] ErrorMessageOr<fs::path> FindSymbolsFileLocally(
       const fs::path& module_path, const std::string& build_id,
+      const orbit_grpc_protos::ModuleInfo::ObjectFileType& object_file_type,
       absl::Span<const fs::path> directories) const;
   [[nodiscard]] ErrorMessageOr<fs::path> FindSymbolsInCache(const fs::path& module_path,
                                                             const std::string& build_id) const;
