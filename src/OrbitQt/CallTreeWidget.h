@@ -54,10 +54,10 @@ class CallTreeWidget : public QWidget {
   void resizeEvent(QResizeEvent* event) override;
 
  private slots:
-  void onCopyKeySequencePressed();
-  void onCustomContextMenuRequested(const QPoint& point);
-  void onSearchLineEditTextEdited(const QString& text);
-  void onSearchTypingFinishedTimerTimout();
+  void OnCopyKeySequencePressed();
+  void OnCustomContextMenuRequested(const QPoint& point);
+  void OnSearchLineEditTextEdited(const QString& text);
+  void OnSearchTypingFinishedTimerTimout();
 
  private:
   static const QString kActionExpandRecursively;
