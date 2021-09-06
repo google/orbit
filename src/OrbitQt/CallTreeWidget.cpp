@@ -28,6 +28,7 @@
 #include <QStringLiteral>
 #include <QStyle>
 #include <QStyleOptionProgressBar>
+#include <QTimer>
 #include <QTreeView>
 #include <algorithm>
 #include <list>
@@ -54,6 +55,7 @@ CallTreeWidget::CallTreeWidget(QWidget* parent)
   ui_->setupUi(this);
   ui_->callTreeTreeView->setItemDelegateForColumn(
       CallTreeViewItemModel::kInclusive, new ProgressBarItemDelegate{ui_->callTreeTreeView});
+  search_typing_finished_timer_->setSingleShot(true);
 
   connect(ui_->callTreeTreeView, &CopyKeySequenceEnabledTreeView::copyKeySequencePressed, this,
           &CallTreeWidget::onCopyKeySequencePressed);
@@ -61,6 +63,8 @@ CallTreeWidget::CallTreeWidget(QWidget* parent)
           &CallTreeWidget::onCustomContextMenuRequested);
   connect(ui_->searchLineEdit, &QLineEdit::textEdited, this,
           &CallTreeWidget::onSearchLineEditTextEdited);
+  connect(search_typing_finished_timer_, &QTimer::timeout, this,
+          &CallTreeWidget::onSearchTypingFinishedTimerTimout);
 }
 
 void CallTreeWidget::SetCallTreeView(std::unique_ptr<CallTreeView> call_tree_view,
@@ -540,13 +544,19 @@ static void ExpandCollapseBasedOnRole(QTreeView* tree_view, int role) {
   }
 }
 
-void CallTreeWidget::onSearchLineEditTextEdited(const QString& text) {
+void CallTreeWidget::onSearchLineEditTextEdited(const QString& /*text*/) {
+  static constexpr int kSearchTypingFinishedTimerTimeoutMs = 400;
+  search_typing_finished_timer_->start(kSearchTypingFinishedTimerTimeoutMs);
+}
+
+void CallTreeWidget::onSearchTypingFinishedTimerTimout() {
   if (search_proxy_model_ == nullptr) {
     return;
   }
-  search_proxy_model_->SetFilter(text.toStdString());
+  const std::string search_text = ui_->searchLineEdit->text().toStdString();
+  search_proxy_model_->SetFilter(search_text);
   ui_->callTreeTreeView->viewport()->update();
-  if (!text.isEmpty()) {
+  if (!search_text.empty()) {
     ExpandCollapseBasedOnRole(ui_->callTreeTreeView,
                               CallTreeViewItemModel::kMatchesCustomFilterRole);
   }
