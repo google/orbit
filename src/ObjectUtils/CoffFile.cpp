@@ -46,7 +46,7 @@ class CoffFileImpl : public CoffFile {
  private:
   ErrorMessageOr<uint64_t> GetSectionOffsetForSymbol(const llvm::object::SymbolRef& symbol_ref);
   ErrorMessageOr<SymbolInfo> CreateSymbolInfo(const llvm::object::SymbolRef& symbol_ref);
-  [[nodiscard]] bool DebugSymbolsEmpty() const;
+  [[nodiscard]] bool AreDebugSymbolsEmpty() const;
   const std::filesystem::path file_path_;
   llvm::object::OwningBinary<llvm::object::ObjectFile> owning_binary_;
   llvm::object::COFFObjectFile* object_file_;
@@ -113,9 +113,9 @@ ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadDebugSymbols() {
   return module_symbols;
 }
 
-bool CoffFileImpl::HasDebugSymbols() const { return has_debug_info_ && !DebugSymbolsEmpty(); }
+bool CoffFileImpl::HasDebugSymbols() const { return has_debug_info_ && !AreDebugSymbolsEmpty(); }
 
-bool CoffFileImpl::DebugSymbolsEmpty() const {
+bool CoffFileImpl::AreDebugSymbolsEmpty() const {
   const auto dwarf_context = llvm::DWARFContext::create(*owning_binary_.getBinary());
   if (dwarf_context == nullptr) {
     ERROR("Could not create DWARF context.");
@@ -130,10 +130,9 @@ bool CoffFileImpl::DebugSymbolsEmpty() const {
       uint64_t low_pc;
       uint64_t high_pc;
       uint64_t unused_section_index;
-      if (!full_die.getLowAndHighPC(low_pc, high_pc, unused_section_index)) {
-        continue;
+      if (full_die.getLowAndHighPC(low_pc, high_pc, unused_section_index)) {
+        return false;
       }
-      return false;
     }
   }
   return true;
