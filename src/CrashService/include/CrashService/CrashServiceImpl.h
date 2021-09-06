@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CRASH_SERVICE_IMPL_CRASH_SERVICE_IMPL_H_
-#define CRASH_SERVICE_IMPL_CRASH_SERVICE_IMPL_H_
+#ifndef CRASH_SERVICE_CRASH_SERVICE_IMPL_H_
+#define CRASH_SERVICE_CRASH_SERVICE_IMPL_H_
 
 #include <grpcpp/grpcpp.h>
 
 #include "services.grpc.pb.h"
 #include "services.pb.h"
 
-namespace orbit_crash_service_impl {
+namespace orbit_crash_service {
 
 class CrashServiceImpl final : public orbit_grpc_protos::CrashService::Service {
  public:
@@ -19,6 +19,6 @@ class CrashServiceImpl final : public orbit_grpc_protos::CrashService::Service {
                                  orbit_grpc_protos::CrashOrbitServiceResponse* response) override;
 };
 
-}  // namespace orbit_crash_service_impl
+}  // namespace orbit_crash_service
 
 #endif  // CRASH_SERVICE_IMPL_CRASH_SERVICE_IMPL_H_
