@@ -1634,7 +1634,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
     return it->second;
   }
 
-  auto local_symbols_path = FindModuleLocally(module_path, build_id);
+  auto local_symbols_path = FindModuleLocally(*module_data);
 
   if (local_symbols_path.has_value()) {
     return local_symbols_path;
@@ -1715,56 +1715,57 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
 }
 
 static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
-    const orbit_symbols::SymbolHelper& symbol_helper, const std::filesystem::path& module_path,
-    const std::string& build_id) {
-  if (build_id.empty()) {
-    return ErrorMessage(absl::StrFormat(
-        "Unable to find local symbols for module \"%s\", build id is empty", module_path.string()));
+    const orbit_symbols::SymbolHelper& symbol_helper, const ModuleData& module_data) {
+  if (module_data.build_id().empty()) {
+    return ErrorMessage(
+        absl::StrFormat("Unable to find local symbols for module \"%s\", build id is empty",
+                        module_data.file_path()));
   }
 
   std::string error_message;
   {
-    const auto symbols_path = symbol_helper.FindSymbolsFileLocally(module_path, build_id,
-                                                                   orbit_symbol_paths::LoadPaths());
+    const auto symbols_path = symbol_helper.FindSymbolsFileLocally(
+        module_data.file_path(), module_data.build_id(), module_data.object_file_type(),
+        orbit_symbol_paths::LoadPaths());
     if (symbols_path.has_value()) {
       LOG("Found symbols for module \"%s\" in user provided symbol folder. Symbols filename: "
           "\"%s\"",
-          module_path.string(), symbols_path.value().string());
+          module_data.file_path(), symbols_path.value().string());
       return symbols_path.value();
     }
     error_message += "\n* " + symbols_path.error().message();
   }
   {
-    const auto symbols_path = symbol_helper.FindSymbolsInCache(module_path, build_id);
+    const auto symbols_path =
+        symbol_helper.FindSymbolsInCache(module_data.file_path(), module_data.build_id());
     if (symbols_path.has_value()) {
       LOG("Found symbols for module \"%s\" in cache. Symbols filename: \"%s\"",
-          module_path.string(), symbols_path.value().string());
+          module_data.file_path(), symbols_path.value().string());
       return symbols_path.value();
     }
     error_message += "\n* " + symbols_path.error().message();
   }
   if (absl::GetFlag(FLAGS_local)) {
-    const auto symbols_included_in_module =
-        orbit_symbols::SymbolHelper::VerifySymbolsFile(module_path, build_id);
+    const auto symbols_included_in_module = orbit_symbols::SymbolHelper::VerifySymbolsFile(
+        module_data.file_path(), module_data.build_id());
     if (symbols_included_in_module.has_value()) {
-      LOG("Found symbols included in module: \"%s\"", module_path.string());
-      return module_path;
+      LOG("Found symbols included in module: \"%s\"", module_data.file_path());
+      return module_data.file_path();
     }
     error_message += "\n* Symbols are not included in module file: " +
                      symbols_included_in_module.error().message();
   }
 
   error_message = absl::StrFormat("Did not find local symbols for module \"%s\": %s",
-                                  module_path.string(), error_message);
+                                  module_data.file_path(), error_message);
   LOG("%s", error_message);
   return ErrorMessage(error_message);
 }
 
-ErrorMessageOr<std::filesystem::path> OrbitApp::FindModuleLocally(
-    const std::filesystem::path& module_path, const std::string& build_id) {
+ErrorMessageOr<std::filesystem::path> OrbitApp::FindModuleLocally(const ModuleData& module_data) {
   const auto scoped_status = CreateScopedStatus(absl::StrFormat(
-      "Searching for symbols on local machine for module: \"%s\"...", module_path.string()));
-  return FindModuleLocallyImpl(symbol_helper_, module_path, build_id);
+      "Searching for symbols on local machine for module: \"%s\"...", module_data.file_path()));
+  return FindModuleLocallyImpl(symbol_helper_, module_data);
 }
 
 void OrbitApp::AddSymbols(const std::filesystem::path& module_file_path,
