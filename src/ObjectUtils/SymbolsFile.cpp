@@ -12,6 +12,7 @@
 
 #include "ObjectUtils/ObjectFile.h"
 #include "ObjectUtils/PdbFile.h"
+#include "OrbitBase/File.h"
 #include "OrbitBase/Result.h"
 
 namespace orbit_object_utils {
@@ -21,13 +22,9 @@ ErrorMessageOr<std::unique_ptr<SymbolsFile>> CreateSymbolsFile(
   std::string error_message{
       absl::StrFormat("Unable to create symbols file from \"%s\".", file_path.string())};
 
-  std::error_code error;
-  bool exists = std::filesystem::exists(file_path, error);
-  if (error) {
-    error_message.append("\n* Unable to stat file.");
-    return ErrorMessage{error_message};
-  }
-  if (!exists) {
+  OUTCOME_TRY(auto file_exists, orbit_base::FileExists(file_path));
+
+  if (!file_exists) {
     error_message.append("\n* File does not exist.");
     return ErrorMessage{error_message};
   }
@@ -48,7 +45,7 @@ ErrorMessageOr<std::unique_ptr<SymbolsFile>> CreateSymbolsFile(
 
   if (pdb_file_or_error.has_value()) return std::move(pdb_file_or_error.value());
 
-  error_message.append(absl::StrFormat("\n* File cannot be read as an pdb file, error: %s",
+  error_message.append(absl::StrFormat("\n* File cannot be read as a pdb file, error: %s",
                                        pdb_file_or_error.error().message()));
 
   return ErrorMessage{error_message};

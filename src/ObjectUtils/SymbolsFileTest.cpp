@@ -58,7 +58,7 @@ TEST(SymbolsFile, FailToCreateSymbolsFile) {
   auto text_file = CreateSymbolsFile(path_to_text_file);
   EXPECT_THAT(text_file, HasError("Unable to create symbols file"));
   EXPECT_THAT(text_file, HasError("File cannot be read as an object file"));
-  EXPECT_THAT(text_file, HasError("File cannot be read as an pdb file"));
+  EXPECT_THAT(text_file, HasError("File cannot be read as a pdb file"));
 
   const std::filesystem::path invalid_path = orbit_test::GetTestdataDir() / "non_existing_file";
   auto invalid_file = CreateSymbolsFile(invalid_path);

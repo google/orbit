@@ -19,13 +19,9 @@ class PdbFile : public SymbolsFile {
   PdbFile() = default;
   virtual ~PdbFile() = default;
 
-  [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbols() override = 0;
-  [[nodiscard]] const std::filesystem::path& GetFilePath() const override = 0;
-
   // GUID and Age are used to match PDB files to objects, similar to build id in the ELF case.
   [[nodiscard]] virtual std::array<uint8_t, 16> GetGuid() const = 0;
   [[nodiscard]] virtual uint32_t GetAge() const = 0;
-  [[nodiscard]] std::string GetBuildId() const override = 0;
 };
 
 ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFile(const std::filesystem::path& file_path);
