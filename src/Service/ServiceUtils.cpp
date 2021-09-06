@@ -27,6 +27,7 @@
 
 #include "ObjectUtils/ObjectFile.h"
 #include "ObjectUtils/SymbolsFile.h"
+#include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
@@ -39,10 +40,9 @@ namespace orbit_service::utils {
 namespace fs = std::filesystem;
 
 using orbit_grpc_protos::TracepointInfo;
-using ::orbit_object_utils::CreateObjectFile;
-using ::orbit_object_utils::CreateSymbolsFile;
-using ::orbit_object_utils::ObjectFile;
-using ::orbit_object_utils::SymbolsFile;
+using orbit_object_utils::CreateObjectFile;
+using orbit_object_utils::CreateSymbolsFile;
+using orbit_object_utils::SymbolsFile;
 
 static const char* kLinuxTracingEventsDirectory = "/sys/kernel/debug/tracing/events/";
 
@@ -258,7 +258,11 @@ std::optional<TotalCpuTime> GetCumulativeTotalCpuTime() {
 
 static ErrorMessageOr<fs::path> FindSymbolsFilePathInStructuredDebugStore(
     const std::filesystem::path& structured_debug_store, std::string_view build_id) {
-  CHECK(build_id.size() >= 3);
+  // Since the first two digits form the name of a sub-directory, we will need at least 3 digits to
+  // generate a proper filename: build_id[0:2]/build_id[2:].debug
+  if (build_id.size() < 3) {
+    return ErrorMessage{absl::StrFormat("The build-id \"%s\" is malformed.", build_id)};
+  }
 
   auto path_in_structured_debug_store = structured_debug_store / ".build-id" /
                                         build_id.substr(0, 2) /
@@ -299,17 +303,14 @@ ErrorMessageOr<fs::path> FindSymbolsFilePath(
                         module_path.string())};
   }
   const std::string& build_id = object_file_or_error.value()->GetBuildId();
-  if (build_id.size() < 3) {
-    return ErrorMessage{absl::StrFormat("The build id of \"%s\" is malformed, build id: %s",
-                                        module_path.string(), build_id)};
+  // 3. If elf file, search in structured symbols stores.
+  if (object_file_or_error.value()->IsElf()) {
+    const fs::path structured_debug_store{"/usr/lib/debug"};
+    ErrorMessageOr<fs::path> debug_store_result =
+        FindSymbolsFilePathInStructuredDebugStore(structured_debug_store, build_id);
+    if (debug_store_result.has_value()) return debug_store_result.value();
   }
-  // 3. Search in structured symbols stores.
-  const fs::path structured_debug_store{"/usr/lib/debug"};
-  ErrorMessageOr<fs::path> debug_store_result =
-      FindSymbolsFilePathInStructuredDebugStore(structured_debug_store, build_id);
-  if (debug_store_result.has_value()) return debug_store_result.value();
-
-  // 4. Search in hardcoded directories + additional directoried (user provided) + next to the
+  // 4. Search in hardcoded directories + additional directories (user provided) + next to the
   // module
   std::vector<fs::path> search_directories{kHardcodedSearchDirectories};
   const auto& additional_search_directories = request.additional_search_directories();
@@ -317,39 +318,36 @@ ErrorMessageOr<fs::path> FindSymbolsFilePath(
                             additional_search_directories.end());
   search_directories.push_back(object_file_or_error.value()->GetFilePath().parent_path());
 
+  // 5. The file extensions for symbols files are .debug for elf files and .pdb for coff files. Only
+  // files with following formats are considered `module.sym_ext`, `module.mod_ext.sym_ext` and
+  // `module.mod_ext`. (`mod_ext` is the module file extension, usually .elf, .so, .exe or .dll;
+  // `sym_ext` is either .debug or .pdb)
+  std::string sym_ext = object_file_or_error.value()->IsElf() ? ".debug" : ".pdb";
   const fs::path& filename = module_path.filename();
-  fs::path filename_dot_debug = filename;
-  filename_dot_debug.replace_extension(".debug");
-  fs::path filename_plus_debug = filename;
-  filename_plus_debug.replace_extension(filename.extension().string() + ".debug");
-  fs::path filename_dot_pdb = filename;
-  filename_dot_pdb.replace_extension(".pdb");
-  fs::path filename_plus_pdb = filename;
-  filename_plus_debug.replace_extension(filename.extension().string() + ".pdb");
+  fs::path filename_dot_sym_ext = filename;
+  filename_dot_sym_ext.replace_extension(sym_ext);
+  fs::path filename_plus_sym_ext = filename;
+  filename_plus_sym_ext.replace_extension(filename.extension().string() + sym_ext);
 
   std::set<fs::path> search_paths;
   for (const auto& directory : search_directories) {
-    search_paths.insert(directory / filename_dot_debug);
-    search_paths.insert(directory / filename_plus_debug);
+    search_paths.insert(directory / filename_dot_sym_ext);
+    search_paths.insert(directory / filename_plus_sym_ext);
     search_paths.insert(directory / filename);
-    search_paths.insert(directory / filename_dot_pdb);
-    search_paths.insert(directory / filename_plus_pdb);
   }
 
   std::vector<std::string> error_messages;
 
   for (const auto& search_path : search_paths) {
-    std::error_code error;
-    bool path_exists = fs::exists(search_path, error);
-    if (error) {
-      std::string error_message =
-          absl::StrFormat("Unable to stat \"%s\": %s", search_path, error.message());
-      ERROR("%s", error_message);
-      error_messages.emplace_back(std::move(error_message));
+    ErrorMessageOr<bool> file_exists = orbit_base::FileExists(search_path);
+
+    if (file_exists.has_error()) {
+      ERROR("%s", file_exists.error().message());
+      error_messages.emplace_back(file_exists.error().message());
       continue;
     }
 
-    if (!path_exists) {
+    if (!file_exists.value()) {
       // no error message when file simply does not exist
       continue;
     }
