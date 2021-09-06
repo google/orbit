@@ -13,7 +13,7 @@
 #include <utility>
 
 #include "CaptureServiceImpl.h"
-#include "CrashServiceImpl/CrashServiceImpl.h"
+#include "CrashService/CrashServiceImpl.h"
 #include "FramePointerValidatorService/FramePointerValidatorServiceImpl.h"
 #include "ProcessServiceImpl.h"
 #include "TracepointServiceImpl.h"
@@ -42,7 +42,7 @@ class OrbitGrpcServerImpl final : public OrbitGrpcServer {
   TracepointServiceImpl tracepoint_service_;
   orbit_frame_pointer_validator_service::FramePointerValidatorServiceImpl
       frame_pointer_validator_service_;
-  orbit_crash_service_impl::CrashServiceImpl crash_service_;
+  orbit_crash_service::CrashServiceImpl crash_service_;
   std::unique_ptr<grpc::Server> server_;
 };
 

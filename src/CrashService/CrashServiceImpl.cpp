@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CrashServiceImpl/CrashServiceImpl.h"
+#include "CrashService/CrashServiceImpl.h"
 
 #include "OrbitBase/Logging.h"
 #include "services.pb.h"
 
-namespace orbit_crash_service_impl {
+namespace orbit_crash_service {
 
 using orbit_grpc_protos::CrashOrbitServiceRequest;
 using orbit_grpc_protos::CrashOrbitServiceResponse;
@@ -38,4 +38,4 @@ grpc::Status CrashServiceImpl::CrashOrbitService(grpc::ServerContext* /*context*
   return grpc::Status::OK;
 }
 
-}  // namespace orbit_crash_service_impl
+}  // namespace orbit_crash_service

@@ -48,7 +48,7 @@ target_include_directories(ServiceLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(ServiceLib PUBLIC
         ApiLoader
-        CrashServiceImpl
+        CrashService
         FramePointerValidatorService
         GrpcProtos
         Introspection
