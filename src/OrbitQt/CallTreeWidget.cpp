@@ -58,13 +58,13 @@ CallTreeWidget::CallTreeWidget(QWidget* parent)
   search_typing_finished_timer_->setSingleShot(true);
 
   connect(ui_->callTreeTreeView, &CopyKeySequenceEnabledTreeView::copyKeySequencePressed, this,
-          &CallTreeWidget::onCopyKeySequencePressed);
+          &CallTreeWidget::OnCopyKeySequencePressed);
   connect(ui_->callTreeTreeView, &QTreeView::customContextMenuRequested, this,
-          &CallTreeWidget::onCustomContextMenuRequested);
+          &CallTreeWidget::OnCustomContextMenuRequested);
   connect(ui_->searchLineEdit, &QLineEdit::textEdited, this,
-          &CallTreeWidget::onSearchLineEditTextEdited);
+          &CallTreeWidget::OnSearchLineEditTextEdited);
   connect(search_typing_finished_timer_, &QTimer::timeout, this,
-          &CallTreeWidget::onSearchTypingFinishedTimerTimout);
+          &CallTreeWidget::OnSearchTypingFinishedTimerTimout);
 }
 
 void CallTreeWidget::SetCallTreeView(std::unique_ptr<CallTreeView> call_tree_view,
@@ -86,7 +86,7 @@ void CallTreeWidget::SetCallTreeView(std::unique_ptr<CallTreeView> call_tree_vie
   ui_->callTreeTreeView->setModel(hooked_proxy_model_.get());
   ui_->callTreeTreeView->sortByColumn(CallTreeViewItemModel::kInclusive, Qt::DescendingOrder);
 
-  onSearchLineEditTextEdited(ui_->searchLineEdit->text());
+  OnSearchLineEditTextEdited(ui_->searchLineEdit->text());
 
   ResizeColumnsIfNecessary();
 }
@@ -302,7 +302,7 @@ static std::string BuildStringFromIndices(QTreeView* tree_view, const QModelInde
   return buffer;
 }
 
-void CallTreeWidget::onCopyKeySequencePressed() {
+void CallTreeWidget::OnCopyKeySequencePressed() {
   app_->SetClipboard(BuildStringFromIndices(
       ui_->callTreeTreeView, ui_->callTreeTreeView->selectionModel()->selectedIndexes()));
 }
@@ -397,7 +397,7 @@ static std::vector<const FunctionInfo*> GetFunctionsFromIndices(
   return std::vector<const FunctionInfo*>(functions_set.begin(), functions_set.end());
 }
 
-void CallTreeWidget::onCustomContextMenuRequested(const QPoint& point) {
+void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
   if (app_ == nullptr) {
     return;
   }
@@ -544,12 +544,12 @@ static void ExpandCollapseBasedOnRole(QTreeView* tree_view, int role) {
   }
 }
 
-void CallTreeWidget::onSearchLineEditTextEdited(const QString& /*text*/) {
+void CallTreeWidget::OnSearchLineEditTextEdited(const QString& /*text*/) {
   static constexpr int kSearchTypingFinishedTimerTimeoutMs = 400;
   search_typing_finished_timer_->start(kSearchTypingFinishedTimerTimeoutMs);
 }
 
-void CallTreeWidget::onSearchTypingFinishedTimerTimout() {
+void CallTreeWidget::OnSearchTypingFinishedTimerTimout() {
   if (search_proxy_model_ == nullptr) {
     return;
   }
