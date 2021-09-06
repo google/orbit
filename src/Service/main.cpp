@@ -19,8 +19,6 @@
 
 ABSL_FLAG(uint64_t, grpc_port, 44765, "gRPC server port");
 
-ABSL_FLAG(bool, devmode, false, "Enable developer mode");
-
 namespace {
 std::atomic<bool> exit_requested;
 
@@ -58,9 +56,8 @@ int main(int argc, char** argv) {
   InstallSigintHandler();
 
   uint16_t grpc_port = absl::GetFlag(FLAGS_grpc_port);
-  bool dev_mode = absl::GetFlag(FLAGS_devmode);
 
   exit_requested = false;
-  orbit_service::OrbitService service{grpc_port, dev_mode};
+  orbit_service::OrbitService service{grpc_port};
   service.Run(&exit_requested);
 }

@@ -395,11 +395,8 @@ outcome::result<void> ServiceDeployManager::StartOrbitService() {
   CHECK(QThread::currentThread() == thread());
   emit statusMessage("Starting OrbitService on the remote instance...");
 
-  std::string task_string = "/opt/developer/tools/OrbitService";
-  if (absl::GetFlag(FLAGS_devmode)) {
-    task_string += " --devmode";
-  }
-  orbit_service_task_.emplace(&session_.value(), task_string);
+  static const std::string kTaskString = "/opt/developer/tools/OrbitService";
+  orbit_service_task_.emplace(&session_.value(), kTaskString);
 
   orbit_qt_utils::EventLoop loop{};
 
@@ -436,11 +433,8 @@ outcome::result<void> ServiceDeployManager::StartOrbitServicePrivileged(
   // implemented in OrbitSshQt::Task.
   emit statusMessage("Starting OrbitService on the remote instance...");
 
-  std::string task_string = "sudo --stdin /tmp/OrbitService";
-  if (absl::GetFlag(FLAGS_devmode)) {
-    task_string += " --devmode";
-  }
-  orbit_service_task_.emplace(&session_.value(), task_string);
+  static const std::string kTaskString = "sudo --stdin /tmp/OrbitService";
+  orbit_service_task_.emplace(&session_.value(), kTaskString);
 
   orbit_service_task_->Write(absl::StrFormat("%s\n", config.root_password));
 

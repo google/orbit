@@ -31,10 +31,8 @@ class OrbitGrpcServer {
   virtual void AddCaptureStartStopListener(CaptureStartStopListener* listener) = 0;
   virtual void RemoveCaptureStartStopListener(CaptureStartStopListener* listener) = 0;
 
-  // Creates a server listening specified address and registers all
-  // necessary services.
-  [[nodiscard]] static std::unique_ptr<OrbitGrpcServer> Create(std::string_view server_address,
-                                                               bool dev_mode);
+  // Creates a server listening specified address and registers all necessary services.
+  [[nodiscard]] static std::unique_ptr<OrbitGrpcServer> Create(std::string_view server_address);
 };
 
 }  // namespace orbit_service

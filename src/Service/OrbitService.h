@@ -20,8 +20,7 @@ namespace orbit_service {
 
 class OrbitService {
  public:
-  explicit OrbitService(uint16_t grpc_port, bool dev_mode)
-      : grpc_port_{grpc_port}, dev_mode_{dev_mode} {}
+  explicit OrbitService(uint16_t grpc_port) : grpc_port_{grpc_port} {}
 
   void Run(std::atomic<bool>* exit_requested);
 
@@ -29,7 +28,6 @@ class OrbitService {
   [[nodiscard]] bool IsSshWatchdogActive() { return last_stdin_message_ != std::nullopt; }
 
   uint16_t grpc_port_;
-  bool dev_mode_;
 
   std::optional<std::chrono::time_point<std::chrono::steady_clock>> last_stdin_message_ =
       std::nullopt;
