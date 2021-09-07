@@ -147,8 +147,7 @@ void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, u
     auto action_on_callstack_events = [=](const CallstackEvent& event) {
       const uint64_t time = event.time();
       CHECK(time >= min_tick && time <= max_tick);
-      Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset,
-               GetPos()[1] + track_height - 1);
+      Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset, GetPos()[1]);
       Vec2 size(kPickingBoxWidth, track_height);
       auto user_data = std::make_unique<PickingUserData>(
           nullptr,
