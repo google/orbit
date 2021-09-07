@@ -14,11 +14,11 @@
 #include <vector>
 
 #include "Batcher.h"
-#include "BlockChain.h"
 #include "CaptureViewElement.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/TimerChain.h"
 #include "ClientData/TrackPaneData.h"
+#include "Containers/BlockChain.h"
 #include "CoreMath.h"
 #include "GteVector.h"
 #include "OrbitBase/Profiling.h"

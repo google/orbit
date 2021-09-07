@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_SCOPE_TREE_H_
-#define ORBIT_GL_SCOPE_TREE_H_
+#ifndef CONTAINERS_SCOPE_TREE_H_
+#define CONTAINERS_SCOPE_TREE_H_
 
 #include <cstdint>
 #include <memory>
@@ -331,4 +331,4 @@ void ScopeNode<ScopeT>::Insert(ScopeNode<ScopeT>* node) {
   parent_node->children_by_start_time_->emplace(node->Start(), node);
 }
 
-#endif  // ORBIT_GL_SCOPE_TREE_H_
+#endif  // CONTAINERS_SCOPE_TREE_H_

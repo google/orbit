@@ -12,9 +12,9 @@
 #include <string>
 
 #include "CallstackThreadBar.h"
+#include "Containers/ScopeTree.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
-#include "ScopeTree.h"
 #include "ThreadStateBar.h"
 #include "TimerTrack.h"
 #include "TracepointThreadBar.h"

@@ -46,6 +46,7 @@ target_sources(ClientData PRIVATE
 
 target_link_libraries(ClientData PUBLIC
         ApiInterface
+        Containers
         ClientProtos
         GrpcProtos
         # TODO(b/191248550): Remove ObjectUtils once GetAbsoluteAddress is removed

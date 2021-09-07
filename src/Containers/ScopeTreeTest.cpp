@@ -10,7 +10,7 @@
 #include <string>
 #include <utility>
 
-#include "ScopeTree.h"
+#include "Containers/ScopeTree.h"
 
 namespace {
 
