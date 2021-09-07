@@ -1014,6 +1014,8 @@ TEST_F(InstrumentFunctionTest, CheckFloatParameters) {
   RestartAndRemoveInstrumentation();
 }
 
+#if __AVX__
+
 // Check-fails if any parameter is not zero.
 extern "C" int CheckM256iParameters(__m256i p0, __m256i p1, __m256i p2, __m256i p3, __m256i p4,
                                     __m256i p5, __m256i p6, __m256i p7) {
@@ -1050,5 +1052,7 @@ TEST_F(InstrumentFunctionTest, CheckM256iParameters) {
   EXPECT_THAT(result, HasNoError());
   RestartAndRemoveInstrumentation();
 }
+
+#endif  // __AVX__
 
 }  // namespace orbit_user_space_instrumentation
