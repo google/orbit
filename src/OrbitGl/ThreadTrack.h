@@ -96,7 +96,7 @@ class ThreadTrack final : public TimerTrack {
   std::shared_ptr<orbit_gl::TracepointThreadBar> tracepoint_bar_;
 
   absl::Mutex scope_tree_mutex_;
-  ScopeTree<const orbit_client_protos::TimerInfo> scope_tree_;
+  orbit_containers::ScopeTree<const orbit_client_protos::TimerInfo> scope_tree_;
   ScopeTreeUpdateType scope_tree_update_type_ = ScopeTreeUpdateType::kAlways;
 };
 

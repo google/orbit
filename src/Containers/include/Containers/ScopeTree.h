@@ -16,6 +16,8 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 
+namespace orbit_containers {
+
 // ScopeTree is a layer of abstraction above existing scope data. It provides a hierachical
 // relationship between profiling scopes. It also maintains an ordered map of nodes per depth. The
 // goal is to be able to generate the scope tree with different streams of scope data that can
@@ -330,5 +332,7 @@ void ScopeNode<ScopeT>::Insert(ScopeNode<ScopeT>* node) {
   // Add new node as child of parent_node.
   parent_node->children_by_start_time_->emplace(node->Start(), node);
 }
+
+}  // namespace orbit_containers
 
 #endif  // CONTAINERS_SCOPE_TREE_H_

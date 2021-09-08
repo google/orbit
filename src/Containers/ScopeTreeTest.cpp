@@ -12,7 +12,7 @@
 
 #include "Containers/ScopeTree.h"
 
-namespace {
+namespace orbit_containers {
 
 struct TestScope {
   uint64_t start() const { return start_; }
@@ -227,4 +227,4 @@ TEST(ScopeTree, FindRelationships) {
   EXPECT_EQ(tree.FindFirstChild(*depth2.at(0)), nullptr);
 }
 
-}  // namespace
+}  // namespace orbit_containers

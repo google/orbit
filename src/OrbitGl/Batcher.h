@@ -24,6 +24,7 @@
 #include "capture_data.pb.h"
 
 using TooltipCallback = std::function<std::string(PickingId)>;
+using orbit_containers::BlockChain;
 
 struct PickingUserData {
   const orbit_client_protos::TimerInfo* timer_info_;

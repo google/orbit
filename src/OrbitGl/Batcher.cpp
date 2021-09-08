@@ -422,8 +422,9 @@ void Batcher::Draw(bool picking) const {
 
 void Batcher::DrawBoxBuffer(float layer, bool picking) const {
   auto& box_buffer = primitive_buffers_by_layer_.at(layer).box_buffer;
-  const Block<Box, BoxBuffer::NUM_BOXES_PER_BLOCK>* box_block = box_buffer.boxes_.root();
-  const Block<Color, BoxBuffer::NUM_BOXES_PER_BLOCK * 4>* color_block;
+  const orbit_containers::Block<Box, BoxBuffer::NUM_BOXES_PER_BLOCK>* box_block =
+      box_buffer.boxes_.root();
+  const orbit_containers::Block<Color, BoxBuffer::NUM_BOXES_PER_BLOCK * 4>* color_block;
 
   color_block = !picking ? box_buffer.colors_.root() : box_buffer.picking_colors_.root();
 
@@ -441,8 +442,9 @@ void Batcher::DrawBoxBuffer(float layer, bool picking) const {
 
 void Batcher::DrawLineBuffer(float layer, bool picking) const {
   auto& line_buffer = primitive_buffers_by_layer_.at(layer).line_buffer;
-  const Block<Line, LineBuffer::NUM_LINES_PER_BLOCK>* line_block = line_buffer.lines_.root();
-  const Block<Color, LineBuffer::NUM_LINES_PER_BLOCK * 2>* color_block;
+  const orbit_containers::Block<Line, LineBuffer::NUM_LINES_PER_BLOCK>* line_block =
+      line_buffer.lines_.root();
+  const orbit_containers::Block<Color, LineBuffer::NUM_LINES_PER_BLOCK * 2>* color_block;
 
   color_block = !picking ? line_buffer.colors_.root() : line_buffer.picking_colors_.root();
   while (line_block != nullptr) {
@@ -459,9 +461,9 @@ void Batcher::DrawLineBuffer(float layer, bool picking) const {
 
 void Batcher::DrawTriangleBuffer(float layer, bool picking) const {
   auto& triangle_buffer = primitive_buffers_by_layer_.at(layer).triangle_buffer;
-  const Block<Triangle, TriangleBuffer::NUM_TRIANGLES_PER_BLOCK>* triangle_block =
+  const orbit_containers::Block<Triangle, TriangleBuffer::NUM_TRIANGLES_PER_BLOCK>* triangle_block =
       triangle_buffer.triangles_.root();
-  const Block<Color, TriangleBuffer::NUM_TRIANGLES_PER_BLOCK * 3>* color_block;
+  const orbit_containers::Block<Color, TriangleBuffer::NUM_TRIANGLES_PER_BLOCK * 3>* color_block;
 
   color_block = !picking ? triangle_buffer.colors_.root() : triangle_buffer.picking_colors_.root();
 

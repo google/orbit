@@ -10,6 +10,8 @@
 
 #include "OrbitBase/Logging.h"
 
+namespace orbit_containers {
+
 template <class T, uint32_t BlockSize>
 class BlockChain;
 
@@ -192,5 +194,7 @@ class BlockChain final {
   Block<T, BlockSize>* current_;
   uint32_t size_;
 };
+
+}  // namespace orbit_containers
 
 #endif  // CONTAINERS_BLOCK_CHAIN_H_
