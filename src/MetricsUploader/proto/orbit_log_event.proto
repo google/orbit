@@ -69,7 +69,7 @@ message OrbitLogEvent {
 // instrumented functions and information that is available at capture stop,
 // like duration of the capture. It is sent when the user stops the capture, or
 // when the capture is aborted because of an error.
-// NextID: 23
+// NextID: 24
 message OrbitCaptureData {
   // Duration of the capture in milliseconds. This is a measure of time from
   // when the user started a capture until the user ends it.
@@ -169,4 +169,7 @@ message OrbitCaptureData {
 
   // Total number of timers from manually tracked values.
   int64 number_of_manual_tracked_value_timers = 22;
+
+  // Size of the capture file in bytes.
+  uint64 file_size = 23;
 }
