@@ -5,18 +5,18 @@
 cmake_minimum_required(VERSION 3.15)
 
 project(Containers)
-add_library(Containers STATIC)
+add_library(Containers INTERFACE)
 
-target_sources(Containers PUBLIC
+target_sources(Containers INTERFACE
         include/Containers/BlockChain.h
         include/Containers/ScopeTree.h)
 
-target_include_directories(Containers PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
+target_include_directories(Containers INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
 
 target_link_libraries(
   Containers
-  PUBLIC Introspection
-         OrbitBase)
+  INTERFACE Introspection
+            OrbitBase)
 
 add_executable(ContainersTests)
 
