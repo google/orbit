@@ -113,10 +113,7 @@ void CaptureData::AddFunctionStats(uint64_t instrumented_function_id,
 void CaptureData::OnCaptureComplete(
     const std::vector<const orbit_client_data::TimerChain*>& chains) {
   // Recalculate standard deviation as the running calculation may have introduced error.
-  for (auto& pair : functions_stats_) {
-    FunctionStats& stats = pair.second;
-    stats.set_variance_ns(0);
-  }
+  absl::flat_hash_map<int, unsigned long> id_to_sum_of_deviations_squared;
 
   for (const orbit_client_data::TimerChain* chain : chains) {
     CHECK(chain);
@@ -129,16 +126,18 @@ void CaptureData::OnCaptureComplete(
         if (stats.count() > 0) {
           uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
           int64_t deviation = elapsed_nanos - stats.average_time_ns();
-          stats.set_variance_ns(stats.variance_ns() + deviation * deviation);
+          id_to_sum_of_deviations_squared[timer_info.function_id()] += deviation * deviation;
         }
       }
     }
   }
 
-  for (auto& pair : functions_stats_) {
-    FunctionStats& stats = pair.second;
+  for (auto& [id, sum_of_deviations_squared] : id_to_sum_of_deviations_squared) {
+    const auto& stats_it = functions_stats_.find(id);
+    if (stats_it == functions_stats_.end()) continue;
+    FunctionStats& stats = stats_it->second;
     if (stats.count() > 0) {
-      stats.set_variance_ns(stats.variance_ns() / static_cast<double>(stats.count()));
+      stats.set_variance_ns(sum_of_deviations_squared / static_cast<double>(stats.count()));
       stats.set_std_dev_ns(static_cast<uint64_t>(sqrt(stats.variance_ns())));
     }
   }
