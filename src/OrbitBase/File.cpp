@@ -254,6 +254,16 @@ ErrorMessageOr<bool> CreateDirectory(const std::filesystem::path& file_path) {
   return created;
 }
 
+ErrorMessageOr<uint64_t> FileSize(const std::filesystem::path& file_path) {
+  std::error_code error;
+  uint64_t file_size = std::filesystem::file_size(file_path, error);
+  if (error) {
+    return ErrorMessage{error.message()};
+  }
+
+  return file_size;
+}
+
 ErrorMessageOr<void> ResizeFile(const std::filesystem::path& file_path, uint64_t new_size) {
   std::error_code error;
 

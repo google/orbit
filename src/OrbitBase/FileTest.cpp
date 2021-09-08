@@ -8,6 +8,7 @@
 
 #include "OrbitBase/File.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/TemporaryFile.h"
 #include "OrbitBase/WriteStringToFile.h"
 #include "Test/Path.h"
@@ -369,6 +370,29 @@ TEST(File, ResizeFile) {
   auto file_content_or_error = ReadFileToString(tmp_file.file_path());
   ASSERT_THAT(file_content_or_error, HasNoError());
   EXPECT_EQ(file_content_or_error.value(), "str");
+}
+
+TEST(File, FileSize) {
+  auto tmp_file_or_error = TemporaryFile::Create();
+  ASSERT_THAT(tmp_file_or_error, HasNoError());
+  auto file_path = tmp_file_or_error.value().file_path();
+  tmp_file_or_error.value().CloseAndRemove();
+
+  {
+    const std::string text = "16 bytes of text";
+    ASSERT_THAT(WriteStringToFile(file_path, text), HasNoError());
+    ErrorMessageOr<uint64_t> file_size_or_error = FileSize(file_path);
+    EXPECT_THAT(file_size_or_error, HasValue(16));
+  }
+
+  ASSERT_THAT(RemoveFile(file_path), HasNoError());
+
+  {
+    ErrorMessageOr<uint64_t> file_size_or_error = FileSize(file_path);
+    // On Windows the error message is: "The system cannot find the file specified."
+    // On Linux it is: "No such file or directory"
+    EXPECT_THAT(file_size_or_error, HasError("file"));
+  }
 }
 
 TEST(File, ListFilesInDirectory) {
