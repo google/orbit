@@ -24,7 +24,6 @@
 #include "capture_data.pb.h"
 
 using TooltipCallback = std::function<std::string(PickingId)>;
-using orbit_containers::BlockChain;
 
 struct PickingUserData {
   const orbit_client_protos::TimerInfo* timer_info_;
@@ -44,9 +43,9 @@ struct LineBuffer {
   }
 
   static const int NUM_LINES_PER_BLOCK = 64 * 1024;
-  BlockChain<Line, NUM_LINES_PER_BLOCK> lines_;
-  BlockChain<Color, 2 * NUM_LINES_PER_BLOCK> colors_;
-  BlockChain<Color, 2 * NUM_LINES_PER_BLOCK> picking_colors_;
+  orbit_containers::BlockChain<Line, NUM_LINES_PER_BLOCK> lines_;
+  orbit_containers::BlockChain<Color, 2 * NUM_LINES_PER_BLOCK> colors_;
+  orbit_containers::BlockChain<Color, 2 * NUM_LINES_PER_BLOCK> picking_colors_;
 };
 
 struct BoxBuffer {
@@ -57,9 +56,9 @@ struct BoxBuffer {
   }
 
   static const int NUM_BOXES_PER_BLOCK = 64 * 1024;
-  BlockChain<Box, NUM_BOXES_PER_BLOCK> boxes_;
-  BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> colors_;
-  BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> picking_colors_;
+  orbit_containers::BlockChain<Box, NUM_BOXES_PER_BLOCK> boxes_;
+  orbit_containers::BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> colors_;
+  orbit_containers::BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> picking_colors_;
 };
 
 struct TriangleBuffer {
@@ -70,9 +69,9 @@ struct TriangleBuffer {
   }
 
   static const int NUM_TRIANGLES_PER_BLOCK = 64 * 1024;
-  BlockChain<Triangle, NUM_TRIANGLES_PER_BLOCK> triangles_;
-  BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> colors_;
-  BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> picking_colors_;
+  orbit_containers::BlockChain<Triangle, NUM_TRIANGLES_PER_BLOCK> triangles_;
+  orbit_containers::BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> colors_;
+  orbit_containers::BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> picking_colors_;
 };
 
 struct PrimitiveBuffers {
