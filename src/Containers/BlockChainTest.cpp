@@ -7,7 +7,9 @@
 #include <string>
 #include <utility>
 
-#include "BlockChain.h"
+#include "Containers/BlockChain.h"
+
+namespace orbit_containers {
 
 namespace {
 
@@ -204,3 +206,5 @@ TEST(BlockChain, MovableType) {
   EXPECT_EQ(chain.root()->data()[0].value(), "v1");
   EXPECT_EQ(chain.root()->data()[1].value(), "v2");
 }
+
+}  // namespace orbit_containers

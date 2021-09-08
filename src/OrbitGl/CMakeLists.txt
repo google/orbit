@@ -20,7 +20,6 @@ target_sources(
          AsyncTrack.h
          BasicPageFaultsTrack.h
          Batcher.h
-         BlockChain.h
          CallstackDataView.h
          CallstackThreadBar.h
          CallTreeView.h
@@ -56,7 +55,6 @@ target_sources(
          SamplingReportDataView.h
          SchedulerTrack.h
          SchedulingStats.h
-         ScopeTree.h
          ShortenStringWithEllipsis.h
          StatusListener.h
          SystemMemoryTrack.h
@@ -151,10 +149,10 @@ target_link_libraries(
          ClientModel
          ClientServices
          CodeReport
+         Containers
          DataViews
          DisplayFormats
          GrpcProtos
-         Introspection
          MetricsUploader
          OrbitAccessibility
          OrbitPaths
@@ -188,7 +186,6 @@ target_sources(OrbitGlTests PRIVATE
 
 target_sources(OrbitGlTests PRIVATE
                BatcherTest.cpp
-               BlockChainTest.cpp
                CaptureStatsTest.cpp
                CaptureWindowTest.cpp
                GlUtilsTest.cpp
@@ -196,7 +193,6 @@ target_sources(OrbitGlTests PRIVATE
                MultivariateTimeSeriesTest.cpp
                PickingManagerTest.cpp
                ScopedStatusTest.cpp
-               ScopeTreeTest.cpp
                SliderTest.cpp
                ShortenStringWithEllipsisTest.cpp
                TimerInfosIteratorTest.cpp

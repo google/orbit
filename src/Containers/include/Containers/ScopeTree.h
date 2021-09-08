@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_SCOPE_TREE_H_
-#define ORBIT_GL_SCOPE_TREE_H_
+#ifndef CONTAINERS_SCOPE_TREE_H_
+#define CONTAINERS_SCOPE_TREE_H_
 
 #include <cstdint>
 #include <memory>
@@ -15,6 +15,8 @@
 #include "absl/container/btree_map.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
+
+namespace orbit_containers {
 
 // ScopeTree is a layer of abstraction above existing scope data. It provides a hierachical
 // relationship between profiling scopes. It also maintains an ordered map of nodes per depth. The
@@ -331,4 +333,6 @@ void ScopeNode<ScopeT>::Insert(ScopeNode<ScopeT>* node) {
   parent_node->children_by_start_time_->emplace(node->Start(), node);
 }
 
-#endif  // ORBIT_GL_SCOPE_TREE_H_
+}  // namespace orbit_containers
+
+#endif  // CONTAINERS_SCOPE_TREE_H_

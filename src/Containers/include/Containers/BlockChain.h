@@ -2,13 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_BLOCK_CHAIN_H_
-#define ORBIT_GL_BLOCK_CHAIN_H_
+#ifndef CONTAINERS_BLOCK_CHAIN_H_
+#define CONTAINERS_BLOCK_CHAIN_H_
 
 #include <algorithm>
 #include <cstdint>
 
 #include "OrbitBase/Logging.h"
+
+namespace orbit_containers {
 
 template <class T, uint32_t BlockSize>
 class BlockChain;
@@ -193,4 +195,6 @@ class BlockChain final {
   uint32_t size_;
 };
 
-#endif  // ORBIT_GL_BLOCK_CHAIN_H_
+}  // namespace orbit_containers
+
+#endif  // CONTAINERS_BLOCK_CHAIN_H_
