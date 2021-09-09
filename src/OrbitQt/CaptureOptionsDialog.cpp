@@ -41,8 +41,8 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
     ui_->introspectionCheckBox->hide();
   }
 
-  if (absl::GetFlag(FLAGS_devmode)) {
-    ui_->userspaceCheckBox->show();
+  if (!absl::GetFlag(FLAGS_devmode)) {
+    ui_->userspaceCheckBox->hide();
   }
 }
 
