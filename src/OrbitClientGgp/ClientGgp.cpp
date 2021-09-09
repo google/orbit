@@ -226,8 +226,10 @@ ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
               process_client_->FindDebugInfoFile(module_path, {}));
   LOG("Found file: %s", main_executable_debug_file);
   LOG("Loading symbols");
-  OUTCOME_TRY(auto&& symbols,
-              orbit_symbols::SymbolHelper::LoadSymbolsFromFile(main_executable_debug_file));
+  orbit_object_utils::ObjectFileInfo object_file_info{main_module_->load_bias(),
+                                                      main_module_->executable_segment_offset()};
+  OUTCOME_TRY(auto&& symbols, orbit_symbols::SymbolHelper::LoadSymbolsFromFile(
+                                  main_executable_debug_file, object_file_info));
   main_module_->AddSymbols(symbols);
   return outcome::success();
 }

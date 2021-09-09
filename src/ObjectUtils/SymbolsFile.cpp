@@ -18,7 +18,7 @@
 namespace orbit_object_utils {
 
 ErrorMessageOr<std::unique_ptr<SymbolsFile>> CreateSymbolsFile(
-    const std::filesystem::path& file_path) {
+    const std::filesystem::path& file_path, const ObjectFileInfo& object_file_info) {
   std::string error_message{
       absl::StrFormat("Unable to create symbols file from \"%s\".", file_path.string())};
 
@@ -41,7 +41,8 @@ ErrorMessageOr<std::unique_ptr<SymbolsFile>> CreateSymbolsFile(
   error_message.append(absl::StrFormat("\n* File cannot be read as an object file, error: %s",
                                        object_file_or_error.error().message()));
 
-  ErrorMessageOr<std::unique_ptr<PdbFile>> pdb_file_or_error = CreatePdbFile(file_path);
+  ErrorMessageOr<std::unique_ptr<PdbFile>> pdb_file_or_error =
+      CreatePdbFile(file_path, object_file_info);
 
   if (pdb_file_or_error.has_value()) return std::move(pdb_file_or_error.value());
 

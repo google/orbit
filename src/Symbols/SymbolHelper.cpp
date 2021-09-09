@@ -39,6 +39,7 @@ namespace fs = std::filesystem;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_object_utils::CreateSymbolsFile;
 using orbit_object_utils::ElfFile;
+using orbit_object_utils::ObjectFileInfo;
 using orbit_object_utils::SymbolsFile;
 
 constexpr const char* kDeprecationNote =
@@ -146,7 +147,7 @@ static std::vector<fs::path> FindStructuredDebugDirectories() {
 
 ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const fs::path& symbols_path,
                                                      const std::string& build_id) {
-  auto symbols_file_or_error = CreateSymbolsFile(symbols_path);
+  auto symbols_file_or_error = CreateSymbolsFile(symbols_path, ObjectFileInfo());
   if (symbols_file_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat("Unable to load symbols file \"%s\", error: %s",
                                         symbols_path.string(),
@@ -256,11 +257,12 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
   return cache_file_path;
 }
 
-ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(const fs::path& file_path) {
+ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(
+    const fs::path& file_path, const ObjectFileInfo& object_file_info) {
   ORBIT_SCOPE_FUNCTION;
   SCOPED_TIMED_LOG("LoadSymbolsFromFile: %s", file_path.string());
 
-  OUTCOME_TRY(auto symbols_file, CreateSymbolsFile(file_path));
+  OUTCOME_TRY(auto symbols_file, CreateSymbolsFile(file_path, object_file_info));
   return symbols_file->LoadDebugSymbols();
 }
 
