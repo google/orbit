@@ -78,8 +78,8 @@ TEST(AccessTraceesMemoryTest, ReadFailures) {
     // Child just runs an endless loop.
     volatile uint64_t counter = 0;
     while (true) {
-      ++counter;  // Endless loops without side effects are UB and recent versions of clang optimize
-                  // it away.
+      // Endless loops without side effects are UB and recent versions of clang optimize it away.
+      ++counter;
     }
   }
 
@@ -114,7 +114,7 @@ TEST(AccessTraceesMemoryTest, ReadFailures) {
   // Detach and end child.
   CHECK(!DetachAndContinueProcess(pid).has_error());
   kill(pid, SIGKILL);
-  waitpid(pid, NULL, 0);
+  waitpid(pid, nullptr, 0);
 }
 
 TEST(AccessTraceesMemoryTest, WriteFailures) {
@@ -124,8 +124,8 @@ TEST(AccessTraceesMemoryTest, WriteFailures) {
     // Child just runs an endless loop.
     volatile uint64_t counter = 0;
     while (true) {
-      ++counter;  // Endless loops without side effects are UB and recent versions of clang optimize
-                  // it away.
+      // Endless loops without side effects are UB and recent versions of clang optimize it away.
+      ++counter;
     }
   }
 
@@ -168,7 +168,7 @@ TEST(AccessTraceesMemoryTest, WriteFailures) {
   CHECK(!WriteTraceesMemory(pid, address, backup.value()).has_error());
   CHECK(!DetachAndContinueProcess(pid).has_error());
   kill(pid, SIGKILL);
-  waitpid(pid, NULL, 0);
+  waitpid(pid, nullptr, 0);
 }
 
 TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
@@ -178,8 +178,8 @@ TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
     // Child just runs an endless loop.
     volatile uint64_t counter = 0;
     while (true) {
-      ++counter;  // Endless loops without side effects are UB and recent versions of clang optimize
-                  // it away.
+      // Endless loops without side effects are UB and recent versions of clang optimize it away.
+      ++counter;
     }
   }
 
@@ -210,7 +210,7 @@ TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
   CHECK(WriteTraceesMemory(pid, address, backup.value()).has_value());
   CHECK(!DetachAndContinueProcess(pid).has_error());
   kill(pid, SIGKILL);
-  waitpid(pid, NULL, 0);
+  waitpid(pid, nullptr, 0);
 }
 
 }  // namespace orbit_user_space_instrumentation

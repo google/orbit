@@ -97,8 +97,8 @@ TEST(InjectLibraryInTraceeTest, OpenUseAndCloseLibraryInUserCode) {
   if (pid == 0) {
     volatile uint64_t counter = 0;
     while (true) {
-      ++counter;  // Endless loops without side effects are UB and recent versions of clang optimize
-                  // it away.
+      // Endless loops without side effects are UB and recent versions of clang optimize it away.
+      ++counter;
     }
   }
 
@@ -106,7 +106,7 @@ TEST(InjectLibraryInTraceeTest, OpenUseAndCloseLibraryInUserCode) {
 
   // End child process.
   kill(pid, SIGKILL);
-  waitpid(pid, NULL, 0);
+  waitpid(pid, nullptr, 0);
 }
 
 TEST(InjectLibraryInTraceeTest, OpenUseAndCloseLibraryInSyscall) {
@@ -123,7 +123,7 @@ TEST(InjectLibraryInTraceeTest, OpenUseAndCloseLibraryInSyscall) {
 
   // End child process.
   kill(pid, SIGKILL);
-  waitpid(pid, NULL, 0);
+  waitpid(pid, nullptr, 0);
 }
 
 TEST(InjectLibraryInTraceeTest, NonExistingLibrary) {
@@ -149,7 +149,7 @@ TEST(InjectLibraryInTraceeTest, NonExistingLibrary) {
 
   // End child process.
   kill(pid, SIGKILL);
-  waitpid(pid, NULL, 0);
+  waitpid(pid, nullptr, 0);
 }
 
 }  // namespace orbit_user_space_instrumentation

@@ -133,9 +133,7 @@ class InstrumentedProcess {
   struct TrampolineMemoryChunk {
     TrampolineMemoryChunk() = default;
     TrampolineMemoryChunk(std::unique_ptr<MemoryInTracee> m, int first_available)
-        : first_available(first_available) {
-      memory = std::move(m);
-    }
+        : memory(std::move(m)), first_available(first_available) {}
     std::unique_ptr<MemoryInTracee> memory;
     int first_available = 0;
   };
@@ -393,7 +391,7 @@ std::unique_ptr<InstrumentationManager> InstrumentationManager::Create() {
   return std::unique_ptr<InstrumentationManager>(new InstrumentationManager());
 }
 
-InstrumentationManager::~InstrumentationManager() {}
+InstrumentationManager::~InstrumentationManager() = default;
 
 ErrorMessageOr<absl::flat_hash_set<uint64_t>> InstrumentationManager::InstrumentProcess(
     const CaptureOptions& capture_options) {

@@ -75,8 +75,8 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
     // Child just runs an endless loop.
     volatile uint64_t counter = 0;
     while (true) {
-      ++counter;  // Endless loops without side effects are UB and recent versions of clang optimize
-                  // it away.
+      // Endless loops without side effects are UB and recent versions of clang optimize it away.
+      ++counter;
     }
   }
 
@@ -140,8 +140,8 @@ TEST(AllocateInTraceeTest, AutomaticAllocateAndFree) {
     // Child just runs an endless loop.
     volatile uint64_t counter = 0;
     while (true) {
-      ++counter;  // Endless loops without side effects are UB and recent versions of clang optimize
-                  // it away.
+      // Endless loops without side effects are UB and recent versions of clang optimize it away.
+      ++counter;
     }
   }
 

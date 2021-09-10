@@ -74,8 +74,8 @@ TEST(InstrumentProcessTest, FailToInstrumentAlreadyAttached) {
   if (pid == 0) {
     volatile uint64_t counter = 0;
     while (true) {
-      ++counter;  // Endless loops without side effects are UB and recent versions of clang optimize
-                  // it away.
+      // Endless loops without side effects are UB and recent versions of clang optimize it away.
+      ++counter;
     }
   }
 
@@ -86,8 +86,8 @@ TEST(InstrumentProcessTest, FailToInstrumentAlreadyAttached) {
     ptrace(PTRACE_ATTACH, pid, nullptr, nullptr);
     volatile uint64_t counter = 0;
     while (true) {
-      ++counter;  // Endless loops without side effects are UB and recent versions of clang optimize
-                  // it away.
+      // Endless loops without side effects are UB and recent versions of clang optimize it away.
+      ++counter;
     }
   }
   bool already_tracing = false;
@@ -104,9 +104,9 @@ TEST(InstrumentProcessTest, FailToInstrumentAlreadyAttached) {
 
   // End tracer process, end child process.
   kill(pid_tracer, SIGKILL);
-  waitpid(pid_tracer, NULL, 0);
+  waitpid(pid_tracer, nullptr, 0);
   kill(pid, SIGKILL);
-  waitpid(pid, NULL, 0);
+  waitpid(pid, nullptr, 0);
 }
 
 TEST(InstrumentProcessTest, FailToInstrumentInvalidPid) {
@@ -153,7 +153,7 @@ TEST(InstrumentProcessTest, Instrument) {
 
   // End child pid_process_1.
   kill(pid_process_1, SIGKILL);
-  waitpid(pid_process_1, NULL, 0);
+  waitpid(pid_process_1, nullptr, 0);
 
   // Just do the same thing with another process to trigger the code path deleting the data for the
   // first. Also Instrument / Uninstrument repeatedly.
@@ -179,7 +179,7 @@ TEST(InstrumentProcessTest, Instrument) {
 
   // End child pid_process_2.
   kill(pid_process_2, SIGKILL);
-  waitpid(pid_process_2, NULL, 0);
+  waitpid(pid_process_2, nullptr, 0);
 }
 
 }  // namespace orbit_user_space_instrumentation

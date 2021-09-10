@@ -28,8 +28,8 @@ TEST(ExecuteInProcessTest, ExecuteInProcess) {
   if (pid == 0) {
     volatile uint64_t counter = 0;
     while (true) {
-      ++counter;  // Endless loops without side effects are UB and recent versions of clang optimize
-                  // it away.
+      // Endless loops without side effects are UB and recent versions of clang optimize it away.
+      ++counter;
     }
   }
 
@@ -66,7 +66,7 @@ TEST(ExecuteInProcessTest, ExecuteInProcess) {
   CHECK(!DlcloseInTracee(pid, library_handle).has_error());
   CHECK(!DetachAndContinueProcess(pid).has_error());
   kill(pid, SIGKILL);
-  waitpid(pid, NULL, 0);
+  waitpid(pid, nullptr, 0);
 }
 
 }  // namespace orbit_user_space_instrumentation
