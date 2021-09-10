@@ -33,6 +33,7 @@ ErrorMessageOr<Instance> GetInstanceFromJson(const QJsonObject& obj) {
   OUTCOME_TRY(auto&& last_updated, process(obj.value("lastUpdated")));
   OUTCOME_TRY(auto&& owner, process(obj.value("owner")));
   OUTCOME_TRY(auto&& pool, process(obj.value("pool")));
+  OUTCOME_TRY(auto&& state, process(obj.value("state")));
 
   auto last_updated_date_time = QDateTime::fromString(last_updated, Qt::ISODate);
   if (!last_updated_date_time.isValid()) {
@@ -47,6 +48,7 @@ ErrorMessageOr<Instance> GetInstanceFromJson(const QJsonObject& obj) {
   inst.last_updated = last_updated_date_time;
   inst.owner = owner;
   inst.pool = pool;
+  inst.state = state;
 
   return inst;
 }

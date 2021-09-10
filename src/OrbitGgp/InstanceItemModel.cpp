@@ -49,6 +49,8 @@ QVariant InstanceItemModel::data(const QModelIndex& index, int role) const {
       return current_instance.owner;
     case Columns::kPool:
       return current_instance.pool;
+    case Columns::kState:
+      return current_instance.state;
     case Columns::kEnd:
       CHECK(false);
       return {};
@@ -86,6 +88,8 @@ QVariant InstanceItemModel::headerData(int section, Qt::Orientation orientation,
       return QLatin1String("Owner");
     case Columns::kPool:
       return QLatin1String("Pool");
+    case Columns::kState:
+      return QLatin1String("State");
     case Columns::kEnd:
       UNREACHABLE();
       return {};
