@@ -130,16 +130,22 @@ ErrorMessageOr<QPointer<Client>> Client::Create(QObject* parent, QString ggp_pro
 }
 
 void Client::GetInstancesAsync(
-    const std::function<void(ErrorMessageOr<QVector<Instance>>)>& callback, int retry) {
+    const std::function<void(ErrorMessageOr<QVector<Instance>>)>& callback, bool all_reserved,
+    int retry) {
   CHECK(callback);
 
-  RunProcessWithTimeout(ggp_program_, {"instance", "list", "-s"}, timeout_, this,
-                        [this, callback, retry](ErrorMessageOr<QByteArray> result) {
+  QStringList arguments{"instance", "list", "-s"};
+  if (all_reserved) {
+    arguments.append("--all-reserved");
+  }
+
+  RunProcessWithTimeout(ggp_program_, arguments, timeout_, this,
+                        [this, callback, retry, all_reserved](ErrorMessageOr<QByteArray> result) {
                           if (result.has_error()) {
                             if (retry < 1) {
                               callback(result.error());
                             } else {
-                              GetInstancesAsync(callback, retry - 1);
+                              GetInstancesAsync(callback, all_reserved, retry - 1);
                             }
                           } else {
                             callback(Instance::GetListFromJson(result.value()));

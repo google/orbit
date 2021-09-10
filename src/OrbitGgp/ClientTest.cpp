@@ -58,6 +58,28 @@ TEST(OrbitGgpClient, GetInstancesAsyncWorking) {
   EXPECT_TRUE(callback_was_called);
 }
 
+TEST(OrbitGgpClient, GetInstancesAsyncWorkingAllReserved) {
+  const std::filesystem::path mock_ggp_working =
+      orbit_base::GetExecutableDir() / "OrbitMockGgpWorking";
+
+  auto client = Client::Create(nullptr, QString::fromStdString(mock_ggp_working.string()));
+  ASSERT_THAT(client, HasValue());
+
+  bool callback_was_called = false;
+  client.value()->GetInstancesAsync(
+      [&callback_was_called](ErrorMessageOr<QVector<Instance>> instances) {
+        QCoreApplication::exit();
+        callback_was_called = true;
+        ASSERT_TRUE(instances.has_value());
+        EXPECT_EQ(instances.value().size(), 2);
+      },
+      true);
+
+  QCoreApplication::exec();
+
+  EXPECT_TRUE(callback_was_called);
+}
+
 TEST(OrbitGgpClient, GetInstancesAsyncTimeout) {
   const std::filesystem::path mock_ggp_working_slow =
       orbit_base::GetExecutableDir() / "OrbitMockGgpWorking";
