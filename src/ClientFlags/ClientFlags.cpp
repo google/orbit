@@ -51,3 +51,6 @@ ABSL_FLAG(bool, enable_warning_threshold, false,
 // Additional folder in which OrbitService will look for symbols
 ABSL_FLAG(std::string, instance_symbols_folder, "",
           "Additional folder in which OrbitService will look for symbols");
+
+// while project selection is in beta
+ABSL_FLAG(bool, enable_project_selection, false, "Enable project selection during Session Setup");
