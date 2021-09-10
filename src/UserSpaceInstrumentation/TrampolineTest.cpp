@@ -451,7 +451,7 @@ TEST_F(RelocateInstructionTest, UnconditionalJumpTo32BitImmediate) {
   EXPECT_EQ(6, result.value().position_of_absolute_address.value());
 }
 
-TEST_F(RelocateInstructionTest, CallToImmediateAddress) {
+TEST_F(RelocateInstructionTest, CallInstructionIsNotSupported) {
   MachineCode code;
   constexpr int32_t kOffset = 0x01020304;
   // call [rip + kOffset]
@@ -461,15 +461,7 @@ TEST_F(RelocateInstructionTest, CallToImmediateAddress) {
 
   ErrorMessageOr<RelocatedInstruction> result =
       RelocateInstruction(instruction_, 0x0100000000, 0x0200000000);
-  ASSERT_THAT(result, HasValue());
-  // call [rip + 2]               ff 15 02 00 00 00
-  // jmp  [rip + 8]               eb 08
-  // absolute_address             09 03 02 01 01 00 00 00
-  EXPECT_THAT(result.value().code,
-              ElementsAreArray({0xff, 0x15, 0x02, 0x00, 0x00, 0x00, 0xeb, 0x08, 0x09, 0x03, 0x02,
-                                0x01, 0x01, 0x00, 0x00, 0x00}));
-  ASSERT_TRUE(result.value().position_of_absolute_address.has_value());
-  EXPECT_EQ(8, result.value().position_of_absolute_address.value());
+  EXPECT_THAT(result, HasError("Relocating a call instruction is not supported."));
 }
 
 TEST_F(RelocateInstructionTest, ConditionalJumpTo8BitImmediate) {
@@ -845,33 +837,6 @@ extern "C" __attribute__((naked)) int UnconditionalJump32BitOffset() {
 
 TEST_F(InstrumentFunctionTest, UnconditionalJump32BitOffset) {
   RunChild(&UnconditionalJump32BitOffset, "UnconditionalJump32BitOffset");
-  PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
-  ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
-      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
-      return_trampoline_address_, capstone_handle_, relocation_map_);
-  EXPECT_THAT(address_after_prologue_or_error, HasNoError());
-  ErrorMessageOr<void> result =
-      InstrumentFunction(pid_, function_address_, /*function_id=*/42,
-                         address_after_prologue_or_error.value(), trampoline_address_);
-  EXPECT_THAT(result, HasNoError());
-  RestartAndRemoveInstrumentation();
-}
-
-// Call function at relative offset.
-extern "C" __attribute__((naked)) int CallFunction() {
-  __asm__ __volatile__(
-      "call function_label\n\t"
-      "ret \n\t"
-      "function_label:\n\t"
-      "nop \n\t"
-      "ret \n\t"
-      :
-      :
-      :);
-}
-
-TEST_F(InstrumentFunctionTest, CallFunction) {
-  RunChild(&CallFunction, "CallFunction");
   PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
   ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
