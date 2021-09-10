@@ -55,19 +55,20 @@ TEST(InstanceTests, GetListFromJson) {
     //   "lastUpdated": "2020-29-09T09:55:20Z",
     //   "owner": "a username",
     //   "pool": "a pool",
+    //   "state": "a state",
     //   "other key": "other value",
     //   "other complex object": {
     //    "object key": "object value"
     //   },
     //  }
     // ]
-    const auto json = QString(
-                          "[{\"displayName\":\"a display name\",\"id\":\"instance "
-                          "id\",\"ipAddress\":\"1.1.0.1\",\"lastUpdated\":\"2020-29-09T09:"
-                          "55:20Z\",\"owner\":\"a username\",\"pool\":\"a pool\",\"other "
-                          "key\":\"other value\",\"other complex object\":{\"object "
-                          "key\":\"object value\"}}]")
-                          .toUtf8();
+    const auto json =
+        QString(
+            "[{\"displayName\":\"a display name\",\"id\":\"instance "
+            "id\",\"ipAddress\":\"1.1.0.1\",\"lastUpdated\":\"2020-29-09T09:55:20Z\",\"owner\":\"a "
+            "username\",\"pool\":\"a pool\",\"state\":\"a state\",\"other key\":\"other "
+            "value\",\"other complex object\":{\"object key\":\"object value\"}}]")
+            .toUtf8();
     const auto result = Instance::GetListFromJson(json);
     EXPECT_THAT(result, orbit_test_utils::HasError("Unable to parse JSON"));
   }
@@ -83,19 +84,20 @@ TEST(InstanceTests, GetListFromJson) {
     //   "lastUpdated": "2020-04-09T09:55:20Z",
     //   "owner": "a username",
     //   "pool": "a pool",
+    //   "state": "a state",
     //   "other key": "other value",
     //   "other complex object": {
     //    "object key": "object value"
     //   },
     //  }
     // ]
-    const auto json = QString(
-                          "[{\"displayName\":\"a display name\",\"id\":\"instance "
-                          "id\",\"ipAddress\":\"1.1.0.1\",\"lastUpdated\":\"2020-04-09T09:"
-                          "55:20Z\",\"owner\":\"a username\",\"pool\":\"a pool\",\"other "
-                          "key\":\"other value\",\"other complex object\":{\"object "
-                          "key\":\"object value\"}}]")
-                          .toUtf8();
+    const auto json =
+        QString(
+            "[{\"displayName\":\"a display name\",\"id\":\"instance "
+            "id\",\"ipAddress\":\"1.1.0.1\",\"lastUpdated\":\"2020-04-09T09:55:20Z\",\"owner\":\"a "
+            "username\",\"pool\":\"a pool\",\"state\":\"a state\",\"other key\":\"other "
+            "value\",\"other complex object\":{\"object key\":\"object value\"}}]")
+            .toUtf8();
     auto result = Instance::GetListFromJson(json);
     ASSERT_THAT(result, orbit_test_utils::HasValue());
     const QVector<Instance> instances = std::move(result.value());
@@ -108,6 +110,7 @@ TEST(InstanceTests, GetListFromJson) {
               QDateTime::fromString(QString{"2020-04-09T09:55:20Z"}, Qt::ISODate));
     EXPECT_EQ(instance.owner, QString{"a username"});
     EXPECT_EQ(instance.pool, QString{"a pool"});
+    EXPECT_EQ(instance.state, QString{"a state"});
   }
 }
 
@@ -146,6 +149,7 @@ TEST(InstanceTests, EqualToOperator) {
   test_instance_0.last_updated = QDateTime::fromString("2020-01-01T00:42:42Z", Qt::ISODate);
   test_instance_0.owner = "a username";
   test_instance_0.pool = "a pool";
+  test_instance_0.state = "a state";
 
   EXPECT_NE(test_instance_0, test_instance_1);
 
@@ -155,6 +159,7 @@ TEST(InstanceTests, EqualToOperator) {
   test_instance_1.last_updated = QDateTime::fromString("2020-01-01T00:42:42Z", Qt::ISODate);
   test_instance_1.owner = "a username";
   test_instance_1.pool = "a pool";
+  test_instance_1.state = "a state";
 
   EXPECT_EQ(test_instance_0, test_instance_1);
 }
@@ -171,6 +176,7 @@ TEST(InstanceTests, NotEqualToOperator) {
   test_instance_0.last_updated = QDateTime::fromString("2020-01-01T00:42:42Z", Qt::ISODate);
   test_instance_0.owner = "a username";
   test_instance_0.pool = "a pool";
+  test_instance_0.state = "a state";
 
   EXPECT_TRUE(test_instance_0 != test_instance_1);
 
@@ -180,6 +186,7 @@ TEST(InstanceTests, NotEqualToOperator) {
   test_instance_1.last_updated = QDateTime::fromString("2020-01-01T00:42:42Z", Qt::ISODate);
   test_instance_1.owner = "a username";
   test_instance_1.pool = "a pool";
+  test_instance_1.state = "a state";
 
   EXPECT_FALSE(test_instance_0 != test_instance_1);
 }

@@ -18,7 +18,7 @@ namespace orbit_ggp {
 
 class InstanceItemModel : public QAbstractItemModel {
  public:
-  enum class Columns { kDisplayName, kId, kIpAddress, kLastUpdated, kOwner, kPool, kEnd };
+  enum class Columns { kDisplayName, kId, kIpAddress, kLastUpdated, kOwner, kPool, kState, kEnd };
 
   explicit InstanceItemModel(QVector<Instance> instances = {}, QObject* parent = nullptr);
 

@@ -21,10 +21,10 @@ namespace orbit_ggp {
 
 TEST(InstanceItemModelTests, columnCount) {
   InstanceItemModel model{};
-  EXPECT_EQ(model.columnCount(), 6);
+  EXPECT_EQ(model.columnCount(), 7);
 
   model.SetInstances({Instance{}});
-  EXPECT_EQ(model.columnCount(), 6);
+  EXPECT_EQ(model.columnCount(), 7);
 }
 
 TEST(InstanceItemModelTests, rowCount) {
@@ -53,21 +53,21 @@ TEST(InstanceItemModelTests, index) {
   EXPECT_TRUE(model.index(0, 0).isValid());
   EXPECT_TRUE(model.index(0, 1).isValid());
   EXPECT_TRUE(model.index(0, 2).isValid());
-  EXPECT_FALSE(model.index(0, 6).isValid());
+  EXPECT_FALSE(model.index(0, 7).isValid());
   EXPECT_FALSE(model.index(1, 0).isValid());
   EXPECT_FALSE(model.index(1, 1).isValid());
   EXPECT_FALSE(model.index(1, 2).isValid());
-  EXPECT_FALSE(model.index(1, 6).isValid());
+  EXPECT_FALSE(model.index(1, 7).isValid());
 
   model.SetInstances({Instance{}, Instance{}});
   EXPECT_TRUE(model.index(0, 0).isValid());
   EXPECT_TRUE(model.index(0, 1).isValid());
   EXPECT_TRUE(model.index(0, 2).isValid());
-  EXPECT_FALSE(model.index(0, 6).isValid());
+  EXPECT_FALSE(model.index(0, 7).isValid());
   EXPECT_TRUE(model.index(1, 0).isValid());
   EXPECT_TRUE(model.index(1, 1).isValid());
   EXPECT_TRUE(model.index(1, 2).isValid());
-  EXPECT_FALSE(model.index(1, 6).isValid());
+  EXPECT_FALSE(model.index(1, 7).isValid());
 
   // parent is set
   const QModelIndex cell_index = model.index(0, 0);
@@ -89,7 +89,7 @@ TEST(InstanceItemModelTests, headerData) {
   EXPECT_FALSE(model.headerData(-1, Qt::Horizontal).isValid());
   EXPECT_TRUE(model.headerData(0, Qt::Horizontal).isValid());
   EXPECT_TRUE(model.headerData(1, Qt::Horizontal).isValid());
-  EXPECT_FALSE(model.headerData(6, Qt::Horizontal).isValid());
+  EXPECT_FALSE(model.headerData(7, Qt::Horizontal).isValid());
 
   // Section correct
   EXPECT_EQ(model.headerData(0, Qt::Horizontal).toString().toStdString(), "Display Name");
@@ -109,6 +109,7 @@ TEST(InstanceItemModelTests, data) {
   test_instance_0.last_updated = QDateTime::fromString("2020-01-01T00:42:42Z", Qt::ISODate);
   test_instance_0.owner = "hebecker@";
   test_instance_0.pool = "foo-gen1-anything";
+  test_instance_0.state = "RESERVED";
 
   Instance test_instance_1{};
   test_instance_1.display_name = "displayName2";
@@ -117,6 +118,7 @@ TEST(InstanceItemModelTests, data) {
   test_instance_1.last_updated = QDateTime::fromString("2020-02-02T00:42:42Z", Qt::ISODate);
   test_instance_1.owner = "programmer@";
   test_instance_1.pool = "foo-gen42-anything";
+  test_instance_1.state = "CONFIGURING";
 
   InstanceItemModel model{{test_instance_0, test_instance_1}};
 
@@ -147,6 +149,7 @@ TEST(InstanceItemModelTests, data) {
   EXPECT_EQ(model.index(0, 3).data().toString(), test_instance_0.last_updated.toString());
   EXPECT_EQ(model.index(0, 4).data().toString(), test_instance_0.owner);
   EXPECT_EQ(model.index(0, 5).data().toString(), test_instance_0.pool);
+  EXPECT_EQ(model.index(0, 6).data().toString(), test_instance_0.state);
 
   // test_instance_1 details
   EXPECT_EQ(model.index(1, 0).data().toString(), test_instance_1.display_name);
@@ -155,6 +158,7 @@ TEST(InstanceItemModelTests, data) {
   EXPECT_EQ(model.index(1, 3).data().toString(), test_instance_1.last_updated.toString());
   EXPECT_EQ(model.index(1, 4).data().toString(), test_instance_1.owner);
   EXPECT_EQ(model.index(1, 5).data().toString(), test_instance_1.pool);
+  EXPECT_EQ(model.index(1, 6).data().toString(), test_instance_1.state);
 }
 
 TEST(InstanceItemModelTests, SetInstances) {

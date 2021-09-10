@@ -23,14 +23,15 @@ struct Instance {
   QDateTime last_updated;
   QString owner;
   QString pool;
+  QString state;
 
   static ErrorMessageOr<QVector<Instance>> GetListFromJson(const QByteArray& json);
   static bool CmpById(const Instance& lhs, const Instance& rhs);
 
   friend bool operator==(const Instance& lhs, const Instance& rhs) {
-    return std::tie(lhs.display_name, lhs.id, lhs.ip_address, lhs.last_updated, lhs.owner,
-                    lhs.pool) == std::tie(rhs.display_name, rhs.id, rhs.ip_address,
-                                          rhs.last_updated, rhs.owner, rhs.pool);
+    return std::tie(lhs.display_name, lhs.id, lhs.ip_address, lhs.last_updated, lhs.owner, lhs.pool,
+                    lhs.state) == std::tie(rhs.display_name, rhs.id, rhs.ip_address,
+                                           rhs.last_updated, rhs.owner, rhs.pool, rhs.state);
   }
 
   friend bool operator!=(const Instance& lhs, const Instance& rhs) { return !(lhs == rhs); }

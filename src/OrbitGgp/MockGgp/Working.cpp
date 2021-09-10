@@ -29,7 +29,8 @@ int GgpInstanceList(char* argv[]) {
   "ipAddress": "123.456.789.012",
   "lastUpdated": "2012-12-12T12:12:12Z",
   "owner": "owner@",
-  "pool": "pool-of-test_instance_1"
+  "pool": "pool-of-test_instance_1",
+  "state": "RESERVED"
  },
  {
   "displayName": "displayName-2",
@@ -37,7 +38,8 @@ int GgpInstanceList(char* argv[]) {
   "ipAddress": "123.456.789.012",
   "lastUpdated": "2012-12-12T12:12:12Z",
   "owner": "owner@",
-  "pool": "pool-of-test_instance_2"
+  "pool": "pool-of-test_instance_2",
+  "state": "CONFIGURING"
  }
 ])" << std::endl;
   return 0;
