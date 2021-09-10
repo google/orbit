@@ -50,4 +50,7 @@ ABSL_DECLARE_FLAG(bool, enable_warning_threshold);
 // additional folder in which OrbitService will look for symbols
 ABSL_DECLARE_FLAG(std::string, instance_symbols_folder);
 
+// while project selection is in beta
+ABSL_DECLARE_FLAG(bool, enable_project_selection);
+
 #endif  // CLIENT_FLAGS_CLIENT_FLAGS_H_
