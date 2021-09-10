@@ -15,6 +15,7 @@
 
 using orbit_grpc_protos::SymbolInfo;
 using orbit_object_utils::CreateCoffFile;
+using orbit_object_utils::ObjectFileInfo;
 using orbit_object_utils::PdbDebugInfo;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;
@@ -24,7 +25,7 @@ TEST(PdbFile, LoadDebugSymbols) {
   std::filesystem::path file_path_pdb = orbit_test::GetTestdataDir() / "dllmain.pdb";
 
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::PdbFile>> pdb_file_result =
-      orbit_object_utils::CreatePdbFile(file_path_pdb);
+      orbit_object_utils::CreatePdbFile(file_path_pdb, ObjectFileInfo{0x180000000, 0x1000});
   ASSERT_THAT(pdb_file_result, HasNoError());
   std::unique_ptr<orbit_object_utils::PdbFile> pdb_file = std::move(pdb_file_result.value());
   auto symbols_result = pdb_file->LoadDebugSymbols();
@@ -39,13 +40,13 @@ TEST(PdbFile, LoadDebugSymbols) {
   SymbolInfo symbol = symbol_infos[0];
   EXPECT_EQ(symbol.name(), "PrintHelloWorldInternal");
   EXPECT_EQ(symbol.demangled_name(), "PrintHelloWorldInternal");
-  EXPECT_EQ(symbol.address(), 0xdf90);
+  EXPECT_EQ(symbol.address(), 0x18000ef90);
   EXPECT_EQ(symbol.size(), 0x2b);
 
   symbol = symbol_infos[1];
   EXPECT_EQ(symbol.name(), "PrintHelloWorld");
   EXPECT_EQ(symbol.demangled_name(), "PrintHelloWorld");
-  EXPECT_EQ(symbol.address(), 0xdfd0);
+  EXPECT_EQ(symbol.address(), 0x18000efd0);
   EXPECT_EQ(symbol.size(), 0xe);
 }
 
@@ -53,7 +54,7 @@ TEST(PdbFile, CanObtainGuidAndAgeFromPdbAndDll) {
   std::filesystem::path file_path_pdb = orbit_test::GetTestdataDir() / "dllmain.pdb";
 
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::PdbFile>> pdb_file_result =
-      orbit_object_utils::CreatePdbFile(file_path_pdb);
+      orbit_object_utils::CreatePdbFile(file_path_pdb, ObjectFileInfo{0x180000000, 0x1000});
   ASSERT_THAT(pdb_file_result, HasNoError());
   std::unique_ptr<orbit_object_utils::PdbFile> pdb_file = std::move(pdb_file_result.value());
 
@@ -77,6 +78,6 @@ TEST(PdbFile, CreatePdbFailsOnNonPdbFile) {
   std::filesystem::path file_path_pdb = orbit_test::GetTestdataDir() / "dllmain.dll";
 
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::PdbFile>> pdb_file_result =
-      orbit_object_utils::CreatePdbFile(file_path_pdb);
+      orbit_object_utils::CreatePdbFile(file_path_pdb, ObjectFileInfo{0x180000000, 0x1000});
   EXPECT_THAT(pdb_file_result, HasError("Unable to load PDB file"));
 }

@@ -1799,8 +1799,14 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
   auto scoped_status = CreateScopedStatus(absl::StrFormat(
       R"(Loading symbols for "%s" from file "%s"...)", module_file_path, symbols_path.string()));
 
-  auto load_symbols_from_file = thread_pool_->Schedule(
-      [symbols_path]() { return orbit_symbols::SymbolHelper::LoadSymbolsFromFile(symbols_path); });
+  auto load_symbols_from_file =
+      thread_pool_->Schedule([this, symbols_path, module_file_path, module_build_id]() {
+        const ModuleData* module_data =
+            GetModuleByPathAndBuildId(module_file_path, module_build_id);
+        orbit_object_utils::ObjectFileInfo object_file_info{
+            module_data->load_bias(), module_data->executable_segment_offset()};
+        return orbit_symbols::SymbolHelper::LoadSymbolsFromFile(symbols_path, object_file_info);
+      });
 
   auto add_symbols =
       [this, module_id, scoped_status = std::move(scoped_status)](

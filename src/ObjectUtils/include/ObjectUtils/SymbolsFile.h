@@ -14,6 +14,15 @@
 
 namespace orbit_object_utils {
 
+struct ObjectFileInfo {
+  // This is the load bias for ELF, for COFF we use ImageBase here, so that our
+  // address computations are consistent between what we do we ELF and for COFF.
+  uint64_t load_bias = 0;
+  // File offset to the beginning of the executable segment. For COFF, this is
+  // the file offset to the beginning of the .text section.
+  uint64_t executable_segment_offset = 0;
+};
+
 class SymbolsFile {
  public:
   SymbolsFile() = default;
@@ -29,8 +38,12 @@ class SymbolsFile {
   [[nodiscard]] virtual const std::filesystem::path& GetFilePath() const = 0;
 };
 
+// Create a symbols file from the file at symbol_file_path. Additional info about the corresponding
+// module can be passed in via object_file_info. This is necessary for PDB files, where information
+// such as the load bias cannot be determined from the PDB file alone but is needed to compute the
+// right addresses for symbols.
 ErrorMessageOr<std::unique_ptr<SymbolsFile>> CreateSymbolsFile(
-    const std::filesystem::path& file_path);
+    const std::filesystem::path& symbol_file_path, const ObjectFileInfo& object_file_info);
 
 }  // namespace orbit_object_utils
 

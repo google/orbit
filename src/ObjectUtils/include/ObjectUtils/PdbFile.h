@@ -24,7 +24,8 @@ class PdbFile : public SymbolsFile {
   [[nodiscard]] virtual uint32_t GetAge() const = 0;
 };
 
-ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFile(const std::filesystem::path& file_path);
+ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFile(const std::filesystem::path& file_path,
+                                                       const ObjectFileInfo& object_file_info);
 
 }  // namespace orbit_object_utils
 

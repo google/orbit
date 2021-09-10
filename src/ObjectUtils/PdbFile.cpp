@@ -22,6 +22,7 @@
 
 #include <memory>
 
+#include "ObjectUtils/CoffFile.h"
 #include "ObjectUtils/WindowsBuildIdUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -40,7 +41,8 @@ namespace {
 // all symbol info required for functions.
 class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
  public:
-  SymbolInfoVisitor(ModuleSymbols* module_symbols) : module_symbols_(module_symbols) {}
+  SymbolInfoVisitor(ModuleSymbols* module_symbols, const ObjectFileInfo& object_file_info)
+      : module_symbols_(module_symbols), object_file_info_(object_file_info) {}
 
   // This is the only record type (ProcSym) we are interested in, so we only override this
   // method. Other records will simply return llvm::Error::success without any work done.
@@ -49,8 +51,11 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
     SymbolInfo symbol_info;
     symbol_info.set_name(proc.Name.str());
     symbol_info.set_demangled_name(llvm::demangle(proc.Name.str()));
-    // This address is a relative virtual address (RVA).
-    symbol_info.set_address(proc.CodeOffset);
+    // The address in PDB files is a relative virtual address (RVA), to make the address compatible
+    // with how we do the computation, we need to add both the load bias (ImageBase for COFF) and
+    // the offset of the executable section.
+    symbol_info.set_address(proc.CodeOffset + object_file_info_.load_bias +
+                            object_file_info_.executable_segment_offset);
     symbol_info.set_size(proc.CodeSize);
     *(module_symbols_->add_symbol_infos()) = std::move(symbol_info);
 
@@ -59,11 +64,13 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
 
  private:
   ModuleSymbols* module_symbols_;
+  ObjectFileInfo object_file_info_;
 };
 
 class PdbFileImpl : public PdbFile {
  public:
-  PdbFileImpl(std::filesystem::path file_path, std::unique_ptr<llvm::pdb::IPDBSession> session);
+  PdbFileImpl(std::filesystem::path file_path, const ObjectFileInfo& object_file_info,
+              std::unique_ptr<llvm::pdb::IPDBSession> session);
 
   [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbols() override;
   [[nodiscard]] const std::filesystem::path& GetFilePath() const override { return file_path_; }
@@ -84,15 +91,19 @@ class PdbFileImpl : public PdbFile {
 
  private:
   std::filesystem::path file_path_;
+  ObjectFileInfo object_file_info_;
   std::unique_ptr<llvm::pdb::IPDBSession> session_;
 };
 
-PdbFileImpl::PdbFileImpl(std::filesystem::path file_path,
+PdbFileImpl::PdbFileImpl(std::filesystem::path file_path, const ObjectFileInfo& object_file_info,
                          std::unique_ptr<llvm::pdb::IPDBSession> session)
-    : file_path_(std::move(file_path)), session_(std::move(session)) {}
+    : file_path_(std::move(file_path)),
+      object_file_info_(object_file_info),
+      session_(std::move(session)) {}
 
 [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileImpl::LoadDebugSymbols() {
   ModuleSymbols module_symbols;
+  module_symbols.set_load_bias(object_file_info_.load_bias);
   module_symbols.set_symbols_file_path(file_path_.string());
 
   llvm::pdb::NativeSession* native_session = static_cast<llvm::pdb::NativeSession*>(session_.get());
@@ -132,7 +143,7 @@ PdbFileImpl::PdbFileImpl(std::filesystem::path file_path,
     llvm::codeview::SymbolDeserializer deserializer(nullptr,
                                                     llvm::codeview::CodeViewContainer::Pdb);
     pipeline.addCallbackToPipeline(deserializer);
-    SymbolInfoVisitor symbol_visitor(&module_symbols);
+    SymbolInfoVisitor symbol_visitor(&module_symbols, object_file_info_);
     pipeline.addCallbackToPipeline(symbol_visitor);
     llvm::codeview::CVSymbolVisitor visitor(pipeline);
 
@@ -153,7 +164,8 @@ PdbFileImpl::PdbFileImpl(std::filesystem::path file_path,
 
 }  // namespace
 
-ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFile(const std::filesystem::path& file_path) {
+ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFile(const std::filesystem::path& file_path,
+                                                       const ObjectFileInfo& object_file_info) {
   std::string file_path_string = file_path.string();
   llvm::StringRef pdb_path{file_path_string};
   std::unique_ptr<llvm::pdb::IPDBSession> session;
@@ -163,6 +175,6 @@ ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFile(const std::filesystem::pa
     return ErrorMessage(absl::StrFormat("Unable to load PDB file %s with error: %s",
                                         file_path.string(), llvm::toString(std::move(error))));
   }
-  return std::make_unique<PdbFileImpl>(file_path, std::move(session));
+  return std::make_unique<PdbFileImpl>(file_path, object_file_info, std::move(session));
 }
 }  // namespace orbit_object_utils
