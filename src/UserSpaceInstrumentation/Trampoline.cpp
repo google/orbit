@@ -187,10 +187,11 @@ void AppendBackupCode(MachineCode& trampoline) {
   }
 }
 
-// Call the entry payload function with the return address and the id of the instrumented function
-// as parameters. Care must be taken that the stack be aligned to 16 bytes before calling the entry
-// payload, as required by the calling convention as per section "3.2.2 The Stack Frame" in, again,
-// "System V Application Binary Interface".
+// Call the entry payload function with the return address, the id of the instrumented function, and
+// the original stack pointer (i.e., address of the return address) as parameters. Care must be
+// taken that the stack be aligned to 16 bytes before calling the entry payload, as required by the
+// calling convention as per section "3.2.2 The Stack Frame" in, again, "System V Application Binary
+// Interface".
 // Then overwrite the return address with `return_trampoline_address`.
 void AppendCallToEntryPayloadAndOverwriteReturnAddress(uint64_t entry_payload_function_address,
                                                        uint64_t return_trampoline_address,
@@ -203,6 +204,7 @@ void AppendCallToEntryPayloadAndOverwriteReturnAddress(uint64_t entry_payload_fu
   // sub rsp, 0x08                                   48 83 ec 08
   // mov rdi, (rax)                                  48 8b 38
   // mov rsi, function_id                            48 be function_id
+  // mov rdx, rax                                    48 89 c2
   // mov rax, entry_payload_function_address         48 b8 addr
   // call rax                                        ff d0
   // add rsp, 0x08                                   48 83 c4 08
@@ -220,6 +222,7 @@ void AppendCallToEntryPayloadAndOverwriteReturnAddress(uint64_t entry_payload_fu
   // The value of function id will be overwritten by every call to `InstrumentFunction`. This is
   // just a placeholder.
   trampoline.AppendImmediate64(0xDEADBEEFDEADBEEF)
+      .AppendBytes({0x48, 0x89, 0xc2})
       .AppendBytes({0x48, 0xb8})
       .AppendImmediate64(entry_payload_function_address)
       .AppendBytes({0xff, 0xd0})

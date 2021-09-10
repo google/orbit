@@ -11,9 +11,9 @@
 extern "C" void StartNewCapture();
 
 // Payload called on entry of an instrumented function. Needs to record the return address of the
-// function (in order to have it available in `ExitPayload`). `function_id` is the id of the
-// instrumented function.
-extern "C" void EntryPayload(uint64_t return_address, uint64_t function_id);
+// function (in order to have it available in `ExitPayload`) and the stack pointer (i.e., the
+// address of the return address). `function_id` is the id of the instrumented function.
+extern "C" void EntryPayload(uint64_t return_address, uint64_t function_id, uint64_t stack_pointer);
 
 // Payload called on exit of an instrumented function. Needs to return the actual return address of
 // the function such that the execution can be continued there.
