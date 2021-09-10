@@ -61,6 +61,7 @@ static_assert(sizeof(FunctionCallEvent) == 32, "FunctionCallEvent should be 32 b
 
 // This class is used to enqueue FunctionCallEvent events from multiple threads and relay them to
 // OrbitService in the form of orbit_grpc_protos::FunctionCall events.
+// TODO(b/194704608): Emit individual FunctionEntry and FunctionExit events instead.
 class LockFreeUserSpaceInstrumentationEventProducer
     : public orbit_capture_event_producer::LockFreeBufferCaptureEventProducer<FunctionCallEvent> {
  public:
