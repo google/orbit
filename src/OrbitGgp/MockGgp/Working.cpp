@@ -4,6 +4,7 @@
 
 #include <chrono>
 #include <iostream>
+#include <string_view>
 #include <thread>
 
 int GgpVersion(char* argv[]) {
@@ -45,6 +46,14 @@ int GgpInstanceList(char* argv[]) {
   return 0;
 }
 
+int GgpInstanceListAllReserved(char* argv[]) {
+  if (std::string_view{argv[4]} != "--all-reserved") {
+    std::cout << "arguments are formatted wrong" << std::endl;
+    return 1;
+  }
+  return GgpInstanceList(argv);
+}
+
 int GgpSshInit(char* argv[]) {
   if (std::string_view{argv[1]} != "ssh" || std::string_view{argv[2]} != "init" ||
       std::string_view{argv[3]} != "-s" || std::string_view{argv[4]} != "--instance" ||
@@ -74,6 +83,8 @@ int main(int argc, char* argv[]) {
       return GgpVersion(argv);
     case 4:
       return GgpInstanceList(argv);
+    case 5:
+      return GgpInstanceListAllReserved(argv);
     case 6:
       return GgpSshInit(argv);
     default:

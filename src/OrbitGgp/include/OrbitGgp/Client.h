@@ -30,7 +30,7 @@ class Client : public QObject {
       std::chrono::milliseconds timeout = GetDefaultTimeoutMs());
 
   void GetInstancesAsync(const std::function<void(ErrorMessageOr<QVector<Instance>>)>& callback,
-                         int retry = 3);
+                         bool all_reserved = false, int retry = 3);
   void GetSshInfoAsync(const Instance& ggp_instance,
                        const std::function<void(ErrorMessageOr<SshInfo>)>& callback);
 
