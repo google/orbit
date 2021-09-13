@@ -21,6 +21,7 @@
 #include "CoreMath.h"
 #include "Geometry.h"
 #include "PickingManager.h"
+#include "TranslationStack.h"
 #include "capture_data.pb.h"
 
 using TooltipCallback = std::function<std::string(PickingId)>;
@@ -117,8 +118,8 @@ class Batcher {
   Batcher(const Batcher&) = delete;
   Batcher(Batcher&&) = delete;
 
-  void PushTranslation(float x, float y, float z = 0.f);
-  void PopTranslation();
+  void PushTranslation(float x, float y, float z = 0.f) { translations_.PushTranslation(x, y, z); }
+  void PopTranslation() { translations_.PopTranslation(); }
 
   void AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                std::unique_ptr<PickingUserData> user_data = nullptr);
@@ -196,8 +197,6 @@ class Batcher {
                    const Color& picking_color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
 
-  [[nodiscard]] Vec3 TransformVertex(const Vec3& input) const;
-
   BatcherId batcher_id_;
   PickingManager* picking_manager_;
   std::unordered_map<float, PrimitiveBuffers> primitive_buffers_by_layer_;
@@ -206,8 +205,7 @@ class Batcher {
 
   std::vector<Vec2> circle_points;
 
-  std::vector<Vec3> translation_stack_;
-  Vec3 current_translation_ = Vec3(0.f, 0.f, 0.f);
+  orbit_gl::TranslationStack translations_;
 };
 
 #endif
