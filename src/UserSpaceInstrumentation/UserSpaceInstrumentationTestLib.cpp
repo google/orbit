@@ -57,6 +57,11 @@ uint64_t ExitPayload() {
   return current_return_address.return_address;
 }
 
+void EntryPayloadAlignedCopy(uint64_t return_address, uint64_t function_id) {
+  return_addresses.emplace(return_address, function_id);
+  __asm__ __volatile__("movaps -0x10(%%rbp), %%xmm0\n\t" : : :);
+}
+
 // rdi, rsi, rdx, rcx, r8, r9, rax, r10
 void EntryPayloadClobberParameterRegisters(uint64_t return_address, uint64_t function_id) {
   return_addresses.emplace(return_address, function_id);
