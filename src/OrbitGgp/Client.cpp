@@ -13,6 +13,7 @@
 #include <QStringList>
 #include <QTimer>
 #include <chrono>
+#include <optional>
 #include <type_traits>
 
 #include "OrbitBase/Logging.h"
@@ -131,26 +132,31 @@ ErrorMessageOr<QPointer<Client>> Client::Create(QObject* parent, QString ggp_pro
 
 void Client::GetInstancesAsync(
     const std::function<void(ErrorMessageOr<QVector<Instance>>)>& callback, bool all_reserved,
-    int retry) {
+    std::optional<Project> project, int retry) {
   CHECK(callback);
 
   QStringList arguments{"instance", "list", "-s"};
   if (all_reserved) {
     arguments.append("--all-reserved");
   }
+  if (project != std::nullopt) {
+    arguments.append("--project");
+    arguments.append(project.value().id);
+  }
 
-  RunProcessWithTimeout(ggp_program_, arguments, timeout_, this,
-                        [this, callback, retry, all_reserved](ErrorMessageOr<QByteArray> result) {
-                          if (result.has_error()) {
-                            if (retry < 1) {
-                              callback(result.error());
-                            } else {
-                              GetInstancesAsync(callback, all_reserved, retry - 1);
-                            }
-                          } else {
-                            callback(Instance::GetListFromJson(result.value()));
-                          }
-                        });
+  RunProcessWithTimeout(
+      ggp_program_, arguments, timeout_, this,
+      [this, callback, retry, all_reserved, project](ErrorMessageOr<QByteArray> result) {
+        if (result.has_error()) {
+          if (retry < 1) {
+            callback(result.error());
+          } else {
+            GetInstancesAsync(callback, all_reserved, project, retry - 1);
+          }
+        } else {
+          callback(Instance::GetListFromJson(result.value()));
+        }
+      });
 }
 
 void Client::GetSshInfoAsync(const Instance& ggp_instance,

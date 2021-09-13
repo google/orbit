@@ -22,7 +22,7 @@ int GgpVersion(int argc, char* argv[]) {
 }
 
 int GgpInstanceList(int argc, char* argv[]) {
-  if (argc < 4 || argc > 5) {
+  if (argc < 4 || argc > 7) {
     std::cout << "Wrong amount of arguments" << std::endl;
     return 1;
   }
@@ -33,6 +33,19 @@ int GgpInstanceList(int argc, char* argv[]) {
   }
 
   if (argc == 5 && std::string_view{argv[4]} != "--all-reserved") {
+    std::cout << "arguments are formatted wrong" << std::endl;
+    return 1;
+  }
+
+  if (argc == 6 && (std::string_view{argv[4]} != "--project" ||
+                    std::string_view{argv[5]} != "project/test/id")) {
+    std::cout << "arguments are formatted wrong" << std::endl;
+    return 1;
+  }
+
+  if (argc == 7 &&
+      (std::string_view{argv[4]} != "--all-reserved" || std::string_view{argv[5]} != "--project" ||
+       std::string_view{argv[6]} != "project/test/id")) {
     std::cout << "arguments are formatted wrong" << std::endl;
     return 1;
   }
