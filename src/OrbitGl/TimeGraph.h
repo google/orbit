@@ -123,11 +123,11 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   [[nodiscard]] bool IsPartlyVisible(uint64_t min, uint64_t max) const;
   [[nodiscard]] bool IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) const;
 
-  [[nodiscard]] int GetNumDrawnTextBoxes() const { return num_drawn_text_boxes_; }
   [[nodiscard]] TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
   [[nodiscard]] Batcher& GetBatcher() { return batcher_; }
   [[nodiscard]] std::vector<const orbit_client_data::TimerChain*> GetAllThreadTrackTimerChains()
       const;
+  [[nodiscard]] int GetNumVisiblePrimitives() const;
 
   void UpdateHorizontalScroll(float ratio);
   [[nodiscard]] double GetMinTimeUs() const { return min_time_us_; }
@@ -199,7 +199,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
  private:
   AccessibleInterfaceProvider* accessible_parent_;
   TextRenderer text_renderer_static_;
-  int num_drawn_text_boxes_ = 0;
 
   // First member is id.
   absl::flat_hash_map<uint64_t, const orbit_client_protos::TimerInfo*> iterator_timer_info_;

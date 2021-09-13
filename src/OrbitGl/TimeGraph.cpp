@@ -408,6 +408,14 @@ std::vector<const TimerChain*> TimeGraph::GetAllThreadTrackTimerChains() const {
   return chains;
 }
 
+int TimeGraph::GetNumVisiblePrimitives() const {
+  int num_visible_primitives = 0;
+  for (auto track : track_manager_->GetAllTracks()) {
+    num_visible_primitives += track->GetVisiblePrimitiveCount();
+  }
+  return num_visible_primitives;
+}
+
 float TimeGraph::GetWorldFromTick(uint64_t time) const {
   if (time_window_us_ > 0) {
     double start = TicksToMicroseconds(capture_min_timestamp_, time) - min_time_us_;
