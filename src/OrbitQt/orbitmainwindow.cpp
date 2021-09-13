@@ -247,6 +247,11 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
   }
 }
 
+void OrbitMainWindow::UpdateFilePath(const std::filesystem::path& file_path) {
+  target_label_->SetFile(file_path);
+  setWindowTitle(QString::fromStdString(file_path.string()));
+}
+
 void OrbitMainWindow::SetupMainWindow() {
   DataViewFactory* data_view_factory = app_.get();
 
@@ -262,8 +267,7 @@ void OrbitMainWindow::SetupMainWindow() {
     // Only set it if this is not empty, we do not want to reset the label when loading from legacy
     // file format.
     if (file_path.has_value()) {
-      target_label_->SetFile(file_path.value());
-      setWindowTitle(QString::fromStdString(file_path.value().string()));
+      UpdateFilePath(file_path.value());
     }
 
     // we want to call UpdateCaptureStateDependentWidgets after we update
@@ -1256,8 +1260,7 @@ void OrbitMainWindow::on_actionRename_Capture_File_triggered() {
       return;
     }
 
-    target_label_->SetFile(new_file_path);
-    setWindowTitle(QString::fromStdString(new_file_path.string()));
+    UpdateFilePath(new_file_path);
   });
 }
 
