@@ -36,7 +36,6 @@ float GlCanvas::kZValueOverlayTextBackground = 0.45f;
 float GlCanvas::kZValueEventBarPicking = 0.49f;
 float GlCanvas::kZValueUi = 0.61f;
 float GlCanvas::kZValueTextUi = 0.61f;
-float GlCanvas::kScreenSpaceCutPoint = 0.8f;
 float GlCanvas::kZValueTimeBarBg = 0.81f;
 float GlCanvas::kZValueTimeBar = 0.83f;
 float GlCanvas::kZValueMargin = 0.85f;
@@ -121,14 +120,7 @@ bool GlCanvas::IsRedrawNeeded() const {
 
 void GlCanvas::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle*/) {
   mouse_move_pos_screen_ = Vec2i(x, y);
-  Vec2 mouse_pos_world = viewport_.ScreenToWorldPos(mouse_move_pos_screen_);
-
-  // Pan
-  if (left && !picking_manager_.IsDragging()) {
-    viewport_.SetScreenTopLeftInWorldX(mouse_click_pos_world_[0] - viewport_.ScreenToWorldWidth(x));
-    viewport_.SetScreenTopLeftInWorldY(mouse_click_pos_world_[1] -
-                                       viewport_.ScreenToWorldHeight(y));
-  }
+  Vec2 mouse_pos_world = viewport_.ScreenToWorld(mouse_move_pos_screen_);
 
   if (left) {
     picking_manager_.Drag(x, y);
@@ -144,7 +136,7 @@ void GlCanvas::MouseMoved(int x, int y, bool left, bool /*right*/, bool /*middle
 
 void GlCanvas::LeftDown(int x, int y) {
   // Store world clicked pos for panning
-  mouse_click_pos_world_ = viewport_.ScreenToWorldPos(Vec2i(x, y));
+  mouse_click_pos_world_ = viewport_.ScreenToWorld(Vec2i(x, y));
   SetPickingMode(PickingMode::kClick);
   is_selecting_ = false;
 
@@ -177,7 +169,7 @@ void GlCanvas::LeftDoubleClick() {
 }
 
 void GlCanvas::RightDown(int x, int y) {
-  mouse_click_pos_world_ = viewport_.ScreenToWorldPos(Vec2i(x, y));
+  mouse_click_pos_world_ = viewport_.ScreenToWorld(Vec2i(x, y));
 
   select_start_pos_world_ = select_stop_pos_world_ = mouse_click_pos_world_;
   is_selecting_ = true;
@@ -217,19 +209,7 @@ void GlCanvas::UpdateSpecialKeys(bool ctrl, bool /*shift*/, bool /*alt*/) { cont
 
 bool GlCanvas::ControlPressed() { return control_key_; }
 
-/** Inits the OpenGL viewport for drawing in 2D. */
-void GlCanvas::PrepareWorldSpaceViewport() {
-  Vec2 top_left = viewport_.GetScreenTopLeftInWorld();
-  glViewport(0, 0, viewport_.GetScreenWidth(), viewport_.GetScreenHeight());
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glOrtho(top_left[0], top_left[0] + viewport_.GetScreenWidth(),
-          viewport_.GetScreenHeight() + top_left[1], top_left[1], -1, 1);
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-}
-
-void GlCanvas::PrepareScreenSpaceViewport() {
+void GlCanvas::PrepareGlViewport() {
   glViewport(0, 0, viewport_.GetScreenWidth(), viewport_.GetScreenHeight());
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -271,7 +251,7 @@ void GlCanvas::Render(int width, int height) {
   ui_batcher_.StartNewFrame();
 
   PrepareGlState();
-  PrepareWorldSpaceViewport();
+  PrepareGlViewport();
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -328,8 +308,7 @@ void GlCanvas::PostRender() {
 
 void GlCanvas::Resize(int width, int height) {
   viewport_.Resize(width, height);
-  viewport_.SetVisibleWorldWidth(width);
-  viewport_.SetVisibleWorldHeight(height);
+  viewport_.SetWorldSize(width, height);
 }
 
 void GlCanvas::ResetHoverTimer() {

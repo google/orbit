@@ -20,7 +20,7 @@ void CaptureViewElement::Draw(Batcher& batcher, TextRenderer& text_renderer,
   DoDraw(batcher, text_renderer, draw_context);
 
   const DrawContext inner_draw_context = draw_context.IncreasedIndentationLevel();
-  for (auto& child : GetChildren()) {
+  for (CaptureViewElement* child : GetChildren()) {
     if (child->ShouldBeRendered()) {
       child->Draw(batcher, text_renderer, inner_draw_context);
     }
@@ -30,11 +30,18 @@ void CaptureViewElement::Draw(Batcher& batcher, TextRenderer& text_renderer,
 void CaptureViewElement::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                           PickingMode picking_mode, float z_offset) {
   DoUpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-  for (auto& child : GetChildren()) {
+  for (CaptureViewElement* child : GetChildren()) {
     if (child->ShouldBeRendered()) {
       child->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
     }
   }
+}
+
+void CaptureViewElement::UpdateLayout() {
+  for (CaptureViewElement* child : GetChildren()) {
+    child->UpdateLayout();
+  }
+  DoUpdateLayout();
 }
 
 void CaptureViewElement::SetWidth(float width) {
@@ -56,7 +63,7 @@ void CaptureViewElement::SetVisible(bool value) {
 }
 
 void CaptureViewElement::OnPick(int x, int y) {
-  mouse_pos_last_click_ = viewport_->ScreenToWorldPos(Vec2i(x, y));
+  mouse_pos_last_click_ = viewport_->ScreenToWorld(Vec2i(x, y));
   picking_offset_ = mouse_pos_last_click_ - pos_;
   mouse_pos_cur_ = mouse_pos_last_click_;
   picked_ = true;
@@ -68,7 +75,7 @@ void CaptureViewElement::OnRelease() {
 }
 
 void CaptureViewElement::OnDrag(int x, int y) {
-  mouse_pos_cur_ = viewport_->ScreenToWorldPos(Vec2i(x, y));
+  mouse_pos_cur_ = viewport_->ScreenToWorld(Vec2i(x, y));
   RequestUpdate();
 }
 

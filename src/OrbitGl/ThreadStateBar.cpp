@@ -167,9 +167,9 @@ void ThreadStateBar::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uin
   ThreadBar::DoUpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
 
   const auto time_window_ns = static_cast<uint64_t>(1000 * time_graph_->GetTimeWindowUs());
-  const uint64_t pixel_delta_ns = time_window_ns / viewport_->WorldToScreenWidth(GetWidth());
+  const uint64_t pixel_delta_ns = time_window_ns / viewport_->WorldToScreen(GetSize())[0];
   const uint64_t min_time_graph_ns = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
-  const float pixel_width_in_world_coords = viewport_->ScreenToWorldWidth(1);
+  const float pixel_width_in_world_coords = viewport_->ScreenToWorld({1, 0})[0];
 
   uint64_t ignore_until_ns = 0;
 

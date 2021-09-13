@@ -45,8 +45,7 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   virtual void PreRender();
   virtual void PostRender();
 
-  void PrepareWorldSpaceViewport();
-  void PrepareScreenSpaceViewport();
+  void PrepareGlViewport();
   void PrepareGlState();
   static void CleanupGlState();
 
@@ -104,7 +103,6 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   static float kZValueMargin;
   static float kZValueTimeBar;
   static float kZValueTimeBarBg;
-  static float kScreenSpaceCutPoint;
   static float kZValueTextUi;
   static float kZValueUi;
   static float kZValueEventBarPicking;
@@ -152,6 +150,7 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
 
   ImGuiContext* imgui_context_ = nullptr;
   double ref_time_click_;
+  float timegraph_click_scrolling_offset_ = 0;
   TextRenderer text_renderer_;
   PickingManager picking_manager_;
   bool double_clicking_;

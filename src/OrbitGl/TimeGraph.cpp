@@ -159,24 +159,15 @@ void TimeGraph::VerticalZoom(float zoom_value, float mouse_normalized_y_position
   const float old_scale = layout_.GetScale();
   layout_.SetScale(old_scale / ratio);
 
-  // We are limiting the maximum and minimum zoom-level, so the real ratio could be different.
-  const float capped_ratio = old_scale / layout_.GetScale();
-
-  const float world_height = viewport_->GetVisibleWorldHeight();
-  const float mouse_position_in_world_y =
-      viewport_->GetScreenTopLeftInWorld()[1] + mouse_normalized_y_position * world_height;
-  const float relative_mouse_position_in_world_y =
-      mouse_position_in_world_y - viewport_->GetScreenTopLeftInWorld()[1];
-
-  // We define world system coordinates in relation of the screen. As we are zooming on the screen,
-  // the world is being expanded or collapsed. Therefore the mouse position in world should be
-  // adapted in the same way.
-  const float new_mouse_position_in_world_y = mouse_position_in_world_y / capped_ratio;
-
-  float new_screen_top_left_in_world_y =
-      new_mouse_position_in_world_y - relative_mouse_position_in_world_y;
-
-  viewport_->SetScreenTopLeftInWorldY(new_screen_top_left_in_world_y);
+  // Adjust the scrolling offset such that the point under the mouse stays the same if possible.
+  // For this, calculate the "global" position (including scaling and scrolling offset) of the point
+  // underneath the mouse with the old and new scaling, and adjust the scrolling to have them match.
+  const float offset_from_top_in_world = viewport_->GetWorldHeight() * mouse_normalized_y_position;
+  const float mouse_y_including_scrolling =
+      (offset_from_top_in_world + vertical_scrolling_offset_) / old_scale;
+  const float new_scrolling_offset =
+      mouse_y_including_scrolling * layout_.GetScale() - offset_from_top_in_world;
+  SetVerticalScrollingOffset(new_scrolling_offset);
 }
 
 void TimeGraph::SetMinMax(double min_time_us, double max_time_us) {
@@ -238,13 +229,12 @@ void TimeGraph::VerticallyMoveIntoView(const TimerInfo& timer_info) {
 void TimeGraph::VerticallyMoveIntoView(Track& track) {
   float pos = track.GetPos()[1];
   float height = track.GetHeight();
-  float world_top_left_y = viewport_->GetScreenTopLeftInWorld()[1];
 
-  float max_world_top_left_y = pos;
-  float min_world_top_left_y =
-      pos + height - viewport_->GetVisibleWorldHeight() + layout_.GetBottomMargin();
-  viewport_->SetScreenTopLeftInWorldY(
-      std::clamp(world_top_left_y, min_world_top_left_y, max_world_top_left_y));
+  float max_vertical_scrolling_offset = pos;
+  float min_vertical_scrolling_offset =
+      pos + height - viewport_->GetWorldHeight() + layout_.GetBottomMargin();
+  SetVerticalScrollingOffset(std::clamp(vertical_scrolling_offset_, min_vertical_scrolling_offset,
+                                        max_vertical_scrolling_offset));
 }
 
 void TimeGraph::UpdateHorizontalScroll(float ratio) {
@@ -425,7 +415,7 @@ float TimeGraph::GetWorldFromTick(uint64_t time) const {
   if (time_window_us_ > 0) {
     double start = TicksToMicroseconds(capture_min_timestamp_, time) - min_time_us_;
     double normalized_start = start / time_window_us_;
-    auto pos = float(viewport_->GetScreenTopLeftInWorld()[0] + normalized_start * GetWidth());
+    float pos = static_cast<float>(normalized_start * GetWidth());
     return pos;
   }
 
@@ -441,10 +431,7 @@ double TimeGraph::GetUsFromTick(uint64_t time) const {
 }
 
 uint64_t TimeGraph::GetTickFromWorld(float world_x) const {
-  double ratio =
-      GetWidth() > 0
-          ? static_cast<double>((world_x - viewport_->GetScreenTopLeftInWorld()[0]) / GetWidth())
-          : 0;
+  double ratio = GetWidth() > 0 ? static_cast<double>(world_x / GetWidth()) : 0;
   auto time_span_ns = static_cast<uint64_t>(1000 * GetTime(ratio));
   return capture_min_timestamp_ + time_span_ns;
 }
@@ -525,6 +512,10 @@ void TimeGraph::DoUpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/,
   CHECK(app_->GetStringManager() != nullptr);
 
   batcher_.StartNewFrame();
+
+  text_renderer_static_.PushTranslation(0, -vertical_scrolling_offset_);
+  batcher_.PushTranslation(0, -vertical_scrolling_offset_);
+
   text_renderer_static_.Clear();
 
   capture_min_timestamp_ =
@@ -538,7 +529,19 @@ void TimeGraph::DoUpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/,
 
   track_manager_->UpdateTrackPrimitives(&batcher_, min_tick, max_tick, picking_mode);
 
+  batcher_.PopTranslation();
+  text_renderer_static_.PopTranslation();
+
   update_primitives_requested_ = false;
+}
+
+void TimeGraph::DoUpdateLayout() {
+  CaptureViewElement::DoUpdateLayout();
+
+  track_manager_->UpdateTracksForRendering();
+  UpdateTracksPosition();
+
+  SetVerticalScrollingOffset(vertical_scrolling_offset_);
 }
 
 void TimeGraph::UpdateTracksPosition() {
@@ -590,8 +593,8 @@ void TimeGraph::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
                        const DrawContext& draw_context) {
   ORBIT_SCOPE_FUNCTION;
 
-  track_manager_->UpdateTracksForRendering();
-  UpdateTracksPosition();
+  text_renderer.PushTranslation(0, -vertical_scrolling_offset_);
+  batcher.PushTranslation(0, -vertical_scrolling_offset_);
 
   const bool picking = draw_context.picking_mode != PickingMode::kNone;
   if ((!picking && update_primitives_requested_) || picking) {
@@ -601,6 +604,9 @@ void TimeGraph::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
   DrawTracks(batcher, text_renderer, draw_context);
   DrawIncompleteDataIntervals(batcher, draw_context.picking_mode);
   DrawOverlay(batcher, text_renderer, draw_context.picking_mode);
+
+  batcher.PopTranslation();
+  text_renderer.PopTranslation();
 
   redraw_requested_ = false;
 }
@@ -680,11 +686,11 @@ void TimeGraph::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
   std::vector<float> x_coords;
   x_coords.reserve(timers.size());
 
-  float world_start_x = viewport_->GetScreenTopLeftInWorld()[0];
+  float world_start_x = 0;
   float world_width = GetWidth();
 
-  float world_start_y = viewport_->GetScreenTopLeftInWorld()[1];
-  float world_height = viewport_->GetVisibleWorldHeight();
+  float world_start_y = vertical_scrolling_offset_;
+  float world_height = viewport_->GetWorldHeight();
 
   double inv_time_window = 1.0 / GetTimeWindowUs();
 
@@ -800,8 +806,8 @@ void TimeGraph::DrawIncompleteDataIntervals(Batcher& batcher, PickingMode pickin
     }
   }
 
-  const float world_start_y = viewport_->GetScreenTopLeftInWorld()[1];
-  const float world_height = viewport_->GetVisibleWorldHeight();
+  const float world_start_y = vertical_scrolling_offset_;
+  const float world_height = viewport_->GetWorldHeight();
 
   // Actually draw the ranges.
   for (const auto& [start_x, end_x] : x_ranges) {
@@ -984,6 +990,14 @@ bool TimeGraph::IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) c
     default:
       return false;
   }
+}
+
+void TimeGraph::SetVerticalScrollingOffset(float value) {
+  float clamped_value = std::max(std::min(value, GetHeight() - viewport_->GetWorldHeight()), 0.f);
+  if (clamped_value == vertical_scrolling_offset_) return;
+
+  vertical_scrolling_offset_ = clamped_value;
+  RequestUpdate();
 }
 
 bool TimeGraph::HasFrameTrack(uint64_t function_id) const {
