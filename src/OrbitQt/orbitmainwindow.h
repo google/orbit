@@ -155,6 +155,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void OnTimerSelectionChanged(const orbit_client_protos::TimerInfo* timer_info);
 
  private:
+  void UpdateFilePath(const std::filesystem::path& file_path);
   void StartMainTimer();
   void SetupCaptureToolbar();
   void SetupMainWindow();
