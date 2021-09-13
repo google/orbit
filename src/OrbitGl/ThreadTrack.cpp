@@ -484,19 +484,24 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
                   app_->GetFunctionIdToHighlight(), app_->GetGroupIdToHighlight());
 
   absl::MutexLock lock(&scope_tree_mutex_);
-
   for (const auto& [depth, ordered_nodes] : scope_tree_.GetOrderedNodesByDepth()) {
-    auto first_node_to_draw = ordered_nodes.lower_bound(min_tick);
-    if (first_node_to_draw != ordered_nodes.begin()) --first_node_to_draw;
-
+    if (ordered_nodes.empty()) {
+      continue;
+    }
     timer_data_->UpdateMaxDepth(depth);
 
     float world_timer_y = GetYFromDepth(depth - 1);
     uint64_t next_pixel_start_time_ns = min_tick;
 
-    for (auto it = first_node_to_draw; it != ordered_nodes.end() && it->first < max_tick; ++it) {
-      const orbit_client_protos::TimerInfo& timer_info = *it->second->GetScope();
-      if (timer_info.end() <= next_pixel_start_time_ns) continue;
+    auto node_to_draw = ordered_nodes.upper_bound(min_tick);
+    // The previous node should be drawn only if its ending is after min_tick.
+    if (node_to_draw != ordered_nodes.begin()) --node_to_draw;
+    if (node_to_draw->second->GetScope()->end() < min_tick) {
+      ++node_to_draw;
+    }
+
+    while (node_to_draw != ordered_nodes.end() && node_to_draw->first < max_tick) {
+      const orbit_client_protos::TimerInfo& timer_info = *node_to_draw->second->GetScope();
       ++visible_timer_count_;
 
       Color color = GetTimerColor(timer_info, draw_data);
@@ -517,8 +522,17 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
         batcher->AddVerticalLine(pos, box_height, draw_data.z, color, std::move(user_data));
       }
 
-      // Use the time at boundary of the next pixel as a threshold to avoid overdraw.
+      // Optimization when going through the scopes, as it doesn't have any sense to draw two timers
+      // in the same pixel.
       next_pixel_start_time_ns = GetNextPixelBoundaryTimeNs(timer_info.end(), draw_data);
+
+      node_to_draw = ordered_nodes.upper_bound(next_pixel_start_time_ns);
+
+      // The previous node should be drawn only if its ending is after next_pixel_start_time_ns.
+      if (node_to_draw != ordered_nodes.begin()) --node_to_draw;
+      if (node_to_draw->second->GetScope()->end() < next_pixel_start_time_ns) {
+        ++node_to_draw;
+      }
     }
   }
 }
