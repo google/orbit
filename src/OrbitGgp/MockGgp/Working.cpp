@@ -71,6 +71,37 @@ int GgpSshInit(char* argv[]) {
   return 0;
 }
 
+int GgpProjectList(char* argv[]) {
+  if (std::string_view{argv[1]} != "project" || std::string_view{argv[2]} != "list" ||
+      std::string_view{argv[3]} != "-s") {
+    std::cout << "arguments are formatted wrong" << std::endl;
+    return 1;
+  }
+  std::cout << R"([
+ {
+  "displayName": "displayName-1",
+  "id": "id/of/project1"
+ },
+ {
+  "displayName": "displayName-2",
+  "id": "id/of/project2"
+ }
+])" << std::endl;
+  return 0;
+}
+
+int GgpWithFourParameters(char* argv[]) {
+  if (std::string_view{argv[1]} == "instance") {
+    return GgpInstanceList(argv);
+  }
+  if (std::string_view{argv[1]} == "project") {
+    return GgpProjectList(argv);
+  }
+
+  std::cout << "arguments are formatted wrong" << std::endl;
+  return 1;
+}
+
 int main(int argc, char* argv[]) {
   // This sleep is here for 2 reasons:
   // 1. The ggp cli which this program is mocking, does have quite a bit of delay, hence having a
@@ -82,7 +113,7 @@ int main(int argc, char* argv[]) {
     case 2:
       return GgpVersion(argv);
     case 4:
-      return GgpInstanceList(argv);
+      return GgpWithFourParameters(argv);
     case 5:
       return GgpInstanceListAllReserved(argv);
     case 6:
