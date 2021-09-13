@@ -143,7 +143,7 @@ const QString kLightGrayColor = "rgb(117, 117, 117)";
 const QString kMediumGrayColor = "rgb(68, 68, 68)";
 const QString kGreenColor = "rgb(41, 218, 130)";
 constexpr int kHintFramePosX = 21;
-constexpr int kHintFramePosY = 47;
+constexpr int kHintFramePosY = 62;
 constexpr int kHintFrameWidth = 140;
 constexpr int kHintFrameHeight = 45;
 }  // namespace
