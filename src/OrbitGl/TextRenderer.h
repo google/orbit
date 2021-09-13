@@ -61,6 +61,9 @@ class TextRenderer {
   [[nodiscard]] float GetStringWidth(const char* text, uint32_t font_size);
   [[nodiscard]] float GetStringHeight(const char* text, uint32_t font_size);
 
+  void PushTranslation(float x, float y, float z = 0.f) { translations_.PushTranslation(x, y, z); }
+  void PopTranslation() { translations_.PopTranslation(); }
+
   static void SetDrawOutline(bool value) { draw_outline_ = value; }
 
  protected:
@@ -91,6 +94,8 @@ class TextRenderer {
   ftgl::vec2 pen_;
   bool initialized_;
   static bool draw_outline_;
+
+  orbit_gl::TranslationStack translations_;
 };
 
 inline ftgl::vec4 ColorToVec4(const Color& color) {
