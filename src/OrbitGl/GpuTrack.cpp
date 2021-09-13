@@ -116,12 +116,8 @@ float GpuTrack::GetHeight() const {
   return height;
 }
 
-// TODO(b/176216022): Make a general interface for capture view elements for setting the width to
-// every child.
-void GpuTrack::SetWidth(float width) {
-  Track::SetWidth(width);
-  submission_track_->SetWidth(width);
-  marker_track_->SetWidth(width);
+std::vector<orbit_gl::CaptureViewElement*> GpuTrack::GetChildren() const {
+  return {submission_track_.get(), marker_track_.get()};
 }
 
 void GpuTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,

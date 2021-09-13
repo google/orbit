@@ -18,6 +18,10 @@ CaptureViewElement::CaptureViewElement(CaptureViewElement* parent, TimeGraph* ti
 void CaptureViewElement::SetWidth(float width) {
   if (width != width_) {
     width_ = width;
+
+    for (auto& child : GetChildren()) {
+      child->SetWidth(width);
+    }
     RequestUpdate();
   }
 }

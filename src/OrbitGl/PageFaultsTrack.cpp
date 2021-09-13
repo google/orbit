@@ -55,14 +55,6 @@ float PageFaultsTrack::GetHeight() const {
   return height;
 }
 
-// TODO(b/176216022): Make a general interface for capture view elements for setting the width to
-// every child.
-void PageFaultsTrack::SetWidth(float width) {
-  Track::SetWidth(width);
-  minor_page_faults_track_->SetWidth(width);
-  major_page_faults_track_->SetWidth(width);
-}
-
 std::vector<orbit_gl::CaptureViewElement*> PageFaultsTrack::GetVisibleChildren() {
   std::vector<CaptureViewElement*> result;
   if (collapse_toggle_->IsCollapsed()) return result;
@@ -75,6 +67,10 @@ std::vector<orbit_gl::CaptureViewElement*> PageFaultsTrack::GetVisibleChildren()
 std::string PageFaultsTrack::GetTooltip() const {
   if (collapse_toggle_->IsCollapsed()) return major_page_faults_track_->GetTooltip();
   return "Shows the minor and major page faults statistics.";
+}
+
+std::vector<CaptureViewElement*> PageFaultsTrack::GetChildren() const {
+  return {major_page_faults_track_.get(), minor_page_faults_track_.get()};
 }
 
 void PageFaultsTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
