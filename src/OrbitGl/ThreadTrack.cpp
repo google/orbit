@@ -316,6 +316,10 @@ std::vector<orbit_gl::CaptureViewElement*> ThreadTrack::GetVisibleChildren() {
   return result;
 }
 
+std::vector<orbit_gl::CaptureViewElement*> ThreadTrack::GetChildren() const {
+  return {thread_state_bar_.get(), event_bar_.get(), tracepoint_bar_.get()};
+}
+
 std::string ThreadTrack::GetTimesliceText(const TimerInfo& timer_info) const {
   std::string time = GetDisplayTime(timer_info);
 
@@ -355,15 +359,6 @@ float ThreadTrack::GetHeight() const {
   return GetHeaderHeight() +
          (gap_between_tracks_and_timers ? layout_->GetSpaceBetweenTracksAndThread() : 0) +
          layout_->GetTextBoxHeight() * depth + layout_->GetTrackContentBottomMargin();
-}
-
-// TODO(b/176216022): Make a general interface for capture view elements for setting the width to
-// every child.
-void ThreadTrack::SetWidth(float width) {
-  Track::SetWidth(width);
-  thread_state_bar_->SetWidth(width);
-  event_bar_->SetWidth(width);
-  tracepoint_bar_->SetWidth(width);
 }
 
 float ThreadTrack::GetHeaderHeight() const {

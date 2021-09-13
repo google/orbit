@@ -56,8 +56,9 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   virtual void SetPos(float x, float y) { pos_ = Vec2(x, y); }
   // TODO(b/185854980): This should not be virtual as soon as we have meaningful track children.
   [[nodiscard]] virtual Vec2 GetPos() const { return pos_; }
-  // TODO(b/185854980): This should not be virtual as soon as we have meaningful track children.
-  virtual void SetWidth(float width);
+
+  // This will set the width of all child elements to 100% by default
+  void SetWidth(float width);
   [[nodiscard]] float GetWidth() const { return width_; }
   // Height should be defined in every particular capture view element.
   [[nodiscard]] virtual float GetHeight() const = 0;
@@ -70,6 +71,7 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   [[nodiscard]] bool Draggable() override { return true; }
 
   [[nodiscard]] virtual CaptureViewElement* GetParent() const { return parent_; }
+  [[nodiscard]] virtual std::vector<CaptureViewElement*> GetChildren() const { return {}; }
   virtual void RequestUpdate();
 
  protected:
