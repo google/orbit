@@ -55,7 +55,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
 
   void RequestUpdate() override;
 
-  void UpdateTracksPosition();
   void SelectCallstacks(float world_start, float world_end, uint32_t thread_id);
   const std::vector<orbit_client_protos::CallstackEvent>& GetSelectedCallstackEvents(uint32_t tid);
 
@@ -173,6 +172,9 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
     RequestUpdate();
   }
 
+  [[nodiscard]] float GetVerticalScrollingOffset() const { return vertical_scrolling_offset_; }
+  void SetVerticalScrollingOffset(float value);
+
   [[nodiscard]] uint64_t GetCaptureMin() const { return capture_min_timestamp_; }
   [[nodiscard]] uint64_t GetCaptureMax() const { return capture_max_timestamp_; }
 
@@ -188,6 +190,9 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
               const DrawContext& draw_context) override;
   void DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                           PickingMode picking_mode, float z_offset = 0) override;
+  void DoUpdateLayout() override;
+
+  void UpdateTracksPosition();
 
   [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleInterface>
   CreateAccessibleInterface() override;
@@ -211,6 +216,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   uint64_t capture_min_timestamp_ = std::numeric_limits<uint64_t>::max();
   uint64_t capture_max_timestamp_ = 0;
   double time_window_us_ = 0;
+  float vertical_scrolling_offset_ = 0;
 
   TimeGraphLayout layout_;
 

@@ -110,8 +110,10 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool right, bool middle)
   // Pan
   if (left && !picking_manager_.IsDragging() && !app_->IsCapturing()) {
     Vec2i mouse_click_screen = viewport_.WorldToScreenPos(mouse_click_pos_world_);
+    Vec2 mouse_pos_world = viewport_.ScreenToWorldPos({x, y});
+    time_graph_->SetVerticalScrollingOffset(timegraph_click_scrolling_offset_ +
+                                            mouse_click_pos_world_[1] - mouse_pos_world[1]);
     time_graph_->PanTime(mouse_click_screen[0], x, viewport_.GetScreenWidth(), ref_time_click_);
-    RequestUpdatePrimitives();
 
     click_was_drag_ = true;
   }
@@ -129,6 +131,7 @@ void CaptureWindow::LeftDown(int x, int y) {
 
   if (time_graph_ == nullptr) return;
   ref_time_click_ = time_graph_->GetTime(static_cast<double>(x) / viewport_.GetScreenWidth());
+  timegraph_click_scrolling_offset_ = time_graph_->GetVerticalScrollingOffset();
 }
 
 void CaptureWindow::LeftUp() {
@@ -392,13 +395,13 @@ void CaptureWindow::Draw() {
   }
 
   if (time_graph_ != nullptr) {
-    // We need to update the visible track list to know the total height of them (used in the
-    // viewport).
-    time_graph_->GetTrackManager()->UpdateTracksForRendering();
-
-    viewport_.SetWorldExtents(viewport_.GetScreenWidth(), time_graph_->GetHeight());
-
+    time_graph_->UpdateLayout();
     UpdateChildrenPosAndSize();
+    // HACK: This needs to be done as long as TimeGraph does not properly report its children.
+    // This is because the `SetWidth` call inside `UpdateChildrenPosAndSize` doesn't correctly
+    // update the track width.
+    // This will be removed once the TimeGraph is implementing the API correctly.
+    time_graph_->UpdateLayout();
 
     uint64_t timegraph_current_mouse_time_ns =
         time_graph_->GetTickFromWorld(viewport_.ScreenToWorldPos(GetMouseScreenPos())[0]);
@@ -479,8 +482,7 @@ void CaptureWindow::UpdateChildrenPosAndSize() {
 
   UpdateRightMargin(right_margin);
 
-  time_graph_->SetPos(0, 0);
-  time_graph_->SetWidth(viewport_.GetScreenWidth() - right_margin);
+  time_graph_->SetWidth(viewport_.GetVisibleWorldWidth() - right_margin);
 }
 
 void CaptureWindow::DrawScreenSpace() {
@@ -524,11 +526,9 @@ void CaptureWindow::UpdateHorizontalScroll(float ratio) {
 
 void CaptureWindow::UpdateVerticalScroll(float ratio) {
   if (time_graph_ == nullptr) return;
-  float min = viewport_.GetWorldMin()[1];
-  float max = viewport_.GetWorldExtents()[1] - viewport_.GetVisibleWorldHeight() - min;
-  float range = max - min;
-  float new_top_left_y = min + ratio * range;
-  viewport_.SetScreenTopLeftInWorldY(new_top_left_y);
+  float range = std::max(0.f, time_graph_->GetHeight() - viewport_.GetVisibleWorldHeight());
+  float new_scrolling_offset = ratio * range;
+  time_graph_->SetVerticalScrollingOffset(new_scrolling_offset);
 }
 
 void CaptureWindow::UpdateHorizontalZoom(float normalized_start, float normalized_end) {
@@ -571,14 +571,13 @@ void CaptureWindow::ProcessSliderMouseMoveEvents(int x, int y) {
 
 void CaptureWindow::UpdateVerticalSliderFromWorld() {
   if (time_graph_ == nullptr) return;
-  float min = 0.0f;
-  float max = viewport_.GetWorldExtents()[1] - viewport_.GetVisibleWorldHeight();
-  float ratio = (viewport_.GetScreenTopLeftInWorld()[1] - min) / (max - min);
-  float vertical_ratio = viewport_.GetVisibleWorldHeight() / viewport_.GetWorldExtents()[1];
+  float max = std::max(0.f, time_graph_->GetHeight() - viewport_.GetVisibleWorldHeight());
+  float pos_ratio = time_graph_->GetVerticalScrollingOffset() / max;
+  float size_ratio = viewport_.GetVisibleWorldHeight() / time_graph_->GetHeight();
   int slider_width = static_cast<int>(time_graph_->GetLayout().GetSliderWidth());
   vertical_slider_->SetPixelHeight(slider_width);
-  vertical_slider_->SetNormalizedPosition(ratio);
-  vertical_slider_->SetNormalizedLength(vertical_ratio);
+  vertical_slider_->SetNormalizedPosition(pos_ratio);
+  vertical_slider_->SetNormalizedLength(size_ratio);
   vertical_slider_->SetOrthogonalSliderPixelHeight(slider_width);
 }
 
@@ -655,10 +654,6 @@ void CaptureWindow::RenderImGuiDebugUI() {
     IMGUI_VAR_TO_TEXT(viewport_.GetScreenHeight());
     IMGUI_VAR_TO_TEXT(viewport_.GetVisibleWorldHeight());
     IMGUI_VAR_TO_TEXT(viewport_.GetVisibleWorldWidth());
-    IMGUI_VAR_TO_TEXT(viewport_.GetScreenTopLeftInWorld()[0]);
-    IMGUI_VAR_TO_TEXT(viewport_.GetScreenTopLeftInWorld()[1]);
-    IMGUI_VAR_TO_TEXT(viewport_.GetWorldExtents()[0]);
-    IMGUI_VAR_TO_TEXT(viewport_.GetWorldExtents()[1]);
     IMGUI_VAR_TO_TEXT(mouse_move_pos_screen_[0]);
     IMGUI_VAR_TO_TEXT(mouse_move_pos_screen_[1]);
     if (time_graph_ != nullptr) {
@@ -812,7 +807,7 @@ void CaptureWindow::RenderSelectionOverlay() {
   float stop_pos_world = time_graph_->GetWorldFromTick(select_stop_time_);
 
   float size_x = to_world - from_world;
-  Vec2 pos(from_world, viewport_.GetScreenTopLeftInWorld()[1]);
+  Vec2 pos(from_world, 0);
   Vec2 size(size_x, viewport_.GetVisibleWorldHeight());
 
   std::string text = orbit_display_formats::GetDisplayTime(TicksToDuration(min_time, max_time));

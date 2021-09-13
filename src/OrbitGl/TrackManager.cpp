@@ -83,7 +83,7 @@ std::vector<Track*> TrackManager::GetTracksOnScreen() const {
   for (Track* track : GetVisibleTracks()) {
     float track_top_y = track->GetPos()[1];
     float track_bottom_y = track_top_y + track->GetHeight();
-    float screen_top_y = viewport_->GetScreenTopLeftInWorld()[1];
+    float screen_top_y = time_graph_->GetVerticalScrollingOffset();
     float screen_bottom_y = screen_top_y + viewport_->GetVisibleWorldHeight();
     if (track_top_y < screen_bottom_y && track_bottom_y > screen_top_y) {
       visible_tracks.push_back(track);

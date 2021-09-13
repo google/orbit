@@ -47,6 +47,7 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
 
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                         PickingMode picking_mode, float z_offset = 0);
+  void UpdateLayout();
 
   [[nodiscard]] TimeGraph* GetTimeGraph() { return time_graph_; }
 
@@ -60,6 +61,7 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   // This will set the width of all child elements to 100% by default
   void SetWidth(float width);
   [[nodiscard]] float GetWidth() const { return width_; }
+
   // Height should be defined in every particular capture view element.
   [[nodiscard]] virtual float GetHeight() const = 0;
   [[nodiscard]] Vec2 GetSize() const { return Vec2(GetWidth(), GetHeight()); }
@@ -96,6 +98,8 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   virtual void DoUpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/,
                                   uint64_t /*max_tick*/, PickingMode /*picking_mode*/,
                                   float /*z_offset*/ = 0){};
+
+  virtual void DoUpdateLayout(){};
 
  private:
   float width_ = 0.;

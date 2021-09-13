@@ -152,6 +152,7 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
 
   ImGuiContext* imgui_context_ = nullptr;
   double ref_time_click_;
+  float timegraph_click_scrolling_offset_ = 0;
   TextRenderer text_renderer_;
   PickingManager picking_manager_;
   bool double_clicking_;

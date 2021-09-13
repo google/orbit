@@ -37,6 +37,13 @@ void CaptureViewElement::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, u
   }
 }
 
+void CaptureViewElement::UpdateLayout() {
+  for (auto& child : GetChildren()) {
+    child->UpdateLayout();
+  }
+  DoUpdateLayout();
+}
+
 void CaptureViewElement::SetWidth(float width) {
   if (width != width_) {
     width_ = width;

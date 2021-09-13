@@ -58,12 +58,6 @@ class Viewport {
   // Minimum values of the world.
   void SetWorldMin(const Vec2& value);
   [[nodiscard]] const Vec2& GetWorldMin() const;
-
-  // Position of world TopLeft anchored at (0, 0) ScreenSpace.
-  void SetScreenTopLeftInWorldX(float x);
-  void SetScreenTopLeftInWorldY(float y);
-  [[nodiscard]] const Vec2& GetScreenTopLeftInWorld() const;
-
   [[nodiscard]] Vec2 ScreenToWorldPos(const Vec2i& screen_pos) const;
 
   // These methods to not take scrolling into account, use those if you need
@@ -91,7 +85,6 @@ class Viewport {
   float visible_world_width_;
   float visible_world_height_;
 
-  Vec2 screen_top_left_in_world_ = Vec2(0.f, 0.f);
   Vec2 world_extents_;
   Vec2 world_min_ = Vec2(0.f, 0.f);
 

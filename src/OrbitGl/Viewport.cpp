@@ -36,8 +36,6 @@ void Viewport::SetVisibleWorldWidth(float width) {
   if (width == visible_world_width_) return;
 
   visible_world_width_ = width;
-  // Recalculate required scrolling.
-  SetScreenTopLeftInWorldX(screen_top_left_in_world_[0]);
   FlagAsDirty();
 }
 
@@ -47,9 +45,6 @@ void Viewport::SetVisibleWorldHeight(float height) {
   if (height == visible_world_height_) return;
 
   visible_world_height_ = height;
-  // Recalculate required scrolling.
-  SetScreenTopLeftInWorldY(screen_top_left_in_world_[1]);
-
   FlagAsDirty();
 }
 
@@ -61,10 +56,6 @@ void Viewport::SetWorldExtents(float width, float height) {
   if (size == world_extents_) return;
 
   world_extents_ = size;
-  // Recalculate required scrolling.
-  SetScreenTopLeftInWorldX(screen_top_left_in_world_[0]);
-  SetScreenTopLeftInWorldY(screen_top_left_in_world_[1]);
-
   FlagAsDirty();
 }
 
@@ -72,55 +63,31 @@ const Vec2& Viewport::GetWorldExtents() { return world_extents_; }
 
 void Viewport::SetWorldMin(const Vec2& value) {
   world_min_ = value;
-  SetScreenTopLeftInWorldX(screen_top_left_in_world_[0]);
-  SetScreenTopLeftInWorldY(screen_top_left_in_world_[1]);
+  FlagAsDirty();
 }
 
 const Vec2& Viewport::GetWorldMin() const { return world_min_; }
 
-void Viewport::SetScreenTopLeftInWorldY(float y) {
-  float clamped = std::max(std::min(y, world_extents_[1] - visible_world_height_ + world_min_[1]),
-                           world_min_[1]);
-  if (screen_top_left_in_world_[1] == clamped) return;
-
-  screen_top_left_in_world_[1] = clamped;
-  FlagAsDirty();
-}
-
-void Viewport::SetScreenTopLeftInWorldX(float x) {
-  float clamped = std::max(std::min(x, world_extents_[0] - visible_world_width_ + world_min_[0]),
-                           world_min_[0]);
-  if (screen_top_left_in_world_[0] == clamped) return;
-
-  screen_top_left_in_world_[0] = clamped;
-  FlagAsDirty();
-}
-
-const Vec2& Viewport::GetScreenTopLeftInWorld() const { return screen_top_left_in_world_; }
-
 Vec2 Viewport::ScreenToWorldPos(const Vec2i& screen_pos) const {
   Vec2 world_pos;
-  world_pos[0] = screen_top_left_in_world_[0] +
-                 screen_pos[0] / static_cast<float>(screen_width_) * visible_world_width_;
-  world_pos[1] = screen_top_left_in_world_[1] +
-                 screen_pos[1] / static_cast<float>(screen_height_) * visible_world_height_;
+  world_pos[0] = screen_pos[0] / static_cast<float>(screen_width_) * visible_world_width_;
+  world_pos[1] = screen_pos[1] / static_cast<float>(screen_height_) * visible_world_height_;
   return world_pos;
 }
 
 float Viewport::ScreenToWorldHeight(int height) const {
-  return (static_cast<float>(height) / static_cast<float>(screen_height_)) * visible_world_height_;
+  return static_cast<float>(height) / screen_height_ * visible_world_height_;
 }
 
 float Viewport::ScreenToWorldWidth(int width) const {
-  return (static_cast<float>(width) / static_cast<float>(screen_width_)) * visible_world_width_;
+  return static_cast<float>(width) / screen_width_ * visible_world_width_;
 }
 
 Vec2i Viewport::WorldToScreenPos(const Vec2& world_pos) const {
   Vec2i screen_pos;
-  screen_pos[0] = static_cast<int>(floorf((world_pos[0] - screen_top_left_in_world_[0]) /
-                                          visible_world_width_ * GetScreenWidth()));
-  screen_pos[1] = static_cast<int>(floorf((world_pos[1] - screen_top_left_in_world_[1]) /
-                                          visible_world_height_ * GetScreenHeight()));
+  screen_pos[0] = static_cast<int>(floorf(world_pos[0] / visible_world_width_ * GetScreenWidth()));
+  screen_pos[1] =
+      static_cast<int>(floorf(world_pos[1] / visible_world_height_ * GetScreenHeight()));
   return screen_pos;
 }
 

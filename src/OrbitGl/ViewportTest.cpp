@@ -18,7 +18,6 @@ TEST(Viewport, ResizingAndDirty) {
   EXPECT_EQ(viewport.GetScreenHeight(), 200);
   EXPECT_EQ(viewport.GetWorldExtents(), Vec2(100, 200));
   EXPECT_EQ(viewport.GetVisibleWorldWidth(), 100.f);
-  EXPECT_EQ(viewport.GetScreenTopLeftInWorld(), Vec2(0.f, 0.f));
 
   // Test: Resizing should not affect the world extents.
   viewport.Resize(1000, 2000);
@@ -31,7 +30,6 @@ TEST(Viewport, ResizingAndDirty) {
   EXPECT_EQ(viewport.GetVisibleWorldWidth(), 100.f);
   EXPECT_EQ(viewport.GetVisibleWorldHeight(), 200.f);
   EXPECT_EQ(viewport.GetWorldExtents(), Vec2(100, 200));
-  EXPECT_EQ(viewport.GetScreenTopLeftInWorld(), Vec2(0.f, 0.f));
 
   // Test: Changing the world width / height should not affect screen extents.
   viewport.SetVisibleWorldWidth(500.f);
@@ -46,7 +44,6 @@ TEST(Viewport, ResizingAndDirty) {
   EXPECT_EQ(viewport.GetScreenHeight(), 2000);
   EXPECT_EQ(viewport.GetVisibleWorldWidth(), 500.f);
   EXPECT_EQ(viewport.GetVisibleWorldHeight(), 600.f);
-  EXPECT_EQ(viewport.GetScreenTopLeftInWorld(), Vec2(0.f, 0.f));
   EXPECT_EQ(viewport.GetWorldExtents(), Vec2(100, 200));
 
   // Test: Changing the world extent should not affect screen size and visible world size.
@@ -58,99 +55,14 @@ TEST(Viewport, ResizingAndDirty) {
   EXPECT_EQ(viewport.GetScreenHeight(), 2000);
   EXPECT_EQ(viewport.GetVisibleWorldWidth(), 500.f);
   EXPECT_EQ(viewport.GetVisibleWorldHeight(), 600.f);
-  EXPECT_EQ(viewport.GetScreenTopLeftInWorld(), Vec2(0.f, 0.f));
   EXPECT_EQ(viewport.GetWorldExtents(), Vec2(1000, 2000));
 
-  // Test: Scrolling (within correct range) should mark as dirty.
-  viewport.Resize(100, 200);
-  viewport.ClearDirtyFlag();
-
-  viewport.SetScreenTopLeftInWorldX(100.f);
-  EXPECT_TRUE(viewport.IsDirty());
-  viewport.ClearDirtyFlag();
-
-  viewport.SetScreenTopLeftInWorldY(50.f);
-  EXPECT_TRUE(viewport.IsDirty());
-  viewport.ClearDirtyFlag();
-
-  EXPECT_EQ(viewport.GetScreenTopLeftInWorld(), Vec2(100.f, 50.f));
-
   // Setting everything to the same values again should not mark the viewport as dirty.
-  viewport.Resize(100, 200);
+  viewport.Resize(1000, 2000);
   viewport.SetVisibleWorldWidth(500.f);
   viewport.SetVisibleWorldHeight(600.f);
-  viewport.SetScreenTopLeftInWorldX(100.f);
-  viewport.SetScreenTopLeftInWorldY(50.f);
   viewport.SetWorldExtents(1000, 2000);
   EXPECT_FALSE(viewport.IsDirty());
-}
-
-TEST(Viewport, ScrollingWithoutZoom) {
-  Viewport viewport(100, 200);
-  viewport.SetWorldExtents(200, 300);
-
-  viewport.SetScreenTopLeftInWorldX(100.f);
-  viewport.SetScreenTopLeftInWorldY(50.f);
-
-  EXPECT_EQ(viewport.GetScreenTopLeftInWorld(), Vec2(100.f, 50.f));
-
-  viewport.SetScreenTopLeftInWorldX(150.f);
-  viewport.SetScreenTopLeftInWorldY(150.f);
-
-  EXPECT_EQ(viewport.GetScreenTopLeftInWorld(), Vec2(100.f, 100.f));
-  EXPECT_EQ(viewport.IsDirty(), true);
-  viewport.ClearDirtyFlag();
-
-  // Scrolling further after clamping should not result in a dirty flag.
-  viewport.SetScreenTopLeftInWorldX(200.f);
-  viewport.SetScreenTopLeftInWorldY(200.f);
-  EXPECT_EQ(viewport.GetScreenTopLeftInWorld(), Vec2(100.f, 100.f));
-  EXPECT_EQ(viewport.IsDirty(), false);
-
-  // Resizing should clamp.
-  viewport.SetWorldExtents(150, 250);
-  EXPECT_EQ(viewport.GetScreenTopLeftInWorld(), Vec2(50.f, 50.f));
-
-  // Changing world min should adjust current top left...
-  viewport.SetWorldMin(Vec2(100, 100));
-  EXPECT_EQ(viewport.GetScreenTopLeftInWorld(), Vec2(100, 100));
-  viewport.SetScreenTopLeftInWorldX(0);
-  viewport.SetScreenTopLeftInWorldY(0);
-  EXPECT_EQ(viewport.GetScreenTopLeftInWorld(), Vec2(100, 100));
-
-  // ... and is taken into account when scrolling.
-  viewport.SetScreenTopLeftInWorldX(500);
-  viewport.SetScreenTopLeftInWorldY(500);
-  EXPECT_EQ(viewport.GetScreenTopLeftInWorld(), Vec2(150, 150));
-}
-
-TEST(Viewport, ScrollingWithZoom) {
-  Viewport viewport(100, 200);
-  viewport.SetVisibleWorldWidth(200);
-  viewport.SetVisibleWorldHeight(400);
-  viewport.SetWorldExtents(400, 800);
-
-  viewport.SetScreenTopLeftInWorldX(250.f);
-  viewport.SetScreenTopLeftInWorldY(350.f);
-
-  EXPECT_EQ(viewport.GetScreenTopLeftInWorld(), Vec2(200.f, 350.f));
-
-  viewport.SetScreenTopLeftInWorldX(300.f);
-  viewport.SetScreenTopLeftInWorldY(450.f);
-
-  EXPECT_EQ(viewport.GetScreenTopLeftInWorld(), Vec2(200.f, 400.f));
-  EXPECT_EQ(viewport.IsDirty(), true);
-  viewport.ClearDirtyFlag();
-
-  // Scrolling further after clamping should not result in a dirty flag.
-  viewport.SetScreenTopLeftInWorldX(350.f);
-  viewport.SetScreenTopLeftInWorldY(600.f);
-  EXPECT_EQ(viewport.GetScreenTopLeftInWorld(), Vec2(200.f, 400.f));
-  EXPECT_EQ(viewport.IsDirty(), false);
-
-  // Resizing should clamp.
-  viewport.SetWorldExtents(250, 450);
-  EXPECT_EQ(viewport.GetScreenTopLeftInWorld(), Vec2(50.f, 50.f));
 }
 
 void VerifyConversion(Viewport& viewport, const Vec2i& screen_pos, const Vec2& world_pos,
@@ -181,11 +93,6 @@ TEST(Viewport, CoordinateConversion) {
   screen_pos = Vec2i(8, 20);
   world_pos = Vec2(16.f, 10.f);
   world_size = Vec2(16.f, 10.f);
-  VerifyConversion(viewport, screen_pos, world_pos, world_size);
-
-  viewport.SetScreenTopLeftInWorldX(10.f);
-  viewport.SetScreenTopLeftInWorldY(100.f);
-  world_pos = Vec2(26.f, 110.f);
   VerifyConversion(viewport, screen_pos, world_pos, world_size);
 }
 
