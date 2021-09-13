@@ -662,7 +662,7 @@ void CaptureWindow::RenderImGuiDebugUI() {
     IMGUI_VAR_TO_TEXT(mouse_move_pos_screen_[0]);
     IMGUI_VAR_TO_TEXT(mouse_move_pos_screen_[1]);
     if (time_graph_ != nullptr) {
-      IMGUI_VAR_TO_TEXT(time_graph_->GetNumDrawnTextBoxes());
+      IMGUI_VAR_TO_TEXT(time_graph_->GetNumVisiblePrimitives());
       IMGUI_VAR_TO_TEXT(time_graph_->GetTrackManager()->GetAllTracks().size());
       IMGUI_VAR_TO_TEXT(time_graph_->GetMinTimeUs());
       IMGUI_VAR_TO_TEXT(time_graph_->GetMaxTimeUs());
