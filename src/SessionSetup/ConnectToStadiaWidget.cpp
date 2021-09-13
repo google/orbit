@@ -4,6 +4,8 @@
 
 #include "SessionSetup/ConnectToStadiaWidget.h"
 
+#include <absl/flags/declare.h>
+#include <absl/flags/flag.h>
 #include <absl/strings/str_format.h>
 #include <grpcpp/create_channel.h>
 #include <grpcpp/security/credentials.h>
@@ -28,6 +30,7 @@
 #include <system_error>
 #include <utility>
 
+#include "ClientFlags/ClientFlags.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
@@ -91,6 +94,21 @@ ConnectToStadiaWidget::ConnectToStadiaWidget(QWidget* parent)
                    [this]() { emit InstanceReloadRequested(); });
 
   SetupStateMachine();
+
+  // The instance settings (mainly project selection and "all instances") is currently hidden behind
+  // the "--enable_project_selection" flag.
+  // TODO(b/190670843): Clean this up when removing the "--enable_project_selection" flag.
+  if (absl::GetFlag(FLAGS_enable_project_selection)) {
+    // TODO(b/199717843): The instanceFilterLineEdit is currently hidden because it is lower
+    // priority as the rest of the UI.
+    ui_->instancesFilterLineEdit->hide();
+    // While the "--enable_project_selection" is used, there are 2 refresh buttons in the .ui file.
+    // "refreshButton" is used for the old ui, "refreshButton_2" is used for the new ui.
+    ui_->refreshButton->hide();
+  } else {
+    // refreshButton_2 is part of instancesSettingsWidget and therefore also hidden.
+    ui_->instancesSettingsWidget->hide();
+  }
 }
 
 void ConnectToStadiaWidget::SetActive(bool value) {

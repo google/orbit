@@ -43,6 +43,7 @@ target_link_libraries(
   SessionSetup
   PUBLIC  CaptureFileInfo
           ClientData
+          ClientFlags
           ClientServices
           MetricsUploader
           OrbitBase
@@ -65,8 +66,7 @@ target_sources(
           DoubleClickableLabelTest.cpp
           ProcessItemModelTest.cpp
           SessionSetupDialogTest.cpp
-          TargetLabelTest.cpp
-          TestEnvironmentAbslFlags.cpp)
+          TargetLabelTest.cpp)
 
 
 target_link_libraries(
