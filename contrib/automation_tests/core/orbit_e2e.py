@@ -8,6 +8,7 @@ import logging
 from typing import Iterable, Callable
 from copy import deepcopy
 import time
+import psutil
 
 from absl import flags
 from pywinauto import Application, timings
@@ -83,12 +84,27 @@ class E2ETestCase:
 
 
 class CloseOrbit(E2ETestCase):
+    def _check_process_is_running(self, name: str):
+        """
+        Returns true if there is a running process containing name
+        """
+        for proc in psutil.process_iter():
+            try:
+                if name.lower() in proc.name().lower():
+                    return True
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+               pass
+        return False;
+
     def _execute(self):
         # For some reason the line below does NOT work when Orbit is maximized - this is actually consistent with
         # the results of AccessibilityInsights as the close button seems to have no on-screen rect...
         # self.find_control("Button", "Close").click_input()
         # ... so just send Alt + F4
         send_keys('%{F4}')
+        # Wait for the Orbit process to close.
+        while self._check_process_is_running('Orbit'):
+            time.sleep(1)
         logging.info('Closed Orbit.')
 
 
