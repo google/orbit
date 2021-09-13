@@ -217,10 +217,10 @@ void AppendCallToEntryPayloadAndOverwriteReturnAddress(uint64_t entry_payload_fu
       .AppendBytes({0x48, 0xb8})
       .AppendImmediate64(entry_payload_function_address)
       .AppendBytes({0xff, 0xd0})
-      .AppendBytes({0x5f})
-      .AppendBytes({0x48, 0xb8})
+      .AppendBytes({0x58})
+      .AppendBytes({0x48, 0xbf})
       .AppendImmediate64(return_trampoline_address)
-      .AppendBytes({0x48, 0x89, 0x07});
+      .AppendBytes({0x48, 0x89, 0x38});
 }
 
 void AppendRestoreCode(MachineCode& trampoline) {
