@@ -25,6 +25,7 @@
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QIODevice>
+#include <QInputDialog>
 #include <QLabel>
 #include <QLineEdit>
 #include <QList>
@@ -258,15 +259,17 @@ void OrbitMainWindow::SetupMainWindow() {
   app_->SetStatusListener(status_listener_.get());
 
   app_->SetCaptureStartedCallback([this](const std::optional<std::filesystem::path>& file_path) {
-    UpdateCaptureStateDependentWidgets();
-    ClearCaptureFilters();
-
     // Only set it if this is not empty, we do not want to reset the label when loading from legacy
     // file format.
     if (file_path.has_value()) {
       target_label_->SetFile(file_path.value());
       setWindowTitle(QString::fromStdString(file_path.value().string()));
     }
+
+    // we want to call UpdateCaptureStateDependentWidgets after we update
+    // target_label_ since the state of some actions depend on it.
+    UpdateCaptureStateDependentWidgets();
+    ClearCaptureFilters();
   });
 
   constexpr const char* kFinalizingCaptureMessage =
@@ -631,6 +634,8 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   ui->actionToggle_Capture->setIcon(is_capturing ? icon_stop_capture_ : icon_start_capture_);
   ui->actionCaptureOptions->setEnabled(!is_capturing);
   ui->actionOpen_Capture->setEnabled(!is_capturing);
+  ui->actionRename_Capture_File->setEnabled(!is_capturing &&
+                                            target_label_->GetFilePath().has_value());
   ui->actionOpen_Preset->setEnabled(!is_capturing && is_connected_);
   ui->actionSave_Preset_As->setEnabled(!is_capturing);
   ui->actionConfigureTracks->setEnabled(has_data);
@@ -1217,6 +1222,43 @@ void OrbitMainWindow::on_actionOpen_Capture_triggered() {
       QString::fromStdString(orbit_base::GetExecutablePath().generic_string());
   QStringList arguments;
   QProcess::startDetached(orbit_executable, arguments << file << command_line_flags_);
+}
+
+void OrbitMainWindow::on_actionRename_Capture_File_triggered() {
+  CHECK(target_label_->GetFilePath().has_value());
+  const std::filesystem::path& current_file_path = target_label_->GetFilePath().value();
+  QString file_path =
+      QFileDialog::getSaveFileName(this, "Rename or Move capture...",
+                                   QString::fromStdString(current_file_path.string()), "*.orbit");
+
+  std::filesystem::path new_file_path{file_path.toStdString()};
+
+  if (new_file_path == current_file_path) return;
+
+  auto* progress_dialog = new QProgressDialog(
+      QString("Moving file to \"%1\"...").arg(QString::fromStdString(new_file_path.string())), "",
+      0, 0, this);
+  progress_dialog->setWindowModality(Qt::WindowModal);
+  progress_dialog->show();
+
+  orbit_base::Future<ErrorMessageOr<void>> rename_future =
+      app_->MoveCaptureFile(current_file_path, new_file_path);
+
+  rename_future.Then(main_thread_executor_.get(), [this, progress_dialog, current_file_path,
+                                                   new_file_path](ErrorMessageOr<void> result) {
+    progress_dialog->close();
+    if (result.has_error()) {
+      QMessageBox::critical(
+          this, QString::fromStdString("Unable to Rename File"),
+          QString::fromStdString(absl::StrFormat(R"(Unable to rename/move file "%s" -> "%s": %s)",
+                                                 current_file_path.string(), new_file_path.string(),
+                                                 result.error().message())));
+      return;
+    }
+
+    target_label_->SetFile(new_file_path);
+    setWindowTitle(QString::fromStdString(new_file_path.string()));
+  });
 }
 
 void OrbitMainWindow::OpenCapture(const std::string& filepath) {

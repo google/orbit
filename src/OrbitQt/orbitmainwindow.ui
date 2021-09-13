@@ -388,6 +388,7 @@ QPushButton:disabled {
      <string>File</string>
     </property>
     <addaction name="actionOpen_Capture"/>
+    <addaction name="actionRename_Capture_File"/>
     <addaction name="separator"/>
     <addaction name="actionOpen_Preset"/>
     <addaction name="actionSave_Preset_As"/>
@@ -697,6 +698,11 @@ It used to also contain captures and presets, but these were moved to the User D
    </property>
    <property name="toolTip">
     <string>Add or remove local symbol directories</string>
+   </property>
+  </action>
+  <action name="actionRename_Capture_File">
+   <property name="text">
+    <string>Rename/Move Capture File...</string>
    </property>
   </action>
  </widget>

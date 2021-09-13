@@ -92,6 +92,7 @@ void TargetLabel::SetFile(const std::filesystem::path& file_path) {
   ui_->fileLabel->setText(QString::fromStdString(file_path.filename().string()));
   ui_->fileLabel->setToolTip(QString::fromStdString(file_path.string()));
   ui_->fileLabel->setVisible(true);
+  emit SizeChanged();
 }
 
 void TargetLabel::ChangeToFileTarget(const fs::path& path) {

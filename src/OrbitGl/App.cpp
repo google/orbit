@@ -1222,6 +1222,13 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
   return load_future;
 }
 
+orbit_base::Future<ErrorMessageOr<void>> OrbitApp::MoveCaptureFile(
+    const std::filesystem::path& src, const std::filesystem::path& dest) {
+  return thread_pool_->Schedule([src, dest]() { return orbit_base::MoveFile(src, dest); })
+      .ThenIfSuccess(main_thread_executor_,
+                     [this, dest] { capture_file_info_manager_.AddOrTouchCaptureFile(dest); });
+}
+
 void OrbitApp::OnLoadCaptureCancelRequested() { capture_loading_cancellation_requested_ = true; }
 
 void OrbitApp::FireRefreshCallbacks(DataViewType type) {
