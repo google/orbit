@@ -173,6 +173,32 @@ TEST(OrbitGgpClient, GetSshInfoAsyncWorking) {
   EXPECT_TRUE(callback_was_called);
 }
 
+TEST(OrbitGgpClient, GetSshInfoAsyncWorkingWithProject) {
+  const std::filesystem::path mock_ggp_working =
+      orbit_base::GetExecutableDir() / "OrbitMockGgpWorking";
+
+  auto client = Client::Create(nullptr, QString::fromStdString(mock_ggp_working.string()));
+  ASSERT_THAT(client, HasValue());
+
+  Instance test_instance;
+  test_instance.id = "instance/test/id";
+
+  Project project{"display name", "project/test/id"};
+
+  bool callback_was_called = false;
+  client.value()->GetSshInfoAsync(
+      test_instance,
+      [&callback_was_called](const ErrorMessageOr<SshInfo>& ssh_info) {
+        QCoreApplication::exit();
+        callback_was_called = true;
+        EXPECT_TRUE(ssh_info.has_value());
+      },
+      project);
+  QCoreApplication::exec();
+
+  EXPECT_TRUE(callback_was_called);
+}
+
 TEST(OrbitGgpClient, GetSshInfoAsyncTimeout) {
   const std::filesystem::path mock_ggp_working_slow =
       orbit_base::GetExecutableDir() / "OrbitMockGgpWorking";

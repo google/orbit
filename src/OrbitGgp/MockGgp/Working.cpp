@@ -74,7 +74,7 @@ int GgpInstanceList(int argc, char* argv[]) {
 }
 
 int GgpSshInit(int argc, char* argv[]) {
-  if (argc != 6) {
+  if (argc < 6 || argc == 7 || argc > 8) {
     std::cout << "Wrong amount of arguments" << std::endl;
     return 1;
   }
@@ -84,6 +84,12 @@ int GgpSshInit(int argc, char* argv[]) {
     std::cout << "arguments are wrong" << std::endl;
     return 1;
   }
+
+  if (argc == 8 && (std::string_view{argv[6]} != "--project" ||
+                    std::string_view{argv[7]} != "project/test/id")) {
+    std::cout << "arguments are wrong" << std::endl;
+  }
+
   std::cout << R"({
  "host": "123.456.789.012",
  "keyPath": "example/path/to/a/key",

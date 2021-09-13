@@ -35,7 +35,8 @@ class Client : public QObject {
                          bool all_reserved = false, std::optional<Project> project = std::nullopt,
                          int retry = 3);
   void GetSshInfoAsync(const Instance& ggp_instance,
-                       const std::function<void(ErrorMessageOr<SshInfo>)>& callback);
+                       const std::function<void(ErrorMessageOr<SshInfo>)>& callback,
+                       std::optional<Project> project = std::nullopt);
   void GetProjectsAsync(const std::function<void(ErrorMessageOr<QVector<Project>>)>& callback);
 
  private:
