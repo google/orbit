@@ -68,7 +68,7 @@ void RunProcessWithTimeout(const QString& program, const QStringList& arguments,
 
                      if (exit_status != QProcess::NormalExit || exit_code != 0) {
                        std::string error_message = absl::StrFormat(
-                           "Ggp list instances request failed with error: %s (exit code: "
+                           "Process failed with error: %s (exit code: "
                            "%d)",
                            process->errorString().toStdString(), exit_code);
                        ERROR("%s", error_message);
@@ -86,8 +86,8 @@ void RunProcessWithTimeout(const QString& program, const QStringList& arguments,
       timeout_timer->stop();
       timeout_timer->deleteLater();
     }
-    std::string error_message = absl::StrFormat("Ggp list instances request failed with error: %s",
-                                                process->errorString().toStdString());
+    std::string error_message =
+        absl::StrFormat("Process failed with error: %s", process->errorString().toStdString());
     ERROR("%s", error_message);
     callback(ErrorMessage{error_message});
     process->deleteLater();
@@ -165,6 +165,20 @@ void Client::GetSshInfoAsync(const Instance& ggp_instance,
                           } else {
                             callback(SshInfo::CreateFromJson(result.value()));
                           }
+                        });
+}
+
+void Client::GetProjectsAsync(
+    const std::function<void(ErrorMessageOr<QVector<Project>>)>& callback) {
+  QStringList arguments{"project", "list", "-s"};
+
+  RunProcessWithTimeout(ggp_program_, arguments, timeout_, this,
+                        [callback](ErrorMessageOr<QByteArray> result) {
+                          if (result.has_error()) {
+                            callback(result.error());
+                            return;
+                          }
+                          callback(Project::GetListFromJson(result.value()));
                         });
 }
 

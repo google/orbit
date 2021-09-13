@@ -15,6 +15,7 @@
 
 #include "Instance.h"
 #include "OrbitBase/Result.h"
+#include "OrbitGgp/Project.h"
 #include "SshInfo.h"
 
 namespace orbit_ggp {
@@ -33,6 +34,7 @@ class Client : public QObject {
                          bool all_reserved = false, int retry = 3);
   void GetSshInfoAsync(const Instance& ggp_instance,
                        const std::function<void(ErrorMessageOr<SshInfo>)>& callback);
+  void GetProjectsAsync(const std::function<void(ErrorMessageOr<QVector<Project>>)>& callback);
 
  private:
   explicit Client(QObject* parent, QString ggp_program, std::chrono::milliseconds timeout)
