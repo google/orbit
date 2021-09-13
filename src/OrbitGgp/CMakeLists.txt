@@ -14,6 +14,7 @@ target_sources(OrbitGgp PUBLIC
           include/OrbitGgp/Error.h
           include/OrbitGgp/Instance.h
           include/OrbitGgp/InstanceItemModel.h
+          include/OrbitGgp/Project.h
           include/OrbitGgp/SshInfo.h)
 
 target_sources(OrbitGgp PRIVATE
@@ -21,6 +22,7 @@ target_sources(OrbitGgp PRIVATE
           Error.cpp
           Instance.cpp
           InstanceItemModel.cpp
+          Project.cpp
           SshInfo.cpp)
 
 target_link_libraries(
@@ -46,6 +48,7 @@ target_sources(OrbitGgpTests PRIVATE
           ClientTest.cpp
           InstanceTests.cpp
           InstanceItemModelTests.cpp
+          ProjectTest.cpp
           SshInfoTests.cpp
 )
 
