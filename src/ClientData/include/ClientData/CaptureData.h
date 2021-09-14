@@ -101,7 +101,7 @@ class CaptureData {
 
   static const std::string kUnknownFunctionOrModuleName;
 
-  [[nodiscard]] const absl::flat_hash_map<int32_t, std::string>& thread_names() const {
+  [[nodiscard]] const absl::flat_hash_map<uint32_t, std::string>& thread_names() const {
     return thread_names_;
   }
 
@@ -115,7 +115,7 @@ class CaptureData {
     thread_names_.insert_or_assign(thread_id, std::move(thread_name));
   }
 
-  [[nodiscard]] const absl::flat_hash_map<int32_t,
+  [[nodiscard]] const absl::flat_hash_map<uint32_t,
                                           std::vector<orbit_client_protos::ThreadStateSliceInfo>>&
   thread_state_slices() const {
     return thread_state_slices_;
@@ -263,10 +263,10 @@ class CaptureData {
 
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats> functions_stats_;
 
-  absl::flat_hash_map<int32_t, std::string> thread_names_;
+  absl::flat_hash_map<uint32_t, std::string> thread_names_;
 
   // For each thread, assume sorted by timestamp and not overlapping.
-  absl::flat_hash_map<int32_t, std::vector<orbit_client_protos::ThreadStateSliceInfo>>
+  absl::flat_hash_map<uint32_t, std::vector<orbit_client_protos::ThreadStateSliceInfo>>
       thread_state_slices_ GUARDED_BY(thread_state_slices_mutex_);
   mutable absl::Mutex thread_state_slices_mutex_;
 
