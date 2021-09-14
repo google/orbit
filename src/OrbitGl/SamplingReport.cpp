@@ -28,10 +28,8 @@ SamplingReport::SamplingReport(
       unique_callstacks_{std::move(unique_callstacks)},
       has_summary_{has_summary},
       app_{app} {
-  selected_thread_id_ = 0;
-  callstack_data_view_ = nullptr;
-  selected_sorted_callstack_report_ = nullptr;
-  selected_callstack_index_ = 0;
+  ORBIT_SCOPE_FUNCTION;
+  SCOPED_TIMED_LOG("SamplingReport::SamplingReport");
   FillReport();
 }
 
