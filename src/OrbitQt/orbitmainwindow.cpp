@@ -1068,7 +1068,7 @@ constexpr uint64_t kMemoryWarningThresholdKbDefaultValue = 1024 * 1024 * 8;  // 
 
 void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
   QSettings settings;
-  if (settings.value(kEnableCallstackSamplingSettingKey, true).toBool()) {
+  if (!app_->IsDevMode() || settings.value(kEnableCallstackSamplingSettingKey, true).toBool()) {
     bool conversion_succeeded = false;
     double sampling_period_ms =
         settings.value(kCallstackSamplingPeriodMsSettingKey, kCallstackSamplingPeriodMsDefaultValue)
@@ -1121,7 +1121,8 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
   QSettings settings;
 
   orbit_qt::CaptureOptionsDialog dialog{this};
-  dialog.SetEnableSampling(settings.value(kEnableCallstackSamplingSettingKey, true).toBool());
+  dialog.SetEnableSampling(!app_->IsDevMode() ||
+                           settings.value(kEnableCallstackSamplingSettingKey, true).toBool());
   dialog.SetSamplingPeriodMs(
       settings.value(kCallstackSamplingPeriodMsSettingKey, kCallstackSamplingPeriodMsDefaultValue)
           .toDouble());

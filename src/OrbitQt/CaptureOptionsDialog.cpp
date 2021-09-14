@@ -25,7 +25,7 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   QObject::connect(ui_->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
   if (!absl::GetFlag(FLAGS_devmode)) {
-    ui_->samplingWidget->hide();
+    ui_->samplingCheckBox->hide();
   }
 
   ui_->localMarkerDepthLineEdit->setValidator(&uint64_validator_);
