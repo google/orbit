@@ -9,6 +9,10 @@
 
 namespace orbit_object_utils {
 
+// Since this module is used on the client and on the service side and we do not currently
+// report page size in capture this is hardcoded here.
+static constexpr uint64_t kPageSize = 0x1000;
+
 [[nodiscard]] uint64_t SymbolVirtualAddressToAbsoluteAddress(
     uint64_t symbol_address, uint64_t module_base_address, uint64_t module_load_bias,
     uint64_t module_executable_section_offset);

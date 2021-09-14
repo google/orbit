@@ -59,7 +59,7 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(const orbit_client_data::ModuleData*, GetModuleByPathAndBuildId,
               (const std::string&, const std::string&), (const));
   MOCK_METHOD(orbit_client_data::ModuleData*, GetMutableModuleByPathAndBuildId,
-              (const std::string&, const std::string&), (const));
+              (const std::string&, const std::string&));
   MOCK_METHOD(orbit_base::Future<void>, RetrieveModulesAndLoadSymbols,
               (absl::Span<const orbit_client_data::ModuleData* const>));
 

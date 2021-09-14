@@ -236,12 +236,11 @@ CaptureData::FindFunctionAbsoluteAddressByInstructionAbsoluteAddressUsingModules
     uint64_t absolute_address) const {
   const auto module_or_error = process_.FindModuleByAddress(absolute_address);
   if (module_or_error.has_error()) return std::nullopt;
-  const std::string& module_path = module_or_error.value().file_path();
-  const std::string& module_build_id = module_or_error.value().build_id();
-  const uint64_t module_base_address = module_or_error.value().start();
+  const auto& module_in_memory = module_or_error.value();
+  const uint64_t module_base_address = module_in_memory.start();
 
-  const ModuleData* module =
-      module_manager_->GetModuleByPathAndBuildId(module_path, module_build_id);
+  const ModuleData* module = module_manager_->GetModuleByModuleInMemoryAndAbsoluteAddress(
+      module_in_memory, absolute_address);
   if (module == nullptr) return std::nullopt;
 
   const uint64_t offset = orbit_object_utils::SymbolAbsoluteAddressToOffset(
@@ -297,12 +296,10 @@ const FunctionInfo* CaptureData::FindFunctionByAddress(uint64_t absolute_address
   const auto module_or_error = process_.FindModuleByAddress(absolute_address);
   if (module_or_error.has_error()) return nullptr;
   const auto& module_in_memory = module_or_error.value();
-  const std::string& module_path = module_in_memory.file_path();
-  const std::string& module_build_id = module_in_memory.build_id();
   const uint64_t module_base_address = module_in_memory.start();
 
-  const ModuleData* module =
-      module_manager_->GetModuleByPathAndBuildId(module_path, module_build_id);
+  const ModuleData* module = module_manager_->GetModuleByModuleInMemoryAndAbsoluteAddress(
+      module_in_memory, absolute_address);
   if (module == nullptr) return nullptr;
 
   const uint64_t offset = orbit_object_utils::SymbolAbsoluteAddressToOffset(
@@ -313,15 +310,15 @@ const FunctionInfo* CaptureData::FindFunctionByAddress(uint64_t absolute_address
 [[nodiscard]] const ModuleData* CaptureData::FindModuleByAddress(uint64_t absolute_address) const {
   const auto result = process_.FindModuleByAddress(absolute_address);
   if (result.has_error()) return nullptr;
-  return module_manager_->GetModuleByPathAndBuildId(result.value().file_path(),
-                                                    result.value().build_id());
+  return module_manager_->GetModuleByModuleInMemoryAndAbsoluteAddress(result.value(),
+                                                                      absolute_address);
 }
 
 [[nodiscard]] ModuleData* CaptureData::FindMutableModuleByAddress(uint64_t absolute_address) {
   const auto result = process_.FindModuleByAddress(absolute_address);
   if (result.has_error()) return nullptr;
-  return module_manager_->GetMutableModuleByPathAndBuildId(result.value().file_path(),
-                                                           result.value().build_id());
+  return module_manager_->GetMutableModuleByModuleInMemoryAndAbsoluteAddress(result.value(),
+                                                                             absolute_address);
 }
 
 uint32_t CaptureData::process_id() const { return process_.pid(); }

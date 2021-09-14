@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "ClientData/ModuleData.h"
+#include "ObjectUtils/Address.h"
 #include "OrbitBase/Logging.h"
 #include "absl/synchronization/mutex.h"
 #include "capture_data.pb.h"
@@ -65,6 +66,40 @@ std::vector<ModuleData*> ModuleManager::AddOrUpdateNotLoadedModules(
   }
 
   return not_updated_modules;
+}
+
+const ModuleData* ModuleManager::GetModuleByModuleInMemoryAndAbsoluteAddress(
+    const ModuleInMemory& module_in_memory, uint64_t absolute_address) const {
+  absl::MutexLock lock(&mutex_);
+  auto it =
+      module_map_.find(std::make_pair(module_in_memory.file_path(), module_in_memory.build_id()));
+  if (it == module_map_.end()) return nullptr;
+
+  // The valid absolute address should be >=
+  // module_base_address + (executable_segment_offset % kPageSize)
+  if (absolute_address < module_in_memory.start() + (it->second.executable_segment_offset() %
+                                                     orbit_object_utils::kPageSize)) {
+    return nullptr;
+  }
+
+  return &it->second;
+}
+
+ModuleData* ModuleManager::GetMutableModuleByModuleInMemoryAndAbsoluteAddress(
+    const ModuleInMemory& module_in_memory, uint64_t absolute_address) {
+  absl::MutexLock lock(&mutex_);
+  auto it =
+      module_map_.find(std::make_pair(module_in_memory.file_path(), module_in_memory.build_id()));
+  if (it == module_map_.end()) return nullptr;
+
+  // The valid absolute address should be >=
+  // module_base_address + (executable_segment_offset % kPageSize)
+  if (absolute_address < module_in_memory.start() + (it->second.executable_segment_offset() %
+                                                     orbit_object_utils::kPageSize)) {
+    return nullptr;
+  }
+
+  return &it->second;
 }
 
 const ModuleData* ModuleManager::GetModuleByPathAndBuildId(const std::string& path,

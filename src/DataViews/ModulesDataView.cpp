@@ -214,7 +214,7 @@ void ModulesDataView::UpdateModules(const ProcessData* process) {
     ModuleData* module = app_->GetMutableModuleByPathAndBuildId(module_in_memory.file_path(),
                                                                 module_in_memory.build_id());
     if (module != nullptr) {
-      AddModule(start_address, std::move(module), module_in_memory);
+      AddModule(start_address, module, module_in_memory);
     }
   }
 
