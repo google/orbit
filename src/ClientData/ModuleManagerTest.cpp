@@ -64,7 +64,7 @@ TEST(ModuleManager, GetModuleByPathAndBuildId) {
 
   {
     const ModuleData* mutable_module_invalid_path =
-        module_manager.GetModuleByPathAndBuildId("wrong/path", build_id);
+        module_manager.GetMutableModuleByPathAndBuildId("wrong/path", build_id);
     EXPECT_EQ(mutable_module_invalid_path, nullptr);
   }
 
