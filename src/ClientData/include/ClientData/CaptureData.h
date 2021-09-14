@@ -97,7 +97,10 @@ class CaptureData {
 
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByAddress(
       uint64_t absolute_address, bool is_exact) const;
-  [[nodiscard]] orbit_client_data::ModuleData* FindModuleByAddress(uint64_t absolute_address) const;
+  [[nodiscard]] const orbit_client_data::ModuleData* FindModuleByAddress(
+      uint64_t absolute_address) const;
+  [[nodiscard]] orbit_client_data::ModuleData* FindMutableModuleByAddress(
+      uint64_t absolute_address);
 
   static const std::string kUnknownFunctionOrModuleName;
 

@@ -310,7 +310,14 @@ const FunctionInfo* CaptureData::FindFunctionByAddress(uint64_t absolute_address
   return module->FindFunctionByOffset(offset, is_exact);
 }
 
-[[nodiscard]] ModuleData* CaptureData::FindModuleByAddress(uint64_t absolute_address) const {
+[[nodiscard]] const ModuleData* CaptureData::FindModuleByAddress(uint64_t absolute_address) const {
+  const auto result = process_.FindModuleByAddress(absolute_address);
+  if (result.has_error()) return nullptr;
+  return module_manager_->GetModuleByPathAndBuildId(result.value().file_path(),
+                                                    result.value().build_id());
+}
+
+[[nodiscard]] ModuleData* CaptureData::FindMutableModuleByAddress(uint64_t absolute_address) {
   const auto result = process_.FindModuleByAddress(absolute_address);
   if (result.has_error()) return nullptr;
   return module_manager_->GetMutableModuleByPathAndBuildId(result.value().file_path(),
