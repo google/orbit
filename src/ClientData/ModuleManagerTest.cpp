@@ -2,29 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <absl/strings/str_format.h>
 #include <gtest/gtest.h>
 #include <stdint.h>
 
 #include <string>
 #include <vector>
 
-#include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
-#include "ClientData/ProcessData.h"
-#include "capture_data.pb.h"
 #include "module.pb.h"
-#include "process.pb.h"
 #include "symbol.pb.h"
 
 namespace orbit_client_data {
 
-using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ModuleSymbols;
-using orbit_grpc_protos::ProcessInfo;
-using orbit_grpc_protos::SymbolInfo;
 
 TEST(ModuleManager, GetModuleByPathAndBuildId) {
   std::string name = "name of module";
