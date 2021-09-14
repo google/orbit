@@ -160,10 +160,16 @@ void Client::GetInstancesAsync(
 }
 
 void Client::GetSshInfoAsync(const Instance& ggp_instance,
-                             const std::function<void(ErrorMessageOr<SshInfo>)>& callback) {
+                             const std::function<void(ErrorMessageOr<SshInfo>)>& callback,
+                             std::optional<Project> project) {
   CHECK(callback);
 
-  const QStringList arguments{"ssh", "init", "-s", "--instance", ggp_instance.id};
+  QStringList arguments{"ssh", "init", "-s", "--instance", ggp_instance.id};
+  if (project != std::nullopt) {
+    arguments.append("--project");
+    arguments.append(project.value().id);
+  }
+
   RunProcessWithTimeout(ggp_program_, arguments, timeout_, this,
                         [callback](ErrorMessageOr<QByteArray> result) {
                           if (result.has_error()) {
