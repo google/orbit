@@ -43,21 +43,42 @@ TEST(ModuleManager, GetModuleByPathAndBuildId) {
   ModuleManager module_manager;
   EXPECT_TRUE(module_manager.AddOrUpdateModules({module_info}).empty());
 
-  const ModuleData* module = module_manager.GetModuleByPathAndBuildId(file_path, build_id);
-  ASSERT_NE(module, nullptr);
-  EXPECT_EQ(module->name(), name);
-  EXPECT_EQ(module->file_path(), file_path);
-  EXPECT_EQ(module->file_size(), file_size);
-  EXPECT_EQ(module->build_id(), build_id);
-  EXPECT_EQ(module->load_bias(), load_bias);
+  {
+    const ModuleData* module = module_manager.GetModuleByPathAndBuildId(file_path, build_id);
+    const ModuleData* mutable_module =
+        module_manager.GetMutableModuleByPathAndBuildId(file_path, build_id);
+    ASSERT_NE(module, nullptr);
+    EXPECT_EQ(module, mutable_module);
+    EXPECT_EQ(module->name(), name);
+    EXPECT_EQ(module->file_path(), file_path);
+    EXPECT_EQ(module->file_size(), file_size);
+    EXPECT_EQ(module->build_id(), build_id);
+    EXPECT_EQ(module->load_bias(), load_bias);
+  }
 
-  const ModuleData* module_invalid_path =
-      module_manager.GetModuleByPathAndBuildId("wrong/path", build_id);
-  EXPECT_EQ(module_invalid_path, nullptr);
+  {
+    const ModuleData* module_invalid_path =
+        module_manager.GetModuleByPathAndBuildId("wrong/path", build_id);
+    EXPECT_EQ(module_invalid_path, nullptr);
+  }
 
-  const ModuleData* module_invalid_build_id =
-      module_manager.GetModuleByPathAndBuildId(file_path, "wrong buildid");
-  EXPECT_EQ(module_invalid_build_id, nullptr);
+  {
+    const ModuleData* mutable_module_invalid_path =
+        module_manager.GetModuleByPathAndBuildId("wrong/path", build_id);
+    EXPECT_EQ(mutable_module_invalid_path, nullptr);
+  }
+
+  {
+    const ModuleData* module_invalid_build_id =
+        module_manager.GetModuleByPathAndBuildId(file_path, "wrong buildid");
+    EXPECT_EQ(module_invalid_build_id, nullptr);
+  }
+
+  {
+    const ModuleData* module_invalid_build_id =
+        module_manager.GetMutableModuleByPathAndBuildId(file_path, "wrong buildid");
+    EXPECT_EQ(module_invalid_build_id, nullptr);
+  }
 }
 
 TEST(ModuleManager, GetMutableModuleByPathAndBuildId) {
