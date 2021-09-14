@@ -149,7 +149,7 @@ static void AddUnwindErrorToTopDownThread(CallTreeThread* thread_node,
 
 [[nodiscard]] static CallTreeThread* GetOrCreateThreadNode(
     CallTreeNode* current_node, uint32_t tid, const std::string& process_name,
-    const absl::flat_hash_map<int32_t, std::string>& thread_names) {
+    const absl::flat_hash_map<uint32_t, std::string>& thread_names) {
   CallTreeThread* thread_node = current_node->GetThreadOrNull(tid);
   if (thread_node == nullptr) {
     std::string thread_name;
@@ -168,7 +168,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
     const CaptureData& capture_data) {
   auto top_down_view = std::make_unique<CallTreeView>();
   const std::string& process_name = capture_data.process_name();
-  const absl::flat_hash_map<int32_t, std::string>& thread_names = capture_data.thread_names();
+  const absl::flat_hash_map<uint32_t, std::string>& thread_names = capture_data.thread_names();
 
   for (const ThreadSampleData& thread_sample_data :
        post_processed_sampling_data.GetThreadSampleData()) {
@@ -240,7 +240,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromPostProcessedS
     const CaptureData& capture_data) {
   auto bottom_up_view = std::make_unique<CallTreeView>();
   const std::string& process_name = capture_data.process_name();
-  const absl::flat_hash_map<int32_t, std::string>& thread_names = capture_data.thread_names();
+  const absl::flat_hash_map<uint32_t, std::string>& thread_names = capture_data.thread_names();
 
   for (const ThreadSampleData& thread_sample_data :
        post_processed_sampling_data.GetThreadSampleData()) {
