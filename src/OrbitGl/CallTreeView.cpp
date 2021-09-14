@@ -11,6 +11,7 @@
 
 #include <algorithm>
 
+#include "Introspection/Introspection.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "capture_data.pb.h"
 
@@ -20,18 +21,22 @@ using orbit_client_data::ThreadSampleData;
 
 using orbit_client_protos::CallstackInfo;
 
-std::vector<const CallTreeNode*> CallTreeNode::children() const {
-  std::vector<const CallTreeNode*> children;
+const std::vector<const CallTreeNode*>& CallTreeNode::children() const {
+  if (children_cache_.has_value()) {
+    return *children_cache_;
+  }
+
+  children_cache_.emplace();
   for (const auto& tid_and_thread : thread_children_) {
-    children.push_back(&tid_and_thread.second);
+    children_cache_->push_back(&tid_and_thread.second);
   }
   for (const auto& address_and_functions : function_children_) {
-    children.push_back(&address_and_functions.second);
+    children_cache_->push_back(&address_and_functions.second);
   }
   if (unwind_errors_child_ != nullptr) {
-    children.push_back(unwind_errors_child_.get());
+    children_cache_->push_back(unwind_errors_child_.get());
   }
-  return children;
+  return *children_cache_;
 }
 
 CallTreeThread* CallTreeNode::GetThreadOrNull(uint32_t thread_id) {
@@ -46,6 +51,7 @@ CallTreeThread* CallTreeNode::AddAndGetThread(uint32_t thread_id, std::string th
   const auto& [it, inserted] = thread_children_.try_emplace(
       thread_id, CallTreeThread{thread_id, std::move(thread_name), this});
   CHECK(inserted);
+  children_cache_.reset();
   return &it->second;
 }
 
@@ -66,6 +72,7 @@ CallTreeFunction* CallTreeNode::AddAndGetFunction(uint64_t function_absolute_add
       CallTreeFunction{function_absolute_address, std::move(function_name), std::move(module_path),
                        std::move(module_build_id), this});
   CHECK(inserted);
+  children_cache_.reset();
   return &it->second;
 }
 
@@ -74,6 +81,7 @@ CallTreeUnwindErrors* CallTreeNode::GetUnwindErrorsOrNull() { return unwind_erro
 CallTreeUnwindErrors* CallTreeNode::AddAndGetUnwindErrors() {
   CHECK(unwind_errors_child_ == nullptr);
   unwind_errors_child_ = std::make_unique<CallTreeUnwindErrors>(this);
+  children_cache_.reset();
   return unwind_errors_child_.get();
 }
 
@@ -166,6 +174,9 @@ static void AddUnwindErrorToTopDownThread(CallTreeThread* thread_node,
 std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
     const PostProcessedSamplingData& post_processed_sampling_data,
     const CaptureData& capture_data) {
+  ORBIT_SCOPE_FUNCTION;
+  SCOPED_TIMED_LOG("CreateTopDownViewFromPostProcessedSamplingData");
+
   auto top_down_view = std::make_unique<CallTreeView>();
   const std::string& process_name = capture_data.process_name();
   const absl::flat_hash_map<uint32_t, std::string>& thread_names = capture_data.thread_names();
@@ -238,6 +249,9 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
 std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(
     const PostProcessedSamplingData& post_processed_sampling_data,
     const CaptureData& capture_data) {
+  ORBIT_SCOPE_FUNCTION;
+  SCOPED_TIMED_LOG("CreateBottomUpViewFromPostProcessedSamplingData");
+
   auto bottom_up_view = std::make_unique<CallTreeView>();
   const std::string& process_name = capture_data.process_name();
   const absl::flat_hash_map<uint32_t, std::string>& thread_names = capture_data.thread_names();

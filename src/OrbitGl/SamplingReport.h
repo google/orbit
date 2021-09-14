@@ -58,12 +58,13 @@ class SamplingReport {
   absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
       unique_callstacks_;
   std::vector<SamplingReportDataView> thread_reports_;
-  CallstackDataView* callstack_data_view_;
+  CallstackDataView* callstack_data_view_ = nullptr;
 
   absl::flat_hash_set<uint64_t> selected_addresses_;
-  orbit_client_data::ThreadID selected_thread_id_;
-  std::unique_ptr<orbit_client_data::SortedCallstackReport> selected_sorted_callstack_report_;
-  size_t selected_callstack_index_;
+  orbit_client_data::ThreadID selected_thread_id_ = 0;
+  std::unique_ptr<orbit_client_data::SortedCallstackReport> selected_sorted_callstack_report_ =
+      nullptr;
+  size_t selected_callstack_index_ = 0;
   std::function<void()> ui_refresh_func_;
   bool has_summary_;
   OrbitApp* app_ = nullptr;

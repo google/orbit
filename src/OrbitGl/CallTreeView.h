@@ -34,7 +34,7 @@ class CallTreeNode {
            (unwind_errors_child_ != nullptr ? 1 : 0);
   }
 
-  [[nodiscard]] std::vector<const CallTreeNode*> children() const;
+  [[nodiscard]] const std::vector<const CallTreeNode*>& children() const;
 
   [[nodiscard]] CallTreeThread* GetThreadOrNull(uint32_t thread_id);
 
@@ -74,7 +74,7 @@ class CallTreeNode {
     return 100.0f * GetExclusiveSampleCount() / total_sample_count;
   }
 
- protected:
+ private:
   // absl::node_hash_map instead of absl::flat_hash_map as pointer stability is
   // needed for the CallTreeNode::parent_ field.
   absl::node_hash_map<uint32_t, CallTreeThread> thread_children_;
@@ -83,9 +83,11 @@ class CallTreeNode {
   // needs the copy constructor (even for try_emplace).
   std::shared_ptr<CallTreeUnwindErrors> unwind_errors_child_;
 
- private:
   CallTreeNode* parent_;
   uint64_t sample_count_ = 0;
+
+  // Filled lazily when children() is called, invalidated when children are invalidated.
+  mutable std::optional<std::vector<const CallTreeNode*>> children_cache_;
 };
 
 class CallTreeFunction : public CallTreeNode {
