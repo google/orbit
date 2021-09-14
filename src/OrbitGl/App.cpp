@@ -1308,9 +1308,6 @@ void OrbitApp::StartCapture() {
   // non-zero since 0 is reserved for invalid ids.
   uint64_t function_id = 1;
   for (const auto& function : selected_functions) {
-    const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(
-        function.module_path(), function.module_build_id());
-    CHECK(module != nullptr);
     if (user_defined_capture_data.ContainsFrameTrack(function)) {
       frame_track_function_ids.insert(function_id);
     }
