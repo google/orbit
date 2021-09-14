@@ -43,14 +43,14 @@ class TrackManager {
                         orbit_client_data::CaptureData* capture_data);
 
   [[nodiscard]] std::vector<Track*> GetAllTracks() const;
-  [[nodiscard]] std::vector<Track*> GetVisibleTracks() const { return visible_tracks_; }
+  [[nodiscard]] std::vector<Track*> GetFilteredTracks() const { return filtered_tracks_; }
   [[nodiscard]] std::vector<ThreadTrack*> GetThreadTracks() const;
   [[nodiscard]] std::vector<FrameTrack*> GetFrameTracks() const;
 
   void RequestTrackSorting() { sorting_invalidated_ = true; };
   void SetFilter(const std::string& filter);
 
-  [[nodiscard]] float GetVisibleTracksTotalHeight() const;
+  [[nodiscard]] float GetFilteredTracksTotalHeight() const;
   void UpdateTracksForRendering();
   void UpdateTrackPrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                              PickingMode picking_mode);
@@ -93,7 +93,7 @@ class TrackManager {
   void UpdateMovingTrackPositionInVisibleTracks();
   void SortTracks();
   [[nodiscard]] std::vector<ThreadTrack*> GetSortedThreadTracks();
-  void UpdateVisibleTrackList();
+  void UpdateFilteredTrackList();
 
   void AddTrack(const std::shared_ptr<Track>& track);
   void AddFrameTrack(const std::shared_ptr<FrameTrack>& frame_track);
@@ -122,11 +122,11 @@ class TrackManager {
 
   std::vector<Track*> sorted_tracks_;
   bool sorting_invalidated_ = false;
-  bool visible_track_list_needs_update_ = false;
+  bool filtered_track_list_needs_update_ = false;
   Timer last_thread_reorder_;
 
   std::string filter_;
-  std::vector<Track*> visible_tracks_;
+  std::vector<Track*> filtered_tracks_;
 
   orbit_client_data::CaptureData* capture_data_ = nullptr;
 

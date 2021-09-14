@@ -31,12 +31,12 @@ AccessibilityState TimeGraphAccessibility::AccessibleState() const {
 }
 
 int TimeGraphAccessibility::AccessibleChildCount() const {
-  return time_graph_->GetTrackManager()->GetVisibleTracks().size();
+  return time_graph_->GetTrackManager()->GetFilteredTracks().size();
 }
 
 const AccessibleInterface* TimeGraphAccessibility::AccessibleChild(int index) const {
   return time_graph_->GetTrackManager()
-      ->GetVisibleTracks()[index]
+      ->GetFilteredTracks()[index]
       ->GetOrCreateAccessibleInterface();
 }
 

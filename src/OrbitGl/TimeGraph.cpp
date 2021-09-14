@@ -541,7 +541,7 @@ void TimeGraph::UpdateTracksPosition() {
   float current_y = layout_.GetSchedulerTrackOffset();
 
   // Track height including space between them
-  for (auto& track : track_manager_->GetVisibleTracks()) {
+  for (auto& track : track_manager_->GetFilteredTracks()) {
     if (!track->IsMoving()) {
       track->SetPos(track_pos_x, current_y);
     }
@@ -821,7 +821,7 @@ void TimeGraph::DrawIncompleteDataIntervals(Batcher& batcher, PickingMode pickin
 
 void TimeGraph::DrawTracks(Batcher& batcher, TextRenderer& text_renderer,
                            const DrawContext& draw_context) {
-  for (auto& track : track_manager_->GetVisibleTracks()) {
+  for (auto& track : track_manager_->GetFilteredTracks()) {
     float z_offset = 0;
     if (track->IsPinned()) {
       z_offset = GlCanvas::kZOffsetPinnedTrack;

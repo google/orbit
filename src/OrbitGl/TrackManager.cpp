@@ -171,41 +171,41 @@ void TrackManager::SortTracks() {
   last_thread_reorder_.Restart();
 
   sorting_invalidated_ = false;
-  visible_track_list_needs_update_ = true;
+  filtered_track_list_needs_update_ = true;
 }
 
 void TrackManager::SetFilter(const std::string& filter) {
   filter_ = absl::AsciiStrToLower(filter);
-  visible_track_list_needs_update_ = true;
+  filtered_track_list_needs_update_ = true;
 }
 
 // This function assumes visible track list is updated.
-float TrackManager::GetVisibleTracksTotalHeight() const {
+float TrackManager::GetFilteredTracksTotalHeight() const {
   // Top and Bottom Margin. TODO: Margins should be treated in a different way (http://b/192070555).
   float total_height = layout_->GetSchedulerTrackOffset() + layout_->GetBottomMargin();
 
   // Track height including space between them
-  for (auto& track : visible_tracks_) {
+  for (auto& track : GetFilteredTracks()) {
     total_height += (track->GetHeight() + layout_->GetSpaceBetweenTracks());
   }
   return total_height;
 }
 
-void TrackManager::UpdateVisibleTrackList() {
+void TrackManager::UpdateFilteredTrackList() {
   // This function assumes we asked before for a update for the visible track list and that tracks
   // are already sorted (in sorted_tracks_).
-  CHECK(visible_track_list_needs_update_);
+  CHECK(filtered_track_list_needs_update_);
   CHECK(!sorting_invalidated_);
 
-  visible_track_list_needs_update_ = false;
-  visible_tracks_.clear();
+  filtered_track_list_needs_update_ = false;
+  filtered_tracks_.clear();
 
   auto track_should_be_shown = [this](const Track* track) {
     return track->GetVisible() && track_type_visibility_[track->GetType()];
   };
 
   if (filter_.empty()) {
-    std::copy_if(sorted_tracks_.begin(), sorted_tracks_.end(), std::back_inserter(visible_tracks_),
+    std::copy_if(sorted_tracks_.begin(), sorted_tracks_.end(), std::back_inserter(filtered_tracks_),
                  track_should_be_shown);
   } else {
     std::vector<std::string> filters = absl::StrSplit(filter_, ' ', absl::SkipWhitespace());
@@ -217,7 +217,7 @@ void TrackManager::UpdateVisibleTrackList() {
       std::string lower_case_label = absl::AsciiStrToLower(track->GetLabel());
       for (auto& filter : filters) {
         if (absl::StrContains(lower_case_label, filter)) {
-          visible_tracks_.push_back(track);
+          filtered_tracks_.push_back(track);
           break;
         }
       }
@@ -265,21 +265,21 @@ void TrackManager::UpdateMovingTrackPositionInVisibleTracks() {
   int moving_track_previous_position = FindMovingTrackIndex();
 
   if (moving_track_previous_position != -1) {
-    Track* moving_track = visible_tracks_[moving_track_previous_position];
-    visible_tracks_.erase(visible_tracks_.begin() + moving_track_previous_position);
+    Track* moving_track = filtered_tracks_[moving_track_previous_position];
+    filtered_tracks_.erase(filtered_tracks_.begin() + moving_track_previous_position);
 
     int moving_track_current_position = -1;
-    for (auto track_it = visible_tracks_.begin(); track_it != visible_tracks_.end(); ++track_it) {
+    for (auto track_it = filtered_tracks_.begin(); track_it != filtered_tracks_.end(); ++track_it) {
       if (moving_track->GetPos()[1] <= (*track_it)->GetPos()[1]) {
-        auto inserted_it = visible_tracks_.insert(track_it, moving_track);
-        moving_track_current_position = inserted_it - visible_tracks_.begin();
+        auto inserted_it = filtered_tracks_.insert(track_it, moving_track);
+        moving_track_current_position = inserted_it - filtered_tracks_.begin();
         break;
       }
     }
 
     if (moving_track_current_position == -1) {
-      visible_tracks_.push_back(moving_track);
-      moving_track_current_position = static_cast<int>(visible_tracks_.size()) - 1;
+      filtered_tracks_.push_back(moving_track);
+      moving_track_current_position = static_cast<int>(filtered_tracks_.size()) - 1;
     }
 
     // Now we have to change the position of the moving_track in the non-filtered array
@@ -290,14 +290,14 @@ void TrackManager::UpdateMovingTrackPositionInVisibleTracks() {
     if (moving_track_current_position > moving_track_previous_position) {
       // In this case we will insert the moving_track right after the one who is before in the
       // filtered array
-      Track* previous_filtered_track = visible_tracks_[moving_track_current_position - 1];
+      Track* previous_filtered_track = filtered_tracks_[moving_track_current_position - 1];
       sorted_tracks_.insert(
           ++std::find(sorted_tracks_.begin(), sorted_tracks_.end(), previous_filtered_track),
           moving_track);
     } else {
       // In this case we will insert the moving_track right before the one who is after in the
       // filtered array
-      Track* next_filtered_track = visible_tracks_[moving_track_current_position + 1];
+      Track* next_filtered_track = filtered_tracks_[moving_track_current_position + 1];
       sorted_tracks_.insert(
           std::find(sorted_tracks_.begin(), sorted_tracks_.end(), next_filtered_track),
           moving_track);
@@ -307,9 +307,9 @@ void TrackManager::UpdateMovingTrackPositionInVisibleTracks() {
 
 int TrackManager::FindMovingTrackIndex() {
   // Returns the position of the moving track, or -1 if there is none.
-  for (auto track_it = visible_tracks_.begin(); track_it != visible_tracks_.end(); ++track_it) {
+  for (auto track_it = filtered_tracks_.begin(); track_it != filtered_tracks_.end(); ++track_it) {
     if ((*track_it)->IsMoving()) {
-      return track_it - visible_tracks_.begin();
+      return track_it - filtered_tracks_.begin();
     }
   }
   return -1;
@@ -317,7 +317,7 @@ int TrackManager::FindMovingTrackIndex() {
 
 void TrackManager::UpdateTrackPrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                          PickingMode picking_mode) {
-  for (auto& track : visible_tracks_) {
+  for (auto& track : GetFilteredTracks()) {
     const float z_offset = track->IsMoving() ? GlCanvas::kZOffsetMovingTrack : 0.f;
     track->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
   }
@@ -331,8 +331,8 @@ void TrackManager::UpdateTracksForRendering() {
   }
 
   // Update visible track list from the sorted one based on the filter.
-  if (visible_track_list_needs_update_) {
-    UpdateVisibleTrackList();
+  if (filtered_track_list_needs_update_) {
+    UpdateFilteredTrackList();
   }
 
   UpdateMovingTrackPositionInVisibleTracks();
@@ -341,7 +341,7 @@ void TrackManager::UpdateTracksForRendering() {
 void TrackManager::AddTrack(const std::shared_ptr<Track>& track) {
   all_tracks_.push_back(track);
   sorting_invalidated_ = true;
-  visible_track_list_needs_update_ = true;
+  filtered_track_list_needs_update_ = true;
 }
 
 void TrackManager::AddFrameTrack(const std::shared_ptr<FrameTrack>& frame_track) {
@@ -358,7 +358,7 @@ void TrackManager::AddFrameTrack(const std::shared_ptr<FrameTrack>& frame_track)
   } else {
     sorted_tracks_.insert(sorted_tracks_.begin(), frame_track.get());
   }
-  visible_track_list_needs_update_ = true;
+  filtered_track_list_needs_update_ = true;
 }
 
 void TrackManager::RemoveFrameTrack(uint64_t function_id) {
@@ -368,7 +368,7 @@ void TrackManager::RemoveFrameTrack(uint64_t function_id) {
       sorted_tracks_.end());
   frame_tracks_.erase(function_id);
 
-  visible_track_list_needs_update_ = true;
+  filtered_track_list_needs_update_ = true;
 }
 
 void TrackManager::SetTrackTypeVisibility(Track::Type type, bool value) {
@@ -376,7 +376,7 @@ void TrackManager::SetTrackTypeVisibility(Track::Type type, bool value) {
   if (time_graph_ != nullptr) {
     time_graph_->RequestUpdate();
   }
-  visible_track_list_needs_update_ = true;
+  filtered_track_list_needs_update_ = true;
 }
 
 bool TrackManager::GetTrackTypeVisibility(Track::Type type) const {
