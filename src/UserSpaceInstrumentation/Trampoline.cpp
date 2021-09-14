@@ -54,8 +54,8 @@ constexpr uint64_t kOffsetOfFunctionIdInCallToEntryPayload = 105;
 [[nodiscard]] std::string InstructionBytesAsString(cs_insn* instruction) {
   std::string result;
   for (int i = 0; i < instruction->size; i++) {
-    result = absl::StrCat(result, i == 0 ? absl::StrFormat("%#0.2x", instruction->bytes[i])
-                                         : absl::StrFormat(" %0.2x", instruction->bytes[i]));
+    absl::StrAppend(&result, i == 0 ? absl::StrFormat("%#0.2x", instruction->bytes[i])
+                                    : absl::StrFormat(" %0.2x", instruction->bytes[i]));
   }
   return result;
 }
@@ -77,7 +77,7 @@ constexpr uint64_t kOffsetOfFunctionIdInCallToEntryPayload = 105;
 }
 
 void AppendBackupCode(MachineCode& trampoline) {
-  // This code is executed immediatly after the control is passed to the instrumented function. The
+  // This code is executed immediately after the control is passed to the instrumented function. The
   // top of the stack contains the return address. Above that are the parameters passed via the
   // stack.
   // Some of the general purpose and vector registers contain the parameters for the
@@ -528,7 +528,7 @@ ErrorMessageOr<AddressRange> FindAddressRangeForTrampoline(
   constexpr uint64_t kMax64BitAddress = UINT64_MAX;
   const uint64_t page_size = sysconf(_SC_PAGE_SIZE);
 
-  FAIL_IF(unavailable_ranges.size() == 0 || unavailable_ranges[0].start != 0,
+  FAIL_IF(unavailable_ranges.empty() || unavailable_ranges[0].start != 0,
           "First entry at unavailable_ranges needs to start at zero. Use result of "
           "GetUnavailableAddressRanges.");
 

@@ -4,7 +4,6 @@
 
 #include "OrbitUserSpaceInstrumentation.h"
 
-#include <stdio.h>
 #include <sys/types.h>
 
 #include <cstdint>
@@ -69,10 +68,10 @@ class LockFreeUserSpaceInstrumentationEventProducer
     BuildAndStart(orbit_producer_side_channel::CreateProducerSideChannel());
   }
 
-  ~LockFreeUserSpaceInstrumentationEventProducer() { ShutdownAndWait(); }
+  ~LockFreeUserSpaceInstrumentationEventProducer() override { ShutdownAndWait(); }
 
  protected:
-  [[nodiscard]] virtual orbit_grpc_protos::ProducerCaptureEvent* TranslateIntermediateEvent(
+  [[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent* TranslateIntermediateEvent(
       FunctionCallEvent&& raw_event, google::protobuf::Arena* arena) override {
     auto* capture_event =
         google::protobuf::Arena::CreateMessage<orbit_grpc_protos::ProducerCaptureEvent>(arena);
@@ -106,8 +105,8 @@ uint64_t ExitPayload() {
   // Skip emitting an event if we are not capturing or the event belongs to a previous capture.
   if (producer.IsCapturing() &&
       start_current_capture_timestamp < current_return_address.timestamp_on_entry_ns) {
-    static pid_t pid = orbit_base::GetCurrentProcessId();
-    thread_local pid_t tid = orbit_base::GetCurrentThreadId();
+    static pid_t pid = orbit_base::GetCurrentProcessIdNative();
+    thread_local pid_t tid = orbit_base::GetCurrentThreadIdNative();
     const uint64_t duration_ns =
         timestamp_on_exit_ns - current_return_address.timestamp_on_entry_ns;
     producer.EnqueueIntermediateEvent(FunctionCallEvent(

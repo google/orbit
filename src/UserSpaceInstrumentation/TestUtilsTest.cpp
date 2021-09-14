@@ -56,7 +56,7 @@ TEST(TestUtilTest, Disassemble) {
 
   // End child process.
   kill(pid, SIGKILL);
-  waitpid(pid, NULL, 0);
+  waitpid(pid, nullptr, 0);
 }
 
 TEST(TestUtilTest, GetFunctionAddressRangeInFile) {

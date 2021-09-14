@@ -19,7 +19,7 @@ namespace {
 
 // In certain error conditions the tracee is damaged and we don't try to recover from that. We just
 // abort with a fatal log message. None of these errors are expected to occur in operation
-// obvioulsy. That's what the *OrDie methods below are for.
+// obviously. That's what the *OrDie methods below are for.
 void RestoreRegistersOrDie(RegisterState& register_state) {
   auto result = register_state.RestoreRegisters();
   FAIL_IF(result.has_error(), "Unable to restore register state in tracee: \"%s\"",
