@@ -26,6 +26,13 @@ extern "C" void EntryPayload(uint64_t return_address, uint64_t function_id);
 // the function such that the execution can be continued there.
 extern "C" uint64_t ExitPayload();
 
+// Performs a MOVAPS from an address at a distance multiple of 16 from RBP. As the 128-bit memory
+// operands must be 16-byte aligned (SIGSEGV is raised otherwise), this verifies that the stack was
+// aligned to 16 bytes before calling this EntryPayload.
+// We are assuming that this function updates the frame pointer, i.e., that it starts with
+// `push rbp; mov rbp, rsp`.
+extern "C" void EntryPayloadAlignedCopy(uint64_t return_address, uint64_t function_id);
+
 // Overwrites rdi, rsi, rdx, rcx, r8, r9, rax, r10. These registers are used to hand over parameters
 // to a called function. This function is used to assert our backup of these registers works
 // properly. The two functions below do the same thing for SSE/AVX registers that can be used to

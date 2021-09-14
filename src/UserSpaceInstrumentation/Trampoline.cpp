@@ -49,7 +49,7 @@ size_t kMaxRelocatedPrologueSize = kSizeOfJmp * 16;
 // before each run. This happens in `InstrumentFunction`. Whenever the code of the trampoline is
 // changed this constant needs to be adjusted as well. There is a CHECK in the code below to make
 // sure this number is correct.
-constexpr uint64_t kOffsetOfFunctionIdInCallToEntryPayload = 105;
+constexpr uint64_t kOffsetOfFunctionIdInCallToEntryPayload = 109;
 
 [[nodiscard]] std::string InstructionBytesAsString(cs_insn* instruction) {
   std::string result;
@@ -164,7 +164,7 @@ void AppendBackupCode(MachineCode& trampoline) {
         .AppendBytes({0xc5, 0xfd, 0x7f, 0x3c, 0x24});
   } else {
     // sub     rsp, 16
-    // movdqa  (rsp), xmm0,
+    // movdqa  (rsp), xmm0
     // ...
     // sub     rsp, 16
     // movdqa  (rsp), xmm7
@@ -188,7 +188,10 @@ void AppendBackupCode(MachineCode& trampoline) {
 }
 
 // Call the entry payload function with the return address and the id of the instrumented function
-// as parameters. Then overwrite the return address with `return_trampoline_address`.
+// as parameters. Care must be taken that the stack be aligned to 16 bytes before calling the entry
+// payload, as required by the calling convention as per section "3.2.2 The Stack Frame" in, again,
+// "System V Application Binary Interface".
+// Then overwrite the return address with `return_trampoline_address`.
 void AppendCallToEntryPayloadAndOverwriteReturnAddress(uint64_t entry_payload_function_address,
                                                        uint64_t return_trampoline_address,
                                                        MachineCode& trampoline) {
@@ -197,15 +200,18 @@ void AppendCallToEntryPayloadAndOverwriteReturnAddress(uint64_t entry_payload_fu
 
   // add rax, 0x40                                   48 83 c0 40
   // push rax                                        50
+  // sub rsp, 0x08                                   48 83 ec 08
   // mov rdi, (rax)                                  48 8b 38
   // mov rsi, function_id                            48 be function_id
   // mov rax, entry_payload_function_address         48 b8 addr
   // call rax                                        ff d0
+  // add rsp, 0x08                                   48 83 c4 08
   // pop rax                                         58
   // mov rdi, return_trampoline_address              48 bf addr
   // mov (rax), rdi                                  48 89 38
   trampoline.AppendBytes({0x48, 0x83, 0xc0, 0x40})
       .AppendBytes({0x50})
+      .AppendBytes({0x48, 0x83, 0xec, 0x08})
       .AppendBytes({0x48, 0x8b, 0x38})
       .AppendBytes({0x48, 0xbe});
   // This fails if the code for the trampoline was changed - see the comment at the declaration of
@@ -217,6 +223,7 @@ void AppendCallToEntryPayloadAndOverwriteReturnAddress(uint64_t entry_payload_fu
       .AppendBytes({0x48, 0xb8})
       .AppendImmediate64(entry_payload_function_address)
       .AppendBytes({0xff, 0xd0})
+      .AppendBytes({0x48, 0x83, 0xc4, 0x08})
       .AppendBytes({0x58})
       .AppendBytes({0x48, 0xbf})
       .AppendImmediate64(return_trampoline_address)

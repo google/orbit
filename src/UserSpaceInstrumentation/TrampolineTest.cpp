@@ -703,6 +703,20 @@ TEST_F(InstrumentFunctionTest, DoSomething) {
   RestartAndRemoveInstrumentation();
 }
 
+TEST_F(InstrumentFunctionTest, CheckStackAlignedTo16Bytes) {
+  RunChild(&DoSomething, "DoSomething");
+  PrepareInstrumentation("EntryPayloadAlignedCopy", kExitPayloadFunctionName);
+  ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(address_after_prologue_or_error, HasNoError());
+  ErrorMessageOr<void> result =
+      InstrumentFunction(pid_, function_address_, /*function_id=*/42,
+                         address_after_prologue_or_error.value(), trampoline_address_);
+  EXPECT_THAT(result, HasNoError());
+  RestartAndRemoveInstrumentation();
+}
+
 // We will not be able to instrument this - the function is just four bytes long and we need five
 // bytes to write a jump.
 extern "C" __attribute__((naked)) int TooShort() {
