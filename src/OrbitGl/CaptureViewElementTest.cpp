@@ -8,20 +8,35 @@
 
 namespace orbit_gl {
 
-class UnitTestCaptureViewElement : public CaptureViewElement {
+class UnitTestCaptureViewLeafElement : public CaptureViewElement {
  public:
-  explicit UnitTestCaptureViewElement(CaptureViewElement* parent, TimeGraph* time_graph,
-                                      Viewport* viewport, TimeGraphLayout* layout,
-                                      int child_count = 0)
+  explicit UnitTestCaptureViewLeafElement(CaptureViewElement* parent, TimeGraph* time_graph,
+                                          Viewport* viewport, TimeGraphLayout* layout)
+      : CaptureViewElement(parent, time_graph, viewport, layout) {}
+
+  [[nodiscard]] float GetHeight() const override { return 10; }
+
+ private:
+  [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleInterface>
+  CreateAccessibleInterface() override {
+    return nullptr;
+  }
+};
+
+class UnitTestCaptureViewContainerElement : public CaptureViewElement {
+ public:
+  explicit UnitTestCaptureViewContainerElement(CaptureViewElement* parent, TimeGraph* time_graph,
+                                               Viewport* viewport, TimeGraphLayout* layout,
+                                               int children_to_create = 0)
       : CaptureViewElement(parent, time_graph, viewport, layout) {
-    for (int i = 0; i < child_count; ++i) {
+    for (int i = 0; i < children_to_create; ++i) {
       children_.emplace_back(
-          std::make_unique<UnitTestCaptureViewElement>(this, time_graph, viewport, layout));
+          std::make_unique<UnitTestCaptureViewLeafElement>(this, time_graph, viewport, layout));
     }
   }
 
   [[nodiscard]] float GetHeight() const override { return 0; }
-  [[nodiscard]] virtual std::vector<CaptureViewElement*> GetChildren() const {
+  [[nodiscard]] std::vector<CaptureViewElement*> GetChildren() const override {
     std::vector<CaptureViewElement*> result;
     for (auto& child : children_) {
       result.push_back(child.get());
@@ -30,7 +45,7 @@ class UnitTestCaptureViewElement : public CaptureViewElement {
   };
 
  private:
-  std::vector<std::unique_ptr<UnitTestCaptureViewElement>> children_;
+  std::vector<std::unique_ptr<UnitTestCaptureViewLeafElement>> children_;
 
   [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleInterface>
   CreateAccessibleInterface() override {
@@ -39,9 +54,10 @@ class UnitTestCaptureViewElement : public CaptureViewElement {
 };
 
 TEST(CaptureViewElementTesterTest, PassesAllTestsOnExistingElement) {
+  const int kChildCount = 2;
   CaptureViewElementTester tester;
-  UnitTestCaptureViewElement container_elem(nullptr, nullptr, tester.GetViewport(),
-                                            tester.GetLayout(), 2);
+  UnitTestCaptureViewContainerElement container_elem(nullptr, nullptr, tester.GetViewport(),
+                                                     tester.GetLayout(), kChildCount);
   tester.RunTests(&container_elem);
 }
 }  // namespace orbit_gl
