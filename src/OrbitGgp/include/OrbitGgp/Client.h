@@ -11,6 +11,7 @@
 #include <QVector>
 #include <chrono>
 #include <functional>
+#include <optional>
 #include <string>
 
 #include "Instance.h"
@@ -31,7 +32,8 @@ class Client : public QObject {
       std::chrono::milliseconds timeout = GetDefaultTimeoutMs());
 
   void GetInstancesAsync(const std::function<void(ErrorMessageOr<QVector<Instance>>)>& callback,
-                         bool all_reserved = false, int retry = 3);
+                         bool all_reserved = false, std::optional<Project> project = std::nullopt,
+                         int retry = 3);
   void GetSshInfoAsync(const Instance& ggp_instance,
                        const std::function<void(ErrorMessageOr<SshInfo>)>& callback);
   void GetProjectsAsync(const std::function<void(ErrorMessageOr<QVector<Project>>)>& callback);

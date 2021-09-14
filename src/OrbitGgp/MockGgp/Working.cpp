@@ -7,7 +7,11 @@
 #include <string_view>
 #include <thread>
 
-int GgpVersion(char* argv[]) {
+int GgpVersion(int argc, char* argv[]) {
+  if (argc != 2) {
+    std::cout << "Wrong amount of arguments" << std::endl;
+    return 1;
+  }
   if (std::string_view{argv[1]} != "version") {
     std::cout << "arguments are formatted wrong" << std::endl;
     return 1;
@@ -17,12 +21,35 @@ int GgpVersion(char* argv[]) {
   return 0;
 }
 
-int GgpInstanceList(char* argv[]) {
+int GgpInstanceList(int argc, char* argv[]) {
+  if (argc < 4 || argc > 7) {
+    std::cout << "Wrong amount of arguments" << std::endl;
+    return 1;
+  }
   if (std::string_view{argv[1]} != "instance" || std::string_view{argv[2]} != "list" ||
       std::string_view{argv[3]} != "-s") {
     std::cout << "arguments are formatted wrong" << std::endl;
     return 1;
   }
+
+  if (argc == 5 && std::string_view{argv[4]} != "--all-reserved") {
+    std::cout << "arguments are formatted wrong" << std::endl;
+    return 1;
+  }
+
+  if (argc == 6 && (std::string_view{argv[4]} != "--project" ||
+                    std::string_view{argv[5]} != "project/test/id")) {
+    std::cout << "arguments are formatted wrong" << std::endl;
+    return 1;
+  }
+
+  if (argc == 7 &&
+      (std::string_view{argv[4]} != "--all-reserved" || std::string_view{argv[5]} != "--project" ||
+       std::string_view{argv[6]} != "project/test/id")) {
+    std::cout << "arguments are formatted wrong" << std::endl;
+    return 1;
+  }
+
   std::cout << R"([
  {
   "displayName": "displayName-1",
@@ -46,15 +73,11 @@ int GgpInstanceList(char* argv[]) {
   return 0;
 }
 
-int GgpInstanceListAllReserved(char* argv[]) {
-  if (std::string_view{argv[4]} != "--all-reserved") {
-    std::cout << "arguments are formatted wrong" << std::endl;
+int GgpSshInit(int argc, char* argv[]) {
+  if (argc != 6) {
+    std::cout << "Wrong amount of arguments" << std::endl;
     return 1;
   }
-  return GgpInstanceList(argv);
-}
-
-int GgpSshInit(char* argv[]) {
   if (std::string_view{argv[1]} != "ssh" || std::string_view{argv[2]} != "init" ||
       std::string_view{argv[3]} != "-s" || std::string_view{argv[4]} != "--instance" ||
       std::string_view{argv[5]} != "instance/test/id") {
@@ -71,7 +94,11 @@ int GgpSshInit(char* argv[]) {
   return 0;
 }
 
-int GgpProjectList(char* argv[]) {
+int GgpProjectList(int argc, char* argv[]) {
+  if (argc != 4) {
+    std::cout << "Wrong amount of arguments" << std::endl;
+    return 1;
+  }
   if (std::string_view{argv[1]} != "project" || std::string_view{argv[2]} != "list" ||
       std::string_view{argv[3]} != "-s") {
     std::cout << "arguments are formatted wrong" << std::endl;
@@ -90,18 +117,6 @@ int GgpProjectList(char* argv[]) {
   return 0;
 }
 
-int GgpWithFourParameters(char* argv[]) {
-  if (std::string_view{argv[1]} == "instance") {
-    return GgpInstanceList(argv);
-  }
-  if (std::string_view{argv[1]} == "project") {
-    return GgpProjectList(argv);
-  }
-
-  std::cout << "arguments are formatted wrong" << std::endl;
-  return 1;
-}
-
 int main(int argc, char* argv[]) {
   // This sleep is here for 2 reasons:
   // 1. The ggp cli which this program is mocking, does have quite a bit of delay, hence having a
@@ -109,17 +124,27 @@ int main(int argc, char* argv[]) {
   // 2. To test the timeout functionaliy in OrbitGgp::Client
   std::this_thread::sleep_for(std::chrono::milliseconds{50});
 
-  switch (argc) {
-    case 2:
-      return GgpVersion(argv);
-    case 4:
-      return GgpWithFourParameters(argv);
-    case 5:
-      return GgpInstanceListAllReserved(argv);
-    case 6:
-      return GgpSshInit(argv);
-    default:
-      std::cout << "Wrong amount of arguments" << std::endl;
-      return 1;
+  if (argc <= 1) {
+    std::cout << "Wrong amount of arguments" << std::endl;
+    return 1;
   }
+
+  if (std::string_view{argv[1]} == "version") {
+    return GgpVersion(argc, argv);
+  }
+
+  if (std::string_view{argv[1]} == "ssh") {
+    return GgpSshInit(argc, argv);
+  }
+
+  if (std::string_view{argv[1]} == "instance") {
+    return GgpInstanceList(argc, argv);
+  }
+
+  if (std::string_view{argv[1]} == "project") {
+    return GgpProjectList(argc, argv);
+  }
+
+  std::cout << "arguments are formatted wrong" << std::endl;
+  return 1;
 }
