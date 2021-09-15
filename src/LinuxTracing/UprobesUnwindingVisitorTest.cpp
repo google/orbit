@@ -157,7 +157,6 @@ TEST_F(UprobesUnwindingVisitorTest,
   constexpr uint32_t kCpu = 1;
 
   {
-    Function function1{1, "/path/to/module", 0x01, false, false};
     UprobesPerfEvent uprobe1;
     uprobe1.ring_buffer_record.sample_id.pid = kPid;
     uprobe1.ring_buffer_record.sample_id.tid = kTid;
@@ -166,7 +165,7 @@ TEST_F(UprobesUnwindingVisitorTest,
     uprobe1.ring_buffer_record.regs.sp = 0x40;
     uprobe1.ring_buffer_record.regs.ip = 0x01;
     uprobe1.ring_buffer_record.stack.top8bytes = 0x00;
-    uprobe1.SetFunction(&function1);
+    uprobe1.SetFunctionId(1);
 
     EXPECT_CALL(return_address_manager_, ProcessUprobes(kTid, 0x40, 0x00)).Times(1);
     visitor_->Visit(&uprobe1);
@@ -174,7 +173,6 @@ TEST_F(UprobesUnwindingVisitorTest,
   }
 
   {
-    Function function2{2, "/path/to/module", 0x02, true, false};
     UprobesWithArgumentsPerfEvent uprobe2;
     uprobe2.ring_buffer_record.sample_id.pid = kPid;
     uprobe2.ring_buffer_record.sample_id.tid = kTid;
@@ -189,7 +187,7 @@ TEST_F(UprobesUnwindingVisitorTest,
     uprobe2.ring_buffer_record.regs.cx = 4;
     uprobe2.ring_buffer_record.regs.r8 = 5;
     uprobe2.ring_buffer_record.regs.r9 = 6;
-    uprobe2.SetFunction(&function2);
+    uprobe2.SetFunctionId(2);
 
     EXPECT_CALL(return_address_manager_, ProcessUprobes(kTid, 0x30, 0x01)).Times(1);
     visitor_->Visit(&uprobe2);
@@ -197,7 +195,6 @@ TEST_F(UprobesUnwindingVisitorTest,
   }
 
   {
-    Function function3{3, "/path/to/module", 0x03, false, true};
     UprobesPerfEvent uprobe3;
     uprobe3.ring_buffer_record.sample_id.pid = kPid;
     uprobe3.ring_buffer_record.sample_id.tid = kTid;
@@ -206,7 +203,7 @@ TEST_F(UprobesUnwindingVisitorTest,
     uprobe3.ring_buffer_record.regs.sp = 0x20;
     uprobe3.ring_buffer_record.regs.ip = 0x03;
     uprobe3.ring_buffer_record.stack.top8bytes = 0x02;
-    uprobe3.SetFunction(&function3);
+    uprobe3.SetFunctionId(3);
 
     EXPECT_CALL(return_address_manager_, ProcessUprobes(kTid, 0x20, 0x02)).Times(1);
     visitor_->Visit(&uprobe3);
@@ -214,7 +211,6 @@ TEST_F(UprobesUnwindingVisitorTest,
   }
 
   {
-    Function function4{4, "/path/to/module", 0x04, true, true};
     UprobesWithArgumentsPerfEvent uprobe4;
     uprobe4.ring_buffer_record.sample_id.pid = kPid;
     uprobe4.ring_buffer_record.sample_id.tid = kTid;
@@ -229,7 +225,7 @@ TEST_F(UprobesUnwindingVisitorTest,
     uprobe4.ring_buffer_record.regs.cx = 4;
     uprobe4.ring_buffer_record.regs.r8 = 5;
     uprobe4.ring_buffer_record.regs.r9 = 6;
-    uprobe4.SetFunction(&function4);
+    uprobe4.SetFunctionId(4);
 
     EXPECT_CALL(return_address_manager_, ProcessUprobes(kTid, 0x10, 0x03)).Times(1);
     visitor_->Visit(&uprobe4);

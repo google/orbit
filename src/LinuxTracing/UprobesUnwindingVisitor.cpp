@@ -285,13 +285,12 @@ void UprobesUnwindingVisitor::OnUprobes(
 
 void UprobesUnwindingVisitor::Visit(UprobesPerfEvent* event) {
   OnUprobes(event->GetTimestamp(), event->GetTid(), event->GetCpu(), event->GetSp(), event->GetIp(),
-            event->GetReturnAddress(), /*registers=*/std::nullopt,
-            event->GetFunction()->function_id());
+            event->GetReturnAddress(), /*registers=*/std::nullopt, event->GetFunctionId());
 }
 
 void UprobesUnwindingVisitor::Visit(UprobesWithArgumentsPerfEvent* event) {
   OnUprobes(event->GetTimestamp(), event->GetTid(), event->GetCpu(), event->GetSp(), event->GetIp(),
-            event->GetReturnAddress(), event->GetRegisters(), event->GetFunction()->function_id());
+            event->GetReturnAddress(), event->GetRegisters(), event->GetFunctionId());
 }
 
 void UprobesUnwindingVisitor::OnUretprobes(uint64_t timestamp_ns, pid_t pid, pid_t tid,
