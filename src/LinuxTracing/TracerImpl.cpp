@@ -115,6 +115,37 @@ void TracerImpl::Stop() {
   run_thread_.join();
 }
 
+void TracerImpl::ProcessFunctionEntry(const orbit_grpc_protos::FunctionEntry& function_entry) {
+  UserSpaceFunctionEntryPerfEvent event{
+      .timestamp = function_entry.timestamp_ns(),
+      .ordered_stream =
+          PerfEventOrderedStream::ThreadId(orbit_base::ToNativeThreadId(function_entry.tid())),
+      .data =
+          UserSpaceFunctionEntryPerfEventData{
+              .pid = orbit_base::ToNativeProcessId(function_entry.pid()),
+              .tid = orbit_base::ToNativeThreadId(function_entry.tid()),
+              .function_id = function_entry.function_id(),
+              .sp = function_entry.stack_pointer(),
+              .return_address = function_entry.return_address(),
+          },
+  };
+  DeferEvent(event);
+}
+
+void TracerImpl::ProcessFunctionExit(const orbit_grpc_protos::FunctionExit& function_exit) {
+  UserSpaceFunctionExitPerfEvent event{
+      .timestamp = function_exit.timestamp_ns(),
+      .ordered_stream =
+          PerfEventOrderedStream::ThreadId(orbit_base::ToNativeThreadId(function_exit.tid())),
+      .data =
+          UserSpaceFunctionExitPerfEventData{
+              .pid = orbit_base::ToNativeProcessId(function_exit.pid()),
+              .tid = orbit_base::ToNativeThreadId(function_exit.tid()),
+          },
+  };
+  DeferEvent(event);
+}
+
 static void CloseFileDescriptors(const std::vector<int>& fds) {
   for (int fd : fds) {
     close(fd);

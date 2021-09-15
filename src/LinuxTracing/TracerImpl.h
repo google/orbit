@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <tracepoint.pb.h>
 
+#include <algorithm>
 #include <atomic>
 #include <cstdint>
 #include <limits>
@@ -29,6 +30,7 @@
 #include "LinuxTracing/TracerListener.h"
 #include "LostAndDiscardedEventVisitor.h"
 #include "OrbitBase/Profiling.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "PerfEvent.h"
 #include "PerfEventProcessor.h"
 #include "PerfEventRingBuffer.h"
@@ -53,20 +55,8 @@ class TracerImpl : public Tracer {
   void Start() override;
   void Stop() override;
 
-  void ProcessFunctionEntry(const orbit_grpc_protos::FunctionEntry& function_entry) override {
-    // TODO(b/194704608): Create an event similar to UprobesPerfEvent and call DeferEvent.
-    LOG("FunctionEntry: pid=%u, tid=%u, function_id=%u, stack_pointer=%#x, return_address=%#x, "
-        "timestamp_ns=%u",
-        function_entry.pid(), function_entry.tid(), function_entry.function_id(),
-        function_entry.stack_pointer(), function_entry.return_address(),
-        function_entry.timestamp_ns());
-  }
-
-  void ProcessFunctionExit(const orbit_grpc_protos::FunctionExit& function_exit) override {
-    // TODO(b/194704608): Create an event similar to UretprobesPerfEvent and call DeferEvent.
-    LOG("FunctionExit: pid=%u, tid=%u, timestamp_ns=%u", function_exit.pid(), function_exit.tid(),
-        function_exit.timestamp_ns());
-  }
+  void ProcessFunctionEntry(const orbit_grpc_protos::FunctionEntry& function_entry) override;
+  void ProcessFunctionExit(const orbit_grpc_protos::FunctionExit& function_exit) override;
 
  private:
   void Run();
