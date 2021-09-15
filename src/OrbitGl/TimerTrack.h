@@ -35,7 +35,7 @@ struct DrawData {
   uint64_t max_tick;
   uint64_t highlighted_function_id;
   uint64_t highlighted_group_id;
-  uint64_t ns_per_pixel;
+  double ns_per_pixel;
   uint64_t min_timegraph_tick;
   Batcher* batcher;
   orbit_gl::Viewport* viewport;
