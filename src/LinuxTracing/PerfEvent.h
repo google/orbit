@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "Function.h"
+#include "GrpcProtos/Constants.h"
 #include "KernelTracepoints.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "PerfEventRecords.h"
@@ -264,17 +265,17 @@ class CallchainSamplePerfEvent : public PerfEvent {
   [[nodiscard]] uint64_t GetStackSize() const { return stack.dyn_size; }
 };
 
-class PerfEventWithFunction : public PerfEvent {
+class PerfEventWithFunctionId : public PerfEvent {
  public:
-  const Function* GetFunction() const { return function_; }
-  void SetFunction(const Function* function) { function_ = function; }
+  [[nodiscard]] uint64_t GetFunctionId() const { return function_id_; }
+  void SetFunctionId(uint64_t function_id) { function_id_ = function_id; }
 
  private:
-  const Function* function_ = nullptr;
+  uint64_t function_id_ = orbit_grpc_protos::kInvalidFunctionId;
 };
 
 template <typename RingBufferRecordT>
-class UprobesPerfEventBase : public PerfEventWithFunction {
+class UprobesPerfEventBase : public PerfEventWithFunctionId {
  public:
   RingBufferRecordT ring_buffer_record;
 
@@ -312,7 +313,7 @@ class UprobesWithArgumentsPerfEvent
 };
 
 template <typename RingBufferRecordT>
-class UretprobesPerfEventBase : public PerfEventWithFunction {
+class UretprobesPerfEventBase : public PerfEventWithFunctionId {
  public:
   RingBufferRecordT ring_buffer_record;
 

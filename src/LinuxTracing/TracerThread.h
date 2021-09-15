@@ -148,7 +148,7 @@ class TracerThread {
   std::vector<PerfEventRingBuffer> ring_buffers_;
   absl::flat_hash_map<int, uint64_t> fds_to_last_timestamp_ns_;
 
-  absl::flat_hash_map<uint64_t, const Function*> uprobes_uretprobes_ids_to_function_;
+  absl::flat_hash_map<uint64_t, uint64_t> uprobes_uretprobes_ids_to_function_id_;
   absl::flat_hash_set<uint64_t> uprobes_ids_;
   absl::flat_hash_set<uint64_t> uprobes_with_args_ids_;
   absl::flat_hash_set<uint64_t> uretprobes_ids_;

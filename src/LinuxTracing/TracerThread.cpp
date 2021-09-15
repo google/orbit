@@ -170,7 +170,7 @@ void TracerThread::AddUprobesFileDescriptors(
   ORBIT_SCOPE_FUNCTION;
   for (const auto [cpu, fd] : uprobes_fds_per_cpu) {
     uint64_t stream_id = perf_event_get_id(fd);
-    uprobes_uretprobes_ids_to_function_.emplace(stream_id, &function);
+    uprobes_uretprobes_ids_to_function_id_.emplace(stream_id, function.function_id());
     if (function.record_arguments()) {
       uprobes_with_args_ids_.insert(stream_id);
     } else {
@@ -186,7 +186,7 @@ void TracerThread::AddUretprobesFileDescriptors(
   ORBIT_SCOPE_FUNCTION;
   for (const auto [cpu, fd] : uretprobes_fds_per_cpu) {
     uint64_t stream_id = perf_event_get_id(fd);
-    uprobes_uretprobes_ids_to_function_.emplace(stream_id, &function);
+    uprobes_uretprobes_ids_to_function_id_.emplace(stream_id, function.function_id());
     if (function.record_return_value()) {
       uretprobes_with_retval_ids_.insert(stream_id);
     } else {
@@ -924,7 +924,7 @@ uint64_t TracerThread::ProcessSampleEventAndReturnTimestamp(const perf_event_hea
     if (event->GetPid() != target_pid_) {
       return timestamp_ns;
     }
-    event->SetFunction(uprobes_uretprobes_ids_to_function_.at(event->GetStreamId()));
+    event->SetFunctionId(uprobes_uretprobes_ids_to_function_id_.at(event->GetStreamId()));
     event->SetOrderedInFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
@@ -935,7 +935,7 @@ uint64_t TracerThread::ProcessSampleEventAndReturnTimestamp(const perf_event_hea
     if (event->GetPid() != target_pid_) {
       return timestamp_ns;
     }
-    event->SetFunction(uprobes_uretprobes_ids_to_function_.at(event->GetStreamId()));
+    event->SetFunctionId(uprobes_uretprobes_ids_to_function_id_.at(event->GetStreamId()));
     event->SetOrderedInFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
@@ -947,7 +947,7 @@ uint64_t TracerThread::ProcessSampleEventAndReturnTimestamp(const perf_event_hea
     if (event->GetPid() != target_pid_) {
       return timestamp_ns;
     }
-    event->SetFunction(uprobes_uretprobes_ids_to_function_.at(event->GetStreamId()));
+    event->SetFunctionId(uprobes_uretprobes_ids_to_function_id_.at(event->GetStreamId()));
     event->SetOrderedInFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
@@ -958,7 +958,7 @@ uint64_t TracerThread::ProcessSampleEventAndReturnTimestamp(const perf_event_hea
     if (event->GetPid() != target_pid_) {
       return timestamp_ns;
     }
-    event->SetFunction(uprobes_uretprobes_ids_to_function_.at(event->GetStreamId()));
+    event->SetFunctionId(uprobes_uretprobes_ids_to_function_id_.at(event->GetStreamId()));
     event->SetOrderedInFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
@@ -1204,7 +1204,7 @@ void TracerThread::Reset() {
   ring_buffers_.clear();
   fds_to_last_timestamp_ns_.clear();
 
-  uprobes_uretprobes_ids_to_function_.clear();
+  uprobes_uretprobes_ids_to_function_id_.clear();
   uprobes_ids_.clear();
   uprobes_with_args_ids_.clear();
   uretprobes_ids_.clear();
