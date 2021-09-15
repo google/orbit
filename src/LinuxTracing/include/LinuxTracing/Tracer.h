@@ -20,6 +20,9 @@ class Tracer {
   virtual void Start() = 0;
   virtual void Stop() = 0;
 
+  virtual void ProcessFunctionEntry(const orbit_grpc_protos::FunctionEntry& function_entry) = 0;
+  virtual void ProcessFunctionExit(const orbit_grpc_protos::FunctionExit& function_exit) = 0;
+
   virtual ~Tracer() = default;
 
   [[nodiscard]] static std::unique_ptr<Tracer> Create(

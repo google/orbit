@@ -55,6 +55,13 @@ class TracingHandler : public orbit_linux_tracing::TracerListener {
   void OnOutOfOrderEventsDiscardedEvent(orbit_grpc_protos::OutOfOrderEventsDiscardedEvent
                                             out_of_order_events_discarded_event) override;
 
+  void ProcessFunctionEntry(const orbit_grpc_protos::FunctionEntry& function_entry) {
+    tracer_->ProcessFunctionEntry(function_entry);
+  }
+  void ProcessFunctionExit(const orbit_grpc_protos::FunctionExit& function_exit) {
+    tracer_->ProcessFunctionExit(function_exit);
+  }
+
  private:
   orbit_producer_event_processor::ProducerEventProcessor* producer_event_processor_;
   std::unique_ptr<orbit_linux_tracing::Tracer> tracer_;

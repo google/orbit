@@ -131,19 +131,10 @@ class ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing
                     orbit_grpc_protos::ProducerCaptureEvent&& event) override {
     switch (event.event_case()) {
       case ProducerCaptureEvent::kFunctionEntry:
-        // TODO(b/194704608): Forward to LinuxTracing through TracingHandler.
-        LOG("FunctionEntry: pid=%u, tid=%u, function_id=%u, stack_pointer=%#x, return_address=%#x, "
-            "timestamp_ns=%u",
-            event.function_entry().pid(), event.function_entry().tid(),
-            event.function_entry().function_id(), event.function_entry().stack_pointer(),
-            event.function_entry().return_address(), event.function_entry().timestamp_ns());
-        (void)tracing_handler_;
+        tracing_handler_->ProcessFunctionEntry(event.function_entry());
         break;
       case ProducerCaptureEvent::kFunctionExit:
-        // TODO(b/194704608): Forward to LinuxTracing through TracingHandler.
-        LOG("FunctionExit: pid=%u, tid=%u, timestamp_ns=%u", event.function_exit().pid(),
-            event.function_exit().tid(), event.function_exit().timestamp_ns());
-        (void)tracing_handler_;
+        tracing_handler_->ProcessFunctionExit(event.function_exit());
         break;
       case ProducerCaptureEvent::EVENT_NOT_SET:
         UNREACHABLE();
