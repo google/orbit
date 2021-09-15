@@ -80,11 +80,11 @@ std::vector<FrameTrack*> TrackManager::GetFrameTracks() const {
 
 std::vector<Track*> TrackManager::GetTracksOnScreen() const {
   std::vector<Track*> visible_tracks;
-  for (auto track : GetVisibleTracks()) {
-    auto track_top_y = track->GetPos()[1];
-    auto track_bottom_y = track_top_y + track->GetHeight();
-    auto screen_top_y = viewport_->GetScreenTopLeftInWorld()[1];
-    auto screen_bottom_y = screen_top_y + viewport_->GetVisibleWorldHeight();
+  for (Track* track : GetVisibleTracks()) {
+    float track_top_y = track->GetPos()[1];
+    float track_bottom_y = track_top_y + track->GetHeight();
+    float screen_top_y = viewport_->GetScreenTopLeftInWorld()[1];
+    float screen_bottom_y = screen_top_y + viewport_->GetVisibleWorldHeight();
     if (track_top_y < screen_bottom_y && track_bottom_y > screen_top_y) {
       visible_tracks.push_back(track);
     }
@@ -331,7 +331,7 @@ int TrackManager::FindMovingTrackIndex() {
 
 void TrackManager::UpdateTrackPrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                          PickingMode picking_mode) {
-  for (auto& track : GetTracksOnScreen()) {
+  for (Track* track : GetTracksOnScreen()) {
     const float z_offset = track->IsMoving() ? GlCanvas::kZOffsetMovingTrack : 0.f;
     track->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
   }

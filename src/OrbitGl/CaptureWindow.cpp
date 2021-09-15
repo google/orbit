@@ -664,6 +664,7 @@ void CaptureWindow::RenderImGuiDebugUI() {
     if (time_graph_ != nullptr) {
       IMGUI_VAR_TO_TEXT(time_graph_->GetNumVisiblePrimitives());
       IMGUI_VAR_TO_TEXT(time_graph_->GetTrackManager()->GetAllTracks().size());
+      IMGUI_VAR_TO_TEXT(time_graph_->GetTrackManager()->GetTracksOnScreen().size());
       IMGUI_VAR_TO_TEXT(time_graph_->GetMinTimeUs());
       IMGUI_VAR_TO_TEXT(time_graph_->GetMaxTimeUs());
       IMGUI_VAR_TO_TEXT(time_graph_->GetCaptureMin());
