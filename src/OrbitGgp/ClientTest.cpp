@@ -8,13 +8,16 @@
 #include <QCoreApplication>
 #include <QString>
 #include <chrono>
+#include <memory>
 
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/Instance.h"
 #include "OrbitGgp/Project.h"
 #include "OrbitGgp/SshInfo.h"
+#include "QtUtils/MainThreadExecutorImpl.h"
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_ggp {
@@ -22,10 +25,24 @@ namespace orbit_ggp {
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasValue;
 
-TEST(OrbitGgpClient, CreateFailing) {
+namespace {
+
+class OrbitGgpClientTest : public ::testing::Test {
+ public:
+  OrbitGgpClientTest() : mte_(orbit_qt_utils::MainThreadExecutorImpl::Create()) {}
+
+ protected:
+  std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> mte_;
+  const std::filesystem::path mock_ggp_working_ =
+      orbit_base::GetExecutableDir() / "OrbitMockGgpWorking";
+};
+
+}  // namespace
+
+TEST_F(OrbitGgpClientTest, CreateFailing) {
   {
     constexpr const char* kNonExistentProgram = "path/to/not/existing/program";
-    auto client = Client::Create(nullptr, kNonExistentProgram);
+    auto client = Client::Create(nullptr, mte_.get(), kNonExistentProgram);
     // The error messages on Windows and Linux are different, the only common part is the word
     // "file".
     EXPECT_THAT(client, HasError("file"));
@@ -33,129 +50,124 @@ TEST(OrbitGgpClient, CreateFailing) {
   {
     const std::filesystem::path mock_ggp_failing =
         orbit_base::GetExecutableDir() / "OrbitMockGgpFailing";
-    auto client = Client::Create(nullptr, QString::fromStdString(mock_ggp_failing.string()));
+    auto client =
+        Client::Create(nullptr, mte_.get(), QString::fromStdString(mock_ggp_failing.string()));
     EXPECT_THAT(client, HasError("exit code: 5"));
   }
 }
 
-TEST(OrbitGgpClient, GetInstancesAsyncWorking) {
-  const std::filesystem::path mock_ggp_working =
-      orbit_base::GetExecutableDir() / "OrbitMockGgpWorking";
-
-  auto client = Client::Create(nullptr, QString::fromStdString(mock_ggp_working.string()));
+TEST_F(OrbitGgpClientTest, GetInstancesAsyncWorking) {
+  auto client =
+      Client::Create(nullptr, mte_.get(), QString::fromStdString(mock_ggp_working_.string()));
   ASSERT_THAT(client, HasValue());
 
   bool callback_was_called = false;
-  client.value()->GetInstancesAsync(
-      [&callback_was_called](ErrorMessageOr<QVector<Instance>> instances) {
-        QCoreApplication::exit();
-        callback_was_called = true;
-        ASSERT_TRUE(instances.has_value());
-        EXPECT_EQ(instances.value().size(), 2);
-      });
+
+  auto future = client.value()->GetInstancesAsync();
+  future.Then(mte_.get(), [&callback_was_called](ErrorMessageOr<QVector<Instance>> instances) {
+    EXPECT_FALSE(callback_was_called);
+    callback_was_called = true;
+    ASSERT_THAT(instances, HasValue());
+    EXPECT_EQ(instances.value().size(), 2);
+    QCoreApplication::exit();
+  });
 
   QCoreApplication::exec();
 
   EXPECT_TRUE(callback_was_called);
 }
 
-TEST(OrbitGgpClient, GetInstancesAsyncWorkingAllReserved) {
-  const std::filesystem::path mock_ggp_working =
-      orbit_base::GetExecutableDir() / "OrbitMockGgpWorking";
-
-  auto client = Client::Create(nullptr, QString::fromStdString(mock_ggp_working.string()));
+TEST_F(OrbitGgpClientTest, GetInstancesAsyncWorkingAllReserved) {
+  auto client =
+      Client::Create(nullptr, mte_.get(), QString::fromStdString(mock_ggp_working_.string()));
   ASSERT_THAT(client, HasValue());
 
   bool callback_was_called = false;
-  client.value()->GetInstancesAsync(
-      [&callback_was_called](ErrorMessageOr<QVector<Instance>> instances) {
-        QCoreApplication::exit();
-        callback_was_called = true;
-        ASSERT_TRUE(instances.has_value());
-        EXPECT_EQ(instances.value().size(), 2);
-      },
-      true);
+  auto future = client.value()->GetInstancesAsync(true);
+  future.Then(mte_.get(), [&callback_was_called](ErrorMessageOr<QVector<Instance>> instances) {
+    EXPECT_FALSE(callback_was_called);
+    callback_was_called = true;
+    ASSERT_THAT(instances, HasValue());
+    EXPECT_EQ(instances.value().size(), 2);
+    QCoreApplication::exit();
+  });
 
   QCoreApplication::exec();
 
   EXPECT_TRUE(callback_was_called);
 }
 
-TEST(OrbitGgpClient, GetInstancesAsyncWorkingWithProject) {
-  const std::filesystem::path mock_ggp_working =
-      orbit_base::GetExecutableDir() / "OrbitMockGgpWorking";
-
-  auto client = Client::Create(nullptr, QString::fromStdString(mock_ggp_working.string()));
+TEST_F(OrbitGgpClientTest, GetInstancesAsyncWorkingWithProject) {
+  auto client =
+      Client::Create(nullptr, mte_.get(), QString::fromStdString(mock_ggp_working_.string()));
   ASSERT_THAT(client, HasValue());
 
   Project project{"display name", "project/test/id"};
 
   bool callback_was_called = false;
-  client.value()->GetInstancesAsync(
-      [&callback_was_called](ErrorMessageOr<QVector<Instance>> instances) {
-        QCoreApplication::exit();
-        callback_was_called = true;
-        ASSERT_TRUE(instances.has_value());
-        EXPECT_EQ(instances.value().size(), 2);
-      },
-      false, project);
+
+  auto future = client.value()->GetInstancesAsync(false, project);
+  future.Then(mte_.get(), [&callback_was_called](ErrorMessageOr<QVector<Instance>> instances) {
+    EXPECT_FALSE(callback_was_called);
+    callback_was_called = true;
+    ASSERT_THAT(instances, HasValue());
+    EXPECT_EQ(instances.value().size(), 2);
+    QCoreApplication::exit();
+  });
 
   QCoreApplication::exec();
 
   EXPECT_TRUE(callback_was_called);
 }
 
-TEST(OrbitGgpClient, GetInstancesAsyncWorkingAllReservedWithProject) {
-  const std::filesystem::path mock_ggp_working =
-      orbit_base::GetExecutableDir() / "OrbitMockGgpWorking";
-
-  auto client = Client::Create(nullptr, QString::fromStdString(mock_ggp_working.string()));
+TEST_F(OrbitGgpClientTest, GetInstancesAsyncWorkingAllReservedWithProject) {
+  auto client =
+      Client::Create(nullptr, mte_.get(), QString::fromStdString(mock_ggp_working_.string()));
   ASSERT_THAT(client, HasValue());
 
   Project project{"display name", "project/test/id"};
 
   bool callback_was_called = false;
-  client.value()->GetInstancesAsync(
-      [&callback_was_called](ErrorMessageOr<QVector<Instance>> instances) {
-        QCoreApplication::exit();
-        callback_was_called = true;
-        ASSERT_TRUE(instances.has_value());
-        EXPECT_EQ(instances.value().size(), 2);
-      },
-      true, project);
+
+  auto future = client.value()->GetInstancesAsync(true, project);
+  future.Then(mte_.get(), [&callback_was_called](ErrorMessageOr<QVector<Instance>> instances) {
+    EXPECT_FALSE(callback_was_called);
+    callback_was_called = true;
+    ASSERT_THAT(instances, HasValue());
+    EXPECT_EQ(instances.value().size(), 2);
+    QCoreApplication::exit();
+  });
 
   QCoreApplication::exec();
 
   EXPECT_TRUE(callback_was_called);
 }
 
-TEST(OrbitGgpClient, GetInstancesAsyncTimeout) {
-  const std::filesystem::path mock_ggp_working_slow =
-      orbit_base::GetExecutableDir() / "OrbitMockGgpWorking";
-
-  auto client = Client::Create(nullptr, QString::fromStdString(mock_ggp_working_slow.string()),
-                               std::chrono::milliseconds{5});
+TEST_F(OrbitGgpClientTest, GetInstancesAsyncTimeout) {
+  auto client =
+      Client::Create(nullptr, mte_.get(), QString::fromStdString(mock_ggp_working_.string()),
+                     std::chrono::milliseconds{5});
   ASSERT_THAT(client, HasValue());
 
   bool callback_was_called = false;
-  client.value()->GetInstancesAsync(
-      [&callback_was_called](const ErrorMessageOr<QVector<Instance>>& instances) {
-        QCoreApplication::exit();
-        callback_was_called = true;
-        EXPECT_THAT(instances, HasError("Process request timed out after 5ms"));
-      },
-      0);
+  auto future = client.value()->GetInstancesAsync();
+  future.Then(mte_.get(),
+              [&callback_was_called](const ErrorMessageOr<QVector<Instance>>& instances) {
+                EXPECT_FALSE(callback_was_called);
+                callback_was_called = true;
+                EXPECT_THAT(instances, HasError("OrbitMockGgpWorking instance list -s"));
+                EXPECT_THAT(instances, HasError("timed out after 5ms"));
+                QCoreApplication::exit();
+              });
 
   QCoreApplication::exec();
 
   EXPECT_TRUE(callback_was_called);
 }
 
-TEST(OrbitGgpClient, GetSshInfoAsyncWorking) {
-  const std::filesystem::path mock_ggp_working =
-      orbit_base::GetExecutableDir() / "OrbitMockGgpWorking";
-
-  auto client = Client::Create(nullptr, QString::fromStdString(mock_ggp_working.string()));
+TEST_F(OrbitGgpClientTest, GetSshInfoAsyncWorking) {
+  auto client =
+      Client::Create(nullptr, mte_.get(), QString::fromStdString(mock_ggp_working_.string()));
   ASSERT_THAT(client, HasValue());
 
   Instance test_instance;
@@ -173,11 +185,9 @@ TEST(OrbitGgpClient, GetSshInfoAsyncWorking) {
   EXPECT_TRUE(callback_was_called);
 }
 
-TEST(OrbitGgpClient, GetSshInfoAsyncWorkingWithProject) {
-  const std::filesystem::path mock_ggp_working =
-      orbit_base::GetExecutableDir() / "OrbitMockGgpWorking";
-
-  auto client = Client::Create(nullptr, QString::fromStdString(mock_ggp_working.string()));
+TEST_F(OrbitGgpClientTest, GetSshInfoAsyncWorkingWithProject) {
+  auto client =
+      Client::Create(nullptr, mte_.get(), QString::fromStdString(mock_ggp_working_.string()));
   ASSERT_THAT(client, HasValue());
 
   Instance test_instance;
@@ -199,15 +209,13 @@ TEST(OrbitGgpClient, GetSshInfoAsyncWorkingWithProject) {
   EXPECT_TRUE(callback_was_called);
 }
 
-TEST(OrbitGgpClient, GetSshInfoAsyncTimeout) {
-  const std::filesystem::path mock_ggp_working_slow =
-      orbit_base::GetExecutableDir() / "OrbitMockGgpWorking";
-
+TEST_F(OrbitGgpClientTest, GetSshInfoAsyncTimeout) {
   Instance test_instance;
   test_instance.id = "instance/test/id";
 
-  auto client = Client::Create(nullptr, QString::fromStdString(mock_ggp_working_slow.string()),
-                               std::chrono::milliseconds{5});
+  auto client =
+      Client::Create(nullptr, mte_.get(), QString::fromStdString(mock_ggp_working_.string()),
+                     std::chrono::milliseconds{5});
   ASSERT_THAT(client, HasValue());
 
   bool callback_was_called = false;
@@ -223,11 +231,9 @@ TEST(OrbitGgpClient, GetSshInfoAsyncTimeout) {
   EXPECT_TRUE(callback_was_called);
 }
 
-TEST(OrbitGgpClient, GetProjectsAsyncWorking) {
-  const std::filesystem::path mock_ggp_working =
-      orbit_base::GetExecutableDir() / "OrbitMockGgpWorking";
-
-  auto client = Client::Create(nullptr, QString::fromStdString(mock_ggp_working.string()));
+TEST_F(OrbitGgpClientTest, GetProjectsAsyncWorking) {
+  auto client =
+      Client::Create(nullptr, mte_.get(), QString::fromStdString(mock_ggp_working_.string()));
   ASSERT_THAT(client, HasValue());
 
   bool callback_was_called = false;
@@ -244,12 +250,10 @@ TEST(OrbitGgpClient, GetProjectsAsyncWorking) {
   EXPECT_TRUE(callback_was_called);
 }
 
-TEST(OrbitGgpClient, GetProjectsAsyncTimeout) {
-  const std::filesystem::path mock_ggp_working_slow =
-      orbit_base::GetExecutableDir() / "OrbitMockGgpWorking";
-
-  auto client = Client::Create(nullptr, QString::fromStdString(mock_ggp_working_slow.string()),
-                               std::chrono::milliseconds{5});
+TEST_F(OrbitGgpClientTest, GetProjectsAsyncTimeout) {
+  auto client =
+      Client::Create(nullptr, mte_.get(), QString::fromStdString(mock_ggp_working_.string()),
+                     std::chrono::milliseconds{5});
   ASSERT_THAT(client, HasValue());
 
   bool callback_was_called = false;

@@ -15,8 +15,10 @@
 #include <string>
 
 #include "Instance.h"
+#include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Project.h"
+#include "QtUtils/MainThreadExecutorImpl.h"
 #include "SshInfo.h"
 
 namespace orbit_ggp {
@@ -28,22 +30,27 @@ class Client : public QObject {
 
  public:
   static ErrorMessageOr<QPointer<Client>> Create(
-      QObject* parent, QString ggp_program = kDefaultGgpProgram,
+      QObject* parent, orbit_qt_utils::MainThreadExecutorImpl* main_thread_executor,
+      QString ggp_program = kDefaultGgpProgram,
       std::chrono::milliseconds timeout = GetDefaultTimeoutMs());
 
-  void GetInstancesAsync(const std::function<void(ErrorMessageOr<QVector<Instance>>)>& callback,
-                         bool all_reserved = false, std::optional<Project> project = std::nullopt,
-                         int retry = 3);
+  orbit_base::Future<ErrorMessageOr<QVector<Instance>>> GetInstancesAsync(
+      bool all_reserved = false, std::optional<Project> project = std::nullopt, int retry = 3);
   void GetSshInfoAsync(const Instance& ggp_instance,
                        const std::function<void(ErrorMessageOr<SshInfo>)>& callback,
                        std::optional<Project> project = std::nullopt);
   void GetProjectsAsync(const std::function<void(ErrorMessageOr<QVector<Project>>)>& callback);
 
  private:
-  explicit Client(QObject* parent, QString ggp_program, std::chrono::milliseconds timeout)
-      : QObject(parent), ggp_program_(std::move(ggp_program)), timeout_(timeout) {}
+  explicit Client(QObject* parent, orbit_qt_utils::MainThreadExecutorImpl* main_thread_executor,
+                  QString ggp_program, std::chrono::milliseconds timeout)
+      : QObject(parent),
+        main_thread_executor_(main_thread_executor),
+        ggp_program_(std::move(ggp_program)),
+        timeout_(timeout) {}
   static std::chrono::milliseconds GetDefaultTimeoutMs();
 
+  orbit_qt_utils::MainThreadExecutorImpl* main_thread_executor_;
   const QString ggp_program_;
   const std::chrono::milliseconds timeout_;
 };

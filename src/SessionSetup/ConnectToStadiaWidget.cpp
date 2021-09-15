@@ -33,6 +33,7 @@
 #include <utility>
 
 #include "ClientFlags/ClientFlags.h"
+#include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
@@ -40,6 +41,7 @@
 #include "OrbitGgp/Project.h"
 #include "OrbitSsh/AddrAndPort.h"
 #include "OrbitSshQt/ScopedConnection.h"
+#include "QtUtils/MainThreadExecutorImpl.h"
 #include "SessionSetup/Error.h"
 #include "SessionSetup/OverlayWidget.h"
 #include "SessionSetup/ServiceDeployManager.h"
@@ -54,6 +56,7 @@ const QString kAllInstancesKey{"kAllInstancesKey"};
 
 namespace orbit_session_setup {
 
+using orbit_base::Future;
 using orbit_ggp::Instance;
 using orbit_ggp::Project;
 using orbit_ssh_qt::ScopedConnection;
@@ -65,6 +68,7 @@ ConnectToStadiaWidget::~ConnectToStadiaWidget() = default;
 ConnectToStadiaWidget::ConnectToStadiaWidget(QWidget* parent)
     : QWidget(parent),
       ui_(std::make_unique<Ui::ConnectToStadiaWidget>()),
+      main_thread_executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()),
       s_idle_(&state_machine_),
       s_instances_loading_(&state_machine_),
       s_instance_selected_(&state_machine_),
@@ -204,7 +208,7 @@ void ConnectToStadiaWidget::Start() {
     return;
   }
 
-  auto client_result = orbit_ggp::Client::Create(this);
+  auto client_result = orbit_ggp::Client::Create(this, main_thread_executor_.get());
   if (client_result.has_error()) {
     ui_->radioButton->setToolTip(QString::fromStdString(client_result.error().message()));
     setEnabled(false);
@@ -347,11 +351,10 @@ void ConnectToStadiaWidget::ReloadInstances() {
   CHECK(ggp_client_ != nullptr);
   instance_model_.SetInstances({});
 
-  ggp_client_->GetInstancesAsync(
-      [this](ErrorMessageOr<QVector<Instance>> instances) {
+  ggp_client_->GetInstancesAsync(ui_->allInstancesCheckBox->isChecked(), selected_project_)
+      .Then(main_thread_executor_.get(), [this](ErrorMessageOr<QVector<Instance>> instances) {
         OnInstancesLoaded(std::move(instances));
-      },
-      ui_->allInstancesCheckBox->isChecked(), selected_project_);
+      });
 
   ggp_client_->GetProjectsAsync(
       [this](ErrorMessageOr<QVector<Project>> projects) { OnProjectsLoaded(std::move(projects)); });
