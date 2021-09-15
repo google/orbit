@@ -82,4 +82,21 @@ TEST(OrbitGgpProject, GetListFromJson) {
   }
 }
 
+TEST(OrbitGgpProject, EqualToOperator) {
+  Project project_0;
+  Project project_1;
+
+  project_0.display_name = "a display name";
+  project_0.id = "an id";
+  project_1.display_name = "a different display name";
+  project_1.id = "a different id";
+
+  EXPECT_FALSE(project_0 == project_1);
+
+  project_1.display_name = "a display name";
+  project_1.id = "an id";
+
+  EXPECT_EQ(project_0, project_1);
+}
+
 }  // namespace orbit_ggp
