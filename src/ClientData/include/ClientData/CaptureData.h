@@ -90,10 +90,6 @@ class CaptureData {
   [[nodiscard]] const std::string& GetModulePathByAddress(uint64_t absolute_address) const;
   [[nodiscard]] std::optional<std::string> FindModuleBuildIdByAddress(
       uint64_t absolute_address) const;
-  [[nodiscard]] const orbit_client_data::ModuleData* GetModuleByPathAndBuildId(
-      const std::string& module_path, const std::string& build_id) const {
-    return module_manager_->GetModuleByPathAndBuildId(module_path, build_id);
-  }
 
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByAddress(
       uint64_t absolute_address, bool is_exact) const;

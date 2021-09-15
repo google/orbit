@@ -106,6 +106,61 @@ TEST(ModuleManager, GetMutableModuleByPathAndBuildId) {
   EXPECT_EQ(module_manager.GetMutableModuleByPathAndBuildId(file_path, "wrong build_id"), nullptr);
 }
 
+TEST(ModuleManager, GetModuleByModuleInMemoryAndAddress) {
+  constexpr const char* kName = "name of module";
+  constexpr const char* kFilePath = "path/of/module";
+  constexpr uint64_t kFileSize = 300;
+  constexpr const char* kBuildId = "build id 1";
+  constexpr uint64_t kLoadBias = 0x4000;
+  constexpr uint64_t kExecutableSegmentOffset = 0x25;
+
+  ModuleInfo module_info;
+  module_info.set_name(kName);
+  module_info.set_file_path(kFilePath);
+  module_info.set_file_size(kFileSize);
+  module_info.set_build_id(kBuildId);
+  module_info.set_load_bias(kLoadBias);
+  module_info.set_executable_segment_offset(kExecutableSegmentOffset);
+
+  ModuleManager module_manager;
+  EXPECT_TRUE(module_manager.AddOrUpdateModules({module_info}).empty());
+
+  ModuleInMemory module_in_memory{0x1000, 0x2000, kFilePath, kBuildId};
+
+  EXPECT_NE(module_manager.GetModuleByPathAndBuildId(module_in_memory.file_path(),
+                                                     module_in_memory.build_id()),
+            nullptr);
+  EXPECT_EQ(module_manager.GetModuleByModuleInMemoryAndAbsoluteAddress(module_in_memory, 0x1000),
+            nullptr);
+  EXPECT_EQ(module_manager.GetModuleByModuleInMemoryAndAbsoluteAddress(module_in_memory, 0x1010),
+            nullptr);
+  EXPECT_EQ(module_manager.GetModuleByModuleInMemoryAndAbsoluteAddress(module_in_memory, 0x1024),
+            nullptr);
+  EXPECT_EQ(
+      module_manager.GetMutableModuleByModuleInMemoryAndAbsoluteAddress(module_in_memory, 0x1000),
+      nullptr);
+  EXPECT_EQ(
+      module_manager.GetMutableModuleByModuleInMemoryAndAbsoluteAddress(module_in_memory, 0x1010),
+      nullptr);
+  EXPECT_EQ(
+      module_manager.GetMutableModuleByModuleInMemoryAndAbsoluteAddress(module_in_memory, 0x1024),
+      nullptr);
+
+  const ModuleData* target_module =
+      module_manager.GetModuleByModuleInMemoryAndAbsoluteAddress(module_in_memory, 0x1025);
+  EXPECT_NE(target_module, nullptr);
+  EXPECT_EQ(
+      module_manager.GetMutableModuleByModuleInMemoryAndAbsoluteAddress(module_in_memory, 0x1025),
+      target_module);
+
+  EXPECT_EQ(target_module->name(), kName);
+  EXPECT_EQ(target_module->file_path(), kFilePath);
+  EXPECT_EQ(target_module->file_size(), kFileSize);
+  EXPECT_EQ(target_module->build_id(), kBuildId);
+  EXPECT_EQ(target_module->load_bias(), kLoadBias);
+  EXPECT_EQ(target_module->executable_segment_offset(), kExecutableSegmentOffset);
+}
+
 TEST(ModuleManager, AddOrUpdateModules) {
   const std::string name = "name of module";
   const std::string file_path = "path/of/module";

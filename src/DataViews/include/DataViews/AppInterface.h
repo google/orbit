@@ -70,7 +70,7 @@ class AppInterface {
   [[nodiscard]] virtual const orbit_client_data::ModuleData* GetModuleByPathAndBuildId(
       const std::string& path, const std::string& build_id) const = 0;
   [[nodiscard]] virtual orbit_client_data::ModuleData* GetMutableModuleByPathAndBuildId(
-      const std::string& path, const std::string& build_id) const = 0;
+      const std::string& path, const std::string& build_id) = 0;
   virtual orbit_base::Future<void> RetrieveModulesAndLoadSymbols(
       absl::Span<const orbit_client_data::ModuleData* const> modules) = 0;
 

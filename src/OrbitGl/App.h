@@ -381,7 +381,7 @@ class OrbitApp final : public DataViewFactory,
     return manual_instrumentation_manager_.get();
   }
   [[nodiscard]] orbit_client_data::ModuleData* GetMutableModuleByPathAndBuildId(
-      const std::string& path, const std::string& build_id) const override {
+      const std::string& path, const std::string& build_id) override {
     return module_manager_->GetMutableModuleByPathAndBuildId(path, build_id);
   }
   [[nodiscard]] const orbit_client_data::ModuleData* GetModuleByPathAndBuildId(
