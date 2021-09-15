@@ -29,10 +29,11 @@ class Client : public QObject {
   Q_OBJECT
 
  public:
-  static ErrorMessageOr<QPointer<Client>> Create(
-      QObject* parent, orbit_qt_utils::MainThreadExecutorImpl* main_thread_executor,
-      QString ggp_program = kDefaultGgpProgram,
-      std::chrono::milliseconds timeout = GetDefaultTimeoutMs());
+  explicit Client(orbit_qt_utils::MainThreadExecutorImpl* main_thread_executor, QString ggp_program,
+                  std::chrono::milliseconds timeout)
+      : main_thread_executor_(main_thread_executor),
+        ggp_program_(std::move(ggp_program)),
+        timeout_(timeout) {}
 
   orbit_base::Future<ErrorMessageOr<QVector<Instance>>> GetInstancesAsync(
       bool all_reserved = false, std::optional<Project> project = std::nullopt, int retry = 3);
@@ -41,18 +42,17 @@ class Client : public QObject {
   orbit_base::Future<ErrorMessageOr<QVector<Project>>> GetProjectsAsync();
 
  private:
-  explicit Client(QObject* parent, orbit_qt_utils::MainThreadExecutorImpl* main_thread_executor,
-                  QString ggp_program, std::chrono::milliseconds timeout)
-      : QObject(parent),
-        main_thread_executor_(main_thread_executor),
-        ggp_program_(std::move(ggp_program)),
-        timeout_(timeout) {}
-  static std::chrono::milliseconds GetDefaultTimeoutMs();
-
   orbit_qt_utils::MainThreadExecutorImpl* main_thread_executor_;
   const QString ggp_program_;
   const std::chrono::milliseconds timeout_;
 };
+
+std::chrono::milliseconds GetDefaultTimeoutMs();
+
+ErrorMessageOr<std::unique_ptr<Client>> CreateClient(
+    orbit_qt_utils::MainThreadExecutorImpl* main_thread_executor,
+    QString ggp_program = kDefaultGgpProgram,
+    std::chrono::milliseconds timeout = GetDefaultTimeoutMs());
 
 }  // namespace orbit_ggp
 

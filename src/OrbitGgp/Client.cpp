@@ -14,6 +14,7 @@
 #include <QStringList>
 #include <QTimer>
 #include <chrono>
+#include <memory>
 #include <optional>
 #include <type_traits>
 
@@ -33,9 +34,9 @@ namespace orbit_ggp {
 
 using orbit_base::Future;
 
-ErrorMessageOr<QPointer<Client>> Client::Create(
-    QObject* parent, orbit_qt_utils::MainThreadExecutorImpl* main_thread_executor,
-    QString ggp_program, std::chrono::milliseconds timeout) {
+ErrorMessageOr<std::unique_ptr<Client>> CreateClient(
+    orbit_qt_utils::MainThreadExecutorImpl* main_thread_executor, QString ggp_program,
+    std::chrono::milliseconds timeout) {
   QProcess ggp_process{};
   ggp_process.setProgram(ggp_program);
   ggp_process.setArguments({"version"});
@@ -61,8 +62,7 @@ ErrorMessageOr<QPointer<Client>> Client::Create(
     return ErrorMessage{error_message};
   }
 
-  return QPointer<Client>(
-      new Client{parent, main_thread_executor, std::move(ggp_program), timeout});
+  return std::make_unique<Client>(main_thread_executor, std::move(ggp_program), timeout);
 }
 
 Future<ErrorMessageOr<QVector<Instance>>> Client::GetInstancesAsync(bool all_reserved,
@@ -120,7 +120,7 @@ Future<ErrorMessageOr<QVector<Project>>> Client::GetProjectsAsync() {
                      });
 }
 
-std::chrono::milliseconds Client::GetDefaultTimeoutMs() {
+std::chrono::milliseconds GetDefaultTimeoutMs() {
   static const uint32_t timeout_seconds = absl::GetFlag(FLAGS_ggp_timeout_seconds);
   static const std::chrono::milliseconds default_timeout_ms(1'000 * timeout_seconds);
   return default_timeout_ms;

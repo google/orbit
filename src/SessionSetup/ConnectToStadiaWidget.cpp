@@ -208,13 +208,13 @@ void ConnectToStadiaWidget::Start() {
     return;
   }
 
-  auto client_result = orbit_ggp::Client::Create(this, main_thread_executor_.get());
+  auto client_result = orbit_ggp::CreateClient(main_thread_executor_.get());
   if (client_result.has_error()) {
     ui_->radioButton->setToolTip(QString::fromStdString(client_result.error().message()));
     setEnabled(false);
     return;
   }
-  ggp_client_ = client_result.value();
+  ggp_client_ = std::move(client_result.value());
 
   if (grpc_channel_ != nullptr && grpc_channel_->GetState(false) == GRPC_CHANNEL_READY) {
     state_machine_.setInitialState(&s_connected_);

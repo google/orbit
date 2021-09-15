@@ -95,7 +95,7 @@ class ConnectToStadiaWidget : public QWidget {
   std::optional<orbit_ggp::Instance> selected_instance_;
   std::unique_ptr<ServiceDeployManager> service_deploy_manager_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
-  QPointer<orbit_ggp::Client> ggp_client_ = nullptr;
+  std::unique_ptr<orbit_ggp::Client> ggp_client_ = nullptr;
   std::optional<QString> remembered_instance_id_;
   QVector<orbit_ggp::Project> projects_;
   std::optional<orbit_ggp::Project> selected_project_;
