@@ -27,6 +27,7 @@
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/Instance.h"
 #include "OrbitGgp/InstanceItemModel.h"
+#include "OrbitGgp/Project.h"
 #include "OrbitGgp/SshInfo.h"
 #include "OrbitSsh/Credentials.h"
 #include "SessionSetup/ServiceDeployManager.h"
@@ -67,6 +68,7 @@ class ConnectToStadiaWidget : public QWidget {
   void OnErrorOccurred(const QString& message);
   void OnSelectionChanged(const QModelIndex& current);
   void UpdateRememberInstance(bool value);
+  void ProjectComboBoxActivated(int index);
 
  signals:
   void ErrorOccurred(const QString& message);
@@ -93,6 +95,8 @@ class ConnectToStadiaWidget : public QWidget {
   std::shared_ptr<grpc::Channel> grpc_channel_;
   QPointer<orbit_ggp::Client> ggp_client_ = nullptr;
   std::optional<QString> remembered_instance_id_;
+  QVector<orbit_ggp::Project> projects_;
+  std::optional<orbit_ggp::Project> selected_project_;
 
   // State Machine & States
   QStateMachine state_machine_;
@@ -109,8 +113,11 @@ class ConnectToStadiaWidget : public QWidget {
   void DetachRadioButton();
   void SetupStateMachine();
   void OnInstancesLoaded(ErrorMessageOr<QVector<orbit_ggp::Instance>> instances);
+  void OnProjectsLoaded(ErrorMessageOr<QVector<orbit_ggp::Project>> projects);
   void OnSshInfoLoaded(ErrorMessageOr<orbit_ggp::SshInfo> ssh_info_result, std::string instance_id);
   void TrySelectRememberedInstance();
+  void SetProject(const std::optional<orbit_ggp::Project>& project);
+  void SetupProjectSelectionFlagContent();
 };
 
 }  // namespace orbit_session_setup
