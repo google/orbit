@@ -370,7 +370,8 @@ grpc::Status CaptureServiceImpl::Capture(
 
   // Enable user space instrumentation.
   std::optional<std::string> error_enabling_user_space_instrumentation;
-  if (capture_options.enable_user_space_instrumentation()) {
+  if (capture_options.enable_user_space_instrumentation() &&
+      capture_options.instrumented_functions_size() != 0) {
     auto result = instrumentation_manager_->InstrumentProcess(capture_options);
     if (result.has_error()) {
       error_enabling_user_space_instrumentation = absl::StrFormat(
