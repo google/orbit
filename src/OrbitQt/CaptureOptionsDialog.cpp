@@ -25,7 +25,8 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   QObject::connect(ui_->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
   if (!absl::GetFlag(FLAGS_devmode)) {
-    ui_->samplingWidget->hide();
+    // TODO(b/198748597): Don't hide samplingCheckBox once disabling sampling completely is exposed.
+    ui_->samplingCheckBox->hide();
   }
 
   ui_->localMarkerDepthLineEdit->setValidator(&uint64_validator_);

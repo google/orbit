@@ -1322,9 +1322,7 @@ void OrbitApp::StartCapture() {
   bool enable_introspection = IsDevMode() && data_manager_->get_enable_introspection();
   bool enable_user_space_instrumentation =
       IsDevMode() && data_manager_->enable_user_space_instrumentation();
-  constexpr double kSamplesPerSecondDefault = 1000.0;
-  double samples_per_second =
-      IsDevMode() ? data_manager_->samples_per_second() : kSamplesPerSecondDefault;
+  double samples_per_second = data_manager_->samples_per_second();
   uint16_t stack_dump_size = data_manager_->stack_dump_size();
   UnwindingMethod unwinding_method = data_manager_->unwinding_method();
   uint64_t max_local_marker_depth_per_command_buffer =
