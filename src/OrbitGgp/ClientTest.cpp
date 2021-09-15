@@ -174,12 +174,13 @@ TEST_F(OrbitGgpClientTest, GetSshInfoAsyncWorking) {
   test_instance.id = "instance/test/id";
 
   bool callback_was_called = false;
-  client.value()->GetSshInfoAsync(test_instance,
-                                  [&callback_was_called](const ErrorMessageOr<SshInfo>& ssh_info) {
-                                    QCoreApplication::exit();
-                                    callback_was_called = true;
-                                    EXPECT_TRUE(ssh_info.has_value());
-                                  });
+  auto future = client.value()->GetSshInfoAsync(test_instance);
+  future.Then(mte_.get(), [&callback_was_called](const ErrorMessageOr<SshInfo>& ssh_info) {
+    EXPECT_FALSE(callback_was_called);
+    callback_was_called = true;
+    EXPECT_THAT(ssh_info, HasValue());
+    QCoreApplication::exit();
+  });
   QCoreApplication::exec();
 
   EXPECT_TRUE(callback_was_called);
@@ -196,14 +197,13 @@ TEST_F(OrbitGgpClientTest, GetSshInfoAsyncWorkingWithProject) {
   Project project{"display name", "project/test/id"};
 
   bool callback_was_called = false;
-  client.value()->GetSshInfoAsync(
-      test_instance,
-      [&callback_was_called](const ErrorMessageOr<SshInfo>& ssh_info) {
-        QCoreApplication::exit();
-        callback_was_called = true;
-        EXPECT_TRUE(ssh_info.has_value());
-      },
-      project);
+  auto future = client.value()->GetSshInfoAsync(test_instance, project);
+  future.Then(mte_.get(), [&callback_was_called](const ErrorMessageOr<SshInfo>& ssh_info) {
+    EXPECT_FALSE(callback_was_called);
+    callback_was_called = true;
+    EXPECT_THAT(ssh_info, HasValue());
+    QCoreApplication::exit();
+  });
   QCoreApplication::exec();
 
   EXPECT_TRUE(callback_was_called);
@@ -219,12 +219,14 @@ TEST_F(OrbitGgpClientTest, GetSshInfoAsyncTimeout) {
   ASSERT_THAT(client, HasValue());
 
   bool callback_was_called = false;
-  client.value()->GetSshInfoAsync(
-      test_instance, [&callback_was_called](const ErrorMessageOr<SshInfo>& ssh_info) {
-        QCoreApplication::exit();
-        callback_was_called = true;
-        EXPECT_THAT(ssh_info, HasError("Process request timed out after 5ms"));
-      });
+  auto future = client.value()->GetSshInfoAsync(test_instance);
+  future.Then(mte_.get(), [&callback_was_called](const ErrorMessageOr<SshInfo>& ssh_info) {
+    EXPECT_FALSE(callback_was_called);
+    callback_was_called = true;
+    EXPECT_THAT(ssh_info, HasError("OrbitMockGgpWorking ssh init -s --instance instance/test/id"));
+    EXPECT_THAT(ssh_info, HasError("timed out after 5ms"));
+    QCoreApplication::exit();
+  });
 
   QCoreApplication::exec();
 

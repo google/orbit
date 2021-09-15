@@ -170,25 +170,18 @@ Future<ErrorMessageOr<QVector<Instance>>> Client::GetInstancesAsync(bool all_res
       }));
 }
 
-void Client::GetSshInfoAsync(const Instance& ggp_instance,
-                             const std::function<void(ErrorMessageOr<SshInfo>)>& callback,
-                             std::optional<Project> project) {
-  CHECK(callback);
-
+Future<ErrorMessageOr<SshInfo>> Client::GetSshInfoAsync(const Instance& ggp_instance,
+                                                        std::optional<Project> project) {
   QStringList arguments{"ssh", "init", "-s", "--instance", ggp_instance.id};
   if (project != std::nullopt) {
     arguments.append("--project");
     arguments.append(project.value().id);
   }
 
-  RunProcessWithTimeout(ggp_program_, arguments, timeout_, this,
-                        [callback](ErrorMessageOr<QByteArray> result) {
-                          if (result.has_error()) {
-                            callback(result.error());
-                          } else {
-                            callback(SshInfo::CreateFromJson(result.value()));
-                          }
-                        });
+  return orbit_qt_utils::ExecuteProcess(ggp_program_, arguments, this, absl::FromChrono(timeout_))
+      .ThenIfSuccess(main_thread_executor_, [](const QByteArray& json) -> ErrorMessageOr<SshInfo> {
+        return SshInfo::CreateFromJson(json);
+      });
 }
 
 void Client::GetProjectsAsync(
