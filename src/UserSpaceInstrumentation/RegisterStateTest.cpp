@@ -35,6 +35,7 @@ void Child() {
   // breakpoint. The parent does "waitpid" for that. Line four and five move the registers back into
   // memory so they are available for verification below.
   __asm__ __volatile__(
+      "flds -0x10(%%rsp)\n\t"
       "mov (%0), %%rax\n\t"
       "vmovups (%1), %%ymm0\n\t"
       "int3\n\t"
