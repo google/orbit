@@ -30,11 +30,12 @@ void Child() {
   for (size_t i = 0; i < avx_bytes.size(); ++i) {
     avx_bytes[i] = i;
   }
-  // The first two lines move the memory to the registers. The "%0" and "%1" refer to the addresses
-  // of "rax" and "avx_bytes" given in the second line from the bottom. "int3" just is the
-  // breakpoint. The parent does "waitpid" for that. Line four and five move the registers back into
-  // memory so they are available for verification below.
+  // The first three touch the fpu and move the memory to the registers. The "%0" and "%1" refer to
+  // the addresses of "rax" and "avx_bytes" given in the second line from the bottom. "int3" just is
+  // the breakpoint. The parent does "waitpid" for that. Line four and five move the registers back
+  // into memory so they are available for verification below.
   __asm__ __volatile__(
+      "flds -0x10(%%rsp)\n\t"
       "mov (%0), %%rax\n\t"
       "vmovups (%1), %%ymm0\n\t"
       "int3\n\t"
