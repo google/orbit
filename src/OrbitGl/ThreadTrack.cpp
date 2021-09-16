@@ -450,7 +450,7 @@ void ThreadTrack::OnCaptureComplete() {
   float normalized_x = (world_x - draw_data.track_start_x) / draw_data.track_width;
   int pixel_x = static_cast<int>(
       ceil(normalized_x * draw_data.viewport->WorldToScreenWidth(draw_data.track_width)));
-  return draw_data.min_tick + pixel_x * draw_data.ns_per_pixel;
+  return draw_data.min_tick + static_cast<uint64_t>(pixel_x * draw_data.ns_per_pixel);
 }
 
 // We minimize overdraw when drawing lines for small events by discarding events that would just
