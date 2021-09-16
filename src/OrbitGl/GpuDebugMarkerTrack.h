@@ -30,7 +30,7 @@ class GpuDebugMarkerTrack : public TimerTrack {
                                orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                uint64_t timeline_hash, OrbitApp* app,
                                const orbit_client_data::CaptureData* capture_data,
-                               orbit_client_data::TrackPaneData* track_data);
+                               orbit_client_data::TimerData* timer_data);
 
   ~GpuDebugMarkerTrack() override = default;
 

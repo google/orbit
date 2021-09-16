@@ -19,7 +19,7 @@ uint32_t ScopeTreeTimerData::GetMaxDepth() const {
 
 const orbit_client_protos::TimerInfo& ScopeTreeTimerData::AddTimer(
     orbit_client_protos::TimerInfo timer_info) {
-  const auto& timer_info_ref = track_pane_data_.AddTimer(/*depth=*/0, timer_info);
+  const auto& timer_info_ref = timer_data_.AddTimer(/*depth=*/0, timer_info);
 
   if (scope_tree_update_type_ == ScopeTreeUpdateType::kAlways) {
     absl::MutexLock lock(&scope_tree_mutex_);
@@ -28,9 +28,9 @@ const orbit_client_protos::TimerInfo& ScopeTreeTimerData::AddTimer(
   return timer_info_ref;
 }
 
-void ScopeTreeTimerData::BuildScopeTreeFromTrackData() {
+void ScopeTreeTimerData::BuildScopeTreeFromTimerData() {
   CHECK(scope_tree_update_type_ == ScopeTreeUpdateType::kOnCaptureComplete);
-  std::vector<const TimerChain*> timer_chains = track_pane_data_.GetChains();
+  std::vector<const TimerChain*> timer_chains = timer_data_.GetChains();
   for (const TimerChain* timer_chain : timer_chains) {
     CHECK(timer_chain != nullptr);
     absl::MutexLock lock(&scope_tree_mutex_);

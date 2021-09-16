@@ -33,8 +33,8 @@ using orbit_grpc_protos::InstrumentedFunction;
 AsyncTrack::AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string name,
                        OrbitApp* app, const orbit_client_data::CaptureData* capture_data,
-                       orbit_client_data::TrackPaneData* track_data)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, track_data),
+                       orbit_client_data::TimerData* timer_data)
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, timer_data),
       name_(std::move(name)) {}
 
 [[nodiscard]] std::string AsyncTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
@@ -85,8 +85,8 @@ void AsyncTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
 
 float AsyncTrack::GetDefaultBoxHeight() const {
   auto box_height = layout_->GetTextBoxHeight();
-  if (collapse_toggle_->IsCollapsed() && track_data_->GetMaxDepth() > 0) {
-    return box_height / static_cast<float>(track_data_->GetMaxDepth());
+  if (collapse_toggle_->IsCollapsed() && timer_data_->GetMaxDepth() > 0) {
+    return box_height / static_cast<float>(timer_data_->GetMaxDepth());
   }
   return box_height;
 }

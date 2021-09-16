@@ -27,11 +27,11 @@
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/TimerChain.h"
+#include "ClientData/TimerData.h"
+#include "ClientData/TimerDataManager.h"
 #include "ClientData/TimestampIntervalSet.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/TracepointData.h"
-#include "ClientData/TrackDataManager.h"
-#include "ClientData/TrackPaneData.h"
 #include "OrbitBase/Logging.h"
 #include "capture.pb.h"
 #include "capture_data.pb.h"
@@ -234,8 +234,8 @@ class CaptureData {
     return frame_track_function_ids_;
   }
 
-  [[nodiscard]] std::pair<uint64_t, TrackPaneData*> CreateTrackData() {
-    return track_data_manager_.CreateTrackData();
+  [[nodiscard]] std::pair<uint64_t, TimerData*> CreateTimerData() {
+    return timer_data_manager_.CreateTimerData();
   }
 
  private:
@@ -278,7 +278,7 @@ class CaptureData {
 
   std::optional<std::filesystem::path> file_path_;
 
-  TrackDataManager track_data_manager_;
+  TimerDataManager timer_data_manager_;
 };
 
 }  // namespace orbit_client_data

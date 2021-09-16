@@ -28,8 +28,8 @@ GpuDebugMarkerTrack::GpuDebugMarkerTrack(CaptureViewElement* parent, TimeGraph* 
                                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                          uint64_t timeline_hash, OrbitApp* app,
                                          const orbit_client_data::CaptureData* capture_data,
-                                         orbit_client_data::TrackPaneData* track_data)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, track_data),
+                                         orbit_client_data::TimerData* timer_data)
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, timer_data),
       string_manager_{app->GetStringManager()},
       timeline_hash_{timeline_hash} {
   draw_background_ = false;
@@ -117,7 +117,7 @@ float GpuDebugMarkerTrack::GetYFromTimer(const TimerInfo& timer_info) const {
 float GpuDebugMarkerTrack::GetHeight() const {
   bool collapsed = collapse_toggle_->IsCollapsed();
   uint32_t depth =
-      collapsed ? std::min<uint32_t>(1, track_data_->GetMaxDepth()) : track_data_->GetMaxDepth();
+      collapsed ? std::min<uint32_t>(1, timer_data_->GetMaxDepth()) : timer_data_->GetMaxDepth();
   return layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin() +
          layout_->GetTextBoxHeight() * depth + layout_->GetTrackContentBottomMargin();
 }

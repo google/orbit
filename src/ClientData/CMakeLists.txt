@@ -27,8 +27,8 @@ target_sources(ClientData PUBLIC
         include/ClientData/TimestampIntervalSet.h
         include/ClientData/TracepointCustom.h
         include/ClientData/TracepointData.h
-        include/ClientData/TrackDataManager.h
-        include/ClientData/TrackPaneData.h
+        include/ClientData/TimerDataManager.h
+        include/ClientData/TimerData.h
         include/ClientData/UserDefinedCaptureData.h)
 
 target_sources(ClientData PRIVATE
@@ -67,7 +67,7 @@ target_sources(ClientDataTests PRIVATE
         ScopeTreeTimerDataTest.cpp
         TimestampIntervalSetTest.cpp
         TracepointDataTest.cpp
-        TrackDataTest.cpp
+        TimerDataTest.cpp
         UserDefinedCaptureDataTest.cpp)
 
 target_link_libraries(ClientDataTests PRIVATE

@@ -52,15 +52,15 @@ std::string MapGpuTimelineToTrackLabel(std::string_view timeline) {
 GpuTrack::GpuTrack(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                    TimeGraphLayout* layout, uint64_t timeline_hash, OrbitApp* app,
                    const orbit_client_data::CaptureData* capture_data,
-                   orbit_client_data::TrackPaneData* submission_track_data,
-                   orbit_client_data::TrackPaneData* marker_track_data)
+                   orbit_client_data::TimerData* submission_timer_data,
+                   orbit_client_data::TimerData* marker_timer_data)
     : Track(parent, time_graph, viewport, layout, capture_data),
       string_manager_{app->GetStringManager()},
       submission_track_{std::make_shared<GpuSubmissionTrack>(this, time_graph, viewport, layout,
                                                              timeline_hash, app, capture_data,
-                                                             submission_track_data)},
+                                                             submission_timer_data)},
       marker_track_{std::make_shared<GpuDebugMarkerTrack>(
-          this, time_graph, viewport, layout, timeline_hash, app, capture_data, marker_track_data)},
+          this, time_graph, viewport, layout, timeline_hash, app, capture_data, marker_timer_data)},
       timeline_hash_{timeline_hash} {
   // Gpu are collapsed by default. Their subtracks are expanded by default, but are however not
   // shown while the Gpu track is collapsed.

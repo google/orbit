@@ -18,7 +18,7 @@
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
 
-using orbit_client_data::TrackPaneData;
+using orbit_client_data::TimerData;
 
 Track::Track(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
              TimeGraphLayout* layout, const orbit_client_data::CaptureData* capture_data)

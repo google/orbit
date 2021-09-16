@@ -26,8 +26,8 @@ const Color kSelectionColor(0, 128, 255, 255);
 SchedulerTrack::SchedulerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                                orbit_gl::Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
                                const orbit_client_data::CaptureData* capture_data,
-                               orbit_client_data::TrackPaneData* track_data)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, track_data),
+                               orbit_client_data::TimerData* timer_data)
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, timer_data),
       num_cores_{0} {
   SetPinned(false);
 }
@@ -40,8 +40,8 @@ void SchedulerTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
 }
 
 float SchedulerTrack::GetHeight() const {
-  uint32_t num_gaps = std::max(track_data_->GetMaxDepth() - 1, 0u);
-  return GetHeaderHeight() + (track_data_->GetMaxDepth() * layout_->GetTextCoresHeight()) +
+  uint32_t num_gaps = std::max(timer_data_->GetMaxDepth() - 1, 0u);
+  return GetHeaderHeight() + (timer_data_->GetMaxDepth() * layout_->GetTextCoresHeight()) +
          (num_gaps * layout_->GetSpaceBetweenCores()) + layout_->GetTrackContentBottomMargin();
 }
 

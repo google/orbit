@@ -453,9 +453,9 @@ Track* TrackManager::GetOrCreateTrackFromTimerInfo(const TimerInfo& timer_info) 
 SchedulerTrack* TrackManager::GetOrCreateSchedulerTrack() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   if (scheduler_track_ == nullptr) {
-    auto [unused, track_data] = capture_data_->CreateTrackData();
+    auto [unused, timer_data] = capture_data_->CreateTimerData();
     scheduler_track_ = std::make_shared<SchedulerTrack>(time_graph_, time_graph_, viewport_,
-                                                        layout_, app_, capture_data_, track_data);
+                                                        layout_, app_, capture_data_, timer_data);
     AddTrack(scheduler_track_);
   }
   return scheduler_track_.get();
@@ -468,9 +468,9 @@ ThreadTrack* TrackManager::GetOrCreateThreadTrack(uint32_t tid) {
     ThreadTrack::ScopeTreeUpdateType scope_tree_update_type =
         GetIsDataFromSavedCapture() ? ThreadTrack::ScopeTreeUpdateType::kOnCaptureComplete
                                     : ThreadTrack::ScopeTreeUpdateType::kAlways;
-    auto [unused, track_data] = capture_data_->CreateTrackData();
+    auto [unused, timer_data] = capture_data_->CreateTimerData();
     track = std::make_shared<ThreadTrack>(time_graph_, time_graph_, viewport_, layout_, tid, app_,
-                                          capture_data_, track_data, scope_tree_update_type);
+                                          capture_data_, timer_data, scope_tree_update_type);
     thread_tracks_[tid] = track;
     AddTrack(track);
   }
@@ -483,11 +483,11 @@ GpuTrack* TrackManager::GetOrCreateGpuTrack(uint64_t timeline_hash) {
       app_->GetStringManager()->Get(timeline_hash).value_or(std::to_string(timeline_hash));
   std::shared_ptr<GpuTrack> track = gpu_tracks_[timeline];
   if (track == nullptr) {
-    auto [unused1, submission_track_data] = capture_data_->CreateTrackData();
-    auto [unused2, marker_track_data] = capture_data_->CreateTrackData();
+    auto [unused1, submission_timer_data] = capture_data_->CreateTimerData();
+    auto [unused2, marker_timer_data] = capture_data_->CreateTimerData();
     track =
         std::make_shared<GpuTrack>(time_graph_, time_graph_, viewport_, layout_, timeline_hash,
-                                   app_, capture_data_, submission_track_data, marker_track_data);
+                                   app_, capture_data_, submission_timer_data, marker_timer_data);
     gpu_tracks_[timeline] = track;
     AddTrack(track);
   }
@@ -510,9 +510,9 @@ AsyncTrack* TrackManager::GetOrCreateAsyncTrack(const std::string& name) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<AsyncTrack> track = async_tracks_[name];
   if (track == nullptr) {
-    auto [unused, track_data] = capture_data_->CreateTrackData();
+    auto [unused, timer_data] = capture_data_->CreateTimerData();
     track = std::make_shared<AsyncTrack>(time_graph_, time_graph_, viewport_, layout_, name, app_,
-                                         capture_data_, track_data);
+                                         capture_data_, timer_data);
     async_tracks_[name] = track;
     AddTrack(track);
   }
@@ -528,9 +528,9 @@ FrameTrack* TrackManager::GetOrCreateFrameTrack(
     return track_it->second.get();
   }
 
-  auto [unused, track_data] = capture_data_->CreateTrackData();
+  auto [unused, timer_data] = capture_data_->CreateTimerData();
   auto track = std::make_shared<FrameTrack>(time_graph_, time_graph_, viewport_, layout_, function,
-                                            app_, capture_data_, track_data);
+                                            app_, capture_data_, timer_data);
 
   // Normally we would call AddTrack(track) here, but frame tracks are removable by users
   // and therefore cannot be simply thrown into the flat vector of tracks. Also, we don't want to

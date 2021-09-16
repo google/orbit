@@ -33,8 +33,8 @@ GpuSubmissionTrack::GpuSubmissionTrack(Track* parent, TimeGraph* time_graph,
                                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                        uint64_t timeline_hash, OrbitApp* app,
                                        const orbit_client_data::CaptureData* capture_data,
-                                       orbit_client_data::TrackPaneData* track_data)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, track_data),
+                                       orbit_client_data::TimerData* timer_data)
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, timer_data),
       timeline_hash_{timeline_hash},
       string_manager_{app->GetStringManager()},
       parent_{parent} {
@@ -174,7 +174,7 @@ std::string GpuSubmissionTrack::GetTimesliceText(const TimerInfo& timer_info) co
 
 float GpuSubmissionTrack::GetHeight() const {
   bool collapsed = IsCollapsed();
-  uint32_t depth = collapsed ? 1 : track_data_->GetMaxDepth();
+  uint32_t depth = collapsed ? 1 : timer_data_->GetMaxDepth();
   uint32_t num_gaps = depth > 0 ? depth - 1 : 0;
   if (has_vulkan_layer_command_buffer_timers_ && !collapsed) {
     depth *= 2;
@@ -186,7 +186,7 @@ float GpuSubmissionTrack::GetHeight() const {
 
 const TimerInfo* GpuSubmissionTrack::GetLeft(const TimerInfo& timer_info) const {
   if (timer_info.timeline_hash() == timeline_hash_) {
-    const TimerChain* chain = track_data_->GetChain(timer_info.depth());
+    const TimerChain* chain = timer_data_->GetChain(timer_info.depth());
     if (chain != nullptr) return chain->GetElementBefore(timer_info);
   }
   return nullptr;
@@ -194,7 +194,7 @@ const TimerInfo* GpuSubmissionTrack::GetLeft(const TimerInfo& timer_info) const 
 
 const TimerInfo* GpuSubmissionTrack::GetRight(const TimerInfo& timer_info) const {
   if (timer_info.timeline_hash() == timeline_hash_) {
-    const TimerChain* chain = track_data_->GetChain(timer_info.depth());
+    const TimerChain* chain = timer_data_->GetChain(timer_info.depth());
     if (chain != nullptr) return chain->GetElementAfter(timer_info);
   }
   return nullptr;

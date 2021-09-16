@@ -39,8 +39,8 @@ class GpuTrack : public Track {
   explicit GpuTrack(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                     TimeGraphLayout* layout, uint64_t timeline_hash, OrbitApp* app,
                     const orbit_client_data::CaptureData* capture_data,
-                    orbit_client_data::TrackPaneData* submission_track_data,
-                    orbit_client_data::TrackPaneData* marker_track_data);
+                    orbit_client_data::TimerData* submission_timer_data,
+                    orbit_client_data::TimerData* marker_timer_data);
 
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 
