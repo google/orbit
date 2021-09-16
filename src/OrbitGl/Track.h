@@ -17,7 +17,7 @@
 #include "CaptureViewElement.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/TimerChain.h"
-#include "ClientData/TrackPaneData.h"
+#include "ClientData/TimerData.h"
 #include "Containers/BlockChain.h"
 #include "CoreMath.h"
 #include "GteVector.h"

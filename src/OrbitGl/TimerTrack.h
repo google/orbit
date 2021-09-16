@@ -54,7 +54,7 @@ class TimerTrack : public Track {
   explicit TimerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
                       const orbit_client_data::CaptureData* capture_data,
-                      orbit_client_data::TrackPaneData* track_data);
+                      orbit_client_data::TimerData* timer_data);
   ~TimerTrack() override = default;
 
   // Pickable
@@ -82,7 +82,7 @@ class TimerTrack : public Track {
       uint64_t start_ns, uint64_t end_ns) const;
   [[nodiscard]] bool IsEmpty() const override;
 
-  [[nodiscard]] bool IsCollapsible() const override { return track_data_->GetMaxDepth() > 1; }
+  [[nodiscard]] bool IsCollapsible() const override { return timer_data_->GetMaxDepth() > 1; }
 
   [[nodiscard]] virtual float GetDefaultBoxHeight() const { return layout_->GetTextBoxHeight(); }
   [[nodiscard]] virtual float GetDynamicBoxHeight(
@@ -99,7 +99,7 @@ class TimerTrack : public Track {
   float GetHeight() const override;
 
   [[nodiscard]] std::vector<const orbit_client_data::TimerChain*> GetChains() const {
-    return track_data_->GetChains();
+    return timer_data_->GetChains();
   }
 
   [[nodiscard]] size_t GetNumberOfTimers() const;
@@ -155,7 +155,7 @@ class TimerTrack : public Track {
   int visible_timer_count_ = 0;
   OrbitApp* app_ = nullptr;
 
-  orbit_client_data::TrackPaneData* track_data_;
+  orbit_client_data::TimerData* timer_data_;
 };
 
 #endif  // ORBIT_GL_TIMER_TRACK_H_

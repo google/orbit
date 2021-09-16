@@ -28,19 +28,18 @@
 #include "capture_data.pb.h"
 
 using orbit_client_data::TimerChain;
-using orbit_client_data::TrackPaneData;
+using orbit_client_data::TimerData;
 using orbit_client_protos::TimerInfo;
 
 const Color TimerTrack::kHighlightColor = Color(100, 181, 246, 255);
 
 TimerTrack::TimerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
-                       const orbit_client_data::CaptureData* capture_data,
-                       TrackPaneData* track_data)
+                       const orbit_client_data::CaptureData* capture_data, TimerData* timer_data)
     : Track(parent, time_graph, viewport, layout, capture_data),
       text_renderer_{time_graph->GetTextRenderer()},
       app_{app},
-      track_data_{track_data} {}
+      timer_data_{timer_data} {}
 
 std::string TimerTrack::GetExtraInfo(const TimerInfo& timer_info) const {
   std::string info;
@@ -264,7 +263,7 @@ void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t 
 
   draw_data.z = GlCanvas::kZValueBox + z_offset;
 
-  std::vector<const orbit_client_data::TimerChain*> chains = track_data_->GetChains();
+  std::vector<const orbit_client_data::TimerChain*> chains = timer_data_->GetChains();
   draw_data.selected_timer = app_->selected_timer();
   draw_data.highlighted_function_id = app_->GetFunctionIdToHighlight();
   draw_data.highlighted_group_id = app_->GetGroupIdToHighlight();
@@ -325,12 +324,12 @@ void TimerTrack::OnTimer(const TimerInfo& timer_info) {
     process_id_ = timer_info.process_id();
   }
 
-  track_data_->AddTimer(timer_info.depth(), timer_info);
+  timer_data_->AddTimer(timer_info.depth(), timer_info);
 }
 
 float TimerTrack::GetHeight() const {
-  uint32_t collapsed_depth = std::min<uint32_t>(1, track_data_->GetMaxDepth());
-  uint32_t depth = collapse_toggle_->IsCollapsed() ? collapsed_depth : track_data_->GetMaxDepth();
+  uint32_t collapsed_depth = std::min<uint32_t>(1, timer_data_->GetMaxDepth());
+  uint32_t depth = collapse_toggle_->IsCollapsed() ? collapsed_depth : timer_data_->GetMaxDepth();
   return GetHeaderHeight() + layout_->GetTrackContentTopMargin() +
          layout_->GetTextBoxHeight() * depth +
          (depth > 0 ? layout_->GetSpaceBetweenTracksAndThread() : 0) +
@@ -343,7 +342,7 @@ std::string TimerTrack::GetTooltip() const {
 }
 
 const TimerInfo* TimerTrack::GetFirstAfterTime(uint64_t time, uint32_t depth) const {
-  const orbit_client_data::TimerChain* chain = track_data_->GetChain(depth);
+  const orbit_client_data::TimerChain* chain = timer_data_->GetChain(depth);
   if (chain == nullptr) return nullptr;
 
   // TODO: do better than linear search...
@@ -359,7 +358,7 @@ const TimerInfo* TimerTrack::GetFirstAfterTime(uint64_t time, uint32_t depth) co
 }
 
 const TimerInfo* TimerTrack::GetFirstBeforeTime(uint64_t time, uint32_t depth) const {
-  const orbit_client_data::TimerChain* chain = track_data_->GetChain(depth);
+  const orbit_client_data::TimerChain* chain = timer_data_->GetChain(depth);
   if (chain == nullptr) return nullptr;
 
   const TimerInfo* first_timer_before_time = nullptr;
@@ -389,7 +388,7 @@ const TimerInfo* TimerTrack::GetDown(const TimerInfo& timer_info) const {
 std::vector<const orbit_client_protos::TimerInfo*> TimerTrack::GetScopesInRange(
     uint64_t start_ns, uint64_t end_ns) const {
   std::vector<const orbit_client_protos::TimerInfo*> result;
-  for (const TimerChain* chain : track_data_->GetChains()) {
+  for (const TimerChain* chain : timer_data_->GetChains()) {
     CHECK(chain != nullptr);
     for (const auto& block : *chain) {
       if (!block.Intersects(start_ns, end_ns)) continue;
@@ -404,7 +403,7 @@ std::vector<const orbit_client_protos::TimerInfo*> TimerTrack::GetScopesInRange(
   return result;
 }
 
-bool TimerTrack::IsEmpty() const { return track_data_->IsEmpty(); }
+bool TimerTrack::IsEmpty() const { return timer_data_->IsEmpty(); }
 
 std::string TimerTrack::GetBoxTooltip(const Batcher& /*batcher*/, PickingId /*id*/) const {
   return "";
@@ -442,6 +441,6 @@ internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick,
   return draw_data;
 }
 
-size_t TimerTrack::GetNumberOfTimers() const { return track_data_->GetNumberOfTimers(); }
-uint64_t TimerTrack::GetMinTime() const { return track_data_->GetMinTime(); }
-uint64_t TimerTrack::GetMaxTime() const { return track_data_->GetMaxTime(); }
+size_t TimerTrack::GetNumberOfTimers() const { return timer_data_->GetNumberOfTimers(); }
+uint64_t TimerTrack::GetMinTime() const { return timer_data_->GetMinTime(); }
+uint64_t TimerTrack::GetMaxTime() const { return timer_data_->GetMaxTime(); }

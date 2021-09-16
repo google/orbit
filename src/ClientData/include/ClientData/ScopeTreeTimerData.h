@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "Containers/ScopeTree.h"
-#include "TrackPaneData.h"
+#include "TimerData.h"
 
 namespace orbit_client_data {
 
@@ -26,13 +26,13 @@ class ScopeTreeTimerData final {
   [[nodiscard]] int64_t GetThreadId() const { return thread_id_; }
   [[nodiscard]] bool IsEmpty() const { return GetNumberOfTimers() == 0; }
   [[nodiscard]] size_t GetNumberOfTimers() const;
-  [[nodiscard]] uint64_t GetMinTime() const { return track_pane_data_.GetMinTime(); }
-  [[nodiscard]] uint64_t GetMaxTime() const { return track_pane_data_.GetMaxTime(); }
+  [[nodiscard]] uint64_t GetMinTime() const { return timer_data_.GetMinTime(); }
+  [[nodiscard]] uint64_t GetMaxTime() const { return timer_data_.GetMaxTime(); }
   [[nodiscard]] uint32_t GetMaxDepth() const;
 
   const orbit_client_protos::TimerInfo& AddTimer(orbit_client_protos::TimerInfo timer_info);
   // Build ScopeTree from timer chains, when we are loading a capture.
-  void BuildScopeTreeFromTrackData();
+  void BuildScopeTreeFromTimerData();
 
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
       uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
@@ -53,7 +53,7 @@ class ScopeTreeTimerData final {
       GUARDED_BY(scope_tree_mutex_);
   ScopeTreeUpdateType scope_tree_update_type_;
 
-  TrackPaneData track_pane_data_;
+  TimerData timer_data_;
 };
 
 }  // namespace orbit_client_data

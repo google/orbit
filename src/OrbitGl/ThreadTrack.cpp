@@ -43,9 +43,9 @@ using orbit_grpc_protos::InstrumentedFunction;
 ThreadTrack::ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout, uint32_t thread_id,
                          OrbitApp* app, const CaptureData* capture_data,
-                         orbit_client_data::TrackPaneData* track_data,
+                         orbit_client_data::TimerData* timer_data,
                          ScopeTreeUpdateType scope_tree_update_type)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, track_data),
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, timer_data),
       thread_id_{thread_id},
       scope_tree_update_type_{scope_tree_update_type} {
   Color color = TimeGraph::GetThreadColor(thread_id);
@@ -200,8 +200,8 @@ bool ThreadTrack::IsTrackSelected() const {
 
 float ThreadTrack::GetDefaultBoxHeight() const {
   auto box_height = layout_->GetTextBoxHeight();
-  if (collapse_toggle_->IsCollapsed() && track_data_->GetMaxDepth() > 0) {
-    return box_height / static_cast<float>(track_data_->GetMaxDepth());
+  if (collapse_toggle_->IsCollapsed() && timer_data_->GetMaxDepth() > 0) {
+    return box_height / static_cast<float>(timer_data_->GetMaxDepth());
   }
   return box_height;
 }
@@ -251,7 +251,7 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
 
 bool ThreadTrack::IsEmpty() const {
   return thread_state_bar_->IsEmpty() && event_bar_->IsEmpty() && tracepoint_bar_->IsEmpty() &&
-         track_data_->IsEmpty();
+         timer_data_->IsEmpty();
 }
 
 void ThreadTrack::UpdatePositionOfSubtracks() {
@@ -350,8 +350,8 @@ std::string ThreadTrack::GetTooltip() const {
 
 float ThreadTrack::GetHeight() const {
   const uint32_t depth = collapse_toggle_->IsCollapsed()
-                             ? std::min<uint32_t>(1, track_data_->GetMaxDepth())
-                             : track_data_->GetMaxDepth();
+                             ? std::min<uint32_t>(1, timer_data_->GetMaxDepth())
+                             : timer_data_->GetMaxDepth();
 
   bool gap_between_tracks_and_timers =
       (!thread_state_bar_->IsEmpty() || !event_bar_->IsEmpty() || !tracepoint_bar_->IsEmpty()) &&
@@ -406,7 +406,7 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
 
   // Pass ownership to timer_chain. TODO(b/194268477): Pass timer_info as a value instead of
   // reference to be able to move it.
-  const auto& timer_info_chain_ref = track_data_->AddTimer(/*depth=*/0, timer_info);
+  const auto& timer_info_chain_ref = timer_data_->AddTimer(/*depth=*/0, timer_info);
 
   if (scope_tree_update_type_ == ScopeTreeUpdateType::kAlways) {
     absl::MutexLock lock(&scope_tree_mutex_);
@@ -419,7 +419,7 @@ void ThreadTrack::OnCaptureComplete() {
     return;
   }
   // Build ScopeTree from timer chains.
-  std::vector<const TimerChain*> timer_chains = track_data_->GetChains();
+  std::vector<const TimerChain*> timer_chains = timer_data_->GetChains();
   for (const TimerChain* timer_chain : timer_chains) {
     CHECK(timer_chain != nullptr);
     absl::MutexLock lock(&scope_tree_mutex_);
@@ -473,7 +473,7 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
     auto first_node_to_draw = ordered_nodes.lower_bound(min_tick);
     if (first_node_to_draw != ordered_nodes.begin()) --first_node_to_draw;
 
-    track_data_->UpdateMaxDepth(depth);
+    timer_data_->UpdateMaxDepth(depth);
 
     float world_timer_y = GetYFromDepth(depth - 1);
     uint64_t next_pixel_start_time_ns = min_tick;

@@ -60,9 +60,8 @@ float FrameTrack::GetAverageBoxHeight() const {
 FrameTrack::FrameTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                        InstrumentedFunction function, OrbitApp* app,
-                       const CaptureData* capture_data,
-                       orbit_client_data::TrackPaneData* track_data)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, track_data),
+                       const CaptureData* capture_data, orbit_client_data::TimerData* timer_data)
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, timer_data),
       function_(std::move(function)) {
   // TODO(b/169554463): Support manual instrumentation.
 

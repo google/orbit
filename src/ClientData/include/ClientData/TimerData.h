@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CLIENT_DATA_TRACK_DATA_H_
-#define CLIENT_DATA_TRACK_DATA_H_
+#ifndef CLIENT_DATA_TIMER_DATA_H_
+#define CLIENT_DATA_TIMER_DATA_H_
 
 #include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
@@ -13,7 +13,7 @@
 
 namespace orbit_client_data {
 
-class TrackPaneData final {
+class TimerData final {
  public:
   [[nodiscard]] bool IsEmpty() const { return num_timers_ == 0; }
   [[nodiscard]] size_t GetNumberOfTimers() const { return num_timers_; }
@@ -89,4 +89,4 @@ class TrackPaneData final {
 
 }  // namespace orbit_client_data
 
-#endif  // CLIENT_DATA_TRACK_DATA_H_
+#endif  // CLIENT_DATA_TIMER_DATA_H_

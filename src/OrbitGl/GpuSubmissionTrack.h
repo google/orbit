@@ -32,7 +32,7 @@ class GpuSubmissionTrack : public TimerTrack {
   explicit GpuSubmissionTrack(Track* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
                               TimeGraphLayout* layout, uint64_t timeline_hash, OrbitApp* app,
                               const orbit_client_data::CaptureData* capture_data,
-                              orbit_client_data::TrackPaneData* track_data);
+                              orbit_client_data::TimerData* timer_data);
   ~GpuSubmissionTrack() override = default;
 
   [[nodiscard]] Track* GetParent() const override { return parent_; }
@@ -57,7 +57,7 @@ class GpuSubmissionTrack : public TimerTrack {
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 
   [[nodiscard]] bool IsCollapsible() const override {
-    return track_data_->GetMaxDepth() > 1 || has_vulkan_layer_command_buffer_timers_;
+    return timer_data_->GetMaxDepth() > 1 || has_vulkan_layer_command_buffer_timers_;
   }
   [[nodiscard]] bool IsCollapsed() const override {
     return Track::IsCollapsed() || GetParent()->IsCollapsed();
