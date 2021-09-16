@@ -9,6 +9,9 @@
 
 namespace orbit_gl {
 
+// Can be used to test basic functionality of classes inheriting from CaptureViewElement to assure
+// all required methods are implemented / overriden correctly.
+// See CaptureViewElementTest.cpp for usage.
 class CaptureViewElementTester {
  public:
   void RunTests(CaptureViewElement* element);

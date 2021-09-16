@@ -35,7 +35,14 @@ class UnitTestCaptureViewContainerElement : public CaptureViewElement {
     }
   }
 
-  [[nodiscard]] float GetHeight() const override { return 0; }
+  [[nodiscard]] float GetHeight() const override {
+    float result = 0;
+    for (auto& child : GetChildren()) {
+      result += child->GetHeight();
+    }
+    return result;
+  }
+
   [[nodiscard]] std::vector<CaptureViewElement*> GetChildren() const override {
     std::vector<CaptureViewElement*> result;
     for (auto& child : children_) {
