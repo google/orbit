@@ -13,6 +13,7 @@
 
 #include <QApplication>
 #include <QCheckBox>
+#include <QComboBox>
 #include <QHBoxLayout>
 #include <QItemSelectionModel>
 #include <QLayout>
@@ -24,6 +25,7 @@
 #include <QTableView>
 #include <QVariant>
 #include <Qt>
+#include <algorithm>
 #include <filesystem>
 #include <memory>
 #include <optional>
@@ -35,6 +37,7 @@
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/InstanceItemModel.h"
+#include "OrbitGgp/Project.h"
 #include "OrbitSsh/AddrAndPort.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "SessionSetup/Error.h"
@@ -44,11 +47,15 @@
 
 namespace {
 const QString kRememberChosenInstance{"RememberChosenInstance"};
+const QString kSelectedProjectDisplayNameKey{"kSelectedProjectDisplayNameKey"};
+const QString kSelectedProjectIdKey{"kSelectedProjectIdKey"};
+const QString kAllInstancesKey{"kAllInstancesKey"};
 }  // namespace
 
 namespace orbit_session_setup {
 
 using orbit_ggp::Instance;
+using orbit_ggp::Project;
 using orbit_ssh_qt::ScopedConnection;
 
 // The destructor needs to be defined here because it needs to see the type
@@ -75,6 +82,10 @@ ConnectToStadiaWidget::ConnectToStadiaWidget(QWidget* parent)
 
   instance_proxy_model_.setSourceModel(&instance_model_);
   instance_proxy_model_.setSortRole(Qt::DisplayRole);
+  instance_proxy_model_.setFilterCaseSensitivity(Qt::CaseInsensitive);
+  // -1 means to filter based on *all* columns
+  // (https://doc.qt.io/qt-5/qsortfilterproxymodel.html#filterKeyColumn-prop)
+  instance_proxy_model_.setFilterKeyColumn(-1);
 
   ui_->instancesTableView->setModel(&instance_proxy_model_);
   ui_->instancesTableView->setSortingEnabled(true);
@@ -92,23 +103,74 @@ ConnectToStadiaWidget::ConnectToStadiaWidget(QWidget* parent)
                    &ConnectToStadiaWidget::UpdateRememberInstance);
   QObject::connect(ui_->refreshButton, &QPushButton::clicked, this,
                    [this]() { emit InstanceReloadRequested(); });
+  QObject::connect(ui_->instancesFilterLineEdit, &QLineEdit::textChanged, &instance_proxy_model_,
+                   &QSortFilterProxyModel::setFilterFixedString);
+  QObject::connect(ui_->refreshButton_2, &QPushButton::clicked, this,
+                   [this]() { emit InstanceReloadRequested(); });
+  QObject::connect(ui_->comboBox, QOverload<int>::of(&QComboBox::activated), this,
+                   &ConnectToStadiaWidget::ProjectComboBoxActivated);
+  QObject::connect(ui_->allInstancesCheckBox, &QCheckBox::stateChanged, this, [this]() {
+    QSettings settings;
+    settings.setValue(kAllInstancesKey, ui_->allInstancesCheckBox->isChecked());
+  });
 
   SetupStateMachine();
 
+  SetupProjectSelectionFlagContent();
+}
+
+void ConnectToStadiaWidget::SetupProjectSelectionFlagContent() {
   // The instance settings (mainly project selection and "all instances") is currently hidden behind
   // the "--enable_project_selection" flag.
   // TODO(b/190670843): Clean this up when removing the "--enable_project_selection" flag.
   if (absl::GetFlag(FLAGS_enable_project_selection)) {
-    // TODO(b/199717843): The instanceFilterLineEdit is currently hidden because it is lower
-    // priority as the rest of the UI.
-    ui_->instancesFilterLineEdit->hide();
     // While the "--enable_project_selection" is used, there are 2 refresh buttons in the .ui file.
     // "refreshButton" is used for the old ui, "refreshButton_2" is used for the new ui.
     ui_->refreshButton->hide();
+    ui_->comboBox->addItem("Default Project", QVariant());
+
+    QSettings settings;
+    QVariant saved_project_id = settings.value(kSelectedProjectIdKey);
+    if (saved_project_id.isValid()) {
+      // This if branch and the following statements are here to display the previously saved (in
+      // QSettings) project while the list of projects is still loading.
+      const Project project{settings.value(kSelectedProjectDisplayNameKey).toString(),
+                            saved_project_id.toString()};
+      LOG("Found previously selected project. display name: %s, id: %s",
+          project.display_name.toStdString(), project.id.toStdString());
+      SetProject(project);
+      ui_->comboBox->addItem(project.display_name, project.id);
+      ui_->comboBox->setCurrentIndex(ui_->comboBox->count() - 1);
+    }
+
+    if (settings.contains(kAllInstancesKey)) {
+      ui_->allInstancesCheckBox->setChecked(settings.value(kAllInstancesKey).toBool());
+    }
+
   } else {
     // refreshButton_2 is part of instancesSettingsWidget and therefore also hidden.
     ui_->instancesSettingsWidget->hide();
   }
+}
+
+void ConnectToStadiaWidget::ProjectComboBoxActivated(int index) {
+  QVariant selected_id_variant = ui_->comboBox->itemData(index);
+
+  if (!selected_id_variant.isValid()) {  // If "Default Project" is selected
+    SetProject(std::nullopt);
+    return;
+  }
+
+  CHECK(selected_id_variant.canConvert<QString>());
+  const QString selected_id = selected_id_variant.toString();
+
+  const auto& result_it =
+      std::find_if(projects_.begin(), projects_.end(),
+                   [&selected_id](const Project& element) { return element.id == selected_id; });
+
+  CHECK(result_it != projects_.end());
+
+  SetProject(*result_it);
 }
 
 void ConnectToStadiaWidget::SetActive(bool value) {
@@ -190,6 +252,7 @@ void ConnectToStadiaWidget::SetupStateMachine() {
   // PROPERTIES of states
   // STATE s_idle
   s_idle_.assignProperty(ui_->refreshButton, "enabled", true);
+  s_idle_.assignProperty(ui_->instancesSettingsWidget, "enabled", true);
   s_idle_.assignProperty(ui_->rememberCheckBox, "enabled", false);
   // STATE s_instances_loading
   s_instances_loading_.assignProperty(ui_->instancesTableOverlay, "visible", true);
@@ -199,6 +262,7 @@ void ConnectToStadiaWidget::SetupStateMachine() {
   s_instances_loading_.assignProperty(ui_->rememberCheckBox, "enabled", false);
   // STATE s_instance_selected
   s_instance_selected_.assignProperty(ui_->refreshButton, "enabled", true);
+  s_instance_selected_.assignProperty(ui_->instancesSettingsWidget, "enabled", true);
   s_instance_selected_.assignProperty(ui_->connectButton, "enabled", true);
   // STATE s_waiting_for_creds
   s_waiting_for_creds_.assignProperty(ui_->instancesTableOverlay, "visible", true);
@@ -217,6 +281,10 @@ void ConnectToStadiaWidget::SetupStateMachine() {
   // TRANSITIONS (and entered/exit events)
   // STATE s_idle_
   s_idle_.addTransition(ui_->refreshButton, &QPushButton::clicked, &s_instances_loading_);
+  s_idle_.addTransition(ui_->refreshButton_2, &QPushButton::clicked, &s_instances_loading_);
+  s_idle_.addTransition(this, &ConnectToStadiaWidget::InstanceReloadRequested,
+                        &s_instances_loading_);
+  s_idle_.addTransition(ui_->allInstancesCheckBox, &QCheckBox::stateChanged, &s_instances_loading_);
   s_idle_.addTransition(this, &ConnectToStadiaWidget::InstanceSelected, &s_instance_selected_);
 
   // STATE s_instances_loading_
@@ -228,6 +296,8 @@ void ConnectToStadiaWidget::SetupStateMachine() {
 
   // STATE s_instance_selected_
   s_instance_selected_.addTransition(this, &ConnectToStadiaWidget::InstanceReloadRequested,
+                                     &s_instances_loading_);
+  s_instance_selected_.addTransition(ui_->allInstancesCheckBox, &QCheckBox::stateChanged,
                                      &s_instances_loading_);
   s_instance_selected_.addTransition(ui_->connectButton, &QPushButton::clicked,
                                      &s_waiting_for_creds_);
@@ -277,9 +347,14 @@ void ConnectToStadiaWidget::ReloadInstances() {
   CHECK(ggp_client_ != nullptr);
   instance_model_.SetInstances({});
 
-  ggp_client_->GetInstancesAsync([this](ErrorMessageOr<QVector<Instance>> instances) {
-    OnInstancesLoaded(std::move(instances));
-  });
+  ggp_client_->GetInstancesAsync(
+      [this](ErrorMessageOr<QVector<Instance>> instances) {
+        OnInstancesLoaded(std::move(instances));
+      },
+      ui_->allInstancesCheckBox->isChecked(), selected_project_);
+
+  ggp_client_->GetProjectsAsync(
+      [this](ErrorMessageOr<QVector<Project>> projects) { OnProjectsLoaded(std::move(projects)); });
 }
 
 void ConnectToStadiaWidget::CheckCredentialsAvailableOrLoad() {
@@ -294,7 +369,8 @@ void ConnectToStadiaWidget::CheckCredentialsAvailableOrLoad() {
           selected_instance_.value(),
           [this, instance_id](ErrorMessageOr<orbit_ggp::SshInfo> ssh_info_result) {
             OnSshInfoLoaded(std::move(ssh_info_result), instance_id);
-          });
+          },
+          selected_project_);
     }
     return;
   }
@@ -425,6 +501,31 @@ void ConnectToStadiaWidget::OnInstancesLoaded(
   TrySelectRememberedInstance();
 }
 
+void ConnectToStadiaWidget::OnProjectsLoaded(ErrorMessageOr<QVector<Project>> projects) {
+  if (projects.has_error()) {
+    emit ErrorOccurred(
+        QString(
+            "Orbit was unable to retrieve the list of Stadia projects. The error message was: %1")
+            .arg(QString::fromStdString(projects.error().message())));
+    return;
+  }
+
+  projects_ = std::move(projects.value());
+  std::sort(projects_.begin(), projects_.end(), [](const Project& p1, const Project& p2) {
+    return p1.display_name.toLower() < p2.display_name.toLower();
+  });
+
+  ui_->comboBox->clear();
+  ui_->comboBox->addItem("Default Project", QVariant());
+
+  for (const auto& project : projects_) {
+    ui_->comboBox->addItem(project.display_name, project.id);
+    if (selected_project_ != std::nullopt && selected_project_->id == project.id) {
+      ui_->comboBox->setCurrentIndex(ui_->comboBox->count() - 1);  // last added item
+    }
+  }
+}
+
 void ConnectToStadiaWidget::OnSshInfoLoaded(ErrorMessageOr<orbit_ggp::SshInfo> ssh_info_result,
                                             std::string instance_id) {
   instance_credentials_loading_.erase(instance_id);
@@ -476,5 +577,21 @@ void ConnectToStadiaWidget::showEvent(QShowEvent* event) {
 }
 
 bool ConnectToStadiaWidget::IsActive() const { return ui_->contentFrame->isEnabled(); }
+
+void ConnectToStadiaWidget::SetProject(const std::optional<orbit_ggp::Project>& project) {
+  if (selected_project_ == project) return;
+
+  QSettings settings;
+  if (!project.has_value()) {
+    settings.setValue(kSelectedProjectDisplayNameKey, QVariant());
+    settings.setValue(kSelectedProjectIdKey, QVariant());
+  } else {
+    settings.setValue(kSelectedProjectDisplayNameKey, project.value().display_name);
+    settings.setValue(kSelectedProjectIdKey, project.value().id);
+  }
+
+  selected_project_ = project;
+  emit InstanceReloadRequested();
+}
 
 }  // namespace orbit_session_setup
