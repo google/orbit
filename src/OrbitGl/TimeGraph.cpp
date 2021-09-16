@@ -821,7 +821,7 @@ void TimeGraph::DrawIncompleteDataIntervals(Batcher& batcher, PickingMode pickin
 
 void TimeGraph::DrawTracks(Batcher& batcher, TextRenderer& text_renderer,
                            const DrawContext& draw_context) {
-  for (auto& track : track_manager_->GetVisibleTracks()) {
+  for (Track* track : track_manager_->GetTracksOnScreen()) {
     float z_offset = 0;
     if (track->IsPinned()) {
       z_offset = GlCanvas::kZOffsetPinnedTrack;

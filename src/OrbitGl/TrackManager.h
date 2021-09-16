@@ -44,6 +44,7 @@ class TrackManager {
 
   [[nodiscard]] std::vector<Track*> GetAllTracks() const;
   [[nodiscard]] std::vector<Track*> GetVisibleTracks() const { return visible_tracks_; }
+  [[nodiscard]] std::vector<Track*> GetTracksOnScreen() const;
   [[nodiscard]] std::vector<ThreadTrack*> GetThreadTracks() const;
   [[nodiscard]] std::vector<FrameTrack*> GetFrameTracks() const;
 
