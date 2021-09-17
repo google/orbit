@@ -181,21 +181,26 @@ endif()
 add_executable(OrbitGlTests)
 
 target_sources(OrbitGlTests PRIVATE
+               CaptureViewElementTester.h
                PickingManagerTest.h
                UnitTestSlider.h)
 
 target_sources(OrbitGlTests PRIVATE
                BatcherTest.cpp
                CaptureStatsTest.cpp
+               CaptureViewElementTest.cpp
+               CaptureViewElementTester.cpp
                CaptureWindowTest.cpp
                GlUtilsTest.cpp
                GpuTrackTest.cpp
                MultivariateTimeSeriesTest.cpp
+               PageFaultsTrackTest.cpp
                PickingManagerTest.cpp
                ScopedStatusTest.cpp
                SliderTest.cpp
                ShortenStringWithEllipsisTest.cpp
                TimerInfosIteratorTest.cpp
+               ThreadTrackTest.cpp
                TrackManagerTest.cpp
                ViewportTest.cpp)
 
