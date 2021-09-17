@@ -457,12 +457,12 @@ void ThreadTrack::OnCaptureComplete() {
     return current_time + 1;
   }
 
-  // Making a ceiling with integers to not lose precision. Given a track width of 4000 pixels, we
-  // can capture for 53 days without overflowing.
-  int next_pixel = ((ns_from_min * num_pixels_on_track) + total_ns - 1) / total_ns;
+  // Given a track width of 4000 pixels, we can capture for 53 days without overflowing.
+  int current_pixel = (ns_from_min * num_pixels_on_track) / total_ns;
+  int next_pixel = current_pixel + 1;
 
-  // Calculate the timestamp of that pixel, rounded to the left similar to how it works in other
-  // parts of Orbit.
+  // To calculate the timestamp of a pixel boundary, we round to the left similar to how it works in
+  // other parts of Orbit.
   uint64_t next_pixel_ns_from_min = total_ns * next_pixel / num_pixels_on_track;
   return draw_data.min_tick + next_pixel_ns_from_min;
 }
