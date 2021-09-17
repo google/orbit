@@ -75,7 +75,7 @@ class InstrumentedProcess {
 
   // Instruments the functions capture_options.instrumented_functions and returns a set of
   // function_id's of successfully instrumented functions.
-  [[nodiscard]] ErrorMessageOr<absl::flat_hash_set<uint64_t>> InstrumentFunctions(
+  [[nodiscard]] ErrorMessageOr<InstrumentationManager::InstrumentationResult> InstrumentFunctions(
       const CaptureOptions& capture_options);
 
   // Removes the instrumentation for all functions in capture_options.instrumented_functions that
@@ -203,8 +203,8 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
   return process;
 }
 
-ErrorMessageOr<absl::flat_hash_set<uint64_t>> InstrumentedProcess::InstrumentFunctions(
-    const CaptureOptions& capture_options) {
+ErrorMessageOr<InstrumentationManager::InstrumentationResult>
+InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) {
   OUTCOME_TRY(AttachAndStopProcess(pid_));
   orbit_base::unique_resource detach_on_exit{pid_, [](int32_t pid) {
                                                if (DetachAndContinueProcess(pid).has_error()) {
@@ -228,7 +228,7 @@ ErrorMessageOr<absl::flat_hash_set<uint64_t>> InstrumentedProcess::InstrumentFun
 
   OUTCOME_TRY(EnsureTrampolinesWritable());
 
-  absl::flat_hash_set<uint64_t> instrumented_function_ids;
+  InstrumentationManager::InstrumentationResult result;
   for (const auto& function : capture_options.instrumented_functions()) {
     const uint64_t function_id = function.function_id();
     constexpr uint64_t kMaxFunctionPrologueBackupSize = 20;
@@ -262,8 +262,10 @@ ErrorMessageOr<absl::flat_hash_set<uint64_t>> InstrumentedProcess::InstrumentFun
                              entry_payload_function_address_, return_trampoline_address_,
                              capstone_handle, relocation_map_);
         if (address_after_prologue_or_error.has_error()) {
-          ERROR("Failed to create trampoline: %s",
-                address_after_prologue_or_error.error().message());
+          const std::string message = absl::StrFormat(
+              "Failed to create trampoline: %s", address_after_prologue_or_error.error().message());
+          ERROR("%s", message);
+          result.error_messages.push_back(message);
           OUTCOME_TRY(ReleaseMostRecentlyAllocatedTrampolineMemory(module_address_range));
           continue;
         }
@@ -276,15 +278,18 @@ ErrorMessageOr<absl::flat_hash_set<uint64_t>> InstrumentedProcess::InstrumentFun
       }
       const TrampolineData& trampoline_data = it->second;
 
-      auto result = InstrumentFunction(pid_, function_address, function_id,
-                                       trampoline_data.address_after_prologue,
-                                       trampoline_data.trampoline_address);
-      if (result.has_error()) {
-        ERROR("Unable to instrument \"%s\": %s", function.function_name(),
-              result.error().message());
+      auto result_or_error = InstrumentFunction(pid_, function_address, function_id,
+                                                trampoline_data.address_after_prologue,
+                                                trampoline_data.trampoline_address);
+      if (result_or_error.has_error()) {
+        const std::string message =
+            absl::StrFormat("Unable to instrument \"%s\": %s", function.function_name(),
+                            result_or_error.error().message());
+        ERROR("%s", message);
+        result.error_messages.push_back(message);
       } else {
         addresses_of_instrumented_functions_.insert(function_address);
-        instrumented_function_ids.insert(function_id);
+        result.instrumented_function_ids.insert(function_id);
       }
     }
   }
@@ -293,7 +298,7 @@ ErrorMessageOr<absl::flat_hash_set<uint64_t>> InstrumentedProcess::InstrumentFun
 
   OUTCOME_TRY(EnsureTrampolinesExecutable());
 
-  return instrumented_function_ids;
+  return result;
 }
 
 ErrorMessageOr<void> InstrumentedProcess::UninstrumentFunctions() {
@@ -393,14 +398,14 @@ std::unique_ptr<InstrumentationManager> InstrumentationManager::Create() {
 
 InstrumentationManager::~InstrumentationManager() = default;
 
-ErrorMessageOr<absl::flat_hash_set<uint64_t>> InstrumentationManager::InstrumentProcess(
-    const CaptureOptions& capture_options) {
+ErrorMessageOr<InstrumentationManager::InstrumentationResult>
+InstrumentationManager::InstrumentProcess(const CaptureOptions& capture_options) {
   const pid_t pid = orbit_base::ToNativeProcessId(capture_options.pid());
 
   // If the user tries to instrument this instance of OrbitService we can't use user space
   // instrumentation: We would need to attach to / stop our own process.
   if (pid == getpid()) {
-    return absl::flat_hash_set<uint64_t>();
+    return InstrumentationResult();
   }
 
   if (!process_map_.contains(pid)) {
@@ -421,10 +426,10 @@ ErrorMessageOr<absl::flat_hash_set<uint64_t>> InstrumentationManager::Instrument
     }
     process_map_.emplace(pid, std::move(process_or_error.value()));
   }
-  OUTCOME_TRY(auto&& instrumented_function_ids,
+  OUTCOME_TRY(auto&& instrumentation_result,
               process_map_[pid]->InstrumentFunctions(capture_options));
 
-  return std::move(instrumented_function_ids);
+  return std::move(instrumentation_result);
 }
 
 ErrorMessageOr<void> InstrumentationManager::UninstrumentProcess(pid_t pid) {

@@ -372,16 +372,17 @@ grpc::Status CaptureServiceImpl::Capture(
   std::optional<std::string> error_enabling_user_space_instrumentation;
   if (capture_options.enable_user_space_instrumentation() &&
       capture_options.instrumented_functions_size() != 0) {
-    auto result = instrumentation_manager_->InstrumentProcess(capture_options);
-    if (result.has_error()) {
+    auto result_or_error = instrumentation_manager_->InstrumentProcess(capture_options);
+    if (result_or_error.has_error()) {
       error_enabling_user_space_instrumentation = absl::StrFormat(
-          "Could not enable user space instrumentation: %s", result.error().message());
+          "Could not enable user space instrumentation: %s", result_or_error.error().message());
       ERROR("%s", error_enabling_user_space_instrumentation.value());
     } else {
-      FilterOutInstrumentedFunctionsFromCaptureOptions(result.value(),
-                                                       linux_tracing_capture_options);
+      FilterOutInstrumentedFunctionsFromCaptureOptions(
+          result_or_error.value().instrumented_function_ids, linux_tracing_capture_options);
       LOG("User space instrumentation enabled for %u out of %u instrumented functions.",
-          result.value().size(), capture_options.instrumented_functions_size());
+          result_or_error.value().instrumented_function_ids.size(),
+          capture_options.instrumented_functions_size());
     }
   }
 
