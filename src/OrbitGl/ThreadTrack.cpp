@@ -446,11 +446,27 @@ void ThreadTrack::OnCaptureComplete() {
 }
 
 [[nodiscard]] static inline uint64_t GetNextPixelBoundaryTimeNs(
-    float world_x, const internal::DrawData& draw_data) {
-  float normalized_x = (world_x - draw_data.track_start_x) / draw_data.track_width;
-  int pixel_x = static_cast<int>(
-      ceil(normalized_x * draw_data.viewport->WorldToScreenWidth(draw_data.track_width)));
-  return draw_data.min_tick + static_cast<uint64_t>(pixel_x * draw_data.ns_per_pixel);
+    uint64_t current_timestamp, const internal::DrawData& draw_data) {
+  uint64_t current_ns_from_min = current_timestamp - draw_data.min_tick;
+  uint64_t total_ns_in_screen = draw_data.max_tick - draw_data.min_tick;
+  uint64_t num_pixels_on_track = draw_data.viewport->WorldToScreenWidth(draw_data.track_width);
+
+  // Given a track width of 4000 pixels, we can capture for 53 days without overflowing.
+  uint64_t current_pixel = (current_ns_from_min * num_pixels_on_track) / total_ns_in_screen;
+  uint64_t next_pixel = current_pixel + 1;
+
+  // To calculate the timestamp of a pixel boundary, we round to the left similar to how it works in
+  // other parts of Orbit.
+  uint64_t next_pixel_ns_from_min = total_ns_in_screen * next_pixel / num_pixels_on_track;
+
+  // Border case when we have a lot of pixels who have the same timestamp (because the number of
+  // pixels is less than the nanoseconds in screen). In this case, as we've already drawn in the
+  // current_timestamp, the next pixel to draw should have the next timestamp.
+  if (next_pixel_ns_from_min == current_ns_from_min) {
+    next_pixel_ns_from_min = current_ns_from_min + 1;
+  }
+
+  return draw_data.min_tick + next_pixel_ns_from_min;
 }
 
 // We minimize overdraw when drawing lines for small events by discarding events that would just
@@ -502,7 +518,7 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
       }
 
       // Use the time at boundary of the next pixel as a threshold to avoid overdraw.
-      next_pixel_start_time_ns = GetNextPixelBoundaryTimeNs(pos[0] + size[0], draw_data);
+      next_pixel_start_time_ns = GetNextPixelBoundaryTimeNs(timer_info.end(), draw_data);
     }
   }
 }
