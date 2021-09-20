@@ -493,46 +493,33 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
     float world_timer_y = GetYFromDepth(depth - 1);
     uint64_t next_pixel_start_time_ns = min_tick;
 
-    auto node_to_draw = ordered_nodes.upper_bound(min_tick);
-    // The previous node should be drawn only if its ending is after min_tick.
-    if (node_to_draw != ordered_nodes.begin()) --node_to_draw;
-    if (node_to_draw->second->GetScope()->end() < min_tick) {
-      ++node_to_draw;
-    }
+    const orbit_client_protos::TimerInfo* timer_info =
+        scope_tree_.FindFirstVisibleScopeAfterTime(depth, min_tick);
 
-    while (node_to_draw != ordered_nodes.end() && node_to_draw->first < max_tick) {
-      const orbit_client_protos::TimerInfo& timer_info = *node_to_draw->second->GetScope();
+    while (timer_info != nullptr && timer_info->start() < max_tick) {
       ++visible_timer_count_;
 
-      Color color = GetTimerColor(timer_info, draw_data);
-      std::unique_ptr<PickingUserData> user_data = CreatePickingUserData(*batcher, timer_info);
+      Color color = GetTimerColor(*timer_info, draw_data);
+      std::unique_ptr<PickingUserData> user_data = CreatePickingUserData(*batcher, *timer_info);
 
       auto box_height = GetDefaultBoxHeight();
-      const auto [pos_x, size_x] = GetBoxPosXAndWidth(draw_data, time_graph_, timer_info);
+      const auto [pos_x, size_x] = GetBoxPosXAndWidth(draw_data, time_graph_, *timer_info);
       const Vec2 pos = {pos_x, world_timer_y};
       const Vec2 size = {size_x, box_height};
 
-      auto timer_duration = timer_info.end() - timer_info.start();
+      auto timer_duration = timer_info->end() - timer_info->start();
       if (timer_duration > draw_data.ns_per_pixel) {
         if (!collapse_toggle_->IsCollapsed() && BoxHasRoomForText(size[0])) {
-          DrawTimesliceText(timer_info, draw_data.track_start_x, z_offset, pos, size);
+          DrawTimesliceText(*timer_info, draw_data.track_start_x, z_offset, pos, size);
         }
         batcher->AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
       } else {
         batcher->AddVerticalLine(pos, box_height, draw_data.z, color, std::move(user_data));
       }
 
-      // Optimization when going through the scopes, as it doesn't have any sense to draw two timers
-      // in the same pixel.
-      next_pixel_start_time_ns = GetNextPixelBoundaryTimeNs(timer_info.end(), draw_data);
-
-      node_to_draw = ordered_nodes.upper_bound(next_pixel_start_time_ns);
-
-      // The previous node should be drawn only if its ending is after next_pixel_start_time_ns.
-      if (node_to_draw != ordered_nodes.begin()) --node_to_draw;
-      if (node_to_draw->second->GetScope()->end() < next_pixel_start_time_ns) {
-        ++node_to_draw;
-      }
+      // Use the time at boundary of the next pixel as a threshold to avoid overdraw.
+      next_pixel_start_time_ns = GetNextPixelBoundaryTimeNs(timer_info->end(), draw_data);
+      timer_info = scope_tree_.FindFirstVisibleScopeAfterTime(depth, next_pixel_start_time_ns);
     }
   }
 }

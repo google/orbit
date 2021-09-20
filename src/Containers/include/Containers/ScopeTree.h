@@ -91,6 +91,8 @@ class ScopeTree {
   GetOrderedNodesByDepth() const {
     return ordered_nodes_by_depth_;
   }
+  [[nodiscard]] const ScopeT* FindFirstVisibleScopeAfterTime(uint32_t depth,
+                                                             uint64_t min_visible_time) const;
   [[nodiscard]] const ScopeT* FindNextScopeAtDepth(const ScopeT& scope) const;
   [[nodiscard]] const ScopeT* FindPreviousScopeAtDepth(const ScopeT& scope) const;
   [[nodiscard]] const ScopeT* FindParent(const ScopeT& scope) const;
@@ -146,6 +148,31 @@ const ScopeT* ScopeTree<ScopeT>::FindFirstChild(const ScopeT& scope) const {
   const auto children = node->GetChildrenByStartTime();
   if (children.empty()) return nullptr;
   return children.begin()->second->GetScope();
+}
+
+template <typename ScopeT>
+const ScopeT* ScopeTree<ScopeT>::FindFirstVisibleScopeAfterTime(uint32_t depth,
+                                                                uint64_t min_visible_time) const {
+  auto& ordered_nodes = ordered_nodes_by_depth_.at(depth);
+
+  // First we get the first node who is fully after the provided time.
+  auto node_it = ordered_nodes.upper_bound(min_visible_time);
+
+  // Previous nodes could also be partially visible if their ending is after min_visible_time.
+  auto previous_node_it = node_it;
+  while (node_it != ordered_nodes.begin()) {
+    --previous_node_it;
+
+    if (previous_node_it->second->GetScope()->end() < min_visible_time) {
+      break;
+    }
+    node_it = previous_node_it;
+  }
+
+  if (node_it == ordered_nodes.end()) {
+    return nullptr;
+  }
+  return node_it->second->GetScope();
 }
 
 template <typename ScopeT>
