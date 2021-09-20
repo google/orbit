@@ -160,12 +160,8 @@ const ScopeT* ScopeTree<ScopeT>::FindFirstVisibleScopeAfterTime(uint32_t depth,
 
   // Previous nodes could also be partially visible if their ending is after min_visible_time.
   auto previous_node_it = node_it;
-  while (node_it != ordered_nodes.begin()) {
-    --previous_node_it;
-
-    if (previous_node_it->second->GetScope()->end() < min_visible_time) {
-      break;
-    }
+  while (node_it != ordered_nodes.begin() &&
+         (--previous_node_it)->second->GetScope()->end() >= min_visible_time) {
     node_it = previous_node_it;
   }
 
