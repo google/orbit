@@ -34,7 +34,7 @@ class InstrumentationManager {
 
   struct InstrumentationResult {
     absl::flat_hash_set<uint64_t> instrumented_function_ids;
-    std::vector<std::string> error_messages;
+    absl::flat_hash_map<uint64_t, std::string> error_messages;
   };
 
   // On the first call to this function we inject OrbitUserSpaceInstrumentation.so into the target

@@ -167,11 +167,6 @@ TEST(InstrumentProcessTest, Instrument) {
   auto result_or_error = instrumentation_manager->InstrumentProcess(capture_options);
   ASSERT_THAT(result_or_error, HasNoError());
   EXPECT_TRUE(result_or_error.value().instrumented_function_ids.contains(kFunctionId1));
-  EXPECT_FALSE(result_or_error.value().instrumented_function_ids.contains(kFunctionId2));
-  ASSERT_EQ(result_or_error.value().error_messages.size(), 1);
-  EXPECT_THAT(result_or_error.value().error_messages[0],
-              HasSubstr("Failed to create trampoline: Unable to disassemble enough of the function "
-                        "to instrument it. Code: c3"));
   auto result = instrumentation_manager->UninstrumentProcess(pid_process_1);
   ASSERT_THAT(result, HasNoError());
 
@@ -204,6 +199,40 @@ TEST(InstrumentProcessTest, Instrument) {
   // End child pid_process_2.
   kill(pid_process_2, SIGKILL);
   waitpid(pid_process_2, nullptr, 0);
+}
+
+TEST(InstrumentProcessTest, GetErrorMessage) {
+  // The function "ReturnImmediately" compiles to something unexpected in gcc. So we only run this
+  // test with the release build of clang.
+#if defined(ORBIT_COVERAGE_BUILD) || !defined(__clang__) || !defined(NDEBUG)
+  GTEST_SKIP();
+#endif
+  InstrumentationManager* instrumentation_manager = GetInstrumentationManager();
+
+  const pid_t pid = fork();
+  CHECK(pid != -1);
+  if (pid == 0) {
+    // Endless loops without side effects are UB and recent versions of clang optimize
+    // it away. Making `sum` volatile avoids that problem.
+    volatile int sum = 0;
+    while (true) {
+      sum += SomethingToInstrument();
+    }
+  }
+
+  orbit_grpc_protos::CaptureOptions capture_options = BuildCaptureOptions();
+  capture_options.set_pid(pid);
+  auto result_or_error = instrumentation_manager->InstrumentProcess(capture_options);
+  ASSERT_THAT(result_or_error, HasNoError());
+  EXPECT_FALSE(result_or_error.value().instrumented_function_ids.contains(kFunctionId2));
+  ASSERT_EQ(result_or_error.value().error_messages.size(), 1);
+  EXPECT_THAT(result_or_error.value().error_messages[kFunctionId2],
+              HasSubstr("Failed to create trampoline: Unable to disassemble enough of the function "
+                        "to instrument it. Code: c3"));
+  auto result = instrumentation_manager->UninstrumentProcess(pid);
+  ASSERT_THAT(result, HasNoError());
+  kill(pid, SIGKILL);
+  waitpid(pid, nullptr, 0);
 }
 
 }  // namespace orbit_user_space_instrumentation
