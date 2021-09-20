@@ -37,6 +37,9 @@ ABSL_FLAG(uint16_t, sampling_rate, 1000,
 ABSL_FLAG(bool, frame_pointers, false, "Use frame pointers for unwinding");
 ABSL_FLAG(std::string, instrument_path, "", "Path of the binary of the function to instrument");
 ABSL_FLAG(uint64_t, instrument_offset, 0, "Offset in the binary of the function to instrument");
+ABSL_FLAG(uint64_t, instrument_size, 0, "Size in bytes of the function to instrument");
+ABSL_FLAG(bool, user_space_instrumentation, false,
+          "Use user space instrumentation instead of uprobes");
 ABSL_FLAG(bool, scheduling, true, "Collect scheduling information");
 ABSL_FLAG(bool, thread_state, false, "Collect thread state information");
 ABSL_FLAG(bool, gpu_jobs, true, "Collect GPU jobs");
@@ -65,13 +68,15 @@ void InstallSigintHandler() {
 
 // On OrbitService's side, and in particular in LinuxTracing, the only information needed to
 // instrument a function is what uprobes need, i.e., the path of the module and the function's
-// offset in the module (address minus load bias). But CaptureClient requires much more than that,
-// through the ModuleManager and the FunctionInfos. For now just keep it simple and leave the fields
-// that are not needed empty.
-void ManipulateModuleManagerAndSelectedFunctionsToAddUprobeFromOffset(
+// offset in the module (address minus load bias); in the case of user space instrumentation, the
+// function size is also needed. But CaptureClient requires much more than that, through the
+// ModuleManager and the FunctionInfos. For now just keep it simple and leave the fields that are
+// not needed empty.
+void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOffset(
     orbit_client_data::ModuleManager* module_manager,
     absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>* selected_functions,
-    const std::string& file_path, uint64_t file_offset, uint64_t function_id) {
+    const std::string& file_path, uint64_t file_offset, uint64_t function_size,
+    uint64_t function_id) {
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
       orbit_object_utils::CreateElfFile(std::filesystem::path{file_path});
   FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
@@ -91,10 +96,11 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddUprobeFromOffset(
   function_info.set_module_path(file_path);
   function_info.set_module_build_id(build_id);
   function_info.set_address(load_bias + file_offset);
+  function_info.set_size(function_size);
   selected_functions->emplace(function_id, function_info);
 }
 
-void ManipulateModuleManagerAndSelectedFunctionsToAddUprobeFromFunctionName(
+void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFunctionName(
     orbit_client_data::ModuleManager* module_manager,
     absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>* selected_functions,
     const std::string& file_path, const std::string& mangled_function_name, uint64_t function_id) {
@@ -118,19 +124,23 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddUprobeFromFunctionName(
   FAIL_IF(symbols_or_error.has_error(), "%s", symbols_or_error.error().message());
   orbit_grpc_protos::ModuleSymbols& symbols = symbols_or_error.value();
 
-  std::optional<uint64_t> address = std::nullopt;
-  for (const orbit_grpc_protos::SymbolInfo& symbol : symbols.symbol_infos()) {
-    if (symbol.name() == mangled_function_name) {
-      address = symbol.address();
+  std::optional<orbit_grpc_protos::SymbolInfo> symbol = std::nullopt;
+  for (const orbit_grpc_protos::SymbolInfo& symbol_candidate : symbols.symbol_infos()) {
+    if (symbol_candidate.name() == mangled_function_name) {
+      symbol = symbol_candidate;
+      break;
     }
   }
-  FAIL_IF(!address.has_value(), "Could not find function \"%s\" in module \"%s\"",
+  FAIL_IF(!symbol.has_value(), "Could not find function \"%s\" in module \"%s\"",
           mangled_function_name, file_path);
 
   orbit_client_protos::FunctionInfo function_info;
+  function_info.set_name(symbol->name());
+  function_info.set_pretty_name(symbol->demangled_name());
   function_info.set_module_path(file_path);
   function_info.set_module_build_id(build_id);
-  function_info.set_address(address.value());
+  function_info.set_address(symbol->address());
+  function_info.set_size(symbol->size());
   selected_functions->emplace(function_id, function_info);
 }
 
@@ -148,14 +158,10 @@ int main(int argc, char* argv[]) {
   absl::SetProgramUsageMessage("Orbit fake client for testing");
   absl::ParseCommandLine(argc, argv);
 
-  FAIL_IF(absl::GetFlag(FLAGS_pid) == 0, "PID to capture not specified");
-  FAIL_IF(absl::GetFlag(FLAGS_duration) == 0, "Specified a zero-length duration");
-  FAIL_IF((absl::GetFlag(FLAGS_instrument_path).empty()) !=
-              (absl::GetFlag(FLAGS_instrument_offset) == 0),
-          "Binary path and offset of the function to instrument need to be specified together");
-
   uint32_t process_id = absl::GetFlag(FLAGS_pid);
   LOG("process_id=%d", process_id);
+  FAIL_IF(process_id == 0, "PID to capture not specified");
+
   uint16_t samples_per_second = absl::GetFlag(FLAGS_sampling_rate);
   LOG("samples_per_second=%u", samples_per_second);
   constexpr uint16_t kStackDumpSize = 65000;
@@ -167,15 +173,26 @@ int main(int argc, char* argv[]) {
       unwinding_method == orbit_grpc_protos::UnwindingMethod::kFramePointerUnwinding
           ? "Frame pointers"
           : "DWARF");
+
   std::string file_path = absl::GetFlag(FLAGS_instrument_path);
   uint64_t file_offset = absl::GetFlag(FLAGS_instrument_offset);
+  FAIL_IF((file_path.empty()) != (file_offset == 0),
+          "Binary path and offset of the function to instrument need to be specified together");
   bool instrument_function = !file_path.empty() && file_offset != 0;
+  uint64_t function_size = absl::GetFlag(FLAGS_instrument_size);
+  bool user_space_instrumentation = absl::GetFlag(FLAGS_user_space_instrumentation);
+  LOG("user_space_instrumentation=%d", user_space_instrumentation);
   if (instrument_function) {
     LOG("file_path=%s", file_path);
     LOG("file_offset=%#x", file_offset);
+    if (user_space_instrumentation) {
+      FAIL_IF(function_size == 0, "User space instrumentation requires the function size");
+      LOG("function_size=%d", function_size);
+    }
   }
   constexpr bool kAlwaysRecordArguments = false;
   constexpr bool kRecordReturnValues = false;
+
   bool collect_scheduling_info = absl::GetFlag(FLAGS_scheduling);
   LOG("collect_scheduling_info=%d", collect_scheduling_info);
   bool collect_thread_state = absl::GetFlag(FLAGS_thread_state);
@@ -184,7 +201,6 @@ int main(int argc, char* argv[]) {
   LOG("collect_gpu_jobs=%d", collect_gpu_jobs);
   constexpr bool kEnableApi = false;
   constexpr bool kEnableIntrospection = false;
-  constexpr bool kEnableUserSpaceInstrumentation = false;
   constexpr uint64_t kMaxLocalMarkerDepthPerCommandBuffer = std::numeric_limits<uint64_t>::max();
   bool collect_memory_info = absl::GetFlag(FLAGS_memory_sampling_rate) > 0;
   LOG("collect_memory_info=%d", collect_memory_info);
@@ -211,8 +227,9 @@ int main(int argc, char* argv[]) {
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
   if (instrument_function) {
     constexpr uint64_t kInstrumentedFunctionId = 1;
-    ManipulateModuleManagerAndSelectedFunctionsToAddUprobeFromOffset(
-        &module_manager, &selected_functions, file_path, file_offset, kInstrumentedFunctionId);
+    ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOffset(
+        &module_manager, &selected_functions, file_path, file_offset, function_size,
+        kInstrumentedFunctionId);
   }
 
   if (absl::GetFlag(FLAGS_frame_time)) {
@@ -231,7 +248,7 @@ int main(int argc, char* argv[]) {
     if (!libvulkan_file_path.empty()) {
       static const std::string kQueuePresentFunctionName{"vkQueuePresentKHR"};
       LOG("%s found: instrumenting %s", kLibvulkanModuleName, kQueuePresentFunctionName);
-      ManipulateModuleManagerAndSelectedFunctionsToAddUprobeFromFunctionName(
+      ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFunctionName(
           &module_manager, &selected_functions, libvulkan_file_path, kQueuePresentFunctionName,
           orbit_fake_client::FakeCaptureEventProcessor::kFrameBoundaryFunctionId);
     }
@@ -243,12 +260,13 @@ int main(int argc, char* argv[]) {
       thread_pool.get(), process_id, module_manager, selected_functions, kAlwaysRecordArguments,
       kRecordReturnValues, orbit_client_data::TracepointInfoSet{}, samples_per_second,
       kStackDumpSize, unwinding_method, collect_scheduling_info, collect_thread_state,
-      collect_gpu_jobs, kEnableApi, kEnableIntrospection, kEnableUserSpaceInstrumentation,
+      collect_gpu_jobs, kEnableApi, kEnableIntrospection, user_space_instrumentation,
       kMaxLocalMarkerDepthPerCommandBuffer, collect_memory_info, memory_sampling_period_ms,
       std::move(capture_event_processor));
   LOG("Asked to start capture");
 
   uint32_t duration_s = absl::GetFlag(FLAGS_duration);
+  FAIL_IF(duration_s == 0, "Specified a zero-length duration");
   absl::Time start_time = absl::Now();
   while (!exit_requested && absl::Now() < start_time + absl::Seconds(duration_s)) {
     std::this_thread::sleep_for(std::chrono::milliseconds{100});
