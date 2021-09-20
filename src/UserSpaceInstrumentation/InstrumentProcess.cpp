@@ -265,7 +265,7 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
           const std::string message = absl::StrFormat(
               "Failed to create trampoline: %s", address_after_prologue_or_error.error().message());
           ERROR("%s", message);
-          result.error_messages[function_id] = message;
+          result.function_ids_to_error_messages[function_id] = message;
           OUTCOME_TRY(ReleaseMostRecentlyAllocatedTrampolineMemory(module_address_range));
           continue;
         }
@@ -286,7 +286,7 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
             absl::StrFormat("Unable to instrument \"%s\": %s", function.function_name(),
                             result_or_error.error().message());
         ERROR("%s", message);
-        result.error_messages[function_id] = message;
+        result.function_ids_to_error_messages[function_id] = message;
       } else {
         addresses_of_instrumented_functions_.insert(function_address);
         result.instrumented_function_ids.insert(function_id);

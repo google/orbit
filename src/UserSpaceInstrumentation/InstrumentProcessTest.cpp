@@ -225,8 +225,8 @@ TEST(InstrumentProcessTest, GetErrorMessage) {
   auto result_or_error = instrumentation_manager->InstrumentProcess(capture_options);
   ASSERT_THAT(result_or_error, HasNoError());
   EXPECT_FALSE(result_or_error.value().instrumented_function_ids.contains(kFunctionId2));
-  ASSERT_EQ(result_or_error.value().error_messages.size(), 1);
-  EXPECT_THAT(result_or_error.value().error_messages[kFunctionId2],
+  ASSERT_EQ(result_or_error.value().function_ids_to_error_messages.size(), 1);
+  EXPECT_THAT(result_or_error.value().function_ids_to_error_messages[kFunctionId2],
               HasSubstr("Failed to create trampoline: Unable to disassemble enough of the function "
                         "to instrument it. Code: c3"));
   auto result = instrumentation_manager->UninstrumentProcess(pid);
