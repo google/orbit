@@ -30,20 +30,33 @@ namespace {
 
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;
+using ::testing::HasSubstr;
 
-constexpr int kFunctionId = 42;
+constexpr int kFunctionId1 = 42;
+constexpr int kFunctionId2 = 43;
 
 orbit_grpc_protos::CaptureOptions BuildCaptureOptions() {
   orbit_grpc_protos::CaptureOptions capture_options;
-  constexpr const char* kFunctionName = "SomethingToInstrument";
-  AddressRange range = GetFunctionRelativeAddressRangeOrDie(kFunctionName);
+
+  constexpr const char* kFunctionName1 = "SomethingToInstrument";
+  AddressRange range = GetFunctionRelativeAddressRangeOrDie(kFunctionName1);
   orbit_grpc_protos::InstrumentedFunction* my_function =
       capture_options.add_instrumented_functions();
-  my_function->set_function_id(kFunctionId);
+  my_function->set_function_id(kFunctionId1);
   my_function->set_file_offset(range.start);
   my_function->set_function_size(range.end - range.start);
-  my_function->set_function_name(kFunctionName);
+  my_function->set_function_name(kFunctionName1);
   my_function->set_file_path(orbit_base::GetExecutablePath());
+
+  constexpr const char* kFunctionName2 = "ReturnImmediately";
+  range = GetFunctionRelativeAddressRangeOrDie(kFunctionName2);
+  my_function = capture_options.add_instrumented_functions();
+  my_function->set_function_id(kFunctionId2);
+  my_function->set_file_offset(range.start);
+  my_function->set_function_size(range.end - range.start);
+  my_function->set_function_name(kFunctionName2);
+  my_function->set_file_path(orbit_base::GetExecutablePath());
+
   return capture_options;
 }
 
@@ -59,6 +72,12 @@ extern "C" int SomethingToInstrument() {
   std::mt19937 gen(rd());
   std::uniform_int_distribution<int> dis(1, 6);
   return dis(gen);
+}
+
+// We will not be able to instrument this - the function is just one byte long and we need five
+// bytes to write a jump.
+extern "C" __attribute__((naked)) int ReturnImmediately() {
+  __asm__ __volatile__("ret \n\t" : : :);
 }
 
 TEST(InstrumentProcessTest, FailToInstrumentAlreadyAttached) {
@@ -99,8 +118,8 @@ TEST(InstrumentProcessTest, FailToInstrumentAlreadyAttached) {
 
   orbit_grpc_protos::CaptureOptions capture_options;
   capture_options.set_pid(pid);
-  auto function_ids_or_error = instrumentation_manager->InstrumentProcess(capture_options);
-  ASSERT_THAT(function_ids_or_error, HasError("is already being traced by"));
+  auto result_or_error = instrumentation_manager->InstrumentProcess(capture_options);
+  ASSERT_THAT(result_or_error, HasError("is already being traced by"));
 
   // End tracer process, end child process.
   kill(pid_tracer, SIGKILL);
@@ -114,8 +133,8 @@ TEST(InstrumentProcessTest, FailToInstrumentInvalidPid) {
 
   orbit_grpc_protos::CaptureOptions capture_options;
   capture_options.set_pid(-1);
-  auto function_ids_or_error = instrumentation_manager->InstrumentProcess(capture_options);
-  ASSERT_THAT(function_ids_or_error, HasError("There is no process with pid"));
+  auto result_or_error = instrumentation_manager->InstrumentProcess(capture_options);
+  ASSERT_THAT(result_or_error, HasError("There is no process with pid"));
 }
 
 TEST(InstrumentProcessTest, FailToInstrumentThisProcess) {
@@ -123,10 +142,10 @@ TEST(InstrumentProcessTest, FailToInstrumentThisProcess) {
 
   orbit_grpc_protos::CaptureOptions capture_options;
   capture_options.set_pid(getpid());
-  auto function_ids_or_error = instrumentation_manager->InstrumentProcess(capture_options);
+  auto result_or_error = instrumentation_manager->InstrumentProcess(capture_options);
   // We do not fail but just instrument nothing.
-  ASSERT_THAT(function_ids_or_error, HasNoError());
-  EXPECT_TRUE(function_ids_or_error.value().empty());
+  ASSERT_THAT(result_or_error, HasNoError());
+  EXPECT_TRUE(result_or_error.value().instrumented_function_ids.empty());
 }
 
 TEST(InstrumentProcessTest, Instrument) {
@@ -145,9 +164,9 @@ TEST(InstrumentProcessTest, Instrument) {
 
   orbit_grpc_protos::CaptureOptions capture_options = BuildCaptureOptions();
   capture_options.set_pid(pid_process_1);
-  auto function_ids_or_error = instrumentation_manager->InstrumentProcess(capture_options);
-  ASSERT_THAT(function_ids_or_error, HasNoError());
-  EXPECT_TRUE(function_ids_or_error.value().contains(kFunctionId));
+  auto result_or_error = instrumentation_manager->InstrumentProcess(capture_options);
+  ASSERT_THAT(result_or_error, HasNoError());
+  EXPECT_TRUE(result_or_error.value().instrumented_function_ids.contains(kFunctionId1));
   auto result = instrumentation_manager->UninstrumentProcess(pid_process_1);
   ASSERT_THAT(result, HasNoError());
 
@@ -170,9 +189,9 @@ TEST(InstrumentProcessTest, Instrument) {
 
   capture_options.set_pid(pid_process_2);
   for (int i = 0; i < 5; i++) {
-    function_ids_or_error = instrumentation_manager->InstrumentProcess(capture_options);
-    ASSERT_THAT(function_ids_or_error, HasNoError());
-    EXPECT_TRUE(function_ids_or_error.value().contains(kFunctionId));
+    result_or_error = instrumentation_manager->InstrumentProcess(capture_options);
+    ASSERT_THAT(result_or_error, HasNoError());
+    EXPECT_TRUE(result_or_error.value().instrumented_function_ids.contains(kFunctionId1));
     result = instrumentation_manager->UninstrumentProcess(pid_process_2);
     ASSERT_THAT(result, HasNoError());
   }
@@ -180,6 +199,40 @@ TEST(InstrumentProcessTest, Instrument) {
   // End child pid_process_2.
   kill(pid_process_2, SIGKILL);
   waitpid(pid_process_2, nullptr, 0);
+}
+
+TEST(InstrumentProcessTest, GetErrorMessage) {
+  // The function "ReturnImmediately" compiles to something unexpected in gcc. So we only run this
+  // test with the release build of clang.
+#if defined(ORBIT_COVERAGE_BUILD) || !defined(__clang__) || !defined(NDEBUG)
+  GTEST_SKIP();
+#endif
+  InstrumentationManager* instrumentation_manager = GetInstrumentationManager();
+
+  const pid_t pid = fork();
+  CHECK(pid != -1);
+  if (pid == 0) {
+    // Endless loops without side effects are UB and recent versions of clang optimize
+    // it away. Making `sum` volatile avoids that problem.
+    volatile int sum = 0;
+    while (true) {
+      sum += SomethingToInstrument();
+    }
+  }
+
+  orbit_grpc_protos::CaptureOptions capture_options = BuildCaptureOptions();
+  capture_options.set_pid(pid);
+  auto result_or_error = instrumentation_manager->InstrumentProcess(capture_options);
+  ASSERT_THAT(result_or_error, HasNoError());
+  EXPECT_FALSE(result_or_error.value().instrumented_function_ids.contains(kFunctionId2));
+  ASSERT_EQ(result_or_error.value().function_ids_to_error_messages.size(), 1);
+  EXPECT_THAT(result_or_error.value().function_ids_to_error_messages[kFunctionId2],
+              HasSubstr("Failed to create trampoline: Unable to disassemble enough of the function "
+                        "to instrument it. Code: c3"));
+  auto result = instrumentation_manager->UninstrumentProcess(pid);
+  ASSERT_THAT(result, HasNoError());
+  kill(pid, SIGKILL);
+  waitpid(pid, nullptr, 0);
 }
 
 }  // namespace orbit_user_space_instrumentation
