@@ -150,7 +150,7 @@ void TimeGraph::ZoomTime(float zoom_value, double mouse_ratio) {
   SetMinMax(min_time_us, max_time_us);
 }
 
-void TimeGraph::VerticalZoom(float zoom_value, float mouse_relative_position) {
+void TimeGraph::VerticalZoom(float zoom_value, float mouse_normalized_y_position) {
   constexpr float kIncrementRatio = 0.1f;
 
   const float ratio = (zoom_value > 0) ? (1 + kIncrementRatio) : (1 / (1 + kIncrementRatio));
@@ -164,8 +164,8 @@ void TimeGraph::VerticalZoom(float zoom_value, float mouse_relative_position) {
 
   const float world_height = viewport_->GetVisibleWorldHeight();
   const float mouse_position_in_world_y =
-      viewport_->GetScreenTopLeftInWorld()[1] + mouse_relative_position * world_height;
-  const float mouse_position_in_screen =
+      viewport_->GetScreenTopLeftInWorld()[1] + mouse_normalized_y_position * world_height;
+  const float relative_mouse_position_in_world_y =
       mouse_position_in_world_y - viewport_->GetScreenTopLeftInWorld()[1];
 
   // We define world system coordinates in relation of the screen. As we are zooming on the screen,
@@ -173,7 +173,8 @@ void TimeGraph::VerticalZoom(float zoom_value, float mouse_relative_position) {
   // adapted in the same way.
   const float new_mouse_position_in_world_y = mouse_position_in_world_y / capped_ratio;
 
-  float new_screen_top_left_in_world_y = new_mouse_position_in_world_y - mouse_position_in_screen;
+  float new_screen_top_left_in_world_y =
+      new_mouse_position_in_world_y - relative_mouse_position_in_world_y;
 
   viewport_->SetScreenTopLeftInWorldY(new_screen_top_left_in_world_y);
 }
