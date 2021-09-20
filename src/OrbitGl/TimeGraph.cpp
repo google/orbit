@@ -163,15 +163,19 @@ void TimeGraph::VerticalZoom(float zoom_value, float mouse_relative_position) {
   const float capped_ratio = old_scale / layout_.GetScale();
 
   const float world_height = viewport_->GetVisibleWorldHeight();
-  const float y_mouse_position =
-      viewport_->GetScreenTopLeftInWorld()[1] - mouse_relative_position * world_height;
-  const float top_distance = viewport_->GetScreenTopLeftInWorld()[1] - y_mouse_position;
+  const float mouse_position_in_world_y =
+      viewport_->GetScreenTopLeftInWorld()[1] + mouse_relative_position * world_height;
+  const float mouse_position_in_screen =
+      mouse_position_in_world_y - viewport_->GetScreenTopLeftInWorld()[1];
 
-  const float new_y_mouse_position = y_mouse_position / capped_ratio;
+  // We define world system coordinates in relation of the screen. As we are zooming on the screen,
+  // the world is being expanded or collapsed. Therefore the mouse position in world should be
+  // adapted in the same way.
+  const float new_mouse_position_in_world_y = mouse_position_in_world_y / capped_ratio;
 
-  float new_world_top_left_y = new_y_mouse_position + top_distance;
+  float new_screen_top_left_in_world_y = new_mouse_position_in_world_y - mouse_position_in_screen;
 
-  viewport_->SetScreenTopLeftInWorldY(new_world_top_left_y);
+  viewport_->SetScreenTopLeftInWorldY(new_screen_top_left_in_world_y);
 }
 
 void TimeGraph::SetMinMax(double min_time_us, double max_time_us) {
