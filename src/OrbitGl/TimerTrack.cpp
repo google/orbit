@@ -339,48 +339,12 @@ std::string TimerTrack::GetTooltip() const {
          "functions";
 }
 
-const TimerInfo* TimerTrack::GetFirstAfterTime(uint64_t time, uint32_t depth) const {
-  const orbit_client_data::TimerChain* chain = timer_data_->GetChain(depth);
-  if (chain == nullptr) return nullptr;
-
-  // TODO: do better than linear search...
-  for (const auto& it : *chain) {
-    for (size_t k = 0; k < it.size(); ++k) {
-      const TimerInfo& timer_info = it[k];
-      if (timer_info.start() > time) {
-        return &timer_info;
-      }
-    }
-  }
-  return nullptr;
-}
-
-const TimerInfo* TimerTrack::GetFirstBeforeTime(uint64_t time, uint32_t depth) const {
-  const orbit_client_data::TimerChain* chain = timer_data_->GetChain(depth);
-  if (chain == nullptr) return nullptr;
-
-  const TimerInfo* first_timer_before_time = nullptr;
-
-  // TODO: do better than linear search...
-  for (const auto& it : *chain) {
-    for (size_t k = 0; k < it.size(); ++k) {
-      const TimerInfo* timer_info = &it[k];
-      if (timer_info->start() > time) {
-        return first_timer_before_time;
-      }
-      first_timer_before_time = timer_info;
-    }
-  }
-
-  return nullptr;
-}
-
 const TimerInfo* TimerTrack::GetUp(const TimerInfo& timer_info) const {
-  return GetFirstBeforeTime(timer_info.start(), timer_info.depth() - 1);
+  return timer_data_->GetFirstBeforeTime(timer_info.start(), timer_info.depth() - 1);
 }
 
 const TimerInfo* TimerTrack::GetDown(const TimerInfo& timer_info) const {
-  return GetFirstAfterTime(timer_info.start(), timer_info.depth() + 1);
+  return timer_data_->GetFirstAfterTime(timer_info.start(), timer_info.depth() + 1);
 }
 
 std::vector<const orbit_client_protos::TimerInfo*> TimerTrack::GetScopesInRange(

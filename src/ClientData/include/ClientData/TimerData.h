@@ -66,6 +66,44 @@ class TimerData final {
 
   void UpdateMaxDepth(uint32_t depth) { max_depth_ = std::max(max_depth_, depth); }
 
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetFirstAfterTime(uint64_t time,
+                                                                        uint32_t depth) const {
+    const orbit_client_data::TimerChain* chain = GetChain(depth);
+    if (chain == nullptr) return nullptr;
+
+    // TODO: do better than linear search...
+    for (const auto& it : *chain) {
+      for (size_t k = 0; k < it.size(); ++k) {
+        const orbit_client_protos::TimerInfo& timer_info = it[k];
+        if (timer_info.start() > time) {
+          return &timer_info;
+        }
+      }
+    }
+    return nullptr;
+  }
+
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetFirstBeforeTime(uint64_t time,
+                                                                         uint32_t depth) const {
+    const orbit_client_data::TimerChain* chain = GetChain(depth);
+    if (chain == nullptr) return nullptr;
+
+    const orbit_client_protos::TimerInfo* first_timer_before_time = nullptr;
+
+    // TODO: do better than linear search...
+    for (const auto& it : *chain) {
+      for (size_t k = 0; k < it.size(); ++k) {
+        const orbit_client_protos::TimerInfo* timer_info = &it[k];
+        if (timer_info->start() > time) {
+          return first_timer_before_time;
+        }
+        first_timer_before_time = timer_info;
+      }
+    }
+
+    return nullptr;
+  }
+
  private:
   [[nodiscard]] TimerChain* GetOrCreateTimerChain(uint64_t depth) {
     absl::MutexLock lock(&mutex_);
