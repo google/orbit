@@ -2206,15 +2206,14 @@ void OrbitApp::DeselectFunction(const orbit_client_protos::FunctionInfo& func) {
   const auto result = process->FindModuleByAddress(absolute_address);
   if (result.has_error()) return false;
 
-  const std::string& module_path = result.value().file_path();
-  const std::string& module_build_id = result.value().build_id();
-  const uint64_t module_base_address = result.value().start();
+  const orbit_client_data::ModuleInMemory& module_in_memory = result.value();
 
-  const ModuleData* module = GetModuleByPathAndBuildId(module_path, module_build_id);
+  const ModuleData* module = module_manager_->GetModuleByModuleInMemoryAndAbsoluteAddress(
+      module_in_memory, absolute_address);
   if (module == nullptr) return false;
 
   const uint64_t offset = orbit_object_utils::SymbolAbsoluteAddressToOffset(
-      absolute_address, module_base_address, module->executable_segment_offset());
+      absolute_address, module_in_memory.start(), module->executable_segment_offset());
   const FunctionInfo* function = module->FindFunctionByOffset(offset, false);
   if (function == nullptr) return false;
 
