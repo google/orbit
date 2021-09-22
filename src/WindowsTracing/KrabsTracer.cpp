@@ -7,7 +7,7 @@
 #include <optional>
 
 #include "ClockUtils.h"
-#include "EventTypes.h"
+#include "EtwEventTypes.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
 
@@ -17,10 +17,10 @@ using orbit_grpc_protos::SchedulingSlice;
 
 KrabsTracer::KrabsTracer(orbit_grpc_protos::CaptureOptions capture_options,
                          TracerListener* listener)
-    : Tracer(std::move(capture_options), listener), trace_(KERNEL_LOGGER_NAME) {
+    : TracerInterface(std::move(capture_options), listener), trace_(KERNEL_LOGGER_NAME) {
   SetTraceProperties();
   EnableProviders();
-};
+}
 
 void KrabsTracer::SetTraceProperties() {
   // https://docs.microsoft.com/en-us/windows/win32/api/evntrace/ns-evntrace-event_trace_properties
@@ -44,16 +44,16 @@ void KrabsTracer::EnableProviders() {
 }
 
 void KrabsTracer::Start() {
-  CHECK(thread_ == nullptr);
+  CHECK(trace_thread_ == nullptr);
   context_switch_manager_ = std::make_unique<ContextSwitchManager>(listener_);
-  thread_ = std::make_unique<std::thread>(&KrabsTracer::Run, this);
+  trace_thread_ = std::make_unique<std::thread>(&KrabsTracer::Run, this);
 }
 
 void KrabsTracer::Stop() {
-  CHECK(thread_ != nullptr && thread_->joinable());
+  CHECK(trace_thread_ != nullptr && trace_thread_->joinable());
   trace_.stop();
-  thread_->join();
-  thread_ = nullptr;
+  trace_thread_->join();
+  trace_thread_ = nullptr;
   OutputStats();
   context_switch_manager_ = nullptr;
 }
@@ -65,9 +65,9 @@ void KrabsTracer::Run() {
 
 void KrabsTracer::OnThreadEvent(const EVENT_RECORD& record, const krabs::trace_context& context) {
   switch (record.EventHeader.EventDescriptor.Opcode) {
-    case Thread_TypeGroup1::kOpcodeStart:
-    case Thread_TypeGroup1::kOpcodeDcStart:
-    case Thread_TypeGroup1::kOpcodeDcEnd: {
+    case etw::Thread_TypeGroup1::kStart:
+    case etw::Thread_TypeGroup1::kDcStart:
+    case etw::Thread_TypeGroup1::kDcEnd: {
       // The Start event type corresponds to a thread's creation. The DCStart and DCEnd event types
       // enumerate the threads that are currently running at the time the kernel session starts and
       // ends, respectively.
@@ -75,20 +75,21 @@ void KrabsTracer::OnThreadEvent(const EVENT_RECORD& record, const krabs::trace_c
       krabs::parser parser(schema);
       uint32_t tid = parser.parse<uint32_t>(L"TThreadId");
       uint32_t pid = parser.parse<uint32_t>(L"ProcessId");
-      context_switch_manager_->ProcessThreadEvent(tid, pid);
+      context_switch_manager_->ProcessTidToPidMapping(tid, pid);
       break;
     }
-    case Thread_CSwitch::kOpcodeCSwitch: {
+    case etw::Thread_CSwitch::kCSwitch: {
       // https://docs.microsoft.com/en-us/windows/win32/etw/cswitch
       krabs::schema schema(record, context.schema_locator);
       krabs::parser parser(schema);
       uint32_t old_tid = parser.parse<uint32_t>(L"OldThreadId");
       uint32_t new_tid = parser.parse<uint32_t>(L"NewThreadId");
-      uint64_t timestamp_ns = ClockUtils::RawTimestampToNs(record.EventHeader.TimeStamp.QuadPart);
+      uint64_t timestamp_ns = clock_utils::RawTimestampToNs(record.EventHeader.TimeStamp.QuadPart);
       uint16_t cpu = record.BufferContext.ProcessorIndex;
-      context_switch_manager_->ProcessCpuEvent(cpu, old_tid, new_tid, timestamp_ns);
+      context_switch_manager_->ProcessContextSwitch(cpu, old_tid, new_tid, timestamp_ns);
     } break;
     default:
+      // Discard uninteresting thread events.
       break;
   }
 }

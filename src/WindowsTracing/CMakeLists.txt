@@ -21,13 +21,14 @@ target_include_directories(WindowsTracing PRIVATE
 
 target_sources(WindowsTracing PUBLIC
         include/WindowsTracing/Tracer.h
+        include/WindowsTracing/TracerInterface.h
         include/WindowsTracing/TracerListener.h)
 
 target_sources(WindowsTracing PRIVATE
         ClockUtils.h
         ContextSwitchManager.cpp
         ContextSwitchManager.h
-        EventTypes.h
+        EtwEventTypes.h
         KrabsTracer.cpp
         KrabsTracer.h
         Tracer.cpp)

@@ -18,8 +18,8 @@ TEST(ContextSwitch, ListenerIsCalled) {
 
   EXPECT_CALL(mock_listener, OnSchedulingSlice).Times(testing::Exactly(1));
 
-  manager.ProcessCpuEvent(/*cpu=*/0, /*old_tid=*/1, /*new_tid=*/2, /*timestamp_ns=*/0);
-  manager.ProcessCpuEvent(/*cpu=*/0, /*old_tid=*/2, /*new_tid=*/1, /*timestamp_ns=*/1);
+  manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/1, /*new_tid=*/2, /*timestamp_ns=*/0);
+  manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/2, /*new_tid=*/1, /*timestamp_ns=*/1);
 }
 
 TEST(ContextSwitch, InvalidPidIsSet) {
@@ -30,8 +30,8 @@ TEST(ContextSwitch, InvalidPidIsSet) {
 
   EXPECT_CALL(mock_listener, OnSchedulingSlice).Times(testing::Exactly(1));
 
-  manager.ProcessCpuEvent(/*cpu=*/0, /*old_tid=*/1, /*new_tid=*/2, /*timestamp_ns=*/0);
-  manager.ProcessCpuEvent(/*cpu=*/0, /*old_tid=*/2, /*new_tid=*/1, /*timestamp_ns=*/1);
+  manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/1, /*new_tid=*/2, /*timestamp_ns=*/0);
+  manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/2, /*new_tid=*/1, /*timestamp_ns=*/1);
 
   EXPECT_EQ(fake_listener.scheduling_slices_.size(), 1);
   EXPECT_EQ(fake_listener.scheduling_slices_[0].pid(), orbit_base::kInvalidProcessId);
@@ -46,9 +46,9 @@ TEST(ContextSwitch, ValidPidIsSet) {
 
   EXPECT_CALL(mock_listener, OnSchedulingSlice).Times(testing::Exactly(1));
 
-  manager.ProcessThreadEvent(/*tid*/ 2, /*pid=*/3);
-  manager.ProcessCpuEvent(/*cpu=*/0, /*old_tid=*/1, /*new_tid=*/2, /*timestamp_ns=*/0);
-  manager.ProcessCpuEvent(/*cpu=*/0, /*old_tid=*/2, /*new_tid=*/1, /*timestamp_ns=*/1);
+  manager.ProcessTidToPidMapping(/*tid*/ 2, /*pid=*/3);
+  manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/1, /*new_tid=*/2, /*timestamp_ns=*/0);
+  manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/2, /*new_tid=*/1, /*timestamp_ns=*/1);
 
   EXPECT_EQ(fake_listener.scheduling_slices_.size(), 1);
   EXPECT_EQ(fake_listener.scheduling_slices_[0].pid(), 3);
@@ -63,10 +63,10 @@ TEST(ContextSwitch, Stats) {
   EXPECT_CALL(mock_listener, OnSchedulingSlice).Times(testing::Exactly(2));
 
   // Thread event that has nothing to do with cpu events below.
-  manager.ProcessThreadEvent(/*tid*/ 123, /*pid=*/456);
+  manager.ProcessTidToPidMapping(/*tid*/ 123, /*pid=*/456);
 
-  manager.ProcessCpuEvent(/*cpu=*/0, /*old_tid=*/1, /*new_tid=*/2, /*timestamp_ns=*/0);
-  manager.ProcessCpuEvent(/*cpu=*/0, /*old_tid=*/2, /*new_tid=*/1, /*timestamp_ns=*/1);
+  manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/1, /*new_tid=*/2, /*timestamp_ns=*/0);
+  manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/2, /*new_tid=*/1, /*timestamp_ns=*/1);
 
   const ContextSwitchManager::Stats& stats = manager.GetStats();
   EXPECT_EQ(stats.num_processed_thread_events_, 1);
@@ -77,9 +77,9 @@ TEST(ContextSwitch, Stats) {
   EXPECT_EQ(stats.tid_witout_pid_set_.size(), 1);
   EXPECT_TRUE(stats.tid_witout_pid_set_.find(/*tid=*/2) != stats.tid_witout_pid_set_.end());
 
-  manager.ProcessThreadEvent(/*tid*/ 2, /*pid=*/3);
-  manager.ProcessCpuEvent(/*cpu=*/1, /*old_tid=*/1, /*new_tid=*/2, /*timestamp_ns=*/0);
-  manager.ProcessCpuEvent(/*cpu=*/1, /*old_tid=*/2, /*new_tid=*/1, /*timestamp_ns=*/1);
+  manager.ProcessTidToPidMapping(/*tid*/ 2, /*pid=*/3);
+  manager.ProcessContextSwitch(/*cpu=*/1, /*old_tid=*/1, /*new_tid=*/2, /*timestamp_ns=*/0);
+  manager.ProcessContextSwitch(/*cpu=*/1, /*old_tid=*/2, /*new_tid=*/1, /*timestamp_ns=*/1);
 
   EXPECT_EQ(stats.num_processed_thread_events_, 2);
   EXPECT_EQ(stats.num_processed_cpu_events_, 4);
@@ -99,8 +99,8 @@ TEST(ContextSwitch, TidMismatch) {
 
   EXPECT_CALL(mock_listener, OnSchedulingSlice).Times(testing::Exactly(0));
 
-  manager.ProcessCpuEvent(/*cpu=*/0, /*old_tid=*/1, /*new_tid=*/2, /*timestamp_ns=*/0);
-  manager.ProcessCpuEvent(/*cpu=*/0, /*old_tid=*/0, /*new_tid=*/3, /*timestamp_ns=*/1);
+  manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/1, /*new_tid=*/2, /*timestamp_ns=*/0);
+  manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/0, /*new_tid=*/3, /*timestamp_ns=*/1);
 
   const ContextSwitchManager::Stats& stats = manager.GetStats();
   EXPECT_EQ(stats.num_tid_mismatches_, 1);

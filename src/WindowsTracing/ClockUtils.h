@@ -9,31 +9,19 @@
 
 #include <cstdint>
 
-namespace orbit_windows_tracing {
+namespace orbit_windows_tracing::clock_utils {
 
-class ClockUtils {
- public:
-  [[nodiscard]] static inline uint64_t RawTimestampToNs(uint64_t raw_timestamp) {
-    return raw_timestamp * GetInstance().performance_period_ns_;
-  }
+[[nodiscard]] uint64_t GetPerformanceCounterPeriodNs() {
+  LARGE_INTEGER frequency;
+  QueryPerformanceFrequency(&frequency);
+  return 1'000'000'000 / frequency.QuadPart;
+}
 
- private:
-  ClockUtils() {
-    LARGE_INTEGER frequency;
-    QueryPerformanceFrequency(&frequency);
-    performance_frequency_ = frequency.QuadPart;
-    performance_period_ns_ = 1'000'000'000 / performance_frequency_;
-  }
+[[nodiscard]] static inline uint64_t RawTimestampToNs(uint64_t raw_timestamp) {
+  static uint64_t performance_period_ns_ = GetPerformanceCounterPeriodNs();
+  return raw_timestamp * performance_period_ns_;
+}
 
-  [[nodiscard]] static ClockUtils& GetInstance() {
-    static ClockUtils clock_utils;
-    return clock_utils;
-  }
-
-  uint64_t performance_frequency_;
-  uint64_t performance_period_ns_;
-};
-
-}  // namespace orbit_windows_tracing
+}  // namespace orbit_windows_tracing::clock_utils
 
 #endif  // WINDOWS_TRACING_CLOCK_UTILS_H_
