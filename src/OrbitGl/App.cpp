@@ -279,6 +279,13 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
   main_thread_executor_->Schedule(
       [this, &initialization_complete, &mutex, &capture_started, file_path = std::move(file_path),
        frame_track_function_ids = std::move(frame_track_function_ids)]() mutable {
+        absl::flat_hash_map<Track::Type, bool> track_type_visibility;
+        bool had_capture = capture_window_->GetTimeGraph();
+        if (had_capture) {
+          track_type_visibility =
+              capture_window_->GetTimeGraph()->GetTrackManager()->GetAllTrackTypesVisibility();
+        }
+
         ClearCapture();
 
         if (file_path.has_value()) {
@@ -292,6 +299,9 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
         capture_window_->CreateTimeGraph(capture_data_.get());
         TrackManager* track_manager = GetMutableTimeGraph()->GetTrackManager();
         track_manager->SetIsDataFromSavedCapture(is_loading_capture_);
+        if (had_capture) {
+          track_manager->RestoreAllTrackTypesVisibility(track_type_visibility);
+        }
 
         frame_track_online_processor_ =
             orbit_gl::FrameTrackOnlineProcessor(GetCaptureData(), GetMutableTimeGraph());

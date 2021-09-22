@@ -145,4 +145,41 @@ TEST_F(TrackManagerTest, TrackTypeVisibilityAffectsVisibleTrackList) {
   EXPECT_EQ(kNumTracks - 1, track_manager_.GetVisibleTracks().size());
 }
 
+TEST_F(TrackManagerTest, TrackTypeVisibilityIsRestored) {
+  CreateAndFillTracks();
+  auto match_visible_track_types = [&](std::set<Track::Type> types) -> bool {
+    bool result = true;
+
+    for (Track::Type type : Track::kAllTrackTypes) {
+      auto type_it = types.find(type);
+      if (type_it != types.end()) {
+        result = result && track_manager_.GetTrackTypeVisibility(type);
+      } else {
+        result = result && !track_manager_.GetTrackTypeVisibility(type);
+      }
+    }
+
+    return result;
+  };
+
+  EXPECT_TRUE(match_visible_track_types(Track::kAllTrackTypes));
+  auto visibility_prev = track_manager_.GetAllTrackTypesVisibility();
+
+  track_manager_.SetTrackTypeVisibility(Track::Type::kThreadTrack, false);
+  track_manager_.SetTrackTypeVisibility(Track::Type::kSchedulerTrack, false);
+
+  std::set<Track::Type> visible_tracks{Track::kAllTrackTypes};
+  visible_tracks.erase(Track::Type::kThreadTrack);
+  visible_tracks.erase(Track::Type::kSchedulerTrack);
+
+  EXPECT_TRUE(match_visible_track_types(visible_tracks));
+  auto visibility_after = track_manager_.GetAllTrackTypesVisibility();
+
+  track_manager_.RestoreAllTrackTypesVisibility(visibility_prev);
+  EXPECT_TRUE(match_visible_track_types(Track::kAllTrackTypes));
+
+  track_manager_.RestoreAllTrackTypesVisibility(visibility_after);
+  EXPECT_TRUE(match_visible_track_types(visible_tracks));
+}
+
 }  // namespace orbit_gl
