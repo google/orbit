@@ -101,8 +101,8 @@ void KrabsTracer::OutputStats() {
   LOG("Free buffers: %u", trace_stats.buffersFree);
   LOG("Buffers written: %u", trace_stats.buffersWritten);
   LOG("Buffers lost: %u", trace_stats.buffersLost);
-  LOG("Events total (handled+lost): %lu", trace_stats.eventsTotal);
-  LOG("Events handled: %lu", trace_stats.eventsHandled);
+  LOG("Events total (handled+lost): %u", trace_stats.eventsTotal);
+  LOG("Events handled: %u", trace_stats.eventsHandled);
   LOG("Events lost: %u", trace_stats.eventsLost);
   context_switch_manager_->OutputStats();
 }
