@@ -10,13 +10,14 @@
 #include "OrbitBase/ThreadUtils.h"
 #include "capture.pb.h"
 
+using ::testing::SaveArg;
 namespace orbit_windows_tracing {
 
 TEST(ContextSwitch, ListenerIsCalled) {
   orbit_windows_tracing::MockTracerListener mock_listener;
   ContextSwitchManager manager(&mock_listener);
 
-  EXPECT_CALL(mock_listener, OnSchedulingSlice).Times(testing::Exactly(1));
+  EXPECT_CALL(mock_listener, OnSchedulingSlice).Times(1);
 
   manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/1, /*new_tid=*/2, /*timestamp_ns=*/0);
   manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/2, /*new_tid=*/1, /*timestamp_ns=*/1);
@@ -24,45 +25,39 @@ TEST(ContextSwitch, ListenerIsCalled) {
 
 TEST(ContextSwitch, InvalidPidIsSet) {
   orbit_windows_tracing::MockTracerListener mock_listener;
-  orbit_windows_tracing::FakeTracerListener& fake_listener = mock_listener.fake_;
-  mock_listener.DelegateToFake();
   ContextSwitchManager manager(&mock_listener);
 
-  EXPECT_CALL(mock_listener, OnSchedulingSlice).Times(testing::Exactly(1));
+  orbit_grpc_protos::SchedulingSlice scheduling_slice;
+  EXPECT_CALL(mock_listener, OnSchedulingSlice).Times(1).WillOnce(SaveArg<0>(&scheduling_slice));
 
   manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/1, /*new_tid=*/2, /*timestamp_ns=*/0);
   manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/2, /*new_tid=*/1, /*timestamp_ns=*/1);
 
-  EXPECT_EQ(fake_listener.scheduling_slices_.size(), 1);
-  EXPECT_EQ(fake_listener.scheduling_slices_[0].pid(), orbit_base::kInvalidProcessId);
-  EXPECT_EQ(fake_listener.scheduling_slices_[0].tid(), 2);
+  EXPECT_EQ(scheduling_slice.pid(), orbit_base::kInvalidProcessId);
+  EXPECT_EQ(scheduling_slice.tid(), 2);
 }
 
 TEST(ContextSwitch, ValidPidIsSet) {
   orbit_windows_tracing::MockTracerListener mock_listener;
-  orbit_windows_tracing::FakeTracerListener& fake_listener = mock_listener.fake_;
-  mock_listener.DelegateToFake();
   ContextSwitchManager manager(&mock_listener);
 
-  EXPECT_CALL(mock_listener, OnSchedulingSlice).Times(testing::Exactly(1));
+  orbit_grpc_protos::SchedulingSlice scheduling_slice;
+  EXPECT_CALL(mock_listener, OnSchedulingSlice).Times(1).WillOnce(SaveArg<0>(&scheduling_slice));
 
   manager.ProcessTidToPidMapping(/*tid*/ 2, /*pid=*/3);
   manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/1, /*new_tid=*/2, /*timestamp_ns=*/0);
   manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/2, /*new_tid=*/1, /*timestamp_ns=*/1);
 
-  EXPECT_EQ(fake_listener.scheduling_slices_.size(), 1);
-  EXPECT_EQ(fake_listener.scheduling_slices_[0].pid(), 3);
+  EXPECT_EQ(scheduling_slice.pid(), 3);
 }
 
 TEST(ContextSwitch, Stats) {
   orbit_windows_tracing::MockTracerListener mock_listener;
-  orbit_windows_tracing::FakeTracerListener& fake_listener = mock_listener.fake_;
-  mock_listener.DelegateToFake();
   ContextSwitchManager manager(&mock_listener);
 
-  EXPECT_CALL(mock_listener, OnSchedulingSlice).Times(testing::Exactly(2));
+  EXPECT_CALL(mock_listener, OnSchedulingSlice).Times(2);
 
-  // Thread event that has nothing to do with cpu events below.
+  // TidToPid event not related to context switch below.
   manager.ProcessTidToPidMapping(/*tid*/ 123, /*pid=*/456);
 
   manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/1, /*new_tid=*/2, /*timestamp_ns=*/0);
@@ -87,17 +82,13 @@ TEST(ContextSwitch, Stats) {
   EXPECT_EQ(stats.num_tid_mismatches_, 0);
   EXPECT_EQ(stats.num_scheduling_slices_with_invalid_pid, 1);
   EXPECT_EQ(stats.tid_witout_pid_set_.size(), 1);
-  EXPECT_EQ(fake_listener.scheduling_slices_[1].pid(), 3);
-  EXPECT_EQ(fake_listener.scheduling_slices_[1].tid(), 2);
 }
 
 TEST(ContextSwitch, TidMismatch) {
   orbit_windows_tracing::MockTracerListener mock_listener;
-  orbit_windows_tracing::FakeTracerListener& fake_listener = mock_listener.fake_;
-  mock_listener.DelegateToFake();
   ContextSwitchManager manager(&mock_listener);
 
-  EXPECT_CALL(mock_listener, OnSchedulingSlice).Times(testing::Exactly(0));
+  EXPECT_CALL(mock_listener, OnSchedulingSlice).Times(0);
 
   manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/1, /*new_tid=*/2, /*timestamp_ns=*/0);
   manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/0, /*new_tid=*/3, /*timestamp_ns=*/1);
