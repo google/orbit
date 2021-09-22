@@ -7,85 +7,82 @@
 
 #include <cstdint>
 
+namespace orbit_windows_tracing::etw {
+
+// ETW event types grouped by event class. Note that an event type name is of the form
+// "[parent class]_[event class]". The parent class is associated with a guid that is used
+// to dispatch events to a particular callback for processing.
+// See https://docs.microsoft.com/en-us/windows/win32/etw/event-tracing-mof-classes.
+
 // https://docs.microsoft.com/en-us/windows/win32/etw/thread-typegroup1
-// [EventType{ 1, 2, 3, 4 }, EventTypeName{ "Start", "End", "DCStart", "DCEnd" }]
-struct Thread_TypeGroup1 {
-  static constexpr uint8_t kOpcodeStart = 1;
-  static constexpr uint8_t kOpcodeEnd = 2;
-  static constexpr uint8_t kOpcodeDcStart = 3;
-  static constexpr uint8_t kOpcodeDcEnd = 4;
-};
+namespace Thread_TypeGroup1 {
+static constexpr uint8_t kStart = 1;
+static constexpr uint8_t kEnd = 2;
+static constexpr uint8_t kDcStart = 3;
+static constexpr uint8_t kDcEnd = 4;
+};  // namespace Thread_TypeGroup1
 
 // https://docs.microsoft.com/en-us/windows/win32/etw/cswitch
-// [EventType{36}, EventTypeName{"CSwitch"}]
-struct Thread_CSwitch {
-  static constexpr uint8_t kOpcodeCSwitch = 36;
+namespace Thread_CSwitch {
+static constexpr uint8_t kCSwitch = 36;
 };
 
 // https://docs.microsoft.com/en-us/windows/win32/etw/sampledprofile
-// [EventType{ 46 }, EventTypeName{ "SampleProfile" }]
-struct PerfInfo_SampledProfile {
-  static constexpr uint8_t kOpcodeSampleProfile = 46;
+namespace PerfInfo_SampledProfile {
+static constexpr uint8_t kSampleProfile = 46;
 };
 
 // https://docs.microsoft.com/en-us/windows/win32/etw/diskio-typegroup1
-// [EventType{ 10,11 }, EventTypeName{ "Read","Write" }]
-struct DiskIo_TypeGroup1 {
-  static constexpr uint8_t kOpcodeRead = 10;
-  static constexpr uint8_t kOpcodeWrite = 11;
-};
+namespace DiskIo_TypeGroup1 {
+static constexpr uint8_t kRead = 10;
+static constexpr uint8_t kWrite = 11;
+};  // namespace DiskIo_TypeGroup1
 
 // https://docs.microsoft.com/en-us/windows/win32/etw/diskio-typegroup2
-// [EventType{ 12, 13, 15 }, EventTypeName{ "ReadInit", "WriteInit", "FlushInit" }]
-struct DiskIo_TypeGroup2 {
-  static constexpr uint8_t kOpcodeReadInit = 12;
-  static constexpr uint8_t kOpcodeWriteInit = 13;
-  static constexpr uint8_t kOpcodeFlushInit = 15;
-};
+namespace DiskIo_TypeGroup2 {
+static constexpr uint8_t kReadInit = 12;
+static constexpr uint8_t kWriteInit = 13;
+static constexpr uint8_t kFlushInit = 15;
+};  // namespace DiskIo_TypeGroup2
 
 // https://docs.microsoft.com/is-is/windows/win32/etw/diskio-typegroup3
-// [EventType{ 14 }, EventTypeName{ "FlushBuffers" }]
-struct DiskIo_TypeGroup3 {
-  static constexpr uint8_t kOpcodeFlushBuffer = 14;
+namespace DiskIo_TypeGroup3 {
+static constexpr uint8_t kFlushBuffer = 14;
 };
 
 // https://docs.microsoft.com/en-us/windows/win32/etw/fileio-name
-// [EventType{ 0, 32, 35, 36 }, EventTypeName{ "Name", "FileCreate", "FileDelete", "FileRundown" }]
-struct FileIo_Name {
-  static constexpr uint8_t kOpcodeName = 0;
-  static constexpr uint8_t kOpcodeFileCreate = 32;
-  static constexpr uint8_t kOpcodeFileDelete = 35;
-  static constexpr uint8_t kOpcodeFileRunDown = 36;
-};
+namespace FileIo_Name {
+static constexpr uint8_t kName = 0;
+static constexpr uint8_t kFileCreate = 32;
+static constexpr uint8_t kFileDelete = 35;
+static constexpr uint8_t kFileRunDown = 36;
+};  // namespace FileIo_Name
 
 // https://docs.microsoft.com/en-us/windows/win32/etw/fileio-create
-// [EventType{ 64 }, EventTypeName{ "Create" }]
-struct FileIo_Create {
-  static constexpr uint8_t kOpcodeFileCreate = 64;
+namespace FileIo_Create {
+static constexpr uint8_t kFileCreate = 64;
 };
 
 // https://docs.microsoft.com/en-us/windows/win32/etw/fileio-info
-// [EventType{ 69, 70, 71, 74, 75 }, EventTypeName{ "SetInfo", "Delete", "Rename", "QueryInfo",
-// "FSControl" }]
-struct FileIo_Info {
-  static constexpr uint8_t kOpcodeSetInfo = 69;
-  static constexpr uint8_t kOpcodeDelete = 70;
-  static constexpr uint8_t kOpcodeRename = 71;
-  static constexpr uint8_t kOpcodeQueryInfo = 74;
-  static constexpr uint8_t kOpcodeFsControl = 75;
-};
+namespace FileIo_Info {
+static constexpr uint8_t kSetInfo = 69;
+static constexpr uint8_t kDelete = 70;
+static constexpr uint8_t kRename = 71;
+static constexpr uint8_t kQueryInfo = 74;
+static constexpr uint8_t kFsControl = 75;
+};  // namespace FileIo_Info
 
 // https://docs.microsoft.com/en-us/windows/win32/etw/fileio-readwrite
-// [EventType{ 67, 68 }, EventTypeName{ "Read", "Write" }]
-struct FileIo_ReadWrite {
-  static constexpr uint8_t kOpcodeRead = 67;
-  static constexpr uint8_t kOpcodeWrite = 68;
-};
+namespace FileIo_ReadWrite {
+static constexpr uint8_t kRead = 67;
+static constexpr uint8_t kWrite = 68;
+};  // namespace FileIo_ReadWrite
 
 // https://docs.microsoft.com/en-us/windows/win32/etw/stackwalk-event
-// [EventType{ 32 }, EventTypeName{ "Stack" }]
-struct StackWalk_Event {
-  static constexpr uint8_t kOpcodeStack = 32;
+namespace StackWalk_Event {
+static constexpr uint8_t kStack = 32;
 };
+
+}  // namespace orbit_windows_tracing::etw
 
 #endif  // WINDOWS_TRACING_EVENT_TYPES_H_
