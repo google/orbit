@@ -484,33 +484,33 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
                   app_->GetFunctionIdToHighlight(), app_->GetGroupIdToHighlight());
 
   absl::MutexLock lock(&scope_tree_mutex_);
-
   for (const auto& [depth, ordered_nodes] : scope_tree_.GetOrderedNodesByDepth()) {
-    auto first_node_to_draw = ordered_nodes.lower_bound(min_tick);
-    if (first_node_to_draw != ordered_nodes.begin()) --first_node_to_draw;
-
+    if (ordered_nodes.empty()) {
+      continue;
+    }
     timer_data_->UpdateMaxDepth(depth);
 
     float world_timer_y = GetYFromDepth(depth - 1);
     uint64_t next_pixel_start_time_ns = min_tick;
 
-    for (auto it = first_node_to_draw; it != ordered_nodes.end() && it->first < max_tick; ++it) {
-      const orbit_client_protos::TimerInfo& timer_info = *it->second->GetScope();
-      if (timer_info.end() <= next_pixel_start_time_ns) continue;
+    const orbit_client_protos::TimerInfo* timer_info =
+        scope_tree_.FindFirstScopeAtOrAfterTime(depth, min_tick);
+
+    while (timer_info != nullptr && timer_info->start() < max_tick) {
       ++visible_timer_count_;
 
-      Color color = GetTimerColor(timer_info, draw_data);
-      std::unique_ptr<PickingUserData> user_data = CreatePickingUserData(*batcher, timer_info);
+      Color color = GetTimerColor(*timer_info, draw_data);
+      std::unique_ptr<PickingUserData> user_data = CreatePickingUserData(*batcher, *timer_info);
 
       auto box_height = GetDefaultBoxHeight();
-      const auto [pos_x, size_x] = GetBoxPosXAndWidth(draw_data, time_graph_, timer_info);
+      const auto [pos_x, size_x] = GetBoxPosXAndWidth(draw_data, time_graph_, *timer_info);
       const Vec2 pos = {pos_x, world_timer_y};
       const Vec2 size = {size_x, box_height};
 
-      auto timer_duration = timer_info.end() - timer_info.start();
+      auto timer_duration = timer_info->end() - timer_info->start();
       if (timer_duration > draw_data.ns_per_pixel) {
         if (!collapse_toggle_->IsCollapsed() && BoxHasRoomForText(size[0])) {
-          DrawTimesliceText(timer_info, draw_data.track_start_x, z_offset, pos, size);
+          DrawTimesliceText(*timer_info, draw_data.track_start_x, z_offset, pos, size);
         }
         batcher->AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
       } else {
@@ -518,7 +518,8 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
       }
 
       // Use the time at boundary of the next pixel as a threshold to avoid overdraw.
-      next_pixel_start_time_ns = GetNextPixelBoundaryTimeNs(timer_info.end(), draw_data);
+      next_pixel_start_time_ns = GetNextPixelBoundaryTimeNs(timer_info->end(), draw_data);
+      timer_info = scope_tree_.FindFirstScopeAtOrAfterTime(depth, next_pixel_start_time_ns);
     }
   }
 }
