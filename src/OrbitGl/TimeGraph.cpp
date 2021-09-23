@@ -518,8 +518,9 @@ void TimeGraph::RequestUpdate() {
 }
 
 // UpdatePrimitives updates all the drawable track timers in the timegraph's batcher
-void TimeGraph::UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, uint64_t /*max_tick*/,
-                                 PickingMode picking_mode, float /*z_offset*/) {
+void TimeGraph::DoUpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/,
+                                   uint64_t /*max_tick*/, PickingMode picking_mode,
+                                   float /*z_offset*/) {
   ORBIT_SCOPE_FUNCTION;
   CHECK(app_->GetStringManager() != nullptr);
 
@@ -585,9 +586,9 @@ const std::vector<CallstackEvent>& TimeGraph::GetSelectedCallstackEvents(uint32_
   return selected_callstack_events_per_thread_[tid];
 }
 
-void TimeGraph::Draw(Batcher& batcher, TextRenderer& text_renderer,
-                     const DrawContext& draw_context) {
-  ORBIT_SCOPE("TimeGraph::Draw");
+void TimeGraph::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+                       const DrawContext& draw_context) {
+  ORBIT_SCOPE_FUNCTION;
 
   track_manager_->UpdateTracksForRendering();
   UpdateTracksPosition();

@@ -48,10 +48,6 @@ class ThreadTrack final : public TimerTrack {
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetDown(
       const orbit_client_protos::TimerInfo& timer_info) const override;
 
-  void Draw(Batcher& batcher, TextRenderer& text_renderer,
-            const DrawContext& draw_context) override;
-  void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                        PickingMode picking_mode, float z_offset = 0) override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   [[nodiscard]] float GetYFromDepth(uint32_t depth) const override;
 
@@ -71,6 +67,11 @@ class ThreadTrack final : public TimerTrack {
   void OnCaptureComplete();
 
  protected:
+  void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+              const DrawContext& draw_context) override;
+  void DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                          PickingMode picking_mode, float z_offset = 0) override;
+
   [[nodiscard]] int64_t GetThreadId() const { return thread_id_; }
   [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const override;
   [[nodiscard]] bool IsTrackSelected() const override;

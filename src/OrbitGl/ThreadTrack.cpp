@@ -269,9 +269,9 @@ void ThreadTrack::UpdatePositionOfSubtracks() {
   tracepoint_bar_->SetPos(pos[0], current_y);
 }
 
-void ThreadTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
-                       const DrawContext& draw_context) {
-  TimerTrack::Draw(batcher, text_renderer, draw_context);
+void ThreadTrack::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+                         const DrawContext& draw_context) {
+  TimerTrack::DoDraw(batcher, text_renderer, draw_context);
 
   DrawContext inner_draw_context = draw_context.IncreasedIndentationLevel();
 
@@ -466,8 +466,8 @@ void ThreadTrack::OnCaptureComplete() {
 // We minimize overdraw when drawing lines for small events by discarding events that would just
 // draw over an already drawn pixel line. When zoomed in enough that all events are drawn as boxes,
 // this has no effect. When zoomed  out, many events will be discarded quickly.
-void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                   PickingMode picking_mode, float z_offset) {
+void ThreadTrack::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                                     PickingMode picking_mode, float z_offset) {
   CHECK(batcher);
   visible_timer_count_ = 0;
   UpdatePrimitivesOfSubtracks(batcher, min_tick, max_tick, picking_mode, z_offset);

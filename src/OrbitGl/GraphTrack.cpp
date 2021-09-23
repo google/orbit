@@ -56,9 +56,9 @@ float GraphTrack<Dimension>::GetLegendHeight() const {
 }
 
 template <size_t Dimension>
-void GraphTrack<Dimension>::Draw(Batcher& batcher, TextRenderer& text_renderer,
-                                 const DrawContext& draw_context) {
-  Track::Draw(batcher, text_renderer, draw_context);
+void GraphTrack<Dimension>::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+                                   const DrawContext& draw_context) {
+  Track::DoDraw(batcher, text_renderer, draw_context);
   if (IsEmpty() || IsCollapsed()) return;
 
   // Draw label
@@ -82,8 +82,9 @@ void GraphTrack<Dimension>::Draw(Batcher& batcher, TextRenderer& text_renderer,
 }
 
 template <size_t Dimension>
-void GraphTrack<Dimension>::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                             PickingMode picking_mode, float z_offset) {
+void GraphTrack<Dimension>::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick,
+                                               uint64_t max_tick, PickingMode picking_mode,
+                                               float z_offset) {
   float track_z = GlCanvas::kZValueTrack + z_offset;
   float graph_z = GlCanvas::kZValueEventBar + z_offset;
 

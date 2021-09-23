@@ -31,10 +31,6 @@ class CallstackThreadBar : public ThreadBar {
 
   std::string GetTooltip() const override;
 
-  void Draw(Batcher& batcher, TextRenderer& text_renderer,
-            const DrawContext& draw_context) override;
-  void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                        PickingMode picking_mode, float z_offset = 0) override;
   [[nodiscard]] float GetHeight() const override {
     return layout_->GetEventTrackHeightFromTid(GetThreadId());
   }
@@ -43,6 +39,12 @@ class CallstackThreadBar : public ThreadBar {
   void OnRelease() override;
 
   [[nodiscard]] bool IsEmpty() const override;
+
+ protected:
+  void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+              const DrawContext& draw_context) override;
+  void DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                          PickingMode picking_mode, float z_offset = 0) override;
 
  private:
   void SelectCallstacks();

@@ -22,9 +22,9 @@ TriangleToggle::TriangleToggle(StateChangeHandler handler, TimeGraph* time_graph
       track_(track),
       handler_(std::move(handler)) {}
 
-void TriangleToggle::Draw(Batcher& batcher, TextRenderer& text_renderer,
-                          const DrawContext& draw_context) {
-  CaptureViewElement::Draw(batcher, text_renderer, draw_context);
+void TriangleToggle::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+                            const DrawContext& draw_context) {
+  CaptureViewElement::DoDraw(batcher, text_renderer, draw_context);
 
   const float z = GlCanvas::kZValueTrack + draw_context.z_offset;
 

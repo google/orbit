@@ -35,11 +35,6 @@ class GraphTrack : public Track {
   [[nodiscard]] bool IsCollapsible() const override { return true; }
   [[nodiscard]] bool IsEmpty() const override { return series_.IsEmpty(); }
 
-  void Draw(Batcher& batcher, TextRenderer& text_renderer,
-            const DrawContext& draw_context) override;
-  void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                        PickingMode picking_mode, float z_offset = 0) override;
-
   virtual void AddValues(uint64_t timestamp_ns, const std::array<double, Dimension>& values) {
     series_.AddValues(timestamp_ns, values);
   }
@@ -70,6 +65,12 @@ class GraphTrack : public Track {
   }
 
  protected:
+  void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+              const DrawContext& draw_context) override;
+
+  void DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                          PickingMode picking_mode, float z_offset = 0) override;
+
   [[nodiscard]] virtual Color GetColor(size_t index) const;
   [[nodiscard]] virtual double GetGraphMaxValue() const { return series_.GetMax(); }
   [[nodiscard]] virtual double GetGraphMinValue() const { return series_.GetMin(); }

@@ -36,11 +36,11 @@ bool ThreadStateBar::IsEmpty() const {
   return capture_data_ == nullptr || !capture_data_->HasThreadStatesForThread(GetThreadId());
 }
 
-void ThreadStateBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
-                          const DrawContext& draw_context) {
-  ThreadBar::Draw(batcher, text_renderer, draw_context);
+void ThreadStateBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+                            const DrawContext& draw_context) {
+  ThreadBar::DoDraw(batcher, text_renderer, draw_context);
 
-  // Similarly to CallstackThreadBar::Draw, the thread state slices don't respond to clicks, but
+  // Similarly to CallstackThreadBar::DoDraw, the thread state slices don't respond to clicks, but
   // have a tooltip. For picking, we want to draw the event bar over them if handling a click, and
   // underneath otherwise. This simulates "click-through" behavior.
   float thread_state_bar_z = draw_context.picking_mode == PickingMode::kClick
@@ -162,9 +162,9 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(Batcher* batcher, Picking
       GetThreadStateDescription(thread_state_slice->thread_state()));
 }
 
-void ThreadStateBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                      PickingMode picking_mode, float z_offset) {
-  ThreadBar::UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
+void ThreadStateBar::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                                        PickingMode picking_mode, float z_offset) {
+  ThreadBar::DoUpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
 
   const auto time_window_ns = static_cast<uint64_t>(1000 * time_graph_->GetTimeWindowUs());
   const uint64_t pixel_delta_ns = time_window_ns / viewport_->WorldToScreenWidth(GetWidth());

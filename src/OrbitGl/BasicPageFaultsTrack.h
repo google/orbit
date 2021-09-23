@@ -37,12 +37,12 @@ class BasicPageFaultsTrack : public LineGraphTrack<kBasicPageFaultsTrackDimensio
   void AddValuesAndUpdateAnnotations(
       uint64_t timestamp_ns, const std::array<double, kBasicPageFaultsTrackDimension>& values);
 
-  void Draw(Batcher& batcher, TextRenderer& text_renderer,
-            const DrawContext& draw_context) override;
-
   enum class SeriesIndex { kProcess = 0, kCGroup = 1, kSystem = 2 };
 
  protected:
+  void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+              const DrawContext& draw_context) override;
+
   void DrawSingleSeriesEntry(
       Batcher* batcher, uint64_t start_tick, uint64_t end_tick,
       const std::array<float, kBasicPageFaultsTrackDimension>& current_normalized_values,

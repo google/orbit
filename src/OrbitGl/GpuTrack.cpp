@@ -120,9 +120,9 @@ std::vector<orbit_gl::CaptureViewElement*> GpuTrack::GetChildren() const {
   return {submission_track_.get(), marker_track_.get()};
 }
 
-void GpuTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
-                    const DrawContext& draw_context) {
-  Track::Draw(batcher, text_renderer, draw_context);
+void GpuTrack::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+                      const DrawContext& draw_context) {
+  Track::DoDraw(batcher, text_renderer, draw_context);
 
   if (collapse_toggle_->IsCollapsed()) {
     return;
@@ -137,8 +137,8 @@ void GpuTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
   }
 }
 
-void GpuTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                PickingMode picking_mode, float z_offset) {
+void GpuTrack::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                                  PickingMode picking_mode, float z_offset) {
   const bool is_collapsed = collapse_toggle_->IsCollapsed();
 
   if (!submission_track_->IsEmpty()) {

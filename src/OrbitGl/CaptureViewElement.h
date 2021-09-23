@@ -42,11 +42,14 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
       return copy;
     }
   };
-  virtual void Draw(Batcher& /*batcher*/, TextRenderer& /*text_renderer*/,
-                    const DrawContext& /*draw_context*/) {}
+  void Draw(Batcher& batcher, TextRenderer& text_renderer, const DrawContext& draw_context) {
+    DoDraw(batcher, text_renderer, draw_context);
+  }
 
-  virtual void UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, uint64_t /*max_tick*/,
-                                PickingMode /*picking_mode*/, float /*z_offset*/ = 0){};
+  void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                        PickingMode picking_mode, float z_offset = 0) {
+    DoUpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
+  };
 
   [[nodiscard]] TimeGraph* GetTimeGraph() { return time_graph_; }
 
@@ -84,6 +87,13 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   Vec2 mouse_pos_cur_;
   Vec2 picking_offset_ = Vec2(0, 0);
   bool picked_ = false;
+
+  virtual void DoDraw(Batcher& /*batcher*/, TextRenderer& /*text_renderer*/,
+                      const DrawContext& /*draw_context*/) {}
+
+  virtual void DoUpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/,
+                                  uint64_t /*max_tick*/, PickingMode /*picking_mode*/,
+                                  float /*z_offset*/ = 0){};
 
  private:
   float width_ = 0.;

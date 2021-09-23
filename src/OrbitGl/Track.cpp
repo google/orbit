@@ -86,8 +86,8 @@ std::unique_ptr<orbit_accessibility::AccessibleInterface> Track::CreateAccessibl
   return std::make_unique<orbit_gl::AccessibleTrack>(this, layout_);
 }
 
-void Track::Draw(Batcher& batcher, TextRenderer& text_renderer, const DrawContext& draw_context) {
-  CaptureViewElement::Draw(batcher, text_renderer, draw_context);
+void Track::DoDraw(Batcher& batcher, TextRenderer& text_renderer, const DrawContext& draw_context) {
+  CaptureViewElement::DoDraw(batcher, text_renderer, draw_context);
 
   const bool picking = draw_context.picking_mode != PickingMode::kNone;
 
@@ -203,9 +203,6 @@ void Track::DrawCollapsingTriangle(Batcher& batcher, TextRenderer& text_renderer
   collapse_toggle_->SetPos(toggle_pos[0], toggle_pos[1]);
   collapse_toggle_->Draw(batcher, text_renderer, draw_context);
 }
-
-void Track::UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*t_min*/, uint64_t /*t_max*/,
-                             PickingMode /*  picking_mode*/, float /*z_offset*/) {}
 
 void Track::SetPos(float x, float y) {
   CaptureViewElement::SetPos(x, y);
