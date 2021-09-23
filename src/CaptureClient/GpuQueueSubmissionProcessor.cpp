@@ -4,6 +4,8 @@
 
 #include "CaptureClient/GpuQueueSubmissionProcessor.h"
 
+#include <regex>
+
 #include "OrbitBase/Logging.h"
 
 namespace orbit_capture_client {
@@ -178,8 +180,8 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuQueueSubmissionWit
 
   result.insert(result.end(), command_buffer_timers.begin(), command_buffer_timers.end());
 
-  std::vector<TimerInfo> debug_marker_timers =
-      ProcessGpuDebugMarkers(gpu_queue_submission, matching_gpu_job, first_command_buffer);
+  std::vector<TimerInfo> debug_marker_timers = ProcessGpuDebugMarkers(
+      gpu_queue_submission, matching_gpu_job, first_command_buffer, string_intern_pool);
 
   result.insert(result.end(), debug_marker_timers.begin(), debug_marker_timers.end());
 
@@ -289,7 +291,8 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuCommandBuffers(
 
 std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
     const GpuQueueSubmission& gpu_queue_submission, const GpuJob& matching_gpu_job,
-    const std::optional<GpuCommandBuffer>& first_command_buffer) {
+    const std::optional<GpuCommandBuffer>& first_command_buffer,
+    const absl::flat_hash_map<uint64_t, std::string>& string_intern_pool) {
   if (gpu_queue_submission.completed_markers_size() == 0) {
     return {};
   }
@@ -412,7 +415,19 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
       color->set_blue(static_cast<uint32_t>(completed_marker.color().blue() * 255.f));
       color->set_alpha(static_cast<uint32_t>(completed_marker.color().alpha() * 255.f));
     }
-    marker_timer.set_user_data_key(completed_marker.text_key());
+
+    // We have special handling for DXVK instrumentation that extracts the encoded group_id from
+    // the label's text. The encoding is:
+    // 'DXVK__vkFunctionName#GROUP_ID', where 'GROUP_ID' is the group id.
+    uint64_t text_key = completed_marker.text_key();
+    marker_timer.set_user_data_key(text_key);
+    std::smatch dxvk_group_id_match;
+    CHECK(string_intern_pool.contains(text_key));
+    if (std::regex_match(string_intern_pool.at(text_key), dxvk_group_id_match,
+                         std::regex("DXVK__vk.*#([0-9]+)")) &&
+        dxvk_group_id_match.size() == 2) {
+      marker_timer.set_group_id(std::stoull(dxvk_group_id_match[1].str()));
+    }
     result.push_back(marker_timer);
   }
 

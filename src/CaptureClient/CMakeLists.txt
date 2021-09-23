@@ -45,6 +45,7 @@ target_sources(CaptureClientTests PRIVATE
         ApiEventProcessorTest.cpp
         CaptureEventProcessorTest.cpp
         CompositeEventProcessorTest.cpp
+        GpuQueueSubmissionProcessorTest.cpp
         SaveToFileEventProcessorTest.cpp)
 
 target_link_libraries(
