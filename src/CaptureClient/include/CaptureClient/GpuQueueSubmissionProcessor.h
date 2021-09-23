@@ -59,6 +59,14 @@ class GpuQueueSubmissionProcessor {
     begin_capture_time_ns_ = std::min(begin_capture_time_ns_, timestamp);
   }
 
+  // We have a special encoding for "group ids" in DXVK Vulkan labels. The encoding is:
+  // 'DXVK__vkFunctionName#GROUP_ID', where 'GROUP_ID' is the group id.
+  // This function tries to extract the "group id" from the given label, based on this encoding.
+  // It returns `true` on success. In this case, the group id will be written to `out_group_id`.
+  // In all other cases `false` will be returned.
+  static bool TryExtractDXVKVulkanGroupIdFromDebugLabel(const std::string& label,
+                                                        uint64_t* out_group_id);
+
  private:
   [[nodiscard]] std::vector<orbit_client_protos::TimerInfo>
   ProcessGpuQueueSubmissionWithMatchingGpuJob(

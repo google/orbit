@@ -417,19 +417,15 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
     const uint64_t text_key = completed_marker.text_key();
     marker_timer.set_user_data_key(text_key);
 
-    // We have special handling for DXVK instrumentation that extracts the encoded group_id from
-    // the label's text. The encoding is:
-    // 'DXVK__vkFunctionName#GROUP_ID', where 'GROUP_ID' is the group id.
+    // We have special handling for DXVK instrumentation that have an encoded group_id in their
+    // label.
     CHECK(string_intern_pool.contains(text_key));
     const std::string& text = string_intern_pool.at(text_key);
-    if (text.find_first_of("DXVK__") != std::string::npos) {
-      const size_t group_id_index = text.find_last_of('#') + 1;
-      uint64_t group_id = 0;
-      if (group_id_index != std::string::npos &&
-          absl::SimpleAtoi(text.substr(group_id_index), &group_id)) {
-        marker_timer.set_group_id(group_id);
-      }
+    uint64_t group_id = 0;
+    if (TryExtractDXVKVulkanGroupIdFromDebugLabel(text, &group_id)) {
+      marker_timer.set_group_id(group_id);
     }
+
     result.push_back(marker_timer);
   }
 
@@ -448,6 +444,21 @@ std::optional<GpuCommandBuffer> GpuQueueSubmissionProcessor::ExtractFirstCommand
     }
   }
   return std::nullopt;
+}
+
+bool GpuQueueSubmissionProcessor::TryExtractDXVKVulkanGroupIdFromDebugLabel(
+    const std::string& label, uint64_t* out_group_id) {
+  // We have special handling for DXVK instrumentation that extracts the encoded group_id from
+  // the label's text. The encoding is:
+  // 'DXVK__vkFunctionName#GROUP_ID', where 'GROUP_ID' is the group id.
+  if (label.find_first_of("DXVK__") != std::string::npos) {
+    const size_t group_id_index = label.find_last_of('#') + 1;
+    if (group_id_index != std::string::npos &&
+        absl::SimpleAtoi(label.substr(group_id_index), out_group_id)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 }  // namespace orbit_capture_client

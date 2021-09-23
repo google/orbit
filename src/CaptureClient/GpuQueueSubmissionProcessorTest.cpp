@@ -181,4 +181,27 @@ TEST_F(GpuQueueSubmissionProcessorTest, DXVKVulkanDebugMarkerEncodesGroupId) {
   EXPECT_TRUE(MessageDifferencer::Equivalent(expected_debug_marker, actual_timers[1]));
 }
 
+TEST_F(GpuQueueSubmissionProcessorTest, TryExtractDXVKVulkanGroupIdFromDebugLabel) {
+  uint64_t group_id = 0;
+  EXPECT_FALSE(GpuQueueSubmissionProcessor::TryExtractDXVKVulkanGroupIdFromDebugLabel(
+      "SomeLabelName", &group_id));
+  EXPECT_EQ(group_id, 0);
+
+  EXPECT_FALSE(GpuQueueSubmissionProcessor::TryExtractDXVKVulkanGroupIdFromDebugLabel(
+      "DXVK__vkFunctionName", &group_id));
+  EXPECT_EQ(group_id, 0);
+
+  EXPECT_FALSE(GpuQueueSubmissionProcessor::TryExtractDXVKVulkanGroupIdFromDebugLabel(
+      "DXVK__vkFunctionName#abc1", &group_id));
+  EXPECT_EQ(group_id, 0);
+
+  EXPECT_TRUE(GpuQueueSubmissionProcessor::TryExtractDXVKVulkanGroupIdFromDebugLabel(
+      "DXVK__vkFunctionName#123", &group_id));
+  EXPECT_EQ(group_id, 123);
+
+  EXPECT_TRUE(GpuQueueSubmissionProcessor::TryExtractDXVKVulkanGroupIdFromDebugLabel(
+      "DXVK__vkFunctionName#456#678", &group_id));
+  EXPECT_EQ(group_id, 678);
+}
+
 }  // namespace orbit_capture_client
