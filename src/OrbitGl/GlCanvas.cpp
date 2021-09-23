@@ -36,7 +36,6 @@ float GlCanvas::kZValueOverlayTextBackground = 0.45f;
 float GlCanvas::kZValueEventBarPicking = 0.49f;
 float GlCanvas::kZValueUi = 0.61f;
 float GlCanvas::kZValueTextUi = 0.61f;
-float GlCanvas::kScreenSpaceCutPoint = 0.8f;
 float GlCanvas::kZValueTimeBarBg = 0.81f;
 float GlCanvas::kZValueTimeBar = 0.83f;
 float GlCanvas::kZValueMargin = 0.85f;
@@ -210,19 +209,7 @@ void GlCanvas::UpdateSpecialKeys(bool ctrl, bool /*shift*/, bool /*alt*/) { cont
 
 bool GlCanvas::ControlPressed() { return control_key_; }
 
-/** Inits the OpenGL viewport for drawing in 2D. */
-void GlCanvas::PrepareWorldSpaceViewport() {
-  Vec2 top_left{0, 0};
-  glViewport(0, 0, viewport_.GetScreenWidth(), viewport_.GetScreenHeight());
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glOrtho(top_left[0], top_left[0] + viewport_.GetScreenWidth(),
-          viewport_.GetScreenHeight() + top_left[1], top_left[1], -1, 1);
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-}
-
-void GlCanvas::PrepareScreenSpaceViewport() {
+void GlCanvas::PrepareGlViewport() {
   glViewport(0, 0, viewport_.GetScreenWidth(), viewport_.GetScreenHeight());
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -264,7 +251,7 @@ void GlCanvas::Render(int width, int height) {
   ui_batcher_.StartNewFrame();
 
   PrepareGlState();
-  PrepareWorldSpaceViewport();
+  PrepareGlViewport();
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

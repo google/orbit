@@ -45,8 +45,7 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   virtual void PreRender();
   virtual void PostRender();
 
-  void PrepareWorldSpaceViewport();
-  void PrepareScreenSpaceViewport();
+  void PrepareGlViewport();
   void PrepareGlState();
   static void CleanupGlState();
 
@@ -104,7 +103,6 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   static float kZValueMargin;
   static float kZValueTimeBar;
   static float kZValueTimeBarBg;
-  static float kScreenSpaceCutPoint;
   static float kZValueTextUi;
   static float kZValueUi;
   static float kZValueEventBarPicking;

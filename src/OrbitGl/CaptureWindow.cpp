@@ -448,19 +448,11 @@ void CaptureWindow::Draw() {
   }
 
   for (float layer : all_layers) {
-    // We use different coordinate systems for ScreenSpace items (margin, scrollbar, ...)
-    // and for the text than the rest of items inside CaptureWindow. So, we have to switch
-    // between these 2 systems while the layer is changing (with these "Prepare.." functions).
-    if (layer < GlCanvas::kScreenSpaceCutPoint) {
-      PrepareWorldSpaceViewport();
-    }
     if (time_graph_ != nullptr) {
       time_graph_->GetBatcher().DrawLayer(layer, picking_mode_ != PickingMode::kNone);
     }
     ui_batcher_.DrawLayer(layer, picking_mode_ != PickingMode::kNone);
 
-    PrepareScreenSpaceViewport();
-    // Text needs to be drawn in screen space.
     if (picking_mode_ == PickingMode::kNone) {
       text_renderer_.RenderLayer(layer);
       RenderText(layer);
