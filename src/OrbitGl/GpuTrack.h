@@ -65,11 +65,6 @@ class GpuTrack : public Track {
   [[nodiscard]] float GetHeight() const override;
 
   [[nodiscard]] std::vector<CaptureViewElement*> GetChildren() const override;
-
-  void Draw(Batcher& batcher, TextRenderer& text_renderer,
-            const DrawContext& draw_context) override;
-  void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                        PickingMode picking_mode, float z_offset = 0) override;
   [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() override;
 
   [[nodiscard]] bool IsEmpty() const override {
@@ -84,6 +79,12 @@ class GpuTrack : public Track {
   [[nodiscard]] uint64_t GetMaxTime() const override {
     return std::max(submission_track_->GetMaxTime(), marker_track_->GetMaxTime());
   }
+
+ protected:
+  void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+              const DrawContext& draw_context) override;
+  void DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                          PickingMode picking_mode, float z_offset = 0) override;
 
  private:
   void UpdatePositionOfSubtracks() override;

@@ -45,8 +45,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   [[nodiscard]] float GetHeight() const override {
     return track_manager_->GetVisibleTracksTotalHeight();
   }
-  void Draw(Batcher& batcher, TextRenderer& text_renderer,
-            const DrawContext& draw_context) override;
   void DrawTracks(Batcher& batcher, TextRenderer& text_renderer, const DrawContext& draw_context);
   void DrawOverlay(Batcher& batcher, TextRenderer& text_renderer, PickingMode picking_mode);
   void DrawIteratorBox(Batcher& batcher, TextRenderer& text_renderer, Vec2 pos, Vec2 size,
@@ -56,8 +54,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   void DrawText(float layer);
 
   void RequestUpdate() override;
-  void UpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/, uint64_t /*max_tick*/,
-                        PickingMode /*picking_mode*/, float /*z_offset*/ = 0) override;
+
   void UpdateTracksPosition();
   void SelectCallstacks(float world_start, float world_end, uint32_t thread_id);
   const std::vector<orbit_client_protos::CallstackEvent>& GetSelectedCallstackEvents(uint32_t tid);
@@ -187,6 +184,11 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   }
 
  protected:
+  void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+              const DrawContext& draw_context) override;
+  void DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                          PickingMode picking_mode, float z_offset = 0) override;
+
   [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleInterface>
   CreateAccessibleInterface() override;
   void ProcessAsyncTimer(const std::string& track_name,

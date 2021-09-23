@@ -73,9 +73,9 @@ std::vector<CaptureViewElement*> PageFaultsTrack::GetChildren() const {
   return {major_page_faults_track_.get(), minor_page_faults_track_.get()};
 }
 
-void PageFaultsTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
-                           const DrawContext& draw_context) {
-  Track::Draw(batcher, text_renderer, draw_context);
+void PageFaultsTrack::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+                             const DrawContext& draw_context) {
+  Track::DoDraw(batcher, text_renderer, draw_context);
 
   if (collapse_toggle_->IsCollapsed()) return;
 
@@ -89,8 +89,8 @@ void PageFaultsTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
   }
 }
 
-void PageFaultsTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                       PickingMode picking_mode, float z_offset) {
+void PageFaultsTrack::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                                         PickingMode picking_mode, float z_offset) {
   if (!major_page_faults_track_->IsEmpty()) {
     major_page_faults_track_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
   }

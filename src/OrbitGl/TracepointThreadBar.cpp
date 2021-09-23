@@ -36,9 +36,9 @@ TracepointThreadBar::TracepointThreadBar(CaptureViewElement* parent, OrbitApp* a
     : ThreadBar(parent, app, time_graph, viewport, layout, capture_data, thread_id, "Tracepoints",
                 color) {}
 
-void TracepointThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
-                               const DrawContext& draw_context) {
-  ThreadBar::Draw(batcher, text_renderer, draw_context);
+void TracepointThreadBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+                                 const DrawContext& draw_context) {
+  ThreadBar::DoDraw(batcher, text_renderer, draw_context);
 
   if (IsEmpty()) {
     return;
@@ -53,9 +53,9 @@ void TracepointThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
   batcher.AddBox(box, color, shared_from_this());
 }
 
-void TracepointThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                           PickingMode picking_mode, float z_offset) {
-  ThreadBar::UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
+void TracepointThreadBar::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                                             PickingMode picking_mode, float z_offset) {
+  ThreadBar::DoUpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
 
   float z = GlCanvas::kZValueEvent + z_offset;
   float track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());

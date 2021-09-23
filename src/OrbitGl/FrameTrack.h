@@ -52,10 +52,10 @@ class FrameTrack : public TimerTrack {
   [[nodiscard]] std::string GetTooltip() const override;
   [[nodiscard]] std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const override;
 
-  void Draw(Batcher& batcher, TextRenderer& text_renderer,
-            const DrawContext& draw_context) override;
-
  protected:
+  void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+              const DrawContext& draw_context) override;
+
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
                                     bool is_selected, bool is_highlighted,
                                     const internal::DrawData& draw_data) const override;
