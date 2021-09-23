@@ -19,10 +19,9 @@ void Tracer::Start() {
 }
 
 void Tracer::Stop() {
-  if (tracer_impl_ != nullptr) {
-    tracer_impl_->Stop();
-    tracer_impl_ = nullptr;
-  }
+  CHECK(tracer_impl_ != nullptr);
+  tracer_impl_->Stop();
+  tracer_impl_ = nullptr;
 }
 
 }  // namespace orbit_windows_tracing

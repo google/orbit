@@ -65,9 +65,9 @@ void KrabsTracer::Run() {
 
 void KrabsTracer::OnThreadEvent(const EVENT_RECORD& record, const krabs::trace_context& context) {
   switch (record.EventHeader.EventDescriptor.Opcode) {
-    case etw::Thread_TypeGroup1::kStart:
-    case etw::Thread_TypeGroup1::kDcStart:
-    case etw::Thread_TypeGroup1::kDcEnd: {
+    case kEtwThreadGroup1EventStart:
+    case kEtwThreadGroup1EventDcStart:
+    case kEtwThreadGroup1EventDcEnd: {
       // The Start event type corresponds to a thread's creation. The DCStart and DCEnd event types
       // enumerate the threads that are currently running at the time the kernel session starts and
       // ends, respectively.
@@ -78,13 +78,13 @@ void KrabsTracer::OnThreadEvent(const EVENT_RECORD& record, const krabs::trace_c
       context_switch_manager_->ProcessTidToPidMapping(tid, pid);
       break;
     }
-    case etw::Thread_CSwitch::kCSwitch: {
+    case kEtwThreadV2EventCSwitch: {
       // https://docs.microsoft.com/en-us/windows/win32/etw/cswitch
       krabs::schema schema(record, context.schema_locator);
       krabs::parser parser(schema);
       uint32_t old_tid = parser.parse<uint32_t>(L"OldThreadId");
       uint32_t new_tid = parser.parse<uint32_t>(L"NewThreadId");
-      uint64_t timestamp_ns = clock_utils::RawTimestampToNs(record.EventHeader.TimeStamp.QuadPart);
+      uint64_t timestamp_ns = RawTimestampToNs(record.EventHeader.TimeStamp.QuadPart);
       uint16_t cpu = record.BufferContext.ProcessorIndex;
       context_switch_manager_->ProcessContextSwitch(cpu, old_tid, new_tid, timestamp_ns);
     } break;

@@ -9,7 +9,7 @@
 
 #include <cstdint>
 
-namespace orbit_windows_tracing::clock_utils {
+namespace orbit_windows_tracing {
 
 [[nodiscard]] inline uint64_t GetPerformanceCounterPeriodNs() {
   LARGE_INTEGER frequency;
@@ -22,6 +22,6 @@ namespace orbit_windows_tracing::clock_utils {
   return raw_timestamp * performance_period_ns_;
 }
 
-}  // namespace orbit_windows_tracing::clock_utils
+}  // namespace orbit_windows_tracing
 
 #endif  // WINDOWS_TRACING_CLOCK_UTILS_H_
