@@ -9,6 +9,7 @@
 
 namespace orbit_windows_tracing {
 
+// Listener interface for receiving events from a Tracer.
 class TracerListener {
  public:
   virtual ~TracerListener() = default;

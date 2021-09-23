@@ -10,6 +10,7 @@
 
 namespace orbit_windows_tracing {
 
+// Interface for a Tracer that forwards events to a TracerListener.
 class TracerInterface {
  public:
   TracerInterface(orbit_grpc_protos::CaptureOptions capture_options, TracerListener* listener)

@@ -13,7 +13,7 @@
 
 namespace orbit_windows_tracing {
 
-// Forwards interesting Windows kernel events to a TraceListener.
+// Forwards interesting Windows kernel events to a TracerListener.
 class Tracer : public TracerInterface {
  public:
   explicit Tracer(orbit_grpc_protos::CaptureOptions capture_options, TracerListener* listener);
