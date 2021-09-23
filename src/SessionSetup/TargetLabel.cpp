@@ -88,6 +88,11 @@ void TargetLabel::ChangeToFileTarget(const FileTarget& file_target) {
 }
 
 void TargetLabel::SetFile(const std::filesystem::path& file_path) {
+  // Without this, the size of the target label is not correctly updated when a capture is opened
+  // directly from the connection window. It's unclear why this happens, might be related to
+  // multiple `SizeChanged` signals being emitted while the main window is still being shown.
+  if (file_path_ == file_path) return;
+
   file_path_ = file_path;
   ui_->fileLabel->setText(QString::fromStdString(file_path.filename().string()));
   ui_->fileLabel->setToolTip(QString::fromStdString(file_path.string()));
