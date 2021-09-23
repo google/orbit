@@ -39,7 +39,9 @@ namespace krabs {
     class trace;
 
     typedef void(*c_provider_callback)(const EVENT_RECORD &, const krabs::trace_context &);
+    typedef void(*c_provider_error_callback)(const EVENT_RECORD&, const std::string&);
     typedef std::function<void(const EVENT_RECORD &, const krabs::trace_context &)> provider_callback;
+    typedef std::function<void(const EVENT_RECORD&, const std::string&)> provider_error_callback;
 
     namespace details {
 
@@ -84,6 +86,19 @@ namespace krabs {
 
             /**
              * <summary>
+             * Adds a function to call when an error occurs when this provider handles an event.
+             * </summary>
+             */
+            void add_on_error_callback(c_provider_error_callback callback);
+
+            template <typename U>
+            void add_on_error_callback(U& callback);
+
+            template <typename U>
+            void add_on_error_callback(const U& callback);
+
+            /**
+             * <summary>
              *   Adds a new filter to a provider, where the filter is expected
              *   to have callbacks attached to it.
              * </summary>
@@ -108,6 +123,7 @@ namespace krabs {
 
         protected:
             std::deque<provider_callback> callbacks_;
+            std::deque<provider_error_callback> error_callbacks_;
             std::deque<event_filter> filters_;
 
         private:
@@ -430,6 +446,36 @@ namespace krabs {
         }
 
         template <typename T>
+        void base_provider<T>::add_on_error_callback(c_provider_error_callback callback)
+        {
+            // C function pointers don't interact well with std::ref, so we
+            // overload to take care of this scenario.
+            error_callbacks_.push_back(callback);
+        }
+
+        template <typename T>
+        template <typename U>
+        void base_provider<T>::add_on_error_callback(U& callback)
+        {
+            // std::function copies its argument -- because our callbacks list
+            // is a list of std::function, this causes problems when a user
+            // intended for their particular instance to be called.
+            // std::ref lets us get around this and point to a specific instance
+            // that they handed us.
+            error_callbacks_.push_back(std::ref(callback));
+        }
+
+        template <typename T>
+        template <typename U>
+        void base_provider<T>::add_on_error_callback(const U& callback)
+        {
+            // This is where temporaries bind to. Temporaries can't be wrapped in
+            // a std::ref because they'll go away very quickly. We are forced to
+            // actually copy these.
+            error_callbacks_.push_back(callback);
+        }
+
+        template <typename T>
         void base_provider<T>::add_filter(const event_filter &f)
         {
             filters_.push_back(f);
@@ -438,12 +484,21 @@ namespace krabs {
         template <typename T>
         void base_provider<T>::on_event(const EVENT_RECORD &record, const krabs::trace_context &trace_context) const
         {
-            for (auto &callback : callbacks_) {
-                callback(record, trace_context);
-            }
+            try
+            {
+                for (auto& callback : callbacks_) {
+                    callback(record, trace_context);
+                }
 
-            for (auto &filter : filters_) {
-                filter.on_event(record, trace_context);
+                for (auto& filter : filters_) {
+                    filter.on_event(record, trace_context);
+                }
+            }
+            catch (krabs::could_not_find_schema& ex)
+            {
+                for (auto& error_callback : error_callbacks_) {
+                    error_callback(record, ex.what());
+                }
             }
         }
     } // namespace details

@@ -311,9 +311,14 @@ namespace krabs {
 
     inline const wchar_t *schema::task_name() const
     {
-        return reinterpret_cast<const wchar_t*>(
-            reinterpret_cast<const char*>(pSchema_) +
-            pSchema_->TaskNameOffset);
+        if (pSchema_->TaskNameOffset != 0) {
+            return reinterpret_cast<const wchar_t*>(
+                reinterpret_cast<const char*>(pSchema_) +
+                pSchema_->TaskNameOffset);
+        }
+        else {
+            return L"";
+        }
     }
 
     inline DECODING_SOURCE schema::decoding_source() const

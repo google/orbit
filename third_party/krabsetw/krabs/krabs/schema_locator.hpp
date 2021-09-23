@@ -143,7 +143,7 @@ namespace krabs {
             &bufferSize);
 
         if (status != ERROR_INSUFFICIENT_BUFFER) {
-            error_check_common_conditions(status);
+            error_check_common_conditions(status, record);
         }
 
         // allocate and fill the schema from TDH
@@ -155,7 +155,8 @@ namespace krabs {
             0,
             NULL,
             (PTRACE_EVENT_INFO)buffer.get(),
-            &bufferSize));
+            &bufferSize),
+            record);
 
         return buffer;
     }

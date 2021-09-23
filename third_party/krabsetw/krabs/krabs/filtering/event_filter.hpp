@@ -23,7 +23,9 @@ namespace krabs { namespace details {
 namespace krabs {
 
     typedef void(*c_provider_callback)(const EVENT_RECORD &, const krabs::trace_context &);
-    typedef std::function<void(const EVENT_RECORD &, const krabs::trace_context &)> provider_callback;
+    typedef void(*c_provider_error_callback)(const EVENT_RECORD&, const std::string&);
+    typedef std::function<void(const EVENT_RECORD &, const krabs::trace_context &)> provider_event_callback;
+    typedef std::function<void(const EVENT_RECORD&, const std::string&)> provider_error_callback;
     typedef std::function<bool(const EVENT_RECORD &, const krabs::trace_context &)> filter_predicate;
 
     template <typename T> class provider;
@@ -84,6 +86,19 @@ namespace krabs {
         template <typename U>
         void add_on_event_callback(const U &callback);
 
+        /**
+         * <summary>
+         * Adds a function to call when an error occurs.
+         * </summary>
+         */
+        void add_on_error_callback(c_provider_error_callback callback);
+
+        template <typename U>
+        void add_on_error_callback(U& callback);
+
+        template <typename U>
+        void add_on_error_callback(const U& callback);
+
         const std::vector<unsigned short>& provider_filter_event_ids() const
         {
             return provider_filter_event_ids_;
@@ -99,8 +114,16 @@ namespace krabs {
          */
         void on_event(const EVENT_RECORD &record, const krabs::trace_context &trace_context) const;
 
+        /**
+         * <summary>
+         *   Called when an error occurs, forwards to the error callback
+         * </summary>
+         */
+        void on_error(const EVENT_RECORD& record, const std::string& error_message) const;
+
     private:
-        std::deque<provider_callback> callbacks_;
+        std::deque<provider_event_callback> event_callbacks_;
+        std::deque<provider_error_callback> error_callbacks_;
         filter_predicate predicate_{ nullptr };
         std::vector<unsigned short> provider_filter_event_ids_;
 
@@ -132,7 +155,7 @@ namespace krabs {
     {
         // C function pointers don't interact well with std::ref, so we
         // overload to take care of this scenario.
-        callbacks_.push_back(callback);
+        event_callbacks_.push_back(callback);
     }
 
     template <typename U>
@@ -143,7 +166,7 @@ namespace krabs {
         // intended for their particular instance to be called.
         // std::ref lets us get around this and point to a specific instance
         // that they handed us.
-        callbacks_.push_back(std::ref(callback));
+        event_callbacks_.push_back(std::ref(callback));
     }
 
     template <typename U>
@@ -152,21 +175,60 @@ namespace krabs {
         // This is where temporaries bind to. Temporaries can't be wrapped in
         // a std::ref because they'll go away very quickly. We are forced to
         // actually copy these.
-        callbacks_.push_back(callback);
+        event_callbacks_.push_back(callback);
+    }
+
+    inline void event_filter::add_on_error_callback(c_provider_error_callback callback)
+    {
+        // C function pointers don't interact well with std::ref, so we
+        // overload to take care of this scenario.
+        error_callbacks_.push_back(callback);
+    }
+
+    template <typename U>
+    void event_filter::add_on_error_callback(U& callback)
+    {
+        // std::function copies its argument -- because our callbacks list
+        // is a list of std::function, this causes problems when a user
+        // intended for their particular instance to be called.
+        // std::ref lets us get around this and point to a specific instance
+        // that they handed us.
+        error_callbacks_.push_back(std::ref(callback));
+    }
+
+    template <typename U>
+    void event_filter::add_on_error_callback(const U& callback)
+    {
+        // This is where temporaries bind to. Temporaries can't be wrapped in
+        // a std::ref because they'll go away very quickly. We are forced to
+        // actually copy these.
+        error_callbacks_.push_back(callback);
     }
 
     inline void event_filter::on_event(const EVENT_RECORD &record, const krabs::trace_context &trace_context) const
     {
-        if (callbacks_.empty()) {
+        if (event_callbacks_.empty()) {
             return;
         }
 
-        if (predicate_ != nullptr && !predicate_(record, trace_context)) {
-            return;
-        }
+        try
+        {
+            if (predicate_ != nullptr && !predicate_(record, trace_context)) {
+                return;
+            }
 
-        for (auto &callback : callbacks_) {
-            callback(record, trace_context);
+            for (auto& callback : event_callbacks_) {
+                callback(record, trace_context);
+            }
+        }
+        catch (const krabs::could_not_find_schema& ex)
+        {
+            // this occurs when a predicate is applied to an event for which
+            // no schema exists. instead of allowing the exception to halt
+            // the entire trace, send a notification to the filter's error callback
+            for (auto& error_callback : error_callbacks_) {
+                error_callback(record, ex.what());
+            }
         }
     }
 } /* namespace krabs */
