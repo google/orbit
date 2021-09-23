@@ -62,6 +62,8 @@ class CaptureWindow : public GlCanvas {
   void UpdateChildrenPosAndSize();
 
   virtual void DrawScreenSpace();
+  void RenderAllLayers();
+
   [[nodiscard]] float GetRightMargin() const { return right_margin_; }
   void UpdateRightMargin(float margin) { right_margin_ = margin; }
   virtual void RenderText(float layer);
