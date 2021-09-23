@@ -46,8 +46,7 @@ target_link_libraries(WindowsTracing PUBLIC
 add_executable(WindowsTracingTests)
 
 target_sources(WindowsTracingTests PRIVATE
-        ContextSwitchManagerTest.cpp
-        MockTracerListener.h)
+        ContextSwitchManagerTest.cpp)
 
 target_link_libraries(WindowsTracingTests PRIVATE
         WindowsTracing

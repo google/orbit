@@ -6,12 +6,17 @@
 #include <gtest/gtest.h>
 
 #include "ContextSwitchManager.h"
-#include "MockTracerListener.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "capture.pb.h"
 
 using ::testing::SaveArg;
+
 namespace orbit_windows_tracing {
+
+class MockTracerListener : public orbit_windows_tracing::TracerListener {
+ public:
+  MOCK_METHOD(void, OnSchedulingSlice, (orbit_grpc_protos::SchedulingSlice), (override));
+};
 
 TEST(ContextSwitch, ListenerIsCalled) {
   orbit_windows_tracing::MockTracerListener mock_listener;
