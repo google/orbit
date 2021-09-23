@@ -28,6 +28,49 @@ TEST(ContextSwitch, ListenerIsCalled) {
   manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/2, /*new_tid=*/1, /*timestamp_ns=*/1);
 }
 
+TEST(ContextSwitch, MultipleSchedulingSlices) {
+  orbit_windows_tracing::MockTracerListener mock_listener;
+  ContextSwitchManager manager(&mock_listener);
+
+  EXPECT_CALL(mock_listener, OnSchedulingSlice).Times(16);
+
+  manager.ProcessTidToPidMapping(/*tid*/ 0, /*pid=*/5);
+  manager.ProcessTidToPidMapping(/*tid*/ 1, /*pid=*/5);
+  manager.ProcessTidToPidMapping(/*tid*/ 2, /*pid=*/5);
+  manager.ProcessTidToPidMapping(/*tid*/ 3, /*pid=*/5);
+  manager.ProcessTidToPidMapping(/*tid*/ 4, /*pid=*/5);
+
+  manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/0, /*new_tid=*/2, /*timestamp_ns=*/0);
+  manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/2, /*new_tid=*/1, /*timestamp_ns=*/1);
+  manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/1, /*new_tid=*/2, /*timestamp_ns=*/2);
+  manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/2, /*new_tid=*/1, /*timestamp_ns=*/3);
+  manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/1, /*new_tid=*/0, /*timestamp_ns=*/4);
+
+  manager.ProcessContextSwitch(/*cpu=*/1, /*old_tid=*/0, /*new_tid=*/2, /*timestamp_ns=*/5);
+  manager.ProcessContextSwitch(/*cpu=*/1, /*old_tid=*/2, /*new_tid=*/1, /*timestamp_ns=*/6);
+  manager.ProcessContextSwitch(/*cpu=*/1, /*old_tid=*/1, /*new_tid=*/2, /*timestamp_ns=*/7);
+  manager.ProcessContextSwitch(/*cpu=*/1, /*old_tid=*/2, /*new_tid=*/1, /*timestamp_ns=*/8);
+  manager.ProcessContextSwitch(/*cpu=*/1, /*old_tid=*/1, /*new_tid=*/0, /*timestamp_ns=*/9);
+
+  manager.ProcessContextSwitch(/*cpu=*/2, /*old_tid=*/0, /*new_tid=*/3, /*timestamp_ns=*/0);
+  manager.ProcessContextSwitch(/*cpu=*/2, /*old_tid=*/3, /*new_tid=*/4, /*timestamp_ns=*/1);
+  manager.ProcessContextSwitch(/*cpu=*/2, /*old_tid=*/4, /*new_tid=*/3, /*timestamp_ns=*/2);
+  manager.ProcessContextSwitch(/*cpu=*/2, /*old_tid=*/3, /*new_tid=*/4, /*timestamp_ns=*/3);
+  manager.ProcessContextSwitch(/*cpu=*/2, /*old_tid=*/4, /*new_tid=*/0, /*timestamp_ns=*/4);
+
+  manager.ProcessContextSwitch(/*cpu=*/3, /*old_tid=*/0, /*new_tid=*/3, /*timestamp_ns=*/5);
+  manager.ProcessContextSwitch(/*cpu=*/3, /*old_tid=*/3, /*new_tid=*/4, /*timestamp_ns=*/6);
+  manager.ProcessContextSwitch(/*cpu=*/3, /*old_tid=*/4, /*new_tid=*/3, /*timestamp_ns=*/7);
+  manager.ProcessContextSwitch(/*cpu=*/3, /*old_tid=*/3, /*new_tid=*/4, /*timestamp_ns=*/8);
+  manager.ProcessContextSwitch(/*cpu=*/3, /*old_tid=*/4, /*new_tid=*/0, /*timestamp_ns=*/9);
+
+  const ContextSwitchManager::Stats& stats = manager.GetStats();
+  EXPECT_EQ(stats.num_scheduling_slices, 16);
+  EXPECT_EQ(stats.num_tid_mismatches_, 0);
+  EXPECT_EQ(stats.num_scheduling_slices_with_invalid_pid, 0);
+  EXPECT_EQ(stats.tid_witout_pid_set_.size(), 0);
+}
+
 TEST(ContextSwitch, InvalidPidIsSet) {
   orbit_windows_tracing::MockTracerListener mock_listener;
   ContextSwitchManager manager(&mock_listener);
