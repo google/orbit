@@ -4,8 +4,6 @@
 
 #include "CaptureClient/GpuQueueSubmissionProcessor.h"
 
-#include <regex>
-
 #include "OrbitBase/Logging.h"
 
 namespace orbit_capture_client {
@@ -416,17 +414,21 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
       color->set_alpha(static_cast<uint32_t>(completed_marker.color().alpha() * 255.f));
     }
 
+    const uint64_t text_key = completed_marker.text_key();
+    marker_timer.set_user_data_key(text_key);
+
     // We have special handling for DXVK instrumentation that extracts the encoded group_id from
     // the label's text. The encoding is:
     // 'DXVK__vkFunctionName#GROUP_ID', where 'GROUP_ID' is the group id.
-    uint64_t text_key = completed_marker.text_key();
-    marker_timer.set_user_data_key(text_key);
-    std::smatch dxvk_group_id_match;
     CHECK(string_intern_pool.contains(text_key));
-    if (std::regex_match(string_intern_pool.at(text_key), dxvk_group_id_match,
-                         std::regex("DXVK__vk.*#([0-9]+)")) &&
-        dxvk_group_id_match.size() == 2) {
-      marker_timer.set_group_id(std::stoull(dxvk_group_id_match[1].str()));
+    const std::string& text = string_intern_pool.at(text_key);
+    if (text.find_first_of("DXVK__") != std::string::npos) {
+      const size_t group_id_index = text.find_last_of('#') + 1;
+      uint64_t group_id = 0;
+      if (group_id_index != std::string::npos &&
+          absl::SimpleAtoi(text.substr(group_id_index), &group_id)) {
+        marker_timer.set_group_id(group_id);
+      }
     }
     result.push_back(marker_timer);
   }
