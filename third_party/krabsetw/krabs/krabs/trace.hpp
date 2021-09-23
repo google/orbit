@@ -125,6 +125,32 @@ namespace krabs {
 
         /**
          * <summary>
+         * Configures trace session settings.
+         * Must be called after open().
+         * See https://docs.microsoft.com/en-us/windows/win32/api/evntrace/nf-evntrace-tracesetinformation
+         * for more information.
+         * </summary>
+         * <example>
+         *    krabs::trace trace;
+         *    // Adjust SE_SYSTEM_PROFILE_NAME token privilege through AdjustTokenPrivileges(...)
+         *    // to enable stack tracing (not done in this example). Then:
+         *    STACK_TRACING_EVENT_ID event_id = {0};
+         *    event_id.EventGuid = krabs::guids::perf_info;
+         *    event_id.Type = 46; // SampleProfile
+         *    trace_.open();
+         *    trace_.set_trace_information(TraceStackTracingInfo, &event_id, sizeof(STACK_TRACING_EVENT_ID));
+         *    krabs::kernel_provider stack_walk_provider(EVENT_TRACE_FLAG_PROFILE, krabs::guids::stack_walk);
+         *    trace_.enable(stack_walk_provider);
+         *    trace.process();
+         * </example>
+         */
+        void set_trace_information(
+            TRACE_INFO_CLASS information_class,
+            PVOID trace_information,
+            ULONG information_length);
+
+        /**
+         * <summary>
          * Enables the provider on the given user trace.
          * </summary>
          * <example>
@@ -317,6 +343,16 @@ namespace krabs {
         properties_.MaximumBuffers = properties->MaximumBuffers;
         properties_.FlushTimer = properties->FlushTimer;
         properties_.LogFileMode = properties->LogFileMode;
+    }
+
+    template <typename T>
+    void trace<T>::set_trace_information(
+        TRACE_INFO_CLASS information_class,
+        PVOID trace_information,
+        ULONG information_length)
+    {
+        details::trace_manager<trace> manager(*this);
+        manager.set_trace_information(information_class, trace_information, information_length);
     }
 
     template <typename T>
