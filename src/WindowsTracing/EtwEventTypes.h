@@ -9,7 +9,7 @@
 
 namespace orbit_windows_tracing {
 
-// ETW event types grouped by event class. See Microsof's documentation for more info:
+// ETW event types grouped by event class. See Microsoft's documentation for more info:
 // https://docs.microsoft.com/en-us/windows/win32/etw/event-tracing-mof-classes.
 
 // https://docs.microsoft.com/en-us/windows/win32/etw/thread-typegroup1
