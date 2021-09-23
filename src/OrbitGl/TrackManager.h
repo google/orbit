@@ -89,6 +89,9 @@ class TrackManager {
   void SetTrackTypeVisibility(Track::Type type, bool value);
   [[nodiscard]] bool GetTrackTypeVisibility(Track::Type type) const;
 
+  const absl::flat_hash_map<Track::Type, bool> GetAllTrackTypesVisibility() const;
+  void RestoreAllTrackTypesVisibility(const absl::flat_hash_map<Track::Type, bool>& values);
+
  private:
   [[nodiscard]] int FindMovingTrackIndex();
   void UpdateMovingTrackPositionInVisibleTracks();

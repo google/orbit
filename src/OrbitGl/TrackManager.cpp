@@ -397,6 +397,19 @@ bool TrackManager::GetTrackTypeVisibility(Track::Type type) const {
   return track_type_visibility_.at(type);
 }
 
+const absl::flat_hash_map<Track::Type, bool> TrackManager::GetAllTrackTypesVisibility() const {
+  return track_type_visibility_;
+}
+
+void TrackManager::RestoreAllTrackTypesVisibility(
+    const absl::flat_hash_map<Track::Type, bool>& values) {
+  track_type_visibility_ = values;
+  if (time_graph_ != nullptr) {
+    time_graph_->RequestUpdate();
+  }
+  visible_track_list_needs_update_ = true;
+}
+
 bool TrackManager::IteratableType(orbit_client_protos::TimerInfo_Type type) {
   switch (type) {
     case TimerInfo::kNone:
