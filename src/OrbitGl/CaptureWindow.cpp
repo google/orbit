@@ -424,34 +424,7 @@ void CaptureWindow::Draw() {
     text_renderer_.RenderDebug(&ui_batcher_);
   }
 
-  // Get all layers.
-  std::vector<float> all_layers{};
-  if (time_graph_ != nullptr) {
-    all_layers = time_graph_->GetBatcher().GetLayers();
-    orbit_base::Append(all_layers, time_graph_->GetTextRenderer()->GetLayers());
-  }
-  orbit_base::Append(all_layers, ui_batcher_.GetLayers());
-  orbit_base::Append(all_layers, text_renderer_.GetLayers());
-
-  // Sort and remove duplicates.
-  std::sort(all_layers.begin(), all_layers.end());
-  auto it = std::unique(all_layers.begin(), all_layers.end());
-  all_layers.resize(std::distance(all_layers.begin(), it));
-  if (all_layers.size() > GlCanvas::kMaxNumberRealZLayers) {
-    ERROR("Too many z-layers. The current number is %d", all_layers.size());
-  }
-
-  for (float layer : all_layers) {
-    if (time_graph_ != nullptr) {
-      time_graph_->GetBatcher().DrawLayer(layer, picking_mode_ != PickingMode::kNone);
-    }
-    ui_batcher_.DrawLayer(layer, picking_mode_ != PickingMode::kNone);
-
-    if (picking_mode_ == PickingMode::kNone) {
-      text_renderer_.RenderLayer(layer);
-      RenderText(layer);
-    }
-  }
+  RenderAllLayers();
 }
 
 void CaptureWindow::UpdateChildrenPosAndSize() {
@@ -511,6 +484,36 @@ void CaptureWindow::DrawScreenSpace() {
         Vec2(viewport_.GetScreenWidth(), time_graph_->GetLayout().GetTimeBarHeight()),
         GlCanvas::kZValueTimeBarBg);
     ui_batcher_.AddBox(background_box, kTimeBarBackgroundColor);
+  }
+}
+
+void CaptureWindow::RenderAllLayers() {
+  std::vector<float> all_layers{};
+  if (time_graph_ != nullptr) {
+    all_layers = time_graph_->GetBatcher().GetLayers();
+    orbit_base::Append(all_layers, time_graph_->GetTextRenderer()->GetLayers());
+  }
+  orbit_base::Append(all_layers, ui_batcher_.GetLayers());
+  orbit_base::Append(all_layers, text_renderer_.GetLayers());
+
+  // Sort and remove duplicates.
+  std::sort(all_layers.begin(), all_layers.end());
+  auto it = std::unique(all_layers.begin(), all_layers.end());
+  all_layers.resize(std::distance(all_layers.begin(), it));
+  if (all_layers.size() > GlCanvas::kMaxNumberRealZLayers) {
+    ERROR("Too many z-layers. The current number is %d", all_layers.size());
+  }
+
+  for (float layer : all_layers) {
+    if (time_graph_ != nullptr) {
+      time_graph_->GetBatcher().DrawLayer(layer, picking_mode_ != PickingMode::kNone);
+    }
+    ui_batcher_.DrawLayer(layer, picking_mode_ != PickingMode::kNone);
+
+    if (picking_mode_ == PickingMode::kNone) {
+      text_renderer_.RenderLayer(layer);
+      RenderText(layer);
+    }
   }
 }
 
