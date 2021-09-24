@@ -33,6 +33,8 @@ class ThreadTrack final : public TimerTrack {
                        orbit_client_data::TimerData* timer_data,
                        ScopeTreeUpdateType scope_tree_update_type);
 
+  void InitializeNameAndLabel();
+
   [[nodiscard]] std::string GetName() const override;
   [[nodiscard]] std::string GetLabel() const override;
   [[nodiscard]] int GetNumberOfPrioritizedTrailingCharacters() const override;
@@ -59,18 +61,13 @@ class ThreadTrack final : public TimerTrack {
 
   [[nodiscard]] bool IsEmpty() const override;
 
-  [[nodiscard]] std::vector<const orbit_client_data::TimerChain*> GetChains() const {
-    return timer_data_->GetChains();
-  }
-
-  [[nodiscard]] bool IsCollapsible() const override { return timer_data_->GetMaxDepth() > 1; }
-
   [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() override;
   [[nodiscard]] std::vector<CaptureViewElement*> GetChildren() const override;
 
   void OnCaptureComplete();
 
  protected:
+  [[nodiscard]] std::string GetThreadNameFromTid(uint32_t tid);
   [[nodiscard]] int64_t GetThreadId() const { return thread_id_; }
   [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const override;
   [[nodiscard]] bool IsTrackSelected() const override;
@@ -90,6 +87,7 @@ class ThreadTrack final : public TimerTrack {
   void UpdatePositionOfSubtracks() override;
   void UpdatePrimitivesOfSubtracks(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                    PickingMode picking_mode, float z_offset);
+  void UpdateMinMaxTimestamps();
 
   int64_t thread_id_;
 

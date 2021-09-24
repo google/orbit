@@ -77,6 +77,8 @@ class TimerTrack : public Track {
       uint64_t start_ns, uint64_t end_ns) const;
   [[nodiscard]] bool IsEmpty() const override;
 
+  [[nodiscard]] bool IsCollapsible() const override { return timer_data_->GetMaxDepth() > 1; }
+
   [[nodiscard]] virtual float GetDefaultBoxHeight() const { return layout_->GetTextBoxHeight(); }
   [[nodiscard]] virtual float GetDynamicBoxHeight(
       const orbit_client_protos::TimerInfo& /*timer_info*/) const {
@@ -90,6 +92,10 @@ class TimerTrack : public Track {
   [[nodiscard]] int GetVisiblePrimitiveCount() const override { return visible_timer_count_; }
 
   float GetHeight() const override;
+
+  [[nodiscard]] std::vector<const orbit_client_data::TimerChain*> GetChains() const {
+    return timer_data_->GetChains();
+  }
 
   [[nodiscard]] size_t GetNumberOfTimers() const;
   [[nodiscard]] uint64_t GetMinTime() const override;
