@@ -51,6 +51,24 @@ class GraphTrack : public Track {
     series_colors_ = series_colors;
   }
 
+  // These are not supported in GraphTracks
+  const orbit_client_protos::TimerInfo* GetLeft(
+      const orbit_client_protos::TimerInfo& /*info*/) const override {
+    return nullptr;
+  }
+  const orbit_client_protos::TimerInfo* GetRight(
+      const orbit_client_protos::TimerInfo& /*info*/) const override {
+    return nullptr;
+  }
+  const orbit_client_protos::TimerInfo* GetUp(
+      const orbit_client_protos::TimerInfo& /*info*/) const override {
+    return nullptr;
+  }
+  const orbit_client_protos::TimerInfo* GetDown(
+      const orbit_client_protos::TimerInfo& /*info*/) const override {
+    return nullptr;
+  }
+
  protected:
   [[nodiscard]] virtual Color GetColor(size_t index) const;
   [[nodiscard]] virtual double GetGraphMaxValue() const { return series_.GetMax(); }

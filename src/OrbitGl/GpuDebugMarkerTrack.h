@@ -24,7 +24,7 @@ class TextRenderer;
 
 // This is a thin implementation of a `TimerTrack` to display Vulkan debug markers, used in the
 // `GpuTrack`.
-class GpuDebugMarkerTrack : public TimerTrack {
+class GpuDebugMarkerTrack final : public TimerTrack {
  public:
   explicit GpuDebugMarkerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                                orbit_gl::Viewport* viewport, TimeGraphLayout* layout,

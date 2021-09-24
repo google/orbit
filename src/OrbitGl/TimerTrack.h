@@ -68,6 +68,10 @@ class TimerTrack : public Track {
 
   [[nodiscard]] std::string GetExtraInfo(const orbit_client_protos::TimerInfo& timer) const;
 
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
+      const orbit_client_protos::TimerInfo& timer_info) const override;
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetRight(
+      const orbit_client_protos::TimerInfo& timer_info) const override;
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetUp(
       const orbit_client_protos::TimerInfo& timer_info) const override;
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetDown(

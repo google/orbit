@@ -339,6 +339,14 @@ std::string TimerTrack::GetTooltip() const {
          "functions";
 }
 
+const TimerInfo* TimerTrack::GetLeft(const TimerInfo& timer_info) const {
+  return timer_data_->GetFirstBeforeStartTime(timer_info.start(), timer_info.depth());
+}
+
+const TimerInfo* TimerTrack::GetRight(const TimerInfo& timer_info) const {
+  return timer_data_->GetFirstAfterStartTime(timer_info.start(), timer_info.depth());
+}
+
 const TimerInfo* TimerTrack::GetUp(const TimerInfo& timer_info) const {
   return timer_data_->GetFirstBeforeStartTime(timer_info.start(), timer_info.depth() - 1);
 }
