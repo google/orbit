@@ -8,8 +8,8 @@
 
 namespace orbit_windows_tracing {
 
-[[nodiscard]] static std::unique_ptr<Tracer> Create(
-    orbit_grpc_protos::CaptureOptions capture_options, TracerListener* listener) {
+std::unique_ptr<Tracer> Tracer::Create(orbit_grpc_protos::CaptureOptions capture_options,
+                                       TracerListener* listener) {
   return std::make_unique<TracerImpl>(capture_options, listener);
 }
 
