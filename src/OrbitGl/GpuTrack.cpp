@@ -86,14 +86,16 @@ void GpuTrack::UpdatePositionOfSubtracks() {
   const Vec2 pos = GetPos();
   if (collapse_toggle_->IsCollapsed()) {
     submission_track_->SetPos(pos[0], pos[1]);
+    marker_track_->SetVisible(false);
     return;
   }
+  marker_track_->SetVisible(true);
   float current_y = pos[1] + layout_->GetTrackTabHeight();
-  if (!submission_track_->IsEmpty()) {
+  if (submission_track_->ShouldBeRendered()) {
     current_y += layout_->GetSpaceBetweenSubtracks();
   }
   submission_track_->SetPos(pos[0], current_y);
-  if (!marker_track_->IsEmpty()) {
+  if (marker_track_->ShouldBeRendered()) {
     current_y += (layout_->GetSpaceBetweenSubtracks() + submission_track_->GetHeight());
   }
 
@@ -105,11 +107,11 @@ float GpuTrack::GetHeight() const {
     return submission_track_->GetHeight();
   }
   float height = layout_->GetTrackTabHeight();
-  if (!submission_track_->IsEmpty()) {
+  if (submission_track_->ShouldBeRendered()) {
     height += submission_track_->GetHeight();
     height += layout_->GetSpaceBetweenSubtracks();
   }
-  if (!marker_track_->IsEmpty()) {
+  if (marker_track_->ShouldBeRendered()) {
     height += marker_track_->GetHeight();
     height += layout_->GetSpaceBetweenSubtracks();
   }
@@ -161,11 +163,11 @@ std::vector<orbit_gl::CaptureViewElement*> GpuTrack::GetVisibleChildren() {
     return result;
   }
 
-  if (!submission_track_->IsEmpty()) {
+  if (submission_track_->ShouldBeRendered()) {
     result.push_back(submission_track_.get());
   }
 
-  if (!marker_track_->IsEmpty()) {
+  if (marker_track_->ShouldBeRendered()) {
     result.push_back(marker_track_.get());
   }
   return result;

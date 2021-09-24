@@ -58,9 +58,6 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
 
   [[nodiscard]] virtual Type GetType() const = 0;
 
-  [[nodiscard]] bool GetVisible() const { return visible_; }
-  void SetVisible(bool value) { visible_ = value; }
-
   [[nodiscard]] virtual uint64_t GetMinTime() const = 0;
   [[nodiscard]] virtual uint64_t GetMaxTime() const = 0;
 
@@ -81,6 +78,10 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   [[nodiscard]] uint32_t GetProcessId() const { return process_id_; }
   void SetProcessId(uint32_t pid) { process_id_ = pid; }
   [[nodiscard]] virtual bool IsEmpty() const = 0;
+  [[nodiscard]] bool ShouldBeRendered() const override {
+    return CaptureViewElement::ShouldBeRendered() && !IsEmpty();
+  }
+
 
   [[nodiscard]] virtual bool IsTrackSelected() const { return false; }
 
@@ -116,7 +117,6 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
 
   uint32_t process_id_;
   bool draw_background_ = true;
-  bool visible_ = true;
   bool pinned_ = false;
   Type type_ = Type::kUnknown;
   std::shared_ptr<TriangleToggle> collapse_toggle_;

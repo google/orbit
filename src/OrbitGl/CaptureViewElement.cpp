@@ -26,6 +26,13 @@ void CaptureViewElement::SetWidth(float width) {
   }
 }
 
+void CaptureViewElement::SetVisible(bool value) {
+  if (visible_ == value) return;
+
+  visible_ = value;
+  RequestUpdate();
+}
+
 void CaptureViewElement::OnPick(int x, int y) {
   mouse_pos_last_click_ = viewport_->ScreenToWorldPos(Vec2i(x, y));
   picking_offset_ = mouse_pos_last_click_ - pos_;
