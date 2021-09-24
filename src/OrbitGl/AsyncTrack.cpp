@@ -99,8 +99,8 @@ std::string AsyncTrack::GetTimesliceText(const TimerInfo& timer_info) const {
   return absl::StrFormat("%s %s", name, time);
 }
 
-Color AsyncTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
-                                bool is_highlighted) const {
+Color AsyncTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected, bool is_highlighted,
+                                const internal::DrawData& /*draw_data*/) const {
   CHECK(timer_info.type() == TimerInfo::kApiScopeAsync);
   const Color kInactiveColor(100, 100, 100, 255);
   const Color kSelectionColor(0, 128, 255, 255);

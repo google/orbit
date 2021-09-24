@@ -215,11 +215,11 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, const internal::Dr
   bool is_group_id_highlighted =
       group_id != kOrbitDefaultGroupId && group_id == draw_data.highlighted_group_id;
   bool is_highlighted = !is_selected && (is_function_id_highlighted || is_group_id_highlighted);
-  return GetTimerColor(timer_info, is_selected, is_highlighted);
+  return GetTimerColor(timer_info, is_selected, is_highlighted, draw_data);
 }
 
-Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
-                                 bool is_highlighted) const {
+Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected, bool is_highlighted,
+                                 const internal::DrawData& /*draw_data*/) const {
   const Color kInactiveColor(100, 100, 100, 255);
   const Color kSelectionColor(0, 128, 255, 255);
   if (is_highlighted) {

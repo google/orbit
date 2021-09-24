@@ -21,6 +21,7 @@
 using orbit_client_protos::TimerInfo;
 
 const Color kInactiveColor(100, 100, 100, 255);
+const Color kSamePidColor(140, 140, 140, 255);
 const Color kSelectionColor(0, 128, 255, 255);
 
 SchedulerTrack::SchedulerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
@@ -58,7 +59,8 @@ bool SchedulerTrack::IsTimerActive(const TimerInfo& timer_info) const {
 }
 
 Color SchedulerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
-                                    bool is_highlighted) const {
+                                    bool is_highlighted,
+                                    const internal::DrawData& draw_data) const {
   if (is_highlighted) {
     return TimerTrack::kHighlightColor;
   }
@@ -66,7 +68,9 @@ Color SchedulerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selecte
     return kSelectionColor;
   }
   if (!IsTimerActive(timer_info)) {
-    return kInactiveColor;
+    const TimerInfo* selected_timer = draw_data.selected_timer;
+    bool is_same_pid = selected_timer && timer_info.process_id() == selected_timer->process_id();
+    return is_same_pid ? kSamePidColor : kInactiveColor;
   }
   return TimeGraph::GetThreadColor(timer_info.thread_id());
 }

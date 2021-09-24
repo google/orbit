@@ -189,7 +189,7 @@ bool TimerTrack::DrawTimer(const TimerInfo* prev_timer_info, const TimerInfo* ne
       group_id != kOrbitDefaultGroupId && group_id == draw_data.highlighted_group_id;
   bool is_highlighted = !is_selected && (is_function_id_highlighted || is_group_id_highlighted);
 
-  Color color = GetTimerColor(*current_timer_info, is_selected, is_highlighted);
+  Color color = GetTimerColor(*current_timer_info, is_selected, is_highlighted, draw_data);
 
   bool is_visible_width = elapsed_us * draw_data.inv_time_window *
                               viewport_->WorldToScreenWidth(draw_data.track_width) >
