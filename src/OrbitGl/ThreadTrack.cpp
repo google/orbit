@@ -485,7 +485,6 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
     timer_data_->UpdateMaxDepth(depth);
 
     float world_timer_y = GetYFromDepth(depth - 1);
-    uint64_t next_pixel_start_time_ns = min_tick;
 
     const orbit_client_protos::TimerInfo* timer_info =
         scope_tree_.FindFirstScopeAtOrAfterTime(depth, min_tick);
@@ -512,7 +511,7 @@ void ThreadTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t
       }
 
       // Use the time at boundary of the next pixel as a threshold to avoid overdraw.
-      next_pixel_start_time_ns = GetNextPixelBoundaryTimeNs(timer_info->end(), draw_data);
+      uint64_t next_pixel_start_time_ns = GetNextPixelBoundaryTimeNs(timer_info->end(), draw_data);
       timer_info = scope_tree_.FindFirstScopeAtOrAfterTime(depth, next_pixel_start_time_ns);
     }
   }
