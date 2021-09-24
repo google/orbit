@@ -52,12 +52,20 @@ class GpuQueueSubmissionProcessor {
       const std::function<uint64_t(const std::string& str)>&
           get_string_hash_and_send_to_listener_if_necessary);
 
-  // In case we have recored the submission containing the "begin" of a certain debug marker, we
+  // In case we have recorded the submission containing the "begin" of a certain debug marker, we
   // use the `begin_capture_time_ns_` as an approximation for the begin CPU timestamp.
   // This method updates this timestamp with the minimum of the current value and the given value.
   void UpdateBeginCaptureTime(uint64_t timestamp) {
     begin_capture_time_ns_ = std::min(begin_capture_time_ns_, timestamp);
   }
+
+  // We have a special encoding for "group ids" in DXVK Vulkan labels. The encoding is:
+  // 'DXVK__vkFunctionName#GROUP_ID', where 'GROUP_ID' is the group id.
+  // This function tries to extract the "group id" from the given label, based on this encoding.
+  // It returns `true` on success. In this case, the group id will be written to `out_group_id`.
+  // In all other cases `false` will be returned.
+  static bool TryExtractDXVKVulkanGroupIdFromDebugLabel(const std::string& label,
+                                                        uint64_t* out_group_id);
 
  private:
   [[nodiscard]] std::vector<orbit_client_protos::TimerInfo>
@@ -79,7 +87,8 @@ class GpuQueueSubmissionProcessor {
   [[nodiscard]] std::vector<orbit_client_protos::TimerInfo> ProcessGpuDebugMarkers(
       const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission,
       const orbit_grpc_protos::GpuJob& matching_gpu_job,
-      const std::optional<orbit_grpc_protos::GpuCommandBuffer>& first_command_buffer);
+      const std::optional<orbit_grpc_protos::GpuCommandBuffer>& first_command_buffer,
+      const absl::flat_hash_map<uint64_t, std::string>& string_intern_pool);
 
   [[nodiscard]] static std::optional<orbit_grpc_protos::GpuCommandBuffer> ExtractFirstCommandBuffer(
       const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission);

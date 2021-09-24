@@ -178,8 +178,8 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuQueueSubmissionWit
 
   result.insert(result.end(), command_buffer_timers.begin(), command_buffer_timers.end());
 
-  std::vector<TimerInfo> debug_marker_timers =
-      ProcessGpuDebugMarkers(gpu_queue_submission, matching_gpu_job, first_command_buffer);
+  std::vector<TimerInfo> debug_marker_timers = ProcessGpuDebugMarkers(
+      gpu_queue_submission, matching_gpu_job, first_command_buffer, string_intern_pool);
 
   result.insert(result.end(), debug_marker_timers.begin(), debug_marker_timers.end());
 
@@ -289,7 +289,8 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuCommandBuffers(
 
 std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
     const GpuQueueSubmission& gpu_queue_submission, const GpuJob& matching_gpu_job,
-    const std::optional<GpuCommandBuffer>& first_command_buffer) {
+    const std::optional<GpuCommandBuffer>& first_command_buffer,
+    const absl::flat_hash_map<uint64_t, std::string>& string_intern_pool) {
   if (gpu_queue_submission.completed_markers_size() == 0) {
     return {};
   }
@@ -412,7 +413,19 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
       color->set_blue(static_cast<uint32_t>(completed_marker.color().blue() * 255.f));
       color->set_alpha(static_cast<uint32_t>(completed_marker.color().alpha() * 255.f));
     }
-    marker_timer.set_user_data_key(completed_marker.text_key());
+
+    const uint64_t text_key = completed_marker.text_key();
+    marker_timer.set_user_data_key(text_key);
+
+    // We have special handling for DXVK instrumentation that have an encoded group_id in their
+    // label.
+    CHECK(string_intern_pool.contains(text_key));
+    const std::string& text = string_intern_pool.at(text_key);
+    uint64_t group_id = 0;
+    if (TryExtractDXVKVulkanGroupIdFromDebugLabel(text, &group_id)) {
+      marker_timer.set_group_id(group_id);
+    }
+
     result.push_back(marker_timer);
   }
 
@@ -431,6 +444,21 @@ std::optional<GpuCommandBuffer> GpuQueueSubmissionProcessor::ExtractFirstCommand
     }
   }
   return std::nullopt;
+}
+
+bool GpuQueueSubmissionProcessor::TryExtractDXVKVulkanGroupIdFromDebugLabel(
+    const std::string& label, uint64_t* out_group_id) {
+  // We have special handling for DXVK instrumentation that extracts the encoded group_id from
+  // the label's text. The encoding is:
+  // 'DXVK__vkFunctionName#GROUP_ID', where 'GROUP_ID' is the group id.
+  if (label.find_first_of("DXVK__") != std::string::npos) {
+    const size_t group_id_index = label.find_last_of('#') + 1;
+    if (group_id_index != std::string::npos &&
+        absl::SimpleAtoi(label.substr(group_id_index), out_group_id)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 }  // namespace orbit_capture_client
