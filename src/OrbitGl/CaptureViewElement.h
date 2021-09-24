@@ -66,6 +66,11 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   // Height should be defined in every particular capture view element.
   [[nodiscard]] virtual float GetHeight() const = 0;
   [[nodiscard]] Vec2 GetSize() const { return Vec2(GetWidth(), GetHeight()); }
+  [[nodiscard]] virtual bool ShouldBeRendered() const { return GetVisible(); }
+
+  void SetVisible(bool value);
+  [[nodiscard]] bool GetVisible() const { return visible_; }
+
 
   // Pickable
   void OnPick(int x, int y) override;
@@ -87,6 +92,7 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   Vec2 mouse_pos_cur_;
   Vec2 picking_offset_ = Vec2(0, 0);
   bool picked_ = false;
+  bool visible_ = true;
 
   virtual void DoDraw(Batcher& /*batcher*/, TextRenderer& /*text_renderer*/,
                       const DrawContext& /*draw_context*/) {}

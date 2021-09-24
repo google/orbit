@@ -31,6 +31,9 @@ class ThreadBar : public CaptureViewElement, public std::enable_shared_from_this
         color_(color) {}
 
   [[nodiscard]] virtual bool IsEmpty() const { return false; }
+  [[nodiscard]] bool ShouldBeRendered() const override {
+    return CaptureViewElement::ShouldBeRendered() && !IsEmpty();
+  }
 
   [[nodiscard]] virtual const std::string& GetName() const { return name_; }
 

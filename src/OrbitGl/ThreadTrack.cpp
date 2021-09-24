@@ -257,12 +257,12 @@ void ThreadTrack::UpdatePositionOfSubtracks() {
   float current_y = pos[1] + layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin();
 
   thread_state_bar_->SetPos(pos[0], current_y);
-  if (!thread_state_bar_->IsEmpty()) {
+  if (thread_state_bar_->ShouldBeRendered()) {
     current_y += (space_between_subtracks + thread_state_track_height);
   }
 
   event_bar_->SetPos(pos[0], current_y);
-  if (!event_bar_->IsEmpty()) {
+  if (event_bar_->ShouldBeRendered()) {
     current_y += (space_between_subtracks + event_track_height);
   }
 

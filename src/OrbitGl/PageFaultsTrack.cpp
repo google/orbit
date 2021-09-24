@@ -46,10 +46,10 @@ float PageFaultsTrack::GetHeight() const {
   }
 
   float height = layout_->GetTrackTabHeight();
-  if (!major_page_faults_track_->IsEmpty()) {
+  if (major_page_faults_track_->ShouldBeRendered()) {
     height += major_page_faults_track_->GetHeight() + layout_->GetSpaceBetweenSubtracks();
   }
-  if (!minor_page_faults_track_->IsEmpty()) {
+  if (minor_page_faults_track_->ShouldBeRendered()) {
     height += minor_page_faults_track_->GetHeight() + layout_->GetSpaceBetweenSubtracks();
   }
   return height;
@@ -106,16 +106,18 @@ void PageFaultsTrack::UpdatePositionOfSubtracks() {
   const Vec2 pos = GetPos();
   if (collapse_toggle_->IsCollapsed()) {
     major_page_faults_track_->SetPos(pos[0], pos[1]);
+    minor_page_faults_track_->SetVisible(false);
     return;
   }
 
+  minor_page_faults_track_->SetVisible(true);
   float current_y = pos[1] + layout_->GetTrackTabHeight();
-  if (!major_page_faults_track_->IsEmpty()) {
+  if (major_page_faults_track_->ShouldBeRendered()) {
     current_y += layout_->GetSpaceBetweenSubtracks();
   }
   major_page_faults_track_->SetPos(pos[0], current_y);
 
-  if (!minor_page_faults_track_->IsEmpty()) {
+  if (minor_page_faults_track_->ShouldBeRendered()) {
     current_y += (layout_->GetSpaceBetweenSubtracks() + major_page_faults_track_->GetHeight());
   }
   minor_page_faults_track_->SetPos(pos[0], current_y);
