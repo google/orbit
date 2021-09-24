@@ -39,7 +39,8 @@ class AsyncTrack final : public TimerTrack {
   [[nodiscard]] std::string GetTimesliceText(
       const orbit_client_protos::TimerInfo& timer) const override;
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
-                                    bool is_selected, bool is_highlighted) const override;
+                                    bool is_selected, bool is_highlighted,
+                                    const internal::DrawData& draw_data) const override;
 
   std::string name_;
   // Used for determining what row can receive a new timer with no overlap.

@@ -74,7 +74,8 @@ bool GpuSubmissionTrack::IsTimerActive(const TimerInfo& timer_info) const {
 }
 
 Color GpuSubmissionTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
-                                        bool is_highlighted) const {
+                                        bool is_highlighted,
+                                        const internal::DrawData& /*draw_data*/) const {
   const Color kInactiveColor(100, 100, 100, 255);
   const Color kSelectionColor(0, 128, 255, 255);
   if (is_highlighted) {

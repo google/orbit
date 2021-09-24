@@ -77,7 +77,8 @@ class ThreadTrack final : public TimerTrack {
 
   [[nodiscard]] float GetDefaultBoxHeight() const override;
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer, bool is_selected,
-                                    bool is_highlighted) const override;
+                                    bool is_highlighted,
+                                    const internal::DrawData& draw_data) const override;
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
                                     const internal::DrawData& draw_data);
   [[nodiscard]] std::string GetTimesliceText(

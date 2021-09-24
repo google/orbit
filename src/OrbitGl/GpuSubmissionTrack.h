@@ -66,7 +66,8 @@ class GpuSubmissionTrack : public TimerTrack {
  protected:
   [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const override;
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer, bool is_selected,
-                                    bool is_highlighted) const override;
+                                    bool is_highlighted,
+                                    const internal::DrawData& draw_data) const override;
   [[nodiscard]] bool TimerFilter(const orbit_client_protos::TimerInfo& timer) const override;
 
   [[nodiscard]] std::string GetTimesliceText(

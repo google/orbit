@@ -101,7 +101,8 @@ class TimerTrack : public Track {
     return true;
   }
   [[nodiscard]] virtual Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
-                                            bool is_selected, bool is_highlighted) const = 0;
+                                            bool is_selected, bool is_highlighted,
+                                            const internal::DrawData& draw_data) const = 0;
   [[nodiscard]] virtual bool TimerFilter(
       const orbit_client_protos::TimerInfo& /*timer_info*/) const {
     return true;
