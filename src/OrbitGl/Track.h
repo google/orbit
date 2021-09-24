@@ -87,6 +87,9 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
 
   [[nodiscard]] virtual bool IsCollapsed() const { return collapse_toggle_->IsCollapsed(); }
 
+  [[nodiscard]] bool GetHeadless() const { return headless_; }
+  void SetHeadless(bool value);
+
   [[nodiscard]] virtual std::vector<CaptureViewElement*> GetVisibleChildren() { return {}; }
   [[nodiscard]] virtual int GetVisiblePrimitiveCount() const { return 0; }
 
@@ -118,6 +121,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   uint32_t process_id_;
   bool draw_background_ = true;
   bool pinned_ = false;
+  bool headless_ = false;
   Type type_ = Type::kUnknown;
   std::shared_ptr<TriangleToggle> collapse_toggle_;
 

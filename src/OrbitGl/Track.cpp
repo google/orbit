@@ -89,6 +89,8 @@ std::unique_ptr<orbit_accessibility::AccessibleInterface> Track::CreateAccessibl
 void Track::DoDraw(Batcher& batcher, TextRenderer& text_renderer, const DrawContext& draw_context) {
   CaptureViewElement::DoDraw(batcher, text_renderer, draw_context);
 
+  if (headless_) return;
+
   const bool picking = draw_context.picking_mode != PickingMode::kNone;
 
   const float x0 = GetPos()[0];
@@ -225,6 +227,13 @@ Color Track::GetTrackBackgroundColor() const {
 }
 
 void Track::OnCollapseToggle(bool /*is_collapsed*/) { RequestUpdate(); }
+
+void Track::SetHeadless(bool value) {
+  if (headless_ == value) return;
+
+  headless_ = value;
+  RequestUpdate();
+}
 
 void Track::OnDrag(int x, int y) {
   CaptureViewElement::OnDrag(x, y);

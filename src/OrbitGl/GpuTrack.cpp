@@ -87,9 +87,12 @@ void GpuTrack::UpdatePositionOfSubtracks() {
   if (collapse_toggle_->IsCollapsed()) {
     submission_track_->SetPos(pos[0], pos[1]);
     marker_track_->SetVisible(false);
+    submission_track_->SetHeadless(true);
     return;
   }
   marker_track_->SetVisible(true);
+  submission_track_->SetHeadless(false);
+
   float current_y = pos[1] + layout_->GetTrackTabHeight();
   if (submission_track_->ShouldBeRendered()) {
     current_y += layout_->GetSpaceBetweenSubtracks();
