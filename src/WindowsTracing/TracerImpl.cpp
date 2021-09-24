@@ -4,9 +4,6 @@
 
 #include "TracerImpl.h"
 
-#include "KrabsTracer.h"
-#include "OrbitBase/Logging.h"
-
 namespace orbit_windows_tracing {
 
 TracerImpl::TracerImpl(orbit_grpc_protos::CaptureOptions capture_options, TracerListener* listener)
