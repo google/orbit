@@ -46,7 +46,7 @@ std::string GpuDebugMarkerTrack::GetTooltip() const {
 
 Color GpuDebugMarkerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected,
                                          bool is_highlighted,
-                                         const internal::DrawData& draw_data) const {
+                                         const internal::DrawData& /*draw_data*/) const {
   CHECK(timer_info.type() == TimerInfo::kGpuDebugMarker);
   const Color kInactiveColor(100, 100, 100, 255);
   const Color kSelectionColor(0, 128, 255, 255);
