@@ -38,6 +38,26 @@ class VariableTrack final : public LineGraphTrack<kVariableTrackDimension> {
   [[nodiscard]] Track::Type GetType() const override { return Track::Type::kVariableTrack; }
   void AddValue(uint64_t time, double value) { AddValues(time, {value}); }
 
+  const orbit_client_protos::TimerInfo* GetLeft(
+      const orbit_client_protos::TimerInfo& /*info*/) const override {
+    return nullptr;
+  }
+
+  const orbit_client_protos::TimerInfo* GetRight(
+      const orbit_client_protos::TimerInfo& /*info*/) const override {
+    return nullptr;
+  }
+
+  const orbit_client_protos::TimerInfo* GetUp(
+      const orbit_client_protos::TimerInfo& /*info*/) const override {
+    return nullptr;
+  }
+
+  const orbit_client_protos::TimerInfo* GetDown(
+      const orbit_client_protos::TimerInfo& /*info*/) const override {
+    return nullptr;
+  }
+
  private:
   std::string name_;
 

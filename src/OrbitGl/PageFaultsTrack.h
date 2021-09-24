@@ -54,6 +54,22 @@ class PageFaultsTrack : public Track {
     minor_page_faults_track_->AddValuesAndUpdateAnnotations(timestamp_ns, values);
   }
 
+  const orbit_client_protos::TimerInfo* GetLeft(
+      const orbit_client_protos::TimerInfo& /*info*/) const override {
+    return nullptr;
+  }
+  const orbit_client_protos::TimerInfo* GetRight(
+      const orbit_client_protos::TimerInfo& /*info*/) const override {
+    return nullptr;
+  }
+  const orbit_client_protos::TimerInfo* GetUp(
+      const orbit_client_protos::TimerInfo& /*info*/) const override {
+    return nullptr;
+  }
+  const orbit_client_protos::TimerInfo* GetDown(
+      const orbit_client_protos::TimerInfo& /*info*/) const override {
+    return nullptr;
+  }
   [[nodiscard]] uint64_t GetMinTime() const override;
   [[nodiscard]] uint64_t GetMaxTime() const override;
 

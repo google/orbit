@@ -42,6 +42,15 @@ class BasicPageFaultsTrack : public LineGraphTrack<kBasicPageFaultsTrackDimensio
 
   enum class SeriesIndex { kProcess = 0, kCGroup = 1, kSystem = 2 };
 
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
+      const orbit_client_protos::TimerInfo& info) const override;
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetRight(
+      const orbit_client_protos::TimerInfo& info) const override;
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetUp(
+      const orbit_client_protos::TimerInfo& info) const override;
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetDown(
+      const orbit_client_protos::TimerInfo& info) const override;
+
  protected:
   void DrawSingleSeriesEntry(
       Batcher* batcher, uint64_t start_tick, uint64_t end_tick,

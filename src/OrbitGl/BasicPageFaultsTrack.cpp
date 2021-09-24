@@ -106,4 +106,24 @@ float BasicPageFaultsTrack::GetAnnotatedTrackContentHeight() const {
   return GetGraphContentHeight();
 }
 
+const orbit_client_protos::TimerInfo* BasicPageFaultsTrack::GetLeft(
+    const orbit_client_protos::TimerInfo& /*info*/) const {
+  return nullptr;
+}
+
+const orbit_client_protos::TimerInfo* BasicPageFaultsTrack::GetRight(
+    const orbit_client_protos::TimerInfo& /*info*/) const {
+  return nullptr;
+}
+
+const orbit_client_protos::TimerInfo* BasicPageFaultsTrack::GetUp(
+    const orbit_client_protos::TimerInfo& /*info*/) const {
+  return nullptr;
+}
+
+const orbit_client_protos::TimerInfo* BasicPageFaultsTrack::GetDown(
+    const orbit_client_protos::TimerInfo& /*info*/) const {
+  return nullptr;
+}
+
 }  // namespace orbit_gl
