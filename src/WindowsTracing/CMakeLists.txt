@@ -21,7 +21,6 @@ target_include_directories(WindowsTracing PRIVATE
 
 target_sources(WindowsTracing PUBLIC
         include/WindowsTracing/Tracer.h
-        include/WindowsTracing/TracerInterface.h
         include/WindowsTracing/TracerListener.h)
 
 target_sources(WindowsTracing PRIVATE
@@ -31,7 +30,9 @@ target_sources(WindowsTracing PRIVATE
         EtwEventTypes.h
         KrabsTracer.cpp
         KrabsTracer.h
-        Tracer.cpp)
+        Tracer.cpp
+        TracerImpl.h
+        TracerImpl.cpp)
 
 target_include_directories(WindowsTracing INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 

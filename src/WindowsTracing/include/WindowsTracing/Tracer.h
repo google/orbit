@@ -7,23 +7,19 @@
 
 #include <memory>
 
-#include "WindowsTracing/TracerInterface.h"
 #include "WindowsTracing/TracerListener.h"
 #include "capture.pb.h"
 
 namespace orbit_windows_tracing {
 
-// Forwards interesting Windows kernel events to a TracerListener.
-class Tracer : public TracerInterface {
- public:
-  explicit Tracer(orbit_grpc_protos::CaptureOptions capture_options, TracerListener* listener);
-  virtual ~Tracer() = default;
+// Interface for a tracer that forwards interesting Windows kernel events to a TracerListener.
+class Tracer {
+ public:  
+  virtual void Start() = 0;
+  virtual void Stop() = 0;
 
-  void Start() override;
-  void Stop() override;
-
- private:
-  std::unique_ptr<TracerInterface> tracer_impl_;
+  [[nodiscard]] static std::unique_ptr<Tracer> Create(
+      orbit_grpc_protos::CaptureOptions capture_options, TracerListener* listener);
 };
 
 }  // namespace orbit_windows_tracing

@@ -10,7 +10,6 @@
 #include <thread>
 
 #include "ContextSwitchManager.h"
-#include "WindowsTracing/TracerInterface.h"
 #include "WindowsTracing/TracerListener.h"
 
 namespace orbit_windows_tracing {
@@ -18,12 +17,12 @@ namespace orbit_windows_tracing {
 // KrabsTracer uses Microsoft's krabsetw, a wrapper around the Event Tracing for Windows API (ETW),
 // to provide kernel event tracing on Windows. Traced events include scheduling information and
 // stack traces.
-class KrabsTracer : public TracerInterface {
+class KrabsTracer {
  public:
   KrabsTracer(orbit_grpc_protos::CaptureOptions capture_options, TracerListener* listener);
   KrabsTracer() = delete;
-  void Start() override;
-  void Stop() override;
+  void Start();
+  void Stop();
 
   krabs::kernel_trace& GetTrace() { return trace_; }
 
@@ -35,6 +34,9 @@ class KrabsTracer : public TracerInterface {
   void OutputStats();
 
  private:
+  orbit_grpc_protos::CaptureOptions capture_options_;
+  TracerListener* listener_ = nullptr;
+
   std::unique_ptr<ContextSwitchManager> context_switch_manager_;
   std::unique_ptr<std::thread> trace_thread_;
 
