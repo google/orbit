@@ -17,7 +17,9 @@ using orbit_grpc_protos::SchedulingSlice;
 
 KrabsTracer::KrabsTracer(orbit_grpc_protos::CaptureOptions capture_options,
                          TracerListener* listener)
-    : capture_options_(std::move(capture_options)), listener_(listener), trace_(KERNEL_LOGGER_NAME) {
+    : capture_options_(std::move(capture_options)),
+      listener_(listener),
+      trace_(KERNEL_LOGGER_NAME) {
   SetTraceProperties();
   EnableProviders();
 }

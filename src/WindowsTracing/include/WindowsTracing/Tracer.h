@@ -14,7 +14,7 @@ namespace orbit_windows_tracing {
 
 // Interface for a tracer that forwards interesting Windows kernel events to a TracerListener.
 class Tracer {
- public:  
+ public:
   virtual void Start() = 0;
   virtual void Stop() = 0;
 
