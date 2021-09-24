@@ -85,7 +85,7 @@ TEST(ContextSwitch, InvalidPidIsSet) {
   EXPECT_EQ(scheduling_slice.tid(), 2);
 }
 
-TEST(ContextSwitch, ValidPidIsSet) {
+TEST(ContextSwitch, ValidSchedulingSlice) {
   orbit_windows_tracing::MockTracerListener mock_listener;
   ContextSwitchManager manager(&mock_listener);
 
@@ -93,10 +93,14 @@ TEST(ContextSwitch, ValidPidIsSet) {
   EXPECT_CALL(mock_listener, OnSchedulingSlice).Times(1).WillOnce(SaveArg<0>(&scheduling_slice));
 
   manager.ProcessTidToPidMapping(/*tid*/ 2, /*pid=*/3);
-  manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/1, /*new_tid=*/2, /*timestamp_ns=*/0);
-  manager.ProcessContextSwitch(/*cpu=*/0, /*old_tid=*/2, /*new_tid=*/1, /*timestamp_ns=*/1);
+  manager.ProcessContextSwitch(/*cpu=*/4, /*old_tid=*/1, /*new_tid=*/2, /*timestamp_ns=*/1);
+  manager.ProcessContextSwitch(/*cpu=*/4, /*old_tid=*/2, /*new_tid=*/1, /*timestamp_ns=*/3);
 
   EXPECT_EQ(scheduling_slice.pid(), 3);
+  EXPECT_EQ(scheduling_slice.tid(), 2);
+  EXPECT_EQ(scheduling_slice.core(), 4);
+  EXPECT_EQ(scheduling_slice.duration_ns(), 2);
+  EXPECT_EQ(scheduling_slice.out_timestamp_ns(), 3);
 }
 
 TEST(ContextSwitch, Stats) {
