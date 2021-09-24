@@ -340,11 +340,11 @@ std::string TimerTrack::GetTooltip() const {
 }
 
 const TimerInfo* TimerTrack::GetUp(const TimerInfo& timer_info) const {
-  return timer_data_->GetFirstBeforeTime(timer_info.start(), timer_info.depth() - 1);
+  return timer_data_->GetFirstBeforeStartTime(timer_info.start(), timer_info.depth() - 1);
 }
 
 const TimerInfo* TimerTrack::GetDown(const TimerInfo& timer_info) const {
-  return timer_data_->GetFirstAfterTime(timer_info.start(), timer_info.depth() + 1);
+  return timer_data_->GetFirstAfterStartTime(timer_info.start(), timer_info.depth() + 1);
 }
 
 std::vector<const orbit_client_protos::TimerInfo*> TimerTrack::GetScopesInRange(

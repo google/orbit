@@ -87,71 +87,77 @@ TEST(TimerData, FindTimers) {
   }
 
   {
-    const TimerInfo* timer_info = timer_data.GetFirstAfterTime(4, 0);
+    const TimerInfo* timer_info = timer_data.GetFirstAfterStartTime(4, 0);
     ASSERT_NE(timer_info, nullptr);
     EXPECT_EQ(timer_info->start(), 8);
     EXPECT_EQ(timer_info->end(), 11);
   }
 
   {
-    const TimerInfo* timer_info = timer_data.GetFirstAfterTime(2, 0);
+    const TimerInfo* timer_info = timer_data.GetFirstAfterStartTime(2, 0);
     ASSERT_NE(timer_info, nullptr);
     EXPECT_EQ(timer_info->start(), 8);
     EXPECT_EQ(timer_info->end(), 11);
   }
 
   {
-    const TimerInfo* timer_info = timer_data.GetFirstAfterTime(1, 0);
+    const TimerInfo* timer_info = timer_data.GetFirstAfterStartTime(1, 0);
     ASSERT_NE(timer_info, nullptr);
     EXPECT_EQ(timer_info->start(), 2);
     EXPECT_EQ(timer_info->end(), 5);
   }
 
   {
-    const TimerInfo* timer_info = timer_data.GetFirstAfterTime(9, 0);
+    const TimerInfo* timer_info = timer_data.GetFirstAfterStartTime(9, 0);
     ASSERT_NE(timer_info, nullptr);
     EXPECT_EQ(timer_info->start(), 10);
     EXPECT_EQ(timer_info->end(), 12);
   }
 
   {
-    const TimerInfo* timer_info = timer_data.GetFirstAfterTime(10, 0);
+    const TimerInfo* timer_info =
+        timer_data.GetFirstAfterStartTime(std::numeric_limits<uint64_t>::max(), 0);
     EXPECT_EQ(timer_info, nullptr);
   }
 
   {
-    const TimerInfo* timer_info = timer_data.GetFirstAfterTime(0, 1);
+    const TimerInfo* timer_info = timer_data.GetFirstAfterStartTime(0, 1);
     EXPECT_EQ(timer_info, nullptr);
   }
 
   {
-    const TimerInfo* timer_info = timer_data.GetFirstBeforeTime(6, 0);
+    const TimerInfo* timer_info = timer_data.GetFirstBeforeStartTime(6, 0);
     ASSERT_NE(timer_info, nullptr);
     EXPECT_EQ(timer_info->start(), 2);
     EXPECT_EQ(timer_info->end(), 5);
   }
 
   {
-    const TimerInfo* timer_info = timer_data.GetFirstBeforeTime(4, 0);
+    const TimerInfo* timer_info = timer_data.GetFirstBeforeStartTime(4, 0);
     ASSERT_NE(timer_info, nullptr);
     EXPECT_EQ(timer_info->start(), 2);
     EXPECT_EQ(timer_info->end(), 5);
   }
 
   {
-    const TimerInfo* timer_info = timer_data.GetFirstBeforeTime(2, 0);
+    const TimerInfo* timer_info =
+        timer_data.GetFirstBeforeStartTime(std::numeric_limits<uint64_t>::max(), 0);
     ASSERT_NE(timer_info, nullptr);
-    EXPECT_EQ(timer_info->start(), 2);
-    EXPECT_EQ(timer_info->end(), 5);
+    EXPECT_EQ(timer_info->start(), 10);
+    EXPECT_EQ(timer_info->end(), 12);
   }
 
   {
-    const TimerInfo* timer_info = timer_data.GetFirstBeforeTime(1, 0);
+    const TimerInfo* timer_info = timer_data.GetFirstBeforeStartTime(2, 0);
     EXPECT_EQ(timer_info, nullptr);
   }
 
   {
-    const TimerInfo* timer_info = timer_data.GetFirstBeforeTime(1000, 1);
+    const TimerInfo* timer_info = timer_data.GetFirstBeforeStartTime(0, 0);
+    EXPECT_EQ(timer_info, nullptr);
+  }
+  {
+    const TimerInfo* timer_info = timer_data.GetFirstBeforeStartTime(1000, 1);
     EXPECT_EQ(timer_info, nullptr);
   }
 }
