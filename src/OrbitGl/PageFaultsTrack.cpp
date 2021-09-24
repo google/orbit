@@ -59,8 +59,10 @@ std::vector<orbit_gl::CaptureViewElement*> PageFaultsTrack::GetVisibleChildren()
   std::vector<CaptureViewElement*> result;
   if (collapse_toggle_->IsCollapsed()) return result;
 
-  if (!major_page_faults_track_->IsEmpty()) result.push_back(major_page_faults_track_.get());
-  if (!minor_page_faults_track_->IsEmpty()) result.push_back(minor_page_faults_track_.get());
+  if (major_page_faults_track_->ShouldBeRendered())
+    result.push_back(major_page_faults_track_.get());
+  if (minor_page_faults_track_->ShouldBeRendered())
+    result.push_back(minor_page_faults_track_.get());
   return result;
 }
 
@@ -107,8 +109,11 @@ void PageFaultsTrack::UpdatePositionOfSubtracks() {
   if (collapse_toggle_->IsCollapsed()) {
     major_page_faults_track_->SetPos(pos[0], pos[1]);
     minor_page_faults_track_->SetVisible(false);
+    major_page_faults_track_->SetHeadless(true);
     return;
   }
+
+  major_page_faults_track_->SetHeadless(false);
 
   minor_page_faults_track_->SetVisible(true);
   float current_y = pos[1] + layout_->GetTrackTabHeight();
