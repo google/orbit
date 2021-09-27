@@ -42,14 +42,11 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
       return copy;
     }
   };
-  void Draw(Batcher& batcher, TextRenderer& text_renderer, const DrawContext& draw_context) {
-    DoDraw(batcher, text_renderer, draw_context);
-  }
+
+  void Draw(Batcher& batcher, TextRenderer& text_renderer, const DrawContext& draw_context);
 
   void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                        PickingMode picking_mode, float z_offset = 0) {
-    DoUpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-  };
+                        PickingMode picking_mode, float z_offset = 0);
 
   [[nodiscard]] TimeGraph* GetTimeGraph() { return time_graph_; }
 
@@ -70,7 +67,6 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
 
   void SetVisible(bool value);
   [[nodiscard]] bool GetVisible() const { return visible_; }
-
 
   // Pickable
   void OnPick(int x, int y) override;

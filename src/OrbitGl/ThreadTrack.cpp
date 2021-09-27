@@ -269,25 +269,6 @@ void ThreadTrack::UpdatePositionOfSubtracks() {
   tracepoint_bar_->SetPos(pos[0], current_y);
 }
 
-void ThreadTrack::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
-                         const DrawContext& draw_context) {
-  TimerTrack::DoDraw(batcher, text_renderer, draw_context);
-
-  DrawContext inner_draw_context = draw_context.IncreasedIndentationLevel();
-
-  if (!thread_state_bar_->IsEmpty()) {
-    thread_state_bar_->Draw(batcher, text_renderer, inner_draw_context);
-  }
-
-  if (!event_bar_->IsEmpty()) {
-    event_bar_->Draw(batcher, text_renderer, inner_draw_context);
-  }
-
-  if (!tracepoint_bar_->IsEmpty()) {
-    tracepoint_bar_->Draw(batcher, text_renderer, inner_draw_context);
-  }
-}
-
 void ThreadTrack::OnPick(int x, int y) {
   Track::OnPick(x, y);
   app_->set_selected_thread_id(GetThreadId());
@@ -467,10 +448,9 @@ void ThreadTrack::OnCaptureComplete() {
 // draw over an already drawn pixel line. When zoomed in enough that all events are drawn as boxes,
 // this has no effect. When zoomed  out, many events will be discarded quickly.
 void ThreadTrack::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                     PickingMode picking_mode, float z_offset) {
+                                     PickingMode /*picking_mode*/, float z_offset) {
   CHECK(batcher);
   visible_timer_count_ = 0;
-  UpdatePrimitivesOfSubtracks(batcher, min_tick, max_tick, picking_mode, z_offset);
 
   const internal::DrawData draw_data =
       GetDrawData(min_tick, max_tick, GetPos()[0], GetWidth(), z_offset, batcher, time_graph_,
@@ -514,19 +494,5 @@ void ThreadTrack::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64
       uint64_t next_pixel_start_time_ns = GetNextPixelBoundaryTimeNs(timer_info->end(), draw_data);
       timer_info = scope_tree_.FindFirstScopeAtOrAfterTime(depth, next_pixel_start_time_ns);
     }
-  }
-}
-
-void ThreadTrack::UpdatePrimitivesOfSubtracks(Batcher* batcher, uint64_t min_tick,
-                                              uint64_t max_tick, PickingMode picking_mode,
-                                              float z_offset) {
-  if (!thread_state_bar_->IsEmpty()) {
-    thread_state_bar_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-  }
-  if (!event_bar_->IsEmpty()) {
-    event_bar_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-  }
-  if (!tracepoint_bar_->IsEmpty()) {
-    tracepoint_bar_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
   }
 }

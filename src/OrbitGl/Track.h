@@ -82,7 +82,6 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
     return CaptureViewElement::ShouldBeRendered() && !IsEmpty();
   }
 
-
   [[nodiscard]] virtual bool IsTrackSelected() const { return false; }
 
   [[nodiscard]] virtual bool IsCollapsed() const { return collapse_toggle_->IsCollapsed(); }

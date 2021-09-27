@@ -75,35 +75,6 @@ std::vector<CaptureViewElement*> PageFaultsTrack::GetChildren() const {
   return {major_page_faults_track_.get(), minor_page_faults_track_.get()};
 }
 
-void PageFaultsTrack::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
-                             const DrawContext& draw_context) {
-  Track::DoDraw(batcher, text_renderer, draw_context);
-
-  if (collapse_toggle_->IsCollapsed()) return;
-
-  const DrawContext sub_track_draw_context = draw_context.IncreasedIndentationLevel();
-  if (!major_page_faults_track_->IsEmpty()) {
-    major_page_faults_track_->Draw(batcher, text_renderer, sub_track_draw_context);
-  }
-
-  if (!minor_page_faults_track_->IsEmpty()) {
-    minor_page_faults_track_->Draw(batcher, text_renderer, sub_track_draw_context);
-  }
-}
-
-void PageFaultsTrack::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                         PickingMode picking_mode, float z_offset) {
-  if (!major_page_faults_track_->IsEmpty()) {
-    major_page_faults_track_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-  }
-
-  if (collapse_toggle_->IsCollapsed()) return;
-
-  if (!minor_page_faults_track_->IsEmpty()) {
-    minor_page_faults_track_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-  }
-}
-
 void PageFaultsTrack::UpdatePositionOfSubtracks() {
   const Vec2 pos = GetPos();
   if (collapse_toggle_->IsCollapsed()) {
