@@ -14,6 +14,7 @@ class TracerListener {
  public:
   virtual ~TracerListener() = default;
   virtual void OnSchedulingSlice(orbit_grpc_protos::SchedulingSlice scheduling_slice) = 0;
+  virtual void OnCallstackSample(orbit_grpc_protos::FullCallstackSample callstack_sample) = 0;
 };
 
 }  // namespace orbit_windows_tracing
