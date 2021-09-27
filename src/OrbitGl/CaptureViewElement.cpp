@@ -15,6 +15,28 @@ CaptureViewElement::CaptureViewElement(CaptureViewElement* parent, TimeGraph* ti
   CHECK(layout != nullptr);
 }
 
+void CaptureViewElement::Draw(Batcher& batcher, TextRenderer& text_renderer,
+                              const DrawContext& draw_context) {
+  DoDraw(batcher, text_renderer, draw_context);
+
+  const DrawContext inner_draw_context = draw_context.IncreasedIndentationLevel();
+  for (auto& child : GetChildren()) {
+    if (child->ShouldBeRendered()) {
+      child->Draw(batcher, text_renderer, inner_draw_context);
+    }
+  }
+}
+
+void CaptureViewElement::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                                          PickingMode picking_mode, float z_offset) {
+  DoUpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
+  for (auto& child : GetChildren()) {
+    if (child->ShouldBeRendered()) {
+      child->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
+    }
+  }
+}
+
 void CaptureViewElement::SetWidth(float width) {
   if (width != width_) {
     width_ = width;

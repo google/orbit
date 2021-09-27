@@ -125,40 +125,6 @@ std::vector<orbit_gl::CaptureViewElement*> GpuTrack::GetChildren() const {
   return {submission_track_.get(), marker_track_.get()};
 }
 
-void GpuTrack::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
-                      const DrawContext& draw_context) {
-  Track::DoDraw(batcher, text_renderer, draw_context);
-
-  if (collapse_toggle_->IsCollapsed()) {
-    return;
-  }
-  const DrawContext sub_track_draw_context = draw_context.IncreasedIndentationLevel();
-  if (!submission_track_->IsEmpty()) {
-    submission_track_->Draw(batcher, text_renderer, sub_track_draw_context);
-  }
-
-  if (!marker_track_->IsEmpty()) {
-    marker_track_->Draw(batcher, text_renderer, sub_track_draw_context);
-  }
-}
-
-void GpuTrack::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                  PickingMode picking_mode, float z_offset) {
-  const bool is_collapsed = collapse_toggle_->IsCollapsed();
-
-  if (!submission_track_->IsEmpty()) {
-    submission_track_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-  }
-
-  if (is_collapsed) {
-    return;
-  }
-
-  if (!marker_track_->IsEmpty()) {
-    marker_track_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-  }
-}
-
 std::vector<orbit_gl::CaptureViewElement*> GpuTrack::GetVisibleChildren() {
   std::vector<CaptureViewElement*> result;
 

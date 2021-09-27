@@ -67,8 +67,6 @@ class ThreadTrack final : public TimerTrack {
   void OnCaptureComplete();
 
  protected:
-  void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
-              const DrawContext& draw_context) override;
   void DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                           PickingMode picking_mode, float z_offset = 0) override;
 
@@ -90,8 +88,6 @@ class ThreadTrack final : public TimerTrack {
   [[nodiscard]] float GetHeaderHeight() const override;
 
   void UpdatePositionOfSubtracks() override;
-  void UpdatePrimitivesOfSubtracks(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                   PickingMode picking_mode, float z_offset);
 
   int64_t thread_id_;
 
