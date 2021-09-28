@@ -29,9 +29,9 @@ declare -rA docker_image_tag_mapping=( \
   [ggp_debug]="20210721T085225.097344550" \
   [iwyu]="20210623T060051.145174476" \
   [license_headers]="20210622T081800.703185280" \
-  [msvc2019_release]="20210623T062112.000000000" \
-  [msvc2019_relwithdebinfo]="20210623T062112.000000000" \
-  [msvc2019_debug]="20210623T062112.000000000" \
+  [msvc2019_release]="20210928T145527.153573100" \
+  [msvc2019_relwithdebinfo]="20210928T153502.151900000" \
+  [msvc2019_debug]="20210928T153511.481358200" \
 )
 
 # Use `readonly DOCKER_IMAGE_TAG="${docker_image_tag_mapping[${CONAN_PROFILE}]-latest}"`

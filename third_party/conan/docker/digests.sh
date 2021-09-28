@@ -28,7 +28,7 @@ declare -rA docker_image_digest_mapping=(
   [ggp_debug]="gcr.io/orbitprofiler/ggp_debug@sha256:c3143f4fa3a503a8c2fe674f0efa82ec48623a3bfa9627feedf6e23de26d3454" \
   [iwyu]="gcr.io/orbitprofiler/iwyu@sha256:0cfab7678821b0df872595f2fdcb042bf6ad00ad20fba8873e65684cc7783be9" \
   [license_headers]="gcr.io/orbitprofiler/license_headers@sha256:f131914386ba4cd91610c89722bfcdf02eba1bf5d47ed49050a629df28173e93" \
-  [msvc2019_release]="gcr.io/orbitprofiler/msvc2019_release@sha256:c5b00356048f505fadb7282ae3f77a1621f9289c882b7e311900db25462ac9a5" \
-  [msvc2019_relwithdebinfo]="gcr.io/orbitprofiler/msvc2019_release@sha256:c5b00356048f505fadb7282ae3f77a1621f9289c882b7e311900db25462ac9a5" \
-  [msvc2019_debug]="gcr.io/orbitprofiler/msvc2019_debug@sha256:c5b00356048f505fadb7282ae3f77a1621f9289c882b7e311900db25462ac9a5" \
+  [msvc2019_release]="gcr.io/orbitprofiler/msvc2019_release@sha256:943e8ad0fb5ca00f9e4b4edf3e58e9d2330f3d7148106801a6a7b80d19a00c76" \
+  [msvc2019_relwithdebinfo]="gcr.io/orbitprofiler/msvc2019_release@sha256:943e8ad0fb5ca00f9e4b4edf3e58e9d2330f3d7148106801a6a7b80d19a00c76" \
+  [msvc2019_debug]="gcr.io/orbitprofiler/msvc2019_debug@sha256:943e8ad0fb5ca00f9e4b4edf3e58e9d2330f3d7148106801a6a7b80d19a00c76" \
 )
