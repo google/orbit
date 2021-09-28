@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef WINDOWS_TRACING_OS_H_
-#define WINDOWS_TRACING_OS_H_
+#ifndef WINDOWS_TRACING_ADJUST_TOKEN_PRIVILEGE_H_
+#define WINDOWS_TRACING_ADJUST_TOKEN_PRIVILEGE_H_
 
 #include <Windows.h>
 
@@ -17,4 +17,4 @@ ErrorMessageOr<void> AdjustTokenPrivilege(LPCTSTR token_name, bool enabled);
 
 }  // namespace orbit_windows_tracing
 
-#endif  // WINDOWS_TRACING_OS_H_
+#endif  // WINDOWS_TRACING_ADJUST_TOKEN_PRIVILEGE_H_
