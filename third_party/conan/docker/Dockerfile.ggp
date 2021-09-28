@@ -21,6 +21,7 @@ RUN useradd -Ums /bin/bash conan && \
         zip \
         llvm `# Needed to cross-compile llvm` \
         clang `# Needed to cross-compile llvm` \
+        libc++1 \
     && \
     python3 -m pip install conan==1.36.0 && \
     rm -rf /var/lib/apt/lists/*
