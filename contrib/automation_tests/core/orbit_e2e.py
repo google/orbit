@@ -73,6 +73,8 @@ class E2ETestCase:
         behavior of context menus: They are not parented underneath the current main window, but are treated
         as a separate window.
         """
+        # Add an extra sleep. Context menu needs to show up before we search for it.
+        time.sleep(1)
         return self.find_control('MenuItem', text, parent=self.suite.application.top_window(),
                                  raise_on_failure=raise_on_failure)
 
