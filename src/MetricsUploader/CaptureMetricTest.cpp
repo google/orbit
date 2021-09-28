@@ -181,16 +181,18 @@ TEST(CaptureMetric, SendCaptureSucceededWithoutCompleteData) {
 TEST(CaptureMetric, SendCaptureWithFile) {
   MockUploader uploader{};
 
+  constexpr uint64_t kTestFileSize = 10;
+
   EXPECT_CALL(uploader, SendCaptureEvent(_, _))
       .Times(1)
-      .WillOnce(
-          [](const OrbitCaptureData& capture_data, OrbitLogEvent_StatusCode status_code) -> bool {
-            EXPECT_EQ(status_code, OrbitLogEvent_StatusCode_SUCCESS);
-            EXPECT_EQ(capture_data.duration_in_milliseconds(), 5);
-            EXPECT_TRUE(HasSameCaptureStartData(capture_data, kTestStartData));
-            EXPECT_EQ(capture_data.file_size(), 10);
-            return true;
-          });
+      .WillOnce([kTestFileSize](const OrbitCaptureData& capture_data,
+                                OrbitLogEvent_StatusCode status_code) -> bool {
+        EXPECT_EQ(status_code, OrbitLogEvent_StatusCode_SUCCESS);
+        EXPECT_EQ(capture_data.duration_in_milliseconds(), 5);
+        EXPECT_TRUE(HasSameCaptureStartData(capture_data, kTestStartData));
+        EXPECT_EQ(capture_data.file_size(), kTestFileSize);
+        return true;
+      });
 
   CaptureMetric metric{&uploader, kTestStartData};
 
