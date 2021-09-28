@@ -24,14 +24,14 @@ target_sources(WindowsTracing PUBLIC
         include/WindowsTracing/TracerListener.h)
 
 target_sources(WindowsTracing PRIVATE
+        AdjustTokenPrivilege.h
+        AdjustTokenPrivilege.cpp
         ClockUtils.h
         ContextSwitchManager.cpp
         ContextSwitchManager.h
         EtwEventTypes.h
         KrabsTracer.cpp
         KrabsTracer.h
-        Os.h
-        Os.cpp
         Tracer.cpp
         TracerImpl.h
         TracerImpl.cpp)
@@ -56,17 +56,8 @@ target_link_libraries(WindowsTracingTests PRIVATE
         GTest::GTest
         GTest::Main)
 
-
 SET_TARGET_PROPERTIES(WindowsTracingTests PROPERTIES LINK_FLAGS "/MANIFESTUAC:\"level='requireAdministrator' uiAccess='false'\"")
 
 register_test(WindowsTracingTests)
 
-add_executable(WindowsSamplingTestApp)
 
-SET_TARGET_PROPERTIES(WindowsSamplingTestApp PROPERTIES LINK_FLAGS "/MANIFESTUAC:\"level='requireAdministrator' uiAccess='false'\"")
-
-target_link_libraries(WindowsSamplingTestApp PRIVATE 
-        WindowsTracing)
-
-target_sources(WindowsSamplingTestApp PRIVATE
-        SamplingTestApp.cpp)

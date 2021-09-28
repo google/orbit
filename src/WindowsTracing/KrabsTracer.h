@@ -30,7 +30,7 @@ class KrabsTracer {
  private:
   void SetTraceProperties();
   void EnableProviders();
-  void EnableSystemProfilePrivilege(bool value);
+  void SetIsSystemProfilePrivilegeEnabled(bool value);
   void SetupStackTracing();
   void Run();
   void OnThreadEvent(const EVENT_RECORD& record, const krabs::trace_context& context);
@@ -39,7 +39,6 @@ class KrabsTracer {
 
   struct Stats {
     uint64_t num_thread_events = 0;
-    uint64_t num_profile_events = 0;
     uint64_t num_stack_events = 0;
     uint64_t num_stack_events_for_target_pid = 0;
   };
@@ -47,6 +46,7 @@ class KrabsTracer {
  private:
   orbit_grpc_protos::CaptureOptions capture_options_;
   TracerListener* listener_ = nullptr;
+  uint32_t target_pid_ = orbit_base::kInvalidProcessId;
 
   std::unique_ptr<ContextSwitchManager> context_switch_manager_;
   std::unique_ptr<std::thread> trace_thread_;
@@ -56,7 +56,6 @@ class KrabsTracer {
   krabs::kernel::thread_provider thread_provider_;
   krabs::kernel::context_switch_provider context_switch_provider_;
   krabs::kernel_provider stack_walk_provider_;
-  uint32_t target_pid_ = orbit_base::kInvalidProcessId;
 };
 
 }  // namespace orbit_windows_tracing

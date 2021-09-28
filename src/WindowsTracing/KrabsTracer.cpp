@@ -9,11 +9,11 @@
 
 #include <optional>
 
+#include "AdjustTokenPrivilege.h"
 #include "ClockUtils.h"
 #include "EtwEventTypes.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "Os.h"
 
 namespace orbit_windows_tracing {
 
@@ -56,7 +56,7 @@ void KrabsTracer::EnableProviders() {
   trace_.enable(stack_walk_provider_);
 }
 
-void KrabsTracer::EnableSystemProfilePrivilege(bool value) {
+void KrabsTracer::SetIsSystemProfilePrivilegeEnabled(bool value) {
   auto result = AdjustTokenPrivilege(SE_SYSTEM_PROFILE_NAME, value);
   if (result.has_error()) ERROR("%s", result.error().message());
 }
@@ -64,7 +64,8 @@ void KrabsTracer::EnableSystemProfilePrivilege(bool value) {
 void KrabsTracer::SetupStackTracing() {
   // Set sampling frequency for ETW trace. Note that the session handle must be 0.
   const double frequency = capture_options_.samples_per_second();
-  CHECK(frequency > 0);
+  CHECK(frequency >= 0);
+  if (frequency == 0) return;
   double period_ns = 1'000'000'000.0 / frequency;
   static uint64_t performance_counter_period_ns = GetPerformanceCounterPeriodNs();
   TRACE_PROFILE_INTERVAL interval = {0};
@@ -79,14 +80,12 @@ void KrabsTracer::SetupStackTracing() {
   event_id.EventGuid = krabs::guids::perf_info;
   event_id.Type = kSampledProfileEventSampleProfile;
   trace_.set_trace_information(TraceStackTracingInfo, &event_id, sizeof(CLASSIC_EVENT_ID));
-  krabs::kernel_provider stack_walk_provider(EVENT_TRACE_FLAG_PROFILE, krabs::guids::stack_walk);
-  trace_.enable(stack_walk_provider);
 }
 
 void KrabsTracer::Start() {
   CHECK(trace_thread_ == nullptr);
   context_switch_manager_ = std::make_unique<ContextSwitchManager>(listener_);
-  EnableSystemProfilePrivilege(true);
+  SetIsSystemProfilePrivilegeEnabled(true);
   trace_.open();
   SetupStackTracing();
   trace_thread_ = std::make_unique<std::thread>(&KrabsTracer::Run, this);
@@ -98,7 +97,7 @@ void KrabsTracer::Stop() {
   trace_thread_->join();
   trace_thread_ = nullptr;
   OutputStats();
-  EnableSystemProfilePrivilege(false);
+  SetIsSystemProfilePrivilegeEnabled(false);
   context_switch_manager_ = nullptr;
 }
 
@@ -108,6 +107,7 @@ void KrabsTracer::Run() {
 }
 
 void KrabsTracer::OnThreadEvent(const EVENT_RECORD& record, const krabs::trace_context& context) {
+  ++stats_.num_thread_events;
   switch (record.EventHeader.EventDescriptor.Opcode) {
     case kEtwThreadGroup1EventStart:
     case kEtwThreadGroup1EventDcStart:
@@ -187,7 +187,6 @@ void KrabsTracer::OutputStats() {
   LOG("Events handled: %u", trace_stats.eventsHandled);
   LOG("Events lost: %u", trace_stats.eventsLost);
   LOG("--- KrabsTracer stats ---");
-  LOG("Number of profile events: %u", stats_.num_profile_events);
   LOG("Number of stack events: %u", stats_.num_stack_events);
   LOG("Number of stack events for target pid: %u", stats_.num_stack_events_for_target_pid);
   context_switch_manager_->OutputStats();
