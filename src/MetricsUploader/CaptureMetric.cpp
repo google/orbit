@@ -5,7 +5,10 @@
 #include "MetricsUploader/CaptureMetric.h"
 
 #include <chrono>
+#include <cstdint>
+#include <filesystem>
 
+#include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "orbit_log_event.pb.h"
 
@@ -42,6 +45,7 @@ void CaptureMetric::SetCaptureCompleteData(const CaptureCompleteData& complete_d
       complete_data.number_of_manual_stop_async_timers);
   capture_data_.set_number_of_manual_tracked_value_timers(
       complete_data.number_of_manual_tracked_value_timers);
+  file_path_ = complete_data.file_path;
 }
 
 bool CaptureMetric::SendCaptureFailed() {
@@ -63,6 +67,19 @@ bool CaptureMetric::SendCaptureCancelled() {
 bool CaptureMetric::SendCaptureSucceeded(std::chrono::milliseconds duration_in_milliseconds) {
   capture_data_.set_duration_in_milliseconds(duration_in_milliseconds.count());
   status_code_ = OrbitLogEvent_StatusCode_SUCCESS;
+
+  if (file_path_.empty()) {
+    ERROR("Unable to determine capture file size for metrics. file path is empty");
+  } else {
+    ErrorMessageOr<uint64_t> file_size = orbit_base::FileSize(file_path_);
+    if (file_size.has_error()) {
+      ERROR("Unable to determine capture file size for metrics. File: \"%s\"; error: %s",
+            file_path_.string(), file_size.error().message());
+    } else {
+      capture_data_.set_file_size(file_size.value());
+    }
+  }
+
   return uploader_->SendCaptureEvent(capture_data_, status_code_);
 }
 

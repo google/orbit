@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #include <chrono>
+#include <filesystem>
 
 #include "MetricsUploader/MetricsUploader.h"
 #include "orbit_log_event.pb.h"
@@ -38,6 +39,7 @@ struct CaptureCompleteData {
   int64_t number_of_manual_start_async_timers = 0;
   int64_t number_of_manual_stop_async_timers = 0;
   int64_t number_of_manual_tracked_value_timers = 0;
+  std::filesystem::path file_path;
 };
 
 class CaptureMetric {
@@ -55,6 +57,7 @@ class CaptureMetric {
   OrbitCaptureData capture_data_;
   OrbitLogEvent_StatusCode status_code_ = OrbitLogEvent_StatusCode_UNKNOWN_STATUS;
   std::chrono::steady_clock::time_point start_;
+  std::filesystem::path file_path_;
 };
 
 }  // namespace orbit_metrics_uploader
