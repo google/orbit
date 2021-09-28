@@ -276,6 +276,10 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
   absl::MutexLock mutex_lock(&mutex);
   bool initialization_complete = false;
 
+  if (file_path.has_value()) {
+    metrics_capture_complete_data_.file_path = file_path.value();
+  }
+
   main_thread_executor_->Schedule(
       [this, &initialization_complete, &mutex, &capture_started, file_path = std::move(file_path),
        frame_track_function_ids = std::move(frame_track_function_ids)]() mutable {
