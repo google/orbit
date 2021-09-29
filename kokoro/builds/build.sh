@@ -171,11 +171,9 @@ if [ -n "$1" ]; then
   if [ "${BUILD_TYPE}" == "release" ] \
      || [ "${BUILD_TYPE}" == "nightly" ] \
      || [ "${BUILD_TYPE}" == "continuous_on_release_branch" ]; then
-    set +e
     echo "Uploading symbols to the symbol server."
     api_key=$(get_api_key "${OAUTH_TOKEN_HEADER}")
     upload_debug_symbols "${api_key}" "${REPO_ROOT}/build/bin" "${REPO_ROOT}/build/lib"
-    set -e
   fi
 
   # Signing the debian package
