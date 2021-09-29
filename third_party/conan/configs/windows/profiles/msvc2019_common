@@ -18,6 +18,6 @@ gtest:compiler.cppstd=17
 OrbitProfiler:system_qt=False
 
 [env]
-CONAN_CMAKE_SYSTEM_VERSION=8.1
+CONAN_CMAKE_SYSTEM_VERSION=10
 LDFLAGS=$LD_FLAGS
 gtest:CXXFLAGS=-std=c++17
