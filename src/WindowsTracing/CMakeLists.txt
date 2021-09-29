@@ -24,6 +24,8 @@ target_sources(WindowsTracing PUBLIC
         include/WindowsTracing/TracerListener.h)
 
 target_sources(WindowsTracing PRIVATE
+        AdjustTokenPrivilege.h
+        AdjustTokenPrivilege.cpp
         ClockUtils.h
         ContextSwitchManager.cpp
         ContextSwitchManager.h
@@ -54,7 +56,8 @@ target_link_libraries(WindowsTracingTests PRIVATE
         GTest::GTest
         GTest::Main)
 
-
 SET_TARGET_PROPERTIES(WindowsTracingTests PROPERTIES LINK_FLAGS "/MANIFESTUAC:\"level='requireAdministrator' uiAccess='false'\"")
 
 register_test(WindowsTracingTests)
+
+

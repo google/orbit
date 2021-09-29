@@ -16,6 +16,7 @@ namespace orbit_windows_tracing {
 class MockTracerListener : public orbit_windows_tracing::TracerListener {
  public:
   MOCK_METHOD(void, OnSchedulingSlice, (orbit_grpc_protos::SchedulingSlice), (override));
+  MOCK_METHOD(void, OnCallstackSample, (orbit_grpc_protos::FullCallstackSample), (override));
 };
 
 TEST(ContextSwitch, ListenerIsCalled) {
