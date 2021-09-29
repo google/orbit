@@ -512,8 +512,9 @@ const TimerInfo* TimeGraph::FindNextFunctionCall(uint64_t function_address, uint
 }
 
 void TimeGraph::RequestUpdate() {
+  CaptureViewElement::RequestUpdate();
   update_primitives_requested_ = true;
-  RequestRedraw();
+  redraw_requested_ = true;
 }
 
 // UpdatePrimitives updates all the drawable track timers in the timegraph's batcher

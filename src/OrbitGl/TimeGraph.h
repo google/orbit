@@ -115,7 +115,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   void SelectAndZoom(const orbit_client_protos::TimerInfo* timer_info);
   [[nodiscard]] double GetCaptureTimeSpanUs() const;
   [[nodiscard]] double GetCurrentTimeSpanUs() const;
-  void RequestRedraw() { redraw_requested_ = true; }
   [[nodiscard]] bool IsRedrawNeeded() const { return redraw_requested_; }
   void SetThreadFilter(const std::string& filter);
 
@@ -174,7 +173,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
       const absl::flat_hash_map<uint64_t, uint64_t>& iterator_id_to_function_id) {
     iterator_timer_info_ = iterator_timer_info;
     iterator_id_to_function_id_ = iterator_id_to_function_id;
-    RequestRedraw();
+    RequestUpdate();
   }
 
   [[nodiscard]] uint64_t GetCaptureMin() const { return capture_min_timestamp_; }
