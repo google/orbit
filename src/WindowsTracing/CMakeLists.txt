@@ -26,6 +26,8 @@ target_sources(WindowsTracing PUBLIC
 target_sources(WindowsTracing PRIVATE
         ContextSwitchManager.cpp
         ContextSwitchManager.h
+        DynamicInstrumentationManager.h
+        DynamicInstrumentationManager.cpp
         EtwEventTypes.h
         KrabsTracer.cpp
         KrabsTracer.h

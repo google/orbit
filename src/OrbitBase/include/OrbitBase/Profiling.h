@@ -6,6 +6,9 @@
 #define ORBIT_BASE_PROFILING_H_
 
 #ifdef _WIN32
+#include <Windows.h>
+#include <profileapi.h>
+
 #include <chrono>
 #else
 #include <stdint.h>
@@ -24,6 +27,17 @@ namespace orbit_base {
 [[nodiscard]] inline uint64_t CaptureTimestampNs() {
   auto time_since_epoch = std::chrono::steady_clock::now().time_since_epoch();
   return std::chrono::duration_cast<std::chrono::nanoseconds>(time_since_epoch).count();
+}
+
+[[nodiscard]] inline uint64_t GetPerformanceCounterPeriodNs() {
+  LARGE_INTEGER frequency;
+  QueryPerformanceFrequency(&frequency);
+  return 1'000'000'000 / frequency.QuadPart;
+}
+
+[[nodiscard]] inline uint64_t RawTimestampToNs(uint64_t raw_timestamp) {
+  static uint64_t performance_period_ns_ = GetPerformanceCounterPeriodNs();
+  return raw_timestamp * performance_period_ns_;
 }
 
 #else
