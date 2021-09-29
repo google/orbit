@@ -54,6 +54,9 @@ function install_breakpad_tools {
 }
 
 function upload_symbol_file {
+  # Fail on any error.
+  set -e
+
   local api_key=$1
   local symbol_file_path=$2
 
@@ -70,6 +73,9 @@ function upload_symbol_file {
 }
 
 function upload_debug_symbols {
+  # Fail on any error.
+  set -e
+
   local api_key=$1
   local bin_folder=$2
   local lib_folder=$3
