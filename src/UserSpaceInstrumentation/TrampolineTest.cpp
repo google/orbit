@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "AccessTraceesMemory.h"
+#include "AddressRange.h"
 #include "AllocateInTracee.h"
 #include "MachineCode.h"
 #include "ObjectUtils/Address.h"
@@ -283,15 +284,16 @@ TEST(TrampolineTest, AllocateMemoryForTrampolines) {
 
   // Find the address range of the code for `DoubleAndIncrement`. For the purpose of this test we
   // just take the entire address space taken up by `UserSpaceInstrumentationTests`.
-  AddressRange code_range;
-  auto modules = orbit_object_utils::ReadModules(pid);
-  CHECK(!modules.has_error());
-  for (const auto& m : modules.value()) {
-    if (m.name() == "UserSpaceInstrumentationTests") {
-      code_range.start = m.address_start();
-      code_range.end = m.address_end();
-    }
-  }
+  auto modules_or_error = orbit_object_utils::ReadModules(pid);
+  CHECK(!modules_or_error.has_error());
+
+  auto& modules = modules_or_error.value();
+  const auto module = std::find_if(modules.begin(), modules.end(), [&](const auto& module) {
+    return module.name() == "UserSpaceInstrumentationTests";
+  });
+
+  ASSERT_NE(module, modules.end());
+  const AddressRange code_range{module->address_start(), module->address_end()};
 
   // Allocate one megabyte in the tracee. The memory will be close to `code_range`.
   constexpr uint64_t kTrampolineSize = 1024 * 1024;
