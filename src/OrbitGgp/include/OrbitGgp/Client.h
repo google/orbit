@@ -25,34 +25,22 @@ namespace orbit_ggp {
 
 constexpr const char* kDefaultGgpProgram{"ggp"};
 
-class Client : public QObject {
-  Q_OBJECT
-
+class Client {
  public:
-  explicit Client(orbit_qt_utils::MainThreadExecutorImpl* main_thread_executor, QString ggp_program,
-                  std::chrono::milliseconds timeout)
-      : main_thread_executor_(main_thread_executor),
-        ggp_program_(std::move(ggp_program)),
-        timeout_(timeout) {}
-
-  orbit_base::Future<ErrorMessageOr<QVector<Instance>>> GetInstancesAsync(
-      bool all_reserved = false, std::optional<Project> project = std::nullopt, int retry = 3);
-  orbit_base::Future<ErrorMessageOr<SshInfo>> GetSshInfoAsync(
-      const Instance& ggp_instance, std::optional<Project> project = std::nullopt);
-  orbit_base::Future<ErrorMessageOr<QVector<Project>>> GetProjectsAsync();
-
- private:
-  orbit_qt_utils::MainThreadExecutorImpl* main_thread_executor_;
-  const QString ggp_program_;
-  const std::chrono::milliseconds timeout_;
+  Client() = default;
+  virtual ~Client() = default;
+  [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<QVector<Instance>>> GetInstancesAsync(
+      bool all_reserved = false, std::optional<Project> project = std::nullopt, int retry = 3) = 0;
+  [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<SshInfo>> GetSshInfoAsync(
+      const Instance& ggp_instance, std::optional<Project> project = std::nullopt) = 0;
+  [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<QVector<Project>>> GetProjectsAsync() = 0;
 };
 
-std::chrono::milliseconds GetDefaultTimeoutMs();
-
+[[nodiscard]] std::chrono::milliseconds ClientDefaultTimeoutMs();
 ErrorMessageOr<std::unique_ptr<Client>> CreateClient(
     orbit_qt_utils::MainThreadExecutorImpl* main_thread_executor,
-    QString ggp_program = kDefaultGgpProgram,
-    std::chrono::milliseconds timeout = GetDefaultTimeoutMs());
+    QString ggp_programm = kDefaultGgpProgram,
+    std::chrono::milliseconds timeout = ClientDefaultTimeoutMs());
 
 }  // namespace orbit_ggp
 
