@@ -6,11 +6,13 @@
 
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
+#include <google/protobuf/arena.h>
 
 #include <thread>
 #include <utility>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "capture.pb.h"
 
@@ -356,8 +358,26 @@ void ProducerSideServiceImpl::ReceiveEventsThread(
     uint64_t producer_id, bool* all_events_sent_received) {
   orbit_base::SetCurrentThreadName("PSSI::RcvEvents");
 
-  orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest request;
-  while (stream->Read(&request)) {
+  // Create the ReceiveCommandsAndSendEventsRequest on a protobuf Arena, which prevents memory
+  // allocations for the multiple sub-messages containing ProducerCaptureEvents. Now, when calling
+  // ProducerEventProcessor::ProcessEvent below, passing the ProducerCaptureEvent will result in a
+  // deep copy and the memory allocations we saved before will happen here, plus copies.
+  // Nonetheless, and maybe counterintuitively, the performance improvement we measured is huge. In
+  // particular, ServerReaderWriter::Read seems particularly inefficient without an Arena.
+  google::protobuf::ArenaOptions arena_options;
+  constexpr size_t kArenaFixedBlockSize = 1024 * 1024;
+  auto arena_initial_block = make_unique_for_overwrite<char[]>(kArenaFixedBlockSize);
+  arena_options.initial_block = arena_initial_block.get();
+  arena_options.initial_block_size = kArenaFixedBlockSize;
+  arena_options.start_block_size = kArenaFixedBlockSize;
+  arena_options.max_block_size = kArenaFixedBlockSize;
+
+  while (true) {
+    google::protobuf::Arena arena{arena_options};
+    auto* request = google::protobuf::Arena::CreateMessage<
+        orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest>(&arena);
+    if (!stream->Read(request)) break;
+
     {
       absl::MutexLock lock{&service_state_mutex_};
       if (service_state_.exit_requested) {
@@ -365,7 +385,7 @@ void ProducerSideServiceImpl::ReceiveEventsThread(
       }
     }
 
-    switch (request.event_case()) {
+    switch (request->event_case()) {
       case orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest::kBufferedCaptureEvents: {
         // We use ReaderMutexLock because the mutex guards the value of producer_event_processor_,
         // it does not guard calls to ProcessEvent nor the internal state of the object implementing
@@ -375,7 +395,7 @@ void ProducerSideServiceImpl::ReceiveEventsThread(
         // Don't log an error in such a case as it could easily spam the logs.
         if (producer_event_processor_ != nullptr) {
           for (ProducerCaptureEvent& event :
-               *request.mutable_buffered_capture_events()->mutable_capture_events()) {
+               *request->mutable_buffered_capture_events()->mutable_capture_events()) {
             producer_event_processor_->ProcessEvent(producer_id, std::move(event));
           }
         }

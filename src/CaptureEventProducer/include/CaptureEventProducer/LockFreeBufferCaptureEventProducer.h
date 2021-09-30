@@ -105,10 +105,15 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
     // Pre-allocate and always reuse the same 1 MB chunk of memory as the first block of each Arena
     // instance in the loop below. This is a small but measurable performance improvement.
     google::protobuf::ArenaOptions arena_options;
-    constexpr size_t kArenaInitialBlockSize = 1024 * 1024;
-    auto arena_initial_block = make_unique_for_overwrite<char[]>(kArenaInitialBlockSize);
+    constexpr size_t kArenaFixedBlockSize = 1024 * 1024;
+    auto arena_initial_block = make_unique_for_overwrite<char[]>(kArenaFixedBlockSize);
     arena_options.initial_block = arena_initial_block.get();
-    arena_options.initial_block_size = kArenaInitialBlockSize;
+    arena_options.initial_block_size = kArenaFixedBlockSize;
+    // Also make sure that, if the Arena still needs to allocate more blocks, those are larger than
+    // the default, which would be capped at 8 kB. We choose the same size as the pre-allocated
+    // first block for simplicity.
+    arena_options.start_block_size = kArenaFixedBlockSize;
+    arena_options.max_block_size = kArenaFixedBlockSize;
 
     while (!shutdown_requested_) {
       while (true) {
