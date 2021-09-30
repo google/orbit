@@ -289,7 +289,7 @@ TEST(TrampolineTest, AllocateMemoryForTrampolines) {
 
   auto& modules = modules_or_error.value();
   const auto module = std::find_if(modules.begin(), modules.end(), [&](const auto& module) {
-    return module.name() == "UserSpaceInstrumentationTests";
+    return module.file_path() == orbit_base::GetExecutablePath();
   });
 
   ASSERT_NE(module, modules.end());
