@@ -184,18 +184,14 @@ Future<ErrorMessageOr<SshInfo>> Client::GetSshInfoAsync(const Instance& ggp_inst
       });
 }
 
-void Client::GetProjectsAsync(
-    const std::function<void(ErrorMessageOr<QVector<Project>>)>& callback) {
+Future<ErrorMessageOr<QVector<Project>>> Client::GetProjectsAsync() {
   QStringList arguments{"project", "list", "-s"};
 
-  RunProcessWithTimeout(ggp_program_, arguments, timeout_, this,
-                        [callback](ErrorMessageOr<QByteArray> result) {
-                          if (result.has_error()) {
-                            callback(result.error());
-                            return;
-                          }
-                          callback(Project::GetListFromJson(result.value()));
-                        });
+  return orbit_qt_utils::ExecuteProcess(ggp_program_, arguments, this, absl::FromChrono(timeout_))
+      .ThenIfSuccess(main_thread_executor_,
+                     [](const QByteArray& json) -> ErrorMessageOr<QVector<Project>> {
+                       return Project::GetListFromJson(json);
+                     });
 }
 
 std::chrono::milliseconds Client::GetDefaultTimeoutMs() {

@@ -38,7 +38,7 @@ class Client : public QObject {
       bool all_reserved = false, std::optional<Project> project = std::nullopt, int retry = 3);
   orbit_base::Future<ErrorMessageOr<SshInfo>> GetSshInfoAsync(
       const Instance& ggp_instance, std::optional<Project> project = std::nullopt);
-  void GetProjectsAsync(const std::function<void(ErrorMessageOr<QVector<Project>>)>& callback);
+  orbit_base::Future<ErrorMessageOr<QVector<Project>>> GetProjectsAsync();
 
  private:
   explicit Client(QObject* parent, orbit_qt_utils::MainThreadExecutorImpl* main_thread_executor,

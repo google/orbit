@@ -356,7 +356,8 @@ void ConnectToStadiaWidget::ReloadInstances() {
         OnInstancesLoaded(std::move(instances));
       });
 
-  ggp_client_->GetProjectsAsync(
+  ggp_client_->GetProjectsAsync().Then(
+      main_thread_executor_.get(),
       [this](ErrorMessageOr<QVector<Project>> projects) { OnProjectsLoaded(std::move(projects)); });
 }
 

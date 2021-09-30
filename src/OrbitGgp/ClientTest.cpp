@@ -239,13 +239,15 @@ TEST_F(OrbitGgpClientTest, GetProjectsAsyncWorking) {
   ASSERT_THAT(client, HasValue());
 
   bool callback_was_called = false;
-  client.value()->GetProjectsAsync(
-      [&callback_was_called](ErrorMessageOr<QVector<Project>> project) {
-        QCoreApplication::exit();
-        callback_was_called = true;
-        ASSERT_TRUE(project.has_value());
-        EXPECT_EQ(project.value().size(), 2);
-      });
+
+  auto future = client.value()->GetProjectsAsync();
+  future.Then(mte_.get(), [&callback_was_called](ErrorMessageOr<QVector<Project>> project) {
+    EXPECT_FALSE(callback_was_called);
+    callback_was_called = true;
+    ASSERT_THAT(project, HasValue());
+    EXPECT_EQ(project.value().size(), 2);
+    QCoreApplication::exit();
+  });
 
   QCoreApplication::exec();
 
@@ -259,12 +261,15 @@ TEST_F(OrbitGgpClientTest, GetProjectsAsyncTimeout) {
   ASSERT_THAT(client, HasValue());
 
   bool callback_was_called = false;
-  client.value()->GetProjectsAsync(
-      [&callback_was_called](const ErrorMessageOr<QVector<Project>>& projects) {
-        QCoreApplication::exit();
-        callback_was_called = true;
-        EXPECT_THAT(projects, HasError("Process request timed out after 5ms"));
-      });
+
+  auto future = client.value()->GetProjectsAsync();
+  future.Then(mte_.get(), [&callback_was_called](const ErrorMessageOr<QVector<Project>>& projects) {
+    EXPECT_FALSE(callback_was_called);
+    callback_was_called = true;
+    EXPECT_THAT(projects, HasError("OrbitMockGgpWorking project list -s"));
+    EXPECT_THAT(projects, HasError("timed out after 5ms"));
+    QCoreApplication::exit();
+  });
 
   QCoreApplication::exec();
 
