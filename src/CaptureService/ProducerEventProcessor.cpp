@@ -90,7 +90,7 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   explicit ProducerEventProcessorImpl(CaptureEventBuffer* capture_event_buffer)
       : capture_event_buffer_{capture_event_buffer} {}
 
-  void ProcessEvent(uint64_t producer_id, ProducerCaptureEvent event) override;
+  void ProcessEvent(uint64_t producer_id, ProducerCaptureEvent&& event) override;
 
  private:
   void ProcessCaptureStartedAndTransferOwnership(CaptureStarted* capture_started);
@@ -522,7 +522,7 @@ void ProducerEventProcessorImpl::ProcessOutOfOrderEventsDiscardedEventAndTransfe
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCaptureEvent event) {
+void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCaptureEvent&& event) {
   switch (event.event_case()) {
     case ProducerCaptureEvent::kCaptureStarted:
       ProcessCaptureStartedAndTransferOwnership(event.release_capture_started());

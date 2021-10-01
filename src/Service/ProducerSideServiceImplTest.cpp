@@ -108,7 +108,7 @@ class FakeProducer {
 
 class MockProducerEventProcessor : public orbit_capture_service::ProducerEventProcessor {
  public:
-  MOCK_METHOD(void, ProcessEvent, (uint64_t, orbit_grpc_protos::ProducerCaptureEvent event),
+  MOCK_METHOD(void, ProcessEvent, (uint64_t, orbit_grpc_protos::ProducerCaptureEvent&& event),
               (override));
 };
 
