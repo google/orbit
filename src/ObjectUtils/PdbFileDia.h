@@ -1,0 +1,56 @@
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#ifndef OBJECT_UTILS_PDB_FILE_DIA_H_
+#define OBJECT_UTILS_PDB_FILE_DIA_H_
+
+#include <Windows.h>
+#include <atlbase.h>
+#include <cguid.h>
+#include <dia2.h>
+
+#include <array>
+#include <filesystem>
+
+#include "ObjectUtils/PdbFile.h"
+#include "ObjectUtils/SymbolsFile.h"
+#include "ObjectUtils/WindowsBuildIdUtils.h"
+#include "OrbitBase/Result.h"
+#include "symbol.pb.h"
+
+namespace orbit_object_utils {
+
+class PdbFileDia : public PdbFile {
+ public:
+  PdbFileDia(std::filesystem::path file_path, const ObjectFileInfo& object_file_info);
+
+  ErrorMessageOr<void> LoadDataForPDB();
+  ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbols() override;
+
+  [[nodiscard]] const std::filesystem::path& GetFilePath() const override { return file_path_; }
+
+  [[nodiscard]] std::array<uint8_t, 16> GetGuid() const override { return guid_; }
+  [[nodiscard]] uint32_t GetAge() const override { return age_; }
+  [[nodiscard]] std::string GetBuildId() const override {
+    return ComputeWindowsBuildId(GetGuid(), GetAge());
+  }
+
+ private:
+  std::filesystem::path file_path_;
+  ObjectFileInfo object_file_info_;
+
+  CComPtr<IDiaDataSource> dia_data_source_ = nullptr;
+  CComPtr<IDiaSession> dia_session_ = nullptr;
+  CComPtr<IDiaSymbol> dia_global_scope_symbol_ = nullptr;
+
+  uint32_t age_ = 0;
+  std::array<uint8_t, 16> guid_;
+};
+
+ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFileDia(const std::filesystem::path& file_path,
+                                                          const ObjectFileInfo& object_file_info);
+
+}  // namespace orbit_object_utils
+
+#endif  // OBJECT_UTILS_PDB_FILE_DIA_H_

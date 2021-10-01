@@ -110,6 +110,7 @@ endif()
 find_package(Filesystem REQUIRED)
 
 if(WIN32)
+  find_package(DiaSdk REQUIRED)
   find_package(krabsetw REQUIRED)
 else()
   find_package(VulkanValidationLayers REQUIRED)

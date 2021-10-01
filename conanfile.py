@@ -310,6 +310,7 @@ chmod -v 4775 /opt/developer/tools/OrbitService
         self.copy("OrbitFakeClient", src="bin/", dst="bin")
         self.copy("OrbitFakeClient.debug", src="bin/", dst="bin")
         self.copy("opengl32sw.dll", src="bin/", dst="bin")
+        self.copy("msdia140.dll", src="bin/", dst="bin")
 
         if not self.options.system_qt:
             orbit_executable = "Orbit.exe" if self.settings.os == "Windows" else "Orbit"

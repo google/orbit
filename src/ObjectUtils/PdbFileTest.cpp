@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/container/flat_hash_map.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -33,21 +34,28 @@ TEST(PdbFile, LoadDebugSymbols) {
 
   auto symbols = std::move(symbols_result.value());
 
-  std::vector<SymbolInfo> symbol_infos(symbols.symbol_infos().begin(),
-                                       symbols.symbol_infos().end());
-  EXPECT_EQ(symbol_infos.size(), 5469);
+  absl::flat_hash_map<uint64_t, const SymbolInfo*> symbol_infos_by_address;
+  for (const SymbolInfo& symbol_info : symbols.symbol_infos()) {
+    symbol_infos_by_address.emplace(symbol_info.address(), &symbol_info);
+  }
 
-  SymbolInfo symbol = symbol_infos[0];
-  EXPECT_EQ(symbol.name(), "PrintHelloWorldInternal");
-  EXPECT_EQ(symbol.demangled_name(), "PrintHelloWorldInternal");
-  EXPECT_EQ(symbol.address(), 0x18000ef90);
-  EXPECT_EQ(symbol.size(), 0x2b);
+  EXPECT_EQ(symbol_infos_by_address.size(), 5469);
 
-  symbol = symbol_infos[1];
-  EXPECT_EQ(symbol.name(), "PrintHelloWorld");
-  EXPECT_EQ(symbol.demangled_name(), "PrintHelloWorld");
-  EXPECT_EQ(symbol.address(), 0x18000efd0);
-  EXPECT_EQ(symbol.size(), 0xe);
+  {
+    const SymbolInfo& symbol = *symbol_infos_by_address[0x18000ef90];
+    EXPECT_EQ(symbol.name(), "PrintHelloWorldInternal");
+    EXPECT_EQ(symbol.demangled_name(), "PrintHelloWorldInternal");
+    EXPECT_EQ(symbol.address(), 0x18000ef90);
+    EXPECT_EQ(symbol.size(), 0x2b);
+  }
+
+  {
+    const SymbolInfo& symbol = *symbol_infos_by_address[0x18000efd0];
+    EXPECT_EQ(symbol.name(), "PrintHelloWorld");
+    EXPECT_EQ(symbol.demangled_name(), "PrintHelloWorld");
+    EXPECT_EQ(symbol.address(), 0x18000efd0);
+    EXPECT_EQ(symbol.size(), 0xe);
+  }
 }
 
 TEST(PdbFile, CanObtainGuidAndAgeFromPdbAndDll) {
