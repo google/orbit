@@ -1,8 +1,7 @@
+#include "Track.h"
 // Copyright (c) 2020 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-
-#include "Track.h"
 
 #include <math.h>
 #include <stddef.h>
@@ -16,6 +15,7 @@
 #include "TextRenderer.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
+#include "Track.h"
 #include "Viewport.h"
 
 using orbit_client_data::TimerData;
@@ -81,6 +81,21 @@ void Track::DrawTriangleFan(Batcher& batcher, const std::vector<Vec2>& points, c
   }
 }
 
+void Track::UpdatePositionOfCollapseToggle() {
+  const float label_height = layout_->GetTrackTabHeight();
+  const float half_label_height = 0.5f * label_height;
+  const float x0 = GetPos()[0] + layout_->GetTrackTabOffset() +
+                   layout_->GetTrackIndentOffset() * indentation_level_;
+  const float button_offset = layout_->GetCollapseButtonOffset();
+  const float toggle_y_pos = GetPos()[1] + half_label_height;
+  Vec2 toggle_pos = Vec2(x0 + button_offset, toggle_y_pos);
+
+  float size = layout_->GetCollapseButtonSize(indentation_level_);
+  collapse_toggle_->SetWidth(size);
+  collapse_toggle_->SetHeight(size);
+  collapse_toggle_->SetPos(toggle_pos[0], toggle_pos[1]);
+}
+
 std::unique_ptr<orbit_accessibility::AccessibleInterface> Track::CreateAccessibleInterface() {
   return std::make_unique<orbit_gl::AccessibleTrack>(this, layout_);
 }
@@ -94,8 +109,8 @@ void Track::DoDraw(Batcher& batcher, TextRenderer& text_renderer, const DrawCont
 
   const float x0 = GetPos()[0];
   const float y0 = GetPos()[1];
-  float track_z = GlCanvas::kZValueTrack + draw_context.z_offset;
-  float text_z = GlCanvas::kZValueTrackText + draw_context.z_offset;
+  float track_z = GlCanvas::kZValueTrack;
+  float text_z = GlCanvas::kZValueTrackText;
 
   Color track_background_color = GetTrackBackgroundColor();
   if (!draw_background_) {
@@ -109,8 +124,7 @@ void Track::DoDraw(Batcher& batcher, TextRenderer& text_renderer, const DrawCont
   float half_label_width = 0.5f * label_width;
   float tab_x0 = x0 + layout_->GetTrackTabOffset();
 
-  const float indentation_x0 =
-      tab_x0 + (draw_context.indentation_level * layout_->GetTrackIntentOffset());
+  const float indentation_x0 = tab_x0 + (indentation_level_ * layout_->GetTrackIndentOffset());
   Box box(Vec2(indentation_x0, y0), Vec2(label_width, label_height), track_z);
   batcher.AddBox(box, track_background_color, shared_from_this());
 
@@ -156,17 +170,13 @@ void Track::DoDraw(Batcher& batcher, TextRenderer& text_renderer, const DrawCont
   // Collapse toggle state management.
   collapse_toggle_->SetIsCollapsible(this->IsCollapsible());
 
-  // Draw collapsing triangle.
-  DrawCollapsingTriangle(batcher, text_renderer, draw_context);
-
   // Draw label.
   if (!picking) {
     uint32_t font_size = layout_->CalculateZoomedFontSize();
     // For the first 5 indentations, we decrease the font_size by 10 percent points (per
     // indentation).
     constexpr uint32_t kMaxIndentationLevel = 5;
-    uint32_t capped_indentation_level =
-        std::min(draw_context.indentation_level, kMaxIndentationLevel);
+    uint32_t capped_indentation_level = std::min(indentation_level_, kMaxIndentationLevel);
     font_size = (font_size * (10 - capped_indentation_level)) / 10;
     float label_offset_x = layout_->GetTrackLabelOffsetX();
 
@@ -190,24 +200,11 @@ void Track::DoDraw(Batcher& batcher, TextRenderer& text_renderer, const DrawCont
   }
 }
 
-void Track::DrawCollapsingTriangle(Batcher& batcher, TextRenderer& text_renderer,
-                                   const DrawContext& draw_context) {
-  const float label_height = layout_->GetTrackTabHeight();
-  const float half_label_height = 0.5f * label_height;
-  const float x0 = GetPos()[0];
-  const float tab_x0 = x0 + layout_->GetTrackTabOffset();
-  const float intent_x0 =
-      tab_x0 + (draw_context.indentation_level * layout_->GetTrackIntentOffset());
-  const float button_offset = layout_->GetCollapseButtonOffset();
-  const float toggle_y_pos = GetPos()[1] + half_label_height;
-  Vec2 toggle_pos = Vec2(intent_x0 + button_offset, toggle_y_pos);
-  collapse_toggle_->SetPos(toggle_pos[0], toggle_pos[1]);
-  collapse_toggle_->Draw(batcher, text_renderer, draw_context);
-}
+void Track::DoUpdateLayout() {
+  CaptureViewElement::DoUpdateLayout();
 
-void Track::SetPos(float x, float y) {
-  CaptureViewElement::SetPos(x, y);
   UpdatePositionOfSubtracks();
+  UpdatePositionOfCollapseToggle();
 }
 
 void Track::SetPinned(bool value) { pinned_ = value; }
@@ -227,10 +224,32 @@ Color Track::GetTrackBackgroundColor() const {
 
 void Track::OnCollapseToggle(bool /*is_collapsed*/) { RequestUpdate(); }
 
+bool Track::ShouldBeRendered() const {
+  return CaptureViewElement::ShouldBeRendered() && !IsEmpty();
+}
+
+float Track::DetermineZOffset() const {
+  float result = 0.f;
+  if (IsPinned()) {
+    result = GlCanvas::kZOffsetPinnedTrack;
+  } else if (IsMoving()) {
+    result = GlCanvas::kZOffsetMovingTrack;
+  }
+  return result;
+}
+
 void Track::SetHeadless(bool value) {
   if (headless_ == value) return;
 
   headless_ = value;
+  collapse_toggle_->SetVisible(!headless_);
+  RequestUpdate();
+}
+
+void Track::SetIndentationLevel(uint32_t level) {
+  if (level == indentation_level_) return;
+
+  indentation_level_ = level;
   RequestUpdate();
 }
 

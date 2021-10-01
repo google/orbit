@@ -15,7 +15,6 @@ TEST(PageFaultsTrack, CaptureViewElementWorksAsIntended) {
       TrackTestData::GenerateTestCaptureData();
   PageFaultsTrack track = PageFaultsTrack(nullptr, nullptr, tester.GetViewport(),
                                           tester.GetLayout(), "", 100, test_data.get());
-  EXPECT_EQ(2ull, track.GetChildren().size());
   tester.RunTests(&track);
 }
 

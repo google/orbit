@@ -47,17 +47,17 @@ void TracepointThreadBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
   float event_bar_z = draw_context.picking_mode == PickingMode::kClick
                           ? GlCanvas::kZValueEventBarPicking
                           : GlCanvas::kZValueEventBar;
-  event_bar_z += draw_context.z_offset;
   Color color = GetColor();
   Box box(GetPos(), Vec2(GetWidth(), -GetHeight()), event_bar_z);
   batcher.AddBox(box, color, shared_from_this());
 }
 
-void TracepointThreadBar::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                             PickingMode picking_mode, float z_offset) {
-  ThreadBar::DoUpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
+void TracepointThreadBar::DoUpdatePrimitives(Batcher* batcher, TextRenderer& text_renderer,
+                                             uint64_t min_tick, uint64_t max_tick,
+                                             PickingMode picking_mode) {
+  ThreadBar::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
 
-  float z = GlCanvas::kZValueEvent + z_offset;
+  float z = GlCanvas::kZValueEvent;
   float track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
   const bool picking = picking_mode != PickingMode::kNone;
 

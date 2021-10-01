@@ -39,6 +39,8 @@ class TriangleToggle : public orbit_gl::CaptureViewElement,
   void SetIsCollapsible(bool is_collapsible) { is_collapsible_ = is_collapsible; }
   [[nodiscard]] bool IsCollapsible() const { return is_collapsible_; }
 
+  [[nodiscard]] uint32_t GetLayoutFlags() const override { return 0; }
+
  protected:
   void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
               const DrawContext& draw_context) override;

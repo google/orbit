@@ -65,7 +65,6 @@ class GpuTrack : public Track {
   [[nodiscard]] float GetHeight() const override;
 
   [[nodiscard]] std::vector<CaptureViewElement*> GetChildren() const override;
-  [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() override;
 
   [[nodiscard]] bool IsEmpty() const override {
     return submission_track_->IsEmpty() && marker_track_->IsEmpty();

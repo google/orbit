@@ -26,22 +26,17 @@ void TriangleToggle::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
                             const DrawContext& draw_context) {
   CaptureViewElement::DoDraw(batcher, text_renderer, draw_context);
 
-  const float z = GlCanvas::kZValueTrack + draw_context.z_offset;
+  const float z = GlCanvas::kZValueTrack;
 
   const bool picking = draw_context.picking_mode != PickingMode::kNone;
   const Color kWhite(255, 255, 255, 255);
   const Color kGrey(100, 100, 100, 255);
   Color color = is_collapsible_ ? kWhite : kGrey;
 
-  // Set the size such that the triangle toggle can be selected in the E2E test.
-  float size = layout_->GetCollapseButtonSize(draw_context.indentation_level);
-  SetWidth(size);
-  SetHeight(size);
-
   // Draw triangle.
   static float half_sqrt_three = 0.5f * sqrtf(3.f);
-  float half_w = 0.5f * size;
-  float half_h = half_sqrt_three * half_w;
+  float half_w = 0.5f * GetWidth();
+  float half_h = half_sqrt_three * 0.5f * GetHeight();
 
   const Vec2 pos = GetPos();
   if (!picking) {

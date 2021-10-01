@@ -12,7 +12,6 @@ TEST(GpuTrack, CaptureViewElementWorksAsIntended) {
   orbit_gl::CaptureViewElementTester tester;
   GpuTrack track = GpuTrack(nullptr, nullptr, tester.GetViewport(), tester.GetLayout(), 0, nullptr,
                             nullptr, nullptr, nullptr);
-  EXPECT_EQ(2ull, track.GetChildren().size());
   tester.RunTests(&track);
 }
 

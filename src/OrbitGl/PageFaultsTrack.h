@@ -28,7 +28,6 @@ class PageFaultsTrack : public Track {
   [[nodiscard]] std::string GetLabel() const override;
   [[nodiscard]] Type GetType() const override { return Type::kPageFaultsTrack; }
   [[nodiscard]] float GetHeight() const override;
-  [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() override;
   [[nodiscard]] std::string GetTooltip() const override;
 
   [[nodiscard]] bool IsEmpty() const override {

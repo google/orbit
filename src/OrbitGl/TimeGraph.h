@@ -45,12 +45,9 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   [[nodiscard]] float GetHeight() const override {
     return track_manager_->GetVisibleTracksTotalHeight();
   }
-  void DrawTracks(Batcher& batcher, TextRenderer& text_renderer, const DrawContext& draw_context);
-  void DrawOverlay(Batcher& batcher, TextRenderer& text_renderer, PickingMode picking_mode);
-  void DrawIteratorBox(Batcher& batcher, TextRenderer& text_renderer, Vec2 pos, Vec2 size,
-                       const Color& color, const std::string& label, const std::string& time,
-                       float text_box_y);
-  void DrawIncompleteDataIntervals(Batcher& batcher, PickingMode picking_mode);
+
+  void DrawAllElements(Batcher& batcher, TextRenderer& text_renderer, PickingMode& picking_mode,
+                       uint64_t current_mouse_time_ns);
   void DrawText(float layer);
 
   void RequestUpdate() override;
@@ -111,7 +108,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   void SelectAndZoom(const orbit_client_protos::TimerInfo* timer_info);
   [[nodiscard]] double GetCaptureTimeSpanUs() const;
   [[nodiscard]] double GetCurrentTimeSpanUs() const;
-  [[nodiscard]] bool IsRedrawNeeded() const { return redraw_requested_; }
+  [[nodiscard]] bool IsRedrawNeeded() const { return update_primitives_requested_; }
   void SetThreadFilter(const std::string& filter);
 
   [[nodiscard]] bool IsFullyVisible(uint64_t min, uint64_t max) const;
@@ -181,16 +178,18 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   [[nodiscard]] bool HasFrameTrack(uint64_t function_id) const;
   void RemoveFrameTrack(uint64_t function_id);
 
+  [[nodiscard]] std::vector<CaptureViewElement*> GetChildren() const override;
+  [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() const override;
+
   [[nodiscard]] AccessibleInterfaceProvider* GetAccessibleParent() const {
     return accessible_parent_;
   }
 
  protected:
+  void UpdatePrimitives(PickingMode picking_mode);
+  void DoUpdateLayout() override;
   void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
               const DrawContext& draw_context) override;
-  void DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                          PickingMode picking_mode, float z_offset = 0) override;
-  void DoUpdateLayout() override;
 
   void UpdateTracksPosition();
 
@@ -203,6 +202,12 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   void ProcessPageFaultsTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
 
  private:
+  void DrawOverlay(Batcher& batcher, TextRenderer& text_renderer, PickingMode picking_mode);
+  void DrawIteratorBox(Batcher& batcher, TextRenderer& text_renderer, Vec2 pos, Vec2 size,
+                       const Color& color, const std::string& label, const std::string& time,
+                       float text_box_y);
+  void DrawIncompleteDataIntervals(Batcher& batcher, PickingMode picking_mode);
+
   AccessibleInterfaceProvider* accessible_parent_;
   TextRenderer text_renderer_static_;
 
@@ -220,17 +225,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
 
   TimeGraphLayout layout_;
 
-  // Be careful when directly changing these members without using the
-  // methods RequestRedraw() or RequestUpdatePrimitives():
-  // update_primitives_requested_ should always imply redraw_requested_, that is
-  // update_primitives_requested_ => redraw_requested_ is an invariant of this
-  // class. When updating the primitives, which computes the primitives
-  // to be drawn and their coordinates, we always have to redraw the
-  // timeline.
   bool update_primitives_requested_ = false;
-  bool redraw_requested_ = false;
-
-  bool draw_text_ = true;
 
   Batcher batcher_;
 

@@ -17,9 +17,8 @@ void MemoryTrack<Dimension>::DoDraw(Batcher& batcher, TextRenderer& text_rendere
   GraphTrack<Dimension>::DoDraw(batcher, text_renderer, draw_context);
 
   if (this->collapse_toggle_->IsCollapsed()) return;
-  AnnotationTrack::DrawAnnotation(batcher, text_renderer, this->layout_,
-                                  draw_context.indentation_level,
-                                  GlCanvas::kZValueTrackText + draw_context.z_offset);
+  AnnotationTrack::DrawAnnotation(batcher, text_renderer, this->layout_, this->indentation_level_,
+                                  GlCanvas::kZValueTrackText);
 }
 
 template <size_t Dimension>

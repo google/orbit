@@ -39,7 +39,6 @@ GpuSubmissionTrack::GpuSubmissionTrack(Track* parent, TimeGraph* time_graph,
       string_manager_{app->GetStringManager()},
       parent_{parent} {
   draw_background_ = false;
-  text_renderer_ = time_graph->GetTextRenderer();
 }
 
 std::string GpuSubmissionTrack::GetName() const {

@@ -75,8 +75,8 @@ void BasicPageFaultsTrack::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
   LineGraphTrack<kBasicPageFaultsTrackDimension>::DoDraw(batcher, text_renderer, draw_context);
 
   if (draw_context.picking_mode != PickingMode::kNone || IsCollapsed()) return;
-  AnnotationTrack::DrawAnnotation(batcher, text_renderer, layout_, draw_context.indentation_level,
-                                  GlCanvas::kZValueTrackText + draw_context.z_offset);
+  AnnotationTrack::DrawAnnotation(batcher, text_renderer, layout_, indentation_level_,
+                                  GlCanvas::kZValueTrackText);
 }
 
 void BasicPageFaultsTrack::DrawSingleSeriesEntry(

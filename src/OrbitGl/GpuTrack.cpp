@@ -91,7 +91,9 @@ void GpuTrack::UpdatePositionOfSubtracks() {
     return;
   }
   marker_track_->SetVisible(true);
+  marker_track_->SetIndentationLevel(indentation_level_ + 1);
   submission_track_->SetHeadless(false);
+  submission_track_->SetIndentationLevel(indentation_level_ + 1);
 
   float current_y = pos[1] + layout_->GetTrackTabHeight();
   if (submission_track_->ShouldBeRendered()) {
@@ -122,23 +124,8 @@ float GpuTrack::GetHeight() const {
 }
 
 std::vector<orbit_gl::CaptureViewElement*> GpuTrack::GetChildren() const {
-  return {submission_track_.get(), marker_track_.get()};
-}
-
-std::vector<orbit_gl::CaptureViewElement*> GpuTrack::GetVisibleChildren() {
-  std::vector<CaptureViewElement*> result;
-
-  if (collapse_toggle_->IsCollapsed()) {
-    return result;
-  }
-
-  if (submission_track_->ShouldBeRendered()) {
-    result.push_back(submission_track_.get());
-  }
-
-  if (marker_track_->ShouldBeRendered()) {
-    result.push_back(marker_track_.get());
-  }
+  auto result = Track::GetChildren();
+  result.insert(result.end(), {submission_track_.get(), marker_track_.get()});
   return result;
 }
 
