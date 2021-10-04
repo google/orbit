@@ -18,7 +18,7 @@ it available in the path.
 "@
   }
 
-  & $pip3.Path install conan==1.36.0
+  & $pip3.Path install conan==1.40.3
   if ($LastExitCode -ne 0) {
     Throw "Error while installing conan via pip3."
   }
@@ -47,7 +47,7 @@ You can call 'pip3 show -f conan' to figure out where conan.exe was placed.
 
     Try {
       $pip3 = Get-Command pip3
-      & $pip3.Path install --upgrade conan==1.36.0
+      & $pip3.Path install --upgrade conan==1.40.3
     } Catch {
       Throw "Error while upgrading conan via pip3. Probably you have conan installed differently." + 
             " Please manually update conan to a at least version $conan_version_major_required.$conan_version_minor_min."
