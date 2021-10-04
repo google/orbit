@@ -21,7 +21,7 @@ class ProducerEventProcessor {
   virtual ~ProducerEventProcessor() = default;
 
   virtual void ProcessEvent(uint64_t producer_id,
-                            orbit_grpc_protos::ProducerCaptureEvent event) = 0;
+                            orbit_grpc_protos::ProducerCaptureEvent&& event) = 0;
 
   static std::unique_ptr<ProducerEventProcessor> Create(CaptureEventBuffer* capture_event_buffer);
 };
