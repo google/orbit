@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>478</width>
-    <height>469</height>
+    <height>523</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -88,9 +88,29 @@
          </layout>
         </item>
         <item>
+         <widget class="QCheckBox" name="schedulerCheckBox">
+          <property name="text">
+           <string>Collect scheduler information</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QCheckBox" name="threadStateCheckBox">
           <property name="text">
            <string>Collect thread states</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="gpuSubmissionsCheckBox">
+          <property name="text">
+           <string>Trace GPU queue submissions</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -102,19 +122,19 @@
          </widget>
         </item>
         <item>
-         <widget class="QCheckBox" name="introspectionCheckBox">
-          <property name="text">
-           <string>Enable introspection</string>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QCheckBox" name="userspaceCheckBox">
           <property name="visible">
            <bool>true</bool>
           </property>
           <property name="text">
            <string>Enable user space instrumentation</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="introspectionCheckBox">
+          <property name="text">
+           <string>Enable introspection</string>
           </property>
          </widget>
         </item>

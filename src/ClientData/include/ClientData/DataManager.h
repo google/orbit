@@ -70,10 +70,20 @@ class DataManager final {
     return user_defined_capture_data_;
   }
 
+  void set_collect_scheduler_info(bool collect_scheduler_info) {
+    collect_scheduler_info_ = collect_scheduler_info;
+  }
+  [[nodiscard]] bool collect_scheduler_info() const { return collect_scheduler_info_; }
+
   void set_collect_thread_states(bool collect_thread_states) {
     collect_thread_states_ = collect_thread_states;
   }
   [[nodiscard]] bool collect_thread_states() const { return collect_thread_states_; }
+
+  void set_trace_gpu_submissions(bool trace_gpu_submissions) {
+    trace_gpu_submissions_ = trace_gpu_submissions;
+  }
+  [[nodiscard]] bool trace_gpu_submissions() const { return trace_gpu_submissions_; }
 
   void set_enable_api(bool enable_api) { enable_api_ = enable_api; }
   [[nodiscard]] bool get_enable_api() const { return enable_api_; }
@@ -145,7 +155,9 @@ class DataManager final {
   // captures.
   UserDefinedCaptureData user_defined_capture_data_;
 
+  bool collect_scheduler_info_ = false;
   bool collect_thread_states_ = false;
+  bool trace_gpu_submissions_ = false;
   bool enable_api_ = false;
   bool enable_introspection_ = false;
   bool enable_user_space_instrumentation_ = false;
