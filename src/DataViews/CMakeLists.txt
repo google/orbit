@@ -7,6 +7,7 @@ cmake_minimum_required(VERSION 3.15)
 add_library(DataViews STATIC)
 
 target_sources(DataViews PRIVATE
+        CallstackDataView.cpp
         CompareAscendingOrDescending.h
         DataView.cpp
         DataViewUtils.h
@@ -18,6 +19,7 @@ target_sources(DataViews PRIVATE
 
 target_sources(DataViews PUBLIC
         include/DataViews/AppInterface.h
+        include/DataViews/CallstackDataView.h
         include/DataViews/DataView.h
         include/DataViews/DataViewType.h
         include/DataViews/FunctionsDataView.h

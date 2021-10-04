@@ -16,10 +16,10 @@
 #include <utility>
 #include <vector>
 
-#include "CallstackDataView.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackTypes.h"
 #include "ClientData/PostProcessedSamplingData.h"
+#include "DataViews/CallstackDataView.h"
 #include "SamplingReportDataView.h"
 #include "capture_data.pb.h"
 
@@ -37,7 +37,9 @@ class SamplingReport {
       absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
           unique_callstacks);
   [[nodiscard]] std::vector<SamplingReportDataView>& GetThreadReports() { return thread_reports_; };
-  void SetCallstackDataView(CallstackDataView* data_view) { callstack_data_view_ = data_view; };
+  void SetCallstackDataView(orbit_data_views::CallstackDataView* data_view) {
+    callstack_data_view_ = data_view;
+  };
   void OnSelectAddresses(const absl::flat_hash_set<uint64_t>& addresses,
                          orbit_client_data::ThreadID thread_id);
   void IncrementCallstackIndex();
@@ -58,7 +60,7 @@ class SamplingReport {
   absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
       unique_callstacks_;
   std::vector<SamplingReportDataView> thread_reports_;
-  CallstackDataView* callstack_data_view_ = nullptr;
+  orbit_data_views::CallstackDataView* callstack_data_view_ = nullptr;
 
   absl::flat_hash_set<uint64_t> selected_addresses_;
   orbit_client_data::ThreadID selected_thread_id_ = 0;

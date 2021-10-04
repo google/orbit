@@ -8,10 +8,10 @@
 #include <string>
 #include <vector>
 
-#include "CallstackDataView.h"
 #include "ClientData/CallstackTypes.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
+#include "DataViews/CallstackDataView.h"
 #include "DataViews/DataView.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
@@ -67,7 +67,7 @@ class SamplingReportDataView : public orbit_data_views::DataView {
   absl::flat_hash_set<uint64_t> selected_function_ids_;
   orbit_client_data::ThreadID tid_ = -1;
   std::string name_;
-  CallstackDataView* callstack_data_view_;
+  orbit_data_views::CallstackDataView* callstack_data_view_;
   SamplingReport* sampling_report_ = nullptr;
 
   enum ColumnIndex {

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_CALLSTACK_DATA_VIEW_H_
-#define ORBIT_GL_CALLSTACK_DATA_VIEW_H_
+#ifndef DATA_VIEWS_CALLSTACK_DATA_VIEW_H_
+#define DATA_VIEWS_CALLSTACK_DATA_VIEW_H_
 
 #include <stdint.h>
 
@@ -16,11 +16,12 @@
 #include "DataViews/DataView.h"
 #include "capture_data.pb.h"
 
-class CallstackDataView : public orbit_data_views::DataView {
- public:
-  explicit CallstackDataView(orbit_data_views::AppInterface* app);
+namespace orbit_data_views {
 
-  void SetAsMainInstance() override;
+class CallstackDataView : public DataView {
+ public:
+  explicit CallstackDataView(AppInterface* app);
+
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnAddress; }
   bool IsSortingAllowed() override { return false; }
@@ -90,4 +91,6 @@ class CallstackDataView : public orbit_data_views::DataView {
   absl::flat_hash_set<uint64_t> functions_to_highlight_;
 };
 
-#endif  // ORBIT_GL_CALLSTACK_DATA_VIEW_H_
+}  // namespace orbit_data_views
+
+#endif  // DATA_VIEWS_CALLSTACK_DATA_VIEW_H_

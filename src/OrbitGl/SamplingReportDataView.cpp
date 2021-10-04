@@ -19,7 +19,6 @@
 #include <utility>
 
 #include "App.h"
-#include "CallstackDataView.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
@@ -342,7 +341,7 @@ void SamplingReportDataView::OnRefresh(const std::vector<int>& visible_selected_
 
 void SamplingReportDataView::LinkDataView(orbit_data_views::DataView* data_view) {
   if (data_view->GetType() == orbit_data_views::DataViewType::kCallstack) {
-    callstack_data_view_ = static_cast<CallstackDataView*>(data_view);
+    callstack_data_view_ = static_cast<orbit_data_views::CallstackDataView*>(data_view);
     sampling_report_->SetCallstackDataView(callstack_data_view_);
   }
 }
