@@ -389,7 +389,9 @@ class OrbitApp final : public DataViewFactory,
     return module_manager_->GetModuleByPathAndBuildId(path, build_id);
   }
 
+  void SetCollectSchedulerInfo(bool collect_scheduler_info);
   void SetCollectThreadStates(bool collect_thread_states);
+  void SetTraceGpuExecutions(bool trace_gpu_executions);
   void SetEnableApi(bool enable_api);
   void SetEnableIntrospection(bool enable_introspection);
   void SetEnableUserSpaceInstrumentation(bool enable);

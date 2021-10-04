@@ -1049,7 +1049,9 @@ void OrbitMainWindow::on_actionToggle_Capture_triggered() { app_->ToggleCapture(
 
 const QString OrbitMainWindow::kEnableCallstackSamplingSettingKey{"EnableCallstackSampling"};
 const QString OrbitMainWindow::kCallstackSamplingPeriodMsSettingKey{"CallstackSamplingPeriodMs"};
+const QString OrbitMainWindow::kCollectSchedulerInfoSettingKey{"CollectSchedulerInfo"};
 const QString OrbitMainWindow::kCollectThreadStatesSettingKey{"CollectThreadStates"};
+const QString OrbitMainWindow::kTraceGpuExecutionsSettingKey{"TraceGpuExecutions"};
 const QString OrbitMainWindow::kCollectMemoryInfoSettingKey{"CollectMemoryInfo"};
 const QString OrbitMainWindow::kEnableApiSettingKey{"EnableApi"};
 const QString OrbitMainWindow::kEnableIntrospectionSettingKey{"EnableIntrospection"};
@@ -1086,7 +1088,9 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
     app_->SetSamplesPerSecond(0.0);
   }
 
+  app_->SetCollectSchedulerInfo(settings.value(kCollectSchedulerInfoSettingKey, true).toBool());
   app_->SetCollectThreadStates(settings.value(kCollectThreadStatesSettingKey, false).toBool());
+  app_->SetTraceGpuExecutions(settings.value(kTraceGpuExecutionsSettingKey, true).toBool());
   app_->SetEnableApi(settings.value(kEnableApiSettingKey, true).toBool());
   app_->SetEnableIntrospection(settings.value(kEnableIntrospectionSettingKey, false).toBool());
   app_->SetEnableUserSpaceInstrumentation(
@@ -1126,7 +1130,9 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
   dialog.SetSamplingPeriodMs(
       settings.value(kCallstackSamplingPeriodMsSettingKey, kCallstackSamplingPeriodMsDefaultValue)
           .toDouble());
+  dialog.SetCollectSchedulerInfo(settings.value(kCollectSchedulerInfoSettingKey, true).toBool());
   dialog.SetCollectThreadStates(settings.value(kCollectThreadStatesSettingKey, false).toBool());
+  dialog.SetTraceGpuExecutions(settings.value(kTraceGpuExecutionsSettingKey, true).toBool());
   dialog.SetEnableApi(settings.value(kEnableApiSettingKey, true).toBool());
   dialog.SetEnableIntrospection(settings.value(kEnableIntrospectionSettingKey, true).toBool());
   dialog.SetEnableUserSpaceInstrumentation(
@@ -1154,7 +1160,9 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
 
   settings.setValue(kEnableCallstackSamplingSettingKey, dialog.GetEnableSampling());
   settings.setValue(kCallstackSamplingPeriodMsSettingKey, dialog.GetSamplingPeriodMs());
+  settings.setValue(kCollectSchedulerInfoSettingKey, dialog.GetCollectSchedulerInfo());
   settings.setValue(kCollectThreadStatesSettingKey, dialog.GetCollectThreadStates());
+  settings.setValue(kTraceGpuExecutionsSettingKey, dialog.GetTraceGpuExecutions());
   settings.setValue(kEnableApiSettingKey, dialog.GetEnableApi());
   settings.setValue(kEnableIntrospectionSettingKey, dialog.GetEnableIntrospection());
   settings.setValue(kEnableUserSpaceInstrumentationSettingKey,

@@ -27,6 +27,10 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   if (!absl::GetFlag(FLAGS_devmode)) {
     // TODO(b/198748597): Don't hide samplingCheckBox once disabling sampling completely is exposed.
     ui_->samplingCheckBox->hide();
+    ui_->schedulerCheckBox->hide();
+    ui_->gpuExecutionsCheckBox->hide();
+    ui_->userspaceCheckBox->hide();
+    ui_->introspectionCheckBox->hide();
   }
 
   ui_->localMarkerDepthLineEdit->setValidator(&uint64_validator_);
@@ -36,14 +40,6 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   if (!absl::GetFlag(FLAGS_enable_warning_threshold)) {
     ui_->memoryWarningThresholdKbLabel->hide();
     ui_->memoryWarningThresholdKbLineEdit->hide();
-  }
-
-  if (!absl::GetFlag(FLAGS_devmode)) {
-    ui_->introspectionCheckBox->hide();
-  }
-
-  if (!absl::GetFlag(FLAGS_devmode)) {
-    ui_->userspaceCheckBox->hide();
   }
 }
 
@@ -61,6 +57,14 @@ double CaptureOptionsDialog::GetSamplingPeriodMs() const {
   return ui_->samplingPeriodMsDoubleSpinBox->value();
 }
 
+void CaptureOptionsDialog::SetCollectSchedulerInfo(bool collect_scheduler_info) {
+  ui_->schedulerCheckBox->setChecked(collect_scheduler_info);
+}
+
+bool CaptureOptionsDialog::GetCollectSchedulerInfo() const {
+  return ui_->schedulerCheckBox->isChecked();
+}
+
 void CaptureOptionsDialog::SetCollectThreadStates(bool collect_thread_state) {
   ui_->threadStateCheckBox->setChecked(collect_thread_state);
 }
@@ -69,19 +73,19 @@ bool CaptureOptionsDialog::GetCollectThreadStates() const {
   return ui_->threadStateCheckBox->isChecked();
 }
 
+void CaptureOptionsDialog::SetTraceGpuExecutions(bool trace_gpu_executions) {
+  ui_->gpuExecutionsCheckBox->setChecked(trace_gpu_executions);
+}
+
+bool CaptureOptionsDialog::GetTraceGpuExecutions() const {
+  return ui_->gpuExecutionsCheckBox->isChecked();
+}
+
 void CaptureOptionsDialog::SetEnableApi(bool enable_api) {
   ui_->apiCheckBox->setChecked(enable_api);
 }
 
 bool CaptureOptionsDialog::GetEnableApi() const { return ui_->apiCheckBox->isChecked(); }
-
-void CaptureOptionsDialog::SetEnableIntrospection(bool enable_introspection) {
-  ui_->introspectionCheckBox->setChecked(enable_introspection);
-}
-
-bool CaptureOptionsDialog::GetEnableIntrospection() const {
-  return ui_->introspectionCheckBox->isChecked();
-}
 
 void CaptureOptionsDialog::SetEnableUserSpaceInstrumentation(bool enable) {
   ui_->userspaceCheckBox->setChecked(enable);
@@ -89,6 +93,14 @@ void CaptureOptionsDialog::SetEnableUserSpaceInstrumentation(bool enable) {
 
 bool CaptureOptionsDialog::GetEnableUserSpaceInstrumentation() const {
   return ui_->userspaceCheckBox->isChecked();
+}
+
+void CaptureOptionsDialog::SetEnableIntrospection(bool enable_introspection) {
+  ui_->introspectionCheckBox->setChecked(enable_introspection);
+}
+
+bool CaptureOptionsDialog::GetEnableIntrospection() const {
+  return ui_->introspectionCheckBox->isChecked();
 }
 
 void CaptureOptionsDialog::SetLimitLocalMarkerDepthPerCommandBuffer(

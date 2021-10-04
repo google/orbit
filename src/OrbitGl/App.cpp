@@ -1329,9 +1329,9 @@ void OrbitApp::StartCapture() {
   }
 
   TracepointInfoSet selected_tracepoints = data_manager_->selected_tracepoints();
-  bool collect_scheduling_info = true;
+  bool collect_scheduling_info = !IsDevMode() || data_manager_->collect_scheduler_info();
   bool collect_thread_states = data_manager_->collect_thread_states();
-  bool collect_gpu_jobs = true;
+  bool collect_gpu_jobs = !IsDevMode() || data_manager_->trace_gpu_executions();
   bool enable_api = data_manager_->get_enable_api();
   bool enable_introspection = IsDevMode() && data_manager_->get_enable_introspection();
   bool enable_user_space_instrumentation =
@@ -2162,8 +2162,16 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
   return orbit_base::JoinFutures(absl::MakeConstSpan(reloaded_modules));
 }
 
+void OrbitApp::SetCollectSchedulerInfo(bool collect_scheduler_info) {
+  data_manager_->set_collect_scheduler_info(collect_scheduler_info);
+}
+
 void OrbitApp::SetCollectThreadStates(bool collect_thread_states) {
   data_manager_->set_collect_thread_states(collect_thread_states);
+}
+
+void OrbitApp::SetTraceGpuExecutions(bool trace_gpu_executions) {
+  data_manager_->set_trace_gpu_executions(trace_gpu_executions);
 }
 
 void OrbitApp::SetEnableApi(bool enable_api) { data_manager_->set_enable_api(enable_api); }
