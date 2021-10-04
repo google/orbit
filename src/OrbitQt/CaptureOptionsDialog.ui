@@ -105,9 +105,9 @@
          </widget>
         </item>
         <item>
-         <widget class="QCheckBox" name="gpuExecutionsCheckBox">
+         <widget class="QCheckBox" name="gpuSubmissionsCheckBox">
           <property name="text">
-           <string>Trace GPU command buffer executions</string>
+           <string>Trace GPU queue submissions</string>
           </property>
           <property name="checked">
            <bool>true</bool>

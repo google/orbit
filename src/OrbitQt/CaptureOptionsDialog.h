@@ -52,8 +52,8 @@ class CaptureOptionsDialog : public QDialog {
   [[nodiscard]] bool GetCollectSchedulerInfo() const;
   void SetCollectThreadStates(bool collect_thread_state);
   [[nodiscard]] bool GetCollectThreadStates() const;
-  void SetTraceGpuExecutions(bool trace_gpu_executions);
-  [[nodiscard]] bool GetTraceGpuExecutions() const;
+  void SetTraceGpuSubmissions(bool trace_gpu_submissions);
+  [[nodiscard]] bool GetTraceGpuSubmissions() const;
   void SetEnableApi(bool enable_api);
   [[nodiscard]] bool GetEnableApi() const;
   void SetEnableUserSpaceInstrumentation(bool enable);

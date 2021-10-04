@@ -80,10 +80,10 @@ class DataManager final {
   }
   [[nodiscard]] bool collect_thread_states() const { return collect_thread_states_; }
 
-  void set_trace_gpu_executions(bool trace_gpu_executions) {
-    trace_gpu_executions_ = trace_gpu_executions;
+  void set_trace_gpu_submissions(bool trace_gpu_submissions) {
+    trace_gpu_submissions_ = trace_gpu_submissions;
   }
-  [[nodiscard]] bool trace_gpu_executions() const { return trace_gpu_executions_; }
+  [[nodiscard]] bool trace_gpu_submissions() const { return trace_gpu_submissions_; }
 
   void set_enable_api(bool enable_api) { enable_api_ = enable_api; }
   [[nodiscard]] bool get_enable_api() const { return enable_api_; }
@@ -157,7 +157,7 @@ class DataManager final {
 
   bool collect_scheduler_info_ = false;
   bool collect_thread_states_ = false;
-  bool trace_gpu_executions_ = false;
+  bool trace_gpu_submissions_ = false;
   bool enable_api_ = false;
   bool enable_introspection_ = false;
   bool enable_user_space_instrumentation_ = false;

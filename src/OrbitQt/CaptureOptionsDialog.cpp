@@ -28,7 +28,7 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
     // TODO(b/198748597): Don't hide samplingCheckBox once disabling sampling completely is exposed.
     ui_->samplingCheckBox->hide();
     ui_->schedulerCheckBox->hide();
-    ui_->gpuExecutionsCheckBox->hide();
+    ui_->gpuSubmissionsCheckBox->hide();
     ui_->userspaceCheckBox->hide();
     ui_->introspectionCheckBox->hide();
   }
@@ -73,12 +73,12 @@ bool CaptureOptionsDialog::GetCollectThreadStates() const {
   return ui_->threadStateCheckBox->isChecked();
 }
 
-void CaptureOptionsDialog::SetTraceGpuExecutions(bool trace_gpu_executions) {
-  ui_->gpuExecutionsCheckBox->setChecked(trace_gpu_executions);
+void CaptureOptionsDialog::SetTraceGpuSubmissions(bool trace_gpu_submissions) {
+  ui_->gpuSubmissionsCheckBox->setChecked(trace_gpu_submissions);
 }
 
-bool CaptureOptionsDialog::GetTraceGpuExecutions() const {
-  return ui_->gpuExecutionsCheckBox->isChecked();
+bool CaptureOptionsDialog::GetTraceGpuSubmissions() const {
+  return ui_->gpuSubmissionsCheckBox->isChecked();
 }
 
 void CaptureOptionsDialog::SetEnableApi(bool enable_api) {
