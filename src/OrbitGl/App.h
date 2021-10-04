@@ -121,7 +121,7 @@ class OrbitApp final : public DataViewFactory,
   void AbortCapture();
   void ClearCapture();
   [[nodiscard]] bool HasCaptureData() const override { return capture_data_ != nullptr; }
-  [[nodiscard]] orbit_client_data::CaptureData& GetMutableCaptureData() {
+  [[nodiscard]] orbit_client_data::CaptureData& GetMutableCaptureData() override {
     CHECK(capture_data_ != nullptr);
     return *capture_data_;
   }

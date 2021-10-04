@@ -48,6 +48,9 @@ class AppInterface {
   virtual void DeselectTimer() = 0;
   [[nodiscard]] virtual bool IsCapturing() const = 0;
 
+  // Function needed by CallstackDataView
+  [[nodiscard]] virtual orbit_client_data::CaptureData& GetMutableCaptureData() = 0;
+
   [[nodiscard]] virtual bool IsFrameTrackEnabled(
       const orbit_client_protos::FunctionInfo& function) const = 0;
   [[nodiscard]] virtual bool HasFrameTrackInCaptureData(

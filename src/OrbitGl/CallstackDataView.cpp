@@ -13,7 +13,6 @@
 #include <cstdint>
 #include <filesystem>
 
-#include "App.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
 #include "DataViews/DataViewType.h"
@@ -28,8 +27,8 @@ using orbit_client_data::ModuleData;
 using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::FunctionInfo;
 
-CallstackDataView::CallstackDataView(OrbitApp* app)
-    : orbit_data_views::DataView(orbit_data_views::DataViewType::kCallstack, app), app_{app} {}
+CallstackDataView::CallstackDataView(orbit_data_views::AppInterface* app)
+    : orbit_data_views::DataView(orbit_data_views::DataViewType::kCallstack, app) {}
 
 void CallstackDataView::SetAsMainInstance() {}
 

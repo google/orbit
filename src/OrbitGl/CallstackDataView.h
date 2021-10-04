@@ -12,13 +12,13 @@
 #include <vector>
 
 #include "ClientData/ModuleData.h"
+#include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
 #include "capture_data.pb.h"
 
-class OrbitApp;
 class CallstackDataView : public orbit_data_views::DataView {
  public:
-  explicit CallstackDataView(OrbitApp* app);
+  explicit CallstackDataView(orbit_data_views::AppInterface* app);
 
   void SetAsMainInstance() override;
   const std::vector<Column>& GetColumns() override;
@@ -88,10 +88,6 @@ class CallstackDataView : public orbit_data_views::DataView {
 
  private:
   absl::flat_hash_set<uint64_t> functions_to_highlight_;
-
-  // TODO(b/185090791): This is temporary and will be removed once this data view has been ported
-  // and move to orbit_data_views.
-  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_CALLSTACK_DATA_VIEW_H_
