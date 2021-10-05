@@ -24,8 +24,8 @@ target_sources(
         CoffFile.cpp
         ElfFile.cpp
         PdbFile.cpp
-        PdbFileLLVM.h
-        PdbFileLLVM.cpp
+        PdbFileLlvm.h
+        PdbFileLlvm.cpp
         ObjectFile.cpp
         SymbolsFile.cpp
         WindowsBuildIdUtils.cpp)

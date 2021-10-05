@@ -77,7 +77,7 @@ ErrorMessageOr<void> PdbFileDia::LoadDataForPDB() {
     return ErrorMessage{
         absl::StrFormat("get_guid failed for %s (%u)", file_path_.string(), result)};
   }
-  CHECK(sizeof(guid_) == sizeof(GUID));
+  static_assert(sizeof(guid_) == sizeof(GUID));
   std::memcpy(guid_.data(), &guid, sizeof(GUID));
 
   return outcome::success();
@@ -99,25 +99,24 @@ ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileDia::LoadDebugSymbols() 
   ULONG celt = 0;
 
   while (SUCCEEDED(dia_enum_symbols->Next(1, &dia_symbol, &celt)) && (celt == 1)) {
-    SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
-
+    SymbolInfo symbol_info;
+    
     BSTR function_name = {};
-    if (dia_symbol->get_name(&function_name) == S_OK) {
-      std::wstring name(function_name);
-      symbol_info->set_name(std::string(name.begin(), name.end()));
-      symbol_info->set_demangled_name(llvm::demangle(symbol_info->name()));
-      SysFreeString(function_name);
-    }
+    if (dia_symbol->get_name(&function_name) != S_OK) continue;
+    std::wstring name(function_name);
+    symbol_info.set_name(std::string(name.begin(), name.end()));
+    symbol_info.set_demangled_name(llvm::demangle(symbol_info.name()));
+    SysFreeString(function_name);
 
     DWORD relative_virtual_address = 0;
-    if (dia_symbol->get_relativeVirtualAddress(&relative_virtual_address) == S_OK) {
-      symbol_info->set_address(relative_virtual_address + object_file_info_.load_bias);
-    }
+    if (dia_symbol->get_relativeVirtualAddress(&relative_virtual_address) != S_OK) continue;
+    symbol_info.set_address(relative_virtual_address + object_file_info_.load_bias);
 
     ULONGLONG length = 0;
-    if (dia_symbol->get_length(&length) == S_OK) {
-      symbol_info->set_size(length);
-    }
+    if (dia_symbol->get_length(&length) != S_OK) continue;
+    symbol_info.set_size(length);
+
+    *module_symbols.add_symbol_infos() = std::move(symbol_info);
   }
 
   return module_symbols;

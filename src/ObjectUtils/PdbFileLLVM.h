@@ -41,6 +41,7 @@ class PdbFileLLVM : public PdbFile {
 
   [[nodiscard]] std::array<uint8_t, 16> GetGuid() const override {
     constexpr int kGuidSize = 16;
+    static_assert(kGuidSize == sizeof(llvm::codeview::GUID));
     std::array<uint8_t, kGuidSize> result;
     auto global_scope = session_->getGlobalScope();
     const llvm::codeview::GUID& guid = global_scope->getGuid();
