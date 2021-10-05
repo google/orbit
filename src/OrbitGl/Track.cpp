@@ -23,7 +23,6 @@ using orbit_client_data::TimerData;
 Track::Track(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
              TimeGraphLayout* layout, const orbit_client_data::CaptureData* capture_data)
     : CaptureViewElement(parent, time_graph, viewport, layout),
-      process_id_{orbit_base::kInvalidProcessId},
       pinned_{false},
       layout_(layout),
       capture_data_(capture_data) {
