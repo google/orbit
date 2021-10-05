@@ -48,6 +48,9 @@ class CallstackDataView : public DataView {
   [[nodiscard]] bool GetDisplayColor(int row, int /*column*/, unsigned char& red,
                                      unsigned char& green, unsigned char& blue) override;
 
+  static const std::string kHighlightedFunctionString;
+  static const std::string kHighlightedFunctionBlankString;
+
  protected:
   void DoFilter() override;
 
@@ -83,8 +86,6 @@ class CallstackDataView : public DataView {
   static const std::string kMenuActionSelect;
   static const std::string kMenuActionUnselect;
   static const std::string kMenuActionDisassembly;
-  static const std::string kHighlightedFunctionString;
-  static const std::string kHighlightedFunctionBlankString;
   static const std::string kMenuActionSourceCode;
 
  private:
