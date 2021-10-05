@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "PdbFileLLVM.h"
+#include "PdbFileLlvm.h"
 
 #include <memory>
 
@@ -52,13 +52,13 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
 
 }  // namespace
 
-PdbFileLLVM::PdbFileLLVM(std::filesystem::path file_path, const ObjectFileInfo& object_file_info,
+PdbFileLlvm::PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& object_file_info,
                          std::unique_ptr<llvm::pdb::IPDBSession> session)
     : file_path_(std::move(file_path)),
       object_file_info_(object_file_info),
       session_(std::move(session)) {}
 
-[[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileLLVM::LoadDebugSymbols() {
+[[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileLlvm::LoadDebugSymbols() {
   ModuleSymbols module_symbols;
   module_symbols.set_load_bias(object_file_info_.load_bias);
   module_symbols.set_symbols_file_path(file_path_.string());
@@ -119,7 +119,7 @@ PdbFileLLVM::PdbFileLLVM(std::filesystem::path file_path, const ObjectFileInfo& 
   return module_symbols;
 }
 
-ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFileLLVM(const std::filesystem::path& file_path,
+ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFileLlvm(const std::filesystem::path& file_path,
                                                            const ObjectFileInfo& object_file_info) {
   std::string file_path_string = file_path.string();
   llvm::StringRef pdb_path{file_path_string};
@@ -130,7 +130,7 @@ ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFileLLVM(const std::filesystem
     return ErrorMessage(absl::StrFormat("Unable to load PDB file %s with error: %s",
                                         file_path.string(), llvm::toString(std::move(error))));
   }
-  return std::make_unique<PdbFileLLVM>(file_path, object_file_info, std::move(session));
+  return std::make_unique<PdbFileLlvm>(file_path, object_file_info, std::move(session));
 }
 
 }  // namespace orbit_object_utils

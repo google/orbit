@@ -8,7 +8,7 @@
 #include "PdbFileDia.h"
 #endif
 
-#include "PdbFileLLVM.h"
+#include "PdbFileLlvm.h"
 
 namespace orbit_object_utils {
 
@@ -18,7 +18,7 @@ ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFile(const std::filesystem::pa
   // To workaround a limitation in LLVM's pdb parsing code, we use the DIA SDK directly on Windows.
   return CreatePdbFileDia(file_path, object_file_info);
 #else
-  return CreatePdbFileLLVM(file_path, object_file_info);
+  return CreatePdbFileLlvm(file_path, object_file_info);
 #endif
 }
 
