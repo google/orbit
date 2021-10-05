@@ -397,10 +397,6 @@ float ThreadTrack::GetYFromDepth(uint32_t depth) const {
 }
 
 void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
-  if (process_id_ == orbit_base::kInvalidProcessId) {
-    process_id_ = timer_info.process_id();
-  }
-
   // Thread tracks use a ScopeTree so we don't need to create one TimerChain per depth.
   // Allocate a single TimerChain into which all timers will be appended.
 

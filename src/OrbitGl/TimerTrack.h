@@ -66,6 +66,7 @@ class TimerTrack : public Track {
                         PickingMode /*picking_mode*/, float z_offset = 0) override;
   [[nodiscard]] Type GetType() const override { return Type::kTimerTrack; }
 
+  [[nodiscard]] uint32_t GetProcessId() const override { return timer_data_->GetProcessId(); }
   [[nodiscard]] std::string GetExtraInfo(const orbit_client_protos::TimerInfo& timer) const;
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetFirstAfterTime(uint64_t time,

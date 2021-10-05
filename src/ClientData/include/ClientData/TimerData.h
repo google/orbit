@@ -8,7 +8,8 @@
 #include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
 
-#include "ClientData/TimerChain.h"
+#include "OrbitBase/ThreadConstants.h"
+#include "TimerChain.h"
 #include "capture_data.pb.h"
 
 namespace orbit_client_data {
@@ -20,9 +21,14 @@ class TimerData final {
   [[nodiscard]] uint64_t GetMinTime() const { return min_time_; }
   [[nodiscard]] uint64_t GetMaxTime() const { return max_time_; }
   [[nodiscard]] uint32_t GetMaxDepth() const { return max_depth_; }
+  [[nodiscard]] uint32_t GetProcessId() const { return process_id_; }
 
   const orbit_client_protos::TimerInfo& AddTimer(uint64_t depth,
                                                  orbit_client_protos::TimerInfo timer_info) {
+    if (process_id_ == orbit_base::kInvalidProcessId) {
+      process_id_ = timer_info.process_id();
+    }
+
     TimerChain* timer_chain = GetOrCreateTimerChain(depth);
     UpdateMinTime(timer_info.start());
     UpdateMaxTime(timer_info.end());
@@ -85,6 +91,8 @@ class TimerData final {
   std::atomic<size_t> num_timers_{0};
   std::atomic<uint64_t> min_time_{std::numeric_limits<uint64_t>::max()};
   std::atomic<uint64_t> max_time_{std::numeric_limits<uint64_t>::min()};
+
+  uint32_t process_id_ = orbit_base::kInvalidProcessId;
 };
 
 }  // namespace orbit_client_data
