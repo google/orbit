@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CallstackDataView.h"
+#include "DataViews/CallstackDataView.h"
 
 #include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
@@ -27,12 +27,11 @@ using orbit_client_data::ModuleData;
 using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::FunctionInfo;
 
-CallstackDataView::CallstackDataView(orbit_data_views::AppInterface* app)
-    : orbit_data_views::DataView(orbit_data_views::DataViewType::kCallstack, app) {}
+namespace orbit_data_views {
 
-void CallstackDataView::SetAsMainInstance() {}
+CallstackDataView::CallstackDataView(AppInterface* app) : DataView(DataViewType::kCallstack, app) {}
 
-const std::vector<orbit_data_views::DataView::Column>& CallstackDataView::GetColumns() {
+const std::vector<DataView::Column>& CallstackDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
@@ -58,8 +57,8 @@ std::string CallstackDataView::GetValue(int row, int column) {
   switch (column) {
     case kColumnSelected:
       return (function != nullptr && app_->IsFunctionSelected(*function))
-                 ? orbit_data_views::FunctionsDataView::kSelectedFunctionString
-                 : orbit_data_views::FunctionsDataView::kUnselectedFunctionString;
+                 ? FunctionsDataView::kSelectedFunctionString
+                 : FunctionsDataView::kUnselectedFunctionString;
     case kColumnName:
       return absl::StrCat(
           functions_to_highlight_.contains(frame.address) ? kHighlightedFunctionString
@@ -271,3 +270,5 @@ CallstackDataView::CallstackDataViewFrame CallstackDataView::GetFrameFromIndex(
   const std::string& fallback_name = capture_data.GetFunctionNameByAddress(address);
   return CallstackDataViewFrame(address, fallback_name, module);
 }
+
+}  // namespace orbit_data_views

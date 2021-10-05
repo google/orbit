@@ -25,7 +25,6 @@
 #include <vector>
 
 #include "CallTreeView.h"
-#include "CallstackDataView.h"
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureFile/CaptureFile.h"
@@ -46,6 +45,7 @@
 #include "CodeReport/DisassemblyReport.h"
 #include "DataViewFactory.h"
 #include "DataViews/AppInterface.h"
+#include "DataViews/CallstackDataView.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"
 #include "DataViews/LiveFunctionsDataView.h"
@@ -553,8 +553,8 @@ class OrbitApp final : public DataViewFactory,
 
   std::unique_ptr<orbit_data_views::ModulesDataView> modules_data_view_;
   std::unique_ptr<orbit_data_views::FunctionsDataView> functions_data_view_;
-  std::unique_ptr<CallstackDataView> callstack_data_view_;
-  std::unique_ptr<CallstackDataView> selection_callstack_data_view_;
+  std::unique_ptr<orbit_data_views::CallstackDataView> callstack_data_view_;
+  std::unique_ptr<orbit_data_views::CallstackDataView> selection_callstack_data_view_;
   std::unique_ptr<orbit_data_views::PresetsDataView> presets_data_view_;
   std::unique_ptr<TracepointsDataView> tracepoints_data_view_;
 
