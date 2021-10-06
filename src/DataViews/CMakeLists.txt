@@ -42,7 +42,8 @@ target_link_libraries(DataViews PUBLIC
         CONAN_PKG::abseil)
 
 add_executable(DataViewsTests)
-target_sources(DataViewsTests PRIVATE DataViewTest.cpp
+target_sources(DataViewsTests PRIVATE CallstackDataViewTest.cpp
+                                      DataViewTest.cpp
                                       DataViewUtilsTest.cpp
                                       FunctionsDataViewTest.cpp
                                       LiveFunctionsDataViewTest.cpp
