@@ -72,6 +72,7 @@ target_sources(
          TracepointsDataView.h
          TracepointThreadBar.h
          TrackTestData.h
+         TranslationStack.h
          VariableTrack.h
          Viewport.h)
 
@@ -130,6 +131,7 @@ target_sources(
           ThreadTrack.cpp
           Track.cpp
           TrackManager.cpp
+          TranslationStack.cpp
           TriangleToggle.cpp
           TracepointsDataView.cpp
           TracepointThreadBar.cpp
@@ -198,6 +200,7 @@ target_sources(OrbitGlTests PRIVATE
                SliderTest.cpp
                ShortenStringWithEllipsisTest.cpp
                TimerInfosIteratorTest.cpp
+               TranslationStackTest.cpp
                ThreadTrackTest.cpp
                TrackManagerTest.cpp
                ViewportTest.cpp)
