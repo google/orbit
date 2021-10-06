@@ -200,6 +200,7 @@ target_sources(OrbitGlTests PRIVATE
                SliderTest.cpp
                ShortenStringWithEllipsisTest.cpp
                TimerInfosIteratorTest.cpp
+               TranslationStackTest.cpp
                ThreadTrackTest.cpp
                TrackManagerTest.cpp
                ViewportTest.cpp)
