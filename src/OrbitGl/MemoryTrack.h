@@ -34,13 +34,14 @@ class MemoryTrack : public GraphTrack<Dimension>, public AnnotationTrack {
   ~MemoryTrack() override = default;
 
   [[nodiscard]] Track::Type GetType() const override { return Track::Type::kMemoryTrack; }
-  void Draw(Batcher& batcher, TextRenderer& text_renderer,
-            const CaptureViewElement::DrawContext& draw_context) override;
 
   void TrySetValueUpperBound(const std::string& pretty_label, double raw_value);
   void TrySetValueLowerBound(const std::string& pretty_label, double raw_value);
 
  protected:
+  void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+              const CaptureViewElement::DrawContext& draw_context) override;
+
   [[nodiscard]] double GetGraphMaxValue() const override;
   [[nodiscard]] double GetGraphMinValue() const override;
 

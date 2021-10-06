@@ -37,11 +37,6 @@ class PageFaultsTrack : public Track {
   [[nodiscard]] bool IsCollapsible() const override { return true; }
   [[nodiscard]] std::vector<CaptureViewElement*> GetChildren() const override;
 
-  void Draw(Batcher& batcher, TextRenderer& text_renderer,
-            const DrawContext& draw_context) override;
-  void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                        PickingMode picking_mode, float z_offset = 0) override;
-
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 
   void AddValuesAndUpdateAnnotationsForMajorPageFaultsSubtrack(

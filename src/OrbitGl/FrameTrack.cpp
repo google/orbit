@@ -206,9 +206,9 @@ std::string FrameTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) cons
           TicksToDuration(timer_info->start(), timer_info->end())));
 }
 
-void FrameTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
-                      const DrawContext& draw_context) {
-  TimerTrack::Draw(batcher, text_renderer, draw_context);
+void FrameTrack::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+                        const DrawContext& draw_context) {
+  TimerTrack::DoDraw(batcher, text_renderer, draw_context);
 
   const Color kWhiteColor(255, 255, 255, 255);
   const Color kBlackColor(0, 0, 0, 255);

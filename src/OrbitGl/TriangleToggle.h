@@ -28,9 +28,6 @@ class TriangleToggle : public orbit_gl::CaptureViewElement,
   TriangleToggle(TriangleToggle&&) = delete;
   TriangleToggle& operator=(TriangleToggle&&) = delete;
 
-  void Draw(Batcher& batcher, TextRenderer& text_renderer,
-            const DrawContext& draw_context) override;
-
   [[nodiscard]] float GetHeight() const override { return height_; }
   void SetHeight(float height) { height_ = height; }
 
@@ -43,6 +40,9 @@ class TriangleToggle : public orbit_gl::CaptureViewElement,
   [[nodiscard]] bool IsCollapsible() const { return is_collapsible_; }
 
  protected:
+  void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+              const DrawContext& draw_context) override;
+
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
 
  private:

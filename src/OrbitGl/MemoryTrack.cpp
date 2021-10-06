@@ -12,9 +12,9 @@
 namespace orbit_gl {
 
 template <size_t Dimension>
-void MemoryTrack<Dimension>::Draw(Batcher& batcher, TextRenderer& text_renderer,
-                                  const CaptureViewElement::DrawContext& draw_context) {
-  GraphTrack<Dimension>::Draw(batcher, text_renderer, draw_context);
+void MemoryTrack<Dimension>::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+                                    const CaptureViewElement::DrawContext& draw_context) {
+  GraphTrack<Dimension>::DoDraw(batcher, text_renderer, draw_context);
 
   if (this->collapse_toggle_->IsCollapsed()) return;
   AnnotationTrack::DrawAnnotation(batcher, text_renderer, this->layout_,

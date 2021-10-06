@@ -47,9 +47,9 @@ std::string CallstackThreadBar::GetTooltip() const {
   return "Left-click and drag to select samples";
 }
 
-void CallstackThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
-                              const DrawContext& draw_context) {
-  ThreadBar::Draw(batcher, text_renderer, draw_context);
+void CallstackThreadBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+                                const DrawContext& draw_context) {
+  ThreadBar::DoDraw(batcher, text_renderer, draw_context);
 
   if (GetThreadId() == orbit_base::kAllThreadsOfAllProcessesTid) {
     return;
@@ -96,9 +96,9 @@ void CallstackThreadBar::Draw(Batcher& batcher, TextRenderer& text_renderer,
   }
 }
 
-void CallstackThreadBar::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                          PickingMode picking_mode, float z_offset) {
-  ThreadBar::UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
+void CallstackThreadBar::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                                            PickingMode picking_mode, float z_offset) {
+  ThreadBar::DoUpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
 
   float z = GlCanvas::kZValueEvent + z_offset;
   float track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());

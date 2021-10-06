@@ -46,10 +46,10 @@ float PageFaultsTrack::GetHeight() const {
   }
 
   float height = layout_->GetTrackTabHeight();
-  if (!major_page_faults_track_->IsEmpty()) {
+  if (major_page_faults_track_->ShouldBeRendered()) {
     height += major_page_faults_track_->GetHeight() + layout_->GetSpaceBetweenSubtracks();
   }
-  if (!minor_page_faults_track_->IsEmpty()) {
+  if (minor_page_faults_track_->ShouldBeRendered()) {
     height += minor_page_faults_track_->GetHeight() + layout_->GetSpaceBetweenSubtracks();
   }
   return height;
@@ -59,8 +59,10 @@ std::vector<orbit_gl::CaptureViewElement*> PageFaultsTrack::GetVisibleChildren()
   std::vector<CaptureViewElement*> result;
   if (collapse_toggle_->IsCollapsed()) return result;
 
-  if (!major_page_faults_track_->IsEmpty()) result.push_back(major_page_faults_track_.get());
-  if (!minor_page_faults_track_->IsEmpty()) result.push_back(minor_page_faults_track_.get());
+  if (major_page_faults_track_->ShouldBeRendered())
+    result.push_back(major_page_faults_track_.get());
+  if (minor_page_faults_track_->ShouldBeRendered())
+    result.push_back(minor_page_faults_track_.get());
   return result;
 }
 
@@ -73,49 +75,25 @@ std::vector<CaptureViewElement*> PageFaultsTrack::GetChildren() const {
   return {major_page_faults_track_.get(), minor_page_faults_track_.get()};
 }
 
-void PageFaultsTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
-                           const DrawContext& draw_context) {
-  Track::Draw(batcher, text_renderer, draw_context);
-
-  if (collapse_toggle_->IsCollapsed()) return;
-
-  const DrawContext sub_track_draw_context = draw_context.IncreasedIndentationLevel();
-  if (!major_page_faults_track_->IsEmpty()) {
-    major_page_faults_track_->Draw(batcher, text_renderer, sub_track_draw_context);
-  }
-
-  if (!minor_page_faults_track_->IsEmpty()) {
-    minor_page_faults_track_->Draw(batcher, text_renderer, sub_track_draw_context);
-  }
-}
-
-void PageFaultsTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                       PickingMode picking_mode, float z_offset) {
-  if (!major_page_faults_track_->IsEmpty()) {
-    major_page_faults_track_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-  }
-
-  if (collapse_toggle_->IsCollapsed()) return;
-
-  if (!minor_page_faults_track_->IsEmpty()) {
-    minor_page_faults_track_->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-  }
-}
-
 void PageFaultsTrack::UpdatePositionOfSubtracks() {
   const Vec2 pos = GetPos();
   if (collapse_toggle_->IsCollapsed()) {
     major_page_faults_track_->SetPos(pos[0], pos[1]);
+    minor_page_faults_track_->SetVisible(false);
+    major_page_faults_track_->SetHeadless(true);
     return;
   }
 
+  major_page_faults_track_->SetHeadless(false);
+
+  minor_page_faults_track_->SetVisible(true);
   float current_y = pos[1] + layout_->GetTrackTabHeight();
-  if (!major_page_faults_track_->IsEmpty()) {
+  if (major_page_faults_track_->ShouldBeRendered()) {
     current_y += layout_->GetSpaceBetweenSubtracks();
   }
   major_page_faults_track_->SetPos(pos[0], current_y);
 
-  if (!minor_page_faults_track_->IsEmpty()) {
+  if (minor_page_faults_track_->ShouldBeRendered()) {
     current_y += (layout_->GetSpaceBetweenSubtracks() + major_page_faults_track_->GetHeight());
   }
   minor_page_faults_track_->SetPos(pos[0], current_y);

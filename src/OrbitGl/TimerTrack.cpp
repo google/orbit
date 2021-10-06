@@ -241,8 +241,8 @@ bool TimerTrack::DrawTimer(const TimerInfo* prev_timer_info, const TimerInfo* ne
   return true;
 }
 
-void TimerTrack::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                  PickingMode /*picking_mode*/, float z_offset) {
+void TimerTrack::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                                    PickingMode /*picking_mode*/, float z_offset) {
   visible_timer_count_ = 0;
 
   internal::DrawData draw_data{};

@@ -215,7 +215,7 @@ void TrackManager::UpdateVisibleTrackList() {
   visible_tracks_.clear();
 
   auto track_should_be_shown = [this](const Track* track) {
-    return track->GetVisible() && track_type_visibility_[track->GetType()];
+    return track->ShouldBeRendered() && track_type_visibility_[track->GetType()];
   };
 
   if (filter_.empty()) {

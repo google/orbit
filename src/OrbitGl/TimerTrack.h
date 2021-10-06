@@ -62,8 +62,6 @@ class TimerTrack : public Track {
   [[nodiscard]] std::string GetTooltip() const override;
 
   // Track
-  void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                        PickingMode /*picking_mode*/, float z_offset = 0) override;
   [[nodiscard]] Type GetType() const override { return Type::kTimerTrack; }
 
   [[nodiscard]] uint32_t GetProcessId() const override { return timer_data_->GetProcessId(); }
@@ -101,6 +99,9 @@ class TimerTrack : public Track {
   [[nodiscard]] uint64_t GetMaxTime() const override;
 
  protected:
+  void DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+                          PickingMode /*picking_mode*/, float z_offset = 0) override;
+
   [[nodiscard]] virtual bool IsTimerActive(
       const orbit_client_protos::TimerInfo& /*timer_info*/) const {
     return true;

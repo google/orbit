@@ -70,9 +70,9 @@ void BasicPageFaultsTrack::AddValuesAndUpdateAnnotations(
   }
 }
 
-void BasicPageFaultsTrack::Draw(Batcher& batcher, TextRenderer& text_renderer,
-                                const DrawContext& draw_context) {
-  LineGraphTrack<kBasicPageFaultsTrackDimension>::Draw(batcher, text_renderer, draw_context);
+void BasicPageFaultsTrack::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+                                  const DrawContext& draw_context) {
+  LineGraphTrack<kBasicPageFaultsTrackDimension>::DoDraw(batcher, text_renderer, draw_context);
 
   if (draw_context.picking_mode != PickingMode::kNone || IsCollapsed()) return;
   AnnotationTrack::DrawAnnotation(batcher, text_renderer, layout_, draw_context.indentation_level,
