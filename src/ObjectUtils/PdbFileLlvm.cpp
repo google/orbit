@@ -119,8 +119,8 @@ PdbFileLlvm::PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& 
   return module_symbols;
 }
 
-ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFileLlvm(const std::filesystem::path& file_path,
-                                                           const ObjectFileInfo& object_file_info) {
+ErrorMessageOr<std::unique_ptr<PdbFile>> PdbFileLlvm::CreatePdbFile(
+    const std::filesystem::path& file_path, const ObjectFileInfo& object_file_info) {
   std::string file_path_string = file_path.string();
   llvm::StringRef pdb_path{file_path_string};
   std::unique_ptr<llvm::pdb::IPDBSession> session;

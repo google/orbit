@@ -16,9 +16,9 @@ ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFile(const std::filesystem::pa
                                                        const ObjectFileInfo& object_file_info) {
 #if _WIN32
   // To workaround a limitation in LLVM's pdb parsing code, we use the DIA SDK directly on Windows.
-  return CreatePdbFileDia(file_path, object_file_info);
+  return PdbFileDia::CreatePdbFile(file_path, object_file_info);
 #else
-  return CreatePdbFileLlvm(file_path, object_file_info);
+  return PdbFileLlvm::CreatePdbFile(file_path, object_file_info);
 #endif
 }
 

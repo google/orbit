@@ -54,6 +54,9 @@ class PdbFileLlvm : public PdbFile {
     return ComputeWindowsBuildId(GetGuid(), GetAge());
   }
 
+  static ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFile(
+      const std::filesystem::path& file_path, const ObjectFileInfo& object_file_info);
+
  private:
   std::filesystem::path file_path_;
   ObjectFileInfo object_file_info_;
@@ -65,4 +68,4 @@ ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFileLlvm(const std::filesystem
 
 }  // namespace orbit_object_utils
 
-#endif  // OBJECT_UTILS_PDB_FILE_DIA_H_
+#endif  // OBJECT_UTILS_PDB_FILE_LLVM_H_

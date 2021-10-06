@@ -62,13 +62,16 @@ target_sources(ObjectUtilsTests PRIVATE
         CoffFileTest.cpp
         ElfFileTest.cpp
         ObjectFileTest.cpp
-        PdbFileTest.cpp
+        PdbFileTest.h
+        PdbFileLlvmTest.cpp
         SymbolsFileTest.cpp
         WindowsBuildIdUtilsTest.cpp
 )
 
 if (NOT WIN32)
 target_sources(ObjectUtilsTests PRIVATE LinuxMapTest.cpp)
+else()
+target_sources(ObjectUtilsTests PRIVATE PdbFileDiaTest.cpp)
 endif()
 
 target_link_libraries(

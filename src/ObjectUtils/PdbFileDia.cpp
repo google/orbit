@@ -100,7 +100,7 @@ ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileDia::LoadDebugSymbols() 
 
   while (SUCCEEDED(dia_enum_symbols->Next(1, &dia_symbol, &celt)) && (celt == 1)) {
     SymbolInfo symbol_info;
-    
+
     BSTR function_name = {};
     if (dia_symbol->get_name(&function_name) != S_OK) continue;
     std::wstring name(function_name);
@@ -122,8 +122,8 @@ ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileDia::LoadDebugSymbols() 
   return module_symbols;
 }
 
-ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFileDia(const std::filesystem::path& file_path,
-                                                          const ObjectFileInfo& object_file_info) {
+ErrorMessageOr<std::unique_ptr<PdbFile>> PdbFileDia::CreatePdbFile(
+    const std::filesystem::path& file_path, const ObjectFileInfo& object_file_info) {
   auto pdb_file_dia = std::make_unique<PdbFileDia>(file_path, object_file_info);
   auto result = pdb_file_dia->LoadDataForPDB();
   if (result.has_error()) {

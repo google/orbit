@@ -36,6 +36,9 @@ class PdbFileDia : public PdbFile {
     return ComputeWindowsBuildId(GetGuid(), GetAge());
   }
 
+  static ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFile(
+      const std::filesystem::path& file_path, const ObjectFileInfo& object_file_info);
+
  private:
   std::filesystem::path file_path_;
   ObjectFileInfo object_file_info_;
@@ -47,9 +50,6 @@ class PdbFileDia : public PdbFile {
   uint32_t age_ = 0;
   std::array<uint8_t, 16> guid_;
 };
-
-ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFileDia(const std::filesystem::path& file_path,
-                                                          const ObjectFileInfo& object_file_info);
 
 }  // namespace orbit_object_utils
 
