@@ -126,6 +126,11 @@ ServiceDeployManager::ServiceDeployManager(const DeploymentConfiguration* deploy
 
   background_thread_.start();
   moveToThread(&background_thread_);
+
+  QObject::connect(
+      this, &ServiceDeployManager::statusMessage, this, [](const QString& status_message) {
+        LOG("ServiceDeployManager status message: \"%s\"", status_message.toStdString());
+      });
 }
 
 ServiceDeployManager::~ServiceDeployManager() {
