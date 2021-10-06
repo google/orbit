@@ -254,25 +254,24 @@ void TextRenderer::AddTextInternal(const char* text, ftgl::vec2* pen,
       float kerning = (i == 0) ? 0.0f : texture_glyph_get_kerning(glyph, text + i - 1);
       pen->x += kerning;
 
-      float x0 = floorf(pen->x + glyph->offset_x);
-      float y0 = floorf(pen->y - glyph->offset_y);
-      float x1 = floorf(x0 + glyph->width);
-      float y1 = floorf(y0 + glyph->height);
+      Vec3 pos0 = translations_.TransformAndFloorVertex(
+          Vec3(pen->x + glyph->offset_x, pen->y - glyph->offset_y, z));
+      Vec3 pos1 = pos0 + Vec3(glyph->width, glyph->height, 0);
 
       float s0 = glyph->s0;
       float t0 = glyph->t0;
       float s1 = glyph->s1;
       float t1 = glyph->t1;
 
-      vertex_t vertices[4] = {{x0, y0, z, s0, t0, r, g, b, a},
-                              {x0, y1, z, s0, t1, r, g, b, a},
-                              {x1, y1, z, s1, t1, r, g, b, a},
-                              {x1, y0, z, s1, t0, r, g, b, a}};
+      vertex_t vertices[4] = {{pos0[0], pos0[1], pos0[2], s0, t0, r, g, b, a},
+                              {pos0[0], pos1[1], pos0[2], s0, t1, r, g, b, a},
+                              {pos1[0], pos1[1], pos0[2], s1, t1, r, g, b, a},
+                              {pos1[0], pos0[1], pos0[2], s1, t0, r, g, b, a}};
 
-      min_x = std::min(min_x, x0);
-      max_x = std::max(max_x, x1);
-      min_y = std::min(min_y, y0);
-      max_y = std::max(max_y, y1);
+      min_x = std::min(min_x, pos0[0]);
+      max_x = std::max(max_x, pos1[0]);
+      min_y = std::min(min_y, pos0[1]);
+      max_y = std::max(max_y, pos1[1]);
 
       str_width = max_x - min_x;
 
