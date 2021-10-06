@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CLIENT_DATA_SCOPE_TREE_TIMER_DATA_PROVIDER_H_
-#define CLIENT_DATA_SCOPE_TREE_TIMER_DATA_PROVIDER_H_
+#ifndef CLIENT_DATA_SCOPE_TREE_TIMER_DATA_H_
+#define CLIENT_DATA_SCOPE_TREE_TIMER_DATA_H_
 
 #include <absl/synchronization/mutex.h>
 
@@ -33,6 +33,7 @@ class ScopeTreeTimerData final {
   const orbit_client_protos::TimerInfo& AddTimer(orbit_client_protos::TimerInfo timer_info);
   // Build ScopeTree from timer chains, when we are loading a capture.
   void BuildScopeTreeFromTimerData();
+  [[nodiscard]] TimerData* GetTimerData() { return &timer_data_; }
 
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
       uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
@@ -58,4 +59,4 @@ class ScopeTreeTimerData final {
 
 }  // namespace orbit_client_data
 
-#endif  // CLIENT_DATA_SCOPE_TREE_TIMER_DATA_PROVIDER_H_
+#endif  // CLIENT_DATA_SCOPE_TREE_TIMER_DATA_H_
