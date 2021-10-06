@@ -67,7 +67,8 @@ class AccessibleCaptureWindow : public AccessibleWidgetBridge {
 
 using orbit_client_protos::TimerInfo;
 
-CaptureWindow::CaptureWindow(OrbitApp* app) : GlCanvas(), app_{app} {
+CaptureWindow::CaptureWindow(OrbitApp* app)
+    : GlCanvas(), app_{app}, frame_times_(30), frame_times_update_primitives_(30) {
   draw_help_ = true;
 
   slider_ = std::make_shared<orbit_gl::GlHorizontalSlider>(viewport_);
@@ -383,6 +384,8 @@ std::unique_ptr<AccessibleInterface> CaptureWindow::CreateAccessibleInterface() 
 
 void CaptureWindow::Draw() {
   ORBIT_SCOPE("CaptureWindow::Draw");
+  auto start_time = std::chrono::system_clock::now();
+  bool time_graph_was_redrawn = false;
 
   text_renderer_.Init();
 
@@ -400,6 +403,9 @@ void CaptureWindow::Draw() {
 
     uint64_t timegraph_current_mouse_time_ns =
         time_graph_->GetTickFromWorld(viewport_.ScreenToWorld(GetMouseScreenPos())[0]);
+    if (time_graph_->IsRedrawNeeded()) {
+      time_graph_was_redrawn = true;
+    }
     time_graph_->Draw(GetBatcher(), GetTextRenderer(),
                       {timegraph_current_mouse_time_ns, picking_mode_, 0, 0});
   }
@@ -425,6 +431,16 @@ void CaptureWindow::Draw() {
   }
 
   RenderAllLayers();
+
+
+  std::chrono::duration<double> frame_duration = std::chrono::system_clock::now() - start_time;
+  if (picking_mode_ == PickingMode::kNone) {
+    if (time_graph_was_redrawn) {
+      frame_times_update_primitives_.PushTiming(frame_duration.count());
+    } else {
+      frame_times_.PushTiming(frame_duration.count());
+    }
+  }
 }
 
 void CaptureWindow::UpdateChildrenPosAndSize() {
@@ -669,6 +685,21 @@ void CaptureWindow::RenderImGuiDebugUI() {
         IMGUI_VAR_TO_TEXT(capture_data->GetCallstackData().GetCallstackEventsCount());
       }
     }
+  }
+
+  if (ImGui::CollapsingHeader("Performance")) {
+    IMGUI_VARN_TO_TEXT(frame_times_.GetAverageTimeInSeconds() * 1000,
+                       "Avg update time in ms (no update_primitives)");
+    IMGUI_VARN_TO_TEXT(frame_times_.GetMinTimeInSeconds() * 1000,
+                       "Min update time in ms (no update_primitives)");
+    IMGUI_VARN_TO_TEXT(frame_times_.GetMaxTimeInSeconds() * 1000,
+                       "Max update time in ms (no update_primitives)");
+    IMGUI_VARN_TO_TEXT(frame_times_update_primitives_.GetAverageTimeInSeconds() * 1000,
+                       "Avg update time in ms (full redraw)");
+    IMGUI_VARN_TO_TEXT(frame_times_update_primitives_.GetMinTimeInSeconds() * 1000,
+                       "Min update time in ms (full redraw)");
+    IMGUI_VARN_TO_TEXT(frame_times_update_primitives_.GetMaxTimeInSeconds() * 1000,
+                       "Max update time in ms (full redraw)");
   }
 
   if (ImGui::CollapsingHeader("Selection Summary")) {
