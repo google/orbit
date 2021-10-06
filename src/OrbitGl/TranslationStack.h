@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_TRANSFORMATION_STACK_H_
-#define ORBIT_GL_TRANSFORMATION_STACK_H_
+#ifndef ORBIT_GL_TRANSLATION_STACK_H_
+#define ORBIT_GL_TRANSLATION_STACK_H_
 
 #include <vector>
 
@@ -14,9 +14,12 @@ class TranslationStack {
  public:
   void PushTranslation(float x, float y, float z = 0.f);
   void PopTranslation();
-  [[nodiscard]] bool IsEmpty() { return translation_stack_.empty(); }
+  [[nodiscard]] bool IsEmpty() const { return translation_stack_.empty(); }
 
-  [[nodiscard]] Vec3 TransformAndFloorVertex(const Vec3& input) const;
+  [[nodiscard]] Vec3 TransformAndFloorVertex(const Vec3& input) {
+    const Vec3 result = input + current_translation_;
+    return Vec3(floorf(result[0]), floorf(result[1]), result[2]);
+  }
 
  private:
   std::vector<Vec3> translation_stack_;

@@ -14,11 +14,6 @@ void orbit_gl::TranslationStack::PushTranslation(float x, float y, float z) {
 
 void orbit_gl::TranslationStack::PopTranslation() {
   CHECK(!translation_stack_.empty());
-  current_translation_ = *translation_stack_.crbegin();
+  current_translation_ = translation_stack_.back();
   translation_stack_.pop_back();
-}
-
-Vec3 orbit_gl::TranslationStack::TransformAndFloorVertex(const Vec3& input) const {
-  const Vec3 result = input + current_translation_;
-  return Vec3(floorf(result[0]), floorf(result[1]), result[2]);
 }
