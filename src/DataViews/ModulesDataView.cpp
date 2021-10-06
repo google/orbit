@@ -213,9 +213,14 @@ void ModulesDataView::UpdateModules(const ProcessData* process) {
   for (const auto& [start_address, module_in_memory] : memory_map) {
     ModuleData* module = app_->GetMutableModuleByPathAndBuildId(module_in_memory.file_path(),
                                                                 module_in_memory.build_id());
-    if (module != nullptr) {
-      AddModule(start_address, module, module_in_memory);
-    }
+
+    // The module here cannot be a nullptr, because the call
+    // `app_->GetMutableModuleByPathAndBuildId` is relaying the call to
+    // `ModuleManager::GetMutableModuleByPathAndBuildId` and ModuleManager never deletes modules,
+    // only changes modules or adds new modules. And the memory_map cannot contain modules that are
+    // not yet in ModuleManager, since these two locations get updated simultaneously.
+    CHECK(module != nullptr);
+    AddModule(start_address, module, module_in_memory);
   }
 
   OnDataChanged();
