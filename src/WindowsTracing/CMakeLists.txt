@@ -21,7 +21,8 @@ target_include_directories(WindowsTracing PRIVATE
 
 target_sources(WindowsTracing PUBLIC
         include/WindowsTracing/Tracer.h
-        include/WindowsTracing/TracerListener.h)
+        include/WindowsTracing/TracerListener.h
+        include/WindowsTracing/WindowsTracingUtils.h)
 
 target_sources(WindowsTracing PRIVATE
         AdjustTokenPrivilege.h
@@ -34,12 +35,14 @@ target_sources(WindowsTracing PRIVATE
         KrabsTracer.h
         Tracer.cpp
         TracerImpl.h
-        TracerImpl.cpp)
+        TracerImpl.cpp
+        WindowsTracingUtils.cpp)
 
 target_include_directories(WindowsTracing INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 target_link_libraries(WindowsTracing PUBLIC
         GrpcProtos
+        ObjectUtils
         OrbitBase
         krabsetw
         CONAN_PKG::abseil
@@ -49,7 +52,8 @@ target_link_libraries(WindowsTracing PUBLIC
 add_executable(WindowsTracingTests)
 
 target_sources(WindowsTracingTests PRIVATE
-        ContextSwitchManagerTest.cpp)
+        ContextSwitchManagerTest.cpp
+        WindowsTracingUtilsTest.cpp)
 
 target_link_libraries(WindowsTracingTests PRIVATE
         WindowsTracing
