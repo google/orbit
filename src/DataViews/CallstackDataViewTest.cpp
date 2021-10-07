@@ -73,8 +73,8 @@ std::string GetExpectedDisplayAddress(uint64_t address) {
   return absl::StrFormat("%#llx", address);
 }
 
-std::unique_ptr<orbit_client_data::CaptureData> GenerateTestCaptureData() {
-  static orbit_client_data::ModuleManager module_manager{};
+std::unique_ptr<orbit_client_data::CaptureData> GenerateTestCaptureData(
+    orbit_client_data::ModuleManager* module_manager) {
   std::vector<ModuleInfo> modules;
 
   for (size_t i = 0; i < kNumModules; i++) {
@@ -86,22 +86,25 @@ std::unique_ptr<orbit_client_data::CaptureData> GenerateTestCaptureData() {
     module_info.set_address_end(kModuleEndAddresses[i]);
     module_info.set_executable_segment_offset(kModuleExecutableSegmentOffsets[i]);
     module_info.set_load_bias(kModuleLoadBiases[i]);
-    (void)module_manager.AddOrUpdateModules({module_info});
+    (void)module_manager->AddOrUpdateModules({module_info});
 
     modules.push_back(module_info);
 
     if (kModuleIsLoaded[i]) {
-      FunctionInfo function;
-      function.set_name(kFunctionNames[i]);
-      function.set_pretty_name(kFunctionPrettyNames[i]);
-      function.set_address(kFunctionAddresses[i]);
-      function.set_size(kFunctionSizes[i]);
-      function.set_module_path(kModulePaths[i]);
-      function.set_module_build_id(kModuleBuildIds[i]);
+      orbit_grpc_protos::SymbolInfo symbol_info;
+      symbol_info.set_name(kFunctionNames[i]);
+      symbol_info.set_demangled_name(kFunctionPrettyNames[i]);
+      symbol_info.set_address(kFunctionAddresses[i]);
+      symbol_info.set_size(kFunctionSizes[i]);
 
-      ModuleData* module_data =
-          module_manager.GetMutableModuleByPathAndBuildId(kModulePaths[i], kModuleBuildIds[i]);
-      module_data->AddFunctionInfoWithBuildId(function, kModuleBuildIds[i]);
+      orbit_grpc_protos::ModuleSymbols module_symbols;
+      module_symbols.set_load_bias(kModuleLoadBiases[i]);
+      module_symbols.set_symbols_file_path(kModulePaths[i]);
+      module_symbols.mutable_symbol_infos()->Add(std::move(symbol_info));
+
+      orbit_client_data::ModuleData* module_data =
+          module_manager->GetMutableModuleByPathAndBuildId(kModulePaths[i], kModuleBuildIds[i]);
+      module_data->AddSymbols(module_symbols);
     }
   }
 
@@ -112,7 +115,7 @@ std::unique_ptr<orbit_client_data::CaptureData> GenerateTestCaptureData() {
   capture_started.set_executable_path(kExecutablePath);
 
   auto capture_data = std::make_unique<orbit_client_data::CaptureData>(
-      &module_manager, capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{});
+      module_manager, capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{});
   ProcessData* process = capture_data.get()->mutable_process();
   process->UpdateModuleInfos(modules);
 
@@ -121,7 +124,8 @@ std::unique_ptr<orbit_client_data::CaptureData> GenerateTestCaptureData() {
 
 class CallstackDataViewTest : public testing::Test {
  public:
-  explicit CallstackDataViewTest() : view_{&app_}, capture_data_(GenerateTestCaptureData()) {}
+  explicit CallstackDataViewTest()
+      : view_{&app_}, capture_data_(GenerateTestCaptureData(&module_manager_)) {}
 
   void SetCallstackFromFrames(std::vector<uint64_t> callstack_frames) {
     orbit_client_protos::CallstackInfo callstack_info;
@@ -143,6 +147,7 @@ class CallstackDataViewTest : public testing::Test {
  protected:
   MockAppInterface app_;
   CallstackDataView view_;
+  orbit_client_data::ModuleManager module_manager_;
   std::unique_ptr<orbit_client_data::CaptureData> capture_data_;
 };
 

@@ -103,16 +103,6 @@ const FunctionInfo* ModuleData::FindFunctionByElfAddress(uint64_t elf_address,
   return function;
 }
 
-void ModuleData::AddFunctionInfoWithBuildId(const FunctionInfo& function_info,
-                                            const std::string& module_build_id) {
-  absl::MutexLock lock(&mutex_);
-  CHECK(functions_.find(function_info.address()) == functions_.end());
-  auto value = std::make_unique<FunctionInfo>(function_info);
-  value->set_module_build_id(module_build_id);
-  functions_.insert_or_assign(function_info.address(), std::move(value));
-  is_loaded_ = true;
-}
-
 void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols) {
   absl::MutexLock lock(&mutex_);
   CHECK(!is_loaded_);
