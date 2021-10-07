@@ -26,6 +26,7 @@
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
+#include "ClientData/ThreadTrackDataManager.h"
 #include "ClientData/TimerChain.h"
 #include "ClientData/TimerData.h"
 #include "ClientData/TimerDataManager.h"
@@ -45,7 +46,8 @@ class CaptureData {
   explicit CaptureData(orbit_client_data::ModuleManager* module_manager,
                        const orbit_grpc_protos::CaptureStarted& capture_started,
                        std::optional<std::filesystem::path> file_path,
-                       absl::flat_hash_set<uint64_t> frame_track_function_ids);
+                       absl::flat_hash_set<uint64_t> frame_track_function_ids,
+                       bool is_data_from_saved_capture = false);
 
   // We can not copy the unique_ptr, so we can not copy this object.
   CaptureData& operator=(const CaptureData& other) = delete;
@@ -238,6 +240,14 @@ class CaptureData {
     return timer_data_manager_.CreateTimerData();
   }
 
+  [[nodiscard]] ScopeTreeTimerData* CreateScopeTreeTimerData(uint32_t thread_id) {
+    return thread_track_data_manager_->CreateScopeTreeTimerData(thread_id);
+  }
+
+  [[nodiscard]] std::vector<const TimerChain*> GetAllThreadTimerChains() const {
+    return thread_track_data_manager_->GetAllThreadTimerChains();
+  }
+
  private:
   [[nodiscard]] std::optional<uint64_t>
   FindFunctionAbsoluteAddressByInstructionAbsoluteAddressUsingModulesInMemory(
@@ -279,6 +289,7 @@ class CaptureData {
   std::optional<std::filesystem::path> file_path_;
 
   TimerDataManager timer_data_manager_;
+  std::unique_ptr<ThreadTrackDataManager> thread_track_data_manager_;
 };
 
 }  // namespace orbit_client_data
