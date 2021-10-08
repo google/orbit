@@ -55,6 +55,12 @@ class ThreadTrack final : public TimerTrack {
 
   [[nodiscard]] bool IsEmpty() const override;
 
+  [[nodiscard]] virtual float GetDefaultBoxHeight() const { return layout_->GetTextBoxHeight(); }
+  [[nodiscard]] virtual float GetDynamicBoxHeight(
+      const orbit_client_protos::TimerInfo& /*timer_info*/) const {
+    return GetDefaultBoxHeight();
+  }
+
   [[nodiscard]] std::vector<const orbit_client_data::TimerChain*> GetChains() const {
     return timer_data_->GetChains();
   }
