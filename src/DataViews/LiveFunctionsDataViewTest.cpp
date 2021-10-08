@@ -44,6 +44,7 @@ const std::array<std::string, kNumFunctions> kPrettyNames{"void foo()", "main(in
 const std::array<std::string, kNumFunctions> kModulePaths{
     "/path/to/foomodule", "/path/to/somemodule", "/path/to/ffindmodule"};
 constexpr std::array<uint64_t, kNumFunctions> kAddresses{0x300, 0x100, 0x200};
+constexpr std::array<uint64_t, kNumFunctions> kSizes{111, 222, 333};
 constexpr std::array<uint64_t, kNumFunctions> kLoadBiases{0x10, 0x20, 0x30};
 const std::array<std::string, kNumFunctions> kBuildIds{"build_id_0", "build_id_1", "build_id_2"};
 
@@ -74,8 +75,8 @@ std::string GetExpectedDisplayAddress(uint64_t address) { return absl::StrFormat
 
 std::string GetExpectedDisplayCount(uint64_t count) { return absl::StrFormat("%lu", count); }
 
-std::unique_ptr<orbit_client_data::CaptureData> GenerateTestCaptureData() {
-  static orbit_client_data::ModuleManager module_manager{};
+std::unique_ptr<orbit_client_data::CaptureData> GenerateTestCaptureData(
+    orbit_client_data::ModuleManager* module_manager) {
   orbit_grpc_protos::CaptureStarted capture_started{};
 
   for (size_t i = 0; i < kNumFunctions; i++) {
@@ -83,19 +84,24 @@ std::unique_ptr<orbit_client_data::CaptureData> GenerateTestCaptureData() {
     module_info.set_file_path(kModulePaths[i]);
     module_info.set_build_id(kBuildIds[i]);
     module_info.set_load_bias(kLoadBiases[i]);
-    (void)module_manager.AddOrUpdateModules({module_info});
+    (void)module_manager->AddOrUpdateModules({module_info});
 
-    FunctionInfo function;
-    function.set_name(kNames[i]);
-    function.set_pretty_name(kPrettyNames[i]);
-    function.set_module_path(kModulePaths[i]);
-    function.set_module_build_id(kBuildIds[i]);
-    function.set_address(kAddresses[i]);
+    orbit_grpc_protos::SymbolInfo symbol_info;
+    symbol_info.set_name(kNames[i]);
+    symbol_info.set_demangled_name(kPrettyNames[i]);
+    symbol_info.set_address(kAddresses[i]);
+    symbol_info.set_size(kSizes[i]);
 
-    ModuleData* module_data =
-        module_manager.GetMutableModuleByPathAndBuildId(kModulePaths[i], kBuildIds[i]);
-    module_data->AddFunctionInfoWithBuildId(function, kBuildIds[i]);
+    orbit_grpc_protos::ModuleSymbols module_symbols;
+    module_symbols.set_load_bias(kLoadBiases[i]);
+    module_symbols.set_symbols_file_path(kModulePaths[i]);
+    module_symbols.mutable_symbol_infos()->Add(std::move(symbol_info));
 
+    orbit_client_data::ModuleData* module_data =
+        module_manager->GetMutableModuleByPathAndBuildId(kModulePaths[i], kBuildIds[i]);
+    module_data->AddSymbols(module_symbols);
+
+    const FunctionInfo& function = *module_data->FindFunctionByElfAddress(kAddresses[i], true);
     InstrumentedFunction* instrumented_function =
         capture_started.mutable_capture_options()->add_instrumented_functions();
     instrumented_function->set_file_path(function.module_path());
@@ -105,7 +111,7 @@ std::unique_ptr<orbit_client_data::CaptureData> GenerateTestCaptureData() {
   }
 
   auto capture_data = std::make_unique<orbit_client_data::CaptureData>(
-      &module_manager, capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{});
+      module_manager, capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{});
 
   for (size_t i = 0; i < kNumFunctions; i++) {
     FunctionStats stats;
@@ -130,7 +136,7 @@ class LiveFunctionsDataViewTest : public testing::Test {
  public:
   explicit LiveFunctionsDataViewTest()
       : view_{&live_functions_, &app_, &metrics_uploader_},
-        capture_data_(GenerateTestCaptureData()) {
+        capture_data_(GenerateTestCaptureData(&module_manager_)) {
     for (size_t i = 0; i < kNumFunctions; i++) {
       FunctionInfo function;
       function.set_name(kNames[i]);
@@ -156,6 +162,7 @@ class LiveFunctionsDataViewTest : public testing::Test {
   orbit_metrics_uploader::MetricsUploaderStub metrics_uploader_;
   orbit_data_views::LiveFunctionsDataView view_;
 
+  orbit_client_data::ModuleManager module_manager_;
   absl::flat_hash_map<uint64_t, FunctionInfo> functions_;
   std::unique_ptr<orbit_client_data::CaptureData> capture_data_;
 };
@@ -677,7 +684,7 @@ TEST_F(LiveFunctionsDataViewTest, ColumnSortingShowsRightResults) {
   using ViewRowEntry = std::array<std::string, kNumColumns>;
   std::vector<ViewRowEntry> view_entries;
   absl::flat_hash_map<std::string, uint64_t> string_to_raw_value;
-  for (const auto [function_id, function] : functions_) {
+  for (const auto& [function_id, function] : functions_) {
     const FunctionStats& stats = capture_data_->GetFunctionStatsOrDefault(function_id);
 
     ViewRowEntry entry;

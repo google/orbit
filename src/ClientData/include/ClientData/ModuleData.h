@@ -53,13 +53,10 @@ class ModuleData final {
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByElfAddress(
       uint64_t elf_address, bool is_exact) const;
   void AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols);
-  void AddFunctionInfoWithBuildId(const orbit_client_protos::FunctionInfo& function_info,
-                                  const std::string& module_build_id);
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionFromHash(uint64_t hash) const;
   [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionFromPrettyName(
       std::string_view pretty_name) const;
   [[nodiscard]] std::vector<const orbit_client_protos::FunctionInfo*> GetFunctions() const;
-  [[nodiscard]] std::vector<orbit_client_protos::FunctionInfo> GetOrbitFunctions() const;
 
  private:
   [[nodiscard]] bool NeedsUpdate(const orbit_grpc_protos::ModuleInfo& info) const;
