@@ -10,6 +10,7 @@
 
 #include <functional>
 
+#include "ApiUtils/GetFunctionTableAddressPrefix.h"
 #include "ObjectUtils/Address.h"
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/ExecutablePath.h"
@@ -102,8 +103,8 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
   OUTCOME_TRY(auto&& modules_by_path, GetModulesByPathForPid(pid));
   for (const ApiFunction& api_function : capture_options.api_functions()) {
     // Filter api functions.
-    constexpr const char* kOrbitApiGetAddressPrefix = "orbit_api_get_function_table_address_v";
-    CHECK(absl::StartsWith(api_function.name(), kOrbitApiGetAddressPrefix));
+    CHECK(absl::StartsWith(api_function.name(),
+                           orbit_api_utils::kOrbitApiGetFunctionTableAddressPrefix));
 
     // Get ModuleInfo associated with function.
     const ModuleInfo* module_info = FindModuleInfoForApiFunction(api_function, modules_by_path);

@@ -14,6 +14,7 @@ target_sources(OrbitFakeClient PRIVATE
 
 target_link_libraries(OrbitFakeClient PRIVATE
         CONAN_PKG::abseil
+        ApiUtils
         CaptureClient
         ClientData
         ClientProtos

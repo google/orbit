@@ -18,6 +18,7 @@
 #include <memory>
 #include <thread>
 
+#include "ApiUtils/GetFunctionTableAddressPrefix.h"
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
 #include "ClientData/ModuleManager.h"
@@ -341,10 +342,10 @@ int main(int argc, char* argv[]) {
     ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> modules_or_error =
         orbit_object_utils::ReadModules(process_id);
     FAIL_IF(modules_or_error.has_error(), "%s", modules_or_error.error().message());
-    static const std::string kOrbitApiGetAddressPrefix{"orbit_api_get_function_table_address_v"};
     for (const orbit_grpc_protos::ModuleInfo& module : modules_or_error.value()) {
       ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
-          &module_manager, module.file_path(), kOrbitApiGetAddressPrefix);
+          &module_manager, module.file_path(),
+          orbit_api_utils::kOrbitApiGetFunctionTableAddressPrefix);
     }
   }
 
