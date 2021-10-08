@@ -16,11 +16,9 @@
 #include "TimeGraph.h"
 #include "Track.h"
 
-TriangleToggle::TriangleToggle(StateChangeHandler handler, TimeGraph* time_graph,
-                               orbit_gl::Viewport* viewport, TimeGraphLayout* layout, Track* track)
-    : CaptureViewElement(track, time_graph, viewport, layout),
-      track_(track),
-      handler_(std::move(handler)) {}
+TriangleToggle::TriangleToggle(TimeGraph* time_graph, orbit_gl::Viewport* viewport,
+                               TimeGraphLayout* layout, Track* track)
+    : CaptureViewElement(track, time_graph, viewport, layout), track_(track) {}
 
 void TriangleToggle::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
                             const DrawContext& draw_context) {
@@ -74,8 +72,6 @@ void TriangleToggle::OnRelease() {
 
   CaptureViewElement::OnRelease();
   is_collapsed_ = !is_collapsed_;
-
-  handler_(is_collapsed_);
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface>
