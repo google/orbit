@@ -42,8 +42,11 @@ class ThreadTrackDataManager final {
 
   void OnCaptureComplete() {
     absl::MutexLock lock(&mutex_);
-    for (const auto& [unused_tid, scope_tree_timer_data] : scope_tree_timer_data_map_) {
-      scope_tree_timer_data->BuildScopeTreeFromTimerData();
+    // Build ScopeTree from timer chains when we are loading a capture.
+    if (scope_tree_update_type_ == ScopeTreeTimerData::ScopeTreeUpdateType::kOnCaptureComplete) {
+      for (const auto& [unused_tid, scope_tree_timer_data] : scope_tree_timer_data_map_) {
+        scope_tree_timer_data->BuildScopeTreeFromTimerData();
+      }
     }
   }
 

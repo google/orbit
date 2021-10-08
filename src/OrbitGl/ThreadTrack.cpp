@@ -40,12 +40,12 @@ using orbit_grpc_protos::InstrumentedFunction;
 
 ThreadTrack::ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout, uint32_t thread_id,
-                         OrbitApp* app, const CaptureData* capture_data,
-                         orbit_client_data::TimerData* timer_data,
-                         ScopeTreeUpdateType scope_tree_update_type)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, timer_data),
+                         OrbitApp* app, const orbit_client_data::CaptureData* capture_data,
+                         orbit_client_data::ScopeTreeTimerData* scope_tree_timer_data)
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data,
+                 scope_tree_timer_data->GetTimerData()),
       thread_id_{thread_id},
-      scope_tree_update_type_{scope_tree_update_type} {
+      scope_tree_timer_data_(scope_tree_timer_data) {
   Color color = TimeGraph::GetThreadColor(thread_id);
   thread_state_bar_ = std::make_shared<orbit_gl::ThreadStateBar>(
       this, app_, time_graph, viewport, layout, capture_data, thread_id, color);
@@ -94,19 +94,19 @@ int ThreadTrack::GetNumberOfPrioritizedTrailingCharacters() const {
 }
 
 const TimerInfo* ThreadTrack::GetLeft(const TimerInfo& timer_info) const {
-  return scope_tree_.FindPreviousScopeAtDepth(timer_info);
+  return scope_tree_timer_data_->GetLeft(timer_info);
 }
 
 const TimerInfo* ThreadTrack::GetRight(const TimerInfo& timer_info) const {
-  return scope_tree_.FindNextScopeAtDepth(timer_info);
+  return scope_tree_timer_data_->GetRight(timer_info);
 }
 
 const TimerInfo* ThreadTrack::GetUp(const TimerInfo& timer_info) const {
-  return scope_tree_.FindParent(timer_info);
+  return scope_tree_timer_data_->GetUp(timer_info);
 }
 
 const TimerInfo* ThreadTrack::GetDown(const TimerInfo& timer_info) const {
-  return scope_tree_.FindFirstChild(timer_info);
+  return scope_tree_timer_data_->GetDown(timer_info);
 }
 
 std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
@@ -372,34 +372,9 @@ float ThreadTrack::GetYFromDepth(uint32_t depth) const {
 }
 
 void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
-  // Thread tracks use a ScopeTree so we don't need to create one TimerChain per depth.
-  // Allocate a single TimerChain into which all timers will be appended.
-
   // Pass ownership to timer_chain. TODO(b/194268477): Pass timer_info as a value instead of
   // reference to be able to move it.
-  const auto& timer_info_chain_ref = timer_data_->AddTimer(/*depth=*/0, timer_info);
-
-  if (scope_tree_update_type_ == ScopeTreeUpdateType::kAlways) {
-    absl::MutexLock lock(&scope_tree_mutex_);
-    scope_tree_.Insert(&timer_info_chain_ref);
-  }
-}
-
-void ThreadTrack::OnCaptureComplete() {
-  if (scope_tree_update_type_ != ScopeTreeUpdateType::kOnCaptureComplete) {
-    return;
-  }
-  // Build ScopeTree from timer chains.
-  std::vector<const TimerChain*> timer_chains = timer_data_->GetChains();
-  for (const TimerChain* timer_chain : timer_chains) {
-    CHECK(timer_chain != nullptr);
-    absl::MutexLock lock(&scope_tree_mutex_);
-    for (const auto& block : *timer_chain) {
-      for (size_t k = 0; k < block.size(); ++k) {
-        scope_tree_.Insert(&block[k]);
-      }
-    }
-  }
+  scope_tree_timer_data_->AddTimer(timer_info);
 }
 
 [[nodiscard]] static std::pair<float, float> GetBoxPosXAndWidth(const internal::DrawData& draw_data,

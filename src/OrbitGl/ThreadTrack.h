@@ -12,6 +12,7 @@
 #include <string>
 
 #include "CallstackThreadBar.h"
+#include "ClientData/ScopeTreeTimerData.h"
 #include "Containers/ScopeTree.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
@@ -30,8 +31,7 @@ class ThreadTrack final : public TimerTrack {
   explicit ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout, uint32_t thread_id,
                        OrbitApp* app, const orbit_client_data::CaptureData* capture_data,
-                       orbit_client_data::TimerData* timer_data,
-                       ScopeTreeUpdateType scope_tree_update_type);
+                       orbit_client_data::ScopeTreeTimerData* scope_tree_timer_data);
 
   [[nodiscard]] std::string GetName() const override;
   [[nodiscard]] std::string GetLabel() const override;
@@ -64,8 +64,6 @@ class ThreadTrack final : public TimerTrack {
   [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() override;
   [[nodiscard]] std::vector<CaptureViewElement*> GetChildren() const override;
 
-  void OnCaptureComplete();
-
  protected:
   void DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                           PickingMode picking_mode, float z_offset = 0) override;
@@ -95,9 +93,7 @@ class ThreadTrack final : public TimerTrack {
   std::shared_ptr<orbit_gl::CallstackThreadBar> event_bar_;
   std::shared_ptr<orbit_gl::TracepointThreadBar> tracepoint_bar_;
 
-  absl::Mutex scope_tree_mutex_;
-  orbit_containers::ScopeTree<const orbit_client_protos::TimerInfo> scope_tree_;
-  ScopeTreeUpdateType scope_tree_update_type_ = ScopeTreeUpdateType::kAlways;
+  orbit_client_data::ScopeTreeTimerData* scope_tree_timer_data_;
 };
 
 #endif  // ORBIT_GL_THREAD_TRACK_H_

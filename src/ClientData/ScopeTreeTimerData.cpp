@@ -19,7 +19,8 @@ uint32_t ScopeTreeTimerData::GetMaxDepth() const {
 
 const orbit_client_protos::TimerInfo& ScopeTreeTimerData::AddTimer(
     orbit_client_protos::TimerInfo timer_info) {
-  const auto& timer_info_ref = timer_data_.AddTimer(/*depth=*/0, timer_info);
+  // Thread tracks use a ScopeTree so we don't need to create one TimerChain per depth.
+  const auto& timer_info_ref = timer_data_.AddTimer(/*depth=*/0, std::move(timer_info));
 
   if (scope_tree_update_type_ == ScopeTreeUpdateType::kAlways) {
     absl::MutexLock lock(&scope_tree_mutex_);
@@ -30,6 +31,8 @@ const orbit_client_protos::TimerInfo& ScopeTreeTimerData::AddTimer(
 
 void ScopeTreeTimerData::BuildScopeTreeFromTimerData() {
   CHECK(scope_tree_update_type_ == ScopeTreeUpdateType::kOnCaptureComplete);
+
+  // Build ScopeTree from timer chains.
   std::vector<const TimerChain*> timer_chains = timer_data_.GetChains();
   for (const TimerChain* timer_chain : timer_chains) {
     CHECK(timer_chain != nullptr);
@@ -64,28 +67,28 @@ std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimers
   return all_timers;
 }
 
-const orbit_client_protos::TimerInfo& ScopeTreeTimerData::GetLeft(
+const orbit_client_protos::TimerInfo* ScopeTreeTimerData::GetLeft(
     const orbit_client_protos::TimerInfo& timer) const {
   absl::MutexLock lock(&scope_tree_mutex_);
-  return *scope_tree_.FindPreviousScopeAtDepth(timer);
+  return scope_tree_.FindPreviousScopeAtDepth(timer);
 }
 
-const orbit_client_protos::TimerInfo& ScopeTreeTimerData::GetRight(
+const orbit_client_protos::TimerInfo* ScopeTreeTimerData::GetRight(
     const orbit_client_protos::TimerInfo& timer) const {
   absl::MutexLock lock(&scope_tree_mutex_);
-  return *scope_tree_.FindNextScopeAtDepth(timer);
+  return scope_tree_.FindNextScopeAtDepth(timer);
 }
 
-const orbit_client_protos::TimerInfo& ScopeTreeTimerData::GetUp(
+const orbit_client_protos::TimerInfo* ScopeTreeTimerData::GetUp(
     const orbit_client_protos::TimerInfo& timer) const {
   absl::MutexLock lock(&scope_tree_mutex_);
-  return *scope_tree_.FindParent(timer);
+  return scope_tree_.FindParent(timer);
 }
 
-const orbit_client_protos::TimerInfo& ScopeTreeTimerData::GetDown(
+const orbit_client_protos::TimerInfo* ScopeTreeTimerData::GetDown(
     const orbit_client_protos::TimerInfo& timer) const {
   absl::MutexLock lock(&scope_tree_mutex_);
-  return *scope_tree_.FindFirstChild(timer);
+  return scope_tree_.FindFirstChild(timer);
 }
 
 }  // namespace orbit_client_data

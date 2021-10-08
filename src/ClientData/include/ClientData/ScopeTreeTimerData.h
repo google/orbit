@@ -38,13 +38,13 @@ class ScopeTreeTimerData final {
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
       uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
       uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const;
-  [[nodiscard]] const orbit_client_protos::TimerInfo& GetLeft(
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
       const orbit_client_protos::TimerInfo& timer) const;
-  [[nodiscard]] const orbit_client_protos::TimerInfo& GetRight(
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetRight(
       const orbit_client_protos::TimerInfo& timer) const;
-  [[nodiscard]] const orbit_client_protos::TimerInfo& GetUp(
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetUp(
       const orbit_client_protos::TimerInfo& timer) const;
-  [[nodiscard]] const orbit_client_protos::TimerInfo& GetDown(
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetDown(
       const orbit_client_protos::TimerInfo& timer) const;
 
  private:

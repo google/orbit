@@ -101,12 +101,12 @@ TEST(ScopeTreeTimerData, GetLeftRightUpDown) {
   timer_info_right.set_end(15);
   scope_tree_timer_data.AddTimer(timer_info_right);
 
-  AreSameTimer(scope_tree_timer_data.GetLeft(timer_info_middle), timer_info_left);
-  AreSameTimer(scope_tree_timer_data.GetLeft(timer_info_right), timer_info_middle);
-  AreSameTimer(scope_tree_timer_data.GetRight(timer_info_left), timer_info_middle);
-  AreSameTimer(scope_tree_timer_data.GetRight(timer_info_middle), timer_info_right);
-  AreSameTimer(scope_tree_timer_data.GetUp(timer_info_down), timer_info_middle);
-  AreSameTimer(scope_tree_timer_data.GetDown(timer_info_middle), timer_info_down);
+  AreSameTimer(*scope_tree_timer_data.GetLeft(timer_info_middle), timer_info_left);
+  AreSameTimer(*scope_tree_timer_data.GetLeft(timer_info_right), timer_info_middle);
+  AreSameTimer(*scope_tree_timer_data.GetRight(timer_info_left), timer_info_middle);
+  AreSameTimer(*scope_tree_timer_data.GetRight(timer_info_middle), timer_info_right);
+  AreSameTimer(*scope_tree_timer_data.GetUp(timer_info_down), timer_info_middle);
+  AreSameTimer(*scope_tree_timer_data.GetDown(timer_info_middle), timer_info_down);
 }
 
 }  // namespace orbit_client_data
