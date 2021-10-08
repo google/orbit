@@ -78,6 +78,12 @@ class TimerTrack : public Track {
 
   [[nodiscard]] bool IsEmpty() const override;
 
+  [[nodiscard]] virtual float GetDefaultBoxHeight() const { return layout_->GetTextBoxHeight(); }
+  [[nodiscard]] virtual float GetDynamicBoxHeight(
+      const orbit_client_protos::TimerInfo& /*timer_info*/) const {
+    return GetDefaultBoxHeight();
+  }
+
   [[nodiscard]] virtual float GetYFromTimer(const orbit_client_protos::TimerInfo& timer_info) const;
   [[nodiscard]] virtual float GetYFromDepth(uint32_t depth) const;
 
