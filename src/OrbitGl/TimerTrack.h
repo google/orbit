@@ -76,8 +76,6 @@ class TimerTrack : public Track {
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetDown(
       const orbit_client_protos::TimerInfo& timer_info) const override;
 
-  [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetScopesInRange(
-      uint64_t start_ns, uint64_t end_ns) const;
   [[nodiscard]] bool IsEmpty() const override;
 
   [[nodiscard]] virtual float GetDefaultBoxHeight() const { return layout_->GetTextBoxHeight(); }
@@ -85,6 +83,7 @@ class TimerTrack : public Track {
       const orbit_client_protos::TimerInfo& /*timer_info*/) const {
     return GetDefaultBoxHeight();
   }
+
   [[nodiscard]] virtual float GetYFromTimer(const orbit_client_protos::TimerInfo& timer_info) const;
   [[nodiscard]] virtual float GetYFromDepth(uint32_t depth) const;
 

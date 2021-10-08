@@ -39,6 +39,8 @@ class SchedulerTrack final : public TimerTrack {
   [[nodiscard]] float GetDefaultBoxHeight() const override { return layout_->GetTextCoresHeight(); }
   [[nodiscard]] float GetYFromTimer(
       const orbit_client_protos::TimerInfo& timer_info) const override;
+  [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetScopesInRange(
+      uint64_t start_ns, uint64_t end_ns) const;
 
  protected:
   [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer_info) const override;

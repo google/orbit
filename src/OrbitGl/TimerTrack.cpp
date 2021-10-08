@@ -351,24 +351,6 @@ const TimerInfo* TimerTrack::GetDown(const TimerInfo& timer_info) const {
   return timer_data_->GetFirstAfterStartTime(timer_info.start(), timer_info.depth() + 1);
 }
 
-std::vector<const orbit_client_protos::TimerInfo*> TimerTrack::GetScopesInRange(
-    uint64_t start_ns, uint64_t end_ns) const {
-  std::vector<const orbit_client_protos::TimerInfo*> result;
-  for (const TimerChain* chain : timer_data_->GetChains()) {
-    CHECK(chain != nullptr);
-    for (const auto& block : *chain) {
-      if (!block.Intersects(start_ns, end_ns)) continue;
-      for (uint64_t i = 0; i < block.size(); ++i) {
-        const orbit_client_protos::TimerInfo& timer_info = block[i];
-        if (timer_info.start() <= end_ns && timer_info.end() > start_ns) {
-          result.push_back(&timer_info);
-        }
-      }
-    }
-  }
-  return result;
-}
-
 bool TimerTrack::IsEmpty() const { return timer_data_->IsEmpty(); }
 
 std::string TimerTrack::GetBoxTooltip(const Batcher& /*batcher*/, PickingId /*id*/) const {
