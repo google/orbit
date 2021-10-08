@@ -42,8 +42,7 @@ ThreadTrack::ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout, uint32_t thread_id,
                          OrbitApp* app, const orbit_client_data::CaptureData* capture_data,
                          orbit_client_data::ScopeTreeTimerData* scope_tree_timer_data)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data,
-                 scope_tree_timer_data->GetTimerData()),
+    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, nullptr),
       thread_id_{thread_id},
       scope_tree_timer_data_(scope_tree_timer_data) {
   Color color = TimeGraph::GetThreadColor(thread_id);
@@ -194,8 +193,8 @@ bool ThreadTrack::IsTrackSelected() const {
 
 float ThreadTrack::GetDefaultBoxHeight() const {
   auto box_height = layout_->GetTextBoxHeight();
-  if (collapse_toggle_->IsCollapsed() && scope_tree_.Height() > 0) {
-    return box_height / static_cast<float>(scope_tree_.Height());
+  if (collapse_toggle_->IsCollapsed() && scope_tree_timer_data_->GetMaxDepth() > 0) {
+    return box_height / static_cast<float>(scope_tree_timer_data_->GetMaxDepth());
   }
   return box_height;
 }
@@ -245,7 +244,7 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected, 
 
 bool ThreadTrack::IsEmpty() const {
   return thread_state_bar_->IsEmpty() && event_bar_->IsEmpty() && tracepoint_bar_->IsEmpty() &&
-         timer_data_->IsEmpty();
+         scope_tree_timer_data_->IsEmpty();
 }
 
 void ThreadTrack::UpdatePositionOfSubtracks() {
@@ -325,8 +324,8 @@ std::string ThreadTrack::GetTooltip() const {
 
 float ThreadTrack::GetHeight() const {
   const uint32_t depth = collapse_toggle_->IsCollapsed()
-                             ? std::min<uint32_t>(1, scope_tree_.Height())
-                             : scope_tree_.Height();
+                             ? std::min<uint32_t>(1, scope_tree_timer_data_->GetMaxDepth())
+                             : scope_tree_timer_data_->GetMaxDepth();
 
   bool gap_between_tracks_and_timers =
       (!thread_state_bar_->IsEmpty() || !event_bar_->IsEmpty() || !tracepoint_bar_->IsEmpty()) &&
@@ -391,29 +390,30 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
   return {world_timer_x, world_timer_width};
 }
 
-[[nodiscard]] static inline uint64_t GetNextPixelBoundaryTimeNs(
-    uint64_t current_timestamp, const internal::DrawData& draw_data) {
-  uint64_t current_ns_from_min = current_timestamp - draw_data.min_tick;
-  uint64_t total_ns_in_screen = draw_data.max_tick - draw_data.min_tick;
-  uint64_t num_pixels_on_track = draw_data.viewport->WorldToScreenWidth(draw_data.track_width);
-
-  // Given a track width of 4000 pixels, we can capture for 53 days without overflowing.
-  uint64_t current_pixel = (current_ns_from_min * num_pixels_on_track) / total_ns_in_screen;
-  uint64_t next_pixel = current_pixel + 1;
-
-  // To calculate the timestamp of a pixel boundary, we round to the left similar to how it works in
-  // other parts of Orbit.
-  uint64_t next_pixel_ns_from_min = total_ns_in_screen * next_pixel / num_pixels_on_track;
-
-  // Border case when we have a lot of pixels who have the same timestamp (because the number of
-  // pixels is less than the nanoseconds in screen). In this case, as we've already drawn in the
-  // current_timestamp, the next pixel to draw should have the next timestamp.
-  if (next_pixel_ns_from_min == current_ns_from_min) {
-    next_pixel_ns_from_min = current_ns_from_min + 1;
-  }
-
-  return draw_data.min_tick + next_pixel_ns_from_min;
-}
+//[[nodiscard]] static inline uint64_t GetNextPixelBoundaryTimeNs(
+//    uint64_t current_timestamp, const internal::DrawData& draw_data) {
+//  uint64_t current_ns_from_min = current_timestamp - draw_data.min_tick;
+//  uint64_t total_ns_in_screen = draw_data.max_tick - draw_data.min_tick;
+//  uint64_t num_pixels_on_track = draw_data.viewport->WorldToScreenWidth(draw_data.track_width);
+//
+//  // Given a track width of 4000 pixels, we can capture for 53 days without overflowing.
+//  uint64_t current_pixel = (current_ns_from_min * num_pixels_on_track) / total_ns_in_screen;
+//  uint64_t next_pixel = current_pixel + 1;
+//
+//  // To calculate the timestamp of a pixel boundary, we round to the left similar to how it works
+//  in
+//  // other parts of Orbit.
+//  uint64_t next_pixel_ns_from_min = total_ns_in_screen * next_pixel / num_pixels_on_track;
+//
+//  // Border case when we have a lot of pixels who have the same timestamp (because the number of
+//  // pixels is less than the nanoseconds in screen). In this case, as we've already drawn in the
+//  // current_timestamp, the next pixel to draw should have the next timestamp.
+//  if (next_pixel_ns_from_min == current_ns_from_min) {
+//    next_pixel_ns_from_min = current_ns_from_min + 1;
+//  }
+//
+//  return draw_data.min_tick + next_pixel_ns_from_min;
+//}
 
 // We minimize overdraw when drawing lines for small events by discarding events that would just
 // draw over an already drawn pixel line. When zoomed in enough that all events are drawn as boxes,
@@ -428,17 +428,13 @@ void ThreadTrack::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64
                   viewport_, collapse_toggle_->IsCollapsed(), app_->selected_timer(),
                   app_->GetFunctionIdToHighlight(), app_->GetGroupIdToHighlight());
 
-  absl::MutexLock lock(&scope_tree_mutex_);
-  for (const auto& [depth, ordered_nodes] : scope_tree_.GetOrderedNodesByDepth()) {
-    if (ordered_nodes.empty()) {
-      continue;
-    }
-    float world_timer_y = GetYFromDepth(depth - 1);
+  uint64_t resolution_in_pixels = draw_data.viewport->WorldToScreenWidth(draw_data.track_width);
 
-    const orbit_client_protos::TimerInfo* timer_info =
-        scope_tree_.FindFirstScopeAtOrAfterTime(depth, min_tick);
+  for (uint32_t depth = 0; depth < scope_tree_timer_data_->GetMaxDepth(); depth++) {
+    float world_timer_y = GetYFromDepth(depth);
 
-    while (timer_info != nullptr && timer_info->start() < max_tick) {
+    for (const TimerInfo* timer_info : scope_tree_timer_data_->GetTimersAtDepth(
+             depth, min_tick, max_tick, resolution_in_pixels)) {
       ++visible_timer_count_;
 
       Color color = GetTimerColor(*timer_info, draw_data);
@@ -458,10 +454,6 @@ void ThreadTrack::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64
       } else {
         batcher->AddVerticalLine(pos, box_height, draw_data.z, color, std::move(user_data));
       }
-
-      // Use the time at boundary of the next pixel as a threshold to avoid overdraw.
-      uint64_t next_pixel_start_time_ns = GetNextPixelBoundaryTimeNs(timer_info->end(), draw_data);
-      timer_info = scope_tree_.FindFirstScopeAtOrAfterTime(depth, next_pixel_start_time_ns);
     }
   }
 }

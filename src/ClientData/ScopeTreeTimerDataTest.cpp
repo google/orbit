@@ -11,7 +11,7 @@ namespace orbit_client_data {
 TEST(ScopeTreeTimerData, IsEmpty) {
   ScopeTreeTimerData scope_tree_timer_data;
   EXPECT_TRUE(scope_tree_timer_data.IsEmpty());
-  EXPECT_TRUE(scope_tree_timer_data.GetTimers().empty());
+  EXPECT_TRUE(scope_tree_timer_data.GetAllTimers().empty());
 }
 
 TEST(ScopeTreeTimerData, AddTimers) {
@@ -49,7 +49,7 @@ TEST(ScopeTreeTimerData, AddTimers) {
   EXPECT_EQ(scope_tree_timer_data.GetMaxTime(), 11);
 }
 
-TEST(ScopeTreeTimerData, GetTimers) {
+TEST(ScopeTreeTimerData, GetAllTimers) {
   ScopeTreeTimerData scope_tree_timer_data;
   orbit_client_protos::TimerInfo timer_info;
 
@@ -65,13 +65,13 @@ TEST(ScopeTreeTimerData, GetTimers) {
   timer_info.set_end(11);
   scope_tree_timer_data.AddTimer(timer_info);
 
-  EXPECT_EQ(scope_tree_timer_data.GetTimers(0, 1).size(), 0);
-  EXPECT_EQ(scope_tree_timer_data.GetTimers(20, 30).size(), 0);
-  EXPECT_EQ(scope_tree_timer_data.GetTimers(1, 3).size(), 1);   // (2,5)
-  EXPECT_EQ(scope_tree_timer_data.GetTimers(8, 9).size(), 1);   // (8,11)
-  EXPECT_EQ(scope_tree_timer_data.GetTimers(8, 11).size(), 2);  // (8,11) , (10,11)
-  EXPECT_EQ(scope_tree_timer_data.GetTimers(4, 11).size(), 3);
-  EXPECT_EQ(scope_tree_timer_data.GetTimers().size(), 3);
+  EXPECT_EQ(scope_tree_timer_data.GetAllTimers(0, 1).size(), 0);
+  EXPECT_EQ(scope_tree_timer_data.GetAllTimers(20, 30).size(), 0);
+  EXPECT_EQ(scope_tree_timer_data.GetAllTimers(1, 3).size(), 1);   // (2,5)
+  EXPECT_EQ(scope_tree_timer_data.GetAllTimers(8, 9).size(), 1);   // (8,11)
+  EXPECT_EQ(scope_tree_timer_data.GetAllTimers(8, 11).size(), 2);  // (8,11) , (10,11)
+  EXPECT_EQ(scope_tree_timer_data.GetAllTimers(4, 11).size(), 3);
+  EXPECT_EQ(scope_tree_timer_data.GetAllTimers().size(), 3);
 }
 
 bool AreSameTimer(const orbit_client_protos::TimerInfo& timer_1,

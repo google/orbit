@@ -37,6 +37,18 @@ class ThreadTrack final : public TimerTrack {
   [[nodiscard]] std::string GetLabel() const override;
   [[nodiscard]] int GetNumberOfPrioritizedTrailingCharacters() const override;
   [[nodiscard]] Type GetType() const override { return Type::kThreadTrack; }
+  [[nodiscard]] uint32_t GetProcessId() const override {
+    return scope_tree_timer_data_->GetProcessId();
+  }
+  [[nodiscard]] size_t GetNumberOfTimers() const override {
+    return scope_tree_timer_data_->GetNumberOfTimers();
+  }
+  [[nodiscard]] uint64_t GetMinTime() const override {
+    return scope_tree_timer_data_->GetMinTime();
+  }
+  [[nodiscard]] uint64_t GetMaxTime() const override {
+    return scope_tree_timer_data_->GetMaxTime();
+  }
   [[nodiscard]] std::string GetTooltip() const override;
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
@@ -56,10 +68,12 @@ class ThreadTrack final : public TimerTrack {
   [[nodiscard]] bool IsEmpty() const override;
 
   [[nodiscard]] std::vector<const orbit_client_data::TimerChain*> GetChains() const {
-    return timer_data_->GetChains();
+    return scope_tree_timer_data_->GetChains();
   }
 
-  [[nodiscard]] bool IsCollapsible() const override { return timer_data_->GetMaxDepth() > 1; }
+  [[nodiscard]] bool IsCollapsible() const override {
+    return scope_tree_timer_data_->GetMaxDepth() > 1;
+  }
 
   [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() override;
   [[nodiscard]] std::vector<CaptureViewElement*> GetChildren() const override;
