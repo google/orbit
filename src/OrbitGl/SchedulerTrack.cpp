@@ -82,6 +82,23 @@ float SchedulerTrack::GetYFromTimer(const TimerInfo& timer_info) const {
          num_gaps * layout_->GetSpaceBetweenCores();
 }
 
+std::vector<const orbit_client_protos::TimerInfo*> SchedulerTrack::GetScopesInRange(
+    uint64_t start_ns, uint64_t end_ns) const {
+  std::vector<const orbit_client_protos::TimerInfo*> result;
+  for (const orbit_client_data::TimerChain* chain : timer_data_->GetChains()) {
+    for (const auto& block : *chain) {
+      if (!block.Intersects(start_ns, end_ns)) continue;
+      for (uint64_t i = 0; i < block.size(); ++i) {
+        const orbit_client_protos::TimerInfo& timer_info = block[i];
+        if (timer_info.start() <= end_ns && timer_info.end() > start_ns) {
+          result.push_back(&timer_info);
+        }
+      }
+    }
+  }
+  return result;
+}
+
 std::string SchedulerTrack::GetTooltip() const {
   return "Shows scheduling information for CPU cores";
 }

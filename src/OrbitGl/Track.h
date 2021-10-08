@@ -104,6 +104,12 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   [[nodiscard]] virtual const orbit_client_protos::TimerInfo* GetDown(
       const orbit_client_protos::TimerInfo& /*timer_info*/) const = 0;
 
+  [[nodiscard]] virtual float GetDefaultBoxHeight() const { return layout_->GetTextBoxHeight(); }
+  [[nodiscard]] virtual float GetDynamicBoxHeight(
+      const orbit_client_protos::TimerInfo& /*timer_info*/) const {
+    return GetDefaultBoxHeight();
+  }
+
  protected:
   void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
               const DrawContext& draw_context) override;
