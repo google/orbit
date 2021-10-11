@@ -18,6 +18,7 @@ target_sources(ApiLoader PRIVATE
         EnableInTracee.cpp)
 
 target_link_libraries(ApiLoader PUBLIC
+        ApiUtils
         GrpcProtos
         ObjectUtils
         OrbitBase

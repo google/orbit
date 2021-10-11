@@ -15,6 +15,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "ApiUtils/GetFunctionTableAddressPrefix.h"
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureClient/CaptureListener.h"
 #include "ClientData/FunctionUtils.h"
@@ -93,9 +94,9 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
     const orbit_client_data::ModuleManager& module_manager) {
   std::vector<ApiFunction> api_functions;
   for (const ModuleData* module_data : module_manager.GetAllModuleData()) {
-    constexpr const char* kOrbitApiGetAddressPrefix = "orbit_api_get_function_table_address_v";
     for (size_t i = 0; i <= kOrbitApiVersion; ++i) {
-      std::string function_name = absl::StrFormat("%s%u", kOrbitApiGetAddressPrefix, i);
+      std::string function_name =
+          absl::StrFormat("%s%u", orbit_api_utils::kOrbitApiGetFunctionTableAddressPrefix, i);
       const FunctionInfo* function_info = module_data->FindFunctionFromPrettyName(function_name);
       if (function_info == nullptr) continue;
       ApiFunction api_function;

@@ -6,6 +6,7 @@
 #include <absl/flags/flag.h>
 #include <absl/flags/parse.h>
 #include <absl/flags/usage.h>
+#include <absl/strings/match.h>
 #include <absl/time/clock.h>
 #include <grpcpp/grpcpp.h>
 
@@ -17,6 +18,7 @@
 #include <memory>
 #include <thread>
 
+#include "ApiUtils/GetFunctionTableAddressPrefix.h"
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
 #include "ClientData/ModuleManager.h"
@@ -24,6 +26,7 @@
 #include "GrpcProtos/Constants.h"
 #include "ObjectUtils/ElfFile.h"
 #include "ObjectUtils/LinuxMap.h"
+#include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadPool.h"
 #include "capture_data.pb.h"
@@ -43,6 +46,7 @@ ABSL_FLAG(bool, user_space_instrumentation, false,
 ABSL_FLAG(bool, scheduling, true, "Collect scheduling information");
 ABSL_FLAG(bool, thread_state, false, "Collect thread state information");
 ABSL_FLAG(bool, gpu_jobs, true, "Collect GPU jobs");
+ABSL_FLAG(bool, orbit_api, false, "Enable Orbit API");
 ABSL_FLAG(uint16_t, memory_sampling_rate, 0,
           "Memory usage sampling rate in samples per second (0: no sampling)");
 ABSL_FLAG(bool, frame_time, true, "Instrument vkQueuePresentKHR to compute avg. frame time");
@@ -83,13 +87,12 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOff
   std::unique_ptr<orbit_object_utils::ElfFile>& elf_file = error_or_elf_file.value();
   std::string build_id = elf_file->GetBuildId();
   uint64_t load_bias = elf_file->GetLoadBias();
-  uint64_t executable_segment_offset = elf_file->GetExecutableSegmentOffset();
 
   orbit_grpc_protos::ModuleInfo module_info;
   module_info.set_file_path(file_path);
   module_info.set_build_id(build_id);
   module_info.set_load_bias(load_bias);
-  module_info.set_executable_segment_offset(executable_segment_offset);
+  module_info.set_executable_segment_offset(elf_file->GetExecutableSegmentOffset());
   CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
 
   orbit_client_protos::FunctionInfo function_info;
@@ -100,7 +103,7 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOff
   selected_functions->emplace(function_id, function_info);
 }
 
-void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFunctionName(
+void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFunctionNameInDynsym(
     orbit_client_data::ModuleManager* module_manager,
     absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>* selected_functions,
     const std::string& file_path, const std::string& mangled_function_name, uint64_t function_id) {
@@ -109,13 +112,13 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFun
   FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
   std::unique_ptr<orbit_object_utils::ElfFile>& elf_file = error_or_elf_file.value();
   std::string build_id = elf_file->GetBuildId();
-  uint64_t load_bias = elf_file->GetLoadBias();
   uint64_t executable_segment_offset = elf_file->GetExecutableSegmentOffset();
 
   orbit_grpc_protos::ModuleInfo module_info;
+  module_info.set_name(elf_file->GetName());
   module_info.set_file_path(file_path);
   module_info.set_build_id(build_id);
-  module_info.set_load_bias(load_bias);
+  module_info.set_load_bias(elf_file->GetLoadBias());
   module_info.set_executable_segment_offset(executable_segment_offset);
   CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
 
@@ -142,6 +145,108 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFun
   function_info.set_address(symbol->address());
   function_info.set_size(symbol->size());
   selected_functions->emplace(function_id, function_info);
+}
+
+// This is a very simple version of the logic for finding a debug symbols file that we have in
+// SymbolHelper. For a file binary.ext we look for symbols in binary.ext, binary.debug, and
+// binary.ext.debug.
+std::optional<orbit_grpc_protos::ModuleSymbols> FindAndLoadDebugSymbols(
+    const std::string& file_path) {
+  std::vector<std::filesystem::path> candidate_paths = {file_path};
+  std::filesystem::path file_name = std::filesystem::path{file_path}.filename();
+  std::filesystem::path file_dir = std::filesystem::path{file_path}.parent_path();
+  static constexpr const char* kDebugFileExt = ".debug";
+  {
+    std::filesystem::path file_name_dot_debug{file_name};
+    file_name_dot_debug.replace_extension(kDebugFileExt);
+    candidate_paths.emplace_back(file_dir / file_name_dot_debug);
+  }
+  {
+    std::filesystem::path file_name_plus_debug{file_name.string() + kDebugFileExt};
+    candidate_paths.emplace_back(file_dir / file_name_plus_debug);
+  }
+
+  for (const std::filesystem::path& candidate_path : candidate_paths) {
+    ErrorMessageOr<bool> error_or_exists = orbit_base::FileExists(candidate_path);
+    FAIL_IF(error_or_exists.has_error(), "%s", error_or_exists.error().message());
+    if (!error_or_exists.value()) {
+      continue;
+    }
+
+    ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
+        orbit_object_utils::CreateElfFile(candidate_path);
+    if (error_or_elf_file.has_error()) {
+      ERROR("%s", error_or_elf_file.error().message());
+      continue;
+    }
+    std::unique_ptr<orbit_object_utils::ElfFile>& elf_file = error_or_elf_file.value();
+
+    ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> symbols_or_error =
+        elf_file->LoadDebugSymbols();
+    // Load debug symbols from the first of the candidate files that contains any.
+    if (symbols_or_error.has_error()) {
+      continue;
+    }
+
+    LOG("Loaded debug symbols of module \"%s\" from \"%s\"", file_name.string(),
+        elf_file->GetName());
+    return symbols_or_error.value();
+  }
+
+  ERROR("Could not find debug symbols of module \"%s\"", file_name.string());
+  return std::nullopt;
+}
+
+void ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
+    orbit_client_data::ModuleManager* module_manager, const std::string& file_path,
+    const std::string& demangled_function_prefix) {
+  ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
+      orbit_object_utils::CreateElfFile(std::filesystem::path{file_path});
+  FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
+  std::unique_ptr<orbit_object_utils::ElfFile>& elf_file = error_or_elf_file.value();
+  std::string build_id = elf_file->GetBuildId();
+  uint64_t load_bias = elf_file->GetLoadBias();
+
+  orbit_grpc_protos::ModuleInfo module_info;
+  module_info.set_name(elf_file->GetName());
+  module_info.set_file_path(file_path);
+  module_info.set_build_id(build_id);
+  module_info.set_load_bias(load_bias);
+  module_info.set_executable_segment_offset(elf_file->GetExecutableSegmentOffset());
+  CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
+
+  std::optional<orbit_grpc_protos::ModuleSymbols> symbols_opt = FindAndLoadDebugSymbols(file_path);
+  if (!symbols_opt.has_value()) {
+    return;
+  }
+  orbit_grpc_protos::ModuleSymbols& symbols = symbols_opt.value();
+
+  std::optional<orbit_grpc_protos::SymbolInfo> symbol = std::nullopt;
+  for (const orbit_grpc_protos::SymbolInfo& symbol_candidate : symbols.symbol_infos()) {
+    if (absl::StartsWith(symbol_candidate.demangled_name(), demangled_function_prefix)) {
+      symbol = symbol_candidate;
+      break;
+    }
+  }
+  if (!symbol.has_value()) {
+    ERROR("Could not find function with prefix \"%s\" in module \"%s\"", demangled_function_prefix,
+          elf_file->GetName());
+    return;
+  }
+  LOG("Found function \"%s\" in module \"%s\"", symbol->name(), elf_file->GetName());
+
+  orbit_grpc_protos::SymbolInfo symbol_info;
+  symbol_info.set_name(symbol->name());
+  symbol_info.set_demangled_name(symbol->demangled_name());
+  symbol_info.set_address(symbol->address());
+  symbol_info.set_size(symbol->size());
+
+  orbit_grpc_protos::ModuleSymbols module_symbols;
+  module_symbols.set_load_bias(load_bias);
+  module_symbols.set_symbols_file_path(file_path);
+  module_symbols.mutable_symbol_infos()->Add(std::move(symbol_info));
+
+  module_manager->GetMutableModuleByPathAndBuildId(file_path, build_id)->AddSymbols(module_symbols);
 }
 
 }  // namespace
@@ -199,7 +304,8 @@ int main(int argc, char* argv[]) {
   LOG("collect_thread_state=%d", collect_thread_state);
   bool collect_gpu_jobs = absl::GetFlag(FLAGS_gpu_jobs);
   LOG("collect_gpu_jobs=%d", collect_gpu_jobs);
-  constexpr bool kEnableApi = false;
+  bool enable_api = absl::GetFlag(FLAGS_orbit_api);
+  LOG("enable_api=%d", enable_api);
   constexpr bool kEnableIntrospection = false;
   constexpr uint64_t kMaxLocalMarkerDepthPerCommandBuffer = std::numeric_limits<uint64_t>::max();
   bool collect_memory_info = absl::GetFlag(FLAGS_memory_sampling_rate) > 0;
@@ -232,6 +338,17 @@ int main(int argc, char* argv[]) {
         kInstrumentedFunctionId);
   }
 
+  if (enable_api) {
+    ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> modules_or_error =
+        orbit_object_utils::ReadModules(process_id);
+    FAIL_IF(modules_or_error.has_error(), "%s", modules_or_error.error().message());
+    for (const orbit_grpc_protos::ModuleInfo& module : modules_or_error.value()) {
+      ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
+          &module_manager, module.file_path(),
+          orbit_api_utils::kOrbitApiGetFunctionTableAddressPrefix);
+    }
+  }
+
   if (absl::GetFlag(FLAGS_frame_time)) {
     // Instrument vkQueuePresentKHR, if possible.
     ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> modules_or_error =
@@ -248,7 +365,7 @@ int main(int argc, char* argv[]) {
     if (!libvulkan_file_path.empty()) {
       static const std::string kQueuePresentFunctionName{"vkQueuePresentKHR"};
       LOG("%s found: instrumenting %s", kLibvulkanModuleName, kQueuePresentFunctionName);
-      ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFunctionName(
+      ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFunctionNameInDynsym(
           &module_manager, &selected_functions, libvulkan_file_path, kQueuePresentFunctionName,
           orbit_fake_client::FakeCaptureEventProcessor::kFrameBoundaryFunctionId);
     }
@@ -260,7 +377,7 @@ int main(int argc, char* argv[]) {
       thread_pool.get(), process_id, module_manager, selected_functions, kAlwaysRecordArguments,
       kRecordReturnValues, orbit_client_data::TracepointInfoSet{}, samples_per_second,
       kStackDumpSize, unwinding_method, collect_scheduling_info, collect_thread_state,
-      collect_gpu_jobs, kEnableApi, kEnableIntrospection, user_space_instrumentation,
+      collect_gpu_jobs, enable_api, kEnableIntrospection, user_space_instrumentation,
       kMaxLocalMarkerDepthPerCommandBuffer, collect_memory_info, memory_sampling_period_ms,
       std::move(capture_event_processor));
   LOG("Asked to start capture");
