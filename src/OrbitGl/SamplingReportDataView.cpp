@@ -28,7 +28,6 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "SamplingReport.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;

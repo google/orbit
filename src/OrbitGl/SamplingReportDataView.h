@@ -14,6 +14,7 @@
 #include "DataViews/AppInterface.h"
 #include "DataViews/CallstackDataView.h"
 #include "DataViews/DataView.h"
+#include "DataViews/SamplingReportInterface.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
 
@@ -38,7 +39,7 @@ class SamplingReportDataView : public orbit_data_views::DataView {
                  const RefreshMode& mode) override;
 
   void LinkDataView(orbit_data_views::DataView* data_view) override;
-  void SetSamplingReport(class SamplingReport* sampling_report) {
+  void SetSamplingReport(orbit_data_views::SamplingReportInterface* sampling_report) {
     sampling_report_ = sampling_report;
   }
   void SetSampledFunctions(const std::vector<orbit_client_data::SampledFunction>& functions);
@@ -67,7 +68,7 @@ class SamplingReportDataView : public orbit_data_views::DataView {
   absl::flat_hash_set<uint64_t> selected_function_ids_;
   orbit_client_data::ThreadID tid_ = -1;
   std::string name_;
-  SamplingReport* sampling_report_ = nullptr;
+  orbit_data_views::SamplingReportInterface* sampling_report_ = nullptr;
 
   enum ColumnIndex {
     kColumnSelected,
