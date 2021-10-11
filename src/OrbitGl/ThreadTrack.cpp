@@ -194,8 +194,8 @@ bool ThreadTrack::IsTrackSelected() const {
 
 float ThreadTrack::GetDefaultBoxHeight() const {
   auto box_height = layout_->GetTextBoxHeight();
-  if (collapse_toggle_->IsCollapsed() && timer_data_->GetMaxDepth() > 0) {
-    return box_height / static_cast<float>(timer_data_->GetMaxDepth());
+  if (collapse_toggle_->IsCollapsed() && scope_tree_.Height() > 0) {
+    return box_height / static_cast<float>(scope_tree_.Height());
   }
   return box_height;
 }
@@ -325,8 +325,8 @@ std::string ThreadTrack::GetTooltip() const {
 
 float ThreadTrack::GetHeight() const {
   const uint32_t depth = collapse_toggle_->IsCollapsed()
-                             ? std::min<uint32_t>(1, timer_data_->GetMaxDepth())
-                             : timer_data_->GetMaxDepth();
+                             ? std::min<uint32_t>(1, scope_tree_.Height())
+                             : scope_tree_.Height();
 
   bool gap_between_tracks_and_timers =
       (!thread_state_bar_->IsEmpty() || !event_bar_->IsEmpty() || !tracepoint_bar_->IsEmpty()) &&
@@ -458,8 +458,6 @@ void ThreadTrack::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64
     if (ordered_nodes.empty()) {
       continue;
     }
-    timer_data_->UpdateMaxDepth(depth);
-
     float world_timer_y = GetYFromDepth(depth - 1);
 
     const orbit_client_protos::TimerInfo* timer_info =
