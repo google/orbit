@@ -67,7 +67,6 @@ class SamplingReportDataView : public orbit_data_views::DataView {
   absl::flat_hash_set<uint64_t> selected_function_ids_;
   orbit_client_data::ThreadID tid_ = -1;
   std::string name_;
-  orbit_data_views::CallstackDataView* callstack_data_view_;
   SamplingReport* sampling_report_ = nullptr;
 
   enum ColumnIndex {
