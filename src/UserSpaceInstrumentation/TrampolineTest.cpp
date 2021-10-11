@@ -269,7 +269,7 @@ TEST(TrampolineTest, AllocateMemoryForTrampolines) {
   pid_t pid = fork();
   CHECK(pid != -1);
   if (pid == 0) {
-    uint64_t sum = 0;
+    [[maybe_unused]] volatile uint64_t sum = 0;
     // Endless loops without side effects are UB and recent versions of clang optimize
     // it away. Making `i` volatile avoids that problem.
     volatile int i = 0;
@@ -566,7 +566,7 @@ class InstrumentFunctionTest : public testing::Test {
     if (pid_ == 0) {
       // Endless loops without side effects are UB and recent versions of clang optimize
       // it away. Making `sum` volatile avoids that problem.
-      volatile uint64_t sum = 0;
+      [[maybe_unused]] volatile uint64_t sum = 0;
       while (true) {
         sum += (*function_pointer)();
       }
@@ -979,7 +979,7 @@ TEST_F(InstrumentFunctionTest, CheckIntParameters) {
   pid_ = fork();
   CHECK(pid_ != -1);
   if (pid_ == 0) {
-    volatile uint64_t sum = 0;
+    [[maybe_unused]] volatile uint64_t sum = 0;
     while (true) {
       sum += CheckIntParameters(0, 0, 0, 0, 0, 0, 0, 0);
       // Endless loops without side effects are UB and recent versions of clang optimize
@@ -1013,7 +1013,7 @@ TEST_F(InstrumentFunctionTest, CheckFloatParameters) {
   if (pid_ == 0) {
     // Endless loops without side effects are UB and recent versions of clang optimize
     // it away. Making `sum` volatile avoids that problem.
-    volatile uint64_t sum = 0;
+    [[maybe_unused]] volatile uint64_t sum = 0;
     while (true) {
       sum += CheckFloatParameters(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
     }
@@ -1047,7 +1047,7 @@ TEST_F(InstrumentFunctionTest, CheckM256iParameters) {
   if (pid_ == 0) {
     // Endless loops without side effects are UB and recent versions of clang optimize
     // it away. Making `sum` volatile avoids that problem.
-    volatile uint64_t sum = 0;
+    [[maybe_unused]] volatile uint64_t sum = 0;
     while (true) {
       sum +=
           CheckM256iParameters(_mm256_set1_epi64x(0), _mm256_set1_epi64x(0), _mm256_set1_epi64x(0),
