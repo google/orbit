@@ -12,9 +12,9 @@ size_t ScopeTreeTimerData::GetNumberOfTimers() const {
   return scope_tree_.Size() - 1;
 }
 
-uint32_t ScopeTreeTimerData::GetMaxDepth() const {
+uint32_t ScopeTreeTimerData::GetDepth() const {
   absl::MutexLock lock(&scope_tree_mutex_);
-  return scope_tree_.Height() - 1;
+  return scope_tree_.Depth();
 }
 
 const orbit_client_protos::TimerInfo& ScopeTreeTimerData::AddTimer(
