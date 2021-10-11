@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_QT_MAIN_THREAD_EXECUTOR_IMPL_H_
-#define ORBIT_QT_MAIN_THREAD_EXECUTOR_IMPL_H_
+#ifndef QT_UTILS_MAIN_THREAD_EXECUTOR_IMPL_H_
+#define QT_UTILS_MAIN_THREAD_EXECUTOR_IMPL_H_
 
 #include <QObject>
 #include <memory>
@@ -41,4 +41,4 @@ class MainThreadExecutorImpl : public QObject, public MainThreadExecutor {
 
 }  // namespace orbit_qt_utils
 
-#endif  // ORBIT_QT_MAIN_THREAD_EXECUTOR_IMPL_H_
+#endif  // QT_UTILS_MAIN_THREAD_EXECUTOR_IMPL_H_

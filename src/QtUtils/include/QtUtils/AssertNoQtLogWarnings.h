@@ -7,7 +7,6 @@
 
 #include <gtest/gtest.h>
 
-#include <QAbstractItemModelTester>
 #include <QByteArray>
 #include <QMessageLogContext>
 #include <QString>
