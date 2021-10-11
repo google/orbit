@@ -21,9 +21,9 @@
 #include <optional>
 #include <string>
 
+#include "DataViews/SamplingReportDataView.h"
 #include "OrbitBase/Logging.h"
 #include "SamplingReport.h"
-#include "SamplingReportDataView.h"
 #include "orbitdataviewpanel.h"
 #include "orbittablemodel.h"
 #include "orbittreeview.h"
@@ -56,7 +56,7 @@ void OrbitSamplingReport::Initialize(orbit_data_views::DataView* callstack_data_
 
   sampling_report_->SetUiRefreshFunc([&]() { this->RefreshCallstackView(); });
 
-  for (SamplingReportDataView& report_data_view : report->GetThreadReports()) {
+  for (orbit_data_views::SamplingReportDataView& report_data_view : report->GetThreadReports()) {
     auto* tab = new QWidget();
     tab->setObjectName(QStringLiteral("tab"));
 

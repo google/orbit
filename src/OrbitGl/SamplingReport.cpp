@@ -44,7 +44,7 @@ void SamplingReport::FillReport() {
   const auto& sample_data = post_processed_sampling_data_.GetThreadSampleData();
 
   for (const ThreadSampleData& thread_sample_data : sample_data) {
-    SamplingReportDataView thread_report{app_};
+    orbit_data_views::SamplingReportDataView thread_report{app_};
     thread_report.SetSampledFunctions(thread_sample_data.sampled_functions);
     thread_report.SetThreadID(thread_sample_data.thread_id);
     thread_report.SetSamplingReport(this);
@@ -75,7 +75,7 @@ void SamplingReport::UpdateReport(
   unique_callstacks_ = std::move(unique_callstacks);
   post_processed_sampling_data_ = std::move(post_processed_sampling_data);
 
-  for (SamplingReportDataView& thread_report : thread_reports_) {
+  for (orbit_data_views::SamplingReportDataView& thread_report : thread_reports_) {
     ThreadID thread_id = thread_report.GetThreadID();
     const ThreadSampleData* thread_sample_data =
         post_processed_sampling_data_.GetThreadSampleDataByThreadId(thread_id);

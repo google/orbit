@@ -20,8 +20,8 @@
 #include "ClientData/CallstackTypes.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "DataViews/CallstackDataView.h"
+#include "DataViews/SamplingReportDataView.h"
 #include "DataViews/SamplingReportInterface.h"
-#include "SamplingReportDataView.h"
 #include "capture_data.pb.h"
 
 class OrbitApp;
@@ -37,7 +37,9 @@ class SamplingReport : public orbit_data_views::SamplingReportInterface {
       orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
       absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
           unique_callstacks);
-  [[nodiscard]] std::vector<SamplingReportDataView>& GetThreadReports() { return thread_reports_; };
+  [[nodiscard]] std::vector<orbit_data_views::SamplingReportDataView>& GetThreadReports() {
+    return thread_reports_;
+  };
   void SetCallstackDataView(orbit_data_views::CallstackDataView* data_view) override {
     callstack_data_view_ = data_view;
   };
@@ -60,7 +62,7 @@ class SamplingReport : public orbit_data_views::SamplingReportInterface {
   orbit_client_data::PostProcessedSamplingData post_processed_sampling_data_;
   absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
       unique_callstacks_;
-  std::vector<SamplingReportDataView> thread_reports_;
+  std::vector<orbit_data_views::SamplingReportDataView> thread_reports_;
   orbit_data_views::CallstackDataView* callstack_data_view_ = nullptr;
 
   absl::flat_hash_set<uint64_t> selected_addresses_;

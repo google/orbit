@@ -51,7 +51,6 @@ target_sources(
          PageFaultsTrack.h
          PickingManager.h
          SamplingReport.h
-         SamplingReportDataView.h
          SchedulerTrack.h
          SchedulingStats.h
          ShortenStringWithEllipsis.h
@@ -117,7 +116,6 @@ target_sources(
           PageFaultsTrack.cpp
           PickingManager.cpp
           SamplingReport.cpp
-          SamplingReportDataView.cpp
           SchedulerTrack.cpp
           SchedulingStats.cpp
           SystemMemoryTrack.cpp

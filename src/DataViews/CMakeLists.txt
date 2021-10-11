@@ -15,7 +15,8 @@ target_sources(DataViews PRIVATE
         FunctionsDataView.cpp
         LiveFunctionsDataView.cpp
         ModulesDataView.cpp
-        PresetsDataView.cpp)
+        PresetsDataView.cpp
+        SamplingReportDataView.cpp)
 
 target_sources(DataViews PUBLIC
         include/DataViews/AppInterface.h
@@ -28,6 +29,7 @@ target_sources(DataViews PUBLIC
         include/DataViews/ModulesDataView.h
         include/DataViews/PresetsDataView.h
         include/DataViews/PresetLoadState.h
+        include/DataViews/SamplingReportDataView.h        
         include/DataViews/SamplingReportInterface.h)
 
 target_include_directories(DataViews PUBLIC include/)
