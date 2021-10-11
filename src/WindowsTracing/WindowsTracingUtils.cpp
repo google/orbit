@@ -32,9 +32,8 @@ namespace orbit_windows_tracing {
   BOOL is_32_bit_process_on_64_bit_os = 0;
   if (IsWow64Process(process_handle, &is_32_bit_process_on_64_bit_os) != 0) {
     return is_32_bit_process_on_64_bit_os != TRUE;
-  } else {
-    ERROR("Calling IsWow64Process for pid %u.", GetProcessId(process_handle));
   }
+  ERROR("Calling IsWow64Process for pid %u", GetProcessId(process_handle));
   return std::nullopt;
 }
 
@@ -47,7 +46,7 @@ std::vector<ProcessInfo> ListProcesses() {
   // Take a snapshot of all processes in the system.
   process_snap_handle = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
   if (process_snap_handle == INVALID_HANDLE_VALUE) {
-    ERROR("Calling CreateToolhelp32Snapshot.");
+    ERROR("Calling CreateToolhelp32Snapshot");
     return {};
   }
   orbit_base::unique_resource handle{process_snap_handle, [](HANDLE h) { CloseHandle(h); }};
@@ -55,7 +54,7 @@ std::vector<ProcessInfo> ListProcesses() {
   // Retrieve information about the first process, and exit if unsuccessful.
   process_entry.dwSize = sizeof(PROCESSENTRY32);
   if (!Process32First(process_snap_handle, &process_entry)) {
-    ERROR("Calling Process32First.");
+    ERROR("Calling Process32First");
     return {};
   }
 
@@ -128,7 +127,7 @@ std::vector<orbit_grpc_protos::ModuleInfo> ListModules(uint32_t pid) {
     if (coff_file_or_error.has_value()) {
       build_id = coff_file_or_error.value()->GetBuildId();
     } else {
-      ERROR("Could not create Coff file for module %s, build-id will be empty.", module_path);
+      ERROR("Could not create Coff file for module %s, build-id will be empty", module_path);
     }
 
     ModuleInfo& module_info = module_infos.emplace_back();
@@ -137,9 +136,7 @@ std::vector<orbit_grpc_protos::ModuleInfo> ListModules(uint32_t pid) {
     module_info.set_file_size(module_entry.modBaseSize);
     module_info.set_address_start(absl::bit_cast<uint64_t>(module_entry.modBaseAddr));
     module_info.set_address_end(module_info.address_start() + module_entry.modBaseSize);
-    if (coff_file_or_error.has_value()) {
-      module_info.set_build_id(coff_file_or_error.value()->GetBuildId());
-    }
+    module_info.set_build_id(build_id);
 
   } while (Module32Next(module_snap_handle, &module_entry));
 
@@ -163,7 +160,7 @@ std::vector<ThreadName> ListThreads(uint32_t pid) {
   // Retrieve information about the first thread.
   thread_entry.dwSize = sizeof(THREADENTRY32);
   if (!Thread32First(thread_snap_handle, &thread_entry)) {
-    ERROR("Calling Thread32First for pid %u.", pid);
+    ERROR("Calling Thread32First for pid %u", pid);
     return {};
   }
 
