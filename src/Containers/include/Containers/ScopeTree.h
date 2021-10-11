@@ -85,7 +85,7 @@ class ScopeTree {
   [[nodiscard]] const ScopeNodeT* Root() const { return root_; }
   [[nodiscard]] size_t Size() const { return nodes_.size(); }
   [[nodiscard]] size_t CountOrderedNodesByDepth() const;
-  [[nodiscard]] uint32_t Height() const { return root_->Height(); }
+  [[nodiscard]] uint32_t Height() const;
   [[nodiscard]] const absl::btree_map<uint32_t,
                                       absl::btree_map<uint64_t /*start time*/, ScopeNodeT*>>&
   GetOrderedNodesByDepth() const {
@@ -225,6 +225,16 @@ size_t ScopeTree<ScopeT>::CountOrderedNodesByDepth() const {
     count_from_depth += nodes_in_depth.size();
   }
   return count_from_depth;
+}
+
+template <typename ScopeT>
+uint32_t ScopeTree<ScopeT>::Height() const {
+  if (ordered_nodes_by_depth_.empty()) return 0;
+
+  // Since `ordered_nodes_by_depth` is an ordered map, we return the depth of the last level. It
+  // shouldn't be empty because we are not erasing nodes.
+  auto last_depth_it = --ordered_nodes_by_depth_.end();
+  return last_depth_it->first;
 }
 
 template <typename ScopeT>
