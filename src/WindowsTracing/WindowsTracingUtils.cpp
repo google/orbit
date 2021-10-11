@@ -127,7 +127,7 @@ std::vector<orbit_grpc_protos::ModuleInfo> ListModules(uint32_t pid) {
     if (coff_file_or_error.has_value()) {
       build_id = coff_file_or_error.value()->GetBuildId();
     } else {
-      ERROR("Could not create Coff file for module %s, build-id will be empty", module_path);
+      ERROR("Could not create Coff file for module \"%s\", build-id will be empty", module_path);
     }
 
     ModuleInfo& module_info = module_infos.emplace_back();

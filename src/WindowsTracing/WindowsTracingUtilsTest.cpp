@@ -98,7 +98,7 @@ TEST(WindowsTracingUtils, ListAllThreads) {
   EXPECT_NE(thread_names.size(), 0);
 
   std::string this_thread_name;
-  for (ThreadName& thread_name : thread_names) {
+  for (const ThreadName& thread_name : thread_names) {
     if (thread_name.tid() == tid) {
       this_thread_name = thread_name.name();
     }
