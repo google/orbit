@@ -149,8 +149,12 @@ const ScopeT* ScopeTree<ScopeT>::FindFirstChild(const ScopeT& scope) const {
 
 template <typename ScopeT>
 const ScopeT* ScopeTree<ScopeT>::FindFirstScopeAtOrAfterTime(uint32_t depth, uint64_t time) const {
-  // TODO(Scope Tree includes a dummy node at depth 0, so we need to add 1 here)
-  auto& ordered_nodes = ordered_nodes_by_depth_.at(depth + 1);
+  // TODO(Scope Tree includes a dummy node at depth 0, so we have nodes 1-indexed and we have to add
+  // 1 here).
+  depth++;
+
+  if (!ordered_nodes_by_depth_.contains(depth)) return nullptr;
+  auto& ordered_nodes = ordered_nodes_by_depth_.at(depth);
 
   // Find the first node after the provided time.
   auto node_it = ordered_nodes.upper_bound(time);

@@ -71,7 +71,7 @@ TEST(ScopeTreeTimerData, GetAllTimers) {
   EXPECT_EQ(scope_tree_timer_data.GetAllTimers(8, 9).size(), 1);   // (8,11)
   EXPECT_EQ(scope_tree_timer_data.GetAllTimers(8, 11).size(), 2);  // (8,11) , (10,11)
   EXPECT_EQ(scope_tree_timer_data.GetAllTimers(4, 11).size(), 3);
-  EXPECT_EQ(scope_tree_timer_data.GetAllTimers().size(), 3);
+  EXPECT_EQ(scope_tree_timer_data.GetAllTimers(0, 50).size(), 3);
 }
 
 bool AreSameTimer(const orbit_client_protos::TimerInfo& timer_1,

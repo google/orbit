@@ -71,9 +71,8 @@ void ScopeTreeTimerData::BuildScopeTreeFromTimerData() {
 
 std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetAllTimers(
     uint64_t min_tick, uint64_t max_tick, uint64_t resolution) const {
-  absl::MutexLock lock(&scope_tree_mutex_);
   std::vector<const orbit_client_protos::TimerInfo*> all_timers;
-  for (const auto& [depth, _] : scope_tree_.GetOrderedNodesByDepth()) {
+  for (uint32_t depth = 0; depth < GetDepth(); depth++) {
     auto timers_at_depth = GetTimersAtDepth(depth, min_tick, max_tick, resolution);
     all_timers.insert(all_timers.end(), timers_at_depth.begin(), timers_at_depth.end());
   }
@@ -84,10 +83,6 @@ std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimers
     uint32_t depth, uint64_t min_tick, uint64_t max_tick, uint64_t resolution) const {
   std::vector<const orbit_client_protos::TimerInfo*> all_timers_at_depth;
   absl::MutexLock lock(&scope_tree_mutex_);
-
-  // Special case. ScopeTree has a root node in depth 0 which shouldn't be considered.
-  if (depth >= scope_tree_.Depth()) return all_timers_at_depth;
-  // TODO(why we need this update)!! timer_data_->UpdateMaxDepth(depth);
 
   const orbit_client_protos::TimerInfo* timer_info =
       scope_tree_.FindFirstScopeAtOrAfterTime(depth, min_tick);
