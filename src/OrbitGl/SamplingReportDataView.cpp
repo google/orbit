@@ -40,9 +40,7 @@ using orbit_client_data::ThreadID;
 using orbit_client_protos::FunctionInfo;
 
 SamplingReportDataView::SamplingReportDataView(OrbitApp* app)
-    : orbit_data_views::DataView(orbit_data_views::DataViewType::kSampling, app),
-      callstack_data_view_(nullptr),
-      app_{app} {}
+    : orbit_data_views::DataView(orbit_data_views::DataViewType::kSampling, app), app_{app} {}
 
 const std::vector<orbit_data_views::DataView::Column>& SamplingReportDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
@@ -340,10 +338,10 @@ void SamplingReportDataView::OnRefresh(const std::vector<int>& visible_selected_
 }
 
 void SamplingReportDataView::LinkDataView(orbit_data_views::DataView* data_view) {
-  if (data_view->GetType() == orbit_data_views::DataViewType::kCallstack) {
-    callstack_data_view_ = static_cast<orbit_data_views::CallstackDataView*>(data_view);
-    sampling_report_->SetCallstackDataView(callstack_data_view_);
-  }
+  if (data_view->GetType() != orbit_data_views::DataViewType::kCallstack) return;
+
+  sampling_report_->SetCallstackDataView(
+      static_cast<orbit_data_views::CallstackDataView*>(data_view));
 }
 
 void SamplingReportDataView::SetSampledFunctions(const std::vector<SampledFunction>& functions) {
