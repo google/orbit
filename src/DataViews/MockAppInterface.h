@@ -34,6 +34,7 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(PresetLoadState, GetPresetLoadState, (const orbit_preset_file::PresetFile&), (const));
 
   MOCK_METHOD(bool, IsFunctionSelected, (const orbit_client_protos::FunctionInfo&), (const));
+  MOCK_METHOD(bool, IsFunctionSelected, (const orbit_client_data::SampledFunction&), (const));
 
   MOCK_METHOD(uint64_t, GetHighlightedFunctionId, (), (const));
   MOCK_METHOD(void, SetHighlightedFunctionId, (uint64_t highlighted_function_id));

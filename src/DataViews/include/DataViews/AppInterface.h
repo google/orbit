@@ -12,6 +12,7 @@
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
 #include "DataViews/PresetLoadState.h"
 #include "OrbitBase/Future.h"
@@ -50,6 +51,10 @@ class AppInterface {
 
   // Function needed by CallstackDataView
   [[nodiscard]] virtual orbit_client_data::CaptureData& GetMutableCaptureData() = 0;
+
+  // Functions needed by SamplingReportsDataView
+  [[nodiscard]] virtual bool IsFunctionSelected(
+      const orbit_client_data::SampledFunction& func) const = 0;
 
   [[nodiscard]] virtual bool IsFrameTrackEnabled(
       const orbit_client_protos::FunctionInfo& function) const = 0;

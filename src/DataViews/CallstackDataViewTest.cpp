@@ -245,7 +245,8 @@ TEST_F(CallstackDataViewTest, ColumnSelectedShowsRightResults) {
   bool function_selected;
   EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(app_, GetMutableCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
-  EXPECT_CALL(app_, IsFunctionSelected).WillRepeatedly(testing::ReturnPointee(&function_selected));
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+      .WillRepeatedly(testing::ReturnPointee(&function_selected));
 
   // Test the case that frame.function == nullptr.
   {
@@ -297,11 +298,12 @@ TEST_F(CallstackDataViewTest, ContextMenuEntriesArePresentCorrectly) {
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, GetMutableCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::ReturnPointee(&capture_connected));
-  EXPECT_CALL(app_, IsFunctionSelected).WillRepeatedly([&](const FunctionInfo& function) -> bool {
-    std::optional<size_t> index = get_index_from_function_info(function);
-    EXPECT_TRUE(index.has_value());
-    return functions_selected.at(index.value());
-  });
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+      .WillRepeatedly([&](const FunctionInfo& function) -> bool {
+        std::optional<size_t> index = get_index_from_function_info(function);
+        EXPECT_TRUE(index.has_value());
+        return functions_selected.at(index.value());
+      });
 
   auto run_checks = [&](std::vector<int> selected_indices) {
     // Common actions should always be available.
@@ -389,7 +391,8 @@ TEST_F(CallstackDataViewTest, ContextMenuActionsAreInvoked) {
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, GetMutableCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(app_, IsFunctionSelected).WillRepeatedly(testing::ReturnPointee(&function_selected));
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+      .WillRepeatedly(testing::ReturnPointee(&function_selected));
 
   constexpr uint64_t kFrameAddress = 0x3140;
   SetCallstackFromFrames({kFrameAddress});

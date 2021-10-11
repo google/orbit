@@ -18,7 +18,6 @@
 #include <memory>
 #include <utility>
 
-#include "App.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
@@ -39,8 +38,8 @@ using orbit_client_data::ThreadID;
 
 using orbit_client_protos::FunctionInfo;
 
-SamplingReportDataView::SamplingReportDataView(OrbitApp* app)
-    : orbit_data_views::DataView(orbit_data_views::DataViewType::kSampling, app), app_{app} {}
+SamplingReportDataView::SamplingReportDataView(orbit_data_views::AppInterface* app)
+    : orbit_data_views::DataView(orbit_data_views::DataViewType::kSampling, app) {}
 
 const std::vector<orbit_data_views::DataView::Column>& SamplingReportDataView::GetColumns() {
   static const std::vector<Column> columns = [] {

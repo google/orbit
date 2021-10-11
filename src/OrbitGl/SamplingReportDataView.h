@@ -11,17 +11,17 @@
 #include "ClientData/CallstackTypes.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
+#include "DataViews/AppInterface.h"
 #include "DataViews/CallstackDataView.h"
 #include "DataViews/DataView.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
 
-class OrbitApp;
 class SamplingReport;
 
 class SamplingReportDataView : public orbit_data_views::DataView {
  public:
-  explicit SamplingReportDataView(OrbitApp* app);
+  explicit SamplingReportDataView(orbit_data_views::AppInterface* app);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnInclusive; }
@@ -85,8 +85,4 @@ class SamplingReportDataView : public orbit_data_views::DataView {
   static const std::string kMenuActionLoadSymbols;
   static const std::string kMenuActionDisassembly;
   static const std::string kMenuActionSourceCode;
-
-  // TODO(b/185090791): This is temporary and will be removed once this data view has been ported
-  // and move to orbit_data_views.
-  OrbitApp* app_ = nullptr;
 };

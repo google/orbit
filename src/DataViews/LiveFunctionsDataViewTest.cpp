@@ -204,7 +204,8 @@ TEST_F(LiveFunctionsDataViewTest, ColumnSelectedShowsRightResults) {
   bool frame_track_enabled = false;
   EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
-  EXPECT_CALL(app_, IsFunctionSelected).WillRepeatedly(testing::ReturnPointee(&function_selected));
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+      .WillRepeatedly(testing::ReturnPointee(&function_selected));
   // The following code guarantees the appearance of frame track icon is determined by
   // frame_track_enable.
   EXPECT_CALL(app_, IsFrameTrackEnabled)
@@ -245,11 +246,12 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
   };
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::ReturnPointee(&capture_connected));
-  EXPECT_CALL(app_, IsFunctionSelected).WillRepeatedly([&](const FunctionInfo& function) -> bool {
-    std::optional<size_t> index = get_index_from_function_info(function);
-    EXPECT_TRUE(index.has_value());
-    return functions_selected.at(index.value());
-  });
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+      .WillRepeatedly([&](const FunctionInfo& function) -> bool {
+        std::optional<size_t> index = get_index_from_function_info(function);
+        EXPECT_TRUE(index.has_value());
+        return functions_selected.at(index.value());
+      });
   EXPECT_CALL(app_, IsFrameTrackEnabled).WillRepeatedly([&](const FunctionInfo& function) -> bool {
     std::optional<size_t> index = get_index_from_function_info(function);
     EXPECT_TRUE(index.has_value());
@@ -360,7 +362,8 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
   EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(app_, IsFunctionSelected).WillRepeatedly(testing::ReturnPointee(&function_selected));
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+      .WillRepeatedly(testing::ReturnPointee(&function_selected));
   EXPECT_CALL(app_, IsFrameTrackEnabled)
       .WillRepeatedly(testing::ReturnPointee(&frame_track_enabled));
 
