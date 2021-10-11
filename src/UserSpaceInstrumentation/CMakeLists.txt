@@ -93,6 +93,8 @@ target_sources(UserSpaceInstrumentationTests PRIVATE
         ExecuteInProcessTest.cpp
         ExecuteMachineCodeTest.cpp
         FindFunctionAddressTest.cpp
+        GetTestLibLibraryPath.cpp
+        GetTestLibLibraryPath.h
         InjectLibraryInTraceeTest.cpp
         InstrumentProcessTest.cpp
         MachineCodeTest.cpp
