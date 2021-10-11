@@ -27,7 +27,8 @@ target_sources(DataViews PUBLIC
         include/DataViews/LiveFunctionsInterface.h
         include/DataViews/ModulesDataView.h
         include/DataViews/PresetsDataView.h
-        include/DataViews/PresetLoadState.h)
+        include/DataViews/PresetLoadState.h
+        include/DataViews/SamplingReportInterface.h)
 
 target_include_directories(DataViews PUBLIC include/)
 target_link_libraries(DataViews PUBLIC
