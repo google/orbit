@@ -156,7 +156,7 @@ TEST(InstrumentProcessTest, Instrument) {
   if (pid_process_1 == 0) {
     // Endless loops without side effects are UB and recent versions of clang optimize
     // it away. Making `sum` volatile avoids that problem.
-    volatile int sum = 0;
+    [[maybe_unused]] volatile int sum = 0;
     while (true) {
       sum += SomethingToInstrument();
     }
@@ -181,7 +181,7 @@ TEST(InstrumentProcessTest, Instrument) {
   if (pid_process_2 == 0) {
     // Endless loops without side effects are UB and recent versions of clang optimize
     // it away. Making `sum` volatile avoids that problem.
-    volatile int sum = 0;
+    [[maybe_unused]] volatile int sum = 0;
     while (true) {
       sum += SomethingToInstrument();
     }
@@ -214,7 +214,7 @@ TEST(InstrumentProcessTest, GetErrorMessage) {
   if (pid == 0) {
     // Endless loops without side effects are UB and recent versions of clang optimize
     // it away. Making `sum` volatile avoids that problem.
-    volatile int sum = 0;
+    [[maybe_unused]] volatile int sum = 0;
     while (true) {
       sum += SomethingToInstrument();
     }
