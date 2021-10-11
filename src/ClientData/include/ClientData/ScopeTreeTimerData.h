@@ -31,7 +31,7 @@ class ScopeTreeTimerData final {
   [[nodiscard]] uint64_t GetMaxTime() const { return timer_data_.GetMaxTime(); }
   [[nodiscard]] std::vector<const TimerChain*> GetChains() const { return timer_data_.GetChains(); }
 
-  [[nodiscard]] uint32_t GetMaxDepth() const;
+  [[nodiscard]] uint32_t GetDepth() const;
 
   const orbit_client_protos::TimerInfo& AddTimer(orbit_client_protos::TimerInfo timer_info);
   // Build ScopeTree from timer chains, when we are loading a capture.

@@ -193,8 +193,8 @@ bool ThreadTrack::IsTrackSelected() const {
 
 float ThreadTrack::GetDefaultBoxHeight() const {
   auto box_height = layout_->GetTextBoxHeight();
-  if (collapse_toggle_->IsCollapsed() && scope_tree_timer_data_->GetMaxDepth() > 0) {
-    return box_height / static_cast<float>(scope_tree_timer_data_->GetMaxDepth());
+  if (collapse_toggle_->IsCollapsed() && scope_tree_timer_data_->GetDepth() > 0) {
+    return box_height / static_cast<float>(scope_tree_timer_data_->GetDepth());
   }
   return box_height;
 }
@@ -324,8 +324,8 @@ std::string ThreadTrack::GetTooltip() const {
 
 float ThreadTrack::GetHeight() const {
   const uint32_t depth = collapse_toggle_->IsCollapsed()
-                             ? std::min<uint32_t>(1, scope_tree_timer_data_->GetMaxDepth())
-                             : scope_tree_timer_data_->GetMaxDepth();
+                             ? std::min<uint32_t>(1, scope_tree_timer_data_->GetDepth())
+                             : scope_tree_timer_data_->GetDepth();
 
   bool gap_between_tracks_and_timers =
       (!thread_state_bar_->IsEmpty() || !event_bar_->IsEmpty() || !tracepoint_bar_->IsEmpty()) &&
@@ -430,7 +430,7 @@ void ThreadTrack::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64
 
   uint64_t resolution_in_pixels = draw_data.viewport->WorldToScreenWidth(draw_data.track_width);
 
-  for (uint32_t depth = 0; depth < scope_tree_timer_data_->GetMaxDepth(); depth++) {
+  for (uint32_t depth = 0; depth < scope_tree_timer_data_->GetDepth(); depth++) {
     float world_timer_y = GetYFromDepth(depth);
 
     for (const TimerInfo* timer_info : scope_tree_timer_data_->GetTimersAtDepth(

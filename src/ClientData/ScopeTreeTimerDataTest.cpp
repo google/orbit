@@ -24,7 +24,7 @@ TEST(ScopeTreeTimerData, AddTimers) {
 
   EXPECT_FALSE(scope_tree_timer_data.IsEmpty());
   EXPECT_EQ(scope_tree_timer_data.GetNumberOfTimers(), 1);
-  EXPECT_EQ(scope_tree_timer_data.GetMaxDepth(), 0);
+  EXPECT_EQ(scope_tree_timer_data.GetDepth(), 1);
   EXPECT_EQ(scope_tree_timer_data.GetMinTime(), 2);
   EXPECT_EQ(scope_tree_timer_data.GetMaxTime(), 5);
 
@@ -34,7 +34,7 @@ TEST(ScopeTreeTimerData, AddTimers) {
   scope_tree_timer_data.AddTimer(timer_info);
 
   EXPECT_EQ(scope_tree_timer_data.GetNumberOfTimers(), 2);
-  EXPECT_EQ(scope_tree_timer_data.GetMaxDepth(), 0);
+  EXPECT_EQ(scope_tree_timer_data.GetDepth(), 1);
   EXPECT_EQ(scope_tree_timer_data.GetMinTime(), 2);
   EXPECT_EQ(scope_tree_timer_data.GetMaxTime(), 11);
 
@@ -44,7 +44,7 @@ TEST(ScopeTreeTimerData, AddTimers) {
   scope_tree_timer_data.AddTimer(timer_info);
 
   EXPECT_EQ(scope_tree_timer_data.GetNumberOfTimers(), 3);
-  EXPECT_EQ(scope_tree_timer_data.GetMaxDepth(), 1);
+  EXPECT_EQ(scope_tree_timer_data.GetDepth(), 2);
   EXPECT_EQ(scope_tree_timer_data.GetMinTime(), 2);
   EXPECT_EQ(scope_tree_timer_data.GetMaxTime(), 11);
 }

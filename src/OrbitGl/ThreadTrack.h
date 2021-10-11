@@ -72,7 +72,7 @@ class ThreadTrack final : public TimerTrack {
   }
 
   [[nodiscard]] bool IsCollapsible() const override {
-    return scope_tree_timer_data_->GetMaxDepth() > 1;
+    return scope_tree_timer_data_->GetDepth() > 1;
   }
 
   [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() override;

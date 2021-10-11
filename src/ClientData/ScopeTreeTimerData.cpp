@@ -12,11 +12,9 @@ size_t ScopeTreeTimerData::GetNumberOfTimers() const {
   return scope_tree_.Size() - 1;
 }
 
-uint32_t ScopeTreeTimerData::GetMaxDepth() const {
+uint32_t ScopeTreeTimerData::GetDepth() const {
   absl::MutexLock lock(&scope_tree_mutex_);
-  // Scope Tree includes a dummy node at depth 0 which we shouldn't consider.
-  // TODO (Fix Height in ScopeTree)
-  return scope_tree_.Height() == 0 ? 0 : scope_tree_.Height() - 1;
+  return scope_tree_.Depth();
 }
 
 const orbit_client_protos::TimerInfo& ScopeTreeTimerData::AddTimer(
@@ -88,7 +86,7 @@ std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimers
   absl::MutexLock lock(&scope_tree_mutex_);
 
   // Special case. ScopeTree has a root node in depth 0 which shouldn't be considered.
-  if (depth >= scope_tree_.Height()) return all_timers_at_depth;
+  if (depth >= scope_tree_.Depth()) return all_timers_at_depth;
   // TODO(why we need this update)!! timer_data_->UpdateMaxDepth(depth);
 
   const orbit_client_protos::TimerInfo* timer_info =

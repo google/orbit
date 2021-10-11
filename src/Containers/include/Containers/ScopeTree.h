@@ -45,7 +45,6 @@ class ScopeNode {
 
   [[nodiscard]] uint64_t Start() const { return scope_->start(); }
   [[nodiscard]] uint64_t End() const { return scope_->end(); }
-  [[nodiscard]] uint32_t Height() const;
   [[nodiscard]] uint32_t Depth() const { return depth_; }
   [[nodiscard]] ScopeNode* Parent() const { return parent_; }
   [[nodiscard]] size_t CountNodesInSubtree() const;
@@ -57,7 +56,6 @@ class ScopeNode {
  private:
   [[nodiscard]] ScopeNode* FindDeepestParentForNode(const ScopeNode* node);
   static void ToString(const ScopeNode* node, std::string* str, uint32_t depth = 0);
-  static void FindHeight(const ScopeNode* node, uint32_t* height, uint32_t current_height = 0);
   static void CountNodesInSubtree(const ScopeNode* node, size_t* count);
   static void GetAllNodesInSubtree(const ScopeNode* node, std::set<const ScopeNode*>* node_set);
 
@@ -85,7 +83,7 @@ class ScopeTree {
   [[nodiscard]] const ScopeNodeT* Root() const { return root_; }
   [[nodiscard]] size_t Size() const { return nodes_.size(); }
   [[nodiscard]] size_t CountOrderedNodesByDepth() const;
-  [[nodiscard]] uint32_t Height() const;
+  [[nodiscard]] uint32_t Depth() const;
   [[nodiscard]] const absl::btree_map<uint32_t,
                                       absl::btree_map<uint64_t /*start time*/, ScopeNodeT*>>&
   GetOrderedNodesByDepth() const {
@@ -229,7 +227,7 @@ size_t ScopeTree<ScopeT>::CountOrderedNodesByDepth() const {
 }
 
 template <typename ScopeT>
-uint32_t ScopeTree<ScopeT>::Height() const {
+uint32_t ScopeTree<ScopeT>::Depth() const {
   if (ordered_nodes_by_depth_.empty()) return 0;
 
   // Since `ordered_nodes_by_depth` is an ordered map, we return the depth of the last level. It
@@ -241,7 +239,7 @@ uint32_t ScopeTree<ScopeT>::Height() const {
 template <typename ScopeT>
 std::string ScopeTree<ScopeT>::ToString() const {
   std::string result =
-      absl::StrFormat("ScopeTree %u nodes height=%u:\n%s\n", Size(), Height(), root_->ToString());
+      absl::StrFormat("ScopeTree %u nodes height=%u:\n%s\n", Size(), Depth(), root_->ToString());
   return result;
 }
 
@@ -252,23 +250,6 @@ void ScopeNode<ScopeT>::ToString(const ScopeNode* node, std::string* str, uint32
                            std::string(depth, ' '), node->scope_, node->Start(), node->End()));
   for (auto& [unused_time, child_node] : node->GetChildrenByStartTime()) {
     ToString(child_node, str, depth + 1);
-  }
-}
-
-template <typename ScopeT>
-uint32_t ScopeNode<ScopeT>::Height() const {
-  uint32_t max_height = 0;
-  FindHeight(this, &max_height);
-  return max_height;
-}
-
-template <typename ScopeT>
-void ScopeNode<ScopeT>::FindHeight(const ScopeNode* node, uint32_t* height,
-                                   uint32_t current_height) {
-  ORBIT_SCOPE_FUNCTION;
-  *height = std::max(*height, current_height);
-  for (auto& [unused_time, child_node] : node->GetChildrenByStartTime()) {
-    FindHeight(child_node, height, current_height + 1);
   }
 }
 
