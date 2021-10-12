@@ -9,11 +9,11 @@
 
 #include <optional>
 
-#include "WindowsUtils/AdjustTokenPrivilege.h"
-#include "WindowsUtils/PerformanceCounter.h"
 #include "EtwEventTypes.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
+#include "WindowsUtils/AdjustTokenPrivilege.h"
+#include "WindowsUtils/PerformanceCounter.h"
 
 namespace orbit_windows_tracing {
 

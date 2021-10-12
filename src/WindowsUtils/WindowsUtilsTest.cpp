@@ -16,8 +16,8 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "WindowsUtils/ListProcesses.h"
 #include "WindowsUtils/ListModules.h"
+#include "WindowsUtils/ListProcesses.h"
 #include "WindowsUtils/ListThreads.h"
 
 namespace orbit_windows_utils {
@@ -107,4 +107,4 @@ TEST(WindowsUtils, ListAllThreads) {
   EXPECT_STREQ(this_thread_name.c_str(), kThreadName);
 }
 
-}  // namespace orbit_windows_tracing
+}  // namespace orbit_windows_utils
