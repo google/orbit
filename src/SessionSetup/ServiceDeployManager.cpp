@@ -431,7 +431,7 @@ outcome::result<void> ServiceDeployManager::StartOrbitService() {
                    &ServiceDeployManager::handleSocketError);
   QObject::connect(
       &orbit_service_task_.value(), &orbit_ssh_qt::Task::finished, this,
-      [](int exit_code) { ERROR("The OrbitService Task finished with exit code: %d", exit_code); });
+      [](int exit_code) { LOG("The OrbitService Task finished with exit code: %d", exit_code); });
   return outcome::success();
 }
 
@@ -473,7 +473,7 @@ outcome::result<void> ServiceDeployManager::StartOrbitServicePrivileged(
                    &ServiceDeployManager::handleSocketError);
   QObject::connect(
       &orbit_service_task_.value(), &orbit_ssh_qt::Task::finished, this,
-      [](int exit_code) { ERROR("The OrbitService Task finished with exit code: %d", exit_code); });
+      [](int exit_code) { LOG("The OrbitService Task finished with exit code: %d", exit_code); });
   return outcome::success();
 }
 
