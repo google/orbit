@@ -96,7 +96,7 @@ class ScopeTree {
   [[nodiscard]] const ScopeNodeT* FindScopeNode(const ScopeT& scope) const;
   [[nodiscard]] ScopeNodeT* CreateNode(ScopeT* scope);
   void UpdateDepthInSubtree(ScopeNodeT* node, uint32_t depth);
-  [[nodiscard]] const absl::btree_map<uint32_t,
+  [[nodiscard]] const absl::btree_map<uint32_t /*depth*/,
                                       absl::btree_map<uint64_t /*start time*/, ScopeNodeT*>>&
   GetOrderedNodesByDepth() const {
     return ordered_nodes_by_depth_;
@@ -153,11 +153,10 @@ const absl::btree_map<uint64_t, ScopeNode<ScopeT>*> ScopeTree<ScopeT>::GetOrdere
   // Scope Tree includes a dummy node at depth 0 and therefore it's 1-indexed.
   depth++;
 
-  if (GetOrderedNodesByDepth().contains(depth)) {
-    return GetOrderedNodesByDepth().at(depth);
+  if (!GetOrderedNodesByDepth().contains(depth)) {
+    return {};
   }
-  const absl::btree_map<uint64_t /*start time*/, ScopeNodeT*> empty_map;
-  return empty_map;
+  return GetOrderedNodesByDepth().at(depth);
 }
 
 template <typename ScopeT>
