@@ -454,11 +454,8 @@ void ThreadTrack::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64
                   app_->GetFunctionIdToHighlight(), app_->GetGroupIdToHighlight());
 
   absl::MutexLock lock(&scope_tree_mutex_);
-  for (const auto& [depth, ordered_nodes] : scope_tree_.GetOrderedNodesByDepth()) {
-    if (ordered_nodes.empty()) {
-      continue;
-    }
-    float world_timer_y = GetYFromDepth(depth - 1);
+  for (uint32_t depth = 0; depth < scope_tree_.Depth(); depth++) {
+    float world_timer_y = GetYFromDepth(depth);
 
     const orbit_client_protos::TimerInfo* timer_info =
         scope_tree_.FindFirstScopeAtOrAfterTime(depth, min_tick);

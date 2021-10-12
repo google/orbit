@@ -84,11 +84,8 @@ class ScopeTree {
   [[nodiscard]] size_t Size() const { return nodes_.size(); }
   [[nodiscard]] size_t CountOrderedNodesByDepth() const;
   [[nodiscard]] uint32_t Depth() const;
-  [[nodiscard]] const absl::btree_map<uint32_t,
-                                      absl::btree_map<uint64_t /*start time*/, ScopeNodeT*>>&
-  GetOrderedNodesByDepth() const {
-    return ordered_nodes_by_depth_;
-  }
+  [[nodiscard]] const absl::btree_map<uint64_t /*start time*/, ScopeNodeT*> GetOrderedNodesAtDepth(
+      uint32_t depth) const;
   [[nodiscard]] const ScopeT* FindFirstScopeAtOrAfterTime(uint32_t depth, uint64_t time) const;
   [[nodiscard]] const ScopeT* FindNextScopeAtDepth(const ScopeT& scope) const;
   [[nodiscard]] const ScopeT* FindPreviousScopeAtDepth(const ScopeT& scope) const;
@@ -99,8 +96,12 @@ class ScopeTree {
   [[nodiscard]] const ScopeNodeT* FindScopeNode(const ScopeT& scope) const;
   [[nodiscard]] ScopeNodeT* CreateNode(ScopeT* scope);
   void UpdateDepthInSubtree(ScopeNodeT* node, uint32_t depth);
+  [[nodiscard]] const absl::btree_map<uint32_t,
+                                      absl::btree_map<uint64_t /*start time*/, ScopeNodeT*>>&
+  GetOrderedNodesByDepth() const {
+    return ordered_nodes_by_depth_;
+  }
 
- private:
   ScopeNodeT* root_ = nullptr;
   BlockChain<ScopeNodeT, 1024> nodes_;
   absl::btree_map<uint32_t, absl::btree_map<uint64_t, ScopeNodeT*>> ordered_nodes_by_depth_;
@@ -146,9 +147,25 @@ const ScopeT* ScopeTree<ScopeT>::FindFirstChild(const ScopeT& scope) const {
   if (children.empty()) return nullptr;
   return children.begin()->second->GetScope();
 }
+template <typename ScopeT>
+const absl::btree_map<uint64_t, ScopeNode<ScopeT>*> ScopeTree<ScopeT>::GetOrderedNodesAtDepth(
+    uint32_t depth) const {
+  // Scope Tree includes a dummy node at depth 0 and therefore it's 1-indexed.
+  depth++;
+
+  if (GetOrderedNodesByDepth().contains(depth)) {
+    return GetOrderedNodesByDepth().at(depth);
+  }
+  const absl::btree_map<uint64_t /*start time*/, ScopeNodeT*> empty_map;
+  return empty_map;
+}
 
 template <typename ScopeT>
 const ScopeT* ScopeTree<ScopeT>::FindFirstScopeAtOrAfterTime(uint32_t depth, uint64_t time) const {
+  // Scope Tree includes a dummy node at depth 0 and therefore it's 1-indexed.
+  depth++;
+
+  if (!ordered_nodes_by_depth_.contains(depth)) return nullptr;
   auto& ordered_nodes = ordered_nodes_by_depth_.at(depth);
 
   // Find the first node after the provided time.

@@ -137,10 +137,8 @@ TEST(ScopeTree, OverlappingTimers) {
   EXPECT_EQ(tree.Depth(), 2);
   EXPECT_EQ(tree.Size(), 5);
 
-  const auto& ordered_nodes_by_depth = tree.GetOrderedNodesByDepth();
-  EXPECT_EQ(ordered_nodes_by_depth.at(0).size(), 1);  // root node
-  EXPECT_EQ(ordered_nodes_by_depth.at(1).size(), 1);  // node 0
-  EXPECT_EQ(ordered_nodes_by_depth.at(2).size(), 3);  // nodes 1, 2 and 3
+  EXPECT_EQ(tree.GetOrderedNodesAtDepth(0).size(), 1);  // node 0
+  EXPECT_EQ(tree.GetOrderedNodesAtDepth(1).size(), 3);  // nodes 1, 2 and 3
   ValidateTree(tree);
 }
 
