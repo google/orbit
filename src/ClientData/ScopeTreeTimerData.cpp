@@ -47,9 +47,9 @@ std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimers
   std::vector<const orbit_client_protos::TimerInfo*> all_timers;
   absl::MutexLock lock(&scope_tree_mutex_);
 
-  for (const auto& [depth, ordered_nodes] : scope_tree_.GetOrderedNodesByDepth()) {
-    // Special case. ScopeTree has a root node in depth 0 which shouldn't be considered.
-    if (depth == 0) continue;
+  for (uint32_t depth = 0; depth < scope_tree_.Depth(); depth++) {
+    auto& ordered_nodes = scope_tree_.GetOrderedNodesAtDepth(depth);
+    if (ordered_nodes.empty()) continue;
 
     auto first_node_to_draw = ordered_nodes.upper_bound(min_tick);
     if (first_node_to_draw != ordered_nodes.begin()) --first_node_to_draw;
