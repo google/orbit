@@ -66,6 +66,7 @@ target_sources(ClientDataTests PRIVATE
         ModuleManagerTest.cpp
         ProcessDataTest.cpp
         ScopeTreeTimerDataTest.cpp
+        ThreadTrackDataManagerTest.cpp
         TimestampIntervalSetTest.cpp
         TracepointDataTest.cpp
         TimerDataTest.cpp
