@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef WINDOWS_TRACING_CLOCK_UTILS_H_
-#define WINDOWS_TRACING_CLOCK_UTILS_H_
+#ifndef WINDOWS_UTILS_PERFORMANCE_COUNTER_H_
+#define WINDOWS_UTILS_PERFORMANCE_COUNTER_H_
 
 #include <profileapi.h>
 
 #include <cstdint>
 
-namespace orbit_windows_tracing {
+namespace orbit_windows_utils {
 
 [[nodiscard]] inline uint64_t GetPerformanceCounterPeriodNs() {
   LARGE_INTEGER frequency;
@@ -22,6 +22,6 @@ namespace orbit_windows_tracing {
   return raw_timestamp * performance_period_ns_;
 }
 
-}  // namespace orbit_windows_tracing
+}  // namespace orbit_windows_utils
 
-#endif  // WINDOWS_TRACING_CLOCK_UTILS_H_
+#endif  // WINDOWS_UTILS_PERFORMANCE_COUNTER_H_

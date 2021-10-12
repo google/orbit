@@ -16,13 +16,11 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "WindowsTracing/WindowsTracingUtils.h"
+#include "WindowsUtils/ListProcesses.h"
+#include "WindowsUtils/ListModules.h"
+#include "WindowsUtils/ListThreads.h"
 
-using orbit_grpc_protos::ModuleInfo;
-using orbit_grpc_protos::ProcessInfo;
-using orbit_grpc_protos::ThreadName;
-
-namespace orbit_windows_tracing {
+namespace orbit_windows_utils {
 
 static std::string GetCurrentModuleName() {
   HMODULE module_handle = NULL;
@@ -34,16 +32,16 @@ static std::string GetCurrentModuleName() {
   return module_name;
 }
 
-TEST(WindowsTracingUtils, ListProcesses) {
-  std::vector<ProcessInfo> processes = orbit_windows_tracing::ListProcesses();
+TEST(WindowsUtils, ListProcesses) {
+  std::vector<Process> processes = ListProcesses();
   EXPECT_NE(processes.size(), 0);
 
   char this_exe_file_name[MAX_PATH];
   GetModuleFileNameA(NULL, this_exe_file_name, MAX_PATH);
 
   bool found_this_exe = false;
-  for (const ProcessInfo& process : processes) {
-    if (process.full_path() == this_exe_file_name) {
+  for (const Process& process : processes) {
+    if (process.full_path == this_exe_file_name) {
       found_this_exe = true;
       break;
     }
@@ -52,15 +50,15 @@ TEST(WindowsTracingUtils, ListProcesses) {
   EXPECT_TRUE(found_this_exe);
 }
 
-TEST(WindowsTracingUtils, ListModules) {
+TEST(WindowsUtils, ListModules) {
   uint32_t pid = orbit_base::GetCurrentProcessId();
-  std::vector<ModuleInfo> modules = orbit_windows_tracing::ListModules(pid);
+  std::vector<Module> modules = ListModules(pid);
   EXPECT_NE(modules.size(), 0);
 
   std::string this_module_name = GetCurrentModuleName();
   bool found_this_module = false;
-  for (const ModuleInfo& module_info : modules) {
-    if (module_info.file_path() == this_module_name) {
+  for (const Module& module : modules) {
+    if (module.full_path == this_module_name) {
       found_this_module = true;
       break;
     }
@@ -68,19 +66,19 @@ TEST(WindowsTracingUtils, ListModules) {
   EXPECT_TRUE(found_this_module);
 }
 
-TEST(WindowsTracingUtils, ListThreads) {
+TEST(WindowsUtils, ListThreads) {
   uint32_t pid = orbit_base::GetCurrentProcessId();
   uint32_t tid = orbit_base::GetCurrentThreadId();
-  constexpr const char* kThreadName = "WindowsTracingListThreads";
+  constexpr const char* kThreadName = "WindowsUtilsListThreads";
   orbit_base::SetCurrentThreadName(kThreadName);
 
-  std::vector<ThreadName> thread_names = orbit_windows_tracing::ListThreads(pid);
-  EXPECT_NE(thread_names.size(), 0);
+  std::vector<Thread> threads = ListThreads(pid);
+  EXPECT_NE(threads.size(), 0);
 
   std::string this_thread_name;
-  for (const ThreadName& thread_name : thread_names) {
-    if (thread_name.tid() == tid) {
-      this_thread_name = thread_name.name();
+  for (const Thread& thread : threads) {
+    if (thread.tid == tid) {
+      this_thread_name = thread.name;
       break;
     }
   }
@@ -89,18 +87,19 @@ TEST(WindowsTracingUtils, ListThreads) {
   EXPECT_STREQ(this_thread_name.c_str(), kThreadName);
 }
 
-TEST(WindowsTracingUtils, ListAllThreads) {
+TEST(WindowsUtils, ListAllThreads) {
   uint32_t tid = orbit_base::GetCurrentThreadId();
-  constexpr const char* kThreadName = "WindowsTracingListAllThread";
+  constexpr const char* kThreadName = "WindowsUtilsListAllThread";
   orbit_base::SetCurrentThreadName(kThreadName);
 
-  std::vector<orbit_grpc_protos::ThreadName> thread_names = orbit_windows_tracing::ListAllThreads();
-  EXPECT_NE(thread_names.size(), 0);
+  std::vector<Thread> threads = ListAllThreads();
+  EXPECT_NE(threads.size(), 0);
 
   std::string this_thread_name;
-  for (const ThreadName& thread_name : thread_names) {
-    if (thread_name.tid() == tid) {
-      this_thread_name = thread_name.name();
+  for (const Thread& thread : threads) {
+    if (thread.tid == tid) {
+      this_thread_name = thread.name;
+      break;
     }
   }
 

@@ -9,8 +9,8 @@
 
 #include <optional>
 
-#include "AdjustTokenPrivilege.h"
-#include "ClockUtils.h"
+#include "WindowsUtils/AdjustTokenPrivilege.h"
+#include "WindowsUtils/PerformanceCounter.h"
 #include "EtwEventTypes.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
@@ -57,7 +57,7 @@ void KrabsTracer::EnableProviders() {
 }
 
 void KrabsTracer::SetIsSystemProfilePrivilegeEnabled(bool value) {
-  auto result = AdjustTokenPrivilege(SE_SYSTEM_PROFILE_NAME, value);
+  auto result = orbit_windows_utils::AdjustTokenPrivilege(SE_SYSTEM_PROFILE_NAME, value);
   if (result.has_error()) ERROR("%s", result.error().message());
 }
 
@@ -67,7 +67,8 @@ void KrabsTracer::SetupStackTracing() {
   CHECK(frequency >= 0);
   if (frequency == 0) return;
   double period_ns = 1'000'000'000.0 / frequency;
-  static uint64_t performance_counter_period_ns = GetPerformanceCounterPeriodNs();
+  static uint64_t performance_counter_period_ns =
+      orbit_windows_utils::GetPerformanceCounterPeriodNs();
   TRACE_PROFILE_INTERVAL interval = {0};
   interval.Interval = static_cast<ULONG>(period_ns / performance_counter_period_ns);
   ULONG status = TraceSetInformation(/*SessionHandle=*/0, TraceSampledProfileIntervalInfo,
@@ -128,7 +129,8 @@ void KrabsTracer::OnThreadEvent(const EVENT_RECORD& record, const krabs::trace_c
       krabs::parser parser(schema);
       uint32_t old_tid = parser.parse<uint32_t>(L"OldThreadId");
       uint32_t new_tid = parser.parse<uint32_t>(L"NewThreadId");
-      uint64_t timestamp_ns = RawTimestampToNs(record.EventHeader.TimeStamp.QuadPart);
+      uint64_t timestamp_ns =
+          orbit_windows_utils::RawTimestampToNs(record.EventHeader.TimeStamp.QuadPart);
       uint16_t cpu = record.BufferContext.ProcessorIndex;
       context_switch_manager_->ProcessContextSwitch(cpu, old_tid, new_tid, timestamp_ns);
     } break;
@@ -164,7 +166,8 @@ void KrabsTracer::OnStackWalkEvent(const EVENT_RECORD& record,
   FullCallstackSample sample;
   sample.set_pid(pid);
   sample.set_tid(parser.parse<uint32_t>(L"StackThread"));
-  sample.set_timestamp_ns(RawTimestampToNs(record.EventHeader.TimeStamp.QuadPart));
+  sample.set_timestamp_ns(
+      orbit_windows_utils::RawTimestampToNs(record.EventHeader.TimeStamp.QuadPart));
 
   Callstack* callstack = sample.mutable_callstack();
   callstack->set_type(Callstack::kComplete);
