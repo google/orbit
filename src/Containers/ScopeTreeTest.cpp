@@ -91,7 +91,7 @@ TEST(ScopeTree, TreeCreation) {
   tree.Insert(CreateScope(5, 8));
   tree.Insert(CreateScope(0, 200));
   tree.Insert(CreateScope(1, 100));
-  EXPECT_EQ(tree.Height(), 6);
+  EXPECT_EQ(tree.Depth(), 6);
   EXPECT_EQ(tree.Size(), 9);
   ValidateTree(tree);
 }
@@ -101,7 +101,7 @@ TEST(ScopeTree, SameTimestamps) {
   tree.Insert(CreateScope(1, 10));
   tree.Insert(CreateScope(1, 10));
   tree.Insert(CreateScope(1, 10));
-  EXPECT_EQ(tree.Height(), 3);
+  EXPECT_EQ(tree.Depth(), 3);
   EXPECT_EQ(tree.Size(), 4);
   ValidateTree(tree);
 }
@@ -113,7 +113,7 @@ TEST(ScopeTree, SameStartTimestamps) {
   tree.Insert(CreateScope(1, 100));
   ValidateTree(tree);
   tree.Insert(CreateScope(1, 50));
-  EXPECT_EQ(tree.Height(), 3);
+  EXPECT_EQ(tree.Depth(), 3);
   ValidateTree(tree);
 }
 
@@ -122,7 +122,7 @@ TEST(ScopeTree, SameEndTimestamps) {
   tree.Insert(CreateScope(3, 10));
   tree.Insert(CreateScope(1, 10));
   tree.Insert(CreateScope(2, 10));
-  EXPECT_EQ(tree.Height(), 3);
+  EXPECT_EQ(tree.Depth(), 3);
   EXPECT_EQ(tree.Size(), 4);
   ValidateTree(tree);
 }
@@ -134,7 +134,7 @@ TEST(ScopeTree, OverlappingTimers) {
   tree.Insert(CreateScope(1, 10));   // node 1 fits in node 0
   tree.Insert(CreateScope(5, 100));  // node 2 overlaps node 1, fits in node 0
   tree.Insert(CreateScope(2, 50));   // node 3 overlaps nodes 1 and 2, fits in node 0
-  EXPECT_EQ(tree.Height(), 2);
+  EXPECT_EQ(tree.Depth(), 2);
   EXPECT_EQ(tree.Size(), 5);
 
   const auto& ordered_nodes_by_depth = tree.GetOrderedNodesByDepth();
