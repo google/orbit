@@ -22,6 +22,7 @@
 
 namespace orbit_ggp {
 
+using orbit_base::Future;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasValue;
 
@@ -159,6 +160,32 @@ TEST_F(OrbitGgpClientTest, GetInstancesAsyncTimeout) {
   EXPECT_TRUE(callback_was_called);
 }
 
+TEST_F(OrbitGgpClientTest, GetInstancesAsyncClientGetsDestroyed) {
+  bool callback_was_called = false;
+
+  Future<ErrorMessageOr<QVector<Instance>>> future =
+      Future<ErrorMessageOr<QVector<Instance>>>{ErrorMessage{"Empty Error Message"}};
+  {
+    ErrorMessageOr<std::unique_ptr<Client>> client =
+        CreateClient(mte_.get(), QString::fromStdString(mock_ggp_working_.string()));
+    ASSERT_THAT(client, HasValue());
+
+    future = client.value()->GetInstancesAsync();
+
+    future.Then(mte_.get(),
+                [&callback_was_called](const ErrorMessageOr<QVector<Instance>>& instances_result) {
+                  EXPECT_FALSE(callback_was_called);
+                  callback_was_called = true;
+                  EXPECT_THAT(instances_result, HasError("orbit_ggp::Client no longer exists"));
+                  QCoreApplication::exit();
+                });
+  }
+
+  QCoreApplication::exec();
+
+  EXPECT_TRUE(callback_was_called);
+}
+
 TEST_F(OrbitGgpClientTest, GetSshInfoAsyncWorking) {
   auto client = CreateClient(mte_.get(), QString::fromStdString(mock_ggp_working_.string()));
   ASSERT_THAT(client, HasValue());
@@ -224,6 +251,34 @@ TEST_F(OrbitGgpClientTest, GetSshInfoAsyncTimeout) {
   EXPECT_TRUE(callback_was_called);
 }
 
+TEST_F(OrbitGgpClientTest, GetSshInfoAsyncClientGetsDestroyed) {
+  bool callback_was_called = false;
+
+  Future<ErrorMessageOr<SshInfo>> future =
+      Future<ErrorMessageOr<SshInfo>>{ErrorMessage{"Empty Error Message"}};
+  {
+    ErrorMessageOr<std::unique_ptr<Client>> client =
+        CreateClient(mte_.get(), QString::fromStdString(mock_ggp_working_.string()));
+    ASSERT_THAT(client, HasValue());
+
+    Instance test_instance;
+    test_instance.id = "instance/test/id";
+
+    future = client.value()->GetSshInfoAsync(test_instance);
+
+    future.Then(mte_.get(), [&callback_was_called](const ErrorMessageOr<SshInfo>& ssh_info_result) {
+      EXPECT_FALSE(callback_was_called);
+      callback_was_called = true;
+      EXPECT_THAT(ssh_info_result, HasError("killed because the parent object was destroyed"));
+      QCoreApplication::exit();
+    });
+  }
+
+  QCoreApplication::exec();
+
+  EXPECT_TRUE(callback_was_called);
+}
+
 TEST_F(OrbitGgpClientTest, GetProjectsAsyncWorking) {
   auto client = CreateClient(mte_.get(), QString::fromStdString(mock_ggp_working_.string()));
   ASSERT_THAT(client, HasValue());
@@ -259,6 +314,32 @@ TEST_F(OrbitGgpClientTest, GetProjectsAsyncTimeout) {
     EXPECT_THAT(projects, HasError("timed out after 5ms"));
     QCoreApplication::exit();
   });
+
+  QCoreApplication::exec();
+
+  EXPECT_TRUE(callback_was_called);
+}
+
+TEST_F(OrbitGgpClientTest, GetProjectsAsyncClientGetsDestroyed) {
+  bool callback_was_called = false;
+
+  Future<ErrorMessageOr<QVector<Project>>> future =
+      Future<ErrorMessageOr<QVector<Project>>>{ErrorMessage{"Empty Error Message"}};
+  {
+    ErrorMessageOr<std::unique_ptr<Client>> client =
+        CreateClient(mte_.get(), QString::fromStdString(mock_ggp_working_.string()));
+    ASSERT_THAT(client, HasValue());
+
+    future = client.value()->GetProjectsAsync();
+
+    future.Then(mte_.get(), [&callback_was_called](
+                                const ErrorMessageOr<QVector<Project>>& projects_result) {
+      EXPECT_FALSE(callback_was_called);
+      callback_was_called = true;
+      EXPECT_THAT(projects_result, HasError("killed because the parent object was destroyed"));
+      QCoreApplication::exit();
+    });
+  }
 
   QCoreApplication::exec();
 
