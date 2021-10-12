@@ -36,11 +36,9 @@ class ThreadTrackDataManager final {
 
   ScopeTreeTimerData* GetOrCreateScopeTreeTimerData(uint32_t thread_id) {
     absl::MutexLock lock(&mutex_);
-    if (!scope_tree_timer_data_map_.contains(thread_id)) {
-      scope_tree_timer_data_map_.insert_or_assign(
-          thread_id, std::make_unique<ScopeTreeTimerData>(thread_id, scope_tree_update_type_));
-    }
-    return scope_tree_timer_data_map_.at(thread_id).get();
+    auto [it, unused_inserted] = scope_tree_timer_data_map_.try_emplace(
+        thread_id, std::make_unique<ScopeTreeTimerData>(thread_id, scope_tree_update_type_));
+    return it->second.get();
   };
 
  private:
