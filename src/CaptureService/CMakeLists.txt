@@ -12,14 +12,15 @@ target_include_directories(CaptureService PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(CaptureService PUBLIC
-        include/CaptureService/CaptureEventBuffer.h
         include/CaptureService/CaptureServiceImpl.h
         include/CaptureService/CaptureStartStopListener.h
+        include/CaptureService/ClientCaptureEventCollector.h
         include/CaptureService/ProducerEventProcessor.h)
 
 target_sources(CaptureService PRIVATE
-        CaptureEventSender.h
         CaptureServiceImpl.cpp
+        GrpcClientCaptureEventCollector.cpp
+        GrpcClientCaptureEventCollector.h
         MemoryInfoHandler.cpp
         MemoryInfoHandler.h
         ProducerEventProcessor.cpp
@@ -40,6 +41,7 @@ target_link_libraries(CaptureService PUBLIC
 add_executable(CaptureServiceTests)
 
 target_sources(CaptureServiceTests PRIVATE
+        GrpcClientCaptureEventCollectorTest.cpp
         ProducerEventProcessorTest.cpp)
 
 target_link_libraries(CaptureServiceTests PRIVATE

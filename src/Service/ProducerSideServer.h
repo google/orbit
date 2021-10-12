@@ -10,7 +10,6 @@
 #include <memory>
 #include <string_view>
 
-#include "CaptureService/CaptureEventBuffer.h"
 #include "CaptureService/CaptureStartStopListener.h"
 #include "CaptureService/ProducerEventProcessor.h"
 #include "OrbitBase/Logging.h"
