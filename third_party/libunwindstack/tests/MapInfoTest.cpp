@@ -15,6 +15,7 @@
  */
 
 #include <stdint.h>
+#include <sys/mman.h>
 
 #include <thread>
 
@@ -29,7 +30,7 @@ namespace unwindstack {
 
 TEST(MapInfoTest, maps_constructor_const_char) {
   auto prev_map = MapInfo::Create(0, 0, 0, 0, "");
-  auto map_info = MapInfo::Create(prev_map, prev_map, 1, 2, 3, 4, "map");
+  auto map_info = MapInfo::Create(prev_map, 1, 2, 3, 4, "map");
 
   EXPECT_EQ(prev_map.get(), map_info->prev_map().get());
   EXPECT_EQ(1UL, map_info->start());
@@ -45,9 +46,9 @@ TEST(MapInfoTest, maps_constructor_const_char) {
 TEST(MapInfoTest, maps_constructor_string) {
   std::string name("string_map");
   auto prev_map = MapInfo::Create(0, 0, 0, 0, "");
-  auto map_info = MapInfo::Create(prev_map, prev_map, 1, 2, 3, 4, name);
+  auto map_info = MapInfo::Create(prev_map, 1, 2, 3, 4, name);
 
-  EXPECT_EQ(prev_map.get(), map_info->prev_map().get());
+  EXPECT_EQ(prev_map, map_info->prev_map());
   EXPECT_EQ(1UL, map_info->start());
   EXPECT_EQ(2UL, map_info->end());
   EXPECT_EQ(3UL, map_info->offset());
@@ -56,6 +57,70 @@ TEST(MapInfoTest, maps_constructor_string) {
   EXPECT_EQ(INT64_MAX, map_info->load_bias());
   EXPECT_EQ(0UL, map_info->object_offset());
   EXPECT_TRUE(map_info->object().get() == nullptr);
+}
+
+TEST(MapInfoTest, real_map_check) {
+  auto map1 = MapInfo::Create(0, 0x1000, 0, PROT_READ, "fake.so");
+  auto map2 = MapInfo::Create(map1, 0, 0, 0, 0, "");
+  auto map3 = MapInfo::Create(map2, 0x1000, 0x2000, 0x1000, PROT_READ | PROT_EXEC, "fake.so");
+
+  EXPECT_EQ(nullptr, map1->prev_map());
+  EXPECT_EQ(nullptr, map1->GetPrevRealMap());
+  EXPECT_EQ(map2, map1->next_map());
+  EXPECT_EQ(map3, map1->GetNextRealMap());
+
+  EXPECT_EQ(map1, map2->prev_map());
+  EXPECT_EQ(nullptr, map2->GetPrevRealMap());
+  EXPECT_EQ(map3, map2->next_map());
+  EXPECT_EQ(nullptr, map2->GetNextRealMap());
+
+  EXPECT_EQ(map2, map3->prev_map());
+  EXPECT_EQ(map1, map3->GetPrevRealMap());
+  EXPECT_EQ(nullptr, map3->next_map());
+  EXPECT_EQ(nullptr, map3->GetNextRealMap());
+
+  // Verify that if the middle map is not blank, then the Get{Next,Prev}RealMap
+  // functions return nullptrs.
+  map2->set_offset(1);
+  EXPECT_EQ(nullptr, map1->GetPrevRealMap());
+  EXPECT_EQ(nullptr, map1->GetNextRealMap());
+  EXPECT_EQ(nullptr, map3->GetPrevRealMap());
+  EXPECT_EQ(nullptr, map3->GetNextRealMap());
+  map2->set_offset(0);
+  EXPECT_EQ(map3, map1->GetNextRealMap());
+
+  map2->set_flags(1);
+  EXPECT_EQ(nullptr, map1->GetPrevRealMap());
+  EXPECT_EQ(nullptr, map1->GetNextRealMap());
+  EXPECT_EQ(nullptr, map3->GetPrevRealMap());
+  EXPECT_EQ(nullptr, map3->GetNextRealMap());
+  map2->set_flags(0);
+  EXPECT_EQ(map3, map1->GetNextRealMap());
+
+  map2->set_name("something");
+  EXPECT_EQ(nullptr, map1->GetPrevRealMap());
+  EXPECT_EQ(nullptr, map1->GetNextRealMap());
+  EXPECT_EQ(nullptr, map3->GetPrevRealMap());
+  EXPECT_EQ(nullptr, map3->GetNextRealMap());
+  map2->set_name("");
+  EXPECT_EQ(map3, map1->GetNextRealMap());
+
+  // Verify that if the Get{Next,Prev}RealMap names must match.
+  map1->set_name("another");
+  EXPECT_EQ(nullptr, map1->GetPrevRealMap());
+  EXPECT_EQ(nullptr, map1->GetNextRealMap());
+  EXPECT_EQ(nullptr, map3->GetPrevRealMap());
+  EXPECT_EQ(nullptr, map3->GetNextRealMap());
+  map1->set_name("fake.so");
+  EXPECT_EQ(map3, map1->GetNextRealMap());
+
+  map3->set_name("another");
+  EXPECT_EQ(nullptr, map1->GetPrevRealMap());
+  EXPECT_EQ(nullptr, map1->GetNextRealMap());
+  EXPECT_EQ(nullptr, map3->GetPrevRealMap());
+  EXPECT_EQ(nullptr, map3->GetNextRealMap());
+  map3->set_name("fake.so");
+  EXPECT_EQ(map3, map1->GetNextRealMap());
 }
 
 TEST(MapInfoTest, get_function_name) {

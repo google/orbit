@@ -386,7 +386,7 @@ TEST_F(MapInfoGetObjectTest, multiple_thread_get_object) {
 // Verify that previous maps don't automatically get the same elf object.
 TEST_F(MapInfoGetObjectTest, prev_map_elf_not_set) {
   auto info1 = MapInfo::Create(0x1000, 0x2000, 0, PROT_READ, "/not/present");
-  auto info2 = MapInfo::Create(info1, info1, 0x2000, 0x3000, 0, PROT_READ, elf_.path);
+  auto info2 = MapInfo::Create(info1, 0x2000, 0x3000, 0, PROT_READ, elf_.path);
 
   Elf32_Ehdr ehdr;
   TestInitEhdr<Elf32_Ehdr>(&ehdr, ELFCLASS32, EM_ARM);
@@ -402,8 +402,7 @@ void MapInfoGetObjectTest::InitMapInfo(std::vector<std::shared_ptr<MapInfo>>& ma
                                        bool in_memory) {
   maps.resize(2);
   maps[0] = MapInfo::Create(0x1000, 0x2000, 0, PROT_READ, elf_.path);
-  maps[1] =
-      MapInfo::Create(maps[0], maps[0], 0x2000, 0x3000, 0x1000, PROT_READ | PROT_EXEC, elf_.path);
+  maps[1] = MapInfo::Create(maps[0], 0x2000, 0x3000, 0x1000, PROT_READ | PROT_EXEC, elf_.path);
 
   Elf32_Ehdr ehdr;
   TestInitEhdr<Elf32_Ehdr>(&ehdr, ELFCLASS32, EM_ARM);
@@ -484,9 +483,8 @@ TEST_F(MapInfoGetObjectTest, read_only_followed_by_read_exec_share_elf_read_only
 // a read-execute map will result in the same elf object in both maps.
 TEST_F(MapInfoGetObjectTest, read_only_followed_by_empty_then_read_exec_share_elf) {
   auto r_info = MapInfo::Create(0x1000, 0x2000, 0, PROT_READ, elf_.path);
-  auto empty = MapInfo::Create(r_info, r_info, 0x2000, 0x3000, 0, 0, "");
-  auto rw_info =
-      MapInfo::Create(empty, r_info, 0x3000, 0x4000, 0x2000, PROT_READ | PROT_EXEC, elf_.path);
+  auto empty = MapInfo::Create(r_info, 0x2000, 0x3000, 0, 0, "");
+  auto rw_info = MapInfo::Create(empty, 0x3000, 0x4000, 0x2000, PROT_READ | PROT_EXEC, elf_.path);
 
   Elf32_Ehdr ehdr;
   TestInitEhdr<Elf32_Ehdr>(&ehdr, ELFCLASS32, EM_ARM);

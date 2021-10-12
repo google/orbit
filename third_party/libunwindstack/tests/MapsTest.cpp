@@ -47,25 +47,28 @@ TEST(MapsTest, map_add) {
   Maps maps;
 
   maps.Add(0x1000, 0x2000, 0, PROT_READ, "fake_map", 0);
-  maps.Add(0x3000, 0x4000, 0x10, 0, "", 0x1234);
-  maps.Add(0x5000, 0x6000, 1, 2, "fake_map2", static_cast<uint64_t>(-1));
+  maps.Add(0x3000, 0x4000, 0, 0, "", 0x1234);
+  maps.Add(0x5000, 0x6000, 1, 2, "fake_map", static_cast<uint64_t>(-1));
 
   ASSERT_EQ(3U, maps.Total());
   auto info1 = maps.Get(0);
   auto info2 = maps.Get(1);
   auto info3 = maps.Get(2);
 
-  ASSERT_TRUE(info1->prev_map() == nullptr);
-  ASSERT_TRUE(info1->prev_real_map() == nullptr);
-  ASSERT_TRUE(info1->next_real_map() == info2);
+  EXPECT_EQ(nullptr, info1->prev_map());
+  EXPECT_EQ(nullptr, info1->GetPrevRealMap());
+  EXPECT_EQ(info2, info1->next_map());
+  EXPECT_EQ(info3, info1->GetNextRealMap());
 
-  ASSERT_TRUE(info2->prev_map() == info1);
-  ASSERT_TRUE(info2->prev_real_map() == info1);
-  ASSERT_TRUE(info2->next_real_map() == info3);
+  EXPECT_EQ(info1, info2->prev_map());
+  EXPECT_EQ(nullptr, info2->GetPrevRealMap());
+  EXPECT_EQ(info3, info2->next_map());
+  EXPECT_EQ(nullptr, info2->GetNextRealMap());
 
-  ASSERT_TRUE(info3->prev_map() == info2);
-  ASSERT_TRUE(info3->prev_real_map() == info2);
-  ASSERT_TRUE(info3->next_real_map() == nullptr);
+  EXPECT_EQ(info2, info3->prev_map());
+  EXPECT_EQ(info1, info3->GetPrevRealMap());
+  EXPECT_EQ(nullptr, info3->next_map());
+  EXPECT_EQ(nullptr, info3->GetNextRealMap());
 
   ASSERT_EQ(0x1000U, info1->start());
   ASSERT_EQ(0x2000U, info1->end());
@@ -630,6 +633,77 @@ TEST(MapsTest, find) {
   EXPECT_EQ(0x50U, info->offset());
   EXPECT_EQ(PROT_READ | PROT_WRITE | PROT_EXEC, info->flags());
   EXPECT_EQ("/system/lib/fake5.so", info->name());
+}
+
+TEST(MapsTest, sort) {
+  Maps maps;
+
+  maps.Add(0x8000, 0x9000, 0, 0, "", 0);
+  maps.Add(0x7000, 0x8000, 0, 0, "lib.so", 0);
+  maps.Add(0x6000, 0x7000, 0, 0, "", 0);
+  maps.Add(0x5000, 0x6000, 0, 0, "lib.so", 0);
+  maps.Add(0x4000, 0x5000, 0, 0, "", 0);
+  maps.Add(0x3000, 0x4000, 0, 0, "", 0);
+  maps.Add(0x2000, 0x3000, 0, 0, "lib.so", 0);
+  maps.Add(0x1000, 0x2000, 0, 0, "", 0);
+
+  maps.Sort();
+
+  EXPECT_EQ(0x1000UL, maps.Get(0)->start());
+  EXPECT_EQ(nullptr, maps.Get(0)->prev_map());
+  EXPECT_EQ(maps.Get(1), maps.Get(0)->next_map());
+  EXPECT_EQ(nullptr, maps.Get(0)->GetPrevRealMap());
+  EXPECT_EQ(nullptr, maps.Get(0)->GetNextRealMap());
+
+  EXPECT_EQ(0x2000UL, maps.Get(1)->start());
+  EXPECT_EQ(maps.Get(0), maps.Get(1)->prev_map());
+  EXPECT_EQ(maps.Get(2), maps.Get(1)->next_map());
+  EXPECT_EQ(nullptr, maps.Get(1)->GetPrevRealMap());
+  EXPECT_EQ(maps.Get(4), maps.Get(1)->GetNextRealMap());
+
+  EXPECT_EQ(0x3000UL, maps.Get(2)->start());
+  EXPECT_EQ(maps.Get(1), maps.Get(2)->prev_map());
+  EXPECT_EQ(maps.Get(3), maps.Get(2)->next_map());
+  EXPECT_EQ(nullptr, maps.Get(2)->GetPrevRealMap());
+  EXPECT_EQ(nullptr, maps.Get(2)->GetNextRealMap());
+
+  EXPECT_EQ(0x4000UL, maps.Get(3)->start());
+  EXPECT_EQ(maps.Get(2), maps.Get(3)->prev_map());
+  EXPECT_EQ(maps.Get(4), maps.Get(3)->next_map());
+  EXPECT_EQ(nullptr, maps.Get(3)->GetPrevRealMap());
+  EXPECT_EQ(nullptr, maps.Get(3)->GetNextRealMap());
+
+  EXPECT_EQ(0x5000UL, maps.Get(4)->start());
+  EXPECT_EQ(maps.Get(3), maps.Get(4)->prev_map());
+  EXPECT_EQ(maps.Get(5), maps.Get(4)->next_map());
+  EXPECT_EQ(maps.Get(1), maps.Get(4)->GetPrevRealMap());
+  EXPECT_EQ(maps.Get(6), maps.Get(4)->GetNextRealMap());
+
+  EXPECT_EQ(0x6000UL, maps.Get(5)->start());
+  EXPECT_EQ(maps.Get(4), maps.Get(5)->prev_map());
+  EXPECT_EQ(maps.Get(6), maps.Get(5)->next_map());
+  EXPECT_EQ(nullptr, maps.Get(5)->GetPrevRealMap());
+  EXPECT_EQ(nullptr, maps.Get(5)->GetNextRealMap());
+
+  EXPECT_EQ(0x7000UL, maps.Get(6)->start());
+  EXPECT_EQ(maps.Get(5), maps.Get(6)->prev_map());
+  EXPECT_EQ(maps.Get(7), maps.Get(6)->next_map());
+  EXPECT_EQ(maps.Get(4), maps.Get(6)->GetPrevRealMap());
+  EXPECT_EQ(nullptr, maps.Get(6)->GetNextRealMap());
+
+  EXPECT_EQ(0x8000UL, maps.Get(7)->start());
+  EXPECT_EQ(maps.Get(6), maps.Get(7)->prev_map());
+  EXPECT_EQ(nullptr, maps.Get(7)->next_map());
+  EXPECT_EQ(nullptr, maps.Get(7)->GetPrevRealMap());
+  EXPECT_EQ(nullptr, maps.Get(7)->GetNextRealMap());
+}
+
+TEST(MapsTest, sort_empty) {
+  Maps maps;
+
+  maps.Sort();
+
+  EXPECT_EQ(0ULL, maps.Total());
 }
 
 }  // namespace unwindstack

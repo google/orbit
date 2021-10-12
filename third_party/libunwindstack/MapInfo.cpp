@@ -35,15 +35,48 @@
 
 namespace unwindstack {
 
+std::shared_ptr<MapInfo> MapInfo::GetPrevRealMap() {
+  if (name().empty()) {
+    return nullptr;
+  }
+
+  for (auto prev = prev_map(); prev != nullptr; prev = prev->prev_map()) {
+    if (!prev->IsBlank()) {
+      if (prev->name() == name()) {
+        return prev;
+      }
+      return nullptr;
+    }
+  }
+  return nullptr;
+}
+
+std::shared_ptr<MapInfo> MapInfo::GetNextRealMap() {
+  if (name().empty()) {
+    return nullptr;
+  }
+
+  for (auto next = next_map(); next != nullptr; next = next->next_map()) {
+    if (!next->IsBlank()) {
+      if (next->name() == name()) {
+        return next;
+      }
+      return nullptr;
+    }
+  }
+  return nullptr;
+}
+
 bool MapInfo::InitFileMemoryFromPreviousReadOnlyMap(MemoryFileAtOffset* memory) {
   // One last attempt, see if the previous map is read-only with the
   // same name and stretches across this map.
-  if (prev_real_map() == nullptr || prev_real_map()->flags() != PROT_READ) {
+  auto prev_real_map = GetPrevRealMap();
+  if (prev_real_map == nullptr || prev_real_map->flags() != PROT_READ) {
     return false;
   }
 
-  uint64_t map_size = end() - prev_real_map()->end();
-  if (!memory->Init(name(), prev_real_map()->offset(), map_size)) {
+  uint64_t map_size = end() - prev_real_map->end();
+  if (!memory->Init(name(), prev_real_map->offset(), map_size)) {
     return false;
   }
 
@@ -52,12 +85,12 @@ bool MapInfo::InitFileMemoryFromPreviousReadOnlyMap(MemoryFileAtOffset* memory) 
     return false;
   }
 
-  if (!memory->Init(name(), prev_real_map()->offset(), max_size)) {
+  if (!memory->Init(name(), prev_real_map->offset(), max_size)) {
     return false;
   }
 
-  set_object_offset(offset() - prev_real_map()->offset());
-  set_object_start_offset(prev_real_map()->offset());
+  set_object_offset(offset() - prev_real_map->offset());
+  set_object_start_offset(prev_real_map->offset());
   return true;
 }
 
@@ -110,13 +143,6 @@ Memory* MapInfo::GetFileMemory() {
   // No elf at offset, try to init as if the whole file is an elf.
   if (memory->Init(name(), 0) && Elf::IsValidElf(memory.get())) {
     set_object_offset(offset());
-    // Need to check how to set the elf start offset. If this map is not
-    // the r-x map of a r-- map, then use the real offset value. Otherwise,
-    // use 0.
-    if (prev_real_map() == nullptr || prev_real_map()->offset() != 0 ||
-        prev_real_map()->flags() != PROT_READ || prev_real_map()->name() != name()) {
-      set_object_start_offset(offset());
-    }
     return memory.release();
   }
 
@@ -169,10 +195,11 @@ Memory* MapInfo::CreateMemory(const std::shared_ptr<Memory>& process_memory) {
   if (Elf::IsValidElf(memory.get())) {
     set_object_start_offset(offset());
 
+    auto next_real_map = GetNextRealMap();
+
     // Might need to peek at the next map to create a memory object that
     // includes that map too.
-    if (offset() != 0 || name().empty() || next_real_map() == nullptr ||
-        offset() >= next_real_map()->offset() || next_real_map()->name() != name()) {
+    if (offset() != 0 || next_real_map == nullptr || offset() >= next_real_map->offset()) {
       return memory.release();
     }
 
@@ -182,32 +209,33 @@ Memory* MapInfo::CreateMemory(const std::shared_ptr<Memory>& process_memory) {
     // be discarded.
     MemoryRanges* ranges = new MemoryRanges;
     ranges->Insert(new MemoryRange(process_memory, start(), end() - start(), 0));
-    ranges->Insert(new MemoryRange(process_memory, next_real_map()->start(),
-                                   next_real_map()->end() - next_real_map()->start(),
-                                   next_real_map()->offset() - offset()));
+    ranges->Insert(new MemoryRange(process_memory, next_real_map->start(),
+                                   next_real_map->end() - next_real_map->start(),
+                                   next_real_map->offset() - offset()));
 
     return ranges;
   }
+
+  auto prev_real_map = GetPrevRealMap();
 
   // Find the read-only map by looking at the previous map. The linker
   // doesn't guarantee that this invariant will always be true. However,
   // if that changes, there is likely something else that will change and
   // break something.
-  if (offset() == 0 || name().empty() || prev_real_map() == nullptr ||
-      prev_real_map()->name() != name() || prev_real_map()->offset() >= offset()) {
+  if (offset() == 0 || prev_real_map == nullptr || prev_real_map->offset() >= offset()) {
     set_memory_backed_object(false);
     return nullptr;
   }
 
   // Make sure that relative pc values are corrected properly.
-  set_object_offset(offset() - prev_real_map()->offset());
+  set_object_offset(offset() - prev_real_map->offset());
   // Use this as the elf start offset, otherwise, you always get offsets into
   // the r-x section, which is not quite the right information.
-  set_object_start_offset(prev_real_map()->offset());
+  set_object_start_offset(prev_real_map->offset());
 
   MemoryRanges* ranges = new MemoryRanges;
-  ranges->Insert(new MemoryRange(process_memory, prev_real_map()->start(),
-                                 prev_real_map()->end() - prev_real_map()->start(), 0));
+  ranges->Insert(new MemoryRange(process_memory, prev_real_map->start(),
+                                 prev_real_map->end() - prev_real_map->start(), 0));
   ranges->Insert(new MemoryRange(process_memory, start(), end() - start(), object_offset()));
 
   return ranges;
@@ -259,19 +287,21 @@ Object* MapInfo::GetObject(const std::shared_ptr<Memory>& process_memory, ArchEn
 
   if (!object()->valid()) {
     set_object_start_offset(offset());
-  } else if (prev_real_map() != nullptr && object_start_offset() != offset() &&
-             prev_real_map()->offset() == object_start_offset() &&
-             prev_real_map()->name() == name()) {
-    // If there is a read-only map then a read-execute map that represents the
-    // same object, make sure the previous map is using the same elf
-    // object if it hasn't already been set.
-    std::lock_guard<std::mutex> guard(prev_real_map()->object_mutex());
-    if (prev_real_map()->object().get() == nullptr) {
-      prev_real_map()->set_object(object());
-      prev_real_map()->set_memory_backed_object(memory_backed_object());
-    } else {
-      // Discard this object, and use the object from the previous map instead.
-      set_object(prev_real_map()->object());
+  } else {
+    auto prev_real_map = GetPrevRealMap();
+    if (prev_real_map != nullptr && object_start_offset() != offset() &&
+        prev_real_map->offset() == object_start_offset()) {
+      // If there is a read-only map then a read-execute map that represents the
+      // same elf object, make sure the previous map is using the same elf
+      // object if it hasn't already been set.
+      std::lock_guard<std::mutex> guard(prev_real_map->object_mutex());
+      if (prev_real_map->object().get() == nullptr) {
+        prev_real_map->set_object(object());
+        prev_real_map->set_memory_backed_object(memory_backed_object());
+      } else {
+        // Discard this elf, and use the elf from the previous map instead.
+        set_object(prev_real_map->object());
+      }
     }
   }
   return object().get();
