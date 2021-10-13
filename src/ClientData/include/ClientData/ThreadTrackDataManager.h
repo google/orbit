@@ -27,7 +27,7 @@ class ThreadTrackDataManager final {
 
   [[nodiscard]] std::vector<ScopeTreeTimerData*> GetAllScopeTreeTimerData() const {
     absl::MutexLock lock(&mutex_);
-    std::vector<ScopeTreeTimerData*> all_scope_tree_timer_data;
+    std::vector<ScopeTreeTimerData*> all_scope_tree_timer_data(scope_tree_timer_data_map_.size());
     for (const auto& [unused_tid, scope_tree_timer_data] : scope_tree_timer_data_map_) {
       all_scope_tree_timer_data.push_back(scope_tree_timer_data.get());
     }
@@ -36,15 +36,17 @@ class ThreadTrackDataManager final {
 
   ScopeTreeTimerData* GetOrCreateScopeTreeTimerData(uint32_t thread_id) {
     absl::MutexLock lock(&mutex_);
-    auto [it, unused_inserted] = scope_tree_timer_data_map_.try_emplace(
-        thread_id, std::make_unique<ScopeTreeTimerData>(thread_id, scope_tree_update_type_));
+    auto [it, inserted] = scope_tree_timer_data_map_.try_emplace(thread_id, nullptr);
+    if (inserted) {
+      it->second = std::make_unique<ScopeTreeTimerData>(thread_id, scope_tree_update_type_);
+    }
     return it->second.get();
   };
 
  private:
   mutable absl::Mutex mutex_;
   absl::flat_hash_map<uint32_t, std::unique_ptr<ScopeTreeTimerData>> scope_tree_timer_data_map_
-      GUARDED_BY(mutex_);
+      ABSL_GUARDED_BY(mutex_);
   ScopeTreeTimerData::ScopeTreeUpdateType scope_tree_update_type_;
 };
 
