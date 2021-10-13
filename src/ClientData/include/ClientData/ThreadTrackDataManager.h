@@ -27,7 +27,8 @@ class ThreadTrackDataManager final {
 
   [[nodiscard]] std::vector<ScopeTreeTimerData*> GetAllScopeTreeTimerData() const {
     absl::MutexLock lock(&mutex_);
-    std::vector<ScopeTreeTimerData*> all_scope_tree_timer_data(scope_tree_timer_data_map_.size());
+    std::vector<ScopeTreeTimerData*> all_scope_tree_timer_data;
+    all_scope_tree_timer_data.reserve(scope_tree_timer_data_map_.size());
     for (const auto& [unused_tid, scope_tree_timer_data] : scope_tree_timer_data_map_) {
       all_scope_tree_timer_data.push_back(scope_tree_timer_data.get());
     }
