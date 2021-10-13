@@ -44,6 +44,12 @@ class ThreadTrackDataManager final {
     return it->second.get();
   };
 
+  ScopeTreeTimerData* GetScopeTreeTimerData(uint32_t thread_id) const {
+    absl::MutexLock lock(&mutex_);
+    CHECK(scope_tree_timer_data_map_.contains(thread_id));
+    return scope_tree_timer_data_map_.at(thread_id).get();
+  };
+
  private:
   mutable absl::Mutex mutex_;
   absl::flat_hash_map<uint32_t, std::unique_ptr<ScopeTreeTimerData>> scope_tree_timer_data_map_
