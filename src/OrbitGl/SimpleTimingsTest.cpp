@@ -9,33 +9,33 @@
 namespace orbit_gl {
 TEST(SimpleTimings, TestCalculations) {
   SimpleTimings timings(4);
-  EXPECT_EQ(0, timings.GetAverageTimeInSeconds());
-  EXPECT_EQ(0, timings.GetMinTimeInSeconds());
-  EXPECT_EQ(0, timings.GetMaxTimeInSeconds());
+  EXPECT_EQ(0, timings.GetAverageTimeInMs());
+  EXPECT_EQ(0, timings.GetMinTimeInMs());
+  EXPECT_EQ(0, timings.GetMaxTimeInMs());
 
-  timings.PushTiming(10);
-  EXPECT_EQ(10, timings.GetAverageTimeInSeconds());
-  EXPECT_EQ(10, timings.GetMinTimeInSeconds());
-  EXPECT_EQ(10, timings.GetMaxTimeInSeconds());
+  timings.PushTimeMs(10);
+  EXPECT_EQ(10, timings.GetAverageTimeInMs());
+  EXPECT_EQ(10, timings.GetMinTimeInMs());
+  EXPECT_EQ(10, timings.GetMaxTimeInMs());
 
-  timings.PushTiming(10);
-  timings.PushTiming(0);
-  timings.PushTiming(0);
+  timings.PushTimeMs(10);
+  timings.PushTimeMs(0);
+  timings.PushTimeMs(0);
   // Should average over 10 + 10 + 0 + 0
-  EXPECT_EQ(5, timings.GetAverageTimeInSeconds());
-  EXPECT_EQ(0, timings.GetMinTimeInSeconds());
-  EXPECT_EQ(10, timings.GetMaxTimeInSeconds());
+  EXPECT_EQ(5, timings.GetAverageTimeInMs());
+  EXPECT_EQ(0, timings.GetMinTimeInMs());
+  EXPECT_EQ(10, timings.GetMaxTimeInMs());
 
-  timings.PushTiming(6);
-  timings.PushTiming(6);
+  timings.PushTimeMs(6);
+  timings.PushTimeMs(6);
   // The two 10s should have been overwritten, so now we average over6 + 6 + 0 + 0
-  EXPECT_EQ(3, timings.GetAverageTimeInSeconds());
-  EXPECT_EQ(0, timings.GetMinTimeInSeconds());
-  EXPECT_EQ(6, timings.GetMaxTimeInSeconds());
+  EXPECT_EQ(3, timings.GetAverageTimeInMs());
+  EXPECT_EQ(0, timings.GetMinTimeInMs());
+  EXPECT_EQ(6, timings.GetMaxTimeInMs());
 
   timings.Reset();
-  EXPECT_EQ(0, timings.GetAverageTimeInSeconds());
-  EXPECT_EQ(0, timings.GetMinTimeInSeconds());
-  EXPECT_EQ(0, timings.GetMaxTimeInSeconds());
+  EXPECT_EQ(0, timings.GetAverageTimeInMs());
+  EXPECT_EQ(0, timings.GetMinTimeInMs());
+  EXPECT_EQ(0, timings.GetMaxTimeInMs());
 }
 }  // namespace orbit_gl

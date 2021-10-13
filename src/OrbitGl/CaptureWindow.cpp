@@ -31,6 +31,7 @@
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "TextRenderer.h"
 #include "TimeGraph.h"
@@ -67,9 +68,11 @@ class AccessibleCaptureWindow : public AccessibleWidgetBridge {
 
 using orbit_client_protos::TimerInfo;
 
-CaptureWindow::CaptureWindow(OrbitApp* app)
-    : GlCanvas(), app_{app}, frame_times_(30), frame_times_update_primitives_(30) {
+CaptureWindow::CaptureWindow(OrbitApp* app) : GlCanvas(), app_{app} {
   draw_help_ = true;
+
+  scoped_frame_times_["Draw"] = std::make_unique<orbit_gl::SimpleTimings>(30);
+  scoped_frame_times_["Draw & Update Primitives"] = std::make_unique<orbit_gl::SimpleTimings>(30);
 
   slider_ = std::make_shared<orbit_gl::GlHorizontalSlider>(viewport_);
   vertical_slider_ = std::make_shared<orbit_gl::GlVerticalSlider>(viewport_);
@@ -384,7 +387,7 @@ std::unique_ptr<AccessibleInterface> CaptureWindow::CreateAccessibleInterface() 
 
 void CaptureWindow::Draw() {
   ORBIT_SCOPE("CaptureWindow::Draw");
-  auto start_time = std::chrono::system_clock::now();
+  uint64_t start_time = orbit_base::CaptureTimestampNs();
   bool time_graph_was_redrawn = false;
 
   text_renderer_.Init();
@@ -433,12 +436,12 @@ void CaptureWindow::Draw() {
   RenderAllLayers();
 
 
-  std::chrono::duration<double> frame_duration = std::chrono::system_clock::now() - start_time;
+  double frame_duration_in_ms = (orbit_base::CaptureTimestampNs() - start_time) / 1000000.0;
   if (picking_mode_ == PickingMode::kNone) {
     if (time_graph_was_redrawn) {
-      frame_times_update_primitives_.PushTiming(frame_duration.count());
+      scoped_frame_times_["Draw & Update Primitives"]->PushTimeMs(frame_duration_in_ms);
     } else {
-      frame_times_.PushTiming(frame_duration.count());
+      scoped_frame_times_["Draw"]->PushTimeMs(frame_duration_in_ms);
     }
   }
 }
@@ -688,18 +691,14 @@ void CaptureWindow::RenderImGuiDebugUI() {
   }
 
   if (ImGui::CollapsingHeader("Performance")) {
-    IMGUI_VARN_TO_TEXT(frame_times_.GetAverageTimeInSeconds() * 1000,
-                       "Avg update time in ms (no update_primitives)");
-    IMGUI_VARN_TO_TEXT(frame_times_.GetMinTimeInSeconds() * 1000,
-                       "Min update time in ms (no update_primitives)");
-    IMGUI_VARN_TO_TEXT(frame_times_.GetMaxTimeInSeconds() * 1000,
-                       "Max update time in ms (no update_primitives)");
-    IMGUI_VARN_TO_TEXT(frame_times_update_primitives_.GetAverageTimeInSeconds() * 1000,
-                       "Avg update time in ms (full redraw)");
-    IMGUI_VARN_TO_TEXT(frame_times_update_primitives_.GetMinTimeInSeconds() * 1000,
-                       "Min update time in ms (full redraw)");
-    IMGUI_VARN_TO_TEXT(frame_times_update_primitives_.GetMaxTimeInSeconds() * 1000,
-                       "Max update time in ms (full redraw)");
+    for (auto& item : scoped_frame_times_) {
+      IMGUI_VARN_TO_TEXT(item.second->GetAverageTimeInMs(),
+                         (std::string("Avg time in ms: ") + item.first));
+      IMGUI_VARN_TO_TEXT(item.second->GetMinTimeInMs(),
+                         (std::string("Min time in ms: ") + item.first));
+      IMGUI_VARN_TO_TEXT(item.second->GetMaxTimeInMs(),
+                         (std::string("Max time in ms: ") + item.first));
+    }
   }
 
   if (ImGui::CollapsingHeader("Selection Summary")) {

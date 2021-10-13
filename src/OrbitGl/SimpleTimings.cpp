@@ -9,20 +9,20 @@
 namespace orbit_gl {
 SimpleTimings::SimpleTimings(size_t num_timings_to_store)
     : num_timings_to_store_(num_timings_to_store) {
-  recorded_timings_.reserve(num_timings_to_store);
+  recorded_timings_ms_.reserve(num_timings_to_store);
 }
 
-double SimpleTimings::GetAverageTimeInSeconds() { return avg_; }
+double SimpleTimings::GetAverageTimeInMs() { return avg_ms_; }
 
-double SimpleTimings::GetMaxTimeInSeconds() { return max_; }
+double SimpleTimings::GetMaxTimeInMs() { return max_ms_; }
 
-double SimpleTimings::GetMinTimeInSeconds() { return min_; }
+double SimpleTimings::GetMinTimeInMs() { return min_ms_; }
 
-void SimpleTimings::PushTiming(double time) {
+void SimpleTimings::PushTimeMs(double time) {
   if (timing_count_ < num_timings_to_store_) {
-    recorded_timings_.push_back(time);
+    recorded_timings_ms_.push_back(time);
   } else {
-    recorded_timings_[timing_count_ % num_timings_to_store_] = time;
+    recorded_timings_ms_[timing_count_ % num_timings_to_store_] = time;
   }
   ++timing_count_;
 
@@ -31,28 +31,28 @@ void SimpleTimings::PushTiming(double time) {
 
 void SimpleTimings::Reset() {
   timing_count_ = 0;
-  recorded_timings_.clear();
+  recorded_timings_ms_.clear();
   UpdateCaches();
 }
 
 void SimpleTimings::UpdateCaches() {
-  size_t count = recorded_timings_.size();
+  size_t count = recorded_timings_ms_.size();
   if (count == 0) {
-    min_ = max_ = avg_ = 0;
+    min_ms_ = max_ms_ = avg_ms_ = 0;
     return;
   }
 
-  min_ = std::numeric_limits<double>::max();
-  max_ = -min_;
+  min_ms_ = std::numeric_limits<double>::max();
+  max_ms_ = -min_ms_;
   double total = 0;
   for (size_t i = 0; i < count; ++i) {
-    double value = recorded_timings_[i];
+    double value = recorded_timings_ms_[i];
     total += value;
-    max_ = std::max(max_, value);
-    min_ = std::min(min_, value);
+    max_ms_ = std::max(max_ms_, value);
+    min_ms_ = std::min(min_ms_, value);
   }
 
-  avg_ = total / count;
+  avg_ms_ = total / count;
 }
 
 }  // namespace orbit_gl

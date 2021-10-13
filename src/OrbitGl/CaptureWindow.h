@@ -109,8 +109,7 @@ class CaptureWindow : public GlCanvas {
   CreateAccessibleInterface() override;
   CaptureStats selection_stats_;
 
-  orbit_gl::SimpleTimings frame_times_;
-  orbit_gl::SimpleTimings frame_times_update_primitives_;
+  absl::flat_hash_map<std::string, std::unique_ptr<orbit_gl::SimpleTimings>> scoped_frame_times_;
 };
 
 #endif  // ORBIT_GL_CAPTURE_WINDOW_H_

@@ -13,21 +13,21 @@ class SimpleTimings {
  public:
   explicit SimpleTimings(size_t num_timings_to_store);
 
-  double GetAverageTimeInSeconds();
-  double GetMaxTimeInSeconds();
-  double GetMinTimeInSeconds();
+  [[nodiscard]] double GetAverageTimeInMs();
+  [[nodiscard]] double GetMaxTimeInMs();
+  [[nodiscard]] double GetMinTimeInMs();
 
-  void PushTiming(double time);
+  void PushTimeMs(double time_in_ms);
   void Reset();
 
  private:
-  std::vector<double> recorded_timings_;
+  std::vector<double> recorded_timings_ms_;
   size_t num_timings_to_store_ = 30;
   size_t timing_count_ = 0;
 
-  double min_ = 0;
-  double max_ = 0;
-  double avg_ = 0;
+  double min_ms_ = 0;
+  double max_ms_ = 0;
+  double avg_ms_ = 0;
 
   void UpdateCaches();
 };
