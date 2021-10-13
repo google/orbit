@@ -26,13 +26,17 @@ using orbit_grpc_protos::ProcessInfo;
 
 namespace orbit_client_data {
 
-CaptureData::CaptureData(ModuleManager* module_manager, const CaptureStarted& capture_started,
+CaptureData::CaptureData(orbit_client_data::ModuleManager* module_manager,
+                         const orbit_grpc_protos::CaptureStarted& capture_started,
                          std::optional<std::filesystem::path> file_path,
-                         absl::flat_hash_set<uint64_t> frame_track_function_ids)
+                         absl::flat_hash_set<uint64_t> frame_track_function_ids,
+                         bool is_data_from_saved_capture)
     : module_manager_{module_manager},
       selection_callstack_data_(std::make_unique<CallstackData>()),
       frame_track_function_ids_{std::move(frame_track_function_ids)},
-      file_path_{std::move(file_path)} {
+      file_path_{std::move(file_path)},
+      thread_track_data_provider_(
+          std::make_unique<ThreadTrackDataProvider>(is_data_from_saved_capture)) {
   ProcessInfo process_info;
   process_info.set_pid(capture_started.process_id());
   std::filesystem::path executable_path{capture_started.executable_path()};
@@ -110,12 +114,14 @@ void CaptureData::AddFunctionStats(uint64_t instrumented_function_id,
   functions_stats_.insert_or_assign(instrumented_function_id, std::move(stats));
 }
 
-void CaptureData::OnCaptureComplete(
-    const std::vector<const orbit_client_data::TimerChain*>& chains) {
+void CaptureData::OnCaptureComplete() {
+  thread_track_data_provider_->OnCaptureComplete();
+
   // Recalculate standard deviation as the running calculation may have introduced error.
   absl::flat_hash_map<int, unsigned long> id_to_sum_of_deviations_squared;
 
-  for (const orbit_client_data::TimerChain* chain : chains) {
+  for (const orbit_client_data::TimerChain* chain :
+       thread_track_data_provider_->GetAllThreadTimerChains()) {
     CHECK(chain);
     for (const orbit_client_data::TimerBlock& block : *chain) {
       for (uint64_t i = 0; i < block.size(); i++) {

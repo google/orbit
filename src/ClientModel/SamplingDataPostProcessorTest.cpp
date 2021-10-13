@@ -130,6 +130,7 @@ MATCHER_P(SortedCallstackReportEq, that, "") {
 
 class SamplingDataPostProcessorTest : public ::testing::Test {
  protected:
+  SamplingDataPostProcessorTest() {}
   void SetUp() override {}
 
   void TearDown() override {}

@@ -67,6 +67,7 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
       batcher_(BatcherId::kTimeGraph),
       manual_instrumentation_manager_{app->GetManualInstrumentationManager()},
       capture_data_{capture_data},
+      thread_track_data_provider_(capture_data->GetThreadTrackDataProvider()),
       app_{app} {
   text_renderer_static_.Init();
   text_renderer_static_.SetViewport(viewport);
@@ -298,13 +299,11 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
       break;
     }
     case TimerInfo::kNone: {
-      ThreadTrack* track = track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
-      track->OnTimer(timer_info);
+      thread_track_data_provider_->AddTimer(timer_info);
       break;
     }
     case TimerInfo::kApiScope: {
-      ThreadTrack* track = track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
-      track->OnTimer(timer_info);
+      thread_track_data_provider_->AddTimer(timer_info);
       break;
     }
     case TimerInfo::kApiScopeAsync: {
@@ -400,11 +399,7 @@ void TimeGraph::ProcessAsyncTimer(const std::string& track_name, const TimerInfo
 }
 
 std::vector<const TimerChain*> TimeGraph::GetAllThreadTrackTimerChains() const {
-  std::vector<const TimerChain*> chains;
-  for (const auto& track : track_manager_->GetThreadTracks()) {
-    orbit_base::Append(chains, track->GetChains());
-  }
-  return chains;
+  return thread_track_data_provider_->GetAllThreadTimerChains();
 }
 
 int TimeGraph::GetNumVisiblePrimitives() const {

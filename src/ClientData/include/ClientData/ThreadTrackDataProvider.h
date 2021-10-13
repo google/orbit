@@ -32,10 +32,11 @@ class ThreadTrackDataProvider final {
     return GetScopeTreeTimerData(thread_id)->GetChains();
   }
 
-  [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
-      uint32_t thread_id, uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
-      uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const {
-    return GetScopeTreeTimerData(thread_id)->GetTimers(min_tick, max_tick);
+  [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimersAtDepth(
+      uint32_t thread_id, uint32_t depth, uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
+      uint64_t max_tick = std::numeric_limits<uint64_t>::max(), uint64_t resolution = 1000) const {
+    return GetScopeTreeTimerData(thread_id)->GetTimersAtDepth(depth, min_tick, max_tick,
+                                                              resolution);
   }
 
   [[nodiscard]] bool IsEmpty(uint32_t thread_id) const {

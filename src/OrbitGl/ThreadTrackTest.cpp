@@ -13,9 +13,8 @@ TEST(ThreadTrack, CaptureViewElementWorksAsIntended) {
   CaptureViewElementTester tester;
   std::unique_ptr<orbit_client_data::CaptureData> test_data =
       TrackTestData::GenerateTestCaptureData();
-  ThreadTrack track =
-      ThreadTrack(nullptr, nullptr, tester.GetViewport(), tester.GetLayout(), -1, nullptr,
-                  test_data.get(), nullptr, ThreadTrack::ScopeTreeUpdateType::kNever);
+  ThreadTrack track = ThreadTrack(nullptr, nullptr, tester.GetViewport(), tester.GetLayout(), -1,
+                                  nullptr, test_data.get(), nullptr);
   EXPECT_EQ(3ull, track.GetChildren().size());
   tester.RunTests(&track);
 }
