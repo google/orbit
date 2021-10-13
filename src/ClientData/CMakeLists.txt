@@ -24,6 +24,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/ProcessData.h
         include/ClientData/ScopeTreeTimerData.h
         include/ClientData/ThreadTrackDataManager.h
+        include/ClientData/ThreadTrackDataProvider.h
         include/ClientData/TimerChain.h
         include/ClientData/TimestampIntervalSet.h
         include/ClientData/TracepointCustom.h
@@ -42,6 +43,7 @@ target_sources(ClientData PRIVATE
         PostProcessedSamplingData.cpp
         ProcessData.cpp
         ScopeTreeTimerData.cpp
+        ThreadTrackDataProvider.cpp
         TimerChain.cpp
         TimestampIntervalSet.cpp
         TracepointData.cpp
@@ -67,6 +69,7 @@ target_sources(ClientDataTests PRIVATE
         ProcessDataTest.cpp
         ScopeTreeTimerDataTest.cpp
         ThreadTrackDataManagerTest.cpp
+        ThreadTrackDataProviderTest.cpp
         TimestampIntervalSetTest.cpp
         TracepointDataTest.cpp
         TimerDataTest.cpp

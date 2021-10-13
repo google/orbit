@@ -26,6 +26,7 @@ class ScopeTreeTimerData final {
   [[nodiscard]] int64_t GetThreadId() const { return thread_id_; }
   [[nodiscard]] bool IsEmpty() const { return GetNumberOfTimers() == 0; }
   [[nodiscard]] size_t GetNumberOfTimers() const;
+  [[nodiscard]] uint32_t GetProcessId() const { return timer_data_.GetProcessId(); }
   [[nodiscard]] uint64_t GetMinTime() const { return timer_data_.GetMinTime(); }
   [[nodiscard]] uint64_t GetMaxTime() const { return timer_data_.GetMaxTime(); }
   [[nodiscard]] uint32_t GetDepth() const;
