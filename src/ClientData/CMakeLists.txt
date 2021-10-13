@@ -23,6 +23,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/PostProcessedSamplingData.h
         include/ClientData/ProcessData.h
         include/ClientData/ScopeTreeTimerData.h
+        include/ClientData/ThreadTrackDataManager.h
         include/ClientData/TimerChain.h
         include/ClientData/TimestampIntervalSet.h
         include/ClientData/TracepointCustom.h
@@ -65,6 +66,7 @@ target_sources(ClientDataTests PRIVATE
         ModuleManagerTest.cpp
         ProcessDataTest.cpp
         ScopeTreeTimerDataTest.cpp
+        ThreadTrackDataManagerTest.cpp
         TimestampIntervalSetTest.cpp
         TracepointDataTest.cpp
         TimerDataTest.cpp
