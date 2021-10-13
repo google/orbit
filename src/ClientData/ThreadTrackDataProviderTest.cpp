@@ -34,7 +34,7 @@ TEST(ThreadTrackDataProvider, InsertAndGetTimer) {
 
   EXPECT_FALSE(thread_track_data_provider.IsEmpty(kThreadId1));
 
-  auto all_timers = thread_track_data_provider.GetTimers(kThreadId1);
+  auto all_timers = thread_track_data_provider.GetTimersAtDepth(kThreadId1, 0);
   EXPECT_EQ(all_timers.size(), 1);
 
   const orbit_client_protos::TimerInfo* inserted_timer_info = all_timers[0];
@@ -54,12 +54,12 @@ TEST(ThreadTrackDataProvider, OnCaptureComplete) {
   thread_track_data_provider.AddTimer(timer_info);
 
   EXPECT_TRUE(thread_track_data_provider.IsEmpty(kThreadId1));
-  EXPECT_EQ(thread_track_data_provider.GetTimers(kThreadId1).size(), 0);
+  EXPECT_EQ(thread_track_data_provider.GetTimersAtDepth(kThreadId1, 0).size(), 0);
 
   thread_track_data_provider.OnCaptureComplete();
 
   EXPECT_FALSE(thread_track_data_provider.IsEmpty(kThreadId1));
-  auto all_timers = thread_track_data_provider.GetTimers(kThreadId1);
+  auto all_timers = thread_track_data_provider.GetTimersAtDepth(kThreadId1, 0);
   EXPECT_EQ(all_timers.size(), 1);
   const orbit_client_protos::TimerInfo* inserted_timer_info = all_timers[0];
   EXPECT_EQ(inserted_timer_info->thread_id(), 1);
@@ -115,8 +115,9 @@ TEST(ThreadTrackDataProvider, GetTimers) {
   ThreadTrackDataProvider thread_track_data_provider;
   InsertTimersForTesting(thread_track_data_provider);
 
-  EXPECT_EQ(thread_track_data_provider.GetTimers(1).size(), 4);
-  EXPECT_EQ(thread_track_data_provider.GetTimers(2).size(), 1);
+  EXPECT_EQ(thread_track_data_provider.GetTimersAtDepth(1, 0).size(), 3);  // left, center, right
+  EXPECT_EQ(thread_track_data_provider.GetTimersAtDepth(1, 1).size(), 1);  // down
+  EXPECT_EQ(thread_track_data_provider.GetTimersAtDepth(2, 0).size(), 1);  // other_thread_id
 }
 
 TEST(ThreadTrackDataProvider, GetAllThreadId) {

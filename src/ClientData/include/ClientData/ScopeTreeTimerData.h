@@ -36,9 +36,16 @@ class ScopeTreeTimerData final {
   void OnCaptureComplete();
   [[nodiscard]] TimerData* GetTimerData() { return &timer_data_; }
 
-  [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
+  // We need to know the resolution because we want to optimize the number of timers we return when
+  // zooming-out. No sense to return many timers with similar timestamp if after they are not going
+  // to be drawn.
+  [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetAllTimers(
       uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
-      uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const;
+      uint64_t max_tick = std::numeric_limits<uint64_t>::max(), uint64_t resolution = 1000) const;
+  [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimersAtDepth(
+      uint32_t depth, uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
+      uint64_t max_tick = std::numeric_limits<uint64_t>::max(), uint64_t resolution = 1000) const;
+
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
       const orbit_client_protos::TimerInfo& timer) const;
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetRight(

@@ -297,8 +297,9 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
 
         // It is safe to do this write on the main thread, as the capture thread is suspended until
         // this task is completely executed.
-        capture_data_ = std::make_unique<CaptureData>(
-            module_manager_.get(), capture_started, file_path, std::move(frame_track_function_ids));
+        capture_data_ =
+            std::make_unique<CaptureData>(module_manager_.get(), capture_started, file_path,
+                                          std::move(frame_track_function_ids), IsLoadingCapture());
         capture_window_->CreateTimeGraph(capture_data_.get());
         TrackManager* track_manager = GetMutableTimeGraph()->GetTrackManager();
         track_manager->SetIsDataFromSavedCapture(is_loading_capture_);
@@ -346,10 +347,7 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
 }
 
 Future<void> OrbitApp::OnCaptureComplete() {
-  for (ThreadTrack* thread_track : GetMutableTimeGraph()->GetTrackManager()->GetThreadTracks()) {
-    thread_track->OnCaptureComplete();
-  }
-  capture_data_->OnCaptureComplete(GetMutableTimeGraph()->GetAllThreadTrackTimerChains());
+  capture_data_->OnCaptureComplete();
 
   GetMutableCaptureData().FilterBrokenCallstacks();
   PostProcessedSamplingData post_processed_sampling_data =
