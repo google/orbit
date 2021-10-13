@@ -233,7 +233,7 @@ void TextRenderer::AddTextInternal(const char* text, ftgl::vec2* pen,
   float a = color.alpha;
 
   float max_width =
-      formatting.max_size == -1.f ? FLT_MAX : viewport_->WorldToScreenWidth(formatting.max_size);
+      formatting.max_size == -1.f ? FLT_MAX : viewport_->WorldToScreen({formatting.max_size, 0})[0];
   float str_width = 0.f;
   float min_x = FLT_MAX;
   float max_x = -FLT_MAX;
@@ -303,7 +303,7 @@ void TextRenderer::AddText(const char* text, float x, float y, float z, TextForm
     return;
   }
 
-  Vec2i pen_pos = viewport_->WorldToScreenPos(Vec2(x, y));
+  Vec2i pen_pos = viewport_->WorldToScreen(Vec2(x, y));
   pen_.x = pen_pos[0];
   pen_.y = pen_pos[1];
 
@@ -342,13 +342,13 @@ void TextRenderer::AddText(const char* text, float x, float y, float z, TextForm
   AddTextInternal(text, &pen_, formatting, z, &out_screen_pos, &out_screen_size);
 
   if (out_text_pos) {
-    (*out_text_pos) = viewport_->ScreenToWorldPos(
+    (*out_text_pos) = viewport_->ScreenToWorld(
         Vec2i(static_cast<int>(out_screen_pos.x), static_cast<int>(out_screen_pos.y)));
   }
 
   if (out_text_size) {
-    (*out_text_size)[0] = viewport_->ScreenToWorldWidth(static_cast<int>(out_screen_size.x));
-    (*out_text_size)[1] = viewport_->ScreenToWorldHeight(static_cast<int>(out_screen_size.y));
+    *out_text_size = viewport_->ScreenToWorld(
+        Vec2i(static_cast<int>(out_screen_size.x), static_cast<int>(out_screen_size.y)));
   }
 }
 
@@ -370,9 +370,9 @@ float TextRenderer::AddTextTrailingCharsPrioritized(const char* text, float x, f
     return 0.f;
   }
 
-  float temp_pen_x = viewport_->WorldToScreenPos(Vec2(x, y))[0];
+  float temp_pen_x = viewport_->WorldToScreen(Vec2(x, y))[0];
   float max_width =
-      formatting.max_size == -1.f ? FLT_MAX : viewport_->WorldToScreenWidth(formatting.max_size);
+      formatting.max_size == -1.f ? FLT_MAX : viewport_->WorldToScreen({formatting.max_size, 0})[0];
   float string_width = 0.f;
   int min_x = INT_MAX;
   int max_x = -INT_MAX;
@@ -433,11 +433,11 @@ float TextRenderer::AddTextTrailingCharsPrioritized(const char* text, float x, f
 }
 
 float TextRenderer::GetStringWidth(const char* text, uint32_t font_size) {
-  return viewport_->ScreenToWorldWidth(GetStringWidthScreenSpace(text, font_size));
+  return viewport_->ScreenToWorld({GetStringWidthScreenSpace(text, font_size), 0})[0];
 }
 
 float TextRenderer::GetStringHeight(const char* text, uint32_t font_size) {
-  return viewport_->ScreenToWorldHeight(GetStringHeightScreenSpace(text, font_size));
+  return viewport_->ScreenToWorld({0, GetStringHeightScreenSpace(text, font_size)})[1];
 }
 
 int TextRenderer::GetStringWidthScreenSpace(const char* text, uint32_t font_size) {

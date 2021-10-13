@@ -9,28 +9,21 @@
 
 namespace orbit_gl {
 
-// Defines a mapping from a 2D screen into a 2D (!) world. Provides functionality to convert between
-// coordinate systems, taking scrolling and scaling into account.
+// Defines a mapping from pixel space to world space. World space may use a different scaling
+// in x- or y-direction. Main use case of this class is to convert coordinates when interacting
+// with mouse input.
 //
-// Uses the following coordinate systems:
+// Unlike in earlier versions, this class does not take care of positioning the viewport within
+// the world. Our "world" is always anchored at (0, 0) top left using the following coordinates:
 //
-// World:
-//  (0, 0) ----> +x
+// (0, 0) ------> +x
 //    |
 //    |
 //    v
 //    +y
 //
-//
-// Screen:
-//  (0, 0) ----> +x
-//    |
-//    |
-//    v
-//    +y
-//
-// where world(0, 0) is initially anchored at screen(0, 0), i.e. top left. Viewport clamps scrolling
-// X values to be >= world_min, and scrollingY values to be <= world_min.
+// When the size of the world and the screen differs, the contents of the world are scaled up
+// or down accordingly to fill the whole screen.
 //
 // Viewport will indicate if any changes happened that require redraw of the contents in between
 // frames. See Viewport::IsDirty() for usage.
@@ -45,38 +38,17 @@ class Viewport {
   [[nodiscard]] int GetScreenWidth() const;
   [[nodiscard]] int GetScreenHeight() const;
 
-  // Visible size of the world.
-  void SetVisibleWorldWidth(float width);
-  void SetVisibleWorldHeight(float height);
-  [[nodiscard]] float GetVisibleWorldWidth() const;
-  [[nodiscard]] float GetVisibleWorldHeight() const;
+  // Size of the world.
+  void SetWorldSize(float width, float height);
+  [[nodiscard]] const float GetWorldWidth() const { return world_width_; }
+  [[nodiscard]] const float GetWorldHeight() const { return world_height_; }
 
-  // Absolute size of the world.
-  void SetWorldExtents(float width, float height);
-  [[nodiscard]] const Vec2& GetWorldExtents();
-
-  // Minimum values of the world.
-  void SetWorldMin(const Vec2& value);
-  [[nodiscard]] const Vec2& GetWorldMin() const;
-
-  // Position of world TopLeft anchored at (0, 0) ScreenSpace.
-  void SetScreenTopLeftInWorldX(float x);
-  void SetScreenTopLeftInWorldY(float y);
-  [[nodiscard]] const Vec2& GetScreenTopLeftInWorld() const;
-
-  [[nodiscard]] Vec2 ScreenToWorldPos(const Vec2i& screen_pos) const;
-
-  // These methods to not take scrolling into account, use those if you need
-  // to convert sizes instead of positions.
-  [[nodiscard]] float ScreenToWorldWidth(int width) const;
-  [[nodiscard]] float ScreenToWorldHeight(int height) const;
-
-  [[nodiscard]] Vec2i WorldToScreenPos(const Vec2& world_pos) const;
-
-  // These methods to not take scrolling into account, use those if you need
-  // to convert sizes instead of positions.
-  [[nodiscard]] int WorldToScreenWidth(float width) const;
-  [[nodiscard]] int WorldToScreenHeight(float height) const;
+  // Convert between screen and world space. This method works for positions and sizes since there
+  // is no translation component involved, only scaling.
+  [[nodiscard]] Vec2 ScreenToWorld(const Vec2i& screen_coords) const;
+  // Convert between world and screen space. This method works for positions and sizes since there
+  // is no translation component involved, only scaling.
+  [[nodiscard]] Vec2i WorldToScreen(const Vec2& world_coords) const;
 
   // "Dirty" indicates that any action has been performed that requires redraw of
   // the viewport contents. The flag must explicitely be cleared in each frame.
@@ -88,12 +60,8 @@ class Viewport {
   int screen_width_;
   int screen_height_;
 
-  float visible_world_width_;
-  float visible_world_height_;
-
-  Vec2 screen_top_left_in_world_ = Vec2(0.f, 0.f);
-  Vec2 world_extents_;
-  Vec2 world_min_ = Vec2(0.f, 0.f);
+  float world_width_;
+  float world_height_;
 
   bool is_dirty_ = true;
 };

@@ -192,7 +192,7 @@ bool TimerTrack::DrawTimer(const TimerInfo* prev_timer_info, const TimerInfo* ne
   Color color = GetTimerColor(*current_timer_info, is_selected, is_highlighted, draw_data);
 
   bool is_visible_width = elapsed_us * draw_data.inv_time_window *
-                              viewport_->WorldToScreenWidth(draw_data.track_width) >
+                              viewport_->WorldToScreen({draw_data.track_width, 0})[0] >
                           1;
 
   if (is_visible_width) {
@@ -271,7 +271,7 @@ void TimerTrack::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_
   // out, many events will be discarded quickly.
   uint64_t time_window_ns = static_cast<uint64_t>(1000 * time_graph_->GetTimeWindowUs());
   draw_data.ns_per_pixel =
-      static_cast<double>(time_window_ns) / viewport_->WorldToScreenWidth(GetWidth());
+      static_cast<double>(time_window_ns) / viewport_->WorldToScreen({GetWidth(), 0})[0];
   draw_data.min_timegraph_tick = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
 
   for (const TimerChain* chain : chains) {
@@ -385,7 +385,7 @@ internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick,
 
   uint64_t time_window_ns = static_cast<uint64_t>(1000 * time_graph->GetTimeWindowUs());
   draw_data.ns_per_pixel =
-      static_cast<double>(time_window_ns) / viewport->WorldToScreenWidth(track_width);
+      static_cast<double>(time_window_ns) / viewport->WorldToScreen({track_width, 0})[0];
   draw_data.min_timegraph_tick = time_graph->GetTickFromUs(time_graph->GetMinTimeUs());
   return draw_data;
 }
