@@ -4,12 +4,13 @@
 
 #include "WindowsUtils/ListThreads.h"
 
-#include <OrbitBase/Logging.h>
-#include <OrbitBase/Profiling.h>
-#include <OrbitBase/ThreadUtils.h>
-#include <OrbitBase/UniqueResource.h>
 #include <absl/base/casts.h>
 #include <windows.h>
+
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/Profiling.h"
+#include "OrbitBase/ThreadUtils.h"
+#include "OrbitBase/UniqueResource.h"
 
 // Include after windows.h.
 #include <psapi.h>

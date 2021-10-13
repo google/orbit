@@ -5,10 +5,10 @@
 #ifndef WINDOWS_UTILS_LIST_THREADS_H_
 #define WINDOWS_UTILS_LIST_THREADS_H_
 
-#include <OrbitBase/ThreadConstants.h>
-
 #include <string>
 #include <vector>
+
+#include "OrbitBase/ThreadConstants.h"
 
 namespace orbit_windows_utils {
 

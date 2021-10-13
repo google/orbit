@@ -40,7 +40,9 @@ target_link_libraries(WindowsUtils PUBLIC
 add_executable(WindowsUtilsTests)
 
 target_sources(WindowsUtilsTests PRIVATE
-        WindowsUtilsTest.cpp)
+        ListModulesTest.cpp
+        ListProcessesTest.cpp
+        ListThreadsTest.cpp)
 
 target_link_libraries(WindowsUtilsTests PRIVATE
         WindowsUtils

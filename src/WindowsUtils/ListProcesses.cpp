@@ -4,17 +4,18 @@
 
 #include "WindowsUtils/ListProcesses.h"
 
-#include <OrbitBase/Logging.h>
-#include <OrbitBase/UniqueResource.h>
 #include <absl/base/casts.h>
 #include <windows.h>
+
+#include <filesystem>
+#include <optional>
+
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/UniqueResource.h"
 
 // Include after windows.h.
 #include <psapi.h>
 #include <tlhelp32.h>
-
-#include <filesystem>
-#include <optional>
 
 namespace orbit_windows_utils {
 
