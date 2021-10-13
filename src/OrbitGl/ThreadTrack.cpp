@@ -420,7 +420,7 @@ void ThreadTrack::OnCaptureComplete() {
     uint64_t current_timestamp, const internal::DrawData& draw_data) {
   uint64_t current_ns_from_min = current_timestamp - draw_data.min_tick;
   uint64_t total_ns_in_screen = draw_data.max_tick - draw_data.min_tick;
-  uint64_t num_pixels_on_track = draw_data.viewport->WorldToScreenWidth(draw_data.track_width);
+  uint64_t num_pixels_on_track = draw_data.viewport->WorldToScreen({draw_data.track_width, 0})[0];
 
   // Given a track width of 4000 pixels, we can capture for 53 days without overflowing.
   uint64_t current_pixel = (current_ns_from_min * num_pixels_on_track) / total_ns_in_screen;
