@@ -76,6 +76,9 @@ static FunctionPrototypeT GetProcAddress(const std::string& library, const std::
 std::string GetThreadNameNative(uint32_t tid) {
   static const std::string kEmptyString;
 
+  // Thread 0 is the "System" thread.
+  if (tid == 0) return "System";
+
   // Find "GetThreadDescription" procedure.
   static auto get_thread_description =
       GetProcAddress<HRESULT(WINAPI*)(HANDLE, PWSTR*)>("kernel32.dll", "GetThreadDescription");
