@@ -19,10 +19,12 @@ namespace orbit_object_utils {
 static ErrorMessageOr<CComPtr<IDiaDataSource>> CreateDiaDataSource() {
   // Initializes the COM library for the current thread.
   thread_local HRESULT com_initialize_result = CoInitialize(NULL);
-  if (com_initialize_result != S_OK) {
+
+  // S_OK means success, S_FALSE means that the COM library is already initialized on this thread.
+  // In both cases, we want to continue.
+  if (com_initialize_result != S_OK && com_initialize_result != S_FALSE) {
     return ErrorMessage{absl::StrFormat("CoInitialize failed (%u)", com_initialize_result)};
   }
-
   // Create instance of dia data source.
   CComPtr<IDiaDataSource> dia_data_source = nullptr;
   constexpr const wchar_t* kDiaDllFileName = L"msdia140.dll";
