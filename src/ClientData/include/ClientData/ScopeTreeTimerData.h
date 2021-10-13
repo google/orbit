@@ -29,22 +29,22 @@ class ScopeTreeTimerData final {
   [[nodiscard]] uint64_t GetMinTime() const { return timer_data_.GetMinTime(); }
   [[nodiscard]] uint64_t GetMaxTime() const { return timer_data_.GetMaxTime(); }
   [[nodiscard]] uint32_t GetDepth() const;
+  [[nodiscard]] std::vector<const TimerChain*> GetChains() const { return timer_data_.GetChains(); }
 
   const orbit_client_protos::TimerInfo& AddTimer(orbit_client_protos::TimerInfo timer_info);
-  // Build ScopeTree from timer chains, when we are loading a capture.
-  void BuildScopeTreeFromTimerData();
+  void OnCaptureComplete();
   [[nodiscard]] TimerData* GetTimerData() { return &timer_data_; }
 
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
       uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
       uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const;
-  [[nodiscard]] const orbit_client_protos::TimerInfo& GetLeft(
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
       const orbit_client_protos::TimerInfo& timer) const;
-  [[nodiscard]] const orbit_client_protos::TimerInfo& GetRight(
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetRight(
       const orbit_client_protos::TimerInfo& timer) const;
-  [[nodiscard]] const orbit_client_protos::TimerInfo& GetUp(
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetUp(
       const orbit_client_protos::TimerInfo& timer) const;
-  [[nodiscard]] const orbit_client_protos::TimerInfo& GetDown(
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetDown(
       const orbit_client_protos::TimerInfo& timer) const;
 
  private:
