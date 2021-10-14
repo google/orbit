@@ -457,6 +457,8 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
       case orbit_grpc_protos::ProducerCaptureEvent::kCaptureStarted:
         // TracingHandler does not send this event.
         UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kCaptureFinished:
+        UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kSchedulingSlice:
         EXPECT_GE(event.scheduling_slice().out_timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.scheduling_slice().out_timestamp_ns();

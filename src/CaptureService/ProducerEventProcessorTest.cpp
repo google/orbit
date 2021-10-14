@@ -25,6 +25,7 @@ using orbit_grpc_protos::ApiTrackUint;
 using orbit_grpc_protos::ApiTrackUint64;
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::CallstackSample;
+using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::CGroupMemoryUsage;
@@ -1558,6 +1559,29 @@ TEST(ProducerEventProcessor, CaptureStartedSmoke) {
   EXPECT_EQ(instrumented_function.file_build_id(), kBuildId2);
 
   EXPECT_EQ(capture_started.capture_options().instrumented_tracepoint_size(), 0);
+}
+
+TEST(ProducerEventProcessor, CaptureFinishedSmoke) {
+  MockCaptureEventBuffer buffer;
+  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+
+  ClientCaptureEvent client_event;
+  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_event));
+
+  {
+    ProducerCaptureEvent producer_event;
+
+    CaptureFinished* capture_finished = producer_event.mutable_capture_finished();
+    capture_finished->set_status(CaptureFinished::kFailed);
+    capture_finished->set_error_message("error_message");
+
+    producer_event_processor->ProcessEvent(1, std::move(producer_event));
+  }
+
+  ASSERT_EQ(client_event.event_case(), ClientCaptureEvent::kCaptureFinished);
+  const CaptureFinished& capture_finished = client_event.capture_finished();
+  EXPECT_EQ(capture_finished.status(), CaptureFinished::kFailed);
+  EXPECT_EQ(capture_finished.error_message(), "error_message");
 }
 
 TEST(ProducerEventProcessor, ModulesSnapshotSmoke) {

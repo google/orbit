@@ -322,8 +322,8 @@ static void StopInternalProducersAndCaptureStartStopListenersInParallel(
   return event;
 }
 
-[[nodiscard]] static ClientCaptureEvent CreateCaptureFinishedEvent() {
-  ClientCaptureEvent event;
+[[nodiscard]] static ProducerCaptureEvent CreateCaptureFinishedEvent() {
+  ProducerCaptureEvent event;
   CaptureFinished* capture_finished = event.mutable_capture_finished();
   capture_finished->set_status(CaptureFinished::kSuccessful);
   return event;
@@ -466,7 +466,8 @@ grpc::Status CaptureServiceImpl::Capture(
   // The destructor of IntrospectionListener takes care of actually disabling introspection.
   introspection_listener.reset();
 
-  capture_event_buffer.AddEvent(CreateCaptureFinishedEvent());
+  producer_event_processor->ProcessEvent(orbit_grpc_protos::kRootProducerId,
+                                         CreateCaptureFinishedEvent());
 
   capture_event_buffer.StopAndWait();
   LOG("Finished handling gRPC call to Capture: all capture data has been sent");
