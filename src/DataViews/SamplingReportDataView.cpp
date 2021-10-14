@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "SamplingReportDataView.h"
+#include "DataViews/SamplingReportDataView.h"
 
 #include <absl/container/flat_hash_set.h>
 #include <absl/flags/declare.h>
@@ -18,7 +18,6 @@
 #include <memory>
 #include <utility>
 
-#include "App.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
@@ -29,7 +28,6 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "SamplingReport.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;
@@ -39,10 +37,12 @@ using orbit_client_data::ThreadID;
 
 using orbit_client_protos::FunctionInfo;
 
-SamplingReportDataView::SamplingReportDataView(OrbitApp* app)
-    : orbit_data_views::DataView(orbit_data_views::DataViewType::kSampling, app), app_{app} {}
+namespace orbit_data_views {
 
-const std::vector<orbit_data_views::DataView::Column>& SamplingReportDataView::GetColumns() {
+SamplingReportDataView::SamplingReportDataView(AppInterface* app)
+    : DataView(DataViewType::kSampling, app) {}
+
+const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
@@ -63,9 +63,8 @@ std::string SamplingReportDataView::GetValue(int row, int column) {
 
   switch (column) {
     case kColumnSelected:
-      return app_->IsFunctionSelected(func)
-                 ? orbit_data_views::FunctionsDataView::kSelectedFunctionString
-                 : orbit_data_views::FunctionsDataView::kUnselectedFunctionString;
+      return app_->IsFunctionSelected(func) ? FunctionsDataView::kSelectedFunctionString
+                                            : FunctionsDataView::kUnselectedFunctionString;
     case kColumnFunctionName:
       return func.name;
     case kColumnExclusive:
@@ -101,21 +100,19 @@ std::string SamplingReportDataView::GetValueForCopy(int row, int column) {
   }
 }
 
-#define ORBIT_PROC_SORT(Member)                                                             \
-  [&](int a, int b) {                                                                       \
-    return orbit_gl::CompareAscendingOrDescending(functions[a].Member, functions[b].Member, \
-                                                  ascending);                               \
+#define ORBIT_PROC_SORT(Member)                                                               \
+  [&](int a, int b) {                                                                         \
+    return CompareAscendingOrDescending(functions[a].Member, functions[b].Member, ascending); \
   }
 
-#define ORBIT_CUSTOM_FUNC_SORT(Func)                                                      \
-  [&](int a, int b) {                                                                     \
-    return orbit_gl::CompareAscendingOrDescending(Func(functions[a]), Func(functions[b]), \
-                                                  ascending);                             \
+#define ORBIT_CUSTOM_FUNC_SORT(Func)                                                        \
+  [&](int a, int b) {                                                                       \
+    return CompareAscendingOrDescending(Func(functions[a]), Func(functions[b]), ascending); \
   }
 
 #define ORBIT_MODULE_NAME_FUNC_SORT                                             \
   [&](int a, int b) {                                                           \
-    return orbit_gl::CompareAscendingOrDescending(                              \
+    return CompareAscendingOrDescending(                                        \
         std::filesystem::path(functions[a].module_path).filename(),             \
         std::filesystem::path(functions[b].module_path).filename(), ascending); \
   }
@@ -337,11 +334,10 @@ void SamplingReportDataView::OnRefresh(const std::vector<int>& visible_selected_
   UpdateVisibleSelectedAddressesAndTid(visible_selected_indices);
 }
 
-void SamplingReportDataView::LinkDataView(orbit_data_views::DataView* data_view) {
-  if (data_view->GetType() != orbit_data_views::DataViewType::kCallstack) return;
+void SamplingReportDataView::LinkDataView(DataView* data_view) {
+  if (data_view->GetType() != DataViewType::kCallstack) return;
 
-  sampling_report_->SetCallstackDataView(
-      static_cast<orbit_data_views::CallstackDataView*>(data_view));
+  sampling_report_->SetCallstackDataView(static_cast<CallstackDataView*>(data_view));
 }
 
 void SamplingReportDataView::SetSampledFunctions(const std::vector<SampledFunction>& functions) {
@@ -402,3 +398,5 @@ const SampledFunction& SamplingReportDataView::GetSampledFunction(unsigned int r
 SampledFunction& SamplingReportDataView::GetSampledFunction(unsigned int row) {
   return functions_[indices_[row]];
 }
+
+}  // namespace orbit_data_views

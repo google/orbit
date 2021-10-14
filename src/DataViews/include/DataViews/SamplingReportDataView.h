@@ -11,17 +11,20 @@
 #include "ClientData/CallstackTypes.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
+#include "DataViews/AppInterface.h"
 #include "DataViews/CallstackDataView.h"
 #include "DataViews/DataView.h"
+#include "DataViews/SamplingReportInterface.h"
 #include "absl/container/flat_hash_set.h"
 #include "capture_data.pb.h"
 
-class OrbitApp;
 class SamplingReport;
 
-class SamplingReportDataView : public orbit_data_views::DataView {
+namespace orbit_data_views {
+
+class SamplingReportDataView : public DataView {
  public:
-  explicit SamplingReportDataView(OrbitApp* app);
+  explicit SamplingReportDataView(AppInterface* app);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnInclusive; }
@@ -37,8 +40,8 @@ class SamplingReportDataView : public orbit_data_views::DataView {
   void OnRefresh(const std::vector<int>& visible_selected_indices,
                  const RefreshMode& mode) override;
 
-  void LinkDataView(orbit_data_views::DataView* data_view) override;
-  void SetSamplingReport(class SamplingReport* sampling_report) {
+  void LinkDataView(DataView* data_view) override;
+  void SetSamplingReport(SamplingReportInterface* sampling_report) {
     sampling_report_ = sampling_report;
   }
   void SetSampledFunctions(const std::vector<orbit_client_data::SampledFunction>& functions);
@@ -67,7 +70,7 @@ class SamplingReportDataView : public orbit_data_views::DataView {
   absl::flat_hash_set<uint64_t> selected_function_ids_;
   orbit_client_data::ThreadID tid_ = -1;
   std::string name_;
-  SamplingReport* sampling_report_ = nullptr;
+  SamplingReportInterface* sampling_report_ = nullptr;
 
   enum ColumnIndex {
     kColumnSelected,
@@ -85,8 +88,6 @@ class SamplingReportDataView : public orbit_data_views::DataView {
   static const std::string kMenuActionLoadSymbols;
   static const std::string kMenuActionDisassembly;
   static const std::string kMenuActionSourceCode;
-
-  // TODO(b/185090791): This is temporary and will be removed once this data view has been ported
-  // and move to orbit_data_views.
-  OrbitApp* app_ = nullptr;
 };
+
+}  // namespace orbit_data_views

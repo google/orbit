@@ -15,7 +15,8 @@ target_sources(DataViews PRIVATE
         FunctionsDataView.cpp
         LiveFunctionsDataView.cpp
         ModulesDataView.cpp
-        PresetsDataView.cpp)
+        PresetsDataView.cpp
+        SamplingReportDataView.cpp)
 
 target_sources(DataViews PUBLIC
         include/DataViews/AppInterface.h
@@ -27,7 +28,9 @@ target_sources(DataViews PUBLIC
         include/DataViews/LiveFunctionsInterface.h
         include/DataViews/ModulesDataView.h
         include/DataViews/PresetsDataView.h
-        include/DataViews/PresetLoadState.h)
+        include/DataViews/PresetLoadState.h
+        include/DataViews/SamplingReportDataView.h        
+        include/DataViews/SamplingReportInterface.h)
 
 target_include_directories(DataViews PUBLIC include/)
 target_link_libraries(DataViews PUBLIC
@@ -49,7 +52,8 @@ target_sources(DataViewsTests PRIVATE CallstackDataViewTest.cpp
                                       LiveFunctionsDataViewTest.cpp
                                       MockAppInterface.h
                                       ModulesDataViewTest.cpp
-                                      PresetsDataViewTest.cpp)
+                                      PresetsDataViewTest.cpp
+                                      SamplingReportDataViewTest.cpp)
 target_link_libraries(DataViewsTests PRIVATE
         DataViews
         TestUtils

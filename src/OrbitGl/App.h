@@ -422,7 +422,8 @@ class OrbitApp final : public DataViewFactory,
   void DeselectFunction(const orbit_client_protos::FunctionInfo& func) override;
   [[nodiscard]] bool IsFunctionSelected(
       const orbit_client_protos::FunctionInfo& func) const override;
-  [[nodiscard]] bool IsFunctionSelected(const orbit_client_data::SampledFunction& func) const;
+  [[nodiscard]] bool IsFunctionSelected(
+      const orbit_client_data::SampledFunction& func) const override;
   [[nodiscard]] bool IsFunctionSelected(uint64_t absolute_address) const;
   [[nodiscard]] const orbit_grpc_protos::InstrumentedFunction* GetInstrumentedFunction(
       uint64_t function_id) const;
