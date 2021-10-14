@@ -6,7 +6,6 @@
 #define LINUX_TRACING_PERF_EVENT_H_
 
 #include <asm/perf_regs.h>
-#include <linux/perf_event.h>
 #include <string.h>
 #include <sys/types.h>
 
@@ -14,13 +13,10 @@
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <utility>
 #include <variant>
 #include <vector>
 
-#include "Function.h"
 #include "GrpcProtos/Constants.h"
-#include "KernelTracepoints.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "PerfEventRecords.h"
 

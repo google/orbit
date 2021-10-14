@@ -20,10 +20,11 @@
 #include <optional>
 #include <vector>
 
-#include "ContextSwitchManager.h"
 #include "Function.h"
 #include "GpuTracepointVisitor.h"
-#include "LinuxTracingUtils.h"
+#include "LeafFunctionCallManager.h"
+#include "LibunwindstackMaps.h"
+#include "LibunwindstackUnwinder.h"
 #include "LostAndDiscardedEventVisitor.h"
 #include "OrbitBase/Profiling.h"
 #include "PerfEvent.h"
@@ -31,6 +32,8 @@
 #include "PerfEventRingBuffer.h"
 #include "SwitchesStatesNamesVisitor.h"
 #include "TracingInterface/TracerListener.h"
+#include "UprobesFunctionCallManager.h"
+#include "UprobesReturnAddressManager.h"
 #include "UprobesUnwindingVisitor.h"
 #include "capture.pb.h"
 

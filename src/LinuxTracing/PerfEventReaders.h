@@ -6,12 +6,8 @@
 #define LINUX_TRACING_PERF_EVENT_READERS_H_
 
 #include <linux/perf_event.h>
-#include <stddef.h>
 #include <stdint.h>
 #include <sys/types.h>
-
-#include <memory>
-#include <type_traits>
 
 #include "PerfEvent.h"
 #include "PerfEventRecords.h"

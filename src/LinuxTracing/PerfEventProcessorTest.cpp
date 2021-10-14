@@ -4,17 +4,16 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
 
 #include <atomic>
 #include <chrono>
+#include <cstdint>
 #include <memory>
 #include <thread>
 
 #include "OrbitBase/Profiling.h"
 #include "PerfEvent.h"
 #include "PerfEventProcessor.h"
-#include "PerfEventRecords.h"
 #include "PerfEventVisitor.h"
 
 using ::testing::A;

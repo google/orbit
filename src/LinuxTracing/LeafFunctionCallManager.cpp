@@ -4,11 +4,20 @@
 
 #include "LeafFunctionCallManager.h"
 
+#include <asm/perf_regs.h>
+#include <stddef.h>
 #include <sys/mman.h>
+#include <unwindstack/MapInfo.h>
+#include <unwindstack/Unwinder.h>
 
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <memory>
 #include <vector>
 
 #include "OrbitBase/Logging.h"
+#include "capture.pb.h"
 
 namespace orbit_linux_tracing {
 

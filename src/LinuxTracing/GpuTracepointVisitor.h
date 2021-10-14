@@ -6,7 +6,6 @@
 #define LINUX_TRACING_GPU_TRACEPOINT_EVENT_PROCESSOR_H_
 
 #include <absl/container/flat_hash_map.h>
-#include <absl/hash/hash.h>
 #include <sys/types.h>
 
 #include <cstdint>
@@ -14,6 +13,7 @@
 #include <tuple>
 #include <vector>
 
+#include "OrbitBase/Logging.h"
 #include "PerfEvent.h"
 #include "PerfEventVisitor.h"
 #include "TracingInterface/TracerListener.h"

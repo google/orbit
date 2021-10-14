@@ -3,11 +3,23 @@
 // found in the LICENSE file.
 
 #include <gmock/gmock.h>
+#include <google/protobuf/stubs/port.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
+#include <string.h>
+#include <sys/types.h>
+
+#include <algorithm>
+#include <atomic>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "MockTracerListener.h"
+#include "OrbitBase/Logging.h"
 #include "PerfEvent.h"
 #include "SwitchesStatesNamesVisitor.h"
+#include "capture.pb.h"
 
 using ::testing::SaveArg;
 

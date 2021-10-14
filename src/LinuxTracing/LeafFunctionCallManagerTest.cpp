@@ -2,11 +2,31 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <asm/perf_regs.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <sys/mman.h>
+#include <unwindstack/Error.h>
+#include <unwindstack/MapInfo.h>
+#include <unwindstack/Maps.h>
+#include <unwindstack/SharedString.h>
+#include <unwindstack/Unwinder.h>
+
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <ctime>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "LeafFunctionCallManager.h"
+#include "LibunwindstackMaps.h"
+#include "LibunwindstackUnwinder.h"
+#include "OrbitBase/MakeUniqueForOverwrite.h"
+#include "PerfEvent.h"
+#include "PerfEventRecords.h"
+#include "capture.pb.h"
 
 using ::testing::_;
 using ::testing::AllOf;

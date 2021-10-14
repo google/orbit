@@ -4,8 +4,8 @@
 
 #include "PerfEventProcessor.h"
 
-#include <memory>
 #include <utility>
+#include <variant>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"

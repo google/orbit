@@ -7,13 +7,16 @@
 #include <asm/perf_regs.h>
 #include <sys/mman.h>
 #include <unwindstack/MapInfo.h>
+#include <unwindstack/SharedString.h>
 #include <unwindstack/Unwinder.h>
 
 #include <algorithm>
+#include <array>
+#include <memory>
 #include <optional>
+#include <string>
 #include <utility>
 
-#include "Function.h"
 #include "LeafFunctionCallManager.h"
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/Logging.h"

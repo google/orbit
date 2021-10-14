@@ -6,15 +6,14 @@
 #define LINUX_TRACING_THREAD_STATE_VISITOR_H_
 
 #include <absl/container/flat_hash_map.h>
-#include <absl/hash/hash.h>
 #include <sys/types.h>
 
 #include <atomic>
 #include <cstdint>
 #include <optional>
-#include <vector>
 
 #include "ContextSwitchManager.h"
+#include "OrbitBase/Logging.h"
 #include "PerfEvent.h"
 #include "PerfEventVisitor.h"
 #include "ThreadStateManager.h"

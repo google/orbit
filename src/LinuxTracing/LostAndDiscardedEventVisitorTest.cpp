@@ -7,12 +7,9 @@
 #include <stdint.h>
 
 #include <memory>
-#include <string>
-#include <utility>
 
 #include "LostAndDiscardedEventVisitor.h"
 #include "MockTracerListener.h"
-#include "OrbitBase/Logging.h"
 #include "PerfEvent.h"
 #include "capture.pb.h"
 

@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include <memory>
+#include <variant>
 
 #include "PerfEvent.h"
 #include "PerfEventQueue.h"

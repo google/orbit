@@ -9,7 +9,7 @@
 
 #include <algorithm>
 #include <atomic>
-#include <memory>
+#include <optional>
 #include <vector>
 
 #include "PerfEvent.h"

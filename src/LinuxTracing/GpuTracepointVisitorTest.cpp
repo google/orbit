@@ -3,21 +3,19 @@
 // found in the LICENSE file.
 
 #include <gmock/gmock.h>
+#include <google/protobuf/stubs/port.h>
 #include <gtest/gtest.h>
 #include <stdint.h>
 #include <string.h>
 #include <sys/types.h>
 
 #include <memory>
-#include <string>
 #include <utility>
 
 #include "GpuTracepointVisitor.h"
-#include "KernelTracepoints.h"
 #include "MockTracerListener.h"
-#include "OrbitBase/Logging.h"
+#include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "PerfEvent.h"
-#include "PerfEventRecords.h"
 #include "capture.pb.h"
 
 namespace orbit_linux_tracing {

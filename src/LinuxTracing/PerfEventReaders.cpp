@@ -4,10 +4,16 @@
 
 #include "PerfEventReaders.h"
 
+#include <stddef.h>
+#include <string.h>
+
+#include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "KernelTracepoints.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/ThreadUtils.h"

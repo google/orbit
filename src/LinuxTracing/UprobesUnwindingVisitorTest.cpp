@@ -2,14 +2,40 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <asm/perf_regs.h>
 #include <gmock/gmock.h>
+#include <google/protobuf/stubs/port.h>
 #include <gtest/gtest.h>
 #include <sys/mman.h>
+#include <unwindstack/Error.h>
+#include <unwindstack/MapInfo.h>
+#include <unwindstack/Maps.h>
+#include <unwindstack/SharedString.h>
+#include <unwindstack/Unwinder.h>
 
+#include <algorithm>
+#include <array>
+#include <atomic>
+#include <cstdint>
+#include <ctime>
+#include <memory>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+#include "LeafFunctionCallManager.h"
 #include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"
 #include "MockTracerListener.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/MakeUniqueForOverwrite.h"
+#include "PerfEvent.h"
+#include "PerfEventRecords.h"
+#include "UprobesFunctionCallManager.h"
+#include "UprobesReturnAddressManager.h"
 #include "UprobesUnwindingVisitor.h"
+#include "capture.pb.h"
 
 using ::testing::_;
 using ::testing::AllOf;
