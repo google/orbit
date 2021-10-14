@@ -161,11 +161,21 @@ outcome::result<bool> ServiceDeployManager::CheckIfInstalled() {
     version = version.substr(1);
   }
   const auto command = absl::StrFormat(
-      "/usr/bin/dpkg-query -W -f '${Version}' orbitprofiler 2>/dev/null | grep -xF '%s'", version);
+      "/usr/bin/dpkg-query -W -f '${Version}' orbitprofiler | grep -xF '%s' && cd / && md5sum -c "
+      "/var/lib/dpkg/info/orbitprofiler.md5sums",
+      version);
 
   orbit_ssh_qt::Task check_if_installed_task{&session_.value(), command};
 
   orbit_qt_utils::EventLoop loop{};
+  QObject::connect(&check_if_installed_task, &orbit_ssh_qt::Task::readyReadStdOut, this,
+                   [&check_if_installed_task]() {
+                     LOG("CheckIfInstalled stdout: %s", check_if_installed_task.ReadStdOut());
+                   });
+  QObject::connect(&check_if_installed_task, &orbit_ssh_qt::Task::readyReadStdErr, this,
+                   [&check_if_installed_task]() {
+                     LOG("CheckIfInstalled stderr: %s", check_if_installed_task.ReadStdErr());
+                   });
   QObject::connect(&check_if_installed_task, &orbit_ssh_qt::Task::finished, &loop,
                    &orbit_qt_utils::EventLoop::exit);
 
@@ -177,6 +187,7 @@ outcome::result<bool> ServiceDeployManager::CheckIfInstalled() {
   check_if_installed_task.Start();
 
   OUTCOME_TRY(auto&& result, loop.exec());
+  LOG("CheckIfInstalled task returned exit code: %d", result);
   if (result == 0) {
     // Already installed
     emit statusMessage("The correct version of OrbitService is already installed.");
@@ -427,6 +438,9 @@ outcome::result<void> ServiceDeployManager::StartOrbitService() {
   OUTCOME_TRY(loop.exec());
   QObject::connect(&orbit_service_task_.value(), &orbit_ssh_qt::Task::errorOccurred, this,
                    &ServiceDeployManager::handleSocketError);
+  QObject::connect(
+      &orbit_service_task_.value(), &orbit_ssh_qt::Task::finished, this,
+      [](int exit_code) { LOG("The OrbitService Task finished with exit code: %d", exit_code); });
   return outcome::success();
 }
 
@@ -466,6 +480,9 @@ outcome::result<void> ServiceDeployManager::StartOrbitServicePrivileged(
   OUTCOME_TRY(loop.exec());
   QObject::connect(&orbit_service_task_.value(), &orbit_ssh_qt::Task::errorOccurred, this,
                    &ServiceDeployManager::handleSocketError);
+  QObject::connect(
+      &orbit_service_task_.value(), &orbit_ssh_qt::Task::finished, this,
+      [](int exit_code) { LOG("The OrbitService Task finished with exit code: %d", exit_code); });
   return outcome::success();
 }
 
