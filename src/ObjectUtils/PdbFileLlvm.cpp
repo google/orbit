@@ -4,6 +4,8 @@
 
 #include "PdbFileLlvm.h"
 
+#include <absl/memory/memory.h>
+
 #include <memory>
 
 #include "ObjectUtils/CoffFile.h"
@@ -130,7 +132,8 @@ ErrorMessageOr<std::unique_ptr<PdbFile>> PdbFileLlvm::CreatePdbFile(
     return ErrorMessage(absl::StrFormat("Unable to load PDB file %s with error: %s",
                                         file_path.string(), llvm::toString(std::move(error))));
   }
-  return std::make_unique<PdbFileLlvm>(file_path, object_file_info, std::move(session));
+  return absl::WrapUnique<PdbFileLlvm>(
+      new PdbFileLlvm(file_path, object_file_info, std::move(session)));
 }
 
 }  // namespace orbit_object_utils

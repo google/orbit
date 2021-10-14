@@ -23,9 +23,6 @@ namespace orbit_object_utils {
 
 class PdbFileDia : public PdbFile {
  public:
-  PdbFileDia(std::filesystem::path file_path, const ObjectFileInfo& object_file_info);
-
-  ErrorMessageOr<void> LoadDataForPDB();
   ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbols() override;
 
   [[nodiscard]] const std::filesystem::path& GetFilePath() const override { return file_path_; }
@@ -40,9 +37,28 @@ class PdbFileDia : public PdbFile {
       const std::filesystem::path& file_path, const ObjectFileInfo& object_file_info);
 
  private:
+  PdbFileDia(std::filesystem::path file_path, const ObjectFileInfo& object_file_info);
+  ErrorMessageOr<void> LoadDataForPDB();
+  ErrorMessageOr<CComPtr<IDiaDataSource>> CreateDiaDataSource();
+
   std::filesystem::path file_path_;
   ObjectFileInfo object_file_info_;
 
+  // Every CoInitialize() call that succeeds with S_OK or S_FALSE needs to have a corresponding
+  // CoUninitialize().
+  struct ComInitializer {
+    ComInitializer() : result(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED)) {}
+    ~ComInitializer() {
+      if (SUCCEEDED(result)) {
+        CoUninitialize();
+      }
+    }
+    HRESULT result;
+  };
+
+  // This needs to be declared before any COM objects (such as CComPtr) to make sure this
+  // is destructed last, as it calls CoUninitialize() if initialization succeeded.
+  ComInitializer com_initializer_;
   CComPtr<IDiaDataSource> dia_data_source_ = nullptr;
   CComPtr<IDiaSession> dia_session_ = nullptr;
   CComPtr<IDiaSymbol> dia_global_scope_symbol_ = nullptr;

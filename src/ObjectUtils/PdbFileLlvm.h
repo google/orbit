@@ -33,9 +33,6 @@ namespace orbit_object_utils {
 
 class PdbFileLlvm : public PdbFile {
  public:
-  PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& object_file_info,
-              std::unique_ptr<llvm::pdb::IPDBSession> session);
-
   [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbols() override;
   [[nodiscard]] const std::filesystem::path& GetFilePath() const override { return file_path_; }
 
@@ -58,6 +55,9 @@ class PdbFileLlvm : public PdbFile {
       const std::filesystem::path& file_path, const ObjectFileInfo& object_file_info);
 
  private:
+  PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& object_file_info,
+              std::unique_ptr<llvm::pdb::IPDBSession> session);
+
   std::filesystem::path file_path_;
   ObjectFileInfo object_file_info_;
   std::unique_ptr<llvm::pdb::IPDBSession> session_;
