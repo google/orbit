@@ -24,6 +24,7 @@ using orbit_grpc_protos::ApiTrackUint;
 using orbit_grpc_protos::ApiTrackUint64;
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::CallstackSample;
+using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::ClockResolutionEvent;
@@ -94,6 +95,7 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
 
  private:
   void ProcessCaptureStartedAndTransferOwnership(CaptureStarted* capture_started);
+  void ProcessCaptureFinishedAndTransferOwnership(CaptureFinished* capture_finished);
   void ProcessFullAddressInfo(FullAddressInfo* full_address_info);
   void ProcessFullCallstackSample(FullCallstackSample* full_callstack_sample);
   void ProcessFunctionCallAndTransferOwnership(FunctionCall* function_call);
@@ -331,6 +333,13 @@ void ProducerEventProcessorImpl::ProcessCaptureStartedAndTransferOwnership(
   capture_event_buffer_->AddEvent(std::move(event));
 }
 
+void ProducerEventProcessorImpl::ProcessCaptureFinishedAndTransferOwnership(
+    CaptureFinished* capture_finished) {
+  ClientCaptureEvent event;
+  event.set_allocated_capture_finished(capture_finished);
+  capture_event_buffer_->AddEvent(std::move(event));
+}
+
 void ProducerEventProcessorImpl::ProcessSchedulingSliceAndTransferOwnership(
     SchedulingSlice* scheduling_slice) {
   ClientCaptureEvent event;
@@ -526,6 +535,9 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
   switch (event.event_case()) {
     case ProducerCaptureEvent::kCaptureStarted:
       ProcessCaptureStartedAndTransferOwnership(event.release_capture_started());
+      break;
+    case ProducerCaptureEvent::kCaptureFinished:
+      ProcessCaptureFinishedAndTransferOwnership(event.release_capture_finished());
       break;
     case ProducerCaptureEvent::kInternedCallstack:
       ProcessInternedCallstack(producer_id, event.mutable_interned_callstack());

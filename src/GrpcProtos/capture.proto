@@ -740,7 +740,7 @@ message ProducerCaptureEvent {
     // numbers starting with 16.
     //
     // Next high-frequency ID: 13
-    // Next lower-frequency ID: 46
+    // Next lower-frequency ID: 47
     //
     // Please keep these alphabetically ordered.
     ApiEvent api_event = 10;
@@ -756,6 +756,7 @@ message ProducerCaptureEvent {
     ApiTrackUint api_track_uint = 43;
     ApiTrackUint64 api_track_uint64 = 44;
     CallstackSample callstack_sample = 1;
+    CaptureFinished capture_finished = 46;
     CaptureStarted capture_started = 23;
     ClockResolutionEvent clock_resolution_event = 32;
     ErrorEnablingOrbitApiEvent error_enabling_orbit_api_event = 31;
