@@ -39,14 +39,11 @@ class ClientImpl : public Client, public QObject {
   explicit ClientImpl(QString ggp_program, std::chrono::milliseconds timeout)
       : ggp_program_(std::move(ggp_program)), timeout_(timeout) {}
 
-  Future<ErrorMessageOr<QVector<Instance>>> GetInstancesAsync() override;
-  Future<ErrorMessageOr<QVector<Instance>>> GetInstancesAsync(bool all_reserved) override;
   Future<ErrorMessageOr<QVector<Instance>>> GetInstancesAsync(
       bool all_reserved, std::optional<Project> project) override;
   Future<ErrorMessageOr<QVector<Instance>>> GetInstancesAsync(bool all_reserved,
                                                               std::optional<Project> project,
                                                               int retry) override;
-  Future<ErrorMessageOr<SshInfo>> GetSshInfoAsync(const Instance& ggp_instance) override;
   Future<ErrorMessageOr<SshInfo>> GetSshInfoAsync(const Instance& ggp_instance,
                                                   std::optional<Project> project) override;
   Future<ErrorMessageOr<QVector<Project>>> GetProjectsAsync() override;
@@ -86,14 +83,6 @@ ErrorMessageOr<std::unique_ptr<Client>> CreateClient(QString ggp_program,
   return std::make_unique<ClientImpl>(std::move(ggp_program), timeout);
 }
 
-Future<ErrorMessageOr<QVector<Instance>>> ClientImpl::GetInstancesAsync() {
-  return GetInstancesAsync(false);
-}
-
-Future<ErrorMessageOr<QVector<Instance>>> ClientImpl::GetInstancesAsync(bool all_reserved) {
-  return GetInstancesAsync(all_reserved, std::nullopt);
-}
-
 Future<ErrorMessageOr<QVector<Instance>>> ClientImpl::GetInstancesAsync(
     bool all_reserved, std::optional<Project> project) {
   return GetInstancesAsync(all_reserved, project, 3);
@@ -129,10 +118,6 @@ Future<ErrorMessageOr<QVector<Instance>>> ClientImpl::GetInstancesAsync(
         }
         return Instance::GetListFromJson(ggp_call_result.value());
       }));
-}
-
-Future<ErrorMessageOr<SshInfo>> ClientImpl::GetSshInfoAsync(const Instance& ggp_instance) {
-  return GetSshInfoAsync(ggp_instance, std::nullopt);
 }
 
 Future<ErrorMessageOr<SshInfo>> ClientImpl::GetSshInfoAsync(const Instance& ggp_instance,

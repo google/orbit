@@ -9,6 +9,7 @@
 #include <QString>
 #include <chrono>
 #include <memory>
+#include <optional>
 
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Future.h"
@@ -63,7 +64,7 @@ TEST_F(OrbitGgpClientTest, GetInstancesAsyncWorking) {
 
   bool future_is_resolved = false;
 
-  auto future = client.value()->GetInstancesAsync();
+  auto future = client.value()->GetInstancesAsync(false, std::nullopt);
   future.Then(main_thread_executor_.get(),
               [&future_is_resolved](ErrorMessageOr<QVector<Instance>> instances) {
                 EXPECT_FALSE(future_is_resolved);
@@ -83,7 +84,7 @@ TEST_F(OrbitGgpClientTest, GetInstancesAsyncWorkingAllReserved) {
   ASSERT_THAT(client, HasValue());
 
   bool future_is_resolved = false;
-  auto future = client.value()->GetInstancesAsync(true);
+  auto future = client.value()->GetInstancesAsync(true, std::nullopt);
   future.Then(main_thread_executor_.get(),
               [&future_is_resolved](ErrorMessageOr<QVector<Instance>> instances) {
                 EXPECT_FALSE(future_is_resolved);
@@ -150,7 +151,7 @@ TEST_F(OrbitGgpClientTest, GetInstancesAsyncTimeout) {
   ASSERT_THAT(client, HasValue());
 
   bool future_is_resolved = false;
-  auto future = client.value()->GetInstancesAsync();
+  auto future = client.value()->GetInstancesAsync(false, std::nullopt);
   future.Then(main_thread_executor_.get(),
               [&future_is_resolved](const ErrorMessageOr<QVector<Instance>>& instances) {
                 LOG("here");
@@ -176,7 +177,7 @@ TEST_F(OrbitGgpClientTest, GetInstancesAsyncClientGetsDestroyed) {
         CreateClient(QString::fromStdString(mock_ggp_working_.string()));
     ASSERT_THAT(client, HasValue());
 
-    future = client.value()->GetInstancesAsync();
+    future = client.value()->GetInstancesAsync(false, std::nullopt);
 
     future.Then(main_thread_executor_.get(),
                 [&future_is_resolved](const ErrorMessageOr<QVector<Instance>>& instances_result) {
@@ -200,7 +201,7 @@ TEST_F(OrbitGgpClientTest, GetSshInfoAsyncWorking) {
   test_instance.id = "instance/test/id";
 
   bool future_is_resolved = false;
-  auto future = client.value()->GetSshInfoAsync(test_instance);
+  auto future = client.value()->GetSshInfoAsync(test_instance, std::nullopt);
   future.Then(main_thread_executor_.get(),
               [&future_is_resolved](const ErrorMessageOr<SshInfo>& ssh_info) {
                 EXPECT_FALSE(future_is_resolved);
@@ -245,7 +246,7 @@ TEST_F(OrbitGgpClientTest, GetSshInfoAsyncTimeout) {
   ASSERT_THAT(client, HasValue());
 
   bool future_is_resolved = false;
-  auto future = client.value()->GetSshInfoAsync(test_instance);
+  auto future = client.value()->GetSshInfoAsync(test_instance, std::nullopt);
   future.Then(main_thread_executor_.get(), [&future_is_resolved](
                                                const ErrorMessageOr<SshInfo>& ssh_info) {
     EXPECT_FALSE(future_is_resolved);
@@ -273,7 +274,7 @@ TEST_F(OrbitGgpClientTest, GetSshInfoAsyncClientGetsDestroyed) {
     Instance test_instance;
     test_instance.id = "instance/test/id";
 
-    future = client.value()->GetSshInfoAsync(test_instance);
+    future = client.value()->GetSshInfoAsync(test_instance, std::nullopt);
 
     future.Then(main_thread_executor_.get(), [&future_is_resolved](
                                                  const ErrorMessageOr<SshInfo>& ssh_info_result) {

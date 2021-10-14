@@ -28,16 +28,10 @@ class Client {
  public:
   Client() = default;
   virtual ~Client() = default;
-  [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<QVector<Instance>>>
-  GetInstancesAsync() = 0;
-  [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<QVector<Instance>>> GetInstancesAsync(
-      bool all_reserved) = 0;
   [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<QVector<Instance>>> GetInstancesAsync(
       bool all_reserved, std::optional<Project> project) = 0;
   [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<QVector<Instance>>> GetInstancesAsync(
       bool all_reserved, std::optional<Project> project, int retry) = 0;
-  [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<SshInfo>> GetSshInfoAsync(
-      const Instance& ggp_instance) = 0;
   [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<SshInfo>> GetSshInfoAsync(
       const Instance& ggp_instance, std::optional<Project> project) = 0;
   [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<QVector<Project>>> GetProjectsAsync() = 0;
