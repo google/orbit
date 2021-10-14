@@ -53,4 +53,6 @@ ABSL_DECLARE_FLAG(std::string, instance_symbols_folder);
 // while project selection is in beta
 ABSL_DECLARE_FLAG(bool, enable_project_selection);
 
+ABSL_DECLARE_FLAG(bool, enforce_full_redraw);
+
 #endif  // CLIENT_FLAGS_CLIENT_FLAGS_H_

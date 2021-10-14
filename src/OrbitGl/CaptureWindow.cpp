@@ -31,6 +31,7 @@
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "TextRenderer.h"
 #include "TimeGraph.h"
@@ -42,6 +43,9 @@ using orbit_accessibility::AccessibleInterface;
 using orbit_accessibility::AccessibleWidgetBridge;
 
 using orbit_client_data::CaptureData;
+
+constexpr const char* kTimingDraw = "Draw";
+constexpr const char* kTimingDrawAndUpdatePrimitives = "Draw & Update Primitives";
 
 class AccessibleCaptureWindow : public AccessibleWidgetBridge {
  public:
@@ -69,6 +73,10 @@ using orbit_client_protos::TimerInfo;
 
 CaptureWindow::CaptureWindow(OrbitApp* app) : GlCanvas(), app_{app} {
   draw_help_ = true;
+
+  scoped_frame_times_[kTimingDraw] = std::make_unique<orbit_gl::SimpleTimings>(30);
+  scoped_frame_times_[kTimingDrawAndUpdatePrimitives] =
+      std::make_unique<orbit_gl::SimpleTimings>(30);
 
   slider_ = std::make_shared<orbit_gl::GlHorizontalSlider>(viewport_);
   vertical_slider_ = std::make_shared<orbit_gl::GlVerticalSlider>(viewport_);
@@ -383,6 +391,8 @@ std::unique_ptr<AccessibleInterface> CaptureWindow::CreateAccessibleInterface() 
 
 void CaptureWindow::Draw() {
   ORBIT_SCOPE("CaptureWindow::Draw");
+  uint64_t start_time_ns = orbit_base::CaptureTimestampNs();
+  bool time_graph_was_redrawn = false;
 
   text_renderer_.Init();
 
@@ -400,6 +410,9 @@ void CaptureWindow::Draw() {
 
     uint64_t timegraph_current_mouse_time_ns =
         time_graph_->GetTickFromWorld(viewport_.ScreenToWorld(GetMouseScreenPos())[0]);
+    if (time_graph_->IsRedrawNeeded()) {
+      time_graph_was_redrawn = true;
+    }
     time_graph_->Draw(GetBatcher(), GetTextRenderer(),
                       {timegraph_current_mouse_time_ns, picking_mode_, 0, 0});
   }
@@ -425,6 +438,15 @@ void CaptureWindow::Draw() {
   }
 
   RenderAllLayers();
+
+  double frame_duration_in_ms = (orbit_base::CaptureTimestampNs() - start_time_ns) / 1000000.0;
+  if (picking_mode_ == PickingMode::kNone) {
+    if (time_graph_was_redrawn) {
+      scoped_frame_times_[kTimingDrawAndUpdatePrimitives]->PushTimeMs(frame_duration_in_ms);
+    } else {
+      scoped_frame_times_[kTimingDraw]->PushTimeMs(frame_duration_in_ms);
+    }
+  }
 }
 
 void CaptureWindow::UpdateChildrenPosAndSize() {
@@ -668,6 +690,17 @@ void CaptureWindow::RenderImGuiDebugUI() {
       if (capture_data != nullptr) {
         IMGUI_VAR_TO_TEXT(capture_data->GetCallstackData().GetCallstackEventsCount());
       }
+    }
+  }
+
+  if (ImGui::CollapsingHeader("Performance")) {
+    for (auto& item : scoped_frame_times_) {
+      IMGUI_VARN_TO_TEXT(item.second->GetAverageTimeMs(),
+                         (std::string("Avg time in ms: ") + item.first));
+      IMGUI_VARN_TO_TEXT(item.second->GetMinTimeMs(),
+                         (std::string("Min time in ms: ") + item.first));
+      IMGUI_VARN_TO_TEXT(item.second->GetMaxTimeMs(),
+                         (std::string("Max time in ms: ") + item.first));
     }
   }
 
