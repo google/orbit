@@ -80,6 +80,10 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
             ProcessAsyncTimer(name, timer_info);
           });
   manual_instrumentation_manager_->AddAsyncTimerListener(async_timer_info_listener_.get());
+
+  if (absl::GetFlag(FLAGS_enforce_full_redraw)) {
+    RequestUpdate();
+  }
 }
 
 TimeGraph::~TimeGraph() {
@@ -532,7 +536,9 @@ void TimeGraph::DoUpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/,
   batcher_.PopTranslation();
   text_renderer_static_.PopTranslation();
 
-  update_primitives_requested_ = false;
+  if (!absl::GetFlag(FLAGS_enforce_full_redraw)) {
+    update_primitives_requested_ = false;
+  }
 }
 
 void TimeGraph::DoUpdateLayout() {
@@ -608,7 +614,9 @@ void TimeGraph::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
   batcher.PopTranslation();
   text_renderer.PopTranslation();
 
-  redraw_requested_ = false;
+  if (!absl::GetFlag(FLAGS_enforce_full_redraw)) {
+    redraw_requested_ = false;
+  }
 }
 
 namespace {

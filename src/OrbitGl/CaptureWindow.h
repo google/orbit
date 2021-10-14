@@ -17,7 +17,9 @@
 #include "GlSlider.h"
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "PickingManager.h"
+#include "SimpleTimings.h"
 #include "TimeGraph.h"
+#include "absl/container/btree_map.h"
 
 class OrbitApp;
 
@@ -107,6 +109,8 @@ class CaptureWindow : public GlCanvas {
   [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleInterface>
   CreateAccessibleInterface() override;
   CaptureStats selection_stats_;
+
+  absl::btree_map<std::string, std::unique_ptr<orbit_gl::SimpleTimings>> scoped_frame_times_;
 };
 
 #endif  // ORBIT_GL_CAPTURE_WINDOW_H_

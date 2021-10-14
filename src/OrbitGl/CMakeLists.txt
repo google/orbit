@@ -55,6 +55,7 @@ target_sources(
          SchedulerTrack.h
          SchedulingStats.h
          ShortenStringWithEllipsis.h
+         SimpleTimings.h
          StatusListener.h
          SystemMemoryTrack.h
          TextRenderer.h
@@ -120,6 +121,7 @@ target_sources(
           SamplingReportDataView.cpp
           SchedulerTrack.cpp
           SchedulingStats.cpp
+          SimpleTimings.cpp
           SystemMemoryTrack.cpp
           TextRenderer.cpp
           TimeGraph.cpp
@@ -197,6 +199,7 @@ target_sources(OrbitGlTests PRIVATE
                PageFaultsTrackTest.cpp
                PickingManagerTest.cpp
                ScopedStatusTest.cpp
+               SimpleTimingsTest.cpp
                SliderTest.cpp
                ShortenStringWithEllipsisTest.cpp
                TimerInfosIteratorTest.cpp
