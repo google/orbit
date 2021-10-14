@@ -28,6 +28,7 @@ target_sources(OrbitGgp PRIVATE
 target_link_libraries(
   OrbitGgp
   PRIVATE OrbitBase
+          QtUtils
           Qt5::Core
 )
 
@@ -56,6 +57,7 @@ target_link_libraries(OrbitGgpTests PRIVATE
           OrbitGgp
           OrbitBase
           TestUtils
+          QtUtils
           GTest::QtCoreMain
           Qt5::Core
 )

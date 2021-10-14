@@ -15,6 +15,7 @@
 #include <string>
 
 #include "Instance.h"
+#include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Project.h"
 #include "SshInfo.h"
@@ -23,30 +24,23 @@ namespace orbit_ggp {
 
 constexpr const char* kDefaultGgpProgram{"ggp"};
 
-class Client : public QObject {
-  Q_OBJECT
-
+class Client {
  public:
-  static ErrorMessageOr<QPointer<Client>> Create(
-      QObject* parent, QString ggp_program = kDefaultGgpProgram,
-      std::chrono::milliseconds timeout = GetDefaultTimeoutMs());
-
-  void GetInstancesAsync(const std::function<void(ErrorMessageOr<QVector<Instance>>)>& callback,
-                         bool all_reserved = false, std::optional<Project> project = std::nullopt,
-                         int retry = 3);
-  void GetSshInfoAsync(const Instance& ggp_instance,
-                       const std::function<void(ErrorMessageOr<SshInfo>)>& callback,
-                       std::optional<Project> project = std::nullopt);
-  void GetProjectsAsync(const std::function<void(ErrorMessageOr<QVector<Project>>)>& callback);
-
- private:
-  explicit Client(QObject* parent, QString ggp_program, std::chrono::milliseconds timeout)
-      : QObject(parent), ggp_program_(std::move(ggp_program)), timeout_(timeout) {}
-  static std::chrono::milliseconds GetDefaultTimeoutMs();
-
-  const QString ggp_program_;
-  const std::chrono::milliseconds timeout_;
+  Client() = default;
+  virtual ~Client() = default;
+  [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<QVector<Instance>>> GetInstancesAsync(
+      bool all_reserved, std::optional<Project> project) = 0;
+  [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<QVector<Instance>>> GetInstancesAsync(
+      bool all_reserved, std::optional<Project> project, int retry) = 0;
+  [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<SshInfo>> GetSshInfoAsync(
+      const Instance& ggp_instance, std::optional<Project> project) = 0;
+  [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<QVector<Project>>> GetProjectsAsync() = 0;
 };
+
+[[nodiscard]] std::chrono::milliseconds GetClientDefaultTimeoutInMs();
+ErrorMessageOr<std::unique_ptr<Client>> CreateClient(
+    QString ggp_programm = kDefaultGgpProgram,
+    std::chrono::milliseconds timeout = GetClientDefaultTimeoutInMs());
 
 }  // namespace orbit_ggp
 

@@ -23,6 +23,7 @@
 #include <string>
 
 #include "Connections.h"
+#include "OrbitBase/Executor.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/Instance.h"
@@ -30,6 +31,7 @@
 #include "OrbitGgp/Project.h"
 #include "OrbitGgp/SshInfo.h"
 #include "OrbitSsh/Credentials.h"
+#include "QtUtils/MainThreadExecutorImpl.h"
 #include "SessionSetup/ServiceDeployManager.h"
 
 namespace Ui {
@@ -93,10 +95,11 @@ class ConnectToStadiaWidget : public QWidget {
   std::optional<orbit_ggp::Instance> selected_instance_;
   std::unique_ptr<ServiceDeployManager> service_deploy_manager_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
-  QPointer<orbit_ggp::Client> ggp_client_ = nullptr;
+  std::unique_ptr<orbit_ggp::Client> ggp_client_;
   std::optional<QString> remembered_instance_id_;
   QVector<orbit_ggp::Project> projects_;
   std::optional<orbit_ggp::Project> selected_project_;
+  std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> main_thread_executor_;
 
   // State Machine & States
   QStateMachine state_machine_;
