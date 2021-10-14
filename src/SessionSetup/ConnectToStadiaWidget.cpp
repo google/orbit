@@ -208,7 +208,7 @@ void ConnectToStadiaWidget::Start() {
     return;
   }
 
-  auto client_result = orbit_ggp::CreateClient(main_thread_executor_.get());
+  auto client_result = orbit_ggp::CreateClient();
   if (client_result.has_error()) {
     ui_->radioButton->setToolTip(QString::fromStdString(client_result.error().message()));
     setEnabled(false);

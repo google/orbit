@@ -20,44 +20,44 @@
 
 #include "OrbitBase/Future.h"
 #include "OrbitBase/FutureHelpers.h"
+#include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Error.h"
 #include "OrbitGgp/Instance.h"
 #include "OrbitGgp/SshInfo.h"
 #include "QtUtils/ExecuteProcess.h"
-#include "QtUtils/MainThreadExecutorImpl.h"
 
 ABSL_FLAG(uint32_t, ggp_timeout_seconds, 20, "Timeout for Ggp commands in seconds");
 
 namespace orbit_ggp {
 
-class ClientImpl : public Client, QObject {
- public:
-  explicit ClientImpl(orbit_qt_utils::MainThreadExecutorImpl* main_thread_executor,
-                      QString ggp_program, std::chrono::milliseconds timeout)
-      : main_thread_executor_(main_thread_executor),
-        ggp_program_(std::move(ggp_program)),
-        timeout_(timeout) {}
+using orbit_base::Future;
 
-  orbit_base::Future<ErrorMessageOr<QVector<Instance>>> GetInstancesAsync(
-      bool all_reserved = false, std::optional<Project> project = std::nullopt,
-      int retry = 3) override;
-  orbit_base::Future<ErrorMessageOr<SshInfo>> GetSshInfoAsync(
-      const Instance& ggp_instance, std::optional<Project> project = std::nullopt) override;
-  orbit_base::Future<ErrorMessageOr<QVector<Project>>> GetProjectsAsync() override;
+class ClientImpl : public Client, public QObject {
+ public:
+  explicit ClientImpl(QString ggp_program, std::chrono::milliseconds timeout)
+      : ggp_program_(std::move(ggp_program)), timeout_(timeout) {}
+
+  Future<ErrorMessageOr<QVector<Instance>>> GetInstancesAsync() override;
+  Future<ErrorMessageOr<QVector<Instance>>> GetInstancesAsync(bool all_reserved) override;
+  Future<ErrorMessageOr<QVector<Instance>>> GetInstancesAsync(
+      bool all_reserved, std::optional<Project> project) override;
+  Future<ErrorMessageOr<QVector<Instance>>> GetInstancesAsync(bool all_reserved,
+                                                              std::optional<Project> project,
+                                                              int retry) override;
+  Future<ErrorMessageOr<SshInfo>> GetSshInfoAsync(const Instance& ggp_instance) override;
+  Future<ErrorMessageOr<SshInfo>> GetSshInfoAsync(const Instance& ggp_instance,
+                                                  std::optional<Project> project) override;
+  Future<ErrorMessageOr<QVector<Project>>> GetProjectsAsync() override;
 
  private:
-  orbit_qt_utils::MainThreadExecutorImpl* main_thread_executor_;
   const QString ggp_program_;
   const std::chrono::milliseconds timeout_;
 };
 
-using orbit_base::Future;
-
-ErrorMessageOr<std::unique_ptr<Client>> CreateClient(
-    orbit_qt_utils::MainThreadExecutorImpl* main_thread_executor, QString ggp_program,
-    std::chrono::milliseconds timeout) {
+ErrorMessageOr<std::unique_ptr<Client>> CreateClient(QString ggp_program,
+                                                     std::chrono::milliseconds timeout) {
   QProcess ggp_process{};
   ggp_process.setProgram(ggp_program);
   ggp_process.setArguments({"version"});
@@ -83,7 +83,20 @@ ErrorMessageOr<std::unique_ptr<Client>> CreateClient(
     return ErrorMessage{error_message};
   }
 
-  return std::make_unique<ClientImpl>(main_thread_executor, std::move(ggp_program), timeout);
+  return std::make_unique<ClientImpl>(std::move(ggp_program), timeout);
+}
+
+Future<ErrorMessageOr<QVector<Instance>>> ClientImpl::GetInstancesAsync() {
+  return GetInstancesAsync(false);
+}
+
+Future<ErrorMessageOr<QVector<Instance>>> ClientImpl::GetInstancesAsync(bool all_reserved) {
+  return GetInstancesAsync(all_reserved, std::nullopt);
+}
+
+Future<ErrorMessageOr<QVector<Instance>>> ClientImpl::GetInstancesAsync(
+    bool all_reserved, std::optional<Project> project) {
+  return GetInstancesAsync(all_reserved, project, 3);
 }
 
 Future<ErrorMessageOr<QVector<Instance>>> ClientImpl::GetInstancesAsync(
@@ -100,20 +113,26 @@ Future<ErrorMessageOr<QVector<Instance>>> ClientImpl::GetInstancesAsync(
   Future<ErrorMessageOr<QByteArray>> ggp_call_future =
       orbit_qt_utils::ExecuteProcess(ggp_program_, arguments, this, absl::FromChrono(timeout_));
 
+  orbit_base::ImmediateExecutor executor;
   return orbit_base::UnwrapFuture(ggp_call_future.Then(
-      main_thread_executor_,
-      [=, client_ptr = QPointer<QObject>(this)](
-          ErrorMessageOr<QByteArray> ggp_call_result) -> Future<ErrorMessageOr<QVector<Instance>>> {
+      &executor,
+      [=,
+       client_ptr = QPointer<ClientImpl>(this)](ErrorMessageOr<QByteArray> ggp_call_result) mutable
+      -> Future<ErrorMessageOr<QVector<Instance>>> {
         if (client_ptr == nullptr) return ErrorMessage{"orbit_ggp::Client no longer exists"};
 
         if (ggp_call_result.has_error()) {
           if (retry > 0) {
-            return GetInstancesAsync(all_reserved, project, retry - 1);
+            return client_ptr->GetInstancesAsync(all_reserved, project, retry - 1);
           }
           return ggp_call_result.error();
         }
         return Instance::GetListFromJson(ggp_call_result.value());
       }));
+}
+
+Future<ErrorMessageOr<SshInfo>> ClientImpl::GetSshInfoAsync(const Instance& ggp_instance) {
+  return GetSshInfoAsync(ggp_instance, std::nullopt);
 }
 
 Future<ErrorMessageOr<SshInfo>> ClientImpl::GetSshInfoAsync(const Instance& ggp_instance,
@@ -124,8 +143,9 @@ Future<ErrorMessageOr<SshInfo>> ClientImpl::GetSshInfoAsync(const Instance& ggp_
     arguments.append(project.value().id);
   }
 
+  orbit_base::ImmediateExecutor executor;
   return orbit_qt_utils::ExecuteProcess(ggp_program_, arguments, this, absl::FromChrono(timeout_))
-      .ThenIfSuccess(main_thread_executor_, [](const QByteArray& json) -> ErrorMessageOr<SshInfo> {
+      .ThenIfSuccess(&executor, [](const QByteArray& json) -> ErrorMessageOr<SshInfo> {
         return SshInfo::CreateFromJson(json);
       });
 }
@@ -133,14 +153,14 @@ Future<ErrorMessageOr<SshInfo>> ClientImpl::GetSshInfoAsync(const Instance& ggp_
 Future<ErrorMessageOr<QVector<Project>>> ClientImpl::GetProjectsAsync() {
   QStringList arguments{"project", "list", "-s"};
 
+  orbit_base::ImmediateExecutor executor;
   return orbit_qt_utils::ExecuteProcess(ggp_program_, arguments, this, absl::FromChrono(timeout_))
-      .ThenIfSuccess(main_thread_executor_,
-                     [](const QByteArray& json) -> ErrorMessageOr<QVector<Project>> {
-                       return Project::GetListFromJson(json);
-                     });
+      .ThenIfSuccess(&executor, [](const QByteArray& json) -> ErrorMessageOr<QVector<Project>> {
+        return Project::GetListFromJson(json);
+      });
 }
 
-std::chrono::milliseconds ClientDefaultTimeoutMs() {
+std::chrono::milliseconds GetClientDefaultTimeoutInMs() {
   static const uint32_t timeout_seconds = absl::GetFlag(FLAGS_ggp_timeout_seconds);
   static const std::chrono::milliseconds default_timeout_ms(1'000 * timeout_seconds);
   return default_timeout_ms;
