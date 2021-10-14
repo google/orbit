@@ -453,65 +453,11 @@ orbit_grpc_protos::ModuleInfo GetExecutableBinaryModuleInfo(pid_t pid) {
 void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
   uint64_t previous_event_timestamp_ns = 0;
   for (const auto& event : events) {
+    // Please keep the cases alphabetically ordered, as in the definition of the
+    // ProducerCaptureEvent message.
     switch (event.event_case()) {
-      case orbit_grpc_protos::ProducerCaptureEvent::kCaptureStarted:
-        // TracingHandler does not send this event.
-        UNREACHABLE();
-      case orbit_grpc_protos::ProducerCaptureEvent::kCaptureFinished:
-        UNREACHABLE();
-      case orbit_grpc_protos::ProducerCaptureEvent::kSchedulingSlice:
-        EXPECT_GE(event.scheduling_slice().out_timestamp_ns(), previous_event_timestamp_ns);
-        previous_event_timestamp_ns = event.scheduling_slice().out_timestamp_ns();
-        break;
-      case orbit_grpc_protos::ProducerCaptureEvent::kInternedCallstack:
-        UNREACHABLE();
-      case orbit_grpc_protos::ProducerCaptureEvent::kCallstackSample:
-        UNREACHABLE();
-      case orbit_grpc_protos::ProducerCaptureEvent::kFullCallstackSample:
-        EXPECT_GE(event.full_callstack_sample().timestamp_ns(), previous_event_timestamp_ns);
-        previous_event_timestamp_ns = event.full_callstack_sample().timestamp_ns();
-        break;
-      case orbit_grpc_protos::ProducerCaptureEvent::kFullTracepointEvent:
-        UNREACHABLE();
-      case orbit_grpc_protos::ProducerCaptureEvent::kFunctionCall:
-        EXPECT_GE(event.function_call().end_timestamp_ns(), previous_event_timestamp_ns);
-        previous_event_timestamp_ns = event.function_call().end_timestamp_ns();
-        break;
-      case orbit_grpc_protos::ProducerCaptureEvent::kInternedString:
-        UNREACHABLE();
-      case orbit_grpc_protos::ProducerCaptureEvent::kModulesSnapshot:
-        EXPECT_GE(event.modules_snapshot().timestamp_ns(), previous_event_timestamp_ns);
-        previous_event_timestamp_ns = event.modules_snapshot().timestamp_ns();
-        break;
-      case orbit_grpc_protos::ProducerCaptureEvent::kFullGpuJob:
-        EXPECT_GE(event.full_gpu_job().dma_fence_signaled_time_ns(), previous_event_timestamp_ns);
-        previous_event_timestamp_ns = event.full_gpu_job().dma_fence_signaled_time_ns();
-        break;
-      case orbit_grpc_protos::ProducerCaptureEvent::kThreadName:
-        EXPECT_GE(event.thread_name().timestamp_ns(), previous_event_timestamp_ns);
-        previous_event_timestamp_ns = event.thread_name().timestamp_ns();
-        break;
-      case orbit_grpc_protos::ProducerCaptureEvent::kThreadNamesSnapshot:
-        EXPECT_GE(event.thread_names_snapshot().timestamp_ns(), previous_event_timestamp_ns);
-        previous_event_timestamp_ns = event.thread_names_snapshot().timestamp_ns();
-        break;
-      case orbit_grpc_protos::ProducerCaptureEvent::kThreadStateSlice:
-        EXPECT_GE(event.thread_state_slice().end_timestamp_ns(), previous_event_timestamp_ns);
-        previous_event_timestamp_ns = event.thread_state_slice().end_timestamp_ns();
-        break;
-      case orbit_grpc_protos::ProducerCaptureEvent::kFullAddressInfo:
-        // AddressInfos have no timestamp.
-        break;
-      case orbit_grpc_protos::ProducerCaptureEvent::kGpuQueueSubmission:
-        UNREACHABLE();
-      case orbit_grpc_protos::ProducerCaptureEvent::kModuleUpdateEvent:
-        EXPECT_GE(event.module_update_event().timestamp_ns(), previous_event_timestamp_ns);
-        previous_event_timestamp_ns = event.module_update_event().timestamp_ns();
-        break;
-      case orbit_grpc_protos::ProducerCaptureEvent::kMemoryUsageEvent:
-        // Cases of memory events are tested in MemoryTracingIntegrationTest.
-        UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kApiEvent:
+        // TracingHandler does not send this event.
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kApiScopeStart:
         UNREACHABLE();
@@ -535,22 +481,60 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackUint64:
         UNREACHABLE();
-      case orbit_grpc_protos::ProducerCaptureEvent::kWarningEvent:
+      case orbit_grpc_protos::ProducerCaptureEvent::kCallstackSample:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kCaptureFinished:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kCaptureStarted:
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kClockResolutionEvent:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kErrorEnablingOrbitApiEvent:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kErrorEnablingUserSpaceInstrumentationEvent:
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kErrorsWithPerfEventOpenEvent:
         EXPECT_GE(event.errors_with_perf_event_open_event().timestamp_ns(),
                   previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.errors_with_perf_event_open_event().timestamp_ns();
         break;
-      case orbit_grpc_protos::ProducerCaptureEvent::kErrorEnablingOrbitApiEvent:
+      case orbit_grpc_protos::ProducerCaptureEvent::kFullCallstackSample:
+        EXPECT_GE(event.full_callstack_sample().timestamp_ns(), previous_event_timestamp_ns);
+        previous_event_timestamp_ns = event.full_callstack_sample().timestamp_ns();
+        break;
+      case orbit_grpc_protos::ProducerCaptureEvent::kFullAddressInfo:
+        // AddressInfos have no timestamp.
+        break;
+      case orbit_grpc_protos::ProducerCaptureEvent::kFullGpuJob:
+        EXPECT_GE(event.full_gpu_job().dma_fence_signaled_time_ns(), previous_event_timestamp_ns);
+        previous_event_timestamp_ns = event.full_gpu_job().dma_fence_signaled_time_ns();
+        break;
+      case orbit_grpc_protos::ProducerCaptureEvent::kFullTracepointEvent:
         UNREACHABLE();
-      case orbit_grpc_protos::ProducerCaptureEvent::kErrorEnablingUserSpaceInstrumentationEvent:
+      case orbit_grpc_protos::ProducerCaptureEvent::kFunctionCall:
+        EXPECT_GE(event.function_call().end_timestamp_ns(), previous_event_timestamp_ns);
+        previous_event_timestamp_ns = event.function_call().end_timestamp_ns();
+        break;
+      case orbit_grpc_protos::ProducerCaptureEvent::kGpuQueueSubmission:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kInternedCallstack:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kInternedString:
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kLostPerfRecordsEvent:
         EXPECT_GE(event.lost_perf_records_event().end_timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.lost_perf_records_event().end_timestamp_ns();
+        break;
+      case orbit_grpc_protos::ProducerCaptureEvent::kMemoryUsageEvent:
+        // Cases of memory events are tested in MemoryTracingIntegrationTest.
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kModulesSnapshot:
+        EXPECT_GE(event.modules_snapshot().timestamp_ns(), previous_event_timestamp_ns);
+        previous_event_timestamp_ns = event.modules_snapshot().timestamp_ns();
+        break;
+      case orbit_grpc_protos::ProducerCaptureEvent::kModuleUpdateEvent:
+        EXPECT_GE(event.module_update_event().timestamp_ns(), previous_event_timestamp_ns);
+        previous_event_timestamp_ns = event.module_update_event().timestamp_ns();
         break;
       case orbit_grpc_protos::ProducerCaptureEvent::kOutOfOrderEventsDiscardedEvent:
         EXPECT_GE(event.out_of_order_events_discarded_event().end_timestamp_ns(),
@@ -558,6 +542,24 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         previous_event_timestamp_ns =
             event.out_of_order_events_discarded_event().end_timestamp_ns();
         break;
+      case orbit_grpc_protos::ProducerCaptureEvent::kSchedulingSlice:
+        EXPECT_GE(event.scheduling_slice().out_timestamp_ns(), previous_event_timestamp_ns);
+        previous_event_timestamp_ns = event.scheduling_slice().out_timestamp_ns();
+        break;
+      case orbit_grpc_protos::ProducerCaptureEvent::kThreadName:
+        EXPECT_GE(event.thread_name().timestamp_ns(), previous_event_timestamp_ns);
+        previous_event_timestamp_ns = event.thread_name().timestamp_ns();
+        break;
+      case orbit_grpc_protos::ProducerCaptureEvent::kThreadNamesSnapshot:
+        EXPECT_GE(event.thread_names_snapshot().timestamp_ns(), previous_event_timestamp_ns);
+        previous_event_timestamp_ns = event.thread_names_snapshot().timestamp_ns();
+        break;
+      case orbit_grpc_protos::ProducerCaptureEvent::kThreadStateSlice:
+        EXPECT_GE(event.thread_state_slice().end_timestamp_ns(), previous_event_timestamp_ns);
+        previous_event_timestamp_ns = event.thread_state_slice().end_timestamp_ns();
+        break;
+      case orbit_grpc_protos::ProducerCaptureEvent::kWarningEvent:
+        UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::EVENT_NOT_SET:
         UNREACHABLE();
     }
