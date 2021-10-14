@@ -848,14 +848,16 @@ void CaptureWindow::RenderSelectionOverlay() {
   Box box(pos, size, GlCanvas::kZValueOverlay);
   ui_batcher_.AddBox(box, color);
 
-  const Color text_color(255, 255, 255, 255);
   TextRenderer::HAlign alignment = select_stop_pos_world_[0] < select_start_pos_world_[0]
                                        ? TextRenderer::HAlign::Left
                                        : TextRenderer::HAlign::Right;
+  TextRenderer::TextFormatting formatting;
+  formatting.font_size = time_graph_->GetLayout().CalculateZoomedFontSize();
+  formatting.color = Color(255, 255, 255, 255);
+  formatting.halign = alignment;
 
   text_renderer_.AddText(text.c_str(), stop_pos_world, select_stop_pos_world_[1],
-                         GlCanvas::kZValueTextUi,
-                         {time_graph_->GetLayout().GetFontSize(), text_color, size[0], alignment});
+                         GlCanvas::kZValueTextUi, formatting);
 
   const unsigned char g = 100;
   Color grey(g, g, g, 255);
