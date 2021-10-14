@@ -4,6 +4,7 @@
 
 #include "PdbFileDia.h"
 
+#include <absl/memory/memory.h>
 #include <diacreate.h>
 #include <llvm/Demangle/Demangle.h>
 #include <winerror.h>
@@ -16,14 +17,12 @@ using orbit_grpc_protos::SymbolInfo;
 
 namespace orbit_object_utils {
 
-static ErrorMessageOr<CComPtr<IDiaDataSource>> CreateDiaDataSource() {
-  // Initializes the COM library for the current thread.
-  thread_local HRESULT com_initialize_result = CoInitialize(NULL);
+PdbFileDia::PdbFileDia(std::filesystem::path file_path, const ObjectFileInfo& object_file_info)
+    : file_path_(std::move(file_path)), object_file_info_(object_file_info) {}
 
-  // S_OK means success, S_FALSE means that the COM library is already initialized on this thread.
-  // In both cases, we want to continue.
-  if (com_initialize_result != S_OK && com_initialize_result != S_FALSE) {
-    return ErrorMessage{absl::StrFormat("CoInitialize failed (%u)", com_initialize_result)};
+ErrorMessageOr<CComPtr<IDiaDataSource>> PdbFileDia::CreateDiaDataSource() {
+  if (!SUCCEEDED(com_initializer_.result)) {
+    return ErrorMessage{absl::StrFormat("CoInitialize failed (%u)", com_initializer_.result)};
   }
   // Create instance of dia data source.
   CComPtr<IDiaDataSource> dia_data_source = nullptr;
@@ -36,9 +35,6 @@ static ErrorMessageOr<CComPtr<IDiaDataSource>> CreateDiaDataSource() {
 
   return dia_data_source;
 }
-
-PdbFileDia::PdbFileDia(std::filesystem::path file_path, const ObjectFileInfo& object_file_info)
-    : file_path_(std::move(file_path)), object_file_info_(object_file_info) {}
 
 ErrorMessageOr<void> PdbFileDia::LoadDataForPDB() {
   OUTCOME_TRY(dia_data_source_, CreateDiaDataSource());
@@ -126,7 +122,7 @@ ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileDia::LoadDebugSymbols() 
 
 ErrorMessageOr<std::unique_ptr<PdbFile>> PdbFileDia::CreatePdbFile(
     const std::filesystem::path& file_path, const ObjectFileInfo& object_file_info) {
-  auto pdb_file_dia = std::make_unique<PdbFileDia>(file_path, object_file_info);
+  auto pdb_file_dia = absl::WrapUnique<PdbFileDia>(new PdbFileDia(file_path, object_file_info));
   auto result = pdb_file_dia->LoadDataForPDB();
   if (result.has_error()) {
     return ErrorMessage(absl::StrFormat("Unable to load PDB file %s with error: %s",
