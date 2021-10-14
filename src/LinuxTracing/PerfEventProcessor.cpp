@@ -49,21 +49,21 @@ std::optional<DiscardedPerfEvent> PerfEventProcessor::HandleOutOfOrderEvent(
   CHECK(discarded_end >= last_discarded_end_);
   if (discarded_end == last_discarded_end_ && discarded_begin < last_discarded_begin_) {
     optional_discarded_event =
-        DiscardedPerfEvent{.begin_timestamp_ns = discarded_begin, .timestamp = discarded_end};
+        DiscardedPerfEvent{.timestamp = discarded_end, .begin_timestamp_ns = discarded_begin};
     last_discarded_begin_ = discarded_begin;
   } else if (discarded_end == last_discarded_end_ && discarded_begin >= last_discarded_begin_) {
     // This is the only case that doesn't generate a DiscardedPerfEvent.
   } else if (discarded_end > last_discarded_end_ && discarded_begin < last_discarded_begin_) {
     optional_discarded_event =
-        DiscardedPerfEvent{.begin_timestamp_ns = discarded_begin, .timestamp = discarded_end};
+        DiscardedPerfEvent{.timestamp = discarded_end, .begin_timestamp_ns = discarded_begin};
     last_discarded_begin_ = discarded_begin;
   } else if (discarded_end > last_discarded_end_ && discarded_begin <= last_discarded_end_) {
     optional_discarded_event =
-        DiscardedPerfEvent{.begin_timestamp_ns = discarded_begin, .timestamp = discarded_end};
+        DiscardedPerfEvent{.timestamp = discarded_end, .begin_timestamp_ns = discarded_begin};
     // Don't update last_discarded_begin_.
   } else if (discarded_end > last_discarded_end_ && discarded_begin > last_discarded_end_) {
     optional_discarded_event =
-        DiscardedPerfEvent{.begin_timestamp_ns = discarded_begin, .timestamp = discarded_end};
+        DiscardedPerfEvent{.timestamp = discarded_end, .begin_timestamp_ns = discarded_begin};
     last_discarded_begin_ = discarded_begin;
   } else {
     UNREACHABLE();

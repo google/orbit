@@ -149,14 +149,13 @@ StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffe
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
   ring_buffer->ReadValueAtOffset(&sample_id, offsetof(perf_event_stack_sample_fixed, sample_id));
 
-  StackSamplePerfEvent event{.dyn_size = dyn_size,
+  StackSamplePerfEvent event{.timestamp = sample_id.time,
                              .pid = ToNativeProcessId(sample_id.pid),
                              .tid = ToNativeThreadId(sample_id.tid),
-                             .timestamp = sample_id.time,
+                             .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
+                             .dyn_size = dyn_size,
+                             .data = make_unique_for_overwrite<char[]>(dyn_size),
                              .ordered_in_file_descriptor = ring_buffer->GetFileDescriptor()};
-
-  event.regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>();
-  event.data = make_unique_for_overwrite<char[]>(dyn_size);
 
   ring_buffer->ReadValueAtOffset(event.regs.get(), offsetof(perf_event_stack_sample_fixed, regs));
   ring_buffer->ReadRawAtOffset(event.data.get(), offset_of_data, dyn_size);
@@ -207,14 +206,15 @@ CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ri
   ring_buffer->ReadValueAtOffset(&sample_id,
                                  offsetof(perf_event_callchain_sample_fixed, sample_id));
 
-  CallchainSamplePerfEvent event{.ips_size = nr,
-                                 .pid = ToNativeProcessId(sample_id.pid),
-                                 .tid = ToNativeThreadId(sample_id.tid),
-                                 .timestamp = sample_id.time,
-                                 .ordered_in_file_descriptor = ring_buffer->GetFileDescriptor()};
-  event.ips = make_unique_for_overwrite<uint64_t[]>(nr);
-  event.data = make_unique_for_overwrite<char[]>(dyn_size);
-  event.regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>();
+  CallchainSamplePerfEvent event{
+      .timestamp = sample_id.time,
+      .pid = ToNativeProcessId(sample_id.pid),
+      .tid = ToNativeThreadId(sample_id.tid),
+      .ordered_in_file_descriptor = ring_buffer->GetFileDescriptor(),
+      .ips_size = nr,
+      .ips = make_unique_for_overwrite<uint64_t[]>(nr),
+      .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
+      .data = make_unique_for_overwrite<char[]>(dyn_size)};
 
   ring_buffer->ReadRawAtOffset(event.ips.get(), offset_of_ips, size_of_ips_in_bytes);
   ring_buffer->ReadRawAtOffset(event.regs.get(), offset_of_regs_user_struct,
@@ -229,9 +229,9 @@ GenericTracepointPerfEvent ConsumeGenericTracepointPerfEvent(PerfEventRingBuffer
                                                              const perf_event_header& header) {
   perf_event_raw_sample_fixed ring_buffer_record;
   ring_buffer->ReadRawAtOffset(&ring_buffer_record, 0, sizeof(perf_event_raw_sample_fixed));
-  GenericTracepointPerfEvent event{.pid = ToNativeProcessId(ring_buffer_record.sample_id.pid),
+  GenericTracepointPerfEvent event{.timestamp = ring_buffer_record.sample_id.time,
+                                   .pid = ToNativeProcessId(ring_buffer_record.sample_id.pid),
                                    .tid = ToNativeThreadId(ring_buffer_record.sample_id.tid),
-                                   .timestamp = ring_buffer_record.sample_id.time,
                                    .cpu = ring_buffer_record.sample_id.cpu,
                                    .size = ring_buffer_record.size,
                                    .ordered_in_file_descriptor = ring_buffer->GetFileDescriptor()};
@@ -264,13 +264,13 @@ EventType ConsumeGPUEvent(PerfEventRingBuffer* ring_buffer, const perf_event_hea
 
   // dma_fence_signaled events can be out of order of timestamp even on the same ring buffer,
   // hence why kNotOrderedInAnyFileDescriptor. To be safe, do the same for the other GPU events.
-  EventType event{.pid = ToNativeProcessId(ring_buffer_record.sample_id.pid),
+  EventType event{.timestamp = ring_buffer_record.sample_id.time,
+                  .pid = ToNativeProcessId(ring_buffer_record.sample_id.pid),
                   .tid = ToNativeThreadId(ring_buffer_record.sample_id.tid),
-                  .timestamp = ring_buffer_record.sample_id.time,
-                  .timeline_string = std::string(&data_loc_data[0]),
                   .context = typed_tracepoint_data.context,
                   .seqno = typed_tracepoint_data.seqno,
-                  .ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor};
+                  .ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor,
+                  .timeline_string = std::string(&data_loc_data[0])};
 
   ring_buffer->SkipRecord(header);
   return event;

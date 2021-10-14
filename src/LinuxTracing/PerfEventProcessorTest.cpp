@@ -49,7 +49,7 @@ class PerfEventProcessorTest : public ::testing::Test {
 PerfEvent MakeFakePerfEvent(int origin_fd, uint64_t timestamp_ns) {
   // We use ForkPerfEvent just because it's a simple one, but we could use any
   // as we only need to set the file descriptor and the timestamp.
-  return ForkPerfEvent{.ordered_in_file_descriptor = origin_fd, .timestamp = timestamp_ns};
+  return ForkPerfEvent{.timestamp = timestamp_ns, .ordered_in_file_descriptor = origin_fd};
 }
 
 MATCHER_P2(UntypedDiscardedPerfEventEq, begin_timestamp_ns, end_timestamp_ns, "") {

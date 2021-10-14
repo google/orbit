@@ -150,25 +150,24 @@ class UprobesUnwindingVisitorTest : public ::testing::Test {
 
 StackSamplePerfEvent BuildStackSamplePerfEvent() {
   constexpr uint64_t kStackSize = 13;
-  return StackSamplePerfEvent{
-      .pid = 10,
-      .tid = 11,
-      .timestamp = 15,
-      .dyn_size = kStackSize,
-      .data = make_unique_for_overwrite<char[]>(kStackSize),
-      .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
+  return StackSamplePerfEvent{.timestamp = 15,
+                              .pid = 10,
+                              .tid = 11,
+                              .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
+                              .dyn_size = kStackSize,
+                              .data = make_unique_for_overwrite<char[]>(kStackSize)
+
   };
 }
 
 CallchainSamplePerfEvent BuildCallchainSamplePerfEvent(const std::vector<uint64_t>& callchain) {
   constexpr uint64_t kStackSize = 13;
   CallchainSamplePerfEvent event{
+      .timestamp = 15,
       .pid = 10,
       .tid = 11,
-      .timestamp = 15,
-      .data = make_unique_for_overwrite<char[]>(kStackSize),
       .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
-  };
+      .data = make_unique_for_overwrite<char[]>(kStackSize)};
   event.SetIps(callchain);
   return event;
 }

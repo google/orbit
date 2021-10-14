@@ -99,16 +99,16 @@ TaskRenamePerfEvent MakeFakeTaskRenamePerfEvent(pid_t renamed_tid, const char* n
 SchedSwitchPerfEvent MakeFakeSchedSwitchPerfEvent(uint32_t cpu, pid_t prev_pid_or_minus_one,
                                                   pid_t prev_tid, int64_t prev_state_mask,
                                                   pid_t next_tid, uint64_t timestamp_ns) {
-  return SchedSwitchPerfEvent{.cpu = cpu,
+  return SchedSwitchPerfEvent{.timestamp = timestamp_ns,
+                              .cpu = cpu,
                               .prev_pid_or_minus_one = prev_pid_or_minus_one,
                               .prev_tid = prev_tid,
                               .prev_state = prev_state_mask,
-                              .next_tid = next_tid,
-                              .timestamp = timestamp_ns};
+                              .next_tid = next_tid};
 }
 
 SchedWakeupPerfEvent MakeFakeSchedWakeupPerfEvent(pid_t woken_tid, uint64_t timestamp_ns) {
-  return SchedWakeupPerfEvent{.woken_tid = woken_tid, .timestamp = timestamp_ns};
+  return SchedWakeupPerfEvent{.timestamp = timestamp_ns, .woken_tid = woken_tid};
 }
 
 SchedulingSlice MakeSchedulingSlice(uint32_t pid, uint32_t tid, int32_t core, uint64_t duration_ns,

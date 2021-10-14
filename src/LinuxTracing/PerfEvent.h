@@ -119,7 +119,9 @@ struct UprobesPerfEvent {
   uint32_t cpu;
   int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
   uint64_t function_id = orbit_grpc_protos::kInvalidFunctionId;
-  uint64_t sp, ip, return_address;
+  uint64_t sp;
+  uint64_t ip;
+  uint64_t return_address;
 };
 
 struct UprobesWithArgumentsPerfEvent {

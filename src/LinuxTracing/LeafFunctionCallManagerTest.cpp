@@ -120,11 +120,11 @@ class LeafFunctionCallManagerTest : public ::testing::Test {
 
 CallchainSamplePerfEvent BuildCallchainSamplePerfEvent(const std::vector<uint64_t>& callchain) {
   CallchainSamplePerfEvent event{
+      .timestamp = 15,
       .pid = 10,
       .tid = 11,
-      .timestamp = 15,
-      .data = make_unique_for_overwrite<char[]>(13),
-      .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>()};
+      .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
+      .data = make_unique_for_overwrite<char[]>(13)};
   event.SetIps(callchain);
   return event;
 }

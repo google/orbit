@@ -27,8 +27,8 @@ namespace {
 
 [[nodiscard]] DiscardedPerfEvent MakeFakeDiscardedPerfEvent(uint64_t begin_timestamp_ns,
                                                             uint64_t end_timestamp_ns) {
-  return DiscardedPerfEvent{.begin_timestamp_ns = begin_timestamp_ns,
-                            .timestamp = end_timestamp_ns};
+  return DiscardedPerfEvent{.timestamp = end_timestamp_ns,
+                            .begin_timestamp_ns = begin_timestamp_ns};
 }
 
 class LostAndDiscardedEventVisitorTest : public ::testing::Test {

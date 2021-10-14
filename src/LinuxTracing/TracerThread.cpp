@@ -929,9 +929,9 @@ uint64_t TracerThread::ProcessSampleEventAndReturnTimestamp(const perf_event_hea
       return timestamp_ns;
     }
 
-    UprobesPerfEvent event{.pid = ToNativeProcessId(ring_buffer_record.sample_id.pid),
+    UprobesPerfEvent event{.timestamp = ring_buffer_record.sample_id.time,
+                           .pid = ToNativeProcessId(ring_buffer_record.sample_id.pid),
                            .tid = ToNativeThreadId(ring_buffer_record.sample_id.tid),
-                           .timestamp = ring_buffer_record.sample_id.time,
                            .cpu = ring_buffer_record.sample_id.cpu,
                            .ordered_in_file_descriptor = fd,
                            .function_id = uprobes_uretprobes_ids_to_function_id_.at(
@@ -951,9 +951,9 @@ uint64_t TracerThread::ProcessSampleEventAndReturnTimestamp(const perf_event_hea
       return timestamp_ns;
     }
 
-    UprobesWithArgumentsPerfEvent event{.pid = ToNativeProcessId(ring_buffer_record.sample_id.pid),
+    UprobesWithArgumentsPerfEvent event{.timestamp = ring_buffer_record.sample_id.time,
+                                        .pid = ToNativeProcessId(ring_buffer_record.sample_id.pid),
                                         .tid = ToNativeThreadId(ring_buffer_record.sample_id.tid),
-                                        .timestamp = ring_buffer_record.sample_id.time,
                                         .cpu = ring_buffer_record.sample_id.cpu,
                                         .ordered_in_file_descriptor = fd,
                                         .function_id = uprobes_uretprobes_ids_to_function_id_.at(
@@ -972,9 +972,9 @@ uint64_t TracerThread::ProcessSampleEventAndReturnTimestamp(const perf_event_hea
       return timestamp_ns;
     }
 
-    UretprobesPerfEvent event{.pid = ToNativeProcessId(ring_buffer_record.sample_id.pid),
+    UretprobesPerfEvent event{.timestamp = ring_buffer_record.sample_id.time,
+                              .pid = ToNativeProcessId(ring_buffer_record.sample_id.pid),
                               .tid = ToNativeThreadId(ring_buffer_record.sample_id.tid),
-                              .timestamp = ring_buffer_record.sample_id.time,
                               .ordered_in_file_descriptor = fd};
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
@@ -989,9 +989,9 @@ uint64_t TracerThread::ProcessSampleEventAndReturnTimestamp(const perf_event_hea
     }
 
     UretprobesWithReturnValuePerfEvent event{
+        .timestamp = ring_buffer_record.sample_id.time,
         .pid = ToNativeProcessId(ring_buffer_record.sample_id.pid),
         .tid = ToNativeThreadId(ring_buffer_record.sample_id.tid),
-        .timestamp = ring_buffer_record.sample_id.time,
         .ordered_in_file_descriptor = fd,
         .rax = ring_buffer_record.regs.ax};
     DeferEvent(std::move(event));
