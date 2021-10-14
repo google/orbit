@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TracepointsDataView.h"
+#include "DataViews/TracepointsDataView.h"
 
 #include <absl/strings/str_split.h>
 #include <stddef.h>
@@ -12,7 +12,6 @@
 #include <functional>
 #include <memory>
 
-#include "App.h"
 #include "CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
 #include "OrbitBase/Append.h"
@@ -24,10 +23,12 @@ static const std::string kMenuActionSelect = "Hook";
 static const std::string kMenuActionUnselect = "Unhook";
 }  // namespace
 
-TracepointsDataView::TracepointsDataView(orbit_data_views::AppInterface* app)
-    : orbit_data_views::DataView(orbit_data_views::DataViewType::kTracepoints, app) {}
+namespace orbit_data_views {
 
-const std::vector<orbit_data_views::DataView::Column>& TracepointsDataView::GetColumns() {
+TracepointsDataView::TracepointsDataView(AppInterface* app)
+    : DataView(DataViewType::kTracepoints, app) {}
+
+const std::vector<DataView::Column>& TracepointsDataView::GetColumns() {
   static const std::vector<Column>& columns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
@@ -54,10 +55,10 @@ std::string TracepointsDataView::GetValue(int row, int col) {
   }
 }
 
-#define ORBIT_PROC_SORT(Member)                                                                   \
-  [&](int a, int b) {                                                                             \
-    return orbit_gl::CompareAscendingOrDescending(tracepoints_[a].Member, tracepoints_[b].Member, \
-                                                  ascending);                                     \
+#define ORBIT_PROC_SORT(Member)                                                         \
+  [&](int a, int b) {                                                                   \
+    return CompareAscendingOrDescending(tracepoints_[a].Member, tracepoints_[b].Member, \
+                                        ascending);                                     \
   }
 
 void TracepointsDataView::DoSort() {
@@ -151,3 +152,5 @@ void TracepointsDataView::SetTracepoints(const std::vector<TracepointInfo>& trac
 const TracepointInfo& TracepointsDataView::GetTracepoint(uint32_t row) const {
   return tracepoints_.at(indices_[row]);
 }
+
+}  // namespace orbit_data_views

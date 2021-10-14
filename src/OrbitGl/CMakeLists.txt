@@ -69,7 +69,6 @@ target_sources(
          Track.h
          TrackManager.h
          TriangleToggle.h
-         TracepointsDataView.h
          TracepointThreadBar.h
          TrackTestData.h
          TranslationStack.h
@@ -133,7 +132,6 @@ target_sources(
           TrackManager.cpp
           TranslationStack.cpp
           TriangleToggle.cpp
-          TracepointsDataView.cpp
           TracepointThreadBar.cpp
           TrackTestData.cpp
           Viewport.cpp)

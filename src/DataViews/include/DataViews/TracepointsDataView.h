@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_TRACEPOINTS_DATA_VIEW_H_
-#define ORBIT_GL_TRACEPOINTS_DATA_VIEW_H_
+#ifndef DATA_VIEWS_TRACEPOINTS_DATA_VIEW_H_
+#define DATA_VIEWS_TRACEPOINTS_DATA_VIEW_H_
 
 #include <stdint.h>
 
@@ -15,9 +15,11 @@
 #include "DataViews/DataView.h"
 #include "tracepoint.pb.h"
 
-class TracepointsDataView : public orbit_data_views::DataView {
+namespace orbit_data_views {
+
+class TracepointsDataView : public DataView {
  public:
-  explicit TracepointsDataView(orbit_data_views::AppInterface* app);
+  explicit TracepointsDataView(AppInterface* app);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnCategory; }
@@ -42,4 +44,6 @@ class TracepointsDataView : public orbit_data_views::DataView {
   const orbit_grpc_protos::TracepointInfo& GetTracepoint(uint32_t row) const;
 };
 
-#endif  // ORBIT_GL_TRACEPOINTS_DATA_VIEW_H_
+}  // namespace orbit_data_views
+
+#endif  // DATA_VIEWS_TRACEPOINTS_DATA_VIEW_H_
