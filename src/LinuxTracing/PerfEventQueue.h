@@ -34,10 +34,10 @@ namespace orbit_linux_tracing {
 // std::priority_queue.
 class PerfEventQueue {
  public:
-  void PushEvent(std::unique_ptr<PerfEvent> event);
+  void PushEvent(PerfEvent&& event);
   [[nodiscard]] bool HasEvent() const;
-  [[nodiscard]] PerfEvent* TopEvent();
-  std::unique_ptr<PerfEvent> PopEvent();
+  [[nodiscard]] PerfEvent& TopEvent();
+  PerfEvent PopEvent();
 
  private:
   // Floats down the element at the top of the ordered_queues_heap_ to its correct place. Used when
@@ -48,21 +48,19 @@ class PerfEventQueue {
 
   // This vector holds the heap of the queues each of which holds events coming from the same ring
   // buffer and assumes them already in order by timestamp.
-  std::vector<std::queue<std::unique_ptr<PerfEvent>>*> heap_of_queues_of_events_ordered_by_fd_;
+  std::vector<std::queue<PerfEvent>*> heap_of_queues_of_events_ordered_by_fd_;
   // This map keeps the association between a file descriptor and the ordered queue of events coming
   // from the ring buffer corresponding to that file descriptor.
-  absl::flat_hash_map<int, std::unique_ptr<std::queue<std::unique_ptr<PerfEvent>>>>
-      queues_of_events_ordered_by_fd_;
+  absl::flat_hash_map<int, std::unique_ptr<std::queue<PerfEvent>>> queues_of_events_ordered_by_fd_;
 
-  static constexpr auto kPerfEventReverseTimestampCompare =
-      [](const std::unique_ptr<PerfEvent>& lhs, const std::unique_ptr<PerfEvent>& rhs) {
-        return lhs->GetTimestamp() > rhs->GetTimestamp();
-      };
+  static constexpr auto kPerfEventReverseTimestampCompare = [](const PerfEvent& lhs,
+                                                               const PerfEvent& rhs) {
+    return GetTimestamp(lhs) > GetTimestamp(rhs);
+  };
   // This priority queue holds all those events that cannot be assumed already sorted in a specific
   // ring buffer. All such events are simply sorted by the priority queue by increasing timestamp.
-  std::priority_queue<
-      std::unique_ptr<PerfEvent>, std::vector<std::unique_ptr<PerfEvent>>,
-      std::function<bool(const std::unique_ptr<PerfEvent>&, const std::unique_ptr<PerfEvent>&)>>
+  std::priority_queue<PerfEvent, std::vector<PerfEvent>,
+                      std::function<bool(const PerfEvent&, const PerfEvent&)>>
       priority_queue_of_events_not_ordered_by_fd_{kPerfEventReverseTimestampCompare};
 };
 

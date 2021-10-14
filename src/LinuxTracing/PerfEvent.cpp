@@ -47,10 +47,6 @@ void ForkPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
 void ExitPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
-void ContextSwitchPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
-
-void SystemWideContextSwitchPerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
-
 void StackSamplePerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }
 
 void CallchainSamplePerfEvent::Accept(PerfEventVisitor* visitor) { visitor->Visit(this); }

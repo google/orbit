@@ -72,78 +72,43 @@ class SwitchesStatesNamesVisitorTest : public ::testing::Test {
   void ProcessFakeEventsForThreadStateTests();
 };
 
-std::unique_ptr<ForkPerfEvent> MakeFakeForkPerfEvent(pid_t pid, pid_t tid) {
-  auto event = std::make_unique<ForkPerfEvent>();
-  event->ring_buffer_record.pid = pid;
-  CHECK(event->GetPid() == pid);
-  event->ring_buffer_record.tid = tid;
-  CHECK(event->GetTid() == tid);
-  return event;
+ForkPerfEvent MakeFakeForkPerfEvent(pid_t pid, pid_t tid) {
+  return ForkPerfEvent{.pid = pid, .tid = tid};
 }
 
-std::unique_ptr<ExitPerfEvent> MakeFakeExitPerfEvent(pid_t pid, pid_t tid) {
-  auto event = std::make_unique<ExitPerfEvent>();
-  event->ring_buffer_record.pid = pid;
-  CHECK(event->GetPid() == pid);
-  event->ring_buffer_record.tid = tid;
-  CHECK(event->GetTid() == tid);
-  return event;
+ExitPerfEvent MakeFakeExitPerfEvent(pid_t pid, pid_t tid) {
+  return ExitPerfEvent{.pid = pid, .tid = tid};
 }
 
-std::unique_ptr<TaskNewtaskPerfEvent> MakeFakeTaskNewtaskPerfEvent(pid_t new_tid, const char* comm,
-                                                                   uint64_t timestamp_ns) {
-  auto event = std::make_unique<TaskNewtaskPerfEvent>();
-  event->ring_buffer_record.data.pid = new_tid;
-  CHECK(event->GetNewTid() == new_tid);
+TaskNewtaskPerfEvent MakeFakeTaskNewtaskPerfEvent(pid_t new_tid, const char* comm,
+                                                  uint64_t timestamp_ns) {
+  TaskNewtaskPerfEvent event{.timestamp = timestamp_ns, .new_tid = new_tid};
   CHECK(strlen(comm) < 16);
-  strncpy(event->ring_buffer_record.data.comm, comm, 16);
-  CHECK(strcmp(event->GetComm(), comm) == 0);
-  event->ring_buffer_record.sample_id.time = timestamp_ns;
-  CHECK(event->GetTimestamp() == timestamp_ns);
+  strncpy(event.comm, comm, 16);
   return event;
 }
 
-std::unique_ptr<TaskRenamePerfEvent> MakeFakeTaskRenamePerfEvent(pid_t renamed_tid,
-                                                                 const char* new_comm,
-                                                                 uint64_t timestamp_ns) {
-  auto event = std::make_unique<TaskRenamePerfEvent>();
-  event->ring_buffer_record.data.pid = renamed_tid;
-  CHECK(event->GetRenamedTid() == renamed_tid);
+TaskRenamePerfEvent MakeFakeTaskRenamePerfEvent(pid_t renamed_tid, const char* new_comm,
+                                                uint64_t timestamp_ns) {
+  TaskRenamePerfEvent event{.timestamp = timestamp_ns, .renamed_tid = renamed_tid};
   CHECK(strlen(new_comm) < 16);
-  strncpy(event->ring_buffer_record.data.newcomm, new_comm, 16);
-  CHECK(strcmp(event->GetNewComm(), new_comm) == 0);
-  event->ring_buffer_record.sample_id.time = timestamp_ns;
-  CHECK(event->GetTimestamp() == timestamp_ns);
+  strncpy(event.newcomm, new_comm, 16);
   return event;
 }
 
-std::unique_ptr<SchedSwitchPerfEvent> MakeFakeSchedSwitchPerfEvent(
-    uint32_t cpu, pid_t prev_pid_or_minus_one, pid_t prev_tid, int64_t prev_state_mask,
-    pid_t next_tid, uint64_t timestamp_ns) {
-  auto event = std::make_unique<SchedSwitchPerfEvent>();
-  event->ring_buffer_record.sample_id.cpu = cpu;
-  CHECK(event->GetCpu() == cpu);
-  event->ring_buffer_record.sample_id.pid = prev_pid_or_minus_one;
-  CHECK(event->GetPrevPidOrMinusOne() == prev_pid_or_minus_one);
-  event->ring_buffer_record.data.prev_pid = prev_tid;
-  CHECK(event->GetPrevTid() == prev_tid);
-  event->ring_buffer_record.data.prev_state = prev_state_mask;
-  CHECK(event->GetPrevState() == prev_state_mask);
-  event->ring_buffer_record.data.next_pid = next_tid;
-  CHECK(event->GetNextTid() == next_tid);
-  event->ring_buffer_record.sample_id.time = timestamp_ns;
-  CHECK(event->GetTimestamp() == timestamp_ns);
-  return event;
+SchedSwitchPerfEvent MakeFakeSchedSwitchPerfEvent(uint32_t cpu, pid_t prev_pid_or_minus_one,
+                                                  pid_t prev_tid, int64_t prev_state_mask,
+                                                  pid_t next_tid, uint64_t timestamp_ns) {
+  return SchedSwitchPerfEvent{.cpu = cpu,
+                              .prev_pid_or_minus_one = prev_pid_or_minus_one,
+                              .prev_tid = prev_tid,
+                              .prev_state = prev_state_mask,
+                              .next_tid = next_tid,
+                              .timestamp = timestamp_ns};
 }
 
-std::unique_ptr<SchedWakeupPerfEvent> MakeFakeSchedWakeupPerfEvent(pid_t woken_tid,
-                                                                   uint64_t timestamp_ns) {
-  auto event = std::make_unique<SchedWakeupPerfEvent>();
-  event->ring_buffer_record.data.pid = woken_tid;
-  CHECK(event->GetWokenTid() == woken_tid);
-  event->ring_buffer_record.sample_id.time = timestamp_ns;
-  CHECK(event->GetTimestamp() == timestamp_ns);
-  return event;
+SchedWakeupPerfEvent MakeFakeSchedWakeupPerfEvent(pid_t woken_tid, uint64_t timestamp_ns) {
+  return SchedWakeupPerfEvent{.woken_tid = woken_tid, .timestamp = timestamp_ns};
 }
 
 SchedulingSlice MakeSchedulingSlice(uint32_t pid, uint32_t tid, int32_t core, uint64_t duration_ns,
@@ -209,7 +174,7 @@ TEST_F(SwitchesStatesNamesVisitorTest, TaskNewtaskOfUnknownPidCausesThreadNameWi
   ThreadName actual_thread_name;
   EXPECT_CALL(mock_listener_, OnThreadName).Times(1).WillOnce(SaveArg<0>(&actual_thread_name));
 
-  MakeFakeTaskNewtaskPerfEvent(kTid, kLongComm, kTimestampNs)->Accept(&visitor_);
+  MakeFakeTaskNewtaskPerfEvent(kTid, kLongComm, kTimestampNs).Accept(&visitor_);
   ThreadName expected_thread_name = MakeThreadName(-1, kTid, kLongComm, kTimestampNs);
   EXPECT_THAT(actual_thread_name, ThreadNameEq(expected_thread_name));
 }
@@ -221,7 +186,7 @@ TEST_F(SwitchesStatesNamesVisitorTest,
   ThreadName actual_thread_name;
   EXPECT_CALL(mock_listener_, OnThreadName).Times(1).WillOnce(SaveArg<0>(&actual_thread_name));
 
-  MakeFakeTaskNewtaskPerfEvent(kTid, kLongComm, kTimestampNs)->Accept(&visitor_);
+  MakeFakeTaskNewtaskPerfEvent(kTid, kLongComm, kTimestampNs).Accept(&visitor_);
   ThreadName expected_thread_name = MakeThreadName(kPid, kTid, kLongComm, kTimestampNs);
   EXPECT_THAT(actual_thread_name, ThreadNameEq(expected_thread_name));
 }
@@ -230,18 +195,18 @@ TEST_F(SwitchesStatesNamesVisitorTest, TaskRenameOfUnknownPidCausesThreadNameWit
   ThreadName actual_thread_name;
   EXPECT_CALL(mock_listener_, OnThreadName).Times(1).WillOnce(SaveArg<0>(&actual_thread_name));
 
-  MakeFakeTaskRenamePerfEvent(kTid, kShortComm, kTimestampNs)->Accept(&visitor_);
+  MakeFakeTaskRenamePerfEvent(kTid, kShortComm, kTimestampNs).Accept(&visitor_);
   ThreadName expected_thread_name = MakeThreadName(-1, kTid, kShortComm, kTimestampNs);
   EXPECT_THAT(actual_thread_name, ThreadNameEq(expected_thread_name));
 }
 
 TEST_F(SwitchesStatesNamesVisitorTest, TaskRenameOfTidWithForkPerfEventCausesThreadNameWithPid) {
-  MakeFakeForkPerfEvent(kPid, kTid)->Accept(&visitor_);
+  MakeFakeForkPerfEvent(kPid, kTid).Accept(&visitor_);
 
   ThreadName actual_thread_name;
   EXPECT_CALL(mock_listener_, OnThreadName).Times(1).WillOnce(SaveArg<0>(&actual_thread_name));
 
-  MakeFakeTaskNewtaskPerfEvent(kTid, kShortComm, kTimestampNs)->Accept(&visitor_);
+  MakeFakeTaskNewtaskPerfEvent(kTid, kShortComm, kTimestampNs).Accept(&visitor_);
   ThreadName expected_thread_name = MakeThreadName(kPid, kTid, kShortComm, kTimestampNs);
   EXPECT_THAT(actual_thread_name, ThreadNameEq(expected_thread_name));
 }
@@ -250,9 +215,9 @@ TEST_F(SwitchesStatesNamesVisitorTest, SchedSwitchesAreIgnoredWithoutSetProduceS
   EXPECT_CALL(mock_listener_, OnSchedulingSlice).Times(0);
 
   MakeFakeSchedSwitchPerfEvent(kCpu, kPrevTid, kPrevTid, kRunnableStateMask, kTid, kInTimestampNs)
-      ->Accept(&visitor_);
+      .Accept(&visitor_);
   MakeFakeSchedSwitchPerfEvent(kCpu, kPid, kTid, kRunnableStateMask, kNextTid, kOutTimestampNs)
-      ->Accept(&visitor_);
+      .Accept(&visitor_);
 }
 
 TEST_F(SwitchesStatesNamesVisitorTest, SchedSwitchesWithZeroTidAreIgnored) {
@@ -264,10 +229,10 @@ TEST_F(SwitchesStatesNamesVisitorTest, SchedSwitchesWithZeroTidAreIgnored) {
 
   MakeFakeSchedSwitchPerfEvent(kCpu, kPrevTid, kPrevTid, kRunnableStateMask, kZeroTid,
                                kInTimestampNs)
-      ->Accept(&visitor_);
+      .Accept(&visitor_);
   MakeFakeSchedSwitchPerfEvent(kCpu, kZeroTid, kZeroTid, kRunnableStateMask, kNextTid,
                                kOutTimestampNs)
-      ->Accept(&visitor_);
+      .Accept(&visitor_);
 }
 
 TEST_F(SwitchesStatesNamesVisitorTest,
@@ -280,10 +245,10 @@ TEST_F(SwitchesStatesNamesVisitorTest,
       .WillOnce(SaveArg<0>(&actual_scheduling_slice));
 
   MakeFakeSchedSwitchPerfEvent(kCpu, kPrevTid, kPrevTid, kRunnableStateMask, kTid, kInTimestampNs)
-      ->Accept(&visitor_);
+      .Accept(&visitor_);
   MakeFakeSchedSwitchPerfEvent(kCpu, kMinusOnePid, kTid, kRunnableStateMask, kNextTid,
                                kOutTimestampNs)
-      ->Accept(&visitor_);
+      .Accept(&visitor_);
 
   SchedulingSlice expected_scheduling_slice =
       MakeSchedulingSlice(-1, kTid, kCpu, kOutTimestampNs - kInTimestampNs, kOutTimestampNs);
@@ -300,11 +265,11 @@ TEST_F(SwitchesStatesNamesVisitorTest,
       .WillOnce(SaveArg<0>(&actual_scheduling_slice));
 
   MakeFakeSchedSwitchPerfEvent(kCpu, kPrevTid, kPrevTid, kRunnableStateMask, kTid, kInTimestampNs)
-      ->Accept(&visitor_);
-  MakeFakeExitPerfEvent(kPid, kTid)->Accept(&visitor_);
+      .Accept(&visitor_);
+  MakeFakeExitPerfEvent(kPid, kTid).Accept(&visitor_);
   MakeFakeSchedSwitchPerfEvent(kCpu, kMinusOnePid, kTid, kRunnableStateMask, kNextTid,
                                kOutTimestampNs)
-      ->Accept(&visitor_);
+      .Accept(&visitor_);
 
   SchedulingSlice expected_scheduling_slice =
       MakeSchedulingSlice(kPid, kTid, kCpu, kOutTimestampNs - kInTimestampNs, kOutTimestampNs);
@@ -321,9 +286,9 @@ TEST_F(SwitchesStatesNamesVisitorTest,
       .WillOnce(SaveArg<0>(&actual_scheduling_slice));
 
   MakeFakeSchedSwitchPerfEvent(kCpu, kPrevTid, kPrevTid, kRunnableStateMask, kTid, kInTimestampNs)
-      ->Accept(&visitor_);
+      .Accept(&visitor_);
   MakeFakeSchedSwitchPerfEvent(kCpu, kPid, kTid, kRunnableStateMask, kNextTid, kOutTimestampNs)
-      ->Accept(&visitor_);
+      .Accept(&visitor_);
 
   SchedulingSlice expected_scheduling_slice =
       MakeSchedulingSlice(kPid, kTid, kCpu, kOutTimestampNs - kInTimestampNs, kOutTimestampNs);
@@ -342,9 +307,9 @@ TEST_F(SwitchesStatesNamesVisitorTest,
       .WillOnce(SaveArg<0>(&actual_scheduling_slice));
 
   MakeFakeSchedSwitchPerfEvent(kCpu, kPrevTid, kPrevTid, kRunnableStateMask, kTid, kInTimestampNs)
-      ->Accept(&visitor_);
+      .Accept(&visitor_);
   MakeFakeSchedSwitchPerfEvent(kCpu, kPid, kTid, kRunnableStateMask, kNextTid, kOutTimestampNs)
-      ->Accept(&visitor_);
+      .Accept(&visitor_);
 
   SchedulingSlice expected_scheduling_slice =
       MakeSchedulingSlice(kPid, kTid, kCpu, kOutTimestampNs - kInTimestampNs, kOutTimestampNs);
@@ -362,38 +327,38 @@ TEST_F(SwitchesStatesNamesVisitorTest,
   EXPECT_CALL(mock_listener_, OnSchedulingSlice).Times(0);
 
   MakeFakeSchedSwitchPerfEvent(kCpu, kPrevTid, kPrevTid, kRunnableStateMask, kTid, kInTimestampNs)
-      ->Accept(&visitor_);
+      .Accept(&visitor_);
   MakeFakeSchedSwitchPerfEvent(kCpu, kMismatchingPid, kTid, kRunnableStateMask, kNextTid,
                                kOutTimestampNs)
-      ->Accept(&visitor_);
+      .Accept(&visitor_);
 }
 
 void SwitchesStatesNamesVisitorTest::ProcessFakeEventsForThreadStateTests() {
   // kTid1
   visitor_.ProcessInitialState(kStartTimestampNs, kTid1, 'D');
-  MakeFakeSchedWakeupPerfEvent(kTid1, kWakeTimestampNs1)->Accept(&visitor_);
+  MakeFakeSchedWakeupPerfEvent(kTid1, kWakeTimestampNs1).Accept(&visitor_);
   MakeFakeSchedSwitchPerfEvent(kCpu1, kPrevTid, kPrevTid, kRunnableStateMask, kTid1,
                                kInTimestampNs1)
-      ->Accept(&visitor_);
+      .Accept(&visitor_);
   MakeFakeSchedSwitchPerfEvent(kCpu1, kPid, kTid1, kDeadStateMask, kNextTid, kOutTimestampNs1)
-      ->Accept(&visitor_);
+      .Accept(&visitor_);
 
   // kTid2
-  MakeFakeTaskNewtaskPerfEvent(kTid2, kComm2, kNewTimestampNs2)->Accept(&visitor_);
+  MakeFakeTaskNewtaskPerfEvent(kTid2, kComm2, kNewTimestampNs2).Accept(&visitor_);
   MakeFakeSchedSwitchPerfEvent(kCpu2, kPrevTid, kPrevTid, kRunnableStateMask, kTid2,
                                kInTimestampNs2)
-      ->Accept(&visitor_);
+      .Accept(&visitor_);
   MakeFakeSchedSwitchPerfEvent(kCpu2, kPid, kTid2, kInterruptibleSleepStateMask, kNextTid,
                                kOutTimestampNs2)
-      ->Accept(&visitor_);
-  MakeFakeSchedWakeupPerfEvent(kTid2, kWakeTimestampNs2)->Accept(&visitor_);
+      .Accept(&visitor_);
+  MakeFakeSchedWakeupPerfEvent(kTid2, kWakeTimestampNs2).Accept(&visitor_);
 
   visitor_.ProcessRemainingOpenStates(kStopTimestampNs);
 }
 
 TEST_F(SwitchesStatesNamesVisitorTest, NoThreadStatesWithoutSetThreadStatePidFilter) {
   visitor_.ProcessInitialTidToPidAssociation(kTid1, kPid);
-  MakeFakeForkPerfEvent(kPid, kTid2)->Accept(&visitor_);
+  MakeFakeForkPerfEvent(kPid, kTid2).Accept(&visitor_);
 
   EXPECT_CALL(mock_listener_, OnThreadName).Times(1);
   EXPECT_CALL(mock_listener_, OnThreadStateSlice).Times(0);
@@ -419,7 +384,7 @@ TEST_F(SwitchesStatesNamesVisitorTest, NoThreadStatesOfUninterestingPid) {
   visitor_.SetThreadStatePidFilter(kPidFilter);
 
   visitor_.ProcessInitialTidToPidAssociation(kTid1, kPid);
-  MakeFakeForkPerfEvent(kPid, kTid2)->Accept(&visitor_);
+  MakeFakeForkPerfEvent(kPid, kTid2).Accept(&visitor_);
 
   EXPECT_CALL(mock_listener_, OnThreadName).Times(1);
   EXPECT_CALL(mock_listener_, OnThreadStateSlice).Times(0);
@@ -433,7 +398,7 @@ TEST_F(SwitchesStatesNamesVisitorTest, VariousThreadStateSlicesFromAllPossibleEv
   visitor_.SetThreadStatePidFilter(kPid);
 
   visitor_.ProcessInitialTidToPidAssociation(kTid1, kPid);
-  MakeFakeForkPerfEvent(kPid, kTid2)->Accept(&visitor_);
+  MakeFakeForkPerfEvent(kPid, kTid2).Accept(&visitor_);
 
   EXPECT_CALL(mock_listener_, OnThreadName).Times(1);
   std::vector<ThreadStateSlice> actual_thread_state_slices;

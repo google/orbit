@@ -118,12 +118,20 @@ class LeafFunctionCallManagerTest : public ::testing::Test {
   };
 };
 
+CallchainSamplePerfEvent BuildCallchainSamplePerfEvent(const std::vector<uint64_t>& callchain) {
+  CallchainSamplePerfEvent event{
+      .pid = 10,
+      .tid = 11,
+      .timestamp = 15,
+      .data = make_unique_for_overwrite<char[]>(13),
+      .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>()};
+  event.SetIps(callchain);
+  return event;
+}
+
 }  // namespace
 
 TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnSmallStackSamples) {
-  constexpr uint32_t kPid = 10;
-  constexpr uint64_t kStackSize = 13;
-
   std::vector<uint64_t> callchain;
   callchain.push_back(kKernelAddress);
   callchain.push_back(kTargetAddress1);
@@ -131,30 +139,16 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnSmall
   callchain.push_back(kTargetAddress2 + 1);
   callchain.push_back(kTargetAddress3 + 1);
 
-  CallchainSamplePerfEvent event{callchain.size(), kStackSize};
-  perf_event_sample_id_tid_time_streamid_cpu sample_id{
-      .pid = kPid,
-      .tid = 11,
-      .time = 15,
-      .stream_id = 12,
-      .cpu = 0,
-      .res = 0,
-  };
-  event.ring_buffer_record.sample_id = sample_id;
-  event.ips = callchain;
-
-  event.regs.bp = 2 * kStackDumpSize;
-  event.regs.sp = 0;
+  CallchainSamplePerfEvent event = BuildCallchainSamplePerfEvent(callchain);
+  event.regs->bp = 2 * kStackDumpSize;
+  event.regs->sp = 0;
 
   EXPECT_EQ(Callstack::kStackTopForDwarfUnwindingTooSmall,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event, &maps_, &unwinder_));
-  EXPECT_THAT(event.ips, ElementsAreArray(callchain));
+  EXPECT_THAT(event.CopyOfIpsAsVector(), ElementsAreArray(callchain));
 }
 
 TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwindingErrors) {
-  constexpr uint32_t kPid = 10;
-  constexpr uint64_t kStackSize = 13;
-
   std::vector<uint64_t> callchain;
   callchain.push_back(kKernelAddress);
   callchain.push_back(kTargetAddress1);
@@ -162,31 +156,21 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
   callchain.push_back(kTargetAddress2 + 1);
   callchain.push_back(kTargetAddress3 + 1);
 
-  CallchainSamplePerfEvent event{callchain.size(), kStackSize};
-  perf_event_sample_id_tid_time_streamid_cpu sample_id{
-      .pid = kPid,
-      .tid = 11,
-      .time = 15,
-      .stream_id = 12,
-      .cpu = 0,
-      .res = 0,
-  };
-  event.ring_buffer_record.sample_id = sample_id;
-  event.ips = callchain;
-  event.regs.bp = kStackDumpSize;
-  event.regs.sp = 10;
+  CallchainSamplePerfEvent event = BuildCallchainSamplePerfEvent(callchain);
+  event.regs->bp = kStackDumpSize;
+  event.regs->sp = 10;
 
   EXPECT_CALL(maps_, Get).WillRepeatedly(Return(nullptr));
 
   // Usually, we should get at least the instruction pointer as frame, even on unwinding errors.
   // However, we should also support empty callstacks and treat them as unwinding error.
-  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, kStackDumpSize - 10, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.pid, nullptr, _, _, kStackDumpSize - 10, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{{}, unwindstack::ErrorCode::ERROR_INVALID_MAP}));
 
   EXPECT_EQ(Callstack::kStackTopDwarfUnwindingError,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event, &maps_, &unwinder_));
-  EXPECT_THAT(event.ips, ElementsAreArray(callchain));
+  EXPECT_THAT(event.CopyOfIpsAsVector(), ElementsAreArray(callchain));
 
   ::testing::Mock::VerifyAndClearExpectations(&unwinder_);
 
@@ -195,7 +179,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
   libunwindstack_callstack.push_back(kFrame1);
   libunwindstack_callstack.push_back(kNonExecutableFrame);
 
-  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, kStackDumpSize - 10, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.pid, nullptr, _, _, kStackDumpSize - 10, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
                                             unwindstack::ErrorCode::ERROR_INVALID_MAP}));
@@ -206,13 +190,10 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
 
   EXPECT_EQ(Callstack::kStackTopDwarfUnwindingError,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event, &maps_, &unwinder_));
-  EXPECT_THAT(event.ips, ElementsAreArray(callchain));
+  EXPECT_THAT(event.CopyOfIpsAsVector(), ElementsAreArray(callchain));
 }
 
 TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnNoFramePointers) {
-  constexpr uint32_t kPid = 10;
-  constexpr uint64_t kStackSize = 13;
-
   std::vector<uint64_t> callchain;
   callchain.push_back(kKernelAddress);
   callchain.push_back(kTargetAddress1);
@@ -220,19 +201,9 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnNoFra
   callchain.push_back(kTargetAddress2 + 1);
   callchain.push_back(kTargetAddress3 + 1);
 
-  CallchainSamplePerfEvent event{callchain.size(), kStackSize};
-  perf_event_sample_id_tid_time_streamid_cpu sample_id{
-      .pid = kPid,
-      .tid = 11,
-      .time = 15,
-      .stream_id = 12,
-      .cpu = 0,
-      .res = 0,
-  };
-  event.ring_buffer_record.sample_id = sample_id;
-  event.ips = callchain;
-  event.regs.bp = kStackDumpSize;
-  event.regs.sp = 10;
+  CallchainSamplePerfEvent event = BuildCallchainSamplePerfEvent(callchain);
+  event.regs->bp = kStackDumpSize;
+  event.regs->sp = 10;
 
   EXPECT_CALL(maps_, Get).WillRepeatedly(Return(nullptr));
 
@@ -242,21 +213,18 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnNoFra
   libunwindstack_callstack.push_back(kFrame2);
   libunwindstack_callstack.push_back(kFrame3);
 
-  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, kStackDumpSize - 10, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.pid, nullptr, _, _, kStackDumpSize - 10, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
                                             unwindstack::ErrorCode::ERROR_INVALID_MAP}));
 
   EXPECT_EQ(Callstack::kFramePointerUnwindingError,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event, &maps_, &unwinder_));
-  EXPECT_THAT(event.ips, ElementsAreArray(callchain));
+  EXPECT_THAT(event.CopyOfIpsAsVector(), ElementsAreArray(callchain));
 }
 
 TEST_F(LeafFunctionCallManagerTest,
        PatchCallerOfLeafFunctionReturnsSuccessAndKeepsCallchainUntouchedOnNonLeafFunctions) {
-  constexpr uint32_t kPid = 10;
-  constexpr uint64_t kStackSize = 13;
-
   std::vector<uint64_t> callchain;
   callchain.push_back(kKernelAddress);
   callchain.push_back(kTargetAddress1);
@@ -264,19 +232,9 @@ TEST_F(LeafFunctionCallManagerTest,
   callchain.push_back(kTargetAddress2 + 1);
   callchain.push_back(kTargetAddress3 + 1);
 
-  CallchainSamplePerfEvent event{callchain.size(), kStackSize};
-  perf_event_sample_id_tid_time_streamid_cpu sample_id{
-      .pid = kPid,
-      .tid = 11,
-      .time = 15,
-      .stream_id = 12,
-      .cpu = 0,
-      .res = 0,
-  };
-  event.ring_buffer_record.sample_id = sample_id;
-  event.ips = callchain;
-  event.regs.bp = kStackDumpSize;
-  event.regs.sp = 10;
+  CallchainSamplePerfEvent event = BuildCallchainSamplePerfEvent(callchain);
+  event.regs->bp = kStackDumpSize;
+  event.regs->sp = 10;
 
   EXPECT_CALL(maps_, Get).WillRepeatedly(Return(nullptr));
 
@@ -285,40 +243,27 @@ TEST_F(LeafFunctionCallManagerTest,
   std::vector<unwindstack::FrameData> libunwindstack_callstack;
   libunwindstack_callstack.push_back(kFrame1);
 
-  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, kStackDumpSize - 10, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.pid, nullptr, _, _, kStackDumpSize - 10, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
                                             unwindstack::ErrorCode::ERROR_INVALID_MAP}));
 
   EXPECT_EQ(Callstack::kComplete,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event, &maps_, &unwinder_));
-  EXPECT_THAT(event.ips, ElementsAreArray(callchain));
+  EXPECT_THAT(event.CopyOfIpsAsVector(), ElementsAreArray(callchain));
 }
 
 TEST_F(LeafFunctionCallManagerTest,
        PatchCallerOfLeafFunctionReturnsSuccessAndPatchesCallchainOnLeafFunctions) {
-  constexpr uint32_t kPid = 10;
-  constexpr uint64_t kStackSize = 13;
-
   std::vector<uint64_t> callchain;
   callchain.push_back(kKernelAddress);
   callchain.push_back(kTargetAddress1);
   // Increment by one as the return address is the next address.
   callchain.push_back(kTargetAddress3 + 1);
 
-  CallchainSamplePerfEvent event{callchain.size(), kStackSize};
-  perf_event_sample_id_tid_time_streamid_cpu sample_id{
-      .pid = kPid,
-      .tid = 11,
-      .time = 15,
-      .stream_id = 12,
-      .cpu = 0,
-      .res = 0,
-  };
-  event.ring_buffer_record.sample_id = sample_id;
-  event.ips = callchain;
-  event.regs.bp = kStackDumpSize;
-  event.regs.sp = 10;
+  CallchainSamplePerfEvent event = BuildCallchainSamplePerfEvent(callchain);
+  event.regs->bp = kStackDumpSize;
+  event.regs->sp = 10;
 
   EXPECT_CALL(maps_, Get).WillRepeatedly(Return(nullptr));
 
@@ -326,7 +271,7 @@ TEST_F(LeafFunctionCallManagerTest,
   libunwindstack_callstack.push_back(kFrame1);
   libunwindstack_callstack.push_back(kFrame2);
 
-  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, kStackDumpSize - 10, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.pid, nullptr, _, _, kStackDumpSize - 10, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
                                             unwindstack::ErrorCode::ERROR_INVALID_MAP}));
@@ -335,8 +280,8 @@ TEST_F(LeafFunctionCallManagerTest,
 
   EXPECT_EQ(Callstack::kComplete,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event, &maps_, &unwinder_));
-  EXPECT_THAT(event.ips, ElementsAre(kKernelAddress, kTargetAddress1, kTargetAddress2 + 1,
-                                     kTargetAddress3 + 1));
+  EXPECT_THAT(event.CopyOfIpsAsVector(), ElementsAre(kKernelAddress, kTargetAddress1,
+                                                     kTargetAddress2 + 1, kTargetAddress3 + 1));
   EXPECT_EQ(event.GetCallchainSize(), callchain.size() + 1);
 }
 }  // namespace orbit_linux_tracing

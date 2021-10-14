@@ -20,24 +20,15 @@ namespace orbit_linux_tracing {
 
 namespace {
 
-[[nodiscard]] std::unique_ptr<LostPerfEvent> MakeFakeLostPerfEvent(uint64_t previous_timestamp_ns,
-                                                                   uint64_t timestamp_ns) {
-  auto event = std::make_unique<LostPerfEvent>();
-  event->ring_buffer_record.sample_id.time = timestamp_ns;
-  CHECK(event->GetTimestamp() == timestamp_ns);
-  event->SetPreviousTimestamp(previous_timestamp_ns);
-  CHECK(event->GetPreviousTimestamp() == previous_timestamp_ns);
-  return event;
+[[nodiscard]] LostPerfEvent MakeFakeLostPerfEvent(uint64_t previous_timestamp_ns,
+                                                  uint64_t timestamp_ns) {
+  return LostPerfEvent{.timestamp = timestamp_ns, .previous_timestamp = previous_timestamp_ns};
 }
 
-[[nodiscard]] std::unique_ptr<DiscardedPerfEvent> MakeFakeDiscardedPerfEvent(
-    uint64_t begin_timestamp_ns, uint64_t end_timestamp_ns) {
-  auto event = std::make_unique<DiscardedPerfEvent>(begin_timestamp_ns, end_timestamp_ns);
-  CHECK(event->GetTimestamp() == end_timestamp_ns);
-  CHECK(event->GetBeginTimestampNs() == begin_timestamp_ns);
-  CHECK(event->GetEndTimestampNs() == end_timestamp_ns);
-  CHECK(event->GetTimestamp() == end_timestamp_ns);
-  return event;
+[[nodiscard]] DiscardedPerfEvent MakeFakeDiscardedPerfEvent(uint64_t begin_timestamp_ns,
+                                                            uint64_t end_timestamp_ns) {
+  return DiscardedPerfEvent{.begin_timestamp_ns = begin_timestamp_ns,
+                            .timestamp = end_timestamp_ns};
 }
 
 class LostAndDiscardedEventVisitorTest : public ::testing::Test {
@@ -60,7 +51,7 @@ TEST_F(LostAndDiscardedEventVisitorTest, VisitLostPerfEventCallsOnLostPerfRecord
 
   constexpr uint64_t kPreviousTimestampNs = 1111;
   constexpr uint64_t kTimestampNs = 1234;
-  MakeFakeLostPerfEvent(kPreviousTimestampNs, kTimestampNs)->Accept(&visitor_);
+  MakeFakeLostPerfEvent(kPreviousTimestampNs, kTimestampNs).Accept(&visitor_);
 
   EXPECT_EQ(actual_lost_perf_records_event.end_timestamp_ns(), kTimestampNs);
   EXPECT_EQ(actual_lost_perf_records_event.duration_ns(), kTimestampNs - kPreviousTimestampNs);
@@ -75,7 +66,7 @@ TEST_F(LostAndDiscardedEventVisitorTest,
 
   constexpr uint64_t kBeginTimestampNs = 1111;
   constexpr uint64_t kEndTimestampNs = 1234;
-  MakeFakeDiscardedPerfEvent(kBeginTimestampNs, kEndTimestampNs)->Accept(&visitor_);
+  MakeFakeDiscardedPerfEvent(kBeginTimestampNs, kEndTimestampNs).Accept(&visitor_);
 
   EXPECT_EQ(actual_out_of_order_events_discarded_event.end_timestamp_ns(), kEndTimestampNs);
   EXPECT_EQ(actual_out_of_order_events_discarded_event.duration_ns(),

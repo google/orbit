@@ -66,11 +66,11 @@ void UprobesUnwindingVisitor::Visit(StackSamplePerfEvent* event) {
   CHECK(listener_ != nullptr);
   CHECK(current_maps_ != nullptr);
 
-  return_address_manager_->PatchSample(event->GetTid(), event->GetRegisters()[PERF_REG_X86_SP],
-                                       event->GetStackData(), event->GetStackSize());
+  return_address_manager_->PatchSample(event->tid, event->GetRegisters()[PERF_REG_X86_SP],
+                                       event->data.get(), event->GetStackSize());
 
   LibunwindstackResult libunwindstack_result =
-      unwinder_->Unwind(event->GetPid(), current_maps_->Get(), event->GetRegisters(),
+      unwinder_->Unwind(event->pid, current_maps_->Get(), event->GetRegisters(),
                         event->GetStackData(), event->GetStackSize());
 
   if (libunwindstack_result.frames().empty()) {
@@ -81,9 +81,9 @@ void UprobesUnwindingVisitor::Visit(StackSamplePerfEvent* event) {
   }
 
   FullCallstackSample sample;
-  sample.set_pid(event->GetPid());
-  sample.set_tid(event->GetTid());
-  sample.set_timestamp_ns(event->GetTimestamp());
+  sample.set_pid(event->pid);
+  sample.set_tid(event->tid);
+  sample.set_timestamp_ns(event->timestamp);
 
   Callstack* callstack = sample.mutable_callstack();
 
@@ -150,9 +150,9 @@ void UprobesUnwindingVisitor::Visit(CallchainSamplePerfEvent* event) {
   }
 
   FullCallstackSample sample;
-  sample.set_pid(event->GetPid());
-  sample.set_tid(event->GetTid());
-  sample.set_timestamp_ns(event->GetTimestamp());
+  sample.set_pid(event->pid);
+  sample.set_tid(event->tid);
+  sample.set_timestamp_ns(event->timestamp);
 
   Callstack* callstack = sample.mutable_callstack();
 
@@ -215,7 +215,7 @@ void UprobesUnwindingVisitor::Visit(CallchainSamplePerfEvent* event) {
     return;
   }
 
-  if (!return_address_manager_->PatchCallchain(event->GetTid(), event->GetCallchain(),
+  if (!return_address_manager_->PatchCallchain(event->tid, event->ips.get(),
                                                event->GetCallchainSize(), current_maps_)) {
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
@@ -284,13 +284,13 @@ void UprobesUnwindingVisitor::OnUprobes(
 }
 
 void UprobesUnwindingVisitor::Visit(UprobesPerfEvent* event) {
-  OnUprobes(event->GetTimestamp(), event->GetTid(), event->GetCpu(), event->GetSp(), event->GetIp(),
-            event->GetReturnAddress(), /*registers=*/std::nullopt, event->GetFunctionId());
+  OnUprobes(event->timestamp, event->tid, event->cpu, event->sp, event->ip, event->return_address,
+            /*registers=*/std::nullopt, event->function_id);
 }
 
 void UprobesUnwindingVisitor::Visit(UprobesWithArgumentsPerfEvent* event) {
-  OnUprobes(event->GetTimestamp(), event->GetTid(), event->GetCpu(), event->GetSp(), event->GetIp(),
-            event->GetReturnAddress(), event->GetRegisters(), event->GetFunctionId());
+  OnUprobes(event->timestamp, event->tid, event->cpu, event->regs.sp, event->regs.ip,
+            event->return_address, event->regs, event->function_id);
 }
 
 void UprobesUnwindingVisitor::OnUretprobes(uint64_t timestamp_ns, pid_t pid, pid_t tid,
@@ -314,11 +314,11 @@ void UprobesUnwindingVisitor::OnUretprobes(uint64_t timestamp_ns, pid_t pid, pid
 }
 
 void UprobesUnwindingVisitor::Visit(UretprobesPerfEvent* event) {
-  OnUretprobes(event->GetTimestamp(), event->GetPid(), event->GetTid(), /*ax=*/std::nullopt);
+  OnUretprobes(event->timestamp, event->pid, event->tid, /*ax=*/std::nullopt);
 }
 
 void UprobesUnwindingVisitor::Visit(UretprobesWithReturnValuePerfEvent* event) {
-  OnUretprobes(event->GetTimestamp(), event->GetPid(), event->GetTid(), event->GetAx());
+  OnUretprobes(event->timestamp, event->pid, event->tid, event->rax);
 }
 
 void UprobesUnwindingVisitor::Visit(MmapPerfEvent* event) {
@@ -334,15 +334,15 @@ void UprobesUnwindingVisitor::Visit(MmapPerfEvent* event) {
   // we add the uprobes map manually. We are using the same values that that uprobes map would get
   // if unwindstack::BufferMaps was built by passing the full content of /proc/<pid>/maps to its
   // constructor.
-  if (event->filename() == "[uprobes]") {
-    current_maps_->AddAndSort(event->address(), event->address() + event->length(), 0, PROT_EXEC,
-                              event->filename(), INT64_MAX);
+  if (event->filename == "[uprobes]") {
+    current_maps_->AddAndSort(event->address, event->address + event->length, 0, PROT_EXEC,
+                              event->filename, INT64_MAX);
     return;
   }
 
   ErrorMessageOr<orbit_grpc_protos::ModuleInfo> module_info_or_error =
-      orbit_object_utils::CreateModule(event->filename(), event->address(),
-                                       event->address() + event->length());
+      orbit_object_utils::CreateModule(event->filename, event->address,
+                                       event->address + event->length);
   if (module_info_or_error.has_error()) {
     ERROR("Unable to create module: %s", module_info_or_error.error().message());
     return;
@@ -352,12 +352,12 @@ void UprobesUnwindingVisitor::Visit(MmapPerfEvent* event) {
 
   // For flags we assume PROT_READ and PROT_EXEC, MMAP event does not return flags.
   current_maps_->AddAndSort(module_info.address_start(), module_info.address_end(),
-                            event->page_offset(), PROT_READ | PROT_EXEC, event->filename(),
+                            event->page_offset, PROT_READ | PROT_EXEC, event->filename,
                             module_info.load_bias());
 
   orbit_grpc_protos::ModuleUpdateEvent module_update_event;
-  module_update_event.set_pid(event->pid());
-  module_update_event.set_timestamp_ns(event->GetTimestamp());
+  module_update_event.set_pid(event->pid);
+  module_update_event.set_timestamp_ns(event->timestamp);
   *module_update_event.mutable_module() = std::move(module_info);
 
   listener_->OnModuleUpdate(std::move(module_update_event));

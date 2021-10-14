@@ -15,8 +15,6 @@ class PerfEventVisitor {
   virtual ~PerfEventVisitor() = default;
   virtual void Visit(ForkPerfEvent* /*event*/) {}
   virtual void Visit(ExitPerfEvent* /*event*/) {}
-  virtual void Visit(ContextSwitchPerfEvent* /*event*/) {}
-  virtual void Visit(SystemWideContextSwitchPerfEvent* /*event*/) {}
   virtual void Visit(StackSamplePerfEvent* /*event*/) {}
   virtual void Visit(CallchainSamplePerfEvent* /*event*/) {}
   virtual void Visit(UprobesPerfEvent* /*event*/) {}

@@ -33,61 +33,34 @@ class GpuTracepointVisitorTest : public ::testing::Test {
 std::unique_ptr<AmdgpuCsIoctlPerfEvent> MakeFakeAmdgpuCsIoctlPerfEvent(
     pid_t pid, pid_t tid, uint64_t timestamp_ns, uint32_t context, uint32_t seqno,
     const std::string& timeline) {
-  auto event = std::make_unique<AmdgpuCsIoctlPerfEvent>(
-      static_cast<uint32_t>(sizeof(amdgpu_cs_ioctl_tracepoint) + timeline.length() + 1));
-  event->ring_buffer_record.sample_id.pid = pid;
-  CHECK(event->GetPid() == pid);
-  event->ring_buffer_record.sample_id.tid = tid;
-  CHECK(event->GetTid() == tid);
-  event->ring_buffer_record.sample_id.time = timestamp_ns;
-  CHECK(event->GetTimestamp() == timestamp_ns);
-  reinterpret_cast<amdgpu_cs_ioctl_tracepoint*>(event->tracepoint_data.get())->context = context;
-  CHECK(event->GetContext() == context);
-  reinterpret_cast<amdgpu_cs_ioctl_tracepoint*>(event->tracepoint_data.get())->seqno = seqno;
-  CHECK(event->GetSeqno() == seqno);
-  // This logic is the reverse of GpuPerfEvent::ExtractTimelineString.
-  reinterpret_cast<amdgpu_cs_ioctl_tracepoint*>(event->tracepoint_data.get())->timeline =
-      ((timeline.length() + 1) << 16) | sizeof(amdgpu_cs_ioctl_tracepoint);
-  memcpy(event->tracepoint_data.get() + sizeof(amdgpu_cs_ioctl_tracepoint), timeline.c_str(),
-         timeline.length() + 1);
-  CHECK(event->ExtractTimelineString() == timeline);
+  auto event = make_unique_for_overwrite<AmdgpuCsIoctlPerfEvent>();
+  event->pid = pid;
+  event->tid = tid;
+  event->timestamp = timestamp_ns;
+  event->context = context;
+  event->seqno = seqno;
+  event->timeline_string = timeline;
   return event;
 }
 
 std::unique_ptr<AmdgpuSchedRunJobPerfEvent> MakeFakeAmdgpuSchedRunJobPerfEvent(
     uint64_t timestamp_ns, uint32_t context, uint32_t seqno, const std::string& timeline) {
-  auto event = std::make_unique<AmdgpuSchedRunJobPerfEvent>(
-      static_cast<uint32_t>(sizeof(amdgpu_sched_run_job_tracepoint) + timeline.length() + 1));
-  event->ring_buffer_record.sample_id.time = timestamp_ns;
-  CHECK(event->GetTimestamp() == timestamp_ns);
-  reinterpret_cast<amdgpu_sched_run_job_tracepoint*>(event->tracepoint_data.get())->context =
-      context;
-  CHECK(event->GetContext() == context);
-  reinterpret_cast<amdgpu_sched_run_job_tracepoint*>(event->tracepoint_data.get())->seqno = seqno;
-  CHECK(event->GetSeqno() == seqno);
-  reinterpret_cast<amdgpu_sched_run_job_tracepoint*>(event->tracepoint_data.get())->timeline =
-      ((timeline.length() + 1) << 16) | sizeof(amdgpu_sched_run_job_tracepoint);
-  memcpy(event->tracepoint_data.get() + sizeof(amdgpu_sched_run_job_tracepoint), timeline.c_str(),
-         timeline.length() + 1);
-  CHECK(event->ExtractTimelineString() == timeline);
+  auto event = make_unique_for_overwrite<AmdgpuSchedRunJobPerfEvent>();
+  event->timestamp = timestamp_ns;
+  event->context = context;
+  event->seqno = seqno;
+  event->timeline_string = timeline;
   return event;
 }
 
 std::unique_ptr<DmaFenceSignaledPerfEvent> MakeFakeDmaFenceSignaledPerfEvent(
     uint64_t timestamp_ns, uint32_t context, uint32_t seqno, const std::string& timeline) {
-  auto event = std::make_unique<DmaFenceSignaledPerfEvent>(
-      static_cast<uint32_t>(sizeof(dma_fence_signaled_tracepoint) + timeline.length() + 1));
-  event->ring_buffer_record.sample_id.time = timestamp_ns;
-  CHECK(event->GetTimestamp() == timestamp_ns);
-  reinterpret_cast<dma_fence_signaled_tracepoint*>(event->tracepoint_data.get())->context = context;
-  CHECK(event->GetContext() == context);
-  reinterpret_cast<dma_fence_signaled_tracepoint*>(event->tracepoint_data.get())->seqno = seqno;
-  CHECK(event->GetSeqno() == seqno);
-  reinterpret_cast<dma_fence_signaled_tracepoint*>(event->tracepoint_data.get())->timeline =
-      ((timeline.length() + 1) << 16) | sizeof(dma_fence_signaled_tracepoint);
-  memcpy(event->tracepoint_data.get() + sizeof(dma_fence_signaled_tracepoint), timeline.c_str(),
-         timeline.length() + 1);
-  CHECK(event->ExtractTimelineString() == timeline);
+  auto event = make_unique_for_overwrite<DmaFenceSignaledPerfEvent>();
+  event->timestamp = timestamp_ns;
+  event->context = context;
+  event->seqno = seqno;
+  event->timeline_string = timeline;
+
   return event;
 }
 

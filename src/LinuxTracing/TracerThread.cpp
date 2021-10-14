@@ -43,6 +43,8 @@ namespace orbit_linux_tracing {
 
 using orbit_base::GetAllPids;
 using orbit_base::GetTidsOfProcess;
+using orbit_base::ToNativeProcessId;
+using orbit_base::ToNativeThreadId;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
@@ -830,54 +832,55 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
 
 uint64_t TracerThread::ProcessForkEventAndReturnTimestamp(const perf_event_header& header,
                                                           PerfEventRingBuffer* ring_buffer) {
-  auto event = make_unique_for_overwrite<ForkPerfEvent>();
-  ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
-  const uint64_t timestamp_ns = event->GetTimestamp();
+  perf_event_fork_exit ring_buffer_record;
+  ring_buffer->ConsumeRecord(header, &ring_buffer_record);
+  ForkPerfEvent event;
+  event.pid = ring_buffer_record.pid;
+  event.tid = ring_buffer_record.tid;
+  event.timestamp = ring_buffer_record.time;
+  event.ordered_in_file_descriptor = ring_buffer->GetFileDescriptor();
 
-  if (timestamp_ns < effective_capture_start_timestamp_ns_) {
-    return timestamp_ns;
+  if (event.timestamp < effective_capture_start_timestamp_ns_) {
+    return event.timestamp;
   }
 
-  // PERF_RECORD_FORK is used by SwitchesStatesNamesVisitor
-  // to keep the association between tid and pid.
-  event->SetOrderedInFileDescriptor(ring_buffer->GetFileDescriptor());
   DeferEvent(std::move(event));
 
-  return timestamp_ns;
+  return event.timestamp;
 }
 
 uint64_t TracerThread::ProcessExitEventAndReturnTimestamp(const perf_event_header& header,
                                                           PerfEventRingBuffer* ring_buffer) {
-  auto event = make_unique_for_overwrite<ExitPerfEvent>();
-  ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
-  const uint64_t timestamp_ns = event->GetTimestamp();
+  ExitPerfEvent event;
+  perf_event_fork_exit ring_buffer_record;
+  ring_buffer->ConsumeRecord(header, &ring_buffer_record);
+  event.pid = ring_buffer_record.pid;
+  event.tid = ring_buffer_record.tid;
+  event.timestamp = ring_buffer_record.time;
+  event.ordered_in_file_descriptor = ring_buffer->GetFileDescriptor();
 
-  if (timestamp_ns < effective_capture_start_timestamp_ns_) {
-    return timestamp_ns;
+  if (event.timestamp < effective_capture_start_timestamp_ns_) {
+    return event.timestamp;
   }
 
-  // PERF_RECORD_EXIT is also used by SwitchesStatesNamesVisitor
-  // to keep the association between tid and pid.
-  event->SetOrderedInFileDescriptor(ring_buffer->GetFileDescriptor());
   DeferEvent(std::move(event));
 
-  return timestamp_ns;
+  return event.timestamp;
 }
 
 uint64_t TracerThread::ProcessMmapEventAndReturnTimestamp(const perf_event_header& header,
                                                           PerfEventRingBuffer* ring_buffer) {
   auto event = ConsumeMmapPerfEvent(ring_buffer, header);
-  uint64_t timestamp_ns = event->GetTimestamp();
+  const uint64_t timestamp_ns = event.timestamp;
 
-  if (event->pid() != target_pid_) {
+  if (event.pid != target_pid_) {
     return timestamp_ns;
   }
 
-  if (event->GetTimestamp() < effective_capture_start_timestamp_ns_) {
+  if (event.timestamp < effective_capture_start_timestamp_ns_) {
     return timestamp_ns;
   }
 
-  event->SetOrderedInFileDescriptor(ring_buffer->GetFileDescriptor());
   DeferEvent(std::move(event));
 
   return timestamp_ns;
@@ -918,48 +921,79 @@ uint64_t TracerThread::ProcessSampleEventAndReturnTimestamp(const perf_event_hea
   int fd = ring_buffer->GetFileDescriptor();
 
   if (is_uprobe) {
-    CHECK(header.size == sizeof(UprobesPerfEvent::ring_buffer_record));
-    auto event = make_unique_for_overwrite<UprobesPerfEvent>();
-    ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
-    if (event->GetPid() != target_pid_) {
+    CHECK(header.size == sizeof(perf_event_sp_ip_8bytes_sample));
+    perf_event_sp_ip_8bytes_sample ring_buffer_record;
+    ring_buffer->ConsumeRecord(header, &ring_buffer_record);
+
+    if (ToNativeProcessId(ring_buffer_record.sample_id.pid) != target_pid_) {
       return timestamp_ns;
     }
-    event->SetFunctionId(uprobes_uretprobes_ids_to_function_id_.at(event->GetStreamId()));
-    event->SetOrderedInFileDescriptor(fd);
+
+    UprobesPerfEvent event{.pid = ToNativeProcessId(ring_buffer_record.sample_id.pid),
+                           .tid = ToNativeThreadId(ring_buffer_record.sample_id.tid),
+                           .timestamp = ring_buffer_record.sample_id.time,
+                           .cpu = ring_buffer_record.sample_id.cpu,
+                           .ordered_in_file_descriptor = fd,
+                           .function_id = uprobes_uretprobes_ids_to_function_id_.at(
+                               ring_buffer_record.sample_id.stream_id),
+                           .sp = ring_buffer_record.regs.sp,
+                           .ip = ring_buffer_record.regs.ip,
+                           .return_address = ring_buffer_record.stack.top8bytes};
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
+
   } else if (is_uprobe_with_args) {
-    CHECK(header.size == sizeof(UprobesWithArgumentsPerfEvent::ring_buffer_record));
-    auto event = make_unique_for_overwrite<UprobesWithArgumentsPerfEvent>();
-    ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
-    if (event->GetPid() != target_pid_) {
+    CHECK(header.size == sizeof(perf_event_sp_ip_arguments_8bytes_sample));
+    perf_event_sp_ip_arguments_8bytes_sample ring_buffer_record;
+    ring_buffer->ConsumeRecord(header, &ring_buffer_record);
+
+    if (ToNativeProcessId(ring_buffer_record.sample_id.pid) != target_pid_) {
       return timestamp_ns;
     }
-    event->SetFunctionId(uprobes_uretprobes_ids_to_function_id_.at(event->GetStreamId()));
-    event->SetOrderedInFileDescriptor(fd);
+
+    UprobesWithArgumentsPerfEvent event{.pid = ToNativeProcessId(ring_buffer_record.sample_id.pid),
+                                        .tid = ToNativeThreadId(ring_buffer_record.sample_id.tid),
+                                        .timestamp = ring_buffer_record.sample_id.time,
+                                        .cpu = ring_buffer_record.sample_id.cpu,
+                                        .ordered_in_file_descriptor = fd,
+                                        .function_id = uprobes_uretprobes_ids_to_function_id_.at(
+                                            ring_buffer_record.sample_id.stream_id),
+                                        .return_address = ring_buffer_record.stack.top8bytes,
+                                        .regs = ring_buffer_record.regs};
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
 
   } else if (is_uretprobe) {
-    CHECK(header.size == sizeof(UretprobesPerfEvent::ring_buffer_record));
-    auto event = make_unique_for_overwrite<UretprobesPerfEvent>();
-    ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
-    if (event->GetPid() != target_pid_) {
+    CHECK(header.size == sizeof(perf_event_empty_sample));
+    perf_event_empty_sample ring_buffer_record;
+    ring_buffer->ConsumeRecord(header, &ring_buffer_record);
+
+    if (ToNativeProcessId(ring_buffer_record.sample_id.pid) != target_pid_) {
       return timestamp_ns;
     }
-    event->SetFunctionId(uprobes_uretprobes_ids_to_function_id_.at(event->GetStreamId()));
-    event->SetOrderedInFileDescriptor(fd);
+
+    UretprobesPerfEvent event{.pid = ToNativeProcessId(ring_buffer_record.sample_id.pid),
+                              .tid = ToNativeThreadId(ring_buffer_record.sample_id.tid),
+                              .timestamp = ring_buffer_record.sample_id.time,
+                              .ordered_in_file_descriptor = fd};
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
+
   } else if (is_uretprobe_with_retval) {
-    CHECK(header.size == sizeof(UretprobesWithReturnValuePerfEvent::ring_buffer_record));
-    auto event = make_unique_for_overwrite<UretprobesWithReturnValuePerfEvent>();
-    ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
-    if (event->GetPid() != target_pid_) {
+    CHECK(header.size == sizeof(perf_event_ax_sample));
+    perf_event_ax_sample ring_buffer_record;
+    ring_buffer->ConsumeRecord(header, &ring_buffer_record);
+
+    if (ToNativeProcessId(ring_buffer_record.sample_id.pid) != target_pid_) {
       return timestamp_ns;
     }
-    event->SetFunctionId(uprobes_uretprobes_ids_to_function_id_.at(event->GetStreamId()));
-    event->SetOrderedInFileDescriptor(fd);
+
+    UretprobesWithReturnValuePerfEvent event{
+        .pid = ToNativeProcessId(ring_buffer_record.sample_id.pid),
+        .tid = ToNativeThreadId(ring_buffer_record.sample_id.tid),
+        .timestamp = ring_buffer_record.sample_id.time,
+        .ordered_in_file_descriptor = fd,
+        .rax = ring_buffer_record.regs.ax};
     DeferEvent(std::move(event));
     ++stats_.uprobes_count;
 
@@ -989,74 +1023,82 @@ uint64_t TracerThread::ProcessSampleEventAndReturnTimestamp(const perf_event_hea
     // in general they seem to produce valid callstacks.
 
     auto event = ConsumeStackSamplePerfEvent(ring_buffer, header);
-    event->SetOrderedInFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.sample_count;
 
   } else if (is_callchain_sample) {
     pid_t pid = ReadSampleRecordPid(ring_buffer);
+
     if (pid != target_pid_) {
       ring_buffer->SkipRecord(header);
       return timestamp_ns;
     }
 
     auto event = ConsumeCallchainSamplePerfEvent(ring_buffer, header);
-    event->SetOrderedInFileDescriptor(fd);
     DeferEvent(std::move(event));
     ++stats_.sample_count;
 
   } else if (is_task_newtask) {
-    auto event = make_unique_for_overwrite<TaskNewtaskPerfEvent>();
-    ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
-    // task:task_newtask is used by SwitchesStatesNamesVisitor
-    // for thread names and thread states.
-    event->SetOrderedInFileDescriptor(fd);
+    perf_event_raw_sample<task_newtask_tracepoint> ring_buffer_record;
+    ring_buffer->ConsumeRecord(header, &ring_buffer_record);
+
+    TaskNewtaskPerfEvent event{.timestamp = ring_buffer_record.sample_id.time,
+                               .new_tid = ring_buffer_record.data.pid,
+                               .ordered_in_file_descriptor = fd};
+    memcpy(event.comm, ring_buffer_record.data.comm, 16);
     DeferEvent(std::move(event));
+
   } else if (is_task_rename) {
-    auto event = make_unique_for_overwrite<TaskRenamePerfEvent>();
-    ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
-    // task:task_newtask is used by SwitchesStatesNamesVisitor for thread names.
-    event->SetOrderedInFileDescriptor(fd);
+    perf_event_raw_sample<task_rename_tracepoint> ring_buffer_record;
+    ring_buffer->ConsumeRecord(header, &ring_buffer_record);
+
+    TaskRenamePerfEvent event{.timestamp = ring_buffer_record.sample_id.time,
+                              .renamed_tid = ring_buffer_record.data.pid,
+                              .ordered_in_file_descriptor = fd};
+    memcpy(event.newcomm, ring_buffer_record.data.newcomm, 16);
     DeferEvent(std::move(event));
 
   } else if (is_sched_switch) {
-    auto event = make_unique_for_overwrite<SchedSwitchPerfEvent>();
-    ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
-    event->SetOrderedInFileDescriptor(fd);
+    perf_event_raw_sample<sched_switch_tracepoint> ring_buffer_record;
+    ring_buffer->ConsumeRecord(header, &ring_buffer_record);
+
+    SchedSwitchPerfEvent event{
+        .timestamp = ring_buffer_record.sample_id.time,
+        .cpu = ring_buffer_record.sample_id.cpu,
+        .prev_pid_or_minus_one = ToNativeProcessId(ring_buffer_record.sample_id.pid),
+        .prev_tid = ring_buffer_record.data.prev_pid,
+        .prev_state = ring_buffer_record.data.prev_state,
+        .next_tid = ring_buffer_record.data.next_pid,
+        .ordered_in_file_descriptor = fd};
     DeferEvent(std::move(event));
     ++stats_.sched_switch_count;
+
   } else if (is_sched_wakeup) {
-    auto event = make_unique_for_overwrite<SchedWakeupPerfEvent>();
-    ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
-    event->SetOrderedInFileDescriptor(fd);
+    perf_event_raw_sample<sched_wakeup_tracepoint> ring_buffer_record;
+    ring_buffer->ConsumeRecord(header, &ring_buffer_record);
+
+    SchedWakeupPerfEvent event{.timestamp = ring_buffer_record.sample_id.time,
+                               .woken_tid = ring_buffer_record.data.pid,
+                               .ordered_in_file_descriptor = fd};
     DeferEvent(std::move(event));
 
   } else if (is_amdgpu_cs_ioctl_event) {
-    auto event =
-        ConsumeVariableSizeTracepointPerfEvent<AmdgpuCsIoctlPerfEvent>(ring_buffer, header);
-    // Do not filter GPU tracepoint events based on pid as we want to have
-    // visibility into all GPU activity across the system.
-    event->SetOrderedInFileDescriptor(PerfEvent::kNotOrderedInAnyFileDescriptor);
+    AmdgpuCsIoctlPerfEvent event = ConsumeAmdgpuCsIoctlPerfEvent(ring_buffer, header);
     DeferEvent(std::move(event));
     ++stats_.gpu_events_count;
+
   } else if (is_amdgpu_sched_run_job_event) {
-    auto event =
-        ConsumeVariableSizeTracepointPerfEvent<AmdgpuSchedRunJobPerfEvent>(ring_buffer, header);
-    event->SetOrderedInFileDescriptor(PerfEvent::kNotOrderedInAnyFileDescriptor);
+    AmdgpuSchedRunJobPerfEvent event = ConsumeAmdgpuSchedRunJobPerfEvent(ring_buffer, header);
     DeferEvent(std::move(event));
     ++stats_.gpu_events_count;
+
   } else if (is_dma_fence_signaled_event) {
-    auto event =
-        ConsumeVariableSizeTracepointPerfEvent<DmaFenceSignaledPerfEvent>(ring_buffer, header);
-    event->SetOrderedInFileDescriptor(PerfEvent::kNotOrderedInAnyFileDescriptor);
-    // dma_fence_signaled events can be out of order of timestamp even on the same ring buffer,
-    // hence why kNotOrderedInAnyFileDescriptor. To be safe, do the same for the other GPU events.
+    DmaFenceSignaledPerfEvent event = ConsumeDmaFenceSignaledPerfEvent(ring_buffer, header);
     DeferEvent(std::move(event));
     ++stats_.gpu_events_count;
 
   } else if (is_user_instrumented_tracepoint) {
     auto it = ids_to_tracepoint_info_.find(stream_id);
-
     if (it == ids_to_tracepoint_info_.end()) {
       return timestamp_ns;
     }
@@ -1064,17 +1106,16 @@ uint64_t TracerThread::ProcessSampleEventAndReturnTimestamp(const perf_event_hea
     auto event = ConsumeGenericTracepointPerfEvent(ring_buffer, header);
 
     orbit_grpc_protos::FullTracepointEvent tracepoint_event;
-    tracepoint_event.set_pid(event->GetPid());
-    tracepoint_event.set_tid(event->GetTid());
-    tracepoint_event.set_timestamp_ns(event->GetTimestamp());
-    tracepoint_event.set_cpu(event->GetCpu());
+    tracepoint_event.set_pid(event.pid);
+    tracepoint_event.set_tid(event.tid);
+    tracepoint_event.set_timestamp_ns(event.timestamp);
+    tracepoint_event.set_cpu(event.cpu);
 
     orbit_grpc_protos::TracepointInfo* tracepoint = tracepoint_event.mutable_tracepoint_info();
     tracepoint->set_name(it->second.name());
     tracepoint->set_category(it->second.category());
 
     listener_->OnTracepointEvent(std::move(tracepoint_event));
-
   } else {
     ERROR("PERF_EVENT_SAMPLE with unexpected stream_id: %lu", stream_id);
     ring_buffer->SkipRecord(header);
@@ -1085,12 +1126,14 @@ uint64_t TracerThread::ProcessSampleEventAndReturnTimestamp(const perf_event_hea
 
 uint64_t TracerThread::ProcessLostEventAndReturnTimestamp(const perf_event_header& header,
                                                           PerfEventRingBuffer* ring_buffer) {
-  auto event = std::make_unique<LostPerfEvent>();
-  ring_buffer->ConsumeRecord(header, &event->ring_buffer_record);
-  uint64_t timestamp_ns = event->GetTimestamp();
+  perf_event_lost ring_buffer_record;
+  ring_buffer->ConsumeRecord(header, &ring_buffer_record);
+  LostPerfEvent event;
+  event.timestamp = ring_buffer_record.sample_id.time;
+  event.ordered_in_file_descriptor = ring_buffer->GetFileDescriptor();
 
-  stats_.lost_count += event->GetNumLost();
-  stats_.lost_count_per_buffer[ring_buffer] += event->GetNumLost();
+  stats_.lost_count += ring_buffer_record.lost;
+  stats_.lost_count_per_buffer[ring_buffer] += ring_buffer_record.lost;
 
   // Fetch the timestamp of the last event that preceded this PERF_RECORD_LOST in this same ring
   // buffer.
@@ -1103,13 +1146,13 @@ uint64_t TracerThread::ProcessLostEventAndReturnTimestamp(const perf_event_heade
     // This shouldn't happen because PERF_RECORD_LOST is reported when a ring buffer is full, which
     // means that there were other events in the same ring buffers, and they have already been read.
     ERROR("Unknown previous timestamp for ring buffer '%s'", ring_buffer->GetName());
-    return timestamp_ns;
+    return event.timestamp;
   }
 
-  event->SetPreviousTimestamp(fd_previous_timestamp_ns);
+  event.previous_timestamp = fd_previous_timestamp_ns;
   DeferEvent(std::move(event));
 
-  return timestamp_ns;
+  return event.timestamp;
 }
 
 uint64_t TracerThread::ProcessThrottleUnthrottleEventAndReturnTimestamp(
@@ -1137,7 +1180,7 @@ uint64_t TracerThread::ProcessThrottleUnthrottleEventAndReturnTimestamp(
   return timestamp_ns;
 }
 
-void TracerThread::DeferEvent(std::unique_ptr<PerfEvent> event) {
+void TracerThread::DeferEvent(PerfEvent&& event) {
   absl::MutexLock lock{&deferred_events_being_buffered_mutex_};
   deferred_events_being_buffered_.emplace_back(std::move(event));
 }
