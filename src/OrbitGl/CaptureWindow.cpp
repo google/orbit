@@ -44,6 +44,9 @@ using orbit_accessibility::AccessibleWidgetBridge;
 
 using orbit_client_data::CaptureData;
 
+constexpr const char* kTimingDraw = "Draw";
+constexpr const char* kTimingDrawAndUpdatePrimitives = "Draw & Update Primitives";
+
 class AccessibleCaptureWindow : public AccessibleWidgetBridge {
  public:
   explicit AccessibleCaptureWindow(CaptureWindow* window) : window_(window) {}
@@ -71,8 +74,9 @@ using orbit_client_protos::TimerInfo;
 CaptureWindow::CaptureWindow(OrbitApp* app) : GlCanvas(), app_{app} {
   draw_help_ = true;
 
-  scoped_frame_times_["Draw"] = std::make_unique<orbit_gl::SimpleTimings>(30);
-  scoped_frame_times_["Draw & Update Primitives"] = std::make_unique<orbit_gl::SimpleTimings>(30);
+  scoped_frame_times_[kTimingDraw] = std::make_unique<orbit_gl::SimpleTimings>(30);
+  scoped_frame_times_[kTimingDrawAndUpdatePrimitives] =
+      std::make_unique<orbit_gl::SimpleTimings>(30);
 
   slider_ = std::make_shared<orbit_gl::GlHorizontalSlider>(viewport_);
   vertical_slider_ = std::make_shared<orbit_gl::GlVerticalSlider>(viewport_);
@@ -387,7 +391,7 @@ std::unique_ptr<AccessibleInterface> CaptureWindow::CreateAccessibleInterface() 
 
 void CaptureWindow::Draw() {
   ORBIT_SCOPE("CaptureWindow::Draw");
-  uint64_t start_time = orbit_base::CaptureTimestampNs();
+  uint64_t start_time_ns = orbit_base::CaptureTimestampNs();
   bool time_graph_was_redrawn = false;
 
   text_renderer_.Init();
@@ -435,13 +439,12 @@ void CaptureWindow::Draw() {
 
   RenderAllLayers();
 
-
-  double frame_duration_in_ms = (orbit_base::CaptureTimestampNs() - start_time) / 1000000.0;
+  double frame_duration_in_ms = (orbit_base::CaptureTimestampNs() - start_time_ns) / 1000000.0;
   if (picking_mode_ == PickingMode::kNone) {
     if (time_graph_was_redrawn) {
-      scoped_frame_times_["Draw & Update Primitives"]->PushTimeMs(frame_duration_in_ms);
+      scoped_frame_times_[kTimingDrawAndUpdatePrimitives]->PushTimeMs(frame_duration_in_ms);
     } else {
-      scoped_frame_times_["Draw"]->PushTimeMs(frame_duration_in_ms);
+      scoped_frame_times_[kTimingDraw]->PushTimeMs(frame_duration_in_ms);
     }
   }
 }
@@ -692,11 +695,11 @@ void CaptureWindow::RenderImGuiDebugUI() {
 
   if (ImGui::CollapsingHeader("Performance")) {
     for (auto& item : scoped_frame_times_) {
-      IMGUI_VARN_TO_TEXT(item.second->GetAverageTimeInMs(),
+      IMGUI_VARN_TO_TEXT(item.second->GetAverageTimeMs(),
                          (std::string("Avg time in ms: ") + item.first));
-      IMGUI_VARN_TO_TEXT(item.second->GetMinTimeInMs(),
+      IMGUI_VARN_TO_TEXT(item.second->GetMinTimeMs(),
                          (std::string("Min time in ms: ") + item.first));
-      IMGUI_VARN_TO_TEXT(item.second->GetMaxTimeInMs(),
+      IMGUI_VARN_TO_TEXT(item.second->GetMaxTimeMs(),
                          (std::string("Max time in ms: ") + item.first));
     }
   }

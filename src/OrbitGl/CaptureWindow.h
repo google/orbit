@@ -19,6 +19,7 @@
 #include "PickingManager.h"
 #include "SimpleTimings.h"
 #include "TimeGraph.h"
+#include "absl/container/btree_map.h"
 
 class OrbitApp;
 
@@ -109,7 +110,7 @@ class CaptureWindow : public GlCanvas {
   CreateAccessibleInterface() override;
   CaptureStats selection_stats_;
 
-  absl::flat_hash_map<std::string, std::unique_ptr<orbit_gl::SimpleTimings>> scoped_frame_times_;
+  absl::btree_map<std::string, std::unique_ptr<orbit_gl::SimpleTimings>> scoped_frame_times_;
 };
 
 #endif  // ORBIT_GL_CAPTURE_WINDOW_H_

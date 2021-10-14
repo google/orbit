@@ -13,9 +13,9 @@ class SimpleTimings {
  public:
   explicit SimpleTimings(size_t num_timings_to_store);
 
-  [[nodiscard]] double GetAverageTimeInMs();
-  [[nodiscard]] double GetMaxTimeInMs();
-  [[nodiscard]] double GetMinTimeInMs();
+  [[nodiscard]] double GetAverageTimeMs() const;
+  [[nodiscard]] double GetMaxTimeMs() const;
+  [[nodiscard]] double GetMinTimeMs() const;
 
   void PushTimeMs(double time_in_ms);
   void Reset();

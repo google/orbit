@@ -12,11 +12,11 @@ SimpleTimings::SimpleTimings(size_t num_timings_to_store)
   recorded_timings_ms_.reserve(num_timings_to_store);
 }
 
-double SimpleTimings::GetAverageTimeInMs() { return avg_ms_; }
+double SimpleTimings::GetAverageTimeMs() const { return avg_ms_; }
 
-double SimpleTimings::GetMaxTimeInMs() { return max_ms_; }
+double SimpleTimings::GetMaxTimeMs() const { return max_ms_; }
 
-double SimpleTimings::GetMinTimeInMs() { return min_ms_; }
+double SimpleTimings::GetMinTimeMs() const { return min_ms_; }
 
 void SimpleTimings::PushTimeMs(double time) {
   if (timing_count_ < num_timings_to_store_) {
