@@ -18,45 +18,84 @@
 
 namespace orbit_user_space_instrumentation {
 
-AddressRange GetFunctionAbsoluteAddressRangeOrDie(std::string_view function_name) {
-  auto modules = orbit_object_utils::ReadModules(getpid());
-  CHECK(!modules.has_error());
-  std::string module_file_path;
-  AddressRange address_range_code(0, 0);
-  for (const auto& module : modules.value()) {
-    if (module.file_path() == orbit_base::GetExecutablePath()) {
-      module_file_path = module.file_path();
-      address_range_code.start = module.address_start();
-      address_range_code.end = module.address_end();
-      break;
-    }
-  }
-  CHECK(!module_file_path.empty());
-  auto elf_file = orbit_object_utils::CreateElfFile(module_file_path);
-  CHECK(!elf_file.has_error());
-  auto syms = elf_file.value()->LoadDebugSymbols();
-  CHECK(!syms.has_error());
-  for (const auto& sym : syms.value().symbol_infos()) {
+static ErrorMessageOr<AddressRange> FindFunctionAbsoluteAddressInModule(
+    std::string_view function_name, std::string_view module_file_path,
+    AddressRange module_address_range) {
+  OUTCOME_TRY(auto&& elf_file, orbit_object_utils::CreateElfFile(module_file_path));
+  OUTCOME_TRY(auto&& syms, elf_file->LoadDebugSymbols());
+  for (const auto& sym : syms.symbol_infos()) {
     if (sym.name() == function_name) {
       const uint64_t address = orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
-          sym.address(), address_range_code.start, syms.value().load_bias(),
-          elf_file.value()->GetExecutableSegmentOffset());
+          sym.address(), module_address_range.start, syms.load_bias(),
+          elf_file->GetExecutableSegmentOffset());
       const uint64_t size = sym.size();
-      return {address, address + size};
+      return AddressRange{address, address + size};
     }
   }
+
+  return ErrorMessage{"No matching function found."};
+}
+
+AddressRange GetFunctionAbsoluteAddressRangeOrDie(std::string_view function_name) {
+  auto modules_or_error = orbit_object_utils::ReadModules(getpid());
+  CHECK(!modules_or_error.has_error());
+  auto& modules = modules_or_error.value();
+
+  // We check the main module first because it's most likely to find the function there.
+  const auto main_module = std::find_if(modules.begin(), modules.end(), [&](const auto& module) {
+    return module.file_path() == orbit_base::GetExecutablePath();
+  });
+
+  if (main_module != modules.end()) {
+    auto result = FindFunctionAbsoluteAddressInModule(
+        function_name, main_module->file_path(),
+        AddressRange{main_module->address_start(), main_module->address_end()});
+    if (result.has_value()) return result.value();
+  }
+
+  // If the main module doesn't contain the function we will look through all the other modules.
+  for (const auto& module : modules) {
+    auto result = FindFunctionAbsoluteAddressInModule(
+        function_name, module.file_path(),
+        AddressRange{module.address_start(), module.address_end()});
+    if (result.has_value()) return result.value();
+  }
+
   FATAL("GetFunctionAbsoluteAddressRangeOrDie hasn't found a function '%s'", function_name);
 }
 
-AddressRange GetFunctionRelativeAddressRangeOrDie(std::string_view function_name) {
-  auto elf_file = orbit_object_utils::CreateElfFile(orbit_base::GetExecutablePath());
-  CHECK(!elf_file.has_error());
-  auto syms = elf_file.value()->LoadDebugSymbols();
-  CHECK(!syms.has_error());
-  for (const auto& sym : syms.value().symbol_infos()) {
+static ErrorMessageOr<AddressRange> FindFunctionRelativeAddressInModule(
+    std::string_view function_name, std::string_view module_file_path) {
+  OUTCOME_TRY(auto&& elf_file, orbit_object_utils::CreateElfFile(module_file_path));
+  OUTCOME_TRY(auto&& syms, elf_file->LoadDebugSymbols());
+  for (const auto& sym : syms.symbol_infos()) {
     if (sym.name() == function_name) {
       return AddressRange(sym.address(), sym.address() + sym.size());
     }
+  }
+
+  return ErrorMessage{"No matching function found."};
+}
+
+[[nodiscard]] AddressRange GetFunctionRelativeAddressRangeOrDie(std::string_view function_name) {
+  auto modules_or_error = orbit_object_utils::ReadModules(getpid());
+  CHECK(!modules_or_error.has_error());
+  auto& modules = modules_or_error.value();
+
+  // We check the main module first because it's most likely to find the function there.
+  const auto main_module = std::find_if(modules.begin(), modules.end(), [&](const auto& module) {
+    return module.file_path() == orbit_base::GetExecutablePath();
+  });
+
+  if (main_module != modules.end()) {
+    auto result = FindFunctionRelativeAddressInModule(function_name, main_module->file_path());
+    if (result.has_value()) return result.value();
+  }
+
+  // If the main module doesn't contain the function we will look through all the other modules.
+  for (const auto& module : modules) {
+    auto result = FindFunctionRelativeAddressInModule(function_name, module.file_path());
+    if (result.has_value()) return result.value();
   }
   FATAL("GetFunctionRelativeAddressRangeOrDie hasn't found a function '%s'", function_name);
 }
