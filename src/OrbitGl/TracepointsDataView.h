@@ -11,14 +11,13 @@
 #include <string>
 #include <vector>
 
+#include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
 #include "tracepoint.pb.h"
 
-class OrbitApp;
-
 class TracepointsDataView : public orbit_data_views::DataView {
  public:
-  explicit TracepointsDataView(OrbitApp* app);
+  explicit TracepointsDataView(orbit_data_views::AppInterface* app);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnCategory; }
@@ -41,10 +40,6 @@ class TracepointsDataView : public orbit_data_views::DataView {
   enum ColumnIndex { kColumnSelected, kColumnCategory, kColumnName, kNumColumns };
 
   const orbit_grpc_protos::TracepointInfo& GetTracepoint(uint32_t row) const;
-
-  // TODO(b/185090791): This is temporary and will be removed once this data view has been ported
-  // and move to orbit_data_views.
-  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_TRACEPOINTS_DATA_VIEW_H_

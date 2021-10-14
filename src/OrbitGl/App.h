@@ -448,10 +448,11 @@ class OrbitApp final : public DataViewFactory,
       const std::vector<orbit_client_protos::CallstackEvent>& selected_callstack_events,
       uint32_t thread_id);
 
-  void SelectTracepoint(const orbit_grpc_protos::TracepointInfo& info);
-  void DeselectTracepoint(const orbit_grpc_protos::TracepointInfo& tracepoint);
+  void SelectTracepoint(const orbit_grpc_protos::TracepointInfo& info) override;
+  void DeselectTracepoint(const orbit_grpc_protos::TracepointInfo& tracepoint) override;
 
-  [[nodiscard]] bool IsTracepointSelected(const orbit_grpc_protos::TracepointInfo& info) const;
+  [[nodiscard]] bool IsTracepointSelected(
+      const orbit_grpc_protos::TracepointInfo& info) const override;
 
   // Only enables the frame track in the capture settings (in DataManager) and does not
   // add a frame track to the current capture data.
