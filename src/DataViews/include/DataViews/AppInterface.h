@@ -18,6 +18,7 @@
 #include "OrbitBase/Future.h"
 #include "PresetFile/PresetFile.h"
 #include "capture_data.pb.h"
+#include "tracepoint.pb.h"
 
 namespace orbit_data_views {
 
@@ -68,6 +69,12 @@ class AppInterface {
   virtual void OnValidateFramePointers(
       std::vector<const orbit_client_data::ModuleData*> modules_to_validate) = 0;
   virtual void UpdateProcessAndModuleList() = 0;
+
+  // Functions needed by TracepointsDataView
+  virtual void SelectTracepoint(const orbit_grpc_protos::TracepointInfo& info) = 0;
+  virtual void DeselectTracepoint(const orbit_grpc_protos::TracepointInfo& tracepoint) = 0;
+  [[nodiscard]] virtual bool IsTracepointSelected(
+      const orbit_grpc_protos::TracepointInfo& info) const = 0;
 
   // This needs to be called from the main thread.
   [[nodiscard]] virtual bool IsCaptureConnected(

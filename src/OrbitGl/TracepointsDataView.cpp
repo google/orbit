@@ -24,8 +24,8 @@ static const std::string kMenuActionSelect = "Hook";
 static const std::string kMenuActionUnselect = "Unhook";
 }  // namespace
 
-TracepointsDataView::TracepointsDataView(OrbitApp* app)
-    : orbit_data_views::DataView(orbit_data_views::DataViewType::kTracepoints, app), app_{app} {}
+TracepointsDataView::TracepointsDataView(orbit_data_views::AppInterface* app)
+    : orbit_data_views::DataView(orbit_data_views::DataViewType::kTracepoints, app) {}
 
 const std::vector<orbit_data_views::DataView::Column>& TracepointsDataView::GetColumns() {
   static const std::vector<Column>& columns = [] {

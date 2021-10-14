@@ -77,6 +77,10 @@ class MockAppInterface : public AppInterface {
 
   MOCK_METHOD(void, Disassemble, (uint32_t pid, const orbit_client_protos::FunctionInfo&));
   MOCK_METHOD(void, ShowSourceCode, (const orbit_client_protos::FunctionInfo&));
+
+  MOCK_METHOD(bool, IsTracepointSelected, (const orbit_grpc_protos::TracepointInfo&), (const));
+  MOCK_METHOD(void, SelectTracepoint, (const orbit_grpc_protos::TracepointInfo&));
+  MOCK_METHOD(void, DeselectTracepoint, (const orbit_grpc_protos::TracepointInfo&));
 };
 
 }  // namespace orbit_data_views
