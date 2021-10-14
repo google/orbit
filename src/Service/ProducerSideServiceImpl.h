@@ -13,7 +13,6 @@
 
 #include <atomic>
 
-#include "CaptureService/CaptureEventBuffer.h"
 #include "CaptureService/CaptureStartStopListener.h"
 #include "CaptureService/ProducerEventProcessor.h"
 #include "GrpcProtos/Constants.h"

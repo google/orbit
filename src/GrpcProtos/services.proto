@@ -12,6 +12,8 @@ import "module.proto";
 import "process.proto";
 import "tracepoint.proto";
 
+option cc_enable_arenas = true;
+
 message CaptureRequest {
   CaptureOptions capture_options = 1;
 }

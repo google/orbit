@@ -73,7 +73,7 @@ namespace orbit_capture_service {
 
 namespace {
 
-class MockCaptureEventBuffer : public CaptureEventBuffer {
+class MockClientCaptureEventCollector : public ClientCaptureEventCollector {
  public:
   MOCK_METHOD(void, AddEvent, (orbit_grpc_protos::ClientCaptureEvent && /*event*/), (override));
 };
@@ -147,8 +147,8 @@ constexpr const char* kBuildId2 = "build_id_2";
 }  // namespace
 
 TEST(ProducerEventProcessor, OneSchedulingSliceEvent) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent event;
   SchedulingSlice* scheduling_slice = event.mutable_scheduling_slice();
@@ -159,7 +159,7 @@ TEST(ProducerEventProcessor, OneSchedulingSliceEvent) {
   scheduling_slice->set_out_timestamp_ns(kTimestampNs1);
 
   ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(event));
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kSchedulingSlice);
@@ -173,8 +173,8 @@ TEST(ProducerEventProcessor, OneSchedulingSliceEvent) {
 }
 
 TEST(ProducerEventProcessor, OneInternedCallstack) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent event;
   InternedCallstack* interned_callstack = event.mutable_interned_callstack();
@@ -186,7 +186,7 @@ TEST(ProducerEventProcessor, OneInternedCallstack) {
   callstack->set_type(Callstack::kComplete);
 
   ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(event));
 
@@ -203,8 +203,8 @@ TEST(ProducerEventProcessor, OneInternedCallstack) {
 }
 
 TEST(ProducerEventProcessor, TwoInternedCallstacksSameFramesDifferentTypes) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent event1;
   InternedCallstack* interned_callstack1 = event1.mutable_interned_callstack();
@@ -226,7 +226,7 @@ TEST(ProducerEventProcessor, TwoInternedCallstacksSameFramesDifferentTypes) {
 
   ClientCaptureEvent client_capture_event1;
   ClientCaptureEvent client_capture_event2;
-  EXPECT_CALL(buffer, AddEvent)
+  EXPECT_CALL(collector, AddEvent)
       .Times(2)
       .WillOnce(SaveArg<0>(&client_capture_event1))
       .WillOnce(SaveArg<0>(&client_capture_event2));
@@ -258,8 +258,8 @@ TEST(ProducerEventProcessor, TwoInternedCallstacksSameFramesDifferentTypes) {
 }
 
 TEST(ProducerEventProcessor, TwoInternedCallstacksDifferentProducersSameKey) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent event1;
   InternedCallstack* interned_callstack1 = event1.mutable_interned_callstack();
@@ -280,11 +280,11 @@ TEST(ProducerEventProcessor, TwoInternedCallstacksDifferentProducersSameKey) {
   callstack2->set_type(Callstack::kComplete);
 
   ClientCaptureEvent client_capture_event1;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event1));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event1));
   producer_event_processor->ProcessEvent(1, std::move(event1));
 
   ClientCaptureEvent client_capture_event2;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event2));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event2));
   producer_event_processor->ProcessEvent(2, std::move(event2));
 
   ASSERT_EQ(client_capture_event1.event_case(), ClientCaptureEvent::kInternedCallstack);
@@ -311,8 +311,8 @@ TEST(ProducerEventProcessor, TwoInternedCallstacksDifferentProducersSameKey) {
 }
 
 TEST(ProducerEventProcessor, TwoInternedCallstacksDifferentProducersSameIntern) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   constexpr uint64_t kProducer1CallstackKey = kKey1;
   constexpr uint64_t kProducer2CallstackKey = kKey2;
@@ -333,7 +333,7 @@ TEST(ProducerEventProcessor, TwoInternedCallstacksDifferentProducersSameIntern) 
 
   ClientCaptureEvent client_capture_event;
   // We expect only one call here because we have same callstacks.
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
   producer_event_processor->ProcessEvent(1, std::move(event1));
   producer_event_processor->ProcessEvent(2, std::move(event2));
 
@@ -349,7 +349,7 @@ TEST(ProducerEventProcessor, TwoInternedCallstacksDifferentProducersSameIntern) 
 
   // Now check that the both producer's callstack are still tracked by
   // ProducerEventProcessor
-  testing::Mock::VerifyAndClearExpectations(&buffer);
+  testing::Mock::VerifyAndClearExpectations(&collector);
 
   ProducerCaptureEvent callstack_sample_event1;
   CallstackSample* callstack_sample1 = callstack_sample_event1.mutable_callstack_sample();
@@ -367,7 +367,7 @@ TEST(ProducerEventProcessor, TwoInternedCallstacksDifferentProducersSameIntern) 
 
   ClientCaptureEvent sample_capture_event1;
   ClientCaptureEvent sample_capture_event2;
-  EXPECT_CALL(buffer, AddEvent)
+  EXPECT_CALL(collector, AddEvent)
       .Times(2)
       .WillOnce(SaveArg<0>(&sample_capture_event1))
       .WillOnce(SaveArg<0>(&sample_capture_event2));
@@ -400,13 +400,13 @@ static ProducerCaptureEvent CreateInternedStringEvent(uint64_t key, const std::s
 }
 
 TEST(ProducerEventProcessor, OneInternedString) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent event = CreateInternedStringEvent(kKey1, "string");
 
   ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(event));
 
@@ -420,18 +420,18 @@ TEST(ProducerEventProcessor, OneInternedString) {
 }
 
 TEST(ProducerEventProcessor, TwoInternedStringsDifferentProducersSameKey) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent event1 = CreateInternedStringEvent(kKey1, "string1");
   ProducerCaptureEvent event2 = CreateInternedStringEvent(kKey1, "string2");
 
   ClientCaptureEvent client_capture_event1;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event1));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event1));
   producer_event_processor->ProcessEvent(1, std::move(event1));
 
   ClientCaptureEvent client_capture_event2;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event2));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event2));
   producer_event_processor->ProcessEvent(2, std::move(event2));
 
   ASSERT_EQ(client_capture_event1.event_case(), ClientCaptureEvent::kInternedString);
@@ -450,8 +450,8 @@ TEST(ProducerEventProcessor, TwoInternedStringsDifferentProducersSameKey) {
 }
 
 TEST(ProducerEventProcessor, TwoInternedStringsDifferentProducersSameIntern) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   constexpr uint64_t kProducer1StringKey = kKey1;
   constexpr uint64_t kProducer2StringKey = kKey2;
@@ -461,7 +461,7 @@ TEST(ProducerEventProcessor, TwoInternedStringsDifferentProducersSameIntern) {
 
   ClientCaptureEvent client_capture_event;
   // We expect only one call here because we have same string.
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
   producer_event_processor->ProcessEvent(1, std::move(event1));
   producer_event_processor->ProcessEvent(2, std::move(event2));
 
@@ -473,7 +473,7 @@ TEST(ProducerEventProcessor, TwoInternedStringsDifferentProducersSameIntern) {
 
   // Now check that the both producer's strings are still tracked by
   // ProducerEventProcessor
-  testing::Mock::VerifyAndClearExpectations(&buffer);
+  testing::Mock::VerifyAndClearExpectations(&collector);
 
   ProducerCaptureEvent gpu_queue_submission_event1;
   GpuQueueSubmission* gpu_queue_submission1 =
@@ -501,7 +501,7 @@ TEST(ProducerEventProcessor, TwoInternedStringsDifferentProducersSameIntern) {
 
   ClientCaptureEvent client_capture_event1;
   ClientCaptureEvent client_capture_event2;
-  EXPECT_CALL(buffer, AddEvent)
+  EXPECT_CALL(collector, AddEvent)
       .Times(2)
       .WillOnce(SaveArg<0>(&client_capture_event1))
       .WillOnce(SaveArg<0>(&client_capture_event2));
@@ -534,8 +534,8 @@ TEST(ProducerEventProcessor, TwoInternedStringsDifferentProducersSameIntern) {
 }
 
 TEST(ProducerEventProcessor, FullCallstackSampleDifferentCallstacks) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent event1;
   FullCallstackSample* full_callstack_sample1 = event1.mutable_full_callstack_sample();
@@ -565,7 +565,7 @@ TEST(ProducerEventProcessor, FullCallstackSampleDifferentCallstacks) {
   ClientCaptureEvent callstack_sample_event1;
   ClientCaptureEvent interned_callstack_event2;
   ClientCaptureEvent callstack_sample_event2;
-  EXPECT_CALL(buffer, AddEvent)
+  EXPECT_CALL(collector, AddEvent)
       .Times(4)
       .WillOnce(SaveArg<0>(&interned_callstack_event1))
       .WillOnce(SaveArg<0>(&callstack_sample_event1))
@@ -612,8 +612,8 @@ TEST(ProducerEventProcessor, FullCallstackSampleDifferentCallstacks) {
 }
 
 TEST(ProducerEventProcessor, FullCallstackSampleSameFramesDifferentTypes) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent event1;
   FullCallstackSample* full_callstack_sample1 = event1.mutable_full_callstack_sample();
@@ -643,7 +643,7 @@ TEST(ProducerEventProcessor, FullCallstackSampleSameFramesDifferentTypes) {
   ClientCaptureEvent callstack_sample_event1;
   ClientCaptureEvent interned_callstack_event2;
   ClientCaptureEvent callstack_sample_event2;
-  EXPECT_CALL(buffer, AddEvent)
+  EXPECT_CALL(collector, AddEvent)
       .Times(4)
       .WillOnce(SaveArg<0>(&interned_callstack_event1))
       .WillOnce(SaveArg<0>(&callstack_sample_event1))
@@ -690,8 +690,8 @@ TEST(ProducerEventProcessor, FullCallstackSampleSameFramesDifferentTypes) {
 }
 
 TEST(ProducerEventProcessor, FullCallstackSamplesSameCallstack) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent event1;
   FullCallstackSample* full_callstack_sample1 = event1.mutable_full_callstack_sample();
@@ -720,7 +720,7 @@ TEST(ProducerEventProcessor, FullCallstackSamplesSameCallstack) {
   ClientCaptureEvent interned_callstack_event1;
   ClientCaptureEvent callstack_sample_event1;
   ClientCaptureEvent callstack_sample_event2;
-  EXPECT_CALL(buffer, AddEvent)
+  EXPECT_CALL(collector, AddEvent)
       .Times(3)
       .WillOnce(SaveArg<0>(&interned_callstack_event1))
       .WillOnce(SaveArg<0>(&callstack_sample_event1))
@@ -756,8 +756,8 @@ TEST(ProducerEventProcessor, FullCallstackSamplesSameCallstack) {
 }
 
 TEST(ProducerEventProcessor, FullTracepointEventsDifferentTracepoints) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent event1;
   FullTracepointEvent* full_tracepoint_event1 = event1.mutable_full_tracepoint_event();
@@ -779,7 +779,7 @@ TEST(ProducerEventProcessor, FullTracepointEventsDifferentTracepoints) {
   ClientCaptureEvent client_tracepoint_event1;
   ClientCaptureEvent interned_tracepoint_info_event2;
   ClientCaptureEvent client_tracepoint_event2;
-  EXPECT_CALL(buffer, AddEvent)
+  EXPECT_CALL(collector, AddEvent)
       .Times(4)
       .WillOnce(SaveArg<0>(&interned_tracepoint_info_event1))
       .WillOnce(SaveArg<0>(&client_tracepoint_event1))
@@ -822,8 +822,8 @@ TEST(ProducerEventProcessor, FullTracepointEventsDifferentTracepoints) {
 }
 
 TEST(ProducerEventProcessor, FullTracepointEventsSameTracepoint) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent event1;
   FullTracepointEvent* full_tracepoint_event1 = event1.mutable_full_tracepoint_event();
@@ -844,7 +844,7 @@ TEST(ProducerEventProcessor, FullTracepointEventsSameTracepoint) {
   ClientCaptureEvent interned_tracepoint_info_event1;
   ClientCaptureEvent client_tracepoint_event1;
   ClientCaptureEvent client_tracepoint_event2;
-  EXPECT_CALL(buffer, AddEvent)
+  EXPECT_CALL(collector, AddEvent)
       .Times(3)
       .WillOnce(SaveArg<0>(&interned_tracepoint_info_event1))
       .WillOnce(SaveArg<0>(&client_tracepoint_event1))
@@ -878,8 +878,8 @@ TEST(ProducerEventProcessor, FullTracepointEventsSameTracepoint) {
 }
 
 TEST(ProducerEventProcessor, FunctionCallSmoke) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent event1;
   {
@@ -913,7 +913,7 @@ TEST(ProducerEventProcessor, FunctionCallSmoke) {
 
   ClientCaptureEvent function_call_event1;
   ClientCaptureEvent function_call_event2;
-  EXPECT_CALL(buffer, AddEvent)
+  EXPECT_CALL(collector, AddEvent)
       .Times(2)
       .WillOnce(SaveArg<0>(&function_call_event1))
       .WillOnce(SaveArg<0>(&function_call_event2));
@@ -956,8 +956,8 @@ TEST(ProducerEventProcessor, FunctionCallSmoke) {
 }
 
 TEST(ProducerEventProcessor, FullGpuJobDifferentTimelines) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent event1;
   {
@@ -994,7 +994,7 @@ TEST(ProducerEventProcessor, FullGpuJobDifferentTimelines) {
   ClientCaptureEvent interned_string2;
   ClientCaptureEvent gpu_job_event2;
 
-  EXPECT_CALL(buffer, AddEvent)
+  EXPECT_CALL(collector, AddEvent)
       .Times(4)
       .WillOnce(SaveArg<0>(&interned_string1))
       .WillOnce(SaveArg<0>(&gpu_job_event1))
@@ -1051,8 +1051,8 @@ TEST(ProducerEventProcessor, FullGpuJobDifferentTimelines) {
 }
 
 TEST(ProducerEventProcessor, FullGpuJobSameTimeline) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent event1;
   {
@@ -1088,7 +1088,7 @@ TEST(ProducerEventProcessor, FullGpuJobSameTimeline) {
   ClientCaptureEvent gpu_job_event1;
   ClientCaptureEvent gpu_job_event2;
 
-  EXPECT_CALL(buffer, AddEvent)
+  EXPECT_CALL(collector, AddEvent)
       .Times(3)
       .WillOnce(SaveArg<0>(&interned_string_event))
       .WillOnce(SaveArg<0>(&gpu_job_event1))
@@ -1137,8 +1137,8 @@ TEST(ProducerEventProcessor, FullGpuJobSameTimeline) {
 }
 
 TEST(ProducerEventProcessor, GpuQueueSubmissionSmoke) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent producer_string_event1 = CreateInternedStringEvent(kKey1, "debug marker1");
   ProducerCaptureEvent producer_string_event2 = CreateInternedStringEvent(kKey2, "debug marker2");
@@ -1216,7 +1216,7 @@ TEST(ProducerEventProcessor, GpuQueueSubmissionSmoke) {
   ClientCaptureEvent string_event2;
   ClientCaptureEvent gpu_submission_event;
 
-  EXPECT_CALL(buffer, AddEvent)
+  EXPECT_CALL(collector, AddEvent)
       .Times(3)
       .WillOnce(SaveArg<0>(&string_event1))
       .WillOnce(SaveArg<0>(&string_event2))
@@ -1297,8 +1297,8 @@ TEST(ProducerEventProcessor, GpuQueueSubmissionSmoke) {
 }
 
 TEST(ProducerEventProcessor, ThreadNameSmoke) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent producer_thread_name;
   producer_thread_name.mutable_thread_name()->set_pid(kPid1);
@@ -1308,7 +1308,7 @@ TEST(ProducerEventProcessor, ThreadNameSmoke) {
 
   ClientCaptureEvent event;
 
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&event));
 
   producer_event_processor->ProcessEvent(1, std::move(producer_thread_name));
 
@@ -1320,8 +1320,8 @@ TEST(ProducerEventProcessor, ThreadNameSmoke) {
 }
 
 TEST(ProducerEventProcessor, ThreadStateSliceSmoke) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent producer_event;
   {
@@ -1335,7 +1335,7 @@ TEST(ProducerEventProcessor, ThreadStateSliceSmoke) {
 
   ClientCaptureEvent event;
 
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&event));
 
   producer_event_processor->ProcessEvent(1, std::move(producer_event));
 
@@ -1349,8 +1349,8 @@ TEST(ProducerEventProcessor, ThreadStateSliceSmoke) {
 }
 
 TEST(ProducerEventProcessor, ModuleUpdateEventSmoke) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent producer_event;
   {
@@ -1369,7 +1369,7 @@ TEST(ProducerEventProcessor, ModuleUpdateEventSmoke) {
 
   ClientCaptureEvent event;
 
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&event));
 
   producer_event_processor->ProcessEvent(1, std::move(producer_event));
 
@@ -1387,8 +1387,8 @@ TEST(ProducerEventProcessor, ModuleUpdateEventSmoke) {
 }
 
 TEST(ProducerEventProcessor, FullAddressInfoSmoke) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent producer_event1;
   {
@@ -1414,7 +1414,7 @@ TEST(ProducerEventProcessor, FullAddressInfoSmoke) {
   ClientCaptureEvent address_info_event1;
   ClientCaptureEvent address_info_event2;
 
-  EXPECT_CALL(buffer, AddEvent)
+  EXPECT_CALL(collector, AddEvent)
       .Times(5)
       .WillOnce(SaveArg<0>(&interned_string_function1))
       .WillOnce(SaveArg<0>(&interned_string_module))
@@ -1461,8 +1461,8 @@ TEST(ProducerEventProcessor, FullAddressInfoSmoke) {
 }
 
 TEST(ProducerEventProcessor, TwoInternedStringsSameProducerSameKey) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent event1 = CreateInternedStringEvent(kKey1, "string1");
   ProducerCaptureEvent event2 = CreateInternedStringEvent(kKey1, "string2");
@@ -1472,8 +1472,8 @@ TEST(ProducerEventProcessor, TwoInternedStringsSameProducerSameKey) {
 }
 
 TEST(ProducerEventProcessor, TwoInternedCallstacksSameProducerSameKey) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent event1;
   {
@@ -1496,8 +1496,8 @@ TEST(ProducerEventProcessor, TwoInternedCallstacksSameProducerSameKey) {
 }
 
 TEST(ProducerEventProcessor, CaptureStartedSmoke) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent producer_event;
   {
@@ -1528,7 +1528,7 @@ TEST(ProducerEventProcessor, CaptureStartedSmoke) {
 
   ClientCaptureEvent event;
 
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&event));
 
   producer_event_processor->ProcessEvent(1, std::move(producer_event));
 
@@ -1562,11 +1562,11 @@ TEST(ProducerEventProcessor, CaptureStartedSmoke) {
 }
 
 TEST(ProducerEventProcessor, CaptureFinishedSmoke) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ClientCaptureEvent client_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_event));
 
   {
     ProducerCaptureEvent producer_event;
@@ -1585,8 +1585,8 @@ TEST(ProducerEventProcessor, CaptureFinishedSmoke) {
 }
 
 TEST(ProducerEventProcessor, ModulesSnapshotSmoke) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent producer_event;
   {
@@ -1606,7 +1606,7 @@ TEST(ProducerEventProcessor, ModulesSnapshotSmoke) {
 
   ClientCaptureEvent event;
 
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&event));
 
   producer_event_processor->ProcessEvent(1, std::move(producer_event));
 
@@ -1625,8 +1625,8 @@ TEST(ProducerEventProcessor, ModulesSnapshotSmoke) {
 }
 
 TEST(ProducerEventProcessor, ThreadNamesSnapshot) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent producer_event;
   {
@@ -1641,7 +1641,7 @@ TEST(ProducerEventProcessor, ThreadNamesSnapshot) {
 
   ClientCaptureEvent event;
 
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&event));
 
   producer_event_processor->ProcessEvent(1, std::move(producer_event));
 
@@ -1696,10 +1696,10 @@ TEST(ProducerEventProcessor, MemoryUsageEvent) {
   std::string expected_memory_usage_event_serialized_as_string =
       memory_usage_event->SerializeAsString();
 
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
   ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kMemoryInfoProducerId, std::move(producer_capture_event));
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kMemoryUsageEvent);
@@ -1729,10 +1729,10 @@ TEST(ProducerEventProcessor, ApiScopeStart) {
 
   ApiScopeStart api_scope_start_copy = *api_scope_start;
 
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
   ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiScopeStart);
@@ -1748,10 +1748,10 @@ TEST(ProducerEventProcessor, ApiScopeStop) {
   api_scope_stop->set_timestamp_ns(kTimestampNs1);
   ApiScopeStop api_scope_stop_copy = *api_scope_stop;
 
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
   ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiScopeStop);
@@ -1780,10 +1780,10 @@ TEST(ProducerEventProcessor, ApiScopeStartAsync) {
   api_scope_start_async->add_encoded_name_additional(kEncodedNameAdditional1);
   ApiScopeStartAsync api_scope_start_async_copy = *api_scope_start_async;
 
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
   ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiScopeStartAsync);
@@ -1800,10 +1800,10 @@ TEST(ProducerEventProcessor, ApiScopeStopAsync) {
   api_scope_stop_async->set_id(kGroupId1);
   ApiScopeStopAsync api_scope_stop_async_copy = *api_scope_stop_async;
 
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
   ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiScopeStopAsync);
@@ -1829,10 +1829,10 @@ TEST(ProducerEventProcessor, ApiStringEvent) {
   api_string_event->add_encoded_name_additional(kEncodedNameAdditional1);
   ApiStringEvent api_string_event_copy = *api_string_event;
 
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
   ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiStringEvent);
@@ -1849,10 +1849,10 @@ TEST(ProducerEventProcessor, ApiTrackInt) {
   api_track_int->set_data(kInt);
   ApiTrackInt api_track_int_copy = *api_track_int;
 
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
   ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiTrackInt);
@@ -1869,10 +1869,10 @@ TEST(ProducerEventProcessor, ApiTrackInt64) {
   api_track_int64->set_data(kInt64);
   ApiTrackInt64 api_track_int64_copy = *api_track_int64;
 
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
   ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiTrackInt64);
@@ -1889,10 +1889,10 @@ TEST(ProducerEventProcessor, ApiTrackUint) {
   api_track_uint->set_data(kUint);
   ApiTrackUint api_track_uint_copy = *api_track_uint;
 
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
   ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiTrackUint);
@@ -1909,10 +1909,10 @@ TEST(ProducerEventProcessor, ApiTrackUint64) {
   api_track_uint64->set_data(kUint64);
   ApiTrackUint64 api_track_uint64_copy = *api_track_uint64;
 
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
   ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiTrackUint64);
@@ -1929,10 +1929,10 @@ TEST(ProducerEventProcessor, ApiTrackFloat) {
   api_track_float->set_data(kFloat);
   ApiTrackFloat api_track_float_copy = *api_track_float;
 
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
   ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiTrackFloat);
@@ -1949,10 +1949,10 @@ TEST(ProducerEventProcessor, ApiTrackDouble) {
   api_track_double->set_data(kDouble);
   ApiTrackDouble api_track_double_copy = *api_track_double;
 
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
   ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiTrackDouble);
@@ -1961,8 +1961,8 @@ TEST(ProducerEventProcessor, ApiTrackDouble) {
 }
 
 TEST(ProducerEventProcessor, WarningEvent) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent producer_capture_event;
   WarningEvent* warning_event = producer_capture_event.mutable_warning_event();
@@ -1971,7 +1971,7 @@ TEST(ProducerEventProcessor, WarningEvent) {
   warning_event->set_message(kMessage);
 
   ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
 
@@ -1982,8 +1982,8 @@ TEST(ProducerEventProcessor, WarningEvent) {
 }
 
 TEST(ProducerEventProcessor, ClockResolutionEvent) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent producer_capture_event;
   ClockResolutionEvent* clock_resolution_event =
@@ -1993,7 +1993,7 @@ TEST(ProducerEventProcessor, ClockResolutionEvent) {
   clock_resolution_event->set_clock_resolution_ns(kClockResolutionNs);
 
   ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
 
@@ -2005,8 +2005,8 @@ TEST(ProducerEventProcessor, ClockResolutionEvent) {
 }
 
 TEST(ProducerEventProcessor, ErrorsWithPerfEventOpenEvent) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent producer_capture_event;
   ErrorsWithPerfEventOpenEvent* errors_with_perf_event_open_event =
@@ -2018,7 +2018,7 @@ TEST(ProducerEventProcessor, ErrorsWithPerfEventOpenEvent) {
   errors_with_perf_event_open_event->add_failed_to_open(kFailedToOpen2);
 
   ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
 
@@ -2032,8 +2032,8 @@ TEST(ProducerEventProcessor, ErrorsWithPerfEventOpenEvent) {
 }
 
 TEST(ProducerEventProcessor, ErrorEnablingOrbitApiEvent) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent producer_capture_event;
   ErrorEnablingOrbitApiEvent* error_enabling_orbit_api_event =
@@ -2043,7 +2043,7 @@ TEST(ProducerEventProcessor, ErrorEnablingOrbitApiEvent) {
   error_enabling_orbit_api_event->set_message(kMessage);
 
   ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
 
@@ -2055,8 +2055,8 @@ TEST(ProducerEventProcessor, ErrorEnablingOrbitApiEvent) {
 }
 
 TEST(ProducerEventProcessor, ErrorEnablingUserSpaceInstrumentationEvent) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent producer_capture_event;
   ErrorEnablingUserSpaceInstrumentationEvent* error_event =
@@ -2066,7 +2066,7 @@ TEST(ProducerEventProcessor, ErrorEnablingUserSpaceInstrumentationEvent) {
   error_event->set_message(kMessage);
 
   ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
 
@@ -2079,8 +2079,8 @@ TEST(ProducerEventProcessor, ErrorEnablingUserSpaceInstrumentationEvent) {
 }
 
 TEST(ProducerEventProcessor, LostPerfRecordsEvent) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent producer_capture_event;
   LostPerfRecordsEvent* lost_perf_records_event =
@@ -2089,7 +2089,7 @@ TEST(ProducerEventProcessor, LostPerfRecordsEvent) {
   lost_perf_records_event->set_end_timestamp_ns(kTimestampNs1);
 
   ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
 
@@ -2101,8 +2101,8 @@ TEST(ProducerEventProcessor, LostPerfRecordsEvent) {
 }
 
 TEST(ProducerEventProcessor, OutOfOrderEventsDiscardedEvent) {
-  MockCaptureEventBuffer buffer;
-  auto producer_event_processor = ProducerEventProcessor::Create(&buffer);
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent producer_capture_event;
   OutOfOrderEventsDiscardedEvent* out_of_order_events_discarded_event =
@@ -2111,7 +2111,7 @@ TEST(ProducerEventProcessor, OutOfOrderEventsDiscardedEvent) {
   out_of_order_events_discarded_event->set_end_timestamp_ns(kTimestampNs1);
 
   ClientCaptureEvent client_capture_event;
-  EXPECT_CALL(buffer, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
 

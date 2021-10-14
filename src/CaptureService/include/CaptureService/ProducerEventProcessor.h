@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 
-#include "CaptureEventBuffer.h"
+#include "ClientCaptureEventCollector.h"
 #include "capture.pb.h"
 
 namespace orbit_capture_service {
@@ -23,7 +23,8 @@ class ProducerEventProcessor {
   virtual void ProcessEvent(uint64_t producer_id,
                             orbit_grpc_protos::ProducerCaptureEvent&& event) = 0;
 
-  static std::unique_ptr<ProducerEventProcessor> Create(CaptureEventBuffer* capture_event_buffer);
+  static std::unique_ptr<ProducerEventProcessor> Create(
+      ClientCaptureEventCollector* client_capture_event_collector);
 };
 
 }  // namespace orbit_capture_service
