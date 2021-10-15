@@ -6,7 +6,6 @@
 #define LINUX_TRACING_PERF_EVENT_H_
 
 #include <asm/perf_regs.h>
-#include <linux/perf_event.h>
 #include <string.h>
 #include <sys/types.h>
 
@@ -14,12 +13,10 @@
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <utility>
+#include <variant>
 #include <vector>
 
-#include "Function.h"
 #include "GrpcProtos/Constants.h"
-#include "KernelTracepoints.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "PerfEventRecords.h"
 
@@ -27,497 +24,252 @@ namespace orbit_linux_tracing {
 
 class PerfEventVisitor;
 
-// This base class is used to do processing of different perf_event_open events
-// using the visitor pattern. To avoid unnecessary copies, the data of the
-// perf_event_open records will be copied from the ring buffer directly into the
-// concrete subclass (depending on the event type), in general into a
-// "ring_buffer_record" field.
-
-class PerfEvent {
- public:
-  virtual ~PerfEvent() = default;
-  virtual uint64_t GetTimestamp() const = 0;
-  virtual void Accept(PerfEventVisitor* visitor) = 0;
-
-  static constexpr int kNotOrderedInAnyFileDescriptor = -1;
-  void SetOrderedInFileDescriptor(int fd) { ordered_in_file_descriptor_ = fd; }
-  int GetOrderedInFileDescriptor() const { return ordered_in_file_descriptor_; }
-
- private:
-  int ordered_in_file_descriptor_ = kNotOrderedInAnyFileDescriptor;
-};
+static constexpr int kNotOrderedInAnyFileDescriptor = -1;
 
 std::array<uint64_t, PERF_REG_X86_64_MAX> perf_event_sample_regs_user_all_to_register_array(
     const perf_event_sample_regs_user_all& regs);
 
-class ContextSwitchPerfEvent : public PerfEvent {
- public:
-  perf_event_context_switch ring_buffer_record;
+struct ForkPerfEvent {
+  void Accept(PerfEventVisitor* visitor);
 
-  uint64_t GetTimestamp() const override { return ring_buffer_record.sample_id.time; }
-
-  void Accept(PerfEventVisitor* visitor) override;
-
-  pid_t GetPid() const { return ring_buffer_record.sample_id.pid; }
-
-  pid_t GetTid() const { return ring_buffer_record.sample_id.tid; }
-
-  bool IsSwitchOut() const { return ring_buffer_record.header.misc & PERF_RECORD_MISC_SWITCH_OUT; }
-  bool IsSwitchIn() const { return !IsSwitchOut(); }
-
-  uint64_t GetStreamId() const { return ring_buffer_record.sample_id.stream_id; }
-
-  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
+  uint64_t timestamp;
+  pid_t pid;
+  pid_t tid;
+  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
 };
 
-class SystemWideContextSwitchPerfEvent : public PerfEvent {
- public:
-  perf_event_context_switch_cpu_wide ring_buffer_record;
+struct ExitPerfEvent {
+  void Accept(PerfEventVisitor* visitor);
 
-  uint64_t GetTimestamp() const override { return ring_buffer_record.sample_id.time; }
-
-  void Accept(PerfEventVisitor* visitor) override;
-
-  pid_t GetPid() const { return ring_buffer_record.sample_id.pid; }
-
-  pid_t GetTid() const { return ring_buffer_record.sample_id.tid; }
-
-  bool IsSwitchOut() const { return ring_buffer_record.header.misc & PERF_RECORD_MISC_SWITCH_OUT; }
-
-  bool IsSwitchIn() const { return !IsSwitchOut(); }
-
-  // Careful: even if PERF_RECORD_SWITCH_CPU_WIDE events carry information on
-  // both the thread being de-scheduled and the one being scheduled (if the cpu
-  // is switching from a thread to another and not from/to an idle state), two
-  // separate PERF_RECORD_SWITCH_CPU_WIDE are still generated, one for the
-  // switch-out and one for the switch-in. Therefore, prefer GetPid/Tid and
-  // IsSwitchOut/In to GetPrev/NextPid/Tid.
-
-  pid_t GetPrevPid() const { return IsSwitchOut() ? GetPid() : ring_buffer_record.next_prev_pid; }
-
-  pid_t GetPrevTid() const { return IsSwitchOut() ? GetTid() : ring_buffer_record.next_prev_tid; }
-
-  pid_t GetNextPid() const { return IsSwitchOut() ? ring_buffer_record.next_prev_pid : GetPid(); }
-
-  pid_t GetNextTid() const { return IsSwitchOut() ? ring_buffer_record.next_prev_tid : GetTid(); }
-
-  uint64_t GetStreamId() const { return ring_buffer_record.sample_id.stream_id; }
-
-  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
+  uint64_t timestamp;
+  pid_t pid;
+  pid_t tid;
+  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
 };
 
-class ForkPerfEvent : public PerfEvent {
- public:
-  perf_event_fork_exit ring_buffer_record;
+struct LostPerfEvent {
+  void Accept(PerfEventVisitor* visitor);
 
-  uint64_t GetTimestamp() const override { return ring_buffer_record.time; }
-
-  void Accept(PerfEventVisitor* visitor) override;
-
-  pid_t GetPid() const { return ring_buffer_record.pid; }
-  pid_t GetParentPid() const { return ring_buffer_record.ppid; }
-  pid_t GetTid() const { return ring_buffer_record.tid; }
-  pid_t GetParentTid() const { return ring_buffer_record.ptid; }
-
-  uint64_t GetStreamId() const { return ring_buffer_record.sample_id.stream_id; }
-
-  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
-};
-
-class ExitPerfEvent : public PerfEvent {
- public:
-  perf_event_fork_exit ring_buffer_record;
-
-  uint64_t GetTimestamp() const override { return ring_buffer_record.time; }
-
-  void Accept(PerfEventVisitor* visitor) override;
-
-  pid_t GetPid() const { return ring_buffer_record.pid; }
-  pid_t GetParentPid() const { return ring_buffer_record.ppid; }
-  pid_t GetTid() const { return ring_buffer_record.tid; }
-  pid_t GetParentTid() const { return ring_buffer_record.ptid; }
-
-  uint64_t GetStreamId() const { return ring_buffer_record.sample_id.stream_id; }
-
-  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
-};
-
-class LostPerfEvent : public PerfEvent {
- public:
-  perf_event_lost ring_buffer_record;
-
-  uint64_t GetTimestamp() const override { return ring_buffer_record.sample_id.time; }
-
-  void Accept(PerfEventVisitor* visitor) override;
-
-  uint64_t GetNumLost() const { return ring_buffer_record.lost; }
-
-  uint64_t GetStreamId() const { return ring_buffer_record.sample_id.stream_id; }
-
-  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
-
-  void SetPreviousTimestamp(uint64_t previous_timestamp) {
-    previous_timestamp_ = previous_timestamp;
-  }
-  [[nodiscard]] uint64_t GetPreviousTimestamp() const { return previous_timestamp_; }
-
- private:
-  // The last timestamp read from the ring buffer before the PERF_RECORD_LOST.
-  uint64_t previous_timestamp_ = 0;
+  uint64_t timestamp;
+  uint64_t previous_timestamp = 0;
+  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
 };
 
 // This class doesn't correspond to any event generated by perf_event_open. Rather, these events are
 // produced by PerfEventProcessor. We need them to be part of the same PerfEvent hierarchy.
-class DiscardedPerfEvent : public PerfEvent {
- public:
-  DiscardedPerfEvent(uint64_t begin_timestamp_ns, uint64_t end_timestamp_ns)
-      : begin_timestamp_ns_{begin_timestamp_ns}, end_timestamp_ns_{end_timestamp_ns} {}
+struct DiscardedPerfEvent {
+  void Accept(PerfEventVisitor* visitor);
 
-  uint64_t GetTimestamp() const override { return GetEndTimestampNs(); }
-
-  void Accept(PerfEventVisitor* visitor) override;
-
-  uint64_t GetBeginTimestampNs() const { return begin_timestamp_ns_; }
-  uint64_t GetEndTimestampNs() const { return end_timestamp_ns_; }
-
- private:
-  uint64_t begin_timestamp_ns_;
-  uint64_t end_timestamp_ns_;
+  uint64_t timestamp;
+  uint64_t begin_timestamp_ns;
+  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
 };
 
-struct dynamically_sized_perf_event_sample_stack_user {
+struct StackSamplePerfEvent {
+  void Accept(PerfEventVisitor* visitor);
+
+  [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegisters() {
+    return perf_event_sample_regs_user_all_to_register_array(*regs);
+  }
+  [[nodiscard]] const char* GetStackData() const { return data.get(); }
+  [[nodiscard]] char* GetStackData() { return data.get(); }
+  [[nodiscard]] uint64_t GetStackSize() { return dyn_size; }
+
+  uint64_t timestamp;
+  pid_t pid;
+  pid_t tid;
+  std::unique_ptr<perf_event_sample_regs_user_all> regs;
   uint64_t dyn_size;
   std::unique_ptr<char[]> data;
-
-  explicit dynamically_sized_perf_event_sample_stack_user(uint64_t dyn_size)
-      : dyn_size{dyn_size}, data{make_unique_for_overwrite<char[]>(dyn_size)} {}
+  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
 };
 
-struct dynamically_sized_perf_event_stack_sample {
-  perf_event_header header;
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
-  perf_event_sample_regs_user_all regs;
-  dynamically_sized_perf_event_sample_stack_user stack;
+struct CallchainSamplePerfEvent {
+  void Accept(PerfEventVisitor* visitor);
 
-  explicit dynamically_sized_perf_event_stack_sample(uint64_t dyn_size) : stack{dyn_size} {}
-};
-
-class StackSamplePerfEvent : public PerfEvent {
- public:
-  dynamically_sized_perf_event_stack_sample ring_buffer_record;
-
-  explicit StackSamplePerfEvent(uint64_t dyn_size) : ring_buffer_record{dyn_size} {}
-
-  uint64_t GetTimestamp() const override { return ring_buffer_record.sample_id.time; }
-
-  void Accept(PerfEventVisitor* visitor) override;
-
-  pid_t GetPid() const { return ring_buffer_record.sample_id.pid; }
-  pid_t GetTid() const { return ring_buffer_record.sample_id.tid; }
-
-  uint64_t GetStreamId() const { return ring_buffer_record.sample_id.stream_id; }
-
-  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
-
-  std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegisters() const {
-    return perf_event_sample_regs_user_all_to_register_array(ring_buffer_record.regs);
+  [[nodiscard]] const uint64_t* GetCallchain() const { return ips.get(); }
+  [[nodiscard]] uint64_t GetCallchainSize() { return ips_size; }
+  [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegisters() {
+    return perf_event_sample_regs_user_all_to_register_array(*regs);
+  }
+  [[nodiscard]] const char* GetStackData() const { return data.get(); }
+  void SetIps(const std::vector<uint64_t>& new_ips) {
+    ips_size = new_ips.size();
+    ips = make_unique_for_overwrite<uint64_t[]>(ips_size);
+    memcpy(ips.get(), new_ips.data(), ips_size * sizeof(uint64_t));
+  }
+  [[nodiscard]] std::vector<uint64_t> CopyOfIpsAsVector() {
+    return std::vector<uint64_t>(ips.get(), ips.get() + ips_size);
   }
 
-  const char* GetStackData() const { return ring_buffer_record.stack.data.get(); }
-  char* GetStackData() { return ring_buffer_record.stack.data.get(); }
-  uint64_t GetStackSize() const { return ring_buffer_record.stack.dyn_size; }
+  uint64_t timestamp;
+  pid_t pid;
+  pid_t tid;
+  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
+  uint64_t ips_size;
+  std::unique_ptr<uint64_t[]> ips;
+  std::unique_ptr<perf_event_sample_regs_user_all> regs;
+  std::unique_ptr<char[]> data;
 };
 
-class CallchainSamplePerfEvent : public PerfEvent {
- public:
-  perf_event_callchain_sample_fixed ring_buffer_record;
-  std::vector<uint64_t> ips;
-  perf_event_sample_regs_user_all regs;
-  dynamically_sized_perf_event_sample_stack_user stack;
+struct UprobesPerfEvent {
+  void Accept(PerfEventVisitor* visitor);
 
-  explicit CallchainSamplePerfEvent(uint64_t callchain_size, uint64_t dyn_stack_size)
-      : ips(callchain_size), stack(dyn_stack_size) {
-    ring_buffer_record.nr = callchain_size;
-  }
-
-  uint64_t GetTimestamp() const override { return ring_buffer_record.sample_id.time; }
-
-  void Accept(PerfEventVisitor* visitor) override;
-
-  pid_t GetPid() const { return ring_buffer_record.sample_id.pid; }
-  pid_t GetTid() const { return ring_buffer_record.sample_id.tid; }
-
-  uint64_t GetStreamId() const { return ring_buffer_record.sample_id.stream_id; }
-
-  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
-
-  uint64_t* GetCallchain() { return ips.data(); }
-  const uint64_t* GetCallchain() const { return ips.data(); }
-
-  uint64_t GetCallchainSize() const { return ring_buffer_record.nr; }
-
-  [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegisters() const {
-    return perf_event_sample_regs_user_all_to_register_array(regs);
-  }
-
-  [[nodiscard]] const char* GetStackData() const { return stack.data.get(); }
-  [[nodiscard]] char* GetStackData() { return stack.data.get(); }
-  [[nodiscard]] uint64_t GetStackSize() const { return stack.dyn_size; }
+  uint64_t timestamp;
+  pid_t pid;
+  pid_t tid;
+  uint32_t cpu;
+  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
+  uint64_t function_id = orbit_grpc_protos::kInvalidFunctionId;
+  uint64_t sp;
+  uint64_t ip;
+  uint64_t return_address;
 };
 
-class PerfEventWithFunctionId : public PerfEvent {
- public:
-  [[nodiscard]] uint64_t GetFunctionId() const { return function_id_; }
-  void SetFunctionId(uint64_t function_id) { function_id_ = function_id; }
+struct UprobesWithArgumentsPerfEvent {
+  void Accept(PerfEventVisitor* visitor);
 
- private:
-  uint64_t function_id_ = orbit_grpc_protos::kInvalidFunctionId;
+  uint64_t timestamp;
+  pid_t pid;
+  pid_t tid;
+  uint32_t cpu;
+  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
+  uint64_t function_id = orbit_grpc_protos::kInvalidFunctionId;
+  uint64_t return_address;
+  perf_event_sample_regs_user_sp_ip_arguments regs;
 };
 
-template <typename RingBufferRecordT>
-class UprobesPerfEventBase : public PerfEventWithFunctionId {
- public:
-  RingBufferRecordT ring_buffer_record;
+struct UretprobesPerfEvent {
+  void Accept(PerfEventVisitor* visitor);
 
-  uint64_t GetTimestamp() const override { return ring_buffer_record.sample_id.time; }
-
-  pid_t GetPid() const { return ring_buffer_record.sample_id.pid; }
-  pid_t GetTid() const { return ring_buffer_record.sample_id.tid; }
-
-  uint64_t GetStreamId() const { return ring_buffer_record.sample_id.stream_id; }
-
-  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
-
-  // Get the stack pointer.
-  uint64_t GetSp() const { return ring_buffer_record.regs.sp; }
-
-  // Get the instruction pointer.
-  uint64_t GetIp() const { return ring_buffer_record.regs.ip; }
-
-  uint64_t GetReturnAddress() const { return ring_buffer_record.stack.top8bytes; }
+  uint64_t timestamp;
+  pid_t pid;
+  pid_t tid;
+  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
 };
 
-class UprobesPerfEvent : public UprobesPerfEventBase<perf_event_sp_ip_8bytes_sample> {
- public:
-  void Accept(PerfEventVisitor* visitor) override;
+struct UretprobesWithReturnValuePerfEvent {
+  void Accept(PerfEventVisitor* visitor);
+
+  uint64_t timestamp;
+  pid_t pid;
+  pid_t tid;
+  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
+  uint64_t rax;
 };
 
-class UprobesWithArgumentsPerfEvent
-    : public UprobesPerfEventBase<perf_event_sp_ip_arguments_8bytes_sample> {
- public:
-  void Accept(PerfEventVisitor* visitor) override;
+struct MmapPerfEvent {
+  void Accept(PerfEventVisitor* visitor);
 
-  const perf_event_sample_regs_user_sp_ip_arguments& GetRegisters() {
-    return ring_buffer_record.regs;
-  }
+  uint64_t timestamp;
+  uint64_t address;
+  uint64_t length;
+  uint64_t page_offset;
+  std::string filename;
+  pid_t pid;
+  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
 };
 
-template <typename RingBufferRecordT>
-class UretprobesPerfEventBase : public PerfEventWithFunctionId {
- public:
-  RingBufferRecordT ring_buffer_record;
+struct GenericTracepointPerfEvent {
+  void Accept(PerfEventVisitor* visitor);
 
-  uint64_t GetTimestamp() const override { return ring_buffer_record.sample_id.time; }
-
-  pid_t GetPid() const { return ring_buffer_record.sample_id.pid; }
-  pid_t GetTid() const { return ring_buffer_record.sample_id.tid; }
-
-  uint64_t GetStreamId() const { return ring_buffer_record.sample_id.stream_id; }
-
-  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
+  uint64_t timestamp;
+  pid_t pid;
+  pid_t tid;
+  uint32_t cpu;
+  uint32_t size;
+  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
 };
 
-class UretprobesPerfEvent : public UretprobesPerfEventBase<perf_event_empty_sample> {
- public:
-  void Accept(PerfEventVisitor* visitor) override;
+struct TaskNewtaskPerfEvent {
+  void Accept(PerfEventVisitor* visitor);
+
+  uint64_t timestamp;
+  char comm[16];
+  pid_t new_tid;
+  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
 };
 
-class UretprobesWithReturnValuePerfEvent : public UretprobesPerfEventBase<perf_event_ax_sample> {
- public:
-  void Accept(PerfEventVisitor* visitor) override;
+struct TaskRenamePerfEvent {
+  void Accept(PerfEventVisitor* visitor);
 
-  // Get AX register which holds integer return value.
-  // See https://wiki.osdev.org/System_V_ABI.
-  uint64_t GetAx() const { return ring_buffer_record.regs.ax; }
+  uint64_t timestamp;
+  char newcomm[16];
+  pid_t renamed_tid;
+  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
 };
 
-class MmapPerfEvent : public PerfEvent {
- public:
-  MmapPerfEvent(pid_t pid, uint64_t timestamp, const perf_event_mmap_up_to_pgoff& mmap_event,
-                std::string filename)
-      : pid_{pid}, timestamp_{timestamp}, mmap_event_{mmap_event}, filename_{std::move(filename)} {}
+struct SchedSwitchPerfEvent {
+  void Accept(PerfEventVisitor* visitor);
 
-  uint64_t GetTimestamp() const override { return timestamp_; }
-
-  void Accept(PerfEventVisitor* visitor) override;
-
-  [[nodiscard]] const std::string& filename() const { return filename_; }
-  [[nodiscard]] pid_t pid() const { return pid_; }
-  [[nodiscard]] uint64_t address() const { return mmap_event_.address; }
-  [[nodiscard]] uint64_t length() const { return mmap_event_.length; }
-  [[nodiscard]] uint64_t page_offset() const { return mmap_event_.page_offset; }
-
- private:
-  pid_t pid_;
-  uint64_t timestamp_;
-  perf_event_mmap_up_to_pgoff mmap_event_;
-  std::string filename_;
+  uint64_t timestamp;
+  uint32_t cpu;
+  pid_t prev_pid_or_minus_one;
+  pid_t prev_tid;
+  int64_t prev_state;
+  int32_t next_tid;
+  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
 };
 
-class GenericTracepointPerfEvent : public PerfEvent {
- public:
-  perf_event_raw_sample_fixed ring_buffer_record;
+struct SchedWakeupPerfEvent {
+  void Accept(PerfEventVisitor* visitor);
 
-  void Accept(PerfEventVisitor* visitor) override;
-
-  int32_t GetPid() const { return ring_buffer_record.sample_id.pid; }
-
-  int32_t GetTid() const { return ring_buffer_record.sample_id.tid; }
-
-  uint64_t GetTimestamp() const override { return ring_buffer_record.sample_id.time; }
-
-  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
+  uint64_t timestamp;
+  pid_t woken_tid;
+  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
 };
 
-template <typename TracepointDataT>
-class FixedSizeTracepointPerfEvent : public PerfEvent {
- public:
-  perf_event_raw_sample<TracepointDataT> ring_buffer_record;
+struct AmdgpuCsIoctlPerfEvent {
+  void Accept(PerfEventVisitor* visitor);
 
-  uint64_t GetTimestamp() const override { return ring_buffer_record.sample_id.time; }
+  uint64_t timestamp;
+  pid_t pid;
+  pid_t tid;
+  uint32_t context;
+  uint32_t seqno;
+  std::string timeline_string;
+  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
 };
 
-class TaskNewtaskPerfEvent : public FixedSizeTracepointPerfEvent<task_newtask_tracepoint> {
- public:
-  void Accept(PerfEventVisitor* visitor) override;
+struct AmdgpuSchedRunJobPerfEvent {
+  void Accept(PerfEventVisitor* visitor);
 
-  // The tracepoint format calls this "pid" but it's effectively the thread id.
-  // Note that ring_buffer_record.sample_id.pid and ring_buffer_record.sample_id.tid are NOT the pid
-  // and tid of the new process/thread, but the ones of the process/thread that created this one.
-  pid_t GetNewTid() const { return ring_buffer_record.data.pid; }
-
-  const char* GetComm() const { return ring_buffer_record.data.comm; }
+  uint64_t timestamp;
+  pid_t pid;
+  pid_t tid;
+  uint32_t context;
+  uint32_t seqno;
+  std::string timeline_string;
+  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
 };
 
-class TaskRenamePerfEvent : public FixedSizeTracepointPerfEvent<task_rename_tracepoint> {
- public:
-  void Accept(PerfEventVisitor* visitor) override;
+struct DmaFenceSignaledPerfEvent {
+  void Accept(PerfEventVisitor* visitor);
 
-  // The tracepoint format calls this "pid" but it's effectively the thread id.
-  // This should match ring_buffer_record.sample_id.tid.
-  pid_t GetRenamedTid() const { return ring_buffer_record.data.pid; }
-
-  const char* GetOldComm() const { return ring_buffer_record.data.oldcomm; }
-  const char* GetNewComm() const { return ring_buffer_record.data.newcomm; }
+  uint64_t timestamp;
+  pid_t pid;
+  pid_t tid;
+  uint32_t context;
+  uint32_t seqno;
+  std::string timeline_string;
+  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
 };
 
-class SchedSwitchPerfEvent : public FixedSizeTracepointPerfEvent<sched_switch_tracepoint> {
- public:
-  void Accept(PerfEventVisitor* visitor) override;
+using PerfEvent = std::variant<
+    ForkPerfEvent, ExitPerfEvent, LostPerfEvent, DiscardedPerfEvent, StackSamplePerfEvent,
+    CallchainSamplePerfEvent, UprobesPerfEvent, UprobesWithArgumentsPerfEvent, UretprobesPerfEvent,
+    UretprobesWithReturnValuePerfEvent, MmapPerfEvent, GenericTracepointPerfEvent,
+    TaskNewtaskPerfEvent, TaskRenamePerfEvent, SchedSwitchPerfEvent, SchedWakeupPerfEvent,
+    AmdgpuCsIoctlPerfEvent, AmdgpuSchedRunJobPerfEvent, DmaFenceSignaledPerfEvent>;
 
-  uint32_t GetCpu() const { return ring_buffer_record.sample_id.cpu; }
+inline uint64_t GetTimestamp(const PerfEvent& event) {
+  return std::visit([](const auto& arg) -> uint64_t { return arg.timestamp; }, event);
+}
 
-  // As the tracepoint data does not include the pid of the process that the thread being switched
-  // out belongs to, we use the pid set by perf_event_open in the corresponding generic field of the
-  // PERF_RECORD_SAMPLE.
-  // Note, though, that this value is -1 when the switch out is caused by the thread exiting.
-  // This is not the case for GetPrevTid(), whose value is always correct as it comes directly from
-  // the tracepoint data.
-  pid_t GetPrevPidOrMinusOne() const { return ring_buffer_record.sample_id.pid; }
-
-  const char* GetPrevComm() const { return ring_buffer_record.data.prev_comm; }
-  pid_t GetPrevTid() const { return ring_buffer_record.data.prev_pid; }
-  int64_t GetPrevState() const { return ring_buffer_record.data.prev_state; }
-
-  const char* GetNextComm() const { return ring_buffer_record.data.next_comm; }
-  pid_t GetNextTid() const { return ring_buffer_record.data.next_pid; }
-};
-
-class SchedWakeupPerfEvent : public FixedSizeTracepointPerfEvent<sched_wakeup_tracepoint> {
- public:
-  void Accept(PerfEventVisitor* visitor) override;
-
-  pid_t GetWakerPid() const { return ring_buffer_record.sample_id.pid; }
-  pid_t GetWakerTid() const { return ring_buffer_record.sample_id.tid; }
-
-  // The tracepoint format calls this "pid" but it's effectively the thread id.
-  pid_t GetWokenTid() const { return ring_buffer_record.data.pid; }
-};
-
-class VariableSizeTracepointPerfEvent : public PerfEvent {
- public:
-  explicit VariableSizeTracepointPerfEvent(uint32_t size)
-      : tracepoint_data{make_unique_for_overwrite<uint8_t[]>(size)} {}
-
-  perf_event_raw_sample_fixed ring_buffer_record;
-  std::unique_ptr<uint8_t[]> tracepoint_data;
-
-  uint64_t GetTimestamp() const override { return ring_buffer_record.sample_id.time; }
-
- protected:
-  template <typename TracepointDataT>
-  const TracepointDataT& GetTypedTracepointData() const {
-    return *reinterpret_cast<const TracepointDataT*>(tracepoint_data.get());
-  }
-};
-
-template <typename TracepointDataT>
-class GpuPerfEvent : public VariableSizeTracepointPerfEvent {
- public:
-  explicit GpuPerfEvent(uint32_t tracepoint_size)
-      : VariableSizeTracepointPerfEvent{tracepoint_size} {}
-
-  std::string ExtractTimelineString() const {
-    int32_t data_loc = GetTimeline();
-    int16_t data_loc_size = static_cast<int16_t>(data_loc >> 16);
-    int16_t data_loc_offset = static_cast<int16_t>(data_loc & 0x00ff);
-
-    std::vector<char> data_loc_data(data_loc_size);
-    std::memcpy(&data_loc_data[0],
-                reinterpret_cast<const char*>(tracepoint_data.get()) + data_loc_offset,
-                data_loc_size);
-
-    // While the string should be null terminated here, we make sure that it
-    // actually is by adding a zero in the last position. In the case of
-    // expected behavior, this is a no-op.
-    data_loc_data[data_loc_data.size() - 1] = 0;
-    return std::string(&data_loc_data[0]);
-  }
-
-  pid_t GetPid() const { return ring_buffer_record.sample_id.pid; }
-
-  pid_t GetTid() const { return ring_buffer_record.sample_id.tid; }
-
-  uint32_t GetContext() const { return GetTypedTracepointData<TracepointDataT>().context; }
-  uint32_t GetSeqno() const { return GetTypedTracepointData<TracepointDataT>().seqno; }
-
- private:
-  int32_t GetTimeline() const { return GetTypedTracepointData<TracepointDataT>().timeline; }
-};
-
-class AmdgpuCsIoctlPerfEvent : public GpuPerfEvent<amdgpu_cs_ioctl_tracepoint> {
- public:
-  explicit AmdgpuCsIoctlPerfEvent(uint32_t tracepoint_size)
-      : GpuPerfEvent<amdgpu_cs_ioctl_tracepoint>{tracepoint_size} {}
-
-  void Accept(PerfEventVisitor* visitor) override;
-};
-
-class AmdgpuSchedRunJobPerfEvent : public GpuPerfEvent<amdgpu_sched_run_job_tracepoint> {
- public:
-  explicit AmdgpuSchedRunJobPerfEvent(uint32_t tracepoint_size)
-      : GpuPerfEvent<amdgpu_sched_run_job_tracepoint>{tracepoint_size} {}
-
-  void Accept(PerfEventVisitor* visitor) override;
-};
-
-class DmaFenceSignaledPerfEvent : public GpuPerfEvent<dma_fence_signaled_tracepoint> {
- public:
-  explicit DmaFenceSignaledPerfEvent(uint32_t tracepoint_size)
-      : GpuPerfEvent<dma_fence_signaled_tracepoint>{tracepoint_size} {}
-
-  void Accept(PerfEventVisitor* visitor) override;
-};
+inline int GetOrderedInFileDescriptor(const PerfEvent& event) {
+  return std::visit([](const auto& arg) -> uint64_t { return arg.ordered_in_file_descriptor; },
+                    event);
+}
 
 }  // namespace orbit_linux_tracing
 

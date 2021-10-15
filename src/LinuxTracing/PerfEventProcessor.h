@@ -9,7 +9,7 @@
 
 #include <algorithm>
 #include <atomic>
-#include <memory>
+#include <optional>
 #include <vector>
 
 #include "PerfEvent.h"
@@ -27,7 +27,7 @@ namespace orbit_linux_tracing {
 // DiscardedPerfEvents are generated and processed in their place.
 class PerfEventProcessor {
  public:
-  void AddEvent(std::unique_ptr<PerfEvent> event);
+  void AddEvent(PerfEvent&& event);
 
   void ProcessAllEvents();
 
@@ -54,7 +54,7 @@ class PerfEventProcessor {
   PerfEventQueue event_queue_;
   std::vector<PerfEventVisitor*> visitors_;
 
-  [[nodiscard]] std::optional<std::unique_ptr<DiscardedPerfEvent>> HandleOutOfOrderEvent(
+  [[nodiscard]] std::optional<DiscardedPerfEvent> HandleOutOfOrderEvent(
       uint64_t event_timestamp_ns);
   uint64_t last_discarded_begin_ = 0;
   uint64_t last_discarded_end_ = 0;

@@ -20,10 +20,11 @@
 #include <optional>
 #include <vector>
 
-#include "ContextSwitchManager.h"
 #include "Function.h"
 #include "GpuTracepointVisitor.h"
-#include "LinuxTracingUtils.h"
+#include "LeafFunctionCallManager.h"
+#include "LibunwindstackMaps.h"
+#include "LibunwindstackUnwinder.h"
 #include "LostAndDiscardedEventVisitor.h"
 #include "OrbitBase/Profiling.h"
 #include "PerfEvent.h"
@@ -31,6 +32,8 @@
 #include "PerfEventRingBuffer.h"
 #include "SwitchesStatesNamesVisitor.h"
 #include "TracingInterface/TracerListener.h"
+#include "UprobesFunctionCallManager.h"
+#include "UprobesReturnAddressManager.h"
 #include "UprobesUnwindingVisitor.h"
 #include "capture.pb.h"
 
@@ -104,7 +107,7 @@ class TracerThread {
   [[nodiscard]] uint64_t ProcessThrottleUnthrottleEventAndReturnTimestamp(
       const perf_event_header& header, PerfEventRingBuffer* ring_buffer);
 
-  void DeferEvent(std::unique_ptr<PerfEvent> event);
+  void DeferEvent(PerfEvent&& event);
   void ProcessDeferredEvents();
 
   void RetrieveInitialTidToPidAssociationSystemWide();
@@ -167,10 +170,10 @@ class TracerThread {
   uint64_t effective_capture_start_timestamp_ns_ = 0;
 
   std::atomic<bool> stop_deferred_thread_ = false;
-  std::vector<std::unique_ptr<PerfEvent>> deferred_events_being_buffered_
+  std::vector<PerfEvent> deferred_events_being_buffered_
       ABSL_GUARDED_BY(deferred_events_being_buffered_mutex_);
   absl::Mutex deferred_events_being_buffered_mutex_;
-  std::vector<std::unique_ptr<PerfEvent>> deferred_events_to_process_;
+  std::vector<PerfEvent> deferred_events_to_process_;
 
   UprobesFunctionCallManager function_call_manager_;
   UprobesReturnAddressManager return_address_manager_;

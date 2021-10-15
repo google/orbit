@@ -6,21 +6,20 @@
 #define LINUX_TRACING_UPROBES_UNWINDING_VISITOR_H_
 
 #include <absl/container/flat_hash_map.h>
-#include <absl/hash/hash.h>
 #include <sys/types.h>
-#include <unwindstack/Maps.h>
 
 #include <atomic>
 #include <cstdint>
-#include <memory>
-#include <string>
+#include <optional>
 #include <tuple>
 #include <vector>
 
 #include "LeafFunctionCallManager.h"
 #include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"
+#include "OrbitBase/Logging.h"
 #include "PerfEvent.h"
+#include "PerfEventRecords.h"
 #include "PerfEventVisitor.h"
 #include "TracingInterface/TracerListener.h"
 #include "UprobesFunctionCallManager.h"

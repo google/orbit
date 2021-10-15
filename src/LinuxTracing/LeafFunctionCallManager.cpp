@@ -4,11 +4,20 @@
 
 #include "LeafFunctionCallManager.h"
 
+#include <asm/perf_regs.h>
+#include <stddef.h>
 #include <sys/mman.h>
+#include <unwindstack/MapInfo.h>
+#include <unwindstack/Unwinder.h>
 
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <memory>
 #include <vector>
 
 #include "OrbitBase/Logging.h"
+#include "capture.pb.h"
 
 namespace orbit_linux_tracing {
 
@@ -50,7 +59,7 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
   }
 
   const LibunwindstackResult& libunwindstack_result =
-      unwinder->Unwind(event->GetPid(), current_maps->Get(), event->GetRegisters(),
+      unwinder->Unwind(event->pid, current_maps->Get(), event->GetRegisters(),
                        event->GetStackData(), stack_size, true);
   const std::vector<unwindstack::FrameData>& libunwindstack_callstack =
       libunwindstack_result.frames();
@@ -74,7 +83,7 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
     return Callstack::kFramePointerUnwindingError;
   }
 
-  const std::vector<uint64_t> original_callchain = event->ips;
+  const std::vector<uint64_t> original_callchain = event->CopyOfIpsAsVector();
   CHECK(original_callchain.size() > 2);
 
   std::vector<uint64_t> result;
@@ -100,8 +109,7 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
     result.push_back(original_callchain[i]);
   }
 
-  event->ring_buffer_record.nr = result.size();
-  event->ips = std::move(result);
+  event->SetIps(result);
 
   return Callstack::kComplete;
 }

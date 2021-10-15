@@ -2,14 +2,40 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <asm/perf_regs.h>
 #include <gmock/gmock.h>
+#include <google/protobuf/stubs/port.h>
 #include <gtest/gtest.h>
 #include <sys/mman.h>
+#include <unwindstack/Error.h>
+#include <unwindstack/MapInfo.h>
+#include <unwindstack/Maps.h>
+#include <unwindstack/SharedString.h>
+#include <unwindstack/Unwinder.h>
 
+#include <algorithm>
+#include <array>
+#include <atomic>
+#include <cstdint>
+#include <ctime>
+#include <memory>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+#include "LeafFunctionCallManager.h"
 #include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"
 #include "MockTracerListener.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/MakeUniqueForOverwrite.h"
+#include "PerfEvent.h"
+#include "PerfEventRecords.h"
+#include "UprobesFunctionCallManager.h"
+#include "UprobesReturnAddressManager.h"
 #include "UprobesUnwindingVisitor.h"
+#include "capture.pb.h"
 
 using ::testing::_;
 using ::testing::AllOf;
@@ -148,6 +174,30 @@ class UprobesUnwindingVisitorTest : public ::testing::Test {
   };
 };
 
+StackSamplePerfEvent BuildFakeStackSamplePerfEvent() {
+  constexpr uint64_t kStackSize = 13;
+  return StackSamplePerfEvent{.timestamp = 15,
+                              .pid = 10,
+                              .tid = 11,
+                              .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
+                              .dyn_size = kStackSize,
+                              .data = make_unique_for_overwrite<char[]>(kStackSize)
+
+  };
+}
+
+CallchainSamplePerfEvent BuildFakeCallchainSamplePerfEvent(const std::vector<uint64_t>& callchain) {
+  constexpr uint64_t kStackSize = 13;
+  CallchainSamplePerfEvent event{
+      .timestamp = 15,
+      .pid = 10,
+      .tid = 11,
+      .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
+      .data = make_unique_for_overwrite<char[]>(kStackSize)};
+  event.SetIps(callchain);
+  return event;
+}
+
 }  // namespace
 
 TEST_F(UprobesUnwindingVisitorTest,
@@ -158,14 +208,14 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   {
     UprobesPerfEvent uprobe1;
-    uprobe1.ring_buffer_record.sample_id.pid = kPid;
-    uprobe1.ring_buffer_record.sample_id.tid = kTid;
-    uprobe1.ring_buffer_record.sample_id.time = 100;
-    uprobe1.ring_buffer_record.sample_id.cpu = kCpu;
-    uprobe1.ring_buffer_record.regs.sp = 0x40;
-    uprobe1.ring_buffer_record.regs.ip = 0x01;
-    uprobe1.ring_buffer_record.stack.top8bytes = 0x00;
-    uprobe1.SetFunctionId(1);
+    uprobe1.pid = kPid;
+    uprobe1.tid = kTid;
+    uprobe1.timestamp = 100;
+    uprobe1.cpu = kCpu;
+    uprobe1.sp = 0x40;
+    uprobe1.ip = 0x01;
+    uprobe1.return_address = 0x00;
+    uprobe1.function_id = 1;
 
     EXPECT_CALL(return_address_manager_, ProcessUprobes(kTid, 0x40, 0x00)).Times(1);
     visitor_->Visit(&uprobe1);
@@ -174,20 +224,20 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   {
     UprobesWithArgumentsPerfEvent uprobe2;
-    uprobe2.ring_buffer_record.sample_id.pid = kPid;
-    uprobe2.ring_buffer_record.sample_id.tid = kTid;
-    uprobe2.ring_buffer_record.sample_id.time = 200;
-    uprobe2.ring_buffer_record.sample_id.cpu = kCpu;
-    uprobe2.ring_buffer_record.regs.sp = 0x30;
-    uprobe2.ring_buffer_record.regs.ip = 0x02;
-    uprobe2.ring_buffer_record.stack.top8bytes = 0x01;
-    uprobe2.ring_buffer_record.regs.di = 1;
-    uprobe2.ring_buffer_record.regs.si = 2;
-    uprobe2.ring_buffer_record.regs.dx = 3;
-    uprobe2.ring_buffer_record.regs.cx = 4;
-    uprobe2.ring_buffer_record.regs.r8 = 5;
-    uprobe2.ring_buffer_record.regs.r9 = 6;
-    uprobe2.SetFunctionId(2);
+    uprobe2.pid = kPid;
+    uprobe2.tid = kTid;
+    uprobe2.timestamp = 200;
+    uprobe2.cpu = kCpu;
+    uprobe2.regs.sp = 0x30;
+    uprobe2.regs.ip = 0x02;
+    uprobe2.return_address = 0x01;
+    uprobe2.regs.di = 1;
+    uprobe2.regs.si = 2;
+    uprobe2.regs.dx = 3;
+    uprobe2.regs.cx = 4;
+    uprobe2.regs.r8 = 5;
+    uprobe2.regs.r9 = 6;
+    uprobe2.function_id = 2;
 
     EXPECT_CALL(return_address_manager_, ProcessUprobes(kTid, 0x30, 0x01)).Times(1);
     visitor_->Visit(&uprobe2);
@@ -196,14 +246,14 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   {
     UprobesPerfEvent uprobe3;
-    uprobe3.ring_buffer_record.sample_id.pid = kPid;
-    uprobe3.ring_buffer_record.sample_id.tid = kTid;
-    uprobe3.ring_buffer_record.sample_id.time = 300;
-    uprobe3.ring_buffer_record.sample_id.cpu = kCpu;
-    uprobe3.ring_buffer_record.regs.sp = 0x20;
-    uprobe3.ring_buffer_record.regs.ip = 0x03;
-    uprobe3.ring_buffer_record.stack.top8bytes = 0x02;
-    uprobe3.SetFunctionId(3);
+    uprobe3.pid = kPid;
+    uprobe3.tid = kTid;
+    uprobe3.timestamp = 300;
+    uprobe3.cpu = kCpu;
+    uprobe3.sp = 0x20;
+    uprobe3.ip = 0x03;
+    uprobe3.return_address = 0x02;
+    uprobe3.function_id = 3;
 
     EXPECT_CALL(return_address_manager_, ProcessUprobes(kTid, 0x20, 0x02)).Times(1);
     visitor_->Visit(&uprobe3);
@@ -212,20 +262,20 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   {
     UprobesWithArgumentsPerfEvent uprobe4;
-    uprobe4.ring_buffer_record.sample_id.pid = kPid;
-    uprobe4.ring_buffer_record.sample_id.tid = kTid;
-    uprobe4.ring_buffer_record.sample_id.time = 400;
-    uprobe4.ring_buffer_record.sample_id.cpu = kCpu;
-    uprobe4.ring_buffer_record.regs.sp = 0x10;
-    uprobe4.ring_buffer_record.regs.ip = 0x04;
-    uprobe4.ring_buffer_record.stack.top8bytes = 0x03;
-    uprobe4.ring_buffer_record.regs.di = 1;
-    uprobe4.ring_buffer_record.regs.si = 2;
-    uprobe4.ring_buffer_record.regs.dx = 3;
-    uprobe4.ring_buffer_record.regs.cx = 4;
-    uprobe4.ring_buffer_record.regs.r8 = 5;
-    uprobe4.ring_buffer_record.regs.r9 = 6;
-    uprobe4.SetFunctionId(4);
+    uprobe4.pid = kPid;
+    uprobe4.tid = kTid;
+    uprobe4.timestamp = 400;
+    uprobe4.cpu = kCpu;
+    uprobe4.regs.sp = 0x10;
+    uprobe4.regs.ip = 0x04;
+    uprobe4.return_address = 0x03;
+    uprobe4.regs.di = 1;
+    uprobe4.regs.si = 2;
+    uprobe4.regs.dx = 3;
+    uprobe4.regs.cx = 4;
+    uprobe4.regs.r8 = 5;
+    uprobe4.regs.r9 = 6;
+    uprobe4.function_id = 4;
 
     EXPECT_CALL(return_address_manager_, ProcessUprobes(kTid, 0x10, 0x03)).Times(1);
     visitor_->Visit(&uprobe4);
@@ -234,10 +284,10 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   {
     UretprobesWithReturnValuePerfEvent uretprobe4;
-    uretprobe4.ring_buffer_record.sample_id.pid = kPid;
-    uretprobe4.ring_buffer_record.sample_id.tid = kTid;
-    uretprobe4.ring_buffer_record.sample_id.time = 500;
-    uretprobe4.ring_buffer_record.regs.ax = 456;
+    uretprobe4.pid = kPid;
+    uretprobe4.tid = kTid;
+    uretprobe4.timestamp = 500;
+    uretprobe4.rax = 456;
 
     EXPECT_CALL(return_address_manager_, ProcessUretprobes(kTid)).Times(1);
     orbit_grpc_protos::FunctionCall actual_function_call;
@@ -257,10 +307,10 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   {
     UretprobesWithReturnValuePerfEvent uretprobe3;
-    uretprobe3.ring_buffer_record.sample_id.pid = kPid;
-    uretprobe3.ring_buffer_record.sample_id.tid = kTid;
-    uretprobe3.ring_buffer_record.sample_id.time = 600;
-    uretprobe3.ring_buffer_record.regs.ax = 123;
+    uretprobe3.pid = kPid;
+    uretprobe3.tid = kTid;
+    uretprobe3.timestamp = 600;
+    uretprobe3.rax = 123;
 
     EXPECT_CALL(return_address_manager_, ProcessUretprobes(kTid)).Times(1);
     orbit_grpc_protos::FunctionCall actual_function_call;
@@ -280,9 +330,9 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   {
     UretprobesPerfEvent uretprobe2;
-    uretprobe2.ring_buffer_record.sample_id.pid = kPid;
-    uretprobe2.ring_buffer_record.sample_id.tid = kTid;
-    uretprobe2.ring_buffer_record.sample_id.time = 700;
+    uretprobe2.pid = kPid;
+    uretprobe2.tid = kTid;
+    uretprobe2.timestamp = 700;
 
     EXPECT_CALL(return_address_manager_, ProcessUretprobes(kTid)).Times(1);
     orbit_grpc_protos::FunctionCall actual_function_call;
@@ -302,9 +352,9 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   {
     UretprobesPerfEvent uretprobe1;
-    uretprobe1.ring_buffer_record.sample_id.pid = kPid;
-    uretprobe1.ring_buffer_record.sample_id.tid = kTid;
-    uretprobe1.ring_buffer_record.sample_id.time = 800;
+    uretprobe1.pid = kPid;
+    uretprobe1.tid = kTid;
+    uretprobe1.timestamp = 800;
 
     EXPECT_CALL(return_address_manager_, ProcessUretprobes(kTid)).Times(1);
     orbit_grpc_protos::FunctionCall actual_function_call;
@@ -329,18 +379,7 @@ TEST_F(UprobesUnwindingVisitorTest,
 
 TEST_F(UprobesUnwindingVisitorTest,
        VisitValidStackSampleWithoutUprobesSendsCompleteCallstackAndAddressInfos) {
-  constexpr uint32_t kPid = 10;
-  constexpr uint64_t kStackSize = 13;
-  StackSamplePerfEvent event{kStackSize};
-  perf_event_sample_id_tid_time_streamid_cpu sample_id{
-      .pid = kPid,
-      .tid = 11,
-      .time = 15,
-      .stream_id = 12,
-      .cpu = 0,
-      .res = 0,
-  };
-  event.ring_buffer_record.sample_id = sample_id;
+  StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
 
   EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillOnce(Return());
   EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
@@ -351,7 +390,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   libunwindstack_callstack.push_back(kFrame2);
   libunwindstack_callstack.push_back(kFrame3);
 
-  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, kStackSize, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.pid, nullptr, _, _, event.dyn_size, _, _))
       .Times(1)
       .WillOnce(Return(
           LibunwindstackResult{libunwindstack_callstack, unwindstack::ErrorCode::ERROR_NONE}));
@@ -397,25 +436,14 @@ TEST_F(UprobesUnwindingVisitorTest,
 }
 
 TEST_F(UprobesUnwindingVisitorTest, VisitEmptyStackSampleWithoutUprobesDoesNothing) {
-  constexpr uint32_t kPid = 10;
-  constexpr uint64_t kStackSize = 13;
-  StackSamplePerfEvent event{kStackSize};
-  perf_event_sample_id_tid_time_streamid_cpu sample_id{
-      .pid = kPid,
-      .tid = 11,
-      .time = 15,
-      .stream_id = 12,
-      .cpu = 0,
-      .res = 0,
-  };
-  event.ring_buffer_record.sample_id = sample_id;
+  StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
 
   EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillOnce(Return());
   EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
 
   std::vector<unwindstack::FrameData> empty_callstack;
 
-  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, kStackSize, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.pid, nullptr, _, _, event.dyn_size, _, _))
       .Times(1)
       .WillOnce(Return(
           LibunwindstackResult{empty_callstack, unwindstack::ErrorCode::ERROR_MEMORY_INVALID}));
@@ -437,18 +465,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitEmptyStackSampleWithoutUprobesDoesNothi
 
 TEST_F(UprobesUnwindingVisitorTest,
        VisitInvalidStackSampleWithoutUprobesSendsUnwindingErrorAndAddressInfo) {
-  constexpr uint32_t kPid = 10;
-  constexpr uint64_t kStackSize = 13;
-  StackSamplePerfEvent event{kStackSize};
-  perf_event_sample_id_tid_time_streamid_cpu sample_id{
-      .pid = kPid,
-      .tid = 11,
-      .time = 15,
-      .stream_id = 12,
-      .cpu = 0,
-      .res = 0,
-  };
-  event.ring_buffer_record.sample_id = sample_id;
+  StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
 
   EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillRepeatedly(Return());
   EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
@@ -457,7 +474,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   libunwindstack_callstack.push_back(kFrame1);
   libunwindstack_callstack.push_back(kFrame2);
 
-  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, kStackSize, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.pid, nullptr, _, _, event.dyn_size, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
                                             unwindstack::ErrorCode::ERROR_MEMORY_INVALID}));
@@ -496,18 +513,7 @@ TEST_F(UprobesUnwindingVisitorTest,
 
 TEST_F(UprobesUnwindingVisitorTest,
        VisitSingleFrameStackSampleWithoutUprobesSendsUnwindingErrorAndAddressInfo) {
-  constexpr uint32_t kPid = 10;
-  constexpr uint64_t kStackSize = 13;
-  StackSamplePerfEvent event{kStackSize};
-  perf_event_sample_id_tid_time_streamid_cpu sample_id{
-      .pid = kPid,
-      .tid = 11,
-      .time = 15,
-      .stream_id = 12,
-      .cpu = 0,
-      .res = 0,
-  };
-  event.ring_buffer_record.sample_id = sample_id;
+  StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
 
   EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillOnce(Return());
   EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
@@ -515,7 +521,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   std::vector<unwindstack::FrameData> incomplete_callstack;
   incomplete_callstack.push_back(kFrame1);
 
-  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, kStackSize, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.pid, nullptr, _, _, event.dyn_size, _, _))
       .Times(1)
       .WillOnce(
           Return(LibunwindstackResult{incomplete_callstack, unwindstack::ErrorCode::ERROR_NONE}));
@@ -552,18 +558,7 @@ TEST_F(UprobesUnwindingVisitorTest,
 }
 
 TEST_F(UprobesUnwindingVisitorTest, VisitStackSampleWithinUprobeSendsInUprobesCallstack) {
-  constexpr uint32_t kPid = 10;
-  constexpr uint64_t kStackSize = 13;
-  StackSamplePerfEvent event{kStackSize};
-  perf_event_sample_id_tid_time_streamid_cpu sample_id{
-      .pid = kPid,
-      .tid = 11,
-      .time = 15,
-      .stream_id = 12,
-      .cpu = 0,
-      .res = 0,
-  };
-  event.ring_buffer_record.sample_id = sample_id;
+  StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
 
   EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillOnce(Return());
   EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
@@ -579,7 +574,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitStackSampleWithinUprobeSendsInUprobesCa
   callstack.push_back(frame_1);
   callstack.push_back(kFrame2);
 
-  EXPECT_CALL(unwinder_, Unwind(kPid, nullptr, _, _, kStackSize, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.pid, nullptr, _, _, event.dyn_size, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{callstack, unwindstack::ErrorCode::ERROR_NONE}));
 
@@ -619,9 +614,6 @@ TEST_F(UprobesUnwindingVisitorTest, VisitStackSampleWithinUprobeSendsInUprobesCa
 //-----------------------------------//
 
 TEST_F(UprobesUnwindingVisitorTest, VisitValidCallchainSampleWithoutUprobesSendsCallstack) {
-  constexpr uint32_t kPid = 10;
-  constexpr uint64_t kStackSize = 13;
-
   std::vector<uint64_t> callchain;
   callchain.push_back(kKernelAddress);
   callchain.push_back(kTargetAddress1);
@@ -629,17 +621,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitValidCallchainSampleWithoutUprobesSends
   callchain.push_back(kTargetAddress2 + 1);
   callchain.push_back(kTargetAddress3 + 1);
 
-  CallchainSamplePerfEvent event{callchain.size(), kStackSize};
-  perf_event_sample_id_tid_time_streamid_cpu sample_id{
-      .pid = kPid,
-      .tid = 11,
-      .time = 15,
-      .stream_id = 12,
-      .cpu = 0,
-      .res = 0,
-  };
-  event.ring_buffer_record.sample_id = sample_id;
-  event.ips = callchain;
+  CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(1).WillOnce(Return(true));
@@ -665,23 +647,10 @@ TEST_F(UprobesUnwindingVisitorTest, VisitValidCallchainSampleWithoutUprobesSends
 }
 
 TEST_F(UprobesUnwindingVisitorTest, VisitSingleFrameCallchainSampleDoesNothing) {
-  constexpr uint32_t kPid = 10;
-  constexpr uint64_t kStackSize = 13;
-
   std::vector<uint64_t> callchain;
   callchain.push_back(kKernelAddress);
 
-  CallchainSamplePerfEvent event{callchain.size(), kStackSize};
-  perf_event_sample_id_tid_time_streamid_cpu sample_id{
-      .pid = kPid,
-      .tid = 11,
-      .time = 15,
-      .stream_id = 12,
-      .cpu = 0,
-      .res = 0,
-  };
-  event.ring_buffer_record.sample_id = sample_id;
-  event.ips = callchain;
+  CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(0);
@@ -703,9 +672,6 @@ TEST_F(UprobesUnwindingVisitorTest, VisitSingleFrameCallchainSampleDoesNothing) 
 }
 
 TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleInsideUprobeCodeSendsInUprobesCallstack) {
-  constexpr uint32_t kPid = 10;
-  constexpr uint64_t kStackSize = 13;
-
   std::vector<uint64_t> callchain;
   callchain.push_back(kKernelAddress);
   callchain.push_back(kUprobesMapsStart);
@@ -713,17 +679,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleInsideUprobeCodeSendsInU
   callchain.push_back(kTargetAddress2 + 1);
   callchain.push_back(kTargetAddress3 + 1);
 
-  CallchainSamplePerfEvent event{callchain.size(), kStackSize};
-  perf_event_sample_id_tid_time_streamid_cpu sample_id{
-      .pid = kPid,
-      .tid = 11,
-      .time = 15,
-      .stream_id = 12,
-      .cpu = 0,
-      .res = 0,
-  };
-  event.ring_buffer_record.sample_id = sample_id;
-  event.ips = callchain;
+  CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
   EXPECT_CALL(maps_, Find(_)).WillRepeatedly(Return(&kTargetMapInfo));
   EXPECT_CALL(maps_, Find(kUprobesMapsStart)).WillRepeatedly(Return(&kUprobesMapInfo));
@@ -750,9 +706,6 @@ TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleInsideUprobeCodeSendsInU
 }
 
 TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleWithUprobeSendsCompleteCallstack) {
-  constexpr uint32_t kPid = 10;
-  constexpr uint64_t kStackSize = 13;
-
   std::vector<uint64_t> callchain;
   callchain.push_back(kKernelAddress);
   callchain.push_back(kTargetAddress1);
@@ -760,17 +713,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleWithUprobeSendsCompleteC
   callchain.push_back(kUprobesMapsStart + 1);
   callchain.push_back(kTargetAddress3 + 1);
 
-  CallchainSamplePerfEvent event{callchain.size(), kStackSize};
-  perf_event_sample_id_tid_time_streamid_cpu sample_id{
-      .pid = kPid,
-      .tid = 11,
-      .time = 15,
-      .stream_id = 12,
-      .cpu = 0,
-      .res = 0,
-  };
-  event.ring_buffer_record.sample_id = sample_id;
-  event.ips = callchain;
+  CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
   auto fake_patch_callchain = [](pid_t /*tid*/, uint64_t* callchain, uint64_t callchain_size,
@@ -811,9 +754,6 @@ TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleWithUprobeSendsCompleteC
 
 TEST_F(UprobesUnwindingVisitorTest,
        VisitCallchainSampleWithBrokenUprobeSendsPatchingFailedCallstack) {
-  constexpr uint32_t kPid = 10;
-  constexpr uint64_t kStackSize = 13;
-
   std::vector<uint64_t> callchain;
   callchain.push_back(kKernelAddress);
   callchain.push_back(kTargetAddress1);
@@ -821,17 +761,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   callchain.push_back(kUprobesMapsStart + 1);
   callchain.push_back(kTargetAddress3 + 1);
 
-  CallchainSamplePerfEvent event{callchain.size(), kStackSize};
-  perf_event_sample_id_tid_time_streamid_cpu sample_id{
-      .pid = kPid,
-      .tid = 11,
-      .time = 15,
-      .stream_id = 12,
-      .cpu = 0,
-      .res = 0,
-  };
-  event.ring_buffer_record.sample_id = sample_id;
-  event.ips = callchain;
+  CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
   EXPECT_CALL(leaf_function_call_manager_, PatchCallerOfLeafFunction)
@@ -861,26 +791,13 @@ TEST_F(UprobesUnwindingVisitorTest,
 
 TEST_F(UprobesUnwindingVisitorTest,
        VisitLeafCallOptimizedCallchainSampleWithoutUprobesSendsCompleteCallstack) {
-  constexpr uint32_t kPid = 10;
-  constexpr uint64_t kStackSize = 13;
-
   std::vector<uint64_t> callchain;
   callchain.push_back(kKernelAddress);
   callchain.push_back(kTargetAddress1);
   // Increment by one as the return address is the next address.
   callchain.push_back(kTargetAddress3 + 1);
 
-  CallchainSamplePerfEvent event{callchain.size(), kStackSize};
-  perf_event_sample_id_tid_time_streamid_cpu sample_id{
-      .pid = kPid,
-      .tid = 11,
-      .time = 15,
-      .stream_id = 12,
-      .cpu = 0,
-      .res = 0,
-  };
-  event.ring_buffer_record.sample_id = sample_id;
-  event.ips = callchain;
+  CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(1).WillRepeatedly(Return(true));
@@ -891,14 +808,14 @@ TEST_F(UprobesUnwindingVisitorTest,
                                                /*unwinder*/) -> Callstack::CallstackType {
     CHECK(event != nullptr);
     std::vector<uint64_t> patched_callchain;
-    EXPECT_THAT(event->ips, ElementsAre(kKernelAddress, kTargetAddress1, kTargetAddress3 + 1));
+    EXPECT_THAT(event->CopyOfIpsAsVector(),
+                ElementsAre(kKernelAddress, kTargetAddress1, kTargetAddress3 + 1));
     patched_callchain.push_back(kKernelAddress);
     patched_callchain.push_back(kTargetAddress1);
     // Patch in the missing frame:
     patched_callchain.push_back(kTargetAddress2 + 1);
     patched_callchain.push_back(kTargetAddress3 + 1);
-    event->ring_buffer_record.nr = patched_callchain.size();
-    event->ips = std::move(patched_callchain);
+    event->SetIps(patched_callchain);
     return Callstack::kComplete;
   };
   EXPECT_CALL(leaf_function_call_manager_, PatchCallerOfLeafFunction)
@@ -925,26 +842,13 @@ TEST_F(UprobesUnwindingVisitorTest,
 TEST_F(
     UprobesUnwindingVisitorTest,
     VisitLeafCallOptimizedCallchainSampleWherePatchingLeafFunctionCallerFailsSendsFramePointerUnwindingErrorCallstack) {
-  constexpr uint32_t kPid = 10;
-  constexpr uint64_t kStackSize = 13;
-
   std::vector<uint64_t> callchain;
   callchain.push_back(kKernelAddress);
   callchain.push_back(kTargetAddress1);
   // Increment by one as the return address is the next address.
   callchain.push_back(kTargetAddress3 + 1);
 
-  CallchainSamplePerfEvent event{callchain.size(), kStackSize};
-  perf_event_sample_id_tid_time_streamid_cpu sample_id{
-      .pid = kPid,
-      .tid = 11,
-      .time = 15,
-      .stream_id = 12,
-      .cpu = 0,
-      .res = 0,
-  };
-  event.ring_buffer_record.sample_id = sample_id;
-  event.ips = callchain;
+  CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(0);

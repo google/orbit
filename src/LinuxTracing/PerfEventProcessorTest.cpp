@@ -4,17 +4,16 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
 
 #include <atomic>
 #include <chrono>
+#include <cstdint>
 #include <memory>
 #include <thread>
 
 #include "OrbitBase/Profiling.h"
 #include "PerfEvent.h"
 #include "PerfEventProcessor.h"
-#include "PerfEventRecords.h"
 #include "PerfEventVisitor.h"
 
 using ::testing::A;
@@ -46,22 +45,15 @@ class PerfEventProcessorTest : public ::testing::Test {
   static constexpr uint64_t kDelayBeforeProcessOldEventsMs = PerfEventProcessor::kProcessingDelayMs;
 };
 
-std::unique_ptr<PerfEvent> MakeFakePerfEvent(int origin_fd, uint64_t timestamp_ns) {
+PerfEvent MakeFakePerfEvent(int origin_fd, uint64_t timestamp_ns) {
   // We use ForkPerfEvent just because it's a simple one, but we could use any
   // as we only need to set the file descriptor and the timestamp.
-  auto event = std::make_unique<ForkPerfEvent>();
-  event->SetOrderedInFileDescriptor(origin_fd);
-  CHECK(event->GetOrderedInFileDescriptor() == origin_fd);
-  event->ring_buffer_record.time = timestamp_ns;
-  event->ring_buffer_record.sample_id.time = timestamp_ns;
-  CHECK(event->GetTimestamp() == timestamp_ns);
-  return event;
+  return ForkPerfEvent{.timestamp = timestamp_ns, .ordered_in_file_descriptor = origin_fd};
 }
 
 MATCHER_P2(UntypedDiscardedPerfEventEq, begin_timestamp_ns, end_timestamp_ns, "") {
   const DiscardedPerfEvent& event = *arg;
-  return event.GetBeginTimestampNs() == begin_timestamp_ns &&
-         event.GetEndTimestampNs() == end_timestamp_ns;
+  return event.begin_timestamp_ns == begin_timestamp_ns && event.timestamp == end_timestamp_ns;
 }
 
 auto DiscardedPerfEventEq(uint64_t begin_timestamp_ns, uint64_t end_timestamp_ns) {
@@ -140,7 +132,7 @@ TEST_F(PerfEventProcessorTest, DiscardedPerfEvents) {
 
   uint64_t last_processed_timestamp_ns1 = orbit_base::CaptureTimestampNs();
   processor_.AddEvent(
-      MakeFakePerfEvent(PerfEvent::kNotOrderedInAnyFileDescriptor, last_processed_timestamp_ns1));
+      MakeFakePerfEvent(kNotOrderedInAnyFileDescriptor, last_processed_timestamp_ns1));
 
   std::this_thread::sleep_for(std::chrono::milliseconds(kDelayBeforeProcessOldEventsMs));
   processor_.ProcessOldEvents();
@@ -151,29 +143,29 @@ TEST_F(PerfEventProcessorTest, DiscardedPerfEvents) {
   EXPECT_CALL(mock_visitor_, Visit(DiscardedPerfEventEq(last_processed_timestamp_ns1 - 10,
                                                         last_processed_timestamp_ns1)))
       .Times(1);
-  processor_.AddEvent(MakeFakePerfEvent(PerfEvent::kNotOrderedInAnyFileDescriptor,
-                                        last_processed_timestamp_ns1 - 10));
+  processor_.AddEvent(
+      MakeFakePerfEvent(kNotOrderedInAnyFileDescriptor, last_processed_timestamp_ns1 - 10));
 
   // Discarded range ends at the same timestamp as the previous one, but starts earlier causing a
   // new DiscardedPerfEvent.
   EXPECT_CALL(mock_visitor_, Visit(DiscardedPerfEventEq(last_processed_timestamp_ns1 - 15,
                                                         last_processed_timestamp_ns1)))
       .Times(1);
-  processor_.AddEvent(MakeFakePerfEvent(PerfEvent::kNotOrderedInAnyFileDescriptor,
-                                        last_processed_timestamp_ns1 - 15));
+  processor_.AddEvent(
+      MakeFakePerfEvent(kNotOrderedInAnyFileDescriptor, last_processed_timestamp_ns1 - 15));
 
   // Discarded range ends at the same timestamp as the previous one, and starts later, so no new
   // DiscardedPerfEvent is generated.
   EXPECT_CALL(mock_visitor_, Visit(DiscardedPerfEventEq(last_processed_timestamp_ns1 - 5,
                                                         last_processed_timestamp_ns1)))
       .Times(0);
-  processor_.AddEvent(MakeFakePerfEvent(PerfEvent::kNotOrderedInAnyFileDescriptor,
-                                        last_processed_timestamp_ns1 - 5));
+  processor_.AddEvent(
+      MakeFakePerfEvent(kNotOrderedInAnyFileDescriptor, last_processed_timestamp_ns1 - 5));
 
   EXPECT_CALL(mock_visitor_, Visit(A<ForkPerfEvent*>())).Times(1);
-  uint64_t last_processed_timestamp_ns2 = orbit_base::CaptureTimestampNs();
+  const uint64_t last_processed_timestamp_ns2 = orbit_base::CaptureTimestampNs();
   processor_.AddEvent(
-      MakeFakePerfEvent(PerfEvent::kNotOrderedInAnyFileDescriptor, last_processed_timestamp_ns2));
+      MakeFakePerfEvent(kNotOrderedInAnyFileDescriptor, last_processed_timestamp_ns2));
 
   std::this_thread::sleep_for(std::chrono::milliseconds(kDelayBeforeProcessOldEventsMs));
   processor_.ProcessOldEvents();
@@ -185,13 +177,13 @@ TEST_F(PerfEventProcessorTest, DiscardedPerfEvents) {
   EXPECT_CALL(mock_visitor_, Visit(DiscardedPerfEventEq(last_processed_timestamp_ns1 - 5,
                                                         last_processed_timestamp_ns2)))
       .Times(1);
-  processor_.AddEvent(MakeFakePerfEvent(PerfEvent::kNotOrderedInAnyFileDescriptor,
-                                        last_processed_timestamp_ns1 - 5));
+  processor_.AddEvent(
+      MakeFakePerfEvent(kNotOrderedInAnyFileDescriptor, last_processed_timestamp_ns1 - 5));
 
   EXPECT_CALL(mock_visitor_, Visit(A<ForkPerfEvent*>())).Times(1);
   uint64_t last_processed_timestamp_ns3 = orbit_base::CaptureTimestampNs();
   processor_.AddEvent(
-      MakeFakePerfEvent(PerfEvent::kNotOrderedInAnyFileDescriptor, last_processed_timestamp_ns3));
+      MakeFakePerfEvent(kNotOrderedInAnyFileDescriptor, last_processed_timestamp_ns3));
 
   std::this_thread::sleep_for(std::chrono::milliseconds(kDelayBeforeProcessOldEventsMs));
   processor_.ProcessOldEvents();
@@ -202,8 +194,8 @@ TEST_F(PerfEventProcessorTest, DiscardedPerfEvents) {
   EXPECT_CALL(mock_visitor_, Visit(DiscardedPerfEventEq(last_processed_timestamp_ns2 + 10,
                                                         last_processed_timestamp_ns3)))
       .Times(1);
-  processor_.AddEvent(MakeFakePerfEvent(PerfEvent::kNotOrderedInAnyFileDescriptor,
-                                        last_processed_timestamp_ns2 + 10));
+  processor_.AddEvent(
+      MakeFakePerfEvent(kNotOrderedInAnyFileDescriptor, last_processed_timestamp_ns2 + 10));
 
   std::this_thread::sleep_for(std::chrono::milliseconds(kDelayBeforeProcessOldEventsMs));
   processor_.ProcessOldEvents();

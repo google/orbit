@@ -130,28 +130,27 @@ void GpuTracepointVisitor::CreateGpuJobAndSendToListenerIfComplete(const Key& ke
 // created when all three types of GPU events have been received.
 
 void GpuTracepointVisitor::Visit(AmdgpuCsIoctlPerfEvent* event) {
-  AmdgpuCsIoctlEvent internal_event{event->GetPid(),       event->GetTid(),
-                                    event->GetTimestamp(), event->GetContext(),
-                                    event->GetSeqno(),     event->ExtractTimelineString()};
-  Key key = std::make_tuple(event->GetContext(), event->GetSeqno(), event->ExtractTimelineString());
+  AmdgpuCsIoctlEvent internal_event{event->pid,     event->tid,   event->timestamp,
+                                    event->context, event->seqno, event->timeline_string};
+  Key key = std::make_tuple(event->context, event->seqno, event->timeline_string);
 
   amdgpu_cs_ioctl_events_.emplace(key, std::move(internal_event));
   CreateGpuJobAndSendToListenerIfComplete(key);
 }
 
 void GpuTracepointVisitor::Visit(AmdgpuSchedRunJobPerfEvent* event) {
-  AmdgpuSchedRunJobEvent internal_event{event->GetTimestamp(), event->GetContext(),
-                                        event->GetSeqno(), event->ExtractTimelineString()};
-  Key key = std::make_tuple(event->GetContext(), event->GetSeqno(), event->ExtractTimelineString());
+  AmdgpuSchedRunJobEvent internal_event{event->timestamp, event->context, event->seqno,
+                                        event->timeline_string};
+  Key key = std::make_tuple(event->context, event->seqno, event->timeline_string);
 
   amdgpu_sched_run_job_events_.emplace(key, std::move(internal_event));
   CreateGpuJobAndSendToListenerIfComplete(key);
 }
 
 void GpuTracepointVisitor::Visit(DmaFenceSignaledPerfEvent* event) {
-  DmaFenceSignaledEvent internal_event{event->GetTimestamp(), event->GetContext(),
-                                       event->GetSeqno(), event->ExtractTimelineString()};
-  Key key = std::make_tuple(event->GetContext(), event->GetSeqno(), event->ExtractTimelineString());
+  DmaFenceSignaledEvent internal_event{event->timestamp, event->context, event->seqno,
+                                       event->timeline_string};
+  Key key = std::make_tuple(event->context, event->seqno, event->timeline_string);
 
   dma_fence_signaled_events_.emplace(key, std::move(internal_event));
   CreateGpuJobAndSendToListenerIfComplete(key);

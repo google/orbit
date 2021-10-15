@@ -4,11 +4,19 @@
 
 #include "PerfEventReaders.h"
 
+#include <stddef.h>
+#include <string.h>
+
+#include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "KernelTracepoints.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/MakeUniqueForOverwrite.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "PerfEventRecords.h"
 #include "PerfEventRingBuffer.h"
 
@@ -67,8 +75,8 @@ uint64_t ReadThrottleUnthrottleRecordTime(PerfEventRingBuffer* ring_buffer) {
   return time;
 }
 
-std::unique_ptr<MmapPerfEvent> ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                    const perf_event_header& header) {
+MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                   const perf_event_header& header) {
   // Mmap records have the following layout:
   // struct {
   //   struct perf_event_header header;
@@ -106,11 +114,17 @@ std::unique_ptr<MmapPerfEvent> ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_bu
   int32_t pid = static_cast<int32_t>(sample_id.pid);
 
   // Consider moving this to MMAP2 event which has more information (like flags)
-  return std::make_unique<MmapPerfEvent>(pid, timestamp, mmap_event, std::move(filename));
+  return MmapPerfEvent{.timestamp = timestamp,
+                       .address = mmap_event.address,
+                       .length = mmap_event.length,
+                       .page_offset = mmap_event.page_offset,
+                       .filename = std::move(filename),
+                       .pid = pid,
+                       .ordered_in_file_descriptor = ring_buffer->GetFileDescriptor()};
 }
 
-std::unique_ptr<StackSamplePerfEvent> ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                                  const perf_event_header& header) {
+StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                 const perf_event_header& header) {
   // We expect the following layout of the perf event:
   //  struct {
   //    struct perf_event_header header;
@@ -140,25 +154,25 @@ std::unique_ptr<StackSamplePerfEvent> ConsumeStackSamplePerfEvent(PerfEventRingB
   uint64_t dyn_size = 0;
   ring_buffer->ReadValueAtOffset(&dyn_size, offset_of_dyn_size);
 
-  auto event = std::make_unique<StackSamplePerfEvent>(dyn_size);
-  event->ring_buffer_record.header = header;
-  ring_buffer->ReadValueAtOffset(&event->ring_buffer_record.sample_id,
-                                 offsetof(perf_event_stack_sample_fixed, sample_id));
-  ring_buffer->ReadValueAtOffset(&event->ring_buffer_record.regs,
-                                 offsetof(perf_event_stack_sample_fixed, regs));
-  ring_buffer->ReadRawAtOffset(event->ring_buffer_record.stack.data.get(), offset_of_data,
-                               dyn_size);
+  perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  ring_buffer->ReadValueAtOffset(&sample_id, offsetof(perf_event_stack_sample_fixed, sample_id));
+
+  StackSamplePerfEvent event{.timestamp = sample_id.time,
+                             .pid = static_cast<pid_t>(sample_id.pid),
+                             .tid = static_cast<pid_t>(sample_id.tid),
+                             .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
+                             .dyn_size = dyn_size,
+                             .data = make_unique_for_overwrite<char[]>(dyn_size),
+                             .ordered_in_file_descriptor = ring_buffer->GetFileDescriptor()};
+
+  ring_buffer->ReadValueAtOffset(event.regs.get(), offsetof(perf_event_stack_sample_fixed, regs));
+  ring_buffer->ReadRawAtOffset(event.data.get(), offset_of_data, dyn_size);
   ring_buffer->SkipRecord(header);
   return event;
 }
 
-std::unique_ptr<CallchainSamplePerfEvent> ConsumeCallchainSamplePerfEvent(
-    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
-  uint64_t nr = 0;
-  ring_buffer->ReadValueAtOffset(&nr, offsetof(perf_event_callchain_sample_fixed, nr));
-
-  uint64_t size_of_ips_in_bytes = nr * sizeof(uint64_t) / sizeof(char);
-
+CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                         const perf_event_header& header) {
   // We expect the following layout of the perf event:
   //  struct {
   //    struct perf_event_header header;
@@ -177,40 +191,116 @@ std::unique_ptr<CallchainSamplePerfEvent> ConsumeCallchainSamplePerfEvent(
   //  };
   // Unfortunately, the number of `ips` is dynamic, so we need to compute the offsets by hand,
   // rather than relying on a struct.
+  uint64_t nr = 0;
+  ring_buffer->ReadValueAtOffset(&nr, offsetof(perf_event_callchain_sample_fixed, nr));
 
-  size_t offset_of_ips = offsetof(perf_event_callchain_sample_fixed, nr) +
-                         sizeof(perf_event_callchain_sample_fixed::nr);
-  size_t offset_of_regs_user_struct = offset_of_ips + size_of_ips_in_bytes;
-  size_t offset_of_size = offset_of_regs_user_struct + sizeof(perf_event_sample_regs_user_all);
-  size_t offset_of_data = offset_of_size + sizeof(uint64_t);
+  const uint64_t size_of_ips_in_bytes = nr * sizeof(uint64_t);
+
+  const size_t offset_of_ips = offsetof(perf_event_callchain_sample_fixed, nr) +
+                               sizeof(perf_event_callchain_sample_fixed::nr);
+  const size_t offset_of_regs_user_struct = offset_of_ips + size_of_ips_in_bytes;
+  // Note that perf_event_sample_regs_user_all contains abi and the regs array.
+  const size_t offset_of_size =
+      offset_of_regs_user_struct + sizeof(perf_event_sample_regs_user_all);
+  const size_t offset_of_data = offset_of_size + sizeof(uint64_t);
 
   uint64_t size = 0;
   ring_buffer->ReadRawAtOffset(&size, offset_of_size, sizeof(uint64_t));
 
-  size_t offset_of_dyn_size = offset_of_data + (size * sizeof(char));
-
+  const size_t offset_of_dyn_size = offset_of_data + size;
   uint64_t dyn_size = 0;
   ring_buffer->ReadRawAtOffset(&dyn_size, offset_of_dyn_size, sizeof(uint64_t));
-  auto event = std::make_unique<CallchainSamplePerfEvent>(nr, dyn_size);
-  event->ring_buffer_record.header = header;
-  ring_buffer->ReadValueAtOffset(&event->ring_buffer_record.sample_id,
+  perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  ring_buffer->ReadValueAtOffset(&sample_id,
                                  offsetof(perf_event_callchain_sample_fixed, sample_id));
 
-  ring_buffer->ReadRawAtOffset(event->ips.data(), offset_of_ips, size_of_ips_in_bytes);
+  CallchainSamplePerfEvent event{
+      .timestamp = sample_id.time,
+      .pid = static_cast<pid_t>(sample_id.pid),
+      .tid = static_cast<pid_t>(sample_id.tid),
+      .ordered_in_file_descriptor = ring_buffer->GetFileDescriptor(),
+      .ips_size = nr,
+      .ips = make_unique_for_overwrite<uint64_t[]>(nr),
+      .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
+      .data = make_unique_for_overwrite<char[]>(dyn_size)};
 
-  ring_buffer->ReadRawAtOffset(&event->regs, offset_of_regs_user_struct,
+  ring_buffer->ReadRawAtOffset(event.ips.get(), offset_of_ips, size_of_ips_in_bytes);
+  ring_buffer->ReadRawAtOffset(event.regs.get(), offset_of_regs_user_struct,
                                sizeof(perf_event_sample_regs_user_all));
-  ring_buffer->ReadRawAtOffset(event->stack.data.get(), offset_of_data, dyn_size);
+  ring_buffer->ReadRawAtOffset(event.data.get(), offset_of_data, dyn_size);
+
   ring_buffer->SkipRecord(header);
   return event;
 }
 
-std::unique_ptr<GenericTracepointPerfEvent> ConsumeGenericTracepointPerfEvent(
-    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
-  auto event = std::make_unique<GenericTracepointPerfEvent>();
-  ring_buffer->ReadRawAtOffset(&event->ring_buffer_record, 0, sizeof(perf_event_raw_sample_fixed));
+GenericTracepointPerfEvent ConsumeGenericTracepointPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                             const perf_event_header& header) {
+  perf_event_raw_sample_fixed ring_buffer_record;
+  ring_buffer->ReadRawAtOffset(&ring_buffer_record, 0, sizeof(perf_event_raw_sample_fixed));
+  GenericTracepointPerfEvent event{.timestamp = ring_buffer_record.sample_id.time,
+                                   .pid = static_cast<pid_t>(ring_buffer_record.sample_id.pid),
+                                   .tid = static_cast<pid_t>(ring_buffer_record.sample_id.tid),
+                                   .cpu = ring_buffer_record.sample_id.cpu,
+                                   .size = ring_buffer_record.size,
+                                   .ordered_in_file_descriptor = ring_buffer->GetFileDescriptor()};
+
   ring_buffer->SkipRecord(header);
   return event;
+}
+
+template <typename EventType, typename StructType>
+EventType ConsumeGpuEvent(PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+  uint32_t tracepoint_size;
+  ring_buffer->ReadValueAtOffset(&tracepoint_size, offsetof(perf_event_raw_sample_fixed, size));
+
+  perf_event_raw_sample_fixed ring_buffer_record;
+  ring_buffer->ReadRawAtOffset(&ring_buffer_record, 0, sizeof(perf_event_raw_sample_fixed));
+
+  std::unique_ptr<uint8_t[]> tracepoint_data =
+      make_unique_for_overwrite<uint8_t[]>(tracepoint_size);
+  ring_buffer->ReadRawAtOffset(
+      tracepoint_data.get(),
+      offsetof(perf_event_raw_sample_fixed, size) + sizeof(perf_event_raw_sample_fixed::size),
+      tracepoint_size);
+  const StructType& typed_tracepoint_data =
+      *reinterpret_cast<const StructType*>(tracepoint_data.get());
+  const int16_t data_loc_size = static_cast<int16_t>(typed_tracepoint_data.timeline >> 16);
+  const int16_t data_loc_offset = static_cast<int16_t>(typed_tracepoint_data.timeline & 0x00ff);
+  std::vector<char> data_loc_data(data_loc_size);
+  std::memcpy(&data_loc_data[0],
+              reinterpret_cast<const char*>(tracepoint_data.get()) + data_loc_offset,
+              data_loc_size);
+  data_loc_data[data_loc_data.size() - 1] = 0;
+
+  // dma_fence_signaled events can be out of order of timestamp even on the same ring buffer,
+  // hence why kNotOrderedInAnyFileDescriptor. To be safe, do the same for the other GPU events.
+  EventType event{.timestamp = ring_buffer_record.sample_id.time,
+                  .pid = static_cast<pid_t>(ring_buffer_record.sample_id.pid),
+                  .tid = static_cast<pid_t>(ring_buffer_record.sample_id.tid),
+                  .context = typed_tracepoint_data.context,
+                  .seqno = typed_tracepoint_data.seqno,
+                  .timeline_string = std::string(&data_loc_data[0]),
+                  .ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor};
+
+  ring_buffer->SkipRecord(header);
+  return event;
+}
+
+AmdgpuCsIoctlPerfEvent ConsumeAmdgpuCsIoctlPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                     const perf_event_header& header) {
+  return ConsumeGpuEvent<AmdgpuCsIoctlPerfEvent, amdgpu_cs_ioctl_tracepoint>(ring_buffer, header);
+}
+
+AmdgpuSchedRunJobPerfEvent ConsumeAmdgpuSchedRunJobPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                             const perf_event_header& header) {
+  return ConsumeGpuEvent<AmdgpuSchedRunJobPerfEvent, amdgpu_sched_run_job_tracepoint>(ring_buffer,
+                                                                                      header);
+}
+
+DmaFenceSignaledPerfEvent ConsumeDmaFenceSignaledPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                           const perf_event_header& header) {
+  return ConsumeGpuEvent<DmaFenceSignaledPerfEvent, dma_fence_signaled_tracepoint>(ring_buffer,
+                                                                                   header);
 }
 
 }  // namespace orbit_linux_tracing
