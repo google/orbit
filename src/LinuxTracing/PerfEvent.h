@@ -226,8 +226,8 @@ struct AmdgpuCsIoctlPerfEvent {
   pid_t tid;
   uint32_t context;
   uint32_t seqno;
-  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
   std::string timeline_string;
+  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
 };
 
 struct AmdgpuSchedRunJobPerfEvent {
@@ -238,8 +238,8 @@ struct AmdgpuSchedRunJobPerfEvent {
   pid_t tid;
   uint32_t context;
   uint32_t seqno;
-  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
   std::string timeline_string;
+  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
 };
 
 struct DmaFenceSignaledPerfEvent {
@@ -250,8 +250,8 @@ struct DmaFenceSignaledPerfEvent {
   pid_t tid;
   uint32_t context;
   uint32_t seqno;
-  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
   std::string timeline_string;
+  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
 };
 
 using PerfEvent = std::variant<

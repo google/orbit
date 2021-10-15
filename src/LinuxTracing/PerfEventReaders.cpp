@@ -281,8 +281,8 @@ EventType ConsumeGPUEvent(PerfEventRingBuffer* ring_buffer, const perf_event_hea
                   .tid = ToNativeThreadId(ring_buffer_record.sample_id.tid),
                   .context = typed_tracepoint_data.context,
                   .seqno = typed_tracepoint_data.seqno,
-                  .ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor,
-                  .timeline_string = std::string(&data_loc_data[0])};
+                  .timeline_string = std::string(&data_loc_data[0]),
+                  .ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor};
 
   ring_buffer->SkipRecord(header);
   return event;
