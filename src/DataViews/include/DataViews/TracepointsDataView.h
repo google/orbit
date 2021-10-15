@@ -36,7 +36,6 @@ class TracepointsDataView : public DataView {
   void DoSort() override;
   void DoFilter() override;
 
-  std::deque<std::string> m_FilterTokens;
   std::deque<orbit_grpc_protos::TracepointInfo> tracepoints_;
 
   enum ColumnIndex { kColumnSelected, kColumnCategory, kColumnName, kNumColumns };

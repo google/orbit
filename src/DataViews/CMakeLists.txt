@@ -55,7 +55,8 @@ target_sources(DataViewsTests PRIVATE CallstackDataViewTest.cpp
                                       MockAppInterface.h
                                       ModulesDataViewTest.cpp
                                       PresetsDataViewTest.cpp
-                                      SamplingReportDataViewTest.cpp)
+                                      SamplingReportDataViewTest.cpp
+                                      TracepointsDataViewTest.cpp)
 target_link_libraries(DataViewsTests PRIVATE
         DataViews
         TestUtils
