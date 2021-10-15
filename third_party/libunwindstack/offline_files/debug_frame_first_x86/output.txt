@@ -1,0 +1,5 @@
+  #00 pc 00000685  waiter (call_level3+53)
+  #01 pc 000006b7  waiter (call_level2+23)
+  #02 pc 000006d7  waiter (call_level1+23)
+  #03 pc 000006f7  waiter (main+23)
+  #04 pc 00018275  libc.so

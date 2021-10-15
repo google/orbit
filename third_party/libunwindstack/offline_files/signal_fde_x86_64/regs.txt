@@ -1,0 +1,17 @@
+rax: 0
+rbx: 707d82c59c60
+rcx: 4
+rdx: 707eb5aa8380
+r8: 7ffcaadde470
+r9: 7ffcaadde478
+r10: 8
+r11: 206
+r12: 707cb2c64330
+r13: 0
+r14: 174e9096a8f
+r15: 707d52c96cb0
+rdi: b
+rsi: 707eb5aa84b0
+rbp: 707eb5aa8320
+rsp: 707eb5aa8320
+rip: 5bb41271e15b

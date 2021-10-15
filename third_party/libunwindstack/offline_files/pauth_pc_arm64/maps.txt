@@ -1,0 +1,4 @@
+5c39048000-5c39073000 r--p 0 00:00 0   toybox
+5c39073000-5c390ba000 r-xp 2b000 00:00 0   toybox
+7e4ed99000-7e4edd6000 r--p 0 00:00 0   libc.so
+7e4edd6000-7e4ee59000 r-xp 3d000 00:00 0   libc.so

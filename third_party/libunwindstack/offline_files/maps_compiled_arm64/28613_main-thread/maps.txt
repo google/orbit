@@ -1,0 +1,14 @@
+6fcf3000-6fd9e000 r--p 0 00:00 0   boot.oat
+6fd9e000-700fe000 r-xp ab000 00:00 0   boot.oat
+71227000-713aa000 r--p 0 00:00 0   boot-framework.oat
+713aa000-71ab4000 r-xp 183000 00:00 0   boot-framework.oat
+6193c7e000-6193c80000 r--p 0 00:00 0   app_process64
+6193c80000-6193c81000 r-xp 2000 00:00 0   app_process64
+7b590f4000-7b5a2aa000 r--p 0 00:00 0   base.odex_maps_compiled_arm64
+7b5a2aa000-7b6061c000 r-xp 11b6000 00:00 0   base.odex_maps_compiled_arm64
+7bdd800000-7bdda00000 r--p 0 00:00 0   libart.so
+7bdda00000-7bddf4a000 r-xp 200000 00:00 0   libart.so
+7e7c400000-7e7c4af000 r--p 0 00:00 0   libandroid_runtime.so
+7e7c4af000-7e7c5df000 r-xp af000 00:00 0   libandroid_runtime.so
+7e86814000-7e86850000 r--p 0 00:00 0   libc.so
+7e86850000-7e868d1000 r-xp 3c000 00:00 0   libc.so

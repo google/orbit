@@ -1,0 +1,3 @@
+eb503000-eb5e8000 r-xp 0 00:00 0   libc.so
+eb831000-eb852000 r-xp 0 00:00 0   tombstoned
+ffffe000-fffff000 r-xp 0 00:00 0   vdso.so

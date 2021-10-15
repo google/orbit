@@ -1,0 +1,7 @@
+  #00 pc 00000000000963a4  libc.so (__ioctl+4)
+  #01 pc 000000000005344c  libc.so (ioctl+140)
+  #02 pc 0000000000050ce4  libbinder.so (android::IPCThreadState::talkWithDriver(bool)+308)
+  #03 pc 0000000000050e98  libbinder.so (android::IPCThreadState::getAndExecuteCommand()+24)
+  #04 pc 00000000000516ac  libbinder.so (android::IPCThreadState::joinThreadPool(bool)+60)
+  #05 pc 00000000000443b0  netd (main+1056)
+  #06 pc 0000000000045594  libc.so (__libc_init+108)

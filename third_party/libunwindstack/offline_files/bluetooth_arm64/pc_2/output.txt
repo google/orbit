@@ -1,0 +1,7 @@
+  #00 pc 0000000000832188  libbluetooth.so
+  #01 pc 000000000081aca4  libbluetooth.so (bluetooth::os::Handler::handle_next_event()+272)
+  #02 pc 000000000081b580  libbluetooth.so (bluetooth::os::Reactor::Run()+608)
+  #03 pc 000000000081bec0  libbluetooth.so (bluetooth::os::Thread::run(bluetooth::os::Thread::Priority)+172)
+  #04 pc 000000000081c028  libbluetooth.so (void* std::__1::__thread_proxy<std::__1::tuple<std::__1::unique_ptr<std::__1::__thread_struct, std::__1::default_delete<std::__1::__thread_struct> >, void (bluetooth::os::Thread::*)(bluetooth::os::Thread::Priority), bluetooth::os::Thread*, bluetooth::os::Thread::Priority> >(void*)+64)
+  #05 pc 00000000000b1920  libc.so (__pthread_start(void*)+264)
+  #06 pc 00000000000513f0  libc.so (__start_thread+64)

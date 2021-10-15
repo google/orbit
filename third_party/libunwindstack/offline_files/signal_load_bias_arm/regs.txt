@@ -1,0 +1,16 @@
+r0: b69b7c84
+r1: 1
+r2: 1
+r3: 1
+r4: f1e52bd0
+r5: f1e11000
+r6: f1e52bd0
+r7: f1e52a38
+r8: f1e11000
+r9: 5de82a8f
+r10: f1e06030
+r11: f1e6d080
+ip: ffe67a88
+sp: f2790ce8
+lr: b6955fab
+pc: b6955f9e

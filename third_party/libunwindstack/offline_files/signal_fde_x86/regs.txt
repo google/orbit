@@ -1,0 +1,9 @@
+eax: 5aeec4ac
+ebx: 5aeec4ac
+ecx: 0
+edx: 6b
+ebp: ecb37188
+edi: ebecda30
+esi: b
+esp: ecb37188
+eip: 5ae0d4d9

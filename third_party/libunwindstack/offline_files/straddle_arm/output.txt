@@ -1,0 +1,4 @@
+  #00 pc 0001a9f8  libc.so (abort+64)
+  #01 pc 00006a1b  libbase.so (android::base::DefaultAborter(char const*)+6)
+  #02 pc 00007441  libbase.so (android::base::LogMessage::~LogMessage()+748)
+  #03 pc 00015147  /does/not/exist/libhidlbase.so

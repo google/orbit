@@ -1,0 +1,4 @@
+  #00 pc 00000000003f5b24  libbluetooth.so (semaphore_post(semaphore_t*))
+  #01 pc 000000000005c3b8  libc.so (__timer_thread_start(void*)+136)
+  #02 pc 00000000000b1920  libc.so (__pthread_start(void*)+264)
+  #03 pc 00000000000513f0  libc.so (__start_thread+64)

@@ -1,0 +1,2 @@
+  #00 pc 0006dc49  libandroid_runtime.so (android::AndroidRuntime::javaThreadShell(void*)+80)
+  #01 pc 0006dce5  libandroid_runtime.so (android::AndroidRuntime::javaCreateThreadEtc(int (*)(void*), void*, char const*, int, unsigned int, void**))

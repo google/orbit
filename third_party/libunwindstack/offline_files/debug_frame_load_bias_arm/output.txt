@@ -1,0 +1,8 @@
+  #00 pc 0005138c  libc.so (__ioctl+8)
+  #01 pc 0002140f  libc.so (ioctl+30)
+  #02 pc 00039535  libbinder.so (android::IPCThreadState::talkWithDriver(bool)+204)
+  #03 pc 00039633  libbinder.so (android::IPCThreadState::getAndExecuteCommand()+10)
+  #04 pc 00039b57  libbinder.so (android::IPCThreadState::joinThreadPool(bool)+38)
+  #05 pc 00000c21  mediaserver (main+104)
+  #06 pc 00084b89  libc.so (__libc_init+48)
+  #07 pc 00000b77  mediaserver (_start_main+38)

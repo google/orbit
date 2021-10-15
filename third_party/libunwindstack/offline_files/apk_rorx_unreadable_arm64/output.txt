@@ -1,0 +1,6 @@
+  #00 pc 0000000000001030  unreadable.apk (offset 0x4000)
+  #01 pc 000000000000108c  unreadable.apk (offset 0x4000)
+  #02 pc 00000000000010b8  unreadable.apk (offset 0x4000)
+  #03 pc 00000000000010e4  unreadable.apk (offset 0x4000)
+  #04 pc 0000000000001154  run (main+256)
+  #05 pc 0000000000048b10  libc.so (__libc_init+96)

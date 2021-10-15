@@ -1,0 +1,4 @@
+  #00 pc 000000000004c35c  libc.so (syscall+28)
+  #01 pc 0000000000050980  libc.so (__futex_wait_ex(void volatile*, bool, int, bool, timespec const*)+144)
+  #02 pc 00000000000b0c64  libc.so (pthread_cond_timedwait+140)
+  #03 pc 000000000027550c  CronetDynamite.apk (offset 0x1000)

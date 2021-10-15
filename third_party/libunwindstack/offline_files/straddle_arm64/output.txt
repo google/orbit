@@ -1,0 +1,6 @@
+  #00 pc 0000000000429fd8  libunwindstack_test (SignalInnerFunction+24)
+  #01 pc 000000000042a078  libunwindstack_test (SignalMiddleFunction+8)
+  #02 pc 000000000042a08c  libunwindstack_test (SignalOuterFunction+8)
+  #03 pc 000000000042d8fc  libunwindstack_test (unwindstack::RemoteThroughSignal(int, unsigned int)+20)
+  #04 pc 000000000042d8d8  libunwindstack_test (unwindstack::UnwindTest_remote_through_signal_Test::TestBody()+32)
+  #05 pc 0000000000455d70  libunwindstack_test (testing::Test::Run()+392)
