@@ -174,7 +174,7 @@ class UprobesUnwindingVisitorTest : public ::testing::Test {
   };
 };
 
-StackSamplePerfEvent BuildStackSamplePerfEvent() {
+StackSamplePerfEvent BuildFakeStackSamplePerfEvent() {
   constexpr uint64_t kStackSize = 13;
   return StackSamplePerfEvent{.timestamp = 15,
                               .pid = 10,
@@ -186,7 +186,7 @@ StackSamplePerfEvent BuildStackSamplePerfEvent() {
   };
 }
 
-CallchainSamplePerfEvent BuildCallchainSamplePerfEvent(const std::vector<uint64_t>& callchain) {
+CallchainSamplePerfEvent BuildFakeCallchainSamplePerfEvent(const std::vector<uint64_t>& callchain) {
   constexpr uint64_t kStackSize = 13;
   CallchainSamplePerfEvent event{
       .timestamp = 15,
@@ -379,7 +379,7 @@ TEST_F(UprobesUnwindingVisitorTest,
 
 TEST_F(UprobesUnwindingVisitorTest,
        VisitValidStackSampleWithoutUprobesSendsCompleteCallstackAndAddressInfos) {
-  StackSamplePerfEvent event = BuildStackSamplePerfEvent();
+  StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
 
   EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillOnce(Return());
   EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
@@ -436,7 +436,7 @@ TEST_F(UprobesUnwindingVisitorTest,
 }
 
 TEST_F(UprobesUnwindingVisitorTest, VisitEmptyStackSampleWithoutUprobesDoesNothing) {
-  StackSamplePerfEvent event = BuildStackSamplePerfEvent();
+  StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
 
   EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillOnce(Return());
   EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
@@ -465,7 +465,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitEmptyStackSampleWithoutUprobesDoesNothi
 
 TEST_F(UprobesUnwindingVisitorTest,
        VisitInvalidStackSampleWithoutUprobesSendsUnwindingErrorAndAddressInfo) {
-  StackSamplePerfEvent event = BuildStackSamplePerfEvent();
+  StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
 
   EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillRepeatedly(Return());
   EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
@@ -513,7 +513,7 @@ TEST_F(UprobesUnwindingVisitorTest,
 
 TEST_F(UprobesUnwindingVisitorTest,
        VisitSingleFrameStackSampleWithoutUprobesSendsUnwindingErrorAndAddressInfo) {
-  StackSamplePerfEvent event = BuildStackSamplePerfEvent();
+  StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
 
   EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillOnce(Return());
   EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
@@ -558,7 +558,7 @@ TEST_F(UprobesUnwindingVisitorTest,
 }
 
 TEST_F(UprobesUnwindingVisitorTest, VisitStackSampleWithinUprobeSendsInUprobesCallstack) {
-  StackSamplePerfEvent event = BuildStackSamplePerfEvent();
+  StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
 
   EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillOnce(Return());
   EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
@@ -621,7 +621,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitValidCallchainSampleWithoutUprobesSends
   callchain.push_back(kTargetAddress2 + 1);
   callchain.push_back(kTargetAddress3 + 1);
 
-  CallchainSamplePerfEvent event = BuildCallchainSamplePerfEvent(callchain);
+  CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(1).WillOnce(Return(true));
@@ -650,7 +650,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitSingleFrameCallchainSampleDoesNothing) 
   std::vector<uint64_t> callchain;
   callchain.push_back(kKernelAddress);
 
-  CallchainSamplePerfEvent event = BuildCallchainSamplePerfEvent(callchain);
+  CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(0);
@@ -679,7 +679,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleInsideUprobeCodeSendsInU
   callchain.push_back(kTargetAddress2 + 1);
   callchain.push_back(kTargetAddress3 + 1);
 
-  CallchainSamplePerfEvent event = BuildCallchainSamplePerfEvent(callchain);
+  CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
   EXPECT_CALL(maps_, Find(_)).WillRepeatedly(Return(&kTargetMapInfo));
   EXPECT_CALL(maps_, Find(kUprobesMapsStart)).WillRepeatedly(Return(&kUprobesMapInfo));
@@ -713,7 +713,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleWithUprobeSendsCompleteC
   callchain.push_back(kUprobesMapsStart + 1);
   callchain.push_back(kTargetAddress3 + 1);
 
-  CallchainSamplePerfEvent event = BuildCallchainSamplePerfEvent(callchain);
+  CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
   auto fake_patch_callchain = [](pid_t /*tid*/, uint64_t* callchain, uint64_t callchain_size,
@@ -761,7 +761,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   callchain.push_back(kUprobesMapsStart + 1);
   callchain.push_back(kTargetAddress3 + 1);
 
-  CallchainSamplePerfEvent event = BuildCallchainSamplePerfEvent(callchain);
+  CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
   EXPECT_CALL(leaf_function_call_manager_, PatchCallerOfLeafFunction)
@@ -797,7 +797,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   // Increment by one as the return address is the next address.
   callchain.push_back(kTargetAddress3 + 1);
 
-  CallchainSamplePerfEvent event = BuildCallchainSamplePerfEvent(callchain);
+  CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(1).WillRepeatedly(Return(true));
@@ -848,7 +848,7 @@ TEST_F(
   // Increment by one as the return address is the next address.
   callchain.push_back(kTargetAddress3 + 1);
 
-  CallchainSamplePerfEvent event = BuildCallchainSamplePerfEvent(callchain);
+  CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(0);
