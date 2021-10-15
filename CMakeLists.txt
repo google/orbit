@@ -136,6 +136,7 @@ endif()
 
 if(WIN32)
   add_definitions(-DWIN32)
+  add_subdirectory(src/WindowsProcessService)
   add_subdirectory(src/WindowsTracing)
   add_subdirectory(src/WindowsUtils)
 else()

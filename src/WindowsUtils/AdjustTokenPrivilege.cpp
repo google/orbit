@@ -4,7 +4,7 @@
 
 #include "WindowsUtils/AdjustTokenPrivilege.h"
 
-namespace orbit_windows_tracing {
+namespace orbit_windows_utils {
 
 ErrorMessageOr<void> AdjustTokenPrivilege(LPCTSTR token_name, bool enabled) {
   std::wstring token_name_wstr(token_name);
@@ -40,4 +40,4 @@ ErrorMessageOr<void> AdjustTokenPrivilege(LPCTSTR token_name, bool enabled) {
   return outcome::success();
 }
 
-}  // namespace orbit_windows_tracing
+}  // namespace orbit_windows_utils
