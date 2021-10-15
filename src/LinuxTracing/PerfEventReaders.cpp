@@ -22,9 +22,6 @@
 
 namespace orbit_linux_tracing {
 
-using orbit_base::ToNativeProcessId;
-using orbit_base::ToNativeThreadId;
-
 void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_header& header,
                          perf_event_sample_id_tid_time_streamid_cpu* sample_id) {
   CHECK(sample_id != nullptr);
@@ -161,8 +158,8 @@ StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffe
   ring_buffer->ReadValueAtOffset(&sample_id, offsetof(perf_event_stack_sample_fixed, sample_id));
 
   StackSamplePerfEvent event{.timestamp = sample_id.time,
-                             .pid = ToNativeProcessId(sample_id.pid),
-                             .tid = ToNativeThreadId(sample_id.tid),
+                             .pid = static_cast<pid_t>(sample_id.pid),
+                             .tid = static_cast<pid_t>(sample_id.tid),
                              .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
                              .dyn_size = dyn_size,
                              .data = make_unique_for_overwrite<char[]>(dyn_size),
@@ -219,8 +216,8 @@ CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ri
 
   CallchainSamplePerfEvent event{
       .timestamp = sample_id.time,
-      .pid = ToNativeProcessId(sample_id.pid),
-      .tid = ToNativeThreadId(sample_id.tid),
+      .pid = static_cast<pid_t>(sample_id.pid),
+      .tid = static_cast<pid_t>(sample_id.tid),
       .ordered_in_file_descriptor = ring_buffer->GetFileDescriptor(),
       .ips_size = nr,
       .ips = make_unique_for_overwrite<uint64_t[]>(nr),
@@ -241,8 +238,8 @@ GenericTracepointPerfEvent ConsumeGenericTracepointPerfEvent(PerfEventRingBuffer
   perf_event_raw_sample_fixed ring_buffer_record;
   ring_buffer->ReadRawAtOffset(&ring_buffer_record, 0, sizeof(perf_event_raw_sample_fixed));
   GenericTracepointPerfEvent event{.timestamp = ring_buffer_record.sample_id.time,
-                                   .pid = ToNativeProcessId(ring_buffer_record.sample_id.pid),
-                                   .tid = ToNativeThreadId(ring_buffer_record.sample_id.tid),
+                                   .pid = static_cast<pid_t>(ring_buffer_record.sample_id.pid),
+                                   .tid = static_cast<pid_t>(ring_buffer_record.sample_id.tid),
                                    .cpu = ring_buffer_record.sample_id.cpu,
                                    .size = ring_buffer_record.size,
                                    .ordered_in_file_descriptor = ring_buffer->GetFileDescriptor()};
@@ -277,8 +274,8 @@ EventType ConsumeGPUEvent(PerfEventRingBuffer* ring_buffer, const perf_event_hea
   // dma_fence_signaled events can be out of order of timestamp even on the same ring buffer,
   // hence why kNotOrderedInAnyFileDescriptor. To be safe, do the same for the other GPU events.
   EventType event{.timestamp = ring_buffer_record.sample_id.time,
-                  .pid = ToNativeProcessId(ring_buffer_record.sample_id.pid),
-                  .tid = ToNativeThreadId(ring_buffer_record.sample_id.tid),
+                  .pid = static_cast<pid_t>(ring_buffer_record.sample_id.pid),
+                  .tid = static_cast<pid_t>(ring_buffer_record.sample_id.tid),
                   .context = typed_tracepoint_data.context,
                   .seqno = typed_tracepoint_data.seqno,
                   .timeline_string = std::string(&data_loc_data[0]),
