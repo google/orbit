@@ -13,11 +13,11 @@
 #include <optional>
 
 #include "ContextSwitchManager.h"
+#include "LinuxTracing/TracerListener.h"
 #include "OrbitBase/Logging.h"
 #include "PerfEvent.h"
 #include "PerfEventVisitor.h"
 #include "ThreadStateManager.h"
-#include "TracingInterface/TracerListener.h"
 #include "capture.pb.h"
 
 namespace orbit_linux_tracing {
@@ -36,8 +36,7 @@ namespace orbit_linux_tracing {
 // profiling). For this we also need the system-wide association between tids and pids.
 class SwitchesStatesNamesVisitor : public PerfEventVisitor {
  public:
-  explicit SwitchesStatesNamesVisitor(orbit_tracing_interface::TracerListener* listener)
-      : listener_{listener} {
+  explicit SwitchesStatesNamesVisitor(TracerListener* listener) : listener_{listener} {
     CHECK(listener_ != nullptr);
   }
 
@@ -67,7 +66,7 @@ class SwitchesStatesNamesVisitor : public PerfEventVisitor {
       char c);
   static orbit_grpc_protos::ThreadStateSlice::ThreadState GetThreadStateFromBits(uint64_t bits);
 
-  orbit_tracing_interface::TracerListener* listener_;
+  TracerListener* listener_;
   std::atomic<uint64_t>* thread_state_counter_ = nullptr;
 
   bool produce_scheduling_slices_ = false;

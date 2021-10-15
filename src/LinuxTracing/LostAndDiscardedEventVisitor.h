@@ -5,9 +5,9 @@
 #ifndef LINUX_TRACING_LOST_AND_DISCARDED_EVENT_VISITOR_H_
 #define LINUX_TRACING_LOST_AND_DISCARDED_EVENT_VISITOR_H_
 
+#include "LinuxTracing/TracerListener.h"
 #include "PerfEvent.h"
 #include "PerfEventVisitor.h"
-#include "TracingInterface/TracerListener.h"
 #include "capture.pb.h"
 
 namespace orbit_linux_tracing {
@@ -16,8 +16,7 @@ namespace orbit_linux_tracing {
 // MetadataEvents to the TracerListener.
 class LostAndDiscardedEventVisitor : public PerfEventVisitor {
  public:
-  explicit LostAndDiscardedEventVisitor(orbit_tracing_interface::TracerListener* listener)
-      : listener_{listener} {
+  explicit LostAndDiscardedEventVisitor(TracerListener* listener) : listener_{listener} {
     CHECK(listener_ != nullptr);
   }
 
@@ -41,7 +40,7 @@ class LostAndDiscardedEventVisitor : public PerfEventVisitor {
   }
 
  private:
-  orbit_tracing_interface::TracerListener* listener_;
+  TracerListener* listener_;
 };
 
 }  // namespace orbit_linux_tracing

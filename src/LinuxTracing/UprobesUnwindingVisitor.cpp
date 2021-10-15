@@ -31,8 +31,6 @@ using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
 using orbit_grpc_protos::FunctionCall;
 
-using orbit_tracing_interface::TracerListener;
-
 static void SendFullAddressInfoToListener(TracerListener* listener,
                                           const unwindstack::FrameData& libunwindstack_frame) {
   CHECK(listener != nullptr);

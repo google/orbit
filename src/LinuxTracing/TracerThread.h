@@ -25,13 +25,13 @@
 #include "LeafFunctionCallManager.h"
 #include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"
+#include "LinuxTracing/TracerListener.h"
 #include "LostAndDiscardedEventVisitor.h"
 #include "OrbitBase/Profiling.h"
 #include "PerfEvent.h"
 #include "PerfEventProcessor.h"
 #include "PerfEventRingBuffer.h"
 #include "SwitchesStatesNamesVisitor.h"
-#include "TracingInterface/TracerListener.h"
 #include "UprobesFunctionCallManager.h"
 #include "UprobesReturnAddressManager.h"
 #include "UprobesUnwindingVisitor.h"
@@ -48,7 +48,7 @@ class TracerThread {
   TracerThread(TracerThread&&) = delete;
   TracerThread& operator=(TracerThread&&) = delete;
 
-  void SetListener(orbit_tracing_interface::TracerListener* listener) { listener_ = listener; }
+  void SetListener(TracerListener* listener) { listener_ = listener; }
 
   void Run(const std::shared_ptr<std::atomic<bool>>& exit_requested);
 
@@ -145,7 +145,7 @@ class TracerThread {
   bool trace_gpu_driver_;
   std::vector<orbit_grpc_protos::TracepointInfo> instrumented_tracepoints_;
 
-  orbit_tracing_interface::TracerListener* listener_ = nullptr;
+  TracerListener* listener_ = nullptr;
 
   std::vector<int> tracing_fds_;
   std::vector<PerfEventRingBuffer> ring_buffers_;

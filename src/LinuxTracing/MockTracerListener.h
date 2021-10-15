@@ -5,11 +5,11 @@
 #ifndef LINUX_TRACING_MOCK_TRACER_LISTENER_H_
 #define LINUX_TRACING_MOCK_TRACER_LISTENER_H_
 
-#include "TracingInterface/TracerListener.h"
+#include "LinuxTracing/TracerListener.h"
 
 namespace orbit_linux_tracing {
 
-class MockTracerListener : public orbit_tracing_interface::TracerListener {
+class MockTracerListener : public TracerListener {
  public:
   MOCK_METHOD(void, OnSchedulingSlice, (orbit_grpc_protos::SchedulingSlice), (override));
   MOCK_METHOD(void, OnCallstackSample, (orbit_grpc_protos::FullCallstackSample), (override));
