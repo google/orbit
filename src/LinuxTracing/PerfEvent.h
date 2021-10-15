@@ -33,7 +33,8 @@ struct ForkPerfEvent {
   void Accept(PerfEventVisitor* visitor);
 
   uint64_t timestamp;
-  pid_t pid, tid;
+  pid_t pid;
+  pid_t tid;
   int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
 };
 
@@ -41,7 +42,8 @@ struct ExitPerfEvent {
   void Accept(PerfEventVisitor* visitor);
 
   uint64_t timestamp;
-  pid_t pid, tid;
+  pid_t pid;
+  pid_t tid;
   int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
 };
 
@@ -73,7 +75,8 @@ struct StackSamplePerfEvent {
   [[nodiscard]] uint64_t GetStackSize() { return dyn_size; }
 
   uint64_t timestamp;
-  pid_t pid, tid;
+  pid_t pid;
+  pid_t tid;
   std::unique_ptr<perf_event_sample_regs_user_all> regs;
   uint64_t dyn_size;
   std::unique_ptr<char[]> data;
@@ -99,7 +102,8 @@ struct CallchainSamplePerfEvent {
   }
 
   uint64_t timestamp;
-  pid_t pid, tid;
+  pid_t pid;
+  pid_t tid;
   int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
   uint64_t ips_size;
   std::unique_ptr<uint64_t[]> ips;
@@ -111,7 +115,8 @@ struct UprobesPerfEvent {
   void Accept(PerfEventVisitor* visitor);
 
   uint64_t timestamp;
-  pid_t pid, tid;
+  pid_t pid;
+  pid_t tid;
   uint32_t cpu;
   int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
   uint64_t function_id = orbit_grpc_protos::kInvalidFunctionId;
@@ -124,7 +129,8 @@ struct UprobesWithArgumentsPerfEvent {
   void Accept(PerfEventVisitor* visitor);
 
   uint64_t timestamp;
-  pid_t pid, tid;
+  pid_t pid;
+  pid_t tid;
   uint32_t cpu;
   int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
   uint64_t function_id = orbit_grpc_protos::kInvalidFunctionId;
@@ -136,7 +142,8 @@ struct UretprobesPerfEvent {
   void Accept(PerfEventVisitor* visitor);
 
   uint64_t timestamp;
-  pid_t pid, tid;
+  pid_t pid;
+  pid_t tid;
   int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
 };
 
@@ -144,21 +151,13 @@ struct UretprobesWithReturnValuePerfEvent {
   void Accept(PerfEventVisitor* visitor);
 
   uint64_t timestamp;
-  pid_t pid, tid;
+  pid_t pid;
+  pid_t tid;
   int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
   uint64_t rax;
 };
 
 struct MmapPerfEvent {
-  MmapPerfEvent(pid_t pid, uint64_t timestamp, int ordered_in_file_descriptor, uint64_t address,
-                uint64_t length, uint64_t page_offset, std::string&& filename)
-      : timestamp{timestamp},
-        address{address},
-        length{length},
-        page_offset{page_offset},
-        filename{filename},
-        pid{pid},
-        ordered_in_file_descriptor{ordered_in_file_descriptor} {}
   void Accept(PerfEventVisitor* visitor);
 
   uint64_t timestamp;
@@ -174,7 +173,8 @@ struct GenericTracepointPerfEvent {
   void Accept(PerfEventVisitor* visitor);
 
   uint64_t timestamp;
-  pid_t pid, tid;
+  pid_t pid;
+  pid_t tid;
   uint32_t cpu;
   uint32_t size;
   int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
@@ -222,7 +222,8 @@ struct AmdgpuCsIoctlPerfEvent {
   void Accept(PerfEventVisitor* visitor);
 
   uint64_t timestamp;
-  pid_t pid, tid;
+  pid_t pid;
+  pid_t tid;
   uint32_t context;
   uint32_t seqno;
   int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
@@ -233,7 +234,8 @@ struct AmdgpuSchedRunJobPerfEvent {
   void Accept(PerfEventVisitor* visitor);
 
   uint64_t timestamp;
-  pid_t pid, tid;
+  pid_t pid;
+  pid_t tid;
   uint32_t context;
   uint32_t seqno;
   int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
@@ -244,7 +246,8 @@ struct DmaFenceSignaledPerfEvent {
   void Accept(PerfEventVisitor* visitor);
 
   uint64_t timestamp;
-  pid_t pid, tid;
+  pid_t pid;
+  pid_t tid;
   uint32_t context;
   uint32_t seqno;
   int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;

@@ -117,8 +117,13 @@ MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
   int32_t pid = static_cast<int32_t>(sample_id.pid);
 
   // Consider moving this to MMAP2 event which has more information (like flags)
-  return MmapPerfEvent(pid, timestamp, ring_buffer->GetFileDescriptor(), mmap_event.address,
-                       mmap_event.length, mmap_event.page_offset, std::move(filename));
+  return MmapPerfEvent{.timestamp = timestamp,
+                       .address = mmap_event.address,
+                       .length = mmap_event.length,
+                       .page_offset = mmap_event.page_offset,
+                       .filename = std::move(filename),
+                       .pid = pid,
+                       .ordered_in_file_descriptor = ring_buffer->GetFileDescriptor()};
 }
 
 StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
