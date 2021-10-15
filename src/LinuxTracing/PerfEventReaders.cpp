@@ -249,7 +249,7 @@ GenericTracepointPerfEvent ConsumeGenericTracepointPerfEvent(PerfEventRingBuffer
 }
 
 template <typename EventType, typename StructType>
-EventType ConsumeGPUEvent(PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+EventType ConsumeGpuEvent(PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
   uint32_t tracepoint_size;
   ring_buffer->ReadValueAtOffset(&tracepoint_size, offsetof(perf_event_raw_sample_fixed, size));
 
@@ -258,9 +258,10 @@ EventType ConsumeGPUEvent(PerfEventRingBuffer* ring_buffer, const perf_event_hea
 
   std::unique_ptr<uint8_t[]> tracepoint_data =
       make_unique_for_overwrite<uint8_t[]>(tracepoint_size);
-  ring_buffer->ReadRawAtOffset(tracepoint_data.get(),
-                               offsetof(perf_event_raw_sample_fixed, size) + sizeof(uint32_t),
-                               tracepoint_size);
+  ring_buffer->ReadRawAtOffset(
+      tracepoint_data.get(),
+      offsetof(perf_event_raw_sample_fixed, size) + sizeof(perf_event_raw_sample_fixed::size),
+      tracepoint_size);
   const StructType& typed_tracepoint_data =
       *reinterpret_cast<const StructType*>(tracepoint_data.get());
   const int16_t data_loc_size = static_cast<int16_t>(typed_tracepoint_data.timeline >> 16);
@@ -287,18 +288,18 @@ EventType ConsumeGPUEvent(PerfEventRingBuffer* ring_buffer, const perf_event_hea
 
 AmdgpuCsIoctlPerfEvent ConsumeAmdgpuCsIoctlPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                      const perf_event_header& header) {
-  return ConsumeGPUEvent<AmdgpuCsIoctlPerfEvent, amdgpu_cs_ioctl_tracepoint>(ring_buffer, header);
+  return ConsumeGpuEvent<AmdgpuCsIoctlPerfEvent, amdgpu_cs_ioctl_tracepoint>(ring_buffer, header);
 }
 
 AmdgpuSchedRunJobPerfEvent ConsumeAmdgpuSchedRunJobPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                              const perf_event_header& header) {
-  return ConsumeGPUEvent<AmdgpuSchedRunJobPerfEvent, amdgpu_sched_run_job_tracepoint>(ring_buffer,
+  return ConsumeGpuEvent<AmdgpuSchedRunJobPerfEvent, amdgpu_sched_run_job_tracepoint>(ring_buffer,
                                                                                       header);
 }
 
 DmaFenceSignaledPerfEvent ConsumeDmaFenceSignaledPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                            const perf_event_header& header) {
-  return ConsumeGPUEvent<DmaFenceSignaledPerfEvent, dma_fence_signaled_tracepoint>(ring_buffer,
+  return ConsumeGpuEvent<DmaFenceSignaledPerfEvent, dma_fence_signaled_tracepoint>(ring_buffer,
                                                                                    header);
 }
 
