@@ -12,6 +12,7 @@
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
+#include "DataViewTestUtils.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
 #include "DataViews/LiveFunctionsDataView.h"
@@ -31,6 +32,7 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using JumpToTimerMode = orbit_data_views::AppInterface::JumpToTimerMode;
 using orbit_client_data::ModuleData;
+using orbit_data_views::CheckSingleAction;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
 
@@ -258,102 +260,75 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     return frame_track_enabled.at(index.value());
   });
 
-  auto run_basic_checks = [&](std::vector<int> selected_indices) {
-    // Common actions should always be available.
-    EXPECT_THAT(view_.GetContextMenu(0, selected_indices),
-                testing::IsSupersetOf({"Copy Selection", "Export to CSV"}));
+  auto run_checks = [&](std::vector<int> selected_indices) {
+    std::vector<std::string> context_menu = view_.GetContextMenu(0, selected_indices);
 
-    // Source code and disassembly actions are availble if and only if capture is connected. Hook
-    // and unhook actions are unavailable if capture is not connected.
-    if (capture_connected) {
-      EXPECT_THAT(view_.GetContextMenu(0, selected_indices),
-                  testing::IsSupersetOf({"Go to Disassembly", "Go to Source code"}));
-    } else {
-      EXPECT_THAT(view_.GetContextMenu(0, selected_indices),
-                  testing::AllOf(testing::Not(testing::Contains("Go to Disassembly")),
-                                 testing::Not(testing::Contains("Go to Source code")),
-                                 testing::Not(testing::Contains("Hook")),
-                                 testing::Not(testing::Contains("Unhook"))));
-    }
+    // Common actions should always be available.
+    CheckSingleAction(context_menu, "Copy Selection", true);
+    CheckSingleAction(context_menu, "Export to CSV", true);
+
+    // Source code and disassembly actions are availble if and only if capture is connected.
+    CheckSingleAction(context_menu, "Go to Source code", capture_connected);
+    CheckSingleAction(context_menu, "Go to Disassembly", capture_connected);
 
     // Jump actions are only available for single selection with non-zero counts.
-    if (selected_indices.size() == 1 && kCounts[selected_indices[0]] > 0) {
-      EXPECT_THAT(
-          view_.GetContextMenu(0, selected_indices),
-          testing::IsSupersetOf({"Jump to first", "Jump to last", "Jump to min", "Jump to max"}));
-    } else {
-      EXPECT_THAT(view_.GetContextMenu(0, selected_indices),
-                  testing::AllOf(testing::Not(testing::Contains("Jump to first")),
-                                 testing::Not(testing::Contains("Jump to last")),
-                                 testing::Not(testing::Contains("Jump to min")),
-                                 testing::Not(testing::Contains("Jump to max"))));
-    }
+    bool enable_jump = selected_indices.size() == 1 && kCounts[selected_indices[0]] > 0;
+    CheckSingleAction(context_menu, "Jump to first", enable_jump);
+    CheckSingleAction(context_menu, "Jump to last", enable_jump);
+    CheckSingleAction(context_menu, "Jump to min", enable_jump);
+    CheckSingleAction(context_menu, "Jump to max", enable_jump);
 
     // Add iterators action is only available if some function has non-zero counts.
     int total_counts = 0;
     for (int selected_index : selected_indices) {
       total_counts += kCounts[selected_index];
     }
-    if (total_counts > 0) {
-      EXPECT_THAT(view_.GetContextMenu(0, selected_indices), testing::Contains("Add iterator(s)"));
-    } else {
-      EXPECT_THAT(view_.GetContextMenu(0, selected_indices),
-                  testing::Not(testing::Contains("Add iterator(s)")));
+    CheckSingleAction(context_menu, "Add iterator(s)", total_counts > 0);
+
+    // Hook action is available if and only if 1) capture is connected and 2) there is an unselected
+    // instrumented function. Unhook action is available if and only if 1) capture is connected and
+    // 2) there is a selected instrumented function.
+    bool enable_select = false;
+    bool enable_unselect = false;
+    if (capture_connected) {
+      for (size_t index : selected_indices) {
+        if (functions_selected.at(index)) {
+          enable_unselect = true;
+        } else {
+          enable_select = true;
+        }
+      }
     }
-  };
+    CheckSingleAction(context_menu, "Hook", enable_select);
+    CheckSingleAction(context_menu, "Unhook", enable_unselect);
 
-  const auto can_unhook = [&]() {
-    return testing::AllOf(testing::Not(testing::Contains("Hook")), testing::Contains("Unhook"));
-  };
-  const auto can_hook = [&]() {
-    return testing::AllOf(testing::Contains("Hook"), testing::Not(testing::Contains("Unhook")));
-  };
-  const auto can_hook_and_unhook = [&]() {
-    return testing::AllOf(testing::Contains("Hook"), testing::Contains("Unhook"));
-  };
-
-  const auto can_disable_frame_tracks = [&]() {
-    return testing::AllOf(testing::Not(testing::Contains("Enable frame track(s)")),
-                          testing::Contains("Disable frame track(s)"));
-  };
-  const auto can_enable_frame_tracks = [&]() {
-    return testing::AllOf(testing::Contains("Enable frame track(s)"),
-                          testing::Not(testing::Contains("Disable frame track(s)")));
-  };
-  const auto can_enable_and_disable_frame_tracks = [&]() {
-    return testing::AllOf(testing::Contains("Enable frame track(s)"),
-                          testing::Contains("Disable frame track(s)"));
+    // Enable frametrack action is available if and only if there is an instrumented function with
+    // frametrack not yet enabled, disable frametrack action is available if and only if there is an
+    // instrumented function with frametrack enabled.
+    bool enable_enable_frametrack = false;
+    bool enable_disable_frametrack = false;
+    for (size_t index : selected_indices) {
+      if (frame_track_enabled.at(index)) {
+        enable_disable_frametrack = true;
+      } else {
+        enable_enable_frametrack = true;
+      }
+    }
+    CheckSingleAction(context_menu, "Enable frame track(s)", enable_enable_frametrack);
+    CheckSingleAction(context_menu, "Disable frame track(s)", enable_disable_frametrack);
   };
 
   capture_connected = false;
-  run_basic_checks({0});
-  EXPECT_THAT(view_.GetContextMenu(0, {0}), can_enable_frame_tracks());
-
-  run_basic_checks({1});
-  EXPECT_THAT(view_.GetContextMenu(0, {1}), can_enable_frame_tracks());
-
-  run_basic_checks({2});
-  EXPECT_THAT(view_.GetContextMenu(0, {2}), can_disable_frame_tracks());
-
-  run_basic_checks({0, 1, 2});
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_enable_and_disable_frame_tracks());
+  { run_checks({0}); }
+  { run_checks({1}); }
+  { run_checks({2}); }
+  { run_checks({0, 1, 2}); }
 
   capture_connected = true;
-  run_basic_checks({0});
-  EXPECT_THAT(view_.GetContextMenu(0, {0}), can_hook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0}), can_enable_frame_tracks());
-
-  run_basic_checks({1});
-  EXPECT_THAT(view_.GetContextMenu(0, {1}), can_unhook());
-  EXPECT_THAT(view_.GetContextMenu(0, {1}), can_enable_frame_tracks());
-
-  run_basic_checks({2});
-  EXPECT_THAT(view_.GetContextMenu(0, {2}), can_unhook());
-  EXPECT_THAT(view_.GetContextMenu(0, {2}), can_disable_frame_tracks());
-
-  run_basic_checks({0, 1, 2});
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_hook_and_unhook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_enable_and_disable_frame_tracks());
+  { run_checks({0}); }
+  { run_checks({1}); }
+  { run_checks({2}); }
+  { run_checks({0, 1, 2}); }
 }
 
 TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {

@@ -5,6 +5,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "DataViewTestUtils.h"
 #include "DataViews/DataView.h"
 #include "DataViews/TracepointsDataView.h"
 #include "MockAppInterface.h"
@@ -14,6 +15,7 @@
 #include "TestUtils/TestUtils.h"
 #include "tracepoint.pb.h"
 
+using orbit_data_views::CheckSingleAction;
 using orbit_grpc_protos::TracepointInfo;
 
 namespace {
@@ -104,21 +106,12 @@ TEST_F(TracepointsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
         return tracepoints_selected.at(index.value());
       });
 
-  auto check_single_action = [](const std::vector<std::string>& context_menu,
-                                const std::string& action, bool enable_action) {
-    if (enable_action) {
-      EXPECT_THAT(context_menu, testing::IsSupersetOf({action}));
-    } else {
-      EXPECT_THAT(context_menu, testing::Not(testing::Contains(action)));
-    }
-  };
-
   auto run_checks = [&](const std::vector<int>& selected_indices) {
     std::vector<std::string> context_menu = view_.GetContextMenu(0, selected_indices);
 
     // Common actions should always be available.
-    check_single_action(context_menu, "Copy Selection", true);
-    check_single_action(context_menu, "Export to CSV", true);
+    CheckSingleAction(context_menu, "Copy Selection", true);
+    CheckSingleAction(context_menu, "Export to CSV", true);
 
     // Unhook action is available if and only if there are selected tracepoints.
     // Hook action is available if and only if there are unselected tracepoints.
@@ -131,8 +124,8 @@ TEST_F(TracepointsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
         enable_select = true;
       }
     }
-    check_single_action(context_menu, "Unhook", enable_unselect);
-    check_single_action(context_menu, "Hook", enable_select);
+    CheckSingleAction(context_menu, "Unhook", enable_unselect);
+    CheckSingleAction(context_menu, "Hook", enable_select);
   };
 
   SetTracepointsByIndices({0, 1, 2});

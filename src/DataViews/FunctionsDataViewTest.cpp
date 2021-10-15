@@ -14,6 +14,7 @@
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
+#include "DataViewTestUtils.h"
 #include "DataViews/DataView.h"
 #include "DataViews/FunctionsDataView.h"
 #include "MockAppInterface.h"
@@ -24,6 +25,8 @@
 #include "capture.pb.h"
 #include "capture_data.pb.h"
 #include "process.pb.h"
+
+using orbit_data_views::CheckSingleAction;
 
 namespace {
 struct FunctionsDataViewTest : public testing::Test {
@@ -371,8 +374,7 @@ TEST_F(FunctionsDataViewTest, CommonContextMenuEntriesArePresent) {
 }
 
 TEST_F(FunctionsDataViewTest, ContextMenuEntriesChangeOnFunctionState) {
-  std::array<bool, 3> is_function_selected = {false, false, false};
-
+  std::array<bool, 3> is_function_selected = {true, true, false};
   EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
       .Times(testing::AnyNumber())
       .WillRepeatedly([&](const orbit_client_protos::FunctionInfo& function) -> bool {
@@ -381,7 +383,7 @@ TEST_F(FunctionsDataViewTest, ContextMenuEntriesChangeOnFunctionState) {
         return is_function_selected.at(index.value());
       });
 
-  std::array<bool, 3> is_frame_track_enabled = {false, false, false};
+  std::array<bool, 3> is_frame_track_enabled = {true, false, false};
   EXPECT_CALL(app_, IsFrameTrackEnabled)
       .Times(testing::AnyNumber())
       .WillRepeatedly([&](const orbit_client_protos::FunctionInfo& function) -> bool {
@@ -392,84 +394,49 @@ TEST_F(FunctionsDataViewTest, ContextMenuEntriesChangeOnFunctionState) {
 
   view_.AddFunctions({&functions_[0], &functions_[1], &functions_[2]});
 
-  const auto can_unhook = [&]() {
-    return testing::AllOf(testing::Not(testing::Contains("Hook")), testing::Contains("Unhook"));
+  auto run_checks = [&](std::vector<int> selected_indices) {
+    std::vector<std::string> context_menu = view_.GetContextMenu(0, selected_indices);
+
+    // Common actions should always be available.
+    CheckSingleAction(context_menu, "Copy Selection", true);
+    CheckSingleAction(context_menu, "Export to CSV", true);
+
+    // Source code and disassembly actions are also always available.
+    CheckSingleAction(context_menu, "Go to Source code", true);
+    CheckSingleAction(context_menu, "Go to Disassembly", true);
+
+    // Hook action is available if and only if there is an unselected function. Unhook action is
+    // available if and only if there is a selected instrumented function.
+    // Enable frametrack action is available if and only if there is a function with frametrack not
+    // yet enabled, disable frametrack action is available if and only if there is a function with
+    // frametrack enabled.
+    bool enable_select = false;
+    bool enable_unselect = false;
+    bool enable_enable_frametrack = false;
+    bool enable_disable_frametrack = false;
+    for (size_t index : selected_indices) {
+      if (is_function_selected.at(index)) {
+        enable_unselect = true;
+      } else {
+        enable_select = true;
+      }
+
+      if (is_frame_track_enabled.at(index)) {
+        enable_disable_frametrack = true;
+      } else {
+        enable_enable_frametrack = true;
+      }
+    }
+    CheckSingleAction(context_menu, "Hook", enable_select);
+    CheckSingleAction(context_menu, "Unhook", enable_unselect);
+    CheckSingleAction(context_menu, "Enable frame track(s)", enable_enable_frametrack);
+    CheckSingleAction(context_menu, "Disable frame track(s)", enable_disable_frametrack);
   };
-  const auto can_hook = [&]() {
-    return testing::AllOf(testing::Contains("Hook"), testing::Not(testing::Contains("Unhook")));
-  };
-  const auto can_hook_and_unhook = [&]() {
-    return testing::AllOf(testing::Contains("Hook"), testing::Contains("Unhook"));
-  };
-  const auto can_disable_frame_tracks = [&]() {
-    return testing::AllOf(testing::Not(testing::Contains("Enable frame track(s)")),
-                          testing::Contains("Disable frame track(s)"));
-  };
-  const auto can_enable_frame_tracks = [&]() {
-    return testing::AllOf(testing::Contains("Enable frame track(s)"),
-                          testing::Not(testing::Contains("Disable frame track(s)")));
-  };
-  const auto can_enable_and_disable_frame_tracks = [&]() {
-    return testing::AllOf(testing::Contains("Enable frame track(s)"),
-                          testing::Contains("Disable frame track(s)"));
-  };
 
-  // Context menus when single entries are selected
-
-  is_function_selected[0] = false;
-  is_frame_track_enabled[0] = false;
-  EXPECT_THAT(view_.GetContextMenu(0, {0}), can_hook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0}), can_enable_frame_tracks());
-
-  is_function_selected[0] = true;
-  is_frame_track_enabled[0] = false;
-  EXPECT_THAT(view_.GetContextMenu(0, {0}), can_unhook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0}), can_enable_frame_tracks());
-
-  is_function_selected[0] = true;
-  is_frame_track_enabled[0] = true;
-  EXPECT_THAT(view_.GetContextMenu(0, {0}), can_unhook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0}), can_disable_frame_tracks());
-
-  // Note that the missing combination - `is_function_selected = false` and `is_frame_track_enabled
-  // = true` - makes no sense since a function needs to be hooked to have a frame track enabled.
-
-  // Context menus when multiple entries are selected: A particular action will be offered when any
-  // selected entry can execute that action.
-  is_function_selected = {false, false, false};
-  is_frame_track_enabled = {false, false, false};
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_hook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_enable_frame_tracks());
-
-  is_function_selected = {false, true, false};
-  is_frame_track_enabled = {false, false, false};
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_hook_and_unhook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_enable_frame_tracks());
-
-  is_function_selected = {false, true, false};
-  is_frame_track_enabled = {false, true, false};
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_hook_and_unhook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_enable_and_disable_frame_tracks());
-
-  is_function_selected = {false, true, true};
-  is_frame_track_enabled = {false, true, false};
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_hook_and_unhook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_enable_and_disable_frame_tracks());
-
-  is_function_selected = {false, true, true};
-  is_frame_track_enabled = {false, true, false};
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_hook_and_unhook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_enable_and_disable_frame_tracks());
-
-  is_function_selected = {true, true, true};
-  is_frame_track_enabled = {true, true, false};
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_unhook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_enable_and_disable_frame_tracks());
-
-  is_function_selected = {true, true, true};
-  is_frame_track_enabled = {true, true, true};
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_unhook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_disable_frame_tracks());
+  { run_checks({0}); }
+  { run_checks({1}); }
+  { run_checks({2}); }
+  { run_checks({0, 1, 2}); }
 }
 
 TEST_F(FunctionsDataViewTest, GenericDataExportFunctionShowCorrectData) {

@@ -12,6 +12,7 @@
 #include "ClientData/ModuleData.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
+#include "DataViewTestUtils.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/CallstackDataView.h"
 #include "DataViews/DataView.h"
@@ -29,6 +30,7 @@ using orbit_client_data::ModuleData;
 using orbit_client_data::ProcessData;
 using orbit_client_data::SampledFunction;
 using orbit_client_protos::FunctionInfo;
+using orbit_data_views::CheckSingleAction;
 using orbit_grpc_protos::ModuleInfo;
 
 namespace {
@@ -278,15 +280,6 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
         return functions_selected.at(index.value());
       });
 
-  auto check_single_action = [&](const std::vector<std::string>& context_menu,
-                                 const std::string& action, bool enable_action) {
-    if (enable_action) {
-      EXPECT_THAT(context_menu, testing::IsSupersetOf({action}));
-    } else {
-      EXPECT_THAT(context_menu, testing::Not(testing::Contains(action)));
-    }
-  };
-
   auto get_context_menu_from_selected_indices =
       [&](const std::vector<int>& selected_indices) -> std::vector<std::string> {
     std::vector<int> selected_rows;
@@ -306,8 +299,8 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
         get_context_menu_from_selected_indices(selected_indices);
 
     // Common actions should always be available.
-    check_single_action(context_menu, "Copy Selection", true);
-    check_single_action(context_menu, "Export to CSV", true);
+    CheckSingleAction(context_menu, "Copy Selection", true);
+    CheckSingleAction(context_menu, "Export to CSV", true);
 
     // Find indices that SamplingReportDataView::GetFunctionsFromIndices can find matching
     // functions.
@@ -323,10 +316,10 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     // Source code and disassembly actions are availble if and only if 1) capture is connected and
     // 2) selected_functions = GetFunctionsFromIndices(selected_indices) is not empty.
     bool enable_source_code = capture_connected && !selected_indices_with_matching_function.empty();
-    check_single_action(context_menu, "Go to Source code", enable_source_code);
+    CheckSingleAction(context_menu, "Go to Source code", enable_source_code);
 
     bool enable_disassembly = capture_connected && !selected_indices_with_matching_function.empty();
-    check_single_action(context_menu, "Go to Disassembly", enable_disassembly);
+    CheckSingleAction(context_menu, "Go to Disassembly", enable_disassembly);
 
     // Hook action is available if and only if 1) capture is connected and 2) selected_functions =
     // GetFunctionsFromIndices(selected_indices) contains a unselected function.
@@ -343,8 +336,8 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
         }
       }
     }
-    check_single_action(context_menu, "Hook", enable_select);
-    check_single_action(context_menu, "Unhook", enable_unselect);
+    CheckSingleAction(context_menu, "Hook", enable_select);
+    CheckSingleAction(context_menu, "Unhook", enable_unselect);
 
     // Find indices that SamplingReportDataView::GetModulePathsAndBuildIdsFromIndices can find
     // matching module path and build id pair.
@@ -364,7 +357,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
         break;
       }
     }
-    check_single_action(context_menu, "Load Symbols", enable_load);
+    CheckSingleAction(context_menu, "Load Symbols", enable_load);
   };
 
   AddFunctionsByIndices({0, 1, 2, 3});

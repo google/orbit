@@ -49,6 +49,8 @@ target_link_libraries(DataViews PUBLIC
 add_executable(DataViewsTests)
 target_sources(DataViewsTests PRIVATE CallstackDataViewTest.cpp
                                       DataViewTest.cpp
+                                      DataViewTestUtils.h
+                                      DataViewTestUtils.cpp
                                       DataViewUtilsTest.cpp
                                       FunctionsDataViewTest.cpp
                                       LiveFunctionsDataViewTest.cpp
