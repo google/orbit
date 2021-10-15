@@ -138,7 +138,7 @@ class LeafFunctionCallManagerTest : public ::testing::Test {
   };
 };
 
-CallchainSamplePerfEvent BuildCallchainSamplePerfEvent(const std::vector<uint64_t>& callchain) {
+CallchainSamplePerfEvent BuildFakeCallchainSamplePerfEvent(const std::vector<uint64_t>& callchain) {
   CallchainSamplePerfEvent event{
       .timestamp = 15,
       .pid = 10,
@@ -159,7 +159,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnSmall
   callchain.push_back(kTargetAddress2 + 1);
   callchain.push_back(kTargetAddress3 + 1);
 
-  CallchainSamplePerfEvent event = BuildCallchainSamplePerfEvent(callchain);
+  CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
   event.regs->bp = 2 * kStackDumpSize;
   event.regs->sp = 0;
 
@@ -176,7 +176,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
   callchain.push_back(kTargetAddress2 + 1);
   callchain.push_back(kTargetAddress3 + 1);
 
-  CallchainSamplePerfEvent event = BuildCallchainSamplePerfEvent(callchain);
+  CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
   event.regs->bp = kStackDumpSize;
   event.regs->sp = 10;
 
@@ -221,7 +221,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnNoFra
   callchain.push_back(kTargetAddress2 + 1);
   callchain.push_back(kTargetAddress3 + 1);
 
-  CallchainSamplePerfEvent event = BuildCallchainSamplePerfEvent(callchain);
+  CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
   event.regs->bp = kStackDumpSize;
   event.regs->sp = 10;
 
@@ -252,7 +252,7 @@ TEST_F(LeafFunctionCallManagerTest,
   callchain.push_back(kTargetAddress2 + 1);
   callchain.push_back(kTargetAddress3 + 1);
 
-  CallchainSamplePerfEvent event = BuildCallchainSamplePerfEvent(callchain);
+  CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
   event.regs->bp = kStackDumpSize;
   event.regs->sp = 10;
 
@@ -281,7 +281,7 @@ TEST_F(LeafFunctionCallManagerTest,
   // Increment by one as the return address is the next address.
   callchain.push_back(kTargetAddress3 + 1);
 
-  CallchainSamplePerfEvent event = BuildCallchainSamplePerfEvent(callchain);
+  CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
   event.regs->bp = kStackDumpSize;
   event.regs->sp = 10;
 
