@@ -260,11 +260,12 @@ EventType ConsumeGPUEvent(PerfEventRingBuffer* ring_buffer, const perf_event_hea
                                offsetof(perf_event_raw_sample_fixed, size) + sizeof(uint32_t),
                                tracepoint_size);
   const StructType& typed_tracepoint_data =
-      *reinterpret_cast<const StructType*>(tracepoint_data.get());
+      *(reinterpret_cast<const StructType*>(tracepoint_data.get()));
   const int16_t data_loc_size = static_cast<int16_t>(typed_tracepoint_data.timeline >> 16);
   const int16_t data_loc_offset = static_cast<int16_t>(typed_tracepoint_data.timeline & 0x00ff);
   std::vector<char> data_loc_data(data_loc_size);
-  std::memcpy(&data_loc_data[0], reinterpret_cast<const char*>(&tracepoint_data) + data_loc_offset,
+  std::memcpy(&data_loc_data[0],
+              reinterpret_cast<const char*>(tracepoint_data.get()) + data_loc_offset,
               data_loc_size);
   data_loc_data[data_loc_data.size() - 1] = 0;
 
