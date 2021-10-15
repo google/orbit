@@ -2,20 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef WINDOWS_SERVICE_PROCESS_SERVICE_IMPL_H_
-#define WINDOWS_SERVICE_PROCESS_SERVICE_IMPL_H_
+#ifndef WINDOWS_PROCESS_SERVICE_PROCESS_SERVICE_IMPL_H_
+#define WINDOWS_PROCESS_SERVICE_PROCESS_SERVICE_IMPL_H_
 
-#include <absl/synchronization/mutex.h>
 #include <grpcpp/grpcpp.h>
-#include <stddef.h>
-
-#include <memory>
-#include <string>
 
 #include "services.grpc.pb.h"
 #include "services.pb.h"
 
-namespace windows_service {
+namespace orbit_windows_process_service {
 
 class ProcessServiceImpl final : public orbit_grpc_protos::ProcessService::Service {
  public:
@@ -36,11 +31,9 @@ class ProcessServiceImpl final : public orbit_grpc_protos::ProcessService::Servi
       orbit_grpc_protos::GetDebugInfoFileResponse* response) override;
 
  private:
-  absl::Mutex mutex_;
-
   static constexpr size_t kMaxGetProcessMemoryResponseSize = 8 * 1024 * 1024;
 };
 
-}  // namespace windows_service
+}  // namespace orbit_windows_process_service
 
-#endif  // WINDOWS_SERVICE_PROCESS_SERVICE_IMPL_H_
+#endif  // WINDOWS_PROCESS_SERVICE_PROCESS_SERVICE_IMPL_H_

@@ -20,8 +20,6 @@ target_sources(WindowsServiceLib PRIVATE
         OrbitGrpcServer.h
         OrbitService.cpp
         OrbitService.h
-        ProcessServiceImpl.cpp
-        ProcessServiceImpl.h
         ProducerEventProcessor.h
         ProducerEventProcessor.cpp
         TracingHandler.cpp
@@ -36,6 +34,7 @@ target_include_directories(WindowsServiceLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(WindowsServiceLib PUBLIC
         GrpcProtos
         Introspection
+        WindowsProcessService
         WindowsTracing
         WindowsUtils
         ObjectUtils

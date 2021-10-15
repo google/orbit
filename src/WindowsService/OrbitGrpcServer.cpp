@@ -13,7 +13,7 @@
 #include <utility>
 
 #include "CaptureServiceImpl.h"
-#include "ProcessServiceImpl.h"
+#include "WindowsProcessService/ProcessServiceImpl.h"
 #include "grpcpp/ext/proto_server_reflection_plugin.h"
 #include "grpcpp/grpcpp.h"
 #include "grpcpp/health_check_service_interface.h"
@@ -21,6 +21,8 @@
 ABSL_DECLARE_FLAG(bool, devmode);
 
 namespace windows_service {
+
+using orbit_windows_process_service::ProcessServiceImpl;
 
 namespace {
 
