@@ -1040,7 +1040,10 @@ uint64_t TracerThread::ProcessSampleEventAndReturnTimestamp(const perf_event_hea
   } else if (is_task_newtask) {
     perf_event_raw_sample<task_newtask_tracepoint> ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
-
+    // The tracepoint format calls the new tid "data.pid" but it's effectively the thread id.
+    // Note that ring_buffer_record.sample_id.pid and ring_buffer_record.sample_id.tid are NOT the
+    // pid and tid of the new process/thread, but the ones of the process/thread that created this
+    // one.
     TaskNewtaskPerfEvent event{.timestamp = ring_buffer_record.sample_id.time,
                                .new_tid = ring_buffer_record.data.pid,
                                .ordered_in_file_descriptor = fd};
@@ -1051,6 +1054,8 @@ uint64_t TracerThread::ProcessSampleEventAndReturnTimestamp(const perf_event_hea
     perf_event_raw_sample<task_rename_tracepoint> ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
+    // The tracepoint format calls the renamed tid "data.pid" but it's effectively the thread id.
+    // This should match ring_buffer_record.sample_id.tid.
     TaskRenamePerfEvent event{.timestamp = ring_buffer_record.sample_id.time,
                               .renamed_tid = ring_buffer_record.data.pid,
                               .ordered_in_file_descriptor = fd};
@@ -1076,6 +1081,7 @@ uint64_t TracerThread::ProcessSampleEventAndReturnTimestamp(const perf_event_hea
     perf_event_raw_sample<sched_wakeup_tracepoint> ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
+    // The tracepoint format calls the woken tid "data.pid" but it's effectively the thread id.
     SchedWakeupPerfEvent event{.timestamp = ring_buffer_record.sample_id.time,
                                .woken_tid = ring_buffer_record.data.pid,
                                .ordered_in_file_descriptor = fd};
