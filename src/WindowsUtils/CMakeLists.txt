@@ -22,18 +22,21 @@ target_include_directories(WindowsUtils PRIVATE
 target_sources(WindowsUtils PUBLIC
         include/WindowsUtils/AdjustTokenPrivilege.h
         include/WindowsUtils/FindDebugSymbols.h
+        include/WindowsUtils/GetLastError.h
+        include/WindowsUtils/HandleCloser.h
         include/WindowsUtils/ListModules.h
-        include/WindowsUtils/ListProcesses.h
         include/WindowsUtils/ListThreads.h
         include/WindowsUtils/PerformanceCounter.h
+        include/WindowsUtils/ProcessList.h
         include/WindowsUtils/ReadProcessMemory.h)
 
 target_sources(WindowsUtils PRIVATE
         AdjustTokenPrivilege.cpp
         FindDebugSymbols.cpp
+        GetLastError.cpp
         ListModules.cpp
-        ListProcesses.cpp
         ListThreads.cpp
+        ProcessList.cpp
         ReadProcessMemory.cpp)
 
 target_link_libraries(WindowsUtils PUBLIC
@@ -46,8 +49,8 @@ add_executable(WindowsUtilsTests)
 target_sources(WindowsUtilsTests PRIVATE
         FindDebugSymbolsTest.cpp
         ListModulesTest.cpp
-        ListProcessesTest.cpp
         ListThreadsTest.cpp
+        ProcessListTest.cpp
         ReadProcessMemoryTest.cpp)
 
 target_link_libraries(WindowsUtilsTests PRIVATE

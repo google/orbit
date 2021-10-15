@@ -19,7 +19,7 @@
 #include "OrbitBase/Result.h"
 #include "WindowsUtils/FindDebugSymbols.h"
 #include "WindowsUtils/ListModules.h"
-#include "WindowsUtils/ListProcesses.h"
+#include "WindowsUtils/ProcessList.h"
 #include "WindowsUtils/ReadProcessMemory.h"
 #include "module.pb.h"
 #include "process.pb.h"
@@ -46,18 +46,29 @@ using orbit_windows_utils::Process;
 
 Status ProcessServiceImpl::GetProcessList(ServerContext*, const GetProcessListRequest*,
                                           GetProcessListResponse* response) {
-  const std::vector<Process> processes = orbit_windows_utils::ListProcesses();
+  std::vector<const Process*> processes;
+
+  {
+    absl::MutexLock lock(&mutex_);
+    if (process_list_ == nullptr) {
+      process_list_ = orbit_windows_utils::ProcessList::Create();
+    }
+    process_list_->Refresh();
+    processes = process_list_->GetProcesses();
+  }
+
   if (processes.empty()) {
     return Status(StatusCode::NOT_FOUND, "Error listing processes");
   }
 
-  for (const Process& process : processes) {
+  for (const Process* process : processes) {
     ProcessInfo* process_info = response->add_processes();
-    process_info->set_pid(process.pid);
-    process_info->set_name(process.name);
-    process_info->set_full_path(process.full_path);
-    process_info->set_build_id(process.build_id);
-    process_info->set_is_64_bit(process.is_64_bit);
+    process_info->set_pid(process->pid);
+    process_info->set_name(process->name);
+    process_info->set_full_path(process->full_path);
+    process_info->set_build_id(process->build_id);
+    process_info->set_is_64_bit(process->is_64_bit);
+    process_info->set_cpu_usage(process->cpu_usage_percentage);
   }
 
   return Status::OK;
