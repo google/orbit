@@ -70,7 +70,7 @@ void UprobesUnwindingVisitor::Visit(StackSamplePerfEvent* event) {
   CHECK(current_maps_ != nullptr);
 
   return_address_manager_->PatchSample(event->tid, event->GetRegisters()[PERF_REG_X86_SP],
-                                       event->data.get(), event->GetStackSize());
+                                       event->GetStackData(), event->GetStackSize());
 
   LibunwindstackResult libunwindstack_result =
       unwinder_->Unwind(event->pid, current_maps_->Get(), event->GetRegisters(),

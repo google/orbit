@@ -72,6 +72,7 @@ struct StackSamplePerfEvent {
     return perf_event_sample_regs_user_all_to_register_array(*regs);
   }
   [[nodiscard]] const char* GetStackData() const { return data.get(); }
+  [[nodiscard]] char* GetStackData() { return data.get(); }
   [[nodiscard]] uint64_t GetStackSize() { return dyn_size; }
 
   uint64_t timestamp;
