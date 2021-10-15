@@ -49,16 +49,17 @@ PerfEvent& PerfEventQueue::TopEvent() {
   // at the top of priority_queue_of_events_not_ordered_by_fd_ (and do the same in PopEvent).
   if (priority_queue_of_events_not_ordered_by_fd_.empty()) {
     CHECK(!heap_of_queues_of_events_ordered_by_fd_.empty());
-    return const_cast<PerfEvent&>(heap_of_queues_of_events_ordered_by_fd_.front()->front());
-  } else if (heap_of_queues_of_events_ordered_by_fd_.empty()) {
+    CHECK(!heap_of_queues_of_events_ordered_by_fd_.front()->empty());
+    return heap_of_queues_of_events_ordered_by_fd_.front()->front();
+  }
+  if (heap_of_queues_of_events_ordered_by_fd_.empty()) {
     CHECK(!priority_queue_of_events_not_ordered_by_fd_.empty());
     return const_cast<PerfEvent&>(priority_queue_of_events_not_ordered_by_fd_.top());
   }
-  return const_cast<PerfEvent&>(
-      (GetTimestamp(heap_of_queues_of_events_ordered_by_fd_.front()->front()) <
-       GetTimestamp(priority_queue_of_events_not_ordered_by_fd_.top()))
-          ? heap_of_queues_of_events_ordered_by_fd_.front()->front()
-          : priority_queue_of_events_not_ordered_by_fd_.top());
+  return (GetTimestamp(heap_of_queues_of_events_ordered_by_fd_.front()->front()) <
+          GetTimestamp(priority_queue_of_events_not_ordered_by_fd_.top()))
+             ? heap_of_queues_of_events_ordered_by_fd_.front()->front()
+             : const_cast<PerfEvent&>(priority_queue_of_events_not_ordered_by_fd_.top());
 }
 
 PerfEvent PerfEventQueue::PopEvent() {
@@ -77,7 +78,7 @@ PerfEvent PerfEventQueue::PopEvent() {
   }
 
   std::queue<PerfEvent>* top_queue = heap_of_queues_of_events_ordered_by_fd_.front();
-  PerfEvent top_event = std::move(const_cast<PerfEvent&>(top_queue->front()));
+  PerfEvent top_event = std::move(top_queue->front());
   top_queue->pop();
 
   if (top_queue->empty()) {
