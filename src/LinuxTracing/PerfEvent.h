@@ -261,12 +261,13 @@ using PerfEvent = std::variant<
     TaskNewtaskPerfEvent, TaskRenamePerfEvent, SchedSwitchPerfEvent, SchedWakeupPerfEvent,
     AmdgpuCsIoctlPerfEvent, AmdgpuSchedRunJobPerfEvent, DmaFenceSignaledPerfEvent>;
 
-inline uint64_t GetTimestamp(const PerfEvent& x) {
-  return std::visit([](const auto& arg) -> uint64_t { return arg.timestamp; }, x);
+inline uint64_t GetTimestamp(const PerfEvent& event) {
+  return std::visit([](const auto& arg) -> uint64_t { return arg.timestamp; }, event);
 }
 
-inline int GetOrderedInFileDescriptor(const PerfEvent& x) {
-  return std::visit([](const auto& arg) -> uint64_t { return arg.ordered_in_file_descriptor; }, x);
+inline int GetOrderedInFileDescriptor(const PerfEvent& event) {
+  return std::visit([](const auto& arg) -> uint64_t { return arg.ordered_in_file_descriptor; },
+                    event);
 }
 
 }  // namespace orbit_linux_tracing
