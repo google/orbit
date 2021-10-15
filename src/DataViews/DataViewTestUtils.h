@@ -8,9 +8,20 @@
 #include <string>
 #include <vector>
 
+#include "DataViews/DataView.h"
+#include "MockAppInterface.h"
+
 namespace orbit_data_views {
 void CheckSingleAction(const std::vector<std::string>& context_menu, const std::string& action,
                        bool enable_action);
+
+void CheckCopySelectionIsInvoked(const std::vector<std::string>& context_menu,
+                                 const MockAppInterface& app, DataView& view,
+                                 const std::string& expected_clipboard);
+
+void CheckExportToCsvIsInvoked(const std::vector<std::string>& context_menu,
+                               const MockAppInterface& app, DataView& view,
+                               const std::string& expected_contents);
 }  // namespace orbit_data_views
 
 #endif  // DATA_VIEWS_DATA_VIEW_TEST_UTILS_H_

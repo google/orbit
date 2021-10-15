@@ -19,10 +19,6 @@
 #include "DataViews/SamplingReportDataView.h"
 #include "DataViews/SamplingReportInterface.h"
 #include "MockAppInterface.h"
-#include "OrbitBase/File.h"
-#include "OrbitBase/ReadFileToString.h"
-#include "OrbitBase/TemporaryFile.h"
-#include "TestUtils/TestUtils.h"
 #include "capture_data.pb.h"
 
 using orbit_client_data::CaptureData;
@@ -30,6 +26,8 @@ using orbit_client_data::ModuleData;
 using orbit_client_data::ProcessData;
 using orbit_client_data::SampledFunction;
 using orbit_client_protos::FunctionInfo;
+using orbit_data_views::CheckCopySelectionIsInvoked;
+using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::CheckSingleAction;
 using orbit_grpc_protos::ModuleInfo;
 
@@ -395,57 +393,28 @@ TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {
 
   // Copy Selection
   {
-    const auto copy_selection_index =
-        std::find(context_menu.begin(), context_menu.end(), "Copy Selection") -
-        context_menu.begin();
-    ASSERT_LT(copy_selection_index, context_menu.size());
-
-    std::string clipboard;
-    EXPECT_CALL(app_, SetClipboard).Times(1).WillOnce(testing::SaveArg<0>(&clipboard));
-    view_.OnContextMenu("Copy Selection", static_cast<int>(copy_selection_index), {0});
-    EXPECT_EQ(clipboard,
-              absl::StrFormat("Hooked\tName\tExclusive\tInclusive\tModule\tAddress\tUnwind errors\n"
-                              "\t%s\t%s\t%s\t%s\t%s\t%s\n",
-                              GetExpectedDisplayFunctionNameByIndex(0, *capture_data_),
-                              GetExpectedDisplayExclusiveByIndex(0, true),
-                              GetExpectedDisplayInclusiveByIndex(0, true),
-                              GetExpectedDisplayModuleNameByIndex(0, *capture_data_),
-                              GetExpectedDisplayAddressByIndex(0),
-                              GetExpectedDisplayUnwindErrorsByIndex(0, true)));
+    std::string expected_clipboard = absl::StrFormat(
+        "Hooked\tName\tExclusive\tInclusive\tModule\tAddress\tUnwind errors\n"
+        "\t%s\t%s\t%s\t%s\t%s\t%s\n",
+        GetExpectedDisplayFunctionNameByIndex(0, *capture_data_),
+        GetExpectedDisplayExclusiveByIndex(0, true), GetExpectedDisplayInclusiveByIndex(0, true),
+        GetExpectedDisplayModuleNameByIndex(0, *capture_data_), GetExpectedDisplayAddressByIndex(0),
+        GetExpectedDisplayUnwindErrorsByIndex(0, true));
+    CheckCopySelectionIsInvoked(context_menu, app_, view_, expected_clipboard);
   }
 
   // Export to CSV
   {
-    const auto export_to_csv_index =
-        std::find(context_menu.begin(), context_menu.end(), "Copy Selection") -
-        context_menu.begin();
-    ASSERT_LT(export_to_csv_index, context_menu.size());
-
-    ErrorMessageOr<orbit_base::TemporaryFile> temporary_file_or_error =
-        orbit_base::TemporaryFile::Create();
-    ASSERT_THAT(temporary_file_or_error, orbit_test_utils::HasNoError());
-    const std::filesystem::path temporary_file_path = temporary_file_or_error.value().file_path();
-    temporary_file_or_error.value().CloseAndRemove();
-
-    EXPECT_CALL(app_, GetSaveFile).Times(1).WillOnce(testing::Return(temporary_file_path.string()));
-    view_.OnContextMenu("Export to CSV", static_cast<int>(export_to_csv_index), {0});
-
-    ErrorMessageOr<std::string> contents_or_error =
-        orbit_base::ReadFileToString(temporary_file_path);
-    ASSERT_THAT(contents_or_error, orbit_test_utils::HasNoError());
-
-    EXPECT_EQ(
-        contents_or_error.value(),
-        absl::StrFormat(
-            R"("Hooked","Name","Exclusive","Inclusive","Module","Address","Unwind errors")"
-            "\r\n"
-            R"("","%s","%s","%s","%s","%s","%s")"
-            "\r\n",
-            GetExpectedDisplayFunctionNameByIndex(0, *capture_data_),
-            GetExpectedDisplayExclusiveByIndex(0, true),
-            GetExpectedDisplayInclusiveByIndex(0, true),
-            GetExpectedDisplayModuleNameByIndex(0, *capture_data_),
-            GetExpectedDisplayAddressByIndex(0), GetExpectedDisplayUnwindErrorsByIndex(0, true)));
+    std::string expected_contents = absl::StrFormat(
+        R"("Hooked","Name","Exclusive","Inclusive","Module","Address","Unwind errors")"
+        "\r\n"
+        R"("","%s","%s","%s","%s","%s","%s")"
+        "\r\n",
+        GetExpectedDisplayFunctionNameByIndex(0, *capture_data_),
+        GetExpectedDisplayExclusiveByIndex(0, true), GetExpectedDisplayInclusiveByIndex(0, true),
+        GetExpectedDisplayModuleNameByIndex(0, *capture_data_), GetExpectedDisplayAddressByIndex(0),
+        GetExpectedDisplayUnwindErrorsByIndex(0, true));
+    CheckExportToCsvIsInvoked(context_menu, app_, view_, expected_contents);
   }
 
   // Go to Disassembly
