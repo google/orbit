@@ -11,7 +11,12 @@
 
 namespace orbit_windows_utils {
 
-[[nodiscard]] ErrorMessageOr<std::string> ReadProcessMemory(uint32_t pid, const void* address,
+// Read memory of process identified by "pid" into preallocated "buffer".
+[[nodiscard]] ErrorMessageOr<void> ReadProcessMemory(uint32_t pid, uintptr_t address, void* buffer,
+                                                     uint64_t size, uint64_t* num_bytes_read);
+
+// Convenience function to save caller from allocating a buffer and the num_bytes_read variable.
+[[nodiscard]] ErrorMessageOr<std::string> ReadProcessMemory(uint32_t pid, uintptr_t address,
                                                             uint64_t size);
 
 }  // namespace orbit_windows_utils

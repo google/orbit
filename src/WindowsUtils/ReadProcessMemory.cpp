@@ -4,6 +4,7 @@
 
 #include "WindowsUtils/ReadProcessMemory.h"
 
+#include <absl/base/casts.h>
 #include <absl/strings/str_format.h>
 #include <windows.h>
 
@@ -14,23 +15,30 @@
 
 namespace orbit_windows_utils {
 
-ErrorMessageOr<std::string> ReadProcessMemory(uint32_t pid, const void* address, uint64_t size) {
+[[nodiscard]] ErrorMessageOr<void> ReadProcessMemory(uint32_t pid, uintptr_t address, void* buffer,
+                                                     uint64_t size, uint64_t* num_bytes_read) {
   HANDLE process_handle = OpenProcess(PROCESS_VM_READ, /*bInheritHandle=*/FALSE, pid);
   if (process_handle == nullptr) {
     return ErrorMessage(absl::StrFormat("Could not get handle for process %u", pid));
   }
 
-  std::string buffer(size, {});
-  uint64_t num_bytes_read = 0;
-  BOOL result = ::ReadProcessMemory(process_handle, address, buffer.data(), size, &num_bytes_read);
+  BOOL result = ::ReadProcessMemory(process_handle, absl::bit_cast<void*>(address), buffer, size,
+                                    num_bytes_read);
 
-  if (result == 0) {
+  if (result == FALSE) {
     return ErrorMessage(
-        absl::StrFormat("Reading %u bytes at address %p of process %u", size, address, pid));
+        absl::StrFormat("Could not read %u bytes at address %p of process %u", size, address, pid));
   }
 
-  CHECK(buffer.size() == num_bytes_read);
-  return buffer;
+  return outcome::success();
+}
+
+ErrorMessageOr<std::string> ReadProcessMemory(uint32_t pid, uintptr_t address, uint64_t size) {
+  std::string buffer(size, {});
+  uint64_t num_bytes_read = 0;
+  OUTCOME_TRY(ReadProcessMemory(pid, address, buffer.data(), size, &num_bytes_read));
+  buffer.resize(num_bytes_read);
+  return std::move(buffer);
 }
 
 }  // namespace orbit_windows_utils

@@ -91,10 +91,9 @@ Status ProcessServiceImpl::GetModuleList(ServerContext* /*context*/,
 
 Status ProcessServiceImpl::GetProcessMemory(ServerContext*, const GetProcessMemoryRequest* request,
                                             GetProcessMemoryResponse* response) {
-  const void* address = absl::bit_cast<void*>(request->address());
   const uint64_t size = std::min(request->size(), kMaxGetProcessMemoryResponseSize);
-  const uint32_t pid = request->pid();
-  ErrorMessageOr<std::string> result = orbit_windows_utils::ReadProcessMemory(pid, address, size);
+  ErrorMessageOr<std::string> result =
+      orbit_windows_utils::ReadProcessMemory(request->pid(), request->address(), size);
 
   if (result.has_error()) {
     return Status(StatusCode::PERMISSION_DENIED, result.error().message());
@@ -191,7 +190,7 @@ static [[nodiscard]] ErrorMessageOr<fs::path> FindSymbolsFilePath(
   }
 
   std::string error_message_for_client{absl::StrFormat(
-      "Unable to find debug symbols on the instance for module \"%s\". ", module_path.string())};
+      "Unable to find debug symbols on the instance for module \"%s\".", module_path.string())};
   if (!error_messages.empty()) {
     absl::StrAppend(&error_message_for_client, "\nDetails:\n* ",
                     absl::StrJoin(error_messages, "\n* "));
