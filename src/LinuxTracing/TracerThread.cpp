@@ -1066,6 +1066,11 @@ uint64_t TracerThread::ProcessSampleEventAndReturnTimestamp(const perf_event_hea
     perf_event_raw_sample<sched_switch_tracepoint> ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
+    // As the tracepoint data does not include the pid of the process that the thread being switched
+    // out belongs to, we use the pid set by perf_event_open in the corresponding generic field of
+    // the PERF_RECORD_SAMPLE. Note, though, that this value is -1 when the switch out is caused by
+    // the thread exiting. This is not the case for data.prev_pid, whose value is always correct as
+    // it comes directly from the tracepoint data.
     SchedSwitchPerfEvent event{
         .timestamp = ring_buffer_record.sample_id.time,
         .cpu = ring_buffer_record.sample_id.cpu,
