@@ -17,8 +17,8 @@
 
 #include "ApiLoader/EnableInTracee.h"
 #include "ApiUtils/Event.h"
-#include "CaptureService/ProducerEventProcessor.h"
-#include "GrpcClientCaptureEventCollector.h"
+#include "CaptureEventProcessor/GrpcClientCaptureEventCollector.h"
+#include "CaptureEventProcessor/ProducerEventProcessor.h"
 #include "GrpcProtos/Constants.h"
 #include "Introspection/Introspection.h"
 #include "MemoryInfoHandler.h"
@@ -37,6 +37,9 @@ using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::ProducerCaptureEvent;
+
+using capture_event_processor::GrpcClientCaptureEventCollector;
+using capture_event_processor::ProducerEventProcessor;
 
 namespace orbit_capture_service {
 
@@ -113,10 +116,8 @@ static void StopInternalProducersAndCaptureStartStopListenersInParallel(
   ProducerCaptureEvent event;
   CaptureStarted* capture_started = event.mutable_capture_started();
 
-  pid_t target_pid = orbit_base::ToNativeProcessId(capture_options.pid());
-
-  capture_started->set_process_id(target_pid);
-  auto executable_path_or_error = orbit_base::GetExecutablePath(target_pid);
+  capture_started->set_process_id(capture_options.pid());
+  auto executable_path_or_error = orbit_base::GetExecutablePath(capture_options.pid());
 
   if (executable_path_or_error.has_value()) {
     const std::string& executable_path = executable_path_or_error.value();

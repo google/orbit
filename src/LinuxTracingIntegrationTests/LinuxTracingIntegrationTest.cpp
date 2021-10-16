@@ -412,7 +412,8 @@ using PuppetConstants = LinuxTracingIntegrationTestPuppetConstants;
 }
 
 std::filesystem::path GetExecutableBinaryPath(pid_t pid) {
-  auto error_or_executable_path = orbit_base::GetExecutablePath(pid);
+  auto error_or_executable_path =
+      orbit_base::GetExecutablePath(orbit_base::FromNativeProcessId(pid));
   CHECK(error_or_executable_path.has_value());
   return error_or_executable_path.value();
 }
@@ -434,7 +435,8 @@ orbit_grpc_protos::ModuleInfo GetExecutableBinaryModuleInfo(pid_t pid) {
   CHECK(error_or_module_infos.has_value());
   const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos = error_or_module_infos.value();
 
-  auto error_or_executable_path = orbit_base::GetExecutablePath(pid);
+  auto error_or_executable_path =
+      orbit_base::GetExecutablePath(orbit_base::FromNativeProcessId(pid));
   CHECK(error_or_executable_path.has_value());
   const std::filesystem::path& executable_path = error_or_executable_path.value();
 

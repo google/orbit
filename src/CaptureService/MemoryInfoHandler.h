@@ -5,7 +5,7 @@
 #ifndef CAPTURE_SERVICE_MEMORY_INFO_HANDLER_H_
 #define CAPTURE_SERVICE_MEMORY_INFO_HANDLER_H_
 
-#include "CaptureService/ProducerEventProcessor.h"
+#include "CaptureEventProcessor/ProducerEventProcessor.h"
 #include "MemoryTracing/MemoryInfoListener.h"
 #include "MemoryTracing/MemoryInfoProducer.h"
 #include "OrbitBase/Logging.h"
@@ -19,7 +19,8 @@ namespace orbit_capture_service {
 // `MemoryUsageEvent` and then sends it to a `ProducerEventProcessor`.
 class MemoryInfoHandler : public orbit_memory_tracing::MemoryInfoListener {
  public:
-  explicit MemoryInfoHandler(ProducerEventProcessor* producer_event_processor)
+  explicit MemoryInfoHandler(
+      capture_event_processor::ProducerEventProcessor* producer_event_processor)
       : producer_event_processor_{producer_event_processor} {
     CHECK(producer_event_processor_ != nullptr);
   }
@@ -36,7 +37,7 @@ class MemoryInfoHandler : public orbit_memory_tracing::MemoryInfoListener {
  private:
   void OnMemoryUsageEvent(orbit_grpc_protos::MemoryUsageEvent memory_usage_event) override;
 
-  ProducerEventProcessor* producer_event_processor_;
+  capture_event_processor::ProducerEventProcessor* producer_event_processor_;
   std::unique_ptr<orbit_memory_tracing::MemoryInfoProducer> cgroup_memory_info_producer_;
   std::unique_ptr<orbit_memory_tracing::MemoryInfoProducer> process_memory_info_producer_;
   std::unique_ptr<orbit_memory_tracing::MemoryInfoProducer> system_memory_info_producer_;

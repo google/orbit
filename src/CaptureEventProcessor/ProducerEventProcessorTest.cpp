@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 #include <stdint.h>
 
-#include "CaptureService/ProducerEventProcessor.h"
+#include "CaptureEventProcessor/ProducerEventProcessor.h"
 #include "GrpcProtos/Constants.h"
 #include "capture.pb.h"
 
@@ -69,7 +69,7 @@ using google::protobuf::util::MessageDifferencer;
 using ::testing::ElementsAre;
 using ::testing::SaveArg;
 
-namespace orbit_capture_service {
+namespace capture_event_processor {
 
 namespace {
 
@@ -2122,4 +2122,4 @@ TEST(ProducerEventProcessor, OutOfOrderEventsDiscardedEvent) {
   EXPECT_EQ(actual_out_of_order_events_discarded_event.end_timestamp_ns(), kTimestampNs1);
 }
 
-}  // namespace orbit_capture_service
+}  // namespace capture_event_processor

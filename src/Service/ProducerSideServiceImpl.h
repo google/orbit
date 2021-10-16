@@ -13,8 +13,8 @@
 
 #include <atomic>
 
+#include "CaptureEventProcessor/ProducerEventProcessor.h"
 #include "CaptureService/CaptureStartStopListener.h"
-#include "CaptureService/ProducerEventProcessor.h"
 #include "GrpcProtos/Constants.h"
 #include "capture.pb.h"
 #include "producer_side_services.grpc.pb.h"
@@ -38,7 +38,7 @@ class ProducerSideServiceImpl final : public orbit_grpc_protos::ProducerSideServ
   // CaptureEvents received from producers will be added to capture_event_buffer.
   void OnCaptureStartRequested(
       orbit_grpc_protos::CaptureOptions capture_options,
-      orbit_capture_service::ProducerEventProcessor* producer_event_processor) override;
+      capture_event_processor::ProducerEventProcessor* producer_event_processor) override;
 
   // This method causes the StopCaptureCommand to be sent to connected producers
   // (but if it's called multiple times in a row, the command will only be sent once).
@@ -90,7 +90,7 @@ class ProducerSideServiceImpl final : public orbit_grpc_protos::ProducerSideServ
   } service_state_ ABSL_GUARDED_BY(service_state_mutex_);
   absl::Mutex service_state_mutex_;
 
-  orbit_capture_service::ProducerEventProcessor* producer_event_processor_
+  capture_event_processor::ProducerEventProcessor* producer_event_processor_
       ABSL_GUARDED_BY(producer_event_processor_mutex_) = nullptr;
   absl::Mutex producer_event_processor_mutex_;
 

@@ -13,6 +13,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/SafeStrerror.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "absl/strings/str_format.h"
 
 namespace orbit_base {
@@ -27,9 +28,9 @@ std::filesystem::path GetExecutablePath() {
   return std::filesystem::path(std::string(buffer, length));
 }
 
-ErrorMessageOr<std::filesystem::path> GetExecutablePath(pid_t pid) {
+ErrorMessageOr<std::filesystem::path> GetExecutablePath(uint32_t process_id) {
   char buffer[PATH_MAX];
-
+  int32_t pid = ToNativeProcessId(process_id);
   ssize_t length = readlink(absl::StrFormat("/proc/%i/exe", pid).c_str(), buffer, sizeof(buffer));
   if (length == -1) {
     return ErrorMessage(absl::StrFormat("Unable to get executable path of process with pid %d: %s",

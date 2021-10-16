@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CaptureService/ProducerEventProcessor.h"
+#include "CaptureEventProcessor/ProducerEventProcessor.h"
 
 #include <absl/container/flat_hash_map.h>
 
@@ -55,7 +55,7 @@ using orbit_grpc_protos::ThreadStateSlice;
 using orbit_grpc_protos::TracepointEvent;
 using orbit_grpc_protos::WarningEvent;
 
-namespace orbit_capture_service {
+namespace capture_event_processor {
 
 namespace {
 
@@ -673,4 +673,4 @@ std::unique_ptr<ProducerEventProcessor> ProducerEventProcessor::Create(
   return std::make_unique<ProducerEventProcessorImpl>(client_capture_event_collector);
 }
 
-}  // namespace orbit_capture_service
+}  // namespace capture_event_processor

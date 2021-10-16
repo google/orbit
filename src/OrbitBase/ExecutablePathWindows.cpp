@@ -7,24 +7,50 @@
 
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
-#include "absl/strings/str_replace.h"
+#include "absl/strings/str_format.h"
+
+// clang-format off
+#include <psapi.h>
+// clang-format on
 
 namespace orbit_base {
 
 std::filesystem::path GetExecutablePath() {
-  char exe_file_name[2048] = {0};
-  LPSTR pszBuffer = exe_file_name;
-  DWORD dwMaxChars = _countof(exe_file_name);
-  DWORD dwLength = 0;
+  constexpr uint32_t kMaxPath = 1024;
+  char exe_file_name[kMaxPath] = {0};
 
-  if (!GetModuleFileNameA(NULL, pszBuffer, dwMaxChars)) {
-    FATAL("GetModuleFileName failed with: %d", GetLastError());
+  if (!GetModuleFileNameA(/*hModule=*/nullptr, exe_file_name, kMaxPath)) {
+    ERROR("GetModuleFileNameA failed with: %u", GetLastError());
+    return {};
   }
 
   // Clean up "../" inside full path
-  char exe_full_path[MAX_PATH];
-  if (!GetFullPathNameA(exe_file_name, MAX_PATH, exe_full_path, nullptr)) {
-    FATAL("GetFullPathNameA failed with: %d", GetLastError());
+  char exe_full_path[kMaxPath] = {0};
+  if (!GetFullPathNameA(exe_file_name, kMaxPath, exe_full_path, nullptr)) {
+    ERROR("GetFullPathNameA failed with: %u", GetLastError());
+    return {};
+  }
+
+  return std::filesystem::path(exe_full_path);
+}
+
+[[nodiscard]] ErrorMessageOr<std::filesystem::path> GetExecutablePath(uint32_t pid) {
+  HANDLE handle = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, /*bInheritHandle=*/FALSE, pid);
+  if (handle == nullptr) {
+    return ErrorMessage(absl::StrFormat("Error calling OpenProcess for pid %u", pid));
+  }
+
+  constexpr uint32_t kMaxPath = 1024;
+  char exe_file_name[kMaxPath] = {0};
+
+  if (!GetModuleFileNameExA(handle, /*hModule=*/nullptr, exe_file_name, kMaxPath)) {
+    return ErrorMessage(absl::StrFormat("GetModuleFileNameExA failed with: %u", GetLastError()));
+  }
+
+  // Clean up "../" inside full path
+  char exe_full_path[kMaxPath] = {0};
+  if (!GetFullPathNameA(exe_file_name, kMaxPath, exe_full_path, nullptr)) {
+    return ErrorMessage(absl::StrFormat("GetFullPathNameA failed with: %u", GetLastError()));
   }
 
   return std::filesystem::path(exe_full_path);

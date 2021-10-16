@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CAPTURE_SERVICE_CLIENT_CAPTURE_EVENT_COLLECTOR_H_
-#define CAPTURE_SERVICE_CLIENT_CAPTURE_EVENT_COLLECTOR_H_
+#ifndef CAPTURE_EVENT_PROCESSOR_CLIENT_CAPTURE_EVENT_COLLECTOR_H_
+#define CAPTURE_EVENT_PROCESSOR_CLIENT_CAPTURE_EVENT_COLLECTOR_H_
 
 #include "capture.pb.h"
 
-namespace orbit_capture_service {
+namespace capture_event_processor {
 
 // Interface used to receive ClientCaptureEvents from a ProducerEventProcessor.
 // AddEvent is to be assumed thread safe.
@@ -17,6 +17,6 @@ class ClientCaptureEventCollector {
   virtual void AddEvent(orbit_grpc_protos::ClientCaptureEvent&& event) = 0;
 };
 
-}  // namespace orbit_capture_service
+}  // namespace capture_event_processor
 
-#endif  // CAPTURE_SERVICE_CLIENT_CAPTURE_EVENT_COLLECTOR_H_
+#endif  // CAPTURE_EVENT_PROCESSOR_CLIENT_CAPTURE_EVENT_COLLECTOR_H_

@@ -18,6 +18,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "ProcessServiceUtils.h"
 
 namespace orbit_process_service_internal {
@@ -91,7 +92,7 @@ ErrorMessageOr<Process> Process::FromPid(pid_t pid) {
   std::replace(cmdline.begin(), cmdline.end(), '\0', ' ');
   process.process_info_.set_command_line(cmdline);
 
-  auto file_path_result = orbit_base::GetExecutablePath(pid);
+  auto file_path_result = orbit_base::GetExecutablePath(orbit_base::FromNativeProcessId(pid));
   if (!file_path_result.has_error()) {
     process.process_info_.set_full_path(file_path_result.value());
 

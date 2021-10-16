@@ -16,10 +16,7 @@ namespace orbit_base {
 
 [[nodiscard]] std::filesystem::path GetExecutablePath();
 [[nodiscard]] std::filesystem::path GetExecutableDir();
-
-#if defined(__linux)
-[[nodiscard]] ErrorMessageOr<std::filesystem::path> GetExecutablePath(pid_t pid);
-#endif
+[[nodiscard]] ErrorMessageOr<std::filesystem::path> GetExecutablePath(uint32_t pid);
 
 }  // namespace orbit_base
 
