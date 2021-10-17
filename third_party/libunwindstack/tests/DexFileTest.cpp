@@ -34,7 +34,7 @@
 namespace unwindstack {
 
 static constexpr size_t kNumLeakLoops = 5000;
-static constexpr size_t kMaxAllowedLeakBytes = 1024;
+static constexpr size_t kMaxAllowedLeakBytes = 4 * 1024;
 
 static void CheckForLeak(size_t loop, size_t* first_allocated_bytes, size_t* last_allocated_bytes) {
   size_t allocated_bytes = mallinfo().uordblks;

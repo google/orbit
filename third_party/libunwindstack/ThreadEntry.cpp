@@ -75,7 +75,7 @@ ThreadEntry::~ThreadEntry() {
 }
 
 bool ThreadEntry::Wait(WaitType type) {
-  static const std::chrono::duration wait_time(std::chrono::seconds(5));
+  static const std::chrono::duration wait_time(std::chrono::seconds(10));
   std::unique_lock<std::mutex> lock(wait_mutex_);
   if (wait_cond_.wait_for(lock, wait_time, [this, type] { return wait_value_ == type; })) {
     return true;
