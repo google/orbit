@@ -84,7 +84,7 @@ class MockLeafFunctionCallManager : public LeafFunctionCallManager {
   explicit MockLeafFunctionCallManager(uint16_t stack_dump_size)
       : LeafFunctionCallManager(stack_dump_size) {}
   MOCK_METHOD(Callstack::CallstackType, PatchCallerOfLeafFunction,
-              (CallchainSamplePerfEvent*, LibunwindstackMaps*, LibunwindstackUnwinder*),
+              (const CallchainSamplePerfEvent*, LibunwindstackMaps*, LibunwindstackUnwinder*),
               (override));
 };
 
@@ -218,7 +218,7 @@ TEST_F(UprobesUnwindingVisitorTest,
     uprobe1.function_id = 1;
 
     EXPECT_CALL(return_address_manager_, ProcessUprobes(kTid, 0x40, 0x00)).Times(1);
-    visitor_->Visit(&uprobe1);
+    visitor_->Visit(uprobe1);
     Mock::VerifyAndClearExpectations(&return_address_manager_);
   }
 
@@ -240,7 +240,7 @@ TEST_F(UprobesUnwindingVisitorTest,
     uprobe2.function_id = 2;
 
     EXPECT_CALL(return_address_manager_, ProcessUprobes(kTid, 0x30, 0x01)).Times(1);
-    visitor_->Visit(&uprobe2);
+    visitor_->Visit(uprobe2);
     Mock::VerifyAndClearExpectations(&return_address_manager_);
   }
 
@@ -256,7 +256,7 @@ TEST_F(UprobesUnwindingVisitorTest,
     uprobe3.function_id = 3;
 
     EXPECT_CALL(return_address_manager_, ProcessUprobes(kTid, 0x20, 0x02)).Times(1);
-    visitor_->Visit(&uprobe3);
+    visitor_->Visit(uprobe3);
     Mock::VerifyAndClearExpectations(&return_address_manager_);
   }
 
@@ -278,7 +278,7 @@ TEST_F(UprobesUnwindingVisitorTest,
     uprobe4.function_id = 4;
 
     EXPECT_CALL(return_address_manager_, ProcessUprobes(kTid, 0x10, 0x03)).Times(1);
-    visitor_->Visit(&uprobe4);
+    visitor_->Visit(uprobe4);
     Mock::VerifyAndClearExpectations(&return_address_manager_);
   }
 
@@ -292,7 +292,7 @@ TEST_F(UprobesUnwindingVisitorTest,
     EXPECT_CALL(return_address_manager_, ProcessUretprobes(kTid)).Times(1);
     orbit_grpc_protos::FunctionCall actual_function_call;
     EXPECT_CALL(listener_, OnFunctionCall).Times(1).WillOnce(SaveArg<0>(&actual_function_call));
-    visitor_->Visit(&uretprobe4);
+    visitor_->Visit(uretprobe4);
     Mock::VerifyAndClearExpectations(&return_address_manager_);
     Mock::VerifyAndClearExpectations(&listener_);
     EXPECT_EQ(actual_function_call.pid(), kPid);
@@ -315,7 +315,7 @@ TEST_F(UprobesUnwindingVisitorTest,
     EXPECT_CALL(return_address_manager_, ProcessUretprobes(kTid)).Times(1);
     orbit_grpc_protos::FunctionCall actual_function_call;
     EXPECT_CALL(listener_, OnFunctionCall).Times(1).WillOnce(SaveArg<0>(&actual_function_call));
-    visitor_->Visit(&uretprobe3);
+    visitor_->Visit(uretprobe3);
     Mock::VerifyAndClearExpectations(&return_address_manager_);
     Mock::VerifyAndClearExpectations(&listener_);
     EXPECT_EQ(actual_function_call.pid(), kPid);
@@ -337,7 +337,7 @@ TEST_F(UprobesUnwindingVisitorTest,
     EXPECT_CALL(return_address_manager_, ProcessUretprobes(kTid)).Times(1);
     orbit_grpc_protos::FunctionCall actual_function_call;
     EXPECT_CALL(listener_, OnFunctionCall).Times(1).WillOnce(SaveArg<0>(&actual_function_call));
-    visitor_->Visit(&uretprobe2);
+    visitor_->Visit(uretprobe2);
     Mock::VerifyAndClearExpectations(&return_address_manager_);
     Mock::VerifyAndClearExpectations(&listener_);
     EXPECT_EQ(actual_function_call.pid(), kPid);
@@ -359,7 +359,7 @@ TEST_F(UprobesUnwindingVisitorTest,
     EXPECT_CALL(return_address_manager_, ProcessUretprobes(kTid)).Times(1);
     orbit_grpc_protos::FunctionCall actual_function_call;
     EXPECT_CALL(listener_, OnFunctionCall).Times(1).WillOnce(SaveArg<0>(&actual_function_call));
-    visitor_->Visit(&uretprobe1);
+    visitor_->Visit(uretprobe1);
     Mock::VerifyAndClearExpectations(&return_address_manager_);
     Mock::VerifyAndClearExpectations(&listener_);
     EXPECT_EQ(actual_function_call.pid(), kPid);
@@ -410,7 +410,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(&event);
+  visitor_->Visit(event);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
               ElementsAre(kTargetAddress1, kTargetAddress2, kTargetAddress3));
@@ -457,7 +457,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitEmptyStackSampleWithoutUprobesDoesNothi
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(&event);
+  visitor_->Visit(event);
 
   EXPECT_EQ(unwinding_errors, 0);
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
@@ -494,7 +494,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(&event);
+  visitor_->Visit(event);
 
   // On unwinding errors, only the first frame is added to the Callstack.
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kTargetAddress1));
@@ -541,7 +541,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(&event);
+  visitor_->Visit(event);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kTargetAddress1));
   EXPECT_EQ(actual_callstack_sample.callstack().type(),
@@ -593,7 +593,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitStackSampleWithinUprobeSendsInUprobesCa
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(&event);
+  visitor_->Visit(event);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kUprobesMapsStart));
   EXPECT_EQ(actual_callstack_sample.callstack().type(), orbit_grpc_protos::Callstack::kInUprobes);
@@ -637,7 +637,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitValidCallchainSampleWithoutUprobesSends
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(&event);
+  visitor_->Visit(event);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
               ElementsAre(kTargetAddress1, kTargetAddress2, kTargetAddress3));
@@ -665,7 +665,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitSingleFrameCallchainSampleDoesNothing) 
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(&event);
+  visitor_->Visit(event);
 
   EXPECT_EQ(unwinding_errors, 0);
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
@@ -696,7 +696,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleInsideUprobeCodeSendsInU
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(&event);
+  visitor_->Visit(event);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kUprobesMapsStart));
   EXPECT_EQ(actual_callstack_sample.callstack().type(), orbit_grpc_protos::Callstack::kInUprobes);
@@ -742,7 +742,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleWithUprobeSendsCompleteC
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(&event);
+  visitor_->Visit(event);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
               ElementsAre(kTargetAddress1, kTargetAddress2, kTargetAddress3));
@@ -779,7 +779,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(&event);
+  visitor_->Visit(event);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kTargetAddress1));
   EXPECT_EQ(actual_callstack_sample.callstack().type(),
@@ -802,7 +802,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(1).WillRepeatedly(Return(true));
 
-  auto fake_patch_caller_of_leaf_function = [](CallchainSamplePerfEvent* event,
+  auto fake_patch_caller_of_leaf_function = [](const CallchainSamplePerfEvent* event,
                                                LibunwindstackMaps* /*maps*/,
                                                orbit_linux_tracing::LibunwindstackUnwinder *
                                                /*unwinder*/) -> Callstack::CallstackType {
@@ -830,7 +830,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(&event);
+  visitor_->Visit(event);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
               ElementsAre(kTargetAddress1, kTargetAddress2, kTargetAddress3));
@@ -865,7 +865,7 @@ TEST_F(
   visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                        &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(&event);
+  visitor_->Visit(event);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kTargetAddress1));
   EXPECT_EQ(actual_callstack_sample.callstack().type(),

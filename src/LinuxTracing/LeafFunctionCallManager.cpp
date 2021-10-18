@@ -39,7 +39,7 @@ using orbit_grpc_protos::Callstack;
 // addresses (after uprobe patching) are not.
 // More (internal) documentation on this in: go/stadia-orbit-leaf-frame-pointer
 Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
-    CallchainSamplePerfEvent* event, LibunwindstackMaps* current_maps,
+    const CallchainSamplePerfEvent* event, LibunwindstackMaps* current_maps,
     LibunwindstackUnwinder* unwinder) {
   CHECK(event != nullptr);
   CHECK(current_maps != nullptr);
