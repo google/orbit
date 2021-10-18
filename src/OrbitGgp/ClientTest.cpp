@@ -154,7 +154,6 @@ TEST_F(OrbitGgpClientTest, GetInstancesAsyncTimeout) {
   auto future = client.value()->GetInstancesAsync(false, std::nullopt);
   future.Then(main_thread_executor_.get(),
               [&future_is_resolved](const ErrorMessageOr<QVector<Instance>>& instances) {
-                LOG("here");
                 EXPECT_FALSE(future_is_resolved);
                 future_is_resolved = true;
                 EXPECT_THAT(instances, HasError("OrbitMockGgpWorking instance list -s"));
