@@ -321,7 +321,7 @@ ErrorMessageOr<fs::path> FindSymbolsFilePath(
   }
 
   std::string error_message_for_client{absl::StrFormat(
-      "Unable to find debug symbols on the instance for module \"%s\". ", module_path)};
+      "Unable to find debug symbols on the instance for module \"%s\".", module_path)};
   if (!error_messages.empty()) {
     absl::StrAppend(&error_message_for_client, "\nDetails:\n* ",
                     absl::StrJoin(error_messages, "\n* "));
