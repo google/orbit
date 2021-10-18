@@ -15,7 +15,8 @@ target_include_directories(LinuxTracing PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(LinuxTracing PUBLIC
-        include/LinuxTracing/Tracer.h)
+        include/LinuxTracing/Tracer.h
+        include/LinuxTracing/TracerListener.h)
 
 target_sources(LinuxTracing PRIVATE
         ContextSwitchManager.cpp
@@ -64,7 +65,6 @@ target_link_libraries(LinuxTracing PUBLIC
         Introspection
         ObjectUtils
         OrbitBase
-        TracingInterface
         CONAN_PKG::abseil
         CONAN_PKG::libunwindstack)
 
@@ -87,7 +87,6 @@ target_sources(LinuxTracingTests PRIVATE
 
 target_link_libraries(LinuxTracingTests PRIVATE
         LinuxTracing
-        TracingInterface
         GTest::GTest
         GTest::Main)
 

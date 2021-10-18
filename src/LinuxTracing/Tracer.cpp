@@ -4,15 +4,8 @@
 
 #include "LinuxTracing/Tracer.h"
 
-#include <pthread.h>
-
-#include <atomic>
-#include <memory>
-
 #include "OrbitBase/ThreadUtils.h"
 #include "TracerThread.h"
-#include "TracingInterface/TracerListener.h"
-#include "capture.pb.h"
 
 namespace orbit_linux_tracing {
 

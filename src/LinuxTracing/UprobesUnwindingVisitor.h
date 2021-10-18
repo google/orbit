@@ -17,11 +17,11 @@
 #include "LeafFunctionCallManager.h"
 #include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"
+#include "LinuxTracing/TracerListener.h"
 #include "OrbitBase/Logging.h"
 #include "PerfEvent.h"
 #include "PerfEventRecords.h"
 #include "PerfEventVisitor.h"
-#include "TracingInterface/TracerListener.h"
 #include "UprobesFunctionCallManager.h"
 #include "UprobesReturnAddressManager.h"
 
@@ -45,7 +45,7 @@ namespace orbit_linux_tracing {
 
 class UprobesUnwindingVisitor : public PerfEventVisitor {
  public:
-  explicit UprobesUnwindingVisitor(orbit_tracing_interface::TracerListener* listener,
+  explicit UprobesUnwindingVisitor(TracerListener* listener,
                                    UprobesFunctionCallManager* function_call_manager,
                                    UprobesReturnAddressManager* uprobes_return_address_manager,
                                    LibunwindstackMaps* initial_maps,
@@ -93,7 +93,7 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
                  uint64_t function_id);
   void OnUretprobes(uint64_t timestamp_ns, pid_t pid, pid_t tid, std::optional<uint64_t> ax);
 
-  orbit_tracing_interface::TracerListener* listener_;
+  TracerListener* listener_;
 
   UprobesFunctionCallManager* function_call_manager_;
   UprobesReturnAddressManager* return_address_manager_;

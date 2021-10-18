@@ -13,17 +13,16 @@
 #include <tuple>
 #include <vector>
 
+#include "LinuxTracing/TracerListener.h"
 #include "OrbitBase/Logging.h"
 #include "PerfEvent.h"
 #include "PerfEventVisitor.h"
-#include "TracingInterface/TracerListener.h"
 
 namespace orbit_linux_tracing {
 
 class GpuTracepointVisitor : public PerfEventVisitor {
  public:
-  explicit GpuTracepointVisitor(orbit_tracing_interface::TracerListener* listener)
-      : listener_{listener} {
+  explicit GpuTracepointVisitor(TracerListener* listener) : listener_{listener} {
     CHECK(listener_ != nullptr);
   }
 
@@ -40,7 +39,7 @@ class GpuTracepointVisitor : public PerfEventVisitor {
 
   void CreateGpuJobAndSendToListenerIfComplete(const Key& key);
 
-  orbit_tracing_interface::TracerListener* listener_;
+  TracerListener* listener_;
 
   struct AmdgpuCsIoctlEvent {
     pid_t pid;

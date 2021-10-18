@@ -27,6 +27,7 @@
 #include "KernelTracepoints.h"
 #include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"
+#include "LinuxTracing/TracerListener.h"
 #include "LinuxTracingUtils.h"
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/GetProcessIds.h"
@@ -36,7 +37,6 @@
 #include "PerfEventOpen.h"
 #include "PerfEventReaders.h"
 #include "PerfEventRecords.h"
-#include "TracingInterface/TracerListener.h"
 #include "module.pb.h"
 #include "tracepoint.pb.h"
 
