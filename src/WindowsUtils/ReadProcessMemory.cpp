@@ -29,6 +29,8 @@ ErrorMessageOr<void> ReadProcessMemory(uint32_t pid, uintptr_t address, void* bu
     return ErrorMessage(
         absl::StrFormat("Could not read %u bytes at address %p of process %u", size, address, pid));
   }
+
+  return outcome::success();
 }
 
 ErrorMessageOr<std::string> ReadProcessMemory(uint32_t pid, uintptr_t address, uint64_t size) {
