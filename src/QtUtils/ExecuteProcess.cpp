@@ -63,9 +63,11 @@ Future<ErrorMessageOr<QByteArray>> ExecuteProcess(const QString& program,
       [promise, process, process_description](int exit_code, QProcess::ExitStatus exit_status) {
         if (exit_status == QProcess::CrashExit) return;
 
-        CHECK(!promise->HasResult());
-
         process->deleteLater();
+
+        // If the promise already has a result, that means it either the timeout
+        // triggered or the parent was destroyed.
+        if (promise->HasResult()) return;
 
         if (exit_code == 0) {
           promise->SetResult(process->readAllStandardOutput());
@@ -84,6 +86,9 @@ Future<ErrorMessageOr<QByteArray>> ExecuteProcess(const QString& program,
   if (parent != nullptr) {
     QObject::connect(
         parent, &QObject::destroyed, process, [process, promise, process_description]() {
+          // If the promise already has a result, that means the timeout occurred.
+          if (promise->HasResult()) return;
+
           std::string error_message{
               absl::StrFormat("Process \"%s\" killed because the parent object was destroyed.",
                               process_description)};
@@ -105,6 +110,9 @@ Future<ErrorMessageOr<QByteArray>> ExecuteProcess(const QString& program,
   // timer has process as target, hence it will only fire if process is not a nullptr.
   QObject::connect(
       timer, &QTimer::timeout, process, [promise, process, process_description, timeout_in_ms]() {
+        // If the promise already has a result, that means the parent was already destroyed.
+        if (promise->HasResult()) return;
+
         std::string error_message{absl::StrFormat("Process \"%s\" timed out after %dms",
                                                   process_description, timeout_in_ms)};
         ERROR("%s", error_message);
