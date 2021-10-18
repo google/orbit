@@ -227,9 +227,9 @@ TEST_F(SwitchesStatesNamesVisitorTest, SchedSwitchesAreIgnoredWithoutSetProduceS
   EXPECT_CALL(mock_listener_, OnSchedulingSlice).Times(0);
 
   visitor_.Visit(MakeFakeSchedSwitchPerfEvent(kCpu, kPrevTid, kPrevTid, kRunnableStateMask, kTid,
-                                               kInTimestampNs));
+                                              kInTimestampNs));
   visitor_.Visit(MakeFakeSchedSwitchPerfEvent(kCpu, kPid, kTid, kRunnableStateMask, kNextTid,
-                                               kOutTimestampNs));
+                                              kOutTimestampNs));
 }
 
 TEST_F(SwitchesStatesNamesVisitorTest, SchedSwitchesWithZeroTidAreIgnored) {
@@ -240,9 +240,9 @@ TEST_F(SwitchesStatesNamesVisitorTest, SchedSwitchesWithZeroTidAreIgnored) {
   EXPECT_CALL(mock_listener_, OnSchedulingSlice).Times(0);
 
   visitor_.Visit(MakeFakeSchedSwitchPerfEvent(kCpu, kPrevTid, kPrevTid, kRunnableStateMask,
-                                               kZeroTid, kInTimestampNs));
+                                              kZeroTid, kInTimestampNs));
   visitor_.Visit(MakeFakeSchedSwitchPerfEvent(kCpu, kZeroTid, kZeroTid, kRunnableStateMask,
-                                               kNextTid, kOutTimestampNs));
+                                              kNextTid, kOutTimestampNs));
 }
 
 TEST_F(SwitchesStatesNamesVisitorTest,
@@ -255,9 +255,9 @@ TEST_F(SwitchesStatesNamesVisitorTest,
       .WillOnce(SaveArg<0>(&actual_scheduling_slice));
 
   visitor_.Visit(MakeFakeSchedSwitchPerfEvent(kCpu, kPrevTid, kPrevTid, kRunnableStateMask, kTid,
-                                               kInTimestampNs));
+                                              kInTimestampNs));
   visitor_.Visit(MakeFakeSchedSwitchPerfEvent(kCpu, kMinusOnePid, kTid, kRunnableStateMask,
-                                               kNextTid, kOutTimestampNs));
+                                              kNextTid, kOutTimestampNs));
 
   SchedulingSlice expected_scheduling_slice =
       MakeSchedulingSlice(-1, kTid, kCpu, kOutTimestampNs - kInTimestampNs, kOutTimestampNs);
@@ -274,10 +274,10 @@ TEST_F(SwitchesStatesNamesVisitorTest,
       .WillOnce(SaveArg<0>(&actual_scheduling_slice));
 
   visitor_.Visit(MakeFakeSchedSwitchPerfEvent(kCpu, kPrevTid, kPrevTid, kRunnableStateMask, kTid,
-                                               kInTimestampNs));
+                                              kInTimestampNs));
   visitor_.Visit(MakeFakeExitPerfEvent(kPid, kTid));
   visitor_.Visit(MakeFakeSchedSwitchPerfEvent(kCpu, kMinusOnePid, kTid, kRunnableStateMask,
-                                               kNextTid, kOutTimestampNs));
+                                              kNextTid, kOutTimestampNs));
 
   SchedulingSlice expected_scheduling_slice =
       MakeSchedulingSlice(kPid, kTid, kCpu, kOutTimestampNs - kInTimestampNs, kOutTimestampNs);
@@ -294,9 +294,9 @@ TEST_F(SwitchesStatesNamesVisitorTest,
       .WillOnce(SaveArg<0>(&actual_scheduling_slice));
 
   visitor_.Visit(MakeFakeSchedSwitchPerfEvent(kCpu, kPrevTid, kPrevTid, kRunnableStateMask, kTid,
-                                               kInTimestampNs));
+                                              kInTimestampNs));
   visitor_.Visit(MakeFakeSchedSwitchPerfEvent(kCpu, kPid, kTid, kRunnableStateMask, kNextTid,
-                                               kOutTimestampNs));
+                                              kOutTimestampNs));
 
   SchedulingSlice expected_scheduling_slice =
       MakeSchedulingSlice(kPid, kTid, kCpu, kOutTimestampNs - kInTimestampNs, kOutTimestampNs);
@@ -315,9 +315,9 @@ TEST_F(SwitchesStatesNamesVisitorTest,
       .WillOnce(SaveArg<0>(&actual_scheduling_slice));
 
   visitor_.Visit(MakeFakeSchedSwitchPerfEvent(kCpu, kPrevTid, kPrevTid, kRunnableStateMask, kTid,
-                                               kInTimestampNs));
+                                              kInTimestampNs));
   visitor_.Visit(MakeFakeSchedSwitchPerfEvent(kCpu, kPid, kTid, kRunnableStateMask, kNextTid,
-                                               kOutTimestampNs));
+                                              kOutTimestampNs));
 
   SchedulingSlice expected_scheduling_slice =
       MakeSchedulingSlice(kPid, kTid, kCpu, kOutTimestampNs - kInTimestampNs, kOutTimestampNs);
@@ -335,9 +335,9 @@ TEST_F(SwitchesStatesNamesVisitorTest,
   EXPECT_CALL(mock_listener_, OnSchedulingSlice).Times(0);
 
   visitor_.Visit(MakeFakeSchedSwitchPerfEvent(kCpu, kPrevTid, kPrevTid, kRunnableStateMask, kTid,
-                                               kInTimestampNs));
+                                              kInTimestampNs));
   visitor_.Visit(MakeFakeSchedSwitchPerfEvent(kCpu, kMismatchingPid, kTid, kRunnableStateMask,
-                                               kNextTid, kOutTimestampNs));
+                                              kNextTid, kOutTimestampNs));
 }
 
 void SwitchesStatesNamesVisitorTest::ProcessFakeEventsForThreadStateTests() {
@@ -345,16 +345,16 @@ void SwitchesStatesNamesVisitorTest::ProcessFakeEventsForThreadStateTests() {
   visitor_.ProcessInitialState(kStartTimestampNs, kTid1, 'D');
   visitor_.Visit(MakeFakeSchedWakeupPerfEvent(kTid1, kWakeTimestampNs1));
   visitor_.Visit(MakeFakeSchedSwitchPerfEvent(kCpu1, kPrevTid, kPrevTid, kRunnableStateMask, kTid1,
-                                               kInTimestampNs1));
+                                              kInTimestampNs1));
   visitor_.Visit(
       MakeFakeSchedSwitchPerfEvent(kCpu1, kPid, kTid1, kDeadStateMask, kNextTid, kOutTimestampNs1));
 
   // kTid2
   visitor_.Visit(MakeFakeTaskNewtaskPerfEvent(kTid2, kComm2, kNewTimestampNs2));
   visitor_.Visit(MakeFakeSchedSwitchPerfEvent(kCpu2, kPrevTid, kPrevTid, kRunnableStateMask, kTid2,
-                                               kInTimestampNs2));
+                                              kInTimestampNs2));
   visitor_.Visit(MakeFakeSchedSwitchPerfEvent(kCpu2, kPid, kTid2, kInterruptibleSleepStateMask,
-                                               kNextTid, kOutTimestampNs2));
+                                              kNextTid, kOutTimestampNs2));
   visitor_.Visit(MakeFakeSchedWakeupPerfEvent(kTid2, kWakeTimestampNs2));
 
   visitor_.ProcessRemainingOpenStates(kStopTimestampNs);
