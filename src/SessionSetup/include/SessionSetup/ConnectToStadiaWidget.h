@@ -111,7 +111,7 @@ class ConnectToStadiaWidget : public QWidget {
   QState s_connected_;
 
   absl::flat_hash_set<std::string> instance_credentials_loading_;
-  absl::flat_hash_map<std::string, ErrorMessageOr<orbit_ssh::Credentials>> instance_credentials_;
+  absl::flat_hash_map<std::string, orbit_ssh::Credentials> instance_credentials_;
 
   void DetachRadioButton();
   void SetupStateMachine();

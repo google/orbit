@@ -366,26 +366,19 @@ void ConnectToStadiaWidget::CheckCredentialsAvailableOrLoad() {
 
   const std::string instance_id = selected_instance_->id.toStdString();
 
-  if (!instance_credentials_.contains(instance_id)) {
-    if (!instance_credentials_loading_.contains(instance_id)) {
-      instance_credentials_loading_.emplace(instance_id);
-
-      auto future = ggp_client_->GetSshInfoAsync(selected_instance_.value(), selected_project_);
-      future.Then(main_thread_executor_.get(),
-                  [this, instance_id](ErrorMessageOr<orbit_ggp::SshInfo> ssh_info_result) {
-                    OnSshInfoLoaded(std::move(ssh_info_result), instance_id);
-                  });
-    }
+  if (instance_credentials_.contains(instance_id)) {
+    emit ReadyToDeploy();
     return;
   }
 
-  if (instance_credentials_.at(instance_id).has_error()) {
-    emit ErrorOccurred(
-        QString::fromStdString(instance_credentials_.at(instance_id).error().message()));
-    return;
-  }
+  if (instance_credentials_loading_.contains(instance_id)) return;
 
-  emit ReadyToDeploy();
+  instance_credentials_loading_.emplace(instance_id);
+  auto future = ggp_client_->GetSshInfoAsync(selected_instance_.value(), selected_project_);
+  future.Then(main_thread_executor_.get(),
+              [this, instance_id](ErrorMessageOr<orbit_ggp::SshInfo> ssh_info_result) {
+                OnSshInfoLoaded(std::move(ssh_info_result), instance_id);
+              });
 }
 
 void ConnectToStadiaWidget::DeployOrbitService() {
@@ -393,9 +386,8 @@ void ConnectToStadiaWidget::DeployOrbitService() {
   CHECK(selected_instance_.has_value());
   const std::string instance_id = selected_instance_->id.toStdString();
   CHECK(instance_credentials_.contains(instance_id));
-  CHECK(instance_credentials_.at(instance_id).has_value());
 
-  const orbit_ssh::Credentials& credentials{instance_credentials_.at(instance_id).value()};
+  const orbit_ssh::Credentials& credentials{instance_credentials_.at(instance_id)};
 
   CHECK(ssh_connection_artifacts_ != nullptr);
   service_deploy_manager_ = std::make_unique<ServiceDeployManager>(
@@ -539,19 +531,20 @@ void ConnectToStadiaWidget::OnSshInfoLoaded(ErrorMessageOr<orbit_ggp::SshInfo> s
         absl::StrFormat("Unable to load encryption credentials for instance with id %s: %s",
                         instance_id, ssh_info_result.error().message());
     ERROR("%s", error_message);
-    instance_credentials_.emplace(instance_id, ErrorMessage(error_message));
-  } else {
-    LOG("Received ssh info for instance with id: %s", instance_id);
-
-    orbit_ggp::SshInfo& ssh_info{ssh_info_result.value()};
-    orbit_ssh::Credentials credentials;
-    credentials.addr_and_port = {ssh_info.host.toStdString(), ssh_info.port};
-    credentials.key_path = ssh_info.key_path.toStdString();
-    credentials.known_hosts_path = ssh_info.known_hosts_path.toStdString();
-    credentials.user = ssh_info.user.toStdString();
-
-    instance_credentials_.emplace(instance_id, std::move(credentials));
+    emit ErrorOccurred(QString::fromStdString(error_message));
+    return;
   }
+
+  LOG("Received ssh info for instance with id: %s", instance_id);
+
+  orbit_ggp::SshInfo& ssh_info{ssh_info_result.value()};
+  orbit_ssh::Credentials credentials;
+  credentials.addr_and_port = {ssh_info.host.toStdString(), ssh_info.port};
+  credentials.key_path = ssh_info.key_path.toStdString();
+  credentials.known_hosts_path = ssh_info.known_hosts_path.toStdString();
+  credentials.user = ssh_info.user.toStdString();
+
+  instance_credentials_.emplace(instance_id, std::move(credentials));
 
   emit ReceivedSshInfo();
 }
