@@ -25,6 +25,7 @@
 #include "LeafFunctionCallManager.h"
 #include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"
+#include "LinuxTracing/Tracer.h"
 #include "LinuxTracing/TracerListener.h"
 #include "LostAndDiscardedEventVisitor.h"
 #include "OrbitBase/Profiling.h"
@@ -39,29 +40,21 @@
 
 namespace orbit_linux_tracing {
 
-class TracerThread {
+class TracerImpl : public Tracer {
  public:
-  explicit TracerThread(const orbit_grpc_protos::CaptureOptions& capture_options);
+  explicit TracerImpl(const orbit_grpc_protos::CaptureOptions& capture_options,
+                      TracerListener* listener);
 
-  TracerThread(const TracerThread&) = delete;
-  TracerThread& operator=(const TracerThread&) = delete;
-  TracerThread(TracerThread&&) = delete;
-  TracerThread& operator=(TracerThread&&) = delete;
+  TracerImpl(const TracerImpl&) = delete;
+  TracerImpl& operator=(const TracerImpl&) = delete;
+  TracerImpl(TracerImpl&&) = delete;
+  TracerImpl& operator=(TracerImpl&&) = delete;
 
-  void SetListener(TracerListener* listener) { listener_ = listener; }
-
-  void Run(const std::shared_ptr<std::atomic<bool>>& exit_requested);
+  void Start() override;
+  void Stop() override;
 
  private:
-  static std::optional<uint64_t> ComputeSamplingPeriodNs(double sampling_frequency) {
-    double period_ns_dbl = 1'000'000'000 / sampling_frequency;
-    if (period_ns_dbl > 0 &&
-        period_ns_dbl <= static_cast<double>(std::numeric_limits<uint64_t>::max())) {
-      return std::optional<uint64_t>(period_ns_dbl);
-    }
-    return std::nullopt;
-  }
-
+  void Run();
   void Startup();
   void Shutdown();
   void ProcessOneRecord(PerfEventRingBuffer* ring_buffer);
@@ -146,6 +139,9 @@ class TracerThread {
   std::vector<orbit_grpc_protos::TracepointInfo> instrumented_tracepoints_;
 
   TracerListener* listener_ = nullptr;
+
+  std::atomic<bool> stop_run_thread_ = true;
+  std::thread run_thread_;
 
   std::vector<int> tracing_fds_;
   std::vector<PerfEventRingBuffer> ring_buffers_;
