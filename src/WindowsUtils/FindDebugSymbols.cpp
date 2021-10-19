@@ -38,7 +38,12 @@ ErrorMessageOr<std::filesystem::path> FindDebugSymbols(
   }
 
   // Coff is currently the only supported format for the Windows service.
-  CHECK(object_file->IsCoff());
+  if (!object_file->IsCoff()) {
+    return ErrorMessage{
+        absl::StrFormat("Module \"%s\" is not of Coff file format, which is currently the only "
+                        "supported format for the Windows service",
+                        module_path.string())};
+  }
 
   const std::string& build_id = object_file->GetBuildId();
 
