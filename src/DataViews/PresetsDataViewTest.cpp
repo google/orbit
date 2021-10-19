@@ -11,6 +11,7 @@
 #include <tuple>
 #include <vector>
 
+#include "DataViewTestUtils.h"
 #include "DataViewUtils.h"
 #include "DataViews/DataView.h"
 #include "DataViews/PresetLoadState.h"
@@ -23,6 +24,9 @@
 #include "PresetFile/PresetFile.h"
 #include "TestUtils/TestUtils.h"
 #include "preset.pb.h"
+
+using orbit_data_views::CheckCopySelectionIsInvoked;
+using orbit_data_views::CheckExportToCsvIsInvoked;
 
 namespace {
 // This is just a helper type to handle colors. Note that Color from `OrbitGl/CoreMath.h` is not
@@ -240,48 +244,22 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
 
   // Copy Selection
   {
-    const auto copy_selection_idx =
-        std::find(context_menu.begin(), context_menu.end(), "Copy Selection") -
-        context_menu.begin();
-    ASSERT_LT(copy_selection_idx, context_menu.size());
-
-    std::string clipboard;
-    EXPECT_CALL(app_, SetClipboard).Times(1).WillOnce(testing::SaveArg<0>(&clipboard));
-    view_.OnContextMenu("Copy Selection", static_cast<int>(copy_selection_idx), {0});
-    EXPECT_EQ(clipboard,
-              absl::StrFormat("Loadable\tPreset\tModules\tHooked Functions\tDate Modified\n"
-                              "Yes\t%s\t\t\t%s\n",
-                              preset_filename0.filename().string(),
-                              FormatShortDatetime(date_modified.value())));
+    std::string expected_clipboard = absl::StrFormat(
+        "Loadable\tPreset\tModules\tHooked Functions\tDate Modified\n"
+        "Yes\t%s\t\t\t%s\n",
+        preset_filename0.filename().string(), FormatShortDatetime(date_modified.value()));
+    CheckCopySelectionIsInvoked(context_menu, app_, view_, expected_clipboard);
   }
 
   // Export to CSV
   {
-    const auto export_to_csv_idx =
-        std::find(context_menu.begin(), context_menu.end(), "Copy Selection") -
-        context_menu.begin();
-    ASSERT_LT(export_to_csv_idx, context_menu.size());
-
-    ErrorMessageOr<orbit_base::TemporaryFile> temporary_file_or_error =
-        orbit_base::TemporaryFile::Create();
-    ASSERT_THAT(temporary_file_or_error, orbit_test_utils::HasNoError());
-    const std::filesystem::path temporary_file_path = temporary_file_or_error.value().file_path();
-    temporary_file_or_error.value().CloseAndRemove();
-
-    EXPECT_CALL(app_, GetSaveFile).Times(1).WillOnce(testing::Return(temporary_file_path.string()));
-    view_.OnContextMenu("Export to CSV", static_cast<int>(export_to_csv_idx), {0});
-
-    ErrorMessageOr<std::string> contents_or_error =
-        orbit_base::ReadFileToString(temporary_file_path);
-    ASSERT_THAT(contents_or_error, orbit_test_utils::HasNoError());
-
-    EXPECT_EQ(contents_or_error.value(),
-              absl::StrFormat(R"("Loadable","Preset","Modules","Hooked Functions","Date Modified")"
-                              "\r\n"
-                              R"("Yes","%s","","","%s")"
-                              "\r\n",
-                              preset_filename0.filename().string(),
-                              FormatShortDatetime(date_modified.value())));
+    std::string expected_contents = absl::StrFormat(
+        R"("Loadable","Preset","Modules","Hooked Functions","Date Modified")"
+        "\r\n"
+        R"("Yes","%s","","","%s")"
+        "\r\n",
+        preset_filename0.filename().string(), FormatShortDatetime(date_modified.value()));
+    CheckExportToCsvIsInvoked(context_menu, app_, view_, expected_contents);
   }
 
   // Load Preset

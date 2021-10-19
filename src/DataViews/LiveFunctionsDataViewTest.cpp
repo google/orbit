@@ -12,6 +12,7 @@
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
+#include "DataViewTestUtils.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
 #include "DataViews/LiveFunctionsDataView.h"
@@ -20,10 +21,6 @@
 #include "GrpcProtos/Constants.h"
 #include "MetricsUploader/MetricsUploaderStub.h"
 #include "MockAppInterface.h"
-#include "OrbitBase/File.h"
-#include "OrbitBase/ReadFileToString.h"
-#include "OrbitBase/TemporaryFile.h"
-#include "TestUtils/TestUtils.h"
 #include "capture.pb.h"
 #include "capture_data.pb.h"
 
@@ -31,6 +28,10 @@ using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using JumpToTimerMode = orbit_data_views::AppInterface::JumpToTimerMode;
 using orbit_client_data::ModuleData;
+using orbit_data_views::CheckCopySelectionIsInvoked;
+using orbit_data_views::CheckExportToCsvIsInvoked;
+using orbit_data_views::CheckSingleAction;
+using orbit_data_views::ContextMenuEntry;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
 
@@ -258,102 +259,81 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     return frame_track_enabled.at(index.value());
   });
 
-  auto run_basic_checks = [&](std::vector<int> selected_indices) {
+  auto verify_context_menu_action_availability = [&](std::vector<int> selected_indices) {
+    std::vector<std::string> context_menu = view_.GetContextMenu(0, selected_indices);
+
     // Common actions should always be available.
-    EXPECT_THAT(view_.GetContextMenu(0, selected_indices),
-                testing::IsSupersetOf({"Copy Selection", "Export to CSV"}));
+    CheckSingleAction(context_menu, "Copy Selection", ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, "Export to CSV", ContextMenuEntry::kEnabled);
 
-    // Source code and disassembly actions are availble if and only if capture is connected. Hook
-    // and unhook actions are unavailable if capture is not connected.
-    if (capture_connected) {
-      EXPECT_THAT(view_.GetContextMenu(0, selected_indices),
-                  testing::IsSupersetOf({"Go to Disassembly", "Go to Source code"}));
-    } else {
-      EXPECT_THAT(view_.GetContextMenu(0, selected_indices),
-                  testing::AllOf(testing::Not(testing::Contains("Go to Disassembly")),
-                                 testing::Not(testing::Contains("Go to Source code")),
-                                 testing::Not(testing::Contains("Hook")),
-                                 testing::Not(testing::Contains("Unhook"))));
-    }
-
-    // Jump actions are only available for single selection with non-zero counts.
-    if (selected_indices.size() == 1 && kCounts[selected_indices[0]] > 0) {
-      EXPECT_THAT(
-          view_.GetContextMenu(0, selected_indices),
-          testing::IsSupersetOf({"Jump to first", "Jump to last", "Jump to min", "Jump to max"}));
-    } else {
-      EXPECT_THAT(view_.GetContextMenu(0, selected_indices),
-                  testing::AllOf(testing::Not(testing::Contains("Jump to first")),
-                                 testing::Not(testing::Contains("Jump to last")),
-                                 testing::Not(testing::Contains("Jump to min")),
-                                 testing::Not(testing::Contains("Jump to max"))));
-    }
+    // Source code and disassembly actions are availble if and only if capture is connected.
+    ContextMenuEntry source_code_or_disassembly =
+        capture_connected ? ContextMenuEntry::kEnabled : ContextMenuEntry::kDisabled;
+    CheckSingleAction(context_menu, "Go to Source code", source_code_or_disassembly);
+    CheckSingleAction(context_menu, "Go to Disassembly", source_code_or_disassembly);
 
     // Add iterators action is only available if some function has non-zero counts.
     int total_counts = 0;
     for (int selected_index : selected_indices) {
       total_counts += kCounts[selected_index];
     }
-    if (total_counts > 0) {
-      EXPECT_THAT(view_.GetContextMenu(0, selected_indices), testing::Contains("Add iterator(s)"));
-    } else {
-      EXPECT_THAT(view_.GetContextMenu(0, selected_indices),
-                  testing::Not(testing::Contains("Add iterator(s)")));
+    ContextMenuEntry add_iterators =
+        total_counts > 0 ? ContextMenuEntry::kEnabled : ContextMenuEntry::kDisabled;
+    CheckSingleAction(context_menu, "Add iterator(s)", add_iterators);
+
+    // Jump actions are only available for single selection with non-zero counts.
+    ContextMenuEntry jump_to_direction = selected_indices.size() == 1 && total_counts > 0
+                                             ? ContextMenuEntry::kEnabled
+                                             : ContextMenuEntry::kDisabled;
+    CheckSingleAction(context_menu, "Jump to first", jump_to_direction);
+    CheckSingleAction(context_menu, "Jump to last", jump_to_direction);
+    CheckSingleAction(context_menu, "Jump to min", jump_to_direction);
+    CheckSingleAction(context_menu, "Jump to max", jump_to_direction);
+
+    // Hook action is available if and only if 1) capture is connected and 2) there is an unselected
+    // instrumented function. Unhook action is available if and only if 1) capture is connected and
+    // 2) there is a selected instrumented function.
+    ContextMenuEntry select = ContextMenuEntry::kDisabled;
+    ContextMenuEntry unselect = ContextMenuEntry::kDisabled;
+    if (capture_connected) {
+      for (size_t index : selected_indices) {
+        if (functions_selected.at(index)) {
+          unselect = ContextMenuEntry::kEnabled;
+        } else {
+          select = ContextMenuEntry::kEnabled;
+        }
+      }
     }
-  };
+    CheckSingleAction(context_menu, "Hook", select);
+    CheckSingleAction(context_menu, "Unhook", unselect);
 
-  const auto can_unhook = [&]() {
-    return testing::AllOf(testing::Not(testing::Contains("Hook")), testing::Contains("Unhook"));
-  };
-  const auto can_hook = [&]() {
-    return testing::AllOf(testing::Contains("Hook"), testing::Not(testing::Contains("Unhook")));
-  };
-  const auto can_hook_and_unhook = [&]() {
-    return testing::AllOf(testing::Contains("Hook"), testing::Contains("Unhook"));
-  };
-
-  const auto can_disable_frame_tracks = [&]() {
-    return testing::AllOf(testing::Not(testing::Contains("Enable frame track(s)")),
-                          testing::Contains("Disable frame track(s)"));
-  };
-  const auto can_enable_frame_tracks = [&]() {
-    return testing::AllOf(testing::Contains("Enable frame track(s)"),
-                          testing::Not(testing::Contains("Disable frame track(s)")));
-  };
-  const auto can_enable_and_disable_frame_tracks = [&]() {
-    return testing::AllOf(testing::Contains("Enable frame track(s)"),
-                          testing::Contains("Disable frame track(s)"));
+    // Enable frametrack action is available if and only if there is an instrumented function with
+    // frametrack not yet enabled, disable frametrack action is available if and only if there is an
+    // instrumented function with frametrack enabled.
+    ContextMenuEntry enable_frametrack = ContextMenuEntry::kDisabled;
+    ContextMenuEntry disable_frametrack = ContextMenuEntry::kDisabled;
+    for (size_t index : selected_indices) {
+      if (frame_track_enabled.at(index)) {
+        disable_frametrack = ContextMenuEntry::kEnabled;
+      } else {
+        enable_frametrack = ContextMenuEntry::kEnabled;
+      }
+    }
+    CheckSingleAction(context_menu, "Enable frame track(s)", enable_frametrack);
+    CheckSingleAction(context_menu, "Disable frame track(s)", disable_frametrack);
   };
 
   capture_connected = false;
-  run_basic_checks({0});
-  EXPECT_THAT(view_.GetContextMenu(0, {0}), can_enable_frame_tracks());
-
-  run_basic_checks({1});
-  EXPECT_THAT(view_.GetContextMenu(0, {1}), can_enable_frame_tracks());
-
-  run_basic_checks({2});
-  EXPECT_THAT(view_.GetContextMenu(0, {2}), can_disable_frame_tracks());
-
-  run_basic_checks({0, 1, 2});
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_enable_and_disable_frame_tracks());
+  verify_context_menu_action_availability({0});
+  verify_context_menu_action_availability({1});
+  verify_context_menu_action_availability({2});
+  verify_context_menu_action_availability({0, 1, 2});
 
   capture_connected = true;
-  run_basic_checks({0});
-  EXPECT_THAT(view_.GetContextMenu(0, {0}), can_hook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0}), can_enable_frame_tracks());
-
-  run_basic_checks({1});
-  EXPECT_THAT(view_.GetContextMenu(0, {1}), can_unhook());
-  EXPECT_THAT(view_.GetContextMenu(0, {1}), can_enable_frame_tracks());
-
-  run_basic_checks({2});
-  EXPECT_THAT(view_.GetContextMenu(0, {2}), can_unhook());
-  EXPECT_THAT(view_.GetContextMenu(0, {2}), can_disable_frame_tracks());
-
-  run_basic_checks({0, 1, 2});
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_hook_and_unhook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_enable_and_disable_frame_tracks());
+  verify_context_menu_action_availability({0});
+  verify_context_menu_action_availability({1});
+  verify_context_menu_action_availability({2});
+  verify_context_menu_action_availability({0, 1, 2});
 }
 
 TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
@@ -373,57 +353,30 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
 
   // Copy Selection
   {
-    const auto copy_selection_index =
-        std::find(context_menu.begin(), context_menu.end(), "Copy Selection") -
-        context_menu.begin();
-    ASSERT_LT(copy_selection_index, context_menu.size());
-
-    std::string clipboard;
-    EXPECT_CALL(app_, SetClipboard).Times(1).WillOnce(testing::SaveArg<0>(&clipboard));
-    view_.OnContextMenu("Copy Selection", static_cast<int>(copy_selection_index), {0});
-    EXPECT_EQ(
-        clipboard,
-        absl::StrFormat("Hooked\tFunction\tCount\tTotal\tAvg\tMin\tMax\tStd Dev\tModule\tAddress\n"
-                        "\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
-                        kPrettyNames[0], GetExpectedDisplayCount(kCounts[0]),
-                        GetExpectedDisplayTime(kTotalTimeNs[0]),
-                        GetExpectedDisplayTime(kAvgTimeNs[0]), GetExpectedDisplayTime(kMinNs[0]),
-                        GetExpectedDisplayTime(kMaxNs[0]), GetExpectedDisplayTime(kStdDevNs[0]),
-                        kModulePaths[0], GetExpectedDisplayAddress(kAddresses[0])));
+    std::string expected_clipboard = absl::StrFormat(
+        "Hooked\tFunction\tCount\tTotal\tAvg\tMin\tMax\tStd Dev\tModule\tAddress\n"
+        "\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+        kPrettyNames[0], GetExpectedDisplayCount(kCounts[0]),
+        GetExpectedDisplayTime(kTotalTimeNs[0]), GetExpectedDisplayTime(kAvgTimeNs[0]),
+        GetExpectedDisplayTime(kMinNs[0]), GetExpectedDisplayTime(kMaxNs[0]),
+        GetExpectedDisplayTime(kStdDevNs[0]), kModulePaths[0],
+        GetExpectedDisplayAddress(kAddresses[0]));
+    CheckCopySelectionIsInvoked(context_menu, app_, view_, expected_clipboard);
   }
 
   // Export to CSV
   {
-    const auto export_to_csv_index =
-        std::find(context_menu.begin(), context_menu.end(), "Copy Selection") -
-        context_menu.begin();
-    ASSERT_LT(export_to_csv_index, context_menu.size());
-
-    ErrorMessageOr<orbit_base::TemporaryFile> temporary_file_or_error =
-        orbit_base::TemporaryFile::Create();
-    ASSERT_THAT(temporary_file_or_error, orbit_test_utils::HasNoError());
-    const std::filesystem::path temporary_file_path = temporary_file_or_error.value().file_path();
-    temporary_file_or_error.value().CloseAndRemove();
-
-    EXPECT_CALL(app_, GetSaveFile).Times(1).WillOnce(testing::Return(temporary_file_path.string()));
-    view_.OnContextMenu("Export to CSV", static_cast<int>(export_to_csv_index), {0});
-
-    ErrorMessageOr<std::string> contents_or_error =
-        orbit_base::ReadFileToString(temporary_file_path);
-    ASSERT_THAT(contents_or_error, orbit_test_utils::HasNoError());
-
-    EXPECT_EQ(
-        contents_or_error.value(),
-        absl::StrFormat(
-            R"("Hooked","Function","Count","Total","Avg","Min","Max","Std Dev","Module","Address")"
-            "\r\n"
-            R"("","%s","%s","%s","%s","%s","%s","%s","%s","%s")"
-            "\r\n",
-            kPrettyNames[0], GetExpectedDisplayCount(kCounts[0]),
-            GetExpectedDisplayTime(kTotalTimeNs[0]), GetExpectedDisplayTime(kAvgTimeNs[0]),
-            GetExpectedDisplayTime(kMinNs[0]), GetExpectedDisplayTime(kMaxNs[0]),
-            GetExpectedDisplayTime(kStdDevNs[0]), kModulePaths[0],
-            GetExpectedDisplayAddress(kAddresses[0])));
+    std::string expected_contents = absl::StrFormat(
+        R"("Hooked","Function","Count","Total","Avg","Min","Max","Std Dev","Module","Address")"
+        "\r\n"
+        R"("","%s","%s","%s","%s","%s","%s","%s","%s","%s")"
+        "\r\n",
+        kPrettyNames[0], GetExpectedDisplayCount(kCounts[0]),
+        GetExpectedDisplayTime(kTotalTimeNs[0]), GetExpectedDisplayTime(kAvgTimeNs[0]),
+        GetExpectedDisplayTime(kMinNs[0]), GetExpectedDisplayTime(kMaxNs[0]),
+        GetExpectedDisplayTime(kStdDevNs[0]), kModulePaths[0],
+        GetExpectedDisplayAddress(kAddresses[0]));
+    CheckExportToCsvIsInvoked(context_menu, app_, view_, expected_contents);
   }
 
   // Go to Disassembly

@@ -5,15 +5,16 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "DataViewTestUtils.h"
 #include "DataViews/DataView.h"
 #include "DataViews/TracepointsDataView.h"
 #include "MockAppInterface.h"
-#include "OrbitBase/File.h"
-#include "OrbitBase/ReadFileToString.h"
-#include "OrbitBase/TemporaryFile.h"
-#include "TestUtils/TestUtils.h"
 #include "tracepoint.pb.h"
 
+using orbit_data_views::CheckCopySelectionIsInvoked;
+using orbit_data_views::CheckExportToCsvIsInvoked;
+using orbit_data_views::CheckSingleAction;
+using orbit_data_views::ContextMenuEntry;
 using orbit_grpc_protos::TracepointInfo;
 
 namespace {
@@ -104,42 +105,33 @@ TEST_F(TracepointsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
         return tracepoints_selected.at(index.value());
       });
 
-  auto check_single_action = [](const std::vector<std::string>& context_menu,
-                                const std::string& action, bool enable_action) {
-    if (enable_action) {
-      EXPECT_THAT(context_menu, testing::IsSupersetOf({action}));
-    } else {
-      EXPECT_THAT(context_menu, testing::Not(testing::Contains(action)));
-    }
-  };
-
-  auto run_checks = [&](const std::vector<int>& selected_indices) {
+  auto verify_context_menu_action_availability = [&](const std::vector<int>& selected_indices) {
     std::vector<std::string> context_menu = view_.GetContextMenu(0, selected_indices);
 
     // Common actions should always be available.
-    check_single_action(context_menu, "Copy Selection", true);
-    check_single_action(context_menu, "Export to CSV", true);
+    CheckSingleAction(context_menu, "Copy Selection", ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, "Export to CSV", ContextMenuEntry::kEnabled);
 
     // Unhook action is available if and only if there are selected tracepoints.
     // Hook action is available if and only if there are unselected tracepoints.
-    bool enable_unselect = false;
-    bool enable_select = false;
+    ContextMenuEntry unselect = ContextMenuEntry::kDisabled;
+    ContextMenuEntry select = ContextMenuEntry::kDisabled;
     for (size_t index : selected_indices) {
       if (tracepoints_selected[index]) {
-        enable_unselect = true;
+        unselect = ContextMenuEntry::kEnabled;
       } else {
-        enable_select = true;
+        select = ContextMenuEntry::kEnabled;
       }
     }
-    check_single_action(context_menu, "Unhook", enable_unselect);
-    check_single_action(context_menu, "Hook", enable_select);
+    CheckSingleAction(context_menu, "Unhook", unselect);
+    CheckSingleAction(context_menu, "Hook", select);
   };
 
   SetTracepointsByIndices({0, 1, 2});
-  { run_checks({0}); }
-  { run_checks({1}); }
-  { run_checks({2}); }
-  { run_checks({0, 1, 2}); }
+  verify_context_menu_action_availability({0});
+  verify_context_menu_action_availability({1});
+  verify_context_menu_action_availability({2});
+  verify_context_menu_action_availability({0, 1, 2});
 }
 
 TEST_F(TracepointsDataViewTest, ContextMenuActionsAreInvoked) {
@@ -154,47 +146,22 @@ TEST_F(TracepointsDataViewTest, ContextMenuActionsAreInvoked) {
 
   // Copy Selection
   {
-    const auto copy_selection_index =
-        std::find(context_menu.begin(), context_menu.end(), "Copy Selection") -
-        context_menu.begin();
-    ASSERT_LT(copy_selection_index, context_menu.size());
-
-    std::string clipboard;
-    EXPECT_CALL(app_, SetClipboard).Times(1).WillOnce(testing::SaveArg<0>(&clipboard));
-    view_.OnContextMenu("Copy Selection", static_cast<int>(copy_selection_index), {0});
-    EXPECT_EQ(clipboard, absl::StrFormat("Selected\tCategory\tName\n"
-                                         "%s\t%s\t%s\n",
-                                         kTracepointUnselected, kTracepointCategories[0],
-                                         kTracepointNames[0]));
+    std::string expected_clipboard = absl::StrFormat(
+        "Selected\tCategory\tName\n"
+        "%s\t%s\t%s\n",
+        kTracepointUnselected, kTracepointCategories[0], kTracepointNames[0]);
+    CheckCopySelectionIsInvoked(context_menu, app_, view_, expected_clipboard);
   }
 
   // Export to CSV
   {
-    const auto export_to_csv_index =
-        std::find(context_menu.begin(), context_menu.end(), "Copy Selection") -
-        context_menu.begin();
-    ASSERT_LT(export_to_csv_index, context_menu.size());
-
-    ErrorMessageOr<orbit_base::TemporaryFile> temporary_file_or_error =
-        orbit_base::TemporaryFile::Create();
-    ASSERT_THAT(temporary_file_or_error, orbit_test_utils::HasNoError());
-    const std::filesystem::path temporary_file_path = temporary_file_or_error.value().file_path();
-    temporary_file_or_error.value().CloseAndRemove();
-
-    EXPECT_CALL(app_, GetSaveFile).Times(1).WillOnce(testing::Return(temporary_file_path.string()));
-    view_.OnContextMenu("Export to CSV", static_cast<int>(export_to_csv_index), {0});
-
-    ErrorMessageOr<std::string> contents_or_error =
-        orbit_base::ReadFileToString(temporary_file_path);
-    ASSERT_THAT(contents_or_error, orbit_test_utils::HasNoError());
-
-    EXPECT_EQ(
-        contents_or_error.value(),
+    std::string expected_contents =
         absl::StrFormat(R"("Selected","Category","Name")"
                         "\r\n"
                         R"("%s","%s","%s")"
                         "\r\n",
-                        kTracepointUnselected, kTracepointCategories[0], kTracepointNames[0]));
+                        kTracepointUnselected, kTracepointCategories[0], kTracepointNames[0]);
+    CheckExportToCsvIsInvoked(context_menu, app_, view_, expected_contents);
   }
 
   // Hook

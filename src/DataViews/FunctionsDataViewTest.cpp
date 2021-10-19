@@ -14,16 +14,18 @@
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
+#include "DataViewTestUtils.h"
 #include "DataViews/DataView.h"
 #include "DataViews/FunctionsDataView.h"
 #include "MockAppInterface.h"
-#include "OrbitBase/ReadFileToString.h"
-#include "OrbitBase/TemporaryFile.h"
-#include "OrbitBase/ThreadPool.h"
-#include "TestUtils/TestUtils.h"
 #include "capture.pb.h"
 #include "capture_data.pb.h"
 #include "process.pb.h"
+
+using orbit_data_views::CheckCopySelectionIsInvoked;
+using orbit_data_views::CheckExportToCsvIsInvoked;
+using orbit_data_views::CheckSingleAction;
+using orbit_data_views::ContextMenuEntry;
 
 namespace {
 struct FunctionsDataViewTest : public testing::Test {
@@ -371,8 +373,7 @@ TEST_F(FunctionsDataViewTest, CommonContextMenuEntriesArePresent) {
 }
 
 TEST_F(FunctionsDataViewTest, ContextMenuEntriesChangeOnFunctionState) {
-  std::array<bool, 3> is_function_selected = {false, false, false};
-
+  std::array<bool, 3> is_function_selected = {true, true, false};
   EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
       .Times(testing::AnyNumber())
       .WillRepeatedly([&](const orbit_client_protos::FunctionInfo& function) -> bool {
@@ -381,7 +382,7 @@ TEST_F(FunctionsDataViewTest, ContextMenuEntriesChangeOnFunctionState) {
         return is_function_selected.at(index.value());
       });
 
-  std::array<bool, 3> is_frame_track_enabled = {false, false, false};
+  std::array<bool, 3> is_frame_track_enabled = {true, false, false};
   EXPECT_CALL(app_, IsFrameTrackEnabled)
       .Times(testing::AnyNumber())
       .WillRepeatedly([&](const orbit_client_protos::FunctionInfo& function) -> bool {
@@ -392,84 +393,49 @@ TEST_F(FunctionsDataViewTest, ContextMenuEntriesChangeOnFunctionState) {
 
   view_.AddFunctions({&functions_[0], &functions_[1], &functions_[2]});
 
-  const auto can_unhook = [&]() {
-    return testing::AllOf(testing::Not(testing::Contains("Hook")), testing::Contains("Unhook"));
+  auto verify_context_menu_action_availability = [&](std::vector<int> selected_indices) {
+    std::vector<std::string> context_menu = view_.GetContextMenu(0, selected_indices);
+
+    // Common actions should always be available.
+    CheckSingleAction(context_menu, "Copy Selection", ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, "Export to CSV", ContextMenuEntry::kEnabled);
+
+    // Source code and disassembly actions are also always available.
+    CheckSingleAction(context_menu, "Go to Source code", ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, "Go to Disassembly", ContextMenuEntry::kEnabled);
+
+    // Hook action is available if and only if there is an unselected function. Unhook action is
+    // available if and only if there is a selected instrumented function.
+    // Enable frametrack action is available if and only if there is a function with frametrack not
+    // yet enabled, disable frametrack action is available if and only if there is a function with
+    // frametrack enabled.
+    ContextMenuEntry select = ContextMenuEntry::kDisabled;
+    ContextMenuEntry unselect = ContextMenuEntry::kDisabled;
+    ContextMenuEntry enable_frametrack = ContextMenuEntry::kDisabled;
+    ContextMenuEntry disable_frametrack = ContextMenuEntry::kDisabled;
+    for (size_t index : selected_indices) {
+      if (is_function_selected.at(index)) {
+        unselect = ContextMenuEntry::kEnabled;
+      } else {
+        select = ContextMenuEntry::kEnabled;
+      }
+
+      if (is_frame_track_enabled.at(index)) {
+        disable_frametrack = ContextMenuEntry::kEnabled;
+      } else {
+        enable_frametrack = ContextMenuEntry::kEnabled;
+      }
+    }
+    CheckSingleAction(context_menu, "Hook", select);
+    CheckSingleAction(context_menu, "Unhook", unselect);
+    CheckSingleAction(context_menu, "Enable frame track(s)", enable_frametrack);
+    CheckSingleAction(context_menu, "Disable frame track(s)", disable_frametrack);
   };
-  const auto can_hook = [&]() {
-    return testing::AllOf(testing::Contains("Hook"), testing::Not(testing::Contains("Unhook")));
-  };
-  const auto can_hook_and_unhook = [&]() {
-    return testing::AllOf(testing::Contains("Hook"), testing::Contains("Unhook"));
-  };
-  const auto can_disable_frame_tracks = [&]() {
-    return testing::AllOf(testing::Not(testing::Contains("Enable frame track(s)")),
-                          testing::Contains("Disable frame track(s)"));
-  };
-  const auto can_enable_frame_tracks = [&]() {
-    return testing::AllOf(testing::Contains("Enable frame track(s)"),
-                          testing::Not(testing::Contains("Disable frame track(s)")));
-  };
-  const auto can_enable_and_disable_frame_tracks = [&]() {
-    return testing::AllOf(testing::Contains("Enable frame track(s)"),
-                          testing::Contains("Disable frame track(s)"));
-  };
 
-  // Context menus when single entries are selected
-
-  is_function_selected[0] = false;
-  is_frame_track_enabled[0] = false;
-  EXPECT_THAT(view_.GetContextMenu(0, {0}), can_hook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0}), can_enable_frame_tracks());
-
-  is_function_selected[0] = true;
-  is_frame_track_enabled[0] = false;
-  EXPECT_THAT(view_.GetContextMenu(0, {0}), can_unhook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0}), can_enable_frame_tracks());
-
-  is_function_selected[0] = true;
-  is_frame_track_enabled[0] = true;
-  EXPECT_THAT(view_.GetContextMenu(0, {0}), can_unhook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0}), can_disable_frame_tracks());
-
-  // Note that the missing combination - `is_function_selected = false` and `is_frame_track_enabled
-  // = true` - makes no sense since a function needs to be hooked to have a frame track enabled.
-
-  // Context menus when multiple entries are selected: A particular action will be offered when any
-  // selected entry can execute that action.
-  is_function_selected = {false, false, false};
-  is_frame_track_enabled = {false, false, false};
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_hook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_enable_frame_tracks());
-
-  is_function_selected = {false, true, false};
-  is_frame_track_enabled = {false, false, false};
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_hook_and_unhook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_enable_frame_tracks());
-
-  is_function_selected = {false, true, false};
-  is_frame_track_enabled = {false, true, false};
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_hook_and_unhook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_enable_and_disable_frame_tracks());
-
-  is_function_selected = {false, true, true};
-  is_frame_track_enabled = {false, true, false};
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_hook_and_unhook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_enable_and_disable_frame_tracks());
-
-  is_function_selected = {false, true, true};
-  is_frame_track_enabled = {false, true, false};
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_hook_and_unhook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_enable_and_disable_frame_tracks());
-
-  is_function_selected = {true, true, true};
-  is_frame_track_enabled = {true, true, false};
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_unhook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_enable_and_disable_frame_tracks());
-
-  is_function_selected = {true, true, true};
-  is_frame_track_enabled = {true, true, true};
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_unhook());
-  EXPECT_THAT(view_.GetContextMenu(0, {0, 1, 2}), can_disable_frame_tracks());
+  verify_context_menu_action_availability({0});
+  verify_context_menu_action_availability({1});
+  verify_context_menu_action_availability({2});
+  verify_context_menu_action_availability({0, 1, 2});
 }
 
 TEST_F(FunctionsDataViewTest, GenericDataExportFunctionShowCorrectData) {
@@ -494,54 +460,26 @@ TEST_F(FunctionsDataViewTest, GenericDataExportFunctionShowCorrectData) {
 
   // Copy Selection
   {
-    const auto copy_selection_idx =
-        std::find(context_menu.begin(), context_menu.end(), "Copy Selection") -
-        context_menu.begin();
-    ASSERT_LT(copy_selection_idx, context_menu.size());
-
-    std::string clipboard;
-    EXPECT_CALL(app_, SetClipboard).Times(1).WillOnce(testing::SaveArg<0>(&clipboard));
-    view_.OnContextMenu("Copy Selection", static_cast<int>(copy_selection_idx), {0});
-    EXPECT_EQ(clipboard, absl::StrFormat(
-                             "Hooked\tFunction\tSize\tModule\tAddress in module\n"
-                             "\t%s\t%d\t%s\t%#x\n",
-                             functions_[0].pretty_name(), functions_[0].size(),
-                             std::filesystem::path{functions_[0].module_path()}.filename().string(),
-                             functions_[0].address()));
+    std::string expected_clipboard = absl::StrFormat(
+        "Hooked\tFunction\tSize\tModule\tAddress in module\n"
+        "\t%s\t%d\t%s\t%#x\n",
+        functions_[0].pretty_name(), functions_[0].size(),
+        std::filesystem::path{functions_[0].module_path()}.filename().string(),
+        functions_[0].address());
+    CheckCopySelectionIsInvoked(context_menu, app_, view_, expected_clipboard);
   }
 
   // Export to CSV
   {
-    const auto export_to_csv_idx =
-        std::find(context_menu.begin(), context_menu.end(), "Export to CSV") - context_menu.begin();
-    ASSERT_LT(export_to_csv_idx, context_menu.size());
-
-    ErrorMessageOr<orbit_base::TemporaryFile> temporary_file_or_error =
-        orbit_base::TemporaryFile::Create();
-    ASSERT_THAT(temporary_file_or_error, orbit_test_utils::HasNoError());
-    const std::filesystem::path temporary_file_path = temporary_file_or_error.value().file_path();
-
-    // We actually only need a temporary file path, so let's call `CloseAndRemove` and reuse the
-    // filepath. The TemporaryFile instance will still take care of deleting our new file when it
-    // gets out of scope.
-    temporary_file_or_error.value().CloseAndRemove();
-
-    EXPECT_CALL(app_, GetSaveFile).Times(1).WillOnce(testing::Return(temporary_file_path.string()));
-    view_.OnContextMenu("Export to CSV", static_cast<int>(export_to_csv_idx), {0});
-
-    ErrorMessageOr<std::string> contents_or_error =
-        orbit_base::ReadFileToString(temporary_file_path);
-    ASSERT_THAT(contents_or_error, orbit_test_utils::HasNoError());
-
-    EXPECT_EQ(
-        contents_or_error.value(),
+    std::string expected_contents =
         absl::StrFormat(R"("Hooked","Function","Size","Module","Address in module")"
                         "\r\n"
                         R"("","%s","%d","%s","%#x")"
                         "\r\n",
                         functions_[0].pretty_name(), functions_[0].size(),
                         std::filesystem::path{functions_[0].module_path()}.filename().string(),
-                        functions_[0].address()));
+                        functions_[0].address());
+    CheckExportToCsvIsInvoked(context_menu, app_, view_, expected_contents);
   }
 }
 
