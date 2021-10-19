@@ -14,6 +14,7 @@
 using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::CheckSingleAction;
+using orbit_data_views::ContextMenuEntry;
 using orbit_grpc_protos::TracepointInfo;
 
 namespace {
@@ -104,33 +105,33 @@ TEST_F(TracepointsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
         return tracepoints_selected.at(index.value());
       });
 
-  auto run_checks = [&](const std::vector<int>& selected_indices) {
+  auto verify_context_menu_action_availability = [&](const std::vector<int>& selected_indices) {
     std::vector<std::string> context_menu = view_.GetContextMenu(0, selected_indices);
 
     // Common actions should always be available.
-    CheckSingleAction(context_menu, "Copy Selection", true);
-    CheckSingleAction(context_menu, "Export to CSV", true);
+    CheckSingleAction(context_menu, "Copy Selection", ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, "Export to CSV", ContextMenuEntry::kEnabled);
 
     // Unhook action is available if and only if there are selected tracepoints.
     // Hook action is available if and only if there are unselected tracepoints.
-    bool enable_unselect = false;
-    bool enable_select = false;
+    ContextMenuEntry unselect = ContextMenuEntry::kDisabled;
+    ContextMenuEntry select = ContextMenuEntry::kDisabled;
     for (size_t index : selected_indices) {
       if (tracepoints_selected[index]) {
-        enable_unselect = true;
+        unselect = ContextMenuEntry::kEnabled;
       } else {
-        enable_select = true;
+        select = ContextMenuEntry::kEnabled;
       }
     }
-    CheckSingleAction(context_menu, "Unhook", enable_unselect);
-    CheckSingleAction(context_menu, "Hook", enable_select);
+    CheckSingleAction(context_menu, "Unhook", unselect);
+    CheckSingleAction(context_menu, "Hook", select);
   };
 
   SetTracepointsByIndices({0, 1, 2});
-  { run_checks({0}); }
-  { run_checks({1}); }
-  { run_checks({2}); }
-  { run_checks({0, 1, 2}); }
+  verify_context_menu_action_availability({0});
+  verify_context_menu_action_availability({1});
+  verify_context_menu_action_availability({2});
+  verify_context_menu_action_availability({0, 1, 2});
 }
 
 TEST_F(TracepointsDataViewTest, ContextMenuActionsAreInvoked) {

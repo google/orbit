@@ -25,6 +25,7 @@
 using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::CheckSingleAction;
+using orbit_data_views::ContextMenuEntry;
 
 namespace {
 struct FunctionsDataViewTest : public testing::Test {
@@ -392,49 +393,49 @@ TEST_F(FunctionsDataViewTest, ContextMenuEntriesChangeOnFunctionState) {
 
   view_.AddFunctions({&functions_[0], &functions_[1], &functions_[2]});
 
-  auto run_checks = [&](std::vector<int> selected_indices) {
+  auto verify_context_menu_action_availability = [&](std::vector<int> selected_indices) {
     std::vector<std::string> context_menu = view_.GetContextMenu(0, selected_indices);
 
     // Common actions should always be available.
-    CheckSingleAction(context_menu, "Copy Selection", true);
-    CheckSingleAction(context_menu, "Export to CSV", true);
+    CheckSingleAction(context_menu, "Copy Selection", ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, "Export to CSV", ContextMenuEntry::kEnabled);
 
     // Source code and disassembly actions are also always available.
-    CheckSingleAction(context_menu, "Go to Source code", true);
-    CheckSingleAction(context_menu, "Go to Disassembly", true);
+    CheckSingleAction(context_menu, "Go to Source code", ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, "Go to Disassembly", ContextMenuEntry::kEnabled);
 
     // Hook action is available if and only if there is an unselected function. Unhook action is
     // available if and only if there is a selected instrumented function.
     // Enable frametrack action is available if and only if there is a function with frametrack not
     // yet enabled, disable frametrack action is available if and only if there is a function with
     // frametrack enabled.
-    bool enable_select = false;
-    bool enable_unselect = false;
-    bool enable_enable_frametrack = false;
-    bool enable_disable_frametrack = false;
+    ContextMenuEntry select = ContextMenuEntry::kDisabled;
+    ContextMenuEntry unselect = ContextMenuEntry::kDisabled;
+    ContextMenuEntry enable_frametrack = ContextMenuEntry::kDisabled;
+    ContextMenuEntry disable_frametrack = ContextMenuEntry::kDisabled;
     for (size_t index : selected_indices) {
       if (is_function_selected.at(index)) {
-        enable_unselect = true;
+        unselect = ContextMenuEntry::kEnabled;
       } else {
-        enable_select = true;
+        select = ContextMenuEntry::kEnabled;
       }
 
       if (is_frame_track_enabled.at(index)) {
-        enable_disable_frametrack = true;
+        disable_frametrack = ContextMenuEntry::kEnabled;
       } else {
-        enable_enable_frametrack = true;
+        enable_frametrack = ContextMenuEntry::kEnabled;
       }
     }
-    CheckSingleAction(context_menu, "Hook", enable_select);
-    CheckSingleAction(context_menu, "Unhook", enable_unselect);
-    CheckSingleAction(context_menu, "Enable frame track(s)", enable_enable_frametrack);
-    CheckSingleAction(context_menu, "Disable frame track(s)", enable_disable_frametrack);
+    CheckSingleAction(context_menu, "Hook", select);
+    CheckSingleAction(context_menu, "Unhook", unselect);
+    CheckSingleAction(context_menu, "Enable frame track(s)", enable_frametrack);
+    CheckSingleAction(context_menu, "Disable frame track(s)", disable_frametrack);
   };
 
-  { run_checks({0}); }
-  { run_checks({1}); }
-  { run_checks({2}); }
-  { run_checks({0, 1, 2}); }
+  verify_context_menu_action_availability({0});
+  verify_context_menu_action_availability({1});
+  verify_context_menu_action_availability({2});
+  verify_context_menu_action_availability({0, 1, 2});
 }
 
 TEST_F(FunctionsDataViewTest, GenericDataExportFunctionShowCorrectData) {

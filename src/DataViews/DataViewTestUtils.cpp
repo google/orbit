@@ -15,11 +15,16 @@
 namespace orbit_data_views {
 
 void CheckSingleAction(const std::vector<std::string>& context_menu, const std::string& action,
-                       bool enable_action) {
-  if (enable_action) {
-    EXPECT_THAT(context_menu, testing::IsSupersetOf({action}));
-  } else {
-    EXPECT_THAT(context_menu, testing::Not(testing::Contains(action)));
+                       ContextMenuEntry menu_entry) {
+  switch (menu_entry) {
+    case ContextMenuEntry::kEnabled:
+      EXPECT_THAT(context_menu, testing::Contains(action));
+      return;
+    case ContextMenuEntry::kDisabled:
+      EXPECT_THAT(context_menu, testing::Not(testing::Contains(action)));
+      return;
+    default:
+      UNREACHABLE();
   }
 }
 

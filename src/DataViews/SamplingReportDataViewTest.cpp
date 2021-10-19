@@ -29,6 +29,7 @@ using orbit_client_protos::FunctionInfo;
 using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::CheckSingleAction;
+using orbit_data_views::ContextMenuEntry;
 using orbit_grpc_protos::ModuleInfo;
 
 namespace {
@@ -292,13 +293,13 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     return view_.GetContextMenu(0, selected_rows);
   };
 
-  auto run_checks = [&](const std::vector<int>& selected_indices) {
+  auto verify_context_menu_action_availability = [&](const std::vector<int>& selected_indices) {
     std::vector<std::string> context_menu =
         get_context_menu_from_selected_indices(selected_indices);
 
     // Common actions should always be available.
-    CheckSingleAction(context_menu, "Copy Selection", true);
-    CheckSingleAction(context_menu, "Export to CSV", true);
+    CheckSingleAction(context_menu, "Copy Selection", ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, "Export to CSV", ContextMenuEntry::kEnabled);
 
     // Find indices that SamplingReportDataView::GetFunctionsFromIndices can find matching
     // functions.
@@ -313,29 +314,30 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
 
     // Source code and disassembly actions are availble if and only if 1) capture is connected and
     // 2) selected_functions = GetFunctionsFromIndices(selected_indices) is not empty.
-    bool enable_source_code = capture_connected && !selected_indices_with_matching_function.empty();
-    CheckSingleAction(context_menu, "Go to Source code", enable_source_code);
-
-    bool enable_disassembly = capture_connected && !selected_indices_with_matching_function.empty();
-    CheckSingleAction(context_menu, "Go to Disassembly", enable_disassembly);
+    ContextMenuEntry source_code_or_disassembly =
+        capture_connected && !selected_indices_with_matching_function.empty()
+            ? ContextMenuEntry::kEnabled
+            : ContextMenuEntry::kDisabled;
+    CheckSingleAction(context_menu, "Go to Source code", source_code_or_disassembly);
+    CheckSingleAction(context_menu, "Go to Disassembly", source_code_or_disassembly);
 
     // Hook action is available if and only if 1) capture is connected and 2) selected_functions =
     // GetFunctionsFromIndices(selected_indices) contains a unselected function.
     // Unhook action is available if and only if 1) capture is connected and 2) selected_functions =
     // GetFunctionsFromIndices(selected_indices) contains a selected function.
-    bool enable_select = false;
-    bool enable_unselect = false;
+    ContextMenuEntry select = ContextMenuEntry::kDisabled;
+    ContextMenuEntry unselect = ContextMenuEntry::kDisabled;
     if (capture_connected) {
       for (size_t index : selected_indices_with_matching_function) {
         if (!functions_selected[index]) {
-          enable_select = true;
+          select = ContextMenuEntry::kEnabled;
         } else {
-          enable_unselect = true;
+          unselect = ContextMenuEntry::kEnabled;
         }
       }
     }
-    CheckSingleAction(context_menu, "Hook", enable_select);
-    CheckSingleAction(context_menu, "Unhook", enable_unselect);
+    CheckSingleAction(context_menu, "Hook", select);
+    CheckSingleAction(context_menu, "Unhook", unselect);
 
     // Find indices that SamplingReportDataView::GetModulePathsAndBuildIdsFromIndices can find
     // matching module path and build id pair.
@@ -348,30 +350,30 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     // Load symbols action is available if and only if: in all the module path and build id pairs
     // returned by SamplingReportDataView::GetModulePathsAndBuildIdsFromIndices, there is one pair
     // corresponds to a module that is not loaded yet.
-    bool enable_load = false;
+    ContextMenuEntry load_symbols = ContextMenuEntry::kDisabled;
     for (int index : selected_indices_with_matching_module) {
       if (!kModuleIsLoaded[index]) {
-        enable_load = true;
+        load_symbols = ContextMenuEntry::kEnabled;
         break;
       }
     }
-    CheckSingleAction(context_menu, "Load Symbols", enable_load);
+    CheckSingleAction(context_menu, "Load Symbols", load_symbols);
   };
 
   AddFunctionsByIndices({0, 1, 2, 3});
   capture_connected = false;
-  { run_checks({0}); }
-  { run_checks({1}); }
-  { run_checks({2}); }
-  { run_checks({3}); }
-  { run_checks({0, 1, 2, 3}); }
+  verify_context_menu_action_availability({0});
+  verify_context_menu_action_availability({1});
+  verify_context_menu_action_availability({2});
+  verify_context_menu_action_availability({3});
+  verify_context_menu_action_availability({0, 1, 2, 3});
 
   capture_connected = true;
-  { run_checks({0}); }
-  { run_checks({1}); }
-  { run_checks({2}); }
-  { run_checks({3}); }
-  { run_checks({0, 1, 2, 3}); }
+  verify_context_menu_action_availability({0});
+  verify_context_menu_action_availability({1});
+  verify_context_menu_action_availability({2});
+  verify_context_menu_action_availability({3});
+  verify_context_menu_action_availability({0, 1, 2, 3});
 }
 
 TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {

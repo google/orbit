@@ -13,6 +13,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ProcessData.h"
+#include "DataViewTestUtils.h"
 #include "DataViews/CallstackDataView.h"
 #include "DataViews/DataView.h"
 #include "DisplayFormats/DisplayFormats.h"
@@ -31,6 +32,9 @@ using orbit_client_data::function_utils::GetLoadedModuleNameByPath;
 using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::FunctionInfo;
 using orbit_data_views::CallstackDataView;
+using orbit_data_views::CheckCopySelectionIsInvoked;
+using orbit_data_views::CheckExportToCsvIsInvoked;
+using orbit_data_views::ContextMenuEntry;
 using orbit_data_views::MockAppInterface;
 using orbit_grpc_protos::ModuleInfo;
 
@@ -305,84 +309,62 @@ TEST_F(CallstackDataViewTest, ContextMenuEntriesArePresentCorrectly) {
         return functions_selected.at(index.value());
       });
 
-  auto run_checks = [&](std::vector<int> selected_indices) {
-    // Common actions should always be available.
-    EXPECT_THAT(view_.GetContextMenu(0, selected_indices),
-                testing::IsSupersetOf({"Copy Selection", "Export to CSV"}));
+  auto verify_context_menu_action_availability = [&](std::vector<int> selected_indices) {
+    std::vector<std::string> context_menu = view_.GetContextMenu(0, selected_indices);
 
-    bool enable_disassembly_and_source_code = false;
-    bool enable_load = false;
-    bool enable_select = false;
-    bool enable_unselect = false;
+    // Common actions should always be available.
+    CheckSingleAction(context_menu, "Copy Selection", ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, "Export to CSV", ContextMenuEntry::kEnabled);
+
+    ContextMenuEntry source_code_or_disassembly = ContextMenuEntry::kDisabled;
+    ContextMenuEntry load_symbols = ContextMenuEntry::kDisabled;
+    ContextMenuEntry select = ContextMenuEntry::kDisabled;
+    ContextMenuEntry unselect = ContextMenuEntry::kDisabled;
     for (int selected_index : selected_indices) {
       if (kFrameFunctionNotNull[selected_index] && capture_connected) {
         // Source code and disassembly actions are availble if and only if: 1) capture is connected
         // and 2) there exists a function that is not null.
-        enable_disassembly_and_source_code = true;
+        source_code_or_disassembly = ContextMenuEntry::kEnabled;
 
         // Hook action is availble if and only if: 1) capture is connected
         // and 2) there exists a function that is not null and also not yet selected.
-        enable_select |= !functions_selected[selected_index];
-
         // Unhook action is availble if and only if: 1) capture is connected
         // and 2) there exists a function that is not null and also already selected.
-        enable_unselect |= functions_selected[selected_index];
+        if (!functions_selected[selected_index]) {
+          select = ContextMenuEntry::kEnabled;
+        } else {
+          unselect = ContextMenuEntry::kEnabled;
+        }
       } else if (kFrameModuleNotNull[selected_index] && !kModuleIsLoaded[selected_index]) {
         // Load symbols action is available if and only if existing a module that is not null and
         // not yet loaded.
-        enable_load = true;
+        load_symbols = ContextMenuEntry::kEnabled;
       }
     }
-
-    if (enable_disassembly_and_source_code) {
-      EXPECT_THAT(view_.GetContextMenu(0, selected_indices),
-                  testing::IsSupersetOf({"Go to Disassembly", "Go to Source code"}));
-    } else {
-      EXPECT_THAT(view_.GetContextMenu(0, selected_indices),
-                  testing::AllOf(testing::Not(testing::Contains("Go to Disassembly")),
-                                 testing::Not(testing::Contains("Go to Source code"))));
-    }
-
-    if (enable_load) {
-      EXPECT_THAT(view_.GetContextMenu(0, selected_indices),
-                  testing::IsSupersetOf({"Load Symbols"}));
-    } else {
-      EXPECT_THAT(view_.GetContextMenu(0, selected_indices),
-                  testing::Not(testing::Contains("Load Symbols")));
-    }
-
-    if (enable_select) {
-      EXPECT_THAT(view_.GetContextMenu(0, selected_indices), testing::IsSupersetOf({"Hook"}));
-    } else {
-      EXPECT_THAT(view_.GetContextMenu(0, selected_indices),
-                  testing::Not(testing::Contains("Hook")));
-    }
-
-    if (enable_unselect) {
-      EXPECT_THAT(view_.GetContextMenu(0, selected_indices), testing::IsSupersetOf({"Unhook"}));
-    } else {
-      EXPECT_THAT(view_.GetContextMenu(0, selected_indices),
-                  testing::Not(testing::Contains("Unhook")));
-    }
+    CheckSingleAction(context_menu, "Go to Disassembly", source_code_or_disassembly);
+    CheckSingleAction(context_menu, "Go to Source code", source_code_or_disassembly);
+    CheckSingleAction(context_menu, "Load Symbols", load_symbols);
+    CheckSingleAction(context_menu, "Hook", select);
+    CheckSingleAction(context_menu, "Unhook", unselect);
   };
 
   SetCallstackFromFrames(kCallstackFrameAddresses);
 
   capture_connected = false;
-  run_checks({0});
-  run_checks({1});
-  run_checks({2});
-  run_checks({3});
-  run_checks({4});
-  run_checks({0, 1, 2, 3, 4});
+  verify_context_menu_action_availability({0});
+  verify_context_menu_action_availability({1});
+  verify_context_menu_action_availability({2});
+  verify_context_menu_action_availability({3});
+  verify_context_menu_action_availability({4});
+  verify_context_menu_action_availability({0, 1, 2, 3, 4});
 
   capture_connected = true;
-  run_checks({0});
-  run_checks({1});
-  run_checks({2});
-  run_checks({3});
-  run_checks({4});
-  run_checks({0, 1, 2, 3, 4});
+  verify_context_menu_action_availability({0});
+  verify_context_menu_action_availability({1});
+  verify_context_menu_action_availability({2});
+  verify_context_menu_action_availability({3});
+  verify_context_menu_action_availability({4});
+  verify_context_menu_action_availability({0, 1, 2, 3, 4});
 }
 
 TEST_F(CallstackDataViewTest, ContextMenuActionsAreInvoked) {
@@ -401,53 +383,26 @@ TEST_F(CallstackDataViewTest, ContextMenuActionsAreInvoked) {
 
   // Copy Selection
   {
-    const auto copy_selection_index =
-        std::find(context_menu.begin(), context_menu.end(), "Copy Selection") -
-        context_menu.begin();
-    ASSERT_LT(copy_selection_index, context_menu.size());
-
-    std::string clipboard;
-    EXPECT_CALL(app_, SetClipboard).Times(1).WillOnce(testing::SaveArg<0>(&clipboard));
-    view_.OnContextMenu("Copy Selection", static_cast<int>(copy_selection_index), {0});
-    EXPECT_EQ(clipboard, absl::StrFormat("Hooked\tFunction\tSize\tModule\tSampled Address\n"
-                                         "\t%s\t%s\t%s\t%s\n",
-                                         absl::StrCat(view_.kHighlightedFunctionBlankString,
-                                                      kFunctionPrettyNames[0]),
-                                         GetExpectedDisplaySize(kFunctionSizes[0]),
-                                         GetLoadedModuleNameByPath(kModulePaths[0]),
-                                         GetExpectedDisplayAddress(kFrameAddress)));
+    std::string expected_clipboard = absl::StrFormat(
+        "Hooked\tFunction\tSize\tModule\tSampled Address\n"
+        "\t%s\t%s\t%s\t%s\n",
+        absl::StrCat(view_.kHighlightedFunctionBlankString, kFunctionPrettyNames[0]),
+        GetExpectedDisplaySize(kFunctionSizes[0]), GetLoadedModuleNameByPath(kModulePaths[0]),
+        GetExpectedDisplayAddress(kFrameAddress));
+    CheckCopySelectionIsInvoked(context_menu, app_, view_, expected_clipboard);
   }
 
   // Export to CSV
   {
-    const auto export_to_csv_index =
-        std::find(context_menu.begin(), context_menu.end(), "Copy Selection") -
-        context_menu.begin();
-    ASSERT_LT(export_to_csv_index, context_menu.size());
-
-    ErrorMessageOr<orbit_base::TemporaryFile> temporary_file_or_error =
-        orbit_base::TemporaryFile::Create();
-    ASSERT_THAT(temporary_file_or_error, orbit_test_utils::HasNoError());
-    const std::filesystem::path temporary_file_path = temporary_file_or_error.value().file_path();
-    temporary_file_or_error.value().CloseAndRemove();
-
-    EXPECT_CALL(app_, GetSaveFile).Times(1).WillOnce(testing::Return(temporary_file_path.string()));
-    view_.OnContextMenu("Export to CSV", static_cast<int>(export_to_csv_index), {0});
-
-    ErrorMessageOr<std::string> contents_or_error =
-        orbit_base::ReadFileToString(temporary_file_path);
-    ASSERT_THAT(contents_or_error, orbit_test_utils::HasNoError());
-
-    EXPECT_EQ(
-        contents_or_error.value(),
-        absl::StrFormat(
-            R"("Hooked","Function","Size","Module","Sampled Address")"
-            "\r\n"
-            R"("","%s","%s","%s","%s")"
-            "\r\n",
-            absl::StrCat(view_.kHighlightedFunctionBlankString, kFunctionPrettyNames[0]),
-            GetExpectedDisplaySize(kFunctionSizes[0]), GetLoadedModuleNameByPath(kModulePaths[0]),
-            GetExpectedDisplayAddress(kFrameAddress)));
+    std::string expected_contents = absl::StrFormat(
+        R"("Hooked","Function","Size","Module","Sampled Address")"
+        "\r\n"
+        R"("","%s","%s","%s","%s")"
+        "\r\n",
+        absl::StrCat(view_.kHighlightedFunctionBlankString, kFunctionPrettyNames[0]),
+        GetExpectedDisplaySize(kFunctionSizes[0]), GetLoadedModuleNameByPath(kModulePaths[0]),
+        GetExpectedDisplayAddress(kFrameAddress));
+    CheckExportToCsvIsInvoked(context_menu, app_, view_, expected_contents);
   }
 
   // Go to Disassembly

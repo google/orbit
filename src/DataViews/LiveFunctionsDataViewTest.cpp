@@ -31,6 +31,7 @@ using orbit_client_data::ModuleData;
 using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::CheckSingleAction;
+using orbit_data_views::ContextMenuEntry;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
 
@@ -258,75 +259,81 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     return frame_track_enabled.at(index.value());
   });
 
-  auto run_checks = [&](std::vector<int> selected_indices) {
+  auto verify_context_menu_action_availability = [&](std::vector<int> selected_indices) {
     std::vector<std::string> context_menu = view_.GetContextMenu(0, selected_indices);
 
     // Common actions should always be available.
-    CheckSingleAction(context_menu, "Copy Selection", true);
-    CheckSingleAction(context_menu, "Export to CSV", true);
+    CheckSingleAction(context_menu, "Copy Selection", ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, "Export to CSV", ContextMenuEntry::kEnabled);
 
     // Source code and disassembly actions are availble if and only if capture is connected.
-    CheckSingleAction(context_menu, "Go to Source code", capture_connected);
-    CheckSingleAction(context_menu, "Go to Disassembly", capture_connected);
-
-    // Jump actions are only available for single selection with non-zero counts.
-    bool enable_jump = selected_indices.size() == 1 && kCounts[selected_indices[0]] > 0;
-    CheckSingleAction(context_menu, "Jump to first", enable_jump);
-    CheckSingleAction(context_menu, "Jump to last", enable_jump);
-    CheckSingleAction(context_menu, "Jump to min", enable_jump);
-    CheckSingleAction(context_menu, "Jump to max", enable_jump);
+    ContextMenuEntry source_code_or_disassembly =
+        capture_connected ? ContextMenuEntry::kEnabled : ContextMenuEntry::kDisabled;
+    CheckSingleAction(context_menu, "Go to Source code", source_code_or_disassembly);
+    CheckSingleAction(context_menu, "Go to Disassembly", source_code_or_disassembly);
 
     // Add iterators action is only available if some function has non-zero counts.
     int total_counts = 0;
     for (int selected_index : selected_indices) {
       total_counts += kCounts[selected_index];
     }
-    CheckSingleAction(context_menu, "Add iterator(s)", total_counts > 0);
+    ContextMenuEntry add_iterators =
+        total_counts > 0 ? ContextMenuEntry::kEnabled : ContextMenuEntry::kDisabled;
+    CheckSingleAction(context_menu, "Add iterator(s)", add_iterators);
+
+    // Jump actions are only available for single selection with non-zero counts.
+    ContextMenuEntry jump_to_direction = selected_indices.size() == 1 && total_counts > 0
+                                             ? ContextMenuEntry::kEnabled
+                                             : ContextMenuEntry::kDisabled;
+    CheckSingleAction(context_menu, "Jump to first", jump_to_direction);
+    CheckSingleAction(context_menu, "Jump to last", jump_to_direction);
+    CheckSingleAction(context_menu, "Jump to min", jump_to_direction);
+    CheckSingleAction(context_menu, "Jump to max", jump_to_direction);
 
     // Hook action is available if and only if 1) capture is connected and 2) there is an unselected
     // instrumented function. Unhook action is available if and only if 1) capture is connected and
     // 2) there is a selected instrumented function.
-    bool enable_select = false;
-    bool enable_unselect = false;
+    ContextMenuEntry select = ContextMenuEntry::kDisabled;
+    ContextMenuEntry unselect = ContextMenuEntry::kDisabled;
     if (capture_connected) {
       for (size_t index : selected_indices) {
         if (functions_selected.at(index)) {
-          enable_unselect = true;
+          unselect = ContextMenuEntry::kEnabled;
         } else {
-          enable_select = true;
+          select = ContextMenuEntry::kEnabled;
         }
       }
     }
-    CheckSingleAction(context_menu, "Hook", enable_select);
-    CheckSingleAction(context_menu, "Unhook", enable_unselect);
+    CheckSingleAction(context_menu, "Hook", select);
+    CheckSingleAction(context_menu, "Unhook", unselect);
 
     // Enable frametrack action is available if and only if there is an instrumented function with
     // frametrack not yet enabled, disable frametrack action is available if and only if there is an
     // instrumented function with frametrack enabled.
-    bool enable_enable_frametrack = false;
-    bool enable_disable_frametrack = false;
+    ContextMenuEntry enable_frametrack = ContextMenuEntry::kDisabled;
+    ContextMenuEntry disable_frametrack = ContextMenuEntry::kDisabled;
     for (size_t index : selected_indices) {
       if (frame_track_enabled.at(index)) {
-        enable_disable_frametrack = true;
+        disable_frametrack = ContextMenuEntry::kEnabled;
       } else {
-        enable_enable_frametrack = true;
+        enable_frametrack = ContextMenuEntry::kEnabled;
       }
     }
-    CheckSingleAction(context_menu, "Enable frame track(s)", enable_enable_frametrack);
-    CheckSingleAction(context_menu, "Disable frame track(s)", enable_disable_frametrack);
+    CheckSingleAction(context_menu, "Enable frame track(s)", enable_frametrack);
+    CheckSingleAction(context_menu, "Disable frame track(s)", disable_frametrack);
   };
 
   capture_connected = false;
-  { run_checks({0}); }
-  { run_checks({1}); }
-  { run_checks({2}); }
-  { run_checks({0, 1, 2}); }
+  verify_context_menu_action_availability({0});
+  verify_context_menu_action_availability({1});
+  verify_context_menu_action_availability({2});
+  verify_context_menu_action_availability({0, 1, 2});
 
   capture_connected = true;
-  { run_checks({0}); }
-  { run_checks({1}); }
-  { run_checks({2}); }
-  { run_checks({0, 1, 2}); }
+  verify_context_menu_action_availability({0});
+  verify_context_menu_action_availability({1});
+  verify_context_menu_action_availability({2});
+  verify_context_menu_action_availability({0, 1, 2});
 }
 
 TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
