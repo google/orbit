@@ -73,9 +73,8 @@ outcome::result<void> Task::run() {
       if (added_new_data_to_read_buffer) {
         emit readyReadStdOut();
       }
-      SetState(State::kEOFSent);
-      emit finished(channel_->GetExitStatus());
-      return outcome::success();
+      SetState(State::kWaitChannelClosed);
+      break;
     } else if (result) {
       read_std_out_buffer_.append(std::move(result).value());
       added_new_data_to_read_buffer = true;
@@ -103,13 +102,18 @@ outcome::result<void> Task::run() {
       if (added_new_data_to_read_buffer) {
         emit readyReadStdErr();
       }
-      SetState(State::kEOFSent);
-      emit finished(channel_->GetExitStatus());
-      return outcome::success();
+      SetState(State::kWaitChannelClosed);
+      break;
     } else if (result) {
       read_std_err_buffer_.append(std::move(result).value());
       added_new_data_to_read_buffer = true;
     }
+  }
+
+  // If the state here is kWaitChannelClosed, that means a close from the remote side was detected.
+  // This means writing is not possible/necessary anymore, therefore: return early.
+  if (CurrentState() == State::kWaitChannelClosed) {
+    return outcome::success();
   }
 
   // write
@@ -150,7 +154,9 @@ outcome::result<void> Task::startup() {
     case State::kCommandRunning:
     case State::kShutdown:
     case State::kSignalEOF:
-    case State::kEOFSent:
+    case State::kWaitRemoteEOF:
+    case State::kSignalChannelClose:
+    case State::kWaitChannelClosed:
     case State::kChannelClosed:
     case State::kError:
       UNREACHABLE();
@@ -171,17 +177,31 @@ outcome::result<void> Task::shutdown() {
     case State::kShutdown:
     case State::kSignalEOF: {
       OUTCOME_TRY(channel_->SendEOF());
-      SetState(State::kEOFSent);
+      SetState(State::kWaitRemoteEOF);
       break;
     }
-    case State::kEOFSent: {
+    case State::kWaitRemoteEOF: {
+      OUTCOME_TRY(channel_->WaitRemoteEOF());
+      SetState(State::kSignalChannelClose);
+      ABSL_FALLTHROUGH_INTENDED;
+    }
+    case State::kSignalChannelClose: {
       OUTCOME_TRY(channel_->Close());
+      SetState(State::kWaitChannelClosed);
+      ABSL_FALLTHROUGH_INTENDED;
+    }
+    case State::kWaitChannelClosed: {
+      OUTCOME_TRY(channel_->WaitClosed());
       SetState(State::kChannelClosed);
+      // The exit status is only guaranteed to be available after the channel is really closed on
+      // both sides
+      emit finished(channel_->GetExitStatus());
       ABSL_FALLTHROUGH_INTENDED;
     }
     case State::kChannelClosed:
       data_event_connection_ = std::nullopt;
       about_to_shutdown_connection_ = std::nullopt;
+      channel_ = std::nullopt;
       break;
     case State::kError:
       UNREACHABLE();
