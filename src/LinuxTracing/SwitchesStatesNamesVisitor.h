@@ -28,7 +28,7 @@ namespace orbit_linux_tracing {
 // As for some of these events the process id is not available, but only the thread id, this class
 // also keeps the association between tids and pids system wide. The initial association extracted
 // from the proc filesystem is passed by calling ProcessInitialTidToPidAssociation for each thread,
-// and is updated with ForkPerfEvents (and also ExitPerfEvents, see Visit(ExitPerfEvent*)).
+// and is updated with ForkPerfEvents (and also ExitPerfEvents, see Visit(const ExitPerfEvent&)).
 // For thread states, we are able to collect partial slices at the beginning and at the end of the
 // capture, hence the ProcessInitialState and ProcessRemainingOpenStates methods.
 // Also, we only process thread states of the process with pid specified with
@@ -50,16 +50,16 @@ class SwitchesStatesNamesVisitor : public PerfEventVisitor {
   void SetThreadStatePidFilter(pid_t pid) { thread_state_pid_filter_ = pid; }
 
   void ProcessInitialTidToPidAssociation(pid_t tid, pid_t pid);
-  void Visit(ForkPerfEvent* event) override;
-  void Visit(ExitPerfEvent* event) override;
+  void Visit(const ForkPerfEvent& event) override;
+  void Visit(const ExitPerfEvent& event) override;
 
   void ProcessInitialState(uint64_t timestamp_ns, pid_t tid, char state_char);
-  void Visit(TaskNewtaskPerfEvent* event) override;
-  void Visit(SchedSwitchPerfEvent* event) override;
-  void Visit(SchedWakeupPerfEvent* event) override;
+  void Visit(const TaskNewtaskPerfEvent& event) override;
+  void Visit(const SchedSwitchPerfEvent& event) override;
+  void Visit(const SchedWakeupPerfEvent& event) override;
   void ProcessRemainingOpenStates(uint64_t timestamp_ns);
 
-  void Visit(TaskRenamePerfEvent* event) override;
+  void Visit(const TaskRenamePerfEvent& event) override;
 
  private:
   static std::optional<orbit_grpc_protos::ThreadStateSlice::ThreadState> GetThreadStateFromChar(

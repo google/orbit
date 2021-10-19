@@ -34,7 +34,7 @@ class LeafFunctionCallManager {
   // Note that the address of the caller address is computed by decreasing the return address by
   // one in libunwindstack, to match the format of perf_event_open.
   virtual orbit_grpc_protos::Callstack::CallstackType PatchCallerOfLeafFunction(
-      CallchainSamplePerfEvent* event, LibunwindstackMaps* current_maps,
+      const CallchainSamplePerfEvent* event, LibunwindstackMaps* current_maps,
       LibunwindstackUnwinder* unwinder);
 
  private:

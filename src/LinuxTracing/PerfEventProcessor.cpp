@@ -79,14 +79,15 @@ std::optional<DiscardedPerfEvent> PerfEventProcessor::HandleOutOfOrderEvent(
 void PerfEventProcessor::ProcessAllEvents() {
   CHECK(!visitors_.empty());
   while (event_queue_.HasEvent()) {
-    PerfEvent event = event_queue_.PopEvent();
+    const PerfEvent& event = event_queue_.TopEvent();
     // Events are guaranteed to be processed in order of timestamp
     // as out-of-order events are discarded in AddEvent.
     CHECK(GetTimestamp(event) >= last_processed_timestamp_ns_);
     last_processed_timestamp_ns_ = GetTimestamp(event);
     for (PerfEventVisitor* visitor : visitors_) {
-      std::visit([visitor](auto&& arg) { arg.Accept(visitor); }, event);
+      std::visit([visitor](auto&& arg) { visitor->Visit(arg); }, event);
     }
+    event_queue_.PopEvent();
   }
 }
 
@@ -95,7 +96,7 @@ void PerfEventProcessor::ProcessOldEvents() {
   const uint64_t current_timestamp_ns = orbit_base::CaptureTimestampNs();
 
   while (event_queue_.HasEvent()) {
-    PerfEvent& event = event_queue_.TopEvent();
+    const PerfEvent& event = event_queue_.TopEvent();
     const uint64_t timestamp = GetTimestamp(event);
 
     // Do not read the most recent events as out-of-order events could (and will) arrive.
@@ -108,7 +109,7 @@ void PerfEventProcessor::ProcessOldEvents() {
     last_processed_timestamp_ns_ = timestamp;
 
     for (PerfEventVisitor* visitor : visitors_) {
-      std::visit([visitor](auto&& arg) { arg.Accept(visitor); }, event);
+      std::visit([visitor](auto&& arg) { visitor->Visit(arg); }, event);
     }
     event_queue_.PopEvent();
   }

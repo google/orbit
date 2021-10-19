@@ -48,7 +48,7 @@ TEST_F(LostAndDiscardedEventVisitorTest, VisitLostPerfEventCallsOnLostPerfRecord
 
   constexpr uint64_t kPreviousTimestampNs = 1111;
   constexpr uint64_t kTimestampNs = 1234;
-  MakeFakeLostPerfEvent(kPreviousTimestampNs, kTimestampNs).Accept(&visitor_);
+  visitor_.Visit(MakeFakeLostPerfEvent(kPreviousTimestampNs, kTimestampNs));
 
   EXPECT_EQ(actual_lost_perf_records_event.end_timestamp_ns(), kTimestampNs);
   EXPECT_EQ(actual_lost_perf_records_event.duration_ns(), kTimestampNs - kPreviousTimestampNs);
@@ -63,7 +63,7 @@ TEST_F(LostAndDiscardedEventVisitorTest,
 
   constexpr uint64_t kBeginTimestampNs = 1111;
   constexpr uint64_t kEndTimestampNs = 1234;
-  MakeFakeDiscardedPerfEvent(kBeginTimestampNs, kEndTimestampNs).Accept(&visitor_);
+  visitor_.Visit(MakeFakeDiscardedPerfEvent(kBeginTimestampNs, kEndTimestampNs));
 
   EXPECT_EQ(actual_out_of_order_events_discarded_event.end_timestamp_ns(), kEndTimestampNs);
   EXPECT_EQ(actual_out_of_order_events_discarded_event.duration_ns(),

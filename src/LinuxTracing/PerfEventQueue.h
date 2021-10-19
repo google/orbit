@@ -36,8 +36,8 @@ class PerfEventQueue {
  public:
   void PushEvent(PerfEvent&& event);
   [[nodiscard]] bool HasEvent() const;
-  [[nodiscard]] PerfEvent& TopEvent();
-  PerfEvent PopEvent();
+  [[nodiscard]] const PerfEvent& TopEvent();
+  void PopEvent();
 
  private:
   // Floats down the element at the top of the ordered_queues_heap_ to its correct place. Used when

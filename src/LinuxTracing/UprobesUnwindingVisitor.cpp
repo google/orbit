@@ -63,16 +63,16 @@ static void SendUprobesFullAddressInfoToListener(
   listener->OnAddressInfo(std::move(address_info));
 }
 
-void UprobesUnwindingVisitor::Visit(StackSamplePerfEvent* event) {
+void UprobesUnwindingVisitor::Visit(const StackSamplePerfEvent& event) {
   CHECK(listener_ != nullptr);
   CHECK(current_maps_ != nullptr);
 
-  return_address_manager_->PatchSample(event->tid, event->GetRegisters()[PERF_REG_X86_SP],
-                                       event->GetStackData(), event->GetStackSize());
+  return_address_manager_->PatchSample(event.tid, event.GetRegisters()[PERF_REG_X86_SP],
+                                       event.GetMutableStackData(), event.GetStackSize());
 
   LibunwindstackResult libunwindstack_result =
-      unwinder_->Unwind(event->pid, current_maps_->Get(), event->GetRegisters(),
-                        event->GetStackData(), event->GetStackSize());
+      unwinder_->Unwind(event.pid, current_maps_->Get(), event.GetRegisters(), event.GetStackData(),
+                        event.GetStackSize());
 
   if (libunwindstack_result.frames().empty()) {
     // Even with unwinding errors this is not expected because we should at least get the program
@@ -82,9 +82,9 @@ void UprobesUnwindingVisitor::Visit(StackSamplePerfEvent* event) {
   }
 
   FullCallstackSample sample;
-  sample.set_pid(event->pid);
-  sample.set_tid(event->tid);
-  sample.set_timestamp_ns(event->timestamp);
+  sample.set_pid(event.pid);
+  sample.set_tid(event.tid);
+  sample.set_timestamp_ns(event.timestamp);
 
   Callstack* callstack = sample.mutable_callstack();
 
@@ -139,21 +139,21 @@ void UprobesUnwindingVisitor::Visit(StackSamplePerfEvent* event) {
   listener_->OnCallstackSample(std::move(sample));
 }
 
-void UprobesUnwindingVisitor::Visit(CallchainSamplePerfEvent* event) {
+void UprobesUnwindingVisitor::Visit(const CallchainSamplePerfEvent& event) {
   CHECK(listener_ != nullptr);
   CHECK(current_maps_ != nullptr);
 
   // The top of a callchain is always inside the kernel code and we don't expect samples to be only
   // inside the kernel. Do nothing in case this happens anyway for some reason.
-  if (event->GetCallchainSize() <= 1) {
-    ERROR("Callchain has only %lu frames", event->GetCallchainSize());
+  if (event.GetCallchainSize() <= 1) {
+    ERROR("Callchain has only %lu frames", event.GetCallchainSize());
     return;
   }
 
   FullCallstackSample sample;
-  sample.set_pid(event->pid);
-  sample.set_tid(event->tid);
-  sample.set_timestamp_ns(event->timestamp);
+  sample.set_pid(event.pid);
+  sample.set_tid(event.tid);
+  sample.set_timestamp_ns(event.timestamp);
 
   Callstack* callstack = sample.mutable_callstack();
 
@@ -162,17 +162,17 @@ void UprobesUnwindingVisitor::Visit(CallchainSamplePerfEvent* event) {
   // Note that this doesn't exclude samples inside the main function of any thread as the main
   // function is never the outermost frame. For example, for the main thread the outermost function
   // is _start, followed by __libc_start_main. For other threads, the outermost function is clone.
-  if (event->GetCallchainSize() == 2) {
+  if (event.GetCallchainSize() == 2) {
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
     }
     callstack->set_type(Callstack::kFramePointerUnwindingError);
-    callstack->add_pcs(event->GetCallchain()[1]);
+    callstack->add_pcs(event.GetCallchain()[1]);
     listener_->OnCallstackSample(std::move(sample));
     return;
   }
 
-  uint64_t top_ip = event->GetCallchain()[1];
+  uint64_t top_ip = event.GetCallchain()[1];
   unwindstack::MapInfo* top_ip_map_info = current_maps_->Find(top_ip);
 
   // Some samples can actually fall inside u(ret)probes code. Set their type accordingly, as we
@@ -197,15 +197,15 @@ void UprobesUnwindingVisitor::Visit(CallchainSamplePerfEvent* event) {
   //  caller of __libc_start_main will be invalid since libc doesn't have frame-pointers. This
   //  prevents us from testing the current implementation, which will have "almost" correct
   //  callstack.
-  for (uint64_t frame_index = 1; frame_index < event->GetCallchainSize(); ++frame_index) {
-    unwindstack::MapInfo* map_info = current_maps_->Find(event->GetCallchain()[frame_index]);
+  for (uint64_t frame_index = 1; frame_index < event.GetCallchainSize(); ++frame_index) {
+    unwindstack::MapInfo* map_info = current_maps_->Find(event.GetCallchain()[frame_index]);
     if (map_info == nullptr || (map_info->flags() & PROT_EXEC) == 0) {
       break;
     }
   }
 
   Callstack::CallstackType leaf_function_patching_status =
-      leaf_function_call_manager_->PatchCallerOfLeafFunction(event, current_maps_, unwinder_);
+      leaf_function_call_manager_->PatchCallerOfLeafFunction(&event, current_maps_, unwinder_);
   if (leaf_function_patching_status != Callstack::kComplete) {
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
@@ -216,8 +216,8 @@ void UprobesUnwindingVisitor::Visit(CallchainSamplePerfEvent* event) {
     return;
   }
 
-  if (!return_address_manager_->PatchCallchain(event->tid, event->ips.get(),
-                                               event->GetCallchainSize(), current_maps_)) {
+  if (!return_address_manager_->PatchCallchain(event.tid, event.ips.get(), event.GetCallchainSize(),
+                                               current_maps_)) {
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
     }
@@ -230,15 +230,15 @@ void UprobesUnwindingVisitor::Visit(CallchainSamplePerfEvent* event) {
   callstack->set_type(Callstack::kComplete);
   // Skip the first frame as the top of a perf_event_open callchain is always
   // inside kernel code.
-  callstack->add_pcs(event->GetCallchain()[1]);
+  callstack->add_pcs(event.GetCallchain()[1]);
   // Only the address of the top of the stack is correct. Frame-based unwinding
   // uses the return address of a function call as the caller's address.
   // However, the actual address of the call instruction is before that.
   // As we don't know the size of the call instruction, we subtract 1 from the
   // return address. This way we fall into the range of the call instruction.
   // Note: This is also done the same way in Libunwindstack.
-  for (uint64_t frame_index = 2; frame_index < event->GetCallchainSize(); ++frame_index) {
-    callstack->add_pcs(event->GetCallchain()[frame_index] - 1);
+  for (uint64_t frame_index = 2; frame_index < event.GetCallchainSize(); ++frame_index) {
+    callstack->add_pcs(event.GetCallchain()[frame_index] - 1);
   }
 
   CHECK(!callstack->pcs().empty());
@@ -284,14 +284,14 @@ void UprobesUnwindingVisitor::OnUprobes(
   return_address_manager_->ProcessUprobes(tid, sp, return_address);
 }
 
-void UprobesUnwindingVisitor::Visit(UprobesPerfEvent* event) {
-  OnUprobes(event->timestamp, event->tid, event->cpu, event->sp, event->ip, event->return_address,
-            /*registers=*/std::nullopt, event->function_id);
+void UprobesUnwindingVisitor::Visit(const UprobesPerfEvent& event) {
+  OnUprobes(event.timestamp, event.tid, event.cpu, event.sp, event.ip, event.return_address,
+            /*registers=*/std::nullopt, event.function_id);
 }
 
-void UprobesUnwindingVisitor::Visit(UprobesWithArgumentsPerfEvent* event) {
-  OnUprobes(event->timestamp, event->tid, event->cpu, event->regs.sp, event->regs.ip,
-            event->return_address, event->regs, event->function_id);
+void UprobesUnwindingVisitor::Visit(const UprobesWithArgumentsPerfEvent& event) {
+  OnUprobes(event.timestamp, event.tid, event.cpu, event.regs.sp, event.regs.ip,
+            event.return_address, event.regs, event.function_id);
 }
 
 void UprobesUnwindingVisitor::OnUretprobes(uint64_t timestamp_ns, pid_t pid, pid_t tid,
@@ -314,36 +314,35 @@ void UprobesUnwindingVisitor::OnUretprobes(uint64_t timestamp_ns, pid_t pid, pid
   return_address_manager_->ProcessUretprobes(tid);
 }
 
-void UprobesUnwindingVisitor::Visit(UretprobesPerfEvent* event) {
-  OnUretprobes(event->timestamp, event->pid, event->tid, /*ax=*/std::nullopt);
+void UprobesUnwindingVisitor::Visit(const UretprobesPerfEvent& event) {
+  OnUretprobes(event.timestamp, event.pid, event.tid, /*ax=*/std::nullopt);
 }
 
-void UprobesUnwindingVisitor::Visit(UretprobesWithReturnValuePerfEvent* event) {
-  OnUretprobes(event->timestamp, event->pid, event->tid, event->rax);
+void UprobesUnwindingVisitor::Visit(const UretprobesWithReturnValuePerfEvent& event) {
+  OnUretprobes(event.timestamp, event.pid, event.tid, event.rax);
 }
 
-void UprobesUnwindingVisitor::Visit(MmapPerfEvent* event) {
+void UprobesUnwindingVisitor::Visit(const MmapPerfEvent& event) {
   CHECK(listener_ != nullptr);
   CHECK(current_maps_ != nullptr);
 
   // Obviously the uprobes map cannot be successfully processed by orbit_object_utils::CreateModule,
   // but it's important that current_maps_ contain it.
   // For example, UprobesReturnAddressManager::PatchCallchain needs it to check whether a program
-  // counter is inside the uprobes map, and UprobesUnwindingVisitor::Visit(StackSamplePerfEvent*)
-  // needs it to throw away incorrectly-unwound samples.
-  // As below we are only adding maps successfully parsed with orbit_object_utils::CreateModule,
-  // we add the uprobes map manually. We are using the same values that that uprobes map would get
-  // if unwindstack::BufferMaps was built by passing the full content of /proc/<pid>/maps to its
+  // counter is inside the uprobes map, and UprobesUnwindingVisitor::Visit( const
+  // StackSamplePerfEvent*) needs it to throw away incorrectly-unwound samples.
+  // As below we are only adding maps successfully parsed with orbit_object_utils::CreateModule, we
+  // add the uprobes map manually. We are using the same values that that uprobes map would get if
+  // unwindstack::BufferMaps was built by passing the full content of /proc/<pid>/maps to its
   // constructor.
-  if (event->filename == "[uprobes]") {
-    current_maps_->AddAndSort(event->address, event->address + event->length, 0, PROT_EXEC,
-                              event->filename, INT64_MAX);
+  if (event.filename == "[uprobes]") {
+    current_maps_->AddAndSort(event.address, event.address + event.length, 0, PROT_EXEC,
+                              event.filename, INT64_MAX);
     return;
   }
 
   ErrorMessageOr<orbit_grpc_protos::ModuleInfo> module_info_or_error =
-      orbit_object_utils::CreateModule(event->filename, event->address,
-                                       event->address + event->length);
+      orbit_object_utils::CreateModule(event.filename, event.address, event.address + event.length);
   if (module_info_or_error.has_error()) {
     ERROR("Unable to create module: %s", module_info_or_error.error().message());
     return;
@@ -353,12 +352,12 @@ void UprobesUnwindingVisitor::Visit(MmapPerfEvent* event) {
 
   // For flags we assume PROT_READ and PROT_EXEC, MMAP event does not return flags.
   current_maps_->AddAndSort(module_info.address_start(), module_info.address_end(),
-                            event->page_offset, PROT_READ | PROT_EXEC, event->filename,
+                            event.page_offset, PROT_READ | PROT_EXEC, event.filename,
                             module_info.load_bias());
 
   orbit_grpc_protos::ModuleUpdateEvent module_update_event;
-  module_update_event.set_pid(event->pid);
-  module_update_event.set_timestamp_ns(event->timestamp);
+  module_update_event.set_pid(event.pid);
+  module_update_event.set_timestamp_ns(event.timestamp);
   *module_update_event.mutable_module() = std::move(module_info);
 
   listener_->OnModuleUpdate(std::move(module_update_event));
