@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TracerThread.h"
+#include "TracerImpl.h"
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
@@ -32,7 +32,6 @@
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "PerfEventOpen.h"
 #include "PerfEventReaders.h"
@@ -51,12 +50,24 @@ using orbit_grpc_protos::ModulesSnapshot;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadNamesSnapshot;
 
-TracerThread::TracerThread(const CaptureOptions& capture_options)
+static std::optional<uint64_t> ComputeSamplingPeriodNs(double sampling_frequency) {
+  double period_ns_dbl = 1'000'000'000 / sampling_frequency;
+  if (period_ns_dbl > 0 &&
+      period_ns_dbl <= static_cast<double>(std::numeric_limits<uint64_t>::max())) {
+    return std::optional<uint64_t>(period_ns_dbl);
+  }
+  return std::nullopt;
+}
+
+TracerImpl::TracerImpl(const CaptureOptions& capture_options, TracerListener* listener)
     : trace_context_switches_{capture_options.trace_context_switches()},
       target_pid_{orbit_base::ToNativeProcessId(capture_options.pid())},
       unwinding_method_{capture_options.unwinding_method()},
       trace_thread_state_{capture_options.trace_thread_state()},
-      trace_gpu_driver_{capture_options.trace_gpu_driver()} {
+      trace_gpu_driver_{capture_options.trace_gpu_driver()},
+      listener_{listener} {
+  CHECK(listener_ != nullptr);
+
   if (unwinding_method_ != CaptureOptions::kUndefined) {
     uint32_t stack_dump_size = capture_options.stack_dump_size();
     if (stack_dump_size > kMaxStackSampleUserSize || stack_dump_size == 0) {
@@ -93,21 +104,30 @@ TracerThread::TracerThread(const CaptureOptions& capture_options)
   }
 }
 
-namespace {
-void CloseFileDescriptors(const std::vector<int>& fds) {
+void TracerImpl::Start() {
+  stop_run_thread_ = false;
+  run_thread_ = std::thread(&TracerImpl::Run, this);
+}
+
+void TracerImpl::Stop() {
+  stop_run_thread_ = true;
+  CHECK(run_thread_.joinable());
+  run_thread_.join();
+}
+
+static void CloseFileDescriptors(const std::vector<int>& fds) {
   for (int fd : fds) {
     close(fd);
   }
 }
 
-void CloseFileDescriptors(const absl::flat_hash_map<int32_t, int>& fds_per_cpu) {
+static void CloseFileDescriptors(const absl::flat_hash_map<int32_t, int>& fds_per_cpu) {
   for (const auto& pair : fds_per_cpu) {
     close(pair.second);
   }
 }
-}  // namespace
 
-void TracerThread::InitUprobesEventVisitor() {
+void TracerImpl::InitUprobesEventVisitor() {
   ORBIT_SCOPE_FUNCTION;
   maps_ = LibunwindstackMaps::ParseMaps(ReadMaps(target_pid_));
   unwinder_ = LibunwindstackUnwinder::Create();
@@ -120,9 +140,9 @@ void TracerThread::InitUprobesEventVisitor() {
   event_processor_.AddVisitor(uprobes_unwinding_visitor_.get());
 }
 
-bool TracerThread::OpenUprobes(const orbit_linux_tracing::Function& function,
-                               const std::vector<int32_t>& cpus,
-                               absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
+bool TracerImpl::OpenUprobes(const orbit_linux_tracing::Function& function,
+                             const std::vector<int32_t>& cpus,
+                             absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
   ORBIT_SCOPE_FUNCTION;
   const char* module = function.file_path().c_str();
   const uint64_t offset = function.file_offset();
@@ -142,9 +162,9 @@ bool TracerThread::OpenUprobes(const orbit_linux_tracing::Function& function,
   return true;
 }
 
-bool TracerThread::OpenUretprobes(const orbit_linux_tracing::Function& function,
-                                  const std::vector<int32_t>& cpus,
-                                  absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
+bool TracerImpl::OpenUretprobes(const orbit_linux_tracing::Function& function,
+                                const std::vector<int32_t>& cpus,
+                                absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
   ORBIT_SCOPE_FUNCTION;
   const char* module = function.file_path().c_str();
   const uint64_t offset = function.file_offset();
@@ -165,7 +185,7 @@ bool TracerThread::OpenUretprobes(const orbit_linux_tracing::Function& function,
   return true;
 }
 
-void TracerThread::AddUprobesFileDescriptors(
+void TracerImpl::AddUprobesFileDescriptors(
     const absl::flat_hash_map<int32_t, int>& uprobes_fds_per_cpu,
     const orbit_linux_tracing::Function& function) {
   ORBIT_SCOPE_FUNCTION;
@@ -181,7 +201,7 @@ void TracerThread::AddUprobesFileDescriptors(
   }
 }
 
-void TracerThread::AddUretprobesFileDescriptors(
+void TracerImpl::AddUretprobesFileDescriptors(
     const absl::flat_hash_map<int32_t, int>& uretprobes_fds_per_cpu,
     const orbit_linux_tracing::Function& function) {
   ORBIT_SCOPE_FUNCTION;
@@ -197,7 +217,7 @@ void TracerThread::AddUretprobesFileDescriptors(
   }
 }
 
-bool TracerThread::OpenUserSpaceProbes(const std::vector<int32_t>& cpus) {
+bool TracerImpl::OpenUserSpaceProbes(const std::vector<int32_t>& cpus) {
   ORBIT_SCOPE_FUNCTION;
   bool uprobes_event_open_errors = false;
 
@@ -233,7 +253,7 @@ bool TracerThread::OpenUserSpaceProbes(const std::vector<int32_t>& cpus) {
   return !uprobes_event_open_errors;
 }
 
-void TracerThread::OpenUserSpaceProbesRingBuffers(
+void TracerImpl::OpenUserSpaceProbesRingBuffers(
     const absl::flat_hash_map<int32_t, std::vector<int>>& uprobes_uretpobres_fds_per_cpu) {
   ORBIT_SCOPE_FUNCTION;
   for (const auto& [/*int32_t*/ cpu, /*std::vector<int>*/ fds] : uprobes_uretpobres_fds_per_cpu) {
@@ -251,7 +271,7 @@ void TracerThread::OpenUserSpaceProbesRingBuffers(
   }
 }
 
-bool TracerThread::OpenMmapTask(const std::vector<int32_t>& cpus) {
+bool TracerImpl::OpenMmapTask(const std::vector<int32_t>& cpus) {
   ORBIT_SCOPE_FUNCTION;
   std::vector<int> mmap_task_tracing_fds;
   std::vector<PerfEventRingBuffer> mmap_task_ring_buffers;
@@ -279,7 +299,7 @@ bool TracerThread::OpenMmapTask(const std::vector<int32_t>& cpus) {
   return true;
 }
 
-bool TracerThread::OpenSampling(const std::vector<int32_t>& cpus) {
+bool TracerImpl::OpenSampling(const std::vector<int32_t>& cpus) {
   ORBIT_SCOPE_FUNCTION;
   std::vector<int> sampling_tracing_fds;
   std::vector<PerfEventRingBuffer> sampling_ring_buffers;
@@ -428,7 +448,7 @@ static bool OpenFileDescriptorsAndRingBuffersForAllTracepoints(
   return true;
 }
 
-bool TracerThread::OpenThreadNameTracepoints(const std::vector<int32_t>& cpus) {
+bool TracerImpl::OpenThreadNameTracepoints(const std::vector<int32_t>& cpus) {
   ORBIT_SCOPE_FUNCTION;
   absl::flat_hash_map<int32_t, int> thread_name_tracepoint_ring_buffer_fds_per_cpu;
   return OpenFileDescriptorsAndRingBuffersForAllTracepoints(
@@ -437,7 +457,7 @@ bool TracerThread::OpenThreadNameTracepoints(const std::vector<int32_t>& cpus) {
       &thread_name_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
 }
 
-void TracerThread::InitSwitchesStatesNamesVisitor() {
+void TracerImpl::InitSwitchesStatesNamesVisitor() {
   ORBIT_SCOPE_FUNCTION;
   switches_states_names_visitor_ = std::make_unique<SwitchesStatesNamesVisitor>(listener_);
   switches_states_names_visitor_->SetProduceSchedulingSlices(trace_context_switches_);
@@ -448,7 +468,7 @@ void TracerThread::InitSwitchesStatesNamesVisitor() {
   event_processor_.AddVisitor(switches_states_names_visitor_.get());
 }
 
-bool TracerThread::OpenContextSwitchAndThreadStateTracepoints(const std::vector<int32_t>& cpus) {
+bool TracerImpl::OpenContextSwitchAndThreadStateTracepoints(const std::vector<int32_t>& cpus) {
   ORBIT_SCOPE_FUNCTION;
   std::vector<TracepointToOpen> tracepoints_to_open;
   if (trace_thread_state_ || trace_context_switches_) {
@@ -469,7 +489,7 @@ bool TracerThread::OpenContextSwitchAndThreadStateTracepoints(const std::vector<
       &thread_state_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
 }
 
-void TracerThread::InitGpuTracepointEventVisitor() {
+void TracerImpl::InitGpuTracepointEventVisitor() {
   ORBIT_SCOPE_FUNCTION;
   gpu_event_visitor_ = std::make_unique<GpuTracepointVisitor>(listener_);
   event_processor_.AddVisitor(gpu_event_visitor_.get());
@@ -487,7 +507,7 @@ void TracerThread::InitGpuTracepointEventVisitor() {
 // same timeline, context, and seqno.
 // We have to record events system-wide (per CPU) to ensure we record all relevant events.
 // This method returns true on success, otherwise false.
-bool TracerThread::OpenGpuTracepoints(const std::vector<int32_t>& cpus) {
+bool TracerImpl::OpenGpuTracepoints(const std::vector<int32_t>& cpus) {
   ORBIT_SCOPE_FUNCTION;
   absl::flat_hash_map<int32_t, int> gpu_tracepoint_ring_buffer_fds_per_cpu;
   return OpenFileDescriptorsAndRingBuffersForAllTracepoints(
@@ -498,7 +518,7 @@ bool TracerThread::OpenGpuTracepoints(const std::vector<int32_t>& cpus) {
       &ring_buffers_);
 }
 
-bool TracerThread::OpenInstrumentedTracepoints(const std::vector<int32_t>& cpus) {
+bool TracerImpl::OpenInstrumentedTracepoints(const std::vector<int32_t>& cpus) {
   ORBIT_SCOPE_FUNCTION;
   bool tracepoint_event_open_errors = false;
   absl::flat_hash_map<int32_t, int> tracepoint_ring_buffer_fds_per_cpu;
@@ -518,7 +538,7 @@ bool TracerThread::OpenInstrumentedTracepoints(const std::vector<int32_t>& cpus)
   return !tracepoint_event_open_errors;
 }
 
-void TracerThread::InitLostAndDiscardedEventVisitor() {
+void TracerImpl::InitLostAndDiscardedEventVisitor() {
   ORBIT_SCOPE_FUNCTION;
   lost_and_discarded_event_visitor_ = std::make_unique<LostAndDiscardedEventVisitor>(listener_);
   event_processor_.AddVisitor(lost_and_discarded_event_visitor_.get());
@@ -545,7 +565,7 @@ static std::vector<ThreadName> RetrieveInitialThreadNamesSystemWide(uint64_t ini
   return thread_names;
 }
 
-void TracerThread::Startup() {
+void TracerImpl::Startup() {
   ORBIT_SCOPE_FUNCTION;
   Reset();
 
@@ -691,7 +711,7 @@ void TracerThread::Startup() {
   stats_.Reset();
 }
 
-void TracerThread::Shutdown() {
+void TracerImpl::Shutdown() {
   ORBIT_SCOPE_FUNCTION;
   if (trace_thread_state_) {
     switches_states_names_visitor_->ProcessRemainingOpenStates(orbit_base::CaptureTimestampNs());
@@ -721,7 +741,7 @@ void TracerThread::Shutdown() {
   }
 }
 
-void TracerThread::ProcessOneRecord(PerfEventRingBuffer* ring_buffer) {
+void TracerImpl::ProcessOneRecord(PerfEventRingBuffer* ring_buffer) {
   uint64_t event_timestamp_ns = 0;
 
   perf_event_header header;
@@ -769,15 +789,15 @@ void TracerThread::ProcessOneRecord(PerfEventRingBuffer* ring_buffer) {
   }
 }
 
-void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested) {
-  FAIL_IF(listener_ == nullptr, "No listener set");
+void TracerImpl::Run() {
+  orbit_base::SetCurrentThreadName("Tracer::Run");
 
   Startup();
 
   bool last_iteration_saw_events = false;
-  std::thread deferred_events_thread(&TracerThread::ProcessDeferredEvents, this);
+  std::thread deferred_events_thread(&TracerImpl::ProcessDeferredEvents, this);
 
-  while (!(*exit_requested)) {
+  while (!stop_run_thread_) {
     ORBIT_SCOPE("TracerThread::Run iteration");
 
     if (!last_iteration_saw_events) {
@@ -798,7 +818,7 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
     // buffer is read constantly while others overflow, we schedule the reading
     // using round-robin like scheduling.
     for (PerfEventRingBuffer& ring_buffer : ring_buffers_) {
-      if (*exit_requested) {
+      if (stop_run_thread_) {
         break;
       }
 
@@ -808,7 +828,7 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
       //  switches). Take this into account in our scheduling algorithm.
       for (int32_t read_from_this_buffer = 0;
            read_from_this_buffer < ROUND_ROBIN_POLLING_BATCH_SIZE; ++read_from_this_buffer) {
-        if (*exit_requested) {
+        if (stop_run_thread_) {
           break;
         }
         if (!ring_buffer.HasNewData()) {
@@ -829,8 +849,8 @@ void TracerThread::Run(const std::shared_ptr<std::atomic<bool>>& exit_requested)
   Shutdown();
 }
 
-uint64_t TracerThread::ProcessForkEventAndReturnTimestamp(const perf_event_header& header,
-                                                          PerfEventRingBuffer* ring_buffer) {
+uint64_t TracerImpl::ProcessForkEventAndReturnTimestamp(const perf_event_header& header,
+                                                        PerfEventRingBuffer* ring_buffer) {
   perf_event_fork_exit ring_buffer_record;
   ring_buffer->ConsumeRecord(header, &ring_buffer_record);
   ForkPerfEvent event;
@@ -848,8 +868,8 @@ uint64_t TracerThread::ProcessForkEventAndReturnTimestamp(const perf_event_heade
   return event.timestamp;
 }
 
-uint64_t TracerThread::ProcessExitEventAndReturnTimestamp(const perf_event_header& header,
-                                                          PerfEventRingBuffer* ring_buffer) {
+uint64_t TracerImpl::ProcessExitEventAndReturnTimestamp(const perf_event_header& header,
+                                                        PerfEventRingBuffer* ring_buffer) {
   ExitPerfEvent event;
   perf_event_fork_exit ring_buffer_record;
   ring_buffer->ConsumeRecord(header, &ring_buffer_record);
@@ -867,8 +887,8 @@ uint64_t TracerThread::ProcessExitEventAndReturnTimestamp(const perf_event_heade
   return event.timestamp;
 }
 
-uint64_t TracerThread::ProcessMmapEventAndReturnTimestamp(const perf_event_header& header,
-                                                          PerfEventRingBuffer* ring_buffer) {
+uint64_t TracerImpl::ProcessMmapEventAndReturnTimestamp(const perf_event_header& header,
+                                                        PerfEventRingBuffer* ring_buffer) {
   auto event = ConsumeMmapPerfEvent(ring_buffer, header);
   const uint64_t timestamp_ns = event.timestamp;
 
@@ -885,8 +905,8 @@ uint64_t TracerThread::ProcessMmapEventAndReturnTimestamp(const perf_event_heade
   return timestamp_ns;
 }
 
-uint64_t TracerThread::ProcessSampleEventAndReturnTimestamp(const perf_event_header& header,
-                                                            PerfEventRingBuffer* ring_buffer) {
+uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_header& header,
+                                                          PerfEventRingBuffer* ring_buffer) {
   uint64_t timestamp_ns = ReadSampleRecordTime(ring_buffer);
 
   if (timestamp_ns < effective_capture_start_timestamp_ns_) {
@@ -1134,8 +1154,8 @@ uint64_t TracerThread::ProcessSampleEventAndReturnTimestamp(const perf_event_hea
   return timestamp_ns;
 }
 
-uint64_t TracerThread::ProcessLostEventAndReturnTimestamp(const perf_event_header& header,
-                                                          PerfEventRingBuffer* ring_buffer) {
+uint64_t TracerImpl::ProcessLostEventAndReturnTimestamp(const perf_event_header& header,
+                                                        PerfEventRingBuffer* ring_buffer) {
   perf_event_lost ring_buffer_record;
   ring_buffer->ConsumeRecord(header, &ring_buffer_record);
   LostPerfEvent event;
@@ -1165,7 +1185,7 @@ uint64_t TracerThread::ProcessLostEventAndReturnTimestamp(const perf_event_heade
   return event.timestamp;
 }
 
-uint64_t TracerThread::ProcessThrottleUnthrottleEventAndReturnTimestamp(
+uint64_t TracerImpl::ProcessThrottleUnthrottleEventAndReturnTimestamp(
     const perf_event_header& header, PerfEventRingBuffer* ring_buffer) {
   // Throttle/unthrottle events are reported when sampling causes too much throttling on the CPU.
   // They are usually caused by/reproducible with a very high sampling frequency.
@@ -1190,12 +1210,12 @@ uint64_t TracerThread::ProcessThrottleUnthrottleEventAndReturnTimestamp(
   return timestamp_ns;
 }
 
-void TracerThread::DeferEvent(PerfEvent&& event) {
+void TracerImpl::DeferEvent(PerfEvent&& event) {
   absl::MutexLock lock{&deferred_events_being_buffered_mutex_};
   deferred_events_being_buffered_.emplace_back(std::move(event));
 }
 
-void TracerThread::ProcessDeferredEvents() {
+void TracerImpl::ProcessDeferredEvents() {
   orbit_base::SetCurrentThreadName("Proc.Def.Events");
   bool should_exit = false;
   while (!should_exit) {
@@ -1232,7 +1252,7 @@ void TracerThread::ProcessDeferredEvents() {
   }
 }
 
-void TracerThread::RetrieveInitialTidToPidAssociationSystemWide() {
+void TracerImpl::RetrieveInitialTidToPidAssociationSystemWide() {
   for (pid_t pid : GetAllPids()) {
     for (pid_t tid : GetTidsOfProcess(pid)) {
       switches_states_names_visitor_->ProcessInitialTidToPidAssociation(tid, pid);
@@ -1240,7 +1260,7 @@ void TracerThread::RetrieveInitialTidToPidAssociationSystemWide() {
   }
 }
 
-void TracerThread::RetrieveInitialThreadStatesOfTarget() {
+void TracerImpl::RetrieveInitialThreadStatesOfTarget() {
   for (pid_t tid : GetTidsOfProcess(target_pid_)) {
     uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
     std::optional<char> state = GetThreadState(tid);
@@ -1251,7 +1271,7 @@ void TracerThread::RetrieveInitialThreadStatesOfTarget() {
   }
 }
 
-void TracerThread::Reset() {
+void TracerImpl::Reset() {
   ORBIT_SCOPE_FUNCTION;
   tracing_fds_.clear();
   ring_buffers_.clear();
@@ -1287,7 +1307,7 @@ void TracerThread::Reset() {
   event_processor_.ClearVisitors();
 }
 
-void TracerThread::PrintStatsIfTimerElapsed() {
+void TracerImpl::PrintStatsIfTimerElapsed() {
   ORBIT_SCOPE_FUNCTION;
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
   if (stats_.event_count_begin_ns + EVENT_STATS_WINDOW_S * NS_PER_SECOND >= timestamp_ns) {

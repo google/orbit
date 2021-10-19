@@ -53,8 +53,8 @@ target_sources(LinuxTracing PRIVATE
         ThreadStateManager.cpp
         ThreadStateManager.h
         Tracer.cpp
-        TracerThread.cpp
-        TracerThread.h
+        TracerImpl.cpp
+        TracerImpl.h
         UprobesFunctionCallManager.h
         UprobesReturnAddressManager.h
         UprobesUnwindingVisitor.cpp

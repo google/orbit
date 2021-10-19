@@ -26,10 +26,9 @@ using orbit_grpc_protos::ThreadStateSlice;
 
 using orbit_grpc_protos::kLinuxTracingProducerId;
 
-void TracingHandler::Start(CaptureOptions capture_options) {
+void TracingHandler::Start(const CaptureOptions& capture_options) {
   CHECK(tracer_ == nullptr);
-  tracer_ = std::make_unique<orbit_linux_tracing::Tracer>(std::move(capture_options));
-  tracer_->SetListener(this);
+  tracer_ = orbit_linux_tracing::Tracer::Create(capture_options, this);
   tracer_->Start();
 }
 

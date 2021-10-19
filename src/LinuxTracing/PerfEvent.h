@@ -234,8 +234,7 @@ inline uint64_t GetTimestamp(const PerfEvent& event) {
 }
 
 inline int GetOrderedInFileDescriptor(const PerfEvent& event) {
-  return std::visit([](const auto& arg) -> uint64_t { return arg.ordered_in_file_descriptor; },
-                    event);
+  return std::visit([](const auto& arg) -> int { return arg.ordered_in_file_descriptor; }, event);
 }
 
 }  // namespace orbit_linux_tracing

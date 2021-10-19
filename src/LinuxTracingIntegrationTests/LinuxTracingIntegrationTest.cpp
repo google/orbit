@@ -350,7 +350,7 @@ class LinuxTracingIntegrationTestFixture {
   }
 
   void StartTracingAndWaitForTracingLoopStarted(orbit_grpc_protos::CaptureOptions capture_options) {
-    CHECK(!tracer_.has_value());
+    CHECK(tracer_ == nullptr);
     CHECK(!listener_.has_value());
 
     if (IsRunningAsRoot()) {
@@ -358,9 +358,8 @@ class LinuxTracingIntegrationTestFixture {
       CHECK(capture_options.trace_context_switches());
     }
 
-    tracer_.emplace(std::move(capture_options));
     listener_.emplace();
-    tracer_->SetListener(&*listener_);
+    tracer_ = orbit_linux_tracing::Tracer::Create(capture_options, &listener_.value());
     tracer_->Start();
 
     if (IsRunningAsRoot()) {
@@ -377,7 +376,7 @@ class LinuxTracingIntegrationTestFixture {
   }
 
   [[nodiscard]] std::vector<orbit_grpc_protos::ProducerCaptureEvent> StopTracingAndGetEvents() {
-    CHECK(tracer_.has_value());
+    CHECK(tracer_ != nullptr);
     CHECK(listener_.has_value());
     tracer_->Stop();
     tracer_.reset();
@@ -388,7 +387,7 @@ class LinuxTracingIntegrationTestFixture {
 
  private:
   ChildProcess puppet_;
-  std::optional<orbit_linux_tracing::Tracer> tracer_ = std::nullopt;
+  std::unique_ptr<orbit_linux_tracing::Tracer> tracer_ = nullptr;
   std::optional<BufferTracerListener> listener_ = std::nullopt;
 };
 

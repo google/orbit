@@ -33,7 +33,7 @@ class TracingHandler : public orbit_linux_tracing::TracerListener {
   TracingHandler(TracingHandler&&) = delete;
   TracingHandler& operator=(TracingHandler&&) = delete;
 
-  void Start(orbit_grpc_protos::CaptureOptions capture_options);
+  void Start(const orbit_grpc_protos::CaptureOptions& capture_options);
   void Stop();
 
   void OnSchedulingSlice(orbit_grpc_protos::SchedulingSlice scheduling_slice) override;
