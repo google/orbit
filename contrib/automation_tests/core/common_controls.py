@@ -89,4 +89,4 @@ class DataViewPanel:
         return self._table_obj.get_item_at(row, col)
 
     def find_first_item_row(self, text: str, column: int, partial_match=False) -> int:
-        return self.find_first_item_row(text, column, partial_match)
+        return self._table_obj.find_first_item_row(text, column, partial_match)

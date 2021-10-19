@@ -123,9 +123,9 @@ class LoadAndVerifyHelloGgpPreset(E2ETestCase):
     def _load_presets(self):
         presets_panel = DataViewPanel(self.find_control('Group', 'PresetsDataView'))
 
-        draw_frame_preset_row = presets_panel.find_first_item_row('draw_frame_in_hello_ggp_1_52', 1, True)
+        draw_frame_preset_row = presets_panel.find_first_item_row('draw_frame_in_hello_ggp_1_68', 1, True)
         issue_frame_token_preset_row = presets_panel.find_first_item_row(
-            'ggp_issue_frame_token_in_hello_ggp_1_52', 1, True)
+            'ggp_issue_frame_token_in_hello_ggp_1_68', 1, True)
 
         self.expect_true(draw_frame_preset_row is not None, 'Found draw_frame preset')
         self.expect_true(issue_frame_token_preset_row is not None, 'Found ggp_issue_frame_token preset')
