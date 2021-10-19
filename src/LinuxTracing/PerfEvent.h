@@ -61,10 +61,11 @@ struct StackSamplePerfEvent {
   [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegisters() const {
     return perf_event_sample_regs_user_all_to_register_array(*regs);
   }
+  [[nodiscard]] const char* GetStackData() const { return data.get(); }
   // Handing out this non const pointer makes the stack data mutable even if the
   // StackSamplePerfEvent is const.  This mutablility is needed in
   // UprobesReturnAddressManager::PatchSample.
-  [[nodiscard]] char* GetStackData() const { return data.get(); }
+  [[nodiscard]] char* GetMutableStackData() const { return data.get(); }
   [[nodiscard]] uint64_t GetStackSize() const { return dyn_size; }
 
   uint64_t timestamp;
@@ -96,7 +97,7 @@ struct CallchainSamplePerfEvent {
   pid_t pid;
   pid_t tid;
   int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
-  // Mutablility is needed in SetIps which in turn is needed by
+  // Mutability is needed in SetIps which in turn is needed by
   // LeafFunctionCallManager::PatchCallerOfLeafFunction.
   mutable uint64_t ips_size;
   mutable std::unique_ptr<uint64_t[]> ips;

@@ -70,7 +70,7 @@ void UprobesUnwindingVisitor::Visit(const StackSamplePerfEvent& event) {
   CHECK(current_maps_ != nullptr);
 
   return_address_manager_->PatchSample(event.tid, event.GetRegisters()[PERF_REG_X86_SP],
-                                       event.GetStackData(), event.GetStackSize());
+                                       event.GetMutableStackData(), event.GetStackSize());
 
   LibunwindstackResult libunwindstack_result =
       unwinder_->Unwind(event.pid, current_maps_->Get(), event.GetRegisters(), event.GetStackData(),
@@ -332,9 +332,9 @@ void UprobesUnwindingVisitor::Visit(const MmapPerfEvent& event) {
   // but it's important that current_maps_ contain it.
   // For example, UprobesReturnAddressManager::PatchCallchain needs it to check whether a program
   // counter is inside the uprobes map, and UprobesUnwindingVisitor::Visit( const
-  // StackSamplePerfEvent*) needs it to throw away incorrectly-unwound samples. As below we are only
-  // adding maps successfully parsed with orbit_object_utils::CreateModule, we add the uprobes map
-  // manually. We are using the same values that that uprobes map would get if
+  // StackSamplePerfEvent*) needs it to throw away incorrectly-unwound samples.
+  // As below we are only adding maps successfully parsed with orbit_object_utils::CreateModule, we
+  // add the uprobes map manually. We are using the same values that that uprobes map would get if
   // unwindstack::BufferMaps was built by passing the full content of /proc/<pid>/maps to its
   // constructor.
   if (event.filename == "[uprobes]") {
