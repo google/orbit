@@ -20,19 +20,20 @@ class LostAndDiscardedEventVisitor : public PerfEventVisitor {
     CHECK(listener_ != nullptr);
   }
 
-  void Visit(const LostPerfEvent& event) override {
+  void Visit(uint64_t event_timestamp, const LostPerfEvent& event_data) override {
     orbit_grpc_protos::LostPerfRecordsEvent lost_perf_records_event;
-    lost_perf_records_event.set_duration_ns(event.timestamp - event.previous_timestamp);
-    lost_perf_records_event.set_end_timestamp_ns(event.timestamp);
+    lost_perf_records_event.set_duration_ns(event_timestamp - event_data.previous_timestamp);
+    lost_perf_records_event.set_end_timestamp_ns(event_timestamp);
 
     CHECK(listener_ != nullptr);
     listener_->OnLostPerfRecordsEvent(std::move(lost_perf_records_event));
   }
 
-  void Visit(const DiscardedPerfEvent& event) override {
+  void Visit(uint64_t event_timestamp, const DiscardedPerfEvent& event_data) override {
     orbit_grpc_protos::OutOfOrderEventsDiscardedEvent out_of_order_events_discarded_event;
-    out_of_order_events_discarded_event.set_duration_ns(event.timestamp - event.begin_timestamp_ns);
-    out_of_order_events_discarded_event.set_end_timestamp_ns(event.timestamp);
+    out_of_order_events_discarded_event.set_duration_ns(event_timestamp -
+                                                        event_data.begin_timestamp_ns);
+    out_of_order_events_discarded_event.set_end_timestamp_ns(event_timestamp);
 
     CHECK(listener_ != nullptr);
     listener_->OnOutOfOrderEventsDiscardedEvent(std::move(out_of_order_events_discarded_event));

@@ -31,26 +31,25 @@ pid_t ReadSampleRecordPid(PerfEventRingBuffer* ring_buffer);
 
 uint64_t ReadThrottleUnthrottleRecordTime(PerfEventRingBuffer* ring_buffer);
 
-StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                 const perf_event_header& header);
+PerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
+                                      const perf_event_header& header);
 
-CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                         const perf_event_header& header);
+PerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
+                                          const perf_event_header& header);
 
-GenericTracepointPerfEvent ConsumeGenericTracepointPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                             const perf_event_header& header);
+PerfEvent ConsumeGenericTracepointPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                            const perf_event_header& header);
 
-MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                   const perf_event_header& header);
+PerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
 
-AmdgpuCsIoctlPerfEvent ConsumeAmdgpuCsIoctlPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                     const perf_event_header& header);
+PerfEvent ConsumeAmdgpuCsIoctlPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                        const perf_event_header& header);
 
-AmdgpuSchedRunJobPerfEvent ConsumeAmdgpuSchedRunJobPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                             const perf_event_header& header);
+PerfEvent ConsumeAmdgpuSchedRunJobPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                            const perf_event_header& header);
 
-DmaFenceSignaledPerfEvent ConsumeDmaFenceSignaledPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                           const perf_event_header& header);
+PerfEvent ConsumeDmaFenceSignaledPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                           const perf_event_header& header);
 }  // namespace orbit_linux_tracing
 
 #endif  // LINUX_TRACING_PERF_EVENT_READERS_H_

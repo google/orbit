@@ -39,4 +39,10 @@ std::array<uint64_t, PERF_REG_X86_64_MAX> perf_event_sample_regs_user_all_to_reg
   return registers;
 }
 
+void PerfEvent::Accept(PerfEventVisitor* visitor) const {
+  std::visit([event_timestamp = timestamp,
+              visitor](auto&& event_data) { visitor->Visit(event_timestamp, event_data); },
+             data);
+}
+
 }  // namespace orbit_linux_tracing

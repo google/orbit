@@ -15,7 +15,7 @@
 namespace orbit_linux_tracing {
 
 void PerfEventQueue::PushEvent(PerfEvent&& event) {
-  const int origin_fd = GetOrderedInFileDescriptor(event);
+  const int origin_fd = event.ordered_in_file_descriptor;
   if (origin_fd == kNotOrderedInAnyFileDescriptor) {
     priority_queue_of_events_not_ordered_by_fd_.push(std::move(event));
   } else if (auto queue_it = queues_of_events_ordered_by_fd_.find(origin_fd);
@@ -24,7 +24,7 @@ void PerfEventQueue::PushEvent(PerfEvent&& event) {
 
     CHECK(!queue->empty());
     // Fundamental assumption: events from the same file descriptor come already in order.
-    CHECK(GetTimestamp(event) >= GetTimestamp(queue->back()));
+    CHECK(event.timestamp >= queue->back().timestamp);
     queue->push(std::move(event));
   } else {
     queue_it = queues_of_events_ordered_by_fd_
@@ -56,8 +56,8 @@ const PerfEvent& PerfEventQueue::TopEvent() {
     CHECK(!priority_queue_of_events_not_ordered_by_fd_.empty());
     return priority_queue_of_events_not_ordered_by_fd_.top();
   }
-  return (GetTimestamp(heap_of_queues_of_events_ordered_by_fd_.front()->front()) <
-          GetTimestamp(priority_queue_of_events_not_ordered_by_fd_.top()))
+  return (heap_of_queues_of_events_ordered_by_fd_.front()->front().timestamp <
+          priority_queue_of_events_not_ordered_by_fd_.top().timestamp)
              ? heap_of_queues_of_events_ordered_by_fd_.front()->front()
              : priority_queue_of_events_not_ordered_by_fd_.top();
 }
@@ -65,8 +65,8 @@ const PerfEvent& PerfEventQueue::TopEvent() {
 void PerfEventQueue::PopEvent() {
   if (!priority_queue_of_events_not_ordered_by_fd_.empty() &&
       (heap_of_queues_of_events_ordered_by_fd_.empty() ||
-       GetTimestamp(priority_queue_of_events_not_ordered_by_fd_.top()) <=
-           GetTimestamp(heap_of_queues_of_events_ordered_by_fd_.front()->front()))) {
+       priority_queue_of_events_not_ordered_by_fd_.top().timestamp <=
+           heap_of_queues_of_events_ordered_by_fd_.front()->front().timestamp)) {
     // The oldest event is at the top of the priority queue holding the events that cannot be
     // assumed sorted in any ring buffer. Note in particular that we return and pop this event even
     // if the event at the top of heap_of_queues_of_events_ordered_by_fd_ has the exact same
@@ -76,7 +76,7 @@ void PerfEventQueue::PopEvent() {
   }
 
   std::queue<PerfEvent>* top_queue = heap_of_queues_of_events_ordered_by_fd_.front();
-  const int top_fd = GetOrderedInFileDescriptor(top_queue->front());
+  const int top_fd = top_queue->front().ordered_in_file_descriptor;
   top_queue->pop();
 
   if (top_queue->empty()) {
@@ -101,13 +101,13 @@ void PerfEventQueue::MoveDownFrontOfHeapOfQueues() {
     size_t left_index = current_index * 2 + 1;
     size_t right_index = current_index * 2 + 2;
     if (left_index < heap_of_queues_of_events_ordered_by_fd_.size() &&
-        GetTimestamp(heap_of_queues_of_events_ordered_by_fd_[left_index]->front()) <
-            GetTimestamp(heap_of_queues_of_events_ordered_by_fd_[new_index]->front())) {
+        heap_of_queues_of_events_ordered_by_fd_[left_index]->front().timestamp <
+            heap_of_queues_of_events_ordered_by_fd_[new_index]->front().timestamp) {
       new_index = left_index;
     }
     if (right_index < heap_of_queues_of_events_ordered_by_fd_.size() &&
-        GetTimestamp(heap_of_queues_of_events_ordered_by_fd_[right_index]->front()) <
-            GetTimestamp(heap_of_queues_of_events_ordered_by_fd_[new_index]->front())) {
+        heap_of_queues_of_events_ordered_by_fd_[right_index]->front().timestamp <
+            heap_of_queues_of_events_ordered_by_fd_[new_index]->front().timestamp) {
       new_index = right_index;
     }
     if (new_index != current_index) {
@@ -128,8 +128,8 @@ void PerfEventQueue::MoveUpBackOfHeapOfQueues() {
   size_t current_index = heap_of_queues_of_events_ordered_by_fd_.size() - 1;
   while (current_index > 0) {
     size_t parent_index = (current_index - 1) / 2;
-    if (GetTimestamp(heap_of_queues_of_events_ordered_by_fd_[parent_index]->front()) <=
-        GetTimestamp(heap_of_queues_of_events_ordered_by_fd_[current_index]->front())) {
+    if (heap_of_queues_of_events_ordered_by_fd_[parent_index]->front().timestamp <=
+        heap_of_queues_of_events_ordered_by_fd_[current_index]->front().timestamp) {
       break;
     }
     std::swap(heap_of_queues_of_events_ordered_by_fd_[parent_index],

@@ -54,8 +54,7 @@ class PerfEventProcessor {
   PerfEventQueue event_queue_;
   std::vector<PerfEventVisitor*> visitors_;
 
-  [[nodiscard]] std::optional<DiscardedPerfEvent> HandleOutOfOrderEvent(
-      uint64_t event_timestamp_ns);
+  [[nodiscard]] std::optional<PerfEvent> HandleOutOfOrderEvent(uint64_t event_timestamp_ns);
   uint64_t last_discarded_begin_ = 0;
   uint64_t last_discarded_end_ = 0;
 };

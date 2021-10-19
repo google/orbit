@@ -50,16 +50,16 @@ class SwitchesStatesNamesVisitor : public PerfEventVisitor {
   void SetThreadStatePidFilter(pid_t pid) { thread_state_pid_filter_ = pid; }
 
   void ProcessInitialTidToPidAssociation(pid_t tid, pid_t pid);
-  void Visit(const ForkPerfEvent& event) override;
-  void Visit(const ExitPerfEvent& event) override;
+  void Visit(uint64_t event_timestamp, const ForkPerfEvent& event_data) override;
+  void Visit(uint64_t event_timestamp, const ExitPerfEvent& event_data) override;
 
   void ProcessInitialState(uint64_t timestamp_ns, pid_t tid, char state_char);
-  void Visit(const TaskNewtaskPerfEvent& event) override;
-  void Visit(const SchedSwitchPerfEvent& event) override;
-  void Visit(const SchedWakeupPerfEvent& event) override;
+  void Visit(uint64_t event_timestamp, const TaskNewtaskPerfEvent& event_data) override;
+  void Visit(uint64_t event_timestamp, const SchedSwitchPerfEvent& event_data) override;
+  void Visit(uint64_t timestamp, const SchedWakeupPerfEvent& event_data) override;
   void ProcessRemainingOpenStates(uint64_t timestamp_ns);
 
-  void Visit(const TaskRenamePerfEvent& event) override;
+  void Visit(uint64_t event_timestamp, const TaskRenamePerfEvent& event_data) override;
 
  private:
   static std::optional<orbit_grpc_protos::ThreadStateSlice::ThreadState> GetThreadStateFromChar(
