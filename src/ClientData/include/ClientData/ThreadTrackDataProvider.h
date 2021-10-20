@@ -10,6 +10,15 @@
 
 namespace orbit_client_data {
 
+struct TimerMetadata {
+  bool is_empty;
+  size_t number_of_timers;
+  uint64_t min_time;
+  uint64_t max_time;
+  uint32_t depth;
+  uint32_t process_id;
+};
+
 // Process timers and provide queries to get them using thread_id as a key.
 class ThreadTrackDataProvider final {
  public:
@@ -18,14 +27,18 @@ class ThreadTrackDataProvider final {
             std::make_unique<ThreadTrackDataManager>(is_data_from_saved_capture)} {};
 
   const orbit_client_protos::TimerInfo& AddTimer(orbit_client_protos::TimerInfo timer_info);
-  void CreateScopeTreeTimerData(uint32_t thread_id) const {
-    thread_track_data_manager_->GetOrCreateScopeTreeTimerData(thread_id);
+  const ScopeTreeTimerData* CreateScopeTreeTimerData(uint32_t thread_id) const {
+    return thread_track_data_manager_->GetOrCreateScopeTreeTimerData(thread_id);
+  }
+
+  [[nodiscard]] const ScopeTreeTimerData* GetScopeTreeTimerData(uint32_t thread_id) const {
+    return thread_track_data_manager_->GetScopeTreeTimerData(thread_id);
   }
 
   // TODO(http://b/???): This function is used to jump to specific timers. Should be replaced by
   // proper queries later.
   std::vector<const TimerChain*> GetAllThreadTimerChains() const;
-  [[nodiscard]] std::vector<uint32_t> GetAllThreadId() const;
+  [[nodiscard]] std::vector<uint32_t> GetAllThreadIds() const;
 
   // For all this queries, we assume the ScopeTreeTimerData already exists.
   std::vector<const TimerChain*> GetChains(uint32_t thread_id) const {
@@ -38,29 +51,7 @@ class ThreadTrackDataProvider final {
     return GetScopeTreeTimerData(thread_id)->GetTimers(min_tick, max_tick);
   }
 
-  [[nodiscard]] bool IsEmpty(uint32_t thread_id) const {
-    return GetScopeTreeTimerData(thread_id)->IsEmpty();
-  }
-
-  [[nodiscard]] size_t GetNumberOfTimers(uint32_t thread_id) const {
-    return GetScopeTreeTimerData(thread_id)->GetNumberOfTimers();
-  }
-
-  [[nodiscard]] uint64_t GetMinTime(uint32_t thread_id) const {
-    return GetScopeTreeTimerData(thread_id)->GetMinTime();
-  }
-
-  [[nodiscard]] uint64_t GetMaxTime(uint32_t thread_id) const {
-    return GetScopeTreeTimerData(thread_id)->GetMaxTime();
-  }
-
-  [[nodiscard]] uint32_t GetDepth(uint32_t thread_id) const {
-    return GetScopeTreeTimerData(thread_id)->GetDepth();
-  }
-
-  [[nodiscard]] uint32_t GetProcessId(uint32_t thread_id) const {
-    return GetScopeTreeTimerData(thread_id)->GetProcessId();
-  }
+  [[nodiscard]] const TimerMetadata GetTimerMetadata(uint32_t thread_id) const;
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
       const orbit_client_protos::TimerInfo& timer) const;
@@ -76,9 +67,6 @@ class ThreadTrackDataProvider final {
  private:
   [[nodiscard]] ScopeTreeTimerData* GetOrCreateScopeTreeTimerData(uint32_t thread_id) const {
     return thread_track_data_manager_->GetOrCreateScopeTreeTimerData(thread_id);
-  }
-  [[nodiscard]] ScopeTreeTimerData* GetScopeTreeTimerData(uint32_t thread_id) const {
-    return thread_track_data_manager_->GetScopeTreeTimerData(thread_id);
   }
 
   std::unique_ptr<ThreadTrackDataManager> thread_track_data_manager_;
