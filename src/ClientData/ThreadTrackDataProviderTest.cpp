@@ -16,18 +16,21 @@ const uint32_t kThreadId1 = 1;
 const uint32_t kThreadId2 = 2;
 const uint32_t kProcessId = 42;
 
-TEST(ThreadTrackDataProvider, Empty) {
-  ThreadTrackDataProvider thread_track_data_provider;
-  EXPECT_TRUE(thread_track_data_provider.GetAllThreadTimerChains().empty());
-  EXPECT_TRUE(thread_track_data_provider.GetAllThreadIds().empty());
-}
-
 TEST(ThreadTrackDataProvider, EmptyWhenCreated) {
   ThreadTrackDataProvider thread_track_data_provider;
 
+  // No ScopeTreeTimerData, no Timers
+  EXPECT_TRUE(thread_track_data_provider.GetAllThreadIds().empty());
+  EXPECT_TRUE(thread_track_data_provider.GetAllThreadTimerChains().empty());
+
   thread_track_data_provider.CreateScopeTreeTimerData(kThreadId1);
+
+  // One ScopeTreeTimerData, still no timers
+  EXPECT_FALSE(thread_track_data_provider.GetAllThreadIds().empty());
+  EXPECT_TRUE(thread_track_data_provider.GetAllThreadTimerChains().empty());
+
+  // Therefore, TimerMetadata of kThreadId1 is still empty.
   EXPECT_TRUE(thread_track_data_provider.GetTimerMetadata(kThreadId1).is_empty);
-  EXPECT_EQ(thread_track_data_provider.GetTimerMetadata(kThreadId1).number_of_timers, 0);
 }
 
 TEST(ThreadTrackDataProvider, InsertAndGetTimer) {
