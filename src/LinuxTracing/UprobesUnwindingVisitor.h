@@ -78,13 +78,15 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
     samples_in_uretprobes_counter_ = samples_in_uretprobes_counter;
   }
 
-  void Visit(const StackSamplePerfEvent& event) override;
-  void Visit(const CallchainSamplePerfEvent& event) override;
-  void Visit(const UprobesPerfEvent& event) override;
-  void Visit(const UprobesWithArgumentsPerfEvent& event) override;
-  void Visit(const UretprobesPerfEvent& event) override;
-  void Visit(const UretprobesWithReturnValuePerfEvent& event) override;
-  void Visit(const MmapPerfEvent& event) override;
+  void Visit(uint64_t event_timestamp, const StackSamplePerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp, const CallchainSamplePerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp, const UprobesPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp,
+             const UprobesWithArgumentsPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp, const UretprobesPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp,
+             const UretprobesWithReturnValuePerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp, const MmapPerfEventData& event_data) override;
 
  private:
   void OnUprobes(uint64_t timestamp_ns, pid_t tid, uint32_t cpu, uint64_t sp, uint64_t ip,

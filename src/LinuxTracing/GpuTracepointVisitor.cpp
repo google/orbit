@@ -129,28 +129,32 @@ void GpuTracepointVisitor::CreateGpuJobAndSendToListenerIfComplete(const Key& ke
 // map and then try to create a complete GPU execution event. This event is only
 // created when all three types of GPU events have been received.
 
-void GpuTracepointVisitor::Visit(const AmdgpuCsIoctlPerfEvent& event) {
-  AmdgpuCsIoctlEvent internal_event{event.pid,     event.tid,   event.timestamp,
-                                    event.context, event.seqno, event.timeline_string};
-  Key key = std::make_tuple(event.context, event.seqno, event.timeline_string);
+void GpuTracepointVisitor::Visit(uint64_t event_timestamp,
+                                 const AmdgpuCsIoctlPerfEventData& event_data) {
+  AmdgpuCsIoctlEvent internal_event{event_data.pid,   event_data.tid,
+                                    event_timestamp,  event_data.context,
+                                    event_data.seqno, event_data.timeline_string};
+  Key key = std::make_tuple(event_data.context, event_data.seqno, event_data.timeline_string);
 
   amdgpu_cs_ioctl_events_.emplace(key, std::move(internal_event));
   CreateGpuJobAndSendToListenerIfComplete(key);
 }
 
-void GpuTracepointVisitor::Visit(const AmdgpuSchedRunJobPerfEvent& event) {
-  AmdgpuSchedRunJobEvent internal_event{event.timestamp, event.context, event.seqno,
-                                        event.timeline_string};
-  Key key = std::make_tuple(event.context, event.seqno, event.timeline_string);
+void GpuTracepointVisitor::Visit(uint64_t event_timestamp,
+                                 const AmdgpuSchedRunJobPerfEventData& event_data) {
+  AmdgpuSchedRunJobEvent internal_event{event_timestamp, event_data.context, event_data.seqno,
+                                        event_data.timeline_string};
+  Key key = std::make_tuple(event_data.context, event_data.seqno, event_data.timeline_string);
 
   amdgpu_sched_run_job_events_.emplace(key, std::move(internal_event));
   CreateGpuJobAndSendToListenerIfComplete(key);
 }
 
-void GpuTracepointVisitor::Visit(const DmaFenceSignaledPerfEvent& event) {
-  DmaFenceSignaledEvent internal_event{event.timestamp, event.context, event.seqno,
-                                       event.timeline_string};
-  Key key = std::make_tuple(event.context, event.seqno, event.timeline_string);
+void GpuTracepointVisitor::Visit(uint64_t event_timestamp,
+                                 const DmaFenceSignaledPerfEventData& event_data) {
+  DmaFenceSignaledEvent internal_event{event_timestamp, event_data.context, event_data.seqno,
+                                       event_data.timeline_string};
+  Key key = std::make_tuple(event_data.context, event_data.seqno, event_data.timeline_string);
 
   dma_fence_signaled_events_.emplace(key, std::move(internal_event));
   CreateGpuJobAndSendToListenerIfComplete(key);
