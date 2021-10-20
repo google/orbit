@@ -121,7 +121,6 @@ outcome::result<void> Channel::Close() {
 
   if (rc < 0) return static_cast<Error>(rc);
 
-  raw_channel_ptr_.reset();
   return outcome::success();
 }
 

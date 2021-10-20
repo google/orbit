@@ -31,7 +31,9 @@ enum class TaskState {
   kCommandRunning,
   kShutdown,
   kSignalEOF,
-  kEOFSent,
+  kWaitRemoteEOF,
+  kSignalChannelClose,
+  kWaitChannelClosed,
   kChannelClosed,
   kError
 };
