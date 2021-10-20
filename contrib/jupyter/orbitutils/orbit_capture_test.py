@@ -14,12 +14,7 @@ class TestOrbitCapture(unittest.TestCase):
         file_path = os.path.join(dir_path, "testdata/OrbitTest_capture.orbit")
         with open(file_path, 'rb') as f:
             capture = orbitutils.orbit_capture.OrbitCapture(f.read())
-            min_ns = capture.compute_min_time_ns()
-            max_ns = capture.compute_max_time_ns()
-      
-            self.assertEqual(31678, len(capture.timer_infos))
-            self.assertEqual(1200163245628561, min_ns)
-            self.assertEqual(1200166685446087, max_ns)
+            self.assertEqual(38766, len(capture.events))
 
 if __name__ == '__main__':
     unittest.main()

@@ -4,74 +4,65 @@ Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
 """
 
-import orbitutils.ClientProtos.capture_data_pb2 as proto
+# This is a hack to make sure all generated proto files are found when importing. I wasn't able
+# to find a proper solution for this, yet.
+import sys
+sys.path.append("./orbitutils")
+
+import orbitutils.capture_pb2 as proto
 import struct
+from google.protobuf.internal.decoder import _DecodeVarint32
 
 class OrbitCapture:
-    """Class that holds a single Orbit capture and all its information.
-
-    Can be construced from the file content of an .orbit capture file
-    (e.g. obtained via open(filename, 'rb').read()).
-    
-    Attributes:
-        header:
-            The capture header including version of the capture.
-
-            See capture_data.proto for full details of all members.
-        capture_info:
-            The capture info, which includes various mappings from ids to
-            instrumented functins, thread names; callstack events with
-            callstack id and a mapping from callstack id to the actual
-            callstacks; module information including address ranges;
-            basic information about the target process.
-
-            See capture_data.proto for full details of all members.
-        timer_infos:
-            A list of all timers (timeslices with a start and end time) of
-            the capture. This includes scheduling information, instrumented
-            function times, GPU scheduling and execution, and more.
-
-            See capture_data.proto (in particular, TimerInfo) for full
-            details of all members.
-    """
     def __init__(self, file_content):
         pos = 0
-        # The capture format is a list of protobuf messages, each preceded
-        # by its message size. Message sizes are written as little Endian
-        # 32-bit integers.
-
-        # The capture format starts with the capture header.
-        msg_len = struct.unpack_from("<I", file_content[pos:pos + 4])[0]
+        magic = file_content[pos:pos + 4]
         pos += 4
-        msg = proto.CaptureHeader()
-        self.header = msg.FromString(file_content[pos:pos + msg_len])
-        pos += msg_len
-
-        # Next is the capture info.
-        msg_len = struct.unpack_from("<I", file_content[pos:pos + 4])[0]
+        self.version = struct.unpack_from("<I", file_content[pos:pos + 4])[0]
         pos += 4
-        msg = proto.CaptureInfo()
-        self.capture_info = msg.FromString(file_content[pos:pos + msg_len])
-        pos += msg_len
+        self.capture_section_offset = struct.unpack_from("<Q", file_content[pos:pos + 8])[0]
+        pos += 8
+        self.section_list_offset = struct.unpack_from("<Q", file_content[pos:pos + 8])[0]
+        pos+= 8
 
-        # And finally an array of TimerInfo messages.
-        self.timer_infos = []
-        while pos < len(file_content):
-            msg_len = struct.unpack_from("<I", file_content[pos:pos + 4])[0]
-            pos += 4
-            msg = proto.TimerInfo()
-            timer = msg.FromString(file_content[pos:pos + msg_len])
-            self.timer_infos.append(timer)
-            pos += msg_len
+        self.read_section_list(file_content, self.section_list_offset)
+        self.calculate_capture_section_size(file_content)
+        self.read_capture_section(file_content)
 
-    def compute_min_time_ns(self):
-        """ Minimum time of the capture (in nanoseconds)
-        """
-        start_times = map(lambda timer: timer.start, self.timer_infos)
-        return min(start_times)
+    def calculate_capture_section_size(self, file_content):
+        if self.section_list_offset == 0:
+            self.capture_section_size = file_content.length - self.capture_section_offset
+            return
+        section_offsets = map(lambda element: element[1], self.sections)
+        capture_section_end_offset = min(self.section_list_offset, min(section_offsets))
+        self.capture_section_size = capture_section_end_offset - self.capture_section_offset
 
-    def compute_max_time_ns(self):
-        """ Maximum time of the capture (in nanoseconds)
-        """
-        end_times = map(lambda timer: timer.end, self.timer_infos)
-        return max(end_times)
+    def read_capture_section(self, file_content):
+        pos = self.capture_section_offset
+        decoder = _DecodeVarint32
+        self.events = []
+        count_failed = 0
+        while pos < self.capture_section_offset + self.capture_section_size:
+            try:
+                (msg_len, new_pos) = decoder(file_content, pos)
+                pos = new_pos
+                msg = proto.ClientCaptureEvent()
+                event = msg.FromString(file_content[pos:pos + msg_len])
+                self.events.append(event)
+                pos += msg_len
+            except:
+                count_failed += 1
+                continue
+        if count_failed != 0:
+            print("count_failed: " + str(count_failed))
+
+    def read_section_list(self, file_content, section_list_offset):
+        pos = section_list_offset
+        number_of_sections = struct.unpack_from("<Q", file_content[pos:pos+8])[0]
+        pos += 8
+        self.sections = []
+        while pos < section_list_offset + 3 * 8 * number_of_sections:
+            section_info = struct.unpack_from("<QQQ", file_content[pos:pos + 3*8])[0:3]
+            pos += 3 * 8
+            self.sections.append(section_info)
+        return

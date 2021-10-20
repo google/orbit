@@ -17,17 +17,19 @@ def install_orbitutils():
 
 def main():
     current_directory = os.path.dirname(os.path.abspath(__file__))
-    orbitutils_path = os.path.join(current_directory, "orbitutils")
+    orbitutils_path = os.path.join(current_directory, "orbitutils/")
 
-    # We need to specify the "root" of the src tree. With this choice, we can then
-    # import the proto as "import ClientProtos.capture_data_pb2.py"
-    proto_path = os.path.join(current_directory, "../../src/")
+    proto_path = os.path.join(current_directory, "../../src/GrpcProtos")
 
-    # This is the only .proto file we currently need for our python code.
-    capture_data_proto = os.path.join(
-        current_directory, "../../src/ClientProtos/capture_data.proto")
+    protos = ""
+    protos += " " + os.path.join(
+        current_directory, "../../src/GrpcProtos/capture.proto")
+    protos += " " + os.path.join(
+        current_directory, "../../src/GrpcProtos/module.proto")
+    protos += " " + os.path.join(
+        current_directory, "../../src/GrpcProtos/tracepoint.proto")
 
-    command = "protoc --python_out=" + orbitutils_path + " --proto_path=" + proto_path + " " + capture_data_proto
+    command = "protoc --python_out=" + orbitutils_path + " --proto_path=" + proto_path + protos
     ret = os.system(command)
     if ret:
         print("Command failed: ", command)
