@@ -25,6 +25,35 @@ class ThreadTrackDataManager final {
                                     ? ScopeTreeTimerData::ScopeTreeUpdateType::kOnCaptureComplete
                                     : ScopeTreeTimerData::ScopeTreeUpdateType::kAlways){};
 
+  const orbit_client_protos::TimerInfo& AddTimer(orbit_client_protos::TimerInfo timer_info) {
+    absl::MutexLock lock(&mutex_);
+    uint32_t thread_id = timer_info.thread_id();
+    // Get or create ScopeTreeTimerData optimized to only make one query to the map, as AddTimer
+    // will be executed many times.
+    auto [it, inserted] = scope_tree_timer_data_map_.try_emplace(thread_id, nullptr);
+    if (inserted) {
+      it->second = std::make_unique<ScopeTreeTimerData>(thread_id, scope_tree_update_type_);
+    }
+    return it->second->AddTimer(std::move(timer_info));
+  }
+
+  const ScopeTreeTimerData* GetScopeTreeTimerData(uint32_t thread_id) const {
+    absl::MutexLock lock(&mutex_);
+    auto it = scope_tree_timer_data_map_.find(thread_id);
+    if (it == scope_tree_timer_data_map_.end()) {
+      return nullptr;
+    }
+    return it->second.get();
+  };
+
+  // This function should be used only for Tracks that needs to be there before a Timer appears.
+  const ScopeTreeTimerData* CreateScopeTreeTimerData(uint32_t thread_id) {
+    absl::MutexLock lock(&mutex_);
+    auto [it, unused_inserted] = scope_tree_timer_data_map_.try_emplace(
+        thread_id, std::make_unique<ScopeTreeTimerData>(thread_id, scope_tree_update_type_));
+    return it->second.get();
+  };
+
   [[nodiscard]] std::vector<ScopeTreeTimerData*> GetAllScopeTreeTimerData() const {
     absl::MutexLock lock(&mutex_);
     std::vector<ScopeTreeTimerData*> all_scope_tree_timer_data;
@@ -34,21 +63,6 @@ class ThreadTrackDataManager final {
     }
     return all_scope_tree_timer_data;
   }
-
-  ScopeTreeTimerData* GetOrCreateScopeTreeTimerData(uint32_t thread_id) {
-    absl::MutexLock lock(&mutex_);
-    auto [it, inserted] = scope_tree_timer_data_map_.try_emplace(thread_id, nullptr);
-    if (inserted) {
-      it->second = std::make_unique<ScopeTreeTimerData>(thread_id, scope_tree_update_type_);
-    }
-    return it->second.get();
-  };
-
-  ScopeTreeTimerData* GetScopeTreeTimerData(uint32_t thread_id) const {
-    absl::MutexLock lock(&mutex_);
-    CHECK(scope_tree_timer_data_map_.contains(thread_id));
-    return scope_tree_timer_data_map_.at(thread_id).get();
-  };
 
  private:
   mutable absl::Mutex mutex_;

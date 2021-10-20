@@ -26,21 +26,19 @@ class ThreadTrackDataProvider final {
       : thread_track_data_manager_{
             std::make_unique<ThreadTrackDataManager>(is_data_from_saved_capture)} {};
 
-  const orbit_client_protos::TimerInfo& AddTimer(orbit_client_protos::TimerInfo timer_info);
-  const ScopeTreeTimerData* CreateScopeTreeTimerData(uint32_t thread_id) const {
-    return thread_track_data_manager_->GetOrCreateScopeTreeTimerData(thread_id);
+  const orbit_client_protos::TimerInfo& AddTimer(orbit_client_protos::TimerInfo timer_info) {
+    return thread_track_data_manager_->AddTimer(std::move(timer_info));
   }
 
-  [[nodiscard]] const ScopeTreeTimerData* GetScopeTreeTimerData(uint32_t thread_id) const {
-    return thread_track_data_manager_->GetScopeTreeTimerData(thread_id);
+  const ScopeTreeTimerData* CreateScopeTreeTimerData(uint32_t thread_id) {
+    return thread_track_data_manager_->CreateScopeTreeTimerData(thread_id);
   }
 
-  // TODO(http://b/???): This function is used to jump to specific timers. Should be replaced by
-  // proper queries later.
-  std::vector<const TimerChain*> GetAllThreadTimerChains() const;
+  // TODO(http://b/203515530): Replace this method by proper queries.
+  [[nodiscard]] std::vector<const TimerChain*> GetAllThreadTimerChains() const;
   [[nodiscard]] std::vector<uint32_t> GetAllThreadIds() const;
 
-  // For all this queries, we assume the ScopeTreeTimerData already exists.
+  // For the following methods, we assume ScopeTreeTimerData is already been created for thread_id.
   std::vector<const TimerChain*> GetChains(uint32_t thread_id) const {
     return GetScopeTreeTimerData(thread_id)->GetChains();
   }
@@ -65,10 +63,9 @@ class ThreadTrackDataProvider final {
   void OnCaptureComplete();
 
  private:
-  [[nodiscard]] ScopeTreeTimerData* GetOrCreateScopeTreeTimerData(uint32_t thread_id) const {
-    return thread_track_data_manager_->GetOrCreateScopeTreeTimerData(thread_id);
+  [[nodiscard]] const ScopeTreeTimerData* GetScopeTreeTimerData(uint32_t thread_id) const {
+    return thread_track_data_manager_->GetScopeTreeTimerData(thread_id);
   }
-
   std::unique_ptr<ThreadTrackDataManager> thread_track_data_manager_;
 };
 

@@ -6,16 +6,12 @@
 
 namespace orbit_client_data {
 
-const orbit_client_protos::TimerInfo& ThreadTrackDataProvider::AddTimer(
-    orbit_client_protos::TimerInfo timer_info) {
-  uint32_t thread_id = timer_info.thread_id();
-  auto scope_tree_timer_data = GetOrCreateScopeTreeTimerData(thread_id);
-  return scope_tree_timer_data->AddTimer(timer_info);
-}
+using orbit_client_protos::TimerInfo;
 
 std::vector<uint32_t> ThreadTrackDataProvider::GetAllThreadIds() const {
   std::vector<uint32_t> all_thread_id;
-  for (const auto scope_tree_timer_data : thread_track_data_manager_->GetAllScopeTreeTimerData()) {
+  for (const ScopeTreeTimerData* scope_tree_timer_data :
+       thread_track_data_manager_->GetAllScopeTreeTimerData()) {
     all_thread_id.push_back(scope_tree_timer_data->GetThreadId());
   }
   return all_thread_id;
@@ -31,7 +27,7 @@ std::vector<const TimerChain*> ThreadTrackDataProvider::GetAllThreadTimerChains(
 
 [[nodiscard]] const TimerMetadata ThreadTrackDataProvider::GetTimerMetadata(
     uint32_t thread_id) const {
-  ScopeTreeTimerData* scope_tree_timer_data = GetOrCreateScopeTreeTimerData(thread_id);
+  const ScopeTreeTimerData* scope_tree_timer_data = GetScopeTreeTimerData(thread_id);
   CHECK(scope_tree_timer_data != nullptr);
   TimerMetadata timer_metadata;
   timer_metadata.is_empty = scope_tree_timer_data->IsEmpty();
@@ -43,33 +39,26 @@ std::vector<const TimerChain*> ThreadTrackDataProvider::GetAllThreadTimerChains(
   return timer_metadata;
 }
 
-const orbit_client_protos::TimerInfo* ThreadTrackDataProvider::GetLeft(
-    const orbit_client_protos::TimerInfo& timer) const {
-  uint32_t thread_id = timer.thread_id();
-  return GetScopeTreeTimerData(thread_id)->GetLeft(timer);
+const TimerInfo* ThreadTrackDataProvider::GetLeft(const TimerInfo& timer) const {
+  return GetScopeTreeTimerData(timer.thread_id())->GetLeft(timer);
 }
 
-const orbit_client_protos::TimerInfo* ThreadTrackDataProvider::GetRight(
-    const orbit_client_protos::TimerInfo& timer) const {
-  uint32_t thread_id = timer.thread_id();
-  return GetScopeTreeTimerData(thread_id)->GetRight(timer);
+const TimerInfo* ThreadTrackDataProvider::GetRight(const TimerInfo& timer) const {
+  return GetScopeTreeTimerData(timer.thread_id())->GetRight(timer);
 }
 
-const orbit_client_protos::TimerInfo* ThreadTrackDataProvider::GetUp(
-    const orbit_client_protos::TimerInfo& timer) const {
-  uint32_t thread_id = timer.thread_id();
-  return GetScopeTreeTimerData(thread_id)->GetUp(timer);
+const TimerInfo* ThreadTrackDataProvider::GetUp(const TimerInfo& timer) const {
+  return GetScopeTreeTimerData(timer.thread_id())->GetUp(timer);
 }
 
-const orbit_client_protos::TimerInfo* ThreadTrackDataProvider::GetDown(
-    const orbit_client_protos::TimerInfo& timer) const {
-  uint32_t thread_id = timer.thread_id();
-  return GetScopeTreeTimerData(thread_id)->GetDown(timer);
+const TimerInfo* ThreadTrackDataProvider::GetDown(const TimerInfo& timer) const {
+  return GetScopeTreeTimerData(timer.thread_id())->GetDown(timer);
 }
 
 void ThreadTrackDataProvider::OnCaptureComplete() {
   // Update data if needed after capture is completed.
-  for (const auto scope_tree_timer_data : thread_track_data_manager_->GetAllScopeTreeTimerData()) {
+  for (ScopeTreeTimerData* scope_tree_timer_data :
+       thread_track_data_manager_->GetAllScopeTreeTimerData()) {
     scope_tree_timer_data->OnCaptureComplete();
   }
 }
