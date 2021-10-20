@@ -48,8 +48,8 @@ const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
     columns.resize(kNumColumns);
     columns[kColumnSelected] = {"Hooked", .0f, SortingOrder::kDescending};
     columns[kColumnFunctionName] = {"Name", .4f, SortingOrder::kAscending};
-    columns[kColumnExclusive] = {"Exclusive", .0f, SortingOrder::kDescending};
     columns[kColumnInclusive] = {"Inclusive", .0f, SortingOrder::kDescending};
+    columns[kColumnExclusive] = {"Exclusive", .0f, SortingOrder::kDescending};
     columns[kColumnModuleName] = {"Module", .0f, SortingOrder::kAscending};
     columns[kColumnAddress] = {"Address", .0f, SortingOrder::kAscending};
     columns[kColumnUnwindErrors] = {"Unwind errors", .0f, SortingOrder::kDescending};
@@ -67,10 +67,10 @@ std::string SamplingReportDataView::GetValue(int row, int column) {
                                             : FunctionsDataView::kUnselectedFunctionString;
     case kColumnFunctionName:
       return func.name;
-    case kColumnExclusive:
-      return absl::StrFormat("%.2f%% (%u)", func.exclusive_percent, func.exclusive);
     case kColumnInclusive:
       return absl::StrFormat("%.2f%% (%u)", func.inclusive_percent, func.inclusive);
+    case kColumnExclusive:
+      return absl::StrFormat("%.2f%% (%u)", func.exclusive_percent, func.exclusive);
     case kColumnModuleName:
       return std::filesystem::path(func.module_path).filename().string();
     case kColumnAddress:
@@ -89,10 +89,10 @@ std::string SamplingReportDataView::GetValue(int row, int column) {
 std::string SamplingReportDataView::GetValueForCopy(int row, int column) {
   const SampledFunction& func = GetSampledFunction(row);
   switch (column) {
-    case kColumnExclusive:
-      return absl::StrFormat("%.2f%%", func.exclusive_percent);
     case kColumnInclusive:
       return absl::StrFormat("%.2f%%", func.inclusive_percent);
+    case kColumnExclusive:
+      return absl::StrFormat("%.2f%%", func.exclusive_percent);
     case kColumnUnwindErrors:
       return (func.unwind_errors > 0) ? absl::StrFormat("%.2f%%", func.unwind_errors_percent) : "";
     default:
@@ -130,11 +130,11 @@ void SamplingReportDataView::DoSort() {
     case kColumnFunctionName:
       sorter = ORBIT_PROC_SORT(name);
       break;
-    case kColumnExclusive:
-      sorter = ORBIT_PROC_SORT(exclusive);
-      break;
     case kColumnInclusive:
       sorter = ORBIT_PROC_SORT(inclusive);
+      break;
+    case kColumnExclusive:
+      sorter = ORBIT_PROC_SORT(exclusive);
       break;
     case kColumnModuleName:
       sorter = ORBIT_MODULE_NAME_FUNC_SORT;

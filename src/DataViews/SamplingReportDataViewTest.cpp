@@ -36,8 +36,8 @@ namespace {
 
 constexpr int kColumnSelected = 0;
 constexpr int kColumnFunctionName = 1;
-constexpr int kColumnExclusive = 2;
-constexpr int kColumnInclusive = 3;
+constexpr int kColumnInclusive = 2;
+constexpr int kColumnExclusive = 3;
 constexpr int kColumnModuleName = 4;
 constexpr int kColumnAddress = 5;
 constexpr int kColumnUnwindErrors = 6;
@@ -396,10 +396,10 @@ TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {
   // Copy Selection
   {
     std::string expected_clipboard = absl::StrFormat(
-        "Hooked\tName\tExclusive\tInclusive\tModule\tAddress\tUnwind errors\n"
+        "Hooked\tName\tInclusive\tExclusive\tModule\tAddress\tUnwind errors\n"
         "\t%s\t%s\t%s\t%s\t%s\t%s\n",
         GetExpectedDisplayFunctionNameByIndex(0, *capture_data_),
-        GetExpectedDisplayExclusiveByIndex(0, true), GetExpectedDisplayInclusiveByIndex(0, true),
+        GetExpectedDisplayInclusiveByIndex(0, true), GetExpectedDisplayExclusiveByIndex(0, true),
         GetExpectedDisplayModuleNameByIndex(0, *capture_data_), GetExpectedDisplayAddressByIndex(0),
         GetExpectedDisplayUnwindErrorsByIndex(0, true));
     CheckCopySelectionIsInvoked(context_menu, app_, view_, expected_clipboard);
@@ -408,12 +408,12 @@ TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {
   // Export to CSV
   {
     std::string expected_contents = absl::StrFormat(
-        R"("Hooked","Name","Exclusive","Inclusive","Module","Address","Unwind errors")"
+        R"("Hooked","Name","Inclusive","Exclusive","Module","Address","Unwind errors")"
         "\r\n"
         R"("","%s","%s","%s","%s","%s","%s")"
         "\r\n",
         GetExpectedDisplayFunctionNameByIndex(0, *capture_data_),
-        GetExpectedDisplayExclusiveByIndex(0, true), GetExpectedDisplayInclusiveByIndex(0, true),
+        GetExpectedDisplayInclusiveByIndex(0, true), GetExpectedDisplayExclusiveByIndex(0, true),
         GetExpectedDisplayModuleNameByIndex(0, *capture_data_), GetExpectedDisplayAddressByIndex(0),
         GetExpectedDisplayUnwindErrorsByIndex(0, true));
     CheckExportToCsvIsInvoked(context_menu, app_, view_, expected_contents);
