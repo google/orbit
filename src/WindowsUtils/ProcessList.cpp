@@ -46,7 +46,7 @@ namespace {
 }
 
 // FILETIME contains a 64-bit value representing the number of 100-nanosecond intervals since
-// January 1, 1601 (UTC). From Microsof't docs:
+// January 1, 1601 (UTC). From Microsoft's docs:
 //
 // From https://docs.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-filetime:
 // "It is not recommended that you add and subtract values from the FILETIME structure to obtain
@@ -122,16 +122,16 @@ ErrorMessageOr<void> ProcessListImpl::Refresh() {
 
   // Take a snapshot of all processes in the system.
   HANDLE process_snap_handle = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, /*th32ProcessID=*/0);
-  HandleCloser handle_closer(process_snap_handle);
+  auto handle_closer = CreateHandleCloser(process_snap_handle);
   if (process_snap_handle == INVALID_HANDLE_VALUE) {
     return ErrorMessage(
-        absl::StrFormat("Calling CreateToolhelp32Snapshot: \"%s\"", GetLastErrorAsString()));
+        absl::StrFormat("Calling CreateToolhelp32Snapshot: %s", GetLastErrorAsString()));
   }
 
   // Retrieve information about the first process, and exit if unsuccessful.
   process_entry.dwSize = sizeof(PROCESSENTRY32);
   if (!Process32First(process_snap_handle, &process_entry)) {
-    return ErrorMessage(absl::StrFormat("Calling Process32First: \"%s\"", GetLastErrorAsString()));
+    return ErrorMessage(absl::StrFormat("Calling Process32First: %s", GetLastErrorAsString()));
   }
 
   // Walk the snapshot of processes.
@@ -147,11 +147,11 @@ ErrorMessageOr<void> ProcessListImpl::Refresh() {
       bool is_64_bit = true;
 
       HANDLE handle = ::OpenProcess(PROCESS_ALL_ACCESS, /*bInheritHandle=*/FALSE, pid);
-      HandleCloser handle_closer(handle);
+      auto handle_closer = CreateHandleCloser(handle);
       if (handle == nullptr) {
         // "System" processes cannot be opened, track errors to skip further OpenProcess calls.
         process_info.open_process_error = ::GetLastError();
-        ERROR("Calling OpenProcess for %s[%u]: \"%s\"", process_name, pid, GetLastErrorAsString());
+        ERROR("Calling OpenProcess for %s[%u]: %s", process_name, pid, GetLastErrorAsString());
       } else {
         std::optional<bool> result = Is64Bit(handle);
         if (result.has_value()) {
@@ -198,10 +198,11 @@ void ProcessListImpl::UpdateCpuUsage() {
     }
 
     HANDLE process_handle = ::OpenProcess(PROCESS_ALL_ACCESS, /*bInheritHandle=*/FALSE, pid);
-    HandleCloser handle_closer(process_handle);
+    auto handle_closer = CreateHandleCloser(process_handle);
+
     if (process_handle == nullptr) {
       process_info.open_process_error = ::GetLastError();
-      ERROR("Calling OpenProcess for %s[%u]: \"%s\"", process.name, pid, GetLastErrorAsString());
+      ERROR("Calling OpenProcess for %s[%u]: %s", process.name, pid, GetLastErrorAsString());
       continue;
     }
 
@@ -211,7 +212,7 @@ void ProcessListImpl::UpdateCpuUsage() {
     FILETIME user_file_time = {};
     if (GetProcessTimes(process_handle, &creation_file_time, &exit_file_time, &kernel_file_time,
                         &user_file_time) == FALSE) {
-      ERROR("Calling GetProcessTimes for %s [%u]: \"%s\"", process.name, process.pid,
+      ERROR("Calling GetProcessTimes for %s [%u]: %s", process.name, process.pid,
             GetLastErrorAsString());
       continue;
     }
@@ -230,10 +231,8 @@ void ProcessListImpl::UpdateCpuUsage() {
     // We need at least two updates for meaningful data.
     if (is_first_update) continue;
 
-    static uint32_t num_cores = std::thread::hardware_concurrency();
     double cpu_time_ns = static_cast<double>(elapsed_kernel_ns + elapsed_user_ns);
-    process.cpu_usage_percentage =
-        100.0 * (cpu_time_ns / static_cast<double>(elapsed_ns)) / static_cast<double>(num_cores);
+    process.cpu_usage_percentage = 100.0 * (cpu_time_ns / static_cast<double>(elapsed_ns));
   }
 }
 

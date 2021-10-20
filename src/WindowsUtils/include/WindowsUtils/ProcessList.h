@@ -27,9 +27,9 @@ struct Process {
 // called at least once to produce meaningful cpu usage values. This class is not thread safe.
 class ProcessList {
  public:
-  virtual ErrorMessageOr<void> Refresh() = 0;
-  virtual [[nodiscard]] std::vector<const Process*> GetProcesses() const = 0;
-  virtual [[nodiscard]] std::optional<const Process*> GetProcessByPid(uint32_t pid) const = 0;
+  [[nodiscard]] virtual ErrorMessageOr<void> Refresh() = 0;
+  [[nodiscard]] virtual std::vector<const Process*> GetProcesses() const = 0;
+  [[nodiscard]] virtual std::optional<const Process*> GetProcessByPid(uint32_t pid) const = 0;
 
   [[nodiscard]] static std::unique_ptr<ProcessList> Create();
 };

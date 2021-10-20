@@ -7,31 +7,17 @@
 
 #include <windows.h>
 
+#include "OrbitBase/UniqueResource.h"
+
 namespace orbit_windows_utils {
 
-// Convenience class around HANDLE to make sure CloseHandle is called.
-class HandleCloser {
- public:
-  explicit HandleCloser(HANDLE handle) : handle_(handle) {}
-
-  ~HandleCloser() { Close(); }
-
-  void Close() {
-    if (handle_ != nullptr) {
-      CloseHandle(handle_);
-      handle_ = nullptr;
+auto CreateHandleCloser(HANDLE handle) {
+  return orbit_base::unique_resource(handle, [](HANDLE h) {
+    if (h != nullptr) {
+      CloseHandle(h);
     }
-  }
-
-  HandleCloser() = delete;
-  HandleCloser(const HandleCloser& other) = delete;
-  HandleCloser& operator=(const HandleCloser& other) = delete;
-  HandleCloser(HandleCloser&& other) = delete;
-  HandleCloser& operator=(HandleCloser&& other) = delete;
-
- private:
-  HANDLE handle_ = nullptr;
-};
+  });
+}
 
 }  // namespace orbit_windows_utils
 

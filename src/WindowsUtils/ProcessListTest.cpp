@@ -45,7 +45,7 @@ TEST(ProcessList, CpuUsage) {
     EXPECT_EQ(process->cpu_usage_percentage, 0);
   }
 
-  constexpr uint64_t kBusyLoopTimeMs = 20;
+  constexpr uint64_t kBusyLoopTimeMs = 200;
   constexpr uint64_t kBusyLoopTimeNs = kBusyLoopTimeMs * 1'000'000;
   uint64_t end_time = orbit_base::CaptureTimestampNs() + kBusyLoopTimeNs;
 
@@ -60,16 +60,21 @@ TEST(ProcessList, CpuUsage) {
   EXPECT_FALSE(result.has_error());
 
   bool found_this_process = false;
-  bool found_cpu_activity = false;
+  double this_process_cpu_usage = 0;
   for (const Process* process : process_list->GetProcesses()) {
     if (process->pid == pid) {
       found_this_process = true;
-      found_cpu_activity = process->cpu_usage_percentage > 0;
+      this_process_cpu_usage = process->cpu_usage_percentage;
     }
   }
 
   EXPECT_EQ(found_this_process, true);
-  EXPECT_EQ(found_cpu_activity, true);
+
+  // For short tests, the interval at which Windows updates process times become an issue.
+  // Assuming an inteval of 16ms and a test period of 200ms, we have a potential error of 20%.
+  // Choose a conservative threshold.
+  constexpr double kMinExpectedBusyLoopCpuPercentage = 70.0;
+  EXPECT_GT(this_process_cpu_usage, kMinExpectedBusyLoopCpuPercentage);
 }
 
 }  // namespace orbit_windows_utils
