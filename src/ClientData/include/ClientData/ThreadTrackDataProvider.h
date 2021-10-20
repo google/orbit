@@ -19,7 +19,8 @@ struct TimerMetadata {
   uint32_t process_id;
 };
 
-// Process timers and provide queries to get them using thread_id as a key.
+// Using thread_id as a key, process timers and provide queries to get all in a range (start,end) as
+// well as metadata about them.
 class ThreadTrackDataProvider final {
  public:
   ThreadTrackDataProvider(bool is_data_from_saved_capture = false)
