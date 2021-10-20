@@ -10,15 +10,6 @@
 
 namespace orbit_client_data {
 
-struct TimerMetadata {
-  bool is_empty;
-  size_t number_of_timers;
-  uint64_t min_time;
-  uint64_t max_time;
-  uint32_t depth;
-  uint32_t process_id;
-};
-
 // Using thread_id as a key, process timers and provide queries to get all in a range (start,end) as
 // well as metadata about them.
 class ThreadTrackDataProvider final {
@@ -50,7 +41,9 @@ class ThreadTrackDataProvider final {
     return GetScopeTreeTimerData(thread_id)->GetTimers(min_tick, max_tick);
   }
 
-  [[nodiscard]] const TimerMetadata GetTimerMetadata(uint32_t thread_id) const;
+  [[nodiscard]] const TimerMetadata GetTimerMetadata(uint32_t thread_id) const {
+    return GetScopeTreeTimerData(thread_id)->GetTimerMetadata();
+  };
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
       const orbit_client_protos::TimerInfo& timer) const;

@@ -25,20 +25,6 @@ std::vector<const TimerChain*> ThreadTrackDataProvider::GetAllThreadTimerChains(
   return chains;
 }
 
-[[nodiscard]] const TimerMetadata ThreadTrackDataProvider::GetTimerMetadata(
-    uint32_t thread_id) const {
-  const ScopeTreeTimerData* scope_tree_timer_data = GetScopeTreeTimerData(thread_id);
-  CHECK(scope_tree_timer_data != nullptr);
-  TimerMetadata timer_metadata;
-  timer_metadata.is_empty = scope_tree_timer_data->IsEmpty();
-  timer_metadata.number_of_timers = scope_tree_timer_data->GetNumberOfTimers();
-  timer_metadata.min_time = scope_tree_timer_data->GetMinTime();
-  timer_metadata.max_time = scope_tree_timer_data->GetMaxTime();
-  timer_metadata.depth = scope_tree_timer_data->GetDepth();
-  timer_metadata.process_id = scope_tree_timer_data->GetProcessId();
-  return timer_metadata;
-}
-
 const TimerInfo* ThreadTrackDataProvider::GetLeft(const TimerInfo& timer) const {
   return GetScopeTreeTimerData(timer.thread_id())->GetLeft(timer);
 }
