@@ -5,10 +5,11 @@ compile_commands.json
 /.vscode/
 /conan.log
 
-# Ignore generated Python code
+# Ignore generated and compiled Python code
 *_pb2.py
 *.egg-info
 __pycache__
+*.pyc
 
 # clangd
 .clangd/
