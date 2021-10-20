@@ -245,7 +245,7 @@ void ProcessListImpl::UpdateCpuUsage() {
 std::unique_ptr<ProcessList> ProcessList::Create() {
   auto process_list = std::make_unique<ProcessListImpl>();
   ErrorMessageOr<void> result = process_list->Refresh();
-  if(result.has_error()) {
+  if (result.has_error()) {
     ERROR("Refreshing process list: %s", result.error().message());
   }
   return std::move(process_list);
