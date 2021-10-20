@@ -32,7 +32,7 @@ std::vector<Module> ListModules(uint32_t pid) {
     ERROR("Calling CreateToolhelp32Snapshot for modules");
     return {};
   }
-  orbit_base::unique_resource handle{module_snap_handle, [](HANDLE h) { CloseHandle(h); }};
+  orbit_base::unique_resource handle{module_snap_handle, ::CloseHandle};
 
   // Retrieve information about the first module.
   module_entry.dwSize = sizeof(MODULEENTRY32);

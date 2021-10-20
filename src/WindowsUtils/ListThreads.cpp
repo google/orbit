@@ -30,7 +30,7 @@ std::vector<Thread> ListThreads(uint32_t pid) {
     ERROR("Calling CreateToolhelp32Snapshot for threads");
     return {};
   }
-  orbit_base::unique_resource handle{thread_snap_handle, [](HANDLE h) { CloseHandle(h); }};
+  orbit_base::unique_resource handle{thread_snap_handle, ::CloseHandle};
 
   // Retrieve information about the first thread.
   thread_entry.dwSize = sizeof(THREADENTRY32);

@@ -15,8 +15,8 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
+#include "OrbitBase/UniqueResource.h"
 #include "WindowsUtils/GetLastError.h"
-#include "WindowsUtils/HandleCloser.h"
 
 // Include after windows.h.
 #include <processthreadsapi.h>
@@ -59,6 +59,12 @@ namespace {
   CHECK(t_1 >= t_0);
   constexpr uint64_t kIntervalNs = 100;
   return (t_1 - t_0) * kIntervalNs;
+}
+
+void SafeCloseHandle(HANDLE handle) {
+  if (handle != nullptr) {
+    ::CloseHandle(handle);
+  }
 }
 
 }  // namespace
@@ -122,7 +128,7 @@ ErrorMessageOr<void> ProcessListImpl::Refresh() {
 
   // Take a snapshot of all processes in the system.
   HANDLE process_snap_handle = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, /*th32ProcessID=*/0);
-  auto handle_closer = CreateHandleCloser(process_snap_handle);
+  orbit_base::unique_resource handle_closer(process_snap_handle, SafeCloseHandle);
   if (process_snap_handle == INVALID_HANDLE_VALUE) {
     return ErrorMessage(
         absl::StrFormat("Calling CreateToolhelp32Snapshot: %s", GetLastErrorAsString()));
@@ -147,7 +153,7 @@ ErrorMessageOr<void> ProcessListImpl::Refresh() {
       bool is_64_bit = true;
 
       HANDLE handle = ::OpenProcess(PROCESS_ALL_ACCESS, /*bInheritHandle=*/FALSE, pid);
-      auto handle_closer = CreateHandleCloser(handle);
+      orbit_base::unique_resource handle_closer(handle, SafeCloseHandle);
       if (handle == nullptr) {
         // "System" processes cannot be opened, track errors to skip further OpenProcess calls.
         process_info.open_process_error = ::GetLastError();
@@ -198,7 +204,7 @@ void ProcessListImpl::UpdateCpuUsage() {
     }
 
     HANDLE process_handle = ::OpenProcess(PROCESS_ALL_ACCESS, /*bInheritHandle=*/FALSE, pid);
-    auto handle_closer = CreateHandleCloser(process_handle);
+    orbit_base::unique_resource handle_closer(process_handle, SafeCloseHandle);
 
     if (process_handle == nullptr) {
       process_info.open_process_error = ::GetLastError();
@@ -238,7 +244,10 @@ void ProcessListImpl::UpdateCpuUsage() {
 
 std::unique_ptr<ProcessList> ProcessList::Create() {
   auto process_list = std::make_unique<ProcessListImpl>();
-  process_list->Refresh();
+  ErrorMessageOr<void> result = process_list->Refresh();
+  if(result.has_error()) {
+    ERROR("Refreshing process list: %s", result.error().message());
+  }
   return std::move(process_list);
 }
 

@@ -23,7 +23,6 @@ target_sources(WindowsUtils PUBLIC
         include/WindowsUtils/AdjustTokenPrivilege.h
         include/WindowsUtils/FindDebugSymbols.h
         include/WindowsUtils/GetLastError.h
-        include/WindowsUtils/HandleCloser.h
         include/WindowsUtils/ListModules.h
         include/WindowsUtils/ListThreads.h
         include/WindowsUtils/PerformanceCounter.h
