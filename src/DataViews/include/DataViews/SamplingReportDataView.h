@@ -75,8 +75,8 @@ class SamplingReportDataView : public DataView {
   enum ColumnIndex {
     kColumnSelected,
     kColumnFunctionName,
+    kColumnInclusive,  // Default sorting column.
     kColumnExclusive,
-    kColumnInclusive,
     kColumnModuleName,
     kColumnAddress,
     kColumnUnwindErrors,
