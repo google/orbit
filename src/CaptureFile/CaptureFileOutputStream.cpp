@@ -7,6 +7,7 @@
 #include <absl/base/casts.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
 #include <optional>
 #include <string>
@@ -22,7 +23,10 @@ namespace {
 
 class CaptureFileOutputStreamImpl final : public CaptureFileOutputStream {
  public:
-  explicit CaptureFileOutputStreamImpl(std::filesystem::path path) : path_{std::move(path)} {}
+  explicit CaptureFileOutputStreamImpl(std::filesystem::path path)
+      : output_type_(OutputType::kFile), path_{std::move(path)} {}
+  explicit CaptureFileOutputStreamImpl(std::vector<unsigned char>* output_buffer)
+      : output_type_(OutputType::kBuffer), output_buffer_(output_buffer) {}
   ~CaptureFileOutputStreamImpl() override;
 
   [[nodiscard]] ErrorMessageOr<void> Initialize();
@@ -34,17 +38,26 @@ class CaptureFileOutputStreamImpl final : public CaptureFileOutputStream {
  private:
   void Reset();
   [[nodiscard]] ErrorMessageOr<void> WriteHeader();
+  [[nodiscard]] std::string_view GetErrorFromOutputStream() const;
   // Handles write error by cleaning up the file and generating error message.
   [[nodiscard]] ErrorMessage HandleWriteError(const char* section_name,
                                               std::string_view original_error);
   // Call this in case of unrecoverable error to close and remove the file.
   void CloseAndTryRemoveFileAfterError();
 
+  enum class OutputType { kFile, kBuffer };
+  OutputType output_type_;
+
   std::filesystem::path path_;
   orbit_base::unique_fd fd_;
-
   std::optional<google::protobuf::io::FileOutputStream> file_output_stream_;
   std::optional<google::protobuf::io::CodedOutputStream> coded_output_;
+
+  // When output capture file to a buffer of raw bytes, we need to frequently create string encoding
+  // the capture event. To reduce heap fragmentation, we reuse the same string object with calls to
+  // SerializeToString().
+  std::string serialized_event_;
+  std::vector<unsigned char>* output_buffer_ = nullptr;
 };
 
 CaptureFileOutputStreamImpl::~CaptureFileOutputStreamImpl() {
@@ -54,12 +67,14 @@ CaptureFileOutputStreamImpl::~CaptureFileOutputStreamImpl() {
 }
 
 ErrorMessageOr<void> CaptureFileOutputStreamImpl::Initialize() {
-  auto fd_or_error = orbit_base::OpenNewFileForWriting(path_);
-  if (fd_or_error.has_error()) {
-    return fd_or_error.error();
-  }
+  if (output_type_ == OutputType::kFile) {
+    auto fd_or_error = orbit_base::OpenNewFileForWriting(path_);
+    if (fd_or_error.has_error()) {
+      return fd_or_error.error();
+    }
 
-  fd_ = std::move(fd_or_error.value());
+    fd_ = std::move(fd_or_error.value());
+  }
 
   if (auto result = WriteHeader(); result.has_error()) {
     return result.error();
@@ -69,10 +84,13 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::Initialize() {
 }
 
 ErrorMessageOr<void> CaptureFileOutputStreamImpl::Close() {
-  coded_output_->Trim();
-  if (coded_output_->HadError()) {
-    return HandleWriteError("Unknown", SafeStrerror(file_output_stream_->GetErrno()));
+  if (output_type_ == OutputType::kFile) {
+    coded_output_->Trim();
+    if (coded_output_->HadError()) {
+      return HandleWriteError("Unknown", GetErrorFromOutputStream());
+    }
   }
+
   Reset();
 
   return outcome::success();
@@ -82,43 +100,72 @@ void CaptureFileOutputStreamImpl::Reset() {
   coded_output_.reset();
   file_output_stream_.reset();
   fd_.release();
+
+  output_buffer_ = nullptr;
 }
 
-bool CaptureFileOutputStreamImpl::IsOpen() { return fd_.valid(); }
+bool CaptureFileOutputStreamImpl::IsOpen() {
+  if (output_type_ == OutputType::kFile) {
+    return fd_.valid();
+  } else if (output_type_ == OutputType::kBuffer) {
+    return output_buffer_ != nullptr;
+  }
+
+  UNREACHABLE();
+}
 
 void CaptureFileOutputStreamImpl::CloseAndTryRemoveFileAfterError() {
   Reset();
-  if (remove(path_.string().c_str()) == -1) {
+
+  if (output_type_ == OutputType::kFile && remove(path_.string().c_str()) == -1) {
     ERROR("Unable to remove \"%s\": %s", path_.string(), SafeStrerror(errno));
   }
+}
+
+std::string_view CaptureFileOutputStreamImpl::GetErrorFromOutputStream() const {
+  if (output_type_ == OutputType::kFile) return SafeStrerror(file_output_stream_->GetErrno());
+  return "";
 }
 
 ErrorMessage CaptureFileOutputStreamImpl::HandleWriteError(const char* section_name,
                                                            std::string_view original_error) {
   CloseAndTryRemoveFileAfterError();
+
+  std::string output_target = output_type_ == OutputType::kFile ? path_.string() : "buffer";
   return ErrorMessage{absl::StrFormat(R"(Error writing "%s" section to "%s": %s)", section_name,
-                                      path_.string(), original_error)};
+                                      output_target, original_error)};
 }
 
 ErrorMessageOr<void> CaptureFileOutputStreamImpl::WriteCaptureEvent(
     const orbit_grpc_protos::ClientCaptureEvent& event) {
-  CHECK(coded_output_.has_value());
-  CHECK(file_output_stream_.has_value());
-  size_t message_size = event.ByteSizeLong();
-  coded_output_->WriteVarint32(message_size);
-  if (!event.SerializeToCodedStream(&coded_output_.value())) {
-    return HandleWriteError("Capture", SafeStrerror(file_output_stream_->GetErrno()));
-  }
+  uint32_t event_size = event.ByteSizeLong();
+  if (output_type_ == OutputType::kFile) {
+    CHECK(coded_output_.has_value());
+    CHECK(file_output_stream_.has_value());
 
-  if (coded_output_->HadError()) {
-    return HandleWriteError("Capture", SafeStrerror(file_output_stream_->GetErrno()));
+    coded_output_->WriteVarint32(event_size);
+    if (!event.SerializeToCodedStream(&coded_output_.value()) || coded_output_->HadError()) {
+      return HandleWriteError("Capture", GetErrorFromOutputStream());
+    }
+
+  } else if (output_type_ == OutputType::kBuffer) {
+    CHECK(output_buffer_ != nullptr);
+
+    uint8_t buffer[10];
+    uint8_t* end =
+        google::protobuf::io::CodedOutputStream::WriteVarint32ToArray(event_size, buffer);
+    output_buffer_->insert(output_buffer_->end(), buffer, end);
+
+    event.SerializeToString(&serialized_event_);
+    output_buffer_->insert(output_buffer_->end(), serialized_event_.begin(),
+                           serialized_event_.end());
   }
 
   return outcome::success();
 }
 
 ErrorMessageOr<void> CaptureFileOutputStreamImpl::WriteHeader() {
-  CHECK(fd_.valid());
+  CHECK(fd_.valid() || output_buffer_ != nullptr);
 
   std::string header{kFileSignature};
   header.append(std::string_view(absl::bit_cast<char*>(&kFileVersion), sizeof(kFileVersion)));
@@ -136,14 +183,19 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::WriteHeader() {
 
   CHECK(capture_section_offset == header.size());
 
-  auto write_result = orbit_base::WriteFully(fd_, header);
-  if (write_result.has_error()) {
-    return HandleWriteError("Header", write_result.error().message());
-  }
+  if (output_type_ == OutputType::kFile) {
+    auto write_result = orbit_base::WriteFully(fd_, header);
+    if (write_result.has_error()) {
+      return HandleWriteError("Header", write_result.error().message());
+    }
 
-  // Prepare the protobuf stream to use to write to capture section.
-  file_output_stream_.emplace(fd_.get());
-  coded_output_.emplace(&file_output_stream_.value());
+    // Prepare the protobuf stream to use to write to capture section.
+    file_output_stream_.emplace(fd_.get());
+    coded_output_.emplace(&file_output_stream_.value());
+
+  } else if (output_type_ == OutputType::kBuffer) {
+    output_buffer_->insert(output_buffer_->end(), header.begin(), header.end());
+  }
 
   return outcome::success();
 }
@@ -157,6 +209,15 @@ ErrorMessageOr<std::unique_ptr<CaptureFileOutputStream>> CaptureFileOutputStream
   if (init_result.has_error()) {
     return init_result.error();
   }
+
+  return implementation;
+}
+
+ErrorMessageOr<std::unique_ptr<CaptureFileOutputStream>> CaptureFileOutputStream::Create(
+    std::vector<unsigned char>* output_buffer) {
+  auto implementation = std::make_unique<CaptureFileOutputStreamImpl>(output_buffer);
+  auto init_result = implementation->Initialize();
+  CHECK(!init_result.has_error());
 
   return implementation;
 }

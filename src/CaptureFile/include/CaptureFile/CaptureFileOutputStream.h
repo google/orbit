@@ -54,6 +54,8 @@ class CaptureFileOutputStream {
   // overwritten.
   [[nodiscard]] static ErrorMessageOr<std::unique_ptr<CaptureFileOutputStream>> Create(
       std::filesystem::path path);
+  [[nodiscard]] static ErrorMessageOr<std::unique_ptr<CaptureFileOutputStream>> Create(
+      std::vector<unsigned char>* output_buffer);
 };
 
 }  // namespace orbit_capture_file
