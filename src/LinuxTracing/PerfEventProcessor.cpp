@@ -14,7 +14,7 @@
 namespace orbit_linux_tracing {
 
 void PerfEventProcessor::AddEvent(PerfEvent&& event) {
-  const uint64_t timestamp = GetTimestamp(event);
+  const uint64_t timestamp = event.timestamp();
   if (last_processed_timestamp_ns_ > 0 && timestamp < last_processed_timestamp_ns_) {
     if (discarded_out_of_order_counter_ != nullptr) {
       ++(*discarded_out_of_order_counter_);
@@ -49,21 +49,21 @@ std::optional<DiscardedPerfEvent> PerfEventProcessor::HandleOutOfOrderEvent(
   CHECK(discarded_end >= last_discarded_end_);
   if (discarded_end == last_discarded_end_ && discarded_begin < last_discarded_begin_) {
     optional_discarded_event =
-        DiscardedPerfEvent{.timestamp = discarded_end, .begin_timestamp_ns = discarded_begin};
+        DiscardedPerfEvent{kNotOrderedInAnyFileDescriptor, discarded_end, discarded_begin};
     last_discarded_begin_ = discarded_begin;
   } else if (discarded_end == last_discarded_end_ && discarded_begin >= last_discarded_begin_) {
     // This is the only case that doesn't generate a DiscardedPerfEvent.
   } else if (discarded_end > last_discarded_end_ && discarded_begin < last_discarded_begin_) {
     optional_discarded_event =
-        DiscardedPerfEvent{.timestamp = discarded_end, .begin_timestamp_ns = discarded_begin};
+        DiscardedPerfEvent{kNotOrderedInAnyFileDescriptor, discarded_end, discarded_begin};
     last_discarded_begin_ = discarded_begin;
   } else if (discarded_end > last_discarded_end_ && discarded_begin <= last_discarded_end_) {
     optional_discarded_event =
-        DiscardedPerfEvent{.timestamp = discarded_end, .begin_timestamp_ns = discarded_begin};
+        DiscardedPerfEvent{kNotOrderedInAnyFileDescriptor, discarded_end, discarded_begin};
     // Don't update last_discarded_begin_.
   } else if (discarded_end > last_discarded_end_ && discarded_begin > last_discarded_end_) {
     optional_discarded_event =
-        DiscardedPerfEvent{.timestamp = discarded_end, .begin_timestamp_ns = discarded_begin};
+        DiscardedPerfEvent{kNotOrderedInAnyFileDescriptor, discarded_end, discarded_begin};
     last_discarded_begin_ = discarded_begin;
   } else {
     UNREACHABLE();
@@ -79,13 +79,13 @@ std::optional<DiscardedPerfEvent> PerfEventProcessor::HandleOutOfOrderEvent(
 void PerfEventProcessor::ProcessAllEvents() {
   CHECK(!visitors_.empty());
   while (event_queue_.HasEvent()) {
-    const PerfEvent& event = event_queue_.TopEvent();
+    PerfEvent& event = event_queue_.TopEvent();
     // Events are guaranteed to be processed in order of timestamp
     // as out-of-order events are discarded in AddEvent.
-    CHECK(GetTimestamp(event) >= last_processed_timestamp_ns_);
-    last_processed_timestamp_ns_ = GetTimestamp(event);
+    CHECK(event.timestamp() >= last_processed_timestamp_ns_);
+    last_processed_timestamp_ns_ = event.timestamp();
     for (PerfEventVisitor* visitor : visitors_) {
-      std::visit([visitor](auto&& arg) { visitor->Visit(arg); }, event);
+      event.Accept(visitor);
     }
     event_queue_.PopEvent();
   }
@@ -96,8 +96,8 @@ void PerfEventProcessor::ProcessOldEvents() {
   const uint64_t current_timestamp_ns = orbit_base::CaptureTimestampNs();
 
   while (event_queue_.HasEvent()) {
-    const PerfEvent& event = event_queue_.TopEvent();
-    const uint64_t timestamp = GetTimestamp(event);
+    PerfEvent& event = event_queue_.TopEvent();
+    const uint64_t timestamp = event.timestamp();
 
     // Do not read the most recent events as out-of-order events could (and will) arrive.
     if (timestamp + kProcessingDelayMs * 1'000'000 >= current_timestamp_ns) {
@@ -109,7 +109,7 @@ void PerfEventProcessor::ProcessOldEvents() {
     last_processed_timestamp_ns_ = timestamp;
 
     for (PerfEventVisitor* visitor : visitors_) {
-      std::visit([visitor](auto&& arg) { visitor->Visit(arg); }, event);
+      event.Accept(visitor);
     }
     event_queue_.PopEvent();
   }

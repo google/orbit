@@ -17,7 +17,7 @@ namespace {
 
 // We do the testing with ForkPerfEvent's - that is just an arbitrary choice.
 ForkPerfEvent MakeTestEvent(int origin_fd, uint64_t timestamp) {
-  return ForkPerfEvent{.timestamp = timestamp, .ordered_in_file_descriptor = origin_fd};
+  return ForkPerfEvent{origin_fd, timestamp, 42, 42};
 }
 
 }  // namespace
@@ -35,19 +35,19 @@ TEST(PerfEventQueue, SingleFd) {
 
   ASSERT_TRUE(event_queue.HasEvent());
   current_oldest_timestamp = 100;
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp);
   event_queue.PopEvent();
 
   event_queue.PushEvent(MakeTestEvent(kOriginFd, 102));
 
   ASSERT_TRUE(event_queue.HasEvent());
   current_oldest_timestamp = 101;
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp);
   event_queue.PopEvent();
 
   ASSERT_TRUE(event_queue.HasEvent());
   current_oldest_timestamp = 102;
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp);
   event_queue.PopEvent();
 
   EXPECT_FALSE(event_queue.HasEvent());
@@ -56,7 +56,7 @@ TEST(PerfEventQueue, SingleFd) {
 
   ASSERT_TRUE(event_queue.HasEvent());
   current_oldest_timestamp = 103;
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp);
   event_queue.PopEvent();
 
   EXPECT_FALSE(event_queue.HasEvent());
@@ -84,12 +84,12 @@ TEST(PerfEventQueue, MultipleFd) {
 
   ASSERT_TRUE(event_queue.HasEvent());
   current_oldest_timestamp = 101;
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp);
   event_queue.PopEvent();
 
   ASSERT_TRUE(event_queue.HasEvent());
   current_oldest_timestamp = 102;
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp);
   event_queue.PopEvent();
 
   event_queue.PushEvent(MakeTestEvent(33, 100));
@@ -98,17 +98,17 @@ TEST(PerfEventQueue, MultipleFd) {
 
   ASSERT_TRUE(event_queue.HasEvent());
   current_oldest_timestamp = 100;
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp);
   event_queue.PopEvent();
 
   ASSERT_TRUE(event_queue.HasEvent());
   current_oldest_timestamp = 103;
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp);
   event_queue.PopEvent();
 
   ASSERT_TRUE(event_queue.HasEvent());
   current_oldest_timestamp = 104;
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp);
   event_queue.PopEvent();
 
   EXPECT_FALSE(event_queue.HasEvent());
@@ -121,56 +121,56 @@ TEST(PerfEventQueue, FdWithOldestAndNewestEvent) {
 
   event_queue.PushEvent(MakeTestEvent(11, 101));
   ASSERT_TRUE(event_queue.HasEvent());
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), 101);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), 101);
 
   event_queue.PushEvent(MakeTestEvent(22, 102));
   ASSERT_TRUE(event_queue.HasEvent());
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), 101);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), 101);
 
   event_queue.PushEvent(MakeTestEvent(33, 103));
   ASSERT_TRUE(event_queue.HasEvent());
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), 101);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), 101);
 
   event_queue.PushEvent(MakeTestEvent(44, 104));
   ASSERT_TRUE(event_queue.HasEvent());
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), 101);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), 101);
 
   event_queue.PushEvent(MakeTestEvent(55, 105));
   ASSERT_TRUE(event_queue.HasEvent());
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), 101);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), 101);
 
   event_queue.PushEvent(MakeTestEvent(66, 106));
   ASSERT_TRUE(event_queue.HasEvent());
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), 101);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), 101);
 
   event_queue.PushEvent(MakeTestEvent(11, 999));
   ASSERT_TRUE(event_queue.HasEvent());
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), 101);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), 101);
 
   event_queue.PopEvent();
   ASSERT_TRUE(event_queue.HasEvent());
 
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), 102);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), 102);
   event_queue.PopEvent();
   ASSERT_TRUE(event_queue.HasEvent());
 
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), 103);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), 103);
   event_queue.PopEvent();
   ASSERT_TRUE(event_queue.HasEvent());
 
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), 104);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), 104);
   event_queue.PopEvent();
   ASSERT_TRUE(event_queue.HasEvent());
 
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), 105);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), 105);
   event_queue.PopEvent();
   ASSERT_TRUE(event_queue.HasEvent());
 
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), 106);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), 106);
   event_queue.PopEvent();
   ASSERT_TRUE(event_queue.HasEvent());
 
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), 999);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), 999);
   event_queue.PopEvent();
   EXPECT_FALSE(event_queue.HasEvent());
 }
@@ -184,36 +184,36 @@ TEST(PerfEventQueue, NotOrderedInAnyFileDescriptor) {
   event_queue.PushEvent(MakeTestEvent(kNotOrderedInAnyFileDescriptor, 104));
   current_oldest_timestamp = 104;
   EXPECT_TRUE(event_queue.HasEvent());
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp);
 
   event_queue.PushEvent(MakeTestEvent(kNotOrderedInAnyFileDescriptor, 101));
   current_oldest_timestamp = 101;
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp);
 
   event_queue.PushEvent(MakeTestEvent(kNotOrderedInAnyFileDescriptor, 102));
 
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp);
   event_queue.PopEvent();
   current_oldest_timestamp = 102;
   ASSERT_TRUE(event_queue.HasEvent());
 
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp);
   event_queue.PopEvent();
   current_oldest_timestamp = 104;
   ASSERT_TRUE(event_queue.HasEvent());
 
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp);
   ASSERT_TRUE(event_queue.HasEvent());
 
   event_queue.PushEvent(MakeTestEvent(kNotOrderedInAnyFileDescriptor, 103));
   current_oldest_timestamp = 103;
 
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp);
   event_queue.PopEvent();
   current_oldest_timestamp = 104;
   ASSERT_TRUE(event_queue.HasEvent());
 
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp);
   event_queue.PopEvent();
   ASSERT_FALSE(event_queue.HasEvent());
 
@@ -234,23 +234,23 @@ TEST(PerfEventQueue, OrderedFdsAndNotOrderedInAnyFileDescriptor) {
   event_queue.PushEvent(MakeTestEvent(22, 109));
 
   uint64_t current_oldest_timestamp = 101;
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp++);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp++);
   event_queue.PopEvent();
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp++);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp++);
   event_queue.PopEvent();
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp++);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp++);
   event_queue.PopEvent();
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp++);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp++);
   event_queue.PopEvent();
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp++);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp++);
   event_queue.PopEvent();
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp++);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp++);
   event_queue.PopEvent();
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp++);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp++);
   event_queue.PopEvent();
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp++);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp++);
   event_queue.PopEvent();
-  EXPECT_EQ(GetTimestamp(event_queue.TopEvent()), current_oldest_timestamp++);
+  EXPECT_EQ(event_queue.TopEvent().timestamp(), current_oldest_timestamp++);
   event_queue.PopEvent();
   EXPECT_FALSE(event_queue.HasEvent());
   EXPECT_DEATH(event_queue.PopEvent(), "");
@@ -265,12 +265,12 @@ TEST(
   event_queue.PushEvent(MakeTestEvent(11, kCommonTimestamp));
   event_queue.PushEvent(MakeTestEvent(kNotOrderedInAnyFileDescriptor, kCommonTimestamp));
 
-  const uint64_t top_timestamp = GetTimestamp(event_queue.TopEvent());
-  const uint64_t top_fd = GetOrderedInFileDescriptor(event_queue.TopEvent());
+  const uint64_t top_timestamp = event_queue.TopEvent().timestamp();
+  const uint64_t top_fd = event_queue.TopEvent().ordered_in_file_descriptor();
   event_queue.PopEvent();
 
-  const uint64_t remaining_timestamp = GetTimestamp(event_queue.TopEvent());
-  const uint64_t remaining_fd = GetOrderedInFileDescriptor(event_queue.TopEvent());
+  const uint64_t remaining_timestamp = event_queue.TopEvent().timestamp();
+  const uint64_t remaining_fd = event_queue.TopEvent().ordered_in_file_descriptor();
 
   EXPECT_EQ(top_timestamp, remaining_timestamp);
   EXPECT_NE(top_fd, remaining_fd);

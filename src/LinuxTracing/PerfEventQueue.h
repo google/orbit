@@ -36,7 +36,7 @@ class PerfEventQueue {
  public:
   void PushEvent(PerfEvent&& event);
   [[nodiscard]] bool HasEvent() const;
-  [[nodiscard]] const PerfEvent& TopEvent();
+  [[nodiscard]] PerfEvent& TopEvent();
   void PopEvent();
 
  private:
@@ -53,10 +53,8 @@ class PerfEventQueue {
   // from the ring buffer corresponding to that file descriptor.
   absl::flat_hash_map<int, std::unique_ptr<std::queue<PerfEvent>>> queues_of_events_ordered_by_fd_;
 
-  static constexpr auto kPerfEventReverseTimestampCompare = [](const PerfEvent& lhs,
-                                                               const PerfEvent& rhs) {
-    return GetTimestamp(lhs) > GetTimestamp(rhs);
-  };
+  static constexpr auto kPerfEventReverseTimestampCompare =
+      [](const PerfEvent& lhs, const PerfEvent& rhs) { return lhs.timestamp() > rhs.timestamp(); };
   // This priority queue holds all those events that cannot be assumed already sorted in a specific
   // ring buffer. All such events are simply sorted by the priority queue by increasing timestamp.
   std::priority_queue<PerfEvent, std::vector<PerfEvent>,

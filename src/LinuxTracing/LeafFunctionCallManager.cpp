@@ -39,15 +39,15 @@ using orbit_grpc_protos::Callstack;
 // addresses (after uprobe patching) are not.
 // More (internal) documentation on this in: go/stadia-orbit-leaf-frame-pointer
 Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
-    const CallchainSamplePerfEvent* event, LibunwindstackMaps* current_maps,
+    CallchainSamplePerfEvent* event, LibunwindstackMaps* current_maps,
     LibunwindstackUnwinder* unwinder) {
   CHECK(event != nullptr);
   CHECK(current_maps != nullptr);
   CHECK(unwinder != nullptr);
-  CHECK(event->GetCallchainSize() > 2);
+  CHECK(event->data().GetCallchainSize() > 2);
 
-  uint64_t rbp = event->GetRegisters()[PERF_REG_X86_BP];
-  uint64_t rsp = event->GetRegisters()[PERF_REG_X86_SP];
+  uint64_t rbp = event->data().GetRegisters()[PERF_REG_X86_BP];
+  uint64_t rsp = event->data().GetRegisters()[PERF_REG_X86_SP];
 
   if (rbp < rsp) {
     return Callstack::kFramePointerUnwindingError;
@@ -59,8 +59,8 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
   }
 
   const LibunwindstackResult& libunwindstack_result =
-      unwinder->Unwind(event->pid, current_maps->Get(), event->GetRegisters(),
-                       event->GetStackData(), stack_size, true);
+      unwinder->Unwind(event->data().pid, current_maps->Get(), event->data().GetRegisters(),
+                       event->data().GetStackData(), stack_size, true);
   const std::vector<unwindstack::FrameData>& libunwindstack_callstack =
       libunwindstack_result.frames();
 
@@ -83,7 +83,7 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
     return Callstack::kFramePointerUnwindingError;
   }
 
-  const std::vector<uint64_t> original_callchain = event->CopyOfIpsAsVector();
+  const std::vector<uint64_t> original_callchain = event->data().CopyOfIpsAsVector();
   CHECK(original_callchain.size() > 2);
 
   std::vector<uint64_t> result;
@@ -109,7 +109,7 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
     result.push_back(original_callchain[i]);
   }
 
-  event->SetIps(result);
+  event->data().SetIps(result);
 
   return Callstack::kComplete;
 }
