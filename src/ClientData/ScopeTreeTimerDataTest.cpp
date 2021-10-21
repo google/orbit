@@ -157,6 +157,11 @@ TEST(ScopeTreeTimerData, GetTimersAtDepthOptimized) {
           .size(),
       2);
 
+  // We should see only one timer if we have 1 pixel resolution.
+  EXPECT_EQ(scope_tree_timer_data.GetTimersAtDepthDiscretized(0, 1, kLeftTimerStart, kRightTimerEnd)
+                .size(),
+            1);
+
   // We should only see 1 if we zoom-out a lot even with a normal resolution.
   EXPECT_EQ(scope_tree_timer_data.GetTimersAtDepthDiscretized(0, 1000, 0, 10000000).size(), 1);
 
