@@ -5,8 +5,10 @@
 #ifndef WINDOWS_PROCESS_SERVICE_PROCESS_SERVICE_IMPL_H_
 #define WINDOWS_PROCESS_SERVICE_PROCESS_SERVICE_IMPL_H_
 
+#include <absl/synchronization/mutex.h>
 #include <grpcpp/grpcpp.h>
 
+#include "WindowsUtils/ProcessList.h"
 #include "services.grpc.pb.h"
 #include "services.pb.h"
 
@@ -31,6 +33,9 @@ class ProcessServiceImpl final : public orbit_grpc_protos::ProcessService::Servi
       orbit_grpc_protos::GetDebugInfoFileResponse* response) override;
 
  private:
+  absl::Mutex mutex_;
+  std::unique_ptr<orbit_windows_utils::ProcessList> process_list_;
+
   static constexpr size_t kMaxGetProcessMemoryResponseSize = 8 * 1024 * 1024;
 };
 

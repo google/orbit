@@ -13,9 +13,10 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/UniqueResource.h"
 
-// Include after windows.h.
+// clang-format off
 #include <psapi.h>
 #include <tlhelp32.h>
+// clang-format on
 
 using orbit_object_utils::CoffFile;
 
@@ -32,7 +33,7 @@ std::vector<Module> ListModules(uint32_t pid) {
     ERROR("Calling CreateToolhelp32Snapshot for modules");
     return {};
   }
-  orbit_base::unique_resource handle{module_snap_handle, [](HANDLE h) { CloseHandle(h); }};
+  orbit_base::unique_resource handle{module_snap_handle, ::CloseHandle};
 
   // Retrieve information about the first module.
   module_entry.dwSize = sizeof(MODULEENTRY32);

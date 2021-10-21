@@ -12,9 +12,10 @@
 #include "OrbitBase/ThreadUtils.h"
 #include "OrbitBase/UniqueResource.h"
 
-// Include after windows.h.
+// clang-format off
 #include <psapi.h>
 #include <tlhelp32.h>
+// clang-format on
 
 namespace orbit_windows_utils {
 
@@ -30,7 +31,7 @@ std::vector<Thread> ListThreads(uint32_t pid) {
     ERROR("Calling CreateToolhelp32Snapshot for threads");
     return {};
   }
-  orbit_base::unique_resource handle{thread_snap_handle, [](HANDLE h) { CloseHandle(h); }};
+  orbit_base::unique_resource handle{thread_snap_handle, ::CloseHandle};
 
   // Retrieve information about the first thread.
   thread_entry.dwSize = sizeof(THREADENTRY32);

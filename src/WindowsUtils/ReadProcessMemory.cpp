@@ -8,8 +8,9 @@
 #include <absl/strings/str_format.h>
 #include <windows.h>
 
-// Include after windows.h.
+// clang-format off
 #include <memoryapi.h>
+// clang-format on
 
 #include "OrbitBase/Logging.h"
 

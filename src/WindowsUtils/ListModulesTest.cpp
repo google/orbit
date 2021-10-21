@@ -7,8 +7,9 @@
 #include <gtest/gtest.h>
 #include <windows.h>
 
-// Include after windows.h.
+// clang-format off
 #include <libloaderapi.h>
+// clang-format on
 
 #include <algorithm>
 #include <chrono>
@@ -17,7 +18,6 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "WindowsUtils/ListModules.h"
-#include "WindowsUtils/ListProcesses.h"
 #include "WindowsUtils/ListThreads.h"
 
 namespace orbit_windows_utils {

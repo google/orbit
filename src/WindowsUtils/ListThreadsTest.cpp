@@ -7,8 +7,9 @@
 #include <gtest/gtest.h>
 #include <windows.h>
 
-// Include after windows.h.
+// clang-format off
 #include <libloaderapi.h>
+// clang-format on
 
 #include "OrbitBase/ThreadUtils.h"
 #include "WindowsUtils/ListThreads.h"
