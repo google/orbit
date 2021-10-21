@@ -89,6 +89,7 @@ SessionSetupDialog::SessionSetupDialog(SshConnectionArtifacts* ssh_connection_ar
   CHECK(metrics_uploader_ != nullptr);
 
   ui_->setupUi(this);
+  ui_->stadiaWidget->SetMetricsUploader(metrics_uploader);
   ui_->stadiaWidget->SetSshConnectionArtifacts(ssh_connection_artifacts);
   ui_->processesTableOverlay->raise();
 

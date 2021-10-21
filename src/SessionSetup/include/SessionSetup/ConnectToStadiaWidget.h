@@ -23,6 +23,7 @@
 #include <string>
 
 #include "Connections.h"
+#include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/Executor.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
@@ -53,6 +54,9 @@ class ConnectToStadiaWidget : public QWidget {
   void SetSshConnectionArtifacts(SshConnectionArtifacts* ssh_connection_artifacts);
   void ClearSshConnectionArtifacts() { ssh_connection_artifacts_ = nullptr; }
   void SetConnection(StadiaConnection connection);
+  void SetMetricsUploader(orbit_metrics_uploader::MetricsUploader* metrics_uploader) {
+    metrics_uploader_ = metrics_uploader;
+  }
   void Start();
   [[nodiscard]] std::optional<orbit_ggp::Instance> GetSelectedInstance() const {
     return selected_instance_;
@@ -100,6 +104,7 @@ class ConnectToStadiaWidget : public QWidget {
   QVector<orbit_ggp::Project> projects_;
   std::optional<orbit_ggp::Project> selected_project_;
   std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> main_thread_executor_;
+  orbit_metrics_uploader::MetricsUploader* metrics_uploader_ = nullptr;
 
   // State Machine & States
   QStateMachine state_machine_;
