@@ -43,6 +43,16 @@ class ScopeTreeTimerData final {
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
       uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
       uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const;
+  [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimersAtDepth(
+      uint32_t depth, uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
+      uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const;
+  // This method avoid to return two timers which after will occupy the same pixels in the screen,
+  // so is especially useful when there are many timers in the screen (when zooming-out). The
+  // overall complexity is O(log(num_timers) * resolution). Resolution should be the number of
+  // pixels that the CaptureWindows has.
+  [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimersAtDepthOptimized(
+      uint32_t depth, uint32_t resolution, uint64_t min_tick, uint64_t max_tick) const;
+
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
       const orbit_client_protos::TimerInfo& timer) const;
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetRight(
