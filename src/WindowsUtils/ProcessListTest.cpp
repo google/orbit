@@ -7,8 +7,9 @@
 #include <gtest/gtest.h>
 #include <windows.h>
 
-// Include after windows.h.
+// clang-format off
 #include <libloaderapi.h>
+// clang-format on
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
@@ -22,7 +23,7 @@ TEST(ProcessList, ContainsCurrentProcess) {
   std::vector<const Process*> processes = process_list->GetProcesses();
   EXPECT_NE(processes.size(), 0);
 
-  char this_exe_file_name[MAX_PATH];
+  char this_exe_file_name[MAX_PATH] = {0};
   GetModuleFileNameA(NULL, this_exe_file_name, MAX_PATH);
 
   bool found_this_exe = false;
@@ -71,7 +72,7 @@ TEST(ProcessList, CpuUsage) {
   EXPECT_EQ(found_this_process, true);
 
   // For short tests, the interval at which Windows updates process times become an issue.
-  // Assuming an inteval of 16ms and a test period of 200ms, we have a potential error of 20%.
+  // Assuming an interval of 16ms and a test period of 200ms, we have a potential error of 20%.
   // Choose a conservative threshold.
   constexpr double kMinExpectedBusyLoopCpuPercentage = 70.0;
   EXPECT_GT(this_process_cpu_usage, kMinExpectedBusyLoopCpuPercentage);

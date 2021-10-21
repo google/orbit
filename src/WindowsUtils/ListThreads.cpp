@@ -12,9 +12,10 @@
 #include "OrbitBase/ThreadUtils.h"
 #include "OrbitBase/UniqueResource.h"
 
-// Include after windows.h.
+// clang-format off
 #include <psapi.h>
 #include <tlhelp32.h>
+// clang-format on
 
 namespace orbit_windows_utils {
 

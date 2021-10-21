@@ -8,8 +8,6 @@
 #include <absl/strings/ascii.h>
 #include <windows.h>
 
-#include "OrbitBase/UniqueResource.h"
-
 namespace orbit_windows_utils {
 
 std::string GetLastErrorAsString() {
@@ -19,7 +17,6 @@ std::string GetLastErrorAsString() {
   }
 
   LPSTR buffer = nullptr;
-  orbit_base::unique_resource buffer_deleter{buffer, [](LPSTR b) { LocalFree(b); }};
 
   // https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-formatmessagea
   // "lpBuffer: A pointer to a buffer that receives the null-terminated string that specifies the
@@ -38,6 +35,7 @@ std::string GetLastErrorAsString() {
   }
 
   std::string error_as_string(buffer, size);
+  LocalFree(buffer);
   return std::string(absl::StripAsciiWhitespace(error_as_string));
 }
 

@@ -18,10 +18,11 @@
 #include "OrbitBase/UniqueResource.h"
 #include "WindowsUtils/GetLastError.h"
 
-// Include after windows.h.
+// clang-format off
 #include <processthreadsapi.h>
 #include <psapi.h>
 #include <tlhelp32.h>
+// clang-format on
 
 #include <algorithm>
 #include <cstdint>
@@ -30,14 +31,15 @@ namespace orbit_windows_utils {
 
 namespace {
 
-// Returns true if the process identified by "pid" is a 64 bit process.
+// Returns true if the process identified by "process_handle" is a 64 bit process.
 // Note that this assumes we are a 64 bit process running on a 64 bit OS.
 [[nodiscard]] std::optional<bool> Is64Bit(HANDLE process_handle) {
   BOOL is_32_bit_process_on_64_bit_os = 0;
   if (IsWow64Process(process_handle, &is_32_bit_process_on_64_bit_os) != 0) {
     return is_32_bit_process_on_64_bit_os != TRUE;
   }
-  ERROR("Calling IsWow64Process for pid %u", GetProcessId(process_handle));
+  ERROR("Calling IsWow64Process for pid %u: %s", GetProcessId(process_handle),
+        GetLastErrorAsString());
   return std::nullopt;
 }
 
@@ -46,7 +48,7 @@ namespace {
 }
 
 // FILETIME contains a 64-bit value representing the number of 100-nanosecond intervals since
-// January 1, 1601 (UTC). From Microsoft's docs:
+// January 1, 1601 (UTC).
 //
 // From https://docs.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-filetime:
 // "It is not recommended that you add and subtract values from the FILETIME structure to obtain
@@ -218,7 +220,7 @@ void ProcessListImpl::UpdateCpuUsage() {
     FILETIME user_file_time = {};
     if (GetProcessTimes(process_handle, &creation_file_time, &exit_file_time, &kernel_file_time,
                         &user_file_time) == FALSE) {
-      ERROR("Calling GetProcessTimes for %s [%u]: %s", process.name, process.pid,
+      ERROR("Calling GetProcessTimes for %s[%u]: %s", process.name, process.pid,
             GetLastErrorAsString());
       continue;
     }
