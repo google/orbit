@@ -1,0 +1,9 @@
+6fcf3000-6fd9e000 r--p 0 00:00 0   boot.oat
+6fd9e000-700fe000 r-xp ab000 00:00 0   boot.oat
+7b590f4000-7b5a2aa000 r--p 0 00:00 0   base.odex_maps_compiled_arm64
+7b5a2aa000-7b6061c000 r-xp 11b6000 00:00 0   base.odex_maps_compiled_arm64
+7bdd326000-7bdd800000 r--p 0 00:00 0   core-oj.jar
+7bdd800000-7bdda00000 r--p 0 00:00 0   libart.so
+7bdda00000-7bddf4a000 r-xp 200000 00:00 0   libart.so
+7e86814000-7e86850000 r--p 0 00:00 0   libc.so
+7e86850000-7e868d1000 r-xp 3c000 00:00 0   libc.so

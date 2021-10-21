@@ -1,0 +1,4 @@
+7b5e40e000-7b5e5d5000 r--p 0 00:00 0   libbluetooth.so
+7b5e5d5000-7b5ec43000 r-xp 1c7000 00:00 0   libbluetooth.so
+7e86814000-7e86850000 r--p 0 00:00 0   libc.so
+7e86850000-7e868d1000 r-xp 3c000 00:00 0   libc.so

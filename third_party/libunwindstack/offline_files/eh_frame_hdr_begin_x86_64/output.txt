@@ -1,0 +1,5 @@
+  #00 pc 0000000000000a80  unwind_test64 (calling3)
+  #01 pc 0000000000000dd9  unwind_test64 (calling2+633)
+  #02 pc 000000000000121e  unwind_test64 (calling1+638)
+  #03 pc 00000000000013ed  unwind_test64 (main+13)
+  #04 pc 00000000000202b0  libc.so

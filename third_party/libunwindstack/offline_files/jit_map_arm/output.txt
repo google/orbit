@@ -1,0 +1,6 @@
+  #00 pc 00000000  jit_map0.so (com.example.simpleperf.simpleperfexamplewithnative.MixActivity.access$000)
+  #01 pc 0000003d  jit_map1.so (com.example.simpleperf.simpleperfexamplewithnative.MixActivity$1.run+60)
+  #02 pc 004135bb  libart.so (art_quick_osr_stub+42)
+  #03 pc 003851dd  libart.so (art::Thread::CreateCallback(void*)+868)
+  #04 pc 00062925  libc.so (__pthread_start(void*)+22)
+  #05 pc 0001de39  libc.so (__start_thread+24)

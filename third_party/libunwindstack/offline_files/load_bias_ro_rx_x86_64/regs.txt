@@ -1,0 +1,17 @@
+rax: 3b
+rbx: 3b
+rcx: 7f9326a57dd4
+rdx: 3b
+r8: 7ffd22415b09
+r9: 7ffd224155e0
+r10: 0
+r11: 246
+r12: 7f9326d28760
+r13: 3b
+r14: 7f9326d23760
+r15: 3b
+rdi: 1
+rsi: 2678850
+rbp: 2678850
+rsp: 7ffd224153c8
+rip: 7f9326a57dd4

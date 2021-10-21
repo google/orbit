@@ -1,0 +1,7 @@
+  #00 pc 000000000014ccbc  linker64 (__dl_syscall+28)
+  #01 pc 000000000005426c  linker64 (__dl__ZL24debuggerd_signal_handleriP7siginfoPv+1128)
+  #02 pc 00000000000008c0  vdso.so (__kernel_rt_sigreturn)
+  #03 pc 00000000000846f4  libc.so (abort+172)
+  #04 pc 0000000000084ad4  libc.so (__assert2+36)
+  #05 pc 000000000003d5b4  ANGLEPrebuilt.apk!libfeature_support_angle.so (offset 0x4000) (ANGLEGetUtilityAPI+56)
+  #06 pc 000000000007fe68  libc.so (__libc_init)

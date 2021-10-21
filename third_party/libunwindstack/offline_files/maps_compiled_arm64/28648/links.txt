@@ -1,0 +1,4 @@
+../../common/base.odex_maps_compiled_arm64 base.odex_maps_compiled_arm64
+../../common/boot.oat_c3e0e6503935c4103ec839d45f3a2183bd910e3c boot.oat
+../../common/libart.so_82c0556f4b66528e4a608c100a63b712 libart.so
+../../common/libc.so_f3791c53da47e6e72151dcc8088b9048 libc.so

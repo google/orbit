@@ -1,0 +1,11 @@
+  #00 pc ffffe430  vdso.so (__kernel_vsyscall+16)
+  #01 pc 00082a4b  libc.so (__epoll_pwait+43)
+  #02 pc 000303a3  libc.so (epoll_pwait+115)
+  #03 pc 000303ed  libc.so (epoll_wait+45)
+  #04 pc 00010ea2  tombstoned (epoll_dispatch+226)
+  #05 pc 0000c5e7  tombstoned (event_base_loop+1095)
+  #06 pc 0000c193  tombstoned (event_base_dispatch+35)
+  #07 pc 00005c77  tombstoned (main+884)
+  #08 pc 00015f66  libc.so (__libc_init+102)
+  #09 pc 0000360e  tombstoned (_start+98)
+  #10 pc 00000001  <unknown>

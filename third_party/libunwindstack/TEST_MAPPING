@@ -1,0 +1,22 @@
+{
+  "presubmit": [
+    {
+      "name": "libunwindstack_unit_test"
+    },
+    {
+      "name": "CtsSimpleperfTestCases"
+    },
+    {
+      "name": "debuggerd_test"
+    },
+    {
+      "name": "CtsPerfettoTestCases"
+    }
+  ],
+
+  "hwasan-postsubmit": [
+    {
+      "name": "libunwindstack_unit_test"
+    }
+  ]
+}

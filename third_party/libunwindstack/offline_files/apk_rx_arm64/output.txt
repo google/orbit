@@ -1,0 +1,6 @@
+  #00 pc 000000000000066c  fake.apk!libunwindstack_local.so (offset 0x4000) (TestlibLevel4+36)
+  #01 pc 00000000000006c0  fake.apk!libunwindstack_local.so (offset 0x4000) (TestlibLevel3+28)
+  #02 pc 00000000000006ec  fake.apk!libunwindstack_local.so (offset 0x4000) (TestlibLevel2+28)
+  #03 pc 0000000000000718  fake.apk!libunwindstack_local.so (offset 0x4000) (TestlibLevel1+28)
+  #04 pc 0000000000001154  run (main+256)
+  #05 pc 0000000000048b10  libc.so (__libc_init+96)

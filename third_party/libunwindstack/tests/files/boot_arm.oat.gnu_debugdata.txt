@@ -1,0 +1,6 @@
+# The gnu_debugdata test data was created using the following commands:
+$ aarch64-linux-android-objcopy -O binary --set-section-flags .gnu_debugdata=alloc -j .gnu_debugdata boot_arm.oat boot_arm.oat.gnu_debugdata.xz
+$ unxz --keep boot_arm.oat.gnu_debugdata.xz
+$ xz --stdout boot_arm.oat.gnu_debugdata > boot_arm.oat.gnu_debugdata.xz.one-block
+$ xz --block-list=256,65536 --stdout boot_arm.oat.gnu_debugdata > boot_arm.oat.gnu_debugdata.xz.odd-sizes
+$ xz --block-size=100000 --stdout boot_arm.oat.gnu_debugdata > boot_arm.oat.gnu_debugdata.xz.non-power
