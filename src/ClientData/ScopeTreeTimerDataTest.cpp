@@ -10,6 +10,8 @@ using orbit_client_protos::TimerInfo;
 
 namespace orbit_client_data {
 
+namespace {
+
 TEST(ScopeTreeTimerData, EmptyWhenCreated) {
   ScopeTreeTimerData scope_tree_timer_data;
   EXPECT_TRUE(scope_tree_timer_data.GetTimerMetadata().is_empty);
@@ -43,46 +45,42 @@ TEST(ScopeTreeTimerData, OnCaptureComplete) {
   EXPECT_EQ(scope_tree_timer_data.GetTimers().size(), 1);
 }
 
-struct ScopeTreeTimerDataTestTimers {
-  static constexpr uint32_t kProcessId = 22;
-
+struct TimersInTest {
   const TimerInfo* left;
-  static constexpr uint64_t kLeftTimerStart = 2;
-  static constexpr uint64_t kLeftTimerEnd = 5;
-
   const TimerInfo* right;
-  static constexpr uint64_t kRightTimerStart = 8;
-  static constexpr uint64_t kRightTimerEnd = 11;
-
   const TimerInfo* down;
-  static constexpr uint64_t kDownTimerStart = 10;
-  static constexpr uint64_t kDownTimerEnd = 11;
-
-  static constexpr uint64_t kNumTimers = 3;
-  static constexpr uint64_t kDepth = 2;
-  static constexpr uint64_t kMinTimestamp = 2;
-  static constexpr uint64_t kMaxTimestamp = 11;
 };
 
-ScopeTreeTimerDataTestTimers AddTimersInScopeTreeTimerDataTest(
-    ScopeTreeTimerData& scope_tree_timer_data) {
-  ScopeTreeTimerDataTestTimers inserted_timers_ptr;
+static constexpr uint32_t kProcessId = 22;
+static constexpr uint64_t kLeftTimerStart = 2;
+static constexpr uint64_t kLeftTimerEnd = 5;
+static constexpr uint64_t kRightTimerStart = 8;
+static constexpr uint64_t kRightTimerEnd = 11;
+static constexpr uint64_t kDownTimerStart = 10;
+static constexpr uint64_t kDownTimerEnd = 11;
+static constexpr uint64_t kNumTimers = 3;
+static constexpr uint64_t kDepth = 2;
+static constexpr uint64_t kMinTimestamp = 2;
+static constexpr uint64_t kMaxTimestamp = 11;
+
+TimersInTest AddTimersInScopeTreeTimerDataTest(ScopeTreeTimerData& scope_tree_timer_data) {
+  TimersInTest inserted_timers_ptr;
   TimerInfo timer_info;
-  timer_info.set_process_id(ScopeTreeTimerDataTestTimers::kProcessId);
+  timer_info.set_process_id(kProcessId);
 
   // left
-  timer_info.set_start(ScopeTreeTimerDataTestTimers::kLeftTimerStart);
-  timer_info.set_end(ScopeTreeTimerDataTestTimers::kLeftTimerEnd);
+  timer_info.set_start(kLeftTimerStart);
+  timer_info.set_end(kLeftTimerEnd);
   inserted_timers_ptr.left = &scope_tree_timer_data.AddTimer(timer_info);
 
   // right
-  timer_info.set_start(ScopeTreeTimerDataTestTimers::kRightTimerStart);
-  timer_info.set_end(ScopeTreeTimerDataTestTimers::kRightTimerEnd);
+  timer_info.set_start(kRightTimerStart);
+  timer_info.set_end(kRightTimerEnd);
   inserted_timers_ptr.right = &scope_tree_timer_data.AddTimer(timer_info);
 
   // down
-  timer_info.set_start(ScopeTreeTimerDataTestTimers::kDownTimerStart);
-  timer_info.set_end(ScopeTreeTimerDataTestTimers::kDownTimerEnd);
+  timer_info.set_start(kDownTimerStart);
+  timer_info.set_end(kDownTimerEnd);
   inserted_timers_ptr.down = &scope_tree_timer_data.AddTimer(timer_info);
 
   return inserted_timers_ptr;
@@ -95,57 +93,32 @@ TEST(ScopeTreeTimerData, GetTimerMetadata) {
   const TimerMetadata timer_metadata = scope_tree_timer_data.GetTimerMetadata();
 
   EXPECT_FALSE(timer_metadata.is_empty);
-  EXPECT_EQ(timer_metadata.number_of_timers, ScopeTreeTimerDataTestTimers::kNumTimers);
-  EXPECT_EQ(timer_metadata.depth, ScopeTreeTimerDataTestTimers::kDepth);
-  EXPECT_EQ(timer_metadata.min_time, ScopeTreeTimerDataTestTimers::kMinTimestamp);
-  EXPECT_EQ(timer_metadata.max_time, ScopeTreeTimerDataTestTimers::kMaxTimestamp);
-  EXPECT_EQ(timer_metadata.process_id, ScopeTreeTimerDataTestTimers::kProcessId);
+  EXPECT_EQ(timer_metadata.number_of_timers, kNumTimers);
+  EXPECT_EQ(timer_metadata.depth, kDepth);
+  EXPECT_EQ(timer_metadata.min_time, kMinTimestamp);
+  EXPECT_EQ(timer_metadata.max_time, kMaxTimestamp);
+  EXPECT_EQ(timer_metadata.process_id, kProcessId);
 }
 
 TEST(ScopeTreeTimerData, GetTimers) {
   ScopeTreeTimerData scope_tree_timer_data;
   AddTimersInScopeTreeTimerDataTest(scope_tree_timer_data);
 
-  EXPECT_EQ(
-      scope_tree_timer_data.GetTimers(0, ScopeTreeTimerDataTestTimers::kLeftTimerStart - 1).size(),
-      0);
-  EXPECT_EQ(scope_tree_timer_data
-                .GetTimers(ScopeTreeTimerDataTestTimers::kRightTimerEnd + 1,
-                           ScopeTreeTimerDataTestTimers::kRightTimerEnd + 10)
-                .size(),
-            0);
-  EXPECT_EQ(scope_tree_timer_data
-                .GetTimers(ScopeTreeTimerDataTestTimers::kLeftTimerStart - 1,
-                           ScopeTreeTimerDataTestTimers::kLeftTimerStart + 1)
-                .size(),
+  EXPECT_EQ(scope_tree_timer_data.GetTimers(0, kLeftTimerStart - 1).size(), 0);
+  EXPECT_EQ(scope_tree_timer_data.GetTimers(kRightTimerEnd + 1, kRightTimerEnd + 10).size(), 0);
+  EXPECT_EQ(scope_tree_timer_data.GetTimers(kLeftTimerStart - 1, kLeftTimerStart + 1).size(),
             1);  // left
-  EXPECT_EQ(scope_tree_timer_data
-                .GetTimers(ScopeTreeTimerDataTestTimers::kRightTimerStart,
-                           ScopeTreeTimerDataTestTimers::kRightTimerStart + 1)
-                .size(),
+  EXPECT_EQ(scope_tree_timer_data.GetTimers(kRightTimerStart, kRightTimerStart + 1).size(),
             1);  // right
-  EXPECT_EQ(scope_tree_timer_data
-                .GetTimers(ScopeTreeTimerDataTestTimers::kRightTimerStart,
-                           ScopeTreeTimerDataTestTimers::kRightTimerEnd)
-                .size(),
+  EXPECT_EQ(scope_tree_timer_data.GetTimers(kRightTimerStart, kRightTimerEnd).size(),
             2);  // right, down
-  EXPECT_EQ(scope_tree_timer_data
-                .GetTimers(ScopeTreeTimerDataTestTimers::kLeftTimerEnd - 1,
-                           ScopeTreeTimerDataTestTimers::kRightTimerEnd)
-                .size(),
-            3);
+  EXPECT_EQ(scope_tree_timer_data.GetTimers(kLeftTimerEnd - 1, kRightTimerEnd).size(), 3);
   EXPECT_EQ(scope_tree_timer_data.GetTimers().size(), 3);
-}
-
-bool AreSameTimer(const orbit_client_protos::TimerInfo& timer_1,
-                  const orbit_client_protos::TimerInfo& timer_2) {
-  return timer_1.start() == timer_2.start() && timer_1.end() && timer_2.end();
 }
 
 TEST(ScopeTreeTimerData, GetLeftRightUpDown) {
   ScopeTreeTimerData scope_tree_timer_data;
-  ScopeTreeTimerDataTestTimers inserted_timers =
-      AddTimersInScopeTreeTimerDataTest(scope_tree_timer_data);
+  TimersInTest inserted_timers = AddTimersInScopeTreeTimerDataTest(scope_tree_timer_data);
 
   const TimerInfo* left = inserted_timers.left;
   const TimerInfo* right = inserted_timers.right;
@@ -164,5 +137,7 @@ TEST(ScopeTreeTimerData, GetLeftRightUpDown) {
   check_neighbors(right, left, nullptr, down, nullptr);
   check_neighbors(down, nullptr, nullptr, nullptr, right);
 }
+
+}  // namespace
 
 }  // namespace orbit_client_data
