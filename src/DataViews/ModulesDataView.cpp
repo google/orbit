@@ -35,11 +35,11 @@ const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
+    columns[kColumnLoaded] = {"Loaded", .0f, SortingOrder::kDescending};
     columns[kColumnName] = {"Name", .2f, SortingOrder::kAscending};
     columns[kColumnPath] = {"Path", .5f, SortingOrder::kAscending};
     columns[kColumnAddressRange] = {"Address Range", .15f, SortingOrder::kAscending};
     columns[kColumnFileSize] = {"File Size", .0f, SortingOrder::kDescending};
-    columns[kColumnLoaded] = {"Loaded", .0f, SortingOrder::kDescending};
     return columns;
   }();
   return columns;
@@ -51,6 +51,8 @@ std::string ModulesDataView::GetValue(int row, int col) {
   const ModuleInMemory& memory_space = start_address_to_module_in_memory_.at(start_address);
 
   switch (col) {
+    case kColumnLoaded:
+      return module->is_loaded() ? "*" : "";
     case kColumnName:
       return module->name();
     case kColumnPath:
@@ -59,8 +61,6 @@ std::string ModulesDataView::GetValue(int row, int col) {
       return memory_space.FormattedAddressRange();
     case kColumnFileSize:
       return orbit_display_formats::GetDisplaySize(module->file_size());
-    case kColumnLoaded:
-      return module->is_loaded() ? "*" : "";
     default:
       return "";
   }
@@ -84,6 +84,9 @@ void ModulesDataView::DoSort() {
   std::function<bool(uint64_t, uint64_t)> sorter = nullptr;
 
   switch (sorting_column_) {
+    case kColumnLoaded:
+      sorter = ORBIT_PROC_SORT(is_loaded());
+      break;
     case kColumnName:
       sorter = ORBIT_PROC_SORT(name());
       break;
@@ -95,9 +98,6 @@ void ModulesDataView::DoSort() {
       break;
     case kColumnFileSize:
       sorter = ORBIT_PROC_SORT(file_size());
-      break;
-    case kColumnLoaded:
-      sorter = ORBIT_PROC_SORT(is_loaded());
       break;
     default:
       break;

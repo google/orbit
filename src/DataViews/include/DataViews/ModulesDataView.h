@@ -55,11 +55,11 @@ class ModulesDataView : public DataView {
   absl::flat_hash_map<uint64_t, orbit_client_data::ModuleData*> start_address_to_module_;
 
   enum ColumnIndex {
+    kColumnLoaded,
     kColumnName,
     kColumnPath,
     kColumnAddressRange,
-    kColumnFileSize,
-    kColumnLoaded,
+    kColumnFileSize,  // Default sorting column
     kNumColumns
   };
 
