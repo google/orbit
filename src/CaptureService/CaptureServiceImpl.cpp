@@ -17,8 +17,6 @@
 
 #include "ApiLoader/EnableInTracee.h"
 #include "ApiUtils/Event.h"
-#include "CaptureService/ProducerEventProcessor.h"
-#include "GrpcClientCaptureEventCollector.h"
 #include "GrpcProtos/Constants.h"
 #include "Introspection/Introspection.h"
 #include "MemoryInfoHandler.h"
@@ -28,6 +26,8 @@
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitVersion/OrbitVersion.h"
+#include "ProducerEventProcessor/GrpcClientCaptureEventCollector.h"
+#include "ProducerEventProcessor/ProducerEventProcessor.h"
 #include "TracingHandler.h"
 #include "capture.pb.h"
 
@@ -37,6 +37,9 @@ using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::ProducerCaptureEvent;
+
+using orbit_producer_event_processor::GrpcClientCaptureEventCollector;
+using orbit_producer_event_processor::ProducerEventProcessor;
 
 namespace orbit_capture_service {
 

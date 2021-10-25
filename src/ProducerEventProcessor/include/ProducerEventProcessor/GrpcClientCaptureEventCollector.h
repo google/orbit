@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CAPTURE_SERVICE_GRPC_CLIENT_CAPTURE_EVENT_COLLECTOR_H_
-#define CAPTURE_SERVICE_GRPC_CLIENT_CAPTURE_EVENT_COLLECTOR_H_
+#ifndef CAPTURE_EVENT_PROCESSOR_GRPC_CLIENT_CAPTURE_EVENT_COLLECTOR_H_
+#define CAPTURE_EVENT_PROCESSOR_GRPC_CLIENT_CAPTURE_EVENT_COLLECTOR_H_
 
 #include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
@@ -13,11 +13,11 @@
 #include <thread>
 #include <vector>
 
-#include "CaptureService/ClientCaptureEventCollector.h"
+#include "ProducerEventProcessor/ClientCaptureEventCollector.h"
 #include "capture.pb.h"
 #include "services.grpc.pb.h"
 
-namespace orbit_capture_service {
+namespace orbit_producer_event_processor {
 
 // This class receives the ClientCaptureEvents emitted by a ProducerEventProcessor and continuously
 // sends them to the client buffered in CaptureResponses.
@@ -55,6 +55,6 @@ class GrpcClientCaptureEventCollector final : public ClientCaptureEventCollector
   uint64_t total_number_of_bytes_sent_ = 0;
 };
 
-}  // namespace orbit_capture_service
+}  // namespace orbit_producer_event_processor
 
-#endif  // CAPTURE_SERVICE_GRPC_CLIENT_CAPTURE_EVENT_COLLECTOR_H_
+#endif  // CAPTURE_EVENT_PROCESSOR_GRPC_CLIENT_CAPTURE_EVENT_COLLECTOR_H_

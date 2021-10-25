@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CAPTURE_SERVICE_PRODUCER_EVENT_PROCESSOR_H_
-#define CAPTURE_SERVICE_PRODUCER_EVENT_PROCESSOR_H_
+#ifndef CAPTURE_EVENT_PROCESSOR_EVENT_PROCESSOR_H_
+#define CAPTURE_EVENT_PROCESSOR_EVENT_PROCESSOR_H_
 
 #include <stdint.h>
 
 #include "ClientCaptureEventCollector.h"
 #include "capture.pb.h"
 
-namespace orbit_capture_service {
+namespace orbit_producer_event_processor {
 
 // The implementation of this interface is responsible for processing
 // ProducerCaptureEvents from multiple producers.
@@ -27,6 +27,6 @@ class ProducerEventProcessor {
       ClientCaptureEventCollector* client_capture_event_collector);
 };
 
-}  // namespace orbit_capture_service
+}  // namespace orbit_producer_event_processor
 
-#endif  // CAPTURE_SERVICE_PRODUCER_EVENT_PROCESSOR_H_
+#endif  // CAPTURE_EVENT_PROCESSOR_EVENT_PROCESSOR_H_

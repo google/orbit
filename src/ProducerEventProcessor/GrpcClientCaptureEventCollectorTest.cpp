@@ -9,8 +9,8 @@
 
 #include <thread>
 
-#include "GrpcClientCaptureEventCollector.h"
 #include "OrbitBase/Logging.h"
+#include "ProducerEventProcessor/GrpcClientCaptureEventCollector.h"
 #include "capture.pb.h"
 #include "services.grpc.pb.h"
 
@@ -18,7 +18,7 @@ using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::ClientCaptureEvent;
 
-namespace orbit_capture_service {
+namespace orbit_producer_event_processor {
 
 namespace {
 
@@ -154,4 +154,4 @@ TEST_F(GrpcClientCaptureEventCollectorTest, AllCaptureResponsesSentShortlyAfterS
   EXPECT_EQ(actual_event_count, kEventCount);
 }
 
-}  // namespace orbit_capture_service
+}  // namespace orbit_producer_event_processor
