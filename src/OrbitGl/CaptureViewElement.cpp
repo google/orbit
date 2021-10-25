@@ -17,6 +17,8 @@ CaptureViewElement::CaptureViewElement(CaptureViewElement* parent, TimeGraph* ti
 
 void CaptureViewElement::Draw(Batcher& batcher, TextRenderer& text_renderer,
                               const DrawContext& draw_context) {
+  ORBIT_SCOPE_FUNCTION;
+
   DoDraw(batcher, text_renderer, draw_context);
 
   const DrawContext inner_draw_context = draw_context.IncreasedIndentationLevel();
@@ -29,6 +31,8 @@ void CaptureViewElement::Draw(Batcher& batcher, TextRenderer& text_renderer,
 
 void CaptureViewElement::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
                                           PickingMode picking_mode, float z_offset) {
+  ORBIT_SCOPE_FUNCTION;
+
   DoUpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
   for (CaptureViewElement* child : GetChildren()) {
     if (child->ShouldBeRendered()) {
