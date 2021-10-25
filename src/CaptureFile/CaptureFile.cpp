@@ -113,7 +113,7 @@ ErrorMessageOr<void> CaptureFileImpl::CalculateCaptureSectionSize() {
     return outcome::success();
   }
 
-  // Otherwise it ends at the start of the next section
+  // Otherwise it ends at the start of the next section or at the section list
   uint64_t min_section_offset = std::numeric_limits<uint64_t>::max();
 
   CHECK(!section_list_.empty());
@@ -122,6 +122,10 @@ ErrorMessageOr<void> CaptureFileImpl::CalculateCaptureSectionSize() {
     if (section.offset < min_section_offset) {
       min_section_offset = section.offset;
     }
+  }
+
+  if (header_.section_list_offset > header_.capture_section_offset) {
+    min_section_offset = std::min(min_section_offset, header_.section_list_offset);
   }
 
   CHECK(min_section_offset < std::numeric_limits<uint64_t>::max());

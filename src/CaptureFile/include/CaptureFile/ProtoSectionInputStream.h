@@ -18,15 +18,12 @@ class ProtoSectionInputStream {
   ProtoSectionInputStream() = default;
   virtual ~ProtoSectionInputStream() = default;
 
-  // Reads next message from the stream. Note that the caller must not read past
-  // orbit_grpc_protos::CaptureFinished message in the case of Capture Section. Doing so
-  // will result in undefined behavior.
-  //
-  // This is because the capture section does not have size and is bounded by the
-  // start of the next section and start of all sections are aligned to 8bytes.
-  // This means reading after CaptureFinished message sometimes end up reading
-  // padded zeros which yield an empty message, or it could generate end of section
-  // error.
+  // Reads next message from the stream. Note that the caller should not read past
+  // orbit_grpc_protos::CaptureFinished message in the case of Capture Section.
+  // This is because the capture section does not have a size and is bounded by the
+  // start of the next section or the section list and start of all sections are
+  // aligned to 8bytes. Reading beyond the CaptureFinished message will incorrectly
+  // read padded zeros as empty messages until finally causing an end of section error.
   virtual ErrorMessageOr<void> ReadMessage(google::protobuf::Message* message) = 0;
 };
 

@@ -147,6 +147,24 @@ TEST(CaptureFile, CreateCaptureFileWriteAdditionalSectionAndReadMainSection) {
     EXPECT_EQ(event.interned_string().key(), kNotAnAnswerKey);
     EXPECT_EQ(event.interned_string().intern(), kNotAnAnswerString);
   }
+
+  // Read beyond the last message to see if we are just reading zeros as
+  // empty messages and then correctly return an end of section error.
+  // We should not accidentally read into the next section or the section
+  // list. Since section alignment is 8, we can expect at most 7 empty
+  // messages, and on the 8th time we go through the loop, we must
+  // encounter the end of the section.
+  constexpr int kSectionAlignment = 8;
+  for (int i = 0; i < kSectionAlignment; ++i) {
+    ClientCaptureEvent event;
+    ErrorMessageOr<void> error = capture_section->ReadMessage(&event);
+    if (error.has_error()) {
+      ASSERT_THAT(error, HasError("Unexpected end of section"));
+      return;
+    }
+    ASSERT_EQ(0, event.ByteSizeLong());
+  }
+  FAIL() << "More empty messages at end of section than expected.";
 }
 
 TEST(CaptureFile, CreateCaptureFileAndAddSection) {
