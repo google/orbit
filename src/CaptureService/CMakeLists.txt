@@ -19,6 +19,15 @@ target_sources(CaptureService PUBLIC
 target_sources(CaptureService PRIVATE
         CaptureService.cpp
         CommonProducerCaptureEventBuilders.cpp)
+        include/CaptureService/CaptureServiceImpl.h
+        include/CaptureService/CaptureStartStopListener.h)
+
+target_sources(CaptureService PRIVATE
+        CaptureServiceImpl.cpp
+        MemoryInfoHandler.cpp
+        MemoryInfoHandler.h
+        TracingHandler.cpp
+        TracingHandler.h)
 
 target_link_libraries(CaptureService PUBLIC
         ApiLoader
