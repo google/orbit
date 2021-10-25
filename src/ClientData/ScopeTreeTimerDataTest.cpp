@@ -10,13 +10,11 @@ using orbit_client_protos::TimerInfo;
 
 namespace orbit_client_data {
 
-namespace {
-
 TEST(ScopeTreeTimerData, EmptyWhenCreated) {
   ScopeTreeTimerData scope_tree_timer_data;
   EXPECT_TRUE(scope_tree_timer_data.GetTimerMetadata().is_empty);
   EXPECT_TRUE(scope_tree_timer_data.GetTimers().empty());
-  EXPECT_EQ(scope_tree_timer_data.GetChains().size(), 0);
+  EXPECT_TRUE(scope_tree_timer_data.GetChains().empty());
 }
 
 TEST(ScopeTreeTimerData, AddTimer) {
@@ -39,11 +37,13 @@ TEST(ScopeTreeTimerData, OnCaptureComplete) {
   scope_tree_timer_data.AddTimer(timer_info);
 
   // OnCaptureComplete method is needed to build the ScopeTree
-  EXPECT_EQ(scope_tree_timer_data.GetTimers().size(), 0);
+  EXPECT_TRUE(scope_tree_timer_data.GetTimers().empty());
 
   scope_tree_timer_data.OnCaptureComplete();
-  EXPECT_EQ(scope_tree_timer_data.GetTimers().size(), 1);
+  EXPECT_FALSE(scope_tree_timer_data.GetTimers().empty());
 }
+
+namespace {
 
 struct TimersInTest {
   const TimerInfo* left;
@@ -63,27 +63,29 @@ static constexpr uint64_t kDepth = 2;
 static constexpr uint64_t kMinTimestamp = 2;
 static constexpr uint64_t kMaxTimestamp = 11;
 
+}  // namespace
+
 TimersInTest AddTimersInScopeTreeTimerDataTest(ScopeTreeTimerData& scope_tree_timer_data) {
-  TimersInTest inserted_timers_ptr;
+  TimersInTest inserted_timers;
   TimerInfo timer_info;
   timer_info.set_process_id(kProcessId);
 
   // left
   timer_info.set_start(kLeftTimerStart);
   timer_info.set_end(kLeftTimerEnd);
-  inserted_timers_ptr.left = &scope_tree_timer_data.AddTimer(timer_info);
+  inserted_timers.left = &scope_tree_timer_data.AddTimer(timer_info);
 
   // right
   timer_info.set_start(kRightTimerStart);
   timer_info.set_end(kRightTimerEnd);
-  inserted_timers_ptr.right = &scope_tree_timer_data.AddTimer(timer_info);
+  inserted_timers.right = &scope_tree_timer_data.AddTimer(timer_info);
 
   // down
   timer_info.set_start(kDownTimerStart);
   timer_info.set_end(kDownTimerEnd);
-  inserted_timers_ptr.down = &scope_tree_timer_data.AddTimer(timer_info);
+  inserted_timers.down = &scope_tree_timer_data.AddTimer(timer_info);
 
-  return inserted_timers_ptr;
+  return inserted_timers;
 }
 
 TEST(ScopeTreeTimerData, GetTimerMetadata) {
@@ -137,7 +139,5 @@ TEST(ScopeTreeTimerData, GetLeftRightUpDown) {
   check_neighbors(right, left, nullptr, down, nullptr);
   check_neighbors(down, nullptr, nullptr, nullptr, right);
 }
-
-}  // namespace
 
 }  // namespace orbit_client_data
