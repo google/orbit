@@ -10,7 +10,7 @@
 namespace orbit_capture_uploader {
 
 // Defines status of data to upload.
-enum class DataReadiness { HAS_DATA, WAITING_FOR_DATA, END_OF_DATA };
+enum class DataReadiness { kHasData, kWaitingForData, kEndOfData };
 
 // Defines the required methods for streaming data to Scotty through a
 // CaptureUploader. This interface allows CaptureUploader to access the upload
@@ -21,12 +21,12 @@ class UploadDataInterface {
 
   // Get status of data to upload. CaptureUploader calls this method frequently
   // to determine whether to continue, pause, resume or stop the upload.
-  virtual DataReadiness GetDataReadiness() const = 0;
+  [[nodiscard]] virtual DataReadiness GetDataReadiness() const = 0;
 
   // Get reference of the upload data buffer which stores data in raw bytes.
   // CaptureUploader calls this method to get the upload data buffer where it
   // will read data from while uploading.
-  virtual const std::vector<unsigned char>& GetUploadDataBuffer() const = 0;
+  [[nodiscard]] virtual const std::vector<unsigned char>& GetUploadDataBuffer() const = 0;
 
   // Clear the upload data buffer and refresh it with newly produced data.
   // CaptureUploader calls this method when it finishes uploading existing data
