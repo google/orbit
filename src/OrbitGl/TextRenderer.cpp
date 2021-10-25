@@ -256,17 +256,18 @@ void TextRenderer::AddTextInternal(const char* text, ftgl::vec2* pen,
 
       Vec3 pos0 = translations_.TransformAndFloorVertex(
           Vec3(pen->x + glyph->offset_x, pen->y - glyph->offset_y, z));
-      Vec3 pos1 = pos0 + Vec3(glyph->width, glyph->height, 0);
+      Vec2 pos1 = Vec2(pos0[0] + glyph->width, pos0[1] + glyph->height);
+      const float transformed_z = pos0[2];
 
       float s0 = glyph->s0;
       float t0 = glyph->t0;
       float s1 = glyph->s1;
       float t1 = glyph->t1;
 
-      vertex_t vertices[4] = {{pos0[0], pos0[1], pos0[2], s0, t0, r, g, b, a},
-                              {pos0[0], pos1[1], pos0[2], s0, t1, r, g, b, a},
-                              {pos1[0], pos1[1], pos0[2], s1, t1, r, g, b, a},
-                              {pos1[0], pos0[1], pos0[2], s1, t0, r, g, b, a}};
+      vertex_t vertices[4] = {{pos0[0], pos0[1], transformed_z, s0, t0, r, g, b, a},
+                              {pos0[0], pos1[1], transformed_z, s0, t1, r, g, b, a},
+                              {pos1[0], pos1[1], transformed_z, s1, t1, r, g, b, a},
+                              {pos1[0], pos0[1], transformed_z, s1, t0, r, g, b, a}};
 
       min_x = std::min(min_x, pos0[0]);
       max_x = std::max(max_x, pos1[0]);
@@ -278,10 +279,12 @@ void TextRenderer::AddTextInternal(const char* text, ftgl::vec2* pen,
       if (str_width > max_width) {
         break;
       }
-      if (!vertex_buffers_by_layer_.count(z)) {
-        vertex_buffers_by_layer_[z] = ftgl::vertex_buffer_new("vertex:3f,tex_coord:2f,color:4f");
+
+      ftgl::vertex_buffer_t*& vertex_buffer = vertex_buffers_by_layer_[transformed_z];
+      if (vertex_buffer == nullptr) {
+        vertex_buffer = ftgl::vertex_buffer_new("vertex:3f,tex_coord:2f,color:4f");
       }
-      vertex_buffer_push_back(vertex_buffers_by_layer_.at(z), vertices, 4, kIndices.data(), 6);
+      vertex_buffer_push_back(vertex_buffer, vertices, 4, kIndices.data(), 6);
       pen->x += glyph->advance_x;
     }
   }
