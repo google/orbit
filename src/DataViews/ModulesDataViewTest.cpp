@@ -35,11 +35,11 @@ const std::array<std::string, kNumModules> kFilePaths{
 const std::array<std::string, kNumModules> kBuildIds{"build_id_0", "build_id_1", "build_id_2"};
 
 // ModulesDataView also has column index constants defined, but they are declared as private.
-constexpr int kColumnName = 0;
-constexpr int kColumnPath = 1;
-constexpr int kColumnAddressRange = 2;
-constexpr int kColumnFileSize = 3;
-constexpr int kColumnLoaded = 4;
+constexpr int kColumnLoaded = 0;
+constexpr int kColumnName = 1;
+constexpr int kColumnPath = 2;
+constexpr int kColumnAddressRange = 3;
+constexpr int kColumnFileSize = 4;
 constexpr int kNumColumns = 5;
 
 std::string GetExpectedDisplayAddressRangeByIndex(size_t index) {
@@ -137,8 +137,8 @@ TEST_F(ModulesDataViewTest, ContextMenuActionsAreInvoked) {
   // Copy Selection
   {
     std::string expected_clipboard = absl::StrFormat(
-        "Name\tPath\tAddress Range\tFile Size\tLoaded\n"
-        "%s\t%s\t%s\t%s\t\n",
+        "Loaded\tName\tPath\tAddress Range\tFile Size\n"
+        "\t%s\t%s\t%s\t%s\n",
         kNames[0], kFilePaths[0], GetExpectedDisplayAddressRangeByIndex(0),
         GetExpectedDisplayFileSizeByIndex(0));
     CheckCopySelectionIsInvoked(context_menu, app_, view_, expected_clipboard);
@@ -147,9 +147,9 @@ TEST_F(ModulesDataViewTest, ContextMenuActionsAreInvoked) {
   // Export to CSV
   {
     std::string expected_contents =
-        absl::StrFormat(R"("Name","Path","Address Range","File Size","Loaded")"
+        absl::StrFormat(R"("Loaded","Name","Path","Address Range","File Size")"
                         "\r\n"
-                        R"("%s","%s","%s","%s","")"
+                        R"("","%s","%s","%s","%s")"
                         "\r\n",
                         kNames[0], kFilePaths[0], GetExpectedDisplayAddressRangeByIndex(0),
                         GetExpectedDisplayFileSizeByIndex(0));
