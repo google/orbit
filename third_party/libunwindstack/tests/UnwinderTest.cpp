@@ -1772,6 +1772,9 @@ TEST_F(UnwinderDeathTest, set_jit_debug_error) {
 }
 
 TEST_F(UnwinderDeathTest, set_dex_files_error) {
+#ifndef DEXFILE_SUPPORT
+  GTEST_SKIP();
+#endif
   Maps maps;
   std::shared_ptr<Memory> process_memory(new MemoryFake);
   Unwinder unwinder(10, &maps, process_memory);

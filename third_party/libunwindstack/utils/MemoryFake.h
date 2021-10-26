@@ -18,6 +18,7 @@
 #define _LIBUNWINDSTACK_UTILS_MEMORY_FAKE_H
 
 #include <stdint.h>
+#include <string.h>
 
 #include <string>
 #include <unordered_map>
