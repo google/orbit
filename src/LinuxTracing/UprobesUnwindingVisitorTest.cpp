@@ -84,17 +84,13 @@ class MockLeafFunctionCallManager : public LeafFunctionCallManager {
   explicit MockLeafFunctionCallManager(uint16_t stack_dump_size)
       : LeafFunctionCallManager(stack_dump_size) {}
   MOCK_METHOD(Callstack::CallstackType, PatchCallerOfLeafFunction,
-              (const CallchainSamplePerfEvent*, LibunwindstackMaps*, LibunwindstackUnwinder*),
+              (const CallchainSamplePerfEventData*, LibunwindstackMaps*, LibunwindstackUnwinder*),
               (override));
 };
 
 class UprobesUnwindingVisitorTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    visitor_ = std::make_unique<UprobesUnwindingVisitor>(&listener_, &function_call_manager_,
-                                                         &return_address_manager_, &maps_,
-                                                         &unwinder_, &leaf_function_call_manager_);
-
     EXPECT_CALL(maps_, Find(AllOf(Ge(kUprobesMapsStart), Lt(kUprobesMapsEnd))))
         .WillRepeatedly(Return(&kUprobesMapInfo));
 
@@ -105,17 +101,17 @@ class UprobesUnwindingVisitorTest : public ::testing::Test {
         .WillRepeatedly(Return(&non_executable_map_info_));
   }
 
-  void TearDown() override { visitor_.reset(); }
-
   static constexpr uint32_t kStackDumpSize = 128;
+  MockTracerListener listener_;
   UprobesFunctionCallManager function_call_manager_;
   MockUprobesReturnAddressManager return_address_manager_;
   MockLibunwindstackMaps maps_;
   MockLibunwindstackUnwinder unwinder_;
   MockLeafFunctionCallManager leaf_function_call_manager_{kStackDumpSize};
-  MockTracerListener listener_;
 
-  std::unique_ptr<UprobesUnwindingVisitor> visitor_ = nullptr;
+  UprobesUnwindingVisitor visitor_{
+      &listener_, &function_call_manager_,     &return_address_manager_, &maps_,
+      &unwinder_, &leaf_function_call_manager_};
 
   static constexpr uint64_t kUprobesMapsStart = 42;
   static constexpr uint64_t kUprobesMapsEnd = 84;
@@ -176,13 +172,16 @@ class UprobesUnwindingVisitorTest : public ::testing::Test {
 
 StackSamplePerfEvent BuildFakeStackSamplePerfEvent() {
   constexpr uint64_t kStackSize = 13;
-  return StackSamplePerfEvent{.timestamp = 15,
-                              .pid = 10,
-                              .tid = 11,
-                              .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
-                              .dyn_size = kStackSize,
-                              .data = make_unique_for_overwrite<char[]>(kStackSize)
-
+  return StackSamplePerfEvent{
+      .timestamp = 15,
+      .data =
+          {
+              .pid = 10,
+              .tid = 11,
+              .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
+              .dyn_size = kStackSize,
+              .data = make_unique_for_overwrite<char[]>(kStackSize),
+          },
   };
 }
 
@@ -190,11 +189,15 @@ CallchainSamplePerfEvent BuildFakeCallchainSamplePerfEvent(const std::vector<uin
   constexpr uint64_t kStackSize = 13;
   CallchainSamplePerfEvent event{
       .timestamp = 15,
-      .pid = 10,
-      .tid = 11,
-      .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
-      .data = make_unique_for_overwrite<char[]>(kStackSize)};
-  event.SetIps(callchain);
+      .data =
+          {
+              .pid = 10,
+              .tid = 11,
+              .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
+              .data = make_unique_for_overwrite<char[]>(kStackSize),
+          },
+  };
+  event.data.SetIps(callchain);
   return event;
 }
 
@@ -207,92 +210,118 @@ TEST_F(UprobesUnwindingVisitorTest,
   constexpr uint32_t kCpu = 1;
 
   {
-    UprobesPerfEvent uprobe1;
-    uprobe1.pid = kPid;
-    uprobe1.tid = kTid;
-    uprobe1.timestamp = 100;
-    uprobe1.cpu = kCpu;
-    uprobe1.sp = 0x40;
-    uprobe1.ip = 0x01;
-    uprobe1.return_address = 0x00;
-    uprobe1.function_id = 1;
+    UprobesPerfEvent uprobe1{
+        .timestamp = 100,
+        .data =
+            {
+                .pid = kPid,
+                .tid = kTid,
+                .cpu = kCpu,
+                .function_id = 1,
+                .sp = 0x40,
+                .ip = 0x01,
+                .return_address = 0x00,
+            },
+    };
 
     EXPECT_CALL(return_address_manager_, ProcessUprobes(kTid, 0x40, 0x00)).Times(1);
-    visitor_->Visit(uprobe1);
+    PerfEvent{uprobe1}.Accept(&visitor_);
     Mock::VerifyAndClearExpectations(&return_address_manager_);
   }
 
   {
-    UprobesWithArgumentsPerfEvent uprobe2;
-    uprobe2.pid = kPid;
-    uprobe2.tid = kTid;
-    uprobe2.timestamp = 200;
-    uprobe2.cpu = kCpu;
-    uprobe2.regs.sp = 0x30;
-    uprobe2.regs.ip = 0x02;
-    uprobe2.return_address = 0x01;
-    uprobe2.regs.di = 1;
-    uprobe2.regs.si = 2;
-    uprobe2.regs.dx = 3;
-    uprobe2.regs.cx = 4;
-    uprobe2.regs.r8 = 5;
-    uprobe2.regs.r9 = 6;
-    uprobe2.function_id = 2;
+    UprobesWithArgumentsPerfEvent uprobe2{
+        .timestamp = 200,
+        .data =
+            {
+                .pid = kPid,
+                .tid = kTid,
+                .cpu = kCpu,
+                .function_id = 2,
+                .return_address = 0x01,
+                .regs =
+                    {
+                        .cx = 4,
+                        .dx = 3,
+                        .si = 2,
+                        .di = 1,
+                        .sp = 0x30,
+                        .ip = 0x02,
+                        .r8 = 5,
+                        .r9 = 6,
+                    },
+            },
+    };
 
     EXPECT_CALL(return_address_manager_, ProcessUprobes(kTid, 0x30, 0x01)).Times(1);
-    visitor_->Visit(uprobe2);
+    PerfEvent{uprobe2}.Accept(&visitor_);
     Mock::VerifyAndClearExpectations(&return_address_manager_);
   }
 
   {
-    UprobesPerfEvent uprobe3;
-    uprobe3.pid = kPid;
-    uprobe3.tid = kTid;
-    uprobe3.timestamp = 300;
-    uprobe3.cpu = kCpu;
-    uprobe3.sp = 0x20;
-    uprobe3.ip = 0x03;
-    uprobe3.return_address = 0x02;
-    uprobe3.function_id = 3;
+    UprobesPerfEvent uprobe3{
+        .timestamp = 300,
+        .data =
+            {
+                .pid = kPid,
+                .tid = kTid,
+                .cpu = kCpu,
+                .function_id = 3,
+                .sp = 0x20,
+                .ip = 0x03,
+                .return_address = 0x02,
+            },
+    };
 
     EXPECT_CALL(return_address_manager_, ProcessUprobes(kTid, 0x20, 0x02)).Times(1);
-    visitor_->Visit(uprobe3);
+    PerfEvent{uprobe3}.Accept(&visitor_);
     Mock::VerifyAndClearExpectations(&return_address_manager_);
   }
 
   {
-    UprobesWithArgumentsPerfEvent uprobe4;
-    uprobe4.pid = kPid;
-    uprobe4.tid = kTid;
-    uprobe4.timestamp = 400;
-    uprobe4.cpu = kCpu;
-    uprobe4.regs.sp = 0x10;
-    uprobe4.regs.ip = 0x04;
-    uprobe4.return_address = 0x03;
-    uprobe4.regs.di = 1;
-    uprobe4.regs.si = 2;
-    uprobe4.regs.dx = 3;
-    uprobe4.regs.cx = 4;
-    uprobe4.regs.r8 = 5;
-    uprobe4.regs.r9 = 6;
-    uprobe4.function_id = 4;
+    UprobesWithArgumentsPerfEvent uprobe4{
+        .timestamp = 400,
+        .data =
+            {
+                .pid = kPid,
+                .tid = kTid,
+                .cpu = kCpu,
+                .function_id = 4,
+                .return_address = 0x03,
+                .regs =
+                    {
+                        .cx = 4,
+                        .dx = 3,
+                        .si = 2,
+                        .di = 1,
+                        .sp = 0x10,
+                        .ip = 0x04,
+                        .r8 = 5,
+                        .r9 = 6,
+                    },
+            },
+    };
 
     EXPECT_CALL(return_address_manager_, ProcessUprobes(kTid, 0x10, 0x03)).Times(1);
-    visitor_->Visit(uprobe4);
+    PerfEvent{uprobe4}.Accept(&visitor_);
     Mock::VerifyAndClearExpectations(&return_address_manager_);
   }
 
   {
-    UretprobesWithReturnValuePerfEvent uretprobe4;
-    uretprobe4.pid = kPid;
-    uretprobe4.tid = kTid;
-    uretprobe4.timestamp = 500;
-    uretprobe4.rax = 456;
+    UretprobesWithReturnValuePerfEvent uretprobe4{
+        .timestamp = 500,
+        .data =
+            {
+                .pid = kPid,
+                .tid = kTid,
+                .rax = 456,
+            },
+    };
 
     EXPECT_CALL(return_address_manager_, ProcessUretprobes(kTid)).Times(1);
     orbit_grpc_protos::FunctionCall actual_function_call;
     EXPECT_CALL(listener_, OnFunctionCall).Times(1).WillOnce(SaveArg<0>(&actual_function_call));
-    visitor_->Visit(uretprobe4);
+    PerfEvent{uretprobe4}.Accept(&visitor_);
     Mock::VerifyAndClearExpectations(&return_address_manager_);
     Mock::VerifyAndClearExpectations(&listener_);
     EXPECT_EQ(actual_function_call.pid(), kPid);
@@ -306,16 +335,20 @@ TEST_F(UprobesUnwindingVisitorTest,
   }
 
   {
-    UretprobesWithReturnValuePerfEvent uretprobe3;
-    uretprobe3.pid = kPid;
-    uretprobe3.tid = kTid;
-    uretprobe3.timestamp = 600;
-    uretprobe3.rax = 123;
+    UretprobesWithReturnValuePerfEvent uretprobe3{
+        .timestamp = 600,
+        .data =
+            {
+                .pid = kPid,
+                .tid = kTid,
+                .rax = 123,
+            },
+    };
 
     EXPECT_CALL(return_address_manager_, ProcessUretprobes(kTid)).Times(1);
     orbit_grpc_protos::FunctionCall actual_function_call;
     EXPECT_CALL(listener_, OnFunctionCall).Times(1).WillOnce(SaveArg<0>(&actual_function_call));
-    visitor_->Visit(uretprobe3);
+    PerfEvent{uretprobe3}.Accept(&visitor_);
     Mock::VerifyAndClearExpectations(&return_address_manager_);
     Mock::VerifyAndClearExpectations(&listener_);
     EXPECT_EQ(actual_function_call.pid(), kPid);
@@ -329,15 +362,19 @@ TEST_F(UprobesUnwindingVisitorTest,
   }
 
   {
-    UretprobesPerfEvent uretprobe2;
-    uretprobe2.pid = kPid;
-    uretprobe2.tid = kTid;
-    uretprobe2.timestamp = 700;
+    UretprobesPerfEvent uretprobe2{
+        .timestamp = 700,
+        .data =
+            {
+                .pid = kPid,
+                .tid = kTid,
+            },
+    };
 
     EXPECT_CALL(return_address_manager_, ProcessUretprobes(kTid)).Times(1);
     orbit_grpc_protos::FunctionCall actual_function_call;
     EXPECT_CALL(listener_, OnFunctionCall).Times(1).WillOnce(SaveArg<0>(&actual_function_call));
-    visitor_->Visit(uretprobe2);
+    PerfEvent{uretprobe2}.Accept(&visitor_);
     Mock::VerifyAndClearExpectations(&return_address_manager_);
     Mock::VerifyAndClearExpectations(&listener_);
     EXPECT_EQ(actual_function_call.pid(), kPid);
@@ -351,15 +388,19 @@ TEST_F(UprobesUnwindingVisitorTest,
   }
 
   {
-    UretprobesPerfEvent uretprobe1;
-    uretprobe1.pid = kPid;
-    uretprobe1.tid = kTid;
-    uretprobe1.timestamp = 800;
+    UretprobesPerfEvent uretprobe1{
+        .timestamp = 800,
+        .data =
+            {
+                .pid = kPid,
+                .tid = kTid,
+            },
+    };
 
     EXPECT_CALL(return_address_manager_, ProcessUretprobes(kTid)).Times(1);
     orbit_grpc_protos::FunctionCall actual_function_call;
     EXPECT_CALL(listener_, OnFunctionCall).Times(1).WillOnce(SaveArg<0>(&actual_function_call));
-    visitor_->Visit(uretprobe1);
+    PerfEvent{uretprobe1}.Accept(&visitor_);
     Mock::VerifyAndClearExpectations(&return_address_manager_);
     Mock::VerifyAndClearExpectations(&listener_);
     EXPECT_EQ(actual_function_call.pid(), kPid);
@@ -390,7 +431,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   libunwindstack_callstack.push_back(kFrame2);
   libunwindstack_callstack.push_back(kFrame3);
 
-  EXPECT_CALL(unwinder_, Unwind(event.pid, nullptr, _, _, event.dyn_size, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
       .Times(1)
       .WillOnce(Return(
           LibunwindstackResult{libunwindstack_callstack, unwindstack::ErrorCode::ERROR_NONE}));
@@ -407,10 +448,10 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   std::atomic<uint64_t> unwinding_errors = 0;
   std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
-  visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
-                                                       &discarded_samples_in_uretprobes_counter);
+  visitor_.SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
+                                                      &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(event);
+  PerfEvent{std::move(event)}.Accept(&visitor_);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
               ElementsAre(kTargetAddress1, kTargetAddress2, kTargetAddress3));
@@ -443,7 +484,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitEmptyStackSampleWithoutUprobesDoesNothi
 
   std::vector<unwindstack::FrameData> empty_callstack;
 
-  EXPECT_CALL(unwinder_, Unwind(event.pid, nullptr, _, _, event.dyn_size, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
       .Times(1)
       .WillOnce(Return(
           LibunwindstackResult{empty_callstack, unwindstack::ErrorCode::ERROR_MEMORY_INVALID}));
@@ -454,10 +495,10 @@ TEST_F(UprobesUnwindingVisitorTest, VisitEmptyStackSampleWithoutUprobesDoesNothi
 
   std::atomic<uint64_t> unwinding_errors = 0;
   std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
-  visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
-                                                       &discarded_samples_in_uretprobes_counter);
+  visitor_.SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
+                                                      &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(event);
+  PerfEvent{std::move(event)}.Accept(&visitor_);
 
   EXPECT_EQ(unwinding_errors, 0);
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
@@ -474,7 +515,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   libunwindstack_callstack.push_back(kFrame1);
   libunwindstack_callstack.push_back(kFrame2);
 
-  EXPECT_CALL(unwinder_, Unwind(event.pid, nullptr, _, _, event.dyn_size, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
                                             unwindstack::ErrorCode::ERROR_MEMORY_INVALID}));
@@ -491,10 +532,10 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   std::atomic<uint64_t> unwinding_errors = 0;
   std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
-  visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
-                                                       &discarded_samples_in_uretprobes_counter);
+  visitor_.SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
+                                                      &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(event);
+  PerfEvent{std::move(event)}.Accept(&visitor_);
 
   // On unwinding errors, only the first frame is added to the Callstack.
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kTargetAddress1));
@@ -521,7 +562,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   std::vector<unwindstack::FrameData> incomplete_callstack;
   incomplete_callstack.push_back(kFrame1);
 
-  EXPECT_CALL(unwinder_, Unwind(event.pid, nullptr, _, _, event.dyn_size, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
       .Times(1)
       .WillOnce(
           Return(LibunwindstackResult{incomplete_callstack, unwindstack::ErrorCode::ERROR_NONE}));
@@ -538,10 +579,10 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   std::atomic<uint64_t> unwinding_errors = 0;
   std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
-  visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
-                                                       &discarded_samples_in_uretprobes_counter);
+  visitor_.SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
+                                                      &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(event);
+  PerfEvent{std::move(event)}.Accept(&visitor_);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kTargetAddress1));
   EXPECT_EQ(actual_callstack_sample.callstack().type(),
@@ -574,7 +615,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitStackSampleWithinUprobeSendsInUprobesCa
   callstack.push_back(frame_1);
   callstack.push_back(kFrame2);
 
-  EXPECT_CALL(unwinder_, Unwind(event.pid, nullptr, _, _, event.dyn_size, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{callstack, unwindstack::ErrorCode::ERROR_NONE}));
 
@@ -590,10 +631,10 @@ TEST_F(UprobesUnwindingVisitorTest, VisitStackSampleWithinUprobeSendsInUprobesCa
 
   std::atomic<uint64_t> unwinding_errors = 0;
   std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
-  visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
-                                                       &discarded_samples_in_uretprobes_counter);
+  visitor_.SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
+                                                      &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(event);
+  PerfEvent{std::move(event)}.Accept(&visitor_);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kUprobesMapsStart));
   EXPECT_EQ(actual_callstack_sample.callstack().type(), orbit_grpc_protos::Callstack::kInUprobes);
@@ -634,10 +675,10 @@ TEST_F(UprobesUnwindingVisitorTest, VisitValidCallchainSampleWithoutUprobesSends
 
   std::atomic<uint64_t> unwinding_errors = 0;
   std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
-  visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
-                                                       &discarded_samples_in_uretprobes_counter);
+  visitor_.SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
+                                                      &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(event);
+  PerfEvent{std::move(event)}.Accept(&visitor_);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
               ElementsAre(kTargetAddress1, kTargetAddress2, kTargetAddress3));
@@ -662,10 +703,10 @@ TEST_F(UprobesUnwindingVisitorTest, VisitSingleFrameCallchainSampleDoesNothing) 
 
   std::atomic<uint64_t> unwinding_errors = 0;
   std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
-  visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
-                                                       &discarded_samples_in_uretprobes_counter);
+  visitor_.SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
+                                                      &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(event);
+  PerfEvent{std::move(event)}.Accept(&visitor_);
 
   EXPECT_EQ(unwinding_errors, 0);
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
@@ -693,10 +734,10 @@ TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleInsideUprobeCodeSendsInU
 
   std::atomic<uint64_t> unwinding_errors = 0;
   std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
-  visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
-                                                       &discarded_samples_in_uretprobes_counter);
+  visitor_.SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
+                                                      &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(event);
+  PerfEvent{std::move(event)}.Accept(&visitor_);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kUprobesMapsStart));
   EXPECT_EQ(actual_callstack_sample.callstack().type(), orbit_grpc_protos::Callstack::kInUprobes);
@@ -739,10 +780,10 @@ TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleWithUprobeSendsCompleteC
 
   std::atomic<uint64_t> unwinding_errors = 0;
   std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
-  visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
-                                                       &discarded_samples_in_uretprobes_counter);
+  visitor_.SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
+                                                      &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(event);
+  PerfEvent{std::move(event)}.Accept(&visitor_);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
               ElementsAre(kTargetAddress1, kTargetAddress2, kTargetAddress3));
@@ -776,10 +817,10 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   std::atomic<uint64_t> unwinding_errors = 0;
   std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
-  visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
-                                                       &discarded_samples_in_uretprobes_counter);
+  visitor_.SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
+                                                      &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(event);
+  PerfEvent{std::move(event)}.Accept(&visitor_);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kTargetAddress1));
   EXPECT_EQ(actual_callstack_sample.callstack().type(),
@@ -802,20 +843,20 @@ TEST_F(UprobesUnwindingVisitorTest,
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(1).WillRepeatedly(Return(true));
 
-  auto fake_patch_caller_of_leaf_function = [](const CallchainSamplePerfEvent* event,
+  auto fake_patch_caller_of_leaf_function = [](const CallchainSamplePerfEventData* event_data,
                                                LibunwindstackMaps* /*maps*/,
                                                orbit_linux_tracing::LibunwindstackUnwinder *
                                                /*unwinder*/) -> Callstack::CallstackType {
-    CHECK(event != nullptr);
+    CHECK(event_data != nullptr);
     std::vector<uint64_t> patched_callchain;
-    EXPECT_THAT(event->CopyOfIpsAsVector(),
+    EXPECT_THAT(event_data->CopyOfIpsAsVector(),
                 ElementsAre(kKernelAddress, kTargetAddress1, kTargetAddress3 + 1));
     patched_callchain.push_back(kKernelAddress);
     patched_callchain.push_back(kTargetAddress1);
     // Patch in the missing frame:
     patched_callchain.push_back(kTargetAddress2 + 1);
     patched_callchain.push_back(kTargetAddress3 + 1);
-    event->SetIps(patched_callchain);
+    event_data->SetIps(patched_callchain);
     return Callstack::kComplete;
   };
   EXPECT_CALL(leaf_function_call_manager_, PatchCallerOfLeafFunction)
@@ -827,10 +868,10 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   std::atomic<uint64_t> unwinding_errors = 0;
   std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
-  visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
-                                                       &discarded_samples_in_uretprobes_counter);
+  visitor_.SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
+                                                      &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(event);
+  PerfEvent{std::move(event)}.Accept(&visitor_);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
               ElementsAre(kTargetAddress1, kTargetAddress2, kTargetAddress3));
@@ -862,10 +903,10 @@ TEST_F(
 
   std::atomic<uint64_t> unwinding_errors = 0;
   std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
-  visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
-                                                       &discarded_samples_in_uretprobes_counter);
+  visitor_.SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
+                                                      &discarded_samples_in_uretprobes_counter);
 
-  visitor_->Visit(event);
+  PerfEvent{std::move(event)}.Accept(&visitor_);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kTargetAddress1));
   EXPECT_EQ(actual_callstack_sample.callstack().type(),

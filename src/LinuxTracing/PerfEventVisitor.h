@@ -9,29 +9,40 @@
 
 namespace orbit_linux_tracing {
 
-// Keep this class in sync with the hierarchy of PerfEvent in PerfEvent.h.
+// Keep this class in sync with the types of `std::variant PerfEvent::data` in PerfEvent.h.
 class PerfEventVisitor {
  public:
   virtual ~PerfEventVisitor() = default;
-  virtual void Visit(const ForkPerfEvent& /*event*/) {}
-  virtual void Visit(const ExitPerfEvent& /*event*/) {}
-  virtual void Visit(const StackSamplePerfEvent& /*event*/) {}
-  virtual void Visit(const CallchainSamplePerfEvent& /*event*/) {}
-  virtual void Visit(const UprobesPerfEvent& /*event*/) {}
-  virtual void Visit(const UprobesWithArgumentsPerfEvent& /*event*/) {}
-  virtual void Visit(const UretprobesPerfEvent& /*event*/) {}
-  virtual void Visit(const UretprobesWithReturnValuePerfEvent& /*event*/) {}
-  virtual void Visit(const LostPerfEvent& /*event*/) {}
-  virtual void Visit(const DiscardedPerfEvent& /*event*/) {}
-  virtual void Visit(const MmapPerfEvent& /*event*/) {}
-  virtual void Visit(const TaskNewtaskPerfEvent& /*event*/) {}
-  virtual void Visit(const TaskRenamePerfEvent& /*event*/) {}
-  virtual void Visit(const SchedSwitchPerfEvent& /*event*/) {}
-  virtual void Visit(const SchedWakeupPerfEvent& /*event*/) {}
-  virtual void Visit(const AmdgpuCsIoctlPerfEvent& /*event*/) {}
-  virtual void Visit(const AmdgpuSchedRunJobPerfEvent& /*event*/) {}
-  virtual void Visit(const DmaFenceSignaledPerfEvent& /*event*/) {}
-  virtual void Visit(const GenericTracepointPerfEvent& /*event*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/, const ForkPerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/, const ExitPerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/, const StackSamplePerfEventData& /*event_data*/) {
+  }
+  virtual void Visit(uint64_t /*event_timestamp*/,
+                     const CallchainSamplePerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/, const UprobesPerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/,
+                     const UprobesWithArgumentsPerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/, const UretprobesPerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/,
+                     const UretprobesWithReturnValuePerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/, const LostPerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/, const DiscardedPerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/, const MmapPerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/, const TaskNewtaskPerfEventData& /*event_data*/) {
+  }
+  virtual void Visit(uint64_t /*event_timestamp*/, const TaskRenamePerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/, const SchedSwitchPerfEventData& /*event_data*/) {
+  }
+  virtual void Visit(uint64_t /*event_timestamp*/, const SchedWakeupPerfEventData& /*event_data*/) {
+  }
+  virtual void Visit(uint64_t /*event_timestamp*/,
+                     const AmdgpuCsIoctlPerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/,
+                     const AmdgpuSchedRunJobPerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/,
+                     const DmaFenceSignaledPerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/,
+                     const GenericTracepointPerfEventData& /*event_data*/) {}
 };
 
 }  // namespace orbit_linux_tracing
