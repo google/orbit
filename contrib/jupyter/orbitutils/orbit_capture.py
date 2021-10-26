@@ -31,7 +31,7 @@ class OrbitCapture:
 
     def calculate_capture_section_size(self, file_content):
         if self.section_list_offset == 0:
-            self.capture_section_size = file_content.length - self.capture_section_offset
+            self.capture_section_size = len(file_content) - self.capture_section_offset
             return
         section_offsets = map(lambda element: element[1], self.sections)
         capture_section_end_offset = min(self.section_list_offset, min(section_offsets))
@@ -57,6 +57,8 @@ class OrbitCapture:
             print("count_failed: " + str(count_failed))
 
     def read_section_list(self, file_content, section_list_offset):
+        if (section_list_offset == 0):
+            return
         pos = section_list_offset
         number_of_sections = struct.unpack_from("<Q", file_content[pos:pos+8])[0]
         pos += 8
