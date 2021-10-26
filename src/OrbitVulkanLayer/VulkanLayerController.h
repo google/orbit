@@ -6,9 +6,13 @@
 #define ORBIT_VULKAN_LAYER_VULKAN_LAYER_CONTROLLER_H_
 
 #include <absl/base/casts.h>
+#include <unistd.h>
 #include <vulkan/vk_layer.h>
 #include <vulkan/vulkan.h>
 
+#include <cstdlib>
+
+#include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "ProducerSideChannel/ProducerSideChannel.h"
 #include "VulkanLayerProducerImpl.h"
@@ -628,6 +632,17 @@ class VulkanLayerController {
       LOG("Bringing up VulkanLayerProducer");
       vulkan_layer_producer_->BringUp(orbit_producer_side_channel::CreateProducerSideChannel());
       submission_tracker_.SetVulkanLayerProducer(vulkan_layer_producer_.get());
+
+      if (const char* pid_file = std::getenv("ORBIT_VULKAN_LAYER_PID_FILE")) {
+        LOG("Writing PID of %d to %s", getpid(), pid_file);
+        ErrorMessageOr<orbit_base::unique_fd> error_or_file =
+            orbit_base::OpenFileForWriting(pid_file);
+        FAIL_IF(error_or_file.has_error(), "Orbit's Vulkan layer %s",
+                error_or_file.error().message());
+        ErrorMessageOr<void> result =
+            orbit_base::WriteFully(error_or_file.value(), absl::StrFormat("%d", getpid()));
+        FAIL_IF(result.has_error(), "Orbit's Vulkan layer %s", result.error().message());
+      }
     }
   }
 
