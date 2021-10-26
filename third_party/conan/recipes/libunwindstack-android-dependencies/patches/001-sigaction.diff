@@ -1,0 +1,12 @@
+--- a/libbase/include/android-base/silent_death_test.h	2021-07-13 18:00:48.244713756 +0200
++++ b/libbase/include/android-base/silent_death_test.h	2021-07-13 18:00:48.244713756 +0200
+@@ -34,6 +34,7 @@
+   virtual void SetUp() {
+     // Suppress debuggerd stack traces. Too slow.
+     for (int signo : {SIGABRT, SIGBUS, SIGSEGV, SIGSYS}) {
+-      struct sigaction64 action = {.sa_handler = SIG_DFL};
++      struct sigaction64 action = {};
++      action.sa_handler = SIG_DFL;
+       sigaction64(signo, &action, &previous_);
+     }
+   }

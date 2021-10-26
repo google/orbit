@@ -1,7 +1,5 @@
 sources:
   "20210709":
-    - url: https://android.googlesource.com/platform/system/unwinding/+archive/d5d45d0bcd25a4862daa127a67da692fd9eb8a1a/libunwindstack.tar.gz
-      destination: libunwindstack
     - url: https://android.googlesource.com/platform/system/libbase/+archive/a211423cd63c054667c9fa830fbd3cefe3ed62b5.tar.gz
       destination: libbase
     - url: https://android.googlesource.com/platform/system/libprocinfo/+archive/de1562c75fae8a2e003f1009c32ba86c1bd73650.tar.gz
@@ -18,11 +16,7 @@ patches:
   "20210709":
     - patch_file: patches/001-sigaction.diff
       strip: 1
-    - patch_file: patches/002-missing-include.diff
-      strip: 1
     - patch_file: patches/003-builtin-available.diff
-      strip: 1
-    - patch_file: patches/004-has-feature.diff
       strip: 1
     - patch_file: patches/005-atomic.diff
       strip: 1
@@ -30,9 +24,6 @@ patches:
       strip: 1
 license_files:
   "20210709":
-    - src: libunwindstack/LICENSE_BSD
-      library_name: libunwinstack
-      library_url: https://android.googlesource.com/platform/system/unwinding/
     - src: libbase/NOTICE
       library_name: libbase
       library_url: https://android.googlesource.com/platform/system/libbase/
