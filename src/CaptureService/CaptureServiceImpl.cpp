@@ -113,7 +113,7 @@ static void StopInternalProducersAndCaptureStartStopListenersInParallel(
   ProducerCaptureEvent event;
   CaptureStarted* capture_started = event.mutable_capture_started();
 
-  pid_t target_pid = orbit_base::ToNativeProcessId(capture_options.pid());
+  uint32_t target_pid = capture_options.pid();
 
   capture_started->set_process_id(target_pid);
   auto executable_path_or_error = orbit_base::GetExecutablePath(target_pid);

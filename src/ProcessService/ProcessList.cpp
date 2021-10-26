@@ -13,6 +13,7 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "ProcessServiceUtils.h"
 
 namespace orbit_process_service_internal {
@@ -68,12 +69,12 @@ ErrorMessageOr<void> ProcessList::Refresh() {
       continue;
     }
 
-    auto process_or_error = Process::FromPid(pid);
+    auto process_or_error = Process::FromPid(orbit_base::FromNativeProcessId(pid));
 
     if (process_or_error.has_error()) {
       // We don't fail in this case. This could be a permission problem which is restricted to a
       // small amount of processes.
-      ERROR("Could not create process list entry for pid %d: %s", pid,
+      ERROR("Could not create process list entry for pid %u: %s", pid,
             process_or_error.error().message());
       continue;
     }
