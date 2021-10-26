@@ -47,6 +47,7 @@ class ClientImpl : public Client, public QObject {
   Future<ErrorMessageOr<SshInfo>> GetSshInfoAsync(const Instance& ggp_instance,
                                                   std::optional<Project> project) override;
   Future<ErrorMessageOr<QVector<Project>>> GetProjectsAsync() override;
+  Future<ErrorMessageOr<Project>> GetDefaultProjectAsync() override;
 
  private:
   const QString ggp_program_;
@@ -142,6 +143,15 @@ Future<ErrorMessageOr<QVector<Project>>> ClientImpl::GetProjectsAsync() {
   return orbit_qt_utils::ExecuteProcess(ggp_program_, arguments, this, absl::FromChrono(timeout_))
       .ThenIfSuccess(&executor, [](const QByteArray& json) -> ErrorMessageOr<QVector<Project>> {
         return Project::GetListFromJson(json);
+      });
+}
+
+Future<ErrorMessageOr<Project>> ClientImpl::GetDefaultProjectAsync() {
+  QStringList arguments{"config", "describe", "-s"};
+  orbit_base::ImmediateExecutor executor;
+  return orbit_qt_utils::ExecuteProcess(ggp_program_, arguments, this, absl::FromChrono(timeout_))
+      .ThenIfSuccess(&executor, [](const QByteArray& json) -> ErrorMessageOr<Project> {
+        return Project::GetDefaultProjectFromJson(json);
       });
 }
 

@@ -123,6 +123,30 @@ int GgpProjectList(int argc, char* argv[]) {
   return 0;
 }
 
+int GgpConfig(int argc, char* argv[]) {
+  if (argc != 4) {
+    std::cout << "Wrong amount of arguments" << std::endl;
+    return 1;
+  }
+  if (std::string_view{argv[1]} != "config" || std::string_view{argv[2]} != "describe" ||
+      std::string_view{argv[3]} != "-s") {
+    std::cout << "arguments are formatted wrong" << std::endl;
+    return 1;
+  }
+  std::cout << R"({
+ "chromeProfileDirectory": "",
+ "environment": "Test env",
+ "organization": "Test Org",
+ "organizationId": "Test Org id",
+ "poolId": "",
+ "project": "Test Project",
+ "projectId": "Test Project id",
+ "renderdocLocalPath": "",
+ "url": "http://someurl.com/"
+})" << std::endl;
+  return 0;
+}
+
 int main(int argc, char* argv[]) {
   // This sleep is here for 2 reasons:
   // 1. The ggp cli which this program is mocking, does have quite a bit of delay, hence having a
@@ -149,6 +173,10 @@ int main(int argc, char* argv[]) {
 
   if (std::string_view{argv[1]} == "project") {
     return GgpProjectList(argc, argv);
+  }
+
+  if (std::string_view{argv[1]} == "config") {
+    return GgpConfig(argc, argv);
   }
 
   std::cout << "arguments are formatted wrong" << std::endl;
