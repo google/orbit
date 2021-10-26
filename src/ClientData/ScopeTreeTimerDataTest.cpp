@@ -10,6 +10,51 @@ using orbit_client_protos::TimerInfo;
 
 namespace orbit_client_data {
 
+namespace {
+
+struct TimersInTest {
+  const TimerInfo* left;
+  const TimerInfo* right;
+  const TimerInfo* down;
+};
+
+static constexpr uint32_t kProcessId = 22;
+static constexpr uint64_t kLeftTimerStart = 2;
+static constexpr uint64_t kLeftTimerEnd = 5;
+static constexpr uint64_t kRightTimerStart = 8;
+static constexpr uint64_t kRightTimerEnd = 11;
+static constexpr uint64_t kDownTimerStart = 10;
+static constexpr uint64_t kDownTimerEnd = 11;
+static constexpr uint64_t kNumTimers = 3;
+static constexpr uint64_t kDepth = 2;
+static constexpr uint64_t kMinTimestamp = 2;
+static constexpr uint64_t kMaxTimestamp = 11;
+
+TimersInTest AddTimersInScopeTreeTimerDataTest(ScopeTreeTimerData& scope_tree_timer_data) {
+  TimersInTest inserted_timers;
+  TimerInfo timer_info;
+  timer_info.set_process_id(kProcessId);
+
+  // left
+  timer_info.set_start(kLeftTimerStart);
+  timer_info.set_end(kLeftTimerEnd);
+  inserted_timers.left = &scope_tree_timer_data.AddTimer(timer_info);
+
+  // right
+  timer_info.set_start(kRightTimerStart);
+  timer_info.set_end(kRightTimerEnd);
+  inserted_timers.right = &scope_tree_timer_data.AddTimer(timer_info);
+
+  // down
+  timer_info.set_start(kDownTimerStart);
+  timer_info.set_end(kDownTimerEnd);
+  inserted_timers.down = &scope_tree_timer_data.AddTimer(timer_info);
+
+  return inserted_timers;
+}
+
+}  // namespace
+
 TEST(ScopeTreeTimerData, EmptyWhenCreated) {
   ScopeTreeTimerData scope_tree_timer_data;
   EXPECT_TRUE(scope_tree_timer_data.GetTimerMetadata().is_empty);
@@ -41,51 +86,6 @@ TEST(ScopeTreeTimerData, OnCaptureComplete) {
 
   scope_tree_timer_data.OnCaptureComplete();
   EXPECT_FALSE(scope_tree_timer_data.GetTimers().empty());
-}
-
-namespace {
-
-struct TimersInTest {
-  const TimerInfo* left;
-  const TimerInfo* right;
-  const TimerInfo* down;
-};
-
-static constexpr uint32_t kProcessId = 22;
-static constexpr uint64_t kLeftTimerStart = 2;
-static constexpr uint64_t kLeftTimerEnd = 5;
-static constexpr uint64_t kRightTimerStart = 8;
-static constexpr uint64_t kRightTimerEnd = 11;
-static constexpr uint64_t kDownTimerStart = 10;
-static constexpr uint64_t kDownTimerEnd = 11;
-static constexpr uint64_t kNumTimers = 3;
-static constexpr uint64_t kDepth = 2;
-static constexpr uint64_t kMinTimestamp = 2;
-static constexpr uint64_t kMaxTimestamp = 11;
-
-}  // namespace
-
-TimersInTest AddTimersInScopeTreeTimerDataTest(ScopeTreeTimerData& scope_tree_timer_data) {
-  TimersInTest inserted_timers;
-  TimerInfo timer_info;
-  timer_info.set_process_id(kProcessId);
-
-  // left
-  timer_info.set_start(kLeftTimerStart);
-  timer_info.set_end(kLeftTimerEnd);
-  inserted_timers.left = &scope_tree_timer_data.AddTimer(timer_info);
-
-  // right
-  timer_info.set_start(kRightTimerStart);
-  timer_info.set_end(kRightTimerEnd);
-  inserted_timers.right = &scope_tree_timer_data.AddTimer(timer_info);
-
-  // down
-  timer_info.set_start(kDownTimerStart);
-  timer_info.set_end(kDownTimerEnd);
-  inserted_timers.down = &scope_tree_timer_data.AddTimer(timer_info);
-
-  return inserted_timers;
 }
 
 TEST(ScopeTreeTimerData, GetTimerMetadata) {
