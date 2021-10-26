@@ -9,7 +9,7 @@
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
 
-namespace orbit_capture_service {
+namespace orbit_linux_capture_service {
 
 void MemoryInfoHandler::Start(orbit_grpc_protos::CaptureOptions capture_options) {
   if (!capture_options.collect_memory_info()) return;
@@ -61,4 +61,4 @@ void MemoryInfoHandler::OnMemoryUsageEvent(orbit_grpc_protos::MemoryUsageEvent m
                                           std::move(event));
 }
 
-}  // namespace orbit_capture_service
+}  // namespace orbit_linux_capture_service

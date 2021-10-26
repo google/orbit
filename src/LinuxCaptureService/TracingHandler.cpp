@@ -12,7 +12,7 @@
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
 
-namespace orbit_capture_service {
+namespace orbit_linux_capture_service {
 
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::FullAddressInfo;
@@ -127,4 +127,4 @@ void TracingHandler::OnOutOfOrderEventsDiscardedEvent(
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }
 
-}  // namespace orbit_capture_service
+}  // namespace orbit_linux_capture_service

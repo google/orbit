@@ -11,7 +11,7 @@
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
 #include "capture.pb.h"
 
-namespace orbit_capture_service {
+namespace orbit_linux_capture_service {
 
 // This class controls the start and stop of the `MemoryInfoProducer`s. It receives the
 // `SystemMemoryUsage`, `CGroupMemoryUsage` and `ProcessMemoryUsage` events from different
@@ -43,6 +43,6 @@ class MemoryInfoHandler : public orbit_memory_tracing::MemoryInfoListener {
   std::unique_ptr<orbit_memory_tracing::MemoryInfoProducer> system_memory_info_producer_;
 };
 
-}  // namespace orbit_capture_service
+}  // namespace orbit_linux_capture_service
 
 #endif  // CAPTURE_SERVICE_MEMORY_INFO_HANDLER_H_

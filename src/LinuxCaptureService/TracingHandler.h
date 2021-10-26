@@ -20,7 +20,7 @@
 #include "capture.pb.h"
 #include "tracepoint.pb.h"
 
-namespace orbit_capture_service {
+namespace orbit_linux_capture_service {
 
 class TracingHandler : public orbit_linux_tracing::TracerListener {
  public:
@@ -60,6 +60,6 @@ class TracingHandler : public orbit_linux_tracing::TracerListener {
   std::unique_ptr<orbit_linux_tracing::Tracer> tracer_;
 };
 
-}  // namespace orbit_capture_service
+}  // namespace orbit_linux_capture_service
 
 #endif  // CAPTURE_SERVICE_LINUX_TRACING_HANDLER_H_
