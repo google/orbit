@@ -65,10 +65,10 @@ target_sources(LinuxTracing PRIVATE
 target_link_libraries(LinuxTracing PUBLIC
         GrpcProtos
         Introspection
+        libunwindstack
         ObjectUtils
         OrbitBase
-        CONAN_PKG::abseil
-        CONAN_PKG::libunwindstack)
+        CONAN_PKG::abseil)
 
 add_executable(LinuxTracingTests)
 

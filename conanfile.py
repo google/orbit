@@ -95,7 +95,7 @@ class OrbitConan(ConanFile):
             "libprotobuf-mutator/20200506@{}#90ce749ca62b40e9c061d20fae4410e0".format(self._orbit_channel))
         if self.settings.os != "Windows":
             self.requires(
-                "libunwindstack/20210709@{}".format(self._orbit_channel))
+                "libunwindstack-android-dependencies/20210709@{}".format(self._orbit_channel))
             self.requires("volk/1.2.170")
             self.requires("vulkan-headers/1.1.114.0")
         self.requires("zlib/1.2.11#9e0c292b60ce77402bd9be60dd68266f")
