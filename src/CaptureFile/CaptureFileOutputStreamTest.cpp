@@ -6,6 +6,7 @@
 #include <gtest/gtest.h>
 #include <stdint.h>
 
+#include "CaptureFile/BufferOutputStream.h"
 #include "CaptureFile/CaptureFileOutputStream.h"
 #include "CaptureFileConstants.h"
 #include "OrbitBase/ReadFileToString.h"
@@ -34,7 +35,7 @@ TEST(CaptureFileOutputStream, Smoke) {
   orbit_grpc_protos::ClientCaptureEvent event2 =
       CreateInternedStringCaptureEvent(kNotAnAnswerKey, kNotAnAnswerString);
 
-  auto write_events = [&](CaptureFileOutputStream* output_stream) {
+  auto write_events_then_close = [&](CaptureFileOutputStream* output_stream) {
     auto write_result = output_stream->WriteCaptureEvent(event1);
     EXPECT_FALSE(write_result.has_error()) << write_result.error().message();
     write_result = output_stream->WriteCaptureEvent(event2);
@@ -90,7 +91,7 @@ TEST(CaptureFileOutputStream, Smoke) {
     std::unique_ptr<CaptureFileOutputStream> output_stream =
         std::move(output_stream_or_error.value());
     EXPECT_TRUE(output_stream->IsOpen());
-    write_events(output_stream.get());
+    write_events_then_close(output_stream.get());
 
     ErrorMessageOr<std::string> stream_content_or_error =
         orbit_base::ReadFileToString(temp_file_name);
@@ -101,16 +102,17 @@ TEST(CaptureFileOutputStream, Smoke) {
 
   // Test the case of outputting capture file content to a vector of raw buffers
   {
-    std::vector<unsigned char> output_buffer;
+    BufferOutputStream output_buffer;
     auto output_stream_or_error = CaptureFileOutputStream::Create(&output_buffer);
     ASSERT_TRUE(output_stream_or_error.has_value()) << output_stream_or_error.error().message();
 
     std::unique_ptr<CaptureFileOutputStream> output_stream =
         std::move(output_stream_or_error.value());
     EXPECT_TRUE(output_stream->IsOpen());
-    write_events(output_stream.get());
+    write_events_then_close(output_stream.get());
 
-    const std::string stream_content(output_buffer.begin(), output_buffer.end());
+    std::vector<unsigned char> buffered_data = output_buffer.TakeBuffer();
+    const std::string stream_content(buffered_data.begin(), buffered_data.end());
     check_output_stream_content(stream_content);
   }
 }
@@ -147,7 +149,7 @@ TEST(CaptureFileOutputStream, WriteAfterClose) {
 
   // Test the case of outputting capture file content to a vector of raw buffers
   {
-    std::vector<unsigned char> output_buffer;
+    BufferOutputStream output_buffer;
     auto output_stream_or_error = CaptureFileOutputStream::Create(&output_buffer);
     ASSERT_TRUE(output_stream_or_error.has_value()) << output_stream_or_error.error().message();
     std::unique_ptr<CaptureFileOutputStream> output_stream =

@@ -12,6 +12,7 @@
 #include <optional>
 #include <string>
 
+#include "CaptureFile/BufferOutputStream.h"
 #include "CaptureFileConstants.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
@@ -25,7 +26,7 @@ class CaptureFileOutputStreamImpl final : public CaptureFileOutputStream {
  public:
   explicit CaptureFileOutputStreamImpl(std::filesystem::path path)
       : output_type_(OutputType::kFile), path_{std::move(path)} {}
-  explicit CaptureFileOutputStreamImpl(std::vector<unsigned char>* output_buffer)
+  explicit CaptureFileOutputStreamImpl(BufferOutputStream* output_buffer)
       : output_type_(OutputType::kBuffer), output_buffer_(output_buffer) {}
   ~CaptureFileOutputStreamImpl() override;
 
@@ -51,13 +52,9 @@ class CaptureFileOutputStreamImpl final : public CaptureFileOutputStream {
   std::filesystem::path path_;
   orbit_base::unique_fd fd_;
   std::optional<google::protobuf::io::FileOutputStream> file_output_stream_;
+  BufferOutputStream* output_buffer_ = nullptr;
+  std::optional<google::protobuf::io::CopyingOutputStreamAdaptor> buffer_output_adaptor_;
   std::optional<google::protobuf::io::CodedOutputStream> coded_output_;
-
-  // When output capture file to a buffer of raw bytes, we need to frequently create string encoding
-  // the capture event. To reduce heap fragmentation, we reuse the same string object with calls to
-  // SerializeToString().
-  std::string serialized_event_;
-  std::vector<unsigned char>* output_buffer_ = nullptr;
 };
 
 CaptureFileOutputStreamImpl::~CaptureFileOutputStreamImpl() {
@@ -84,29 +81,30 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::Initialize() {
 }
 
 ErrorMessageOr<void> CaptureFileOutputStreamImpl::Close() {
-  if (output_type_ == OutputType::kFile) {
-    coded_output_->Trim();
-    if (coded_output_->HadError()) {
-      return HandleWriteError("Unknown", GetErrorFromOutputStream());
-    }
+  coded_output_->Trim();
+  if (coded_output_->HadError()) {
+    return HandleWriteError("Unknown", GetErrorFromOutputStream());
   }
-
   Reset();
 
   return outcome::success();
 }
 
 void CaptureFileOutputStreamImpl::Reset() {
+  // Destroy coded_output_ before destroying the underlaying ZeroCopyOutputStream (i.e.,
+  // file_output_stream_ and buffer_output_adaptor_) to guarantee that coded_output_ flushes all
+  // data to the underlaying ZeroCopyOutputStream and trims the unused bytes.
   coded_output_.reset();
   file_output_stream_.reset();
   fd_.release();
-
+  buffer_output_adaptor_.reset();
   output_buffer_ = nullptr;
 }
 
 bool CaptureFileOutputStreamImpl::IsOpen() {
   if (output_type_ == OutputType::kFile) {
     return fd_.valid();
+
   } else if (output_type_ == OutputType::kBuffer) {
     return output_buffer_ != nullptr;
   }
@@ -138,27 +136,22 @@ ErrorMessage CaptureFileOutputStreamImpl::HandleWriteError(const char* section_n
 
 ErrorMessageOr<void> CaptureFileOutputStreamImpl::WriteCaptureEvent(
     const orbit_grpc_protos::ClientCaptureEvent& event) {
-  uint32_t event_size = event.ByteSizeLong();
+  CHECK(coded_output_.has_value());
+
   if (output_type_ == OutputType::kFile) {
-    CHECK(coded_output_.has_value());
     CHECK(file_output_stream_.has_value());
 
-    coded_output_->WriteVarint32(event_size);
-    if (!event.SerializeToCodedStream(&coded_output_.value()) || coded_output_->HadError()) {
-      return HandleWriteError("Capture", GetErrorFromOutputStream());
-    }
-
   } else if (output_type_ == OutputType::kBuffer) {
-    CHECK(output_buffer_ != nullptr);
+    CHECK(buffer_output_adaptor_.has_value());
 
-    uint8_t buffer[10];
-    uint8_t* end =
-        google::protobuf::io::CodedOutputStream::WriteVarint32ToArray(event_size, buffer);
-    output_buffer_->insert(output_buffer_->end(), buffer, end);
+  } else {
+    UNREACHABLE();
+  }
 
-    event.SerializeToString(&serialized_event_);
-    output_buffer_->insert(output_buffer_->end(), serialized_event_.begin(),
-                           serialized_event_.end());
+  uint32_t event_size = event.ByteSizeLong();
+  coded_output_->WriteVarint32(event_size);
+  if (!event.SerializeToCodedStream(&coded_output_.value()) || coded_output_->HadError()) {
+    return HandleWriteError("Capture", GetErrorFromOutputStream());
   }
 
   return outcome::success();
@@ -194,7 +187,9 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::WriteHeader() {
     coded_output_.emplace(&file_output_stream_.value());
 
   } else if (output_type_ == OutputType::kBuffer) {
-    output_buffer_->insert(output_buffer_->end(), header.begin(), header.end());
+    buffer_output_adaptor_.emplace(output_buffer_);
+    coded_output_.emplace(&buffer_output_adaptor_.value());
+    coded_output_->WriteString(header);
   }
 
   return outcome::success();
@@ -214,7 +209,7 @@ ErrorMessageOr<std::unique_ptr<CaptureFileOutputStream>> CaptureFileOutputStream
 }
 
 ErrorMessageOr<std::unique_ptr<CaptureFileOutputStream>> CaptureFileOutputStream::Create(
-    std::vector<unsigned char>* output_buffer) {
+    BufferOutputStream* output_buffer) {
   auto implementation = std::make_unique<CaptureFileOutputStreamImpl>(output_buffer);
   auto init_result = implementation->Initialize();
   CHECK(!init_result.has_error());

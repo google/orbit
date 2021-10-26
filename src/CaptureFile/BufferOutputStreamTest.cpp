@@ -7,7 +7,7 @@
 
 #include <random>
 
-#include "BufferOutputStream.h"
+#include "CaptureFile/BufferOutputStream.h"
 
 namespace orbit_capture_file {
 
