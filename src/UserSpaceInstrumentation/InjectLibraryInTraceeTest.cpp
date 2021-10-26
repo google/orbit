@@ -39,14 +39,13 @@ using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;
 using testing::Eq;
 
-// The device ID and the inode ID together uniquely identify a file on a single machine.
-// Ref: https://www.gnu.org/software/libc/manual/html_node/Attribute-Meanings.html
-struct DeviceInodePair {
-  dev_t device;
-  ino_t inode;
-};
-
-ErrorMessageOr<bool> IsDeviceInodePairInMapsFile(DeviceInodePair device_inode, pid_t pid) {
+// This function checks if a certain inode appears in the maps file
+// of the process with PID `pid`. It is only comparing the inode and
+// not the device id because the latter has proven to be unrealiable
+// when using overlayfs. That's the case on the CI because Docker uses
+// overlayfs. Fixing that properly is a non-trivial task and isn't
+// justified compared to the risk of having an inode clash.
+ErrorMessageOr<bool> IsInodeInMapsFile(ino_t inode, pid_t pid) {
   OUTCOME_TRY(auto&& maps_contents,
               orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid)));
 
@@ -59,46 +58,18 @@ ErrorMessageOr<bool> IsDeviceInodePairInMapsFile(DeviceInodePair device_inode, p
 
     ino_t current_inode{};
     if (!absl::SimpleAtoi(fields[kInodeFieldIndex], &current_inode)) continue;
-    if (current_inode != device_inode.inode) continue;
-
-    // The device field is formatted as `AA:BB` where `AA` is a single hex byte representing the
-    // major number and `BB` being a single hex byte representing the minor number. Both numbers
-    // are always two digits wide.
-    constexpr int kDeviceFieldIndex = 3;
-    std::vector<std::string_view> device_number_fields =
-        absl::StrSplit(fields[kDeviceFieldIndex], ':');
-    if (device_number_fields.size() != 2) continue;
-
-    constexpr int kMajorFieldIndex = 0;
-    if (device_number_fields[kMajorFieldIndex].size() != 2) continue;
-    uint32_t major_number{};
-    if (std::from_chars(device_number_fields[kMajorFieldIndex].begin(),
-                        device_number_fields[kMajorFieldIndex].end(), major_number, 16)
-            .ec != std::errc{}) {
-      continue;
-    }
-
-    constexpr int kMinorFieldIndex = 1;
-    if (device_number_fields[kMinorFieldIndex].size() != 2) continue;
-    uint32_t minor_number{};
-    if (std::from_chars(device_number_fields[kMinorFieldIndex].begin(),
-                        device_number_fields[kMinorFieldIndex].end(), minor_number, 16)
-            .ec != std::errc{}) {
-      continue;
-    }
-
-    if (makedev(major_number, minor_number) == device_inode.device) return true;
+    if (current_inode == inode) return true;
   }
 
   return false;
 }
 
-ErrorMessageOr<DeviceInodePair> GetDeviceInodePairFromFilePath(const std::string& file_path) {
+ErrorMessageOr<ino_t> GetInodeFromFilePath(const std::string& file_path) {
   struct stat stat_buf {};
   if (stat(file_path.c_str(), &stat_buf) != 0) {
     return ErrorMessage{absl::StrFormat("Failed to obtain inode of '%s'", file_path)};
   }
-  return DeviceInodePair{stat_buf.st_dev, stat_buf.st_ino};
+  return stat_buf.st_ino;
 }
 
 void OpenUseAndCloseLibrary(pid_t pid) {
@@ -109,19 +80,18 @@ void OpenUseAndCloseLibrary(pid_t pid) {
   ASSERT_THAT(library_path_or_error, HasNoError());
   std::filesystem::path library_path = std::move(library_path_or_error.value());
 
-  ErrorMessageOr<DeviceInodePair> device_inode_pair_of_library =
-      GetDeviceInodePairFromFilePath(library_path);
-  ASSERT_THAT(device_inode_pair_of_library, HasNoError());
+  ErrorMessageOr<ino_t> inode_of_library = GetInodeFromFilePath(library_path);
+  ASSERT_THAT(inode_of_library, HasNoError());
 
   // Tracee does not have the dynamic lib loaded, obviously.
-  EXPECT_THAT(IsDeviceInodePairInMapsFile(device_inode_pair_of_library.value(), pid),
+  EXPECT_THAT(IsInodeInMapsFile(inode_of_library.value(), pid),
               orbit_test_utils::HasValue(Eq(false)));
 
   auto library_handle_or_error = DlopenInTracee(pid, library_path, RTLD_NOW);
   ASSERT_TRUE(library_handle_or_error.has_value());
 
   // Tracee now does have the dynamic lib loaded.
-  EXPECT_THAT(IsDeviceInodePairInMapsFile(device_inode_pair_of_library.value(), pid),
+  EXPECT_THAT(IsInodeInMapsFile(inode_of_library.value(), pid),
               orbit_test_utils::HasValue(Eq(true)));
 
   // Look up symbol for "TrivialFunction" in the dynamic lib.
@@ -154,7 +124,7 @@ void OpenUseAndCloseLibrary(pid_t pid) {
   ASSERT_THAT(result_dlclose, HasNoError());
 
   // Now, again, the lib is absent from the tracee.
-  EXPECT_THAT(IsDeviceInodePairInMapsFile(device_inode_pair_of_library.value(), pid),
+  EXPECT_THAT(IsInodeInMapsFile(inode_of_library.value(), pid),
               orbit_test_utils::HasValue(Eq(false)));
 
   CHECK(!DetachAndContinueProcess(pid).has_error());
