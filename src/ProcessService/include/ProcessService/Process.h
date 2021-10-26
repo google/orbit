@@ -19,7 +19,7 @@ class Process {
 
   // Creates a `Process` by reading details from the `/proc` filesystem.
   // This might fail due to a non existing pid or due to permission problems.
-  static ErrorMessageOr<Process> FromPid(pid_t pid);
+  static ErrorMessageOr<Process> FromPid(uint32_t pid);
 
   // NOLINTNEXTLINE
   [[nodiscard]] const orbit_grpc_protos::ProcessInfo& process_info() const { return process_info_; }

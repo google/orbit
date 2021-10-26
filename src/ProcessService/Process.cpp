@@ -44,11 +44,11 @@ void Process::UpdateCpuUsage(Jiffies process_cpu_time, TotalCpuTime total_cpu_ti
   previous_total_cpu_time_ = total_cpu_time.jiffies;
 }
 
-ErrorMessageOr<Process> Process::FromPid(pid_t pid) {
+ErrorMessageOr<Process> Process::FromPid(uint32_t pid) {
   const auto path = std::filesystem::path{"/proc"} / std::to_string(pid);
 
   if (!std::filesystem::is_directory(path)) {
-    return ErrorMessage{absl::StrFormat("PID %d does not exist", pid)};
+    return ErrorMessage{absl::StrFormat("PID %u does not exist", pid)};
   }
 
   const std::filesystem::path name_file_path = path / "comm";
@@ -62,7 +62,7 @@ ErrorMessageOr<Process> Process::FromPid(pid_t pid) {
   // Remove new line character.
   absl::StripTrailingAsciiWhitespace(&name);
   if (name.empty()) {
-    return ErrorMessage{absl::StrFormat("Could not determine the process name of process %d", pid)};
+    return ErrorMessage{absl::StrFormat("Could not determine the process name of process %u", pid)};
   }
 
   Process process{};
@@ -75,7 +75,7 @@ ErrorMessageOr<Process> Process::FromPid(pid_t pid) {
   if (cpu_time && total_cpu_time) {
     process.UpdateCpuUsage(cpu_time.value(), total_cpu_time.value());
   } else {
-    LOG("Could not update the CPU usage of process %d", process.process_info().pid());
+    LOG("Could not update the CPU usage of process %u", process.process_info().pid());
   }
 
   // "The command-line arguments appear [...] as a set of strings
@@ -100,7 +100,7 @@ ErrorMessageOr<Process> Process::FromPid(pid_t pid) {
       process.process_info_.set_is_64_bit(elf_file.value()->Is64Bit());
       process.process_info_.set_build_id(elf_file.value()->GetBuildId());
     } else {
-      LOG("Warning: Unable to parse the executable \"%s\" as elf file. (pid: %d): %s",
+      LOG("Warning: Unable to parse the executable \"%s\" as elf file. (pid: %u): %s",
           file_path_result.value(), pid, elf_file.error().message());
     }
   }
