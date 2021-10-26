@@ -14,6 +14,15 @@
 
 namespace orbit_client_data {
 
+struct TimerMetadata {
+  bool is_empty;
+  size_t number_of_timers;
+  uint64_t min_time;
+  uint64_t max_time;
+  uint32_t depth;
+  uint32_t process_id;
+};
+
 // Stores all the timers from a particular ThreadId. Provides queries to get timers in a certain
 // range as well as metadata from them.
 class ScopeTreeTimerData final {
@@ -24,17 +33,12 @@ class ScopeTreeTimerData final {
       : thread_id_(thread_id), scope_tree_update_type_(scope_tree_update_type){};
 
   [[nodiscard]] int64_t GetThreadId() const { return thread_id_; }
-  [[nodiscard]] bool IsEmpty() const { return GetNumberOfTimers() == 0; }
-  [[nodiscard]] size_t GetNumberOfTimers() const;
-  [[nodiscard]] uint32_t GetProcessId() const { return timer_data_.GetProcessId(); }
-  [[nodiscard]] uint64_t GetMinTime() const { return timer_data_.GetMinTime(); }
-  [[nodiscard]] uint64_t GetMaxTime() const { return timer_data_.GetMaxTime(); }
-  [[nodiscard]] uint32_t GetDepth() const;
+  [[nodiscard]] const TimerMetadata GetTimerMetadata() const;
+
   [[nodiscard]] std::vector<const TimerChain*> GetChains() const { return timer_data_.GetChains(); }
 
   const orbit_client_protos::TimerInfo& AddTimer(orbit_client_protos::TimerInfo timer_info);
   void OnCaptureComplete();
-  [[nodiscard]] TimerData* GetTimerData() { return &timer_data_; }
 
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
       uint64_t min_tick = std::numeric_limits<uint64_t>::min(),

@@ -6,15 +6,17 @@
 
 namespace orbit_client_data {
 
-size_t ScopeTreeTimerData::GetNumberOfTimers() const {
+const TimerMetadata ScopeTreeTimerData::GetTimerMetadata() const {
   absl::MutexLock lock(&scope_tree_mutex_);
+  TimerMetadata timer_metadata;
   // Special case. ScopeTree has a root node in depth 0 which shouldn't be considered.
-  return scope_tree_.Size() - 1;
-}
-
-uint32_t ScopeTreeTimerData::GetDepth() const {
-  absl::MutexLock lock(&scope_tree_mutex_);
-  return scope_tree_.Depth();
+  timer_metadata.number_of_timers = scope_tree_.Size() - 1;
+  timer_metadata.is_empty = timer_metadata.number_of_timers == 0;
+  timer_metadata.min_time = timer_data_.GetMinTime();
+  timer_metadata.max_time = timer_data_.GetMaxTime();
+  timer_metadata.depth = scope_tree_.Depth();
+  timer_metadata.process_id = timer_data_.GetProcessId();
+  return timer_metadata;
 }
 
 const orbit_client_protos::TimerInfo& ScopeTreeTimerData::AddTimer(
