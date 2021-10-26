@@ -3,6 +3,8 @@
 // found in the LICENSE file.
 #include "OrbitGgp/Project.h"
 
+#include <absl/strings/str_format.h>
+
 #include <QByteArray>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -15,16 +17,24 @@ namespace orbit_ggp {
 
 namespace {
 
-ErrorMessageOr<Project> GetProjectFromJson(const QJsonObject& obj) {
-  const auto safe_json_to_string = [](const QJsonValue& val) -> ErrorMessageOr<QString> {
-    if (!val.isString()) {
-      return ErrorMessage{"Unable to parse JSON: String expected."};
-    }
-    return val.toString();
-  };
+ErrorMessageOr<QString> SafeJsonValueToString(const QJsonValue& val) {
+  if (!val.isString()) {
+    return ErrorMessage{"Unable to parse JSON: String expected."};
+  }
+  return val.toString();
+}
 
-  OUTCOME_TRY(auto&& display_name, safe_json_to_string(obj.value("displayName")));
-  OUTCOME_TRY(auto&& id, safe_json_to_string(obj.value("id")));
+ErrorMessageOr<QString> SafeGetStringValueForKey(const QJsonObject& obj, QString key) {
+  if (!obj.contains(key)) {
+    return ErrorMessage{absl::StrFormat("Unable to parse JSON: Object does not contain key \"%s\"",
+                                        key.toStdString())};
+  }
+  return SafeJsonValueToString(obj.value(key));
+}
+
+ErrorMessageOr<Project> GetProjectFromJson(const QJsonObject& obj) {
+  OUTCOME_TRY(auto&& display_name, SafeGetStringValueForKey(obj, "displayName"));
+  OUTCOME_TRY(auto&& id, SafeGetStringValueForKey(obj, "id"));
 
   return Project{display_name, id};
 }
@@ -48,6 +58,19 @@ ErrorMessageOr<QVector<Project>> Project::GetListFromJson(const QByteArray& json
   }
 
   return list;
+}
+
+ErrorMessageOr<Project> Project::GetDefaultProjectFromJson(const QByteArray& json) {
+  const QJsonDocument doc = QJsonDocument::fromJson(json);
+
+  if (!doc.isObject()) return ErrorMessage{"Unable to parse JSON: Object expected."};
+
+  const QJsonObject obj = doc.object();
+
+  OUTCOME_TRY(auto&& display_name, SafeGetStringValueForKey(obj, "project"));
+  OUTCOME_TRY(auto&& id, SafeGetStringValueForKey(obj, "projectId"));
+
+  return Project{display_name, id};
 }
 
 }  // namespace orbit_ggp

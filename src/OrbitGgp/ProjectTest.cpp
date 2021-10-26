@@ -82,6 +82,66 @@ TEST(OrbitGgpProject, GetListFromJson) {
   }
 }
 
+TEST(OrbitGgpProject, GetDefaultProjectFromJson) {
+  {  // invalid json
+    const auto json = QString("json").toUtf8();
+    EXPECT_THAT(Project::GetDefaultProjectFromJson(json),
+                orbit_test_utils::HasError("Unable to parse JSON"));
+  }
+
+  {
+    // json array
+    const auto json = QString("[]").toUtf8();
+    EXPECT_THAT(Project::GetDefaultProjectFromJson(json),
+                orbit_test_utils::HasError("Object expected"));
+  }
+
+  {
+    // empty json object
+    const auto json = QString("{}").toUtf8();
+    EXPECT_THAT(Project::GetDefaultProjectFromJson(json),
+                orbit_test_utils::HasError(
+                    "Unable to parse JSON: Object does not contain key \"project\""));
+  }
+
+  {
+    // wrong value type
+    const auto json = QString(R"({"project":5})").toUtf8();
+    EXPECT_THAT(Project::GetDefaultProjectFromJson(json),
+                orbit_test_utils::HasError("Unable to parse JSON: String expected"));
+  }
+
+  {
+    // missing project id json object
+    const auto json = QString(R"({"project":"project name"})").toUtf8();
+    EXPECT_THAT(Project::GetDefaultProjectFromJson(json),
+                orbit_test_utils::HasError(
+                    "Unable to parse JSON: Object does not contain key \"projectId\""));
+  }
+
+  {
+    // valid json object
+    const auto json = QString(R"({"project":"Project Name", "projectId":"project id"})").toUtf8();
+    const auto result = Project::GetDefaultProjectFromJson(json);
+    ASSERT_THAT(result, orbit_test_utils::HasNoError());
+    const Project& project = result.value();
+    EXPECT_EQ(project.display_name, "Project Name");
+    EXPECT_EQ(project.id, "project id");
+  }
+
+  {
+    // valid json object that contains more
+    const auto json =
+        QString(R"({"project":"Project Name", "projectId":"project id", "environment": "foobar"})")
+            .toUtf8();
+    const auto result = Project::GetDefaultProjectFromJson(json);
+    ASSERT_THAT(result, orbit_test_utils::HasNoError());
+    const Project& project = result.value();
+    EXPECT_EQ(project.display_name, "Project Name");
+    EXPECT_EQ(project.id, "project id");
+  }
+}
+
 TEST(OrbitGgpProject, EqualToOperator) {
   Project project_0;
   Project project_1;
