@@ -5,6 +5,8 @@
 #ifndef BUFFER_OUTPUT_STREAM_H_
 #define BUFFER_OUTPUT_STREAM_H_
 
+#include <absl/base/thread_annotations.h>
+#include <absl/synchronization/mutex.h>
 #include <google/protobuf/io/zero_copy_stream.h>
 
 #include <vector>
@@ -15,7 +17,6 @@ namespace orbit_capture_file_internal {
 // https://developers.google.com/protocol-buffers/docs/reference/cpp/google.protobuf.io.zero_copy_stream
 class BufferOutputStream : public google::protobuf::io::ZeroCopyOutputStream {
  public:
-  BufferOutputStream(std::vector<unsigned char>* target);
   ~BufferOutputStream() override = default;
 
   // Obtains a buffer into which data can be written.
@@ -28,9 +29,14 @@ class BufferOutputStream : public google::protobuf::io::ZeroCopyOutputStream {
   // Returns the total number of bytes written since this object was created.
   google::protobuf::int64 ByteCount() const override;
 
+  // Support consuming outputted data by swapping the buffer content.
+  void Swap(std::vector<unsigned char>& target);
+  [[nodiscard]] const std::vector<unsigned char>& Read() const;
+
  private:
   static constexpr size_t kMinimumSize = 16;
-  std::vector<unsigned char>* const target_;  // The byte vector.
+  mutable absl::Mutex mutex_;
+  std::vector<unsigned char> buffer_ ABSL_GUARDED_BY(mutex_);  // The byte vector.
 };
 
 }  // namespace orbit_capture_file_internal

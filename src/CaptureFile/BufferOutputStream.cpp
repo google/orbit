@@ -11,20 +11,18 @@
 
 namespace orbit_capture_file_internal {
 
-BufferOutputStream::BufferOutputStream(std::vector<unsigned char>* target) : target_(target) {}
-
 bool BufferOutputStream::Next(void** data, int* size) {
   CHECK(data != nullptr);
   CHECK(size != nullptr);
-  CHECK(target_ != nullptr);
+  absl::MutexLock lock{&mutex_};
 
-  size_t old_size = target_->size();
+  size_t old_size = buffer_.size();
 
   size_t new_size;
-  if (old_size < target_->capacity()) {
+  if (old_size < buffer_.capacity()) {
     // Resize the vector to match its capacity, since we can get away
     // without a memory allocation this way.
-    new_size = target_->capacity();
+    new_size = buffer_.capacity();
   } else {
     // Size has reached capacity, try to double it.
     new_size = old_size * 2;
@@ -34,26 +32,38 @@ bool BufferOutputStream::Next(void** data, int* size) {
   // Make sure the increase size is at least kMinimumSize. Here "+ 0" works around GCC4 weirdness.
   new_size = std::max(new_size, kMinimumSize + 0);
   // Grow the vector.
-  target_->resize(new_size);
+  buffer_.resize(new_size);
 
-  *data = target_->data() + old_size;
-  *size = target_->size() - old_size;
+  *data = buffer_.data() + old_size;
+  *size = buffer_.size() - old_size;
 
   return true;
 }
 
 void BufferOutputStream::BackUp(int count) {
-  CHECK(target_ != nullptr);
   CHECK(count >= 0);
-  CHECK(static_cast<size_t>(count) <= target_->size());
+  absl::MutexLock lock{&mutex_};
+  CHECK(static_cast<size_t>(count) <= buffer_.size());
 
-  target_->resize(target_->size() - count);
+  buffer_.resize(buffer_.size() - count);
 }
 
-int64_t BufferOutputStream::ByteCount() const {
-  CHECK(target_ != nullptr);
+google::protobuf::int64 BufferOutputStream::ByteCount() const {
+  absl::MutexLock lock{&mutex_};
 
-  return target_->size();
+  return buffer_.size();
+}
+
+void BufferOutputStream::Swap(std::vector<unsigned char>& target) {
+  absl::MutexLock lock{&mutex_};
+
+  buffer_.swap(target);
+}
+
+const std::vector<unsigned char>& BufferOutputStream::Read() const {
+  absl::MutexLock lock{&mutex_};
+
+  return buffer_;
 }
 
 }  // namespace orbit_capture_file_internal

@@ -29,18 +29,22 @@ std::string GenerateRandomString(int size) {
 }  // namespace
 
 TEST(BufferOutputStream, WriteToOutputStream) {
-  std::vector<unsigned char> output_buffer;
-  BufferOutputStream output_stream{&output_buffer};
+  BufferOutputStream output_stream;
   EXPECT_EQ(output_stream.ByteCount(), 0);
 
-  google::protobuf::io::CodedOutputStream coded_output_stream(&output_stream);
   constexpr int kBytesToWrite = 1024;
   std::string data_to_write = GenerateRandomString(kBytesToWrite);
+  google::protobuf::io::CodedOutputStream coded_output_stream(&output_stream);
   coded_output_stream.WriteString(data_to_write);
   EXPECT_EQ(output_stream.ByteCount(), kBytesToWrite);
 
+  const std::vector<unsigned char>& output_buffer = output_stream.Read();
   std::string output_stream_content(output_buffer.begin(), output_buffer.end());
   EXPECT_EQ(output_stream_content, data_to_write);
+
+  std::vector<unsigned char> new_buffer;
+  output_stream.Swap(new_buffer);
+  EXPECT_EQ(output_stream.ByteCount(), 0);
 }
 
 }  // namespace orbit_capture_file_internal
