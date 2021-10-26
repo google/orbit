@@ -89,10 +89,11 @@ class LockFreeUserSpaceInstrumentationEventProducer
 
 void StartNewCapture() { start_current_capture_timestamp = CaptureTimestampNs(); }
 
-void EntryPayload(uint64_t return_address, uint64_t function_id) {
+void EntryPayload(uint64_t return_address, uint64_t function_id, uint64_t /*stack_pointer*/) {
   const uint64_t timestamp_on_entry_ns = CaptureTimestampNs();
   auto& open_function_call_stack = GetOpenFunctionCallStack();
   open_function_call_stack.emplace(return_address, function_id, timestamp_on_entry_ns);
+  // TODO(b/194704608): Communicate stack_pointer to OrbitService for DWARF unwinding.
 }
 
 uint64_t ExitPayload() {
