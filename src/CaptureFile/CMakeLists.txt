@@ -17,7 +17,9 @@ target_sources(
 
 target_sources(
   CaptureFile
-  PRIVATE CaptureFileConstants.h
+  PRIVATE BufferOutputStream.cpp
+          BufferOutputStream.h
+          CaptureFileConstants.h
           CaptureFile.cpp
           CaptureFileHelpers.cpp
           CaptureFileOutputStream.cpp
@@ -38,6 +40,7 @@ target_link_libraries(
 add_executable(CaptureFileTests)
 
 target_sources(CaptureFileTests PRIVATE
+  BufferOutputStreamTest.cpp
   CaptureFileHelpersTest.cpp
   CaptureFileOutputStreamTest.cpp
   CaptureFileTest.cpp
