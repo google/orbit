@@ -47,6 +47,13 @@ ErrorMessageOr<void> ProtoSectionInputStreamImpl::ReadMessage(google::protobuf::
   }
 
   message->ParseFromArray(buf.get(), message_size);
+
+  if (message->ByteSizeLong() != message_size) {
+    return ErrorMessage{absl::StrFormat(
+        "The message size %d of the parsed message is different from the parsed size %d",
+        message->ByteSizeLong(), message_size)};
+  }
+
   return outcome::success();
 }
 
