@@ -30,7 +30,7 @@ std::filesystem::path GetExecutablePath() {
 
 ErrorMessageOr<std::filesystem::path> GetExecutablePath(uint32_t process_id) {
   char buffer[PATH_MAX];
-  int32_t pid = ToNativeProcessId(process_id);
+  pid_t pid = ToNativeProcessId(process_id);
 
   ssize_t length = readlink(absl::StrFormat("/proc/%i/exe", pid).c_str(), buffer, sizeof(buffer));
   if (length == -1) {

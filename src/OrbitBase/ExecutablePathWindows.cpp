@@ -44,6 +44,7 @@ ErrorMessageOr<std::filesystem::path> GetExecutablePath(uint32_t pid) {
     return ErrorMessage(absl::StrFormat("GetModuleFileNameExA failed with: %u", GetLastError()));
   }
 
+  // Clean up "../" inside full path
   char exe_full_path[kMaxPath] = {0};
   if (!GetFullPathNameA(exe_file_name, kMaxPath, exe_full_path, nullptr)) {
     return ErrorMessage(absl::StrFormat("GetFullPathNameA failed with: %u", GetLastError()));

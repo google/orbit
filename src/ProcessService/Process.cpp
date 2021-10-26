@@ -75,7 +75,7 @@ ErrorMessageOr<Process> Process::FromPid(uint32_t pid) {
   if (cpu_time && total_cpu_time) {
     process.UpdateCpuUsage(cpu_time.value(), total_cpu_time.value());
   } else {
-    LOG("Could not update the CPU usage of process %d", process.process_info().pid());
+    LOG("Could not update the CPU usage of process %u", process.process_info().pid());
   }
 
   // "The command-line arguments appear [...] as a set of strings
