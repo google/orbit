@@ -245,7 +245,7 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected, 
 
 bool ThreadTrack::IsEmpty() const {
   return thread_state_bar_->IsEmpty() && event_bar_->IsEmpty() && tracepoint_bar_->IsEmpty() &&
-         timer_data_->IsEmpty();
+         TimerTrack::IsEmpty();
 }
 
 void ThreadTrack::UpdatePositionOfSubtracks() {
@@ -377,7 +377,7 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
 
   // Pass ownership to timer_chain. TODO(b/194268477): Pass timer_info as a value instead of
   // reference to be able to move it.
-  const auto& timer_info_chain_ref = timer_data_->AddTimer(/*depth=*/0, timer_info);
+  const auto& timer_info_chain_ref = timer_data_->AddTimer(timer_info, /*depth=*/0);
 
   if (scope_tree_update_type_ == ScopeTreeUpdateType::kAlways) {
     absl::MutexLock lock(&scope_tree_mutex_);

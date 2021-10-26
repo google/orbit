@@ -10,21 +10,15 @@
 
 #include "OrbitBase/ThreadConstants.h"
 #include "TimerChain.h"
+#include "TimerDataInterface.h"
 #include "capture_data.pb.h"
 
 namespace orbit_client_data {
 
-class TimerData final {
+class TimerData final : public TimerDataInterface {
  public:
-  [[nodiscard]] bool IsEmpty() const { return num_timers_ == 0; }
-  [[nodiscard]] size_t GetNumberOfTimers() const { return num_timers_; }
-  [[nodiscard]] uint64_t GetMinTime() const { return min_time_; }
-  [[nodiscard]] uint64_t GetMaxTime() const { return max_time_; }
-  [[nodiscard]] uint32_t GetMaxDepth() const { return max_depth_; }
-  [[nodiscard]] uint32_t GetProcessId() const { return process_id_; }
-
-  const orbit_client_protos::TimerInfo& AddTimer(uint64_t depth,
-                                                 orbit_client_protos::TimerInfo timer_info) {
+  const orbit_client_protos::TimerInfo& AddTimer(orbit_client_protos::TimerInfo timer_info,
+                                                 uint32_t depth) override {
     if (process_id_ == orbit_base::kInvalidProcessId) {
       process_id_ = timer_info.process_id();
     }
@@ -38,7 +32,26 @@ class TimerData final {
     return timer_chain->emplace_back(std::move(timer_info));
   }
 
-  [[nodiscard]] std::vector<const TimerChain*> GetChains() const {
+  [[nodiscard]] virtual std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
+      uint64_t /*min_tick*/ = std::numeric_limits<uint64_t>::min(),
+      uint64_t /*max_tick*/ = std::numeric_limits<uint64_t>::max()) const override {
+    // TODO(b/204173236): Implement GetTimers and use it in TimerTracks.
+    return {};
+  }
+
+  // TODO(b/204173036): Test depth and process_id.
+  const TimerMetadata GetTimerMetadata() const override {
+    TimerMetadata timer_metadata;
+    timer_metadata.number_of_timers = num_timers_;
+    timer_metadata.is_empty = num_timers_ == 0;
+    timer_metadata.min_time = min_time_;
+    timer_metadata.max_time = max_time_;
+    timer_metadata.depth = max_depth_;
+    timer_metadata.process_id = process_id_;
+    return timer_metadata;
+  }
+
+  [[nodiscard]] std::vector<const TimerChain*> GetChains() const override {
     std::vector<const TimerChain*> chains;
     absl::MutexLock lock(&mutex_);
     for (const auto& it : timers_) {
@@ -58,20 +71,6 @@ class TimerData final {
     return nullptr;
   }
 
-  void UpdateMinTime(uint64_t min_time) {
-    uint64_t current_min = min_time_.load();
-    while ((min_time < current_min) && !min_time_.compare_exchange_weak(current_min, min_time)) {
-    }
-  }
-
-  void UpdateMaxTime(uint64_t max_time) {
-    uint64_t current_max = max_time_.load();
-    while ((max_time > current_max) && !max_time_.compare_exchange_weak(current_max, max_time)) {
-    }
-  }
-
-  void UpdateMaxDepth(uint32_t depth) { max_depth_ = std::max(max_depth_, depth); }
-
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetFirstAfterStartTime(uint64_t time,
                                                                              uint32_t depth) const {
     const orbit_client_data::TimerChain* chain = GetChain(depth);
@@ -88,6 +87,30 @@ class TimerData final {
     }
     return nullptr;
   }
+
+  const orbit_client_protos::TimerInfo* GetLeft(
+      const orbit_client_protos::TimerInfo& timer_info) const override {
+    return GetFirstBeforeStartTime(timer_info.start(), timer_info.depth());
+  }
+
+  const orbit_client_protos::TimerInfo* GetRight(
+      const orbit_client_protos::TimerInfo& timer_info) const override {
+    return GetFirstAfterStartTime(timer_info.start(), timer_info.depth());
+  }
+
+  const orbit_client_protos::TimerInfo* GetUp(
+      const orbit_client_protos::TimerInfo& timer_info) const override {
+    return GetFirstBeforeStartTime(timer_info.start(), timer_info.depth() - 1);
+  }
+
+  const orbit_client_protos::TimerInfo* GetDown(
+      const orbit_client_protos::TimerInfo& timer_info) const override {
+    return GetFirstAfterStartTime(timer_info.start(), timer_info.depth() + 1);
+  }
+
+  // Unused methods needed in TimerDataInterface
+  [[nodiscard]] int64_t GetThreadId() const override { return -1; }
+  virtual void OnCaptureComplete() override {}
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetFirstBeforeStartTime(
       uint64_t time, uint32_t depth) const {
@@ -111,6 +134,19 @@ class TimerData final {
   }
 
  private:
+  void UpdateMinTime(uint64_t min_time) {
+    uint64_t current_min = min_time_.load();
+    while ((min_time < current_min) && !min_time_.compare_exchange_weak(current_min, min_time)) {
+    }
+  }
+
+  void UpdateMaxTime(uint64_t max_time) {
+    uint64_t current_max = max_time_.load();
+    while ((max_time > current_max) && !max_time_.compare_exchange_weak(current_max, max_time)) {
+    }
+  }
+
+  void UpdateMaxDepth(uint32_t depth) { max_depth_ = std::max(max_depth_, depth); }
   [[nodiscard]] TimerChain* GetOrCreateTimerChain(uint64_t depth) {
     absl::MutexLock lock(&mutex_);
     auto it = timers_.find(depth);
@@ -125,7 +161,7 @@ class TimerData final {
 
   uint32_t max_depth_ = 0;
   mutable absl::Mutex mutex_;
-  std::map<uint64_t, std::unique_ptr<TimerChain>> timers_ ABSL_GUARDED_BY(mutex_);
+  std::map<uint32_t, std::unique_ptr<TimerChain>> timers_ ABSL_GUARDED_BY(mutex_);
   std::atomic<size_t> num_timers_{0};
   std::atomic<uint64_t> min_time_{std::numeric_limits<uint64_t>::max()};
   std::atomic<uint64_t> max_time_{std::numeric_limits<uint64_t>::min()};

@@ -59,7 +59,7 @@ class ThreadTrack final : public TimerTrack {
     return timer_data_->GetChains();
   }
 
-  [[nodiscard]] bool IsCollapsible() const override { return timer_data_->GetMaxDepth() > 1; }
+  [[nodiscard]] bool IsCollapsible() const override { return GetDepth() > 1; }
 
   [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() override;
   [[nodiscard]] std::vector<CaptureViewElement*> GetChildren() const override;

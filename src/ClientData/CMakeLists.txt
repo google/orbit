@@ -26,11 +26,12 @@ target_sources(ClientData PUBLIC
         include/ClientData/ThreadTrackDataManager.h
         include/ClientData/ThreadTrackDataProvider.h
         include/ClientData/TimerChain.h
+        include/ClientData/TimerData.h
+        include/ClientData/TimerDataInterface.h
+        include/ClientData/TimerDataManager.h
         include/ClientData/TimestampIntervalSet.h
         include/ClientData/TracepointCustom.h
         include/ClientData/TracepointData.h
-        include/ClientData/TimerDataManager.h
-        include/ClientData/TimerData.h
         include/ClientData/UserDefinedCaptureData.h)
 
 target_sources(ClientData PRIVATE

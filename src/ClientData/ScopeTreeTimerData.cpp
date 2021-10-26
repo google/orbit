@@ -8,21 +8,18 @@ namespace orbit_client_data {
 
 const TimerMetadata ScopeTreeTimerData::GetTimerMetadata() const {
   absl::MutexLock lock(&scope_tree_mutex_);
-  TimerMetadata timer_metadata;
+  TimerMetadata timer_metadata = timer_data_.GetTimerMetadata();
   // Special case. ScopeTree has a root node in depth 0 which shouldn't be considered.
   timer_metadata.number_of_timers = scope_tree_.Size() - 1;
   timer_metadata.is_empty = timer_metadata.number_of_timers == 0;
-  timer_metadata.min_time = timer_data_.GetMinTime();
-  timer_metadata.max_time = timer_data_.GetMaxTime();
   timer_metadata.depth = scope_tree_.Depth();
-  timer_metadata.process_id = timer_data_.GetProcessId();
   return timer_metadata;
 }
 
 const orbit_client_protos::TimerInfo& ScopeTreeTimerData::AddTimer(
-    orbit_client_protos::TimerInfo timer_info) {
+    orbit_client_protos::TimerInfo timer_info, uint32_t /*depth*/) {
   // Thread tracks use a ScopeTree so we don't need to create one TimerChain per depth.
-  const auto& timer_info_ref = timer_data_.AddTimer(/*depth=*/0, std::move(timer_info));
+  const auto& timer_info_ref = timer_data_.AddTimer(std::move(timer_info), /*depth=*/0);
 
   if (scope_tree_update_type_ == ScopeTreeUpdateType::kAlways) {
     absl::MutexLock lock(&scope_tree_mutex_);

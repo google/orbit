@@ -11,46 +11,41 @@
 
 #include "Containers/ScopeTree.h"
 #include "TimerData.h"
+#include "TimerDataInterface.h"
 
 namespace orbit_client_data {
 
-struct TimerMetadata {
-  bool is_empty;
-  size_t number_of_timers;
-  uint64_t min_time;
-  uint64_t max_time;
-  uint32_t depth;
-  uint32_t process_id;
-};
-
 // Stores all the timers from a particular ThreadId. Provides queries to get timers in a certain
 // range as well as metadata from them.
-class ScopeTreeTimerData final {
+class ScopeTreeTimerData final : public TimerDataInterface {
  public:
   enum class ScopeTreeUpdateType { kAlways, kOnCaptureComplete, kNever };
   explicit ScopeTreeTimerData(int64_t thread_id = -1, ScopeTreeUpdateType scope_tree_update_type =
                                                           ScopeTreeUpdateType::kAlways)
       : thread_id_(thread_id), scope_tree_update_type_(scope_tree_update_type){};
 
-  [[nodiscard]] int64_t GetThreadId() const { return thread_id_; }
-  [[nodiscard]] const TimerMetadata GetTimerMetadata() const;
+  [[nodiscard]] int64_t GetThreadId() const override { return thread_id_; }
+  [[nodiscard]] const TimerMetadata GetTimerMetadata() const override;
 
-  [[nodiscard]] std::vector<const TimerChain*> GetChains() const { return timer_data_.GetChains(); }
+  [[nodiscard]] std::vector<const TimerChain*> GetChains() const override {
+    return timer_data_.GetChains();
+  }
 
-  const orbit_client_protos::TimerInfo& AddTimer(orbit_client_protos::TimerInfo timer_info);
-  void OnCaptureComplete();
+  const orbit_client_protos::TimerInfo& AddTimer(orbit_client_protos::TimerInfo timer_info,
+                                                 uint32_t /*depth*/ = 0) override;
+  void OnCaptureComplete() override;
 
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
       uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
-      uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const;
+      uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const override;
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
-      const orbit_client_protos::TimerInfo& timer) const;
+      const orbit_client_protos::TimerInfo& timer) const override;
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetRight(
-      const orbit_client_protos::TimerInfo& timer) const;
+      const orbit_client_protos::TimerInfo& timer) const override;
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetUp(
-      const orbit_client_protos::TimerInfo& timer) const;
+      const orbit_client_protos::TimerInfo& timer) const override;
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetDown(
-      const orbit_client_protos::TimerInfo& timer) const;
+      const orbit_client_protos::TimerInfo& timer) const override;
 
  private:
   const int64_t thread_id_;

@@ -64,7 +64,10 @@ class TimerTrack : public Track {
   // Track
   [[nodiscard]] Type GetType() const override { return Type::kTimerTrack; }
 
-  [[nodiscard]] uint32_t GetProcessId() const override { return timer_data_->GetProcessId(); }
+  [[nodiscard]] uint32_t GetDepth() const { return timer_data_->GetTimerMetadata().depth; }
+  [[nodiscard]] uint32_t GetProcessId() const override {
+    return timer_data_->GetTimerMetadata().process_id;
+  }
   [[nodiscard]] std::string GetExtraInfo(const orbit_client_protos::TimerInfo& timer) const;
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
