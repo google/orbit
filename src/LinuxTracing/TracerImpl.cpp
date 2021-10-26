@@ -855,7 +855,7 @@ uint64_t TracerImpl::ProcessForkEventAndReturnTimestamp(const perf_event_header&
   ring_buffer->ConsumeRecord(header, &ring_buffer_record);
   ForkPerfEvent event{
       .timestamp = ring_buffer_record.time,
-      .ordered_in_file_descriptor = ring_buffer->GetFileDescriptor(),
+      .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
       .data =
           {
               .pid = static_cast<pid_t>(ring_buffer_record.pid),
@@ -877,7 +877,7 @@ uint64_t TracerImpl::ProcessExitEventAndReturnTimestamp(const perf_event_header&
   ring_buffer->ConsumeRecord(header, &ring_buffer_record);
   ExitPerfEvent event{
       .timestamp = ring_buffer_record.time,
-      .ordered_in_file_descriptor = ring_buffer->GetFileDescriptor(),
+      .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
       .data =
           {
               .pid = static_cast<pid_t>(ring_buffer_record.pid),
@@ -956,7 +956,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
 
     UprobesPerfEvent event{
         .timestamp = ring_buffer_record.sample_id.time,
-        .ordered_in_file_descriptor = fd,
+        .ordered_stream = PerfEventOrderedStream::FileDescriptor(fd),
         .data =
             {
                 .pid = static_cast<pid_t>(ring_buffer_record.sample_id.pid),
@@ -984,7 +984,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
 
     UprobesWithArgumentsPerfEvent event{
         .timestamp = ring_buffer_record.sample_id.time,
-        .ordered_in_file_descriptor = fd,
+        .ordered_stream = PerfEventOrderedStream::FileDescriptor(fd),
         .data =
             {
                 .pid = static_cast<pid_t>(ring_buffer_record.sample_id.pid),
@@ -1011,7 +1011,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
 
     UretprobesPerfEvent event{
         .timestamp = ring_buffer_record.sample_id.time,
-        .ordered_in_file_descriptor = fd,
+        .ordered_stream = PerfEventOrderedStream::FileDescriptor(fd),
         .data =
             {
                 .pid = static_cast<pid_t>(ring_buffer_record.sample_id.pid),
@@ -1033,7 +1033,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
 
     UretprobesWithReturnValuePerfEvent event{
         .timestamp = ring_buffer_record.sample_id.time,
-        .ordered_in_file_descriptor = fd,
+        .ordered_stream = PerfEventOrderedStream::FileDescriptor(fd),
         .data =
             {
                 .pid = static_cast<pid_t>(ring_buffer_record.sample_id.pid),
@@ -1090,7 +1090,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
     TaskNewtaskPerfEvent event{
         .timestamp = ring_buffer_record.sample_id.time,
-        .ordered_in_file_descriptor = fd,
+        .ordered_stream = PerfEventOrderedStream::FileDescriptor(fd),
         .data =
             {
                 // The tracepoint format calls the new tid "data.pid" but it's effectively the
@@ -1110,7 +1110,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
 
     TaskRenamePerfEvent event{
         .timestamp = ring_buffer_record.sample_id.time,
-        .ordered_in_file_descriptor = fd,
+        .ordered_stream = PerfEventOrderedStream::FileDescriptor(fd),
         .data =
             {
                 // The tracepoint format calls the renamed tid "data.pid" but it's effectively the
@@ -1128,7 +1128,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
 
     SchedSwitchPerfEvent event{
         .timestamp = ring_buffer_record.sample_id.time,
-        .ordered_in_file_descriptor = fd,
+        .ordered_stream = PerfEventOrderedStream::FileDescriptor(fd),
         .data =
             {
                 .cpu = ring_buffer_record.sample_id.cpu,
@@ -1153,7 +1153,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
 
     SchedWakeupPerfEvent event{
         .timestamp = ring_buffer_record.sample_id.time,
-        .ordered_in_file_descriptor = fd,
+        .ordered_stream = PerfEventOrderedStream::FileDescriptor(fd),
         .data =
             {
                 // The tracepoint format calls the woken tid "data.pid" but it's effectively the
@@ -1230,7 +1230,7 @@ uint64_t TracerImpl::ProcessLostEventAndReturnTimestamp(const perf_event_header&
 
   LostPerfEvent event{
       .timestamp = timestamp,
-      .ordered_in_file_descriptor = ring_buffer->GetFileDescriptor(),
+      .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
       .data =
           {
               .previous_timestamp = fd_previous_timestamp_ns,

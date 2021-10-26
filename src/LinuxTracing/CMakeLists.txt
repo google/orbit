@@ -38,6 +38,8 @@ target_sources(LinuxTracing PRIVATE
         PerfEvent.h
         PerfEventOpen.cpp
         PerfEventOpen.h
+        PerfEventOrderedStream.cpp
+        PerfEventOrderedStream.h
         PerfEventProcessor.cpp
         PerfEventProcessor.h
         PerfEventQueue.cpp
