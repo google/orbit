@@ -24,104 +24,24 @@ class TimerData final {
   [[nodiscard]] uint32_t GetProcessId() const { return process_id_; }
 
   const orbit_client_protos::TimerInfo& AddTimer(uint64_t depth,
-                                                 orbit_client_protos::TimerInfo timer_info) {
-    if (process_id_ == orbit_base::kInvalidProcessId) {
-      process_id_ = timer_info.process_id();
-    }
+                                                 orbit_client_protos::TimerInfo timer_info);
 
-    TimerChain* timer_chain = GetOrCreateTimerChain(depth);
-    UpdateMinTime(timer_info.start());
-    UpdateMaxTime(timer_info.end());
-    ++num_timers_;
-    UpdateMaxDepth(timer_info.depth() + 1);
+  [[nodiscard]] std::vector<const TimerChain*> GetChains() const;
+  [[nodiscard]] const TimerChain* GetChain(uint64_t depth) const;
 
-    return timer_chain->emplace_back(std::move(timer_info));
-  }
-
-  [[nodiscard]] std::vector<const TimerChain*> GetChains() const {
-    std::vector<const TimerChain*> chains;
-    absl::MutexLock lock(&mutex_);
-    for (const auto& it : timers_) {
-      chains.push_back(it.second.get());
-    }
-
-    return chains;
-  }
-
-  [[nodiscard]] const TimerChain* GetChain(uint64_t depth) const {
-    absl::MutexLock lock(&mutex_);
-    auto it = timers_.find(depth);
-    if (it != timers_.end()) {
-      return it->second.get();
-    }
-
-    return nullptr;
-  }
-
-  void UpdateMinTime(uint64_t min_time) {
-    uint64_t current_min = min_time_.load();
-    while ((min_time < current_min) && !min_time_.compare_exchange_weak(current_min, min_time)) {
-    }
-  }
-
-  void UpdateMaxTime(uint64_t max_time) {
-    uint64_t current_max = max_time_.load();
-    while ((max_time > current_max) && !max_time_.compare_exchange_weak(current_max, max_time)) {
-    }
-  }
+  void UpdateMinTime(uint64_t min_time);
+  void UpdateMaxTime(uint64_t max_time);
 
   void UpdateMaxDepth(uint32_t depth) { max_depth_ = std::max(max_depth_, depth); }
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetFirstAfterStartTime(uint64_t time,
-                                                                             uint32_t depth) const {
-    const orbit_client_data::TimerChain* chain = GetChain(depth);
-    if (chain == nullptr) return nullptr;
+                                                                             uint32_t depth) const;
 
-    // TODO(b/201044462): do better than linear search...
-    for (const auto& it : *chain) {
-      for (size_t k = 0; k < it.size(); ++k) {
-        const orbit_client_protos::TimerInfo& timer_info = it[k];
-        if (timer_info.start() > time) {
-          return &timer_info;
-        }
-      }
-    }
-    return nullptr;
-  }
-
-  [[nodiscard]] const orbit_client_protos::TimerInfo* GetFirstBeforeStartTime(
-      uint64_t time, uint32_t depth) const {
-    const orbit_client_data::TimerChain* chain = GetChain(depth);
-    if (chain == nullptr) return nullptr;
-
-    const orbit_client_protos::TimerInfo* first_timer_before_time = nullptr;
-
-    // TODO(b/201044462): do better than linear search...
-    for (const auto& it : *chain) {
-      for (size_t k = 0; k < it.size(); ++k) {
-        const orbit_client_protos::TimerInfo* timer_info = &it[k];
-        if (timer_info->start() >= time) {
-          return first_timer_before_time;
-        }
-        first_timer_before_time = timer_info;
-      }
-    }
-
-    return first_timer_before_time;
-  }
+  [[nodiscard]] const orbit_client_protos::TimerInfo* GetFirstBeforeStartTime(uint64_t time,
+                                                                              uint32_t depth) const;
 
  private:
-  [[nodiscard]] TimerChain* GetOrCreateTimerChain(uint64_t depth) {
-    absl::MutexLock lock(&mutex_);
-    auto it = timers_.find(depth);
-    if (it != timers_.end()) {
-      return it->second.get();
-    }
-
-    auto [inserted_it, inserted] = timers_.insert_or_assign(depth, std::make_unique<TimerChain>());
-    CHECK(inserted);
-    return inserted_it->second.get();
-  }
+  [[nodiscard]] TimerChain* GetOrCreateTimerChain(uint64_t depth);
 
   uint32_t max_depth_ = 0;
   mutable absl::Mutex mutex_;

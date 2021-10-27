@@ -47,6 +47,7 @@ target_sources(ClientData PRIVATE
         ScopeTreeTimerData.cpp
         ThreadTrackDataProvider.cpp
         TimerChain.cpp
+        TimerData.cpp
         TimerTrackDataIdManager.cpp
         TimestampIntervalSet.cpp
         TracepointData.cpp
