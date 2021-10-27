@@ -33,34 +33,45 @@ std::string GenerateRandomString(int size) {
 
 TEST(BufferOutputStream, WriteAndRead) {
   BufferOutputStream output_stream;
-  EXPECT_EQ(output_stream.ByteCount(), 0);
+  google::protobuf::io::CopyingOutputStreamAdaptor adaptor(&output_stream);
+  EXPECT_EQ(output_stream.BytesAvailableToRead(), 0);
+  EXPECT_EQ(adaptor.ByteCount(), 0);
 
-  // Test write data and trim unused bytes.
-  constexpr int kBytesToWrite = 1000;
-  std::string data_to_write = GenerateRandomString(kBytesToWrite);
-  google::protobuf::io::CodedOutputStream coded_output_stream(&output_stream);
-  coded_output_stream.WriteString(data_to_write);
-  EXPECT_GE(output_stream.ByteCount(), kBytesToWrite);
+  // CopyingOutputStreamAdaptor::Next is called when constructing the coded_output_stream. To get
+  // the actural written bytes of the adaptor, we need to trim the unused bytes.
+  google::protobuf::io::CodedOutputStream coded_output_stream(&adaptor);
+  EXPECT_GT(adaptor.ByteCount(), 0);
   coded_output_stream.Trim();
-  EXPECT_EQ(output_stream.ByteCount(), kBytesToWrite);
+  EXPECT_EQ(adaptor.ByteCount(), 0);
+
+  // Test write data to adaptor and then flush data to output stream. Note that we need to trim
+  // unused bytes in the adaptor before flushing data to the output stream.
+  constexpr int kBytesToWrite = 10000;
+  std::string data_to_write = GenerateRandomString(kBytesToWrite);
+  coded_output_stream.WriteString(data_to_write);
+  EXPECT_GT(adaptor.ByteCount(), kBytesToWrite);
+  coded_output_stream.Trim();
+  EXPECT_TRUE(adaptor.Flush());
+  EXPECT_EQ(adaptor.ByteCount(), kBytesToWrite);
+  EXPECT_EQ(output_stream.BytesAvailableToRead(), kBytesToWrite);
 
   // Test read data. The bytes trying to read is less than bytes available to read.
   std::string data_read;
-  constexpr int kBytesToRead = 123;
+  constexpr int kBytesToRead = 1234;
   data_read.resize(kBytesToRead);
   size_t actural_bytes_read = output_stream.ReadIntoBuffer(data_read.data(), kBytesToRead);
   EXPECT_EQ(actural_bytes_read, kBytesToRead);
   EXPECT_EQ(data_read, data_to_write.substr(0, kBytesToRead));
-  EXPECT_EQ(output_stream.ByteCount(), kBytesToWrite - kBytesToRead);
+  EXPECT_EQ(output_stream.BytesAvailableToRead(), kBytesToWrite - kBytesToRead);
 
   // Test read data. The bytes trying to read is more than bytes available to read.
-  constexpr int kBytesMoreThanReadAvailable = 900;
+  constexpr int kBytesMoreThanReadAvailable = 9000;
   data_read.resize(kBytesMoreThanReadAvailable);
   actural_bytes_read = output_stream.ReadIntoBuffer(data_read.data(), kBytesMoreThanReadAvailable);
   EXPECT_EQ(actural_bytes_read, kBytesToWrite - kBytesToRead);
   EXPECT_EQ(data_read.substr(0, actural_bytes_read),
             data_to_write.substr(kBytesToRead, kBytesToWrite - kBytesToRead));
-  EXPECT_EQ(output_stream.ByteCount(), 0);
+  EXPECT_EQ(output_stream.BytesAvailableToRead(), 0);
 }
 
 }  // namespace orbit_capture_file
