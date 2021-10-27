@@ -294,6 +294,7 @@ if [ "$(uname -s)" == "Linux" ]; then
     -e KOKORO_JOB_NAME -e CONAN_PROFILE -e BUILD_TYPE \
     -e OAUTH_TOKEN_HEADER -e ORBIT_BYPASS_RELEASE_CHECK \
     -e ORBIT_BUILD_MISSING_PACKAGES \
+    --security-opt "seccomp=${KOKORO_ARTIFACTS_DIR}/github/orbitprofiler/kokoro/builds/linux/seccomp.json" \
     ${CONTAINER} \
     /mnt/github/orbitprofiler/kokoro/builds/build.sh in_docker
 else
