@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "WindowsUtils/GetLastError.h"
+#include "OrbitBase/GetLastError.h"
 
 #include <absl/base/casts.h>
 #include <absl/strings/ascii.h>
 #include <windows.h>
 
-namespace orbit_windows_utils {
+namespace orbit_base {
 
 std::string GetLastErrorAsString() {
   DWORD error = ::GetLastError();
@@ -39,4 +39,4 @@ std::string GetLastErrorAsString() {
   return std::string(absl::StripAsciiWhitespace(error_as_string));
 }
 
-}  // namespace orbit_windows_utils
+}  // namespace orbit_base

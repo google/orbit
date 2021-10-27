@@ -61,7 +61,11 @@ target_sources(OrbitBase PRIVATE
 
 if (WIN32)
 target_sources(OrbitBase PRIVATE
+        include/OrbitBase/GetLastError.h)
+
+target_sources(OrbitBase PRIVATE
         ExecutablePathWindows.cpp
+        GetLastError.cpp
         ThreadUtilsWindows.cpp)
 else()
 target_sources(OrbitBase PRIVATE
