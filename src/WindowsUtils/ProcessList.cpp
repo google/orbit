@@ -13,10 +13,10 @@
 #include <filesystem>
 #include <optional>
 
+#include "OrbitBase/GetLastError.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/UniqueResource.h"
-#include "WindowsUtils/GetLastError.h"
 
 // clang-format off
 #include <processthreadsapi.h>
@@ -39,7 +39,7 @@ namespace {
     return is_32_bit_process_on_64_bit_os != TRUE;
   }
   ERROR("Calling IsWow64Process for pid %u: %s", GetProcessId(process_handle),
-        GetLastErrorAsString());
+        orbit_base::GetLastErrorAsString());
   return std::nullopt;
 }
 
@@ -132,14 +132,15 @@ ErrorMessageOr<void> ProcessListImpl::Refresh() {
   HANDLE process_snap_handle = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, /*th32ProcessID=*/0);
   orbit_base::unique_resource handle_closer(process_snap_handle, SafeCloseHandle);
   if (process_snap_handle == INVALID_HANDLE_VALUE) {
-    return ErrorMessage(
-        absl::StrFormat("Calling CreateToolhelp32Snapshot: %s", GetLastErrorAsString()));
+    return ErrorMessage(absl::StrFormat("Calling CreateToolhelp32Snapshot: %s",
+                                        orbit_base::GetLastErrorAsString()));
   }
 
   // Retrieve information about the first process, and exit if unsuccessful.
   process_entry.dwSize = sizeof(PROCESSENTRY32);
   if (!Process32First(process_snap_handle, &process_entry)) {
-    return ErrorMessage(absl::StrFormat("Calling Process32First: %s", GetLastErrorAsString()));
+    return ErrorMessage(
+        absl::StrFormat("Calling Process32First: %s", orbit_base::GetLastErrorAsString()));
   }
 
   // Walk the snapshot of processes.
@@ -159,7 +160,8 @@ ErrorMessageOr<void> ProcessListImpl::Refresh() {
       if (handle == nullptr) {
         // "System" processes cannot be opened, track errors to skip further OpenProcess calls.
         process_info.open_process_error = ::GetLastError();
-        ERROR("Calling OpenProcess for %s[%u]: %s", process_name, pid, GetLastErrorAsString());
+        ERROR("Calling OpenProcess for %s[%u]: %s", process_name, pid,
+              orbit_base::GetLastErrorAsString());
       } else {
         std::optional<bool> result = Is64Bit(handle);
         if (result.has_value()) {
@@ -210,7 +212,8 @@ void ProcessListImpl::UpdateCpuUsage() {
 
     if (process_handle == nullptr) {
       process_info.open_process_error = ::GetLastError();
-      ERROR("Calling OpenProcess for %s[%u]: %s", process.name, pid, GetLastErrorAsString());
+      ERROR("Calling OpenProcess for %s[%u]: %s", process.name, pid,
+            orbit_base::GetLastErrorAsString());
       continue;
     }
 
@@ -221,7 +224,7 @@ void ProcessListImpl::UpdateCpuUsage() {
     if (GetProcessTimes(process_handle, &creation_file_time, &exit_file_time, &kernel_file_time,
                         &user_file_time) == FALSE) {
       ERROR("Calling GetProcessTimes for %s[%u]: %s", process.name, process.pid,
-            GetLastErrorAsString());
+            orbit_base::GetLastErrorAsString());
       continue;
     }
 

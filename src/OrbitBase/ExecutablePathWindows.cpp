@@ -10,6 +10,7 @@
 // clang-format on
 
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/GetLastError.h"
 #include "OrbitBase/Logging.h"
 #include "absl/strings/str_replace.h"
 
@@ -19,13 +20,13 @@ std::filesystem::path GetExecutablePath() {
   constexpr uint32_t kMaxPath = 2048;
   char exe_file_name[kMaxPath] = {0};
   if (!GetModuleFileNameA(/*hModule=*/nullptr, exe_file_name, kMaxPath)) {
-    FATAL("GetModuleFileName failed with: %u", GetLastError());
+    FATAL("GetModuleFileName failed with: %s", GetLastErrorAsString());
   }
 
   // Clean up "../" inside full path
   char exe_full_path[kMaxPath] = {0};
   if (!GetFullPathNameA(exe_file_name, kMaxPath, exe_full_path, nullptr)) {
-    FATAL("GetFullPathNameA failed with: %u", GetLastError());
+    FATAL("GetFullPathNameA failed with: %s", GetLastErrorAsString());
   }
 
   return std::filesystem::path(exe_full_path);
@@ -41,13 +42,15 @@ ErrorMessageOr<std::filesystem::path> GetExecutablePath(uint32_t pid) {
   char exe_file_name[kMaxPath] = {0};
 
   if (!GetModuleFileNameExA(handle, /*hModule=*/nullptr, exe_file_name, kMaxPath)) {
-    return ErrorMessage(absl::StrFormat("GetModuleFileNameExA failed with: %u", GetLastError()));
+    return ErrorMessage(
+        absl::StrFormat("GetModuleFileNameExA failed with: %s", GetLastErrorAsString()));
   }
 
   // Clean up "../" inside full path
   char exe_full_path[kMaxPath] = {0};
   if (!GetFullPathNameA(exe_file_name, kMaxPath, exe_full_path, nullptr)) {
-    return ErrorMessage(absl::StrFormat("GetFullPathNameA failed with: %u", GetLastError()));
+    return ErrorMessage(
+        absl::StrFormat("GetFullPathNameA failed with: %s", GetLastErrorAsString()));
   }
 
   return std::filesystem::path(exe_full_path);
