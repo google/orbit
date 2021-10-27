@@ -91,7 +91,8 @@ class TimerTrack : public Track {
 
   [[nodiscard]] int GetVisiblePrimitiveCount() const override { return visible_timer_count_; }
 
-  float GetHeight() const override;
+  [[nodiscard]] float GetHeight() const override;
+  [[nodiscard]] uint32_t GetDepth() const { return timer_data_->GetMaxDepth(); }
 
   [[nodiscard]] size_t GetNumberOfTimers() const;
   [[nodiscard]] uint64_t GetMinTime() const override;
