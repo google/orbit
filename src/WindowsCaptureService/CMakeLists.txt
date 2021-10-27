@@ -20,13 +20,11 @@ target_sources(WindowsCaptureService PRIVATE
         TracingHandler.h)
 
 target_link_libraries(WindowsCaptureService PUBLIC
-        ApiLoader
         ApiUtils
         CaptureService
         ProducerEventProcessor
         GrpcProtos
         Introspection
-        LinuxTracing
         OrbitBase
         OrbitVersion
         WindowsTracing)
