@@ -87,8 +87,9 @@ ThreadEntry* ThreadUnwinder::SendSignalToThread(int signal, pid_t tid) {
 
   ThreadEntry* entry = ThreadEntry::Get(tid);
   entry->Lock();
-  struct sigaction new_action = {.sa_sigaction = SignalHandler,
-                                 .sa_flags = SA_RESTART | SA_SIGINFO | SA_ONSTACK};
+  struct sigaction new_action = {};
+  new_action.sa_sigaction = SignalHandler;
+  new_action.sa_flags = SA_RESTART | SA_SIGINFO | SA_ONSTACK;
   struct sigaction old_action = {};
   sigemptyset(&new_action.sa_mask);
   if (sigaction(signal, &new_action, &old_action) != 0) {
@@ -124,8 +125,9 @@ ThreadEntry* ThreadUnwinder::SendSignalToThread(int signal, pid_t tid) {
     // within the timeout. Add a signal handler that's simply going to log
     // something so that we don't crash if the signal eventually gets
     // delivered. Only do this if there isn't already an action set up.
-    struct sigaction log_action = {.sa_sigaction = SignalLogOnly,
-                                   .sa_flags = SA_RESTART | SA_SIGINFO | SA_ONSTACK};
+    struct sigaction log_action = {};
+    log_action.sa_sigaction = SignalLogOnly;
+    log_action.sa_flags = SA_RESTART | SA_SIGINFO | SA_ONSTACK;
     sigemptyset(&log_action.sa_mask);
     sigaction(signal, &log_action, nullptr);
   } else {

@@ -36,7 +36,7 @@
 #define EM_AARCH64 183
 #endif
 
-#if __has_feature(address_sanitizer)
+#if 0
 // There is a test that tries to allocate a large value, allow it to fail
 // if asan is enabled.
 extern "C" const char* __asan_default_options() {
