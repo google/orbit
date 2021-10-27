@@ -49,6 +49,9 @@ void ScopeTreeTimerData::OnCaptureComplete() {
 
 std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimers(
     uint64_t start_ns, uint64_t end_ns) const {
+  // The query is for the interval [start_ns, end_ns], but it's easier to work with the close-open
+  // interval [start_ns, end_ns+1). We have to be careful with overflowing.
+  end_ns = std::max(end_ns, end_ns + 1);
   std::vector<const orbit_client_protos::TimerInfo*> all_timers;
 
   for (uint32_t depth = 0; depth < GetTimerMetadata().depth; ++depth) {
@@ -108,6 +111,9 @@ std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimers
 
 std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimersAtDepthDiscretized(
     uint32_t depth, uint32_t resolution, uint64_t start_ns, uint64_t end_ns) const {
+  // The query is for the interval [start_ns, end_ns], but it's easier to work with the close-open
+  // interval [start_ns, end_ns+1). We have to be careful with overflowing.
+  end_ns = std::max(end_ns, end_ns + 1);
   std::vector<const orbit_client_protos::TimerInfo*> all_timers_at_depth;
   absl::MutexLock lock(&scope_tree_mutex_);
 
