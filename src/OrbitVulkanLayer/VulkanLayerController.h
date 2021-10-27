@@ -638,17 +638,17 @@ class VulkanLayerController {
 
   void DumpProcessIdIfNecessary() const {
     const char* pid_file = std::getenv("ORBIT_VULKAN_LAYER_PID_FILE");
-    if (pid_file != nullptr) {
-      uint32_t pid = orbit_base::GetCurrentThreadId();
-      LOG("PID: %d", pid);
-      ErrorMessageOr<orbit_base::unique_fd> error_or_file =
-          orbit_base::OpenFileForWriting(pid_file);
-      FAIL_IF(error_or_file.has_error(), "Opening \"%s\": %s", pid_file,
-              error_or_file.error().message());
-      ErrorMessageOr<void> result =
-          orbit_base::WriteFully(error_or_file.value(), absl::StrFormat("%d", pid));
-      FAIL_IF(result.has_error(), "Writing PID to \"%s\": %s", pid_file, result.error().message());
+    if (pid_file == nullptr) {
+      return;
     }
+    uint32_t pid = orbit_base::GetCurrentProcessId();
+    LOG("Writing PID of %u to \"%s\"", pid, pid_file);
+    ErrorMessageOr<orbit_base::unique_fd> error_or_file = orbit_base::OpenFileForWriting(pid_file);
+    FAIL_IF(error_or_file.has_error(), "Opening \"%s\": %s", pid_file,
+            error_or_file.error().message());
+    ErrorMessageOr<void> result =
+        orbit_base::WriteFully(error_or_file.value(), absl::StrFormat("%d", pid));
+    FAIL_IF(result.has_error(), "Writing PID to \"%s\": %s", pid_file, result.error().message());
   }
 
   void CloseVulkanLayerProducerIfNecessary() {
