@@ -48,12 +48,12 @@ void ScopeTreeTimerData::OnCaptureComplete() {
 }
 
 std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimers(
-    uint64_t min_tick, uint64_t max_tick) const {
+    uint64_t start_ns, uint64_t end_ns) const {
   std::vector<const orbit_client_protos::TimerInfo*> all_timers;
 
-  for (uint32_t depth = 0; depth < GetTimerMetadata().depth; depth++) {
+  for (uint32_t depth = 0; depth < GetTimerMetadata().depth; ++depth) {
     std::vector<const orbit_client_protos::TimerInfo*> timers_at_depth =
-        GetTimersAtDepth(depth, min_tick, max_tick);
+        GetTimersAtDepth(depth, start_ns, end_ns);
     all_timers.insert(all_timers.end(), timers_at_depth.begin(), timers_at_depth.end());
   }
 
@@ -61,20 +61,20 @@ std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimers
 }
 
 std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimersAtDepth(
-    uint32_t depth, uint64_t min_tick, uint64_t max_tick) const {
+    uint32_t depth, uint64_t start_ns, uint64_t end_ns) const {
   std::vector<const orbit_client_protos::TimerInfo*> all_timers_at_depth;
   absl::MutexLock lock(&scope_tree_mutex_);
 
   auto& ordered_nodes = scope_tree_.GetOrderedNodesAtDepth(depth);
   if (ordered_nodes.empty()) return all_timers_at_depth;
 
-  auto first_node_to_draw = ordered_nodes.upper_bound(min_tick);
+  auto first_node_to_draw = ordered_nodes.upper_bound(start_ns);
   if (first_node_to_draw != ordered_nodes.begin()) --first_node_to_draw;
 
   // If this node is strictly before the range, we shouldn't include it.
-  if (first_node_to_draw->second->GetScope()->end() < min_tick) ++first_node_to_draw;
+  if (first_node_to_draw->second->GetScope()->end() < start_ns) ++first_node_to_draw;
 
-  for (auto it = first_node_to_draw; it != ordered_nodes.end() && it->first < max_tick; ++it) {
+  for (auto it = first_node_to_draw; it != ordered_nodes.end() && it->first < end_ns; ++it) {
     all_timers_at_depth.push_back(it->second->GetScope());
   }
 
@@ -106,21 +106,21 @@ std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimers
   return start_ns + next_pixel_ns_from_min;
 }
 
-std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimersAtDepthOptimized(
-    uint32_t depth, uint32_t resolution, uint64_t min_tick, uint64_t max_tick) const {
+std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimersAtDepthDiscretized(
+    uint32_t depth, uint32_t resolution, uint64_t start_ns, uint64_t end_ns) const {
   std::vector<const orbit_client_protos::TimerInfo*> all_timers_at_depth;
   absl::MutexLock lock(&scope_tree_mutex_);
 
   const orbit_client_protos::TimerInfo* timer_info =
-      scope_tree_.FindFirstScopeAtOrAfterTime(depth, min_tick);
+      scope_tree_.FindFirstScopeAtOrAfterTime(depth, start_ns);
 
-  while (timer_info != nullptr && timer_info->start() < max_tick) {
+  while (timer_info != nullptr && timer_info->start() < end_ns) {
     all_timers_at_depth.push_back(timer_info);
 
-    // Use the time at boundary of the next pixel as a threshold to avoid returning several timers
-    // who will after overlap in the same pixel.
+    // Use the time of next pixel boundary as a threshold to avoid returning several timers
+    // for the same pixel that will overlap after.
     uint64_t next_pixel_start_time_ns =
-        GetNextPixelBoundaryTimeNs(timer_info->end(), resolution, min_tick, max_tick);
+        GetNextPixelBoundaryTimeNs(timer_info->end(), resolution, start_ns, end_ns);
     timer_info = scope_tree_.FindFirstScopeAtOrAfterTime(depth, next_pixel_start_time_ns);
   }
   return all_timers_at_depth;

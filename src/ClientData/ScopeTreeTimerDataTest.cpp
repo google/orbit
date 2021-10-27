@@ -153,23 +153,23 @@ TEST(ScopeTreeTimerData, GetTimersAtDepthOptimized) {
 
   // We should see both timers with a normal resolution.
   EXPECT_EQ(
-      scope_tree_timer_data.GetTimersAtDepthOptimized(0, 1000, kLeftTimerStart, kRightTimerEnd)
+      scope_tree_timer_data.GetTimersAtDepthDiscretized(0, 1000, kLeftTimerStart, kRightTimerEnd)
           .size(),
       2);
 
   // We should only see 1 if we zoom-out a lot even with a normal resolution.
-  EXPECT_EQ(scope_tree_timer_data.GetTimersAtDepthOptimized(0, 1000, 0, 10000000).size(), 1);
+  EXPECT_EQ(scope_tree_timer_data.GetTimersAtDepthDiscretized(0, 1000, 0, 10000000).size(), 1);
 
   // If there is a timer in the range, we should see it in any resolution.
   EXPECT_EQ(
-      scope_tree_timer_data.GetTimersAtDepthOptimized(0, 1, kLeftTimerStart, kLeftTimerStart + 1)
+      scope_tree_timer_data.GetTimersAtDepthDiscretized(0, 1, kLeftTimerStart, kLeftTimerStart + 1)
           .size(),
       1);  // Left
-  EXPECT_EQ(
-      scope_tree_timer_data.GetTimersAtDepthOptimized(0, 1000, kLeftTimerStart, kLeftTimerStart + 1)
-          .size(),
-      1);  // Left
-  EXPECT_EQ(scope_tree_timer_data.GetTimersAtDepthOptimized(1, 1000, 0, 10000000).size(),
+  EXPECT_EQ(scope_tree_timer_data
+                .GetTimersAtDepthDiscretized(0, 1000, kLeftTimerStart, kLeftTimerStart + 1)
+                .size(),
+            1);  // Left
+  EXPECT_EQ(scope_tree_timer_data.GetTimersAtDepthDiscretized(1, 1000, 0, 10000000).size(),
             1);  // Down
 }
 
