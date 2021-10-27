@@ -100,6 +100,8 @@ else
              -e ORBIT_OVERRIDE_ARTIFACTORY_URL \
              -e IN_DOCKER \
              -e ORBIT_PUBLIC_BUILD \
+             `# Needed to call process_vm_readv. The CI's seccomp profile doesn't work here due to a different docker version` \
+             --security-opt "seccomp=unconfined" \
              `find_container_for_conan_profile $profile` \
              $SCRIPT $profile || exit $?
     done
