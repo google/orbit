@@ -35,6 +35,7 @@ class Client {
   [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<SshInfo>> GetSshInfoAsync(
       const Instance& ggp_instance, std::optional<Project> project) = 0;
   [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<QVector<Project>>> GetProjectsAsync() = 0;
+  [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<Project>> GetDefaultProjectAsync() = 0;
 };
 
 [[nodiscard]] std::chrono::milliseconds GetClientDefaultTimeoutInMs();

@@ -146,6 +146,7 @@ TEST_F(OrbitGgpClientTest, GetInstancesAsyncWorkingAllReservedWithProject) {
 }
 
 TEST_F(OrbitGgpClientTest, GetInstancesAsyncTimeout) {
+  // mock_ggp_working_ has a 50ms sleep, hence waiting for only 5ms should result in a timeout
   auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()),
                              std::chrono::milliseconds{5});
   ASSERT_THAT(client, HasValue());
@@ -240,6 +241,7 @@ TEST_F(OrbitGgpClientTest, GetSshInfoAsyncTimeout) {
   Instance test_instance;
   test_instance.id = "instance/test/id";
 
+  // mock_ggp_working_ has a 50ms sleep, hence waiting for only 5ms should result in a timeout
   auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()),
                              std::chrono::milliseconds{5});
   ASSERT_THAT(client, HasValue());
@@ -311,6 +313,7 @@ TEST_F(OrbitGgpClientTest, GetProjectsAsyncWorking) {
 }
 
 TEST_F(OrbitGgpClientTest, GetProjectsAsyncTimeout) {
+  // mock_ggp_working_ has a 50ms sleep, hence waiting for only 5ms should result in a timeout
   auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()),
                              std::chrono::milliseconds{5});
   ASSERT_THAT(client, HasValue());
@@ -350,6 +353,76 @@ TEST_F(OrbitGgpClientTest, GetProjectsAsyncClientGetsDestroyed) {
                   future_is_resolved = true;
                   EXPECT_THAT(projects_result,
                               HasError("killed because the parent object was destroyed"));
+                  QCoreApplication::exit();
+                });
+  }
+
+  QCoreApplication::exec();
+
+  EXPECT_TRUE(future_is_resolved);
+}
+
+TEST_F(OrbitGgpClientTest, GetDefaultProjectAsyncWorking) {
+  auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()));
+  ASSERT_THAT(client, HasValue());
+
+  bool future_is_resolved = false;
+
+  auto future = client.value()->GetDefaultProjectAsync();
+  future.Then(main_thread_executor_.get(), [&future_is_resolved](ErrorMessageOr<Project> project) {
+    EXPECT_FALSE(future_is_resolved);
+    future_is_resolved = true;
+    ASSERT_THAT(project, HasValue());
+    EXPECT_EQ(project.value().display_name, "Test Project");
+    EXPECT_EQ(project.value().id, "Test Project id");
+    QCoreApplication::exit();
+  });
+
+  QCoreApplication::exec();
+
+  EXPECT_TRUE(future_is_resolved);
+}
+
+TEST_F(OrbitGgpClientTest, GetDefaultProjectAsyncTimeout) {
+  // mock_ggp_working_ has a 50ms sleep, hence waiting for only 5ms should result in a timeout
+  auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()),
+                             std::chrono::milliseconds{5});
+  ASSERT_THAT(client, HasValue());
+
+  bool future_is_resolved = false;
+
+  auto future = client.value()->GetDefaultProjectAsync();
+  future.Then(main_thread_executor_.get(),
+              [&future_is_resolved](const ErrorMessageOr<Project>& project) {
+                EXPECT_FALSE(future_is_resolved);
+                future_is_resolved = true;
+                EXPECT_THAT(project, HasError("OrbitMockGgpWorking config describe -s"));
+                EXPECT_THAT(project, HasError("timed out after 5ms"));
+                QCoreApplication::exit();
+              });
+
+  QCoreApplication::exec();
+
+  EXPECT_TRUE(future_is_resolved);
+}
+
+TEST_F(OrbitGgpClientTest, GetDefaultProjectAsyncClientGetsDestroyed) {
+  bool future_is_resolved = false;
+
+  Future<ErrorMessageOr<Project>> future =
+      Future<ErrorMessageOr<Project>>{ErrorMessage{"Empty Error Message"}};
+  {
+    ErrorMessageOr<std::unique_ptr<Client>> client =
+        CreateClient(QString::fromStdString(mock_ggp_working_.string()));
+    ASSERT_THAT(client, HasValue());
+
+    future = client.value()->GetDefaultProjectAsync();
+
+    future.Then(main_thread_executor_.get(),
+                [&future_is_resolved](const ErrorMessageOr<Project>& project) {
+                  EXPECT_FALSE(future_is_resolved);
+                  future_is_resolved = true;
+                  EXPECT_THAT(project, HasError("killed because the parent object was destroyed"));
                   QCoreApplication::exit();
                 });
   }
