@@ -11,17 +11,9 @@
 
 #include "Containers/ScopeTree.h"
 #include "TimerData.h"
+#include "TimerDataInterface.h"
 
 namespace orbit_client_data {
-
-struct TimerMetadata {
-  bool is_empty;
-  size_t number_of_timers;
-  uint64_t min_time;
-  uint64_t max_time;
-  uint32_t depth;
-  uint32_t process_id;
-};
 
 // Stores all the timers from a particular ThreadId. Provides queries to get timers in a certain
 // range as well as metadata from them.
