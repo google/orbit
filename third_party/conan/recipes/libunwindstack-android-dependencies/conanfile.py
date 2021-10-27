@@ -2,28 +2,21 @@ from conans import ConanFile, CMake, tools
 import os
 
 
-class LibunwindstackConan(ConanFile):
-    name = "libunwindstack"
+class LibunwindstackAndroidDependenciesConan(ConanFile):
+    name = "libunwindstack-android-dependencies"
     version = "20210709"
     license = "MIT"
     author = "Henning Becker <henning.becker@gmail.com>"
-    homepage = "https://android.googlesource.com/platform/system/unwinding/"
+    homepage = "https://android.googlesource.com/platform/system/libbase/"
     settings = "os", "compiler", "build_type", "arch"
     generators = "cmake"
     exports_sources = ["CMakeLists.txt", "cmake/FindFilesystem.cmake", "patches/*"]
-    requires = ["lzma_sdk/19.00@orbitdeps/stable"]
-    options = {"fPIC" : [True, False], "run_tests": [True, False]}
-    default_options = {"fPIC": True, "run_tests": False}
+    options = {"fPIC" : [True, False]}
+    default_options = {"fPIC": True}
 
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
-
-    def build_requirements(self):
-        self.build_requires("gtest/1.11.0", force_host_context=True)
-
-    def configure(self):
-        self.options["gtest"].no_main = False
 
     def source(self):
         for source in self.conan_data["sources"][self.version]:
@@ -35,8 +28,6 @@ class LibunwindstackConan(ConanFile):
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
-        if self.options.run_tests and not tools.cross_building(self, skip_x64_x86=True):
-            cmake.test(output_on_failure=True)
 
     def package(self):
         with open(os.path.join(self.package_folder, "LICENSE"), "w") as fd:
@@ -49,16 +40,18 @@ class LibunwindstackConan(ConanFile):
 
             fd.write("================================================================================\n")
 
-        self.copy("*.h", dst="include", src="libunwindstack/include/")
         self.copy("*.h", dst="include", src="libbase/include/")
         self.copy("*.h", dst="include", src="libprocinfo/include/")
-        self.copy("*unwindstack.lib", dst="lib", keep_path=False)
+        self.copy("*.h", dst="include", src="liblog/include/")
+        self.copy("*.lib", dst="lib", keep_path=False)
         self.copy("*.a", dst="lib", keep_path=False)
+        self.copy("*.so", dst="lib", keep_path=False)
+        self.copy("*.dll", dst="lib", keep_path=False)
 
     def package_info(self):
-        self.cpp_info.libs = ["unwindstack"]
-
-    def package_id(self):
-        # The resulting package is not affected by tests been run or not.
-        del self.info.options.run_tests
+        # We can't list liblog here because we need to link it
+        # dynamically in the libunwindstack tests and statically otherwise.
+        # We compile both versions and include it in the package,
+        # but won't enable automatic linking by listing it here.
+        self.cpp_info.libs = ["procinfo", "base"]
 

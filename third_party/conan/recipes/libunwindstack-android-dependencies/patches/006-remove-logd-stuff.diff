@@ -1,13 +1,13 @@
 --- a/libbase/logging.cpp	2021-07-14 10:01:54.373014821 +0200
 +++ b/libbase/logging.cpp	2021-07-14 10:03:04.200476140 +0200
-@@ -327,6 +327,7 @@
-   }
+@@ -314,6 +314,7 @@
+   abort();
  }
  
 +#ifdef __ANDROID__
- LogdLogger::LogdLogger(LogId default_log_id) : default_log_id_(default_log_id) {}
- 
- void LogdLogger::operator()(LogId id, LogSeverity severity, const char* tag, const char* file,
+ static void LogdLogChunk(LogId id, LogSeverity severity, const char* tag, const char* message) {
+   int32_t lg_id = LogIdTolog_id_t(id);
+   int32_t priority = LogSeverityToPriority(severity);
 @@ -337,6 +338,7 @@
  
    SplitByLogdChunks(id, severity, tag, file, line, message, LogdLogChunk);
