@@ -23,7 +23,7 @@ if [ "$0" == "$SCRIPT" ]; then
       echo $line
     fi
   done <<< $(find /mnt -name '*.cpp' -o -name '*.h' \
-        | grep -v "third_party/" \
+        | grep -v -P "third_party/(?!libunwindstack)" `# Remove all from third_party except libunwindstack` \
         | grep -v "/build" )
   echo -e "--\n"
 
@@ -31,7 +31,7 @@ if [ "$0" == "$SCRIPT" ]; then
   # Use origin/main as reference branch, if not specified by kokoro
   REFERENCE="origin/${KOKORO_GITHUB_PULL_REQUEST_TARGET_BRANCH:-main}"
   MERGE_BASE="$(git merge-base $REFERENCE HEAD)" # Merge base is the commit on main this PR was branched from.
-  FORMATTING_DIFF="$(git diff -U0 --no-color --relative --diff-filter=r $MERGE_BASE -- !(third_party|build*) | clang-format-diff-9 -p1)"
+  FORMATTING_DIFF="$(git diff -U0 --no-color --relative --diff-filter=r $MERGE_BASE -- 'third_party/libunwindstack/**' 'src/**' | clang-format-diff-9 -p1)"
 
   if [ -n "$FORMATTING_DIFF" ]; then
     echo "clang-format determined the following necessary changes to your PR:"
