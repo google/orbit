@@ -561,6 +561,7 @@ TEST_F(VulkanLayerControllerTest, WillDumpPidOnCreateInstance) {
   EXPECT_EQ(pid_or_error.value(), absl::StrFormat("%u", pid));
   EXPECT_EQ(result, VK_SUCCESS);
   ErrorMessageOr<bool> removed_or_error = orbit_base::RemoveFile(filename);
+  EXPECT_FALSE(removed_or_error.has_error());
 }
 
 TEST_F(VulkanLayerControllerTest, DumpProcessIdFailsOnCreateInstanceByNonExistentPath) {
