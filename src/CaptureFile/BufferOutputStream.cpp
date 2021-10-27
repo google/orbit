@@ -5,11 +5,12 @@
 #include "BufferOutputStream.h"
 
 #include <algorithm>
+#include <cstring>
 #include <limits>
 
 #include "OrbitBase/File.h"
 
-namespace orbit_capture_file_internal {
+namespace orbit_capture_file {
 
 bool BufferOutputStream::Next(void** data, int* size) {
   CHECK(data != nullptr);
@@ -46,6 +47,7 @@ void BufferOutputStream::BackUp(int count) {
   CHECK(static_cast<size_t>(count) <= buffer_.size());
 
   buffer_.resize(buffer_.size() - count);
+  bytes_available_to_read_ = buffer_.size();
 }
 
 google::protobuf::int64 BufferOutputStream::ByteCount() const {
@@ -54,16 +56,19 @@ google::protobuf::int64 BufferOutputStream::ByteCount() const {
   return buffer_.size();
 }
 
-void BufferOutputStream::Swap(std::vector<unsigned char>& target) {
+size_t BufferOutputStream::ReadIntoBuffer(void* dest, size_t max_size) {
+  CHECK(dest != nullptr);
+  CHECK(max_size >= 0);
   absl::MutexLock lock{&mutex_};
 
-  buffer_.swap(target);
+  size_t bytes_to_read = std::min(bytes_available_to_read_, max_size);
+  std::memcpy(dest, buffer_.data(), bytes_to_read);
+
+  buffer_.erase(buffer_.begin(), buffer_.begin() + bytes_to_read);
+
+  bytes_available_to_read_ -= bytes_to_read;
+
+  return bytes_to_read;
 }
 
-const std::vector<unsigned char>& BufferOutputStream::Read() const {
-  absl::MutexLock lock{&mutex_};
-
-  return buffer_;
-}
-
-}  // namespace orbit_capture_file_internal
+}  // namespace orbit_capture_file

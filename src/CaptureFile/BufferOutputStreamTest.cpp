@@ -5,9 +5,11 @@
 #include <google/protobuf/io/coded_stream.h>
 #include <gtest/gtest.h>
 
+#include <random>
+
 #include "BufferOutputStream.h"
 
-namespace orbit_capture_file_internal {
+namespace orbit_capture_file {
 
 namespace {
 std::string GenerateRandomString(int size) {
@@ -19,8 +21,9 @@ std::string GenerateRandomString(int size) {
         "0123456789"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "abcdefghijklmnopqrstuvwxyz";
-    const size_t max_index = (sizeof(charset) - 1);
-    return charset[std::rand() % max_index];
+    std::mt19937 gen(123);
+    std::uniform_int_distribution<int> uniform(0, sizeof(charset) - 1);
+    return charset[uniform(gen)];
   };
   std::generate_n(random.data(), size, randchar);
 
@@ -28,23 +31,36 @@ std::string GenerateRandomString(int size) {
 }
 }  // namespace
 
-TEST(BufferOutputStream, WriteToOutputStream) {
+TEST(BufferOutputStream, WriteAndRead) {
   BufferOutputStream output_stream;
   EXPECT_EQ(output_stream.ByteCount(), 0);
 
-  constexpr int kBytesToWrite = 1024;
+  // Test write data and trim unused bytes.
+  constexpr int kBytesToWrite = 1000;
   std::string data_to_write = GenerateRandomString(kBytesToWrite);
   google::protobuf::io::CodedOutputStream coded_output_stream(&output_stream);
   coded_output_stream.WriteString(data_to_write);
+  EXPECT_GE(output_stream.ByteCount(), kBytesToWrite);
+  coded_output_stream.Trim();
   EXPECT_EQ(output_stream.ByteCount(), kBytesToWrite);
 
-  const std::vector<unsigned char>& output_buffer = output_stream.Read();
-  std::string output_stream_content(output_buffer.begin(), output_buffer.end());
-  EXPECT_EQ(output_stream_content, data_to_write);
+  // Test read data. The bytes trying to read is less than bytes available to read.
+  std::string data_read;
+  constexpr int kBytesToRead = 123;
+  data_read.resize(kBytesToRead);
+  size_t actural_bytes_read = output_stream.ReadIntoBuffer(data_read.data(), kBytesToRead);
+  EXPECT_EQ(actural_bytes_read, kBytesToRead);
+  EXPECT_EQ(data_read, data_to_write.substr(0, kBytesToRead));
+  EXPECT_EQ(output_stream.ByteCount(), kBytesToWrite - kBytesToRead);
 
-  std::vector<unsigned char> new_buffer;
-  output_stream.Swap(new_buffer);
+  // Test read data. The bytes trying to read is more than bytes available to read.
+  constexpr int kBytesMoreThanReadAvailable = 900;
+  data_read.resize(kBytesMoreThanReadAvailable);
+  actural_bytes_read = output_stream.ReadIntoBuffer(data_read.data(), kBytesMoreThanReadAvailable);
+  EXPECT_EQ(actural_bytes_read, kBytesToWrite - kBytesToRead);
+  EXPECT_EQ(data_read.substr(0, actural_bytes_read),
+            data_to_write.substr(kBytesToRead, kBytesToWrite - kBytesToRead));
   EXPECT_EQ(output_stream.ByteCount(), 0);
 }
 
-}  // namespace orbit_capture_file_internal
+}  // namespace orbit_capture_file
