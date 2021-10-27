@@ -12,13 +12,14 @@ using orbit_client_protos::TimerInfo;
 
 TEST(TimerData, IsEmpty) {
   TimerData timer_data;
+  TimerMetadata timer_metadata = timer_data.GetTimerMetadata();
   EXPECT_TRUE(timer_data.GetChains().empty());
   EXPECT_EQ(timer_data.GetChain(0), nullptr);
   EXPECT_EQ(timer_data.GetChain(7), nullptr);
-  EXPECT_TRUE(timer_data.IsEmpty());
-  EXPECT_EQ(timer_data.GetNumberOfTimers(), 0);
-  EXPECT_EQ(timer_data.GetMaxTime(), std::numeric_limits<uint64_t>::min());
-  EXPECT_EQ(timer_data.GetMinTime(), std::numeric_limits<uint64_t>::max());
+  EXPECT_TRUE(timer_metadata.is_empty);
+  EXPECT_EQ(timer_metadata.number_of_timers, 0);
+  EXPECT_EQ(timer_metadata.max_time, std::numeric_limits<uint64_t>::min());
+  EXPECT_EQ(timer_metadata.min_time, std::numeric_limits<uint64_t>::max());
 }
 
 TEST(TimerData, AddTimers) {
@@ -27,47 +28,48 @@ TEST(TimerData, AddTimers) {
   timer_info.set_start(2);
   timer_info.set_end(5);
 
-  timer_data.AddTimer(0, timer_info);
+  timer_data.AddTimer(timer_info, 0);
 
-  EXPECT_FALSE(timer_data.IsEmpty());
-  EXPECT_EQ(timer_data.GetNumberOfTimers(), 1);
+  EXPECT_FALSE(timer_data.GetTimerMetadata().is_empty);
+  EXPECT_EQ(timer_data.GetTimerMetadata().number_of_timers, 1);
   ASSERT_NE(timer_data.GetChain(0), nullptr);
   EXPECT_EQ(timer_data.GetChain(1), nullptr);
   EXPECT_EQ(timer_data.GetChain(0)->size(), 1);
 
-  EXPECT_EQ(timer_data.GetMaxTime(), 5);
-  EXPECT_EQ(timer_data.GetMinTime(), 2);
+  EXPECT_EQ(timer_data.GetTimerMetadata().max_time, 5);
+  EXPECT_EQ(timer_data.GetTimerMetadata().min_time, 2);
 
   timer_info.set_start(8);
   timer_info.set_end(11);
 
-  timer_data.AddTimer(0, timer_info);
+  timer_data.AddTimer(timer_info, 0);
 
-  EXPECT_FALSE(timer_data.IsEmpty());
-  EXPECT_EQ(timer_data.GetNumberOfTimers(), 2);
+  EXPECT_FALSE(timer_data.GetTimerMetadata().is_empty);
+  EXPECT_EQ(timer_data.GetTimerMetadata().number_of_timers, 2);
   ASSERT_NE(timer_data.GetChain(0), nullptr);
   EXPECT_EQ(timer_data.GetChain(1), nullptr);
   EXPECT_EQ(timer_data.GetChain(0)->size(), 2);
 
-  EXPECT_EQ(timer_data.GetMaxTime(), 11);
-  EXPECT_EQ(timer_data.GetMinTime(), 2);
+  EXPECT_EQ(timer_data.GetTimerMetadata().max_time, 11);
+  EXPECT_EQ(timer_data.GetTimerMetadata().min_time, 2);
 
   timer_info.set_start(10);
   timer_info.set_end(11);
 
-  timer_data.AddTimer(1, timer_info);
+  timer_data.AddTimer(timer_info, 1);
 
-  EXPECT_EQ(timer_data.GetNumberOfTimers(), 3);
-  EXPECT_FALSE(timer_data.IsEmpty());
+  EXPECT_EQ(timer_data.GetTimerMetadata().number_of_timers, 3);
+  EXPECT_FALSE(timer_data.GetTimerMetadata().is_empty);
   ASSERT_NE(timer_data.GetChain(0), nullptr);
   ASSERT_NE(timer_data.GetChain(1), nullptr);
   EXPECT_EQ(timer_data.GetChain(0)->size(), 2);
   EXPECT_EQ(timer_data.GetChain(1)->size(), 1);
 
-  EXPECT_EQ(timer_data.GetMaxTime(), 11);
-  EXPECT_EQ(timer_data.GetMinTime(), 2);
+  EXPECT_EQ(timer_data.GetTimerMetadata().max_time, 11);
+  EXPECT_EQ(timer_data.GetTimerMetadata().min_time, 2);
 }
 
+// TODO(b/204173036): Make GetFirstAfterStartTime private and test GetLeft/Right/Top/Down instead.
 TEST(TimerData, FindTimers) {
   TimerData timer_data;
 
@@ -75,15 +77,15 @@ TEST(TimerData, FindTimers) {
     TimerInfo timer_info;
     timer_info.set_start(2);
     timer_info.set_end(5);
-    timer_data.AddTimer(0, timer_info);
+    timer_data.AddTimer(timer_info, 0);
 
     timer_info.set_start(8);
     timer_info.set_end(11);
-    timer_data.AddTimer(0, timer_info);
+    timer_data.AddTimer(timer_info, 0);
 
     timer_info.set_start(10);
     timer_info.set_end(12);
-    timer_data.AddTimer(0, timer_info);
+    timer_data.AddTimer(timer_info, 0);
   }
 
   {

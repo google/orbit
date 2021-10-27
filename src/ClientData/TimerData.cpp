@@ -10,7 +10,7 @@ using orbit_client_protos::TimerInfo;
 
 namespace orbit_client_data {
 
-const TimerInfo& TimerData::AddTimer(uint64_t depth, TimerInfo timer_info) {
+const TimerInfo& TimerData::AddTimer(TimerInfo timer_info, uint32_t depth) {
   if (process_id_ == orbit_base::kInvalidProcessId) {
     process_id_ = timer_info.process_id();
   }
@@ -22,6 +22,17 @@ const TimerInfo& TimerData::AddTimer(uint64_t depth, TimerInfo timer_info) {
   UpdateMaxDepth(timer_info.depth() + 1);
 
   return timer_chain->emplace_back(std::move(timer_info));
+}
+
+TimerMetadata TimerData::GetTimerMetadata() const {
+  TimerMetadata timer_metadata;
+  timer_metadata.number_of_timers = num_timers_;
+  timer_metadata.is_empty = num_timers_ == 0;
+  timer_metadata.min_time = min_time_;
+  timer_metadata.max_time = max_time_;
+  timer_metadata.depth = max_depth_;
+  timer_metadata.process_id = process_id_;
+  return timer_metadata;
 }
 
 std::vector<const TimerChain*> TimerData::GetChains() const {
