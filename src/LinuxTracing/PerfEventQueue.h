@@ -13,24 +13,28 @@
 #include <vector>
 
 #include "PerfEvent.h"
+#include "PerfEventOrderedStream.h"
 
 namespace orbit_linux_tracing {
 
-// This class implements a data structure that holds a large number of different perf_event_open
-// records coming from multiple ring buffers, and allows reading them in order (oldest first).
+// This class implements a data structure that holds a large number of different PerfEvents coming
+// from multiple sources, e.g., perf_event_open records coming from multiple ring buffers, and
+// allows reading them in order (oldest first).
 //
 // Instead of keeping a single priority queue with all the events to process, on which push/pop
-// operations would be logarithmic in the number of events, we leverage the fact that events coming
-// from the same perf_event_open ring buffer are already sorted. We then keep a priority queue of
-// queues, where the events in each queue come from the same ring buffer. Whenever an event is
-// removed from a queue, we need to move such queue down the priority queue.
+// operations would be logarithmic in the number of events, we leverage the fact that some streams
+// of events are known to be already sorted; for example, most perf_event_open records coming from
+// the same perf_event_open ring buffer are already sorted. We then keep a priority queue of queues,
+// where the events in each queue come from the same sorted stream, identified by matching instances
+// of PerfEventOrderedStream. Whenever an event is removed from a queue, we need to move such queue
+// down the priority queue.
 //
 // In order to be able to add an event to a queue, we also need to maintain the association between
-// a queue and its ring buffer, which is what the map is for. We use the file descriptor used to
-// read from the ring buffer as identifier for a ring buffer.
+// a queue and its sorted stream, which is what the map is for. We use the PerfEventOrderedStream as
+// key.
 //
 // Some events, though, are known to come out of order even in relation to other events in the same
-// ring buffer (e.g., dma_fence_signaled). For those cases, use an additional single
+// perf_event_open ring buffer (e.g., dma_fence_signaled). For those cases, use an additional single
 // std::priority_queue.
 class PerfEventQueue {
  public:
@@ -46,20 +50,21 @@ class PerfEventQueue {
   // Floats up an element that it is know should be further up in the heap. Used on insertion.
   void MoveUpBackOfHeapOfQueues();
 
-  // This vector holds the heap of the queues each of which holds events coming from the same ring
-  // buffer and assumes them already in order by timestamp.
-  std::vector<std::queue<PerfEvent>*> heap_of_queues_of_events_ordered_by_fd_;
-  // This map keeps the association between a file descriptor and the ordered queue of events coming
-  // from the ring buffer corresponding to that file descriptor.
-  absl::flat_hash_map<int, std::unique_ptr<std::queue<PerfEvent>>> queues_of_events_ordered_by_fd_;
+  // This vector holds the heap of the queues each of which holds events coming from the same
+  // stream of events already in order by timestamp.
+  std::vector<std::queue<PerfEvent>*> heap_of_queues_of_events_ordered_in_stream_;
+  // This map keeps the association between an ordered stream of events and the ordered queue of
+  // events coming from that stream.
+  absl::flat_hash_map<PerfEventOrderedStream, std::unique_ptr<std::queue<PerfEvent>>>
+      queues_of_events_ordered_in_stream_;
 
   static constexpr auto kPerfEventReverseTimestampCompare =
       [](const PerfEvent& lhs, const PerfEvent& rhs) { return lhs.timestamp > rhs.timestamp; };
   // This priority queue holds all those events that cannot be assumed already sorted in a specific
-  // ring buffer. All such events are simply sorted by the priority queue by increasing timestamp.
+  // stream. All such events are simply sorted by the priority queue by increasing timestamp.
   std::priority_queue<PerfEvent, std::vector<PerfEvent>,
                       std::function<bool(const PerfEvent&, const PerfEvent&)>>
-      priority_queue_of_events_not_ordered_by_fd_{kPerfEventReverseTimestampCompare};
+      priority_queue_of_events_not_ordered_in_stream_{kPerfEventReverseTimestampCompare};
 };
 
 }  // namespace orbit_linux_tracing

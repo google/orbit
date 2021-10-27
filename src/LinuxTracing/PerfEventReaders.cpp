@@ -17,6 +17,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/ThreadUtils.h"
+#include "PerfEventOrderedStream.h"
 #include "PerfEventRecords.h"
 #include "PerfEventRingBuffer.h"
 
@@ -116,7 +117,7 @@ MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
   // Consider moving this to MMAP2 event which has more information (like flags)
   return MmapPerfEvent{
       .timestamp = timestamp,
-      .ordered_in_file_descriptor = ring_buffer->GetFileDescriptor(),
+      .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
       .data =
           {
               .address = mmap_event.address,
@@ -164,7 +165,7 @@ StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffe
 
   StackSamplePerfEvent event{
       .timestamp = sample_id.time,
-      .ordered_in_file_descriptor = ring_buffer->GetFileDescriptor(),
+      .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
       .data =
           {
               .pid = static_cast<pid_t>(sample_id.pid),
@@ -227,7 +228,7 @@ CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ri
 
   CallchainSamplePerfEvent event{
       .timestamp = sample_id.time,
-      .ordered_in_file_descriptor = ring_buffer->GetFileDescriptor(),
+      .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
       .data =
           {
               .pid = static_cast<pid_t>(sample_id.pid),
@@ -254,7 +255,7 @@ GenericTracepointPerfEvent ConsumeGenericTracepointPerfEvent(PerfEventRingBuffer
   ring_buffer->ReadRawAtOffset(&ring_buffer_record, 0, sizeof(perf_event_raw_sample_fixed));
   GenericTracepointPerfEvent event{
       .timestamp = ring_buffer_record.sample_id.time,
-      .ordered_in_file_descriptor = ring_buffer->GetFileDescriptor(),
+      .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
       .data =
           {
               .pid = static_cast<pid_t>(ring_buffer_record.sample_id.pid),
@@ -291,11 +292,11 @@ EventType ConsumeGpuEvent(PerfEventRingBuffer* ring_buffer, const perf_event_hea
               data_loc_size);
   data_loc_data[data_loc_data.size() - 1] = 0;
 
-  // dma_fence_signaled events can be out of order of timestamp even on the same ring buffer,
-  // hence why kNotOrderedInAnyFileDescriptor. To be safe, do the same for the other GPU events.
+  // dma_fence_signaled events can be out of order of timestamp even on the same ring buffer, hence
+  // why PerfEventOrderedStream::kNone. To be safe, do the same for the other GPU events.
   EventType event{
       .timestamp = ring_buffer_record.sample_id.time,
-      .ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor,
+      .ordered_stream = PerfEventOrderedStream::kNone,
       .data =
           {
               .pid = static_cast<pid_t>(ring_buffer_record.sample_id.pid),

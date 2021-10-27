@@ -18,6 +18,7 @@
 
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
+#include "PerfEventOrderedStream.h"
 #include "PerfEventRecords.h"
 
 namespace orbit_linux_tracing {
@@ -27,15 +28,13 @@ class PerfEventVisitor;
 [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX>
 perf_event_sample_regs_user_all_to_register_array(const perf_event_sample_regs_user_all& regs);
 
-static constexpr int kNotOrderedInAnyFileDescriptor = -1;
-
 // This template class holds data from a specific perf_event_open event, based on the type argument.
 // The top-level fields (`timestamp` and `ordered_in_file_descriptor`) are common to all events,
 // while the `data` field holds the data specific to the individual event.
 template <typename PerfEventDataT>
 struct TypedPerfEvent {
   uint64_t timestamp;
-  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
+  PerfEventOrderedStream ordered_stream = PerfEventOrderedStream::kNone;
   PerfEventDataT data;
 };
 
@@ -225,18 +224,18 @@ struct PerfEvent {
   // NOLINTNEXTLINE(google-explicit-constructor): Non-explicit constructor for conversions.
   PerfEvent(const TypedPerfEvent<PerfEventDataT>& typed_perf_event)
       : timestamp{typed_perf_event.timestamp},
-        ordered_in_file_descriptor{typed_perf_event.ordered_in_file_descriptor},
+        ordered_stream{typed_perf_event.ordered_stream},
         data{typed_perf_event.data} {}
 
   template <typename PerfEventDataT>
   // NOLINTNEXTLINE(google-explicit-constructor): Non-explicit constructor for conversions.
   PerfEvent(TypedPerfEvent<PerfEventDataT>&& typed_perf_event)
       : timestamp{typed_perf_event.timestamp},
-        ordered_in_file_descriptor{typed_perf_event.ordered_in_file_descriptor},
+        ordered_stream{typed_perf_event.ordered_stream},
         data{std::move(typed_perf_event.data)} {}
 
   uint64_t timestamp;
-  int ordered_in_file_descriptor = kNotOrderedInAnyFileDescriptor;
+  PerfEventOrderedStream ordered_stream = PerfEventOrderedStream::kNone;
   std::variant<ForkPerfEventData, ExitPerfEventData, LostPerfEventData, DiscardedPerfEventData,
                StackSamplePerfEventData, CallchainSamplePerfEventData, UprobesPerfEventData,
                UprobesWithArgumentsPerfEventData, UretprobesPerfEventData,
