@@ -53,7 +53,7 @@ void ProducerSideServer::ShutdownAndWait() {
 
 void ProducerSideServer::OnCaptureStartRequested(
     orbit_grpc_protos::CaptureOptions capture_options,
-    orbit_capture_service::ProducerEventProcessor* producer_event_processor) {
+    orbit_producer_event_processor::ProducerEventProcessor* producer_event_processor) {
   producer_side_service_.OnCaptureStartRequested(std::move(capture_options),
                                                  producer_event_processor);
 }

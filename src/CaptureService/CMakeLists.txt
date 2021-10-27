@@ -13,23 +13,19 @@ target_include_directories(CaptureService PRIVATE
 
 target_sources(CaptureService PUBLIC
         include/CaptureService/CaptureServiceImpl.h
-        include/CaptureService/CaptureStartStopListener.h
-        include/CaptureService/ClientCaptureEventCollector.h
-        include/CaptureService/ProducerEventProcessor.h)
+        include/CaptureService/CaptureStartStopListener.h)
 
 target_sources(CaptureService PRIVATE
         CaptureServiceImpl.cpp
-        GrpcClientCaptureEventCollector.cpp
-        GrpcClientCaptureEventCollector.h
         MemoryInfoHandler.cpp
         MemoryInfoHandler.h
-        ProducerEventProcessor.cpp
         TracingHandler.cpp
         TracingHandler.h)
 
 target_link_libraries(CaptureService PUBLIC
         ApiLoader
         ApiUtils
+        ProducerEventProcessor
         GrpcProtos
         Introspection
         LinuxTracing
@@ -38,15 +34,3 @@ target_link_libraries(CaptureService PUBLIC
         OrbitVersion
         UserSpaceInstrumentation)
 
-add_executable(CaptureServiceTests)
-
-target_sources(CaptureServiceTests PRIVATE
-        GrpcClientCaptureEventCollectorTest.cpp
-        ProducerEventProcessorTest.cpp)
-
-target_link_libraries(CaptureServiceTests PRIVATE
-        TestUtils
-        CaptureService
-        GTest::Main)
-
-register_test(CaptureServiceTests)

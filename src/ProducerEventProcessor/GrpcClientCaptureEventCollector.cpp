@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "GrpcClientCaptureEventCollector.h"
+#include "ProducerEventProcessor/GrpcClientCaptureEventCollector.h"
 
 #include <google/protobuf/arena.h>
 
@@ -16,7 +16,7 @@
 using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::ClientCaptureEvent;
 
-namespace orbit_capture_service {
+namespace orbit_producer_event_processor {
 
 static void InitializeArenaOfCaptureResponses(
     std::unique_ptr<google::protobuf::Arena>* arena_of_capture_responses,
@@ -95,10 +95,6 @@ void GrpcClientCaptureEventCollector::SenderThread() {
   orbit_base::SetCurrentThreadName("SenderThread");
   constexpr absl::Duration kSendTimeInterval = absl::Milliseconds(20);
 
-  // This should be lower than (not equal to) kMaxEventsPerCaptureResponse in AddEvent as a few more
-  // ClientCaptureEvents are likely to arrive after the condition becomes true.
-  constexpr int kSendEventCountInterval = 5000;
-
   bool stopped = false;
   while (!stopped) {
     ORBIT_SCOPE("SenderThread iteration");
@@ -106,6 +102,11 @@ void GrpcClientCaptureEventCollector::SenderThread() {
     mutex_.LockWhenWithTimeout(
         absl::Condition(
             +[](GrpcClientCaptureEventCollector* self) ABSL_EXCLUSIVE_LOCKS_REQUIRED(self->mutex_) {
+              // This should be lower than (not equal to) kMaxEventsPerCaptureResponse in AddEvent
+              // as a few more ClientCaptureEvents are likely to arrive after the condition becomes
+              // true.
+              constexpr int kSendEventCountInterval = 5000;
+
               return (self->capture_responses_being_built_.size() == 1 &&
                       self->capture_responses_being_built_.back()->capture_events_size() >=
                           kSendEventCountInterval) ||
@@ -171,4 +172,4 @@ void GrpcClientCaptureEventCollector::SenderThread() {
   }
 }
 
-}  // namespace orbit_capture_service
+}  // namespace orbit_producer_event_processor
