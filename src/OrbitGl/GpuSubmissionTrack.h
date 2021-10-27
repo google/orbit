@@ -57,7 +57,7 @@ class GpuSubmissionTrack : public TimerTrack {
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 
   [[nodiscard]] bool IsCollapsible() const override {
-    return timer_data_->GetMaxDepth() > 1 || has_vulkan_layer_command_buffer_timers_;
+    return GetDepth() > 1 || has_vulkan_layer_command_buffer_timers_;
   }
   [[nodiscard]] bool IsCollapsed() const override {
     return Track::IsCollapsed() || GetParent()->IsCollapsed();

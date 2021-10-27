@@ -322,8 +322,8 @@ void TimerTrack::OnTimer(const TimerInfo& timer_info) {
 }
 
 float TimerTrack::GetHeight() const {
-  uint32_t collapsed_depth = std::min<uint32_t>(1, timer_data_->GetMaxDepth());
-  uint32_t depth = collapse_toggle_->IsCollapsed() ? collapsed_depth : timer_data_->GetMaxDepth();
+  uint32_t collapsed_depth = std::min<uint32_t>(1, GetDepth());
+  uint32_t depth = collapse_toggle_->IsCollapsed() ? collapsed_depth : GetDepth();
   return GetHeaderHeight() + layout_->GetTrackContentTopMargin() +
          layout_->GetTextBoxHeight() * depth +
          (depth > 0 ? layout_->GetSpaceBetweenTracksAndThread() : 0) +
