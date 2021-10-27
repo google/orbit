@@ -146,6 +146,7 @@ TEST_F(OrbitGgpClientTest, GetInstancesAsyncWorkingAllReservedWithProject) {
 }
 
 TEST_F(OrbitGgpClientTest, GetInstancesAsyncTimeout) {
+  // mock_ggp_working_ has a 50ms sleep, hence waiting for only 5ms should result in a timeout
   auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()),
                              std::chrono::milliseconds{5});
   ASSERT_THAT(client, HasValue());
@@ -240,6 +241,7 @@ TEST_F(OrbitGgpClientTest, GetSshInfoAsyncTimeout) {
   Instance test_instance;
   test_instance.id = "instance/test/id";
 
+  // mock_ggp_working_ has a 50ms sleep, hence waiting for only 5ms should result in a timeout
   auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()),
                              std::chrono::milliseconds{5});
   ASSERT_THAT(client, HasValue());
@@ -311,6 +313,7 @@ TEST_F(OrbitGgpClientTest, GetProjectsAsyncWorking) {
 }
 
 TEST_F(OrbitGgpClientTest, GetProjectsAsyncTimeout) {
+  // mock_ggp_working_ has a 50ms sleep, hence waiting for only 5ms should result in a timeout
   auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()),
                              std::chrono::milliseconds{5});
   ASSERT_THAT(client, HasValue());
@@ -381,6 +384,7 @@ TEST_F(OrbitGgpClientTest, GetDefaultProjectAsyncWorking) {
 }
 
 TEST_F(OrbitGgpClientTest, GetDefaultProjectAsyncTimeout) {
+  // mock_ggp_working_ has a 50ms sleep, hence waiting for only 5ms should result in a timeout
   auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()),
                              std::chrono::milliseconds{5});
   ASSERT_THAT(client, HasValue());
