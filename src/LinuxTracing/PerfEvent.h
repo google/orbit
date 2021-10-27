@@ -142,6 +142,25 @@ struct UretprobesWithReturnValuePerfEventData {
 };
 using UretprobesWithReturnValuePerfEvent = TypedPerfEvent<UretprobesWithReturnValuePerfEventData>;
 
+// UserSpaceFunctionEntryPerfEvent and UserSpaceFunctionExitPerfEvent don't correspond to records
+// produced by perf_event_open, but rather to the FunctionEntry and FunctionExit protos emitted by
+// user space instrumentation. They are processed in LinuxTracing because, just like with uprobes,
+// unwinding and dynamic instrumentation need to work together.
+struct UserSpaceFunctionEntryPerfEventData {
+  pid_t pid;
+  pid_t tid;
+  uint64_t function_id = orbit_grpc_protos::kInvalidFunctionId;
+  uint64_t sp;
+  uint64_t return_address;
+};
+using UserSpaceFunctionEntryPerfEvent = TypedPerfEvent<UserSpaceFunctionEntryPerfEventData>;
+
+struct UserSpaceFunctionExitPerfEventData {
+  pid_t pid;
+  pid_t tid;
+};
+using UserSpaceFunctionExitPerfEvent = TypedPerfEvent<UserSpaceFunctionExitPerfEventData>;
+
 struct MmapPerfEventData {
   uint64_t address;
   uint64_t length;
@@ -239,7 +258,8 @@ struct PerfEvent {
   std::variant<ForkPerfEventData, ExitPerfEventData, LostPerfEventData, DiscardedPerfEventData,
                StackSamplePerfEventData, CallchainSamplePerfEventData, UprobesPerfEventData,
                UprobesWithArgumentsPerfEventData, UretprobesPerfEventData,
-               UretprobesWithReturnValuePerfEventData, MmapPerfEventData,
+               UretprobesWithReturnValuePerfEventData, UserSpaceFunctionEntryPerfEventData,
+               UserSpaceFunctionExitPerfEventData, MmapPerfEventData,
                GenericTracepointPerfEventData, TaskNewtaskPerfEventData, TaskRenamePerfEventData,
                SchedSwitchPerfEventData, SchedWakeupPerfEventData, AmdgpuCsIoctlPerfEventData,
                AmdgpuSchedRunJobPerfEventData, DmaFenceSignaledPerfEventData>

@@ -9,9 +9,8 @@
 
 namespace orbit_linux_tracing {
 
-// This struct must be in sync with the SAMPLE_TYPE_TID_TIME_STREAMID_CPU in
-// PerfEventOpen.h, as the bits set in perf_event_attr::sample_type determine
-// the fields this struct should have.
+// This struct must be in sync with the SAMPLE_TYPE_TID_TIME_STREAMID_CPU in PerfEventOpen.h, as the
+// bits set in perf_event_attr::sample_type determine the fields this struct should have.
 struct __attribute__((__packed__)) perf_event_sample_id_tid_time_streamid_cpu {
   uint32_t pid, tid;  /* if PERF_SAMPLE_TID */
   uint64_t time;      /* if PERF_SAMPLE_TIME */
@@ -39,8 +38,7 @@ struct __attribute__((__packed__)) perf_event_fork_exit {
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
 };
 
-// This struct must be in sync with the SAMPLE_REGS_USER_ALL in
-// PerfEventOpen.h.
+// This struct must be in sync with the SAMPLE_REGS_USER_ALL in PerfEventOpen.h.
 struct __attribute__((__packed__)) perf_event_sample_regs_user_all {
   uint64_t abi;
   uint64_t ax;
@@ -65,23 +63,20 @@ struct __attribute__((__packed__)) perf_event_sample_regs_user_all {
   uint64_t r15;
 };
 
-// This struct must be in sync with the SAMPLE_REGS_USER_AX in
-// PerfEventOpen.h.
+// This struct must be in sync with the SAMPLE_REGS_USER_AX in PerfEventOpen.h.
 struct __attribute__((__packed__)) perf_event_sample_regs_user_ax {
   uint64_t abi;
   uint64_t ax;
 };
 
-// This struct must be in sync with the SAMPLE_REGS_USER_SP_IP in
-// PerfEventOpen.h.
+// This struct must be in sync with the SAMPLE_REGS_USER_SP_IP in PerfEventOpen.h.
 struct __attribute__((__packed__)) perf_event_sample_regs_user_sp_ip {
   uint64_t abi;
   uint64_t sp;
   uint64_t ip;
 };
 
-// This struct must be in sync with the SAMPLE_REGS_USER_SP_IP_ARGUMENTS in
-// PerfEventOpen.h.
+// This struct must be in sync with the SAMPLE_REGS_USER_SP_IP_ARGUMENTS in PerfEventOpen.h.
 struct __attribute__((__packed__)) perf_event_sample_regs_user_sp_ip_arguments {
   uint64_t abi;
   uint64_t cx;

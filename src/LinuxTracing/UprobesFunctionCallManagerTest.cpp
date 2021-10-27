@@ -36,9 +36,9 @@ TEST(UprobesFunctionCallManager, OneFunctionCallWithoutArgumentsAndWithoutReturn
   std::optional<FunctionCall> processed_function_call;
   UprobesFunctionCallManager function_call_manager;
 
-  function_call_manager.ProcessUprobes(kTid, 100, 1, std::nullopt);
+  function_call_manager.ProcessFunctionEntry(kTid, 100, 1, std::nullopt);
 
-  processed_function_call = function_call_manager.ProcessUretprobes(kPid, kTid, 2, std::nullopt);
+  processed_function_call = function_call_manager.ProcessFunctionExit(kPid, kTid, 2, std::nullopt);
   ASSERT_TRUE(processed_function_call.has_value());
   EXPECT_EQ(processed_function_call.value().pid(), kPid);
   EXPECT_EQ(processed_function_call.value().tid(), kTid);
@@ -56,9 +56,9 @@ TEST(UprobesFunctionCallManager, OneFunctionCallWithArgumentsAndWithoutReturnVal
   std::optional<FunctionCall> processed_function_call;
   UprobesFunctionCallManager function_call_manager;
 
-  function_call_manager.ProcessUprobes(kTid, 100, 1, kRegisters);
+  function_call_manager.ProcessFunctionEntry(kTid, 100, 1, kRegisters);
 
-  processed_function_call = function_call_manager.ProcessUretprobes(kPid, kTid, 2, std::nullopt);
+  processed_function_call = function_call_manager.ProcessFunctionExit(kPid, kTid, 2, std::nullopt);
   ASSERT_TRUE(processed_function_call.has_value());
   EXPECT_EQ(processed_function_call.value().pid(), kPid);
   EXPECT_EQ(processed_function_call.value().tid(), kTid);
@@ -76,9 +76,9 @@ TEST(UprobesFunctionCallManager, OneFunctionCallWithoutArgumentsAndWithReturnVal
   std::optional<FunctionCall> processed_function_call;
   UprobesFunctionCallManager function_call_manager;
 
-  function_call_manager.ProcessUprobes(kTid, 100, 1, std::nullopt);
+  function_call_manager.ProcessFunctionEntry(kTid, 100, 1, std::nullopt);
 
-  processed_function_call = function_call_manager.ProcessUretprobes(kPid, kTid, 2, 1234);
+  processed_function_call = function_call_manager.ProcessFunctionExit(kPid, kTid, 2, 1234);
   ASSERT_TRUE(processed_function_call.has_value());
   EXPECT_EQ(processed_function_call.value().pid(), kPid);
   EXPECT_EQ(processed_function_call.value().tid(), kTid);
@@ -96,9 +96,9 @@ TEST(UprobesFunctionCallManager, OneFunctionCallWithArgumentsAndWithReturnValue)
   std::optional<FunctionCall> processed_function_call;
   UprobesFunctionCallManager function_call_manager;
 
-  function_call_manager.ProcessUprobes(kTid, 100, 1, kRegisters);
+  function_call_manager.ProcessFunctionEntry(kTid, 100, 1, kRegisters);
 
-  processed_function_call = function_call_manager.ProcessUretprobes(kPid, kTid, 2, 1234);
+  processed_function_call = function_call_manager.ProcessFunctionExit(kPid, kTid, 2, 1234);
   ASSERT_TRUE(processed_function_call.has_value());
   EXPECT_EQ(processed_function_call.value().pid(), kPid);
   EXPECT_EQ(processed_function_call.value().tid(), kTid);
@@ -116,11 +116,11 @@ TEST(UprobesFunctionCallManager, TwoNestedFunctionCallsAndAnotherFunctionCall) {
   std::optional<FunctionCall> processed_function_call;
   UprobesFunctionCallManager function_call_manager;
 
-  function_call_manager.ProcessUprobes(kTid, 100, 1, kRegisters);
+  function_call_manager.ProcessFunctionEntry(kTid, 100, 1, kRegisters);
 
-  function_call_manager.ProcessUprobes(kTid, 200, 2, kRegisters);
+  function_call_manager.ProcessFunctionEntry(kTid, 200, 2, kRegisters);
 
-  processed_function_call = function_call_manager.ProcessUretprobes(kPid, kTid, 3, 1234);
+  processed_function_call = function_call_manager.ProcessFunctionExit(kPid, kTid, 3, 1234);
   ASSERT_TRUE(processed_function_call.has_value());
   EXPECT_EQ(processed_function_call.value().pid(), kPid);
   EXPECT_EQ(processed_function_call.value().tid(), kTid);
@@ -131,7 +131,7 @@ TEST(UprobesFunctionCallManager, TwoNestedFunctionCallsAndAnotherFunctionCall) {
   EXPECT_EQ(processed_function_call.value().return_value(), 1234);
   EXPECT_THAT(processed_function_call.value().registers(), ElementsAre(1, 2, 3, 4, 5, 6));
 
-  processed_function_call = function_call_manager.ProcessUretprobes(kPid, kTid, 4, 1235);
+  processed_function_call = function_call_manager.ProcessFunctionExit(kPid, kTid, 4, 1235);
   ASSERT_TRUE(processed_function_call.has_value());
   EXPECT_EQ(processed_function_call.value().pid(), kPid);
   EXPECT_EQ(processed_function_call.value().tid(), kTid);
@@ -142,9 +142,9 @@ TEST(UprobesFunctionCallManager, TwoNestedFunctionCallsAndAnotherFunctionCall) {
   EXPECT_EQ(processed_function_call.value().return_value(), 1235);
   EXPECT_THAT(processed_function_call.value().registers(), ElementsAre(1, 2, 3, 4, 5, 6));
 
-  function_call_manager.ProcessUprobes(kTid, 300, 5, std::nullopt);
+  function_call_manager.ProcessFunctionEntry(kTid, 300, 5, std::nullopt);
 
-  processed_function_call = function_call_manager.ProcessUretprobes(kPid, kTid, 6, std::nullopt);
+  processed_function_call = function_call_manager.ProcessFunctionExit(kPid, kTid, 6, std::nullopt);
   ASSERT_TRUE(processed_function_call.has_value());
   EXPECT_EQ(processed_function_call.value().pid(), kPid);
   EXPECT_EQ(processed_function_call.value().tid(), kTid);
@@ -163,11 +163,11 @@ TEST(UprobesFunctionCallManager, TwoFunctionCallsOnDifferentThreads) {
   std::optional<FunctionCall> processed_function_call;
   UprobesFunctionCallManager function_call_manager;
 
-  function_call_manager.ProcessUprobes(kTid1, 100, 1, kRegisters);
+  function_call_manager.ProcessFunctionEntry(kTid1, 100, 1, kRegisters);
 
-  function_call_manager.ProcessUprobes(kTid2, 200, 2, std::nullopt);
+  function_call_manager.ProcessFunctionEntry(kTid2, 200, 2, std::nullopt);
 
-  processed_function_call = function_call_manager.ProcessUretprobes(kPid, kTid1, 3, std::nullopt);
+  processed_function_call = function_call_manager.ProcessFunctionExit(kPid, kTid1, 3, std::nullopt);
   ASSERT_TRUE(processed_function_call.has_value());
   EXPECT_EQ(processed_function_call.value().pid(), kPid);
   EXPECT_EQ(processed_function_call.value().tid(), kTid1);
@@ -178,7 +178,7 @@ TEST(UprobesFunctionCallManager, TwoFunctionCallsOnDifferentThreads) {
   EXPECT_EQ(processed_function_call.value().return_value(), 0);
   EXPECT_THAT(processed_function_call.value().registers(), ElementsAre(1, 2, 3, 4, 5, 6));
 
-  processed_function_call = function_call_manager.ProcessUretprobes(kPid, kTid2, 4, 1234);
+  processed_function_call = function_call_manager.ProcessFunctionExit(kPid, kTid2, 4, 1234);
   ASSERT_TRUE(processed_function_call.has_value());
   EXPECT_EQ(processed_function_call.value().pid(), kPid);
   EXPECT_EQ(processed_function_call.value().tid(), kTid2);
@@ -196,7 +196,7 @@ TEST(UprobesFunctionCallManager, OnlyUretprobeNoFunctionCall) {
   std::optional<FunctionCall> processed_function_call;
   UprobesFunctionCallManager function_call_manager;
 
-  processed_function_call = function_call_manager.ProcessUretprobes(kPid, kTid, 2, 1234);
+  processed_function_call = function_call_manager.ProcessFunctionExit(kPid, kTid, 2, 1234);
   ASSERT_FALSE(processed_function_call.has_value());
 }
 

@@ -20,8 +20,8 @@ namespace orbit_user_space_instrumentation {
 class InstrumentedProcess;
 
 // `InstrumentationManager` is a globally unique object containing the bookkeeping for all user
-// space instrumentaion (in the `process_map_` member). Its lifetime is pretty much identical to the
-// lifetime of the profiling service.
+// space instrumentation (in the `process_map_` member). Its lifetime is pretty much identical to
+// the lifetime of the profiling service.
 class InstrumentationManager {
  public:
   InstrumentationManager(const InstrumentationManager&) = delete;
