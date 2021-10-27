@@ -133,7 +133,7 @@ int GgpConfig(int argc, char* argv[]) {
     std::cout << "arguments are formatted wrong" << std::endl;
     return 1;
   }
-  std::cout << R"({
+  std::string output{R"({
  "chromeProfileDirectory": "",
  "environment": "Test env",
  "organization": "Test Org",
@@ -143,7 +143,8 @@ int GgpConfig(int argc, char* argv[]) {
  "projectId": "Test Project id",
  "renderdocLocalPath": "",
  "url": "http://someurl.com/"
-})" << std::endl;
+})"};
+  std::cout << output << std::endl;
   return 0;
 }
 
