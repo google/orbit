@@ -26,8 +26,8 @@ namespace orbit_capture_file {
 //      coded_output_stream.Trim();
 //      adaptor.Flush();
 //
-//   * Read buffered data into provided buffer.
-//      size_t bytes_read = buffer_output_stream.ReadIntoBuffer(dest, max_size);
+//   * Take buffered data away from output stream.
+//      std::vector<unsigned char> buffered_data = buffer_output_stream.TakeBuffer();
 //
 // Mote details about ZeroCopyOutputStream:
 // https://developers.google.com/protocol-buffers/docs/reference/cpp/google.protobuf.io.zero_copy_stream
@@ -37,11 +37,8 @@ class BufferOutputStream : public google::protobuf::io::CopyingOutputStream {
   // https://developers.google.com/protocol-buffers/docs/reference/cpp/google.protobuf.io.zero_copy_stream_impl_lite#CopyingOutputStream.Write.details
   bool Write(const void* buffer, int size) override;
 
-  // Reads at most `max_size` bytes data into the buffer pointed to by `dest` and returns the number
-  // of successful read bytes. Note that the read bytes are erased from `buffer_`.
-  [[nodiscard]] size_t ReadIntoBuffer(void* dest, size_t max_size);
-
-  [[nodiscard]] google::protobuf::int64 BytesAvailableToRead() const;
+  // Take buffered data away from the output stream.
+  [[nodiscard]] std::vector<unsigned char> TakeBuffer();
 
  private:
   mutable absl::Mutex mutex_;
