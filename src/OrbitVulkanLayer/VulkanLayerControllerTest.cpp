@@ -6,6 +6,7 @@
 #include <gtest/gtest.h>
 #include <vulkan/vk_layer.h>
 
+#include "OrbitBase/ReadFileToString.h"
 #include "VulkanLayerController.h"
 #include "VulkanLayerProducer.h"
 
@@ -508,6 +509,156 @@ TEST_F(
       .WillOnce(SaveArg<0>(&actual_producer));
   controller.reset();
   EXPECT_EQ(actual_producer, nullptr);
+}
+
+TEST_F(VulkanLayerControllerTest, WillDumpPidOnCreateInstance) {
+  std::unique_ptr<VulkanLayerControllerImpl> controller =
+      std::make_unique<VulkanLayerControllerImpl>();
+  const MockVulkanWrapper* vulkan_wrapper = controller->vulkan_wrapper();
+
+  EXPECT_CALL(*vulkan_wrapper, CallVkEnumerateInstanceExtensionProperties)
+      .WillRepeatedly(Invoke([](const char* /*layer_name*/, uint32_t* property_count,
+                                VkExtensionProperties* properties) -> VkResult {
+        CHECK(property_count != nullptr);
+        if (properties == nullptr) {
+          *property_count = 1;
+          return VK_SUCCESS;
+        }
+        VkExtensionProperties p{VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+                                VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_SPEC_VERSION};
+        *properties = p;
+        return VK_SUCCESS;
+      }));
+
+  static constexpr PFN_vkCreateInstance kMockDriverCreateInstance =
+      +[](const VkInstanceCreateInfo* /*create_info*/, const VkAllocationCallbacks* /*allocator*/,
+          VkInstance* /*instance*/) { return VK_SUCCESS; };
+
+  PFN_vkGetInstanceProcAddr fake_get_instance_proc_addr =
+      +[](VkInstance /*instance*/, const char* name) -> PFN_vkVoidFunction {
+    if (strcmp(name, "vkCreateInstance") == 0) {
+      return absl::bit_cast<PFN_vkVoidFunction>(kMockDriverCreateInstance);
+    }
+    return nullptr;
+  };
+
+  VkLayerInstanceLink layer_link_1 = {.pfnNextGetInstanceProcAddr = fake_get_instance_proc_addr};
+  VkLayerInstanceCreateInfo layer_create_info{
+      .sType = VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO, .function = VK_LAYER_LINK_INFO};
+  layer_create_info.u.pLayerInfo = &layer_link_1;
+  VkInstanceCreateInfo create_info{.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+                                   .pNext = &layer_create_info,
+                                   .enabledExtensionCount = 0,
+                                   .ppEnabledExtensionNames = nullptr};
+
+  VkInstance created_instance;
+  constexpr const char* filename = "pid.txt";
+  setenv("ORBIT_VULKAN_LAYER_PID_FILE", filename, /*overwrite*/ true);
+  VkResult result = controller->OnCreateInstance(&create_info, nullptr, &created_instance);
+  uint32_t pid = orbit_base::GetCurrentProcessId();
+  ErrorMessageOr<std::string> pid_or_error = orbit_base::ReadFileToString(filename);
+  EXPECT_FALSE(pid_or_error.has_error());
+  EXPECT_EQ(pid_or_error.value(), absl::StrFormat("%u", pid));
+  EXPECT_EQ(result, VK_SUCCESS);
+  ErrorMessageOr<bool> removed_or_error = orbit_base::RemoveFile(filename);
+  EXPECT_FALSE(removed_or_error.has_error());
+}
+
+TEST_F(VulkanLayerControllerTest, DumpProcessIdFailsOnCreateInstanceByNonExistentPath) {
+  std::unique_ptr<VulkanLayerControllerImpl> controller =
+      std::make_unique<VulkanLayerControllerImpl>();
+  const MockVulkanWrapper* vulkan_wrapper = controller->vulkan_wrapper();
+
+  EXPECT_CALL(*vulkan_wrapper, CallVkEnumerateInstanceExtensionProperties)
+      .WillRepeatedly(Invoke([](const char* /*layer_name*/, uint32_t* property_count,
+                                VkExtensionProperties* properties) -> VkResult {
+        CHECK(property_count != nullptr);
+        if (properties == nullptr) {
+          *property_count = 1;
+          return VK_SUCCESS;
+        }
+        VkExtensionProperties p{VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+                                VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_SPEC_VERSION};
+        *properties = p;
+        return VK_SUCCESS;
+      }));
+
+  static constexpr PFN_vkCreateInstance kMockDriverCreateInstance =
+      +[](const VkInstanceCreateInfo* /*create_info*/, const VkAllocationCallbacks* /*allocator*/,
+          VkInstance* /*instance*/) { return VK_SUCCESS; };
+
+  PFN_vkGetInstanceProcAddr fake_get_instance_proc_addr =
+      +[](VkInstance /*instance*/, const char* name) -> PFN_vkVoidFunction {
+    if (strcmp(name, "vkCreateInstance") == 0) {
+      return absl::bit_cast<PFN_vkVoidFunction>(kMockDriverCreateInstance);
+    }
+    return nullptr;
+  };
+
+  VkLayerInstanceLink layer_link_1 = {.pfnNextGetInstanceProcAddr = fake_get_instance_proc_addr};
+  VkLayerInstanceCreateInfo layer_create_info{
+      .sType = VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO, .function = VK_LAYER_LINK_INFO};
+  layer_create_info.u.pLayerInfo = &layer_link_1;
+  VkInstanceCreateInfo create_info{.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+                                   .pNext = &layer_create_info,
+                                   .enabledExtensionCount = 0,
+                                   .ppEnabledExtensionNames = nullptr};
+
+  VkInstance created_instance;
+  constexpr const char* filename = "i_dont_exists_dir/pid.txt";
+  setenv("ORBIT_VULKAN_LAYER_PID_FILE", filename, /*overwrite*/ true);
+  [[maybe_unused]] VkResult result = VK_SUCCESS;
+  EXPECT_DEATH(result = controller->OnCreateInstance(&create_info, nullptr, &created_instance),
+               "Opening \"i_dont_exists_dir/pid.txt\": Unable to open file "
+               "\"i_dont_exists_dir/pid.txt\": No such file or directory");
+}
+
+TEST_F(VulkanLayerControllerTest, DumpProcessIdFailsOnCreateInstanceByInvalidFilename) {
+  std::unique_ptr<VulkanLayerControllerImpl> controller =
+      std::make_unique<VulkanLayerControllerImpl>();
+  const MockVulkanWrapper* vulkan_wrapper = controller->vulkan_wrapper();
+
+  EXPECT_CALL(*vulkan_wrapper, CallVkEnumerateInstanceExtensionProperties)
+      .WillRepeatedly(Invoke([](const char* /*layer_name*/, uint32_t* property_count,
+                                VkExtensionProperties* properties) -> VkResult {
+        CHECK(property_count != nullptr);
+        if (properties == nullptr) {
+          *property_count = 1;
+          return VK_SUCCESS;
+        }
+        VkExtensionProperties p{VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+                                VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_SPEC_VERSION};
+        *properties = p;
+        return VK_SUCCESS;
+      }));
+
+  static constexpr PFN_vkCreateInstance kMockDriverCreateInstance =
+      +[](const VkInstanceCreateInfo* /*create_info*/, const VkAllocationCallbacks* /*allocator*/,
+          VkInstance* /*instance*/) { return VK_SUCCESS; };
+
+  PFN_vkGetInstanceProcAddr fake_get_instance_proc_addr =
+      +[](VkInstance /*instance*/, const char* name) -> PFN_vkVoidFunction {
+    if (strcmp(name, "vkCreateInstance") == 0) {
+      return absl::bit_cast<PFN_vkVoidFunction>(kMockDriverCreateInstance);
+    }
+    return nullptr;
+  };
+
+  VkLayerInstanceLink layer_link_1 = {.pfnNextGetInstanceProcAddr = fake_get_instance_proc_addr};
+  VkLayerInstanceCreateInfo layer_create_info{
+      .sType = VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO, .function = VK_LAYER_LINK_INFO};
+  layer_create_info.u.pLayerInfo = &layer_link_1;
+  VkInstanceCreateInfo create_info{.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+                                   .pNext = &layer_create_info,
+                                   .enabledExtensionCount = 0,
+                                   .ppEnabledExtensionNames = nullptr};
+
+  VkInstance created_instance;
+  constexpr const char* filename = "tmpdir/";
+  setenv("ORBIT_VULKAN_LAYER_PID_FILE", filename, /*overwrite*/ true);
+  [[maybe_unused]] VkResult result = VK_SUCCESS;
+  EXPECT_DEATH(result = controller->OnCreateInstance(&create_info, nullptr, &created_instance),
+               "Opening \"tmpdir/\": Unable to open file \"tmpdir/\": Is a directory");
 }
 
 TEST_F(VulkanLayerControllerTest, InitializationFailsOnCreateDeviceWithNoInfo) {

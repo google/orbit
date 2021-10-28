@@ -6,9 +6,13 @@
 #define ORBIT_VULKAN_LAYER_VULKAN_LAYER_CONTROLLER_H_
 
 #include <absl/base/casts.h>
+#include <unistd.h>
 #include <vulkan/vk_layer.h>
 #include <vulkan/vulkan.h>
 
+#include <cstdlib>
+
+#include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "ProducerSideChannel/ProducerSideChannel.h"
 #include "VulkanLayerProducerImpl.h"
@@ -80,6 +84,7 @@ class VulkanLayerController {
     }
 
     InitVulkanLayerProducerIfNecessary();
+    DumpProcessIdIfNecessary();
 
     PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
         layer_create_info->u.pLayerInfo->pfnNextGetInstanceProcAddr;
@@ -629,6 +634,21 @@ class VulkanLayerController {
       vulkan_layer_producer_->BringUp(orbit_producer_side_channel::CreateProducerSideChannel());
       submission_tracker_.SetVulkanLayerProducer(vulkan_layer_producer_.get());
     }
+  }
+
+  void DumpProcessIdIfNecessary() const {
+    const char* pid_file = std::getenv("ORBIT_VULKAN_LAYER_PID_FILE");
+    if (pid_file == nullptr) {
+      return;
+    }
+    uint32_t pid = orbit_base::GetCurrentProcessId();
+    LOG("Writing PID of %u to \"%s\"", pid, pid_file);
+    ErrorMessageOr<orbit_base::unique_fd> error_or_file = orbit_base::OpenFileForWriting(pid_file);
+    FAIL_IF(error_or_file.has_error(), "Opening \"%s\": %s", pid_file,
+            error_or_file.error().message());
+    ErrorMessageOr<void> result =
+        orbit_base::WriteFully(error_or_file.value(), absl::StrFormat("%d", pid));
+    FAIL_IF(result.has_error(), "Writing PID to \"%s\": %s", pid_file, result.error().message());
   }
 
   void CloseVulkanLayerProducerIfNecessary() {
