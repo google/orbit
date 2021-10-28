@@ -1196,7 +1196,7 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
     data_source_ = CaptureData::DataSource::kLoadedCapture;
     orbit_base::unique_resource scope_exit{&data_source_,
                                            [](std::atomic<CaptureData::DataSource>* value) {
-                                             *value = CaptureData::DataSource::kCapturing;
+                                             *value = CaptureData::DataSource::kLiveCapture;
                                            }};
 
     ScopedMetric metric{metrics_uploader_,

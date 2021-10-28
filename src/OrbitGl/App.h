@@ -529,7 +529,7 @@ class OrbitApp final : public DataViewFactory,
 
   std::atomic<bool> capture_loading_cancellation_requested_ = false;
   std::atomic<orbit_client_data::CaptureData::DataSource> data_source_{
-      orbit_client_data::CaptureData::DataSource::kCapturing};
+      orbit_client_data::CaptureData::DataSource::kLiveCapture};
 
   CaptureStartedCallback capture_started_callback_;
   CaptureStopRequestedCallback capture_stop_requested_callback_;

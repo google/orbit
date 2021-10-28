@@ -43,7 +43,7 @@ namespace orbit_client_data {
 
 class CaptureData {
  public:
-  enum class DataSource { kCapturing, kLoadedCapture };
+  enum class DataSource { kLiveCapture, kLoadedCapture };
   explicit CaptureData(orbit_client_data::ModuleManager* module_manager,
                        const orbit_grpc_protos::CaptureStarted& capture_started,
                        std::optional<std::filesystem::path> file_path,

@@ -114,7 +114,7 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
 
   auto capture_data = std::make_unique<CaptureData>(module_manager, capture_started, std::nullopt,
                                                     absl::flat_hash_set<uint64_t>{},
-                                                    CaptureData::DataSource::kCapturing);
+                                                    CaptureData::DataSource::kLiveCapture);
 
   for (size_t i = 0; i < kNumFunctions; i++) {
     FunctionStats stats;

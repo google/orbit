@@ -11,7 +11,7 @@ namespace orbit_gl {
 std::unique_ptr<CaptureData> TrackTestData::GenerateTestCaptureData() {
   auto capture_data = std::make_unique<CaptureData>(nullptr, orbit_grpc_protos::CaptureStarted{},
                                                     std::nullopt, absl::flat_hash_set<uint64_t>{},
-                                                    CaptureData::DataSource::kCapturing);
+                                                    CaptureData::DataSource::kLiveCapture);
 
   // AddressInfo
   orbit_client_protos::LinuxAddressInfo address_info;

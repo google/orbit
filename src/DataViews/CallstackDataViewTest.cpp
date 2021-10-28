@@ -120,7 +120,7 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
 
   auto capture_data = std::make_unique<CaptureData>(module_manager, capture_started, std::nullopt,
                                                     absl::flat_hash_set<uint64_t>{},
-                                                    CaptureData::DataSource::kCapturing);
+                                                    CaptureData::DataSource::kLiveCapture);
   ProcessData* process = capture_data.get()->mutable_process();
   process->UpdateModuleInfos(modules);
 

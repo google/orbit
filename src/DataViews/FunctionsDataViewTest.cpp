@@ -304,7 +304,7 @@ TEST_F(FunctionsDataViewTest, FrameTrackSelectionAppearsInFirstColumnWhenACaptur
   EXPECT_CALL(app_, HasCaptureData).Times(2).WillRepeatedly(testing::Return(true));
 
   orbit_client_data::CaptureData capture_data{
-      &module_manager, capture_started, std::nullopt, {}, CaptureData::DataSource::kCapturing};
+      &module_manager, capture_started, std::nullopt, {}, CaptureData::DataSource::kLiveCapture};
   EXPECT_CALL(app_, GetCaptureData).Times(2).WillRepeatedly(testing::ReturnPointee(&capture_data));
 
   // Note that `CaptureData` also keeps a list of enabled frame track function ids, but this list is

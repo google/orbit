@@ -201,7 +201,7 @@ IntrospectionWindow::IntrospectionWindow(OrbitApp* app)
   absl::flat_hash_set<uint64_t> frame_track_function_ids;
   capture_data_ = std::make_unique<CaptureData>(/*module_manager=*/nullptr, capture_started,
                                                 std::nullopt, std::move(frame_track_function_ids),
-                                                CaptureData::DataSource::kCapturing);
+                                                CaptureData::DataSource::kLiveCapture);
 }
 
 IntrospectionWindow::~IntrospectionWindow() { StopIntrospection(); }
