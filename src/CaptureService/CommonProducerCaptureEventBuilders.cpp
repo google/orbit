@@ -2,27 +2,24 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CAPTURE_SERVICE_CAPTURE_EVENT_BUILDER_H_
-#define CAPTURE_SERVICE_CAPTURE_EVENT_BUILDER_H_
+#ifndef CAPTURE_SERVICE_COMMON_PRODUCER_CAPTURE_EVENT_BUILDER_H_
+#define CAPTURE_SERVICE_COMMON_PRODUCER_CAPTURE_EVENT_BUILDER_H_
 
-#include "CaptureService/ProducerCaptureEventBuilder.h"
+#include "CaptureService/CommonProducerCaptureEventBuilders.h"
 
 #include <string>
 
-#include "ApiUtils/Event.h"
-#include "GrpcProtos/Constants.h"
 #include "Introspection/Introspection.h"
 #include "ObjectUtils/CoffFile.h"
 #include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/Result.h"
 #include "OrbitVersion/OrbitVersion.h"
-#include "ProducerEventProcessor/GrpcClientCaptureEventCollector.h"
-#include "ProducerEventProcessor/ProducerEventProcessor.h"
 #include "capture.pb.h"
+#include "services.grpc.pb.h"
+
 using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
@@ -91,6 +88,13 @@ ProducerCaptureEvent CreateCaptureStartedEvent(const CaptureOptions& capture_opt
   return event;
 }
 
+ProducerCaptureEvent CreateCaptureFinishedEvent() {
+  ProducerCaptureEvent event;
+  CaptureFinished* capture_finished = event.mutable_capture_finished();
+  capture_finished->set_status(CaptureFinished::kSuccessful);
+  return event;
+}
+
 ProducerCaptureEvent CreateClockResolutionEvent(uint64_t timestamp_ns, uint64_t resolution_ns) {
   ProducerCaptureEvent event;
   orbit_grpc_protos::ClockResolutionEvent* clock_resolution_event =
@@ -128,13 +132,6 @@ ProducerCaptureEvent CreateWarningEvent(uint64_t timestamp_ns, std::string messa
   return event;
 }
 
-ProducerCaptureEvent CreateCaptureFinishedEvent() {
-  ProducerCaptureEvent event;
-  CaptureFinished* capture_finished = event.mutable_capture_finished();
-  capture_finished->set_status(CaptureFinished::kSuccessful);
-  return event;
-}
-
 }  // namespace orbit_capture_service
 
-#endif  // CAPTURE_SERVICE_CAPTURE_EVENT_BUILDER_H_
+#endif  // CAPTURE_SERVICE_COMMON_PRODUCER_CAPTURE_EVENT_BUILDER_H_

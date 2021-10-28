@@ -9,6 +9,7 @@
 
 namespace orbit_windows_capture_service {
 
+// Windows implementation of the grpc capture service.
 class WindowsCaptureService final : public orbit_capture_service::CaptureService {
  public:
   grpc::Status Capture(

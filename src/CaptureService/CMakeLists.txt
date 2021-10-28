@@ -14,11 +14,11 @@ target_include_directories(CaptureService PRIVATE
 target_sources(CaptureService PUBLIC
         include/CaptureService/CaptureService.h
         include/CaptureService/CaptureStartStopListener.h
-        include/CaptureService/ProducerCaptureEventBuilder.h)
+        include/CaptureService/CommonProducerCaptureEventBuilders.h)
 
 target_sources(CaptureService PRIVATE
         CaptureService.cpp
-        ProducerCaptureEventBuilder.cpp)
+        CommonProducerCaptureEventBuilders.cpp)
 
 target_link_libraries(CaptureService PUBLIC
         ApiLoader

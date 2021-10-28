@@ -17,7 +17,7 @@
 
 #include "ApiLoader/EnableInTracee.h"
 #include "ApiUtils/Event.h"
-#include "CaptureService/ProducerCaptureEventBuilder.h"
+#include "CaptureService/CommonProducerCaptureEventBuilders.h"
 #include "GrpcProtos/Constants.h"
 #include "Introspection/Introspection.h"
 #include "MemoryInfoHandler.h"
@@ -117,18 +117,14 @@ grpc::Status LinuxCaptureService::Capture(
     grpc::ServerContext* /*context*/,
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   orbit_base::SetCurrentThreadName("CSImpl::Capture");
-  if (is_capturing) {
-    ERROR("Cannot start capture because another capture is already in progress");
-    return grpc::Status(grpc::StatusCode::ALREADY_EXISTS,
-                        "Cannot start capture because another capture is already in progress.");
-  }
-  is_capturing = true;
 
-  GrpcClientCaptureEventCollector client_capture_event_collector{reader_writer};
-  std::unique_ptr<ProducerEventProcessor> producer_event_processor =
-      ProducerEventProcessor::Create(&client_capture_event_collector);
-  TracingHandler tracing_handler{producer_event_processor.get()};
-  MemoryInfoHandler memory_info_handler{producer_event_processor.get()};
+  ErrorMessageOr<void> result = InitializeCapture(reader_writer);
+  if (result.has_error()) {
+    return grpc::Status(grpc::StatusCode::ALREADY_EXISTS, result.error().message());
+  }
+
+  TracingHandler tracing_handler{producer_event_processor_.get()};
+  MemoryInfoHandler memory_info_handler{producer_event_processor_.get()};
 
   CaptureRequest request;
   reader_writer->Read(&request);
@@ -169,59 +165,43 @@ grpc::Status LinuxCaptureService::Capture(
     }
   }
 
-  // These are not in precise sync but they do not have to be.
-  absl::Time capture_start_time = absl::Now();
-  uint64_t capture_start_timestamp_ns = orbit_base::CaptureTimestampNs();
-
-  producer_event_processor->ProcessEvent(
-      orbit_grpc_protos::kRootProducerId,
-      orbit_capture_service::CreateCaptureStartedEvent(capture_options, capture_start_time,
-                                                       capture_start_timestamp_ns));
-
-  producer_event_processor->ProcessEvent(orbit_grpc_protos::kRootProducerId,
-                                         orbit_capture_service::CreateClockResolutionEvent(
-                                             capture_start_timestamp_ns, clock_resolution_ns_));
+  StartEventProcessing(capture_options);
 
   if (error_enabling_orbit_api.has_value()) {
-    producer_event_processor->ProcessEvent(
+    producer_event_processor_->ProcessEvent(
         orbit_grpc_protos::kRootProducerId,
         orbit_capture_service::CreateErrorEnablingOrbitApiEvent(
-            capture_start_timestamp_ns, std::move(error_enabling_orbit_api.value())));
+            capture_start_timestamp_ns_, std::move(error_enabling_orbit_api.value())));
   }
 
   if (error_enabling_user_space_instrumentation.has_value()) {
-    producer_event_processor->ProcessEvent(
+    producer_event_processor_->ProcessEvent(
         orbit_grpc_protos::kRootProducerId,
         orbit_capture_service::CreateErrorEnablingUserSpaceInstrumentationEvent(
-            capture_start_timestamp_ns,
+            capture_start_timestamp_ns_,
             std::move(error_enabling_user_space_instrumentation.value())));
   }
 
   std::unique_ptr<orbit_introspection::IntrospectionListener> introspection_listener;
   if (capture_options.enable_introspection()) {
-    introspection_listener = CreateIntrospectionListener(producer_event_processor.get());
+    introspection_listener = CreateIntrospectionListener(producer_event_processor_.get());
   }
 
   tracing_handler.Start(linux_tracing_capture_options);
 
   memory_info_handler.Start(request.capture_options());
   for (CaptureStartStopListener* listener : capture_start_stop_listeners_) {
-    listener->OnCaptureStartRequested(request.capture_options(), producer_event_processor.get());
+    listener->OnCaptureStartRequested(request.capture_options(), producer_event_processor_.get());
   }
 
-  // The client asks for the capture to be stopped by calling WritesDone.
-  // At that point, this call to Read will return false.
-  // In the meantime, it blocks if no message is received.
-  while (reader_writer->Read(&request)) {
-  }
-  LOG("Client finished writing on Capture's gRPC stream: stopping capture");
+  WaitForEndCaptureRequestFromClient(reader_writer, request);
 
   // Disable Orbit API in tracee.
   if (capture_options.enable_api()) {
     auto result = orbit_api_loader::DisableApiInTracee(capture_options);
     if (result.has_error()) {
       ERROR("Disabling Orbit Api: %s", result.error().message());
-      producer_event_processor->ProcessEvent(
+      producer_event_processor_->ProcessEvent(
           orbit_grpc_protos::kRootProducerId,
           orbit_capture_service::CreateWarningEvent(
               orbit_base::CaptureTimestampNs(),
@@ -236,7 +216,7 @@ grpc::Status LinuxCaptureService::Capture(
     auto result_tmp = instrumentation_manager_->UninstrumentProcess(target_process_id);
     if (result_tmp.has_error()) {
       ERROR("Disabling user space instrumentation: %s", result_tmp.error().message());
-      producer_event_processor->ProcessEvent(
+      producer_event_processor_->ProcessEvent(
           orbit_grpc_protos::kRootProducerId,
           orbit_capture_service::CreateWarningEvent(
               orbit_base::CaptureTimestampNs(),
@@ -251,12 +231,10 @@ grpc::Status LinuxCaptureService::Capture(
   // The destructor of IntrospectionListener takes care of actually disabling introspection.
   introspection_listener.reset();
 
-  producer_event_processor->ProcessEvent(orbit_grpc_protos::kRootProducerId,
-                                         orbit_capture_service::CreateCaptureFinishedEvent());
+  FinalizeEventProcessing();
 
-  client_capture_event_collector.StopAndWait();
-  LOG("Finished handling gRPC call to Capture: all capture data has been sent");
-  is_capturing = false;
+  TerminateCapture();
+
   return grpc::Status::OK;
 }
 

@@ -1,32 +1,17 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #include "CaptureService/CaptureService.h"
 
-#include <absl/container/flat_hash_set.h>
-#include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
 #include <stdint.h>
 
-#include <algorithm>
-#include <limits>
-#include <thread>
-#include <utility>
-#include <vector>
-
-#include "ApiUtils/Event.h"
-#include "CaptureService/ProducerCaptureEventBuilder.h"
+#include "CaptureService/CommonProducerCaptureEventBuilders.h"
 #include "GrpcProtos/Constants.h"
 #include "Introspection/Introspection.h"
-#include "ObjectUtils/ElfFile.h"
-#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/Profiling.h"
-#include "OrbitVersion/OrbitVersion.h"
-#include "ProducerEventProcessor/GrpcClientCaptureEventCollector.h"
-#include "ProducerEventProcessor/ProducerEventProcessor.h"
 #include "capture.pb.h"
 
 using orbit_grpc_protos::CaptureFinished;
@@ -41,14 +26,9 @@ using orbit_producer_event_processor::ProducerEventProcessor;
 
 namespace orbit_capture_service {
 
-void CaptureService::AddCaptureStartStopListener(CaptureStartStopListener* listener) {
-  bool new_insertion = capture_start_stop_listeners_.insert(listener).second;
-  CHECK(new_insertion);
-}
-
-void CaptureService::RemoveCaptureStartStopListener(CaptureStartStopListener* listener) {
-  bool was_removed = capture_start_stop_listeners_.erase(listener) > 0;
-  CHECK(was_removed);
+CaptureService::CaptureService() {
+  // We want to estimate clock resolution once, not at the beginning of every capture.
+  EstimateAndLogClockResolution();
 }
 
 void CaptureService::EstimateAndLogClockResolution() {
@@ -59,6 +39,88 @@ void CaptureService::EstimateAndLogClockResolution() {
   } else {
     ERROR("Failed to estimate clock resolution");
   }
+}
+
+void CaptureService::AddCaptureStartStopListener(CaptureStartStopListener* listener) {
+  bool new_insertion = capture_start_stop_listeners_.insert(listener).second;
+  CHECK(new_insertion);
+}
+
+void CaptureService::RemoveCaptureStartStopListener(CaptureStartStopListener* listener) {
+  bool was_removed = capture_start_stop_listeners_.erase(listener) > 0;
+  CHECK(was_removed);
+}
+
+ErrorMessageOr<void> CaptureService::InitializeCapture(
+    grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
+  {
+    absl::MutexLock lock(&capture_mutex_);
+    if (is_capturing) {
+      return ErrorMessage("Cannot start capture because another capture is already in progress");
+    }
+    is_capturing = true;
+  }
+
+  grpc_client_capture_event_collector_ =
+      std::make_unique<GrpcClientCaptureEventCollector>(reader_writer);
+
+  producer_event_processor_ =
+      ProducerEventProcessor::Create(grpc_client_capture_event_collector_.get());
+
+  return outcome::success();
+}
+
+void CaptureService::TerminateCapture() {
+  producer_event_processor_.reset();
+  grpc_client_capture_event_collector_.reset();
+  capture_start_timestamp_ns_ = 0;
+
+  absl::MutexLock lock(&capture_mutex_);
+  is_capturing = false;
+}
+
+void CaptureService::WaitForStartCaptureRequestFromClient(
+    grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse, orbit_grpc_protos::CaptureRequest>*
+        reader_writer,
+    orbit_grpc_protos::CaptureRequest& request) {
+  // This call is blocking.
+  reader_writer->Read(&request);
+
+  LOG("Read CaptureRequest from Capture's gRPC stream: starting capture");
+}
+
+void CaptureService::WaitForEndCaptureRequestFromClient(
+    grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse, orbit_grpc_protos::CaptureRequest>*
+        reader_writer,
+    orbit_grpc_protos::CaptureRequest& request) {
+  // The client asks for the capture to be stopped by calling WritesDone. At that point, this call
+  // to Read will return false. In the meantime, it blocks if no message is received.
+  while (reader_writer->Read(&request)) {
+  }
+  LOG("Client finished writing on Capture's gRPC stream: stopping capture");
+}
+
+void CaptureService::StartEventProcessing(const CaptureOptions& capture_options) {
+  // These are not in precise sync but they do not have to be.
+  absl::Time capture_start_time = absl::Now();
+  capture_start_timestamp_ns_ = orbit_base::CaptureTimestampNs();
+
+  producer_event_processor_->ProcessEvent(
+      orbit_grpc_protos::kRootProducerId,
+      orbit_capture_service::CreateCaptureStartedEvent(capture_options, capture_start_time,
+                                                       capture_start_timestamp_ns_));
+
+  producer_event_processor_->ProcessEvent(orbit_grpc_protos::kRootProducerId,
+                                          orbit_capture_service::CreateClockResolutionEvent(
+                                              capture_start_timestamp_ns_, clock_resolution_ns_));
+}
+
+void CaptureService::FinalizeEventProcessing() {
+  producer_event_processor_->ProcessEvent(orbit_grpc_protos::kRootProducerId,
+                                          orbit_capture_service::CreateCaptureFinishedEvent());
+
+  grpc_client_capture_event_collector_->StopAndWait();
+  LOG("Finished handling gRPC call to Capture: all capture data has been sent");
 }
 
 }  // namespace orbit_capture_service

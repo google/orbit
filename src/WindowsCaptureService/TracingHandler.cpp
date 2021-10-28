@@ -6,22 +6,17 @@
 
 #include <absl/synchronization/mutex.h>
 
-#include <utility>
-
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_windows_capture_service {
 
 using orbit_grpc_protos::CaptureOptions;
-using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
-using orbit_grpc_protos::FullGpuJob;
 using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
-using orbit_grpc_protos::ThreadStateSlice;
 
 using orbit_grpc_protos::kWindowsTracingProducerId;
 

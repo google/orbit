@@ -1,9 +1,9 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef LINUX_CAPTURE_SERVICE_CAPTURE_SERVICE_H_
-#define LINUX_CAPTURE_SERVICE_CAPTURE_SERVICE_H_
+#ifndef LINUX_CAPTURE_SERVICE_LINUX_CAPTURE_SERVICE_H_
+#define LINUX_CAPTURE_SERVICE_LINUX_CAPTURE_SERVICE_H_
 
 #include <absl/container/flat_hash_set.h>
 #include <grpcpp/grpcpp.h>
@@ -20,6 +20,7 @@
 
 namespace orbit_linux_capture_service {
 
+// Linux implementation of the grpc capture service.
 class LinuxCaptureService final : public orbit_capture_service::CaptureService {
  public:
   LinuxCaptureService() {
@@ -38,4 +39,4 @@ class LinuxCaptureService final : public orbit_capture_service::CaptureService {
 
 }  // namespace orbit_linux_capture_service
 
-#endif  // LINUX_CAPTURE_SERVICE_CAPTURE_SERVICE_IMPL_H_
+#endif  // LINUX_CAPTURE_SERVICE_LINUX_CAPTURE_SERVICE_H_
