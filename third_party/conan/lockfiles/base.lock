@@ -104,10 +104,7 @@
     "context": "host"
    },
    "13": {
-    "ref": "libunwindstack/20210709@orbitdeps/stable#01cac911596286754869ea05ec87df51",
-    "requires": [
-     "10"
-    ],
+    "ref": "libunwindstack-android-dependencies/20210709@orbitdeps/stable#6530d7e3b78d909db8a6690ad522a7d3",
     "context": "host"
    },
    "14": {

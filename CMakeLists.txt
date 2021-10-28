@@ -4,7 +4,7 @@
 
 cmake_minimum_required(VERSION 3.15)
 
-project(Orbit C CXX)
+project(Orbit C CXX ASM)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
@@ -161,6 +161,7 @@ else()
   add_subdirectory(src/TracepointService)
   add_subdirectory(src/UserSpaceInstrumentation)
   add_subdirectory(src/VulkanTutorial)
+  add_subdirectory(third_party/libunwindstack)
 endif()
 
 add_subdirectory(src/ApiInterface)
