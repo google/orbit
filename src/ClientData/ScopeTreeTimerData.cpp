@@ -19,7 +19,7 @@ const TimerMetadata ScopeTreeTimerData::GetTimerMetadata() const {
 const orbit_client_protos::TimerInfo& ScopeTreeTimerData::AddTimer(
     orbit_client_protos::TimerInfo timer_info) {
   // Thread tracks use a ScopeTree so we don't need to create one TimerChain per depth.
-  const auto& timer_info_ref = timer_data_.AddTimer(std::move(timer_info));
+  const auto& timer_info_ref = timer_data_.AddTimer(std::move(timer_info), /*depth=*/0);
 
   if (scope_tree_update_type_ == ScopeTreeUpdateType::kAlways) {
     absl::MutexLock lock(&scope_tree_mutex_);
