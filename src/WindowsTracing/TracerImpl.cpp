@@ -13,6 +13,9 @@ using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ModulesSnapshot;
 using orbit_windows_utils::Module;
 
+using orbit_grpc_protos::ModuleInfo;
+using orbit_grpc_protos::ModulesSnapshot;
+using orbit_windows_utils::Module;
 namespace orbit_windows_tracing {
 
 TracerImpl::TracerImpl(orbit_grpc_protos::CaptureOptions capture_options, TracerListener* listener)

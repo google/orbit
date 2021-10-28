@@ -6,7 +6,6 @@
 #define WINDOWS_SERVICE_ORBIT_GRPC_SERVER_H_
 
 #include <memory>
-#include <string>
 #include <string_view>
 
 #include "CaptureService/CaptureStartStopListener.h"
