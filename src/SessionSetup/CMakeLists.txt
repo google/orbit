@@ -16,6 +16,7 @@ target_sources(
           include/SessionSetup/Error.h
           include/SessionSetup/OverlayWidget.h
           include/SessionSetup/ProcessItemModel.h
+          include/SessionSetup/RetrieveInstancesWidget.h
           include/SessionSetup/ServiceDeployManager.h
           include/SessionSetup/SessionSetupDialog.h
           include/SessionSetup/TargetConfiguration.h
@@ -32,6 +33,8 @@ target_sources(
           OverlayWidget.cpp
           OverlayWidget.ui
           ProcessItemModel.cpp
+          RetrieveInstancesWidget.cpp
+          RetrieveInstancesWidget.ui
           ServiceDeployManager.cpp
           SessionSetupDialog.cpp
           SessionSetupDialog.ui
@@ -65,6 +68,7 @@ target_sources(
   PRIVATE ConnectToStadiaWidgetTest.cpp
           DoubleClickableLabelTest.cpp
           ProcessItemModelTest.cpp
+          RetrieveInstancesWidgetTest.cpp
           SessionSetupDialogTest.cpp
           TargetLabelTest.cpp)
 
@@ -82,3 +86,5 @@ endif()
 if (NOT WIN32)
   register_test(SessionSetupTest PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
 endif()
+
+add_subdirectory(RetrieveInstancesWidgetDemo)
