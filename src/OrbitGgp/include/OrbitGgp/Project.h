@@ -24,6 +24,11 @@ struct Project {
   friend bool operator==(const Project& lhs, const Project& rhs) {
     return std::tie(lhs.display_name, lhs.id) == std::tie(rhs.display_name, rhs.id);
   }
+
+  template <typename H>
+  friend H AbslHashValue(H h, const Project& project) {
+    return H::combine(std::move(h), project.display_name, project.id);
+  }
 };
 
 }  // namespace orbit_ggp
