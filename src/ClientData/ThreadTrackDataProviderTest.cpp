@@ -155,6 +155,32 @@ TEST(ThreadTrackDataProvider, GetTimers) {
   EXPECT_EQ(thread_track_data_provider.GetTimers(2).size(), TimersInTest::kNumTimersInThread2);
 }
 
+TEST(ThreadTrackDataProvider, GetTimersAtDepthDiscretized) {
+  ThreadTrackDataProvider thread_track_data_provider;
+  InsertTimersForTesting(thread_track_data_provider);
+
+  constexpr uint32_t kNormalResolution = 1000;
+
+  // All timers should be visible in normal conditions
+  EXPECT_EQ(thread_track_data_provider
+                .GetTimersAtDepthDiscretized(1, 0, kNormalResolution, TimersInTest::kLeftTimerStart,
+                                             TimersInTest::kRightTimerEnd)
+                .size(),
+            3);  // left, center, right
+  // Only 1 pixel. There is only 1 visible timer.
+  EXPECT_EQ(thread_track_data_provider
+                .GetTimersAtDepthDiscretized(1, 0, 1, TimersInTest::kLeftTimerStart,
+                                             TimersInTest::kRightTimerEnd)
+                .size(),
+            1);
+  // Zooming-out a lot. Only the first pixel will have a visible timer.
+  EXPECT_EQ(thread_track_data_provider
+                .GetTimersAtDepthDiscretized(1, 0, kNormalResolution, TimersInTest::kLeftTimerStart,
+                                             std::numeric_limits<uint64_t>::max())
+                .size(),
+            1);
+}
+
 TEST(ThreadTrackDataProvider, GetAllThreadIds) {
   ThreadTrackDataProvider thread_track_data_provider;
   InsertTimersForTesting(thread_track_data_provider);
