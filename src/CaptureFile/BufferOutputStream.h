@@ -16,15 +16,22 @@ namespace orbit_capture_file {
 // A CopyingOutputStream implementation backed by a vector of raw bytes. It supports reading data
 // from the buffer of this stream into a provided buffer.
 //
+// Note: This output stream will be used together with a CopyingOutputStreamAdaptor. The adaptor
+// will flush data to this output stream when:
+//   * The adaptor uses up all space in its own buffer. The adaptor will flush all data in its
+//   buffer to the output stream;
+//   * We force the adaptor to flush data to output stream with CopyingOutputStreamAdaptor::Flush.
+//   There might be unused bytes in the adaptor's buffer, remember trim them before calling Flush.
+//   * The adaptor is destructed.
+//
 // Example Usage:
-//   * Create a BufferOutputStream and write data into it. Notice that the unused bytes in the
-//   adaptor should be trimmed before flushing data from adaptor's buffer to the output stream
+//   * Create a BufferOutputStream and write data into it.
 //      BufferOutputStream buffer_output_stream;
 //      CopyingOutputStreamAdaptor adaptor(&buffer_output_stream)
 //      CodedOutputStream coded_output_stream(&adaptor);
 //      coded_output_stream.WriteString(data_to_write);
-//      coded_output_stream.Trim();
-//      adaptor.Flush();
+//      coded_output_stream.Trim(); /* Flush data to the adaptor and trim unused bytes */
+//      adaptor.Flush(); /* Flush data to the buffer_output_stream */
 //
 //   * Take buffered data away from output stream.
 //      std::vector<unsigned char> buffered_data = buffer_output_stream.TakeBuffer();
