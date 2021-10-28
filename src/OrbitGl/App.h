@@ -528,7 +528,8 @@ class OrbitApp final : public DataViewFactory,
   void CaptureMetricProcessTimer(const orbit_client_protos::TimerInfo& timer);
 
   std::atomic<bool> capture_loading_cancellation_requested_ = false;
-  std::atomic<bool> is_loading_capture_{false};
+  std::atomic<orbit_client_data::CaptureData::DataSource> data_source_{
+      orbit_client_data::CaptureData::DataSource::kLiveCapture};
 
   CaptureStartedCallback capture_started_callback_;
   CaptureStopRequestedCallback capture_stop_requested_callback_;

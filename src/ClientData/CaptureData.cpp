@@ -28,11 +28,14 @@ namespace orbit_client_data {
 
 CaptureData::CaptureData(ModuleManager* module_manager, const CaptureStarted& capture_started,
                          std::optional<std::filesystem::path> file_path,
-                         absl::flat_hash_set<uint64_t> frame_track_function_ids)
+                         absl::flat_hash_set<uint64_t> frame_track_function_ids,
+                         DataSource data_source)
     : module_manager_{module_manager},
       selection_callstack_data_(std::make_unique<CallstackData>()),
       frame_track_function_ids_{std::move(frame_track_function_ids)},
-      file_path_{std::move(file_path)} {
+      file_path_{std::move(file_path)},
+      thread_track_data_provider_(
+          std::make_unique<ThreadTrackDataProvider>(data_source == DataSource::kLoadedCapture)) {
   ProcessInfo process_info;
   process_info.set_pid(capture_started.process_id());
   std::filesystem::path executable_path{capture_started.executable_path()};
