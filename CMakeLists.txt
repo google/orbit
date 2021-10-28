@@ -245,6 +245,7 @@ file(COPY third_party/qtpropertybrowser/LICENSE.txt DESTINATION ${CMAKE_BINARY_D
 file(COPY third_party/conan/LICENSE.md DESTINATION ${CMAKE_BINARY_DIR}/licenses/conan/licenses/)
 file(COPY third_party/vulkan/LICENSE.txt DESTINATION ${CMAKE_BINARY_DIR}/licenses/vulkan/licenses/)
 file(COPY third_party/krabsetw/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/krabsetw/)
+file(COPY "third_party/DIA SDK/LICENSE" DESTINATION "${CMAKE_BINARY_DIR}/licenses/DIA SDK/")
 file(REMOVE ${CMAKE_BINARY_DIR}/licenses/freetype/licenses/LICENSE.TXT)
 file(REMOVE ${CMAKE_BINARY_DIR}/licenses/freetype/licenses/GPLv2.TXT)
 
