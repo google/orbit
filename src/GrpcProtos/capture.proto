@@ -355,7 +355,7 @@ message Callstack {
     kDwarfUnwindingError = 1;
     kFramePointerUnwindingError = 2;
     kInUprobes = 3;
-    kUprobesPatchingFailed = 4;
+    kCallstackPatchingFailed = 4;
     kStackTopForDwarfUnwindingTooSmall = 5;
     kStackTopDwarfUnwindingError = 6;
   }

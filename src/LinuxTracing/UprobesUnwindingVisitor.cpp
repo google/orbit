@@ -109,7 +109,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
     }
-    callstack->set_type(Callstack::kUprobesPatchingFailed);
+    callstack->set_type(Callstack::kCallstackPatchingFailed);
     SendFullAddressInfoToListener(listener_, libunwindstack_result.frames().front());
     callstack->add_pcs(libunwindstack_result.frames().front().pc);
 
@@ -223,7 +223,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
     }
-    callstack->set_type(Callstack::kUprobesPatchingFailed);
+    callstack->set_type(Callstack::kCallstackPatchingFailed);
     callstack->add_pcs(top_ip);
     listener_->OnCallstackSample(std::move(sample));
     return;
