@@ -39,7 +39,7 @@ class CaptureFileOutputStreamImpl final : public CaptureFileOutputStream {
  private:
   void Reset();
   [[nodiscard]] ErrorMessageOr<void> WriteHeader();
-  [[nodiscard]] std::string_view GetErrorFromOutputStream() const;
+  [[nodiscard]] std::string_view TryGetErrorFromOutputStream() const;
   // Handles write error by cleaning up the file and generating error message.
   [[nodiscard]] ErrorMessage HandleWriteError(const char* section_name,
                                               std::string_view original_error);
@@ -83,7 +83,7 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::Initialize() {
 ErrorMessageOr<void> CaptureFileOutputStreamImpl::Close() {
   coded_output_->Trim();
   if (coded_output_->HadError()) {
-    return HandleWriteError("Unknown", GetErrorFromOutputStream());
+    return HandleWriteError("Unknown", TryGetErrorFromOutputStream());
   }
   Reset();
 
@@ -120,7 +120,7 @@ void CaptureFileOutputStreamImpl::CloseAndTryRemoveFileAfterError() {
   }
 }
 
-std::string_view CaptureFileOutputStreamImpl::GetErrorFromOutputStream() const {
+std::string_view CaptureFileOutputStreamImpl::TryGetErrorFromOutputStream() const {
   if (output_type_ == OutputType::kFile) return SafeStrerror(file_output_stream_->GetErrno());
   return "";
 }
@@ -129,7 +129,8 @@ ErrorMessage CaptureFileOutputStreamImpl::HandleWriteError(const char* section_n
                                                            std::string_view original_error) {
   CloseAndTryRemoveFileAfterError();
 
-  std::string output_target = output_type_ == OutputType::kFile ? path_.string() : "buffer";
+  std::string output_target =
+      output_type_ == OutputType::kFile ? path_.string() : "buffer output adaptor";
   return ErrorMessage{absl::StrFormat(R"(Error writing "%s" section to "%s": %s)", section_name,
                                       output_target, original_error)};
 }
@@ -151,7 +152,7 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::WriteCaptureEvent(
   uint32_t event_size = event.ByteSizeLong();
   coded_output_->WriteVarint32(event_size);
   if (!event.SerializeToCodedStream(&coded_output_.value()) || coded_output_->HadError()) {
-    return HandleWriteError("Capture", GetErrorFromOutputStream());
+    return HandleWriteError("Capture", TryGetErrorFromOutputStream());
   }
 
   return outcome::success();
