@@ -23,6 +23,9 @@ class TracerImpl : public Tracer {
   virtual void Stop();
 
  private:
+  void SendModulesSnapshot();
+
+ private:
   orbit_grpc_protos::CaptureOptions capture_options_;
   TracerListener* listener_ = nullptr;
   std::unique_ptr<KrabsTracer> krabs_tracer_;
