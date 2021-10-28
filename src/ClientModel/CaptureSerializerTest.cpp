@@ -38,7 +38,11 @@ TEST(CaptureSerializer, GenerateCaptureFileName) {
 
   ModuleManager module_manager;
 
-  CaptureData capture_data{&module_manager, capture_started, std::filesystem::path{}, {}};
+  CaptureData capture_data{&module_manager,
+                           capture_started,
+                           std::filesystem::path{},
+                           {},
+                           CaptureData::DataSource::kCapturing};
   EXPECT_TRUE(module_manager.AddOrUpdateModules({module_info}).empty());
   capture_data.mutable_process()->UpdateModuleInfos({module_info});
 

@@ -117,8 +117,9 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
   capture_started.set_process_id(kProcessId);
   capture_started.set_executable_path(kExecutablePath);
 
-  auto capture_data = std::make_unique<orbit_client_data::CaptureData>(
-      module_manager, capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{});
+  auto capture_data = std::make_unique<CaptureData>(module_manager, capture_started, std::nullopt,
+                                                    absl::flat_hash_set<uint64_t>{},
+                                                    CaptureData::DataSource::kCapturing);
   ProcessData* process = capture_data.get()->mutable_process();
   process->UpdateModuleInfos(modules);
 

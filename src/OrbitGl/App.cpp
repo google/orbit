@@ -297,11 +297,13 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
 
         // It is safe to do this write on the main thread, as the capture thread is suspended until
         // this task is completely executed.
-        capture_data_ = std::make_unique<CaptureData>(
-            module_manager_.get(), capture_started, file_path, std::move(frame_track_function_ids));
+        capture_data_ =
+            std::make_unique<CaptureData>(module_manager_.get(), capture_started, file_path,
+                                          std::move(frame_track_function_ids), data_source_);
         capture_window_->CreateTimeGraph(capture_data_.get());
         TrackManager* track_manager = GetMutableTimeGraph()->GetTrackManager();
-        track_manager->SetIsDataFromSavedCapture(is_loading_capture_);
+        track_manager->SetIsDataFromSavedCapture(data_source_ ==
+                                                 CaptureData::DataSource::kLoadedCapture);
         if (had_capture) {
           track_manager->RestoreAllTrackTypesVisibility(track_type_visibility);
         }
@@ -1191,9 +1193,11 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
     ErrorMessageOr<CaptureListener::CaptureOutcome> load_result{CaptureOutcome::kComplete};
 
     // Set is_loading_capture_ to true for the duration of this scope.
-    is_loading_capture_ = true;
-    orbit_base::unique_resource scope_exit{&is_loading_capture_,
-                                           [](std::atomic<bool>* value) { *value = false; }};
+    data_source_ = CaptureData::DataSource::kLoadedCapture;
+    orbit_base::unique_resource scope_exit{&data_source_,
+                                           [](std::atomic<CaptureData::DataSource>* value) {
+                                             *value = CaptureData::DataSource::kCapturing;
+                                           }};
 
     ScopedMetric metric{metrics_uploader_,
                         capture_file_or_error.has_value()
@@ -2472,7 +2476,9 @@ bool OrbitApp::IsCapturing() const {
   return capture_client_ != nullptr && capture_client_->IsCapturing();
 }
 
-bool OrbitApp::IsLoadingCapture() const { return is_loading_capture_; }
+bool OrbitApp::IsLoadingCapture() const {
+  return data_source_ == orbit_client_data::CaptureData::DataSource::kLoadedCapture;
+}
 
 ScopedStatus OrbitApp::CreateScopedStatus(const std::string& initial_message) {
   CHECK(std::this_thread::get_id() == main_thread_id_);

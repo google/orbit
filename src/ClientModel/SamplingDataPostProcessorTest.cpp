@@ -136,7 +136,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
 
   ModuleManager module_manager_;
   CaptureData capture_data_{&module_manager_, CaptureStarted{}, std::filesystem::path{},
-                            absl::flat_hash_set<uint64_t>{}};
+                            absl::flat_hash_set<uint64_t>{}, CaptureData::DataSource::kCapturing};
 
   void AddCallstackInfo(uint64_t callstack_id, const std::vector<uint64_t>& callstack_frames,
                         CallstackInfo::CallstackType callstack_type) {

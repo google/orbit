@@ -43,11 +43,12 @@ namespace orbit_client_data {
 
 class CaptureData {
  public:
+  enum class DataSource { kCapturing, kLoadedCapture };
   explicit CaptureData(orbit_client_data::ModuleManager* module_manager,
                        const orbit_grpc_protos::CaptureStarted& capture_started,
                        std::optional<std::filesystem::path> file_path,
                        absl::flat_hash_set<uint64_t> frame_track_function_ids,
-                       bool is_data_from_saved_capture = false);
+                       DataSource data_source);
 
   // We can not copy the unique_ptr, so we can not copy this object.
   CaptureData& operator=(const CaptureData& other) = delete;

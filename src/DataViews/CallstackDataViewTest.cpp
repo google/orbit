@@ -77,7 +77,7 @@ std::string GetExpectedDisplayAddress(uint64_t address) {
   return absl::StrFormat("%#llx", address);
 }
 
-std::unique_ptr<orbit_client_data::CaptureData> GenerateTestCaptureData(
+std::unique_ptr<CaptureData> GenerateTestCaptureData(
     orbit_client_data::ModuleManager* module_manager) {
   std::vector<ModuleInfo> modules;
 
@@ -118,8 +118,9 @@ std::unique_ptr<orbit_client_data::CaptureData> GenerateTestCaptureData(
   capture_started.set_process_id(kProcessId);
   capture_started.set_executable_path(kExecutablePath);
 
-  auto capture_data = std::make_unique<orbit_client_data::CaptureData>(
-      module_manager, capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{});
+  auto capture_data = std::make_unique<CaptureData>(module_manager, capture_started, std::nullopt,
+                                                    absl::flat_hash_set<uint64_t>{},
+                                                    CaptureData::DataSource::kCapturing);
   ProcessData* process = capture_data.get()->mutable_process();
   process->UpdateModuleInfos(modules);
 
@@ -152,7 +153,7 @@ class CallstackDataViewTest : public testing::Test {
   MockAppInterface app_;
   CallstackDataView view_;
   orbit_client_data::ModuleManager module_manager_;
-  std::unique_ptr<orbit_client_data::CaptureData> capture_data_;
+  std::unique_ptr<CaptureData> capture_data_;
 };
 
 }  // namespace

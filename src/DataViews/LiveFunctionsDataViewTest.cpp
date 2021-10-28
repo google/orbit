@@ -27,6 +27,7 @@
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using JumpToTimerMode = orbit_data_views::AppInterface::JumpToTimerMode;
+using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;
 using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
@@ -76,7 +77,7 @@ std::string GetExpectedDisplayAddress(uint64_t address) { return absl::StrFormat
 
 std::string GetExpectedDisplayCount(uint64_t count) { return absl::StrFormat("%lu", count); }
 
-std::unique_ptr<orbit_client_data::CaptureData> GenerateTestCaptureData(
+std::unique_ptr<CaptureData> GenerateTestCaptureData(
     orbit_client_data::ModuleManager* module_manager) {
   orbit_grpc_protos::CaptureStarted capture_started{};
 
@@ -111,8 +112,9 @@ std::unique_ptr<orbit_client_data::CaptureData> GenerateTestCaptureData(
         orbit_client_data::function_utils::Offset(function, *module_data));
   }
 
-  auto capture_data = std::make_unique<orbit_client_data::CaptureData>(
-      module_manager, capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{});
+  auto capture_data = std::make_unique<CaptureData>(module_manager, capture_started, std::nullopt,
+                                                    absl::flat_hash_set<uint64_t>{},
+                                                    CaptureData::DataSource::kCapturing);
 
   for (size_t i = 0; i < kNumFunctions; i++) {
     FunctionStats stats;
@@ -165,7 +167,7 @@ class LiveFunctionsDataViewTest : public testing::Test {
 
   orbit_client_data::ModuleManager module_manager_;
   absl::flat_hash_map<uint64_t, FunctionInfo> functions_;
-  std::unique_ptr<orbit_client_data::CaptureData> capture_data_;
+  std::unique_ptr<CaptureData> capture_data_;
 };
 
 }  // namespace
