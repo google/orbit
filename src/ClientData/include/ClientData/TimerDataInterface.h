@@ -25,7 +25,7 @@ class TimerDataInterface {
   virtual ~TimerDataInterface() = default;
 
   virtual const orbit_client_protos::TimerInfo& AddTimer(orbit_client_protos::TimerInfo timer_info,
-                                                         uint32_t depth = 0) = 0;
+                                                         uint32_t depth) = 0;
   [[nodiscard]] virtual TimerMetadata GetTimerMetadata() const = 0;
   [[nodiscard]] virtual std::vector<const TimerChain*> GetChains() const = 0;
   [[nodiscard]] virtual std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
