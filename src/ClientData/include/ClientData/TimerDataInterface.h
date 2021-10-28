@@ -26,10 +26,21 @@ class TimerDataInterface {
 
   virtual const orbit_client_protos::TimerInfo& AddTimer(orbit_client_protos::TimerInfo timer_info,
                                                          uint32_t depth) = 0;
-  [[nodiscard]] virtual TimerMetadata GetTimerMetadata() const = 0;
+
+  // Timers queries
   [[nodiscard]] virtual std::vector<const TimerChain*> GetChains() const = 0;
   [[nodiscard]] virtual std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
       uint64_t min_tick, uint64_t max_tick) const = 0;
+
+  // Metadata queries
+  [[nodiscard]] virtual bool IsEmpty() const = 0;
+  [[nodiscard]] virtual size_t GetNumberOfTimers() const = 0;
+  [[nodiscard]] virtual uint64_t GetMinTime() const = 0;
+  [[nodiscard]] virtual uint64_t GetMaxTime() const = 0;
+  [[nodiscard]] virtual uint32_t GetDepth() const = 0;
+  [[nodiscard]] virtual uint32_t GetProcessId() const = 0;
+
+  // Relative timers queries
   [[nodiscard]] virtual const orbit_client_protos::TimerInfo* GetLeft(
       const orbit_client_protos::TimerInfo& timer) const = 0;
   [[nodiscard]] virtual const orbit_client_protos::TimerInfo* GetRight(

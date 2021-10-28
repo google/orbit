@@ -26,8 +26,7 @@ TEST(ThreadTrackDataManager, CreateScopeTreeTimerData) {
   thread_track_data_manager.CreateScopeTreeTimerData(kThreadId1);
   // One ScopeTreeTimerData, no timers.
   EXPECT_EQ(thread_track_data_manager.GetAllScopeTreeTimerData().size(), 1);
-  EXPECT_TRUE(
-      thread_track_data_manager.GetScopeTreeTimerData(kThreadId1)->GetTimerMetadata().is_empty);
+  EXPECT_TRUE(thread_track_data_manager.GetScopeTreeTimerData(kThreadId1)->IsEmpty());
 }
 
 TEST(ThreadTrackDataManager, AddTimer) {
@@ -41,16 +40,14 @@ TEST(ThreadTrackDataManager, AddTimer) {
   thread_track_data_manager.AddTimer(timer_info);
 
   EXPECT_EQ(thread_track_data_manager.GetAllScopeTreeTimerData().size(), 1);
-  EXPECT_FALSE(
-      thread_track_data_manager.GetScopeTreeTimerData(kThreadId1)->GetTimerMetadata().is_empty);
+  EXPECT_FALSE(thread_track_data_manager.GetScopeTreeTimerData(kThreadId1)->IsEmpty());
 
   timer_info.set_thread_id(kThreadId2);
   // Adding a timer without creating the data before should also work.
   thread_track_data_manager.AddTimer(timer_info);
 
   EXPECT_EQ(thread_track_data_manager.GetAllScopeTreeTimerData().size(), 2);
-  EXPECT_FALSE(
-      thread_track_data_manager.GetScopeTreeTimerData(kThreadId2)->GetTimerMetadata().is_empty);
+  EXPECT_FALSE(thread_track_data_manager.GetScopeTreeTimerData(kThreadId2)->IsEmpty());
 }
 
 }  // namespace orbit_client_data

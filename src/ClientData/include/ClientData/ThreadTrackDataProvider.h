@@ -52,10 +52,27 @@ class ThreadTrackDataProvider final {
                                                                          start_ns, end_ns);
   }
 
-  [[nodiscard]] const TimerMetadata GetTimerMetadata(uint32_t thread_id) const {
-    return GetScopeTreeTimerData(thread_id)->GetTimerMetadata();
+  // Metadata queries
+  [[nodiscard]] bool IsEmpty(uint32_t thread_id) const {
+    return GetScopeTreeTimerData(thread_id)->IsEmpty();
+  };
+  [[nodiscard]] size_t GetNumberOfTimers(uint32_t thread_id) const {
+    return GetScopeTreeTimerData(thread_id)->GetNumberOfTimers();
+  };
+  [[nodiscard]] uint64_t GetMinTime(uint32_t thread_id) const {
+    return GetScopeTreeTimerData(thread_id)->GetMinTime();
+  };
+  [[nodiscard]] uint64_t GetMaxTime(uint32_t thread_id) const {
+    return GetScopeTreeTimerData(thread_id)->GetMaxTime();
+  };
+  [[nodiscard]] uint32_t GetDepth(uint32_t thread_id) const {
+    return GetScopeTreeTimerData(thread_id)->GetDepth();
+  };
+  [[nodiscard]] uint32_t GetProcessId(uint32_t thread_id) const {
+    return GetScopeTreeTimerData(thread_id)->GetProcessId();
   };
 
+  // Relative Timers query
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
       const orbit_client_protos::TimerInfo& timer) const;
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetRight(

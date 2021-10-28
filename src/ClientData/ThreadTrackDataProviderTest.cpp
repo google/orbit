@@ -28,9 +28,7 @@ TEST(ThreadTrackDataProvider, EmptyWhenCreated) {
   // One ScopeTreeTimerData, still no timers
   EXPECT_FALSE(thread_track_data_provider.GetAllThreadIds().empty());
   EXPECT_TRUE(thread_track_data_provider.GetAllThreadTimerChains().empty());
-
-  // Therefore, TimerMetadata of kThreadId1 is still empty.
-  EXPECT_TRUE(thread_track_data_provider.GetTimerMetadata(kThreadId1).is_empty);
+  EXPECT_TRUE(thread_track_data_provider.IsEmpty(kThreadId1));
 }
 
 TEST(ThreadTrackDataProvider, InsertAndGetTimer) {
@@ -44,7 +42,7 @@ TEST(ThreadTrackDataProvider, InsertAndGetTimer) {
   timer_info.set_end(kTimerEnd);
   thread_track_data_provider.AddTimer(timer_info);
 
-  EXPECT_FALSE(thread_track_data_provider.GetTimerMetadata(kThreadId1).is_empty);
+  EXPECT_FALSE(thread_track_data_provider.IsEmpty(kThreadId1));
 
   std::vector<const TimerInfo*> all_timers = thread_track_data_provider.GetTimers(kThreadId1);
   EXPECT_EQ(all_timers.size(), 1);
@@ -212,22 +210,23 @@ TEST(ThreadTrackDataProvider, GetStatsFromThreadId) {
   ThreadTrackDataProvider thread_track_data_provider;
   InsertTimersForTesting(thread_track_data_provider);
 
-  const TimerMetadata timer_metadata_thread_1 =
-      thread_track_data_provider.GetTimerMetadata(kThreadId1);
-  const TimerMetadata timer_metadata_thread_2 =
-      thread_track_data_provider.GetTimerMetadata(kThreadId2);
+  EXPECT_EQ(thread_track_data_provider.GetNumberOfTimers(kThreadId1),
+            TimersInTest::kNumTimersInThread1);
+  EXPECT_EQ(thread_track_data_provider.GetMinTime(kThreadId1),
+            TimersInTest::kMinTimestampinThread1);
+  EXPECT_EQ(thread_track_data_provider.GetMaxTime(kThreadId1),
+            TimersInTest::kMaxTimestampinThread1);
+  EXPECT_EQ(thread_track_data_provider.GetDepth(kThreadId1), TimersInTest::kDepthThread1);
+  EXPECT_EQ(thread_track_data_provider.GetProcessId(kThreadId1), kProcessId);
 
-  EXPECT_EQ(timer_metadata_thread_1.number_of_timers, TimersInTest::kNumTimersInThread1);
-  EXPECT_EQ(timer_metadata_thread_1.min_time, TimersInTest::kMinTimestampinThread1);
-  EXPECT_EQ(timer_metadata_thread_1.max_time, TimersInTest::kMaxTimestampinThread1);
-  EXPECT_EQ(timer_metadata_thread_1.depth, TimersInTest::kDepthThread1);
-  EXPECT_EQ(timer_metadata_thread_1.process_id, kProcessId);
-
-  EXPECT_EQ(timer_metadata_thread_2.number_of_timers, TimersInTest::kNumTimersInThread2);
-  EXPECT_EQ(timer_metadata_thread_2.min_time, TimersInTest::kOtherThreadIdTimerStart);
-  EXPECT_EQ(timer_metadata_thread_2.max_time, TimersInTest::kOtherThreadIdTimerEnd);
-  EXPECT_EQ(timer_metadata_thread_2.depth, TimersInTest::kDepthThread2);
-  EXPECT_EQ(timer_metadata_thread_2.process_id, kProcessId);
+  EXPECT_EQ(thread_track_data_provider.GetNumberOfTimers(kThreadId2),
+            TimersInTest::kNumTimersInThread2);
+  EXPECT_EQ(thread_track_data_provider.GetMinTime(kThreadId2),
+            TimersInTest::kOtherThreadIdTimerStart);
+  EXPECT_EQ(thread_track_data_provider.GetMaxTime(kThreadId2),
+            TimersInTest::kOtherThreadIdTimerEnd);
+  EXPECT_EQ(thread_track_data_provider.GetDepth(kThreadId2), TimersInTest::kDepthThread2);
+  EXPECT_EQ(thread_track_data_provider.GetProcessId(kThreadId2), kProcessId);
 }
 
 TEST(ThreadTrackDataProvider, GetLeftRightUpDown) {

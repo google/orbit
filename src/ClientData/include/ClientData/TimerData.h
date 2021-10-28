@@ -20,6 +20,9 @@ class TimerData final : public TimerDataInterface {
   const orbit_client_protos::TimerInfo& AddTimer(orbit_client_protos::TimerInfo timer_info,
                                                  uint32_t depth = 0) override;
 
+  // Timers queries
+  [[nodiscard]] std::vector<const TimerChain*> GetChains() const override;
+  [[nodiscard]] const TimerChain* GetChain(uint64_t depth) const;
   [[nodiscard]] virtual std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
       uint64_t /*min_tick*/ = std::numeric_limits<uint64_t>::min(),
       uint64_t /*max_tick*/ = std::numeric_limits<uint64_t>::max()) const override {
@@ -27,12 +30,16 @@ class TimerData final : public TimerDataInterface {
     return {};
   }
 
+  // Metadata queries
+  [[nodiscard]] bool IsEmpty() const override { return GetNumberOfTimers() == 0; }
+  [[nodiscard]] size_t GetNumberOfTimers() const override { return num_timers_; }
+  [[nodiscard]] uint64_t GetMinTime() const override { return min_time_; }
+  [[nodiscard]] uint64_t GetMaxTime() const override { return max_time_; }
   // TODO(b/204173036): Test depth and process_id.
-  TimerMetadata GetTimerMetadata() const override;
+  [[nodiscard]] uint32_t GetDepth() const override { return depth_; }
+  [[nodiscard]] uint32_t GetProcessId() const override { return process_id_; }
 
-  [[nodiscard]] std::vector<const TimerChain*> GetChains() const override;
-  [[nodiscard]] const TimerChain* GetChain(uint64_t depth) const;
-
+  // Relative timers queries
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetFirstAfterStartTime(uint64_t time,
                                                                              uint32_t depth) const;
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetFirstBeforeStartTime(uint64_t time,
@@ -65,10 +72,10 @@ class TimerData final : public TimerDataInterface {
  private:
   void UpdateMinTime(uint64_t min_time);
   void UpdateMaxTime(uint64_t max_time);
-  void UpdateMaxDepth(uint32_t depth) { max_depth_ = std::max(max_depth_, depth); }
+  void UpdateDepth(uint32_t depth) { depth_ = std::max(depth_, depth); }
   [[nodiscard]] TimerChain* GetOrCreateTimerChain(uint64_t depth);
 
-  uint32_t max_depth_ = 0;
+  uint32_t depth_ = 0;
   mutable absl::Mutex mutex_;
   std::map<uint32_t, std::unique_ptr<TimerChain>> timers_ ABSL_GUARDED_BY(mutex_);
   std::atomic<size_t> num_timers_{0};
