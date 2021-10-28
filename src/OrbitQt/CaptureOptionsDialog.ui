@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>478</width>
-    <height>523</height>
+    <height>553</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -86,6 +86,50 @@
            </spacer>
           </item>
          </layout>
+        </item>
+        <item>
+         <widget class="QWidget" name="unwindingMethodWidget" native="true">
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QLabel" name="unwindingMethodLabel">
+             <property name="text">
+              <string>Callstack unwinding method:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="unwindingMethodComboBox"/>
+           </item>
+           <item>
+            <spacer name="unwindingMethodHorizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Expanding</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>112</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
         </item>
         <item>
          <widget class="QCheckBox" name="schedulerCheckBox">
@@ -419,6 +463,22 @@ Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</s
     <hint type="destinationlabel">
      <x>202</x>
      <y>80</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>samplingCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>unwindingMethodComboBox</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>238</x>
+     <y>50</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>259</x>
+     <y>110</y>
     </hint>
    </hints>
   </connection>
