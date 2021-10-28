@@ -34,6 +34,12 @@ you are running a 64 bit version of python.
 The Orbit UI is 64 bit only and pywinauto requires the bitness of python to match the bitness 
 of the program under test.
 
+*For Google internal users only:*
+
+You can download the 
+[python distribution used in the automatic test runs](https://pantheon.corp.google.com/storage/browser/_details/orbit-integration-test-data/WPy64-3830.zip;tab=live_object?project=orbitprofiler), unpack it and start 'WinPython Command Prompt.exe'. All pathes 
+will be set correctly and the dependencies are installed.
+
 ## Running the tests locally
 
 Before running an E2E test, the following conditions need to be met: 
