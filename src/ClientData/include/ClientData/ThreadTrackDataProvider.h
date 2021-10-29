@@ -41,10 +41,10 @@ class ThreadTrackDataProvider final {
     return GetScopeTreeTimerData(thread_id)->GetTimers(min_tick, max_tick);
   }
 
-  // This method avoids returning two timers that map to the same pixel in the screen, so is
-  // especially useful when there are many timers in the screen (zooming-out for example).
-  // The overall complexity is O(log(num_timers) * resolution). Resolution should be the number
-  // of pixels-width where timers will be drawn.
+  // This method avoids returning two timers that map to the same pixel, so is especially useful
+  // when many timers map to the same pixel (zooming-out for example). The overall complexity is
+  // O(log(num_timers) * resolution). Resolution should be the pixel width of the area where timers
+  // will be drawn.
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimersAtDepthDiscretized(
       uint32_t thread_id, uint32_t depth, uint32_t resolution, uint64_t start_ns,
       uint64_t end_ns) const {
