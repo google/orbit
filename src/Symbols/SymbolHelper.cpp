@@ -176,7 +176,8 @@ SymbolHelper::SymbolHelper()
 
 ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
     const fs::path& module_path, const std::string& build_id,
-    const ModuleInfo::ObjectFileType& object_file_type, std::vector<fs::path> directories) const {
+    const ModuleInfo::ObjectFileType& object_file_type,
+    absl::Span<const fs::path> directories) const {
   if (build_id.empty()) {
     return ErrorMessage(absl::StrFormat(
         "Could not find symbols file for module \"%s\", because it does not contain a build id",
@@ -203,8 +204,6 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
   filename_dot_sym_ext.replace_extension(sym_ext);
   fs::path filename_plus_sym_ext = filename;
   filename_plus_sym_ext.replace_extension(filename.extension().string() + sym_ext);
-
-  directories.emplace_back(module_path.parent_path());
 
   std::set<fs::path> search_paths;
   for (const auto& directory : directories) {
