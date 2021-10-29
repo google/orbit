@@ -88,7 +88,7 @@ CaptureRequest CaptureService::WaitForStartCaptureRequestFromClient(
   reader_writer->Read(&request);
 
   LOG("Read CaptureRequest from Capture's gRPC stream: starting capture");
-  return std::move(request);
+  return request;
 }
 
 void CaptureService::WaitForEndCaptureRequestFromClient(
