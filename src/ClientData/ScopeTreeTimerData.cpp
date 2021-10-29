@@ -6,16 +6,6 @@
 
 namespace orbit_client_data {
 
-TimerMetadata ScopeTreeTimerData::GetTimerMetadata() const {
-  absl::MutexLock lock(&scope_tree_mutex_);
-  TimerMetadata timer_metadata = timer_data_.GetTimerMetadata();
-  // Special case. ScopeTree has a root node in depth 0 which shouldn't be considered.
-  timer_metadata.number_of_timers = scope_tree_.Size() - 1;
-  timer_metadata.is_empty = timer_metadata.number_of_timers == 0;
-  timer_metadata.depth = scope_tree_.Depth();
-  return timer_metadata;
-}
-
 const orbit_client_protos::TimerInfo& ScopeTreeTimerData::AddTimer(
     orbit_client_protos::TimerInfo timer_info, uint32_t /*depth*/) {
   // We don't need to have one TimerChain per depth because it's managed by ScopeTree.
@@ -51,7 +41,7 @@ std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimers
   end_ns = std::max(end_ns, end_ns + 1);
   std::vector<const orbit_client_protos::TimerInfo*> all_timers;
 
-  for (uint32_t depth = 0; depth < GetTimerMetadata().depth; ++depth) {
+  for (uint32_t depth = 0; depth < GetDepth(); ++depth) {
     std::vector<const orbit_client_protos::TimerInfo*> timers_at_depth =
         GetTimersAtDepth(depth, start_ns, end_ns);
     all_timers.insert(all_timers.end(), timers_at_depth.begin(), timers_at_depth.end());

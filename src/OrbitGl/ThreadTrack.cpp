@@ -245,7 +245,7 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected, 
 
 bool ThreadTrack::IsEmpty() const {
   return thread_state_bar_->IsEmpty() && event_bar_->IsEmpty() && tracepoint_bar_->IsEmpty() &&
-         timer_data_->GetTimerMetadata().is_empty;
+         TimerTrack::IsEmpty();
 }
 
 void ThreadTrack::UpdatePositionOfSubtracks() {

@@ -57,7 +57,7 @@ TimersInTest AddTimersInScopeTreeTimerDataTest(ScopeTreeTimerData& scope_tree_ti
 
 TEST(ScopeTreeTimerData, EmptyWhenCreated) {
   ScopeTreeTimerData scope_tree_timer_data;
-  EXPECT_TRUE(scope_tree_timer_data.GetTimerMetadata().is_empty);
+  EXPECT_TRUE(scope_tree_timer_data.IsEmpty());
   EXPECT_TRUE(scope_tree_timer_data.GetTimers().empty());
   EXPECT_TRUE(scope_tree_timer_data.GetChains().empty());
 }
@@ -68,7 +68,7 @@ TEST(ScopeTreeTimerData, AddTimer) {
   orbit_client_protos::TimerInfo timer_info;
 
   scope_tree_timer_data.AddTimer(timer_info);
-  EXPECT_FALSE(scope_tree_timer_data.GetTimerMetadata().is_empty);
+  EXPECT_FALSE(scope_tree_timer_data.IsEmpty());
   EXPECT_EQ(scope_tree_timer_data.GetTimers().size(), 1);
   EXPECT_EQ(scope_tree_timer_data.GetThreadId(), kThreadId);
   EXPECT_EQ(scope_tree_timer_data.GetChains().size(), 1);
@@ -92,14 +92,12 @@ TEST(ScopeTreeTimerData, GetTimerMetadata) {
   ScopeTreeTimerData scope_tree_timer_data;
   AddTimersInScopeTreeTimerDataTest(scope_tree_timer_data);
 
-  const TimerMetadata timer_metadata = scope_tree_timer_data.GetTimerMetadata();
-
-  EXPECT_FALSE(timer_metadata.is_empty);
-  EXPECT_EQ(timer_metadata.number_of_timers, kNumTimers);
-  EXPECT_EQ(timer_metadata.depth, kDepth);
-  EXPECT_EQ(timer_metadata.min_time, kMinTimestamp);
-  EXPECT_EQ(timer_metadata.max_time, kMaxTimestamp);
-  EXPECT_EQ(timer_metadata.process_id, kProcessId);
+  EXPECT_FALSE(scope_tree_timer_data.IsEmpty());
+  EXPECT_EQ(scope_tree_timer_data.GetNumberOfTimers(), kNumTimers);
+  EXPECT_EQ(scope_tree_timer_data.GetDepth(), kDepth);
+  EXPECT_EQ(scope_tree_timer_data.GetMinTime(), kMinTimestamp);
+  EXPECT_EQ(scope_tree_timer_data.GetMaxTime(), kMaxTimestamp);
+  EXPECT_EQ(scope_tree_timer_data.GetProcessId(), kProcessId);
 }
 
 TEST(ScopeTreeTimerData, GetTimers) {

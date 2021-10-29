@@ -64,9 +64,7 @@ class TimerTrack : public Track {
   // Track
   [[nodiscard]] Type GetType() const override { return Type::kTimerTrack; }
 
-  [[nodiscard]] uint32_t GetProcessId() const override {
-    return timer_data_->GetTimerMetadata().process_id;
-  }
+  [[nodiscard]] uint32_t GetProcessId() const override { return timer_data_->GetProcessId(); }
   [[nodiscard]] std::string GetExtraInfo(const orbit_client_protos::TimerInfo& timer) const;
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
@@ -94,7 +92,7 @@ class TimerTrack : public Track {
   [[nodiscard]] int GetVisiblePrimitiveCount() const override { return visible_timer_count_; }
 
   [[nodiscard]] float GetHeight() const override;
-  [[nodiscard]] uint32_t GetDepth() const { return timer_data_->GetTimerMetadata().depth; }
+  [[nodiscard]] uint32_t GetDepth() const { return timer_data_->GetDepth(); }
 
   [[nodiscard]] size_t GetNumberOfTimers() const;
   [[nodiscard]] uint64_t GetMinTime() const override;

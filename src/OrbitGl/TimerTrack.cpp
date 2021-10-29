@@ -351,7 +351,7 @@ const TimerInfo* TimerTrack::GetDown(const TimerInfo& timer_info) const {
   return timer_data_->GetFirstAfterStartTime(timer_info.start(), timer_info.depth() + 1);
 }
 
-bool TimerTrack::IsEmpty() const { return timer_data_->GetTimerMetadata().is_empty; }
+bool TimerTrack::IsEmpty() const { return timer_data_->IsEmpty(); }
 
 std::string TimerTrack::GetBoxTooltip(const Batcher& /*batcher*/, PickingId /*id*/) const {
   return "";
@@ -390,8 +390,6 @@ internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick,
   return draw_data;
 }
 
-size_t TimerTrack::GetNumberOfTimers() const {
-  return timer_data_->GetTimerMetadata().number_of_timers;
-}
-uint64_t TimerTrack::GetMinTime() const { return timer_data_->GetTimerMetadata().min_time; }
-uint64_t TimerTrack::GetMaxTime() const { return timer_data_->GetTimerMetadata().max_time; }
+size_t TimerTrack::GetNumberOfTimers() const { return timer_data_->GetNumberOfTimers(); }
+uint64_t TimerTrack::GetMinTime() const { return timer_data_->GetMinTime(); }
+uint64_t TimerTrack::GetMaxTime() const { return timer_data_->GetMaxTime(); }
