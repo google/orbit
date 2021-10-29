@@ -64,7 +64,7 @@ class CaptureService : public orbit_grpc_protos::CaptureService::Service {
 
   uint64_t clock_resolution_ns_ = 0;
   absl::Mutex capture_mutex_;
-  bool is_capturing = false;
+  bool is_capturing ABSL_GUARDED_BY(capture_mutex_) = false;
 };
 
 }  // namespace orbit_capture_service
