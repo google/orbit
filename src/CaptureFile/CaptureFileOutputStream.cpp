@@ -39,7 +39,7 @@ class CaptureFileOutputStreamImpl final : public CaptureFileOutputStream {
  private:
   void Reset();
   [[nodiscard]] ErrorMessageOr<void> WriteHeader();
-  [[nodiscard]] std::string_view TryGetErrorFromOutputStream() const;
+  [[nodiscard]] std::string_view GetErrorFromOutputStream() const;
   // Handles write error by cleaning up the file and generating error message.
   [[nodiscard]] ErrorMessage HandleWriteError(const char* section_name,
                                               std::string_view original_error);
@@ -64,13 +64,25 @@ CaptureFileOutputStreamImpl::~CaptureFileOutputStreamImpl() {
 }
 
 ErrorMessageOr<void> CaptureFileOutputStreamImpl::Initialize() {
-  if (output_type_ == OutputType::kFile) {
-    auto fd_or_error = orbit_base::OpenNewFileForWriting(path_);
-    if (fd_or_error.has_error()) {
-      return fd_or_error.error();
-    }
+  // Prepare the protobuf stream to use to write to capture section.
+  switch (output_type_) {
+    case OutputType::kBuffer: {
+      CHECK(output_buffer_ != nullptr);
 
-    fd_ = std::move(fd_or_error.value());
+      buffer_output_adaptor_.emplace(output_buffer_);
+      coded_output_.emplace(&buffer_output_adaptor_.value());
+      break;
+    }
+    case OutputType::kFile: {
+      auto fd_or_error = orbit_base::OpenNewFileForWriting(path_);
+      if (fd_or_error.has_error()) return fd_or_error.error();
+      fd_ = std::move(fd_or_error.value());
+      CHECK(fd_.valid());
+
+      file_output_stream_.emplace(fd_.get());
+      coded_output_.emplace(&file_output_stream_.value());
+      break;
+    }
   }
 
   if (auto result = WriteHeader(); result.has_error()) {
@@ -83,7 +95,7 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::Initialize() {
 ErrorMessageOr<void> CaptureFileOutputStreamImpl::Close() {
   coded_output_->Trim();
   if (coded_output_->HadError()) {
-    return HandleWriteError("Unknown", TryGetErrorFromOutputStream());
+    return HandleWriteError("Unknown", GetErrorFromOutputStream());
   }
   Reset();
 
@@ -102,14 +114,15 @@ void CaptureFileOutputStreamImpl::Reset() {
 }
 
 bool CaptureFileOutputStreamImpl::IsOpen() {
-  if (output_type_ == OutputType::kFile) {
-    return fd_.valid();
-
-  } else if (output_type_ == OutputType::kBuffer) {
-    return output_buffer_ != nullptr;
+  switch (output_type_) {
+    case OutputType::kBuffer:
+      return output_buffer_ != nullptr;
+    case OutputType::kFile:
+      return fd_.valid();
   }
 
   UNREACHABLE();
+  return false;
 }
 
 void CaptureFileOutputStreamImpl::CloseAndTryRemoveFileAfterError() {
@@ -120,17 +133,18 @@ void CaptureFileOutputStreamImpl::CloseAndTryRemoveFileAfterError() {
   }
 }
 
-std::string_view CaptureFileOutputStreamImpl::TryGetErrorFromOutputStream() const {
-  if (output_type_ == OutputType::kFile) return SafeStrerror(file_output_stream_->GetErrno());
-  return "";
+std::string_view CaptureFileOutputStreamImpl::GetErrorFromOutputStream() const {
+  // There should not be any write error in the case of `OutputType::kBuffer` as we do not limit the
+  // buffer size of BufferOutputStream.
+  CHECK(output_type_ == OutputType::kFile);
+  return SafeStrerror(file_output_stream_->GetErrno());
 }
 
 ErrorMessage CaptureFileOutputStreamImpl::HandleWriteError(const char* section_name,
                                                            std::string_view original_error) {
   CloseAndTryRemoveFileAfterError();
 
-  std::string output_target =
-      output_type_ == OutputType::kFile ? path_.string() : "buffer output adaptor";
+  std::string output_target = output_type_ == OutputType::kFile ? path_.string() : "";
   return ErrorMessage{absl::StrFormat(R"(Error writing "%s" section to "%s": %s)", section_name,
                                       output_target, original_error)};
 }
@@ -139,27 +153,26 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::WriteCaptureEvent(
     const orbit_grpc_protos::ClientCaptureEvent& event) {
   CHECK(coded_output_.has_value());
 
-  if (output_type_ == OutputType::kFile) {
-    CHECK(file_output_stream_.has_value());
-
-  } else if (output_type_ == OutputType::kBuffer) {
-    CHECK(buffer_output_adaptor_.has_value());
-
-  } else {
-    UNREACHABLE();
+  switch (output_type_) {
+    case OutputType::kBuffer:
+      CHECK(buffer_output_adaptor_.has_value());
+      break;
+    case OutputType::kFile:
+      CHECK(file_output_stream_.has_value());
+      break;
   }
 
   uint32_t event_size = event.ByteSizeLong();
   coded_output_->WriteVarint32(event_size);
   if (!event.SerializeToCodedStream(&coded_output_.value()) || coded_output_->HadError()) {
-    return HandleWriteError("Capture", TryGetErrorFromOutputStream());
+    return HandleWriteError("Capture", GetErrorFromOutputStream());
   }
 
   return outcome::success();
 }
 
 ErrorMessageOr<void> CaptureFileOutputStreamImpl::WriteHeader() {
-  CHECK(fd_.valid() || output_buffer_ != nullptr);
+  CHECK(coded_output_.has_value());
 
   std::string header{kFileSignature};
   header.append(std::string_view(absl::bit_cast<char*>(&kFileVersion), sizeof(kFileVersion)));
@@ -177,20 +190,9 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::WriteHeader() {
 
   CHECK(capture_section_offset == header.size());
 
-  if (output_type_ == OutputType::kFile) {
-    auto write_result = orbit_base::WriteFully(fd_, header);
-    if (write_result.has_error()) {
-      return HandleWriteError("Header", write_result.error().message());
-    }
-
-    // Prepare the protobuf stream to use to write to capture section.
-    file_output_stream_.emplace(fd_.get());
-    coded_output_.emplace(&file_output_stream_.value());
-
-  } else if (output_type_ == OutputType::kBuffer) {
-    buffer_output_adaptor_.emplace(output_buffer_);
-    coded_output_.emplace(&buffer_output_adaptor_.value());
-    coded_output_->WriteString(header);
+  coded_output_->WriteString(header);
+  if (coded_output_->HadError()) {
+    return HandleWriteError("Header", GetErrorFromOutputStream());
   }
 
   return outcome::success();
