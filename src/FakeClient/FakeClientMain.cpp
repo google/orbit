@@ -8,7 +8,12 @@
 #include <absl/flags/usage.h>
 #include <absl/strings/match.h>
 #include <absl/time/clock.h>
+#include <absl/strings/match.h>
 #include <grpcpp/grpcpp.h>
+
+#if defined(__linux)
+#include <sys/inotify.h>
+#endif
 
 #include <atomic>
 #include <csignal>
@@ -23,33 +28,16 @@
 #include "CaptureClient/CaptureListener.h"
 #include "ClientData/ModuleManager.h"
 #include "FakeCaptureEventProcessor.h"
+#include "Flags.h"
+#include "GraphicsCaptureEventProcessor.h"
 #include "GrpcProtos/Constants.h"
 #include "ObjectUtils/ElfFile.h"
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/ThreadPool.h"
 #include "capture_data.pb.h"
-
-ABSL_FLAG(uint64_t, port, 44765, "Port OrbitService's gRPC service is listening on");
-ABSL_FLAG(int32_t, pid, 0, "PID of the process to capture");
-ABSL_FLAG(uint32_t, duration, std::numeric_limits<uint32_t>::max(),
-          "Duration of the capture in seconds (stop earlier with Ctrl+C)");
-ABSL_FLAG(uint16_t, sampling_rate, 1000,
-          "Callstack sampling rate in samples per second (0: no sampling)");
-ABSL_FLAG(bool, frame_pointers, false, "Use frame pointers for unwinding");
-ABSL_FLAG(std::string, instrument_path, "", "Path of the binary of the function to instrument");
-ABSL_FLAG(uint64_t, instrument_offset, 0, "Offset in the binary of the function to instrument");
-ABSL_FLAG(uint64_t, instrument_size, 0, "Size in bytes of the function to instrument");
-ABSL_FLAG(bool, user_space_instrumentation, false,
-          "Use user space instrumentation instead of uprobes");
-ABSL_FLAG(bool, scheduling, true, "Collect scheduling information");
-ABSL_FLAG(bool, thread_state, false, "Collect thread state information");
-ABSL_FLAG(bool, gpu_jobs, true, "Collect GPU jobs");
-ABSL_FLAG(bool, orbit_api, false, "Enable Orbit API");
-ABSL_FLAG(uint16_t, memory_sampling_rate, 0,
-          "Memory usage sampling rate in samples per second (0: no sampling)");
-ABSL_FLAG(bool, frame_time, true, "Instrument vkQueuePresentKHR to compute avg. frame time");
 
 namespace {
 std::atomic<bool> exit_requested = false;
@@ -103,10 +91,10 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOff
   selected_functions->emplace(function_id, function_info);
 }
 
-void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFunctionNameInDynsym(
+void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFunctionNameInDebugSymbols(
     orbit_client_data::ModuleManager* module_manager,
     absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>* selected_functions,
-    const std::string& file_path, const std::string& mangled_function_name, uint64_t function_id) {
+    const std::string& file_path, const std::string& demangled_function_name, uint64_t function_id) {
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
       orbit_object_utils::CreateElfFile(std::filesystem::path{file_path});
   FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
@@ -123,19 +111,19 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFun
   CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
 
   ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> symbols_or_error =
-      elf_file->LoadSymbolsFromDynsym();
+      elf_file->LoadDebugSymbols();
   FAIL_IF(symbols_or_error.has_error(), "%s", symbols_or_error.error().message());
   orbit_grpc_protos::ModuleSymbols& symbols = symbols_or_error.value();
 
   std::optional<orbit_grpc_protos::SymbolInfo> symbol = std::nullopt;
   for (const orbit_grpc_protos::SymbolInfo& symbol_candidate : symbols.symbol_infos()) {
-    if (symbol_candidate.name() == mangled_function_name) {
+    if (symbol_candidate.demangled_name() == demangled_function_name) {
       symbol = symbol_candidate;
       break;
     }
   }
   FAIL_IF(!symbol.has_value(), "Could not find function \"%s\" in module \"%s\"",
-          mangled_function_name, file_path);
+          demangled_function_name, file_path);
 
   orbit_client_protos::FunctionInfo function_info;
   function_info.set_name(symbol->name());
@@ -249,6 +237,50 @@ void ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
   module_manager->GetMutableModuleByPathAndBuildId(file_path, build_id)->AddSymbols(module_symbols);
 }
 
+uint32_t ReadPIDFromFile(const std::string& file_path) {
+  ErrorMessageOr<std::string> pid_string = orbit_base::ReadFileToString(file_path);
+  FAIL_IF(pid_string.has_error(), "Reading from \"%s\": %s", file_path,
+          pid_string.error().message());
+  uint32_t process_id = 0;
+  FAIL_IF(!absl::SimpleAtoi<uint32_t>(pid_string.value(), &process_id),
+          "Failed to read the PID from %s", file_path);
+  return process_id;
+}
+
+void WaitForFileModification(const std::string& file_path) {
+#if defined(__linux)
+  int inotify_fd = -1;
+  int wd = -1;
+
+  inotify_fd = inotify_init();
+  FAIL_IF(inotify_fd == -1, "Failed to initialize inotify");
+
+  wd = inotify_add_watch(inotify_fd, file_path.c_str(), IN_MODIFY);
+  FAIL_IF(wd == -1, "Failed to watch %s", file_path);
+  LOG("Started to watch %s", file_path);
+
+  // Wait for the first modify event received to read its PID
+  constexpr ssize_t kMaxBufferSize = 1024;
+  constexpr ssize_t kMinReadSize = sizeof(inotify_event);
+
+  ssize_t offset = 0;
+  char buffer[kMaxBufferSize];
+  while (offset < kMinReadSize) {
+    ssize_t bytes_read = read(inotify_fd, buffer + offset, kMaxBufferSize - offset);
+    FAIL_IF(bytes_read == -1, "Failed to read watch event");
+    offset += bytes_read;
+  }
+
+  inotify_event* event = reinterpret_cast<inotify_event*>(buffer);
+  CHECK(event->wd == wd);
+
+  close(inotify_fd);
+  LOG("Stopped to watch %s", file_path);
+#else
+  FATAL("Watching for modifications in %s is not supported in this platform", file_path);
+#endif
+}
+
 }  // namespace
 
 // OrbitFakeClient is a simple command line client that connects to a local instance of
@@ -263,7 +295,18 @@ int main(int argc, char* argv[]) {
   absl::SetProgramUsageMessage("Orbit fake client for testing");
   absl::ParseCommandLine(argc, argv);
 
+  LOG("Starting Client");
+  FAIL_IF(absl::GetFlag(FLAGS_duration) == 0, "Specified a zero-length duration");
+  FAIL_IF((absl::GetFlag(FLAGS_instrument_path).empty()) !=
+              (absl::GetFlag(FLAGS_instrument_offset) == 0),
+          "Binary path and offset of the function to instrument need to be specified together");
+
   uint32_t process_id = absl::GetFlag(FLAGS_pid);
+  if (!process_id) {
+    FAIL_IF(absl::GetFlag(FLAGS_pid_file_path).empty(), "A PID or a path to a file is needed.");
+    WaitForFileModification(absl::GetFlag(FLAGS_pid_file_path));
+    process_id = ReadPIDFromFile(absl::GetFlag(FLAGS_pid_file_path));
+  }
   LOG("process_id=%d", process_id);
   FAIL_IF(process_id == 0, "PID to capture not specified");
 
@@ -349,29 +392,50 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  if (absl::GetFlag(FLAGS_frame_time)) {
+  const bool calculate_frame_time = absl::GetFlag(FLAGS_frame_time);
+  LOG("frame_time=%d", calculate_frame_time);
+  if (calculate_frame_time) {
     // Instrument vkQueuePresentKHR, if possible.
+    // Some application don't call libVulkan library directly instead they just query the
+    // function addresses and use those. So lets just instrument the layer
+    // `orbit_vulkan_layer::OrbitQueuePresentKHR`
+    static const std::string kGgpvlkModuleName = "ggpvlk.so";
+    static const std::string kQueuePresentFunctionName{"yeti::internal::vulkan::(anonymous namespace)::QueuePresentKHR(VkQueue_T*, VkPresentInfoKHR const*)"};
+
     ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> modules_or_error =
         orbit_object_utils::ReadModules(process_id);
     FAIL_IF(modules_or_error.has_error(), "%s", modules_or_error.error().message());
-    static const std::string kLibvulkanModuleName{"libvulkan.so.1"};
     std::string libvulkan_file_path;
     for (const orbit_grpc_protos::ModuleInfo& module : modules_or_error.value()) {
-      if (module.soname() == kLibvulkanModuleName) {
+      if (module.soname() == kGgpvlkModuleName) {
         libvulkan_file_path = module.file_path();
         break;
       }
     }
     if (!libvulkan_file_path.empty()) {
-      static const std::string kQueuePresentFunctionName{"vkQueuePresentKHR"};
-      LOG("%s found: instrumenting %s", kLibvulkanModuleName, kQueuePresentFunctionName);
-      ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFunctionNameInDynsym(
-          &module_manager, &selected_functions, libvulkan_file_path, kQueuePresentFunctionName,
-          orbit_fake_client::FakeCaptureEventProcessor::kFrameBoundaryFunctionId);
+      LOG("%s found: instrumenting %s", kGgpvlkModuleName,
+          kQueuePresentFunctionName);
+      ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFunctionNameInDebugSymbols(
+          &module_manager, &selected_functions, libvulkan_file_path,
+          kQueuePresentFunctionName, orbit_fake_client::FakeCaptureEventProcessor::kFrameBoundaryFunctionId);
+      LOG("%s instrumented", kQueuePresentFunctionName);
+    } else {
+      LOG("%s not found", kGgpvlkModuleName);
     }
   }
 
-  auto capture_event_processor = std::make_unique<orbit_fake_client::FakeCaptureEventProcessor>();
+  std::unique_ptr<orbit_capture_client::CaptureEventProcessor> capture_event_processor;
+  switch (absl::GetFlag(FLAGS_event_processor)) {
+    case EventProcessorType::kFake:
+      capture_event_processor = std::make_unique<orbit_fake_client::FakeCaptureEventProcessor>();
+      break;
+    case EventProcessorType::kVulkanLayer:
+      capture_event_processor =
+          std::make_unique<orbit_fake_client::GraphicsCaptureEventProcessor>();
+      break;
+    default:
+      break;
+  }
 
   auto capture_outcome_future = capture_client.Capture(
       thread_pool.get(), process_id, module_manager, selected_functions, kAlwaysRecordArguments,
@@ -396,11 +460,10 @@ int main(int argc, char* argv[]) {
   if (capture_outcome_or_error.has_error()) {
     FATAL("Capture failed: %s", capture_outcome_or_error.error().message());
   }
+  thread_pool->ShutdownAndWait();
+
   CHECK(capture_outcome_or_error.value() ==
         orbit_capture_client::CaptureListener::CaptureOutcome::kComplete);
   LOG("Capture completed");
-
-  thread_pool->ShutdownAndWait();
-
   return 0;
 }

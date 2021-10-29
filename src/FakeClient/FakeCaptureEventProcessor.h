@@ -6,6 +6,7 @@
 #define FAKE_CLIENT_FAKE_CAPTURE_EVENT_PROCESSOR_H_
 
 #include "CaptureClient/CaptureEventProcessor.h"
+#include "Flags.h"
 #include "OrbitBase/WriteStringToFile.h"
 
 namespace orbit_fake_client {
@@ -41,16 +42,18 @@ class FakeCaptureEventProcessor : public orbit_capture_client::CaptureEventProce
   ~FakeCaptureEventProcessor() override {
     {
       LOG("Events received: %u", event_count_);
-      ErrorMessageOr<void> event_count_write_result =
-          orbit_base::WriteStringToFile(kEventCountFilename, std::to_string(event_count_));
+      std::filesystem::path filepath(absl::GetFlag(FLAGS_output_path));
+      ErrorMessageOr<void> event_count_write_result = orbit_base::WriteStringToFile(
+          filepath.append(kEventCountFilename), std::to_string(event_count_));
       FAIL_IF(event_count_write_result.has_error(), "Writing to \"%s\": %s", kEventCountFilename,
               event_count_write_result.error().message());
     }
 
     {
       LOG("Bytes received: %u", byte_count_);
-      ErrorMessageOr<void> byte_count_write_result =
-          orbit_base::WriteStringToFile(kByteCountFilename, std::to_string(byte_count_));
+      std::filesystem::path filepath(absl::GetFlag(FLAGS_output_path));
+      ErrorMessageOr<void> byte_count_write_result = orbit_base::WriteStringToFile(
+          filepath.append(kByteCountFilename), std::to_string(byte_count_));
       FAIL_IF(byte_count_write_result.has_error(), "Writing to \"%s\": %s", kByteCountFilename,
               byte_count_write_result.error().message());
     }
@@ -65,8 +68,9 @@ class FakeCaptureEventProcessor : public orbit_capture_client::CaptureEventProce
         frame_time_ms_string = absl::StrFormat("%.3f", frame_time_ms);
         LOG("Avg. frame time (ms): %s", frame_time_ms_string);
       }
+      std::filesystem::path filepath(absl::GetFlag(FLAGS_output_path));
       ErrorMessageOr<void> frame_time_write_result =
-          orbit_base::WriteStringToFile(kFrameTimeFilename, frame_time_ms_string);
+          orbit_base::WriteStringToFile(filepath.append(kFrameTimeFilename), frame_time_ms_string);
       FAIL_IF(frame_time_write_result.has_error(), "Writing to \"%s\": %s", kFrameTimeFilename,
               frame_time_write_result.error().message());
     }
