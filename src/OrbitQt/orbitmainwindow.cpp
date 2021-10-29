@@ -1088,7 +1088,8 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
     orbit_grpc_protos::UnwindingMethod unwinding_method =
         static_cast<orbit_grpc_protos::UnwindingMethod>(
             settings
-                .value(kCallstackUnwindingMethodSettingKey, kCallstackUnwindingMethodDefaultValue)
+                .value(kCallstackUnwindingMethodSettingKey,
+                       static_cast<int>(kCallstackUnwindingMethodDefaultValue))
                 .toInt());
     app_->SetUnwindingMethod(unwinding_method);
   } else {
@@ -1138,7 +1139,9 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
       settings.value(kCallstackSamplingPeriodMsSettingKey, kCallstackSamplingPeriodMsDefaultValue)
           .toDouble());
   dialog.SetUnwindingMethod(static_cast<orbit_grpc_protos::UnwindingMethod>(
-      settings.value(kCallstackUnwindingMethodSettingKey, kCallstackUnwindingMethodDefaultValue)
+      settings
+          .value(kCallstackUnwindingMethodSettingKey,
+                 static_cast<int>(kCallstackUnwindingMethodDefaultValue))
           .toInt()));
   dialog.SetCollectSchedulerInfo(settings.value(kCollectSchedulerInfoSettingKey, true).toBool());
   dialog.SetCollectThreadStates(settings.value(kCollectThreadStatesSettingKey, false).toBool());
@@ -1170,7 +1173,8 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
 
   settings.setValue(kEnableCallstackSamplingSettingKey, dialog.GetEnableSampling());
   settings.setValue(kCallstackSamplingPeriodMsSettingKey, dialog.GetSamplingPeriodMs());
-  settings.setValue(kCallstackUnwindingMethodSettingKey, dialog.GetUnwindingMethod());
+  settings.setValue(kCallstackUnwindingMethodSettingKey,
+                    static_cast<int>(dialog.GetUnwindingMethod()));
   settings.setValue(kCollectSchedulerInfoSettingKey, dialog.GetCollectSchedulerInfo());
   settings.setValue(kCollectThreadStatesSettingKey, dialog.GetCollectThreadStates());
   settings.setValue(kTraceGpuSubmissionsSettingKey, dialog.GetTraceGpuSubmissions());

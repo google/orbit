@@ -1337,7 +1337,8 @@ void OrbitApp::StartCapture() {
       IsDevMode() && data_manager_->enable_user_space_instrumentation();
   double samples_per_second = data_manager_->samples_per_second();
   uint16_t stack_dump_size = data_manager_->stack_dump_size();
-  UnwindingMethod unwinding_method = data_manager_->unwinding_method();
+  UnwindingMethod unwinding_method =
+      IsDevMode() ? data_manager_->unwinding_method() : UnwindingMethod::kDwarfUnwinding;
   uint64_t max_local_marker_depth_per_command_buffer =
       data_manager_->max_local_marker_depth_per_command_buffer();
 

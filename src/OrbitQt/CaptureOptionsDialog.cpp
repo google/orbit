@@ -24,10 +24,11 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   QObject::connect(ui_->buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
   QObject::connect(ui_->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
-  ui_->unwindingMethodComboBox->addItem("DWARF",
-                                        orbit_grpc_protos::UnwindingMethod::kDwarfUnwinding);
-  ui_->unwindingMethodComboBox->addItem("Frame pointers",
-                                        orbit_grpc_protos::UnwindingMethod::kFramePointerUnwinding);
+  ui_->unwindingMethodComboBox->addItem(
+      "DWARF", static_cast<int>(orbit_grpc_protos::UnwindingMethod::kDwarfUnwinding));
+  ui_->unwindingMethodComboBox->addItem(
+      "Frame pointers",
+      static_cast<int>(orbit_grpc_protos::UnwindingMethod::kFramePointerUnwinding));
 
   if (!absl::GetFlag(FLAGS_devmode)) {
     // TODO(b/198748597): Don't hide samplingCheckBox once disabling sampling completely is exposed.
@@ -64,7 +65,7 @@ double CaptureOptionsDialog::GetSamplingPeriodMs() const {
 }
 
 void CaptureOptionsDialog::SetUnwindingMethod(orbit_grpc_protos::UnwindingMethod unwinding_method) {
-  int index = ui_->unwindingMethodComboBox->findData(unwinding_method);
+  int index = ui_->unwindingMethodComboBox->findData(static_cast<int>(unwinding_method));
   CHECK(index >= 0);
   return ui_->unwindingMethodComboBox->setCurrentIndex(index);
 }
