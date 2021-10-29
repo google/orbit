@@ -31,10 +31,10 @@ class ScopeTreeTimerData final : public TimerDataInterface {
     return timer_data_.GetChains();
   }
 
-  // We are using a ScopeTree to automatically manage timers and their depth, not need to set it
+  // We are using a ScopeTree to automatically manage timers and their depth, no need to set it
   // here.
   const orbit_client_protos::TimerInfo& AddTimer(orbit_client_protos::TimerInfo timer_info,
-                                                 uint32_t /*depth*/ = 0) override;
+                                                 uint32_t /*unused_depth*/ = 0) override;
   void OnCaptureComplete() override;
 
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
