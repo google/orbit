@@ -114,10 +114,10 @@ void UploaderCaptureEventCollector::RefreshUploadDataBuffer() {
         static_cast<float>(buffered_event_bytes_) / static_cast<float>(buffered_event_count_);
     ORBIT_FLOAT("Average bytes per CaptureEvent", average_bytes);
   }
-  total_uploaded_event_count_ += buffered_event_count_;
-  total_uploaded_data_bytes_ += capture_data_to_upload_.size();
 
   capture_data_to_upload_ = capture_data_buffer_stream_->TakeBuffer();
+  total_uploaded_event_count_ += buffered_event_count_;
+  total_uploaded_data_bytes_ += capture_data_to_upload_.size();
   buffered_event_count_ = 0;
   buffered_event_bytes_ = 0;
   mutex_.Unlock();

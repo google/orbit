@@ -33,7 +33,8 @@ add_executable(ProducerEventProcessorTests)
 
 target_sources(ProducerEventProcessorTests PRIVATE
         GrpcClientCaptureEventCollectorTest.cpp
-        ProducerEventProcessorTest.cpp)
+        ProducerEventProcessorTest.cpp
+        UploaderCaptureEventCollectorTest.cpp)
 
 target_link_libraries(ProducerEventProcessorTests PRIVATE
         TestUtils
