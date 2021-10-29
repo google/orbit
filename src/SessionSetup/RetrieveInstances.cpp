@@ -28,10 +28,9 @@ using orbit_ggp::Client;
 using orbit_ggp::Instance;
 using orbit_ggp::Project;
 
-class RetrieveInstancesImpl : public RetrieveInstances, public QObject {
+class RetrieveInstancesImpl : public RetrieveInstances {
  public:
-  RetrieveInstancesImpl(orbit_ggp::Client* ggp_client, MainThreadExecutor* main_thread_executor,
-                        QObject* parent);
+  RetrieveInstancesImpl(orbit_ggp::Client* ggp_client, MainThreadExecutor* main_thread_executor);
 
   orbit_base::Future<ErrorMessageOr<QVector<orbit_ggp::Instance>>> LoadInstances(
       const std::optional<orbit_ggp::Project>& project,
@@ -55,14 +54,13 @@ class RetrieveInstancesImpl : public RetrieveInstances, public QObject {
 };
 
 std::unique_ptr<RetrieveInstances> RetrieveInstances::Create(
-    orbit_ggp::Client* ggp_client, MainThreadExecutor* main_thread_executor, QObject* parent) {
-  return std::make_unique<RetrieveInstancesImpl>(ggp_client, main_thread_executor, parent);
+    orbit_ggp::Client* ggp_client, MainThreadExecutor* main_thread_executor) {
+  return std::make_unique<RetrieveInstancesImpl>(ggp_client, main_thread_executor);
 }
 
 RetrieveInstancesImpl::RetrieveInstancesImpl(Client* ggp_client,
-                                             MainThreadExecutor* main_thread_executor,
-                                             QObject* parent)
-    : QObject(parent), ggp_client_(ggp_client), main_thread_executor_(main_thread_executor) {
+                                             MainThreadExecutor* main_thread_executor)
+    : ggp_client_(ggp_client), main_thread_executor_(main_thread_executor) {
   CHECK(ggp_client != nullptr);
   CHECK(main_thread_executor != nullptr);
 }

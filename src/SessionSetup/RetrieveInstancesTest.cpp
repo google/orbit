@@ -54,8 +54,7 @@ class RetrieveInstancesTest : public testing::Test {
  public:
   RetrieveInstancesTest()
       : executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()),
-        retrieve_instances_(
-            RetrieveInstances::Create(&mock_ggp_, executor_.get(), QCoreApplication::instance())) {}
+        retrieve_instances_(RetrieveInstances::Create(&mock_ggp_, executor_.get())) {}
 
   template <typename T>
   static Future<ErrorMessageOr<T>> ReturnErrorFuture() {

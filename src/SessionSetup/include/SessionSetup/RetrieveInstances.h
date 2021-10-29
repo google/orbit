@@ -27,7 +27,6 @@ class RetrieveInstances {
     std::optional<orbit_ggp::Project> project_of_instances;
   };
 
-  RetrieveInstances() = default;
   virtual ~RetrieveInstances() = default;
 
   virtual orbit_base::Future<ErrorMessageOr<QVector<orbit_ggp::Instance>>> LoadInstances(
@@ -41,8 +40,7 @@ class RetrieveInstances {
                            orbit_ggp::Client::InstanceListScope scope) = 0;
 
   [[nodiscard]] static std::unique_ptr<RetrieveInstances> Create(
-      orbit_ggp::Client* ggp_client, MainThreadExecutor* main_thread_executor,
-      QObject* parent = nullptr);
+      orbit_ggp::Client* ggp_client, MainThreadExecutor* main_thread_executor);
 };
 
 }  // namespace orbit_session_setup
