@@ -7,10 +7,12 @@
 #include <absl/base/casts.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
 #include <optional>
 #include <string>
 
+#include "CaptureFile/BufferOutputStream.h"
 #include "CaptureFileConstants.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
@@ -22,7 +24,10 @@ namespace {
 
 class CaptureFileOutputStreamImpl final : public CaptureFileOutputStream {
  public:
-  explicit CaptureFileOutputStreamImpl(std::filesystem::path path) : path_{std::move(path)} {}
+  explicit CaptureFileOutputStreamImpl(std::filesystem::path path)
+      : output_type_(OutputType::kFile), path_{std::move(path)} {}
+  explicit CaptureFileOutputStreamImpl(BufferOutputStream* output_buffer)
+      : output_type_(OutputType::kBuffer), output_buffer_(output_buffer) {}
   ~CaptureFileOutputStreamImpl() override;
 
   [[nodiscard]] ErrorMessageOr<void> Initialize();
@@ -34,16 +39,20 @@ class CaptureFileOutputStreamImpl final : public CaptureFileOutputStream {
  private:
   void Reset();
   [[nodiscard]] ErrorMessageOr<void> WriteHeader();
+  [[nodiscard]] std::string_view GetErrorFromOutputStream() const;
   // Handles write error by cleaning up the file and generating error message.
   [[nodiscard]] ErrorMessage HandleWriteError(const char* section_name,
                                               std::string_view original_error);
   // Call this in case of unrecoverable error to close and remove the file.
   void CloseAndTryRemoveFileAfterError();
 
+  enum class OutputType { kFile, kBuffer };
+  OutputType output_type_;
+
   std::filesystem::path path_;
   orbit_base::unique_fd fd_;
-
-  std::optional<google::protobuf::io::FileOutputStream> file_output_stream_;
+  BufferOutputStream* output_buffer_ = nullptr;
+  std::unique_ptr<google::protobuf::io::ZeroCopyOutputStream> zero_copy_output_stream_;
   std::optional<google::protobuf::io::CodedOutputStream> coded_output_;
 };
 
@@ -54,12 +63,28 @@ CaptureFileOutputStreamImpl::~CaptureFileOutputStreamImpl() {
 }
 
 ErrorMessageOr<void> CaptureFileOutputStreamImpl::Initialize() {
-  auto fd_or_error = orbit_base::OpenNewFileForWriting(path_);
-  if (fd_or_error.has_error()) {
-    return fd_or_error.error();
+  // Prepare the protobuf stream to use to write to capture section.
+  switch (output_type_) {
+    case OutputType::kBuffer: {
+      CHECK(output_buffer_ != nullptr);
+
+      zero_copy_output_stream_ =
+          std::make_unique<google::protobuf::io::CopyingOutputStreamAdaptor>(output_buffer_);
+      break;
+    }
+    case OutputType::kFile: {
+      auto fd_or_error = orbit_base::OpenNewFileForWriting(path_);
+      if (fd_or_error.has_error()) return fd_or_error.error();
+      fd_ = std::move(fd_or_error.value());
+      CHECK(fd_.valid());
+
+      zero_copy_output_stream_ =
+          std::make_unique<google::protobuf::io::FileOutputStream>(fd_.get());
+      break;
+    }
   }
 
-  fd_ = std::move(fd_or_error.value());
+  coded_output_.emplace(zero_copy_output_stream_.get());
 
   if (auto result = WriteHeader(); result.has_error()) {
     return result.error();
@@ -71,7 +96,7 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::Initialize() {
 ErrorMessageOr<void> CaptureFileOutputStreamImpl::Close() {
   coded_output_->Trim();
   if (coded_output_->HadError()) {
-    return HandleWriteError("Unknown", SafeStrerror(file_output_stream_->GetErrno()));
+    return HandleWriteError("Unknown", GetErrorFromOutputStream());
   }
   Reset();
 
@@ -79,46 +104,68 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::Close() {
 }
 
 void CaptureFileOutputStreamImpl::Reset() {
+  // Destroy coded_output_ before destroying the underlaying ZeroCopyOutputStream to guarantee that
+  // coded_output_ flushes all data to the underlaying ZeroCopyOutputStream and trims the unused
+  // bytes.
   coded_output_.reset();
-  file_output_stream_.reset();
+  zero_copy_output_stream_.reset(nullptr);
   fd_.release();
+  output_buffer_ = nullptr;
 }
 
-bool CaptureFileOutputStreamImpl::IsOpen() { return fd_.valid(); }
+bool CaptureFileOutputStreamImpl::IsOpen() {
+  switch (output_type_) {
+    case OutputType::kBuffer:
+      return output_buffer_ != nullptr;
+    case OutputType::kFile:
+      return fd_.valid();
+  }
+
+  UNREACHABLE();
+}
 
 void CaptureFileOutputStreamImpl::CloseAndTryRemoveFileAfterError() {
   Reset();
-  if (remove(path_.string().c_str()) == -1) {
+
+  if (output_type_ == OutputType::kFile && remove(path_.string().c_str()) == -1) {
     ERROR("Unable to remove \"%s\": %s", path_.string(), SafeStrerror(errno));
   }
+}
+
+std::string_view CaptureFileOutputStreamImpl::GetErrorFromOutputStream() const {
+  // There should not be any write error in the case of `OutputType::kBuffer` as we do not limit the
+  // buffer size of BufferOutputStream.
+  CHECK(output_type_ == OutputType::kFile);
+  auto file_output_stream =
+      static_cast<google::protobuf::io::FileOutputStream*>(zero_copy_output_stream_.get());
+  return SafeStrerror(file_output_stream->GetErrno());
 }
 
 ErrorMessage CaptureFileOutputStreamImpl::HandleWriteError(const char* section_name,
                                                            std::string_view original_error) {
   CloseAndTryRemoveFileAfterError();
+
+  std::string output_target = output_type_ == OutputType::kFile ? path_.string() : "";
   return ErrorMessage{absl::StrFormat(R"(Error writing "%s" section to "%s": %s)", section_name,
-                                      path_.string(), original_error)};
+                                      output_target, original_error)};
 }
 
 ErrorMessageOr<void> CaptureFileOutputStreamImpl::WriteCaptureEvent(
     const orbit_grpc_protos::ClientCaptureEvent& event) {
   CHECK(coded_output_.has_value());
-  CHECK(file_output_stream_.has_value());
-  size_t message_size = event.ByteSizeLong();
-  coded_output_->WriteVarint32(message_size);
-  if (!event.SerializeToCodedStream(&coded_output_.value())) {
-    return HandleWriteError("Capture", SafeStrerror(file_output_stream_->GetErrno()));
-  }
+  CHECK(zero_copy_output_stream_ != nullptr);
 
-  if (coded_output_->HadError()) {
-    return HandleWriteError("Capture", SafeStrerror(file_output_stream_->GetErrno()));
+  uint32_t event_size = event.ByteSizeLong();
+  coded_output_->WriteVarint32(event_size);
+  if (!event.SerializeToCodedStream(&coded_output_.value()) || coded_output_->HadError()) {
+    return HandleWriteError("Capture", GetErrorFromOutputStream());
   }
 
   return outcome::success();
 }
 
 ErrorMessageOr<void> CaptureFileOutputStreamImpl::WriteHeader() {
-  CHECK(fd_.valid());
+  CHECK(coded_output_.has_value());
 
   std::string header{kFileSignature};
   header.append(std::string_view(absl::bit_cast<char*>(&kFileVersion), sizeof(kFileVersion)));
@@ -136,14 +183,10 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::WriteHeader() {
 
   CHECK(capture_section_offset == header.size());
 
-  auto write_result = orbit_base::WriteFully(fd_, header);
-  if (write_result.has_error()) {
-    return HandleWriteError("Header", write_result.error().message());
+  coded_output_->WriteString(header);
+  if (coded_output_->HadError()) {
+    return HandleWriteError("Header", GetErrorFromOutputStream());
   }
-
-  // Prepare the protobuf stream to use to write to capture section.
-  file_output_stream_.emplace(fd_.get());
-  coded_output_.emplace(&file_output_stream_.value());
 
   return outcome::success();
 }
@@ -157,6 +200,15 @@ ErrorMessageOr<std::unique_ptr<CaptureFileOutputStream>> CaptureFileOutputStream
   if (init_result.has_error()) {
     return init_result.error();
   }
+
+  return implementation;
+}
+
+std::unique_ptr<CaptureFileOutputStream> CaptureFileOutputStream::Create(
+    BufferOutputStream* output_buffer) {
+  auto implementation = std::make_unique<CaptureFileOutputStreamImpl>(output_buffer);
+  auto init_result = implementation->Initialize();
+  CHECK(!init_result.has_error());
 
   return implementation;
 }

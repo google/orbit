@@ -6,6 +6,7 @@
 #include <gtest/gtest.h>
 #include <stdint.h>
 
+#include "CaptureFile/BufferOutputStream.h"
 #include "CaptureFile/CaptureFileOutputStream.h"
 #include "CaptureFileConstants.h"
 #include "OrbitBase/ReadFileToString.h"
@@ -29,95 +30,127 @@ static orbit_grpc_protos::ClientCaptureEvent CreateInternedStringCaptureEvent(
 }
 
 TEST(CaptureFileOutputStream, Smoke) {
-  auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
-  ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
-  orbit_base::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
-
-  temporary_file.CloseAndRemove();
-  std::string temp_file_name = temporary_file.file_path().string();
-
-  auto output_stream_or_error = CaptureFileOutputStream::Create(temp_file_name);
-  ASSERT_TRUE(output_stream_or_error.has_value()) << output_stream_or_error.error().message();
-
-  std::unique_ptr<CaptureFileOutputStream> output_stream =
-      std::move(output_stream_or_error.value());
-
-  EXPECT_TRUE(output_stream->IsOpen());
-
   orbit_grpc_protos::ClientCaptureEvent event1 =
       CreateInternedStringCaptureEvent(kAnswerKey, kAnswerString);
   orbit_grpc_protos::ClientCaptureEvent event2 =
       CreateInternedStringCaptureEvent(kNotAnAnswerKey, kNotAnAnswerString);
 
-  auto write_result = output_stream->WriteCaptureEvent(event1);
-  EXPECT_FALSE(write_result.has_error()) << write_result.error().message();
-  write_result = output_stream->WriteCaptureEvent(event2);
-  EXPECT_FALSE(write_result.has_error()) << write_result.error().message();
-  auto close_result = output_stream->Close();
-  ASSERT_FALSE(close_result.has_error()) << close_result.error().message();
+  auto write_events_then_close = [&](CaptureFileOutputStream* output_stream) {
+    auto write_result = output_stream->WriteCaptureEvent(event1);
+    EXPECT_FALSE(write_result.has_error()) << write_result.error().message();
+    write_result = output_stream->WriteCaptureEvent(event2);
+    EXPECT_FALSE(write_result.has_error()) << write_result.error().message();
+    auto close_result = output_stream->Close();
+    ASSERT_FALSE(close_result.has_error()) << close_result.error().message();
+  };
 
-  ErrorMessageOr<std::string> file_content_or_error = orbit_base::ReadFileToString(temp_file_name);
-  ASSERT_TRUE(file_content_or_error.has_value()) << file_content_or_error.error().message();
+  auto check_output_stream_content = [&](const std::string& stream_content) {
+    ASSERT_GT(stream_content.size(), 24);
+    ASSERT_EQ(stream_content.substr(0, 4), kFileSignature);
+    uint64_t capture_section_offset = 0;
+    memcpy(&capture_section_offset, stream_content.data() + 8, sizeof(capture_section_offset));
+    ASSERT_EQ(capture_section_offset, 24);
 
-  const std::string& file_content = file_content_or_error.value();
+    google::protobuf::io::ArrayInputStream input_stream(
+        stream_content.data() + capture_section_offset,
+        static_cast<int>(stream_content.size() - capture_section_offset));
+    google::protobuf::io::CodedInputStream coded_input_stream(&input_stream);
 
-  ASSERT_GT(file_content.size(), 24);
-  ASSERT_EQ(file_content.substr(0, 4), kFileSignature);
-  uint64_t capture_section_offset = 0;
-  memcpy(&capture_section_offset, file_content.data() + 8, sizeof(capture_section_offset));
-  ASSERT_EQ(capture_section_offset, 24);
+    orbit_grpc_protos::ClientCaptureEvent event_from_file;
+    uint32_t event_size;
+    ASSERT_TRUE(coded_input_stream.ReadVarint32(&event_size));
+    std::vector<uint8_t> buffer(event_size);
+    ASSERT_TRUE(coded_input_stream.ReadRaw(buffer.data(), buffer.size()));
+    ASSERT_TRUE(event_from_file.ParseFromArray(buffer.data(), buffer.size()));
 
-  google::protobuf::io::ArrayInputStream input_stream(
-      file_content.data() + capture_section_offset,
-      static_cast<int>(file_content.size() - capture_section_offset));
-  google::protobuf::io::CodedInputStream coded_input_stream(&input_stream);
+    ASSERT_EQ(event_from_file.event_case(), orbit_grpc_protos::ClientCaptureEvent::kInternedString);
+    EXPECT_EQ(event_from_file.interned_string().key(), kAnswerKey);
+    EXPECT_EQ(event_from_file.interned_string().intern(), kAnswerString);
 
-  orbit_grpc_protos::ClientCaptureEvent event_from_file;
-  uint32_t event_size;
-  ASSERT_TRUE(coded_input_stream.ReadVarint32(&event_size));
-  std::vector<uint8_t> buffer(event_size);
-  ASSERT_TRUE(coded_input_stream.ReadRaw(buffer.data(), buffer.size()));
-  ASSERT_TRUE(event_from_file.ParseFromArray(buffer.data(), buffer.size()));
+    ASSERT_TRUE(coded_input_stream.ReadVarint32(&event_size));
+    buffer = std::vector<uint8_t>(event_size);
+    ASSERT_TRUE(coded_input_stream.ReadRaw(buffer.data(), buffer.size()));
+    ASSERT_TRUE(event_from_file.ParseFromArray(buffer.data(), buffer.size()));
 
-  ASSERT_EQ(event_from_file.event_case(), orbit_grpc_protos::ClientCaptureEvent::kInternedString);
-  EXPECT_EQ(event_from_file.interned_string().key(), kAnswerKey);
-  EXPECT_EQ(event_from_file.interned_string().intern(), kAnswerString);
+    ASSERT_EQ(event_from_file.event_case(), orbit_grpc_protos::ClientCaptureEvent::kInternedString);
+    EXPECT_EQ(event_from_file.interned_string().key(), kNotAnAnswerKey);
+    EXPECT_EQ(event_from_file.interned_string().intern(), kNotAnAnswerString);
+  };
 
-  ASSERT_TRUE(coded_input_stream.ReadVarint32(&event_size));
-  buffer = std::vector<uint8_t>(event_size);
-  ASSERT_TRUE(coded_input_stream.ReadRaw(buffer.data(), buffer.size()));
-  ASSERT_TRUE(event_from_file.ParseFromArray(buffer.data(), buffer.size()));
+  // Test the case of outputting capture file content to a file
+  {
+    auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
+    ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
+    orbit_base::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
+    temporary_file.CloseAndRemove();
 
-  ASSERT_EQ(event_from_file.event_case(), orbit_grpc_protos::ClientCaptureEvent::kInternedString);
-  EXPECT_EQ(event_from_file.interned_string().key(), kNotAnAnswerKey);
-  EXPECT_EQ(event_from_file.interned_string().intern(), kNotAnAnswerString);
+    std::string temp_file_name = temporary_file.file_path().string();
+    auto output_stream_or_error = CaptureFileOutputStream::Create(temp_file_name);
+    ASSERT_TRUE(output_stream_or_error.has_value()) << output_stream_or_error.error().message();
+
+    std::unique_ptr<CaptureFileOutputStream> output_stream =
+        std::move(output_stream_or_error.value());
+    EXPECT_TRUE(output_stream->IsOpen());
+    write_events_then_close(output_stream.get());
+
+    ErrorMessageOr<std::string> stream_content_or_error =
+        orbit_base::ReadFileToString(temp_file_name);
+    ASSERT_TRUE(stream_content_or_error.has_value()) << stream_content_or_error.error().message();
+    const std::string& stream_content = stream_content_or_error.value();
+    check_output_stream_content(stream_content);
+  }
+
+  // Test the case of outputting capture file content to a vector of raw buffers
+  {
+    BufferOutputStream output_buffer;
+    std::unique_ptr<CaptureFileOutputStream> output_stream =
+        CaptureFileOutputStream::Create(&output_buffer);
+    EXPECT_TRUE(output_stream->IsOpen());
+    write_events_then_close(output_stream.get());
+
+    std::vector<unsigned char> buffered_data = output_buffer.TakeBuffer();
+    const std::string stream_content(buffered_data.begin(), buffered_data.end());
+    check_output_stream_content(stream_content);
+  }
 }
 
 TEST(CaptureFileOutputStream, WriteAfterClose) {
-  auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
-  ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
-  orbit_base::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
+  auto check_write_after_close = [&](CaptureFileOutputStream* output_stream) {
+    EXPECT_TRUE(output_stream->IsOpen());
 
-  std::string temp_file_name = temporary_file.file_path().string();
-  temporary_file.CloseAndRemove();
+    auto close_result = output_stream->Close();
+    ASSERT_FALSE(close_result.has_error()) << close_result.error().message();
 
-  auto output_stream_or_error = CaptureFileOutputStream::Create(temp_file_name);
-  ASSERT_TRUE(output_stream_or_error.has_value()) << output_stream_or_error.error().message();
+    EXPECT_FALSE(output_stream->IsOpen());
 
-  std::unique_ptr<CaptureFileOutputStream> output_stream =
-      std::move(output_stream_or_error.value());
+    orbit_grpc_protos::ClientCaptureEvent event =
+        CreateInternedStringCaptureEvent(kAnswerKey, kAnswerString);
 
-  EXPECT_TRUE(output_stream->IsOpen());
+    EXPECT_DEATH((void)output_stream->WriteCaptureEvent(event), "");
+  };
 
-  auto close_result = output_stream->Close();
-  ASSERT_FALSE(close_result.has_error()) << close_result.error().message();
+  // Test the case of outputting capture file content to a file
+  {
+    auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
+    ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
+    orbit_base::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
+    temporary_file.CloseAndRemove();
 
-  EXPECT_FALSE(output_stream->IsOpen());
+    std::string temp_file_name = temporary_file.file_path().string();
+    auto output_stream_or_error = CaptureFileOutputStream::Create(temp_file_name);
+    ASSERT_TRUE(output_stream_or_error.has_value()) << output_stream_or_error.error().message();
+    std::unique_ptr<CaptureFileOutputStream> output_stream =
+        std::move(output_stream_or_error.value());
+    check_write_after_close(output_stream.get());
+  }
 
-  orbit_grpc_protos::ClientCaptureEvent event =
-      CreateInternedStringCaptureEvent(kAnswerKey, kAnswerString);
-
-  EXPECT_DEATH((void)output_stream->WriteCaptureEvent(event), "");
+  // Test the case of outputting capture file content to a vector of raw buffers
+  {
+    BufferOutputStream output_buffer;
+    std::unique_ptr<CaptureFileOutputStream> output_stream =
+        CaptureFileOutputStream::Create(&output_buffer);
+    check_write_after_close(output_stream.get());
+  }
 }
 
 }  // namespace orbit_capture_file
