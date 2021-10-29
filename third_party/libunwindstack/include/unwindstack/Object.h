@@ -65,18 +65,23 @@ class Object {
   virtual ErrorCode GetLastErrorCode() = 0;
   virtual uint64_t GetLastErrorAddress() = 0;
 
+  // Caching cannot be enabled/disabled while unwinding. It is assumed
+  // that once enabled, it remains enabled while all unwinds are running.
+  // If the state of the caching changes while unwinding is occurring,
+  // it could cause crashes.
   static void SetCachingEnabled(bool enable);
+
   static bool CachingEnabled() { return cache_enabled_; }
 
   static void CacheLock();
   static void CacheUnlock();
   static void CacheAdd(MapInfo* info);
   static bool CacheGet(MapInfo* info);
-  static bool CacheAfterCreateMemory(MapInfo* info);
 
  protected:
   static bool cache_enabled_;
-  static std::unordered_map<std::string, std::pair<std::shared_ptr<Object>, bool>>* cache_;
+  static std::unordered_map<std::string, std::unordered_map<uint64_t, std::shared_ptr<Object>>>*
+      cache_;
   static std::mutex* cache_lock_;
 };
 

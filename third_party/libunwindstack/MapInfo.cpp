@@ -71,7 +71,8 @@ bool MapInfo::InitFileMemoryFromPreviousReadOnlyMap(MemoryFileAtOffset* memory) 
   // One last attempt, see if the previous map is read-only with the
   // same name and stretches across this map.
   auto prev_real_map = GetPrevRealMap();
-  if (prev_real_map == nullptr || prev_real_map->flags() != PROT_READ) {
+  if (prev_real_map == nullptr || prev_real_map->flags() != PROT_READ ||
+      prev_real_map->offset() >= offset()) {
     return false;
   }
 
@@ -241,68 +242,68 @@ Memory* MapInfo::CreateMemory(const std::shared_ptr<Memory>& process_memory) {
   return ranges;
 }
 
-Object* MapInfo::GetObject(const std::shared_ptr<Memory>& process_memory, ArchEnum expected_arch) {
-  {
-    // Make sure no other thread is trying to add the object to this map.
-    std::lock_guard<std::mutex> guard(object_mutex());
+class ScopedObjectCacheLock {
+ public:
+  ScopedObjectCacheLock() {
+    if (Object::CachingEnabled()) Object::CacheLock();
+  }
+  ~ScopedObjectCacheLock() {
+    if (Object::CachingEnabled()) Object::CacheUnlock();
+  }
+};
 
-    if (object().get() != nullptr) {
+Object* MapInfo::GetObject(const std::shared_ptr<Memory>& process_memory, ArchEnum expected_arch) {
+  // Make sure no other thread is trying to add the object to this map.
+  std::lock_guard<std::mutex> guard(object_mutex());
+
+  if (object().get() != nullptr) {
+    return object().get();
+  }
+
+  ScopedObjectCacheLock object_cache_lock;
+  if (Object::CachingEnabled() && !name().empty()) {
+    if (Object::CacheGet(this)) {
       return object().get();
     }
+  }
 
-    bool locked = false;
-    if (Object::CachingEnabled() && !name().empty()) {
-      Object::CacheLock();
-      locked = true;
-      if (Object::CacheGet(this)) {
-        Object::CacheUnlock();
-        return object().get();
-      }
-    }
-
-    Memory* memory = CreateMemory(process_memory);
-    if (locked) {
-      if (Object::CacheAfterCreateMemory(this)) {
-        delete memory;
-        Object::CacheUnlock();
-        return object().get();
-      }
-    }
-    // TODO: Distinguish between the type of object file here (Coff vs. Elf).
-    object().reset(new Elf(memory));
-
-    // If the init fails, keep the object around as an invalid object so we
-    // don't try to reinit the object.
-    object()->Init();
-    if (object()->valid() && expected_arch != object()->arch()) {
-      // Make the object invalid, mismatch between arch and expected arch.
-      object()->Invalidate();
-    }
-
-    if (locked) {
-      Object::CacheAdd(this);
-      Object::CacheUnlock();
-    }
+  // TODO: Distinguish between the type of object file here (Coff vs. Elf).
+  object().reset(new Elf(CreateMemory(process_memory)));
+  // If the init fails, keep the object around as an invalid object so we
+  // don't try to reinit the object.
+  object()->Init();
+  if (object()->valid() && expected_arch != object()->arch()) {
+    // Make the object invalid, mismatch between arch and expected arch.
+    object()->Invalidate();
   }
 
   if (!object()->valid()) {
     set_object_start_offset(offset());
-  } else {
-    auto prev_real_map = GetPrevRealMap();
-    if (prev_real_map != nullptr && object_start_offset() != offset() &&
-        prev_real_map->offset() == object_start_offset()) {
-      // If there is a read-only map then a read-execute map that represents the
-      // same elf object, make sure the previous map is using the same elf
-      // object if it hasn't already been set.
-      std::lock_guard<std::mutex> guard(prev_real_map->object_mutex());
-      if (prev_real_map->object().get() == nullptr) {
-        prev_real_map->set_object(object());
-        prev_real_map->set_memory_backed_object(memory_backed_object());
-      } else {
-        // Discard this elf, and use the elf from the previous map instead.
-        set_object(prev_real_map->object());
-      }
+  } else if (auto prev_real_map = GetPrevRealMap(); prev_real_map != nullptr &&
+                                                    prev_real_map->flags() == PROT_READ &&
+                                                    prev_real_map->offset() < offset()) {
+    // If there is a read-only map then a read-execute map that represents the
+    // same elf object, make sure the previous map is using the same elf
+    // object if it hasn't already been set. Locking this should not result
+    // in a deadlock as long as the invariant that the code only ever tries
+    // to lock the previous real map holds true.
+    std::lock_guard<std::mutex> guard(prev_real_map->object_mutex());
+    if (prev_real_map->object() == nullptr) {
+      // Need to verify if the map is the previous read-only map.
+      prev_real_map->set_object(object());
+      prev_real_map->set_memory_backed_object(memory_backed_object());
+      prev_real_map->set_object_start_offset(object_start_offset());
+      prev_real_map->set_object_offset(prev_real_map->offset() - object_start_offset());
+    } else if (prev_real_map->object_start_offset() == object_start_offset()) {
+      // Discard this elf, and use the elf from the previous map instead.
+      set_object(prev_real_map->object());
     }
+  }
+
+  // Cache the elf only after all of the above checks since we might
+  // discard the original elf we created.
+  if (Elf::CachingEnabled()) {
+    Elf::CacheAdd(this);
   }
   return object().get();
 }
