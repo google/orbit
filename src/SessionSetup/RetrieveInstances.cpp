@@ -154,8 +154,6 @@ RetrieveInstancesImpl::LoadProjectsAndInstances(const std::optional<orbit_ggp::P
               out->append(err.error().message());
             });
 
-        LOG(" --- combined error message: %s", combined_error_messages);
-
         return ErrorMessage{
             absl::StrFormat("The following error occured:\n%s", combined_error_messages)};
       });
