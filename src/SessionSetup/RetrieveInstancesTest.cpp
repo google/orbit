@@ -7,12 +7,14 @@
 #include <gtest/gtest.h>
 
 #include <QCoreApplication>
+#include <functional>
 #include <optional>
 
 #include "MainThreadExecutor.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
+#include "OrbitGgp/Project.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "SessionSetup/RetrieveInstances.h"
 #include "TestUtils/TestUtils.h"
@@ -26,6 +28,7 @@ using orbit_ggp::Project;
 using orbit_ggp::SshInfo;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasValue;
+using testing::Return;
 
 class MockGgpClient : public orbit_ggp::Client {
  public:
@@ -63,8 +66,9 @@ class RetrieveInstancesTest : public testing::Test {
       EXPECT_FALSE(lambda_called);
       lambda_called = true;
       EXPECT_THAT(result, HasError(kErrorString));
+      QCoreApplication::exit();
     });
-    QCoreApplication::processEvents();
+    QCoreApplication::exec();
     EXPECT_TRUE(lambda_called);
   }
 
@@ -73,16 +77,27 @@ class RetrieveInstancesTest : public testing::Test {
     return Future<ErrorMessageOr<T>>{T{}};
   }
   template <typename T>
-  void VerifyDefaultSuccessResult(Future<ErrorMessageOr<T>> future) {
+  void VerifySuccessResult(Future<ErrorMessageOr<T>> future, std::function<void(T)> verifyer) {
     bool lambda_called = false;
-    future.Then(executor_.get(), [&lambda_called](ErrorMessageOr<T> result) {
-      EXPECT_FALSE(lambda_called);
-      lambda_called = true;
-      ASSERT_THAT(result, HasValue());
-      EXPECT_EQ(result.value(), T{});
-    });
-    QCoreApplication::processEvents();
+    future.Then(executor_.get(),
+                [&lambda_called, verifyer = std::move(verifyer)](ErrorMessageOr<T> result) {
+                  EXPECT_FALSE(lambda_called);
+                  lambda_called = true;
+                  ASSERT_THAT(result, HasValue());
+                  verifyer(result.value());
+                  QCoreApplication::exit();
+                });
+    QCoreApplication::exec();
     EXPECT_TRUE(lambda_called);
+  }
+  template <typename T>
+  void VerifyEqualSuccessResult(Future<ErrorMessageOr<T>> future, T value) {
+    VerifySuccessResult<T>(std::move(future),
+                           [value = std::move(value)](T result) { EXPECT_EQ(value, result); });
+  }
+  template <typename T>
+  void VerifyDefaultSuccessResult(Future<ErrorMessageOr<T>> future) {
+    VerifyEqualSuccessResult<T>(std::move(future), T{});
   }
 
  protected:
@@ -206,6 +221,130 @@ TEST_F(RetrieveInstancesTest, LoadInstancesWithoutCacheAlwaysCallsGgpErrorCase) 
         project, Client::InstanceListScope::kOnlyOwnInstances));
     VerifyDefaultSuccessResult(retrieve_instances_.LoadInstancesWithoutCache(
         project, Client::InstanceListScope::kOnlyOwnInstances));
+  }
+}
+
+TEST_F(RetrieveInstancesTest, LoadProjectsAndInstancesError) {
+  {  // all return error
+    EXPECT_CALL(mock_ggp_, GetProjectsAsync()).WillOnce(&ReturnErrorFuture<QVector<Project>>);
+    EXPECT_CALL(mock_ggp_, GetDefaultProjectAsync()).WillOnce(&ReturnErrorFuture<Project>);
+    EXPECT_CALL(mock_ggp_, GetInstancesAsync(Client::InstanceListScope::kOnlyOwnInstances,
+                                             std::optional<Project>(std::nullopt)))
+        .WillOnce(&ReturnErrorFuture<QVector<Instance>>);
+    auto future = retrieve_instances_.LoadProjectsAndInstances(
+        std::nullopt, Client::InstanceListScope::kOnlyOwnInstances);
+    VerifyErrorResult(future);
+  }
+
+  {  // one returns error
+    EXPECT_CALL(mock_ggp_, GetProjectsAsync()).WillOnce(&ReturnErrorFuture<QVector<Project>>);
+
+    EXPECT_CALL(mock_ggp_, GetDefaultProjectAsync()).WillOnce(&ReturnDefaultSuccessFuture<Project>);
+    EXPECT_CALL(mock_ggp_, GetInstancesAsync(Client::InstanceListScope::kOnlyOwnInstances,
+                                             std::optional<Project>(std::nullopt)))
+        .WillOnce(&ReturnDefaultSuccessFuture<QVector<Instance>>);
+    auto future = retrieve_instances_.LoadProjectsAndInstances(
+        std::nullopt, Client::InstanceListScope::kOnlyOwnInstances);
+    VerifyErrorResult(future);
+  }
+
+  {
+    // if project is already nullopt and the call fails, there will be not be a retry (only one call
+    // to GetInstancesAsync).
+    EXPECT_CALL(mock_ggp_, GetProjectsAsync())
+        .WillOnce(&ReturnDefaultSuccessFuture<QVector<Project>>);
+    EXPECT_CALL(mock_ggp_, GetDefaultProjectAsync()).WillOnce(&ReturnDefaultSuccessFuture<Project>);
+    EXPECT_CALL(mock_ggp_, GetInstancesAsync(Client::InstanceListScope::kOnlyOwnInstances,
+                                             std::optional<Project>(std::nullopt)))
+        .WillOnce(&ReturnErrorFuture<QVector<Instance>>);
+
+    auto future = retrieve_instances_.LoadProjectsAndInstances(
+        std::nullopt, Client::InstanceListScope::kOnlyOwnInstances);
+    VerifyErrorResult(future);
+  }
+
+  {
+    // If project is not nullopt and the call has an error that contains "it may not exist", there
+    // will be a retry (second call to GetInstancesAsync with nullopt). If the second try still has
+    // an error, the final result will be an error.
+    const Project test_project{"Test Display Name", "test_project_id"};
+
+    EXPECT_CALL(mock_ggp_, GetProjectsAsync())
+        .WillOnce(&ReturnDefaultSuccessFuture<QVector<Project>>);
+    EXPECT_CALL(mock_ggp_, GetDefaultProjectAsync()).WillOnce(&ReturnDefaultSuccessFuture<Project>);
+    EXPECT_CALL(mock_ggp_, GetInstancesAsync(Client::InstanceListScope::kOnlyOwnInstances,
+                                             std::optional<Project>(test_project)))
+        .WillOnce(Return(ErrorMessage("it may not exist")));
+    EXPECT_CALL(mock_ggp_, GetInstancesAsync(Client::InstanceListScope::kOnlyOwnInstances,
+                                             std::optional<Project>(std::nullopt)))
+        .WillOnce(&ReturnErrorFuture<QVector<Instance>>);
+
+    auto future = retrieve_instances_.LoadProjectsAndInstances(
+        test_project, Client::InstanceListScope::kOnlyOwnInstances);
+    VerifyErrorResult(future);
+  }
+}
+
+TEST_F(RetrieveInstancesTest, LoadProjectsAndInstancesSuccess) {
+  Project default_project{"Test Project 1 - default", "proj_id_1"};
+  Project project_of_instances{"Test Project 2 - instances project", "proj_id_2"};
+  Project test_project_3{"Project Display Name", "project_id"};
+  Instance test_instance_1{"Test Instance 1", "instance_id_1"};
+  Instance test_instance_2{"Test Instance 2", "instance_id_2"};
+
+  RetrieveInstances::LoadProjectsAndInstancesResult test_data;
+  test_data.default_project = default_project;
+  test_data.project_of_instances = project_of_instances;
+  test_data.projects = {default_project, project_of_instances, test_project_3};
+  test_data.instances = {test_instance_1, test_instance_2};
+
+  {  // all succeed
+    EXPECT_CALL(mock_ggp_, GetProjectsAsync())
+        .WillOnce(Return(Future<ErrorMessageOr<QVector<Project>>>(test_data.projects)));
+    EXPECT_CALL(mock_ggp_, GetDefaultProjectAsync())
+        .WillOnce(Return(Future<ErrorMessageOr<Project>>(test_data.default_project)));
+    EXPECT_CALL(mock_ggp_,
+                GetInstancesAsync(Client::InstanceListScope::kOnlyOwnInstances,
+                                  std::optional<Project>(test_data.project_of_instances)))
+        .WillOnce(Return(Future<ErrorMessageOr<QVector<Instance>>>(test_data.instances)));
+
+    auto future = retrieve_instances_.LoadProjectsAndInstances(
+        test_data.project_of_instances, Client::InstanceListScope::kOnlyOwnInstances);
+
+    VerifySuccessResult<RetrieveInstances::LoadProjectsAndInstancesResult>(
+        future, [test_data](auto result) {
+          EXPECT_EQ(result.default_project, test_data.default_project);
+          EXPECT_EQ(result.project_of_instances, test_data.project_of_instances);
+          EXPECT_EQ(result.projects, test_data.projects);
+          EXPECT_EQ(result.instances, test_data.instances);
+        });
+  }
+
+  {
+    // If project is not nullopt and the call has and error containing "it may not exist", there
+    // will be a retry (second call to GetInstancesAsync with nullopt). If that one succeeds, the
+    // whole call is successful.
+    EXPECT_CALL(mock_ggp_, GetProjectsAsync())
+        .WillOnce(Return(Future<ErrorMessageOr<QVector<Project>>>(test_data.projects)));
+    EXPECT_CALL(mock_ggp_, GetDefaultProjectAsync())
+        .WillOnce(Return(Future<ErrorMessageOr<Project>>(test_data.default_project)));
+    EXPECT_CALL(mock_ggp_,
+                GetInstancesAsync(Client::InstanceListScope::kOnlyOwnInstances,
+                                  std::optional<Project>(test_data.project_of_instances)))
+        .WillOnce(Return(ErrorMessage("it may not exist")));
+    EXPECT_CALL(mock_ggp_, GetInstancesAsync(Client::InstanceListScope::kOnlyOwnInstances,
+                                             std::optional<Project>(std::nullopt)))
+        .WillOnce(Return(Future<ErrorMessageOr<QVector<Instance>>>(test_data.instances)));
+
+    auto future = retrieve_instances_.LoadProjectsAndInstances(
+        test_data.project_of_instances, Client::InstanceListScope::kOnlyOwnInstances);
+    VerifySuccessResult<RetrieveInstances::LoadProjectsAndInstancesResult>(
+        future, [test_data](auto result) {
+          EXPECT_EQ(result.default_project, test_data.default_project);
+          EXPECT_EQ(result.project_of_instances, std::nullopt);
+          EXPECT_EQ(result.projects, test_data.projects);
+          EXPECT_EQ(result.instances, test_data.instances);
+        });
   }
 }
 
