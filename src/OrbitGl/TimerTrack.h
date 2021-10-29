@@ -64,7 +64,9 @@ class TimerTrack : public Track {
   // Track
   [[nodiscard]] Type GetType() const override { return Type::kTimerTrack; }
 
-  [[nodiscard]] uint32_t GetProcessId() const override { return timer_data_->GetProcessId(); }
+  [[nodiscard]] virtual uint32_t GetProcessId() const override {
+    return timer_data_->GetProcessId();
+  }
   [[nodiscard]] std::string GetExtraInfo(const orbit_client_protos::TimerInfo& timer) const;
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
@@ -76,7 +78,7 @@ class TimerTrack : public Track {
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetDown(
       const orbit_client_protos::TimerInfo& timer_info) const override;
 
-  [[nodiscard]] bool IsEmpty() const override;
+  [[nodiscard]] virtual bool IsEmpty() const override;
 
   [[nodiscard]] virtual float GetDefaultBoxHeight() const { return layout_->GetTextBoxHeight(); }
   [[nodiscard]] virtual float GetDynamicBoxHeight(
@@ -92,11 +94,11 @@ class TimerTrack : public Track {
   [[nodiscard]] int GetVisiblePrimitiveCount() const override { return visible_timer_count_; }
 
   [[nodiscard]] float GetHeight() const override;
-  [[nodiscard]] uint32_t GetDepth() const { return timer_data_->GetDepth(); }
+  [[nodiscard]] virtual uint32_t GetDepth() const { return timer_data_->GetDepth(); }
 
-  [[nodiscard]] size_t GetNumberOfTimers() const;
-  [[nodiscard]] uint64_t GetMinTime() const override;
-  [[nodiscard]] uint64_t GetMaxTime() const override;
+  [[nodiscard]] virtual size_t GetNumberOfTimers() const;
+  [[nodiscard]] virtual uint64_t GetMinTime() const override;
+  [[nodiscard]] virtual uint64_t GetMaxTime() const override;
 
  protected:
   void DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,

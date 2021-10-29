@@ -151,7 +151,7 @@ class CaptureData {
   void AddFunctionStats(uint64_t instrumented_function_id,
                         orbit_client_protos::FunctionStats stats);
 
-  void OnCaptureComplete(const std::vector<const orbit_client_data::TimerChain*>& chains);
+  void OnCaptureComplete();
 
   [[nodiscard]] const CallstackData& GetCallstackData() const { return callstack_data_; };
 

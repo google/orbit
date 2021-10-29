@@ -113,12 +113,14 @@ void CaptureData::AddFunctionStats(uint64_t instrumented_function_id,
   functions_stats_.insert_or_assign(instrumented_function_id, std::move(stats));
 }
 
-void CaptureData::OnCaptureComplete(
-    const std::vector<const orbit_client_data::TimerChain*>& chains) {
+void CaptureData::OnCaptureComplete() {
+  thread_track_data_provider_->OnCaptureComplete();
+
   // Recalculate standard deviation as the running calculation may have introduced error.
   absl::flat_hash_map<int, unsigned long> id_to_sum_of_deviations_squared;
 
-  for (const orbit_client_data::TimerChain* chain : chains) {
+  for (const orbit_client_data::TimerChain* chain :
+       thread_track_data_provider_->GetAllThreadTimerChains()) {
     CHECK(chain);
     for (const orbit_client_data::TimerBlock& block : *chain) {
       for (uint64_t i = 0; i < block.size(); i++) {
