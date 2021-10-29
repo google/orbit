@@ -27,16 +27,17 @@ class RetrieveInstances : public QObject {
                     QObject* parent = nullptr);
 
   orbit_base::Future<ErrorMessageOr<QVector<orbit_ggp::Instance>>> LoadInstances(
-      const std::optional<orbit_ggp::Project>& project, bool all);
+      const std::optional<orbit_ggp::Project>& project, orbit_ggp::Client::InstanceListScope scope);
   orbit_base::Future<ErrorMessageOr<QVector<orbit_ggp::Instance>>> LoadInstancesWithoutCache(
-      const std::optional<orbit_ggp::Project>& project, bool all);
+      const std::optional<orbit_ggp::Project>& project, orbit_ggp::Client::InstanceListScope scope);
 
  private:
   orbit_ggp::Client* ggp_client_;
   // To avoid race conditions to the instance_cache_, the main thread is used.
   MainThreadExecutor* main_thread_executor_;
-  absl::flat_hash_map<std::pair<std::optional<orbit_ggp::Project>, bool>,
-                      QVector<orbit_ggp::Instance>>
+  absl::flat_hash_map<
+      std::pair<std::optional<orbit_ggp::Project>, orbit_ggp::Client::InstanceListScope>,
+      QVector<orbit_ggp::Instance>>
       instance_cache_;
 };
 

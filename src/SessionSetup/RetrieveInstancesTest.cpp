@@ -20,6 +20,7 @@
 namespace orbit_session_setup {
 
 using orbit_base::Future;
+using orbit_ggp::Client;
 using orbit_ggp::Instance;
 using orbit_ggp::Project;
 using orbit_ggp::SshInfo;
@@ -29,9 +30,11 @@ using orbit_test_utils::HasValue;
 class MockGgpClient : public orbit_ggp::Client {
  public:
   MOCK_METHOD(Future<ErrorMessageOr<QVector<Instance>>>, GetInstancesAsync,
-              (bool /*all_reserved*/, std::optional<Project> /*project*/), (override));
+              (Client::InstanceListScope /*scope*/, std::optional<Project> /*project*/),
+              (override));
   MOCK_METHOD(Future<ErrorMessageOr<QVector<Instance>>>, GetInstancesAsync,
-              (bool /*all_reserved*/, std::optional<Project> /*project*/, int /*retry*/),
+              (Client::InstanceListScope /*scope*/, std::optional<Project> /*project*/,
+               int /*retry*/),
               (override));
   MOCK_METHOD(Future<ErrorMessageOr<SshInfo>>, GetSshInfoAsync,
               (const Instance& /*ggp_instance*/, std::optional<Project> /*project*/), (override));
@@ -47,7 +50,7 @@ class RetrieveInstancesTest : public testing::Test {
  public:
   RetrieveInstancesTest()
       : executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()),
-        retreive_instances_(&mock_ggp_, executor_.get(), QCoreApplication::instance()) {}
+        retrieve_instances_(&mock_ggp_, executor_.get(), QCoreApplication::instance()) {}
 
   template <typename T>
   static Future<ErrorMessageOr<T>> ReturnErrorFuture() {
@@ -85,32 +88,78 @@ class RetrieveInstancesTest : public testing::Test {
  protected:
   MockGgpClient mock_ggp_;
   std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> executor_;
-  RetrieveInstances retreive_instances_;
+  RetrieveInstances retrieve_instances_;
 };
 
 }  // namespace
 
 TEST_F(RetrieveInstancesTest, LoadInstancesCacheWorks) {
-  const std::optional<Project> project = std::nullopt;
-
   {  // Error case: cache is not used
-    EXPECT_CALL(mock_ggp_, GetInstancesAsync(false, std::optional<Project>(project)))
+    EXPECT_CALL(mock_ggp_, GetInstancesAsync(Client::InstanceListScope::kOnlyOwnInstances,
+                                             std::optional<Project>(std::nullopt)))
         .Times(3)
         .WillRepeatedly(&ReturnErrorFuture<QVector<Instance>>);
 
-    VerifyErrorResult(retreive_instances_.LoadInstances(project, false));
-    VerifyErrorResult(retreive_instances_.LoadInstances(project, false));
-    VerifyErrorResult(retreive_instances_.LoadInstances(project, false));
+    VerifyErrorResult(retrieve_instances_.LoadInstances(
+        std::nullopt, Client::InstanceListScope::kOnlyOwnInstances));
+    VerifyErrorResult(retrieve_instances_.LoadInstances(
+        std::nullopt, Client::InstanceListScope::kOnlyOwnInstances));
+    VerifyErrorResult(retrieve_instances_.LoadInstances(
+        std::nullopt, Client::InstanceListScope::kOnlyOwnInstances));
   }
 
-  {  // Success case: cache is used (ggp is only called once)
-    EXPECT_CALL(mock_ggp_, GetInstancesAsync(true, std::optional<Project>(project)))
+  {  // Success case: cache is used (ggp is only called once for every combination)
+    EXPECT_CALL(mock_ggp_, GetInstancesAsync(Client::InstanceListScope::kOnlyOwnInstances,
+                                             std::optional<Project>(std::nullopt)))
         .Times(1)
         .WillRepeatedly(&ReturnDefaultSuccessFuture<QVector<Instance>>);
 
-    VerifyDefaultSuccessResult(retreive_instances_.LoadInstances(project, true));
-    VerifyDefaultSuccessResult(retreive_instances_.LoadInstances(project, true));
-    VerifyDefaultSuccessResult(retreive_instances_.LoadInstances(project, true));
+    EXPECT_CALL(mock_ggp_, GetInstancesAsync(Client::InstanceListScope::kAllReservedInstances,
+                                             std::optional<Project>(std::nullopt)))
+        .Times(1)
+        .WillRepeatedly(&ReturnDefaultSuccessFuture<QVector<Instance>>);
+
+    const Project test_project{"Test Display Name", "test_project_id"};
+    EXPECT_CALL(mock_ggp_, GetInstancesAsync(Client::InstanceListScope::kOnlyOwnInstances,
+                                             std::optional<Project>(test_project)))
+        .Times(1)
+        .WillRepeatedly(&ReturnDefaultSuccessFuture<QVector<Instance>>);
+
+    EXPECT_CALL(mock_ggp_, GetInstancesAsync(Client::InstanceListScope::kAllReservedInstances,
+                                             std::optional<Project>(test_project)))
+        .Times(1)
+        .WillRepeatedly(&ReturnDefaultSuccessFuture<QVector<Instance>>);
+
+    // 2 times each combination
+    VerifyDefaultSuccessResult(retrieve_instances_.LoadInstances(
+        std::nullopt, Client::InstanceListScope::kOnlyOwnInstances));
+    VerifyDefaultSuccessResult(retrieve_instances_.LoadInstances(
+        std::nullopt, Client::InstanceListScope::kOnlyOwnInstances));
+
+    VerifyDefaultSuccessResult(retrieve_instances_.LoadInstances(
+        std::nullopt, Client::InstanceListScope::kAllReservedInstances));
+    VerifyDefaultSuccessResult(retrieve_instances_.LoadInstances(
+        std::nullopt, Client::InstanceListScope::kAllReservedInstances));
+
+    VerifyDefaultSuccessResult(retrieve_instances_.LoadInstances(
+        test_project, Client::InstanceListScope::kOnlyOwnInstances));
+    VerifyDefaultSuccessResult(retrieve_instances_.LoadInstances(
+        test_project, Client::InstanceListScope::kOnlyOwnInstances));
+
+    VerifyDefaultSuccessResult(retrieve_instances_.LoadInstances(
+        test_project, Client::InstanceListScope::kAllReservedInstances));
+    VerifyDefaultSuccessResult(retrieve_instances_.LoadInstances(
+        test_project, Client::InstanceListScope::kAllReservedInstances));
+
+    // one more time each call
+    VerifyDefaultSuccessResult(retrieve_instances_.LoadInstances(
+        std::nullopt, Client::InstanceListScope::kOnlyOwnInstances));
+    VerifyDefaultSuccessResult(retrieve_instances_.LoadInstances(
+        std::nullopt, Client::InstanceListScope::kAllReservedInstances));
+    VerifyDefaultSuccessResult(retrieve_instances_.LoadInstances(
+        test_project, Client::InstanceListScope::kOnlyOwnInstances));
+    VerifyDefaultSuccessResult(retrieve_instances_.LoadInstances(
+        test_project, Client::InstanceListScope::kAllReservedInstances));
   }
 }
 
@@ -118,21 +167,27 @@ TEST_F(RetrieveInstancesTest, LoadInstancesWithoutCacheAlwaysCallsGgpErrorCase) 
   const std::optional<Project> project = std::nullopt;
 
   {  // With error
-    EXPECT_CALL(mock_ggp_, GetInstancesAsync(false, std::optional<Project>(project)))
+    EXPECT_CALL(mock_ggp_, GetInstancesAsync(Client::InstanceListScope::kOnlyOwnInstances,
+                                             std::optional<Project>(project)))
         .Times(2)
         .WillRepeatedly(&ReturnErrorFuture<QVector<Instance>>);
 
-    VerifyErrorResult(retreive_instances_.LoadInstancesWithoutCache(project, false));
-    VerifyErrorResult(retreive_instances_.LoadInstancesWithoutCache(project, false));
+    VerifyErrorResult(retrieve_instances_.LoadInstancesWithoutCache(
+        project, Client::InstanceListScope::kOnlyOwnInstances));
+    VerifyErrorResult(retrieve_instances_.LoadInstancesWithoutCache(
+        project, Client::InstanceListScope::kOnlyOwnInstances));
   }
 
   {  // With success
-    EXPECT_CALL(mock_ggp_, GetInstancesAsync(false, std::optional<Project>(project)))
+    EXPECT_CALL(mock_ggp_, GetInstancesAsync(Client::InstanceListScope::kOnlyOwnInstances,
+                                             std::optional<Project>(project)))
         .Times(2)
         .WillRepeatedly(&ReturnDefaultSuccessFuture<QVector<Instance>>);
 
-    VerifyDefaultSuccessResult(retreive_instances_.LoadInstancesWithoutCache(project, false));
-    VerifyDefaultSuccessResult(retreive_instances_.LoadInstancesWithoutCache(project, false));
+    VerifyDefaultSuccessResult(retrieve_instances_.LoadInstancesWithoutCache(
+        project, Client::InstanceListScope::kOnlyOwnInstances));
+    VerifyDefaultSuccessResult(retrieve_instances_.LoadInstancesWithoutCache(
+        project, Client::InstanceListScope::kOnlyOwnInstances));
   }
 }
 

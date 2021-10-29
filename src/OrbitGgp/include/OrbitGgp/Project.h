@@ -27,7 +27,7 @@ struct Project {
 
   template <typename H>
   friend H AbslHashValue(H h, const Project& project) {
-    return H::combine(std::move(h), project.display_name, project.id);
+    return H::combine(std::move(h), project.display_name.toStdString(), project.id.toStdString());
   }
 };
 

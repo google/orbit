@@ -64,7 +64,8 @@ TEST_F(OrbitGgpClientTest, GetInstancesAsyncWorking) {
 
   bool future_is_resolved = false;
 
-  auto future = client.value()->GetInstancesAsync(false, std::nullopt);
+  auto future =
+      client.value()->GetInstancesAsync(Client::InstanceListScope::kOnlyOwnInstances, std::nullopt);
   future.Then(main_thread_executor_.get(),
               [&future_is_resolved](ErrorMessageOr<QVector<Instance>> instances) {
                 EXPECT_FALSE(future_is_resolved);
@@ -84,7 +85,8 @@ TEST_F(OrbitGgpClientTest, GetInstancesAsyncWorkingAllReserved) {
   ASSERT_THAT(client, HasValue());
 
   bool future_is_resolved = false;
-  auto future = client.value()->GetInstancesAsync(true, std::nullopt);
+  auto future = client.value()->GetInstancesAsync(Client::InstanceListScope::kAllReservedInstances,
+                                                  std::nullopt);
   future.Then(main_thread_executor_.get(),
               [&future_is_resolved](ErrorMessageOr<QVector<Instance>> instances) {
                 EXPECT_FALSE(future_is_resolved);
@@ -107,7 +109,8 @@ TEST_F(OrbitGgpClientTest, GetInstancesAsyncWorkingWithProject) {
 
   bool future_is_resolved = false;
 
-  auto future = client.value()->GetInstancesAsync(false, project);
+  auto future =
+      client.value()->GetInstancesAsync(Client::InstanceListScope::kOnlyOwnInstances, project);
   future.Then(main_thread_executor_.get(),
               [&future_is_resolved](ErrorMessageOr<QVector<Instance>> instances) {
                 EXPECT_FALSE(future_is_resolved);
@@ -130,7 +133,8 @@ TEST_F(OrbitGgpClientTest, GetInstancesAsyncWorkingAllReservedWithProject) {
 
   bool future_is_resolved = false;
 
-  auto future = client.value()->GetInstancesAsync(true, project);
+  auto future =
+      client.value()->GetInstancesAsync(Client::InstanceListScope::kAllReservedInstances, project);
   future.Then(main_thread_executor_.get(),
               [&future_is_resolved](ErrorMessageOr<QVector<Instance>> instances) {
                 EXPECT_FALSE(future_is_resolved);
@@ -152,7 +156,8 @@ TEST_F(OrbitGgpClientTest, GetInstancesAsyncTimeout) {
   ASSERT_THAT(client, HasValue());
 
   bool future_is_resolved = false;
-  auto future = client.value()->GetInstancesAsync(false, std::nullopt);
+  auto future =
+      client.value()->GetInstancesAsync(Client::InstanceListScope::kOnlyOwnInstances, std::nullopt);
   future.Then(main_thread_executor_.get(),
               [&future_is_resolved](const ErrorMessageOr<QVector<Instance>>& instances) {
                 EXPECT_FALSE(future_is_resolved);
@@ -177,7 +182,8 @@ TEST_F(OrbitGgpClientTest, GetInstancesAsyncClientGetsDestroyed) {
         CreateClient(QString::fromStdString(mock_ggp_working_.string()));
     ASSERT_THAT(client, HasValue());
 
-    future = client.value()->GetInstancesAsync(false, std::nullopt);
+    future = client.value()->GetInstancesAsync(Client::InstanceListScope::kOnlyOwnInstances,
+                                               std::nullopt);
 
     future.Then(main_thread_executor_.get(),
                 [&future_is_resolved](const ErrorMessageOr<QVector<Instance>>& instances_result) {

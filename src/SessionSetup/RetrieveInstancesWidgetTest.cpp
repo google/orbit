@@ -26,9 +26,11 @@ using orbit_ggp::SshInfo;
 class MockGgpClient : public orbit_ggp::Client {
  public:
   MOCK_METHOD(Future<ErrorMessageOr<QVector<Instance>>>, GetInstancesAsync,
-              (bool /*all_reserved*/, std::optional<Project> /*project*/), (override));
+              (orbit_ggp::Client::InstanceListScope /*scope*/, std::optional<Project> /*project*/),
+              (override));
   MOCK_METHOD(Future<ErrorMessageOr<QVector<Instance>>>, GetInstancesAsync,
-              (bool /*all_reserved*/, std::optional<Project> /*project*/, int /*retry*/),
+              (orbit_ggp::Client::InstanceListScope /*scope*/, std::optional<Project> /*project*/,
+               int /*retry*/),
               (override));
   MOCK_METHOD(Future<ErrorMessageOr<SshInfo>>, GetSshInfoAsync,
               (const Instance& /*ggp_instance*/, std::optional<Project> /*project*/), (override));
