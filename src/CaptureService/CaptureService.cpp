@@ -51,12 +51,13 @@ void CaptureService::RemoveCaptureStartStopListener(CaptureStartStopListener* li
   CHECK(was_removed);
 }
 
-ErrorMessageOr<void> CaptureService::InitializeCapture(
+grpc::Status CaptureService::InitializeCapture(
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   {
     absl::MutexLock lock(&capture_mutex_);
     if (is_capturing) {
-      return ErrorMessage("Cannot start capture because another capture is already in progress");
+      return grpc::Status(grpc::StatusCode::ALREADY_EXISTS,
+                          "Cannot start capture because another capture is already in progress");
     }
     is_capturing = true;
   }
@@ -67,7 +68,7 @@ ErrorMessageOr<void> CaptureService::InitializeCapture(
   producer_event_processor_ =
       ProducerEventProcessor::Create(grpc_client_capture_event_collector_.get());
 
-  return outcome::success();
+  return grpc::Status::OK;
 }
 
 void CaptureService::TerminateCapture() {
@@ -79,20 +80,21 @@ void CaptureService::TerminateCapture() {
   is_capturing = false;
 }
 
-void CaptureService::WaitForStartCaptureRequestFromClient(
+CaptureRequest CaptureService::WaitForStartCaptureRequestFromClient(
     grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse, orbit_grpc_protos::CaptureRequest>*
-        reader_writer,
-    orbit_grpc_protos::CaptureRequest& request) {
+        reader_writer) {
+  CaptureRequest request;
   // This call is blocking.
   reader_writer->Read(&request);
 
   LOG("Read CaptureRequest from Capture's gRPC stream: starting capture");
+  return std::move(request);
 }
 
 void CaptureService::WaitForEndCaptureRequestFromClient(
     grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse, orbit_grpc_protos::CaptureRequest>*
-        reader_writer,
-    orbit_grpc_protos::CaptureRequest& request) {
+        reader_writer) {
+  orbit_grpc_protos::CaptureRequest request;
   // The client asks for the capture to be stopped by calling WritesDone. At that point, this call
   // to Read will return false. In the meantime, it blocks if no message is received.
   while (reader_writer->Read(&request)) {

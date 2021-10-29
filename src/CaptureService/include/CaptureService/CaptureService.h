@@ -20,7 +20,7 @@
 
 namespace orbit_capture_service {
 
-// CaptureService is an interface derived from the grpc capture service. It holds common
+// CaptureService is an abstract class derived from the grpc capture service. It holds common
 // functionality shared by the platform-specific capture services.
 class CaptureService : public orbit_grpc_protos::CaptureService::Service {
  public:
@@ -36,38 +36,35 @@ class CaptureService : public orbit_grpc_protos::CaptureService::Service {
   void RemoveCaptureStartStopListener(CaptureStartStopListener* listener);
 
  protected:
-  void EstimateAndLogClockResolution();
-
-  ErrorMessageOr<void> InitializeCapture(
+  grpc::Status InitializeCapture(
       grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse,
                                orbit_grpc_protos::CaptureRequest>* reader_writer);
   void TerminateCapture();
 
-  void WaitForStartCaptureRequestFromClient(
+  orbit_grpc_protos::CaptureRequest WaitForStartCaptureRequestFromClient(
       grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse,
-                               orbit_grpc_protos::CaptureRequest>* reader_writer,
-      orbit_grpc_protos::CaptureRequest& request);
+                               orbit_grpc_protos::CaptureRequest>* reader_writer);
 
   void WaitForEndCaptureRequestFromClient(
       grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse,
-                               orbit_grpc_protos::CaptureRequest>* reader_writer,
-      orbit_grpc_protos::CaptureRequest& request);
+                               orbit_grpc_protos::CaptureRequest>* reader_writer);
 
   void StartEventProcessing(const orbit_grpc_protos::CaptureOptions& capture_options);
   void FinalizeEventProcessing();
-
- protected:
-  mutable absl::Mutex capture_mutex_;
-  bool is_capturing = false;
 
   std::unique_ptr<orbit_producer_event_processor::GrpcClientCaptureEventCollector>
       grpc_client_capture_event_collector_;
   std::unique_ptr<orbit_producer_event_processor::ProducerEventProcessor> producer_event_processor_;
 
   absl::flat_hash_set<CaptureStartStopListener*> capture_start_stop_listeners_;
+  uint64_t capture_start_timestamp_ns_ = 0;
+
+ private:
+  void EstimateAndLogClockResolution();
 
   uint64_t clock_resolution_ns_ = 0;
-  uint64_t capture_start_timestamp_ns_ = 0;
+  absl::Mutex capture_mutex_;
+  bool is_capturing = false;
 };
 
 }  // namespace orbit_capture_service

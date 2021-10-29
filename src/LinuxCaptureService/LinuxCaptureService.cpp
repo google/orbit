@@ -118,17 +118,15 @@ grpc::Status LinuxCaptureService::Capture(
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   orbit_base::SetCurrentThreadName("CSImpl::Capture");
 
-  ErrorMessageOr<void> result = InitializeCapture(reader_writer);
-  if (result.has_error()) {
-    return grpc::Status(grpc::StatusCode::ALREADY_EXISTS, result.error().message());
+  grpc::Status result = InitializeCapture(reader_writer);
+  if (!result.ok()) {
+    return result;
   }
 
   TracingHandler tracing_handler{producer_event_processor_.get()};
   MemoryInfoHandler memory_info_handler{producer_event_processor_.get()};
 
-  CaptureRequest request;
-  reader_writer->Read(&request);
-  LOG("Read CaptureRequest from Capture's gRPC stream: starting capture");
+  CaptureRequest request = WaitForStartCaptureRequestFromClient(reader_writer);
 
   const CaptureOptions& capture_options = request.capture_options();
 
@@ -194,7 +192,7 @@ grpc::Status LinuxCaptureService::Capture(
     listener->OnCaptureStartRequested(request.capture_options(), producer_event_processor_.get());
   }
 
-  WaitForEndCaptureRequestFromClient(reader_writer, request);
+  WaitForEndCaptureRequestFromClient(reader_writer);
 
   // Disable Orbit API in tracee.
   if (capture_options.enable_api()) {

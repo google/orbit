@@ -2,9 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CAPTURE_SERVICE_COMMON_PRODUCER_CAPTURE_EVENT_BUILDER_H_
-#define CAPTURE_SERVICE_COMMON_PRODUCER_CAPTURE_EVENT_BUILDER_H_
-
 #include "CaptureService/CommonProducerCaptureEventBuilders.h"
 
 #include <string>
@@ -133,5 +130,3 @@ ProducerCaptureEvent CreateWarningEvent(uint64_t timestamp_ns, std::string messa
 }
 
 }  // namespace orbit_capture_service
-
-#endif  // CAPTURE_SERVICE_COMMON_PRODUCER_CAPTURE_EVENT_BUILDER_H_

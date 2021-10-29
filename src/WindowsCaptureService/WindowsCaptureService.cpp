@@ -21,23 +21,18 @@ grpc::Status WindowsCaptureService::Capture(
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   orbit_base::SetCurrentThreadName("WinCS::Capture");
 
-  ErrorMessageOr<void> result = InitializeCapture(reader_writer);
-  if (result.has_error()) {
-    return grpc::Status(grpc::StatusCode::ALREADY_EXISTS, result.error().message());
+  grpc::Status result = InitializeCapture(reader_writer);
+  if (!result.ok()) {
+    return result;
   }
 
-  TracingHandler tracing_handler{producer_event_processor_.get()};
-  CaptureRequest request;
-
-  WaitForStartCaptureRequestFromClient(reader_writer, request);
+  CaptureRequest request = WaitForStartCaptureRequestFromClient(reader_writer);
 
   StartEventProcessing(request.capture_options());
+  TracingHandler tracing_handler{producer_event_processor_.get()};
   tracing_handler.Start(request.capture_options());
-
-  WaitForEndCaptureRequestFromClient(reader_writer, request);
-
+  WaitForEndCaptureRequestFromClient(reader_writer);
   tracing_handler.Stop();
-  LOG("Windows TracingHandler stopped: etw tracing is done");
   FinalizeEventProcessing();
 
   TerminateCapture();

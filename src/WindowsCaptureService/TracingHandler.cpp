@@ -30,6 +30,7 @@ void TracingHandler::Stop() {
   CHECK(tracer_ != nullptr);
   tracer_->Stop();
   tracer_.reset();
+  LOG("Windows TracingHandler stopped: ETW tracing is done");
 }
 
 void TracingHandler::OnSchedulingSlice(SchedulingSlice scheduling_slice) {
