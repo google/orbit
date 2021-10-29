@@ -51,9 +51,8 @@ class CaptureFileOutputStreamImpl final : public CaptureFileOutputStream {
 
   std::filesystem::path path_;
   orbit_base::unique_fd fd_;
-  std::optional<google::protobuf::io::FileOutputStream> file_output_stream_;
   BufferOutputStream* output_buffer_ = nullptr;
-  std::optional<google::protobuf::io::CopyingOutputStreamAdaptor> buffer_output_adaptor_;
+  std::unique_ptr<google::protobuf::io::ZeroCopyOutputStream> zero_copy_output_stream_;
   std::optional<google::protobuf::io::CodedOutputStream> coded_output_;
 };
 
@@ -69,8 +68,8 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::Initialize() {
     case OutputType::kBuffer: {
       CHECK(output_buffer_ != nullptr);
 
-      buffer_output_adaptor_.emplace(output_buffer_);
-      coded_output_.emplace(&buffer_output_adaptor_.value());
+      zero_copy_output_stream_ =
+          std::make_unique<google::protobuf::io::CopyingOutputStreamAdaptor>(output_buffer_);
       break;
     }
     case OutputType::kFile: {
@@ -79,11 +78,13 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::Initialize() {
       fd_ = std::move(fd_or_error.value());
       CHECK(fd_.valid());
 
-      file_output_stream_.emplace(fd_.get());
-      coded_output_.emplace(&file_output_stream_.value());
+      zero_copy_output_stream_ =
+          std::make_unique<google::protobuf::io::FileOutputStream>(fd_.get());
       break;
     }
   }
+
+  coded_output_.emplace(zero_copy_output_stream_.get());
 
   if (auto result = WriteHeader(); result.has_error()) {
     return result.error();
@@ -103,13 +104,12 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::Close() {
 }
 
 void CaptureFileOutputStreamImpl::Reset() {
-  // Destroy coded_output_ before destroying the underlaying ZeroCopyOutputStream (i.e.,
-  // file_output_stream_ and buffer_output_adaptor_) to guarantee that coded_output_ flushes all
-  // data to the underlaying ZeroCopyOutputStream and trims the unused bytes.
+  // Destroy coded_output_ before destroying the underlaying ZeroCopyOutputStream to guarantee that
+  // coded_output_ flushes all data to the underlaying ZeroCopyOutputStream and trims the unused
+  // bytes.
   coded_output_.reset();
-  file_output_stream_.reset();
+  zero_copy_output_stream_.reset(nullptr);
   fd_.release();
-  buffer_output_adaptor_.reset();
   output_buffer_ = nullptr;
 }
 
@@ -122,7 +122,6 @@ bool CaptureFileOutputStreamImpl::IsOpen() {
   }
 
   UNREACHABLE();
-  return false;
 }
 
 void CaptureFileOutputStreamImpl::CloseAndTryRemoveFileAfterError() {
@@ -137,7 +136,9 @@ std::string_view CaptureFileOutputStreamImpl::GetErrorFromOutputStream() const {
   // There should not be any write error in the case of `OutputType::kBuffer` as we do not limit the
   // buffer size of BufferOutputStream.
   CHECK(output_type_ == OutputType::kFile);
-  return SafeStrerror(file_output_stream_->GetErrno());
+  auto file_output_stream =
+      static_cast<google::protobuf::io::FileOutputStream*>(zero_copy_output_stream_.get());
+  return SafeStrerror(file_output_stream->GetErrno());
 }
 
 ErrorMessage CaptureFileOutputStreamImpl::HandleWriteError(const char* section_name,
@@ -152,15 +153,7 @@ ErrorMessage CaptureFileOutputStreamImpl::HandleWriteError(const char* section_n
 ErrorMessageOr<void> CaptureFileOutputStreamImpl::WriteCaptureEvent(
     const orbit_grpc_protos::ClientCaptureEvent& event) {
   CHECK(coded_output_.has_value());
-
-  switch (output_type_) {
-    case OutputType::kBuffer:
-      CHECK(buffer_output_adaptor_.has_value());
-      break;
-    case OutputType::kFile:
-      CHECK(file_output_stream_.has_value());
-      break;
-  }
+  CHECK(zero_copy_output_stream_ != nullptr);
 
   uint32_t event_size = event.ByteSizeLong();
   coded_output_->WriteVarint32(event_size);
