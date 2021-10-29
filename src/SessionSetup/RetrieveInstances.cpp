@@ -78,7 +78,7 @@ RetrieveInstances::LoadProjectsAndInstances(const std::optional<orbit_ggp::Proje
                     ErrorMessageOr<QVector<Instance>> instances) -> Future<ErrorMessageOr<void>> {
                   if (instances.has_value()) {
                     projects_and_instances_load_result_.instances = instances.value();
-                    projects_and_instances_load_result_.instances_project = project;
+                    projects_and_instances_load_result_.project_of_instances = project;
                     return Future<ErrorMessageOr<void>>{outcome::success()};
                   }
                   if (project == std::nullopt ||
@@ -93,7 +93,7 @@ RetrieveInstances::LoadProjectsAndInstances(const std::optional<orbit_ggp::Proje
                           main_thread_executor_,
                           [this](QVector<Instance> instances) -> ErrorMessageOr<void> {
                             projects_and_instances_load_result_.instances = std::move(instances);
-                            projects_and_instances_load_result_.instances_project = std::nullopt;
+                            projects_and_instances_load_result_.project_of_instances = std::nullopt;
                             return outcome::success();
                           });
                 }));
@@ -105,21 +105,23 @@ RetrieveInstances::LoadProjectsAndInstances(const std::optional<orbit_ggp::Proje
       main_thread_executor_,
       [this](std::vector<ErrorMessageOr<void>> result_vector)
           -> ErrorMessageOr<LoadProjectsAndInstancesResult> {
-        std::vector<ErrorMessageOr<void>> collected_errors;
-        std::copy_if(result_vector.begin(), result_vector.end(),
-                     std::back_inserter(collected_errors),
-                     [](const ErrorMessageOr<void>& result) { return result.has_error(); });
+        // Remove all that are not errors
+        result_vector.erase(
+            std::remove_if(result_vector.begin(), result_vector.end(),
+                           [](const ErrorMessageOr<void>& result) { return !result.has_error(); }),
+            result_vector.end());
 
-        if (collected_errors.empty()) {
+        if (result_vector.empty()) {
           return projects_and_instances_load_result_;
         }
 
-        std::vector<std::string> error_messages;
-        std::transform(collected_errors.begin(), collected_errors.end(),
-                       std::back_inserter(error_messages),
-                       [](ErrorMessageOr<void> error) { return error.error().message(); });
+        std::string combined_error_messages = absl::StrJoin(
+            result_vector, "\n", [](std::string* out, const ErrorMessageOr<void>& err) {
+              out->append(err.error().message());
+            });
 
-        std::string combined_error_messages = absl::StrJoin(error_messages, "\n");
+        LOG(" --- combined error message: %s", combined_error_messages);
+
         return ErrorMessage{
             absl::StrFormat("The following error occured:\n%s", combined_error_messages)};
       });

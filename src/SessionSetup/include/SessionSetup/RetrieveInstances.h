@@ -26,7 +26,7 @@ class RetrieveInstances : public QObject {
     QVector<orbit_ggp::Project> projects;
     orbit_ggp::Project default_project;
     QVector<orbit_ggp::Instance> instances;
-    std::optional<orbit_ggp::Project> instances_project;
+    std::optional<orbit_ggp::Project> project_of_instances;
   };
 
   RetrieveInstances(orbit_ggp::Client* ggp_client, MainThreadExecutor* main_thread_executor,
