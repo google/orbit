@@ -11,8 +11,9 @@
 
 namespace {
 template <typename Distribution, typename UnaryOperation>
-void ForEachCentile(uint32_t numCentiles, const Distribution& distribution, UnaryOperation&& operation) {
-  uint32_t populationSize = std::accumulate(std::begin(distribution), std::end(distribution), 0 );
+void ForEachCentile(uint32_t numCentiles, const Distribution& distribution,
+                    UnaryOperation&& operation) {
+  uint32_t populationSize = std::accumulate(std::begin(distribution), std::end(distribution), 0);
   size_t currentBucket = 0;
   uint32_t runningCount = 0;
   for (uint32_t centile = 1; centile <= numCentiles; ++centile) {

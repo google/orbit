@@ -8,7 +8,6 @@
 #include <absl/flags/usage.h>
 #include <absl/strings/match.h>
 #include <absl/time/clock.h>
-#include <absl/strings/match.h>
 #include <grpcpp/grpcpp.h>
 
 #if defined(__linux)
@@ -94,7 +93,8 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOff
 void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFunctionNameInDebugSymbols(
     orbit_client_data::ModuleManager* module_manager,
     absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>* selected_functions,
-    const std::string& file_path, const std::string& demangled_function_name, uint64_t function_id) {
+    const std::string& file_path, const std::string& demangled_function_name,
+    uint64_t function_id) {
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
       orbit_object_utils::CreateElfFile(std::filesystem::path{file_path});
   FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
@@ -110,8 +110,7 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFun
   module_info.set_executable_segment_offset(executable_segment_offset);
   CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
 
-  ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> symbols_or_error =
-      elf_file->LoadDebugSymbols();
+  ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> symbols_or_error = elf_file->LoadDebugSymbols();
   FAIL_IF(symbols_or_error.has_error(), "%s", symbols_or_error.error().message());
   orbit_grpc_protos::ModuleSymbols& symbols = symbols_or_error.value();
 
@@ -400,7 +399,9 @@ int main(int argc, char* argv[]) {
     // function addresses and use those. So lets just instrument the layer
     // `orbit_vulkan_layer::OrbitQueuePresentKHR`
     static const std::string kGgpvlkModuleName = "ggpvlk.so";
-    static const std::string kQueuePresentFunctionName{"yeti::internal::vulkan::(anonymous namespace)::QueuePresentKHR(VkQueue_T*, VkPresentInfoKHR const*)"};
+    static const std::string kQueuePresentFunctionName{
+        "yeti::internal::vulkan::(anonymous namespace)::QueuePresentKHR(VkQueue_T*, "
+        "VkPresentInfoKHR const*)"};
 
     ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> modules_or_error =
         orbit_object_utils::ReadModules(process_id);
@@ -413,11 +414,10 @@ int main(int argc, char* argv[]) {
       }
     }
     if (!libvulkan_file_path.empty()) {
-      LOG("%s found: instrumenting %s", kGgpvlkModuleName,
-          kQueuePresentFunctionName);
+      LOG("%s found: instrumenting %s", kGgpvlkModuleName, kQueuePresentFunctionName);
       ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFunctionNameInDebugSymbols(
-          &module_manager, &selected_functions, libvulkan_file_path,
-          kQueuePresentFunctionName, orbit_fake_client::FakeCaptureEventProcessor::kFrameBoundaryFunctionId);
+          &module_manager, &selected_functions, libvulkan_file_path, kQueuePresentFunctionName,
+          orbit_fake_client::FakeCaptureEventProcessor::kFrameBoundaryFunctionId);
       LOG("%s instrumented", kQueuePresentFunctionName);
     } else {
       LOG("%s not found", kGgpvlkModuleName);
