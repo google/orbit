@@ -204,7 +204,7 @@ ErrorMessageOr<std::unique_ptr<CaptureFileOutputStream>> CaptureFileOutputStream
   return implementation;
 }
 
-ErrorMessageOr<std::unique_ptr<CaptureFileOutputStream>> CaptureFileOutputStream::Create(
+std::unique_ptr<CaptureFileOutputStream> CaptureFileOutputStream::Create(
     BufferOutputStream* output_buffer) {
   auto implementation = std::make_unique<CaptureFileOutputStreamImpl>(output_buffer);
   auto init_result = implementation->Initialize();

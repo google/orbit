@@ -55,7 +55,7 @@ class CaptureFileOutputStream {
   // overwritten.
   [[nodiscard]] static ErrorMessageOr<std::unique_ptr<CaptureFileOutputStream>> Create(
       std::filesystem::path path);
-  [[nodiscard]] static ErrorMessageOr<std::unique_ptr<CaptureFileOutputStream>> Create(
+  [[nodiscard]] static std::unique_ptr<CaptureFileOutputStream> Create(
       BufferOutputStream* output_buffer);
 };
 

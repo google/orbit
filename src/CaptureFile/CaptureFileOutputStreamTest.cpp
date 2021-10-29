@@ -103,11 +103,8 @@ TEST(CaptureFileOutputStream, Smoke) {
   // Test the case of outputting capture file content to a vector of raw buffers
   {
     BufferOutputStream output_buffer;
-    auto output_stream_or_error = CaptureFileOutputStream::Create(&output_buffer);
-    ASSERT_TRUE(output_stream_or_error.has_value()) << output_stream_or_error.error().message();
-
     std::unique_ptr<CaptureFileOutputStream> output_stream =
-        std::move(output_stream_or_error.value());
+        CaptureFileOutputStream::Create(&output_buffer);
     EXPECT_TRUE(output_stream->IsOpen());
     write_events_then_close(output_stream.get());
 
@@ -150,10 +147,8 @@ TEST(CaptureFileOutputStream, WriteAfterClose) {
   // Test the case of outputting capture file content to a vector of raw buffers
   {
     BufferOutputStream output_buffer;
-    auto output_stream_or_error = CaptureFileOutputStream::Create(&output_buffer);
-    ASSERT_TRUE(output_stream_or_error.has_value()) << output_stream_or_error.error().message();
     std::unique_ptr<CaptureFileOutputStream> output_stream =
-        std::move(output_stream_or_error.value());
+        CaptureFileOutputStream::Create(&output_buffer);
     check_write_after_close(output_stream.get());
   }
 }
