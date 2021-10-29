@@ -17,18 +17,26 @@
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/Instance.h"
 #include "OrbitGgp/Project.h"
-#include "SessionSetup/RetrieveInstancesWidget.h"
 
 namespace orbit_session_setup {
 
 class RetrieveInstances : public QObject {
  public:
+  struct LoadProjectsAndInstancesResult {
+    QVector<orbit_ggp::Project> projects;
+    orbit_ggp::Project default_project;
+    QVector<orbit_ggp::Instance> instances;
+    std::optional<orbit_ggp::Project> instances_project;
+  };
+
   RetrieveInstances(orbit_ggp::Client* ggp_client, MainThreadExecutor* main_thread_executor,
                     QObject* parent = nullptr);
 
   orbit_base::Future<ErrorMessageOr<QVector<orbit_ggp::Instance>>> LoadInstances(
       const std::optional<orbit_ggp::Project>& project, orbit_ggp::Client::InstanceListScope scope);
   orbit_base::Future<ErrorMessageOr<QVector<orbit_ggp::Instance>>> LoadInstancesWithoutCache(
+      const std::optional<orbit_ggp::Project>& project, orbit_ggp::Client::InstanceListScope scope);
+  orbit_base::Future<ErrorMessageOr<LoadProjectsAndInstancesResult>> LoadProjectsAndInstances(
       const std::optional<orbit_ggp::Project>& project, orbit_ggp::Client::InstanceListScope scope);
 
  private:
@@ -39,6 +47,7 @@ class RetrieveInstances : public QObject {
       std::pair<std::optional<orbit_ggp::Project>, orbit_ggp::Client::InstanceListScope>,
       QVector<orbit_ggp::Instance>>
       instance_cache_;
+  LoadProjectsAndInstancesResult projects_and_instances_load_result_;
 };
 
 }  // namespace orbit_session_setup
