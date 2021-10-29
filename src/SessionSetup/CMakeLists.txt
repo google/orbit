@@ -16,6 +16,7 @@ target_sources(
           include/SessionSetup/Error.h
           include/SessionSetup/OverlayWidget.h
           include/SessionSetup/ProcessItemModel.h
+          include/SessionSetup/RetrieveInstances.h
           include/SessionSetup/RetrieveInstancesWidget.h
           include/SessionSetup/ServiceDeployManager.h
           include/SessionSetup/SessionSetupDialog.h
@@ -33,6 +34,7 @@ target_sources(
           OverlayWidget.cpp
           OverlayWidget.ui
           ProcessItemModel.cpp
+          RetrieveInstances.cpp
           RetrieveInstancesWidget.cpp
           RetrieveInstancesWidget.ui
           ServiceDeployManager.cpp
@@ -68,6 +70,7 @@ target_sources(
   PRIVATE ConnectToStadiaWidgetTest.cpp
           DoubleClickableLabelTest.cpp
           ProcessItemModelTest.cpp
+          RetrieveInstancesTest.cpp
           RetrieveInstancesWidgetTest.cpp
           SessionSetupDialogTest.cpp
           TargetLabelTest.cpp)
@@ -76,6 +79,7 @@ target_sources(
 target_link_libraries(
   SessionSetupTest
   PRIVATE SessionSetup
+          TestUtils
           GTest::QtGuiMain
           Qt5::Test)
 

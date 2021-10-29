@@ -352,7 +352,12 @@ void ConnectToStadiaWidget::ReloadInstances() {
   CHECK(ggp_client_ != nullptr);
   instance_model_.SetInstances({});
 
-  ggp_client_->GetInstancesAsync(ui_->allInstancesCheckBox->isChecked(), selected_project_)
+  orbit_ggp::Client::InstanceListScope scope =
+      ui_->allInstancesCheckBox->isChecked()
+          ? orbit_ggp::Client::InstanceListScope::kAllReservedInstances
+          : orbit_ggp::Client::InstanceListScope::kOnlyOwnInstances;
+
+  ggp_client_->GetInstancesAsync(scope, selected_project_)
       .Then(main_thread_executor_.get(), [this](ErrorMessageOr<QVector<Instance>> instances) {
         OnInstancesLoaded(std::move(instances));
       });

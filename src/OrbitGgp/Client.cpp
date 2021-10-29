@@ -40,8 +40,8 @@ class ClientImpl : public Client, public QObject {
       : ggp_program_(std::move(ggp_program)), timeout_(timeout) {}
 
   Future<ErrorMessageOr<QVector<Instance>>> GetInstancesAsync(
-      bool all_reserved, std::optional<Project> project) override;
-  Future<ErrorMessageOr<QVector<Instance>>> GetInstancesAsync(bool all_reserved,
+      InstanceListScope scope, std::optional<Project> project) override;
+  Future<ErrorMessageOr<QVector<Instance>>> GetInstancesAsync(InstanceListScope scope,
                                                               std::optional<Project> project,
                                                               int retry) override;
   Future<ErrorMessageOr<SshInfo>> GetSshInfoAsync(const Instance& ggp_instance,
@@ -85,14 +85,14 @@ ErrorMessageOr<std::unique_ptr<Client>> CreateClient(QString ggp_program,
 }
 
 Future<ErrorMessageOr<QVector<Instance>>> ClientImpl::GetInstancesAsync(
-    bool all_reserved, std::optional<Project> project) {
-  return GetInstancesAsync(all_reserved, project, 3);
+    InstanceListScope scope, std::optional<Project> project) {
+  return GetInstancesAsync(scope, project, 3);
 }
 
 Future<ErrorMessageOr<QVector<Instance>>> ClientImpl::GetInstancesAsync(
-    bool all_reserved, std::optional<Project> project, int retry) {
+    InstanceListScope scope, std::optional<Project> project, int retry) {
   QStringList arguments{"instance", "list", "-s"};
-  if (all_reserved) {
+  if (scope == InstanceListScope::kAllReservedInstances) {
     arguments.append("--all-reserved");
   }
   if (project != std::nullopt) {
@@ -113,7 +113,7 @@ Future<ErrorMessageOr<QVector<Instance>>> ClientImpl::GetInstancesAsync(
 
         if (ggp_call_result.has_error()) {
           if (retry > 0) {
-            return client_ptr->GetInstancesAsync(all_reserved, project, retry - 1);
+            return client_ptr->GetInstancesAsync(scope, project, retry - 1);
           }
           return ggp_call_result.error();
         }
