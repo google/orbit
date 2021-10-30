@@ -21,11 +21,7 @@ target_sources(CaptureService PRIVATE
         CommonProducerCaptureEventBuilders.cpp)
 
 target_sources(CaptureService PRIVATE
-        CaptureService.cpp
-        MemoryInfoHandler.cpp
-        MemoryInfoHandler.h
-        TracingHandler.cpp
-        TracingHandler.h)
+        CaptureService.cpp)
 
 target_link_libraries(CaptureService PUBLIC
         ProducerEventProcessor
