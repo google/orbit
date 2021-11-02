@@ -20,9 +20,8 @@ namespace orbit_producer_event_processor {
 UploaderCaptureEventCollector::UploaderCaptureEventCollector() {
   // Create an output stream which will be used to convert capture events into parts of a well
   // formatted capture file. This should never fail.
-  capture_data_buffer_stream_ = std::make_unique<orbit_capture_file::BufferOutputStream>();
   output_stream_ =
-      orbit_capture_file::CaptureFileOutputStream::Create(capture_data_buffer_stream_.get());
+      orbit_capture_file::CaptureFileOutputStream::Create(&capture_data_buffer_stream_);
 }
 
 UploaderCaptureEventCollector::~UploaderCaptureEventCollector() {
@@ -40,40 +39,33 @@ UploaderCaptureEventCollector::~UploaderCaptureEventCollector() {
 void UploaderCaptureEventCollector::Stop() {
   absl::MutexLock lock{&mutex_};
 
-  // Protect stop_requested_ with mutex_ so that we can use stop_requested_ in Conditions for
-  // Await/LockWhen.
-  stop_requested_ = true;
-
-  // Capture finish event would be processed before requesting stopping this collector, and the
-  // output stream should already be closed while processing the capture finish event.
-  CHECK(!output_stream_->IsOpen());
-}
-
-void UploaderCaptureEventCollector::AddEvent(ClientCaptureEvent&& event) {
-  absl::MutexLock lock{&mutex_};
-
-  // Drop events received after "stop capture" being requested.
-  if (stop_requested_) return;
-
-  // The output stream will be closed while processing the capture finish event. Drop events
-  // received after closing the output stream.
   CHECK(output_stream_ != nullptr);
-  if (!output_stream_->IsOpen()) return;
-
-  auto write_result = output_stream_->WriteCaptureEvent(event);
-  if (write_result.has_error()) {
-    total_write_error_count_++;
-    return;
-  }
-  buffered_event_count_++;
-  buffered_event_bytes_ += event.ByteSizeLong();
-
-  // Close output stream after processing the capture finish event.
-  if (event.event_case() != ClientCaptureEvent::kCaptureFinished) return;
   auto close_result = output_stream_->Close();
   if (close_result.has_error()) {
     LOG("Error while closing output steam: %s", close_result.error().message());
   }
+}
+
+void UploaderCaptureEventCollector::AddEvent(ClientCaptureEvent&& event) {
+  {
+    absl::MutexLock lock{&mutex_};
+
+    // The output stream will be closed while processing the capture finish event. Drop events
+    // received after closing the output stream.
+    CHECK(output_stream_ != nullptr);
+    if (!output_stream_->IsOpen()) return;
+
+    auto write_result = output_stream_->WriteCaptureEvent(event);
+    if (write_result.has_error()) {
+      total_write_error_count_++;
+      return;
+    }
+    buffered_event_count_++;
+    buffered_event_bytes_ += event.ByteSizeLong();
+  }
+
+  // Close output stream after processing the capture finish event.
+  if (event.event_case() == ClientCaptureEvent::kCaptureFinished) Stop();
 }
 
 DataReadiness UploaderCaptureEventCollector::GetDataReadiness() const {
@@ -82,7 +74,7 @@ DataReadiness UploaderCaptureEventCollector::GetDataReadiness() const {
   if (!capture_data_to_upload_.empty()) {
     return DataReadiness::kHasData;
 
-  } else if (!stop_requested_ || buffered_event_bytes_ > 0) {
+  } else if (output_stream_->IsOpen() || buffered_event_bytes_ > 0) {
     return DataReadiness::kWaitingForData;
 
   } else {
@@ -94,18 +86,14 @@ void UploaderCaptureEventCollector::RefreshUploadDataBuffer() {
   // Clear capture_data_to_upload_ immediately.
   capture_data_to_upload_.clear();
 
-  // Refill capture_data_to_upload_ when there is enough data to upload or we have been waiting
-  // for enough time.
-  constexpr int kUploadEventCountInterval = 5000;
-  constexpr absl::Duration kWaitDuration = absl::Milliseconds(20);
-  mutex_.LockWhenWithTimeout(
-      absl::Condition(
-          +[](UploaderCaptureEventCollector* self) ABSL_EXCLUSIVE_LOCKS_REQUIRED(self->mutex_) {
-            return self->buffered_event_count_ >= kUploadEventCountInterval ||
-                   self->stop_requested_;
-          },
-          this),
-      kWaitDuration);
+  // Refill capture_data_to_upload_ when there is enough data to upload.
+  mutex_.LockWhen(absl::Condition(
+      +[](UploaderCaptureEventCollector* self) ABSL_EXCLUSIVE_LOCKS_REQUIRED(self->mutex_) {
+        constexpr int kUploadEventCountInterval = 5000;
+        return self->buffered_event_count_ >= kUploadEventCountInterval ||
+               !self->output_stream_->IsOpen();
+      },
+      this));
 
   ORBIT_INT("Number of CaptureEvents to upload", buffered_event_count_);
   ORBIT_INT("Bytes of CaptureEvents to upload", buffered_event_bytes_);
@@ -115,11 +103,13 @@ void UploaderCaptureEventCollector::RefreshUploadDataBuffer() {
     ORBIT_FLOAT("Average bytes per CaptureEvent", average_bytes);
   }
 
-  capture_data_to_upload_ = capture_data_buffer_stream_->TakeBuffer();
-  total_uploaded_event_count_ += buffered_event_count_;
-  total_uploaded_data_bytes_ += capture_data_to_upload_.size();
-  buffered_event_count_ = 0;
-  buffered_event_bytes_ = 0;
+  capture_data_to_upload_ = capture_data_buffer_stream_.TakeBuffer();
+  if (!capture_data_to_upload_.empty()) {
+    total_uploaded_event_count_ += buffered_event_count_;
+    total_uploaded_data_bytes_ += capture_data_to_upload_.size();
+    buffered_event_count_ = 0;
+    buffered_event_bytes_ = 0;
+  }
   mutex_.Unlock();
 }
 

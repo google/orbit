@@ -44,9 +44,8 @@ class UploaderCaptureEventCollectorTest : public testing::Test {
     produce_duration_ms_ = produce_duration_ms;
     upload_duration_ms_ = upload_duration_ms;
 
-    uint64_t kWaitDurationMs = 20;
     wait_all_data_uploaded_duration_ms_ =
-        kWaitDurationMs + upload_duration_ms_ + produce_duration_ms_ * event_count_;
+        upload_duration_ms_ * 2 + produce_duration_ms_ * event_count_;
 
     data_produce_thread_ =
         std::thread(&UploaderCaptureEventCollectorTest::ProduceCaptureData, this);
@@ -87,7 +86,6 @@ class UploaderCaptureEventCollectorTest : public testing::Test {
 
     collector_.AddEvent(CreateCaptureFinishedEvent());
 
-    collector_.Stop();
     Stop();
   }
 
