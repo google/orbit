@@ -107,6 +107,22 @@ message FunctionCall {
   repeated uint64 registers = 8;
 }
 
+// FunctionEntry and FunctionExit are emitted by user space instrumentation.
+message FunctionEntry {
+  uint32 pid = 1;
+  uint32 tid = 2;
+  uint64 function_id = 3;
+  uint64 stack_pointer = 4;
+  uint64 return_address = 5;
+  uint64 timestamp_ns = 6;
+}
+
+message FunctionExit {
+  uint32 pid = 1;
+  uint32 tid = 2;
+  uint64 timestamp_ns = 3;
+}
+
 message ApiEvent {
   uint32 pid = 1;
   uint32 tid = 2;
@@ -739,7 +755,7 @@ message ProducerCaptureEvent {
     // use them for high frequency events. For the rest please assign
     // numbers starting with 16.
     //
-    // Next high-frequency ID: 13
+    // Next high-frequency ID: 15
     // Next lower-frequency ID: 47
     //
     // Please keep these alphabetically ordered.
@@ -772,6 +788,8 @@ message ProducerCaptureEvent {
     FullGpuJob full_gpu_job = 3;
     FullTracepointEvent full_tracepoint_event = 4;
     FunctionCall function_call = 5;
+    FunctionEntry function_entry = 13;
+    FunctionExit function_exit = 14;
     GpuQueueSubmission gpu_queue_submission = 6;
     InternedCallstack interned_callstack = 7;
     InternedString interned_string = 18;

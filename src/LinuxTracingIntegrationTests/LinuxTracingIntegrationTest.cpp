@@ -516,6 +516,10 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         EXPECT_GE(event.function_call().end_timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.function_call().end_timestamp_ns();
         break;
+      case orbit_grpc_protos::ProducerCaptureEvent::kFunctionEntry:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kFunctionExit:
+        UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kGpuQueueSubmission:
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kInternedCallstack:
