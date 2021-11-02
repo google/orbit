@@ -824,7 +824,7 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kTargetAddress1));
   EXPECT_EQ(actual_callstack_sample.callstack().type(),
-            orbit_grpc_protos::Callstack::kUprobesPatchingFailed);
+            orbit_grpc_protos::Callstack::kCallstackPatchingFailed);
 
   EXPECT_EQ(unwinding_errors, 1);
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
