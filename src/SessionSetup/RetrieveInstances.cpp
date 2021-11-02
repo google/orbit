@@ -4,12 +4,14 @@
 
 #include "SessionSetup/RetrieveInstances.h"
 
+#include <absl/container/flat_hash_map.h>
 #include <absl/strings/match.h>
 #include <absl/strings/str_join.h>
 #include <absl/types/span.h>
 
 #include <algorithm>
 #include <iterator>
+#include <memory>
 #include <optional>
 #include <utility>
 
@@ -26,14 +28,44 @@ using orbit_ggp::Client;
 using orbit_ggp::Instance;
 using orbit_ggp::Project;
 
-RetrieveInstances::RetrieveInstances(Client* ggp_client, MainThreadExecutor* main_thread_executor,
-                                     QObject* parent)
-    : QObject(parent), ggp_client_(ggp_client), main_thread_executor_(main_thread_executor) {
+class RetrieveInstancesImpl : public RetrieveInstances {
+ public:
+  RetrieveInstancesImpl(orbit_ggp::Client* ggp_client, MainThreadExecutor* main_thread_executor);
+
+  orbit_base::Future<ErrorMessageOr<QVector<orbit_ggp::Instance>>> LoadInstances(
+      const std::optional<orbit_ggp::Project>& project,
+      orbit_ggp::Client::InstanceListScope scope) override;
+  orbit_base::Future<ErrorMessageOr<QVector<orbit_ggp::Instance>>> LoadInstancesWithoutCache(
+      const std::optional<orbit_ggp::Project>& project,
+      orbit_ggp::Client::InstanceListScope scope) override;
+  orbit_base::Future<ErrorMessageOr<LoadProjectsAndInstancesResult>> LoadProjectsAndInstances(
+      const std::optional<orbit_ggp::Project>& project,
+      orbit_ggp::Client::InstanceListScope scope) override;
+
+ private:
+  orbit_ggp::Client* ggp_client_;
+  // To avoid race conditions to the instance_cache_, the main thread is used.
+  MainThreadExecutor* main_thread_executor_;
+  absl::flat_hash_map<
+      std::pair<std::optional<orbit_ggp::Project>, orbit_ggp::Client::InstanceListScope>,
+      QVector<orbit_ggp::Instance>>
+      instance_cache_;
+  LoadProjectsAndInstancesResult projects_and_instances_load_result_;
+};
+
+std::unique_ptr<RetrieveInstances> RetrieveInstances::Create(
+    orbit_ggp::Client* ggp_client, MainThreadExecutor* main_thread_executor) {
+  return std::make_unique<RetrieveInstancesImpl>(ggp_client, main_thread_executor);
+}
+
+RetrieveInstancesImpl::RetrieveInstancesImpl(Client* ggp_client,
+                                             MainThreadExecutor* main_thread_executor)
+    : ggp_client_(ggp_client), main_thread_executor_(main_thread_executor) {
   CHECK(ggp_client != nullptr);
   CHECK(main_thread_executor != nullptr);
 }
 
-Future<ErrorMessageOr<QVector<Instance>>> RetrieveInstances::LoadInstances(
+Future<ErrorMessageOr<QVector<Instance>>> RetrieveInstancesImpl::LoadInstances(
     const std::optional<Project>& project, orbit_ggp::Client::InstanceListScope scope) {
   auto key = std::make_pair(project, scope);
   if (instance_cache_.contains(key)) {
@@ -42,7 +74,7 @@ Future<ErrorMessageOr<QVector<Instance>>> RetrieveInstances::LoadInstances(
   return LoadInstancesWithoutCache(project, scope);
 }
 
-Future<ErrorMessageOr<QVector<Instance>>> RetrieveInstances::LoadInstancesWithoutCache(
+Future<ErrorMessageOr<QVector<Instance>>> RetrieveInstancesImpl::LoadInstancesWithoutCache(
     const std::optional<Project>& project, orbit_ggp::Client::InstanceListScope scope) {
   auto future = ggp_client_->GetInstancesAsync(scope, project);
   (void)future.ThenIfSuccess(main_thread_executor_, [this, key = std::make_pair(project, scope)](
@@ -53,8 +85,8 @@ Future<ErrorMessageOr<QVector<Instance>>> RetrieveInstances::LoadInstancesWithou
 }
 
 Future<ErrorMessageOr<RetrieveInstances::LoadProjectsAndInstancesResult>>
-RetrieveInstances::LoadProjectsAndInstances(const std::optional<orbit_ggp::Project>& project,
-                                            orbit_ggp::Client::InstanceListScope scope) {
+RetrieveInstancesImpl::LoadProjectsAndInstances(const std::optional<orbit_ggp::Project>& project,
+                                                orbit_ggp::Client::InstanceListScope scope) {
   projects_and_instances_load_result_ = LoadProjectsAndInstancesResult{};
 
   const Future<ErrorMessageOr<void>> project_list_future =
@@ -119,8 +151,6 @@ RetrieveInstances::LoadProjectsAndInstances(const std::optional<orbit_ggp::Proje
             result_vector, "\n", [](std::string* out, const ErrorMessageOr<void>& err) {
               out->append(err.error().message());
             });
-
-        LOG(" --- combined error message: %s", combined_error_messages);
 
         return ErrorMessage{
             absl::StrFormat("The following error occured:\n%s", combined_error_messages)};
