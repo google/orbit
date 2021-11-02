@@ -11,7 +11,10 @@
 #include <QWidget>
 #include <memory>
 
+#include "MainThreadExecutor.h"
 #include "OrbitGgp/Client.h"
+#include "OrbitGgp/Project.h"
+#include "SessionSetup/RetrieveInstances.h"
 
 namespace Ui {
 class RetrieveInstancesWidget;
@@ -23,15 +26,31 @@ class RetrieveInstancesWidget : public QWidget {
   Q_OBJECT
 
  public:
-  explicit RetrieveInstancesWidget(orbit_ggp::Client* ggp_client, QWidget* parent = nullptr);
+  explicit RetrieveInstancesWidget(MainThreadExecutor* main_thread_executor,
+                                   RetrieveInstances* retreive_instances,
+                                   QWidget* parent = nullptr);
   ~RetrieveInstancesWidget() override;
 
+  void Start();
+
  signals:
+  void LoadingStarted();
+  void LoadingSuccessful(QVector<orbit_ggp::Instance>);
+  void LoadingFailed();
+  void InitialLoadingFailed();
   void FilterTextChanged(const QString& text);
 
  private:
+  void SetupStateMachine();
+  orbit_ggp::Client::InstanceListScope GetInstanceListScope();
+  void InitialLoad(const std::optional<orbit_ggp::Project>& remembered_project);
+  std::optional<orbit_ggp::Project> GetQSettingsProject();
+  void OnInstancesLoadingReturned(
+      const ErrorMessageOr<QVector<orbit_ggp::Instance>>& loading_result);
+
   std::unique_ptr<Ui::RetrieveInstancesWidget> ui_;
-  orbit_ggp::Client* ggp_client_;
+  MainThreadExecutor* main_thread_executor_;
+  RetrieveInstances* retreive_instances_;
   QStateMachine state_machine_;
   QState s_idle_;
   QState s_loading_;
