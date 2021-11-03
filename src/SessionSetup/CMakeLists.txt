@@ -15,6 +15,7 @@ target_sources(
           include/SessionSetup/DoubleClickableLabel.h
           include/SessionSetup/Error.h
           include/SessionSetup/OverlayWidget.h
+          include/SessionSetup/PersistentStorage.h
           include/SessionSetup/ProcessItemModel.h
           include/SessionSetup/RetrieveInstances.h
           include/SessionSetup/RetrieveInstancesWidget.h
@@ -33,6 +34,7 @@ target_sources(
           Error.cpp
           OverlayWidget.cpp
           OverlayWidget.ui
+          PersistentStorage.cpp
           ProcessItemModel.cpp
           RetrieveInstances.cpp
           RetrieveInstancesWidget.cpp
@@ -69,6 +71,7 @@ target_sources(
   SessionSetupTest
   PRIVATE ConnectToStadiaWidgetTest.cpp
           DoubleClickableLabelTest.cpp
+          PersistentStorageTest.cpp
           ProcessItemModelTest.cpp
           RetrieveInstancesTest.cpp
           RetrieveInstancesWidgetTest.cpp

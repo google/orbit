@@ -14,13 +14,13 @@
 #include <QSettings>
 #include <QSignalSpy>
 #include <QTest>
-#include <QTimer>
 #include <memory>
 #include <optional>
 
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/Project.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
+#include "SessionSetup/PersistentStorage.h"
 #include "SessionSetup/RetrieveInstances.h"
 #include "SessionSetup/RetrieveInstancesWidget.h"
 
@@ -28,8 +28,6 @@ namespace {
 constexpr const char* kOrganizationName = "The Orbit Authors";
 constexpr const char* kApplicationName{"RetrieveInstancesWidgetTest"};
 constexpr const char* kAllInstancesKey{"kAllInstancesKey"};
-constexpr const char* kSelectedProjectIdKey{"kSelectedProjectIdKey"};
-constexpr const char* kSelectedProjectDisplayNameKey{"kSelectedProjectDisplayNameKey"};
 }  // namespace
 
 namespace orbit_session_setup {
@@ -84,7 +82,19 @@ const Instance kTestInstance2{
     "IN_USE",                                                   /* state */
 };
 
+const Instance kTestInstance3{
+    "Test Instance 3",                                          /* display_name */
+    "test_instance_3_id",                                       /* id */
+    "3.3.3.30",                                                 /* ip_address */
+    QDateTime::fromString("2020-03-03T00:43:43Z", Qt::ISODate), /* last_updated */
+    "test_owner_3@",                                            /* owner */
+    "foo-bar-pool-3",                                           /* pool */
+    "IN_USE",                                                   /* state */
+};
+
 const QVector<Instance> kTestInstancesProject1{kTestInstance1, kTestInstance2};
+
+const QVector<Instance> kTestInstancesProject2{kTestInstance3};
 
 const RetrieveInstances::LoadProjectsAndInstancesResult kInitialTestDataDefault{
     QVector<Project>{kTestProject1, kTestProject2}, /* projects */
@@ -178,6 +188,24 @@ class RetrieveInstancesWidgetTest : public testing::Test {
     VerifyProjectComboBoxData(data.projects, data.default_project, data.project_of_instances);
   }
 
+  void VerifyAndClearSignalsOfSuccessfulLoadingCycle() {
+    EXPECT_EQ(loading_started_spy_.count(), 1);
+    loading_started_spy_.clear();
+    EXPECT_EQ(loading_successful_spy_.count(), 1);
+    loading_successful_spy_.clear();
+    EXPECT_EQ(loading_failed_spy_.count(), 0);
+    EXPECT_EQ(initial_loading_failed_spy_.count(), 0);
+  }
+
+  void VerifyAndClearSignalsOfFailedLoadingCycle() {
+    EXPECT_EQ(loading_started_spy_.count(), 1);
+    loading_started_spy_.clear();
+    EXPECT_EQ(loading_successful_spy_.count(), 0);
+    EXPECT_EQ(loading_failed_spy_.count(), 1);
+    loading_failed_spy_.clear();
+    EXPECT_EQ(initial_loading_failed_spy_.count(), 0);
+  }
+
   MockRetrieveInstances mock_retrieve_instances_;
   RetrieveInstancesWidget widget_;
   QLineEdit* filter_line_edit_ = nullptr;
@@ -204,16 +232,9 @@ class RetrieveInstancesWidgetTestStarted : public RetrieveInstancesWidgetTest {
     widget_.Start();
     QCoreApplication::processEvents();
 
-    EXPECT_EQ(loading_started_spy_.count(), 1);
-    EXPECT_EQ(loading_successful_spy_.count(), 1);
-    EXPECT_EQ(loading_failed_spy_.count(), 0);
-    EXPECT_EQ(initial_loading_failed_spy_.count(), 0);
-
+    VerifyAndClearSignalsOfSuccessfulLoadingCycle();
     VerifyAllElementsAreEnabled();
     VerifyProjectComboBoxHoldsData(kInitialTestDataDefault);
-
-    loading_started_spy_.clear();
-    loading_successful_spy_.clear();
   }
 };
 
@@ -243,12 +264,8 @@ TEST_F(RetrieveInstancesWidgetTest, StartSuccessfulDefault) {
   widget_.Start();
   QCoreApplication::processEvents();
 
-  EXPECT_EQ(loading_started_spy_.count(), 1);
-  EXPECT_EQ(loading_successful_spy_.count(), 1);
-  EXPECT_EQ(loading_failed_spy_.count(), 0);
-  EXPECT_EQ(initial_loading_failed_spy_.count(), 0);
-
   VerifyLastLoadingReturnedInstanceList(kInitialTestDataDefault.instances);
+  VerifyAndClearSignalsOfSuccessfulLoadingCycle();
   VerifyAllElementsAreEnabled();
   VerifyProjectComboBoxHoldsData(kInitialTestDataDefault);
 }
@@ -262,22 +279,15 @@ TEST_F(RetrieveInstancesWidgetTest, StartSuccessfulWithRememberedSettings) {
       .WillOnce(Return(Future<ErrorMessageOr<RetrieveInstances::LoadProjectsAndInstancesResult>>{
           kInitialTestDataWithProjectOfInstances}));
 
+  SaveProjectToPersistentStorage(kInitialTestDataWithProjectOfInstances.project_of_instances);
   QSettings settings;
-  settings.setValue(kSelectedProjectIdKey,
-                    kInitialTestDataWithProjectOfInstances.project_of_instances->id);
-  settings.setValue(kSelectedProjectDisplayNameKey,
-                    kInitialTestDataWithProjectOfInstances.project_of_instances->display_name);
   settings.setValue(kAllInstancesKey, true);
 
   widget_.Start();
   QCoreApplication::processEvents();
 
-  EXPECT_EQ(loading_started_spy_.count(), 1);
-  EXPECT_EQ(loading_successful_spy_.count(), 1);
-  EXPECT_EQ(loading_failed_spy_.count(), 0);
-  EXPECT_EQ(initial_loading_failed_spy_.count(), 0);
-
   VerifyLastLoadingReturnedInstanceList(kInitialTestDataWithProjectOfInstances.instances);
+  VerifyAndClearSignalsOfSuccessfulLoadingCycle();
   VerifyAllElementsAreEnabled();
   VerifyProjectComboBoxHoldsData(kInitialTestDataWithProjectOfInstances);
 
@@ -291,13 +301,10 @@ TEST_F(RetrieveInstancesWidgetTest, StartFailed) {
       .WillOnce(Return(Future<ErrorMessageOr<RetrieveInstances::LoadProjectsAndInstancesResult>>{
           ErrorMessage{"error message"}}));
 
-  // close the error message box
-  QTimer::singleShot(5, []() {
-    QApplication::activeModalWidget()->close();
-    QCoreApplication::exit();
-  });
-
   widget_.Start();
+
+  QMetaObject::invokeMethod(
+      &widget_, []() { QCoreApplication::exit(); }, Qt::QueuedConnection);
   QCoreApplication::exec();
 
   EXPECT_EQ(loading_started_spy_.count(), 1);
@@ -318,20 +325,14 @@ TEST_F(RetrieveInstancesWidgetTestStarted, ReloadSucceeds) {
 
   QTest::mouseClick(reload_button_, Qt::MouseButton::LeftButton);
   QCoreApplication::processEvents();
-  EXPECT_EQ(loading_started_spy_.count(), 1);
-  EXPECT_EQ(loading_successful_spy_.count(), 1);
-  EXPECT_EQ(loading_failed_spy_.count(), 0);
-  EXPECT_EQ(initial_loading_failed_spy_.count(), 0);
   VerifyLastLoadingReturnedInstanceList(kTestInstancesProject1);
+  VerifyAndClearSignalsOfSuccessfulLoadingCycle();
   VerifyAllElementsAreEnabled();
 
   QTest::mouseClick(reload_button_, Qt::MouseButton::LeftButton);
   QCoreApplication::processEvents();
-  EXPECT_EQ(loading_started_spy_.count(), 2);
-  EXPECT_EQ(loading_successful_spy_.count(), 2);
-  EXPECT_EQ(loading_failed_spy_.count(), 0);
-  EXPECT_EQ(initial_loading_failed_spy_.count(), 0);
   VerifyLastLoadingReturnedInstanceList({kTestInstance1});
+  VerifyAndClearSignalsOfSuccessfulLoadingCycle();
   VerifyAllElementsAreEnabled();
 }
 
@@ -343,18 +344,109 @@ TEST_F(RetrieveInstancesWidgetTestStarted, ReloadFails) {
 
   QTest::mouseClick(reload_button_, Qt::MouseButton::LeftButton);
 
-  // close the error message box
-  QTimer::singleShot(5, []() {
-    QApplication::activeModalWidget()->close();
-    QCoreApplication::exit();
-  });
+  QMetaObject::invokeMethod(
+      &widget_, []() { QCoreApplication::exit(); }, Qt::QueuedConnection);
   QCoreApplication::exec();
 
-  EXPECT_EQ(loading_started_spy_.count(), 1);
-  EXPECT_EQ(loading_successful_spy_.count(), 0);
-  EXPECT_EQ(loading_failed_spy_.count(), 1);
-  EXPECT_EQ(initial_loading_failed_spy_.count(), 0);
-
+  VerifyAndClearSignalsOfFailedLoadingCycle();
   VerifyAllElementsAreEnabled();
 }
+
+TEST_F(RetrieveInstancesWidgetTestStarted, ProjectChangeSuccessful) {
+  // Note: The project combo box ui tests do not work with QTest::mouseClick, since it not possible
+  // to click on a combobox item with the QTest framework. setCurrentIndex is used instead.
+
+  // The combobox content looks like the following (> marks selection):
+  // > "Default Project (Test Project 1)"
+  // "Test Project 1 (default)"
+  // "Test Project 2"
+
+  EXPECT_CALL(mock_retrieve_instances_,
+              LoadInstances(std::optional<Project>(kTestProject1),
+                            InstanceListScope(InstanceListScope::kOnlyOwnInstances)))
+      .WillOnce(Return(Future<ErrorMessageOr<QVector<Instance>>>(kTestInstancesProject1)));
+
+  project_combo_box_->setCurrentIndex(1);
+  QCoreApplication::processEvents();
+
+  VerifyLastLoadingReturnedInstanceList(kTestInstancesProject1);
+  VerifyAndClearSignalsOfSuccessfulLoadingCycle();
+  EXPECT_EQ(LoadProjectFromPersistentStorage(), kTestProject1);
+  EXPECT_EQ(project_combo_box_->currentIndex(), 1);
+
+  // The combobox content looks like the following (> marks selection):
+  // "Default Project (Test Project 1)"
+  // > "Test Project 1 (default)"
+  // "Test Project 2"
+
+  EXPECT_CALL(mock_retrieve_instances_,
+              LoadInstances(std::optional<Project>(std::nullopt),
+                            InstanceListScope(InstanceListScope::kOnlyOwnInstances)))
+      .WillOnce(Return(Future<ErrorMessageOr<QVector<Instance>>>(kTestInstancesProject1)));
+
+  project_combo_box_->setCurrentIndex(0);
+  QCoreApplication::processEvents();
+
+  VerifyLastLoadingReturnedInstanceList(kTestInstancesProject1);
+  VerifyAndClearSignalsOfSuccessfulLoadingCycle();
+  EXPECT_EQ(LoadProjectFromPersistentStorage(), std::nullopt);
+  EXPECT_EQ(project_combo_box_->currentIndex(), 0);
+
+  // The combobox content looks like the following (> marks selection):
+  // > "Default Project (Test Project 1)"
+  // "Test Project 1 (default)"
+  // "Test Project 2"
+
+  EXPECT_CALL(mock_retrieve_instances_,
+              LoadInstances(std::optional<Project>(kTestProject2),
+                            InstanceListScope(InstanceListScope::kOnlyOwnInstances)))
+      .WillOnce(Return(Future<ErrorMessageOr<QVector<Instance>>>(kTestInstancesProject2)));
+
+  project_combo_box_->setCurrentIndex(2);
+  QCoreApplication::processEvents();
+
+  VerifyLastLoadingReturnedInstanceList(kTestInstancesProject2);
+  VerifyAndClearSignalsOfSuccessfulLoadingCycle();
+  EXPECT_EQ(LoadProjectFromPersistentStorage(), kTestProject2);
+  EXPECT_EQ(project_combo_box_->currentIndex(), 2);
+
+  // The combobox content looks like the following (> marks selection):
+  // "Default Project (Test Project 1)"
+  // "Test Project 1 (default)"
+  // > "Test Project 2"
+}
+
+TEST_F(RetrieveInstancesWidgetTestStarted, ProjectChangeFailed) {
+  // Note: The project combo box ui tests do not work with QTest::mouseClick, since it not possible
+  // to click on a combobox item with the QTest framework. setCurrentIndex is used instead.
+
+  // The combobox content looks like the following (> marks selection):
+  // > "Default Project (Test Project 1)"
+  // "Test Project 1 (default)"
+  // "Test Project 2"
+
+  EXPECT_CALL(mock_retrieve_instances_,
+              LoadInstances(std::optional<Project>(kTestProject1),
+                            InstanceListScope(InstanceListScope::kOnlyOwnInstances)))
+      .WillOnce(Return(Future<ErrorMessageOr<QVector<Instance>>>(ErrorMessage{"error"})));
+
+  EXPECT_EQ(LoadProjectFromPersistentStorage(), std::nullopt);
+  EXPECT_EQ(project_combo_box_->currentIndex(), 0);
+
+  project_combo_box_->setCurrentIndex(1);
+
+  QMetaObject::invokeMethod(
+      &widget_, []() { QCoreApplication::exit(); }, Qt::QueuedConnection);
+  QCoreApplication::exec();
+
+  VerifyAndClearSignalsOfFailedLoadingCycle();
+  EXPECT_EQ(LoadProjectFromPersistentStorage(), std::nullopt);
+  EXPECT_EQ(project_combo_box_->currentIndex(), 0);
+
+  // The combobox content looks like the following (> marks selection):
+  // > "Default Project (Test Project 1)"
+  // "Test Project 1 (default)"
+  // "Test Project 2"
+}
+
 }  // namespace orbit_session_setup

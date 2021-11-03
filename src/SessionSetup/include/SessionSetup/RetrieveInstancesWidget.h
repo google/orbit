@@ -42,12 +42,14 @@ class RetrieveInstancesWidget : public QWidget {
  private:
   void SetupStateMachine();
   [[nodiscard]] orbit_ggp::Client::InstanceListScope GetInstanceListScope() const;
+  [[nodiscard]] std::optional<orbit_ggp::Project> GetSelectedProject() const;
   void InitialLoad(const std::optional<orbit_ggp::Project>& remembered_project);
   void OnInstancesLoadingReturned(
       const ErrorMessageOr<QVector<orbit_ggp::Instance>>& loading_result);
   void OnInitialLoadingReturnedSuccess(
       RetrieveInstances::LoadProjectsAndInstancesResult initial_load_result);
   void OnReloadButtonClicked();
+  void OnProjectComboBoxCurrentIndexChanged();
 
   std::unique_ptr<Ui::RetrieveInstancesWidget> ui_;
   std::shared_ptr<MainThreadExecutor> main_thread_executor_;
