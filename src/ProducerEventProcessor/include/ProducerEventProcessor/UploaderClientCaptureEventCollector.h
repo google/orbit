@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CAPTURE_EVENT_PROCESSOR_UPLOADER_CAPTURE_EVENT_COLLECTOR_H_
-#define CAPTURE_EVENT_PROCESSOR_UPLOADER_CAPTURE_EVENT_COLLECTOR_H_
+#ifndef PRODUCER_EVENT_PROCESSOR_UPLOADER_CAPTURE_EVENT_COLLECTOR_H_
+#define PRODUCER_EVENT_PROCESSOR_UPLOADER_CAPTURE_EVENT_COLLECTOR_H_
 
 #include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
@@ -24,11 +24,12 @@ namespace orbit_producer_event_processor {
 // buffered capture data.
 // Note that this collector will stop automatically after receiving a CaptureFinish event from the
 // ProducerEventProcessor.
-class UploaderCaptureEventCollector final : public ClientCaptureEventCollector,
-                                            public orbit_capture_uploader::UploadDataInterface {
+class UploaderClientCaptureEventCollector final
+    : public ClientCaptureEventCollector,
+      public orbit_capture_uploader::UploadDataInterface {
  public:
-  explicit UploaderCaptureEventCollector();
-  ~UploaderCaptureEventCollector() override;
+  explicit UploaderClientCaptureEventCollector();
+  ~UploaderClientCaptureEventCollector() override;
 
   // Convert the received capture event into raw bytes according to the format of capture file, and
   // then buffer the converted data.
@@ -36,6 +37,7 @@ class UploaderCaptureEventCollector final : public ClientCaptureEventCollector,
 
   // Functions needed by the CaptureUploader to upload data.
   orbit_capture_uploader::DataReadiness GetDataReadiness() const override;
+  // This function is blocking until there is enough data to upload.
   void RefreshUploadDataBuffer() override;
   const std::vector<unsigned char>& GetUploadDataBuffer() const override {
     return capture_data_to_upload_;
@@ -66,4 +68,4 @@ class UploaderCaptureEventCollector final : public ClientCaptureEventCollector,
 
 }  // namespace orbit_producer_event_processor
 
-#endif  // CAPTURE_EVENT_PROCESSOR_UPLOADER_CAPTURE_EVENT_COLLECTOR_H_
+#endif  // PRODUCER_EVENT_PROCESSOR_UPLOADER_CAPTURE_EVENT_COLLECTOR_H_

@@ -15,12 +15,12 @@ target_sources(ProducerEventProcessor PUBLIC
         include/ProducerEventProcessor/ClientCaptureEventCollector.h
         include/ProducerEventProcessor/GrpcClientCaptureEventCollector.h
         include/ProducerEventProcessor/ProducerEventProcessor.h
-        include/ProducerEventProcessor/UploaderCaptureEventCollector.h)
+        include/ProducerEventProcessor/UploaderClientCaptureEventCollector.h)
 
 target_sources(ProducerEventProcessor PRIVATE
         GrpcClientCaptureEventCollector.cpp
         ProducerEventProcessor.cpp
-        UploaderCaptureEventCollector.cpp)
+        UploaderClientCaptureEventCollector.cpp)
 
 target_link_libraries(ProducerEventProcessor PUBLIC
         CaptureFile
@@ -34,7 +34,7 @@ add_executable(ProducerEventProcessorTests)
 target_sources(ProducerEventProcessorTests PRIVATE
         GrpcClientCaptureEventCollectorTest.cpp
         ProducerEventProcessorTest.cpp
-        UploaderCaptureEventCollectorTest.cpp)
+        UploaderClientCaptureEventCollectorTest.cpp)
 
 target_link_libraries(ProducerEventProcessorTests PRIVATE
         TestUtils
