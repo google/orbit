@@ -9,10 +9,13 @@
 #include <absl/strings/str_join.h>
 #include <absl/types/span.h>
 
+#include <QVector>
 #include <algorithm>
+#include <cstddef>
 #include <iterator>
 #include <memory>
 #include <optional>
+#include <tuple>
 #include <utility>
 
 #include "MainThreadExecutor.h"
@@ -50,7 +53,6 @@ class RetrieveInstancesImpl : public RetrieveInstances {
       std::pair<std::optional<orbit_ggp::Project>, orbit_ggp::Client::InstanceListScope>,
       QVector<orbit_ggp::Instance>>
       instance_cache_;
-  LoadProjectsAndInstancesResult projects_and_instances_load_result_;
 };
 
 std::unique_ptr<RetrieveInstances> RetrieveInstances::Create(
@@ -87,70 +89,79 @@ Future<ErrorMessageOr<QVector<Instance>>> RetrieveInstancesImpl::LoadInstancesWi
 Future<ErrorMessageOr<RetrieveInstances::LoadProjectsAndInstancesResult>>
 RetrieveInstancesImpl::LoadProjectsAndInstances(const std::optional<orbit_ggp::Project>& project,
                                                 orbit_ggp::Client::InstanceListScope scope) {
-  projects_and_instances_load_result_ = LoadProjectsAndInstancesResult{};
+  const Future<ErrorMessageOr<QVector<Project>>> projects_future = ggp_client_->GetProjectsAsync();
 
-  const Future<ErrorMessageOr<void>> project_list_future =
-      ggp_client_->GetProjectsAsync().ThenIfSuccess(
-          main_thread_executor_, [this](QVector<Project> projects) -> ErrorMessageOr<void> {
-            projects_and_instances_load_result_.projects = std::move(projects);
-            return outcome::success();
-          });
+  const Future<ErrorMessageOr<Project>> default_project_future =
+      ggp_client_->GetDefaultProjectAsync();
 
-  const Future<ErrorMessageOr<void>> default_project_future =
-      ggp_client_->GetDefaultProjectAsync().ThenIfSuccess(
-          main_thread_executor_, [this](Project default_project) -> ErrorMessageOr<void> {
-            projects_and_instances_load_result_.default_project = std::move(default_project);
-            return outcome::success();
-          });
+  const Future<ErrorMessageOr<QVector<Instance>>> instances_from_project_future =
+      LoadInstancesWithoutCache(project, scope);
 
-  const Future<ErrorMessageOr<void>> instance_list_future = orbit_base::UnwrapFuture(
-      ggp_client_->GetInstancesAsync(scope, project)
-          .Then(main_thread_executor_,
-                [this, scope, project](
-                    ErrorMessageOr<QVector<Instance>> instances) -> Future<ErrorMessageOr<void>> {
-                  if (instances.has_value()) {
-                    projects_and_instances_load_result_.instances = instances.value();
-                    projects_and_instances_load_result_.project_of_instances = project;
-                    return Future<ErrorMessageOr<void>>{outcome::success()};
-                  }
-                  if (project == std::nullopt ||
-                      !absl::StrContains(instances.error().message(), "it may not exist")) {
-                    return {instances.error()};
-                  }
-                  // If the error message contains "it may not exist", then the project may not
-                  // exist anymore and the call to ggp is retried without a project (default
-                  // project)
-                  return ggp_client_->GetInstancesAsync(scope, std::nullopt)
-                      .ThenIfSuccess(
-                          main_thread_executor_,
-                          [this](QVector<Instance> instances) -> ErrorMessageOr<void> {
-                            projects_and_instances_load_result_.instances = std::move(instances);
-                            projects_and_instances_load_result_.project_of_instances = std::nullopt;
-                            return outcome::success();
-                          });
-                }));
+  // It can be the case that the project (from the argument) does not exist anymore, or the user
+  // lost access to it. In this case, a second call (the following) is made to
+  // LoadInstancesWithoutCache with the default project (std::nullopt). This result of this call is
+  // used when the first call returns that the project "may not exist" (the "it may not exist" error
+  // comes from ggp itself). In case the project is already the default project, the second call
+  // does not need to be made.
+  const Future<ErrorMessageOr<QVector<Instance>>> instances_from_default_project_future =
+      project != std::nullopt ? LoadInstancesWithoutCache(std::nullopt, scope)
+                              : instances_from_project_future;
 
-  Future<std::vector<ErrorMessageOr<void>>> combined_future = orbit_base::JoinFutures(
-      absl::MakeConstSpan({project_list_future, default_project_future, instance_list_future}));
+  Future<std::tuple<ErrorMessageOr<QVector<Project>>, ErrorMessageOr<Project>,
+                    ErrorMessageOr<QVector<Instance>>, ErrorMessageOr<QVector<Instance>>>>
+      combined_future = orbit_base::JoinFutures(projects_future, default_project_future,
+                                                instances_from_project_future,
+                                                instances_from_default_project_future);
 
   return combined_future.Then(
       main_thread_executor_,
-      [this](std::vector<ErrorMessageOr<void>> result_vector)
-          -> ErrorMessageOr<LoadProjectsAndInstancesResult> {
-        // Remove all that are not errors
-        result_vector.erase(
-            std::remove_if(result_vector.begin(), result_vector.end(),
-                           [](const ErrorMessageOr<void>& result) { return !result.has_error(); }),
-            result_vector.end());
+      [project](
+          const std::tuple<ErrorMessageOr<QVector<Project>>, ErrorMessageOr<Project>,
+                           ErrorMessageOr<QVector<Instance>>, ErrorMessageOr<QVector<Instance>>>&
+              result_tuple) -> ErrorMessageOr<LoadProjectsAndInstancesResult> {
+        const auto& [projects, default_project, instances_from_project,
+                     instances_from_default_project] = result_tuple;
 
-        if (result_vector.empty()) {
-          return projects_and_instances_load_result_;
+        LoadProjectsAndInstancesResult result;
+        std::vector<ErrorMessage> errors;
+
+        if (projects.has_value()) {
+          result.projects = projects.value();
+        } else {
+          errors.push_back(projects.error());
         }
 
+        if (default_project.has_value()) {
+          result.default_project = default_project.value();
+        } else {
+          errors.push_back(default_project.error());
+        }
+
+        if (instances_from_project.has_value()) {
+          result.instances = instances_from_project.value();
+          result.project_of_instances = project;
+        } else {
+          if (absl::StrContains(instances_from_project.error().message(), "it may not exist")) {
+            // If the result from instances_from_project "may not exist", then
+            // instances_from_default_project is used.
+            if (instances_from_default_project.has_value()) {
+              result.instances = instances_from_default_project.value();
+              result.project_of_instances = std::nullopt;
+            } else {
+              errors.push_back(instances_from_default_project.error());
+            }
+          } else {
+            // This is the case that instances_from_project has an error that is different from "it
+            // may not exist".
+            errors.push_back(instances_from_project.error());
+          }
+        }
+
+        if (errors.empty()) return result;
+
         std::string combined_error_messages = absl::StrJoin(
-            result_vector, "\n", [](std::string* out, const ErrorMessageOr<void>& err) {
-              out->append(err.error().message());
-            });
+            errors, "\n",
+            [](std::string* out, const ErrorMessage& err) { out->append(err.message()); });
 
         return ErrorMessage{
             absl::StrFormat("The following error occured:\n%s", combined_error_messages)};
