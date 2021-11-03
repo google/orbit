@@ -47,7 +47,9 @@ void ApplyStyle(QApplication* app) {
   QApplication::setPalette(darkPalette);
   app->setStyleSheet(
       "QToolTip { color: #ffffff; background-color: #2a82da; border: 1px "
-      "solid white; }");
+      "solid white; }"
+      "QMenu::separator { height: 1px; background-color: rgb(90, 90, 90); margin-left: 2px; "
+      "margin-right: 2px; }");
 }
 
 }  // namespace orbit_style

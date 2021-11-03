@@ -9,6 +9,6 @@
 
 namespace orbit_style {
 void ApplyStyle(QApplication* app);
-}
+}  // namespace orbit_style
 
 #endif  // STYLE_STYLE_H_
