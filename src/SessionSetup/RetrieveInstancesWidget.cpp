@@ -114,17 +114,19 @@ void RetrieveInstancesWidget::InitialLoad(const std::optional<Project>& remember
   emit LoadingStarted();
   retrieve_instances_->LoadProjectsAndInstances(remembered_project, GetInstanceListScope())
       .Then(main_thread_executor_.get(),
-            [widget = QPointer<RetrieveInstancesWidget>(this)](
-                ErrorMessageOr<LoadProjectsAndInstancesResult> loading_result) {
-              if (widget == nullptr) return;
+            [this](ErrorMessageOr<LoadProjectsAndInstancesResult> loading_result) {
+              // `this` still exists when this lambda is executed. This is enforced, because
+              // main_thread_executor_ is a member of `this`. Then `this` is destroyed,
+              // main_thread_executor_ is destroyed and the lambda is not executed. Check
+              // Future::Then for details about the lambda not being executed.
 
               if (loading_result.has_error()) {
-                emit widget->InitialLoadingFailed();
-                widget->OnInstancesLoadingReturned(loading_result.error());
+                emit InitialLoadingFailed();
+                OnInstancesLoadingReturned(loading_result.error());
                 return;
               }
 
-              widget->OnInitialLoadingReturnedSuccess(loading_result.value());
+              OnInitialLoadingReturnedSuccess(loading_result.value());
             });
 }
 
@@ -187,11 +189,14 @@ void RetrieveInstancesWidget::OnReloadButtonClicked() {
 
   emit LoadingStarted();
   retrieve_instances_->LoadInstancesWithoutCache(selected_project, GetInstanceListScope())
-      .Then(main_thread_executor_.get(), [widget = QPointer<RetrieveInstancesWidget>(this)](
-                                             const ErrorMessageOr<QVector<Instance>>& load_result) {
-        if (widget == nullptr) return;
-        widget->OnInstancesLoadingReturned(load_result);
-      });
+      .Then(main_thread_executor_.get(),
+            [this](const ErrorMessageOr<QVector<Instance>>& load_result) {
+              // `this` still exists when this lambda is executed. This is enforced, because
+              // main_thread_executor_ is a member of `this`. Then `this` is destroyed,
+              // main_thread_executor_ is destroyed and the lambda is not executed. Check
+              // Future::Then for details about the lambda not being executed.
+              OnInstancesLoadingReturned(load_result);
+            });
 }
 
 }  // namespace orbit_session_setup
