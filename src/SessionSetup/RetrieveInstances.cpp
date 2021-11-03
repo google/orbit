@@ -89,68 +89,75 @@ Future<ErrorMessageOr<QVector<Instance>>> RetrieveInstancesImpl::LoadInstancesWi
 Future<ErrorMessageOr<RetrieveInstances::LoadProjectsAndInstancesResult>>
 RetrieveInstancesImpl::LoadProjectsAndInstances(const std::optional<orbit_ggp::Project>& project,
                                                 orbit_ggp::Client::InstanceListScope scope) {
-  const Future<ErrorMessageOr<QVector<Project>>> project_list_future =
-      ggp_client_->GetProjectsAsync();
+  const Future<ErrorMessageOr<QVector<Project>>> projects_future = ggp_client_->GetProjectsAsync();
 
   const Future<ErrorMessageOr<Project>> default_project_future =
       ggp_client_->GetDefaultProjectAsync();
 
-  const Future<ErrorMessageOr<std::pair<QVector<Instance>, std::optional<Project>>>>
-      instance_list_future = orbit_base::UnwrapFuture(
-          ggp_client_->GetInstancesAsync(scope, project)
-              .Then(main_thread_executor_,
-                    [this, scope, project](ErrorMessageOr<QVector<Instance>> instances)
-                        -> Future<
-                            ErrorMessageOr<std::pair<QVector<Instance>, std::optional<Project>>>> {
-                      if (instances.has_value()) {
-                        return {std::make_pair(instances.value(), project)};
-                      }
-                      if (project == std::nullopt ||
-                          !absl::StrContains(instances.error().message(), "it may not exist")) {
-                        return {instances.error()};
-                      }
-                      // If the error message contains "it may not exist", then the project may not
-                      // exist anymore and the call to ggp is retried without a project (default
-                      // project)
-                      return ggp_client_->GetInstancesAsync(scope, std::nullopt)
-                          .ThenIfSuccess(
-                              main_thread_executor_,
-                              [](const QVector<Instance>& instances)
-                                  -> ErrorMessageOr<
-                                      std::pair<QVector<Instance>, std::optional<Project>>> {
-                                return std::make_pair(instances, std::nullopt);
-                              });
-                    }));
+  const Future<ErrorMessageOr<QVector<Instance>>> instances_from_project_future =
+      LoadInstancesWithoutCache(project, scope);
+
+  // It can be the case that the project (from the argument) does not exist anymore, or the user
+  // lost access to it. In this case, a second call (the following) is made to
+  // LoadInstancesWithoutCache with the default project (std::nullopt). This result of this call is
+  // used when the first call returns that the project "may not exist" (the "it may not exist" error
+  // comes from ggp itself). In case the project is already the default project, the second call
+  // does not need to be made.
+  const Future<ErrorMessageOr<QVector<Instance>>> instances_from_default_project_future =
+      project != std::nullopt ? LoadInstancesWithoutCache(std::nullopt, scope)
+                              : instances_from_project_future;
 
   Future<std::tuple<ErrorMessageOr<QVector<Project>>, ErrorMessageOr<Project>,
-                    ErrorMessageOr<std::pair<QVector<Instance>, std::optional<Project>>>>>
-      combined_future = orbit_base::JoinFutures(project_list_future, default_project_future,
-                                                instance_list_future);
+                    ErrorMessageOr<QVector<Instance>>, ErrorMessageOr<QVector<Instance>>>>
+      combined_future = orbit_base::JoinFutures(projects_future, default_project_future,
+                                                instances_from_project_future,
+                                                instances_from_default_project_future);
 
   return combined_future.Then(
       main_thread_executor_,
-      [](std::tuple<ErrorMessageOr<QVector<Project>>, ErrorMessageOr<Project>,
-                    ErrorMessageOr<std::pair<QVector<Instance>, std::optional<Project>>>>
-             result_tuple) -> ErrorMessageOr<LoadProjectsAndInstancesResult> {
+      [project](
+          const std::tuple<ErrorMessageOr<QVector<Project>>, ErrorMessageOr<Project>,
+                           ErrorMessageOr<QVector<Instance>>, ErrorMessageOr<QVector<Instance>>>&
+              result_tuple) -> ErrorMessageOr<LoadProjectsAndInstancesResult> {
+        const auto& [projects, default_project, instances_from_project,
+                     instances_from_default_project] = result_tuple;
+
+        LoadProjectsAndInstancesResult result;
         std::vector<ErrorMessage> errors;
-        if (std::get<0>(result_tuple).has_error()) {
-          errors.push_back(std::get<0>(result_tuple).error());
-        }
-        if (std::get<1>(result_tuple).has_error()) {
-          errors.push_back(std::get<1>(result_tuple).error());
-        }
-        if (std::get<2>(result_tuple).has_error()) {
-          errors.push_back(std::get<2>(result_tuple).error());
+
+        if (projects.has_value()) {
+          result.projects = projects.value();
+        } else {
+          errors.push_back(projects.error());
         }
 
-        if (errors.empty()) {
-          return LoadProjectsAndInstancesResult{
-              std::get<0>(result_tuple).value(),       /* projects*/
-              std::get<1>(result_tuple).value(),       /* default_project*/
-              std::get<2>(result_tuple).value().first, /* instances*/
-              std::get<2>(result_tuple).value().second /* project_of_instances*/
-          };
+        if (default_project.has_value()) {
+          result.default_project = default_project.value();
+        } else {
+          errors.push_back(default_project.error());
         }
+
+        if (instances_from_project.has_value()) {
+          result.instances = instances_from_project.value();
+          result.project_of_instances = project;
+        } else {
+          if (absl::StrContains(instances_from_project.error().message(), "it may not exist")) {
+            // If the result from instances_from_project "may not exist", then
+            // instances_from_default_project is used.
+            if (instances_from_default_project.has_value()) {
+              result.instances = instances_from_default_project.value();
+              result.project_of_instances = std::nullopt;
+            } else {
+              errors.push_back(instances_from_default_project.error());
+            }
+          } else {
+            // This is the case that instances_from_project has an error that is different from "it
+            // may not exist".
+            errors.push_back(instances_from_project.error());
+          }
+        }
+
+        if (errors.empty()) return result;
 
         std::string combined_error_messages = absl::StrJoin(
             errors, "\n",
