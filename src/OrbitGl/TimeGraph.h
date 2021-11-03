@@ -242,6 +242,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   ManualInstrumentationManager* manual_instrumentation_manager_;
   std::unique_ptr<ManualInstrumentationManager::AsyncTimerInfoListener> async_timer_info_listener_;
   const orbit_client_data::CaptureData* capture_data_ = nullptr;
+  orbit_client_data::ThreadTrackDataProvider* thread_track_data_provider_ = nullptr;
 
   OrbitApp* app_ = nullptr;
 };

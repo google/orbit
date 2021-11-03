@@ -12,6 +12,7 @@
 #include <string>
 
 #include "CallstackThreadBar.h"
+#include "ClientData/ThreadTrackDataProvider.h"
 #include "Containers/ScopeTree.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
@@ -30,13 +31,28 @@ class ThreadTrack final : public TimerTrack {
   explicit ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout, uint32_t thread_id,
                        OrbitApp* app, const orbit_client_data::CaptureData* capture_data,
-                       orbit_client_data::TimerData* timer_data,
-                       ScopeTreeUpdateType scope_tree_update_type);
+                       orbit_client_data::ThreadTrackDataProvider* thread_track_data_provider);
 
   [[nodiscard]] std::string GetName() const override;
   [[nodiscard]] std::string GetLabel() const override;
   [[nodiscard]] int GetNumberOfPrioritizedTrailingCharacters() const override;
   [[nodiscard]] Type GetType() const override { return Type::kThreadTrack; }
+
+  [[nodiscard]] uint32_t GetDepth() const override {
+    return thread_track_data_provider_->GetDepth(thread_id_);
+  }
+  [[nodiscard]] uint32_t GetProcessId() const override {
+    return thread_track_data_provider_->GetProcessId(thread_id_);
+  }
+  [[nodiscard]] size_t GetNumberOfTimers() const override {
+    return thread_track_data_provider_->GetNumberOfTimers(thread_id_);
+  }
+  [[nodiscard]] uint64_t GetMinTime() const override {
+    return thread_track_data_provider_->GetMinTime(thread_id_);
+  }
+  [[nodiscard]] uint64_t GetMaxTime() const override {
+    return thread_track_data_provider_->GetMaxTime(thread_id_);
+  }
   [[nodiscard]] std::string GetTooltip() const override;
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
@@ -56,15 +72,13 @@ class ThreadTrack final : public TimerTrack {
   [[nodiscard]] bool IsEmpty() const override;
 
   [[nodiscard]] std::vector<const orbit_client_data::TimerChain*> GetChains() const {
-    return timer_data_->GetChains();
+    return thread_track_data_provider_->GetChains(thread_id_);
   }
 
   [[nodiscard]] bool IsCollapsible() const override { return GetDepth() > 1; }
 
   [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() override;
   [[nodiscard]] std::vector<CaptureViewElement*> GetChildren() const override;
-
-  void OnCaptureComplete();
 
  protected:
   void DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
@@ -95,9 +109,7 @@ class ThreadTrack final : public TimerTrack {
   std::shared_ptr<orbit_gl::CallstackThreadBar> event_bar_;
   std::shared_ptr<orbit_gl::TracepointThreadBar> tracepoint_bar_;
 
-  absl::Mutex scope_tree_mutex_;
-  orbit_containers::ScopeTree<const orbit_client_protos::TimerInfo> scope_tree_;
-  ScopeTreeUpdateType scope_tree_update_type_ = ScopeTreeUpdateType::kAlways;
+  orbit_client_data::ThreadTrackDataProvider* thread_track_data_provider_;
 };
 
 #endif  // ORBIT_GL_THREAD_TRACK_H_
