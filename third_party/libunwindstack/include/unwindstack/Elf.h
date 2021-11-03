@@ -28,6 +28,7 @@
 #include <unwindstack/Arch.h>
 #include <unwindstack/ElfInterface.h>
 #include <unwindstack/Memory.h>
+#include <unwindstack/Object.h>
 #include <unwindstack/SharedString.h>
 
 #if !defined(EM_AARCH64)
@@ -40,53 +41,47 @@ namespace unwindstack {
 class MapInfo;
 class Regs;
 
-class Elf {
+class Elf : public Object {
  public:
   Elf(Memory* memory) : memory_(memory) {}
   virtual ~Elf() = default;
 
-  bool Init();
+  bool Init() override;
+  bool valid() override { return valid_; }
+  void Invalidate() override;
+
+  int64_t GetLoadBias() override { return load_bias_; }
+  std::string GetBuildID() override;
+
+  std::string GetSoname() override;
+  bool GetFunctionName(uint64_t addr, SharedString* name, uint64_t* func_offset) override;
+  bool GetGlobalVariableOffset(const std::string& name, uint64_t* memory_offset) override;
+
+  uint64_t GetRelPc(uint64_t pc, MapInfo* map_info) override;
+
+  bool StepIfSignalHandler(uint64_t rel_pc, Regs* regs, Memory* process_memory) override;
+  bool Step(uint64_t rel_pc, Regs* regs, Memory* process_memory, bool* finished,
+            bool* is_signal_frame) override;
+
+  Memory* memory() override { return memory_.get(); }
+
+  void GetLastError(ErrorData* data) override;
+  ErrorCode GetLastErrorCode() override;
+  uint64_t GetLastErrorAddress() override;
 
   void InitGnuDebugdata();
 
-  void Invalidate();
-
-  std::string GetSoname();
-
-  bool GetFunctionName(uint64_t addr, SharedString* name, uint64_t* func_offset);
-
-  bool GetGlobalVariableOffset(const std::string& name, uint64_t* memory_offset);
-
-  uint64_t GetRelPc(uint64_t pc, MapInfo* map_info);
-
-  bool StepIfSignalHandler(uint64_t rel_pc, Regs* regs, Memory* process_memory);
-
-  bool Step(uint64_t rel_pc, Regs* regs, Memory* process_memory, bool* finished,
-            bool* is_signal_frame);
-
   ElfInterface* CreateInterfaceFromMemory(Memory* memory);
-
-  std::string GetBuildID();
-
-  int64_t GetLoadBias() { return load_bias_; }
 
   bool IsValidPc(uint64_t pc);
 
   bool GetTextRange(uint64_t* addr, uint64_t* size);
-
-  void GetLastError(ErrorData* data);
-  ErrorCode GetLastErrorCode();
-  uint64_t GetLastErrorAddress();
-
-  bool valid() { return valid_; }
 
   uint32_t machine_type() { return machine_type_; }
 
   uint8_t class_type() { return class_type_; }
 
   ArchEnum arch() { return arch_; }
-
-  Memory* memory() { return memory_.get(); }
 
   ElfInterface* interface() { return interface_.get(); }
 
