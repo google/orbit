@@ -24,9 +24,16 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   QObject::connect(ui_->buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
   QObject::connect(ui_->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
+  ui_->unwindingMethodComboBox->addItem(
+      "DWARF", static_cast<int>(orbit_grpc_protos::UnwindingMethod::kDwarfUnwinding));
+  ui_->unwindingMethodComboBox->addItem(
+      "Frame pointers",
+      static_cast<int>(orbit_grpc_protos::UnwindingMethod::kFramePointerUnwinding));
+
   if (!absl::GetFlag(FLAGS_devmode)) {
     // TODO(b/198748597): Don't hide samplingCheckBox once disabling sampling completely is exposed.
     ui_->samplingCheckBox->hide();
+    ui_->unwindingMethodWidget->hide();
     ui_->schedulerCheckBox->hide();
     ui_->gpuSubmissionsCheckBox->hide();
     ui_->userspaceCheckBox->hide();
@@ -55,6 +62,17 @@ void CaptureOptionsDialog::SetSamplingPeriodMs(double sampling_period_ms) {
 
 double CaptureOptionsDialog::GetSamplingPeriodMs() const {
   return ui_->samplingPeriodMsDoubleSpinBox->value();
+}
+
+void CaptureOptionsDialog::SetUnwindingMethod(orbit_grpc_protos::UnwindingMethod unwinding_method) {
+  int index = ui_->unwindingMethodComboBox->findData(static_cast<int>(unwinding_method));
+  CHECK(index >= 0);
+  return ui_->unwindingMethodComboBox->setCurrentIndex(index);
+}
+
+orbit_grpc_protos::UnwindingMethod CaptureOptionsDialog::GetUnwindingMethod() const {
+  return static_cast<orbit_grpc_protos::UnwindingMethod>(
+      ui_->unwindingMethodComboBox->currentData().toInt());
 }
 
 void CaptureOptionsDialog::SetCollectSchedulerInfo(bool collect_scheduler_info) {
