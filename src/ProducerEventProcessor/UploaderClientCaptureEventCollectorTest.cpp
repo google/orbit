@@ -41,13 +41,13 @@ class UploaderClientCaptureEventCollectorTest : public testing::Test {
  protected:
   // Set `early_stop_event_count` to be >= 2 if we want to call `Stop()` early with producing only
   // `early_stop_event_count` events. Here we require ">= 2" as an early stop will create at
-  // least two capture events: one InternedStringCaptureEvent created when stop_called_ becomes
-  // true, and one `CaptureFinishEvent`.
-  void Start(size_t event_count, uint64_t produce_event_every_ms, uint64_t upload_event_every_ms,
+  // least two capture events: one `InternedStringCaptureEvent` created when stop_called_ becomes
+  // true, and one `CaptureFinishedEvent`.
+  void Start(size_t event_count, uint64_t produce_event_every_ms, uint64_t upload_events_every_ms,
              size_t early_stop_event_count = 0) {
     event_count_ = event_count;
     produce_event_every_ms_ = produce_event_every_ms;
-    upload_event_every_ms_ = upload_event_every_ms;
+    upload_events_every_ms_ = upload_events_every_ms;
     early_stop_event_count_ = early_stop_event_count;
 
     data_produce_thread_ =
@@ -84,15 +84,17 @@ class UploaderClientCaptureEventCollectorTest : public testing::Test {
 
  private:
   // Keep producing capture events until stop is called or `event_count_` events are produced with a
-  // specified produce duration. The last produced event will always be the capture finish event.
+  // specified produce duration. The last produced event will always be the `CaptureFinishedEvent`.
   void ProduceCaptureData() {
     size_t added_event_count = 0;
     bool need_check_early_stop = (early_stop_event_count_ >= 2);
     bool stopped = false;
     while (added_event_count < event_count_ - 1 && !stopped) {
       if (need_check_early_stop && added_event_count + 2 >= early_stop_event_count_) {
-        absl::MutexLock lock{&early_stop_mutex_};
-        early_stop_ = true;
+        {
+          absl::MutexLock lock{&early_stop_mutex_};
+          early_stop_ = true;
+        }
         need_check_early_stop = false;
       }
 
@@ -112,7 +114,7 @@ class UploaderClientCaptureEventCollectorTest : public testing::Test {
 
   void UploadCaptureData() {
     while (collector_.GetDataReadiness() != orbit_capture_uploader::DataReadiness::kEndOfData) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(upload_event_every_ms_));
+      std::this_thread::sleep_for(std::chrono::milliseconds(upload_events_every_ms_));
 
       const std::vector<unsigned char>& upload_data_buffer = collector_.GetUploadDataBuffer();
       total_uploaded_data_bytes_ += upload_data_buffer.size();
@@ -129,7 +131,7 @@ class UploaderClientCaptureEventCollectorTest : public testing::Test {
   size_t event_count_ = 0;
   size_t early_stop_event_count_;
   uint64_t produce_event_every_ms_;
-  uint64_t upload_event_every_ms_;
+  uint64_t upload_events_every_ms_;
   std::thread data_upload_thread_;
   std::thread data_produce_thread_;
 };
@@ -139,9 +141,9 @@ class UploaderClientCaptureEventCollectorTest : public testing::Test {
 TEST_F(UploaderClientCaptureEventCollectorTest, EarlyStop) {
   constexpr size_t kEventCount = 10;
   constexpr uint64_t kProduceEventEveryMs = 50;
-  constexpr uint64_t kUploadEventEveryMs = 5;
+  constexpr uint64_t kUploadEventsEveryMs = 5;
   constexpr size_t kEarlyStopEventCount = 4;
-  Start(kEventCount, kProduceEventEveryMs, kUploadEventEveryMs, kEarlyStopEventCount);
+  Start(kEventCount, kProduceEventEveryMs, kUploadEventsEveryMs, kEarlyStopEventCount);
 
   // Stop producing data early
   {
@@ -161,8 +163,8 @@ TEST_F(UploaderClientCaptureEventCollectorTest, EarlyStop) {
 TEST_F(UploaderClientCaptureEventCollectorTest, SlowProduceAndFastUpload) {
   constexpr size_t kEventCount = 10;
   constexpr uint64_t kSlowProduceEventEveryMs = 50;
-  constexpr uint64_t kFastUploadEventEveryMs = 5;
-  Start(kEventCount, kSlowProduceEventEveryMs, kFastUploadEventEveryMs);
+  constexpr uint64_t kFastUploadEventsEveryMs = 5;
+  Start(kEventCount, kSlowProduceEventEveryMs, kFastUploadEventsEveryMs);
 
   {
     absl::MutexLock lock{&upload_finished_mutex_};
@@ -175,8 +177,8 @@ TEST_F(UploaderClientCaptureEventCollectorTest, SlowProduceAndFastUpload) {
 TEST_F(UploaderClientCaptureEventCollectorTest, FastProduceAndSlowUpload) {
   constexpr size_t kEventCount = 10;
   constexpr uint64_t kFastProduceEventEveryMs = 5;
-  constexpr uint64_t kSlowUploadEventEveryMs = 50;
-  Start(kEventCount, kFastProduceEventEveryMs, kSlowUploadEventEveryMs);
+  constexpr uint64_t kSlowUploadEventsEveryMs = 50;
+  Start(kEventCount, kFastProduceEventEveryMs, kSlowUploadEventsEveryMs);
 
   {
     absl::MutexLock lock{&upload_finished_mutex_};

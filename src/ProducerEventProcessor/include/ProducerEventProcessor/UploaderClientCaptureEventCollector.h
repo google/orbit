@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef PRODUCER_EVENT_PROCESSOR_UPLOADER_CAPTURE_EVENT_COLLECTOR_H_
-#define PRODUCER_EVENT_PROCESSOR_UPLOADER_CAPTURE_EVENT_COLLECTOR_H_
+#ifndef PRODUCER_EVENT_PROCESSOR_UPLOADER_CLIENT_CAPTURE_EVENT_COLLECTOR_H_
+#define PRODUCER_EVENT_PROCESSOR_UPLOADER_CLIENT_CAPTURE_EVENT_COLLECTOR_H_
 
 #include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
@@ -19,11 +19,10 @@
 
 namespace orbit_producer_event_processor {
 
-// This class receives the ClientCaptureEvents emitted by a ProducerEventProcessor, buffers them
-// as a part of a well formated capture file, and enables a CaptureUploader to streaming upload the
-// buffered capture data.
-// Note that this collector will stop automatically after receiving a CaptureFinish event from the
-// ProducerEventProcessor.
+// This class receives the `ClientCaptureEvent`s emitted by a `ProducerEventProcessor`, buffers them
+// as a part of a well formated capture file, and enables a `CaptureUploader` to streaming upload
+// the buffered capture data. Note that this collector will stop automatically after receiving a
+// `CaptureFinishedEvent` from the `ProducerEventProcessor`.
 class UploaderClientCaptureEventCollector final
     : public ClientCaptureEventCollector,
       public orbit_capture_uploader::UploadDataInterface {
@@ -31,15 +30,15 @@ class UploaderClientCaptureEventCollector final
   explicit UploaderClientCaptureEventCollector();
   ~UploaderClientCaptureEventCollector() override;
 
-  // Convert the received capture event into raw bytes according to the format of capture file, and
-  // then buffer the converted data.
+  // Convert the received `ClientCaptureEvent` into raw bytes according to the format of capture
+  // file, and then buffer the converted data.
   void AddEvent(orbit_grpc_protos::ClientCaptureEvent&& event) override;
 
-  // Functions needed by the CaptureUploader to upload data.
-  orbit_capture_uploader::DataReadiness GetDataReadiness() const override;
+  // Functions needed by the `CaptureUploader` to upload data.
+  [[nodiscard]] orbit_capture_uploader::DataReadiness GetDataReadiness() const override;
   // This function is blocking until there is enough data to upload.
   void RefreshUploadDataBuffer() override;
-  const std::vector<unsigned char>& GetUploadDataBuffer() const override {
+  [[nodiscard]] const std::vector<unsigned char>& GetUploadDataBuffer() const override {
     return capture_data_to_upload_;
   }
 
@@ -54,8 +53,8 @@ class UploaderClientCaptureEventCollector final
   mutable absl::Mutex mutex_;
   size_t buffered_event_count_ ABSL_GUARDED_BY(mutex_) = 0;
   size_t buffered_event_bytes_ ABSL_GUARDED_BY(mutex_) = 0;
-  // Protect output_stream_ with mutex_ so that we can use output_stream_->IsOpen() in Conditions
-  // for Await/LockWhen.
+  // Protect `output_stream_` with `mutex_` so that we can use `output_stream_->IsOpen()` in
+  // Conditions for Await/LockWhen.
   std::unique_ptr<orbit_capture_file::CaptureFileOutputStream> output_stream_
       ABSL_GUARDED_BY(mutex_);
   orbit_capture_file::BufferOutputStream capture_data_buffer_stream_;
@@ -68,4 +67,4 @@ class UploaderClientCaptureEventCollector final
 
 }  // namespace orbit_producer_event_processor
 
-#endif  // PRODUCER_EVENT_PROCESSOR_UPLOADER_CAPTURE_EVENT_COLLECTOR_H_
+#endif  // PRODUCER_EVENT_PROCESSOR_UPLOADER_CLIENT_CAPTURE_EVENT_COLLECTOR_H_

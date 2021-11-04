@@ -50,8 +50,8 @@ void UploaderClientCaptureEventCollector::AddEvent(ClientCaptureEvent&& event) {
   {
     absl::MutexLock lock{&mutex_};
 
-    // The output stream gets closed when processing the capture finish event. Drop events received
-    // after closing the output stream.
+    // The output stream gets closed when processing the `CaptureFinishedEvent`. Drop events
+    // received after closing the output stream.
     CHECK(output_stream_ != nullptr);
     if (!output_stream_->IsOpen()) return;
 
@@ -64,7 +64,7 @@ void UploaderClientCaptureEventCollector::AddEvent(ClientCaptureEvent&& event) {
     buffered_event_bytes_ += event.ByteSizeLong();
   }
 
-  // Close output stream after processing the capture finish event.
+  // Close output stream after processing the `CaptureFinishedEvent`.
   if (event.event_case() == ClientCaptureEvent::kCaptureFinished) Stop();
 }
 
@@ -83,10 +83,10 @@ DataReadiness UploaderClientCaptureEventCollector::GetDataReadiness() const {
 }
 
 void UploaderClientCaptureEventCollector::RefreshUploadDataBuffer() {
-  // Clear capture_data_to_upload_ immediately.
+  // Clear `capture_data_to_upload_` immediately.
   capture_data_to_upload_.clear();
 
-  // Refill capture_data_to_upload_ when there is enough data to upload.
+  // Refill `capture_data_to_upload_` when there is enough data to upload.
   mutex_.LockWhen(absl::Condition(
       +[](UploaderClientCaptureEventCollector* self) ABSL_EXCLUSIVE_LOCKS_REQUIRED(self->mutex_) {
         constexpr int kUploadEventCountInterval = 5000;
