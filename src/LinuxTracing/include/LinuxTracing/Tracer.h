@@ -20,6 +20,10 @@ class Tracer {
   virtual void Start() = 0;
   virtual void Stop() = 0;
 
+  // The `FunctionEntry` and `FunctionExit` events are received from user space instrumentation and
+  // piped back into `LinuxTracing` using these two methods. This way they can be processed together
+  // with stack samples, allowing us to correctly unwind the samples that fall inside one or more
+  // dynamically instrumented functions, just like we do with u(ret)probes.
   virtual void ProcessFunctionEntry(const orbit_grpc_protos::FunctionEntry& function_entry) = 0;
   virtual void ProcessFunctionExit(const orbit_grpc_protos::FunctionExit& function_exit) = 0;
 
