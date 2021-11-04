@@ -380,7 +380,7 @@ void ThreadTrack::DoUpdatePrimitives(Batcher* batcher, TextRenderer& text_render
                                      uint64_t min_tick, uint64_t max_tick,
                                      PickingMode /*picking_mode*/) {
   // TODO(b/203181055): The parent class already provides an implementation, but this is completely
-  // ignored for optimization reasons.
+  // ignored because ThreadTrack uses the ScopeTree, and TimerTrack doesn't.
   // TimerTrack::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
 
   CHECK(batcher);
