@@ -163,10 +163,10 @@ void FunctionsDataView::DoSort() {
 
 const std::string FunctionsDataView::kMenuActionSelect = "Hook";
 const std::string FunctionsDataView::kMenuActionUnselect = "Unhook";
-const std::string FunctionsDataView::kMenuActionEnableFrameTrack = "Enable frame track(s)";
-const std::string FunctionsDataView::kMenuActionDisableFrameTrack = "Disable frame track(s)";
 const std::string FunctionsDataView::kMenuActionDisassembly = "Go to Disassembly";
 const std::string FunctionsDataView::kMenuActionSourceCode = "Go to Source code";
+const std::string FunctionsDataView::kMenuActionEnableFrameTrack = "Enable frame track(s)";
+const std::string FunctionsDataView::kMenuActionDisableFrameTrack = "Disable frame track(s)";
 
 std::vector<std::string> FunctionsDataView::GetContextMenu(
     int clicked_index, const std::vector<int>& selected_indices) {
@@ -191,6 +191,36 @@ std::vector<std::string> FunctionsDataView::GetContextMenu(
   menu.emplace_back(kMenuActionDisassembly);
   menu.emplace_back(kMenuActionSourceCode);
   orbit_base::Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
+  return menu;
+}
+
+std::vector<std::vector<std::string>> FunctionsDataView::GetContextMenuWithGrouping(
+    int clicked_index, const std::vector<int>& selected_indices) {
+  bool enable_select = false;
+  bool enable_unselect = false;
+  bool enable_enable_frame_track = false;
+  bool enable_disable_frame_track = false;
+
+  for (int index : selected_indices) {
+    const FunctionInfo& function = *GetFunction(index);
+    enable_select |= !app_->IsFunctionSelected(function);
+    enable_unselect |= app_->IsFunctionSelected(function);
+    enable_enable_frame_track |= !app_->IsFrameTrackEnabled(function);
+    enable_disable_frame_track |= app_->IsFrameTrackEnabled(function);
+  }
+
+  std::vector<std::string> action_group;
+  if (enable_select) action_group.emplace_back(kMenuActionSelect);
+  if (enable_unselect) action_group.emplace_back(kMenuActionUnselect);
+  action_group.emplace_back(kMenuActionDisassembly);
+  action_group.emplace_back(kMenuActionSourceCode);
+  if (enable_enable_frame_track) action_group.emplace_back(kMenuActionEnableFrameTrack);
+  if (enable_disable_frame_track) action_group.emplace_back(kMenuActionDisableFrameTrack);
+
+  std::vector<std::vector<std::string>> menu =
+      DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);
+  menu.insert(menu.begin(), action_group);
+
   return menu;
 }
 
