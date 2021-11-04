@@ -155,11 +155,8 @@ grpc::Status LinuxCaptureService::Capture(
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   orbit_base::SetCurrentThreadName("CSImpl::Capture");
 
-  {
-    grpc::Status result = InitializeCapture(reader_writer);
-    if (!result.ok()) {
-      return result;
-    }
+  if (grpc::Status result = InitializeCapture(reader_writer); !result.ok()) {
+    return result;
   }
 
   TracingHandler tracing_handler{producer_event_processor_.get()};
