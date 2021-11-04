@@ -58,7 +58,7 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
 
   virtual void RequestUpdate();
 
-  enum LayoutFlags : uint32_t { kScaleHorizontallyWithParent = 1 << 0 };
+  enum LayoutFlags : uint32_t { kNone = 0, kScaleHorizontallyWithParent = 1 << 0 };
 
   [[nodiscard]] virtual uint32_t GetLayoutFlags() const { return kScaleHorizontallyWithParent; }
   [[nodiscard]] virtual float DetermineZOffset() const { return 0.f; }
