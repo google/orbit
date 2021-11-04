@@ -26,8 +26,7 @@ class RetrieveInstancesWidget : public QWidget {
   Q_OBJECT
 
  public:
-  explicit RetrieveInstancesWidget(MainThreadExecutor* main_thread_executor,
-                                   RetrieveInstances* retreive_instances,
+  explicit RetrieveInstancesWidget(RetrieveInstances* retrieve_instances,
                                    QWidget* parent = nullptr);
   ~RetrieveInstancesWidget() override;
 
@@ -42,15 +41,16 @@ class RetrieveInstancesWidget : public QWidget {
 
  private:
   void SetupStateMachine();
-  orbit_ggp::Client::InstanceListScope GetInstanceListScope();
+  [[nodiscard]] orbit_ggp::Client::InstanceListScope GetInstanceListScope() const;
   void InitialLoad(const std::optional<orbit_ggp::Project>& remembered_project);
-  std::optional<orbit_ggp::Project> GetQSettingsProject();
   void OnInstancesLoadingReturned(
       const ErrorMessageOr<QVector<orbit_ggp::Instance>>& loading_result);
+  void OnInitialLoadingReturnedSuccess(
+      RetrieveInstances::LoadProjectsAndInstancesResult initial_load_result);
 
   std::unique_ptr<Ui::RetrieveInstancesWidget> ui_;
-  MainThreadExecutor* main_thread_executor_;
-  RetrieveInstances* retreive_instances_;
+  std::shared_ptr<MainThreadExecutor> main_thread_executor_;
+  RetrieveInstances* retrieve_instances_;
   QStateMachine state_machine_;
   QState s_idle_;
   QState s_loading_;

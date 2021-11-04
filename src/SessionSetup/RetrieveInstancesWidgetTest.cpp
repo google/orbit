@@ -108,9 +108,7 @@ const RetrieveInstances::LoadProjectsAndInstancesResult kInitialTestDataWithProj
 
 class RetrieveInstancesWidgetTest : public testing::Test {
  public:
-  RetrieveInstancesWidgetTest()
-      : executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()),
-        widget_(executor_.get(), &mock_retrieve_instances_) {
+  RetrieveInstancesWidgetTest() : widget_(&mock_retrieve_instances_) {
     filter_line_edit_ = widget_.findChild<QLineEdit*>("filterLineEdit");
     all_check_box_ = widget_.findChild<QCheckBox*>("allCheckBox");
     project_combo_box_ = widget_.findChild<QComboBox*>("projectComboBox");
@@ -152,9 +150,8 @@ class RetrieveInstancesWidgetTest : public testing::Test {
     EXPECT_EQ(arguments.at(0).value<QVector<Instance>>(), instances);
   }
 
-  void VerifyProjectComboBoxHoldsData(const QVector<Project>& projects,
-                                      const Project& default_project,
-                                      const std::optional<Project>& selected_project) {
+  void VerifyProjectComboBoxData(const QVector<Project>& projects, const Project& default_project,
+                                 const std::optional<Project>& selected_project) {
     // all projects + first default entry
     EXPECT_EQ(project_combo_box_->count(), projects.count() + 1);
 
@@ -183,12 +180,11 @@ class RetrieveInstancesWidgetTest : public testing::Test {
 
   void VerifyProjectComboBoxHoldsData(
       const RetrieveInstances::LoadProjectsAndInstancesResult& data) {
-    VerifyProjectComboBoxHoldsData(data.projects, data.default_project, data.project_of_instances);
+    VerifyProjectComboBoxData(data.projects, data.default_project, data.project_of_instances);
   }
 
   // MockGgpClient mock_ggp_;
   MockRetrieveInstances mock_retrieve_instances_;
-  std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> executor_;
   RetrieveInstancesWidget widget_;
   QLineEdit* filter_line_edit_ = nullptr;
   QCheckBox* all_check_box_ = nullptr;

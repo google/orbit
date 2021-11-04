@@ -36,11 +36,11 @@ int main(int argc, char* argv[]) {
   std::unique_ptr<RetrieveInstances> retrieve_instances =
       RetrieveInstances::Create(client_ptr, executor.get());
 
-  RetrieveInstancesWidget widget{executor.get(), retrieve_instances.get()};
+  RetrieveInstancesWidget widget{retrieve_instances.get()};
 
   QObject::connect(&widget, &RetrieveInstancesWidget::LoadingSuccessful, &widget,
                    [&widget](const QVector<orbit_ggp::Instance>& instances) {
-                     auto message =
+                     QString message =
                          QString{"Retrieved %1 instance. This is the list (display name):\n"}.arg(
                              instances.count());
                      for (const auto& instance : instances) {

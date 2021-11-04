@@ -17,6 +17,7 @@
 
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
+#include "QtUtils/MainThreadExecutorImpl.h"
 #include "SessionSetup/RetrieveInstances.h"
 #include "ui_RetrieveInstancesWidget.h"
 
@@ -31,21 +32,37 @@ namespace orbit_session_setup {
 using orbit_ggp::Client;
 using orbit_ggp::Instance;
 using orbit_ggp::Project;
+using LoadProjectsAndInstancesResult = RetrieveInstances::LoadProjectsAndInstancesResult;
+
+namespace {
+
+std::optional<Project> GetQSettingsProject() {
+  QSettings settings;
+
+  std::optional<Project> project;
+  if (settings.contains(kSelectedProjectIdKey)) {
+    project = Project{
+        settings.value(kSelectedProjectDisplayNameKey).toString() /* display_name */,
+        settings.value(kSelectedProjectIdKey).toString() /* id */
+    };
+  }
+  return project;
+}
+
+}  // namespace
 
 RetrieveInstancesWidget::~RetrieveInstancesWidget() = default;
 
-RetrieveInstancesWidget::RetrieveInstancesWidget(MainThreadExecutor* main_thread_executor,
-                                                 RetrieveInstances* retreive_instances,
+RetrieveInstancesWidget::RetrieveInstancesWidget(RetrieveInstances* retrieve_instances,
                                                  QWidget* parent)
     : QWidget(parent),
       ui_(std::make_unique<Ui::RetrieveInstancesWidget>()),
-      main_thread_executor_(main_thread_executor),
-      retreive_instances_(retreive_instances),
+      main_thread_executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()),
+      retrieve_instances_(retrieve_instances),
       s_idle_(&state_machine_),
       s_loading_(&state_machine_),
       s_initial_loading_failed_(&state_machine_) {
-  CHECK(main_thread_executor != nullptr);
-  CHECK(retreive_instances != nullptr);
+  CHECK(retrieve_instances != nullptr);
 
   ui_->setupUi(this);
 
@@ -76,19 +93,6 @@ void RetrieveInstancesWidget::SetupStateMachine() {
                                           &s_loading_);
 }
 
-std::optional<Project> RetrieveInstancesWidget::GetQSettingsProject() {
-  QSettings settings;
-
-  std::optional<Project> remembered_project;
-  if (settings.contains(kSelectedProjectIdKey)) {
-    remembered_project = Project{
-        settings.value(kSelectedProjectDisplayNameKey).toString() /* display_name */,
-        settings.value(kSelectedProjectIdKey).toString() /* id */
-    };
-  }
-  return remembered_project;
-}
-
 void RetrieveInstancesWidget::Start() {
   state_machine_.setInitialState(&s_loading_);
   state_machine_.start();
@@ -99,17 +103,17 @@ void RetrieveInstancesWidget::Start() {
   InitialLoad(GetQSettingsProject());
 }
 
-Client::InstanceListScope RetrieveInstancesWidget::GetInstanceListScope() {
+Client::InstanceListScope RetrieveInstancesWidget::GetInstanceListScope() const {
   return ui_->allCheckBox->isChecked() ? Client::InstanceListScope::kAllReservedInstances
                                        : Client::InstanceListScope::kOnlyOwnInstances;
 }
 
 void RetrieveInstancesWidget::InitialLoad(const std::optional<Project>& remembered_project) {
   emit LoadingStarted();
-  retreive_instances_->LoadProjectsAndInstances(remembered_project, GetInstanceListScope())
-      .Then(main_thread_executor_,
+  retrieve_instances_->LoadProjectsAndInstances(remembered_project, GetInstanceListScope())
+      .Then(main_thread_executor_.get(),
             [widget = QPointer<RetrieveInstancesWidget>(this)](
-                ErrorMessageOr<RetrieveInstances::LoadProjectsAndInstancesResult> loading_result) {
+                ErrorMessageOr<LoadProjectsAndInstancesResult> loading_result) {
               if (widget == nullptr) return;
 
               if (loading_result.has_error()) {
@@ -118,40 +122,47 @@ void RetrieveInstancesWidget::InitialLoad(const std::optional<Project>& remember
                 return;
               }
 
-              CHECK(widget->ui_->projectComboBox->count() == 0);
-
-              RetrieveInstances::LoadProjectsAndInstancesResult& data{loading_result.value()};
-
-              QString default_project_text =
-                  QString("Default Project (%1)").arg(data.default_project.display_name);
-              widget->ui_->projectComboBox->addItem(default_project_text);
-
-              QVector<Project>& projects{data.projects};
-              std::sort(projects.begin(), projects.end(), [](const Project& p1, const Project& p2) {
-                return p1.display_name.toLower() < p2.display_name.toLower();
-              });
-
-              for (const Project& project : data.projects) {
-                QString text = project.display_name;
-                if (project == data.default_project) {
-                  text.append(" (default)");
-                }
-                widget->ui_->projectComboBox->addItem(text, QVariant::fromValue(project));
-
-                if (project == data.project_of_instances) {
-                  // last added item
-                  widget->ui_->projectComboBox->setCurrentIndex(
-                      widget->ui_->projectComboBox->count() - 1);
-                }
-              }
-
-              widget->OnInstancesLoadingReturned(data.instances);
+              widget->OnInitialLoadingReturnedSuccess(loading_result.value());
             });
+}
+
+void RetrieveInstancesWidget::OnInitialLoadingReturnedSuccess(
+    LoadProjectsAndInstancesResult initial_load_result) {
+  CHECK(ui_->projectComboBox->count() == 0);
+
+  QString default_project_text =
+      QString("Default Project (%1)").arg(initial_load_result.default_project.display_name);
+  ui_->projectComboBox->addItem(default_project_text);
+
+  QVector<Project>& projects{initial_load_result.projects};
+  std::sort(projects.begin(), projects.end(),
+            [](const Project& p1, const Project& p2) { return p1.display_name < p2.display_name; });
+
+  for (const Project& project : initial_load_result.projects) {
+    QString text = project.display_name;
+    if (project == initial_load_result.default_project) {
+      text.append(" (default)");
+    }
+    ui_->projectComboBox->addItem(text, QVariant::fromValue(project));
+
+    // initial_load_result.instance, is the list for a specific project, which is
+    // initial_load_result.project_of_instances. (This can be different than the remembered project
+    // which was used in InitialLoad.) Since the initial_load_result.instances will be shown by
+    // ConnectToStadiaWidget, the combobox should have the project selected that belongs to this
+    // list. This selection is done here.
+    if (project == initial_load_result.project_of_instances) {
+      // last added item
+      ui_->projectComboBox->setCurrentIndex(ui_->projectComboBox->count() - 1);
+    }
+  }
+
+  OnInstancesLoadingReturned(initial_load_result.instances);
 }
 
 void RetrieveInstancesWidget::OnInstancesLoadingReturned(
     const ErrorMessageOr<QVector<Instance>>& loading_result) {
   if (loading_result.has_error()) {
+    ERROR("instance loading returned with error: %s", loading_result.error().message());
     QMessageBox::critical(this, QCoreApplication::applicationName(),
                           QString::fromStdString(loading_result.error().message()));
     emit LoadingFailed();
