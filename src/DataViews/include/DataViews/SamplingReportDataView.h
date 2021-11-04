@@ -28,8 +28,11 @@ class SamplingReportDataView : public DataView {
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnInclusive; }
+  // TODO(b/193604470): This will be removed once we change to use GetContextMenuWithGrouping
   std::vector<std::string> GetContextMenu(int clicked_index,
                                           const std::vector<int>& selected_indices) override;
+  std::vector<std::vector<std::string>> GetContextMenuWithGrouping(
+      int clicked_index, const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
   std::string GetValueForCopy(int row, int column) override;
   const std::string& GetName() { return name_; }
@@ -83,9 +86,9 @@ class SamplingReportDataView : public DataView {
     kNumColumns
   };
 
+  static const std::string kMenuActionLoadSymbols;
   static const std::string kMenuActionSelect;
   static const std::string kMenuActionUnselect;
-  static const std::string kMenuActionLoadSymbols;
   static const std::string kMenuActionDisassembly;
   static const std::string kMenuActionSourceCode;
 };
