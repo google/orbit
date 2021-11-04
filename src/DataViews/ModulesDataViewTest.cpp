@@ -21,6 +21,8 @@ using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleInMemory;
 using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
+using orbit_data_views::ContextMenuEntry;
+using orbit_data_views::FlattenContextMenuWithGrouping;
 using orbit_grpc_protos::ModuleInfo;
 
 namespace {
@@ -112,14 +114,18 @@ TEST_F(ModulesDataViewTest, ColumnValuesAreCorrect) {
 
 TEST_F(ModulesDataViewTest, ContextMenuEntriesArePresent) {
   AddModulesByIndices({0});
+  std::vector<std::string> context_menu =
+      FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
 
-  EXPECT_THAT(view_.GetContextMenu(0, {0}),
-              testing::UnorderedElementsAre("Load Symbols", "Copy Selection", "Export to CSV"));
+  CheckSingleAction(context_menu, "Copy Selection", ContextMenuEntry::kEnabled);
+  CheckSingleAction(context_menu, "Export to CSV", ContextMenuEntry::kEnabled);
+  CheckSingleAction(context_menu, "Load Symbols", ContextMenuEntry::kEnabled);
 }
 
 TEST_F(ModulesDataViewTest, ContextMenuActionsAreInvoked) {
   AddModulesByIndices({0});
-  std::vector<std::string> context_menu = view_.GetContextMenu(0, {0});
+  std::vector<std::string> context_menu =
+      FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
   // Load Symbols

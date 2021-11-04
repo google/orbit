@@ -26,6 +26,9 @@ void CheckExportToCsvIsInvoked(const std::vector<std::string>& context_menu,
                                const MockAppInterface& app, DataView& view,
                                const std::string& expected_contents);
 
+std::vector<std::string> FlattenContextMenuWithGrouping(
+    const std::vector<std::vector<std::string>>& menu_with_grouping);
+
 }  // namespace orbit_data_views
 
 #endif  // DATA_VIEWS_DATA_VIEW_TEST_UTILS_H_

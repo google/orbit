@@ -27,6 +27,7 @@
 
 using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
+using orbit_data_views::FlattenContextMenuWithGrouping;
 
 namespace {
 // This is just a helper type to handle colors. Note that Color from `OrbitGl/CoreMath.h` is not
@@ -206,18 +207,18 @@ TEST_F(PresetsDataViewTest, CheckPresenceOfContextMenuEntries) {
   view_.OnSort(1, DataView::SortingOrder::kAscending);
 
   // Loadable preset
-  EXPECT_THAT(view_.GetContextMenu(0, {0}),
+  EXPECT_THAT(FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0})),
               testing::UnorderedElementsAre("Copy Selection", "Export to CSV", "Load Preset",
                                             "Delete Preset"))
       << view_.GetValue(0, 1);
 
   // Not loadable preset
-  EXPECT_THAT(view_.GetContextMenu(1, {1}),
+  EXPECT_THAT(FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(1, {1})),
               testing::UnorderedElementsAre("Copy Selection", "Export to CSV", "Delete Preset"))
       << view_.GetValue(1, 1);
 
   // Partially loadable preset
-  EXPECT_THAT(view_.GetContextMenu(2, {2}),
+  EXPECT_THAT(FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(2, {2})),
               testing::UnorderedElementsAre("Copy Selection", "Export to CSV", "Load Preset",
                                             "Delete Preset"))
       << view_.GetValue(2, 1);
@@ -239,7 +240,8 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
   ASSERT_THAT(date_modified, orbit_test_utils::HasNoError());
 
   view_.SetPresets({preset_file0});
-  std::vector<std::string> context_menu = view_.GetContextMenu(0, {0});
+  std::vector<std::string> context_menu =
+      FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
   // Copy Selection
@@ -312,7 +314,8 @@ TEST_F(PresetsDataViewTest, CheckLoadPresetOnDoubleClick) {
   orbit_preset_file::PresetFile preset_file0{preset_filename0, orbit_client_protos::PresetInfo{}};
 
   view_.SetPresets({preset_file0});
-  std::vector<std::string> context_menu = view_.GetContextMenu(0, {0});
+  std::vector<std::string> context_menu =
+      FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
   EXPECT_CALL(app_, LoadPreset)

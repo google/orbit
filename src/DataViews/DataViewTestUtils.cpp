@@ -7,6 +7,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "OrbitBase/Append.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/TemporaryFile.h"
@@ -65,6 +66,15 @@ void CheckExportToCsvIsInvoked(const std::vector<std::string>& context_menu,
   ASSERT_THAT(contents_or_error, orbit_test_utils::HasNoError());
 
   EXPECT_EQ(contents_or_error.value(), expected_contents);
+}
+
+std::vector<std::string> FlattenContextMenuWithGrouping(
+    const std::vector<std::vector<std::string>>& menu_with_grouping) {
+  std::vector<std::string> menu;
+  for (const std::vector<std::string>& action_group : menu_with_grouping) {
+    orbit_base::Append(menu, action_group);
+  }
+  return menu;
 }
 
 }  // namespace orbit_data_views

@@ -15,6 +15,7 @@ using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::CheckSingleAction;
 using orbit_data_views::ContextMenuEntry;
+using orbit_data_views::FlattenContextMenuWithGrouping;
 using orbit_grpc_protos::TracepointInfo;
 
 namespace {
@@ -106,7 +107,8 @@ TEST_F(TracepointsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
       });
 
   auto verify_context_menu_action_availability = [&](const std::vector<int>& selected_indices) {
-    std::vector<std::string> context_menu = view_.GetContextMenu(0, selected_indices);
+    std::vector<std::string> context_menu =
+        FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, selected_indices));
 
     // Common actions should always be available.
     CheckSingleAction(context_menu, "Copy Selection", ContextMenuEntry::kEnabled);
@@ -141,7 +143,8 @@ TEST_F(TracepointsDataViewTest, ContextMenuActionsAreInvoked) {
       .WillRepeatedly(testing::ReturnPointee(&tracepoint_selected));
 
   SetTracepointsByIndices({0});
-  std::vector<std::string> context_menu = view_.GetContextMenu(0, {0});
+  std::vector<std::string> context_menu =
+      FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
   // Copy Selection
@@ -177,7 +180,7 @@ TEST_F(TracepointsDataViewTest, ContextMenuActionsAreInvoked) {
   }
 
   tracepoint_selected = true;
-  context_menu = view_.GetContextMenu(0, {0});
+  context_menu = FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
   // Unhook
