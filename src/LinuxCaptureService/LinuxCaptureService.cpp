@@ -113,17 +113,55 @@ static void StopInternalProducersAndCaptureStartStopListenersInParallel(
   }
 }
 
+namespace {
+
+// This class hijacks FunctionEntry and FunctionExit events before they reach the
+// ProducerEventProcessor, and sends them to LinuxTracing instead, so that they can be processed
+// like u(ret)probes. All the other events are forwarded to the ProducerEventProcessor normally.
+class ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing
+    : public ProducerEventProcessor {
+ public:
+  ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing(
+      ProducerEventProcessor* original_producer_event_processor, TracingHandler* tracing_handler)
+      : producer_event_processor_{original_producer_event_processor},
+        tracing_handler_{tracing_handler} {}
+  ~ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing() override = default;
+
+  void ProcessEvent(uint64_t producer_id,
+                    orbit_grpc_protos::ProducerCaptureEvent&& event) override {
+    switch (event.event_case()) {
+      case ProducerCaptureEvent::kFunctionEntry:
+        tracing_handler_->ProcessFunctionEntry(event.function_entry());
+        break;
+      case ProducerCaptureEvent::kFunctionExit:
+        tracing_handler_->ProcessFunctionExit(event.function_exit());
+        break;
+      case ProducerCaptureEvent::EVENT_NOT_SET:
+        UNREACHABLE();
+      default:
+        producer_event_processor_->ProcessEvent(producer_id, std::move(event));
+    }
+  }
+
+ private:
+  ProducerEventProcessor* producer_event_processor_;
+  TracingHandler* tracing_handler_;
+};
+
+}  // namespace
+
 grpc::Status LinuxCaptureService::Capture(
     grpc::ServerContext* /*context*/,
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   orbit_base::SetCurrentThreadName("CSImpl::Capture");
 
-  grpc::Status result = InitializeCapture(reader_writer);
-  if (!result.ok()) {
+  if (grpc::Status result = InitializeCapture(reader_writer); !result.ok()) {
     return result;
   }
 
   TracingHandler tracing_handler{producer_event_processor_.get()};
+  ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing function_entry_exit_hijacker{
+      producer_event_processor_.get(), &tracing_handler};
   MemoryInfoHandler memory_info_handler{producer_event_processor_.get()};
 
   CaptureRequest request = WaitForStartCaptureRequestFromClient(reader_writer);
@@ -189,7 +227,7 @@ grpc::Status LinuxCaptureService::Capture(
 
   memory_info_handler.Start(request.capture_options());
   for (CaptureStartStopListener* listener : capture_start_stop_listeners_) {
-    listener->OnCaptureStartRequested(request.capture_options(), producer_event_processor_.get());
+    listener->OnCaptureStartRequested(request.capture_options(), &function_entry_exit_hijacker);
   }
 
   WaitForEndCaptureRequestFromClient(reader_writer);

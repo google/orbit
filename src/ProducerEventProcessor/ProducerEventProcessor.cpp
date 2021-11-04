@@ -613,10 +613,8 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
       ProcessFunctionCallAndTransferOwnership(event.release_function_call());
       break;
     case ProducerCaptureEvent::kFunctionEntry:
-      // TODO(b/194704608): Forward to LinuxTracing (before reaching here).
       UNREACHABLE();
     case ProducerCaptureEvent::kFunctionExit:
-      // TODO(b/194704608): Forward to LinuxTracing (before reaching here).
       UNREACHABLE();
     case ProducerCaptureEvent::kGpuQueueSubmission:
       ProcessGpuQueueSubmissionAndTransferOwnership(producer_id,

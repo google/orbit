@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <tracepoint.pb.h>
 
+#include <algorithm>
 #include <atomic>
 #include <cstdint>
 #include <limits>
@@ -29,6 +30,7 @@
 #include "LinuxTracing/TracerListener.h"
 #include "LostAndDiscardedEventVisitor.h"
 #include "OrbitBase/Profiling.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "PerfEvent.h"
 #include "PerfEventProcessor.h"
 #include "PerfEventRingBuffer.h"
@@ -52,6 +54,9 @@ class TracerImpl : public Tracer {
 
   void Start() override;
   void Stop() override;
+
+  void ProcessFunctionEntry(const orbit_grpc_protos::FunctionEntry& function_entry) override;
+  void ProcessFunctionExit(const orbit_grpc_protos::FunctionExit& function_exit) override;
 
  private:
   void Run();
