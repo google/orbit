@@ -82,9 +82,9 @@ std::string TimerTrack::GetDisplayTime(const TimerInfo& timer) const {
   return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(timer.end() - timer.start()));
 }
 
-void TimerTrack::DrawTimesliceText(const orbit_client_protos::TimerInfo& timer,
-                                   TextRenderer& text_renderer, float min_x, Vec2 box_pos,
-                                   Vec2 box_size) {
+void TimerTrack::DrawTimesliceText(TextRenderer& text_renderer,
+                                   const orbit_client_protos::TimerInfo& timer, float min_x,
+                                   Vec2 box_pos, Vec2 box_size) {
   std::string timeslice_text = GetTimesliceText(timer);
 
   const std::string elapsed_time = GetDisplayTime(timer);
@@ -101,8 +101,8 @@ void TimerTrack::DrawTimesliceText(const orbit_client_protos::TimerInfo& timer,
       GlCanvas::kZValueBox, formatting, elapsed_time_length);
 }
 
-bool TimerTrack::DrawTimer(const TimerInfo* prev_timer_info, const TimerInfo* next_timer_info,
-                           const internal::DrawData& draw_data, TextRenderer& text_renderer,
+bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_timer_info,
+                           const TimerInfo* next_timer_info, const internal::DrawData& draw_data,
                            const TimerInfo* current_timer_info, uint64_t* min_ignore,
                            uint64_t* max_ignore) {
   CHECK(min_ignore != nullptr);
@@ -175,7 +175,7 @@ bool TimerTrack::DrawTimer(const TimerInfo* prev_timer_info, const TimerInfo* ne
       Vec2 pos{world_x_info.world_x_start, world_timer_y};
       Vec2 size{world_x_info.world_x_width, GetDynamicBoxHeight(*current_timer_info)};
 
-      DrawTimesliceText(*current_timer_info, text_renderer, draw_data.track_start_x, pos, size);
+      DrawTimesliceText(text_renderer, *current_timer_info, draw_data.track_start_x, pos, size);
     }
   }
 
@@ -300,7 +300,7 @@ void TimerTrack::DoUpdatePrimitives(Batcher* batcher, TextRenderer& text_rendere
         // from the previous iteration ("current").
         next_timer_info = &block[k];
 
-        if (DrawTimer(prev_timer_info, next_timer_info, draw_data, text_renderer,
+        if (DrawTimer(text_renderer, prev_timer_info, next_timer_info, draw_data,
                       current_timer_info, &min_ignore, &max_ignore)) {
           ++visible_timer_count_;
         }
@@ -312,7 +312,7 @@ void TimerTrack::DoUpdatePrimitives(Batcher* batcher, TextRenderer& text_rendere
 
     // We still need to draw the last timer.
     next_timer_info = nullptr;
-    if (DrawTimer(prev_timer_info, next_timer_info, draw_data, text_renderer, current_timer_info,
+    if (DrawTimer(text_renderer, prev_timer_info, next_timer_info, draw_data, current_timer_info,
                   &min_ignore, &max_ignore)) {
       ++visible_timer_count_;
     }

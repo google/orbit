@@ -113,9 +113,10 @@ class TimerTrack : public Track {
     return true;
   }
 
-  [[nodiscard]] bool DrawTimer(const orbit_client_protos::TimerInfo* prev_timer_info,
+  [[nodiscard]] bool DrawTimer(TextRenderer& text_renderer,
+                               const orbit_client_protos::TimerInfo* prev_timer_info,
                                const orbit_client_protos::TimerInfo* next_timer_info,
-                               const internal::DrawData& draw_data, TextRenderer& text_renderer,
+                               const internal::DrawData& draw_data,
                                const orbit_client_protos::TimerInfo* current_timer_info,
                                uint64_t* min_ignore, uint64_t* max_ignore);
 
@@ -125,7 +126,7 @@ class TimerTrack : public Track {
   }
   [[nodiscard]] std::string GetDisplayTime(const orbit_client_protos::TimerInfo&) const;
 
-  void DrawTimesliceText(const orbit_client_protos::TimerInfo& timer, TextRenderer& text_renderer,
+  void DrawTimesliceText(TextRenderer& text_renderer, const orbit_client_protos::TimerInfo& timer,
                          float min_x, Vec2 box_pos, Vec2 box_size);
 
   [[nodiscard]] static internal::DrawData GetDrawData(
