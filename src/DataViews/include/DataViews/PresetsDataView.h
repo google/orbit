@@ -26,8 +26,11 @@ class PresetsDataView : public DataView {
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnPresetName; }
+  // TODO(b/193604470): This will be removed once we change to use GetContextMenuWithGrouping
   std::vector<std::string> GetContextMenu(int clicked_index,
                                           const std::vector<int>& selected_indices) override;
+  std::vector<std::vector<std::string>> GetContextMenuWithGrouping(
+      int clicked_index, const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
   std::string GetToolTip(int row, int column) override;
   std::string GetLabel() override { return "Presets"; }

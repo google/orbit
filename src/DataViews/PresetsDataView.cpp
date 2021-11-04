@@ -166,6 +166,25 @@ std::vector<std::string> PresetsDataView::GetContextMenu(int clicked_index,
   return menu;
 }
 
+std::vector<std::vector<std::string>> PresetsDataView::GetContextMenuWithGrouping(
+    int clicked_index, const std::vector<int>& selected_indices) {
+  std::vector<std::string> action_group;
+  // Note that the UI already enforces a single selection.
+  if (selected_indices.size() == 1) {
+    const PresetFile& preset = GetPreset(selected_indices[0]);
+    if (app_->GetPresetLoadState(preset).state != PresetLoadState::kNotLoadable) {
+      action_group.emplace_back(kMenuActionLoad);
+    }
+    action_group.emplace_back(kMenuActionDelete);
+  }
+
+  std::vector<std::vector<std::string>> menu =
+      DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);
+  menu.insert(menu.begin(), action_group);
+
+  return menu;
+}
+
 void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
                                     const std::vector<int>& item_indices) {
   if (action == kMenuActionLoad) {
