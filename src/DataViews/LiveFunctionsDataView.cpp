@@ -197,15 +197,15 @@ void LiveFunctionsDataView::DoSort() {
 
 const std::string LiveFunctionsDataView::kMenuActionSelect = "Hook";
 const std::string LiveFunctionsDataView::kMenuActionUnselect = "Unhook";
+const std::string LiveFunctionsDataView::kMenuActionDisassembly = "Go to Disassembly";
+const std::string LiveFunctionsDataView::kMenuActionSourceCode = "Go to Source code";
+const std::string LiveFunctionsDataView::kMenuActionEnableFrameTrack = "Enable frame track(s)";
+const std::string LiveFunctionsDataView::kMenuActionDisableFrameTrack = "Disable frame track(s)";
+const std::string LiveFunctionsDataView::kMenuActionIterate = "Add iterator(s)";
 const std::string LiveFunctionsDataView::kMenuActionJumpToFirst = "Jump to first";
 const std::string LiveFunctionsDataView::kMenuActionJumpToLast = "Jump to last";
 const std::string LiveFunctionsDataView::kMenuActionJumpToMin = "Jump to min";
 const std::string LiveFunctionsDataView::kMenuActionJumpToMax = "Jump to max";
-const std::string LiveFunctionsDataView::kMenuActionDisassembly = "Go to Disassembly";
-const std::string LiveFunctionsDataView::kMenuActionIterate = "Add iterator(s)";
-const std::string LiveFunctionsDataView::kMenuActionEnableFrameTrack = "Enable frame track(s)";
-const std::string LiveFunctionsDataView::kMenuActionDisableFrameTrack = "Disable frame track(s)";
-const std::string LiveFunctionsDataView::kMenuActionSourceCode = "Go to Source code";
 
 std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
     int clicked_index, const std::vector<int>& selected_indices) {
@@ -269,6 +269,68 @@ std::vector<std::string> LiveFunctionsDataView::GetContextMenu(
     }
   }
   orbit_base::Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
+  return menu;
+}
+
+std::vector<std::vector<std::string>> LiveFunctionsDataView::GetContextMenuWithGrouping(
+    int clicked_index, const std::vector<int>& selected_indices) {
+  bool enable_select = false;
+  bool enable_unselect = false;
+  bool enable_disassembly = false;
+  bool enable_source_code = false;
+  bool enable_enable_frame_track = false;
+  bool enable_disable_frame_track = false;
+  bool enable_iterator = false;
+
+  const CaptureData& capture_data = app_->GetCaptureData();
+  for (int index : selected_indices) {
+    uint64_t instrumented_function_id = GetInstrumentedFunctionId(index);
+    const FunctionInfo& instrumented_function = GetInstrumentedFunction(index);
+
+    if (app_->IsCaptureConnected(capture_data)) {
+      enable_select |= !app_->IsFunctionSelected(instrumented_function);
+      enable_unselect |= app_->IsFunctionSelected(instrumented_function);
+      enable_disassembly = true;
+      enable_source_code = true;
+    }
+
+    const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(instrumented_function_id);
+    // We need at least one function call to a function so that adding iterators makes sense.
+    enable_iterator |= stats.count() > 0;
+
+    if (app_->IsCaptureConnected(capture_data)) {
+      enable_enable_frame_track |= !app_->IsFrameTrackEnabled(instrumented_function);
+      enable_disable_frame_track |= app_->IsFrameTrackEnabled(instrumented_function);
+    } else {
+      enable_enable_frame_track |= !capture_data.IsFrameTrackEnabled(instrumented_function_id);
+      enable_disable_frame_track |= capture_data.IsFrameTrackEnabled(instrumented_function_id);
+    }
+  }
+
+  std::vector<std::string> action_group;
+  if (enable_select) action_group.emplace_back(kMenuActionSelect);
+  if (enable_unselect) action_group.emplace_back(kMenuActionUnselect);
+  if (enable_disassembly) action_group.emplace_back(kMenuActionDisassembly);
+  if (enable_source_code) action_group.emplace_back(kMenuActionSourceCode);
+  if (enable_enable_frame_track) action_group.emplace_back(kMenuActionEnableFrameTrack);
+  if (enable_disable_frame_track) action_group.emplace_back(kMenuActionDisableFrameTrack);
+  if (enable_iterator) action_group.emplace_back(kMenuActionIterate);
+
+  // For now, these actions only make sense when one function is selected,
+  // so we don't show them otherwise.
+  if (selected_indices.size() == 1) {
+    uint64_t instrumented_function_id = GetInstrumentedFunctionId(selected_indices[0]);
+    const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(instrumented_function_id);
+    if (stats.count() > 0) {
+      action_group.insert(action_group.end(), {kMenuActionJumpToFirst, kMenuActionJumpToLast,
+                                               kMenuActionJumpToMin, kMenuActionJumpToMax});
+    }
+  }
+
+  std::vector<std::vector<std::string>> menu =
+      DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);
+  menu.insert(menu.begin(), action_group);
+
   return menu;
 }
 
