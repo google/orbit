@@ -77,6 +77,13 @@ std::vector<std::string> DataView::GetContextMenu(int /*clicked_index*/,
   return menu;
 }
 
+std::vector<std::vector<std::string>> DataView::GetContextMenuWithGrouping(
+    int /*clicked_index*/, const std::vector<int>& /*selected_indices*/) {
+  static std::vector<std::string> default_group = {kMenuActionCopySelection,
+                                                   kMenuActionExportToCsv};
+  return {default_group};
+}
+
 void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
                              const std::vector<int>& item_indices) {
   if (action == kMenuActionExportToCsv) {
