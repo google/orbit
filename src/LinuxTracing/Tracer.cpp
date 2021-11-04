@@ -6,13 +6,17 @@
 
 #include <memory>
 
+#include "LinuxTracing/UserSpaceInstrumentationAddresses.h"
 #include "TracerImpl.h"
 
 namespace orbit_linux_tracing {
 
-std::unique_ptr<Tracer> Tracer::Create(const orbit_grpc_protos::CaptureOptions& capture_options,
-                                       TracerListener* listener) {
-  return std::make_unique<TracerImpl>(capture_options, listener);
+std::unique_ptr<Tracer> Tracer::Create(
+    const orbit_grpc_protos::CaptureOptions& capture_options,
+    std::unique_ptr<UserSpaceInstrumentationAddresses> user_space_instrumentation_addresses,
+    TracerListener* listener) {
+  return std::make_unique<TracerImpl>(capture_options,
+                                      std::move(user_space_instrumentation_addresses), listener);
 }
 
 }  // namespace orbit_linux_tracing

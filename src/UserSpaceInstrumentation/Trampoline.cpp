@@ -25,6 +25,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "RegisterState.h"
+#include "UserSpaceInstrumentation/AddressRange.h"
 
 namespace orbit_user_space_instrumentation {
 

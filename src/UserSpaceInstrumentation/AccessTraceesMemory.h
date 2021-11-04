@@ -10,8 +10,8 @@
 #include <cstdint>
 #include <vector>
 
-#include "AddressRange.h"
 #include "OrbitBase/Result.h"
+#include "UserSpaceInstrumentation/AddressRange.h"
 
 namespace orbit_user_space_instrumentation {
 

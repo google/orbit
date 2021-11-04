@@ -28,6 +28,7 @@
 #include "LibunwindstackUnwinder.h"
 #include "LinuxTracing/Tracer.h"
 #include "LinuxTracing/TracerListener.h"
+#include "LinuxTracing/UserSpaceInstrumentationAddresses.h"
 #include "LostAndDiscardedEventVisitor.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
@@ -44,8 +45,10 @@ namespace orbit_linux_tracing {
 
 class TracerImpl : public Tracer {
  public:
-  explicit TracerImpl(const orbit_grpc_protos::CaptureOptions& capture_options,
-                      TracerListener* listener);
+  explicit TracerImpl(
+      const orbit_grpc_protos::CaptureOptions& capture_options,
+      std::unique_ptr<UserSpaceInstrumentationAddresses> user_space_instrumentation_addresses,
+      TracerListener* listener);
 
   TracerImpl(const TracerImpl&) = delete;
   TracerImpl& operator=(const TracerImpl&) = delete;

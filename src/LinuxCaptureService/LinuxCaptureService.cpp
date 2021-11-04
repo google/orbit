@@ -30,6 +30,7 @@
 #include "ProducerEventProcessor/GrpcClientCaptureEventCollector.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
 #include "TracingHandler.h"
+#include "UserSpaceInstrumentationAddressesImpl.h"
 #include "capture.pb.h"
 
 using orbit_grpc_protos::CaptureFinished;
@@ -185,6 +186,7 @@ grpc::Status LinuxCaptureService::Capture(
 
   // Enable user space instrumentation.
   std::optional<std::string> error_enabling_user_space_instrumentation;
+  std::unique_ptr<UserSpaceInstrumentationAddressesImpl> user_space_instrumentation_addresses;
   if (capture_options.enable_user_space_instrumentation() &&
       capture_options.instrumented_functions_size() != 0) {
     auto result_or_error = instrumentation_manager_->InstrumentProcess(capture_options);
@@ -198,6 +200,11 @@ grpc::Status LinuxCaptureService::Capture(
       LOG("User space instrumentation enabled for %u out of %u instrumented functions.",
           result_or_error.value().instrumented_function_ids.size(),
           capture_options.instrumented_functions_size());
+      user_space_instrumentation_addresses =
+          std::make_unique<UserSpaceInstrumentationAddressesImpl>(
+              result_or_error.value().entry_trampoline_address_ranges,
+              result_or_error.value().return_trampoline_address_range,
+              result_or_error.value().injected_library_path.string());
     }
   }
 
@@ -223,7 +230,8 @@ grpc::Status LinuxCaptureService::Capture(
     introspection_listener = CreateIntrospectionListener(producer_event_processor_.get());
   }
 
-  tracing_handler.Start(linux_tracing_capture_options);
+  tracing_handler.Start(linux_tracing_capture_options,
+                        std::move(user_space_instrumentation_addresses));
 
   memory_info_handler.Start(request.capture_options());
   for (CaptureStartStopListener* listener : capture_start_stop_listeners_) {

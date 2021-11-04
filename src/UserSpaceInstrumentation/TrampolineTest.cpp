@@ -25,7 +25,6 @@
 #include <vector>
 
 #include "AccessTraceesMemory.h"
-#include "AddressRange.h"
 #include "AllocateInTracee.h"
 #include "GetTestLibLibraryPath.h"
 #include "MachineCode.h"
@@ -37,6 +36,7 @@
 #include "TestUtils.h"
 #include "TestUtils/TestUtils.h"
 #include "Trampoline.h"
+#include "UserSpaceInstrumentation/AddressRange.h"
 #include "UserSpaceInstrumentation/Attach.h"
 #include "UserSpaceInstrumentation/InjectLibraryInTracee.h"
 

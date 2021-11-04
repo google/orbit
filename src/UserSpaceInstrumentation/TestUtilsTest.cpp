@@ -11,7 +11,6 @@
 #include <string_view>
 
 #include "AccessTraceesMemory.h"
-#include "AddressRange.h"
 #include "FindFunctionAddress.h"
 #include "ObjectUtils/ElfFile.h"
 #include "ObjectUtils/LinuxMap.h"
@@ -19,6 +18,7 @@
 #include "OrbitBase/Logging.h"
 #include "TestUtils.h"
 #include "TestUtils/TestUtils.h"
+#include "UserSpaceInstrumentation/AddressRange.h"
 #include "UserSpaceInstrumentation/Attach.h"
 
 namespace orbit_user_space_instrumentation {

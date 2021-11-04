@@ -60,7 +60,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
 
 }  // namespace
 
-[[nodiscard]] ErrorMessageOr<void*> DlopenInTracee(pid_t pid, std::filesystem::path path,
+[[nodiscard]] ErrorMessageOr<void*> DlopenInTracee(pid_t pid, const std::filesystem::path& path,
                                                    uint32_t flag) {
   // Make sure file exists.
   auto file_exists_or_error = orbit_base::FileExists(path);

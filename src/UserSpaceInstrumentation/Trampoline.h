@@ -14,9 +14,9 @@
 #include <optional>
 #include <vector>
 
-#include "AddressRange.h"
 #include "AllocateInTracee.h"
 #include "OrbitBase/Result.h"
+#include "UserSpaceInstrumentation/AddressRange.h"
 
 namespace orbit_user_space_instrumentation {
 
@@ -104,13 +104,13 @@ struct RelocatedInstruction {
 // Returns the translated code and, optionally, a position in the code that might require an address
 // translation (details in the comment above).
 // Note that not all instructions can be handled (for various reasons, see the comments in the
-// implemention). At least in the current implementation it might not be possible to instrument some
-// functions.
+// implementation). At least in the current implementation it might not be possible to instrument
+// some functions.
 [[nodiscard]] ErrorMessageOr<RelocatedInstruction> RelocateInstruction(cs_insn* instruction,
                                                                        uint64_t old_address,
                                                                        uint64_t new_address);
 
-// Strictly speaking the max tempoline size is a compile time constant, but we prefer to compute it
+// Strictly speaking the max trampoline size is a compile time constant, but we prefer to compute it
 // here since this captures every change to the code constructing the trampoline.
 [[nodiscard]] uint64_t GetMaxTrampolineSize();
 
@@ -151,7 +151,7 @@ struct RelocatedInstruction {
                                                           uint64_t return_trampoline_address);
 
 // Instrument function at `function_address` in process `pid`. This simply overwrites the beginning
-// of the fuction with a jump to `trampoline_address`. The trampoline needs to be constructed with
+// of the function with a jump to `trampoline_address`. The trampoline needs to be constructed with
 // `CreateTrampoline` above. The trampoline gets patched such that it hands over the current
 // `function_id` to the entry payload.
 [[nodiscard]] ErrorMessageOr<void> InstrumentFunction(pid_t pid, uint64_t function_address,
