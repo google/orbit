@@ -33,10 +33,9 @@ int main(int argc, char* argv[]) {
   std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> executor{
       orbit_qt_utils::MainThreadExecutorImpl::Create()};
 
-  std::unique_ptr<RetrieveInstances> retrieve_instances =
-      RetrieveInstances::Create(client_ptr, executor.get());
+  RetrieveInstancesWidget widget{};
 
-  RetrieveInstancesWidget widget{retrieve_instances.get()};
+  widget.SetRetrieveInstances(RetrieveInstances::Create(client_ptr, executor.get()));
 
   QObject::connect(&widget, &RetrieveInstancesWidget::LoadingSuccessful, &widget,
                    [&widget](const QVector<orbit_ggp::Instance>& instances) {

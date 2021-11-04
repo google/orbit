@@ -123,7 +123,9 @@ const RetrieveInstances::LoadProjectsAndInstancesResult kInitialTestDataWithProj
 
 class RetrieveInstancesWidgetTest : public testing::Test {
  public:
-  RetrieveInstancesWidgetTest() : widget_(&mock_retrieve_instances_) {
+  RetrieveInstancesWidgetTest()
+      : mock_retrieve_instances_(std::make_shared<MockRetrieveInstances>()) {
+    widget_.SetRetrieveInstances(mock_retrieve_instances_);
     filter_line_edit_ = widget_.findChild<QLineEdit*>("filterLineEdit");
     all_check_box_ = widget_.findChild<QCheckBox*>("allCheckBox");
     project_combo_box_ = widget_.findChild<QComboBox*>("projectComboBox");
@@ -230,7 +232,7 @@ class RetrieveInstancesWidgetTest : public testing::Test {
     VerifyAllElementsAreEnabled();
   }
 
-  MockRetrieveInstances mock_retrieve_instances_;
+  std::shared_ptr<MockRetrieveInstances> mock_retrieve_instances_;
   RetrieveInstancesWidget widget_;
   QLineEdit* filter_line_edit_ = nullptr;
   QCheckBox* all_check_box_ = nullptr;
@@ -247,7 +249,7 @@ class RetrieveInstancesWidgetTestStarted : public RetrieveInstancesWidgetTest {
   void SetUp() override {
     RetrieveInstancesWidgetTest::SetUp();
 
-    EXPECT_CALL(mock_retrieve_instances_,
+    EXPECT_CALL(*mock_retrieve_instances_,
                 LoadProjectsAndInstances(std::optional<Project>(std::nullopt),
                                          InstanceListScope(InstanceListScope::kOnlyOwnInstances)))
         .WillOnce(Return(Future<ErrorMessageOr<RetrieveInstances::LoadProjectsAndInstancesResult>>{
@@ -279,7 +281,7 @@ TEST_F(RetrieveInstancesWidgetTest, FilterTextChanged) {
 }
 
 TEST_F(RetrieveInstancesWidgetTest, StartSuccessfulDefault) {
-  EXPECT_CALL(mock_retrieve_instances_,
+  EXPECT_CALL(*mock_retrieve_instances_,
               LoadProjectsAndInstances(std::optional<Project>(std::nullopt),
                                        InstanceListScope(InstanceListScope::kOnlyOwnInstances)))
       .WillOnce(Return(Future<ErrorMessageOr<RetrieveInstances::LoadProjectsAndInstancesResult>>{
@@ -294,7 +296,7 @@ TEST_F(RetrieveInstancesWidgetTest, StartSuccessfulDefault) {
 
 TEST_F(RetrieveInstancesWidgetTest, StartSuccessfulWithRememberedSettings) {
   EXPECT_CALL(
-      mock_retrieve_instances_,
+      *mock_retrieve_instances_,
       LoadProjectsAndInstances(
           std::optional<Project>(kInitialTestDataWithProjectOfInstances.project_of_instances),
           InstanceListScope(InstanceListScope::kAllReservedInstances)))
@@ -314,7 +316,7 @@ TEST_F(RetrieveInstancesWidgetTest, StartSuccessfulWithRememberedSettings) {
 }
 
 TEST_F(RetrieveInstancesWidgetTest, StartFailed) {
-  EXPECT_CALL(mock_retrieve_instances_,
+  EXPECT_CALL(*mock_retrieve_instances_,
               LoadProjectsAndInstances(std::optional<Project>(std::nullopt),
                                        InstanceListScope(InstanceListScope::kOnlyOwnInstances)))
       .WillOnce(Return(Future<ErrorMessageOr<RetrieveInstances::LoadProjectsAndInstancesResult>>{
@@ -335,7 +337,7 @@ TEST_F(RetrieveInstancesWidgetTest, StartFailed) {
 }
 
 TEST_F(RetrieveInstancesWidgetTestStarted, ReloadSucceeds) {
-  EXPECT_CALL(mock_retrieve_instances_,
+  EXPECT_CALL(*mock_retrieve_instances_,
               LoadInstancesWithoutCache(std::optional<Project>(std::nullopt),
                                         InstanceListScope(InstanceListScope::kOnlyOwnInstances)))
       .WillOnce(Return(Future<ErrorMessageOr<QVector<Instance>>>(kTestInstancesProject1)))
@@ -352,7 +354,7 @@ TEST_F(RetrieveInstancesWidgetTestStarted, ReloadSucceeds) {
 }
 
 TEST_F(RetrieveInstancesWidgetTestStarted, ReloadFails) {
-  EXPECT_CALL(mock_retrieve_instances_,
+  EXPECT_CALL(*mock_retrieve_instances_,
               LoadInstancesWithoutCache(std::optional<Project>(std::nullopt),
                                         InstanceListScope(InstanceListScope::kOnlyOwnInstances)))
       .WillOnce(Return(Future<ErrorMessageOr<QVector<Instance>>>(ErrorMessage{"error"})));
@@ -376,7 +378,7 @@ TEST_F(RetrieveInstancesWidgetTestStarted, ProjectChangeSuccessful) {
   // "Test Project 1 (default)"
   // "Test Project 2"
 
-  EXPECT_CALL(mock_retrieve_instances_,
+  EXPECT_CALL(*mock_retrieve_instances_,
               LoadInstances(std::optional<Project>(kTestProject1),
                             InstanceListScope(InstanceListScope::kOnlyOwnInstances)))
       .WillOnce(Return(Future<ErrorMessageOr<QVector<Instance>>>(kTestInstancesProject1)));
@@ -393,7 +395,7 @@ TEST_F(RetrieveInstancesWidgetTestStarted, ProjectChangeSuccessful) {
   // > "Test Project 1 (default)"
   // "Test Project 2"
 
-  EXPECT_CALL(mock_retrieve_instances_,
+  EXPECT_CALL(*mock_retrieve_instances_,
               LoadInstances(std::optional<Project>(std::nullopt),
                             InstanceListScope(InstanceListScope::kOnlyOwnInstances)))
       .WillOnce(Return(Future<ErrorMessageOr<QVector<Instance>>>(kTestInstancesProject1)));
@@ -410,7 +412,7 @@ TEST_F(RetrieveInstancesWidgetTestStarted, ProjectChangeSuccessful) {
   // "Test Project 1 (default)"
   // "Test Project 2"
 
-  EXPECT_CALL(mock_retrieve_instances_,
+  EXPECT_CALL(*mock_retrieve_instances_,
               LoadInstances(std::optional<Project>(kTestProject2),
                             InstanceListScope(InstanceListScope::kOnlyOwnInstances)))
       .WillOnce(Return(Future<ErrorMessageOr<QVector<Instance>>>(kTestInstancesProject2)));
@@ -437,7 +439,7 @@ TEST_F(RetrieveInstancesWidgetTestStarted, ProjectChangeFailed) {
   // "Test Project 1 (default)"
   // "Test Project 2"
 
-  EXPECT_CALL(mock_retrieve_instances_,
+  EXPECT_CALL(*mock_retrieve_instances_,
               LoadInstances(std::optional<Project>(kTestProject1),
                             InstanceListScope(InstanceListScope::kOnlyOwnInstances)))
       .WillOnce(Return(Future<ErrorMessageOr<QVector<Instance>>>(ErrorMessage{"error"})));
@@ -462,11 +464,11 @@ TEST_F(RetrieveInstancesWidgetTestStarted, ProjectChangeFailed) {
 }
 
 TEST_F(RetrieveInstancesWidgetTestStarted, AllCheckboxSuccessful) {
-  EXPECT_CALL(mock_retrieve_instances_,
+  EXPECT_CALL(*mock_retrieve_instances_,
               LoadInstances(std::optional<Project>(std::nullopt),
                             InstanceListScope(InstanceListScope::kAllReservedInstances)))
       .WillOnce(Return(Future<ErrorMessageOr<QVector<Instance>>>(kTestInstancesProject1All)));
-  EXPECT_CALL(mock_retrieve_instances_,
+  EXPECT_CALL(*mock_retrieve_instances_,
               LoadInstances(std::optional<Project>(std::nullopt),
                             InstanceListScope(InstanceListScope::kOnlyOwnInstances)))
       .WillOnce(Return(Future<ErrorMessageOr<QVector<Instance>>>(kTestInstancesProject1)));
@@ -487,7 +489,7 @@ TEST_F(RetrieveInstancesWidgetTestStarted, AllCheckboxSuccessful) {
 }
 
 TEST_F(RetrieveInstancesWidgetTestStarted, AllCheckboxFail) {
-  EXPECT_CALL(mock_retrieve_instances_,
+  EXPECT_CALL(*mock_retrieve_instances_,
               LoadInstances(std::optional<Project>(std::nullopt),
                             InstanceListScope(InstanceListScope::kAllReservedInstances)))
       .WillOnce(Return(Future<ErrorMessageOr<QVector<Instance>>>(ErrorMessage{"error"})));

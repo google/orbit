@@ -26,11 +26,13 @@ class RetrieveInstancesWidget : public QWidget {
   Q_OBJECT
 
  public:
-  explicit RetrieveInstancesWidget(RetrieveInstances* retrieve_instances,
-                                   QWidget* parent = nullptr);
+  explicit RetrieveInstancesWidget(QWidget* parent = nullptr);
   ~RetrieveInstancesWidget() override;
 
   void Start();
+  void SetRetrieveInstances(std::shared_ptr<RetrieveInstances> retrieve_instances) {
+    retrieve_instances_ = std::move(retrieve_instances);
+  }
 
  signals:
   void LoadingStarted();
@@ -54,7 +56,7 @@ class RetrieveInstancesWidget : public QWidget {
 
   std::unique_ptr<Ui::RetrieveInstancesWidget> ui_;
   std::shared_ptr<MainThreadExecutor> main_thread_executor_;
-  RetrieveInstances* retrieve_instances_;
+  std::shared_ptr<RetrieveInstances> retrieve_instances_;
   QStateMachine state_machine_;
   QState s_idle_;
   QState s_loading_;

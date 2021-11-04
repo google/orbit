@@ -31,17 +31,13 @@ using InstanceListScope = orbit_ggp::Client::InstanceListScope;
 
 RetrieveInstancesWidget::~RetrieveInstancesWidget() = default;
 
-RetrieveInstancesWidget::RetrieveInstancesWidget(RetrieveInstances* retrieve_instances,
-                                                 QWidget* parent)
+RetrieveInstancesWidget::RetrieveInstancesWidget(QWidget* parent)
     : QWidget(parent),
       ui_(std::make_unique<Ui::RetrieveInstancesWidget>()),
       main_thread_executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()),
-      retrieve_instances_(retrieve_instances),
       s_idle_(&state_machine_),
       s_loading_(&state_machine_),
       s_initial_loading_failed_(&state_machine_) {
-  CHECK(retrieve_instances != nullptr);
-
   ui_->setupUi(this);
 
   SetupStateMachine();
@@ -78,6 +74,7 @@ void RetrieveInstancesWidget::SetupStateMachine() {
 }
 
 void RetrieveInstancesWidget::Start() {
+  CHECK(retrieve_instances_ != nullptr);
   state_machine_.setInitialState(&s_loading_);
   state_machine_.start();
 
