@@ -151,21 +151,6 @@ void PresetsDataView::DoSort() {
 const std::string PresetsDataView::kMenuActionLoad = "Load Preset";
 const std::string PresetsDataView::kMenuActionDelete = "Delete Preset";
 
-std::vector<std::string> PresetsDataView::GetContextMenu(int clicked_index,
-                                                         const std::vector<int>& selected_indices) {
-  std::vector<std::string> menu;
-  // Note that the UI already enforces a single selection.
-  if (selected_indices.size() == 1) {
-    const PresetFile& preset = GetPreset(selected_indices[0]);
-    if (app_->GetPresetLoadState(preset).state != PresetLoadState::kNotLoadable) {
-      menu.emplace_back(kMenuActionLoad);
-    }
-    menu.emplace_back(kMenuActionDelete);
-  }
-  orbit_base::Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
-  return menu;
-}
-
 std::vector<std::vector<std::string>> PresetsDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   std::vector<std::string> action_group;

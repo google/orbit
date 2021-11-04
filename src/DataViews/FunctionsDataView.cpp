@@ -168,32 +168,6 @@ const std::string FunctionsDataView::kMenuActionSourceCode = "Go to Source code"
 const std::string FunctionsDataView::kMenuActionEnableFrameTrack = "Enable frame track(s)";
 const std::string FunctionsDataView::kMenuActionDisableFrameTrack = "Disable frame track(s)";
 
-std::vector<std::string> FunctionsDataView::GetContextMenu(
-    int clicked_index, const std::vector<int>& selected_indices) {
-  bool enable_select = false;
-  bool enable_unselect = false;
-  bool enable_enable_frame_track = false;
-  bool enable_disable_frame_track = false;
-
-  for (int index : selected_indices) {
-    const FunctionInfo& function = *GetFunction(index);
-    enable_select |= !app_->IsFunctionSelected(function);
-    enable_unselect |= app_->IsFunctionSelected(function);
-    enable_enable_frame_track |= !app_->IsFrameTrackEnabled(function);
-    enable_disable_frame_track |= app_->IsFrameTrackEnabled(function);
-  }
-
-  std::vector<std::string> menu;
-  if (enable_select) menu.emplace_back(kMenuActionSelect);
-  if (enable_unselect) menu.emplace_back(kMenuActionUnselect);
-  if (enable_enable_frame_track) menu.emplace_back(kMenuActionEnableFrameTrack);
-  if (enable_disable_frame_track) menu.emplace_back(kMenuActionDisableFrameTrack);
-  menu.emplace_back(kMenuActionDisassembly);
-  menu.emplace_back(kMenuActionSourceCode);
-  orbit_base::Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
-  return menu;
-}
-
 std::vector<std::vector<std::string>> FunctionsDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_select = false;

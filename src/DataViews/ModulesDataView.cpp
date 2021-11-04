@@ -111,32 +111,6 @@ void ModulesDataView::DoSort() {
 const std::string ModulesDataView::kMenuActionLoadSymbols = "Load Symbols";
 const std::string ModulesDataView::kMenuActionVerifyFramePointers = "Verify Frame Pointers";
 
-std::vector<std::string> ModulesDataView::GetContextMenu(int clicked_index,
-                                                         const std::vector<int>& selected_indices) {
-  bool enable_load = false;
-  bool enable_verify = false;
-  for (int index : selected_indices) {
-    const ModuleData* module = GetModule(index);
-    if (!module->is_loaded()) {
-      enable_load = true;
-    }
-
-    if (module->is_loaded()) {
-      enable_verify = true;
-    }
-  }
-
-  std::vector<std::string> menu;
-  if (enable_load) {
-    menu.emplace_back(kMenuActionLoadSymbols);
-  }
-  if (enable_verify && absl::GetFlag(FLAGS_enable_frame_pointer_validator)) {
-    menu.emplace_back(kMenuActionVerifyFramePointers);
-  }
-  orbit_base::Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
-  return menu;
-}
-
 std::vector<std::vector<std::string>> ModulesDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_load = false;

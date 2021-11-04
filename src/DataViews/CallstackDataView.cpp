@@ -106,38 +106,6 @@ const std::string CallstackDataView::kHighlightedFunctionString = "➜ ";
 const std::string CallstackDataView::kHighlightedFunctionBlankString =
     std::string(kHighlightedFunctionString.size(), ' ');
 
-std::vector<std::string> CallstackDataView::GetContextMenu(
-    int clicked_index, const std::vector<int>& selected_indices) {
-  bool enable_load = false;
-  bool enable_select = false;
-  bool enable_unselect = false;
-  bool enable_disassembly = false;
-  bool enable_source_code = false;
-  for (int index : selected_indices) {
-    CallstackDataViewFrame frame = GetFrameFromRow(index);
-    const FunctionInfo* function = frame.function;
-    const ModuleData* module = frame.module;
-
-    if (frame.function != nullptr && app_->IsCaptureConnected(app_->GetCaptureData())) {
-      enable_select |= !app_->IsFunctionSelected(*function);
-      enable_unselect |= app_->IsFunctionSelected(*function);
-      enable_disassembly = true;
-      enable_source_code = true;
-    } else if (module != nullptr && !module->is_loaded()) {
-      enable_load = true;
-    }
-  }
-
-  std::vector<std::string> menu;
-  if (enable_load) menu.emplace_back(kMenuActionLoadSymbols);
-  if (enable_select) menu.emplace_back(kMenuActionSelect);
-  if (enable_unselect) menu.emplace_back(kMenuActionUnselect);
-  if (enable_disassembly) menu.emplace_back(kMenuActionDisassembly);
-  if (enable_source_code) menu.emplace_back(kMenuActionSourceCode);
-  orbit_base::Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
-  return menu;
-}
-
 std::vector<std::vector<std::string>> CallstackDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_load = false;

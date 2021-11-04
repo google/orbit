@@ -222,45 +222,6 @@ const std::string SamplingReportDataView::kMenuActionLoadSymbols = "Load Symbols
 const std::string SamplingReportDataView::kMenuActionDisassembly = "Go to Disassembly";
 const std::string SamplingReportDataView::kMenuActionSourceCode = "Go to Source code";
 
-std::vector<std::string> SamplingReportDataView::GetContextMenu(
-    int clicked_index, const std::vector<int>& selected_indices) {
-  bool enable_select = false;
-  bool enable_unselect = false;
-  bool enable_disassembly = false;
-  bool enable_source_code = false;
-
-  if (app_->IsCaptureConnected(app_->GetCaptureData())) {
-    absl::flat_hash_set<const FunctionInfo*> selected_functions =
-        GetFunctionsFromIndices(selected_indices);
-
-    enable_disassembly = !selected_functions.empty();
-    enable_source_code = !selected_functions.empty();
-
-    for (const FunctionInfo* function : selected_functions) {
-      enable_select |= !app_->IsFunctionSelected(*function);
-      enable_unselect |= app_->IsFunctionSelected(*function);
-    }
-  }
-
-  bool enable_load = false;
-  for (const auto& [module_path, build_id] :
-       GetModulePathsAndBuildIdsFromIndices(selected_indices)) {
-    const ModuleData* module = app_->GetModuleByPathAndBuildId(module_path, build_id);
-    if (!module->is_loaded()) {
-      enable_load = true;
-    }
-  }
-
-  std::vector<std::string> menu;
-  if (enable_select) menu.emplace_back(kMenuActionSelect);
-  if (enable_unselect) menu.emplace_back(kMenuActionUnselect);
-  if (enable_load) menu.emplace_back(kMenuActionLoadSymbols);
-  if (enable_disassembly) menu.emplace_back(kMenuActionDisassembly);
-  if (enable_source_code) menu.emplace_back(kMenuActionSourceCode);
-  orbit_base::Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
-  return menu;
-}
-
 std::vector<std::vector<std::string>> SamplingReportDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_load = false;

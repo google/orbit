@@ -106,25 +106,6 @@ void TracepointsDataView::DoFilter() {
   indices_ = std::move(indices);
 }
 
-std::vector<std::string> TracepointsDataView::GetContextMenu(
-    int clicked_index, const std::vector<int>& selected_indices) {
-  std::vector<std::string> menu;
-
-  bool enable_select = false;
-  bool enable_unselect = false;
-  for (int index : selected_indices) {
-    const TracepointInfo& tracepoint = GetTracepoint(index);
-    enable_select |= !app_->IsTracepointSelected(tracepoint);
-    enable_unselect |= app_->IsTracepointSelected(tracepoint);
-  }
-
-  if (enable_select) menu.emplace_back(kMenuActionSelect);
-  if (enable_unselect) menu.emplace_back(kMenuActionUnselect);
-
-  orbit_base::Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
-  return menu;
-}
-
 std::vector<std::vector<std::string>> TracepointsDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_select = false;
