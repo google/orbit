@@ -45,29 +45,29 @@ class MapInfo {
         offset_(offset),
         flags_(flags),
         name_(name),
-        elf_fields_(nullptr),
+        object_fields_(nullptr),
         prev_map_(prev_map),
         prev_real_map_(prev_real_map) {
     if (prev_real_map != nullptr) prev_real_map->next_real_map_ = this;
   }
   ~MapInfo();
 
-  // Cached data for mapped ELF files.
-  // We allocate this structure lazily since there are much fewer ELFs than maps.
-  struct ElfFields {
-    ElfFields() : load_bias_(INT64_MAX), build_id_(0) {}
+  // Cached data for mapped object files.
+  // We allocate this structure lazily since there are much fewer objects than maps.
+  struct ObjectFields {
+    ObjectFields() : load_bias_(INT64_MAX), build_id_(0) {}
 
-    std::shared_ptr<Elf> elf_;
+    std::shared_ptr<Object> object_;
     // The offset of the beginning of this mapping to the beginning of the
-    // ELF file.
-    // elf_offset == offset - elf_start_offset.
+    // object file.
+    // object_offset == offset - object_start_offset.
     // This value is only non-zero if the offset is non-zero but there is
     // no elf signature found at that offset.
-    uint64_t elf_offset_ = 0;
+    uint64_t object_offset_ = 0;
     // This value is the offset into the file of the map in memory that is the
     // start of the elf. This is not equal to offset when the linker splits
     // shared libraries into a read-only and read-execute map.
-    uint64_t elf_start_offset_ = 0;
+    uint64_t object_start_offset_ = 0;
 
     std::atomic_int64_t load_bias_;
 
@@ -76,11 +76,11 @@ class MapInfo {
     // make it easier to move to a fine grained lock in the future.
     std::atomic<SharedString*> build_id_;
 
-    // Set to true if the elf file data is coming from memory.
-    bool memory_backed_elf_ = false;
+    // Set to true if the object file data is coming from memory.
+    bool memory_backed_object_ = false;
 
-    // Protect the creation of the elf object.
-    std::mutex elf_mutex_;
+    // Protect the creation of the object instance.
+    std::mutex object_mutex_;
   };
 
   inline uint64_t start() const { return start_; }
@@ -99,24 +99,28 @@ class MapInfo {
   inline void set_name(SharedString& value) { name_ = value; }
   inline void set_name(const char* value) { name_ = value; }
 
-  inline std::shared_ptr<Elf>& elf() { return GetElfFields().elf_; }
-  inline void set_elf(std::shared_ptr<Elf>& value) { GetElfFields().elf_ = value; }
-  inline void set_elf(Elf* value) { GetElfFields().elf_.reset(value); }
+  inline std::shared_ptr<Object>& object() { return GetObjectFields().object_; }
+  inline void set_object(std::shared_ptr<Object>& value) { GetObjectFields().object_ = value; }
+  inline void set_object(Object* value) { GetObjectFields().object_.reset(value); }
 
-  inline uint64_t elf_offset() { return GetElfFields().elf_offset_; }
-  inline void set_elf_offset(uint64_t value) { GetElfFields().elf_offset_ = value; }
+  inline uint64_t object_offset() { return GetObjectFields().object_offset_; }
+  inline void set_object_offset(uint64_t value) { GetObjectFields().object_offset_ = value; }
 
-  inline uint64_t elf_start_offset() { return GetElfFields().elf_start_offset_; }
-  inline void set_elf_start_offset(uint64_t value) { GetElfFields().elf_start_offset_ = value; }
+  inline uint64_t object_start_offset() { return GetObjectFields().object_start_offset_; }
+  inline void set_object_start_offset(uint64_t value) {
+    GetObjectFields().object_start_offset_ = value;
+  }
 
-  inline std::atomic_int64_t& load_bias() { return GetElfFields().load_bias_; }
-  inline void set_load_bias(int64_t value) { GetElfFields().load_bias_ = value; }
+  inline std::atomic_int64_t& load_bias() { return GetObjectFields().load_bias_; }
+  inline void set_load_bias(int64_t value) { GetObjectFields().load_bias_ = value; }
 
-  inline std::atomic<SharedString*>& build_id() { return GetElfFields().build_id_; }
-  inline void set_build_id(SharedString* value) { GetElfFields().build_id_ = value; }
+  inline std::atomic<SharedString*>& build_id() { return GetObjectFields().build_id_; }
+  inline void set_build_id(SharedString* value) { GetObjectFields().build_id_ = value; }
 
-  inline bool memory_backed_elf() { return GetElfFields().memory_backed_elf_; }
-  inline void set_memory_backed_elf(bool value) { GetElfFields().memory_backed_elf_ = value; }
+  inline bool memory_backed_object() { return GetObjectFields().memory_backed_object_; }
+  inline void set_memory_backed_object(bool value) {
+    GetObjectFields().memory_backed_object_ = value;
+  }
 
   inline MapInfo* prev_map() const { return prev_map_; }
   inline void set_prev_map(MapInfo* value) { prev_map_ = value; }
@@ -128,7 +132,7 @@ class MapInfo {
   inline void set_next_real_map(MapInfo* value) { next_real_map_ = value; }
 
   // This function guarantees it will never return nullptr.
-  Elf* GetElf(const std::shared_ptr<Memory>& process_memory, ArchEnum expected_arch);
+  Object* GetObject(const std::shared_ptr<Memory>& process_memory, ArchEnum expected_arch);
 
   uint64_t GetLoadBias(const std::shared_ptr<Memory>& process_memory);
 
@@ -136,7 +140,7 @@ class MapInfo {
 
   bool GetFunctionName(uint64_t addr, SharedString* name, uint64_t* func_offset);
 
-  // Returns the raw build id read from the elf data.
+  // Returns the raw build id read from the object data.
   SharedString GetBuildID();
 
   // Used internally, and by tests. It sets the value only if it was not already set.
@@ -147,8 +151,10 @@ class MapInfo {
 
   inline bool IsBlank() { return offset() == 0 && flags() == 0 && name().empty(); }
 
-  // Returns elf_fields_. It will create the object if it is null.
-  ElfFields& GetElfFields();
+  // Returns object_fields_. It will create the object if it is null.
+  ObjectFields& GetObjectFields();
+
+  bool IsElf() const { return true; }
 
  private:
   MapInfo(const MapInfo&) = delete;
@@ -157,8 +163,8 @@ class MapInfo {
   Memory* GetFileMemory();
   bool InitFileMemoryFromPreviousReadOnlyMap(MemoryFileAtOffset* memory);
 
-  // Protect the creation of the elf object.
-  std::mutex& elf_mutex() { return GetElfFields().elf_mutex_; }
+  // Protect the creation of the object instance.
+  std::mutex& object_mutex() { return GetObjectFields().object_mutex_; }
 
   uint64_t start_ = 0;
   uint64_t end_ = 0;
@@ -166,7 +172,7 @@ class MapInfo {
   uint16_t flags_ = 0;
   SharedString name_;
 
-  std::atomic<ElfFields*> elf_fields_;
+  std::atomic<ObjectFields*> object_fields_;
 
   MapInfo* prev_map_ = nullptr;
   // This is the previous map that is not empty with a 0 offset. For

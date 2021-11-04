@@ -18,10 +18,10 @@
 
 #include <functional>
 
-#include <unwindstack/Elf.h>
 #include <unwindstack/MachineX86.h>
 #include <unwindstack/MapInfo.h>
 #include <unwindstack/Memory.h>
+#include <unwindstack/Object.h>
 #include <unwindstack/RegsX86.h>
 #include <unwindstack/UcontextX86.h>
 #include <unwindstack/UserX86.h>
@@ -112,12 +112,12 @@ Regs* RegsX86::CreateFromUcontext(void* ucontext) {
   return regs;
 }
 
-bool RegsX86::StepIfSignalHandler(uint64_t elf_offset, Elf* elf, Memory* process_memory) {
+bool RegsX86::StepIfSignalHandler(uint64_t object_offset, Object* object, Memory* process_memory) {
   uint64_t data;
-  Memory* elf_memory = elf->memory();
-  // Read from elf memory since it is usually more expensive to read from
+  Memory* object_memory = object->memory();
+  // Read from object memory since it is usually more expensive to read from
   // process memory.
-  if (!elf_memory->ReadFully(elf_offset, &data, sizeof(data))) {
+  if (!object_memory->ReadFully(object_offset, &data, sizeof(data))) {
     return false;
   }
 

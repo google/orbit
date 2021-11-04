@@ -29,7 +29,7 @@
 namespace unwindstack {
 
 // Forward declarations.
-class Elf;
+class Object;
 class Memory;
 
 class Regs {
@@ -71,7 +71,8 @@ class Regs {
   virtual bool SetPseudoRegister(uint16_t, uint64_t) { return false; }
   virtual bool GetPseudoRegister(uint16_t, uint64_t*) { return false; }
 
-  virtual bool StepIfSignalHandler(uint64_t elf_offset, Elf* elf, Memory* process_memory) = 0;
+  virtual bool StepIfSignalHandler(uint64_t object_offset, Object* object,
+                                   Memory* process_memory) = 0;
 
   virtual bool SetPcFromReturnAddress(Memory* process_memory) = 0;
 
@@ -113,7 +114,7 @@ class RegsImpl : public Regs {
   std::vector<AddressType> regs_;
 };
 
-uint64_t GetPcAdjustment(uint64_t rel_pc, Elf* elf, ArchEnum arch);
+uint64_t GetPcAdjustment(uint64_t rel_pc, Object* object, ArchEnum arch);
 
 }  // namespace unwindstack
 

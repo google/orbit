@@ -36,7 +36,7 @@
 namespace unwindstack {
 
 // Forward declarations.
-class Elf;
+class Object;
 class ThreadEntry;
 
 struct FrameData {
@@ -54,7 +54,7 @@ struct FrameData {
   // two maps (read-only and read-execute) this will be the offset from
   // the read-only map. When there is only one map, this will be the
   // same as the actual offset of the map and match map_exact_offset.
-  uint64_t map_elf_start_offset = 0;
+  uint64_t map_object_start_offset = 0;
   // The actual offset from the map where the pc lies.
   uint64_t map_exact_offset = 0;
   uint64_t map_start = 0;
@@ -118,7 +118,7 @@ class Unwinder {
 
   void SetDexFiles(DexFiles* dex_files);
 
-  bool elf_from_memory_not_file() { return elf_from_memory_not_file_; }
+  bool object_from_memory_not_file() { return object_from_memory_not_file_; }
 
   ErrorCode LastErrorCode() { return last_error_.code; }
   const char* LastErrorCodeString() { return GetErrorCodeString(last_error_.code); }
@@ -146,7 +146,8 @@ class Unwinder {
   }
 
   void FillInDexFrame();
-  FrameData* FillInFrame(MapInfo* map_info, Elf* elf, uint64_t rel_pc, uint64_t pc_adjustment);
+  FrameData* FillInFrame(MapInfo* map_info, Object* object, uint64_t rel_pc,
+                         uint64_t pc_adjustment);
 
   size_t max_frames_;
   Maps* maps_;
@@ -158,9 +159,9 @@ class Unwinder {
   bool resolve_names_ = true;
   bool embedded_soname_ = true;
   bool display_build_id_ = false;
-  // True if at least one elf file is coming from memory and not the related
-  // file. This is only true if there is an actual file backing up the elf.
-  bool elf_from_memory_not_file_ = false;
+  // True if at least one object file is coming from memory and not the related
+  // file. This is only true if there is an actual file backing up the object.
+  bool object_from_memory_not_file_ = false;
   ErrorData last_error_;
   uint64_t warnings_;
   ArchEnum arch_ = ARCH_UNKNOWN;

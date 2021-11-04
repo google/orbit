@@ -81,9 +81,9 @@ void Global::FindAndReadVariable(Maps* maps, const char* var_str) {
   for (const auto& info : *maps) {
     if ((info->flags() & (PROT_READ | PROT_WRITE)) == (PROT_READ | PROT_WRITE) &&
         map_zero != nullptr && Searchable(info->name()) && info->name() == map_zero->name()) {
-      Elf* elf = map_zero->GetElf(memory_, arch());
+      Object* object = map_zero->GetObject(memory_, arch());
       uint64_t ptr;
-      if (elf->GetGlobalVariableOffset(variable, &ptr) && ptr != 0) {
+      if (object->GetGlobalVariableOffset(variable, &ptr) && ptr != 0) {
         uint64_t offset_end = info->offset() + info->end() - info->start();
         if (ptr >= info->offset() && ptr < offset_end) {
           ptr = info->start() + ptr - info->offset();

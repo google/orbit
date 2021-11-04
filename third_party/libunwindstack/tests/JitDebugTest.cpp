@@ -27,6 +27,7 @@
 #include <unwindstack/MapInfo.h>
 #include <unwindstack/Maps.h>
 #include <unwindstack/Memory.h>
+#include <unwindstack/Object.h>
 
 #include "ElfFake.h"
 #include "utils/MemoryFake.h"
@@ -46,7 +47,7 @@ class JitDebugTest : public ::testing::Test {
     interface->FakeSetDataOffset(data_offset);
     interface->FakeSetDataVaddrStart(data_vaddr);
     interface->FakeSetDataVaddrEnd(data_vaddr + data_size);
-    map_info->set_elf(elf);
+    map_info->set_object(elf);
   }
 
   void Init(ArchEnum arch) {

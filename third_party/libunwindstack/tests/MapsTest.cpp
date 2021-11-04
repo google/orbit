@@ -39,7 +39,7 @@ static void VerifyLine(std::string line, MapInfo* info) {
     info->set_offset(element->offset());
     info->set_flags(element->flags());
     info->set_name(element->name());
-    info->set_elf_offset(element->elf_offset());
+    info->set_object_offset(element->object_offset());
   }
 }
 
@@ -57,7 +57,7 @@ TEST(MapsTest, map_add) {
   ASSERT_EQ(0U, info->offset());
   ASSERT_EQ(PROT_READ, info->flags());
   ASSERT_EQ("fake_map", info->name());
-  ASSERT_EQ(0U, info->elf_offset());
+  ASSERT_EQ(0U, info->object_offset());
   ASSERT_EQ(0U, info->load_bias().load());
 }
 
@@ -77,7 +77,7 @@ TEST(MapsTest, map_move) {
   ASSERT_EQ(0U, info->offset());
   ASSERT_EQ(PROT_READ, info->flags());
   ASSERT_EQ("fake_map", info->name());
-  ASSERT_EQ(0U, info->elf_offset());
+  ASSERT_EQ(0U, info->object_offset());
   ASSERT_EQ(0U, info->load_bias().load());
 }
 

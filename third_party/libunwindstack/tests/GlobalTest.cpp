@@ -85,7 +85,7 @@ class GlobalTest : public ::testing::Test {
     elf_fakes_[0]->FakeSetDataVaddrEnd(0x3000);
     elf_fakes_[0]->FakeSetDataOffset(0x2000);
     auto map_info = maps_->Find(0x10000);
-    map_info->GetElfFields().elf_.reset(elf_fake);
+    map_info->GetObjectFields().object_.reset(elf_fake);
 
     elf_fake = new ElfFake(nullptr);
     elf_fake->FakeSetValid(true);
@@ -94,7 +94,7 @@ class GlobalTest : public ::testing::Test {
     elf_fakes_[1]->FakeSetDataVaddrEnd(0x3000);
     elf_fakes_[1]->FakeSetDataOffset(0x2000);
     map_info = maps_->Find(0x20000);
-    map_info->GetElfFields().elf_.reset(elf_fake);
+    map_info->GetObjectFields().object_.reset(static_cast<Object*>(elf_fake));
 
     elf_fake = new ElfFake(nullptr);
     elf_fake->FakeSetValid(true);
@@ -103,7 +103,7 @@ class GlobalTest : public ::testing::Test {
     elf_fakes_[2]->FakeSetDataVaddrEnd(0x3000);
     elf_fakes_[2]->FakeSetDataOffset(0x2000);
     map_info = maps_->Find(0x30000);
-    map_info->GetElfFields().elf_.reset(elf_fake);
+    map_info->GetObjectFields().object_.reset(static_cast<Object*>(elf_fake));
 
     elf_fake = new ElfFake(nullptr);
     elf_fake->FakeSetValid(true);
@@ -112,7 +112,7 @@ class GlobalTest : public ::testing::Test {
     elf_fakes_[3]->FakeSetDataVaddrEnd(0x1000);
     elf_fakes_[3]->FakeSetDataOffset(0);
     map_info = maps_->Find(0x40000);
-    map_info->GetElfFields().elf_.reset(elf_fake);
+    map_info->GetObjectFields().object_.reset(static_cast<Object*>(elf_fake));
 
     global_.reset(new GlobalMock(empty_));
   }

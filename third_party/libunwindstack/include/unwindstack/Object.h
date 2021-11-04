@@ -19,7 +19,13 @@
 
 #include <string>
 
-#include "unwindstack/Error.h"
+#include <memory>
+#include <mutex>
+#include <unordered_map>
+
+#include <unwindstack/Arch.h>
+#include <unwindstack/Error.h>
+#include <unwindstack/SharedString.h>
 
 namespace unwindstack {
 
@@ -44,6 +50,8 @@ class Object {
   virtual bool GetFunctionName(uint64_t addr, SharedString* name, uint64_t* func_offset) = 0;
   virtual bool GetGlobalVariableOffset(const std::string& name, uint64_t* memory_address) = 0;
 
+  virtual ArchEnum arch() = 0;
+
   virtual uint64_t GetRelPc(uint64_t pc, MapInfo* map_info) = 0;
 
   virtual bool StepIfSignalHandler(uint64_t rel_pc, Regs* regs, Memory* process_memory) = 0;
@@ -55,6 +63,20 @@ class Object {
   virtual void GetLastError(ErrorData* data) = 0;
   virtual ErrorCode GetLastErrorCode() = 0;
   virtual uint64_t GetLastErrorAddress() = 0;
+
+  static void SetCachingEnabled(bool enable);
+  static bool CachingEnabled() { return cache_enabled_; }
+
+  static void CacheLock();
+  static void CacheUnlock();
+  static void CacheAdd(MapInfo* info);
+  static bool CacheGet(MapInfo* info);
+  static bool CacheAfterCreateMemory(MapInfo* info);
+
+ protected:
+  static bool cache_enabled_;
+  static std::unordered_map<std::string, std::pair<std::shared_ptr<Object>, bool>>* cache_;
+  static std::mutex* cache_lock_;
 };
 
 }  // namespace unwindstack
