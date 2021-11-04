@@ -35,8 +35,8 @@ void TriangleToggle::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
 
   // Draw triangle.
   static float half_sqrt_three = 0.5f * sqrtf(3.f);
-  float half_w = 0.5f * GetWidth();
-  float half_h = half_sqrt_three * 0.5f * GetHeight();
+  float half_triangle_base_width = 0.5f * GetWidth();
+  float half_triangle_height = half_sqrt_three * 0.5f * GetHeight();
 
   const Vec2 pos = GetPos();
   if (!picking) {
@@ -44,16 +44,18 @@ void TriangleToggle::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
 
     Triangle triangle;
     if (is_collapsed_) {
-      triangle = Triangle(position + Vec3(-half_h, half_w, z), position + Vec3(-half_h, -half_w, z),
-                          position + Vec3(half_w, 0.f, z));
+      triangle = Triangle(position + Vec3(-half_triangle_height, half_triangle_base_width, z),
+                          position + Vec3(-half_triangle_height, -half_triangle_base_width, z),
+                          position + Vec3(half_triangle_base_width, 0.f, z));
     } else {
-      triangle = Triangle(position + Vec3(half_w, -half_h, z), position + Vec3(-half_w, -half_h, z),
-                          position + Vec3(0.f, half_w, z));
+      triangle = Triangle(position + Vec3(half_triangle_base_width, -half_triangle_height, z),
+                          position + Vec3(-half_triangle_base_width, -half_triangle_height, z),
+                          position + Vec3(0.f, half_triangle_base_width, z));
     }
     batcher.AddTriangle(triangle, color, shared_from_this());
   } else {
     // When picking, draw a big square for easier picking.
-    float original_width = 2 * half_w;
+    float original_width = 2 * half_triangle_base_width;
     float large_width = 2 * original_width;
     Box box(Vec2(pos[0] - original_width, pos[1] - original_width), Vec2(large_width, large_width),
             z);
