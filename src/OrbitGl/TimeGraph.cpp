@@ -506,7 +506,7 @@ void TimeGraph::RequestUpdate() {
   update_primitives_requested_ = true;
 }
 
-void TimeGraph::UpdatePrimitives(PickingMode picking_mode) {
+void TimeGraph::PrepareBatcherAndUpdatePrimitives(PickingMode picking_mode) {
   ORBIT_SCOPE_FUNCTION;
   CHECK(app_->GetStringManager() != nullptr);
 
@@ -949,7 +949,7 @@ void TimeGraph::DrawAllElements(Batcher& batcher, TextRenderer& text_renderer,
   text_renderer.PopTranslation();
 
   if ((!picking && update_primitives_requested_) || picking) {
-    UpdatePrimitives(picking_mode);
+    PrepareBatcherAndUpdatePrimitives(picking_mode);
   }
 }
 

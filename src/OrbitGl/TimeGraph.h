@@ -186,7 +186,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   }
 
  protected:
-  void UpdatePrimitives(PickingMode picking_mode);
+  void PrepareBatcherAndUpdatePrimitives(PickingMode picking_mode);
   void DoUpdateLayout() override;
   void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
               const DrawContext& draw_context) override;
