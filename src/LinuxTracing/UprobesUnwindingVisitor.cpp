@@ -90,6 +90,11 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   Callstack* callstack = sample.mutable_callstack();
 
   if (libunwindstack_result.frames().front().map_name == "[uprobes]") {
+    // TODO(b/194704608): Also detect if the sample is inside a user space instrumentation entry
+    //  trampoline or return trampoline. Note that the sample could also be inside the entry or exit
+    //  payload in liborbituserspaceinstrumentation.so or a library called by it.
+    //  For now, these samples will just be unwinding errors as we can't unwind past the trampoline.
+
     // Some samples can actually fall inside u(ret)probes code. They cannot be unwound by
     // libunwindstack (even when the unwinding is reported as successful, the result is wrong).
     if (samples_in_uretprobes_counter_ != nullptr) {
@@ -101,6 +106,9 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
 
   } else if (libunwindstack_result.frames().size() > 1 &&
              libunwindstack_result.frames().back().map_name == "[uprobes]") {
+    // TODO(b/194704608): Also detect if unwinding stopped at a user space instrumentation return
+    //  trampoline.
+
     // If unwinding stops at a [uprobes] frame (this is usually reported as an unwinding error, but
     // not always), it means that patching the stack with UprobesReturnAddressManager::PatchSample
     // wasn't (completely) successful (we cannot detect this before actually unwinding).
@@ -188,6 +196,9 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
     listener_->OnCallstackSample(std::move(sample));
     return;
   }
+  // TODO(b/194704608): Also detect if the sample is inside a user space instrumentation entry
+  //  trampoline or return trampoline, the entry or return payloads in
+  //  liborbituserspaceinstrumentation.so, or a library called by the payloads.
 
   // The leaf function is not guaranteed to have the frame pointer for all our targets. Though, we
   // assume that $rbp remains untouched by the leaf functions, such that we can rely on
@@ -281,9 +292,9 @@ void UprobesUnwindingVisitor::OnUprobes(
   }
   uprobe_sps_ips_cpus.emplace_back(sp, ip, cpu);
 
-  function_call_manager_->ProcessUprobes(tid, function_id, timestamp_ns, registers);
+  function_call_manager_->ProcessFunctionEntry(tid, function_id, timestamp_ns, registers);
 
-  return_address_manager_->ProcessUprobes(tid, sp, return_address);
+  return_address_manager_->ProcessFunctionEntry(tid, sp, return_address);
 }
 
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
@@ -311,12 +322,12 @@ void UprobesUnwindingVisitor::OnUretprobes(uint64_t timestamp_ns, pid_t pid, pid
   }
 
   std::optional<FunctionCall> function_call =
-      function_call_manager_->ProcessUretprobes(pid, tid, timestamp_ns, ax);
+      function_call_manager_->ProcessFunctionExit(pid, tid, timestamp_ns, ax);
   if (function_call.has_value()) {
     listener_->OnFunctionCall(std::move(function_call.value()));
   }
 
-  return_address_manager_->ProcessUretprobes(tid);
+  return_address_manager_->ProcessFunctionExit(tid);
 }
 
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
@@ -327,6 +338,26 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
                                     const UretprobesWithReturnValuePerfEventData& event_data) {
   OnUretprobes(event_timestamp, event_data.pid, event_data.tid, event_data.rax);
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
+                                    const UserSpaceFunctionEntryPerfEventData& event_data) {
+  function_call_manager_->ProcessFunctionEntry(event_data.tid, event_data.function_id,
+                                               event_timestamp, std::nullopt);
+
+  return_address_manager_->ProcessFunctionEntry(event_data.tid, event_data.sp,
+                                                event_data.return_address);
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
+                                    const UserSpaceFunctionExitPerfEventData& event_data) {
+  std::optional<FunctionCall> function_call = function_call_manager_->ProcessFunctionExit(
+      event_data.pid, event_data.tid, event_timestamp, std::nullopt);
+  if (function_call.has_value()) {
+    listener_->OnFunctionCall(std::move(function_call.value()));
+  }
+
+  return_address_manager_->ProcessFunctionExit(event_data.tid);
 }
 
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp, const MmapPerfEventData& event_data) {

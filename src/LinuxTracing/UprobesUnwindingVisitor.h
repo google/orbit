@@ -27,22 +27,18 @@
 
 namespace orbit_linux_tracing {
 
-// UprobesUnwindingVisitor processes stack samples and uprobes/uretprobes
-// records (as well as memory maps changes, to keep necessary unwinding
-// information up-to-date), assuming they come in order. The reason for
-// processing both in the same visitor is that, when entering a
-// dynamically-instrumented function, the return address saved on the stack is
-// hijacked by uretprobes. This causes unwinding of any (time-based) stack
-// sample that falls inside such a function to stop at the first such function,
-// with a frame in the [uprobes] map.
-// To solve this, UprobesReturnAddressManager keeps a stack, for every thread,
-// of the return addresses before they are hijacked, and patches them into the
-// time-based stack samples. Such return addresses can be retrieved by getting
-// the eight bytes at the top of the stack on hitting uprobes.
-// TODO: Make this more robust to losing uprobes or uretprobes events, if this
-//  is still observed. For example, pass the address of uretprobes and compare
-//  it against the address of uprobes on the stack.
-
+// UprobesUnwindingVisitor processes stack samples and entries/exits into dynamically instrumented
+// functions (e.g., uprobes/uretprobes). It also processes memory maps changes, to keep necessary
+// unwinding information up-to-date. It assumes all this information comes in order.
+// The reason for processing samples and dynamic instrumentation in the same visitor is that, when
+// entering a dynamically-instrumented function, the return address saved on the stack is hijacked
+// (e.g., by uretprobes), so that the exit from the function can also be recorded.
+// This causes unwinding of any (time-based) stack sample that falls inside such a function to stop
+// at the first such function, with a frame in the trampoline (e.g., in the [uprobes] map).
+// To solve this, UprobesReturnAddressManager keeps a stack, for every thread, of the return
+// addresses before they are hijacked, and patches them into the time-based stack samples. Such
+// return addresses can be retrieved by getting the eight bytes at the top of the stack when
+// entering a dynamically instrumented function (e.g., when hitting uprobes).
 class UprobesUnwindingVisitor : public PerfEventVisitor {
  public:
   explicit UprobesUnwindingVisitor(TracerListener* listener,
@@ -86,6 +82,10 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   void Visit(uint64_t event_timestamp, const UretprobesPerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp,
              const UretprobesWithReturnValuePerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp,
+             const UserSpaceFunctionEntryPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp,
+             const UserSpaceFunctionExitPerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp, const MmapPerfEventData& event_data) override;
 
  private:

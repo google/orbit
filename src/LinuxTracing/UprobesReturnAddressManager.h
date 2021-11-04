@@ -18,10 +18,10 @@
 
 namespace orbit_linux_tracing {
 
-// Keeps a stack, for every thread, of the return addresses at the top of the
-// stack when uprobes are hit, before they are hijacked by uretprobes. Patches
-// them into samples so that unwinding can continue past
-// dynamically-instrumented functions.
+// Keeps a stack, for every thread, of the return addresses at the top of the stack when dynamically
+// instrumented functions are entered (e.g., when uprobes are hit), before they are hijacked to
+// record the exits (e.g., by uretprobes). Patches them into samples so that unwinding can continue
+// past dynamically instrumented functions.
 class UprobesReturnAddressManager {
  public:
   UprobesReturnAddressManager() = default;
@@ -33,36 +33,49 @@ class UprobesReturnAddressManager {
   UprobesReturnAddressManager(UprobesReturnAddressManager&&) = default;
   UprobesReturnAddressManager& operator=(UprobesReturnAddressManager&&) = default;
 
-  virtual void ProcessUprobes(pid_t tid, uint64_t stack_pointer, uint64_t return_address) {
-    auto& tid_uprobes_stack = tid_uprobes_stacks_[tid];
-    tid_uprobes_stack.emplace_back(stack_pointer, return_address);
+  virtual void ProcessFunctionEntry(pid_t tid, uint64_t stack_pointer, uint64_t return_address) {
+    std::vector<OpenFunction>& stack_of_open_functions = tid_to_stack_of_open_functions_[tid];
+    stack_of_open_functions.emplace_back(stack_pointer, return_address);
+  }
+
+  virtual void ProcessFunctionExit(pid_t tid) {
+    if (!tid_to_stack_of_open_functions_.contains(tid)) {
+      return;
+    }
+
+    std::vector<OpenFunction>& stack_of_open_functions = tid_to_stack_of_open_functions_.at(tid);
+    CHECK(!stack_of_open_functions.empty());
+    stack_of_open_functions.pop_back();
+    if (stack_of_open_functions.empty()) {
+      tid_to_stack_of_open_functions_.erase(tid);
+    }
   }
 
   virtual void PatchSample(pid_t tid, uint64_t stack_pointer, void* stack_data,
                            uint64_t stack_size) {
-    if (!tid_uprobes_stacks_.contains(tid)) {
+    if (!tid_to_stack_of_open_functions_.contains(tid)) {
       return;
     }
 
-    auto& tid_uprobes_stack = tid_uprobes_stacks_.at(tid);
-    CHECK(!tid_uprobes_stack.empty());
+    std::vector<OpenFunction>& stack_of_open_functions = tid_to_stack_of_open_functions_.at(tid);
+    CHECK(!stack_of_open_functions.empty());
 
-    // Apply saved return addresses in reverse order, from the last called
-    // function. In case two uretprobes hijacked an address at the same stack
-    // pointer (e.g., in case of tail-call optimization), this results in the
-    // correct original return address to end up in the patched stack.
-    for (auto it = tid_uprobes_stack.rbegin(); it != tid_uprobes_stack.rend(); it++) {
-      const OpenUprobes& uprobes = *it;
-      if (uprobes.stack_pointer < stack_pointer) {
+    // Apply saved return addresses in reverse order, from the last called function. In case two
+    // return addresses are hijacked at the same stack pointer (e.g., in case of tail-call
+    // optimization), this results in the correct original return address to end up in the patched
+    // stack.
+    for (auto it = stack_of_open_functions.rbegin(); it != stack_of_open_functions.rend(); it++) {
+      const OpenFunction& open_function = *it;
+      if (open_function.stack_pointer < stack_pointer) {
         continue;
       }
-      const uint64_t& offset = uprobes.stack_pointer - stack_pointer;
+      const uint64_t& offset = open_function.stack_pointer - stack_pointer;
       if (offset >= stack_size) {
         continue;
       }
 
-      memcpy(static_cast<uint8_t*>(stack_data) + offset, &uprobes.return_address,
-             sizeof(uprobes.return_address));
+      memcpy(static_cast<uint8_t*>(stack_data) + offset, &open_function.return_address,
+             sizeof(open_function.return_address));
     }
   }
 
@@ -72,6 +85,7 @@ class UprobesReturnAddressManager {
   // This function patches the callchain, using the maps information to identify
   // instruction pointers of uprobe code and using the return address saved in
   // the uprobes.
+  // TODO(b/204404077): Extend this algorithm to also support user space instrumentation.
   virtual bool PatchCallchain(pid_t tid, uint64_t* callchain, uint64_t callchain_size,
                               LibunwindstackMaps* maps) {
     CHECK(callchain_size > 0);
@@ -83,6 +97,8 @@ class UprobesReturnAddressManager {
       uint64_t ip = callchain[i];
       unwindstack::MapInfo* map_info = maps->Find(ip);
 
+      // TODO(b/204404077): We need to be able to detect whether an address belongs to a return
+      //  trampoline created by user space instrumentation.
       if (map_info == nullptr || map_info->name() != "[uprobes]") {
         continue;
       }
@@ -90,7 +106,7 @@ class UprobesReturnAddressManager {
       frames_to_patch.push_back(i);
     }
 
-    if (!tid_uprobes_stacks_.contains(tid)) {
+    if (!tid_to_stack_of_open_functions_.contains(tid)) {
       // If there are no uprobes, but the callchain needs to be patched, we need
       // to discard the sample.
       // There are two situations where this may happen:
@@ -103,12 +119,12 @@ class UprobesReturnAddressManager {
       return true;
     }
 
-    auto& tid_uprobes_stack = tid_uprobes_stacks_.at(tid);
+    std::vector<OpenFunction>& tid_uprobes_stack = tid_to_stack_of_open_functions_.at(tid);
     CHECK(!tid_uprobes_stack.empty());
 
     size_t num_unique_uprobes = 0;
     uint64_t prev_uprobe_stack_pointer = -1;
-    for (const auto& uprobe : tid_uprobes_stack) {
+    for (const OpenFunction& uprobe : tid_uprobes_stack) {
       if (uprobe.stack_pointer != prev_uprobe_stack_pointer) {
         num_unique_uprobes++;
       }
@@ -159,7 +175,7 @@ class UprobesReturnAddressManager {
       if (skip_last_uprobes && unique_uprobes_so_far + 1 == num_unique_uprobes) {
         break;
       }
-      const OpenUprobes& uprobe = tid_uprobes_stack[uprobe_i];
+      const OpenFunction& uprobe = tid_uprobes_stack[uprobe_i];
       // In tail-call case, we already have process the uprobe with the correct
       // return address and are done with that frame.
       if (uprobe.stack_pointer == prev_uprobe_stack_pointer) {
@@ -176,28 +192,15 @@ class UprobesReturnAddressManager {
     return true;
   }
 
-  virtual void ProcessUretprobes(pid_t tid) {
-    if (!tid_uprobes_stacks_.contains(tid)) {
-      return;
-    }
-
-    auto& tid_uprobes_stack = tid_uprobes_stacks_.at(tid);
-    CHECK(!tid_uprobes_stack.empty());
-    tid_uprobes_stack.pop_back();
-    if (tid_uprobes_stack.empty()) {
-      tid_uprobes_stacks_.erase(tid);
-    }
-  }
-
  private:
-  struct OpenUprobes {
-    OpenUprobes(uint64_t stack_pointer, uint64_t return_address)
+  struct OpenFunction {
+    OpenFunction(uint64_t stack_pointer, uint64_t return_address)
         : stack_pointer{stack_pointer}, return_address{return_address} {}
     uint64_t stack_pointer;
     uint64_t return_address;
   };
 
-  absl::flat_hash_map<pid_t, std::vector<OpenUprobes>> tid_uprobes_stacks_{};
+  absl::flat_hash_map<pid_t, std::vector<OpenFunction>> tid_to_stack_of_open_functions_{};
 };
 
 }  // namespace orbit_linux_tracing
