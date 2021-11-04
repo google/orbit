@@ -15,6 +15,8 @@ TEST(ThreadTrack, CaptureViewElementWorksAsIntended) {
       TrackTestData::GenerateTestCaptureData();
   ThreadTrack track(nullptr, nullptr, tester.GetViewport(), tester.GetLayout(), -1, nullptr,
                     test_data.get(), nullptr);
+  // Expect thread states, samples, tracepoints, and collapse toggle
+  EXPECT_EQ(4ull, track.GetAllChildren().size());
   tester.RunTests(&track);
 }
 
