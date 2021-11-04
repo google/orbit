@@ -273,8 +273,8 @@ void ThreadTrack::OnPick(int x, int y) {
   app_->set_selected_thread_id(GetThreadId());
 }
 
-std::vector<orbit_gl::CaptureViewElement*> ThreadTrack::GetChildren() const {
-  auto result = Track::GetChildren();
+std::vector<orbit_gl::CaptureViewElement*> ThreadTrack::GetAllChildren() const {
+  auto result = Track::GetAllChildren();
   result.insert(result.end(), {thread_state_bar_.get(), event_bar_.get(), tracepoint_bar_.get()});
   return result;
 }

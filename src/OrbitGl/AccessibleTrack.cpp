@@ -61,7 +61,7 @@ class FakeTimerPane : public CaptureViewElement {
   }
 
   [[nodiscard]] Vec2 GetPos() const override {
-    std::vector<CaptureViewElement*> track_children = track_->GetVisibleChildren();
+    std::vector<CaptureViewElement*> track_children = track_->GetNonHiddenChildren();
 
     // We are looking for the track's child that is right above the timer pane.
     CaptureViewElement* predecessor = track_tab_;
@@ -117,10 +117,10 @@ int AccessibleTrack::AccessibleChildCount() const {
 
   // Only expose the "Timer" pane if any timers were rendered in the visible field
   if (track_->GetVisiblePrimitiveCount() > 0) {
-    return static_cast<int>(track_->GetVisibleChildren().size()) + 2;
+    return static_cast<int>(track_->GetNonHiddenChildren().size()) + 2;
   }
 
-  return static_cast<int>(track_->GetVisibleChildren().size()) + 1;
+  return static_cast<int>(track_->GetNonHiddenChildren().size()) + 1;
 }
 
 const AccessibleInterface* AccessibleTrack::AccessibleChild(int index) const {
@@ -131,7 +131,7 @@ const AccessibleInterface* AccessibleTrack::AccessibleChild(int index) const {
     return fake_tab_->GetOrCreateAccessibleInterface();
   }
 
-  const auto& children = track_->GetVisibleChildren();
+  const auto& children = track_->GetNonHiddenChildren();
   auto child_count = static_cast<int>(children.size());
 
   // The last child is the timer pane if it has timers.

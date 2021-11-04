@@ -178,8 +178,8 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   [[nodiscard]] bool HasFrameTrack(uint64_t function_id) const;
   void RemoveFrameTrack(uint64_t function_id);
 
-  [[nodiscard]] std::vector<CaptureViewElement*> GetChildren() const override;
-  [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() const override;
+  [[nodiscard]] std::vector<CaptureViewElement*> GetAllChildren() const override;
+  [[nodiscard]] std::vector<CaptureViewElement*> GetNonHiddenChildren() const override;
 
   [[nodiscard]] AccessibleInterfaceProvider* GetAccessibleParent() const {
     return accessible_parent_;

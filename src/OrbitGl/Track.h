@@ -90,7 +90,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   void SetIndentationLevel(uint32_t level);
   [[nodiscard]] uint32_t GetIndentationLevel() const { return indentation_level_; }
 
-  [[nodiscard]] std::vector<CaptureViewElement*> GetChildren() const override {
+  [[nodiscard]] std::vector<CaptureViewElement*> GetAllChildren() const override {
     return {collapse_toggle_.get()};
   }
 

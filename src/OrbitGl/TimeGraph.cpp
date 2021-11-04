@@ -1000,12 +1000,12 @@ void TimeGraph::RemoveFrameTrack(uint64_t function_id) {
   RequestUpdate();
 }
 
-std::vector<orbit_gl::CaptureViewElement*> TimeGraph::GetChildren() const {
+std::vector<orbit_gl::CaptureViewElement*> TimeGraph::GetAllChildren() const {
   std::vector<Track*> all_tracks = track_manager_->GetAllTracks();
   return {all_tracks.begin(), all_tracks.end()};
 }
 
-std::vector<orbit_gl::CaptureViewElement*> TimeGraph::GetVisibleChildren() const {
+std::vector<orbit_gl::CaptureViewElement*> TimeGraph::GetNonHiddenChildren() const {
   std::vector<Track*> all_tracks = track_manager_->GetVisibleTracks();
   return {all_tracks.begin(), all_tracks.end()};
 }

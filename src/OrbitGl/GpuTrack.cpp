@@ -123,8 +123,8 @@ float GpuTrack::GetHeight() const {
   return height;
 }
 
-std::vector<orbit_gl::CaptureViewElement*> GpuTrack::GetChildren() const {
-  auto result = Track::GetChildren();
+std::vector<orbit_gl::CaptureViewElement*> GpuTrack::GetAllChildren() const {
+  auto result = Track::GetAllChildren();
   result.insert(result.end(), {submission_track_.get(), marker_track_.get()});
   return result;
 }

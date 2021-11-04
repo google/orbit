@@ -24,10 +24,8 @@ void CaptureViewElement::Draw(Batcher& batcher, TextRenderer& text_renderer,
 
   DoDraw(batcher, text_renderer, draw_context);
 
-  for (CaptureViewElement* child : GetVisibleChildrenOnScreen()) {
-    if (child->ShouldBeRendered()) {
-      child->Draw(batcher, text_renderer, draw_context);
-    }
+  for (CaptureViewElement* child : GetChildrenVisibleInViewport()) {
+    child->Draw(batcher, text_renderer, draw_context);
   }
 
   text_renderer.PopTranslation();
@@ -44,7 +42,7 @@ void CaptureViewElement::UpdatePrimitives(Batcher* batcher, TextRenderer& text_r
 
   DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
 
-  for (CaptureViewElement* child : GetVisibleChildrenOnScreen()) {
+  for (CaptureViewElement* child : GetChildrenVisibleInViewport()) {
     if (child->ShouldBeRendered()) {
       child->UpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
     }
@@ -55,7 +53,7 @@ void CaptureViewElement::UpdatePrimitives(Batcher* batcher, TextRenderer& text_r
 }
 
 void CaptureViewElement::UpdateLayout() {
-  for (CaptureViewElement* child : GetChildren()) {
+  for (CaptureViewElement* child : GetAllChildren()) {
     child->UpdateLayout();
   }
   DoUpdateLayout();
@@ -73,7 +71,7 @@ void CaptureViewElement::SetWidth(float width) {
   if (width != width_) {
     width_ = width;
 
-    for (auto& child : GetChildren()) {
+    for (auto& child : GetAllChildren()) {
       if (child->GetLayoutFlags() & LayoutFlags::kScaleHorizontallyWithParent) {
         child->SetWidth(width);
       }
@@ -110,9 +108,9 @@ void CaptureViewElement::OnDrag(int x, int y) {
   RequestUpdate();
 }
 
-std::vector<CaptureViewElement*> CaptureViewElement::GetVisibleChildren() const {
+std::vector<CaptureViewElement*> CaptureViewElement::GetNonHiddenChildren() const {
   std::vector<CaptureViewElement*> result;
-  for (CaptureViewElement* child : GetChildren()) {
+  for (CaptureViewElement* child : GetAllChildren()) {
     if (child->ShouldBeRendered()) {
       result.push_back(child);
     }
@@ -121,9 +119,9 @@ std::vector<CaptureViewElement*> CaptureViewElement::GetVisibleChildren() const 
   return result;
 }
 
-std::vector<CaptureViewElement*> CaptureViewElement::GetVisibleChildrenOnScreen() const {
+std::vector<CaptureViewElement*> CaptureViewElement::GetChildrenVisibleInViewport() const {
   std::vector<CaptureViewElement*> result;
-  for (CaptureViewElement* child : GetVisibleChildren()) {
+  for (CaptureViewElement* child : GetNonHiddenChildren()) {
     float child_top_y = child->GetPos()[1];
     float child_bottom_y = child_top_y + child->GetHeight();
     float screen_top_y = time_graph_->GetVerticalScrollingOffset();

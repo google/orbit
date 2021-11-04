@@ -77,7 +77,7 @@ class ThreadTrack final : public TimerTrack {
 
   [[nodiscard]] bool IsCollapsible() const override { return GetDepth() > 1; }
 
-  [[nodiscard]] std::vector<CaptureViewElement*> GetChildren() const override;
+  [[nodiscard]] std::vector<CaptureViewElement*> GetAllChildren() const override;
 
  protected:
   void DoUpdatePrimitives(Batcher* batcher, TextRenderer& text_renderer, uint64_t min_tick,

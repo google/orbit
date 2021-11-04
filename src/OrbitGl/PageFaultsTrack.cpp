@@ -60,8 +60,8 @@ std::string PageFaultsTrack::GetTooltip() const {
   return "Shows the minor and major page faults statistics.";
 }
 
-std::vector<CaptureViewElement*> PageFaultsTrack::GetChildren() const {
-  auto result = Track::GetChildren();
+std::vector<CaptureViewElement*> PageFaultsTrack::GetAllChildren() const {
+  auto result = Track::GetAllChildren();
   result.insert(result.end(), {major_page_faults_track_.get(), minor_page_faults_track_.get()});
   return result;
 }

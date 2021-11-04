@@ -34,7 +34,7 @@ class PageFaultsTrack : public Track {
     return major_page_faults_track_->IsEmpty() && minor_page_faults_track_->IsEmpty();
   }
   [[nodiscard]] bool IsCollapsible() const override { return true; }
-  [[nodiscard]] std::vector<CaptureViewElement*> GetChildren() const override;
+  [[nodiscard]] std::vector<CaptureViewElement*> GetAllChildren() const override;
 
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 

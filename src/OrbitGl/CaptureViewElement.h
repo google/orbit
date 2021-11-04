@@ -52,9 +52,9 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   [[nodiscard]] bool Draggable() override { return true; }
 
   [[nodiscard]] virtual CaptureViewElement* GetParent() const { return parent_; }
-  [[nodiscard]] virtual std::vector<CaptureViewElement*> GetChildren() const { return {}; }
-  [[nodiscard]] virtual std::vector<CaptureViewElement*> GetVisibleChildren() const;
-  [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildrenOnScreen() const;
+  [[nodiscard]] virtual std::vector<CaptureViewElement*> GetAllChildren() const { return {}; }
+  [[nodiscard]] virtual std::vector<CaptureViewElement*> GetNonHiddenChildren() const;
+  [[nodiscard]] std::vector<CaptureViewElement*> GetChildrenVisibleInViewport() const;
 
   virtual void RequestUpdate();
 

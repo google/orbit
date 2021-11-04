@@ -15,14 +15,14 @@ void orbit_gl::CaptureViewElementTester::TestWidthPropagationToChildren(
   const float kWidth = 100, kUpdatedWidth = 50;
 
   element->SetWidth(kWidth);
-  for (auto& child : element->GetChildren()) {
+  for (auto& child : element->GetAllChildren()) {
     if (child->GetLayoutFlags() & CaptureViewElement::LayoutFlags::kScaleHorizontallyWithParent) {
       EXPECT_EQ(kWidth, child->GetWidth());
     }
   }
 
   element->SetWidth(kUpdatedWidth);
-  for (auto& child : element->GetChildren()) {
+  for (auto& child : element->GetAllChildren()) {
     if (child->GetLayoutFlags() & CaptureViewElement::LayoutFlags::kScaleHorizontallyWithParent) {
       EXPECT_EQ(kUpdatedWidth, child->GetWidth());
     }
