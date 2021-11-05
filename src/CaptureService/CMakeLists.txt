@@ -29,4 +29,3 @@ target_link_libraries(CaptureService PUBLIC
         ObjectUtils
         OrbitBase
         OrbitVersion)
-

@@ -59,7 +59,11 @@ static std::optional<uint64_t> ComputeSamplingPeriodNs(double sampling_frequency
   return std::nullopt;
 }
 
-TracerImpl::TracerImpl(const CaptureOptions& capture_options, TracerListener* listener)
+// TODO(b/194704608,b/204404077): Actually use UserSpaceInstrumentationAddresses across the module.
+TracerImpl::TracerImpl(
+    const CaptureOptions& capture_options,
+    std::unique_ptr<UserSpaceInstrumentationAddresses> /*user_space_instrumentation_addresses*/,
+    TracerListener* listener)
     : trace_context_switches_{capture_options.trace_context_switches()},
       target_pid_{orbit_base::ToNativeProcessId(capture_options.pid())},
       unwinding_method_{capture_options.unwinding_method()},

@@ -19,7 +19,8 @@ target_sources(LinuxCaptureService PRIVATE
         MemoryInfoHandler.cpp
         MemoryInfoHandler.h
         TracingHandler.cpp
-        TracingHandler.h)
+        TracingHandler.h
+        UserSpaceInstrumentationAddressesImpl.h)
 
 target_link_libraries(LinuxCaptureService PUBLIC
         ApiLoader
@@ -34,3 +35,13 @@ target_link_libraries(LinuxCaptureService PUBLIC
         OrbitVersion
         UserSpaceInstrumentation)
 
+add_executable(LinuxCaptureServiceTests)
+
+target_sources(LinuxCaptureServiceTests PRIVATE
+        UserSpaceInstrumentationAddressesImplTest.cpp)
+
+target_link_libraries(LinuxCaptureServiceTests PRIVATE
+        LinuxCaptureService
+        GTest::Main)
+
+register_test(LinuxCaptureServiceTests)

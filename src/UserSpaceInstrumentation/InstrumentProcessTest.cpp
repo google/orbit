@@ -12,7 +12,6 @@
 #include <string>
 #include <string_view>
 
-#include "AddressRange.h"
 #include "FindFunctionAddress.h"
 #include "ObjectUtils/ElfFile.h"
 #include "ObjectUtils/LinuxMap.h"
@@ -21,6 +20,8 @@
 #include "OrbitBase/Logging.h"
 #include "TestUtils.h"
 #include "TestUtils/TestUtils.h"
+#include "Trampoline.h"
+#include "UserSpaceInstrumentation/AddressRange.h"
 #include "UserSpaceInstrumentation/Attach.h"
 #include "UserSpaceInstrumentation/InstrumentProcess.h"
 
@@ -148,6 +149,23 @@ TEST(InstrumentProcessTest, FailToInstrumentThisProcess) {
   EXPECT_TRUE(result_or_error.value().instrumented_function_ids.empty());
 }
 
+static void VerifyTrampolineAddressRangesAndLibraryPath(
+    const InstrumentationManager::InstrumentationResult& instrumentation_result) {
+  EXPECT_EQ(instrumentation_result.entry_trampoline_address_ranges.size(), 1);
+  if (!instrumentation_result.entry_trampoline_address_ranges.empty()) {
+    EXPECT_EQ(instrumentation_result.entry_trampoline_address_ranges.at(0).end -
+                  instrumentation_result.entry_trampoline_address_ranges.at(0).start,
+              4096 * GetMaxTrampolineSize());
+  }
+
+  EXPECT_EQ(instrumentation_result.return_trampoline_address_range.end -
+                instrumentation_result.return_trampoline_address_range.start,
+            GetReturnTrampolineSize());
+
+  EXPECT_EQ(instrumentation_result.injected_library_path.filename().string(),
+            "liborbituserspaceinstrumentation.so");
+}
+
 TEST(InstrumentProcessTest, Instrument) {
   InstrumentationManager* instrumentation_manager = GetInstrumentationManager();
 
@@ -167,6 +185,7 @@ TEST(InstrumentProcessTest, Instrument) {
   auto result_or_error = instrumentation_manager->InstrumentProcess(capture_options);
   ASSERT_THAT(result_or_error, HasNoError());
   EXPECT_TRUE(result_or_error.value().instrumented_function_ids.contains(kFunctionId1));
+  VerifyTrampolineAddressRangesAndLibraryPath(result_or_error.value());
   auto result = instrumentation_manager->UninstrumentProcess(pid_process_1);
   ASSERT_THAT(result, HasNoError());
 
@@ -192,6 +211,7 @@ TEST(InstrumentProcessTest, Instrument) {
     result_or_error = instrumentation_manager->InstrumentProcess(capture_options);
     ASSERT_THAT(result_or_error, HasNoError());
     EXPECT_TRUE(result_or_error.value().instrumented_function_ids.contains(kFunctionId1));
+    VerifyTrampolineAddressRangesAndLibraryPath(result_or_error.value());
     result = instrumentation_manager->UninstrumentProcess(pid_process_2);
     ASSERT_THAT(result, HasNoError());
   }
@@ -229,6 +249,7 @@ TEST(InstrumentProcessTest, GetErrorMessage) {
   EXPECT_THAT(result_or_error.value().function_ids_to_error_messages[kFunctionId2],
               HasSubstr("Failed to create trampoline: Unable to disassemble enough of the function "
                         "to instrument it. Code: c3"));
+  VerifyTrampolineAddressRangesAndLibraryPath(result_or_error.value());
   auto result = instrumentation_manager->UninstrumentProcess(pid);
   ASSERT_THAT(result, HasNoError());
   kill(pid, SIGKILL);

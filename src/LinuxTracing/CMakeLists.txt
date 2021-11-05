@@ -16,7 +16,8 @@ target_include_directories(LinuxTracing PRIVATE
 
 target_sources(LinuxTracing PUBLIC
         include/LinuxTracing/Tracer.h
-        include/LinuxTracing/TracerListener.h)
+        include/LinuxTracing/TracerListener.h
+        include/LinuxTracing/UserSpaceInstrumentationAddresses.h)
 
 target_sources(LinuxTracing PRIVATE
         ContextSwitchManager.cpp

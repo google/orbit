@@ -359,7 +359,8 @@ class LinuxTracingIntegrationTestFixture {
     }
 
     listener_.emplace();
-    tracer_ = orbit_linux_tracing::Tracer::Create(capture_options, &listener_.value());
+    tracer_ = orbit_linux_tracing::Tracer::Create(
+        capture_options, /*user_space_instrumentation_addresses=*/nullptr, &listener_.value());
     tracer_->Start();
 
     if (IsRunningAsRoot()) {

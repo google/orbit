@@ -11,6 +11,7 @@
 #include <utility>
 
 #include "LinuxTracing/TracerListener.h"
+#include "LinuxTracing/UserSpaceInstrumentationAddresses.h"
 #include "capture.pb.h"
 
 namespace orbit_linux_tracing {
@@ -30,7 +31,9 @@ class Tracer {
   virtual ~Tracer() = default;
 
   [[nodiscard]] static std::unique_ptr<Tracer> Create(
-      const orbit_grpc_protos::CaptureOptions& capture_options, TracerListener* listener);
+      const orbit_grpc_protos::CaptureOptions& capture_options,
+      std::unique_ptr<UserSpaceInstrumentationAddresses> user_space_instrumentation_addresses,
+      TracerListener* listener);
 };
 
 }  // namespace orbit_linux_tracing

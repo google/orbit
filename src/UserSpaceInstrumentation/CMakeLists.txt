@@ -15,6 +15,7 @@ target_include_directories(UserSpaceInstrumentation PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(UserSpaceInstrumentation PUBLIC
+        include/UserSpaceInstrumentation/AddressRange.h
         include/UserSpaceInstrumentation/Attach.h
         include/UserSpaceInstrumentation/ExecuteInProcess.h
         include/UserSpaceInstrumentation/InjectLibraryInTracee.h
@@ -23,7 +24,6 @@ target_sources(UserSpaceInstrumentation PUBLIC
 target_sources(UserSpaceInstrumentation PRIVATE
         AccessTraceesMemory.cpp
         AccessTraceesMemory.h
-        AddressRange.h
         AllocateInTracee.cpp
         AllocateInTracee.h
         Attach.cpp
