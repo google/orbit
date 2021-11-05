@@ -46,6 +46,32 @@ namespace unwindstack {
 
 class UnwinderTest : public ::testing::Test {
  protected:
+  // We set up `memory_` and `regs_` per test fixture, because some tests modify these, which
+  // can lead to tests influencing other tests and causing them to fail. This is only
+  // a problem when all tests are run in the same process, which is for example the
+  // case when running these tests locally during development.
+  UnwinderTest() : memory_(new MemoryFake), process_memory_(memory_), regs_(5) {
+    // dex debug data
+    memory_->SetData32(0xf180c, 0xf3000);
+    memory_->SetData32(0xf3000, 0xf4000);
+    memory_->SetData32(0xf3004, 0xf4000);
+    memory_->SetData32(0xf3008, 0xf5000);
+    // jit debug data
+    memory_->SetData32(0xf1900, 1);
+    memory_->SetData32(0xf1904, 0);
+    memory_->SetData32(0xf1908, 0xf6000);
+    memory_->SetData32(0xf190c, 0xf6000);
+    memory_->SetData32(0xf6000, 0);
+    memory_->SetData32(0xf6004, 0);
+    memory_->SetData32(0xf6008, 0xf7000);
+    memory_->SetData32(0xf600c, 0);
+    memory_->SetData64(0xf6010, 0x1000);
+
+    ElfInterfaceFake::FakeClear();
+    regs_.FakeSetArch(ARCH_ARM);
+    regs_.FakeSetReturnAddressValid(false);
+  }
+
   static MapInfo* AddMapInfo(uint64_t start, uint64_t end, uint64_t offset, uint64_t flags,
                              const char* name, Elf* elf = nullptr) {
     std::string str_name(name);
@@ -59,9 +85,6 @@ class UnwinderTest : public ::testing::Test {
 
   static void SetUpTestSuite() {
     maps_.reset(new Maps);
-
-    memory_ = new MemoryFake;
-    process_memory_.reset(memory_);
 
     ElfFake* elf;
     ElfInterfaceFake* interface;
@@ -151,21 +174,6 @@ class UnwinderTest : public ::testing::Test {
     interface->FakeSetDataVaddrEnd(0x8000);
     AddMapInfo(0xf0000, 0xf1000, 0, PROT_READ | PROT_WRITE | PROT_EXEC, "/fake/global.so", elf);
     AddMapInfo(0xf1000, 0xf9000, 0x1000, PROT_READ | PROT_WRITE, "/fake/global.so");
-    // dex debug data
-    memory_->SetData32(0xf180c, 0xf3000);
-    memory_->SetData32(0xf3000, 0xf4000);
-    memory_->SetData32(0xf3004, 0xf4000);
-    memory_->SetData32(0xf3008, 0xf5000);
-    // jit debug data
-    memory_->SetData32(0xf1900, 1);
-    memory_->SetData32(0xf1904, 0);
-    memory_->SetData32(0xf1908, 0xf6000);
-    memory_->SetData32(0xf190c, 0xf6000);
-    memory_->SetData32(0xf6000, 0);
-    memory_->SetData32(0xf6004, 0);
-    memory_->SetData32(0xf6008, 0xf7000);
-    memory_->SetData32(0xf600c, 0);
-    memory_->SetData64(0xf6010, 0x1000);
 
     elf = new ElfFake(new MemoryFake);
     elf->FakeSetValid(false);
@@ -176,22 +184,14 @@ class UnwinderTest : public ::testing::Test {
     map_info->set_offset(0x200);
   }
 
-  void SetUp() override {
-    ElfInterfaceFake::FakeClear();
-    regs_.FakeSetArch(ARCH_ARM);
-    regs_.FakeSetReturnAddressValid(false);
-  }
-
   static std::unique_ptr<Maps> maps_;
-  static RegsFake regs_;
-  static MemoryFake* memory_;
-  static std::shared_ptr<Memory> process_memory_;
+
+  MemoryFake* memory_;
+  std::shared_ptr<Memory> process_memory_;
+  RegsFake regs_;
 };
 
 std::unique_ptr<Maps> UnwinderTest::maps_;
-RegsFake UnwinderTest::regs_(5);
-MemoryFake* UnwinderTest::memory_;
-std::shared_ptr<Memory> UnwinderTest::process_memory_(nullptr);
 
 TEST_F(UnwinderTest, multiple_frames) {
   ElfInterfaceFake::FakePushFunctionData(FunctionData("Frame0", 0));
