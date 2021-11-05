@@ -36,7 +36,7 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
     ui_->unwindingMethodWidget->hide();
     ui_->schedulerCheckBox->hide();
     ui_->gpuSubmissionsCheckBox->hide();
-    ui_->userspaceCheckBox->hide();
+    ui_->dynamicInstrumentationMethodWidget->hide();
     ui_->introspectionCheckBox->hide();
   }
 
@@ -106,11 +106,11 @@ void CaptureOptionsDialog::SetEnableApi(bool enable_api) {
 bool CaptureOptionsDialog::GetEnableApi() const { return ui_->apiCheckBox->isChecked(); }
 
 void CaptureOptionsDialog::SetEnableUserSpaceInstrumentation(bool enable) {
-  ui_->userspaceCheckBox->setChecked(enable);
+  ui_->dynamicInstrumentationMethodComboBox->setCurrentIndex(enable ? 1 : 0);
 }
 
 bool CaptureOptionsDialog::GetEnableUserSpaceInstrumentation() const {
-  return ui_->userspaceCheckBox->isChecked();
+  return ui_->dynamicInstrumentationMethodComboBox->currentIndex() == 1;
 }
 
 void CaptureOptionsDialog::SetEnableIntrospection(bool enable_introspection) {
