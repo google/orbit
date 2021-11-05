@@ -60,7 +60,6 @@ class UploaderClientCaptureEventCollector final
   orbit_capture_file::BufferOutputStream capture_data_buffer_stream_;
   std::vector<unsigned char> capture_data_to_upload_;
 
-  size_t total_write_error_count_ = 0;
   size_t total_uploaded_event_count_ = 0;
   size_t total_uploaded_data_bytes_ = 0;
 };

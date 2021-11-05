@@ -27,7 +27,6 @@ UploaderClientCaptureEventCollector::UploaderClientCaptureEventCollector() {
 UploaderClientCaptureEventCollector::~UploaderClientCaptureEventCollector() {
   LOG("Total number of events uploaded: %u", total_uploaded_event_count_);
   LOG("Total number of bytes uploaded: %u", total_uploaded_data_bytes_);
-  LOG("Total number of write event errors: %u", total_write_error_count_);
 
   if (total_uploaded_event_count_ > 0) {
     float average_bytes = static_cast<float>(total_uploaded_data_bytes_) /
@@ -56,10 +55,8 @@ void UploaderClientCaptureEventCollector::AddEvent(ClientCaptureEvent&& event) {
     if (!output_stream_->IsOpen()) return;
 
     auto write_result = output_stream_->WriteCaptureEvent(event);
-    if (write_result.has_error()) {
-      ++total_write_error_count_;
-      return;
-    }
+    CHECK(!write_result.has_error());
+
     ++buffered_event_count_;
     buffered_event_bytes_ += event.ByteSizeLong();
   }

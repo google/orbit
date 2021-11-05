@@ -39,82 +39,53 @@ ClientCaptureEvent CreateCaptureFinishedEvent() {
 
 class UploaderClientCaptureEventCollectorTest : public testing::Test {
  protected:
-  // Set `early_stop_event_count` to be >= 2 if we want to call `Stop()` early with producing only
-  // `early_stop_event_count` events. Here we require ">= 2" as an early stop will create at
-  // least two capture events: one `InternedStringCaptureEvent` created when stop_called_ becomes
-  // true, and one `CaptureFinishedEvent`.
-  void Start(size_t event_count, uint64_t produce_event_every_ms, uint64_t upload_events_every_ms,
-             size_t early_stop_event_count = 0) {
-    event_count_ = event_count;
-    produce_event_every_ms_ = produce_event_every_ms;
-    upload_events_every_ms_ = upload_events_every_ms;
-    early_stop_event_count_ = early_stop_event_count;
+  void StartProduce(size_t event_count) {
+    ASSERT_GE(event_count, 1);
+    data_produce_thread_ = std::thread(&UploaderClientCaptureEventCollectorTest::ProduceCaptureData,
+                                       this, event_count);
+  }
 
-    data_produce_thread_ =
-        std::thread(&UploaderClientCaptureEventCollectorTest::ProduceCaptureData, this);
+  void StartUpload() {
     data_upload_thread_ =
         std::thread(&UploaderClientCaptureEventCollectorTest::UploadCaptureData, this);
   }
 
-  void Stop() {
-    absl::MutexLock lock{&stop_called_mutex_};
-    stop_called_ = true;
-  }
-
   void TearDown() override {
-    {
-      absl::MutexLock lock{&stop_called_mutex_};
-      CHECK(stop_called_);
-    }
-
-    CHECK(data_produce_thread_.joinable());
+    ASSERT_TRUE(data_produce_thread_.joinable());
     data_produce_thread_.join();
 
-    CHECK(data_upload_thread_.joinable());
+    ASSERT_TRUE(data_upload_thread_.joinable());
     data_upload_thread_.join();
   }
 
   UploaderClientCaptureEventCollector collector_;
   size_t total_uploaded_data_bytes_ = 0;
-
+  absl::Mutex produce_finished_mutex_;
+  bool produce_finished_ ABSL_GUARDED_BY(produce_finished_mutex_) = false;
   absl::Mutex upload_finished_mutex_;
   bool upload_finished_ ABSL_GUARDED_BY(upload_finished_mutex_) = false;
-  absl::Mutex early_stop_mutex_;
-  bool early_stop_ ABSL_GUARDED_BY(early_stop_mutex_) = false;
 
  private:
-  // Keep producing capture events until stop is called or `event_count_` events are produced with a
-  // specified produce duration. The last produced event will always be the `CaptureFinishedEvent`.
-  void ProduceCaptureData() {
-    size_t added_event_count = 0;
-    bool need_check_early_stop = (early_stop_event_count_ >= 2);
-    bool stopped = false;
-    while (added_event_count < event_count_ - 1 && !stopped) {
-      if (need_check_early_stop && added_event_count + 2 >= early_stop_event_count_) {
-        {
-          absl::MutexLock lock{&early_stop_mutex_};
-          early_stop_ = true;
-        }
-        need_check_early_stop = false;
-      }
+  // Keep producing capture events until `event_count` events are produced. The last produced event
+  // will always be the `CaptureFinishedEvent`.
+  void ProduceCaptureData(size_t event_count) {
+    while (event_count-- > 1) {
+      constexpr uint64_t kProduceEventEveryMs = 10;
+      std::this_thread::sleep_for(std::chrono::milliseconds(kProduceEventEveryMs));
 
-      stop_called_mutex_.LockWhenWithTimeout(absl::Condition(&stop_called_),
-                                             absl::Milliseconds(produce_event_every_ms_));
       collector_.AddEvent(CreateInternedStringCaptureEvent(kAnswerKey, kAnswerString));
-      stopped = stop_called_;
-      stop_called_mutex_.Unlock();
-
-      ++added_event_count;
     }
 
     collector_.AddEvent(CreateCaptureFinishedEvent());
 
-    Stop();
+    absl::MutexLock lock{&produce_finished_mutex_};
+    produce_finished_ = true;
   }
 
   void UploadCaptureData() {
     while (collector_.GetDataReadiness() != orbit_capture_uploader::DataReadiness::kEndOfData) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(upload_events_every_ms_));
+      constexpr uint64_t kUploadEventsEveryMs = 10;
+      std::this_thread::sleep_for(std::chrono::milliseconds(kUploadEventsEveryMs));
 
       const std::vector<unsigned char>& upload_data_buffer = collector_.GetUploadDataBuffer();
       total_uploaded_data_bytes_ += upload_data_buffer.size();
@@ -125,46 +96,21 @@ class UploaderClientCaptureEventCollectorTest : public testing::Test {
     upload_finished_ = true;
   }
 
-  absl::Mutex stop_called_mutex_;
-  bool stop_called_ ABSL_GUARDED_BY(stop_called_mutex_) = false;
-
-  size_t event_count_ = 0;
-  size_t early_stop_event_count_;
-  uint64_t produce_event_every_ms_;
-  uint64_t upload_events_every_ms_;
   std::thread data_upload_thread_;
   std::thread data_produce_thread_;
 };
 
 }  // namespace
 
-TEST_F(UploaderClientCaptureEventCollectorTest, EarlyStop) {
+TEST_F(UploaderClientCaptureEventCollectorTest, UploadAfterFinishingProducing) {
   constexpr size_t kEventCount = 10;
-  constexpr uint64_t kProduceEventEveryMs = 50;
-  constexpr uint64_t kUploadEventsEveryMs = 5;
-  constexpr size_t kEarlyStopEventCount = 4;
-  Start(kEventCount, kProduceEventEveryMs, kUploadEventsEveryMs, kEarlyStopEventCount);
-
-  // Stop producing data early
-  {
-    absl::MutexLock lock{&early_stop_mutex_};
-    early_stop_mutex_.Await(absl::Condition(&early_stop_));
-  }
-  Stop();
+  StartProduce(kEventCount);
 
   {
-    absl::MutexLock lock{&upload_finished_mutex_};
-    upload_finished_mutex_.Await(absl::Condition(&upload_finished_));
+    absl::MutexLock lock{&produce_finished_mutex_};
+    produce_finished_mutex_.Await(absl::Condition(&produce_finished_));
   }
-  EXPECT_EQ(collector_.GetTotalUploadedEventCount(), kEarlyStopEventCount);
-  EXPECT_EQ(collector_.GetTotalUploadedDataBytes(), total_uploaded_data_bytes_);
-}
-
-TEST_F(UploaderClientCaptureEventCollectorTest, SlowProduceAndFastUpload) {
-  constexpr size_t kEventCount = 10;
-  constexpr uint64_t kSlowProduceEventEveryMs = 50;
-  constexpr uint64_t kFastUploadEventsEveryMs = 5;
-  Start(kEventCount, kSlowProduceEventEveryMs, kFastUploadEventsEveryMs);
+  StartUpload();
 
   {
     absl::MutexLock lock{&upload_finished_mutex_};
@@ -174,11 +120,10 @@ TEST_F(UploaderClientCaptureEventCollectorTest, SlowProduceAndFastUpload) {
   EXPECT_EQ(collector_.GetTotalUploadedDataBytes(), total_uploaded_data_bytes_);
 }
 
-TEST_F(UploaderClientCaptureEventCollectorTest, FastProduceAndSlowUpload) {
+TEST_F(UploaderClientCaptureEventCollectorTest, UploadWhileStillProducing) {
   constexpr size_t kEventCount = 10;
-  constexpr uint64_t kFastProduceEventEveryMs = 5;
-  constexpr uint64_t kSlowUploadEventsEveryMs = 50;
-  Start(kEventCount, kFastProduceEventEveryMs, kSlowUploadEventsEveryMs);
+  StartProduce(kEventCount);
+  StartUpload();
 
   {
     absl::MutexLock lock{&upload_finished_mutex_};
