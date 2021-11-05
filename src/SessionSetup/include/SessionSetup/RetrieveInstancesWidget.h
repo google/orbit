@@ -41,7 +41,7 @@ class RetrieveInstancesWidget : public QWidget {
 
  private:
   void SetupStateMachine();
-  [[nodiscard]] orbit_ggp::Client::InstanceListScope GetInstanceListScope() const;
+  [[nodiscard]] orbit_ggp::Client::InstanceListScope GetSelectedInstancesScope() const;
   [[nodiscard]] std::optional<orbit_ggp::Project> GetSelectedProject() const;
   void InitialLoad(const std::optional<orbit_ggp::Project>& remembered_project);
   void OnInstancesLoadingReturned(
