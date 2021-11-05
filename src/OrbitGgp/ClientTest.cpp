@@ -203,11 +203,10 @@ TEST_F(OrbitGgpClientTest, GetSshInfoAsyncWorking) {
   auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()));
   ASSERT_THAT(client, HasValue());
 
-  Instance test_instance;
-  test_instance.id = "instance/test/id";
+  QString test_instance_id = "instance/test/id";
 
   bool future_is_resolved = false;
-  auto future = client.value()->GetSshInfoAsync(test_instance, std::nullopt);
+  auto future = client.value()->GetSshInfoAsync(test_instance_id, std::nullopt);
   future.Then(main_thread_executor_.get(),
               [&future_is_resolved](const ErrorMessageOr<SshInfo>& ssh_info) {
                 EXPECT_FALSE(future_is_resolved);
@@ -224,13 +223,12 @@ TEST_F(OrbitGgpClientTest, GetSshInfoAsyncWorkingWithProject) {
   auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()));
   ASSERT_THAT(client, HasValue());
 
-  Instance test_instance;
-  test_instance.id = "instance/test/id";
+  QString test_instance_id = "instance/test/id";
 
   Project project{"display name", "project/test/id"};
 
   bool future_is_resolved = false;
-  auto future = client.value()->GetSshInfoAsync(test_instance, project);
+  auto future = client.value()->GetSshInfoAsync(test_instance_id, project);
   future.Then(main_thread_executor_.get(),
               [&future_is_resolved](const ErrorMessageOr<SshInfo>& ssh_info) {
                 EXPECT_FALSE(future_is_resolved);
@@ -244,8 +242,7 @@ TEST_F(OrbitGgpClientTest, GetSshInfoAsyncWorkingWithProject) {
 }
 
 TEST_F(OrbitGgpClientTest, GetSshInfoAsyncTimeout) {
-  Instance test_instance;
-  test_instance.id = "instance/test/id";
+  QString test_instance_id = "instance/test/id";
 
   // mock_ggp_working_ has a 50ms sleep, hence waiting for only 5ms should result in a timeout
   auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()),
@@ -253,7 +250,7 @@ TEST_F(OrbitGgpClientTest, GetSshInfoAsyncTimeout) {
   ASSERT_THAT(client, HasValue());
 
   bool future_is_resolved = false;
-  auto future = client.value()->GetSshInfoAsync(test_instance, std::nullopt);
+  auto future = client.value()->GetSshInfoAsync(test_instance_id, std::nullopt);
   future.Then(main_thread_executor_.get(), [&future_is_resolved](
                                                const ErrorMessageOr<SshInfo>& ssh_info) {
     EXPECT_FALSE(future_is_resolved);
@@ -278,10 +275,9 @@ TEST_F(OrbitGgpClientTest, GetSshInfoAsyncClientGetsDestroyed) {
         CreateClient(QString::fromStdString(mock_ggp_working_.string()));
     ASSERT_THAT(client, HasValue());
 
-    Instance test_instance;
-    test_instance.id = "instance/test/id";
+    QString test_instance_id = "instance/test/id";
 
-    future = client.value()->GetSshInfoAsync(test_instance, std::nullopt);
+    future = client.value()->GetSshInfoAsync(test_instance_id, std::nullopt);
 
     future.Then(main_thread_executor_.get(), [&future_is_resolved](
                                                  const ErrorMessageOr<SshInfo>& ssh_info_result) {
