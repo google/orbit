@@ -55,6 +55,12 @@ class MemoryFake : public Memory {
     SetMemory(addr, string.c_str(), string.size() + 1);
   }
 
+  void ClearMemory(uint64_t addr, size_t length) {
+    for (uint64_t i = 0; i < length; ++i) {
+      data_.erase(addr + i);
+    }
+  }
+
   void Clear() { data_.clear(); }
 
  private:

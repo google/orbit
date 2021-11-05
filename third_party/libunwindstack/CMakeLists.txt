@@ -40,6 +40,7 @@ target_sources(libunwindstack_common PRIVATE
   ElfInterfaceArm.cpp
   ElfInterfaceArm.h
   ElfInterface.cpp
+  PeCoffInterface.cpp
   Global.cpp
   GlobalDebugImpl.h
   JitDebug.cpp
@@ -112,6 +113,7 @@ target_sources(libunwindstack_common PUBLIC
   include/unwindstack/Maps.h
   include/unwindstack/Memory.h
   include/unwindstack/Object.h
+  include/unwindstack/PeCoffInterface.h
   include/unwindstack/Regs.h
   include/unwindstack/RegsArm.h
   include/unwindstack/RegsArm64.h
@@ -243,6 +245,7 @@ target_sources(libunwindstack_tests PRIVATE
   tests/MemoryThreadCacheTest.cpp
   tests/MemoryXzTest.cpp
   tests/ObjectCacheTest.cpp
+  tests/PeCoffInterfaceTest.cpp
   tests/RegsInfoTest.cpp
   tests/RegsIterateTest.cpp
   tests/RegsStepIfSignalHandlerTest.cpp
