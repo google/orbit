@@ -57,6 +57,8 @@ class Elf : public Object {
   bool GetFunctionName(uint64_t addr, SharedString* name, uint64_t* func_offset) override;
   bool GetGlobalVariableOffset(const std::string& name, uint64_t* memory_offset) override;
 
+  ArchEnum arch() override { return arch_; }
+
   uint64_t GetRelPc(uint64_t pc, MapInfo* map_info) override;
 
   bool StepIfSignalHandler(uint64_t rel_pc, Regs* regs, Memory* process_memory) override;
@@ -81,8 +83,6 @@ class Elf : public Object {
 
   uint8_t class_type() { return class_type_; }
 
-  ArchEnum arch() { return arch_; }
-
   ElfInterface* interface() { return interface_.get(); }
 
   ElfInterface* gnu_debugdata_interface() { return gnu_debugdata_interface_.get(); }
@@ -94,15 +94,6 @@ class Elf : public Object {
   static int64_t GetLoadBias(Memory* memory);
 
   static std::string GetBuildID(Memory* memory);
-
-  static void SetCachingEnabled(bool enable);
-  static bool CachingEnabled() { return cache_enabled_; }
-
-  static void CacheLock();
-  static void CacheUnlock();
-  static void CacheAdd(MapInfo* info);
-  static bool CacheGet(MapInfo* info);
-  static bool CacheAfterCreateMemory(MapInfo* info);
 
  protected:
   bool valid_ = false;
@@ -117,10 +108,6 @@ class Elf : public Object {
 
   std::unique_ptr<Memory> gnu_debugdata_memory_;
   std::unique_ptr<ElfInterface> gnu_debugdata_interface_;
-
-  static bool cache_enabled_;
-  static std::unordered_map<std::string, std::pair<std::shared_ptr<Elf>, bool>>* cache_;
-  static std::mutex* cache_lock_;
 };
 
 }  // namespace unwindstack

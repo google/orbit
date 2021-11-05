@@ -19,8 +19,8 @@
 
 #include <stdint.h>
 
-#include <unwindstack/Elf.h>
 #include <unwindstack/Memory.h>
+#include <unwindstack/Object.h>
 #include <unwindstack/Regs.h>
 
 #include "Check.h"
@@ -54,7 +54,7 @@ class RegsFake : public Regs {
     return fake_arch_ == ARCH_ARM || fake_arch_ == ARCH_X86 || fake_arch_ == ARCH_MIPS;
   }
 
-  bool StepIfSignalHandler(uint64_t, Elf*, Memory*) override { return false; }
+  bool StepIfSignalHandler(uint64_t, Object*, Memory*) override { return false; }
 
   void FakeSetArch(ArchEnum arch) { fake_arch_ = arch; }
   void FakeSetDexPc(uint64_t dex_pc) { dex_pc_ = dex_pc; }
@@ -86,7 +86,7 @@ class RegsImplFake : public RegsImpl<TypeParam> {
   void set_pseudo_reg(uint64_t reg) { fake_pseudo_reg_ = reg; }
 
   bool SetPcFromReturnAddress(Memory*) override { return false; }
-  bool StepIfSignalHandler(uint64_t, Elf*, Memory*) override { return false; }
+  bool StepIfSignalHandler(uint64_t, Object*, Memory*) override { return false; }
 
   bool SetPseudoRegister(uint16_t reg, uint64_t value) override {
     if (fake_pseudo_reg_ != reg) {

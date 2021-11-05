@@ -21,7 +21,7 @@
 
 #include <gtest/gtest.h>
 
-#include <unwindstack/Elf.h>
+#include <unwindstack/Object.h>
 #include <unwindstack/MapInfo.h>
 
 #include "ElfTestUtils.h"
@@ -29,13 +29,13 @@
 
 namespace unwindstack {
 
-class ElfCacheTest : public ::testing::Test {
+class ObjectCacheTest : public ::testing::Test {
  protected:
   static void SetUpTestSuite() { memory_.reset(new MemoryFake); }
 
-  void SetUp() override { Elf::SetCachingEnabled(true); }
+  void SetUp() override { Object::SetCachingEnabled(true); }
 
-  void TearDown() override { Elf::SetCachingEnabled(false); }
+  void TearDown() override { Object::SetCachingEnabled(false); }
 
   void WriteElfFile(uint64_t offset, TemporaryFile* tf, uint32_t type) {
     ASSERT_TRUE(type == EM_ARM || type == EM_386 || type == EM_X86_64);
@@ -64,11 +64,11 @@ class ElfCacheTest : public ::testing::Test {
   static std::shared_ptr<Memory> memory_;
 };
 
-std::shared_ptr<Memory> ElfCacheTest::memory_;
+std::shared_ptr<Memory> ObjectCacheTest::memory_;
 
-void ElfCacheTest::VerifySameMap(bool cache_enabled) {
+void ObjectCacheTest::VerifySameMap(bool cache_enabled) {
   if (!cache_enabled) {
-    Elf::SetCachingEnabled(false);
+    Object::SetCachingEnabled(false);
   }
 
   TemporaryFile tf;
@@ -81,29 +81,29 @@ void ElfCacheTest::VerifySameMap(bool cache_enabled) {
   MapInfo info1(nullptr, nullptr, start, end, 0, 0x5, tf.path);
   MapInfo info2(nullptr, nullptr, start, end, 0, 0x5, tf.path);
 
-  Elf* elf1 = info1.GetElf(memory_, ARCH_ARM);
-  ASSERT_TRUE(elf1->valid());
-  Elf* elf2 = info2.GetElf(memory_, ARCH_ARM);
-  ASSERT_TRUE(elf2->valid());
+  Object* object1 = info1.GetObject(memory_, ARCH_ARM);
+  ASSERT_TRUE(object1->valid());
+  Object* object2 = info2.GetObject(memory_, ARCH_ARM);
+  ASSERT_TRUE(object2->valid());
 
   if (cache_enabled) {
-    EXPECT_EQ(elf1, elf2);
+    EXPECT_EQ(object1, object2);
   } else {
-    EXPECT_NE(elf1, elf2);
+    EXPECT_NE(object1, object2);
   }
 }
 
-TEST_F(ElfCacheTest, no_caching) {
+TEST_F(ObjectCacheTest, no_caching) {
   VerifySameMap(false);
 }
 
-TEST_F(ElfCacheTest, caching_invalid_elf) {
+TEST_F(ObjectCacheTest, caching_invalid_elf) {
   VerifySameMap(true);
 }
 
-void ElfCacheTest::VerifyWithinSameMap(bool cache_enabled) {
+void ObjectCacheTest::VerifyWithinSameMap(bool cache_enabled) {
   if (!cache_enabled) {
-    Elf::SetCachingEnabled(false);
+    Object::SetCachingEnabled(false);
   }
 
   TemporaryFile tf;
@@ -131,78 +131,78 @@ void ElfCacheTest::VerifyWithinSameMap(bool cache_enabled) {
   MapInfo info300_1(nullptr, nullptr, start, end, 0x300, 0x5, tf.path);
   MapInfo info300_2(nullptr, nullptr, start, end, 0x300, 0x5, tf.path);
 
-  Elf* elf0_1 = info0_1.GetElf(memory_, ARCH_ARM);
-  ASSERT_TRUE(elf0_1->valid());
-  EXPECT_EQ(ARCH_ARM, elf0_1->arch());
-  Elf* elf0_2 = info0_2.GetElf(memory_, ARCH_ARM);
-  ASSERT_TRUE(elf0_2->valid());
-  EXPECT_EQ(ARCH_ARM, elf0_2->arch());
-  EXPECT_EQ(0U, info0_1.elf_offset());
-  EXPECT_EQ(0U, info0_2.elf_offset());
+  Object* object0_1 = info0_1.GetObject(memory_, ARCH_ARM);
+  ASSERT_TRUE(object0_1->valid());
+  EXPECT_EQ(ARCH_ARM, object0_1->arch());
+  Object* object0_2 = info0_2.GetObject(memory_, ARCH_ARM);
+  ASSERT_TRUE(object0_2->valid());
+  EXPECT_EQ(ARCH_ARM, object0_2->arch());
+  EXPECT_EQ(0U, info0_1.object_offset());
+  EXPECT_EQ(0U, info0_2.object_offset());
   if (cache_enabled) {
-    EXPECT_EQ(elf0_1, elf0_2);
+    EXPECT_EQ(object0_1, object0_2);
   } else {
-    EXPECT_NE(elf0_1, elf0_2);
+    EXPECT_NE(object0_1, object0_2);
   }
 
-  Elf* elf100_1 = info100_1.GetElf(memory_, ARCH_X86);
-  ASSERT_TRUE(elf100_1->valid());
-  EXPECT_EQ(ARCH_X86, elf100_1->arch());
-  Elf* elf100_2 = info100_2.GetElf(memory_, ARCH_X86);
-  ASSERT_TRUE(elf100_2->valid());
-  EXPECT_EQ(ARCH_X86, elf100_2->arch());
-  EXPECT_EQ(0U, info100_1.elf_offset());
-  EXPECT_EQ(0U, info100_2.elf_offset());
+  Object* object100_1 = info100_1.GetObject(memory_, ARCH_X86);
+  ASSERT_TRUE(object100_1->valid());
+  EXPECT_EQ(ARCH_X86, object100_1->arch());
+  Object* object100_2 = info100_2.GetObject(memory_, ARCH_X86);
+  ASSERT_TRUE(object100_2->valid());
+  EXPECT_EQ(ARCH_X86, object100_2->arch());
+  EXPECT_EQ(0U, info100_1.object_offset());
+  EXPECT_EQ(0U, info100_2.object_offset());
   if (cache_enabled) {
-    EXPECT_EQ(elf100_1, elf100_2);
+    EXPECT_EQ(object100_1, object100_2);
   } else {
-    EXPECT_NE(elf100_1, elf100_2);
+    EXPECT_NE(object100_1, object100_2);
   }
 
-  Elf* elf200_1 = info200_1.GetElf(memory_, ARCH_X86_64);
-  ASSERT_TRUE(elf200_1->valid());
-  EXPECT_EQ(ARCH_X86_64, elf200_1->arch());
-  Elf* elf200_2 = info200_2.GetElf(memory_, ARCH_X86_64);
-  ASSERT_TRUE(elf200_2->valid());
-  EXPECT_EQ(ARCH_X86_64, elf200_2->arch());
-  EXPECT_EQ(0U, info200_1.elf_offset());
-  EXPECT_EQ(0U, info200_2.elf_offset());
+  Object* object200_1 = info200_1.GetObject(memory_, ARCH_X86_64);
+  ASSERT_TRUE(object200_1->valid());
+  EXPECT_EQ(ARCH_X86_64, object200_1->arch());
+  Object* object200_2 = info200_2.GetObject(memory_, ARCH_X86_64);
+  ASSERT_TRUE(object200_2->valid());
+  EXPECT_EQ(ARCH_X86_64, object200_2->arch());
+  EXPECT_EQ(0U, info200_1.object_offset());
+  EXPECT_EQ(0U, info200_2.object_offset());
   if (cache_enabled) {
-    EXPECT_EQ(elf200_1, elf200_2);
+    EXPECT_EQ(object200_1, object200_2);
   } else {
-    EXPECT_NE(elf200_1, elf200_2);
+    EXPECT_NE(object200_1, object200_2);
   }
 
-  Elf* elf300_1 = info300_1.GetElf(memory_, ARCH_ARM);
-  ASSERT_TRUE(elf300_1->valid());
-  EXPECT_EQ(ARCH_ARM, elf300_1->arch());
-  Elf* elf300_2 = info300_2.GetElf(memory_, ARCH_ARM);
-  ASSERT_TRUE(elf300_2->valid());
-  EXPECT_EQ(ARCH_ARM, elf300_2->arch());
-  EXPECT_EQ(0x300U, info300_1.elf_offset());
-  EXPECT_EQ(0x300U, info300_2.elf_offset());
+  Object* object300_1 = info300_1.GetObject(memory_, ARCH_ARM);
+  ASSERT_TRUE(object300_1->valid());
+  EXPECT_EQ(ARCH_ARM, object300_1->arch());
+  Object* object300_2 = info300_2.GetObject(memory_, ARCH_ARM);
+  ASSERT_TRUE(object300_2->valid());
+  EXPECT_EQ(ARCH_ARM, object300_2->arch());
+  EXPECT_EQ(0x300U, info300_1.object_offset());
+  EXPECT_EQ(0x300U, info300_2.object_offset());
   if (cache_enabled) {
-    EXPECT_EQ(elf300_1, elf300_2);
-    EXPECT_EQ(elf0_1, elf300_1);
+    EXPECT_EQ(object300_1, object300_2);
+    EXPECT_EQ(object0_1, object300_1);
   } else {
-    EXPECT_NE(elf300_1, elf300_2);
-    EXPECT_NE(elf0_1, elf300_1);
+    EXPECT_NE(object300_1, object300_2);
+    EXPECT_NE(object0_1, object300_1);
   }
 }
 
-TEST_F(ElfCacheTest, no_caching_valid_elf_offset_non_zero) {
+TEST_F(ObjectCacheTest, no_caching_valid_elf_offset_non_zero) {
   VerifyWithinSameMap(false);
 }
 
-TEST_F(ElfCacheTest, caching_valid_elf_offset_non_zero) {
+TEST_F(ObjectCacheTest, caching_valid_elf_offset_non_zero) {
   VerifyWithinSameMap(true);
 }
 
 // Verify that when reading from multiple non-zero offsets in the same map
 // that when cached, all of the elf objects are the same.
-void ElfCacheTest::VerifyWithinSameMapNeverReadAtZero(bool cache_enabled) {
+void ObjectCacheTest::VerifyWithinSameMapNeverReadAtZero(bool cache_enabled) {
   if (!cache_enabled) {
-    Elf::SetCachingEnabled(false);
+    Object::SetCachingEnabled(false);
   }
 
   TemporaryFile tf;
@@ -221,42 +221,42 @@ void ElfCacheTest::VerifyWithinSameMapNeverReadAtZero(bool cache_enabled) {
   MapInfo info400_1(nullptr, nullptr, start, end, 0x400, 0x5, tf.path);
   MapInfo info400_2(nullptr, nullptr, start, end, 0x400, 0x5, tf.path);
 
-  Elf* elf300_1 = info300_1.GetElf(memory_, ARCH_ARM);
-  ASSERT_TRUE(elf300_1->valid());
-  EXPECT_EQ(ARCH_ARM, elf300_1->arch());
-  Elf* elf300_2 = info300_2.GetElf(memory_, ARCH_ARM);
-  ASSERT_TRUE(elf300_2->valid());
-  EXPECT_EQ(ARCH_ARM, elf300_2->arch());
-  EXPECT_EQ(0x300U, info300_1.elf_offset());
-  EXPECT_EQ(0x300U, info300_2.elf_offset());
+  Object* object300_1 = info300_1.GetObject(memory_, ARCH_ARM);
+  ASSERT_TRUE(object300_1->valid());
+  EXPECT_EQ(ARCH_ARM, object300_1->arch());
+  Object* object300_2 = info300_2.GetObject(memory_, ARCH_ARM);
+  ASSERT_TRUE(object300_2->valid());
+  EXPECT_EQ(ARCH_ARM, object300_2->arch());
+  EXPECT_EQ(0x300U, info300_1.object_offset());
+  EXPECT_EQ(0x300U, info300_2.object_offset());
   if (cache_enabled) {
-    EXPECT_EQ(elf300_1, elf300_2);
+    EXPECT_EQ(object300_1, object300_2);
   } else {
-    EXPECT_NE(elf300_1, elf300_2);
+    EXPECT_NE(object300_1, object300_2);
   }
 
-  Elf* elf400_1 = info400_1.GetElf(memory_, ARCH_ARM);
-  ASSERT_TRUE(elf400_1->valid());
-  EXPECT_EQ(ARCH_ARM, elf400_1->arch());
-  Elf* elf400_2 = info400_2.GetElf(memory_, ARCH_ARM);
-  ASSERT_TRUE(elf400_2->valid());
-  EXPECT_EQ(ARCH_ARM, elf400_2->arch());
-  EXPECT_EQ(0x400U, info400_1.elf_offset());
-  EXPECT_EQ(0x400U, info400_2.elf_offset());
+  Object* object400_1 = info400_1.GetObject(memory_, ARCH_ARM);
+  ASSERT_TRUE(object400_1->valid());
+  EXPECT_EQ(ARCH_ARM, object400_1->arch());
+  Object* object400_2 = info400_2.GetObject(memory_, ARCH_ARM);
+  ASSERT_TRUE(object400_2->valid());
+  EXPECT_EQ(ARCH_ARM, object400_2->arch());
+  EXPECT_EQ(0x400U, info400_1.object_offset());
+  EXPECT_EQ(0x400U, info400_2.object_offset());
   if (cache_enabled) {
-    EXPECT_EQ(elf400_1, elf400_2);
-    EXPECT_EQ(elf300_1, elf400_1);
+    EXPECT_EQ(object400_1, object400_2);
+    EXPECT_EQ(object300_1, object400_1);
   } else {
-    EXPECT_NE(elf400_1, elf400_2);
-    EXPECT_NE(elf300_1, elf400_1);
+    EXPECT_NE(object400_1, object400_2);
+    EXPECT_NE(object300_1, object400_1);
   }
 }
 
-TEST_F(ElfCacheTest, no_caching_valid_elf_offset_non_zero_never_read_at_zero) {
+TEST_F(ObjectCacheTest, no_caching_valid_elf_offset_non_zero_never_read_at_zero) {
   VerifyWithinSameMapNeverReadAtZero(false);
 }
 
-TEST_F(ElfCacheTest, caching_valid_elf_offset_non_zero_never_read_at_zero) {
+TEST_F(ObjectCacheTest, caching_valid_elf_offset_non_zero_never_read_at_zero) {
   VerifyWithinSameMapNeverReadAtZero(true);
 }
 

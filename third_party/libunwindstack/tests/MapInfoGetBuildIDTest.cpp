@@ -29,10 +29,10 @@
 
 #include <gtest/gtest.h>
 
-#include <unwindstack/Elf.h>
 #include <unwindstack/MapInfo.h>
 #include <unwindstack/Maps.h>
 #include <unwindstack/Memory.h>
+#include <unwindstack/Object.h>
 
 #include "ElfFake.h"
 #include "ElfTestUtils.h"
@@ -75,7 +75,7 @@ TEST_F(MapInfoGetBuildIDTest, no_elf_and_no_valid_elf_in_memory) {
 }
 
 TEST_F(MapInfoGetBuildIDTest, from_elf) {
-  map_info_->set_elf(elf_container_.release());
+  map_info_->set_object(elf_container_.release());
   elf_interface_->FakeSetBuildID("FAKE_BUILD_ID");
 
   EXPECT_EQ("FAKE_BUILD_ID", map_info_->GetBuildID());
@@ -83,7 +83,7 @@ TEST_F(MapInfoGetBuildIDTest, from_elf) {
 }
 
 TEST_F(MapInfoGetBuildIDTest, from_elf_no_sign_extension) {
-  map_info_->set_elf(elf_container_.release());
+  map_info_->set_object(elf_container_.release());
 
   std::string build_id = {static_cast<char>(0xfa), static_cast<char>(0xab), static_cast<char>(0x12),
                           static_cast<char>(0x02)};
@@ -126,7 +126,7 @@ void MapInfoGetBuildIDTest::MultipleThreadTest(std::string expected_build_id) {
 }
 
 TEST_F(MapInfoGetBuildIDTest, multiple_thread_elf_exists) {
-  map_info_->set_elf(elf_container_.release());
+  map_info_->set_object(elf_container_.release());
   elf_interface_->FakeSetBuildID("FAKE_BUILD_ID");
 
   MultipleThreadTest("FAKE_BUILD_ID");

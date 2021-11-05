@@ -64,6 +64,7 @@ target_sources(libunwindstack_common PRIVATE
   MemoryRemote.h
   MemoryXz.cpp
   MemoryXz.h
+  Object.cpp
   RegsArm64.cpp
   RegsArm.cpp
   Regs.cpp
@@ -110,6 +111,7 @@ target_sources(libunwindstack_common PUBLIC
   include/unwindstack/MapInfo.h
   include/unwindstack/Maps.h
   include/unwindstack/Memory.h
+  include/unwindstack/Object.h
   include/unwindstack/Regs.h
   include/unwindstack/RegsArm.h
   include/unwindstack/RegsArm64.h
@@ -198,7 +200,6 @@ target_sources(libunwindstack_tests PRIVATE
   tests/DwarfOpTest.cpp
   tests/DwarfSectionImplTest.cpp
   tests/DwarfSectionTest.cpp
-  tests/ElfCacheTest.cpp
   tests/ElfFake.cpp
   tests/ElfInterfaceArmTest.cpp
   tests/ElfInterfaceTest.cpp
@@ -221,8 +222,8 @@ target_sources(libunwindstack_tests PRIVATE
   tests/LogFake.cpp
   tests/MapInfoCreateMemoryTest.cpp
   tests/MapInfoGetBuildIDTest.cpp
-  tests/MapInfoGetElfTest.cpp
   tests/MapInfoGetLoadBiasTest.cpp
+  tests/MapInfoGetObjectTest.cpp
   tests/MapInfoTest.cpp
   tests/MapsTest.cpp
   tests/MemoryBufferTest.cpp
@@ -241,6 +242,7 @@ target_sources(libunwindstack_tests PRIVATE
   tests/MemoryTest.cpp
   tests/MemoryThreadCacheTest.cpp
   tests/MemoryXzTest.cpp
+  tests/ObjectCacheTest.cpp
   tests/RegsInfoTest.cpp
   tests/RegsIterateTest.cpp
   tests/RegsStepIfSignalHandlerTest.cpp

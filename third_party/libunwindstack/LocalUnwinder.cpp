@@ -33,11 +33,11 @@
 #include <string>
 #include <vector>
 
-#include <unwindstack/Elf.h>
 #include <unwindstack/LocalUnwinder.h>
 #include <unwindstack/MapInfo.h>
 #include <unwindstack/Maps.h>
 #include <unwindstack/Memory.h>
+#include <unwindstack/Object.h>
 #include <unwindstack/Regs.h>
 #include <unwindstack/RegsGetLocal.h>
 
@@ -86,12 +86,12 @@ bool LocalUnwinder::Unwind(std::vector<LocalFrameData>* frame_info, size_t max_f
       break;
     }
 
-    Elf* elf = map_info->GetElf(process_memory_, arch);
-    uint64_t rel_pc = elf->GetRelPc(cur_pc, map_info);
+    Object* object = map_info->GetObject(process_memory_, arch);
+    uint64_t rel_pc = object->GetRelPc(cur_pc, map_info);
     uint64_t step_pc = rel_pc;
     uint64_t pc_adjustment;
     if (adjust_pc) {
-      pc_adjustment = GetPcAdjustment(rel_pc, elf, arch);
+      pc_adjustment = GetPcAdjustment(rel_pc, object, arch);
     } else {
       pc_adjustment = 0;
     }
@@ -99,10 +99,10 @@ bool LocalUnwinder::Unwind(std::vector<LocalFrameData>* frame_info, size_t max_f
 
     bool finished = false;
     bool is_signal_frame = false;
-    if (elf->StepIfSignalHandler(rel_pc, regs.get(), process_memory_.get())) {
+    if (object->StepIfSignalHandler(rel_pc, regs.get(), process_memory_.get())) {
       step_pc = rel_pc;
-    } else if (!elf->Step(step_pc, regs.get(), process_memory_.get(), &finished,
-                          &is_signal_frame)) {
+    } else if (!object->Step(step_pc, regs.get(), process_memory_.get(), &finished,
+                             &is_signal_frame)) {
       finished = true;
     }
 
@@ -111,7 +111,7 @@ bool LocalUnwinder::Unwind(std::vector<LocalFrameData>* frame_info, size_t max_f
       // Add frame information.
       SharedString func_name;
       uint64_t func_offset;
-      if (elf->GetFunctionName(rel_pc, &func_name, &func_offset)) {
+      if (object->GetFunctionName(rel_pc, &func_name, &func_offset)) {
         frame_info->emplace_back(map_info, cur_pc - pc_adjustment, rel_pc - pc_adjustment,
                                  func_name, func_offset);
       } else {
