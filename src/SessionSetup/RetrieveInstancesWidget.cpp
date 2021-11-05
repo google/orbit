@@ -116,7 +116,7 @@ void RetrieveInstancesWidget::InitialLoad(const std::optional<Project>& remember
       .Then(main_thread_executor_.get(),
             [this](ErrorMessageOr<LoadProjectsAndInstancesResult> loading_result) {
               // `this` still exists when this lambda is executed. This is enforced, because
-              // main_thread_executor_ is a member of `this`. Then `this` is destroyed,
+              // main_thread_executor_ is a member of `this`. When `this` is destroyed,
               // main_thread_executor_ is destroyed and the lambda is not executed. Check
               // Future::Then for details about the lambda not being executed.
 
@@ -192,7 +192,7 @@ void RetrieveInstancesWidget::OnReloadButtonClicked() {
       .Then(main_thread_executor_.get(),
             [this](const ErrorMessageOr<QVector<Instance>>& load_result) {
               // `this` still exists when this lambda is executed. This is enforced, because
-              // main_thread_executor_ is a member of `this`. Then `this` is destroyed,
+              // main_thread_executor_ is a member of `this`. When `this` is destroyed,
               // main_thread_executor_ is destroyed and the lambda is not executed. Check
               // Future::Then for details about the lambda not being executed.
               OnInstancesLoadingReturned(load_result);
