@@ -43,6 +43,8 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(void, DeselectTimer, ());
   MOCK_METHOD(bool, IsCapturing, (), (const));
   MOCK_METHOD(void, JumpToTimerAndZoom, (uint64_t function_id, JumpToTimerMode selection_mode));
+  MOCK_METHOD(std::vector<const orbit_client_protos::TimerInfo*>, GetAllFunctionCalls, (uint64_t),
+              (const));
 
   MOCK_METHOD(bool, IsFrameTrackEnabled, (const orbit_client_protos::FunctionInfo&), (const));
   MOCK_METHOD(bool, HasFrameTrackInCaptureData, (uint64_t), (const));
