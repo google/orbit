@@ -49,6 +49,11 @@ class LiveFunctionsDataView : public DataView {
   std::optional<int> GetRowFromFunctionId(uint64_t function_id);
   void AddFunction(uint64_t function_id, orbit_client_protos::FunctionInfo function_info);
 
+  // Export all events (including the function name, thread name and id, start timestamp, end
+  // timestamp, and duration) associated with the selected rows in to a CSV file.
+  ErrorMessageOr<void> ExportAllEventsToCsv(const std::filesystem::path& file_path,
+                                            const std::vector<int>& item_indices);
+
  protected:
   void DoFilter() override;
   void DoSort() override;
@@ -89,6 +94,7 @@ class LiveFunctionsDataView : public DataView {
   static const std::string kMenuActionJumpToLast;
   static const std::string kMenuActionJumpToMin;
   static const std::string kMenuActionJumpToMax;
+  static const std::string kMenuActionExportEventsToCsv;
 
  private:
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;

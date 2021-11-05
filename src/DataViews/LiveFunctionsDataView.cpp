@@ -24,7 +24,10 @@
 #include "DisplayFormats/DisplayFormats.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Append.h"
+#include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "capture_data.pb.h"
 
 using orbit_client_data::CaptureData;
@@ -32,6 +35,7 @@ using orbit_client_data::ModuleData;
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
+using orbit_client_protos::TimerInfo;
 
 using orbit_grpc_protos::InstrumentedFunction;
 
@@ -206,6 +210,7 @@ const std::string LiveFunctionsDataView::kMenuActionJumpToFirst = "Jump to first
 const std::string LiveFunctionsDataView::kMenuActionJumpToLast = "Jump to last";
 const std::string LiveFunctionsDataView::kMenuActionJumpToMin = "Jump to min";
 const std::string LiveFunctionsDataView::kMenuActionJumpToMax = "Jump to max";
+const std::string LiveFunctionsDataView::kMenuActionExportEventsToCsv = "Export events to CSV";
 
 std::vector<std::vector<std::string>> LiveFunctionsDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
@@ -244,6 +249,7 @@ std::vector<std::vector<std::string>> LiveFunctionsDataView::GetContextMenuWithG
 
   std::vector<std::vector<std::string>> menu =
       DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);
+  menu.begin()->push_back(kMenuActionExportEventsToCsv);
 
   std::vector<std::string> action_group;
   if (enable_iterator) action_group.emplace_back(kMenuActionIterate);
@@ -269,6 +275,67 @@ std::vector<std::vector<std::string>> LiveFunctionsDataView::GetContextMenuWithG
   menu.insert(menu.begin(), action_group);
 
   return menu;
+}
+
+ErrorMessageOr<void> LiveFunctionsDataView::ExportAllEventsToCsv(
+    const std::filesystem::path& file_path, const std::vector<int>& item_indices) {
+  ErrorMessageOr<orbit_base::unique_fd> result = orbit_base::OpenFileForWriting(file_path);
+  if (result.has_error()) {
+    return ErrorMessage{absl::StrFormat("Failed to open \"%s\" file: %s", file_path.string(),
+                                        result.error().message())};
+  }
+  const orbit_base::unique_fd& fd = result.value();
+
+  // Write header line
+  constexpr const char* kFieldSeparator = ",";
+  constexpr const char* kLineSeparator = "\r\n";
+  constexpr size_t kNumColumns = 5;
+  const std::array<std::string, kNumColumns> kNames{"Name", "Thread", "Start", "End",
+                                                    "Duration (ns)"};
+  std::string header_line;
+  for (size_t i = 0; i < kNumColumns - 1; ++i) {
+    header_line.append(FormatValueForCsv(kNames[i]));
+    header_line.append(kFieldSeparator);
+  }
+  header_line.append(FormatValueForCsv(kNames[kNumColumns - 1]));
+  header_line.append(kLineSeparator);
+  auto write_result = orbit_base::WriteFully(fd, header_line);
+  if (write_result.has_error()) {
+    return ErrorMessage{absl::StrFormat("Error writing to \"%s\": %s", file_path.string(),
+                                        write_result.error().message())};
+  }
+
+  for (int row : item_indices) {
+    const FunctionInfo& function = GetInstrumentedFunction(row);
+    std::string function_name = orbit_client_data::function_utils::GetDisplayName(function);
+
+    const uint64_t function_id = GetInstrumentedFunctionId(row);
+    std::vector<const TimerInfo*> timers = app_->GetAllFunctionCalls(function_id);
+
+    const CaptureData& capture_data = app_->GetCaptureData();
+    for (const TimerInfo* timer : timers) {
+      std::string line;
+      line.append(FormatValueForCsv(function_name));
+      line.append(kFieldSeparator);
+      line.append(FormatValueForCsv(absl::StrFormat(
+          "%s [%lu]", capture_data.GetThreadName(timer->thread_id()), timer->thread_id())));
+      line.append(kFieldSeparator);
+      line.append(FormatValueForCsv(absl::StrFormat("%lu", timer->start())));
+      line.append(kFieldSeparator);
+      line.append(FormatValueForCsv(absl::StrFormat("%lu", timer->end())));
+      line.append(kFieldSeparator);
+      line.append(FormatValueForCsv(absl::StrFormat("%lu", timer->end() - timer->start())));
+      line.append(kLineSeparator);
+
+      auto write_result = orbit_base::WriteFully(fd, line);
+      if (write_result.has_error()) {
+        return ErrorMessage{absl::StrFormat("Error writing to \"%s\": %s", file_path.string(),
+                                            write_result.error().message())};
+      }
+    }
+  }
+
+  return outcome::success();
 }
 
 void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
@@ -337,6 +404,14 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
     for (int i : item_indices) {
       app_->DisableFrameTrack(GetInstrumentedFunction(i));
       app_->RemoveFrameTrack(GetInstrumentedFunctionId(i));
+    }
+  } else if (action == kMenuActionExportEventsToCsv) {
+    std::string save_file = app_->GetSaveFile(".csv");
+    if (!save_file.empty()) {
+      auto result = ExportAllEventsToCsv(save_file, item_indices);
+      if (result.has_error()) {
+        app_->SendErrorToUi("Export all events to CSV", result.error().message());
+      }
     }
   } else {
     DataView::OnContextMenu(action, menu_index, item_indices);
