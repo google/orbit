@@ -6,6 +6,7 @@
 #define ORBIT_GPP_PROJECT_H_
 
 #include <QByteArray>
+#include <QMetaType>
 #include <QString>
 #include <QVector>
 #include <tuple>
@@ -32,5 +33,7 @@ struct Project {
 };
 
 }  // namespace orbit_ggp
+
+Q_DECLARE_METATYPE(orbit_ggp::Project);
 
 #endif  // ORBIT_GPP_PROJECT_H_

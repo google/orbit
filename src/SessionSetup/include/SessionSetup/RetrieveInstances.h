@@ -18,8 +18,17 @@
 
 namespace orbit_session_setup {
 
+// RetrieveInstances manages calls to orbit_ggp::Client for retrieving the list of projects and
+// instances. It acts as an abstraction layer that can add functionality like caching and combines
+// calls to be executed in parallel. Its intended use is retrieving the data for
+// RetrieveInstancesWidget.
 class RetrieveInstances {
  public:
+  // This struct holds the result of call to LoadProjectsAndInstances.
+  // * projects: List of projects.
+  // * default_project: Default project.
+  // * instances: list of instances.
+  // * project_of_instances: project of the list of instances.
   struct LoadProjectsAndInstancesResult {
     QVector<orbit_ggp::Project> projects;
     orbit_ggp::Project default_project;
@@ -35,6 +44,11 @@ class RetrieveInstances {
   virtual orbit_base::Future<ErrorMessageOr<QVector<orbit_ggp::Instance>>>
   LoadInstancesWithoutCache(const std::optional<orbit_ggp::Project>& project,
                             orbit_ggp::Client::InstanceListScope scope) = 0;
+  // LoadProjectsAndInstances always loads the project list and the default project. Additionally,it
+  // is attempted to load the list of instances for the input project. The later can fail, when the
+  // project does not exist anymore. Then the instance list of the default project is loaded and
+  // returned. To indicate to which project the list of instances belongs,
+  // LoadProjectsAndInstancesResult has the field project_of_instances.
   virtual orbit_base::Future<ErrorMessageOr<LoadProjectsAndInstancesResult>>
   LoadProjectsAndInstances(const std::optional<orbit_ggp::Project>& project,
                            orbit_ggp::Client::InstanceListScope scope) = 0;
