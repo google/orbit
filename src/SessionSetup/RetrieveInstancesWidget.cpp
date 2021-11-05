@@ -36,7 +36,7 @@ using LoadProjectsAndInstancesResult = RetrieveInstances::LoadProjectsAndInstanc
 
 namespace {
 
-std::optional<Project> GetQSettingsProject() {
+[[nodiscard]] std::optional<Project> GetQSettingsProject() {
   QSettings settings;
 
   std::optional<Project> project;
@@ -145,7 +145,7 @@ void RetrieveInstancesWidget::OnInitialLoadingReturnedSuccess(
     }
     ui_->projectComboBox->addItem(text, QVariant::fromValue(project));
 
-    // initial_load_result.instance, is the list for a specific project, which is
+    // initial_load_result.instances is the list for a specific project, which is
     // initial_load_result.project_of_instances. (This can be different than the remembered project
     // which was used in InitialLoad.) Since the initial_load_result.instances will be shown by
     // ConnectToStadiaWidget, the combobox should have the project selected that belongs to this

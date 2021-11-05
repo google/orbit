@@ -18,6 +18,10 @@
 
 namespace orbit_session_setup {
 
+// RetrieveInstances manages calls to orbit_ggp::Client for retrieving the list of projects and
+// instances. It acts as an abstraction layer that can add functionality like caching and combines
+// calls to be executed in parallel. Its intended use is retrieving the data for
+// RetrieveInstancesWidget.
 class RetrieveInstances {
  public:
   // This struct holds the result of call to LoadProjectsAndInstances.
