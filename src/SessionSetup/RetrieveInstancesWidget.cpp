@@ -22,10 +22,6 @@
 #include "SessionSetup/RetrieveInstances.h"
 #include "ui_RetrieveInstancesWidget.h"
 
-namespace {
-constexpr const char* kAllInstancesKey{"kAllInstancesKey"};
-}  // namespace
-
 namespace orbit_session_setup {
 
 using orbit_ggp::Instance;
@@ -84,7 +80,8 @@ void RetrieveInstancesWidget::Start() {
   state_machine_.start();
 
   QSettings settings;
-  ui_->allCheckBox->setChecked(settings.value(kAllInstancesKey, false).toBool());
+  ui_->allCheckBox->setChecked(LoadInstancesScopeFromPersistentStorage() ==
+                               InstanceListScope::kAllReservedInstances);
 
   InitialLoad(LoadLastSelectedProjectFromPersistentStorage());
 }

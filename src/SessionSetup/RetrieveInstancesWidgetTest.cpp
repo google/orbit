@@ -27,7 +27,6 @@
 namespace {
 constexpr const char* kOrganizationName = "The Orbit Authors";
 constexpr const char* kApplicationName{"RetrieveInstancesWidgetTest"};
-constexpr const char* kAllInstancesKey{"kAllInstancesKey"};
 }  // namespace
 
 namespace orbit_session_setup {
@@ -282,8 +281,7 @@ TEST_F(RetrieveInstancesWidgetTest, StartSuccessfulWithRememberedSettings) {
           kInitialTestDataWithProjectOfInstances}));
 
   SaveProjectToPersistentStorage(kInitialTestDataWithProjectOfInstances.project_of_instances);
-  QSettings settings;
-  settings.setValue(kAllInstancesKey, true);
+  SaveInstancesScopeToPersistentStorage(InstanceListScope::kAllReservedInstances);
 
   widget_.Start();
   QCoreApplication::processEvents();

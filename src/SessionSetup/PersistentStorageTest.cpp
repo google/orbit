@@ -8,6 +8,7 @@
 #include <QSettings>
 #include <optional>
 
+#include "OrbitGgp/Client.h"
 #include "OrbitGgp/Project.h"
 #include "SessionSetup/PersistentStorage.h"
 
@@ -19,6 +20,7 @@ constexpr const char* kApplicationName{"SessionSetupPersistentStorageTest"};
 namespace orbit_session_setup {
 
 using orbit_ggp::Project;
+using InstanceListScope = orbit_ggp::Client::InstanceListScope;
 
 class SessionSetupPersistentStorageTest : public testing::Test {
  protected:
@@ -31,7 +33,7 @@ class SessionSetupPersistentStorageTest : public testing::Test {
   }
 };
 
-TEST_F(SessionSetupPersistentStorageTest, SaveAndLoad) {
+TEST_F(SessionSetupPersistentStorageTest, SaveAndLoadProject) {
   EXPECT_EQ(LoadLastSelectedProjectFromPersistentStorage(), std::nullopt);  // default is nullopt
 
   SaveProjectToPersistentStorage(std::nullopt);
@@ -44,6 +46,16 @@ TEST_F(SessionSetupPersistentStorageTest, SaveAndLoad) {
 
   SaveProjectToPersistentStorage(project);
   EXPECT_EQ(LoadLastSelectedProjectFromPersistentStorage(), project);
+}
+
+TEST_F(SessionSetupPersistentStorageTest, SaveAndLoadInstancesScope) {
+  EXPECT_EQ(LoadInstancesScopeFromPersistentStorage(), InstanceListScope::kOnlyOwnInstances);
+
+  SaveInstancesScopeToPersistentStorage(InstanceListScope::kAllReservedInstances);
+  EXPECT_EQ(LoadInstancesScopeFromPersistentStorage(), InstanceListScope::kAllReservedInstances);
+
+  SaveInstancesScopeToPersistentStorage(InstanceListScope::kOnlyOwnInstances);
+  EXPECT_EQ(LoadInstancesScopeFromPersistentStorage(), InstanceListScope::kOnlyOwnInstances);
 }
 
 }  // namespace orbit_session_setup
