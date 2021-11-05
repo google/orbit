@@ -71,22 +71,23 @@ void GraphTrack<Dimension>::DoDraw(Batcher& batcher, TextRenderer& text_renderer
   std::string text = GetLabelTextFromValues(values);
   const Color kBlack(0, 0, 0, 255);
   const Color kTransparentWhite(255, 255, 255, 180);
-  DrawLabel(batcher, text_renderer, draw_context, Vec2(point_x, point_y), text, kBlack,
-            kTransparentWhite);
+  DrawLabel(batcher, text_renderer, Vec2(point_x, point_y), text, kBlack, kTransparentWhite);
 
   if (Dimension == 1) return;
 
   // Draw legends
   const Color kWhite(255, 255, 255, 255);
-  DrawLegend(batcher, text_renderer, draw_context, series_.GetSeriesNames(), kWhite);
+  DrawLegend(batcher, text_renderer, series_.GetSeriesNames(), kWhite);
 }
 
 template <size_t Dimension>
-void GraphTrack<Dimension>::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick,
-                                               uint64_t max_tick, PickingMode picking_mode,
-                                               float z_offset) {
-  float track_z = GlCanvas::kZValueTrack + z_offset;
-  float graph_z = GlCanvas::kZValueEventBar + z_offset;
+void GraphTrack<Dimension>::DoUpdatePrimitives(Batcher* batcher, TextRenderer& text_renderer,
+                                               uint64_t min_tick, uint64_t max_tick,
+                                               PickingMode picking_mode) {
+  Track::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
+
+  float track_z = GlCanvas::kZValueTrack;
+  float graph_z = GlCanvas::kZValueEventBar;
 
   float content_height = GetGraphContentHeight();
   Vec2 content_pos = GetPos();
@@ -152,10 +153,9 @@ uint32_t GraphTrack<Dimension>::GetLegendFontSize(uint32_t indentation_level) co
 
 template <size_t Dimension>
 void GraphTrack<Dimension>::DrawLabel(Batcher& batcher, TextRenderer& text_renderer,
-                                      const DrawContext& draw_context, Vec2 target_pos,
-                                      const std::string& text, const Color& text_color,
-                                      const Color& font_color) {
-  uint32_t font_size = GetLegendFontSize(draw_context.indentation_level);
+                                      Vec2 target_pos, const std::string& text,
+                                      const Color& text_color, const Color& font_color) {
+  uint32_t font_size = GetLegendFontSize(indentation_level_);
   const float kTextLeftMargin = 2.f;
   const float kTextRightMargin = kTextLeftMargin;
   const float kTextTopMargin = layout_->GetTextOffset();
@@ -180,7 +180,7 @@ void GraphTrack<Dimension>::DrawLabel(Batcher& batcher, TextRenderer& text_rende
                                               : -arrow_width - kTextRightMargin - text_box_size[0]),
       target_pos[1] - text_box_size[1] / 2.f);
 
-  float label_z = GlCanvas::kZValueTrackLabel + draw_context.z_offset;
+  float label_z = GlCanvas::kZValueTrackLabel;
   text_renderer.AddText(text.c_str(), text_box_position[0], text_box_position[1], label_z,
                         {font_size, text_color, text_box_size[0]});
 
@@ -203,7 +203,6 @@ void GraphTrack<Dimension>::DrawLabel(Batcher& batcher, TextRenderer& text_rende
 
 template <size_t Dimension>
 void GraphTrack<Dimension>::DrawLegend(Batcher& batcher, TextRenderer& text_renderer,
-                                       const DrawContext& draw_context,
                                        const std::array<std::string, Dimension>& series_names,
                                        const Color& legend_text_color) {
   const float kSpaceBetweenLegendSymbolAndText = layout_->GetGenericFixedSpacerWidth();
@@ -212,10 +211,10 @@ void GraphTrack<Dimension>::DrawLegend(Batcher& batcher, TextRenderer& text_rend
   const float legend_symbol_width = legend_symbol_height;
   float x0 = GetPos()[0] + layout_->GetRightMargin();
   const float y0 = GetPos()[1] + layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin();
-  uint32_t font_size = GetLegendFontSize(draw_context.indentation_level);
+  uint32_t font_size = GetLegendFontSize(indentation_level_);
   const Color kFullyTransparent(255, 255, 255, 0);
 
-  float text_z = GlCanvas::kZValueTrackText + draw_context.z_offset;
+  float text_z = GlCanvas::kZValueTrackText;
   for (size_t i = 0; i < Dimension; ++i) {
     batcher.AddShadedBox(Vec2(x0, y0), Vec2(legend_symbol_width, legend_symbol_height), text_z,
                          GetColor(i));

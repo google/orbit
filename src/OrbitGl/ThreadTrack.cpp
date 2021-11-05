@@ -273,25 +273,10 @@ void ThreadTrack::OnPick(int x, int y) {
   app_->set_selected_thread_id(GetThreadId());
 }
 
-std::vector<orbit_gl::CaptureViewElement*> ThreadTrack::GetVisibleChildren() {
-  std::vector<CaptureViewElement*> result;
-  if (!thread_state_bar_->IsEmpty()) {
-    result.push_back(thread_state_bar_.get());
-  }
-
-  if (!event_bar_->IsEmpty()) {
-    result.push_back(event_bar_.get());
-  }
-
-  if (!tracepoint_bar_->IsEmpty()) {
-    result.push_back(tracepoint_bar_.get());
-  }
-
+std::vector<orbit_gl::CaptureViewElement*> ThreadTrack::GetAllChildren() const {
+  auto result = Track::GetAllChildren();
+  result.insert(result.end(), {thread_state_bar_.get(), event_bar_.get(), tracepoint_bar_.get()});
   return result;
-}
-
-std::vector<orbit_gl::CaptureViewElement*> ThreadTrack::GetChildren() const {
-  return {thread_state_bar_.get(), event_bar_.get(), tracepoint_bar_.get()};
 }
 
 std::string ThreadTrack::GetTimesliceText(const TimerInfo& timer_info) const {
@@ -391,14 +376,19 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
 // We minimize overdraw when drawing lines for small events by discarding events that would just
 // draw over an already drawn pixel line. When zoomed in enough that all events are drawn as boxes,
 // this has no effect. When zoomed  out, many events will be discarded quickly.
-void ThreadTrack::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                     PickingMode /*picking_mode*/, float z_offset) {
+void ThreadTrack::DoUpdatePrimitives(Batcher* batcher, TextRenderer& text_renderer,
+                                     uint64_t min_tick, uint64_t max_tick,
+                                     PickingMode /*picking_mode*/) {
+  // TODO(b/203181055): The parent class already provides an implementation, but this is completely
+  // ignored because ThreadTrack uses the ScopeTree, and TimerTrack doesn't.
+  // TimerTrack::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
+
   CHECK(batcher);
   visible_timer_count_ = 0;
 
   const internal::DrawData draw_data =
-      GetDrawData(min_tick, max_tick, GetPos()[0], GetWidth(), z_offset, batcher, time_graph_,
-                  viewport_, collapse_toggle_->IsCollapsed(), app_->selected_timer(),
+      GetDrawData(min_tick, max_tick, GetPos()[0], GetWidth(), batcher, time_graph_, viewport_,
+                  collapse_toggle_->IsCollapsed(), app_->selected_timer(),
                   app_->GetFunctionIdToHighlight(), app_->GetGroupIdToHighlight());
 
   uint64_t resolution_in_pixels = draw_data.viewport->WorldToScreen({draw_data.track_width, 0})[0];
@@ -419,8 +409,8 @@ void ThreadTrack::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64
 
       auto timer_duration = timer_info->end() - timer_info->start();
       if (timer_duration > draw_data.ns_per_pixel) {
-        if (!collapse_toggle_->IsCollapsed() && BoxHasRoomForText(size[0])) {
-          DrawTimesliceText(*timer_info, draw_data.track_start_x, z_offset, pos, size);
+        if (!collapse_toggle_->IsCollapsed() && BoxHasRoomForText(text_renderer, size[0])) {
+          DrawTimesliceText(text_renderer, *timer_info, draw_data.track_start_x, pos, size);
         }
         batcher->AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
       } else {

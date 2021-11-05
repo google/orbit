@@ -26,22 +26,17 @@ void TriangleToggle::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
                             const DrawContext& draw_context) {
   CaptureViewElement::DoDraw(batcher, text_renderer, draw_context);
 
-  const float z = GlCanvas::kZValueTrack + draw_context.z_offset;
+  const float z = GlCanvas::kZValueTrack;
 
   const bool picking = draw_context.picking_mode != PickingMode::kNone;
   const Color kWhite(255, 255, 255, 255);
   const Color kGrey(100, 100, 100, 255);
   Color color = is_collapsible_ ? kWhite : kGrey;
 
-  // Set the size such that the triangle toggle can be selected in the E2E test.
-  float size = layout_->GetCollapseButtonSize(draw_context.indentation_level);
-  SetWidth(size);
-  SetHeight(size);
-
   // Draw triangle.
   static float half_sqrt_three = 0.5f * sqrtf(3.f);
-  float half_w = 0.5f * size;
-  float half_h = half_sqrt_three * half_w;
+  float half_triangle_base_width = 0.5f * GetWidth();
+  float half_triangle_height = half_sqrt_three * 0.5f * GetHeight();
 
   const Vec2 pos = GetPos();
   if (!picking) {
@@ -49,16 +44,18 @@ void TriangleToggle::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
 
     Triangle triangle;
     if (is_collapsed_) {
-      triangle = Triangle(position + Vec3(-half_h, half_w, z), position + Vec3(-half_h, -half_w, z),
-                          position + Vec3(half_w, 0.f, z));
+      triangle = Triangle(position + Vec3(-half_triangle_height, half_triangle_base_width, z),
+                          position + Vec3(-half_triangle_height, -half_triangle_base_width, z),
+                          position + Vec3(half_triangle_base_width, 0.f, z));
     } else {
-      triangle = Triangle(position + Vec3(half_w, -half_h, z), position + Vec3(-half_w, -half_h, z),
-                          position + Vec3(0.f, half_w, z));
+      triangle = Triangle(position + Vec3(half_triangle_base_width, -half_triangle_height, z),
+                          position + Vec3(-half_triangle_base_width, -half_triangle_height, z),
+                          position + Vec3(0.f, half_triangle_base_width, z));
     }
     batcher.AddTriangle(triangle, color, shared_from_this());
   } else {
     // When picking, draw a big square for easier picking.
-    float original_width = 2 * half_w;
+    float original_width = 2 * half_triangle_base_width;
     float large_width = 2 * original_width;
     Box box(Vec2(pos[0] - original_width, pos[1] - original_width), Vec2(large_width, large_width),
             z);

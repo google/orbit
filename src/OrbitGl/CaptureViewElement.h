@@ -23,42 +23,17 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   explicit CaptureViewElement(CaptureViewElement* parent, TimeGraph* time_graph,
                               orbit_gl::Viewport* viewport, TimeGraphLayout* layout);
 
-  struct DrawContext {
-    constexpr const static uint32_t kMaxIndentationLevel = 5;
-    uint64_t current_mouse_time_ns;
-    PickingMode picking_mode;
-    uint32_t indentation_level;
-    float z_offset = 0;
-
-    [[nodiscard]] DrawContext IncreasedIndentationLevel() const {
-      auto copy = *this;
-      copy.indentation_level = std::min(kMaxIndentationLevel, copy.indentation_level + 1);
-      return copy;
-    };
-
-    [[nodiscard]] DrawContext UpdatedZOffset(float z_offset) const {
-      auto copy = *this;
-      copy.z_offset = z_offset;
-      return copy;
-    }
-  };
-
-  void Draw(Batcher& batcher, TextRenderer& text_renderer, const DrawContext& draw_context);
-
-  void UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                        PickingMode picking_mode, float z_offset = 0);
   void UpdateLayout();
 
   [[nodiscard]] TimeGraph* GetTimeGraph() { return time_graph_; }
 
   [[nodiscard]] orbit_gl::Viewport* GetViewport() const { return viewport_; }
 
-  // TODO(b/185854980): This should not be virtual as soon as we have meaningful track children.
-  virtual void SetPos(float x, float y) { pos_ = Vec2(x, y); }
+  void SetPos(float x, float y);
+
   // TODO(b/185854980): This should not be virtual as soon as we have meaningful track children.
   [[nodiscard]] virtual Vec2 GetPos() const { return pos_; }
 
-  // This will set the width of all child elements to 100% by default
   void SetWidth(float width);
   [[nodiscard]] float GetWidth() const { return width_; }
 
@@ -77,10 +52,23 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   [[nodiscard]] bool Draggable() override { return true; }
 
   [[nodiscard]] virtual CaptureViewElement* GetParent() const { return parent_; }
-  [[nodiscard]] virtual std::vector<CaptureViewElement*> GetChildren() const { return {}; }
+  [[nodiscard]] virtual std::vector<CaptureViewElement*> GetAllChildren() const { return {}; }
+  [[nodiscard]] virtual std::vector<CaptureViewElement*> GetNonHiddenChildren() const;
+  [[nodiscard]] std::vector<CaptureViewElement*> GetChildrenVisibleInViewport() const;
+
   virtual void RequestUpdate();
 
+  enum LayoutFlags : uint32_t { kNone = 0, kScaleHorizontallyWithParent = 1 << 0 };
+
+  [[nodiscard]] virtual uint32_t GetLayoutFlags() const { return kScaleHorizontallyWithParent; }
+  [[nodiscard]] virtual float DetermineZOffset() const { return 0.f; }
+
  protected:
+  struct DrawContext {
+    uint64_t current_mouse_time_ns = 0;
+    PickingMode picking_mode = PickingMode::kNone;
+  };
+
   orbit_gl::Viewport* viewport_;
   TimeGraphLayout* layout_;
 
@@ -92,12 +80,16 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   bool picked_ = false;
   bool visible_ = true;
 
+  void Draw(Batcher& batcher, TextRenderer& text_renderer, const DrawContext& draw_context);
+  void UpdatePrimitives(Batcher* batcher, TextRenderer& text_renderer, uint64_t min_tick,
+                        uint64_t max_tick, PickingMode picking_mode);
+
   virtual void DoDraw(Batcher& /*batcher*/, TextRenderer& /*text_renderer*/,
                       const DrawContext& /*draw_context*/) {}
 
-  virtual void DoUpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/,
-                                  uint64_t /*max_tick*/, PickingMode /*picking_mode*/,
-                                  float /*z_offset*/ = 0) {}
+  virtual void DoUpdatePrimitives(Batcher* /*batcher*/, TextRenderer& /*text_renderer*/,
+                                  uint64_t /*min_tick*/, uint64_t /*max_tick*/,
+                                  PickingMode /*picking_mode*/) {}
 
   virtual void DoUpdateLayout() {}
 

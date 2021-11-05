@@ -77,12 +77,11 @@ class ThreadTrack final : public TimerTrack {
 
   [[nodiscard]] bool IsCollapsible() const override { return GetDepth() > 1; }
 
-  [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() override;
-  [[nodiscard]] std::vector<CaptureViewElement*> GetChildren() const override;
+  [[nodiscard]] std::vector<CaptureViewElement*> GetAllChildren() const override;
 
  protected:
-  void DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                          PickingMode picking_mode, float z_offset = 0) override;
+  void DoUpdatePrimitives(Batcher* batcher, TextRenderer& text_renderer, uint64_t min_tick,
+                          uint64_t max_tick, PickingMode picking_mode) override;
 
   [[nodiscard]] int64_t GetThreadId() const { return thread_id_; }
   [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const override;

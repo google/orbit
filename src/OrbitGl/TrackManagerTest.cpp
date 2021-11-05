@@ -65,6 +65,16 @@ TEST_F(TrackManagerTest, GetOrCreateCreatesTracks) {
   EXPECT_EQ(2ull, track_manager_.GetAllTracks().size());
 }
 
+TEST_F(TrackManagerTest, FrameTracksAreReportedWithAllTracks) {
+  EXPECT_EQ(0ull, track_manager_.GetAllTracks().size());
+
+  track_manager_.GetOrCreateSchedulerTrack();
+  EXPECT_EQ(1ull, track_manager_.GetAllTracks().size());
+  orbit_grpc_protos::InstrumentedFunction function;
+  track_manager_.GetOrCreateFrameTrack(function);
+  EXPECT_EQ(2ull, track_manager_.GetAllTracks().size());
+}
+
 TEST_F(TrackManagerTest, AllButEmptyTracksAreVisible) {
   CreateAndFillTracks();
   track_manager_.UpdateTracksForRendering();

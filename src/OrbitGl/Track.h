@@ -53,7 +53,6 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
                  TimeGraphLayout* layout, const orbit_client_data::CaptureData* capture_data);
   ~Track() override = default;
 
-  void SetPos(float x, float y) override;
   void OnDrag(int x, int y) override;
 
   [[nodiscard]] virtual Type GetType() const = 0;
@@ -77,9 +76,9 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   TriangleToggle* GetTriangleToggle() const { return collapse_toggle_.get(); }
   [[nodiscard]] virtual uint32_t GetProcessId() const { return orbit_base::kInvalidProcessId; }
   [[nodiscard]] virtual bool IsEmpty() const = 0;
-  [[nodiscard]] bool ShouldBeRendered() const override {
-    return CaptureViewElement::ShouldBeRendered() && !IsEmpty();
-  }
+  [[nodiscard]] bool ShouldBeRendered() const override;
+
+  [[nodiscard]] float DetermineZOffset() const override;
 
   [[nodiscard]] virtual bool IsTrackSelected() const { return false; }
 
@@ -88,7 +87,13 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   [[nodiscard]] bool GetHeadless() const { return headless_; }
   void SetHeadless(bool value);
 
-  [[nodiscard]] virtual std::vector<CaptureViewElement*> GetVisibleChildren() { return {}; }
+  void SetIndentationLevel(uint32_t level);
+  [[nodiscard]] uint32_t GetIndentationLevel() const { return indentation_level_; }
+
+  [[nodiscard]] std::vector<CaptureViewElement*> GetAllChildren() const override {
+    return {collapse_toggle_.get()};
+  }
+
   [[nodiscard]] virtual int GetVisiblePrimitiveCount() const { return 0; }
 
   // Must be overriden by child class for sensible behavior.
@@ -107,18 +112,19 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
  protected:
   void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
               const DrawContext& draw_context) override;
+  void DoUpdateLayout() override;
 
-  void DrawCollapsingTriangle(Batcher& batcher, TextRenderer& text_renderer,
-                              const DrawContext& draw_context);
   void DrawTriangleFan(Batcher& batcher, const std::vector<Vec2>& points, const Vec2& pos,
                        const Color& color, float rotation, float z);
   virtual void UpdatePositionOfSubtracks() {}
+  void UpdatePositionOfCollapseToggle();
 
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
 
   bool draw_background_ = true;
   bool pinned_ = false;
   bool headless_ = false;
+  uint32_t indentation_level_ = 0;
   Type type_ = Type::kUnknown;
   std::shared_ptr<TriangleToggle> collapse_toggle_;
 

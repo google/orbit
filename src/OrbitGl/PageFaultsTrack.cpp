@@ -55,24 +55,15 @@ float PageFaultsTrack::GetHeight() const {
   return height;
 }
 
-std::vector<orbit_gl::CaptureViewElement*> PageFaultsTrack::GetVisibleChildren() {
-  std::vector<CaptureViewElement*> result;
-  if (collapse_toggle_->IsCollapsed()) return result;
-
-  if (major_page_faults_track_->ShouldBeRendered())
-    result.push_back(major_page_faults_track_.get());
-  if (minor_page_faults_track_->ShouldBeRendered())
-    result.push_back(minor_page_faults_track_.get());
-  return result;
-}
-
 std::string PageFaultsTrack::GetTooltip() const {
   if (collapse_toggle_->IsCollapsed()) return major_page_faults_track_->GetTooltip();
   return "Shows the minor and major page faults statistics.";
 }
 
-std::vector<CaptureViewElement*> PageFaultsTrack::GetChildren() const {
-  return {major_page_faults_track_.get(), minor_page_faults_track_.get()};
+std::vector<CaptureViewElement*> PageFaultsTrack::GetAllChildren() const {
+  auto result = Track::GetAllChildren();
+  result.insert(result.end(), {major_page_faults_track_.get(), minor_page_faults_track_.get()});
+  return result;
 }
 
 void PageFaultsTrack::UpdatePositionOfSubtracks() {
@@ -85,8 +76,10 @@ void PageFaultsTrack::UpdatePositionOfSubtracks() {
   }
 
   major_page_faults_track_->SetHeadless(false);
-
+  major_page_faults_track_->SetIndentationLevel(indentation_level_ + 1);
   minor_page_faults_track_->SetVisible(true);
+  minor_page_faults_track_->SetIndentationLevel(indentation_level_ + 1);
+
   float current_y = pos[1] + layout_->GetTrackTabHeight();
   if (major_page_faults_track_->ShouldBeRendered()) {
     current_y += layout_->GetSpaceBetweenSubtracks();

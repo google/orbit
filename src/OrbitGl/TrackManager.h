@@ -44,7 +44,6 @@ class TrackManager {
 
   [[nodiscard]] std::vector<Track*> GetAllTracks() const;
   [[nodiscard]] std::vector<Track*> GetVisibleTracks() const { return visible_tracks_; }
-  [[nodiscard]] std::vector<Track*> GetTracksOnScreen() const;
   [[nodiscard]] std::vector<ThreadTrack*> GetThreadTracks() const;
   [[nodiscard]] std::vector<FrameTrack*> GetFrameTracks() const;
 
@@ -53,8 +52,6 @@ class TrackManager {
 
   [[nodiscard]] float GetVisibleTracksTotalHeight() const;
   void UpdateTracksForRendering();
-  void UpdateTrackPrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                             PickingMode picking_mode);
 
   [[nodiscard]] std::pair<uint64_t, uint64_t> GetTracksMinMaxTimestamps() const;
 

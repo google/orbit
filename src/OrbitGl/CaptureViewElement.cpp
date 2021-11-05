@@ -19,41 +19,62 @@ void CaptureViewElement::Draw(Batcher& batcher, TextRenderer& text_renderer,
                               const DrawContext& draw_context) {
   ORBIT_SCOPE_FUNCTION;
 
+  batcher.PushTranslation(0, 0, DetermineZOffset());
+  text_renderer.PushTranslation(0, 0, DetermineZOffset());
+
   DoDraw(batcher, text_renderer, draw_context);
 
-  const DrawContext inner_draw_context = draw_context.IncreasedIndentationLevel();
-  for (CaptureViewElement* child : GetChildren()) {
-    if (child->ShouldBeRendered()) {
-      child->Draw(batcher, text_renderer, inner_draw_context);
-    }
+  for (CaptureViewElement* child : GetChildrenVisibleInViewport()) {
+    child->Draw(batcher, text_renderer, draw_context);
   }
+
+  text_renderer.PopTranslation();
+  batcher.PopTranslation();
 }
 
-void CaptureViewElement::UpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                          PickingMode picking_mode, float z_offset) {
+void CaptureViewElement::UpdatePrimitives(Batcher* batcher, TextRenderer& text_renderer,
+                                          uint64_t min_tick, uint64_t max_tick,
+                                          PickingMode picking_mode) {
   ORBIT_SCOPE_FUNCTION;
 
-  DoUpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-  for (CaptureViewElement* child : GetChildren()) {
+  batcher->PushTranslation(0, 0, DetermineZOffset());
+  text_renderer.PushTranslation(0, 0, DetermineZOffset());
+
+  DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
+
+  for (CaptureViewElement* child : GetChildrenVisibleInViewport()) {
     if (child->ShouldBeRendered()) {
-      child->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
+      child->UpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
     }
   }
+
+  text_renderer.PopTranslation();
+  batcher->PopTranslation();
 }
 
 void CaptureViewElement::UpdateLayout() {
-  for (CaptureViewElement* child : GetChildren()) {
+  for (CaptureViewElement* child : GetAllChildren()) {
     child->UpdateLayout();
   }
   DoUpdateLayout();
+}
+
+void CaptureViewElement::SetPos(float x, float y) {
+  const Vec2 pos = Vec2(x, y);
+  if (pos == pos_) return;
+
+  pos_ = pos;
+  RequestUpdate();
 }
 
 void CaptureViewElement::SetWidth(float width) {
   if (width != width_) {
     width_ = width;
 
-    for (auto& child : GetChildren()) {
-      child->SetWidth(width);
+    for (auto& child : GetAllChildren()) {
+      if (child->GetLayoutFlags() & LayoutFlags::kScaleHorizontallyWithParent) {
+        child->SetWidth(width);
+      }
     }
     RequestUpdate();
   }
@@ -85,6 +106,31 @@ void CaptureViewElement::OnDrag(int x, int y) {
   mouse_pos_cur_ =
       viewport_->ScreenToWorld(Vec2i(x, y)) + Vec2(0, time_graph_->GetVerticalScrollingOffset());
   RequestUpdate();
+}
+
+std::vector<CaptureViewElement*> CaptureViewElement::GetNonHiddenChildren() const {
+  std::vector<CaptureViewElement*> result;
+  for (CaptureViewElement* child : GetAllChildren()) {
+    if (child->ShouldBeRendered()) {
+      result.push_back(child);
+    }
+  }
+
+  return result;
+}
+
+std::vector<CaptureViewElement*> CaptureViewElement::GetChildrenVisibleInViewport() const {
+  std::vector<CaptureViewElement*> result;
+  for (CaptureViewElement* child : GetNonHiddenChildren()) {
+    float child_top_y = child->GetPos()[1];
+    float child_bottom_y = child_top_y + child->GetHeight();
+    float screen_top_y = time_graph_->GetVerticalScrollingOffset();
+    float screen_bottom_y = screen_top_y + viewport_->GetWorldHeight();
+    if (child_top_y < screen_bottom_y && child_bottom_y > screen_top_y) {
+      result.push_back(child);
+    }
+  }
+  return result;
 }
 
 void CaptureViewElement::RequestUpdate() {
