@@ -178,7 +178,6 @@ class RetrieveInstancesWidgetTest : public testing::Test {
     VerifyProjectComboBoxData(data.projects, data.default_project, data.project_of_instances);
   }
 
-  // MockGgpClient mock_ggp_;
   MockRetrieveInstances mock_retrieve_instances_;
   RetrieveInstancesWidget widget_;
   QLineEdit* filter_line_edit_ = nullptr;

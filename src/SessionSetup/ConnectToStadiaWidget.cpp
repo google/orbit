@@ -380,7 +380,7 @@ void ConnectToStadiaWidget::CheckCredentialsAvailableOrLoad() {
   if (instance_credentials_loading_.contains(instance_id)) return;
 
   instance_credentials_loading_.emplace(instance_id);
-  auto future = ggp_client_->GetSshInfoAsync(selected_instance_.value(), selected_project_);
+  auto future = ggp_client_->GetSshInfoAsync(selected_instance_.value().id, selected_project_);
   future.Then(main_thread_executor_.get(),
               [this, instance_id](ErrorMessageOr<orbit_ggp::SshInfo> ssh_info_result) {
                 OnSshInfoLoaded(std::move(ssh_info_result), instance_id);
