@@ -47,6 +47,7 @@ class RetrieveInstancesWidget : public QWidget {
       const ErrorMessageOr<QVector<orbit_ggp::Instance>>& loading_result);
   void OnInitialLoadingReturnedSuccess(
       RetrieveInstances::LoadProjectsAndInstancesResult initial_load_result);
+  void OnReloadButtonClicked();
 
   std::unique_ptr<Ui::RetrieveInstancesWidget> ui_;
   std::shared_ptr<MainThreadExecutor> main_thread_executor_;

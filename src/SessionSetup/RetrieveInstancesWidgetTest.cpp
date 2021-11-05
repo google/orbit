@@ -35,27 +35,21 @@ constexpr const char* kSelectedProjectDisplayNameKey{"kSelectedProjectDisplayNam
 namespace orbit_session_setup {
 
 using orbit_base::Future;
-using orbit_ggp::Client;
 using orbit_ggp::Instance;
 using orbit_ggp::Project;
 using testing::Return;
+using InstanceListScope = orbit_ggp::Client::InstanceListScope;
 
 class MockRetrieveInstances : public RetrieveInstances {
  public:
   MOCK_METHOD(orbit_base::Future<ErrorMessageOr<QVector<orbit_ggp::Instance>>>, LoadInstances,
-              (const std::optional<orbit_ggp::Project>& project,
-               orbit_ggp::Client::InstanceListScope scope),
-              (override));
+              (const std::optional<Project>& project, InstanceListScope scope), (override));
   MOCK_METHOD(orbit_base::Future<ErrorMessageOr<QVector<orbit_ggp::Instance>>>,
               LoadInstancesWithoutCache,
-              (const std::optional<orbit_ggp::Project>& project,
-               orbit_ggp::Client::InstanceListScope scope),
-              (override));
+              (const std::optional<Project>& project, InstanceListScope scope), (override));
   MOCK_METHOD(orbit_base::Future<ErrorMessageOr<LoadProjectsAndInstancesResult>>,
               LoadProjectsAndInstances,
-              (const std::optional<orbit_ggp::Project>& project,
-               orbit_ggp::Client::InstanceListScope scope),
-              (override));
+              (const std::optional<Project>& project, InstanceListScope scope), (override));
 };
 
 namespace {
@@ -90,19 +84,19 @@ const Instance kTestInstance2{
     "IN_USE",                                                   /* state */
 };
 
-const QVector<Instance> kTestInstances{kTestInstance1, kTestInstance2};
+const QVector<Instance> kTestInstancesProject1{kTestInstance1, kTestInstance2};
 
 const RetrieveInstances::LoadProjectsAndInstancesResult kInitialTestDataDefault{
     QVector<Project>{kTestProject1, kTestProject2}, /* projects */
     Project{kTestProject1},                         /* default_project */
-    QVector<Instance>{kTestInstances},              /* instances */
+    QVector<Instance>{kTestInstancesProject1},      /* instances */
     std::optional<Project>{std::nullopt},           /* project_of_instances */
 };
 
 const RetrieveInstances::LoadProjectsAndInstancesResult kInitialTestDataWithProjectOfInstances{
     QVector<Project>{kTestProject1, kTestProject2}, /* projects */
     Project{kTestProject1},                         /* default_project */
-    QVector<Instance>{kTestInstances},              /* instances */
+    QVector<Instance>{kTestInstancesProject1},      /* instances */
     std::optional<Project>{kTestProject1},          /* project_of_instances */
 };
 
@@ -143,6 +137,7 @@ class RetrieveInstancesWidgetTest : public testing::Test {
   }
 
   void VerifyLastLoadingReturnedInstanceList(const QVector<Instance>& instances) {
+    ASSERT_GE(loading_successful_spy_.count(), 1);
     QList<QVariant> arguments = loading_successful_spy_.last();
     ASSERT_EQ(arguments.count(), 1);
     ASSERT_TRUE(arguments.at(0).canConvert<QVector<Instance>>());
@@ -196,6 +191,33 @@ class RetrieveInstancesWidgetTest : public testing::Test {
   QSignalSpy initial_loading_failed_spy_{&widget_, &RetrieveInstancesWidget::InitialLoadingFailed};
 };
 
+class RetrieveInstancesWidgetTestStarted : public RetrieveInstancesWidgetTest {
+ protected:
+  void SetUp() override {
+    RetrieveInstancesWidgetTest::SetUp();
+
+    EXPECT_CALL(mock_retrieve_instances_,
+                LoadProjectsAndInstances(std::optional<Project>(std::nullopt),
+                                         InstanceListScope(InstanceListScope::kOnlyOwnInstances)))
+        .WillOnce(Return(Future<ErrorMessageOr<RetrieveInstances::LoadProjectsAndInstancesResult>>{
+            kInitialTestDataDefault}));
+
+    widget_.Start();
+    QCoreApplication::processEvents();
+
+    EXPECT_EQ(loading_started_spy_.count(), 1);
+    EXPECT_EQ(loading_successful_spy_.count(), 1);
+    EXPECT_EQ(loading_failed_spy_.count(), 0);
+    EXPECT_EQ(initial_loading_failed_spy_.count(), 0);
+
+    VerifyAllElementsAreEnabled();
+    VerifyProjectComboBoxHoldsData(kInitialTestDataDefault);
+
+    loading_started_spy_.clear();
+    loading_successful_spy_.clear();
+  }
+};
+
 }  // namespace
 
 TEST_F(RetrieveInstancesWidgetTest, FilterTextChanged) {
@@ -214,9 +236,8 @@ TEST_F(RetrieveInstancesWidgetTest, FilterTextChanged) {
 
 TEST_F(RetrieveInstancesWidgetTest, StartSuccessfulDefault) {
   EXPECT_CALL(mock_retrieve_instances_,
-              LoadProjectsAndInstances(
-                  std::optional<Project>(std::nullopt),
-                  Client::InstanceListScope(Client::InstanceListScope::kOnlyOwnInstances)))
+              LoadProjectsAndInstances(std::optional<Project>(std::nullopt),
+                                       InstanceListScope(InstanceListScope::kOnlyOwnInstances)))
       .WillOnce(Return(Future<ErrorMessageOr<RetrieveInstances::LoadProjectsAndInstancesResult>>{
           kInitialTestDataDefault}));
 
@@ -238,7 +259,7 @@ TEST_F(RetrieveInstancesWidgetTest, StartSuccessfulWithRememberedSettings) {
       mock_retrieve_instances_,
       LoadProjectsAndInstances(
           std::optional<Project>(kInitialTestDataWithProjectOfInstances.project_of_instances),
-          Client::InstanceListScope(Client::InstanceListScope::kAllReservedInstances)))
+          InstanceListScope(InstanceListScope::kAllReservedInstances)))
       .WillOnce(Return(Future<ErrorMessageOr<RetrieveInstances::LoadProjectsAndInstancesResult>>{
           kInitialTestDataWithProjectOfInstances}));
 
@@ -266,9 +287,8 @@ TEST_F(RetrieveInstancesWidgetTest, StartSuccessfulWithRememberedSettings) {
 
 TEST_F(RetrieveInstancesWidgetTest, StartFailed) {
   EXPECT_CALL(mock_retrieve_instances_,
-              LoadProjectsAndInstances(
-                  std::optional<Project>(std::nullopt),
-                  Client::InstanceListScope(Client::InstanceListScope::kOnlyOwnInstances)))
+              LoadProjectsAndInstances(std::optional<Project>(std::nullopt),
+                                       InstanceListScope(InstanceListScope::kOnlyOwnInstances)))
       .WillOnce(Return(Future<ErrorMessageOr<RetrieveInstances::LoadProjectsAndInstancesResult>>{
           ErrorMessage{"error message"}}));
 
@@ -287,5 +307,55 @@ TEST_F(RetrieveInstancesWidgetTest, StartFailed) {
   EXPECT_EQ(initial_loading_failed_spy_.count(), 1);
 
   VerifyOnlyReloadIsEnabled();
+}
+
+TEST_F(RetrieveInstancesWidgetTestStarted, ReloadSucceeds) {
+  EXPECT_CALL(mock_retrieve_instances_,
+              LoadInstancesWithoutCache(std::optional<Project>(std::nullopt),
+                                        InstanceListScope(InstanceListScope::kOnlyOwnInstances)))
+      .WillOnce(Return(Future<ErrorMessageOr<QVector<Instance>>>(kTestInstancesProject1)))
+      .WillOnce(
+          Return(Future<ErrorMessageOr<QVector<Instance>>>(QVector<Instance>{kTestInstance1})));
+
+  QTest::mouseClick(reload_button_, Qt::MouseButton::LeftButton);
+  QCoreApplication::processEvents();
+  EXPECT_EQ(loading_started_spy_.count(), 1);
+  EXPECT_EQ(loading_successful_spy_.count(), 1);
+  EXPECT_EQ(loading_failed_spy_.count(), 0);
+  EXPECT_EQ(initial_loading_failed_spy_.count(), 0);
+  VerifyLastLoadingReturnedInstanceList(kTestInstancesProject1);
+  VerifyAllElementsAreEnabled();
+
+  QTest::mouseClick(reload_button_, Qt::MouseButton::LeftButton);
+  QCoreApplication::processEvents();
+  EXPECT_EQ(loading_started_spy_.count(), 2);
+  EXPECT_EQ(loading_successful_spy_.count(), 2);
+  EXPECT_EQ(loading_failed_spy_.count(), 0);
+  EXPECT_EQ(initial_loading_failed_spy_.count(), 0);
+  VerifyLastLoadingReturnedInstanceList({kTestInstance1});
+  VerifyAllElementsAreEnabled();
+}
+
+TEST_F(RetrieveInstancesWidgetTestStarted, ReloadFails) {
+  EXPECT_CALL(mock_retrieve_instances_,
+              LoadInstancesWithoutCache(std::optional<Project>(std::nullopt),
+                                        InstanceListScope(InstanceListScope::kOnlyOwnInstances)))
+      .WillOnce(Return(Future<ErrorMessageOr<QVector<Instance>>>(ErrorMessage{"error"})));
+
+  QTest::mouseClick(reload_button_, Qt::MouseButton::LeftButton);
+
+  // close the error message box
+  QTimer::singleShot(5, []() {
+    QApplication::activeModalWidget()->close();
+    QCoreApplication::exit();
+  });
+  QCoreApplication::exec();
+
+  EXPECT_EQ(loading_started_spy_.count(), 1);
+  EXPECT_EQ(loading_successful_spy_.count(), 0);
+  EXPECT_EQ(loading_failed_spy_.count(), 1);
+  EXPECT_EQ(initial_loading_failed_spy_.count(), 0);
+
+  VerifyAllElementsAreEnabled();
 }
 }  // namespace orbit_session_setup

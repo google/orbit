@@ -29,10 +29,10 @@ constexpr const char* kSelectedProjectDisplayNameKey{"kSelectedProjectDisplayNam
 
 namespace orbit_session_setup {
 
-using orbit_ggp::Client;
 using orbit_ggp::Instance;
 using orbit_ggp::Project;
 using LoadProjectsAndInstancesResult = RetrieveInstances::LoadProjectsAndInstancesResult;
+using InstanceListScope = orbit_ggp::Client::InstanceListScope;
 
 namespace {
 
@@ -70,6 +70,8 @@ RetrieveInstancesWidget::RetrieveInstancesWidget(RetrieveInstances* retrieve_ins
 
   QObject::connect(ui_->filterLineEdit, &QLineEdit::textChanged, this,
                    &RetrieveInstancesWidget::FilterTextChanged);
+  QObject::connect(ui_->reloadButton, &QPushButton::clicked, this,
+                   &RetrieveInstancesWidget::OnReloadButtonClicked);
 }
 
 void RetrieveInstancesWidget::SetupStateMachine() {
@@ -103,26 +105,28 @@ void RetrieveInstancesWidget::Start() {
   InitialLoad(GetQSettingsProject());
 }
 
-Client::InstanceListScope RetrieveInstancesWidget::GetInstanceListScope() const {
-  return ui_->allCheckBox->isChecked() ? Client::InstanceListScope::kAllReservedInstances
-                                       : Client::InstanceListScope::kOnlyOwnInstances;
+InstanceListScope RetrieveInstancesWidget::GetInstanceListScope() const {
+  return ui_->allCheckBox->isChecked() ? InstanceListScope::kAllReservedInstances
+                                       : InstanceListScope::kOnlyOwnInstances;
 }
 
 void RetrieveInstancesWidget::InitialLoad(const std::optional<Project>& remembered_project) {
   emit LoadingStarted();
   retrieve_instances_->LoadProjectsAndInstances(remembered_project, GetInstanceListScope())
       .Then(main_thread_executor_.get(),
-            [widget = QPointer<RetrieveInstancesWidget>(this)](
-                ErrorMessageOr<LoadProjectsAndInstancesResult> loading_result) {
-              if (widget == nullptr) return;
+            [this](ErrorMessageOr<LoadProjectsAndInstancesResult> loading_result) {
+              // `this` still exists when this lambda is executed. This is enforced, because
+              // main_thread_executor_ is a member of `this`. When `this` is destroyed,
+              // main_thread_executor_ is destroyed and the lambda is not executed. Check
+              // Future::Then for details about the lambda not being executed.
 
               if (loading_result.has_error()) {
-                emit widget->InitialLoadingFailed();
-                widget->OnInstancesLoadingReturned(loading_result.error());
+                emit InitialLoadingFailed();
+                OnInstancesLoadingReturned(loading_result.error());
                 return;
               }
 
-              widget->OnInitialLoadingReturnedSuccess(loading_result.value());
+              OnInitialLoadingReturnedSuccess(loading_result.value());
             });
 }
 
@@ -169,6 +173,30 @@ void RetrieveInstancesWidget::OnInstancesLoadingReturned(
     return;
   }
   emit LoadingSuccessful(loading_result.value());
+}
+
+void RetrieveInstancesWidget::OnReloadButtonClicked() {
+  // Initial loading failed
+  if (ui_->projectComboBox->count() == 0) {
+    InitialLoad(std::nullopt);
+    return;
+  }
+
+  std::optional<Project> selected_project;
+  if (ui_->projectComboBox->currentData().canConvert<Project>()) {
+    selected_project = ui_->projectComboBox->currentData().value<Project>();
+  }
+
+  emit LoadingStarted();
+  retrieve_instances_->LoadInstancesWithoutCache(selected_project, GetInstanceListScope())
+      .Then(main_thread_executor_.get(),
+            [this](const ErrorMessageOr<QVector<Instance>>& load_result) {
+              // `this` still exists when this lambda is executed. This is enforced, because
+              // main_thread_executor_ is a member of `this`. When `this` is destroyed,
+              // main_thread_executor_ is destroyed and the lambda is not executed. Check
+              // Future::Then for details about the lambda not being executed.
+              OnInstancesLoadingReturned(load_result);
+            });
 }
 
 }  // namespace orbit_session_setup
