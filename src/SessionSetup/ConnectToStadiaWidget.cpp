@@ -33,7 +33,6 @@
 #include <utility>
 
 #include "ClientFlags/ClientFlags.h"
-#include "MetricsUploader/ScopedMetric.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -408,16 +407,12 @@ void ConnectToStadiaWidget::DeployOrbitService() {
       QObject::connect(ui_->instancesTableOverlay, &OverlayWidget::Cancelled,
                        service_deploy_manager_.get(), &ServiceDeployManager::Cancel)};
 
-  orbit_metrics_uploader::ScopedMetric connect_metric{
-      metrics_uploader_, orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_INSTANCE_CONNECT};
-  const auto deployment_result = service_deploy_manager_->Exec();
+  const auto deployment_result = service_deploy_manager_->Exec(metrics_uploader_);
   if (!deployment_result) {
     Disconnect();
     if (deployment_result.error() == make_error_code(Error::kUserCanceledServiceDeployment)) {
-      connect_metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_CANCELLED);
       return;
     }
-    connect_metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_INTERNAL_ERROR);
     emit ErrorOccurred(QString("Orbit was unable to successfully connect to the Instance. The "
                                "error message was: %1")
                            .arg(QString::fromStdString(deployment_result.error().message())));
@@ -432,7 +427,6 @@ void ConnectToStadiaWidget::DeployOrbitService() {
                                .arg(QString::fromStdString(error.message())));
       });
 
-  LOG("Deployment successful, grpc_port: %d", deployment_result.value().grpc_port);
   CHECK(grpc_channel_ == nullptr);
   std::string grpc_server_address =
       absl::StrFormat("127.0.0.1:%d", deployment_result.value().grpc_port);
