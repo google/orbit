@@ -45,6 +45,7 @@
 #include "SessionSetup/Error.h"
 #include "SessionSetup/OverlayWidget.h"
 #include "SessionSetup/ServiceDeployManager.h"
+#include "SessionSetup/SessionSetupUtils.h"
 #include "ui_ConnectToStadiaWidget.h"
 
 namespace {
@@ -428,11 +429,7 @@ void ConnectToStadiaWidget::DeployOrbitService() {
       });
 
   CHECK(grpc_channel_ == nullptr);
-  std::string grpc_server_address =
-      absl::StrFormat("127.0.0.1:%d", deployment_result.value().grpc_port);
-  LOG("Starting gRPC channel to: %s", grpc_server_address);
-  grpc_channel_ = grpc::CreateCustomChannel(grpc_server_address, grpc::InsecureChannelCredentials(),
-                                            grpc::ChannelArguments());
+  grpc_channel_ = CreateGrpcChannel(deployment_result.value().grpc_port);
   CHECK(grpc_channel_ != nullptr);
 
   emit Connected();
@@ -542,13 +539,7 @@ void ConnectToStadiaWidget::OnSshInfoLoaded(ErrorMessageOr<orbit_ggp::SshInfo> s
   LOG("Received ssh info for instance with id: %s", instance_id);
 
   orbit_ggp::SshInfo& ssh_info{ssh_info_result.value()};
-  orbit_ssh::Credentials credentials;
-  credentials.addr_and_port = {ssh_info.host.toStdString(), ssh_info.port};
-  credentials.key_path = ssh_info.key_path.toStdString();
-  credentials.known_hosts_path = ssh_info.known_hosts_path.toStdString();
-  credentials.user = ssh_info.user.toStdString();
-
-  instance_credentials_.emplace(instance_id, std::move(credentials));
+  instance_credentials_.emplace(instance_id, CredentialsFromSshInfo(ssh_info));
 
   emit ReceivedSshInfo();
 }
