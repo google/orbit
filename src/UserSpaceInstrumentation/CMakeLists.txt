@@ -43,7 +43,7 @@ target_sources(UserSpaceInstrumentation PRIVATE
 
 target_link_libraries(UserSpaceInstrumentation PUBLIC
         GrpcProtos
-        LinuxTracing
+        ObjectUtils
         OrbitBase
         CONAN_PKG::abseil
         CONAN_PKG::capstone)
@@ -107,7 +107,6 @@ target_sources(UserSpaceInstrumentationTests PRIVATE
         TrampolineTest.cpp)
 
 target_link_libraries(UserSpaceInstrumentationTests PRIVATE
-        LinuxTracing
         TestUtils
         UserSpaceInstrumentation
         CONAN_PKG::abseil
