@@ -29,6 +29,7 @@ using orbit_client_protos::FunctionStats;
 using JumpToTimerMode = orbit_data_views::AppInterface::JumpToTimerMode;
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;
+using orbit_client_protos::TimerInfo;
 using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::CheckSingleAction;
@@ -269,6 +270,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     // Common actions should always be available.
     CheckSingleAction(context_menu, "Copy Selection", ContextMenuEntry::kEnabled);
     CheckSingleAction(context_menu, "Export to CSV", ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, "Export events to CSV", ContextMenuEntry::kEnabled);
 
     // Source code and disassembly actions are availble if and only if capture is connected.
     ContextMenuEntry source_code_or_disassembly =
@@ -382,6 +384,34 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
         GetExpectedDisplayTime(kStdDevNs[0]), kModulePaths[0],
         GetExpectedDisplayAddress(kAddresses[0]));
     CheckExportToCsvIsInvoked(context_menu, app_, view_, expected_contents);
+  }
+
+  // Export events to CSV
+  {
+    const uint32_t kThreadId = 111;
+    const std::string kThreadName = "Test Thread";
+    capture_data_->AddOrAssignThreadName(kThreadId, kThreadName);
+    EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
+
+    constexpr uint64_t kStart = 12345;
+    constexpr uint64_t kEnd = 67890;
+    TimerInfo timer;
+    timer.set_start(kStart);
+    timer.set_end(kEnd);
+    timer.set_thread_id(kThreadId);
+    std::vector<const TimerInfo*> timers = {&timer};
+    EXPECT_CALL(app_, GetAllFunctionCalls).WillRepeatedly(testing::Return(timers));
+
+    std::string expected_contents =
+        absl::StrFormat(R"#("Name","Thread","Start","End","Duration (ns)")#"
+                        "\r\n"
+                        R"("%s","%s","%s","%s","%s")"
+                        "\r\n",
+                        kPrettyNames[0], absl::StrFormat("%s [%lu]", kThreadName, kThreadId),
+                        absl::StrFormat("%lu", kStart), absl::StrFormat("%lu", kEnd),
+                        absl::StrFormat("%lu", kEnd - kStart));
+    bool is_exporting_events = true;
+    CheckExportToCsvIsInvoked(context_menu, app_, view_, expected_contents, is_exporting_events);
   }
 
   // Go to Disassembly
