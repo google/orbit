@@ -1121,6 +1121,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     ++stats_.sample_count;
 
   } else if (is_task_newtask) {
+    CHECK(header.size == sizeof(perf_event_raw_sample<task_newtask_tracepoint>));
     perf_event_raw_sample<task_newtask_tracepoint> ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
     TaskNewtaskPerfEvent event{
@@ -1140,6 +1141,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     DeferEvent(event);
 
   } else if (is_task_rename) {
+    CHECK(header.size == sizeof(perf_event_raw_sample<task_rename_tracepoint>));
     perf_event_raw_sample<task_rename_tracepoint> ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
@@ -1158,6 +1160,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     DeferEvent(event);
 
   } else if (is_sched_switch) {
+    CHECK(header.size == sizeof(perf_event_raw_sample<sched_switch_tracepoint>));
     perf_event_raw_sample<sched_switch_tracepoint> ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
@@ -1183,20 +1186,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     ++stats_.sched_switch_count;
 
   } else if (is_sched_wakeup) {
-    perf_event_raw_sample<sched_wakeup_tracepoint> ring_buffer_record;
-    ring_buffer->ConsumeRecord(header, &ring_buffer_record);
-
-    SchedWakeupPerfEvent event{
-        .timestamp = ring_buffer_record.sample_id.time,
-        .ordered_stream = PerfEventOrderedStream::FileDescriptor(fd),
-        .data =
-            {
-                // The tracepoint format calls the woken tid "data.pid" but it's effectively the
-                // thread id.
-                .woken_tid = ring_buffer_record.data.pid,
-            },
-    };
-
+    SchedWakeupPerfEvent event = ConsumeSchedWakeupPerfEvent(ring_buffer, header);
     DeferEvent(event);
 
   } else if (is_amdgpu_cs_ioctl_event) {

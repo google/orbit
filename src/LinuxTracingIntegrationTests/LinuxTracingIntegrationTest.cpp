@@ -349,7 +349,8 @@ class LinuxTracingIntegrationTestFixture {
     return capture_options;
   }
 
-  void StartTracingAndWaitForTracingLoopStarted(orbit_grpc_protos::CaptureOptions capture_options) {
+  void StartTracingAndWaitForTracingLoopStarted(
+      const orbit_grpc_protos::CaptureOptions& capture_options) {
     CHECK(tracer_ == nullptr);
     CHECK(!listener_.has_value());
 

@@ -268,6 +268,35 @@ GenericTracepointPerfEvent ConsumeGenericTracepointPerfEvent(PerfEventRingBuffer
   return event;
 }
 
+SchedWakeupPerfEvent ConsumeSchedWakeupPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                 const perf_event_header& header) {
+  CHECK(header.size >= sizeof(perf_event_raw_sample_fixed));
+  perf_event_raw_sample_fixed ring_buffer_record;
+  ring_buffer->ReadRawAtOffset(&ring_buffer_record, 0, sizeof(perf_event_raw_sample_fixed));
+
+  // The last fields of the sched:sched_wakeup tracepoint aren't always the same, depending on the
+  // kernel version. Fortunately we only need the first fields, which are always the same, so only
+  // read those. See `sched_wakeup_tracepoint_fixed`.
+  CHECK(ring_buffer_record.size >= sizeof(sched_wakeup_tracepoint_fixed));
+  sched_wakeup_tracepoint_fixed sched_wakeup;
+  ring_buffer->ReadRawAtOffset(
+      &sched_wakeup,
+      offsetof(perf_event_raw_sample_fixed, size) + sizeof(perf_event_raw_sample_fixed::size),
+      sizeof(sched_wakeup_tracepoint_fixed));
+
+  ring_buffer->SkipRecord(header);
+  return SchedWakeupPerfEvent{
+      .timestamp = ring_buffer_record.sample_id.time,
+      .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
+      .data =
+          {
+              // The tracepoint format calls the woken tid "data.pid" but it's effectively the
+              // thread id.
+              .woken_tid = sched_wakeup.pid,
+          },
+  };
+}
+
 template <typename EventType, typename StructType>
 EventType ConsumeGpuEvent(PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
   uint32_t tracepoint_size;
