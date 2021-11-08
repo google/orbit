@@ -122,6 +122,7 @@ using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
+using orbit_grpc_protos::DynamicInstrumentationMethod;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::TracepointInfo;
@@ -1334,8 +1335,9 @@ void OrbitApp::StartCapture() {
   bool collect_gpu_jobs = !IsDevMode() || data_manager_->trace_gpu_submissions();
   bool enable_api = data_manager_->get_enable_api();
   bool enable_introspection = IsDevMode() && data_manager_->get_enable_introspection();
-  bool enable_user_space_instrumentation =
-      IsDevMode() && data_manager_->enable_user_space_instrumentation();
+  const DynamicInstrumentationMethod dynamic_instrumentation_method =
+      IsDevMode() ? data_manager_->dynamic_instrumentation_method()
+                  : DynamicInstrumentationMethod::kKernelUprobes;
   double samples_per_second = data_manager_->samples_per_second();
   uint16_t stack_dump_size = data_manager_->stack_dump_size();
   UnwindingMethod unwinding_method =
@@ -1390,7 +1392,7 @@ void OrbitApp::StartCapture() {
       /*record_arguments=*/false, absl::GetFlag(FLAGS_show_return_values),
       std::move(selected_tracepoints), samples_per_second, stack_dump_size, unwinding_method,
       collect_scheduling_info, collect_thread_states, collect_gpu_jobs, enable_api,
-      enable_introspection, enable_user_space_instrumentation,
+      enable_introspection, dynamic_instrumentation_method,
       max_local_marker_depth_per_command_buffer, collect_memory_info, memory_sampling_period_ms,
       std::move(capture_event_processor));
 
@@ -2185,8 +2187,8 @@ void OrbitApp::SetEnableIntrospection(bool enable_introspection) {
   data_manager_->set_enable_introspection(enable_introspection);
 }
 
-void OrbitApp::SetEnableUserSpaceInstrumentation(bool enable) {
-  data_manager_->set_enable_user_space_instrumentation(enable);
+void OrbitApp::SetDynamicInstrumentationMethod(DynamicInstrumentationMethod method) {
+  data_manager_->set_dynamic_instrumentation_method(method);
 }
 
 void OrbitApp::SetSamplesPerSecond(double samples_per_second) {

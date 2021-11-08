@@ -61,6 +61,7 @@ using orbit_client_protos::TimerInfo;
 
 using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureStarted;
+using orbit_grpc_protos::DynamicInstrumentationMethod;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
 using orbit_grpc_protos::UnwindingMethod;
@@ -113,7 +114,8 @@ ErrorMessageOr<void> ClientGgp::RequestStartCapture(orbit_base::ThreadPool* thre
   bool collect_gpu_jobs = true;
   bool enable_api = false;
   bool enable_introspection = false;
-  bool enable_user_space_instrumentation = false;
+  DynamicInstrumentationMethod dynamic_instrumentation_method =
+      DynamicInstrumentationMethod::kKernelUprobes;
   uint64_t max_local_marker_depth_per_command_buffer =
       absl::GetFlag(FLAGS_max_local_marker_depth_per_command_buffer);
 
@@ -131,7 +133,7 @@ ErrorMessageOr<void> ClientGgp::RequestStartCapture(orbit_base::ThreadPool* thre
       /*record_arguments=*/false, /*record_return_values=*/false, selected_tracepoints,
       options_.samples_per_second, options_.stack_dump_size, unwinding_method,
       collect_scheduling_info, collect_thread_state, collect_gpu_jobs, enable_api,
-      enable_introspection, enable_user_space_instrumentation,
+      enable_introspection, dynamic_instrumentation_method,
       max_local_marker_depth_per_command_buffer, /*collect_memory_info=*/false, 0,
       std::move(event_processor));
 

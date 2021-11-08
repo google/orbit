@@ -22,6 +22,7 @@ constexpr uint64_t kWindowsTracingProducerId = 4;
 constexpr uint64_t kExternalProducerStartingId = 1024;
 
 enum class UnwindingMethod { kDwarfUnwinding = 0, kFramePointerUnwinding = 1 };
+enum class DynamicInstrumentationMethod { kKernelUprobes = 1, kOrbit = 2 };
 }  // namespace orbit_grpc_protos
 
 #endif  // GRPC_PROTOS_CONSTANTS_H_

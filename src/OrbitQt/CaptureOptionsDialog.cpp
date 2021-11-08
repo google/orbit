@@ -15,7 +15,10 @@
 
 #include "ClientFlags/ClientFlags.h"
 #include "ui_CaptureOptionsDialog.h"
+
 namespace orbit_qt {
+
+using orbit_grpc_protos::DynamicInstrumentationMethod;
 
 CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
     : QDialog{parent}, ui_(std::make_unique<Ui::CaptureOptionsDialog>()) {
@@ -105,12 +108,15 @@ void CaptureOptionsDialog::SetEnableApi(bool enable_api) {
 
 bool CaptureOptionsDialog::GetEnableApi() const { return ui_->apiCheckBox->isChecked(); }
 
-void CaptureOptionsDialog::SetEnableUserSpaceInstrumentation(bool enable) {
-  ui_->dynamicInstrumentationMethodComboBox->setCurrentIndex(enable ? 1 : 0);
+void CaptureOptionsDialog::SetDynamicInstrumentationMethod(DynamicInstrumentationMethod method) {
+  ui_->dynamicInstrumentationMethodComboBox->setCurrentIndex(
+      method == DynamicInstrumentationMethod::kKernelUprobes ? 0 : 1);
 }
 
-bool CaptureOptionsDialog::GetEnableUserSpaceInstrumentation() const {
-  return ui_->dynamicInstrumentationMethodComboBox->currentIndex() == 1;
+DynamicInstrumentationMethod CaptureOptionsDialog::GetDynamicInstrumentationMethod() const {
+  return ui_->dynamicInstrumentationMethodComboBox->currentIndex() == 0
+             ? DynamicInstrumentationMethod::kKernelUprobes
+             : DynamicInstrumentationMethod::kOrbit;
 }
 
 void CaptureOptionsDialog::SetEnableIntrospection(bool enable_introspection) {

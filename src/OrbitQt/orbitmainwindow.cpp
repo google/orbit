@@ -130,6 +130,7 @@ using orbit_capture_client::CaptureListener;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_CHECK_FALSE;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
+using orbit_grpc_protos::DynamicInstrumentationMethod;
 
 using orbit_session_setup::LocalTarget;
 using orbit_session_setup::ServiceDeployManager;
@@ -1053,8 +1054,8 @@ const QString OrbitMainWindow::kTraceGpuSubmissionsSettingKey{"TraceGpuSubmissio
 const QString OrbitMainWindow::kCollectMemoryInfoSettingKey{"CollectMemoryInfo"};
 const QString OrbitMainWindow::kEnableApiSettingKey{"EnableApi"};
 const QString OrbitMainWindow::kEnableIntrospectionSettingKey{"EnableIntrospection"};
-const QString OrbitMainWindow::kEnableUserSpaceInstrumentationSettingKey{
-    "EnableUserSpaceInstrumentation"};
+const QString OrbitMainWindow::kDynamicInstrumentationMethodSettingKey{
+    "DynamicInstrumentationMethod"};
 const QString OrbitMainWindow::kMemorySamplingPeriodMsSettingKey{"MemorySamplingPeriodMs"};
 const QString OrbitMainWindow::kMemoryWarningThresholdKbSettingKey{"MemoryWarningThresholdKb"};
 const QString OrbitMainWindow::kLimitLocalMarkerDepthPerCommandBufferSettingsKey{
@@ -1067,6 +1068,8 @@ constexpr orbit_grpc_protos::UnwindingMethod kCallstackUnwindingMethodDefaultVal
     orbit_grpc_protos::UnwindingMethod::kDwarfUnwinding;
 constexpr uint64_t kMemorySamplingPeriodMsDefaultValue = 10;
 constexpr uint64_t kMemoryWarningThresholdKbDefaultValue = 1024 * 1024 * 8;  // 8Gb
+constexpr DynamicInstrumentationMethod kDynamicInstrumentationMethodDefaultValue =
+    DynamicInstrumentationMethod::kKernelUprobes;
 
 void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
   QSettings settings;
@@ -1101,8 +1104,13 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
   app_->SetTraceGpuSubmissions(settings.value(kTraceGpuSubmissionsSettingKey, true).toBool());
   app_->SetEnableApi(settings.value(kEnableApiSettingKey, true).toBool());
   app_->SetEnableIntrospection(settings.value(kEnableIntrospectionSettingKey, false).toBool());
-  app_->SetEnableUserSpaceInstrumentation(
-      settings.value(kEnableUserSpaceInstrumentationSettingKey, false).toBool());
+  const DynamicInstrumentationMethod instrumentation_method =
+      static_cast<DynamicInstrumentationMethod>(
+          settings
+              .value(kDynamicInstrumentationMethodSettingKey,
+                     static_cast<int>(kDynamicInstrumentationMethodDefaultValue))
+              .toInt());
+  app_->SetDynamicInstrumentationMethod(instrumentation_method);
 
   app_->SetCollectMemoryInfo(settings.value(kCollectMemoryInfoSettingKey, false).toBool());
   uint64_t memory_sampling_period_ms = kMemorySamplingPeriodMsDefaultValue;
@@ -1148,8 +1156,13 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
   dialog.SetTraceGpuSubmissions(settings.value(kTraceGpuSubmissionsSettingKey, true).toBool());
   dialog.SetEnableApi(settings.value(kEnableApiSettingKey, true).toBool());
   dialog.SetEnableIntrospection(settings.value(kEnableIntrospectionSettingKey, true).toBool());
-  dialog.SetEnableUserSpaceInstrumentation(
-      settings.value(kEnableUserSpaceInstrumentationSettingKey, false).toBool());
+  const DynamicInstrumentationMethod instrumentation_method =
+      static_cast<DynamicInstrumentationMethod>(
+          settings
+              .value(kDynamicInstrumentationMethodSettingKey,
+                     static_cast<int>(kDynamicInstrumentationMethodDefaultValue))
+              .toInt());
+  dialog.SetDynamicInstrumentationMethod(instrumentation_method);
   dialog.SetCollectMemoryInfo(settings.value(kCollectMemoryInfoSettingKey, false).toBool());
   dialog.SetMemorySamplingPeriodMs(
       settings
@@ -1180,8 +1193,8 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
   settings.setValue(kTraceGpuSubmissionsSettingKey, dialog.GetTraceGpuSubmissions());
   settings.setValue(kEnableApiSettingKey, dialog.GetEnableApi());
   settings.setValue(kEnableIntrospectionSettingKey, dialog.GetEnableIntrospection());
-  settings.setValue(kEnableUserSpaceInstrumentationSettingKey,
-                    dialog.GetEnableUserSpaceInstrumentation());
+  settings.setValue(kDynamicInstrumentationMethodSettingKey,
+                    static_cast<int>(dialog.GetDynamicInstrumentationMethod()));
   settings.setValue(kCollectMemoryInfoSettingKey, dialog.GetCollectMemoryInfo());
   settings.setValue(kMemorySamplingPeriodMsSettingKey,
                     QString::number(dialog.GetMemorySamplingPeriodMs()));
