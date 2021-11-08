@@ -76,6 +76,13 @@ bool Maps::Parse() {
 }
 
 void Maps::Add(uint64_t start, uint64_t end, uint64_t offset, uint64_t flags,
+               const std::string& name) {
+  std::shared_ptr<MapInfo> prev_map(maps_.empty() ? nullptr : maps_.back());
+  auto map_info = MapInfo::Create(prev_map, start, end, offset, flags, name);
+  maps_.emplace_back(std::move(map_info));
+}
+
+void Maps::Add(uint64_t start, uint64_t end, uint64_t offset, uint64_t flags,
                const std::string& name, uint64_t load_bias) {
   std::shared_ptr<MapInfo> prev_map(maps_.empty() ? nullptr : maps_.back());
   auto map_info = MapInfo::Create(prev_map, start, end, offset, flags, name);

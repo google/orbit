@@ -128,6 +128,14 @@ static void VerifyUnwindFrames(Unwinder* unwinder,
   }
 
   ASSERT_TRUE(expected_function_names.empty()) << ErrorMsg(expected_function_names, unwinder);
+
+  // Verify that the load bias of every map with a MapInfo is has been initialized.
+  for (auto& frame : unwinder->frames()) {
+    if (frame.map_info == nullptr) {
+      continue;
+    }
+    ASSERT_NE(UINT64_MAX, frame.map_info->GetLoadBias()) << "Frame " << frame.num << " failed";
+  }
 }
 
 static void VerifyUnwind(Unwinder* unwinder, std::vector<const char*> expected_function_names) {

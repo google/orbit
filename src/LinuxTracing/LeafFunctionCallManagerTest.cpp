@@ -117,28 +117,28 @@ class LeafFunctionCallManagerTest : public ::testing::Test {
       .pc = kTargetAddress1,
       .function_name = "foo",
       .function_offset = 0,
-      .map_name = kTargetName,
+      .map_info = kTargetMapInfo,
   };
 
   static inline unwindstack::FrameData kFrame2{
       .pc = kTargetAddress2,
       .function_name = "bar",
       .function_offset = 0,
-      .map_name = kTargetName,
+      .map_info = kTargetMapInfo,
   };
 
   static inline unwindstack::FrameData kFrame3{
       .pc = kTargetAddress3,
       .function_name = "baz",
       .function_offset = 0,
-      .map_name = kTargetName,
+      .map_info = kTargetMapInfo,
   };
 
   static inline unwindstack::FrameData kNonExecutableFrame{
       .pc = kNonExecutableMapsStart,
       .function_name = "???",
       .function_offset = 0,
-      .map_name = kNonExecutableName,
+      .map_info = kNonExecutableMapInfo,
   };
 };
 

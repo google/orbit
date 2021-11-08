@@ -56,6 +56,7 @@ class Maps {
 
   virtual const std::string GetMapsFile() const { return ""; }
 
+  void Add(uint64_t start, uint64_t end, uint64_t offset, uint64_t flags, const std::string& name);
   void Add(uint64_t start, uint64_t end, uint64_t offset, uint64_t flags, const std::string& name,
            uint64_t load_bias);
 

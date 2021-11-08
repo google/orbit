@@ -37,7 +37,11 @@ static void SendFullAddressInfoToListener(TracerListener* listener,
 
   FullAddressInfo address_info;
   address_info.set_absolute_address(libunwindstack_frame.pc);
-  address_info.set_module_name(libunwindstack_frame.map_name);
+
+  // Careful: unwindstack::FrameData::map_info might contain nullptr.
+  if (libunwindstack_frame.map_info != nullptr) {
+    address_info.set_module_name(libunwindstack_frame.map_info->name());
+  }
 
   // For addresses falling directly inside u(ret)probes code, unwindstack::FrameData has limited
   // information. Nonetheless, we can send a perfectly meaningful FullAddressInfo, treating
@@ -45,9 +49,11 @@ static void SendFullAddressInfoToListener(TracerListener* listener,
   // I observed are 0x7fffffffe000 (~1% of uprobes addresses) and 0x7fffffffe001 (~99%). This way
   // the client can show more information for such a frame, in particular when associated with the
   // corresponding unwinding error.
-  if (libunwindstack_frame.map_name == "[uprobes]") {
+  if (libunwindstack_frame.map_info != nullptr &&
+      libunwindstack_frame.map_info->name() == "[uprobes]") {
     address_info.set_function_name("[uprobes]");
-    address_info.set_offset_in_function(libunwindstack_frame.pc - libunwindstack_frame.map_start);
+    address_info.set_offset_in_function(libunwindstack_frame.pc -
+                                        libunwindstack_frame.map_info->start());
   } else {
     address_info.set_function_name(libunwindstack_frame.function_name);
     address_info.set_offset_in_function(libunwindstack_frame.function_offset);
@@ -72,11 +78,11 @@ static bool CallstackIsInUserSpaceInstrumentation(
   // if any of the previous frames corresponds to a trampoline.
   std::string_view injected_library_map_name =
       user_space_instrumentation_addresses.GetInjectedLibraryMapName();
-  auto library_frame_it =
-      std::find_if(frames.begin(), frames.end(),
-                   [&injected_library_map_name](const unwindstack::FrameData& frame) {
-                     return frame.map_name == injected_library_map_name;
-                   });
+  auto library_frame_it = std::find_if(
+      frames.begin(), frames.end(),
+      [&injected_library_map_name](const unwindstack::FrameData& frame) {
+        return frame.map_info != nullptr && frame.map_info->name() == injected_library_map_name;
+      });
   if (library_frame_it == frames.end()) {
     return false;
   }
@@ -122,7 +128,8 @@ static bool CallchainIsInUserSpaceInstrumentation(
 orbit_grpc_protos::Callstack::CallstackType
 UprobesUnwindingVisitor::ComputeCallstackTypeFromStackSample(
     const LibunwindstackResult& libunwindstack_result) {
-  if (libunwindstack_result.frames().front().map_name == "[uprobes]") {
+  if (libunwindstack_result.frames().front().map_info != nullptr &&
+      libunwindstack_result.frames().front().map_info->name() == "[uprobes]") {
     // Some samples can actually fall inside u(ret)probes code. They cannot be unwound by
     // libunwindstack (even when the unwinding is reported as successful, the result is wrong).
     if (samples_in_uretprobes_counter_ != nullptr) {
@@ -145,7 +152,8 @@ UprobesUnwindingVisitor::ComputeCallstackTypeFromStackSample(
     return Callstack::kInUserSpaceInstrumentation;
   }
   if (libunwindstack_result.frames().size() > 1 &&
-      (libunwindstack_result.frames().back().map_name == "[uprobes]" ||
+      ((libunwindstack_result.frames().back().map_info != nullptr &&
+        libunwindstack_result.frames().back().map_info->name() == "[uprobes]") ||
        (user_space_instrumentation_addresses_ != nullptr &&
         user_space_instrumentation_addresses_->IsInReturnTrampoline(
             libunwindstack_result.frames().back().pc)))) {
@@ -460,7 +468,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp, const MmapPerfEven
   // constructor.
   if (event_data.filename == "[uprobes]") {
     current_maps_->AddAndSort(event_data.address, event_data.address + event_data.length, 0,
-                              PROT_EXEC, event_data.filename, INT64_MAX);
+                              PROT_EXEC, event_data.filename, UINT64_MAX);
     return;
   }
 

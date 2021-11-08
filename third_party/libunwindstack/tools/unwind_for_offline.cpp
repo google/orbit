@@ -300,8 +300,7 @@ bool SaveData(pid_t tid, const std::filesystem::path& cwd, bool is_main_thread, 
       sp_map_start = map_info->start();
     }
 
-    if (maps_by_start.count(frame.map_start) == 0) {
-      map_info = maps->Find(frame.map_start);
+    if (maps_by_start.count(frame.map_info->start()) == 0) {
       if (map_info == nullptr) {
         continue;
       }

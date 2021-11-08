@@ -63,21 +63,12 @@ void Unwinder::FillInDexFrame() {
   frame->pc = dex_pc;
   frame->sp = regs_->sp();
 
-  std::shared_ptr<MapInfo> info = maps_->Find(dex_pc);
-  if (info != nullptr) {
-    frame->map_start = info->start();
-    frame->map_end = info->end();
-    // Since this is a dex file frame, the elf_start_offset is not set
-    // by any of the normal code paths. Use the offset of the map since
-    // that matches the actual offset.
-    frame->map_object_start_offset = info->offset();
-    frame->map_exact_offset = info->offset();
-    frame->map_load_bias = info->load_bias();
-    frame->map_flags = info->flags();
-    if (resolve_names_) {
-      frame->map_name = info->name();
-    }
-    frame->rel_pc = dex_pc - info->start();
+  frame->map_info = maps_->Find(dex_pc);
+  if (frame->map_info != nullptr) {
+    frame->rel_pc = dex_pc - frame->map_info->start();
+    // Initialize the load bias for this map so subsequent calls
+    // to GetLoadBias() will always return data.
+    frame->map_info->set_load_bias(0);
   } else {
     frame->rel_pc = dex_pc;
     warnings_ |= WARNING_DEX_PC_NOT_IN_MAP;
@@ -97,8 +88,8 @@ void Unwinder::FillInDexFrame() {
 #endif
 }
 
-FrameData* Unwinder::FillInFrame(MapInfo* map_info, Object* object, uint64_t rel_pc,
-                                 uint64_t pc_adjustment) {
+FrameData* Unwinder::FillInFrame(std::shared_ptr<MapInfo>& map_info, Object* /*object*/,
+                                 uint64_t rel_pc, uint64_t pc_adjustment) {
   size_t frame_num = frames_.size();
   frames_.resize(frame_num + 1);
   FrameData* frame = &frames_.at(frame_num);
@@ -112,25 +103,8 @@ FrameData* Unwinder::FillInFrame(MapInfo* map_info, Object* object, uint64_t rel
     return nullptr;
   }
 
-  if (resolve_names_) {
-    frame->map_name = map_info->name();
-    if (embedded_soname_ && map_info->object_start_offset() != 0 && !frame->map_name.empty()) {
-      std::string soname = object->GetSoname();
-      if (!soname.empty()) {
-        std::string map_with_soname;
-        map_with_soname += frame->map_name;
-        map_with_soname += '!';
-        map_with_soname += soname;
-        frame->map_name = SharedString(std::move(map_with_soname));
-      }
-    }
-  }
-  frame->map_object_start_offset = map_info->object_start_offset();
-  frame->map_exact_offset = map_info->offset();
-  frame->map_start = map_info->start();
-  frame->map_end = map_info->end();
-  frame->map_flags = map_info->flags();
-  frame->map_load_bias = object->GetLoadBias();
+  frame->map_info = map_info;
+
   return frame;
 }
 
@@ -234,7 +208,7 @@ void Unwinder::Unwind(const std::vector<std::string>* initial_map_names_to_skip,
         }
       }
 
-      frame = FillInFrame(map_info.get(), object, rel_pc, pc_adjustment);
+      frame = FillInFrame(map_info, object, rel_pc, pc_adjustment);
 
       // Once a frame is added, stop skipping frames.
       initial_map_names_to_skip = nullptr;
@@ -335,18 +309,19 @@ std::string Unwinder::FormatFrame(const FrameData& frame) const {
     data += android::base::StringPrintf("  #%02zu pc %016" PRIx64, frame.num, frame.rel_pc);
   }
 
-  if (frame.map_start == frame.map_end) {
+  auto map_info = frame.map_info;
+  if (map_info == nullptr) {
     // No valid map associated with this frame.
     data += "  <unknown>";
-  } else if (!frame.map_name.empty()) {
+  } else if (!map_info->name().empty()) {
     data += "  ";
-    data += frame.map_name;
+    data += map_info->GetFullName();
   } else {
-    data += android::base::StringPrintf("  <anonymous:%" PRIx64 ">", frame.map_start);
+    data += android::base::StringPrintf("  <anonymous:%" PRIx64 ">", map_info->start());
   }
 
-  if (frame.map_object_start_offset != 0) {
-    data += android::base::StringPrintf(" (offset 0x%" PRIx64 ")", frame.map_object_start_offset);
+  if (map_info != nullptr && map_info->object_start_offset() != 0) {
+    data += android::base::StringPrintf(" (offset 0x%" PRIx64 ")", map_info->object_start_offset());
   }
 
   if (!frame.function_name.empty()) {
@@ -365,7 +340,6 @@ std::string Unwinder::FormatFrame(const FrameData& frame) const {
     data += ')';
   }
 
-  std::shared_ptr<MapInfo> map_info = maps_->Find(frame.map_start);
   if (map_info != nullptr && display_build_id_) {
     std::string build_id = map_info->GetPrintableBuildID();
     if (!build_id.empty()) {
@@ -478,13 +452,7 @@ FrameData Unwinder::BuildFrameFromPcOnly(uint64_t pc, ArchEnum arch, Maps* maps,
   // Copy all the things we need into the frame for symbolization.
   frame.rel_pc = relative_pc;
   frame.pc = pc - pc_adjustment;
-  frame.map_name = map_info->name();
-  frame.map_object_start_offset = map_info->object_start_offset();
-  frame.map_exact_offset = map_info->offset();
-  frame.map_start = map_info->start();
-  frame.map_end = map_info->end();
-  frame.map_flags = map_info->flags();
-  frame.map_load_bias = object->GetLoadBias();
+  frame.map_info = map_info;
 
   if (!resolve_names ||
       !object->GetFunctionName(debug_pc, &frame.function_name, &frame.function_offset)) {

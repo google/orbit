@@ -49,18 +49,7 @@ struct FrameData {
   SharedString function_name;
   uint64_t function_offset = 0;
 
-  SharedString map_name;
-  // The offset from the first map representing the frame. When there are
-  // two maps (read-only and read-execute) this will be the offset from
-  // the read-only map. When there is only one map, this will be the
-  // same as the actual offset of the map and match map_exact_offset.
-  uint64_t map_object_start_offset = 0;
-  // The actual offset from the map where the pc lies.
-  uint64_t map_exact_offset = 0;
-  uint64_t map_start = 0;
-  uint64_t map_end = 0;
-  uint64_t map_load_bias = 0;
-  int map_flags = 0;
+  std::shared_ptr<MapInfo> map_info;
 };
 
 class Unwinder {
@@ -109,11 +98,6 @@ class Unwinder {
   // set to an empty string and the function offset being set to zero.
   void SetResolveNames(bool resolve) { resolve_names_ = resolve; }
 
-  // Enable/disable soname printing the soname for a map name if the elf is
-  // embedded in a file. This is enabled by default.
-  // NOTE: This does nothing unless resolving names is enabled.
-  void SetEmbeddedSoname(bool embedded_soname) { embedded_soname_ = embedded_soname; }
-
   void SetDisplayBuildID(bool display_build_id) { display_build_id_ = display_build_id; }
 
   void SetDexFiles(DexFiles* dex_files);
@@ -146,7 +130,7 @@ class Unwinder {
   }
 
   void FillInDexFrame();
-  FrameData* FillInFrame(MapInfo* map_info, Object* object, uint64_t rel_pc,
+  FrameData* FillInFrame(std::shared_ptr<MapInfo>& map_info, Object* object, uint64_t rel_pc,
                          uint64_t pc_adjustment);
 
   size_t max_frames_;
@@ -157,7 +141,6 @@ class Unwinder {
   JitDebug* jit_debug_ = nullptr;
   DexFiles* dex_files_ = nullptr;
   bool resolve_names_ = true;
-  bool embedded_soname_ = true;
   bool display_build_id_ = false;
   // True if at least one object file is coming from memory and not the related
   // file. This is only true if there is an actual file backing up the object.
