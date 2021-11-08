@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 
+#include <QString>
 #include <filesystem>
 
 #include "OrbitGgp/SshInfo.h"
@@ -28,6 +29,29 @@ TEST(SessionSetupUtils, CredentialsFromSshInfoWorksCorrectly) {
   EXPECT_EQ(std::filesystem::path{info.known_hosts_path.toStdString()},
             credentials.known_hosts_path);
   EXPECT_EQ(info.user.toStdString(), credentials.user);
+}
+
+TEST(SessionSetupUtils, SplitInstanceAndProcessId) {
+  const QString instance = "some/i-nstanc-3/id123";
+  const uint32_t pid = 1234;
+
+  // Correct format: "pid@instance_id", where PID is a uint32_t
+  const QString target_string = QString("%1@%2").arg(QString::number(pid), instance);
+  auto result = SplitInstanceAndProcessIdFromConnectionTarget(target_string);
+  EXPECT_TRUE(result.has_value());
+  if (result.has_value()) {
+    EXPECT_EQ(result.value().first.toStdString(), instance.toStdString());
+    EXPECT_EQ(result.value().second, pid);
+  }
+
+  // Fail-tests for multiple incorrect formats
+  EXPECT_FALSE(SplitInstanceAndProcessIdFromConnectionTarget("no/id/found").has_value());
+  EXPECT_FALSE(
+      SplitInstanceAndProcessIdFromConnectionTarget("invalid_pid@valid/i-nstanc-3/id").has_value());
+  EXPECT_FALSE(SplitInstanceAndProcessIdFromConnectionTarget("").has_value());
+  // Double "@" results in failure as it's ambiguous
+  EXPECT_FALSE(
+      SplitInstanceAndProcessIdFromConnectionTarget("1234@invalid@i-nstanc-3/id").has_value());
 }
 
 }  // namespace orbit_session_setup

@@ -8,6 +8,7 @@
 #include <grpcpp/create_channel.h>
 
 #include <memory>
+#include <optional>
 
 #include "OrbitGgp/SshInfo.h"
 #include "OrbitSsh/Credentials.h"
@@ -16,6 +17,10 @@ namespace orbit_session_setup {
 
 [[nodiscard]] orbit_ssh::Credentials CredentialsFromSshInfo(const orbit_ggp::SshInfo& ssh_info);
 [[nodiscard]] std::shared_ptr<grpc::Channel> CreateGrpcChannel(uint16_t port);
+
+// Split a target given as "<pid>@<instance_id>" into its components
+[[nodiscard]] std::optional<std::pair<QString, uint32_t>>
+SplitInstanceAndProcessIdFromConnectionTarget(const QString& connection_target);
 
 }  // namespace orbit_session_setup
 
