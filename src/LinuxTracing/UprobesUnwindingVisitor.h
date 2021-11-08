@@ -12,12 +12,14 @@
 #include <cstdint>
 #include <optional>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include "LeafFunctionCallManager.h"
 #include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"
 #include "LinuxTracing/TracerListener.h"
+#include "LinuxTracing/UserSpaceInstrumentationAddresses.h"
 #include "OrbitBase/Logging.h"
 #include "PerfEvent.h"
 #include "PerfEventRecords.h"
@@ -41,18 +43,18 @@ namespace orbit_linux_tracing {
 // entering a dynamically instrumented function (e.g., when hitting uprobes).
 class UprobesUnwindingVisitor : public PerfEventVisitor {
  public:
-  explicit UprobesUnwindingVisitor(TracerListener* listener,
-                                   UprobesFunctionCallManager* function_call_manager,
-                                   UprobesReturnAddressManager* uprobes_return_address_manager,
-                                   LibunwindstackMaps* initial_maps,
-                                   LibunwindstackUnwinder* unwinder,
-                                   LeafFunctionCallManager* leaf_function_call_manager)
+  explicit UprobesUnwindingVisitor(
+      TracerListener* listener, UprobesFunctionCallManager* function_call_manager,
+      UprobesReturnAddressManager* uprobes_return_address_manager, LibunwindstackMaps* initial_maps,
+      LibunwindstackUnwinder* unwinder, LeafFunctionCallManager* leaf_function_call_manager,
+      UserSpaceInstrumentationAddresses* user_space_instrumentation_addresses)
       : listener_{listener},
         function_call_manager_{function_call_manager},
         return_address_manager_{uprobes_return_address_manager},
         current_maps_{initial_maps},
         unwinder_{unwinder},
-        leaf_function_call_manager_{leaf_function_call_manager} {
+        leaf_function_call_manager_{leaf_function_call_manager},
+        user_space_instrumentation_addresses_{user_space_instrumentation_addresses} {
     CHECK(listener_ != nullptr);
     CHECK(function_call_manager_ != nullptr);
     CHECK(return_address_manager_ != nullptr);
@@ -102,6 +104,8 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   LibunwindstackMaps* current_maps_;
   LibunwindstackUnwinder* unwinder_;
   LeafFunctionCallManager* leaf_function_call_manager_;
+
+  UserSpaceInstrumentationAddresses* user_space_instrumentation_addresses_;
 
   std::atomic<uint64_t>* unwind_error_counter_ = nullptr;
   std::atomic<uint64_t>* samples_in_uretprobes_counter_ = nullptr;

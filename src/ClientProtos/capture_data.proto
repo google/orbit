@@ -62,6 +62,7 @@ message CallstackInfo {
     kDwarfUnwindingError = 1;
     kFramePointerUnwindingError = 2;
     kInUprobes = 3;
+    kInUserSpaceInstrumentation = 7;
     kCallstackPatchingFailed = 4;
     kStackTopForDwarfUnwindingTooSmall = 5;
     kStackTopDwarfUnwindingError = 6;

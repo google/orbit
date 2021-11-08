@@ -59,16 +59,16 @@ static std::optional<uint64_t> ComputeSamplingPeriodNs(double sampling_frequency
   return std::nullopt;
 }
 
-// TODO(b/194704608,b/204404077): Actually use UserSpaceInstrumentationAddresses across the module.
 TracerImpl::TracerImpl(
     const CaptureOptions& capture_options,
-    std::unique_ptr<UserSpaceInstrumentationAddresses> /*user_space_instrumentation_addresses*/,
+    std::unique_ptr<UserSpaceInstrumentationAddresses> user_space_instrumentation_addresses,
     TracerListener* listener)
     : trace_context_switches_{capture_options.trace_context_switches()},
       target_pid_{orbit_base::ToNativeProcessId(capture_options.pid())},
       unwinding_method_{capture_options.unwinding_method()},
       trace_thread_state_{capture_options.trace_thread_state()},
       trace_gpu_driver_{capture_options.trace_gpu_driver()},
+      user_space_instrumentation_addresses_{std::move(user_space_instrumentation_addresses)},
       listener_{listener} {
   CHECK(listener_ != nullptr);
 
@@ -166,10 +166,12 @@ void TracerImpl::InitUprobesEventVisitor() {
   ORBIT_SCOPE_FUNCTION;
   maps_ = LibunwindstackMaps::ParseMaps(ReadMaps(target_pid_));
   unwinder_ = LibunwindstackUnwinder::Create();
+  return_address_manager_.emplace(user_space_instrumentation_addresses_.get());
   leaf_function_call_manager_ = std::make_unique<LeafFunctionCallManager>(stack_dump_size_);
   uprobes_unwinding_visitor_ = std::make_unique<UprobesUnwindingVisitor>(
-      listener_, &function_call_manager_, &return_address_manager_, maps_.get(), unwinder_.get(),
-      leaf_function_call_manager_.get());
+      listener_, &function_call_manager_, &return_address_manager_.value(), maps_.get(),
+      unwinder_.get(), leaf_function_call_manager_.get(),
+      user_space_instrumentation_addresses_.get());
   uprobes_unwinding_visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(
       &stats_.unwind_error_count, &stats_.samples_in_uretprobes_count);
   event_processor_.AddVisitor(uprobes_unwinding_visitor_.get());
@@ -1383,6 +1385,8 @@ void TracerImpl::Reset() {
   }
   deferred_events_to_process_.clear();
   uprobes_unwinding_visitor_.reset();
+  leaf_function_call_manager_.reset();
+  return_address_manager_.reset();
   switches_states_names_visitor_.reset();
   gpu_event_visitor_.reset();
   event_processor_.ClearVisitors();

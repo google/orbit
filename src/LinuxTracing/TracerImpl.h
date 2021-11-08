@@ -146,6 +146,8 @@ class TracerImpl : public Tracer {
   bool trace_gpu_driver_;
   std::vector<orbit_grpc_protos::TracepointInfo> instrumented_tracepoints_;
 
+  std::unique_ptr<UserSpaceInstrumentationAddresses> user_space_instrumentation_addresses_;
+
   TracerListener* listener_ = nullptr;
 
   std::atomic<bool> stop_run_thread_ = true;
@@ -180,7 +182,7 @@ class TracerImpl : public Tracer {
   std::vector<PerfEvent> deferred_events_to_process_;
 
   UprobesFunctionCallManager function_call_manager_;
-  UprobesReturnAddressManager return_address_manager_;
+  std::optional<UprobesReturnAddressManager> return_address_manager_;
   std::unique_ptr<LibunwindstackMaps> maps_;
   std::unique_ptr<LibunwindstackUnwinder> unwinder_;
   std::unique_ptr<LeafFunctionCallManager> leaf_function_call_manager_;

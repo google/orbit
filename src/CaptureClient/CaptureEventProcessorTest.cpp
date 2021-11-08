@@ -192,6 +192,9 @@ static void ExpectCallstackSamplesEqual(const CallstackEvent& actual_callstack_e
     case Callstack::kInUprobes:
       EXPECT_EQ(actual_callstack.type(), CallstackInfo::kInUprobes);
       break;
+    case Callstack::kInUserSpaceInstrumentation:
+      EXPECT_EQ(actual_callstack.type(), CallstackInfo::kInUserSpaceInstrumentation);
+      break;
     case Callstack::kCallstackPatchingFailed:
       EXPECT_EQ(actual_callstack.type(), CallstackInfo::kCallstackPatchingFailed);
       break;
@@ -248,6 +251,7 @@ TEST(CaptureEventProcessor, CanHandleOneNonCompleteCallstackSample) {
   CanHandleOneCallstackSampleOfType(Callstack::kDwarfUnwindingError);
   CanHandleOneCallstackSampleOfType(Callstack::kFramePointerUnwindingError);
   CanHandleOneCallstackSampleOfType(Callstack::kInUprobes);
+  CanHandleOneCallstackSampleOfType(Callstack::kInUserSpaceInstrumentation);
   CanHandleOneCallstackSampleOfType(Callstack::kCallstackPatchingFailed);
   CanHandleOneCallstackSampleOfType(Callstack::kStackTopDwarfUnwindingError);
   CanHandleOneCallstackSampleOfType(Callstack::kStackTopForDwarfUnwindingTooSmall);
