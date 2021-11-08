@@ -15,6 +15,7 @@
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
 #include <imgui.h>
+#include <stdlib.h>
 
 #include <chrono>
 #include <cinttypes>
@@ -2040,6 +2041,19 @@ void OrbitApp::LoadPreset(const PresetFile& preset_file) {
 
     FireRefreshCallbacks();
   });
+}
+
+void OrbitApp::ShowPresetInExplorer(const PresetFile& preset) {
+  const auto file_exists = orbit_base::FileExists(preset.file_path());
+  if (file_exists.has_error()) {
+    ERROR("Unable to find preset file: %s", file_exists.error().message());
+    return;
+  }
+
+  std::string command = absl::StrFormat("explorer.exe /select,\"%s\"", preset.file_path().string());
+  if (system(command.c_str()) == 0) return;
+
+  ERROR("Unable to show preset file in explorer by running: %s", command);
 }
 
 void OrbitApp::UpdateProcessAndModuleList() {
