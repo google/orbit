@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef LINUX_TRACING_TRACEPOINTS_H_
-#define LINUX_TRACING_TRACEPOINTS_H_
+#ifndef LINUX_TRACING_KERNEL_TRACEPOINTS_H_
+#define LINUX_TRACING_KERNEL_TRACEPOINTS_H_
 
 #include <cstdint>
 
@@ -53,17 +53,28 @@ struct __attribute__((__packed__)) sched_switch_tracepoint {
 
 static_assert(sizeof(sched_switch_tracepoint) == 68);
 
-struct __attribute__((__packed__)) sched_wakeup_tracepoint {
+struct __attribute__((__packed__)) sched_wakeup_tracepoint_fixed {
   tracepoint_common common;
   char comm[16];
   int32_t pid;
   int32_t prio;
-  int32_t success;
-  int32_t target_cpu;
-  char reserved[4];  // These bytes are not documented in the format file.
+
+  // Before kernel version v5.14, the remaining fields are:
+  //   int32_t success;
+  //   int32_t target_cpu;
+  //   char reserved[4];
+  // with the 4-byte padding at the end not documented in the format file.
+  //
+  // From kernel v5.14, the `success` field is removed (also from sched_waking, sched_wakeup_new):
+  // https://github.com/torvalds/linux/commit/58b9987de86cc5f154b5e91923676f952fcf8a93
+  // The padding is also gone. So the remaining fields are only:
+  //   int32_t target_cpu;
+  //
+  // As we don't use any of these last fields, let's only keep the common part in this struct and
+  // not assume a fixed size.
 };
 
-static_assert(sizeof(sched_wakeup_tracepoint) == 44);
+static_assert(sizeof(sched_wakeup_tracepoint_fixed) == 32);
 
 struct __attribute__((__packed__)) amdgpu_cs_ioctl_tracepoint {
   tracepoint_common common;
@@ -94,4 +105,4 @@ struct __attribute__((__packed__)) dma_fence_signaled_tracepoint {
   uint32_t seqno;
 };
 
-#endif  // LINUX_TRACING_TRACEPOINTS_H_
+#endif  // LINUX_TRACING_KERNEL_TRACEPOINTS_H_
