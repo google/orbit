@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>609</width>
+    <width>478</width>
     <height>610</height>
    </rect>
   </property>
@@ -193,7 +193,7 @@
            <item>
             <widget class="QLabel" name="label_2">
              <property name="text">
-              <string>Dynamic Instrumentation Method:</string>
+              <string>Dynamic Instrumentation method:</string>
              </property>
             </widget>
            </item>
