@@ -24,7 +24,6 @@
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "capture.pb.h"
 #include "tracepoint.pb.h"
 
 namespace orbit_capture_client {
@@ -41,7 +40,7 @@ using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::TracepointInfo;
-using orbit_grpc_protos::UnwindingMethod;
+using UnwindingMethod = orbit_grpc_protos::CaptureOptions::UnwindingMethod;
 
 using orbit_base::Future;
 
@@ -140,11 +139,8 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   } else {
     capture_options->set_samples_per_second(samples_per_second);
     capture_options->set_stack_dump_size(stack_dump_size);
-    if (unwinding_method == UnwindingMethod::kFramePointerUnwinding) {
-      capture_options->set_unwinding_method(CaptureOptions::kFramePointers);
-    } else {
-      capture_options->set_unwinding_method(CaptureOptions::kDwarf);
-    }
+    CHECK(unwinding_method != CaptureOptions::kUndefined);
+    capture_options->set_unwinding_method(unwinding_method);
   }
 
   capture_options->set_collect_memory_info(collect_memory_info);

@@ -12,8 +12,8 @@
 #include <QWidget>
 #include <memory>
 
-#include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
+#include "capture.pb.h"
 #include "ui_CaptureOptionsDialog.h"
 
 namespace orbit_qt {
@@ -49,8 +49,8 @@ class CaptureOptionsDialog : public QDialog {
   [[nodiscard]] bool GetEnableSampling() const;
   void SetSamplingPeriodMs(double sampling_period_ms);
   [[nodiscard]] double GetSamplingPeriodMs() const;
-  void SetUnwindingMethod(orbit_grpc_protos::UnwindingMethod unwinding_method);
-  [[nodiscard]] orbit_grpc_protos::UnwindingMethod GetUnwindingMethod() const;
+  void SetUnwindingMethod(orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method);
+  [[nodiscard]] orbit_grpc_protos::CaptureOptions::UnwindingMethod GetUnwindingMethod() const;
   void SetCollectSchedulerInfo(bool collect_scheduler_info);
   [[nodiscard]] bool GetCollectSchedulerInfo() const;
   void SetCollectThreadStates(bool collect_thread_state);

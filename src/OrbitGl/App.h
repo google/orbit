@@ -397,7 +397,7 @@ class OrbitApp final : public DataViewFactory,
   void SetEnableUserSpaceInstrumentation(bool enable);
   void SetSamplesPerSecond(double samples_per_second);
   void SetStackDumpSize(uint16_t stack_dump_size);
-  void SetUnwindingMethod(orbit_grpc_protos::UnwindingMethod unwinding_method);
+  void SetUnwindingMethod(orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method);
   void SetMaxLocalMarkerDepthPerCommandBuffer(uint64_t max_local_marker_depth_per_command_buffer);
 
   void SetCollectMemoryInfo(bool collect_memory_info) {
