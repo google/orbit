@@ -211,16 +211,15 @@ void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
 
     QMenu context_menu(tr("ContextMenu"), this);
     std::vector<std::unique_ptr<QAction>> actions;
-    size_t action_index = 0;
     for (size_t i = 0; i < menu_with_grouping.size(); ++i) {
       if (i > 0) context_menu.addSeparator();
 
       for (const std::string& action_name : menu_with_grouping[i]) {
         actions.push_back(std::make_unique<QAction>(QString::fromStdString(action_name)));
-        connect(actions[action_index].get(), &QAction::triggered,
+        size_t action_index = actions.size();
+        connect(actions.back().get(), &QAction::triggered,
                 [this, action_name, action_index] { OnMenuClicked(action_name, action_index); });
-        context_menu.addAction(actions[action_index].get());
-        ++action_index;
+        context_menu.addAction(actions.back().get());
       }
     }
 
