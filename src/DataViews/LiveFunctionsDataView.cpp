@@ -242,15 +242,11 @@ std::vector<std::vector<std::string>> LiveFunctionsDataView::GetContextMenuWithG
     }
   }
 
-  std::vector<std::string> action_group;
-  if (enable_select) action_group.emplace_back(kMenuActionSelect);
-  if (enable_unselect) action_group.emplace_back(kMenuActionUnselect);
-  if (enable_disassembly) action_group.emplace_back(kMenuActionDisassembly);
-  if (enable_source_code) action_group.emplace_back(kMenuActionSourceCode);
-  if (enable_enable_frame_track) action_group.emplace_back(kMenuActionEnableFrameTrack);
-  if (enable_disable_frame_track) action_group.emplace_back(kMenuActionDisableFrameTrack);
-  if (enable_iterator) action_group.emplace_back(kMenuActionIterate);
+  std::vector<std::vector<std::string>> menu =
+      DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);
 
+  std::vector<std::string> action_group;
+  if (enable_iterator) action_group.emplace_back(kMenuActionIterate);
   // For now, these actions only make sense when one function is selected,
   // so we don't show them otherwise.
   if (selected_indices.size() == 1) {
@@ -261,9 +257,15 @@ std::vector<std::vector<std::string>> LiveFunctionsDataView::GetContextMenuWithG
                                                kMenuActionJumpToMin, kMenuActionJumpToMax});
     }
   }
+  menu.insert(menu.begin(), action_group);
 
-  std::vector<std::vector<std::string>> menu =
-      DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);
+  action_group.clear();
+  if (enable_select) action_group.emplace_back(kMenuActionSelect);
+  if (enable_unselect) action_group.emplace_back(kMenuActionUnselect);
+  if (enable_disassembly) action_group.emplace_back(kMenuActionDisassembly);
+  if (enable_source_code) action_group.emplace_back(kMenuActionSourceCode);
+  if (enable_enable_frame_track) action_group.emplace_back(kMenuActionEnableFrameTrack);
+  if (enable_disable_frame_track) action_group.emplace_back(kMenuActionDisableFrameTrack);
   menu.insert(menu.begin(), action_group);
 
   return menu;
