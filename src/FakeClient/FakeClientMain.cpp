@@ -288,7 +288,8 @@ int main(int argc, char* argv[]) {
   absl::ParseCommandLine(argc, argv);
 
   LOG("Starting Client");
-  FAIL_IF(absl::GetFlag(FLAGS_duration) == 0, "Specified a zero-length duration");
+  uint32_t duration_s = absl::GetFlag(FLAGS_duration);
+  FAIL_IF(duration_s == 0, "Specified a zero-length duration");
   FAIL_IF((absl::GetFlag(FLAGS_instrument_path).empty()) !=
               (absl::GetFlag(FLAGS_instrument_offset) == 0),
           "Binary path and offset of the function to instrument need to be specified together");
@@ -438,8 +439,6 @@ int main(int argc, char* argv[]) {
       std::move(capture_event_processor));
   LOG("Asked to start capture");
 
-  uint32_t duration_s = absl::GetFlag(FLAGS_duration);
-  FAIL_IF(duration_s == 0, "Specified a zero-length duration");
   absl::Time start_time = absl::Now();
   while (!exit_requested && absl::Now() < start_time + absl::Seconds(duration_s)) {
     std::this_thread::sleep_for(std::chrono::milliseconds{100});
