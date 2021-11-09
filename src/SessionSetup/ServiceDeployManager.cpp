@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "ClientFlags/ClientFlags.h"
+#include "MetricsUploader/ScopedMetric.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Promise.h"
@@ -560,9 +561,24 @@ void ServiceDeployManager::StartWatchdog() {
   ssh_watchdog_timer_.start(kSshWatchdogInterval);
 }
 
-outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::Exec() {
+outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::Exec(
+    orbit_metrics_uploader::MetricsUploader* metrics_uploader) {
+  orbit_metrics_uploader::ScopedMetric connect_metric{
+      metrics_uploader, orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_INSTANCE_CONNECT};
+
   outcome::result<GrpcPort> result = outcome::success(GrpcPort{0});
   DeferToBackgroundThreadAndWait(this, [&]() { result = ExecImpl(); });
+
+  if (!result.has_value()) {
+    if (result.error() == make_error_code(Error::kUserCanceledServiceDeployment)) {
+      connect_metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_CANCELLED);
+      LOG("OrbitService deployment has been aborted by the user");
+    } else {
+      connect_metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_INTERNAL_ERROR);
+      LOG("Deployment successful, grpc_port: %d", result.value().grpc_port);
+    }
+  }
+
   return result;
 }
 
