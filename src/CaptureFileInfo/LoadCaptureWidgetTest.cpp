@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 
 #include <QApplication>
+#include <QLineEdit>
 #include <QPushButton>
 #include <QRadioButton>
 #include <QTableView>
@@ -27,6 +28,8 @@ TEST(LoadCaptureWidget, IsActiveSetActive) {
 
   auto* radio_button = widget.findChild<QRadioButton*>("radioButton");
   ASSERT_TRUE(radio_button != nullptr);
+  auto* capture_filter_line_edit = widget.findChild<QLineEdit*>("captureFilterLineEdit");
+  ASSERT_TRUE(capture_filter_line_edit != nullptr);
   auto* select_file_button = widget.findChild<QPushButton*>("selectFileButton");
   ASSERT_TRUE(select_file_button != nullptr);
   auto* table_view = widget.findChild<QTableView*>("tableView");
@@ -40,6 +43,7 @@ TEST(LoadCaptureWidget, IsActiveSetActive) {
 
   // default is active
   EXPECT_TRUE(widget.IsActive());
+  EXPECT_TRUE(capture_filter_line_edit->isEnabled());
   EXPECT_TRUE(select_file_button->isEnabled());
   EXPECT_TRUE(table_view->isEnabled());
   // radio button is always enabled
@@ -48,6 +52,7 @@ TEST(LoadCaptureWidget, IsActiveSetActive) {
   // set active false
   widget.SetActive(false);
   EXPECT_FALSE(widget.IsActive());
+  EXPECT_FALSE(capture_filter_line_edit->isEnabled());
   EXPECT_FALSE(select_file_button->isEnabled());
   EXPECT_FALSE(table_view->isEnabled());
   EXPECT_FALSE(radio_button->isChecked());
@@ -57,6 +62,7 @@ TEST(LoadCaptureWidget, IsActiveSetActive) {
   // set active true
   widget.SetActive(true);
   EXPECT_TRUE(widget.IsActive());
+  EXPECT_TRUE(capture_filter_line_edit->isEnabled());
   EXPECT_TRUE(select_file_button->isEnabled());
   EXPECT_TRUE(table_view->isEnabled());
   EXPECT_TRUE(radio_button->isChecked());
@@ -108,6 +114,33 @@ TEST(LoadCaptureWidget, SelectFromTableView) {
   QTest::mouseDClick(table_view->viewport(), Qt::MouseButton::LeftButton,
                      Qt::KeyboardModifier::NoModifier, QPoint{x_pos, y_pos});
   EXPECT_TRUE(confirm_happened);
+}
+
+TEST(LoadCaptureWidget, EditCaptureFileFilter) {
+  QCoreApplication::setOrganizationName(kOrgName);
+  QCoreApplication::setApplicationName("LoadCaptureWidget.EditCaptureFileFilter");
+
+  const std::filesystem::path test_file_path0{orbit_test::GetTestdataDir() / "test_capture.orbit"};
+  const std::filesystem::path test_file_path1{orbit_test::GetTestdataDir() / "test_file.txt"};
+
+  Manager manager{};
+  manager.Clear();
+  manager.AddOrTouchCaptureFile(test_file_path0);
+  manager.AddOrTouchCaptureFile(test_file_path1);
+
+  LoadCaptureWidget widget{};
+  auto* table_view = widget.findChild<QTableView*>("tableView");
+  ASSERT_TRUE(table_view != nullptr);
+  ASSERT_EQ(table_view->model()->rowCount(), 2);
+
+  auto* capture_filter_line_edit = widget.findChild<QLineEdit*>("captureFilterLineEdit");
+  QTest::keyClicks(capture_filter_line_edit, "cap");
+  ASSERT_EQ(table_view->model()->rowCount(), 1);
+  EXPECT_EQ(table_view->model()->index(0, 0).data().toString().toStdString(),
+            test_file_path0.filename().string());
+
+  QTest::keyClicks(capture_filter_line_edit, "123");
+  ASSERT_EQ(table_view->model()->rowCount(), 0);
 }
 
 }  // namespace orbit_capture_file_info

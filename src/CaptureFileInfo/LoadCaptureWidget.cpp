@@ -37,6 +37,7 @@ LoadCaptureWidget::LoadCaptureWidget(QWidget* parent)
 
   proxy_item_model_.setSourceModel(&item_model_);
   proxy_item_model_.setSortRole(Qt::DisplayRole);
+  proxy_item_model_.setFilterCaseSensitivity(Qt::CaseInsensitive);
 
   ui_->setupUi(this);
   ui_->tableView->setModel(&proxy_item_model_);
@@ -83,6 +84,9 @@ LoadCaptureWidget::LoadCaptureWidget(QWidget* parent)
 
   QObject::connect(ui_->tableView, &QTableView::doubleClicked, this,
                    [this]() { emit SelectionConfirmed(); });
+
+  QObject::connect(ui_->captureFilterLineEdit, &QLineEdit::textChanged, &proxy_item_model_,
+                   &QSortFilterProxyModel::setFilterFixedString);
 }
 
 bool LoadCaptureWidget::IsActive() const { return ui_->contentFrame->isEnabled(); }
