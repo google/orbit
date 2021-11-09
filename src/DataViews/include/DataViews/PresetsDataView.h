@@ -72,6 +72,7 @@ class PresetsDataView : public DataView {
 
   static const std::string kMenuActionLoad;
   static const std::string kMenuActionDelete;
+  static const std::string kMenuActionShowInExplorer;
 
  private:
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;

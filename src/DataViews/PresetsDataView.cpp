@@ -150,6 +150,7 @@ void PresetsDataView::DoSort() {
 
 const std::string PresetsDataView::kMenuActionLoad = "Load Preset";
 const std::string PresetsDataView::kMenuActionDelete = "Delete Preset";
+const std::string PresetsDataView::kMenuActionShowInExplorer = "Show in Explorer";
 
 std::vector<std::vector<std::string>> PresetsDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
@@ -161,6 +162,7 @@ std::vector<std::vector<std::string>> PresetsDataView::GetContextMenuWithGroupin
       action_group.emplace_back(kMenuActionLoad);
     }
     action_group.emplace_back(kMenuActionDelete);
+    action_group.emplace_back(kMenuActionShowInExplorer);
   }
 
   std::vector<std::vector<std::string>> menu =
@@ -198,6 +200,13 @@ void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
       app_->SendErrorToUi("Error deleting preset",
                           absl::StrFormat("Could not delete preset \"%s\".", filename));
     }
+
+  } else if (action == kMenuActionShowInExplorer) {
+    if (item_indices.size() != 1) {
+      return;
+    }
+    const PresetFile& preset = GetPreset(item_indices[0]);
+    app_->ShowPresetInExplorer(preset);
 
   } else {
     DataView::OnContextMenu(action, menu_index, item_indices);
