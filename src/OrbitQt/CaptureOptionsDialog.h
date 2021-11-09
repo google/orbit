@@ -59,8 +59,10 @@ class CaptureOptionsDialog : public QDialog {
   [[nodiscard]] bool GetTraceGpuSubmissions() const;
   void SetEnableApi(bool enable_api);
   [[nodiscard]] bool GetEnableApi() const;
-  void SetEnableUserSpaceInstrumentation(bool enable);
-  [[nodiscard]] bool GetEnableUserSpaceInstrumentation() const;
+  void SetDynamicInstrumentationMethod(
+      orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod method);
+  [[nodiscard]] orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod
+  GetDynamicInstrumentationMethod() const;
   void SetEnableIntrospection(bool enable_introspection);
   [[nodiscard]] bool GetEnableIntrospection() const;
 

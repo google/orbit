@@ -205,16 +205,6 @@
                <height>0</height>
               </size>
              </property>
-             <item>
-              <property name="text">
-               <string>Kernel (uprobes)</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Orbit</string>
-              </property>
-             </item>
             </widget>
            </item>
            <item>

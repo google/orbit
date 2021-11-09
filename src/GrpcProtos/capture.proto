@@ -53,7 +53,12 @@ message CaptureOptions {
   }
   UnwindingMethod unwinding_method = 4;
 
-  bool enable_user_space_instrumentation = 17;
+  enum DynamicInstrumentationMethod {
+    kDynamicInstrumentationMethodUnspecified = 0;
+    kKernelUprobes = 1;
+    kOrbit = 2;
+  }
+  DynamicInstrumentationMethod dynamic_instrumentation_method = 17;
 
   repeated InstrumentedFunction instrumented_functions = 5;
 
