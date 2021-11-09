@@ -64,7 +64,7 @@ const Project kTestProject2{
 
 const Instance kTestInstance1{
     "Test Instance 1",                                          /* display_name */
-    "test_instance_1_id",                                       /* id */
+    "edge/somewhere/test_instance_1_id",                        /* id */
     "1.1.1.10",                                                 /* ip_address */
     QDateTime::fromString("2020-01-01T00:42:42Z", Qt::ISODate), /* last_updated */
     "test_owner_1@",                                            /* owner */
@@ -74,7 +74,7 @@ const Instance kTestInstance1{
 
 const Instance kTestInstance2{
     "Test Instance 2",                                          /* display_name */
-    "test_instance_2_id",                                       /* id */
+    "edge/somewhere/test_instance_2_id",                        /* id */
     "2.2.2.20",                                                 /* ip_address */
     QDateTime::fromString("2020-02-02T00:42:42Z", Qt::ISODate), /* last_updated */
     "test_owner_2@",                                            /* owner */
@@ -84,7 +84,7 @@ const Instance kTestInstance2{
 
 const Instance kTestInstance3{
     "Test Instance 3",                                          /* display_name */
-    "test_instance_3_id",                                       /* id */
+    "edge/somewhere/test_instance_3_id",                        /* id */
     "3.3.3.30",                                                 /* ip_address */
     QDateTime::fromString("2020-03-03T00:43:43Z", Qt::ISODate), /* last_updated */
     "test_owner_3@",                                            /* owner */
@@ -124,6 +124,7 @@ class RetrieveInstancesWidgetTest : public testing::Test {
     QCoreApplication::setOrganizationName(kOrganizationName);
     QCoreApplication::setApplicationName(kApplicationName);
     QSettings settings;
+    settings.setFallbacksEnabled(false);
     settings.clear();
 
     ASSERT_NE(filter_line_edit_, nullptr);
@@ -371,7 +372,7 @@ TEST_F(RetrieveInstancesWidgetTestStarted, ProjectChangeSuccessful) {
 
   VerifyLastLoadingReturnedInstanceList(kTestInstancesProject1);
   VerifyAndClearSignalsOfSuccessfulLoadingCycle();
-  EXPECT_EQ(LoadProjectFromPersistentStorage(), kTestProject1);
+  EXPECT_EQ(LoadLastSelectedProjectFromPersistentStorage(), kTestProject1);
   EXPECT_EQ(project_combo_box_->currentIndex(), 1);
 
   // The combobox content looks like the following (> marks selection):
@@ -389,7 +390,7 @@ TEST_F(RetrieveInstancesWidgetTestStarted, ProjectChangeSuccessful) {
 
   VerifyLastLoadingReturnedInstanceList(kTestInstancesProject1);
   VerifyAndClearSignalsOfSuccessfulLoadingCycle();
-  EXPECT_EQ(LoadProjectFromPersistentStorage(), std::nullopt);
+  EXPECT_EQ(LoadLastSelectedProjectFromPersistentStorage(), std::nullopt);
   EXPECT_EQ(project_combo_box_->currentIndex(), 0);
 
   // The combobox content looks like the following (> marks selection):
@@ -407,7 +408,7 @@ TEST_F(RetrieveInstancesWidgetTestStarted, ProjectChangeSuccessful) {
 
   VerifyLastLoadingReturnedInstanceList(kTestInstancesProject2);
   VerifyAndClearSignalsOfSuccessfulLoadingCycle();
-  EXPECT_EQ(LoadProjectFromPersistentStorage(), kTestProject2);
+  EXPECT_EQ(LoadLastSelectedProjectFromPersistentStorage(), kTestProject2);
   EXPECT_EQ(project_combo_box_->currentIndex(), 2);
 
   // The combobox content looks like the following (> marks selection):
@@ -430,7 +431,7 @@ TEST_F(RetrieveInstancesWidgetTestStarted, ProjectChangeFailed) {
                             InstanceListScope(InstanceListScope::kOnlyOwnInstances)))
       .WillOnce(Return(Future<ErrorMessageOr<QVector<Instance>>>(ErrorMessage{"error"})));
 
-  EXPECT_EQ(LoadProjectFromPersistentStorage(), std::nullopt);
+  EXPECT_EQ(LoadLastSelectedProjectFromPersistentStorage(), std::nullopt);
   EXPECT_EQ(project_combo_box_->currentIndex(), 0);
 
   project_combo_box_->setCurrentIndex(1);
@@ -440,7 +441,7 @@ TEST_F(RetrieveInstancesWidgetTestStarted, ProjectChangeFailed) {
   QCoreApplication::exec();
 
   VerifyAndClearSignalsOfFailedLoadingCycle();
-  EXPECT_EQ(LoadProjectFromPersistentStorage(), std::nullopt);
+  EXPECT_EQ(LoadLastSelectedProjectFromPersistentStorage(), std::nullopt);
   EXPECT_EQ(project_combo_box_->currentIndex(), 0);
 
   // The combobox content looks like the following (> marks selection):
