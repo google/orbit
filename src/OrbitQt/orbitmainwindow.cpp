@@ -257,6 +257,7 @@ void OrbitMainWindow::SetupMainWindow() {
   DataViewFactory* data_view_factory = app_.get();
 
   ui->setupUi(this);
+  RestoreMainWindowGeometry();
 
   ui->splitter_2->setSizes({5000, 5000});
 
@@ -573,6 +574,18 @@ void OrbitMainWindow::SaveCurrentTabLayoutAsDefaultInMemory() {
     layout.current_index = tab_widget->currentIndex();
     default_tab_layout_[tab_widget] = layout;
   }
+}
+
+void OrbitMainWindow::SaveMainWindowGeometry() {
+  QSettings settings;
+  settings.setValue(kMainWindowGeometrySettingKey, saveGeometry());
+  settings.setValue(kMainWindowStateSettingKey, saveState());
+}
+
+void OrbitMainWindow::RestoreMainWindowGeometry() {
+  QSettings settings;
+  restoreGeometry(settings.value(kMainWindowGeometrySettingKey).toByteArray());
+  restoreState(settings.value(kMainWindowStateSettingKey).toByteArray());
 }
 
 void OrbitMainWindow::CreateTabBarContextMenu(QTabWidget* tab_widget, int tab_index,
@@ -1065,6 +1078,8 @@ const QString OrbitMainWindow::kLimitLocalMarkerDepthPerCommandBufferSettingsKey
     "LimitLocalMarkerDepthPerCommandBuffer"};
 const QString OrbitMainWindow::kMaxLocalMarkerDepthPerCommandBufferSettingsKey{
     "MaxLocalMarkerDepthPerCommandBuffer"};
+const QString OrbitMainWindow::kMainWindowGeometrySettingKey{"MainWindowGeometry"};
+const QString OrbitMainWindow::kMainWindowStateSettingKey{"MainWindowState"};
 
 constexpr double kCallstackSamplingPeriodMsDefaultValue = 1.0;
 constexpr UnwindingMethod kCallstackUnwindingMethodDefaultValue = CaptureOptions::kDwarf;
@@ -1425,6 +1440,8 @@ bool OrbitMainWindow::ConfirmExit() {
 }
 
 void OrbitMainWindow::Exit(int return_code) {
+  SaveMainWindowGeometry();
+
   if (app_->IsCapturing() || app_->IsLoadingCapture()) {
     // We need for the capture to clean up - exit as soon as this is done
     app_->SetCaptureFailedCallback([this, return_code] { Exit(return_code); });
