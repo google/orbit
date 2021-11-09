@@ -1117,7 +1117,7 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
                  static_cast<int>(kDynamicInstrumentationMethodDefaultValue))
           .toInt());
   if (instrumentation_method != CaptureOptions::kKernelUprobes &&
-      instrumentation_method != CaptureOptions::kOrbit) {
+      instrumentation_method != CaptureOptions::kUserSpaceInstrumentation) {
     instrumentation_method = kDynamicInstrumentationMethodDefaultValue;
   }
   app_->SetDynamicInstrumentationMethod(instrumentation_method);
@@ -1177,7 +1177,7 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
                  static_cast<int>(kDynamicInstrumentationMethodDefaultValue))
           .toInt());
   if (instrumentation_method != CaptureOptions::kKernelUprobes &&
-      instrumentation_method != CaptureOptions::kOrbit) {
+      instrumentation_method != CaptureOptions::kUserSpaceInstrumentation) {
     instrumentation_method = kDynamicInstrumentationMethodDefaultValue;
   }
   dialog.SetDynamicInstrumentationMethod(instrumentation_method);

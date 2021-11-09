@@ -181,7 +181,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   capture_options->set_enable_api(enable_api);
   capture_options->set_enable_introspection(enable_introspection);
   CHECK(dynamic_instrumentation_method == CaptureOptions::kKernelUprobes ||
-        dynamic_instrumentation_method == CaptureOptions::kOrbit);
+        dynamic_instrumentation_method == CaptureOptions::kUserSpaceInstrumentation);
   capture_options->set_dynamic_instrumentation_method(dynamic_instrumentation_method);
 
   auto api_functions = FindApiFunctions(module_manager);

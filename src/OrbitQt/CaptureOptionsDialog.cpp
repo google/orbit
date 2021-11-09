@@ -36,8 +36,8 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
                                         static_cast<int>(CaptureOptions::kFramePointers));
   ui_->dynamicInstrumentationMethodComboBox->addItem(
       "Kernel (Uprobes)", static_cast<int>(CaptureOptions::kKernelUprobes));
-  ui_->dynamicInstrumentationMethodComboBox->addItem("Orbit",
-                                                     static_cast<int>(CaptureOptions::kOrbit));
+  ui_->dynamicInstrumentationMethodComboBox->addItem(
+      "Orbit", static_cast<int>(CaptureOptions::kUserSpaceInstrumentation));
   if (!absl::GetFlag(FLAGS_devmode)) {
     // TODO(b/198748597): Don't hide samplingCheckBox once disabling sampling completely is exposed.
     ui_->samplingCheckBox->hide();

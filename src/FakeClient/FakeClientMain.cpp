@@ -288,13 +288,14 @@ int main(int argc, char* argv[]) {
   bool instrument_function = !file_path.empty() && file_offset != 0;
   uint64_t function_size = absl::GetFlag(FLAGS_instrument_size);
   DynamicInstrumentationMethod instrumentation_method =
-      absl::GetFlag(FLAGS_user_space_instrumentation) ? CaptureOptions::kOrbit
+      absl::GetFlag(FLAGS_user_space_instrumentation) ? CaptureOptions::kUserSpaceInstrumentation
                                                       : CaptureOptions::kKernelUprobes;
-  LOG("user_space_instrumentation=%d", instrumentation_method == CaptureOptions::kOrbit);
+  LOG("user_space_instrumentation=%d",
+      instrumentation_method == CaptureOptions::kUserSpaceInstrumentation);
   if (instrument_function) {
     LOG("file_path=%s", file_path);
     LOG("file_offset=%#x", file_offset);
-    if (instrumentation_method == CaptureOptions::kOrbit) {
+    if (instrumentation_method == CaptureOptions::kUserSpaceInstrumentation) {
       FAIL_IF(function_size == 0, "User space instrumentation requires the function size");
       LOG("function_size=%d", function_size);
     }
