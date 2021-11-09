@@ -427,7 +427,6 @@ int main(int argc, char* argv[]) {
       break;
     default:
       UNREACHABLE();
-      break;
   }
 
   auto capture_outcome_future = capture_client.Capture(
