@@ -3,9 +3,9 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
-#include <qvector.h>
 
 #include <QString>
+#include <QVector>
 
 #include "OrbitGgp/Project.h"
 #include "TestUtils/TestUtils.h"
