@@ -29,8 +29,8 @@ class LiveFunctionsDataView : public DataView {
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnCount; }
-  std::vector<std::string> GetContextMenu(int clicked_index,
-                                          const std::vector<int>& selected_indices) override;
+  std::vector<std::vector<std::string>> GetContextMenuWithGrouping(
+      int clicked_index, const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
   // As we allow single selection on Live tab, this method returns either an empty vector or a
   // single-value vector.
@@ -80,15 +80,15 @@ class LiveFunctionsDataView : public DataView {
 
   static const std::string kMenuActionSelect;
   static const std::string kMenuActionUnselect;
+  static const std::string kMenuActionDisassembly;
+  static const std::string kMenuActionSourceCode;
+  static const std::string kMenuActionEnableFrameTrack;
+  static const std::string kMenuActionDisableFrameTrack;
+  static const std::string kMenuActionIterate;
   static const std::string kMenuActionJumpToFirst;
   static const std::string kMenuActionJumpToLast;
   static const std::string kMenuActionJumpToMin;
   static const std::string kMenuActionJumpToMax;
-  static const std::string kMenuActionDisassembly;
-  static const std::string kMenuActionSourceCode;
-  static const std::string kMenuActionIterate;
-  static const std::string kMenuActionEnableFrameTrack;
-  static const std::string kMenuActionDisableFrameTrack;
 
  private:
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;

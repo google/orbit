@@ -27,6 +27,7 @@ using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::CheckSingleAction;
 using orbit_data_views::ContextMenuEntry;
+using orbit_data_views::FlattenContextMenuWithGrouping;
 
 namespace {
 struct FunctionsDataViewTest : public testing::Test {
@@ -357,23 +358,6 @@ TEST_F(FunctionsDataViewTest, AddressColumnShowsAddress) {
   EXPECT_EQ(view_.GetValue(0, 4).substr(2), absl::StrFormat("%x", functions_[0].address()));
 }
 
-TEST_F(FunctionsDataViewTest, CommonContextMenuEntriesArePresent) {
-  // This functionality is not tested in this test case.
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
-      .Times(testing::AnyNumber())
-      .WillRepeatedly(testing::Return(false));
-
-  // This functionality is not tested in this test case.
-  EXPECT_CALL(app_, IsFrameTrackEnabled)
-      .Times(testing::AnyNumber())
-      .WillRepeatedly(testing::Return(false));
-
-  view_.AddFunctions({&functions_[0], &functions_[1], &functions_[2]});
-
-  EXPECT_THAT(view_.GetContextMenu(0, {0}),
-              testing::IsSupersetOf({"Copy Selection", "Export to CSV"}));
-}
-
 TEST_F(FunctionsDataViewTest, ContextMenuEntriesChangeOnFunctionState) {
   std::array<bool, 3> is_function_selected = {true, true, false};
   EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
@@ -396,7 +380,8 @@ TEST_F(FunctionsDataViewTest, ContextMenuEntriesChangeOnFunctionState) {
   view_.AddFunctions({&functions_[0], &functions_[1], &functions_[2]});
 
   auto verify_context_menu_action_availability = [&](std::vector<int> selected_indices) {
-    std::vector<std::string> context_menu = view_.GetContextMenu(0, selected_indices);
+    std::vector<std::string> context_menu =
+        FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, selected_indices));
 
     // Common actions should always be available.
     CheckSingleAction(context_menu, "Copy Selection", ContextMenuEntry::kEnabled);
@@ -458,7 +443,8 @@ TEST_F(FunctionsDataViewTest, GenericDataExportFunctionShowCorrectData) {
 
   view_.AddFunctions({&functions_[0]});
 
-  std::vector<std::string> context_menu = view_.GetContextMenu(0, {0});
+  std::vector<std::string> context_menu =
+      FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
 
   // Copy Selection
   {
