@@ -43,7 +43,12 @@ LoadCaptureWidget::LoadCaptureWidget(QWidget* parent)
   ui_->tableView->setSortingEnabled(true);
   ui_->tableView->sortByColumn(static_cast<int>(ItemModel::Column::kLastUsed),
                                Qt::SortOrder::DescendingOrder);
-  ui_->tableView->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+  ui_->tableView->horizontalHeader()->setSectionResizeMode(
+      static_cast<int>(ItemModel::Column::kFilename), QHeaderView::Stretch);
+  ui_->tableView->horizontalHeader()->setSectionResizeMode(
+      static_cast<int>(ItemModel::Column::kLastUsed), QHeaderView::ResizeToContents);
+  ui_->tableView->horizontalHeader()->setSectionResizeMode(
+      static_cast<int>(ItemModel::Column::kCreated), QHeaderView::ResizeToContents);
   ui_->tableView->verticalHeader()->setDefaultSectionSize(kRowHeight);
 
   // The following is to make the radiobutton behave as if it was part of an exclusive button group

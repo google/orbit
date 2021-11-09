@@ -106,10 +106,10 @@ SessionSetupDialog::SessionSetupDialog(SshConnectionArtifacts* ssh_connection_ar
   ui_->processesTableView->sortByColumn(static_cast<int>(ProcessItemModel::Column::kCpu),
                                         Qt::DescendingOrder);
 
-  ui_->processesTableView->horizontalHeader()->resizeSection(
-      static_cast<int>(ProcessItemModel::Column::kPid), 60);
-  ui_->processesTableView->horizontalHeader()->resizeSection(
-      static_cast<int>(ProcessItemModel::Column::kCpu), 60);
+  ui_->processesTableView->horizontalHeader()->setSectionResizeMode(
+      static_cast<int>(ProcessItemModel::Column::kPid), QHeaderView::ResizeToContents);
+  ui_->processesTableView->horizontalHeader()->setSectionResizeMode(
+      static_cast<int>(ProcessItemModel::Column::kCpu), QHeaderView::ResizeToContents);
   ui_->processesTableView->horizontalHeader()->setSectionResizeMode(
       static_cast<int>(ProcessItemModel::Column::kName), QHeaderView::Stretch);
   ui_->processesTableView->verticalHeader()->setDefaultSectionSize(kProcessesRowHeight);
