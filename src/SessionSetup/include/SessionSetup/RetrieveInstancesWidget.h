@@ -50,6 +50,7 @@ class RetrieveInstancesWidget : public QWidget {
       RetrieveInstances::LoadProjectsAndInstancesResult initial_load_result);
   void OnReloadButtonClicked();
   void OnProjectComboBoxCurrentIndexChanged();
+  void OnAllCheckboxClicked();
 
   std::unique_ptr<Ui::RetrieveInstancesWidget> ui_;
   std::shared_ptr<MainThreadExecutor> main_thread_executor_;

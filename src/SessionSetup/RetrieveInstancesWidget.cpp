@@ -52,6 +52,8 @@ RetrieveInstancesWidget::RetrieveInstancesWidget(RetrieveInstances* retrieve_ins
                    &RetrieveInstancesWidget::OnReloadButtonClicked);
   QObject::connect(ui_->projectComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
                    &RetrieveInstancesWidget::OnProjectComboBoxCurrentIndexChanged);
+  QObject::connect(ui_->allCheckBox, &QCheckBox::clicked, this,
+                   &RetrieveInstancesWidget::OnAllCheckboxClicked);
 }
 
 void RetrieveInstancesWidget::SetupStateMachine() {
@@ -229,6 +231,28 @@ void RetrieveInstancesWidget::OnProjectComboBoxCurrentIndexChanged() {
               }
 
               OnInstancesLoadingReturned(load_result);
+            });
+}
+
+void RetrieveInstancesWidget::OnAllCheckboxClicked() {
+  InstanceListScope selected_scope = GetSelectedInstancesScope();
+
+  emit LoadingStarted();
+  retrieve_instances_->LoadInstances(GetSelectedProject(), selected_scope)
+      .Then(main_thread_executor_.get(),
+            [widget = QPointer<RetrieveInstancesWidget>(this),
+             selected_scope](const ErrorMessageOr<QVector<Instance>>& load_result) {
+              if (widget == nullptr) return;
+
+              if (load_result.has_value()) {
+                SaveInstancesScopeToPersistentStorage(selected_scope);
+              } else {
+                // reset to the value before (value saved in PersistenStorage)
+                widget->ui_->allCheckBox->setChecked(LoadInstancesScopeFromPersistentStorage() ==
+                                                     InstanceListScope::kAllReservedInstances);
+              }
+
+              widget->OnInstancesLoadingReturned(load_result);
             });
 }
 

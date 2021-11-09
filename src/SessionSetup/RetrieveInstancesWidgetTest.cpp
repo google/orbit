@@ -91,7 +91,19 @@ const Instance kTestInstance3{
     "IN_USE",                                                   /* state */
 };
 
+const Instance kTestInstance4{
+    "Test Instance 4",                                          /* display_name */
+    "edge/somewhere/test_instance_4_id",                        /* id */
+    "4.4.4.40",                                                 /* ip_address */
+    QDateTime::fromString("2020-04-04T00:44:44Z", Qt::ISODate), /* last_updated */
+    "test_owner_4@",                                            /* owner */
+    "foo-bar-pool-4",                                           /* pool */
+    "IN_USE",                                                   /* state */
+};
+
 const QVector<Instance> kTestInstancesProject1{kTestInstance1, kTestInstance2};
+
+const QVector<Instance> kTestInstancesProject1All{kTestInstance1, kTestInstance2, kTestInstance4};
 
 const QVector<Instance> kTestInstancesProject2{kTestInstance3};
 
@@ -447,6 +459,53 @@ TEST_F(RetrieveInstancesWidgetTestStarted, ProjectChangeFailed) {
   // > "Default Project (Test Project 1)"
   // "Test Project 1 (default)"
   // "Test Project 2"
+}
+
+TEST_F(RetrieveInstancesWidgetTestStarted, AllCheckboxSuccessful) {
+  EXPECT_CALL(mock_retrieve_instances_,
+              LoadInstances(std::optional<Project>(std::nullopt),
+                            InstanceListScope(InstanceListScope::kAllReservedInstances)))
+      .WillOnce(Return(Future<ErrorMessageOr<QVector<Instance>>>(kTestInstancesProject1All)));
+  EXPECT_CALL(mock_retrieve_instances_,
+              LoadInstances(std::optional<Project>(std::nullopt),
+                            InstanceListScope(InstanceListScope::kOnlyOwnInstances)))
+      .WillOnce(Return(Future<ErrorMessageOr<QVector<Instance>>>(kTestInstancesProject1)));
+
+  QTest::mouseClick(all_check_box_, Qt::MouseButton::LeftButton);
+  QCoreApplication::processEvents();
+
+  VerifyLastLoadingReturnedInstanceList(kTestInstancesProject1All);
+  VerifyAndClearSignalsOfSuccessfulLoadingCycle();
+  VerifyAllElementsAreEnabled();
+  EXPECT_TRUE(all_check_box_->isChecked());
+  EXPECT_EQ(LoadInstancesScopeFromPersistentStorage(), InstanceListScope::kAllReservedInstances);
+
+  QTest::mouseClick(all_check_box_, Qt::MouseButton::LeftButton);
+  QCoreApplication::processEvents();
+
+  VerifyLastLoadingReturnedInstanceList(kTestInstancesProject1);
+  VerifyAndClearSignalsOfSuccessfulLoadingCycle();
+  VerifyAllElementsAreEnabled();
+  EXPECT_FALSE(all_check_box_->isChecked());
+  EXPECT_EQ(LoadInstancesScopeFromPersistentStorage(), InstanceListScope::kOnlyOwnInstances);
+}
+
+TEST_F(RetrieveInstancesWidgetTestStarted, AllCheckboxFail) {
+  EXPECT_CALL(mock_retrieve_instances_,
+              LoadInstances(std::optional<Project>(std::nullopt),
+                            InstanceListScope(InstanceListScope::kAllReservedInstances)))
+      .WillOnce(Return(Future<ErrorMessageOr<QVector<Instance>>>(ErrorMessage{"error"})));
+
+  QTest::mouseClick(all_check_box_, Qt::MouseButton::LeftButton);
+
+  QMetaObject::invokeMethod(
+      &widget_, []() { QCoreApplication::exit(); }, Qt::QueuedConnection);
+  QCoreApplication::exec();
+
+  VerifyAndClearSignalsOfFailedLoadingCycle();
+  VerifyAllElementsAreEnabled();
+  EXPECT_FALSE(all_check_box_->isChecked());
+  EXPECT_EQ(LoadInstancesScopeFromPersistentStorage(), InstanceListScope::kOnlyOwnInstances);
 }
 
 }  // namespace orbit_session_setup
