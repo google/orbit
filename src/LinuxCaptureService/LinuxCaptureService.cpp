@@ -187,7 +187,8 @@ grpc::Status LinuxCaptureService::Capture(
   // Enable user space instrumentation.
   std::optional<std::string> error_enabling_user_space_instrumentation;
   std::unique_ptr<UserSpaceInstrumentationAddressesImpl> user_space_instrumentation_addresses;
-  if (capture_options.enable_user_space_instrumentation() &&
+  if (capture_options.dynamic_instrumentation_method() ==
+          CaptureOptions::kUserSpaceInstrumentation &&
       capture_options.instrumented_functions_size() != 0) {
     auto result_or_error = instrumentation_manager_->InstrumentProcess(capture_options);
     if (result_or_error.has_error()) {
@@ -254,7 +255,8 @@ grpc::Status LinuxCaptureService::Capture(
   }
 
   // Disable user space instrumentation.
-  if (capture_options.enable_user_space_instrumentation() &&
+  if (capture_options.dynamic_instrumentation_method() ==
+          CaptureOptions::kUserSpaceInstrumentation &&
       capture_options.instrumented_functions_size() != 0) {
     const pid_t target_process_id = orbit_base::ToNativeProcessId(capture_options.pid());
     auto result_tmp = instrumentation_manager_->UninstrumentProcess(target_process_id);

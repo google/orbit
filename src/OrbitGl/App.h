@@ -394,7 +394,8 @@ class OrbitApp final : public DataViewFactory,
   void SetTraceGpuSubmissions(bool trace_gpu_submissions);
   void SetEnableApi(bool enable_api);
   void SetEnableIntrospection(bool enable_introspection);
-  void SetEnableUserSpaceInstrumentation(bool enable);
+  void SetDynamicInstrumentationMethod(
+      orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod method);
   void SetSamplesPerSecond(double samples_per_second);
   void SetStackDumpSize(uint16_t stack_dump_size);
   void SetUnwindingMethod(orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method);

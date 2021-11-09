@@ -38,8 +38,10 @@ message ApiFunction {
   uint64 api_version = 5;
 }
 
-// NextId: 18
+// NextId: 19
 message CaptureOptions {
+  reserved 17;
+
   bool trace_context_switches = 1;
   uint32 pid = 2;
   double samples_per_second = 3;
@@ -53,7 +55,12 @@ message CaptureOptions {
   }
   UnwindingMethod unwinding_method = 4;
 
-  bool enable_user_space_instrumentation = 17;
+  enum DynamicInstrumentationMethod {
+    kDynamicInstrumentationMethodUnspecified = 0;
+    kKernelUprobes = 1;
+    kUserSpaceInstrumentation = 2;
+  }
+  DynamicInstrumentationMethod dynamic_instrumentation_method = 18;
 
   repeated InstrumentedFunction instrumented_functions = 5;
 
