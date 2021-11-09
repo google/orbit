@@ -114,6 +114,7 @@
 #include "absl/flags/flag.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
+#include "capture.pb.h"
 #include "capture_data.pb.h"
 #include "orbitaboutdialog.h"
 #include "orbitdataviewpanel.h"
@@ -127,6 +128,7 @@
 using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureListener;
 
+using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_CHECK_FALSE;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
@@ -138,6 +140,8 @@ using orbit_session_setup::TargetConfiguration;
 using orbit_session_setup::TargetLabel;
 
 using orbit_data_views::DataViewType;
+
+using UnwindingMethod = orbit_grpc_protos::CaptureOptions::UnwindingMethod;
 
 namespace {
 const QString kLightGrayColor = "rgb(117, 117, 117)";
@@ -1063,8 +1067,7 @@ const QString OrbitMainWindow::kMaxLocalMarkerDepthPerCommandBufferSettingsKey{
     "MaxLocalMarkerDepthPerCommandBuffer"};
 
 constexpr double kCallstackSamplingPeriodMsDefaultValue = 1.0;
-constexpr orbit_grpc_protos::UnwindingMethod kCallstackUnwindingMethodDefaultValue =
-    orbit_grpc_protos::UnwindingMethod::kDwarfUnwinding;
+constexpr UnwindingMethod kCallstackUnwindingMethodDefaultValue = CaptureOptions::kDwarf;
 constexpr uint64_t kMemorySamplingPeriodMsDefaultValue = 10;
 constexpr uint64_t kMemoryWarningThresholdKbDefaultValue = 1024 * 1024 * 8;  // 8Gb
 
@@ -1085,12 +1088,15 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
     }
     app_->SetSamplesPerSecond(1000.0 / sampling_period_ms);
 
-    orbit_grpc_protos::UnwindingMethod unwinding_method =
-        static_cast<orbit_grpc_protos::UnwindingMethod>(
-            settings
-                .value(kCallstackUnwindingMethodSettingKey,
-                       static_cast<int>(kCallstackUnwindingMethodDefaultValue))
-                .toInt());
+    UnwindingMethod unwinding_method = static_cast<UnwindingMethod>(
+        settings
+            .value(kCallstackUnwindingMethodSettingKey,
+                   static_cast<int>(kCallstackUnwindingMethodDefaultValue))
+            .toInt());
+    if (unwinding_method != CaptureOptions::kDwarf &&
+        unwinding_method != CaptureOptions::kFramePointers) {
+      unwinding_method = kCallstackUnwindingMethodDefaultValue;
+    }
     app_->SetUnwindingMethod(unwinding_method);
   } else {
     app_->SetSamplesPerSecond(0.0);
@@ -1138,11 +1144,16 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
   dialog.SetSamplingPeriodMs(
       settings.value(kCallstackSamplingPeriodMsSettingKey, kCallstackSamplingPeriodMsDefaultValue)
           .toDouble());
-  dialog.SetUnwindingMethod(static_cast<orbit_grpc_protos::UnwindingMethod>(
+  UnwindingMethod unwinding_method = static_cast<UnwindingMethod>(
       settings
           .value(kCallstackUnwindingMethodSettingKey,
                  static_cast<int>(kCallstackUnwindingMethodDefaultValue))
-          .toInt()));
+          .toInt());
+  if (unwinding_method != CaptureOptions::kDwarf &&
+      unwinding_method != CaptureOptions::kFramePointers) {
+    unwinding_method = kCallstackUnwindingMethodDefaultValue;
+  }
+  dialog.SetUnwindingMethod(unwinding_method);
   dialog.SetCollectSchedulerInfo(settings.value(kCollectSchedulerInfoSettingKey, true).toBool());
   dialog.SetCollectThreadStates(settings.value(kCollectThreadStatesSettingKey, false).toBool());
   dialog.SetTraceGpuSubmissions(settings.value(kTraceGpuSubmissionsSettingKey, true).toBool());

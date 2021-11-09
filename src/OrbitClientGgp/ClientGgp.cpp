@@ -60,10 +60,12 @@ using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::TimerInfo;
 
 using orbit_grpc_protos::CaptureFinished;
+using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
-using orbit_grpc_protos::UnwindingMethod;
+
+using UnwindingMethod = orbit_grpc_protos::CaptureOptions::UnwindingMethod;
 
 bool ClientGgp::InitClient() {
   if (options_.grpc_server_address.empty()) {
@@ -105,9 +107,8 @@ ErrorMessageOr<void> ClientGgp::RequestStartCapture(orbit_base::ThreadPool* thre
 
   LOG("Capture pid %d", pid);
   TracepointInfoSet selected_tracepoints;
-  UnwindingMethod unwinding_method = options_.use_framepointer_unwinding
-                                         ? UnwindingMethod::kFramePointerUnwinding
-                                         : UnwindingMethod::kDwarfUnwinding;
+  const UnwindingMethod unwinding_method =
+      options_.use_framepointer_unwinding ? CaptureOptions::kFramePointers : CaptureOptions::kDwarf;
   bool collect_scheduling_info = true;
   bool collect_thread_state = absl::GetFlag(FLAGS_thread_state);
   bool collect_gpu_jobs = true;

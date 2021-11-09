@@ -23,12 +23,12 @@
 #include "CaptureClient/CaptureListener.h"
 #include "ClientData/ModuleManager.h"
 #include "FakeCaptureEventProcessor.h"
-#include "GrpcProtos/Constants.h"
 #include "ObjectUtils/ElfFile.h"
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadPool.h"
+#include "capture.pb.h"
 #include "capture_data.pb.h"
 
 ABSL_FLAG(uint64_t, port, 44765, "Port OrbitService's gRPC service is listening on");
@@ -52,6 +52,10 @@ ABSL_FLAG(uint16_t, memory_sampling_rate, 0,
 ABSL_FLAG(bool, frame_time, true, "Instrument vkQueuePresentKHR to compute avg. frame time");
 
 namespace {
+
+using orbit_grpc_protos::CaptureOptions;
+using UnwindingMethod = orbit_grpc_protos::CaptureOptions::UnwindingMethod;
+
 std::atomic<bool> exit_requested = false;
 
 void SigintHandler(int signum) {
@@ -270,14 +274,10 @@ int main(int argc, char* argv[]) {
   uint16_t samples_per_second = absl::GetFlag(FLAGS_sampling_rate);
   LOG("samples_per_second=%u", samples_per_second);
   constexpr uint16_t kStackDumpSize = 65000;
-  orbit_grpc_protos::UnwindingMethod unwinding_method =
-      absl::GetFlag(FLAGS_frame_pointers)
-          ? orbit_grpc_protos::UnwindingMethod::kFramePointerUnwinding
-          : orbit_grpc_protos::UnwindingMethod::kDwarfUnwinding;
+  const UnwindingMethod unwinding_method =
+      absl::GetFlag(FLAGS_frame_pointers) ? CaptureOptions::kFramePointers : CaptureOptions::kDwarf;
   LOG("unwinding_method=%s",
-      unwinding_method == orbit_grpc_protos::UnwindingMethod::kFramePointerUnwinding
-          ? "Frame pointers"
-          : "DWARF");
+      unwinding_method == CaptureOptions::kFramePointers ? "Frame pointers" : "DWARF");
 
   std::string file_path = absl::GetFlag(FLAGS_instrument_path);
   uint64_t file_offset = absl::GetFlag(FLAGS_instrument_offset);

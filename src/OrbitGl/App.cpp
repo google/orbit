@@ -119,13 +119,13 @@ using orbit_client_services::TracepointServiceClient;
 using orbit_gl::MainWindowInterface;
 
 using orbit_grpc_protos::CaptureFinished;
+using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::TracepointInfo;
-using orbit_grpc_protos::UnwindingMethod;
 
 using orbit_metrics_uploader::CaptureMetric;
 using orbit_metrics_uploader::ScopedMetric;
@@ -133,6 +133,8 @@ using orbit_metrics_uploader::ScopedMetric;
 using orbit_preset_file::PresetFile;
 
 using orbit_data_views::DataViewType;
+
+using UnwindingMethod = orbit_grpc_protos::CaptureOptions::UnwindingMethod;
 
 namespace {
 
@@ -1338,8 +1340,8 @@ void OrbitApp::StartCapture() {
       IsDevMode() && data_manager_->enable_user_space_instrumentation();
   double samples_per_second = data_manager_->samples_per_second();
   uint16_t stack_dump_size = data_manager_->stack_dump_size();
-  UnwindingMethod unwinding_method =
-      IsDevMode() ? data_manager_->unwinding_method() : UnwindingMethod::kDwarfUnwinding;
+  const UnwindingMethod unwinding_method =
+      IsDevMode() ? data_manager_->unwinding_method() : CaptureOptions::kDwarf;
   uint64_t max_local_marker_depth_per_command_buffer =
       data_manager_->max_local_marker_depth_per_command_buffer();
 
@@ -2197,7 +2199,7 @@ void OrbitApp::SetStackDumpSize(uint16_t stack_dump_size) {
   data_manager_->set_stack_dump_size(stack_dump_size);
 }
 
-void OrbitApp::SetUnwindingMethod(orbit_grpc_protos::UnwindingMethod unwinding_method) {
+void OrbitApp::SetUnwindingMethod(UnwindingMethod unwinding_method) {
   data_manager_->set_unwinding_method(unwinding_method);
 }
 
