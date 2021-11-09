@@ -270,7 +270,7 @@ void WaitForFileModification(const std::string& file_path) {
   CHECK(event->wd == wd);
 
   close(inotify_fd);
-  LOG("Stopped to watch \"%s\"", file_path);
+  LOG("Stopped watching \"%s\"", file_path);
 }
 
 }  // namespace
@@ -296,7 +296,8 @@ int main(int argc, char* argv[]) {
 
   uint32_t process_id = absl::GetFlag(FLAGS_pid);
   if (process_id == 0) {
-    FAIL_IF(absl::GetFlag(FLAGS_pid_file_path).empty(), "A PID or a path to a file is needed.");
+    const std::string pid_file_path = absl::GetFlag(FLAGS_pid_file_path);
+    FAIL_IF(pid_file_path.empty(), "A PID or a path to a file is needed.");
     WaitForFileModification(absl::GetFlag(FLAGS_pid_file_path));
     process_id = ReadPidFromFile(absl::GetFlag(FLAGS_pid_file_path));
   }

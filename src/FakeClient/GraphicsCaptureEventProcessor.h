@@ -160,8 +160,8 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
       const uint64_t begin_timestamp_ns = command_buffer_timestamp.begin;
       const uint64_t end_timestamp_ns = command_buffer_timestamp.end;
 
-      // If the interval don't overlap just add the length of the interval to the frame time, else
-      // if there's overlap just add the new part of the interval that haven't been taking into
+      // If the interval doesn't overlap just add the length of the interval to the frame time, else
+      // if there's overlap just add the new part of the interval that hasn't yet been taken into
       // account.
       if (begin_timestamp_ns >= current_range_end) {
         frame_time_ns += (end_timestamp_ns - begin_timestamp_ns);
@@ -227,8 +227,9 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
     for (int centile = 1; centile <= kCentiles; ++centile) {
       absl::StrAppend(&header, absl::StrFormat(",%d_%dtile_ms_per_frame", centile, kCentiles));
     }
+    absl::StrAppend(&header, "\n");
     std::string output;
-    absl::StrAppend(&output, header, "\n", absl::StrFormat("%u,%.2f", num_frames, avg));
+    absl::StrAppend(&output, header, absl::StrFormat("%u,%.2f", num_frames, avg));
 
     std::vector<uint32_t> centiles;
     centiles.reserve(100);
@@ -247,13 +248,13 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
   static constexpr uint64_t kQueuePresentFunctionId = std::numeric_limits<uint64_t>::max();
 
  private:
-  static constexpr int kMaxTimeMs = 1023;
+  static constexpr int kMaxTimeMs = 1023;  // This is an arbitrary number
   static constexpr const char* kCpuFrameTimeFilename = "cpu_frame_times.txt";
   static constexpr const char* kGpuFrameTimeFilename = "gpu_frame_times.txt";
 
   double gpu_avg_frame_time_ms_ = 0.0;
   double cpu_avg_frame_time_ms_ = 0.0;
-  // - The frame time histograms are divided in 1024 buckets, where each
+  // The frame time histograms are divided in 1024 buckets, where each
   // bucket X represents how many frames have a duration between [X, X+1) ms.
   std::array<uint32_t, kMaxTimeMs + 1> gpu_time_distribution_;
   std::array<uint32_t, kMaxTimeMs + 1> cpu_time_distribution_;
