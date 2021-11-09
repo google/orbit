@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef FAKE_CLIENT_FAKE_CLIENT_MAIN_H_
-#define FAKE_CLIENT_FAKE_CLIENT_MAIN_H_
+#ifndef FAKE_CLIENT_FLAGS_H_
+#define FAKE_CLIENT_FLAGS_H_
 
 #include <absl/flags/flag.h>
 
@@ -58,4 +58,4 @@ ABSL_FLAG(std::string, pid_file_path, "",
           "Path of the file to watch that will contain the target PID (the file must exists)");
 ABSL_FLAG(std::string, output_path, "", "Path of the output files");
 
-#endif  // FAKE_CLIENT_FAKE_CLIENT_MAIN_H_
+#endif  // FAKE_CLIENT_FLAGS_H_

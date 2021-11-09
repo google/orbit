@@ -9,10 +9,7 @@
 #include <absl/strings/match.h>
 #include <absl/time/clock.h>
 #include <grpcpp/grpcpp.h>
-
-#if defined(__linux)
 #include <sys/inotify.h>
-#endif
 
 #include <atomic>
 #include <csignal>
@@ -236,18 +233,17 @@ void ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
   module_manager->GetMutableModuleByPathAndBuildId(file_path, build_id)->AddSymbols(module_symbols);
 }
 
-uint32_t ReadPIDFromFile(const std::string& file_path) {
+uint32_t ReadPidFromFile(const std::string& file_path) {
   ErrorMessageOr<std::string> pid_string = orbit_base::ReadFileToString(file_path);
   FAIL_IF(pid_string.has_error(), "Reading from \"%s\": %s", file_path,
           pid_string.error().message());
   uint32_t process_id = 0;
   FAIL_IF(!absl::SimpleAtoi<uint32_t>(pid_string.value(), &process_id),
-          "Failed to read the PID from %s", file_path);
+          "Failed to read the PID from \"%s\"", file_path);
   return process_id;
 }
 
 void WaitForFileModification(const std::string& file_path) {
-#if defined(__linux)
   int inotify_fd = -1;
   int wd = -1;
 
@@ -255,8 +251,8 @@ void WaitForFileModification(const std::string& file_path) {
   FAIL_IF(inotify_fd == -1, "Failed to initialize inotify");
 
   wd = inotify_add_watch(inotify_fd, file_path.c_str(), IN_MODIFY);
-  FAIL_IF(wd == -1, "Failed to watch %s", file_path);
-  LOG("Started to watch %s", file_path);
+  FAIL_IF(wd == -1, "Failed to watch \"%s\"", file_path);
+  LOG("Started to watch \"%s\"", file_path);
 
   // Wait for the first modify event received to read its PID
   constexpr ssize_t kMaxBufferSize = 1024;
@@ -274,10 +270,7 @@ void WaitForFileModification(const std::string& file_path) {
   CHECK(event->wd == wd);
 
   close(inotify_fd);
-  LOG("Stopped to watch %s", file_path);
-#else
-  FATAL("Watching for modifications in %s is not supported in this platform", file_path);
-#endif
+  LOG("Stopped to watch \"%s\"", file_path);
 }
 
 }  // namespace
@@ -301,10 +294,10 @@ int main(int argc, char* argv[]) {
           "Binary path and offset of the function to instrument need to be specified together");
 
   uint32_t process_id = absl::GetFlag(FLAGS_pid);
-  if (!process_id) {
+  if (process_id == 0) {
     FAIL_IF(absl::GetFlag(FLAGS_pid_file_path).empty(), "A PID or a path to a file is needed.");
     WaitForFileModification(absl::GetFlag(FLAGS_pid_file_path));
-    process_id = ReadPIDFromFile(absl::GetFlag(FLAGS_pid_file_path));
+    process_id = ReadPidFromFile(absl::GetFlag(FLAGS_pid_file_path));
   }
   LOG("process_id=%d", process_id);
   FAIL_IF(process_id == 0, "PID to capture not specified");
@@ -395,9 +388,8 @@ int main(int argc, char* argv[]) {
   LOG("frame_time=%d", calculate_frame_time);
   if (calculate_frame_time) {
     // Instrument vkQueuePresentKHR, if possible.
-    // Some application don't call libVulkan library directly instead they just query the
-    // function addresses and use those. So lets just instrument the layer
-    // `orbit_vulkan_layer::OrbitQueuePresentKHR`
+    // Some application don't call libVulkan library directly; instead, they just query the
+    // function addresses and use those. So let's just instrument the `ggpvlk QueuePresentKHR`
     static const std::string kGgpvlkModuleName = "ggpvlk.so";
     static const std::string kQueuePresentFunctionName{
         "yeti::internal::vulkan::(anonymous namespace)::QueuePresentKHR(VkQueue_T*, "
@@ -434,6 +426,7 @@ int main(int argc, char* argv[]) {
           std::make_unique<orbit_fake_client::GraphicsCaptureEventProcessor>();
       break;
     default:
+      UNREACHABLE();
       break;
   }
 

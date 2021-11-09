@@ -5,51 +5,79 @@
 #ifndef FAKE_CLIENT_GRAPHICS_CAPTURE_EVENT_PROCESSOR_H_
 #define FAKE_CLIENT_GRAPHICS_CAPTURE_EVENT_PROCESSOR_H_
 
+#include <cstdint>
+
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "Flags.h"
 #include "OrbitBase/WriteStringToFile.h"
 
-namespace {
-template <typename Distribution, typename UnaryOperation>
-void ForEachCentile(uint32_t numCentiles, const Distribution& distribution,
-                    UnaryOperation&& operation) {
-  uint32_t populationSize = std::accumulate(std::begin(distribution), std::end(distribution), 0);
-  size_t currentBucket = 0;
-  uint32_t runningCount = 0;
-  for (uint32_t centile = 1; centile <= numCentiles; ++centile) {
-    while (currentBucket < distribution.size() &&
-           // checks if runningCount is less than centile/numCentiles of the
-           // population size, but keeps the calculation within the integral
-           // domain by scaling with numCentiles
-           (runningCount * numCentiles) < (populationSize * centile)) {
-      runningCount += distribution[currentBucket];
-      ++currentBucket;
-    }
-    operation(currentBucket);
-  }
-}
-}  // namespace
-
 namespace orbit_fake_client {
 
-// This implementation of CaptureEventProcessor mostly discard all events it receives, except for
+namespace {
+struct CommandBufferTimestamps {
+  uint64_t begin;
+  uint64_t end;
+
+  bool operator<(const CommandBufferTimestamps& rhs) const {
+    if (begin == rhs.begin) {
+      return end < rhs.end;
+    }
+
+    return begin < rhs.begin;
+  }
+};
+
+template <typename Distribution, typename UnaryOperation>
+void ForEachCentile(uint32_t num_centiles, const Distribution& distribution,
+                    UnaryOperation&& operation) {
+  uint32_t population_size = std::accumulate(std::begin(distribution), std::end(distribution), 0);
+  size_t current_bucket = 0;
+  uint32_t running_count = 0;
+  for (uint32_t centile = 1; centile <= num_centiles; ++centile) {
+    while (current_bucket < distribution.size() &&
+           // checks if `running_count` is less than `centile/num_centiles` of the
+           // population size, but keeps the calculation within the integral
+           // domain by scaling with `num_centiles`
+           (running_count * num_centiles) < (population_size * centile)) {
+      running_count += distribution[current_bucket];
+      ++current_bucket;
+    }
+    operation(current_bucket);
+  }
+}
+
+}  // namespace
+
+// This implementation of CaptureEventProcessor mostly discards all events it receives, except for
 // keeping track of the calls to the frame boundary function and GPU queue submissions.
 class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventProcessor {
  public:
+  ~GraphicsCaptureEventProcessor() {
+    CalculateCpuStats();
+    CalculateGpuStats();
+    std::filesystem::path file_path(absl::GetFlag(FLAGS_output_path));
+    WriteToCsvFile(file_path.append(kCpuFrameTimeFilename).string(), cpu_time_distribution_,
+                   cpu_avg_frame_time_ms_, frame_start_boundary_timestamps_.size() - 1);
+    file_path.assign(absl::GetFlag(FLAGS_output_path));
+    WriteToCsvFile(file_path.append(kGpuFrameTimeFilename).string(), gpu_time_distribution_,
+                   gpu_avg_frame_time_ms_, frame_start_boundary_timestamps_.size());
+  }
+
+ private:
   void ProcessEvent(const orbit_grpc_protos::ClientCaptureEvent& event) override {
     switch (event.event_case()) {
       case orbit_grpc_protos::ClientCaptureEvent::kFunctionCall:
         ProcessFunctionCall(event.function_call());
         break;
       case orbit_grpc_protos::ClientCaptureEvent::kGpuQueueSubmission:
-        ProcessGPUQueueSubmission(event.gpu_queue_submission());
+        ProcessGpuQueueSubmission(event.gpu_queue_submission());
         break;
       default:
         break;
     }
   }
 
-  void ProcessGPUQueueSubmission(const orbit_grpc_protos::GpuQueueSubmission& submission) {
+  void ProcessGpuQueueSubmission(const orbit_grpc_protos::GpuQueueSubmission& submission) {
     submissions_.emplace_back(submission);
   }
 
@@ -60,23 +88,27 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
     }
   }
 
-  // Calculate the GPU frame times in [ms] by measuring the amount of time spent by the GPU
-  // executing a GPU Job, from any queue that was submitted between two sequential vkQueuePresentKHR
-  // calls. The algorithm take into account that is possible that two jobs from different queue's
-  // can overlap, so the time is not account for multiple times.
-  //
-  // This function also generates:
-  // - The corresponding GPU frame time histogram, that is divided in 1024 buckets, each bucket X
-  // represents how many frames have a duration between [X, X+1) ms.
-  // - Average GPU frame times[ms]
-  void CalculateGPUTimes() {
+  void CalculateGpuStats() {
     LOG("Calculating GPU Times");
-    uint64_t total_duration_ns = 0;
+    CalculateGpuFrameDurations();
+    GenerateGpuDurationDistribution();
+    CalculateGpuAvgFrameTime();
+  }
+
+  void CalculateGpuFrameDurations() {
     size_t current_submission = 0;
-    gpu_time_distribution_.fill(0u);
+    // Timestamps should come in CPU start timestamp order, but we sort regardless to be careful and
+    // since runtime doesn't matter that much here.
+    sort(frame_start_boundary_timestamps_.begin(), frame_start_boundary_timestamps_.end());
+    sort(submissions_.begin(), submissions_.end(),
+         [](const orbit_grpc_protos::GpuQueueSubmission& a,
+            const orbit_grpc_protos::GpuQueueSubmission& b) {
+           return a.meta_info().pre_submission_cpu_timestamp() <
+                  b.meta_info().pre_submission_cpu_timestamp();
+         });
+
     for (uint64_t next_frame_start_timestamp : frame_start_boundary_timestamps_) {
-      uint64_t frame_time_ns = 0;
-      std::vector<std::pair</*begin*/ uint64_t, /*end*/ uint64_t>> command_buffer_timestamps;
+      std::vector<CommandBufferTimestamps> command_buffer_timestamps;
       while (current_submission < submissions_.size()) {
         const orbit_grpc_protos::GpuQueueSubmission& submission = submissions_[current_submission];
         if (submission.meta_info().pre_submission_cpu_timestamp() >= next_frame_start_timestamp) {
@@ -86,115 +118,117 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
         for (const orbit_grpc_protos::GpuSubmitInfo& submit_info : submission.submit_infos()) {
           for (const orbit_grpc_protos::GpuCommandBuffer& command_buffer :
                submit_info.command_buffers()) {
-            command_buffer_timestamps.emplace_back(std::make_pair(
-                command_buffer.begin_gpu_timestamp_ns(), command_buffer.end_gpu_timestamp_ns()));
+            CommandBufferTimestamps timestamps{.begin = command_buffer.begin_gpu_timestamp_ns(),
+                                               .end = command_buffer.end_gpu_timestamp_ns()};
+            command_buffer_timestamps.emplace_back(timestamps);
           }
         }
         ++current_submission;
       }
 
-      sort(command_buffer_timestamps.begin(), command_buffer_timestamps.end());
-      uint64_t current_range_end = 0;
-      for (const std::pair<uint64_t, uint64_t>& command_buffer_timestamp :
-           command_buffer_timestamps) {
-        uint64_t begin_timestamp_ns = command_buffer_timestamp.first;
-        uint64_t end_timestamp_ns = command_buffer_timestamp.second;
-        if (begin_timestamp_ns >= current_range_end) {
-          frame_time_ns += (end_timestamp_ns - begin_timestamp_ns);
-          current_range_end = end_timestamp_ns;
-        } else if (end_timestamp_ns > current_range_end) {
-          frame_time_ns += end_timestamp_ns - current_range_end;
-          current_range_end = end_timestamp_ns;
-        }
-      }
-
-      if (!command_buffer_timestamps.empty()) {
-        double frame_time_ms = frame_time_ns / 1.0e6;
-        int distribution_index = std::min(static_cast<int>(frame_time_ms), kMaxTimeMs);
-        ++gpu_time_distribution_[distribution_index];
-      }
-
-      total_duration_ns += frame_time_ns;
+      uint64_t frame_time_ns = CalculateFrameGpuTime(command_buffer_timestamps);
+      frame_gpu_durations_ns_.emplace_back(frame_time_ns);
     }
-
-    gpu_avg_frame_time_ms = (total_duration_ns / frame_start_boundary_timestamps_.size()) / 1.0e6;
   }
 
-  // Calculate the CPU frame times in [ms] as the time between sequential vkQueuePresentKHR
-  // calls. This function also generates:
-  // - The corresponding CPU frame time histogram, that is divided in 1024 buckets, where each
-  // bucket X represents how many frames have a duration between [X, X+1) ms.
-  // - The average CPU frame times [ms]
-  void CalculateCPUTimes() {
+  void GenerateGpuDurationDistribution() {
+    gpu_time_distribution_.fill(0u);
+    for (const uint64_t duration_ns : frame_gpu_durations_ns_) {
+      UpdateFrameDurationDistribution(duration_ns, gpu_time_distribution_);
+    }
+  }
+
+  void CalculateGpuAvgFrameTime() {
+    uint64_t total_duration_ns = std::accumulate(frame_gpu_durations_ns_.begin(),
+                                                 frame_gpu_durations_ns_.end(), uint64_t(0));
+    gpu_avg_frame_time_ms_ = (total_duration_ns / frame_start_boundary_timestamps_.size()) / 1.0e6;
+  }
+
+  uint64_t CalculateFrameGpuTime(std::vector<CommandBufferTimestamps> command_buffers_timestamps) {
+    // The frame gpu time is calculated as the union of all the command buffer intervals, to do this
+    // we sort the command buffer by starting time and compute the length of the union of all
+    // intervals.
+    //
+    // There's no guaranteed that the submission order is mantained through the execution, command
+    // buffers that belong to different queues are executed in parallel or they can be executed out
+    // of order because there isn't any depedency between them. So to get the correct results the
+    // array needs to be sorted first.
+    sort(command_buffers_timestamps.begin(), command_buffers_timestamps.end());
+    uint64_t frame_time_ns = 0;
+    uint64_t current_range_end = 0;  // Keeps track of the last interval end time.
+    for (const CommandBufferTimestamps& command_buffer_timestamp : command_buffers_timestamps) {
+      const uint64_t begin_timestamp_ns = command_buffer_timestamp.begin;
+      const uint64_t end_timestamp_ns = command_buffer_timestamp.end;
+
+      // If the interval don't overlap just add the length of the interval to the frame time, else
+      // if there's overlap just add the new part of the interval that haven't been taking into
+      // account.
+      if (begin_timestamp_ns >= current_range_end) {
+        frame_time_ns += (end_timestamp_ns - begin_timestamp_ns);
+        current_range_end = end_timestamp_ns;
+      } else if (end_timestamp_ns > current_range_end) {
+        frame_time_ns += end_timestamp_ns - current_range_end;
+        current_range_end = end_timestamp_ns;
+      }
+    }
+
+    return frame_time_ns;
+  }
+
+  void CalculateCpuStats() {
     LOG("Calculating CPU Times");
 
     uint64_t frame_boundary_count = frame_start_boundary_timestamps_.size();
     FAIL_IF(frame_boundary_count <= 2,
             "Not enough calls to vkQueuePresentKHR to calculate CPU frame times.");
 
-    cpu_time_distribution_.fill(0u);
-    uint64_t total_duration_ns = 0;
-    size_t current_frame = 1;
-    while (current_frame < frame_start_boundary_timestamps_.size()) {
-      uint64_t frame_time_ns = (frame_start_boundary_timestamps_[current_frame] -
-                                frame_start_boundary_timestamps_[current_frame - 1]);
-      double frame_time_ms = frame_time_ns / 1.0e6;
-      int distribution_index = std::min(static_cast<int>(frame_time_ms), kMaxTimeMs);
-      total_duration_ns += frame_time_ns;
-      ++cpu_time_distribution_[distribution_index];
-      ++current_frame;
-    }
-
-    cpu_avg_frame_time_ms = static_cast<double>(total_duration_ns) / 1.0e6 /
-                            static_cast<double>(frame_boundary_count - 1);
+    CalculateCpuFrameDurations();
+    GenerateCpuDurationDistribution();
+    CalculateCpuAvgFrameTime();
   }
 
-  ~GraphicsCaptureEventProcessor() {
-    CalculateCPUTimes();
-    CalculateGPUTimes();
-    std::filesystem::path filepath(absl::GetFlag(FLAGS_output_path));
-    WriteToCSVFile(filepath.append(kCPUFrameTimeFilename).string(), cpu_time_distribution_,
-                   cpu_avg_frame_time_ms, frame_start_boundary_timestamps_.size() - 1);
-    filepath.assign(absl::GetFlag(FLAGS_output_path));
-    WriteToCSVFile(filepath.append(kGPUFrameTimeFilename).string(), gpu_time_distribution_,
-                   gpu_avg_frame_time_ms, frame_start_boundary_timestamps_.size());
+  void CalculateCpuFrameDurations() {
+    for (size_t current_frame = 1; current_frame < frame_start_boundary_timestamps_.size();
+         ++current_frame) {
+      uint64_t frame_time_ns = (frame_start_boundary_timestamps_[current_frame] -
+                                frame_start_boundary_timestamps_[current_frame - 1]);
+      frame_cpu_durations_ns_.emplace_back(frame_time_ns);
+    }
+  }
+
+  void GenerateCpuDurationDistribution() {
+    cpu_time_distribution_.fill(0u);
+    for (uint64_t frame_duration_ns : frame_cpu_durations_ns_) {
+      UpdateFrameDurationDistribution(frame_duration_ns, cpu_time_distribution_);
+    }
+  }
+
+  void CalculateCpuAvgFrameTime() {
+    uint64_t total_duration_ns = std::accumulate(frame_cpu_durations_ns_.begin(),
+                                                 frame_cpu_durations_ns_.end(), uint64_t(0));
+    cpu_avg_frame_time_ms_ = (static_cast<double>(total_duration_ns) / 1.0e6) /
+                             static_cast<double>(frame_start_boundary_timestamps_.size() - 1);
   }
 
   template <typename Distribution>
-  void WriteToCSVFile(absl::string_view filename, const Distribution& distribution,
-                      const double avg, const size_t num_frames) const {
+  static void UpdateFrameDurationDistribution(uint64_t frame_time_ns, Distribution& distribution) {
+    if (frame_time_ns > 0) {
+      double frame_time_ms = frame_time_ns / 1.0e6;
+      int distribution_index = std::min(static_cast<int>(frame_time_ms), kMaxTimeMs);
+      ++distribution[distribution_index];
+    }
+  }
+
+  template <typename Distribution>
+  static void WriteToCsvFile(absl::string_view filename, const Distribution& distribution,
+                             const double avg, const size_t num_frames) {
     constexpr int kCentiles = 100;
-    constexpr const char* kCSVHeader =
-        "num_frames,avg_ms_per_frame,1_100tile_ms_per_frame,2_100tile_ms_per_frame,3_100tile_ms_"
-        "per_frame,4_100tile_ms_per_frame,5_100tile_ms_per_frame,6_100tile_ms_per_frame,7_100tile_"
-        "ms_per_frame,8_100tile_ms_per_frame,9_100tile_ms_per_frame,10_100tile_ms_per_frame,11_"
-        "100tile_ms_per_frame,12_100tile_ms_per_frame,13_100tile_ms_per_frame,14_100tile_ms_per_"
-        "frame,15_100tile_ms_per_frame,16_100tile_ms_per_frame,17_100tile_ms_per_frame,18_100tile_"
-        "ms_per_frame,19_100tile_ms_per_frame,20_100tile_ms_per_frame,21_100tile_ms_per_frame,22_"
-        "100tile_ms_per_frame,23_100tile_ms_per_frame,24_100tile_ms_per_frame,25_100tile_ms_per_"
-        "frame,26_100tile_ms_per_frame,27_100tile_ms_per_frame,28_100tile_ms_per_frame,29_100tile_"
-        "ms_per_frame,30_100tile_ms_per_frame,31_100tile_ms_per_frame,32_100tile_ms_per_frame,33_"
-        "100tile_ms_per_frame,34_100tile_ms_per_frame,35_100tile_ms_per_frame,36_100tile_ms_per_"
-        "frame,37_100tile_ms_per_frame,38_100tile_ms_per_frame,39_100tile_ms_per_frame,40_100tile_"
-        "ms_per_frame,41_100tile_ms_per_frame,42_100tile_ms_per_frame,43_100tile_ms_per_frame,44_"
-        "100tile_ms_per_frame,45_100tile_ms_per_frame,46_100tile_ms_per_frame,47_100tile_ms_per_"
-        "frame,48_100tile_ms_per_frame,49_100tile_ms_per_frame,50_100tile_ms_per_frame,51_100tile_"
-        "ms_per_frame,52_100tile_ms_per_frame,53_100tile_ms_per_frame,54_100tile_ms_per_frame,55_"
-        "100tile_ms_per_frame,56_100tile_ms_per_frame,57_100tile_ms_per_frame,58_100tile_ms_per_"
-        "frame,59_100tile_ms_per_frame,60_100tile_ms_per_frame,61_100tile_ms_per_frame,62_100tile_"
-        "ms_per_frame,63_100tile_ms_per_frame,64_100tile_ms_per_frame,65_100tile_ms_per_frame,66_"
-        "100tile_ms_per_frame,67_100tile_ms_per_frame,68_100tile_ms_per_frame,69_100tile_ms_per_"
-        "frame,70_100tile_ms_per_frame,71_100tile_ms_per_frame,72_100tile_ms_per_frame,73_100tile_"
-        "ms_per_frame,74_100tile_ms_per_frame,75_100tile_ms_per_frame,76_100tile_ms_per_frame,77_"
-        "100tile_ms_per_frame,78_100tile_ms_per_frame,79_100tile_ms_per_frame,80_100tile_ms_per_"
-        "frame,81_100tile_ms_per_frame,82_100tile_ms_per_frame,83_100tile_ms_per_frame,84_100tile_"
-        "ms_per_frame,85_100tile_ms_per_frame,86_100tile_ms_per_frame,87_100tile_ms_per_frame,88_"
-        "100tile_ms_per_frame,89_100tile_ms_per_frame,90_100tile_ms_per_frame,91_100tile_ms_per_"
-        "frame,92_100tile_ms_per_frame,93_100tile_ms_per_frame,94_100tile_ms_per_frame,95_100tile_"
-        "ms_per_frame,96_100tile_ms_per_frame,97_100tile_ms_per_frame,98_100tile_ms_per_frame,99_"
-        "100tile_ms_per_frame,100_100tile_ms_per_frame";
+    std::string header = "num_frames,avg_ms_per_frame";
+    for (int centile = 1; centile <= kCentiles; ++centile) {
+      absl::StrAppend(&header, absl::StrFormat(",%d_%dtile_ms_per_frame", centile, kCentiles));
+    }
     std::string output;
-    absl::StrAppend(&output, kCSVHeader, "\n", absl::StrFormat("%u,%.2f", num_frames, avg));
+    absl::StrAppend(&output, header, "\n", absl::StrFormat("%u,%.2f", num_frames, avg));
 
     std::vector<uint32_t> centiles;
     centiles.reserve(100);
@@ -214,14 +248,18 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
 
  private:
   static constexpr int kMaxTimeMs = 1023;
-  static constexpr const char* kCPUFrameTimeFilename = "cpu_frame_times.txt";
-  static constexpr const char* kGPUFrameTimeFilename = "gpu_frame_times.txt";
+  static constexpr const char* kCpuFrameTimeFilename = "cpu_frame_times.txt";
+  static constexpr const char* kGpuFrameTimeFilename = "gpu_frame_times.txt";
 
-  double gpu_avg_frame_time_ms = 0.0;
-  double cpu_avg_frame_time_ms = 0.0;
+  double gpu_avg_frame_time_ms_ = 0.0;
+  double cpu_avg_frame_time_ms_ = 0.0;
+  // - The frame time histograms are divided in 1024 buckets, where each
+  // bucket X represents how many frames have a duration between [X, X+1) ms.
   std::array<uint32_t, kMaxTimeMs + 1> gpu_time_distribution_;
   std::array<uint32_t, kMaxTimeMs + 1> cpu_time_distribution_;
   std::vector<uint64_t> frame_start_boundary_timestamps_;
+  std::vector<uint64_t> frame_gpu_durations_ns_;
+  std::vector<uint64_t> frame_cpu_durations_ns_;
   std::vector<orbit_grpc_protos::GpuQueueSubmission> submissions_;
 };
 
