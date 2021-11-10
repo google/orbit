@@ -388,30 +388,39 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
 
   // Export events to CSV
   {
-    const uint32_t kThreadId = 111;
-    const std::string kThreadName = "Test Thread";
-    capture_data_->AddOrAssignThreadName(kThreadId, kThreadName);
+    constexpr size_t kNumThreads = 2;
+    const std::array<uint32_t, kNumThreads> kThreadIds = {111, 222};
+    const std::array<std::string, kNumThreads> kThreadNames = {"Test Thread 1", "Test Thread 2"};
+    for (size_t i = 0; i < kNumThreads; ++i) {
+      capture_data_->AddOrAssignThreadName(kThreadIds[i], kThreadNames[i]);
+    }
     EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
 
-    constexpr uint64_t kStart = 12345;
-    constexpr uint64_t kEnd = 67890;
-    TimerInfo timer;
-    timer.set_start(kStart);
-    timer.set_end(kEnd);
-    timer.set_thread_id(kThreadId);
-    std::vector<const TimerInfo*> timers = {&timer};
-    EXPECT_CALL(app_, GetAllFunctionCalls).WillRepeatedly(testing::Return(timers));
+    constexpr size_t kNumTimers = 3;
+    const std::array<uint64_t, kNumTimers> kStarts = {1000, 2345, 6789};
+    const std::array<uint64_t, kNumTimers> kEnds = {1500, 5432, 9876};
+    const std::array<uint64_t, kNumTimers> kThreadIndices = {
+        0, 1, 1};  // kThreadIndices[i] is the index of the thread that timer i corresponds to.
+    std::array<TimerInfo, kNumTimers> timers;
+    std::vector<const TimerInfo*> timers_for_instrumented_function;
+    for (size_t i = 0; i < kNumTimers; i++) {
+      timers[i].set_start(kStarts[i]);
+      timers[i].set_end(kEnds[i]);
+      timers[i].set_thread_id(kThreadIds[kThreadIndices[i]]);
+      timers_for_instrumented_function.push_back(&timers[i]);
+    }
+    EXPECT_CALL(app_, GetAllFunctionCalls)
+        .WillRepeatedly(testing::Return(timers_for_instrumented_function));
 
-    std::string expected_contents =
-        absl::StrFormat(R"#("Name","Thread","Start","End","Duration (ns)")#"
-                        "\r\n"
-                        R"("%s","%s","%s","%s","%s")"
-                        "\r\n",
-                        kPrettyNames[0], absl::StrFormat("%s [%lu]", kThreadName, kThreadId),
-                        absl::StrFormat("%lu", kStart), absl::StrFormat("%lu", kEnd),
-                        absl::StrFormat("%lu", kEnd - kStart));
-    bool is_exporting_events = true;
-    CheckExportToCsvIsInvoked(context_menu, app_, view_, expected_contents, is_exporting_events);
+    std::string expected_contents("\"Name\",\"Thread\",\"Start\",\"End\",\"Duration (ns)\"\r\n");
+    for (size_t i = 0; i < kNumTimers; ++i) {
+      expected_contents += absl::StrFormat(R"("%s","%s [%lu]","%lu","%lu","%lu")"
+                                           "\r\n",
+                                           kPrettyNames[0], kThreadNames[kThreadIndices[i]],
+                                           kThreadIds[kThreadIndices[i]], kStarts[i], kEnds[i],
+                                           kEnds[i] - kStarts[i]);
+    }
+    CheckExportToCsvIsInvoked(context_menu, app_, view_, expected_contents, "Export events to CSV");
   }
 
   // Go to Disassembly

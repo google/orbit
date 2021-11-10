@@ -44,10 +44,10 @@ void CheckCopySelectionIsInvoked(const std::vector<std::string>& context_menu,
 
 void CheckExportToCsvIsInvoked(const std::vector<std::string>& context_menu,
                                const MockAppInterface& app, DataView& view,
-                               const std::string& expected_contents, bool is_exporting_events) {
-  std::string action = is_exporting_events ? "Export events to CSV" : "Export to CSV";
+                               const std::string& expected_contents,
+                               const std::string& action_name) {
   const auto action_index =
-      std::find(context_menu.begin(), context_menu.end(), action) - context_menu.begin();
+      std::find(context_menu.begin(), context_menu.end(), action_name) - context_menu.begin();
   ASSERT_LT(action_index, context_menu.size());
 
   ErrorMessageOr<orbit_base::TemporaryFile> temporary_file_or_error =
@@ -61,7 +61,7 @@ void CheckExportToCsvIsInvoked(const std::vector<std::string>& context_menu,
   temporary_file_or_error.value().CloseAndRemove();
 
   EXPECT_CALL(app, GetSaveFile).Times(1).WillOnce(testing::Return(temporary_file_path.string()));
-  view.OnContextMenu(action, static_cast<int>(action_index), {0});
+  view.OnContextMenu(action_name, static_cast<int>(action_index), {0});
 
   ErrorMessageOr<std::string> contents_or_error = orbit_base::ReadFileToString(temporary_file_path);
   ASSERT_THAT(contents_or_error, orbit_test_utils::HasNoError());

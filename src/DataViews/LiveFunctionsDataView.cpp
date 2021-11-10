@@ -8,6 +8,7 @@
 #include <absl/container/flat_hash_set.h>
 #include <absl/flags/flag.h>
 #include <absl/strings/str_format.h>
+#include <absl/strings/str_join.h>
 #include <absl/strings/str_split.h>
 #include <absl/time/time.h>
 #include <llvm/Demangle/Demangle.h>
@@ -292,12 +293,9 @@ ErrorMessageOr<void> LiveFunctionsDataView::ExportAllEventsToCsv(
   constexpr size_t kNumColumns = 5;
   const std::array<std::string, kNumColumns> kNames{"Name", "Thread", "Start", "End",
                                                     "Duration (ns)"};
-  std::string header_line;
-  for (size_t i = 0; i < kNumColumns - 1; ++i) {
-    header_line.append(FormatValueForCsv(kNames[i]));
-    header_line.append(kFieldSeparator);
-  }
-  header_line.append(FormatValueForCsv(kNames[kNumColumns - 1]));
+  std::string header_line = absl::StrJoin(
+      kNames, kFieldSeparator,
+      [](std::string* out, const std::string& name) { out->append(FormatValueForCsv(name)); });
   header_line.append(kLineSeparator);
   auto write_result = orbit_base::WriteFully(fd, header_line);
   if (write_result.has_error()) {
@@ -310,10 +308,8 @@ ErrorMessageOr<void> LiveFunctionsDataView::ExportAllEventsToCsv(
     std::string function_name = orbit_client_data::function_utils::GetDisplayName(function);
 
     const uint64_t function_id = GetInstrumentedFunctionId(row);
-    std::vector<const TimerInfo*> timers = app_->GetAllFunctionCalls(function_id);
-
     const CaptureData& capture_data = app_->GetCaptureData();
-    for (const TimerInfo* timer : timers) {
+    for (const TimerInfo* timer : app_->GetAllFunctionCalls(function_id)) {
       std::string line;
       line.append(FormatValueForCsv(function_name));
       line.append(kFieldSeparator);

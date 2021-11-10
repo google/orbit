@@ -25,7 +25,7 @@ void CheckCopySelectionIsInvoked(const std::vector<std::string>& context_menu,
 void CheckExportToCsvIsInvoked(const std::vector<std::string>& context_menu,
                                const MockAppInterface& app, DataView& view,
                                const std::string& expected_contents,
-                               bool is_exporting_events = false);
+                               const std::string& action_name = "Export to CSV");
 
 std::vector<std::string> FlattenContextMenuWithGrouping(
     const std::vector<std::vector<std::string>>& menu_with_grouping);
