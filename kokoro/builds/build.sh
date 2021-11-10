@@ -206,7 +206,7 @@ if [ -n "$1" ]; then
     cp -v lib/libOrbitVulkanLayer.so Orbit/collector/
     cp -v lib/VkLayer_Orbit_implicit.json Orbit/collector/
     cp -v bin/LinuxTracingIntegrationTests Orbit/collector/
-    cp -v lib/libLinuxTracingIntegrationTestPuppetSharedObject.so Orbit/collector/
+    cp -v lib/libIntegrationTestPuppetSharedObject.so Orbit/collector/
     cp -v bin/OrbitFakeClient Orbit/collector/
     zip Collector.zip -r Orbit/
     rm -rf Orbit/

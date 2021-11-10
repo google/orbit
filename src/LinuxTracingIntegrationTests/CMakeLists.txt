@@ -3,32 +3,47 @@
 # found in the LICENSE file.
 
 cmake_minimum_required(VERSION 3.15)
-
 project(LinuxTracingIntegrationTests)
 
-add_library(LinuxTracingIntegrationTestPuppetSharedObject SHARED)
 
-target_sources(LinuxTracingIntegrationTestPuppetSharedObject PRIVATE
-        LinuxTracingIntegrationTestPuppetSharedObject.cpp)
+add_library(IntegrationTestPuppetSharedObject SHARED)
 
-target_link_libraries(LinuxTracingIntegrationTestPuppetSharedObject PUBLIC
+target_sources(IntegrationTestPuppetSharedObject PRIVATE
+        IntegrationTestPuppetSharedObject.cpp)
+
+target_link_libraries(IntegrationTestPuppetSharedObject PUBLIC
         dl
         OrbitBase)
 
-strip_symbols(LinuxTracingIntegrationTestPuppetSharedObject)
+strip_symbols(IntegrationTestPuppetSharedObject)
+
+
+add_library(IntegrationTestCommons STATIC)
+
+target_include_directories(IntegrationTestCommons PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+target_sources(IntegrationTestCommons PRIVATE
+        IntegrationTestChildProcess.h
+        IntegrationTestPuppet.cpp
+        IntegrationTestPuppet.h
+        IntegrationTestUtils.h)
+
+target_link_libraries(IntegrationTestCommons PUBLIC
+        OrbitBase
+        OffscreenRenderingVulkanTutorialLib
+        CONAN_PKG::abseil)
+
 
 add_executable(LinuxTracingIntegrationTests)
 
 target_sources(LinuxTracingIntegrationTests PRIVATE
-        LinuxTracingIntegrationTest.cpp
-        LinuxTracingIntegrationTestPuppet.cpp
-        LinuxTracingIntegrationTestPuppet.h)
+        LinuxTracingIntegrationTest.cpp)
 
 target_link_libraries(LinuxTracingIntegrationTests PRIVATE
         GrpcProtos
+        IntegrationTestCommons
         LinuxTracing
         ObjectUtils
-        OffscreenRenderingVulkanTutorialLib
         OrbitBase
         GTest::GTest
         GTest::Main

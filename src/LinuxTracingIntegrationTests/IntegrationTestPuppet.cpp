@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "LinuxTracingIntegrationTestPuppet.h"
+#include "IntegrationTestPuppet.h"
 
 #include <absl/base/casts.h>
 #include <absl/time/clock.h>
@@ -24,7 +24,7 @@
 
 namespace orbit_linux_tracing_integration_tests {
 
-using PuppetConstants = LinuxTracingIntegrationTestPuppetConstants;
+using PuppetConstants = IntegrationTestPuppetConstants;
 
 static void SleepRepeatedly() {
   for (uint64_t i = 0; i < PuppetConstants::kSleepCount; ++i) {
@@ -100,7 +100,7 @@ static void RunVulkanTutorial() {
   tutorial.Run(PuppetConstants::kFrameCount);
 }
 
-int LinuxTracingIntegrationTestPuppetMain() {
+int IntegrationTestPuppetMain() {
   while (!!std::cin && !std::cin.eof()) {
     std::string command;
     std::getline(std::cin, command);
