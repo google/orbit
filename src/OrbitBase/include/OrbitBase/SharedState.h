@@ -5,6 +5,7 @@
 #ifndef ORBIT_BASE_SHARED_STATE_H_
 #define ORBIT_BASE_SHARED_STATE_H_
 
+#include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
 
 #include <optional>
@@ -21,19 +22,21 @@ namespace orbit_base_internal {
 template <typename T>
 struct SharedState {
   absl::Mutex mutex;
-  std::optional<T> result;
-  std::vector<orbit_base::AnyInvocable<void(const T&)>> continuations;
+  std::optional<T> result ABSL_GUARDED_BY(mutex);
+  std::vector<orbit_base::AnyInvocable<void(const T&)>> continuations ABSL_GUARDED_BY(mutex);
 
-  [[nodiscard]] bool IsFinished() const { return result.has_value(); }
+  [[nodiscard]] bool IsFinished() const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex) {
+    return result.has_value();
+  }
 };
 
 template <>
 struct SharedState<void> {
   absl::Mutex mutex;
-  bool finished = false;
-  std::vector<orbit_base::AnyInvocable<void()>> continuations;
+  bool finished ABSL_GUARDED_BY(mutex) = false;
+  std::vector<orbit_base::AnyInvocable<void()>> continuations ABSL_GUARDED_BY(mutex);
 
-  [[nodiscard]] bool IsFinished() const { return finished; }
+  [[nodiscard]] bool IsFinished() const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex) { return finished; }
 };
 
 }  // namespace orbit_base_internal
