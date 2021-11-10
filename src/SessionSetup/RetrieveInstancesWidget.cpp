@@ -213,7 +213,8 @@ void RetrieveInstancesWidget::OnProjectComboBoxCurrentIndexChanged() {
               if (load_result.has_value()) {
                 SaveProjectToPersistentStorage(selected_project);
               } else {
-                std::optional<Project> previously_selected = LoadLastSelectedProjectFromPersistentStorage();
+                std::optional<Project> previously_selected =
+                    LoadLastSelectedProjectFromPersistentStorage();
                 // The upcoming call to setCurrentIndex is not user action, but only resetting to
                 // previous values. Hence the signals are temporarily blocked.
                 ui_->projectComboBox->blockSignals(true);
