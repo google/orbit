@@ -6,6 +6,7 @@
 #include <gtest/gtest.h>
 #include <stddef.h>
 
+#include <atomic>
 #include <chrono>
 #include <memory>
 
@@ -426,22 +427,23 @@ TEST(ThreadPool, FutureContinuation) {
       ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl);
 
   absl::Mutex mutex;
-  bool called = false;
+  std::atomic_bool called = false;
 
   {
     absl::MutexLock lock(&mutex);
     orbit_base::Future<void> future =
         thread_pool->Schedule([&]() { absl::MutexLock lock(&mutex); });
 
-    auto const result = future.RegisterContinuation([&]() { called = true; });
+    auto const result = future.RegisterContinuation([&]() { called.store(true); });
     EXPECT_EQ(result, orbit_base::FutureRegisterContinuationResult::kSuccessfullyRegistered);
 
     EXPECT_TRUE(future.IsValid());
     EXPECT_FALSE(future.IsFinished());
 
-    EXPECT_TRUE(mutex.AwaitWithTimeout(absl::Condition(
-                                           +[](bool* called) { return *called; }, &called),
-                                       absl::Milliseconds(100)));
+    EXPECT_TRUE(mutex.AwaitWithTimeout(
+        absl::Condition(
+            +[](std::atomic_bool* called) { return called->load(); }, &called),
+        absl::Milliseconds(100)));
 
     future.Wait();
     EXPECT_TRUE(future.IsValid());
