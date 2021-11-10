@@ -2060,8 +2060,8 @@ void OrbitApp::ShowPresetInExplorer(const PresetFile& preset) {
                                  "/org/freedesktop/FileManager1",
                                  "org.freedesktop.FileManager1.ShowItems",
                                  QString::fromStdString(absl::StrFormat(
-                                     "array:string:\"file:///%s\"", preset.file_path().string())),
-                                 "string:\"\""};
+                                     "array:string:file:////%s", preset.file_path().string())),
+                                 "string:"};
 #elif defined(_WIN32)
   const QString program{"explorer.exe"};
   const QStringList arguments = {
