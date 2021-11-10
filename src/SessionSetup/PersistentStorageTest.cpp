@@ -32,10 +32,10 @@ class SessionSetupPersistentStorageTest : public testing::Test {
 };
 
 TEST_F(SessionSetupPersistentStorageTest, SaveAndLoad) {
-  EXPECT_EQ(LoadProjectFromPersistentStorage(), std::nullopt);  // default is nullopt
+  EXPECT_EQ(LoadLastSelectedProjectFromPersistentStorage(), std::nullopt);  // default is nullopt
 
   SaveProjectToPersistentStorage(std::nullopt);
-  EXPECT_EQ(LoadProjectFromPersistentStorage(), std::nullopt);
+  EXPECT_EQ(LoadLastSelectedProjectFromPersistentStorage(), std::nullopt);
 
   std::optional<Project> project = Project{
       "Test Project Name", /*display_name*/
@@ -43,7 +43,7 @@ TEST_F(SessionSetupPersistentStorageTest, SaveAndLoad) {
   };
 
   SaveProjectToPersistentStorage(project);
-  EXPECT_EQ(LoadProjectFromPersistentStorage(), project);
+  EXPECT_EQ(LoadLastSelectedProjectFromPersistentStorage(), project);
 }
 
 }  // namespace orbit_session_setup

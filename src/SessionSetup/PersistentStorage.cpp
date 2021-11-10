@@ -15,7 +15,7 @@ constexpr const char* kSelectedProjectDisplayNameKey{"kSelectedProjectDisplayNam
 
 using orbit_ggp::Project;
 
-[[nodiscard]] std::optional<orbit_ggp::Project> LoadProjectFromPersistentStorage() {
+[[nodiscard]] std::optional<orbit_ggp::Project> LoadLastSelectedProjectFromPersistentStorage() {
   QSettings settings;
 
   std::optional<Project> project;
