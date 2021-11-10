@@ -11,7 +11,6 @@
 
 #include "OrbitGgp/SshInfo.h"
 #include "OrbitSsh/Credentials.h"
-#include "absl/strings/str_format.h"
 
 namespace orbit_session_setup {
 
