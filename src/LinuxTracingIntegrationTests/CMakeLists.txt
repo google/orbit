@@ -24,13 +24,19 @@ target_include_directories(IntegrationTestCommons PUBLIC ${CMAKE_CURRENT_SOURCE_
 
 target_sources(IntegrationTestCommons PRIVATE
         IntegrationTestChildProcess.h
+        IntegrationTestCommons.cpp
+        IntegrationTestCommons.h
         IntegrationTestPuppet.cpp
         IntegrationTestPuppet.h
+        IntegrationTestUtils.cpp
         IntegrationTestUtils.h)
 
 target_link_libraries(IntegrationTestCommons PUBLIC
+        GrpcProtos
+        ObjectUtils
         OrbitBase
         OffscreenRenderingVulkanTutorialLib
+        GTest::GTest
         CONAN_PKG::abseil)
 
 
@@ -52,3 +58,26 @@ target_link_libraries(LinuxTracingIntegrationTests PRIVATE
 strip_symbols(LinuxTracingIntegrationTests)
 
 register_test(LinuxTracingIntegrationTests)
+
+
+add_executable(OrbitServiceIntegrationTests)
+
+target_sources(OrbitServiceIntegrationTests PRIVATE
+        OrbitServiceIntegrationTest.cpp
+        IntegrationTestPuppet.cpp
+        IntegrationTestPuppet.h)
+
+target_link_libraries(OrbitServiceIntegrationTests PRIVATE
+        GrpcProtos
+        IntegrationTestCommons
+        ObjectUtils
+        OrbitBase
+        OrbitVersion
+        ServiceLib
+        GTest::GTest
+        GTest::Main
+        CONAN_PKG::abseil)
+
+strip_symbols(OrbitServiceIntegrationTests)
+
+register_test(OrbitServiceIntegrationTests)

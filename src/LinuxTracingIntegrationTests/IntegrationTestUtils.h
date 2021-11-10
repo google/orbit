@@ -6,12 +6,14 @@
 #define LINUX_TRACING_INTEGRATION_TESTS_INTEGRATION_TEST_UTILS_H_
 
 #include <absl/strings/match.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include <string>
 
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/ReadFileToString.h"
+#include "module.pb.h"
+#include "symbol.pb.h"
 
 namespace orbit_linux_tracing_integration_tests {
 
@@ -25,6 +27,12 @@ namespace orbit_linux_tracing_integration_tests {
   ERROR("Root required for this test");
   return false;
 }
+
+[[nodiscard]] std::filesystem::path GetExecutableBinaryPath(pid_t pid);
+
+[[nodiscard]] orbit_grpc_protos::ModuleSymbols GetExecutableBinaryModuleSymbols(pid_t pid);
+
+[[nodiscard]] orbit_grpc_protos::ModuleInfo GetExecutableBinaryModuleInfo(pid_t pid);
 
 }  // namespace orbit_linux_tracing_integration_tests
 

@@ -101,6 +101,7 @@ static void RunVulkanTutorial() {
 }
 
 int IntegrationTestPuppetMain() {
+  LOG("Puppet started");
   while (!!std::cin && !std::cin.eof()) {
     std::string command;
     std::getline(std::cin, command);
@@ -126,6 +127,7 @@ int IntegrationTestPuppetMain() {
 
     std::cout << PuppetConstants::kDoneResponse << std::endl;
   }
+  LOG("Puppet finished");
   return 0;
 }
 
