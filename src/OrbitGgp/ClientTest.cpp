@@ -434,4 +434,45 @@ TEST_F(OrbitGgpClientTest, GetDefaultProjectAsyncClientGetsDestroyed) {
   EXPECT_TRUE(future_is_resolved);
 }
 
+TEST_F(OrbitGgpClientTest, DescribeInstanceAsyncWorking) {
+  auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()));
+  ASSERT_THAT(client, HasValue());
+
+  bool future_is_resolved = false;
+
+  auto future = client.value()->DescribeInstanceAsync("id/of/instance1");
+  future.Then(main_thread_executor_.get(),
+              [&future_is_resolved](ErrorMessageOr<Instance> instance) {
+                EXPECT_FALSE(future_is_resolved);
+                future_is_resolved = true;
+                ASSERT_THAT(instance, HasValue());
+                EXPECT_EQ("id/of/instance1", instance.value().id);
+                QCoreApplication::exit();
+              });
+
+  QCoreApplication::exec();
+
+  EXPECT_TRUE(future_is_resolved);
+}
+
+TEST_F(OrbitGgpClientTest, DescribeInstanceAsyncWorkingForInvalidInstance) {
+  auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()));
+  ASSERT_THAT(client, HasValue());
+
+  bool future_is_resolved = false;
+
+  auto future = client.value()->DescribeInstanceAsync("unknown/instance");
+  future.Then(main_thread_executor_.get(),
+              [&future_is_resolved](ErrorMessageOr<Instance> instance) {
+                EXPECT_FALSE(future_is_resolved);
+                future_is_resolved = true;
+                ASSERT_THAT(instance, HasError("Unable to parse JSON"));
+                QCoreApplication::exit();
+              });
+
+  QCoreApplication::exec();
+
+  EXPECT_TRUE(future_is_resolved);
+}
+
 }  // namespace orbit_ggp
