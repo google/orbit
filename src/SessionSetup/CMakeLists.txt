@@ -20,6 +20,7 @@ target_sources(
           include/SessionSetup/RetrieveInstancesWidget.h
           include/SessionSetup/ServiceDeployManager.h
           include/SessionSetup/SessionSetupDialog.h
+          include/SessionSetup/SessionSetupUtils.h
           include/SessionSetup/TargetConfiguration.h
           include/SessionSetup/TargetLabel.h)
 
@@ -40,6 +41,7 @@ target_sources(
           ServiceDeployManager.cpp
           SessionSetupDialog.cpp
           SessionSetupDialog.ui
+          SessionSetupUtils.cpp
           TargetLabel.cpp
           TargetLabel.ui
           ../../icons/orbiticons.qrc)
@@ -73,6 +75,7 @@ target_sources(
           RetrieveInstancesTest.cpp
           RetrieveInstancesWidgetTest.cpp
           SessionSetupDialogTest.cpp
+          SessionSetupUtilsTest.cpp
           TargetLabelTest.cpp)
 
 
