@@ -154,16 +154,16 @@ const std::string PresetsDataView::kMenuActionShowInExplorer = "Show in Explorer
 
 std::vector<std::vector<std::string>> PresetsDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
-  std::vector<std::string> action_group;
   // Note that the UI already enforces a single selection.
-  if (selected_indices.size() == 1) {
-    const PresetFile& preset = GetPreset(selected_indices[0]);
-    if (app_->GetPresetLoadState(preset).state != PresetLoadState::kNotLoadable) {
-      action_group.emplace_back(kMenuActionLoad);
-    }
-    action_group.emplace_back(kMenuActionDelete);
-    action_group.emplace_back(kMenuActionShowInExplorer);
+  CHECK(selected_indices.size() == 1);
+
+  std::vector<std::string> action_group;
+  const PresetFile& preset = GetPreset(selected_indices[0]);
+  if (app_->GetPresetLoadState(preset).state != PresetLoadState::kNotLoadable) {
+    action_group.emplace_back(kMenuActionLoad);
   }
+  action_group.emplace_back(kMenuActionDelete);
+  action_group.emplace_back(kMenuActionShowInExplorer);
 
   std::vector<std::vector<std::string>> menu =
       DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);
@@ -174,19 +174,16 @@ std::vector<std::vector<std::string>> PresetsDataView::GetContextMenuWithGroupin
 
 void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
                                     const std::vector<int>& item_indices) {
+  // Note that the UI already enforces a single selection.
+  CHECK(item_indices.size() == 1);
+
   if (action == kMenuActionLoad) {
-    if (item_indices.size() != 1) {
-      return;
-    }
     const PresetFile& preset = GetPreset(item_indices[0]);
     app_->LoadPreset(preset);
 
   } else if (action == kMenuActionDelete) {
     orbit_metrics_uploader::ScopedMetric metric{
         metrics_uploader_, orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_PRESET_DELETE};
-    if (item_indices.size() != 1) {
-      return;
-    }
     int row = item_indices[0];
     const PresetFile& preset = GetPreset(row);
     const std::string& filename = preset.file_path().string();
@@ -202,9 +199,6 @@ void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
     }
 
   } else if (action == kMenuActionShowInExplorer) {
-    if (item_indices.size() != 1) {
-      return;
-    }
     const PresetFile& preset = GetPreset(item_indices[0]);
     app_->ShowPresetInExplorer(preset);
 
