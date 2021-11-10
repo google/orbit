@@ -258,7 +258,8 @@ class Capture(E2ETestCase):
         logging.info('Showing capture window')
         self.find_control("TabItem", "Capture").click_input()
 
-    def _set_capture_options(self, collect_thread_states: bool, collect_system_memory_usage: bool):
+    def _set_capture_options(self, collect_thread_states: bool, collect_system_memory_usage: bool,
+                             user_space_instrumentation: bool):
         capture_tab = self.find_control('Group', "CaptureTab")
 
         logging.info('Opening "Capture Options" dialog')
@@ -280,6 +281,16 @@ class Capture(E2ETestCase):
             logging.info('Toggling "Collect memory usage and page faults information" checkbox')
             collect_system_memory_usage_checkbox.click_input()
 
+        dynamic_instrumentation_method_combobox = self.find_control('ComboBox',
+                                                                    'DynamicInstrumentationMethodComboBox',
+                                                                    parent=capture_options_dialog)
+        if user_space_instrumentation:
+            logging.info('Setting dynamic instrumentation method to "Orbit".')
+            dynamic_instrumentation_method_combobox.select("Orbit")
+        else:
+            logging.info('Setting dynamic instrumentation method to "Kernel (Uprobes)".')
+            dynamic_instrumentation_method_combobox.select("Kernel (Uprobes)")
+  
         logging.info('Saving "Capture Options"')
         self.find_control('Button', 'OK', parent=capture_options_dialog).click_input()
 
@@ -306,9 +317,9 @@ class Capture(E2ETestCase):
         logging.info("Capturing finished")
 
     def _execute(self, length_in_seconds: int = 5, collect_thread_states: bool = False,
-                 collect_system_memory_usage: bool = False):
+                 collect_system_memory_usage: bool = False, user_space_instrumentation: bool = False):
         self._show_capture_window()
-        self._set_capture_options(collect_thread_states, collect_system_memory_usage)
+        self._set_capture_options(collect_thread_states, collect_system_memory_usage, user_space_instrumentation)
         self._take_capture(length_in_seconds)
         self._verify_existence_of_tracks()
 

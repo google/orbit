@@ -199,6 +199,9 @@
            </item>
            <item>
             <widget class="QComboBox" name="dynamicInstrumentationMethodComboBox">
+             <property name="accessibleName">
+              <string>DynamicInstrumentationMethodComboBox</string>
+             </property>
              <property name="minimumSize">
               <size>
                <width>170</width>
