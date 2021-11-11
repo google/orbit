@@ -409,7 +409,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
       timers[i].set_thread_id(kThreadIds[kThreadIndices[i]]);
       timers_for_instrumented_function.push_back(&timers[i]);
     }
-    EXPECT_CALL(app_, GetAllFunctionCalls)
+    EXPECT_CALL(app_, GetAllTimersForHookedFunction)
         .WillRepeatedly(testing::Return(timers_for_instrumented_function));
 
     std::string expected_contents("\"Name\",\"Thread\",\"Start\",\"End\",\"Duration (ns)\"\r\n");

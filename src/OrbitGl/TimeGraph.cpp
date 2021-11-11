@@ -501,7 +501,8 @@ const TimerInfo* TimeGraph::FindNextFunctionCall(uint64_t function_address, uint
   return next_timer;
 }
 
-std::vector<const TimerInfo*> TimeGraph::GetAllFunctionCalls(uint64_t function_address) const {
+std::vector<const TimerInfo*> TimeGraph::GetAllTimersForHookedFunction(
+    uint64_t function_address) const {
   std::vector<const TimerInfo*> timers;
   std::vector<const TimerChain*> chains = GetAllThreadTrackTimerChains();
   for (const TimerChain* chain : chains) {

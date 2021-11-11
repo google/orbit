@@ -309,7 +309,7 @@ ErrorMessageOr<void> LiveFunctionsDataView::ExportAllEventsToCsv(
 
     const uint64_t function_id = GetInstrumentedFunctionId(row);
     const CaptureData& capture_data = app_->GetCaptureData();
-    for (const TimerInfo* timer : app_->GetAllFunctionCalls(function_id)) {
+    for (const TimerInfo* timer : app_->GetAllTimersForHookedFunction(function_id)) {
       std::string line;
       line.append(FormatValueForCsv(function_name));
       line.append(kFieldSeparator);

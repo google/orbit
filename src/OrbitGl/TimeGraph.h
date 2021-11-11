@@ -105,7 +105,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   [[nodiscard]] const orbit_client_protos::TimerInfo* FindNextFunctionCall(
       uint64_t function_address, uint64_t current_time,
       std::optional<uint32_t> thread_id = std::nullopt) const;
-  [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetAllFunctionCalls(
+  [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetAllTimersForHookedFunction(
       uint64_t function_address) const;
 
   void SelectAndZoom(const orbit_client_protos::TimerInfo* timer_info);
