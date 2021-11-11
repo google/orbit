@@ -18,13 +18,12 @@
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
+#include "SessionSetup/PersistentStorage.h"
 #include "SessionSetup/RetrieveInstances.h"
 #include "ui_RetrieveInstancesWidget.h"
 
 namespace {
 constexpr const char* kAllInstancesKey{"kAllInstancesKey"};
-constexpr const char* kSelectedProjectIdKey{"kSelectedProjectIdKey"};
-constexpr const char* kSelectedProjectDisplayNameKey{"kSelectedProjectDisplayNameKey"};
 }  // namespace
 
 namespace orbit_session_setup {
@@ -33,23 +32,6 @@ using orbit_ggp::Instance;
 using orbit_ggp::Project;
 using LoadProjectsAndInstancesResult = RetrieveInstances::LoadProjectsAndInstancesResult;
 using InstanceListScope = orbit_ggp::Client::InstanceListScope;
-
-namespace {
-
-[[nodiscard]] std::optional<Project> GetQSettingsProject() {
-  QSettings settings;
-
-  std::optional<Project> project;
-  if (settings.contains(kSelectedProjectIdKey)) {
-    project = Project{
-        settings.value(kSelectedProjectDisplayNameKey).toString() /* display_name */,
-        settings.value(kSelectedProjectIdKey).toString() /* id */
-    };
-  }
-  return project;
-}
-
-}  // namespace
 
 RetrieveInstancesWidget::~RetrieveInstancesWidget() = default;
 
@@ -72,6 +54,8 @@ RetrieveInstancesWidget::RetrieveInstancesWidget(RetrieveInstances* retrieve_ins
                    &RetrieveInstancesWidget::FilterTextChanged);
   QObject::connect(ui_->reloadButton, &QPushButton::clicked, this,
                    &RetrieveInstancesWidget::OnReloadButtonClicked);
+  QObject::connect(ui_->projectComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+                   &RetrieveInstancesWidget::OnProjectComboBoxCurrentIndexChanged);
 }
 
 void RetrieveInstancesWidget::SetupStateMachine() {
@@ -102,7 +86,7 @@ void RetrieveInstancesWidget::Start() {
   QSettings settings;
   ui_->allCheckBox->setChecked(settings.value(kAllInstancesKey, false).toBool());
 
-  InitialLoad(GetQSettingsProject());
+  InitialLoad(LoadLastSelectedProjectFromPersistentStorage());
 }
 
 InstanceListScope RetrieveInstancesWidget::GetInstanceListScope() const {
@@ -111,6 +95,7 @@ InstanceListScope RetrieveInstancesWidget::GetInstanceListScope() const {
 }
 
 void RetrieveInstancesWidget::InitialLoad(const std::optional<Project>& remembered_project) {
+  CHECK(ui_->projectComboBox->count() == 0);
   emit LoadingStarted();
   retrieve_instances_->LoadProjectsAndInstances(remembered_project, GetInstanceListScope())
       .Then(main_thread_executor_.get(),
@@ -133,6 +118,10 @@ void RetrieveInstancesWidget::InitialLoad(const std::optional<Project>& remember
 void RetrieveInstancesWidget::OnInitialLoadingReturnedSuccess(
     LoadProjectsAndInstancesResult initial_load_result) {
   CHECK(ui_->projectComboBox->count() == 0);
+
+  // From here on the projectComboBox is filled. To not trigger currentIndexChanged signals, the
+  // signals of projectComboBox are blocked until the end of this function.
+  ui_->projectComboBox->blockSignals(true);
 
   QString default_project_text =
       QString("Default Project (%1)").arg(initial_load_result.default_project.display_name);
@@ -159,6 +148,8 @@ void RetrieveInstancesWidget::OnInitialLoadingReturnedSuccess(
       ui_->projectComboBox->setCurrentIndex(ui_->projectComboBox->count() - 1);
     }
   }
+
+  ui_->projectComboBox->blockSignals(false);
 
   OnInstancesLoadingReturned(initial_load_result.instances);
 }
@@ -195,6 +186,51 @@ void RetrieveInstancesWidget::OnReloadButtonClicked() {
               // main_thread_executor_ is a member of `this`. When `this` is destroyed,
               // main_thread_executor_ is destroyed and the lambda is not executed. Check
               // Future::Then for details about the lambda not being executed.
+              OnInstancesLoadingReturned(load_result);
+            });
+}
+
+std::optional<orbit_ggp::Project> RetrieveInstancesWidget::GetSelectedProject() const {
+  std::optional<Project> project;
+  if (ui_->projectComboBox->currentData().canConvert<Project>()) {
+    project = ui_->projectComboBox->currentData().value<Project>();
+  }
+  return project;
+}
+
+void RetrieveInstancesWidget::OnProjectComboBoxCurrentIndexChanged() {
+  std::optional<Project> selected_project = GetSelectedProject();
+
+  emit LoadingStarted();
+  retrieve_instances_->LoadInstances(selected_project, GetInstanceListScope())
+      .Then(main_thread_executor_.get(),
+            [this, selected_project](const ErrorMessageOr<QVector<Instance>>& load_result) {
+              // `this` still exists when this lambda is executed. This is enforced, because
+              // main_thread_executor_ is a member of `this`. When `this` is destroyed,
+              // main_thread_executor_ is destroyed and the lambda is not executed. Check
+              // Future::Then for details about the lambda not being executed.
+
+              if (load_result.has_value()) {
+                SaveProjectToPersistentStorage(selected_project);
+              } else {
+                std::optional<Project> previously_selected =
+                    LoadLastSelectedProjectFromPersistentStorage();
+                // The upcoming call to setCurrentIndex is not user action, but only resetting to
+                // previous values. Hence the signals are temporarily blocked.
+                ui_->projectComboBox->blockSignals(true);
+                if (previously_selected == std::nullopt) {
+                  // If previously_selected is nullopt, that means QSettings contained either the
+                  // default project or nothing (in which case selecting the default project is also
+                  // correct). The first entry of the combobox (index 0) is the default project.
+                  ui_->projectComboBox->setCurrentIndex(0);
+                } else {
+                  int index = ui_->projectComboBox->findData(
+                      QVariant::fromValue(previously_selected.value()));
+                  ui_->projectComboBox->setCurrentIndex(index);
+                }
+                ui_->projectComboBox->blockSignals(false);
+              }
+
               OnInstancesLoadingReturned(load_result);
             });
 }
