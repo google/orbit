@@ -29,7 +29,7 @@ std::shared_ptr<grpc::Channel> CreateGrpcChannel(uint16_t port) {
   return result;
 }
 
-std::optional<std::pair<QString, uint32_t>> SplitInstanceAndProcessIdFromConnectionTarget(
+std::optional<ConnectionTarget> orbit_session_setup::ConnectionTarget::FromString(
     const QString& connection_target) {
   auto parts = connection_target.split('@', QString::SplitBehavior::KeepEmptyParts);
 
@@ -43,7 +43,7 @@ std::optional<std::pair<QString, uint32_t>> SplitInstanceAndProcessIdFromConnect
     return std::nullopt;
   }
 
-  return std::pair<QString, uint32_t>{parts[1], pid};
+  return ConnectionTarget{parts[1], pid};
 }
 
 }  // namespace orbit_session_setup
