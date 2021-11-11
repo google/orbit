@@ -44,7 +44,6 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
     ui_->unwindingMethodWidget->hide();
     ui_->schedulerCheckBox->hide();
     ui_->gpuSubmissionsCheckBox->hide();
-    ui_->dynamicInstrumentationMethodWidget->hide();
     ui_->introspectionCheckBox->hide();
   }
 
