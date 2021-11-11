@@ -208,19 +208,20 @@ TEST_F(PresetsDataViewTest, CheckPresenceOfContextMenuEntries) {
 
   // Loadable preset
   EXPECT_THAT(FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0})),
-              testing::UnorderedElementsAre("Copy Selection", "Export to CSV", "Load Preset",
-                                            "Delete Preset"))
+              testing::ElementsAre("Load Preset", "Delete Preset", "Show in Explorer",
+                                   "Copy Selection", "Export to CSV"))
       << view_.GetValue(0, 1);
 
   // Not loadable preset
-  EXPECT_THAT(FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(1, {1})),
-              testing::UnorderedElementsAre("Copy Selection", "Export to CSV", "Delete Preset"))
+  EXPECT_THAT(
+      FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(1, {1})),
+      testing::ElementsAre("Delete Preset", "Show in Explorer", "Copy Selection", "Export to CSV"))
       << view_.GetValue(1, 1);
 
   // Partially loadable preset
   EXPECT_THAT(FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(2, {2})),
-              testing::UnorderedElementsAre("Copy Selection", "Export to CSV", "Load Preset",
-                                            "Delete Preset"))
+              testing::ElementsAre("Load Preset", "Delete Preset", "Show in Explorer",
+                                   "Copy Selection", "Export to CSV"))
       << view_.GetValue(2, 1);
 }
 
@@ -276,6 +277,21 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
           EXPECT_EQ(preset_file.file_path(), preset_filename0);
         });
     view_.OnContextMenu("Load Preset", static_cast<int>(load_preset_idx), {0});
+  }
+
+  // Show In Explorer
+  {
+    const auto show_in_explorer_idx =
+        std::find(context_menu.begin(), context_menu.end(), "Show in Explorer") -
+        context_menu.begin();
+    ASSERT_LT(show_in_explorer_idx, context_menu.size());
+
+    EXPECT_CALL(app_, ShowPresetInExplorer)
+        .Times(1)
+        .WillOnce([&](const orbit_preset_file::PresetFile& preset_file) {
+          EXPECT_EQ(preset_file.file_path(), preset_filename0);
+        });
+    view_.OnContextMenu("Show in Explorer", static_cast<int>(show_in_explorer_idx), {0});
   }
 
   // Delete Preset

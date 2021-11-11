@@ -36,6 +36,7 @@ class AppInterface {
   virtual void LoadPreset(const orbit_preset_file::PresetFile& preset) = 0;
   [[nodiscard]] virtual PresetLoadState GetPresetLoadState(
       const orbit_preset_file::PresetFile& preset) const = 0;
+  virtual void ShowPresetInExplorer(const orbit_preset_file::PresetFile& preset) = 0;
 
   // Functions needed by FunctionsDataView
   [[nodiscard]] virtual bool IsFunctionSelected(

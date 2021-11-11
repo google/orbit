@@ -30,8 +30,9 @@ class MockAppInterface : public AppInterface {
 
   MOCK_METHOD(void, SendErrorToUi, (const std::string& title, const std::string& text));
 
-  MOCK_METHOD(void, LoadPreset, (const orbit_preset_file::PresetFile& preset));
+  MOCK_METHOD(void, LoadPreset, (const orbit_preset_file::PresetFile&));
   MOCK_METHOD(PresetLoadState, GetPresetLoadState, (const orbit_preset_file::PresetFile&), (const));
+  MOCK_METHOD(void, ShowPresetInExplorer, (const orbit_preset_file::PresetFile&));
 
   MOCK_METHOD(bool, IsFunctionSelected, (const orbit_client_protos::FunctionInfo&), (const));
   MOCK_METHOD(bool, IsFunctionSelected, (const orbit_client_data::SampledFunction&), (const));

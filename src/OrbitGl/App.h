@@ -349,6 +349,7 @@ class OrbitApp final : public DataViewFactory,
   void LoadPreset(const orbit_preset_file::PresetFile& preset) override;
   [[nodiscard]] orbit_data_views::PresetLoadState GetPresetLoadState(
       const orbit_preset_file::PresetFile& preset) const override;
+  void ShowPresetInExplorer(const orbit_preset_file::PresetFile& preset) override;
   void FilterTracks(const std::string& filter);
 
   void CrashOrbitService(orbit_grpc_protos::CrashOrbitServiceRequest_CrashType crash_type);

@@ -15,7 +15,9 @@
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
 #include <imgui.h>
+#include <stdlib.h>
 
+#include <QProcess>
 #include <chrono>
 #include <cinttypes>
 #include <cstddef>
@@ -2043,6 +2045,36 @@ void OrbitApp::LoadPreset(const PresetFile& preset_file) {
 
     FireRefreshCallbacks();
   });
+}
+
+void OrbitApp::ShowPresetInExplorer(const PresetFile& preset) {
+  const auto file_exists = orbit_base::FileExists(preset.file_path());
+  if (file_exists.has_error()) {
+    SendErrorToUi("Unable to find preset file: %s", file_exists.error().message());
+    return;
+  }
+
+#if defined(__linux)
+  const QString program{"dbus-send"};
+  const QStringList arguments = {"--session",
+                                 "--print-reply",
+                                 "--dest=org.freedesktop.FileManager1",
+                                 "--type=method_call",
+                                 "/org/freedesktop/FileManager1",
+                                 "org.freedesktop.FileManager1.ShowItems",
+                                 QString::fromStdString(absl::StrFormat(
+                                     "array:string:file:////%s", preset.file_path().string())),
+                                 "string:"};
+#elif defined(_WIN32)
+  const QString program{"explorer.exe"};
+  const QStringList arguments = {
+      QString::fromStdString(absl::StrFormat("/select,%s", preset.file_path().string()))};
+#endif  // defined(__linux)
+  // QProcess::startDetached starts the program `program` with the arguments `arguments` in a new
+  // process, and detaches from it. Returns true on success; otherwise returns false.
+  if (QProcess::startDetached(program, arguments)) return;
+
+  SendErrorToUi("%s", "Unable to show preset file in explorer.");
 }
 
 void OrbitApp::UpdateProcessAndModuleList() {
