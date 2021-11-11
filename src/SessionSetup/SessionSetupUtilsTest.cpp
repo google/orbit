@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 
+#include <QString>
 #include <filesystem>
 
 #include "OrbitGgp/SshInfo.h"
@@ -28,6 +29,27 @@ TEST(SessionSetupUtils, CredentialsFromSshInfoWorksCorrectly) {
   EXPECT_EQ(std::filesystem::path{info.known_hosts_path.toStdString()},
             credentials.known_hosts_path);
   EXPECT_EQ(info.user.toStdString(), credentials.user);
+}
+
+TEST(SessionSetupUtils, ConnectionTargetFromString) {
+  const QString instance = "some/i-nstanc-3/id123";
+  const uint32_t pid = 1234;
+
+  // Correct format: "pid@instance_id", where PID is a uint32_t
+  const QString target_string = QString("%1@%2").arg(QString::number(pid), instance);
+  auto result = ConnectionTarget::FromString(target_string);
+  EXPECT_TRUE(result.has_value());
+  if (result.has_value()) {
+    EXPECT_EQ(result.value().instance_id_.toStdString(), instance.toStdString());
+    EXPECT_EQ(result.value().process_id_, pid);
+  }
+
+  // Fail-tests for multiple incorrect formats
+  EXPECT_FALSE(ConnectionTarget::FromString("no/id/found").has_value());
+  EXPECT_FALSE(ConnectionTarget::FromString("invalid_pid@valid/i-nstanc-3/id").has_value());
+  EXPECT_FALSE(ConnectionTarget::FromString("").has_value());
+  // Double "@" results in failure as it's ambiguous
+  EXPECT_FALSE(ConnectionTarget::FromString("1234@invalid@i-nstanc-3/id").has_value());
 }
 
 }  // namespace orbit_session_setup

@@ -4,6 +4,8 @@
 
 #include "SessionSetup/SessionSetupUtils.h"
 
+#include <QStringList>
+
 #include "OrbitBase/Logging.h"
 
 namespace orbit_session_setup {
@@ -25,6 +27,23 @@ std::shared_ptr<grpc::Channel> CreateGrpcChannel(uint16_t port) {
       grpc_server_address, grpc::InsecureChannelCredentials(), grpc::ChannelArguments());
   CHECK(result != nullptr);
   return result;
+}
+
+std::optional<ConnectionTarget> orbit_session_setup::ConnectionTarget::FromString(
+    const QString& connection_target) {
+  auto parts = connection_target.split('@', QString::SplitBehavior::KeepEmptyParts);
+
+  if (parts.size() != 2) {
+    return std::nullopt;
+  }
+
+  bool ok = false;
+  uint pid = parts[0].toUInt(&ok);
+  if (!ok) {
+    return std::nullopt;
+  }
+
+  return ConnectionTarget{parts[1], pid};
 }
 
 }  // namespace orbit_session_setup
