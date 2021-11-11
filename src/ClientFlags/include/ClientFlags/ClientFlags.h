@@ -55,4 +55,7 @@ ABSL_DECLARE_FLAG(bool, enable_project_selection);
 
 ABSL_DECLARE_FLAG(bool, enforce_full_redraw);
 
+// VSI
+ABSL_DECLARE_FLAG(std::string, connection_target);
+
 #endif  // CLIENT_FLAGS_CLIENT_FLAGS_H_
