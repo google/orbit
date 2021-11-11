@@ -122,9 +122,10 @@ class RetrieveInstancesWidgetTest : public testing::Test {
  protected:
   void SetUp() override {
     QCoreApplication::setOrganizationName(kOrganizationName);
-    QCoreApplication::setApplicationName(kApplicationName);
+    QString test_name = QString("%1 - %2").arg(
+        kApplicationName, testing::UnitTest::GetInstance()->current_test_info()->name());
+    QCoreApplication::setApplicationName(test_name);
     QSettings settings;
-    settings.setFallbacksEnabled(false);
     settings.clear();
 
     ASSERT_NE(filter_line_edit_, nullptr);
