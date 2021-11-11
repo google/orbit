@@ -44,6 +44,7 @@ using orbit_grpc_protos::GpuDebugMarker;
 using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::GpuQueueSubmission;
 using orbit_grpc_protos::GpuSubmitInfo;
+using orbit_grpc_protos::InfoEnablingUserSpaceInstrumentationEvent;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
@@ -2076,6 +2077,30 @@ TEST(ProducerEventProcessor, ErrorEnablingUserSpaceInstrumentationEvent) {
       client_capture_event.error_enabling_user_space_instrumentation_event();
   EXPECT_EQ(actual_error_event.timestamp_ns(), kTimestampNs1);
   EXPECT_EQ(actual_error_event.message(), kMessage);
+}
+
+TEST(ProducerEventProcessor, InfoEnablingUserSpaceInstrumentationEvent) {
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
+
+  ProducerCaptureEvent producer_capture_event;
+  InfoEnablingUserSpaceInstrumentationEvent* info_event =
+      producer_capture_event.mutable_info_enabling_user_space_instrumentation_event();
+  info_event->set_timestamp_ns(kTimestampNs1);
+  constexpr const char* kMessage = "message";
+  info_event->set_message(kMessage);
+
+  ClientCaptureEvent client_capture_event;
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+
+  producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
+
+  ASSERT_EQ(client_capture_event.event_case(),
+            ClientCaptureEvent::kInfoEnablingUserSpaceInstrumentationEvent);
+  const InfoEnablingUserSpaceInstrumentationEvent& actual_info_event =
+      client_capture_event.info_enabling_user_space_instrumentation_event();
+  EXPECT_EQ(actual_info_event.timestamp_ns(), kTimestampNs1);
+  EXPECT_EQ(actual_info_event.message(), kMessage);
 }
 
 TEST(ProducerEventProcessor, LostPerfRecordsEvent) {

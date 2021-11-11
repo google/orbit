@@ -39,6 +39,7 @@ using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::GpuDebugMarker;
 using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::GpuQueueSubmission;
+using orbit_grpc_protos::InfoEnablingUserSpaceInstrumentationEvent;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointInfo;
@@ -127,6 +128,8 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessFunctionCallAndTransferOwnership(FunctionCall* function_call);
   void ProcessGpuQueueSubmissionAndTransferOwnership(uint64_t producer_id,
                                                      GpuQueueSubmission* gpu_queue_submission);
+  void ProcessInfoEnablingUserSpaceInstrumentationEventAndTransferOwnership(
+      InfoEnablingUserSpaceInstrumentationEvent* info_event);
   // ProcessInterned* functions remap producer intern_ids to the id space used in the client.
   // They keep track of these mappings in producer_interned_callstack_id_to_client_callstack_id_
   // and producer_interned_string_id_to_client_string_id_.
@@ -418,6 +421,14 @@ void ProducerEventProcessorImpl::ProcessGpuQueueSubmissionAndTransferOwnership(
   client_capture_event_collector_->AddEvent(std::move(event));
 }
 
+void ProducerEventProcessorImpl::
+    ProcessInfoEnablingUserSpaceInstrumentationEventAndTransferOwnership(
+        InfoEnablingUserSpaceInstrumentationEvent* info_event) {
+  ClientCaptureEvent event;
+  event.set_allocated_info_enabling_user_space_instrumentation_event(info_event);
+  client_capture_event_collector_->AddEvent(std::move(event));
+}
+
 void ProducerEventProcessorImpl::ProcessInternedCallstack(uint64_t producer_id,
                                                           InternedCallstack* interned_callstack) {
   // TODO(b/180235290): replace with error message
@@ -619,6 +630,10 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
     case ProducerCaptureEvent::kGpuQueueSubmission:
       ProcessGpuQueueSubmissionAndTransferOwnership(producer_id,
                                                     event.release_gpu_queue_submission());
+      break;
+    case ProducerCaptureEvent::kInfoEnablingUserSpaceInstrumentationEvent:
+      ProcessInfoEnablingUserSpaceInstrumentationEventAndTransferOwnership(
+          event.release_info_enabling_user_space_instrumentation_event());
       break;
     case ProducerCaptureEvent::kInternedCallstack:
       ProcessInternedCallstack(producer_id, event.mutable_interned_callstack());

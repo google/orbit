@@ -677,6 +677,12 @@ message ErrorEnablingUserSpaceInstrumentationEvent {
   bytes message = 2;
 }
 
+message InfoEnablingUserSpaceInstrumentationEvent {
+  uint64 timestamp_ns = 1;
+  // This is a string, we use bytes to avoid UTF-8 validation.
+  bytes message = 2;
+}
+
 message ClockResolutionEvent {
   uint64 timestamp_ns = 1;
   uint64 clock_resolution_ns = 2;
@@ -708,7 +714,7 @@ message ClientCaptureEvent {
     // numbers starting with 16.
     //
     // Next high-frequency ID: 12
-    // Next lower-frequency ID: 48
+    // Next lower-frequency ID: 49
     // Please keep these alphabetically ordered.
 
     // Even though AddressInfo is a high-frequency event
@@ -738,6 +744,8 @@ message ClientCaptureEvent {
     FunctionCall function_call = 2;
     GpuJob gpu_job = 3;
     GpuQueueSubmission gpu_queue_submission = 4;
+    InfoEnablingUserSpaceInstrumentationEvent
+        info_enabling_user_space_instrumentation_event = 48;
     InternedCallstack interned_callstack = 5;
     InternedString interned_string = 18;
     InternedTracepointInfo interned_tracepoint_info = 19;
@@ -764,7 +772,7 @@ message ProducerCaptureEvent {
     // numbers starting with 16.
     //
     // Next high-frequency ID: 15
-    // Next lower-frequency ID: 47
+    // Next lower-frequency ID: 48
     //
     // Please keep these alphabetically ordered.
     ApiEvent api_event = 10;
@@ -799,6 +807,8 @@ message ProducerCaptureEvent {
     FunctionEntry function_entry = 13;
     FunctionExit function_exit = 14;
     GpuQueueSubmission gpu_queue_submission = 6;
+    InfoEnablingUserSpaceInstrumentationEvent
+        info_enabling_user_space_instrumentation_event = 47;
     InternedCallstack interned_callstack = 7;
     InternedString interned_string = 18;
     LostPerfRecordsEvent lost_perf_records_event = 34;

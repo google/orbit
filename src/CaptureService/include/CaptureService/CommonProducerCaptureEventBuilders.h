@@ -29,6 +29,9 @@ namespace orbit_capture_service {
 [[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent
 CreateErrorEnablingUserSpaceInstrumentationEvent(uint64_t timestamp_ns, std::string message);
 
+[[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent
+CreateInfoEnablingUserSpaceInstrumentationEvent(uint64_t timestamp_ns, std::string message);
+
 [[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent CreateWarningEvent(uint64_t timestamp_ns,
                                                                          std::string message);
 

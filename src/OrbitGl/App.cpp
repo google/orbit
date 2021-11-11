@@ -606,6 +606,15 @@ void OrbitApp::OnErrorEnablingUserSpaceInstrumentationEvent(
   });
 }
 
+void OrbitApp::OnInfoEnablingUserSpaceInstrumentationEvent(
+    orbit_grpc_protos::InfoEnablingUserSpaceInstrumentationEvent info_event) {
+  main_thread_executor_->Schedule([this, info_event = std::move(info_event)]() {
+    main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
+                                     GetCaptureTimeAt(info_event.timestamp_ns()),
+                                     info_event.message());
+  });
+}
+
 static constexpr const char* kIncompleteDataLogMessage =
     "The capture contains one or more time ranges with incomplete data. Some information might "
     "be inaccurate.";

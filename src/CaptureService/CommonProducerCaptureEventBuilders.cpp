@@ -121,6 +121,17 @@ ProducerCaptureEvent CreateErrorEnablingUserSpaceInstrumentationEvent(uint64_t t
   return event;
 }
 
+ProducerCaptureEvent CreateInfoEnablingUserSpaceInstrumentationEvent(uint64_t timestamp_ns,
+                                                                     std::string message) {
+  ProducerCaptureEvent event;
+  orbit_grpc_protos::InfoEnablingUserSpaceInstrumentationEvent*
+      info_enabling_user_space_instrumentation_event =
+          event.mutable_info_enabling_user_space_instrumentation_event();
+  info_enabling_user_space_instrumentation_event->set_timestamp_ns(timestamp_ns);
+  info_enabling_user_space_instrumentation_event->set_message(std::move(message));
+  return event;
+}
+
 ProducerCaptureEvent CreateWarningEvent(uint64_t timestamp_ns, std::string message) {
   ProducerCaptureEvent event;
   orbit_grpc_protos::WarningEvent* warning_event = event.mutable_warning_event();
