@@ -1341,8 +1341,7 @@ void OrbitApp::StartCapture() {
   bool enable_api = data_manager_->get_enable_api();
   bool enable_introspection = IsDevMode() && data_manager_->get_enable_introspection();
   const DynamicInstrumentationMethod dynamic_instrumentation_method =
-      IsDevMode() ? data_manager_->dynamic_instrumentation_method()
-                  : CaptureOptions::kKernelUprobes;
+      data_manager_->dynamic_instrumentation_method();
   double samples_per_second = data_manager_->samples_per_second();
   uint16_t stack_dump_size = data_manager_->stack_dump_size();
   const UnwindingMethod unwinding_method =
