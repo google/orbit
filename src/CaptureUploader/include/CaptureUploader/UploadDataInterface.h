@@ -19,19 +19,13 @@ class UploadDataInterface {
  public:
   virtual ~UploadDataInterface() = default;
 
-  // Get status of data to upload. CaptureUploader calls this method frequently
-  // to determine whether to continue, pause, resume or stop the upload.
-  [[nodiscard]] virtual DataReadiness GetDataReadiness() const = 0;
+  // Get status of data to upload. CaptureUploader calls this method frequently to determine whether
+  // to continue, pause, resume or stop the upload.
+  [[nodiscard]] virtual DataReadiness GetDataReadiness() = 0;
 
-  // Get reference of the upload data buffer which stores data in raw bytes.
-  // CaptureUploader calls this method to get the upload data buffer where it
-  // will read data from while uploading.
-  [[nodiscard]] virtual const std::vector<unsigned char>& GetUploadDataBuffer() const = 0;
-
-  // Clear the upload data buffer and refresh it with newly produced data.
-  // CaptureUploader calls this method when it finishes uploading existing data
-  // in the upload data buffer.
-  virtual void RefreshUploadDataBuffer() = 0;
+  // Read at most `max_bytes` data into the buffer pointed to by `dest` and return the actual read
+  // bytes.
+  [[nodiscard]] virtual size_t ReadIntoBuffer(void* dest, size_t max_bytes) = 0;
 };
 
 }  // namespace orbit_capture_uploader

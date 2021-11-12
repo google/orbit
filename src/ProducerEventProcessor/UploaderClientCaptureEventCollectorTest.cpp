@@ -82,14 +82,13 @@ class UploaderClientCaptureEventCollectorTest : public testing::Test {
     produce_finished_ = true;
   }
 
+  static constexpr size_t kUploadBufferSize = 100;
   void UploadCaptureData() {
     while (collector_.GetDataReadiness() != orbit_capture_uploader::DataReadiness::kEndOfData) {
       constexpr uint64_t kUploadEventsEveryMs = 10;
       std::this_thread::sleep_for(std::chrono::milliseconds(kUploadEventsEveryMs));
 
-      const std::vector<unsigned char>& upload_data_buffer = collector_.GetUploadDataBuffer();
-      total_uploaded_data_bytes_ += upload_data_buffer.size();
-      collector_.RefreshUploadDataBuffer();
+      total_uploaded_data_bytes_ += collector_.ReadIntoBuffer(upload_buffer_, kUploadBufferSize);
     }
 
     absl::MutexLock lock{&upload_finished_mutex_};
@@ -98,6 +97,7 @@ class UploaderClientCaptureEventCollectorTest : public testing::Test {
 
   std::thread data_upload_thread_;
   std::thread data_produce_thread_;
+  char* upload_buffer_ = new char[kUploadBufferSize];
 };
 
 }  // namespace
