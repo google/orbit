@@ -30,6 +30,7 @@ using orbit_base::Future;
 using orbit_ggp::Client;
 using orbit_ggp::Instance;
 using orbit_ggp::Project;
+using orbit_metrics_uploader::OrbitLogEvent;
 
 class RetrieveInstancesImpl : public RetrieveInstances {
  public:
@@ -44,6 +45,9 @@ class RetrieveInstancesImpl : public RetrieveInstances {
   orbit_base::Future<ErrorMessageOr<LoadProjectsAndInstancesResult>> LoadProjectsAndInstances(
       const std::optional<orbit_ggp::Project>& project,
       orbit_ggp::Client::InstanceListScope scope) override;
+  void SetMetricsUploader(orbit_metrics_uploader::MetricsUploader* metrics_uploader) override {
+    metrics_uploader_ = metrics_uploader;
+  }
 
  private:
   orbit_ggp::Client* ggp_client_;
@@ -53,6 +57,7 @@ class RetrieveInstancesImpl : public RetrieveInstances {
       std::pair<std::optional<orbit_ggp::Project>, orbit_ggp::Client::InstanceListScope>,
       QVector<orbit_ggp::Instance>>
       instance_cache_;
+  orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 };
 
 std::unique_ptr<RetrieveInstances> RetrieveInstances::Create(
@@ -71,6 +76,9 @@ Future<ErrorMessageOr<QVector<Instance>>> RetrieveInstancesImpl::LoadInstances(
     const std::optional<Project>& project, orbit_ggp::Client::InstanceListScope scope) {
   auto key = std::make_pair(project, scope);
   if (instance_cache_.contains(key)) {
+    if (metrics_uploader_ != nullptr) {
+      metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_INSTANCES_CACHE_HIT);
+    }
     return Future<ErrorMessageOr<QVector<Instance>>>{instance_cache_.at(key)};
   }
   return LoadInstancesWithoutCache(project, scope);
