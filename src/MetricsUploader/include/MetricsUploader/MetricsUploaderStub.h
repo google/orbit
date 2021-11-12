@@ -21,11 +21,11 @@ class MetricsUploaderStub : public MetricsUploader {
   };
   bool SendLogEvent(OrbitLogEvent_LogEventType /*log_event_type*/,
                     std::chrono::milliseconds /*event_duration*/,
-                    OrbitLogEvent_StatusCode /*status_code*/) override {
+                    OrbitLogEvent::StatusCode /*status_code*/) override {
     return false;
   };
   bool SendCaptureEvent(OrbitCaptureData /*capture_data*/,
-                        OrbitLogEvent_StatusCode /*status_code*/) override {
+                        OrbitLogEvent::StatusCode /*status_code*/) override {
     return false;
   }
 };

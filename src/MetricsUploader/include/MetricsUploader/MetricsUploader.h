@@ -56,12 +56,12 @@ class MetricsUploader {
   // true on success and false otherwise.
   virtual bool SendLogEvent(OrbitLogEvent_LogEventType log_event_type,
                             std::chrono::milliseconds event_duration,
-                            OrbitLogEvent_StatusCode status_code) = 0;
+                            OrbitLogEvent::StatusCode status_code) = 0;
 
   // Send a ORBIT_CAPTURE_END log event with an attached OrbitCaptureData message and a status code.
   // Returns true on success and false otherwise
   virtual bool SendCaptureEvent(OrbitCaptureData capture_data,
-                                OrbitLogEvent_StatusCode status_code) = 0;
+                                OrbitLogEvent::StatusCode status_code) = 0;
 };
 
 [[nodiscard]] ErrorMessageOr<std::string> GenerateUUID();

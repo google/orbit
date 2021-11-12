@@ -26,10 +26,10 @@ class MockUploader : public MetricsUploader {
   MOCK_METHOD(bool, SendLogEvent,
               (OrbitLogEvent_LogEventType /*log_event_type*/,
                std::chrono::milliseconds /*event_duration*/,
-               OrbitLogEvent_StatusCode /*status_code*/),
+               OrbitLogEvent::StatusCode /*status_code*/),
               (override));
   MOCK_METHOD(bool, SendCaptureEvent,
-              (OrbitCaptureData /*capture data*/, OrbitLogEvent_StatusCode /*status_code*/),
+              (OrbitCaptureData /*capture data*/, OrbitLogEvent::StatusCode /*status_code*/),
               (override));
 };
 
