@@ -91,7 +91,17 @@ LockFreeUserSpaceInstrumentationEventProducer& GetCaptureEventProducer() {
 
 }  // namespace
 
-void StartNewCapture() { current_capture_start_timestamp_ns = CaptureTimestampNs(); }
+void StartNewCapture() {
+  current_capture_start_timestamp_ns = CaptureTimestampNs();
+
+  // If the library has just been injected, initialize the
+  // LockFreeUserSpaceInstrumentationEventProducer and establish the connection to OrbitService now
+  // instead of waiting for the first call to EntryPayload. As it takes a bit to
+  // establish the connection, GetCaptureEventProducer().IsCapturing() would otherwise always be
+  // false in the first call to EntryPayload, which would cause the first function call to be missed
+  // even if the time between StartNewCapture() and the first function call is large.
+  GetCaptureEventProducer();
+}
 
 void EntryPayload(uint64_t return_address, uint64_t function_id, uint64_t stack_pointer) {
   const uint64_t timestamp_on_entry_ns = CaptureTimestampNs();
