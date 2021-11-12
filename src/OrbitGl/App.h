@@ -349,6 +349,7 @@ class OrbitApp final : public DataViewFactory,
   void LoadPreset(const orbit_preset_file::PresetFile& preset) override;
   [[nodiscard]] orbit_data_views::PresetLoadState GetPresetLoadState(
       const orbit_preset_file::PresetFile& preset) const override;
+  void ShowPresetInExplorer(const orbit_preset_file::PresetFile& preset) override;
   void FilterTracks(const std::string& filter);
 
   void CrashOrbitService(orbit_grpc_protos::CrashOrbitServiceRequest_CrashType crash_type);
@@ -394,10 +395,11 @@ class OrbitApp final : public DataViewFactory,
   void SetTraceGpuSubmissions(bool trace_gpu_submissions);
   void SetEnableApi(bool enable_api);
   void SetEnableIntrospection(bool enable_introspection);
-  void SetEnableUserSpaceInstrumentation(bool enable);
+  void SetDynamicInstrumentationMethod(
+      orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod method);
   void SetSamplesPerSecond(double samples_per_second);
   void SetStackDumpSize(uint16_t stack_dump_size);
-  void SetUnwindingMethod(orbit_grpc_protos::UnwindingMethod unwinding_method);
+  void SetUnwindingMethod(orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method);
   void SetMaxLocalMarkerDepthPerCommandBuffer(uint64_t max_local_marker_depth_per_command_buffer);
 
   void SetCollectMemoryInfo(bool collect_memory_info) {
@@ -479,6 +481,8 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] bool HasFrameTrackInCaptureData(uint64_t instrumented_function_id) const override;
 
   void JumpToTimerAndZoom(uint64_t function_id, JumpToTimerMode selection_mode) override;
+  [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetAllTimersForHookedFunction(
+      uint64_t function_id) const override;
 
  private:
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(

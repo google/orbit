@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <tracepoint.pb.h>
 
+#include <algorithm>
 #include <atomic>
 #include <cstdint>
 #include <limits>
@@ -27,8 +28,10 @@
 #include "LibunwindstackUnwinder.h"
 #include "LinuxTracing/Tracer.h"
 #include "LinuxTracing/TracerListener.h"
+#include "LinuxTracing/UserSpaceInstrumentationAddresses.h"
 #include "LostAndDiscardedEventVisitor.h"
 #include "OrbitBase/Profiling.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "PerfEvent.h"
 #include "PerfEventProcessor.h"
 #include "PerfEventRingBuffer.h"
@@ -42,8 +45,10 @@ namespace orbit_linux_tracing {
 
 class TracerImpl : public Tracer {
  public:
-  explicit TracerImpl(const orbit_grpc_protos::CaptureOptions& capture_options,
-                      TracerListener* listener);
+  explicit TracerImpl(
+      const orbit_grpc_protos::CaptureOptions& capture_options,
+      std::unique_ptr<UserSpaceInstrumentationAddresses> user_space_instrumentation_addresses,
+      TracerListener* listener);
 
   TracerImpl(const TracerImpl&) = delete;
   TracerImpl& operator=(const TracerImpl&) = delete;
@@ -52,6 +57,9 @@ class TracerImpl : public Tracer {
 
   void Start() override;
   void Stop() override;
+
+  void ProcessFunctionEntry(const orbit_grpc_protos::FunctionEntry& function_entry) override;
+  void ProcessFunctionExit(const orbit_grpc_protos::FunctionExit& function_exit) override;
 
  private:
   void Run();
@@ -138,6 +146,8 @@ class TracerImpl : public Tracer {
   bool trace_gpu_driver_;
   std::vector<orbit_grpc_protos::TracepointInfo> instrumented_tracepoints_;
 
+  std::unique_ptr<UserSpaceInstrumentationAddresses> user_space_instrumentation_addresses_;
+
   TracerListener* listener_ = nullptr;
 
   std::atomic<bool> stop_run_thread_ = true;
@@ -172,7 +182,7 @@ class TracerImpl : public Tracer {
   std::vector<PerfEvent> deferred_events_to_process_;
 
   UprobesFunctionCallManager function_call_manager_;
-  UprobesReturnAddressManager return_address_manager_;
+  std::optional<UprobesReturnAddressManager> return_address_manager_;
   std::unique_ptr<LibunwindstackMaps> maps_;
   std::unique_ptr<LibunwindstackUnwinder> unwinder_;
   std::unique_ptr<LeafFunctionCallManager> leaf_function_call_manager_;

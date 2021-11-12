@@ -25,6 +25,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "RegisterState.h"
+#include "UserSpaceInstrumentation/AddressRange.h"
 
 namespace orbit_user_space_instrumentation {
 
@@ -687,21 +688,23 @@ ErrorMessageOr<RelocatedInstruction> RelocateInstruction(cs_insn* instruction, u
     // Call function at relative immediate parameter.
     // Example of original code (call function at offset 0x01020304):
     // call 0x01020304              e8 04 03 02 01
-    // We compute the absolute address of the called function and call it like this:
+    //
+    // We could relocate the call instruction as follows. We compute the absolute address of the
+    // called function and call it like this:
     // call [rip+2]                 ff 15 02 00 00 00
     // jmp label;                   eb 08
     // .byte absolute_address       01 02 03 04 05 06 07 08
     // label:
-    const int32_t immediate = *absl::bit_cast<int32_t*>(
-        instruction->bytes + instruction->detail->x86.encoding.imm_offset);
-    const uint64_t absolute_address = old_address + instruction->size + immediate;
-    MachineCode code;
-    code.AppendBytes({0xff, 0x15})
-        .AppendImmediate32(0x00000002)
-        .AppendBytes({0xeb, 0x08})
-        .AppendImmediate64(absolute_address);
-    result.code = code.GetResultAsVector();
-    result.position_of_absolute_address = 8;
+    //
+    // But currently we don't want to support relocating a call instruction. Every sample that
+    // involves a relocated instruction is an unwinding error. This is normally not a problem for a
+    // couple of relocated instructions at the beginning of a function, that would correspond to
+    // innermost frames. But for call instructions, an arbitrarily large number of callstacks could
+    // be affected, the ones falling in the function and all its tree of callees, and we want to
+    // prevent that. Refer to http://b/194704608#comment3.
+    return ErrorMessage(
+        absl::StrFormat("Relocating a call instruction is not supported. Instruction: %s",
+                        InstructionBytesAsString(instruction)));
   } else if ((instruction->detail->x86.opcode[0] & 0xf0) == 0x70) {
     // 0x7? are conditional jumps to an 8 bit immediate.
     // Example of original code (jump backwards 10 bytes if last result was not zero):

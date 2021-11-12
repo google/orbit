@@ -612,6 +612,10 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
     case ProducerCaptureEvent::kFunctionCall:
       ProcessFunctionCallAndTransferOwnership(event.release_function_call());
       break;
+    case ProducerCaptureEvent::kFunctionEntry:
+      UNREACHABLE();
+    case ProducerCaptureEvent::kFunctionExit:
+      UNREACHABLE();
     case ProducerCaptureEvent::kGpuQueueSubmission:
       ProcessGpuQueueSubmissionAndTransferOwnership(producer_id,
                                                     event.release_gpu_queue_submission());

@@ -7,6 +7,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "OrbitBase/Append.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/TemporaryFile.h"
@@ -43,10 +44,11 @@ void CheckCopySelectionIsInvoked(const std::vector<std::string>& context_menu,
 
 void CheckExportToCsvIsInvoked(const std::vector<std::string>& context_menu,
                                const MockAppInterface& app, DataView& view,
-                               const std::string& expected_contents) {
-  const auto export_to_csv_index =
-      std::find(context_menu.begin(), context_menu.end(), "Copy Selection") - context_menu.begin();
-  ASSERT_LT(export_to_csv_index, context_menu.size());
+                               const std::string& expected_contents,
+                               const std::string& action_name) {
+  const auto action_index =
+      std::find(context_menu.begin(), context_menu.end(), action_name) - context_menu.begin();
+  ASSERT_LT(action_index, context_menu.size());
 
   ErrorMessageOr<orbit_base::TemporaryFile> temporary_file_or_error =
       orbit_base::TemporaryFile::Create();
@@ -59,12 +61,21 @@ void CheckExportToCsvIsInvoked(const std::vector<std::string>& context_menu,
   temporary_file_or_error.value().CloseAndRemove();
 
   EXPECT_CALL(app, GetSaveFile).Times(1).WillOnce(testing::Return(temporary_file_path.string()));
-  view.OnContextMenu("Export to CSV", static_cast<int>(export_to_csv_index), {0});
+  view.OnContextMenu(action_name, static_cast<int>(action_index), {0});
 
   ErrorMessageOr<std::string> contents_or_error = orbit_base::ReadFileToString(temporary_file_path);
   ASSERT_THAT(contents_or_error, orbit_test_utils::HasNoError());
 
   EXPECT_EQ(contents_or_error.value(), expected_contents);
+}
+
+std::vector<std::string> FlattenContextMenuWithGrouping(
+    const std::vector<std::vector<std::string>>& menu_with_grouping) {
+  std::vector<std::string> menu;
+  for (const std::vector<std::string>& action_group : menu_with_grouping) {
+    orbit_base::Append(menu, action_group);
+  }
+  return menu;
 }
 
 }  // namespace orbit_data_views

@@ -15,6 +15,7 @@
 
 #include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"
+#include "LinuxTracing/UserSpaceInstrumentationAddresses.h"
 #include "UprobesReturnAddressManager.h"
 
 namespace orbit_linux_tracing {
@@ -105,7 +106,8 @@ class TestHandler {
     hijacked_stack_.Push(next_push_);
     ++next_push_;
 
-    return_address_manager->ProcessUprobes(tid_, hijacked_stack_.GetSp(), hijacked_stack_.GetTop());
+    return_address_manager->ProcessFunctionEntry(tid_, hijacked_stack_.GetSp(),
+                                                 hijacked_stack_.GetTop());
 
     // Fake uretprobes hijacking the return address.
     hijacked_stack_.HijackTop(next_hijack_);
@@ -126,7 +128,7 @@ class TestHandler {
     expected_stack_.Pop();
     hijacked_stack_.Pop();
 
-    return_address_manager->ProcessUretprobes(tid_);
+    return_address_manager->ProcessFunctionExit(tid_);
   }
 
   void OnUprobesOptimizedTailCall(UprobesReturnAddressManager* return_address_manager) {
@@ -136,7 +138,8 @@ class TestHandler {
 
     // Do not fake pushing the return address as this is an optimized tail call.
 
-    return_address_manager->ProcessUprobes(tid_, hijacked_stack_.GetSp(), hijacked_stack_.GetTop());
+    return_address_manager->ProcessFunctionEntry(tid_, hijacked_stack_.GetSp(),
+                                                 hijacked_stack_.GetTop());
 
     // Fake uretprobes hijacking the return address.
     hijacked_stack_.HijackTop(next_hijack_);
@@ -155,7 +158,7 @@ class TestHandler {
     // Do not fake popping the return address as this function had ended with a
     // tail call, only the uretprobe is hit.
 
-    return_address_manager->ProcessUretprobes(tid_);
+    return_address_manager->ProcessFunctionExit(tid_);
   }
 
   TestStack PatchStackOnSample(UprobesReturnAddressManager* return_address_manager) {
@@ -165,11 +168,7 @@ class TestHandler {
     return patched_stack;
   }
 
-  pid_t GetTid() const { return tid_; }
-
-  const TestStack& GetExpectedStack() const { return expected_stack_; }
-
-  const TestStack& GetHijackedStack() const { return hijacked_stack_; }
+  [[nodiscard]] const TestStack& GetExpectedStack() const { return expected_stack_; }
 
  private:
   pid_t tid_;
@@ -183,7 +182,7 @@ class TestHandler {
 }  // namespace
 
 TEST(UprobesReturnAddressManager, NoUprobes) {
-  UprobesReturnAddressManager return_address_manager;
+  UprobesReturnAddressManager return_address_manager{nullptr};
   TestHandler test_handler{42};
 
   // Fake sample.
@@ -216,7 +215,7 @@ TEST(UprobesReturnAddressManager, NoUprobes) {
 }
 
 TEST(UprobesReturnAddressManager, OneUprobe) {
-  UprobesReturnAddressManager return_address_manager;
+  UprobesReturnAddressManager return_address_manager{nullptr};
   TestHandler test_handler{42};
 
   // A is called.
@@ -251,7 +250,7 @@ TEST(UprobesReturnAddressManager, OneUprobe) {
 }
 
 TEST(UprobesReturnAddressManager, DifferentThread) {
-  UprobesReturnAddressManager return_address_manager;
+  UprobesReturnAddressManager return_address_manager{nullptr};
   TestHandler test_handler{42};
   TestHandler other_test_handler{111};
 
@@ -283,7 +282,7 @@ TEST(UprobesReturnAddressManager, DifferentThread) {
 }
 
 TEST(UprobesReturnAddressManager, TwoNestedUprobesAndAnotherUprobe) {
-  UprobesReturnAddressManager return_address_manager;
+  UprobesReturnAddressManager return_address_manager{nullptr};
   TestHandler test_handler{42};
 
   // A is called.
@@ -345,7 +344,7 @@ TEST(UprobesReturnAddressManager, TwoNestedUprobesAndAnotherUprobe) {
 }
 
 TEST(UprobesReturnAddressManager, TailCallOptimization) {
-  UprobesReturnAddressManager return_address_manager;
+  UprobesReturnAddressManager return_address_manager{nullptr};
   TestHandler test_handler{42};
 
   // A is called.
@@ -484,20 +483,43 @@ const std::string maps_string =
 
 std::unique_ptr<LibunwindstackMaps> maps = LibunwindstackMaps::ParseMaps(maps_string);
 
+constexpr uint64_t kIgnoredCallchainTopFrame = 0xFFFFFFFFFFFFFE00LU;
+constexpr uint64_t kUprobesFrame = 0x7FFFFFFFE000LU;
+constexpr uint64_t kReturnTrampolineFrame = 0xBBBBBBBBBBBBBB00LU;
+
+class FakeTrampolineAddressSet : public UserSpaceInstrumentationAddresses {
+ public:
+  [[nodiscard]] bool IsInEntryTrampoline(uint64_t /*address*/) const override {
+    // This should never be called.
+    EXPECT_TRUE(false);
+    return false;
+  }
+  [[nodiscard]] bool IsInReturnTrampoline(uint64_t address) const override {
+    return address == kReturnTrampolineFrame;
+  }
+  [[nodiscard]] std::string_view GetInjectedLibraryMapName() const override {
+    // This should never be called.
+    EXPECT_TRUE(false);
+    return "";
+  }
+} trampoline_address_set;
+
+}  // namespace
+
 TEST(UprobesReturnAddressManager, CallchainNoUprobes) {
-  UprobesReturnAddressManager return_address_manager;
+  UprobesReturnAddressManager return_address_manager{&trampoline_address_set};
 
-  std::vector<uint64_t> expected_callchain{0xFFFFFFFFFFFFFE00lu, 0x55D0F260D23Elu, 0x55D0F260D268lu,
-                                           0x55D0F260D29Alu,     0x55D0F260D2CClu, 0x55D0F260D2FElu,
-                                           0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
-                                           0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
-                                           0x5541D68949564100lu};
+  std::vector<uint64_t> expected_callchain{
+      kIgnoredCallchainTopFrame, 0x55D0F260D23Elu, 0x55D0F260D268lu, 0x55D0F260D29Alu,
+      0x55D0F260D2CClu,          0x55D0F260D2FElu, 0x55D0F260D330lu, 0x55D0F260D362lu,
+      0x55D0F260D397lu,          0x55D0F260D3BBlu, 0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
 
-  std::vector<uint64_t> callchain_sample{0xFFFFFFFFFFFFFE00lu, 0x55D0F260D23Elu, 0x55D0F260D268lu,
-                                         0x55D0F260D29Alu,     0x55D0F260D2CClu, 0x55D0F260D2FElu,
-                                         0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
-                                         0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
-                                         0x5541D68949564100lu};
+  std::vector<uint64_t> callchain_sample{
+      kIgnoredCallchainTopFrame, 0x55D0F260D23Elu, 0x55D0F260D268lu, 0x55D0F260D29Alu,
+      0x55D0F260D2CClu,          0x55D0F260D2FElu, 0x55D0F260D330lu, 0x55D0F260D362lu,
+      0x55D0F260D397lu,          0x55D0F260D3BBlu, 0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
 
   EXPECT_TRUE(return_address_manager.PatchCallchain(1, callchain_sample.data(),
                                                     callchain_sample.size(), maps.get()));
@@ -505,21 +527,43 @@ TEST(UprobesReturnAddressManager, CallchainNoUprobes) {
 }
 
 TEST(UprobesReturnAddressManager, CallchainOneUprobe) {
-  UprobesReturnAddressManager return_address_manager;
+  UprobesReturnAddressManager return_address_manager{&trampoline_address_set};
 
-  std::vector<uint64_t> expected_callchain{0xFFFFFFFFFFFFFE00lu, 0x55D0F260D23Elu, 0x55D0F260D268lu,
-                                           0x55D0F260D29Alu,     0x55D0F260D2CClu, 0x55D0F260D2FElu,
-                                           0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
-                                           0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
-                                           0x5541D68949564100lu};
+  std::vector<uint64_t> expected_callchain{
+      kIgnoredCallchainTopFrame, 0x55D0F260D23Elu, 0x55D0F260D268lu, 0x55D0F260D29Alu,
+      0x55D0F260D2CClu,          0x55D0F260D2FElu, 0x55D0F260D330lu, 0x55D0F260D362lu,
+      0x55D0F260D397lu,          0x55D0F260D3BBlu, 0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
 
-  return_address_manager.ProcessUprobes(1, 0x7FFCAE6430E8lu, 0x55D0F260D2FElu);
+  return_address_manager.ProcessFunctionEntry(1, 0x7FFCAE6430E8lu, 0x55D0F260D2FElu);
 
-  std::vector<uint64_t> callchain_sample{0xFFFFFFFFFFFFFE00lu, 0x55D0F260D23Elu, 0x55D0F260D268lu,
-                                         0x55D0F260D29Alu,     0x55D0F260D2CClu, 0x7FFFFFFFE000lu,
-                                         0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
-                                         0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
-                                         0x5541D68949564100lu};
+  std::vector<uint64_t> callchain_sample{
+      kIgnoredCallchainTopFrame, 0x55D0F260D23Elu, 0x55D0F260D268lu, 0x55D0F260D29Alu,
+      0x55D0F260D2CClu,          kUprobesFrame,    0x55D0F260D330lu, 0x55D0F260D362lu,
+      0x55D0F260D397lu,          0x55D0F260D3BBlu, 0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+
+  EXPECT_TRUE(return_address_manager.PatchCallchain(1, callchain_sample.data(),
+                                                    callchain_sample.size(), maps.get()));
+  EXPECT_THAT(callchain_sample, testing::ElementsAreArray(expected_callchain));
+}
+
+TEST(UprobesReturnAddressManager, CallchainOneUserSpaceInstrumentationReturnTrampoline) {
+  UprobesReturnAddressManager return_address_manager{&trampoline_address_set};
+
+  std::vector<uint64_t> expected_callchain{
+      kIgnoredCallchainTopFrame, 0x55D0F260D23Elu, 0x55D0F260D268lu, 0x55D0F260D29Alu,
+      0x55D0F260D2CClu,          0x55D0F260D2FElu, 0x55D0F260D330lu, 0x55D0F260D362lu,
+      0x55D0F260D397lu,          0x55D0F260D3BBlu, 0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+
+  return_address_manager.ProcessFunctionEntry(1, 0x7FFCAE6430E8lu, 0x55D0F260D2FElu);
+
+  std::vector<uint64_t> callchain_sample{
+      kIgnoredCallchainTopFrame, 0x55D0F260D23Elu,       0x55D0F260D268lu, 0x55D0F260D29Alu,
+      0x55D0F260D2CClu,          kReturnTrampolineFrame, 0x55D0F260D330lu, 0x55D0F260D362lu,
+      0x55D0F260D397lu,          0x55D0F260D3BBlu,       0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
 
   EXPECT_TRUE(return_address_manager.PatchCallchain(1, callchain_sample.data(),
                                                     callchain_sample.size(), maps.get()));
@@ -527,21 +571,44 @@ TEST(UprobesReturnAddressManager, CallchainOneUprobe) {
 }
 
 TEST(UprobesReturnAddressManager, CallchainTwoUprobes) {
-  UprobesReturnAddressManager return_address_manager;
+  UprobesReturnAddressManager return_address_manager{&trampoline_address_set};
 
-  std::vector<uint64_t> expected_callchain{0xFFFFFFFFFFFFFE00lu, 0x55D0F260D22Flu, 0x55D0F260D268lu,
-                                           0x55D0F260D29Alu,     0x55D0F260D2CClu, 0x55D0F260D2FElu,
-                                           0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
-                                           0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
-                                           0x5541D68949564100lu};
-  return_address_manager.ProcessUprobes(1, 0x7FFCAE643148lu, 0x55D0F260D397lu);
-  return_address_manager.ProcessUprobes(1, 0x7FFCAE6430C8lu, 0x55D0F260D2CClu);
+  std::vector<uint64_t> expected_callchain{
+      kIgnoredCallchainTopFrame, 0x55D0F260D22Flu, 0x55D0F260D268lu, 0x55D0F260D29Alu,
+      0x55D0F260D2CClu,          0x55D0F260D2FElu, 0x55D0F260D330lu, 0x55D0F260D362lu,
+      0x55D0F260D397lu,          0x55D0F260D3BBlu, 0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+  return_address_manager.ProcessFunctionEntry(1, 0x7FFCAE643148lu, 0x55D0F260D397lu);
+  return_address_manager.ProcessFunctionEntry(1, 0x7FFCAE6430C8lu, 0x55D0F260D2CClu);
 
-  std::vector<uint64_t> callchain_sample{0xFFFFFFFFFFFFFE00lu, 0x55D0F260D22Flu, 0x55D0F260D268lu,
-                                         0x55D0F260D29Alu,     0x7FFFFFFFE000lu, 0x55D0F260D2FElu,
-                                         0x55D0F260D330lu,     0x55D0F260D362lu, 0x7FFFFFFFE000lu,
-                                         0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
-                                         0x5541D68949564100lu};
+  std::vector<uint64_t> callchain_sample{
+      kIgnoredCallchainTopFrame, 0x55D0F260D22Flu, 0x55D0F260D268lu,
+      0x55D0F260D29Alu,          kUprobesFrame,    0x55D0F260D2FElu,
+      0x55D0F260D330lu,          0x55D0F260D362lu, kUprobesFrame,
+      0x55D0F260D3BBlu,          0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+
+  EXPECT_TRUE(return_address_manager.PatchCallchain(1, callchain_sample.data(),
+                                                    callchain_sample.size(), maps.get()));
+  EXPECT_THAT(callchain_sample, testing::ElementsAreArray(expected_callchain));
+}
+
+TEST(UprobesReturnAddressManager, CallchainTwoUserSpaceInstrumentationReturnTrampolines) {
+  UprobesReturnAddressManager return_address_manager{&trampoline_address_set};
+
+  std::vector<uint64_t> expected_callchain{
+      kIgnoredCallchainTopFrame, 0x55D0F260D22Flu, 0x55D0F260D268lu, 0x55D0F260D29Alu,
+      0x55D0F260D2CClu,          0x55D0F260D2FElu, 0x55D0F260D330lu, 0x55D0F260D362lu,
+      0x55D0F260D397lu,          0x55D0F260D3BBlu, 0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+  return_address_manager.ProcessFunctionEntry(1, 0x7FFCAE643148lu, 0x55D0F260D397lu);
+  return_address_manager.ProcessFunctionEntry(1, 0x7FFCAE6430C8lu, 0x55D0F260D2CClu);
+
+  std::vector<uint64_t> callchain_sample{
+      kIgnoredCallchainTopFrame, 0x55D0F260D22Flu, 0x55D0F260D268lu, 0x55D0F260D29Alu,
+      kReturnTrampolineFrame,    0x55D0F260D2FElu, 0x55D0F260D330lu, 0x55D0F260D362lu,
+      kReturnTrampolineFrame,    0x55D0F260D3BBlu, 0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
 
   EXPECT_TRUE(return_address_manager.PatchCallchain(1, callchain_sample.data(),
                                                     callchain_sample.size(), maps.get()));
@@ -549,38 +616,105 @@ TEST(UprobesReturnAddressManager, CallchainTwoUprobes) {
 }
 
 TEST(UprobesReturnAddressManager, CallchainTwoUprobesMissingOne) {
-  UprobesReturnAddressManager return_address_manager;
+  UprobesReturnAddressManager return_address_manager{&trampoline_address_set};
 
-  return_address_manager.ProcessUprobes(1, 0x7FFCAE6430C8lu, 0x55D0F260D2CClu);
+  return_address_manager.ProcessFunctionEntry(1, 0x7FFCAE6430C8lu, 0x55D0F260D2CClu);
 
-  std::vector<uint64_t> callchain_sample{0xFFFFFFFFFFFFFE00lu, 0x55D0F260D22Flu, 0x55D0F260D268lu,
-                                         0x55D0F260D29Alu,     0x7FFFFFFFE000lu, 0x55D0F260D2FElu,
-                                         0x55D0F260D330lu,     0x55D0F260D362lu, 0x7FFFFFFFE000lu,
-                                         0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
-                                         0x5541D68949564100lu};
+  std::vector<uint64_t> callchain_sample{
+      kIgnoredCallchainTopFrame, 0x55D0F260D22Flu, 0x55D0F260D268lu,
+      0x55D0F260D29Alu,          kUprobesFrame,    0x55D0F260D2FElu,
+      0x55D0F260D330lu,          0x55D0F260D362lu, kUprobesFrame,
+      0x55D0F260D3BBlu,          0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+
+  EXPECT_FALSE(return_address_manager.PatchCallchain(1, callchain_sample.data(),
+                                                     callchain_sample.size(), maps.get()));
+}
+
+TEST(UprobesReturnAddressManager, CallchainTwoUserSpaceInstrumentationTrampolinesMissingOne) {
+  UprobesReturnAddressManager return_address_manager{&trampoline_address_set};
+
+  return_address_manager.ProcessFunctionEntry(1, 0x7FFCAE6430C8lu, 0x55D0F260D2CClu);
+
+  std::vector<uint64_t> callchain_sample{
+      kIgnoredCallchainTopFrame, 0x55D0F260D22Flu, 0x55D0F260D268lu, 0x55D0F260D29Alu,
+      kReturnTrampolineFrame,    0x55D0F260D2FElu, 0x55D0F260D330lu, 0x55D0F260D362lu,
+      kReturnTrampolineFrame,    0x55D0F260D3BBlu, 0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
 
   EXPECT_FALSE(return_address_manager.PatchCallchain(1, callchain_sample.data(),
                                                      callchain_sample.size(), maps.get()));
 }
 
 TEST(UprobesReturnAddressManager, CallchainTwoConsecutiveUprobes) {
-  UprobesReturnAddressManager return_address_manager;
+  UprobesReturnAddressManager return_address_manager{&trampoline_address_set};
 
-  std::vector<uint64_t> expected_callchain{0xFFFFFFFFFFFFFE00lu, 0x55D0F260D22Flu, 0x55D0F260D268lu,
-                                           0x55D0F260D29Alu,     0x55D0F260D2CClu, 0x55D0F260D2FElu,
-                                           0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
-                                           0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
-                                           0x5541D68949564100lu};
+  std::vector<uint64_t> expected_callchain{
+      kIgnoredCallchainTopFrame, 0x55D0F260D22Flu, 0x55D0F260D268lu, 0x55D0F260D29Alu,
+      0x55D0F260D2CClu,          0x55D0F260D2FElu, 0x55D0F260D330lu, 0x55D0F260D362lu,
+      0x55D0F260D397lu,          0x55D0F260D3BBlu, 0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
 
-  return_address_manager.ProcessUprobes(1, 0x7FFCAE643148lu, 0x55D0F260D397lu);
-  return_address_manager.ProcessUprobes(1, 0x7FFCAE6430E8lu, 0x55D0F260D2FElu);
-  return_address_manager.ProcessUprobes(1, 0x7FFCAE6430C8lu, 0x55D0F260D2CClu);
+  return_address_manager.ProcessFunctionEntry(1, 0x7FFCAE643148lu, 0x55D0F260D397lu);
+  return_address_manager.ProcessFunctionEntry(1, 0x7FFCAE6430E8lu, 0x55D0F260D2FElu);
+  return_address_manager.ProcessFunctionEntry(1, 0x7FFCAE6430C8lu, 0x55D0F260D2CClu);
 
-  std::vector<uint64_t> callchain_sample{0xFFFFFFFFFFFFFE00lu, 0x55D0F260D22Flu, 0x55D0F260D268lu,
-                                         0x55D0F260D29Alu,     0x7FFFFFFFE000lu, 0x7FFFFFFFE000lu,
-                                         0x55D0F260D330lu,     0x55D0F260D362lu, 0x7FFFFFFFE000lu,
-                                         0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
-                                         0x5541D68949564100lu};
+  std::vector<uint64_t> callchain_sample{
+      kIgnoredCallchainTopFrame, 0x55D0F260D22Flu, 0x55D0F260D268lu,
+      0x55D0F260D29Alu,          kUprobesFrame,    kUprobesFrame,
+      0x55D0F260D330lu,          0x55D0F260D362lu, kUprobesFrame,
+      0x55D0F260D3BBlu,          0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+
+  EXPECT_TRUE(return_address_manager.PatchCallchain(1, callchain_sample.data(),
+                                                    callchain_sample.size(), maps.get()));
+  EXPECT_THAT(callchain_sample, testing::ElementsAreArray(expected_callchain));
+}
+
+TEST(UprobesReturnAddressManager,
+     CallchainTwoConsecutiveUserSpaceInstrumentationReturnTrampolines) {
+  UprobesReturnAddressManager return_address_manager{&trampoline_address_set};
+
+  std::vector<uint64_t> expected_callchain{
+      kIgnoredCallchainTopFrame, 0x55D0F260D22Flu, 0x55D0F260D268lu, 0x55D0F260D29Alu,
+      0x55D0F260D2CClu,          0x55D0F260D2FElu, 0x55D0F260D330lu, 0x55D0F260D362lu,
+      0x55D0F260D397lu,          0x55D0F260D3BBlu, 0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+
+  return_address_manager.ProcessFunctionEntry(1, 0x7FFCAE643148lu, 0x55D0F260D397lu);
+  return_address_manager.ProcessFunctionEntry(1, 0x7FFCAE6430E8lu, 0x55D0F260D2FElu);
+  return_address_manager.ProcessFunctionEntry(1, 0x7FFCAE6430C8lu, 0x55D0F260D2CClu);
+
+  std::vector<uint64_t> callchain_sample{
+      kIgnoredCallchainTopFrame, 0x55D0F260D22Flu,       0x55D0F260D268lu, 0x55D0F260D29Alu,
+      kReturnTrampolineFrame,    kReturnTrampolineFrame, 0x55D0F260D330lu, 0x55D0F260D362lu,
+      kReturnTrampolineFrame,    0x55D0F260D3BBlu,       0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+
+  EXPECT_TRUE(return_address_manager.PatchCallchain(1, callchain_sample.data(),
+                                                    callchain_sample.size(), maps.get()));
+  EXPECT_THAT(callchain_sample, testing::ElementsAreArray(expected_callchain));
+}
+
+TEST(UprobesReturnAddressManager,
+     CallchainMixOfUprobesAndUserSpaceInstrumentationReturnTrampolines) {
+  UprobesReturnAddressManager return_address_manager{&trampoline_address_set};
+
+  std::vector<uint64_t> expected_callchain{
+      kIgnoredCallchainTopFrame, 0x55D0F260D22Flu, 0x55D0F260D268lu, 0x55D0F260D29Alu,
+      0x55D0F260D2CClu,          0x55D0F260D2FElu, 0x55D0F260D330lu, 0x55D0F260D362lu,
+      0x55D0F260D397lu,          0x55D0F260D3BBlu, 0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+
+  return_address_manager.ProcessFunctionEntry(1, 0x7FFCAE643148lu, 0x55D0F260D397lu);
+  return_address_manager.ProcessFunctionEntry(1, 0x7FFCAE6430E8lu, 0x55D0F260D2FElu);
+  return_address_manager.ProcessFunctionEntry(1, 0x7FFCAE6430C8lu, 0x55D0F260D2CClu);
+
+  std::vector<uint64_t> callchain_sample{
+      kIgnoredCallchainTopFrame, 0x55D0F260D22Flu, 0x55D0F260D268lu, 0x55D0F260D29Alu,
+      kReturnTrampolineFrame,    kUprobesFrame,    0x55D0F260D330lu, 0x55D0F260D362lu,
+      kReturnTrampolineFrame,    0x55D0F260D3BBlu, 0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
 
   EXPECT_TRUE(return_address_manager.PatchCallchain(1, callchain_sample.data(),
                                                     callchain_sample.size(), maps.get()));
@@ -588,20 +722,26 @@ TEST(UprobesReturnAddressManager, CallchainTwoConsecutiveUprobes) {
 }
 
 TEST(UprobesReturnAddressManager, CallchainBeforeInjectionByUprobe) {
-  UprobesReturnAddressManager return_address_manager;
+  UprobesReturnAddressManager return_address_manager{&trampoline_address_set};
 
-  std::vector<uint64_t> expected_callchain{0xFFFFFFFFFFFFFE00lu, 0x55D0F260D279lu, 0x55D0F260D2FElu,
-                                           0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
-                                           0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
-                                           0x5541D68949564100lu};
+  std::vector<uint64_t> expected_callchain{
+      kIgnoredCallchainTopFrame, 0x55D0F260D279lu,    0x55D0F260D2FElu, 0x55D0F260D330lu,
+      0x55D0F260D362lu,          0x55D0F260D397lu,    0x55D0F260D3BBlu, 0x55D0F260D4CBlu,
+      0x7F075B666BBBlu,          0x5541D68949564100lu};
 
-  return_address_manager.ProcessUprobes(1, 0x7FFCAE643128lu, 0x55D0F260D362lu);
-  return_address_manager.ProcessUprobes(1, 0x7FFCAE643108lu, 0x55D0F260D330lu);
-  return_address_manager.ProcessUprobes(1, 0x7FFCAE6430C8lu, 0x55D0F260D2CClu);
+  return_address_manager.ProcessFunctionEntry(1, 0x7FFCAE643128lu, 0x55D0F260D362lu);
+  return_address_manager.ProcessFunctionEntry(1, 0x7FFCAE643108lu, 0x55D0F260D330lu);
+  return_address_manager.ProcessFunctionEntry(1, 0x7FFCAE6430C8lu, 0x55D0F260D2CClu);
 
-  std::vector<uint64_t> callchain_sample{0xFFFFFFFFFFFFFE00lu, 0x55D0F260D279lu, 0x55D0F260D2FElu,
-                                         0x7FFFFFFFE000lu,     0x7FFFFFFFE000lu, 0x55D0F260D397lu,
-                                         0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+  std::vector<uint64_t> callchain_sample{kIgnoredCallchainTopFrame,
+                                         0x55D0F260D279lu,
+                                         0x55D0F260D2FElu,
+                                         kUprobesFrame,
+                                         kUprobesFrame,
+                                         0x55D0F260D397lu,
+                                         0x55D0F260D3BBlu,
+                                         0x55D0F260D4CBlu,
+                                         0x7F075B666BBBlu,
                                          0x5541D68949564100lu};
 
   EXPECT_TRUE(return_address_manager.PatchCallchain(1, callchain_sample.data(),
@@ -609,39 +749,52 @@ TEST(UprobesReturnAddressManager, CallchainBeforeInjectionByUprobe) {
   EXPECT_THAT(callchain_sample, testing::ElementsAreArray(expected_callchain));
 }
 
-TEST(UprobesReturnAddressManager, CallchainWithoutUprobeRecord) {
-  UprobesReturnAddressManager return_address_manager;
+TEST(UprobesReturnAddressManager, CallchainWithUprobeWithoutFunctionEntry) {
+  UprobesReturnAddressManager return_address_manager{&trampoline_address_set};
 
-  std::vector<uint64_t> callchain_sample{0xFFFFFFFFFFFFFE00lu, 0x55D0F260D23Elu, 0x55D0F260D268lu,
-                                         0x55D0F260D29Alu,     0x55D0F260D2CClu, 0x7FFFFFFFE000lu,
-                                         0x55D0F260D330lu,     0x55D0F260D362lu, 0x55D0F260D397lu,
-                                         0x55D0F260D3BBlu,     0x55D0F260D4CBlu, 0x7F075B666BBBlu,
-                                         0x5541D68949564100lu};
+  std::vector<uint64_t> callchain_sample{
+      kIgnoredCallchainTopFrame, 0x55D0F260D23Elu, 0x55D0F260D268lu, 0x55D0F260D29Alu,
+      0x55D0F260D2CClu,          kUprobesFrame,    0x55D0F260D330lu, 0x55D0F260D362lu,
+      0x55D0F260D397lu,          0x55D0F260D3BBlu, 0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
+
+  EXPECT_FALSE(return_address_manager.PatchCallchain(1, callchain_sample.data(),
+                                                     callchain_sample.size(), maps.get()));
+}
+
+TEST(UprobesReturnAddressManager,
+     CallchainWithUserSpaceInstrumentationReturnTrampolineWithoutFunctionEntry) {
+  UprobesReturnAddressManager return_address_manager{&trampoline_address_set};
+
+  std::vector<uint64_t> callchain_sample{
+      kIgnoredCallchainTopFrame, 0x55D0F260D23Elu,       0x55D0F260D268lu, 0x55D0F260D29Alu,
+      0x55D0F260D2CClu,          kReturnTrampolineFrame, 0x55D0F260D330lu, 0x55D0F260D362lu,
+      0x55D0F260D397lu,          0x55D0F260D3BBlu,       0x55D0F260D4CBlu, 0x7F075B666BBBlu,
+      0x5541D68949564100lu};
 
   EXPECT_FALSE(return_address_manager.PatchCallchain(1, callchain_sample.data(),
                                                      callchain_sample.size(), maps.get()));
 }
 
 TEST(UprobesReturnAddressManager, CallchainOfTailcall) {
-  UprobesReturnAddressManager return_address_manager;
+  UprobesReturnAddressManager return_address_manager{&trampoline_address_set};
 
-  std::vector<uint64_t> expected_callchain{0xFFFFFFFFFFFFFE00lu, 0x0000000000401140lu,
-                                           0x0000000000401185lu, 0x00000000004011E7lu,
-                                           0x00007FE90B8B9E0Blu, 0x5541D68949564100lu};
+  std::vector<uint64_t> expected_callchain{kIgnoredCallchainTopFrame, 0x0000000000401140lu,
+                                           0x0000000000401185lu,      0x00000000004011E7lu,
+                                           0x00007FE90B8B9E0Blu,      0x5541D68949564100lu};
 
-  return_address_manager.ProcessUprobes(1, 0x00007FFE17645888lu, 0x00000000004011E7lu);
-  return_address_manager.ProcessUprobes(1, 0x00007FFE17645888lu, 0x00007FFFFFFFE000lu);
-  return_address_manager.ProcessUprobes(1, 0x00007FFE17645888lu, 0x00007FFFFFFFE000lu);
-  return_address_manager.ProcessUprobes(1, 0x00007FFE17645868lu, 0x0000000000401185lu);
+  return_address_manager.ProcessFunctionEntry(1, 0x00007FFE17645888lu, 0x00000000004011E7lu);
+  return_address_manager.ProcessFunctionEntry(1, 0x00007FFE17645888lu, 0x00007FFFFFFFE000lu);
+  return_address_manager.ProcessFunctionEntry(1, 0x00007FFE17645888lu, 0x00007FFFFFFFE000lu);
+  return_address_manager.ProcessFunctionEntry(1, 0x00007FFE17645868lu, 0x0000000000401185lu);
 
-  std::vector<uint64_t> callchain_sample{0xFFFFFFFFFFFFFE00lu, 0x0000000000401140lu,
-                                         0x00007FFFFFFFE000lu, 0x00007FFFFFFFE000lu,
-                                         0x00007FE90B8B9E0Blu, 0x5541D68949564100lu};
+  std::vector<uint64_t> callchain_sample{kIgnoredCallchainTopFrame, 0x0000000000401140lu,
+                                         0x00007FFFFFFFE000lu,      0x00007FFFFFFFE000lu,
+                                         0x00007FE90B8B9E0Blu,      0x5541D68949564100lu};
 
   EXPECT_TRUE(return_address_manager.PatchCallchain(1, callchain_sample.data(),
                                                     callchain_sample.size(), maps.get()));
   EXPECT_THAT(callchain_sample, testing::ElementsAreArray(expected_callchain));
 }
-}  // namespace
 
 }  // namespace orbit_linux_tracing

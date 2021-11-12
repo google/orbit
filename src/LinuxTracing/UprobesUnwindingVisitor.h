@@ -12,12 +12,14 @@
 #include <cstdint>
 #include <optional>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include "LeafFunctionCallManager.h"
 #include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"
 #include "LinuxTracing/TracerListener.h"
+#include "LinuxTracing/UserSpaceInstrumentationAddresses.h"
 #include "OrbitBase/Logging.h"
 #include "PerfEvent.h"
 #include "PerfEventRecords.h"
@@ -27,36 +29,32 @@
 
 namespace orbit_linux_tracing {
 
-// UprobesUnwindingVisitor processes stack samples and uprobes/uretprobes
-// records (as well as memory maps changes, to keep necessary unwinding
-// information up-to-date), assuming they come in order. The reason for
-// processing both in the same visitor is that, when entering a
-// dynamically-instrumented function, the return address saved on the stack is
-// hijacked by uretprobes. This causes unwinding of any (time-based) stack
-// sample that falls inside such a function to stop at the first such function,
-// with a frame in the [uprobes] map.
-// To solve this, UprobesReturnAddressManager keeps a stack, for every thread,
-// of the return addresses before they are hijacked, and patches them into the
-// time-based stack samples. Such return addresses can be retrieved by getting
-// the eight bytes at the top of the stack on hitting uprobes.
-// TODO: Make this more robust to losing uprobes or uretprobes events, if this
-//  is still observed. For example, pass the address of uretprobes and compare
-//  it against the address of uprobes on the stack.
-
+// UprobesUnwindingVisitor processes stack samples and entries/exits into dynamically instrumented
+// functions (e.g., uprobes/uretprobes). It also processes memory maps changes, to keep necessary
+// unwinding information up-to-date. It assumes all this information comes in order.
+// The reason for processing samples and dynamic instrumentation in the same visitor is that, when
+// entering a dynamically-instrumented function, the return address saved on the stack is hijacked
+// (e.g., by uretprobes), so that the exit from the function can also be recorded.
+// This causes unwinding of any (time-based) stack sample that falls inside such a function to stop
+// at the first such function, with a frame in the trampoline (e.g., in the [uprobes] map).
+// To solve this, UprobesReturnAddressManager keeps a stack, for every thread, of the return
+// addresses before they are hijacked, and patches them into the time-based stack samples. Such
+// return addresses can be retrieved by getting the eight bytes at the top of the stack when
+// entering a dynamically instrumented function (e.g., when hitting uprobes).
 class UprobesUnwindingVisitor : public PerfEventVisitor {
  public:
-  explicit UprobesUnwindingVisitor(TracerListener* listener,
-                                   UprobesFunctionCallManager* function_call_manager,
-                                   UprobesReturnAddressManager* uprobes_return_address_manager,
-                                   LibunwindstackMaps* initial_maps,
-                                   LibunwindstackUnwinder* unwinder,
-                                   LeafFunctionCallManager* leaf_function_call_manager)
+  explicit UprobesUnwindingVisitor(
+      TracerListener* listener, UprobesFunctionCallManager* function_call_manager,
+      UprobesReturnAddressManager* uprobes_return_address_manager, LibunwindstackMaps* initial_maps,
+      LibunwindstackUnwinder* unwinder, LeafFunctionCallManager* leaf_function_call_manager,
+      UserSpaceInstrumentationAddresses* user_space_instrumentation_addresses)
       : listener_{listener},
         function_call_manager_{function_call_manager},
         return_address_manager_{uprobes_return_address_manager},
         current_maps_{initial_maps},
         unwinder_{unwinder},
-        leaf_function_call_manager_{leaf_function_call_manager} {
+        leaf_function_call_manager_{leaf_function_call_manager},
+        user_space_instrumentation_addresses_{user_space_instrumentation_addresses} {
     CHECK(listener_ != nullptr);
     CHECK(function_call_manager_ != nullptr);
     CHECK(return_address_manager_ != nullptr);
@@ -86,6 +84,10 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   void Visit(uint64_t event_timestamp, const UretprobesPerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp,
              const UretprobesWithReturnValuePerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp,
+             const UserSpaceFunctionEntryPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp,
+             const UserSpaceFunctionExitPerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp, const MmapPerfEventData& event_data) override;
 
  private:
@@ -102,6 +104,8 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   LibunwindstackMaps* current_maps_;
   LibunwindstackUnwinder* unwinder_;
   LeafFunctionCallManager* leaf_function_call_manager_;
+
+  UserSpaceInstrumentationAddresses* user_space_instrumentation_addresses_;
 
   std::atomic<uint64_t>* unwind_error_counter_ = nullptr;
   std::atomic<uint64_t>* samples_in_uretprobes_counter_ = nullptr;

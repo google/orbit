@@ -38,8 +38,8 @@ TEST(MapInfoTest, maps_constructor_const_char) {
   EXPECT_EQ(4UL, map_info.flags());
   EXPECT_EQ("map", map_info.name());
   EXPECT_EQ(INT64_MAX, map_info.load_bias());
-  EXPECT_EQ(0UL, map_info.elf_offset());
-  EXPECT_TRUE(map_info.elf().get() == nullptr);
+  EXPECT_EQ(0UL, map_info.object_offset());
+  EXPECT_TRUE(map_info.object().get() == nullptr);
 }
 
 TEST(MapInfoTest, maps_constructor_string) {
@@ -54,8 +54,8 @@ TEST(MapInfoTest, maps_constructor_string) {
   EXPECT_EQ(4UL, map_info.flags());
   EXPECT_EQ("string_map", map_info.name());
   EXPECT_EQ(INT64_MAX, map_info.load_bias());
-  EXPECT_EQ(0UL, map_info.elf_offset());
-  EXPECT_TRUE(map_info.elf().get() == nullptr);
+  EXPECT_EQ(0UL, map_info.object_offset());
+  EXPECT_TRUE(map_info.object().get() == nullptr);
 }
 
 TEST(MapInfoTest, get_function_name) {
@@ -65,7 +65,7 @@ TEST(MapInfoTest, get_function_name) {
   interface->FakePushFunctionData(FunctionData("function", 1000));
 
   MapInfo map_info(nullptr, nullptr, 1, 2, 3, 4, "");
-  map_info.set_elf(elf);
+  map_info.set_object(elf);
 
   SharedString name;
   uint64_t offset;
@@ -74,11 +74,11 @@ TEST(MapInfoTest, get_function_name) {
   EXPECT_EQ(1000UL, offset);
 }
 
-TEST(MapInfoTest, multiple_thread_get_elf_fields) {
+TEST(MapInfoTest, multiple_thread_get_object_fields) {
   MapInfo map_info(nullptr, nullptr, 0, 0, 0, 0, "");
 
   static constexpr size_t kNumConcurrentThreads = 100;
-  MapInfo::ElfFields* elf_fields[kNumConcurrentThreads];
+  MapInfo::ObjectFields* object_fields[kNumConcurrentThreads];
 
   std::atomic_bool wait;
   wait = true;
@@ -86,10 +86,10 @@ TEST(MapInfoTest, multiple_thread_get_elf_fields) {
   // to make it likely that a race will occur.
   std::vector<std::thread*> threads;
   for (size_t i = 0; i < kNumConcurrentThreads; i++) {
-    std::thread* thread = new std::thread([i, &wait, &map_info, &elf_fields]() {
+    std::thread* thread = new std::thread([i, &wait, &map_info, &object_fields]() {
       while (wait)
         ;
-      elf_fields[i] = &map_info.GetElfFields();
+      object_fields[i] = &map_info.GetObjectFields();
     });
     threads.push_back(thread);
   }
@@ -102,10 +102,10 @@ TEST(MapInfoTest, multiple_thread_get_elf_fields) {
   }
 
   // Now verify that all of elf fields are exactly the same and valid.
-  MapInfo::ElfFields* expected_elf_fields = &map_info.GetElfFields();
-  ASSERT_TRUE(expected_elf_fields != nullptr);
+  MapInfo::ObjectFields* expected_object_fields = &map_info.GetObjectFields();
+  ASSERT_TRUE(expected_object_fields != nullptr);
   for (size_t i = 0; i < kNumConcurrentThreads; i++) {
-    EXPECT_EQ(expected_elf_fields, elf_fields[i]) << "Thread " << i << " mismatched.";
+    EXPECT_EQ(expected_object_fields, object_fields[i]) << "Thread " << i << " mismatched.";
   }
 }
 

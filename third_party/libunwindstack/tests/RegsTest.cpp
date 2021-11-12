@@ -21,12 +21,13 @@
 #include <unwindstack/Elf.h>
 #include <unwindstack/ElfInterface.h>
 #include <unwindstack/MapInfo.h>
+#include <unwindstack/Object.h>
 #include <unwindstack/RegsArm.h>
 #include <unwindstack/RegsArm64.h>
-#include <unwindstack/RegsX86.h>
-#include <unwindstack/RegsX86_64.h>
 #include <unwindstack/RegsMips.h>
 #include <unwindstack/RegsMips64.h>
+#include <unwindstack/RegsX86.h>
+#include <unwindstack/RegsX86_64.h>
 
 #include "ElfFake.h"
 #include "RegsFake.h"
@@ -171,7 +172,7 @@ TEST_F(RegsTest, rel_pc_arm) {
 TEST_F(RegsTest, elf_invalid) {
   MapInfo map_info(nullptr, nullptr, 0x1000, 0x2000, 0, 0, "");
   Elf* invalid_elf = new Elf(nullptr);
-  map_info.set_elf(invalid_elf);
+  map_info.set_object(invalid_elf);
 
   EXPECT_EQ(0x500U, invalid_elf->GetRelPc(0x1500, &map_info));
   EXPECT_EQ(2U, GetPcAdjustment(0x500U, invalid_elf, ARCH_ARM));

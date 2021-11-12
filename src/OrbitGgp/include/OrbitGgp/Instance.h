@@ -26,6 +26,7 @@ struct Instance {
   QString state;
 
   static ErrorMessageOr<QVector<Instance>> GetListFromJson(const QByteArray& json);
+  static ErrorMessageOr<Instance> CreateFromJson(const QByteArray& json);
   static bool CmpById(const Instance& lhs, const Instance& rhs);
 
   friend bool operator==(const Instance& lhs, const Instance& rhs) {

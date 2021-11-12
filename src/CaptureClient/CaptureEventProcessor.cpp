@@ -621,8 +621,11 @@ void CaptureEventProcessorForListener::SendCallstackToListenerIfNecessary(
     case orbit_grpc_protos::Callstack::kInUprobes:
       callstack_info.set_type(CallstackInfo::kInUprobes);
       break;
-    case orbit_grpc_protos::Callstack::kUprobesPatchingFailed:
-      callstack_info.set_type(CallstackInfo::kUprobesPatchingFailed);
+    case orbit_grpc_protos::Callstack::kInUserSpaceInstrumentation:
+      callstack_info.set_type(CallstackInfo::kInUserSpaceInstrumentation);
+      break;
+    case orbit_grpc_protos::Callstack::kCallstackPatchingFailed:
+      callstack_info.set_type(CallstackInfo::kCallstackPatchingFailed);
       break;
     case orbit_grpc_protos::Callstack::kStackTopForDwarfUnwindingTooSmall:
       callstack_info.set_type(CallstackInfo::kStackTopForDwarfUnwindingTooSmall);

@@ -22,6 +22,7 @@
 #include "OrbitBase/ThreadUtils.h"
 #include "OrbitBase/UniqueResource.h"
 #include "Trampoline.h"
+#include "UserSpaceInstrumentation/AddressRange.h"
 #include "UserSpaceInstrumentation/Attach.h"
 #include "UserSpaceInstrumentation/ExecuteInProcess.h"
 #include "UserSpaceInstrumentation/InjectLibraryInTracee.h"
@@ -76,8 +77,10 @@ class InstrumentedProcess {
   [[nodiscard]] static ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> Create(
       const CaptureOptions& capture_options);
 
-  // Instruments the functions capture_options.instrumented_functions and returns a set of
-  // function_id's of successfully instrumented functions.
+  // Instruments the functions capture_options.instrumented_functions. Returns a set of
+  // function_id's of successfully instrumented functions, a map of function_id's to errors for
+  // functions that couldn't be instrumented, the address ranges dedicated to trampolines, and the
+  // map name of the injected library.
   [[nodiscard]] ErrorMessageOr<InstrumentationManager::InstrumentationResult> InstrumentFunctions(
       const CaptureOptions& capture_options);
 
@@ -104,6 +107,10 @@ class InstrumentedProcess {
   [[nodiscard]] ErrorMessageOr<void> EnsureTrampolinesExecutable();
 
   [[nodiscard]] ErrorMessageOr<std::vector<ModuleInfo>> ModulesFromModulePath(std::string path);
+
+  // Returns a vector of the address ranges dedicated to all entry trampolines for this process. The
+  // number of address ranges is usually very small as kTrampolinesPerChunk is high.
+  [[nodiscard]] std::vector<AddressRange> GetEntryTrampolineAddressRanges();
 
   pid_t pid_ = -1;
 
@@ -150,6 +157,10 @@ class InstrumentedProcess {
   // When instrumenting a function we record the address here. This is used when we uninstrument: we
   // look up the original bytes in `trampoline_map_` above.
   absl::flat_hash_set<uint64_t> addresses_of_instrumented_functions_;
+
+  // The absolute canonical path to the library injected into the target process. This path should
+  // appear in the maps of the target process.
+  std::filesystem::path injected_library_path_;
 };
 
 ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create(
@@ -171,6 +182,8 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
                                         library_path_or_error.error().message()));
   }
   const std::filesystem::path library_path = library_path_or_error.value();
+  CHECK(library_path.is_absolute());
+  process->injected_library_path_ = std::filesystem::canonical(library_path);
 
   auto library_handle_or_error = DlopenInTracee(pid, library_path, RTLD_NOW);
   if (library_handle_or_error.has_error()) {
@@ -208,7 +221,7 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
 
 ErrorMessageOr<InstrumentationManager::InstrumentationResult>
 InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) {
-  OUTCOME_TRY(AttachAndStopProcess(pid_));
+  OUTCOME_TRY(auto&& already_attached_tids, AttachAndStopProcess(pid_));
   orbit_base::unique_resource detach_on_exit{pid_, [](int32_t pid) {
                                                if (DetachAndContinueProcess(pid).has_error()) {
                                                  ERROR("Detaching from %i", pid);
@@ -228,6 +241,9 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
       &capstone_handle, [](csh* capstone_handle) { cs_close(capstone_handle); }};
 
   OUTCOME_TRY(ExecuteInProcess(pid_, absl::bit_cast<void*>(start_new_capture_function_address_)));
+  // StartNewFunction could (and will) spawn new threads. Stop those too, as the assumption here is
+  // that the target process is completely stopped.
+  OUTCOME_TRY(AttachAndStopNewThreadsOfProcess(pid_, std::move(already_attached_tids)));
 
   OUTCOME_TRY(EnsureTrampolinesWritable());
 
@@ -296,6 +312,11 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
       }
     }
   }
+
+  result.entry_trampoline_address_ranges = GetEntryTrampolineAddressRanges();
+  result.return_trampoline_address_range = AddressRange{
+      return_trampoline_address_, return_trampoline_address_ + GetReturnTrampolineSize()};
+  result.injected_library_path = injected_library_path_;
 
   MoveInstructionPointersOutOfOverwrittenCode(pid_, relocation_map_);
 
@@ -388,6 +409,19 @@ ErrorMessageOr<void> InstrumentedProcess::EnsureTrampolinesExecutable() {
     }
   }
   return outcome::success();
+}
+
+std::vector<AddressRange> InstrumentedProcess::GetEntryTrampolineAddressRanges() {
+  std::vector<AddressRange> address_ranges;
+  for (const auto& [unused_module_address_range, trampoline_memory_chunks] :
+       trampolines_for_modules_) {
+    for (const TrampolineMemoryChunk& trampoline_memory_chunk : trampoline_memory_chunks) {
+      address_ranges.emplace_back(
+          trampoline_memory_chunk.memory->GetAddress(),
+          trampoline_memory_chunk.memory->GetAddress() + trampoline_memory_chunk.memory->GetSize());
+    }
+  }
+  return address_ranges;
 }
 
 std::unique_ptr<InstrumentationManager> InstrumentationManager::Create() {

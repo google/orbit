@@ -28,14 +28,13 @@ class PageFaultsTrack : public Track {
   [[nodiscard]] std::string GetLabel() const override;
   [[nodiscard]] Type GetType() const override { return Type::kPageFaultsTrack; }
   [[nodiscard]] float GetHeight() const override;
-  [[nodiscard]] std::vector<CaptureViewElement*> GetVisibleChildren() override;
   [[nodiscard]] std::string GetTooltip() const override;
 
   [[nodiscard]] bool IsEmpty() const override {
     return major_page_faults_track_->IsEmpty() && minor_page_faults_track_->IsEmpty();
   }
   [[nodiscard]] bool IsCollapsible() const override { return true; }
-  [[nodiscard]] std::vector<CaptureViewElement*> GetChildren() const override;
+  [[nodiscard]] std::vector<CaptureViewElement*> GetAllChildren() const override;
 
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 

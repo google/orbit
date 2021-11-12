@@ -111,8 +111,8 @@ void ModulesDataView::DoSort() {
 const std::string ModulesDataView::kMenuActionLoadSymbols = "Load Symbols";
 const std::string ModulesDataView::kMenuActionVerifyFramePointers = "Verify Frame Pointers";
 
-std::vector<std::string> ModulesDataView::GetContextMenu(int clicked_index,
-                                                         const std::vector<int>& selected_indices) {
+std::vector<std::vector<std::string>> ModulesDataView::GetContextMenuWithGrouping(
+    int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_load = false;
   bool enable_verify = false;
   for (int index : selected_indices) {
@@ -126,14 +126,16 @@ std::vector<std::string> ModulesDataView::GetContextMenu(int clicked_index,
     }
   }
 
-  std::vector<std::string> menu;
-  if (enable_load) {
-    menu.emplace_back(kMenuActionLoadSymbols);
-  }
+  std::vector<std::string> action_group;
+  if (enable_load) action_group.emplace_back(kMenuActionLoadSymbols);
   if (enable_verify && absl::GetFlag(FLAGS_enable_frame_pointer_validator)) {
-    menu.emplace_back(kMenuActionVerifyFramePointers);
+    action_group.emplace_back(kMenuActionVerifyFramePointers);
   }
-  orbit_base::Append(menu, DataView::GetContextMenu(clicked_index, selected_indices));
+
+  std::vector<std::vector<std::string>> menu =
+      DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);
+  menu.insert(menu.begin(), action_group);
+
   return menu;
 }
 

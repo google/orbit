@@ -58,6 +58,9 @@ std::vector<Track*> TrackManager::GetAllTracks() const {
   for (const auto& track : all_tracks_) {
     tracks.push_back(track.get());
   }
+  for (const auto& track : frame_tracks_) {
+    tracks.push_back(track.second.get());
+  }
   return tracks;
 }
 
@@ -76,20 +79,6 @@ std::vector<FrameTrack*> TrackManager::GetFrameTracks() const {
     tracks.push_back(track.get());
   }
   return tracks;
-}
-
-std::vector<Track*> TrackManager::GetTracksOnScreen() const {
-  std::vector<Track*> visible_tracks;
-  for (Track* track : GetVisibleTracks()) {
-    float track_top_y = track->GetPos()[1];
-    float track_bottom_y = track_top_y + track->GetHeight();
-    float screen_top_y = time_graph_->GetVerticalScrollingOffset();
-    float screen_bottom_y = screen_top_y + viewport_->GetWorldHeight();
-    if (track_top_y < screen_bottom_y && track_bottom_y > screen_top_y) {
-      visible_tracks.push_back(track);
-    }
-  }
-  return visible_tracks;
 }
 
 void TrackManager::SortTracks() {
@@ -329,14 +318,6 @@ int TrackManager::FindMovingTrackIndex() {
   return -1;
 }
 
-void TrackManager::UpdateTrackPrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                         PickingMode picking_mode) {
-  for (Track* track : GetTracksOnScreen()) {
-    const float z_offset = track->IsMoving() ? GlCanvas::kZOffsetMovingTrack : 0.f;
-    track->UpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
-  }
-}
-
 void TrackManager::UpdateTracksForRendering() {
   // Reorder threads if sorting isn't valid or once per second when capturing.
   if (sorting_invalidated_ ||
@@ -478,12 +459,10 @@ ThreadTrack* TrackManager::GetOrCreateThreadTrack(uint32_t tid) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<ThreadTrack> track = thread_tracks_[tid];
   if (track == nullptr) {
-    ThreadTrack::ScopeTreeUpdateType scope_tree_update_type =
-        GetIsDataFromSavedCapture() ? ThreadTrack::ScopeTreeUpdateType::kOnCaptureComplete
-                                    : ThreadTrack::ScopeTreeUpdateType::kAlways;
-    auto [unused, timer_data] = capture_data_->CreateTimerData();
+    auto thread_track_data_provider = capture_data_->GetThreadTrackDataProvider();
+    thread_track_data_provider->CreateScopeTreeTimerData(tid);
     track = std::make_shared<ThreadTrack>(time_graph_, time_graph_, viewport_, layout_, tid, app_,
-                                          capture_data_, timer_data, scope_tree_update_type);
+                                          capture_data_, thread_track_data_provider);
     thread_tracks_[tid] = track;
     AddTrack(track);
   }

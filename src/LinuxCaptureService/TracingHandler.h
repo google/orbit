@@ -17,10 +17,11 @@
 #include "LinuxTracing/TracerListener.h"
 #include "OrbitBase/Logging.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
+#include "UserSpaceInstrumentationAddressesImpl.h"
 #include "capture.pb.h"
 #include "tracepoint.pb.h"
 
-namespace orbit_capture_service {
+namespace orbit_linux_capture_service {
 
 class TracingHandler : public orbit_linux_tracing::TracerListener {
  public:
@@ -34,7 +35,9 @@ class TracingHandler : public orbit_linux_tracing::TracerListener {
   TracingHandler(TracingHandler&&) = delete;
   TracingHandler& operator=(TracingHandler&&) = delete;
 
-  void Start(const orbit_grpc_protos::CaptureOptions& capture_options);
+  void Start(
+      const orbit_grpc_protos::CaptureOptions& capture_options,
+      std::unique_ptr<UserSpaceInstrumentationAddressesImpl> user_space_instrumentation_addresses);
   void Stop();
 
   void OnSchedulingSlice(orbit_grpc_protos::SchedulingSlice scheduling_slice) override;
@@ -55,11 +58,18 @@ class TracingHandler : public orbit_linux_tracing::TracerListener {
   void OnOutOfOrderEventsDiscardedEvent(orbit_grpc_protos::OutOfOrderEventsDiscardedEvent
                                             out_of_order_events_discarded_event) override;
 
+  void ProcessFunctionEntry(const orbit_grpc_protos::FunctionEntry& function_entry) {
+    tracer_->ProcessFunctionEntry(function_entry);
+  }
+  void ProcessFunctionExit(const orbit_grpc_protos::FunctionExit& function_exit) {
+    tracer_->ProcessFunctionExit(function_exit);
+  }
+
  private:
   orbit_producer_event_processor::ProducerEventProcessor* producer_event_processor_;
   std::unique_ptr<orbit_linux_tracing::Tracer> tracer_;
 };
 
-}  // namespace orbit_capture_service
+}  // namespace orbit_linux_capture_service
 
 #endif  // CAPTURE_SERVICE_LINUX_TRACING_HANDLER_H_

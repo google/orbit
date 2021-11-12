@@ -20,8 +20,8 @@
 
 #include <vector>
 
-#include <unwindstack/Elf.h>
 #include <unwindstack/MapInfo.h>
+#include <unwindstack/Object.h>
 #include <unwindstack/Regs.h>
 #include <unwindstack/RegsArm.h>
 #include <unwindstack/RegsArm64.h>
@@ -121,14 +121,14 @@ Regs* Regs::CreateFromLocal() {
   return regs;
 }
 
-uint64_t GetPcAdjustment(uint64_t rel_pc, Elf* elf, ArchEnum arch) {
+uint64_t GetPcAdjustment(uint64_t rel_pc, Object* object, ArchEnum arch) {
   switch (arch) {
     case ARCH_ARM: {
-      if (!elf->valid()) {
+      if (!object->valid()) {
         return 2;
       }
 
-      uint64_t load_bias = elf->GetLoadBias();
+      uint64_t load_bias = object->GetLoadBias();
       if (rel_pc < load_bias) {
         if (rel_pc < 2) {
           return 0;
@@ -146,7 +146,7 @@ uint64_t GetPcAdjustment(uint64_t rel_pc, Elf* elf, ArchEnum arch) {
       if (adjusted_rel_pc & 1) {
         // This is a thumb instruction, it could be 2 or 4 bytes.
         uint32_t value;
-        if (!elf->memory()->ReadFully(adjusted_rel_pc - 5, &value, sizeof(value)) ||
+        if (!object->memory()->ReadFully(adjusted_rel_pc - 5, &value, sizeof(value)) ||
             (value & 0xe000f000) != 0xe000f000) {
           return 2;
         }

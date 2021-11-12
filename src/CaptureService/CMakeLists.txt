@@ -12,15 +12,13 @@ target_include_directories(CaptureService PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(CaptureService PUBLIC
-        include/CaptureService/CaptureServiceImpl.h
-        include/CaptureService/CaptureStartStopListener.h)
+        include/CaptureService/CaptureService.h
+        include/CaptureService/CaptureStartStopListener.h
+        include/CaptureService/CommonProducerCaptureEventBuilders.h)
 
 target_sources(CaptureService PRIVATE
-        CaptureServiceImpl.cpp
-        MemoryInfoHandler.cpp
-        MemoryInfoHandler.h
-        TracingHandler.cpp
-        TracingHandler.h)
+        CaptureService.cpp
+        CommonProducerCaptureEventBuilders.cpp)
 
 target_link_libraries(CaptureService PUBLIC
         ApiLoader
@@ -28,9 +26,6 @@ target_link_libraries(CaptureService PUBLIC
         ProducerEventProcessor
         GrpcProtos
         Introspection
-        LinuxTracing
-        MemoryTracing
+        ObjectUtils
         OrbitBase
-        OrbitVersion
-        UserSpaceInstrumentation)
-
+        OrbitVersion)

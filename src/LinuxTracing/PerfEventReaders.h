@@ -31,6 +31,9 @@ pid_t ReadSampleRecordPid(PerfEventRingBuffer* ring_buffer);
 
 uint64_t ReadThrottleUnthrottleRecordTime(PerfEventRingBuffer* ring_buffer);
 
+MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                   const perf_event_header& header);
+
 StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
                                                  const perf_event_header& header);
 
@@ -40,8 +43,8 @@ CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ri
 GenericTracepointPerfEvent ConsumeGenericTracepointPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                              const perf_event_header& header);
 
-MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                   const perf_event_header& header);
+SchedWakeupPerfEvent ConsumeSchedWakeupPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                 const perf_event_header& header);
 
 AmdgpuCsIoctlPerfEvent ConsumeAmdgpuCsIoctlPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                      const perf_event_header& header);

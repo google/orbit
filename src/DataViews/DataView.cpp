@@ -71,10 +71,16 @@ void DataView::OnDataChanged() {
 const std::string DataView::kMenuActionCopySelection = "Copy Selection";
 const std::string DataView::kMenuActionExportToCsv = "Export to CSV";
 
-std::vector<std::string> DataView::GetContextMenu(int /*clicked_index*/,
-                                                  const std::vector<int>& /*selected_indices*/) {
-  static std::vector<std::string> menu = {kMenuActionCopySelection, kMenuActionExportToCsv};
-  return menu;
+std::vector<std::vector<std::string>> DataView::GetContextMenuWithGrouping(
+    int /*clicked_index*/, const std::vector<int>& selected_indices) {
+  // GetContextmenuWithGrouping is called when OrbitTreeView::indexAt returns a valid index and
+  // hence the selected_indices retrieved from OrbitTreeView::selectionModel()->selectedIndexes()
+  // should not be empty.
+  CHECK(!selected_indices.empty());
+
+  static std::vector<std::string> default_group = {kMenuActionCopySelection,
+                                                   kMenuActionExportToCsv};
+  return {default_group};
 }
 
 void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,

@@ -15,7 +15,9 @@
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
 #include <imgui.h>
+#include <stdlib.h>
 
+#include <QProcess>
 #include <chrono>
 #include <cinttypes>
 #include <cstddef>
@@ -119,13 +121,13 @@ using orbit_client_services::TracepointServiceClient;
 using orbit_gl::MainWindowInterface;
 
 using orbit_grpc_protos::CaptureFinished;
+using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::TracepointInfo;
-using orbit_grpc_protos::UnwindingMethod;
 
 using orbit_metrics_uploader::CaptureMetric;
 using orbit_metrics_uploader::ScopedMetric;
@@ -133,6 +135,10 @@ using orbit_metrics_uploader::ScopedMetric;
 using orbit_preset_file::PresetFile;
 
 using orbit_data_views::DataViewType;
+
+using DynamicInstrumentationMethod =
+    orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod;
+using UnwindingMethod = orbit_grpc_protos::CaptureOptions::UnwindingMethod;
 
 namespace {
 
@@ -348,10 +354,7 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
 }
 
 Future<void> OrbitApp::OnCaptureComplete() {
-  for (ThreadTrack* thread_track : GetMutableTimeGraph()->GetTrackManager()->GetThreadTracks()) {
-    thread_track->OnCaptureComplete();
-  }
-  capture_data_->OnCaptureComplete(GetMutableTimeGraph()->GetAllThreadTrackTimerChains());
+  capture_data_->OnCaptureComplete();
 
   GetMutableCaptureData().FilterBrokenCallstacks();
   PostProcessedSamplingData post_processed_sampling_data =
@@ -1337,11 +1340,12 @@ void OrbitApp::StartCapture() {
   bool collect_gpu_jobs = !IsDevMode() || data_manager_->trace_gpu_submissions();
   bool enable_api = data_manager_->get_enable_api();
   bool enable_introspection = IsDevMode() && data_manager_->get_enable_introspection();
-  bool enable_user_space_instrumentation =
-      IsDevMode() && data_manager_->enable_user_space_instrumentation();
+  const DynamicInstrumentationMethod dynamic_instrumentation_method =
+      data_manager_->dynamic_instrumentation_method();
   double samples_per_second = data_manager_->samples_per_second();
   uint16_t stack_dump_size = data_manager_->stack_dump_size();
-  UnwindingMethod unwinding_method = data_manager_->unwinding_method();
+  const UnwindingMethod unwinding_method =
+      IsDevMode() ? data_manager_->unwinding_method() : CaptureOptions::kDwarf;
   uint64_t max_local_marker_depth_per_command_buffer =
       data_manager_->max_local_marker_depth_per_command_buffer();
 
@@ -1392,7 +1396,7 @@ void OrbitApp::StartCapture() {
       /*record_arguments=*/false, absl::GetFlag(FLAGS_show_return_values),
       std::move(selected_tracepoints), samples_per_second, stack_dump_size, unwinding_method,
       collect_scheduling_info, collect_thread_states, collect_gpu_jobs, enable_api,
-      enable_introspection, enable_user_space_instrumentation,
+      enable_introspection, dynamic_instrumentation_method,
       max_local_marker_depth_per_command_buffer, collect_memory_info, memory_sampling_period_ms,
       std::move(capture_event_processor));
 
@@ -1743,9 +1747,13 @@ static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
 
   std::string error_message;
   {
-    const auto symbols_path = symbol_helper.FindSymbolsFileLocally(
-        module_data.file_path(), module_data.build_id(), module_data.object_file_type(),
-        orbit_symbol_paths::LoadPaths());
+    std::vector<fs::path> search_paths = orbit_symbol_paths::LoadPaths();
+    fs::path module_path(module_data.file_path());
+    search_paths.emplace_back(module_path.parent_path());
+
+    const auto symbols_path =
+        symbol_helper.FindSymbolsFileLocally(module_data.file_path(), module_data.build_id(),
+                                             module_data.object_file_type(), search_paths);
     if (symbols_path.has_value()) {
       LOG("Found symbols for module \"%s\" in user provided symbol folder. Symbols filename: "
           "\"%s\"",
@@ -2038,6 +2046,36 @@ void OrbitApp::LoadPreset(const PresetFile& preset_file) {
   });
 }
 
+void OrbitApp::ShowPresetInExplorer(const PresetFile& preset) {
+  const auto file_exists = orbit_base::FileExists(preset.file_path());
+  if (file_exists.has_error()) {
+    SendErrorToUi("Unable to find preset file: %s", file_exists.error().message());
+    return;
+  }
+
+#if defined(__linux)
+  const QString program{"dbus-send"};
+  const QStringList arguments = {"--session",
+                                 "--print-reply",
+                                 "--dest=org.freedesktop.FileManager1",
+                                 "--type=method_call",
+                                 "/org/freedesktop/FileManager1",
+                                 "org.freedesktop.FileManager1.ShowItems",
+                                 QString::fromStdString(absl::StrFormat(
+                                     "array:string:file:////%s", preset.file_path().string())),
+                                 "string:"};
+#elif defined(_WIN32)
+  const QString program{"explorer.exe"};
+  const QStringList arguments = {
+      QString::fromStdString(absl::StrFormat("/select,%s", preset.file_path().string()))};
+#endif  // defined(__linux)
+  // QProcess::startDetached starts the program `program` with the arguments `arguments` in a new
+  // process, and detaches from it. Returns true on success; otherwise returns false.
+  if (QProcess::startDetached(program, arguments)) return;
+
+  SendErrorToUi("%s", "Unable to show preset file in explorer.");
+}
+
 void OrbitApp::UpdateProcessAndModuleList() {
   functions_data_view_->ClearFunctions();
 
@@ -2183,8 +2221,8 @@ void OrbitApp::SetEnableIntrospection(bool enable_introspection) {
   data_manager_->set_enable_introspection(enable_introspection);
 }
 
-void OrbitApp::SetEnableUserSpaceInstrumentation(bool enable) {
-  data_manager_->set_enable_user_space_instrumentation(enable);
+void OrbitApp::SetDynamicInstrumentationMethod(DynamicInstrumentationMethod method) {
+  data_manager_->set_dynamic_instrumentation_method(method);
 }
 
 void OrbitApp::SetSamplesPerSecond(double samples_per_second) {
@@ -2195,7 +2233,7 @@ void OrbitApp::SetStackDumpSize(uint16_t stack_dump_size) {
   data_manager_->set_stack_dump_size(stack_dump_size);
 }
 
-void OrbitApp::SetUnwindingMethod(orbit_grpc_protos::UnwindingMethod unwinding_method) {
+void OrbitApp::SetUnwindingMethod(UnwindingMethod unwinding_method) {
   data_manager_->set_unwinding_method(unwinding_method);
 }
 
@@ -2620,6 +2658,10 @@ void OrbitApp::JumpToTimerAndZoom(uint64_t function_id, JumpToTimerMode selectio
       break;
     }
   }
+}
+
+std::vector<const TimerInfo*> OrbitApp::GetAllTimersForHookedFunction(uint64_t function_id) const {
+  return GetTimeGraph()->GetAllTimersForHookedFunction(function_id);
 }
 
 void OrbitApp::RefreshFrameTracks() {

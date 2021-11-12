@@ -32,10 +32,10 @@
 #include <android-base/test_utils.h>
 #include <gtest/gtest.h>
 
-#include <unwindstack/Elf.h>
 #include <unwindstack/MapInfo.h>
 #include <unwindstack/Maps.h>
 #include <unwindstack/Memory.h>
+#include <unwindstack/Object.h>
 
 #include "ElfFake.h"
 #include "ElfTestUtils.h"
@@ -69,7 +69,7 @@ TEST_F(MapInfoGetLoadBiasTest, no_elf_and_no_valid_elf_in_memory) {
 }
 
 TEST_F(MapInfoGetLoadBiasTest, load_bias_cached_from_elf) {
-  map_info_->set_elf(elf_container_.release());
+  map_info_->set_object(elf_container_.release());
 
   elf_->FakeSetLoadBias(0);
   EXPECT_EQ(0U, map_info_->GetLoadBias(process_memory_));
@@ -79,7 +79,7 @@ TEST_F(MapInfoGetLoadBiasTest, load_bias_cached_from_elf) {
 }
 
 TEST_F(MapInfoGetLoadBiasTest, elf_exists) {
-  map_info_->set_elf(elf_container_.release());
+  map_info_->set_object(elf_container_.release());
 
   elf_->FakeSetLoadBias(0);
   EXPECT_EQ(0U, map_info_->GetLoadBias(process_memory_));
@@ -122,7 +122,7 @@ void MapInfoGetLoadBiasTest::MultipleThreadTest(uint64_t expected_load_bias) {
 }
 
 TEST_F(MapInfoGetLoadBiasTest, multiple_thread_elf_exists) {
-  map_info_->set_elf(elf_container_.release());
+  map_info_->set_object(elf_container_.release());
   elf_->FakeSetLoadBias(0x1000);
 
   MultipleThreadTest(0x1000);

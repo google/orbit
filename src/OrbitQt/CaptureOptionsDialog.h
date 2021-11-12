@@ -13,6 +13,7 @@
 #include <memory>
 
 #include "OrbitBase/Logging.h"
+#include "capture.pb.h"
 #include "ui_CaptureOptionsDialog.h"
 
 namespace orbit_qt {
@@ -48,6 +49,8 @@ class CaptureOptionsDialog : public QDialog {
   [[nodiscard]] bool GetEnableSampling() const;
   void SetSamplingPeriodMs(double sampling_period_ms);
   [[nodiscard]] double GetSamplingPeriodMs() const;
+  void SetUnwindingMethod(orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method);
+  [[nodiscard]] orbit_grpc_protos::CaptureOptions::UnwindingMethod GetUnwindingMethod() const;
   void SetCollectSchedulerInfo(bool collect_scheduler_info);
   [[nodiscard]] bool GetCollectSchedulerInfo() const;
   void SetCollectThreadStates(bool collect_thread_state);
@@ -56,8 +59,10 @@ class CaptureOptionsDialog : public QDialog {
   [[nodiscard]] bool GetTraceGpuSubmissions() const;
   void SetEnableApi(bool enable_api);
   [[nodiscard]] bool GetEnableApi() const;
-  void SetEnableUserSpaceInstrumentation(bool enable);
-  [[nodiscard]] bool GetEnableUserSpaceInstrumentation() const;
+  void SetDynamicInstrumentationMethod(
+      orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod method);
+  [[nodiscard]] orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod
+  GetDynamicInstrumentationMethod() const;
   void SetEnableIntrospection(bool enable_introspection);
   [[nodiscard]] bool GetEnableIntrospection() const;
 

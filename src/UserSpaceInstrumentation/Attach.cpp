@@ -7,19 +7,16 @@
 #include <absl/container/flat_hash_set.h>
 #include <absl/strings/str_format.h>
 #include <errno.h>
-#include <stdint.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 
 #include <chrono>
-#include <memory>
-#include <set>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #include "OrbitBase/GetProcessIds.h"
-#include "OrbitBase/Logging.h"
 #include "OrbitBase/SafeStrerror.h"
 
 namespace orbit_user_space_instrumentation {
@@ -71,13 +68,14 @@ namespace {
 
 }  // namespace
 
-ErrorMessageOr<void> AttachAndStopProcess(pid_t pid) {
-  auto process_tids = GetTidsOfProcess(pid);
-  if (process_tids.empty()) {
-    return ErrorMessage(absl::StrFormat("There is no process with pid %d.", pid));
+ErrorMessageOr<absl::flat_hash_set<pid_t>> AttachAndStopProcess(pid_t pid) {
+  ErrorMessageOr<pid_t> error_or_tracer_pid = orbit_base::GetTracerPidOfProcess(pid);
+  if (error_or_tracer_pid.has_error()) {
+    return ErrorMessage(absl::StrFormat("There is no process with pid %d: %s", pid,
+                                        error_or_tracer_pid.error().message()));
   }
 
-  OUTCOME_TRY(auto&& tracer_pid, orbit_base::GetTracerPidOfProcess(pid));
+  const pid_t tracer_pid = error_or_tracer_pid.value();
   if (tracer_pid != 0) {
     return ErrorMessage(
         absl::StrFormat("Process %d is already being traced by %d. Please make sure no debugger is "
@@ -85,7 +83,13 @@ ErrorMessageOr<void> AttachAndStopProcess(pid_t pid) {
                         pid, tracer_pid));
   }
 
-  absl::flat_hash_set<pid_t> halted_tids;
+  return AttachAndStopNewThreadsOfProcess(pid, {});
+}
+
+[[nodiscard]] ErrorMessageOr<absl::flat_hash_set<pid_t>> AttachAndStopNewThreadsOfProcess(
+    pid_t pid, absl::flat_hash_set<pid_t> already_halted_tids) {
+  std::vector<pid_t> process_tids = GetTidsOfProcess(pid);
+  absl::flat_hash_set<pid_t> halted_tids{std::move(already_halted_tids)};
   // Note that the process is still running - it can spawn and end threads at this point.
   while (process_tids.size() != halted_tids.size()) {
     for (const auto tid : process_tids) {
@@ -111,7 +115,7 @@ ErrorMessageOr<void> AttachAndStopProcess(pid_t pid) {
     }
     process_tids = GetTidsOfProcess(pid);
   }
-  return outcome::success();
+  return halted_tids;
 }
 
 ErrorMessageOr<void> DetachAndContinueProcess(pid_t pid) {

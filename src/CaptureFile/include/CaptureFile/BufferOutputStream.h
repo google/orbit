@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef BUFFER_OUTPUT_STREAM_H_
-#define BUFFER_OUTPUT_STREAM_H_
+#ifndef CAPTURE_FILE_BUFFER_OUTPUT_STREAM_H_
+#define CAPTURE_FILE_BUFFER_OUTPUT_STREAM_H_
 
 #include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
@@ -54,4 +54,4 @@ class BufferOutputStream : public google::protobuf::io::CopyingOutputStream {
 
 }  // namespace orbit_capture_file
 
-#endif  // BUFFER_OUTPUT_STREAM_H_
+#endif  // CAPTURE_FILE_BUFFER_OUTPUT_STREAM_H_

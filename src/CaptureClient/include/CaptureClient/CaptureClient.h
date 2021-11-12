@@ -25,6 +25,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
+#include "capture.pb.h"
 #include "capture_data.pb.h"
 #include "services.grpc.pb.h"
 #include "services.pb.h"
@@ -44,9 +45,11 @@ class CaptureClient {
       absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
       bool record_arguments, bool record_return_values,
       orbit_client_data::TracepointInfoSet selected_tracepoints, double samples_per_second,
-      uint16_t stack_dump_size, orbit_grpc_protos::UnwindingMethod unwinding_method,
+      uint16_t stack_dump_size, orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method,
       bool collect_scheduling_info, bool collect_thread_state, bool collect_gpu_jobs,
-      bool enable_api, bool enable_introspection, bool enable_user_space_instrumentation,
+      bool enable_api, bool enable_introspection,
+      orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod
+          dynamic_instrumentation_method,
       uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
       uint64_t memory_sampling_period_ms,
       std::unique_ptr<CaptureEventProcessor> capture_event_processor);
@@ -77,9 +80,11 @@ class CaptureClient {
       const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>& selected_functions,
       bool record_arguments, bool record_return_values,
       const orbit_client_data::TracepointInfoSet& selected_tracepoints, double samples_per_second,
-      uint16_t stack_dump_size, orbit_grpc_protos::UnwindingMethod unwinding_method,
+      uint16_t stack_dump_size, orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method,
       bool collect_scheduling_info, bool collect_thread_state, bool collect_gpu_jobs,
-      bool enable_api, bool enable_introspection, bool enable_user_space_instrumentation,
+      bool enable_api, bool enable_introspection,
+      orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod
+          dynamic_instrumentation_method,
       uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
       uint64_t memory_sampling_period_ms, CaptureEventProcessor* capture_event_processor);
 

@@ -19,10 +19,10 @@
 
 #include <functional>
 
-#include <unwindstack/Elf.h>
 #include <unwindstack/MachineMips.h>
 #include <unwindstack/MapInfo.h>
 #include <unwindstack/Memory.h>
+#include <unwindstack/Object.h>
 #include <unwindstack/RegsMips.h>
 #include <unwindstack/UcontextMips.h>
 #include <unwindstack/UserMips.h>
@@ -115,19 +115,19 @@ Regs* RegsMips::CreateFromUcontext(void* ucontext) {
   RegsMips* regs = new RegsMips();
   // Copy 64 bit sc_regs over to 32 bit regs
   for (int i = 0; i < 32; i++) {
-      (*regs)[MIPS_REG_R0 + i] = mips_ucontext->uc_mcontext.sc_regs[i];
+    (*regs)[MIPS_REG_R0 + i] = mips_ucontext->uc_mcontext.sc_regs[i];
   }
   (*regs)[MIPS_REG_PC] = mips_ucontext->uc_mcontext.sc_pc;
   return regs;
 }
 
-bool RegsMips::StepIfSignalHandler(uint64_t elf_offset, Elf* elf, Memory* process_memory) {
+bool RegsMips::StepIfSignalHandler(uint64_t object_offset, Object* object, Memory* process_memory) {
   uint64_t data;
   uint64_t offset = 0;
-  Memory* elf_memory = elf->memory();
-  // Read from elf memory since it is usually more expensive to read from
+  Memory* object_memory = object->memory();
+  // Read from object memory since it is usually more expensive to read from
   // process memory.
-  if (!elf_memory->ReadFully(elf_offset, &data, sizeof(data))) {
+  if (!object_memory->ReadFully(object_offset, &data, sizeof(data))) {
     return false;
   }
 

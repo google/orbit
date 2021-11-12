@@ -28,7 +28,7 @@ TimeGraphLayout::TimeGraphLayout() {
   track_tab_width_ = 350.f;
   track_tab_height_ = 25.f;
   track_tab_offset_ = 0.f;
-  track_intent_offset_ = 5.f;
+  track_indent_offset_ = 5.f;
   collapse_button_offset_ = 15.f;
   collapse_button_size_ = 10.f;
   collapse_button_decrease_per_indentation_ = 2.f;
@@ -69,7 +69,7 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER(time_bar_height_);
   FLOAT_SLIDER(track_tab_height_);
   FLOAT_SLIDER(track_tab_offset_);
-  FLOAT_SLIDER(track_intent_offset_);
+  FLOAT_SLIDER(track_indent_offset_);
   FLOAT_SLIDER(collapse_button_size_);
   FLOAT_SLIDER(collapse_button_decrease_per_indentation_);
 

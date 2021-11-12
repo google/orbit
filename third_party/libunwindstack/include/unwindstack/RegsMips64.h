@@ -38,7 +38,7 @@ class RegsMips64 : public RegsImpl<uint64_t> {
 
   bool SetPcFromReturnAddress(Memory* process_memory) override;
 
-  bool StepIfSignalHandler(uint64_t elf_offset, Elf* elf, Memory* process_memory) override;
+  bool StepIfSignalHandler(uint64_t object_offset, Object* object, Memory* process_memory) override;
 
   void IterateRegisters(std::function<void(const char*, uint64_t)>) override final;
 

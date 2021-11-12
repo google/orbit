@@ -337,10 +337,10 @@ class LinuxTracingIntegrationTestFixture {
 
   [[nodiscard]] std::string ReadLineFromPuppet() { return puppet_.ReadLine(); }
 
-  [[nodiscard]] orbit_grpc_protos::CaptureOptions BuildDefaultCaptureOptions() {
+  [[nodiscard]] orbit_grpc_protos::CaptureOptions BuildDefaultCaptureOptions() const {
     orbit_grpc_protos::CaptureOptions capture_options;
     capture_options.set_trace_context_switches(true);
-    capture_options.set_pid(orbit_base::FromNativeProcessId(puppet_.GetChildPidNative()));
+    capture_options.set_pid(GetPuppetPid());
     capture_options.set_samples_per_second(1000.0);
     capture_options.set_stack_dump_size(65000);
     capture_options.set_unwinding_method(orbit_grpc_protos::CaptureOptions::kDwarf);
@@ -349,7 +349,8 @@ class LinuxTracingIntegrationTestFixture {
     return capture_options;
   }
 
-  void StartTracingAndWaitForTracingLoopStarted(orbit_grpc_protos::CaptureOptions capture_options) {
+  void StartTracingAndWaitForTracingLoopStarted(
+      const orbit_grpc_protos::CaptureOptions& capture_options) {
     CHECK(tracer_ == nullptr);
     CHECK(!listener_.has_value());
 
@@ -359,7 +360,8 @@ class LinuxTracingIntegrationTestFixture {
     }
 
     listener_.emplace();
-    tracer_ = orbit_linux_tracing::Tracer::Create(capture_options, &listener_.value());
+    tracer_ = orbit_linux_tracing::Tracer::Create(
+        capture_options, /*user_space_instrumentation_addresses=*/nullptr, &listener_.value());
     tracer_->Start();
 
     if (IsRunningAsRoot()) {
@@ -516,6 +518,10 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         EXPECT_GE(event.function_call().end_timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.function_call().end_timestamp_ns();
         break;
+      case orbit_grpc_protos::ProducerCaptureEvent::kFunctionEntry:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kFunctionExit:
+        UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kGpuQueueSubmission:
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kInternedCallstack:
@@ -668,7 +674,7 @@ void AddOuterAndInnerFunctionToCaptureOptions(orbit_grpc_protos::CaptureOptions*
 }
 
 void VerifyFunctionCallsOfOuterAndInnerFunction(
-    const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events, pid_t pid,
+    const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events, uint32_t pid,
     uint64_t outer_function_id, uint64_t inner_function_id) {
   std::vector<orbit_grpc_protos::FunctionCall> function_calls;
   for (const auto& event : events) {
@@ -732,7 +738,7 @@ TEST(LinuxTracingIntegrationTest, FunctionCalls) {
   orbit_grpc_protos::CaptureOptions capture_options = fixture.BuildDefaultCaptureOptions();
   constexpr uint64_t kOuterFunctionId = 1;
   constexpr uint64_t kInnerFunctionId = 2;
-  AddOuterAndInnerFunctionToCaptureOptions(&capture_options, fixture.GetPuppetPid(),
+  AddOuterAndInnerFunctionToCaptureOptions(&capture_options, fixture.GetPuppetPidNative(),
                                            kOuterFunctionId, kInnerFunctionId);
 
   std::vector<orbit_grpc_protos::ProducerCaptureEvent> events =
@@ -821,7 +827,7 @@ absl::flat_hash_set<uint64_t> VerifyAndGetAddressInfosWithOuterAndInnerFunction(
 }
 
 void VerifyCallstackSamplesWithOuterAndInnerFunction(
-    const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events, pid_t pid,
+    const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events, uint32_t pid,
     std::pair<uint64_t, uint64_t> outer_function_virtual_address_range,
     std::pair<uint64_t, uint64_t> inner_function_virtual_address_range, double sampling_rate,
     const absl::flat_hash_set<uint64_t>* address_infos_received, bool unwound_with_frame_pointers) {
@@ -909,7 +915,7 @@ void VerifyCallstackSamplesWithOuterAndInnerFunction(
 }
 
 void VerifyCallstackSamplesWithOuterAndInnerFunctionForDwarfUnwinding(
-    const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events, pid_t pid,
+    const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events, uint32_t pid,
     std::pair<uint64_t, uint64_t> outer_function_virtual_address_range,
     std::pair<uint64_t, uint64_t> inner_function_virtual_address_range, double sampling_rate,
     const absl::flat_hash_set<uint64_t>* address_infos_received) {
@@ -919,7 +925,7 @@ void VerifyCallstackSamplesWithOuterAndInnerFunctionForDwarfUnwinding(
 }
 
 void VerifyCallstackSamplesWithOuterAndInnerFunctionForFramePointerUnwinding(
-    const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events, pid_t pid,
+    const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events, uint32_t pid,
     std::pair<uint64_t, uint64_t> outer_function_virtual_address_range,
     std::pair<uint64_t, uint64_t> inner_function_virtual_address_range, double sampling_rate,
     const absl::flat_hash_set<uint64_t>* address_infos_received) {
@@ -935,8 +941,9 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesAndAddressInfos) {
   LinuxTracingIntegrationTestFixture fixture;
 
   const auto& [outer_function_virtual_address_range, inner_function_virtual_address_range] =
-      GetOuterAndInnerFunctionVirtualAddressRanges(fixture.GetPuppetPid());
-  const std::filesystem::path& executable_path = GetExecutableBinaryPath(fixture.GetPuppetPid());
+      GetOuterAndInnerFunctionVirtualAddressRanges(fixture.GetPuppetPidNative());
+  const std::filesystem::path& executable_path =
+      GetExecutableBinaryPath(fixture.GetPuppetPidNative());
 
   orbit_grpc_protos::CaptureOptions capture_options = fixture.BuildDefaultCaptureOptions();
   const double samples_per_second = capture_options.samples_per_second();
@@ -967,13 +974,14 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesTogetherWithFunctionCalls) {
   LinuxTracingIntegrationTestFixture fixture;
 
   const auto& [outer_function_virtual_address_range, inner_function_virtual_address_range] =
-      GetOuterAndInnerFunctionVirtualAddressRanges(fixture.GetPuppetPid());
-  const std::filesystem::path& executable_path = GetExecutableBinaryPath(fixture.GetPuppetPid());
+      GetOuterAndInnerFunctionVirtualAddressRanges(fixture.GetPuppetPidNative());
+  const std::filesystem::path& executable_path =
+      GetExecutableBinaryPath(fixture.GetPuppetPidNative());
 
   orbit_grpc_protos::CaptureOptions capture_options = fixture.BuildDefaultCaptureOptions();
   constexpr uint64_t kOuterFunctionId = 1;
   constexpr uint64_t kInnerFunctionId = 2;
-  AddOuterAndInnerFunctionToCaptureOptions(&capture_options, fixture.GetPuppetPid(),
+  AddOuterAndInnerFunctionToCaptureOptions(&capture_options, fixture.GetPuppetPidNative(),
                                            kOuterFunctionId, kInnerFunctionId);
   const double sampling_rate = capture_options.samples_per_second();
 
@@ -1010,7 +1018,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointers) {
   LinuxTracingIntegrationTestFixture fixture;
 
   const auto& [outer_function_virtual_address_range, inner_function_virtual_address_range] =
-      GetOuterAndInnerFunctionVirtualAddressRanges(fixture.GetPuppetPid());
+      GetOuterAndInnerFunctionVirtualAddressRanges(fixture.GetPuppetPidNative());
 
   orbit_grpc_protos::CaptureOptions capture_options = fixture.BuildDefaultCaptureOptions();
   capture_options.set_unwinding_method(orbit_grpc_protos::CaptureOptions::kFramePointers);
@@ -1043,13 +1051,13 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointersTogetherWithF
   LinuxTracingIntegrationTestFixture fixture;
 
   const auto& [outer_function_virtual_address_range, inner_function_virtual_address_range] =
-      GetOuterAndInnerFunctionVirtualAddressRanges(fixture.GetPuppetPid());
+      GetOuterAndInnerFunctionVirtualAddressRanges(fixture.GetPuppetPidNative());
 
   orbit_grpc_protos::CaptureOptions capture_options = fixture.BuildDefaultCaptureOptions();
   capture_options.set_unwinding_method(orbit_grpc_protos::CaptureOptions::kFramePointers);
   constexpr uint64_t kOuterFunctionId = 1;
   constexpr uint64_t kInnerFunctionId = 2;
-  AddOuterAndInnerFunctionToCaptureOptions(&capture_options, fixture.GetPuppetPid(),
+  AddOuterAndInnerFunctionToCaptureOptions(&capture_options, fixture.GetPuppetPidNative(),
                                            kOuterFunctionId, kInnerFunctionId);
   const double sampling_rate = capture_options.samples_per_second();
 

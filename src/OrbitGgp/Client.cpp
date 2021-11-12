@@ -11,6 +11,7 @@
 #include <QIODevice>
 #include <QObject>
 #include <QProcess>
+#include <QString>
 #include <QStringList>
 #include <QTimer>
 #include <chrono>
@@ -44,10 +45,11 @@ class ClientImpl : public Client, public QObject {
   Future<ErrorMessageOr<QVector<Instance>>> GetInstancesAsync(InstanceListScope scope,
                                                               std::optional<Project> project,
                                                               int retry) override;
-  Future<ErrorMessageOr<SshInfo>> GetSshInfoAsync(const Instance& ggp_instance,
+  Future<ErrorMessageOr<SshInfo>> GetSshInfoAsync(const QString& instance_id,
                                                   std::optional<Project> project) override;
   Future<ErrorMessageOr<QVector<Project>>> GetProjectsAsync() override;
   Future<ErrorMessageOr<Project>> GetDefaultProjectAsync() override;
+  Future<ErrorMessageOr<Instance>> DescribeInstanceAsync(const QString& instance_id) override;
 
  private:
   const QString ggp_program_;
@@ -121,9 +123,9 @@ Future<ErrorMessageOr<QVector<Instance>>> ClientImpl::GetInstancesAsync(
       }));
 }
 
-Future<ErrorMessageOr<SshInfo>> ClientImpl::GetSshInfoAsync(const Instance& ggp_instance,
+Future<ErrorMessageOr<SshInfo>> ClientImpl::GetSshInfoAsync(const QString& instance_id,
                                                             std::optional<Project> project) {
-  QStringList arguments{"ssh", "init", "-s", "--instance", ggp_instance.id};
+  QStringList arguments{"ssh", "init", "-s", "--instance", instance_id};
   if (project != std::nullopt) {
     arguments.append("--project");
     arguments.append(project.value().id);
@@ -152,6 +154,16 @@ Future<ErrorMessageOr<Project>> ClientImpl::GetDefaultProjectAsync() {
   return orbit_qt_utils::ExecuteProcess(ggp_program_, arguments, this, absl::FromChrono(timeout_))
       .ThenIfSuccess(&executor, [](const QByteArray& json) -> ErrorMessageOr<Project> {
         return Project::GetDefaultProjectFromJson(json);
+      });
+}
+
+Future<ErrorMessageOr<Instance>> ClientImpl::DescribeInstanceAsync(const QString& instance_id) {
+  QStringList arguments{"instance", "describe", instance_id, "-s"};
+
+  orbit_base::ImmediateExecutor executor;
+  return orbit_qt_utils::ExecuteProcess(ggp_program_, arguments, this, absl::FromChrono(timeout_))
+      .ThenIfSuccess(&executor, [](const QByteArray& json) -> ErrorMessageOr<Instance> {
+        return Instance::CreateFromJson(json);
       });
 }
 

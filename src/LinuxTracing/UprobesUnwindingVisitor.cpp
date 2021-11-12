@@ -63,6 +63,51 @@ static void SendUprobesFullAddressInfoToListener(
   listener->OnAddressInfo(std::move(address_info));
 }
 
+static bool CallstackIsInUserSpaceInstrumentation(
+    const std::vector<unwindstack::FrameData>& frames,
+    const UserSpaceInstrumentationAddresses& user_space_instrumentation_addresses) {
+  CHECK(!frames.empty());
+
+  // This case is for a sample falling directly inside a user space instrumentation trampoline.
+  if (user_space_instrumentation_addresses.IsInEntryTrampoline(frames.front().pc) ||
+      user_space_instrumentation_addresses.IsInReturnTrampoline(frames.front().pc)) {
+    return true;
+  }
+
+  // This case is for all samples falling in a callee of the trampoline. These are normally in the
+  // injected library, but they could also be in a module containing a function called by the
+  // library. So we check if *any* frame is in the injected library.
+  std::string_view injected_library_map_name =
+      user_space_instrumentation_addresses.GetInjectedLibraryMapName();
+  return std::any_of(frames.begin(), frames.end(),
+                     [&injected_library_map_name](const unwindstack::FrameData& frame) {
+                       return frame.map_name == injected_library_map_name;
+                     });
+}
+
+static bool CallchainIsInUserSpaceInstrumentation(
+    const uint64_t* callchain, uint64_t callchain_size, LibunwindstackMaps& maps,
+    const UserSpaceInstrumentationAddresses& user_space_instrumentation_addresses) {
+  CHECK(callchain_size >= 2);
+
+  // This case is for a sample falling directly inside a user space instrumentation trampoline.
+  if (user_space_instrumentation_addresses.IsInEntryTrampoline(callchain[1]) ||
+      user_space_instrumentation_addresses.IsInReturnTrampoline(callchain[1])) {
+    return true;
+  }
+
+  // This case is for all samples falling in a callee of the trampoline. These are normally in the
+  // injected library, but they could also be in a module containing a function called by the
+  // library. So we check if *any* frame is in the injected library.
+  std::string_view injected_library_map_name =
+      user_space_instrumentation_addresses.GetInjectedLibraryMapName();
+  return std::any_of(callchain + 1, callchain + callchain_size,
+                     [&maps, &injected_library_map_name](uint64_t frame) {
+                       unwindstack::MapInfo* map_info = maps.Find(frame);
+                       return map_info != nullptr && map_info->name() == injected_library_map_name;
+                     });
+}
+
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
                                     const StackSamplePerfEventData& event_data) {
   CHECK(listener_ != nullptr);
@@ -98,18 +143,36 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
     callstack->set_type(Callstack::kInUprobes);
     SendUprobesFullAddressInfoToListener(listener_, libunwindstack_result.frames().front());
     callstack->add_pcs(libunwindstack_result.frames().front().pc);
+  } else if (user_space_instrumentation_addresses_ != nullptr &&
+             CallstackIsInUserSpaceInstrumentation(libunwindstack_result.frames(),
+                                                   *user_space_instrumentation_addresses_)) {
+    // Like the previous case, but with samples falling directly inside a user space instrumentation
+    // trampoline (entry or return), or inside liborbituserspaceinstrumentation.so, or inside a
+    // module called by this.
+    callstack->set_type(Callstack::kInUserSpaceInstrumentation);
+    if (!user_space_instrumentation_addresses_->IsInEntryTrampoline(
+            libunwindstack_result.frames().front().pc) &&
+        !user_space_instrumentation_addresses_->IsInReturnTrampoline(
+            libunwindstack_result.frames().front().pc)) {
+      SendFullAddressInfoToListener(listener_, libunwindstack_result.frames().front());
+    }
+    callstack->add_pcs(libunwindstack_result.frames().front().pc);
 
   } else if (libunwindstack_result.frames().size() > 1 &&
-             libunwindstack_result.frames().back().map_name == "[uprobes]") {
-    // If unwinding stops at a [uprobes] frame (this is usually reported as an unwinding error, but
-    // not always), it means that patching the stack with UprobesReturnAddressManager::PatchSample
-    // wasn't (completely) successful (we cannot detect this before actually unwinding).
-    // This easily happens at the beginning of the capture, when we missed the first uprobes, but
-    // also if some perf_event_open events are lost or discarded.
+             (libunwindstack_result.frames().back().map_name == "[uprobes]" ||
+              (user_space_instrumentation_addresses_ != nullptr &&
+               user_space_instrumentation_addresses_->IsInReturnTrampoline(
+                   libunwindstack_result.frames().back().pc)))) {
+    // If unwinding stops at a [uprobes] frame or at a frame corresponding to a user space
+    // instrumentation return trampoline (this is usually reported as an unwinding error, but not
+    // always, at least for uprobes), it means that patching the stack with
+    // UprobesReturnAddressManager::PatchSample wasn't (completely) successful (we cannot detect
+    // this before actually unwinding). This easily happens at the beginning of the capture, when we
+    // missed the first uprobes, but also if some perf_event_open events are lost or discarded.
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
     }
-    callstack->set_type(Callstack::kUprobesPatchingFailed);
+    callstack->set_type(Callstack::kCallstackPatchingFailed);
     SendFullAddressInfoToListener(listener_, libunwindstack_result.frames().front());
     callstack->add_pcs(libunwindstack_result.frames().front().pc);
 
@@ -175,15 +238,27 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   }
 
   uint64_t top_ip = event_data.GetCallchain()[1];
-  unwindstack::MapInfo* top_ip_map_info = current_maps_->Find(top_ip);
 
   // Some samples can actually fall inside u(ret)probes code. Set their type accordingly, as we
   // don't want to show the unnamed uprobes module in the samples.
-  if (top_ip_map_info == nullptr || top_ip_map_info->name() == "[uprobes]") {
+  unwindstack::MapInfo* top_ip_map_info = current_maps_->Find(top_ip);
+  if (top_ip_map_info != nullptr && top_ip_map_info->name() == "[uprobes]") {
     if (samples_in_uretprobes_counter_ != nullptr) {
       ++(*samples_in_uretprobes_counter_);
     }
     callstack->set_type(Callstack::kInUprobes);
+    callstack->add_pcs(top_ip);
+    listener_->OnCallstackSample(std::move(sample));
+    return;
+  }
+  // Similar to the previous case: detect if the sample fell inside a user space instrumentation
+  // trampoline (entry or return), or inside liborbituserspaceinstrumentation.so, or inside a module
+  // called by this.
+  if (user_space_instrumentation_addresses_ != nullptr &&
+      CallchainIsInUserSpaceInstrumentation(event_data.GetCallchain(),
+                                            event_data.GetCallchainSize(), *current_maps_,
+                                            *user_space_instrumentation_addresses_)) {
+    callstack->set_type(Callstack::kInUserSpaceInstrumentation);
     callstack->add_pcs(top_ip);
     listener_->OnCallstackSample(std::move(sample));
     return;
@@ -218,12 +293,27 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
     return;
   }
 
+  // Apparently quite a corner case, but easy to observe: the library injected by user space
+  // instrumentation didn't appear in the callchain because it called a leaf function in another
+  // module, but after calling PatchCallerOfLeafFunction it's now the second innermost frame.
+  if (user_space_instrumentation_addresses_ != nullptr && event_data.GetCallchainSize() >= 3) {
+    unwindstack::MapInfo* second_ip_map_info = current_maps_->Find(event_data.GetCallchain()[2]);
+    if (second_ip_map_info != nullptr &&
+        second_ip_map_info->name() ==
+            user_space_instrumentation_addresses_->GetInjectedLibraryMapName()) {
+      callstack->set_type(Callstack::kInUserSpaceInstrumentation);
+      callstack->add_pcs(top_ip);
+      listener_->OnCallstackSample(std::move(sample));
+      return;
+    }
+  }
+
   if (!return_address_manager_->PatchCallchain(event_data.tid, event_data.ips.get(),
                                                event_data.GetCallchainSize(), current_maps_)) {
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
     }
-    callstack->set_type(Callstack::kUprobesPatchingFailed);
+    callstack->set_type(Callstack::kCallstackPatchingFailed);
     callstack->add_pcs(top_ip);
     listener_->OnCallstackSample(std::move(sample));
     return;
@@ -281,9 +371,9 @@ void UprobesUnwindingVisitor::OnUprobes(
   }
   uprobe_sps_ips_cpus.emplace_back(sp, ip, cpu);
 
-  function_call_manager_->ProcessUprobes(tid, function_id, timestamp_ns, registers);
+  function_call_manager_->ProcessFunctionEntry(tid, function_id, timestamp_ns, registers);
 
-  return_address_manager_->ProcessUprobes(tid, sp, return_address);
+  return_address_manager_->ProcessFunctionEntry(tid, sp, return_address);
 }
 
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
@@ -311,12 +401,12 @@ void UprobesUnwindingVisitor::OnUretprobes(uint64_t timestamp_ns, pid_t pid, pid
   }
 
   std::optional<FunctionCall> function_call =
-      function_call_manager_->ProcessUretprobes(pid, tid, timestamp_ns, ax);
+      function_call_manager_->ProcessFunctionExit(pid, tid, timestamp_ns, ax);
   if (function_call.has_value()) {
     listener_->OnFunctionCall(std::move(function_call.value()));
   }
 
-  return_address_manager_->ProcessUretprobes(tid);
+  return_address_manager_->ProcessFunctionExit(tid);
 }
 
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
@@ -327,6 +417,26 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
                                     const UretprobesWithReturnValuePerfEventData& event_data) {
   OnUretprobes(event_timestamp, event_data.pid, event_data.tid, event_data.rax);
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
+                                    const UserSpaceFunctionEntryPerfEventData& event_data) {
+  function_call_manager_->ProcessFunctionEntry(event_data.tid, event_data.function_id,
+                                               event_timestamp, std::nullopt);
+
+  return_address_manager_->ProcessFunctionEntry(event_data.tid, event_data.sp,
+                                                event_data.return_address);
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
+                                    const UserSpaceFunctionExitPerfEventData& event_data) {
+  std::optional<FunctionCall> function_call = function_call_manager_->ProcessFunctionExit(
+      event_data.pid, event_data.tid, event_timestamp, std::nullopt);
+  if (function_call.has_value()) {
+    listener_->OnFunctionCall(std::move(function_call.value()));
+  }
+
+  return_address_manager_->ProcessFunctionExit(event_data.tid);
 }
 
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp, const MmapPerfEventData& event_data) {

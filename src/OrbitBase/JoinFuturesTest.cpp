@@ -132,4 +132,46 @@ TYPED_TEST(JoinFuturesTest, JoinSpanWithCompletedFutures) {
   EXPECT_TRUE(joined_future.IsFinished());
   TestFixture::VerifyResult(&joined_future, 3);
 }
+
+TEST(JoinFuturesTest, JoinOneFuture) {
+  Promise<int> promise0{};
+  Future<int> future0 = promise0.GetFuture();
+
+  Future<std::tuple<int>> joined_future = JoinFutures(future0);
+  EXPECT_TRUE(joined_future.IsValid());
+  EXPECT_FALSE(joined_future.IsFinished());
+
+  promise0.SetResult(42);
+  EXPECT_TRUE(joined_future.IsFinished());
+
+  EXPECT_EQ(std::get<0>(joined_future.Get()), 42);
+}
+
+TEST(JoinFuturesTest, JoinThreeFutures) {
+  Promise<int> promise0{};
+  Future<int> future0 = promise0.GetFuture();
+
+  Promise<std::string> promise1{};
+  Future<std::string> future1 = promise1.GetFuture();
+
+  Promise<int> promise2{};
+  Future<int> future2 = promise2.GetFuture();
+
+  Future<std::tuple<int, std::string, int>> joined_future = JoinFutures(future0, future1, future2);
+  EXPECT_TRUE(joined_future.IsValid());
+  EXPECT_FALSE(joined_future.IsFinished());
+
+  promise0.SetResult(42);
+  EXPECT_FALSE(joined_future.IsFinished());
+
+  promise2.SetResult(80);
+  EXPECT_FALSE(joined_future.IsFinished());
+
+  promise1.SetResult("result");
+  ASSERT_TRUE(joined_future.IsFinished());
+
+  EXPECT_EQ(std::get<0>(joined_future.Get()), 42);
+  EXPECT_EQ(std::get<1>(joined_future.Get()), "result");
+  EXPECT_EQ(std::get<2>(joined_future.Get()), 80);
+}
 }  // namespace orbit_base

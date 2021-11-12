@@ -9,7 +9,7 @@
 #include <string_view>
 #include <vector>
 
-#include "AddressRange.h"
+#include "UserSpaceInstrumentation/AddressRange.h"
 
 namespace orbit_user_space_instrumentation {
 

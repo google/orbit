@@ -10,9 +10,11 @@
 #include <sys/types.h>
 
 #include <cstdint>
+#include <filesystem>
 #include <memory>
 
 #include "OrbitBase/Result.h"
+#include "UserSpaceInstrumentation/AddressRange.h"
 #include "capture.pb.h"
 
 namespace orbit_user_space_instrumentation {
@@ -20,8 +22,8 @@ namespace orbit_user_space_instrumentation {
 class InstrumentedProcess;
 
 // `InstrumentationManager` is a globally unique object containing the bookkeeping for all user
-// space instrumentaion (in the `process_map_` member). Its lifetime is pretty much identical to the
-// lifetime of the profiling service.
+// space instrumentation (in the `process_map_` member). Its lifetime is pretty much identical to
+// the lifetime of the profiling service.
 class InstrumentationManager {
  public:
   InstrumentationManager(const InstrumentationManager&) = delete;
@@ -35,6 +37,9 @@ class InstrumentationManager {
   struct InstrumentationResult {
     absl::flat_hash_set<uint64_t> instrumented_function_ids;
     absl::flat_hash_map<uint64_t, std::string> function_ids_to_error_messages;
+    std::vector<AddressRange> entry_trampoline_address_ranges;
+    AddressRange return_trampoline_address_range;
+    std::filesystem::path injected_library_path;
   };
 
   // On the first call to this function we inject OrbitUserSpaceInstrumentation.so into the target
@@ -42,7 +47,9 @@ class InstrumentationManager {
   // were not instrumented before and instrument all functions by overwriting the prologue with a
   // jump into the trampoline. Returns the function_id's of the instrumented functions and -
   // potentially - error messages for functions where the instrumentation failed. Note that there is
-  // no guarantee that we can instrument all the functions in a binary.
+  // no guarantee that we can instrument all the functions in a binary. It also returns the address
+  // ranges dedicated to trampolines, including the return trampoline, and the map name of the
+  // injected library.
   [[nodiscard]] ErrorMessageOr<InstrumentationResult> InstrumentProcess(
       const orbit_grpc_protos::CaptureOptions& capture_options);
 

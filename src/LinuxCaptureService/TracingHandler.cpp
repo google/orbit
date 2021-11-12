@@ -11,8 +11,9 @@
 #include "ApiUtils/Event.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
+#include "UserSpaceInstrumentationAddressesImpl.h"
 
-namespace orbit_capture_service {
+namespace orbit_linux_capture_service {
 
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::FullAddressInfo;
@@ -26,9 +27,13 @@ using orbit_grpc_protos::ThreadStateSlice;
 
 using orbit_grpc_protos::kLinuxTracingProducerId;
 
-void TracingHandler::Start(const CaptureOptions& capture_options) {
+void TracingHandler::Start(
+    const CaptureOptions& capture_options,
+    std::unique_ptr<UserSpaceInstrumentationAddressesImpl> user_space_instrumentation_addresses) {
   CHECK(tracer_ == nullptr);
-  tracer_ = orbit_linux_tracing::Tracer::Create(capture_options, this);
+
+  tracer_ = orbit_linux_tracing::Tracer::Create(
+      capture_options, std::move(user_space_instrumentation_addresses), this);
   tracer_->Start();
 }
 
@@ -127,4 +132,4 @@ void TracingHandler::OnOutOfOrderEventsDiscardedEvent(
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }
 
-}  // namespace orbit_capture_service
+}  // namespace orbit_linux_capture_service

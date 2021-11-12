@@ -122,10 +122,7 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
 
       OrbitMainWindow w(std::move(target_config.value()), crash_handler, metrics_uploader.get(),
                         command_line_flags);
-
-      // "resize" is required to make "showMaximized" work properly.
-      w.resize(1280, 720);
-      w.showMaximized();
+      w.show();
 
       application_return_code = QApplication::exec();
 

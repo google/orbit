@@ -33,9 +33,16 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/ThreadPool.h"
+#include "capture.pb.h"
 #include "capture_data.pb.h"
 
 namespace {
+
+using orbit_grpc_protos::CaptureOptions;
+using DynamicInstrumentationMethod =
+    orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod;
+using UnwindingMethod = orbit_grpc_protos::CaptureOptions::UnwindingMethod;
+
 std::atomic<bool> exit_requested = false;
 
 void SigintHandler(int signum) {
@@ -307,14 +314,10 @@ int main(int argc, char* argv[]) {
   uint16_t samples_per_second = absl::GetFlag(FLAGS_sampling_rate);
   LOG("samples_per_second=%u", samples_per_second);
   constexpr uint16_t kStackDumpSize = 65000;
-  orbit_grpc_protos::UnwindingMethod unwinding_method =
-      absl::GetFlag(FLAGS_frame_pointers)
-          ? orbit_grpc_protos::UnwindingMethod::kFramePointerUnwinding
-          : orbit_grpc_protos::UnwindingMethod::kDwarfUnwinding;
+  const UnwindingMethod unwinding_method =
+      absl::GetFlag(FLAGS_frame_pointers) ? CaptureOptions::kFramePointers : CaptureOptions::kDwarf;
   LOG("unwinding_method=%s",
-      unwinding_method == orbit_grpc_protos::UnwindingMethod::kFramePointerUnwinding
-          ? "Frame pointers"
-          : "DWARF");
+      unwinding_method == CaptureOptions::kFramePointers ? "Frame pointers" : "DWARF");
 
   std::string file_path = absl::GetFlag(FLAGS_instrument_path);
   uint64_t file_offset = absl::GetFlag(FLAGS_instrument_offset);
@@ -322,12 +325,15 @@ int main(int argc, char* argv[]) {
           "Binary path and offset of the function to instrument need to be specified together");
   bool instrument_function = !file_path.empty() && file_offset != 0;
   uint64_t function_size = absl::GetFlag(FLAGS_instrument_size);
-  bool user_space_instrumentation = absl::GetFlag(FLAGS_user_space_instrumentation);
-  LOG("user_space_instrumentation=%d", user_space_instrumentation);
+  DynamicInstrumentationMethod instrumentation_method =
+      absl::GetFlag(FLAGS_user_space_instrumentation) ? CaptureOptions::kUserSpaceInstrumentation
+                                                      : CaptureOptions::kKernelUprobes;
+  LOG("user_space_instrumentation=%d",
+      instrumentation_method == CaptureOptions::kUserSpaceInstrumentation);
   if (instrument_function) {
     LOG("file_path=%s", file_path);
     LOG("file_offset=%#x", file_offset);
-    if (user_space_instrumentation) {
+    if (instrumentation_method == CaptureOptions::kUserSpaceInstrumentation) {
       FAIL_IF(function_size == 0, "User space instrumentation requires the function size");
       LOG("function_size=%d", function_size);
     }
@@ -435,7 +441,7 @@ int main(int argc, char* argv[]) {
       thread_pool.get(), process_id, module_manager, selected_functions, kAlwaysRecordArguments,
       kRecordReturnValues, orbit_client_data::TracepointInfoSet{}, samples_per_second,
       kStackDumpSize, unwinding_method, collect_scheduling_info, collect_thread_state,
-      collect_gpu_jobs, enable_api, kEnableIntrospection, user_space_instrumentation,
+      collect_gpu_jobs, enable_api, kEnableIntrospection, instrumentation_method,
       kMaxLocalMarkerDepthPerCommandBuffer, collect_memory_info, memory_sampling_period_ms,
       std::move(capture_event_processor));
   LOG("Asked to start capture");

@@ -12,9 +12,43 @@ namespace orbit_client_data {
 using orbit_client_protos::TimerInfo;
 using ::testing::UnorderedElementsAre;
 
+namespace {
+
 const uint32_t kThreadId1 = 1;
 const uint32_t kThreadId2 = 2;
 const uint32_t kProcessId = 42;
+
+// Thread1
+static constexpr uint64_t kLeftTimerStart = 2;
+static constexpr uint64_t kLeftTimerEnd = 5;
+static constexpr uint64_t kCenterTimerStart = 6;
+static constexpr uint64_t kCenterTimerEnd = 9;
+static constexpr uint64_t kRightTimerStart = 9;
+static constexpr uint64_t kRightTimerEnd = 10;
+static constexpr uint64_t kDownTimerStart = 7;
+static constexpr uint64_t kDownTimerEnd = 9;
+
+static constexpr uint64_t kNumTimersInThread1 = 4;
+static constexpr uint64_t kDepthThread1 = 2;
+static constexpr uint64_t kMinTimestampinThread1 = 2;
+static constexpr uint64_t kMaxTimestampinThread1 = 10;
+
+// Thread2
+static constexpr uint64_t kOtherThreadIdTimerStart = 5;
+static constexpr uint64_t kOtherThreadIdTimerEnd = 11;
+
+static constexpr uint64_t kNumTimersInThread2 = 1;
+static constexpr uint64_t kDepthThread2 = 1;
+
+struct TimersInTest {
+  const TimerInfo* left;
+  const TimerInfo* center;
+  const TimerInfo* right;
+  const TimerInfo* down;
+  const TimerInfo* other_thread_id;
+};
+
+}  // namespace
 
 TEST(ThreadTrackDataProvider, EmptyWhenCreated) {
   ThreadTrackDataProvider thread_track_data_provider;
@@ -77,38 +111,6 @@ TEST(ThreadTrackDataProvider, OnCaptureComplete) {
   EXPECT_EQ(inserted_timer_info->end(), kTimerEnd);
 }
 
-struct TimersInTest {
-  // Thread1
-  const TimerInfo* left;
-  static constexpr uint64_t kLeftTimerStart = 2;
-  static constexpr uint64_t kLeftTimerEnd = 5;
-
-  const TimerInfo* center;
-  static constexpr uint64_t kCenterTimerStart = 6;
-  static constexpr uint64_t kCenterTimerEnd = 9;
-
-  const TimerInfo* right;
-  static constexpr uint64_t kRightTimerStart = 9;
-  static constexpr uint64_t kRightTimerEnd = 10;
-
-  const TimerInfo* down;
-  static constexpr uint64_t kDownTimerStart = 7;
-  static constexpr uint64_t kDownTimerEnd = 9;
-
-  static constexpr uint64_t kNumTimersInThread1 = 4;
-  static constexpr uint64_t kDepthThread1 = 2;
-  static constexpr uint64_t kMinTimestampinThread1 = 2;
-  static constexpr uint64_t kMaxTimestampinThread1 = 10;
-
-  // Thread2
-  const TimerInfo* other_thread_id;
-  static constexpr uint64_t kOtherThreadIdTimerStart = 5;
-  static constexpr uint64_t kOtherThreadIdTimerEnd = 11;
-
-  static constexpr uint64_t kNumTimersInThread2 = 1;
-  static constexpr uint64_t kDepthThread2 = 1;
-};
-
 // Insert 4 timers with the same thread_id and an extra with a different one.
 TimersInTest InsertTimersForTesting(ThreadTrackDataProvider& thread_track_data_provider) {
   TimersInTest inserted_timers_ptr;
@@ -117,29 +119,29 @@ TimersInTest InsertTimersForTesting(ThreadTrackDataProvider& thread_track_data_p
   // left
   timer_info.set_process_id(kProcessId);
   timer_info.set_thread_id(kThreadId1);
-  timer_info.set_start(TimersInTest::kLeftTimerStart);
-  timer_info.set_end(TimersInTest::kLeftTimerEnd);
+  timer_info.set_start(kLeftTimerStart);
+  timer_info.set_end(kLeftTimerEnd);
   inserted_timers_ptr.left = &thread_track_data_provider.AddTimer(timer_info);
 
   // center
-  timer_info.set_start(TimersInTest::kCenterTimerStart);
-  timer_info.set_end(TimersInTest::kCenterTimerEnd);
+  timer_info.set_start(kCenterTimerStart);
+  timer_info.set_end(kCenterTimerEnd);
   inserted_timers_ptr.center = &thread_track_data_provider.AddTimer(timer_info);
 
   // down
-  timer_info.set_start(TimersInTest::kDownTimerStart);
-  timer_info.set_end(TimersInTest::kDownTimerEnd);
+  timer_info.set_start(kDownTimerStart);
+  timer_info.set_end(kDownTimerEnd);
   inserted_timers_ptr.down = &thread_track_data_provider.AddTimer(timer_info);
 
   // right
-  timer_info.set_start(TimersInTest::kRightTimerStart);
-  timer_info.set_end(TimersInTest::kRightTimerEnd);
+  timer_info.set_start(kRightTimerStart);
+  timer_info.set_end(kRightTimerEnd);
   inserted_timers_ptr.right = &thread_track_data_provider.AddTimer(timer_info);
 
   // other thread_id
   timer_info.set_thread_id(kThreadId2);
-  timer_info.set_start(TimersInTest::kOtherThreadIdTimerStart);
-  timer_info.set_end(TimersInTest::kOtherThreadIdTimerEnd);
+  timer_info.set_start(kOtherThreadIdTimerStart);
+  timer_info.set_end(kOtherThreadIdTimerEnd);
   inserted_timers_ptr.other_thread_id = &thread_track_data_provider.AddTimer(timer_info);
 
   return inserted_timers_ptr;
@@ -149,8 +151,19 @@ TEST(ThreadTrackDataProvider, GetTimers) {
   ThreadTrackDataProvider thread_track_data_provider;
   InsertTimersForTesting(thread_track_data_provider);
 
-  EXPECT_EQ(thread_track_data_provider.GetTimers(1).size(), TimersInTest::kNumTimersInThread1);
-  EXPECT_EQ(thread_track_data_provider.GetTimers(2).size(), TimersInTest::kNumTimersInThread2);
+  EXPECT_EQ(thread_track_data_provider.GetTimers(1).size(), kNumTimersInThread1);
+  EXPECT_EQ(thread_track_data_provider.GetTimers(2).size(), kNumTimersInThread2);
+
+  EXPECT_EQ(thread_track_data_provider.GetTimers(1, 0, kLeftTimerStart).size(),
+            1);  // Left, range are inclusive
+  EXPECT_EQ(thread_track_data_provider.GetTimers(1, kLeftTimerEnd, kCenterTimerStart).size(),
+            2);  // Left + Center
+  EXPECT_EQ(thread_track_data_provider.GetTimers(1, kLeftTimerEnd + 1, kDownTimerStart).size(),
+            2);  // Center + Down
+  EXPECT_EQ(thread_track_data_provider.GetTimers(1, kRightTimerEnd, kRightTimerEnd + 1).size(),
+            1);  // Right
+  EXPECT_EQ(thread_track_data_provider.GetTimers(1, kRightTimerEnd + 1, kRightTimerEnd + 10).size(),
+            0);
 }
 
 TEST(ThreadTrackDataProvider, GetTimersAtDepthDiscretized) {
@@ -160,20 +173,19 @@ TEST(ThreadTrackDataProvider, GetTimersAtDepthDiscretized) {
   constexpr uint32_t kNormalResolution = 1000;
 
   // All timers should be visible in normal conditions
-  EXPECT_EQ(thread_track_data_provider
-                .GetTimersAtDepthDiscretized(1, 0, kNormalResolution, TimersInTest::kLeftTimerStart,
-                                             TimersInTest::kRightTimerEnd)
-                .size(),
-            3);  // left, center, right
+  EXPECT_EQ(
+      thread_track_data_provider
+          .GetTimersAtDepthDiscretized(1, 0, kNormalResolution, kLeftTimerStart, kRightTimerEnd)
+          .size(),
+      3);  // left, center, right
   // Only 1 pixel. There is only 1 visible timer.
   EXPECT_EQ(thread_track_data_provider
-                .GetTimersAtDepthDiscretized(1, 0, 1, TimersInTest::kLeftTimerStart,
-                                             TimersInTest::kRightTimerEnd)
+                .GetTimersAtDepthDiscretized(1, 0, 1, kLeftTimerStart, kRightTimerEnd)
                 .size(),
             1);
   // Zooming-out a lot. Only the first pixel will have a visible timer.
   EXPECT_EQ(thread_track_data_provider
-                .GetTimersAtDepthDiscretized(1, 0, kNormalResolution, TimersInTest::kLeftTimerStart,
+                .GetTimersAtDepthDiscretized(1, 0, kNormalResolution, kLeftTimerStart,
                                              std::numeric_limits<uint64_t>::max())
                 .size(),
             1);
@@ -193,39 +205,33 @@ TEST(ThreadTrackDataProvider, GetChains) {
 
   std::vector<const TimerChain*> chains_thread_1 = thread_track_data_provider.GetChains(kThreadId1);
   EXPECT_EQ(chains_thread_1.size(), 1);
-  EXPECT_EQ(chains_thread_1[0]->size(), TimersInTest::kNumTimersInThread1);
+  EXPECT_EQ(chains_thread_1[0]->size(), kNumTimersInThread1);
 
   std::vector<const TimerChain*> chains_thread_2 = thread_track_data_provider.GetChains(kThreadId2);
   EXPECT_EQ(chains_thread_2.size(), 1);
-  EXPECT_EQ(chains_thread_2[0]->size(), TimersInTest::kNumTimersInThread2);
+  EXPECT_EQ(chains_thread_2[0]->size(), kNumTimersInThread2);
 
   // 2 Chains, 5 Timers in Total.
   std::vector<const TimerChain*> all_chains = thread_track_data_provider.GetAllThreadTimerChains();
   EXPECT_EQ(all_chains.size(), 2);
   EXPECT_EQ(all_chains[0]->size() + all_chains[1]->size(),
-            TimersInTest::kNumTimersInThread1 + TimersInTest::kNumTimersInThread2);
+            kNumTimersInThread1 + kNumTimersInThread2);
 }
 
 TEST(ThreadTrackDataProvider, GetStatsFromThreadId) {
   ThreadTrackDataProvider thread_track_data_provider;
   InsertTimersForTesting(thread_track_data_provider);
 
-  EXPECT_EQ(thread_track_data_provider.GetNumberOfTimers(kThreadId1),
-            TimersInTest::kNumTimersInThread1);
-  EXPECT_EQ(thread_track_data_provider.GetMinTime(kThreadId1),
-            TimersInTest::kMinTimestampinThread1);
-  EXPECT_EQ(thread_track_data_provider.GetMaxTime(kThreadId1),
-            TimersInTest::kMaxTimestampinThread1);
-  EXPECT_EQ(thread_track_data_provider.GetDepth(kThreadId1), TimersInTest::kDepthThread1);
+  EXPECT_EQ(thread_track_data_provider.GetNumberOfTimers(kThreadId1), kNumTimersInThread1);
+  EXPECT_EQ(thread_track_data_provider.GetMinTime(kThreadId1), kMinTimestampinThread1);
+  EXPECT_EQ(thread_track_data_provider.GetMaxTime(kThreadId1), kMaxTimestampinThread1);
+  EXPECT_EQ(thread_track_data_provider.GetDepth(kThreadId1), kDepthThread1);
   EXPECT_EQ(thread_track_data_provider.GetProcessId(kThreadId1), kProcessId);
 
-  EXPECT_EQ(thread_track_data_provider.GetNumberOfTimers(kThreadId2),
-            TimersInTest::kNumTimersInThread2);
-  EXPECT_EQ(thread_track_data_provider.GetMinTime(kThreadId2),
-            TimersInTest::kOtherThreadIdTimerStart);
-  EXPECT_EQ(thread_track_data_provider.GetMaxTime(kThreadId2),
-            TimersInTest::kOtherThreadIdTimerEnd);
-  EXPECT_EQ(thread_track_data_provider.GetDepth(kThreadId2), TimersInTest::kDepthThread2);
+  EXPECT_EQ(thread_track_data_provider.GetNumberOfTimers(kThreadId2), kNumTimersInThread2);
+  EXPECT_EQ(thread_track_data_provider.GetMinTime(kThreadId2), kOtherThreadIdTimerStart);
+  EXPECT_EQ(thread_track_data_provider.GetMaxTime(kThreadId2), kOtherThreadIdTimerEnd);
+  EXPECT_EQ(thread_track_data_provider.GetDepth(kThreadId2), kDepthThread2);
   EXPECT_EQ(thread_track_data_provider.GetProcessId(kThreadId2), kProcessId);
 }
 

@@ -5,10 +5,8 @@
 #ifndef SESSION_SETUP_RETRIEVE_INSTANCES_H_
 #define SESSION_SETUP_RETRIEVE_INSTANCES_H_
 
-#include <absl/container/flat_hash_map.h>
-
-#include <QObject>
 #include <QVector>
+#include <memory>
 #include <optional>
 
 #include "MainThreadExecutor.h"
@@ -17,28 +15,46 @@
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/Instance.h"
 #include "OrbitGgp/Project.h"
-#include "SessionSetup/RetrieveInstancesWidget.h"
 
 namespace orbit_session_setup {
 
-class RetrieveInstances : public QObject {
+// RetrieveInstances manages calls to orbit_ggp::Client for retrieving the list of projects and
+// instances. It acts as an abstraction layer that can add functionality like caching and combines
+// calls to be executed in parallel. Its intended use is retrieving the data for
+// RetrieveInstancesWidget.
+class RetrieveInstances {
  public:
-  RetrieveInstances(orbit_ggp::Client* ggp_client, MainThreadExecutor* main_thread_executor,
-                    QObject* parent = nullptr);
+  // This struct holds the result of call to LoadProjectsAndInstances.
+  // * projects: List of projects.
+  // * default_project: Default project.
+  // * instances: list of instances.
+  // * project_of_instances: project of the list of instances.
+  struct LoadProjectsAndInstancesResult {
+    QVector<orbit_ggp::Project> projects;
+    orbit_ggp::Project default_project;
+    QVector<orbit_ggp::Instance> instances;
+    std::optional<orbit_ggp::Project> project_of_instances;
+  };
 
-  orbit_base::Future<ErrorMessageOr<QVector<orbit_ggp::Instance>>> LoadInstances(
-      const std::optional<orbit_ggp::Project>& project, orbit_ggp::Client::InstanceListScope scope);
-  orbit_base::Future<ErrorMessageOr<QVector<orbit_ggp::Instance>>> LoadInstancesWithoutCache(
-      const std::optional<orbit_ggp::Project>& project, orbit_ggp::Client::InstanceListScope scope);
+  virtual ~RetrieveInstances() = default;
 
- private:
-  orbit_ggp::Client* ggp_client_;
-  // To avoid race conditions to the instance_cache_, the main thread is used.
-  MainThreadExecutor* main_thread_executor_;
-  absl::flat_hash_map<
-      std::pair<std::optional<orbit_ggp::Project>, orbit_ggp::Client::InstanceListScope>,
-      QVector<orbit_ggp::Instance>>
-      instance_cache_;
+  virtual orbit_base::Future<ErrorMessageOr<QVector<orbit_ggp::Instance>>> LoadInstances(
+      const std::optional<orbit_ggp::Project>& project,
+      orbit_ggp::Client::InstanceListScope scope) = 0;
+  virtual orbit_base::Future<ErrorMessageOr<QVector<orbit_ggp::Instance>>>
+  LoadInstancesWithoutCache(const std::optional<orbit_ggp::Project>& project,
+                            orbit_ggp::Client::InstanceListScope scope) = 0;
+  // LoadProjectsAndInstances always loads the project list and the default project. Additionally,it
+  // is attempted to load the list of instances for the input project. The later can fail, when the
+  // project does not exist anymore. Then the instance list of the default project is loaded and
+  // returned. To indicate to which project the list of instances belongs,
+  // LoadProjectsAndInstancesResult has the field project_of_instances.
+  virtual orbit_base::Future<ErrorMessageOr<LoadProjectsAndInstancesResult>>
+  LoadProjectsAndInstances(const std::optional<orbit_ggp::Project>& project,
+                           orbit_ggp::Client::InstanceListScope scope) = 0;
+
+  [[nodiscard]] static std::unique_ptr<RetrieveInstances> Create(
+      orbit_ggp::Client* ggp_client, MainThreadExecutor* main_thread_executor);
 };
 
 }  // namespace orbit_session_setup

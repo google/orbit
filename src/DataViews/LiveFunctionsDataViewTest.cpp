@@ -29,10 +29,12 @@ using orbit_client_protos::FunctionStats;
 using JumpToTimerMode = orbit_data_views::AppInterface::JumpToTimerMode;
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;
+using orbit_client_protos::TimerInfo;
 using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::CheckSingleAction;
 using orbit_data_views::ContextMenuEntry;
+using orbit_data_views::FlattenContextMenuWithGrouping;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
 
@@ -262,11 +264,13 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
   });
 
   auto verify_context_menu_action_availability = [&](std::vector<int> selected_indices) {
-    std::vector<std::string> context_menu = view_.GetContextMenu(0, selected_indices);
+    std::vector<std::string> context_menu =
+        FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, selected_indices));
 
     // Common actions should always be available.
     CheckSingleAction(context_menu, "Copy Selection", ContextMenuEntry::kEnabled);
     CheckSingleAction(context_menu, "Export to CSV", ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, "Export events to CSV", ContextMenuEntry::kEnabled);
 
     // Source code and disassembly actions are availble if and only if capture is connected.
     ContextMenuEntry source_code_or_disassembly =
@@ -350,7 +354,8 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
       .WillRepeatedly(testing::ReturnPointee(&frame_track_enabled));
 
   AddFunctionsByIndices({0});
-  std::vector<std::string> context_menu = view_.GetContextMenu(0, {0});
+  std::vector<std::string> context_menu =
+      FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
   // Copy Selection
@@ -379,6 +384,43 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
         GetExpectedDisplayTime(kStdDevNs[0]), kModulePaths[0],
         GetExpectedDisplayAddress(kAddresses[0]));
     CheckExportToCsvIsInvoked(context_menu, app_, view_, expected_contents);
+  }
+
+  // Export events to CSV
+  {
+    constexpr size_t kNumThreads = 2;
+    const std::array<uint32_t, kNumThreads> kThreadIds = {111, 222};
+    const std::array<std::string, kNumThreads> kThreadNames = {"Test Thread 1", "Test Thread 2"};
+    for (size_t i = 0; i < kNumThreads; ++i) {
+      capture_data_->AddOrAssignThreadName(kThreadIds[i], kThreadNames[i]);
+    }
+    EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
+
+    constexpr size_t kNumTimers = 3;
+    const std::array<uint64_t, kNumTimers> kStarts = {1000, 2345, 6789};
+    const std::array<uint64_t, kNumTimers> kEnds = {1500, 5432, 9876};
+    const std::array<uint64_t, kNumTimers> kThreadIndices = {
+        0, 1, 1};  // kThreadIndices[i] is the index of the thread that timer i corresponds to.
+    std::array<TimerInfo, kNumTimers> timers;
+    std::vector<const TimerInfo*> timers_for_instrumented_function;
+    for (size_t i = 0; i < kNumTimers; i++) {
+      timers[i].set_start(kStarts[i]);
+      timers[i].set_end(kEnds[i]);
+      timers[i].set_thread_id(kThreadIds[kThreadIndices[i]]);
+      timers_for_instrumented_function.push_back(&timers[i]);
+    }
+    EXPECT_CALL(app_, GetAllTimersForHookedFunction)
+        .WillRepeatedly(testing::Return(timers_for_instrumented_function));
+
+    std::string expected_contents("\"Name\",\"Thread\",\"Start\",\"End\",\"Duration (ns)\"\r\n");
+    for (size_t i = 0; i < kNumTimers; ++i) {
+      expected_contents += absl::StrFormat(R"("%s","%s [%lu]","%lu","%lu","%lu")"
+                                           "\r\n",
+                                           kPrettyNames[0], kThreadNames[kThreadIndices[i]],
+                                           kThreadIds[kThreadIndices[i]], kStarts[i], kEnds[i],
+                                           kEnds[i] - kStarts[i]);
+    }
+    CheckExportToCsvIsInvoked(context_menu, app_, view_, expected_contents, "Export events to CSV");
   }
 
   // Go to Disassembly
@@ -513,7 +555,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
   function_selected = true;
   frame_track_enabled = true;
   capture_data_->EnableFrameTrack(kFunctionIds[0]);
-  context_menu = view_.GetContextMenu(0, {0});
+  context_menu = FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
   // Unhook

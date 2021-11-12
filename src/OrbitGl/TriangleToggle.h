@@ -39,6 +39,8 @@ class TriangleToggle : public orbit_gl::CaptureViewElement,
   void SetIsCollapsible(bool is_collapsible) { is_collapsible_ = is_collapsible; }
   [[nodiscard]] bool IsCollapsible() const { return is_collapsible_; }
 
+  [[nodiscard]] uint32_t GetLayoutFlags() const override { return LayoutFlags::kNone; }
+
  protected:
   void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
               const DrawContext& draw_context) override;
@@ -51,7 +53,7 @@ class TriangleToggle : public orbit_gl::CaptureViewElement,
   // We require explicit knowledge about the parent.
   Track* track_;
 
-  float height_;
+  float height_ = 20;
   bool is_collapsed_ = false;
   bool is_collapsible_ = true;
 

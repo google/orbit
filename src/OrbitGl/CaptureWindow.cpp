@@ -408,13 +408,14 @@ void CaptureWindow::Draw() {
     time_graph_->UpdateLayout();
     UpdateChildrenPosAndSize();
 
-    uint64_t timegraph_current_mouse_time_ns =
-        time_graph_->GetTickFromWorld(viewport_.ScreenToWorld(GetMouseScreenPos())[0]);
     if (time_graph_->IsRedrawNeeded()) {
       time_graph_was_redrawn = true;
     }
-    time_graph_->Draw(GetBatcher(), GetTextRenderer(),
-                      {timegraph_current_mouse_time_ns, picking_mode_, 0, 0});
+
+    uint64_t timegraph_current_mouse_time_ns =
+        time_graph_->GetTickFromWorld(viewport_.ScreenToWorld(GetMouseScreenPos())[0]);
+    time_graph_->DrawAllElements(GetBatcher(), GetTextRenderer(), picking_mode_,
+                                 timegraph_current_mouse_time_ns);
   }
 
   RenderSelectionOverlay();
@@ -680,7 +681,6 @@ void CaptureWindow::RenderImGuiDebugUI() {
     if (time_graph_ != nullptr) {
       IMGUI_VAR_TO_TEXT(time_graph_->GetNumVisiblePrimitives());
       IMGUI_VAR_TO_TEXT(time_graph_->GetTrackManager()->GetAllTracks().size());
-      IMGUI_VAR_TO_TEXT(time_graph_->GetTrackManager()->GetTracksOnScreen().size());
       IMGUI_VAR_TO_TEXT(time_graph_->GetMinTimeUs());
       IMGUI_VAR_TO_TEXT(time_graph_->GetMaxTimeUs());
       IMGUI_VAR_TO_TEXT(time_graph_->GetCaptureMin());

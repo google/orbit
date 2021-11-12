@@ -33,7 +33,6 @@
 #include <utility>
 
 #include "ClientFlags/ClientFlags.h"
-#include "MetricsUploader/ScopedMetric.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -46,6 +45,7 @@
 #include "SessionSetup/Error.h"
 #include "SessionSetup/OverlayWidget.h"
 #include "SessionSetup/ServiceDeployManager.h"
+#include "SessionSetup/SessionSetupUtils.h"
 #include "ui_ConnectToStadiaWidget.h"
 
 namespace {
@@ -380,7 +380,7 @@ void ConnectToStadiaWidget::CheckCredentialsAvailableOrLoad() {
   if (instance_credentials_loading_.contains(instance_id)) return;
 
   instance_credentials_loading_.emplace(instance_id);
-  auto future = ggp_client_->GetSshInfoAsync(selected_instance_.value(), selected_project_);
+  auto future = ggp_client_->GetSshInfoAsync(selected_instance_.value().id, selected_project_);
   future.Then(main_thread_executor_.get(),
               [this, instance_id](ErrorMessageOr<orbit_ggp::SshInfo> ssh_info_result) {
                 OnSshInfoLoaded(std::move(ssh_info_result), instance_id);
@@ -408,16 +408,12 @@ void ConnectToStadiaWidget::DeployOrbitService() {
       QObject::connect(ui_->instancesTableOverlay, &OverlayWidget::Cancelled,
                        service_deploy_manager_.get(), &ServiceDeployManager::Cancel)};
 
-  orbit_metrics_uploader::ScopedMetric connect_metric{
-      metrics_uploader_, orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_INSTANCE_CONNECT};
-  const auto deployment_result = service_deploy_manager_->Exec();
+  const auto deployment_result = service_deploy_manager_->Exec(metrics_uploader_);
   if (!deployment_result) {
     Disconnect();
     if (deployment_result.error() == make_error_code(Error::kUserCanceledServiceDeployment)) {
-      connect_metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_CANCELLED);
       return;
     }
-    connect_metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_INTERNAL_ERROR);
     emit ErrorOccurred(QString("Orbit was unable to successfully connect to the Instance. The "
                                "error message was: %1")
                            .arg(QString::fromStdString(deployment_result.error().message())));
@@ -432,13 +428,8 @@ void ConnectToStadiaWidget::DeployOrbitService() {
                                .arg(QString::fromStdString(error.message())));
       });
 
-  LOG("Deployment successful, grpc_port: %d", deployment_result.value().grpc_port);
   CHECK(grpc_channel_ == nullptr);
-  std::string grpc_server_address =
-      absl::StrFormat("127.0.0.1:%d", deployment_result.value().grpc_port);
-  LOG("Starting gRPC channel to: %s", grpc_server_address);
-  grpc_channel_ = grpc::CreateCustomChannel(grpc_server_address, grpc::InsecureChannelCredentials(),
-                                            grpc::ChannelArguments());
+  grpc_channel_ = CreateGrpcChannel(deployment_result.value().grpc_port);
   CHECK(grpc_channel_ != nullptr);
 
   emit Connected();
@@ -548,13 +539,7 @@ void ConnectToStadiaWidget::OnSshInfoLoaded(ErrorMessageOr<orbit_ggp::SshInfo> s
   LOG("Received ssh info for instance with id: %s", instance_id);
 
   orbit_ggp::SshInfo& ssh_info{ssh_info_result.value()};
-  orbit_ssh::Credentials credentials;
-  credentials.addr_and_port = {ssh_info.host.toStdString(), ssh_info.port};
-  credentials.key_path = ssh_info.key_path.toStdString();
-  credentials.known_hosts_path = ssh_info.known_hosts_path.toStdString();
-  credentials.user = ssh_info.user.toStdString();
-
-  instance_credentials_.emplace(instance_id, std::move(credentials));
+  instance_credentials_.emplace(instance_id, CredentialsFromSshInfo(ssh_info));
 
   emit ReceivedSshInfo();
 }

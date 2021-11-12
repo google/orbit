@@ -9,7 +9,8 @@ add_library(CaptureFile STATIC)
 
 target_sources(
   CaptureFile
-  PUBLIC include/CaptureFile/CaptureFile.h
+  PUBLIC include/CaptureFile/BufferOutputStream.h
+         include/CaptureFile/CaptureFile.h
          include/CaptureFile/CaptureFileHelpers.h
          include/CaptureFile/CaptureFileOutputStream.h
          include/CaptureFile/CaptureFileSection.h
@@ -18,7 +19,6 @@ target_sources(
 target_sources(
   CaptureFile
   PRIVATE BufferOutputStream.cpp
-          BufferOutputStream.h
           CaptureFileConstants.h
           CaptureFile.cpp
           CaptureFileHelpers.cpp

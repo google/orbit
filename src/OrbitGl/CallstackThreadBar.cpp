@@ -62,7 +62,6 @@ void CallstackThreadBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
   float event_bar_z = draw_context.picking_mode == PickingMode::kClick
                           ? GlCanvas::kZValueEventBarPicking
                           : GlCanvas::kZValueEventBar;
-  event_bar_z += draw_context.z_offset;
   Color color = GetColor();
   const Vec2 pos = GetPos();
   Box box(pos, Vec2(GetWidth(), GetHeight()), event_bar_z);
@@ -90,17 +89,17 @@ void CallstackThreadBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
     y1 = y0 + GetHeight();
 
     Color picked_color(0, 128, 255, 128);
-    Box picked_box(Vec2(x0, y0), Vec2(x1 - x0, GetHeight()),
-                   GlCanvas::kZValueUi + draw_context.z_offset);
+    Box picked_box(Vec2(x0, y0), Vec2(x1 - x0, GetHeight()), GlCanvas::kZValueUi);
     batcher.AddBox(picked_box, picked_color, shared_from_this());
   }
 }
 
-void CallstackThreadBar::DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                                            PickingMode picking_mode, float z_offset) {
-  ThreadBar::DoUpdatePrimitives(batcher, min_tick, max_tick, picking_mode, z_offset);
+void CallstackThreadBar::DoUpdatePrimitives(Batcher* batcher, TextRenderer& text_renderer,
+                                            uint64_t min_tick, uint64_t max_tick,
+                                            PickingMode picking_mode) {
+  ThreadBar::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
 
-  float z = GlCanvas::kZValueEvent + z_offset;
+  float z = GlCanvas::kZValueEvent;
   float track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
   const bool picking = picking_mode != PickingMode::kNone;
 

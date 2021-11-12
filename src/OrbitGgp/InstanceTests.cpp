@@ -21,6 +21,74 @@
 
 namespace orbit_ggp {
 
+// Instance with invalid date
+// pretty json:
+//  {
+//   "displayName": "a display name",
+//   "id": "instance id",
+//   "ipAddress": "1.1.0.1",
+//   "lastUpdated": "2020-29-09T09:55:20Z",
+//   "owner": "a username",
+//   "pool": "a pool",
+//   "state": "a state",
+//   "other key": "other value",
+//   "other complex object": {
+//    "object key": "object value"
+//   },
+//  }
+const auto invalid_timestamp_instance_json = QString(
+    "{\"displayName\":\"a display name\",\"id\":\"instance "
+    "id\",\"ipAddress\":\"1.1.0.1\",\"lastUpdated\":\"2020-29-09T09:55:20Z\",\"owner\":\"a "
+    "username\",\"pool\":\"a pool\",\"state\":\"a state\",\"other key\":\"other "
+    "value\",\"other complex object\":{\"object key\":\"object value\"}}");
+
+// Correct instance JSON declaration
+// pretty json:
+//  {
+//   "displayName": "a display name",
+//   "id": "instance id",
+//   "ipAddress": "1.1.0.1",
+//   "lastUpdated": "2020-04-09T09:55:20Z",
+//   "owner": "a username",
+//   "pool": "a pool",
+//   "state": "a state",
+//   "other key": "other value",
+//   "other complex object": {
+//    "object key": "object value"
+//   },
+//  }
+const auto valid_instance_json = QString(
+    "{\"displayName\":\"a display name\",\"id\":\"instance "
+    "id\",\"ipAddress\":\"1.1.0.1\",\"lastUpdated\":\"2020-04-09T09:55:20Z\",\"owner\":\"a "
+    "username\",\"pool\":\"a pool\",\"state\":\"a state\",\"other key\":\"other "
+    "value\",\"other complex object\":{\"object key\":\"object value\"}}");
+
+// Instance with missing "id" child
+// pretty json:
+//  {
+//   "displayName": "a display name",
+//   "ipAddress": "1.1.0.1",
+//   "lastUpdated": "2020-04-09T09:55:20Z",
+//   "owner": "a username",
+//   "pool": "a pool",
+//   "state": "a state",
+//   "other key": "other value",
+//   "other complex object": {
+//    "object key": "object value"
+//   },
+//  }
+const auto missing_element_instance_json = QString(
+    "{\"displayName\":\"a display name\",\"ipAddress\":\"1.1.0.1\","
+    "\"lastUpdated\":\"2020-04-09T09:55:20Z\",\"owner\":\"a "
+    "username\",\"pool\":\"a pool\",\"state\":\"a state\",\"other key\":\"other "
+    "value\",\"other complex object\":{\"object key\":\"object value\"}}");
+
+const Instance valid_instance{
+    QString{"a display name"}, QString{"instance id"},
+    QString{"1.1.0.1"},        QDateTime::fromString(QString{"2020-04-09T09:55:20Z"}, Qt::ISODate),
+    QString{"a username"},     QString{"a pool"},
+    QString{"a state"}};
+
 TEST(InstanceTests, GetListFromJson) {
   {
     // invalid json
@@ -45,72 +113,52 @@ TEST(InstanceTests, GetListFromJson) {
   }
 
   {
-    // one element with invalid date
-    // pretty json:
-    // [
-    //  {
-    //   "displayName": "a display name",
-    //   "id": "instance id",
-    //   "ipAddress": "1.1.0.1",
-    //   "lastUpdated": "2020-29-09T09:55:20Z",
-    //   "owner": "a username",
-    //   "pool": "a pool",
-    //   "state": "a state",
-    //   "other key": "other value",
-    //   "other complex object": {
-    //    "object key": "object value"
-    //   },
-    //  }
-    // ]
-    const auto json =
-        QString(
-            "[{\"displayName\":\"a display name\",\"id\":\"instance "
-            "id\",\"ipAddress\":\"1.1.0.1\",\"lastUpdated\":\"2020-29-09T09:55:20Z\",\"owner\":\"a "
-            "username\",\"pool\":\"a pool\",\"state\":\"a state\",\"other key\":\"other "
-            "value\",\"other complex object\":{\"object key\":\"object value\"}}]")
-            .toUtf8();
+    const auto json = QString("[%1]").arg(invalid_timestamp_instance_json).toUtf8();
     const auto result = Instance::GetListFromJson(json);
     EXPECT_THAT(result, orbit_test_utils::HasError("Unable to parse JSON"));
   }
 
   {
-    // one full json object
-    // pretty json:
-    // [
-    //  {
-    //   "displayName": "a display name",
-    //   "id": "instance id",
-    //   "ipAddress": "1.1.0.1",
-    //   "lastUpdated": "2020-04-09T09:55:20Z",
-    //   "owner": "a username",
-    //   "pool": "a pool",
-    //   "state": "a state",
-    //   "other key": "other value",
-    //   "other complex object": {
-    //    "object key": "object value"
-    //   },
-    //  }
-    // ]
-    const auto json =
-        QString(
-            "[{\"displayName\":\"a display name\",\"id\":\"instance "
-            "id\",\"ipAddress\":\"1.1.0.1\",\"lastUpdated\":\"2020-04-09T09:55:20Z\",\"owner\":\"a "
-            "username\",\"pool\":\"a pool\",\"state\":\"a state\",\"other key\":\"other "
-            "value\",\"other complex object\":{\"object key\":\"object value\"}}]")
-            .toUtf8();
+    const auto json = QString("[%1]").arg(valid_instance_json).toUtf8();
     auto result = Instance::GetListFromJson(json);
     ASSERT_THAT(result, orbit_test_utils::HasValue());
     const QVector<Instance> instances = std::move(result.value());
     ASSERT_EQ(instances.size(), 1);
     const Instance instance = instances[0];
-    EXPECT_EQ(instance.display_name, QString{"a display name"});
-    EXPECT_EQ(instance.id, QString{"instance id"});
-    EXPECT_EQ(instance.ip_address, QString{"1.1.0.1"});
-    EXPECT_EQ(instance.last_updated,
-              QDateTime::fromString(QString{"2020-04-09T09:55:20Z"}, Qt::ISODate));
-    EXPECT_EQ(instance.owner, QString{"a username"});
-    EXPECT_EQ(instance.pool, QString{"a pool"});
-    EXPECT_EQ(instance.state, QString{"a state"});
+    EXPECT_EQ(instance, valid_instance);
+  }
+}
+
+TEST(InstanceTests, CreateFromJson) {
+  {
+    // invalid json
+    const auto json = QString("json").toUtf8();
+    EXPECT_THAT(Instance::CreateFromJson(json), orbit_test_utils::HasError("Unable to parse JSON"));
+  }
+
+  {
+    // empty json
+    const auto json = QString("{}").toUtf8();
+    const auto invalid_instance = Instance::CreateFromJson(json);
+    EXPECT_THAT(invalid_instance, orbit_test_utils::HasError("Unable to parse JSON"));
+  }
+
+  {
+    const auto json = missing_element_instance_json.toUtf8();
+    EXPECT_THAT(Instance::CreateFromJson(json), orbit_test_utils::HasError("Unable to parse JSON"));
+  }
+
+  {
+    const auto json = invalid_timestamp_instance_json.toUtf8();
+    const auto result = Instance::CreateFromJson(json);
+    EXPECT_THAT(result, orbit_test_utils::HasError("Unable to parse JSON"));
+  }
+
+  {
+    const auto json = valid_instance_json.toUtf8();
+    auto result = Instance::CreateFromJson(json);
+    ASSERT_THAT(result, orbit_test_utils::HasValue());
+    EXPECT_EQ(result.value(), valid_instance);
   }
 }
 

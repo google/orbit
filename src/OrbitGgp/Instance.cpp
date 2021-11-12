@@ -74,6 +74,14 @@ ErrorMessageOr<QVector<Instance>> Instance::GetListFromJson(const QByteArray& js
   return list;
 }
 
+ErrorMessageOr<Instance> Instance::CreateFromJson(const QByteArray& json) {
+  const QJsonDocument doc = QJsonDocument::fromJson(json);
+
+  if (!doc.isObject()) return ErrorMessage{"Unable to parse JSON: Object expected."};
+
+  return GetInstanceFromJson(doc.object());
+}
+
 bool Instance::CmpById(const Instance& lhs, const Instance& rhs) { return lhs.id < rhs.id; }
 
 }  // namespace orbit_ggp

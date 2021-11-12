@@ -62,7 +62,8 @@ message CallstackInfo {
     kDwarfUnwindingError = 1;
     kFramePointerUnwindingError = 2;
     kInUprobes = 3;
-    kUprobesPatchingFailed = 4;
+    kInUserSpaceInstrumentation = 7;
+    kCallstackPatchingFailed = 4;
     kStackTopForDwarfUnwindingTooSmall = 5;
     kStackTopDwarfUnwindingError = 6;
     // These are set by the client and are in addition to the ones in

@@ -31,8 +31,8 @@ class TracepointThreadBar : public ThreadBar {
  protected:
   void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
               const DrawContext& draw_context) override;
-  void DoUpdatePrimitives(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
-                          PickingMode picking_mode, float z_offset = 0) override;
+  void DoUpdatePrimitives(Batcher* batcher, TextRenderer& text_renderer, uint64_t min_tick,
+                          uint64_t max_tick, PickingMode picking_mode) override;
 
  private:
   std::string GetTracepointTooltip(Batcher* batcher, PickingId id) const;

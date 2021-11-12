@@ -38,8 +38,10 @@ message ApiFunction {
   uint64 api_version = 5;
 }
 
-// NextId: 18
+// NextId: 19
 message CaptureOptions {
+  reserved 17;
+
   bool trace_context_switches = 1;
   uint32 pid = 2;
   double samples_per_second = 3;
@@ -53,7 +55,12 @@ message CaptureOptions {
   }
   UnwindingMethod unwinding_method = 4;
 
-  bool enable_user_space_instrumentation = 17;
+  enum DynamicInstrumentationMethod {
+    kDynamicInstrumentationMethodUnspecified = 0;
+    kKernelUprobes = 1;
+    kUserSpaceInstrumentation = 2;
+  }
+  DynamicInstrumentationMethod dynamic_instrumentation_method = 18;
 
   repeated InstrumentedFunction instrumented_functions = 5;
 
@@ -105,6 +112,22 @@ message FunctionCall {
   int32 depth = 6;
   uint64 return_value = 7;
   repeated uint64 registers = 8;
+}
+
+// FunctionEntry and FunctionExit are emitted by user space instrumentation.
+message FunctionEntry {
+  uint32 pid = 1;
+  uint32 tid = 2;
+  uint64 function_id = 3;
+  uint64 stack_pointer = 4;
+  uint64 return_address = 5;
+  uint64 timestamp_ns = 6;
+}
+
+message FunctionExit {
+  uint32 pid = 1;
+  uint32 tid = 2;
+  uint64 timestamp_ns = 3;
 }
 
 message ApiEvent {
@@ -355,7 +378,8 @@ message Callstack {
     kDwarfUnwindingError = 1;
     kFramePointerUnwindingError = 2;
     kInUprobes = 3;
-    kUprobesPatchingFailed = 4;
+    kInUserSpaceInstrumentation = 7;
+    kCallstackPatchingFailed = 4;
     kStackTopForDwarfUnwindingTooSmall = 5;
     kStackTopDwarfUnwindingError = 6;
   }
@@ -739,7 +763,7 @@ message ProducerCaptureEvent {
     // use them for high frequency events. For the rest please assign
     // numbers starting with 16.
     //
-    // Next high-frequency ID: 13
+    // Next high-frequency ID: 15
     // Next lower-frequency ID: 47
     //
     // Please keep these alphabetically ordered.
@@ -772,6 +796,8 @@ message ProducerCaptureEvent {
     FullGpuJob full_gpu_job = 3;
     FullTracepointEvent full_tracepoint_event = 4;
     FunctionCall function_call = 5;
+    FunctionEntry function_entry = 13;
+    FunctionExit function_exit = 14;
     GpuQueueSubmission gpu_queue_submission = 6;
     InternedCallstack interned_callstack = 7;
     InternedString interned_string = 18;

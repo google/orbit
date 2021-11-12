@@ -130,3 +130,4 @@ class FilterAndSelectFirstProcess(E2ETestCase):
         wait_for_main_window(self.suite.application)
         window = self.suite.top_window(True)
         self.expect_eq(window.class_name(), "OrbitMainWindow", 'Main window is visible')
+        window.maximize()

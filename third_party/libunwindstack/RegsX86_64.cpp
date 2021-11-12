@@ -19,10 +19,10 @@
 
 #include <functional>
 
-#include <unwindstack/Elf.h>
 #include <unwindstack/MachineX86_64.h>
 #include <unwindstack/MapInfo.h>
 #include <unwindstack/Memory.h>
+#include <unwindstack/Object.h>
 #include <unwindstack/RegsX86_64.h>
 #include <unwindstack/UcontextX86_64.h>
 #include <unwindstack/UserX86_64.h>
@@ -132,17 +132,18 @@ Regs* RegsX86_64::CreateFromUcontext(void* ucontext) {
   return regs;
 }
 
-bool RegsX86_64::StepIfSignalHandler(uint64_t elf_offset, Elf* elf, Memory* process_memory) {
+bool RegsX86_64::StepIfSignalHandler(uint64_t object_offset, Object* object,
+                                     Memory* process_memory) {
   uint64_t data;
-  Memory* elf_memory = elf->memory();
-  // Read from elf memory since it is usually more expensive to read from
+  Memory* object_memory = object->memory();
+  // Read from object memory since it is usually more expensive to read from
   // process memory.
-  if (!elf_memory->ReadFully(elf_offset, &data, sizeof(data)) || data != 0x0f0000000fc0c748) {
+  if (!object_memory->ReadFully(object_offset, &data, sizeof(data)) || data != 0x0f0000000fc0c748) {
     return false;
   }
 
   uint8_t data2;
-  if (!elf_memory->ReadFully(elf_offset + 8, &data2, sizeof(data2)) || data2 != 0x05) {
+  if (!object_memory->ReadFully(object_offset + 8, &data2, sizeof(data2)) || data2 != 0x05) {
     return false;
   }
 

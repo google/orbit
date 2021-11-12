@@ -26,8 +26,8 @@ class PresetsDataView : public DataView {
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnPresetName; }
-  std::vector<std::string> GetContextMenu(int clicked_index,
-                                          const std::vector<int>& selected_indices) override;
+  std::vector<std::vector<std::string>> GetContextMenuWithGrouping(
+      int clicked_index, const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
   std::string GetToolTip(int row, int column) override;
   std::string GetLabel() override { return "Presets"; }
@@ -72,6 +72,7 @@ class PresetsDataView : public DataView {
 
   static const std::string kMenuActionLoad;
   static const std::string kMenuActionDelete;
+  static const std::string kMenuActionShowInExplorer;
 
  private:
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;

@@ -17,6 +17,7 @@
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
 #include "GrpcProtos/Constants.h"
+#include "capture.pb.h"
 #include "capture_data.pb.h"
 #include "tracepoint.pb.h"
 
@@ -93,11 +94,13 @@ class DataManager final {
   }
   [[nodiscard]] bool get_enable_introspection() const { return enable_introspection_; }
 
-  void set_enable_user_space_instrumentation(bool enable) {
-    enable_user_space_instrumentation_ = enable;
+  void set_dynamic_instrumentation_method(
+      orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod method) {
+    dynamic_instrumentation_method_ = method;
   }
-  [[nodiscard]] bool enable_user_space_instrumentation() const {
-    return enable_user_space_instrumentation_;
+  [[nodiscard]] orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod
+  dynamic_instrumentation_method() const {
+    return dynamic_instrumentation_method_;
   }
 
   void set_samples_per_second(double samples_per_second) {
@@ -108,10 +111,12 @@ class DataManager final {
   void set_stack_dump_size(uint16_t stack_dump_size) { stack_dump_size_ = stack_dump_size; }
   [[nodiscard]] uint16_t stack_dump_size() const { return stack_dump_size_; }
 
-  void set_unwinding_method(orbit_grpc_protos::UnwindingMethod method) {
+  void set_unwinding_method(orbit_grpc_protos::CaptureOptions::UnwindingMethod method) {
     unwinding_method_ = method;
   }
-  orbit_grpc_protos::UnwindingMethod unwinding_method() const { return unwinding_method_; }
+  orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method() const {
+    return unwinding_method_;
+  }
 
   void set_max_local_marker_depth_per_command_buffer(
       uint64_t max_local_marker_depth_per_command_buffer) {
@@ -160,11 +165,11 @@ class DataManager final {
   bool trace_gpu_submissions_ = false;
   bool enable_api_ = false;
   bool enable_introspection_ = false;
-  bool enable_user_space_instrumentation_ = false;
+  orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod dynamic_instrumentation_method_{};
   uint64_t max_local_marker_depth_per_command_buffer_ = std::numeric_limits<uint64_t>::max();
   double samples_per_second_ = 0;
   uint16_t stack_dump_size_ = 0;
-  orbit_grpc_protos::UnwindingMethod unwinding_method_{};
+  orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method_{};
 
   bool collect_memory_info_ = false;
   uint64_t memory_sampling_period_ms_ = 10;

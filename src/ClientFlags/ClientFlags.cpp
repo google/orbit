@@ -31,9 +31,6 @@ ABSL_FLAG(bool, enable_tutorials_feature, false, "Enable tutorials");
 ABSL_FLAG(uint16_t, stack_dump_size, 65000,
           "Number of bytes to copy from the stack per sample. Max: 65000");
 
-// TODO(b/160549506): Remove this flag once it can be specified in the ui.
-ABSL_FLAG(bool, frame_pointer_unwinding, false, "Use frame pointers for unwinding");
-
 // TODO(kuebler): remove this once we have the validator complete
 ABSL_FLAG(bool, enable_frame_pointer_validator, false, "Enable validation of frame pointers");
 

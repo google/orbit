@@ -67,6 +67,7 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
       batcher_(BatcherId::kTimeGraph),
       manual_instrumentation_manager_{app->GetManualInstrumentationManager()},
       capture_data_{capture_data},
+      thread_track_data_provider_(capture_data->GetThreadTrackDataProvider()),
       app_{app} {
   text_renderer_static_.Init();
   text_renderer_static_.SetViewport(viewport);
@@ -298,13 +299,15 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
       break;
     }
     case TimerInfo::kNone: {
-      ThreadTrack* track = track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
-      track->OnTimer(timer_info);
+      // TODO (http://b/198135618): Create tracks only before drawing.
+      track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
+      thread_track_data_provider_->AddTimer(timer_info);
       break;
     }
     case TimerInfo::kApiScope: {
-      ThreadTrack* track = track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
-      track->OnTimer(timer_info);
+      // TODO (http://b/198135618): Create tracks only before drawing.
+      track_manager_->GetOrCreateThreadTrack(timer_info.thread_id());
+      thread_track_data_provider_->AddTimer(timer_info);
       break;
     }
     case TimerInfo::kApiScopeAsync: {
@@ -379,7 +382,7 @@ void TimeGraph::ProcessCGroupAndProcessMemoryTrackingTimer(const TimerInfo& time
   track->OnTimer(timer_info);
 }
 
-void TimeGraph::ProcessPageFaultsTrackingTimer(const orbit_client_protos::TimerInfo& timer_info) {
+void TimeGraph::ProcessPageFaultsTrackingTimer(const TimerInfo& timer_info) {
   uint64_t cgroup_name_hash = timer_info.registers(
       static_cast<size_t>(CaptureEventProcessor::PageFaultsEncodingIndex::kCGroupNameHash));
   std::string cgroup_name = app_->GetStringManager()->Get(cgroup_name_hash).value_or("");
@@ -400,11 +403,7 @@ void TimeGraph::ProcessAsyncTimer(const std::string& track_name, const TimerInfo
 }
 
 std::vector<const TimerChain*> TimeGraph::GetAllThreadTrackTimerChains() const {
-  std::vector<const TimerChain*> chains;
-  for (const auto& track : track_manager_->GetThreadTracks()) {
-    orbit_base::Append(chains, track->GetChains());
-  }
-  return chains;
+  return thread_track_data_provider_->GetAllThreadTimerChains();
 }
 
 int TimeGraph::GetNumVisiblePrimitives() const {
@@ -457,14 +456,14 @@ void TimeGraph::SelectAndMakeVisible(const TimerInfo* timer_info) {
 const TimerInfo* TimeGraph::FindPreviousFunctionCall(uint64_t function_address,
                                                      uint64_t current_time,
                                                      std::optional<uint32_t> thread_id) const {
-  const orbit_client_protos::TimerInfo* previous_timer = nullptr;
+  const TimerInfo* previous_timer = nullptr;
   uint64_t goal_time = std::numeric_limits<uint64_t>::lowest();
   std::vector<const TimerChain*> chains = GetAllThreadTrackTimerChains();
   for (const TimerChain* chain : chains) {
     for (const auto& block : *chain) {
       if (!block.Intersects(goal_time, current_time)) continue;
       for (uint64_t i = 0; i < block.size(); i++) {
-        const orbit_client_protos::TimerInfo& timer_info = block[i];
+        const TimerInfo& timer_info = block[i];
         auto timer_end_time = timer_info.end();
         if ((timer_info.function_id() == function_address) &&
             (!thread_id || thread_id.value() == timer_info.thread_id()) &&
@@ -480,7 +479,7 @@ const TimerInfo* TimeGraph::FindPreviousFunctionCall(uint64_t function_address,
 
 const TimerInfo* TimeGraph::FindNextFunctionCall(uint64_t function_address, uint64_t current_time,
                                                  std::optional<uint32_t> thread_id) const {
-  const orbit_client_protos::TimerInfo* next_timer = nullptr;
+  const TimerInfo* next_timer = nullptr;
   uint64_t goal_time = std::numeric_limits<uint64_t>::max();
   std::vector<const TimerChain*> chains = GetAllThreadTrackTimerChains();
   for (const TimerChain* chain : chains) {
@@ -488,7 +487,7 @@ const TimerInfo* TimeGraph::FindNextFunctionCall(uint64_t function_address, uint
     for (const auto& block : *chain) {
       if (!block.Intersects(current_time, goal_time)) continue;
       for (uint64_t i = 0; i < block.size(); i++) {
-        const orbit_client_protos::TimerInfo& timer_info = block[i];
+        const TimerInfo& timer_info = block[i];
         auto timer_end_time = timer_info.end();
         if ((timer_info.function_id() == function_address) &&
             (!thread_id || thread_id.value() == timer_info.thread_id()) &&
@@ -502,16 +501,28 @@ const TimerInfo* TimeGraph::FindNextFunctionCall(uint64_t function_address, uint
   return next_timer;
 }
 
+std::vector<const TimerInfo*> TimeGraph::GetAllTimersForHookedFunction(
+    uint64_t function_address) const {
+  std::vector<const TimerInfo*> timers;
+  std::vector<const TimerChain*> chains = GetAllThreadTrackTimerChains();
+  for (const TimerChain* chain : chains) {
+    CHECK(chain != nullptr);
+    for (const auto& block : *chain) {
+      for (uint64_t i = 0; i < block.size(); i++) {
+        const TimerInfo& timer = block[i];
+        if (timer.function_id() == function_address) timers.push_back(&timer);
+      }
+    }
+  }
+  return timers;
+}
+
 void TimeGraph::RequestUpdate() {
   CaptureViewElement::RequestUpdate();
   update_primitives_requested_ = true;
-  redraw_requested_ = true;
 }
 
-// UpdatePrimitives updates all the drawable track timers in the timegraph's batcher
-void TimeGraph::DoUpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/,
-                                   uint64_t /*max_tick*/, PickingMode picking_mode,
-                                   float /*z_offset*/) {
+void TimeGraph::PrepareBatcherAndUpdatePrimitives(PickingMode picking_mode) {
   ORBIT_SCOPE_FUNCTION;
   CHECK(app_->GetStringManager() != nullptr);
 
@@ -522,16 +533,11 @@ void TimeGraph::DoUpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/,
 
   text_renderer_static_.Clear();
 
-  capture_min_timestamp_ =
-      std::min(capture_min_timestamp_, capture_data_->GetCallstackData().min_time());
-  capture_max_timestamp_ =
-      std::max(capture_max_timestamp_, capture_data_->GetCallstackData().max_time());
-
-  time_window_us_ = max_time_us_ - min_time_us_;
   uint64_t min_tick = GetTickFromUs(min_time_us_);
   uint64_t max_tick = GetTickFromUs(max_time_us_);
 
-  track_manager_->UpdateTrackPrimitives(&batcher_, min_tick, max_tick, picking_mode);
+  CaptureViewElement::UpdatePrimitives(&batcher_, text_renderer_static_, min_tick, max_tick,
+                                       picking_mode);
 
   batcher_.PopTranslation();
   text_renderer_static_.PopTranslation();
@@ -544,6 +550,13 @@ void TimeGraph::DoUpdatePrimitives(Batcher* /*batcher*/, uint64_t /*min_tick*/,
 void TimeGraph::DoUpdateLayout() {
   CaptureViewElement::DoUpdateLayout();
 
+  capture_min_timestamp_ =
+      std::min(capture_min_timestamp_, capture_data_->GetCallstackData().min_time());
+  capture_max_timestamp_ =
+      std::max(capture_max_timestamp_, capture_data_->GetCallstackData().max_time());
+
+  time_window_us_ = max_time_us_ - min_time_us_;
+
   track_manager_->UpdateTracksForRendering();
   UpdateTracksPosition();
 
@@ -551,7 +564,6 @@ void TimeGraph::DoUpdateLayout() {
 }
 
 void TimeGraph::UpdateTracksPosition() {
-  // Update position of a track which is currently being moved.
   const float track_pos_x = GetPos()[0];
 
   float current_y = layout_.GetSchedulerTrackOffset();
@@ -593,30 +605,6 @@ void TimeGraph::SelectCallstacks(float world_start, float world_end, uint32_t th
 
 const std::vector<CallstackEvent>& TimeGraph::GetSelectedCallstackEvents(uint32_t tid) {
   return selected_callstack_events_per_thread_[tid];
-}
-
-void TimeGraph::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
-                       const DrawContext& draw_context) {
-  ORBIT_SCOPE_FUNCTION;
-
-  text_renderer.PushTranslation(0, -vertical_scrolling_offset_);
-  batcher.PushTranslation(0, -vertical_scrolling_offset_);
-
-  const bool picking = draw_context.picking_mode != PickingMode::kNone;
-  if ((!picking && update_primitives_requested_) || picking) {
-    UpdatePrimitives(nullptr, 0, 0, draw_context.picking_mode, draw_context.z_offset);
-  }
-
-  DrawTracks(batcher, text_renderer, draw_context);
-  DrawIncompleteDataIntervals(batcher, draw_context.picking_mode);
-  DrawOverlay(batcher, text_renderer, draw_context.picking_mode);
-
-  batcher.PopTranslation();
-  text_renderer.PopTranslation();
-
-  if (!absl::GetFlag(FLAGS_enforce_full_redraw)) {
-    redraw_requested_ = false;
-  }
 }
 
 namespace {
@@ -678,14 +666,13 @@ void TimeGraph::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
     return;
   }
 
-  std::vector<std::pair<uint64_t, const orbit_client_protos::TimerInfo*>> timers(
-      iterator_timer_info_.size());
+  std::vector<std::pair<uint64_t, const TimerInfo*>> timers(iterator_timer_info_.size());
   std::copy(iterator_timer_info_.begin(), iterator_timer_info_.end(), timers.begin());
 
   // Sort timers by start time.
   std::sort(timers.begin(), timers.end(),
-            [](const std::pair<uint64_t, const orbit_client_protos::TimerInfo*>& timer_a,
-               const std::pair<uint64_t, const orbit_client_protos::TimerInfo*>& timer_b) -> bool {
+            [](const std::pair<uint64_t, const TimerInfo*>& timer_a,
+               const std::pair<uint64_t, const TimerInfo*>& timer_b) -> bool {
               return timer_a.second->start() < timer_b.second->start();
             });
 
@@ -840,20 +827,6 @@ void TimeGraph::DrawIncompleteDataIntervals(Batcher& batcher, PickingMode pickin
   }
 }
 
-void TimeGraph::DrawTracks(Batcher& batcher, TextRenderer& text_renderer,
-                           const DrawContext& draw_context) {
-  for (Track* track : track_manager_->GetTracksOnScreen()) {
-    float z_offset = 0;
-    if (track->IsPinned()) {
-      z_offset = GlCanvas::kZOffsetPinnedTrack;
-    } else if (track->IsMoving()) {
-      z_offset = GlCanvas::kZOffsetMovingTrack;
-    }
-    const DrawContext updated_draw_context = draw_context.UpdatedZOffset(z_offset);
-    track->Draw(batcher, text_renderer, updated_draw_context);
-  }
-}
-
 void TimeGraph::SetThreadFilter(const std::string& filter) {
   track_manager_->SetFilter(filter);
   RequestUpdate();
@@ -875,7 +848,7 @@ void TimeGraph::JumpToNeighborTimer(const TimerInfo* from, JumpDirection jump_di
       !TrackManager::FunctionIteratableType(from->type())) {
     jump_scope = JumpScope::kSameDepth;
   }
-  const orbit_client_protos::TimerInfo* goal = nullptr;
+  const TimerInfo* goal = nullptr;
   auto function_id = from->function_id();
   auto current_time = from->end();
   auto thread_id = from->thread_id();
@@ -947,13 +920,13 @@ const TimerInfo* TimeGraph::FindDown(const TimerInfo& from) {
 
 std::pair<const TimerInfo*, const TimerInfo*> TimeGraph::GetMinMaxTimerInfoForFunction(
     uint64_t function_id) const {
-  const orbit_client_protos::TimerInfo* min_timer = nullptr;
-  const orbit_client_protos::TimerInfo* max_timer = nullptr;
+  const TimerInfo* min_timer = nullptr;
+  const TimerInfo* max_timer = nullptr;
   std::vector<const TimerChain*> chains = GetAllThreadTrackTimerChains();
   for (const TimerChain* chain : chains) {
     for (const auto& block : *chain) {
       for (size_t i = 0; i < block.size(); i++) {
-        const orbit_client_protos::TimerInfo& timer_info = block[i];
+        const TimerInfo& timer_info = block[i];
         if (timer_info.function_id() != function_id) continue;
 
         uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
@@ -969,11 +942,33 @@ std::pair<const TimerInfo*, const TimerInfo*> TimeGraph::GetMinMaxTimerInfoForFu
   return std::make_pair(min_timer, max_timer);
 }
 
-void TimeGraph::DrawText(float layer) {
-  if (draw_text_) {
-    text_renderer_static_.RenderLayer(layer);
+void TimeGraph::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+                       const DrawContext& draw_context) {
+  CaptureViewElement::DoDraw(batcher, text_renderer, draw_context);
+
+  DrawIncompleteDataIntervals(batcher, draw_context.picking_mode);
+  DrawOverlay(batcher, text_renderer, draw_context.picking_mode);
+}
+
+void TimeGraph::DrawAllElements(Batcher& batcher, TextRenderer& text_renderer,
+                                PickingMode& picking_mode, uint64_t current_mouse_time_ns) {
+  const bool picking = picking_mode != PickingMode::kNone;
+
+  text_renderer.PushTranslation(0, -vertical_scrolling_offset_);
+  batcher.PushTranslation(0, -vertical_scrolling_offset_);
+
+  DrawContext context{current_mouse_time_ns, picking_mode};
+  Draw(batcher, text_renderer, context);
+
+  batcher.PopTranslation();
+  text_renderer.PopTranslation();
+
+  if ((!picking && update_primitives_requested_) || picking) {
+    PrepareBatcherAndUpdatePrimitives(picking_mode);
   }
 }
+
+void TimeGraph::DrawText(float layer) { text_renderer_static_.RenderLayer(layer); }
 
 bool TimeGraph::IsFullyVisible(uint64_t min, uint64_t max) const {
   double start = TicksToMicroseconds(capture_min_timestamp_, min);
@@ -1018,6 +1013,16 @@ bool TimeGraph::HasFrameTrack(uint64_t function_id) const {
 void TimeGraph::RemoveFrameTrack(uint64_t function_id) {
   track_manager_->RemoveFrameTrack(function_id);
   RequestUpdate();
+}
+
+std::vector<orbit_gl::CaptureViewElement*> TimeGraph::GetAllChildren() const {
+  std::vector<Track*> all_tracks = track_manager_->GetAllTracks();
+  return {all_tracks.begin(), all_tracks.end()};
+}
+
+std::vector<orbit_gl::CaptureViewElement*> TimeGraph::GetNonHiddenChildren() const {
+  std::vector<Track*> all_tracks = track_manager_->GetVisibleTracks();
+  return {all_tracks.begin(), all_tracks.end()};
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> TimeGraph::CreateAccessibleInterface() {

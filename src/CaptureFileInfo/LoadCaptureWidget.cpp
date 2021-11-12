@@ -37,13 +37,19 @@ LoadCaptureWidget::LoadCaptureWidget(QWidget* parent)
 
   proxy_item_model_.setSourceModel(&item_model_);
   proxy_item_model_.setSortRole(Qt::DisplayRole);
+  proxy_item_model_.setFilterCaseSensitivity(Qt::CaseInsensitive);
 
   ui_->setupUi(this);
   ui_->tableView->setModel(&proxy_item_model_);
   ui_->tableView->setSortingEnabled(true);
   ui_->tableView->sortByColumn(static_cast<int>(ItemModel::Column::kLastUsed),
                                Qt::SortOrder::DescendingOrder);
-  ui_->tableView->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+  ui_->tableView->horizontalHeader()->setSectionResizeMode(
+      static_cast<int>(ItemModel::Column::kFilename), QHeaderView::Stretch);
+  ui_->tableView->horizontalHeader()->setSectionResizeMode(
+      static_cast<int>(ItemModel::Column::kLastUsed), QHeaderView::ResizeToContents);
+  ui_->tableView->horizontalHeader()->setSectionResizeMode(
+      static_cast<int>(ItemModel::Column::kCreated), QHeaderView::ResizeToContents);
   ui_->tableView->verticalHeader()->setDefaultSectionSize(kRowHeight);
 
   // The following is to make the radiobutton behave as if it was part of an exclusive button group
@@ -78,6 +84,9 @@ LoadCaptureWidget::LoadCaptureWidget(QWidget* parent)
 
   QObject::connect(ui_->tableView, &QTableView::doubleClicked, this,
                    [this]() { emit SelectionConfirmed(); });
+
+  QObject::connect(ui_->captureFilterLineEdit, &QLineEdit::textChanged, &proxy_item_model_,
+                   &QSortFilterProxyModel::setFilterFixedString);
 }
 
 bool LoadCaptureWidget::IsActive() const { return ui_->contentFrame->isEnabled(); }

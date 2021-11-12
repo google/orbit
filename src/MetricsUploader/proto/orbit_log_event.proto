@@ -10,7 +10,7 @@ package orbit_metrics_uploader;
 // client. Changing this proto requires changing the metrics uploader client
 // library accordingly.
 message OrbitLogEvent {
-  // NextID: 20
+  // NextID: 24
   enum LogEventType {
     UNKNOWN_EVENT_TYPE = 0;
     // go/keep-sorted start
@@ -21,6 +21,9 @@ message OrbitLogEvent {
     ORBIT_CAPTURE_SAVE = 3;
     ORBIT_END_SESSION_CLICKED = 13;
     ORBIT_EXIT = 15;
+    ORBIT_INSTANCES_CACHE_HIT = 22;
+    ORBIT_INSTANCES_INITIAL_LOAD = 20;
+    ORBIT_INSTANCES_LOAD = 21;
     ORBIT_INSTANCE_CONNECT = 19;
     ORBIT_ITERATOR_ADD = 8;
     ORBIT_ITERATOR_REMOVE = 9;
@@ -30,6 +33,7 @@ message OrbitLogEvent {
     ORBIT_PRESET_DELETE = 7;
     ORBIT_PRESET_LOAD = 6;
     ORBIT_PRESET_SAVE = 5;
+    ORBIT_PROJECT_CHANGED = 23;
     ORBIT_SESSION_SETUP_WINDOW_CLOSE = 12;
     ORBIT_SESSION_SETUP_WINDOW_OPEN = 11;
     ORBIT_SYMBOL_LOAD = 16;

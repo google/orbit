@@ -12,10 +12,10 @@
 #include <string>
 #include <utility>
 
-#include "CaptureService/CaptureServiceImpl.h"
 #include "CaptureService/CaptureStartStopListener.h"
 #include "CrashService/CrashServiceImpl.h"
 #include "FramePointerValidatorService/FramePointerValidatorServiceImpl.h"
+#include "LinuxCaptureService/LinuxCaptureService.h"
 #include "ProcessService/ProcessServiceImpl.h"
 #include "TracepointService/TracepointServiceImpl.h"
 
@@ -40,7 +40,7 @@ class OrbitGrpcServerImpl final : public OrbitGrpcServer {
       orbit_capture_service::CaptureStartStopListener* listener) override;
 
  private:
-  orbit_capture_service::CaptureServiceImpl capture_service_;
+  orbit_linux_capture_service::LinuxCaptureService capture_service_;
   orbit_process_service::ProcessServiceImpl process_service_;
   orbit_tracepoint_service::TracepointServiceImpl tracepoint_service_;
   orbit_frame_pointer_validator_service::FramePointerValidatorServiceImpl

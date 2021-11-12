@@ -30,6 +30,7 @@ using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::CheckSingleAction;
 using orbit_data_views::ContextMenuEntry;
+using orbit_data_views::FlattenContextMenuWithGrouping;
 using orbit_grpc_protos::ModuleInfo;
 
 namespace {
@@ -291,7 +292,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
         }
       }
     }
-    return view_.GetContextMenu(0, selected_rows);
+    return FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, selected_rows));
   };
 
   auto verify_context_menu_action_availability = [&](const std::vector<int>& selected_indices) {
@@ -391,7 +392,8 @@ TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {
           });
 
   AddFunctionsByIndices({0});
-  std::vector<std::string> context_menu = view_.GetContextMenu(0, {0});
+  std::vector<std::string> context_menu =
+      FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
   // Copy Selection
@@ -461,7 +463,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {
   }
 
   function_selected = true;
-  context_menu = view_.GetContextMenu(0, {0});
+  context_menu = FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
   // Unhook
@@ -477,7 +479,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {
   }
 
   AddFunctionsByIndices({2});
-  context_menu = view_.GetContextMenu(0, {0});
+  context_menu = FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
   // Load Symbols

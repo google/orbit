@@ -27,6 +27,7 @@
 
 using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
+using orbit_data_views::FlattenContextMenuWithGrouping;
 
 namespace {
 // This is just a helper type to handle colors. Note that Color from `OrbitGl/CoreMath.h` is not
@@ -206,20 +207,21 @@ TEST_F(PresetsDataViewTest, CheckPresenceOfContextMenuEntries) {
   view_.OnSort(1, DataView::SortingOrder::kAscending);
 
   // Loadable preset
-  EXPECT_THAT(view_.GetContextMenu(0, {0}),
-              testing::UnorderedElementsAre("Copy Selection", "Export to CSV", "Load Preset",
-                                            "Delete Preset"))
+  EXPECT_THAT(FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0})),
+              testing::ElementsAre("Load Preset", "Delete Preset", "Show in Explorer",
+                                   "Copy Selection", "Export to CSV"))
       << view_.GetValue(0, 1);
 
   // Not loadable preset
-  EXPECT_THAT(view_.GetContextMenu(1, {1}),
-              testing::UnorderedElementsAre("Copy Selection", "Export to CSV", "Delete Preset"))
+  EXPECT_THAT(
+      FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(1, {1})),
+      testing::ElementsAre("Delete Preset", "Show in Explorer", "Copy Selection", "Export to CSV"))
       << view_.GetValue(1, 1);
 
   // Partially loadable preset
-  EXPECT_THAT(view_.GetContextMenu(2, {2}),
-              testing::UnorderedElementsAre("Copy Selection", "Export to CSV", "Load Preset",
-                                            "Delete Preset"))
+  EXPECT_THAT(FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(2, {2})),
+              testing::ElementsAre("Load Preset", "Delete Preset", "Show in Explorer",
+                                   "Copy Selection", "Export to CSV"))
       << view_.GetValue(2, 1);
 }
 
@@ -239,7 +241,8 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
   ASSERT_THAT(date_modified, orbit_test_utils::HasNoError());
 
   view_.SetPresets({preset_file0});
-  std::vector<std::string> context_menu = view_.GetContextMenu(0, {0});
+  std::vector<std::string> context_menu =
+      FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
   // Copy Selection
@@ -274,6 +277,21 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
           EXPECT_EQ(preset_file.file_path(), preset_filename0);
         });
     view_.OnContextMenu("Load Preset", static_cast<int>(load_preset_idx), {0});
+  }
+
+  // Show In Explorer
+  {
+    const auto show_in_explorer_idx =
+        std::find(context_menu.begin(), context_menu.end(), "Show in Explorer") -
+        context_menu.begin();
+    ASSERT_LT(show_in_explorer_idx, context_menu.size());
+
+    EXPECT_CALL(app_, ShowPresetInExplorer)
+        .Times(1)
+        .WillOnce([&](const orbit_preset_file::PresetFile& preset_file) {
+          EXPECT_EQ(preset_file.file_path(), preset_filename0);
+        });
+    view_.OnContextMenu("Show in Explorer", static_cast<int>(show_in_explorer_idx), {0});
   }
 
   // Delete Preset
@@ -312,7 +330,8 @@ TEST_F(PresetsDataViewTest, CheckLoadPresetOnDoubleClick) {
   orbit_preset_file::PresetFile preset_file0{preset_filename0, orbit_client_protos::PresetInfo{}};
 
   view_.SetPresets({preset_file0});
-  std::vector<std::string> context_menu = view_.GetContextMenu(0, {0});
+  std::vector<std::string> context_menu =
+      FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
   EXPECT_CALL(app_, LoadPreset)
