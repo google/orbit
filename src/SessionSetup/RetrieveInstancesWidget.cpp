@@ -22,10 +22,6 @@
 #include "SessionSetup/RetrieveInstances.h"
 #include "ui_RetrieveInstancesWidget.h"
 
-namespace {
-constexpr const char* kAllInstancesKey{"kAllInstancesKey"};
-}  // namespace
-
 namespace orbit_session_setup {
 
 using orbit_ggp::Instance;
@@ -56,6 +52,8 @@ RetrieveInstancesWidget::RetrieveInstancesWidget(RetrieveInstances* retrieve_ins
                    &RetrieveInstancesWidget::OnReloadButtonClicked);
   QObject::connect(ui_->projectComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
                    &RetrieveInstancesWidget::OnProjectComboBoxCurrentIndexChanged);
+  QObject::connect(ui_->allCheckBox, &QCheckBox::clicked, this,
+                   &RetrieveInstancesWidget::OnAllCheckboxClicked);
 }
 
 void RetrieveInstancesWidget::SetupStateMachine() {
@@ -84,12 +82,13 @@ void RetrieveInstancesWidget::Start() {
   state_machine_.start();
 
   QSettings settings;
-  ui_->allCheckBox->setChecked(settings.value(kAllInstancesKey, false).toBool());
+  ui_->allCheckBox->setChecked(LoadInstancesScopeFromPersistentStorage() ==
+                               InstanceListScope::kAllReservedInstances);
 
   InitialLoad(LoadLastSelectedProjectFromPersistentStorage());
 }
 
-InstanceListScope RetrieveInstancesWidget::GetInstanceListScope() const {
+InstanceListScope RetrieveInstancesWidget::GetSelectedInstanceListScope() const {
   return ui_->allCheckBox->isChecked() ? InstanceListScope::kAllReservedInstances
                                        : InstanceListScope::kOnlyOwnInstances;
 }
@@ -97,7 +96,7 @@ InstanceListScope RetrieveInstancesWidget::GetInstanceListScope() const {
 void RetrieveInstancesWidget::InitialLoad(const std::optional<Project>& remembered_project) {
   CHECK(ui_->projectComboBox->count() == 0);
   emit LoadingStarted();
-  retrieve_instances_->LoadProjectsAndInstances(remembered_project, GetInstanceListScope())
+  retrieve_instances_->LoadProjectsAndInstances(remembered_project, GetSelectedInstanceListScope())
       .Then(main_thread_executor_.get(),
             [this](ErrorMessageOr<LoadProjectsAndInstancesResult> loading_result) {
               // `this` still exists when this lambda is executed. This is enforced, because
@@ -179,7 +178,7 @@ void RetrieveInstancesWidget::OnReloadButtonClicked() {
   }
 
   emit LoadingStarted();
-  retrieve_instances_->LoadInstancesWithoutCache(selected_project, GetInstanceListScope())
+  retrieve_instances_->LoadInstancesWithoutCache(selected_project, GetSelectedInstanceListScope())
       .Then(main_thread_executor_.get(),
             [this](const ErrorMessageOr<QVector<Instance>>& load_result) {
               // `this` still exists when this lambda is executed. This is enforced, because
@@ -202,7 +201,7 @@ void RetrieveInstancesWidget::OnProjectComboBoxCurrentIndexChanged() {
   std::optional<Project> selected_project = GetSelectedProject();
 
   emit LoadingStarted();
-  retrieve_instances_->LoadInstances(selected_project, GetInstanceListScope())
+  retrieve_instances_->LoadInstances(selected_project, GetSelectedInstanceListScope())
       .Then(main_thread_executor_.get(),
             [this, selected_project](const ErrorMessageOr<QVector<Instance>>& load_result) {
               // `this` still exists when this lambda is executed. This is enforced, because
@@ -232,6 +231,28 @@ void RetrieveInstancesWidget::OnProjectComboBoxCurrentIndexChanged() {
               }
 
               OnInstancesLoadingReturned(load_result);
+            });
+}
+
+void RetrieveInstancesWidget::OnAllCheckboxClicked() {
+  InstanceListScope selected_scope = GetSelectedInstanceListScope();
+
+  emit LoadingStarted();
+  retrieve_instances_->LoadInstances(GetSelectedProject(), selected_scope)
+      .Then(main_thread_executor_.get(),
+            [widget = QPointer<RetrieveInstancesWidget>(this),
+             selected_scope](const ErrorMessageOr<QVector<Instance>>& load_result) {
+              if (widget == nullptr) return;
+
+              if (load_result.has_value()) {
+                SaveInstancesScopeToPersistentStorage(selected_scope);
+              } else {
+                // reset to the value before (value saved in PersistenStorage)
+                widget->ui_->allCheckBox->setChecked(LoadInstancesScopeFromPersistentStorage() ==
+                                                     InstanceListScope::kAllReservedInstances);
+              }
+
+              widget->OnInstancesLoadingReturned(load_result);
             });
 }
 

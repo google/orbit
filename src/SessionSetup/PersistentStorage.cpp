@@ -6,14 +6,17 @@
 
 #include <QSettings>
 
+#include "OrbitGgp/Client.h"
 #include "OrbitGgp/Project.h"
 
 namespace orbit_session_setup {
 
 constexpr const char* kSelectedProjectIdKey{"kSelectedProjectIdKey"};
 constexpr const char* kSelectedProjectDisplayNameKey{"kSelectedProjectDisplayNameKey"};
+constexpr const char* kInstancesScopeKey{"kInstancesScopeKey"};
 
 using orbit_ggp::Project;
+using InstanceListScope = orbit_ggp::Client::InstanceListScope;
 
 [[nodiscard]] std::optional<orbit_ggp::Project> LoadLastSelectedProjectFromPersistentStorage() {
   QSettings settings;
@@ -37,6 +40,26 @@ void SaveProjectToPersistentStorage(std::optional<Project> project) {
   } else {
     settings.remove(kSelectedProjectIdKey);
     settings.remove(kSelectedProjectDisplayNameKey);
+  }
+}
+
+[[nodiscard]] InstanceListScope LoadInstancesScopeFromPersistentStorage() {
+  QSettings settings;
+  if (settings.contains(kInstancesScopeKey)) {
+    return InstanceListScope::kAllReservedInstances;
+  }
+  return InstanceListScope::kOnlyOwnInstances;
+}
+
+void SaveInstancesScopeToPersistentStorage(InstanceListScope scope) {
+  QSettings settings;
+  switch (scope) {
+    case InstanceListScope::kOnlyOwnInstances:
+      settings.remove(kInstancesScopeKey);
+      break;
+    case InstanceListScope::kAllReservedInstances:
+      settings.setValue(kInstancesScopeKey, true);
+      break;
   }
 }
 

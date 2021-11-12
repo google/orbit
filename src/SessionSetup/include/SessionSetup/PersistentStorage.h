@@ -7,6 +7,7 @@
 
 #include <optional>
 
+#include "OrbitGgp/Client.h"
 #include "OrbitGgp/Project.h"
 
 namespace orbit_session_setup {
@@ -14,6 +15,10 @@ namespace orbit_session_setup {
 [[nodiscard]] std::optional<orbit_ggp::Project> LoadLastSelectedProjectFromPersistentStorage();
 
 void SaveProjectToPersistentStorage(std::optional<orbit_ggp::Project> project);
+
+[[nodiscard]] orbit_ggp::Client::InstanceListScope LoadInstancesScopeFromPersistentStorage();
+
+void SaveInstancesScopeToPersistentStorage(orbit_ggp::Client::InstanceListScope scope);
 
 }  // namespace orbit_session_setup
 
