@@ -28,14 +28,13 @@ using orbit_grpc_protos::InstrumentedFunction;
 
 namespace {
 constexpr const double kHeightCapAverageMultipleDouble = 6.0;
-constexpr const double kFrameTrackExpandedScaleFactor = 6.0;
 constexpr const uint64_t kHeightCapAverageMultipleUint64 = 6;
 constexpr const float kBoxHeightMultiplier = 3.f;
 }  // namespace
 
 float FrameTrack::GetCappedMaximumToAverageRatio() const {
   if (stats_.average_time_ns() == 0) {
-    return std::numeric_limits<float>::max();
+    return 0.f;
   }
   // Compute the scale factor in double first as we convert time values in nanoseconds to
   // floating point. Single-precision floating point (float type) can only exactly
@@ -49,7 +48,7 @@ float FrameTrack::GetCappedMaximumToAverageRatio() const {
 
 float FrameTrack::GetMaximumBoxHeight() const {
   const bool is_collapsed = collapse_toggle_->IsCollapsed();
-  float scale_factor = is_collapsed ? 1.f : kFrameTrackExpandedScaleFactor;
+  float scale_factor = is_collapsed ? 1.f : GetCappedMaximumToAverageRatio();
   return scale_factor * GetDefaultBoxHeight();
 }
 
