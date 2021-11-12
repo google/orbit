@@ -592,18 +592,17 @@ void OrbitApp::OnErrorEnablingOrbitApiEvent(
 void OrbitApp::OnErrorEnablingUserSpaceInstrumentationEvent(
     orbit_grpc_protos::ErrorEnablingUserSpaceInstrumentationEvent error_event) {
   main_thread_executor_->Schedule([this, error_event = std::move(error_event)]() {
+    const std::string message =
+        absl::StrCat(error_event.message(),
+                     "\nAll functions will be instrumented using the slower kernel(uprobe) "
+                     "functionality.\n");
     main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
-                                     GetCaptureTimeAt(error_event.timestamp_ns()),
-                                     error_event.message());
-
+                                     GetCaptureTimeAt(error_event.timestamp_ns()), message);
     if (!IsLoadingCapture()) {
       constexpr const char* kDontShowAgainErrorEnablingUserSpaceInstrumentationWarningKey =
           "DontShowAgainErrorEnablingUserSpaceInstrumentationWarning";
       main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
-          "Could not enable user space instrumentation",
-          absl::StrCat(error_event.message(),
-                       "\nAll functions will be instrumented using the slower kernel(uprobe) "
-                       "functionality.\n"),
+          "Could not enable user space instrumentation", message,
           kDontShowAgainErrorEnablingUserSpaceInstrumentationWarningKey);
     }
   });
