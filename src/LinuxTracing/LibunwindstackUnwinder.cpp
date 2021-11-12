@@ -4,6 +4,7 @@
 
 #include "LibunwindstackUnwinder.h"
 
+#include <unwindstack/Error.h>
 #include <unwindstack/Memory.h>
 #include <unwindstack/Regs.h>
 #include <unwindstack/RegsX86_64.h>
@@ -123,11 +124,7 @@ std::unique_ptr<LibunwindstackUnwinder> LibunwindstackUnwinder::Create() {
 }
 
 std::string LibunwindstackUnwinder::LibunwindstackErrorString(unwindstack::ErrorCode error_code) {
-  static const std::vector<const char*> kErrorNames{
-      "ERROR_NONE",           "ERROR_MEMORY_INVALID", "ERROR_UNWIND_INFO",
-      "ERROR_UNSUPPORTED",    "ERROR_INVALID_MAP",    "ERROR_MAX_FRAMES_EXCEEDED",
-      "ERROR_REPEATED_FRAME", "ERROR_INVALID_ELF"};
-  return kErrorNames[error_code];
+  return std::string(unwindstack::GetErrorCodeString(error_code));
 }
 
 }  // namespace orbit_linux_tracing
