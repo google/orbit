@@ -251,7 +251,7 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
     const uint64_t backup_size = std::min(kMaxFunctionPrologueBackupSize, function.function_size());
     if (backup_size == 0) {
       const std::string message = absl::StrFormat(
-          "Can't instrument function \"%s\"  since it has size zero.", function.function_name());
+          "Can't instrument function \"%s\" since it has size zero.", function.function_name());
       ERROR("%s", message);
       result.function_ids_to_error_messages[function_id] = message;
       continue;

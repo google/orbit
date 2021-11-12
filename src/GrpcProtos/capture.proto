@@ -677,10 +677,15 @@ message ErrorEnablingUserSpaceInstrumentationEvent {
   bytes message = 2;
 }
 
+message FunctionThatFailedToBeInstrumented {
+  uint64 function_id = 1;
+  // This is a string, we use bytes to avoid UTF-8 validation.
+  bytes error_message = 2;
+}
+
 message InfoEnablingUserSpaceInstrumentationEvent {
   uint64 timestamp_ns = 1;
-  // This is a string, we use bytes to avoid UTF-8 validation.
-  bytes message = 2;
+  repeated FunctionThatFailedToBeInstrumented functions_that_failed_to_instrument = 2;
 }
 
 message ClockResolutionEvent {

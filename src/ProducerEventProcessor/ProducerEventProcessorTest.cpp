@@ -2087,8 +2087,11 @@ TEST(ProducerEventProcessor, InfoEnablingUserSpaceInstrumentationEvent) {
   InfoEnablingUserSpaceInstrumentationEvent* info_event =
       producer_capture_event.mutable_info_enabling_user_space_instrumentation_event();
   info_event->set_timestamp_ns(kTimestampNs1);
-  constexpr const char* kMessage = "message";
-  info_event->set_message(kMessage);
+  constexpr int kFunctionId = 42;
+  constexpr const char* kErrorMessage = "error message";
+  auto function = info_event->add_functions_that_failed_to_instrument();
+  function->set_function_id(kFunctionId);
+  function->set_error_message(kErrorMessage);
 
   ClientCaptureEvent client_capture_event;
   EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
@@ -2100,7 +2103,9 @@ TEST(ProducerEventProcessor, InfoEnablingUserSpaceInstrumentationEvent) {
   const InfoEnablingUserSpaceInstrumentationEvent& actual_info_event =
       client_capture_event.info_enabling_user_space_instrumentation_event();
   EXPECT_EQ(actual_info_event.timestamp_ns(), kTimestampNs1);
-  EXPECT_EQ(actual_info_event.message(), kMessage);
+  EXPECT_EQ(actual_info_event.functions_that_failed_to_instrument(0).function_id(), kFunctionId);
+  EXPECT_EQ(actual_info_event.functions_that_failed_to_instrument(0).error_message(),
+            kErrorMessage);
 }
 
 TEST(ProducerEventProcessor, LostPerfRecordsEvent) {

@@ -609,9 +609,16 @@ void OrbitApp::OnErrorEnablingUserSpaceInstrumentationEvent(
 void OrbitApp::OnInfoEnablingUserSpaceInstrumentationEvent(
     orbit_grpc_protos::InfoEnablingUserSpaceInstrumentationEvent info_event) {
   main_thread_executor_->Schedule([this, info_event = std::move(info_event)]() {
-    main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
-                                     GetCaptureTimeAt(info_event.timestamp_ns()),
-                                     info_event.message());
+    std::string message = "Failed to instrument some functions:\n";
+    for (const auto& function : info_event.functions_that_failed_to_instrument()) {
+      message = absl::StrCat(message, function.error_message(), "\n");
+    }
+    message = absl::StrCat(message,
+                           "\nThe functions above will be instrumented using the slower kernel "
+                           "(uprobe) functionality.\n");
+
+    main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kWarning,
+                                     GetCaptureTimeAt(info_event.timestamp_ns()), message);
   });
 }
 

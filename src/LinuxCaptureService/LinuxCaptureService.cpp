@@ -187,7 +187,8 @@ grpc::Status LinuxCaptureService::Capture(
 
   // Enable user space instrumentation.
   std::optional<std::string> error_enabling_user_space_instrumentation;
-  std::optional<std::string> info_from_enabling_user_space_instrumentation;
+  std::optional<orbit_grpc_protos::ProducerCaptureEvent>
+      info_from_enabling_user_space_instrumentation;
   std::unique_ptr<UserSpaceInstrumentationAddressesImpl> user_space_instrumentation_addresses;
   if (capture_options.dynamic_instrumentation_method() ==
           CaptureOptions::kUserSpaceInstrumentation &&
@@ -201,26 +202,9 @@ grpc::Status LinuxCaptureService::Capture(
       FilterOutInstrumentedFunctionsFromCaptureOptions(
           result_or_error.value().instrumented_function_ids, linux_tracing_capture_options);
 
-      const std::string status_message = absl::StrFormat(
-          "User space instrumentation enabled for %u out of %u instrumented functions.",
-          result_or_error.value().instrumented_function_ids.size(),
-          capture_options.instrumented_functions_size());
-      LOG("%s", status_message);
-
-      // If at least one function was not instrumented we send a message to the capture log.
-      if (result_or_error.value().function_ids_to_error_messages.size()) {
-        info_from_enabling_user_space_instrumentation = "Failed to instrument some functions:\n";
-        for (auto const& [id, message] : result_or_error.value().function_ids_to_error_messages) {
-          info_from_enabling_user_space_instrumentation =
-              absl::StrCat(info_from_enabling_user_space_instrumentation.value(), message, "\n");
-        }
-        info_from_enabling_user_space_instrumentation =
-            absl::StrCat(info_from_enabling_user_space_instrumentation.value(),
-                         "\nThe functions above will be instrumented using the slower kernel "
-                         "(uprobe) functionality.\n");
-        info_from_enabling_user_space_instrumentation =
-            absl::StrCat(info_from_enabling_user_space_instrumentation.value(), status_message);
-      }
+      info_from_enabling_user_space_instrumentation =
+          orbit_capture_service::CreateInfoEnablingUserSpaceInstrumentationEvent(
+              capture_start_timestamp_ns_, result_or_error.value().function_ids_to_error_messages);
 
       user_space_instrumentation_addresses =
           std::make_unique<UserSpaceInstrumentationAddressesImpl>(
@@ -250,9 +234,7 @@ grpc::Status LinuxCaptureService::Capture(
   if (info_from_enabling_user_space_instrumentation.has_value()) {
     producer_event_processor_->ProcessEvent(
         orbit_grpc_protos::kRootProducerId,
-        orbit_capture_service::CreateInfoEnablingUserSpaceInstrumentationEvent(
-            capture_start_timestamp_ns_,
-            std::move(info_from_enabling_user_space_instrumentation.value())));
+        std::move(info_from_enabling_user_space_instrumentation.value()));
   }
 
   std::unique_ptr<orbit_introspection::IntrospectionListener> introspection_listener;
