@@ -25,6 +25,7 @@
 #include <utility>
 #include <vector>
 
+#include "CommandLineUtils.h"
 #include "MetricsUploader/ScopedMetric.h"
 #include "MoveFilesToDocuments/MoveFilesToDocuments.h"
 #include "OrbitBase/File.h"
@@ -141,21 +142,6 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
 
     UNREACHABLE();
   }
-}
-
-// Extract command line flags by filtering the positional arguments out from the command line
-// arguments.
-static QStringList ExtractCommandLineFlags(const std::vector<std::string>& command_line_args,
-                                           const std::vector<char*>& positional_args) {
-  QStringList command_line_flags;
-  absl::flat_hash_set<std::string> positional_arg_set(positional_args.begin(),
-                                                      positional_args.end());
-  for (const std::string& command_line_arg : command_line_args) {
-    if (!positional_arg_set.contains(command_line_arg)) {
-      command_line_flags << QString::fromStdString(command_line_arg);
-    }
-  }
-  return command_line_flags;
 }
 
 static void DisplayErrorToUser(const QString& message) {
@@ -330,6 +316,8 @@ int main(int argc, char* argv[]) {
     arguments << QString::fromStdString(capture_file_paths[i]) << command_line_flags;
     QProcess::startDetached(orbit_executable, arguments);
   }
+
+  command_line_flags = RemoveFlagsNotPassedToMainWindow(command_line_flags);
 
   RunUiInstance(deployment_configuration, &context.value(), command_line_flags, crash_handler.get(),
                 capture_file_paths.empty() ? "" : capture_file_paths[0]);

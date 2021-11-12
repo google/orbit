@@ -4,7 +4,19 @@
 
 project(Orbit CXX)
 
-add_executable(Orbit main.cpp)
+add_executable(Orbit)
+
+target_sources(
+    Orbit
+    PRIVATE CommandLineUtils.cpp
+            main.cpp
+)
+
+target_sources(
+  Orbit
+  PRIVATE CommandLineUtils.h
+)
+
 target_link_libraries(Orbit PRIVATE
         ClientFlags
         MoveFilesToDocuments
@@ -34,3 +46,19 @@ if(WIN32)
 endif()
 
 strip_symbols(Orbit)
+
+add_executable(OrbitMainTests)
+
+target_sources(OrbitMainTests PRIVATE
+               CommandLineUtils.cpp
+               CommandLineUtilsTest.cpp)
+
+target_link_libraries(
+  OrbitMainTests
+  PRIVATE ClientFlags
+          GTest::Main
+          MoveFilesToDocuments
+          OrbitQt
+          Style)
+
+register_test(OrbitMainTests)
