@@ -88,7 +88,7 @@ void RetrieveInstancesWidget::Start() {
   InitialLoad(LoadLastSelectedProjectFromPersistentStorage());
 }
 
-InstanceListScope RetrieveInstancesWidget::GetSelectedInstancesScope() const {
+InstanceListScope RetrieveInstancesWidget::GetSelectedInstanceListScope() const {
   return ui_->allCheckBox->isChecked() ? InstanceListScope::kAllReservedInstances
                                        : InstanceListScope::kOnlyOwnInstances;
 }
@@ -96,7 +96,7 @@ InstanceListScope RetrieveInstancesWidget::GetSelectedInstancesScope() const {
 void RetrieveInstancesWidget::InitialLoad(const std::optional<Project>& remembered_project) {
   CHECK(ui_->projectComboBox->count() == 0);
   emit LoadingStarted();
-  retrieve_instances_->LoadProjectsAndInstances(remembered_project, GetSelectedInstancesScope())
+  retrieve_instances_->LoadProjectsAndInstances(remembered_project, GetSelectedInstanceListScope())
       .Then(main_thread_executor_.get(),
             [this](ErrorMessageOr<LoadProjectsAndInstancesResult> loading_result) {
               // `this` still exists when this lambda is executed. This is enforced, because
@@ -178,7 +178,7 @@ void RetrieveInstancesWidget::OnReloadButtonClicked() {
   }
 
   emit LoadingStarted();
-  retrieve_instances_->LoadInstancesWithoutCache(selected_project, GetSelectedInstancesScope())
+  retrieve_instances_->LoadInstancesWithoutCache(selected_project, GetSelectedInstanceListScope())
       .Then(main_thread_executor_.get(),
             [this](const ErrorMessageOr<QVector<Instance>>& load_result) {
               // `this` still exists when this lambda is executed. This is enforced, because
@@ -201,7 +201,7 @@ void RetrieveInstancesWidget::OnProjectComboBoxCurrentIndexChanged() {
   std::optional<Project> selected_project = GetSelectedProject();
 
   emit LoadingStarted();
-  retrieve_instances_->LoadInstances(selected_project, GetSelectedInstancesScope())
+  retrieve_instances_->LoadInstances(selected_project, GetSelectedInstanceListScope())
       .Then(main_thread_executor_.get(),
             [this, selected_project](const ErrorMessageOr<QVector<Instance>>& load_result) {
               // `this` still exists when this lambda is executed. This is enforced, because
@@ -235,7 +235,7 @@ void RetrieveInstancesWidget::OnProjectComboBoxCurrentIndexChanged() {
 }
 
 void RetrieveInstancesWidget::OnAllCheckboxClicked() {
-  InstanceListScope selected_scope = GetSelectedInstancesScope();
+  InstanceListScope selected_scope = GetSelectedInstanceListScope();
 
   emit LoadingStarted();
   retrieve_instances_->LoadInstances(GetSelectedProject(), selected_scope)

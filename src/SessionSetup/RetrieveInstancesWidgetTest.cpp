@@ -219,6 +219,17 @@ class RetrieveInstancesWidgetTest : public testing::Test {
     EXPECT_EQ(initial_loading_failed_spy_.count(), 0);
   }
 
+  // This helper method does the following things
+  // * Check that the result of the loading was `instances`
+  // * Check that the correct signals were sent
+  // * Clear/Reset the signal spys
+  // * Check that all UI elements are enabled
+  void VerifySuccessfulLoadAndUIState(const QVector<Instance>& instances) {
+    VerifyLastLoadingReturnedInstanceList(instances);
+    VerifyAndClearSignalsOfSuccessfulLoadingCycle();
+    VerifyAllElementsAreEnabled();
+  }
+
   MockRetrieveInstances mock_retrieve_instances_;
   RetrieveInstancesWidget widget_;
   QLineEdit* filter_line_edit_ = nullptr;
@@ -277,9 +288,7 @@ TEST_F(RetrieveInstancesWidgetTest, StartSuccessfulDefault) {
   widget_.Start();
   QCoreApplication::processEvents();
 
-  VerifyLastLoadingReturnedInstanceList(kInitialTestDataDefault.instances);
-  VerifyAndClearSignalsOfSuccessfulLoadingCycle();
-  VerifyAllElementsAreEnabled();
+  VerifySuccessfulLoadAndUIState(kInitialTestDataDefault.instances);
   VerifyProjectComboBoxHoldsData(kInitialTestDataDefault);
 }
 
@@ -298,9 +307,7 @@ TEST_F(RetrieveInstancesWidgetTest, StartSuccessfulWithRememberedSettings) {
   widget_.Start();
   QCoreApplication::processEvents();
 
-  VerifyLastLoadingReturnedInstanceList(kInitialTestDataWithProjectOfInstances.instances);
-  VerifyAndClearSignalsOfSuccessfulLoadingCycle();
-  VerifyAllElementsAreEnabled();
+  VerifySuccessfulLoadAndUIState(kInitialTestDataWithProjectOfInstances.instances);
   VerifyProjectComboBoxHoldsData(kInitialTestDataWithProjectOfInstances);
 
   EXPECT_TRUE(all_check_box_->isChecked());
@@ -337,15 +344,11 @@ TEST_F(RetrieveInstancesWidgetTestStarted, ReloadSucceeds) {
 
   QTest::mouseClick(reload_button_, Qt::MouseButton::LeftButton);
   QCoreApplication::processEvents();
-  VerifyLastLoadingReturnedInstanceList(kTestInstancesProject1);
-  VerifyAndClearSignalsOfSuccessfulLoadingCycle();
-  VerifyAllElementsAreEnabled();
+  VerifySuccessfulLoadAndUIState(kTestInstancesProject1);
 
   QTest::mouseClick(reload_button_, Qt::MouseButton::LeftButton);
   QCoreApplication::processEvents();
-  VerifyLastLoadingReturnedInstanceList({kTestInstance1});
-  VerifyAndClearSignalsOfSuccessfulLoadingCycle();
-  VerifyAllElementsAreEnabled();
+  VerifySuccessfulLoadAndUIState({kTestInstance1});
 }
 
 TEST_F(RetrieveInstancesWidgetTestStarted, ReloadFails) {
@@ -381,8 +384,7 @@ TEST_F(RetrieveInstancesWidgetTestStarted, ProjectChangeSuccessful) {
   project_combo_box_->setCurrentIndex(1);
   QCoreApplication::processEvents();
 
-  VerifyLastLoadingReturnedInstanceList(kTestInstancesProject1);
-  VerifyAndClearSignalsOfSuccessfulLoadingCycle();
+  VerifySuccessfulLoadAndUIState(kTestInstancesProject1);
   EXPECT_EQ(LoadLastSelectedProjectFromPersistentStorage(), kTestProject1);
   EXPECT_EQ(project_combo_box_->currentIndex(), 1);
 
@@ -399,8 +401,7 @@ TEST_F(RetrieveInstancesWidgetTestStarted, ProjectChangeSuccessful) {
   project_combo_box_->setCurrentIndex(0);
   QCoreApplication::processEvents();
 
-  VerifyLastLoadingReturnedInstanceList(kTestInstancesProject1);
-  VerifyAndClearSignalsOfSuccessfulLoadingCycle();
+  VerifySuccessfulLoadAndUIState(kTestInstancesProject1);
   EXPECT_EQ(LoadLastSelectedProjectFromPersistentStorage(), std::nullopt);
   EXPECT_EQ(project_combo_box_->currentIndex(), 0);
 
@@ -417,8 +418,7 @@ TEST_F(RetrieveInstancesWidgetTestStarted, ProjectChangeSuccessful) {
   project_combo_box_->setCurrentIndex(2);
   QCoreApplication::processEvents();
 
-  VerifyLastLoadingReturnedInstanceList(kTestInstancesProject2);
-  VerifyAndClearSignalsOfSuccessfulLoadingCycle();
+  VerifySuccessfulLoadAndUIState(kTestInstancesProject2);
   EXPECT_EQ(LoadLastSelectedProjectFromPersistentStorage(), kTestProject2);
   EXPECT_EQ(project_combo_box_->currentIndex(), 2);
 
@@ -474,18 +474,14 @@ TEST_F(RetrieveInstancesWidgetTestStarted, AllCheckboxSuccessful) {
   QTest::mouseClick(all_check_box_, Qt::MouseButton::LeftButton);
   QCoreApplication::processEvents();
 
-  VerifyLastLoadingReturnedInstanceList(kTestInstancesProject1All);
-  VerifyAndClearSignalsOfSuccessfulLoadingCycle();
-  VerifyAllElementsAreEnabled();
+  VerifySuccessfulLoadAndUIState(kTestInstancesProject1All);
   EXPECT_TRUE(all_check_box_->isChecked());
   EXPECT_EQ(LoadInstancesScopeFromPersistentStorage(), InstanceListScope::kAllReservedInstances);
 
   QTest::mouseClick(all_check_box_, Qt::MouseButton::LeftButton);
   QCoreApplication::processEvents();
 
-  VerifyLastLoadingReturnedInstanceList(kTestInstancesProject1);
-  VerifyAndClearSignalsOfSuccessfulLoadingCycle();
-  VerifyAllElementsAreEnabled();
+  VerifySuccessfulLoadAndUIState(kTestInstancesProject1);
   EXPECT_FALSE(all_check_box_->isChecked());
   EXPECT_EQ(LoadInstancesScopeFromPersistentStorage(), InstanceListScope::kOnlyOwnInstances);
 }
