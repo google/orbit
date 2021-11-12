@@ -600,7 +600,10 @@ void OrbitApp::OnErrorEnablingUserSpaceInstrumentationEvent(
       constexpr const char* kDontShowAgainErrorEnablingUserSpaceInstrumentationWarningKey =
           "DontShowAgainErrorEnablingUserSpaceInstrumentationWarning";
       main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
-          "Could not enable user space instrumentation", error_event.message(),
+          "Could not enable user space instrumentation",
+          absl::StrCat(error_event.message(),
+                       "\nAll functions will be instrumented using the slower kernel(uprobe) "
+                       "functionality.\n"),
           kDontShowAgainErrorEnablingUserSpaceInstrumentationWarningKey);
     }
   });
