@@ -17,9 +17,10 @@ namespace orbit_user_space_instrumentation {
 // Returns the set of thread ids of the threads that were stopped.
 [[nodiscard]] ErrorMessageOr<absl::flat_hash_set<pid_t>> AttachAndStopProcess(pid_t pid);
 
-// Attaches to and stop all threads of the process `pid` that are not already in
-// `already_halted_tids`. It is used to stop threads that spawned while already attached to a
-// process. Returns the set of thread ids of the threads that were stopped.
+// Attaches to and stops all threads of the process `pid` that are not already in
+// `already_halted_tids`. It can be used to stop threads that spawned while already attached to a
+// process.
+// Returns the new set of thread ids of all halted threads (old and new).
 [[nodiscard]] ErrorMessageOr<absl::flat_hash_set<pid_t>> AttachAndStopNewThreadsOfProcess(
     pid_t pid, absl::flat_hash_set<pid_t> already_halted_tids);
 

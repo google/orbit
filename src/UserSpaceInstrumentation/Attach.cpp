@@ -66,9 +66,27 @@ namespace {
   return ErrorMessage(absl::StrFormat("Waiting for the traced thread %d to stop timed out.", tid));
 }
 
-// Given a process id, it attaches to all threads that are not already in `already_halted_tids`.
-// Returns the new set of halted threads.
-ErrorMessageOr<absl::flat_hash_set<pid_t>> AttachAndStopThreads(
+}  // namespace
+
+ErrorMessageOr<absl::flat_hash_set<pid_t>> AttachAndStopProcess(pid_t pid) {
+  ErrorMessageOr<pid_t> error_or_tracer_pid = orbit_base::GetTracerPidOfProcess(pid);
+  if (error_or_tracer_pid.has_error()) {
+    return ErrorMessage(absl::StrFormat("There is no process with pid %d: %s", pid,
+                                        error_or_tracer_pid.error().message()));
+  }
+
+  const pid_t tracer_pid = error_or_tracer_pid.value();
+  if (tracer_pid != 0) {
+    return ErrorMessage(
+        absl::StrFormat("Process %d is already being traced by %d. Please make sure no debugger is "
+                        "attached to the target process when profiling.",
+                        pid, tracer_pid));
+  }
+
+  return AttachAndStopNewThreadsOfProcess(pid, {});
+}
+
+[[nodiscard]] ErrorMessageOr<absl::flat_hash_set<pid_t>> AttachAndStopNewThreadsOfProcess(
     pid_t pid, absl::flat_hash_set<pid_t> already_halted_tids) {
   std::vector<pid_t> process_tids = GetTidsOfProcess(pid);
   absl::flat_hash_set<pid_t> halted_tids{std::move(already_halted_tids)};
@@ -98,31 +116,6 @@ ErrorMessageOr<absl::flat_hash_set<pid_t>> AttachAndStopThreads(
     process_tids = GetTidsOfProcess(pid);
   }
   return halted_tids;
-}
-
-}  // namespace
-
-ErrorMessageOr<absl::flat_hash_set<pid_t>> AttachAndStopProcess(pid_t pid) {
-  ErrorMessageOr<pid_t> error_or_tracer_pid = orbit_base::GetTracerPidOfProcess(pid);
-  if (error_or_tracer_pid.has_error()) {
-    return ErrorMessage(absl::StrFormat("There is no process with pid %d: %s", pid,
-                                        error_or_tracer_pid.error().message()));
-  }
-
-  const pid_t tracer_pid = error_or_tracer_pid.value();
-  if (tracer_pid != 0) {
-    return ErrorMessage(
-        absl::StrFormat("Process %d is already being traced by %d. Please make sure no debugger is "
-                        "attached to the target process when profiling.",
-                        pid, tracer_pid));
-  }
-
-  return AttachAndStopThreads(pid, {});
-}
-
-[[nodiscard]] ErrorMessageOr<absl::flat_hash_set<pid_t>> AttachAndStopNewThreadsOfProcess(
-    pid_t pid, absl::flat_hash_set<pid_t> already_halted_tids) {
-  return AttachAndStopThreads(pid, std::move(already_halted_tids));
 }
 
 ErrorMessageOr<void> DetachAndContinueProcess(pid_t pid) {
