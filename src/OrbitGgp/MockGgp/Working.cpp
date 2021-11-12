@@ -4,6 +4,7 @@
 
 #include <chrono>
 #include <iostream>
+#include <string>
 #include <string_view>
 #include <thread>
 
@@ -148,6 +149,54 @@ int GgpConfig(int argc, char* argv[]) {
   return 0;
 }
 
+int GgpInstanceDescribe(int argc, char* argv[]) {
+  if (argc != 5) {
+    std::cout << "Wrong amount of arguments" << std::endl;
+    return 1;
+  }
+
+  if (std::string_view{argv[1]} != "instance" || std::string_view{argv[2]} != "describe" ||
+      std::string_view{argv[4]} != "-s") {
+    std::cout << "arguments are formatted wrong" << std::endl;
+    return 1;
+  }
+
+  if (std::string_view{argv[3]} == "id/of/instance1") {
+    std::cout << R"(
+ {
+  "displayName": "displayName-1",
+  "id": "id/of/instance1",
+  "ipAddress": "123.456.789.012",
+  "lastUpdated": "2012-12-12T12:12:12Z",
+  "owner": "owner@",
+  "pool": "pool-of-test_instance_1",
+  "state": "RESERVED"
+ })" << std::endl;
+  } else {
+    const std::string result = std::string("Error: instance [") + argv[3] + "] not found";
+    std::cout << result << std::endl;
+  }
+  return 0;
+}
+
+int GgpInstance(int argc, char* argv[]) {
+  if (argc < 3) {
+    std::cout << "Wrong amount of arguments" << std::endl;
+    return 1;
+  }
+
+  if (std::string_view{argv[2]} == "list") {
+    return GgpInstanceList(argc, argv);
+  }
+
+  if (std::string_view{argv[2]} == "describe") {
+    return GgpInstanceDescribe(argc, argv);
+  }
+
+  std::cout << "arguments are formatted wrong" << std::endl;
+  return 1;
+}
+
 int main(int argc, char* argv[]) {
   // This sleep is here for 2 reasons:
   // 1. The ggp cli which this program is mocking, does have quite a bit of delay, hence having a
@@ -169,7 +218,7 @@ int main(int argc, char* argv[]) {
   }
 
   if (std::string_view{argv[1]} == "instance") {
-    return GgpInstanceList(argc, argv);
+    return GgpInstance(argc, argv);
   }
 
   if (std::string_view{argv[1]} == "project") {
