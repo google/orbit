@@ -19,6 +19,7 @@
 #include <utility>
 
 #include "MainThreadExecutor.h"
+#include "MetricsUploader/ScopedMetric.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/FutureHelpers.h"
 #include "OrbitBase/JoinFutures.h"
@@ -31,6 +32,7 @@ using orbit_ggp::Client;
 using orbit_ggp::Instance;
 using orbit_ggp::Project;
 using orbit_metrics_uploader::OrbitLogEvent;
+using orbit_metrics_uploader::ScopedMetric;
 
 class RetrieveInstancesImpl : public RetrieveInstances {
  public:
@@ -86,12 +88,20 @@ Future<ErrorMessageOr<QVector<Instance>>> RetrieveInstancesImpl::LoadInstances(
 
 Future<ErrorMessageOr<QVector<Instance>>> RetrieveInstancesImpl::LoadInstancesWithoutCache(
     const std::optional<Project>& project, orbit_ggp::Client::InstanceListScope scope) {
-  auto future = ggp_client_->GetInstancesAsync(scope, project);
-  (void)future.ThenIfSuccess(main_thread_executor_, [this, key = std::make_pair(project, scope)](
-                                                        QVector<Instance> instances) {
-    instance_cache_.emplace(key, instances);
-  });
-  return future;
+  ScopedMetric metric{metrics_uploader_, OrbitLogEvent::ORBIT_INSTANCES_LOAD};
+  return ggp_client_->GetInstancesAsync(scope, project)
+      .Then(main_thread_executor_,
+            [metric = std::move(metric)](auto result) mutable {
+              if (result.has_error()) {
+                metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
+              }
+              return result;
+            })
+      .ThenIfSuccess(main_thread_executor_,
+                     [this, key = std::make_pair(project, scope)](QVector<Instance> instances) {
+                       instance_cache_.emplace(key, instances);
+                       return instances;
+                     });
 }
 
 Future<ErrorMessageOr<RetrieveInstances::LoadProjectsAndInstancesResult>>
