@@ -16,6 +16,9 @@
 
 namespace orbit_linux_tracing_integration_tests {
 
+// This class handles a child process forked from the current one. It allows to write to the child's
+// stdin and to read from its stdout through standard use of pipes. The constructor runs the child
+// and the destructor waits for its completion.
 class ChildProcess {
  public:
   explicit ChildProcess(const std::function<int()>& child_main) {
