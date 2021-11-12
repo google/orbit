@@ -11,8 +11,8 @@
 
 namespace orbit_linux_tracing_integration_tests {
 
-struct LinuxTracingIntegrationTestPuppetConstants {
-  LinuxTracingIntegrationTestPuppetConstants() = delete;
+struct IntegrationTestPuppetConstants {
+  IntegrationTestPuppetConstants() = delete;
 
   constexpr static uint64_t kSleepCount = 1000;
 
@@ -26,7 +26,7 @@ struct LinuxTracingIntegrationTestPuppetConstants {
   constexpr static const char* kNewThreadName = "Thread Name";
 
   constexpr static const char* kSharedObjectFileName =
-      "libLinuxTracingIntegrationTestPuppetSharedObject.so";
+      "libIntegrationTestPuppetSharedObject.so";
 
   constexpr static uint64_t kFrameCount = 60;
 
@@ -39,7 +39,7 @@ struct LinuxTracingIntegrationTestPuppetConstants {
   constexpr static const char* kDoneResponse = "DONE";
 };
 
-int LinuxTracingIntegrationTestPuppetMain();
+int IntegrationTestPuppetMain();
 
 }  // namespace orbit_linux_tracing_integration_tests
 
