@@ -15,6 +15,7 @@
 #include <memory>
 #include <optional>
 
+#include "MetricsUploader/ScopedMetric.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
@@ -28,6 +29,8 @@ using orbit_ggp::Instance;
 using orbit_ggp::Project;
 using LoadProjectsAndInstancesResult = RetrieveInstances::LoadProjectsAndInstancesResult;
 using InstanceListScope = orbit_ggp::Client::InstanceListScope;
+using orbit_metrics_uploader::OrbitLogEvent;
+using orbit_metrics_uploader::ScopedMetric;
 
 RetrieveInstancesWidget::~RetrieveInstancesWidget() = default;
 
@@ -93,7 +96,15 @@ InstanceListScope RetrieveInstancesWidget::GetSelectedInstanceListScope() const 
 void RetrieveInstancesWidget::InitialLoad(const std::optional<Project>& remembered_project) {
   CHECK(ui_->projectComboBox->count() == 0);
   emit LoadingStarted();
+  ScopedMetric metric{metrics_uploader_, OrbitLogEvent::ORBIT_INSTANCES_INITIAL_LOAD};
   retrieve_instances_->LoadProjectsAndInstances(remembered_project, GetSelectedInstanceListScope())
+      .Then(main_thread_executor_.get(),
+            // The metric gets its own future continuation, so the time measured is only the
+            // time that the call took.
+            [metric = std::move(metric)](auto loading_result) mutable {
+              if (loading_result.has_error()) metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
+              return loading_result;
+            })
       .Then(main_thread_executor_.get(),
             [this](ErrorMessageOr<LoadProjectsAndInstancesResult> loading_result) {
               // `this` still exists when this lambda is executed. This is enforced, because
