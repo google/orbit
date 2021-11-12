@@ -32,6 +32,7 @@ target_sources(IntegrationTestCommons PRIVATE
         IntegrationTestUtils.h)
 
 target_link_libraries(IntegrationTestCommons PUBLIC
+        ApiInterface
         GrpcProtos
         ObjectUtils
         OrbitBase
@@ -68,6 +69,8 @@ target_sources(OrbitServiceIntegrationTests PRIVATE
         IntegrationTestPuppet.h)
 
 target_link_libraries(OrbitServiceIntegrationTests PRIVATE
+        ApiInterface
+        ApiUtils
         GrpcProtos
         IntegrationTestCommons
         ObjectUtils

@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #include <array>
+#include <cstdlib>
 
 namespace orbit_linux_tracing_integration_tests {
 
@@ -30,11 +31,44 @@ struct IntegrationTestPuppetConstants {
 
   constexpr static uint64_t kFrameCount = 60;
 
+  constexpr static const char* kUseOrbitApiFunctionName = "UseOrbitApi";
+  constexpr static uint64_t kOrbitApiUsageCount = 5;
+  constexpr static const char* kOrbitApiScopeName = "Scope";
+  constexpr static uint32_t kOrbitApiScopeColor = 0x11111111;
+  constexpr static uint32_t kOrbitApiScopeGroupId = 1;
+  constexpr static const char* kOrbitApiStartName = "Start";
+  constexpr static uint32_t kOrbitApiStartColor = 0x22222222;
+  constexpr static uint32_t kOrbitApiStartGroupId = 2;
+  constexpr static const char* kOrbitApiAsyncStringName = "AsyncString";
+  constexpr static uint32_t kOrbitApiAsyncStringColor = 0x33333333;
+  constexpr static const char* kOrbitApiStartAsyncName = "StartAsync";
+  constexpr static uint32_t kOrbitApiStartAsyncId = 3;
+  constexpr static uint32_t kOrbitApiStartAsyncColor = 0x44444444;
+  constexpr static const char* kOrbitApiIntName = "Int";
+  constexpr static int32_t kOrbitApiIntValue = -42;
+  constexpr static uint32_t kOrbitApiIntColor = 0x55555555;
+  constexpr static const char* kOrbitApiUintName = "Uint";
+  constexpr static int32_t kOrbitApiUintValue = 42;
+  constexpr static uint32_t kOrbitApiUintColor = 0x66666666;
+  constexpr static const char* kOrbitApiInt64Name = "Int64";
+  constexpr static int32_t kOrbitApiInt64Value = -43;
+  constexpr static uint32_t kOrbitApiInt64Color = 0x77777777;
+  constexpr static const char* kOrbitApiUint64Name = "Uint64";
+  constexpr static int32_t kOrbitApiUint64Value = 43;
+  constexpr static uint32_t kOrbitApiUint64Color = 0x88888888;
+  constexpr static const char* kOrbitApiFloatName = "Float";
+  constexpr static int32_t kOrbitApiFloatValue = 44.0f;
+  constexpr static uint32_t kOrbitApiFloatColor = 0x99999999;
+  constexpr static const char* kOrbitApiDoubleName = "Double";
+  constexpr static int32_t kOrbitApiDoubleValue = 45.0;
+  constexpr static uint32_t kOrbitApiDoubleColor = 0xAAAAAAAA;
+
   constexpr static const char* kSleepCommand = "sleep";
   constexpr static const char* kCallOuterFunctionCommand = "CallOuterFunction";
   constexpr static const char* kPthreadSetnameNpCommand = "pthread_setname_np";
   constexpr static const char* kDlopenCommand = "dlopen";
   constexpr static const char* kVulkanTutorialCommand = "VulkanTutorial";
+  constexpr static const char* kOrbitApiCommand = "OrbitApi";
 
   constexpr static const char* kDoneResponse = "DONE";
 };
