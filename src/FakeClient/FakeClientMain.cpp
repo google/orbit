@@ -305,8 +305,8 @@ int main(int argc, char* argv[]) {
   if (process_id == 0) {
     const std::string pid_file_path = absl::GetFlag(FLAGS_pid_file_path);
     FAIL_IF(pid_file_path.empty(), "A PID or a path to a file is needed.");
-    WaitForFileModification(absl::GetFlag(FLAGS_pid_file_path));
-    process_id = ReadPidFromFile(absl::GetFlag(FLAGS_pid_file_path));
+    WaitForFileModification(pid_file_path);
+    process_id = ReadPidFromFile(pid_file_path);
   }
   LOG("process_id=%d", process_id);
   FAIL_IF(process_id == 0, "PID to capture not specified");
