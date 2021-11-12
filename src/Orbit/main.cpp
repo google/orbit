@@ -88,10 +88,10 @@ void RunUiInstance(const DeploymentConfiguration& deployment_configuration,
   std::unique_ptr<orbit_metrics_uploader::MetricsUploader> metrics_uploader =
       orbit_metrics_uploader::MetricsUploader::CreateMetricsUploader();
   metrics_uploader->SendLogEvent(
-      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_METRICS_UPLOADER_START);
+      orbit_metrics_uploader::OrbitLogEvent::ORBIT_METRICS_UPLOADER_START);
 
-  orbit_metrics_uploader::ScopedMetric metric{
-      metrics_uploader.get(), orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_EXIT};
+  orbit_metrics_uploader::ScopedMetric metric{metrics_uploader.get(),
+                                              orbit_metrics_uploader::OrbitLogEvent::ORBIT_EXIT};
 
   // If Orbit starts with loading a capture file, we skip SessionSetupDialog and create a
   // FileTarget from capture_file_path. After creating the FileTarget, we reset

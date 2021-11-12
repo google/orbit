@@ -183,7 +183,7 @@ void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
 
   } else if (action == kMenuActionDelete) {
     orbit_metrics_uploader::ScopedMetric metric{
-        metrics_uploader_, orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_PRESET_DELETE};
+        metrics_uploader_, orbit_metrics_uploader::OrbitLogEvent::ORBIT_PRESET_DELETE};
     int row = item_indices[0];
     const PresetFile& preset = GetPreset(row);
     const std::string& filename = preset.file_path().string();

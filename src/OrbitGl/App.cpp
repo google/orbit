@@ -1093,8 +1093,7 @@ void OrbitApp::SetClipboard(const std::string& text) {
 }
 
 ErrorMessageOr<void> OrbitApp::OnSavePreset(const std::string& filename) {
-  ScopedMetric metric{metrics_uploader_,
-                      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_PRESET_SAVE};
+  ScopedMetric metric{metrics_uploader_, orbit_metrics_uploader::OrbitLogEvent::ORBIT_PRESET_SAVE};
   auto save_result = SavePreset(filename);
   if (save_result.has_error()) {
     metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_INTERNAL_ERROR);
@@ -1441,8 +1440,8 @@ void OrbitApp::StopCapture() {
   auto capture_time_us =
       std::chrono::duration<double, std::micro>(GetTimeGraph()->GetCaptureTimeSpanUs());
   auto capture_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(capture_time_us);
-  metrics_uploader_->SendLogEvent(
-      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_CAPTURE_DURATION, capture_time_ms);
+  metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_CAPTURE_DURATION,
+                                  capture_time_ms);
 
   CHECK(capture_stop_requested_callback_);
   capture_stop_requested_callback_();
@@ -1615,8 +1614,7 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
 
 orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
     const std::string& module_path, const std::string& build_id) {
-  ScopedMetric metric(metrics_uploader_,
-                      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_SYMBOL_LOAD);
+  ScopedMetric metric(metrics_uploader_, orbit_metrics_uploader::OrbitLogEvent::ORBIT_SYMBOL_LOAD);
 
   const ModuleData* const module_data = GetModuleByPathAndBuildId(module_path, build_id);
   if (module_data == nullptr) {
@@ -1987,8 +1985,7 @@ void OrbitApp::EnableFrameTracksByName(const ModuleData* module,
 }
 
 void OrbitApp::LoadPreset(const PresetFile& preset_file) {
-  ScopedMetric metric{metrics_uploader_,
-                      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_PRESET_LOAD};
+  ScopedMetric metric{metrics_uploader_, orbit_metrics_uploader::OrbitLogEvent::ORBIT_PRESET_LOAD};
   std::vector<orbit_base::Future<std::string>> load_module_results{};
   auto module_paths = preset_file.GetModulePaths();
   load_module_results.reserve(module_paths.size());

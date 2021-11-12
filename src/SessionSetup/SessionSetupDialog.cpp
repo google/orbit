@@ -146,7 +146,7 @@ SessionSetupDialog::SessionSetupDialog(SshConnectionArtifacts* ssh_connection_ar
   }
 
   metrics_uploader_->SendLogEvent(
-      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_SESSION_SETUP_WINDOW_OPEN);
+      orbit_metrics_uploader::OrbitLogEvent::ORBIT_SESSION_SETUP_WINDOW_OPEN);
 }
 
 void SessionSetupDialog::SetStateMachineInitialState() {
@@ -176,7 +176,7 @@ std::optional<TargetConfiguration> SessionSetupDialog::Exec() {
   state_machine_.stop();
 
   metrics_uploader_->SendLogEvent(
-      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_SESSION_SETUP_WINDOW_CLOSE);
+      orbit_metrics_uploader::OrbitLogEvent::ORBIT_SESSION_SETUP_WINDOW_CLOSE);
 
   if (rc != QDialog::Accepted) return std::nullopt;
 

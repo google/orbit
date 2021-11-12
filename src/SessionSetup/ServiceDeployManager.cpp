@@ -564,7 +564,7 @@ void ServiceDeployManager::StartWatchdog() {
 outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::Exec(
     orbit_metrics_uploader::MetricsUploader* metrics_uploader) {
   orbit_metrics_uploader::ScopedMetric connect_metric{
-      metrics_uploader, orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_INSTANCE_CONNECT};
+      metrics_uploader, orbit_metrics_uploader::OrbitLogEvent::ORBIT_INSTANCE_CONNECT};
 
   outcome::result<GrpcPort> result = outcome::success(GrpcPort{0});
   DeferToBackgroundThreadAndWait(this, [&]() { result = ExecImpl(); });
