@@ -16,7 +16,8 @@ inline bool AbslParseFlag(absl::string_view text, EventProcessorType* out, std::
   if (text == kEventProcessorFakeString) {
     *out = EventProcessorType::kFake;
     return true;
-  } else if (text == kEventProcessorVulkanLayerString) {
+  }
+  if (text == kEventProcessorVulkanLayerString) {
     *out = EventProcessorType::kVulkanLayer;
     return true;
   }

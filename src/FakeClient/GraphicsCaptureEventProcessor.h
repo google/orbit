@@ -145,11 +145,11 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
   }
 
   uint64_t CalculateFrameGpuTime(std::vector<CommandBufferTimestamps> command_buffers_timestamps) {
-    // The frame gpu time is calculated as the union of all the command buffer intervals, to do this
-    // we sort the command buffer by starting time and compute the length of the union of all
+    // The frame gpu time is calculated as the union of all the command buffer intervals; to do
+    // this, we sort the command buffer by starting time and compute the length of the union of all
     // intervals.
     //
-    // There's no guaranteed that the submission order is mantained through the execution, command
+    // There's no guarantee that the submission order is mantained throughout the execution; command
     // buffers that belong to different queues are executed in parallel or they can be executed out
     // of order because there isn't any depedency between them. So to get the correct results the
     // array needs to be sorted first.
