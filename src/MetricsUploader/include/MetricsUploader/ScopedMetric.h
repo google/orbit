@@ -26,7 +26,7 @@ class ScopedMetric {
  private:
   MetricsUploader* uploader_;
   OrbitLogEvent_LogEventType log_event_type_;
-  OrbitLogEvent_StatusCode status_code_ = OrbitLogEvent_StatusCode_SUCCESS;
+  OrbitLogEvent_StatusCode status_code_ = OrbitLogEvent::SUCCESS;
   std::chrono::steady_clock::time_point start_;
 };
 

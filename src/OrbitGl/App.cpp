@@ -1096,7 +1096,7 @@ ErrorMessageOr<void> OrbitApp::OnSavePreset(const std::string& filename) {
   ScopedMetric metric{metrics_uploader_, orbit_metrics_uploader::OrbitLogEvent::ORBIT_PRESET_SAVE};
   auto save_result = SavePreset(filename);
   if (save_result.has_error()) {
-    metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_INTERNAL_ERROR);
+    metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
     return save_result.error();
   }
   ListPresets();
@@ -1213,13 +1213,13 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
     }
 
     if (load_result.has_error()) {
-      metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_INTERNAL_ERROR);
+      metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
       return load_result;
     }
 
     switch (load_result.value()) {
       case CaptureOutcome::kCancelled:
-        metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_CANCELLED);
+        metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::CANCELLED);
         break;
       case CaptureOutcome::kComplete:
         OnCaptureComplete();
@@ -1618,7 +1618,7 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
 
   const ModuleData* const module_data = GetModuleByPathAndBuildId(module_path, build_id);
   if (module_data == nullptr) {
-    metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_INTERNAL_ERROR);
+    metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
     return {ErrorMessage{absl::StrFormat("Module \"%s\" was not found", module_path)}};
   }
   if (module_data->is_loaded()) return {outcome::success()};
@@ -1630,12 +1630,12 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
             return LoadSymbols(local_file_path, module_path, build_id);
           }));
 
-  load_result.Then(main_thread_executor_, [metric = std::move(metric)](
-                                              const ErrorMessageOr<void>& result) mutable {
-    if (result.has_error()) {
-      metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_INTERNAL_ERROR);
-    }
-  });
+  load_result.Then(main_thread_executor_,
+                   [metric = std::move(metric)](const ErrorMessageOr<void>& result) mutable {
+                     if (result.has_error()) {
+                       metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
+                     }
+                   });
 
   return load_result;
 }
@@ -2019,7 +2019,7 @@ void OrbitApp::LoadPreset(const PresetFile& preset_file) {
         module_paths_not_found.end());
 
     if (tried_to_load_amount == module_paths_not_found.size()) {
-      metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_INTERNAL_ERROR);
+      metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
       SendErrorToUi("Preset loading failed",
                     absl::StrFormat("None of the modules of the preset were loaded:\n* %s",
                                     absl::StrJoin(module_paths_not_found, "\n* ")));

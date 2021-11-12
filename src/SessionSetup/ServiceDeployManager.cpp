@@ -571,10 +571,10 @@ outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::Exec(
 
   if (!result.has_value()) {
     if (result.error() == make_error_code(Error::kUserCanceledServiceDeployment)) {
-      connect_metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_CANCELLED);
+      connect_metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::CANCELLED);
       LOG("OrbitService deployment has been aborted by the user");
     } else {
-      connect_metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_INTERNAL_ERROR);
+      connect_metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
       LOG("Deployment successful, grpc_port: %d", result.value().grpc_port);
     }
   }

@@ -107,7 +107,7 @@ TEST(CaptureMetric, SendCaptureFailed) {
       .Times(1)
       .WillOnce(
           [](const OrbitCaptureData& capture_data, OrbitLogEvent_StatusCode status_code) -> bool {
-            EXPECT_EQ(status_code, OrbitLogEvent_StatusCode_INTERNAL_ERROR);
+            EXPECT_EQ(status_code, OrbitLogEvent::INTERNAL_ERROR);
             EXPECT_GE(capture_data.duration_in_milliseconds(), 5);
             EXPECT_TRUE(HasSameCaptureStartData(capture_data, kTestStartData));
             EXPECT_TRUE(HasSameCaptureCompleteData(capture_data, kTestCompleteData));
@@ -127,7 +127,7 @@ TEST(CaptureMetric, SendCaptureCancelled) {
       .Times(1)
       .WillOnce(
           [](const OrbitCaptureData& capture_data, OrbitLogEvent_StatusCode status_code) -> bool {
-            EXPECT_EQ(status_code, OrbitLogEvent_StatusCode_CANCELLED);
+            EXPECT_EQ(status_code, OrbitLogEvent::CANCELLED);
             EXPECT_GE(capture_data.duration_in_milliseconds(), 5);
             EXPECT_TRUE(HasSameCaptureStartData(capture_data, kTestStartData));
             EXPECT_TRUE(HasSameCaptureCompleteData(capture_data, kTestCompleteData));
@@ -147,7 +147,7 @@ TEST(CaptureMetric, SendCaptureSucceeded) {
       .Times(1)
       .WillOnce(
           [](const OrbitCaptureData& capture_data, OrbitLogEvent_StatusCode status_code) -> bool {
-            EXPECT_EQ(status_code, OrbitLogEvent_StatusCode_SUCCESS);
+            EXPECT_EQ(status_code, OrbitLogEvent::SUCCESS);
             EXPECT_EQ(capture_data.duration_in_milliseconds(), 51);
             EXPECT_TRUE(HasSameCaptureStartData(capture_data, kTestStartData));
             EXPECT_TRUE(HasSameCaptureCompleteData(capture_data, kTestCompleteData));
@@ -166,7 +166,7 @@ TEST(CaptureMetric, SendCaptureSucceededWithoutCompleteData) {
       .Times(1)
       .WillOnce(
           [](const OrbitCaptureData& capture_data, OrbitLogEvent_StatusCode status_code) -> bool {
-            EXPECT_EQ(status_code, OrbitLogEvent_StatusCode_SUCCESS);
+            EXPECT_EQ(status_code, OrbitLogEvent::SUCCESS);
             EXPECT_EQ(capture_data.duration_in_milliseconds(), 5);
             EXPECT_TRUE(HasSameCaptureStartData(capture_data, kTestStartData));
             EXPECT_TRUE(HasSameCaptureCompleteData(capture_data, {}));
@@ -187,7 +187,7 @@ TEST(CaptureMetric, SendCaptureWithFile) {
       .Times(1)
       .WillOnce([kTestFileSize](const OrbitCaptureData& capture_data,
                                 OrbitLogEvent_StatusCode status_code) -> bool {
-        EXPECT_EQ(status_code, OrbitLogEvent_StatusCode_SUCCESS);
+        EXPECT_EQ(status_code, OrbitLogEvent::SUCCESS);
         EXPECT_EQ(capture_data.duration_in_milliseconds(), 5);
         EXPECT_TRUE(HasSameCaptureStartData(capture_data, kTestStartData));
         EXPECT_EQ(capture_data.file_size(), kTestFileSize);
@@ -210,7 +210,7 @@ TEST(CaptureMetric, SendCaptureWithoutFile) {
       .Times(1)
       .WillOnce(
           [](const OrbitCaptureData& capture_data, OrbitLogEvent_StatusCode status_code) -> bool {
-            EXPECT_EQ(status_code, OrbitLogEvent_StatusCode_SUCCESS);
+            EXPECT_EQ(status_code, OrbitLogEvent::SUCCESS);
             EXPECT_EQ(capture_data.duration_in_milliseconds(), 5);
             EXPECT_TRUE(HasSameCaptureStartData(capture_data, kTestStartData));
             EXPECT_EQ(capture_data.number_of_gpu_activity_timers(), 5);
