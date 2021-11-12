@@ -21,6 +21,7 @@
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "SessionSetup/PersistentStorage.h"
 #include "SessionSetup/RetrieveInstances.h"
+#include "orbit_log_event.pb.h"
 #include "ui_RetrieveInstancesWidget.h"
 
 namespace orbit_session_setup {
@@ -207,6 +208,10 @@ std::optional<orbit_ggp::Project> RetrieveInstancesWidget::GetSelectedProject() 
 
 void RetrieveInstancesWidget::OnProjectComboBoxCurrentIndexChanged() {
   std::optional<Project> selected_project = GetSelectedProject();
+
+  if (metrics_uploader_ != nullptr) {
+    metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_PROJECT_CHANGED);
+  }
 
   emit LoadingStarted();
   retrieve_instances_->LoadInstances(selected_project, GetSelectedInstanceListScope())
