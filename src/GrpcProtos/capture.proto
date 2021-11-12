@@ -685,7 +685,8 @@ message FunctionThatFailedToBeInstrumented {
 
 message InfoEnablingUserSpaceInstrumentationEvent {
   uint64 timestamp_ns = 1;
-  repeated FunctionThatFailedToBeInstrumented functions_that_failed_to_instrument = 2;
+  repeated FunctionThatFailedToBeInstrumented
+      functions_that_failed_to_instrument = 2;
 }
 
 message ClockResolutionEvent {
