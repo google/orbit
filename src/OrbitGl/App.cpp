@@ -2660,6 +2660,10 @@ void OrbitApp::JumpToTimerAndZoom(uint64_t function_id, JumpToTimerMode selectio
   }
 }
 
+std::vector<const TimerInfo*> OrbitApp::GetAllTimersForHookedFunction(uint64_t function_id) const {
+  return GetTimeGraph()->GetAllTimersForHookedFunction(function_id);
+}
+
 void OrbitApp::RefreshFrameTracks() {
   CHECK(HasCaptureData());
   CHECK(std::this_thread::get_id() == main_thread_id_);

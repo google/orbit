@@ -382,7 +382,7 @@ void TimeGraph::ProcessCGroupAndProcessMemoryTrackingTimer(const TimerInfo& time
   track->OnTimer(timer_info);
 }
 
-void TimeGraph::ProcessPageFaultsTrackingTimer(const orbit_client_protos::TimerInfo& timer_info) {
+void TimeGraph::ProcessPageFaultsTrackingTimer(const TimerInfo& timer_info) {
   uint64_t cgroup_name_hash = timer_info.registers(
       static_cast<size_t>(CaptureEventProcessor::PageFaultsEncodingIndex::kCGroupNameHash));
   std::string cgroup_name = app_->GetStringManager()->Get(cgroup_name_hash).value_or("");
@@ -456,14 +456,14 @@ void TimeGraph::SelectAndMakeVisible(const TimerInfo* timer_info) {
 const TimerInfo* TimeGraph::FindPreviousFunctionCall(uint64_t function_address,
                                                      uint64_t current_time,
                                                      std::optional<uint32_t> thread_id) const {
-  const orbit_client_protos::TimerInfo* previous_timer = nullptr;
+  const TimerInfo* previous_timer = nullptr;
   uint64_t goal_time = std::numeric_limits<uint64_t>::lowest();
   std::vector<const TimerChain*> chains = GetAllThreadTrackTimerChains();
   for (const TimerChain* chain : chains) {
     for (const auto& block : *chain) {
       if (!block.Intersects(goal_time, current_time)) continue;
       for (uint64_t i = 0; i < block.size(); i++) {
-        const orbit_client_protos::TimerInfo& timer_info = block[i];
+        const TimerInfo& timer_info = block[i];
         auto timer_end_time = timer_info.end();
         if ((timer_info.function_id() == function_address) &&
             (!thread_id || thread_id.value() == timer_info.thread_id()) &&
@@ -479,7 +479,7 @@ const TimerInfo* TimeGraph::FindPreviousFunctionCall(uint64_t function_address,
 
 const TimerInfo* TimeGraph::FindNextFunctionCall(uint64_t function_address, uint64_t current_time,
                                                  std::optional<uint32_t> thread_id) const {
-  const orbit_client_protos::TimerInfo* next_timer = nullptr;
+  const TimerInfo* next_timer = nullptr;
   uint64_t goal_time = std::numeric_limits<uint64_t>::max();
   std::vector<const TimerChain*> chains = GetAllThreadTrackTimerChains();
   for (const TimerChain* chain : chains) {
@@ -487,7 +487,7 @@ const TimerInfo* TimeGraph::FindNextFunctionCall(uint64_t function_address, uint
     for (const auto& block : *chain) {
       if (!block.Intersects(current_time, goal_time)) continue;
       for (uint64_t i = 0; i < block.size(); i++) {
-        const orbit_client_protos::TimerInfo& timer_info = block[i];
+        const TimerInfo& timer_info = block[i];
         auto timer_end_time = timer_info.end();
         if ((timer_info.function_id() == function_address) &&
             (!thread_id || thread_id.value() == timer_info.thread_id()) &&
@@ -499,6 +499,22 @@ const TimerInfo* TimeGraph::FindNextFunctionCall(uint64_t function_address, uint
     }
   }
   return next_timer;
+}
+
+std::vector<const TimerInfo*> TimeGraph::GetAllTimersForHookedFunction(
+    uint64_t function_address) const {
+  std::vector<const TimerInfo*> timers;
+  std::vector<const TimerChain*> chains = GetAllThreadTrackTimerChains();
+  for (const TimerChain* chain : chains) {
+    CHECK(chain != nullptr);
+    for (const auto& block : *chain) {
+      for (uint64_t i = 0; i < block.size(); i++) {
+        const TimerInfo& timer = block[i];
+        if (timer.function_id() == function_address) timers.push_back(&timer);
+      }
+    }
+  }
+  return timers;
 }
 
 void TimeGraph::RequestUpdate() {
@@ -650,14 +666,13 @@ void TimeGraph::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
     return;
   }
 
-  std::vector<std::pair<uint64_t, const orbit_client_protos::TimerInfo*>> timers(
-      iterator_timer_info_.size());
+  std::vector<std::pair<uint64_t, const TimerInfo*>> timers(iterator_timer_info_.size());
   std::copy(iterator_timer_info_.begin(), iterator_timer_info_.end(), timers.begin());
 
   // Sort timers by start time.
   std::sort(timers.begin(), timers.end(),
-            [](const std::pair<uint64_t, const orbit_client_protos::TimerInfo*>& timer_a,
-               const std::pair<uint64_t, const orbit_client_protos::TimerInfo*>& timer_b) -> bool {
+            [](const std::pair<uint64_t, const TimerInfo*>& timer_a,
+               const std::pair<uint64_t, const TimerInfo*>& timer_b) -> bool {
               return timer_a.second->start() < timer_b.second->start();
             });
 
@@ -833,7 +848,7 @@ void TimeGraph::JumpToNeighborTimer(const TimerInfo* from, JumpDirection jump_di
       !TrackManager::FunctionIteratableType(from->type())) {
     jump_scope = JumpScope::kSameDepth;
   }
-  const orbit_client_protos::TimerInfo* goal = nullptr;
+  const TimerInfo* goal = nullptr;
   auto function_id = from->function_id();
   auto current_time = from->end();
   auto thread_id = from->thread_id();
@@ -905,13 +920,13 @@ const TimerInfo* TimeGraph::FindDown(const TimerInfo& from) {
 
 std::pair<const TimerInfo*, const TimerInfo*> TimeGraph::GetMinMaxTimerInfoForFunction(
     uint64_t function_id) const {
-  const orbit_client_protos::TimerInfo* min_timer = nullptr;
-  const orbit_client_protos::TimerInfo* max_timer = nullptr;
+  const TimerInfo* min_timer = nullptr;
+  const TimerInfo* max_timer = nullptr;
   std::vector<const TimerChain*> chains = GetAllThreadTrackTimerChains();
   for (const TimerChain* chain : chains) {
     for (const auto& block : *chain) {
       for (size_t i = 0; i < block.size(); i++) {
-        const orbit_client_protos::TimerInfo& timer_info = block[i];
+        const TimerInfo& timer_info = block[i];
         if (timer_info.function_id() != function_id) continue;
 
         uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
