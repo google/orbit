@@ -69,6 +69,7 @@ static inline const char* GetErrorCodeString(ErrorCode error) {
     case ERROR_SYSTEM_CALL:
       return "System Call Failed";
   }
+  return "";
 }
 
 struct ErrorData {
