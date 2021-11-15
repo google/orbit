@@ -250,7 +250,7 @@ bool MetricsUploaderImpl::SendLogEvent(OrbitLogEvent_LogEventType log_event_type
 bool MetricsUploaderImpl::SendCaptureEvent(OrbitCaptureData capture_data,
                                            OrbitLogEvent_StatusCode status_code) {
   OrbitLogEvent log_event;
-  log_event.set_log_event_type(OrbitLogEvent_LogEventType_ORBIT_CAPTURE_END);
+  log_event.set_log_event_type(OrbitLogEvent::ORBIT_CAPTURE_END);
   *log_event.mutable_orbit_capture_data() = std::move(capture_data);
   log_event.set_status_code(status_code);
   return FillAndSendLogEvent(log_event);

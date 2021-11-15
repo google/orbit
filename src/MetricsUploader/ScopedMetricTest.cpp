@@ -34,26 +34,26 @@ class MockUploader : public MetricsUploader {
 };
 
 TEST(ScopedMetric, Constructor) {
-  { ScopedMetric metric{nullptr, OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_OPEN}; }
+  { ScopedMetric metric{nullptr, OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN}; }
 
   MockUploader uploader{};
 
-  EXPECT_CALL(uploader, SendLogEvent(OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_OPEN, _,
+  EXPECT_CALL(uploader, SendLogEvent(OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN, _,
                                      OrbitLogEvent_StatusCode_SUCCESS))
       .Times(1);
 
-  { ScopedMetric metric{&uploader, OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_OPEN}; }
+  { ScopedMetric metric{&uploader, OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN}; }
 }
 
 TEST(ScopedMetric, SetStatusCode) {
   MockUploader uploader{};
 
-  EXPECT_CALL(uploader, SendLogEvent(OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_OPEN, _,
+  EXPECT_CALL(uploader, SendLogEvent(OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN, _,
                                      OrbitLogEvent_StatusCode_CANCELLED))
       .Times(1);
 
   {
-    ScopedMetric metric{&uploader, OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_OPEN};
+    ScopedMetric metric{&uploader, OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN};
     metric.SetStatusCode(OrbitLogEvent_StatusCode_CANCELLED);
   }
 }
@@ -63,12 +63,12 @@ TEST(ScopedMetric, Sleep) {
 
   std::chrono::milliseconds sleep_time{1};
 
-  EXPECT_CALL(uploader, SendLogEvent(OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_OPEN,
-                                     Ge(sleep_time), OrbitLogEvent_StatusCode_SUCCESS))
+  EXPECT_CALL(uploader, SendLogEvent(OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN, Ge(sleep_time),
+                                     OrbitLogEvent_StatusCode_SUCCESS))
       .Times(1);
 
   {
-    ScopedMetric metric{&uploader, OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_OPEN};
+    ScopedMetric metric{&uploader, OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN};
     std::this_thread::sleep_for(sleep_time);
   }
 }
@@ -78,12 +78,12 @@ TEST(ScopedMetric, MoveAndSleep) {
 
   std::chrono::milliseconds sleep_time{1};
 
-  EXPECT_CALL(uploader, SendLogEvent(OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_OPEN,
-                                     Ge(sleep_time * 2), OrbitLogEvent_StatusCode_SUCCESS))
+  EXPECT_CALL(uploader, SendLogEvent(OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN, Ge(sleep_time * 2),
+                                     OrbitLogEvent_StatusCode_SUCCESS))
       .Times(1);
 
   {
-    ScopedMetric metric{&uploader, OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_OPEN};
+    ScopedMetric metric{&uploader, OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN};
     std::this_thread::sleep_for(sleep_time);
 
     [metric = std::move(metric), sleep_time]() { std::this_thread::sleep_for(sleep_time); }();

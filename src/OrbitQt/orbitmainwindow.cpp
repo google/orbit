@@ -196,8 +196,7 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
 
   LoadCaptureOptionsIntoApp();
 
-  metrics_uploader_->SendLogEvent(
-      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_OPEN);
+  metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN);
 
   // SymbolPaths.txt deprecation code
   // If file does not exist, do nothing. (It means the user never used an older Orbit version or
@@ -1475,8 +1474,7 @@ void OrbitMainWindow::Exit(int return_code) {
     introspection_widget_->close();
   }
 
-  metrics_uploader_->SendLogEvent(
-      orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_MAIN_WINDOW_CLOSE);
+  metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_MAIN_WINDOW_CLOSE);
 
   QApplication::exit(return_code);
 }
