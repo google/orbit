@@ -677,6 +677,18 @@ message ErrorEnablingUserSpaceInstrumentationEvent {
   bytes message = 2;
 }
 
+message FunctionThatFailedToBeInstrumented {
+  uint64 function_id = 1;
+  // This is a string, we use bytes to avoid UTF-8 validation.
+  bytes error_message = 2;
+}
+
+message WarningInstrumentingWithUserSpaceInstrumentationEvent {
+  uint64 timestamp_ns = 1;
+  repeated FunctionThatFailedToBeInstrumented
+      functions_that_failed_to_instrument = 2;
+}
+
 message ClockResolutionEvent {
   uint64 timestamp_ns = 1;
   uint64 clock_resolution_ns = 2;
@@ -708,7 +720,7 @@ message ClientCaptureEvent {
     // numbers starting with 16.
     //
     // Next high-frequency ID: 12
-    // Next lower-frequency ID: 48
+    // Next lower-frequency ID: 49
     // Please keep these alphabetically ordered.
 
     // Even though AddressInfo is a high-frequency event
@@ -752,6 +764,8 @@ message ClientCaptureEvent {
     ThreadStateSlice thread_state_slice = 7;
     TracepointEvent tracepoint_event = 8;
     WarningEvent warning_event = 32;
+    WarningInstrumentingWithUserSpaceInstrumentationEvent
+        warning_instrumenting_with_user_space_instrumentation_event = 48;
   }
 }
 
@@ -764,7 +778,7 @@ message ProducerCaptureEvent {
     // numbers starting with 16.
     //
     // Next high-frequency ID: 15
-    // Next lower-frequency ID: 47
+    // Next lower-frequency ID: 48
     //
     // Please keep these alphabetically ordered.
     ApiEvent api_event = 10;
@@ -811,5 +825,7 @@ message ProducerCaptureEvent {
     ThreadNamesSnapshot thread_names_snapshot = 24;
     ThreadStateSlice thread_state_slice = 9;
     WarningEvent warning_event = 30;
+    WarningInstrumentingWithUserSpaceInstrumentationEvent
+        warning_instrumenting_with_user_space_instrumentation_event = 47;
   }
 }

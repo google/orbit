@@ -64,6 +64,7 @@ using orbit_grpc_protos::ThreadNamesSnapshot;
 using orbit_grpc_protos::ThreadStateSlice;
 using orbit_grpc_protos::TracepointEvent;
 using orbit_grpc_protos::WarningEvent;
+using orbit_grpc_protos::WarningInstrumentingWithUserSpaceInstrumentationEvent;
 
 using google::protobuf::util::MessageDifferencer;
 using ::testing::ElementsAre;
@@ -2076,6 +2077,36 @@ TEST(ProducerEventProcessor, ErrorEnablingUserSpaceInstrumentationEvent) {
       client_capture_event.error_enabling_user_space_instrumentation_event();
   EXPECT_EQ(actual_error_event.timestamp_ns(), kTimestampNs1);
   EXPECT_EQ(actual_error_event.message(), kMessage);
+}
+
+TEST(ProducerEventProcessor, WarningInstrumentingWithUserSpaceInstrumentationEvent) {
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
+
+  ProducerCaptureEvent producer_capture_event;
+  WarningInstrumentingWithUserSpaceInstrumentationEvent* warning_event =
+      producer_capture_event.mutable_warning_instrumenting_with_user_space_instrumentation_event();
+  warning_event->set_timestamp_ns(kTimestampNs1);
+  constexpr int kFunctionId = 42;
+  constexpr const char* kErrorMessage = "error message";
+  auto function = warning_event->add_functions_that_failed_to_instrument();
+  function->set_function_id(kFunctionId);
+  function->set_error_message(kErrorMessage);
+
+  ClientCaptureEvent client_capture_event;
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+
+  producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
+
+  ASSERT_EQ(client_capture_event.event_case(),
+            ClientCaptureEvent::kWarningInstrumentingWithUserSpaceInstrumentationEvent);
+  const WarningInstrumentingWithUserSpaceInstrumentationEvent& actual_warning_event =
+      client_capture_event.warning_instrumenting_with_user_space_instrumentation_event();
+  EXPECT_EQ(actual_warning_event.timestamp_ns(), kTimestampNs1);
+  ASSERT_EQ(actual_warning_event.functions_that_failed_to_instrument_size(), 1);
+  EXPECT_EQ(actual_warning_event.functions_that_failed_to_instrument(0).function_id(), kFunctionId);
+  EXPECT_EQ(actual_warning_event.functions_that_failed_to_instrument(0).error_message(),
+            kErrorMessage);
 }
 
 TEST(ProducerEventProcessor, LostPerfRecordsEvent) {

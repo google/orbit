@@ -253,8 +253,10 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
     constexpr uint64_t kMaxFunctionPrologueBackupSize = 20;
     const uint64_t backup_size = std::min(kMaxFunctionPrologueBackupSize, function.function_size());
     if (backup_size == 0) {
-      // Can't instrument function of size zero
-      ERROR("Can't instrument function \"%s\" since it has size zero.", function.function_name());
+      const std::string message = absl::StrFormat(
+          "Can't instrument function \"%s\" since it has size zero.", function.function_name());
+      ERROR("%s", message);
+      result.function_ids_to_error_messages[function_id] = message;
       continue;
     }
     // Get all modules with the right path (usually one, but might be more) and get a function
@@ -282,7 +284,8 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
                              capstone_handle, relocation_map_);
         if (address_after_prologue_or_error.has_error()) {
           const std::string message = absl::StrFormat(
-              "Failed to create trampoline: %s", address_after_prologue_or_error.error().message());
+              "Can't instrument function \"%s\". Failed to create trampoline: %s",
+              function.function_name(), address_after_prologue_or_error.error().message());
           ERROR("%s", message);
           result.function_ids_to_error_messages[function_id] = message;
           OUTCOME_TRY(ReleaseMostRecentlyAllocatedTrampolineMemory(module_address_range));
@@ -302,7 +305,7 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
                                                 trampoline_data.trampoline_address);
       if (result_or_error.has_error()) {
         const std::string message =
-            absl::StrFormat("Unable to instrument \"%s\": %s", function.function_name(),
+            absl::StrFormat("Can't instrument function \"%s\": %s", function.function_name(),
                             result_or_error.error().message());
         ERROR("%s", message);
         result.function_ids_to_error_messages[function_id] = message;

@@ -5,6 +5,7 @@
 #ifndef CAPTURE_SERVICE_COMMON_PRODUCER_CAPTURE_EVENT_BUILDERS_H_
 #define CAPTURE_SERVICE_COMMON_PRODUCER_CAPTURE_EVENT_BUILDERS_H_
 
+#include <absl/container/flat_hash_map.h>
 #include <absl/time/time.h>
 #include <stdint.h>
 
@@ -28,6 +29,11 @@ namespace orbit_capture_service {
 
 [[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent
 CreateErrorEnablingUserSpaceInstrumentationEvent(uint64_t timestamp_ns, std::string message);
+
+[[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent
+CreateWarningInstrumentingWithUserSpaceInstrumentationEvent(
+    uint64_t timestamp_ns,
+    const absl::flat_hash_map<uint64_t, std::string>& function_ids_to_error_messages);
 
 [[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent CreateWarningEvent(uint64_t timestamp_ns,
                                                                          std::string message);

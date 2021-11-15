@@ -176,6 +176,11 @@ class IntrospectionCaptureListener : public orbit_capture_client::CaptureListene
       orbit_grpc_protos::ErrorEnablingUserSpaceInstrumentationEvent /*error_event*/) override {
     UNREACHABLE();
   }
+  void OnWarningInstrumentingWithUserSpaceInstrumentationEvent(
+      orbit_grpc_protos::WarningInstrumentingWithUserSpaceInstrumentationEvent /*warning_event*/)
+      override {
+    UNREACHABLE();
+  }
   void OnLostPerfRecordsEvent(
       orbit_grpc_protos::LostPerfRecordsEvent /*lost_perf_records_event*/) override {
     UNREACHABLE();

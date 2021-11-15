@@ -5,6 +5,7 @@
 #include "LinuxCaptureService/LinuxCaptureService.h"
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/strings/str_cat.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
 #include <stdint.h>
@@ -186,6 +187,8 @@ grpc::Status LinuxCaptureService::Capture(
 
   // Enable user space instrumentation.
   std::optional<std::string> error_enabling_user_space_instrumentation;
+  std::optional<orbit_grpc_protos::ProducerCaptureEvent>
+      info_from_enabling_user_space_instrumentation;
   std::unique_ptr<UserSpaceInstrumentationAddressesImpl> user_space_instrumentation_addresses;
   if (capture_options.dynamic_instrumentation_method() ==
           CaptureOptions::kUserSpaceInstrumentation &&
@@ -198,9 +201,18 @@ grpc::Status LinuxCaptureService::Capture(
     } else {
       FilterOutInstrumentedFunctionsFromCaptureOptions(
           result_or_error.value().instrumented_function_ids, linux_tracing_capture_options);
+
       LOG("User space instrumentation enabled for %u out of %u instrumented functions.",
           result_or_error.value().instrumented_function_ids.size(),
           capture_options.instrumented_functions_size());
+
+      if (!result_or_error.value().function_ids_to_error_messages.empty()) {
+        info_from_enabling_user_space_instrumentation =
+            orbit_capture_service::CreateWarningInstrumentingWithUserSpaceInstrumentationEvent(
+                capture_start_timestamp_ns_,
+                result_or_error.value().function_ids_to_error_messages);
+      }
+
       user_space_instrumentation_addresses =
           std::make_unique<UserSpaceInstrumentationAddressesImpl>(
               result_or_error.value().entry_trampoline_address_ranges,
@@ -224,6 +236,12 @@ grpc::Status LinuxCaptureService::Capture(
         orbit_capture_service::CreateErrorEnablingUserSpaceInstrumentationEvent(
             capture_start_timestamp_ns_,
             std::move(error_enabling_user_space_instrumentation.value())));
+  }
+
+  if (info_from_enabling_user_space_instrumentation.has_value()) {
+    producer_event_processor_->ProcessEvent(
+        orbit_grpc_protos::kRootProducerId,
+        std::move(info_from_enabling_user_space_instrumentation.value()));
   }
 
   std::unique_ptr<orbit_introspection::IntrospectionListener> introspection_listener;
