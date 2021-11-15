@@ -2,9 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CommandLineUtils.h"
+#include "CommandLineUtils/CommandLineUtils.h"
 
 #include <absl/container/flat_hash_set.h>
+
+namespace orbit_command_line_utils {
 
 QStringList ExtractCommandLineFlags(const std::vector<std::string>& command_line_args,
                                     const std::vector<char*>& positional_args) {
@@ -31,3 +33,5 @@ QStringList RemoveFlagsNotPassedToMainWindow(const QStringList& flags) {
 
   return result;
 }
+
+}  // namespace orbit_command_line_utils

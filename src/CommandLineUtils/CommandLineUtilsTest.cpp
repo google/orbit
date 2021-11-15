@@ -6,7 +6,9 @@
 
 #include <QStringList>
 
-#include "CommandLineUtils.h"
+#include "CommandLineUtils/CommandLineUtils.h"
+
+namespace orbit_command_line_utils {
 
 TEST(CommandLineUtils, RemoveFlagsNotPassedToMainWindow) {
   QStringList params{"--some_bool", "-b", "--connection_target=1234@target", "--some_flag"};
@@ -16,8 +18,8 @@ TEST(CommandLineUtils, RemoveFlagsNotPassedToMainWindow) {
 }
 
 TEST(CommandLineUtils, ExtractCommandLineFlags) {
-  char* pos_arg1 = "pos_arg";
-  char* pos_arg2 = "another_pos_arg";
+  char* pos_arg1 = strdup("pos_arg");
+  char* pos_arg2 = strdup("another_pos_arg");
 
   std::vector<std::string> command_line_args{"-b", "--test_arg", "--another_arg=something",
                                              pos_arg1, pos_arg2};
@@ -27,3 +29,5 @@ TEST(CommandLineUtils, ExtractCommandLineFlags) {
   QStringList expected{"-b", "--test_arg", "--another_arg=something"};
   EXPECT_EQ(expected, result);
 }
+
+}  // namespace orbit_command_line_utils
