@@ -287,9 +287,7 @@ class Capture(E2ETestCase):
         dynamic_instrumentation_method_combobox = self.find_control('ComboBox',
                                                                     'DynamicInstrumentationMethodComboBox',
                                                                     parent=capture_options_dialog)
-        left = dynamic_instrumentation_method_combobox.get_properties()['rectangle'].left
-        top = dynamic_instrumentation_method_combobox.get_properties()['rectangle'].top
-        mouse.click(button='left', coords=(left, top))
+        dynamic_instrumentation_method_combobox.click_input()
         if user_space_instrumentation:
             logging.info('Setting dynamic instrumentation method to "Orbit".')
             keyboard.send_keys('{DOWN}{ENTER}')
