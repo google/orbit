@@ -281,16 +281,20 @@ class Capture(E2ETestCase):
             logging.info('Toggling "Collect memory usage and page faults information" checkbox')
             collect_system_memory_usage_checkbox.click_input()
 
+        # Choosing the combo box entry with the 'select' function does not work reliably. So we click into the control
+        # to set the keyboard focus ('set_focus' does not work). Then we use the up, down and enter keys to select the
+        # entry.
         dynamic_instrumentation_method_combobox = self.find_control('ComboBox',
                                                                     'DynamicInstrumentationMethodComboBox',
                                                                     parent=capture_options_dialog)
+        dynamic_instrumentation_method_combobox.click_input()
         if user_space_instrumentation:
             logging.info('Setting dynamic instrumentation method to "Orbit".')
-            dynamic_instrumentation_method_combobox.select("Orbit")
+            keyboard.send_keys('{DOWN}{ENTER}')
         else:
             logging.info('Setting dynamic instrumentation method to "Kernel (Uprobes)".')
-            dynamic_instrumentation_method_combobox.select("Kernel (Uprobes)")
-  
+            keyboard.send_keys('{UP}{ENTER}')
+
         logging.info('Saving "Capture Options"')
         self.find_control('Button', 'OK', parent=capture_options_dialog).click_input()
 
