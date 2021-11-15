@@ -44,7 +44,6 @@ using orbit_grpc_protos::GpuDebugMarker;
 using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::GpuQueueSubmission;
 using orbit_grpc_protos::GpuSubmitInfo;
-using orbit_grpc_protos::InfoEnablingUserSpaceInstrumentationEvent;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
@@ -65,6 +64,7 @@ using orbit_grpc_protos::ThreadNamesSnapshot;
 using orbit_grpc_protos::ThreadStateSlice;
 using orbit_grpc_protos::TracepointEvent;
 using orbit_grpc_protos::WarningEvent;
+using orbit_grpc_protos::WarningInstrumentingWithUserSpaceInstrumentationEvent;
 
 using google::protobuf::util::MessageDifferencer;
 using ::testing::ElementsAre;
@@ -2079,17 +2079,17 @@ TEST(ProducerEventProcessor, ErrorEnablingUserSpaceInstrumentationEvent) {
   EXPECT_EQ(actual_error_event.message(), kMessage);
 }
 
-TEST(ProducerEventProcessor, InfoEnablingUserSpaceInstrumentationEvent) {
+TEST(ProducerEventProcessor, WarningInstrumentingWithUserSpaceInstrumentationEvent) {
   MockClientCaptureEventCollector collector;
   auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent producer_capture_event;
-  InfoEnablingUserSpaceInstrumentationEvent* info_event =
-      producer_capture_event.mutable_info_enabling_user_space_instrumentation_event();
-  info_event->set_timestamp_ns(kTimestampNs1);
+  WarningInstrumentingWithUserSpaceInstrumentationEvent* warning_event =
+      producer_capture_event.mutable_warning_instrumenting_with_user_space_instrumentation_event();
+  warning_event->set_timestamp_ns(kTimestampNs1);
   constexpr int kFunctionId = 42;
   constexpr const char* kErrorMessage = "error message";
-  auto function = info_event->add_functions_that_failed_to_instrument();
+  auto function = warning_event->add_functions_that_failed_to_instrument();
   function->set_function_id(kFunctionId);
   function->set_error_message(kErrorMessage);
 
@@ -2099,12 +2099,12 @@ TEST(ProducerEventProcessor, InfoEnablingUserSpaceInstrumentationEvent) {
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
 
   ASSERT_EQ(client_capture_event.event_case(),
-            ClientCaptureEvent::kInfoEnablingUserSpaceInstrumentationEvent);
-  const InfoEnablingUserSpaceInstrumentationEvent& actual_info_event =
-      client_capture_event.info_enabling_user_space_instrumentation_event();
-  EXPECT_EQ(actual_info_event.timestamp_ns(), kTimestampNs1);
-  EXPECT_EQ(actual_info_event.functions_that_failed_to_instrument(0).function_id(), kFunctionId);
-  EXPECT_EQ(actual_info_event.functions_that_failed_to_instrument(0).error_message(),
+            ClientCaptureEvent::kWarningInstrumentingWithUserSpaceInstrumentationEvent);
+  const WarningInstrumentingWithUserSpaceInstrumentationEvent& actual_warning_event =
+      client_capture_event.warning_instrumenting_with_user_space_instrumentation_event();
+  EXPECT_EQ(actual_warning_event.timestamp_ns(), kTimestampNs1);
+  EXPECT_EQ(actual_warning_event.functions_that_failed_to_instrument(0).function_id(), kFunctionId);
+  EXPECT_EQ(actual_warning_event.functions_that_failed_to_instrument(0).error_message(),
             kErrorMessage);
 }
 

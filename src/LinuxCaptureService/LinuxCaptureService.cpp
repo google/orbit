@@ -202,9 +202,12 @@ grpc::Status LinuxCaptureService::Capture(
       FilterOutInstrumentedFunctionsFromCaptureOptions(
           result_or_error.value().instrumented_function_ids, linux_tracing_capture_options);
 
-      info_from_enabling_user_space_instrumentation =
-          orbit_capture_service::CreateInfoEnablingUserSpaceInstrumentationEvent(
-              capture_start_timestamp_ns_, result_or_error.value().function_ids_to_error_messages);
+      if (result_or_error.value().function_ids_to_error_messages.size()) {
+        info_from_enabling_user_space_instrumentation =
+            orbit_capture_service::CreateWarningInstrumentingWithUserSpaceInstrumentationEvent(
+                capture_start_timestamp_ns_,
+                result_or_error.value().function_ids_to_error_messages);
+      }
 
       user_space_instrumentation_addresses =
           std::make_unique<UserSpaceInstrumentationAddressesImpl>(

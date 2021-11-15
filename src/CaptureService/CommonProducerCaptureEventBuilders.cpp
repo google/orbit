@@ -121,15 +121,15 @@ ProducerCaptureEvent CreateErrorEnablingUserSpaceInstrumentationEvent(uint64_t t
   return event;
 }
 
-ProducerCaptureEvent CreateInfoEnablingUserSpaceInstrumentationEvent(
+ProducerCaptureEvent CreateWarningInstrumentingWithUserSpaceInstrumentationEvent(
     uint64_t timestamp_ns,
     const absl::flat_hash_map<uint64_t, std::string>& function_ids_to_error_messages) {
   ProducerCaptureEvent event;
-  orbit_grpc_protos::InfoEnablingUserSpaceInstrumentationEvent* info_event =
-      event.mutable_info_enabling_user_space_instrumentation_event();
-  info_event->set_timestamp_ns(timestamp_ns);
+  orbit_grpc_protos::WarningInstrumentingWithUserSpaceInstrumentationEvent* warning_event =
+      event.mutable_warning_instrumenting_with_user_space_instrumentation_event();
+  warning_event->set_timestamp_ns(timestamp_ns);
   for (auto const& [id, error_message] : function_ids_to_error_messages) {
-    auto function = info_event->add_functions_that_failed_to_instrument();
+    auto function = warning_event->add_functions_that_failed_to_instrument();
     function->set_function_id(id);
     function->set_error_message(error_message);
   }

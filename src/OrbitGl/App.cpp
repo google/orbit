@@ -594,7 +594,7 @@ void OrbitApp::OnErrorEnablingUserSpaceInstrumentationEvent(
   main_thread_executor_->Schedule([this, error_event = std::move(error_event)]() {
     const std::string message =
         absl::StrCat(error_event.message(),
-                     "\nAll functions will be instrumented using the slower kernel(uprobe) "
+                     "\nAll functions will be instrumented using the slower kernel (uprobe) "
                      "functionality.\n");
     main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
                                      GetCaptureTimeAt(error_event.timestamp_ns()), message);
@@ -608,19 +608,19 @@ void OrbitApp::OnErrorEnablingUserSpaceInstrumentationEvent(
   });
 }
 
-void OrbitApp::OnInfoEnablingUserSpaceInstrumentationEvent(
-    orbit_grpc_protos::InfoEnablingUserSpaceInstrumentationEvent info_event) {
-  main_thread_executor_->Schedule([this, info_event = std::move(info_event)]() {
+void OrbitApp::OnWarningInstrumentingWithUserSpaceInstrumentationEvent(
+    orbit_grpc_protos::WarningInstrumentingWithUserSpaceInstrumentationEvent warning_event) {
+  main_thread_executor_->Schedule([this, warning_event = std::move(warning_event)]() {
     std::string message = "Failed to instrument some functions:\n";
-    for (const auto& function : info_event.functions_that_failed_to_instrument()) {
+    for (const auto& function : warning_event.functions_that_failed_to_instrument()) {
       message = absl::StrCat(message, function.error_message(), "\n");
     }
     message = absl::StrCat(message,
                            "\nThe functions above will be instrumented using the slower kernel "
-                           "(uprobe) functionality.\n");
+                           "(uprobes) functionality.\n");
 
     main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kWarning,
-                                     GetCaptureTimeAt(info_event.timestamp_ns()), message);
+                                     GetCaptureTimeAt(warning_event.timestamp_ns()), message);
   });
 }
 

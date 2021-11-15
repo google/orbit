@@ -49,7 +49,6 @@ using orbit_grpc_protos::GpuJob;
 using orbit_grpc_protos::GpuQueueSubmission;
 using orbit_grpc_protos::GpuQueueSubmissionMetaInfo;
 using orbit_grpc_protos::GpuSubmitInfo;
-using orbit_grpc_protos::InfoEnablingUserSpaceInstrumentationEvent;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointInfo;
@@ -65,6 +64,7 @@ using orbit_grpc_protos::ThreadStateSlice;
 using orbit_grpc_protos::TracepointEvent;
 using orbit_grpc_protos::TracepointInfo;
 using orbit_grpc_protos::WarningEvent;
+using orbit_grpc_protos::WarningInstrumentingWithUserSpaceInstrumentationEvent;
 
 using ::testing::_;
 using ::testing::DoAll;
@@ -112,9 +112,10 @@ class MockCaptureListener : public CaptureListener {
   MOCK_METHOD(void, OnErrorEnablingUserSpaceInstrumentationEvent,
               (orbit_grpc_protos::ErrorEnablingUserSpaceInstrumentationEvent /*error_event*/),
               (override));
-  MOCK_METHOD(void, OnInfoEnablingUserSpaceInstrumentationEvent,
-              (orbit_grpc_protos::InfoEnablingUserSpaceInstrumentationEvent /*info_event*/),
-              (override));
+  MOCK_METHOD(
+      void, OnWarningInstrumentingWithUserSpaceInstrumentationEvent,
+      (orbit_grpc_protos::WarningInstrumentingWithUserSpaceInstrumentationEvent /*warning_event*/),
+      (override));
   MOCK_METHOD(void, OnLostPerfRecordsEvent,
               (orbit_grpc_protos::LostPerfRecordsEvent /*lost_perf_records_event*/), (override));
   MOCK_METHOD(
@@ -1330,33 +1331,33 @@ TEST(CaptureEventProcessor, CanHandleErrorEnablingUserSpaceInstrumentationEvents
   EXPECT_EQ(actual_error_event.message(), kMessage);
 }
 
-TEST(CaptureEventProcessor, CanHandleInfoEnablingUserSpaceInstrumentationEvents) {
+TEST(CaptureEventProcessor, CanHandleWarningInstrumentingWithUserSpaceInstrumentationEvents) {
   MockCaptureListener listener;
   auto event_processor =
       CaptureEventProcessor::CreateForCaptureListener(&listener, std::filesystem::path{}, {});
 
   ClientCaptureEvent event;
-  InfoEnablingUserSpaceInstrumentationEvent* info_event =
-      event.mutable_info_enabling_user_space_instrumentation_event();
+  WarningInstrumentingWithUserSpaceInstrumentationEvent* warning_event =
+      event.mutable_warning_instrumenting_with_user_space_instrumentation_event();
   constexpr uint64_t kTimestampNs = 100;
-  info_event->set_timestamp_ns(kTimestampNs);
+  warning_event->set_timestamp_ns(kTimestampNs);
   constexpr uint64_t kFunctionId = 42;
   constexpr const char* kErrorMessage = "error message";
   orbit_grpc_protos::FunctionThatFailedToBeInstrumented* function =
-      info_event->add_functions_that_failed_to_instrument();
+      warning_event->add_functions_that_failed_to_instrument();
   function->set_function_id(kFunctionId);
   function->set_error_message(kErrorMessage);
 
-  InfoEnablingUserSpaceInstrumentationEvent actual_info_event;
-  EXPECT_CALL(listener, OnInfoEnablingUserSpaceInstrumentationEvent)
+  WarningInstrumentingWithUserSpaceInstrumentationEvent actual_warning_event;
+  EXPECT_CALL(listener, OnWarningInstrumentingWithUserSpaceInstrumentationEvent)
       .Times(1)
-      .WillOnce(SaveArg<0>(&actual_info_event));
+      .WillOnce(SaveArg<0>(&actual_warning_event));
 
   event_processor->ProcessEvent(event);
 
-  EXPECT_EQ(actual_info_event.timestamp_ns(), kTimestampNs);
-  EXPECT_EQ(actual_info_event.functions_that_failed_to_instrument(0).function_id(), kFunctionId);
-  EXPECT_EQ(actual_info_event.functions_that_failed_to_instrument(0).error_message(),
+  EXPECT_EQ(actual_warning_event.timestamp_ns(), kTimestampNs);
+  EXPECT_EQ(actual_warning_event.functions_that_failed_to_instrument(0).function_id(), kFunctionId);
+  EXPECT_EQ(actual_warning_event.functions_that_failed_to_instrument(0).error_message(),
             kErrorMessage);
 }
 

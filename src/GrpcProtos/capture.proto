@@ -683,7 +683,7 @@ message FunctionThatFailedToBeInstrumented {
   bytes error_message = 2;
 }
 
-message InfoEnablingUserSpaceInstrumentationEvent {
+message WarningInstrumentingWithUserSpaceInstrumentationEvent {
   uint64 timestamp_ns = 1;
   repeated FunctionThatFailedToBeInstrumented
       functions_that_failed_to_instrument = 2;
@@ -750,8 +750,8 @@ message ClientCaptureEvent {
     FunctionCall function_call = 2;
     GpuJob gpu_job = 3;
     GpuQueueSubmission gpu_queue_submission = 4;
-    InfoEnablingUserSpaceInstrumentationEvent
-        info_enabling_user_space_instrumentation_event = 48;
+    WarningInstrumentingWithUserSpaceInstrumentationEvent
+        warning_instrumenting_with_user_space_instrumentation_event = 48;
     InternedCallstack interned_callstack = 5;
     InternedString interned_string = 18;
     InternedTracepointInfo interned_tracepoint_info = 19;
@@ -813,8 +813,8 @@ message ProducerCaptureEvent {
     FunctionEntry function_entry = 13;
     FunctionExit function_exit = 14;
     GpuQueueSubmission gpu_queue_submission = 6;
-    InfoEnablingUserSpaceInstrumentationEvent
-        info_enabling_user_space_instrumentation_event = 47;
+    WarningInstrumentingWithUserSpaceInstrumentationEvent
+        warning_instrumenting_with_user_space_instrumentation_event = 47;
     InternedCallstack interned_callstack = 7;
     InternedString interned_string = 18;
     LostPerfRecordsEvent lost_perf_records_event = 34;

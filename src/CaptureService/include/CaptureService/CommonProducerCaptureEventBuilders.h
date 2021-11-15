@@ -31,7 +31,7 @@ namespace orbit_capture_service {
 CreateErrorEnablingUserSpaceInstrumentationEvent(uint64_t timestamp_ns, std::string message);
 
 [[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent
-CreateInfoEnablingUserSpaceInstrumentationEvent(
+CreateWarningInstrumentingWithUserSpaceInstrumentationEvent(
     uint64_t timestamp_ns,
     const absl::flat_hash_map<uint64_t, std::string>& function_ids_to_error_messages);
 
