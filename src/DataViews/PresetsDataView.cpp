@@ -193,7 +193,7 @@ void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
       OnDataChanged();
     } else {
       ERROR("Deleting preset \"%s\": %s", filename, SafeStrerror(errno));
-      metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent_StatusCode_INTERNAL_ERROR);
+      metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
       app_->SendErrorToUi("Error deleting preset",
                           absl::StrFormat("Could not delete preset \"%s\".", filename));
     }

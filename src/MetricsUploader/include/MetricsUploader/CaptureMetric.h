@@ -55,7 +55,7 @@ class CaptureMetric {
  private:
   MetricsUploader* uploader_;
   OrbitCaptureData capture_data_;
-  OrbitLogEvent_StatusCode status_code_ = OrbitLogEvent_StatusCode_UNKNOWN_STATUS;
+  OrbitLogEvent::StatusCode status_code_ = OrbitLogEvent::UNKNOWN_STATUS;
   std::chrono::steady_clock::time_point start_;
   std::filesystem::path file_path_;
 };

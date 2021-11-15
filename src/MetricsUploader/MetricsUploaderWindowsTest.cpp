@@ -56,16 +56,14 @@ TEST(MetricsUploader, SendLogEvent) {
                                           std::chrono::milliseconds(100));
   EXPECT_TRUE(result);
   result = metrics_uploader->SendLogEvent(OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN,
-                                          std::chrono::milliseconds(0),
-                                          OrbitLogEvent_StatusCode_SUCCESS);
+                                          std::chrono::milliseconds(0), OrbitLogEvent::SUCCESS);
   EXPECT_TRUE(result);
 }
 
 TEST(MetricsUploader, SendCaptureEvent) {
   auto metrics_uploader = MetricsUploader::CreateMetricsUploader("MetricsUploaderCompleteClient");
   EXPECT_FALSE(IsMetricsUploaderStub(metrics_uploader));
-  bool result =
-      metrics_uploader->SendCaptureEvent(OrbitCaptureData{}, OrbitLogEvent_StatusCode_SUCCESS);
+  bool result = metrics_uploader->SendCaptureEvent(OrbitCaptureData{}, OrbitLogEvent::SUCCESS);
   EXPECT_TRUE(result);
 }
 
