@@ -172,11 +172,12 @@ void TimeGraph::VerticalZoom(float zoom_value, float mouse_normalized_y_position
 }
 
 void TimeGraph::SetMinMax(double min_time_us, double max_time_us) {
-  const double kTimeGraphMinTimeWindowsUs = 0.1; /* 100 ns */
-  double desired_time_window = std::max(max_time_us - min_time_us, kTimeGraphMinTimeWindowsUs);
+  constexpr double kTimeGraphMinTimeWindowsUs = 0.1; /* 100 ns */
+  const double desired_time_window =
+      std::max(max_time_us - min_time_us, kTimeGraphMinTimeWindowsUs);
 
   // Centering the interval in screen.
-  double center_time_us = (max_time_us + min_time_us) / 2.;
+  const double center_time_us = (max_time_us + min_time_us) / 2.;
 
   min_time_us_ = std::max(center_time_us - desired_time_window / 2, 0.0);
   max_time_us_ = std::min(min_time_us_ + desired_time_window, GetCaptureTimeSpanUs());
