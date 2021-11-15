@@ -11,6 +11,7 @@
 
 #include "Connections.h"
 #include "MetricsUploader/MetricsUploader.h"
+#include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/SshInfo.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
@@ -46,30 +47,29 @@ class ConnectToTargetDialog : public QDialog {
   uint32_t process_id_;
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 
-  struct ResultData {
-    QString error_message_ = "";
-    std::optional<orbit_ggp::Instance> maybe_instance_ = std::nullopt;
-    std::unique_ptr<orbit_client_data::ProcessData> process_data_ = nullptr;
-    std::unique_ptr<orbit_session_setup::ServiceDeployManager> service_deploy_manager_ = nullptr;
-    std::shared_ptr<grpc_impl::Channel> grpc_channel_ = nullptr;
+  struct ConnectionData {
+    std::unique_ptr<orbit_client_data::ProcessData> process_data_;
+    std::unique_ptr<orbit_session_setup::ServiceDeployManager> service_deploy_manager_;
+    std::shared_ptr<grpc_impl::Channel> grpc_channel_;
   };
 
-  ResultData result_data_;
+  using MaybeSshAndInstanceData =
+      std::tuple<ErrorMessageOr<orbit_ggp::SshInfo>, ErrorMessageOr<orbit_ggp::Instance>>;
 
   std::unique_ptr<orbit_ggp::Client> ggp_client_;
   std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> main_thread_executor_;
 
-  [[nodiscard]] StadiaTarget CreateTargetFromResult();
+  ErrorMessageOr<StadiaTarget> OnAsyncDataAvailable(MaybeSshAndInstanceData ssh_instance_data);
 
-  [[nodiscard]] bool StartConnection();
-  [[nodiscard]] std::optional<ServiceDeployManager::GrpcPort> DeployOrbitService(
-      orbit_ggp::SshInfo& ssh_info);
-  void ListProcessesAndSaveProcess(std::shared_ptr<grpc_impl::Channel> grpc_channel);
-  void LoadInstanceDetailsAsync();
-  void OnSshInfoAvailable(ErrorMessageOr<orbit_ggp::SshInfo> ssh_info_result);
+  [[nodiscard]] StadiaTarget CreateTarget(ConnectionData result,
+                                          orbit_ggp::Instance instance) const;
+  [[nodiscard]] ErrorMessageOr<orbit_session_setup::ServiceDeployManager::GrpcPort>
+  DeployOrbitService(orbit_session_setup::ServiceDeployManager* service_deploy_manager);
+  [[nodiscard]] ErrorMessageOr<std::unique_ptr<orbit_client_data::ProcessData>>
+  FindSpecifiedProcess(std::shared_ptr<grpc_impl::Channel> grpc_channel, uint32_t process_id);
 
-  void CloseDialogIfResultIsReady();
   void SetStatusMessage(const QString& message);
+  void LogAndDisplayError(const QString& message);
 };
 
 }  // namespace orbit_session_setup

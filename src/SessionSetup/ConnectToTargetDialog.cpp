@@ -9,6 +9,7 @@
 #include <memory>
 
 #include "ClientServices/ProcessClient.h"
+#include "OrbitBase/JoinFutures.h"
 #include "OrbitBase/Logging.h"
 #include "SessionSetup/ConnectToTargetDialog.h"
 #include "SessionSetup/ServiceDeployManager.h"
@@ -31,160 +32,143 @@ ConnectToTargetDialog::ConnectToTargetDialog(
 
   ui_->setupUi(this);
   ui_->instanceIdLabel->setText(instance_id);
-  ui_->processIdLabel->setText(QString("%1").arg(process_id));
+  ui_->processIdLabel->setText(QString::number(process_id));
 }
 
 ConnectToTargetDialog::~ConnectToTargetDialog() {}
 
 std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
-  int rc = QDialog::DialogCode::Rejected;
-
-  if (StartConnection()) {
-    LoadInstanceDetailsAsync();
-    rc = QDialog::exec();
-  }
-
-  if (rc != QDialog::Accepted) {
-    if (!result_data_.error_message_.isEmpty()) {
-      QString error =
-          QString("Error connecting to specified target: %1.").arg(result_data_.error_message_);
-      ERROR("%s", error.toStdString().c_str());
-      QMessageBox::critical(nullptr, QApplication::applicationName(), error);
-    }
-    return std::nullopt;
-  }
-
-  return CreateTargetFromResult();
-}
-
-StadiaTarget ConnectToTargetDialog::CreateTargetFromResult() {
-  CHECK(result_data_.maybe_instance_.has_value());
-  CHECK(result_data_.grpc_channel_ != nullptr);
-  CHECK(result_data_.service_deploy_manager_ != nullptr);
-  CHECK(result_data_.process_data_ != nullptr);
-
-  auto process_manager = orbit_client_services::ProcessManager::Create(result_data_.grpc_channel_,
-                                                                       absl::Milliseconds(1000));
-  auto stadia_connection = orbit_session_setup::StadiaConnection(
-      std::move(result_data_.maybe_instance_.value()),
-      std::move(result_data_.service_deploy_manager_), std::move(result_data_.grpc_channel_));
-  return orbit_session_setup::StadiaTarget(std::move(stadia_connection), std::move(process_manager),
-                                           std::move(result_data_.process_data_));
-}
-
-bool ConnectToTargetDialog::StartConnection() {
-  LOG("Establishing connection to specified target %s:%d", instance_id_.toStdString().c_str(),
+  LOG("Trying to establish a connection to specified target %s:%d", instance_id_.toStdString(),
       process_id_);
-  result_data_ = ResultData();
 
   auto ggp_client_result = orbit_ggp::CreateClient();
   if (ggp_client_result.has_error()) {
-    result_data_.error_message_ = QString::fromStdString(ggp_client_result.error().message());
-    return false;
+    LogAndDisplayError(QString::fromStdString(ggp_client_result.error().message()));
+    return std::nullopt;
   }
-
   ggp_client_ = std::move(ggp_client_result.value());
 
   SetStatusMessage("Loading encryption credentials for instance...");
-  auto future = ggp_client_->GetSshInfoAsync(instance_id_, std::nullopt);
-  future.Then(main_thread_executor_.get(),
-              [this](ErrorMessageOr<orbit_ggp::SshInfo> ssh_info_result) {
-                OnSshInfoAvailable(std::move(ssh_info_result));
-              });
 
-  return true;
-}
+  auto process_future = ggp_client_->GetSshInfoAsync(instance_id_, std::nullopt);
+  auto instance_future = ggp_client_->DescribeInstanceAsync(instance_id_);
+  auto joined_future = orbit_base::JoinFutures(process_future, instance_future);
 
-void ConnectToTargetDialog::OnSshInfoAvailable(ErrorMessageOr<orbit_ggp::SshInfo> ssh_info_result) {
-  if (!ssh_info_result.has_error()) {
-    LOG("Received ssh info for instance with id: %s", instance_id_.toStdString());
+  std::optional<TargetConfiguration> target;
 
-    auto ssh_info = ssh_info_result.value();
-    auto deployment_result = DeployOrbitService(ssh_info);
-    if (deployment_result.has_value()) {
-      result_data_.grpc_channel_ = CreateGrpcChannel(deployment_result.value().grpc_port);
-      ListProcessesAndSaveProcess(result_data_.grpc_channel_);
-    }
-  } else {
-    result_data_.error_message_ =
-        QString("Error receiving ssh info for instance with id %1:%2")
-            .arg(instance_id_, QString::fromStdString(ssh_info_result.error().message()));
+  joined_future.Then(main_thread_executor_.get(),
+                     [this, &target](MaybeSshAndInstanceData ssh_instance_data) {
+                       auto result = OnAsyncDataAvailable(std::move(ssh_instance_data));
+                       if (result.has_value()) {
+                         target = std::move(result.value());
+                         accept();
+                       } else {
+                         LogAndDisplayError(QString::fromStdString(result.error().message()));
+                         reject();
+                       }
+                     });
+
+  int rc = QDialog::exec();
+
+  if (rc != QDialog::Accepted) {
+    return std::nullopt;
   }
 
-  CloseDialogIfResultIsReady();
+  return target;
 }
 
-void ConnectToTargetDialog::LoadInstanceDetailsAsync() {
-  ggp_client_->DescribeInstanceAsync(instance_id_)
-      .Then(main_thread_executor_.get(),
-            [this](ErrorMessageOr<orbit_ggp::Instance> instance_result) {
-              if (instance_result.has_error()) {
-                result_data_.maybe_instance_ = std::nullopt;
-                result_data_.error_message_ =
-                    QString::fromStdString(instance_result.error().message());
-              } else {
-                result_data_.maybe_instance_ = instance_result.value();
-              }
-              CloseDialogIfResultIsReady();
-            });
-}
+ErrorMessageOr<StadiaTarget> ConnectToTargetDialog::OnAsyncDataAvailable(
+    MaybeSshAndInstanceData ssh_instance_data) {
+  auto& [ssh_info_result, instance_result] = ssh_instance_data;
 
-std::optional<ServiceDeployManager::GrpcPort> ConnectToTargetDialog::DeployOrbitService(
-    orbit_ggp::SshInfo& ssh_info) {
-  result_data_.service_deploy_manager_ =
+  std::string error;
+  if (ssh_info_result.has_error()) {
+    return ssh_info_result.error();
+  } else if (instance_result.has_error()) {
+    return instance_result.error();
+  }
+
+  ConnectionData connection_data;
+
+  connection_data.service_deploy_manager_ =
       std::make_unique<orbit_session_setup::ServiceDeployManager>(
           ssh_connection_artifacts_->GetDeploymentConfiguration(),
-          ssh_connection_artifacts_->GetSshContext(), CredentialsFromSshInfo(ssh_info),
+          ssh_connection_artifacts_->GetSshContext(),
+          CredentialsFromSshInfo(ssh_info_result.value()),
           ssh_connection_artifacts_->GetGrpcPort());
 
-  orbit_ssh_qt::ScopedConnection label_connection{QObject::connect(
-      result_data_.service_deploy_manager_.get(), &ServiceDeployManager::statusMessage, this,
-      &ConnectToTargetDialog::SetStatusMessage)};
-  orbit_ssh_qt::ScopedConnection cancel_connection{
-      QObject::connect(ui_->abortButton, &QPushButton::clicked,
-                       result_data_.service_deploy_manager_.get(), &ServiceDeployManager::Cancel)};
+  OUTCOME_TRY(auto&& grpc_port, DeployOrbitService(connection_data.service_deploy_manager_.get()));
+  connection_data.grpc_channel_ = CreateGrpcChannel(grpc_port.grpc_port);
 
-  auto deployment_result = result_data_.service_deploy_manager_->Exec();
+  OUTCOME_TRY(connection_data.process_data_,
+              FindSpecifiedProcess(connection_data.grpc_channel_, process_id_));
+
+  return CreateTarget(std::move(connection_data), std::move(instance_result.value()));
+}
+
+StadiaTarget ConnectToTargetDialog::CreateTarget(ConnectionData result,
+                                                 orbit_ggp::Instance instance) const {
+  CHECK(instance.id == instance_id_);
+  CHECK(result.grpc_channel_ != nullptr);
+  CHECK(result.service_deploy_manager_ != nullptr);
+  CHECK(result.process_data_ != nullptr);
+
+  auto process_manager =
+      orbit_client_services::ProcessManager::Create(result.grpc_channel_, absl::Milliseconds(1000));
+  auto stadia_connection = orbit_session_setup::StadiaConnection(
+      std::move(instance), std::move(result.service_deploy_manager_),
+      std::move(result.grpc_channel_));
+  return orbit_session_setup::StadiaTarget(std::move(stadia_connection), std::move(process_manager),
+                                           std::move(result.process_data_));
+}
+
+ErrorMessageOr<orbit_session_setup::ServiceDeployManager::GrpcPort>
+ConnectToTargetDialog::DeployOrbitService(
+    orbit_session_setup::ServiceDeployManager* service_deploy_manager) {
+  orbit_ssh_qt::ScopedConnection label_connection{
+      QObject::connect(service_deploy_manager, &ServiceDeployManager::statusMessage, this,
+                       &ConnectToTargetDialog::SetStatusMessage)};
+  orbit_ssh_qt::ScopedConnection cancel_connection{
+      QObject::connect(ui_->abortButton, &QPushButton::clicked, service_deploy_manager,
+                       &ServiceDeployManager::Cancel)};
+
+  auto deployment_result = service_deploy_manager->Exec();
   if (deployment_result.has_error()) {
-    result_data_.error_message_ = QString::fromStdString(deployment_result.error().message());
-    return std::nullopt;
+    return ErrorMessage{"Error during service deployment"};
   } else {
     return deployment_result.value();
   }
 }
 
-void ConnectToTargetDialog::ListProcessesAndSaveProcess(
-    std::shared_ptr<grpc_impl::Channel> grpc_channel) {
+ErrorMessageOr<std::unique_ptr<orbit_client_data::ProcessData>>
+ConnectToTargetDialog::FindSpecifiedProcess(std::shared_ptr<grpc_impl::Channel> grpc_channel,
+                                            uint32_t process_id) {
   CHECK(grpc_channel != nullptr);
 
   orbit_client_services::ProcessClient client(grpc_channel);
   auto process_list = client.GetProcessList();
-  if (!process_list.has_value()) return;
+  if (!process_list.has_value()) {
+    return ErrorMessage("Unknown error: Could not retrieve list of running processes.");
+  }
 
   for (auto& process : process_list.value()) {
-    if (process.pid() == process_id_) {
-      result_data_.process_data_ = std::make_unique<orbit_client_data::ProcessData>(process);
-      return;
+    if (process.pid() == process_id) {
+      return std::make_unique<orbit_client_data::ProcessData>(process);
     }
   }
 
-  result_data_.error_message_ =
-      QString("PID %1 was not found in the list of running processes.").arg(process_id_);
-}
-
-void ConnectToTargetDialog::CloseDialogIfResultIsReady() {
-  if (!result_data_.error_message_.isEmpty()) {
-    reject();
-  }
-
-  if (result_data_.maybe_instance_.has_value() && result_data_.grpc_channel_ != nullptr &&
-      result_data_.process_data_ != nullptr) {
-    accept();
-  }
+  return ErrorMessage(QString("PID %1 was not found in the list of running processes.")
+                          .arg(process_id)
+                          .toStdString());
 }
 
 void ConnectToTargetDialog::SetStatusMessage(const QString& message) {
   ui_->statusLabel->setText(QString("<b>Status:</b> ") + message);
+}
+
+void ConnectToTargetDialog::LogAndDisplayError(const QString& message) {
+  ERROR("%s", message.toStdString());
+  QMessageBox::critical(nullptr, QApplication::applicationName(), message);
 }
 
 }  // namespace orbit_session_setup
