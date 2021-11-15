@@ -8,8 +8,6 @@
 #include "orbit_log_event.pb.h"
 
 using orbit_metrics_uploader::OrbitLogEvent;
-using orbit_metrics_uploader::OrbitLogEvent::UNKNOWN_EVENT_TYPE;
-
 using orbit_metrics_uploader::Result;
 
 extern "C" {
