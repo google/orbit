@@ -524,9 +524,6 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kGpuQueueSubmission:
         UNREACHABLE();
-      case orbit_grpc_protos::ProducerCaptureEvent::
-          kWarningInstrumentingWithUserSpaceInstrumentationEvent:
-        UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kInternedCallstack:
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kInternedString:
@@ -569,6 +566,9 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         previous_event_timestamp_ns = event.thread_state_slice().end_timestamp_ns();
         break;
       case orbit_grpc_protos::ProducerCaptureEvent::kWarningEvent:
+        UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::
+          kWarningInstrumentingWithUserSpaceInstrumentationEvent:
         UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::EVENT_NOT_SET:
         UNREACHABLE();

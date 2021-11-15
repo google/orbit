@@ -594,7 +594,7 @@ void OrbitApp::OnErrorEnablingUserSpaceInstrumentationEvent(
   main_thread_executor_->Schedule([this, error_event = std::move(error_event)]() {
     const std::string message =
         absl::StrCat(error_event.message(),
-                     "\nAll functions will be instrumented using the slower kernel (uprobe) "
+                     "\nAll functions will be instrumented using the slower kernel (uprobes) "
                      "functionality.\n");
     main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
                                      GetCaptureTimeAt(error_event.timestamp_ns()), message);

@@ -206,7 +206,7 @@ grpc::Status LinuxCaptureService::Capture(
           result_or_error.value().instrumented_function_ids.size(),
           capture_options.instrumented_functions_size());
 
-      if (result_or_error.value().function_ids_to_error_messages.size()) {
+      if (!result_or_error.value().function_ids_to_error_messages.empty()) {
         info_from_enabling_user_space_instrumentation =
             orbit_capture_service::CreateWarningInstrumentingWithUserSpaceInstrumentationEvent(
                 capture_start_timestamp_ns_,

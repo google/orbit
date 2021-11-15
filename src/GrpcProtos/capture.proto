@@ -750,8 +750,6 @@ message ClientCaptureEvent {
     FunctionCall function_call = 2;
     GpuJob gpu_job = 3;
     GpuQueueSubmission gpu_queue_submission = 4;
-    WarningInstrumentingWithUserSpaceInstrumentationEvent
-        warning_instrumenting_with_user_space_instrumentation_event = 48;
     InternedCallstack interned_callstack = 5;
     InternedString interned_string = 18;
     InternedTracepointInfo interned_tracepoint_info = 19;
@@ -766,6 +764,8 @@ message ClientCaptureEvent {
     ThreadStateSlice thread_state_slice = 7;
     TracepointEvent tracepoint_event = 8;
     WarningEvent warning_event = 32;
+    WarningInstrumentingWithUserSpaceInstrumentationEvent
+        warning_instrumenting_with_user_space_instrumentation_event = 48;
   }
 }
 
@@ -813,8 +813,6 @@ message ProducerCaptureEvent {
     FunctionEntry function_entry = 13;
     FunctionExit function_exit = 14;
     GpuQueueSubmission gpu_queue_submission = 6;
-    WarningInstrumentingWithUserSpaceInstrumentationEvent
-        warning_instrumenting_with_user_space_instrumentation_event = 47;
     InternedCallstack interned_callstack = 7;
     InternedString interned_string = 18;
     LostPerfRecordsEvent lost_perf_records_event = 34;
@@ -827,5 +825,7 @@ message ProducerCaptureEvent {
     ThreadNamesSnapshot thread_names_snapshot = 24;
     ThreadStateSlice thread_state_slice = 9;
     WarningEvent warning_event = 30;
+    WarningInstrumentingWithUserSpaceInstrumentationEvent
+        warning_instrumenting_with_user_space_instrumentation_event = 47;
   }
 }

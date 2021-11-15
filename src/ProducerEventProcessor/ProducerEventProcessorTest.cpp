@@ -2103,6 +2103,7 @@ TEST(ProducerEventProcessor, WarningInstrumentingWithUserSpaceInstrumentationEve
   const WarningInstrumentingWithUserSpaceInstrumentationEvent& actual_warning_event =
       client_capture_event.warning_instrumenting_with_user_space_instrumentation_event();
   EXPECT_EQ(actual_warning_event.timestamp_ns(), kTimestampNs1);
+  ASSERT_EQ(actual_warning_event.functions_that_failed_to_instrument_size(), 1);
   EXPECT_EQ(actual_warning_event.functions_that_failed_to_instrument(0).function_id(), kFunctionId);
   EXPECT_EQ(actual_warning_event.functions_that_failed_to_instrument(0).error_message(),
             kErrorMessage);
