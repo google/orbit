@@ -202,6 +202,10 @@ grpc::Status LinuxCaptureService::Capture(
       FilterOutInstrumentedFunctionsFromCaptureOptions(
           result_or_error.value().instrumented_function_ids, linux_tracing_capture_options);
 
+      LOG("User space instrumentation enabled for %u out of %u instrumented functions.",
+          result_or_error.value().instrumented_function_ids.size(),
+          capture_options.instrumented_functions_size());
+
       if (result_or_error.value().function_ids_to_error_messages.size()) {
         info_from_enabling_user_space_instrumentation =
             orbit_capture_service::CreateWarningInstrumentingWithUserSpaceInstrumentationEvent(
