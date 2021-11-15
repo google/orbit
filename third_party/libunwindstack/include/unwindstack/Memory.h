@@ -55,6 +55,12 @@ class Memory {
 
   bool ReadFully(uint64_t addr, void* dst, size_t size);
 
+  inline bool Read8(uint64_t addr, uint8_t* dst) { return ReadFully(addr, dst, sizeof(uint8_t)); }
+
+  inline bool Read16(uint64_t addr, uint16_t* dst) {
+    return ReadFully(addr, dst, sizeof(uint16_t));
+  }
+
   inline bool Read32(uint64_t addr, uint32_t* dst) {
     return ReadFully(addr, dst, sizeof(uint32_t));
   }
