@@ -65,7 +65,8 @@ class MyCaptureListener : public CaptureListener {
   void OnErrorEnablingUserSpaceInstrumentationEvent(
       orbit_grpc_protos::ErrorEnablingUserSpaceInstrumentationEvent /*error_event*/) override {}
   void OnWarningInstrumentingWithUserSpaceInstrumentationEvent(
-      orbit_grpc_protos::WarningInstrumentingWithUserSpaceInstrumentationEvent /*warning_event*/) override {}
+      orbit_grpc_protos::WarningInstrumentingWithUserSpaceInstrumentationEvent /*warning_event*/)
+      override {}
   void OnLostPerfRecordsEvent(
       orbit_grpc_protos::LostPerfRecordsEvent /*lost_perf_records_event*/) override {}
   void OnOutOfOrderEventsDiscardedEvent(orbit_grpc_protos::OutOfOrderEventsDiscardedEvent

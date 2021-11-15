@@ -73,9 +73,10 @@ class MockCaptureListener : public CaptureListener {
   MOCK_METHOD(void, OnErrorEnablingUserSpaceInstrumentationEvent,
               (orbit_grpc_protos::ErrorEnablingUserSpaceInstrumentationEvent /*error_event*/),
               (override));
-  MOCK_METHOD(void, OnWarningInstrumentingWithUserSpaceInstrumentationEvent,
-              (orbit_grpc_protos::WarningInstrumentingWithUserSpaceInstrumentationEvent /*warning_event*/),
-              (override));
+  MOCK_METHOD(
+      void, OnWarningInstrumentingWithUserSpaceInstrumentationEvent,
+      (orbit_grpc_protos::WarningInstrumentingWithUserSpaceInstrumentationEvent /*warning_event*/),
+      (override));
   MOCK_METHOD(void, OnLostPerfRecordsEvent,
               (orbit_grpc_protos::LostPerfRecordsEvent /*lost_perf_records_event*/), (override));
   MOCK_METHOD(
