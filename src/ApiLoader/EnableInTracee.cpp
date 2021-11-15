@@ -24,6 +24,7 @@
 using orbit_grpc_protos::ApiFunction;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::ModuleInfo;
+using orbit_user_space_instrumentation::AttachAndStopNewThreadsOfProcess;
 using orbit_user_space_instrumentation::AttachAndStopProcess;
 using orbit_user_space_instrumentation::DetachAndContinueProcess;
 using orbit_user_space_instrumentation::DlopenInTracee;
@@ -83,7 +84,7 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
 
   int32_t pid = orbit_base::ToNativeProcessId(capture_options.pid());
 
-  OUTCOME_TRY(AttachAndStopProcess(pid));
+  OUTCOME_TRY(auto&& already_attached_tids, AttachAndStopProcess(pid));
 
   // Make sure we resume the target process, even on early-outs.
   orbit_base::unique_resource scope_exit{pid, [](int32_t pid) {
@@ -122,6 +123,11 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
     // Call "orbit_api_set_enabled" in tracee.
     OUTCOME_TRY(ExecuteInProcess(pid, orbit_api_set_enabled_function, function_table_address,
                                  api_function.api_version(), enabled ? 1 : 0));
+    // `orbit_api_set_enabled` could spawn new threads (and will, the first time it's called). Stop
+    // those too, as this loop could be executed again and the assumption is that the target process
+    // is completely stopped.
+    OUTCOME_TRY(already_attached_tids,
+                AttachAndStopNewThreadsOfProcess(pid, already_attached_tids));
   }
 
   return outcome::success();

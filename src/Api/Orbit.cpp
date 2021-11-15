@@ -158,15 +158,21 @@ void orbit_api_set_enabled(uint64_t address, uint64_t api_version, bool enabled)
     case 0: {
       auto* api_v0 = absl::bit_cast<orbit_api_v0*>(address);
       orbit_api_initialize_and_set_enabled(api_v0, &orbit_api_initialize_v0, enabled);
-      return;
-    }
+    } break;
     case 1: {
       auto* api_v1 = absl::bit_cast<orbit_api_v1*>(address);
       orbit_api_initialize_and_set_enabled(api_v1, &orbit_api_initialize_v1, enabled);
-      return;
-    }
+    } break;
     default:
       UNREACHABLE();
   }
+
+  // Initialize `LockFreeApiEventProducer` and establish the connection to OrbitService now instead
+  // of waiting for the first call to `EnqueueApiEvent`. As it takes some time to establish the
+  // connection, `producer.IsCapturing()` would otherwise always be false with at least the first
+  // event (but possibly more), causing it to be missed even if it comes a long time after calling
+  // `orbit_api_set_enabled`.
+  GetEventProducer();
 }
-}
+
+}  // extern "C"
