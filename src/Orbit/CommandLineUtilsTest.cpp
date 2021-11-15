@@ -16,9 +16,12 @@ TEST(CommandLineUtils, RemoveFlagsNotPassedToMainWindow) {
 }
 
 TEST(CommandLineUtils, ExtractCommandLineFlags) {
+  char* pos_arg1 = "pos_arg";
+  char* pos_arg2 = "another_pos_arg";
+
   std::vector<std::string> command_line_args{"-b", "--test_arg", "--another_arg=something",
-                                             "pos_arg", "pos_arg with spaces"};
-  std::vector<char*> positional_args{"pos_arg", "pos_arg with spaces"};
+                                             pos_arg1, pos_arg2};
+  std::vector<char*> positional_args{pos_arg1, pos_arg2};
 
   auto result = ExtractCommandLineFlags(command_line_args, positional_args);
   QStringList expected{"-b", "--test_arg", "--another_arg=something"};
