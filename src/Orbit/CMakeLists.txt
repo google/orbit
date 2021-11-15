@@ -4,9 +4,17 @@
 
 project(Orbit CXX)
 
-add_executable(Orbit main.cpp)
+add_executable(Orbit)
+
+target_sources(
+    Orbit
+    PRIVATE main.cpp
+)
+
+
 target_link_libraries(Orbit PRIVATE
         ClientFlags
+        CommandLineUtils
         MoveFilesToDocuments
         OrbitQt
         Style)
