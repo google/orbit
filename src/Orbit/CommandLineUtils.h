@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef _ORBIT_MAIN_H__
-#define _ORBIT_MAIN_H__
+#ifndef _ORBIT_COMMAND_LINE_UTILS_H__
+#define _ORBIT_COMMAND_LINE_UTILS_H__
 
 #include <QStringList>
 #include <string>
