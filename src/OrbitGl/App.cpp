@@ -599,11 +599,9 @@ void OrbitApp::OnErrorEnablingUserSpaceInstrumentationEvent(
     main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
                                      GetCaptureTimeAt(error_event.timestamp_ns()), message);
     if (!IsLoadingCapture()) {
-      constexpr const char* kDontShowAgainErrorEnablingUserSpaceInstrumentationWarningKey =
-          "DontShowAgainErrorEnablingUserSpaceInstrumentationWarning";
-      main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
-          "Could not enable user space instrumentation", message,
-          kDontShowAgainErrorEnablingUserSpaceInstrumentationWarningKey);
+      // We use 'SendWarningToUi' here since we don't want the "don't show again" checkbox. The user
+      // should always be notified.
+      SendWarningToUi("Could not enable dynamic instrumentation", message);
     }
   });
 }
