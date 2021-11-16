@@ -28,6 +28,7 @@ class MainWindowInterface {
   virtual void ShowWarningWithDontShowAgainCheckboxIfNeeded(
       std::string_view title, std::string_view text,
       std::string_view dont_show_again_setting_key) = 0;
+  virtual void ShowWarning(std::string_view title, std::string_view text) = 0;
 
   virtual void ShowSourceCode(
       const std::filesystem::path& file_path, size_t line_number,

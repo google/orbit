@@ -111,6 +111,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void ShowWarningWithDontShowAgainCheckboxIfNeeded(
       std::string_view title, std::string_view text,
       std::string_view dont_show_again_setting_key) override;
+  void ShowWarning(std::string_view title, std::string_view text) override;
 
  protected:
   void closeEvent(QCloseEvent* event) override;
