@@ -11,6 +11,7 @@ target_sources(
   SessionSetup
   PUBLIC  include/SessionSetup/Connections.h
           include/SessionSetup/ConnectToStadiaWidget.h
+          include/SessionSetup/ConnectToTargetDialog.h
           include/SessionSetup/DeploymentConfigurations.h
           include/SessionSetup/DoubleClickableLabel.h
           include/SessionSetup/Error.h
@@ -31,6 +32,8 @@ target_sources(
   SessionSetup
   PRIVATE ConnectToStadiaWidget.cpp
           ConnectToStadiaWidget.ui
+          ConnectToTargetDialog.cpp
+          ConnectToTargetDialog.ui
           DeploymentConfigurations.cpp
           Error.cpp
           OverlayWidget.cpp
