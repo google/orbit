@@ -322,7 +322,8 @@ void ConnectToStadiaWidget::SetupStateMachine() {
 
   s_loading_credentials_.addTransition(this, &ConnectToStadiaWidget::ReceivedSshInfo,
                                        &s_loading_credentials_);
-  s_loading_credentials_.addTransition(this, &ConnectToStadiaWidget::ReadyToDeploy, &s_deploying_);
+  s_loading_credentials_.addTransition(this, &ConnectToStadiaWidget::CredentialsLoaded,
+                                       &s_deploying_);
   s_loading_credentials_.addTransition(ui_->instancesTableOverlay, &OverlayWidget::Cancelled,
                                        &s_instance_selected_);
   s_loading_credentials_.addTransition(this, &ConnectToStadiaWidget::ErrorOccurred,
@@ -374,7 +375,7 @@ void ConnectToStadiaWidget::LoadCredentials() {
   const std::string instance_id = selected_instance_->id.toStdString();
 
   if (instance_credentials_.contains(instance_id)) {
-    emit ReadyToDeploy();
+    emit CredentialsLoaded();
     return;
   }
 
