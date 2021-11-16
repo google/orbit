@@ -73,7 +73,7 @@ ConnectToStadiaWidget::ConnectToStadiaWidget(QWidget* parent)
       s_idle_(&state_machine_),
       s_instances_loading_(&state_machine_),
       s_instance_selected_(&state_machine_),
-      s_waiting_for_creds_(&state_machine_),
+      s_loading_credentials_(&state_machine_),
       s_deploying_(&state_machine_),
       s_connected_(&state_machine_) {
   ui_->setupUi(this);
@@ -270,10 +270,10 @@ void ConnectToStadiaWidget::SetupStateMachine() {
   s_instance_selected_.assignProperty(ui_->instancesSettingsWidget, "enabled", true);
   s_instance_selected_.assignProperty(ui_->connectButton, "enabled", true);
   // STATE s_waiting_for_creds
-  s_waiting_for_creds_.assignProperty(ui_->instancesTableOverlay, "visible", true);
-  s_waiting_for_creds_.assignProperty(ui_->instancesTableOverlay, "statusMessage",
-                                      "Loading encryption credentials for instance...");
-  s_waiting_for_creds_.assignProperty(ui_->instancesTableOverlay, "cancelable", true);
+  s_loading_credentials_.assignProperty(ui_->instancesTableOverlay, "visible", true);
+  s_loading_credentials_.assignProperty(ui_->instancesTableOverlay, "statusMessage",
+                                        "Loading encryption credentials for instance...");
+  s_loading_credentials_.assignProperty(ui_->instancesTableOverlay, "cancelable", true);
   // STATE s_deploying
   s_deploying_.assignProperty(ui_->instancesTableOverlay, "visible", true);
   s_deploying_.assignProperty(ui_->instancesTableOverlay, "cancelable", true);
@@ -305,10 +305,11 @@ void ConnectToStadiaWidget::SetupStateMachine() {
   s_instance_selected_.addTransition(ui_->allInstancesCheckBox, &QCheckBox::stateChanged,
                                      &s_instances_loading_);
   s_instance_selected_.addTransition(ui_->connectButton, &QPushButton::clicked,
-                                     &s_waiting_for_creds_);
+                                     &s_loading_credentials_);
   s_instance_selected_.addTransition(ui_->instancesTableView, &QTableView::doubleClicked,
-                                     &s_waiting_for_creds_);
-  s_instance_selected_.addTransition(this, &ConnectToStadiaWidget::Connect, &s_waiting_for_creds_);
+                                     &s_loading_credentials_);
+  s_instance_selected_.addTransition(this, &ConnectToStadiaWidget::Connect,
+                                     &s_loading_credentials_);
   QObject::connect(&s_instance_selected_, &QState::entered, this, [this]() {
     if (instance_model_.rowCount() == 0) {
       emit InstanceReloadRequested();
@@ -316,16 +317,16 @@ void ConnectToStadiaWidget::SetupStateMachine() {
   });
 
   // STATE s_waiting_for_creds_
-  QObject::connect(&s_waiting_for_creds_, &QState::entered, this,
+  QObject::connect(&s_loading_credentials_, &QState::entered, this,
                    &ConnectToStadiaWidget::LoadCredentials);
 
-  s_waiting_for_creds_.addTransition(this, &ConnectToStadiaWidget::ReceivedSshInfo,
-                                     &s_waiting_for_creds_);
-  s_waiting_for_creds_.addTransition(this, &ConnectToStadiaWidget::ReadyToDeploy, &s_deploying_);
-  s_waiting_for_creds_.addTransition(ui_->instancesTableOverlay, &OverlayWidget::Cancelled,
-                                     &s_instance_selected_);
-  s_waiting_for_creds_.addTransition(this, &ConnectToStadiaWidget::ErrorOccurred,
-                                     &s_instance_selected_);
+  s_loading_credentials_.addTransition(this, &ConnectToStadiaWidget::ReceivedSshInfo,
+                                       &s_loading_credentials_);
+  s_loading_credentials_.addTransition(this, &ConnectToStadiaWidget::ReadyToDeploy, &s_deploying_);
+  s_loading_credentials_.addTransition(ui_->instancesTableOverlay, &OverlayWidget::Cancelled,
+                                       &s_instance_selected_);
+  s_loading_credentials_.addTransition(this, &ConnectToStadiaWidget::ErrorOccurred,
+                                       &s_instance_selected_);
 
   // STATE s_deploying_
   QObject::connect(&s_deploying_, &QState::entered, this,

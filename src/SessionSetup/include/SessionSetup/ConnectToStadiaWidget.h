@@ -111,7 +111,7 @@ class ConnectToStadiaWidget : public QWidget {
   QState s_idle_;
   QState s_instances_loading_;
   QState s_instance_selected_;
-  QState s_waiting_for_creds_;
+  QState s_loading_credentials_;
   QState s_deploying_;
   QState s_connected_;
 
