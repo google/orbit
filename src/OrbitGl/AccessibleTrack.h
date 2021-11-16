@@ -24,7 +24,7 @@ class AccessibleTrackTab : public AccessibleCaptureViewElement {
  public:
   AccessibleTrackTab(CaptureViewElement* fake_track_tab, Track* track);
 
-  [[nodiscard]] int AccessibleChildCount() const override { return 1; }
+  [[nodiscard]] int AccessibleChildCount() const override { return 0; }
   [[nodiscard]] const AccessibleInterface* AccessibleChild(int /*index*/) const override;
 
   [[nodiscard]] std::string AccessibleName() const override;
