@@ -292,6 +292,7 @@ TEST_F(RetrieveInstancesWidgetTest, StartSuccessfulDefault) {
 
   widget_.Start();
   QCoreApplication::processEvents();
+  QCoreApplication::processEvents();
 
   VerifySuccessfulLoadAndUIState(kInitialTestDataDefault.instances);
   VerifyProjectComboBoxHoldsData(kInitialTestDataDefault);

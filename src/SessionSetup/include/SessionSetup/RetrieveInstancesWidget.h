@@ -63,7 +63,7 @@ class RetrieveInstancesWidget : public QWidget {
   std::unique_ptr<Ui::RetrieveInstancesWidget> ui_;
   std::shared_ptr<MainThreadExecutor> main_thread_executor_;
   std::shared_ptr<RetrieveInstances> retrieve_instances_;
-  orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
+  orbit_metrics_uploader::MetricsUploader* metrics_uploader_ = nullptr;
   QStateMachine state_machine_;
   QState s_idle_;
   QState s_loading_;

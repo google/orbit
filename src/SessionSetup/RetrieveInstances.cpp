@@ -52,14 +52,14 @@ class RetrieveInstancesImpl : public RetrieveInstances {
   }
 
  private:
-  orbit_ggp::Client* ggp_client_;
+  orbit_ggp::Client* ggp_client_ = nullptr;
   // To avoid race conditions to the instance_cache_, the main thread is used.
-  MainThreadExecutor* main_thread_executor_;
+  MainThreadExecutor* main_thread_executor_ = nullptr;
   absl::flat_hash_map<
       std::pair<std::optional<orbit_ggp::Project>, orbit_ggp::Client::InstanceListScope>,
       QVector<orbit_ggp::Instance>>
       instance_cache_;
-  orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
+  orbit_metrics_uploader::MetricsUploader* metrics_uploader_ = nullptr;
 };
 
 std::unique_ptr<RetrieveInstances> RetrieveInstances::Create(
