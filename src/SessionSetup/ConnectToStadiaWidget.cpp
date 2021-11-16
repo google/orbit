@@ -555,7 +555,7 @@ void ConnectToStadiaWidget::TrySelectRememberedInstance() {
 
   ui_->instancesTableView->selectionModel()->setCurrentIndex(
       matches[0], {QItemSelectionModel::SelectCurrent, QItemSelectionModel::Rows});
-  emit Connect();
+  emit Connecting();
   remembered_instance_id_ = std::nullopt;
 }
 

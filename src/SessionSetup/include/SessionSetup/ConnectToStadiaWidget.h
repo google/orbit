@@ -82,7 +82,7 @@ class ConnectToStadiaWidget : public QWidget {
   void InstanceSelected();
   void ReceivedSshInfo();
   void ReadyToDeploy();
-  void Connect();
+  void Connecting();
   void Activated();
   void Connected();
   void Disconnected();
