@@ -260,6 +260,7 @@ class RetrieveInstancesWidgetTestStarted : public RetrieveInstancesWidgetTest {
 
     widget_.Start();
     QCoreApplication::processEvents();
+    QCoreApplication::processEvents();
 
     VerifyAndClearSignalsOfSuccessfulLoadingCycle();
     VerifyAllElementsAreEnabled();
@@ -312,6 +313,7 @@ TEST_F(RetrieveInstancesWidgetTest, StartSuccessfulWithRememberedSettings) {
 
   widget_.Start();
   QCoreApplication::processEvents();
+  QCoreApplication::processEvents();
 
   VerifySuccessfulLoadAndUIState(kInitialTestDataWithProjectOfInstances.instances);
   VerifyProjectComboBoxHoldsData(kInitialTestDataWithProjectOfInstances);
@@ -327,6 +329,7 @@ TEST_F(RetrieveInstancesWidgetTest, StartFailed) {
           ErrorMessage{"error message"}}));
 
   widget_.Start();
+  QCoreApplication::processEvents();
 
   QMetaObject::invokeMethod(
       &widget_, []() { QCoreApplication::exit(); }, Qt::QueuedConnection);
