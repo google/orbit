@@ -19,14 +19,13 @@
 #include <utility>
 
 #include "IntegrationTestChildProcess.h"
+#include "IntegrationTestCommons.h"
 #include "IntegrationTestPuppet.h"
 #include "IntegrationTestUtils.h"
 #include "LinuxTracing/Tracer.h"
 #include "LinuxTracing/TracerListener.h"
 #include "ObjectUtils/Address.h"
 #include "ObjectUtils/ElfFile.h"
-#include "ObjectUtils/LinuxMap.h"
-#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/ThreadUtils.h"
@@ -260,6 +259,8 @@ class LinuxTracingIntegrationTestFixture {
     capture_options.set_samples_per_second(1000.0);
     capture_options.set_stack_dump_size(65000);
     capture_options.set_unwinding_method(orbit_grpc_protos::CaptureOptions::kDwarf);
+    capture_options.set_dynamic_instrumentation_method(
+        orbit_grpc_protos::CaptureOptions::kKernelUprobes);
     capture_options.set_trace_thread_state(true);
     capture_options.set_trace_gpu_driver(true);
     return capture_options;
@@ -327,46 +328,6 @@ using PuppetConstants = IntegrationTestPuppetConstants;
   constexpr absl::Duration kSleepBeforeStopTracing = absl::Milliseconds(100);
   absl::SleepFor(kSleepBeforeStopTracing);
   return fixture->StopTracingAndGetEvents();
-}
-
-std::filesystem::path GetExecutableBinaryPath(pid_t pid) {
-  auto error_or_executable_path =
-      orbit_base::GetExecutablePath(orbit_base::FromNativeProcessId(pid));
-  CHECK(error_or_executable_path.has_value());
-  return error_or_executable_path.value();
-}
-
-orbit_grpc_protos::ModuleSymbols GetExecutableBinaryModuleSymbols(pid_t pid) {
-  const std::filesystem::path& executable_path = GetExecutableBinaryPath(pid);
-
-  auto error_or_elf_file = orbit_object_utils::CreateElfFile(executable_path.string());
-  CHECK(error_or_elf_file.has_value());
-  const std::unique_ptr<orbit_object_utils::ElfFile>& elf_file = error_or_elf_file.value();
-
-  auto error_or_module = elf_file->LoadDebugSymbols();
-  CHECK(error_or_module.has_value());
-  return error_or_module.value();
-}
-
-orbit_grpc_protos::ModuleInfo GetExecutableBinaryModuleInfo(pid_t pid) {
-  auto error_or_module_infos = orbit_object_utils::ReadModules(pid);
-  CHECK(error_or_module_infos.has_value());
-  const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos = error_or_module_infos.value();
-
-  auto error_or_executable_path =
-      orbit_base::GetExecutablePath(orbit_base::FromNativeProcessId(pid));
-  CHECK(error_or_executable_path.has_value());
-  const std::filesystem::path& executable_path = error_or_executable_path.value();
-
-  const orbit_grpc_protos::ModuleInfo* executable_module_info = nullptr;
-  for (const auto& module_info : module_infos) {
-    if (module_info.file_path() == executable_path) {
-      executable_module_info = &module_info;
-      break;
-    }
-  }
-  CHECK(executable_module_info != nullptr);
-  return *executable_module_info;
 }
 
 void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
@@ -553,99 +514,20 @@ TEST(LinuxTracingIntegrationTest, SchedulingSlices) {
   EXPECT_GE(scheduling_slice_count, PuppetConstants::kSleepCount - 1);
 }
 
-void AddOuterAndInnerFunctionToCaptureOptions(orbit_grpc_protos::CaptureOptions* capture_options,
-                                              pid_t pid, uint64_t outer_function_id,
-                                              uint64_t inner_function_id) {
-  // Find the offset in the ELF file of the "outer" function and the "inner" function and add those
-  // functions to the CaptureOptions to be instrumented.
-  const orbit_grpc_protos::ModuleSymbols& module_symbols = GetExecutableBinaryModuleSymbols(pid);
-  const std::filesystem::path& executable_path = GetExecutableBinaryPath(pid);
-
-  bool outer_function_symbol_found = false;
-  bool inner_function_symbol_found = false;
-  for (const orbit_grpc_protos::SymbolInfo& symbol : module_symbols.symbol_infos()) {
-    if (symbol.name() == PuppetConstants::kOuterFunctionName) {
-      CHECK(!outer_function_symbol_found);
-      outer_function_symbol_found = true;
-      orbit_grpc_protos::InstrumentedFunction instrumented_function;
-      instrumented_function.set_file_path(executable_path);
-      instrumented_function.set_file_offset(symbol.address() - module_symbols.load_bias());
-      instrumented_function.set_function_id(outer_function_id);
-      instrumented_function.set_function_name(symbol.name());
-      instrumented_function.set_record_return_value(true);
-      capture_options->mutable_instrumented_functions()->Add(std::move(instrumented_function));
-    }
-
-    if (symbol.name() == PuppetConstants::kInnerFunctionName) {
-      CHECK(!inner_function_symbol_found);
-      inner_function_symbol_found = true;
-      orbit_grpc_protos::InstrumentedFunction instrumented_function;
-      instrumented_function.set_file_path(executable_path);
-      instrumented_function.set_file_offset(symbol.address() - module_symbols.load_bias());
-      instrumented_function.set_function_id(inner_function_id);
-      instrumented_function.set_function_name(symbol.name());
-      instrumented_function.set_record_arguments(true);
-      capture_options->mutable_instrumented_functions()->Add(std::move(instrumented_function));
-    }
-  }
-  CHECK(outer_function_symbol_found);
-  CHECK(inner_function_symbol_found);
-}
-
 void VerifyFunctionCallsOfOuterAndInnerFunction(
     const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events, uint32_t pid,
     uint64_t outer_function_id, uint64_t inner_function_id) {
   std::vector<orbit_grpc_protos::FunctionCall> function_calls;
-  for (const auto& event : events) {
+  for (const orbit_grpc_protos::ProducerCaptureEvent& event : events) {
     if (event.event_case() != orbit_grpc_protos::ProducerCaptureEvent::kFunctionCall) {
       continue;
     }
-
-    const orbit_grpc_protos::FunctionCall& function_call = event.function_call();
-    ASSERT_EQ(function_call.pid(), pid);
-    ASSERT_EQ(function_call.tid(), pid);
-    function_calls.emplace_back(function_call);
+    function_calls.emplace_back(event.function_call());
   }
 
-  // We expect an ordered sequence of kInnerFunctionCallCount calls to the "inner" function followed
-  // by one call to the "outer" function, repeated kOuterFunctionCallCount times.
-  ASSERT_EQ(function_calls.size(), PuppetConstants::kOuterFunctionCallCount +
-                                       PuppetConstants::kOuterFunctionCallCount *
-                                           PuppetConstants::kInnerFunctionCallCount);
-  size_t function_call_index = 0;
-  for (size_t outer_index = 0; outer_index < PuppetConstants::kOuterFunctionCallCount;
-       ++outer_index) {
-    uint64_t inner_calls_duration_ns_sum = 0;
-    for (size_t inner_index = 0; inner_index < PuppetConstants::kInnerFunctionCallCount;
-         ++inner_index) {
-      const orbit_grpc_protos::FunctionCall& function_call = function_calls[function_call_index];
-      EXPECT_EQ(function_call.function_id(), inner_function_id);
-      EXPECT_GT(function_call.duration_ns(), 0);
-      inner_calls_duration_ns_sum += function_call.duration_ns();
-      if (function_call_index > 0) {
-        EXPECT_GT(function_call.end_timestamp_ns(),
-                  function_calls[function_call_index - 1].end_timestamp_ns());
-      }
-      EXPECT_EQ(function_call.depth(), 1);
-      EXPECT_EQ(function_call.return_value(), 0);
-      EXPECT_THAT(function_call.registers(), testing::ElementsAre(1, 2, 3, 4, 5, 6));
-      ++function_call_index;
-    }
-
-    {
-      const orbit_grpc_protos::FunctionCall& function_call = function_calls[function_call_index];
-      EXPECT_EQ(function_call.function_id(), outer_function_id);
-      EXPECT_GT(function_call.duration_ns(), inner_calls_duration_ns_sum);
-      if (function_call_index > 0) {
-        EXPECT_GT(function_call.end_timestamp_ns(),
-                  function_calls[function_call_index - 1].end_timestamp_ns());
-      }
-      EXPECT_EQ(function_call.depth(), 0);
-      EXPECT_EQ(function_call.return_value(), PuppetConstants::kOuterFunctionReturnValue);
-      EXPECT_EQ(function_call.registers_size(), 0);
-      ++function_call_index;
-    }
-  }
+  VerifyFunctionCallsOfPuppetOuterAndInnerFunction(function_calls, pid, outer_function_id,
+                                                   inner_function_id,
+                                                   /*expect_return_value_and_registers=*/true);
 }
 
 TEST(LinuxTracingIntegrationTest, FunctionCalls) {
@@ -657,8 +539,8 @@ TEST(LinuxTracingIntegrationTest, FunctionCalls) {
   orbit_grpc_protos::CaptureOptions capture_options = fixture.BuildDefaultCaptureOptions();
   constexpr uint64_t kOuterFunctionId = 1;
   constexpr uint64_t kInnerFunctionId = 2;
-  AddOuterAndInnerFunctionToCaptureOptions(&capture_options, fixture.GetPuppetPidNative(),
-                                           kOuterFunctionId, kInnerFunctionId);
+  AddPuppetOuterAndInnerFunctionToCaptureOptions(&capture_options, fixture.GetPuppetPidNative(),
+                                                 kOuterFunctionId, kInnerFunctionId);
 
   std::vector<orbit_grpc_protos::ProducerCaptureEvent> events =
       TraceAndGetEvents(&fixture, PuppetConstants::kCallOuterFunctionCommand, capture_options);
@@ -900,8 +782,8 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesTogetherWithFunctionCalls) {
   orbit_grpc_protos::CaptureOptions capture_options = fixture.BuildDefaultCaptureOptions();
   constexpr uint64_t kOuterFunctionId = 1;
   constexpr uint64_t kInnerFunctionId = 2;
-  AddOuterAndInnerFunctionToCaptureOptions(&capture_options, fixture.GetPuppetPidNative(),
-                                           kOuterFunctionId, kInnerFunctionId);
+  AddPuppetOuterAndInnerFunctionToCaptureOptions(&capture_options, fixture.GetPuppetPidNative(),
+                                                 kOuterFunctionId, kInnerFunctionId);
   const double sampling_rate = capture_options.samples_per_second();
 
   std::vector<orbit_grpc_protos::ProducerCaptureEvent> events =
@@ -976,8 +858,8 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointersTogetherWithF
   capture_options.set_unwinding_method(orbit_grpc_protos::CaptureOptions::kFramePointers);
   constexpr uint64_t kOuterFunctionId = 1;
   constexpr uint64_t kInnerFunctionId = 2;
-  AddOuterAndInnerFunctionToCaptureOptions(&capture_options, fixture.GetPuppetPidNative(),
-                                           kOuterFunctionId, kInnerFunctionId);
+  AddPuppetOuterAndInnerFunctionToCaptureOptions(&capture_options, fixture.GetPuppetPidNative(),
+                                                 kOuterFunctionId, kInnerFunctionId);
   const double sampling_rate = capture_options.samples_per_second();
 
   std::vector<orbit_grpc_protos::ProducerCaptureEvent> events =
