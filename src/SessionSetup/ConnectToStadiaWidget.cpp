@@ -308,7 +308,7 @@ void ConnectToStadiaWidget::SetupStateMachine() {
                                      &s_loading_credentials_);
   s_instance_selected_.addTransition(ui_->instancesTableView, &QTableView::doubleClicked,
                                      &s_loading_credentials_);
-  s_instance_selected_.addTransition(this, &ConnectToStadiaWidget::Connect,
+  s_instance_selected_.addTransition(this, &ConnectToStadiaWidget::Connecting,
                                      &s_loading_credentials_);
   QObject::connect(&s_instance_selected_, &QState::entered, this, [this]() {
     if (instance_model_.rowCount() == 0) {
