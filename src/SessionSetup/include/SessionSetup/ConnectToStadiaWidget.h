@@ -67,7 +67,7 @@ class ConnectToStadiaWidget : public QWidget {
 
  private slots:
   void ReloadInstances();
-  void CheckCredentialsAvailableOrLoad();
+  void LoadCredentials();
   void DeployOrbitService();
   void Disconnect();
   void OnConnectToStadiaRadioButtonClicked(bool checked);

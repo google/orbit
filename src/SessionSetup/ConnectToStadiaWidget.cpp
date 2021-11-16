@@ -317,7 +317,7 @@ void ConnectToStadiaWidget::SetupStateMachine() {
 
   // STATE s_waiting_for_creds_
   QObject::connect(&s_waiting_for_creds_, &QState::entered, this,
-                   &ConnectToStadiaWidget::CheckCredentialsAvailableOrLoad);
+                   &ConnectToStadiaWidget::LoadCredentials);
 
   s_waiting_for_creds_.addTransition(this, &ConnectToStadiaWidget::ReceivedSshInfo,
                                      &s_waiting_for_creds_);
@@ -367,7 +367,7 @@ void ConnectToStadiaWidget::ReloadInstances() {
       [this](ErrorMessageOr<QVector<Project>> projects) { OnProjectsLoaded(std::move(projects)); });
 }
 
-void ConnectToStadiaWidget::CheckCredentialsAvailableOrLoad() {
+void ConnectToStadiaWidget::LoadCredentials() {
   CHECK(selected_instance_.has_value());
 
   const std::string instance_id = selected_instance_->id.toStdString();
