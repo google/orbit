@@ -43,7 +43,7 @@ std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
 
   auto ggp_client_result = orbit_ggp::CreateClient();
   if (ggp_client_result.has_error()) {
-    LogAndDisplayError(QString::fromStdString(ggp_client_result.error().message()));
+    LogAndDisplayError(ggp_client_result.error());
     return std::nullopt;
   }
   ggp_client_ = std::move(ggp_client_result.value());
@@ -63,7 +63,7 @@ std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
                          target = std::move(result.value());
                          accept();
                        } else {
-                         LogAndDisplayError(QString::fromStdString(result.error().message()));
+                         LogAndDisplayError(result.error());
                          reject();
                        }
                      });
@@ -79,22 +79,15 @@ std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
 
 ErrorMessageOr<StadiaTarget> ConnectToTargetDialog::OnAsyncDataAvailable(
     MaybeSshAndInstanceData ssh_instance_data) {
-  auto& [ssh_info_result, instance_result] = ssh_instance_data;
-
-  std::string error;
-  if (ssh_info_result.has_error()) {
-    return ssh_info_result.error();
-  } else if (instance_result.has_error()) {
-    return instance_result.error();
-  }
+  OUTCOME_TRY(auto&& ssh_info, std::get<0>(ssh_instance_data));
+  OUTCOME_TRY(auto&& instance, std::get<1>(ssh_instance_data));
 
   ConnectionData connection_data;
 
   connection_data.service_deploy_manager_ =
       std::make_unique<orbit_session_setup::ServiceDeployManager>(
           ssh_connection_artifacts_->GetDeploymentConfiguration(),
-          ssh_connection_artifacts_->GetSshContext(),
-          CredentialsFromSshInfo(ssh_info_result.value()),
+          ssh_connection_artifacts_->GetSshContext(), CredentialsFromSshInfo(ssh_info),
           ssh_connection_artifacts_->GetGrpcPort());
 
   OUTCOME_TRY(auto&& grpc_port, DeployOrbitService(connection_data.service_deploy_manager_.get()));
@@ -103,7 +96,7 @@ ErrorMessageOr<StadiaTarget> ConnectToTargetDialog::OnAsyncDataAvailable(
   OUTCOME_TRY(connection_data.process_data_,
               FindSpecifiedProcess(connection_data.grpc_channel_, process_id_));
 
-  return CreateTarget(std::move(connection_data), std::move(instance_result.value()));
+  return CreateTarget(std::move(connection_data), std::move(instance));
 }
 
 StadiaTarget ConnectToTargetDialog::CreateTarget(ConnectionData result,
@@ -157,18 +150,18 @@ ConnectToTargetDialog::FindSpecifiedProcess(std::shared_ptr<grpc_impl::Channel> 
     }
   }
 
-  return ErrorMessage(QString("PID %1 was not found in the list of running processes.")
-                          .arg(process_id)
-                          .toStdString());
+  return ErrorMessage(
+      absl::StrFormat("PID %d was not found in the list of running processes.", process_id));
 }
 
 void ConnectToTargetDialog::SetStatusMessage(const QString& message) {
   ui_->statusLabel->setText(QString("<b>Status:</b> ") + message);
 }
 
-void ConnectToTargetDialog::LogAndDisplayError(const QString& message) {
-  ERROR("%s", message.toStdString());
-  QMessageBox::critical(nullptr, QApplication::applicationName(), message);
+void ConnectToTargetDialog::LogAndDisplayError(const ErrorMessage& message) {
+  ERROR("%s", message.message());
+  QMessageBox::critical(nullptr, QApplication::applicationName(),
+                        QString::fromStdString(message.message()));
 }
 
 }  // namespace orbit_session_setup

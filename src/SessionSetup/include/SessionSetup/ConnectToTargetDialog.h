@@ -69,7 +69,7 @@ class ConnectToTargetDialog : public QDialog {
   FindSpecifiedProcess(std::shared_ptr<grpc_impl::Channel> grpc_channel, uint32_t process_id);
 
   void SetStatusMessage(const QString& message);
-  void LogAndDisplayError(const QString& message);
+  void LogAndDisplayError(const ErrorMessage& message);
 };
 
 }  // namespace orbit_session_setup
