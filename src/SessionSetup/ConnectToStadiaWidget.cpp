@@ -379,9 +379,6 @@ void ConnectToStadiaWidget::LoadCredentials() {
     return;
   }
 
-  if (instance_credentials_loading_.contains(instance_id)) return;
-
-  instance_credentials_loading_.emplace(instance_id);
   auto future = ggp_client_->GetSshInfoAsync(selected_instance_.value().id, selected_project_);
   future.Then(main_thread_executor_.get(),
               [this, instance_id](ErrorMessageOr<orbit_ggp::SshInfo> ssh_info_result) {
@@ -527,8 +524,6 @@ void ConnectToStadiaWidget::OnProjectsLoaded(ErrorMessageOr<QVector<Project>> pr
 
 void ConnectToStadiaWidget::OnSshInfoLoaded(ErrorMessageOr<orbit_ggp::SshInfo> ssh_info_result,
                                             std::string instance_id) {
-  instance_credentials_loading_.erase(instance_id);
-
   if (ssh_info_result.has_error()) {
     std::string error_message =
         absl::StrFormat("Unable to load encryption credentials for instance with id %s: %s",
