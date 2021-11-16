@@ -1618,13 +1618,6 @@ void OrbitMainWindow::ShowWarningWithDontShowAgainCheckboxIfNeeded(
   message_box.exec();
 }
 
-void OrbitMainWindow::ShowWarning(std::string_view title, std::string_view text) {
-  QMessageBox message_box{QMessageBox::Icon::Warning, QString::fromStdString(std::string{title}),
-                          QString::fromStdString(std::string{text}),
-                          QMessageBox::StandardButton::Ok, this};
-  message_box.exec();
-}
-
 static std::optional<QString> TryApplyMappingAndReadSourceFile(
     const std::filesystem::path& file_path) {
   orbit_source_paths_mapping::MappingManager mapping_manager{};

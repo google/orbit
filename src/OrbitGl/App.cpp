@@ -599,7 +599,7 @@ void OrbitApp::OnErrorEnablingUserSpaceInstrumentationEvent(
     main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
                                      GetCaptureTimeAt(error_event.timestamp_ns()), message);
     if (!IsLoadingCapture()) {
-      main_window_->ShowWarning("Could not enable user space instrumentation", message);
+      SendWarningToUi("Could not enable user space instrumentation", message);
     }
   });
 }
