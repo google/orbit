@@ -17,11 +17,13 @@
 #include <unwindstack/PeCoffInterface.h>
 
 #include <cstring>
+#include <limits>
 
 #include <android-base/file.h>
 
 #include <gtest/gtest.h>
 
+#include <Check.h>
 #include <MemoryBuffer.h>
 #include "utils/MemoryFake.h"
 
@@ -69,6 +71,16 @@ class PeCoffInterfaceTest : public ::testing::Test {
     offset = SetNewHeaderAtOffset(offset);
     offset = SetCoffHeaderAtOffset(offset);
     offset = SetOptionalHeaderAtOffset(offset);
+    offset = SetSectionHeadersAtOffset(offset);
+  }
+
+  uint64_t InitPeCoffInterfaceFakeNoSectionHeaders() {
+    memory_fake_.Clear();
+    uint64_t offset = SetDosHeader(0x1000);
+    offset = SetNewHeaderAtOffset(offset);
+    offset = SetCoffHeaderAtOffset(offset);
+    offset = SetOptionalHeaderAtOffset(offset);
+    return offset;
   }
 
   uint64_t SetData8(uint64_t offset, uint8_t value) {
@@ -126,11 +138,19 @@ class PeCoffInterfaceTest : public ::testing::Test {
   uint64_t SetNewHeaderAtOffset(uint64_t offset) { return SetData32(offset, 0x00004550); }
 
   uint64_t SetCoffHeaderAtOffset(uint64_t offset) {
-    offset = SetData16(offset, 0);
-    offset = SetData16(offset, 0);
-    offset = SetData32(offset, 0);
-    offset = SetData32(offset, 0);
-    offset = SetData32(offset, 0);
+    offset = SetData16(offset, 0);  // machine
+
+    // We remember the location of the number of sections here, so we can set it correctly later
+    // when we initialize the sections.
+    coff_header_nsects_offset_ = offset;
+    offset = SetData16(offset, 0);  // nsects
+
+    offset = SetData32(offset, 0);  // modtime
+
+    coff_header_symoff_offset_ = offset;
+    offset = SetData32(offset, 0);  // symoff
+
+    offset = SetData32(offset, 0);  // nsyms
 
     // We remember the location of the header size (which is actually the size of the optional
     // header) here so that we can set it correctly later when we know the size of the optional
@@ -138,7 +158,7 @@ class PeCoffInterfaceTest : public ::testing::Test {
     optional_header_size_offset_ = offset;
     offset = SetData16(offset, 0);  // hdrsize, to be set correctly later
 
-    offset = SetData16(offset, 0);
+    offset = SetData16(offset, 0);  // flags
     return offset;
   }
 
@@ -217,16 +237,77 @@ class PeCoffInterfaceTest : public ::testing::Test {
     return offset;
   }
 
+  uint64_t SetSectionHeaderAtOffset(uint64_t offset, std::string section_name) {
+    std::string name_in_header = section_name;
+    if (section_name.size() > kSectionNameInHeaderSize) {
+      const uint64_t previous_offset =
+          section_names_in_string_table_.empty() ? 0 : section_names_in_string_table_.back().first;
+      const uint64_t previous_size = section_names_in_string_table_.empty()
+                                         ? 0
+                                         : section_names_in_string_table_.back().second.size() + 1;
+      const uint64_t current_offset = previous_offset + previous_size;
+      name_in_header = std::string("/") + std::to_string(current_offset);
+      section_names_in_string_table_.emplace_back(current_offset, section_name);
+    }
+
+    std::vector<uint8_t> zeros(kSectionNameInHeaderSize, 0);
+    memory_fake_.SetMemory(offset, zeros.data(), zeros.size());
+    memory_fake_.SetMemory(offset, name_in_header);
+    offset += kSectionNameInHeaderSize;
+    offset = SetData32(offset, 0);  // vmsize
+    offset = SetData32(offset, 0);  // vmaddr
+    offset = SetData32(offset, 0);  // size
+    offset = SetData32(offset, 0);  // offset
+    offset = SetData32(offset, 0);  // reloff
+    offset = SetData32(offset, 0);  // lineoff
+    offset = SetData16(offset, 0);  // nrel
+    offset = SetData16(offset, 0);  // nline
+    offset = SetData32(offset, 0);  // flagsd
+    return offset;
+  };
+
+  uint64_t SetSectionStringsAtOffset(uint64_t offset) {
+    const uint64_t string_table_base_offset = offset;
+    for (const auto& [string_table_offset, name] : section_names_in_string_table_) {
+      memory_fake_.SetMemory(string_table_base_offset + string_table_offset, name);
+
+      // Strings written to memory are null-terminated, so we need to add "1" to the size.
+      offset += name.size() + 1;
+    }
+    return offset;
+  }
+
+  uint64_t SetSectionHeadersAtOffset(uint64_t offset) {
+    // Shorter than kSectionNameInHeaderSize (== 8) characters
+    offset = SetSectionHeaderAtOffset(offset, ".text");
+    // Longer than kSectionNameInHeaderSize (== 8) characters
+    offset = SetSectionHeaderAtOffset(offset, ".debug_frame");
+    SetData16(coff_header_nsects_offset_, 2);
+
+    CHECK(offset <= std::numeric_limits<uint32_t>::max());
+    const uint32_t actual_symoff = static_cast<uint32_t>(offset);
+    SetData32(coff_header_symoff_offset_, actual_symoff);
+
+    offset = SetSectionStringsAtOffset(offset);
+
+    return offset;
+  }
+
   std::unique_ptr<Memory> memory_;
   MemoryFake memory_fake_;
+
+  uint64_t coff_header_nsects_offset_;
+  uint64_t coff_header_symoff_offset_;
 
   uint64_t optional_header_size_offset_;
   uint64_t optional_header_start_offset_;
 
   uint64_t optional_header_num_data_dirs_offset_;
+
+  std::vector<std::pair<uint64_t, std::string>> section_names_in_string_table_;
 };
 
-// Many test equally apply to the 32-bit and the 64-bit case, so we implement these
+// Many tests equally apply to the 32-bit and the 64-bit case, so we implement these
 // as TYPED_TESTs.
 typedef ::testing::Types<PeCoffInterface32, PeCoffInterface64> Implementations;
 TYPED_TEST_SUITE(PeCoffInterfaceTest, Implementations);
@@ -348,6 +429,63 @@ TYPED_TEST(PeCoffInterfaceTest, optional_header_parsing_fails_incorrect_num_data
   uint32_t correct_num;
   this->memory_fake_.Read32(this->optional_header_num_data_dirs_offset_, &correct_num);
   this->SetData32(this->optional_header_num_data_dirs_offset_, correct_num + 1);
+
+  TypeParam coff(&this->memory_fake_);
+  ASSERT_FALSE(coff.Init());
+  EXPECT_EQ(ERROR_INVALID_COFF, coff.LastError().code);
+}
+
+TYPED_TEST(PeCoffInterfaceTest, section_headers_parsing_fails_invalid_memory) {
+  this->InitPeCoffInterfaceFakeNoSectionHeaders();
+  this->SetData16(this->coff_header_nsects_offset_, 1);
+
+  TypeParam coff(&this->memory_fake_);
+  ASSERT_FALSE(coff.Init());
+  EXPECT_EQ(ERROR_MEMORY_INVALID, coff.LastError().code);
+}
+
+TYPED_TEST(PeCoffInterfaceTest,
+           section_headers_parsing_fails_invalid_memory_middle_of_section_header) {
+  const uint64_t section_headers_offset = this->InitPeCoffInterfaceFakeNoSectionHeaders();
+  this->SetSectionHeaderAtOffset(section_headers_offset, ".text");
+  this->SetData16(this->coff_header_nsects_offset_, 1);
+  // We want to catch the second failure case, which is after the initial section name string of
+  // length kSectionNameInHeaderSize
+  this->memory_fake_.ClearMemory(section_headers_offset + kSectionNameInHeaderSize, 1);
+
+  TypeParam coff(&this->memory_fake_);
+  ASSERT_FALSE(coff.Init());
+  EXPECT_EQ(ERROR_MEMORY_INVALID, coff.LastError().code);
+}
+
+TYPED_TEST(PeCoffInterfaceTest,
+           section_headers_parsing_fails_section_string_name_offset_not_an_integer) {
+  const uint64_t section_headers_offset = this->InitPeCoffInterfaceFakeNoSectionHeaders();
+  this->SetSectionHeaderAtOffset(section_headers_offset, "/abc");
+  this->SetData16(this->coff_header_nsects_offset_, 1);
+
+  TypeParam coff(&this->memory_fake_);
+  ASSERT_FALSE(coff.Init());
+  EXPECT_EQ(ERROR_INVALID_COFF, coff.LastError().code);
+}
+
+TYPED_TEST(PeCoffInterfaceTest, section_headers_parsing_fails_missing_string_table) {
+  uint64_t offset = this->InitPeCoffInterfaceFakeNoSectionHeaders();
+  // The "/0" indicates that the section name has to be read at offset 0 in the string table,
+  // however for this test, the string table is not set up at all, so it must fail.
+  offset = this->SetSectionHeaderAtOffset(offset, "/0");
+  this->SetData32(this->coff_header_symoff_offset_, offset);
+  this->SetData16(this->coff_header_nsects_offset_, 1);
+
+  TypeParam coff(&this->memory_fake_);
+  ASSERT_FALSE(coff.Init());
+  EXPECT_EQ(ERROR_MEMORY_INVALID, coff.LastError().code);
+}
+
+TYPED_TEST(PeCoffInterfaceTest, section_headers_parsing_fails_no_text_section) {
+  uint64_t offset = this->InitPeCoffInterfaceFakeNoSectionHeaders();
+  offset = this->SetSectionHeaderAtOffset(offset, ".no_text");
+  this->SetData16(this->coff_header_nsects_offset_, 1);
 
   TypeParam coff(&this->memory_fake_);
   ASSERT_FALSE(coff.Init());

@@ -16,6 +16,8 @@
 
 #include <unwindstack/PeCoffInterface.h>
 
+#include <android-base/parseint.h>
+
 #include <unwindstack/Error.h>
 #include <unwindstack/Log.h>
 #include <unwindstack/Memory.h>
@@ -85,6 +87,14 @@ bool PeCoffMemory::GetMax64(uint64_t* value, uint64_t size) {
   return false;
 }
 
+bool PeCoffMemory::GetFully(void* dst, size_t size) {
+  bool success = memory_->ReadFully(cur_offset_, dst, size);
+  if (success) {
+    cur_offset_ += size;
+  }
+  return success;
+}
+
 template <typename AddressType>
 bool PeCoffInterface<AddressType>::ParseDosHeader(uint64_t offset) {
   coff_memory_.set_cur_offset(offset);
@@ -105,13 +115,12 @@ bool PeCoffInterface<AddressType>::ParseDosHeader(uint64_t offset) {
   // we can correctly read the memory at these addresses.
   constexpr size_t kDosHeaderSize = 0x40;
   std::vector<uint8_t> unused_data(kDosHeaderSize - sizeof(uint16_t) - sizeof(uint32_t));
-  if (!coff_memory_.ReadFully(coff_memory_.cur_offset(), &unused_data[0], unused_data.size())) {
+  if (!coff_memory_.GetFully(&unused_data[0], unused_data.size())) {
     last_error_.code = ERROR_MEMORY_INVALID;
     last_error_.address = coff_memory_.cur_offset();
     return false;
   }
 
-  coff_memory_.set_cur_offset(offset + 0x3c);
   if (!coff_memory_.Get32(&dos_header_.e_lfanew)) {
     last_error_.code = ERROR_MEMORY_INVALID;
     last_error_.address = coff_memory_.cur_offset();
@@ -129,7 +138,7 @@ bool PeCoffInterface<AddressType>::ParseNewHeader(uint64_t offset) {
     last_error_.address = coff_memory_.cur_offset();
     return false;
   }
-  uint32_t kImagePeSignature = 0x00004550;
+  constexpr uint32_t kImagePeSignature = 0x00004550;
   if (pe_signature != kImagePeSignature) {
     Log::Error("PE image signature not found");
     last_error_.code = ERROR_INVALID_COFF;
@@ -252,6 +261,114 @@ bool PeCoffInterface<AddressType>::ParseOptionalHeader(uint64_t offset) {
     }
   }
 
+  coff_memory_.set_cur_offset(end_offset);
+
+  return true;
+}
+
+template <typename AddressType>
+bool PeCoffInterface<AddressType>::ParseSectionHeaders(uint64_t offset) {
+  const uint16_t num_sections = coff_header_.nsects;
+
+  coff_memory_.set_cur_offset(offset);
+
+  for (uint16_t idx = 0; idx < num_sections; ++idx) {
+    SectionHeader section_header;
+
+    // Section names in the header are always exactly kSectionNameInHeaderSize (== 8) bytes. Longer
+    // names have to be looked up in the string table.
+    if (!coff_memory_.GetFully(static_cast<void*>(&section_header.name[0]),
+                               kSectionNameInHeaderSize)) {
+      last_error_.code = ERROR_MEMORY_INVALID;
+      last_error_.address = coff_memory_.cur_offset();
+      Log::Error("Parsing section header failed: %s", GetErrorCodeString(last_error_.code));
+      return false;
+    }
+
+    if (!coff_memory_.Get32(&section_header.vmsize) ||
+        !coff_memory_.Get32(&section_header.vmaddr) || !coff_memory_.Get32(&section_header.size) ||
+        !coff_memory_.Get32(&section_header.offset) ||
+        !coff_memory_.Get32(&section_header.reloff) ||
+        !coff_memory_.Get32(&section_header.lineoff) || !coff_memory_.Get16(&section_header.nrel) ||
+        !coff_memory_.Get16(&section_header.nline) || !coff_memory_.Get32(&section_header.flags)) {
+      last_error_.code = ERROR_MEMORY_INVALID;
+      last_error_.address = coff_memory_.cur_offset();
+      Log::Error("Parsing section header failed: %s", GetErrorCodeString(last_error_.code));
+      return false;
+    }
+    parsed_section_headers_.emplace_back(section_header);
+  }
+  return true;
+}
+
+template <typename AddressType>
+bool PeCoffInterface<AddressType>::GetSectionName(const std::string& parsed_section_name_string,
+                                                  std::string* result) {
+  uint64_t offset = 0;
+  if (!android::base::ParseUint<uint64_t>(parsed_section_name_string.c_str(), &offset)) {
+    Log::Error("Failed to parse section name as integer: %s", parsed_section_name_string.c_str());
+    last_error_.code = ERROR_INVALID_COFF;
+    return false;
+  }
+
+  // The symbols come first and every one of them has a size of 18 bytes and we need to add
+  // this to the offset to get to the strings for the section names.
+  const uint64_t file_offset = coff_header_.symoff + (18 * coff_header_.nsyms) + offset;
+
+  // Arbitrarily chosen to be large enough.
+  constexpr uint64_t kMaxSectionNameLength = 1024;
+
+  if (!coff_memory_.ReadString(file_offset, result, kMaxSectionNameLength)) {
+    Log::Error("GetSectionName() failed when reading section name string");
+    last_error_.code = ERROR_MEMORY_INVALID;
+    last_error_.address = file_offset;
+    return false;
+  }
+  return true;
+}
+
+template <typename AddressType>
+bool PeCoffInterface<AddressType>::InitSections() {
+  for (const auto& section_header : parsed_section_headers_) {
+    Section section;
+    const std::string header_name(section_header.name.data(), section_header.name.size());
+    std::string name_trimmed = header_name.substr(0, header_name.find('\0'));
+    if (name_trimmed[0] != '/') {
+      section.name = name_trimmed;
+    } else if (!GetSectionName(name_trimmed.substr(1), &section.name)) {
+      return false;
+    }
+    section.vmaddr = section_header.vmaddr;
+    section.vmsize = section_header.vmsize;
+    section.offset = section_header.offset;
+    section.size = section_header.size;
+    sections_.emplace_back(section);
+  }
+
+  for (size_t i = 0; i < sections_.size(); ++i) {
+    if (sections_[i].name == ".text") {
+      TextSectionData section_data;
+      section_data.executable_offset = sections_[i].vmaddr;
+      section_data.section_index = i;
+      text_section_data_.emplace(section_data);
+    }
+    if (sections_[i].name == ".debug_frame") {
+      DebugFrameSectionData section_data;
+      section_data.file_offset = sections_[i].offset;
+      section_data.size = sections_[i].size;
+      uint64_t debug_frame_section_bias =
+          static_cast<int64_t>(sections_[i].vmaddr) - sections_[i].offset;
+      section_data.section_bias = debug_frame_section_bias;
+      debug_frame_section_data_.emplace(section_data);
+    }
+  }
+
+  if (!text_section_data_.has_value()) {
+    Log::Error("PE/COFF object file does not have a .text section");
+    last_error_.code = ERROR_INVALID_COFF;
+    return false;
+  }
+
   return true;
 }
 
@@ -266,19 +383,20 @@ bool PeCoffInterface<AddressType>::ParseAllHeaders() {
   if (!ParseCoffHeader(coff_memory_.cur_offset())) {
     return false;
   }
+
   if (coff_header_.hdrsize > 0 && !ParseOptionalHeader(coff_memory_.cur_offset())) {
     return false;
   }
-  // TODO: Parse section headers.
-  // if (!ParseSectionHeaders(coff_header_, memory, &offset, &section_headers_)) {
-  //   return false;
-  // }
+
+  if (!ParseSectionHeaders(coff_memory_.cur_offset())) {
+    return false;
+  }
   return true;
 }
 
 template <typename AddressType>
 bool PeCoffInterface<AddressType>::Init() {
-  return ParseAllHeaders();
+  return ParseAllHeaders() && InitSections();
 }
 
 // Instantiate all of the needed template functions.
