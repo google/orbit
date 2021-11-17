@@ -50,6 +50,7 @@ class ClientImpl : public Client, public QObject {
   Future<ErrorMessageOr<QVector<Project>>> GetProjectsAsync() override;
   Future<ErrorMessageOr<Project>> GetDefaultProjectAsync() override;
   Future<ErrorMessageOr<Instance>> DescribeInstanceAsync(const QString& instance_id) override;
+  Future<ErrorMessageOr<Account>> GetDefaultAccountAsync() override;
 
  private:
   const QString ggp_program_;
@@ -164,6 +165,16 @@ Future<ErrorMessageOr<Instance>> ClientImpl::DescribeInstanceAsync(const QString
   return orbit_qt_utils::ExecuteProcess(ggp_program_, arguments, this, absl::FromChrono(timeout_))
       .ThenIfSuccess(&executor, [](const QByteArray& json) -> ErrorMessageOr<Instance> {
         return Instance::CreateFromJson(json);
+      });
+}
+
+Future<ErrorMessageOr<Account>> ClientImpl::GetDefaultAccountAsync() {
+  QStringList arguments{"auth", "list", "-s"};
+
+  orbit_base::ImmediateExecutor executor;
+  return orbit_qt_utils::ExecuteProcess(ggp_program_, arguments, this, absl::FromChrono(timeout_))
+      .ThenIfSuccess(&executor, [](const QByteArray& json) -> ErrorMessageOr<Account> {
+        return Account::GetDefaultAccountFromJson(json);
       });
 }
 

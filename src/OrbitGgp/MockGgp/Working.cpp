@@ -197,6 +197,21 @@ int GgpInstance(int argc, char* argv[]) {
   return 1;
 }
 
+int GgpAuth(int argc, char* argv[]) {
+  if (argc != 4) {
+    std::cout << "Wrong amount of arguments" << std::endl;
+    return 1;
+  }
+  if (std::string_view{argv[1]} != "auth" || std::string_view{argv[2]} != "list" ||
+      std::string_view{argv[3]} != "-s") {
+    std::cout << "arguments are formatted wrong" << std::endl;
+    return 1;
+  }
+
+  std::cout << R"([{"default":"yes", "account":"username@email.com"}])" << std::endl;
+  return 0;
+}
+
 int main(int argc, char* argv[]) {
   // This sleep is here for 2 reasons:
   // 1. The ggp cli which this program is mocking, does have quite a bit of delay, hence having a
@@ -227,6 +242,10 @@ int main(int argc, char* argv[]) {
 
   if (std::string_view{argv[1]} == "config") {
     return GgpConfig(argc, argv);
+  }
+
+  if (std::string_view{argv[1]} == "auth") {
+    return GgpAuth(argc, argv);
   }
 
   std::cout << "arguments are formatted wrong" << std::endl;

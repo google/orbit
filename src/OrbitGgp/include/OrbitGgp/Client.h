@@ -14,6 +14,7 @@
 #include <optional>
 #include <string>
 
+#include "Account.h"
 #include "Instance.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
@@ -45,6 +46,7 @@ class Client {
   [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<Project>> GetDefaultProjectAsync() = 0;
   [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<Instance>> DescribeInstanceAsync(
       const QString& instance_id) = 0;
+  [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<Account>> GetDefaultAccountAsync() = 0;
 };
 
 [[nodiscard]] std::chrono::milliseconds GetClientDefaultTimeoutInMs();
