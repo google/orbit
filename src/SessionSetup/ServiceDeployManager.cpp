@@ -575,8 +575,10 @@ outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::Exec(
       LOG("OrbitService deployment has been aborted by the user");
     } else {
       connect_metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
-      LOG("Deployment successful, grpc_port: %d", result.value().grpc_port);
+      ERROR("OrbitService deployment failed, error: %s", result.error().message());
     }
+  } else {
+    LOG("Deployment successful, grpc_port: %d", result.value().grpc_port);
   }
 
   return result;
