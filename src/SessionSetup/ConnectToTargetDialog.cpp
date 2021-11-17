@@ -127,7 +127,7 @@ ConnectToTargetDialog::DeployOrbitService(
 
   auto deployment_result = service_deploy_manager->Exec();
   if (deployment_result.has_error()) {
-    return ErrorMessage{"Error during service deployment"};
+    return ErrorMessage{deployment_result.error().message()};
   } else {
     return deployment_result.value();
   }

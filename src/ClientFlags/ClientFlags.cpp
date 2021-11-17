@@ -54,3 +54,10 @@ ABSL_FLAG(bool, enable_project_selection, false, "Enable project selection durin
 
 ABSL_FLAG(bool, enforce_full_redraw, false,
           "Enforce full redraw every frame (used for performance measurements)");
+
+// VSI
+ABSL_FLAG(std::string, connection_target, "",
+          "Instance and process in the form <pid>@<instance_id>. Specify this to skip the "
+          "connection setup and open the main window instead. If either the instance or the "
+          "process ID can't be found or deployment is aborted by the user Orbit will exit "
+          "with return code -1 immediately.");
