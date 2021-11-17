@@ -46,6 +46,7 @@ class MockGgpClient : public orbit_ggp::Client {
   MOCK_METHOD(Future<ErrorMessageOr<Project>>, GetDefaultProjectAsync, (), (override));
   MOCK_METHOD(Future<ErrorMessageOr<Instance>>, DescribeInstanceAsync,
               (const QString& /*instance_id*/), (override));
+  MOCK_METHOD(Future<ErrorMessageOr<orbit_ggp::Account>>, GetDefaultAccountAsync, (), (override));
 };
 
 namespace {

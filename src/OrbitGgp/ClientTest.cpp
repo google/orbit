@@ -15,6 +15,7 @@
 #include "OrbitBase/Future.h"
 #include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Result.h"
+#include "OrbitGgp/Account.h"
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/Instance.h"
 #include "OrbitGgp/Project.h"
@@ -469,6 +470,26 @@ TEST_F(OrbitGgpClientTest, DescribeInstanceAsyncWorkingForInvalidInstance) {
                 ASSERT_THAT(instance, HasError("Unable to parse JSON"));
                 QCoreApplication::exit();
               });
+
+  QCoreApplication::exec();
+
+  EXPECT_TRUE(future_is_resolved);
+}
+
+TEST_F(OrbitGgpClientTest, GetAccountAsyncWorking) {
+  auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()));
+  ASSERT_THAT(client, HasValue());
+
+  bool future_is_resolved = false;
+
+  client.value()->GetDefaultAccountAsync().Then(
+      main_thread_executor_.get(), [&future_is_resolved](ErrorMessageOr<Account> account) {
+        EXPECT_FALSE(future_is_resolved);
+        future_is_resolved = true;
+        ASSERT_THAT(account, HasValue());
+        EXPECT_EQ(account.value().email, "username@email.com");
+        QCoreApplication::exit();
+      });
 
   QCoreApplication::exec();
 

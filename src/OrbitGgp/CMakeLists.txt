@@ -10,6 +10,7 @@ target_include_directories(OrbitGgp PUBLIC
           ${CMAKE_CURRENT_LIST_DIR}/include)
 
 target_sources(OrbitGgp PUBLIC
+          include/OrbitGgp/Account.h
           include/OrbitGgp/Client.h
           include/OrbitGgp/Error.h
           include/OrbitGgp/Instance.h
@@ -18,6 +19,7 @@ target_sources(OrbitGgp PUBLIC
           include/OrbitGgp/SshInfo.h)
 
 target_sources(OrbitGgp PRIVATE
+          Account.cpp
           Client.cpp
           Error.cpp
           Instance.cpp
@@ -46,6 +48,7 @@ target_sources(OrbitMockGgpWorking PRIVATE MockGgp/Working.cpp)
 add_executable(OrbitGgpTests)
 
 target_sources(OrbitGgpTests PRIVATE 
+          AccountTest.cpp
           ClientTest.cpp
           InstanceTests.cpp
           InstanceItemModelTests.cpp
