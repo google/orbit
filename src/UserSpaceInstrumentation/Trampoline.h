@@ -115,10 +115,10 @@ struct RelocatedInstruction {
 [[nodiscard]] uint64_t GetMaxTrampolineSize();
 
 // Creates a trampoline for the function at `function_address`. The trampoline is built at
-// `trampoline_address`. The trampoline will call `entry_payload_function_address` with
-// `return_address` and a function id as a parameter. The function id is written into the
-// trampoline by `InstrumentFunction`. This is necessary since the function id is not stable across
-// multiple profiling runs.
+// `trampoline_address`. The trampoline will call `entry_payload_function_address` with the
+// function's return address, a function id and the address on the stack where the return address is
+// stored as parameters. The function id is written into the trampoline by `InstrumentFunction`.
+// This is necessary since the function id is not stable across multiple profiling runs.
 // `function` contains the beginning of the function (kMaxFunctionPrologueBackupSize bytes or less
 // if the function shorter). `capstone_handle` is a handle to the capstone disassembler library
 // returned by cs_open. The function returns an error if it was not possible to instrument the
