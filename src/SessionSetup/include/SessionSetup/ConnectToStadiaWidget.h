@@ -67,7 +67,7 @@ class ConnectToStadiaWidget : public QWidget {
 
  private slots:
   void ReloadInstances();
-  void CheckCredentialsAvailableOrLoad();
+  void LoadCredentials();
   void DeployOrbitService();
   void Disconnect();
   void OnConnectToStadiaRadioButtonClicked(bool checked);
@@ -81,8 +81,8 @@ class ConnectToStadiaWidget : public QWidget {
   void ReceivedInstances();
   void InstanceSelected();
   void ReceivedSshInfo();
-  void ReadyToDeploy();
-  void Connect();
+  void CredentialsLoaded();
+  void Connecting();
   void Activated();
   void Connected();
   void Disconnected();
@@ -111,7 +111,7 @@ class ConnectToStadiaWidget : public QWidget {
   QState s_idle_;
   QState s_instances_loading_;
   QState s_instance_selected_;
-  QState s_waiting_for_creds_;
+  QState s_loading_credentials_;
   QState s_deploying_;
   QState s_connected_;
 
