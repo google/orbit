@@ -202,9 +202,8 @@
 
 #define ORBIT_GET_CALLER_PC() reinterpret_cast<uint64_t>(_ReturnAddress())
 #else
-// `__builtin_return_address(0)` will return us the (possibly encoded) return address of the
-// current function (level "0" refers to this frame, "1" would be the callers return address and
-// so on).
+// `__builtin_return_address(0)` will return us the (possibly encoded) return address of the current
+// function (level "0" refers to this frame, "1" would be the caller's return address and so on).
 // To decode the return address, we call `__builtin_extract_return_addr`.
 #define ORBIT_GET_CALLER_PC() \
   reinterpret_cast<uint64_t>(__builtin_extract_return_addr(__builtin_return_address(0)))
@@ -217,9 +216,15 @@
   ORBIT_SCOPE_WITH_COLOR_AND_GROUP_ID(name, col, kOrbitDefaultGroupId)
 #define ORBIT_SCOPE_WITH_GROUP_ID(name, group_id) \
   ORBIT_SCOPE_WITH_COLOR_AND_GROUP_ID(name, kOrbitColorAuto, group_id)
+#ifdef WIN32
 #define ORBIT_SCOPE_WITH_COLOR_AND_GROUP_ID(name, col, group_id) \
   orbit_api::Scope ORBIT_VAR(name, col, group_id)
-#endif
+#else
+#define ORBIT_SCOPE_WITH_COLOR_AND_GROUP_ID(name, col, group_id) \
+  ORBIT_SCOPE_WITH_COLOR_AND_GROUP_ID_INTERNAL(name, col, group_id, ORBIT_VAR)
+#endif  // WIN32
+
+#endif  // __cplusplus
 
 #define ORBIT_START(name) \
   ORBIT_CALL(start, name, kOrbitColorAuto, kOrbitDefaultGroupId, kOrbitCallerAddressAuto)
@@ -369,20 +374,38 @@ inline bool orbit_api_active() {
 }  // extern "C"
 
 // Internal macros.
-#define ORBIT_CONCAT_IND(x, y) (x##y)
+#define ORBIT_CONCAT_IND(x, y) x##y
 #define ORBIT_CONCAT(x, y) ORBIT_CONCAT_IND(x, y)
 #define ORBIT_UNIQUE(x) ORBIT_CONCAT(x, __COUNTER__)
 #define ORBIT_VAR ORBIT_UNIQUE(ORB)
 
+#ifdef WIN32
 namespace orbit_api {
 struct Scope {
-  Scope(const char* name, orbit_api_color color, uint64_t group_id) {
+  __declspec(noinline) Scope(const char* name, orbit_api_color color, uint64_t group_id) {
     uint64_t return_address = ORBIT_GET_CALLER_PC();
     ORBIT_CALL(start, name, color, group_id, return_address);
   }
   ~Scope() { ORBIT_CALL(stop); }
 };
 }  // namespace orbit_api
+#else
+// Retrieve the program counter with inline assembly, instead of using ORBIT_GET_CALLER_PC() in
+// Scope::Scope and forcing that constructor to be noinline.
+#define ORBIT_SCOPE_WITH_COLOR_AND_GROUP_ID_INTERNAL(name, col, group_id, pc_name) \
+  uint64_t pc_name;                                                                \
+  asm("lea (%%rip), %0" : "=r"(pc_name) : :);                                      \
+  orbit_api::Scope ORBIT_VAR(name, col, group_id, pc_name)
+
+namespace orbit_api {
+struct Scope {
+  Scope(const char* name, orbit_api_color color, uint64_t group_id, uint64_t pc) {
+    ORBIT_CALL(start, name, color, group_id, pc);
+  }
+  ~Scope() { ORBIT_CALL(stop); }
+};
+}  // namespace orbit_api
+#endif  // WIN32
 
 #endif  // __cplusplus
 
