@@ -16,6 +16,7 @@ target_sources(
           include/SessionSetup/DoubleClickableLabel.h
           include/SessionSetup/Error.h
           include/SessionSetup/OverlayWidget.h
+          include/SessionSetup/OtherUserDialog.h
           include/SessionSetup/PersistentStorage.h
           include/SessionSetup/ProcessItemModel.h
           include/SessionSetup/RetrieveInstances.h
@@ -36,6 +37,8 @@ target_sources(
           ConnectToTargetDialog.ui
           DeploymentConfigurations.cpp
           Error.cpp
+          OtherUserDialog.cpp
+          OtherUserDialog.ui
           OverlayWidget.cpp
           OverlayWidget.ui
           PersistentStorage.cpp
@@ -78,6 +81,7 @@ target_sources(
           DoubleClickableLabelTest.cpp
           PersistentStorageTest.cpp
           ProcessItemModelTest.cpp
+          OtherUserDialogTest.cpp
           RetrieveInstancesTest.cpp
           RetrieveInstancesWidgetTest.cpp
           SessionSetupDialogTest.cpp
