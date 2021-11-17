@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 #include <immintrin.h>
 #include <signal.h>
+#include <sys/prctl.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -270,6 +271,8 @@ TEST(TrampolineTest, AllocateMemoryForTrampolines) {
   pid_t pid = fork();
   CHECK(pid != -1);
   if (pid == 0) {
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+
     [[maybe_unused]] volatile uint64_t sum = 0;
     // Endless loops without side effects are UB and recent versions of clang optimize
     // it away. Making `i` volatile avoids that problem.
@@ -557,6 +560,8 @@ class InstrumentFunctionTest : public testing::Test {
     pid_ = fork();
     CHECK(pid_ != -1);
     if (pid_ == 0) {
+      prctl(PR_SET_PDEATHSIG, SIGTERM);
+
       // Endless loops without side effects are UB and recent versions of clang optimize
       // it away. Making `sum` volatile avoids that problem.
       [[maybe_unused]] volatile uint64_t sum = 0;
@@ -947,6 +952,8 @@ TEST_F(InstrumentFunctionTest, CheckIntParameters) {
   pid_ = fork();
   CHECK(pid_ != -1);
   if (pid_ == 0) {
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+
     [[maybe_unused]] volatile uint64_t sum = 0;
     while (true) {
       sum += CheckIntParameters(0, 0, 0, 0, 0, 0, 0, 0);
@@ -979,6 +986,8 @@ TEST_F(InstrumentFunctionTest, CheckFloatParameters) {
   pid_ = fork();
   CHECK(pid_ != -1);
   if (pid_ == 0) {
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+
     // Endless loops without side effects are UB and recent versions of clang optimize
     // it away. Making `sum` volatile avoids that problem.
     [[maybe_unused]] volatile uint64_t sum = 0;
@@ -1013,6 +1022,8 @@ TEST_F(InstrumentFunctionTest, CheckM256iParameters) {
   pid_ = fork();
   CHECK(pid_ != -1);
   if (pid_ == 0) {
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+
     // Endless loops without side effects are UB and recent versions of clang optimize
     // it away. Making `sum` volatile avoids that problem.
     [[maybe_unused]] volatile uint64_t sum = 0;
