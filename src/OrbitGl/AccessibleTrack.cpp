@@ -54,7 +54,9 @@ class FakeTimerPane : public CaptureViewElement {
   explicit FakeTimerPane(Track* track, TimeGraphLayout* layout, CaptureViewElement* track_tab)
       : CaptureViewElement(track, track->GetTimeGraph(), track->GetViewport(), layout),
         track_(track),
-        track_tab_(track_tab) {}
+        track_tab_(track_tab) {
+    SetWidth(track->GetWidth());
+  }
 
   std::unique_ptr<AccessibleInterface> CreateAccessibleInterface() override {
     return std::make_unique<AccessibleTimerPane>(this);
@@ -70,13 +72,13 @@ class FakeTimerPane : public CaptureViewElement {
       predecessor = track_children[track_children.size() - 1];
     }
 
-    Vec2 pos{track_->GetPos()[0], predecessor->GetPos()[1] - predecessor->GetSize()[1]};
+    Vec2 pos{track_->GetPos()[0], predecessor->GetPos()[1] + predecessor->GetSize()[1]};
     return pos;
   }
 
   [[nodiscard]] float GetHeight() const override {
     float height = track_->GetHeight();
-    float track_header_height = track_->GetPos()[1] - GetPos()[1];
+    float track_header_height = GetPos()[1] - track_->GetPos()[1];
     height -= track_header_height;
     return height;
   }
@@ -91,12 +93,7 @@ class FakeTimerPane : public CaptureViewElement {
 AccessibleTrackTab::AccessibleTrackTab(CaptureViewElement* fake_track_tab, Track* track)
     : AccessibleCaptureViewElement(fake_track_tab), track_(track) {}
 
-const AccessibleInterface* AccessibleTrackTab::AccessibleChild(int index) const {
-  if (index == 0) {
-    return track_->GetTriangleToggle()->GetOrCreateAccessibleInterface();
-  }
-  return nullptr;
-}
+const AccessibleInterface* AccessibleTrackTab::AccessibleChild(int index) const { return nullptr; }
 
 std::string AccessibleTrackTab::AccessibleName() const {
   CHECK(track_ != nullptr);

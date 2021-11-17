@@ -26,6 +26,7 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   void UpdateLayout();
 
   [[nodiscard]] TimeGraph* GetTimeGraph() { return time_graph_; }
+  [[nodiscard]] const TimeGraph* GetTimeGraph() const { return time_graph_; }
 
   [[nodiscard]] orbit_gl::Viewport* GetViewport() const { return viewport_; }
 

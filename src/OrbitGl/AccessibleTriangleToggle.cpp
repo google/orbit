@@ -21,11 +21,4 @@ orbit_accessibility::AccessibilityState AccessibleTriangleToggle::AccessibleStat
   return orbit_accessibility::AccessibilityState::Disabled;
 }
 
-const orbit_accessibility::AccessibleInterface* AccessibleTriangleToggle::AccessibleParent() const {
-  // Hack: The toggle's parent is the track tab, not the track itself.
-  // As the tab is virtual only, we expose it's accessibility interface here
-  // directly.
-  return parent_->GetOrCreateAccessibleInterface()->AccessibleChild(0);
-}
-
 }  // namespace orbit_gl
