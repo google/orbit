@@ -64,6 +64,7 @@ TEST(OtherUserDialog, Remember) {
         &dialog,
         [&]() {
           QCheckBox* check_box = dialog.findChild<QCheckBox*>();
+          ASSERT_TRUE(check_box != nullptr);
           check_box->setChecked(true);
           dialog.accept();
         },

@@ -9,9 +9,7 @@
 
 #include "ui_OtherUserDialog.h"
 
-namespace {
 constexpr const char* kRememberKey = "OtherUserDialog.RememberKey";
-}
 
 namespace orbit_session_setup {
 
@@ -19,7 +17,6 @@ OtherUserDialog::OtherUserDialog(QString user_name, QWidget* parent)
     : QDialog(parent), ui_(std::make_unique<Ui::OtherUserDialog>()) {
   ui_->setupUi(this);
   ui_->userLabel->setText(user_name);
-  ui_->userLabel->setStyleSheet("font-weight: bold");
 }
 
 OtherUserDialog::~OtherUserDialog() = default;

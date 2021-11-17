@@ -22,14 +22,17 @@
      <item>
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>This instance is owned by </string>
+        <string>This instance is owned by another user </string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QLabel" name="userLabel">
+       <property name="styleSheet">
+        <string notr="true">font-weight: bold</string>
+       </property>
        <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;&amp;lt;username&amp;gt;&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;username&gt;</string>
        </property>
       </widget>
      </item>

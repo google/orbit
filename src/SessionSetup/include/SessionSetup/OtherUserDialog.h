@@ -18,7 +18,7 @@ namespace orbit_session_setup {
 
 class OtherUserDialog : public QDialog {
  public:
-  OtherUserDialog(QString user_name, QWidget* parent = nullptr);
+  explicit OtherUserDialog(QString user_name, QWidget* parent = nullptr);
   ~OtherUserDialog() override;
 
   ErrorMessageOr<void> Exec();
