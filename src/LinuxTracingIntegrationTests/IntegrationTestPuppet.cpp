@@ -7,13 +7,13 @@
 #include <absl/base/casts.h>
 #include <absl/time/clock.h>
 #include <dlfcn.h>
-#include <pthread.h>
 #include <stddef.h>
 
 #include <filesystem>
 #include <iostream>
 #include <string>
 
+#include "ApiInterface/Orbit.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
@@ -21,6 +21,10 @@
 
 // This executable is used by LinuxTracingIntegrationTest to test the generation of specific
 // perf_event_open events. The behavior is controlled by commands sent on standard input.
+
+// Hack: Don't use ORBIT_API_INSTANTIATE as it would redefine `struct orbit_api_v1 g_orbit_api_v1`,
+// which is already defined by the Introspection target.
+void* orbit_api_get_function_table_address_v1() { return &g_orbit_api_v1; }
 
 namespace orbit_linux_tracing_integration_tests {
 
@@ -100,6 +104,63 @@ static void RunVulkanTutorial() {
   tutorial.Run(PuppetConstants::kFrameCount);
 }
 
+extern "C" __attribute__((noinline)) void UseOrbitApi() {
+  for (uint64_t i = 0; i < PuppetConstants::kOrbitApiUsageCount; ++i) {
+    LOG("Using OrbitApi");
+    constexpr absl::Duration kDelayBetweenEvents = absl::Microseconds(100);
+    {
+      ORBIT_SCOPE_WITH_COLOR_AND_GROUP_ID(
+          PuppetConstants::kOrbitApiScopeName,
+          static_cast<orbit_api_color>(PuppetConstants::kOrbitApiScopeColor),
+          PuppetConstants::kOrbitApiScopeGroupId);
+      absl::SleepFor(kDelayBetweenEvents);
+    }
+    absl::SleepFor(kDelayBetweenEvents);
+
+    ORBIT_START_WITH_COLOR_AND_GROUP_ID(
+        PuppetConstants::kOrbitApiStartName,
+        static_cast<orbit_api_color>(PuppetConstants::kOrbitApiStartColor),
+        PuppetConstants::kOrbitApiStartGroupId);
+    absl::SleepFor(kDelayBetweenEvents);
+    ORBIT_STOP();
+    absl::SleepFor(kDelayBetweenEvents);
+
+    ORBIT_ASYNC_STRING_WITH_COLOR(
+        PuppetConstants::kOrbitApiAsyncStringName, PuppetConstants::kOrbitApiStartAsyncId,
+        static_cast<orbit_api_color>(PuppetConstants::kOrbitApiAsyncStringColor));
+    absl::SleepFor(kDelayBetweenEvents);
+    ORBIT_START_ASYNC_WITH_COLOR(
+        PuppetConstants::kOrbitApiStartAsyncName, PuppetConstants::kOrbitApiStartAsyncId,
+        static_cast<orbit_api_color>(PuppetConstants::kOrbitApiStartAsyncColor));
+    absl::SleepFor(kDelayBetweenEvents);
+    ORBIT_STOP_ASYNC(PuppetConstants::kOrbitApiStartAsyncId);
+    absl::SleepFor(kDelayBetweenEvents);
+
+    ORBIT_INT_WITH_COLOR(PuppetConstants::kOrbitApiIntName, PuppetConstants::kOrbitApiIntValue,
+                         static_cast<orbit_api_color>(PuppetConstants::kOrbitApiIntColor));
+    absl::SleepFor(kDelayBetweenEvents);
+    ORBIT_UINT_WITH_COLOR(PuppetConstants::kOrbitApiUintName, PuppetConstants::kOrbitApiUintValue,
+                          static_cast<orbit_api_color>(PuppetConstants::kOrbitApiUintColor));
+    absl::SleepFor(kDelayBetweenEvents);
+    ORBIT_INT64_WITH_COLOR(PuppetConstants::kOrbitApiInt64Name,
+                           PuppetConstants::kOrbitApiInt64Value,
+                           static_cast<orbit_api_color>(PuppetConstants::kOrbitApiInt64Color));
+    absl::SleepFor(kDelayBetweenEvents);
+    ORBIT_UINT64_WITH_COLOR(PuppetConstants::kOrbitApiUint64Name,
+                            PuppetConstants::kOrbitApiUint64Value,
+                            static_cast<orbit_api_color>(PuppetConstants::kOrbitApiUint64Color));
+    absl::SleepFor(kDelayBetweenEvents);
+    ORBIT_FLOAT_WITH_COLOR(PuppetConstants::kOrbitApiFloatName,
+                           PuppetConstants::kOrbitApiFloatValue,
+                           static_cast<orbit_api_color>(PuppetConstants::kOrbitApiFloatColor));
+    absl::SleepFor(kDelayBetweenEvents);
+    ORBIT_DOUBLE_WITH_COLOR(PuppetConstants::kOrbitApiDoubleName,
+                            PuppetConstants::kOrbitApiDoubleValue,
+                            static_cast<orbit_api_color>(PuppetConstants::kOrbitApiDoubleColor));
+    absl::SleepFor(kDelayBetweenEvents);
+  }
+}
+
 int IntegrationTestPuppetMain() {
   LOG("Puppet started");
   while (!!std::cin && !std::cin.eof()) {
@@ -120,6 +181,8 @@ int IntegrationTestPuppetMain() {
       LoadSoWithDlopenAndCallFunction();
     } else if (command == PuppetConstants::kVulkanTutorialCommand) {
       RunVulkanTutorial();
+    } else if (command == PuppetConstants::kOrbitApiCommand) {
+      UseOrbitApi();
     } else {
       ERROR("Unknown command: %s", command);
       continue;

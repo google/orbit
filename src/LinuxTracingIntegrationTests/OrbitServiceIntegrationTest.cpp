@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <absl/synchronization/mutex.h>
+#include <gmock/gmock.h>
 #include <grpcpp/channel.h>
 #include <grpcpp/create_channel.h>
 #include <gtest/gtest.h>
@@ -13,10 +14,14 @@
 #include <thread>
 #include <vector>
 
+#include "ApiInterface/Orbit.h"
+#include "ApiUtils/EncodedString.h"
+#include "ApiUtils/GetFunctionTableAddressPrefix.h"
 #include "IntegrationTestChildProcess.h"
 #include "IntegrationTestCommons.h"
 #include "IntegrationTestPuppet.h"
 #include "IntegrationTestUtils.h"
+#include "ObjectUtils/Address.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "OrbitService.h"
@@ -43,6 +48,8 @@ int OrbitServiceMain() {
   LOG("OrbitService finished");
   return 0;
 }
+
+using PuppetConstants = IntegrationTestPuppetConstants;
 
 class OrbitServiceIntegrationTestFixture {
  public:
@@ -80,7 +87,7 @@ class OrbitServiceIntegrationTestFixture {
     std::this_thread::sleep_for(kSleepAfterFirstEvent);
 
     puppet_.WriteLine(command_for_puppet);
-    while (puppet_.ReadLine() != IntegrationTestPuppetConstants::kDoneResponse) continue;
+    while (puppet_.ReadLine() != PuppetConstants::kDoneResponse) continue;
 
     // Some producers might miss some of the final data if we stop the capture immediately after the
     // puppet is done.
@@ -245,7 +252,7 @@ TEST(OrbitServiceIntegrationTest, CaptureSmoke) {
   OrbitServiceIntegrationTestFixture fixture;
   CaptureOptions capture_options = fixture.BuildDefaultCaptureOptions();
   std::vector<ClientCaptureEvent> events =
-      fixture.CaptureAndGetEvents(IntegrationTestPuppetConstants::kSleepCommand, capture_options);
+      fixture.CaptureAndGetEvents(PuppetConstants::kSleepCommand, capture_options);
 
   VerifyInitialAndFinalEvents(events, capture_options);
   VerifyErrorEvents(events);
@@ -279,13 +286,310 @@ TEST(OrbitServiceIntegrationTest, FunctionCallsWithUserSpaceInstrumentation) {
   constexpr uint64_t kInnerFunctionId = 2;
   AddPuppetOuterAndInnerFunctionToCaptureOptions(&capture_options, fixture.GetPuppetPidNative(),
                                                  kOuterFunctionId, kInnerFunctionId);
-  std::vector<ClientCaptureEvent> events = fixture.CaptureAndGetEvents(
-      IntegrationTestPuppetConstants::kCallOuterFunctionCommand, capture_options);
+  std::vector<ClientCaptureEvent> events =
+      fixture.CaptureAndGetEvents(PuppetConstants::kCallOuterFunctionCommand, capture_options);
 
   VerifyInitialAndFinalEvents(events, capture_options);
   VerifyErrorEvents(events);
   VerifyFunctionCallsOfOuterAndInnerFunction(events, fixture.GetPuppetPid(), kOuterFunctionId,
                                              kInnerFunctionId);
+}
+
+static void AddOrbitApiToCaptureOptions(orbit_grpc_protos::CaptureOptions* capture_options,
+                                        pid_t pid) {
+  capture_options->set_enable_api(true);
+
+  const orbit_grpc_protos::ModuleInfo& module_info = GetExecutableBinaryModuleInfo(pid);
+  const orbit_grpc_protos::ModuleSymbols& module_symbols = GetExecutableBinaryModuleSymbols(pid);
+
+  std::string api_function_name = absl::StrFormat(
+      "%s%u", orbit_api_utils::kOrbitApiGetFunctionTableAddressPrefix, kOrbitApiVersion);
+  for (const orbit_grpc_protos::SymbolInfo& symbol_info : module_symbols.symbol_infos()) {
+    if (symbol_info.demangled_name() == api_function_name) {
+      orbit_grpc_protos::ApiFunction* api_function = capture_options->add_api_functions();
+      api_function->set_module_path(module_info.file_path());
+      api_function->set_module_build_id(module_info.build_id());
+      api_function->set_address(symbol_info.address());
+      api_function->set_name(api_function_name);
+      api_function->set_api_version(kOrbitApiVersion);
+      break;
+    }
+  }
+  CHECK(capture_options->api_functions_size() == 1);
+}
+
+static std::pair<uint64_t, uint64_t> GetUseOrbitApiFunctionVirtualAddressRange(pid_t pid) {
+  const orbit_grpc_protos::ModuleInfo& module_info = GetExecutableBinaryModuleInfo(pid);
+  const orbit_grpc_protos::ModuleSymbols& module_symbols = GetExecutableBinaryModuleSymbols(pid);
+  for (const orbit_grpc_protos::SymbolInfo& symbol : module_symbols.symbol_infos()) {
+    if (symbol.name() == PuppetConstants::kUseOrbitApiFunctionName) {
+      const uint64_t virtual_address_start =
+          orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+              symbol.address(), module_info.address_start(), module_info.load_bias(),
+              module_info.executable_segment_offset());
+      const uint64_t virtual_address_end = virtual_address_start + symbol.size() - 1;
+      return {virtual_address_start, virtual_address_end};
+    }
+  }
+  UNREACHABLE();
+}
+
+TEST(OrbitServiceIntegrationTest, OrbitApi) {
+  if (!CheckIsRunningAsRoot()) {
+    GTEST_SKIP();
+  }
+
+  OrbitServiceIntegrationTestFixture fixture;
+  CaptureOptions capture_options = fixture.BuildDefaultCaptureOptions();
+  AddOrbitApiToCaptureOptions(&capture_options, fixture.GetPuppetPidNative());
+  const std::pair<uint64_t, uint64_t>& use_orbit_api_virtual_address_range =
+      GetUseOrbitApiFunctionVirtualAddressRange(fixture.GetPuppetPidNative());
+
+  std::vector<ClientCaptureEvent> events =
+      fixture.CaptureAndGetEvents(PuppetConstants::kOrbitApiCommand, capture_options);
+
+  VerifyInitialAndFinalEvents(events, capture_options);
+  VerifyErrorEvents(events);
+
+  bool expect_next_api_scope_start_coming_from_scope = true;
+  uint64_t api_scope_start_count = 0;
+  uint64_t api_scope_stop_count = 0;
+  uint64_t api_scope_start_async_count = 0;
+  uint64_t api_scope_stop_async_count = 0;
+  uint64_t api_async_string_count = 0;
+  uint64_t api_track_int_count = 0;
+  uint64_t api_track_uint_count = 0;
+  uint64_t api_track_int64_count = 0;
+  uint64_t api_track_uint64_count = 0;
+  uint64_t api_track_float_count = 0;
+  uint64_t api_track_double_count = 0;
+  uint64_t previous_timestamp_ns = 0;
+  for (const ClientCaptureEvent& event : events) {
+    switch (event.event_case()) {
+      case ClientCaptureEvent::kApiEvent:
+        UNREACHABLE();
+
+      case ClientCaptureEvent::kApiScopeStart: {
+        const orbit_grpc_protos::ApiScopeStart& api_scope_start = event.api_scope_start();
+        EXPECT_EQ(api_scope_start.pid(), fixture.GetPuppetPid());
+        EXPECT_EQ(api_scope_start.tid(), fixture.GetPuppetPid());
+        EXPECT_GT(api_scope_start.timestamp_ns(), previous_timestamp_ns);
+        previous_timestamp_ns = api_scope_start.timestamp_ns();
+        std::string decoded_name = orbit_api::DecodeString(
+            api_scope_start.encoded_name_1(), api_scope_start.encoded_name_2(),
+            api_scope_start.encoded_name_3(), api_scope_start.encoded_name_4(),
+            api_scope_start.encoded_name_5(), api_scope_start.encoded_name_6(),
+            api_scope_start.encoded_name_7(), api_scope_start.encoded_name_8(),
+            api_scope_start.encoded_name_additional().data(),
+            api_scope_start.encoded_name_additional_size());
+        if (expect_next_api_scope_start_coming_from_scope) {
+          EXPECT_EQ(decoded_name, PuppetConstants::kOrbitApiScopeName);
+          EXPECT_EQ(api_scope_start.color_rgba(), PuppetConstants::kOrbitApiScopeColor);
+          EXPECT_EQ(api_scope_start.group_id(), PuppetConstants::kOrbitApiScopeGroupId);
+        } else {
+          EXPECT_EQ(decoded_name, PuppetConstants::kOrbitApiStartName);
+          EXPECT_EQ(api_scope_start.color_rgba(), PuppetConstants::kOrbitApiStartColor);
+          EXPECT_EQ(api_scope_start.group_id(), PuppetConstants::kOrbitApiStartGroupId);
+        }
+        expect_next_api_scope_start_coming_from_scope =
+            !expect_next_api_scope_start_coming_from_scope;
+        EXPECT_THAT(api_scope_start.address_in_function(),
+                    testing::AllOf(testing::Ge(use_orbit_api_virtual_address_range.first),
+                                   testing::Le(use_orbit_api_virtual_address_range.second)));
+        ++api_scope_start_count;
+      } break;
+
+      case ClientCaptureEvent::kApiScopeStop: {
+        const orbit_grpc_protos::ApiScopeStop& api_scope_stop = event.api_scope_stop();
+        EXPECT_EQ(api_scope_stop.pid(), fixture.GetPuppetPid());
+        EXPECT_EQ(api_scope_stop.tid(), fixture.GetPuppetPid());
+        EXPECT_GT(api_scope_stop.timestamp_ns(), previous_timestamp_ns);
+        previous_timestamp_ns = api_scope_stop.timestamp_ns();
+        ++api_scope_stop_count;
+      } break;
+
+      case ClientCaptureEvent::kApiScopeStartAsync: {
+        const orbit_grpc_protos::ApiScopeStartAsync& api_scope_start_async =
+            event.api_scope_start_async();
+        EXPECT_EQ(api_scope_start_async.pid(), fixture.GetPuppetPid());
+        EXPECT_EQ(api_scope_start_async.tid(), fixture.GetPuppetPid());
+        EXPECT_GT(api_scope_start_async.timestamp_ns(), previous_timestamp_ns);
+        previous_timestamp_ns = api_scope_start_async.timestamp_ns();
+        std::string decoded_name = orbit_api::DecodeString(
+            api_scope_start_async.encoded_name_1(), api_scope_start_async.encoded_name_2(),
+            api_scope_start_async.encoded_name_3(), api_scope_start_async.encoded_name_4(),
+            api_scope_start_async.encoded_name_5(), api_scope_start_async.encoded_name_6(),
+            api_scope_start_async.encoded_name_7(), api_scope_start_async.encoded_name_8(),
+            api_scope_start_async.encoded_name_additional().data(),
+            api_scope_start_async.encoded_name_additional_size());
+        EXPECT_EQ(decoded_name, PuppetConstants::kOrbitApiStartAsyncName);
+        EXPECT_EQ(api_scope_start_async.id(), PuppetConstants::kOrbitApiStartAsyncId);
+        EXPECT_EQ(api_scope_start_async.color_rgba(), PuppetConstants::kOrbitApiStartAsyncColor);
+        ++api_scope_start_async_count;
+      } break;
+
+      case ClientCaptureEvent::kApiScopeStopAsync: {
+        const orbit_grpc_protos::ApiScopeStopAsync& api_scope_stop_async =
+            event.api_scope_stop_async();
+        EXPECT_EQ(api_scope_stop_async.pid(), fixture.GetPuppetPid());
+        EXPECT_EQ(api_scope_stop_async.tid(), fixture.GetPuppetPid());
+        EXPECT_GT(api_scope_stop_async.timestamp_ns(), previous_timestamp_ns);
+        previous_timestamp_ns = api_scope_stop_async.timestamp_ns();
+        EXPECT_EQ(api_scope_stop_async.id(), PuppetConstants::kOrbitApiStartAsyncId);
+        ++api_scope_stop_async_count;
+      } break;
+
+      case ClientCaptureEvent::kApiStringEvent: {
+        const orbit_grpc_protos::ApiStringEvent& api_async_string = event.api_string_event();
+        EXPECT_EQ(api_async_string.pid(), fixture.GetPuppetPid());
+        EXPECT_EQ(api_async_string.tid(), fixture.GetPuppetPid());
+        EXPECT_GT(api_async_string.timestamp_ns(), previous_timestamp_ns);
+        previous_timestamp_ns = api_async_string.timestamp_ns();
+        std::string decoded_name = orbit_api::DecodeString(
+            api_async_string.encoded_name_1(), api_async_string.encoded_name_2(),
+            api_async_string.encoded_name_3(), api_async_string.encoded_name_4(),
+            api_async_string.encoded_name_5(), api_async_string.encoded_name_6(),
+            api_async_string.encoded_name_7(), api_async_string.encoded_name_8(),
+            api_async_string.encoded_name_additional().data(),
+            api_async_string.encoded_name_additional_size());
+        EXPECT_EQ(decoded_name, PuppetConstants::kOrbitApiAsyncStringName);
+        EXPECT_EQ(api_async_string.id(), PuppetConstants::kOrbitApiStartAsyncId);
+        EXPECT_EQ(api_async_string.color_rgba(), PuppetConstants::kOrbitApiAsyncStringColor);
+        ++api_async_string_count;
+      } break;
+
+      case ClientCaptureEvent::kApiTrackDouble: {
+        const orbit_grpc_protos::ApiTrackDouble& api_track_double = event.api_track_double();
+        EXPECT_EQ(api_track_double.pid(), fixture.GetPuppetPid());
+        EXPECT_EQ(api_track_double.tid(), fixture.GetPuppetPid());
+        EXPECT_GT(api_track_double.timestamp_ns(), previous_timestamp_ns);
+        previous_timestamp_ns = api_track_double.timestamp_ns();
+        EXPECT_EQ(api_track_double.data(), PuppetConstants::kOrbitApiDoubleValue);
+        std::string decoded_name = orbit_api::DecodeString(
+            api_track_double.encoded_name_1(), api_track_double.encoded_name_2(),
+            api_track_double.encoded_name_3(), api_track_double.encoded_name_4(),
+            api_track_double.encoded_name_5(), api_track_double.encoded_name_6(),
+            api_track_double.encoded_name_7(), api_track_double.encoded_name_8(),
+            api_track_double.encoded_name_additional().data(),
+            api_track_double.encoded_name_additional_size());
+        EXPECT_EQ(decoded_name, PuppetConstants::kOrbitApiDoubleName);
+        EXPECT_EQ(api_track_double.color_rgba(), PuppetConstants::kOrbitApiDoubleColor);
+        ++api_track_double_count;
+      } break;
+
+      case ClientCaptureEvent::kApiTrackFloat: {
+        const orbit_grpc_protos::ApiTrackFloat& api_track_float = event.api_track_float();
+        EXPECT_EQ(api_track_float.pid(), fixture.GetPuppetPid());
+        EXPECT_EQ(api_track_float.tid(), fixture.GetPuppetPid());
+        EXPECT_GT(api_track_float.timestamp_ns(), previous_timestamp_ns);
+        previous_timestamp_ns = api_track_float.timestamp_ns();
+        EXPECT_EQ(api_track_float.data(), PuppetConstants::kOrbitApiFloatValue);
+        std::string decoded_name = orbit_api::DecodeString(
+            api_track_float.encoded_name_1(), api_track_float.encoded_name_2(),
+            api_track_float.encoded_name_3(), api_track_float.encoded_name_4(),
+            api_track_float.encoded_name_5(), api_track_float.encoded_name_6(),
+            api_track_float.encoded_name_7(), api_track_float.encoded_name_8(),
+            api_track_float.encoded_name_additional().data(),
+            api_track_float.encoded_name_additional_size());
+        EXPECT_EQ(decoded_name, PuppetConstants::kOrbitApiFloatName);
+        EXPECT_EQ(api_track_float.color_rgba(), PuppetConstants::kOrbitApiFloatColor);
+        ++api_track_float_count;
+      } break;
+
+      case ClientCaptureEvent::kApiTrackInt: {
+        const orbit_grpc_protos::ApiTrackInt& api_track_int = event.api_track_int();
+        EXPECT_EQ(api_track_int.pid(), fixture.GetPuppetPid());
+        EXPECT_EQ(api_track_int.tid(), fixture.GetPuppetPid());
+        EXPECT_GT(api_track_int.timestamp_ns(), previous_timestamp_ns);
+        previous_timestamp_ns = api_track_int.timestamp_ns();
+        EXPECT_EQ(api_track_int.data(), PuppetConstants::kOrbitApiIntValue);
+        std::string decoded_name =
+            orbit_api::DecodeString(api_track_int.encoded_name_1(), api_track_int.encoded_name_2(),
+                                    api_track_int.encoded_name_3(), api_track_int.encoded_name_4(),
+                                    api_track_int.encoded_name_5(), api_track_int.encoded_name_6(),
+                                    api_track_int.encoded_name_7(), api_track_int.encoded_name_8(),
+                                    api_track_int.encoded_name_additional().data(),
+                                    api_track_int.encoded_name_additional_size());
+        EXPECT_EQ(decoded_name, PuppetConstants::kOrbitApiIntName);
+        EXPECT_EQ(api_track_int.color_rgba(), PuppetConstants::kOrbitApiIntColor);
+        ++api_track_int_count;
+      } break;
+
+      case ClientCaptureEvent::kApiTrackInt64: {
+        const orbit_grpc_protos::ApiTrackInt64& api_track_int64 = event.api_track_int64();
+        EXPECT_EQ(api_track_int64.pid(), fixture.GetPuppetPid());
+        EXPECT_EQ(api_track_int64.tid(), fixture.GetPuppetPid());
+        EXPECT_GT(api_track_int64.timestamp_ns(), previous_timestamp_ns);
+        previous_timestamp_ns = api_track_int64.timestamp_ns();
+        EXPECT_EQ(api_track_int64.data(), PuppetConstants::kOrbitApiInt64Value);
+        std::string decoded_name = orbit_api::DecodeString(
+            api_track_int64.encoded_name_1(), api_track_int64.encoded_name_2(),
+            api_track_int64.encoded_name_3(), api_track_int64.encoded_name_4(),
+            api_track_int64.encoded_name_5(), api_track_int64.encoded_name_6(),
+            api_track_int64.encoded_name_7(), api_track_int64.encoded_name_8(),
+            api_track_int64.encoded_name_additional().data(),
+            api_track_int64.encoded_name_additional_size());
+        EXPECT_EQ(decoded_name, PuppetConstants::kOrbitApiInt64Name);
+        EXPECT_EQ(api_track_int64.color_rgba(), PuppetConstants::kOrbitApiInt64Color);
+        ++api_track_int64_count;
+      } break;
+
+      case ClientCaptureEvent::kApiTrackUint: {
+        const orbit_grpc_protos::ApiTrackUint& api_track_uint = event.api_track_uint();
+        EXPECT_EQ(api_track_uint.pid(), fixture.GetPuppetPid());
+        EXPECT_EQ(api_track_uint.tid(), fixture.GetPuppetPid());
+        EXPECT_GT(api_track_uint.timestamp_ns(), previous_timestamp_ns);
+        previous_timestamp_ns = api_track_uint.timestamp_ns();
+        EXPECT_EQ(api_track_uint.data(), PuppetConstants::kOrbitApiUintValue);
+        std::string decoded_name = orbit_api::DecodeString(
+            api_track_uint.encoded_name_1(), api_track_uint.encoded_name_2(),
+            api_track_uint.encoded_name_3(), api_track_uint.encoded_name_4(),
+            api_track_uint.encoded_name_5(), api_track_uint.encoded_name_6(),
+            api_track_uint.encoded_name_7(), api_track_uint.encoded_name_8(),
+            api_track_uint.encoded_name_additional().data(),
+            api_track_uint.encoded_name_additional_size());
+        EXPECT_EQ(decoded_name, PuppetConstants::kOrbitApiUintName);
+        EXPECT_EQ(api_track_uint.color_rgba(), PuppetConstants::kOrbitApiUintColor);
+        ++api_track_uint_count;
+      } break;
+
+      case ClientCaptureEvent::kApiTrackUint64: {
+        const orbit_grpc_protos::ApiTrackUint64& api_track_uint64 = event.api_track_uint64();
+        EXPECT_EQ(api_track_uint64.pid(), fixture.GetPuppetPid());
+        EXPECT_EQ(api_track_uint64.tid(), fixture.GetPuppetPid());
+        EXPECT_GT(api_track_uint64.timestamp_ns(), previous_timestamp_ns);
+        previous_timestamp_ns = api_track_uint64.timestamp_ns();
+        EXPECT_EQ(api_track_uint64.data(), PuppetConstants::kOrbitApiUint64Value);
+        std::string decoded_name = orbit_api::DecodeString(
+            api_track_uint64.encoded_name_1(), api_track_uint64.encoded_name_2(),
+            api_track_uint64.encoded_name_3(), api_track_uint64.encoded_name_4(),
+            api_track_uint64.encoded_name_5(), api_track_uint64.encoded_name_6(),
+            api_track_uint64.encoded_name_7(), api_track_uint64.encoded_name_8(),
+            api_track_uint64.encoded_name_additional().data(),
+            api_track_uint64.encoded_name_additional_size());
+        EXPECT_EQ(decoded_name, PuppetConstants::kOrbitApiUint64Name);
+        EXPECT_EQ(api_track_uint64.color_rgba(), PuppetConstants::kOrbitApiUint64Color);
+        ++api_track_uint64_count;
+      } break;
+
+      case ClientCaptureEvent::EVENT_NOT_SET:
+        UNREACHABLE();
+      default:
+        break;
+    }
+  }
+
+  EXPECT_EQ(api_scope_start_count, 2 * PuppetConstants::kOrbitApiUsageCount);
+  EXPECT_EQ(api_scope_stop_count, 2 * PuppetConstants::kOrbitApiUsageCount);
+  EXPECT_EQ(api_scope_start_async_count, PuppetConstants::kOrbitApiUsageCount);
+  EXPECT_EQ(api_scope_stop_async_count, PuppetConstants::kOrbitApiUsageCount);
+  EXPECT_EQ(api_async_string_count, PuppetConstants::kOrbitApiUsageCount);
+  EXPECT_EQ(api_track_int_count, PuppetConstants::kOrbitApiUsageCount);
+  EXPECT_EQ(api_track_uint_count, PuppetConstants::kOrbitApiUsageCount);
+  EXPECT_EQ(api_track_int64_count, PuppetConstants::kOrbitApiUsageCount);
+  EXPECT_EQ(api_track_uint64_count, PuppetConstants::kOrbitApiUsageCount);
+  EXPECT_EQ(api_track_float_count, PuppetConstants::kOrbitApiUsageCount);
+  EXPECT_EQ(api_track_double_count, PuppetConstants::kOrbitApiUsageCount);
 }
 
 }  // namespace orbit_linux_tracing_integration_tests
