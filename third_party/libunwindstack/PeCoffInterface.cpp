@@ -141,9 +141,10 @@ bool PeCoffInterface<AddressType>::ParseNewHeader(uint64_t offset) {
 template <typename AddressType>
 bool PeCoffInterface<AddressType>::ParseCoffHeader(uint64_t offset) {
   coff_memory_.set_cur_offset(offset);
-  if (!coff_memory_.Get16(&coff_header_.machine) || !coff_memory_.Get32(&coff_header_.modtime) ||
-      !coff_memory_.Get32(&coff_header_.symoff) || !coff_memory_.Get32(&coff_header_.nsyms) ||
-      !coff_memory_.Get16(&coff_header_.hdrsize) || !coff_memory_.Get16(&coff_header_.flags)) {
+  if (!coff_memory_.Get16(&coff_header_.machine) || !coff_memory_.Get16(&coff_header_.nsects) ||
+      !coff_memory_.Get32(&coff_header_.modtime) || !coff_memory_.Get32(&coff_header_.symoff) ||
+      !coff_memory_.Get32(&coff_header_.nsyms) || !coff_memory_.Get16(&coff_header_.hdrsize) ||
+      !coff_memory_.Get16(&coff_header_.flags)) {
     last_error_.code = ERROR_MEMORY_INVALID;
     last_error_.address = coff_memory_.cur_offset();
     Log::Error("Parsing the COFF header failed: %s", GetErrorCodeString(last_error_.code));
@@ -154,6 +155,8 @@ bool PeCoffInterface<AddressType>::ParseCoffHeader(uint64_t offset) {
 
 template <typename AddressType>
 bool PeCoffInterface<AddressType>::ParseOptionalHeader(uint64_t offset) {
+  const uint64_t optional_header_start_offset = offset;
+
   coff_memory_.set_cur_offset(offset);
   if (!coff_memory_.Get16(&optional_header_.magic) ||
       !coff_memory_.Get8(&optional_header_.major_linker_version) ||
@@ -220,6 +223,19 @@ bool PeCoffInterface<AddressType>::ParseOptionalHeader(uint64_t offset) {
     last_error_.code = ERROR_MEMORY_INVALID;
     last_error_.address = coff_memory_.cur_offset();
     Log::Error("Parsing the optional header failed: %s", GetErrorCodeString(last_error_.code));
+    return false;
+  }
+
+  // We check if hdrsize (which is the size of the optional header) and num_data_dir_entries are
+  // consistent with each other. The remaining size of data according to hdrsize must match exactly
+  // the size of the data directory entries. If not, the COFF file is invalid.
+  constexpr uint64_t size_per_data_dir_entry = 2 * sizeof(uint32_t);
+  const uint64_t end_offset = optional_header_start_offset + coff_header_.hdrsize;
+  const uint64_t expected_num_data_dir_entries_size = (end_offset - coff_memory_.cur_offset());
+  if (expected_num_data_dir_entries_size !=
+      size_per_data_dir_entry * optional_header_.num_data_dir_entries) {
+    last_error_.code = ERROR_INVALID_COFF;
+    Log::Error("Optional header size or number of data directories is incorrect");
     return false;
   }
 

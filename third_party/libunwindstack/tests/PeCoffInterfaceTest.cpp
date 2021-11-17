@@ -127,11 +127,17 @@ class PeCoffInterfaceTest : public ::testing::Test {
 
   uint64_t SetCoffHeaderAtOffset(uint64_t offset) {
     offset = SetData16(offset, 0);
+    offset = SetData16(offset, 0);
     offset = SetData32(offset, 0);
     offset = SetData32(offset, 0);
     offset = SetData32(offset, 0);
-    constexpr uint16_t kOptionalHeaderSize = 1;
-    offset = SetData16(offset, kOptionalHeaderSize);
+
+    // We remember the location of the header size (which is actually the size of the optional
+    // header) here so that we can set it correctly later when we know the size of the optional
+    // header (which depends on target address size and the number of directory entries).
+    optional_header_size_offset_ = offset;
+    offset = SetData16(offset, 0);  // hdrsize, to be set correctly later
+
     offset = SetData16(offset, 0);
     return offset;
   }
@@ -147,6 +153,8 @@ class PeCoffInterfaceTest : public ::testing::Test {
   }
 
   uint64_t SetOptionalHeaderAtOffset(uint64_t offset) {
+    optional_header_start_offset_ = offset;
+
     if constexpr (sizeof(typename PeCoffInterfaceType::AddressType) == 4) {
       offset = SetOptionalHeaderMagicPE32AtOffset(offset);
     } else if constexpr (sizeof(typename PeCoffInterfaceType::AddressType) == 8) {
@@ -195,6 +203,7 @@ class PeCoffInterfaceTest : public ::testing::Test {
 
     offset = SetData32(offset, 0);  // loader_flags
 
+    optional_header_num_data_dirs_offset_ = offset;
     constexpr uint32_t kNumDirDataEntries = 10;
     offset = SetData32(offset, kNumDirDataEntries);  // num_dir_data_entries
 
@@ -203,11 +212,18 @@ class PeCoffInterfaceTest : public ::testing::Test {
       offset = SetData32(offset, 0);
     }
 
+    SetData16(optional_header_size_offset_, offset - optional_header_start_offset_);
+
     return offset;
   }
 
   std::unique_ptr<Memory> memory_;
   MemoryFake memory_fake_;
+
+  uint64_t optional_header_size_offset_;
+  uint64_t optional_header_start_offset_;
+
+  uint64_t optional_header_num_data_dirs_offset_;
 };
 
 // Many test equally apply to the 32-bit and the 64-bit case, so we implement these
@@ -287,9 +303,8 @@ TYPED_TEST(PeCoffInterfaceTest, coff_header_parsing_fails_invalid_memory) {
 
 TYPED_TEST(PeCoffInterfaceTest, optional_header_parsing_fails_wrong_magic_number) {
   this->InitPeCoffInterfaceFake();
-  constexpr uint64_t kOptionalHeaderStart = 0x1016;
   // 0x010b would be a correct choice
-  this->SetData16(kOptionalHeaderStart, 0x010a);
+  this->SetData16(this->optional_header_start_offset_, 0x010a);
   TypeParam coff(&this->memory_fake_);
   ASSERT_FALSE(coff.Init());
   EXPECT_EQ(ERROR_INVALID_COFF, coff.LastError().code);
@@ -298,8 +313,7 @@ TYPED_TEST(PeCoffInterfaceTest, optional_header_parsing_fails_wrong_magic_number
 TYPED_TEST(PeCoffInterfaceTest, optional_header_parsing_fails_invalid_memory_start) {
   this->InitPeCoffInterfaceFake();
 
-  constexpr uint64_t kOptionalHeaderStart = 0x1016;
-  this->memory_fake_.ClearMemory(kOptionalHeaderStart, 1);
+  this->memory_fake_.ClearMemory(this->optional_header_start_offset_, 1);
 
   TypeParam coff(&this->memory_fake_);
   ASSERT_FALSE(coff.Init());
@@ -309,12 +323,35 @@ TYPED_TEST(PeCoffInterfaceTest, optional_header_parsing_fails_invalid_memory_sta
 TYPED_TEST(PeCoffInterfaceTest, optional_header_parsing_fails_invalid_memory_end) {
   this->InitPeCoffInterfaceFake();
 
-  constexpr uint64_t kOptionalHeaderStart = 0x1016;
-  this->memory_fake_.ClearMemory(kOptionalHeaderStart, 1);
+  this->memory_fake_.ClearMemory(this->optional_header_start_offset_, 1);
 
   TypeParam coff(&this->memory_fake_);
   ASSERT_FALSE(coff.Init());
   EXPECT_EQ(ERROR_MEMORY_INVALID, coff.LastError().code);
+}
+
+TYPED_TEST(PeCoffInterfaceTest, optional_header_parsing_fails_incorrect_header_size) {
+  this->InitPeCoffInterfaceFake();
+
+  uint16_t correct_header_size;
+  this->memory_fake_.Read16(this->optional_header_size_offset_, &correct_header_size);
+  this->SetData16(this->optional_header_size_offset_, correct_header_size + 1);
+
+  TypeParam coff(&this->memory_fake_);
+  ASSERT_FALSE(coff.Init());
+  EXPECT_EQ(ERROR_INVALID_COFF, coff.LastError().code);
+}
+
+TYPED_TEST(PeCoffInterfaceTest, optional_header_parsing_fails_incorrect_num_data_dir_entries) {
+  this->InitPeCoffInterfaceFake();
+
+  uint32_t correct_num;
+  this->memory_fake_.Read32(this->optional_header_num_data_dirs_offset_, &correct_num);
+  this->SetData32(this->optional_header_num_data_dirs_offset_, correct_num + 1);
+
+  TypeParam coff(&this->memory_fake_);
+  ASSERT_FALSE(coff.Init());
+  EXPECT_EQ(ERROR_INVALID_COFF, coff.LastError().code);
 }
 
 // The remaining tests are not TYPED_TESTs, because they are specific to either the 32-bit or 64-bit
@@ -341,7 +378,7 @@ TEST_F(PeCoffInterface64Test, init_32_fails_for_coff_64_fake) {
 
 TEST_F(PeCoffInterface32Test, optional_header_parsing_fails_invalid_memory_at_data_offset_32_only) {
   InitPeCoffInterfaceFake();
-  constexpr uint64_t kDataOffsetAddress = 0x1016 + 0x0018;
+  const uint64_t kDataOffsetAddress = optional_header_start_offset_ + 0x0018;
   this->memory_fake_.ClearMemory(kDataOffsetAddress, 1);
 
   PeCoffInterface32 coff(&memory_fake_);
@@ -351,7 +388,7 @@ TEST_F(PeCoffInterface32Test, optional_header_parsing_fails_invalid_memory_at_da
 
 TEST_F(PeCoffInterface32Test, optional_header_parsing_fails_invalid_memory_end_32) {
   InitPeCoffInterfaceFake();
-  constexpr uint64_t kAfterDataOffset = 0x1016 + 0x0018 + 0x0004;
+  const uint64_t kAfterDataOffset = optional_header_start_offset_ + 0x0018 + 0x0004;
   this->memory_fake_.ClearMemory(kAfterDataOffset, 1);
 
   PeCoffInterface32 coff(&memory_fake_);
@@ -361,7 +398,7 @@ TEST_F(PeCoffInterface32Test, optional_header_parsing_fails_invalid_memory_end_3
 
 TEST_F(PeCoffInterface64Test, optional_header_parsing_fails_invalid_memory_end_64) {
   InitPeCoffInterfaceFake();
-  constexpr uint64_t kAfterDataOffset = 0x1016 + 0x0018;
+  const uint64_t kAfterDataOffset = optional_header_start_offset_ + 0x0018;
   this->memory_fake_.ClearMemory(kAfterDataOffset, 1);
 
   PeCoffInterface64 coff(&memory_fake_);
@@ -371,7 +408,7 @@ TEST_F(PeCoffInterface64Test, optional_header_parsing_fails_invalid_memory_end_6
 
 TEST_F(PeCoffInterface32Test, optional_header_parsing_fails_invalid_memory_data_dirs_32) {
   InitPeCoffInterfaceFake();
-  constexpr uint64_t kDataDirOffset = 0x1016 + 0x0018 + 0x0004 + 0x0044;
+  const uint64_t kDataDirOffset = optional_header_start_offset_ + 0x0018 + 0x0004 + 0x0044;
   this->memory_fake_.ClearMemory(kDataDirOffset, 1);
 
   PeCoffInterface32 coff(&memory_fake_);
@@ -381,7 +418,7 @@ TEST_F(PeCoffInterface32Test, optional_header_parsing_fails_invalid_memory_data_
 
 TEST_F(PeCoffInterface64Test, optional_header_parsing_fails_invalid_memory_data_dirs_64) {
   InitPeCoffInterfaceFake();
-  constexpr uint64_t kDataDirOffset = 0x1016 + 0x0018 + 0x0058;
+  const uint64_t kDataDirOffset = optional_header_start_offset_ + 0x0018 + 0x0058;
   this->memory_fake_.ClearMemory(kDataDirOffset, 1);
 
   PeCoffInterface64 coff(&memory_fake_);
