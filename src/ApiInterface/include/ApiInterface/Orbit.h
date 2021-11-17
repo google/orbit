@@ -193,21 +193,8 @@
 
 // To disable manual instrumentation macros, define ORBIT_API_ENABLED as 0.
 #define ORBIT_API_ENABLED 1
+
 #if ORBIT_API_ENABLED
-
-#ifdef WIN32
-#include <intrin.h>
-
-#pragma intrinsic(_ReturnAddress)
-
-#define ORBIT_GET_CALLER_PC() reinterpret_cast<uint64_t>(_ReturnAddress())
-#else
-// `__builtin_return_address(0)` will return us the (possibly encoded) return address of the current
-// function (level "0" refers to this frame, "1" would be the caller's return address and so on).
-// To decode the return address, we call `__builtin_extract_return_addr`.
-#define ORBIT_GET_CALLER_PC() \
-  reinterpret_cast<uint64_t>(__builtin_extract_return_addr(__builtin_return_address(0)))
-#endif
 
 #ifdef __cplusplus
 
@@ -260,6 +247,8 @@
 #ifdef __cplusplus
 #define ORBIT_SCOPE(name)
 #define ORBIT_SCOPE_WITH_COLOR(name, color)
+#define ORBIT_SCOPE_WITH_GROUP_ID(name, group_id)
+#define ORBIT_SCOPE_WITH_COLOR_AND_GROUP_ID(name, col, group_id)
 #endif
 
 #define ORBIT_START(name)
@@ -283,6 +272,9 @@
 #define ORBIT_UINT64_WITH_COLOR(name, value, color)
 #define ORBIT_FLOAT_WITH_COLOR(name, value, color)
 #define ORBIT_DOUBLE_WITH_COLOR(name, value, color)
+
+#define ORBIT_START_WITH_GROUP_ID(name, group_id)
+#define ORBIT_START_WITH_COLOR_AND_GROUP_ID(name, color, group_id)
 
 #endif  // ORBIT_API_ENABLED
 
@@ -378,6 +370,20 @@ inline bool orbit_api_active() {
 #define ORBIT_CONCAT(x, y) ORBIT_CONCAT_IND(x, y)
 #define ORBIT_UNIQUE(x) ORBIT_CONCAT(x, __COUNTER__)
 #define ORBIT_VAR ORBIT_UNIQUE(ORB)
+
+#ifdef WIN32
+#include <intrin.h>
+
+#pragma intrinsic(_ReturnAddress)
+
+#define ORBIT_GET_CALLER_PC() reinterpret_cast<uint64_t>(_ReturnAddress())
+#else
+// `__builtin_return_address(0)` will return us the (possibly encoded) return address of the current
+// function (level "0" refers to this frame, "1" would be the caller's return address and so on).
+// To decode the return address, we call `__builtin_extract_return_addr`.
+#define ORBIT_GET_CALLER_PC() \
+  reinterpret_cast<uint64_t>(__builtin_extract_return_addr(__builtin_return_address(0)))
+#endif
 
 #ifdef WIN32
 namespace orbit_api {
