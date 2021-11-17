@@ -20,7 +20,7 @@ namespace orbit_gl {
  */
 class AccessibleTriangleToggle : public AccessibleCaptureViewElement {
  public:
-  explicit AccessibleTriangleToggle(TriangleToggle* triangle_toggle, Track* parent);
+  explicit AccessibleTriangleToggle(TriangleToggle* triangle_toggle);
 
   [[nodiscard]] int AccessibleChildCount() const override { return 0; };
   [[nodiscard]] const AccessibleInterface* AccessibleChild(int /*index*/) const override {
@@ -36,7 +36,6 @@ class AccessibleTriangleToggle : public AccessibleCaptureViewElement {
 
  private:
   TriangleToggle* triangle_toggle_;
-  Track* parent_;
 };
 
 }  // namespace orbit_gl

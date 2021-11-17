@@ -18,9 +18,7 @@
 
 TriangleToggle::TriangleToggle(StateChangeHandler handler, TimeGraph* time_graph,
                                orbit_gl::Viewport* viewport, TimeGraphLayout* layout, Track* track)
-    : CaptureViewElement(track, time_graph, viewport, layout),
-      track_(track),
-      handler_(std::move(handler)) {}
+    : CaptureViewElement(track, time_graph, viewport, layout), handler_(std::move(handler)) {}
 
 void TriangleToggle::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
                             const DrawContext& draw_context) {
@@ -77,5 +75,5 @@ void TriangleToggle::OnRelease() {
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface>
 TriangleToggle::CreateAccessibleInterface() {
-  return std::make_unique<orbit_gl::AccessibleTriangleToggle>(this, track_);
+  return std::make_unique<orbit_gl::AccessibleTriangleToggle>(this);
 }

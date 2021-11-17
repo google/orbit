@@ -93,7 +93,9 @@ class FakeTimerPane : public CaptureViewElement {
 AccessibleTrackTab::AccessibleTrackTab(CaptureViewElement* fake_track_tab, Track* track)
     : AccessibleCaptureViewElement(fake_track_tab), track_(track) {}
 
-const AccessibleInterface* AccessibleTrackTab::AccessibleChild(int index) const { return nullptr; }
+const AccessibleInterface* AccessibleTrackTab::AccessibleChild(int /*unused*/) const {
+  return nullptr;
+}
 
 std::string AccessibleTrackTab::AccessibleName() const {
   CHECK(track_ != nullptr);

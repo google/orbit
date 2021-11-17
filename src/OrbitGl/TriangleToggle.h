@@ -48,11 +48,6 @@ class TriangleToggle : public orbit_gl::CaptureViewElement,
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
 
  private:
-  // Ideally this should be `CaptureViewElement* parent`, but as the track is not the parent, but
-  // the virtual `TrackTab`, which is a child of the track itself, we stick to track here.
-  // We require explicit knowledge about the parent.
-  Track* track_;
-
   float height_ = 20;
   bool is_collapsed_ = false;
   bool is_collapsible_ = true;
