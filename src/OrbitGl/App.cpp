@@ -174,7 +174,9 @@ orbit_data_views::PresetLoadState GetPresetLoadStateForProcess(const PresetFile&
 orbit_metrics_uploader::CaptureStartData CreateCaptureStartData(
     const std::vector<FunctionInfo>& instrumented_functions, int64_t number_of_frame_tracks,
     bool thread_states, int64_t memory_information_sampling_period_ms,
-    bool lib_orbit_vulkan_layer_loaded, uint64_t max_local_marker_depth_per_command_buffer) {
+    bool lib_orbit_vulkan_layer_loaded, uint64_t max_local_marker_depth_per_command_buffer,
+    DynamicInstrumentationMethod dynamic_instrumentation_method,
+    uint64_t callstack_samples_per_second, UnwindingMethod callstack_unwinding_method) {
   orbit_metrics_uploader::CaptureStartData capture_start_data{};
   capture_start_data.number_of_instrumented_functions = instrumented_functions.size();
   capture_start_data.number_of_frame_tracks = number_of_frame_tracks;
@@ -195,6 +197,19 @@ orbit_metrics_uploader::CaptureStartData CreateCaptureStartData(
     capture_start_data.max_local_marker_depth_per_command_buffer =
         max_local_marker_depth_per_command_buffer;
   }
+  capture_start_data.dynamic_instrumentation_method =
+      dynamic_instrumentation_method == orbit_grpc_protos::CaptureOptions::kKernelUprobes
+          ? orbit_metrics_uploader::
+                OrbitCaptureData_DynamicInstrumentationMethod_DYNAMIC_INSTRUMENTATION_METHOD_KERNEL
+          : orbit_metrics_uploader::
+                OrbitCaptureData_DynamicInstrumentationMethod_DYNAMIC_INSTRUMENTATION_METHOD_ORBIT;
+  capture_start_data.callstack_samples_per_second = callstack_samples_per_second;
+  capture_start_data.callstack_unwinding_method =
+      callstack_unwinding_method == orbit_grpc_protos::CaptureOptions::kDwarf
+          ? orbit_metrics_uploader::
+                OrbitCaptureData_CallstackUnwindingMethod_CALLSTACK_UNWINDING_METHOD_DWARF
+          : orbit_metrics_uploader::
+                OrbitCaptureData_CallstackUnwindingMethod_CALLSTACK_UNWINDING_METHOD_FRAME_POINTER;
   return capture_start_data;
 }
 
@@ -1393,7 +1408,9 @@ void OrbitApp::StartCapture() {
       CreateCaptureStartData(
           selected_functions, user_defined_capture_data.frame_track_functions().size(),
           data_manager_->collect_thread_states(), memory_information_sampling_period_ms_for_metrics,
-          orbit_vulkan_layer_loaded_by_process, max_local_marker_depth_per_command_buffer)};
+          orbit_vulkan_layer_loaded_by_process, max_local_marker_depth_per_command_buffer,
+          dynamic_instrumentation_method, static_cast<uint64_t>(samples_per_second),
+          unwinding_method)};
 
   metrics_capture_complete_data_ = orbit_metrics_uploader::CaptureCompleteData{};
 

@@ -27,6 +27,9 @@ CaptureMetric::CaptureMetric(MetricsUploader* uploader, const CaptureStartData& 
       start_data.local_marker_depth_per_command_buffer);
   capture_data_.set_max_local_marker_depth_per_command_buffer(
       start_data.max_local_marker_depth_per_command_buffer);
+  capture_data_.set_dynamic_instrumentation_method(start_data.dynamic_instrumentation_method);
+  capture_data_.set_callstack_samples_per_second(start_data.callstack_samples_per_second);
+  capture_data_.set_callstack_unwinding_method(start_data.callstack_unwinding_method);
 }
 
 void CaptureMetric::SetCaptureCompleteData(const CaptureCompleteData& complete_data) {

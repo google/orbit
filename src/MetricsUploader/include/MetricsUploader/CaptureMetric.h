@@ -27,6 +27,13 @@ struct CaptureStartData {
       local_marker_depth_per_command_buffer = orbit_metrics_uploader::
           OrbitCaptureData_LocalMarkerDepthPerCommandBuffer_LOCAL_MARKER_DEPTH_PER_COMMAND_BUFFER_UNKNOWN;
   uint64_t max_local_marker_depth_per_command_buffer = 0;
+  orbit_metrics_uploader::OrbitCaptureData_DynamicInstrumentationMethod
+      dynamic_instrumentation_method = orbit_metrics_uploader::
+          OrbitCaptureData_DynamicInstrumentationMethod_DYNAMIC_INSTRUMENTATION_METHOD_UNKNOWN;
+  uint64_t callstack_samples_per_second = 0;
+  orbit_metrics_uploader::OrbitCaptureData_CallstackUnwindingMethod callstack_unwinding_method =
+      orbit_metrics_uploader::
+          OrbitCaptureData_CallstackUnwindingMethod_CALLSTACK_UNWINDING_METHOD_UNKNOWN;
 };
 
 struct CaptureCompleteData {
