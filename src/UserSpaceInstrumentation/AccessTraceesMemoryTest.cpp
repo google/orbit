@@ -105,7 +105,7 @@ TEST(AccessTraceesMemoryTest, ReadFailures) {
 
   // Read past the end of the mappings.
   result = ReadTraceesMemory(pid, address, length + 1);
-  EXPECT_THAT(result, HasError("Only got"));
+  EXPECT_THAT(result, HasError("Input/output error"));
 
   // Read from bad address.
   result = ReadTraceesMemory(pid, 0, length);
