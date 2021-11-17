@@ -86,7 +86,7 @@ class ConnectToStadiaWidget : public QWidget {
   void Activated();
   void Connected();
   void Disconnected();
-  void InstanceReloadRequested();
+  void InstancesLoading();
 
  private:
   void showEvent(QShowEvent* event) override;
