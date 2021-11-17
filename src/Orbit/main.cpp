@@ -82,7 +82,8 @@ static std::optional<orbit_session_setup::TargetConfiguration> ConnectToSpecifie
   auto connection_target_result =
       orbit_session_setup::ConnectionTarget::FromString(connection_target_string);
   if (!connection_target_result.has_value()) {
-    LOG("Invalid connection target parameter was specified. Expected format: pid@instance_id, got "
+    ERROR(
+        "Invalid connection target parameter was specified. Expected format: pid@instance_id, got "
         "\"%s\"",
         connection_target_string.toStdString());
     return std::nullopt;
