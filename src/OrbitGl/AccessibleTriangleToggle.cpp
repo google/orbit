@@ -9,10 +9,8 @@
 
 namespace orbit_gl {
 
-AccessibleTriangleToggle::AccessibleTriangleToggle(TriangleToggle* triangle_toggle, Track* parent)
-    : AccessibleCaptureViewElement(triangle_toggle),
-      triangle_toggle_{triangle_toggle},
-      parent_{parent} {}
+AccessibleTriangleToggle::AccessibleTriangleToggle(TriangleToggle* triangle_toggle)
+    : AccessibleCaptureViewElement(triangle_toggle), triangle_toggle_{triangle_toggle} {}
 
 orbit_accessibility::AccessibilityState AccessibleTriangleToggle::AccessibleState() const {
   if (triangle_toggle_->IsCollapsible()) {
