@@ -17,6 +17,10 @@ class UserSpaceInstrumentationAddresses {
   [[nodiscard]] virtual bool IsInEntryTrampoline(uint64_t address) const = 0;
   [[nodiscard]] virtual bool IsInReturnTrampoline(uint64_t address) const = 0;
   [[nodiscard]] virtual std::string_view GetInjectedLibraryMapName() const = 0;
+
+  [[nodiscard]] bool IsInEntryOrReturnTrampoline(uint64_t address) const {
+    return IsInEntryTrampoline(address) || IsInReturnTrampoline(address);
+  }
 };
 
 }  // namespace orbit_linux_tracing
