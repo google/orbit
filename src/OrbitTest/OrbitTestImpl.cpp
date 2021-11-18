@@ -172,12 +172,12 @@ void OrbitTestImpl::ManualInstrumentationApiTest() {
     ORBIT_UINT64_WITH_COLOR("uint64_var", uint64_var, kOrbitColorIndigo);
 
     [[maybe_unused]] static float float_var = 0.f;
-    [[maybe_unused]] static float sinf_coeff = 0.1f;
-    ORBIT_FLOAT_WITH_COLOR("float_var", sinf((++float_var) * sinf_coeff), kOrbitColorPink);
+    [[maybe_unused]] static constexpr float kSinfCoeff = 0.1f;
+    ORBIT_FLOAT_WITH_COLOR("float_var", sinf((++float_var) * kSinfCoeff), kOrbitColorPink);
 
     [[maybe_unused]] static double double_var = 0.0;
-    [[maybe_unused]] static double cos_coeff = 0.1;
-    ORBIT_DOUBLE_WITH_COLOR("double_var", cos((++double_var) * cos_coeff), kOrbitColorPurple);
+    [[maybe_unused]] static constexpr double kCosCoeff = 0.1;
+    ORBIT_DOUBLE_WITH_COLOR("double_var", cos((++double_var) * kCosCoeff), kOrbitColorPurple);
 
     for (int i = 0; i < 5; ++i) {
       std::string track_name = absl::StrFormat("DynamicName_%u", i);
@@ -186,7 +186,7 @@ void OrbitTestImpl::ManualInstrumentationApiTest() {
 
     // Async spans.
     static uint32_t task_id = 0;
-    size_t kNumTasksToSchedule = 10;
+    static constexpr size_t kNumTasksToSchedule = 10;
     for (size_t i = 0; i < kNumTasksToSchedule; ++i) {
       uint32_t id = ++task_id;
       ORBIT_START_ASYNC("ORBIT_ASYNC_TASKS", id);
