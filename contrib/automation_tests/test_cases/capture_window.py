@@ -182,13 +182,13 @@ class CollapsingTrackBase(CaptureWindowE2ETestCaseBase):
     Clicks on a track's triangle toggle and compares the track's height by calling `_verify_height`.
     """
 
-    def _execute(self, expected_name: str):
+    def _execute(self, expected_name: str, recursive: bool = False):
         """
         :param expected_name: The exact name of the track to be collapsed. "*" is allowed as placeholder.
         """
         assert (expected_name != "")
 
-        tracks = self._find_tracks(expected_name)
+        tracks = self._find_tracks(expected_name, recursive=recursive)
 
         self.expect_true(len(tracks) == 1, 'Found track {}'.format(expected_name))
         track = Track(tracks[0])
