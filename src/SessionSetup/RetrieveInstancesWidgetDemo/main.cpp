@@ -35,7 +35,9 @@ int main(int argc, char* argv[]) {
 
   RetrieveInstancesWidget widget{};
 
-  widget.SetRetrieveInstances(RetrieveInstances::Create(client_ptr, executor.get()));
+  std::unique_ptr<RetrieveInstances> retrieve_instances =
+      RetrieveInstances::Create(client_ptr, executor.get());
+  widget.SetRetrieveInstances(retrieve_instances.get());
 
   QObject::connect(&widget, &RetrieveInstancesWidget::LoadingSuccessful, &widget,
                    [&widget](const QVector<orbit_ggp::Instance>& instances) {
