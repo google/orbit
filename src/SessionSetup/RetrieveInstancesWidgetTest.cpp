@@ -259,6 +259,9 @@ class RetrieveInstancesWidgetTestStarted : public RetrieveInstancesWidgetTest {
             kInitialTestDataDefault}));
 
     widget_.Start();
+    // processEvents is needed twice here, because the events that are worked on by the first call,
+    // schedule more events onto the queue (via Future.Then(main_thread_executor, ...)). The second
+    // call then processes these additional events.
     QCoreApplication::processEvents();
     QCoreApplication::processEvents();
 
@@ -292,6 +295,9 @@ TEST_F(RetrieveInstancesWidgetTest, StartSuccessfulDefault) {
           kInitialTestDataDefault}));
 
   widget_.Start();
+  // processEvents is needed twice here, because the events that are worked on by the first call,
+  // schedule more events onto the queue (via Future.Then(main_thread_executor, ...)). The second
+  // call then processes these additional events.
   QCoreApplication::processEvents();
   QCoreApplication::processEvents();
 
@@ -312,6 +318,9 @@ TEST_F(RetrieveInstancesWidgetTest, StartSuccessfulWithRememberedSettings) {
   SaveInstancesScopeToPersistentStorage(InstanceListScope::kAllReservedInstances);
 
   widget_.Start();
+  // processEvents is needed twice here, because the events that are worked on by the first call,
+  // schedule more events onto the queue (via Future.Then(main_thread_executor, ...)). The second
+  // call then processes these additional events.
   QCoreApplication::processEvents();
   QCoreApplication::processEvents();
 
