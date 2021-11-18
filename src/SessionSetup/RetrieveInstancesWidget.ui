@@ -34,6 +34,9 @@
        <height>0</height>
       </size>
      </property>
+     <property name="accessibleName">
+      <string>ProjectSelectionComboBox</string>
+     </property>
      <property name="sizeAdjustPolicy">
       <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
      </property>
@@ -51,6 +54,9 @@
      <property name="text">
       <string>All instances</string>
      </property>
+     <property name="accessibleName">
+      <string>AllInstancesCheckBox</string>
+     </property>
     </widget>
    </item>
    <item>
@@ -61,6 +67,9 @@
      <property name="icon">
       <iconset resource="../../icons/orbiticons.qrc">
        <normaloff>:/actions/refresh</normaloff>:/actions/refresh</iconset>
+     </property>
+     <property name="accessibleName">
+      <string>RefreshInstanceList</string>
      </property>
     </widget>
    </item>
