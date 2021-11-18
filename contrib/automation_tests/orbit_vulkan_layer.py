@@ -34,8 +34,10 @@ def main(argv):
         VerifyTracksExist(track_names=["gfx"]),
         ExpandTrack(expected_name="gfx"),
         CheckTimers(track_name_filter='gfx_submissions', recursive=True),
+        CollapseTrack(expected_name='gfx_submissions', recursive=True),
         CheckTimers(track_name_filter='gfx_marker', recursive=True),
-        CollapseTrack(expected_name="gfx")]
+        CollapseTrack(expected_name="gfx")
+    ]
     suite = E2ETestSuite(test_name="Vulkan Layer", test_cases=test_cases)
     suite.execute()
 
