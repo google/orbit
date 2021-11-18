@@ -32,6 +32,8 @@
 namespace unwindstack {
 
 constexpr size_t kDosHeaderSizeInBytes = 0x40;
+constexpr uint64_t kDebugFrameSectionFileOffset = 0x2000;
+constexpr uint64_t kDebugFrameSectionSize = 0x200;
 
 // Needed for static_asserts that depend on the template parameter. Just a
 // plain `false` in the static_assert will cause compilation to fail.
@@ -72,6 +74,8 @@ class PeCoffInterfaceTest : public ::testing::Test {
     offset = SetCoffHeaderAtOffset(offset);
     offset = SetOptionalHeaderAtOffset(offset);
     offset = SetSectionHeadersAtOffset(offset);
+
+    SetDebugFrameSectionAtOffset(kDebugFrameSectionFileOffset);
   }
 
   uint64_t InitPeCoffInterfaceFakeNoSectionHeaders() {
@@ -237,7 +241,9 @@ class PeCoffInterfaceTest : public ::testing::Test {
     return offset;
   }
 
-  uint64_t SetSectionHeaderAtOffset(uint64_t offset, std::string section_name) {
+  uint64_t SetSectionHeaderAtOffset(uint64_t offset, std::string section_name, uint64_t vmsize = 0,
+                                    uint64_t vmaddr = 0, uint64_t size = 0,
+                                    uint64_t file_offset = 0) {
     std::string name_in_header = section_name;
     if (section_name.size() > kSectionNameInHeaderSize) {
       const uint64_t previous_offset =
@@ -254,10 +260,10 @@ class PeCoffInterfaceTest : public ::testing::Test {
     memory_fake_.SetMemory(offset, zeros.data(), zeros.size());
     memory_fake_.SetMemory(offset, name_in_header);
     offset += kSectionNameInHeaderSize;
-    offset = SetData32(offset, 0);  // vmsize
-    offset = SetData32(offset, 0);  // vmaddr
-    offset = SetData32(offset, 0);  // size
-    offset = SetData32(offset, 0);  // offset
+    offset = SetData32(offset, vmsize);
+    offset = SetData32(offset, vmaddr);
+    offset = SetData32(offset, size);
+    offset = SetData32(offset, file_offset);
     offset = SetData32(offset, 0);  // reloff
     offset = SetData32(offset, 0);  // lineoff
     offset = SetData16(offset, 0);  // nrel
@@ -279,9 +285,11 @@ class PeCoffInterfaceTest : public ::testing::Test {
 
   uint64_t SetSectionHeadersAtOffset(uint64_t offset) {
     // Shorter than kSectionNameInHeaderSize (== 8) characters
-    offset = SetSectionHeaderAtOffset(offset, ".text");
+    offset = SetSectionHeaderAtOffset(offset, ".text", 0, 0, 0, 0);
     // Longer than kSectionNameInHeaderSize (== 8) characters
-    offset = SetSectionHeaderAtOffset(offset, ".debug_frame");
+    offset = SetSectionHeaderAtOffset(offset, ".debug_frame", kDebugFrameSectionSize,
+                                      kDebugFrameSectionFileOffset, kDebugFrameSectionSize,
+                                      kDebugFrameSectionFileOffset);
     SetData16(coff_header_nsects_offset_, 2);
 
     CHECK(offset <= std::numeric_limits<uint32_t>::max());
@@ -290,6 +298,22 @@ class PeCoffInterfaceTest : public ::testing::Test {
 
     offset = SetSectionStringsAtOffset(offset);
 
+    return offset;
+  }
+
+  uint64_t SetDebugFrameSectionAtOffset(uint64_t offset) {
+    uint64_t initial_offset = offset;
+    // CIE 32
+    offset = SetData32(offset, 0xfc);        // length
+    offset = SetData32(offset, 0xffffffff);  // CIE_id
+    memory_fake_.SetMemory(offset, std::vector<uint8_t>{1, '\0', 0, 0, 1});
+
+    // FDE 32
+    offset = initial_offset + 0x100;
+    offset = SetData32(offset, 0xfc);
+    offset = SetData32(offset, 0);
+    offset = SetData32(offset, 0x2100);
+    offset = SetData32(offset, 0x400);
     return offset;
   }
 
@@ -490,6 +514,17 @@ TYPED_TEST(PeCoffInterfaceTest, section_headers_parsing_fails_no_text_section) {
   TypeParam coff(&this->memory_fake_);
   ASSERT_FALSE(coff.Init());
   EXPECT_EQ(ERROR_INVALID_COFF, coff.LastError().code);
+}
+
+TYPED_TEST(PeCoffInterfaceTest, debug_frame_section_parsed_correctly) {
+  this->InitPeCoffInterfaceFake();
+  TypeParam coff(&this->memory_fake_);
+  ASSERT_TRUE(coff.Init());
+
+  const DwarfFde* dwarf_fde = coff.DebugFrameSection()->GetFdeFromPc(0x2100);
+  ASSERT_NE(dwarf_fde, nullptr);
+  EXPECT_EQ(0x2100, dwarf_fde->pc_start);
+  EXPECT_EQ(0x2500, dwarf_fde->pc_end);
 }
 
 // The remaining tests are not TYPED_TESTs, because they are specific to either the 32-bit or 64-bit
