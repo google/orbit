@@ -205,6 +205,8 @@ if [ -n "$1" ]; then
     cp -v bin/OrbitClientGgp Orbit/collector/
     cp -v lib/libOrbitVulkanLayer.so Orbit/collector/
     cp -v lib/VkLayer_Orbit_implicit.json Orbit/collector/
+    cp -v lib/liborbit.so Orbit/collector/
+    cp -v lib/liborbituserspaceinstrumentation.so Orbit/collector/
     cp -v bin/LinuxTracingIntegrationTests Orbit/collector/
     cp -v bin/OrbitServiceIntegrationTests Orbit/collector/
     cp -v lib/libIntegrationTestPuppetSharedObject.so Orbit/collector/
