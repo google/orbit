@@ -58,4 +58,7 @@ ABSL_DECLARE_FLAG(bool, enforce_full_redraw);
 // VSI
 ABSL_DECLARE_FLAG(std::string, connection_target);
 
+// Clears QSettings. This is intended for e2e tests.
+ABSL_DECLARE_FLAG(bool, clear_settings);
+
 #endif  // CLIENT_FLAGS_CLIENT_FLAGS_H_

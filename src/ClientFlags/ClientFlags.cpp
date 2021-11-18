@@ -61,3 +61,7 @@ ABSL_FLAG(std::string, connection_target, "",
           "connection setup and open the main window instead. If either the instance or the "
           "process ID can't be found or deployment is aborted by the user Orbit will exit "
           "with return code -1 immediately.");
+
+// Clears QSettings. This is intended for e2e tests.
+ABSL_FLAG(bool, clear_settings, false,
+          "Clears user defined settings. This includes symbol locations and source path mappings.");
