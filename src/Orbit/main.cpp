@@ -301,6 +301,11 @@ int main(int argc, char* argv[]) {
     return 0;
   }
 
+  if (absl::GetFlag(FLAGS_clear_settings)) {
+    QSettings{}.clear();
+    return 0;
+  }
+
   orbit_style::ApplyStyle(&app);
 
   const auto open_gl_version = orbit_qt::DetectOpenGlVersion();
