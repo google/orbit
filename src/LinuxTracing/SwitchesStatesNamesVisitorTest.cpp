@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 #include <gmock/gmock.h>
-#include <google/protobuf/stubs/port.h>
 #include <gtest/gtest.h>
 #include <stdint.h>
 #include <string.h>
