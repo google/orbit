@@ -95,7 +95,6 @@ void NO_INLINE OrbitTestImpl::BusyWork(uint64_t microseconds) {
   }
 }
 
-#if ORBIT_API_ENABLED
 static void NO_INLINE SleepFor1Ms() { std::this_thread::sleep_for(std::chrono::milliseconds(1)); }
 
 static void NO_INLINE SleepFor2Ms() {
@@ -103,7 +102,8 @@ static void NO_INLINE SleepFor2Ms() {
   ORBIT_SCOPE_WITH_COLOR("Sleep for two milliseconds", kOrbitColorTeal);
   ORBIT_SCOPE_WITH_COLOR("Sleep for two milliseconds", kOrbitColorOrange);
   thread_local uint64_t group_id = 0;
-  uint64_t current_id = group_id++;
+  // [[maybe_unused]] prevents "unused variable" compilation error if ORBIT_API_ENABLED is set to 0.
+  [[maybe_unused]] uint64_t current_id = group_id++;
   ORBIT_SCOPE_WITH_GROUP_ID("Sleeping for two milliseconds with group id", current_id);
   ORBIT_SCOPE_WITH_COLOR_AND_GROUP_ID("Sleeping for two milliseconds with group id",
                                       kOrbitColorBlueGrey, current_id);
@@ -143,7 +143,7 @@ void OrbitTestImpl::ManualInstrumentationApiTest() {
     ORBIT_STOP();
 
     thread_local uint64_t group_id = 0;
-    uint64_t current_id = group_id++;
+    [[maybe_unused]] uint64_t current_id = group_id++;
     ORBIT_START_WITH_GROUP_ID("ORBIT_START_TEST with group id", current_id);
     ORBIT_START_WITH_COLOR_AND_GROUP_ID("ORBIT_START_TEST with group id", kOrbitColorBlueGrey,
                                         current_id);
@@ -171,13 +171,13 @@ void OrbitTestImpl::ManualInstrumentationApiTest() {
     if (++uint64_var > 100) uint64_var = 0;
     ORBIT_UINT64_WITH_COLOR("uint64_var", uint64_var, kOrbitColorIndigo);
 
-    static float float_var = 0.f;
-    static volatile float sinf_coeff = 0.1f;
-    ORBIT_FLOAT_WITH_COLOR("float_var", sinf((++float_var) * sinf_coeff), kOrbitColorPink);
+    [[maybe_unused]] static float float_var = 0.f;
+    [[maybe_unused]] static constexpr float kSinfCoeff = 0.1f;
+    ORBIT_FLOAT_WITH_COLOR("float_var", sinf((++float_var) * kSinfCoeff), kOrbitColorPink);
 
-    static double double_var = 0.0;
-    static volatile double cos_coeff = 0.1;
-    ORBIT_DOUBLE_WITH_COLOR("double_var", cos((++double_var) * cos_coeff), kOrbitColorPurple);
+    [[maybe_unused]] static double double_var = 0.0;
+    [[maybe_unused]] static constexpr double kCosCoeff = 0.1;
+    ORBIT_DOUBLE_WITH_COLOR("double_var", cos((++double_var) * kCosCoeff), kOrbitColorPurple);
 
     for (int i = 0; i < 5; ++i) {
       std::string track_name = absl::StrFormat("DynamicName_%u", i);
@@ -186,7 +186,7 @@ void OrbitTestImpl::ManualInstrumentationApiTest() {
 
     // Async spans.
     static uint32_t task_id = 0;
-    size_t kNumTasksToSchedule = 10;
+    static constexpr size_t kNumTasksToSchedule = 10;
     for (size_t i = 0; i < kNumTasksToSchedule; ++i) {
       uint32_t id = ++task_id;
       ORBIT_START_ASYNC("ORBIT_ASYNC_TASKS", id);
@@ -195,6 +195,3 @@ void OrbitTestImpl::ManualInstrumentationApiTest() {
     }
   }
 }
-#else
-void OrbitTest::ManualInstrumentationApiTest() {}
-#endif  // ORBIT_API_ENABLED

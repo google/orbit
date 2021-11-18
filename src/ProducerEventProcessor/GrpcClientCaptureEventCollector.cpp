@@ -159,7 +159,7 @@ void GrpcClientCaptureEventCollector::SenderThread() {
       ORBIT_UINT64("Number of buffered CaptureEvents sent", number_of_events_sent);
 
       CHECK(number_of_events_sent > 0);
-      float average_bytes =
+      [[maybe_unused]] const float average_bytes =
           static_cast<float>(number_of_bytes_sent) / static_cast<float>(number_of_events_sent);
       ORBIT_FLOAT("Average bytes per CaptureEvent", average_bytes);
 

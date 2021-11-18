@@ -95,7 +95,7 @@ void UploaderClientCaptureEventCollector::RefreshUploadDataBuffer() {
   ORBIT_UINT64("Number of CaptureEvents to upload", buffered_event_count_);
   ORBIT_UINT64("Bytes of CaptureEvents to upload", buffered_event_bytes_);
   if (buffered_event_count_ > 0) {
-    float average_bytes =
+    [[maybe_unused]] const float average_bytes =
         static_cast<float>(buffered_event_bytes_) / static_cast<float>(buffered_event_count_);
     ORBIT_FLOAT("Average bytes per CaptureEvent", average_bytes);
   }
