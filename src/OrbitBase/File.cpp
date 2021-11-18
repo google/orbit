@@ -8,6 +8,8 @@
 #include <cstdint>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
+#include "OrbitBase/SafeStrerror.h"
 
 #if defined(__linux)
 #include <unistd.h>
@@ -22,40 +24,7 @@
 
 namespace {
 
-using ssize_t = int64_t;
-
-// There is no implementation for pread and pwrite in 'io.h' so we implement them on top of lseek,
-// read and write here.
-ssize_t pread(int fd, void* buffer, size_t size, int64_t offset) {
-  int64_t old_position = _lseeki64(fd, 0, SEEK_CUR);
-  if (old_position == -1) {
-    return -1;
-  }
-  if (_lseeki64(fd, offset, SEEK_SET) == -1) {
-    return -1;
-  }
-  ssize_t bytes_read = read(fd, buffer, size);
-  if ((_lseeki64(fd, old_position, SEEK_SET)) == -1) {
-    return -1;
-  }
-  return bytes_read;
-}
-
-ssize_t pwrite(int fd, const void* buffer, size_t size, int64_t offset) {
-  int64_t cpos, opos;
-  int64_t old_position = _lseeki64(fd, 0, SEEK_CUR);
-  if (old_position == -1) {
-    return -1;
-  }
-  if (_lseeki64(fd, offset, SEEK_SET) == -1) {
-    return -1;
-  }
-  ssize_t bytes_written = write(fd, buffer, size);
-  if (_lseeki64(fd, old_position, SEEK_SET) == -1) {
-    return -1;
-  }
-  return bytes_written;
-}
+int64_t lseek64(int fd, int64_t offset, int origin) { return _lseeki64(fd, offset, origin); }
 
 }  // namespace
 
@@ -158,21 +127,13 @@ ErrorMessageOr<void> WriteFully(const unique_fd& fd, std::string_view content) {
 
 ErrorMessageOr<void> WriteFullyAtOffset(const unique_fd& fd, const void* buffer, size_t size,
                                         int64_t offset) {
-  const char* current_position = static_cast<const char*>(buffer);
+  int64_t seek_result = lseek64(fd.get(), offset, SEEK_SET);
 
-  while (size > 0) {
-    int64_t bytes_written = TEMP_FAILURE_RETRY(pwrite(fd.get(), current_position, size, offset));
-    CHECK(bytes_written != 0);
-    if (bytes_written == -1) {
-      return ErrorMessage{SafeStrerror(errno)};
-    }
-    current_position += bytes_written;
-    offset += bytes_written;
-    size -= bytes_written;
+  if (seek_result == -1) {
+    return ErrorMessage{SafeStrerror(errno)};
   }
 
-  CHECK(size == 0);
-  return outcome::success();
+  return WriteFully(fd, buffer, size);
 }
 
 ErrorMessageOr<size_t> ReadFully(const unique_fd& fd, void* buffer, size_t size) {
@@ -195,23 +156,13 @@ ErrorMessageOr<size_t> ReadFully(const unique_fd& fd, void* buffer, size_t size)
 
 ErrorMessageOr<size_t> ReadFullyAtOffset(const unique_fd& fd, void* buffer, size_t size,
                                          int64_t offset) {
-  uint8_t* current_position = static_cast<uint8_t*>(buffer);
-  size_t bytes_read = 0;
-  while (bytes_read < size) {
-    int64_t pread_result = TEMP_FAILURE_RETRY(pread(fd.get(), current_position, size, offset));
-    if (pread_result == -1) {
-      return ErrorMessage{SafeStrerror(errno)};
-    }
-    if (pread_result == 0) {
-      break;
-    }
-    bytes_read += pread_result;
-    current_position += pread_result;
-    size -= pread_result;
-    offset += pread_result;
+  int64_t seek_result = lseek64(fd.get(), offset, SEEK_SET);
+
+  if (seek_result == -1) {
+    return ErrorMessage{SafeStrerror(errno)};
   }
 
-  return bytes_read;
+  return ReadFully(fd, buffer, size);
 }
 
 ErrorMessageOr<bool> FileExists(const std::filesystem::path& path) {
