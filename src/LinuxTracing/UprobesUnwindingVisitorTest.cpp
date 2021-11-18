@@ -4,7 +4,6 @@
 
 #include <asm/perf_regs.h>
 #include <gmock/gmock.h>
-#include <google/protobuf/stubs/port.h>
 #include <gtest/gtest.h>
 #include <sys/mman.h>
 #include <unwindstack/Error.h>
