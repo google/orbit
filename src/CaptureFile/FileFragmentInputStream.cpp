@@ -56,7 +56,7 @@ bool FileFragmentInputStream::Skip(int count) {
   return current_position_ < file_fragments_end_;
 }
 
-google::protobuf::int64 FileFragmentInputStream::ByteCount() const {
+int64_t FileFragmentInputStream::ByteCount() const {
   return current_position_ - file_fragments_start_;
 }
 
