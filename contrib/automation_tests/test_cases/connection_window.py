@@ -71,11 +71,9 @@ class DisconnectFromStadiaInstance(E2ETestCase):
         )
         disconnect_button.click_input()
 
-        logging.info('Waiting for instance list to appear again')
-        window = self.suite.top_window()
-        window.InstanceList.DataItem0.wait('exists', timeout=100)
-        self.expect_true(instance_list_overlay.rectangle().width() == 0,
-                         "Instance overlay has width() 0 (is not shown)")
+        logging.info('Waiting for instance overlay to dissapear')
+        wait_for_condition(lambda: self.find_control(
+            'Group', 'InstanceListOverlay', raise_on_failure=False) is None)
         logging.info('Loading done, overlay is hidden')
         self.expect_true(get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
         wait_for_condition(lambda: self.find_control(
@@ -98,10 +96,9 @@ class RefreshStadiaInstanceList(E2ETestCase):
         self.expect_true(instance_list_overlay.is_visible(), "Instance overlay is visible")
         logging.info('Found InstanceListOverlay and its visible')
 
-        window = self.suite.top_window()
-        window.InstanceList.DataItem0.wait('exists', timeout=100)
-        self.expect_true(instance_list_overlay.rectangle().width() == 0,
-                         "InstanceOverlay has width() 0 (is not shown)")
+        wait_for_condition(
+            lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
+            None, 100)
         logging.info('Loading done, overlay is hidden')
         self.expect_true(get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
 
