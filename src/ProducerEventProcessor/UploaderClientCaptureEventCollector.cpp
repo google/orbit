@@ -65,7 +65,7 @@ void UploaderClientCaptureEventCollector::AddEvent(ClientCaptureEvent&& event) {
   if (event.event_case() == ClientCaptureEvent::kCaptureFinished) Stop();
 }
 
-DataReadiness UploaderClientCaptureEventCollector::GetDataReadiness() {
+DataReadiness UploaderClientCaptureEventCollector::DetermineDataReadiness() {
   absl::MutexLock lock(&mutex_);
 
   // Return `kHasData` if not yet finish uploading data in `capture_data_to_upload_`.
@@ -122,7 +122,7 @@ size_t UploaderClientCaptureEventCollector::ReadIntoBuffer(void* dest, size_t ma
   size_t bytes_to_read = std::min(capture_data_to_upload_.size() - byte_position_, max_bytes);
 
   char* dest_buffer = static_cast<char*>(dest);
-  memcpy(dest_buffer, capture_data_to_upload_.data() + byte_position_, bytes_to_read);
+  std::memcpy(dest_buffer, capture_data_to_upload_.data() + byte_position_, bytes_to_read);
   byte_position_ += bytes_to_read;
 
   return bytes_to_read;

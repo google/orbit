@@ -35,7 +35,7 @@ class UploaderClientCaptureEventCollector final
   void AddEvent(orbit_grpc_protos::ClientCaptureEvent&& event) override;
 
   // Functions needed by the `CaptureUploader` to upload data.
-  [[nodiscard]] orbit_capture_uploader::DataReadiness GetDataReadiness() override;
+  [[nodiscard]] orbit_capture_uploader::DataReadiness DetermineDataReadiness() override;
   // Try to read no more than `max_bytes` data in to the buffer pointed to by `dest`. Returns the
   // bytes read into buffer successfully.
   [[nodiscard]] size_t ReadIntoBuffer(void* dest, size_t max_bytes) override;

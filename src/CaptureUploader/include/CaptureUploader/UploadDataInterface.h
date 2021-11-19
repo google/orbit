@@ -19,9 +19,9 @@ class UploadDataInterface {
  public:
   virtual ~UploadDataInterface() = default;
 
-  // Get status of data to upload. CaptureUploader calls this method frequently to determine whether
-  // to continue, pause, resume or stop the upload.
-  [[nodiscard]] virtual DataReadiness GetDataReadiness() = 0;
+  // Determine status of data to upload. CaptureUploader calls this method frequently to determine
+  // whether to continue, pause, resume or stop the upload.
+  [[nodiscard]] virtual DataReadiness DetermineDataReadiness() = 0;
 
   // Read at most `max_bytes` data into the buffer pointed to by `dest` and return the actual read
   // bytes.
