@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <sys/prctl.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -92,6 +93,8 @@ TEST(InstrumentProcessTest, FailToInstrumentAlreadyAttached) {
   const pid_t pid = fork();
   CHECK(pid != -1);
   if (pid == 0) {
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+
     volatile uint64_t counter = 0;
     while (true) {
       // Endless loops without side effects are UB and recent versions of clang optimize it away.
@@ -103,6 +106,8 @@ TEST(InstrumentProcessTest, FailToInstrumentAlreadyAttached) {
   const pid_t pid_tracer = fork();
   CHECK(pid_tracer != -1);
   if (pid_tracer == 0) {
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+
     ptrace(PTRACE_ATTACH, pid, nullptr, nullptr);
     volatile uint64_t counter = 0;
     while (true) {
@@ -172,6 +177,8 @@ TEST(InstrumentProcessTest, Instrument) {
   const pid_t pid_process_1 = fork();
   CHECK(pid_process_1 != -1);
   if (pid_process_1 == 0) {
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+
     // Endless loops without side effects are UB and recent versions of clang optimize
     // it away. Making `sum` volatile avoids that problem.
     [[maybe_unused]] volatile int sum = 0;
@@ -198,6 +205,8 @@ TEST(InstrumentProcessTest, Instrument) {
   const pid_t pid_process_2 = fork();
   CHECK(pid_process_2 != -1);
   if (pid_process_2 == 0) {
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+
     // Endless loops without side effects are UB and recent versions of clang optimize
     // it away. Making `sum` volatile avoids that problem.
     [[maybe_unused]] volatile int sum = 0;
@@ -232,6 +241,8 @@ TEST(InstrumentProcessTest, GetErrorMessage) {
   const pid_t pid = fork();
   CHECK(pid != -1);
   if (pid == 0) {
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+
     // Endless loops without side effects are UB and recent versions of clang optimize
     // it away. Making `sum` volatile avoids that problem.
     [[maybe_unused]] volatile int sum = 0;

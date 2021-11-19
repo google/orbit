@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <sys/prctl.h>
 #include <sys/wait.h>
 
 #include <cstdint>
@@ -34,6 +35,8 @@ TEST(TestUtilTest, Disassemble) {
   pid_t pid = fork();
   CHECK(pid != -1);
   if (pid == 0) {
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+
     // Endless loops without side effects are UB and recent versions of clang optimize
     // it away. Making `sum` volatile avoids that problem.
     [[maybe_unused]] volatile int sum = 0;

@@ -8,6 +8,7 @@
 #include <absl/strings/str_split.h>
 #include <dlfcn.h>
 #include <gtest/gtest.h>
+#include <sys/prctl.h>
 #include <sys/sysmacros.h>
 #include <sys/wait.h>
 
@@ -136,6 +137,8 @@ TEST(InjectLibraryInTraceeTest, OpenUseAndCloseLibraryInUserCode) {
   pid_t pid = fork();
   CHECK(pid != -1);
   if (pid == 0) {
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+
     volatile uint64_t counter = 0;
     while (true) {
       // Endless loops without side effects are UB and recent versions of clang optimize it away.
@@ -154,6 +157,8 @@ TEST(InjectLibraryInTraceeTest, OpenUseAndCloseLibraryInSyscall) {
   pid_t pid = fork();
   CHECK(pid != -1);
   if (pid == 0) {
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+
     while (true) {
       // Child will be stuck in syscall sys_clock_nanosleep.
       std::this_thread::sleep_for(std::chrono::hours(1000000000));
@@ -171,6 +176,8 @@ TEST(InjectLibraryInTraceeTest, NonExistingLibrary) {
   pid_t pid = fork();
   CHECK(pid != -1);
   if (pid == 0) {
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+
     while (true) {
       // Child will be stuck in syscall sys_clock_nanosleep.
       std::this_thread::sleep_for(std::chrono::hours(1000000000));
