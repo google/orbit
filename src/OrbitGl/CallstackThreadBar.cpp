@@ -265,6 +265,9 @@ std::string CallstackThreadBar::GetSampleTooltip(const Batcher& batcher, Picking
   } else {
     // TODO(b/188756080): Show a specific explanation for each CallstackType.
     result += "Callstack not available: the stack could not be unwound successfully";
+    if (app_->IsDevMode()) {
+      result += absl::StrFormat(" (%s)", CallstackInfo::CallstackType_Name(callstack->type()));
+    }
   }
   return result +
          "<br/><br/><i>To select samples, click the bar & drag across multiple samples</i>";

@@ -69,20 +69,29 @@ static bool CallstackIsInUserSpaceInstrumentation(
   CHECK(!frames.empty());
 
   // This case is for a sample falling directly inside a user space instrumentation trampoline.
-  if (user_space_instrumentation_addresses.IsInEntryTrampoline(frames.front().pc) ||
-      user_space_instrumentation_addresses.IsInReturnTrampoline(frames.front().pc)) {
+  if (user_space_instrumentation_addresses.IsInEntryOrReturnTrampoline(frames.front().pc)) {
     return true;
   }
 
   // This case is for all samples falling in a callee of the trampoline. These are normally in the
   // injected library, but they could also be in a module containing a function called by the
-  // library. So we check if *any* frame is in the injected library.
+  // library. So we check if *any* frame is in the injected library. If one is found, we then check
+  // if any of the previous frames corresponds to a trampoline.
   std::string_view injected_library_map_name =
       user_space_instrumentation_addresses.GetInjectedLibraryMapName();
-  return std::any_of(frames.begin(), frames.end(),
-                     [&injected_library_map_name](const unwindstack::FrameData& frame) {
-                       return frame.map_name == injected_library_map_name;
-                     });
+  auto library_frame_it =
+      std::find_if(frames.begin(), frames.end(),
+                   [&injected_library_map_name](const unwindstack::FrameData& frame) {
+                     return frame.map_name == injected_library_map_name;
+                   });
+  if (library_frame_it == frames.end()) {
+    return false;
+  }
+  return std::any_of(
+      library_frame_it + 1, frames.end(),
+      [&user_space_instrumentation_addresses](const unwindstack::FrameData& frame) {
+        return user_space_instrumentation_addresses.IsInEntryOrReturnTrampoline(frame.pc);
+      });
 }
 
 static bool CallchainIsInUserSpaceInstrumentation(
@@ -91,21 +100,30 @@ static bool CallchainIsInUserSpaceInstrumentation(
   CHECK(callchain_size >= 2);
 
   // This case is for a sample falling directly inside a user space instrumentation trampoline.
-  if (user_space_instrumentation_addresses.IsInEntryTrampoline(callchain[1]) ||
-      user_space_instrumentation_addresses.IsInReturnTrampoline(callchain[1])) {
+  if (user_space_instrumentation_addresses.IsInEntryOrReturnTrampoline(callchain[1])) {
     return true;
   }
 
   // This case is for all samples falling in a callee of the trampoline. These are normally in the
   // injected library, but they could also be in a module containing a function called by the
-  // library. So we check if *any* frame is in the injected library.
+  // library. So we check if *any* frame is in the injected library. If one is found, we then check
+  // if any of the previous frames corresponds to a trampoline.
   std::string_view injected_library_map_name =
       user_space_instrumentation_addresses.GetInjectedLibraryMapName();
-  return std::any_of(callchain + 1, callchain + callchain_size,
-                     [&maps, &injected_library_map_name](uint64_t frame) {
-                       unwindstack::MapInfo* map_info = maps.Find(frame);
-                       return map_info != nullptr && map_info->name() == injected_library_map_name;
-                     });
+  const uint64_t* library_frame_ptr =
+      std::find_if(callchain + 1, callchain + callchain_size,
+                   [&maps, &injected_library_map_name](uint64_t frame) {
+                     unwindstack::MapInfo* map_info = maps.Find(frame);
+                     return map_info != nullptr && map_info->name() == injected_library_map_name;
+                   });
+  if (library_frame_ptr == callchain + callchain_size) {
+    return false;
+  }
+  return std::any_of(
+      library_frame_ptr + 1, callchain + callchain_size,
+      [&user_space_instrumentation_addresses](uint64_t frame) {
+        return user_space_instrumentation_addresses.IsInEntryOrReturnTrampoline(frame);
+      });
 }
 
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
@@ -146,9 +164,15 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   } else if (user_space_instrumentation_addresses_ != nullptr &&
              CallstackIsInUserSpaceInstrumentation(libunwindstack_result.frames(),
                                                    *user_space_instrumentation_addresses_)) {
-    // Like the previous case, but with samples falling directly inside a user space instrumentation
-    // trampoline (entry or return), or inside liborbituserspaceinstrumentation.so, or inside a
-    // module called by this.
+    // Like the previous case, but for user space instrumentation. This is harder to detect, as we
+    // have to consider whether the sample:
+    // - fell directly inside a user space instrumentation trampoline (entry or return); or
+    // - fell inside liborbituserspaceinstrumentation.so or a module called by this, AND also
+    //   includes a previous frame corresponding to a trampoline, usually where unwinding stopped
+    //   (otherwise we could exclude other samples in the library that don't come from a
+    //   trampoline).
+    // We don't simply check if any frame is in the trampoline as we want to distinguish from the
+    // kCallstackPatchingFailed case below.
     callstack->set_type(Callstack::kInUserSpaceInstrumentation);
     if (!user_space_instrumentation_addresses_->IsInEntryTrampoline(
             libunwindstack_result.frames().front().pc) &&
@@ -251,9 +275,12 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
     listener_->OnCallstackSample(std::move(sample));
     return;
   }
-  // Similar to the previous case: detect if the sample fell inside a user space instrumentation
-  // trampoline (entry or return), or inside liborbituserspaceinstrumentation.so, or inside a module
-  // called by this.
+  // Similar to the previous case, but for user space instrumentation. We consider whether a sample:
+  // - fell directly inside a user space instrumentation trampoline (entry or return); or
+  // - fell inside liborbituserspaceinstrumentation.so or a module called by this, AND also
+  //   includes a previous frame corresponding to a trampoline, usually where unwinding stopped.
+  // We don't simply check if any frame is in the trampoline as that's normal before calling
+  // PatchCallchain.
   if (user_space_instrumentation_addresses_ != nullptr &&
       CallchainIsInUserSpaceInstrumentation(event_data.GetCallchain(),
                                             event_data.GetCallchainSize(), *current_maps_,
@@ -296,11 +323,17 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   // Apparently quite a corner case, but easy to observe: the library injected by user space
   // instrumentation didn't appear in the callchain because it called a leaf function in another
   // module, but after calling PatchCallerOfLeafFunction it's now the second innermost frame.
-  if (user_space_instrumentation_addresses_ != nullptr && event_data.GetCallchainSize() >= 3) {
+  if (user_space_instrumentation_addresses_ != nullptr && event_data.GetCallchainSize() >= 4) {
     unwindstack::MapInfo* second_ip_map_info = current_maps_->Find(event_data.GetCallchain()[2]);
     if (second_ip_map_info != nullptr &&
         second_ip_map_info->name() ==
-            user_space_instrumentation_addresses_->GetInjectedLibraryMapName()) {
+            user_space_instrumentation_addresses_->GetInjectedLibraryMapName() &&
+        // Verify that the sample actually came from a user space instrumentation trampoline.
+        std::any_of(
+            event_data.GetCallchain() + 3,
+            event_data.GetCallchain() + event_data.GetCallchainSize(), [this](uint64_t frame) {
+              return user_space_instrumentation_addresses_->IsInEntryOrReturnTrampoline(frame);
+            })) {
       callstack->set_type(Callstack::kInUserSpaceInstrumentation);
       callstack->add_pcs(top_ip);
       listener_->OnCallstackSample(std::move(sample));
@@ -320,8 +353,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   }
 
   callstack->set_type(Callstack::kComplete);
-  // Skip the first frame as the top of a perf_event_open callchain is always
-  // inside kernel code.
+  // Skip the first frame as the top of a perf_event_open callchain is always inside kernel code.
   callstack->add_pcs(event_data.GetCallchain()[1]);
   // Only the address of the top of the stack is correct. Frame-based unwinding
   // uses the return address of a function call as the caller's address.
