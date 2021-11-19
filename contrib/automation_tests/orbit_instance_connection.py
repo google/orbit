@@ -7,9 +7,8 @@ found in the LICENSE file.
 from absl import app
 
 from core.orbit_e2e import E2ETestSuite
-from test_cases.connection_window import (ConnectToStadiaInstance, 
-    DisconnectFromStadiaInstance, RefreshStadiaInstanceList)
-
+from test_cases.connection_window import (ConnectToStadiaInstance, DisconnectFromStadiaInstance,
+                                          RefreshStadiaInstanceList)
 """Test Instance connections in the Session Setup Window 
 
 Before this script is run there needs to be a gamelet reserved.
@@ -27,6 +26,7 @@ This automation script does the following:
     that instances exist after the refresh
 """
 
+
 def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),
@@ -36,5 +36,6 @@ def main(argv):
     suite = E2ETestSuite(test_name="Instance Connections", test_cases=test_cases)
     suite.execute()
 
-if __name__ =='__main__':
+
+if __name__ == '__main__':
     app.run(main)

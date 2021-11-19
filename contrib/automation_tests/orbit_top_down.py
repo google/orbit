@@ -10,7 +10,6 @@ from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 from test_cases.capture_window import Capture
 from test_cases.top_down_tab import VerifyHelloGgpTopDownContents
-
 """Inspect the top-down view in Orbit using pywinauto.
 
 Before this script is run there needs to be a gamelet reserved and

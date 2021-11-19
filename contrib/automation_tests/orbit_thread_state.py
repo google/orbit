@@ -9,13 +9,13 @@ from absl import app
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 from test_cases.capture_window import Capture, CheckThreadStates
-
 """Smoke test for thread state collection.
 
 This automated test takes a capture on "hello_ggp_standalone" with thread state
 collection enabled and verifies the presence of at least one track in the
 capture window.
 """
+
 
 def main(argv):
     test_cases = [

@@ -11,7 +11,6 @@ from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToS
 from test_cases.capture_window import Capture, FilterTracks, CheckTimers, VerifyTracksExist
 from test_cases.symbols_tab import LoadSymbols, FilterAndHookFunction
 from test_cases.live_tab import AddFrameTrack
-
 """Create a frame track in Orbit using pywinauto.
 
 Before this script is run there needs to be a gamelet reserved and
@@ -39,7 +38,7 @@ def main(argv):
         FilterAndHookFunction(function_search_string='DrawFrame'),
         Capture(),
         AddFrameTrack(function_name="DrawFrame"),
-        VerifyTracksExist(track_names="Frame track*"), # Verify there's exactly one frame track
+        VerifyTracksExist(track_names="Frame track*"),  # Verify there's exactly one frame track
         CheckTimers(track_name_filter='Frame track*')  # Verify the frame track has timers
     ]
     suite = E2ETestSuite(test_name="Add Frame Track", test_cases=test_cases)

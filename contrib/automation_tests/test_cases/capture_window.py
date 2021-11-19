@@ -56,7 +56,10 @@ class SelectTrack(CaptureWindowE2ETestCaseBase):
     Select a track in the capture window and check the selection afterwards.
     """
 
-    def _execute(self, track_index: int = 0, check_selection_before: bool = False, expect_failure: bool = False):
+    def _execute(self,
+                 track_index: int = 0,
+                 check_selection_before: bool = False,
+                 expect_failure: bool = False):
         """
         :param track_index: Index of the track to select
         :param check_selection_before: If True, verifies that this track was not selected before
@@ -96,7 +99,8 @@ class DeselectTrack(CaptureWindowE2ETestCaseBase):
         mouse.click(button='left', coords=(rect.left + 10, rect.top - 5))
         # TODO: I need to call this twice to work, why?
         mouse.click(button='left', coords=(rect.left + 10, rect.top - 5))
-        self.expect_true(not self._find_tracks()[index].has_keyboard_focus(), "Track is no longer selected")
+        self.expect_true(not self._find_tracks()[index].has_keyboard_focus(),
+                         "Track is no longer selected")
         self.expect_true(self._find_focused_track_and_index()[0] is None, "No Track is selected")
 
 
@@ -132,8 +136,9 @@ class MoveTrack(CaptureWindowE2ETestCaseBase):
         track.title.drag_mouse_input((mouse_x, new_y + 5))
 
         index = self._find_tracks().index(track.container)
-        self.expect_eq(index, expected_new_index % track_count,
-                       "Expected track index {} after reordering, got {}".format(expected_new_index, index))
+        self.expect_eq(
+            index, expected_new_index % track_count,
+            "Expected track index {} after reordering, got {}".format(expected_new_index, index))
 
 
 class VerifyTracksExist(CaptureWindowE2ETestCaseBase):
@@ -141,7 +146,9 @@ class VerifyTracksExist(CaptureWindowE2ETestCaseBase):
     Checks if one or multiple specified tracks are currently visible in the capture window.
     """
 
-    def _execute(self, track_names: str or List[str or Iterable[str]] = None, allow_duplicates=False):
+    def _execute(self,
+                 track_names: str or List[str or Iterable[str]] = None,
+                 allow_duplicates=False):
         """
         :param track_names: List of (partial) matching names of tracks to be visible, or a single track name.
             Names can be a partial match with wildcards (using fnmatch). Each entry in this list can either
@@ -164,7 +171,8 @@ class VerifyTracksExist(CaptureWindowE2ETestCaseBase):
             if allow_duplicates:
                 self.expect_true(found > 0, "Found a match for track name '{}'".format(str(name)))
             else:
-                self.expect_true(found == 1, "Found exactly one match for track name '{}'".format(str(name)))
+                self.expect_true(found == 1,
+                                 "Found exactly one match for track name '{}'".format(str(name)))
 
     @staticmethod
     def _match(expected_name: str or Iterable[str], found_name: str) -> bool:
@@ -213,9 +221,10 @@ class ExpandTrack(CollapsingTrackBase):
     """
 
     def _verify_height(self, prev_click_height: int, post_click_height: int, track_name: str):
-        self.expect_true(prev_click_height < post_click_height, "Expanding track '{}' changed its height from {:d} to "
-                                                                "{:d}".format(
-            track_name, prev_click_height, post_click_height))
+        self.expect_true(
+            prev_click_height < post_click_height,
+            "Expanding track '{}' changed its height from {:d} to "
+            "{:d}".format(track_name, prev_click_height, post_click_height))
 
 
 class CollapseTrack(CollapsingTrackBase):
@@ -224,9 +233,10 @@ class CollapseTrack(CollapsingTrackBase):
     """
 
     def _verify_height(self, prev_click_height: int, post_click_height: int, track_name: str):
-        self.expect_true(prev_click_height > post_click_height,
-                         "Collapsing track '{}' changed its height from {:d} to {:d}".format(
-                             track_name, prev_click_height, post_click_height))
+        self.expect_true(
+            prev_click_height > post_click_height,
+            "Collapsing track '{}' changed its height from {:d} to {:d}".format(
+                track_name, prev_click_height, post_click_height))
 
 
 class FilterTracks(CaptureWindowE2ETestCaseBase):
@@ -249,11 +259,13 @@ class FilterTracks(CaptureWindowE2ETestCaseBase):
         keyboard.send_keys(filter_string)
 
         if expected_track_count is not None:
-            self.expect_true(len(self._find_tracks()) == expected_track_count,
-                             '# of tracks matches {}'.format(expected_track_count))
+            self.expect_true(
+                len(self._find_tracks()) == expected_track_count,
+                '# of tracks matches {}'.format(expected_track_count))
 
 
 class Capture(E2ETestCase):
+
     def _show_capture_window(self):
         logging.info('Showing capture window')
         self.find_control("TabItem", "Capture").click_input()
@@ -268,15 +280,17 @@ class Capture(E2ETestCase):
 
         capture_options_dialog = self.find_control('Window', 'Capture Options')
 
-        collect_thread_states_checkbox = self.find_control('CheckBox', 'Collect thread states',
+        collect_thread_states_checkbox = self.find_control('CheckBox',
+                                                           'Collect thread states',
                                                            parent=capture_options_dialog)
         if collect_thread_states_checkbox.get_toggle_state() != collect_thread_states:
             logging.info('Toggling "Collect thread states" checkbox')
             collect_thread_states_checkbox.click_input()
 
-        collect_system_memory_usage_checkbox = self.find_control('CheckBox',
-                                                                 'Collect memory usage and page faults information',
-                                                                 parent=capture_options_dialog)
+        collect_system_memory_usage_checkbox = self.find_control(
+            'CheckBox',
+            'Collect memory usage and page faults information',
+            parent=capture_options_dialog)
         if collect_system_memory_usage_checkbox.get_toggle_state() != collect_system_memory_usage:
             logging.info('Toggling "Collect memory usage and page faults information" checkbox')
             collect_system_memory_usage_checkbox.click_input()
@@ -284,9 +298,8 @@ class Capture(E2ETestCase):
         # Choosing the combo box entry with the 'select' function does not work reliably. So we click into the control
         # to set the keyboard focus ('set_focus' does not work). Then we use the up, down and enter keys to select the
         # entry.
-        dynamic_instrumentation_method_combobox = self.find_control('ComboBox',
-                                                                    'DynamicInstrumentationMethodComboBox',
-                                                                    parent=capture_options_dialog)
+        dynamic_instrumentation_method_combobox = self.find_control(
+            'ComboBox', 'DynamicInstrumentationMethodComboBox', parent=capture_options_dialog)
         dynamic_instrumentation_method_combobox.click_input()
         if user_space_instrumentation:
             logging.info('Setting dynamic instrumentation method to "Orbit".')
@@ -316,19 +329,25 @@ class Capture(E2ETestCase):
 
     def _wait_for_capture_completion(self):
         logging.info("Waiting for capture to finalize...")
-        wait_for_condition(lambda: self.find_control('Window', 'Finalizing capture',
-                                                     recurse=False, raise_on_failure=False) is None, max_seconds=120)
+        wait_for_condition(lambda: self.find_control(
+            'Window', 'Finalizing capture', recurse=False, raise_on_failure=False) is None,
+                           max_seconds=120)
         logging.info("Capturing finished")
 
-    def _execute(self, length_in_seconds: int = 5, collect_thread_states: bool = False,
-                 collect_system_memory_usage: bool = False, user_space_instrumentation: bool = False):
+    def _execute(self,
+                 length_in_seconds: int = 5,
+                 collect_thread_states: bool = False,
+                 collect_system_memory_usage: bool = False,
+                 user_space_instrumentation: bool = False):
         self._show_capture_window()
-        self._set_capture_options(collect_thread_states, collect_system_memory_usage, user_space_instrumentation)
+        self._set_capture_options(collect_thread_states, collect_system_memory_usage,
+                                  user_space_instrumentation)
         self._take_capture(length_in_seconds)
         self._verify_existence_of_tracks()
 
 
 class CheckThreadStates(CaptureWindowE2ETestCaseBase):
+
     def _execute(self, track_name_filter: str, expect_exists: bool = True):
         tracks = self._find_tracks(track_name_filter)
         self.expect_true(len(tracks) > 0, 'Found tracks matching {}'.format(track_name_filter))
@@ -336,12 +355,15 @@ class CheckThreadStates(CaptureWindowE2ETestCaseBase):
         for track in tracks:
             track = Track(track)
             if expect_exists:
-                self.expect_true(track.thread_states is not None, 'Track {} has a thread state pane'.format(track.name))
+                self.expect_true(track.thread_states is not None,
+                                 'Track {} has a thread state pane'.format(track.name))
             else:
-                self.expect_true(track.thread_states is None, 'Track {} has a no thread state pane'.format(track.name))
+                self.expect_true(track.thread_states is None,
+                                 'Track {} has a no thread state pane'.format(track.name))
 
 
 class CheckTimers(CaptureWindowE2ETestCaseBase):
+
     def _execute(self, track_name_filter: str, expect_exists: bool = True, recursive: bool = False):
         tracks = self._find_tracks(track_name_filter, recursive)
         self.expect_true(len(tracks) > 0, 'Found tracks matching "{}"'.format(track_name_filter))
@@ -349,12 +371,15 @@ class CheckTimers(CaptureWindowE2ETestCaseBase):
         for track in tracks:
             track = Track(track)
             if expect_exists:
-                self.expect_true(track.timers is not None, 'Track "{}" has timers pane'.format(track.name))
+                self.expect_true(track.timers is not None,
+                                 'Track "{}" has timers pane'.format(track.name))
             else:
-                self.expect_true(track.timers is None, 'Track "{}" has no timers pane'.format(track.name))
+                self.expect_true(track.timers is None,
+                                 'Track "{}" has no timers pane'.format(track.name))
 
 
 class CheckCallstacks(CaptureWindowE2ETestCaseBase):
+
     def _execute(self, track_name_filter: str, expect_exists: bool = True):
         tracks = self._find_tracks(track_name_filter)
         self.expect_true(len(tracks) > 0, 'Found tracks matching "{}"'.format(track_name_filter))
@@ -362,9 +387,11 @@ class CheckCallstacks(CaptureWindowE2ETestCaseBase):
         for track in tracks:
             track = Track(track)
             if expect_exists:
-                self.expect_true(track.callstacks is not None, 'Track "{}" has callstacks pane'.format(track.name))
+                self.expect_true(track.callstacks is not None,
+                                 'Track "{}" has callstacks pane'.format(track.name))
             else:
-                self.expect_true(track.callstacks is None, 'Track "{}" has no callstacks pane'.format(track.name))
+                self.expect_true(track.callstacks is None,
+                                 'Track "{}" has no callstacks pane'.format(track.name))
 
 
 class SetAndCheckMemorySamplingPeriod(E2ETestCase):
@@ -379,15 +406,16 @@ class SetAndCheckMemorySamplingPeriod(E2ETestCase):
     def _enable_collect_system_memory_usage(self):
         logging.info('Selecting "Collect memory usage and page faults information" checkbox')
         collect_system_memory_usage_checkbox = self.find_control(
-            'CheckBox', 'Collect memory usage and page faults information',
+            'CheckBox',
+            'Collect memory usage and page faults information',
             parent=self.find_control('Window', 'Capture Options'))
         if not collect_system_memory_usage_checkbox.get_toggle_state():
             collect_system_memory_usage_checkbox.click_input()
 
     def _close_capture_options_dialog(self):
         logging.info('Saving "Capture Options"')
-        self.find_control(
-            'Button', 'OK', parent=self.find_control('Window', 'Capture Options')).click_input()
+        self.find_control('Button', 'OK',
+                          parent=self.find_control('Window', 'Capture Options')).click_input()
 
     def _execute(self, memory_sampling_period: str):
         self._show_capture_options_dialog()
@@ -414,8 +442,10 @@ class SetAndCheckMemorySamplingPeriod(E2ETestCase):
         logging.info('Validating the value in "Sampling period (ms)" edit')
         memory_sampling_period_edit = self.find_control('Edit', 'MemorySamplingPeriodEdit')
         result = memory_sampling_period_edit.texts()[0]
-        self.expect_true(result == expected,
-                         'Memory sampling period is set to "{}" while it should be "{}"'.format(result, expected))
+        self.expect_true(
+            result == expected,
+            'Memory sampling period is set to "{}" while it should be "{}"'.format(
+                result, expected))
         self._close_capture_options_dialog()
 
 
@@ -430,12 +460,14 @@ class VerifyTracksDoNotExist(CaptureWindowE2ETestCaseBase):
         matching implementation).
         """
         if isinstance(track_names, str):
-            self.expect_true(len(self._find_tracks(track_names)) == 0,
-                             'Track {} was found, but should not have been'.format(track_names))
+            self.expect_true(
+                len(self._find_tracks(track_names)) == 0,
+                'Track {} was found, but should not have been'.format(track_names))
         else:
             for track_name in track_names:
-                self.expect_true(len(self._find_tracks(track_name)) == 0,
-                                 'Track {} was found, but should not have been'.format(track_name))
+                self.expect_true(
+                    len(self._find_tracks(track_name)) == 0,
+                    'Track {} was found, but should not have been'.format(track_name))
             toggle_button = self.find_control('CheckBox', 'Track Configuration Pane')
             toggle_button.click_input()
 

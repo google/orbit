@@ -21,6 +21,7 @@ class ConnectToStadiaInstance(E2ETestCase):
     """
     Connect to the first available stadia instance
     """
+
     def _execute(self):
         window = self.suite.top_window()
 
@@ -41,11 +42,13 @@ class ConnectToStadiaInstance(E2ETestCase):
 
         # In the new UI, use small waits until the process list is active, and then some more for the
         # semi-transparent "loading" Overlay of the tables to disappear
-        wait_for_condition(lambda: self.find_control('Custom', 'ProcessesFrame').is_enabled() is True, 25)
+        wait_for_condition(
+            lambda: self.find_control('Custom', 'ProcessesFrame').is_enabled() is True, 25)
         wait_for_condition(lambda: self.find_control('Table', 'ProcessList').is_active(), 10)
         # This is a bit annoying, but since the overlay is invisible when loading is done, we need to check for
         # absence of the overlay... not sure if there is a better way
-        wait_for_condition(lambda: self.find_control('Group', 'ProcessListOverlay', raise_on_failure=False) is None)
+        wait_for_condition(lambda: self.find_control(
+            'Group', 'ProcessListOverlay', raise_on_failure=False) is None)
         logging.info('Process list ready')
 
 
@@ -53,22 +56,27 @@ class DisconnectFromStadiaInstance(E2ETestCase):
     """
     Disconnect from the instance. Requires to be connected. Verify that there are instances after the disconnect.
     """
+
     def _execute(self):
         instance_list_overlay = self.find_control('Group', 'InstanceListOverlay')
         self.expect_true(instance_list_overlay.is_visible(), "Instance overlay is visible")
         disconnect_button = self.find_control('Button', 'Disconnect')
-        logging.info('Instance overlay visible and Disconnect button was found; performing disconnect from the instance')
+        logging.info(
+            'Instance overlay visible and Disconnect button was found; performing disconnect from the instance'
+        )
         disconnect_button.click_input()
 
         logging.info('Waiting for instance list to appear again')
         window = self.suite.top_window()
         window.InstanceList.DataItem0.wait('exists', timeout=100)
-        self.expect_true(instance_list_overlay.rectangle().width() == 0, "Instance overlay has width() 0 (is not shown)")
+        self.expect_true(instance_list_overlay.rectangle().width() == 0,
+                         "Instance overlay has width() 0 (is not shown)")
         logging.info('Loading done, overlay is hidden')
         instance_list = self.find_control('Table', 'InstanceList')
         logging.info('Found %s rows in the instance list', instance_list.item_count())
         self.expect_true(instance_list.item_count() >= 1, 'Found at least one instance')
-        wait_for_condition(lambda: self.find_control('Group', 'ProcessListOverlay', raise_on_failure=False) is None)
+        wait_for_condition(lambda: self.find_control(
+            'Group', 'ProcessListOverlay', raise_on_failure=False) is None)
 
 
 class RefreshStadiaInstanceList(E2ETestCase):
@@ -76,10 +84,11 @@ class RefreshStadiaInstanceList(E2ETestCase):
     Click the refresh button and check that the loading overlay is displayed and the list contains
     items when the loading finished.
     """
+
     def _execute(self):
         instance_list = self.find_control('Table', 'InstanceList')
         refresh_button = self.find_control('Button', 'RefreshInstanceList')
-        logging.info('Found instance list and refresh button, clicking refresh button') 
+        logging.info('Found instance list and refresh button, clicking refresh button')
         refresh_button.click_input()
 
         instance_list_overlay = self.find_control(None, 'InstanceListOverlay')
@@ -88,7 +97,8 @@ class RefreshStadiaInstanceList(E2ETestCase):
 
         window = self.suite.top_window()
         window.InstanceList.DataItem0.wait('exists', timeout=100)
-        self.expect_true(instance_list_overlay.rectangle().width() == 0, "InstanceOverlay has width() 0 (is not shown)")
+        self.expect_true(instance_list_overlay.rectangle().width() == 0,
+                         "InstanceOverlay has width() 0 (is not shown)")
         logging.info('Loading done, overlay is hidden')
         logging.info('Found %s rows in the instance list', instance_list.item_count())
         self.expect_true(instance_list.item_count() >= 1, 'Found at least one instance')
@@ -98,6 +108,7 @@ class FilterAndSelectFirstProcess(E2ETestCase):
     """
     Select the first process in the process list and verify there is at least one entry in the list
     """
+
     def _execute(self, process_filter):
         # Finding FilterProcesses/ProcessList occationally throws from within pywinauto. This is not
         # understood. The while loop with the try/except block is a workaround for that.
@@ -113,7 +124,7 @@ class FilterAndSelectFirstProcess(E2ETestCase):
                 process_list = self.find_control('Table', 'ProcessList')
                 break
             except KeyError:
-                logging.info('Find ProcessList failed. Try again.')        
+                logging.info('Find ProcessList failed. Try again.')
 
         logging.info('Waiting for process list to be populated')
         wait_for_condition(lambda: process_list.item_count() > 0, 30)

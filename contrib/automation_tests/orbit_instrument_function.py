@@ -11,7 +11,6 @@ from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToS
 from test_cases.capture_window import Capture, CheckTimers, ExpandTrack
 from test_cases.symbols_tab import LoadSymbols, FilterAndHookFunction
 from test_cases.live_tab import VerifyFunctionCallCount
-
 """Instrument a single function in Orbit using pywinauto.
 
 Before this script is run there needs to be a gamelet reserved and
