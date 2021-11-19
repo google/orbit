@@ -177,4 +177,24 @@ message OrbitCaptureData {
 
   // Size of the capture file in bytes.
   uint64 file_size = 23;
+
+  // Method for dynamic instrumentation.
+  enum DynamicInstrumentationMethod {
+    DYNAMIC_INSTRUMENTATION_METHOD_UNKNOWN = 0;
+    DYNAMIC_INSTRUMENTATION_METHOD_KERNEL = 1;
+    DYNAMIC_INSTRUMENTATION_METHOD_ORBIT = 2;
+  }
+  DynamicInstrumentationMethod dynamic_instrumentation_method = 24;
+
+  // Callstack samples per second. A value of 0 means memory callstack sampling
+  // was turned off.
+  uint64 callstack_samples_per_second = 25;
+
+  // Method used for callstack unwinding.
+  enum CallstackUnwindingMethod {
+    CALLSTACK_UNWINDING_METHOD_UNKNOWN = 0;
+    CALLSTACK_UNWINDING_METHOD_DWARF = 1;
+    CALLSTACK_UNWINDING_METHOD_FRAME_POINTER = 2;
+  }
+  CallstackUnwindingMethod callstack_unwinding_method = 26;
 }
