@@ -180,12 +180,18 @@ void CallstackDataView::OnContextMenu(const std::string& action, int menu_index,
   } else if (action == kMenuActionDisassembly) {
     const uint32_t pid = app_->GetCaptureData().process_id();
     for (int i : item_indices) {
-      app_->Disassemble(pid, *GetFrameFromRow(i).function);
+      const FunctionInfo* function = GetFrameFromRow(i).function;
+      if (function != nullptr) {
+        app_->Disassemble(pid, *function);
+      }
     }
 
   } else if (action == kMenuActionSourceCode) {
     for (int i : item_indices) {
-      app_->ShowSourceCode(*GetFrameFromRow(i).function);
+      const FunctionInfo* function = GetFrameFromRow(i).function;
+      if (function != nullptr) {
+        app_->ShowSourceCode(*function);
+      }
     }
 
   } else {
