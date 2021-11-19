@@ -65,49 +65,67 @@ void UploaderClientCaptureEventCollector::AddEvent(ClientCaptureEvent&& event) {
   if (event.event_case() == ClientCaptureEvent::kCaptureFinished) Stop();
 }
 
-DataReadiness UploaderClientCaptureEventCollector::GetDataReadiness() const {
+DataReadiness UploaderClientCaptureEventCollector::DetermineDataReadiness() {
   absl::MutexLock lock(&mutex_);
 
+  // Return `kHasData` if not yet finish uploading data in `capture_data_to_upload_`.
+  if (byte_position_ < capture_data_to_upload_.size()) {
+    return DataReadiness::kHasData;
+  }
+
+  // Now there are two possible cases that make `byte_position_ == capture_data_to_upload_.size()`:
+  // - case 1: `capture_data_to_upload_` is not empty and we just finished uploading data from it
+  // - case 2: `capture_data_to_upload_` is empty as we didn't get new data from the last call of
+  //           `capture_data_buffer_stream_.TakeBuffer()`.
+  // Update uploaded data if it is case 1. (Nothing happens for case 2.)
+  total_uploaded_event_count_ += buffered_event_count_;
+  total_uploaded_data_bytes_ += capture_data_to_upload_.size();
+
+  // Refill `capture_data_to_upload_` with data buffered in `capture_data_buffer_stream_`.
+  capture_data_to_upload_ = capture_data_buffer_stream_.TakeBuffer();
+  byte_position_ = 0;
+
+  // As buffered data is taken away from `capture_data_buffer_stream_`, update the statistics of
+  // buffered data.
+  if (buffered_event_count_ > 0) {
+    ORBIT_UINT64("Number of CaptureEvents to upload", buffered_event_count_);
+    ORBIT_UINT64("Bytes of CaptureEvents to upload", buffered_event_bytes_);
+
+    [[maybe_unused]] const float average_bytes =
+        static_cast<float>(buffered_event_bytes_) / static_cast<float>(buffered_event_count_);
+    ORBIT_FLOAT("Average bytes per CaptureEvent", average_bytes);
+  }
+  buffered_event_count_ = 0;
+  buffered_event_bytes_ = 0;
+
+  // Check again whether there is new data ready.
   if (!capture_data_to_upload_.empty()) {
     return DataReadiness::kHasData;
   }
 
-  if (output_stream_->IsOpen() || buffered_event_bytes_ > 0) {
+  // If no new data is filled into `capture_data_to_upload_` and the capture is not finished, return
+  // `kWaitingForData`. Note that `output_stream_` will be closed immediately after processing the
+  // CaptureFinishedEvent, and all the buffered data in `output_stream_` will be flushed to
+  // `capture_data_buffer_stream_`. And this last piece of data should already be taken away by
+  // previous call of `capture_data_buffer_stream_.TakeBuffer()` when we find `output_stream_` is
+  // closed here.
+  if (output_stream_->IsOpen()) {
     return DataReadiness::kWaitingForData;
   }
 
   return DataReadiness::kEndOfData;
 }
 
-void UploaderClientCaptureEventCollector::RefreshUploadDataBuffer() {
-  // Clear `capture_data_to_upload_` immediately.
-  capture_data_to_upload_.clear();
+size_t UploaderClientCaptureEventCollector::ReadIntoBuffer(void* dest, size_t max_bytes) {
+  absl::MutexLock lock(&mutex_);
 
-  // Refill `capture_data_to_upload_` when there is enough data to upload.
-  mutex_.LockWhen(absl::Condition(
-      +[](UploaderClientCaptureEventCollector* self) ABSL_EXCLUSIVE_LOCKS_REQUIRED(self->mutex_) {
-        constexpr int kUploadEventCountInterval = 5000;
-        return self->buffered_event_count_ >= kUploadEventCountInterval ||
-               !self->output_stream_->IsOpen();
-      },
-      this));
+  size_t bytes_to_read = std::min(capture_data_to_upload_.size() - byte_position_, max_bytes);
 
-  ORBIT_UINT64("Number of CaptureEvents to upload", buffered_event_count_);
-  ORBIT_UINT64("Bytes of CaptureEvents to upload", buffered_event_bytes_);
-  if (buffered_event_count_ > 0) {
-    [[maybe_unused]] const float average_bytes =
-        static_cast<float>(buffered_event_bytes_) / static_cast<float>(buffered_event_count_);
-    ORBIT_FLOAT("Average bytes per CaptureEvent", average_bytes);
-  }
+  char* dest_buffer = static_cast<char*>(dest);
+  std::memcpy(dest_buffer, capture_data_to_upload_.data() + byte_position_, bytes_to_read);
+  byte_position_ += bytes_to_read;
 
-  capture_data_to_upload_ = capture_data_buffer_stream_.TakeBuffer();
-  if (!capture_data_to_upload_.empty()) {
-    total_uploaded_event_count_ += buffered_event_count_;
-    total_uploaded_data_bytes_ += capture_data_to_upload_.size();
-    buffered_event_count_ = 0;
-    buffered_event_bytes_ = 0;
-  }
-  mutex_.Unlock();
+  return bytes_to_read;
 }
 
 }  // namespace orbit_producer_event_processor

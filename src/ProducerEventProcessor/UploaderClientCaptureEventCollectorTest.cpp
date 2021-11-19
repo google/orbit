@@ -21,8 +21,9 @@ namespace orbit_producer_event_processor {
 
 namespace {
 
-static constexpr const char* kAnswerString = "Test Interned String";
-static constexpr uint64_t kAnswerKey = 42;
+constexpr const char* kAnswerString = "Test Interned String";
+constexpr uint64_t kAnswerKey = 42;
+constexpr size_t kUploadBufferSize = 100;
 
 ClientCaptureEvent CreateInternedStringCaptureEvent(uint64_t key, const std::string& str) {
   ClientCaptureEvent event;
@@ -83,13 +84,13 @@ class UploaderClientCaptureEventCollectorTest : public testing::Test {
   }
 
   void UploadCaptureData() {
-    while (collector_.GetDataReadiness() != orbit_capture_uploader::DataReadiness::kEndOfData) {
+    while (collector_.DetermineDataReadiness() !=
+           orbit_capture_uploader::DataReadiness::kEndOfData) {
       constexpr uint64_t kUploadEventsEveryMs = 10;
       std::this_thread::sleep_for(std::chrono::milliseconds(kUploadEventsEveryMs));
 
-      const std::vector<unsigned char>& upload_data_buffer = collector_.GetUploadDataBuffer();
-      total_uploaded_data_bytes_ += upload_data_buffer.size();
-      collector_.RefreshUploadDataBuffer();
+      total_uploaded_data_bytes_ +=
+          collector_.ReadIntoBuffer(upload_buffer_.data(), kUploadBufferSize);
     }
 
     absl::MutexLock lock{&upload_finished_mutex_};
@@ -98,6 +99,7 @@ class UploaderClientCaptureEventCollectorTest : public testing::Test {
 
   std::thread data_upload_thread_;
   std::thread data_produce_thread_;
+  std::array<char, kUploadBufferSize> upload_buffer_;
 };
 
 }  // namespace
