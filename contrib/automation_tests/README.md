@@ -108,4 +108,9 @@ Running an E2E test with the `-dev_mode` command line parameter will:
 - Not close Orbit when a test is done
 
 Use this for quick iterations on new tests. In addition, omit the usual test cases to connect to the 
-stadia instance and select a process while you're developing, so you can simply keep Orbit open.  
+stadia instance and select a process while you're developing, so you can simply keep Orbit open.
+
+### Style
+
+[yapf](https://github.com/google/yapf) is used with the Google style to keep consistent code style
+in python files. yapf will pick up the provided `.style.yapf` file automatically.
