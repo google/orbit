@@ -166,8 +166,12 @@ void CallstackDataView::OnContextMenu(const std::string& action, int menu_index,
     for (int i : item_indices) {
       CallstackDataViewFrame frame = GetFrameFromRow(i);
       const FunctionInfo* function = frame.function;
-      app_->DeselectFunction(*function);
-      app_->DisableFrameTrack(*function);
+      // If the frame belongs to a function for which no symbol is loaded 'function' is nullptr and
+      // we can skip it since it can't be instrumented.
+      if (function != nullptr) {
+        app_->DeselectFunction(*function);
+        app_->DisableFrameTrack(*function);
+      }
     }
 
   } else if (action == kMenuActionDisassembly) {
