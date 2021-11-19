@@ -17,6 +17,7 @@
 #include <memory>
 #include <optional>
 
+#include "MetricsUploader/MetricsUploader.h"
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/Project.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
@@ -47,6 +48,8 @@ class MockRetrieveInstances : public RetrieveInstances {
   MOCK_METHOD(orbit_base::Future<ErrorMessageOr<LoadProjectsAndInstancesResult>>,
               LoadProjectsAndInstances,
               (const std::optional<Project>& project, InstanceListScope scope), (override));
+  MOCK_METHOD(void, SetMetricsUploader,
+              (orbit_metrics_uploader::MetricsUploader * metrics_uploader), (override));
 };
 
 namespace {
@@ -123,7 +126,8 @@ const RetrieveInstances::LoadProjectsAndInstancesResult kInitialTestDataWithProj
 
 class RetrieveInstancesWidgetTest : public testing::Test {
  public:
-  RetrieveInstancesWidgetTest() : widget_(&mock_retrieve_instances_) {
+  RetrieveInstancesWidgetTest() {
+    widget_.SetRetrieveInstances(&mock_retrieve_instances_);
     filter_line_edit_ = widget_.findChild<QLineEdit*>("filterLineEdit");
     all_check_box_ = widget_.findChild<QCheckBox*>("allCheckBox");
     project_combo_box_ = widget_.findChild<QComboBox*>("projectComboBox");
@@ -254,6 +258,10 @@ class RetrieveInstancesWidgetTestStarted : public RetrieveInstancesWidgetTest {
             kInitialTestDataDefault}));
 
     widget_.Start();
+    // processEvents is needed twice here, because the events that are worked on by the first call,
+    // schedule more events onto the queue (via Future.Then(main_thread_executor, ...)). The second
+    // call then processes these additional events.
+    QCoreApplication::processEvents();
     QCoreApplication::processEvents();
 
     VerifyAndClearSignalsOfSuccessfulLoadingCycle();
@@ -286,6 +294,10 @@ TEST_F(RetrieveInstancesWidgetTest, StartSuccessfulDefault) {
           kInitialTestDataDefault}));
 
   widget_.Start();
+  // processEvents is needed twice here, because the events that are worked on by the first call,
+  // schedule more events onto the queue (via Future.Then(main_thread_executor, ...)). The second
+  // call then processes these additional events.
+  QCoreApplication::processEvents();
   QCoreApplication::processEvents();
 
   VerifySuccessfulLoadAndUIState(kInitialTestDataDefault.instances);
@@ -305,6 +317,10 @@ TEST_F(RetrieveInstancesWidgetTest, StartSuccessfulWithRememberedSettings) {
   SaveInstancesScopeToPersistentStorage(InstanceListScope::kAllReservedInstances);
 
   widget_.Start();
+  // processEvents is needed twice here, because the events that are worked on by the first call,
+  // schedule more events onto the queue (via Future.Then(main_thread_executor, ...)). The second
+  // call then processes these additional events.
+  QCoreApplication::processEvents();
   QCoreApplication::processEvents();
 
   VerifySuccessfulLoadAndUIState(kInitialTestDataWithProjectOfInstances.instances);
@@ -321,6 +337,7 @@ TEST_F(RetrieveInstancesWidgetTest, StartFailed) {
           ErrorMessage{"error message"}}));
 
   widget_.Start();
+  QCoreApplication::processEvents();
 
   QMetaObject::invokeMethod(
       &widget_, []() { QCoreApplication::exit(); }, Qt::QueuedConnection);

@@ -12,6 +12,7 @@
 #include <memory>
 
 #include "MainThreadExecutor.h"
+#include "MetricsUploader/MetricsUploader.h"
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/Project.h"
 #include "SessionSetup/RetrieveInstances.h"
@@ -26,11 +27,18 @@ class RetrieveInstancesWidget : public QWidget {
   Q_OBJECT
 
  public:
-  explicit RetrieveInstancesWidget(RetrieveInstances* retrieve_instances,
-                                   QWidget* parent = nullptr);
+  explicit RetrieveInstancesWidget(QWidget* parent = nullptr);
   ~RetrieveInstancesWidget() override;
 
   void Start();
+  void SetRetrieveInstances(RetrieveInstances* retrieve_instances) {
+    retrieve_instances_ = retrieve_instances;
+  }
+  void SetMetricsUploader(orbit_metrics_uploader::MetricsUploader* metrics_uploader) {
+    metrics_uploader_ = metrics_uploader;
+    CHECK(retrieve_instances_ != nullptr);
+    retrieve_instances_->SetMetricsUploader(metrics_uploader);
+  }
 
  signals:
   void LoadingStarted();
@@ -55,6 +63,7 @@ class RetrieveInstancesWidget : public QWidget {
   std::unique_ptr<Ui::RetrieveInstancesWidget> ui_;
   std::shared_ptr<MainThreadExecutor> main_thread_executor_;
   RetrieveInstances* retrieve_instances_;
+  orbit_metrics_uploader::MetricsUploader* metrics_uploader_ = nullptr;
   QStateMachine state_machine_;
   QState s_idle_;
   QState s_loading_;
