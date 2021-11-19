@@ -30,6 +30,7 @@ class LoadSymbols(E2ETestCase):
 
     Selection is done be filtering the module list and loading the first remaining row.
     """
+
     def _execute(self, module_search_string: str):
         _show_symbols_and_functions_tabs(self.suite.top_window())
 
@@ -61,6 +62,7 @@ class FilterAndHookFunction(E2ETestCase):
     """
     Hook a function based on a search string, and verify it is indicated as Hooked in the UI.
     """
+
     def _execute(self, function_search_string):
         _show_symbols_and_functions_tabs(self.suite.top_window())
 
@@ -79,11 +81,13 @@ class FilterAndHookFunction(E2ETestCase):
 
         self.find_context_menu_item('Hook').click_input()
         wait_for_condition(lambda: '✓' in functions_dataview.get_item_at(0, 0).texts()[0])
-        
+
+
 class FilterAndHookMultipleFunctions(E2ETestCase):
     """
     Hook multiple functions based on a search string, and verify it is indicated as hooked in the UI.
     """
+
     def _execute(self, function_search_string):
         _show_symbols_and_functions_tabs(self.suite.top_window())
 
@@ -98,17 +102,19 @@ class FilterAndHookMultipleFunctions(E2ETestCase):
         functions_dataview.filter.set_edit_text('')
         send_keys(function_search_string)
         wait_for_condition(lambda: functions_dataview.get_row_count() > 0)
-        
+
         for i in range(functions_dataview.get_row_count()):
             functions_dataview.get_item_at(i, 0).click_input('right')
             self.find_context_menu_item('Hook').click_input()
             wait_for_condition(lambda: '✓' in functions_dataview.get_item_at(i, 0).texts()[0])
+
 
 class LoadAndVerifyHelloGgpPreset(E2ETestCase):
     """
     Load the predefined E2E test preset and verify if has been applied correctly.
     TODO: This may need to be updated
     """
+
     def _execute(self):
         _show_symbols_and_functions_tabs(self.suite.top_window())
 
@@ -118,18 +124,22 @@ class LoadAndVerifyHelloGgpPreset(E2ETestCase):
         Capture().execute(self.suite)
 
         logging.info('Verifying function call counts')
-        VerifyFunctionCallCount(function_name='DrawFrame', min_calls=30, max_calls=3000).execute(self.suite)
-        VerifyFunctionCallCount(function_name='GgpIssueFrameToken', min_calls=30, max_calls=3000).execute(self.suite)
+        VerifyFunctionCallCount(function_name='DrawFrame', min_calls=30,
+                                max_calls=3000).execute(self.suite)
+        VerifyFunctionCallCount(function_name='GgpIssueFrameToken', min_calls=30,
+                                max_calls=3000).execute(self.suite)
 
     def _load_presets(self):
         presets_panel = DataViewPanel(self.find_control('Group', 'PresetsDataView'))
 
-        draw_frame_preset_row = presets_panel.find_first_item_row('draw_frame_in_hello_ggp_1_68', 1, True)
+        draw_frame_preset_row = presets_panel.find_first_item_row('draw_frame_in_hello_ggp_1_68', 1,
+                                                                  True)
         issue_frame_token_preset_row = presets_panel.find_first_item_row(
             'ggp_issue_frame_token_in_hello_ggp_1_68', 1, True)
 
         self.expect_true(draw_frame_preset_row is not None, 'Found draw_frame preset')
-        self.expect_true(issue_frame_token_preset_row is not None, 'Found ggp_issue_frame_token preset')
+        self.expect_true(issue_frame_token_preset_row is not None,
+                         'Found ggp_issue_frame_token preset')
 
         presets_panel.get_item_at(draw_frame_preset_row, 0).click_input(button='right')
         self.find_context_menu_item('Load Preset').click_input()
@@ -174,10 +184,8 @@ class ShowSourceCode(E2ETestCase):
     def _provoke_goto_source_action(self, function_search_string: str):
         _show_symbols_and_functions_tabs(self.suite.top_window())
 
-        logging.info('Start showing source code for function {}'.format(
-            function_search_string))
-        functions_dataview = DataViewPanel(
-            self.find_control("Group", "FunctionsDataView"))
+        logging.info('Start showing source code for function {}'.format(function_search_string))
+        functions_dataview = DataViewPanel(self.find_control("Group", "FunctionsDataView"))
 
         logging.info('Waiting for function list to be populated...')
         wait_for_condition(lambda: functions_dataview.get_row_count() > 0, 100)
@@ -196,27 +204,38 @@ class ShowSourceCode(E2ETestCase):
         logging.info('Waiting for message box')
 
         def get_message_box():
-            return self.find_control(control_type="Window", name="Source code file not found", parent=self.suite.top_window(), recurse=False)
+            return self.find_control(control_type="Window",
+                                     name="Source code file not found",
+                                     parent=self.suite.top_window(),
+                                     recurse=False)
+
         wait_for_condition(lambda: get_message_box().is_visible())
 
         logging.info('Message box found - Clicking "Choose file..."')
-        choose_file_button = self.find_control(
-            control_type="Button", name="Choose file...", parent=get_message_box(), recurse=True)
+        choose_file_button = self.find_control(control_type="Button",
+                                               name="Choose file...",
+                                               parent=get_message_box(),
+                                               recurse=True)
         choose_file_button.click_input()
 
     def _handle_file_open_dialog(self):
         logging.info("Waiting for File Open Dialog")
 
         def get_file_open_dialog():
-            return self.find_control(control_type="Window", name_contains="Choose ", parent=self.suite.top_window(), recurse=False)
+            return self.find_control(control_type="Window",
+                                     name_contains="Choose ",
+                                     parent=self.suite.top_window(),
+                                     recurse=False)
+
         wait_for_condition(lambda: get_file_open_dialog().is_visible())
         file_open_dialog = get_file_open_dialog()
-        logging.info(
-            "File Open Dialog is now visible. Looking for file edit...")
+        logging.info("File Open Dialog is now visible. Looking for file edit...")
 
         logging.info("File Edit was found. Entering file path...")
-        file_edit = self.find_control(
-            control_type="Edit", name="File name:", parent=file_open_dialog, recurse=True)
+        file_edit = self.find_control(control_type="Edit",
+                                      name="File name:",
+                                      parent=file_open_dialog,
+                                      recurse=True)
         file_edit.set_focus()
         file_edit.set_edit_text('')
 
@@ -231,8 +250,10 @@ class ShowSourceCode(E2ETestCase):
         send_keys(flags.FLAGS.source_code_file)
 
         logging.info("Clicking the open button...")
-        file_open_button = self.find_control(
-            control_type="Button", name="Open", parent=file_open_dialog, recurse=False)
+        file_open_button = self.find_control(control_type="Button",
+                                             name="Open",
+                                             parent=file_open_dialog,
+                                             recurse=False)
         file_open_button.click_input()
 
     def _handle_source_code_dialog(self):
@@ -242,14 +263,18 @@ class ShowSourceCode(E2ETestCase):
         source_code_dialog.wait('visible')
 
         logging.info("Found source code dialog. Checking contents...")
-        source_code_edit = self.find_control(
-            control_type="Edit", name="", parent=source_code_dialog, recurse=False)
+        source_code_edit = self.find_control(control_type="Edit",
+                                             name="",
+                                             parent=source_code_dialog,
+                                             recurse=False)
         self.expect_true('#include <ggp_c/ggp.h>' in source_code_edit.get_line(0),
                          "Source code dialog shows the correct file.")
 
         logging.info("All good. Closing the dialog...")
-        close_button = self.find_control(
-            control_type="Button", name="Close", parent=source_code_dialog, recurse=True)
+        close_button = self.find_control(control_type="Button",
+                                         name="Close",
+                                         parent=source_code_dialog,
+                                         recurse=True)
         close_button.click_input()
 
     def _execute(self, function_search_string: str):

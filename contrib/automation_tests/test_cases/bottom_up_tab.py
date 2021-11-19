@@ -14,6 +14,7 @@ class VerifyHelloGgpBottomUpContents(E2ETestCase):
     react to the amount of columns in the treeview - see common_controls.DataViewPanel
     on how to access the required fields.
     """
+
     def _execute(self):
         self.find_control("TabItem", "Bottom-Up").click_input()
         logging.info('Switched to Bottom-Up tab')
@@ -43,5 +44,4 @@ class VerifyHelloGgpBottomUpContents(E2ETestCase):
         if not tree_items[BOTTOM_UP_ROW_CELL_COUNT].window_text().startswith('drm'):
             raise RuntimeError('First child of the first item ("ioctl") '
                                'of the bottom-up view doesn\'t start with "drm"')
-        logging.info(
-            'Verified that first child of the first item starts with "drm"')
+        logging.info('Verified that first child of the first item starts with "drm"')

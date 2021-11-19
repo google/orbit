@@ -10,7 +10,6 @@ from core.orbit_e2e import E2ETestSuite
 from test_cases.capture_window import Capture, VerifyTracksExist, SetAndCheckMemorySamplingPeriod, \
     VerifyTracksDoNotExist, ExpandTrack, CollapseTrack
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-
 """Smoke test for the memory tracing and visualization using pywinauto.
 
 This automation script covers a basic workflow:
@@ -43,7 +42,8 @@ def main(argv):
         VerifyTracksDoNotExist(track_names="Page Faults*"),
         VerifyTracksDoNotExist(track_names="*Memory Usage*")
     ]
-    suite = E2ETestSuite(test_name="Collect Memory Usage & Page Faults Information", test_cases=test_cases)
+    suite = E2ETestSuite(test_name="Collect Memory Usage & Page Faults Information",
+                         test_cases=test_cases)
     suite.execute()
 
 

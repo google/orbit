@@ -13,6 +13,7 @@ from core.orbit_e2e import E2ETestCase, wait_for_condition
 
 
 class LiveTabTestCase(E2ETestCase):
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._live_tab = None
@@ -33,6 +34,7 @@ class AddIterator(LiveTabTestCase):
     """
     Add a single iterator to an already hooked function and verify its existence.
     """
+
     def _execute(self, function_name):
         # Adding an iterator adds three new buttons and we use this knowledge to
         # verify that an iterator was added correctly. It seems other widgets like
@@ -55,6 +57,7 @@ class AddFrameTrack(LiveTabTestCase):
     """
     Add a frame track to an already hooked function
     """
+
     def _execute(self, function_name):
         cell, index = self.find_function_cell(function_name)
         cell.click_input(button='right')
@@ -69,7 +72,8 @@ class VerifyFunctionCallCount(LiveTabTestCase):
     Verify the amount of times a hooked function has been called according to the
     live-tab
     """
-    def _execute(self, function_name, min_calls=1, max_calls=pow(2, 33)-1):
+
+    def _execute(self, function_name, min_calls=1, max_calls=pow(2, 33) - 1):
         cell, index = self.find_function_cell(function_name)
         children = self.find_control('Tree', parent=self._live_tab).children()
 
@@ -77,9 +81,10 @@ class VerifyFunctionCallCount(LiveTabTestCase):
         hook_status = children[index - 1].window_text()
 
         logging.info('Found a call count of %s, hook status: %s', call_count, hook_status)
-        self.expect_true(min_calls <= call_count <= max_calls,
-                         'Call count for function "%s" expected to be between %s and %s, was %s'
-                         % (function_name, min_calls, max_calls, call_count))
+        self.expect_true(
+            min_calls <= call_count <= max_calls,
+            'Call count for function "%s" expected to be between %s and %s, was %s' %
+            (function_name, min_calls, max_calls, call_count))
 
 
 class VerifyOneFunctionWasCalled(LiveTabTestCase):
@@ -87,14 +92,16 @@ class VerifyOneFunctionWasCalled(LiveTabTestCase):
     Verify that at least one of the functions matching the function name has 
     received the given number of hits.
     """
-    def _execute(self, function_name_contains, min_calls=1, max_calls=pow(2, 33)-1):
+
+    def _execute(self, function_name_contains, min_calls=1, max_calls=pow(2, 33) - 1):
         children = self.find_control('Tree', parent=self._live_tab).children()
         for i in range(len(children)):
             if function_name_contains in children[i].window_text():
                 call_count = int(children[i + 1].window_text())
                 if min_calls <= call_count <= max_calls:
-                    logging.info('Found a call to "%s" with %s hits', 
-                                 children[i].window_text(), call_count)
+                    logging.info('Found a call to "%s" with %s hits', children[i].window_text(),
+                                 call_count)
                     return
-        
-        raise RuntimeError('No function matching "%s" has received the required hit count' % (function_name_contains))
+
+        raise RuntimeError('No function matching "%s" has received the required hit count' %
+                           (function_name_contains))

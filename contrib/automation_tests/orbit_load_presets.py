@@ -9,7 +9,6 @@ from absl import app
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 from test_cases.symbols_tab import LoadAndVerifyHelloGgpPreset
-
 """Apply two presets in Orbit using pywinauto.
 
 Before this script is run there needs to be a gamelet reserved and

@@ -12,7 +12,6 @@ from test_cases.connection_window import FilterAndSelectFirstProcess
 from test_cases.connection_window import ConnectToStadiaInstance
 from test_cases.symbols_tab import LoadSymbols
 from test_cases.symbols_tab import ShowSourceCode
-
 """Show source code for a single function in Orbit using pywinauto.
 
 Before this script is run there needs to be a gamelet reserved and
@@ -49,10 +48,8 @@ def main(argv):
 
 
 # The default path works for E2E test machines!
-flags.DEFINE_string("source_code_file",
-                    "C:\\build\\scratch\\test\\hello_ggp\\src\\main.c",
+flags.DEFINE_string("source_code_file", "C:\\build\\scratch\\test\\hello_ggp\\src\\main.c",
                     "An absolute path to main.c from hello_ggp.")
-
 
 if __name__ == '__main__':
     app.run(main)

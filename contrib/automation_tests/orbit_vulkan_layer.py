@@ -9,7 +9,6 @@ from absl import app
 from core.orbit_e2e import E2ETestSuite
 from test_cases.capture_window import VerifyTracksExist, Capture, CheckTimers, ExpandTrack, CollapseTrack
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-
 """Basic smoke test for the Vulkan layer functionality using pywinauto.
 
 Before this script is run there needs to be a gamelet reserved and
@@ -26,6 +25,8 @@ This automation script covers a basic workflow:
  - take a capture
  - check that there are debug markers for the graphics queue track
 """
+
+
 def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),

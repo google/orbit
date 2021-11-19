@@ -16,8 +16,9 @@ from pywinauto.base_wrapper import BaseWrapper
 from pywinauto.findwindows import ElementNotFoundError
 from pywinauto.keyboard import send_keys
 
-flags.DEFINE_boolean('dev_mode', False, 'Dev mode - expect Orbit MainWindow to be opened, '
-                                        'and do not close Orbit at the end')
+flags.DEFINE_boolean(
+    'dev_mode', False, 'Dev mode - expect Orbit MainWindow to be opened, '
+    'and do not close Orbit at the end')
 
 
 class OrbitE2EError(RuntimeError):
@@ -34,6 +35,7 @@ class E2ETestCase:
     a parameterized test, simply inherit from this class and provide your own _execute methods with any number of
     named arguments.
     """
+
     def __init__(self, **kwargs):
         self._suite = None
         self._args = kwargs
@@ -47,14 +49,22 @@ class E2ETestCase:
 
     def expect_true(self, cond, description):
         if not cond:
-            raise OrbitE2EError('Error executing testcase %s, fragment %s. Condition expected to be True: "%s"' %
-                                (self.suite.name, self.__class__.__name__, description))
+            raise OrbitE2EError(
+                'Error executing testcase %s, fragment %s. Condition expected to be True: "%s"' %
+                (self.suite.name, self.__class__.__name__, description))
 
     def expect_eq(self, left, right, description):
         self.expect_true(left == right, description)
 
-    def find_control(self, control_type=None, name=None, parent: BaseWrapper=None, name_contains=None,
-                     auto_id_leaf=None, qt_class=None, recurse=True, raise_on_failure=True) -> BaseWrapper:
+    def find_control(self,
+                     control_type=None,
+                     name=None,
+                     parent: BaseWrapper = None,
+                     name_contains=None,
+                     auto_id_leaf=None,
+                     qt_class=None,
+                     recurse=True,
+                     raise_on_failure=True) -> BaseWrapper:
         """
         Returns the first child of BaseWrapper that matches all of the search parameters.
         As soon as a matching child is encountered, this function returns.
@@ -63,8 +73,13 @@ class E2ETestCase:
         """
         if not parent:
             parent = self.suite.top_window()
-        return find_control(parent, control_type=control_type, name=name, name_contains=name_contains,
-                            auto_id_leaf=auto_id_leaf, qt_class=qt_class, recurse=recurse,
+        return find_control(parent,
+                            control_type=control_type,
+                            name=name,
+                            name_contains=name_contains,
+                            auto_id_leaf=auto_id_leaf,
+                            qt_class=qt_class,
+                            recurse=recurse,
                             raise_on_failure=raise_on_failure)
 
     def find_context_menu_item(self, text: str, raise_on_failure=True):
@@ -75,7 +90,9 @@ class E2ETestCase:
         """
         # Add an extra sleep. Context menu needs to show up before we search for it.
         time.sleep(1)
-        return self.find_control('MenuItem', text, parent=self.suite.application.top_window(),
+        return self.find_control('MenuItem',
+                                 text,
+                                 parent=self.suite.application.top_window(),
                                  raise_on_failure=raise_on_failure)
 
     def _execute(self, **kwargs):
@@ -86,6 +103,7 @@ class E2ETestCase:
 
 
 class CloseOrbit(E2ETestCase):
+
     def _check_process_is_running(self, name: str):
         """
         Returns true if there is a running process containing name
@@ -95,8 +113,8 @@ class CloseOrbit(E2ETestCase):
                 if name.lower() in proc.name().lower():
                     return True
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-               pass
-        return False;
+                pass
+        return False
 
     def _execute(self):
         # For some reason the line below does NOT work when Orbit is maximized - this is actually consistent with
@@ -111,6 +129,7 @@ class CloseOrbit(E2ETestCase):
 
 
 class E2ETestSuite:
+
     def __init__(self, test_name: str, test_cases: Iterable[E2ETestCase], dev_mode: bool = False):
         logging.info('E2E Test Suite "%s" started.', test_name)
         self._top_window = None
@@ -168,7 +187,10 @@ class E2ETestSuite:
         self.top_window(True).set_focus()
 
 
-def wait_for_condition(any_callable: Callable, max_seconds: int = 5, interval: int = 1, raise_exceptions: bool = False):
+def wait_for_condition(any_callable: Callable,
+                       max_seconds: int = 5,
+                       interval: int = 1,
+                       raise_exceptions: bool = False):
     """
     Wait until a condition is satisfied.
 
@@ -193,8 +215,14 @@ def wait_for_condition(any_callable: Callable, max_seconds: int = 5, interval: i
     raise OrbitE2EError('Wait time exceeded')
 
 
-def find_control(parent: BaseWrapper, control_type=None, name=None, name_contains=None,
-                 auto_id_leaf=None, qt_class=None, recurse=True, raise_on_failure=True) -> BaseWrapper or None:
+def find_control(parent: BaseWrapper,
+                 control_type=None,
+                 name=None,
+                 name_contains=None,
+                 auto_id_leaf=None,
+                 qt_class=None,
+                 recurse=True,
+                 raise_on_failure=True) -> BaseWrapper or None:
     """
     Returns the first child of BaseWrapper that matches all of the search parameters.
     As soon as a matching child is encountered, this function returns.
@@ -218,7 +246,8 @@ def find_control(parent: BaseWrapper, control_type=None, name=None, name_contain
             return elem
 
     if raise_on_failure:
-        raise OrbitE2EError('Could not find element of type %s (name="%s", name_contains="%s", qt_class="%s", recurse=%s).' %
-                            (control_type, name, name_contains, qt_class, recurse))
+        raise OrbitE2EError(
+            'Could not find element of type %s (name="%s", name_contains="%s", qt_class="%s", recurse=%s).'
+            % (control_type, name, name_contains, qt_class, recurse))
     else:
         return None

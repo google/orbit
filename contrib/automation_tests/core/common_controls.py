@@ -11,6 +11,7 @@ from core.orbit_e2e import find_control
 
 
 class Track:
+
     def __init__(self, control: BaseWrapper):
         self._container = control
         self._name = control.texts()[0]
@@ -19,7 +20,10 @@ class Track:
         self._thread_states = find_control(control, 'Pane', 'ThreadState', raise_on_failure=False)
         self._tracepoints = find_control(control, 'Pane', 'Tracepoints', raise_on_failure=False)
         self._timers = find_control(control, 'Pane', 'Timers', raise_on_failure=False)
-        self._triangle_toggle = find_control(control, 'Button', 'TriangleToggle', raise_on_failure=False)
+        self._triangle_toggle = find_control(control,
+                                             'Button',
+                                             'TriangleToggle',
+                                             raise_on_failure=False)
 
     container = property(lambda self: self._container)
     title = property(lambda self: self._title)
@@ -32,6 +36,7 @@ class Track:
 
 
 class Table:
+
     def __init__(self, control: BaseWrapper):
         self._table = control
 
@@ -67,12 +72,13 @@ class Table:
 
 
 class DataViewPanel:
+
     def __init__(self, control: BaseWrapper):
         self._panel = control
         self._table = find_control(control, "Tree", "DataView")
         self._table_obj = Table(self._table)
         self._refresh_button = find_control(control, "Button", "Refresh", raise_on_failure=False)
-        self._filter = find_control(control,  "Edit", "Filter")
+        self._filter = find_control(control, "Edit", "Filter")
 
     panel = property(lambda self: self._panel)
     table = property(lambda self: self._table)
