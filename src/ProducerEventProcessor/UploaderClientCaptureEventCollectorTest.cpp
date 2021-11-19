@@ -21,8 +21,9 @@ namespace orbit_producer_event_processor {
 
 namespace {
 
-static constexpr const char* kAnswerString = "Test Interned String";
-static constexpr uint64_t kAnswerKey = 42;
+constexpr const char* kAnswerString = "Test Interned String";
+constexpr uint64_t kAnswerKey = 42;
+constexpr size_t kUploadBufferSize = 100;
 
 ClientCaptureEvent CreateInternedStringCaptureEvent(uint64_t key, const std::string& str) {
   ClientCaptureEvent event;
@@ -82,7 +83,6 @@ class UploaderClientCaptureEventCollectorTest : public testing::Test {
     produce_finished_ = true;
   }
 
-  static constexpr size_t kUploadBufferSize = 100;
   void UploadCaptureData() {
     while (collector_.DetermineDataReadiness() !=
            orbit_capture_uploader::DataReadiness::kEndOfData) {
