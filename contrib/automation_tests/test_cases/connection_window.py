@@ -103,6 +103,88 @@ class RefreshStadiaInstanceList(E2ETestCase):
         self.expect_true(get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
 
 
+class SelectProject(E2ETestCase):
+    """
+    Expand the project selection combo box and click the entry `project_name`. Also waits 
+    appropriately when loading takes place.
+    """
+
+    def _execute(self, project_name: str):
+        logging.info('Select project with name ' + project_name)
+        project_combo_box = self.find_control(name='ProjectSelectionComboBox')
+        # wait until loading is done
+        wait_for_condition(lambda: project_combo_box.is_enabled() is True, 25)
+        project_combo_box.click_input()
+
+        default_project = self.find_combo_box_item(text=project_name)
+        logging.info('Expanded project combo box and found entry ' + project_name)
+        default_project.click_input()
+        # After project changing, loading takes place. Wait until the overlay is hidden
+        wait_for_condition(
+            lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
+            None, 100)
+        logging.info('Successfully selected project ' + project_name +
+                     'and waited until loading is done')
+
+
+class SelectNextProject(E2ETestCase):
+    """
+    Expand the project selection combo box and select the next project by pressing the down arrow
+    and enter. Also waits appropriately when loading takes place.
+    """
+
+    def _execute(self):
+        logging.info('Select next project')
+        project_combo_box = self.find_control(name='ProjectSelectionComboBox')
+        # wait until loading is done
+        wait_for_condition(lambda: project_combo_box.is_enabled() is True, 25)
+        project_combo_box.click_input()
+        logging.info('Found and opened project combo box, sending down arrow and enter')
+        send_keys('{DOWN}{ENTER}')
+        # After project changing, loading takes place. Wait until the overlay is hidden
+        wait_for_condition(
+            lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
+            None, 100)
+        logging.info('Successfully selected next project')
+
+
+class TestAllInstancesCheckbox(E2ETestCase):
+    """
+    This test expects that the "All Instances" check box is not checked at the start. The Test
+    clicks the check box and expects that the number of instances stays the same or increases.
+    Afterwards the checkbox is clicked again to reset the state.
+    """
+
+    def _execute(self):
+        logging.info('Starting "All Instances" checkbox test.')
+        # First wait until all loading is done.
+        wait_for_condition(
+            lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
+            None, 100)
+        check_box = self.find_control('CheckBox', 'AllInstancesCheckBox')
+        logging.info('Found checkbox')
+
+        instance_count = get_number_of_instances_in_list(self)
+
+        check_box.click_input()
+        logging.info('Clicked All Instances check box, waiting until loading is done')
+        wait_for_condition(
+            lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
+            None, 100)
+        self.expect_true(instance_count <= get_number_of_instances_in_list(self),
+                         'Instance list contains at least same amount of instances as before.')
+        logging.info('Loading successful, instance number increased')
+
+        check_box.click_input()
+        wait_for_condition(
+            lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
+            None, 100)
+        self.expect_true(
+            get_number_of_instances_in_list(self) >= 1,
+            'Instance list contains at least one instance')
+        logging.info('Second click on check box successful')
+
+
 class FilterAndSelectFirstProcess(E2ETestCase):
     """
     Select the first process in the process list and verify there is at least one entry in the list

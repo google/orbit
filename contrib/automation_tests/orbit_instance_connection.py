@@ -8,7 +8,8 @@ from absl import app
 
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import (ConnectToStadiaInstance, DisconnectFromStadiaInstance,
-                                          RefreshStadiaInstanceList)
+                                          RefreshStadiaInstanceList, TestAllInstancesCheckbox,
+                                          SelectProject, SelectNextProject)
 """Test Instance connections in the Session Setup Window 
 
 Before this script is run there needs to be a gamelet reserved.
@@ -29,6 +30,10 @@ This automation script does the following:
 
 def main(argv):
     test_cases = [
+        SelectProject(project_name="Default Project (Automated Testing)"),
+        SelectNextProject(),
+        SelectProject(project_name="Default Project (Automated Testing)"),
+        TestAllInstancesCheckbox(),
         ConnectToStadiaInstance(),
         DisconnectFromStadiaInstance(),
         RefreshStadiaInstanceList()
