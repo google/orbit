@@ -4,6 +4,7 @@
 
 #include "SessionSetup/ConnectToStadiaWidget.h"
 
+#include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
 #include <grpcpp/create_channel.h>
 #include <grpcpp/security/credentials.h>
@@ -271,7 +272,7 @@ void ConnectToStadiaWidget::SetupStateMachine() {
 void ConnectToStadiaWidget::LoadCredentials() {
   CHECK(selected_instance_.has_value());
 
-  const std::string& instance_id{selected_instance_->id.toStdString()};
+  const std::string instance_id{selected_instance_->id.toStdString()};
 
   if (instance_credentials_.contains(instance_id)) {
     emit CredentialsLoaded();
@@ -433,7 +434,8 @@ void ConnectToStadiaWidget::Connect() {
     return;
   }
 
-  if (!account_result.value().email.contains(selected_instance_->owner)) {
+  if (!absl::StartsWith(account_result.value().email.toStdString(),
+                        selected_instance_->owner.toStdString())) {
     OtherUserDialog dialog{selected_instance_->owner, this};
     auto dialog_result = dialog.Exec();
     if (dialog_result.has_error()) return;
