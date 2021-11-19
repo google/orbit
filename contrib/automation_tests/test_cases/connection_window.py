@@ -17,6 +17,13 @@ def wait_for_main_window(application: Application):
     wait_for_condition(lambda: application.top_window().class_name() == "OrbitMainWindow", 30)
 
 
+def get_number_of_instances_in_list(test_case: E2ETestCase) -> int:
+    instance_list = test_case.find_control('Table', 'InstanceList')
+    instance_count = instance_list.item_count()
+    logging.info('Found %s rows in the instance list', instance_count)
+    return instance_count
+
+
 class ConnectToStadiaInstance(E2ETestCase):
     """
     Connect to the first available stadia instance
@@ -33,9 +40,7 @@ class ConnectToStadiaInstance(E2ETestCase):
         # We're not using find_control here because magic lookup enables us to easily wait for the existence of a row
         window.InstanceList.click_input()
         window.InstanceList.DataItem0.wait('exists', timeout=100)
-        instance_list = self.find_control('Table', 'InstanceList')
-        logging.info('Found %s rows in the instance list', instance_list.item_count())
-        self.expect_true(instance_list.item_count() >= 1, 'Found at least one instance')
+        self.expect_true(get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
 
         window.InstanceList.DataItem0.double_click_input()
         logging.info('Connecting to Instance, waiting for the process list...')
@@ -72,9 +77,7 @@ class DisconnectFromStadiaInstance(E2ETestCase):
         self.expect_true(instance_list_overlay.rectangle().width() == 0,
                          "Instance overlay has width() 0 (is not shown)")
         logging.info('Loading done, overlay is hidden')
-        instance_list = self.find_control('Table', 'InstanceList')
-        logging.info('Found %s rows in the instance list', instance_list.item_count())
-        self.expect_true(instance_list.item_count() >= 1, 'Found at least one instance')
+        self.expect_true(get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
         wait_for_condition(lambda: self.find_control(
             'Group', 'ProcessListOverlay', raise_on_failure=False) is None)
 
@@ -100,8 +103,7 @@ class RefreshStadiaInstanceList(E2ETestCase):
         self.expect_true(instance_list_overlay.rectangle().width() == 0,
                          "InstanceOverlay has width() 0 (is not shown)")
         logging.info('Loading done, overlay is hidden')
-        logging.info('Found %s rows in the instance list', instance_list.item_count())
-        self.expect_true(instance_list.item_count() >= 1, 'Found at least one instance')
+        self.expect_true(get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
 
 
 class FilterAndSelectFirstProcess(E2ETestCase):
