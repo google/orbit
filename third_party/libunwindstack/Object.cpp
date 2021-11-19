@@ -18,6 +18,8 @@
 #include <unwindstack/MapInfo.h>
 #include <unwindstack/Object.h>
 
+#include <android-base/stringprintf.h>
+
 namespace unwindstack {
 
 bool Object::cache_enabled_;
@@ -90,6 +92,23 @@ bool Object::CacheGet(MapInfo* info) {
   info->set_object_start_offset(object_start_offset);
   info->set_object_offset(info->offset() - object_start_offset);
   return true;
+}
+
+std::string Object::GetPrintableBuildID(std::string& build_id) {
+  if (build_id.empty()) {
+    return "";
+  }
+  std::string printable_build_id;
+  for (const char& c : build_id) {
+    // Use %hhx to avoid sign extension on abis that have signed chars.
+    printable_build_id += android::base::StringPrintf("%02hhx", c);
+  }
+  return printable_build_id;
+}
+
+std::string Object::GetPrintableBuildID() {
+  std::string build_id = GetBuildID();
+  return Elf::GetPrintableBuildID(build_id);
 }
 
 }  // namespace unwindstack

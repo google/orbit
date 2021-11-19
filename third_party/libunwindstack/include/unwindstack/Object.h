@@ -46,6 +46,7 @@ class Object {
   virtual int64_t GetLoadBias() = 0;
   virtual bool GetTextRange(uint64_t* addr, uint64_t* size) = 0;
   virtual std::string GetBuildID() = 0;
+  std::string GetPrintableBuildID();
 
   virtual std::string GetSoname() = 0;
   virtual bool GetFunctionName(uint64_t addr, SharedString* name, uint64_t* func_offset) = 0;
@@ -77,6 +78,8 @@ class Object {
   static void CacheUnlock();
   static void CacheAdd(MapInfo* info);
   static bool CacheGet(MapInfo* info);
+
+  static std::string GetPrintableBuildID(std::string& build_id);
 
  protected:
   static bool cache_enabled_;
