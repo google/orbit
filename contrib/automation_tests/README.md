@@ -113,4 +113,6 @@ stadia instance and select a process while you're developing, so you can simply 
 ### Style
 
 [yapf](https://github.com/google/yapf) is used with the Google style to keep consistent code style
-in python files. yapf will pick up the provided `.style.yapf` file automatically.
+in python files. yapf can be installed with `pip install` and will pick up the provided
+`.style.yapf` file automatically. For most convenience, use yapf with an IDE extension, or run by
+hand with `yapf -i <file>.py` (formats file in place).
