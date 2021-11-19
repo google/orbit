@@ -159,7 +159,10 @@ void CallstackDataView::OnContextMenu(const std::string& action, int menu_index,
     for (int i : item_indices) {
       CallstackDataViewFrame frame = GetFrameFromRow(i);
       const FunctionInfo* function = frame.function;
-      app_->SelectFunction(*function);
+      // Only hook functions for which we have symbols loaded.
+      if (function != nullptr) {
+        app_->SelectFunction(*function);
+      }
     }
 
   } else if (action == kMenuActionUnselect) {
