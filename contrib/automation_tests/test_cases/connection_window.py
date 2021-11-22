@@ -105,7 +105,7 @@ class RefreshStadiaInstanceList(E2ETestCase):
 
 class SelectProject(E2ETestCase):
     """
-    Expand the project selection combo box and click the entry `project_name`. Also waits 
+    Expand the project selection combo box and click the entry `project_name`. Also waits
     appropriately when loading takes place.
     """
 
@@ -116,9 +116,9 @@ class SelectProject(E2ETestCase):
         wait_for_condition(lambda: project_combo_box.is_enabled() is True, 25)
         project_combo_box.click_input()
 
-        default_project = self.find_combo_box_item(text=project_name)
+        project = self.find_combo_box_item(text=project_name)
         logging.info('Expanded project combo box and found entry ' + project_name)
-        default_project.click_input()
+        project.click_input()
         # After project changing, loading takes place. Wait until the overlay is hidden
         wait_for_condition(
             lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
