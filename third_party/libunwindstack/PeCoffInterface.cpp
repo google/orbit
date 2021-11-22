@@ -21,6 +21,8 @@
 #include <unwindstack/Error.h>
 #include <unwindstack/Log.h>
 #include <unwindstack/Memory.h>
+#include "Check.h"
+#include "DwarfDebugFrame.h"
 
 namespace unwindstack {
 
@@ -373,6 +375,26 @@ bool PeCoffInterface<AddressType>::InitSections() {
 }
 
 template <typename AddressType>
+bool PeCoffInterface<AddressType>::InitDebugFrameSection() {
+  CHECK(debug_frame_section_data_.has_value());
+
+  debug_frame_.reset(new DwarfDebugFrame<AddressType>(memory_));
+
+  if (!debug_frame_->Init(debug_frame_section_data_->file_offset, debug_frame_section_data_->size,
+                          debug_frame_section_data_->section_bias)) {
+    debug_frame_.reset(nullptr);
+    debug_frame_section_data_->file_offset = 0;
+    debug_frame_section_data_->size = 0;
+    debug_frame_section_data_->section_bias = 0;
+
+    Log::Error("Failed to initialize the .debug_frame section for PE/COFF file.");
+    last_error_.code = ERROR_INVALID_COFF;
+    return false;
+  }
+  return true;
+}
+
+template <typename AddressType>
 bool PeCoffInterface<AddressType>::ParseAllHeaders() {
   if (!ParseDosHeader(0x0)) {
     return false;
@@ -396,7 +418,19 @@ bool PeCoffInterface<AddressType>::ParseAllHeaders() {
 
 template <typename AddressType>
 bool PeCoffInterface<AddressType>::Init() {
-  return ParseAllHeaders() && InitSections();
+  if (!ParseAllHeaders()) {
+    return false;
+  }
+  if (!InitSections()) {
+    return false;
+  }
+  if (debug_frame_section_data_.has_value() && !InitDebugFrameSection()) {
+    // If initializing the debug frame section fails, we assume that the PE/COFF file
+    // is corrupted, consider it invalid and therefore abort initialization.
+    return false;
+  }
+
+  return true;
 }
 
 // Instantiate all of the needed template functions.

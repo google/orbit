@@ -141,14 +141,17 @@ class PeCoffInterface {
                 "AddressTypeArg must be an unsigned integer and either 4-bytes or 8-bytes");
 
  public:
-  explicit PeCoffInterface(Memory* memory) : coff_memory_(memory) {}
+  explicit PeCoffInterface(Memory* memory) : memory_(memory), coff_memory_(memory) {}
   virtual ~PeCoffInterface() {}
   bool Init();
   ErrorData LastError() const { return last_error_; }
 
   using AddressType = AddressTypeArg;
 
+  DwarfSection* DebugFrameSection() { return debug_frame_.get(); }
+
  private:
+  Memory* memory_;
   PeCoffMemory coff_memory_;
 
   // Parsed data
@@ -188,6 +191,7 @@ class PeCoffInterface {
 
   bool GetSectionName(const std::string& parsed_section_name_string, std::string* result);
   bool InitSections();
+  bool InitDebugFrameSection();
 };
 
 using PeCoffInterface32 = PeCoffInterface<uint32_t>;
