@@ -103,7 +103,7 @@ class RefreshStadiaInstanceList(E2ETestCase):
         self.expect_true(get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
 
 
-class SelectProject(E2ETestCase):
+class SelectProjectAndVerifyItHasAtLeastOneInstance(E2ETestCase):
     """
     Expand the project selection combo box and click the entry `project_name`. Also waits
     appropriately when loading takes place.
@@ -125,6 +125,7 @@ class SelectProject(E2ETestCase):
             None, 100)
         logging.info('Successfully selected project ' + project_name +
                      'and waited until loading is done')
+        self.expect_true(get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
 
 
 class SelectNextProject(E2ETestCase):
