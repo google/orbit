@@ -78,4 +78,9 @@ std::unique_ptr<FunctionInfo> CreateFunctionInfo(const SymbolInfo& symbol_info,
   return function_info;
 }
 
+bool IsFunctionSelectable(const FunctionInfo& function) {
+  constexpr const char* kLibOrbitUserSpaceInstrumentation = "liborbituserspaceinstrumentation.so";
+  return function.module_path().find(kLibOrbitUserSpaceInstrumentation) == std::string::npos;
+}
+
 }  // namespace orbit_client_data::function_utils
