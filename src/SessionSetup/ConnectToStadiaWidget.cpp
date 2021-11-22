@@ -32,6 +32,7 @@
 #include <system_error>
 #include <utility>
 
+#include "MainThreadExecutor.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -112,9 +113,10 @@ ConnectToStadiaWidget::ConnectToStadiaWidget(QWidget* parent)
                    &ConnectToStadiaWidget::OnInstancesLoaded);
   QObject::connect(ui_->retrieveInstancesWidget, &RetrieveInstancesWidget::FilterTextChanged,
                    &instance_proxy_model_, &QSortFilterProxyModel::setFilterFixedString);
-  QObject::connect(ui_->connectButton, &QPushButton::clicked, this, [this]() { Connect(); });
+  QObject::connect(ui_->connectButton, &QPushButton::clicked, this,
+                   &ConnectToStadiaWidget::Connect);
   QObject::connect(ui_->instancesTableView, &QTableView::doubleClicked, this,
-                   [this]() { Connect(); });
+                   &ConnectToStadiaWidget::Connect);
 
   SetupStateMachine();
 }
@@ -448,18 +450,16 @@ ErrorMessageOr<Account> ConnectToStadiaWidget::GetAccountSync() {
   if (cached_account_ != std::nullopt) return cached_account_.value();
 
   // This async call is not doing network calls, only reads local config files, hence it is fast and
-  // used in a syncronous manner here.
-  QEventLoop local_loop;
+  // used in a syncronous manner here. A timeout of 3 is used anyways
+  ErrorMessageOr<Account> future_result = ErrorMessage{"Call to \"ggp auth list\" timed out."};
   auto account_future = ggp_client_->GetDefaultAccountAsync().Then(
-      main_thread_executor_.get(), [&local_loop](ErrorMessageOr<Account> account) {
-        local_loop.quit();
-        return account;
+      main_thread_executor_.get(), [&future_result](ErrorMessageOr<Account> result) -> void {
+        future_result = std::move(result);
       });
-  local_loop.exec();
 
-  OUTCOME_TRY(auto&& account, account_future.Get());
+  main_thread_executor_->WaitFor(account_future, std::chrono::seconds(3));
 
-  cached_account_ = std::move(account);
+  OUTCOME_TRY(cached_account_, future_result);
 
   return cached_account_.value();
 }
