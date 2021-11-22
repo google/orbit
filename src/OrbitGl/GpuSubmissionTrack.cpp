@@ -259,7 +259,7 @@ std::string GpuSubmissionTrack::GetHwQueueTooltip(const TimerInfo& timer_info) c
 std::string GpuSubmissionTrack::GetHwExecutionTooltip(const TimerInfo& timer_info) const {
   CHECK(capture_data_ != nullptr);
   return absl::StrFormat(
-      "<b>Harware Execution</b><br/>"
+      "<b>Hardware Execution</b><br/>"
       "<i>End is marked by \"dma_fence_signaled\" event for this command "
       "buffer submission</i>"
       "<br/>"
