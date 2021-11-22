@@ -119,7 +119,8 @@ std::vector<std::vector<std::string>> CallstackDataView::GetContextMenuWithGroup
     const ModuleData* module = frame.module;
 
     if (frame.function != nullptr && app_->IsCaptureConnected(app_->GetCaptureData())) {
-      enable_select |= !app_->IsFunctionSelected(*function);
+      enable_select |= !app_->IsFunctionSelected(*function) &&
+                       orbit_client_data::function_utils::IsFunctionSelectable(*function);
       enable_unselect |= app_->IsFunctionSelected(*function);
       enable_disassembly = true;
       enable_source_code = true;
