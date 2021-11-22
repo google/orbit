@@ -163,9 +163,11 @@ static void VerifyTrampolineAddressRangesAndLibraryPath(
   EXPECT_EQ(instrumentation_result.return_trampoline_address_range.end -
                 instrumentation_result.return_trampoline_address_range.start,
             GetReturnTrampolineSize());
+  /* copybara:strip_begin(In the internal build the library name can be different.) */
 
   EXPECT_EQ(instrumentation_result.injected_library_path.filename().string(),
             "liborbituserspaceinstrumentation.so");
+  /* copybara:strip_end */
 }
 
 TEST(InstrumentProcessTest, Instrument) {
