@@ -17,7 +17,7 @@ def wait_for_main_window(application: Application):
     wait_for_condition(lambda: application.top_window().class_name() == "OrbitMainWindow", 30)
 
 
-def get_number_of_instances_in_list(test_case: E2ETestCase) -> int:
+def _get_number_of_instances_in_list(test_case: E2ETestCase) -> int:
     instance_list = test_case.find_control('Table', 'InstanceList')
     instance_count = instance_list.item_count()
     logging.info('Found %s rows in the instance list', instance_count)
@@ -40,7 +40,7 @@ class ConnectToStadiaInstance(E2ETestCase):
         # We're not using find_control here because magic lookup enables us to easily wait for the existence of a row
         window.InstanceList.click_input()
         window.InstanceList.DataItem0.wait('exists', timeout=100)
-        self.expect_true(get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
+        self.expect_true(_get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
 
         window.InstanceList.DataItem0.double_click_input()
         logging.info('Connecting to Instance, waiting for the process list...')
@@ -75,7 +75,7 @@ class DisconnectFromStadiaInstance(E2ETestCase):
         wait_for_condition(lambda: self.find_control(
             'Group', 'InstanceListOverlay', raise_on_failure=False) is None)
         logging.info('Loading done, overlay is hidden')
-        self.expect_true(get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
+        self.expect_true(_get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
         wait_for_condition(lambda: self.find_control(
             'Group', 'ProcessListOverlay', raise_on_failure=False) is None)
 
@@ -100,7 +100,7 @@ class RefreshStadiaInstanceList(E2ETestCase):
             lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
             None, 100)
         logging.info('Loading done, overlay is hidden')
-        self.expect_true(get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
+        self.expect_true(_get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
 
 
 class SelectProjectAndVerifyItHasAtLeastOneInstance(E2ETestCase):
@@ -125,7 +125,7 @@ class SelectProjectAndVerifyItHasAtLeastOneInstance(E2ETestCase):
             None, 100)
         logging.info('Successfully selected project ' + project_name +
                      'and waited until loading is done')
-        self.expect_true(get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
+        self.expect_true(_get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
 
 
 class SelectNextProject(E2ETestCase):
@@ -165,14 +165,14 @@ class TestAllInstancesCheckbox(E2ETestCase):
         check_box = self.find_control('CheckBox', 'AllInstancesCheckBox')
         logging.info('Found checkbox')
 
-        instance_count = get_number_of_instances_in_list(self)
+        instance_count = _get_number_of_instances_in_list(self)
 
         check_box.click_input()
         logging.info('Clicked All Instances check box, waiting until loading is done')
         wait_for_condition(
             lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
             None, 100)
-        self.expect_true(instance_count <= get_number_of_instances_in_list(self),
+        self.expect_true(instance_count <= _get_number_of_instances_in_list(self),
                          'Instance list contains at least same amount of instances as before.')
         logging.info('Loading successful, instance number increased')
 
@@ -181,7 +181,7 @@ class TestAllInstancesCheckbox(E2ETestCase):
             lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
             None, 100)
         self.expect_true(
-            get_number_of_instances_in_list(self) >= 1,
+            _get_number_of_instances_in_list(self) >= 1,
             'Instance list contains at least one instance')
         logging.info('Second click on check box successful')
 
