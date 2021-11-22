@@ -95,6 +95,20 @@ class E2ETestCase:
                                  parent=self.suite.application.top_window(),
                                  raise_on_failure=raise_on_failure)
 
+    def find_combo_box_item(self, text: str, raise_on_failure=True):
+        """
+        Specialized version of find_control for combo box items. This is provided due to the special
+        behavior of expanded combo box lists: They are not parented underneath the current main window, but
+        are treated as a separate window.
+        """
+        wait_for_condition(lambda: self.find_control(
+            'ListItem', text, parent=self.suite.application.top_window(), raise_on_failure=False) is
+                           not None)
+        return self.find_control('ListItem',
+                                 text,
+                                 parent=self.suite.application.top_window(),
+                                 raise_on_failure=raise_on_failure)
+
     def _execute(self, **kwargs):
         """
         Provide this method in your fragment

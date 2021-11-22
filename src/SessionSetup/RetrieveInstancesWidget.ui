@@ -64,6 +64,9 @@
      <property name="text">
       <string/>
      </property>
+     <property name="accessibleName">
+      <string>RefreshInstanceList</string>
+     </property>
      <property name="icon">
       <iconset resource="../../icons/orbiticons.qrc">
        <normaloff>:/actions/refresh</normaloff>:/actions/refresh</iconset>

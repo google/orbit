@@ -17,6 +17,13 @@ def wait_for_main_window(application: Application):
     wait_for_condition(lambda: application.top_window().class_name() == "OrbitMainWindow", 30)
 
 
+def _get_number_of_instances_in_list(test_case: E2ETestCase) -> int:
+    instance_list = test_case.find_control('Table', 'InstanceList')
+    instance_count = instance_list.item_count()
+    logging.info('Found %s rows in the instance list', instance_count)
+    return instance_count
+
+
 class ConnectToStadiaInstance(E2ETestCase):
     """
     Connect to the first available stadia instance
@@ -33,9 +40,7 @@ class ConnectToStadiaInstance(E2ETestCase):
         # We're not using find_control here because magic lookup enables us to easily wait for the existence of a row
         window.InstanceList.click_input()
         window.InstanceList.DataItem0.wait('exists', timeout=100)
-        instance_list = self.find_control('Table', 'InstanceList')
-        logging.info('Found %s rows in the instance list', instance_list.item_count())
-        self.expect_true(instance_list.item_count() >= 1, 'Found at least one instance')
+        self.expect_true(_get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
 
         window.InstanceList.DataItem0.double_click_input()
         logging.info('Connecting to Instance, waiting for the process list...')
@@ -66,15 +71,11 @@ class DisconnectFromStadiaInstance(E2ETestCase):
         )
         disconnect_button.click_input()
 
-        logging.info('Waiting for instance list to appear again')
-        window = self.suite.top_window()
-        window.InstanceList.DataItem0.wait('exists', timeout=100)
-        self.expect_true(instance_list_overlay.rectangle().width() == 0,
-                         "Instance overlay has width() 0 (is not shown)")
+        logging.info('Waiting for instance overlay to dissapear')
+        wait_for_condition(lambda: self.find_control(
+            'Group', 'InstanceListOverlay', raise_on_failure=False) is None)
         logging.info('Loading done, overlay is hidden')
-        instance_list = self.find_control('Table', 'InstanceList')
-        logging.info('Found %s rows in the instance list', instance_list.item_count())
-        self.expect_true(instance_list.item_count() >= 1, 'Found at least one instance')
+        self.expect_true(_get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
         wait_for_condition(lambda: self.find_control(
             'Group', 'ProcessListOverlay', raise_on_failure=False) is None)
 
@@ -95,13 +96,94 @@ class RefreshStadiaInstanceList(E2ETestCase):
         self.expect_true(instance_list_overlay.is_visible(), "Instance overlay is visible")
         logging.info('Found InstanceListOverlay and its visible')
 
-        window = self.suite.top_window()
-        window.InstanceList.DataItem0.wait('exists', timeout=100)
-        self.expect_true(instance_list_overlay.rectangle().width() == 0,
-                         "InstanceOverlay has width() 0 (is not shown)")
+        wait_for_condition(
+            lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
+            None, 100)
         logging.info('Loading done, overlay is hidden')
-        logging.info('Found %s rows in the instance list', instance_list.item_count())
-        self.expect_true(instance_list.item_count() >= 1, 'Found at least one instance')
+        self.expect_true(_get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
+
+
+class SelectProjectAndVerifyItHasAtLeastOneInstance(E2ETestCase):
+    """
+    Expand the project selection combo box and click the entry `project_name`. Also waits
+    appropriately when loading takes place.
+    """
+
+    def _execute(self, project_name: str):
+        logging.info('Select project with name ' + project_name)
+        project_combo_box = self.find_control(name='ProjectSelectionComboBox')
+        # wait until loading is done
+        wait_for_condition(lambda: project_combo_box.is_enabled() is True, 25)
+        project_combo_box.click_input()
+
+        project = self.find_combo_box_item(text=project_name)
+        logging.info('Expanded project combo box and found entry ' + project_name)
+        project.click_input()
+        # After project changing, loading takes place. Wait until the overlay is hidden
+        wait_for_condition(
+            lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
+            None, 100)
+        logging.info('Successfully selected project ' + project_name +
+                     'and waited until loading is done')
+        self.expect_true(_get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
+
+
+class SelectNextProject(E2ETestCase):
+    """
+    Expand the project selection combo box and select the next project by pressing the down arrow
+    and enter. Also waits appropriately when loading takes place.
+    """
+
+    def _execute(self):
+        logging.info('Select next project')
+        project_combo_box = self.find_control(name='ProjectSelectionComboBox')
+        # wait until loading is done
+        wait_for_condition(lambda: project_combo_box.is_enabled() is True, 25)
+        project_combo_box.click_input()
+        logging.info('Found and opened project combo box, sending down arrow and enter')
+        send_keys('{DOWN}{ENTER}')
+        # After project changing, loading takes place. Wait until the overlay is hidden
+        wait_for_condition(
+            lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
+            None, 100)
+        logging.info('Successfully selected next project')
+
+
+class TestAllInstancesCheckbox(E2ETestCase):
+    """
+    This test expects that the "All Instances" check box is not checked at the start. The Test
+    clicks the check box and expects that the number of instances stays the same or increases.
+    Afterwards the checkbox is clicked again to reset the state.
+    """
+
+    def _execute(self):
+        logging.info('Starting "All Instances" checkbox test.')
+        # First wait until all loading is done.
+        wait_for_condition(
+            lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
+            None, 100)
+        check_box = self.find_control('CheckBox', 'AllInstancesCheckBox')
+        logging.info('Found checkbox')
+
+        instance_count = _get_number_of_instances_in_list(self)
+
+        check_box.click_input()
+        logging.info('Clicked All Instances check box, waiting until loading is done')
+        wait_for_condition(
+            lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
+            None, 100)
+        self.expect_true(instance_count <= _get_number_of_instances_in_list(self),
+                         'Instance list contains at least same amount of instances as before.')
+        logging.info('Loading successful, instance number increased')
+
+        check_box.click_input()
+        wait_for_condition(
+            lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
+            None, 100)
+        self.expect_true(
+            _get_number_of_instances_in_list(self) >= 1,
+            'Instance list contains at least one instance')
+        logging.info('Second click on check box successful')
 
 
 class FilterAndSelectFirstProcess(E2ETestCase):
