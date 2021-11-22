@@ -59,6 +59,10 @@ RetrieveInstancesWidget::RetrieveInstancesWidget(QWidget* parent)
 void RetrieveInstancesWidget::SetupStateMachine() {
   state_machine_.setGlobalRestorePolicy(QStateMachine::RestoreProperties);
 
+  s_idle_.assignProperty(ui_->projectComboBox, "enabled", true);
+  s_idle_.assignProperty(ui_->filterLineEdit, "enabled", true);
+  s_idle_.assignProperty(ui_->allCheckBox, "enabled", true);
+  s_idle_.assignProperty(ui_->reloadButton, "enabled", true);
   s_idle_.addTransition(this, &RetrieveInstancesWidget::LoadingStarted, &s_loading_);
 
   s_loading_.assignProperty(ui_->projectComboBox, "enabled", false);
@@ -73,6 +77,7 @@ void RetrieveInstancesWidget::SetupStateMachine() {
   s_initial_loading_failed_.assignProperty(ui_->projectComboBox, "enabled", false);
   s_initial_loading_failed_.assignProperty(ui_->filterLineEdit, "enabled", false);
   s_initial_loading_failed_.assignProperty(ui_->allCheckBox, "enabled", false);
+  s_initial_loading_failed_.assignProperty(ui_->reloadButton, "enabled", true);
   s_initial_loading_failed_.addTransition(this, &RetrieveInstancesWidget::LoadingStarted,
                                           &s_loading_);
 }
@@ -82,7 +87,6 @@ void RetrieveInstancesWidget::Start() {
   state_machine_.setInitialState(&s_loading_);
   state_machine_.start();
 
-  QSettings settings;
   ui_->allCheckBox->setChecked(LoadInstancesScopeFromPersistentStorage() ==
                                InstanceListScope::kAllReservedInstances);
 

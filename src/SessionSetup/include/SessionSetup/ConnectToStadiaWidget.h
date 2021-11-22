@@ -22,10 +22,10 @@
 #include <optional>
 #include <string>
 
-#include "Connections.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/Executor.h"
 #include "OrbitBase/Result.h"
+#include "OrbitGgp/Account.h"
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/Instance.h"
 #include "OrbitGgp/InstanceItemModel.h"
@@ -33,6 +33,9 @@
 #include "OrbitGgp/SshInfo.h"
 #include "OrbitSsh/Credentials.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
+#include "SessionSetup/Connections.h"
+#include "SessionSetup/RetrieveInstances.h"
+#include "SessionSetup/RetrieveInstancesWidget.h"
 #include "SessionSetup/ServiceDeployManager.h"
 
 namespace Ui {
@@ -66,7 +69,7 @@ class ConnectToStadiaWidget : public QWidget {
   void SetActive(bool value);
 
  private slots:
-  void ReloadInstances();
+  void Connect();
   void LoadCredentials();
   void DeployOrbitService();
   void Disconnect();
@@ -74,22 +77,19 @@ class ConnectToStadiaWidget : public QWidget {
   void OnErrorOccurred(const QString& message);
   void OnSelectionChanged(const QModelIndex& current);
   void UpdateRememberInstance(bool value);
-  void ProjectComboBoxActivated(int index);
 
  signals:
   void ErrorOccurred(const QString& message);
   void ReceivedInstances();
   void InstanceSelected();
-  void ReceivedSshInfo();
   void CredentialsLoaded();
   void Connecting();
   void Activated();
   void Connected();
   void Disconnected();
-  void InstanceReloadRequested();
+  void InstancesLoading();
 
  private:
-  void showEvent(QShowEvent* event) override;
   std::unique_ptr<Ui::ConnectToStadiaWidget> ui_;
 
   orbit_ggp::InstanceItemModel instance_model_;
@@ -115,17 +115,15 @@ class ConnectToStadiaWidget : public QWidget {
   QState s_deploying_;
   QState s_connected_;
 
-  absl::flat_hash_set<std::string> instance_credentials_loading_;
   absl::flat_hash_map<std::string, orbit_ssh::Credentials> instance_credentials_;
+  std::optional<orbit_ggp::Account> cached_account_;
+  std::unique_ptr<RetrieveInstances> retrieve_instances_;
 
-  void DetachRadioButton();
   void SetupStateMachine();
-  void OnInstancesLoaded(ErrorMessageOr<QVector<orbit_ggp::Instance>> instances);
-  void OnProjectsLoaded(ErrorMessageOr<QVector<orbit_ggp::Project>> projects);
+  void OnInstancesLoaded(QVector<orbit_ggp::Instance> instances);
   void OnSshInfoLoaded(ErrorMessageOr<orbit_ggp::SshInfo> ssh_info_result, std::string instance_id);
   void TrySelectRememberedInstance();
-  void SetProject(const std::optional<orbit_ggp::Project>& project);
-  void SetupProjectSelectionFlagContent();
+  ErrorMessageOr<orbit_ggp::Account> GetAccountSync();
 };
 
 }  // namespace orbit_session_setup

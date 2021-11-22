@@ -37,11 +37,32 @@
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
-     <property name="lineWidth">
-      <number>1</number>
-     </property>
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="1" column="0">
+     <layout class="QVBoxLayout" name="verticalLayout_4">
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QRadioButton" name="radioButton">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
+        <property name="accessibleName">
+         <string>ConnectToStadia</string>
+        </property>
+        <property name="text">
+         <string>Connect to a Stadia instance</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QFrame" name="contentFrame">
         <property name="lineWidth">
          <number>0</number>
@@ -60,76 +81,6 @@
           <number>0</number>
          </property>
          <item>
-          <layout class="QHBoxLayout" name="titleBarLayout">
-           <item>
-            <widget class="QRadioButton" name="radioButton">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="font">
-              <font>
-               <pointsize>12</pointsize>
-              </font>
-             </property>
-             <property name="accessibleName">
-              <string>ConnectToStadia</string>
-             </property>
-             <property name="text">
-              <string>Connect to a Stadia instance</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <spacer name="horizontalSpacer_1">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>24</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QPushButton" name="refreshButton">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>23</width>
-               <height>23</height>
-              </size>
-             </property>
-             <property name="baseSize">
-              <size>
-               <width>23</width>
-               <height>23</height>
-              </size>
-             </property>
-             <property name="toolTip">
-              <string>Refresh Instance list</string>
-             </property>
-             <property name="accessibleName">
-              <string>RefreshInstanceList</string>
-             </property>
-             <property name="icon">
-              <iconset resource="../../icons/orbiticons.qrc">
-               <normaloff>:/actions/refresh</normaloff>:/actions/refresh</iconset>
-             </property>
-             <property name="autoDefault">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
           <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1">
            <item>
             <spacer name="horizontalSpacer">
@@ -146,81 +97,11 @@
            </item>
            <item>
             <layout class="QVBoxLayout" name="verticalLayout">
-             <property name="spacing">
-              <number>7</number>
-             </property>
              <item>
-              <widget class="QWidget" name="instancesSettingsWidget" native="true">
+              <widget class="orbit_session_setup::RetrieveInstancesWidget" name="retrieveInstancesWidget" native="true">
                <property name="enabled">
                 <bool>false</bool>
                </property>
-               <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,1,0,0">
-                <property name="leftMargin">
-                 <number>0</number>
-                </property>
-                <property name="topMargin">
-                 <number>5</number>
-                </property>
-                <property name="rightMargin">
-                 <number>0</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>0</number>
-                </property>
-                <item>
-                 <widget class="QComboBox" name="comboBox">
-                  <property name="sizeAdjustPolicy">
-                   <enum>QComboBox::AdjustToContents</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="instancesFilterLineEdit">
-                  <property name="placeholderText">
-                   <string>Filter Instances</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QCheckBox" name="allInstancesCheckBox">
-                  <property name="toolTip">
-                   <string>Enable the --all-reserved argument for the list of instances. This shows also instances owned by others.</string>
-                  </property>
-                  <property name="text">
-                   <string>All instances</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="refreshButton_2">
-                  <property name="minimumSize">
-                   <size>
-                    <width>23</width>
-                    <height>23</height>
-                   </size>
-                  </property>
-                  <property name="baseSize">
-                   <size>
-                    <width>23</width>
-                    <height>23</height>
-                   </size>
-                  </property>
-                  <property name="toolTip">
-                   <string>Refresh instance list and projects</string>
-                  </property>
-                  <property name="accessibleName">
-                   <string>RefreshInstanceList</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="../../icons/orbiticons.qrc">
-                    <normaloff>:/actions/refresh</normaloff>:/actions/refresh</iconset>
-                  </property>
-                  <property name="autoDefault">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
               </widget>
              </item>
              <item>
@@ -299,9 +180,6 @@
              </item>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0">
-               <property name="spacing">
-                <number>7</number>
-               </property>
                <item>
                 <widget class="QCheckBox" name="rememberCheckBox">
                  <property name="enabled">
@@ -350,6 +228,12 @@
    <class>orbit_session_setup::OverlayWidget</class>
    <extends>QWidget</extends>
    <header>SessionSetup/OverlayWidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>orbit_session_setup::RetrieveInstancesWidget</class>
+   <extends>QWidget</extends>
+   <header>SessionSetup/RetrieveInstancesWidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
