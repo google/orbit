@@ -77,7 +77,7 @@ static ErrorMessageOr<AddressRange> FindFunctionRelativeAddressInModule(
   return ErrorMessage{"No matching function found."};
 }
 
-[[nodiscard]] AddressRange GetFunctionRelativeAddressRangeOrDie(std::string_view function_name) {
+FunctionLocation FindFunctionOrDie(std::string_view function_name) {
   auto modules_or_error = orbit_object_utils::ReadModules(getpid());
   CHECK(!modules_or_error.has_error());
   auto& modules = modules_or_error.value();
@@ -89,15 +89,15 @@ static ErrorMessageOr<AddressRange> FindFunctionRelativeAddressInModule(
 
   if (main_module != modules.end()) {
     auto result = FindFunctionRelativeAddressInModule(function_name, main_module->file_path());
-    if (result.has_value()) return result.value();
+    if (result.has_value()) return FunctionLocation{main_module->file_path(), result.value()};
   }
 
   // If the main module doesn't contain the function we will look through all the other modules.
   for (const auto& module : modules) {
     auto result = FindFunctionRelativeAddressInModule(function_name, module.file_path());
-    if (result.has_value()) return result.value();
+    if (result.has_value()) return FunctionLocation{module.file_path(), result.value()};
   }
-  FATAL("GetFunctionRelativeAddressRangeOrDie hasn't found a function '%s'", function_name);
+  FATAL("FindFunctionOrDie hasn't found a function '%s'", function_name);
 }
 
 void DumpDisassembly(const std::vector<uint8_t>& code, uint64_t start_address) {

@@ -6,6 +6,7 @@
 #define USER_SPACE_INSTRUMENTATION_TEST_UTILS_H_
 
 #include <cstdint>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -13,8 +14,14 @@
 
 namespace orbit_user_space_instrumentation {
 
-// Returns the relative address of the function `function_name` in the test executable.
-AddressRange GetFunctionRelativeAddressRangeOrDie(std::string_view function_name);
+struct FunctionLocation {
+  std::string module_file_path;
+  AddressRange relative_address_range;
+};
+
+// Returns the relative address of the function `function_name` and the corresponding module
+// file path in the test process.
+[[nodiscard]] FunctionLocation FindFunctionOrDie(std::string_view function_name);
 
 // Returns the absolute virtual memory address range of function `function_name` in the test
 // executable.

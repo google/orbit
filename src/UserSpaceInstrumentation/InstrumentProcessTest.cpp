@@ -25,6 +25,7 @@
 #include "UserSpaceInstrumentation/AddressRange.h"
 #include "UserSpaceInstrumentation/Attach.h"
 #include "UserSpaceInstrumentation/InstrumentProcess.h"
+#include "capture.pb.h"
 
 namespace orbit_user_space_instrumentation {
 
@@ -37,27 +38,23 @@ using ::testing::HasSubstr;
 constexpr int kFunctionId1 = 42;
 constexpr int kFunctionId2 = 43;
 
+void AddFunctionToCaptureOptions(orbit_grpc_protos::CaptureOptions* capture_options,
+                                 std::string_view function_name, int function_id) {
+  const auto [module_file_path, range] = FindFunctionOrDie(function_name);
+  orbit_grpc_protos::InstrumentedFunction* my_function =
+      capture_options->add_instrumented_functions();
+  my_function->set_function_id(function_id);
+  my_function->set_file_offset(range.start);
+  my_function->set_function_size(range.end - range.start);
+  my_function->set_function_name(std::string{function_name});
+  my_function->set_file_path(module_file_path);
+}
+
 orbit_grpc_protos::CaptureOptions BuildCaptureOptions() {
   orbit_grpc_protos::CaptureOptions capture_options;
 
-  constexpr const char* kFunctionName1 = "SomethingToInstrument";
-  AddressRange range = GetFunctionRelativeAddressRangeOrDie(kFunctionName1);
-  orbit_grpc_protos::InstrumentedFunction* my_function =
-      capture_options.add_instrumented_functions();
-  my_function->set_function_id(kFunctionId1);
-  my_function->set_file_offset(range.start);
-  my_function->set_function_size(range.end - range.start);
-  my_function->set_function_name(kFunctionName1);
-  my_function->set_file_path(orbit_base::GetExecutablePath());
-
-  constexpr const char* kFunctionName2 = "ReturnImmediately";
-  range = GetFunctionRelativeAddressRangeOrDie(kFunctionName2);
-  my_function = capture_options.add_instrumented_functions();
-  my_function->set_function_id(kFunctionId2);
-  my_function->set_file_offset(range.start);
-  my_function->set_function_size(range.end - range.start);
-  my_function->set_function_name(kFunctionName2);
-  my_function->set_file_path(orbit_base::GetExecutablePath());
+  AddFunctionToCaptureOptions(&capture_options, "SomethingToInstrument", kFunctionId1);
+  AddFunctionToCaptureOptions(&capture_options, "ReturnImmediately", kFunctionId2);
 
   return capture_options;
 }

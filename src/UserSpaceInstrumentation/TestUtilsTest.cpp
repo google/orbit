@@ -64,7 +64,7 @@ TEST(TestUtilTest, Disassemble) {
 
 TEST(TestUtilTest, GetFunctionAddressRangeInFile) {
   constexpr const char* kFunctionName = "SomethingToDisassemble";
-  AddressRange range = GetFunctionRelativeAddressRangeOrDie(kFunctionName);
+  AddressRange range = FindFunctionOrDie(kFunctionName).relative_address_range;
   EXPECT_NE(0, range.start);
   EXPECT_LT(range.start, range.end);
 }
