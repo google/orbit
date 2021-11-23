@@ -8,9 +8,9 @@
 #include <algorithm>
 #include <iterator>
 
+#include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Logging.h"
 #include "google/protobuf/util/message_differencer.h"
-#include "process.pb.h"
 
 namespace orbit_session_setup {
 

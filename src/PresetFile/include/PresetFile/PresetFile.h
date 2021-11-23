@@ -8,8 +8,8 @@
 #include <filesystem>
 #include <vector>
 
+#include "ClientProtos/preset.pb.h"
 #include "OrbitBase/Result.h"
-#include "preset.pb.h"
 
 namespace orbit_preset_file {
 

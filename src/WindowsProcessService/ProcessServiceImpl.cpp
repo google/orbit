@@ -13,6 +13,8 @@
 #include <string>
 #include <vector>
 
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/process.pb.h"
 #include "ObjectUtils/ObjectFile.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
@@ -21,8 +23,6 @@
 #include "WindowsUtils/ListModules.h"
 #include "WindowsUtils/ProcessList.h"
 #include "WindowsUtils/ReadProcessMemory.h"
-#include "module.pb.h"
-#include "process.pb.h"
 
 namespace orbit_windows_process_service {
 

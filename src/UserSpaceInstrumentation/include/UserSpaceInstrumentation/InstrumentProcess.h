@@ -13,9 +13,9 @@
 #include <filesystem>
 #include <memory>
 
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Result.h"
 #include "UserSpaceInstrumentation/AddressRange.h"
-#include "capture.pb.h"
 
 namespace orbit_user_space_instrumentation {
 

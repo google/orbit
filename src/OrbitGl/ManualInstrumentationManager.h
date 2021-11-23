@@ -10,13 +10,13 @@
 #include <optional>
 #include <string>
 
+#include "ClientProtos/capture_data.pb.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
 #include "StringManager/StringManager.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/synchronization/mutex.h"
-#include "capture_data.pb.h"
 
 class ManualInstrumentationManager {
  public:

@@ -22,6 +22,7 @@
 #include "CaptureViewElement.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/CaptureData.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Geometry.h"
@@ -37,7 +38,6 @@
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "absl/base/casts.h"
-#include "capture_data.pb.h"
 
 using orbit_accessibility::AccessibleInterface;
 using orbit_accessibility::AccessibleWidgetBridge;

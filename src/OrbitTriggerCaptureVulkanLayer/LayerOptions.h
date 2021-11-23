@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-#include "layer_config.pb.h"
+#include "OrbitTriggerCaptureVulkanLayer/layer_config.pb.h"
 
 // Reads the config file into a proto to be used in the layer.
 class LayerOptions {

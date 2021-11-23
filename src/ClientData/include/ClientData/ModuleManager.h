@@ -10,10 +10,10 @@
 
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
+#include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/module.pb.h"
 #include "absl/container/node_hash_map.h"
 #include "absl/synchronization/mutex.h"
-#include "capture_data.pb.h"
-#include "module.pb.h"
 
 namespace orbit_client_data {
 

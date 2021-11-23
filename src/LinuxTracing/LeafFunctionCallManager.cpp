@@ -16,8 +16,8 @@
 #include <memory>
 #include <vector>
 
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
-#include "capture.pb.h"
 
 namespace orbit_linux_tracing {
 

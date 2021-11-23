@@ -41,13 +41,13 @@
 #include "CaptureFileInfo/LoadCaptureWidget.h"
 #include "ClientFlags/ClientFlags.h"
 #include "ClientServices/ProcessManager.h"
+#include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Logging.h"
 #include "SessionSetup/ConnectToStadiaWidget.h"
 #include "SessionSetup/Connections.h"
 #include "SessionSetup/OverlayWidget.h"
 #include "SessionSetup/ProcessItemModel.h"
 #include "SessionSetup/TargetConfiguration.h"
-#include "process.pb.h"
 #include "ui_SessionSetupDialog.h"
 
 namespace {

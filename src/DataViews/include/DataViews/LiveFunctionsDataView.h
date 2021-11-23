@@ -13,12 +13,12 @@
 #include <utility>
 #include <vector>
 
+#include "ClientProtos/capture_data.pb.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
 #include "DataViews/LiveFunctionsInterface.h"
+#include "GrpcProtos/capture.pb.h"
 #include "MetricsUploader/MetricsUploader.h"
-#include "capture.pb.h"
-#include "capture_data.pb.h"
 
 namespace orbit_data_views {
 

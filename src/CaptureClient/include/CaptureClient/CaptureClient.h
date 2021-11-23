@@ -21,14 +21,14 @@
 #include "ClientData/ProcessData.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/Constants.h"
+#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/services.grpc.pb.h"
+#include "GrpcProtos/services.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
-#include "capture.pb.h"
-#include "capture_data.pb.h"
-#include "services.grpc.pb.h"
-#include "services.pb.h"
 
 namespace orbit_capture_client {
 

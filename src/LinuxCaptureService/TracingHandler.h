@@ -12,14 +12,14 @@
 #include <memory>
 #include <string>
 
+#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/tracepoint.pb.h"
 #include "Introspection/Introspection.h"
 #include "LinuxTracing/Tracer.h"
 #include "LinuxTracing/TracerListener.h"
 #include "OrbitBase/Logging.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
 #include "UserSpaceInstrumentationAddressesImpl.h"
-#include "capture.pb.h"
-#include "tracepoint.pb.h"
 
 namespace orbit_linux_capture_service {
 

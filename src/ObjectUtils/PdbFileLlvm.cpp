@@ -8,10 +8,10 @@
 
 #include <memory>
 
+#include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/CoffFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "symbol.pb.h"
 
 using orbit_grpc_protos::ModuleSymbols;
 using orbit_grpc_protos::SymbolInfo;

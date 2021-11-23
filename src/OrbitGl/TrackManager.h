@@ -17,6 +17,7 @@
 
 #include "AsyncTrack.h"
 #include "CGroupAndProcessMemoryTrack.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "FrameTrack.h"
 #include "GpuTrack.h"
 #include "GraphTrack.h"
@@ -29,7 +30,6 @@
 #include "Track.h"
 #include "VariableTrack.h"
 #include "Viewport.h"
-#include "capture_data.pb.h"
 
 class OrbitApp;
 class Timegraph;

@@ -10,7 +10,7 @@
 
 #include <mutex>
 
-#include "capture_data.pb.h"
+#include "ClientProtos/capture_data.pb.h"
 
 using orbit_client_protos::TimerInfo;
 

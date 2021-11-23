@@ -11,7 +11,7 @@
 
 #include "LayerOptions.h"
 #include "OrbitCaptureGgpClient/OrbitCaptureGgpClient.h"
-#include "layer_config.pb.h"
+#include "OrbitTriggerCaptureVulkanLayer/layer_config.pb.h"
 
 // Contains the logic of the OrbitTriggerCaptureVulkanLayer to run Orbit captures automatically when
 // the time per frame is higher than a certain threshold. It also instantiates the classes and

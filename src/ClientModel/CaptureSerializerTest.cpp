@@ -13,7 +13,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientModel/CaptureSerializer.h"
-#include "module.pb.h"
+#include "GrpcProtos/module.pb.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleManager;

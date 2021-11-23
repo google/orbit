@@ -5,10 +5,10 @@
 #ifndef LINUX_TRACING_LOST_AND_DISCARDED_EVENT_VISITOR_H_
 #define LINUX_TRACING_LOST_AND_DISCARDED_EVENT_VISITOR_H_
 
+#include "GrpcProtos/capture.pb.h"
 #include "LinuxTracing/TracerListener.h"
 #include "PerfEvent.h"
 #include "PerfEventVisitor.h"
-#include "capture.pb.h"
 
 namespace orbit_linux_tracing {
 

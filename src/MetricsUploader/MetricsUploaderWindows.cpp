@@ -9,10 +9,10 @@
 
 #include "MetricsUploader/MetricsUploader.h"
 #include "MetricsUploader/MetricsUploaderStub.h"
+#include "MetricsUploader/orbit_log_event.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitVersion/OrbitVersion.h"
-#include "orbit_log_event.pb.h"
 
 namespace orbit_metrics_uploader {
 

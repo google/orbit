@@ -5,9 +5,9 @@
 #include "IntrospectionWindow.h"
 
 #include "App.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"
 #include "TimeGraph.h"
-#include "capture_data.pb.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_protos::TimerInfo;

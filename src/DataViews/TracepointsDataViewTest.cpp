@@ -8,8 +8,8 @@
 #include "DataViewTestUtils.h"
 #include "DataViews/DataView.h"
 #include "DataViews/TracepointsDataView.h"
+#include "GrpcProtos/tracepoint.pb.h"
 #include "MockAppInterface.h"
-#include "tracepoint.pb.h"
 
 using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;

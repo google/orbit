@@ -13,12 +13,12 @@
 #include <optional>
 
 #include "ContextSwitchManager.h"
+#include "GrpcProtos/capture.pb.h"
 #include "LinuxTracing/TracerListener.h"
 #include "OrbitBase/Logging.h"
 #include "PerfEvent.h"
 #include "PerfEventVisitor.h"
 #include "ThreadStateManager.h"
-#include "capture.pb.h"
 
 namespace orbit_linux_tracing {
 

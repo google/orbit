@@ -5,7 +5,7 @@
 #ifndef LINUX_TRACING_TRACER_LISTENER_H_
 #define LINUX_TRACING_TRACER_LISTENER_H_
 
-#include "capture.pb.h"
+#include "GrpcProtos/capture.pb.h"
 
 namespace orbit_linux_tracing {
 

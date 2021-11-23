@@ -15,9 +15,9 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/SafeStrerror.h"
+#include "OrbitTriggerCaptureVulkanLayer/layer_config.pb.h"
 #include "google/protobuf/io/zero_copy_stream_impl.h"
 #include "google/protobuf/text_format.h"
-#include "layer_config.pb.h"
 
 using orbit_vulkan_capture_protos::LayerConfig;
 

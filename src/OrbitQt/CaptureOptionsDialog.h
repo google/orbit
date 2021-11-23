@@ -12,8 +12,8 @@
 #include <QWidget>
 #include <memory>
 
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
-#include "capture.pb.h"
 #include "ui_CaptureOptionsDialog.h"
 
 namespace orbit_qt {

@@ -13,10 +13,10 @@
 
 #include "ClientData/CallstackTypes.h"
 #include "ClientData/CaptureData.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
 #include "ThreadBar.h"
 #include "Viewport.h"
-#include "capture_data.pb.h"
 
 class OrbitApp;
 

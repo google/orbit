@@ -13,7 +13,7 @@
 #include <QtCore>
 #include <vector>
 
-#include "process.pb.h"
+#include "GrpcProtos/process.pb.h"
 
 namespace orbit_session_setup {
 

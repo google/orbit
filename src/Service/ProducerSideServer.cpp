@@ -12,9 +12,9 @@
 
 #include <string>
 
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/SafeStrerror.h"
-#include "capture.pb.h"
 
 namespace orbit_service {
 

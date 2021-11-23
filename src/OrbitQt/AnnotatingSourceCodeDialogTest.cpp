@@ -11,6 +11,7 @@
 #include <filesystem>
 
 #include "AnnotatingSourceCodeDialog.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "CodeReport/AnnotateDisassembly.h"
 #include "CodeReport/AnnotatingLine.h"
 #include "CodeReport/DisassemblyReport.h"
@@ -21,7 +22,6 @@
 #include "SourcePathsMapping/MappingManager.h"
 #include "SyntaxHighlighter/X86Assembly.h"
 #include "Test/Path.h"
-#include "capture_data.pb.h"
 
 using namespace std::string_view_literals;
 const std::string_view kMainFunctionInstructions =

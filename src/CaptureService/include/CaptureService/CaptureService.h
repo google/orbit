@@ -12,11 +12,11 @@
 #include <memory>
 
 #include "CaptureStartStopListener.h"
+#include "GrpcProtos/services.grpc.pb.h"
+#include "GrpcProtos/services.pb.h"
 #include "OrbitBase/Result.h"
 #include "ProducerEventProcessor/GrpcClientCaptureEventCollector.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
-#include "services.grpc.pb.h"
-#include "services.pb.h"
 
 namespace orbit_capture_service {
 

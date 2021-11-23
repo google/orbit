@@ -5,7 +5,7 @@
 #include <cstdint>
 
 #include "MetricsUploader/Result.h"
-#include "orbit_log_event.pb.h"
+#include "MetricsUploader/orbit_log_event.pb.h"
 
 using orbit_metrics_uploader::OrbitLogEvent;
 using orbit_metrics_uploader::Result;

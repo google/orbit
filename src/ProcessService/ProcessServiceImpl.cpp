@@ -13,11 +13,11 @@
 #include <string>
 #include <vector>
 
+#include "GrpcProtos/process.pb.h"
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "ProcessServiceUtils.h"
-#include "process.pb.h"
 
 namespace orbit_process_service {
 

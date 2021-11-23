@@ -9,9 +9,9 @@
 
 #include <stack>
 
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 #include "PerfEventRecords.h"
-#include "capture.pb.h"
 
 namespace orbit_linux_tracing {
 

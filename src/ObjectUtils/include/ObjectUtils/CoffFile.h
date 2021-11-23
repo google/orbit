@@ -13,9 +13,9 @@
 #include <memory>
 #include <optional>
 
+#include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/ObjectFile.h"
 #include "OrbitBase/Result.h"
-#include "symbol.pb.h"
 
 namespace orbit_object_utils {
 

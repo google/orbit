@@ -7,7 +7,7 @@
 
 #include <absl/container/flat_hash_set.h>
 
-#include "tracepoint.pb.h"
+#include "GrpcProtos/tracepoint.pb.h"
 
 namespace orbit_client_data {
 

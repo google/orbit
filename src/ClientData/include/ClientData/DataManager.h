@@ -16,10 +16,10 @@
 #include "ClientData/FunctionInfoSet.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/Constants.h"
-#include "capture.pb.h"
-#include "capture_data.pb.h"
-#include "tracepoint.pb.h"
+#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/tracepoint.pb.h"
 
 namespace orbit_client_data {
 

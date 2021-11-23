@@ -5,12 +5,12 @@
 #ifndef ORBIT_GL_PAGE_FAULTS_TRACK_H_
 #define ORBIT_GL_PAGE_FAULTS_TRACK_H_
 
+#include "ClientProtos/capture_data.pb.h"
 #include "MajorPageFaultsTrack.h"
 #include "MinorPageFaultsTrack.h"
 #include "Timer.h"
 #include "Track.h"
 #include "Viewport.h"
-#include "capture_data.pb.h"
 
 namespace orbit_gl {
 

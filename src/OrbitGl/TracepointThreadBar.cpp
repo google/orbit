@@ -14,17 +14,17 @@
 #include "Batcher.h"
 #include "CaptureViewElement.h"
 #include "ClientData/CaptureData.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "ClientServices/TracepointServiceClient.h"
 #include "CoreMath.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
+#include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
-#include "capture_data.pb.h"
-#include "tracepoint.pb.h"
 
 namespace orbit_gl {
 

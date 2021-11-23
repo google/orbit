@@ -5,11 +5,11 @@
 #ifndef CAPTURE_SERVICE_MEMORY_INFO_HANDLER_H_
 #define CAPTURE_SERVICE_MEMORY_INFO_HANDLER_H_
 
+#include "GrpcProtos/capture.pb.h"
 #include "MemoryTracing/MemoryInfoListener.h"
 #include "MemoryTracing/MemoryInfoProducer.h"
 #include "OrbitBase/Logging.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
-#include "capture.pb.h"
 
 namespace orbit_linux_capture_service {
 

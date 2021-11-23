@@ -5,10 +5,10 @@
 #ifndef WINDOWS_TRACING_TRACER_IMPL_H_
 #define WINDOWS_TRACING_TRACER_IMPL_H_
 
+#include "GrpcProtos/capture.pb.h"
 #include "KrabsTracer.h"
 #include "WindowsTracing/Tracer.h"
 #include "WindowsTracing/TracerListener.h"
-#include "capture.pb.h"
 
 namespace orbit_windows_tracing {
 

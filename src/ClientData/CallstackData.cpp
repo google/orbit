@@ -11,8 +11,8 @@
 #include <mutex>
 #include <utility>
 
+#include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"
-#include "capture_data.pb.h"
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;

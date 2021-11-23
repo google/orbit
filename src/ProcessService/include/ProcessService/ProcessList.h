@@ -14,9 +14,9 @@
 #include <utility>
 #include <vector>
 
+#include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Result.h"
 #include "Process.h"
-#include "process.pb.h"
 
 namespace orbit_process_service_internal {
 

@@ -35,9 +35,10 @@ target_link_libraries(MetricsUploader PUBLIC rpcrt4.lib)
 endif()
 
 # generate protos for communication
-protobuf_generate(TARGET MetricsUploader PROTOS proto/orbit_log_event.proto)
-target_include_directories(MetricsUploader PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_include_directories(MetricsUploader PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/proto)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/protos/MetricsUploader)
+protobuf_generate(TARGET MetricsUploader PROTOS orbit_log_event.proto
+                  PROTOC_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/protos/MetricsUploader)
+target_include_directories(MetricsUploader PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/protos)
 target_link_libraries(MetricsUploader PUBLIC CONAN_PKG::protobuf)
 
 if (WIN32)

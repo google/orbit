@@ -6,8 +6,8 @@
 
 #include <memory>
 
+#include "GrpcProtos/process.pb.h"
 #include "SessionSetup/TargetLabel.h"
-#include "process.pb.h"
 
 namespace orbit_session_setup {
 

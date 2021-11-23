@@ -13,10 +13,10 @@
 #include <vector>
 
 #include "ClientData/ModuleData.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "ObjectUtils/Address.h"
 #include "OrbitBase/Logging.h"
 #include "absl/synchronization/mutex.h"
-#include "capture_data.pb.h"
 
 using orbit_client_protos::FunctionInfo;
 

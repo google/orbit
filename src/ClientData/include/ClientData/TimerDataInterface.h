@@ -5,8 +5,8 @@
 #ifndef CLIENT_DATA_TIMER_DATA_INTERFACE_H_
 #define CLIENT_DATA_TIMER_DATA_INTERFACE_H_
 
+#include "ClientProtos/capture_data.pb.h"
 #include "TimerChain.h"
-#include "capture_data.pb.h"
 
 namespace orbit_client_data {
 

@@ -9,10 +9,10 @@
 
 #include "CaptureService/CommonProducerCaptureEventBuilders.h"
 #include "GrpcProtos/Constants.h"
+#include "GrpcProtos/capture.pb.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
-#include "capture.pb.h"
 
 using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureOptions;

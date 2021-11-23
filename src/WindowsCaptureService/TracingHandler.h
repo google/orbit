@@ -12,12 +12,12 @@
 #include <memory>
 #include <string>
 
+#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/Logging.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
 #include "WindowsTracing/Tracer.h"
 #include "WindowsTracing/TracerListener.h"
-#include "capture.pb.h"
-#include "tracepoint.pb.h"
 
 namespace orbit_windows_capture_service {
 

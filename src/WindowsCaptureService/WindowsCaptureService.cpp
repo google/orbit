@@ -6,9 +6,9 @@
 
 #include <stdint.h>
 
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "TracingHandler.h"
-#include "capture.pb.h"
 
 namespace orbit_windows_capture_service {
 

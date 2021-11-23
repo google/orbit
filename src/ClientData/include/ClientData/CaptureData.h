@@ -33,11 +33,11 @@
 #include "ClientData/TimestampIntervalSet.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/TracepointData.h"
+#include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/process.pb.h"
+#include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/Logging.h"
-#include "capture.pb.h"
-#include "capture_data.pb.h"
-#include "process.pb.h"
-#include "tracepoint.pb.h"
 
 namespace orbit_client_data {
 

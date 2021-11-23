@@ -10,8 +10,8 @@
 
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
-#include "module.pb.h"
-#include "symbol.pb.h"
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/symbol.pb.h"
 
 namespace orbit_client_data {
 

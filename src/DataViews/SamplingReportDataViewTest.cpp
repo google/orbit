@@ -12,6 +12,7 @@
 #include "ClientData/ModuleData.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "DataViewTestUtils.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/CallstackDataView.h"
@@ -19,7 +20,6 @@
 #include "DataViews/SamplingReportDataView.h"
 #include "DataViews/SamplingReportInterface.h"
 #include "MockAppInterface.h"
-#include "capture_data.pb.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;

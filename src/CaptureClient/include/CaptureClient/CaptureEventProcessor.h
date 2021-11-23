@@ -12,7 +12,7 @@
 #include <string>
 
 #include "CaptureClient/CaptureListener.h"
-#include "capture.pb.h"
+#include "GrpcProtos/capture.pb.h"
 
 namespace orbit_capture_client {
 

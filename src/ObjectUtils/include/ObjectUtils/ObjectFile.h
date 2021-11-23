@@ -12,9 +12,9 @@
 #include <memory>
 #include <string>
 
+#include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/SymbolsFile.h"
 #include "OrbitBase/Result.h"
-#include "symbol.pb.h"
 
 namespace orbit_object_utils {
 

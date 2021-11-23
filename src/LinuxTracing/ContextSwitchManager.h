@@ -12,7 +12,7 @@
 #include <cstdint>
 #include <optional>
 
-#include "capture.pb.h"
+#include "GrpcProtos/capture.pb.h"
 
 namespace orbit_linux_tracing {
 

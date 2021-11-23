@@ -8,12 +8,12 @@
 #include <string>
 
 #include "CallstackThreadBar.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
 #include "TimerTrack.h"
 #include "Track.h"
 #include "Viewport.h"
-#include "capture_data.pb.h"
 
 class OrbitApp;
 

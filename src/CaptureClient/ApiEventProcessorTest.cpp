@@ -13,9 +13,9 @@
 #include "CaptureClient/ApiEventProcessor.h"
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureClient/CaptureListener.h"
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "capture.pb.h"
 
 namespace orbit_capture_client {
 

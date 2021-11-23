@@ -9,7 +9,7 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/synchronization/mutex.h>
 
-#include "capture.pb.h"
+#include "GrpcProtos/capture.pb.h"
 
 namespace orbit_memory_tracing {
 

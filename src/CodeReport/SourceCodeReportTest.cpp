@@ -6,10 +6,10 @@
 #include <gtest/gtest.h>
 
 #include "ClientData/PostProcessedSamplingData.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "CodeReport/SourceCodeReport.h"
+#include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/ObjectFile.h"
-#include "capture_data.pb.h"
-#include "symbol.pb.h"
 
 namespace {
 class MockElfFile : public orbit_object_utils::ElfFile {

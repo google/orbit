@@ -12,6 +12,7 @@
 #include <string_view>
 
 #include "CallstackThreadBar.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
 #include "GpuDebugMarkerTrack.h"
 #include "GpuSubmissionTrack.h"
@@ -19,7 +20,6 @@
 #include "TimerTrack.h"
 #include "Track.h"
 #include "Viewport.h"
-#include "capture_data.pb.h"
 
 class OrbitApp;
 class TextRenderer;

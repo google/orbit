@@ -10,9 +10,9 @@
 #include <thread>
 #include <utility>
 
+#include "GrpcProtos/capture.pb.h"
 #include "LinuxTracing/TracerListener.h"
 #include "LinuxTracing/UserSpaceInstrumentationAddresses.h"
-#include "capture.pb.h"
 
 namespace orbit_linux_tracing {
 

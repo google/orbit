@@ -17,6 +17,7 @@
 #include "CaptureViewElement.h"
 #include "ClientData/CallstackTypes.h"
 #include "ClientData/TimerChain.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "Containers/BlockChain.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
@@ -25,7 +26,6 @@
 #include "Track.h"
 #include "Viewport.h"
 #include "absl/synchronization/mutex.h"
-#include "capture_data.pb.h"
 
 class OrbitApp;
 

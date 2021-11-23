@@ -41,10 +41,10 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "CopyKeySequenceEnabledTreeView.h"
 #include "DataViews/FunctionsDataView.h"
 #include "OrbitBase/Logging.h"
-#include "capture_data.pb.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;

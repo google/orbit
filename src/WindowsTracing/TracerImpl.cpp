@@ -4,10 +4,10 @@
 
 #include "TracerImpl.h"
 
+#include "GrpcProtos/module.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
 #include "WindowsUtils/ListModules.h"
-#include "module.pb.h"
 
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ModulesSnapshot;

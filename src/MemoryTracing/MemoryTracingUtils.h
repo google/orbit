@@ -7,8 +7,8 @@
 
 #include <string_view>
 
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Result.h"
-#include "capture.pb.h"
 
 namespace orbit_memory_tracing {
 

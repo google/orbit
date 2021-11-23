@@ -14,11 +14,11 @@
 #include <string_view>
 #include <vector>
 
+#include "GrpcProtos/module.pb.h"
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/Result.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
-#include "module.pb.h"
 
 using orbit_test_utils::HasNoError;
 

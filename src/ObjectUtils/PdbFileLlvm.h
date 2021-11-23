@@ -24,10 +24,10 @@
 #include <array>
 #include <filesystem>
 
+#include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/PdbFile.h"
 #include "ObjectUtils/WindowsBuildIdUtils.h"
 #include "OrbitBase/Result.h"
-#include "symbol.pb.h"
 
 namespace orbit_object_utils {
 

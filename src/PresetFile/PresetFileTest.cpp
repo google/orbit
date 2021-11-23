@@ -5,10 +5,10 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "ClientProtos/preset.pb.h"
 #include "OrbitBase/TemporaryFile.h"
 #include "PresetFile/PresetFile.h"
 #include "TestUtils/TestUtils.h"
-#include "preset.pb.h"
 
 namespace orbit_preset_file {
 

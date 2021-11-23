@@ -16,10 +16,10 @@
 
 #include <system_error>
 
+#include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/WindowsBuildIdUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "symbol.pb.h"
 
 namespace orbit_object_utils {
 

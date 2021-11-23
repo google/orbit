@@ -8,9 +8,9 @@
 #include <cstdint>
 #include <filesystem>
 
+#include "MetricsUploader/orbit_log_event.pb.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
-#include "orbit_log_event.pb.h"
 
 namespace orbit_metrics_uploader {
 

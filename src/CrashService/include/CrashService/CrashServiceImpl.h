@@ -7,8 +7,8 @@
 
 #include <grpcpp/grpcpp.h>
 
-#include "services.grpc.pb.h"
-#include "services.pb.h"
+#include "GrpcProtos/services.grpc.pb.h"
+#include "GrpcProtos/services.pb.h"
 
 namespace orbit_crash_service {
 

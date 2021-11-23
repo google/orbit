@@ -11,9 +11,9 @@
 #include <optional>
 #include <string_view>
 
+#include "ClientProtos/capture_data.pb.h"
 #include "CodeReport/CodeReport.h"
 #include "CodeReport/DisassemblyReport.h"
-#include "capture_data.pb.h"
 
 namespace orbit_gl {
 

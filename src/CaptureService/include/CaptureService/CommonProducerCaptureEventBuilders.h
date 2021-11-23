@@ -11,7 +11,7 @@
 
 #include <string>
 
-#include "capture.pb.h"
+#include "GrpcProtos/capture.pb.h"
 
 namespace orbit_capture_service {
 

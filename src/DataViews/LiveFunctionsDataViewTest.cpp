@@ -12,6 +12,7 @@
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "DataViewTestUtils.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
@@ -19,10 +20,9 @@
 #include "DataViews/LiveFunctionsInterface.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GrpcProtos/Constants.h"
+#include "GrpcProtos/capture.pb.h"
 #include "MetricsUploader/MetricsUploaderStub.h"
 #include "MockAppInterface.h"
-#include "capture.pb.h"
-#include "capture_data.pb.h"
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;

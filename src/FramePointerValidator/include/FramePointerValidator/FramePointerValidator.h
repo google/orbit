@@ -9,7 +9,7 @@
 #include <optional>
 #include <vector>
 
-#include "code_block.pb.h"
+#include "GrpcProtos/code_block.pb.h"
 
 class FramePointerValidator {
  public:

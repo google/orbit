@@ -7,9 +7,9 @@
 
 #include <sys/types.h>
 
+#include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Result.h"
 #include "ProcessService/CpuTime.h"
-#include "process.pb.h"
 
 namespace orbit_process_service_internal {
 

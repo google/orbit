@@ -7,9 +7,9 @@
 #include <absl/strings/str_format.h>
 
 #include "CaptureWindow.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "Introspection/Introspection.h"
 #include "SchedulingStats.h"
-#include "capture_data.pb.h"
 
 ErrorMessageOr<void> CaptureStats::Generate(CaptureWindow* capture_window, uint64_t start_ns,
                                             uint64_t end_ns) {

@@ -9,8 +9,8 @@
 
 #include <string>
 
+#include "GrpcProtos/services.pb.h"
 #include "OrbitBase/Logging.h"
-#include "services.pb.h"
 
 namespace orbit_client_services {
 

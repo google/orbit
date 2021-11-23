@@ -6,8 +6,8 @@
 #include "CaptureFile/CaptureFile.h"
 #include "CaptureFile/CaptureFileHelpers.h"
 #include "CaptureFile/CaptureFileOutputStream.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
-#include "capture_data.pb.h"
 
 using orbit_capture_file::CaptureFileOutputStream;
 using orbit_client_protos::UserDefinedCaptureInfo;

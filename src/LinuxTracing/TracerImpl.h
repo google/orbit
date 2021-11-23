@@ -11,7 +11,6 @@
 #include <absl/synchronization/mutex.h>
 #include <linux/perf_event.h>
 #include <sys/types.h>
-#include <tracepoint.pb.h>
 
 #include <algorithm>
 #include <atomic>
@@ -23,6 +22,8 @@
 
 #include "Function.h"
 #include "GpuTracepointVisitor.h"
+#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/tracepoint.pb.h"
 #include "LeafFunctionCallManager.h"
 #include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"
@@ -39,7 +40,6 @@
 #include "UprobesFunctionCallManager.h"
 #include "UprobesReturnAddressManager.h"
 #include "UprobesUnwindingVisitor.h"
-#include "capture.pb.h"
 
 namespace orbit_linux_tracing {
 

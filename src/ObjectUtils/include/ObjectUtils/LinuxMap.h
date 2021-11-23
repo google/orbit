@@ -14,8 +14,8 @@
 #include <filesystem>
 #include <vector>
 
+#include "GrpcProtos/module.pb.h"
 #include "OrbitBase/Result.h"
-#include "module.pb.h"
 
 namespace orbit_object_utils {
 

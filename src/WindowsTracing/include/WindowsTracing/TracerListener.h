@@ -5,7 +5,7 @@
 #ifndef WINDOWS_TRACING_TRACER_LISTENER_H_
 #define WINDOWS_TRACING_TRACER_LISTENER_H_
 
-#include "capture.pb.h"
+#include "GrpcProtos/capture.pb.h"
 
 namespace orbit_windows_tracing {
 

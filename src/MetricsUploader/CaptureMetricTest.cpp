@@ -10,8 +10,8 @@
 
 #include "MetricsUploader/CaptureMetric.h"
 #include "MetricsUploader/MetricsUploader.h"
+#include "MetricsUploader/orbit_log_event.pb.h"
 #include "Test/Path.h"
-#include "orbit_log_event.pb.h"
 
 namespace orbit_metrics_uploader {
 

@@ -15,10 +15,10 @@
 #include <string>
 
 #include "ClientData/CaptureData.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "capture_data.pb.h"
 
 namespace orbit_client_model_internal {
 std::string FormatTimeWithUnderscores(absl::Time time);

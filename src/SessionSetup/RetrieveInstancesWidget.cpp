@@ -16,12 +16,12 @@
 #include <optional>
 
 #include "MetricsUploader/ScopedMetric.h"
+#include "MetricsUploader/orbit_log_event.pb.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "SessionSetup/PersistentStorage.h"
 #include "SessionSetup/RetrieveInstances.h"
-#include "orbit_log_event.pb.h"
 #include "ui_RetrieveInstancesWidget.h"
 
 namespace orbit_session_setup {

@@ -11,8 +11,8 @@
 #include <iosfwd>
 #include <limits>
 
+#include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"
-#include "capture_data.pb.h"
 
 namespace orbit_client_data {
 

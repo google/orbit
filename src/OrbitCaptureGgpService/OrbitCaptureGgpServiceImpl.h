@@ -9,10 +9,10 @@
 
 #include <memory>
 
+#include "GrpcProtos/services_ggp.grpc.pb.h"
+#include "GrpcProtos/services_ggp.pb.h"
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitClientGgp/ClientGgp.h"
-#include "services_ggp.grpc.pb.h"
-#include "services_ggp.pb.h"
 
 // Logic and data behind the server's behavior.
 class CaptureClientGgpServiceImpl final

@@ -6,8 +6,8 @@
 
 #include <absl/container/flat_hash_map.h>
 
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
-#include "capture.pb.h"
 
 using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::ApiEvent;

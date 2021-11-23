@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 
-#include "capture_data.pb.h"
+#include "ClientProtos/capture_data.pb.h"
 
 namespace orbit_data_views {
 

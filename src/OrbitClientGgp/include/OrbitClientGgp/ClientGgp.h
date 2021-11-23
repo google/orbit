@@ -24,14 +24,14 @@
 #include "ClientData/ProcessData.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "ClientServices/ProcessClient.h"
+#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitClientGgp/ClientGgpOptions.h"
-#include "capture.pb.h"
-#include "capture_data.pb.h"
-#include "tracepoint.pb.h"
 
 class ClientGgp {
  public:

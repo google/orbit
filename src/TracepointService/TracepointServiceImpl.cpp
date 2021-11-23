@@ -4,10 +4,10 @@
 
 #include "TracepointService/TracepointServiceImpl.h"
 
+#include "GrpcProtos/services.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "ReadTracepoints.h"
-#include "services.pb.h"
 
 namespace orbit_tracepoint_service {
 

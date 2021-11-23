@@ -14,9 +14,9 @@
 #include <utility>
 
 #include "ClientData/PostProcessedSamplingData.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "CodeReport/CodeReport.h"
 #include "ObjectUtils/ElfFile.h"
-#include "capture_data.pb.h"
 
 namespace orbit_code_report {
 

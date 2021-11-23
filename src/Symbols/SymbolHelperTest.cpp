@@ -10,6 +10,8 @@
 #include <filesystem>
 #include <string>
 
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/SymbolsFile.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/File.h"
@@ -19,8 +21,6 @@
 #include "Symbols/SymbolHelper.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
-#include "module.pb.h"
-#include "symbol.pb.h"
 
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ModuleSymbols;

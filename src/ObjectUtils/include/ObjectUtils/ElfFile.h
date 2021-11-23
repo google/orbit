@@ -14,11 +14,11 @@
 #include <string>
 #include <vector>
 
+#include "GrpcProtos/symbol.pb.h"
 #include "ObjectFile.h"
 #include "OrbitBase/Result.h"
 #include "llvm/Object/Binary.h"
 #include "llvm/Object/ObjectFile.h"
-#include "symbol.pb.h"
 
 namespace orbit_object_utils {
 

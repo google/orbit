@@ -12,9 +12,9 @@
 #include <memory>
 #include <string>
 
+#include "GrpcProtos/services.grpc.pb.h"
+#include "GrpcProtos/services.pb.h"
 #include "ProcessService/ProcessList.h"
-#include "services.grpc.pb.h"
-#include "services.pb.h"
 
 namespace orbit_process_service {
 

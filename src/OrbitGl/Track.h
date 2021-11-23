@@ -18,6 +18,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/TimerChain.h"
 #include "ClientData/TimerData.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "Containers/BlockChain.h"
 #include "CoreMath.h"
 #include "GteVector.h"
@@ -26,7 +27,6 @@
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
 #include "Viewport.h"
-#include "capture_data.pb.h"
 
 class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_from_this<Track> {
  public:

@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "ClientData/ModuleData.h"
-#include "services.grpc.pb.h"
+#include "GrpcProtos/services.grpc.pb.h"
 
 class OrbitApp;
 

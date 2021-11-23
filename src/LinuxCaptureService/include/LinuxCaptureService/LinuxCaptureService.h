@@ -12,11 +12,11 @@
 #include <memory>
 
 #include "CaptureService/CaptureService.h"
+#include "GrpcProtos/services.grpc.pb.h"
+#include "GrpcProtos/services.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
 #include "UserSpaceInstrumentation/InstrumentProcess.h"
-#include "services.grpc.pb.h"
-#include "services.pb.h"
 
 namespace orbit_linux_capture_service {
 

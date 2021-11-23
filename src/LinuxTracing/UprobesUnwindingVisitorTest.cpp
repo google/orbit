@@ -23,6 +23,7 @@
 #include <utility>
 #include <vector>
 
+#include "GrpcProtos/capture.pb.h"
 #include "LeafFunctionCallManager.h"
 #include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"
@@ -34,7 +35,6 @@
 #include "UprobesFunctionCallManager.h"
 #include "UprobesReturnAddressManager.h"
 #include "UprobesUnwindingVisitor.h"
-#include "capture.pb.h"
 
 using ::testing::_;
 using ::testing::AllOf;
