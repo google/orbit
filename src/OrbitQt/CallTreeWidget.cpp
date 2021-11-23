@@ -39,6 +39,7 @@
 #include "App.h"
 #include "CallTreeViewItemModel.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
 #include "CopyKeySequenceEnabledTreeView.h"
 #include "DataViews/FunctionsDataView.h"
@@ -448,7 +449,8 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
   bool enable_source_code = false;
   if (app_->IsCaptureConnected(app_->GetCaptureData())) {
     for (const FunctionInfo* function : functions) {
-      enable_select |= !app_->IsFunctionSelected(*function);
+      enable_select |= !app_->IsFunctionSelected(*function) &&
+                       orbit_client_data::function_utils::IsFunctionSelectable(*function);
       enable_deselect |= app_->IsFunctionSelected(*function);
       enable_disassembly = true;
       enable_source_code = true;

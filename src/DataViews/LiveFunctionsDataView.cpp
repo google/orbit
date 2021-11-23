@@ -229,7 +229,9 @@ std::vector<std::vector<std::string>> LiveFunctionsDataView::GetContextMenuWithG
     const FunctionInfo& instrumented_function = GetInstrumentedFunction(index);
 
     if (app_->IsCaptureConnected(capture_data)) {
-      enable_select |= !app_->IsFunctionSelected(instrumented_function);
+      enable_select |=
+          !app_->IsFunctionSelected(instrumented_function) &&
+          orbit_client_data::function_utils::IsFunctionSelectable(instrumented_function);
       enable_unselect |= app_->IsFunctionSelected(instrumented_function);
       enable_disassembly = true;
       enable_source_code = true;
