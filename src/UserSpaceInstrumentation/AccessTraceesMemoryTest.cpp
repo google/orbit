@@ -93,7 +93,9 @@ TEST(AccessTraceesMemoryTest, ReadFailures) {
   CHECK(continuous_range_or_error.has_value());
   const auto continuous_range = continuous_range_or_error.value();
   const uint64_t address = continuous_range.start;
-  const uint64_t length = continuous_range.end - continuous_range.start;
+
+  constexpr uint64_t kMaxLength = 20ul * 1024 * 1024;  // 20 MiB
+  const uint64_t length = std::min(kMaxLength, continuous_range.end - continuous_range.start);
 
   // Good read.
   ErrorMessageOr<std::vector<uint8_t>> result = ReadTraceesMemory(pid, address, length);
@@ -107,7 +109,7 @@ TEST(AccessTraceesMemoryTest, ReadFailures) {
   EXPECT_DEATH(auto unused_result = ReadTraceesMemory(pid, address, 0), "Check failed");
 
   // Read past the end of the mappings.
-  result = ReadTraceesMemory(pid, address, length + 1);
+  result = ReadTraceesMemory(pid, continuous_range.end - length, length + 1);
   EXPECT_THAT(result, HasError("Input/output error"));
 
   // Read from bad address.
@@ -141,7 +143,9 @@ TEST(AccessTraceesMemoryTest, WriteFailures) {
   CHECK(continuous_range_or_error.has_value());
   const auto continuous_range = continuous_range_or_error.value();
   const uint64_t address = continuous_range.start;
-  const uint64_t length = continuous_range.end - continuous_range.start;
+
+  constexpr uint64_t kMaxLength = 20ul * 1024 * 1024;  // 20 MiB
+  const uint64_t length = std::min(kMaxLength, continuous_range.end - continuous_range.start);
 
   // Backup.
   auto backup = ReadTraceesMemory(pid, address, length);
@@ -162,7 +166,7 @@ TEST(AccessTraceesMemoryTest, WriteFailures) {
 
   // Write past the end of the mappings.
   bytes.push_back(0);
-  result = WriteTraceesMemory(pid, address, bytes);
+  result = WriteTraceesMemory(pid, continuous_range.end - length, bytes);
   EXPECT_THAT(result, HasError("Input/output error"));
 
   // Write to bad address.
