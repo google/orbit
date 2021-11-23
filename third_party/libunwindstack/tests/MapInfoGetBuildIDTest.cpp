@@ -202,4 +202,11 @@ TEST_F(MapInfoGetBuildIDTest, real_elf) {
   EXPECT_EQ("6df0590c4920f4c7b9f34fe833f37d54", map_info->GetPrintableBuildID());
 }
 
+TEST_F(MapInfoGetBuildIDTest, in_device_map) {
+  auto map_info =
+      MapInfo::Create(0x1000, 0x20000, 0, PROT_READ | PROT_WRITE | MAPS_FLAGS_DEVICE_MAP,
+                      GetOfflineFilesDirectory() + "empty_arm64/libc.so");
+  EXPECT_EQ("", map_info->GetPrintableBuildID());
+}
+
 }  // namespace unwindstack

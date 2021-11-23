@@ -94,6 +94,11 @@ bool MapInfo::InitFileMemoryFromPreviousReadOnlyMap(MemoryFileAtOffset* memory) 
 }
 
 Memory* MapInfo::GetFileMemory() {
+  // Fail on device maps.
+  if (flags() & MAPS_FLAGS_DEVICE_MAP) {
+    return nullptr;
+  }
+
   std::unique_ptr<MemoryFileAtOffset> memory(new MemoryFileAtOffset);
   if (offset() == 0) {
     if (memory->Init(name(), 0)) {
