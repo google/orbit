@@ -177,7 +177,8 @@ std::vector<std::vector<std::string>> FunctionsDataView::GetContextMenuWithGroup
 
   for (int index : selected_indices) {
     const FunctionInfo& function = *GetFunction(index);
-    enable_select |= !app_->IsFunctionSelected(function);
+    enable_select |= !app_->IsFunctionSelected(function) &&
+                     orbit_client_data::function_utils::IsFunctionSelectable(function);
     enable_unselect |= app_->IsFunctionSelected(function);
     enable_enable_frame_track |= !app_->IsFrameTrackEnabled(function);
     enable_disable_frame_track |= app_->IsFrameTrackEnabled(function);

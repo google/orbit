@@ -44,6 +44,8 @@ namespace orbit_client_data::function_utils {
     const orbit_grpc_protos::SymbolInfo& symbol_info, const std::string& module_path,
     const std::string& module_build_id);
 
+[[nodiscard]] bool IsFunctionSelectable(const orbit_client_protos::FunctionInfo& function);
+
 }  // namespace orbit_client_data::function_utils
 
 #endif  // CLIENT_DATA_FUNCTION_UTILS_H_

@@ -8,6 +8,7 @@
 
 #include <utility>
 
+#include "ClientData/FunctionUtils.h"
 #include "OrbitBase/Logging.h"
 #include "capture_data.pb.h"
 
@@ -19,7 +20,8 @@ namespace orbit_client_data {
 
 void DataManager::SelectFunction(const FunctionInfo& function) {
   CHECK(std::this_thread::get_id() == main_thread_id_);
-  if (!selected_functions_.contains(function)) {
+  if (!selected_functions_.contains(function) &&
+      orbit_client_data::function_utils::IsFunctionSelectable(function)) {
     selected_functions_.insert(function);
   }
 }

@@ -19,6 +19,7 @@
 #include <utility>
 
 #include "ClientData/CaptureData.h"
+#include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
 #include "CompareAscendingOrDescending.h"
@@ -245,7 +246,8 @@ std::vector<std::vector<std::string>> SamplingReportDataView::GetContextMenuWith
     enable_source_code = !selected_functions.empty();
 
     for (const FunctionInfo* function : selected_functions) {
-      enable_select |= !app_->IsFunctionSelected(*function);
+      enable_select |= !app_->IsFunctionSelected(*function) &&
+                       orbit_client_data::function_utils::IsFunctionSelectable(*function);
       enable_unselect |= app_->IsFunctionSelected(*function);
     }
   }
