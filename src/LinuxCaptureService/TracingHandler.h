@@ -23,6 +23,9 @@
 
 namespace orbit_linux_capture_service {
 
+// Wrapper around LinuxTracing and its orbit_linux_tracing::Tracer that forwards the received events
+// to the ProducerEventProcessor.
+// It shouldn't be reused for multiple captures, i.e., Start and Stop should only be called once.
 class TracingHandler : public orbit_linux_tracing::TracerListener {
  public:
   explicit TracingHandler(
