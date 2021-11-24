@@ -89,6 +89,13 @@ LockFreeUserSpaceInstrumentationEventProducer& GetCaptureEventProducer() {
   return producer;
 }
 
+// Provide a thread local bool to keep track of whether the current thread is inside the payload we
+// injected. If that is the case we avoid further instrumentation.
+bool& GetIsInPayload() {
+  thread_local bool is_in_payload = false;
+  return is_in_payload;
+}
+
 }  // namespace
 
 void StartNewCapture() {
@@ -104,6 +111,15 @@ void StartNewCapture() {
 }
 
 void EntryPayload(uint64_t return_address, uint64_t function_id, uint64_t stack_pointer) {
+  bool& is_in_payload = GetIsInPayload();
+  if (is_in_payload) {
+    // We have already overwritten the return address with the address of the exit trampoline. So we
+    // need to restore the original return address, which was in a EntryPayload or ExitPayload or
+    // one of their callees.
+    *reinterpret_cast<uint64_t*>(stack_pointer) = return_address;
+    return;
+  }
+  is_in_payload = true;
   const uint64_t timestamp_on_entry_ns = CaptureTimestampNs();
   std::stack<OpenFunctionCall>& open_function_call_stack = GetOpenFunctionCallStack();
   open_function_call_stack.emplace(return_address, timestamp_on_entry_ns);
@@ -120,9 +136,12 @@ void EntryPayload(uint64_t return_address, uint64_t function_id, uint64_t stack_
     function_entry.set_timestamp_ns(timestamp_on_entry_ns);
     GetCaptureEventProducer().EnqueueIntermediateEvent(std::move(function_entry));
   }
+  is_in_payload = false;
 }
 
 uint64_t ExitPayload() {
+  bool& is_in_payload = GetIsInPayload();
+  is_in_payload = true;
   const uint64_t timestamp_on_exit_ns = CaptureTimestampNs();
   std::stack<OpenFunctionCall>& open_function_call_stack = GetOpenFunctionCallStack();
   OpenFunctionCall current_function_call = open_function_call_stack.top();
@@ -140,6 +159,6 @@ uint64_t ExitPayload() {
     function_exit.set_timestamp_ns(timestamp_on_exit_ns);
     GetCaptureEventProducer().EnqueueIntermediateEvent(std::move(function_exit));
   }
-
+  is_in_payload = false;
   return current_function_call.return_address;
 }
