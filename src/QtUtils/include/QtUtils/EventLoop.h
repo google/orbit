@@ -8,20 +8,21 @@
 #include <QEventLoop>
 #include <optional>
 
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 
 namespace orbit_qt_utils {
 
 /**
- * A wrapper around QEventLoop to allow returning a std::error_code instead of
- * just a plain integer return code.
+ * A wrapper around QEventLoop to allow returning a std::error_code instead of just a plain integer
+ * return code.
  *
- * The function names don't follow our usual style guide but maintain API
- * compatibility to QEventLoop.
+ * The function names don't follow our usual style guide but maintain API compatibility to
+ * QEventLoop.
  *
  * Behavioural change against QEventLoop:
- * This event loop can queue an error before it's even running. The consecutive
- * call of exec() will then immediately return the queued error.
+ * This event loop can queue an result (error or return code) before it's even running. The
+ * consecutive call of exec() will then immediately return the queued result.
  * */
 class EventLoop : public QObject {
   Q_OBJECT
@@ -33,28 +34,30 @@ class EventLoop : public QObject {
   using ProcessEventsFlags = QEventLoop::ProcessEventsFlags;
 
   outcome::result<int> exec(ProcessEventsFlags flags = ProcessEventsFlag::AllEvents) {
-    if (error_) {
-      auto error = error_.value();
-      error_ = std::nullopt;
-      return outcome::failure(error);
+    if (result_ == std::nullopt) {
+      (void)loop_.exec(flags);
     }
 
-    const int return_code = loop_.exec(flags);
+    CHECK(result_ != std::nullopt);
 
-    if (error_) {
-      return outcome::failure(error_.value());
-    } else {
-      return outcome::success(return_code);
-    }
+    auto result = result_.value();
+    result_ = std::nullopt;
+    return result;
   }
 
   void error(std::error_code e) {
-    error_ = e;
+    result_ = outcome::failure(e);
     loop_.quit();
   }
 
-  void quit() { return loop_.quit(); }
-  void exit(int return_code) { return loop_.exit(return_code); }
+  void quit() {
+    result_ = outcome::success(0);
+    return loop_.quit();
+  }
+  void exit(int return_code) {
+    result_ = outcome::success(return_code);
+    return loop_.exit(return_code);
+  }
   bool isRunning() const { return loop_.isRunning(); }
   void wakeUp() { return loop_.wakeUp(); }
   bool event(QEvent* event) { return loop_.event(event); }
@@ -65,7 +68,7 @@ class EventLoop : public QObject {
   void processEvents(ProcessEventsFlags flags, int maxTime) { loop_.processEvents(flags, maxTime); }
 
  private:
-  std::optional<std::error_code> error_;
+  std::optional<outcome::result<int>> result_;
   QEventLoop loop_;
 };
 
