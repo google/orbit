@@ -113,7 +113,9 @@ void StartNewCapture() {
 void EntryPayload(uint64_t return_address, uint64_t function_id, uint64_t stack_pointer) {
   bool& is_in_payload = GetIsInPayload();
   if (is_in_payload) {
-    // We already overwrote the return address with the exit trampoline. So we need to restore this.
+    // We have already overwritten the return address with the address of the exit trampoline. So we
+    // need to restore the original return address, which was in a EntryPayload or ExitPayload or one
+    // of their callees.
     *reinterpret_cast<uint64_t*>(stack_pointer) = return_address;
     return;
   }
