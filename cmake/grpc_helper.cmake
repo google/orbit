@@ -9,7 +9,7 @@ function(grpc_helper)
 
   get_target_property(_sources ${ARGV0} SOURCES)
   set(new_sources "")
-  set(bin_dir "${CMAKE_CURRENT_BINARY_DIR}/grpc_codegen")
+  set(bin_dir "${CMAKE_CURRENT_BINARY_DIR}/grpc_codegen/include/${ARGV0}")
 
   foreach(source_file ${_sources})
     if(source_file MATCHES ".*\.proto")
@@ -43,7 +43,7 @@ function(grpc_helper)
   set_target_properties(${ARGV0} PROPERTIES SOURCES "${_sources}")
 
   target_link_libraries(${ARGV0} PUBLIC CONAN_PKG::grpc)
-  target_include_directories(${ARGV0} PUBLIC ${bin_dir})
+  target_include_directories(${ARGV0} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/grpc_codegen/include/)
 
   # include-what-you-use needs full source-code visibility, which means
   # we don't need to compile all the code, but we need to run all code

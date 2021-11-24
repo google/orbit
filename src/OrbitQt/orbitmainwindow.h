@@ -32,10 +32,12 @@
 
 #include "App.h"
 #include "CallTreeView.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "ClientServices/ProcessManager.h"
 #include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
 #include "FilterPanelWidgetAction.h"
+#include "GrpcProtos/process.pb.h"
 #include "MainThreadExecutor.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/CrashHandler.h"
@@ -43,9 +45,7 @@
 #include "SessionSetup/TargetConfiguration.h"
 #include "SessionSetup/TargetLabel.h"
 #include "StatusListener.h"
-#include "capture_data.pb.h"
 #include "orbitglwidget.h"
-#include "process.pb.h"
 
 namespace Ui {
 class OrbitMainWindow;

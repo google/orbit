@@ -5,7 +5,7 @@
 #ifndef CAPTURE_EVENT_PROCESSOR_CLIENT_CAPTURE_EVENT_COLLECTOR_H_
 #define CAPTURE_EVENT_PROCESSOR_CLIENT_CAPTURE_EVENT_COLLECTOR_H_
 
-#include "capture.pb.h"
+#include "GrpcProtos/capture.pb.h"
 
 namespace orbit_producer_event_processor {
 

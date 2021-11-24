@@ -13,8 +13,8 @@
 #include <string>
 #include <vector>
 
-#include "capture.pb.h"
-#include "capture_data.pb.h"
+#include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/capture.pb.h"
 
 namespace orbit_capture_client {
 

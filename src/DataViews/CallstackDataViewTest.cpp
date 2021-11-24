@@ -13,17 +13,17 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ProcessData.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "DataViewTestUtils.h"
 #include "DataViews/CallstackDataView.h"
 #include "DataViews/DataView.h"
 #include "DisplayFormats/DisplayFormats.h"
+#include "GrpcProtos/capture.pb.h"
 #include "MockAppInterface.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/TemporaryFile.h"
 #include "TestUtils/TestUtils.h"
-#include "capture.pb.h"
-#include "capture_data.pb.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;

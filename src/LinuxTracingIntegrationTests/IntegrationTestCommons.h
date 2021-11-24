@@ -7,7 +7,7 @@
 
 #include <sys/types.h>
 
-#include "capture.pb.h"
+#include "GrpcProtos/capture.pb.h"
 
 namespace orbit_linux_tracing_integration_tests {
 

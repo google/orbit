@@ -9,9 +9,9 @@
 #include <algorithm>
 
 #include "App.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"
 #include "absl/strings/str_format.h"
-#include "capture_data.pb.h"
 
 using orbit_client_data::CallstackCount;
 using orbit_client_data::PostProcessedSamplingData;

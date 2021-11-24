@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "ClientData/TimerChain.h"
-#include "capture_data.pb.h"
+#include "ClientProtos/capture_data.pb.h"
 
 class TimerInfosIterator {
  public:

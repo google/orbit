@@ -13,8 +13,8 @@
 #include <vector>
 
 #include "ClientData/TimerChain.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "TimerInfosIterator.h"
-#include "capture_data.pb.h"
 
 using orbit_client_protos::TimerInfo;
 

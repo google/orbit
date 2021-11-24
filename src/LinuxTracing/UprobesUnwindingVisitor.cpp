@@ -17,12 +17,12 @@
 #include <string>
 #include <utility>
 
+#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/module.pb.h"
 #include "LeafFunctionCallManager.h"
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "capture.pb.h"
-#include "module.pb.h"
 
 namespace orbit_linux_tracing {
 

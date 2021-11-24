@@ -10,8 +10,8 @@
 #include <memory>
 #include <string>
 
-#include "services.grpc.pb.h"
-#include "services.pb.h"
+#include "GrpcProtos/services.grpc.pb.h"
+#include "GrpcProtos/services.pb.h"
 
 namespace orbit_tracepoint_service {
 

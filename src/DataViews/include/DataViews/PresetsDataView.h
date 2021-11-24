@@ -12,11 +12,11 @@
 #include <utility>
 #include <vector>
 
+#include "ClientProtos/preset.pb.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "PresetFile/PresetFile.h"
-#include "preset.pb.h"
 
 namespace orbit_data_views {
 class PresetsDataView : public DataView {

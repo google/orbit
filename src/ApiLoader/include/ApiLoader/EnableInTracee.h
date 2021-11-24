@@ -5,8 +5,8 @@
 #ifndef API_LOADER_ENABLE_IN_TRACEE_H_
 #define API_LOADER_ENABLE_IN_TRACEE_H_
 
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Result.h"
-#include "capture.pb.h"
 
 namespace orbit_api_loader {
 

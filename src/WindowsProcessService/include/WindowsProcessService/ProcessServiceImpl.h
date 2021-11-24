@@ -8,9 +8,9 @@
 #include <absl/synchronization/mutex.h>
 #include <grpcpp/grpcpp.h>
 
+#include "GrpcProtos/services.grpc.pb.h"
+#include "GrpcProtos/services.pb.h"
 #include "WindowsUtils/ProcessList.h"
-#include "services.grpc.pb.h"
-#include "services.pb.h"
 
 namespace orbit_windows_process_service {
 

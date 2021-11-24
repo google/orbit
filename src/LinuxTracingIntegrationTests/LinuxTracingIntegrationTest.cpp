@@ -18,6 +18,7 @@
 #include <thread>
 #include <utility>
 
+#include "GrpcProtos/capture.pb.h"
 #include "IntegrationTestChildProcess.h"
 #include "IntegrationTestCommons.h"
 #include "IntegrationTestPuppet.h"
@@ -29,7 +30,6 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "capture.pb.h"
 
 namespace orbit_linux_tracing_integration_tests {
 

@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 
 #include "ApiUtils/EncodedString.h"
-#include "capture.pb.h"
+#include "GrpcProtos/capture.pb.h"
 using orbit_grpc_protos::ApiScopeStart;
 
 using ::testing::ElementsAre;

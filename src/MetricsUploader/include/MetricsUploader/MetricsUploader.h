@@ -14,8 +14,8 @@
 #include <string>
 
 #include "MetricsUploader/Result.h"
+#include "MetricsUploader/orbit_log_event.pb.h"
 #include "OrbitBase/Result.h"
-#include "orbit_log_event.pb.h"
 
 namespace orbit_metrics_uploader {
 

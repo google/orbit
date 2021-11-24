@@ -14,6 +14,7 @@
 #include <string_view>
 
 #include "FindFunctionAddress.h"
+#include "GrpcProtos/capture.pb.h"
 #include "ObjectUtils/ElfFile.h"
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/ExecutablePath.h"
@@ -25,7 +26,6 @@
 #include "UserSpaceInstrumentation/AddressRange.h"
 #include "UserSpaceInstrumentation/Attach.h"
 #include "UserSpaceInstrumentation/InstrumentProcess.h"
-#include "capture.pb.h"
 
 namespace orbit_user_space_instrumentation {
 

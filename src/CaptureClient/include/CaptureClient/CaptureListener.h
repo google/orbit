@@ -8,10 +8,10 @@
 #include "ClientData/ProcessData.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
+#include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Result.h"
 #include "absl/container/flat_hash_set.h"
-#include "capture.pb.h"
-#include "capture_data.pb.h"
 
 namespace orbit_capture_client {
 

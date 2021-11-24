@@ -13,9 +13,9 @@
 
 #include "CaptureFile/CaptureFileOutputStream.h"
 #include "CaptureUploader/UploadDataInterface.h"
+#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/services.grpc.pb.h"
 #include "ProducerEventProcessor/ClientCaptureEventCollector.h"
-#include "capture.pb.h"
-#include "services.grpc.pb.h"
 
 namespace orbit_producer_event_processor {
 

@@ -7,8 +7,8 @@
 
 #include <filesystem>
 
+#include "ClientProtos/user_defined_capture_info.pb.h"
 #include "OrbitBase/Result.h"
-#include "user_defined_capture_info.pb.h"
 
 namespace orbit_capture_file {
 ErrorMessageOr<void> WriteUserData(

@@ -9,7 +9,7 @@
 #include <grpcpp/grpcpp.h>
 #include <gtest/gtest.h>
 
-#include "producer_side_services.grpc.pb.h"
+#include "GrpcProtos/producer_side_services.grpc.pb.h"
 
 namespace orbit_fake_producer_side_service {
 

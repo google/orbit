@@ -20,6 +20,7 @@
 #include "ApiUtils/Event.h"
 #include "CaptureService/CommonProducerCaptureEventBuilders.h"
 #include "GrpcProtos/Constants.h"
+#include "GrpcProtos/capture.pb.h"
 #include "Introspection/Introspection.h"
 #include "MemoryInfoHandler.h"
 #include "ObjectUtils/ElfFile.h"
@@ -32,7 +33,6 @@
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
 #include "TracingHandler.h"
 #include "UserSpaceInstrumentationAddressesImpl.h"
-#include "capture.pb.h"
 
 using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureOptions;

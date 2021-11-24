@@ -14,9 +14,9 @@
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureClient/CaptureListener.h"
 #include "ClientData/TracepointCustom.h"
-#include "capture.pb.h"
-#include "capture_data.pb.h"
-#include "tracepoint.pb.h"
+#include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/tracepoint.pb.h"
 
 namespace orbit_capture_client {
 

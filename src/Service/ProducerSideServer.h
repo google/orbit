@@ -11,10 +11,10 @@
 #include <string_view>
 
 #include "CaptureService/CaptureStartStopListener.h"
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
 #include "ProducerSideServiceImpl.h"
-#include "capture.pb.h"
 
 namespace orbit_service {
 

@@ -11,9 +11,9 @@
 
 #include "ApiInterface/Orbit.h"
 #include "EncodedString.h"
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 #include "absl/base/casts.h"
-#include "capture.pb.h"
 
 // We don't want to store protos in the LockFreeApiEventProducer's buffer, as they introduce
 // expensive and unnecessary indirections and allocations. Therefore, we use the a std::variant of

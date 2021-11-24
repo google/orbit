@@ -13,12 +13,12 @@
 #include "Batcher.h"
 #include "CaptureViewElement.h"
 #include "ClientData/CaptureData.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
 #include "TimeGraph.h"
 #include "Viewport.h"
-#include "capture_data.pb.h"
 
 using orbit_client_data::ThreadID;
 using orbit_client_protos::ThreadStateSliceInfo;

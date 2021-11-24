@@ -6,12 +6,12 @@
 
 #include <google/protobuf/arena.h>
 
+#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/services.grpc.pb.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "capture.pb.h"
-#include "services.grpc.pb.h"
 
 using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::ClientCaptureEvent;

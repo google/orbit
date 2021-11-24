@@ -16,11 +16,11 @@
 #include "App.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
+#include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/code_block.pb.h"
+#include "GrpcProtos/services.grpc.pb.h"
+#include "GrpcProtos/services.pb.h"
 #include "OrbitBase/Logging.h"
-#include "capture_data.pb.h"
-#include "code_block.pb.h"
-#include "services.grpc.pb.h"
-#include "services.pb.h"
 
 using orbit_client_data::ModuleData;
 using orbit_client_protos::FunctionInfo;

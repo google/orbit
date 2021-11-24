@@ -13,6 +13,7 @@
 
 #include "CallstackThreadBar.h"
 #include "ClientData/ThreadTrackDataProvider.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "Containers/ScopeTree.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
@@ -21,7 +22,6 @@
 #include "TracepointThreadBar.h"
 #include "Track.h"
 #include "Viewport.h"
-#include "capture_data.pb.h"
 
 class OrbitApp;
 

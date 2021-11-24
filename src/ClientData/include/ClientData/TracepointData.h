@@ -15,8 +15,8 @@
 #include <map>
 #include <vector>
 
-#include "capture_data.pb.h"
-#include "tracepoint.pb.h"
+#include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/tracepoint.pb.h"
 
 namespace orbit_client_data {
 

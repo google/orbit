@@ -17,6 +17,8 @@
 #include "ApiInterface/Orbit.h"
 #include "ApiUtils/EncodedString.h"
 #include "ApiUtils/GetFunctionTableAddressPrefix.h"
+#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/services.grpc.pb.h"
 #include "IntegrationTestChildProcess.h"
 #include "IntegrationTestCommons.h"
 #include "IntegrationTestPuppet.h"
@@ -26,8 +28,6 @@
 #include "OrbitBase/ThreadUtils.h"
 #include "OrbitService.h"
 #include "OrbitVersion/OrbitVersion.h"
-#include "capture.pb.h"
-#include "services.grpc.pb.h"
 
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::ClientCaptureEvent;

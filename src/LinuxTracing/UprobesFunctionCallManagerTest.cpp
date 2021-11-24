@@ -9,9 +9,9 @@
 #include <memory>
 #include <optional>
 
+#include "GrpcProtos/capture.pb.h"
 #include "PerfEventRecords.h"
 #include "UprobesFunctionCallManager.h"
-#include "capture.pb.h"
 
 using orbit_grpc_protos::FunctionCall;
 using ::testing::ElementsAre;

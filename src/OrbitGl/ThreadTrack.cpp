@@ -18,6 +18,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/TimerChain.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlUtils.h"
 #include "Introspection/Introspection.h"
@@ -29,7 +30,6 @@
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
 #include "Viewport.h"
-#include "capture_data.pb.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::TimerChain;

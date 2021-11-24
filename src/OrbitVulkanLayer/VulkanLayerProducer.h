@@ -7,7 +7,7 @@
 
 #include <grpcpp/grpcpp.h>
 
-#include "capture.pb.h"
+#include "GrpcProtos/capture.pb.h"
 
 namespace orbit_vulkan_layer {
 

@@ -34,11 +34,11 @@
 #include <utility>
 #include <vector>
 
+#include "GrpcProtos/symbol.pb.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
-#include "symbol.pb.h"
 
 namespace orbit_object_utils {
 

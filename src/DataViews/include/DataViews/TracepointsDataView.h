@@ -13,7 +13,7 @@
 
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
-#include "tracepoint.pb.h"
+#include "GrpcProtos/tracepoint.pb.h"
 
 namespace orbit_data_views {
 

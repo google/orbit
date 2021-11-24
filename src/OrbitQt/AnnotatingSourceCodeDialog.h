@@ -13,16 +13,16 @@
 #include <functional>
 
 #include "App.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "CodeReport/AnnotatingLine.h"
 #include "CodeReport/DisassemblyReport.h"
 #include "CodeViewer/FontSizeInEm.h"
 #include "CodeViewer/OwningDialog.h"
+#include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
-#include "capture_data.pb.h"
-#include "symbol.pb.h"
 
 namespace orbit_qt {
 

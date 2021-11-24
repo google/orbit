@@ -17,6 +17,7 @@
 #include "Batcher.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/CaptureData.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
@@ -26,7 +27,6 @@
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
-#include "capture_data.pb.h"
 
 using orbit_client_data::CallstackData;
 using orbit_client_data::CaptureData;

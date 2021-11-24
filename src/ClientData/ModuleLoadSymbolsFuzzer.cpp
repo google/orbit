@@ -4,8 +4,8 @@
 
 #include "ClientData/ModuleData.h"
 #include "FuzzingUtils/ProtoFuzzer.h"
-#include "module.pb.h"
-#include "symbol.pb.h"
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/symbol.pb.h"
 
 using orbit_client_data::ModuleData;
 using orbit_grpc_protos::ModuleSymbols;

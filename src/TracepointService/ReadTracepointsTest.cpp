@@ -6,9 +6,9 @@
 
 #include <deque>
 
+#include "GrpcProtos/tracepoint.pb.h"
 #include "ReadTracepoints.h"
 #include "TestUtils/TestUtils.h"
-#include "tracepoint.pb.h"
 
 using orbit_grpc_protos::TracepointInfo;
 

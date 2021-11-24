@@ -9,10 +9,10 @@
 #include <algorithm>
 
 #include "ClientData/FunctionUtils.h"
+#include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/module.pb.h"
 #include "OrbitBase/Logging.h"
 #include "absl/synchronization/mutex.h"
-#include "capture_data.pb.h"
-#include "module.pb.h"
 
 using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::ModuleInfo;

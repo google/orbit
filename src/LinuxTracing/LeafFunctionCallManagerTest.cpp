@@ -20,13 +20,13 @@
 #include <string>
 #include <vector>
 
+#include "GrpcProtos/capture.pb.h"
 #include "LeafFunctionCallManager.h"
 #include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "PerfEvent.h"
 #include "PerfEventRecords.h"
-#include "capture.pb.h"
 
 using ::testing::_;
 using ::testing::AllOf;

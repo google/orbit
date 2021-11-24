@@ -15,12 +15,12 @@
 #include <vector>
 
 #include "FramePointerValidator/FramePointerValidator.h"
+#include "GrpcProtos/code_block.pb.h"
+#include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "Test/Path.h"
-#include "code_block.pb.h"
-#include "symbol.pb.h"
 
 using orbit_grpc_protos::CodeBlock;
 using orbit_grpc_protos::SymbolInfo;

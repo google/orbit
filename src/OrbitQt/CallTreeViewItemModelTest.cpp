@@ -13,9 +13,9 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
+#include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/capture.pb.h"
 #include "QtUtils/AssertNoQtLogWarnings.h"
-#include "capture.pb.h"
-#include "capture_data.pb.h"
 
 constexpr uint64_t kCallstackId = 1;
 constexpr uint64_t kFunctionAbsoluteAddress = 0x30;

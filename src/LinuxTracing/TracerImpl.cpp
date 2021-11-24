@@ -23,6 +23,8 @@
 
 #include "ApiInterface/Orbit.h"
 #include "Function.h"
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/tracepoint.pb.h"
 #include "Introspection/Introspection.h"
 #include "KernelTracepoints.h"
 #include "LibunwindstackMaps.h"
@@ -36,8 +38,6 @@
 #include "PerfEventOpen.h"
 #include "PerfEventReaders.h"
 #include "PerfEventRecords.h"
-#include "module.pb.h"
-#include "tracepoint.pb.h"
 
 namespace orbit_linux_tracing {
 

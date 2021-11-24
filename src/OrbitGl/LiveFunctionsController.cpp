@@ -14,8 +14,8 @@
 
 #include "App.h"
 #include "ClientData/CaptureData.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "TimeGraph.h"
-#include "capture_data.pb.h"
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;

@@ -10,8 +10,8 @@
 #include <utility>
 #include <vector>
 
+#include "GrpcProtos/capture.pb.h"
 #include "ThreadStateManager.h"
-#include "capture.pb.h"
 
 namespace orbit_linux_tracing {
 

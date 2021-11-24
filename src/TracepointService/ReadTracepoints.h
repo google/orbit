@@ -7,8 +7,8 @@
 
 #include <vector>
 
+#include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/Result.h"
-#include "tracepoint.pb.h"
 
 namespace orbit_tracepoint_service {
 

@@ -17,12 +17,12 @@
 #include <utility>
 #include <vector>
 
+#include "ClientProtos/capture_data.pb.h"
 #include "Containers/BlockChain.h"
 #include "CoreMath.h"
 #include "Geometry.h"
 #include "PickingManager.h"
 #include "TranslationStack.h"
-#include "capture_data.pb.h"
 
 using TooltipCallback = std::function<std::string(PickingId)>;
 

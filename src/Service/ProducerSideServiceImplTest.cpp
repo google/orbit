@@ -14,11 +14,11 @@
 #include <optional>
 #include <thread>
 
+#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/producer_side_services.grpc.pb.h"
+#include "GrpcProtos/producer_side_services.pb.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
 #include "ProducerSideServiceImpl.h"
-#include "capture.pb.h"
-#include "producer_side_services.grpc.pb.h"
-#include "producer_side_services.pb.h"
 
 namespace orbit_service {
 

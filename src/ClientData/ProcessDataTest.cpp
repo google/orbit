@@ -13,10 +13,10 @@
 
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Result.h"
 #include "TestUtils/TestUtils.h"
-#include "module.pb.h"
-#include "process.pb.h"
 
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;

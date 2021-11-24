@@ -7,11 +7,11 @@
 
 #include <filesystem>
 
+#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/symbol.pb.h"
 #include "IntegrationTestPuppet.h"
 #include "IntegrationTestUtils.h"
 #include "OrbitBase/Logging.h"
-#include "capture.pb.h"
-#include "symbol.pb.h"
 
 namespace orbit_linux_tracing_integration_tests {
 

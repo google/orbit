@@ -15,7 +15,7 @@
 
 #include "CaptureEventProducer/CaptureEventProducer.h"
 #include "FakeProducerSideService/FakeProducerSideService.h"
-#include "producer_side_services.pb.h"
+#include "GrpcProtos/producer_side_services.pb.h"
 
 namespace orbit_capture_event_producer {
 

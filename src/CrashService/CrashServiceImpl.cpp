@@ -4,8 +4,8 @@
 
 #include "CrashService/CrashServiceImpl.h"
 
+#include "GrpcProtos/services.pb.h"
 #include "OrbitBase/Logging.h"
-#include "services.pb.h"
 
 namespace orbit_crash_service {
 

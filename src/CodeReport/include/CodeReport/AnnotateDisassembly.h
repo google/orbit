@@ -8,11 +8,11 @@
 #include <string>
 #include <vector>
 
+#include "ClientProtos/capture_data.pb.h"
 #include "CodeReport/AnnotatingLine.h"
 #include "CodeReport/DisassemblyReport.h"
+#include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/ElfFile.h"
-#include "capture_data.pb.h"
-#include "symbol.pb.h"
 
 namespace orbit_code_report {
 

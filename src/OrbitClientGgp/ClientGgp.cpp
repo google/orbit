@@ -28,17 +28,17 @@
 #include "ClientData/UserDefinedCaptureData.h"
 #include "ClientModel/CaptureSerializer.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/Constants.h"
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/process.pb.h"
+#include "GrpcProtos/services.pb.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "Symbols/SymbolHelper.h"
-#include "capture_data.pb.h"
-#include "module.pb.h"
-#include "process.pb.h"
-#include "services.pb.h"
 
 ABSL_DECLARE_FLAG(bool, thread_state);
 ABSL_DECLARE_FLAG(uint64_t, max_local_marker_depth_per_command_buffer);

@@ -14,11 +14,11 @@
 #include <utility>
 #include <vector>
 
+#include "GrpcProtos/capture.pb.h"
 #include "MockTracerListener.h"
 #include "OrbitBase/Logging.h"
 #include "PerfEvent.h"
 #include "SwitchesStatesNamesVisitor.h"
-#include "capture.pb.h"
 
 using ::testing::SaveArg;
 

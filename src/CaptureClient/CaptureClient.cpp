@@ -20,11 +20,11 @@
 #include "CaptureClient/CaptureListener.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
+#include "GrpcProtos/tracepoint.pb.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "tracepoint.pb.h"
 
 namespace orbit_capture_client {
 

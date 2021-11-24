@@ -10,9 +10,9 @@
 #include <memory>
 #include <vector>
 
+#include "GrpcProtos/services.grpc.pb.h"
+#include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/Result.h"
-#include "services.grpc.pb.h"
-#include "tracepoint.pb.h"
 
 namespace orbit_client_services {
 

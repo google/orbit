@@ -21,6 +21,7 @@
 #include "CaptureViewElement.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/TimerChain.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
 #include "ManualInstrumentationManager.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
@@ -31,7 +32,6 @@
 #include "TrackManager.h"
 #include "Viewport.h"
 #include "absl/container/flat_hash_map.h"
-#include "capture_data.pb.h"
 
 class OrbitApp;
 

@@ -11,9 +11,9 @@
 
 #include <algorithm>
 
+#include "ClientProtos/capture_data.pb.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "capture_data.pb.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::PostProcessedSamplingData;

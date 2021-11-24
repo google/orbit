@@ -12,9 +12,9 @@
 #include <string>
 
 #include "ClientData/ModuleData.h"
+#include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/symbol.pb.h"
 #include "ProcessData.h"
-#include "capture_data.pb.h"
-#include "symbol.pb.h"
 
 namespace orbit_client_data::function_utils {
 

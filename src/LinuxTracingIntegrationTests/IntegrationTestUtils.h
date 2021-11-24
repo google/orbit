@@ -11,9 +11,9 @@
 
 #include <string>
 
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/symbol.pb.h"
 #include "OrbitBase/Logging.h"
-#include "module.pb.h"
-#include "symbol.pb.h"
 
 namespace orbit_linux_tracing_integration_tests {
 

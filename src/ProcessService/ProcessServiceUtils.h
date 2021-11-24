@@ -17,11 +17,11 @@
 #include <unordered_map>
 #include <vector>
 
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/services.pb.h"
+#include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/Result.h"
 #include "ProcessService/CpuTime.h"
-#include "module.pb.h"
-#include "services.pb.h"
-#include "tracepoint.pb.h"
 
 namespace orbit_process_service {
 

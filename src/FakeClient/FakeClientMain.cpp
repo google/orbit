@@ -23,18 +23,18 @@
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
 #include "ClientData/ModuleManager.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "FakeCaptureEventProcessor.h"
 #include "Flags.h"
 #include "GraphicsCaptureEventProcessor.h"
 #include "GrpcProtos/Constants.h"
+#include "GrpcProtos/capture.pb.h"
 #include "ObjectUtils/ElfFile.h"
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/ThreadPool.h"
-#include "capture.pb.h"
-#include "capture_data.pb.h"
 
 namespace {
 

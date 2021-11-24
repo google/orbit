@@ -14,8 +14,8 @@
 #include "DataViews/DataView.h"
 #include "DataViews/ModulesDataView.h"
 #include "DisplayFormats/DisplayFormats.h"
+#include "GrpcProtos/module.pb.h"
 #include "MockAppInterface.h"
-#include "module.pb.h"
 
 using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleInMemory;

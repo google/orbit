@@ -12,12 +12,12 @@
 #include <string_view>
 
 #include "CallstackThreadBar.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
 #include "StringManager/StringManager.h"
 #include "TimerTrack.h"
 #include "Track.h"
-#include "capture_data.pb.h"
 
 class OrbitApp;
 class TextRenderer;

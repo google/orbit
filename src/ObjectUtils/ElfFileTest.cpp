@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
@@ -19,7 +20,6 @@
 #include "TestUtils/TestUtils.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_format.h"
-#include "symbol.pb.h"
 
 using orbit_grpc_protos::SymbolInfo;
 using orbit_object_utils::CreateElfFile;

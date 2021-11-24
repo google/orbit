@@ -16,11 +16,11 @@
 #include <thread>
 #include <vector>
 
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/process.pb.h"
+#include "GrpcProtos/symbol.pb.h"
 #include "OrbitBase/Result.h"
 #include "absl/synchronization/mutex.h"
-#include "module.pb.h"
-#include "process.pb.h"
-#include "symbol.pb.h"
 
 namespace orbit_client_services {
 

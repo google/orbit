@@ -12,10 +12,10 @@
 #include <memory>
 #include <thread>
 
+#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/producer_side_services.grpc.pb.h"
+#include "GrpcProtos/producer_side_services.pb.h"
 #include "absl/synchronization/mutex.h"
-#include "capture.pb.h"
-#include "producer_side_services.grpc.pb.h"
-#include "producer_side_services.pb.h"
 
 namespace orbit_capture_event_producer {
 

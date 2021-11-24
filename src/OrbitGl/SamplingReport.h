@@ -19,10 +19,10 @@
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackTypes.h"
 #include "ClientData/PostProcessedSamplingData.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "DataViews/CallstackDataView.h"
 #include "DataViews/SamplingReportDataView.h"
 #include "DataViews/SamplingReportInterface.h"
-#include "capture_data.pb.h"
 
 class OrbitApp;
 

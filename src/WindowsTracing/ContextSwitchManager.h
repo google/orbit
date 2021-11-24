@@ -12,8 +12,8 @@
 #include <optional>
 #include <vector>
 
+#include "GrpcProtos/capture.pb.h"
 #include "WindowsTracing/TracerListener.h"
-#include "capture.pb.h"
 
 namespace orbit_windows_tracing {
 

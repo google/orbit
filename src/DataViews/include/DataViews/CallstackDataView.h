@@ -12,9 +12,9 @@
 #include <vector>
 
 #include "ClientData/ModuleData.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
-#include "capture_data.pb.h"
 
 namespace orbit_data_views {
 

@@ -14,13 +14,13 @@
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "DataViewTestUtils.h"
 #include "DataViews/DataView.h"
 #include "DataViews/FunctionsDataView.h"
+#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/process.pb.h"
 #include "MockAppInterface.h"
-#include "capture.pb.h"
-#include "capture_data.pb.h"
-#include "process.pb.h"
 
 using orbit_client_data::CaptureData;
 using orbit_data_views::CheckCopySelectionIsInvoked;

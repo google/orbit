@@ -11,9 +11,9 @@
 #include <optional>
 #include <vector>
 
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 #include "absl/container/flat_hash_map.h"
-#include "capture.pb.h"
 
 namespace orbit_linux_tracing {
 

@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 #include "ClientCaptureEventCollector.h"
-#include "capture.pb.h"
+#include "GrpcProtos/capture.pb.h"
 
 namespace orbit_producer_event_processor {
 

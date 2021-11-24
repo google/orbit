@@ -85,10 +85,10 @@ inline const QString testing_example =
 #include "CaptureEventBuffer.h"
 #include "CaptureEventSender.h"
 #include "CaptureServiceImpl.h"
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Tracing.h"
 #include "TracingHandler.h"
-#include "capture.pb.h"
 
 namespace orbit_service {
 

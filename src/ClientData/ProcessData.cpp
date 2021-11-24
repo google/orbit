@@ -9,9 +9,9 @@
 #include <cstdint>
 #include <vector>
 
+#include "GrpcProtos/symbol.pb.h"
 #include "OrbitBase/Result.h"
 #include "absl/strings/str_format.h"
-#include "symbol.pb.h"
 
 using orbit_grpc_protos::ModuleInfo;
 

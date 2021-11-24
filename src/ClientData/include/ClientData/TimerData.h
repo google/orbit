@@ -8,10 +8,10 @@
 #include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
 
+#include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "TimerChain.h"
 #include "TimerDataInterface.h"
-#include "capture_data.pb.h"
 
 namespace orbit_client_data {
 

@@ -9,8 +9,8 @@
 
 #include <chrono>
 
+#include "GrpcProtos/services.grpc.pb.h"
 #include "OrbitBase/Logging.h"
-#include "services.grpc.pb.h"
 
 namespace orbit_client_services {
 namespace {

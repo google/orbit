@@ -12,13 +12,13 @@
 #include <numeric>
 
 #include "GrpcProtos/Constants.h"
+#include "GrpcProtos/capture.pb.h"
 #include "MemoryTracing/MemoryInfoListener.h"
 #include "MemoryTracing/MemoryInfoProducer.h"
 #include "MemoryTracingUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "capture.pb.h"
 
 namespace orbit_memory_tracing {
 namespace {

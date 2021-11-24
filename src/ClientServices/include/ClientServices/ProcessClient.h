@@ -15,10 +15,10 @@
 #include <utility>
 #include <vector>
 
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/process.pb.h"
+#include "GrpcProtos/services.grpc.pb.h"
 #include "OrbitBase/Result.h"
-#include "module.pb.h"
-#include "process.pb.h"
-#include "services.grpc.pb.h"
 
 namespace orbit_client_services {
 

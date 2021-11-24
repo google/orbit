@@ -5,12 +5,12 @@
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleManager.h"
+#include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/capture.pb.h"
 #include "TimeGraph.h"
 #include "Track.h"
 #include "TrackManager.h"
 #include "TrackTestData.h"
-#include "capture.pb.h"
-#include "capture_data.pb.h"
 
 using orbit_client_protos::TimerInfo;
 

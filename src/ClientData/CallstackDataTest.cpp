@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "ClientData/CallstackData.h"
-#include "capture_data.pb.h"
+#include "ClientProtos/capture_data.pb.h"
 
 using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;

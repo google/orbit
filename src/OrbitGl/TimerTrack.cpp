@@ -17,6 +17,7 @@
 #include "App.h"
 #include "Batcher.h"
 #include "ClientFlags/ClientFlags.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "TimeGraph.h"
@@ -25,7 +26,6 @@
 #include "Viewport.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
-#include "capture_data.pb.h"
 
 using orbit_client_data::TimerChain;
 using orbit_client_data::TimerData;

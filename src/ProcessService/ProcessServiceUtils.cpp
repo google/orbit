@@ -25,6 +25,7 @@
 #include <system_error>
 #include <utility>
 
+#include "GrpcProtos/module.pb.h"
 #include "ObjectUtils/ObjectFile.h"
 #include "ObjectUtils/SymbolsFile.h"
 #include "OrbitBase/File.h"
@@ -33,7 +34,6 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "absl/strings/str_format.h"
-#include "module.pb.h"
 
 namespace orbit_process_service {
 

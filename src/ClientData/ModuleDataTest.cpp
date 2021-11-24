@@ -10,9 +10,9 @@
 
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
-#include "capture_data.pb.h"
-#include "module.pb.h"
-#include "symbol.pb.h"
+#include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/symbol.pb.h"
 
 using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::ModuleInfo;

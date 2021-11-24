@@ -15,10 +15,10 @@
 #include <utility>
 #include <vector>
 
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/SymbolsFile.h"
 #include "OrbitBase/Result.h"
-#include "module.pb.h"
-#include "symbol.pb.h"
 
 namespace fs = std::filesystem;
 

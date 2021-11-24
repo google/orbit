@@ -10,10 +10,10 @@
 #include <QString>
 #include <string>
 
+#include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Logging.h"
 #include "QtUtils/AssertNoQtLogWarnings.h"
 #include "SessionSetup/ProcessItemModel.h"
-#include "process.pb.h"
 
 namespace orbit_session_setup {
 

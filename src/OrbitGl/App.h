@@ -39,6 +39,8 @@
 #include "ClientData/ProcessData.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
+#include "ClientProtos/capture_data.pb.h"
+#include "ClientProtos/preset.pb.h"
 #include "ClientServices/CrashManager.h"
 #include "ClientServices/ProcessManager.h"
 #include "ClientServices/TracepointServiceClient.h"
@@ -56,6 +58,10 @@
 #include "FramePointerValidatorClient.h"
 #include "FrameTrackOnlineProcessor.h"
 #include "GlCanvas.h"
+#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/services.pb.h"
+#include "GrpcProtos/symbol.pb.h"
+#include "GrpcProtos/tracepoint.pb.h"
 #include "IntrospectionWindow.h"
 #include "MainThreadExecutor.h"
 #include "MainWindowInterface.h"
@@ -72,12 +78,6 @@
 #include "StatusListener.h"
 #include "StringManager/StringManager.h"
 #include "Symbols/SymbolHelper.h"
-#include "capture.pb.h"
-#include "capture_data.pb.h"
-#include "preset.pb.h"
-#include "services.pb.h"
-#include "symbol.pb.h"
-#include "tracepoint.pb.h"
 
 class OrbitApp final : public DataViewFactory,
                        public orbit_capture_client::CaptureListener,

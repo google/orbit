@@ -7,9 +7,9 @@
 #include <filesystem>
 #include <vector>
 
+#include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/Result.h"
 #include "absl/strings/str_format.h"
-#include "tracepoint.pb.h"
 
 namespace fs = std::filesystem;
 

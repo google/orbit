@@ -11,8 +11,8 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "capture_data.pb.h"
 
 using orbit_client_data::CallstackCount;
 using orbit_client_data::CaptureData;

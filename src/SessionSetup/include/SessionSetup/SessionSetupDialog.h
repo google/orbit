@@ -25,10 +25,10 @@
 #include "ClientData/ProcessData.h"
 #include "ClientServices/ProcessManager.h"
 #include "Connections.h"
+#include "GrpcProtos/process.pb.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "ProcessItemModel.h"
 #include "TargetConfiguration.h"
-#include "process.pb.h"
 
 namespace Ui {
 class SessionSetupDialog;  // IWYU pragma: keep

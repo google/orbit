@@ -11,7 +11,7 @@
 #include <filesystem>
 
 #include "MetricsUploader/MetricsUploader.h"
-#include "orbit_log_event.pb.h"
+#include "MetricsUploader/orbit_log_event.pb.h"
 
 namespace orbit_metrics_uploader {
 

@@ -8,12 +8,12 @@
 #include <cstdint>
 #include <functional>
 
+#include "ClientProtos/capture_data.pb.h"
 #include "DataViews/LiveFunctionsDataView.h"
 #include "DataViews/LiveFunctionsInterface.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/Profiling.h"
 #include "absl/container/flat_hash_map.h"
-#include "capture_data.pb.h"
 
 class OrbitApp;
 

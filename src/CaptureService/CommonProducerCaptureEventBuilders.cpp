@@ -6,6 +6,8 @@
 
 #include <string>
 
+#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/services.grpc.pb.h"
 #include "Introspection/Introspection.h"
 #include "ObjectUtils/CoffFile.h"
 #include "ObjectUtils/ElfFile.h"
@@ -14,8 +16,6 @@
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/Result.h"
 #include "OrbitVersion/OrbitVersion.h"
-#include "capture.pb.h"
-#include "services.grpc.pb.h"
 
 using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureOptions;

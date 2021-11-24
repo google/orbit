@@ -11,8 +11,8 @@
 #include <vector>
 
 #include "FramePointerValidator/FramePointerValidator.h"
+#include "GrpcProtos/code_block.pb.h"
 #include "ObjectUtils/ElfFile.h"
-#include "code_block.pb.h"
 
 namespace orbit_frame_pointer_validator_service {
 

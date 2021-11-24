@@ -15,12 +15,12 @@
 #include <string>
 #include <vector>
 
+#include "GrpcProtos/services.pb.h"
+#include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/Result.h"
 #include "ProcessServiceUtils.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
-#include "services.pb.h"
-#include "tracepoint.pb.h"
 
 namespace orbit_process_service {
 

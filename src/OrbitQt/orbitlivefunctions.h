@@ -14,9 +14,9 @@
 #include <QWidget>
 #include <optional>
 
+#include "ClientProtos/capture_data.pb.h"
 #include "LiveFunctionsController.h"
 #include "absl/container/flat_hash_map.h"
-#include "capture_data.pb.h"
 #include "orbiteventiterator.h"
 #include "types.h"
 

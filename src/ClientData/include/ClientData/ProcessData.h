@@ -18,11 +18,11 @@
 #include <vector>
 
 #include "ClientData/ModuleData.h"
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/process.pb.h"
+#include "GrpcProtos/symbol.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "module.pb.h"
-#include "process.pb.h"
-#include "symbol.pb.h"
 
 namespace orbit_client_data {
 

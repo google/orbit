@@ -11,6 +11,7 @@
 #include <tuple>
 #include <vector>
 
+#include "ClientProtos/preset.pb.h"
 #include "DataViewTestUtils.h"
 #include "DataViewUtils.h"
 #include "DataViews/DataView.h"
@@ -23,7 +24,6 @@
 #include "OrbitBase/TemporaryFile.h"
 #include "PresetFile/PresetFile.h"
 #include "TestUtils/TestUtils.h"
-#include "preset.pb.h"
 
 using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;

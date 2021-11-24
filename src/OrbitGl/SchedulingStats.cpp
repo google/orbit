@@ -7,7 +7,7 @@
 #include <absl/strings/str_format.h>
 
 #include "CaptureWindow.h"
-#include "capture_data.pb.h"
+#include "ClientProtos/capture_data.pb.h"
 
 using orbit_client_protos::TimerInfo;
 

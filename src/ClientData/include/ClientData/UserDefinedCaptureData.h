@@ -6,7 +6,7 @@
 #define CLIENT_DATA_USER_DEFINED_CAPTURE_DATA_H_
 
 #include "ClientData/FunctionInfoSet.h"
-#include "capture_data.pb.h"
+#include "ClientProtos/capture_data.pb.h"
 
 namespace orbit_client_data {
 

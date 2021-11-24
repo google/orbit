@@ -11,12 +11,12 @@
 #include "ClientData/CallstackTypes.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/CallstackDataView.h"
 #include "DataViews/DataView.h"
 #include "DataViews/SamplingReportInterface.h"
 #include "absl/container/flat_hash_set.h"
-#include "capture_data.pb.h"
 
 class SamplingReport;
 

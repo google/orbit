@@ -8,7 +8,7 @@
 #include <grpcpp/grpcpp.h>
 #include <stdint.h>
 
-#include "services_ggp.grpc.pb.h"
+#include "GrpcProtos/services_ggp.grpc.pb.h"
 
 class OrbitCaptureGgpService final {
  public:

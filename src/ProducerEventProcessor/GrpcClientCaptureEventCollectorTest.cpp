@@ -9,10 +9,10 @@
 
 #include <thread>
 
+#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/services.grpc.pb.h"
 #include "OrbitBase/Logging.h"
 #include "ProducerEventProcessor/GrpcClientCaptureEventCollector.h"
-#include "capture.pb.h"
-#include "services.grpc.pb.h"
 
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;

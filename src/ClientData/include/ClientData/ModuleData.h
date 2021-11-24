@@ -13,12 +13,12 @@
 #include <utility>
 #include <vector>
 
+#include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/symbol.pb.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_format.h"
 #include "absl/synchronization/mutex.h"
-#include "capture_data.pb.h"
-#include "module.pb.h"
-#include "symbol.pb.h"
 
 namespace orbit_client_data {
 

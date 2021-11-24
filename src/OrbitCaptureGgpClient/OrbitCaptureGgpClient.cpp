@@ -14,10 +14,10 @@
 #include <string>
 #include <vector>
 
+#include "GrpcProtos/services_ggp.grpc.pb.h"
+#include "GrpcProtos/services_ggp.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "services_ggp.grpc.pb.h"
-#include "services_ggp.pb.h"
 
 using orbit_grpc_protos::ShutdownServiceRequest;
 using orbit_grpc_protos::ShutdownServiceResponse;

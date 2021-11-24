@@ -9,10 +9,10 @@
 
 #include <thread>
 
+#include "GrpcProtos/capture.pb.h"
 #include "MemoryTracingUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "capture.pb.h"
 
 namespace orbit_memory_tracing {
 

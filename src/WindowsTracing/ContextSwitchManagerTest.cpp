@@ -6,8 +6,8 @@
 #include <gtest/gtest.h>
 
 #include "ContextSwitchManager.h"
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "capture.pb.h"
 
 using ::testing::SaveArg;
 

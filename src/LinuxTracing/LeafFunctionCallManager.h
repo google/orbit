@@ -5,9 +5,9 @@
 #ifndef LINUX_TRACING_LEAF_FUNCTION_CALL_MANAGER_H_
 #define LINUX_TRACING_LEAF_FUNCTION_CALL_MANAGER_H_
 
-#include <capture.pb.h>
 #include <stdint.h>
 
+#include "GrpcProtos/capture.pb.h"
 #include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"
 #include "PerfEvent.h"

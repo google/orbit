@@ -9,7 +9,7 @@
 #include <cstring>
 
 #include "ApiUtils/Event.h"
-#include "capture.pb.h"
+#include "GrpcProtos/capture.pb.h"
 
 namespace orbit_api {
 

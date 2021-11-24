@@ -8,10 +8,10 @@
 
 #include <memory>
 
+#include "GrpcProtos/capture.pb.h"
 #include "LostAndDiscardedEventVisitor.h"
 #include "MockTracerListener.h"
 #include "PerfEvent.h"
-#include "capture.pb.h"
 
 namespace orbit_linux_tracing {
 

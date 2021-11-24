@@ -9,7 +9,7 @@
 
 #include <memory>
 
-#include "services.pb.h"
+#include "GrpcProtos/services.pb.h"
 
 namespace orbit_client_services {
 

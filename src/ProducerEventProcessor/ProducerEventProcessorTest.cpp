@@ -8,8 +8,8 @@
 #include <stdint.h>
 
 #include "GrpcProtos/Constants.h"
+#include "GrpcProtos/capture.pb.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
-#include "capture.pb.h"
 
 using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::ApiScopeStart;

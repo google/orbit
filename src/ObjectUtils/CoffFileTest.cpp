@@ -9,11 +9,11 @@
 #include <memory>
 #include <vector>
 
+#include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/CoffFile.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
 #include "absl/strings/ascii.h"
-#include "symbol.pb.h"
 
 using orbit_grpc_protos::SymbolInfo;
 using orbit_object_utils::CoffFile;

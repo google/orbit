@@ -7,13 +7,13 @@
 
 #include <filesystem>
 
+#include "ClientProtos/capture_data.pb.h"
 #include "CodeReport/AnnotateDisassembly.h"
 #include "CodeReport/AnnotatingLine.h"
 #include "CodeReport/DisassemblyReport.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "Test/Path.h"
-#include "capture_data.pb.h"
 
 using namespace std::string_view_literals;
 const std::string_view kMainFunctionInstructions =

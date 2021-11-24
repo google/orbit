@@ -14,9 +14,9 @@
 #include <vector>
 
 #include "ClientData/CallstackTypes.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
-#include "capture_data.pb.h"
 
 namespace orbit_client_data {
 

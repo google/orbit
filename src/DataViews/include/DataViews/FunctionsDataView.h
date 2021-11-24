@@ -8,10 +8,10 @@
 #include <string>
 #include <vector>
 
+#include "ClientProtos/capture_data.pb.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
 #include "OrbitBase/ThreadPool.h"
-#include "capture_data.pb.h"
 
 namespace orbit_data_views {
 class FunctionsDataView : public DataView {

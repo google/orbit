@@ -5,8 +5,8 @@
 #ifndef CAPTURE_SERVICE_CAPTURE_START_STOP_LISTENER_H_
 #define CAPTURE_SERVICE_CAPTURE_START_STOP_LISTENER_H_
 
+#include "GrpcProtos/capture.pb.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
-#include "capture.pb.h"
 
 namespace orbit_capture_service {
 
