@@ -160,6 +160,14 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
       const uint64_t begin_timestamp_ns = command_buffer_timestamp.begin;
       const uint64_t end_timestamp_ns = command_buffer_timestamp.end;
 
+      // Skip the command buffers that were partially tracked, the ones where the
+      // `begin_timestamp_ns` is zero. This happens when the capture process starts while the
+      // command buffer is being recorded, so the Orbit Vulkan layer only tracks the end of the
+      // command buffer execution but not the start.
+      if (begin_timestamp_ns == 0) {
+        continue;
+      }
+
       // If the interval doesn't overlap just add the length of the interval to the frame time, else
       // if there's overlap just add the new part of the interval that hasn't yet been taken into
       // account.
