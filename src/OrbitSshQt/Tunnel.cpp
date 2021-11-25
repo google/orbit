@@ -56,7 +56,8 @@ void Tunnel::Start() {
 }
 
 void Tunnel::Stop() {
-  if (CurrentState() == State::kError) {
+  if (CurrentState() == State::kError || CurrentState() == State::kDone) {
+    emit stopped();
     return;
   }
 
@@ -64,6 +65,8 @@ void Tunnel::Stop() {
     SetState(State::kDone);
     deleteByEventLoop(this, &local_server_);
     channel_ = std::nullopt;
+    emit stopped();
+    return;
   }
 
   if (CurrentState() == State::kServerListening) {
