@@ -136,10 +136,7 @@ ServiceDeployManager::ServiceDeployManager(const DeploymentConfiguration* deploy
 }
 
 ServiceDeployManager::~ServiceDeployManager() {
-  // ssh_watchdog_timer is registered in background_thread_, so it has to be stopped there to
-  // not trigger a race condition.
-  QMetaObject::invokeMethod(
-      this, [this]() { ssh_watchdog_timer_.stop(); }, Qt::BlockingQueuedConnection);
+  Shutdown();
   background_thread_.quit();
   background_thread_.wait();
 }
@@ -695,6 +692,7 @@ outcome::result<void> ServiceDeployManager::ShutdownSession(orbit_ssh_qt::Sessio
 }
 
 void ServiceDeployManager::Shutdown() {
+  SCOPED_TIMED_LOG("ServiceDeployManager::Shutdown");
   DeferToBackgroundThreadAndWait(this, [this]() {
     if (sftp_channel_ != nullptr) {
       (void)ShutdownSftpChannel(sftp_channel_.get());
