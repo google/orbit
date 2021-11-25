@@ -361,3 +361,8 @@ set_target_properties(libunwindstack_local PROPERTIES
          LIBRARY_OUTPUT_DIRECTORY_RELWITHDEBINFO $<TARGET_FILE_DIR:libunwindstack_tests>)
 set_target_properties(libunwindstack_local PROPERTIES
          LIBRARY_OUTPUT_DIRECTORY_DEBUG $<TARGET_FILE_DIR:libunwindstack_tests>)
+
+# Fuzz testing for parsers
+add_fuzzer(PeCoffInterfaceFuzzer tests/fuzz/PeCoffInterfaceFuzzer.cpp)
+target_include_directories(PeCoffInterfaceFuzzer PRIVATE include/)
+target_link_libraries(PeCoffInterfaceFuzzer PRIVATE libunwindstack)
