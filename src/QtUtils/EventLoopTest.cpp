@@ -71,6 +71,26 @@ TEST(EventLoop, exec) {
       ASSERT_EQ(result.error(), std::errc::bad_message);
     }
   }
+
+  // Case 4: The event loop immediately returns due to a queued result (quit).
+  {
+    orbit_qt_utils::EventLoop loop{};
+    ASSERT_FALSE(loop.isRunning());
+    loop.quit();
+
+    QMetaObject::invokeMethod(
+        &loop,
+        []() {
+          FAIL();  // This task will be queued but never executes since the event loop is supposed
+                   // to return early.
+        },
+        Qt::QueuedConnection);
+    {
+      const auto result = loop.exec();
+      ASSERT_FALSE(result.has_error());
+      EXPECT_EQ(result.value(), 0);
+    }
+  }
 }
 
 TEST(EventLoop, exit) {
@@ -101,4 +121,62 @@ TEST(EventLoop, processEvents) {
 
   loop.processEvents();
   EXPECT_TRUE(called);
+}
+
+TEST(EventLoop, reuseLoop) {
+  // Testing whether Eventloop can be reused, similar to QEventloop
+
+  orbit_qt_utils::EventLoop loop{};
+  ASSERT_FALSE(loop.isRunning());
+
+  // 1. normal quit
+  QMetaObject::invokeMethod(
+      &loop,
+      [&]() {
+        ASSERT_TRUE(loop.isRunning());
+        loop.quit();
+      },
+      Qt::QueuedConnection);
+  {
+    const auto result = loop.exec();
+    ASSERT_FALSE(result.has_error());
+    EXPECT_EQ(result.value(), 0);
+  }
+
+  // 2. normal error
+  QMetaObject::invokeMethod(
+      &loop,
+      [&]() {
+        ASSERT_TRUE(loop.isRunning());
+        loop.error(std::make_error_code(std::errc::bad_message));
+      },
+      Qt::QueuedConnection);
+  {
+    const auto result = loop.exec();
+    ASSERT_TRUE(result.has_error());
+    EXPECT_EQ(result.error(), std::errc::bad_message);
+  }
+
+  // 3. premature quit
+  loop.quit();
+  QMetaObject::invokeMethod(
+      &loop,
+      []() {
+        FAIL();  // This task will be queued but never executes since the event loop is supposed
+                 // to return early.
+      },
+      Qt::QueuedConnection);
+  {
+    const auto result = loop.exec();
+    ASSERT_FALSE(result.has_error());
+    EXPECT_EQ(result.value(), 0);
+  }
+
+  // 4. premature error
+  loop.error(std::make_error_code(std::errc::bad_message));
+  {
+    const auto result = loop.exec();
+    ASSERT_TRUE(result.has_error());
+    EXPECT_EQ(result.error(), std::errc::bad_message);
+  }
 }
