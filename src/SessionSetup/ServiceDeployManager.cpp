@@ -264,9 +264,11 @@ outcome::result<void> ServiceDeployManager::CopyFileToRemote(
   return outcome::success();
 }
 
-outcome::result<void> ServiceDeployManager::StopSftpChannel(
+outcome::result<void> ServiceDeployManager::ShutdownSftpChannel(
     orbit_ssh_qt::SftpChannel* sftp_channel) {
+  SCOPED_TIMED_LOG("ServiceDeployManager::ShutdownSftpChannel");
   CHECK(QThread::currentThread() == thread());
+  CHECK(sftp_channel != nullptr);
 
   orbit_qt_utils::EventLoop loop{};
   auto quit_handler = ConnectQuitHandler(&loop, sftp_channel, &orbit_ssh_qt::SftpChannel::stopped);
@@ -279,8 +281,6 @@ outcome::result<void> ServiceDeployManager::StopSftpChannel(
   OUTCOME_TRY(loop.exec());
   return outcome::success();
 }
-
-void ServiceDeployManager::StopSftpChannel() { (void)StopSftpChannel(sftp_channel_.get()); }
 
 outcome::result<void> ServiceDeployManager::CopyOrbitServicePackage() {
   CHECK(QThread::currentThread() == thread());
@@ -348,12 +348,12 @@ ErrorMessageOr<void> ServiceDeployManager::CopyFileToLocalImpl(std::string_view 
                                         destination, result.error().message()));
   }
 
-  auto sftp_channel_stop_result = StopSftpChannel(sftp_channel.value().get());
+  auto sftp_channel_shutdown_result = ShutdownSftpChannel(sftp_channel.value().get());
 
-  if (!sftp_channel_stop_result) {
+  if (!sftp_channel_shutdown_result) {
     std::string sftp_error_message =
         absl::StrFormat(R"(Error closing sftp channel (after copied remote "%s" to "%s": %s))",
-                        source, destination, sftp_channel_stop_result.error().message());
+                        source, destination, sftp_channel_shutdown_result.error().message());
     ERROR("%s", sftp_error_message);
     return ErrorMessage(
         absl::StrFormat("Download of file %s failed: %s", source, sftp_error_message));
@@ -705,7 +705,10 @@ void ServiceDeployManager::ShutdownSession() {
 
 void ServiceDeployManager::Shutdown() {
   DeferToBackgroundThreadAndWait(this, [this]() {
-    StopSftpChannel();
+    if (sftp_channel_ != nullptr) {
+      (void)ShutdownSftpChannel(sftp_channel_.get());
+      sftp_channel_.reset();
+    }
     ShutdownTunnel(&grpc_tunnel_);
     ShutdownOrbitService();
     ShutdownSession();
