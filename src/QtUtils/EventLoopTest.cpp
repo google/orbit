@@ -172,7 +172,7 @@ TEST(EventLoop, reuseLoop) {
     EXPECT_EQ(result.value(), 0);
   }
 
-  // 3. premature error
+  // 4. premature error
   loop.error(std::make_error_code(std::errc::bad_message));
   {
     const auto result = loop.exec();
