@@ -27,5 +27,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   std::shared_ptr<unwindstack::Memory> memory =
       unwindstack::Memory::CreateOfflineMemory(data, 0, size);
   unwindstack::PeCoffInterface<uint64_t> pe_coff_interface(memory.get());
+  pe_coff_interface.Init();
   return 0;
 }
