@@ -5,6 +5,7 @@
 #ifndef FAKE_PRODUCER_SIDE_SERVICE_FAKE_PRODUCER_SIDE_SERVICE_H_
 #define FAKE_PRODUCER_SIDE_SERVICE_FAKE_PRODUCER_SIDE_SERVICE_H_
 
+#include <absl/synchronization/mutex.h>
 #include <gmock/gmock.h>
 #include <grpcpp/grpcpp.h>
 #include <gtest/gtest.h>
@@ -14,6 +15,8 @@
 namespace orbit_fake_producer_side_service {
 
 // This class fakes a ProducerSideService for use in tests.
+// SendStartCaptureCommand, SendStopCaptureCommand, SendCaptureFinishedCommand should not be called
+// concurrently.
 class FakeProducerSideService : public orbit_grpc_protos::ProducerSideService::Service {
  public:
   grpc::Status ReceiveCommandsAndSendEvents(
@@ -21,16 +24,23 @@ class FakeProducerSideService : public orbit_grpc_protos::ProducerSideService::S
       ::grpc::ServerReaderWriter< ::orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse,
                                   ::orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest>* stream)
       override {
-    EXPECT_EQ(context_, nullptr);
-    EXPECT_EQ(stream_, nullptr);
     if (!rpc_allowed_) {
       return grpc::Status::CANCELLED;
     }
-    context_ = context;
-    stream_ = stream;
+    {
+      absl::WriterMutexLock lock{&context_and_stream_mutex_};
+      EXPECT_EQ(context_, nullptr);
+      EXPECT_EQ(stream_, nullptr);
+      context_ = context;
+      stream_ = stream;
+    }
 
-    orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest request;
-    while (stream->Read(&request)) {
+    while (true) {
+      orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest request;
+      {
+        absl::ReaderMutexLock lock{&context_and_stream_mutex_};
+        if (!stream->Read(&request)) break;
+      }
       EXPECT_NE(request.event_case(),
                 orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest::EVENT_NOT_SET);
       switch (request.event_case()) {
@@ -48,12 +58,16 @@ class FakeProducerSideService : public orbit_grpc_protos::ProducerSideService::S
       }
     }
 
-    context_ = nullptr;
-    stream_ = nullptr;
+    {
+      absl::WriterMutexLock lock{&context_and_stream_mutex_};
+      context_ = nullptr;
+      stream_ = nullptr;
+    }
     return grpc::Status::OK;
   }
 
   void SendStartCaptureCommand(orbit_grpc_protos::CaptureOptions capture_options) {
+    absl::ReaderMutexLock lock{&context_and_stream_mutex_};
     ASSERT_NE(stream_, nullptr);
     orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse command;
     *command.mutable_start_capture_command()->mutable_capture_options() =
@@ -63,6 +77,7 @@ class FakeProducerSideService : public orbit_grpc_protos::ProducerSideService::S
   }
 
   void SendStopCaptureCommand() {
+    absl::ReaderMutexLock lock{&context_and_stream_mutex_};
     ASSERT_NE(stream_, nullptr);
     orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse command;
     command.mutable_stop_capture_command();
@@ -71,6 +86,7 @@ class FakeProducerSideService : public orbit_grpc_protos::ProducerSideService::S
   }
 
   void SendCaptureFinishedCommand() {
+    absl::ReaderMutexLock lock{&context_and_stream_mutex_};
     ASSERT_NE(stream_, nullptr);
     orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse command;
     command.mutable_capture_finished_command();
@@ -80,12 +96,18 @@ class FakeProducerSideService : public orbit_grpc_protos::ProducerSideService::S
 
   void FinishAndDisallowRpc() {
     rpc_allowed_ = false;
-    if (context_ != nullptr) {
-      EXPECT_NE(stream_, nullptr);
-      context_->TryCancel();
-      context_ = nullptr;
+    {
+      absl::ReaderMutexLock lock{&context_and_stream_mutex_};
+      if (context_ != nullptr) {
+        EXPECT_NE(stream_, nullptr);
+        context_->TryCancel();
+      }
     }
-    stream_ = nullptr;
+    {
+      absl::WriterMutexLock lock{&context_and_stream_mutex_};
+      context_ = nullptr;
+      stream_ = nullptr;
+    }
   }
 
   void ReAllowRpc() { rpc_allowed_ = true; }
@@ -95,10 +117,11 @@ class FakeProducerSideService : public orbit_grpc_protos::ProducerSideService::S
   MOCK_METHOD(void, OnAllEventsSentReceived, (), ());
 
  private:
-  grpc::ServerContext* context_ = nullptr;
+  grpc::ServerContext* context_ ABSL_GUARDED_BY(context_and_stream_mutex_) = nullptr;
   grpc::ServerReaderWriter<orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse,
-                           orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest>* stream_ =
-      nullptr;
+                           orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest>* stream_
+      ABSL_GUARDED_BY(context_and_stream_mutex_) = nullptr;
+  absl::Mutex context_and_stream_mutex_;
   std::atomic<bool> rpc_allowed_ = true;
 };
 
