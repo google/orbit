@@ -6,12 +6,16 @@
 
 #include <absl/base/macros.h>
 
+#include <QTimer>
 #include <type_traits>
 #include <utility>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitSsh/Error.h"
 #include "OrbitSshQt/Error.h"
+
+// Maximum time that the shutdown is allowed to take.
+constexpr const int kShutdownTimeoutMs{2000};
 
 namespace orbit_ssh_qt {
 
@@ -28,6 +32,13 @@ void Task::Start() {
 }
 
 void Task::Stop() {
+  QTimer::singleShot(kShutdownTimeoutMs, this, [this]() {
+    if (state_ < State::kChannelClosed) {
+      ERROR("Task shutdown timed out");
+      SetError(Error::kOrbitServiceShutdownTimedout);
+    }
+  });
+
   if (state_ == State::kCommandRunning) {
     SetState(State::kSignalEOF);
   }
