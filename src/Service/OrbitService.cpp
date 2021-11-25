@@ -141,7 +141,7 @@ static std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {
   return producer_side_server;
 }
 
-void OrbitService::Run(std::atomic<bool>* exit_requested) {
+int OrbitService::Run(std::atomic<bool>* exit_requested) {
   PrintInstanceVersions();
   LOG("Running Orbit Service version %s", orbit_version::GetVersionString());
 #ifndef NDEBUG
@@ -152,23 +152,30 @@ void OrbitService::Run(std::atomic<bool>* exit_requested) {
 
   std::unique_ptr<OrbitGrpcServer> grpc_server = CreateGrpcServer(grpc_port_, dev_mode_);
   if (grpc_server == nullptr) {
-    return;
+    ERROR("Unable to create gRPC server.");
+    return -1;
   }
 
   std::unique_ptr<ProducerSideServer> producer_side_server = BuildAndStartProducerSideServer();
   if (producer_side_server == nullptr) {
-    return;
+    ERROR("Unable to build and start ProducerSideServer.");
+    return -1;
   }
   grpc_server->AddCaptureStartStopListener(producer_side_server.get());
 
   // Make stdin non-blocking.
   fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
 
+  int return_code = 0;
+
   // Wait for exit_request or for the watchdog to expire.
   while (!(*exit_requested)) {
     std::string stdin_data = ReadStdIn();
     // If ssh sends EOF, end main loop.
-    if (feof(stdin) != 0) break;
+    if (feof(stdin) != 0) {
+      LOG("Received EOF on stdin. Exiting main loop.");
+      break;
+    }
 
     if (IsSshWatchdogActive() || absl::StrContains(stdin_data, kStartWatchdogPassphrase)) {
       if (!stdin_data.empty()) {
@@ -176,11 +183,13 @@ void OrbitService::Run(std::atomic<bool>* exit_requested) {
       }
 
       if (!IsSshConnectionAlive(last_stdin_message_.value(), kWatchdogTimeoutInSeconds)) {
+        ERROR("Connection is not alive (watchdog timed out). Exiting main loop.");
+        return_code = -1;
         break;
       }
     }
 
-    std::this_thread::sleep_for(std::chrono::seconds{1});
+    std::this_thread::sleep_for(std::chrono::milliseconds{200});
   }
 
   producer_side_server->ShutdownAndWait();
@@ -188,6 +197,8 @@ void OrbitService::Run(std::atomic<bool>* exit_requested) {
 
   grpc_server->Shutdown();
   grpc_server->Wait();
+
+  return return_code;
 }
 
 }  // namespace orbit_service

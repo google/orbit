@@ -44,9 +44,10 @@ int OrbitServiceMain() {
   LOG("OrbitService started");
   std::atomic<bool> exit_requested = false;
   // OrbitService's loop terminates when EOF is received, no need to manipulate exit_requested.
-  orbit_service::OrbitService{kOrbitServicePort, /*dev_mode=*/false}.Run(&exit_requested);
-  LOG("OrbitService finished");
-  return 0;
+  int exit_code =
+      orbit_service::OrbitService{kOrbitServicePort, /*dev_mode=*/false}.Run(&exit_requested);
+  LOG("OrbitService finished with exit code %d", exit_code);
+  return exit_code;
 }
 
 using PuppetConstants = IntegrationTestPuppetConstants;
