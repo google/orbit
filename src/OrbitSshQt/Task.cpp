@@ -178,7 +178,7 @@ outcome::result<void> Task::shutdown() {
     case State::kSignalEOF: {
       OUTCOME_TRY(channel_->SendEOF());
       SetState(State::kWaitRemoteEOF);
-      break;
+      ABSL_FALLTHROUGH_INTENDED;
     }
     case State::kWaitRemoteEOF: {
       OUTCOME_TRY(channel_->WaitRemoteEOF());
