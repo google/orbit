@@ -89,6 +89,7 @@ class ServiceDeployManager : public QObject {
   outcome::result<void> ShutdownSftpChannel(orbit_ssh_qt::SftpChannel* sftp_channel);
   outcome::result<void> ShutdownTunnel(orbit_ssh_qt::Tunnel* tunnel);
   outcome::result<void> ShutdownTask(orbit_ssh_qt::Task* task);
+  outcome::result<void> ShutdownSession(orbit_ssh_qt::Session* session);
   outcome::result<void> CopyFileToRemote(
       const std::string& source, const std::string& dest,
       orbit_ssh_qt::SftpCopyToRemoteOperation::FileMode dest_mode);
@@ -97,7 +98,6 @@ class ServiceDeployManager : public QObject {
   outcome::result<GrpcPort> ExecImpl();
 
   void StartWatchdog();
-  void ShutdownSession();
 
   void handleSocketError(std::error_code);
 };

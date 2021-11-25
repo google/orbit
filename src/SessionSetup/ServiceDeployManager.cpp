@@ -28,6 +28,7 @@
 #include "OrbitBase/Promise.h"
 #include "OrbitSsh/AddrAndPort.h"
 #include "OrbitSshQt/ScopedConnection.h"
+#include "OrbitSshQt/Session.h"
 #include "OrbitSshQt/SftpChannel.h"
 #include "OrbitSshQt/SftpCopyToLocalOperation.h"
 #include "OrbitSshQt/SftpCopyToRemoteOperation.h"
@@ -678,21 +679,19 @@ outcome::result<void> ServiceDeployManager::ShutdownTask(orbit_ssh_qt::Task* tas
   return outcome::success();
 }
 
-void ServiceDeployManager::ShutdownSession() {
-  if (!session_) {
-    return;
-  }
+outcome::result<void> ServiceDeployManager::ShutdownSession(orbit_ssh_qt::Session* session) {
+  SCOPED_TIMED_LOG("ServiceDeployManager::ShutdownSession");
+  CHECK(session != nullptr);
 
   orbit_qt_utils::EventLoop loop{};
-  auto quit_handler = ConnectQuitHandler(&loop, &session_.value(), &orbit_ssh_qt::Session::stopped);
-  auto error_handler =
-      ConnectQuitHandler(&loop, &session_.value(), &orbit_ssh_qt::Session::errorOccurred);
+  auto quit_handler = ConnectQuitHandler(&loop, session, &orbit_ssh_qt::Session::stopped);
+  auto error_handler = ConnectQuitHandler(&loop, session, &orbit_ssh_qt::Session::errorOccurred);
   auto cancel_handler = ConnectCancelHandler(&loop, this);
 
-  session_->Disconnect();
+  session->Disconnect();
 
-  (void)loop.exec();
-  session_ = std::nullopt;
+  OUTCOME_TRY(loop.exec());
+  return outcome::success();
 }
 
 void ServiceDeployManager::Shutdown() {
@@ -710,7 +709,10 @@ void ServiceDeployManager::Shutdown() {
       (void)ShutdownTask(&orbit_service_task_.value());
       orbit_service_task_ = std::nullopt;
     }
-    ShutdownSession();
+    if (session_.has_value()) {
+      (void)ShutdownSession(&session_.value());
+      session_ = std::nullopt;
+    }
   });
 }
 
