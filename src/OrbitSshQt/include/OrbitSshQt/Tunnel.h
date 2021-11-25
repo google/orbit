@@ -35,6 +35,7 @@ enum class TunnelState {
   kShutdown,
   kFlushing,
   kSendEOF,
+  kWaitRemoteEOF,
   kClosingChannel,
   kWaitRemoteClosed,
   kDone,

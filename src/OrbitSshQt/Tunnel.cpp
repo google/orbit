@@ -114,6 +114,7 @@ outcome::result<void> Tunnel::startup() {
     case State::kShutdown:
     case State::kFlushing:
     case State::kSendEOF:
+    case State::kWaitRemoteEOF:
     case State::kClosingChannel:
     case State::kWaitRemoteClosed:
     case State::kDone:
@@ -142,6 +143,11 @@ outcome::result<void> Tunnel::shutdown() {
     }
     case State::kSendEOF: {
       OUTCOME_TRY(channel_->SendEOF());
+      SetState(State::kWaitRemoteEOF);
+      ABSL_FALLTHROUGH_INTENDED;
+    }
+    case State::kWaitRemoteEOF: {
+      OUTCOME_TRY(channel_->WaitRemoteEOF());
       SetState(State::kClosingChannel);
       ABSL_FALLTHROUGH_INTENDED;
     }
