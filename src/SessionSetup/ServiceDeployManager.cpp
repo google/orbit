@@ -657,7 +657,7 @@ void ServiceDeployManager::ShutdownTunnel(std::optional<orbit_ssh_qt::Tunnel>* t
   }
 
   orbit_qt_utils::EventLoop loop{};
-  auto quit_handler = ConnectQuitHandler(&loop, &tunnel->value(), &orbit_ssh_qt::Tunnel::started);
+  auto quit_handler = ConnectQuitHandler(&loop, &tunnel->value(), &orbit_ssh_qt::Tunnel::stopped);
   auto error_handler =
       ConnectQuitHandler(&loop, &tunnel->value(), &orbit_ssh_qt::Tunnel::errorOccurred);
   auto cancel_handler = ConnectCancelHandler(&loop, this);
