@@ -651,21 +651,19 @@ void ServiceDeployManager::handleSocketError(std::error_code e) {
   emit socketErrorOccurred(e);
 }
 
-void ServiceDeployManager::ShutdownTunnel(std::optional<orbit_ssh_qt::Tunnel>* tunnel) {
-  if (!tunnel || !*tunnel) {
-    return;
-  }
+outcome::result<void> ServiceDeployManager::ShutdownTunnel(orbit_ssh_qt::Tunnel* tunnel) {
+  SCOPED_TIMED_LOG("ServiceDeployManager::StopTunnel");
+  CHECK(tunnel != nullptr);
 
   orbit_qt_utils::EventLoop loop{};
-  auto quit_handler = ConnectQuitHandler(&loop, &tunnel->value(), &orbit_ssh_qt::Tunnel::stopped);
-  auto error_handler =
-      ConnectQuitHandler(&loop, &tunnel->value(), &orbit_ssh_qt::Tunnel::errorOccurred);
+  auto quit_handler = ConnectQuitHandler(&loop, tunnel, &orbit_ssh_qt::Tunnel::stopped);
+  auto error_handler = ConnectQuitHandler(&loop, tunnel, &orbit_ssh_qt::Tunnel::errorOccurred);
   auto cancel_handler = ConnectCancelHandler(&loop, this);
 
-  tunnel->value().Stop();
+  tunnel->Stop();
 
-  (void)loop.exec();
-  *tunnel = std::nullopt;
+  OUTCOME_TRY(loop.exec());
+  return outcome::success();
 }
 
 void ServiceDeployManager::ShutdownOrbitService() {
@@ -709,7 +707,10 @@ void ServiceDeployManager::Shutdown() {
       (void)ShutdownSftpChannel(sftp_channel_.get());
       sftp_channel_.reset();
     }
-    ShutdownTunnel(&grpc_tunnel_);
+    if (grpc_tunnel_.has_value()) {
+      (void)ShutdownTunnel(&grpc_tunnel_.value());
+      grpc_tunnel_ = std::nullopt;
+    }
     ShutdownOrbitService();
     ShutdownSession();
   });

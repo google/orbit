@@ -87,6 +87,7 @@ class ServiceDeployManager : public QObject {
   outcome::result<uint16_t> StartTunnel(std::optional<orbit_ssh_qt::Tunnel>* tunnel, uint16_t port);
   outcome::result<std::unique_ptr<orbit_ssh_qt::SftpChannel>> StartSftpChannel();
   outcome::result<void> ShutdownSftpChannel(orbit_ssh_qt::SftpChannel* sftp_channel);
+  outcome::result<void> ShutdownTunnel(orbit_ssh_qt::Tunnel* tunnel);
   outcome::result<void> CopyFileToRemote(
       const std::string& source, const std::string& dest,
       orbit_ssh_qt::SftpCopyToRemoteOperation::FileMode dest_mode);
@@ -97,7 +98,6 @@ class ServiceDeployManager : public QObject {
   void StartWatchdog();
   void ShutdownSession();
   void ShutdownOrbitService();
-  void ShutdownTunnel(std::optional<orbit_ssh_qt::Tunnel>*);
 
   void handleSocketError(std::error_code);
 };
