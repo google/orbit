@@ -161,13 +161,6 @@ void FunctionsDataView::DoSort() {
   }
 }
 
-const std::string FunctionsDataView::kMenuActionSelect = "Hook";
-const std::string FunctionsDataView::kMenuActionUnselect = "Unhook";
-const std::string FunctionsDataView::kMenuActionDisassembly = "Go to Disassembly";
-const std::string FunctionsDataView::kMenuActionSourceCode = "Go to Source code";
-const std::string FunctionsDataView::kMenuActionEnableFrameTrack = "Enable frame track(s)";
-const std::string FunctionsDataView::kMenuActionDisableFrameTrack = "Disable frame track(s)";
-
 std::vector<std::vector<std::string>> FunctionsDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_select = false;

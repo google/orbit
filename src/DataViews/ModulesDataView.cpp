@@ -108,9 +108,6 @@ void ModulesDataView::DoSort() {
   }
 }
 
-const std::string ModulesDataView::kMenuActionLoadSymbols = "Load Symbols";
-const std::string ModulesDataView::kMenuActionVerifyFramePointers = "Verify Frame Pointers";
-
 std::vector<std::vector<std::string>> ModulesDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_load = false;

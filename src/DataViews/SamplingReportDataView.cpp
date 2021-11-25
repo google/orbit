@@ -217,12 +217,6 @@ SamplingReportDataView::GetModulePathsAndBuildIdsFromIndices(
   return module_paths_and_build_ids;
 }
 
-const std::string SamplingReportDataView::kMenuActionSelect = "Hook";
-const std::string SamplingReportDataView::kMenuActionUnselect = "Unhook";
-const std::string SamplingReportDataView::kMenuActionLoadSymbols = "Load Symbols";
-const std::string SamplingReportDataView::kMenuActionDisassembly = "Go to Disassembly";
-const std::string SamplingReportDataView::kMenuActionSourceCode = "Go to Source code";
-
 std::vector<std::vector<std::string>> SamplingReportDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_load = false;

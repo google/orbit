@@ -97,11 +97,6 @@ std::string CallstackDataView::GetToolTip(int row, int /*column*/) {
   return "";
 }
 
-const std::string CallstackDataView::kMenuActionLoadSymbols = "Load Symbols";
-const std::string CallstackDataView::kMenuActionSelect = "Hook";
-const std::string CallstackDataView::kMenuActionUnselect = "Unhook";
-const std::string CallstackDataView::kMenuActionDisassembly = "Go to Disassembly";
-const std::string CallstackDataView::kMenuActionSourceCode = "Go to Source code";
 const std::string CallstackDataView::kHighlightedFunctionString = "➜ ";
 const std::string CallstackDataView::kHighlightedFunctionBlankString =
     std::string(kHighlightedFunctionString.size(), ' ');

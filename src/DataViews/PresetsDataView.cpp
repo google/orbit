@@ -148,10 +148,6 @@ void PresetsDataView::DoSort() {
   }
 }
 
-const std::string PresetsDataView::kMenuActionLoadPreset = "Load Preset";
-const std::string PresetsDataView::kMenuActionDeletePreset = "Delete Preset";
-const std::string PresetsDataView::kMenuActionShowInExplorer = "Show in Explorer";
-
 std::vector<std::vector<std::string>> PresetsDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   // Note that the UI already enforces a single selection.

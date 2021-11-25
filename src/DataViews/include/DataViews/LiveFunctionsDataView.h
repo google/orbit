@@ -83,19 +83,6 @@ class LiveFunctionsDataView : public DataView {
     kNumColumns
   };
 
-  static const std::string kMenuActionSelect;
-  static const std::string kMenuActionUnselect;
-  static const std::string kMenuActionDisassembly;
-  static const std::string kMenuActionSourceCode;
-  static const std::string kMenuActionEnableFrameTrack;
-  static const std::string kMenuActionDisableFrameTrack;
-  static const std::string kMenuActionIterate;
-  static const std::string kMenuActionJumpToFirst;
-  static const std::string kMenuActionJumpToLast;
-  static const std::string kMenuActionJumpToMin;
-  static const std::string kMenuActionJumpToMax;
-  static const std::string kMenuActionExportEventsToCsv;
-
  private:
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 };

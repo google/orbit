@@ -63,8 +63,6 @@ class ModulesDataView : public DataView {
     kNumColumns
   };
 
-  static const std::string kMenuActionLoadSymbols;
-  static const std::string kMenuActionVerifyFramePointers;
 };
 
 }  // namespace orbit_data_views

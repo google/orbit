@@ -70,10 +70,6 @@ class PresetsDataView : public DataView {
     kNumColumns
   };
 
-  static const std::string kMenuActionLoadPreset;
-  static const std::string kMenuActionDeletePreset;
-  static const std::string kMenuActionShowInExplorer;
-
  private:
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 };

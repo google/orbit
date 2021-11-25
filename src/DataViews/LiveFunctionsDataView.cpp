@@ -200,19 +200,6 @@ void LiveFunctionsDataView::DoSort() {
   }
 }
 
-const std::string LiveFunctionsDataView::kMenuActionSelect = "Hook";
-const std::string LiveFunctionsDataView::kMenuActionUnselect = "Unhook";
-const std::string LiveFunctionsDataView::kMenuActionDisassembly = "Go to Disassembly";
-const std::string LiveFunctionsDataView::kMenuActionSourceCode = "Go to Source code";
-const std::string LiveFunctionsDataView::kMenuActionEnableFrameTrack = "Enable frame track(s)";
-const std::string LiveFunctionsDataView::kMenuActionDisableFrameTrack = "Disable frame track(s)";
-const std::string LiveFunctionsDataView::kMenuActionIterate = "Add iterator(s)";
-const std::string LiveFunctionsDataView::kMenuActionJumpToFirst = "Jump to first";
-const std::string LiveFunctionsDataView::kMenuActionJumpToLast = "Jump to last";
-const std::string LiveFunctionsDataView::kMenuActionJumpToMin = "Jump to min";
-const std::string LiveFunctionsDataView::kMenuActionJumpToMax = "Jump to max";
-const std::string LiveFunctionsDataView::kMenuActionExportEventsToCsv = "Export events to CSV";
-
 std::vector<std::vector<std::string>> LiveFunctionsDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_select = false;

@@ -104,6 +104,35 @@ class DataView {
   [[nodiscard]] DataViewType GetType() const { return type_; }
   [[nodiscard]] virtual bool ResetOnRefresh() const { return true; }
 
+  // Hooking related actions
+  static const std::string kMenuActionLoadSymbols;
+  static const std::string kMenuActionSelect;
+  static const std::string kMenuActionUnselect;
+  static const std::string kMenuActionEnableFrameTrack;
+  static const std::string kMenuActionDisableFrameTrack;
+  static const std::string kMenuActionIterate;
+
+  static const std::string kMenuActionVerifyFramePointers;
+
+  static const std::string kMenuActionDisassembly;
+  static const std::string kMenuActionSourceCode;
+
+  // Navigating related actions
+  static const std::string kMenuActionJumpToFirst;
+  static const std::string kMenuActionJumpToLast;
+  static const std::string kMenuActionJumpToMin;
+  static const std::string kMenuActionJumpToMax;
+
+  // Preset related actions
+  static const std::string kMenuActionLoadPreset;
+  static const std::string kMenuActionDeletePreset;
+  static const std::string kMenuActionShowInExplorer;
+
+  // Exporting relate actions
+  static const std::string kMenuActionCopySelection;
+  static const std::string kMenuActionExportToCsv;
+  static const std::string kMenuActionExportEventsToCsv;
+
  protected:
   void InitSortingOrders();
   virtual void DoSort() {}
@@ -117,9 +146,6 @@ class DataView {
   int update_period_ms_;
   absl::flat_hash_set<int> selected_indices_;
   DataViewType type_;
-
-  static const std::string kMenuActionCopySelection;
-  static const std::string kMenuActionExportToCsv;
 
   orbit_data_views::AppInterface* app_ = nullptr;
 };
