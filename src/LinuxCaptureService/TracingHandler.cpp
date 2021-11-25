@@ -40,7 +40,10 @@ void TracingHandler::Start(
 void TracingHandler::Stop() {
   CHECK(tracer_ != nullptr);
   tracer_->Stop();
-  tracer_.reset();
+  // tracer_ is not reset as FunctionEntry and FunctionExit events could still arrive afterwards. In
+  // that case the Tracer will simply not process them.
+  // Leaving the reset to the destructor means that an object of this class cannot be reused by
+  // calling Start again.
 }
 
 void TracingHandler::OnSchedulingSlice(SchedulingSlice scheduling_slice) {
