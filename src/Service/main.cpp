@@ -62,5 +62,5 @@ int main(int argc, char** argv) {
 
   exit_requested = false;
   orbit_service::OrbitService service{grpc_port, dev_mode};
-  service.Run(&exit_requested);
+  return service.Run(&exit_requested);
 }
