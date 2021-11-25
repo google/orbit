@@ -551,11 +551,8 @@ void ServiceDeployManager::StartWatchdog() {
   orbit_service_task_->Write(kSshWatchdogPassphrase);
 
   QObject::connect(&ssh_watchdog_timer_, &QTimer::timeout, [this]() {
-    if (orbit_service_task_) {
-      orbit_service_task_->Write(".");
-    } else {
-      ssh_watchdog_timer_.stop();
-    }
+    CHECK(orbit_service_task_.has_value());
+    orbit_service_task_->Write(".");
   });
 
   ssh_watchdog_timer_.start(kSshWatchdogInterval);
@@ -711,6 +708,7 @@ void ServiceDeployManager::Shutdown() {
       (void)ShutdownTunnel(&grpc_tunnel_.value());
       grpc_tunnel_ = std::nullopt;
     }
+    ssh_watchdog_timer_.stop();
     ShutdownOrbitService();
     ShutdownSession();
   });
