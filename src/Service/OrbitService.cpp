@@ -152,13 +152,13 @@ int OrbitService::Run(std::atomic<bool>* exit_requested) {
 
   std::unique_ptr<OrbitGrpcServer> grpc_server = CreateGrpcServer(grpc_port_, dev_mode_);
   if (grpc_server == nullptr) {
-    ERROR("Unable to create grpc server.");
+    ERROR("Unable to create gRPC server.");
     return -1;
   }
 
   std::unique_ptr<ProducerSideServer> producer_side_server = BuildAndStartProducerSideServer();
   if (producer_side_server == nullptr) {
-    ERROR("Unable to build and start producer side server.");
+    ERROR("Unable to build and start ProducerSideServer.");
     return -1;
   }
   grpc_server->AddCaptureStartStopListener(producer_side_server.get());
