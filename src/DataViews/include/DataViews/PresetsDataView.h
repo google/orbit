@@ -70,8 +70,8 @@ class PresetsDataView : public DataView {
     kNumColumns
   };
 
-  static const std::string kMenuActionLoad;
-  static const std::string kMenuActionDelete;
+  static const std::string kMenuActionLoadPreset;
+  static const std::string kMenuActionDeletePreset;
   static const std::string kMenuActionShowInExplorer;
 
  private:

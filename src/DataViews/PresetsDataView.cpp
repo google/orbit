@@ -148,8 +148,8 @@ void PresetsDataView::DoSort() {
   }
 }
 
-const std::string PresetsDataView::kMenuActionLoad = "Load Preset";
-const std::string PresetsDataView::kMenuActionDelete = "Delete Preset";
+const std::string PresetsDataView::kMenuActionLoadPreset = "Load Preset";
+const std::string PresetsDataView::kMenuActionDeletePreset = "Delete Preset";
 const std::string PresetsDataView::kMenuActionShowInExplorer = "Show in Explorer";
 
 std::vector<std::vector<std::string>> PresetsDataView::GetContextMenuWithGrouping(
@@ -160,9 +160,9 @@ std::vector<std::vector<std::string>> PresetsDataView::GetContextMenuWithGroupin
   std::vector<std::string> action_group;
   const PresetFile& preset = GetPreset(selected_indices[0]);
   if (app_->GetPresetLoadState(preset).state != PresetLoadState::kNotLoadable) {
-    action_group.emplace_back(kMenuActionLoad);
+    action_group.emplace_back(kMenuActionLoadPreset);
   }
-  action_group.emplace_back(kMenuActionDelete);
+  action_group.emplace_back(kMenuActionDeletePreset);
   action_group.emplace_back(kMenuActionShowInExplorer);
 
   std::vector<std::vector<std::string>> menu =
@@ -177,11 +177,11 @@ void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
   // Note that the UI already enforces a single selection.
   CHECK(item_indices.size() == 1);
 
-  if (action == kMenuActionLoad) {
+  if (action == kMenuActionLoadPreset) {
     const PresetFile& preset = GetPreset(item_indices[0]);
     app_->LoadPreset(preset);
 
-  } else if (action == kMenuActionDelete) {
+  } else if (action == kMenuActionDeletePreset) {
     orbit_metrics_uploader::ScopedMetric metric{
         metrics_uploader_, orbit_metrics_uploader::OrbitLogEvent::ORBIT_PRESET_DELETE};
     int row = item_indices[0];
