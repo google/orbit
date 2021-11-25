@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/synchronization/mutex.h>
 #include <gmock/gmock.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/support/channel_arguments.h>
@@ -34,15 +35,25 @@ class FakeProducer {
         orbit_grpc_protos::ProducerSideService::NewStub(channel);
     ASSERT_NE(stub, nullptr);
 
-    EXPECT_EQ(context_, nullptr);
-    EXPECT_EQ(stream_, nullptr);
-    context_ = std::make_unique<grpc::ClientContext>();
-    stream_ = stub->ReceiveCommandsAndSendEvents(context_.get());
-    ASSERT_NE(stream_, nullptr);
+    {
+      absl::WriterMutexLock lock{&context_and_stream_mutex_};
+      EXPECT_EQ(context_, nullptr);
+      EXPECT_EQ(stream_, nullptr);
+      context_ = std::make_unique<grpc::ClientContext>();
+      stream_ = stub->ReceiveCommandsAndSendEvents(context_.get());
+      ASSERT_NE(stream_, nullptr);
+    }
 
     read_thread_ = std::thread([this] {
-      orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse response;
-      while (stream_->Read(&response)) {
+      while (true) {
+        orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse response;
+        {
+          absl::ReaderMutexLock lock{&context_and_stream_mutex_};
+          ASSERT_NE(stream_, nullptr);
+          if (!stream_->Read(&response)) {
+            break;
+          }
+        }
         EXPECT_NE(response.command_case(),
                   orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse::COMMAND_NOT_SET);
         switch (response.command_case()) {
@@ -63,34 +74,50 @@ class FakeProducer {
   }
 
   void SendBufferedCaptureEvents(int32_t num_to_send) {
+    absl::ReaderMutexLock lock{&context_and_stream_mutex_};
     ASSERT_NE(stream_, nullptr);
     orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest request;
     request.mutable_buffered_capture_events();
     for (int32_t i = 0; i < num_to_send; ++i) {
       request.mutable_buffered_capture_events()->mutable_capture_events()->Add();
     }
-    bool written = stream_->Write(request);
-    EXPECT_TRUE(written);
+
+    {
+      absl::MutexLock write_lock{&exclusive_writes_mutex_};
+      bool written = stream_->Write(request);
+      EXPECT_TRUE(written);
+    }
   }
 
   void SendAllEventsSent() {
+    absl::ReaderMutexLock lock{&context_and_stream_mutex_};
     ASSERT_NE(stream_, nullptr);
     orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest request;
     request.mutable_all_events_sent();
-    bool written = stream_->Write(request);
-    EXPECT_TRUE(written);
+
+    {
+      absl::MutexLock write_lock{&exclusive_writes_mutex_};
+      bool written = stream_->Write(request);
+      EXPECT_TRUE(written);
+    }
   }
 
   void FinishRpc() {
-    if (context_ != nullptr) {
-      context_->TryCancel();
-      context_ = nullptr;
-      EXPECT_NE(stream_, nullptr);
-      EXPECT_TRUE(read_thread_.joinable());
+    {
+      absl::ReaderMutexLock lock{&context_and_stream_mutex_};
+      if (context_ != nullptr) {
+        context_->TryCancel();
+        EXPECT_NE(stream_, nullptr);
+        EXPECT_TRUE(read_thread_.joinable());
+      }
+      if (read_thread_.joinable()) {
+        read_thread_.join();
+      }
     }
-    stream_ = nullptr;
-    if (read_thread_.joinable()) {
-      read_thread_.join();
+    {
+      absl::WriterMutexLock lock{&context_and_stream_mutex_};
+      stream_ = nullptr;
+      context_ = nullptr;
     }
   }
 
@@ -99,10 +126,18 @@ class FakeProducer {
   MOCK_METHOD(void, OnCaptureFinishedCommandReceived, (), ());
 
  private:
-  std::unique_ptr<grpc::ClientContext> context_;
+  std::unique_ptr<grpc::ClientContext> context_ ABSL_GUARDED_BY(context_and_stream_mutex_);
   std::unique_ptr<grpc::ClientReaderWriter<orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest,
                                            orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse>>
-      stream_;
+      stream_ ABSL_GUARDED_BY(context_and_stream_mutex_);
+  absl::Mutex context_and_stream_mutex_;
+
+  // WriteInterface::Write is thread safe with respect to ReadInterface::Read, but not to itself,
+  // i.e., it shouldn't be called concurrently from two different threads. Since we can call
+  // SendBufferedCaptureEvents and SendAllEventsSent from different threads, we need additional
+  // synchronization.
+  absl::Mutex exclusive_writes_mutex_;
+
   std::thread read_thread_;
 };
 
