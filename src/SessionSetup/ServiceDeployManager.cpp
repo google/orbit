@@ -663,22 +663,19 @@ outcome::result<void> ServiceDeployManager::ShutdownTunnel(orbit_ssh_qt::Tunnel*
   return outcome::success();
 }
 
-void ServiceDeployManager::ShutdownOrbitService() {
-  if (!orbit_service_task_) {
-    return;
-  }
+outcome::result<void> ServiceDeployManager::ShutdownTask(orbit_ssh_qt::Task* task) {
+  SCOPED_TIMED_LOG("ServiceDeployManager::ShutdownOrbitService");
+  CHECK(task != nullptr);
 
   orbit_qt_utils::EventLoop loop{};
-  auto quit_handler =
-      ConnectQuitHandler(&loop, &orbit_service_task_.value(), &orbit_ssh_qt::Task::finished);
-  auto error_handler =
-      ConnectQuitHandler(&loop, &orbit_service_task_.value(), &orbit_ssh_qt::Task::errorOccurred);
+  auto quit_handler = ConnectQuitHandler(&loop, task, &orbit_ssh_qt::Task::stopped);
+  auto error_handler = ConnectQuitHandler(&loop, task, &orbit_ssh_qt::Task::errorOccurred);
   auto cancel_handler = ConnectCancelHandler(&loop, this);
 
-  orbit_service_task_->Stop();
+  task->Stop();
 
-  (void)loop.exec();
-  orbit_service_task_ = std::nullopt;
+  OUTCOME_TRY(loop.exec());
+  return outcome::success();
 }
 
 void ServiceDeployManager::ShutdownSession() {
@@ -709,7 +706,10 @@ void ServiceDeployManager::Shutdown() {
       grpc_tunnel_ = std::nullopt;
     }
     ssh_watchdog_timer_.stop();
-    ShutdownOrbitService();
+    if (orbit_service_task_.has_value()) {
+      (void)ShutdownTask(&orbit_service_task_.value());
+      orbit_service_task_ = std::nullopt;
+    }
     ShutdownSession();
   });
 }
