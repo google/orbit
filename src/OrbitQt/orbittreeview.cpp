@@ -257,7 +257,7 @@ void OrbitTreeView::keyPressEvent(QKeyEvent* event) {
     }
 
     std::vector<int> items(selection.begin(), selection.end());
-    model_->GetDataView()->CopySelection(items);
+    model_->GetDataView()->OnCopySelectionRequested(items);
   } else {
     QTreeView::keyPressEvent(event);
   }
