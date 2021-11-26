@@ -31,6 +31,10 @@ uint64_t TrivialSum(uint64_t p0, uint64_t p1, uint64_t p2, uint64_t p3, uint64_t
   return p0 + p1 + p2 + p3 + p4 + p5;
 }
 
+uint64_t TrivialSumWithMsAbi(uint64_t p0, uint64_t p1, uint64_t p2, uint64_t p3) {
+  return p0 + p1 + p2 + p3;
+}
+
 void EntryPayload(uint64_t return_address, uint64_t function_id, uint64_t stack_pointer) {
   // Verify that the return address and the stack pointer (location of the return address) are
   // coherent. If not, the tests that use trampolines that call this EntryPayload will not succeed.
